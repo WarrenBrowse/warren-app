@@ -126,10 +126,15 @@ class WarrenQuinnAdapterTest {
             return descriptor
         }
 
-        override fun establish(plan: WarrenTunInterfacePlan): ParcelFileDescriptor {
+        /** When set, the blocking interface cannot be established. */
+        @Volatile
+        var blackholeFails = false
+
+        override fun establish(plan: WarrenTunInterfacePlan): ParcelFileDescriptor? {
             val call = if (plan.blocking) ESTABLISH_BLACKHOLE else ESTABLISH_LIVE
             calls += call
             threads[call] = Thread.currentThread().name
+            if (plan.blocking && blackholeFails) return null
             return if (plan.blocking) blackholeTun else liveTun
         }
 
@@ -452,6 +457,41 @@ class WarrenQuinnAdapterTest {
             "the native side must release its fd copy before the adapter drops its own, got: $calls"
         )
         adapter.disconnect()
+    }
+
+    /**
+     * When the blocking TUN cannot be established, the dead session's TUN is
+     * the only interface holding the routes: the handover fallback keeps it
+     * until the reconnect's own interface replaces it.
+     */
+    @Test
+    fun `fallback keeps the live tun when the blackhole cannot be established`() = runTest {
+        mockkStatic(SystemClock::class)
+        every { SystemClock.elapsedRealtime() } returns 0L
+        try {
+            val platform = RecordingPlatform()
+            val (adapter, callback) = connectedAdapter(platform)
+            platform.blackholeFails = true
+
+            callback.onAvailable(mockk<Network>())
+            platform.statusOnConnect = STATUS_CONNECTED
+            platform.status = STATUS_DISCONNECTED
+
+            awaitReal("the fallback must reconnect") {
+                CONNECT_TUNNEL in platform.calls.toList()
+            }
+            val calls = platform.calls.toList()
+            val replaced = calls.indexOf(ESTABLISH_LIVE)
+            val closed = calls.indexOf(CLOSE_ACTIVE)
+            assertTrue(
+                replaced >= 0 && closed > replaced,
+                "the dead session's TUN must hold the routes until the reconnect's " +
+                    "interface replaced it, got: $calls",
+            )
+            adapter.disconnect()
+        } finally {
+            unmockkStatic(SystemClock::class)
+        }
     }
 
     /**
@@ -826,6 +866,50 @@ class WarrenQuinnAdapterTest {
             unmockkStatic(SystemClock::class)
         }
     }
+
+    /**
+     * The failover must hold the routes on some interface throughout. When the
+     * blocking TUN cannot be established, the dead session's TUN is the only
+     * interface left, and it drops everything, so it stays up until the
+     * failover's own interface replaces it.
+     */
+    @Test
+    fun `ensure a failover keeps the live tun when the blackhole cannot be established`() =
+        runTest {
+            mockkStatic(SystemClock::class)
+            every { SystemClock.elapsedRealtime() } returns 0L
+            try {
+                val platform = RecordingPlatform()
+                val alternative =
+                    config().copy(exitPubkeyHex = "ef".repeat(32), exitEndpoint = "exit2.example:443")
+                val adapter =
+                    adapterWith(platform, failoverConfig = { alternative }, dropRetryGraceMs = 600_000L)
+                adapter.connect(config(), Mnemonic(PHRASE))
+                awaitReal("the session must reach Connected") {
+                    adapter.state.value is WarrenTunnelState.Connected
+                }
+                platform.calls.clear()
+                platform.blackholeFails = true
+
+                platform.statusOnConnect = STATUS_CONNECTED
+                platform.status = STATUS_EXIT_LEAVING
+                awaitReal("the failover must dial the alternative") {
+                    platform.configs.lastOrNull()?.contains("ef".repeat(32)) == true
+                }
+
+                val calls = platform.calls.toList()
+                val replaced = calls.indexOf(ESTABLISH_LIVE)
+                val closed = calls.indexOf(CLOSE_ACTIVE)
+                assertTrue(
+                    replaced >= 0 && closed > replaced,
+                    "the dead session's TUN must hold the routes until the failover's " +
+                        "interface replaced it, got: $calls",
+                )
+                adapter.disconnect()
+            } finally {
+                unmockkStatic(SystemClock::class)
+            }
+        }
 
     /**
      * Leaving is a failover, never a drop: the flap guard would release the

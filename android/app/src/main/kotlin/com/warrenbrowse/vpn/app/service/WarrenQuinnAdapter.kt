@@ -257,7 +257,7 @@ class WarrenQuinnAdapter(
         // traffic on the physical link until the drop is observed. The
         // fail-closed logic below relies on activeFd being a LIVE handle to the
         // interface.
-        activeFd = try {
+        val liveDup = try {
             fd.dup()
         } catch (e: IOException) {
             Logger.e(throwable = e) { "failed to dup TUN fd; aborting connect" }
@@ -265,6 +265,11 @@ class WarrenQuinnAdapter(
             onSessionDown(config, "TUN fd dup failed")
             return@withLock
         }
+        // A handle still here is a dead session's TUN a fallback kept as the
+        // blackhole because the blocking one could not be established; the
+        // interface just established replaced it.
+        activeFd?.close()
+        activeFd = liveDup
 
         val rc = try {
             mnemonic.useAsString { phrase ->
@@ -897,7 +902,10 @@ class WarrenQuinnAdapter(
                     if (fd != null) {
                         blockingFd = fd
                     } else {
-                        Logger.w("scheduleHandoverReconnect: blackhole establish failed; brief leak possible")
+                        Logger.w(
+                            "scheduleHandoverReconnect: blackhole establish failed; keeping " +
+                                "the dead tunnel's interface as the blackhole"
+                        )
                     }
                 }
                 // Stop the watch before the intentional teardown so the status
@@ -906,8 +914,12 @@ class WarrenQuinnAdapter(
                 statusWatchJob?.cancel()
                 statusWatchJob = null
                 platform.disconnectTunnel()
-                activeFd?.close()
-                activeFd = null
+                // Without a blocking TUN the live one is the only interface
+                // holding the routes: it stays until connect() replaces it.
+                if (blockingFd != null) {
+                    activeFd?.close()
+                    activeFd = null
+                }
                 _state.value = WarrenTunnelState.Disconnected
             }
             delay(HANDOVER_FALLBACK_GRACE_MS)
@@ -947,15 +959,20 @@ class WarrenQuinnAdapter(
                             blockingFd = fd
                         } else {
                             Logger.w(
-                                "scheduleExitFailover: blackhole establish failed; brief leak possible"
+                                "scheduleExitFailover: blackhole establish failed; keeping the " +
+                                    "dead tunnel's interface as the blackhole"
                             )
                         }
                     }
                     statusWatchJob?.cancel()
                     statusWatchJob = null
                     platform.disconnectTunnel()
-                    activeFd?.close()
-                    activeFd = null
+                    // Without a blocking TUN the live one is the only interface
+                    // holding the routes: it stays until connect() replaces it.
+                    if (blockingFd != null) {
+                        activeFd?.close()
+                        activeFd = null
+                    }
                     _state.value = WarrenTunnelState.Disconnected
                     true
                 }
