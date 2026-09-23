@@ -44,12 +44,16 @@ in a state where it blocks *all traffic*, such as the [connecting], [disconnecti
 states. Additionally the android system has a setting called *Block connections without VPN* that
 enables the Android OS to block *all traffic* that is not routed through the Warren VPN.
 
-One exception applies with the app's *Lockdown mode* off, which is the default: when the tunnel
+Two exceptions apply with the app's *Lockdown mode* off, which is the default. When the tunnel
 keeps dropping (four unexpected drops within 90 seconds), the app stops retrying, closes its
-blocking interface and hands *all traffic* back to the regular network, outside the tunnel. The
-app says so in its connection banner and in the system notification, and names Lockdown mode as
-the way to stay blocked instead. With Lockdown mode on, the app keeps blocking until the user
-acts. With *Block connections without VPN* enabled, the OS keeps blocking in both cases.
+blocking interface and hands *all traffic* back to the regular network, outside the tunnel; it
+says so in its connection banner and in the system notification, and names Lockdown mode as the
+way to stay blocked instead. When an exit refuses the account (a lapsed or revoked
+subscription), the app releases the traffic the same way and shows the subscription as expired.
+With Lockdown mode on, the app keeps blocking in both cases until the user acts. With
+*Block connections without VPN* enabled, the OS keeps blocking in both cases whatever the app
+does. The desktop behaviour described under [error] below does not apply to these two Android
+cases.
 
 Besides the [known issues], Android has many variants and flavors that may introduce variances to
 the default [Android Open Source Project](https://source.android.com/) behavior. This means that
