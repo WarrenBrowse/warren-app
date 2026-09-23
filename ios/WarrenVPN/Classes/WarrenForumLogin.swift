@@ -457,8 +457,10 @@ final class WarrenForumLoginFlow: @unchecked Sendable {
         controller.modalPresentationStyle = .formSheet
         hosting = controller
         presenter.present(controller, animated: true)
+        // A wall-clock deadline: an uptime one stops counting while the phone
+        // sleeps, and would keep a dead code on screen past its session.
         let lifetime = max(0, session.expiresAt.timeIntervalSinceNow)
-        DispatchQueue.main.asyncAfter(deadline: .now() + lifetime) { [weak controller] in
+        DispatchQueue.main.asyncAfter(wallDeadline: .now() + lifetime) { [weak controller] in
             controller?.dismiss(animated: true)
         }
     }
@@ -473,6 +475,11 @@ struct WarrenForumLoginCompletionView: View {
     @State var codeRevealed: Bool
     let finishInBrowser: (() -> Void)?
     let close: () -> Void
+    /// The person leaves the app to type the code in the browser, which is
+    /// when the system snapshots the screen for the app switcher: the code is
+    /// drawn only while the app is active. Read from the application's own
+    /// notifications, which a UIKit-hosted view receives reliably.
+    @State private var appActive = true
 
     var body: some View {
         VStack(spacing: 16) {
@@ -495,7 +502,7 @@ struct WarrenForumLoginCompletionView: View {
                 .multilineTextAlignment(.center)
             }
             if codeRevealed {
-                Text(verbatim: code)
+                Text(verbatim: appActive ? code : String(repeating: "\u{2022}", count: code.count))
                     .font(.system(size: 40, weight: .semibold, design: .monospaced))
                     .kerning(6)
                     .accessibilityLabel(Text(verbatim: code.map(String.init).joined(separator: " ")))
@@ -525,5 +532,11 @@ struct WarrenForumLoginCompletionView: View {
             Button(NSLocalizedString("Close", comment: "Forum login, closes the completion code"), action: close)
         }
         .padding(24)
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willResignActiveNotification)) { _ in
+            appActive = false
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.didBecomeActiveNotification)) { _ in
+            appActive = true
+        }
     }
 }
