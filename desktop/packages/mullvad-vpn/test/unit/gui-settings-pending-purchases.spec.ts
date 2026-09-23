@@ -34,4 +34,15 @@ describe('a settings file that still carries pending purchases', () => {
     expect(JSON.stringify(guiSettingsForRenderer(settings.state))).not.toContain(secret);
     expect(settings.enableSystemNotifications).toBe(false);
   });
+
+  // A setting that fails validation leaves the file as it is; the purchases
+  // must go all the same.
+  it('loses them even when another setting in the file does not validate', () => {
+    fs.writeFileSync(FILE, JSON.stringify({ autoConnect: 'yes', pendingPurchases: [entry] }));
+
+    new GuiSettings().load();
+
+    expect(fs.readFileSync(FILE, 'utf8')).not.toContain(secret);
+    expect(JSON.parse(fs.readFileSync(FILE, 'utf8'))).toEqual({ autoConnect: 'yes' });
+  });
 });

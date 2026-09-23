@@ -15,12 +15,15 @@ export const PENDING_PURCHASES_FILE = 'purchases.bin';
  *
  * Each entry carries the purchase's pull secret, the only thing that collects
  * the voucher, so it never goes into `gui_settings.json`, which is cleartext
- * and readable by every program the user runs. With a platform keychain the
- * entries are sealed in a file of their own, so a purchase paid after the app
- * was closed is still collected on the next run. Without one (Linux with no
- * keyring) they stay in memory for the life of the process and are never
- * written. The file goes with the last entry, which the purchase flow drops
- * once its voucher is collected or the server has let it lapse.
+ * by invariant. With a platform keychain the entries are sealed in a file of
+ * their own that only its owner can read, so a purchase paid after the app was
+ * closed is still collected on the next run. The seal keeps them out of
+ * backups and of anything that reads the file; on Windows and Linux the
+ * keychain still opens it for any program of the same user, as it does for the
+ * other sealed blobs. Without a keychain (Linux with no keyring) the entries
+ * stay in memory for the life of the process and are never written. The file
+ * goes with the last entry, which the purchase flow drops once its voucher is
+ * collected or the server has let it lapse.
  */
 export class SealedPendingPurchaseStore implements PendingPurchaseStore {
   private entries: string[] = [];

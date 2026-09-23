@@ -603,6 +603,22 @@ describe('PurchaseFlow expiry', () => {
     flow.dispose();
   });
 
+  // A clock set back after the purchase started (NTP correcting a clock
+  // that ran ahead) leaves its start in the future. The day then runs from
+  // the first time the flow saw it, and from what it stored, not from a
+  // start that keeps sliding with the clock.
+  it('erases a purchase started in the future a day after it was first seen', async () => {
+    const { delegate } = makeDelegate(alwaysInvalid);
+    const store = new FakeStore([`${fixtureCode('b')}:${T0 + 3_600_000}:acct1`]);
+    const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
+
+    flow.forgetExpired();
+    await vi.advanceTimersByTimeAsync(PENDING_PURCHASE_TTL_MS + 1);
+
+    expect(store.entries).toEqual([]);
+    flow.dispose();
+  });
+
   it('erases a purchase a previous run left at the end of its day', async () => {
     const { delegate } = makeDelegate(alwaysInvalid);
     const store = new FakeStore([`${fixtureCode('b')}:${T0 - 60_000}:acct1`]);

@@ -318,15 +318,20 @@ export default class PurchaseFlow {
 
   private prune(nowMs: number): PendingPurchase[] {
     const raw = this.store.get();
-    const entries = raw
+    const kept = raw
       .map(parseEntry)
       .filter((entry): entry is PendingPurchase => entry !== undefined)
-      .filter((entry) => nowMs - entry.startedMs <= PENDING_PURCHASE_TTL_MS)
-      // A start time in the future means the system clock was set
-      // back; clamp so age math stays bounded instead of producing an
-      // hours-long active poll.
-      .map((entry) => ({ ...entry, startedMs: Math.min(entry.startedMs, nowMs) }));
-    if (entries.length !== raw.length) {
+      .filter((entry) => nowMs - entry.startedMs <= PENDING_PURCHASE_TTL_MS);
+    // A start time in the future means the system clock was set back;
+    // clamp so age math stays bounded instead of producing an hours-long
+    // active poll, and store the clamp, or the day would restart from the
+    // stored future time at every read.
+    const clamped = kept.some((entry) => entry.startedMs > nowMs);
+    const entries = kept.map((entry) => ({
+      ...entry,
+      startedMs: Math.min(entry.startedMs, nowMs),
+    }));
+    if (entries.length !== raw.length || clamped) {
       this.persist(entries);
     }
     return entries;

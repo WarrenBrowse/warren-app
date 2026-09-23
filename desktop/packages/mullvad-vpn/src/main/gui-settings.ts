@@ -250,17 +250,17 @@ export default class GuiSettings {
       const rawJson = JSON.parse(contents);
       // Earlier builds kept the pending purchases here, each with the pull
       // secret that collects its voucher. They live in their own sealed store
-      // now, and a copy found in this cleartext file is removed at load.
-      const carriedPurchases = LEGACY_PENDING_PURCHASES_KEY in rawJson;
-      delete rawJson[LEGACY_PENDING_PURCHASES_KEY];
+      // now, and a copy found in this cleartext file is removed at load,
+      // before validation, which leaves the file untouched when it fails.
+      if (LEGACY_PENDING_PURCHASES_KEY in rawJson) {
+        delete rawJson[LEGACY_PENDING_PURCHASES_KEY];
+        this.write(rawJson);
+      }
 
       this.stateValue = {
         ...defaultSettings,
         ...this.validateSettings(rawJson),
       };
-      if (carriedPurchases) {
-        this.store();
-      }
     } catch (e) {
       const error = e as Error & { code?: string };
       // Read settings if the file exists, otherwise write the default settings to it.
@@ -274,10 +274,12 @@ export default class GuiSettings {
   }
 
   public store() {
-    try {
-      const settingsFile = this.filePath();
+    this.write(this.stateValue);
+  }
 
-      fs.writeFileSync(settingsFile, JSON.stringify(this.stateValue));
+  private write(settings: unknown) {
+    try {
+      fs.writeFileSync(this.filePath(), JSON.stringify(settings));
     } catch (error) {
       log.error(`Failed to write GUI settings file: ${error}`);
     }
