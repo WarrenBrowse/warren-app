@@ -12,6 +12,62 @@ notes du tout. Les en-têtes `## [X.Y.Z]` doivent rester identiques à ceux de
 version. Le préfixe de plateforme (`[macOS]`, `[Windows]`, `[linux]`) est lu
 par l'application, gardez-le tel quel.
 
+## [Non publié]
+### Ajouté
+- Demander le code du bon quand `warren account redeem` est lancé sans code, ou le lire sur
+  l'entrée standard, pour qu'un script puisse le transmettre. Un code tapé sur la ligne de commande
+  est visible par tous les comptes de l'ordinateur pendant que la commande s'exécute ; la commande
+  l'accepte encore à cet endroit, et le signale.
+- Prévenir après une connexion au forum quand le lien ouvert avait été créé pour une connexion sur
+  un autre appareil. Le forum répond à un tel lien par un code à saisir ailleurs, ce qui est
+  l'allure d'une connexion lancée par quelqu'un d'autre puis envoyée à vous : l'application indique
+  maintenant que l'expéditeur du lien essaie de se connecter à votre place, et qu'il ne faut pas
+  lui donner le code.
+
+### Modifié
+- Terminer une connexion au forum avec un code à usage unique. Le navigateur qui a ouvert la
+  connexion doit maintenant présenter un code à 6 chiffres avant que le forum ne le laisse entrer.
+  Quand vous approuvez sur le même appareil, l'application ouvre ce navigateur pour qu'il termine
+  seul ; après un QR code ou un code de connexion saisi dans les Réglages, l'application affiche le
+  code à saisir sur l'autre appareil. Un lien que quelqu'un d'autre vous envoie ne le connecte plus.
+- Réserver au compte qui a installé Warren sur cet ordinateur, et aux administrateurs, la
+  connexion, la déconnexion, les réglages et l'usage du portefeuille. Les autres comptes du même
+  ordinateur voient toujours si le VPN est actif. L'application de bureau indique quand Warren
+  appartient à un autre compte, et redemande chaque minute.
+- [macOS] Installer la version en ligne de commande sous `/opt/warren` plutôt que `/usr/local`, que
+  Homebrew confie au compte qui l'a installé sur les Mac Intel. L'installateur refuse un dossier
+  qu'un autre compte peut modifier, et déplace une installation existante.
+
+### Sécurité
+- Rendre le fichier de réglages lisible par les seuls administrateurs, et créer les rapports de
+  problème lisibles par leur seul propriétaire.
+- Durcir l'application de bureau : elle ne peut plus être lancée comme simple interpréteur de
+  scripts, ignore les options de débogage et de Node sur sa ligne de commande, ne charge son code
+  que depuis sa propre archive et, sous macOS et Windows, refuse de démarrer quand cette archive a
+  été modifiée.
+- Mettre à jour l'application de bureau vers Electron 39.8.10, ainsi que ses composants gRPC et XML,
+  au-delà des vulnérabilités publiées.
+- [Windows, macOS, Android] Tenir le code de connexion au forum à l'écart des captures d'écran et
+  du partage d'écran tant qu'il est affiché.
+- N'ouvrir aucune page de connexion au forum qui appartient à une autre connexion que celle que
+  vous avez approuvée.
+- Lancer les outils système dont la connexion dépend depuis leur emplacement système fixe, jamais
+  depuis le chemin de recherche de celui qui a lancé l'application.
+- [Linux] Lancer un programme hors du tunnel uniquement pour le compte propriétaire de Warren ou
+  pour un administrateur.
+- [Linux] Réserver au compte propriétaire de Warren, et aux administrateurs, la fermeture de la
+  connexion VPN affichée dans le menu réseau du bureau. La fermer retirait l'adresse du tunnel.
+- [Android] Connecter le VPN uniquement sur une demande de l'application elle-même. Une autre
+  application pouvait envoyer la même demande et faire connecter le VPN.
+- [Windows] Faire parler la ligne de commande uniquement à un canal de gestion servi par un
+  administrateur, et couper une connexion de gestion restée muette trente secondes.
+- [macOS] Ne jamais lancer en administrateur l'outil d'installation de la version précédente
+  pendant une mise à jour, sauf si seuls les administrateurs ont pu le modifier, et garder la
+  protection de mise à jour là où aucun autre compte ne peut la remplacer.
+- Signer la liste des sommes de contrôle de chaque version en ligne de commande avec la clé de
+  publication de Warren. Les scripts d'installation refusent un téléchargement qu'elle ne garantit
+  pas, et les archives enregistrent chaque fichier comme appartenant au compte administrateur.
+
 ## [1.1.31] - 2026-09-21
 ### Ajouté
 - Se connecter sur un réseau qui ne donne aucune adresse IPv4 à votre appareil. Quatre des six

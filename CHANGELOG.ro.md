@@ -11,6 +11,60 @@ Titlurile `## [X.Y.Z]` trebuie să rămână identice cu cele din `CHANGELOG.md`
 extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`,
 `[Windows]`, `[linux]`) este citit de aplicație, păstrați-l ca atare.
 
+## [Nepublicat]
+### Adăugat
+- Cere codul voucherului când `warren account redeem` este rulat fără cod, sau îl citește de pe
+  intrarea standard, pentru ca un script să i-l poată transmite. Un cod scris în linia de comandă
+  este vizibil pentru toate conturile de pe computer cât timp rulează comanda; comanda îl mai
+  acceptă acolo și avertizează.
+- Avertizează după o autentificare pe forum când linkul deschis a fost creat pentru o autentificare
+  pe alt dispozitiv. Forumul răspunde unui astfel de link cu un cod de introdus în altă parte, ceea
+  ce arată exact ca o autentificare pornită de altcineva și trimisă dvs.: aplicația spune acum că
+  expeditorul linkului încearcă să se autentifice în locul dvs. și că nu trebuie să-i dați codul.
+
+### Modificat
+- Finalizează autentificarea pe forum cu un cod de unică folosință. Browserul care a deschis
+  autentificarea trebuie acum să prezinte un cod de 6 cifre înainte ca forumul să-l lase să intre.
+  Când aprobați pe același dispozitiv, aplicația deschide acel browser ca să termine singur; după
+  un cod QR sau un cod de autentificare introdus în Setări, aplicația afișează codul de introdus pe
+  celălalt dispozitiv. Un link trimis de altcineva nu îl mai autentifică pe acela.
+- Doar contul care a configurat Warren pe acest computer, și administratorii, pot conecta,
+  deconecta, schimba setările sau folosi portofelul. Celelalte conturi de pe același computer văd
+  în continuare dacă VPN-ul este pornit. Aplicația desktop spune când Warren aparține altui cont și
+  întreabă din nou în fiecare minut.
+- [macOS] Instalează versiunea pentru linia de comandă în `/opt/warren` în loc de `/usr/local`, pe
+  care Homebrew îl dă, pe Mac-urile Intel, contului care l-a instalat. Programul de instalare
+  refuză un dosar pe care alt cont îl poate modifica și mută o instalare existentă.
+
+### Securitate
+- Fișierul de setări poate fi citit doar de administratori, iar rapoartele de problemă doar de
+  proprietarul lor.
+- Aplicația desktop este întărită: nu mai poate fi pornită ca simplu interpretor de scripturi,
+  ignoră opțiunile de depanare și de Node din linia de comandă, își încarcă codul doar din propria
+  arhivă și, pe macOS și Windows, refuză să pornească atunci când arhiva a fost modificată.
+- Actualizează aplicația desktop la Electron 39.8.10, împreună cu componentele gRPC și XML, dincolo
+  de vulnerabilitățile publicate.
+- [Windows, macOS, Android] Ține codul de autentificare pe forum departe de capturile de ecran și
+  de partajarea ecranului cât timp este afișat.
+- Nu deschide nicio pagină de autentificare pe forum care aparține altei autentificări decât cea
+  aprobată de dvs.
+- Pornește instrumentele de sistem de care depinde conexiunea din locul lor fix din sistem,
+  niciodată din calea de căutare a celui care a pornit aplicația.
+- [Linux] Rulează un program în afara tunelului doar pentru contul care deține Warren sau pentru
+  un administrator.
+- [Linux] Doar contul care deține Warren, și administratorii, pot închide conexiunea VPN afișată
+  în meniul de rețea al desktopului. Închiderea ei scotea adresa tunelului.
+- [Android] Conectează VPN-ul doar la o cerere venită de la aplicația însăși. O altă aplicație
+  putea trimite aceeași cerere și conecta VPN-ul.
+- [Windows] Linia de comandă vorbește doar cu un canal de gestiune servit de un administrator, iar
+  o conexiune de gestiune care tace timp de treizeci de secunde este închisă.
+- [macOS] Nu rulează niciodată ca administrator, la o actualizare, instrumentul de configurare al
+  versiunii anterioare, decât dacă doar administratorii l-au putut modifica, și păstrează
+  protecția de actualizare acolo unde niciun alt cont nu o poate înlocui.
+- Semnează lista sumelor de control a fiecărei versiuni pentru linia de comandă cu cheia de
+  publicare Warren. Scripturile de instalare refuză o descărcare pe care ea nu o garantează, iar
+  arhivele înregistrează fiecare fișier ca aparținând contului de administrator.
+
 ## [1.1.31] - 2026-09-21
 ### Adăugat
 - Conectare într-o rețea care nu oferă nicio adresă IPv4 dispozitivului dvs. Patru dintre cele

@@ -21,6 +21,58 @@ Line wrap the file at 100 chars.                                              Th
 * **Fixed**: for any bug fixes.
 * **Security**: in case of vulnerabilities.
 
+## [Unreleased]
+### Added
+- Ask for the voucher code when `warren account redeem` is run without one, or read it from
+  standard input, so a script can pipe it in. A code typed on the command line is visible to every
+  account on the computer while the command runs; the command still accepts one there, and says so.
+- Warn after a forum sign-in when the link you opened was made for a sign-in on another device. The
+  forum answers such a link with a code to type elsewhere, which is what a sign-in someone else
+  started and sent you looks like: the app now says that whoever sent the link is trying to sign in
+  as you, and not to give them the code.
+
+### Changed
+- Finish a forum sign-in with a one-time code. The browser that opened the sign-in now has to
+  present a 6-digit code before the forum lets it in. When you approve on the same device, the app
+  opens that browser to finish on its own; after a QR code or a sign-in code typed under Settings,
+  the app shows the code to type on the other device. A link sent to you by someone else no longer
+  signs them in.
+- Let only the account that set Warren up on this computer, and administrators, connect, disconnect,
+  change settings or use the wallet. Other accounts on the same computer can still see whether the
+  VPN is on. The desktop app says when Warren belongs to another account, and asks again every
+  minute.
+- [macOS] Install the command-line version under `/opt/warren` rather than `/usr/local`, which
+  Homebrew hands to the account that installed it on Intel Macs. The installer refuses a folder
+  that another account can change, and moves an existing installation.
+
+### Security
+- Keep the settings file readable by administrators only, and create problem reports readable by
+  their owner only.
+- Harden the desktop app: it can no longer be started as a plain script interpreter, ignores
+  debugging and Node options on its command line, loads its code from its own archive only, and on
+  macOS and Windows refuses to start when that archive was modified.
+- Update the desktop app to Electron 39.8.10, and its gRPC and XML components, past published
+  advisories.
+- [Windows, macOS, Android] Keep the forum sign-in code out of screenshots and screen sharing while
+  it is on screen.
+- Open no forum sign-in page that belongs to another sign-in than the one you approved.
+- Start the system tools the connection relies on from their fixed system location, never from the
+  search path of whoever started the app.
+- [Linux] Run a program outside the tunnel only for the account that owns Warren or an
+  administrator.
+- [Linux] Let only the account that owns Warren, and administrators, take down the VPN connection
+  shown in the desktop network menu. Taking it down used to remove the tunnel's address.
+- [Android] Connect the VPN only on a request from the app itself. Another app could send the same
+  request and have the VPN connect.
+- [Windows] Have the command line talk only to a management pipe served by an administrator, and
+  drop a management connection that stays silent for thirty seconds.
+- [macOS] Never run the previous version's setup tool as administrator during an update unless
+  only administrators could have changed it, and keep the update guard where no other account can
+  replace it.
+- Sign the checksum list of every command-line release with the Warren release key. The install
+  scripts refuse a download it does not vouch for, and the archives record every file as owned by
+  the administrator account.
+
 ## [1.1.31] - 2026-09-21
 ### Added
 - Connect on a network that gives your device no IPv4 address. Four of the six exits now answer on
