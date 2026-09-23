@@ -84,7 +84,7 @@ jobs:
             -p mullvad-daemon -p mullvad-api -p mullvad-types \
             -p mullvad-management-interface -p mullvad-cli -p mullvad-paths \
             -p mullvad-setup \
-            -p talpid-warren-tunnel -p talpid-core -p talpid-dns \
+            -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p talpid-dbus \
             -p warren-jni -p warren-ios -p warren-forum -p warren-product-env \
             -p mullvad-update -p mullvad-release \
             -- --check
@@ -149,6 +149,10 @@ jobs:
         # are already built here (mullvad-daemon pulls both), so they cost a
         # compile of two small crates.
         #
+        # talpid-dbus builds the NetworkManager VPN connection the desktop
+        # indicator reads, including who may take it down; the daemon already
+        # compiles it here, and nothing else ran its tests.
+        #
         # mullvad-update's `sign` feature builds the update-manifest signer,
         # whose own tests keep the release key off its command line.
         timeout-minutes: 30
@@ -157,7 +161,7 @@ jobs:
             -p mullvad-daemon -p mullvad-api -p mullvad-types \
             -p mullvad-management-interface -p mullvad-cli -p mullvad-paths \
             -p mullvad-setup \
-            -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p warren-jni \
+            -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p talpid-dbus -p warren-jni \
             -p warren-forum -p warren-product-env -p warren-ios \
             -p mullvad-update -p mullvad-release \
             --features mullvad-update/sign,mullvad-update/client
@@ -169,7 +173,7 @@ jobs:
         # that are not part of the Warren surface and carry their own upstream CI.
         timeout-minutes: 20
         run: |
-          crates="mullvad-daemon mullvad-api mullvad-cli talpid-warren-tunnel talpid-core talpid-dns"
+          crates="mullvad-daemon mullvad-api mullvad-cli talpid-warren-tunnel talpid-core talpid-dns talpid-dbus"
           crates="$crates warren-jni warren-forum warren-product-env warren-ios"
           crates="$crates mullvad-paths mullvad-setup"
           crates="$crates mullvad-update mullvad-release"

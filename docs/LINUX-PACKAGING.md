@@ -62,6 +62,17 @@ by a measurement on NM 1.46:
   `auto-route-ext-gw` (NM 1.42+ only, or the connection is rejected) keeps it
   from adding a host route to the peer.
 
+The connection answers to the wallet owner alone. NetworkManager lets any
+account at the console take a VPN connection down, and taking this one down
+strips the addresses it reconciled onto the tunnel interface. So the profile
+carries `connection.permissions` naming the wallet's owner (root when there is
+none): only that account's desktop lists it, and only root and that account
+can deactivate it, which is who the daemon lets disconnect anyway. Root
+activates it, so NetworkManager never ties its lifetime to the owner's session.
+This follows NetworkManager's own ACL code (`nm_auth_is_subject_in_acl`,
+`_activation_bind_lifetime_to_profile_visibility`); the ignored real-NM test in
+`talpid-dbus` is the way to confirm it on a live desktop.
+
 Three things to keep in mind when touching any of it:
 
 - **sysvinit has no supervisor.** The daemon exits fail-closed, so

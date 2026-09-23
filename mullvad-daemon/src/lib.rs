@@ -2210,7 +2210,7 @@ impl Daemon {
             volume_update_tx,
             location_handler,
             leak_checker,
-            nm_vpn_indicator: nm_vpn_indicator::NmVpnIndicator::new(),
+            nm_vpn_indicator: nm_vpn_indicator::NmVpnIndicator::new(&config.settings_dir),
             #[cfg(target_os = "macos")]
             warren_route_manager: route_manager,
             cache_dir: config.cache_dir,

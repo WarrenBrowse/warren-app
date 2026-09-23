@@ -13,6 +13,7 @@
 
 use std::net::IpAddr;
 
+use mullvad_management_interface::Principal;
 use talpid_types::tunnel::TunnelStateTransition;
 
 // Only the Linux implementation consumes these two, but they are plain
@@ -67,17 +68,41 @@ pub fn desired_indicator(transition: &TunnelStateTransition) -> Option<TunnelDes
     })
 }
 
+/// The one account NetworkManager lets see, change or take down the
+/// indicator connection; root always may. Taking it down strips the addresses
+/// NetworkManager reconciled onto the tunnel's interface, a disconnect the
+/// daemon allows only the wallet's owner and administrators. So it is the
+/// owner, whose desktop then shows the VPN, and root when there is no owner
+/// NetworkManager can name.
+#[cfg_attr(
+    all(not(target_os = "linux"), not(test)),
+    expect(dead_code, reason = "the NetworkManager indicator is Linux only")
+)]
+pub fn permitted_user(
+    owner: Option<&Principal>,
+    user_name: impl FnOnce(u32) -> Option<String>,
+) -> String {
+    match owner {
+        Some(Principal::Uid(uid)) => user_name(*uid),
+        _ => None,
+    }
+    .unwrap_or_else(|| "root".to_owned())
+}
+
 pub use imp::NmVpnIndicator;
 
 #[cfg(target_os = "linux")]
 mod imp {
+    use std::path::Path;
     use std::sync::mpsc;
     use std::thread;
 
+    use nix::unistd::{Uid, User};
     use talpid_dbus::network_manager::{NetworkManager, VpnIndicatorConnection};
     use talpid_types::tunnel::TunnelStateTransition;
 
-    use super::{TunnelDescription, desired_indicator};
+    use super::{TunnelDescription, desired_indicator, permitted_user};
+    use crate::wallet_access::OwnerStore;
 
     /// Name the connection carries in the desktop's network menu.
     fn connection_id() -> String {
@@ -101,11 +126,14 @@ mod imp {
     }
 
     impl NmVpnIndicator {
-        pub fn new() -> Self {
+        /// `settings_dir` holds the wallet owner record, read at every
+        /// publication so the connection follows the current owner.
+        pub fn new(settings_dir: &Path) -> Self {
             let (tx, rx) = mpsc::channel();
+            let settings_dir = settings_dir.to_path_buf();
             let spawned = thread::Builder::new()
                 .name("nm-vpn-indicator".to_owned())
-                .spawn(move || run(&rx));
+                .spawn(move || run(&rx, &settings_dir));
             let commands = match spawned {
                 Ok(_handle) => Some(tx),
                 Err(error) => {
@@ -141,13 +169,13 @@ mod imp {
     /// Owns the published connection for as long as the daemon runs, and
     /// takes it down when the channel closes, so a daemon shutdown does not
     /// leave the desktop claiming a VPN.
-    fn run(commands: &mpsc::Receiver<Command>) {
+    fn run(commands: &mpsc::Receiver<Command>, settings_dir: &Path) {
         let mut published: Option<VpnIndicatorConnection> = None;
         while let Ok(command) = commands.recv() {
             match command {
                 Command::Publish(description) => {
                     withdraw(&mut published);
-                    published = publish(&description);
+                    published = publish(&description, settings_dir);
                 }
                 Command::Withdraw => withdraw(&mut published),
             }
@@ -157,7 +185,10 @@ mod imp {
         withdraw(&mut published);
     }
 
-    fn publish(description: &TunnelDescription) -> Option<VpnIndicatorConnection> {
+    fn publish(
+        description: &TunnelDescription,
+        settings_dir: &Path,
+    ) -> Option<VpnIndicatorConnection> {
         let manager = match NetworkManager::new() {
             Ok(manager) => manager,
             Err(error) => {
@@ -169,11 +200,24 @@ mod imp {
             log::debug!("No NetworkManager to show the VPN in: {error}");
             return None;
         }
+        // An owner record that cannot be read leaves the connection to root,
+        // as it leaves the tunnel to administrators.
+        let owner = OwnerStore::in_settings_dir(settings_dir)
+            .load()
+            .ok()
+            .flatten();
+        let user = permitted_user(owner.as_ref(), |uid| {
+            User::from_uid(Uid::from_raw(uid))
+                .ok()
+                .flatten()
+                .map(|user| user.name)
+        });
         match manager.publish_vpn_indicator(
             warren_product_env::NM_VPN_SERVICE,
             &connection_id(),
             &description.interface,
             description.gateway,
+            &user,
         ) {
             Ok(connection) => {
                 log::debug!("Desktop now shows a VPN on {}", description.interface);
@@ -210,7 +254,7 @@ mod imp {
     pub struct NmVpnIndicator;
 
     impl NmVpnIndicator {
-        pub fn new() -> Self {
+        pub fn new(_settings_dir: &std::path::Path) -> Self {
             NmVpnIndicator
         }
 
@@ -291,5 +335,28 @@ mod tests {
         let transition = TunnelStateTransition::Connected(tunnel(None, None));
 
         assert_eq!(desired_indicator(&transition), None);
+    }
+
+    fn named(uid: u32) -> Option<String> {
+        (uid == 1000).then(|| "alice".to_owned())
+    }
+
+    #[test]
+    fn only_the_wallet_owner_may_take_the_indicator_down() {
+        let owner = Principal::Uid(1000);
+
+        assert_eq!(permitted_user(Some(&owner), named), "alice");
+    }
+
+    #[test]
+    fn root_alone_may_take_it_down_when_there_is_no_owner() {
+        assert_eq!(permitted_user(None, named), "root");
+    }
+
+    #[test]
+    fn root_alone_may_take_it_down_when_the_owner_has_no_name() {
+        let owner = Principal::Uid(4242);
+
+        assert_eq!(permitted_user(Some(&owner), named), "root");
     }
 }

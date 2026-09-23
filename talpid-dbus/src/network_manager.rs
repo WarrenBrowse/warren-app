@@ -188,14 +188,27 @@ impl NetworkManager {
     /// `service_type` answers NetworkManager with what the interface
     /// actually holds, and retracts the connection if the interface goes
     /// away.
+    ///
+    /// `permitted_user` is the one account NetworkManager lets see, change
+    /// or take down the connection (root always may): any other account at
+    /// the console could otherwise deactivate it, and NetworkManager would
+    /// strip the addresses it reconciled onto the live tunnel interface.
     pub fn publish_vpn_indicator(
         &self,
         service_type: &str,
         id: &str,
         tundev: &str,
         gateway: IpAddr,
+        permitted_user: &str,
     ) -> Result<VpnIndicatorConnection> {
-        let settings = self.vpn_indicator_settings(service_type, id, tundev, gateway)?;
+        let settings = vpn_indicator_settings(
+            &vpn_ip_policy(self.version()?),
+            service_type,
+            id,
+            tundev,
+            gateway,
+            permitted_user,
+        );
 
         let config_path: dbus::Path<'static> = match self.add_connection_2(&settings) {
             Ok((path, _result)) => path,
@@ -252,40 +265,6 @@ impl NetworkManager {
         if let Err(error) = deleted {
             log::debug!("NetworkManager had already dropped the VPN profile: {error}");
         }
-    }
-
-    fn vpn_indicator_settings(
-        &self,
-        service_type: &str,
-        id: &str,
-        tundev: &str,
-        gateway: IpAddr,
-    ) -> Result<DeviceConfig> {
-        let policy = vpn_ip_policy(self.version()?);
-
-        let mut connection = VariantMap::new();
-        connection.insert("id".to_string(), Variant(Box::new(id.to_string())));
-        connection.insert("type".to_string(), Variant(Box::new("vpn".to_string())));
-        // Only the daemon ever brings this up, alongside a tunnel it built.
-        connection.insert("autoconnect".to_string(), Variant(Box::new(false)));
-
-        let mut data = HashMap::new();
-        data.insert("tundev".to_string(), tundev.to_string());
-        data.insert("gateway".to_string(), gateway.to_string());
-
-        let mut vpn = VariantMap::new();
-        vpn.insert(
-            "service-type".to_string(),
-            Variant(Box::new(service_type.to_string())),
-        );
-        vpn.insert("data".to_string(), Variant(Box::new(data)));
-
-        let mut settings = DeviceConfig::new();
-        settings.insert("connection".to_string(), connection);
-        settings.insert("vpn".to_string(), vpn);
-        settings.insert("ipv4".to_string(), ip_settings(&policy));
-        settings.insert("ipv6".to_string(), ip_settings(&policy));
-        Ok(settings)
     }
 
     pub fn get_interface_name(&self, tunnel: &WireguardTunnel) -> Result<String> {
@@ -848,6 +827,44 @@ impl WireguardTunnel {
 /// method a VPN connection must use: the plugin is what supplies the
 /// addresses, and every other knob here tells NetworkManager to keep its
 /// hands off what the plugin reports.
+/// The VPN connection that stands for a tunnel the engine already built.
+fn vpn_indicator_settings(
+    policy: &VpnIpPolicy,
+    service_type: &str,
+    id: &str,
+    tundev: &str,
+    gateway: IpAddr,
+    permitted_user: &str,
+) -> DeviceConfig {
+    let mut connection = VariantMap::new();
+    connection.insert("id".to_string(), Variant(Box::new(id.to_string())));
+    connection.insert("type".to_string(), Variant(Box::new("vpn".to_string())));
+    // Only the daemon ever brings this up, alongside a tunnel it built.
+    connection.insert("autoconnect".to_string(), Variant(Box::new(false)));
+    connection.insert(
+        "permissions".to_string(),
+        Variant(Box::new(vec![format!("user:{permitted_user}:")])),
+    );
+
+    let mut data = HashMap::new();
+    data.insert("tundev".to_string(), tundev.to_string());
+    data.insert("gateway".to_string(), gateway.to_string());
+
+    let mut vpn = VariantMap::new();
+    vpn.insert(
+        "service-type".to_string(),
+        Variant(Box::new(service_type.to_string())),
+    );
+    vpn.insert("data".to_string(), Variant(Box::new(data)));
+
+    let mut settings = DeviceConfig::new();
+    settings.insert("connection".to_string(), connection);
+    settings.insert("vpn".to_string(), vpn);
+    settings.insert("ipv4".to_string(), ip_settings(policy));
+    settings.insert("ipv6".to_string(), ip_settings(policy));
+    settings
+}
+
 fn ip_settings(policy: &VpnIpPolicy) -> VariantMap {
     let mut settings = VariantMap::new();
     settings.insert("method".to_string(), Variant(Box::new("auto".to_string())));
@@ -955,6 +972,25 @@ mod test {
         assert_eq!(vpn_ip_policy((2, 0)).auto_route_ext_gw, Some(0));
     }
 
+    /// Without an ACL, NetworkManager lets any account at the console take
+    /// the connection down, and the tunnel's addresses with it.
+    #[test]
+    fn the_indicator_connection_answers_to_the_permitted_user_alone() {
+        let settings = vpn_indicator_settings(
+            &vpn_ip_policy((1, 46)),
+            "org.freedesktop.NetworkManager.warren",
+            "Warren VPN",
+            "warren0",
+            "203.0.113.7".parse().unwrap(),
+            "alice",
+        );
+
+        let permissions = settings["connection"]
+            .get("permissions")
+            .and_then(|value| value.0.as_any().downcast_ref::<Vec<String>>());
+        assert_eq!(permissions, Some(&vec!["user:alice:".to_owned()]));
+    }
+
     /// The whole round trip against a real NetworkManager, which is the
     /// only place the D-Bus payload is actually judged: a dictionary NM
     /// dislikes fails here and nowhere else.
@@ -984,6 +1020,7 @@ mod test {
                 "Warren VPN test",
                 &interface,
                 "203.0.113.7".parse().unwrap(),
+                "root",
             )
             .expect("NetworkManager accepted the VPN connection");
 
