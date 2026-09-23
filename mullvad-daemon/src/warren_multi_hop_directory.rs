@@ -1044,6 +1044,15 @@ pub(crate) struct DrainMigrationRequest {
     pub reply: tokio::sync::oneshot::Sender<bool>,
 }
 
+impl DrainMigrationRequest {
+    /// Whether the caller rebuilds the tunnel itself when the pass migrates
+    /// nothing. The drain reactor and the egress probe do; the dial-refusal
+    /// hook stays on the supervisor's backoff.
+    fn rebuilds_without_migration(&self) -> bool {
+        self.avoid_entry_relay.is_none()
+    }
+}
+
 /// Sender half handed to [`crate::tunnel::ParametersGenerator`] so the
 /// tunnel's drain reactor can trigger an on-demand drain pass.
 pub(crate) type DrainMigrationTx = tokio::sync::mpsc::UnboundedSender<DrainMigrationRequest>;
@@ -1226,14 +1235,16 @@ fn settle_drain_replies(pending: &mut Vec<tokio::sync::oneshot::Sender<bool>>, m
 }
 
 /// Break-before-make fallback for a circuit change that was not applied
-/// gap-free. When a drain reactor is waiting on this pass, the reconnect is
-/// NOT requested here: the reactor escalates the rebuild itself on the
-/// `false` reply, and firing both triggers would rebuild the tunnel twice.
-fn dispatch_reconnect_fallback(reactor_waiting: bool, request_reconnect: &dyn Fn()) {
-    if reactor_waiting {
+/// gap-free. When a caller that rebuilds the tunnel itself is waiting on this
+/// pass (see [`DrainMigrationRequest::rebuilds_without_migration`]), the
+/// reconnect is NOT requested here: it escalates the rebuild on the `false`
+/// reply, and firing both triggers would rebuild the tunnel twice. A pass
+/// only dial refusals wait on still reconnects, or the change is lost.
+fn dispatch_reconnect_fallback(rebuilder_waiting: bool, request_reconnect: &dyn Fn()) {
+    if rebuilder_waiting {
         log::info!(
             "Warren multi-hop: no gap-free migration possible; deferring the \
-             rebuild to the waiting drain reactor"
+             rebuild to the drain reactor or egress probe waiting on this pass"
         );
         return;
     }
@@ -1387,6 +1398,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
         let mut drain_migration_rx = cfg.drain_migration_rx.take();
         let mut drain_watch_active = drain_migration_rx.is_some();
         let mut pending_drain_replies: Vec<tokio::sync::oneshot::Sender<bool>> = Vec::new();
+        let mut rebuilder_waiting = false;
         // Refused entry relays queued for the next pass, which checks each
         // against the circuit in use before recording it.
         let mut pending_refused_entries: Vec<[u8; 16]> = Vec::new();
@@ -1734,10 +1746,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                                 "Warren multi-hop circuit cleared; reconnecting single-hop"
                             ),
                         }
-                        dispatch_reconnect_fallback(
-                            !pending_drain_replies.is_empty(),
-                            &*cfg.request_reconnect,
-                        );
+                        dispatch_reconnect_fallback(rebuilder_waiting, &*cfg.request_reconnect);
                     }
                 }
             }
@@ -1746,6 +1755,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
             // unchanged, no live handle) replies `false` and the reactor
             // escalates the rebuild.
             settle_drain_replies(&mut pending_drain_replies, pass_migrated);
+            rebuilder_waiting = false;
 
             // Optional short backoff after a transport fetch failure: re-probe
             // the network soon instead of waiting the full periodic interval.
@@ -1829,6 +1839,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                             if let Some(relay_id) = request.avoid_entry_relay {
                                 pending_refused_entries.push(relay_id);
                             }
+                            rebuilder_waiting |= request.rebuilds_without_migration();
                             pending_drain_replies.push(request.reply);
                             refresh_due = false;
                         }
@@ -2875,6 +2886,77 @@ mod tests {
                 .expect("the circuit handed to the tunnel");
             assert_eq!(moved(current, &handed), expected, "multi-hop {enabled}");
             drop(settings_tx);
+        }
+    }
+
+    #[tokio::test]
+    async fn a_pass_a_refusal_woke_still_reconnects_for_a_settings_change() {
+        // The user moved the exit while a refusal was queued, and the refusal
+        // woke the pass that picked the change up. The refusal hook stays on
+        // the supervisor's backoff when its pass migrates nothing, so the pass
+        // must reconnect onto the new circuit itself. A drain reactor
+        // escalates the rebuild on that same answer, so for it the pass must
+        // not.
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "is", 0, 100),
+            node(&op, 2, "ee", 0, 100),
+            node(&op, 3, "lv", 0, 50),
+            node(&op, 4, "lt", 0, 40),
+        ]);
+        let two_hop = assemble(&d, 0, 1, true, true).expect("is -> ee");
+
+        for (waiting, refused_entry, expected_reconnects) in [
+            ("the refusal hook", Some(two_hop.relay.relay_id), 1),
+            ("a drain reactor", None, 0),
+        ] {
+            let reconnects = std::sync::Arc::new(std::sync::atomic::AtomicU32::new(0));
+            let counted = reconnects.clone();
+            let (settings_tx, settings_rx) = tokio::sync::watch::channel(multi_hop_settings(true));
+            let (drain_tx, drain_rx) = tokio::sync::mpsc::unbounded_channel();
+            spawn(UpdaterConfig {
+                api_url: String::new(),
+                server_pins: Vec::new(),
+                root_mode: RootPinMode::InsecureTofu,
+                settings_rx,
+                parameters_generator: generator_on(&two_hop),
+                request_reconnect: std::sync::Arc::new(move || {
+                    counted.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                }),
+                on_maintenance_migration: None,
+                settings_dir: std::path::PathBuf::from("/nonexistent/warren-updater-test"),
+                online_edge_rx: None,
+                drain_migration_rx: Some(drain_rx),
+                boot_seed: Some(BootSeed {
+                    directory: d.clone(),
+                    circuit: Some(two_hop.clone()),
+                    stale: false,
+                }),
+            });
+            // Let the boot pass and the first timer tick (due at once) settle
+            // on the seeded circuit, so the only thing left to wake the
+            // updater is the request below. The updater shares this
+            // single-threaded runtime: each yield lets it run until it parks.
+            // A drain reactor waited on the earlier pass, which must not
+            // outlive it.
+            request_drain_migration(Some(&drain_tx), None).await;
+            for _ in 0..32 {
+                tokio::task::yield_now().await;
+            }
+            assert_eq!(reconnects.load(std::sync::atomic::Ordering::SeqCst), 0);
+
+            // A settings edit the updater has not been woken for yet.
+            settings_tx.send_if_modified(|settings| {
+                settings.exit_country = "lv".to_owned();
+                false
+            });
+            request_drain_migration(Some(&drain_tx), refused_entry).await;
+
+            assert_eq!(
+                reconnects.load(std::sync::atomic::Ordering::SeqCst),
+                expected_reconnects,
+                "{waiting} waiting on the pass"
+            );
         }
     }
 
