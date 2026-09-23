@@ -54,10 +54,11 @@ public enum WarrenAccountError: Error, Equatable {
 /// the `login` table of `fixtures/client-rules/forum_outcomes.json`, which the
 /// desktop and Android decoders read from the same crate.
 public enum WarrenForumLoginOutcome: Equatable {
-    /// The provider accepted the signature; the browser completes the login.
-    /// Carries the forum identity the body handed back, `nil` from an older
-    /// provider that names none.
-    case approved(WarrenForumIdentity?)
+    /// The provider accepted the signature. Carries the forum identity the
+    /// body handed back (`nil` from an older provider that names none), and the
+    /// completion of a bound approval: the code the browser that opened the
+    /// sign-in must present. Without one the browser completes on its own.
+    case approved(WarrenForumIdentity?, WarrenForumLoginCompletion?)
     /// The wallet has never subscribed to Warren; forum access is refused (403).
     case subscriptionRequired
     /// The provider refused the signature because this device's clock is off by
@@ -80,6 +81,50 @@ public enum WarrenForumLoginOutcome: Equatable {
         case .approved, .failed:
             return false
         }
+    }
+}
+
+/// What a bound approval hands back (warren-connect `docs/FORUM-LOGIN-V2.md`):
+/// the one-time code the browser that opened the sign-in must present, and on
+/// a same-device approval the handoff URL that carries it to the default
+/// browser. Both are live credentials until the session ends, so neither
+/// description prints them, and nothing here is ever logged or stored.
+public struct WarrenForumLoginCompletion: Equatable, Sendable, CustomStringConvertible,
+    CustomDebugStringConvertible
+{
+    public let code: String
+    public let handoffURL: String?
+
+    public init(code: String, handoffURL: String?) {
+        self.code = code
+        self.handoffURL = handoffURL
+    }
+
+    public var description: String {
+        "WarrenForumLoginCompletion(code: <redacted>, handoff: \(handoffURL == nil ? "none" : "<redacted>"))"
+    }
+
+    public var debugDescription: String { description }
+
+    /// The completion of an envelope's `completion` object. The Rust crate
+    /// validated both before they crossed the FFI; the handoff is opened in the
+    /// browser, so the decoder takes nothing else either: six ASCII digits, and
+    /// exactly `https://<connect host>/handoff#sid=<32 lowercase hex>&code=<code>`.
+    static func validated(code: String?, handoffURL: String?, connectHost: String) -> Self? {
+        guard let code, code.utf8.count == 6, code.utf8.allSatisfy({ (48...57).contains($0) }) else {
+            return nil
+        }
+        let prefix = "https://\(connectHost)/handoff#sid="
+        let handoff = handoffURL.flatMap { url -> String? in
+            guard url.hasPrefix(prefix) else { return nil }
+            let rest = url.dropFirst(prefix.count)
+            let sid = rest.prefix(32)
+            let isSid =
+                sid.utf8.count == 32
+                && sid.utf8.allSatisfy { (48...57).contains($0) || (97...102).contains($0) }
+            return isSid && rest.dropFirst(32) == "&code=\(code)" ? url : nil
+        }
+        return Self(code: code, handoffURL: handoff)
     }
 }
 
@@ -364,12 +409,15 @@ public enum WarrenAccountClient {
     /// Maps the `warren_forum_login` JSON envelope to an outcome. The shapes
     /// are single-sourced in the Rust `warren-forum` crate and pinned by the
     /// `envelope` column of `fixtures/client-rules/forum_outcomes.json`:
-    /// `{"ok":true}` with the additive `handle` and `notify_slot`, or
+    /// `{"ok":true}` with the additive `handle`, `notify_slot` and `completion`, or
     /// `{"ok":false,"error":<kind>}` with the additive `reason` on `error`.
     /// The handle is taken as the crate hands it (it validated the shape
     /// before crossing the FFI), as the Android decoder does. Pure so the
     /// mapping is unit-tested off-device.
-    static func forumLoginOutcome(fromEnvelope envelope: String?) -> WarrenForumLoginOutcome {
+    public static func forumLoginOutcome(
+        fromEnvelope envelope: String?,
+        connectHost: String = WarrenProductAnchors.current.connectHost
+    ) -> WarrenForumLoginOutcome {
         guard let envelope,
             let data = envelope.data(using: .utf8),
             let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
@@ -377,11 +425,18 @@ public enum WarrenAccountClient {
             return .failed(reason: "unknown")
         }
         if object["ok"] as? Bool == true {
-            guard let handle = object["handle"] as? String else {
-                return .approved(nil)
+            let identity = (object["handle"] as? String).map { handle in
+                WarrenForumIdentity(
+                    handle: handle,
+                    notifySlot: (object["notify_slot"] as? NSNumber).map { UInt32(truncating: $0) })
             }
-            let slot = (object["notify_slot"] as? NSNumber).map { UInt32(truncating: $0) }
-            return .approved(WarrenForumIdentity(handle: handle, notifySlot: slot))
+            let completion = (object["completion"] as? [String: Any]).flatMap { completion in
+                WarrenForumLoginCompletion.validated(
+                    code: completion["code"] as? String,
+                    handoffURL: completion["handoff_url"] as? String,
+                    connectHost: connectHost)
+            }
+            return .approved(identity, completion)
         }
         switch object["error"] as? String {
         case "subscription-required":

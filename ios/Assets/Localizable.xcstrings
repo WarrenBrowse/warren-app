@@ -101445,6 +101445,1042 @@
           }
         }
       }
+    },
+    "Finishing the sign-in in your browser": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finishing the sign-in in your browser"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ إكمال تسجيل الدخول في متصفحك"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afslutter login i din browser"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Anmeldung wird in deinem Browser abgeschlossen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminando el inicio de sesión en tu navegador"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "در حال تکمیل ورود در مرورگر شما"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kirjautuminen viimeistellään selaimessasi"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Connexion en cours de finalisation dans votre navigateur"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completamento dell'accesso nel browser"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ブラウザでサインインを完了しています"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "브라우저에서 로그인을 완료하는 중"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သင့်ဘရောက်ဆာတွင် ဝင်ရောက်မှုကို အပြီးသတ်နေသည်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fullfører innloggingen i nettleseren din"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De aanmelding wordt afgerond in je browser"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kończenie logowania w przeglądarce"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A concluir o início de sessão no seu navegador"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se finalizează autentificarea în browser"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вход завершается в вашем браузере"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inloggningen slutförs i din webbläsare"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "กำลังลงชื่อเข้าใช้ให้เสร็จในเบราว์เซอร์ของคุณ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturum açma tarayıcınızda tamamlanıyor"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вхід завершується у вашому браузері"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在浏览器中完成登录"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "正在瀏覽器中完成登入"
+          }
+        }
+      }
+    },
+    "Your browser is finishing the sign-in to the Warren community forum.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your browser is finishing the sign-in to the Warren community forum."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يُكمل متصفحك تسجيل الدخول إلى منتدى مجتمع Warren."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Din browser afslutter login på Warren-fællesskabsforummet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Browser schließt die Anmeldung beim Warren Community-Forum ab."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu navegador está terminando el inicio de sesión en el foro de la comunidad Warren."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مرورگر شما در حال تکمیل ورود به انجمن جامعه Warren است."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selaimesi viimeistelee kirjautumisen Warrenin yhteisöfoorumille."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre navigateur termine la connexion au forum communautaire Warren."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il browser sta completando l'accesso al forum della community Warren."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ブラウザが Warren コミュニティフォーラムへのサインインを完了しています。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "브라우저가 Warren 커뮤니티 포럼 로그인을 완료하고 있습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သင့်ဘရောက်ဆာသည် Warren အသိုက်အဝန်း ဖိုရမ်သို့ ဝင်ရောက်မှုကို အပြီးသတ်နေပါသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nettleseren din fullfører innloggingen på Warren-fellesskapsforumet."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je browser rondt de aanmelding bij het Warren community-forum af."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przeglądarka kończy logowanie do forum społeczności Warren."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O seu navegador está a concluir o início de sessão no fórum da comunidade Warren."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browserul tău finalizează autentificarea pe forumul comunității Warren."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш браузер завершает вход на форум сообщества Warren."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Din webbläsare slutför inloggningen på Warren-gemenskapsforumet."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เบราว์เซอร์ของคุณกำลังลงชื่อเข้าใช้ฟอรัมชุมชน Warren ให้เสร็จสมบูรณ์"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tarayıcınız Warren topluluk forumuna oturum açmayı tamamlıyor."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш браузер завершує вхід на форум спільноти Warren."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "您的浏览器正在完成 Warren 社区论坛的登录。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "您的瀏覽器正在完成 Warren 社群論壇的登入。"
+          }
+        }
+      }
+    },
+    "The sign-in page is in another browser? Show the code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The sign-in page is in another browser? Show the code"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صفحة تسجيل الدخول في متصفح آخر؟ اعرض الرمز"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er loginsiden i en anden browser? Vis koden"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Anmeldeseite ist in einem anderen Browser? Code anzeigen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿La página de inicio de sesión está en otro navegador? Mostrar el código"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صفحه ورود در مرورگر دیگری است؟ نمایش کد"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Onko kirjautumissivu toisessa selaimessa? Näytä koodi"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La page de connexion est dans un autre navigateur ? Afficher le code"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La pagina di accesso è in un altro browser? Mostra il codice"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サインインページが別のブラウザにありますか？コードを表示"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그인 페이지가 다른 브라우저에 있나요? 코드 보기"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဝင်ရောက်မှုစာမျက်နှာသည် အခြားဘရောက်ဆာတွင် ရှိနေပါသလား? ကုဒ်ကို ပြပါ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er innloggingssiden i en annen nettleser? Vis koden"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Staat de aanmeldpagina in een andere browser? Toon de code"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Strona logowania jest w innej przeglądarce? Pokaż kod"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A página de início de sessão está noutro navegador? Mostrar o código"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pagina de autentificare este în alt browser? Arată codul"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Страница входа открыта в другом браузере? Показать код"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Är inloggningssidan i en annan webbläsare? Visa koden"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "หน้าลงชื่อเข้าใช้อยู่ในเบราว์เซอร์อื่นใช่ไหม แสดงโค้ด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturum açma sayfası başka bir tarayıcıda mı? Kodu göster"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Сторінка входу відкрита в іншому браузері? Показати код"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登录页面在另一个浏览器中？显示代码"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登入頁面在另一個瀏覽器中？顯示代碼"
+          }
+        }
+      }
+    },
+    "Your 6-digit code": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your 6-digit code"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رمزك المكوّن من 6 أرقام"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Din 6-cifrede kode"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein 6-stelliger Code"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu código de 6 dígitos"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کد ۶ رقمی شما"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6-numeroinen koodisi"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre code à 6 chiffres"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il tuo codice di 6 cifre"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6 桁のコード"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6자리 코드"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သင့်ဂဏန်း ၆ လုံးကုဒ်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den 6-sifrede koden din"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je code van 6 cijfers"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Twój 6-cyfrowy kod"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O seu código de 6 dígitos"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Codul tău de 6 cifre"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш 6-значный код"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Din 6-siffriga kod"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "โค้ด 6 หลักของคุณ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6 haneli kodunuz"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш 6-значний код"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "您的 6 位数代码"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "您的 6 位數代碼"
+          }
+        }
+      }
+    },
+    "Type this code on the sign-in page of your other device. Never read it out or send it to anyone, including someone who says they are from Warren.": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Type this code on the sign-in page of your other device. Never read it out or send it to anyone, including someone who says they are from Warren."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اكتب هذا الرمز في صفحة تسجيل الدخول على جهازك الآخر. لا تقرأه بصوت عالٍ ولا ترسله إلى أي أحد، ولا حتى إلى من يدّعي أنه من Warren."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Indtast denne kode på loginsiden på din anden enhed. Læs den aldrig op, og send den aldrig til nogen, heller ikke til nogen, der siger, at de er fra Warren."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gib diesen Code auf der Anmeldeseite deines anderen Geräts ein. Lies ihn niemals vor und schicke ihn niemandem, auch nicht jemandem, der behauptet, von Warren zu sein."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Escribe este código en la página de inicio de sesión de tu otro dispositivo. Nunca lo leas en voz alta ni lo envíes a nadie, ni siquiera a alguien que diga ser de Warren."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "این کد را در صفحه ورود دستگاه دیگرتان وارد کنید. هرگز آن را بلند نخوانید و برای هیچ‌کس نفرستید، حتی برای کسی که می‌گوید از طرف Warren است."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kirjoita tämä koodi toisen laitteesi kirjautumissivulle. Älä koskaan lue sitä ääneen tai lähetä sitä kenellekään, ei edes henkilölle, joka sanoo olevansa Warrenilta."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saisissez ce code sur la page de connexion de votre autre appareil. Ne le lisez jamais à voix haute et ne l'envoyez à personne, même à quelqu'un qui prétend travailler pour Warren."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Digita questo codice nella pagina di accesso dell'altro dispositivo. Non leggerlo mai ad alta voce e non inviarlo a nessuno, nemmeno a chi dice di essere di Warren."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このコードをもう一方のデバイスのサインインページに入力してください。読み上げたり、誰かに送ったりしないでください。Warren を名乗る人に対しても同様です。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 코드를 다른 기기의 로그인 페이지에 입력하세요. Warren 직원이라고 말하는 사람을 포함해 누구에게도 이 코드를 읽어 주거나 보내지 마세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဤကုဒ်ကို သင့်အခြားစက်ပစ္စည်း၏ ဝင်ရောက်မှုစာမျက်နှာတွင် ရိုက်ထည့်ပါ။ Warren မှဖြစ်သည်ဟု ပြောသူ အပါအဝင် မည်သူ့ကိုမျှ ဖတ်ပြခြင်း သို့မဟုတ် ပို့ပေးခြင်း လုံးဝမပြုပါနှင့်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skriv inn denne koden på innloggingssiden på den andre enheten din. Les den aldri høyt, og send den aldri til noen, heller ikke til noen som sier at de er fra Warren."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Typ deze code op de aanmeldpagina van je andere apparaat. Lees hem nooit voor en stuur hem naar niemand, ook niet naar iemand die zegt van Warren te zijn."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wpisz ten kod na stronie logowania na drugim urządzeniu. Nigdy nie odczytuj go na głos i nie wysyłaj go nikomu, nawet komuś, kto twierdzi, że jest z Warren."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introduza este código na página de início de sessão do seu outro dispositivo. Nunca o leia em voz alta nem o envie a ninguém, nem mesmo a quem diga ser da Warren."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Introdu acest cod pe pagina de autentificare a celuilalt dispozitiv. Nu-l citi niciodată cu voce tare și nu-l trimite nimănui, nici măcar cuiva care spune că este de la Warren."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Введите этот код на странице входа на другом устройстве. Никогда не зачитывайте его и никому не отправляйте, даже тому, кто называет себя сотрудником Warren."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skriv in koden på inloggningssidan på din andra enhet. Läs aldrig upp den och skicka den aldrig till någon, inte ens till någon som säger att de är från Warren."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "พิมพ์โค้ดนี้ในหน้าลงชื่อเข้าใช้บนอุปกรณ์อีกเครื่องของคุณ ห้ามอ่านออกเสียงหรือส่งให้ผู้ใด แม้แต่ผู้ที่อ้างว่ามาจาก Warren"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu kodu diğer cihazınızdaki oturum açma sayfasına yazın. Kodu asla sesli okumayın ve Warren'dan olduğunu söyleyen biri dahil hiç kimseye göndermeyin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Введіть цей код на сторінці входу на іншому пристрої. Ніколи не зачитуйте його вголос і нікому не надсилайте, навіть тому, хто називає себе представником Warren."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "请在您另一台设备的登录页面上输入此代码。切勿念出或发送给任何人，包括自称来自 Warren 的人。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "請在您另一台裝置的登入頁面上輸入此代碼。切勿唸出或傳送給任何人，包括自稱來自 Warren 的人。"
+          }
+        }
+      }
+    },
+    "Finish in this device's browser": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finish in this device's browser"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أكمل في متصفح هذا الجهاز"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afslut i denne enheds browser"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Im Browser dieses Geräts abschließen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminar en el navegador de este dispositivo"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تکمیل در مرورگر همین دستگاه"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Viimeistele tämän laitteen selaimessa"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terminer dans le navigateur de cet appareil"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Completa nel browser di questo dispositivo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このデバイスのブラウザで完了"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 기기의 브라우저에서 완료"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဤစက်ပစ္စည်း၏ ဘရောက်ဆာတွင် အပြီးသတ်ပါ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fullfør i denne enhetens nettleser"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Afronden in de browser van dit apparaat"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dokończ w przeglądarce tego urządzenia"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Concluir no navegador deste dispositivo"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Finalizează în browserul acestui dispozitiv"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Завершить в браузере этого устройства"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Slutför i den här enhetens webbläsare"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ทำให้เสร็จในเบราว์เซอร์ของอุปกรณ์นี้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu cihazın tarayıcısında tamamla"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Завершити в браузері цього пристрою"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在此设备的浏览器中完成"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在此裝置的瀏覽器中完成"
+          }
+        }
+      }
+    },
+    "Close": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إغلاق"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Luk"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Schließen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بستن"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sulje"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fermer"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Chiudi"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "閉じる"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "닫기"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ပိတ်ရန်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lukk"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sluiten"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zamknij"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Fechar"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Închide"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Закрыть"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stäng"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ปิด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kapat"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Закрити"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "關閉"
+          }
+        }
+      }
     }
   },
   "version": "1.1"

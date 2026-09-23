@@ -9,12 +9,23 @@ import XCTest
 /// cannot silently fall into the generic failure the way `clock-skew` did on
 /// 2026-08-18.
 final class WarrenForumLoginOutcomeTests: XCTestCase {
+    /// The fixture's answers name the production connect host.
+    private let connectHost = "connect.warrenbrowse.com"
+
     private func expected(_ expect: [String: Any]) throws -> WarrenForumLoginOutcome {
         switch try ClientRulesFixtures.string(expect, "kind") {
         case "approved":
-            guard let handle = expect["handle"] as? String else { return .approved(nil) }
-            let slot = (expect["notify_slot"] as? NSNumber).map { UInt32(truncating: $0) }
-            return .approved(WarrenForumIdentity(handle: handle, notifySlot: slot))
+            let identity = (expect["handle"] as? String).map { handle in
+                WarrenForumIdentity(
+                    handle: handle,
+                    notifySlot: (expect["notify_slot"] as? NSNumber).map { UInt32(truncating: $0) })
+            }
+            let completion = try (expect["completion"] as? [String: Any]).map { completion in
+                WarrenForumLoginCompletion(
+                    code: try ClientRulesFixtures.string(completion, "code"),
+                    handoffURL: completion["handoff_url"] as? String)
+            }
+            return .approved(identity, completion)
         case "subscription-required":
             return .subscriptionRequired
         case "clock-skew":
@@ -39,7 +50,8 @@ final class WarrenForumLoginOutcomeTests: XCTestCase {
             let envelope = try ClientRulesFixtures.string(testCase, "envelope")
             let expect = try ClientRulesFixtures.object(testCase, "expect")
             XCTAssertEqual(
-                WarrenAccountClient.forumLoginOutcome(fromEnvelope: envelope), try expected(expect), name)
+                WarrenAccountClient.forumLoginOutcome(fromEnvelope: envelope, connectHost: connectHost),
+                try expected(expect), name)
         }
     }
 
@@ -59,7 +71,7 @@ final class WarrenForumLoginOutcomeTests: XCTestCase {
         let login = try ClientRulesFixtures.object(fixture, "login")
         let terminal = Set(try XCTUnwrap(login["terminal_kinds"] as? [String]))
         let outcomes: [(String, WarrenForumLoginOutcome)] = [
-            ("approved", .approved(nil)),
+            ("approved", .approved(nil, nil)),
             ("subscription-required", .subscriptionRequired),
             ("clock-skew", .clockSkew),
             ("expired", .expired),
@@ -68,6 +80,33 @@ final class WarrenForumLoginOutcomeTests: XCTestCase {
         XCTAssertEqual(Set(outcomes.map(\.0)), Set(try XCTUnwrap(login["_kinds"] as? [String])))
         for (kind, outcome) in outcomes {
             XCTAssertEqual(outcome.isTerminal, terminal.contains(kind), kind)
+        }
+    }
+
+    func testACompletionTheCrateWouldNeverEmitIsNotTrusted() {
+        // The crate validates both before they cross the FFI; the handoff is
+        // opened in the browser, so the decoder refuses anything else too.
+        let sid = "0123456789abcdef0123456789abcdef"
+        XCTAssertEqual(
+            WarrenAccountClient.forumLoginOutcome(
+                fromEnvelope: #"{"ok":true,"completion":{"code":"42917"}}"#, connectHost: connectHost),
+            .approved(nil, nil))
+        XCTAssertEqual(
+            WarrenAccountClient.forumLoginOutcome(
+                fromEnvelope:
+                    #"{"ok":true,"completion":{"code":"042917","handoff_url":"https://evil.example/handoff#sid=\#(sid)&code=042917"}}"#,
+                connectHost: connectHost),
+            .approved(nil, WarrenForumLoginCompletion(code: "042917", handoffURL: nil)))
+    }
+
+    func testACompletionPrintedToALogShowsNeitherTheCodeNorTheHandoff() {
+        let completion = WarrenForumLoginCompletion(
+            code: "042917",
+            handoffURL: "https://\(connectHost)/handoff#sid=0123456789abcdef0123456789abcdef&code=042917")
+        let outcome = WarrenForumLoginOutcome.approved(nil, completion)
+        for printed in [String(describing: outcome), String(reflecting: outcome), "\(outcome)"] {
+            XCTAssertFalse(printed.contains("042917"), printed)
+            XCTAssertFalse(printed.contains("0123456789abcdef"), printed)
         }
     }
 

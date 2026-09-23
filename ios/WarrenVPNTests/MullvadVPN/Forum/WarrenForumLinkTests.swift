@@ -131,9 +131,88 @@ final class WarrenForumLinkTests: XCTestCase {
         let sid = "0123456789abcdef0123456789abcdef"
         XCTAssertEqual(
             WarrenForumLinks.linkFromCode(sid, host: allowedHost),
-            ForumLoginLink(sid: sid, host: allowedHost, crossDevice: true))
+            ForumLoginLink(sid: sid, host: allowedHost, crossDevice: true, typedCode: true))
         let fixture = try ClientRulesFixtures.load("forum_link.json")
         XCTAssertEqual(fixture["sign_in_code_cross_device"] as? Bool, true)
+    }
+
+    func testEachWayInIsItsOwnApproach() {
+        // The completion screen differs by approach: a typed code shows the
+        // code and keeps the handoff behind a button, a same-device link opens
+        // it, a QR never does.
+        let sid = "0123456789abcdef0123456789abcdef"
+        let good = "warren://forum-login?sid=\(sid)&host=\(allowedHost)"
+        guard
+            case .accepted(let button) = WarrenForumLinks.classify(
+                good, expectedScheme: "warren", allowedHost: allowedHost),
+            case .accepted(let qr) = WarrenForumLinks.classify(
+                good + "&xd=1", expectedScheme: "warren", allowedHost: allowedHost)
+        else { return XCTFail("the links are accepted") }
+        XCTAssertEqual(ForumLoginApproach.of(button), .sameDeviceLink)
+        XCTAssertEqual(ForumLoginApproach.of(qr), .crossDeviceLink)
+        XCTAssertEqual(ForumLoginApproach.of(WarrenForumLinks.linkFromCode(sid, host: allowedHost)), .typedCode)
+    }
+
+    func testEveryApproachLeadsToTheScreenAndTheHandoffTheFixtureNames() throws {
+        let outcomes = try ClientRulesFixtures.load("forum_outcomes.json")
+        let login = try ClientRulesFixtures.object(outcomes, "login")
+        let completion = try ClientRulesFixtures.object(login, "completion")
+        let answers = try Dictionary(
+            uniqueKeysWithValues: ClientRulesFixtures.cases(login, "cases").map {
+                (try ClientRulesFixtures.string($0, "name"), $0)
+            })
+        XCTAssertEqual(
+            Set(try XCTUnwrap(completion["approaches"] as? [String])),
+            Set(ForumLoginApproach.allCases.map(\.rawValue)))
+        let cases = try ClientRulesFixtures.cases(completion, "cases").filter { !ClientRulesFixtures.skippedOnIOS($0) }
+        XCTAssertGreaterThanOrEqual(cases.count, 9, "only \(cases.count) completion cases reached this reader")
+        for testCase in cases {
+            let name = try ClientRulesFixtures.string(testCase, "name")
+            let answer = try XCTUnwrap(answers[try ClientRulesFixtures.string(testCase, "answer")], name)
+            let approach = try XCTUnwrap(
+                ForumLoginApproach(rawValue: try ClientRulesFixtures.string(testCase, "approach")), name)
+            guard
+                case .approved(_, let decoded) = WarrenAccountClient.forumLoginOutcome(
+                    fromEnvelope: try ClientRulesFixtures.string(answer, "envelope"), connectHost: allowedHost)
+            else { return XCTFail("\(name): the answer is an approval") }
+            let plan = WarrenForumLinks.completionPlan(approach: approach, completion: decoded)
+            let expect = try ClientRulesFixtures.object(testCase, "expect")
+            XCTAssertEqual(plan.screen.rawValue, try ClientRulesFixtures.string(expect, "screen"), name)
+            XCTAssertEqual(plan.handoff.rawValue, try ClientRulesFixtures.string(expect, "handoff"), name)
+        }
+        XCTAssertEqual(
+            WarrenForumLinks.codeLifetime,
+            TimeInterval(try XCTUnwrap(completion["code_lifetime_secs"] as? Int)))
+    }
+
+    func testTheCompletionSessionHandsEachHandoffOverOnceAndNotAfterTheSessionDied() {
+        let sid = "0123456789abcdef0123456789abcdef"
+        let handoff = "https://\(allowedHost)/handoff#sid=\(sid)&code=042917"
+        let completion = WarrenForumLoginCompletion(code: "042917", handoffURL: handoff)
+        let received = Date(timeIntervalSince1970: 1_000)
+        let link = ForumLoginLink(sid: sid, host: allowedHost, crossDevice: false)
+
+        let sameDevice = WarrenForumCompletionSession(link: link, completion: completion, receivedAt: received)
+        XCTAssertEqual(sameDevice.screen, .finishingInBrowser)
+        XCTAssertEqual(sameDevice.takeHandoffToOpen(at: received), handoff)
+        XCTAssertNil(sameDevice.takeHandoffToOpen(at: received))
+        XCTAssertEqual(sameDevice.offersFinishInBrowser, false)
+
+        let typed = WarrenForumCompletionSession(
+            link: WarrenForumLinks.linkFromCode(sid, host: allowedHost), completion: completion, receivedAt: received)
+        XCTAssertEqual(typed.screen, .showCode)
+        XCTAssertNil(typed.takeHandoffToOpen(at: received))
+        XCTAssertEqual(typed.offersFinishInBrowser, true)
+        let late = received.addingTimeInterval(WarrenForumLinks.codeLifetime)
+        XCTAssertEqual(typed.isExpired(at: late), true)
+        XCTAssertNil(typed.takeFinishURL(at: late))
+
+        let qr = WarrenForumCompletionSession(
+            link: ForumLoginLink(sid: sid, host: allowedHost, crossDevice: true), completion: completion,
+            receivedAt: received)
+        XCTAssertNil(qr.takeHandoffToOpen(at: received))
+        XCTAssertEqual(qr.offersFinishInBrowser, false)
+        XCTAssertFalse(String(describing: qr).contains("042917"))
     }
 
     func testTheSceneHandsTheFlowAURLAsItsAbsoluteString() throws {

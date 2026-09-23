@@ -13,6 +13,7 @@
 //
 
 import Foundation
+import SwiftUI
 import UIKit
 import WarrenLogging
 import WarrenRustRuntime
@@ -28,6 +29,81 @@ struct ForumLoginLink: Equatable {
     let sid: String
     let host: String
     let crossDevice: Bool
+    /// The sid was typed under Settings rather than delivered by a link: the
+    /// same-device id, read off a page that may be on another device.
+    var typedCode = false
+}
+
+/// How the sid reached the app, which decides what a bound approval shows
+/// (`WarrenForumLinks.completionPlan`). The raw values are the shared
+/// fixture's spelling.
+enum ForumLoginApproach: String, CaseIterable {
+    case sameDeviceLink = "same-device-link"
+    case crossDeviceLink = "cross-device-link"
+    case typedCode = "typed-code"
+
+    static func of(_ link: ForumLoginLink) -> ForumLoginApproach {
+        if link.typedCode { return .typedCode }
+        return link.crossDevice ? .crossDeviceLink : .sameDeviceLink
+    }
+}
+
+enum ForumCompletionScreen: String {
+    /// No completion: the browser completes on its own, as before the code existed.
+    case returnedToBrowser = "returned-to-browser"
+    /// The handoff is open in the default browser; the code waits behind "Show the code".
+    case finishingInBrowser = "finishing-in-browser"
+    /// The code, with the warning never to share it.
+    case showCode = "show-code"
+}
+
+enum ForumHandoff: String {
+    case openAtOnce = "open-at-once"
+    case onButton = "on-button"
+    case never
+}
+
+struct ForumCompletionPlan: Equatable {
+    let screen: ForumCompletionScreen
+    let handoff: ForumHandoff
+}
+
+/// One bound approval's completion screen: the code, and the handoff URLs it
+/// may open, each at most once and never after the session behind them died.
+/// The URLs carry the code and the sid, so they stay here and never reach a
+/// view; `description` prints neither.
+final class WarrenForumCompletionSession: CustomStringConvertible {
+    let screen: ForumCompletionScreen
+    let code: String
+    let expiresAt: Date
+    private var handoffToOpen: String?
+    private var finishURL: String?
+
+    init(link: ForumLoginLink, completion: WarrenForumLoginCompletion, receivedAt: Date) {
+        let plan = WarrenForumLinks.completionPlan(approach: .of(link), completion: completion)
+        screen = plan.screen
+        code = completion.code
+        expiresAt = receivedAt.addingTimeInterval(WarrenForumLinks.codeLifetime)
+        handoffToOpen = plan.handoff == .openAtOnce ? completion.handoffURL : nil
+        finishURL = plan.handoff == .onButton ? completion.handoffURL : nil
+    }
+
+    /// Whether "Finish in this device's browser" has a handoff behind it.
+    var offersFinishInBrowser: Bool { finishURL != nil }
+
+    func takeHandoffToOpen(at now: Date) -> String? {
+        defer { handoffToOpen = nil }
+        return isExpired(at: now) ? nil : handoffToOpen
+    }
+
+    func takeFinishURL(at now: Date) -> String? {
+        defer { finishURL = nil }
+        return isExpired(at: now) ? nil : finishURL
+    }
+
+    func isExpired(at now: Date) -> Bool { now >= expiresAt }
+
+    var description: String { "WarrenForumCompletionSession(\(screen.rawValue), code: <redacted>)" }
 }
 
 /// A deep link's verdict. A rejection names its class only (never the
@@ -104,7 +180,33 @@ enum WarrenForumLinks {
     /// hands the forum identity to whoever sent the code, and that is exactly
     /// this case.
     static func linkFromCode(_ sid: String, host: String) -> ForumLoginLink {
-        ForumLoginLink(sid: sid, host: host, crossDevice: true)
+        ForumLoginLink(sid: sid, host: host, crossDevice: true, typedCode: true)
+    }
+
+    /// How long after the provider's answer the code may still be shown: the
+    /// session's own lifetime, after which the code completes nothing.
+    static let codeLifetime: TimeInterval = 300
+
+    /// The screen and the handoff of an approved login, from how its sid
+    /// arrived and the completion the answer carried. Pinned by the
+    /// `login.completion` table of `fixtures/client-rules/forum_outcomes.json`.
+    static func completionPlan(
+        approach: ForumLoginApproach, completion: WarrenForumLoginCompletion?
+    ) -> ForumCompletionPlan {
+        guard let completion else { return ForumCompletionPlan(screen: .returnedToBrowser, handoff: .never) }
+        let hasHandoff = completion.handoffURL != nil
+        switch approach {
+        case .sameDeviceLink:
+            return hasHandoff
+                ? ForumCompletionPlan(screen: .finishingInBrowser, handoff: .openAtOnce)
+                : ForumCompletionPlan(screen: .showCode, handoff: .never)
+        case .typedCode:
+            return ForumCompletionPlan(screen: .showCode, handoff: hasHandoff ? .onButton : .never)
+        case .crossDeviceLink:
+            // The browser signing in is on another device: a handoff a
+            // provider sent anyway would carry the code to this one's browser.
+            return ForumCompletionPlan(screen: .showCode, handoff: .never)
+        }
     }
 }
 
@@ -242,7 +344,7 @@ final class WarrenForumLoginFlow: @unchecked Sendable {
             } else {
                 outcome = .failed(reason: "wallet-absent")
             }
-            if case .approved(let identity?) = outcome {
+            if case .approved(let identity?, _) = outcome {
                 do {
                     try WarrenForumIdentityStore.save(identity)
                 } catch {
@@ -250,14 +352,16 @@ final class WarrenForumLoginFlow: @unchecked Sendable {
                 }
             }
             self?.logger.info("forum login result: \(Self.resultClass(outcome))")
-            DispatchQueue.main.async { self?.presentResult(outcome) }
+            let receivedAt = Date()
+            DispatchQueue.main.async { self?.presentResult(outcome, link: link, receivedAt: receivedAt) }
         }
     }
 
     /// The class for the log: never a handle, never a sid.
     private static func resultClass(_ outcome: WarrenForumLoginOutcome) -> String {
         switch outcome {
-        case .approved(let identity): identity == nil ? "approved" : "approved with identity"
+        case .approved(_, _?): "approved, bound"
+        case .approved(let identity, nil): identity == nil ? "approved" : "approved with identity"
         case .subscriptionRequired: "subscription-required"
         case .clockSkew: "clock-skew"
         case .expired: "expired"
@@ -284,8 +388,14 @@ final class WarrenForumLoginFlow: @unchecked Sendable {
     }
 
     @MainActor
-    private func presentResult(_ outcome: WarrenForumLoginOutcome) {
+    private func presentResult(_ outcome: WarrenForumLoginOutcome, link: ForumLoginLink, receivedAt: Date) {
         guard let presenter = presenter?() else { return }
+        if case .approved(_, let completion?) = outcome {
+            presentCompletion(
+                WarrenForumCompletionSession(link: link, completion: completion, receivedAt: receivedAt),
+                on: presenter)
+            return
+        }
         let message: String
         switch outcome {
         case .approved:
@@ -316,5 +426,104 @@ final class WarrenForumLoginFlow: @unchecked Sendable {
                 title: NSLocalizedString("OK", comment: "Forum login result alert, the dismissing button"),
                 style: .default))
         presenter.present(alert, animated: true)
+    }
+
+    /// The screen of a bound approval (warren-connect `docs/FORUM-LOGIN-V2.md`):
+    /// the browser that opened the sign-in must present the one-time code.
+    /// After a same-device link the handoff page opens in the default browser
+    /// at once and the code waits behind "Show the code"; after a QR or a typed
+    /// code the code is the screen. It closes with the session behind it.
+    @MainActor
+    private func presentCompletion(_ session: WarrenForumCompletionSession, on presenter: UIViewController) {
+        if let url = session.takeHandoffToOpen(at: Date()).flatMap(URL.init(string:)) {
+            UIApplication.shared.open(url) { [weak self] opened in
+                // The code stays one tap away; the URL is never logged.
+                if !opened { self?.logger.warning("forum login handoff could not be opened") }
+            }
+        }
+        weak var hosting: UIViewController?
+        let view = WarrenForumLoginCompletionView(
+            screen: session.screen,
+            code: session.code,
+            codeRevealed: session.screen == .showCode,
+            finishInBrowser: session.offersFinishInBrowser
+                ? {
+                    if let url = session.takeFinishURL(at: Date()).flatMap(URL.init(string:)) {
+                        UIApplication.shared.open(url)
+                    }
+                } : nil,
+            close: { hosting?.dismiss(animated: true) })
+        let controller = UIHostingController(rootView: view)
+        controller.modalPresentationStyle = .formSheet
+        hosting = controller
+        presenter.present(controller, animated: true)
+        let lifetime = max(0, session.expiresAt.timeIntervalSinceNow)
+        DispatchQueue.main.asyncAfter(deadline: .now() + lifetime) { [weak controller] in
+            controller?.dismiss(animated: true)
+        }
+    }
+}
+
+/// The code of a bound approval, large, with the warning never to share it.
+/// Never copied for the person: a code on the clipboard is one paste away from
+/// a chat window.
+struct WarrenForumLoginCompletionView: View {
+    let screen: ForumCompletionScreen
+    let code: String
+    @State var codeRevealed: Bool
+    let finishInBrowser: (() -> Void)?
+    let close: () -> Void
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text(
+                screen == .finishingInBrowser
+                    ? NSLocalizedString(
+                        "Finishing the sign-in in your browser",
+                        comment: "Forum login, the handoff page opened in the browser")
+                    : NSLocalizedString(
+                        "Your 6-digit code", comment: "Forum login, the title over the completion code")
+            )
+            .font(.headline)
+            .multilineTextAlignment(.center)
+            if screen == .finishingInBrowser {
+                Text(
+                    NSLocalizedString(
+                        "Your browser is finishing the sign-in to the Warren community forum.",
+                        comment: "Forum login, the handoff page opened in the browser")
+                )
+                .multilineTextAlignment(.center)
+            }
+            if codeRevealed {
+                Text(verbatim: code)
+                    .font(.system(size: 40, weight: .semibold, design: .monospaced))
+                    .kerning(6)
+                    .accessibilityLabel(Text(verbatim: code.map(String.init).joined(separator: " ")))
+                Text(
+                    NSLocalizedString(
+                        "Type this code on the sign-in page of your other device. Never read it out or send it to anyone, including someone who says they are from Warren.",
+                        comment: "Forum login, the warning under the completion code")
+                )
+                .font(.footnote)
+                .multilineTextAlignment(.center)
+            } else {
+                Button(
+                    NSLocalizedString(
+                        "The sign-in page is in another browser? Show the code",
+                        comment: "Forum login, reveals the completion code")
+                ) { codeRevealed = true }
+            }
+            if let finishInBrowser {
+                Button(
+                    NSLocalizedString(
+                        "Finish in this device's browser",
+                        comment: "Forum login, opens the handoff page after a typed sign-in code"),
+                    action: finishInBrowser
+                )
+                .buttonStyle(.borderedProminent)
+            }
+            Button(NSLocalizedString("Close", comment: "Forum login, closes the completion code"), action: close)
+        }
+        .padding(24)
     }
 }
