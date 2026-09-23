@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.warren.android.library)
     alias(libs.plugins.kotlin.parcelize)
+    alias(libs.plugins.warren.unit.test)
 }
 
 android { namespace = "com.warrenbrowse.vpn.lib.common" }

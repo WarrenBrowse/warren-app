@@ -44,6 +44,7 @@ import com.warrenbrowse.vpn.app.forum.classifyForumLoginLink
 import com.warrenbrowse.vpn.app.forum.forumDeepLinkAction
 import com.warrenbrowse.vpn.app.perf.JankLogger
 import com.warrenbrowse.vpn.di.uiModule
+import com.warrenbrowse.vpn.lib.common.constant.InternalIntentToken
 import com.warrenbrowse.vpn.lib.common.constant.KEY_OPEN_FORUM_ACTIVITY
 import com.warrenbrowse.vpn.lib.common.constant.KEY_REQUEST_VPN_PROFILE
 import com.warrenbrowse.vpn.lib.common.util.CreateVpnProfile
@@ -269,7 +270,17 @@ class MainActivity : AppCompatActivity(), AndroidScopeComponent {
                 apiEndpointFromIntentHolder.setApiEndpointOverride(
                     intent.getApiEndpointConfigurationExtras()
                 )
-            KEY_REQUEST_VPN_PROFILE -> handleRequestVpnProfileIntent()
+            // The activity is exported, so any app may send this action: only
+            // the notification this process built carries the secret, and
+            // without it the action would connect the VPN on another app's say.
+            KEY_REQUEST_VPN_PROFILE -> {
+                val secret = intent.getStringExtra(InternalIntentToken.EXTRA)
+                if (InternalIntentToken.isGenuine(secret)) {
+                    handleRequestVpnProfileIntent()
+                } else {
+                    Logger.w("Ignoring a VPN profile request this app did not send")
+                }
+            }
             // The forum notification was tapped: the panel opens once the main
             // flow is on screen (the navigator may not exist yet on a cold start).
             KEY_OPEN_FORUM_ACTIVITY -> forumActivityOpenRequests.request()

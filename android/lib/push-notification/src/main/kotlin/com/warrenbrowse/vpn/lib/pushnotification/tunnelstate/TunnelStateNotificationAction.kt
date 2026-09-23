@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import androidx.core.app.NotificationCompat
+import com.warrenbrowse.vpn.lib.common.constant.InternalIntentToken
 import com.warrenbrowse.vpn.lib.common.constant.KEY_CONNECT_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_DISCONNECT_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_RECONNECT_ACTION
@@ -97,6 +98,7 @@ internal fun NotificationAction.Tunnel.toCompatAction(context: Context): Notific
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                     addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                     setAction(KEY_REQUEST_VPN_PROFILE)
+                    putExtra(InternalIntentToken.EXTRA, InternalIntentToken.value)
                 }
 
             PendingIntent.getActivity(context, 1, intent, getSupportedPendingIntentFlags())
