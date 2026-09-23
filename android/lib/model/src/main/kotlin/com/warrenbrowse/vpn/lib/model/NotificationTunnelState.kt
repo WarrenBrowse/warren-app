@@ -23,5 +23,8 @@ sealed interface NotificationTunnelState {
         data object LegacyLockdown : Error
 
         data object Critical : Error
+
+        /** The tunnel gave up after repeated drops and the traffic left the VPN. */
+        data object TrafficReleased : Error
     }
 }

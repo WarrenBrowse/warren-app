@@ -63,8 +63,16 @@ sealed class WarrenTunnelState {
      * refused the setup because the account is not authorized (lapsed /
      * revoked subscription), so the UI shows a "subscription expired"
      * message instead of a generic error and the reconnect loop stops.
+     *
+     * [flapping] is set when the tunnel dropped too many times in a short
+     * window with lockdown mode off: the retry loop stopped and the traffic
+     * went back to the regular network, outside the VPN, and the UI says so.
      */
-    data class Failed(val reason: String, val expired: Boolean = false) : WarrenTunnelState()
+    data class Failed(
+        val reason: String,
+        val expired: Boolean = false,
+        val flapping: Boolean = false,
+    ) : WarrenTunnelState()
 
     /**
      * The tunnel is down but the kill switch (lockdown mode) is keeping a

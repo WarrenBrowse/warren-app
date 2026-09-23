@@ -114,6 +114,16 @@ class WarrenQuinnStateProxyTest {
     }
 
     @Test
+    fun `a release after flapping reaches the connection card as such`() = runTest {
+        val proxy = WarrenQuinnStateProxy()
+        proxy.update(WarrenTunnelState.Failed("dropped", flapping = true))
+        assertEquals(
+            WarrenConnectedInfo.Failed("dropped", flapping = true),
+            proxy.connectedInfo.value,
+        )
+    }
+
+    @Test
     fun `Failed renders Failed with reason`() = runTest {
         val proxy = WarrenQuinnStateProxy()
         proxy.update(WarrenTunnelState.Failed("handshake timeout"))

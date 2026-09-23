@@ -59,6 +59,9 @@
     <string name="warren_kill_switch_active">Avbruddsbryteren holder trafikken din blokkert mens tunnelen er nede. Tilkoblingen din er beskyttet, og den gjenopptas automatisk når tunnelen er tilbake.</string>
     <string name="warren_no_dialable_network_title">NETTVERK UTEN IPv4</string>
     <string name="warren_no_dialable_network">Dette nettverket gir ikke enheten din en IPv4-adresse, og Warrens inngangspunkter svarer bare på IPv4, så tunnelen kan ikke opprettes her. Kill switchen holder trafikken din blokkert: koble fra for å få internett tilbake, eller bytt til et nettverk med IPv4.</string>
+    <string name="warren_traffic_released_title">TRAFIKK UTENFOR VPN</string>
+    <string name="warren_traffic_released">Forbindelsen din falt ut gang på gang, så Warren sluttet å prøve på nytt, og trafikken din går nå gjennom det vanlige nettverket ditt, utenfor VPN. Slå på Låsemodus under VPN-innstillinger for å forbli blokkert når dette skjer.</string>
+    <string name="warren_traffic_released_notification">Trafikk utenfor VPN</string>
     <string name="vpn_permission_denied_error">VPN-tillatelsen ble avslått, eller en annen app har «VPN alltid på» aktivert</string>
     <string name="no_matching_relay">Ingen servere passer til innstillingene dine. Prøv å endre server eller andre innstillinger.</string>
     <string name="custom_tunnel_host_resolution_error">Kunne ikke løse vert for egendefinert tunnel. Forsøk å endre innstillingene dine.</string>
@@ -228,6 +231,7 @@
     <string name="tunnel_kill_switch_subtitle">Blokker all trafikk hvis tunnelen faller bort, i stedet for å falle tilbake til det ubeskyttede nettverket.</string>
     <string name="tunnel_kill_switch_info_1">Denne innebygde funksjonen hindrer at trafikken din lekker ut av VPN-tunnelen hvis nettverket plutselig slutter å virke eller tunnelen svikter: den blokkerer trafikken til forbindelsen er gjenopprettet.</string>
     <string name="tunnel_kill_switch_info_2">Forskjellen mellom avbruddsbryteren og låsemodus er at avbruddsbryteren hindrer lekkasjer under automatiske gjentilkoblinger av tunnelen, programvarekrasj og lignende uhell. Med låsemodus aktivert må du være koblet til en Warren-server for å nå internett: å koble fra manuelt eller avslutte appen blokkerer forbindelsen din.</string>
+    <string name="tunnel_kill_switch_info_3">Hvis forbindelsen faller ut flere ganger i rask rekkefølge, slutter Warren å prøve på nytt, og trafikken din går tilbake til det vanlige nettverket ditt, utenfor VPN. Slå på Låsemodus for å holde den blokkert i stedet.</string>
     <string name="tunnel_ipv6_title">IPv6 i tunnel</string>
     <string name="tunnel_ipv6_subtitle">Rut IPv6 gjennom tunnelen. Når den er av, blokkeres IPv6 for å hindre lekkasjer.</string>
     <string name="tunnel_ipv6_info_1">Når denne funksjonen er aktivert, kan IPv6 brukes sammen med IPv4 i VPN-tunnelen til å kommunisere med internettjenester.</string>

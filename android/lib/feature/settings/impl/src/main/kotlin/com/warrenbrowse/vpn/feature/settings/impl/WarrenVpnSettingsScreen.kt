@@ -488,6 +488,7 @@ private fun KillSwitchInfoRow() {
             paragraphs = listOf(
                 stringResource(R.string.tunnel_kill_switch_info_1),
                 stringResource(R.string.tunnel_kill_switch_info_2),
+                stringResource(R.string.tunnel_kill_switch_info_3),
             ),
             onDismiss = { showInfo = false },
         )

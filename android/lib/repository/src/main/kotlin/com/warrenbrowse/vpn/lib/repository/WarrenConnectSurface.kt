@@ -113,8 +113,15 @@ sealed interface WarrenConnectedInfo {
      * Tunnel failed (no kill switch). Surfaced as a non-blocking error. [expired] is set when the
      * exit refused the account (lapsed / revoked subscription), so the card shows a "subscription
      * expired" error.
+     *
+     * [flapping] is set when the tunnel dropped too many times in a short window with lockdown mode
+     * off: the retry loop stopped and traffic went back to the regular network, outside the VPN.
      */
-    data class Failed(val reason: String, val expired: Boolean = false) : WarrenConnectedInfo
+    data class Failed(
+        val reason: String,
+        val expired: Boolean = false,
+        val flapping: Boolean = false,
+    ) : WarrenConnectedInfo
 
     /**
      * Tunnel down but the kill switch (lockdown) is keeping a blocking interface in place, so

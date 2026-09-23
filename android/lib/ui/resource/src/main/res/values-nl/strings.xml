@@ -59,6 +59,9 @@
     <string name="warren_kill_switch_active">De killswitch houdt je verkeer geblokkeerd terwijl de tunnel weg is. Je verbinding is beschermd en wordt automatisch hervat zodra de tunnel terug is.</string>
     <string name="warren_no_dialable_network_title">NETWERK ZONDER IPv4</string>
     <string name="warren_no_dialable_network">Dit netwerk geeft uw apparaat geen IPv4-adres en de Warren-toegangspunten antwoorden alleen via IPv4, dus de tunnel kan hier niet worden opgezet. De kill switch houdt uw verkeer geblokkeerd: verbreek de verbinding om weer internet te krijgen, of ga naar een netwerk met IPv4.</string>
+    <string name="warren_traffic_released_title">VERKEER BUITEN DE VPN</string>
+    <string name="warren_traffic_released">Uw verbinding viel steeds weg, dus Warren is gestopt met opnieuw proberen en uw verkeer loopt nu via uw gewone netwerk, buiten de VPN. Zet Lockdownmodus aan in VPN-instellingen om in dit geval geblokkeerd te blijven.</string>
+    <string name="warren_traffic_released_notification">Verkeer buiten de VPN</string>
     <string name="vpn_permission_denied_error">VPN-toegang is geweigerd of \"VPN altijd aan\" is geactiveerd in een andere app</string>
     <string name="no_matching_relay">Er zijn geen servers die overeenkomen met uw instellingen. Probeer een andere server of andere instellingen.</string>
     <string name="custom_tunnel_host_resolution_error">Kan host van aangepaste tunnel niet omzetten. Probeer uw instellingen te wijzigen.</string>
@@ -228,6 +231,7 @@
     <string name="tunnel_kill_switch_subtitle">Blokkeer al het verkeer als de tunnel wegvalt, in plaats van terug te vallen op het onbeschermde netwerk.</string>
     <string name="tunnel_kill_switch_info_1">Deze ingebouwde functie voorkomt dat je verkeer buiten de VPN-tunnel lekt als je netwerk plotseling uitvalt of de tunnel faalt: het verkeer wordt geblokkeerd tot de verbinding is hersteld.</string>
     <string name="tunnel_kill_switch_info_2">Het verschil tussen de killswitch en de lockdownmodus is dat de killswitch lekken voorkomt tijdens automatische herverbindingen van de tunnel, softwarecrashes en vergelijkbare ongelukken. Met lockdownmodus aan moet je met een Warren-server verbonden zijn om internet te bereiken: handmatig verbreken of de app afsluiten blokkeert je verbinding.</string>
+    <string name="tunnel_kill_switch_info_3">Als de verbinding meerdere keren kort na elkaar wegvalt, stopt Warren met opnieuw proberen en gaat je verkeer terug naar je gewone netwerk, buiten de VPN. Zet Lockdownmodus aan om het in plaats daarvan geblokkeerd te houden.</string>
     <string name="tunnel_ipv6_title">IPv6 in tunnel</string>
     <string name="tunnel_ipv6_subtitle">Stuur IPv6 door de tunnel. Wanneer uitgeschakeld wordt IPv6 geblokkeerd om lekken te voorkomen.</string>
     <string name="tunnel_ipv6_info_1">Als deze functie is ingeschakeld, kan IPv6 naast IPv4 worden gebruikt in de VPN-tunnel om te communiceren met internetdiensten.</string>

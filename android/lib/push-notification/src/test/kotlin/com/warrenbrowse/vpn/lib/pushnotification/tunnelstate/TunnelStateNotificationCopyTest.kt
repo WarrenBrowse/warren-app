@@ -108,6 +108,16 @@ class TunnelStateNotificationCopyTest {
     }
 
     @Test
+    fun `a release after flapping says the traffic is outside the VPN`() {
+        every { context.getString(R.string.warren_traffic_released_notification) } returns
+            "Traffic outside the VPN"
+        assertEquals(
+            "Traffic outside the VPN",
+            NotificationTunnelState.Error.TrafficReleased.notificationTitle(context),
+        )
+    }
+
+    @Test
     fun `states without a location have no detail line`() {
         assertNull(NotificationTunnelState.Blocking.notificationText(context))
     }

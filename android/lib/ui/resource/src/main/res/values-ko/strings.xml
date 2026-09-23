@@ -59,6 +59,9 @@
     <string name="warren_kill_switch_active">터널이 중단된 동안 킬 스위치가 트래픽을 계속 차단합니다. 연결은 보호되고 있으며 터널이 복구되면 자동으로 재개됩니다.</string>
     <string name="warren_no_dialable_network_title">IPv4가 없는 네트워크</string>
     <string name="warren_no_dialable_network">이 네트워크는 기기에 IPv4 주소를 주지 않으며 Warren 진입점은 IPv4로만 응답하므로 여기서는 터널을 연결할 수 없습니다. 킬 스위치가 트래픽을 계속 차단합니다. 인터넷을 되찾으려면 연결을 끊거나 IPv4를 제공하는 네트워크로 이동하세요.</string>
+    <string name="warren_traffic_released_title">VPN 밖의 트래픽</string>
+    <string name="warren_traffic_released">연결이 계속 끊겨 Warren이 재시도를 멈췄으며, 트래픽은 이제 VPN 밖의 일반 네트워크를 통해 전송됩니다. 이런 경우에도 차단된 상태를 유지하려면 VPN 설정에서 잠금 모드를 켜세요.</string>
+    <string name="warren_traffic_released_notification">VPN 밖의 트래픽</string>
     <string name="vpn_permission_denied_error">VPN 권한이 거부되었거나 다른 앱에 \"상시 접속 VPN\"이 활성화되어 있을 수 있습니다</string>
     <string name="no_matching_relay">설정과 일치하는 서버가 없습니다. 서버 또는 기타 설정을 변경해 보세요.</string>
     <string name="custom_tunnel_host_resolution_error">사용자 지정 터널의 호스트를 확인할 수 없습니다. 설정을 변경해 보세요.</string>
@@ -228,6 +231,7 @@
     <string name="tunnel_kill_switch_subtitle">터널이 끊기면 보호되지 않는 네트워크로 전환하는 대신 모든 트래픽을 차단합니다.</string>
     <string name="tunnel_kill_switch_info_1">이 내장 기능은 네트워크가 갑자기 끊기거나 터널이 실패할 때 트래픽이 VPN 터널 밖으로 새는 것을 막습니다. 연결이 복구될 때까지 트래픽을 차단합니다.</string>
     <string name="tunnel_kill_switch_info_2">킬 스위치와 잠금 모드의 차이는, 킬 스위치가 터널의 자동 재연결이나 소프트웨어 충돌 같은 사고 중 유출을 막는다는 점입니다. 잠금 모드를 켜면 인터넷에 접속하려면 Warren 서버에 연결되어 있어야 하며, 수동으로 연결을 끊거나 앱을 종료하면 연결이 차단됩니다.</string>
+    <string name="tunnel_kill_switch_info_3">짧은 시간에 연결이 여러 번 끊기면 Warren은 재시도를 멈추고 트래픽은 VPN 밖의 일반 네트워크로 돌아갑니다. 대신 차단된 상태를 유지하려면 잠금 모드를 켜세요.</string>
     <string name="tunnel_ipv6_title">터널 내 IPv6</string>
     <string name="tunnel_ipv6_subtitle">IPv6를 터널을 통해 라우팅합니다. 꺼져 있으면 누출을 방지하기 위해 IPv6가 차단됩니다.</string>
     <string name="tunnel_ipv6_info_1">이 기능을 활성화하면 VPN 터널에서 IPv4와 함께 IPv6을 사용하여 인터넷 서비스와 통신할 수 있습니다.</string>

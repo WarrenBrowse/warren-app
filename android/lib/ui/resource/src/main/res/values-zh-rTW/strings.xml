@@ -59,6 +59,9 @@
     <string name="warren_kill_switch_active">通道中斷期間，終止開關會持續封鎖您的流量。您的連線受到保護，通道恢復後會自動繼續。</string>
     <string name="warren_no_dialable_network_title">沒有 IPv4 的網路</string>
     <string name="warren_no_dialable_network">此網路未配發 IPv4 位址給你的裝置，而 Warren 的入口節點只在 IPv4 上回應，因此無法在此建立通道。終止開關仍在攔截你的流量：中斷連線以恢復上網，或改用提供 IPv4 的網路。</string>
+    <string name="warren_traffic_released_title">流量正在繞過 VPN</string>
+    <string name="warren_traffic_released">你的連線反覆中斷，Warren 已停止重試，你的流量現在經由你的一般網路傳輸，不經過 VPN。若希望此時維持封鎖，請在 VPN 設定中開啟鎖定模式。</string>
+    <string name="warren_traffic_released_notification">流量正在繞過 VPN</string>
     <string name="vpn_permission_denied_error">VPN 權限遭到拒絕，或者已有其他應用程式啟用「一律啟用 VPN」</string>
     <string name="no_matching_relay">沒有與您的設定相符的伺服器，請嘗試變更伺服器或其他設定。</string>
     <string name="custom_tunnel_host_resolution_error">無法解析自訂通道的主機。請嘗試變更您的設定。</string>
@@ -228,6 +231,7 @@
     <string name="tunnel_kill_switch_subtitle">當通道中斷時封鎖所有流量，而非退回至未受保護的網路。</string>
     <string name="tunnel_kill_switch_info_1">若您的網路突然中斷或通道失敗，此內建功能可防止流量洩漏至 VPN 通道之外：它會封鎖流量，直到連線恢復。</string>
     <string name="tunnel_kill_switch_info_2">終止開關與鎖定模式的差別在於：終止開關可防止通道自動重新連線、軟體當機等意外期間的洩漏。啟用鎖定模式後，必須連線至 Warren 伺服器才能存取網際網路，手動中斷或結束應用程式都會封鎖您的連線。</string>
+    <string name="tunnel_kill_switch_info_3">若連線在短時間內多次中斷，Warren 會停止重試，你的流量會回到一般網路，不再經過 VPN。開啟鎖定模式即可改為維持封鎖。</string>
     <string name="tunnel_ipv6_title">通道內 IPv6</string>
     <string name="tunnel_ipv6_subtitle">透過通道路由 IPv6。關閉時，IPv6 會被封鎖以防止洩漏。</string>
     <string name="tunnel_ipv6_info_1">啟用此功能後，即可在 VPN 通道中同時使用 IPv6 和 IPv4，以便與網際網路服務進行通訊。</string>

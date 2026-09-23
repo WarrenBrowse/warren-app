@@ -59,6 +59,9 @@
     <string name="warren_kill_switch_active">Le coupe-circuit maintient votre trafic bloqué pendant que le tunnel est coupé. Votre connexion est protégée ; elle reprendra automatiquement dès le retour du tunnel.</string>
     <string name="warren_no_dialable_network_title">RÉSEAU SANS IPv4</string>
     <string name="warren_no_dialable_network">Ce réseau ne donne aucune adresse IPv4 à votre appareil, et les points d\'entrée Warren ne répondent qu\'en IPv4 : le tunnel ne peut pas être établi ici. Le coupe-circuit maintient votre trafic bloqué : déconnectez-vous pour retrouver internet, ou passez sur un réseau qui fournit de l\'IPv4.</string>
+    <string name="warren_traffic_released_title">TRAFIC HORS DU VPN</string>
+    <string name="warren_traffic_released">Votre connexion coupait sans cesse, alors Warren a cessé de réessayer : votre trafic passe désormais par votre réseau habituel, hors du VPN. Pour qu\'il reste bloqué dans ce cas, activez le Mode verrouillage dans les Paramètres VPN.</string>
+    <string name="warren_traffic_released_notification">Trafic hors du VPN</string>
     <string name="vpn_permission_denied_error">L\'autorisation VPN a été refusée ou une autre application a activé « Toujours exiger un VPN ».</string>
     <string name="no_matching_relay">Aucun serveur ne correspond à vos paramètres, essayez de modifier les paramètres du serveur ou d\'autres paramètres.</string>
     <string name="custom_tunnel_host_resolution_error">Échec de la résolution de l\'hôte du tunnel personnalisé. Essayez de modifier vos paramètres.</string>
@@ -228,6 +231,7 @@
     <string name="tunnel_kill_switch_subtitle">Bloque tout le trafic si le tunnel tombe, au lieu de basculer sur le réseau non protégé.</string>
     <string name="tunnel_kill_switch_info_1">Cette fonctionnalité intégrée empêche votre trafic de fuir hors du tunnel VPN si votre réseau s\'arrête brusquement ou si le tunnel échoue : elle bloque votre trafic jusqu\'au rétablissement de la connexion.</string>
     <string name="tunnel_kill_switch_info_2">La différence entre le coupe-circuit et le mode verrouillage : le coupe-circuit empêche les fuites lors des reconnexions automatiques du tunnel, des plantages logiciels et incidents similaires. Avec le mode verrouillage activé, vous devez être connecté à un serveur Warren pour accéder à Internet : vous déconnecter manuellement ou quitter l\'application bloque votre connexion.</string>
+    <string name="tunnel_kill_switch_info_3">Si la connexion coupe plusieurs fois de suite en peu de temps, Warren cesse de réessayer et votre trafic repasse par votre réseau habituel, hors du VPN. Activez le Mode verrouillage pour qu\'il reste bloqué.</string>
     <string name="tunnel_ipv6_title">IPv6 en tunnel</string>
     <string name="tunnel_ipv6_subtitle">Achemine l\'IPv6 dans le tunnel. Désactivé, l\'IPv6 est bloqué pour éviter les fuites.</string>
     <string name="tunnel_ipv6_info_1">Lorsque cette fonctionnalité est activée, IPv6 peut être utilisé parallèlement à IPv4 dans le tunnel VPN pour communiquer avec les services internet.</string>

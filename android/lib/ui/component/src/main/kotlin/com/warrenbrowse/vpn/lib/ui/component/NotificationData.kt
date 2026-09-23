@@ -473,8 +473,8 @@ private fun forumAction(): NotificationAction {
 // set_dns_error, start_tunnel_error) must give them a way to do it, mirroring
 // desktop's error.tsx getActions(). Kept in sync with ErrorState.message():
 // when not blocking successfully (the leak state), the generic
-// failed_to_block_internet copy is shown regardless of cause, so the action
-// must follow the same fallback.
+// failed_to_block_internet copy is shown for every cause but the release after
+// flapping, so the action must follow the same fallback.
 //
 // A cause with known remedies opens the troubleshoot dialog first (desktop
 // troubleshoot-dialog action): sending a user to the forum before telling them
@@ -561,6 +561,9 @@ private fun ErrorState.isPortForwardingBan(): Boolean {
 private fun ErrorState.isReportWorthy(): Boolean {
     val cause = this.cause
     return when {
+        // The release is the policy with lockdown mode off, and the copy
+        // names the setting that changes it: nothing to report.
+        cause is ErrorStateCause.WarrenTrafficReleased -> false
         !isBlocking -> true
         cause is ErrorStateCause.AuthFailed -> cause.error is AuthFailedError.Unknown
         cause is ErrorStateCause.FirewallPolicyError -> true
@@ -600,6 +603,8 @@ private fun ErrorState.title(): String {
             stringResource(R.string.warren_tunnel_flapping_title)
         cause is ErrorStateCause.WarrenNoDialableNetwork ->
             stringResource(R.string.warren_no_dialable_network_title)
+        cause is ErrorStateCause.WarrenTrafficReleased ->
+            stringResource(R.string.warren_traffic_released_title)
         isBlocking -> stringResource(R.string.banner_blocking_internet)
         else -> stringResource(R.string.banner_critical_error)
     }
@@ -609,7 +614,8 @@ private fun ErrorState.title(): String {
 private fun ErrorState.message(): AnnotatedString {
     val cause = this.cause
     return when {
-        isBlocking -> cause.errorMessageId().formatWithHtml()
+        isBlocking || cause is ErrorStateCause.WarrenTrafficReleased ->
+            cause.errorMessageId().formatWithHtml()
         else -> stringResource(R.string.failed_to_block_internet).formatWithHtml()
     }
 }
@@ -626,6 +632,7 @@ private fun ErrorStateCause.errorMessageId(): String =
             stringResource(R.string.warren_tunnel_flapping)
         is ErrorStateCause.WarrenNoDialableNetwork ->
             stringResource(R.string.warren_no_dialable_network)
+        is ErrorStateCause.WarrenTrafficReleased -> stringResource(R.string.warren_traffic_released)
         is ErrorStateCause.WarrenKillSwitchActive ->
             stringResource(R.string.warren_kill_switch_active)
         is ErrorStateCause.IsOffline -> stringResource(R.string.is_offline)

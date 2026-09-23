@@ -600,12 +600,14 @@ class WarrenQuinnAdapter(
             !userInitiatedDisconnect && flapDetector.recordDrop(SystemClock.elapsedRealtime())
         when (KillSwitchPolicy.decide(userInitiatedDisconnect, flapping, config.lockdownMode)) {
             KillSwitchAction.RELEASE -> {
-                // The user asked to release traffic: now it is safe to drop the
-                // TUN (this is the only path that returns traffic to the bare
-                // network, and only on explicit intent).
+                // The one path that returns traffic to the bare network. It
+                // runs for a user teardown, and with lockdown mode off for a
+                // tunnel the flap guard gave up on, with nobody asking: that
+                // case is named in the state so the UI tells the user the
+                // traffic left the VPN and how to stay blocked instead.
                 Logger.w("WarrenQuinnAdapter: releasing traffic ($reason)")
                 releaseTraffic()
-                _state.value = WarrenTunnelState.Failed(reason)
+                _state.value = WarrenTunnelState.Failed(reason, flapping = flapping)
             }
             KillSwitchAction.PARK -> {
                 // Kill switch on and flapping: stay blocked until the user

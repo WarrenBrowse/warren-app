@@ -59,6 +59,9 @@
     <string name="warren_kill_switch_active">يُبقي مفتاح الإيقاف التلقائي حركة بياناتك محظورة أثناء توقف النفق. اتصالك محمي، وسيُستأنف تلقائياً بمجرد عودة النفق.</string>
     <string name="warren_no_dialable_network_title">شبكة بدون IPv4</string>
     <string name="warren_no_dialable_network">لا تمنح هذه الشبكة جهازك أي عنوان IPv4، ونقاط دخول Warren تستجيب عبر IPv4 فقط، لذا لا يمكن إنشاء النفق هنا. لا يزال مفتاح الإيقاف يحجب حركة بياناتك: اقطع الاتصال لاستعادة الإنترنت، أو انتقل إلى شبكة توفّر IPv4.</string>
+    <string name="warren_traffic_released_title">حركة البيانات خارج شبكة VPN</string>
+    <string name="warren_traffic_released">انقطع اتصالك مرارًا، فتوقّف Warren عن إعادة المحاولة وأصبحت حركة بياناتك تمر الآن عبر شبكتك المعتادة خارج شبكة VPN. لإبقائها محجوبة في هذه الحالة، فعّل وضع التأمين في إعدادات شبكة VPN.</string>
+    <string name="warren_traffic_released_notification">حركة البيانات خارج شبكة VPN</string>
     <string name="vpn_permission_denied_error">تم رفض إذن شبكة VPN أو يوجد تطبيق آخر تم تفعيل خيار \"تشغيل VPN دائمًا\" عليه</string>
     <string name="no_matching_relay">لا توجد خوادم تتطابق مع إعداداتك، حاول تغيير الخادم أو الإعدادات الأخرى.</string>
     <string name="custom_tunnel_host_resolution_error">يتعذَّر حل مشكلة مضيف النفق المُخصَّص. جرِّب تغيير إعداداتك.</string>
@@ -228,6 +231,7 @@
     <string name="tunnel_kill_switch_subtitle">احجب كل حركة المرور إذا انقطع النفق، بدلًا من العودة إلى الشبكة غير المحمية.</string>
     <string name="tunnel_kill_switch_info_1">تمنع هذه الميزة المدمجة تسرّب حركة بياناتك خارج نفق VPN إذا توقفت شبكتك فجأة أو تعطّل النفق: فهي تحظر حركة بياناتك حتى تُستعاد الاتصال.</string>
     <string name="tunnel_kill_switch_info_2">الفرق بين مفتاح الإيقاف التلقائي ووضع الإغلاق هو أن مفتاح الإيقاف التلقائي يمنع التسريبات أثناء إعادة اتصال النفق التلقائية وأعطال البرامج وما شابهها. أما مع تفعيل وضع الإغلاق فيجب أن تكون متصلاً بخادم Warren للوصول إلى الإنترنت: قطع الاتصال يدوياً أو إغلاق التطبيق يحظر اتصالك.</string>
+    <string name="tunnel_kill_switch_info_3">إذا انقطع الاتصال مرارًا خلال وقت قصير، يتوقف Warren عن إعادة المحاولة وتعود حركة بياناتك إلى شبكتك المعتادة خارج نفق VPN. فعّل وضع التأمين لإبقائها محجوبة بدلًا من ذلك.</string>
     <string name="tunnel_ipv6_title">IPv6 في النفق</string>
     <string name="tunnel_ipv6_subtitle">وجّه IPv6 عبر النفق. عند الإيقاف، يُحجب IPv6 لمنع التسريبات.</string>
     <string name="tunnel_ipv6_info_1">عندما يتم تفعيل هذه الميزة، يمكن استخدام IPv6 جنبًا إلى جنب مع IPv4 في نفق VPN للاتصال بخدمات الإنترنت.</string>

@@ -59,6 +59,9 @@
     <string name="warren_kill_switch_active">Il kill switch mantiene bloccato il tuo traffico mentre il tunnel è inattivo. La connessione è protetta e riprenderà automaticamente al ritorno del tunnel.</string>
     <string name="warren_no_dialable_network_title">RETE SENZA IPv4</string>
     <string name="warren_no_dialable_network">Questa rete non assegna alcun indirizzo IPv4 al suo dispositivo e i punti di ingresso Warren rispondono solo su IPv4, quindi il tunnel non può essere stabilito qui. Il kill switch mantiene il traffico bloccato: si disconnetta per recuperare internet oppure passi a una rete che fornisce IPv4.</string>
+    <string name="warren_traffic_released_title">TRAFFICO FUORI DALLA VPN</string>
+    <string name="warren_traffic_released">La connessione cadeva di continuo, quindi Warren ha smesso di riprovare e il traffico ora passa dalla sua rete abituale, fuori dalla VPN. Per restare bloccato in questi casi, attivi la Modalità Blocco nelle Impostazioni VPN.</string>
+    <string name="warren_traffic_released_notification">Traffico fuori dalla VPN</string>
     <string name="vpn_permission_denied_error">L\'autorizzazione VPN è stata negata o un\'altra app ha abilitato \"VPN sempre attiva\"</string>
     <string name="no_matching_relay">Nessun server corrispondente alle tue impostazioni, prova a cambiare server o impostazioni.</string>
     <string name="custom_tunnel_host_resolution_error">Impossibile risolvere l\'host del tunnel personalizzato. Prova a modificare le impostazioni.</string>
@@ -228,6 +231,7 @@
     <string name="tunnel_kill_switch_subtitle">Blocca tutto il traffico se il tunnel cade, invece di ripiegare sulla rete non protetta.</string>
     <string name="tunnel_kill_switch_info_1">Questa funzionalità integrata impedisce al traffico di uscire dal tunnel VPN se la rete smette improvvisamente di funzionare o se il tunnel cade: blocca il traffico finché la connessione non viene ristabilita.</string>
     <string name="tunnel_kill_switch_info_2">La differenza tra kill switch e modalità di blocco è che il kill switch previene le fughe durante le riconnessioni automatiche del tunnel, i crash del software e incidenti simili. Con la modalità di blocco attiva devi essere connesso a un server Warren per raggiungere internet: disconnetterti manualmente o chiudere l’app blocca la connessione.</string>
+    <string name="tunnel_kill_switch_info_3">Se la connessione cade più volte in rapida successione, Warren smette di riprovare e il traffico torna sulla rete abituale, fuori dalla VPN. Con la Modalità Blocco attiva, il traffico resta invece bloccato.</string>
     <string name="tunnel_ipv6_title">In-tunnel IPv6</string>
     <string name="tunnel_ipv6_subtitle">Instrada l\'IPv6 attraverso il tunnel. Quando è disattivato, l\'IPv6 viene bloccato per evitare fughe di dati.</string>
     <string name="tunnel_ipv6_info_1">Quando questa funzione è abilitata, IPv6 può essere utilizzato insieme a IPv4 nel tunnel VPN per comunicare con i servizi Internet.</string>

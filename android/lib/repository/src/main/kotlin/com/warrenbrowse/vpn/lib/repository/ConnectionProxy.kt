@@ -243,19 +243,7 @@ class ConnectionProxy(private val tunnelStateProvider: WarrenTunnelStateProvider
                         ),
                 )
             is WarrenConnectedInfo.Failed ->
-                TunnelState.Error(
-                    ErrorState(
-                        // An expired/revoked subscription is an auth
-                        // failure (actionable: renew), not a generic tunnel
-                        // start error.
-                        cause = if (info.expired) {
-                            ErrorStateCause.AuthFailed(AuthFailedError.ExpiredAccount)
-                        } else {
-                            ErrorStateCause.StartTunnelError
-                        },
-                        isBlocking = false,
-                    ),
-                )
+                TunnelState.Error(ErrorState(cause = failedCause(info), isBlocking = false))
             is WarrenConnectedInfo.Blocking ->
                 TunnelState.Error(
                     ErrorState(
@@ -283,6 +271,16 @@ class ConnectionProxy(private val tunnelStateProvider: WarrenTunnelStateProvider
                         isBlocking = true,
                     ),
                 )
+        }
+
+    // An expired/revoked subscription is an auth failure (actionable: renew),
+    // not a generic tunnel start error. A release after flapping is the policy
+    // with lockdown mode off, and names itself.
+    private fun failedCause(info: WarrenConnectedInfo.Failed): ErrorStateCause =
+        when {
+            info.expired -> ErrorStateCause.AuthFailed(AuthFailedError.ExpiredAccount)
+            info.flapping -> ErrorStateCause.WarrenTrafficReleased
+            else -> ErrorStateCause.StartTunnelError
         }
 
     private fun buildTunnelEndpoint(info: WarrenConnectedInfo.Connected): TunnelEndpoint =

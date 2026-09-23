@@ -280,6 +280,16 @@ class ConnectionProxyTest {
     }
 
     @Test
+    fun `a Failed after flapping is a non-blocking traffic-released error`() = runTest {
+        val state =
+            mapped(WarrenConnectedInfo.Failed("dropped", flapping = true)) as TunnelState.Error
+        // Traffic left the VPN by policy (lockdown mode off): the card must say
+        // so rather than report a firewall that failed to block.
+        assertFalse(state.errorState.isBlocking)
+        assertTrue(state.errorState.cause is ErrorStateCause.WarrenTrafficReleased)
+    }
+
+    @Test
     fun `an expired Failed is a non-blocking expired-account error`() = runTest {
         val state =
             mapped(WarrenConnectedInfo.Failed("expired", expired = true)) as TunnelState.Error

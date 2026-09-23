@@ -30,6 +30,16 @@ sealed class ErrorStateCause {
     data object WarrenTunnelFlapping : ErrorStateCause()
 
     /**
+     * The tunnel dropped too many times in a short window with lockdown mode
+     * off, so the retry loop stopped and the traffic went back to the regular
+     * network, outside the VPN. Never blocking. It has its own copy because the
+     * generic non-blocking copy reports a firewall that could not block, while
+     * this release is the policy with lockdown mode off, and the user needs
+     * to know that lockdown mode keeps the traffic blocked instead.
+     */
+    data object WarrenTrafficReleased : ErrorStateCause()
+
+    /**
      * The device is online and its network carries no address family a Warren
      * entry point can be dialed on (an IPv6-only mobile network: every entry
      * endpoint is an IPv4 literal). The retry loop is parked and the kill

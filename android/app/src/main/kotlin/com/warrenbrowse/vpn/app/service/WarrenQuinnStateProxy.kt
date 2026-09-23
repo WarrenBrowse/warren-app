@@ -144,7 +144,7 @@ class WarrenQuinnStateProxy :
                     daita = daita,
                     assignedNatPmpPort = assignedNatPmpPort,
                 )
-            is WarrenTunnelState.Failed -> WarrenConnectedInfo.Failed(reason, expired)
+            is WarrenTunnelState.Failed -> WarrenConnectedInfo.Failed(reason, expired, flapping)
             is WarrenTunnelState.Blocking ->
                 WarrenConnectedInfo.Blocking(reason, flapping, expired, noDialableNetwork)
         }

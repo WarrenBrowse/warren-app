@@ -61,6 +61,9 @@
     <string name="warren_kill_switch_active">Kill Switch-ul menține traficul blocat cât timp tunelul este căzut. Conexiunea dvs. este protejată și va fi reluată automat imediat ce tunelul revine.</string>
     <string name="warren_no_dialable_network_title">REȚEA FĂRĂ IPv4</string>
     <string name="warren_no_dialable_network">Această rețea nu oferă nicio adresă IPv4 dispozitivului dvs., iar punctele de intrare Warren răspund doar pe IPv4, deci tunelul nu poate fi deschis aici. Kill Switch-ul menține traficul blocat: deconectați-vă pentru a recăpăta internetul sau treceți pe o rețea care oferă IPv4.</string>
+    <string name="warren_traffic_released_title">TRAFIC ÎN AFARA VPN-ULUI</string>
+    <string name="warren_traffic_released">Conexiunea dvs. a căzut în mod repetat, așa că Warren nu a mai reîncercat, iar traficul dvs. trece acum prin rețeaua obișnuită, în afara VPN-ului. Pentru a rămâne blocat în această situație, activați Mod Blocare din Setări VPN.</string>
+    <string name="warren_traffic_released_notification">Trafic în afara VPN-ului</string>
     <string name="vpn_permission_denied_error">Permisiunea VPN a fost refuzată sau o altă aplicație are activat \"VPN permanent\"</string>
     <string name="no_matching_relay">Niciun server nu corespunde setărilor dvs., încercați să schimbați serverul sau alte setări.</string>
     <string name="custom_tunnel_host_resolution_error">Nu se poate rezolva gazda tunelului personalizat. Încercați să schimbați setările.</string>
@@ -232,6 +235,7 @@
     <string name="tunnel_kill_switch_subtitle">Blochează tot traficul dacă tunelul cade, în loc să revină la rețeaua neprotejată.</string>
     <string name="tunnel_kill_switch_info_1">Această funcție integrată împiedică scurgerea traficului în afara tunelului VPN dacă rețeaua se oprește brusc sau dacă tunelul cedează: blochează traficul până la restabilirea conexiunii.</string>
     <string name="tunnel_kill_switch_info_2">Diferența dintre Kill Switch și modul de blocare este că primul previne scurgerile în timpul reconectărilor automate ale tunelului, al blocărilor de software și al altor incidente similare. Cu modul de blocare activat, trebuie să fiți conectat la un server Warren pentru a accesa internetul: deconectarea manuală sau închiderea aplicației vă blochează conexiunea.</string>
+    <string name="tunnel_kill_switch_info_3">Dacă conexiunea cade de mai multe ori la scurt timp, Warren nu mai reîncearcă, iar traficul revine pe rețeaua obișnuită, în afara VPN-ului. Activați Mod Blocare pentru ca traficul să rămână blocat.</string>
     <string name="tunnel_ipv6_title">IPv6 în tunel</string>
     <string name="tunnel_ipv6_subtitle">Direcționează IPv6 prin tunel. Când este dezactivat, IPv6 este blocat pentru a preveni scurgerile de date.</string>
     <string name="tunnel_ipv6_info_1">Când această funcție este activată, IPv6 poate fi utilizat împreună cu IPv4 în tunelul VPN pentru a comunica cu serviciile de internet.</string>

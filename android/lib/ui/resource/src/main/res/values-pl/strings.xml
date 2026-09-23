@@ -59,6 +59,9 @@
     <string name="warren_kill_switch_active">Kill switch blokuje Twój ruch, dopóki tunel nie działa. Połączenie jest chronione i zostanie automatycznie wznowione po powrocie tunelu.</string>
     <string name="warren_no_dialable_network_title">SIEĆ BEZ IPv4</string>
     <string name="warren_no_dialable_network">Ta sieć nie przydziela urządzeniu adresu IPv4, a punkty wejściowe Warren odpowiadają wyłącznie po IPv4, więc tunelu nie da się tu zestawić. Kill switch nadal blokuje ruch: rozłącz się, aby odzyskać internet, albo przejdź do sieci z IPv4.</string>
+    <string name="warren_traffic_released_title">RUCH POZA VPN</string>
+    <string name="warren_traffic_released">Połączenie ciągle się zrywało, więc Warren przestał ponawiać próby, a Twój ruch idzie teraz przez zwykłą sieć, poza VPN. Aby w takiej sytuacji ruch pozostał zablokowany, włącz Tryb Lockdown w Ustawieniach VPN.</string>
+    <string name="warren_traffic_released_notification">Ruch poza VPN</string>
     <string name="vpn_permission_denied_error">Odmówiono uprawnienia VPN lub inna aplikacja ma włączoną funkcję „Zawsze włączony VPN”</string>
     <string name="no_matching_relay">Żaden serwer nie odpowiada ustawieniom. Spróbuj zmienić serwer lub inne ustawienia.</string>
     <string name="custom_tunnel_host_resolution_error">Nie można rozpoznać hosta tunelu niestandardowego. Spróbuj zmienić ustawienia.</string>
@@ -228,6 +231,7 @@
     <string name="tunnel_kill_switch_subtitle">Blokuj cały ruch, gdy tunel się rozłączy, zamiast przełączać się na niechronioną sieć.</string>
     <string name="tunnel_kill_switch_info_1">Ta wbudowana funkcja zapobiega wyciekowi ruchu poza tunel VPN, gdy sieć nagle przestanie działać lub tunel zawiedzie: blokuje ruch do czasu przywrócenia połączenia.</string>
     <string name="tunnel_kill_switch_info_2">Różnica między kill switchem a trybem blokady polega na tym, że kill switch zapobiega wyciekom podczas automatycznych ponownych połączeń tunelu, awarii oprogramowania i podobnych zdarzeń. Przy włączonym trybie blokady musisz być połączony z serwerem Warren, aby korzystać z internetu: ręczne rozłączenie lub zamknięcie aplikacji blokuje połączenie.</string>
+    <string name="tunnel_kill_switch_info_3">Jeśli połączenie zerwie się kilka razy w krótkim czasie, Warren przestaje ponawiać próby, a ruch wraca do zwykłej sieci, poza VPN. Włącz Tryb Lockdown, aby zamiast tego pozostał zablokowany.</string>
     <string name="tunnel_ipv6_title">Protokół IPv6 w tunelu</string>
     <string name="tunnel_ipv6_subtitle">Kieruj ruch IPv6 przez tunel. Gdy opcja jest wyłączona, IPv6 jest blokowane, aby zapobiec wyciekom.</string>
     <string name="tunnel_ipv6_info_1">Gdy ta funkcja jest włączona, protokołu IPv6 można używać wraz z protokołem IPv4 w tunelu VPN do komunikacji z usługami internetowymi.</string>

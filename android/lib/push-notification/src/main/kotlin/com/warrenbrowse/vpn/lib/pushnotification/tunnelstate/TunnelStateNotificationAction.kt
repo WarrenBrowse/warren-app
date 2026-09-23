@@ -62,6 +62,8 @@ internal fun NotificationTunnelState.notificationTitle(context: Context): String
         NotificationTunnelState.Blocking -> context.getString(R.string.blocking)
         NotificationTunnelState.Error.Blocked -> context.getString(R.string.blocking_internet)
         is NotificationTunnelState.Error.Critical -> context.getString(R.string.critical_error)
+        NotificationTunnelState.Error.TrafficReleased ->
+            context.getString(R.string.warren_traffic_released_notification)
         NotificationTunnelState.Error.DeviceOffline ->
             context.getString(R.string.blocking_internet_device_offline)
         NotificationTunnelState.Error.VpnPermissionDenied ->

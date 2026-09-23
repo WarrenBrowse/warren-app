@@ -995,6 +995,37 @@ class WarrenQuinnAdapterTest {
         }
 
     /**
+     * The release after flapping is the one state where traffic leaves the
+     * VPN without the user asking, so it has to reach the UI as such rather
+     * than as a generic failure.
+     */
+    @Test
+    fun `ensure a flapping tunnel without lockdown reports that it released the traffic`() =
+        runTest {
+            mockkStatic(SystemClock::class)
+            every { SystemClock.elapsedRealtime() } returns 0L
+            try {
+                val platform = RecordingPlatform()
+                val adapter = adapterWith(platform, dropRetryGraceMs = 0L)
+                adapter.connect(config().copy(lockdownMode = false), Mnemonic(PHRASE))
+                awaitReal("the session must reach Connected") {
+                    adapter.state.value is WarrenTunnelState.Connected
+                }
+
+                platform.statusOnConnect = STATUS_DISCONNECTED
+                platform.status = STATUS_DISCONNECTED
+                awaitReal("the flapping tunnel must release traffic") {
+                    adapter.state.value is WarrenTunnelState.Failed
+                }
+
+                val failed = adapter.state.value as WarrenTunnelState.Failed
+                assertTrue(failed.flapping, "the release must name the flap, got: $failed")
+            } finally {
+                unmockkStatic(SystemClock::class)
+            }
+        }
+
+    /**
      * The system revoke has to return promptly, so its teardown wait is
      * bounded. A dial holding the lock past the bound (a cold native runtime,
      * the key derivation) must not turn the bound into an abandoned session:

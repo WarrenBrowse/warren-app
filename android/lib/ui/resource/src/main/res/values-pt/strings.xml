@@ -59,6 +59,9 @@
     <string name="warren_kill_switch_active">O kill switch mantém o seu tráfego bloqueado enquanto o túnel está em baixo. A sua ligação está protegida e será retomada automaticamente assim que o túnel voltar.</string>
     <string name="warren_no_dialable_network_title">REDE SEM IPv4</string>
     <string name="warren_no_dialable_network">Esta rede não atribui qualquer endereço IPv4 ao seu dispositivo e os pontos de entrada Warren respondem apenas em IPv4, pelo que o túnel não pode ser estabelecido aqui. O kill switch mantém o seu tráfego bloqueado: desligue para recuperar a internet ou mude para uma rede que forneça IPv4.</string>
+    <string name="warren_traffic_released_title">TRÁFEGO FORA DA VPN</string>
+    <string name="warren_traffic_released">A sua ligação caiu repetidamente, por isso o Warren deixou de tentar novamente e o seu tráfego passa agora pela sua rede habitual, fora da VPN. Para continuar bloqueado quando isto acontecer, ative o Modo de bloqueio nas Definições de VPN.</string>
+    <string name="warren_traffic_released_notification">Tráfego fora da VPN</string>
     <string name="vpn_permission_denied_error">A permissão de VPN foi negada, ou outra aplicação tem a opção \"VPN sempre ligada\" ativada</string>
     <string name="no_matching_relay">Nenhum servidor corresponde às suas definições. Tente alterar o servidor ou outras definições.</string>
     <string name="custom_tunnel_host_resolution_error">Não foi possível resolver o anfitrião do túnel personalizado. Experimente alterar as suas definições.</string>
@@ -228,6 +231,7 @@
     <string name="tunnel_kill_switch_subtitle">Bloquear todo o tráfego se o túnel cair, em vez de recorrer à rede desprotegida.</string>
     <string name="tunnel_kill_switch_info_1">Esta funcionalidade integrada impede que o seu tráfego saia do túnel VPN se a rede deixar de funcionar de repente ou se o túnel falhar: bloqueia o tráfego até a ligação ser restabelecida.</string>
     <string name="tunnel_kill_switch_info_2">A diferença entre o kill switch e o modo de bloqueio é que o kill switch evita fugas durante as reconexões automáticas do túnel, falhas de software e acidentes semelhantes. Com o modo de bloqueio ativado, tem de estar ligado a um servidor Warren para aceder à internet: desligar manualmente ou fechar a app bloqueia a sua ligação.</string>
+    <string name="tunnel_kill_switch_info_3">Se a ligação cair várias vezes seguidas em pouco tempo, o Warren deixa de tentar novamente e o seu tráfego volta à sua rede habitual, fora da VPN. Ative o Modo de bloqueio para o manter bloqueado.</string>
     <string name="tunnel_ipv6_title">IPv6 em túnel</string>
     <string name="tunnel_ipv6_subtitle">Encaminhar IPv6 através do túnel. Quando desativado, o IPv6 é bloqueado para evitar fugas.</string>
     <string name="tunnel_ipv6_info_1">Quando esta funcionalidade está ativada, o IPv6 pode ser utilizado juntamente com o IPv4 no túnel VPN para comunicar com os serviços Internet.</string>

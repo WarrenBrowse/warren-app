@@ -44,6 +44,13 @@ in a state where it blocks *all traffic*, such as the [connecting], [disconnecti
 states. Additionally the android system has a setting called *Block connections without VPN* that
 enables the Android OS to block *all traffic* that is not routed through the Warren VPN.
 
+One exception applies with the app's *Lockdown mode* off, which is the default: when the tunnel
+keeps dropping (four unexpected drops within 90 seconds), the app stops retrying, closes its
+blocking interface and hands *all traffic* back to the regular network, outside the tunnel. The
+app says so in its connection banner and in the system notification, and names Lockdown mode as
+the way to stay blocked instead. With Lockdown mode on, the app keeps blocking until the user
+acts. With *Block connections without VPN* enabled, the OS keeps blocking in both cases.
+
 Besides the [known issues], Android has many variants and flavors that may introduce variances to
 the default [Android Open Source Project](https://source.android.com/) behavior. This means that
 the Warren VPN app, like all other VPN apps, is subject to the limitations of the VPN Service API.

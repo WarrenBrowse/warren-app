@@ -93,6 +93,8 @@ class TunnelStateNotificationProvider(
                 NotificationTunnelState.Error.VpnPermissionDenied
             cause is ErrorStateCause.OtherAlwaysOnApp ->
                 NotificationTunnelState.Error.AlwaysOnVpn(cause.appName)
+            cause is ErrorStateCause.WarrenTrafficReleased ->
+                NotificationTunnelState.Error.TrafficReleased
             errorState.isBlocking -> NotificationTunnelState.Error.Blocked
             else -> NotificationTunnelState.Error.Critical
         }
@@ -117,6 +119,7 @@ class TunnelStateNotificationProvider(
                 listOf(NotificationAction.Tunnel.Reconnect, NotificationAction.Tunnel.Disconnect)
             is NotificationTunnelState.Connecting -> listOf(NotificationAction.Tunnel.Cancel)
             is NotificationTunnelState.Error.Critical,
+            NotificationTunnelState.Error.TrafficReleased,
             NotificationTunnelState.Error.VpnPermissionDenied,
             is NotificationTunnelState.Error.AlwaysOnVpn,
             NotificationTunnelState.Error.LegacyLockdown ->

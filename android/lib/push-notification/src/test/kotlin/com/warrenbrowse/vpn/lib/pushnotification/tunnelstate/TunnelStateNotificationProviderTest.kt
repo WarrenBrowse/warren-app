@@ -17,6 +17,8 @@ import kotlinx.coroutines.test.runTest
 import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
 import com.warrenbrowse.vpn.lib.model.AccountNumber
 import com.warrenbrowse.vpn.lib.model.DeviceState
+import com.warrenbrowse.vpn.lib.model.ErrorState
+import com.warrenbrowse.vpn.lib.model.ErrorStateCause
 import com.warrenbrowse.vpn.lib.model.GeoIpLocation
 import com.warrenbrowse.vpn.lib.model.Notification
 import com.warrenbrowse.vpn.lib.model.NotificationChannelId
@@ -118,6 +120,22 @@ class TunnelStateNotificationProviderTest {
             val update = awaitItem()
             assertTrue(update is NotificationUpdate.Notify)
             assertTrue(update.value.state is NotificationTunnelState.Connected)
+        }
+    }
+
+    @Test
+    fun `a release after flapping is notified as traffic outside the VPN`() = runTest {
+        provider.notifications.test {
+            awaitItem() // Skip initial emission
+
+            tunnelStateFlow.value =
+                TunnelState.Error(
+                    ErrorState(ErrorStateCause.WarrenTrafficReleased, isBlocking = false)
+                )
+
+            val update = awaitItem()
+            assertTrue(update is NotificationUpdate.Notify)
+            assertEquals(NotificationTunnelState.Error.TrafficReleased, update.value.state)
         }
     }
 
