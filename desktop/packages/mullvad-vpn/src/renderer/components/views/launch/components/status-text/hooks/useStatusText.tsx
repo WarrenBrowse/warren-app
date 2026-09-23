@@ -8,18 +8,26 @@ export const useStatusText = () => {
   const { daemonStatus } = useUserInterfaceDaemonStatus();
   const daemonAccessRefusal = useSelector((state) => state.userInterface.daemonAccessRefusal);
 
-  if (daemonAccessRefusal !== null) {
+  if (daemonAccessRefusal === 'claimNeedsConsoleUser') {
     return (
       <Flex justifyContent="center">
         <BodySmall color="whiteAlpha40" textAlign="center" role="alert">
-          {daemonAccessRefusal === 'claimNeedsConsoleUser'
-            ? // TRANSLATORS: Status text when Warren was set up on this computer before it recorded an owner, and this account may not take it over.
-              messages.pgettext('launch-view', 'Warren on this computer has no owner yet')
-            : // TRANSLATORS: Status text when another account on this computer set up Warren, so the daemon refuses this one.
-              messages.pgettext(
-                'launch-view',
-                'Warren is set up by another account on this computer',
-              )}
+          {
+            // TRANSLATORS: Status text when Warren was set up on this computer before it recorded an owner, and this account may not take it over.
+            messages.pgettext('launch-view', 'Warren on this computer has no owner yet')
+          }
+        </BodySmall>
+      </Flex>
+    );
+  }
+  if (daemonAccessRefusal === 'ownedByAnotherAccount') {
+    return (
+      <Flex justifyContent="center">
+        <BodySmall color="whiteAlpha40" textAlign="center" role="alert">
+          {
+            // TRANSLATORS: Status text when another account on this computer set up Warren, so the daemon refuses this one.
+            messages.pgettext('launch-view', 'Warren is set up by another account on this computer')
+          }
         </BodySmall>
       </Flex>
     );

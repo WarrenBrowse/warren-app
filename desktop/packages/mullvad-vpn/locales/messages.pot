@@ -2175,10 +2175,6 @@ msgctxt "launch-view"
 msgid "Unable to contact the Warren system service, your connection might be unsecure. Please troubleshoot by clicking the \"Learn more\" button, or report the problem on our community forum."
 msgstr ""
 
-msgctxt "launch-view"
-msgid "Warren VPN will restore internet access without VPN protection."
-msgstr ""
-
 #. Status text when another account on this computer set up Warren, so the daemon refuses this one.
 msgctxt "launch-view"
 msgid "Warren is set up by another account on this computer"
@@ -2187,6 +2183,10 @@ msgstr ""
 #. Status text when Warren was set up on this computer before it recorded an owner, and this account may not take it over.
 msgctxt "launch-view"
 msgid "Warren on this computer has no owner yet"
+msgstr ""
+
+msgctxt "launch-view"
+msgid "Warren VPN will restore internet access without VPN protection."
 msgstr ""
 
 #. This is used for appending information about a location.
