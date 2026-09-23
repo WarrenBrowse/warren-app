@@ -80,9 +80,11 @@ impl Status {
 pub async fn handle(cmd: Option<Status>, args: StatusArgs) -> Result<()> {
     let mut rpc = MullvadProxyClient::new().await?;
     let state = rpc.get_tunnel_state().await?;
-    let device = rpc.get_device().await?;
-
-    print_account_logged_out(&state, &device);
+    // The device belongs to the account that owns Warren here: another
+    // account still gets the tunnel state, just not the warning about it.
+    if let Some(device) = unless_refused(rpc.get_device().await)? {
+        print_account_logged_out(&state, &device);
+    }
 
     if !print_debug_or_json(&args, "New tunnel state", &state)? {
         format::print_state(&state, None, args.verbose);
@@ -92,6 +94,22 @@ pub async fn handle(cmd: Option<Status>, args: StatusArgs) -> Result<()> {
         Status::listen(rpc, args, state).await?;
     }
     Ok(())
+}
+
+/// `result`, with a refusal from the daemon turned into `None`: what the
+/// daemon keeps for the owner of Warren on this computer.
+fn unless_refused<T>(
+    result: Result<T, mullvad_management_interface::Error>,
+) -> Result<Option<T>, mullvad_management_interface::Error> {
+    match result {
+        Ok(value) => Ok(Some(value)),
+        Err(mullvad_management_interface::Error::Rpc(status))
+            if status.code() == mullvad_management_interface::Code::PermissionDenied =>
+        {
+            Ok(None)
+        }
+        Err(error) => Err(error),
+    }
 }
 
 fn print_account_logged_out(state: &TunnelState, device: &DeviceState) {
@@ -127,5 +145,28 @@ fn print_debug_or_json<T: Debug + Serialize>(
         Ok(true)
     } else {
         Ok(false)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::unless_refused;
+    use mullvad_management_interface::{Error, Status};
+
+    #[test]
+    fn a_refusal_leaves_nothing_to_show() {
+        let refused = Err::<(), _>(Error::from(Status::permission_denied(
+            "Warren is set up by another account on this computer",
+        )));
+
+        assert!(matches!(unless_refused(refused), Ok(None)));
+    }
+
+    #[test]
+    fn any_other_failure_is_still_an_error() {
+        let down = Err::<(), _>(Error::from(Status::unavailable("daemon is down")));
+
+        assert!(unless_refused(down).is_err());
+        assert!(matches!(unless_refused(Ok(7)), Ok(Some(7))));
     }
 }
