@@ -21,8 +21,13 @@ Line wrap the file at 100 chars.                                              Th
 * **Fixed**: for any bug fixes.
 * **Security**: in case of vulnerabilities.
 
-## [Unreleased]
+## [1.1.33] - 2026-09-24
 ### Fixed
+- [macOS] Fix the VPN showing Connected with no internet on some Macs, in a loop of reconnects.
+  On a Mac with another VPN or network tool installed, the connection to the server can stop
+  leaving the computer as soon as the VPN takes over the traffic. The app checks for this right
+  after connecting and switches to a route that works, but its check counted replies the server
+  repeats on its own as proof that the connection worked, so it never switched.
 - [Windows, macOS, Linux] Stop reconnecting about 18 seconds after connecting on a quiet network.
   The app took packets the exit refuses by design, and never answers, for traffic left without a
   reply: the packets the system sends on its own, or the last packets of connections opened before

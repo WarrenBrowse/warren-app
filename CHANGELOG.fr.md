@@ -12,8 +12,14 @@ notes du tout. Les en-têtes `## [X.Y.Z]` doivent rester identiques à ceux de
 version. Le préfixe de plateforme (`[macOS]`, `[Windows]`, `[linux]`) est lu
 par l'application, gardez-le tel quel.
 
-## [Non publié]
+## [1.1.33] - 2026-09-24
 ### Corrigé
+- [macOS] Corriger le VPN affiché Connecté sans accès à internet sur certains Mac, avec des
+  reconnexions en boucle. Sur un Mac où un autre VPN ou outil réseau est installé, la connexion au
+  serveur peut cesser de sortir de l'ordinateur dès que le VPN prend en charge le trafic.
+  L'application le vérifie juste après la connexion et passe alors par une route qui fonctionne,
+  mais sa vérification comptait comme preuve les réponses que le serveur répète de lui-même : elle
+  ne changeait donc jamais de route.
 - [Windows, macOS, Linux] Ne plus se reconnecter environ 18 secondes après une connexion sur un
   réseau calme. L'application prenait pour du trafic resté sans réponse des paquets que la sortie
   refuse par conception et auxquels elle ne répond jamais : ceux que le système envoie de lui-même,

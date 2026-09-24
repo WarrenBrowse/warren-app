@@ -11,8 +11,13 @@ Titlurile `## [X.Y.Z]` trebuie să rămână identice cu cele din `CHANGELOG.md`
 extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`,
 `[Windows]`, `[linux]`) este citit de aplicație, păstrați-l ca atare.
 
-## [Nepublicat]
+## [1.1.33] - 2026-09-24
 ### Reparat
+- [macOS] Repară situația în care VPN-ul apărea Conectat fără acces la internet pe unele Mac-uri,
+  cu reconectări în buclă. Pe un Mac cu un alt VPN sau instrument de rețea instalat, conexiunea
+  către server poate înceta să mai iasă din computer imediat ce VPN-ul preia traficul. Aplicația
+  verifică acest lucru imediat după conectare și trece pe o rută care funcționează, însă verificarea
+  lua drept dovadă răspunsurile pe care serverul le repetă singur, așa că nu schimba niciodată ruta.
 - [Windows, macOS, Linux] Aplicația nu se mai reconectează la aproximativ 18 secunde după ce se
   conectează pe o rețea liniștită. Considera trafic rămas fără răspuns pachetele pe care ieșirea le
   refuză intenționat și la care nu răspunde niciodată: cele pe care sistemul le trimite singur sau
