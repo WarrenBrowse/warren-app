@@ -12,6 +12,20 @@ notes du tout. Les en-têtes `## [X.Y.Z]` doivent rester identiques à ceux de
 version. Le préfixe de plateforme (`[macOS]`, `[Windows]`, `[linux]`) est lu
 par l'application, gardez-le tel quel.
 
+## [Non publié]
+### Corrigé
+- [Windows, macOS, Linux] Ne plus se reconnecter environ 18 secondes après une connexion sur un
+  réseau calme. L'application prenait pour du trafic resté sans réponse des paquets que la sortie
+  refuse par conception et auxquels elle ne répond jamais : ceux que le système envoie de lui-même,
+  ou les derniers paquets des connexions ouvertes avant le VPN. Faute d'autre trafic, elle concluait
+  que la connexion était morte et se reconnectait.
+- [Windows, macOS, Linux] Signaler moins de chemins d'une nouvelle connexion comme défaillants dans
+  `warren status -v`, `warren doctor` et l'indicateur « Degraded bond », et continuer d'y faire
+  passer le trafic. Juste après la connexion, la sortie peut perdre la réponse à un paquet de test
+  sur le chemin du retour, et une seule réponse perdue suffisait à signaler comme défaillant le
+  chemin par lequel le test était parti. Un chemin n'est plus signalé que lorsque deux séries de
+  tests consécutives le trouvent défaillant.
+
 ## [1.1.32] - 2026-09-24
 ### Ajouté
 - Demander le code du bon quand `warren account redeem` est lancé sans code, ou le lire sur

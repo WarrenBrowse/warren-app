@@ -11,6 +11,19 @@ Titlurile `## [X.Y.Z]` trebuie să rămână identice cu cele din `CHANGELOG.md`
 extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`,
 `[Windows]`, `[linux]`) este citit de aplicație, păstrați-l ca atare.
 
+## [Nepublicat]
+### Reparat
+- [Windows, macOS, Linux] Aplicația nu se mai reconectează la aproximativ 18 secunde după ce se
+  conectează pe o rețea liniștită. Considera trafic rămas fără răspuns pachetele pe care ieșirea le
+  refuză intenționat și la care nu răspunde niciodată: cele pe care sistemul le trimite singur sau
+  ultimele pachete ale conexiunilor deschise înainte de VPN. Fără alt trafic, conchidea că
+  conexiunea nu mai funcționează și se reconecta.
+- [Windows, macOS, Linux] `warren status -v`, `warren doctor` și indicatorul „Degraded bond”
+  marchează ca defecte mai puține căi ale unei conexiuni noi, iar traficul rămâne pe ele. Imediat
+  după conectare, ieșirea poate pierde răspunsul la un pachet de test pe drumul de întoarcere, iar
+  un singur răspuns pierdut ajungea pentru a marca drept defectă calea pe care plecase testul. Acum
+  o cale este marcată doar când două runde de teste la rând o găsesc defectă.
+
 ## [1.1.32] - 2026-09-24
 ### Adăugat
 - Cere codul voucherului când `warren account redeem` este rulat fără cod, sau îl citește de pe
