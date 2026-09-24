@@ -8155,7 +8155,7 @@ proto.mullvad_daemon.management_interface.TunnelEndpoint.toObject = function(inc
     tunnelType: jspb.Message.getFieldWithDefault(msg, 8, 0),
     effectiveMtu: jspb.Message.getFieldWithDefault(msg, 9, 0),
     legsBonded: jspb.Message.getFieldWithDefault(msg, 10, 0),
-    legsDownlinkStalled: jspb.Message.getFieldWithDefault(msg, 11, 0)
+    legsNotDelivering: jspb.Message.getFieldWithDefault(msg, 11, 0)
   };
 
   if (includeInstance) {
@@ -8237,7 +8237,7 @@ proto.mullvad_daemon.management_interface.TunnelEndpoint.deserializeBinaryFromRe
       break;
     case 11:
       var value = /** @type {number} */ (reader.readUint32());
-      msg.setLegsDownlinkStalled(value);
+      msg.setLegsNotDelivering(value);
       break;
     default:
       reader.skipField();
@@ -8625,10 +8625,10 @@ proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.hasLegsBonded
 
 
 /**
- * optional uint32 legs_downlink_stalled = 11;
+ * optional uint32 legs_not_delivering = 11;
  * @return {number}
  */
-proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.getLegsDownlinkStalled = function() {
+proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.getLegsNotDelivering = function() {
   return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 11, 0));
 };
 
@@ -8637,7 +8637,7 @@ proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.getLegsDownli
  * @param {number} value
  * @return {!proto.mullvad_daemon.management_interface.TunnelEndpoint} returns this
  */
-proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.setLegsDownlinkStalled = function(value) {
+proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.setLegsNotDelivering = function(value) {
   return jspb.Message.setField(this, 11, value);
 };
 
@@ -8646,7 +8646,7 @@ proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.setLegsDownli
  * Clears the field making it undefined.
  * @return {!proto.mullvad_daemon.management_interface.TunnelEndpoint} returns this
  */
-proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.clearLegsDownlinkStalled = function() {
+proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.clearLegsNotDelivering = function() {
   return jspb.Message.setField(this, 11, undefined);
 };
 
@@ -8655,7 +8655,7 @@ proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.clearLegsDown
  * Returns whether this field is set.
  * @return {boolean}
  */
-proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.hasLegsDownlinkStalled = function() {
+proto.mullvad_daemon.management_interface.TunnelEndpoint.prototype.hasLegsNotDelivering = function() {
   return jspb.Message.getField(this, 11) != null;
 };
 

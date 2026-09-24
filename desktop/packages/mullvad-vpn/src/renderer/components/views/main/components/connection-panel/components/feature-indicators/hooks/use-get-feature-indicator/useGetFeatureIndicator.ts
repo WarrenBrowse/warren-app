@@ -19,7 +19,7 @@ export const useGetFeatureIndicator = () => {
       : undefined;
   const effectiveMtu = connectedEndpoint?.effectiveMtu;
   const legsBonded = connectedEndpoint?.legsBonded;
-  const legsDownlinkStalled = connectedEndpoint?.legsDownlinkStalled;
+  const legsNotDelivering = connectedEndpoint?.legsNotDelivering;
 
   const gotoDaitaFeature = React.useCallback(() => {
     history.push(RoutePath.daitaSettings, {
@@ -181,7 +181,7 @@ export const useGetFeatureIndicator = () => {
       label: reducedMtuIndicatorLabel(effectiveMtu),
     },
     [FeatureIndicator.degradedBond]: {
-      label: degradedBondIndicatorLabel(legsDownlinkStalled, legsBonded),
+      label: degradedBondIndicatorLabel(legsNotDelivering, legsBonded),
     },
     [FeatureIndicator.daita]: { label: strings.daita, onClick: gotoEnableDaitaFeature },
     [FeatureIndicator.daitaMultihop]: {

@@ -4,19 +4,20 @@
 //!
 //! A tunnel that is up but wrong looks exactly like a healthy one from every
 //! surface a user can reach: the app says Connected and shows the same feature
-//! chips. The facts that would settle it (the bundle width, the per-leg
-//! downlink, the carrier bind verdict remembered for this network, whether the
+//! chips. The facts that would settle it (the bundle width, which legs
+//! deliver, the carrier bind verdict remembered for this network, whether the
 //! host holds two interfaces on one LAN) all exist inside the daemon and none
 //! of them had a way out.
 //!
 //! Each line reports what was OBSERVED. Where the observation does not support
-//! a conclusion, the line says so instead of inventing one: an absent stall
+//! a conclusion, the line says so instead of inventing one: an absent leg
 //! count is "not measured", never "healthy".
 
 use anyhow::Result;
 use mullvad_management_interface::MullvadProxyClient;
 use mullvad_types::states::TunnelState;
 use mullvad_types::warren_diagnostics::CarrierVerdictKind;
+use talpid_types::net::TunnelEndpoint;
 
 /// How a probe came out. Ordering IS the severity ranking: the run's verdict is
 /// the worst status it produced.
@@ -235,31 +236,39 @@ fn report_tunnel_state(report: &mut Report, state: &TunnelState) {
         ),
     }
 
-    if endpoint.legs_bonded == 0 {
-        report.push(
+    let (status, observation) = bonded_legs_observation(endpoint);
+    report.push(status, "bonded legs", observation);
+}
+
+/// The bonded-legs line. A leg counts as delivering only on the probe
+/// evidence the tunnel monitor publishes: a leg's QUIC counters keep climbing
+/// on the exit's acknowledgements while the exit drops every frame it carries.
+fn bonded_legs_observation(endpoint: &TunnelEndpoint) -> (Status, String) {
+    let bonded = endpoint.legs_bonded;
+    if bonded == 0 {
+        return (
             Status::Info,
-            "bonded legs",
-            "not measured yet (the first sample lands a few seconds after connecting)",
+            "not measured yet (in-tunnel probes measure every leg, and their first round \
+             lands a few seconds after connecting)"
+                .to_owned(),
         );
-    } else if endpoint.legs_downlink_stalled == 0 {
-        report.push(
+    }
+    match endpoint.legs_not_delivering {
+        0 => (
             Status::Ok,
-            "bonded legs",
             format!(
-                "{} bonded, all of them received traffic over the last sampling interval",
-                endpoint.legs_bonded
+                "{bonded} bonded, all {bonded} delivering (each got the latest in-tunnel probe \
+                 through the exit)"
             ),
-        );
-    } else {
-        report.push(
+        ),
+        not_delivering => (
             Status::Warn,
-            "bonded legs",
             format!(
-                "{} bonded, {} kept sending while receiving nothing back over the last \
-                 sampling interval",
-                endpoint.legs_bonded, endpoint.legs_downlink_stalled
+                "{bonded} bonded, {} delivering ({not_delivering} got no in-tunnel probe through \
+                 the exit, or kept sending while receiving nothing back)",
+                bonded.saturating_sub(not_delivering)
             ),
-        );
+        ),
     }
 }
 
@@ -314,10 +323,55 @@ mod tests {
 
     #[test]
     fn a_probe_line_starts_with_its_status_and_names_the_probe() {
-        let line = probe_line(Status::Warn, "bonded legs", "8 bonded, 1 stalled");
+        let line = probe_line(Status::Warn, "bonded legs", "8 bonded, 7 delivering");
         assert!(line.starts_with("WARN"), "{line}");
         assert!(line.contains("bonded legs"), "{line}");
-        assert!(line.ends_with("8 bonded, 1 stalled"), "{line}");
+        assert!(line.ends_with("8 bonded, 7 delivering"), "{line}");
+    }
+
+    fn endpoint(legs_bonded: u8, legs_not_delivering: u8) -> TunnelEndpoint {
+        TunnelEndpoint {
+            endpoint: talpid_types::net::Endpoint {
+                address: "198.51.100.1:443".parse().unwrap(),
+                protocol: talpid_types::net::TransportProtocol::Udp,
+            },
+            quantum_resistant: false,
+            obfuscation: None,
+            entry_endpoint: None,
+            tunnel_interface: None,
+            daita: false,
+            effective_mtu: None,
+            legs_bonded,
+            legs_not_delivering,
+            tunnel_type: talpid_types::net::TunnelType::Warren,
+        }
+    }
+
+    #[test]
+    fn a_bond_with_legs_that_do_not_deliver_is_a_warning_counting_those_that_do() {
+        let (status, observation) = bonded_legs_observation(&endpoint(8, 3));
+        assert_eq!(status, Status::Warn);
+        assert!(
+            observation.starts_with("8 bonded, 5 delivering"),
+            "{observation}"
+        );
+    }
+
+    #[test]
+    fn a_bond_whose_every_leg_delivers_is_ok() {
+        let (status, observation) = bonded_legs_observation(&endpoint(8, 0));
+        assert_eq!(status, Status::Ok);
+        assert!(
+            observation.starts_with("8 bonded, all 8 delivering"),
+            "{observation}"
+        );
+    }
+
+    #[test]
+    fn an_unmeasured_bond_claims_nothing() {
+        let (status, observation) = bonded_legs_observation(&endpoint(0, 0));
+        assert_eq!(status, Status::Info);
+        assert!(observation.starts_with("not measured yet"), "{observation}");
     }
 
     #[test]

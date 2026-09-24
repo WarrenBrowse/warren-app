@@ -382,10 +382,11 @@ function convertFromTunnelStateRelayInfo(
         effectiveMtu: state.tunnelEndpoint.effectiveMtu || undefined,
         // A bundle width of 0 (or an older daemon that omits the field) means
         // the tunnel was never sampled, so BOTH counts stay undefined. Once it
-        // was sampled, a stall count of 0 is a real measurement and is kept.
+        // was sampled, a count of 0 legs not delivering is a real measurement
+        // and is kept.
         legsBonded: state.tunnelEndpoint.legsBonded || undefined,
-        legsDownlinkStalled: state.tunnelEndpoint.legsBonded
-          ? (state.tunnelEndpoint.legsDownlinkStalled ?? 0)
+        legsNotDelivering: state.tunnelEndpoint.legsBonded
+          ? (state.tunnelEndpoint.legsNotDelivering ?? 0)
           : undefined,
         entryEndpoint:
           state.tunnelEndpoint.entryEndpoint &&

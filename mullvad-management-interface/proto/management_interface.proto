@@ -539,11 +539,11 @@ message TunnelEndpoint {
   // Number of transport legs the live tunnel bonds. Optional so a client can
   // tell "this daemon never sampled" from "the sample said zero".
   optional uint32 legs_bonded = 10;
-  // How many of those legs kept sending while receiving nothing back over the
-  // last sampling interval. Present only alongside `legs_bonded`, and only an
-  // indicator: nothing in the datapath acts on it, and exit-side idle cover
-  // hides some stalls.
-  optional uint32 legs_downlink_stalled = 11;
+  // How many of those legs do not deliver: the latest in-tunnel probe sweep
+  // did not hear them, or they kept sending while receiving nothing back over
+  // the last sampling interval. Present only alongside `legs_bonded`, and only
+  // an indicator: nothing in the tunnel acts on it.
+  optional uint32 legs_not_delivering = 11;
 }
 
 // Read-only datapath observations. See `mullvad_types::warren_diagnostics`.
@@ -602,8 +602,8 @@ enum FeatureIndicator {
   // The live tunnel measured an inner-packet budget below the TUN MTU
   // (reduced-MTU underlay); the datapath is adapting automatically.
   REDUCED_MTU = 18;
-  // At least one bonded transport leg kept sending while receiving nothing
-  // back, so part of the downlink capacity is gone on an otherwise up tunnel.
+  // At least one bonded transport leg does not deliver, so part of the
+  // capacity is gone on an otherwise up tunnel.
   DEGRADED_BOND = 19;
 }
 

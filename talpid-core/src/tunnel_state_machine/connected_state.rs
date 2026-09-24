@@ -70,7 +70,7 @@ fn grace_action(is_multi_hop: bool, grace_armed: bool, is_offline: bool) -> Grac
 /// settings, negotiation has not happened yet), Connected overrides the fields
 /// the tunnel monitor MEASURES with its metadata: a requested-but-ungranted
 /// defense must never be published as active, and the path measurements
-/// (effective MTU, per-leg stall count) exist nowhere else. A mid-session
+/// (effective MTU, per-leg delivery count) exist nowhere else. A mid-session
 /// metadata refresh re-enters here, which is how a later measurement reaches
 /// the published endpoint.
 fn connected_tunnel_endpoint(
@@ -82,7 +82,7 @@ fn connected_tunnel_endpoint(
         daita: metadata.daita_active,
         effective_mtu: metadata.effective_mtu,
         legs_bonded: metadata.legs_bonded,
-        legs_downlink_stalled: metadata.legs_downlink_stalled,
+        legs_not_delivering: metadata.legs_not_delivering,
         ..tunnel_parameters.get_tunnel_endpoint()
     }
 }
@@ -691,7 +691,7 @@ mod connected_endpoint_tests {
             daita_active,
             effective_mtu: None,
             legs_bonded: 0,
-            legs_downlink_stalled: 0,
+            legs_not_delivering: 0,
         }
     }
 
@@ -726,28 +726,28 @@ mod connected_endpoint_tests {
         assert_eq!(endpoint.tunnel_interface.as_deref(), Some("utun7"));
     }
 
-    /// The per-leg stall count is runtime truth from the tunnel monitor, on the
+    /// The per-leg delivery count is runtime truth from the tunnel monitor, on the
     /// same path as the effective MTU: a mid-session metadata refresh is what
     /// surfaces (or clears) the degraded-bond indicator.
     #[test]
     fn connected_endpoint_carries_the_leg_counts_from_metadata() {
         let endpoint = connected_tunnel_endpoint(&params(false), &metadata(false));
         assert_eq!(
-            (endpoint.legs_bonded, endpoint.legs_downlink_stalled),
+            (endpoint.legs_bonded, endpoint.legs_not_delivering),
             (0, 0),
             "an unsampled tunnel publishes no leg measurement"
         );
 
         let sampled = TunnelMetadata {
             legs_bonded: 8,
-            legs_downlink_stalled: 3,
+            legs_not_delivering: 3,
             ..metadata(false)
         };
         let endpoint = connected_tunnel_endpoint(&params(false), &sampled);
         assert_eq!(
-            (endpoint.legs_bonded, endpoint.legs_downlink_stalled),
+            (endpoint.legs_bonded, endpoint.legs_not_delivering),
             (8, 3),
-            "a sampled bundle width and stall count must reach the published endpoint"
+            "a sampled bundle width and delivery count must reach the published endpoint"
         );
     }
 
@@ -832,7 +832,7 @@ mod peer_endpoint_tests {
                 daita_active: false,
                 effective_mtu: None,
                 legs_bonded: 0,
-                legs_downlink_stalled: 0,
+                legs_not_delivering: 0,
             },
             tunnel_events: events.fuse(),
             peer_endpoints: tunnel_parameters.get_next_hop_endpoints(),

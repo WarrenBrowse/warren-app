@@ -66,11 +66,12 @@ pub struct TunnelEndpoint {
     /// Runtime truth from the tunnel monitor, like `daita`.
     #[serde(default)]
     pub legs_bonded: u8,
-    /// How many of those legs kept sending while receiving nothing back over
-    /// the last sampling interval. An indicator, never a guard: the datapath
-    /// takes no action on it, and exit-side idle cover hides some stalls.
+    /// How many of those legs do not deliver: the latest in-tunnel probe sweep
+    /// did not hear them, or they kept sending while receiving nothing back
+    /// over the last sampling interval. An indicator, never a guard: the tunnel
+    /// takes no action on it.
     #[serde(default)]
-    pub legs_downlink_stalled: u8,
+    pub legs_not_delivering: u8,
     /// The tunneling technology used for this endpoint.
     #[serde(default)]
     pub tunnel_type: TunnelType,
@@ -618,7 +619,7 @@ mod tests {
             daita: false,
             effective_mtu: None,
             legs_bonded: 0,
-            legs_downlink_stalled: 0,
+            legs_not_delivering: 0,
             tunnel_type,
         }
     }

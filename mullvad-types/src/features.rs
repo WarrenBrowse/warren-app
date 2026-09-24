@@ -123,14 +123,12 @@ pub enum FeatureIndicator {
     /// Runtime truth from `TunnelEndpoint::effective_mtu`, like DAITA.
     ReducedMtu,
 
-    /// At least one of the tunnel's bonded transport legs kept sending while
-    /// receiving nothing back, so part of the downlink capacity is gone while
-    /// the tunnel is otherwise up and reports Connected. Runtime truth from
-    /// `TunnelEndpoint::legs_downlink_stalled`.
+    /// At least one of the tunnel's bonded transport legs does not deliver, so
+    /// part of the capacity is gone while the tunnel is otherwise up and
+    /// reports Connected. Runtime truth from
+    /// `TunnelEndpoint::legs_not_delivering`.
     ///
-    /// An indicator, never a guard: nothing acts on it, and exit-side idle
-    /// cover keeps a stalled leg's receive counter climbing, so its absence
-    /// is not a claim of health.
+    /// An indicator, never a guard: nothing acts on it.
     DegradedBond,
 }
 
@@ -247,10 +245,10 @@ pub fn compute_feature_indicators(
     // path measured below the TUN MTU, so presence IS the verdict.
     let reduced_mtu = endpoint.effective_mtu.is_some();
 
-    // Same shape: the tunnel monitor only publishes a non-zero count after it
-    // has measured one sampling interval, so the count IS the verdict and a
+    // Same shape: the tunnel monitor only publishes a count once a probe sweep
+    // measured every leg of the bond, so the count IS the verdict and a
     // settings recompute (which reuses the live endpoint) reproduces it.
-    let degraded_bond = endpoint.legs_downlink_stalled > 0;
+    let degraded_bond = endpoint.legs_not_delivering > 0;
 
     let protocol_features = vec![
         (split_tunneling, FeatureIndicator::SplitTunneling),
@@ -310,7 +308,7 @@ mod tests {
             daita: Default::default(),
             effective_mtu: Default::default(),
             legs_bonded: Default::default(),
-            legs_downlink_stalled: Default::default(),
+            legs_not_delivering: Default::default(),
             tunnel_type: Default::default(),
         };
 
@@ -534,7 +532,7 @@ mod tests {
             daita,
             effective_mtu: Default::default(),
             legs_bonded: Default::default(),
-            legs_downlink_stalled: Default::default(),
+            legs_not_delivering: Default::default(),
             tunnel_type: Default::default(),
         }
     }
@@ -586,7 +584,7 @@ mod tests {
             daita: Default::default(),
             effective_mtu: None,
             legs_bonded: Default::default(),
-            legs_downlink_stalled: Default::default(),
+            legs_not_delivering: Default::default(),
             tunnel_type: Default::default(),
         };
         assert!(
@@ -604,9 +602,9 @@ mod tests {
         );
     }
 
-    /// A stalled leg is runtime truth from the tunnel monitor, so it must
-    /// survive a settings-only recompute untouched: the recompute reuses the
-    /// live endpoint, which is where the count lives.
+    /// A leg that does not deliver is runtime truth from the tunnel monitor, so
+    /// it must survive a settings-only recompute untouched: the recompute reuses
+    /// the live endpoint, which is where the count lives.
     #[test]
     fn degraded_bond_indicator_follows_the_endpoint_leg_measurement() {
         let mut settings = Settings::default();
@@ -622,7 +620,7 @@ mod tests {
             daita: Default::default(),
             effective_mtu: None,
             legs_bonded: 8,
-            legs_downlink_stalled: 0,
+            legs_not_delivering: 0,
             tunnel_type: Default::default(),
         };
         let degraded = |settings: &Settings, endpoint: &TunnelEndpoint| {
@@ -633,13 +631,13 @@ mod tests {
 
         assert!(
             !degraded(&settings, &endpoint),
-            "a bundle where every leg still receives must show no indicator"
+            "a bundle where every leg delivers must show no indicator"
         );
 
-        endpoint.legs_downlink_stalled = 1;
+        endpoint.legs_not_delivering = 1;
         assert!(
             degraded(&settings, &endpoint),
-            "one leg that sends into silence must surface the indicator"
+            "one leg that does not deliver must surface the indicator"
         );
 
         settings.allow_lan = true;

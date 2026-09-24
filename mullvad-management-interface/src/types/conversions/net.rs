@@ -22,10 +22,10 @@ impl From<talpid_types::net::TunnelEndpoint> for proto::TunnelEndpoint {
             effective_mtu: endpoint.effective_mtu.map(u32::from),
             // `legs_bonded == 0` means the monitor never sampled this tunnel,
             // so both counts stay absent on the wire and a reader can tell
-            // "no measurement" from "measured, nothing stalled".
+            // "no measurement" from "measured, every leg delivers".
             legs_bonded: (endpoint.legs_bonded > 0).then(|| u32::from(endpoint.legs_bonded)),
-            legs_downlink_stalled: (endpoint.legs_bonded > 0)
-                .then(|| u32::from(endpoint.legs_downlink_stalled)),
+            legs_not_delivering: (endpoint.legs_bonded > 0)
+                .then(|| u32::from(endpoint.legs_not_delivering)),
         }
     }
 }
@@ -194,13 +194,13 @@ impl TryFrom<proto::TunnelEndpoint> for talpid_types::net::TunnelEndpoint {
             legs_bonded: endpoint
                 .legs_bonded
                 .map_or(0, |legs| u8::try_from(legs).unwrap_or(u8::MAX)),
-            // A stall count without a bundle width describes no bundle at all.
+            // A leg count without a bundle width describes no bundle at all.
             // Taking it anyway would raise the degraded-bond indicator over a
             // "not measured yet" leg row, so the pair is trusted together or
             // not at all.
-            legs_downlink_stalled: endpoint
+            legs_not_delivering: endpoint
                 .legs_bonded
-                .and(endpoint.legs_downlink_stalled)
+                .and(endpoint.legs_not_delivering)
                 .map_or(0, |legs| u8::try_from(legs).unwrap_or(u8::MAX)),
             tunnel_type: match proto::TunnelType::try_from(endpoint.tunnel_type) {
                 Ok(proto::TunnelType::Warren) => talpid_types::net::TunnelType::Warren,
@@ -437,7 +437,7 @@ mod tests {
     use super::*;
     use talpid_types::net as talpid_net;
 
-    fn endpoint(legs_bonded: u8, legs_downlink_stalled: u8) -> talpid_net::TunnelEndpoint {
+    fn endpoint(legs_bonded: u8, legs_not_delivering: u8) -> talpid_net::TunnelEndpoint {
         talpid_net::TunnelEndpoint {
             endpoint: talpid_net::Endpoint {
                 address: "198.51.100.1:443".parse().unwrap(),
@@ -451,7 +451,7 @@ mod tests {
             daita: false,
             effective_mtu: None,
             legs_bonded,
-            legs_downlink_stalled,
+            legs_not_delivering,
             tunnel_type: talpid_net::TunnelType::Warren,
         }
     }
@@ -466,31 +466,31 @@ mod tests {
     }
 
     /// The two counts are the observability payload, so the wire must carry a
-    /// measured "nothing is stalled" as such and never collapse it into the
+    /// measured "every leg delivers" as such and never collapse it into the
     /// "never measured" shape.
     #[test]
     fn a_healthy_bundle_is_sent_as_measured_rather_than_absent() {
         let wire = proto::TunnelEndpoint::from(endpoint(8, 0));
         assert_eq!(wire.legs_bonded, Some(8));
-        assert_eq!(wire.legs_downlink_stalled, Some(0));
+        assert_eq!(wire.legs_not_delivering, Some(0));
     }
 
     #[test]
     fn an_unsampled_tunnel_sends_no_leg_counts_at_all() {
         let wire = proto::TunnelEndpoint::from(endpoint(0, 0));
         assert_eq!(wire.legs_bonded, None);
-        assert_eq!(wire.legs_downlink_stalled, None);
+        assert_eq!(wire.legs_not_delivering, None);
     }
 
     #[test]
-    fn a_stall_count_without_a_bundle_width_decodes_as_unsampled() {
+    fn a_leg_count_without_a_bundle_width_decodes_as_unsampled() {
         let mut wire = proto::TunnelEndpoint::from(endpoint(8, 3));
         wire.legs_bonded = None;
         let restored = talpid_net::TunnelEndpoint::try_from(wire).unwrap();
         assert_eq!(
-            (restored.legs_bonded, restored.legs_downlink_stalled),
+            (restored.legs_bonded, restored.legs_not_delivering),
             (0, 0),
-            "a stall count is only meaningful next to the width it counts against"
+            "a leg count is only meaningful next to the width it counts against"
         );
     }
 
@@ -500,11 +500,8 @@ mod tests {
     fn an_endpoint_without_leg_counts_decodes_as_unsampled() {
         let mut wire = proto::TunnelEndpoint::from(endpoint(8, 3));
         wire.legs_bonded = None;
-        wire.legs_downlink_stalled = None;
+        wire.legs_not_delivering = None;
         let restored = talpid_net::TunnelEndpoint::try_from(wire).unwrap();
-        assert_eq!(
-            (restored.legs_bonded, restored.legs_downlink_stalled),
-            (0, 0)
-        );
+        assert_eq!((restored.legs_bonded, restored.legs_not_delivering), (0, 0));
     }
 }

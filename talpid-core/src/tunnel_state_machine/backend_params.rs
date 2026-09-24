@@ -183,7 +183,7 @@ fn warren_tunnel_endpoint(info: &WarrenBackendInfo) -> TunnelEndpoint {
         return TunnelEndpoint {
             effective_mtu: None,
             legs_bonded: 0,
-            legs_downlink_stalled: 0,
+            legs_not_delivering: 0,
             endpoint: Endpoint::from_socket_address(endpoint_addr, TransportProtocol::Udp),
             quantum_resistant: false,
             obfuscation: None,
@@ -227,7 +227,7 @@ fn warren_tunnel_endpoint(info: &WarrenBackendInfo) -> TunnelEndpoint {
     TunnelEndpoint {
         effective_mtu: None,
         legs_bonded: 0,
-        legs_downlink_stalled: 0,
+        legs_not_delivering: 0,
         endpoint: Endpoint::from_socket_address(endpoint_addr, TransportProtocol::Udp),
         quantum_resistant: false,
         obfuscation: None,

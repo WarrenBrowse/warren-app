@@ -187,12 +187,13 @@ export interface ITunnelEndpoint {
   entryEndpoint?: IEndpoint;
   daita: boolean;
   effectiveMtu?: number;
-  // How many transport legs the live tunnel bonds, and how many of those kept
-  // sending while receiving nothing back over the last sampling interval. Both
-  // are absent until the daemon has sampled the tunnel once; a defined
-  // `legsDownlinkStalled` of 0 means measured and healthy.
+  // How many transport legs the live tunnel bonds, and how many of those do not
+  // deliver (the latest in-tunnel probe sweep did not hear them, or they kept
+  // sending while receiving nothing back). Both are absent until the daemon has
+  // sampled the tunnel once; a defined `legsNotDelivering` of 0 means measured
+  // and healthy.
   legsBonded?: number;
-  legsDownlinkStalled?: number;
+  legsNotDelivering?: number;
   tunnelType: TunnelType;
 }
 

@@ -1575,6 +1575,9 @@ impl WarrenTunnelMonitor {
         // as a live "Connected" that silently carries no traffic.
         let mut supervisor_fatal_rx = supervisor.fatal_rx();
         let supervisor_datapath_dead_rx = supervisor.datapath_dead_rx();
+        // The per-leg probe reading the leg counts are built on, which has to
+        // be taken before `run()` consumes the supervisor.
+        let leg_health_rx = supervisor.leg_health_rx();
         // Control handle for the migration watchdog's forced-reconnect
         // fallback; must be taken before `run()` consumes the supervisor.
         let supervisor_control = supervisor.handle();
@@ -2104,10 +2107,11 @@ impl WarrenTunnelMonitor {
         // reduced paths regardless; this only surfaces the state to the
         // UI as the ReducedMtu feature indicator.
         //
-        // The same tick carries the per-leg downlink-stall count: a leg that
-        // keeps sending while nothing comes back leaves the tunnel Connected
-        // and merely slower, which is how half a bundle died unnoticed once.
-        // Both are indicators; neither takes any action on the datapath.
+        // The same tick carries the count of legs that do not deliver: a leg
+        // whose frames stop getting through leaves the tunnel Connected and
+        // merely slower, so nothing else names it. `leg_stall` says what
+        // counts as delivering. Both are indicators; neither takes any action
+        // on the datapath.
         {
             let mut sampler_hook = event_hook.clone();
             let mut sampler_rx = client_rx.clone();
@@ -2135,19 +2139,20 @@ impl WarrenTunnelMonitor {
                                 }
                             })
                             .collect();
-                        let legs = (
-                            u8::try_from(current_legs.len()).unwrap_or(u8::MAX),
-                            leg_stall::count_downlink_stalled(&previous_legs, &current_legs),
+                        let legs = leg_stall::leg_counts(
+                            &leg_health_rx.borrow(),
+                            &previous_legs,
+                            &current_legs,
                         );
                         previous_legs = current_legs;
                         let legs_changed = legs_published.observe(legs).is_some();
                         if verdict != last || legs_changed {
                             last = verdict;
-                            let (bonded, stalled) = legs_published.published();
+                            let (bonded, not_delivering) = legs_published.published();
                             let mut refreshed = sampler_meta.clone();
                             refreshed.effective_mtu = verdict;
                             refreshed.legs_bonded = bonded;
-                            refreshed.legs_downlink_stalled = stalled;
+                            refreshed.legs_not_delivering = not_delivering;
                             sampler_hook.on_event(TunnelEvent::Up(refreshed)).await;
                         }
                     }
@@ -3294,7 +3299,7 @@ fn build_tunnel_metadata(tun: &Tun, config: &TunConfig, daita_active: bool) -> T
         daita_active,
         effective_mtu: None,
         legs_bonded: 0,
-        legs_downlink_stalled: 0,
+        legs_not_delivering: 0,
     }
 }
 

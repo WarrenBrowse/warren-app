@@ -200,23 +200,22 @@ fn print_connection_info(
 }
 
 /// The bonded-legs row: how many transport legs the tunnel carries and how many
-/// of them stopped receiving.
+/// of them deliver.
 ///
 /// `None` when the tunnel monitor has published no sample (`legs_bonded == 0`),
-/// so the row is absent rather than claiming a bundle of zero legs. The row
-/// states what was observed and leaves the conclusion out: a stalled leg costs
-/// downlink capacity, and exit-side idle cover can hide one, so "all receiving"
-/// is a reading, not a clean bill of health.
+/// so the row is absent rather than claiming a bundle of zero legs. Which legs
+/// deliver is the tunnel monitor's reading (`legs_not_delivering`); the row
+/// states that count and leaves the conclusion out.
 fn format_bonded_legs(endpoint: &TunnelEndpoint) -> Option<String> {
     if endpoint.legs_bonded == 0 {
         return None;
     }
-    Some(match endpoint.legs_downlink_stalled {
-        0 => format!("{} (all receiving)", endpoint.legs_bonded),
-        1 => format!("{} (1 receiving nothing back)", endpoint.legs_bonded),
-        stalled => format!(
-            "{} ({stalled} receiving nothing back)",
-            endpoint.legs_bonded
+    Some(match endpoint.legs_not_delivering {
+        0 => format!("{} (all delivering)", endpoint.legs_bonded),
+        not_delivering => format!(
+            "{} ({} delivering)",
+            endpoint.legs_bonded,
+            endpoint.legs_bonded.saturating_sub(not_delivering)
         ),
     })
 }
@@ -380,7 +379,7 @@ mod tests {
     use super::*;
     use talpid_types::net::{TransportProtocol, TunnelType};
 
-    fn endpoint(legs_bonded: u8, legs_downlink_stalled: u8) -> TunnelEndpoint {
+    fn endpoint(legs_bonded: u8, legs_not_delivering: u8) -> TunnelEndpoint {
         TunnelEndpoint {
             endpoint: Endpoint {
                 address: "198.51.100.1:443".parse().unwrap(),
@@ -395,7 +394,7 @@ mod tests {
             daita: false,
             effective_mtu: None,
             legs_bonded,
-            legs_downlink_stalled,
+            legs_not_delivering,
             tunnel_type: TunnelType::Warren,
         }
     }
@@ -406,22 +405,18 @@ mod tests {
     }
 
     #[test]
-    fn a_healthy_bundle_reports_its_width() {
+    fn a_bundle_whose_every_leg_delivers_reports_its_width() {
         assert_eq!(
             format_bonded_legs(&endpoint(8, 0)).as_deref(),
-            Some("8 (all receiving)")
+            Some("8 (all delivering)")
         );
     }
 
     #[test]
-    fn a_stalled_leg_is_named_in_the_row() {
-        assert_eq!(
-            format_bonded_legs(&endpoint(8, 1)).as_deref(),
-            Some("8 (1 receiving nothing back)")
-        );
+    fn the_row_counts_only_the_legs_that_deliver() {
         assert_eq!(
             format_bonded_legs(&endpoint(8, 3)).as_deref(),
-            Some("8 (3 receiving nothing back)")
+            Some("8 (5 delivering)")
         );
     }
 }

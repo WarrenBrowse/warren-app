@@ -95,10 +95,11 @@ pub struct TunnelMetadata {
     /// measurement: the first `Up` carries it, as does any tunnel type that
     /// does not bond. A later metadata refresh publishes the sampled width.
     pub legs_bonded: u8,
-    /// How many of those legs kept sending while receiving nothing back over
-    /// the last sampling interval. Only meaningful alongside a non-zero
-    /// `legs_bonded`. An indicator: the datapath takes no action on it.
-    pub legs_downlink_stalled: u8,
+    /// How many of those legs do not deliver: the latest in-tunnel probe sweep
+    /// did not hear them, or they kept sending while receiving nothing back
+    /// over the last sampling interval. Only meaningful alongside a non-zero
+    /// `legs_bonded`. An indicator: the tunnel takes no action on it.
+    pub legs_not_delivering: u8,
 }
 
 impl TunnelMetadata {

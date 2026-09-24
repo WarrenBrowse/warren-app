@@ -289,7 +289,7 @@ mod tests {
             daita: false,
             effective_mtu: None,
             legs_bonded: 0,
-            legs_downlink_stalled: 0,
+            legs_not_delivering: 0,
             tunnel_type: TunnelType::Warren,
         }
     }

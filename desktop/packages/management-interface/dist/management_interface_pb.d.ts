@@ -834,10 +834,10 @@ export class TunnelEndpoint extends jspb.Message {
     getLegsBonded(): number | undefined;
     setLegsBonded(value: number): TunnelEndpoint;
 
-    hasLegsDownlinkStalled(): boolean;
-    clearLegsDownlinkStalled(): void;
-    getLegsDownlinkStalled(): number | undefined;
-    setLegsDownlinkStalled(value: number): TunnelEndpoint;
+    hasLegsNotDelivering(): boolean;
+    clearLegsNotDelivering(): void;
+    getLegsNotDelivering(): number | undefined;
+    setLegsNotDelivering(value: number): TunnelEndpoint;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): TunnelEndpoint.AsObject;
@@ -861,7 +861,7 @@ export namespace TunnelEndpoint {
         tunnelType: TunnelType,
         effectiveMtu?: number,
         legsBonded?: number,
-        legsDownlinkStalled?: number,
+        legsNotDelivering?: number,
     }
 }
 
