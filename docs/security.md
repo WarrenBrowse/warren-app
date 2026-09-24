@@ -218,6 +218,15 @@ can only be made to them.
 This state allows traffic on all interfaces to and from the IP+port+protocol combination that
 the tunnel runs over. See the [connecting] state for details on this rule.
 
+The tunnel can move its session to another server without going down: when the exit in use
+announces maintenance, or when the entry server refuses new connections. The rule then also allows
+the IP+port+protocol combinations of the server it moves to, with the same process/user
+restriction, before the first packet is sent there. Once the session has moved over to the new
+server, only that server's combinations stay allowed. A move that does not complete (the new
+server does not answer, or the session reaches it through a redial instead) leaves them allowed,
+for the same processes, until the tunnel is next rebuilt. The server comes from the server list
+the app verified, never from the exit or the entry that triggered the move.
+
 ### Disconnecting
 
 This state becomes active if there is a VPN tunnel active but the app decides to close said
