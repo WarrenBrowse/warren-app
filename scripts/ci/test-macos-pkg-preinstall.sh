@@ -53,7 +53,10 @@ STUB
 
     cat > "$dir/bin/sudo" <<'STUB'
 #!/usr/bin/env bash
-[ "$1" = "-u" ] && shift 2
+if [ "$1" = "-u" ]; then
+    echo "$2 $4" >> "$WARREN_TEST_SANDBOX/sudo-calls"
+    shift 2
+fi
 exec "$@"
 STUB
 
@@ -126,6 +129,17 @@ assert_setup_called() {
     fi
 }
 
+assert_sealed_as_nobody() {
+    local label=$1 dir=$2 expected=$3 actual=no
+    grep -qx "nobody prepare-restart" "$dir/sudo-calls" 2>/dev/null && actual=yes
+    if [ "$expected" = "$actual" ]; then
+        echo "ok - $label"
+    else
+        echo "FAIL - $label: prepare-restart as nobody: expected $expected, got $actual"
+        failures=$((failures + 1))
+    fi
+}
+
 assert_setup_not_called() {
     local label=$1 dir=$2 subcommand=$3
     if grep -qx "$subcommand" "$dir/setup-calls" 2>/dev/null; then
@@ -163,6 +177,11 @@ dir=$(make_sandbox upgrade 0 with-old-bundle)
 report "a nominal upgrade proceeds" 0 "$(run_preinstall "$dir")" "$dir"
 assert_setup_called "a nominal upgrade arms the guard" "$dir" arm-deadman
 assert_setup_called "a nominal upgrade seals the host" "$dir" prepare-restart
+# Since 1.1.32 the daemon admits `prepare-restart` only from root or the wallet
+# owner, so the seal sent as `nobody` was refused and every macOS update from
+# 1.1.32 aborted (2026-09-24). A warren-setup root alone controls seals as root,
+# like the Linux and Windows installers.
+assert_sealed_as_nobody "a root-controlled warren-setup seals the host as root" "$dir" no
 if [ -e "$dir/Applications/Warren VPN.app" ]; then
     echo "FAIL - a nominal upgrade removes the old bundle"
     failures=$((failures + 1))
@@ -179,6 +198,7 @@ chmod g+w "$dir/Applications/Warren VPN.app/Contents/Resources/warren-setup"
 report "an upgrade over a bundle another account can write proceeds" 0 "$(run_preinstall "$dir")" "$dir"
 assert_setup_not_called "a writable warren-setup is not run as root" "$dir" arm-deadman
 assert_setup_called "the unprivileged seal still runs" "$dir" prepare-restart
+assert_sealed_as_nobody "a writable warren-setup seals only as nobody" "$dir" yes
 
 dir=$(make_sandbox writable-bundle 0 with-old-bundle)
 chmod o+w "$dir/Applications/Warren VPN.app"

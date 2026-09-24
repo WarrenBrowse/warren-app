@@ -75,14 +75,23 @@ if [[ -x "$SETUP" ]]; then
         echo "The previous warren-setup is not controlled by root alone; not running it as root"
     fi
 
-    # Stop the existing daemon. INSTALL_DIR is writeable by admins, so we drop privileges before executing warren-setup.
+    # Stop the existing daemon. INSTALL_DIR is writeable by admins, so a
+    # warren-setup that root does not control alone runs as `nobody`. One that
+    # root alone controls runs as root, like the Linux and Windows installers:
+    # since 1.1.32 the daemon admits `prepare-restart` only from root or the
+    # wallet owner, and refused the `nobody` seal, which aborted every macOS
+    # update from 1.1.32.
     #
     # FATAL since 2026-08-08, matching Windows: this is what seals the host for the
     # swap, and an installer that could not arm the protection must not go on to
     # delete the app and kill the daemon. Proceeding is how a user ends up with no
     # internet, no daemon and no app to click.
     PREPARE_RESTART_STATUS=0
-    sudo -u nobody "$SETUP" prepare-restart &>/dev/null || PREPARE_RESTART_STATUS=$?
+    if setup_may_run_as_root; then
+        "$SETUP" prepare-restart &>/dev/null || PREPARE_RESTART_STATUS=$?
+    else
+        sudo -u nobody "$SETUP" prepare-restart &>/dev/null || PREPARE_RESTART_STATUS=$?
+    fi
 
     # 3 is warren-setup's DaemonNotRunning (mullvad-setup/src/main.rs): no daemon
     # is left holding the host, which is the state the seal was reaching for, not
