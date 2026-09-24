@@ -514,6 +514,7 @@ mod tests {
         assert_eq!(io.reported.len(), 1, "one avoid-set report per advisory");
         assert_eq!(io.slept.len(), 1, "one jitter per advisory");
     }
+
     #[tokio::test]
     async fn reacts_to_advisory_with_one_jittered_escalation() {
         // 60s budget => usable 55 => window capped at 20; fraction 0.5 => 10s.
