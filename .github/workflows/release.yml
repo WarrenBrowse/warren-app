@@ -459,8 +459,9 @@ jobs:
         # No TARGETS: the runner IS aarch64, so build.sh takes its local-target
         # path and electron-builder packages for the host architecture. That
         # names the artifacts _arm64.deb / _aarch64.rpm / _aarch64.pacman, which
-        # ci/stage-release-assets.sh maps to the harmonized release names.
-        run: ./build.sh --optimize
+        # ci/stage-release-assets.sh maps to the harmonized release names. The
+        # retry wrapper absorbs an OOM kill of a rustc by the shared Colima VM.
+        run: bash ci/run-with-runner-retry.sh timeout -k 60s 55m ./build.sh --optimize
 
       - name: Stage release assets (harmonized names)
         if: env.WARREN_CHANNEL == 'prod'
@@ -470,7 +471,7 @@ jobs:
         if: env.WARREN_CHANNEL == 'beta'
         env:
           WARREN_PRODUCT_ENV: beta
-        run: ./build.sh --optimize
+        run: bash ci/run-with-runner-retry.sh timeout -k 60s 55m ./build.sh --optimize
 
       - name: Stage beta release assets
         if: env.WARREN_CHANNEL == 'beta'

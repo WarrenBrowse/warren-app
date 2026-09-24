@@ -247,7 +247,9 @@ jobs:
     outputs:
       sums: ${{ steps.sums.outputs.sums }}
     # Native aarch64 pool on the same Mac, so no Rosetta: no CC=clang against
-    # the emulated gcc cc1 crash and no whole-build retry on a crash signature.
+    # the emulated gcc cc1 crash. The build still goes through the retry
+    # wrapper, because the Colima VM's OOM killer takes an LTO link here when
+    # several runners compile at once, exactly as on the x86_64 pool.
     # This job is what makes the one-line installer work on an ARM server
     # (Raspberry Pi, Ampere/Graviton instances).
     runs-on: [self-hosted, Linux, ARM64, macstudio-arm64]
@@ -287,7 +289,7 @@ jobs:
         # No TARGETS: the runner is aarch64, so build.sh packages for its own
         # host and cargo-deb / cargo-generate-rpm name the output _arm64.deb and
         # _aarch64.rpm.
-        run: ./build.sh --daemon-only --optimize
+        run: bash ci/run-with-runner-retry.sh timeout -k 60s 40m ./build.sh --daemon-only --optimize
       - name: Collect artifacts
         run: |
           mkdir -p release-assets
