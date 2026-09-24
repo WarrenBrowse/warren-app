@@ -12,6 +12,13 @@ notes du tout. Les en-têtes `## [X.Y.Z]` doivent rester identiques à ceux de
 version. Le préfixe de plateforme (`[macOS]`, `[Windows]`, `[linux]`) est lu
 par l'application, gardez-le tel quel.
 
+## [1.1.34] - 2026-09-24
+### Corrigé
+- [macOS] Corriger la mise à jour de l'application depuis la version 1.1.32, qui s'arrêtait sur
+  « L'installation a échoué ». L'installateur demandait à l'application en cours d'exécution de
+  se préparer à la mise à jour depuis un compte dont elle n'accepte plus les commandes, et
+  s'arrêtait devant son refus.
+
 ## [1.1.33] - 2026-09-24
 ### Corrigé
 - [macOS] Corriger le VPN affiché Connecté sans accès à internet sur certains Mac, avec des

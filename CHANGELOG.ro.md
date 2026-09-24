@@ -11,6 +11,12 @@ Titlurile `## [X.Y.Z]` trebuie să rămână identice cu cele din `CHANGELOG.md`
 extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`,
 `[Windows]`, `[linux]`) este citit de aplicație, păstrați-l ca atare.
 
+## [1.1.34] - 2026-09-24
+### Reparat
+- [macOS] Repară actualizarea aplicației de la versiunea 1.1.32, care se oprea cu „Instalarea a
+  eșuat". Programul de instalare cerea aplicației care rula să se pregătească de actualizare
+  dintr-un cont de la care aplicația nu mai acceptă comenzi și se oprea când aceasta refuza.
+
 ## [1.1.33] - 2026-09-24
 ### Reparat
 - [macOS] Repară situația în care VPN-ul apărea Conectat fără acces la internet pe unele Mac-uri,

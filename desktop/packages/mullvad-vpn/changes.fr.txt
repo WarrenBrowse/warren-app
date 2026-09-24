@@ -1,18 +1,5 @@
 ### Corrigé
-- [macOS] Corriger le VPN affiché Connecté sans accès à internet sur certains Mac, avec des
-  reconnexions en boucle. Sur un Mac où un autre VPN ou outil réseau est installé, la connexion au
-  serveur peut cesser de sortir de l'ordinateur dès que le VPN prend en charge le trafic.
-  L'application le vérifie juste après la connexion et passe alors par une route qui fonctionne,
-  mais sa vérification comptait comme preuve les réponses que le serveur répète de lui-même : elle
-  ne changeait donc jamais de route.
-- [Windows, macOS, Linux] Ne plus se reconnecter environ 18 secondes après une connexion sur un
-  réseau calme. L'application prenait pour du trafic resté sans réponse des paquets que la sortie
-  refuse par conception et auxquels elle ne répond jamais : ceux que le système envoie de lui-même,
-  ou les derniers paquets des connexions ouvertes avant le VPN. Faute d'autre trafic, elle concluait
-  que la connexion était morte et se reconnectait.
-- [Windows, macOS, Linux] Signaler moins de chemins d'une nouvelle connexion comme défaillants dans
-  `warren status -v`, `warren doctor` et l'indicateur « Degraded bond », et continuer d'y faire
-  passer le trafic. Juste après la connexion, la sortie peut perdre la réponse à un paquet de test
-  sur le chemin du retour, et une seule réponse perdue suffisait à signaler comme défaillant le
-  chemin par lequel le test était parti. Un chemin n'est plus signalé que lorsque deux séries de
-  tests consécutives le trouvent défaillant.
+- [macOS] Corriger la mise à jour de l'application depuis la version 1.1.32, qui s'arrêtait sur
+  « L'installation a échoué ». L'installateur demandait à l'application en cours d'exécution de
+  se préparer à la mise à jour depuis un compte dont elle n'accepte plus les commandes, et
+  s'arrêtait devant son refus.

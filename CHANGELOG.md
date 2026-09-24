@@ -21,6 +21,12 @@ Line wrap the file at 100 chars.                                              Th
 * **Fixed**: for any bug fixes.
 * **Security**: in case of vulnerabilities.
 
+## [1.1.34] - 2026-09-24
+### Fixed
+- [macOS] Fix updating the app from version 1.1.32, which stopped with "The installation failed".
+  The installer asked the running app to prepare for the update from an account the app no longer
+  accepts commands from, and stopped when it refused.
+
 ## [1.1.33] - 2026-09-24
 ### Fixed
 - [macOS] Fix the VPN showing Connected with no internet on some Macs, in a loop of reconnects.

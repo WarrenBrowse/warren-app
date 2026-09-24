@@ -1,16 +1,4 @@
 ### Reparat
-- [macOS] Repară situația în care VPN-ul apărea Conectat fără acces la internet pe unele Mac-uri,
-  cu reconectări în buclă. Pe un Mac cu un alt VPN sau instrument de rețea instalat, conexiunea
-  către server poate înceta să mai iasă din computer imediat ce VPN-ul preia traficul. Aplicația
-  verifică acest lucru imediat după conectare și trece pe o rută care funcționează, însă verificarea
-  lua drept dovadă răspunsurile pe care serverul le repetă singur, așa că nu schimba niciodată ruta.
-- [Windows, macOS, Linux] Aplicația nu se mai reconectează la aproximativ 18 secunde după ce se
-  conectează pe o rețea liniștită. Considera trafic rămas fără răspuns pachetele pe care ieșirea le
-  refuză intenționat și la care nu răspunde niciodată: cele pe care sistemul le trimite singur sau
-  ultimele pachete ale conexiunilor deschise înainte de VPN. Fără alt trafic, conchidea că
-  conexiunea nu mai funcționează și se reconecta.
-- [Windows, macOS, Linux] `warren status -v`, `warren doctor` și indicatorul „Degraded bond”
-  marchează ca defecte mai puține căi ale unei conexiuni noi, iar traficul rămâne pe ele. Imediat
-  după conectare, ieșirea poate pierde răspunsul la un pachet de test pe drumul de întoarcere, iar
-  un singur răspuns pierdut ajungea pentru a marca drept defectă calea pe care plecase testul. Acum
-  o cale este marcată doar când două runde de teste la rând o găsesc defectă.
+- [macOS] Repară actualizarea aplicației de la versiunea 1.1.32, care se oprea cu „Instalarea a
+  eșuat". Programul de instalare cerea aplicației care rula să se pregătească de actualizare
+  dintr-un cont de la care aplicația nu mai acceptă comenzi și se oprea când aceasta refuza.

@@ -1,15 +1,4 @@
 ### Fixed
-- [macOS] Fix the VPN showing Connected with no internet on some Macs, in a loop of reconnects.
-  On a Mac with another VPN or network tool installed, the connection to the server can stop
-  leaving the computer as soon as the VPN takes over the traffic. The app checks for this right
-  after connecting and switches to a route that works, but its check counted replies the server
-  repeats on its own as proof that the connection worked, so it never switched.
-- [Windows, macOS, Linux] Stop reconnecting about 18 seconds after connecting on a quiet network.
-  The app took packets the exit refuses by design, and never answers, for traffic left without a
-  reply: the packets the system sends on its own, or the last packets of connections opened before
-  the VPN. With nothing else sent, it concluded the connection was dead and reconnected.
-- [Windows, macOS, Linux] Mark fewer paths of a new connection as failing in `warren status -v`,
-  `warren doctor` and the "Degraded bond" indicator, and keep traffic on them. Right after
-  connecting, the exit can lose a test reply on its way back, and one lost reply was enough to mark
-  the path the test went out on as failing. A path is now marked only when two test rounds in a row
-  find it failing.
+- [macOS] Fix updating the app from version 1.1.32, which stopped with "The installation failed".
+  The installer asked the running app to prepare for the update from an account the app no longer
+  accepts commands from, and stopped when it refused.
