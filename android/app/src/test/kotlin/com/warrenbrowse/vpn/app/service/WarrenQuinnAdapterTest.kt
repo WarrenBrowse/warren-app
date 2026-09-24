@@ -247,6 +247,7 @@ class WarrenQuinnAdapterTest {
         platform: RecordingPlatform,
         dispatcher: CoroutineDispatcher = Dispatchers.IO,
         failoverConfig: (WarrenTunnelConfig) -> WarrenTunnelConfig? = { null },
+        hasFailoverExit: (WarrenTunnelConfig) -> Boolean = { false },
         dropRetryGraceMs: Long = 15_000L,
         connectivity: MutableStateFlow<Connectivity> = MutableStateFlow(Connectivity.PresumeOnline),
     ): WarrenQuinnAdapter {
@@ -261,6 +262,7 @@ class WarrenQuinnAdapterTest {
             platform = platform,
             dispatcher = dispatcher,
             failoverConfig = failoverConfig,
+            hasFailoverExit = hasFailoverExit,
             dropRetryGraceMs = dropRetryGraceMs,
         )
     }
@@ -966,7 +968,7 @@ class WarrenQuinnAdapterTest {
     @Test
     fun `ensure a session with nowhere to fail over to stays on a draining exit`() = runTest {
         val platform = RecordingPlatform()
-        val adapter = adapterWith(platform, failoverConfig = { null })
+        val adapter = adapterWith(platform, hasFailoverExit = { false })
         adapter.connect(config(), Mnemonic(PHRASE))
         awaitReal("the session must be dialled") { platform.configs.isNotEmpty() }
 
@@ -980,9 +982,7 @@ class WarrenQuinnAdapterTest {
     @Test
     fun `ensure a session with another exit leaves a draining exit for it`() = runTest {
         val platform = RecordingPlatform()
-        val alternative =
-            config().copy(exitPubkeyHex = "ef".repeat(32), exitEndpoint = "exit2.example:443")
-        val adapter = adapterWith(platform, failoverConfig = { alternative })
+        val adapter = adapterWith(platform, hasFailoverExit = { true })
         adapter.connect(config(), Mnemonic(PHRASE))
         awaitReal("the session must be dialled") { platform.configs.isNotEmpty() }
 

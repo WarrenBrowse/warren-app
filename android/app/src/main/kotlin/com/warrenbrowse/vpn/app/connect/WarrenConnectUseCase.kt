@@ -125,6 +125,17 @@ class WarrenConnectUseCase(
         return alternative?.let(::withLocalToggles)
     }
 
+    /**
+     * Whether a drop or a drain of [previous]'s exit has another exit to fail
+     * over to: the answer [buildFailoverConfig] gives, without pinning a key
+     * seen for the first time nor logging, since it is asked on every dial.
+     */
+    fun hasFailoverExit(previous: WarrenTunnelConfig): Boolean {
+        val built = configBuilder.buildFailover(previous) ?: return false
+        val verdict = built.exitId?.let { localSettings.exitKeyVerdict(it, built.exitPubkeyHex) }
+        return verdict !is ExitKeyVerdict.Mismatch && built.exitPubkeyHex != previous.exitPubkeyHex
+    }
+
     private fun walletPubkey(): WalletAddress? =
         when (val state = walletRepository.state.value) {
             is WalletState.Ready -> state.pubkey

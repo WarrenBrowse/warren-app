@@ -79,6 +79,27 @@ class WarrenConnectUseCaseTest {
     }
 
     @Test
+    fun `a drain has somewhere to go when the failover would dial another exit`() {
+        assertEquals(true, useCase(alternative).hasFailoverExit(previous))
+        assertEquals(false, useCase(null).hasFailoverExit(previous))
+        assertEquals(
+            false,
+            useCase(alternative, verdict = ExitKeyVerdict.Mismatch("ee".repeat(32)))
+                .hasFailoverExit(previous),
+        )
+    }
+
+    @Test
+    fun `asking whether a drain has somewhere to go pins nothing`() {
+        // It is asked on every dial, well before any failover: a first
+        // sighting is pinned when the failover actually dials it.
+        val localSettings: WarrenLocalSettingsRepository = mockk(relaxed = true)
+        useCase(alternative, verdict = ExitKeyVerdict.FirstSeen, localSettings = localSettings)
+            .hasFailoverExit(previous)
+        verify(exactly = 0) { localSettings.trustExitKey(any(), any()) }
+    }
+
+    @Test
     fun `a first-seen alternative is pinned like a fresh connect would`() {
         val localSettings: WarrenLocalSettingsRepository = mockk(relaxed = true)
         val config =

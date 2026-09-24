@@ -75,6 +75,9 @@ class WarrenQuinnAdapter(
     // null to redial the same exit: desktop `assemble_failover_for_attempt`,
     // resolved by the caller from the current pin and catalogue.
     private val failoverConfig: (WarrenTunnelConfig) -> WarrenTunnelConfig? = { null },
+    // Whether [failoverConfig] would dial another exit, asked on every dial
+    // with no side effect (see [withDrainFailover]).
+    private val hasFailoverExit: (WarrenTunnelConfig) -> Boolean = { false },
     // Injectable so a test does not sit through the production grace.
     private val dropRetryGraceMs: Long = DROP_RETRY_GRACE_MS,
 ) {
@@ -271,11 +274,9 @@ class WarrenQuinnAdapter(
         activeFd?.close()
         activeFd = liveDup
 
+        val wire = withDrainFailover(config).toWireJson()
         val rc = try {
-            mnemonic.useAsString { phrase ->
-                val wire = withDrainFailover(config).toWireJson()
-                platform.connectTunnel(fd.detachFd(), phrase, wire)
-            }
+            mnemonic.useAsString { phrase -> platform.connectTunnel(fd.detachFd(), phrase, wire) }
         } catch (e: IllegalStateException) {
             // The cached mnemonic was wiped between scheduling and this
             // (re)connect, e.g. a user disconnect raced an automatic retry.
@@ -935,15 +936,10 @@ class WarrenQuinnAdapter(
     /**
      * [config] telling the native session whether a maintenance drain of its
      * exit has another exit to fail over to (see
-     * [WarrenTunnelConfig.drainFailover]): the failover [scheduleExitFailover]
-     * would dial must name a different exit.
+     * [WarrenTunnelConfig.drainFailover]).
      */
-    private fun withDrainFailover(config: WarrenTunnelConfig): WarrenTunnelConfig {
-        val failover = failoverConfig(config)
-        return config.copy(
-            drainFailover = failover != null && failover.exitPubkeyHex != config.exitPubkeyHex
-        )
-    }
+    private fun withDrainFailover(config: WarrenTunnelConfig): WarrenTunnelConfig =
+        config.copy(drainFailover = hasFailoverExit(config))
 
     /**
      * Leave an exit that is leaving for another one, at once: the same

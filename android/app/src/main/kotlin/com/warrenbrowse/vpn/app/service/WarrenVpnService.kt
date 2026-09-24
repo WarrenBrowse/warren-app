@@ -95,6 +95,7 @@ class WarrenVpnService : LifecycleVpnService() {
                 settings = getKoin().get(),
                 connectivity = connectivityMonitor.connectivity,
                 failoverConfig = warrenConnectUseCase::buildFailoverConfig,
+                hasFailoverExit = warrenConnectUseCase::hasFailoverExit,
             )
 
         // Observe Quinn tunnel transitions:
