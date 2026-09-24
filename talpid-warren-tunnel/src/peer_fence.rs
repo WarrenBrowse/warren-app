@@ -13,7 +13,9 @@
 //! verified directory. No traffic of the user's leaves outside the tunnel
 //! through it.
 
-use std::sync::{Arc, Mutex, Weak};
+use std::sync::{Arc, Weak};
+
+use tokio::sync::mpsc;
 
 use futures::future::BoxFuture;
 use talpid_types::net::{Endpoint, TransportProtocol};
@@ -26,7 +28,9 @@ pub(crate) type PeerSink = Arc<dyn Fn(Vec<Endpoint>) -> BoxFuture<'static, ()> +
 
 /// The relays the firewall names for this tunnel.
 pub(crate) struct PeerFence {
-    peers: Mutex<Peers>,
+    /// Held until the firewall applied the set computed under it, so the sets
+    /// reach the firewall in the order the fence computed them.
+    peers: tokio::sync::Mutex<Peers>,
     sink: PeerSink,
 }
 
@@ -40,7 +44,7 @@ struct Peers {
 impl PeerFence {
     pub(crate) fn new(in_use: &RelayDescriptorSigned, sink: PeerSink) -> Self {
         Self {
-            peers: Mutex::new(Peers {
+            peers: tokio::sync::Mutex::new(Peers {
                 landed: relay_endpoints(in_use),
                 pending: Vec::new(),
             }),
@@ -52,31 +56,23 @@ impl PeerFence {
     /// requested before an earlier one landed keeps that one's relay named:
     /// the supervisor may still be dialling it.
     pub(crate) async fn open_for(&self, target: &RelayDescriptorSigned) {
-        let named = {
-            let mut peers = self.lock();
-            for endpoint in relay_endpoints(target) {
-                if !peers.landed.contains(&endpoint) && !peers.pending.contains(&endpoint) {
-                    peers.pending.push(endpoint);
-                }
+        let mut peers = self.peers.lock().await;
+        for endpoint in relay_endpoints(target) {
+            if !peers.landed.contains(&endpoint) && !peers.pending.contains(&endpoint) {
+                peers.pending.push(endpoint);
             }
-            peers.landed.iter().chain(&peers.pending).copied().collect()
-        };
+        }
+        let named = peers.landed.iter().chain(&peers.pending).copied().collect();
         (self.sink)(named).await;
     }
 
     /// The session landed on `relay`: name it alone.
     pub(crate) async fn landed_on(&self, relay: &RelayDescriptorSigned) {
-        let named = {
-            let mut peers = self.lock();
-            peers.landed = relay_endpoints(relay);
-            peers.pending.clear();
-            peers.landed.clone()
-        };
+        let mut peers = self.peers.lock().await;
+        peers.landed = relay_endpoints(relay);
+        peers.pending.clear();
+        let named = peers.landed.clone();
         (self.sink)(named).await;
-    }
-
-    fn lock(&self) -> std::sync::MutexGuard<'_, Peers> {
-        self.peers.lock().unwrap_or_else(|p| p.into_inner())
     }
 }
 
@@ -114,14 +110,16 @@ pub(crate) fn swap_observer(
 /// whether off a draining exit or off a refusing entry, opens the firewall for
 /// its target before the overlap dial starts.
 ///
-/// The daemon keeps it across tunnels, so it holds the fence weakly: the fence
-/// carries the tunnel's event sender, and the state machine reads the end of
-/// that channel as the tunnel going down.
+/// Migrations run one at a time, in the order they were asked for: the
+/// supervisor dials the last target it was handed, so an older one reaching
+/// it last would win.
+///
+/// The daemon keeps the handle across tunnels, so the fence is held weakly:
+/// it carries the tunnel's event sender, and the state machine reads the end
+/// of that channel as the tunnel going down.
 #[derive(Clone)]
 pub struct WarrenMigrateHandle {
-    fence: Weak<PeerFence>,
-    migrate: Arc<dyn Fn(CircuitTarget) + Send + Sync>,
-    runtime: tokio::runtime::Handle,
+    queue: mpsc::UnboundedSender<CircuitTarget>,
 }
 
 impl WarrenMigrateHandle {
@@ -130,31 +128,32 @@ impl WarrenMigrateHandle {
         migrate: Arc<dyn Fn(CircuitTarget) + Send + Sync>,
         runtime: tokio::runtime::Handle,
     ) -> Self {
-        Self {
-            fence: Arc::downgrade(fence),
-            migrate,
-            runtime,
-        }
+        let (queue, mut targets) = mpsc::unbounded_channel::<CircuitTarget>();
+        let fence: Weak<PeerFence> = Arc::downgrade(fence);
+        runtime.spawn(async move {
+            while let Some(target) = targets.recv().await {
+                let Some(fence) = fence.upgrade() else {
+                    return;
+                };
+                fence.open_for(&target.relay).await;
+                migrate(target);
+            }
+        });
+        Self { queue }
     }
 
     /// Gap-free migration onto `target` (`MigrateHandle::migrate_to`), once
     /// the firewall names its relay. Returns at once; the dial starts on the
     /// tunnel's runtime, and a tunnel already torn down never starts it.
     pub fn migrate_to(&self, target: CircuitTarget) {
-        let Some(fence) = self.fence.upgrade() else {
-            return;
-        };
-        let migrate = Arc::clone(&self.migrate);
-        self.runtime.spawn(async move {
-            fence.open_for(&target.relay).await;
-            migrate(target);
-        });
+        let _ = self.queue.send(target);
     }
 }
 
 #[cfg(test)]
 mod tests {
     use std::net::SocketAddr;
+    use std::sync::Mutex;
 
     use super::*;
 
@@ -342,6 +341,56 @@ mod tests {
         tokio::task::yield_now().await;
 
         assert!(!dialled.load(std::sync::atomic::Ordering::SeqCst));
+    }
+
+    /// A firewall that takes a while to apply the first set it is handed, and
+    /// applies the next ones at once.
+    fn slow_first_firewall(log: &Log) -> PeerSink {
+        let log = Arc::clone(log);
+        let calls = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        Arc::new(move |peers| {
+            let log = Arc::clone(&log);
+            let first = calls.fetch_add(1, std::sync::atomic::Ordering::SeqCst) == 0;
+            Box::pin(async move {
+                log.lock().unwrap().push(Step::Named(peers));
+                if first {
+                    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+                }
+                log.lock().unwrap().push(Step::Applied);
+            })
+        })
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn migrations_dial_in_the_order_they_were_asked_for() {
+        // The supervisor dials the last target it was handed: an older one
+        // reaching it last would win.
+        let log: Log = Arc::default();
+        let fence = Arc::new(PeerFence::new(
+            &relay("198.51.100.1:443", None),
+            slow_first_firewall(&log),
+        ));
+        let dialled: Arc<Mutex<Vec<SocketAddr>>> = Arc::default();
+        let dials = Arc::clone(&dialled);
+        let handle = WarrenMigrateHandle::new(
+            &fence,
+            Arc::new(move |target: CircuitTarget| {
+                dials.lock().unwrap().push(target.relay.endpoint);
+            }),
+            tokio::runtime::Handle::current(),
+        );
+
+        handle.migrate_to(target(relay("198.51.100.2:443", None)));
+        handle.migrate_to(target(relay("198.51.100.3:443", None)));
+        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+
+        assert_eq!(
+            *dialled.lock().unwrap(),
+            vec![
+                "198.51.100.2:443".parse::<SocketAddr>().unwrap(),
+                "198.51.100.3:443".parse::<SocketAddr>().unwrap(),
+            ]
+        );
     }
 
     #[test]
