@@ -12,7 +12,7 @@ notes du tout. Les en-têtes `## [X.Y.Z]` doivent rester identiques à ceux de
 version. Le préfixe de plateforme (`[macOS]`, `[Windows]`, `[linux]`) est lu
 par l'application, gardez-le tel quel.
 
-## [Non publié]
+## [1.1.32] - 2026-09-24
 ### Ajouté
 - Demander le code du bon quand `warren account redeem` est lancé sans code, ou le lire sur
   l'entrée standard, pour qu'un script puisse le transmettre. Un code tapé sur la ligne de commande
@@ -30,22 +30,22 @@ par l'application, gardez-le tel quel.
   Quand vous approuvez sur le même appareil, l'application ouvre ce navigateur pour qu'il termine
   seul ; après un QR code ou un code de connexion saisi dans les Réglages, l'application affiche le
   code à saisir sur l'autre appareil. Un lien que quelqu'un d'autre vous envoie ne le connecte plus.
-- Réserver au compte qui a installé Warren sur cet ordinateur, et aux administrateurs, la
-  connexion, la déconnexion, les réglages et l'usage du portefeuille. Les autres comptes du même
-  ordinateur voient toujours si le VPN est actif. L'application de bureau indique quand Warren
-  appartient à un autre compte, et redemande chaque minute.
+- [Windows, macOS, Linux] Réserver au compte qui a installé Warren sur cet ordinateur, et aux
+  administrateurs, la connexion, la déconnexion, les réglages et l'usage du portefeuille. Les autres
+  comptes du même ordinateur voient toujours si le VPN est actif. L'application de bureau indique
+  quand Warren appartient à un autre compte, et redemande chaque minute.
 - [macOS] Installer la version en ligne de commande sous `/opt/warren` plutôt que `/usr/local`, que
   Homebrew confie au compte qui l'a installé sur les Mac Intel. L'installateur refuse un dossier
   qu'un autre compte peut modifier, et déplace une installation existante.
 
 ### Corrigé
-- Se reconnecter seul quand l'emplacement choisi retrouve une sortie après une maintenance. Si la
-  liste des sorties que l'application avait récupérée n'en contenait plus aucune à cet endroit, la
-  connexion restait bloquée jusqu'à un clic de votre part ; l'application récupère maintenant la
-  liste à nouveau et réessaie chaque minute.
-- [Android, iOS] Passer sur une autre sortie dès que la sortie utilisée annonce une maintenance, et
-  sur un autre serveur d'entrée quand l'entrée d'une connexion multihop refuse les nouvelles
-  connexions, au lieu de réessayer le même serveur jusqu'à son retour.
+- [Windows, macOS, Linux] Se reconnecter seul quand l'emplacement choisi retrouve une sortie après
+  une maintenance. Si la liste des sorties que l'application avait récupérée n'en contenait plus
+  aucune à cet endroit, la connexion restait bloquée jusqu'à un clic de votre part ; l'application
+  récupère maintenant la liste à nouveau et réessaie chaque minute.
+- [Android] Passer sur une autre sortie dès que la sortie utilisée annonce une maintenance, et sur
+  un autre serveur d'entrée quand l'entrée d'une connexion multihop refuse les nouvelles connexions,
+  au lieu de réessayer le même serveur jusqu'à son retour.
 - [Android] Le dire quand la connexion coupait sans cesse et que l'application a cessé de réessayer
   en laissant passer votre trafic par votre réseau habituel, hors du VPN, et indiquer le Mode
   verrouillage comme moyen de le garder bloqué. L'application affichait un message générique sur une
@@ -53,8 +53,6 @@ par l'application, gardez-le tel quel.
 - [Windows, macOS, Linux] Quitter chaque sortie qui annonce une maintenance pendant que vous y êtes
   connecté. Après un premier passage sur une autre sortie, une maintenance de celle-ci laissait la
   connexion en place jusqu'à ce que la sortie la ferme.
-- [iOS] Quitter une sortie qui annonce une maintenance même quand la sortie que la connexion vient
-  de quitter annonçait la même.
 - [Windows, macOS, Linux] Appliquer un changement d'emplacement ou du réglage multihop fait pendant
   qu'un serveur d'entrée refusait les nouvelles connexions. La connexion pouvait rester sur ses
   serveurs précédents jusqu'à sa prochaine reconnexion.
@@ -75,8 +73,8 @@ par l'application, gardez-le tel quel.
   transmet rien reçoit quand même les accusés de réception de la sortie.
 
 ### Sécurité
-- Rendre le fichier de réglages lisible par les seuls administrateurs, et créer les rapports de
-  problème lisibles par leur seul propriétaire.
+- [macOS, Linux] Rendre le fichier de réglages lisible par les seuls administrateurs, et créer les
+  rapports de problème lisibles par leur seul propriétaire.
 - Durcir l'application de bureau : elle ne peut plus être lancée comme simple interpréteur de
   scripts, ignore les options de débogage et de Node sur sa ligne de commande, ne charge son code
   que depuis sa propre archive et, sous macOS et Windows, refuse de démarrer quand cette archive a
@@ -87,8 +85,8 @@ par l'application, gardez-le tel quel.
   du partage d'écran tant qu'il est affiché.
 - N'ouvrir aucune page de connexion au forum qui appartient à une autre connexion que celle que
   vous avez approuvée.
-- Lancer les outils système dont la connexion dépend depuis leur emplacement système fixe, jamais
-  depuis le chemin de recherche de celui qui a lancé l'application.
+- [Windows, macOS, Linux] Lancer les outils système dont la connexion dépend depuis leur emplacement
+  système fixe, jamais depuis le chemin de recherche de celui qui a lancé l'application.
 - [Linux] Lancer un programme hors du tunnel uniquement pour le compte propriétaire de Warren ou
   pour un administrateur.
 - [Linux] Réserver au compte propriétaire de Warren, et aux administrateurs, la fermeture de la
@@ -97,13 +95,14 @@ par l'application, gardez-le tel quel.
   application pouvait envoyer la même demande et faire connecter le VPN.
 - [Windows] Faire parler la ligne de commande uniquement à un canal de gestion servi par un
   administrateur, et couper une connexion de gestion restée muette trente secondes.
-- [macOS] Ne jamais lancer en administrateur l'outil d'installation de la version précédente
-  pendant une mise à jour, sauf si seuls les administrateurs ont pu le modifier, et garder la
-  protection de mise à jour là où aucun autre compte ne peut la remplacer.
+- [macOS] Ne jamais lancer en administrateur l'outil d'installation de la version précédente pendant
+  une mise à jour, sauf si seuls les administrateurs ont pu le modifier.
+- [Windows] Garder la protection de mise à jour, qui s'exécute en administrateur pendant une mise à
+  jour, dans un dossier qu'aucun autre compte ne peut modifier.
 - Signer la liste des sommes de contrôle de chaque version en ligne de commande avec la clé de
   publication de Warren. Les scripts d'installation refusent un téléchargement qu'elle ne garantit
   pas, et les archives enregistrent chaque fichier comme appartenant au compte administrateur.
-- Tenir l'adresse interne du tunnel à l'écart des journaux de l'application.
+- [Windows, macOS, Linux] Tenir l'adresse interne du tunnel à l'écart des journaux de l'application.
 - Récupérer un abonnement acheté depuis l'application avec un secret que l'application garde pour
   elle et n'envoie que dans la requête qui récupère le bon, pour qu'un lien d'achat vu par quelqu'un
   d'autre ne lui donne plus le bon. Tant que l'achat attend, le secret est scellé par le trousseau
@@ -111,8 +110,8 @@ par l'application, gardez-le tel quel.
   journée. Sous Linux sans trousseau, il reste en mémoire, et l'achat n'est alors récupéré que
   tant que l'application tourne. Un achat commencé avec une version précédente et encore en
   attente de paiement n'est plus récupéré automatiquement.
-- Quand le tunnel est reconstruit, ne redemander son ancienne adresse interne qu'à la sortie qui l'a
-  attribuée.
+- [Windows, macOS, Linux] Quand le tunnel est reconstruit, ne redemander son ancienne adresse
+  interne qu'à la sortie qui l'a attribuée.
 - [Windows, macOS, Linux] Répondre à un serveur qui refuse la connexion en passant une connexion
   multihop sur un autre serveur d'entrée pour la même sortie, et en réessayant une connexion à un
   seul serveur sur ce même serveur. N'importe qui sur le chemin réseau peut forger un tel refus, et

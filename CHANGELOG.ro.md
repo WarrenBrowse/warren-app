@@ -11,7 +11,7 @@ Titlurile `## [X.Y.Z]` trebuie să rămână identice cu cele din `CHANGELOG.md`
 extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`,
 `[Windows]`, `[linux]`) este citit de aplicație, păstrați-l ca atare.
 
-## [Nepublicat]
+## [1.1.32] - 2026-09-24
 ### Adăugat
 - Cere codul voucherului când `warren account redeem` este rulat fără cod, sau îl citește de pe
   intrarea standard, pentru ca un script să i-l poată transmite. Un cod scris în linia de comandă
@@ -28,22 +28,22 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   Când aprobați pe același dispozitiv, aplicația deschide acel browser ca să termine singur; după
   un cod QR sau un cod de autentificare introdus în Setări, aplicația afișează codul de introdus pe
   celălalt dispozitiv. Un link trimis de altcineva nu îl mai autentifică pe acela.
-- Doar contul care a configurat Warren pe acest computer, și administratorii, pot conecta,
-  deconecta, schimba setările sau folosi portofelul. Celelalte conturi de pe același computer văd
-  în continuare dacă VPN-ul este pornit. Aplicația desktop spune când Warren aparține altui cont și
-  întreabă din nou în fiecare minut.
+- [Windows, macOS, Linux] Doar contul care a configurat Warren pe acest computer, și
+  administratorii, pot conecta, deconecta, schimba setările sau folosi portofelul. Celelalte conturi
+  de pe același computer văd în continuare dacă VPN-ul este pornit. Aplicația desktop spune când
+  Warren aparține altui cont și întreabă din nou în fiecare minut.
 - [macOS] Instalează versiunea pentru linia de comandă în `/opt/warren` în loc de `/usr/local`, pe
   care Homebrew îl dă, pe Mac-urile Intel, contului care l-a instalat. Programul de instalare
   refuză un dosar pe care alt cont îl poate modifica și mută o instalare existentă.
 
 ### Reparat
-- Se reconectează singură când locația aleasă are din nou o ieșire după o mentenanță. Dacă lista de
-  ieșiri descărcată ultima dată de aplicație nu mai conținea niciuna acolo, conexiunea rămânea
-  blocată până la un clic din partea dvs.; aplicația descarcă acum lista din nou și reîncearcă în
-  fiecare minut.
-- [Android, iOS] Trece pe altă ieșire imediat ce ieșirea folosită anunță o mentenanță și pe alt
-  server de intrare când intrarea unei conexiuni multihop refuză conexiunile noi, în loc să
-  reîncerce același server până revine.
+- [Windows, macOS, Linux] Se reconectează singură când locația aleasă are din nou o ieșire după o
+  mentenanță. Dacă lista de ieșiri descărcată ultima dată de aplicație nu mai conținea niciuna
+  acolo, conexiunea rămânea blocată până la un clic din partea dvs.; aplicația descarcă acum lista
+  din nou și reîncearcă în fiecare minut.
+- [Android] Trece pe altă ieșire imediat ce ieșirea folosită anunță o mentenanță și pe alt server de
+  intrare când intrarea unei conexiuni multihop refuză conexiunile noi, în loc să reîncerce același
+  server până revine.
 - [Android] Spune acest lucru când conexiunea cădea întruna și aplicația a încetat să reîncerce,
   lăsând traficul dvs. să treacă prin rețeaua obișnuită, în afara VPN-ului, și indică Mod Blocare ca
   modalitate de a-l ține blocat. Aplicația afișa un mesaj generic despre o posibilă scurgere de
@@ -51,8 +51,6 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [Windows, macOS, Linux] Părăsește fiecare ieșire care anunță o mentenanță cât timp sunteți
   conectat la ea. După o primă trecere pe altă ieșire, o mentenanță a acesteia lăsa conexiunea pe
   loc până când ieșirea o închidea.
-- [iOS] Părăsește o ieșire care anunță o mentenanță chiar și când ieșirea pe care conexiunea tocmai
-  a părăsit-o anunța aceeași mentenanță.
 - [Windows, macOS, Linux] Aplică o schimbare de locație sau a setării multihop făcută în timp ce un
   server de intrare refuza conexiunile noi. Conexiunea putea rămâne pe serverele anterioare până la
   următoarea reconectare.
@@ -73,8 +71,8 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   confirmările de primire ale ieșirii.
 
 ### Securitate
-- Fișierul de setări poate fi citit doar de administratori, iar rapoartele de problemă doar de
-  proprietarul lor.
+- [macOS, Linux] Fișierul de setări poate fi citit doar de administratori, iar rapoartele de
+  problemă doar de proprietarul lor.
 - Aplicația desktop este întărită: nu mai poate fi pornită ca simplu interpretor de scripturi,
   ignoră opțiunile de depanare și de Node din linia de comandă, își încarcă codul doar din propria
   arhivă și, pe macOS și Windows, refuză să pornească atunci când arhiva a fost modificată.
@@ -84,8 +82,8 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   de partajarea ecranului cât timp este afișat.
 - Nu deschide nicio pagină de autentificare pe forum care aparține altei autentificări decât cea
   aprobată de dvs.
-- Pornește instrumentele de sistem de care depinde conexiunea din locul lor fix din sistem,
-  niciodată din calea de căutare a celui care a pornit aplicația.
+- [Windows, macOS, Linux] Pornește instrumentele de sistem de care depinde conexiunea din locul lor
+  fix din sistem, niciodată din calea de căutare a celui care a pornit aplicația.
 - [Linux] Rulează un program în afara tunelului doar pentru contul care deține Warren sau pentru
   un administrator.
 - [Linux] Doar contul care deține Warren, și administratorii, pot închide conexiunea VPN afișată
@@ -95,12 +93,13 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [Windows] Linia de comandă vorbește doar cu un canal de gestiune servit de un administrator, iar
   o conexiune de gestiune care tace timp de treizeci de secunde este închisă.
 - [macOS] Nu rulează niciodată ca administrator, la o actualizare, instrumentul de configurare al
-  versiunii anterioare, decât dacă doar administratorii l-au putut modifica, și păstrează
-  protecția de actualizare acolo unde niciun alt cont nu o poate înlocui.
+  versiunii anterioare, decât dacă doar administratorii l-au putut modifica.
+- [Windows] Păstrează protecția de actualizare, care rulează ca administrator în timpul unei
+  actualizări, într-un dosar pe care niciun alt cont nu îl poate modifica.
 - Semnează lista sumelor de control a fiecărei versiuni pentru linia de comandă cu cheia de
   publicare Warren. Scripturile de instalare refuză o descărcare pe care ea nu o garantează, iar
   arhivele înregistrează fiecare fișier ca aparținând contului de administrator.
-- Ține adresa internă a tunelului în afara jurnalelor aplicației.
+- [Windows, macOS, Linux] Ține adresa internă a tunelului în afara jurnalelor aplicației.
 - Preia un abonament cumpărat din aplicație cu un secret pe care aplicația îl păstrează pentru ea și
   îl trimite doar în cererea care preia voucherul, astfel încât un link de cumpărare văzut de
   altcineva să nu-i mai dea voucherul. Cât timp cumpărarea așteaptă, secretul este sigilat de
@@ -108,8 +107,8 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   preluat sau după o zi. Pe Linux fără depozit de chei (keyring), rămâne în memorie, iar
   cumpărarea este preluată doar cât timp aplicația rulează. O cumpărare începută cu o versiune
   anterioară și încă în așteptarea plății nu mai este preluată automat.
-- Când tunelul este reconstruit, cere înapoi adresa sa internă anterioară doar de la ieșirea care a
-  atribuit-o.
+- [Windows, macOS, Linux] Când tunelul este reconstruit, cere înapoi adresa sa internă anterioară
+  doar de la ieșirea care a atribuit-o.
 - [Windows, macOS, Linux] Răspunde unui server care refuză conexiunea mutând o conexiune multihop
   pe alt server de intrare pentru aceeași ieșire și reîncercând o conexiune printr-un singur server
   pe același server. Oricine se află pe calea de rețea poate falsifica un astfel de refuz, iar

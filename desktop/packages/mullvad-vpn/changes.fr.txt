@@ -1,55 +1,105 @@
 ### Ajouté
-- Se connecter sur un réseau qui ne donne aucune adresse IPv4 à votre appareil. Quatre des six
-  sorties répondent maintenant aussi en IPv6, l'application choisit la famille d'adresses que votre
-  réseau peut réellement joindre avant de composer, et ouvre les deux dans le pare-feu. Un réseau
-  mobile en IPv6 seul laissait l'application composer une adresse hors d'atteinte, coupe-circuit
-  actif.
-- Donner à la commande de port forwarding une sortie lisible par une machine, pour qu'un script
-  puisse piloter un client torrent comme qBittorrent sans lire le texte destiné à l'humain.
-  `warren port-forward get --json` et `warren port-forward status --json` affichent un objet JSON
-  par ligne, `status --wait` attend que le port public soit accordé et indique le résultat par son
-  code de sortie, et `status --watch --exec` lance la commande de votre choix à chaque changement
-  du port public accordé.
-- Copier le port public accordé depuis l'écran de port forwarding. Un bouton de copie est placé à
-  côté de chaque port ouvert et met le seul numéro de port dans le presse-papiers, prêt à coller
-  dans le champ du port d'écoute d'un client torrent.
-- Vous prévenir quand un port public accordé s'ouvre, change ou se ferme, par une notification
-  système qui nomme le nouveau port et ouvre l'écran de port forwarding. Un renouvellement qui
-  garde le même port ne dit rien. La notification se désactive depuis l'écran de port forwarding.
-- Publier les ports publics accordés dans un fichier qu'un script peut surveiller, un port par
-  ligne, écrit à côté des réglages de l'application sous le nom `forwarded_port`
-  (`~/.config/Warren VPN/` sous Linux, `~/Library/Application Support/Warren VPN/` sous macOS,
-  `%LOCALAPPDATA%\Warren VPN\` sous Windows). Le fichier se vide quand le tunnel est coupé, et
-  il est réécrit sur place pour qu'une surveillance continue de le suivre.
-- Saisir le port public accordé dans votre client torrent, et l'y maintenir. Choisissez
-  qBittorrent, Transmission ou Deluge sur l'écran de port forwarding, donnez l'adresse de son
-  interface web et ses identifiants, et l'application écrit le port accordé dans le client via
-  l'API de ce client, à chaque fois que le serveur de sortie déplace le port. Elle désactive aussi
-  le tirage de port aléatoire et l'UPnP du client, qui le ramèneraient aussitôt hors du port
-  accordé. « Tester la connexion » rapporte la réponse du client et « Appliquer maintenant » écrit
-  le port courant sans attendre. Le mot de passe est conservé dans le trousseau du système
-  d'exploitation, jamais dans le fichier de réglages.
-- Relier l'écran de port forwarding au guide du site expliquant comment configurer un client
-  torrent avec un port accordé.
+- Demander le code du bon quand `warren account redeem` est lancé sans code, ou le lire sur
+  l'entrée standard, pour qu'un script puisse le transmettre. Un code tapé sur la ligne de commande
+  est visible par tous les comptes de l'ordinateur pendant que la commande s'exécute ; la commande
+  l'accepte encore à cet endroit, et le signale.
+- Prévenir après une connexion au forum quand le lien ouvert avait été créé pour une connexion sur
+  un autre appareil. Le forum répond à un tel lien par un code à saisir ailleurs, ce qui est
+  l'allure d'une connexion lancée par quelqu'un d'autre puis envoyée à vous : l'application indique
+  maintenant que l'expéditeur du lien essaie de se connecter à votre place, et qu'il ne faut pas
+  lui donner le code.
+
+### Modifié
+- Terminer une connexion au forum avec un code à usage unique. Le navigateur qui a ouvert la
+  connexion doit maintenant présenter un code à 6 chiffres avant que le forum ne le laisse entrer.
+  Quand vous approuvez sur le même appareil, l'application ouvre ce navigateur pour qu'il termine
+  seul ; après un QR code ou un code de connexion saisi dans les Réglages, l'application affiche le
+  code à saisir sur l'autre appareil. Un lien que quelqu'un d'autre vous envoie ne le connecte plus.
+- [Windows, macOS, Linux] Réserver au compte qui a installé Warren sur cet ordinateur, et aux
+  administrateurs, la connexion, la déconnexion, les réglages et l'usage du portefeuille. Les autres
+  comptes du même ordinateur voient toujours si le VPN est actif. L'application de bureau indique
+  quand Warren appartient à un autre compte, et redemande chaque minute.
+- [macOS] Installer la version en ligne de commande sous `/opt/warren` plutôt que `/usr/local`, que
+  Homebrew confie au compte qui l'a installé sur les Mac Intel. L'installateur refuse un dossier
+  qu'un autre compte peut modifier, et déplace une installation existante.
 
 ### Corrigé
-- Vous dire pourquoi votre trafic est bloqué quand votre réseau ne peut pas joindre Warren du
-  tout. L'application attendait en silence un réseau utilisable, donc un téléphone qui avait
-  internet restait derrière le coupe-circuit sans explication à l'écran. Elle nomme désormais la
-  famille d'adresses manquante et indique les deux sorties: se déconnecter, ou changer de réseau.
-- Empêcher une tentative de connexion de rester bloquée vingt secondes sur un réseau qui laisse le
-  tunnel démarrer puis le coupe. L'application demandait son adresse au serveur et attendait une
-  réponse qui n'arrivait jamais, ce qui consommait toute la tentative sur cette seule attente, sans
-  jamais atteindre le moment où elle bascule en TCP. Elle abandonne maintenant une réponse
-  silencieuse au bout de six secondes, et envoie la tentative suivante en TCP sur le port 443
-  directement.
-- Conserver un fichier de journal de plus sur Android. Rouvrir l'application deux fois après une
-  connexion échouée effaçait jusqu'ici les traces que l'on cherche justement dans un rapport de bug.
-- Empêcher la carte de connexion Android de repasser au vert après que le système a repris le VPN.
-  Quand une autre application prenait la place du VPN pendant qu'une connexion était encore en
-  cours, le tunnel était bien démonté, mais une mise à jour d'état déjà en route réaffichait
-  « Connecté » sur une session qui n'existait plus.
-- Afficher les notes de version de l'application installée dans la langue de l'application. L'écran
-  « Quoi de neuf » lisait un fichier unique, écrit en anglais, donc une application en français ou
-  en roumain annonçait ses propres changements en anglais. Les notes proposées avec une mise à jour
-  étaient déjà traduites.
+- [Windows, macOS, Linux] Se reconnecter seul quand l'emplacement choisi retrouve une sortie après
+  une maintenance. Si la liste des sorties que l'application avait récupérée n'en contenait plus
+  aucune à cet endroit, la connexion restait bloquée jusqu'à un clic de votre part ; l'application
+  récupère maintenant la liste à nouveau et réessaie chaque minute.
+- [Android] Passer sur une autre sortie dès que la sortie utilisée annonce une maintenance, et sur
+  un autre serveur d'entrée quand l'entrée d'une connexion multihop refuse les nouvelles connexions,
+  au lieu de réessayer le même serveur jusqu'à son retour.
+- [Android] Le dire quand la connexion coupait sans cesse et que l'application a cessé de réessayer
+  en laissant passer votre trafic par votre réseau habituel, hors du VPN, et indiquer le Mode
+  verrouillage comme moyen de le garder bloqué. L'application affichait un message générique sur une
+  possible fuite de trafic réseau.
+- [Windows, macOS, Linux] Quitter chaque sortie qui annonce une maintenance pendant que vous y êtes
+  connecté. Après un premier passage sur une autre sortie, une maintenance de celle-ci laissait la
+  connexion en place jusqu'à ce que la sortie la ferme.
+- [Windows, macOS, Linux] Appliquer un changement d'emplacement ou du réglage multihop fait pendant
+  qu'un serveur d'entrée refusait les nouvelles connexions. La connexion pouvait rester sur ses
+  serveurs précédents jusqu'à sa prochaine reconnexion.
+- [Windows, macOS, Linux, Android] Garder la connexion sur une sortie qui annonce une maintenance
+  quand l'emplacement choisi n'a pas d'autre sortie. L'application la coupait et réessayait cette
+  sortie, qui refusait jusqu'à son redémarrage : environ deux minutes sans internet.
+- [Windows, macOS, Linux] Passer sur une autre sortie sans coupure quand la sortie utilisée annonce
+  une maintenance. Le pare-feu bloquait le nouveau serveur, si bien que le passage n'avait lieu
+  qu'une fois la connexion fermée par l'ancienne sortie.
+- [Windows, macOS, Linux] Corriger les connexions qui perdaient des paquets ou se bloquaient après
+  s'être établies sur un réseau calme. Quand l'ordinateur n'envoyait rien pendant ses premières
+  secondes, une partie des chemins parallèles sur lesquels une connexion répartit son trafic cessait
+  de le transmettre, sans aucune erreur : des pings se perdaient et certaines nouvelles connexions
+  expiraient, pendant jusqu'à une demi-heure.
+- [Windows, macOS, Linux] Ne compter un chemin de la connexion comme opérationnel qu'une fois
+  qu'un paquet de test l'a traversé, dans `warren status -v`, `warren doctor` et l'indicateur
+  « Degraded bond ». Ils comptaient chaque chemin qui recevait des données, et un chemin qui ne
+  transmet rien reçoit quand même les accusés de réception de la sortie.
+
+### Sécurité
+- [macOS, Linux] Rendre le fichier de réglages lisible par les seuls administrateurs, et créer les
+  rapports de problème lisibles par leur seul propriétaire.
+- Durcir l'application de bureau : elle ne peut plus être lancée comme simple interpréteur de
+  scripts, ignore les options de débogage et de Node sur sa ligne de commande, ne charge son code
+  que depuis sa propre archive et, sous macOS et Windows, refuse de démarrer quand cette archive a
+  été modifiée.
+- Mettre à jour l'application de bureau vers Electron 39.8.10, ainsi que ses composants gRPC et XML,
+  au-delà des vulnérabilités publiées.
+- [Windows, macOS, Android] Tenir le code de connexion au forum à l'écart des captures d'écran et
+  du partage d'écran tant qu'il est affiché.
+- N'ouvrir aucune page de connexion au forum qui appartient à une autre connexion que celle que
+  vous avez approuvée.
+- [Windows, macOS, Linux] Lancer les outils système dont la connexion dépend depuis leur emplacement
+  système fixe, jamais depuis le chemin de recherche de celui qui a lancé l'application.
+- [Linux] Lancer un programme hors du tunnel uniquement pour le compte propriétaire de Warren ou
+  pour un administrateur.
+- [Linux] Réserver au compte propriétaire de Warren, et aux administrateurs, la fermeture de la
+  connexion VPN affichée dans le menu réseau du bureau. La fermer retirait l'adresse du tunnel.
+- [Android] Connecter le VPN uniquement sur une demande de l'application elle-même. Une autre
+  application pouvait envoyer la même demande et faire connecter le VPN.
+- [Windows] Faire parler la ligne de commande uniquement à un canal de gestion servi par un
+  administrateur, et couper une connexion de gestion restée muette trente secondes.
+- [macOS] Ne jamais lancer en administrateur l'outil d'installation de la version précédente pendant
+  une mise à jour, sauf si seuls les administrateurs ont pu le modifier.
+- [Windows] Garder la protection de mise à jour, qui s'exécute en administrateur pendant une mise à
+  jour, dans un dossier qu'aucun autre compte ne peut modifier.
+- Signer la liste des sommes de contrôle de chaque version en ligne de commande avec la clé de
+  publication de Warren. Les scripts d'installation refusent un téléchargement qu'elle ne garantit
+  pas, et les archives enregistrent chaque fichier comme appartenant au compte administrateur.
+- [Windows, macOS, Linux] Tenir l'adresse interne du tunnel à l'écart des journaux de l'application.
+- Récupérer un abonnement acheté depuis l'application avec un secret que l'application garde pour
+  elle et n'envoie que dans la requête qui récupère le bon, pour qu'un lien d'achat vu par quelqu'un
+  d'autre ne lui donne plus le bon. Tant que l'achat attend, le secret est scellé par le trousseau
+  du système dans un fichier à part, et il est effacé dès que le bon est récupéré ou au bout d'une
+  journée. Sous Linux sans trousseau, il reste en mémoire, et l'achat n'est alors récupéré que
+  tant que l'application tourne. Un achat commencé avec une version précédente et encore en
+  attente de paiement n'est plus récupéré automatiquement.
+- [Windows, macOS, Linux] Quand le tunnel est reconstruit, ne redemander son ancienne adresse
+  interne qu'à la sortie qui l'a attribuée.
+- [Windows, macOS, Linux] Répondre à un serveur qui refuse la connexion en passant une connexion
+  multihop sur un autre serveur d'entrée pour la même sortie, et en réessayant une connexion à un
+  seul serveur sur ce même serveur. N'importe qui sur le chemin réseau peut forger un tel refus, et
+  s'en servir pour changer de sortie lui permettait d'amener la connexion, refus après refus, sur
+  la sortie de son choix. La sortie change toujours dès qu'elle annonce elle-même une maintenance,
+  à l'intérieur de la connexion chiffrée.

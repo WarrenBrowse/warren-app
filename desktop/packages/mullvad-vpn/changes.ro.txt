@@ -1,53 +1,103 @@
 ### Adăugat
-- Conectare într-o rețea care nu oferă nicio adresă IPv4 dispozitivului dvs. Patru dintre cele
-  șase ieșiri răspund acum și pe IPv6, aplicația alege familia de adrese pe care rețeaua dvs. o
-  poate atinge cu adevărat înainte de a apela și deschide ambele în firewall. O rețea mobilă doar
-  cu IPv6 lăsa aplicația să apeleze o adresă imposibil de atins, cu Kill Switch-ul activ.
-- Oferă comenzii de port forwarding o ieșire citibilă de o mașină, pentru ca un script să poată
-  conduce un client torrent precum qBittorrent fără să citească textul destinat oamenilor.
-  `warren port-forward get --json` și `warren port-forward status --json` afișează un obiect JSON
-  pe linie, `status --wait` așteaptă până când portul public este acordat și raportează rezultatul
-  prin codul său de ieșire, iar `status --watch --exec` rulează comanda aleasă de tine la fiecare
-  schimbare a portului public acordat.
-- Copiază portul public acordat din ecranul de port forwarding. Un buton de copiere stă lângă
-  fiecare port deschis și pune doar numărul portului în clipboard, gata de lipit în câmpul
-  portului de intrare al unui client torrent.
-- Te anunță când un port public acordat se deschide, se schimbă sau se închide, printr-o
-  notificare de sistem care numește noul port și deschide ecranul de port forwarding. O reînnoire
-  care păstrează același port nu spune nimic. Notificarea se poate opri din ecranul de port
-  forwarding.
-- Publică porturile publice acordate într-un fișier pe care un script îl poate urmări, un port pe
-  linie, scris lângă setările aplicației sub numele `forwarded_port` (`~/.config/Warren VPN/` pe
-  Linux, `~/Library/Application Support/Warren VPN/` pe macOS, `%LOCALAPPDATA%\Warren VPN\` pe
-  Windows). Fișierul se golește cât timp tunelul este oprit și este rescris pe loc, astfel încât o
-  urmărire continuă să îl vadă.
-- Introdu portul public acordat în clientul tău torrent și păstrează-l acolo. Alege qBittorrent,
-  Transmission sau Deluge în ecranul de port forwarding, dă adresa interfeței web și datele de
-  autentificare, iar aplicația scrie portul acordat în client prin API-ul acelui client, de
-  fiecare dată când serverul de ieșire mută portul. Dezactivează și alegerea aleatorie a portului
-  și UPnP din client, care l-ar scoate imediat de pe portul acordat. „Testează conexiunea” arată
-  ce a răspuns clientul, iar „Aplică acum” scrie portul curent fără să aștepte. Parola este
-  păstrată în seiful sistemului de operare, niciodată în fișierul de setări.
-- Leagă ecranul de port forwarding de ghidul de pe site care explică cum se configurează un client
-  torrent cu un port acordat.
+- Cere codul voucherului când `warren account redeem` este rulat fără cod, sau îl citește de pe
+  intrarea standard, pentru ca un script să i-l poată transmite. Un cod scris în linia de comandă
+  este vizibil pentru toate conturile de pe computer cât timp rulează comanda; comanda îl mai
+  acceptă acolo și avertizează.
+- Avertizează după o autentificare pe forum când linkul deschis a fost creat pentru o autentificare
+  pe alt dispozitiv. Forumul răspunde unui astfel de link cu un cod de introdus în altă parte, ceea
+  ce arată exact ca o autentificare pornită de altcineva și trimisă dvs.: aplicația spune acum că
+  expeditorul linkului încearcă să se autentifice în locul dvs. și că nu trebuie să-i dați codul.
+
+### Modificat
+- Finalizează autentificarea pe forum cu un cod de unică folosință. Browserul care a deschis
+  autentificarea trebuie acum să prezinte un cod de 6 cifre înainte ca forumul să-l lase să intre.
+  Când aprobați pe același dispozitiv, aplicația deschide acel browser ca să termine singur; după
+  un cod QR sau un cod de autentificare introdus în Setări, aplicația afișează codul de introdus pe
+  celălalt dispozitiv. Un link trimis de altcineva nu îl mai autentifică pe acela.
+- [Windows, macOS, Linux] Doar contul care a configurat Warren pe acest computer, și
+  administratorii, pot conecta, deconecta, schimba setările sau folosi portofelul. Celelalte conturi
+  de pe același computer văd în continuare dacă VPN-ul este pornit. Aplicația desktop spune când
+  Warren aparține altui cont și întreabă din nou în fiecare minut.
+- [macOS] Instalează versiunea pentru linia de comandă în `/opt/warren` în loc de `/usr/local`, pe
+  care Homebrew îl dă, pe Mac-urile Intel, contului care l-a instalat. Programul de instalare
+  refuză un dosar pe care alt cont îl poate modifica și mută o instalare existentă.
 
 ### Reparat
-- Vă spune de ce traficul este blocat când rețeaua dvs. nu poate ajunge deloc la Warren.
-  Aplicația aștepta în tăcere o rețea utilizabilă, așa că un telefon cu internet funcțional
-  rămânea în spatele Kill Switch-ului fără nicio explicație pe ecran. Acum numește familia de
-  adrese lipsă și indică cele două ieșiri: deconectare sau schimbarea rețelei.
-- Împiedică o încercare de conectare să rămână blocată douăzeci de secunde pe o rețea care lasă
-  tunelul să pornească și apoi îl taie. Aplicația cerea serverului adresa sa și aștepta un răspuns
-  care nu venea niciodată, consumând toată încercarea pe această singură așteptare, fără să ajungă
-  la momentul în care trece pe TCP. Acum renunță la un răspuns tăcut după șase secunde și trimite
-  următoarea încercare direct pe TCP, pe portul 443.
-- Păstrează încă un fișier de jurnal pe Android. Redeschiderea aplicației de două ori după o
-  conectare eșuată ștergea până acum tocmai urmele pentru care este citit un raport de eroare.
-- Oprește cardul de conectare de pe Android din a reveni la verde după ce sistemul a luat VPN-ul.
-  Când o altă aplicație ocupa locul VPN-ului în timp ce o conectare era încă în curs, tunelul era
-  demontat corect, dar o actualizare de stare deja pornită punea la loc „Conectat” peste o sesiune
-  care nu mai exista.
-- Afișează notele de versiune ale aplicației instalate în limba în care rulează aplicația. Ecranul
-  „Ce este nou” citea un singur fișier, scris în engleză, așa că o aplicație în franceză sau română
-  își anunța propriile modificări în engleză. Notele oferite odată cu o actualizare erau deja
-  traduse.
+- [Windows, macOS, Linux] Se reconectează singură când locația aleasă are din nou o ieșire după o
+  mentenanță. Dacă lista de ieșiri descărcată ultima dată de aplicație nu mai conținea niciuna
+  acolo, conexiunea rămânea blocată până la un clic din partea dvs.; aplicația descarcă acum lista
+  din nou și reîncearcă în fiecare minut.
+- [Android] Trece pe altă ieșire imediat ce ieșirea folosită anunță o mentenanță și pe alt server de
+  intrare când intrarea unei conexiuni multihop refuză conexiunile noi, în loc să reîncerce același
+  server până revine.
+- [Android] Spune acest lucru când conexiunea cădea întruna și aplicația a încetat să reîncerce,
+  lăsând traficul dvs. să treacă prin rețeaua obișnuită, în afara VPN-ului, și indică Mod Blocare ca
+  modalitate de a-l ține blocat. Aplicația afișa un mesaj generic despre o posibilă scurgere de
+  trafic de rețea.
+- [Windows, macOS, Linux] Părăsește fiecare ieșire care anunță o mentenanță cât timp sunteți
+  conectat la ea. După o primă trecere pe altă ieșire, o mentenanță a acesteia lăsa conexiunea pe
+  loc până când ieșirea o închidea.
+- [Windows, macOS, Linux] Aplică o schimbare de locație sau a setării multihop făcută în timp ce un
+  server de intrare refuza conexiunile noi. Conexiunea putea rămâne pe serverele anterioare până la
+  următoarea reconectare.
+- [Windows, macOS, Linux, Android] Păstrează conexiunea pe o ieșire care anunță o mentenanță când
+  locația aleasă nu are altă ieșire. Aplicația o întrerupea și reîncerca acea ieșire, care refuza
+  până la repornire: aproximativ două minute fără internet.
+- [Windows, macOS, Linux] Trece pe altă ieșire fără întrerupere când ieșirea folosită anunță o
+  mentenanță. Firewall-ul bloca noul server, așa că trecerea avea loc abia după ce vechea ieșire
+  închidea conexiunea.
+- [Windows, macOS, Linux] Conexiunile nu mai pierd pachete și nu se mai blochează după ce se
+  stabilesc pe o rețea liniștită. Când computerul nu trimitea nimic în primele secunde, o parte din
+  căile paralele pe care o conexiune își împarte traficul încetau să-l mai transmită, fără nicio
+  eroare: ping-urile se pierdeau, iar unele conexiuni noi expirau, timp de până la o jumătate de
+  oră.
+- [Windows, macOS, Linux] `warren status -v`, `warren doctor` și indicatorul „Degraded bond”
+  consideră o cale a conexiunii funcțională doar după ce un pachet de test a trecut prin ea.
+  Numărau orice cale care primea date, iar o cale care nu transmite nimic primește totuși
+  confirmările de primire ale ieșirii.
+
+### Securitate
+- [macOS, Linux] Fișierul de setări poate fi citit doar de administratori, iar rapoartele de
+  problemă doar de proprietarul lor.
+- Aplicația desktop este întărită: nu mai poate fi pornită ca simplu interpretor de scripturi,
+  ignoră opțiunile de depanare și de Node din linia de comandă, își încarcă codul doar din propria
+  arhivă și, pe macOS și Windows, refuză să pornească atunci când arhiva a fost modificată.
+- Actualizează aplicația desktop la Electron 39.8.10, împreună cu componentele gRPC și XML, dincolo
+  de vulnerabilitățile publicate.
+- [Windows, macOS, Android] Ține codul de autentificare pe forum departe de capturile de ecran și
+  de partajarea ecranului cât timp este afișat.
+- Nu deschide nicio pagină de autentificare pe forum care aparține altei autentificări decât cea
+  aprobată de dvs.
+- [Windows, macOS, Linux] Pornește instrumentele de sistem de care depinde conexiunea din locul lor
+  fix din sistem, niciodată din calea de căutare a celui care a pornit aplicația.
+- [Linux] Rulează un program în afara tunelului doar pentru contul care deține Warren sau pentru
+  un administrator.
+- [Linux] Doar contul care deține Warren, și administratorii, pot închide conexiunea VPN afișată
+  în meniul de rețea al desktopului. Închiderea ei scotea adresa tunelului.
+- [Android] Conectează VPN-ul doar la o cerere venită de la aplicația însăși. O altă aplicație
+  putea trimite aceeași cerere și conecta VPN-ul.
+- [Windows] Linia de comandă vorbește doar cu un canal de gestiune servit de un administrator, iar
+  o conexiune de gestiune care tace timp de treizeci de secunde este închisă.
+- [macOS] Nu rulează niciodată ca administrator, la o actualizare, instrumentul de configurare al
+  versiunii anterioare, decât dacă doar administratorii l-au putut modifica.
+- [Windows] Păstrează protecția de actualizare, care rulează ca administrator în timpul unei
+  actualizări, într-un dosar pe care niciun alt cont nu îl poate modifica.
+- Semnează lista sumelor de control a fiecărei versiuni pentru linia de comandă cu cheia de
+  publicare Warren. Scripturile de instalare refuză o descărcare pe care ea nu o garantează, iar
+  arhivele înregistrează fiecare fișier ca aparținând contului de administrator.
+- [Windows, macOS, Linux] Ține adresa internă a tunelului în afara jurnalelor aplicației.
+- Preia un abonament cumpărat din aplicație cu un secret pe care aplicația îl păstrează pentru ea și
+  îl trimite doar în cererea care preia voucherul, astfel încât un link de cumpărare văzut de
+  altcineva să nu-i mai dea voucherul. Cât timp cumpărarea așteaptă, secretul este sigilat de
+  depozitul de chei al sistemului într-un fișier separat și este șters imediat ce voucherul este
+  preluat sau după o zi. Pe Linux fără depozit de chei (keyring), rămâne în memorie, iar
+  cumpărarea este preluată doar cât timp aplicația rulează. O cumpărare începută cu o versiune
+  anterioară și încă în așteptarea plății nu mai este preluată automat.
+- [Windows, macOS, Linux] Când tunelul este reconstruit, cere înapoi adresa sa internă anterioară
+  doar de la ieșirea care a atribuit-o.
+- [Windows, macOS, Linux] Răspunde unui server care refuză conexiunea mutând o conexiune multihop
+  pe alt server de intrare pentru aceeași ieșire și reîncercând o conexiune printr-un singur server
+  pe același server. Oricine se află pe calea de rețea poate falsifica un astfel de refuz, iar
+  folosirea lui pentru a schimba ieșirea îi permitea să ducă conexiunea, refuz după refuz, pe
+  ieșirea aleasă de el. Ieșirea se schimbă în continuare de îndată ce anunță ea însăși o
+  mentenanță, în interiorul conexiunii criptate.
