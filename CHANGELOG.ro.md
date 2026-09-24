@@ -62,6 +62,15 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [Windows, macOS, Linux] Trece pe altă ieșire fără întrerupere când ieșirea folosită anunță o
   mentenanță. Firewall-ul bloca noul server, așa că trecerea avea loc abia după ce vechea ieșire
   închidea conexiunea.
+- [Windows, macOS, Linux] Conexiunile nu mai pierd pachete și nu se mai blochează după ce se
+  stabilesc pe o rețea liniștită. Când computerul nu trimitea nimic în primele secunde, o parte din
+  căile paralele pe care o conexiune își împarte traficul încetau să-l mai transmită, fără nicio
+  eroare: ping-urile se pierdeau, iar unele conexiuni noi expirau, timp de până la o jumătate de
+  oră.
+- [Windows, macOS, Linux] `warren status -v`, `warren doctor` și indicatorul „Degraded bond”
+  consideră o cale a conexiunii funcțională doar după ce un pachet de test a trecut prin ea.
+  Numărau orice cale care primea date, iar o cale care nu transmite nimic primește totuși
+  confirmările de primire ale ieșirii.
 
 ### Securitate
 - Fișierul de setări poate fi citit doar de administratori, iar rapoartele de problemă doar de

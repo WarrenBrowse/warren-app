@@ -69,6 +69,14 @@ Line wrap the file at 100 chars.                                              Th
 - [Windows, macOS, Linux] Move to another exit without a gap when the exit in use announces
   maintenance. The firewall blocked the new server, so the move only happened once the old exit
   closed the connection.
+- [Windows, macOS, Linux] Fix connections that lost packets or stalled after connecting on a quiet
+  network. When the computer sent nothing in its first seconds, some of the parallel paths a
+  connection spreads its traffic over stopped delivering without any error: pings were lost and
+  some new connections timed out, for up to half an hour.
+- [Windows, macOS, Linux] Count a path of the connection as delivering only once a test packet got
+  through it, in `warren status -v`, `warren doctor` and the "Degraded bond" indicator. They
+  counted every path that received data, and a path that delivers nothing still receives the
+  exit's acknowledgements.
 
 ### Security
 - Keep the settings file readable by administrators only, and create problem reports readable by

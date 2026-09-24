@@ -64,6 +64,15 @@ par l'application, gardez-le tel quel.
 - [Windows, macOS, Linux] Passer sur une autre sortie sans coupure quand la sortie utilisée annonce
   une maintenance. Le pare-feu bloquait le nouveau serveur, si bien que le passage n'avait lieu
   qu'une fois la connexion fermée par l'ancienne sortie.
+- [Windows, macOS, Linux] Corriger les connexions qui perdaient des paquets ou se bloquaient après
+  s'être établies sur un réseau calme. Quand l'ordinateur n'envoyait rien pendant ses premières
+  secondes, une partie des chemins parallèles sur lesquels une connexion répartit son trafic cessait
+  de le transmettre, sans aucune erreur : des pings se perdaient et certaines nouvelles connexions
+  expiraient, pendant jusqu'à une demi-heure.
+- [Windows, macOS, Linux] Ne compter un chemin de la connexion comme opérationnel qu'une fois
+  qu'un paquet de test l'a traversé, dans `warren status -v`, `warren doctor` et l'indicateur
+  « Degraded bond ». Ils comptaient chaque chemin qui recevait des données, et un chemin qui ne
+  transmet rien reçoit quand même les accusés de réception de la sortie.
 
 ### Sécurité
 - Rendre le fichier de réglages lisible par les seuls administrateurs, et créer les rapports de
