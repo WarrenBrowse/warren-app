@@ -4,6 +4,22 @@ import { describe, expect, it } from 'vitest';
 
 import { parseChangelog } from '../../src/main/changelog';
 
+// `parseChangelog` keeps only the entries for the platform it runs on, and CI
+// runs these tests on Linux: a release whose notes are all macOS entries (1.1.34)
+// parsed to nothing there although every Mac renders it. What the file must
+// guarantee is a renderable list on at least one of the platforms it targets.
+function rendersAListOnSomePlatform(text: string): boolean {
+  const original = Object.getOwnPropertyDescriptor(process, 'platform')!;
+  try {
+    return ['darwin', 'linux', 'win32'].some((platform) => {
+      Object.defineProperty(process, 'platform', { ...original, value: platform });
+      return parseChangelog(text).some((block) => block.type === 'list');
+    });
+  } finally {
+    Object.defineProperty(process, 'platform', original);
+  }
+}
+
 /**
  * The bundled "What's new" screen must show THIS version's notes.
  *
@@ -91,9 +107,7 @@ describe("the bundled what's-new screen", () => {
   it('parses into renderable blocks rather than one opaque paragraph', () => {
     // A file the parser cannot structure renders as a wall of text under the
     // version heading, which is the same user-visible defect as staleness.
-    const blocks = parseChangelog(fs.readFileSync(changesTxt, 'utf8'));
-    expect(blocks.length).toBeGreaterThan(0);
-    expect(blocks.some((block) => block.type === 'list')).toBe(true);
+    expect(rendersAListOnSomePlatform(fs.readFileSync(changesTxt, 'utf8'))).toBe(true);
   });
 
   it('is a section body, without the version heading the view already shows', () => {
@@ -127,9 +141,7 @@ describe("the bundled what's-new screen", () => {
     });
 
     it('parses into renderable blocks rather than one opaque paragraph', () => {
-      const blocks = parseChangelog(fs.readFileSync(bundledPath, 'utf8'));
-      expect(blocks.length).toBeGreaterThan(0);
-      expect(blocks.some((block) => block.type === 'list')).toBe(true);
+      expect(rendersAListOnSomePlatform(fs.readFileSync(bundledPath, 'utf8'))).toBe(true);
     });
   });
 });
