@@ -273,7 +273,8 @@ class WarrenQuinnAdapter(
 
         val rc = try {
             mnemonic.useAsString { phrase ->
-                platform.connectTunnel(fd.detachFd(), phrase, config.toWireJson())
+                val wire = withDrainFailover(config).toWireJson()
+                platform.connectTunnel(fd.detachFd(), phrase, wire)
             }
         } catch (e: IllegalStateException) {
             // The cached mnemonic was wiped between scheduling and this
@@ -929,6 +930,19 @@ class WarrenQuinnAdapter(
             // and flips the flag, so we must not reconnect over a user teardown.
             if (!userInitiatedDisconnect) connectLocked(config, mnemonic)
         }
+    }
+
+    /**
+     * [config] telling the native session whether a maintenance drain of its
+     * exit has another exit to fail over to (see
+     * [WarrenTunnelConfig.drainFailover]): the failover [scheduleExitFailover]
+     * would dial must name a different exit.
+     */
+    private fun withDrainFailover(config: WarrenTunnelConfig): WarrenTunnelConfig {
+        val failover = failoverConfig(config)
+        return config.copy(
+            drainFailover = failover != null && failover.exitPubkeyHex != config.exitPubkeyHex
+        )
     }
 
     /**

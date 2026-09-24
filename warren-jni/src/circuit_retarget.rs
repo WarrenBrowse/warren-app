@@ -88,14 +88,15 @@ impl EntryRetarget {
 }
 
 /// Latch `leaving` once the exit announces a drain, after the anti-stampede
-/// delay that spreads its clients before its deadline. `fraction` is the
-/// client's uniform draw in `[0, 1)` (production passes
-/// `drain_policy::stampede_fraction()`).
+/// delay that spreads its clients before its deadline, when `another_exit`
+/// says Kotlin has one to fail over to. `fraction` is the client's uniform
+/// draw in `[0, 1)` (production passes `drain_policy::stampede_fraction()`).
 pub(crate) async fn leave_on_drain(
     mut drain: watch::Receiver<Option<ExitDrainNotice>>,
     leaving: watch::Sender<bool>,
     now_unix: impl Fn() -> u64,
     fraction: f64,
+    another_exit: bool,
 ) {
     // An advisory published before this task first ran is still the
     // session's drain, so the current value is read before any wait.
@@ -107,6 +108,12 @@ pub(crate) async fn leave_on_drain(
             return;
         }
     };
+    if !another_exit {
+        // Ending the session would only redial the exit that refuses it. A
+        // closed `leaving` channel never ends a session.
+        log::info!("multi-hop exit draining and no other exit can serve; staying until its close");
+        return;
+    }
     let delay: Duration = jitter_delay(advisory.deadline_unix_secs, now_unix(), fraction);
     tokio::time::sleep(delay).await;
     let _ = leaving.send(true);
@@ -248,7 +255,7 @@ mod tests {
     async fn a_drain_ends_the_session_within_the_exit_deadline() {
         let (drain_tx, drain) = watch::channel(None);
         let (leaving_tx, mut leaving) = watch::channel(false);
-        let reactor = tokio::spawn(leave_on_drain(drain, leaving_tx, || NOW, 0.5));
+        let reactor = tokio::spawn(leave_on_drain(drain, leaving_tx, || NOW, 0.5, true));
 
         drain_tx
             .send(Some(drain_notice(NOW + 45)))
@@ -274,7 +281,7 @@ mod tests {
             .send(Some(drain_notice(NOW + 2)))
             .expect("receiver alive");
 
-        let _reactor = tokio::spawn(leave_on_drain(drain, leaving_tx, || NOW, 0.0));
+        let _reactor = tokio::spawn(leave_on_drain(drain, leaving_tx, || NOW, 0.0, true));
 
         tokio::time::timeout(Duration::from_secs(60), leaving.changed())
             .await
@@ -284,10 +291,29 @@ mod tests {
     }
 
     #[tokio::test(start_paused = true)]
+    async fn a_drain_with_no_exit_to_fail_over_to_keeps_the_session() {
+        // A location pinned to a country with one node: ending the session
+        // would only redial the draining node, which refuses until it
+        // restarts. The session stays until the exit closes it.
+        let (drain_tx, drain) = watch::channel(None);
+        let (leaving_tx, leaving) = watch::channel(false);
+        let reactor = tokio::spawn(leave_on_drain(drain, leaving_tx, || NOW, 0.0, false));
+
+        drain_tx
+            .send(Some(drain_notice(NOW + 2)))
+            .expect("reactor alive");
+        tokio::time::sleep(Duration::from_secs(60)).await;
+
+        assert!(!*leaving.borrow(), "the session must not be ended");
+        drop(drain_tx);
+        reactor.await.expect("the reactor ends with the session");
+    }
+
+    #[tokio::test(start_paused = true)]
     async fn a_drain_whose_deadline_is_upon_the_session_leaves_at_once() {
         let (drain_tx, drain) = watch::channel(None);
         let (leaving_tx, mut leaving) = watch::channel(false);
-        let _reactor = tokio::spawn(leave_on_drain(drain, leaving_tx, || NOW, 0.9));
+        let _reactor = tokio::spawn(leave_on_drain(drain, leaving_tx, || NOW, 0.9, true));
 
         drain_tx
             .send(Some(drain_notice(NOW + 2)))

@@ -957,6 +957,43 @@ class WarrenQuinnAdapterTest {
             }
         }
 
+    /**
+     * A drain on an exit with no other exit to fail over to (a location pinned
+     * to a country with one node) must not end the session: ending it would
+     * only redial the draining exit, which refuses until it restarts. The
+     * native session learns it from its config.
+     */
+    @Test
+    fun `ensure a session with nowhere to fail over to stays on a draining exit`() = runTest {
+        val platform = RecordingPlatform()
+        val adapter = adapterWith(platform, failoverConfig = { null })
+        adapter.connect(config(), Mnemonic(PHRASE))
+        awaitReal("the session must be dialled") { platform.configs.isNotEmpty() }
+
+        assertTrue(
+            platform.configs.last().contains("\"drain_failover\":false"),
+            "the native session must stay on a draining exit, got: ${platform.configs.last()}",
+        )
+        adapter.disconnect()
+    }
+
+    @Test
+    fun `ensure a session with another exit leaves a draining exit for it`() = runTest {
+        val platform = RecordingPlatform()
+        val alternative =
+            config().copy(exitPubkeyHex = "ef".repeat(32), exitEndpoint = "exit2.example:443")
+        val adapter = adapterWith(platform, failoverConfig = { alternative })
+        adapter.connect(config(), Mnemonic(PHRASE))
+        awaitReal("the session must be dialled") { platform.configs.isNotEmpty() }
+
+        assertTrue(
+            !platform.configs.last().contains("drain_failover"),
+            "a session with an exit to fail over to leaves a draining one, got: " +
+                platform.configs.last(),
+        )
+        adapter.disconnect()
+    }
+
     /** With no alternative the retry redials the same exit and reports no switch. */
     @Test
     fun `ensure a drop retry without an alternative redials the same exit silently`() = runTest {

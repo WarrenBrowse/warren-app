@@ -84,6 +84,12 @@ data class WarrenTunnelConfig(
     // Never sent as a user value in beta builds (the beta cap is
     // server-enforced); the builder gates it on the product flags.
     @SerialName("max_rate_bps") val maxRateBps: Long = 0,
+    // Whether a maintenance drain of this exit has another exit to fail over
+    // to. Without one (a location pinned to a country with one node), the
+    // native session stays on the draining exit until the exit closes it:
+    // ending it would only redial the exit that refuses it. Set by the adapter
+    // on every dial from its failover choice.
+    @SerialName("drain_failover") val drainFailover: Boolean = true,
     // The selected exit's stable id, used ONLY in-process for the trust-on-
     // first-use key check (WarrenConnectUseCase) before the config is encoded.
     // @Transient on purpose: the Rust side has no use for it. The check runs

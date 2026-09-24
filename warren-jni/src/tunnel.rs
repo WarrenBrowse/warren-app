@@ -153,6 +153,12 @@ pub struct WarrenTunnelConfig {
     /// effect on the next connect, like the MTU).
     #[serde(default)]
     pub max_rate_bps: Option<u64>,
+    /// Whether Kotlin has another exit to fail over to when this one
+    /// announces a maintenance drain. Without one, the session stays on the
+    /// draining exit until the exit closes it: ending it would only redial
+    /// the exit that refuses it. Absent on older payloads, which leave.
+    #[serde(default)]
+    pub drain_failover: Option<bool>,
 }
 
 pub use crate::redial::SessionStatus;
@@ -492,6 +498,7 @@ async fn run_multi_hop_session(
             leaving_tx,
             unix_now_secs,
             warrenguard_transport::drain_policy::stampede_fraction(),
+            config.drain_failover.unwrap_or(true),
         ));
         // Publish the goodput prober's verdict for Kotlin to poll. The
         // supervisor's dead-path watches cannot see the degradation class
