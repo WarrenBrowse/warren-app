@@ -35,17 +35,27 @@
 //! settles it by asking the kernel the same route question the datapath asks,
 //! in both escape configurations, without emitting a packet.
 //!
-//! # Why ACK progress, not received bytes
+//! # Why a fresh RTT sample, not received bytes or ACK frames
 //!
 //! The original evidence was `udp_rx.bytes` ("a reply cannot arrive unless our
 //! request left the wire"). That axiom died when the fleet armed exit-side
 //! DAITA and idle cover: the exit now sends UNSOLICITED dummies downlink, so
 //! rx climbs on a client whose uplink is fully black-holed, and every
 //! reconnect false-confirmed the dead bind (VPN "Connected", no internet,
-//! NAT-PMP timeouts). ACK frames are different: the peer only emits them in
-//! response to receiving OUR ack-eliciting packets, so `frame_rx.acks`
-//! advancing proves client egress even under a rain of dummies. The baseline
-//! is additionally taken one probe interval AFTER the guard starts, so ACKs
+//! NAT-PMP timeouts).
+//!
+//! Counting received ACK frames (`frame_rx.acks`) failed the same way. A QUIC
+//! peer repeats its ACK ranges in every packet it sends until it learns that
+//! one of those ACKs arrived, and on a black-holed uplink it never learns it:
+//! its PTO retransmissions and its idle cover each carry the same stale ACK
+//! frame, so the counter climbs while nothing new is acknowledged. That is how
+//! a dead bind was confirmed on every connect on poka's Mac on 2026-09-24.
+//!
+//! quinn takes an RTT sample only when an ACK newly acknowledges the largest
+//! packet so far and that ack covers an ack-eliciting packet. A leg whose
+//! smoothed RTT moved therefore had one of OUR packets reach the peer, and
+//! repeated ACK frames or unsolicited downlink cannot move it. The baseline is
+//! additionally taken one probe interval AFTER the guard starts, so samples
 //! for pre-swap sends (handshake, setup stream: they land within one
 //! RTT + max_ack_delay, far below the interval) can never masquerade as
 //! post-swap proof.
@@ -99,21 +109,20 @@ pub(crate) struct EgressReading {
     ///
     /// It counts frames the peer OWES an answer for, never raw UDP packets:
     /// `udp_tx.datagrams` also counts pure-ACK packets, which are not
-    /// ack-eliciting and so can never make [`Self::acks_rx`] move. Feeding the
+    /// ack-eliciting and so can never earn an RTT sample. Feeding the
     /// dead-window rule with sends the peer cannot answer is what made this
     /// guard call a healthy carrier black-holed on every connect under the
     /// fleet's exit-side idle cover
     /// (`incidents/2026-08-15-carrier-egress-guard-convicts-a-healthy-bind-on-every-connect.md`).
     pub tx_datagrams: u64,
-    /// quinn `frame_rx.acks` summed over every bonded leg: ACK frames received
-    /// from the peer. Summed because the probe round-robins over the whole
-    /// bundle and every leg shares the one physical carrier, so an ACK on any
-    /// leg proves that carrier egresses. The peer only
-    /// generates an ACK in response to receiving our ack-eliciting packets, so
-    /// progress here (past the post-swap baseline) is client-side proof of
-    /// egress that unsolicited downlink traffic (DAITA dummies, idle cover)
-    /// cannot fake.
+    /// quinn `frame_rx.acks` summed over every bonded leg. Diagnostic only,
+    /// never evidence: a peer that stops hearing us keeps repeating its last
+    /// ACK frame on everything it sends, so this climbs on a dead uplink.
     pub acks_rx: u64,
+    /// Smoothed RTT of each bonded leg, keyed by the leg's identity, in bundle
+    /// order and truncated to [`MAX_TRACKED_LEGS`]. The evidence: see
+    /// [`EgressReading::took_rtt_sample_since`].
+    pub leg_rtts: [LegRtt; MAX_TRACKED_LEGS],
     /// Smoothed path RTT, for the adaptive dead window. `Duration::ZERO` when
     /// no session is published.
     pub rtt: Duration,
@@ -124,11 +133,40 @@ pub(crate) struct EgressReading {
     pub legs: usize,
 }
 
+/// Legs whose RTT a reading keeps. The desktop bond is 8 legs; a larger bond
+/// only loses the evidence its extra legs could have given, never gains any.
+pub(crate) const MAX_TRACKED_LEGS: usize = 16;
+
+/// One leg's smoothed RTT, keyed by an identity that is stable for the leg's
+/// lifetime. `id == 0` marks an empty slot.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub(crate) struct LegRtt {
+    pub id: u64,
+    pub rtt: Duration,
+}
+
+impl EgressReading {
+    /// True when a leg present in both readings took an RTT sample in between,
+    /// which means the peer newly acknowledged one of our ack-eliciting packets.
+    ///
+    /// Legs are matched by identity, never by position: a leg that joined or
+    /// left the bundle between the readings shifts every later slot, and a
+    /// joining leg brings an RTT of its own that no post-baseline send earned.
+    pub(crate) fn took_rtt_sample_since(&self, baseline: &Self) -> bool {
+        self.leg_rtts.iter().filter(|leg| leg.id != 0).any(|leg| {
+            baseline
+                .leg_rtts
+                .iter()
+                .any(|before| before.id == leg.id && before.rtt != leg.rtt)
+        })
+    }
+}
+
 /// Verdict of one [`assess_egress`] evaluation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum EgressVerdict {
-    /// Post-baseline ACK progress (or a fresh session handshook post-swap):
-    /// the bound carrier egresses. Keep the bind.
+    /// A leg took a post-baseline RTT sample (or a fresh session handshook
+    /// post-swap): the bound carrier egresses. Keep the bind.
     Confirmed,
     /// No egress proof yet and the dead window has not elapsed: keep probing.
     Pending,
@@ -145,17 +183,21 @@ pub(crate) enum EgressVerdict {
 pub(crate) struct LegCounters {
     /// Frames the peer OWES an answer for: DATAGRAM (what the probe emits) plus
     /// PING. Never raw UDP packets: `udp_tx.datagrams` also counts pure-ACK
-    /// packets, which are not ack-eliciting and so can never move `acks_rx`.
+    /// packets, which are not ack-eliciting and so can never earn a sample.
     pub ack_eliciting_tx: u64,
-    /// ACK frames received on this leg.
+    /// ACK frames received on this leg. Diagnostic only.
     pub acks_rx: u64,
+    /// Identity stable for the leg's lifetime, never `0`.
+    pub id: u64,
+    /// The leg's smoothed RTT (quinn `path.rtt`).
+    pub rtt: Duration,
 }
 
 /// Build a reading by summing the bundle's legs.
 ///
 /// Summed rather than read off the primary because the probe round-robins over
-/// the whole bundle and every leg carries the same physical carrier bind, so an
-/// ACK on any leg proves that carrier egresses.
+/// the whole bundle and every leg carries the same physical carrier bind, so a
+/// fresh RTT sample on any leg proves that carrier egresses.
 pub(crate) fn egress_reading_from(
     session_id: u64,
     per_leg: &[LegCounters],
@@ -163,14 +205,22 @@ pub(crate) fn egress_reading_from(
 ) -> EgressReading {
     let mut tx_datagrams = 0u64;
     let mut acks_rx = 0u64;
-    for leg in per_leg {
+    let mut leg_rtts = [LegRtt::default(); MAX_TRACKED_LEGS];
+    for (i, leg) in per_leg.iter().enumerate() {
         tx_datagrams = tx_datagrams.saturating_add(leg.ack_eliciting_tx);
         acks_rx = acks_rx.saturating_add(leg.acks_rx);
+        if let Some(slot) = leg_rtts.get_mut(i) {
+            *slot = LegRtt {
+                id: leg.id,
+                rtt: leg.rtt,
+            };
+        }
     }
     EgressReading {
         session_id,
         tx_datagrams,
         acks_rx,
+        leg_rtts,
         rtt,
         legs: per_leg.len(),
     }
@@ -198,9 +248,9 @@ pub(crate) fn assess_egress(
     if current.session_id != 0 && current.session_id != baseline.session_id {
         return EgressVerdict::Confirmed;
     }
-    // Same session acknowledging more of our packets than at baseline: a
-    // post-baseline send left the NIC and reached the peer.
-    if current.session_id == baseline.session_id && current.acks_rx > baseline.acks_rx {
+    // Same session, and a leg took an RTT sample: the peer newly acknowledged a
+    // post-baseline send, so it left the NIC and reached the peer.
+    if current.session_id == baseline.session_id && current.took_rtt_sample_since(&baseline) {
         return EgressVerdict::Confirmed;
     }
     // Nothing acknowledged. Only call it dead on POSITIVE blackhole evidence:
@@ -666,6 +716,10 @@ mod real_io {
                             .datagram
                             .saturating_add(stats.frame_tx.ping),
                         acks_rx: stats.frame_rx.acks,
+                        // A live leg's `Arc` address is stable, non-zero and
+                        // unique among the legs alive at the same time.
+                        id: Arc::as_ptr(leg) as u64,
+                        rtt: stats.path.rtt,
                     }
                 })
                 .collect();
@@ -755,6 +809,7 @@ mod tests {
             acks_rx: 40,
             rtt: Duration::from_millis(25),
             legs: 8,
+            ..Default::default()
         };
         let current = EgressReading {
             session_id: 7,
@@ -762,6 +817,7 @@ mod tests {
             acks_rx: 40,
             rtt: Duration::from_millis(175),
             legs: 8,
+            ..Default::default()
         };
 
         let got = measurement_from(baseline, current);
@@ -781,6 +837,7 @@ mod tests {
         let leg = LegCounters {
             ack_eliciting_tx: 5,
             acks_rx: 1,
+            ..Default::default()
         };
         assert_eq!(
             super::egress_reading_from(7, &[leg; 8], Duration::from_millis(25)).legs,
@@ -805,10 +862,7 @@ mod tests {
     fn ack_only_traffic_is_not_a_send() {
         // 40 UDP packets went out, none of them ack-eliciting: the seam maps
         // pure-ACK traffic to zero here, which is the whole point.
-        let ack_only = LegCounters {
-            ack_eliciting_tx: 0,
-            acks_rx: 0,
-        };
+        let ack_only = LegCounters::default();
 
         let got = super::egress_reading_from(7, &[ack_only], Duration::from_millis(25));
 
@@ -826,7 +880,7 @@ mod tests {
     fn ack_eliciting_frames_are_the_sends() {
         let leg = LegCounters {
             ack_eliciting_tx: 5,
-            acks_rx: 0,
+            ..Default::default()
         };
 
         let got = super::egress_reading_from(7, &[leg], Duration::from_millis(25));
@@ -843,10 +897,12 @@ mod tests {
         let primary = LegCounters {
             ack_eliciting_tx: 1,
             acks_rx: 2,
+            ..Default::default()
         };
         let secondary = LegCounters {
             ack_eliciting_tx: 4,
             acks_rx: 9,
+            ..Default::default()
         };
 
         let got = super::egress_reading_from(7, &[primary, secondary], Duration::from_millis(25));
@@ -855,12 +911,17 @@ mod tests {
         assert_eq!(got.acks_rx, 11, "acks sum over the bundle");
     }
 
-    /// A leg that acknowledges anything proves the shared carrier egresses,
+    /// A fresh RTT sample on any leg proves the shared carrier egresses,
     /// whichever leg it is: every leg carries the same `IP_BOUND_IF` bind.
     #[test]
-    fn an_ack_on_any_leg_confirms_the_carrier() {
-        let baseline = reading(7, 0, 0);
-        let current = reading(7, 4, 1);
+    fn an_rtt_sample_on_any_leg_confirms_the_carrier() {
+        let leg = |id, ms| LegCounters {
+            id,
+            rtt: Duration::from_millis(ms),
+            ..Default::default()
+        };
+        let baseline = super::egress_reading_from(7, &[leg(1, 25), leg(2, 30)], Duration::ZERO);
+        let current = super::egress_reading_from(7, &[leg(1, 25), leg(2, 31)], Duration::ZERO);
 
         assert_eq!(
             assess_egress(baseline, current, Duration::from_secs(2)),
@@ -868,21 +929,75 @@ mod tests {
         );
     }
 
+    /// A leg that joined the bundle after the baseline arrives with an RTT of
+    /// its own, measured on packets that may all predate the swap. Its presence
+    /// is not a sample taken since the baseline, and neither is the position
+    /// shift it causes in the bundle order.
+    #[test]
+    fn a_leg_that_joined_after_the_baseline_proves_nothing() {
+        let leg = |id, ms| LegCounters {
+            id,
+            ack_eliciting_tx: 50,
+            rtt: Duration::from_millis(ms),
+            ..Default::default()
+        };
+        let baseline = super::egress_reading_from(7, &[leg(1, 25)], Duration::from_millis(25));
+        let current =
+            super::egress_reading_from(7, &[leg(9, 40), leg(1, 25)], Duration::from_millis(25));
+
+        assert_eq!(
+            assess_egress(baseline, current, dead_window(current.rtt)),
+            EgressVerdict::Dead
+        );
+    }
+
+    /// The false confirmation that kept poka's Mac "Connected" with no internet
+    /// on 2026-09-24. The bind was dead from the route swap on (the exit's
+    /// capture held no client packet past it), yet the exit went on sending:
+    /// PTO retransmissions of what the client never acknowledged, idle cover.
+    /// Every one of those packets repeats the exit's ACK ranges, because the
+    /// client's ACKs never arrived to retire them, so `frame_rx.acks` climbed
+    /// while not one new client packet was acknowledged. A stale ACK frame
+    /// acknowledges nothing new and yields no RTT sample; it must not confirm.
+    #[test]
+    fn ack_frames_that_acknowledge_nothing_new_never_confirm_a_dead_bind() {
+        let base = reading(1, 10, 5);
+        let cur = reading(1, 400, 40);
+
+        assert_eq!(
+            assess_egress(base, cur, dead_window(cur.rtt)),
+            EgressVerdict::Dead
+        );
+    }
+
+    /// One leg whose RTT holds still: no sample taken, whatever the counters do.
     fn reading(session_id: u64, tx_datagrams: u64, acks_rx: u64) -> EgressReading {
+        let mut leg_rtts = [LegRtt::default(); MAX_TRACKED_LEGS];
+        leg_rtts[0] = LegRtt {
+            id: 1,
+            rtt: Duration::from_millis(25),
+        };
         EgressReading {
             session_id,
             tx_datagrams,
             acks_rx,
+            leg_rtts,
             rtt: Duration::from_millis(25),
             legs: 1,
         }
     }
 
+    /// `r` after its leg took one RTT sample.
+    fn sampled(mut r: EgressReading) -> EgressReading {
+        r.leg_rtts[0].rtt += Duration::from_micros(300);
+        r
+    }
+
     #[test]
-    fn confirmed_when_acks_advance_on_the_same_session() {
-        // The peer acknowledged a post-baseline send: it must have egressed.
+    fn confirmed_when_a_leg_takes_an_rtt_sample_on_the_same_session() {
+        // The peer newly acknowledged a post-baseline send: it must have egressed.
         let base = reading(1, 10, 5);
-        let cur = reading(1, 14, 7);
+        let cur = sampled(reading(1, 14, 7));
         assert_eq!(
             assess_egress(base, cur, Duration::from_millis(250)),
             EgressVerdict::Confirmed
@@ -1025,9 +1140,9 @@ mod tests {
 
     #[tokio::test(start_paused = true)]
     async fn guard_keeps_the_bind_when_egress_is_confirmed() {
-        // Post-baseline acks advance on the same session: confirmed on the
-        // first probe, no revert, the /32 leak is never added.
-        let mut io = MockIo::new(reading(1, 10, 5), reading(1, 12, 6));
+        // A leg takes a post-baseline RTT sample on the same session: confirmed
+        // on the first probe, no revert, the /32 leak is never added.
+        let mut io = MockIo::new(reading(1, 10, 5), sampled(reading(1, 12, 6)));
         let outcome = run_bootstrap_guard(&mut io).await.outcome;
         assert_eq!(outcome, GuardOutcome::BypassConfirmed);
         assert!(io.probes_sent >= 2, "one burn probe plus decision probes");
@@ -1063,7 +1178,7 @@ mod tests {
     async fn escape_verify_guard_confirms_an_escape_that_carries_traffic() {
         // The ordinary cached-RouteOnly connect: the escape works, the cached
         // verdict is still right, and no route is touched.
-        let mut io = MockIo::new(reading(1, 10, 5), reading(1, 14, 7));
+        let mut io = MockIo::new(reading(1, 10, 5), sampled(reading(1, 14, 7)));
         let outcome = run_escape_verify_guard(&mut io).await.outcome;
         assert_eq!(outcome, GuardOutcome::RevertedToRoute);
     }
