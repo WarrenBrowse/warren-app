@@ -60,8 +60,15 @@ Line wrap the file at 100 chars.                                              Th
   place until the exit closed it.
 - [iOS] Leave an exit that announces maintenance even when the exit the connection just left
   announced the same maintenance.
-- Apply a location or multihop change made while an entry server was refusing new connections. The
-  connection could stay on its previous servers until it next reconnected.
+- [Windows, macOS, Linux] Apply a location or multihop change made while an entry server was
+  refusing new connections. The connection could stay on its previous servers until it next
+  reconnected.
+- [Windows, macOS, Linux, Android] Keep the connection on an exit that announces maintenance when
+  the location you picked has no other exit. The app used to drop it and retry that exit, which
+  refused until it restarted: about two minutes without internet.
+- [Windows, macOS, Linux] Move to another exit without a gap when the exit in use announces
+  maintenance. The firewall blocked the new server, so the move only happened once the old exit
+  closed the connection.
 
 ### Security
 - Keep the settings file readable by administrators only, and create problem reports readable by

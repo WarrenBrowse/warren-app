@@ -55,9 +55,15 @@ par l'application, gardez-le tel quel.
   connexion en place jusqu'à ce que la sortie la ferme.
 - [iOS] Quitter une sortie qui annonce une maintenance même quand la sortie que la connexion vient
   de quitter annonçait la même.
-- Appliquer un changement d'emplacement ou du réglage multihop fait pendant qu'un serveur d'entrée
-  refusait les nouvelles connexions. La connexion pouvait rester sur ses serveurs précédents jusqu'à
-  sa prochaine reconnexion.
+- [Windows, macOS, Linux] Appliquer un changement d'emplacement ou du réglage multihop fait pendant
+  qu'un serveur d'entrée refusait les nouvelles connexions. La connexion pouvait rester sur ses
+  serveurs précédents jusqu'à sa prochaine reconnexion.
+- [Windows, macOS, Linux, Android] Garder la connexion sur une sortie qui annonce une maintenance
+  quand l'emplacement choisi n'a pas d'autre sortie. L'application la coupait et réessayait cette
+  sortie, qui refusait jusqu'à son redémarrage : environ deux minutes sans internet.
+- [Windows, macOS, Linux] Passer sur une autre sortie sans coupure quand la sortie utilisée annonce
+  une maintenance. Le pare-feu bloquait le nouveau serveur, si bien que le passage n'avait lieu
+  qu'une fois la connexion fermée par l'ancienne sortie.
 
 ### Sécurité
 - Rendre le fichier de réglages lisible par les seuls administrateurs, et créer les rapports de

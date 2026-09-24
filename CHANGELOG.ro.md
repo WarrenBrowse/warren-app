@@ -53,8 +53,15 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   loc până când ieșirea o închidea.
 - [iOS] Părăsește o ieșire care anunță o mentenanță chiar și când ieșirea pe care conexiunea tocmai
   a părăsit-o anunța aceeași mentenanță.
-- Aplică o schimbare de locație sau a setării multihop făcută în timp ce un server de intrare refuza
-  conexiunile noi. Conexiunea putea rămâne pe serverele anterioare până la următoarea reconectare.
+- [Windows, macOS, Linux] Aplică o schimbare de locație sau a setării multihop făcută în timp ce un
+  server de intrare refuza conexiunile noi. Conexiunea putea rămâne pe serverele anterioare până la
+  următoarea reconectare.
+- [Windows, macOS, Linux, Android] Păstrează conexiunea pe o ieșire care anunță o mentenanță când
+  locația aleasă nu are altă ieșire. Aplicația o întrerupea și reîncerca acea ieșire, care refuza
+  până la repornire: aproximativ două minute fără internet.
+- [Windows, macOS, Linux] Trece pe altă ieșire fără întrerupere când ieșirea folosită anunță o
+  mentenanță. Firewall-ul bloca noul server, așa că trecerea avea loc abia după ce vechea ieșire
+  închidea conexiunea.
 
 ### Securitate
 - Fișierul de setări poate fi citit doar de administratori, iar rapoartele de problemă doar de
