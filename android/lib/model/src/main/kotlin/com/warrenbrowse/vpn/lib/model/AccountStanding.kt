@@ -41,10 +41,13 @@ data class AccountStrike(
      * remembered by in the preferences, so the preferences name no case.
      */
     val dismissalKey: String
-        get() = "strike:" + Integer.toHexString(caseReference.hashCode())
+        get() = STRIKE_DISMISSAL_PREFIX + Integer.toHexString(caseReference.hashCode())
 
     override fun toString(): String = "AccountStrike(day=$dayUnixSecs, category=$category)"
 }
+
+/** What every strike's dismissal key starts with, so a departing wallet's go together. */
+const val STRIKE_DISMISSAL_PREFIX = "strike:"
 
 /** A ban on the wallet. */
 data class AccountBan(

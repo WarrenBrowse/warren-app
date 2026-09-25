@@ -84,6 +84,23 @@ class UserPreferencesRepository(
         }
     }
 
+    /**
+     * Drops every dismissal whose key starts with [prefix]. A wallet leaving
+     * the device takes its port-forward strike dismissals with it
+     * (`strike:` keys): they are digests of its case references, and the
+     * device keeps no trace of the account's cases once it is gone.
+     */
+    suspend fun forgetDismissedNotices(prefix: String) {
+        userPreferencesStore.updateData { prefs ->
+            val kept = prefs.dismissedNoticesList.filterNot { it.startsWith(prefix) }
+            if (kept.size == prefs.dismissedNoticesCount) {
+                prefs
+            } else {
+                prefs.toBuilder().clearDismissedNotices().addAllDismissedNotices(kept).build()
+            }
+        }
+    }
+
     /** Ids of the launch announcements the reader has put away. */
     fun dismissedAnnouncements(): Flow<List<String>> =
         userPreferencesStore.data.map { it.dismissedAnnouncementsList }

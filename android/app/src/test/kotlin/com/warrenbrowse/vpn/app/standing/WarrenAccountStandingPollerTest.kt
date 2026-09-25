@@ -195,11 +195,56 @@ class WarrenAccountStandingPollerTest {
     }
 
     @Test
+    fun `a failed poll is not retried before the cadence`() = runTest {
+        val bridge = FakeStandingBridge(FAILED, FAILED)
+        val clock = TestTimeSource()
+        val poller =
+            WarrenAccountStandingPoller(
+                bridge,
+                WarrenAccountStandingRepository(),
+                RecordingAlerts(),
+                FakeWalletRepository(),
+                UnconfinedTestDispatcher(testScheduler),
+                clock,
+            )
+
+        poller.pollIfDue()
+        clock += 1.minutes
+        poller.pollIfDue()
+
+        assertEquals(1, bridge.phrases.size)
+    }
+
+    @Test
+    fun `a flood of new strikes raises a bounded number of notifications`() = runTest {
+        val many =
+            (1..50).joinToString(",") {
+                """{"strike":${STRIKE_1.replace("PF-1", "PF-$it")},"ordinal":$it,"threshold":3}"""
+            }
+        val alerts = RecordingAlerts()
+        val poller =
+            WarrenAccountStandingPoller(
+                FakeStandingBridge(
+                    """{"ok":true,"reported":true,"standing":null,"new_strikes":[$many]}"""
+                ),
+                WarrenAccountStandingRepository(),
+                alerts,
+                FakeWalletRepository(),
+                UnconfinedTestDispatcher(testScheduler),
+            )
+
+        poller.pollOnce()
+
+        assertEquals(WarrenAccountStandingPoller.MAX_STRIKES, alerts.announced.size)
+    }
+
+    @Test
     fun `a wallet that leaves takes its standing and its warnings with it`() = runTest {
         val state = WarrenAccountStandingRepository()
         val alerts = RecordingAlerts()
         val bridge = FakeStandingBridge(STANDING_ONE_STRIKE)
         val wallet = FakeWalletRepository()
+        var dismissalsForgotten = 0
         val poller =
             WarrenAccountStandingPoller(
                 bridge,
@@ -207,6 +252,7 @@ class WarrenAccountStandingPollerTest {
                 alerts,
                 wallet,
                 UnconfinedTestDispatcher(testScheduler),
+                forgetDismissedStrikes = { dismissalsForgotten++ },
             )
         val job = launch { poller.runWhile(MutableStateFlow(true)) }
         runCurrent()
@@ -218,6 +264,7 @@ class WarrenAccountStandingPollerTest {
         assertNull(state.standing.value)
         assertEquals(1, alerts.clears)
         assertEquals(1, bridge.forgets)
+        assertEquals(1, dismissalsForgotten)
         job.cancel()
     }
 }

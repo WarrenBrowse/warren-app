@@ -56,9 +56,11 @@ class WarrenAccountStandingPoller(
     private val wallet: WalletRepository,
     private val io: CoroutineDispatcher = Dispatchers.IO,
     private val clock: TimeSource.WithComparableMarks = TimeSource.Monotonic,
+    /** Drops the strike banner dismissals of a wallet that left the device. */
+    private val forgetDismissedStrikes: suspend () -> Unit = {},
 ) {
     private val polling = Mutex()
-    private var lastAnswerAt: ComparableTimeMark? = null
+    private var lastAttemptAt: ComparableTimeMark? = null
 
     /** Runs until cancelled; the caller scopes it. */
     suspend fun run() {
@@ -79,14 +81,16 @@ class WarrenAccountStandingPoller(
     }
 
     /**
-     * Polls unless an answer is younger than the cadence, so two owners of the
-     * loop (a service that restarts, a resume) cost one request, not two.
+     * Polls unless an attempt is younger than the cadence, so two owners of the
+     * loop (a service that restarts, a resume) cost one request, not two, and
+     * an API that keeps failing is asked no more often than one that answers.
      */
     suspend fun pollIfDue() =
         polling.withLock {
-            val due = lastAnswerAt?.let { it.elapsedNow() >= INTERVAL } ?: true
-            if (due && pollOnce()) {
-                lastAnswerAt = clock.markNow()
+            val due = lastAttemptAt?.let { it.elapsedNow() >= INTERVAL } ?: true
+            if (due && identityOf(wallet.state.value) != null) {
+                lastAttemptAt = clock.markNow()
+                pollOnce()
             }
         }
 
@@ -103,7 +107,8 @@ class WarrenAccountStandingPoller(
         val answered = poll?.ok == true
         if (poll != null && answered) {
             state.setStanding(poll.standing)
-            poll.newStrikes.forEach(alerts::announce)
+            // Bounded: a hostile or broken answer must not flood the shade.
+            poll.newStrikes.take(MAX_STRIKES).forEach(alerts::announce)
         }
         return answered
     }
@@ -129,10 +134,11 @@ class WarrenAccountStandingPoller(
             .drop(1)
             .collect {
                 polling.withLock {
-                    lastAnswerAt = null
+                    lastAttemptAt = null
                     state.setStanding(null)
                     alerts.clear()
                     withContext(io) { forget() }
+                    forgetDismissedStrikes()
                 }
             }
     }
@@ -168,8 +174,14 @@ class WarrenAccountStandingPoller(
         /** The token refresh cadence, which the desktop daemon polls on too. */
         val INTERVAL: Duration = 10.minutes
 
-        /** How soon a failed or skipped poll is tried again. */
+        /** How often the loop checks whether a poll is due. */
         val RETRY: Duration = 1.minutes
+
+        /**
+         * Strikes the app shows and announces from one answer, at most. Three
+         * ban the account, so a longer list is a broken or hostile answer.
+         */
+        const val MAX_STRIKES = 10
     }
 }
 
@@ -220,9 +232,10 @@ internal fun parseStandingEnvelope(rawJson: String): StandingPoll? =
 private fun standingOf(obj: JsonObject): AccountStanding =
     AccountStanding(
         strikes =
-            (obj["strikes"] as? JsonArray).orEmpty().mapNotNull {
-                (it as? JsonObject)?.let(::strikeOf)
-            },
+            (obj["strikes"] as? JsonArray)
+                .orEmpty()
+                .mapNotNull { (it as? JsonObject)?.let(::strikeOf) }
+                .take(WarrenAccountStandingPoller.MAX_STRIKES),
         threshold = obj.int("threshold") ?: 0,
         windowDays = obj.int("window_days") ?: 0,
         ban =

@@ -35,6 +35,7 @@ import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
 import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointOverride
 import com.warrenbrowse.vpn.lib.model.BuildVersion
 import com.warrenbrowse.vpn.lib.model.NotificationChannel
+import com.warrenbrowse.vpn.lib.model.STRIKE_DISMISSAL_PREFIX
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationChannelFactory
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationManager
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationProvider
@@ -303,6 +304,9 @@ val appModule = module {
             state = get(),
             alerts = get(),
             wallet = get(),
+            forgetDismissedStrikes = {
+                get<UserPreferencesRepository>().forgetDismissedNotices(STRIKE_DISMISSAL_PREFIX)
+            },
         )
     }
     single<WarrenSupportReporter> {
