@@ -94,6 +94,9 @@ pub mod warren_multi_hop_mode;
 /// Background fetcher of the public `GET /v1/network` environment
 /// descriptor, cached into `warren_status` for both UIs.
 mod warren_network_info;
+/// On-demand, per-window cached fetch of the public `GET /v1/network/stats`
+/// transparency snapshot, served to the frontends over gRPC.
+pub mod warren_network_stats;
 mod warren_notices_updater;
 mod warren_port_entitlements;
 /// Warren PRODUCT/deployment constants (`WARREN_API_URL`,
@@ -1208,6 +1211,7 @@ impl Daemon {
         let command_sender = daemon_command_channel.sender();
         let app_upgrade_broadcast = tokio::sync::broadcast::channel(32).0;
         let warren_status_cache = warren_status::WarrenStatusCache::new();
+        let warren_network_stats = warren_network_stats::WarrenNetworkStats::new();
         let management_interface = ManagementInterfaceServer::start(
             command_sender,
             config.rpc_socket_path,
@@ -1215,6 +1219,7 @@ impl Daemon {
             config.log_handle,
             relay_selector.clone(),
             warren_status_cache.clone(),
+            warren_network_stats.clone(),
             &config.settings_dir,
             warren_identity.clone(),
         )
@@ -1480,6 +1485,8 @@ impl Daemon {
         // flag, default bandwidth cap, payments flag): fetched in the
         // background and pushed to both UIs through the status stream.
         warren_network_info::spawn(warren_api_url.clone(), warren_status_cache.clone());
+        // Public stats snapshot: nothing is fetched until a frontend asks.
+        warren_network_stats.set_api_base(warren_api_url.clone());
         // Pinned server pubkey: env override for dev/staging, else the
         // baked production key. Pinning is mandatory in prod.
         let warren_server_pubkey: Option<String> = Some(
@@ -1595,6 +1602,9 @@ impl Daemon {
             Arc::new(Mutex::new(warren_relay_selector.as_ref().map(|sel| {
                 warren_relay_list_view::to_mullvad_relay_list(sel.list())
             })));
+        if let Some(selector) = warren_relay_selector.as_ref() {
+            warren_network_stats.set_relay_list(selector.list());
+        }
 
         // Forward the resolved warren-api URL so the
         // failover path (tunnel.rs) can post a best-effort
@@ -1903,6 +1913,7 @@ impl Daemon {
             // the broadcast push. Without this the GUI's mount-time pull
             // keeps returning the stale (empty in dev) boot view.
             let warren_view_for_updater = Arc::clone(&warren_relay_list_view);
+            let warren_stats_for_updater = warren_network_stats.clone();
             // The handle is retained to kick an immediate refresh on the
             // connectivity online edge (sleep/wake); the task also keeps
             // itself alive via its internal keepalive sender (periodic
@@ -1922,6 +1933,7 @@ impl Daemon {
                 None,
                 move |list| {
                     let view = warren_relay_list_view::to_mullvad_relay_list(&list);
+                    warren_stats_for_updater.set_relay_list(&list);
                     let pg = warren_pg.clone();
                     let notifier = warren_notifier.clone();
                     // Hot-swap the shared view BEFORE notifying so a GUI

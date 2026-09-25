@@ -79,6 +79,10 @@ service ManagementService {
   // Probes nothing, changes nothing, and carries no identity material: only
   // counts, a verdict kind with its age, and interface names.
   rpc GetWarrenDiagnostics(google.protobuf.Empty) returns (WarrenDiagnostics) {}
+  // Public network transparency snapshot (warren-core doc 106), fetched from
+  // the API only when a frontend calls this and cached for the window it
+  // describes. Anonymous display data: nothing in it is about this client.
+  rpc GetWarrenNetworkStats(google.protobuf.Empty) returns (WarrenNetworkStats) {}
   // Returns the user's BIP39 mnemonic (12 words) so the GUI can let the
   // user back it up. Empty string if the identity has never been
   // bootstrapped (= legacy Mullvad mode or first boot before
@@ -544,6 +548,25 @@ message TunnelEndpoint {
   // the last sampling interval. Present only alongside `legs_bonded`, and only
   // an indicator: nothing in the tunnel acts on it.
   optional uint32 legs_not_delivering = 11;
+}
+
+// Reply of GetWarrenNetworkStats.
+message WarrenNetworkStats {
+  // The `GET /v1/network/stats` body exactly as the API served it, after the
+  // daemon checked it is a JSON object of schema version 1. Empty when the
+  // API predates the endpoint.
+  string snapshot_json = 1;
+  // How the exits of the snapshot map onto the relay list rows, taken from
+  // the signed relay list: display names come from there, not from the
+  // unsigned snapshot.
+  repeated WarrenExitHostname exit_hostnames = 2;
+}
+
+message WarrenExitHostname {
+  // 32 lowercase hex characters, the key of `exits[]` in the snapshot.
+  string exit_id = 1;
+  // The hostname of the same exit in the relay list.
+  string hostname = 2;
 }
 
 // Read-only datapath observations. See `mullvad_types::warren_diagnostics`.

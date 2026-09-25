@@ -60,6 +60,9 @@ struct ManagementServiceImpl {
     /// without round-tripping through the daemon command channel
     /// (the cache is `Arc`-backed and the values are pure RAM).
     warren_status_cache: crate::warren_status::WarrenStatusCache,
+    /// The public network stats snapshot, fetched and cached per window on
+    /// behalf of the frontends.
+    warren_network_stats: crate::warren_network_stats::WarrenNetworkStats,
     /// Who owns the wallet: every call was already admitted against it by
     /// the gate, and this decides what each caller may be shown and who a
     /// wallet install makes the owner.
@@ -1023,6 +1026,41 @@ impl ManagementService for ManagementServiceImpl {
         let mut status = warren_status_snapshot_to_proto(snapshot);
         withhold_account_secrets(&mut status, self.may_see_identity(&request));
         Ok(Response::new(status))
+    }
+
+    /// The public network transparency snapshot. Served here rather than
+    /// through the daemon loop: it may wait on the network, and nothing in it
+    /// touches daemon state.
+    async fn get_warren_network_stats(
+        &self,
+        _: Request<()>,
+    ) -> ServiceResult<types::WarrenNetworkStats> {
+        use crate::warren_network_stats::StatsOutcome;
+        log::debug!("get_warren_network_stats");
+        let snapshot_json = match self.warren_network_stats.get().await {
+            Ok(StatsOutcome::Snapshot(snapshot)) => snapshot.json().to_owned(),
+            Ok(StatsOutcome::Unsupported) => String::new(),
+            Err(error) => {
+                log::debug!(
+                    "{}",
+                    error.display_chain_with_msg("Network stats unavailable")
+                );
+                return Err(Status::unavailable("network stats unavailable"));
+            }
+        };
+        let exit_hostnames = self
+            .warren_network_stats
+            .exit_hostnames()
+            .into_iter()
+            .map(|exit| types::WarrenExitHostname {
+                exit_id: exit.exit_id,
+                hostname: exit.hostname,
+            })
+            .collect();
+        Ok(Response::new(types::WarrenNetworkStats {
+            snapshot_json,
+            exit_hostnames,
+        }))
     }
 
     /// Push stream emitting a `WarrenStatus` whenever the underlying
@@ -2488,6 +2526,7 @@ impl ManagementInterfaceServer {
         log_reload_handle: crate::logging::LogHandle,
         relay_selector: mullvad_relay_selector::RelaySelector,
         warren_status_cache: crate::warren_status::WarrenStatusCache,
+        warren_network_stats: crate::warren_network_stats::WarrenNetworkStats,
         settings_dir: &std::path::Path,
         warren_identity: Arc<crate::warren_identity_manager::WarrenIdentityManager>,
     ) -> Result<ManagementInterfaceServer, Error> {
@@ -2511,6 +2550,7 @@ impl ManagementInterfaceServer {
             app_upgrade_broadcast,
             log_reload_handle,
             warren_status_cache: warren_status_cache.clone(),
+            warren_network_stats,
             wallet_access: wallet_access.clone(),
         };
 

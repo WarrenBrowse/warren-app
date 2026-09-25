@@ -103,6 +103,7 @@ rpc_classes! {
         SetWarrenNConnections => ControlMachine,
         SetWarrenMaxRateBps => ControlMachine,
         GetWarrenDiagnostics => ReadPublic,
+        GetWarrenNetworkStats => ReadPublic,
         GetWarrenMultiHopSettings => ReadPublic,
         SetWarrenMultiHopSettings => ControlMachine,
         SetWarrenCustomExit => ControlMachine,

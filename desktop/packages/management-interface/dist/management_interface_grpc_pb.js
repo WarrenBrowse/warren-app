@@ -624,6 +624,17 @@ function deserialize_mullvad_daemon_management_interface_WarrenMultiHopSettings(
   return management_interface_pb.WarrenMultiHopSettings.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_mullvad_daemon_management_interface_WarrenNetworkStats(arg) {
+  if (!(arg instanceof management_interface_pb.WarrenNetworkStats)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.WarrenNetworkStats');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_WarrenNetworkStats(buffer_arg) {
+  return management_interface_pb.WarrenNetworkStats.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_mullvad_daemon_management_interface_WarrenStatus(arg) {
   if (!(arg instanceof management_interface_pb.WarrenStatus)) {
     throw new Error('Expected argument of type mullvad_daemon.management_interface.WarrenStatus');
@@ -1071,6 +1082,20 @@ getWarrenDiagnostics: {
     requestDeserialize: deserialize_google_protobuf_Empty,
     responseSerialize: serialize_mullvad_daemon_management_interface_WarrenDiagnostics,
     responseDeserialize: deserialize_mullvad_daemon_management_interface_WarrenDiagnostics,
+  },
+  // Public network transparency snapshot (warren-core doc 106), fetched from
+// the API only when a frontend calls this and cached for the window it
+// describes. Anonymous display data: nothing in it is about this client.
+getWarrenNetworkStats: {
+    path: '/mullvad_daemon.management_interface.ManagementService/GetWarrenNetworkStats',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: management_interface_pb.WarrenNetworkStats,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_mullvad_daemon_management_interface_WarrenNetworkStats,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_WarrenNetworkStats,
   },
   // Returns the user's BIP39 mnemonic (12 words) so the GUI can let the
 // user back it up. Empty string if the identity has never been

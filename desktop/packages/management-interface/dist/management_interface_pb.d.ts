@@ -865,6 +865,54 @@ export namespace TunnelEndpoint {
     }
 }
 
+export class WarrenNetworkStats extends jspb.Message { 
+    getSnapshotJson(): string;
+    setSnapshotJson(value: string): WarrenNetworkStats;
+    clearExitHostnamesList(): void;
+    getExitHostnamesList(): Array<WarrenExitHostname>;
+    setExitHostnamesList(value: Array<WarrenExitHostname>): WarrenNetworkStats;
+    addExitHostnames(value?: WarrenExitHostname, index?: number): WarrenExitHostname;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenNetworkStats.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenNetworkStats): WarrenNetworkStats.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenNetworkStats, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenNetworkStats;
+    static deserializeBinaryFromReader(message: WarrenNetworkStats, reader: jspb.BinaryReader): WarrenNetworkStats;
+}
+
+export namespace WarrenNetworkStats {
+    export type AsObject = {
+        snapshotJson: string,
+        exitHostnamesList: Array<WarrenExitHostname.AsObject>,
+    }
+}
+
+export class WarrenExitHostname extends jspb.Message { 
+    getExitId(): string;
+    setExitId(value: string): WarrenExitHostname;
+    getHostname(): string;
+    setHostname(value: string): WarrenExitHostname;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenExitHostname.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenExitHostname): WarrenExitHostname.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenExitHostname, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenExitHostname;
+    static deserializeBinaryFromReader(message: WarrenExitHostname, reader: jspb.BinaryReader): WarrenExitHostname;
+}
+
+export namespace WarrenExitHostname {
+    export type AsObject = {
+        exitId: string,
+        hostname: string,
+    }
+}
+
 export class WarrenDiagnostics extends jspb.Message { 
     getRequestedNConnections(): number;
     setRequestedNConnections(value: number): WarrenDiagnostics;
@@ -2219,6 +2267,70 @@ export namespace WarrenStatus {
     }
 }
 
+export class WarrenAnnouncement extends jspb.Message { 
+    getId(): string;
+    setId(value: string): WarrenAnnouncement;
+    getHeadline(): string;
+    setHeadline(value: string): WarrenAnnouncement;
+    getBody(): string;
+    setBody(value: string): WarrenAnnouncement;
+    getLevel(): WarrenNoticeLevel;
+    setLevel(value: WarrenNoticeLevel): WarrenAnnouncement;
+
+    hasCta(): boolean;
+    clearCta(): void;
+    getCta(): WarrenAnnouncementCta | undefined;
+    setCta(value?: WarrenAnnouncementCta): WarrenAnnouncement;
+
+    hasVoucherCode(): boolean;
+    clearVoucherCode(): void;
+    getVoucherCode(): string | undefined;
+    setVoucherCode(value: string): WarrenAnnouncement;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenAnnouncement.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenAnnouncement): WarrenAnnouncement.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenAnnouncement, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenAnnouncement;
+    static deserializeBinaryFromReader(message: WarrenAnnouncement, reader: jspb.BinaryReader): WarrenAnnouncement;
+}
+
+export namespace WarrenAnnouncement {
+    export type AsObject = {
+        id: string,
+        headline: string,
+        body: string,
+        level: WarrenNoticeLevel,
+        cta?: WarrenAnnouncementCta.AsObject,
+        voucherCode?: string,
+    }
+}
+
+export class WarrenAnnouncementCta extends jspb.Message { 
+    getLabel(): string;
+    setLabel(value: string): WarrenAnnouncementCta;
+    getUrl(): string;
+    setUrl(value: string): WarrenAnnouncementCta;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenAnnouncementCta.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenAnnouncementCta): WarrenAnnouncementCta.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenAnnouncementCta, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenAnnouncementCta;
+    static deserializeBinaryFromReader(message: WarrenAnnouncementCta, reader: jspb.BinaryReader): WarrenAnnouncementCta;
+}
+
+export namespace WarrenAnnouncementCta {
+    export type AsObject = {
+        label: string,
+        url: string,
+    }
+}
+
 export class WarrenForeignEnv extends jspb.Message { 
     getName(): string;
     setName(value: string): WarrenForeignEnv;
@@ -2291,70 +2403,6 @@ export namespace WarrenNotice {
         id: string,
         message: string,
         level: WarrenNoticeLevel,
-    }
-}
-
-export class WarrenAnnouncement extends jspb.Message { 
-    getId(): string;
-    setId(value: string): WarrenAnnouncement;
-    getHeadline(): string;
-    setHeadline(value: string): WarrenAnnouncement;
-    getBody(): string;
-    setBody(value: string): WarrenAnnouncement;
-    getLevel(): WarrenNoticeLevel;
-    setLevel(value: WarrenNoticeLevel): WarrenAnnouncement;
-
-    hasCta(): boolean;
-    clearCta(): void;
-    getCta(): WarrenAnnouncementCta | undefined;
-    setCta(value?: WarrenAnnouncementCta): WarrenAnnouncement;
-
-    hasVoucherCode(): boolean;
-    clearVoucherCode(): void;
-    getVoucherCode(): string | undefined;
-    setVoucherCode(value: string): WarrenAnnouncement;
-
-    serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): WarrenAnnouncement.AsObject;
-    static toObject(includeInstance: boolean, msg: WarrenAnnouncement): WarrenAnnouncement.AsObject;
-    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: WarrenAnnouncement, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): WarrenAnnouncement;
-    static deserializeBinaryFromReader(message: WarrenAnnouncement, reader: jspb.BinaryReader): WarrenAnnouncement;
-}
-
-export namespace WarrenAnnouncement {
-    export type AsObject = {
-        id: string,
-        headline: string,
-        body: string,
-        level: WarrenNoticeLevel,
-        cta?: WarrenAnnouncementCta.AsObject,
-        voucherCode?: string,
-    }
-}
-
-export class WarrenAnnouncementCta extends jspb.Message { 
-    getLabel(): string;
-    setLabel(value: string): WarrenAnnouncementCta;
-    getUrl(): string;
-    setUrl(value: string): WarrenAnnouncementCta;
-
-    serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): WarrenAnnouncementCta.AsObject;
-    static toObject(includeInstance: boolean, msg: WarrenAnnouncementCta): WarrenAnnouncementCta.AsObject;
-    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: WarrenAnnouncementCta, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): WarrenAnnouncementCta;
-    static deserializeBinaryFromReader(message: WarrenAnnouncementCta, reader: jspb.BinaryReader): WarrenAnnouncementCta;
-}
-
-export namespace WarrenAnnouncementCta {
-    export type AsObject = {
-        label: string,
-        url: string,
     }
 }
 

@@ -112,8 +112,7 @@ fn make_wireguard_relay(
     let endpoint_bytes: [u8; 32] = *relay.endpoint_id().as_bytes();
     let public_key = wireguard::PublicKey::from(endpoint_bytes);
 
-    // Short visually distinct hostname (16 hex chars of the pubkey).
-    let hostname = format!("warren-{}", &hex::encode(endpoint_bytes)[..16]);
+    let hostname = relay_hostname(relay);
 
     let ipv4 = relay
         .endpoint_addr()
@@ -155,6 +154,16 @@ fn make_wireguard_relay(
         "warren".to_string(), // provider
         WireguardRelayEndpointData::new(public_key),
         inner,
+    )
+}
+
+/// The hostname a relay carries in the GUI list: 16 hex chars of its pubkey,
+/// short and visually distinct. The network stats join reuses it, so the two
+/// can never disagree on which row is which exit.
+pub(crate) fn relay_hostname(relay: &WarrenRelay) -> String {
+    format!(
+        "warren-{}",
+        &hex::encode(relay.endpoint_id().as_bytes())[..16]
     )
 }
 
