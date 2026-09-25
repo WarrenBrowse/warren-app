@@ -259,6 +259,23 @@ jobs:
           cp unsigned/downloads.json signed/downloads.json
           ls -lh signed
 
+      # Same as release.yml: the Linux install script is served beside the
+      # packages and refuses a checksum list the release key did not sign, so
+      # a republish carries both, or the one-command install breaks with it.
+      - name: Sign the checksum list and render the Linux install script
+        if: env.WARREN_CHANNEL_LIVE == 'true'
+        env:
+          WARREN_SUMS_NAMESPACE: warren-desktop-sha256sums/1
+        run: |
+          bash ci/sign-headless-sums.sh release-files/SHA256SUMS
+          sed -e "s|@UPDATES_URL@|${WARREN_METADATA_BASE%/}|" \
+            -e "s|@ARTIFACT_PREFIX@|${WARREN_ARTIFACT_PREFIX}|" \
+            dist-assets/linux/install.sh > release-files/install.sh
+          if grep -q '@UPDATES_URL@\|@ARTIFACT_PREFIX@' release-files/install.sh; then
+            echo "::error::the Linux install script still carries a placeholder"
+            exit 1
+          fi
+
       - name: Preflight ssh client
         if: env.WARREN_CHANNEL_LIVE == 'true' && env.WARREN_UPDATES_SSH_KEY != ''
         run: |
@@ -321,7 +338,7 @@ jobs:
             batch=""
           }
           n=0
-          for f in $missing SHA256SUMS; do
+          for f in $missing SHA256SUMS SHA256SUMS.sshsig install.sh; do
             (
               set -o pipefail
               cd release-files
