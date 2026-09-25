@@ -51,6 +51,10 @@ log = { workspace = true }
 # Android-only. The Android target section below adds the reqwest transport.
 warren-api = { path = "../../warren-sdk-rs/crates/warren-api" }
 warrenguard-token = { path = "../../warrenguard/crates/warrenguard-token" }
+# Port-forward abuse standing (warren-core doc 105): the model, the strike
+# ledger and the ban mapping shared with the desktop daemon and iOS, so the
+# three clients agree on when to warn and when to block. Host-tested here.
+warren-standing = { path = "../warren-standing" }
 # Compiled product environment (prod | staging | beta): the Gradle beta
 # flavor exports WARREN_PRODUCT_ENV=beta to the cargo build, which is the
 # only endpoint-switching mechanism release APKs honor.

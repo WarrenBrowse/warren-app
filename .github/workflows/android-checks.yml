@@ -31,6 +31,7 @@ on:
     paths: &android_paths
       - "android/**"
       - "warren-jni/**"
+      - "warren-standing/**"
       # The client-rule fixtures are replayed by the JVM unit tests (the forum
       # link classes, the outcome envelopes, the per-flavor BuildConfig).
       - "fixtures/client-rules/**"

@@ -45,6 +45,7 @@ const REFRESH_INTERVAL: Duration = Duration::from_secs(600);
 pub(crate) struct EntitlementMint<T> {
     now: NowFn,
     managers: parking_lot::Mutex<HashMap<[u8; 32], Arc<PortEntitlementManager<T>>>>,
+    ban_sink: Option<crate::token_provider::BanSink>,
 }
 
 impl<T: HttpTransport + 'static> EntitlementMint<T> {
@@ -52,7 +53,15 @@ impl<T: HttpTransport + 'static> EntitlementMint<T> {
         Self {
             now,
             managers: parking_lot::Mutex::new(HashMap::new()),
+            ban_sink: None,
         }
+    }
+
+    /// Reports every refresh failure to `sink`: the entitlement issuer refuses
+    /// a banned wallet the way the token issuer does.
+    pub(crate) fn with_ban_sink(mut self, sink: crate::token_provider::BanSink) -> Self {
+        self.ban_sink = Some(sink);
+        self
     }
 
     /// The credential source rule `slot` of `wallet_pubkey` presents. First
@@ -71,7 +80,13 @@ impl<T: HttpTransport + 'static> EntitlementMint<T> {
                 .entry(wallet_pubkey)
                 .or_insert_with(|| {
                     let manager = Arc::new(PortEntitlementManager::new(Arc::new(make_client())));
-                    spawn_refresh(manager.clone(), self.now.clone(), slot);
+                    spawn_refresh(
+                        manager.clone(),
+                        self.now.clone(),
+                        slot,
+                        wallet_pubkey,
+                        self.ban_sink.clone(),
+                    );
                     manager
                 })
                 .clone()
@@ -120,6 +135,8 @@ fn spawn_refresh<T: HttpTransport + 'static>(
     manager: Arc<PortEntitlementManager<T>>,
     now: NowFn,
     probe_slot: usize,
+    wallet_pubkey: [u8; 32],
+    ban_sink: Option<crate::token_provider::BanSink>,
 ) {
     tokio::spawn(async move {
         let mut tick = tokio::time::interval(REFRESH_INTERVAL);
@@ -136,11 +153,23 @@ fn spawn_refresh<T: HttpTransport + 'static>(
                     "Warren port-entitlement refresh ok (slot stocked={})",
                     manager.credential_for_slot(probe_slot, n).is_some()
                 ),
-                // Transient: the batch keeps vending what it already holds and
-                // the next tick retries. The error chain carries no credential
-                // or seed material.
+                // A ban refusal goes to the standing, which blocks the tunnel;
+                // anything else is transient, the batch keeps vending what it
+                // already holds and the next tick retries. The error chain
+                // carries no credential or seed material.
                 Err(e) => {
-                    log::warn!("Warren port-entitlement refresh failed (keeping existing): {e}")
+                    if ban_sink
+                        .as_ref()
+                        .is_some_and(|sink| sink(&wallet_pubkey, &e))
+                    {
+                        log::warn!(
+                            "Warren port-entitlement refresh refused: the account is banned"
+                        );
+                    } else {
+                        log::warn!(
+                            "Warren port-entitlement refresh failed (keeping existing): {e}"
+                        );
+                    }
                 }
             }
         }
@@ -185,7 +214,13 @@ mod android {
     /// the tunnel handshake signs with, so the minting wallet is bit-for-bit
     /// the subscribed wallet.
     pub(crate) fn provider_for(signing_key: SigningKey) -> CredentialSource {
-        let mint = MINT.get_or_init(|| EntitlementMint::new(Arc::new(now_unix_secs)));
+        let mint = MINT.get_or_init(|| {
+            EntitlementMint::new(Arc::new(now_unix_secs)).with_ban_sink(Arc::new(
+                |wallet, error| {
+                    crate::standing::store().on_refresh_error(wallet, error, now_unix_secs())
+                },
+            ))
+        });
         let wallet_pubkey = signing_key.verifying_key().to_bytes();
         mint.credential_source(wallet_pubkey, ANDROID_RULE_SLOT, move || {
             WarrenApiClient::new(
@@ -236,6 +271,9 @@ mod tests {
         /// only checks the signature and the epoch before stocking it.
         attribution_key: SigningKey,
         refuse_issuance: AtomicBool,
+        /// Answers every issue request with the issuer's ban refusal
+        /// (403 `{"error":"banned"}`, warren-core doc 105 §5.3).
+        ban_wallet: AtomicBool,
         fail_transport: AtomicBool,
         issue_calls: AtomicUsize,
     }
@@ -253,6 +291,7 @@ mod tests {
                     .collect(),
                 attribution_key: SigningKey::from_bytes(&[0x42; 32]),
                 refuse_issuance: AtomicBool::new(false),
+                ban_wallet: AtomicBool::new(false),
                 fail_transport: AtomicBool::new(false),
                 issue_calls: AtomicUsize::new(0),
             }))
@@ -325,6 +364,12 @@ mod tests {
                 request.url
             );
             self.0.issue_calls.fetch_add(1, Ordering::SeqCst);
+            if self.0.ban_wallet.load(Ordering::SeqCst) {
+                return Ok(HttpResponse {
+                    status: 403,
+                    body: br#"{"error":"banned","reason_code":"other"}"#.to_vec(),
+                });
+            }
             let req: TokenIssueRequest = serde_json::from_slice(&request.body).unwrap();
             let mut epochs = Vec::new();
             for e in &req.epochs {
@@ -456,6 +501,27 @@ mod tests {
         let state = issuer.0.clone();
         wait_for(|| state.issue_calls.load(Ordering::SeqCst) >= 1).await;
         assert!(source().is_some(), "the tick must stock the batch");
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn the_issuers_ban_refusal_reaches_the_standing_of_the_wallet_it_refused() {
+        let issuer = FakeIssuer::new(&[100]);
+        issuer.0.ban_wallet.store(true, Ordering::SeqCst);
+        let (_t, now) = clock(NOW);
+        let standing = Arc::new(warren_standing::StandingStore::new(None));
+        let sink = standing.clone();
+        let mint = EntitlementMint::new(now).with_ban_sink(Arc::new(move |wallet, error| {
+            sink.on_refresh_error(wallet, error, NOW)
+        }));
+        let source = mint.credential_source([1; 32], 0, || client(&issuer));
+
+        wait_for(|| standing.ban_in_force(&[1; 32], NOW).is_some()).await;
+
+        assert_eq!(
+            standing.ban_in_force(&[1; 32], NOW).map(|ban| ban.reason),
+            Some(warren_api::BanReasonCode::Other)
+        );
+        assert!(source().is_none(), "a banned wallet presents nothing");
     }
 
     #[tokio::test(start_paused = true)]

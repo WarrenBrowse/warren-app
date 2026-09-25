@@ -230,6 +230,18 @@ pub async fn run_session(
     // timing never mirrors the moment the user turns it on.
     let port_entitlements = crate::port_entitlements::provider_for(signing_key.clone());
 
+    // A wallet known to be banned is refused before it dials (warren-core doc
+    // 105 §5.3): the issuers' refusal or the standing poll said so, and an
+    // exit would only say it again. Checked after the two mints above so their
+    // first refresh, which is how a ban is learned, has already started.
+    clear_ban_verdict();
+    let wallet_pubkey = signing_key.verifying_key().to_bytes();
+    if let Some(ban) = crate::standing::store().ban_in_force(&wallet_pubkey, unix_now_secs()) {
+        log::warn!("Warren account is banned; not dialing");
+        block_for_ban(status, ban);
+        return;
+    }
+
     // The production fleet speaks only the multi-hop wire, so a valid config
     // always carries an entry hop: the Kotlin builder sets it even when the
     // multi-hop toggle is off (a 1-hop circuit with the exit collapsed onto
@@ -270,6 +282,53 @@ pub(crate) const WARREN_MULTIHOP_ROOT_PUBKEY_HEX: &str =
 /// (none of which the `/v1/exits` list carries).
 ///
 /// [`MultiHopSupervisor`]: warrenguard_transport::supervisor::MultiHopSupervisor
+/// What ended one connect attempt of [`run_multi_hop_session`].
+enum AttemptEnd {
+    /// Kotlin disconnected.
+    Cancelled,
+    /// A ban on the wallet became known while the session ran.
+    Banned(warren_standing::Ban),
+    /// The session itself ended.
+    Session(crate::supervised_session::SessionEnd),
+}
+
+/// The ban on the session's wallet, when the standing learns of one: an
+/// issuer's refusal from a background refresh, or the standing poll. Pending
+/// forever when none comes.
+async fn ban_arrives(wallet_pubkey: [u8; 32]) -> warren_standing::Ban {
+    let store = crate::standing::store();
+    let mut changes = store.subscribe();
+    loop {
+        if let Some(ban) = store.ban_in_force(&wallet_pubkey, unix_now_secs()) {
+            return ban;
+        }
+        if changes.changed().await.is_err() {
+            std::future::pending::<()>().await;
+        }
+    }
+}
+
+/// The ban the last session was blocked for, which `getBanVerdict` hands to
+/// Kotlin with the [`SessionStatus::Banned`] edge.
+static BAN_VERDICT: parking_lot::Mutex<Option<warren_standing::Ban>> =
+    parking_lot::Mutex::new(None);
+
+fn clear_ban_verdict() {
+    BAN_VERDICT.lock().take();
+}
+
+/// Ends the session for `ban`: Kotlin reads the verdict, shows the
+/// suspension and stops retrying, since no exit admits a banned wallet.
+fn block_for_ban(status: &'static crate::status_watch::StatusCell, ban: warren_standing::Ban) {
+    *BAN_VERDICT.lock() = Some(ban);
+    status.store(SessionStatus::Banned as i32);
+}
+
+/// `getBanVerdict`'s answer, see [`warren_standing::ban_verdict_json`].
+pub(crate) fn ban_verdict_json() -> String {
+    warren_standing::ban_verdict_json(BAN_VERDICT.lock().as_ref())
+}
+
 async fn run_multi_hop_session(
     tun: AndroidTun,
     signing: SigningKey,
@@ -288,6 +347,7 @@ async fn run_multi_hop_session(
 
     use crate::supervised_session::{AbortOnDrop, SessionEnd, SupervisedInputs};
 
+    let wallet_pubkey = signing.verifying_key().to_bytes();
     let want_exit = match WarrenPubkey::from_hex(&config.exit_pubkey_hex) {
         Ok(p) => p,
         Err(e) => {
@@ -605,7 +665,8 @@ async fn run_multi_hop_session(
         let daita = daita.clone();
         let outcome = match max_rate_bps {
             Some(bps) => tokio::select! {
-                _ = &mut cancel_rx => None,
+                _ = &mut cancel_rx => AttemptEnd::Cancelled,
+                ban = ban_arrives(wallet_pubkey) => AttemptEnd::Banned(ban),
                 end = crate::supervised_session::run_supervised(
                     inputs,
                     |spec| crate::rate_limited_tun::RateLimitedTun::new(remap(spec), bps),
@@ -613,10 +674,11 @@ async fn run_multi_hop_session(
                     Some(exit_draining_channel.clone()),
                     status,
                     crate::supervised_session::SESSION_GRACE,
-                ) => Some(end),
+                ) => AttemptEnd::Session(end),
             },
             None => tokio::select! {
-                _ = &mut cancel_rx => None,
+                _ = &mut cancel_rx => AttemptEnd::Cancelled,
+                ban = ban_arrives(wallet_pubkey) => AttemptEnd::Banned(ban),
                 end = crate::supervised_session::run_supervised(
                     inputs,
                     remap,
@@ -624,20 +686,28 @@ async fn run_multi_hop_session(
                     Some(exit_draining_channel.clone()),
                     status,
                     crate::supervised_session::SESSION_GRACE,
-                ) => Some(end),
+                ) => AttemptEnd::Session(end),
             },
         };
 
         match outcome {
-            None => {
+            AttemptEnd::Cancelled => {
                 log::info!("multi-hop tunnel cancelled by Kotlin");
                 break;
+            }
+            // The desktop daemon blocks its tunnel on the same news: tokens
+            // minted before the ban keep an admitted session alive for their
+            // whole prefetch horizon otherwise.
+            AttemptEnd::Banned(ban) => {
+                log::warn!("multi-hop: the account was banned during the session; ending it");
+                block_for_ban(status, ban);
+                return;
             }
             // A rejected v7 token (spent serial, clock-skewed epoch) is a
             // verdict on the TOKEN, not the subscription, and Unauthorized is
             // terminal for Kotlin. Re-verify on the wallet-signed path before
             // surfacing anything.
-            Some(SessionEnd::Rejected(RejectionReason::NotAllowlisted))
+            AttemptEnd::Session(SessionEnd::Rejected(RejectionReason::NotAllowlisted))
                 if token_provider.is_some() && presented.load(Ordering::Relaxed) =>
             {
                 log::warn!("multi-hop: exit rejected the v7 token; retrying wallet-signed");
@@ -648,18 +718,27 @@ async fn run_multi_hop_session(
             // shows "subscription expired" and stops retrying, instead of a
             // generic disconnect + reconnect storm that keeps hitting the
             // same rejection.
-            Some(SessionEnd::Rejected(RejectionReason::NotAllowlisted)) => {
+            // The exit found the wallet on its CRL: a suspension, which no
+            // other exit lifts, and which the expiry message would misname.
+            AttemptEnd::Session(SessionEnd::Rejected(RejectionReason::Banned(code))) => {
+                log::warn!("multi-hop: exit rejected setup (account banned)");
+                let ban =
+                    crate::standing::store().on_exit_ban(&wallet_pubkey, code, unix_now_secs());
+                block_for_ban(status, ban);
+                return;
+            }
+            AttemptEnd::Session(SessionEnd::Rejected(RejectionReason::NotAllowlisted)) => {
                 log::warn!("multi-hop: exit rejected setup (not authorized / subscription lapsed)");
                 status.store(SessionStatus::Unauthorized as i32);
                 return;
             }
-            Some(SessionEnd::ExitLeaving) => {
+            AttemptEnd::Session(SessionEnd::ExitLeaving) => {
                 status.store(SessionStatus::ExitLeaving as i32);
                 return;
             }
-            Some(end) => {
-                // No-logs: `SessionEnd` carries only a failure category (and,
-                // for a ban, the exit's opaque product code), never identity.
+            AttemptEnd::Session(end) => {
+                // No-logs: `SessionEnd` carries only a failure category, never
+                // identity.
                 log::info!("multi-hop session ended: {end:?}");
                 break;
             }
@@ -1016,6 +1095,39 @@ fn maybe_spawn_nat_pmp(
         crate::natpmp_slot::NatPmpSlot::Pending,
     ));
     let refresh_slot = refresh.clone();
+    // Whether the last request carried an entitlement: an exit's refusal
+    // means something else with and without one.
+    let presented = std::sync::Arc::new(AtomicBool::new(false));
+    let entitlements = crate::natpmp_refusal::recording_presence(entitlements, presented.clone());
+    // The entitlement is consulted once per refresh cycle rather than captured
+    // once: a credential is valid for its own epoch only, so a mapping that
+    // outlives an epoch presents the next batch at its next renewal, without
+    // the loop restarting.
+    let spawn_loop = {
+        let entitlements = entitlements.clone();
+        std::sync::Arc::new(
+            move |tx: tokio::sync::mpsc::UnboundedSender<
+                warrenguard_natpmp_client::NatPmpEvent,
+            >| {
+                warrenguard_natpmp_client::spawn_refresh_loop_with(
+                    warrenguard_natpmp_client::RefreshLoopConfig {
+                        server,
+                        protos,
+                        internal_port: 0,
+                        suggested_external_port,
+                        lifetime_secs,
+                        suggestion,
+                        bind_addr: Some(bind_addr),
+                        credential: Some(entitlements.clone()),
+                    },
+                    tx,
+                )
+            },
+        )
+    };
+    let respawn = spawn_loop.clone();
+    let respawn_tx = tx.clone();
+    let respawn_slot = refresh.clone();
     let starter = tokio::spawn(async move {
         // The engine reads the credential once per cycle, and the exit refuses
         // a first request that carries no entitlement envelope (warren-core doc
@@ -1035,23 +1147,7 @@ fn maybe_spawn_nat_pmp(
         log::info!(
             "NAT-PMP refresh loop spawned (server={server}, bind_addr={bind_addr}, entitlement={entitlement_present})"
         );
-        // The entitlement is consulted once per refresh cycle rather than
-        // captured once: a credential is valid for its own epoch only, so a
-        // mapping that outlives an epoch presents the next batch at its next
-        // renewal, without the loop restarting.
-        let handle = warrenguard_natpmp_client::spawn_refresh_loop_with(
-            warrenguard_natpmp_client::RefreshLoopConfig {
-                server,
-                protos,
-                internal_port: 0,
-                suggested_external_port,
-                lifetime_secs,
-                suggestion,
-                bind_addr: Some(bind_addr),
-                credential: Some(entitlements),
-            },
-            tx,
-        );
+        let handle = spawn_loop(tx);
         // The session may have ended while this task was between the spawn
         // above and this store, a window no abort can interrupt. The slot
         // hands the handle back when it has: the loop this task just started
@@ -1062,8 +1158,40 @@ fn maybe_spawn_nat_pmp(
         }
     });
     let drain = tokio::spawn(async move {
+        let mut refusals = crate::natpmp_refusal::RefusalCount::default();
         while let Some(event) = rx.recv().await {
             log::info!("NAT-PMP event from Android tunnel: {event:?}");
+            match crate::natpmp_refusal::MapOutcome::of(&event) {
+                crate::natpmp_refusal::MapOutcome::Granted => refusals.on_granted(),
+                // The engine stops on a refusal, which it takes for permanent.
+                // Here it is not: a missing entitlement comes with the next
+                // mint or epoch, and a refused one is usually the serial the
+                // previous tunnel address still holds until the exit reaps it.
+                // So the rule asks again on the shared schedule, the way the
+                // desktop controller restarts a refused rule.
+                crate::natpmp_refusal::MapOutcome::Refused => {
+                    let (refusal, retry_in_secs) =
+                        refusals.on_refused(presented.load(Ordering::Relaxed));
+                    log::info!(
+                        "NAT-PMP request refused ({refusal:?}), asking again in {retry_in_secs}s"
+                    );
+                    crate::android_jni::set_natpmp_status(
+                        crate::natpmp_refusal::refused_status_json(refusal, retry_in_secs),
+                    );
+                    tokio::time::sleep(std::time::Duration::from_secs(u64::from(retry_in_secs)))
+                        .await;
+                    crate::android_jni::set_natpmp_status(r#"{"state":"requesting"}"#.to_owned());
+                    let handle = respawn(respawn_tx.clone());
+                    // Same race as the starter's: a teardown between the spawn
+                    // and the store leaves this task holding the only handle.
+                    if let Some(mut orphan) = respawn_slot.lock().store(handle) {
+                        orphan.cancel();
+                        break;
+                    }
+                    continue;
+                }
+                crate::natpmp_refusal::MapOutcome::Other => {}
+            }
             // Remember the granted external port so the next session (after
             // an exit change) re-suggests it: the public port follows the
             // client. Only a grant carries a port; 0 is never granted.

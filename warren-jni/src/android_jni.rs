@@ -293,6 +293,10 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_initLogger(
     // call carries it.
     #[cfg(feature = "tunnel")]
     crate::token_provider::set_app_files_dir(&files_dir);
+    // The strike ledger lives beside the token bundle, in the same private,
+    // never-backed-up directory.
+    #[cfg(feature = "tunnel")]
+    crate::standing::init(&files_dir);
 
     log_panics::init();
     log::info!("Warren JNI logger initialised in {}", files_dir.display());
@@ -1895,6 +1899,96 @@ fn unix_now() -> u64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map_or(0, |d| d.as_secs())
+}
+
+// ---------------------------------------------------------------------------
+// Port-forward abuse standing (warren-core doc 105 §5.4)
+// ---------------------------------------------------------------------------
+
+/// Polls the wallet's standing (signed `GET /v1/account/standing`) and answers
+/// the envelope `warren_standing::StandingStore::on_poll` documents: the live
+/// strikes with their case references, the ban with its lapse, and the strikes
+/// this device has not warned about yet, each exactly once.
+///
+/// Rides the VpnService-protected transport, like the incident reports: a
+/// banned tunnel sits in the kill-switch blackhole, and the poll is what
+/// notices the ban being lifted, so it must not be captured by it. The case
+/// references and ports go to the account's own screens and nowhere else,
+/// never to a log. Blocks on a network GET: invoke off the main thread.
+#[cfg(feature = "tunnel")]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_accountStanding<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    mnemonic: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let phrase = Zeroizing::new(String::from_java(&jnix_env, mnemonic));
+    let json = account_standing(&phrase);
+    match jnix_env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+#[cfg(feature = "tunnel")]
+fn account_standing(mnemonic: &str) -> String {
+    const NOT_POLLED: &str = r#"{"ok":false,"reported":true,"standing":null,"new_strikes":[]}"#;
+    let Some(runtime) = runtime() else {
+        log::warn!("accountStanding: initLogger must run first");
+        return NOT_POLLED.to_owned();
+    };
+    let Ok(identity) = warren_identity::WarrenIdentity::from_mnemonic(mnemonic) else {
+        log::warn!("accountStanding: wallet could not be derived");
+        return NOT_POLLED.to_owned();
+    };
+    let wallet_pubkey = identity.public_key();
+    let client = warren_api::WarrenApiClient::new(
+        PRODUCT_API_URL.to_owned(),
+        identity,
+        IncidentTransport::new(),
+    );
+    let result = runtime.block_on(client.account_standing());
+    if let Err(error) = &result {
+        // The class only: the error's body may echo identity material. A 404
+        // is an API that does not serve the standing yet, which is quiet.
+        match error {
+            warren_api::ClientError::ServerStatus { status: 404, .. } => {
+                log::debug!("accountStanding: the API does not report the standing yet");
+            }
+            warren_api::ClientError::ServerStatus { status, .. } => {
+                log::warn!("accountStanding: refused by the server ({status})");
+            }
+            _ => log::warn!("accountStanding: transport failed"),
+        }
+    }
+    crate::standing::store().on_poll(&wallet_pubkey, result, unix_now())
+}
+
+/// The wallet left this device (logged out or replaced): forgets its standing,
+/// the ban included, and which of its strikes were announced, on disk too.
+#[cfg(feature = "tunnel")]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forgetAccountStanding(
+    _env: JNIEnv<'_>,
+    _class: JClass<'_>,
+) {
+    crate::standing::store().forget();
+}
+
+/// The ban the last session ended on with status `Banned` (6):
+/// `{"reason":"[BANNED_PORT_FORWARDING] ...","lapses_at_unix_secs":N|null}`,
+/// or `{}`. Kotlin keys the suspension message on the `[BANNED*]` token.
+#[cfg(feature = "tunnel")]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getBanVerdict(
+    env: JNIEnv<'_>,
+    _class: JClass<'_>,
+) -> jstring {
+    match env.new_string(crate::tunnel::ban_verdict_json()) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
 }
 
 // Device list/remove JNI exports were dropped: Warren's identity is the

@@ -38,7 +38,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
-use warren_api::{HttpTransport, PersistedTokens, TokenManager, WarrenApiClient};
+use warren_api::{HttpTransport, PersistedTokens, TokenClientError, TokenManager, WarrenApiClient};
 use warrenguard_token::TOKEN_LEN;
 
 /// Epochs minted ahead of the current one (current + horizon per refresh
@@ -57,6 +57,12 @@ type NowFn = Arc<dyn Fn() -> u64 + Send + Sync>;
 /// token this epoch" and keeps the v6 wallet-signed path (availability over a
 /// temporary anonymity downgrade, matching desktop and iOS).
 pub(crate) type StackSource = Arc<dyn Fn() -> Vec<[u8; TOKEN_LEN]> + Send + Sync>;
+
+/// Where a refresh failure of a wallet goes, to learn whether it is the
+/// issuer's ban refusal (warren-core doc 105 §5.3). Answers whether it was one.
+/// Shared with the entitlement mint, whose issuer refuses a banned wallet the
+/// same way.
+pub(crate) type BanSink = Arc<dyn Fn(&[u8; 32], &TokenClientError) -> bool + Send + Sync>;
 
 /// The on-disk home of the seed-free token bundle, written atomically
 /// (temp + rename, the same pattern as the iOS TOFU pin store) so a process
@@ -113,6 +119,7 @@ pub(crate) struct TokenMint<T> {
     /// The bundle is restored into the first manager built this process; a
     /// second wallet must not re-load tokens the first already vends.
     restored: AtomicBool,
+    ban_sink: Option<BanSink>,
 }
 
 impl<T: HttpTransport + 'static> TokenMint<T> {
@@ -122,7 +129,15 @@ impl<T: HttpTransport + 'static> TokenMint<T> {
             managers: parking_lot::Mutex::new(HashMap::new()),
             persist: persist.map(Arc::new),
             restored: AtomicBool::new(false),
+            ban_sink: None,
         }
+    }
+
+    /// Reports every refresh failure to `sink`, which is how an issuer's ban
+    /// refusal reaches the standing before any exit is dialed.
+    pub(crate) fn with_ban_sink(mut self, sink: BanSink) -> Self {
+        self.ban_sink = Some(sink);
+        self
     }
 
     /// The pop-only stack source for `wallet_pubkey`. First sight of a wallet
@@ -151,7 +166,13 @@ impl<T: HttpTransport + 'static> TokenMint<T> {
                         let restored = manager.restore_persisted(&bundle);
                         log::info!("restored {restored} persisted v7 tokens");
                     }
-                    spawn_refresh(manager.clone(), self.now.clone(), self.persist.clone());
+                    spawn_refresh(
+                        manager.clone(),
+                        self.now.clone(),
+                        self.persist.clone(),
+                        wallet_pubkey,
+                        self.ban_sink.clone(),
+                    );
                     manager
                 })
                 .clone()
@@ -181,6 +202,8 @@ fn spawn_refresh<T: HttpTransport + 'static>(
     manager: Arc<TokenManager<T>>,
     now: NowFn,
     persist: Option<Arc<PersistFile>>,
+    wallet_pubkey: [u8; 32],
+    ban_sink: Option<BanSink>,
 ) {
     tokio::spawn(async move {
         let mut tick = tokio::time::interval(Duration::from_secs(600));
@@ -202,11 +225,20 @@ fn spawn_refresh<T: HttpTransport + 'static>(
                         manager.available(n / 3600)
                     );
                 }
-                // Transient: the store keeps vending what it already holds and
-                // the next tick retries. Same message as the desktop twin; the
-                // error chain carries no token or seed material.
+                // A ban refusal is not transient: it goes to the standing, which
+                // blocks the tunnel. Anything else is, and the store keeps
+                // vending what it already holds until the next tick retries.
+                // Same message as the desktop twin; the error chain carries no
+                // token or seed material.
                 Err(e) => {
-                    log::warn!("Warren v7 token refresh failed (keeping existing tokens): {e}")
+                    if ban_sink
+                        .as_ref()
+                        .is_some_and(|sink| sink(&wallet_pubkey, &e))
+                    {
+                        log::warn!("Warren v7 token refresh refused: the account is banned");
+                    } else {
+                        log::warn!("Warren v7 token refresh failed (keeping existing tokens): {e}");
+                    }
                 }
             }
         }
@@ -268,7 +300,13 @@ mod android {
     /// re-derivation), so the minting wallet is bit-for-bit the subscribed
     /// wallet. The returned closure pops one token per dial and never mints.
     pub(crate) fn provider_for(signing_key: SigningKey) -> SessionTokenProvider {
-        let mint = MINT.get_or_init(|| TokenMint::new(Arc::new(now_unix_secs), persist_file()));
+        let mint = MINT.get_or_init(|| {
+            TokenMint::new(Arc::new(now_unix_secs), persist_file()).with_ban_sink(Arc::new(
+                |wallet, error| {
+                    crate::standing::store().on_refresh_error(wallet, error, now_unix_secs())
+                },
+            ))
+        });
         let wallet_pubkey = signing_key.verifying_key().to_bytes();
         let source = mint.stack_source(wallet_pubkey, move || {
             WarrenApiClient::new(
@@ -312,6 +350,9 @@ mod tests {
     struct IssuerState {
         keys: HashMap<u64, IssuerSecretKey>,
         refuse_issuance: AtomicBool,
+        /// Answers every issue request with the issuer's ban refusal
+        /// (403 `{"error":"banned"}`, warren-core doc 105 §5.3).
+        ban_wallet: AtomicBool,
         fail_transport: AtomicBool,
         issue_calls: AtomicUsize,
     }
@@ -329,6 +370,7 @@ mod tests {
             Self(Arc::new(IssuerState {
                 keys,
                 refuse_issuance: AtomicBool::new(false),
+                ban_wallet: AtomicBool::new(false),
                 fail_transport: AtomicBool::new(false),
                 issue_calls: AtomicUsize::new(0),
             }))
@@ -379,6 +421,13 @@ mod tests {
                 request.url
             );
             self.0.issue_calls.fetch_add(1, Ordering::SeqCst);
+            if self.0.ban_wallet.load(Ordering::SeqCst) {
+                return Ok(HttpResponse {
+                    status: 403,
+                    body: br#"{"error":"banned","reason_code":"port_forwarding_abuse","lapses_at_unix_secs":2000000000}"#
+                        .to_vec(),
+                });
+            }
             let req: TokenIssueRequest = serde_json::from_slice(&request.body).unwrap();
             let mut epochs = Vec::new();
             for e in &req.epochs {
@@ -540,6 +589,28 @@ mod tests {
         // The issuer answered but refused (wallet not subscribed): no token,
         // the dial rides the v6 wallet-signed path.
         assert!(source().is_empty());
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn the_issuers_ban_refusal_reaches_the_standing_of_the_wallet_it_refused() {
+        let issuer = FakeIssuer::new(&[100]);
+        issuer.0.ban_wallet.store(true, Ordering::SeqCst);
+        let (_t, now) = clock(NOW);
+        let standing = Arc::new(warren_standing::StandingStore::new(None));
+        let sink = standing.clone();
+        let mint = TokenMint::new(now, None).with_ban_sink(Arc::new(move |wallet, error| {
+            sink.on_refresh_error(wallet, error, NOW)
+        }));
+        let _source = mint.stack_source([1; 32], || client(&issuer));
+
+        wait_for(|| standing.ban_in_force(&[1; 32], NOW).is_some()).await;
+
+        assert_eq!(
+            standing
+                .ban_in_force(&[1; 32], NOW)
+                .and_then(|ban| ban.lapses_at_unix_secs),
+            Some(2_000_000_000)
+        );
     }
 
     #[tokio::test(start_paused = true)]

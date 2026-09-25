@@ -12,6 +12,8 @@ license.workspace = true
 # issuer's ban refusal into one model (warren-core doc 105 §5.3, §5.4), decides
 # which strikes are new to this device, and names the tunnel error a ban maps
 # to, so the three clients cannot disagree on when to warn and when to block.
+# The mobile `StandingStore` persists the strike ledger with `std::fs` in a
+# directory its caller names.
 [dependencies]
 warren-api = { path = "../../warren-sdk-rs/crates/warren-api" }
 serde = { workspace = true, features = ["derive"] }
@@ -19,6 +21,13 @@ serde_json = { workspace = true }
 sha2 = { workspace = true }
 hex = "0.4"
 thiserror = { workspace = true }
+# The mobile store wakes the tunnel on a ban through a watch channel; `sync`
+# only, no runtime.
+tokio = { workspace = true, features = ["sync"] }
+log = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3"
 
 [lints]
 workspace = true

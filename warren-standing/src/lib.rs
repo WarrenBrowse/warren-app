@@ -21,10 +21,12 @@
 
 mod ledger;
 mod port_refusal;
+mod store;
 mod tracker;
 
 pub use ledger::{LedgerError, StrikeLedger};
 pub use port_refusal::PortRefusal;
+pub use store::{LEDGER_FILE, StandingStore, ban_verdict_json};
 pub use tracker::{NewStrike, StandingTracker, StandingUpdate};
 pub use warren_api::{AbuseCategory, AccountStrike, BanReasonCode};
 
@@ -126,6 +128,26 @@ impl Ban {
                 lapses_at_unix_secs: *lapses_at_unix_secs,
             }),
             _ => None,
+        }
+    }
+
+    /// The ban an exit's `RejectedBanned` answer carries, from the opaque
+    /// ban-reason code the exit sealed on it. The exit says nothing about
+    /// when the ban lapses. Code `1` is port-forwarding abuse
+    /// (`warren-exit-policy` `ban_reason_code::PORT_FORWARDING_ABUSE`); any
+    /// other code, `0` and codes newer than this build included, is the
+    /// generic suspension.
+    #[must_use]
+    pub fn from_exit_rejection(code: u8) -> Self {
+        const PORT_FORWARDING_ABUSE: u8 = 1;
+        Self {
+            reason: if code == PORT_FORWARDING_ABUSE {
+                BanReasonCode::PortForwardingAbuse
+            } else {
+                BanReasonCode::Other
+            },
+            banned_at_unix_secs: None,
+            lapses_at_unix_secs: None,
         }
     }
 
@@ -239,6 +261,24 @@ mod tests {
             Ban::from_refresh_error(&TokenClientError::BadAttributionKey),
             None
         );
+    }
+
+    #[test]
+    fn an_exit_ban_rejection_with_the_port_forwarding_code_is_a_port_forwarding_ban() {
+        assert_eq!(
+            Ban::from_exit_rejection(1),
+            ban(BanReasonCode::PortForwardingAbuse, None)
+        );
+    }
+
+    #[test]
+    fn an_exit_ban_rejection_with_any_other_code_is_a_generic_ban() {
+        for code in [0, 2, 200] {
+            assert_eq!(
+                Ban::from_exit_rejection(code),
+                ban(BanReasonCode::Other, None)
+            );
+        }
     }
 
     #[test]

@@ -73,6 +73,12 @@ mod natpmp_follow;
 #[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 mod natpmp_slot;
 
+// What the NAT-PMP path does when an exit refuses a Map request as not
+// authorized (warren-core doc 105), host-tested; the task that restarts the
+// refused loop is Android-gated in `tunnel`.
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
+mod natpmp_refusal;
+
 // Multi-hop circuit selection (single-hop collapse vs distinct-entry two-hop):
 // pure index arithmetic, host-tested; the datapath that dials the chosen node
 // is Android-gated in `tunnel`.
@@ -108,6 +114,11 @@ mod token_provider;
 // inside.
 #[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 mod port_entitlements;
+
+// The process-lived port-forward standing store (warren-core doc 105), whose
+// logic and tests live in the shared `warren-standing` crate.
+#[cfg(all(target_os = "android", feature = "tunnel"))]
+mod standing;
 
 // VpnService-protected HTTP transport for the token mint: host-testable
 // (injected protector), wired to `VpnService.protect` on Android.

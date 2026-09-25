@@ -19,6 +19,9 @@
 //! - `ExitLeaving` (5) ends the session because its exit announced a
 //!   maintenance drain: the Kotlin layer fails over to another exit at once,
 //!   blackhole first, and does not count it as a drop.
+//! - `Banned` (6) is terminal too: the wallet is suspended (warren-core doc
+//!   105), learned from an issuer, the standing poll or the exit's CRL, and
+//!   `getBanVerdict` says for what and until when.
 
 /// Tunnel session status reported back to Kotlin via
 /// `WarrenJni.getTunnelStatus()`. Encoded as an `i32` rather than an enum
@@ -40,4 +43,6 @@ pub enum SessionStatus {
     Unauthorized = 4,
     /// The exit is leaving (see the module doc): fail over now.
     ExitLeaving = 5,
+    /// The wallet is banned: see the module doc.
+    Banned = 6,
 }
