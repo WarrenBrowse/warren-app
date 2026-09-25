@@ -191,3 +191,41 @@ describe('Linux packaging identity per product environment', () => {
     timeoutMs,
   );
 });
+
+// pacman runs pre_upgrade and post_upgrade on an upgrade, never the install or
+// removal scriptlets. With only --before-install and --after-install given to
+// fpm, every Arch upgrade, by hand or in-app, left the previous daemon running
+// on a deleted binary and the previous GUI open (measured on an Arch Linux ARM
+// VM, 2026-09-25).
+describe('pacman upgrade scriptlets', () => {
+  afterEach(() => {
+    delete process.env.WARREN_PRODUCT_ENV;
+  });
+
+  async function pacmanFpm(productEnv: string): Promise<string[]> {
+    vi.resetModules();
+    process.env.WARREN_PRODUCT_ENV = productEnv;
+    const distribution = await import('../../tasks/distribution.cjs');
+    const config = distribution.newConfig() as unknown as DistributionConfig;
+    const fpm = config.pacman?.fpm;
+    return (Array.isArray(fpm) ? fpm : []).filter((arg): arg is string => typeof arg === 'string');
+  }
+
+  function scriptAfter(fpm: string[], flag: string): string {
+    const index = fpm.indexOf(flag);
+    expect(index, `${flag} is passed to fpm`).toBeGreaterThanOrEqual(0);
+    return fs.readFileSync(fpm[index + 1], 'utf8');
+  }
+
+  it('hands the daemon over and closes the GUI before an upgrade', async () => {
+    const preUpgrade = scriptAfter(await pacmanFpm('beta'), '--before-upgrade');
+    expect(preUpgrade).toContain('pkill -2 -x "warren-gui-beta"');
+    expect(preUpgrade).toContain('prepare-restart');
+    expect(preUpgrade).toContain('systemctl stop warren-daemon-beta.service');
+  }, 60_000);
+
+  it('starts the new daemon after an upgrade', async () => {
+    const postUpgrade = scriptAfter(await pacmanFpm('beta'), '--after-upgrade');
+    expect(postUpgrade).toContain('systemctl start warren-daemon-beta.service');
+  }, 60_000);
+});

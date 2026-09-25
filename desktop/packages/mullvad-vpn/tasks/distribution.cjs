@@ -188,6 +188,24 @@ function envAsset(relativePath) {
   return out;
 }
 
+// pacman runs pre_upgrade and post_upgrade on an upgrade, never the install
+// or removal scriptlets, so an Arch upgrade must be given its own: without them
+// it left the previous daemon running on a deleted binary and the previous GUI
+// open. pre_upgrade closes the GUI (what the deb and rpm removal scriptlets do)
+// and then hands the daemon over exactly like a fresh install's preinstall.
+function pacmanPreUpgrade() {
+  const out = buildAssets(
+    path.join(`env-assets-${productEnvName}`, 'linux', 'pacman-pre-upgrade.sh'),
+  );
+  fs.mkdirSync(path.dirname(out), { recursive: true });
+  const body = ['linux/pacman-close-gui.sh', 'linux/before-install.sh']
+    .map((asset) => transformEnvAssetText(fs.readFileSync(distAssets(asset), 'utf8')))
+    .map((text) => text.replace(/^#!.*\n/, ''))
+    .join('\n');
+  fs.writeFileSync(out, `#!/usr/bin/env bash\n${body}`, { mode: 0o755 });
+  return out;
+}
+
 // problem-report-link is a committed symlink (fpm packages the link itself),
 // so a transformed copy must be a fresh symlink at the per-env target. The
 // Linux fpm config is built even on a Windows pack (which then packs only the
@@ -591,6 +609,10 @@ function newConfig() {
         envAsset('linux/before-install.sh'),
         '--before-remove',
         envAsset('linux/before-remove.sh'),
+        '--before-upgrade',
+        pacmanPreUpgrade(),
+        '--after-upgrade',
+        envAsset('linux/after-install.sh'),
         envAsset('linux/warren-daemon.service') +
           `=/usr/lib/systemd/system/warren-daemon${envSuffix}.service`,
         envAsset('linux/warren-early-boot-blocking.service') +

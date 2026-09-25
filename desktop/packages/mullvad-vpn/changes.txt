@@ -5,6 +5,6 @@
   does the same from a terminal.
 
 ### Fixed
-- [Linux] Restart the app's background service when an update is installed on a system without the
-  `which` command, as on minimal Fedora, openSUSE and Arch installs. The update left the previous
-  version running until the next reboot.
+- [Linux] Restart the app when an update is installed on Arch Linux and its derivatives, and on a
+  system without the `which` command (minimal Fedora and openSUSE installs). The update left the
+  previous version running until the next reboot.

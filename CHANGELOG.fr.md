@@ -20,9 +20,9 @@ par l'application, gardez-le tel quel.
   redémarre sur la nouvelle version. `warren upgrade` fait de même depuis un terminal.
 
 ### Corrigé
-- [Linux] Redémarrer le service de l'application à l'installation d'une mise à jour sur un système
-  sans la commande `which`, comme les installations minimales de Fedora, openSUSE et Arch. La mise
-  à jour laissait tourner la version précédente jusqu'au redémarrage suivant.
+- [Linux] Redémarrer l'application à l'installation d'une mise à jour sur Arch Linux et ses
+  dérivées, et sur un système sans la commande `which` (installations minimales de Fedora et
+  openSUSE). La mise à jour laissait tourner la version précédente jusqu'au redémarrage suivant.
 
 ## [1.1.34] - 2026-09-24
 ### Corrigé
