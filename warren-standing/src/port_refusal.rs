@@ -48,9 +48,50 @@ impl PortRefusal {
     }
 }
 
+/// Refusals in a row since the last grant, for one rule: what the next
+/// refusal means and how long to wait before asking again.
+#[derive(Debug, Default)]
+pub struct RefusalCount {
+    refusals: u32,
+}
+
+impl RefusalCount {
+    /// One more refusal of a request that did (`presented`) or did not carry
+    /// an entitlement: what it means and how long to wait before asking again.
+    pub fn on_refused(&mut self, presented: bool) -> (PortRefusal, u32) {
+        self.refusals = self.refusals.saturating_add(1);
+        let refusal = PortRefusal::of_request(presented);
+        (refusal, refusal.retry_after_secs(self.refusals))
+    }
+
+    /// The port was granted: the next refusal starts the waits over.
+    pub fn on_granted(&mut self) {
+        self.refusals = 0;
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_request_without_an_entitlement_is_counted_on_the_mint_cadence() {
+        let mut count = RefusalCount::default();
+
+        assert_eq!(count.on_refused(false), (PortRefusal::NoEntitlement, 5));
+        assert_eq!(count.on_refused(false), (PortRefusal::NoEntitlement, 30));
+    }
+
+    #[test]
+    fn a_grant_starts_the_waits_over() {
+        let mut count = RefusalCount::default();
+        count.on_refused(true);
+        count.on_refused(true);
+
+        count.on_granted();
+
+        assert_eq!(count.on_refused(true), (PortRefusal::EntitlementRefused, 2));
+    }
 
     #[test]
     fn a_request_that_carried_an_entitlement_was_refused_it() {

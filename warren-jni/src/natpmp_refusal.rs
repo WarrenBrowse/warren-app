@@ -5,8 +5,8 @@
 //! The engine's refresh loop treats that answer as permanent and stops, so the
 //! mapping would never come back on its own. The desktop tunnel controller
 //! restarts the rule after a delay; this is the same policy for the single
-//! Android rule, read through `warren_standing::PortRefusal` so both clients
-//! wait the same way. Pure and host-tested; the task that drives it is
+//! Android rule, counted by `warren_standing::RefusalCount` so every client
+//! waits the same way. Pure and host-tested; the task that drives it is
 //! Android-gated in `tunnel`.
 
 use std::sync::Arc;
@@ -38,27 +38,6 @@ impl MapOutcome {
             } => Self::Refused,
             _ => Self::Other,
         }
-    }
-}
-
-/// Refusals in a row since the last grant.
-#[derive(Debug, Default)]
-pub(crate) struct RefusalCount {
-    refusals: u32,
-}
-
-impl RefusalCount {
-    /// One more refusal of a request that did (`presented`) or did not carry
-    /// an entitlement: what it means and how long to wait before asking again.
-    pub(crate) fn on_refused(&mut self, presented: bool) -> (PortRefusal, u32) {
-        self.refusals = self.refusals.saturating_add(1);
-        let refusal = PortRefusal::of_request(presented);
-        (refusal, refusal.retry_after_secs(self.refusals))
-    }
-
-    /// The port was granted: the next refusal starts the waits over.
-    pub(crate) fn on_granted(&mut self) {
-        self.refusals = 0;
     }
 }
 
@@ -116,32 +95,6 @@ mod tests {
             }),
             MapOutcome::Other
         );
-    }
-
-    #[test]
-    fn a_request_without_an_entitlement_waits_on_the_mint_cadence() {
-        let mut count = RefusalCount::default();
-
-        assert_eq!(count.on_refused(false), (PortRefusal::NoEntitlement, 5));
-        assert_eq!(count.on_refused(false), (PortRefusal::NoEntitlement, 30));
-    }
-
-    #[test]
-    fn a_refused_entitlement_is_asked_again_soon() {
-        let mut count = RefusalCount::default();
-
-        assert_eq!(count.on_refused(true), (PortRefusal::EntitlementRefused, 2));
-    }
-
-    #[test]
-    fn a_grant_starts_the_waits_over() {
-        let mut count = RefusalCount::default();
-        count.on_refused(true);
-        count.on_refused(true);
-
-        count.on_granted();
-
-        assert_eq!(count.on_refused(true).1, 2);
     }
 
     #[test]

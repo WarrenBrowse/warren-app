@@ -1158,7 +1158,7 @@ fn maybe_spawn_nat_pmp(
         }
     });
     let drain = tokio::spawn(async move {
-        let mut refusals = crate::natpmp_refusal::RefusalCount::default();
+        let mut refusals = warren_standing::RefusalCount::default();
         while let Some(event) = rx.recv().await {
             log::info!("NAT-PMP event from Android tunnel: {event:?}");
             match crate::natpmp_refusal::MapOutcome::of(&event) {

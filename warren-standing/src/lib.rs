@@ -25,7 +25,7 @@ mod store;
 mod tracker;
 
 pub use ledger::{LedgerError, StrikeLedger};
-pub use port_refusal::PortRefusal;
+pub use port_refusal::{PortRefusal, RefusalCount};
 pub use store::{LEDGER_FILE, StandingStore, ban_verdict_json};
 pub use tracker::{NewStrike, StandingTracker, StandingUpdate};
 pub use warren_api::{AbuseCategory, AccountStrike, BanReasonCode};
