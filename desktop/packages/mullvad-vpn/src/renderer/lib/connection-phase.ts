@@ -1,3 +1,4 @@
+import sceneryManifest from '../../../assets/images/scenery/scenery.json';
 import { TunnelState } from '../../shared/daemon-rpc-types';
 import { Colors, colors } from './foundations';
 
@@ -48,34 +49,15 @@ export function getPhaseAccentColor(phase: ConnectionPhase): string {
 
 // The accent as it must be written, not filled. The saturated accents carry
 // icons, rails and buttons, where 3:1 is enough; a title at text size needs the
-// lifted tint to clear 4.5:1 on the card's neutral surface.
+// lifted tint to clear 4.5:1 on the card's neutral surface. The kill-switch
+// state has no hue of its own: neutral IS its signal. The table lives in
+// scenery.json, shared with the browser extension, so both paint a phase alike.
 export function getPhaseTitleColorName(phase: ConnectionPhase): Colors {
-  switch (phase) {
-    case 'protected':
-      return 'greenText';
-    case 'connecting':
-    case 'interrupted':
-      return 'orangeText';
-    case 'exposed':
-      return 'redText';
-    case 'blocked':
-      // The kill-switch state has no hue of its own; neutral IS its signal.
-      return 'white';
-  }
+  return sceneryManifest.phases[phase].title as Colors;
 }
 
 // Same accent as a colour-token name, for APIs (like <Icon color>) that take a
 // token key rather than a resolved value.
 export function getPhaseAccentColorName(phase: ConnectionPhase): Colors {
-  switch (phase) {
-    case 'protected':
-      return 'green';
-    case 'connecting':
-    case 'interrupted':
-      return 'orange';
-    case 'exposed':
-      return 'red';
-    case 'blocked':
-      return 'white';
-  }
+  return sceneryManifest.phases[phase].accent as Colors;
 }

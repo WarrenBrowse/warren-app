@@ -1,23 +1,31 @@
+import sceneryManifest from '../../../../assets/images/scenery/scenery.json';
 import { ConnectionPhase } from '../../lib/connection-phase';
 
 // Runtime path (served statically from the app root, like every other asset).
 const SCENERY_BASE = 'assets/images/scenery';
 
-// Only these exits have dedicated cityscape art. Every other country falls back
-// to the generic plain. Keys are the normalized (lower-case, trimmed) advertised
-// country name.
-const COUNTRY_IMAGE: Readonly<Record<string, string>> = {
-  finland: 'finland.webp',
-  germany: 'germany.webp',
-  netherlands: 'netherlands.webp',
-  singapore: 'singapore.webp',
+// scenery.json is the one table of layers and phases, shared with the browser
+// extension (its design sync copies it) and process-scenery.sh. Only the
+// countries it lists have dedicated art; every other one falls back to the
+// plain. Keys here are the normalized (lower-case, trimmed) English relay-list
+// country name, which is what the daemon reports.
+const COUNTRY_IMAGE: Readonly<Record<string, string>> = Object.fromEntries(
+  sceneryManifest.layers
+    .filter((layer) => layer.role === 'country')
+    .map((layer) => [(layer.countryName ?? '').toLowerCase(), `${layer.slug}.webp`]),
+);
+
+const layerFile = (role: string) => {
+  const layer = sceneryManifest.layers.find((l) => l.role === role);
+  if (!layer) throw new Error(`scenery.json has no ${role} layer`);
+  return `${SCENERY_BASE}/${layer.slug}.webp`;
 };
 
 // The open plain, with the two cameras trained on it: home when no tunnel
 // carries the traffic, and the backdrop of any exit with no bespoke art.
-export const PLAINE_IMAGE = `${SCENERY_BASE}/plaine.webp`;
-export const TERRIER_IMAGE = `${SCENERY_BASE}/terrier.webp`;
-export const BULA_IMAGE = `${SCENERY_BASE}/bula.webp`;
+export const PLAINE_IMAGE = layerFile('plain');
+export const TERRIER_IMAGE = layerFile('burrow');
+export const BULA_IMAGE = layerFile('bula');
 
 export interface Scenery {
   // Full asset path of the background landscape.
@@ -39,25 +47,15 @@ export function resolveCountryImage(country: string | undefined): string {
 // plain, so an unprotected screen shows what unprotected means, and the country
 // art is reserved for the states where traffic really goes there.
 export function resolveScenery(phase: ConnectionPhase, exitCountry: string | undefined): Scenery {
-  switch (phase) {
-    case 'exposed':
-      return { image: PLAINE_IMAGE, showBula: true, blurred: false };
-    case 'connecting':
-      // Background swaps to the target country and blurs; the rabbit is left
-      // untouched (still outside) until the tunnel is actually up.
-      return { image: resolveCountryImage(exitCountry), showBula: true, blurred: true };
-    case 'protected':
-      return { image: resolveCountryImage(exitCountry), showBula: false, blurred: false };
-    case 'interrupted':
-      // Host offline on a nominally-up tunnel: same visual language as
-      // the connecting transition (blurred city) so the scene reads
-      // "not settled", with the rabbit still tucked in (the kill
-      // switch holds, nothing leaks).
-      return { image: resolveCountryImage(exitCountry), showBula: false, blurred: true };
-    case 'blocked':
-      // Kill switch: nothing leaks, so the rabbit is tucked in the burrow and
-      // the watched world outside is only seen through the blur, never sharp
-      // like the exposed state.
-      return { image: PLAINE_IMAGE, showBula: false, blurred: true };
-  }
+  // exposed: the watched plain, Bula outside. connecting: the target country,
+  // blurred, Bula still outside until the tunnel is up. protected: the country,
+  // sharp, Bula in the burrow. interrupted: the country blurred ("not
+  // settled"), Bula tucked in because the kill switch holds. blocked: the plain
+  // seen only through the blur, Bula tucked in.
+  const table = sceneryManifest.phases[phase];
+  return {
+    image: table.landscape === 'country' ? resolveCountryImage(exitCountry) : PLAINE_IMAGE,
+    showBula: table.bula,
+    blurred: table.blurred,
+  };
 }

@@ -11,11 +11,26 @@ designer as a numbered version (V14, V15, ...) of full-canvas masters.
    git-ignored, and it is where `process-scenery.sh` looks by default. A folder
    named anything else (`new DA/`, `V15/`) is NOT ignored and will end up in a
    commit.
-2. Update the `LAYERS` table in
-   `desktop/packages/mullvad-vpn/scripts/process-scenery.sh` if the file names
-   carry a new version number, then run it with no arguments.
-3. Commit the regenerated assets. `test/unit/scenery-assets.spec.ts` is the gate;
-   it runs in `warren-checks`.
+2. Edit `desktop/packages/mullvad-vpn/assets/images/scenery/scenery.json`, the
+   one table of layers: point each `master` at the new file names, or add an
+   entry for a new country (`slug`, `role: "country"`, its ISO `country` code,
+   its English relay-list `countryName`, `master`, `iosImageset`). Then run
+   `process-scenery.sh` with no arguments; it encodes exactly the layers that
+   table lists.
+3. A new country also needs its line in the Android and iOS resolvers
+   (`ConnectionPhase.kt`, `MapViewController.swift`); the desktop renderer reads
+   the table itself.
+4. Commit the regenerated assets and the table. `test/unit/scenery-assets.spec.ts`
+   is the gate: the table must name every shipped layer and nothing else, and
+   every country in it must be mapped on Android and iOS. It runs in
+   `warren-checks`.
+5. Run `pnpm design:sync` in warren-extension and commit there: the browser
+   extension ships the same layers, the same table and the same tokens, pinned
+   to this repo's commit (its CI refuses a copy that drifts from its pin).
+
+The same table carries the phase rows (which landscape, whether Bula shows,
+blur, accent and title colour tokens), which this app's renderer and the
+extension both read.
 
 **Never convert a layer by hand, and never regenerate one platform alone.** That
 is not a style preference: the layers are pre-registered full-frame images that

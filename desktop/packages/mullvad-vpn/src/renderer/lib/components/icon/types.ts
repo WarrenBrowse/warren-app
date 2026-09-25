@@ -19,6 +19,7 @@ export const icons = {
   copy: 'icon-copy',
   'cross-circle': 'icon-cross-circle',
   cross: 'icon-cross',
+  download: 'icon-download',
   edit: 'icon-edit',
   'edit-circle': 'icon-edit-circle',
   external: 'icon-external',

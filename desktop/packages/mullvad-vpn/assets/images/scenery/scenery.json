@@ -1,0 +1,92 @@
+{
+  "canvas": { "width": 1140, "height": 1706 },
+  "layers": [
+    {
+      "slug": "plaine",
+      "role": "plain",
+      "master": "INTERFACE PLAINE V14.jpg",
+      "iosImageset": "SceneryPlaine"
+    },
+    {
+      "slug": "terrier",
+      "role": "burrow",
+      "master": "INTERFACE TERRIER V15.png",
+      "iosImageset": "SceneryTerrier"
+    },
+    {
+      "slug": "bula",
+      "role": "bula",
+      "master": "INTERFACE BULA V15.png",
+      "iosImageset": "SceneryBula"
+    },
+    {
+      "slug": "germany",
+      "role": "country",
+      "country": "DE",
+      "countryName": "Germany",
+      "master": "INTERFACE ALLEMAGNE V14.jpg",
+      "iosImageset": "SceneryGermany"
+    },
+    {
+      "slug": "finland",
+      "role": "country",
+      "country": "FI",
+      "countryName": "Finland",
+      "master": "INTERFACE FINLANDE V14.jpg",
+      "iosImageset": "SceneryFinland"
+    },
+    {
+      "slug": "netherlands",
+      "role": "country",
+      "country": "NL",
+      "countryName": "Netherlands",
+      "master": "INTERFACE PAYS BAS V14.jpg",
+      "iosImageset": "SceneryNetherlands"
+    },
+    {
+      "slug": "singapore",
+      "role": "country",
+      "country": "SG",
+      "countryName": "Singapore",
+      "master": "INTERFACE SINGAPOUR V14.jpg",
+      "iosImageset": "ScenerySingapore"
+    }
+  ],
+  "phases": {
+    "exposed": {
+      "landscape": "plain",
+      "bula": true,
+      "blurred": false,
+      "accent": "red",
+      "title": "redText"
+    },
+    "connecting": {
+      "landscape": "country",
+      "bula": true,
+      "blurred": true,
+      "accent": "orange",
+      "title": "orangeText"
+    },
+    "protected": {
+      "landscape": "country",
+      "bula": false,
+      "blurred": false,
+      "accent": "green",
+      "title": "greenText"
+    },
+    "interrupted": {
+      "landscape": "country",
+      "bula": false,
+      "blurred": true,
+      "accent": "orange",
+      "title": "orangeText"
+    },
+    "blocked": {
+      "landscape": "plain",
+      "bula": false,
+      "blurred": true,
+      "accent": "white",
+      "title": "white"
+    }
+  }
+}

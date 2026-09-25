@@ -3,6 +3,9 @@ import { readdirSync, readFileSync } from 'fs';
 import path from 'path';
 import { describe, expect, it } from 'vitest';
 
+import manifest from '../../assets/images/scenery/scenery.json';
+import { colorTokens } from '../../src/renderer/lib/foundations/tokens';
+
 // The connect screen composites a landscape, the burrow and Bula as three
 // full-frame layers that only register if every client ships the SAME canvas.
 // They drifted once already (Singapore stayed photoreal on desktop after the
@@ -16,18 +19,21 @@ const ANDROID = path.join(REPO, 'android/lib/ui/resource/src/main/res/drawable-n
 const IOS = path.join(REPO, 'ios/WarrenVPN/Supporting Files/Assets.xcassets');
 
 // The canvas every layer is authored on, downscaled 3x for HiDPI.
-const CANVAS = { width: 1140, height: 1706 };
+const CANVAS = manifest.canvas;
 
-// slug -> iOS imageset. Backgrounds are opaque, so iOS ships them as JPEG;
-// the alpha layers stay PNG because a lossy alpha halos the fur outline.
-const BACKGROUNDS = {
-  plaine: 'SceneryPlaine',
-  germany: 'SceneryGermany',
-  finland: 'SceneryFinland',
-  netherlands: 'SceneryNetherlands',
-  singapore: 'ScenerySingapore',
-};
-const FOREGROUNDS = { terrier: 'SceneryTerrier', bula: 'SceneryBula' };
+// scenery.json is the one table of layers every client reads (this app, the
+// browser extension through its design sync, process-scenery.sh). slug -> iOS
+// imageset. Backgrounds are opaque, so iOS ships them as JPEG; the alpha layers
+// stay PNG because a lossy alpha halos the fur outline.
+const isForeground = (role: string) => role === 'burrow' || role === 'bula';
+const imagesets = (foreground: boolean) =>
+  Object.fromEntries(
+    manifest.layers
+      .filter((layer) => isForeground(layer.role) === foreground)
+      .map((layer) => [layer.slug, layer.iosImageset]),
+  );
+const BACKGROUNDS = imagesets(false);
+const FOREGROUNDS = imagesets(true);
 const ALL = { ...BACKGROUNDS, ...FOREGROUNDS };
 
 const sha = (file: string) => createHash('sha256').update(readFileSync(file)).digest('hex');
@@ -113,6 +119,65 @@ describe('scenery assets stay registered across the three clients', () => {
       const { dir, filename } = iosImage(imageset);
       const stray = readdirSync(dir).filter((f) => f !== 'Contents.json' && f !== filename);
       expect(stray).toEqual([]);
+    }
+  });
+});
+
+describe('scenery.json is the one table of layers', () => {
+  it('names every scenery file the desktop ships, and nothing it does not ship', () => {
+    const shipped = readdirSync(DESKTOP)
+      .filter((f) => f.endsWith('.webp'))
+      .map((f) => f.replace(/\.webp$/, ''))
+      .sort();
+    expect(manifest.layers.map((layer) => layer.slug).sort()).toEqual(shipped);
+  });
+
+  it('has exactly one plain, one burrow and one Bula layer', () => {
+    for (const role of ['plain', 'burrow', 'bula']) {
+      expect(manifest.layers.filter((layer) => layer.role === role)).toHaveLength(1);
+    }
+  });
+
+  it('keys every country layer by its ISO code and its English relay-list name', () => {
+    for (const layer of manifest.layers.filter((l) => l.role === 'country')) {
+      expect(layer.country).toMatch(/^[A-Z]{2}$/);
+      expect(layer.countryName).toBeTruthy();
+    }
+  });
+
+  it('paints each phase with colour tokens that exist', () => {
+    for (const phase of Object.values(manifest.phases)) {
+      expect(Object.keys(colorTokens)).toContain(phase.accent);
+      expect(Object.keys(colorTokens)).toContain(phase.title);
+    }
+  });
+
+  it('is the table process-scenery.sh encodes from, so a new country is one entry', () => {
+    const script = readFileSync(
+      path.join(REPO, 'desktop/packages/mullvad-vpn/scripts/process-scenery.sh'),
+      'utf8',
+    );
+    expect(script).toContain('scenery.json');
+    expect(script).not.toMatch(/^LAYERS=\(/m);
+  });
+
+  // Android and iOS resolve the exit country in their own code; a country added
+  // here and forgotten there would ship its art to one platform only.
+  it('maps every country layer on Android and iOS', () => {
+    const kotlin = readFileSync(
+      path.join(
+        REPO,
+        'android/lib/feature/home/impl/src/main/kotlin/com/warrenbrowse/vpn/feature/home/impl/connect/ConnectionPhase.kt',
+      ),
+      'utf8',
+    );
+    const swift = readFileSync(
+      path.join(REPO, 'ios/WarrenVPN/View controllers/Tunnel/MapViewController.swift'),
+      'utf8',
+    );
+    for (const layer of manifest.layers.filter((l) => l.role === 'country')) {
+      expect(kotlin, layer.slug).toContain(`R.drawable.scenery_${layer.slug}`);
+      expect(swift, layer.slug).toContain(`"${layer.iosImageset}"`);
     }
   });
 });

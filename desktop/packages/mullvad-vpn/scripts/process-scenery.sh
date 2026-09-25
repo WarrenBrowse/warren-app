@@ -41,22 +41,23 @@ FG_QUALITY=88   # alpha layers (bula, terrier): keep soft edges clean
 # subsampling smears. The alpha layers stay PNG: a lossy alpha halos the fur.
 IOS_BG_QUALITY=92
 
+# The layers come from scenery.json, the one table every client reads (this
+# app's renderer, the browser extension's design sync, the asset spec). A new
+# country is one entry there plus its master, never a second list here.
+MANIFEST="$DESKTOP_DIR/scenery.json"
 # master file | slug | iOS imageset | bg (opaque) or fg (alpha)
-LAYERS=(
-  "INTERFACE PLAINE V14.jpg|plaine|SceneryPlaine|bg"
-  "INTERFACE ALLEMAGNE V14.jpg|germany|SceneryGermany|bg"
-  "INTERFACE FINLANDE V14.jpg|finland|SceneryFinland|bg"
-  "INTERFACE PAYS BAS V14.jpg|netherlands|SceneryNetherlands|bg"
-  "INTERFACE SINGAPOUR V14.jpg|singapore|ScenerySingapore|bg"
-  "INTERFACE TERRIER V15.png|terrier|SceneryTerrier|fg"
-  "INTERFACE BULA V15.png|bula|SceneryBula|fg"
-)
+LAYER_ROWS="$(node -e '
+  const m = require(process.argv[1]);
+  for (const l of m.layers) {
+    const kind = l.role === "burrow" || l.role === "bula" ? "fg" : "bg";
+    console.log([l.master, l.slug, l.iosImageset, kind].join("|"));
+  }
+' "$MANIFEST")"
 
 mkdir -p "$DESKTOP_DIR" "$ANDROID_DIR"
 
 echo "Encoding scenery from $SRC_DIR"
-for layer in "${LAYERS[@]}"; do
-  IFS='|' read -r master slug imageset kind <<<"$layer"
+while IFS='|' read -r master slug imageset kind; do
   src="$SRC_DIR/$master"
   [ -f "$src" ] || { echo "missing master: $src" >&2; exit 1; }
 
@@ -99,6 +100,7 @@ for layer in "${LAYERS[@]}"; do
 JSON
 
   echo "  $slug"
-done
+done <<<"$LAYER_ROWS"
 
-echo "Done."
+echo "Done. Then commit, and run \`pnpm design:sync\` in warren-extension so the"
+echo "browser extension ships the same layers."
