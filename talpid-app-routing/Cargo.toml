@@ -1,0 +1,24 @@
+[package]
+name = "talpid-app-routing"
+edition.workspace = true
+rust-version.workspace = true
+description = "Per-app routing: flow classification by owning process, address translation and route decisions"
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+thiserror = { workspace = true }
+
+[target.'cfg(any(target_os = "macos", target_os = "linux"))'.dependencies]
+libc = "0.2"
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { workspace = true, features = [
+  "Win32_Foundation",
+  "Win32_NetworkManagement_IpHelper",
+  "Win32_Networking_WinSock",
+  "Win32_System_Threading",
+] }
+
+[lints]
+workspace = true

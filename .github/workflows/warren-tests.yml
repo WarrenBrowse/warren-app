@@ -85,6 +85,7 @@ jobs:
             -p mullvad-management-interface -p mullvad-cli -p mullvad-paths \
             -p mullvad-setup \
             -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p talpid-dbus \
+            -p talpid-app-routing \
             -p warren-jni -p warren-ios -p warren-forum -p warren-product-env \
             -p mullvad-update -p mullvad-release \
             -- --check
@@ -155,6 +156,10 @@ jobs:
         #
         # mullvad-update's `sign` feature builds the update-manifest signer,
         # whose own tests keep the release key off its command line.
+        #
+        # talpid-app-routing attributes each flow to the process owning its
+        # socket; its Linux owner lookup (sock_diag, /proc) only runs here, and
+        # its macOS one in the macOS job below.
         timeout-minutes: 30
         run: |
           cargo nextest run --locked --profile warren-ci \
@@ -162,6 +167,7 @@ jobs:
             -p mullvad-management-interface -p mullvad-cli -p mullvad-paths \
             -p mullvad-setup \
             -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p talpid-dbus -p warren-jni \
+            -p talpid-app-routing \
             -p warren-forum -p warren-product-env -p warren-ios \
             -p mullvad-update -p mullvad-release \
             --features mullvad-update/sign,mullvad-update/client
@@ -176,7 +182,7 @@ jobs:
           crates="mullvad-daemon mullvad-api mullvad-cli talpid-warren-tunnel talpid-core talpid-dns talpid-dbus"
           crates="$crates warren-jni warren-forum warren-product-env warren-ios"
           crates="$crates mullvad-paths mullvad-setup"
-          crates="$crates mullvad-update mullvad-release"
+          crates="$crates mullvad-update mullvad-release talpid-app-routing"
           for crate in $crates; do
             cargo clippy --no-deps --locked -p "$crate" -- -D warnings
           done
@@ -207,6 +213,17 @@ jobs:
       - name: cargo clippy talpid-dns (macOS implementation)
         timeout-minutes: 10
         run: cargo clippy --no-deps --locked -p talpid-dns --all-targets -- -D warnings
+
+      # The per-app router reads the kernel's private PCB export on macOS; its
+      # real-socket tests pin that layout against the running kernel, so they
+      # have to run on a Mac.
+      - name: cargo test talpid-app-routing (macOS owner lookup)
+        timeout-minutes: 10
+        run: cargo test --locked -p talpid-app-routing
+
+      - name: cargo clippy talpid-app-routing (macOS implementation)
+        timeout-minutes: 10
+        run: cargo clippy --no-deps --locked -p talpid-app-routing --all-targets -- -D warnings
 
       # warren-ios's FFI modules are `#![cfg(target_os = "ios")]`, so the Linux
       # job above compiles none of them: the whole forum login preflight (the

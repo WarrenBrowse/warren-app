@@ -37,6 +37,9 @@ on:
       # a coexisting VPN's service). It was in no gate at all, so both
       # changes reached main with zero Rust checks run.
       - "talpid-dns/**"
+      # Decides per packet which session an app's traffic leaves through, and
+      # blocks it when that session is down.
+      - "talpid-app-routing/**"
       - "warren-jni/**"
       - "warren-ios/**"
       # Both are tested and linted in the Warren test scope (the forum request
