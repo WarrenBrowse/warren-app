@@ -901,8 +901,11 @@ pub(crate) enum InternalDaemonEvent {
         env: warren_product_env::ProductEnv,
         state: Option<warren_env_arbitration::ForeignDaemonState>,
     },
-    /// The tunnel's route sessions changed state.
-    AppRouteReports(Vec<talpid_warren_tunnel::app_routes::RouteReport>),
+    /// The route sessions of the tunnel with this number changed state.
+    AppRouteReports {
+        tunnel: u64,
+        reports: Vec<talpid_warren_tunnel::app_routes::RouteReport>,
+    },
     /// The app exits were resolved again.
     AppRoutesPlanned,
 }
@@ -1192,8 +1195,10 @@ pub struct Daemon {
     warren_foreign_envs: Vec<warren_env_arbitration::ForeignEnvObservation>,
     /// How each exit in force is served, as last resolved.
     app_route_resolutions: tokio::sync::watch::Receiver<warren_app_routes::Resolutions>,
-    /// How the tunnel's route sessions stand, as last reported.
+    /// How the tunnel's route sessions stand, as last reported, and the
+    /// number of the tunnel that reported it.
     app_route_reports: Vec<talpid_warren_tunnel::app_routes::RouteReport>,
+    app_route_reports_tunnel: u64,
     /// The route statuses clients last heard, so they hear only changes.
     app_routes_published: Vec<AppRouteStatus>,
 }
@@ -1800,9 +1805,14 @@ impl Daemon {
         let app_route_resolutions = {
             let reports_tx = internal_event_tx.clone();
             parameters_generator
-                .set_app_route_observer(Arc::new(move |reports| {
-                    let _ = reports_tx.send(InternalDaemonEvent::AppRouteReports(reports));
+                .set_app_route_observer(Arc::new(move |tunnel, reports| {
+                    let _ =
+                        reports_tx.send(InternalDaemonEvent::AppRouteReports { tunnel, reports });
                 }))
+                .await;
+            // Before any tunnel can start, so the first one has a plan.
+            parameters_generator
+                .set_app_routing(settings.app_routing.clone())
                 .await;
             let (routing_tx, mut routing_rx) =
                 tokio::sync::watch::channel(settings.app_routing.clone());
@@ -1818,12 +1828,9 @@ impl Daemon {
             // One task, so the generator sees the changes in their order.
             let routing_generator = parameters_generator.clone();
             tokio::spawn(async move {
-                loop {
+                while routing_rx.changed().await.is_ok() {
                     let routing = routing_rx.borrow_and_update().clone();
                     routing_generator.set_app_routing(routing).await;
-                    if routing_rx.changed().await.is_err() {
-                        return;
-                    }
                 }
             });
             let resolutions = parameters_generator.app_route_resolutions().await;
@@ -2356,6 +2363,7 @@ impl Daemon {
             ),
             app_route_resolutions,
             app_route_reports: Vec::new(),
+            app_route_reports_tunnel: 0,
             app_routes_published: Vec::new(),
         };
 
@@ -2537,9 +2545,14 @@ impl Daemon {
             WarrenForeignEnvObserved { env, state } => {
                 self.handle_warren_foreign_env_observed(env, state).await;
             }
-            AppRouteReports(reports) => {
-                self.app_route_reports = reports;
-                self.publish_app_routes_if_changed();
+            AppRouteReports { tunnel, reports } => {
+                // A tunnel being torn down may still report after its
+                // successor did.
+                if tunnel >= self.app_route_reports_tunnel {
+                    self.app_route_reports_tunnel = tunnel;
+                    self.app_route_reports = reports;
+                    self.publish_app_routes_if_changed();
+                }
             }
             AppRoutesPlanned => self.publish_app_routes_if_changed(),
         }

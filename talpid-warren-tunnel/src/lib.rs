@@ -1227,13 +1227,14 @@ impl AppRoutesTask {
     /// device, which the next tunnel may reopen under the same name.
     async fn shutdown(self) {
         let _ = self.stop_tx.send(());
-        let task = self.task;
+        let mut task = self.task;
         let abort = task.abort_handle();
-        if tokio::time::timeout(APP_ROUTES_SHUTDOWN_BOUND, task)
+        if tokio::time::timeout(APP_ROUTES_SHUTDOWN_BOUND, &mut task)
             .await
             .is_err()
         {
             abort.abort();
+            let _ = tokio::time::timeout(APP_ROUTES_SHUTDOWN_BOUND, task).await;
         }
     }
 }
@@ -2220,6 +2221,50 @@ impl WarrenTunnelMonitor {
             });
         }
 
+        // Per-app exits: the controller installs the plan's policy before the
+        // main pumps carry their first packet, so no packet of a routed or
+        // blocked app goes through the main session while its route starts.
+        let app_routes_controller = params.app_routes_rx.clone().map(|plan_rx| {
+            let mut config =
+                app_routes::RouteSessionConfig::new(params.session_token_provider.clone());
+            config.wants_ipv6 = wants_ipv6;
+            config.enable_daita = params.enable_daita;
+            config.idle_cover = mh_idle_cover;
+            config.socket_bypass = socket_bypass;
+            config.on_exit_draining = params.on_exit_draining.clone();
+            #[cfg(target_os = "macos")]
+            {
+                config.relay_escape = Some(macos_relay_escape(
+                    args.route_manager.clone(),
+                    metadata.interface.clone(),
+                ));
+            }
+            let name_relays: app_routes::RelaySink = {
+                let fence = Arc::clone(&fence);
+                Arc::new(move |relays| {
+                    let fence = Arc::clone(&fence);
+                    Box::pin(async move { fence.name_routes(&relays).await })
+                })
+            };
+            let mut controller = app_routes::RouteController::new(
+                Arc::clone(&routing_table),
+                packet_device.clone(),
+                app_routes::SupervisorRouteSessions::new(runtime.clone(), config),
+                talpid_app_routing::router::SessionAddresses {
+                    v4: Some(tun_ip),
+                    v6: tun_ipv6,
+                },
+                name_relays,
+                params.on_app_routes.clone(),
+            );
+            let main_exit = client_rx
+                .borrow()
+                .as_ref()
+                .map(|bundle| *bundle.exit_id().as_bytes());
+            controller.seed(&plan_rx.borrow(), main_exit);
+            (controller, plan_rx, client_rx.clone())
+        });
+
         // Spawn the uplink + downlink pumps. Each consumes a clone of
         // the watch receiver so they can independently park on the
         // supervisor's reconnect signal. When the exit granted DAITA the
@@ -2518,44 +2563,40 @@ impl WarrenTunnelMonitor {
         } = spawn_nat_pmp_runtime(&runtime, params);
 
         // Route sessions start once the tunnel is Up: the connected state
-        // is the one that names their relays to the firewall.
-        let app_routes = params.app_routes_rx.clone().map(|plan_rx| {
-            let mut config =
-                app_routes::RouteSessionConfig::new(params.session_token_provider.clone());
-            config.wants_ipv6 = wants_ipv6;
-            config.enable_daita = params.enable_daita;
-            config.idle_cover = mh_idle_cover;
-            config.socket_bypass = socket_bypass;
-            config.on_exit_draining = params.on_exit_draining.clone();
-            #[cfg(target_os = "macos")]
-            {
-                config.relay_escape = Some(macos_relay_escape(
-                    args.route_manager.clone(),
-                    metadata.interface.clone(),
-                ));
-            }
-            let name_relays: app_routes::RelaySink = {
-                let fence = Arc::clone(&fence);
-                Arc::new(move |relays| {
-                    let fence = Arc::clone(&fence);
-                    Box::pin(async move { fence.name_routes(&relays).await })
-                })
-            };
-            let controller = app_routes::RouteController::new(
-                Arc::clone(&routing_table),
-                packet_device.clone(),
-                app_routes::SupervisorRouteSessions::new(runtime.clone(), config),
-                talpid_app_routing::router::SessionAddresses {
-                    v4: Some(tun_ip),
-                    v6: tun_ipv6,
-                },
-                name_relays,
-                params.on_app_routes.clone(),
-            );
+        // is the one that names their relays to the firewall. The controller
+        // follows the exit the main session is on, for the apps the plan
+        // leaves on it.
+        let app_routes = app_routes_controller.map(|(controller, plan_rx, mut sessions)| {
             let (stop_tx, stop_rx) = tokio::sync::oneshot::channel::<()>();
-            let task = runtime.spawn(controller.run(plan_rx, async move {
-                let _ = stop_rx.await;
-            }));
+            let task = runtime.spawn(async move {
+                let exit_of = |sessions: &warrenguard_transport::supervisor::ClientWatch| {
+                    sessions
+                        .borrow()
+                        .as_ref()
+                        .map(|bundle| *bundle.exit_id().as_bytes())
+                };
+                let (exit_tx, exit_rx) = tokio::sync::watch::channel(exit_of(&sessions));
+                // While the main session redials it carries nothing, so the
+                // last exit it was on stands until it lands again.
+                let follow = async move {
+                    while sessions.changed().await.is_ok() {
+                        if let Some(exit) = exit_of(&sessions) {
+                            exit_tx.send_if_modified(|current| {
+                                let moved = *current != Some(exit);
+                                *current = Some(exit);
+                                moved
+                            });
+                        }
+                    }
+                    std::future::pending::<()>().await;
+                };
+                tokio::select! {
+                    () = controller.run(plan_rx, exit_rx, async move {
+                        let _ = stop_rx.await;
+                    }) => {}
+                    () = follow => {}
+                }
+            });
             AppRoutesTask { stop_tx, task }
         });
 

@@ -75,6 +75,15 @@ pub struct PlannedRoute {
     pub apps: Vec<String>,
 }
 
+/// Apps whose exit the main connection already matches: the main session
+/// carries them while it is on `exit_id`, and they are blocked while it is
+/// not (it may have moved since the plan was made).
+#[derive(Clone, PartialEq, Eq)]
+pub struct MainRoute {
+    pub exit_id: [u8; 16],
+    pub apps: Vec<String>,
+}
+
 /// Every route session the daemon asks for, and the apps it blocks: apps whose
 /// exit cannot be served (no relay, over the limit) never fall back to the
 /// main session.
@@ -82,6 +91,7 @@ pub struct PlannedRoute {
 pub struct AppRoutesPlan {
     pub routes: Vec<PlannedRoute>,
     pub blocked_apps: Vec<String>,
+    pub main_apps: Vec<MainRoute>,
 }
 
 impl AppRoutesPlan {
@@ -89,6 +99,7 @@ impl AppRoutesPlan {
     /// republished plan does not touch the live sessions.
     pub fn same_as(&self, other: &Self) -> bool {
         self.blocked_apps == other.blocked_apps
+            && self.main_apps == other.main_apps
             && self.routes.len() == other.routes.len()
             && self.routes.iter().zip(&other.routes).all(|(a, b)| {
                 a.apps == b.apps && circuit_identity(&a.circuit) == circuit_identity(&b.circuit)
