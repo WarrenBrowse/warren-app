@@ -341,7 +341,7 @@ mod tests {
         let payload = b"sensitive";
         storage.store("k", payload).expect("store ok");
 
-        let ciphertext = fs::read(storage.key_path("k")).expect("read blob");
+        let ciphertext = fs::read(storage.key_path("k").expect("key path")).expect("read blob");
 
         // Decrypt with wrong entropy: should error.
         let wrong_entropy = b"not-warren-entropy";
