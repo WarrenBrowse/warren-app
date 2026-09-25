@@ -44,6 +44,11 @@ struct Inner {
     /// The wallet the tracker last heard about, so a poll that failed for
     /// another wallet never answers the previous one's standing.
     wallet: Option<String>,
+    /// Wallets that left this device. Their token and entitlement refresh
+    /// loops outlive them, and a ban refusal one of those loops reports says
+    /// nothing about the wallet now installed: taken as news, it would switch
+    /// the tracker back to the departed wallet and drop the current one's ban.
+    departed: std::collections::HashSet<String>,
 }
 
 /// Process-lived holder of the wallet's standing.
@@ -57,12 +62,14 @@ pub struct StandingStore {
 impl StandingStore {
     /// A store that remembers the strikes the ledger at `ledger_path` lists as
     /// announced. `None` keeps the ledger in memory only.
+    #[must_use]
     pub fn new(ledger_path: Option<PathBuf>) -> Self {
         let ledger = ledger_path.as_deref().map(load_ledger).unwrap_or_default();
         Self {
             inner: Mutex::new(Inner {
                 tracker: StandingTracker::new(ledger),
                 wallet: None,
+                departed: std::collections::HashSet::new(),
             }),
             ledger_path,
             changed: tokio::sync::watch::Sender::new(0),
@@ -86,10 +93,15 @@ impl StandingStore {
     }
 
     /// An exit refused `wallet_pubkey` as banned with the opaque reason
-    /// `code`. Answers the ban the tunnel blocks with: the one the standing
-    /// endpoint answered when it still holds, since that one knows its lapse.
+    /// `code`. Answers the ban the session ends on: the one the standing or an
+    /// issuer reported when it still holds, since that one knows its lapse.
+    ///
+    /// The exit's answer is not recorded as a block for the next dial, the
+    /// desktop daemon's rule: it carries no lapse, so nothing but a standing
+    /// answer could ever clear it, and the next dial is refused by the exit
+    /// anyway while the ban holds.
+    #[must_use]
     pub fn on_exit_ban(&self, wallet_pubkey: &[u8; 32], code: u8, now_unix_secs: u64) -> Ban {
-        self.record_ban(wallet_pubkey, Ban::from_exit_rejection(code), now_unix_secs);
         self.ban_in_force(wallet_pubkey, now_unix_secs)
             .unwrap_or_else(|| Ban::from_exit_rejection(code))
     }
@@ -111,14 +123,16 @@ impl StandingStore {
         now_unix_secs: u64,
     ) -> String {
         let wallet = wallet_key(wallet_pubkey);
+        let mut to_persist = None;
         let mut inner = self.lock();
         let (ok, reported, new_strikes) = match result {
             Ok(response) => {
                 let before = inner.tracker.ledger().clone();
+                inner.departed.remove(&wallet);
                 inner.wallet = Some(wallet.clone());
                 let update = inner.tracker.on_standing(&wallet, response);
                 if *inner.tracker.ledger() != before {
-                    self.persist(inner.tracker.ledger());
+                    to_persist = Some(inner.tracker.ledger().clone());
                 }
                 if update.is_some() {
                     self.changed.send_modify(|n| *n = n.wrapping_add(1));
@@ -135,6 +149,12 @@ impl StandingStore {
         let standing = (inner.wallet.as_deref() == Some(wallet.as_str()))
             .then(|| inner.tracker.standing().cloned())
             .flatten();
+        drop(inner);
+        // Written with the lock released: the tunnel reads the store from its
+        // runtime workers, and a slow disk must not stall them.
+        if let Some(ledger) = to_persist {
+            self.persist(&ledger);
+        }
         envelope(ok, reported, standing.as_ref(), &new_strikes, now_unix_secs)
     }
 
@@ -151,19 +171,40 @@ impl StandingStore {
     /// were announced are forgotten, on disk too.
     pub fn forget(&self) {
         let mut inner = self.lock();
-        inner.wallet = None;
+        if let Some(departed) = inner.wallet.take() {
+            inner.departed.insert(departed);
+        }
         let had_ledger = *inner.tracker.ledger() != StrikeLedger::new();
         if inner.tracker.on_no_wallet().is_some() {
             self.changed.send_modify(|n| *n = n.wrapping_add(1));
         }
+        drop(inner);
         if had_ledger {
-            self.persist(inner.tracker.ledger());
+            self.persist(&StrikeLedger::new());
         }
     }
 
     /// A receiver that wakes on every change of the standing.
     pub fn subscribe(&self) -> tokio::sync::watch::Receiver<u64> {
         self.changed.subscribe()
+    }
+
+    /// The ban on `wallet_pubkey`, once one holds at `now()`: at once when
+    /// one already does, else when the standing learns of one (an issuer's
+    /// refusal from a background refresh, a standing answer). Pending forever
+    /// when none comes. A tunnel selects on it to end a live session on a ban.
+    pub async fn ban_arrives(&self, wallet_pubkey: [u8; 32], now: impl Fn() -> u64) -> Ban {
+        // Subscribed before the first look, so a ban recorded in between
+        // still wakes the loop.
+        let mut changes = self.subscribe();
+        loop {
+            if let Some(ban) = self.ban_in_force(&wallet_pubkey, now()) {
+                return ban;
+            }
+            if changes.changed().await.is_err() {
+                std::future::pending::<()>().await;
+            }
+        }
     }
 
     fn lock(&self) -> MutexGuard<'_, Inner> {
@@ -175,6 +216,9 @@ impl StandingStore {
     fn record_ban(&self, wallet_pubkey: &[u8; 32], ban: Ban, now_unix_secs: u64) {
         let wallet = wallet_key(wallet_pubkey);
         let mut inner = self.lock();
+        if inner.departed.contains(&wallet) {
+            return;
+        }
         inner.wallet = Some(wallet.clone());
         if inner
             .tracker
@@ -198,6 +242,7 @@ impl StandingStore {
 /// The ban a blocked session names to the app (`getBanVerdict` on Android):
 /// `{"reason":"[BANNED_PORT_FORWARDING] ...","lapses_at_unix_secs":N|null}`,
 /// or `{}` when the session was not blocked for a ban.
+#[must_use]
 pub fn ban_verdict_json(ban: Option<&Ban>) -> String {
     match ban {
         Some(ban) => serde_json::json!({
@@ -449,6 +494,35 @@ mod tests {
     }
 
     #[test]
+    fn a_departed_wallets_refusal_leaves_the_current_wallets_ban_alone() {
+        let store = StandingStore::new(None);
+        store.on_poll(&OTHER, Ok(answer(&[], None)), NOW);
+        store.forget();
+        store.on_poll(&WALLET, Ok(answer(&[], Some(account_ban(NOW + 60)))), NOW);
+
+        store.on_refresh_error(&OTHER, &banned_refusal(), NOW);
+
+        assert_eq!(
+            store
+                .ban_in_force(&WALLET, NOW)
+                .and_then(|ban| ban.lapses_at_unix_secs),
+            Some(NOW + 60)
+        );
+    }
+
+    #[test]
+    fn a_wallet_that_comes_back_is_heard_again() {
+        let store = StandingStore::new(None);
+        store.on_poll(&WALLET, Ok(answer(&[], None)), NOW);
+        store.forget();
+        store.on_poll(&WALLET, Ok(answer(&[], None)), NOW);
+
+        store.on_refresh_error(&WALLET, &banned_refusal(), NOW);
+
+        assert!(store.ban_in_force(&WALLET, NOW).is_some());
+    }
+
+    #[test]
     fn an_exit_ban_keeps_the_lapse_the_standing_answered() {
         let store = StandingStore::new(None);
         store.on_poll(&WALLET, Ok(answer(&[], Some(account_ban(NOW + 60)))), NOW);
@@ -459,14 +533,50 @@ mod tests {
     }
 
     #[test]
-    fn an_exit_ban_alone_is_a_ban_without_a_known_lapse() {
+    fn an_exit_ban_alone_names_the_ban_without_blocking_the_next_dial() {
         let store = StandingStore::new(None);
 
         let ban = store.on_exit_ban(&WALLET, 0, NOW);
 
         assert_eq!(ban.reason, BanReasonCode::Other);
         assert_eq!(ban.lapses_at_unix_secs, None);
-        assert!(store.ban_in_force(&WALLET, NOW).is_some());
+        assert_eq!(store.ban_in_force(&WALLET, NOW), None);
+    }
+
+    #[tokio::test]
+    async fn a_ban_learned_during_a_session_ends_the_wait() {
+        let store = std::sync::Arc::new(StandingStore::new(None));
+        let waiting = {
+            let store = store.clone();
+            tokio::spawn(async move { store.ban_arrives(WALLET, || NOW).await })
+        };
+        tokio::task::yield_now().await;
+        assert!(!waiting.is_finished(), "no ban yet");
+
+        store.on_refresh_error(&WALLET, &banned_refusal(), NOW);
+
+        let ban = tokio::time::timeout(std::time::Duration::from_secs(5), waiting)
+            .await
+            .expect("the ban ends the wait")
+            .unwrap();
+        assert_eq!(ban.lapses_at_unix_secs, Some(NOW + 100));
+    }
+
+    #[tokio::test]
+    async fn another_wallets_ban_does_not_end_the_wait() {
+        let store = StandingStore::new(None);
+        store.on_refresh_error(&OTHER, &banned_refusal(), NOW);
+
+        let waited = tokio::time::timeout(
+            std::time::Duration::from_millis(50),
+            store.ban_arrives(WALLET, || NOW),
+        )
+        .await;
+
+        assert!(
+            waited.is_err(),
+            "another wallet's ban never ends this wallet's session"
+        );
     }
 
     #[test]

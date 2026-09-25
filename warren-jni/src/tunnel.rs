@@ -270,18 +270,6 @@ pub async fn run_session(
 pub(crate) const WARREN_MULTIHOP_ROOT_PUBKEY_HEX: &str =
     "33cd9279ad06d1ee884235e763b876fa70598094944bdcfb82375bd9aaa67b08";
 
-/// Drive a multi-hop tunnel (entry relay -> exit) from start to teardown.
-///
-/// Mirrors the desktop reference (`talpid-warren-tunnel::start_multi_hop`) and
-/// iOS: a [`MultiHopSupervisor`] owns the session across disconnects and the
-/// two `supervised_pump` halves pump the Android TUN against whatever it
-/// publishes. Selection uses the signed multi-hop directory
-/// (`GET /v2/multihop/directory`, frozen `/v1` on an older backend), the
-/// only source of the signed relay
-/// descriptor, the exit X25519 HPKE key, and the operational trust anchor
-/// (none of which the `/v1/exits` list carries).
-///
-/// [`MultiHopSupervisor`]: warrenguard_transport::supervisor::MultiHopSupervisor
 /// What ended one connect attempt of [`run_multi_hop_session`].
 enum AttemptEnd {
     /// Kotlin disconnected.
@@ -290,22 +278,6 @@ enum AttemptEnd {
     Banned(warren_standing::Ban),
     /// The session itself ended.
     Session(crate::supervised_session::SessionEnd),
-}
-
-/// The ban on the session's wallet, when the standing learns of one: an
-/// issuer's refusal from a background refresh, or the standing poll. Pending
-/// forever when none comes.
-async fn ban_arrives(wallet_pubkey: [u8; 32]) -> warren_standing::Ban {
-    let store = crate::standing::store();
-    let mut changes = store.subscribe();
-    loop {
-        if let Some(ban) = store.ban_in_force(&wallet_pubkey, unix_now_secs()) {
-            return ban;
-        }
-        if changes.changed().await.is_err() {
-            std::future::pending::<()>().await;
-        }
-    }
 }
 
 /// The ban the last session was blocked for, which `getBanVerdict` hands to
@@ -329,6 +301,18 @@ pub(crate) fn ban_verdict_json() -> String {
     warren_standing::ban_verdict_json(BAN_VERDICT.lock().as_ref())
 }
 
+/// Drive a multi-hop tunnel (entry relay -> exit) from start to teardown.
+///
+/// Mirrors the desktop reference (`talpid-warren-tunnel::start_multi_hop`) and
+/// iOS: a [`MultiHopSupervisor`] owns the session across disconnects and the
+/// two `supervised_pump` halves pump the Android TUN against whatever it
+/// publishes. Selection uses the signed multi-hop directory
+/// (`GET /v2/multihop/directory`, frozen `/v1` on an older backend), the
+/// only source of the signed relay
+/// descriptor, the exit X25519 HPKE key, and the operational trust anchor
+/// (none of which the `/v1/exits` list carries).
+///
+/// [`MultiHopSupervisor`]: warrenguard_transport::supervisor::MultiHopSupervisor
 async fn run_multi_hop_session(
     tun: AndroidTun,
     signing: SigningKey,
@@ -666,7 +650,7 @@ async fn run_multi_hop_session(
         let outcome = match max_rate_bps {
             Some(bps) => tokio::select! {
                 _ = &mut cancel_rx => AttemptEnd::Cancelled,
-                ban = ban_arrives(wallet_pubkey) => AttemptEnd::Banned(ban),
+                ban = crate::standing::store().ban_arrives(wallet_pubkey, unix_now_secs) => AttemptEnd::Banned(ban),
                 end = crate::supervised_session::run_supervised(
                     inputs,
                     |spec| crate::rate_limited_tun::RateLimitedTun::new(remap(spec), bps),
@@ -678,7 +662,7 @@ async fn run_multi_hop_session(
             },
             None => tokio::select! {
                 _ = &mut cancel_rx => AttemptEnd::Cancelled,
-                ban = ban_arrives(wallet_pubkey) => AttemptEnd::Banned(ban),
+                ban = crate::standing::store().ban_arrives(wallet_pubkey, unix_now_secs) => AttemptEnd::Banned(ban),
                 end = crate::supervised_session::run_supervised(
                     inputs,
                     remap,
@@ -1009,11 +993,10 @@ impl Drop for NatPmpGuard {
         if let Some(mut refresh) = self.refresh.lock().cancel() {
             refresh.cancel();
         }
-        // Abort eagerly: the refresh-loop cancel closes the sender
-        // and the drain would exit naturally on the next `recv`, but
-        // an explicit abort removes the window where Kotlin observes
-        // `disconnectTunnel` complete while the drain task is still
-        // alive on the runtime.
+        // The drain holds a sender of its own, to restart a refused loop, so
+        // cancelling the loop does not end it: only this abort does, and it
+        // also removes the window where Kotlin observes `disconnectTunnel`
+        // complete while the drain task is still alive on the runtime.
         self.drain.abort();
     }
 }
@@ -1160,7 +1143,13 @@ fn maybe_spawn_nat_pmp(
     let drain = tokio::spawn(async move {
         let mut refusals = warren_standing::RefusalCount::default();
         while let Some(event) = rx.recv().await {
-            log::info!("NAT-PMP event from Android tunnel: {event:?}");
+            // The kind only: a grant's `Debug` carries the forwarded port, the
+            // key of an abuse case (warren-core doc 105), and problem reports
+            // attach this log.
+            log::info!(
+                "NAT-PMP event from Android tunnel: {}",
+                natpmp_event_kind(&event)
+            );
             match crate::natpmp_refusal::MapOutcome::of(&event) {
                 crate::natpmp_refusal::MapOutcome::Granted => refusals.on_granted(),
                 // The engine stops on a refusal, which it takes for permanent.
@@ -1212,6 +1201,18 @@ fn maybe_spawn_nat_pmp(
         starter,
         drain,
     })
+}
+
+/// What kind of event `event` is, for the log, without the port it carries.
+fn natpmp_event_kind(event: &warrenguard_natpmp_client::NatPmpEvent) -> &'static str {
+    use warrenguard_natpmp_client::NatPmpEvent;
+    match event {
+        NatPmpEvent::Mapped { .. } => "mapped",
+        NatPmpEvent::Renewed { .. } => "renewed",
+        NatPmpEvent::RateLimited { .. } => "rate limited",
+        NatPmpEvent::Failed { .. } => "failed",
+        NatPmpEvent::Cancelled => "cancelled",
+    }
 }
 
 /// Project a [`warrenguard_natpmp_client::NatPmpEvent`] to the JSON status

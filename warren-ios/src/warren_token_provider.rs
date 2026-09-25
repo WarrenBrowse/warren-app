@@ -41,7 +41,12 @@ fn now_unix_secs() -> u64 {
 }
 
 fn spawn_refresh(manager: Arc<Manager>, wallet_pubkey: [u8; 32]) {
-    tokio::spawn(async move {
+    // On the process runtime: `provider_for` runs on a tunnel's own runtime,
+    // which `warren_tunnel_stop` shuts down, and the manager outlives it in
+    // `MANAGERS`, so a refresh spawned there would die with the first tunnel
+    // and never be started again. The next session in the same extension
+    // process would then learn of no ban and top up no token.
+    let refresh = async move {
         // First tick fires immediately (top up before the first connect), then
         // every 10 min. The manager mints only epochs it has not minted yet.
         let mut tick = tokio::time::interval(Duration::from_secs(600));
@@ -64,7 +69,15 @@ fn spawn_refresh(manager: Arc<Manager>, wallet_pubkey: [u8; 32]) {
                 }
             }
         }
-    });
+    };
+    match crate::warren_ios_runtime() {
+        Ok(runtime) => {
+            runtime.spawn(refresh);
+        }
+        Err(_) => {
+            tokio::spawn(refresh);
+        }
+    }
 }
 
 /// The v7 token provider for `signing_key`'s wallet. Builds (and starts

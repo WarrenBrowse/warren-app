@@ -416,7 +416,7 @@ enum TerminalVerdict {
     Ordinary,
 }
 
-#[cfg(all(target_os = "ios", feature = "tunnel"))]
+#[cfg(feature = "tunnel")]
 impl From<Option<warrenguard_multihop::RejectionReason>> for TerminalVerdict {
     fn from(reason: Option<warrenguard_multihop::RejectionReason>) -> Self {
         use warrenguard_multihop::RejectionReason;
@@ -915,14 +915,20 @@ mod handle_impl {
 
         /// Record the ban this session ends on. The terminal edge reads it.
         pub fn record_ban(&self, ban: warren_standing::Ban) {
-            if let Ok(mut slot) = self.ban.lock() {
-                *slot = Some(ban);
-            }
+            // Poisoning is recovered from: a ban lost to a panic elsewhere
+            // would turn a suspension into a plain disconnect.
+            *self
+                .ban
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(ban);
         }
 
         /// The ban this session ended on, if any.
         pub fn recorded_ban(&self) -> Option<warren_standing::Ban> {
-            self.ban.lock().ok().and_then(|slot| *slot)
+            *self
+                .ban
+                .lock()
+                .unwrap_or_else(std::sync::PoisonError::into_inner)
         }
 
         /// Fire `EventBanned` with the recorded ban's reason and lapse. The
@@ -1652,7 +1658,7 @@ fn spawn_multi_hop(
                         tracing::error!(error = %e, "multi-hop supervisor terminated");
                     }
                 }
-                ban = ban_arrives(wallet_pubkey) => {
+                ban = crate::warren_standing_ffi::tunnel_store().ban_arrives(wallet_pubkey, now_secs) => {
                     tracing::warn!("Warren account was banned during the session; ending it");
                     ban_arc.record_ban(ban);
                 }
@@ -1785,23 +1791,6 @@ fn spawn_multi_hop(
             arc_for_task.fire_event(terminal_event);
         }
     });
-}
-
-/// The ban on the session's wallet, when the extension's standing learns of
-/// one (the token issuer's refusal from a background refresh). Pending
-/// forever when none comes.
-#[cfg(all(target_os = "ios", feature = "tunnel"))]
-async fn ban_arrives(wallet_pubkey: [u8; 32]) -> warren_standing::Ban {
-    let store = crate::warren_standing_ffi::tunnel_store();
-    let mut changes = store.subscribe();
-    loop {
-        if let Some(ban) = store.ban_in_force(&wallet_pubkey, now_secs()) {
-            return ban;
-        }
-        if changes.changed().await.is_err() {
-            std::future::pending::<()>().await;
-        }
-    }
 }
 
 // ---- NAT-PMP port forwarding (feature-gated) ----
@@ -1951,12 +1940,17 @@ impl Drop for NatPmpGuard {
         // separate "cleared" FFI event tag and no NAT-PMP status atomic to
         // reset (the mapping is surfaced purely through events), so the
         // tunnel session teardown is what clears the user-visible state.
-        if let Ok(mut slot) = self.refresh.lock() {
-            slot.cancelled = true;
-            if let Some(mut refresh) = slot.current.take() {
-                refresh.cancel();
-            }
+        // Poisoning is recovered from: skipping the cancel would leave the
+        // loop renewing a mapping for a tunnel that is gone.
+        let mut slot = self
+            .refresh
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner);
+        slot.cancelled = true;
+        if let Some(mut refresh) = slot.current.take() {
+            refresh.cancel();
         }
+        drop(slot);
         self.drain.abort();
     }
 }
@@ -2067,9 +2061,9 @@ fn maybe_spawn_nat_pmp(
                     tokio::time::sleep(std::time::Duration::from_secs(u64::from(retry_in_secs)))
                         .await;
                     let fresh = spawn_loop(tx.clone());
-                    let Ok(mut slot) = respawn_slot.lock() else {
-                        break;
-                    };
+                    let mut slot = respawn_slot
+                        .lock()
+                        .unwrap_or_else(std::sync::PoisonError::into_inner);
                     if slot.cancelled {
                         let mut fresh = fresh;
                         fresh.cancel();
@@ -2487,10 +2481,21 @@ pub unsafe extern "C" fn warren_tunnel_set_event_callback(
         let Some(arc) = (unsafe { clone_arc_from_raw(handle) }) else {
             return RC_INVALID_INPUT;
         };
-        let Ok(mut slot) = arc.event_callback.lock() else {
-            return RC_INVALID_INPUT;
-        };
-        *slot = Some(handle_impl::CallbackEntry { callback, context });
+        {
+            let Ok(mut slot) = arc.event_callback.lock() else {
+                return RC_INVALID_INPUT;
+            };
+            *slot = Some(handle_impl::CallbackEntry { callback, context });
+        }
+        // A wallet known to be banned is refused before the session task's
+        // first await, which can run before Swift registers this callback:
+        // the ban event would then reach nobody, and Swift would show the
+        // state with neither the reason nor the lapse. Replayed here; a second
+        // copy of the same event is harmless.
+        if arc.state.load(std::sync::atomic::Ordering::Relaxed) == WarrenTunnelStateC::Banned as u8
+        {
+            arc.fire_ban_event();
+        }
         RC_OK
     }
     #[cfg(not(all(target_os = "ios", feature = "tunnel")))]
@@ -2925,9 +2930,6 @@ mod tests {
         assert_eq!(event, super::WarrenTunnelEventTagC::EventUnauthorized);
     }
 
-    /// Everything that is not a refusal of this account: the user
-    /// disconnected, the tunnel was torn down, or the refusal was an exhausted
-    /// address pool, which an expiry prompt would misdescribe.
     /// A ban is a suspension, which neither the expiry prompt nor a plain
     /// disconnect describes: it ends on a state and an event of its own.
     #[test]
@@ -2937,6 +2939,24 @@ mod tests {
         assert_eq!(event, super::WarrenTunnelEventTagC::EventBanned);
     }
 
+    /// The exit's CRL rejection is the ban verdict, whatever reason code it
+    /// sealed: the code only picks the message.
+    #[cfg(feature = "tunnel")]
+    #[test]
+    fn an_exit_ban_rejection_is_the_ban_verdict() {
+        use warrenguard_multihop::RejectionReason;
+
+        for code in [0, 1, 200] {
+            assert_eq!(
+                super::TerminalVerdict::from(Some(RejectionReason::Banned(code))),
+                super::TerminalVerdict::Banned
+            );
+        }
+    }
+
+    /// Everything that is not a refusal of this account: the user
+    /// disconnected, the tunnel was torn down, or the refusal was an exhausted
+    /// address pool, which an expiry prompt would misdescribe.
     #[test]
     fn anything_else_ends_plainly_disconnected() {
         let (state, event) = super::terminal_for(super::TerminalVerdict::Ordinary);

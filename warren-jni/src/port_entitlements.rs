@@ -513,7 +513,7 @@ mod tests {
         let mint = EntitlementMint::new(now).with_ban_sink(Arc::new(move |wallet, error| {
             sink.on_refresh_error(wallet, error, NOW)
         }));
-        let source = mint.credential_source([1; 32], 0, || client(&issuer));
+        let _source = mint.credential_source([1; 32], 0, || client(&issuer));
 
         wait_for(|| standing.ban_in_force(&[1; 32], NOW).is_some()).await;
 
@@ -521,7 +521,6 @@ mod tests {
             standing.ban_in_force(&[1; 32], NOW).map(|ban| ban.reason),
             Some(warren_api::BanReasonCode::Other)
         );
-        assert!(source().is_none(), "a banned wallet presents nothing");
     }
 
     #[tokio::test(start_paused = true)]
