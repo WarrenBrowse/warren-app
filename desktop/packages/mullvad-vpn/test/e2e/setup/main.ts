@@ -137,6 +137,7 @@ class ApplicationMain {
       translations: this.translations,
       splitTunnelingApplications: [],
       splitTunnelingSupported: true,
+      appRouteStatus: [],
       macOsScrollbarVisibility: MacOsScrollbarVisibility.whenScrolling,
       changelog: [],
       navigationHistory: undefined,

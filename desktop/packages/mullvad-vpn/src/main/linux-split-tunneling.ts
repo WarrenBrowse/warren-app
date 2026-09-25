@@ -1,11 +1,16 @@
 import argvSplit from 'argv-split';
 import child_process from 'child_process';
+import fs from 'fs/promises';
 import path from 'path';
 
-import { ILinuxSplitTunnelingApplication } from '../shared/application-types';
+import {
+  ILinuxSplitTunnelingApplication,
+  ISplitTunnelingApplication,
+} from '../shared/application-types';
 import { messages } from '../shared/gettext';
 import { LaunchApplicationResult } from '../shared/ipc-schema';
 import { Scheduler } from '../shared/scheduler';
+import { ExecutableLookup, resolveLaunchCommand } from './linux-app-routing';
 import {
   DesktopEntry,
   findIconPath,
@@ -29,10 +34,15 @@ const PROBLEMATIC_APPLICATIONS = {
   launchingElsewhere: ['gnome-terminal'],
 };
 
+// `warren-exclude` runs a program outside the tunnel, `warren-include` runs it
+// as one of the only programs inside it (include-only mode).
+export type LinuxLauncher = 'warren-exclude' | 'warren-include';
+
 // Launches an application. The application parameter could be a path the an executable or .desktop
 // file or an object representing an application
 export async function launchApplication(
   app: ILinuxSplitTunnelingApplication | string,
+  launcher: LinuxLauncher = 'warren-exclude',
 ): Promise<LaunchApplicationResult> {
   let excludeArguments: string[];
   try {
@@ -44,7 +54,7 @@ export async function launchApplication(
 
   return new Promise((resolve, _reject) => {
     const scheduler = new Scheduler();
-    const proc = child_process.spawn('warren-exclude', excludeArguments, { detached: true });
+    const proc = child_process.spawn(launcher, excludeArguments, { detached: true });
 
     // If the process exits within 200 milliseconds the user is notified that it failed to launch.
     scheduler.schedule(() => {
@@ -163,4 +173,47 @@ function addApplicationWarnings(
   } else {
     return application;
   }
+}
+
+const executableLookup: ExecutableLookup = {
+  pathEnv: process.env.PATH ?? '',
+  isExecutable: async (candidate) => {
+    try {
+      await fs.access(candidate, fs.constants.X_OK);
+      return (await fs.stat(candidate)).isFile();
+    } catch {
+      return false;
+    }
+  },
+  realpath: (candidate) => fs.realpath(candidate),
+};
+
+// The desktop apps keyed by the program they run, which is what a per-app
+// country names on Linux. An app whose program cannot be found is left out.
+export async function getPathBasedApplications(
+  locale: string,
+): Promise<ISplitTunnelingApplication[]> {
+  const applications: ISplitTunnelingApplication[] = [];
+  for (const application of await getApplications(locale)) {
+    const executable = await resolveLaunchCommand(formatExec(application.exec), executableLookup);
+    if (
+      executable !== undefined &&
+      !applications.some((known) => known.absolutepath === executable)
+    ) {
+      applications.push({
+        absolutepath: executable,
+        name: application.name,
+        icon: application.icon,
+        deletable: false,
+      });
+    }
+  }
+  return applications;
+}
+
+// A program picked with the file dialog: a desktop entry resolves to the
+// program it runs, anything else to the file it links to.
+export async function resolveExecutablePath(selected: string): Promise<string> {
+  const argv = await getLaunchCommand(selected);
+  return (await resolveLaunchCommand(argv, executableLookup)) ?? selected;
 }

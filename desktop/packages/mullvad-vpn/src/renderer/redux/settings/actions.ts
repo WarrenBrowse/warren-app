@@ -2,6 +2,8 @@ import { ISplitTunnelingApplication } from '../../../shared/application-types';
 import {
   AccessMethodSetting,
   ApiAccessMethodSettings,
+  AppRouteStatus,
+  AppRoutingSettings,
   CustomLists,
   IDaitaSettings,
   IDnsOptions,
@@ -164,6 +166,21 @@ export interface ISetSplitTunnelingSupportedAction {
   supported: boolean;
 }
 
+export interface IUpdateAppRoutingAction {
+  type: 'UPDATE_APP_ROUTING';
+  appRouting: AppRoutingSettings;
+}
+
+export interface ISetAppRouteStatusAction {
+  type: 'SET_APP_ROUTE_STATUS';
+  statuses: AppRouteStatus[];
+}
+
+export interface ISetAppRoutingApplicationsAction {
+  type: 'SET_APP_ROUTING_APPLICATIONS';
+  applications: ISplitTunnelingApplication[];
+}
+
 export interface ISetObfuscationSettings {
   type: 'SET_OBFUSCATION_SETTINGS';
   obfuscationSettings: ObfuscationSettings;
@@ -220,6 +237,9 @@ export type SettingsAction =
   | IUpdateSplitTunnelingStateAction
   | ISetSplitTunnelingApplicationsAction
   | ISetSplitTunnelingSupportedAction
+  | IUpdateAppRoutingAction
+  | ISetAppRouteStatusAction
+  | ISetAppRoutingApplicationsAction
   | ISetObfuscationSettings
   | ISetCustomLists
   | ISetRecents
@@ -415,6 +435,29 @@ function setSplitTunnelingSupported(supported: boolean): ISetSplitTunnelingSuppo
   };
 }
 
+function updateAppRouting(appRouting: AppRoutingSettings): IUpdateAppRoutingAction {
+  return {
+    type: 'UPDATE_APP_ROUTING',
+    appRouting,
+  };
+}
+
+function setAppRouteStatus(statuses: AppRouteStatus[]): ISetAppRouteStatusAction {
+  return {
+    type: 'SET_APP_ROUTE_STATUS',
+    statuses,
+  };
+}
+
+function setAppRoutingApplications(
+  applications: ISplitTunnelingApplication[],
+): ISetAppRoutingApplicationsAction {
+  return {
+    type: 'SET_APP_ROUTING_APPLICATIONS',
+    applications,
+  };
+}
+
 function updateObfuscationSettings(
   obfuscationSettings: ObfuscationSettings,
 ): ISetObfuscationSettings {
@@ -485,6 +528,9 @@ export default {
   updateSplitTunnelingState,
   setSplitTunnelingApplications,
   setSplitTunnelingSupported,
+  updateAppRouting,
+  setAppRouteStatus,
+  setAppRoutingApplications,
   updateObfuscationSettings,
   updateCustomLists,
   updateApiAccessMethods,
