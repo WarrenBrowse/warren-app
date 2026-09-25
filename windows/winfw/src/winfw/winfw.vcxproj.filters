@@ -25,6 +25,9 @@
     <ClCompile Include="rules\baseline\permitlanservice.cpp">
       <Filter>rules\baseline</Filter>
     </ClCompile>
+    <ClCompile Include="rules\baseline\permitnontunnelipv4.cpp">
+      <Filter>rules\baseline</Filter>
+    </ClCompile>
     <ClCompile Include="rules\baseline\permitloopback.cpp">
       <Filter>rules\baseline</Filter>
     </ClCompile>
@@ -91,6 +94,9 @@
       <Filter>rules\baseline</Filter>
     </ClInclude>
     <ClInclude Include="rules\baseline\permitlanservice.h">
+      <Filter>rules\baseline</Filter>
+    </ClInclude>
+    <ClInclude Include="rules\baseline\permitnontunnelipv4.h">
       <Filter>rules\baseline</Filter>
     </ClInclude>
     <ClInclude Include="rules\baseline\permitloopback.h">

@@ -77,6 +77,7 @@ pub enum Error {
 }
 
 /// The Windows implementation for the firewall.
+#[derive(Default)]
 pub struct Firewall {
     /// Whether a still-blocking policy should be rewritten as boot-time
     /// filters when this module shuts down or dies, so that it also blocks
@@ -91,12 +92,10 @@ pub struct Firewall {
     ///
     /// [`SharedTunnelStateValues::set_lockdown_mode`]: crate::tunnel_state_machine::SharedTunnelStateValues::set_lockdown_mode
     persist: bool,
-}
-
-impl Default for Firewall {
-    fn default() -> Self {
-        Self { persist: false }
-    }
+    /// "VPN only for these apps": the connected policy lets IPv4 traffic
+    /// outside the tunnel go, for every app the split tunnel driver does not
+    /// keep in it.
+    include_only: bool,
 }
 
 /// Cleanup policy to hand to WinFw when this module goes away.
@@ -151,6 +150,12 @@ impl Firewall {
         Ok(Firewall::default())
     }
 
+    /// Chooses between the full tunnel and include-only for the policies
+    /// applied from now on.
+    pub fn set_include_only(&mut self, include_only: bool) {
+        self.include_only = include_only;
+    }
+
     pub fn apply_policy(&mut self, policy: FirewallPolicy) -> Result<(), Error> {
         let should_block_hyperv = matches!(
             policy,
@@ -183,7 +188,7 @@ impl Firewall {
                 allow_lan,
                 dns_config,
             } => {
-                let cfg = &WinFwSettings::new(allow_lan);
+                let cfg = &WinFwSettings::connected(allow_lan, self.include_only);
                 self.set_connected_state(
                     &peer_endpoints,
                     exit_endpoint_ip,

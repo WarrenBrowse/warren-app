@@ -533,8 +533,15 @@ impl TunnelStateMachine {
             &args.settings.split_apps,
         );
 
+        // Include-only needs the driver to hold the included apps back from
+        // the physical network the firewall then opens.
         #[cfg(target_os = "windows")]
-        let split_mode = args.settings.split_apps.mode;
+        let split_mode = enforceable_mode(
+            args.settings.split_apps.mode,
+            split_tunnel.handle().is_loaded(),
+        );
+        #[cfg(target_os = "windows")]
+        firewall.set_include_only(split_mode == SplitTunnelMode::IncludeOnly);
 
         #[cfg(target_os = "macos")]
         if let Err(error) = split_tunnel.set_split_apps(args.settings.split_apps).await {
@@ -743,7 +750,7 @@ pub trait TunnelParametersGenerator: Send + 'static {
 /// The mode the firewall and the routes can enforce. Include-only with no
 /// way to select the included apps falls back to the full tunnel: everything
 /// is tunneled, where the other way round no app would be.
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "windows"))]
 fn enforceable_mode(requested: SplitTunnelMode, can_include: bool) -> SplitTunnelMode {
     if requested == SplitTunnelMode::IncludeOnly && !can_include {
         log::error!("Include-only cannot select the included apps; tunneling everything");
@@ -944,8 +951,11 @@ impl SharedTunnelStateValues {
         apps: SplitApps,
         tx: oneshot::Sender<Result<(), split_tunnel::Error>>,
     ) -> bool {
-        let mode_changed = self.split_mode != apps.mode;
-        self.split_mode = apps.mode;
+        let mode = enforceable_mode(apps.mode, self.split_tunnel.handle().is_loaded());
+        let mode_changed = self.split_mode != mode;
+        self.split_mode = mode;
+        self.firewall
+            .set_include_only(mode == SplitTunnelMode::IncludeOnly);
         self.split_tunnel.set_split_apps(&apps, tx);
         mode_changed
     }

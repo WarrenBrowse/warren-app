@@ -395,6 +395,13 @@ impl ConnectedState {
                     {
                         self.disconnect(shared_values, AfterDisconnect::Reconnect(0))
                     }
+                    // An include-only tunnel routes its resolvers when it
+                    // connects, so new resolvers need a new connection.
+                    #[cfg(target_os = "windows")]
+                    if shared_values.include_only() {
+                        let _ = complete_tx.send(());
+                        return self.disconnect(shared_values, AfterDisconnect::Reconnect(0));
+                    }
                     #[cfg(not(target_os = "android"))]
                     {
                         if let Err(error) = self.set_firewall_policy(shared_values) {

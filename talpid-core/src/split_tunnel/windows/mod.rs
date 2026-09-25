@@ -6,6 +6,7 @@ mod service;
 mod volume_monitor;
 mod windows;
 
+use super::driver_addresses::AddressPair;
 use crate::tunnel_state_machine::TunnelCommand;
 use futures::channel::{mpsc, oneshot};
 use std::{
@@ -115,15 +116,6 @@ pub enum Error {
     Unavailable,
 }
 
-/// The paths the driver must split for `apps`. Include-only is refused
-/// until the driver is driven for it, rather than having its apps excluded.
-fn excluded_paths(apps: &SplitApps) -> Result<&[OsString], Error> {
-    match apps.mode {
-        SplitTunnelMode::Exclude => Ok(&apps.apps),
-        SplitTunnelMode::IncludeOnly => Err(Error::Unavailable),
-    }
-}
-
 /// Manages applications whose traffic to exclude from the tunnel.
 pub struct SplitTunnel {
     state: SplitTunnelState,
@@ -146,10 +138,7 @@ impl SplitTunnel {
         route_manager: RouteManagerHandle,
         initial_apps: &SplitApps,
     ) -> Self {
-        let initial_paths = excluded_paths(initial_apps).unwrap_or_else(|error| {
-            log::error!("{}", error.display_chain());
-            &[]
-        });
+        let initial_paths = &initial_apps.apps;
         let state = InitializedSplitTunnelState::new(
             runtime,
             resource_dir,
@@ -157,7 +146,10 @@ impl SplitTunnel {
             volume_update_rx,
             route_manager,
         )
-        .map(SplitTunnelState::Initialized)
+        .map(|mut state| {
+            state.mode = initial_apps.mode;
+            SplitTunnelState::Initialized(state)
+        })
         .unwrap_or_else(|err| {
             log::error!(
                 "{}",
@@ -188,19 +180,27 @@ impl SplitTunnel {
         split_tunnel
     }
 
-    /// Set the split mode and the applications it diverts.
+    /// Set the split mode and the applications it diverts. In both modes the
+    /// driver splits the listed apps; the mode decides which address it
+    /// moves them to (see `driver_addresses`).
     pub fn set_split_apps(
         &mut self,
         apps: &SplitApps,
         result_tx: oneshot::Sender<Result<(), Error>>,
     ) {
-        let paths = match excluded_paths(apps) {
-            Ok(paths) => paths,
-            Err(error) => {
+        if let SplitTunnelState::Initialized(state) = &mut self.state
+            && state.mode != apps.mode
+        {
+            // The registered addresses are mapped for the old mode: with the
+            // new list they would send the new apps the wrong way. The
+            // reconnect that follows a mode change registers them again.
+            if let Err(error) = state.clear_tunnel_addresses() {
                 let _ = result_tx.send(Err(error));
                 return;
             }
-        };
+            state.mode = apps.mode;
+        }
+        let paths = &apps.apps;
         match &mut self.state {
             SplitTunnelState::Initialized(state) => state.set_paths(paths, result_tx),
             SplitTunnelState::Failed(state) => state.set_paths(paths, result_tx),
@@ -345,6 +345,8 @@ struct InitializedSplitTunnelState {
     daemon_tx: Weak<mpsc::UnboundedSender<TunnelCommand>>,
     async_path_update_in_progress: Arc<AtomicBool>,
     route_manager: RouteManagerHandle,
+    /// Which way the listed apps are split.
+    mode: SplitTunnelMode,
 }
 
 enum Request {
@@ -433,6 +435,7 @@ impl InitializedSplitTunnelState {
             async_path_update_in_progress: Arc::new(AtomicBool::new(false)),
             excluded_processes,
             route_manager,
+            mode: SplitTunnelMode::default(),
         })
     }
 
@@ -886,6 +889,7 @@ impl InitializedSplitTunnelState {
             SplitTunnelDefaultRouteChangeHandlerContext::new(
                 self.request_tx.clone(),
                 self.daemon_tx.clone(),
+                self.mode,
                 tunnel_ipv4,
                 tunnel_ipv6,
             ),
@@ -969,6 +973,10 @@ impl Drop for InitializedSplitTunnelState {
 struct SplitTunnelDefaultRouteChangeHandlerContext {
     request_tx: RequestTx,
     pub daemon_tx: Weak<mpsc::UnboundedSender<TunnelCommand>>,
+    mode: SplitTunnelMode,
+    /// The VPN interface's addresses as `tunnel_*`, the physical default
+    /// interface's as `internet_*`, whatever the mode: `register_ips` maps
+    /// them to the driver's terms.
     pub addresses: InterfaceAddresses,
 }
 
@@ -976,12 +984,14 @@ impl SplitTunnelDefaultRouteChangeHandlerContext {
     pub fn new(
         request_tx: RequestTx,
         daemon_tx: Weak<mpsc::UnboundedSender<TunnelCommand>>,
+        mode: SplitTunnelMode,
         tunnel_ipv4: Option<Ipv4Addr>,
         tunnel_ipv6: Option<Ipv6Addr>,
     ) -> Self {
         SplitTunnelDefaultRouteChangeHandlerContext {
             request_tx,
             daemon_tx,
+            mode,
             addresses: InterfaceAddresses {
                 tunnel_ipv4,
                 tunnel_ipv6,
@@ -992,9 +1002,25 @@ impl SplitTunnelDefaultRouteChangeHandlerContext {
     }
 
     pub fn register_ips(&self) -> Result<(), Error> {
+        let driver = super::driver_addresses::driver_addresses(
+            self.mode,
+            AddressPair {
+                ipv4: self.addresses.tunnel_ipv4,
+                ipv6: self.addresses.tunnel_ipv6,
+            },
+            AddressPair {
+                ipv4: self.addresses.internet_ipv4,
+                ipv6: self.addresses.internet_ipv6,
+            },
+        );
         InitializedSplitTunnelState::send_request_inner(
             &self.request_tx,
-            Request::RegisterIps(self.addresses.clone()),
+            Request::RegisterIps(InterfaceAddresses {
+                tunnel_ipv4: driver.tunnel.ipv4,
+                tunnel_ipv6: driver.tunnel.ipv6,
+                internet_ipv4: driver.internet.ipv4,
+                internet_ipv6: driver.internet.ipv6,
+            }),
         )
     }
 

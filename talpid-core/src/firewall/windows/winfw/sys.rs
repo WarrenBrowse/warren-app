@@ -13,6 +13,7 @@ pub const LOGGING_CONTEXT: &CStr = c"WinFw";
 pub struct WinFwSettings {
     permitDhcp: bool,
     permitLan: bool,
+    permitNonTunnelIpv4: bool,
 }
 
 impl WinFwSettings {
@@ -20,7 +21,30 @@ impl WinFwSettings {
         WinFwSettings {
             permitDhcp: true,
             permitLan: permit_lan,
+            permitNonTunnelIpv4: false,
         }
+    }
+
+    /// The connected policy's settings: include-only ("VPN only for these
+    /// apps") lets IPv4 traffic outside the tunnel go, for every app the
+    /// split tunnel driver does not keep in it.
+    pub fn connected(permit_lan: bool, include_only: bool) -> WinFwSettings {
+        WinFwSettings {
+            permitNonTunnelIpv4: include_only,
+            ..Self::new(permit_lan)
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::WinFwSettings;
+
+    #[test]
+    fn only_include_only_opens_the_physical_network() {
+        assert!(WinFwSettings::connected(false, true).permitNonTunnelIpv4);
+        assert!(!WinFwSettings::connected(true, false).permitNonTunnelIpv4);
+        assert!(!WinFwSettings::new(true).permitNonTunnelIpv4);
     }
 }
 

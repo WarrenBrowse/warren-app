@@ -608,6 +608,12 @@ pub struct WarrenTunnelParameters {
     /// routes and the firewall always follow the same mode.
     pub include_only: bool,
 
+    /// The tunnel resolvers the system uses. An include-only tunnel on
+    /// Windows routes them into the tunnel: the system resolver binds no
+    /// address, so the physical default route would otherwise carry its
+    /// queries. Set by the tunnel state machine alongside `include_only`.
+    pub tunnel_resolvers: Vec<IpAddr>,
+
     /// DAITA v2 opt-in. When `true`, the client requests DAITA in its
     /// multi-hop setup (`IpRequest` `wants_daita`). The exit may then
     /// respond with an `IpAssign.daita_spec` describing the negotiated
@@ -672,6 +678,7 @@ impl std::fmt::Debug for WarrenTunnelParameters {
             )
             .field("bypass_cidrs", &self.bypass_cidrs)
             .field("include_only", &self.include_only)
+            .field("tunnel_resolvers", &self.tunnel_resolvers.len())
             .field("enable_daita", &self.enable_daita)
             .finish()
     }
@@ -1893,6 +1900,8 @@ impl WarrenTunnelMonitor {
         // is the *relay* (first hop), not the exit, since it is the only UDP
         // peer the client speaks to directly.
         let include_only = params.include_only;
+        let tunnel_resolvers = params.tunnel_resolvers.clone();
+        let tunnel_resolvers_v6 = params.tunnel_resolvers.clone();
         #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
         let default_route_guard = {
             let relay_ip_v4 = match relay_endpoint.ip() {
@@ -1903,7 +1912,13 @@ impl WarrenTunnelMonitor {
                 let tun_name_for_split = metadata.interface.clone();
                 runtime
                     .block_on(async move {
-                        default_route_split::install_v4(v4, &tun_name_for_split, include_only).await
+                        default_route_split::install_v4(
+                            v4,
+                            &tun_name_for_split,
+                            include_only,
+                            &tunnel_resolvers,
+                        )
+                        .await
                     })
                     .map(Some)
                     .unwrap_or_else(|e| {
@@ -1932,7 +1947,13 @@ impl WarrenTunnelMonitor {
             let tun_name_for_v6 = metadata.interface.clone();
             runtime
                 .block_on(async move {
-                    default_route_split::install_v6(None, &tun_name_for_v6, include_only).await
+                    default_route_split::install_v6(
+                        None,
+                        &tun_name_for_v6,
+                        include_only,
+                        &tunnel_resolvers_v6,
+                    )
+                    .await
                 })
                 .map(Some)
                 .unwrap_or_else(|e| {
@@ -3919,6 +3940,7 @@ mod tests {
             max_rate_control_rx: None,
             bypass_cidrs: Vec::new(),
             include_only: false,
+            tunnel_resolvers: Vec::new(),
             enable_daita: false,
             session_token_provider: None,
             port_entitlement_provider: None,
@@ -4015,6 +4037,7 @@ mod tests {
             max_rate_control_rx: None,
             bypass_cidrs: Vec::new(),
             include_only: false,
+            tunnel_resolvers: Vec::new(),
             enable_daita: false,
             session_token_provider: None,
             port_entitlement_provider: None,
@@ -4078,6 +4101,7 @@ mod tests {
             max_rate_control_rx: None,
             bypass_cidrs: Vec::new(),
             include_only: false,
+            tunnel_resolvers: Vec::new(),
             enable_daita: false,
             session_token_provider: None,
             port_entitlement_provider: None,

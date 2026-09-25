@@ -237,6 +237,14 @@ impl ConnectingState {
         {
             warren_params.include_only = shared_values.include_only();
         }
+        #[cfg(target_os = "windows")]
+        if warren_params.include_only {
+            warren_params.tunnel_resolvers = crate::firewall::allowed_tunnel_dns(
+                &shared_values
+                    .dns_config
+                    .resolve(&[talpid_warren_tunnel::TUNNEL_GATEWAY_IP.into()]),
+            );
+        }
 
         // Pre-handshake firewall for the Warren tunnel: the
         // `BackendParams::Warren` variant exposes the candidate exit IPs via

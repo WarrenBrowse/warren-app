@@ -26,6 +26,11 @@ typedef struct tag_WinFwSettings
 
 	// Permit all traffic to and from private address ranges.
 	bool permitLan;
+
+	// "VPN only for these apps": permit IPv4 traffic outside the tunnel for
+	// every app the split tunnel driver does not keep in it. Only the
+	// connected policy honours it.
+	bool permitNonTunnelIpv4;
 }
 WinFwSettings;
 

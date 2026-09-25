@@ -154,16 +154,21 @@ connected, unavailable), and the public IP it appears from.
 The default route stays on the physical network. Only the included apps are
 tunneled, and they are fail-closed: an included app never reaches the Internet
 outside the tunnel, also while the tunnel reconnects. DNS for the whole system
-keeps going through the tunnel resolver (reachable through the tunnel's own
-subnet route), so an included app's names never go to the ISP.
+keeps going through the tunnel resolver (routed into the tunnel by each
+platform, see below), so an included app's names never go to the ISP.
 
 | OS | mechanism |
 |---|---|
 | macOS | the existing split-tunnel classifier (eslogger process tracking, pf route-to into the ST utun) with the decision inverted: included processes to the VPN, everything else to the default interface. A packet is attributed to the pktap effective pid when there is one, so WebKit's network process working for Safari counts as Safari. A process the monitor does not know yet is dropped, and an included packet without the tunnel address is dropped. System DNS to the tunnel resolver never reaches the classifier (a pf rule passes it on the tunnel first). The error and blocked states block everything, the rest of the system included. Needs Full Disk Access and a signed build, like exclude. |
-| Windows | the unmodified, Microsoft-signed Mullvad driver with the address pair swapped (tunnel address registered as "internet", physical as "tunnel") and the included apps registered as split; the tunnel gets its own `0.0.0.0/0` with a higher metric than the physical default instead of the two `/1` halves; winfw gets a policy that permits non-included apps. IPv6: when the tunnel has no IPv6, winfw blocks included apps' IPv6 (by app id) so no IPv6 flow escapes. Included apps cannot reach the LAN. |
+| Windows | the unmodified, Microsoft-signed Mullvad driver with the address pair swapped (tunnel address registered as "internet", physical as "tunnel") and the included apps registered as split; the tunnel gets its own `0.0.0.0/0` with a higher metric than the physical default instead of the two `/1` halves, and host routes to its resolvers; winfw's connected policy permits IPv4 outside the tunnel for non-included apps. IPv6 outside the tunnel stays blocked for every app. Included apps cannot reach the LAN. Details and the beta blocker below. |
 | Linux | an `included` cgroup (`warren-inclusions`, cgroup2) marked in nft; the tunnel table lookup (pref 51) becomes conditional on that mark (`TunLookupScope::Marked`) and the exclusion bypass (pref 49) is not installed; marked traffic that would leave through anything but the tunnel is dropped; launched through `warren-include`, the mirror of `warren-exclude`, same owner-only rule. Details below. |
 | Android | `VpnService.Builder.addAllowedApplication`, with a guard refusing an empty or fully uninstalled list (Android would otherwise capture everything), and the same allow list on every blackhole plan. |
 | iOS | not available. |
+
+The GUI shows a persistent, calm warning while include-only is active: a
+banner in the tab ("Only these apps are protected. The rest of your device
+uses your normal connection.") and a short label on the main screen under the
+connection state. Turning the mode on asks for one confirmation.
 
 ### 3.1 Linux
 
@@ -225,10 +230,82 @@ apps to its own upstream outside the tunnel; only the system resolver pointed
 at the tunnel resolver is covered. In the disconnected state without lockdown
 nothing is tunneled, as with the full tunnel.
 
-The GUI shows a persistent, calm warning while include-only is active: a
-banner in the tab ("Only these apps are protected. The rest of your device
-uses your normal connection.") and a short label on the main screen under the
-connection state. Turning the mode on asks for one confirmation.
+### 3.2 Windows
+
+Nothing in the driver changes: `talpid-core/src/split_tunnel/driver_addresses.rs`
+hands it the address pair swapped (the physical address as its "tunnel"
+address, the VPN address as its "internet" one) and the included apps as the
+split ones. Confirmed against the driver source
+(`dist-assets/binaries/win-split-tunnel/src`): for split apps the bind redirect
+(`callouts.cpp`, non-TCP) rewrites a bind to `ANY` or to the "tunnel" address
+into the "internet" one, the connect redirect (TCP) rewrites the source of a
+connection that uses the "tunnel" address or goes to a non-local destination,
+and `BlockTunnel` (`filters.cpp`, weight `MAX`, in winfw's baseline sublayer)
+hard-blocks their flows on the "tunnel" address; apps that are not split are
+left to winfw.
+
+- Routes (`talpid-warren-tunnel/src/default_route_split/windows.rs`): no `/1`
+  halves. The tunnel gets an on-link `0.0.0.0/0` (and `::/0` when it has IPv6)
+  at route metric 9000, so the physical default stays the best route and only
+  sockets bound to the tunnel address take it, plus a host route to each tunnel
+  resolver, since the system resolver binds nothing. A DNS change while
+  connected reconnects, so the host routes follow.
+- Firewall: the connected policy adds `PermitNonTunnelIpv4`
+  (`windows/winfw/src/winfw/rules/baseline/permitnontunnelipv4.cpp`, weight
+  `Medium`, above `BlockAll`, below the driver's filters), which lets IPv4 go
+  outside the tunnel for every app the driver does not hold back. DNS keeps the
+  full tunnel's rules (port 53 only to the tunnel resolvers over the tunnel).
+  Connecting, error and lockdown keep blocking everything: before the driver
+  has its addresses nothing tells an included app from another.
+- IPv6 outside the tunnel stays blocked for every app. The driver guards one
+  physical IPv6 address and an interface usually holds several (temporary
+  addresses), and a permit by app id would miss an included app's children,
+  which the driver splits by inheritance, so apps outside the VPN use IPv4
+  only while include-only is on. This replaces the per-app IPv6 block the
+  first design named: it is stricter and cannot miss a process.
+- With the driver not loaded, include-only is refused, and a persisted one
+  falls back to the full tunnel.
+
+Residual limits: an included app that binds a UDP socket explicitly to the
+address of an interface other than the physical default one is neither rebound
+nor blocked by the driver; included apps cannot reach the LAN.
+
+**Blocker for beta and staging.** The driver adds its filters to winfw's
+baseline and DNS sublayers by their hardcoded Mullvad GUIDs
+(`firewall/identifiers.h:132,140`), while winfw salts every GUID per product
+environment (`mullvadguids.cpp`, `WarrenEnvGuid`; the salt is 0 on prod only).
+On beta and staging the driver finds no such sublayer, cannot engage, and the
+tunnel goes to the error state as soon as a split mode is on: exclusion is as
+broken there as include-only. Fixing it means keeping those two sublayers
+unsalted (shared by environments installed side by side, with each side
+tolerating the other's sublayer on add and on delete), which needs a Windows
+test run before it lands.
+
+What the Windows VM run must check, on a build whose sublayers the driver can
+reach (prod, or beta once the blocker is fixed):
+
+1. `warren-beta app-routing mode include-only` then `include add` for a
+   browser: connect, and compare the browser's public address (exit) with
+   `curl.exe https://api.ipify.org` in a terminal (ISP address).
+2. `Get-NetRoute -InterfaceAlias <tunnel>`: a `0.0.0.0/0` at metric 9000 and a
+   `/32` per resolver, no `/1` halves; `route print` shows the physical default
+   with the lower effective metric.
+3. `Get-NetUDPEndpoint`/`Get-NetTCPConnection -OwningProcess <browser pid>`:
+   local address is the tunnel address.
+4. Cut the exit (block its address in Windows Defender Firewall, or pull the
+   network): the included app gets nothing, the terminal keeps working once the
+   network is back, and a packet capture on the physical adapter (`pktmon`)
+   shows no packet of the included app and no DNS query.
+5. IPv6 on a dual-stack network: the included app never reaches an IPv6
+   destination outside the tunnel; other apps fall back to IPv4.
+6. The browser's child processes (renderers, the network service) egress from
+   the exit too.
+7. Switch include-only off and on while connected: the routes, the WFP filters
+   (`netsh wfp show filters`) and the driver state follow the mode, with no
+   window where an included app leaves on the physical address.
+8. Exclusion still works: `mode exclude`, `exclude add` for an app, it leaves
+   from the ISP address while the rest uses the exit.
+
 
 ## 4. Platform availability
 
