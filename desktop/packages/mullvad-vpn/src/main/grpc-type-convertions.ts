@@ -6,6 +6,11 @@ import {
   AccessMethodSetting,
   AfterDisconnect,
   ApiAccessMethodSettings,
+  AppExit,
+  AppRouteStatus,
+  AppRouteUnavailableReason,
+  AppRoutingSettings,
+  AppSplitMode,
   AuthFailedError,
   BridgesMethod,
   ConnectionConfig,
@@ -23,6 +28,7 @@ import {
   EndpointObfuscationType,
   ErrorStateCause,
   ErrorStateDetails,
+  ExitChoice,
   FeatureIndicator,
   FirewallPolicyError,
   FirewallPolicyErrorType,
@@ -524,6 +530,10 @@ export function convertFromSettings(settings: grpcTypes.Settings): ISettings | u
   const relaySettings = convertFromRelaySettings(settings.getRelaySettings())!;
   const tunnelOptions = convertFromTunnelOptions(settingsObject.tunnelOptions!);
   const splitTunnel = settingsObject.splitTunnel ?? { enableExclusions: false, appsList: [] };
+  const appRouting = convertFromAppRoutingSettings(
+    settings.getAppRouting(),
+    settings.getSplitTunnel(),
+  );
   const obfuscationSettings = convertFromObfuscationSettings(settingsObject.obfuscationSettings);
   const customLists = convertFromCustomListSettings(settings.getCustomLists());
   const apiAccessMethods = convertFromApiAccessMethodSettings(settings.getApiAccessMethods()!);
@@ -549,6 +559,7 @@ export function convertFromSettings(settings: grpcTypes.Settings): ISettings | u
     relaySettings,
     tunnelOptions,
     splitTunnel,
+    appRouting,
     obfuscationSettings,
     customLists,
     apiAccessMethods,
@@ -1277,6 +1288,11 @@ export function convertFromDaemonEvent(data: grpcTypes.DaemonEvent): DaemonEvent
     };
   }
 
+  const appRoutes = data.getAppRoutes();
+  if (appRoutes !== undefined) {
+    return { appRoutes: convertFromAppRouteStatusList(appRoutes) };
+  }
+
   // Handle unknown daemon events
   const keys = Object.entries(data.toObject())
     .filter(([, value]) => value !== undefined)
@@ -1729,4 +1745,136 @@ export function ensureExists<T>(value: T | undefined, errorMessage: string): T {
     return value;
   }
   throw new ResponseParseError(errorMessage);
+}
+
+function convertFromAppSplitMode(mode: grpcTypes.AppSplitMode.Mode): AppSplitMode {
+  switch (mode) {
+    case grpcTypes.AppSplitMode.Mode.EXCLUDE:
+      return 'exclude';
+    case grpcTypes.AppSplitMode.Mode.INCLUDE_ONLY:
+      return 'include-only';
+    case grpcTypes.AppSplitMode.Mode.OFF:
+      return 'off';
+  }
+}
+
+export function convertToAppSplitMode(mode: AppSplitMode): grpcTypes.AppSplitMode {
+  const proto = new grpcTypes.AppSplitMode();
+  switch (mode) {
+    case 'off':
+      return proto.setMode(grpcTypes.AppSplitMode.Mode.OFF);
+    case 'exclude':
+      return proto.setMode(grpcTypes.AppSplitMode.Mode.EXCLUDE);
+    case 'include-only':
+      return proto.setMode(grpcTypes.AppSplitMode.Mode.INCLUDE_ONLY);
+  }
+}
+
+function convertFromExitChoice(exit: grpcTypes.ExitChoice): ExitChoice {
+  return exit.hasCity()
+    ? { country: exit.getCountry(), city: exit.getCity() }
+    : { country: exit.getCountry() };
+}
+
+export function convertToAppExit(app: string, exit: ExitChoice): grpcTypes.AppExit {
+  const choice = new grpcTypes.ExitChoice().setCountry(exit.country);
+  if (exit.city !== undefined) {
+    choice.setCity(exit.city);
+  }
+  return new grpcTypes.AppExit().setApp(app).setExit(choice);
+}
+
+// A daemon that predates app routing sends no `app_routing`: its split
+// tunneling settings are the exclusion part, and it has nothing else.
+export function convertFromAppRoutingSettings(
+  appRouting: grpcTypes.AppRoutingSettings | undefined,
+  splitTunnel: grpcTypes.SplitTunnelSettings | undefined,
+): AppRoutingSettings {
+  if (appRouting === undefined) {
+    return {
+      splitMode: splitTunnel?.getEnableExclusions() ? 'exclude' : 'off',
+      excludedApps: splitTunnel?.getAppsList() ?? [],
+      includedApps: [],
+      appExitsEnabled: false,
+      appExits: [],
+    };
+  }
+
+  const appExits: AppExit[] = [];
+  for (const entry of appRouting.getAppExitsList()) {
+    const exit = entry.getExit();
+    if (exit !== undefined) {
+      appExits.push({ app: entry.getApp(), exit: convertFromExitChoice(exit) });
+    }
+  }
+
+  return {
+    splitMode: convertFromAppSplitMode(appRouting.getSplitMode()),
+    excludedApps: appRouting.getExcludedAppsList(),
+    includedApps: appRouting.getIncludedAppsList(),
+    appExitsEnabled: appRouting.getAppExitsEnabled(),
+    appExits,
+  };
+}
+
+function convertFromAppRouteUnavailableReason(
+  reason: grpcTypes.AppRouteStatus.UnavailableReason,
+): AppRouteUnavailableReason | undefined {
+  switch (reason) {
+    case grpcTypes.AppRouteStatus.UnavailableReason.TUNNEL_DOWN:
+      return 'tunnel-down';
+    case grpcTypes.AppRouteStatus.UnavailableReason.NO_TOKEN:
+      return 'no-token';
+    case grpcTypes.AppRouteStatus.UnavailableReason.LIMIT_REACHED:
+      return 'limit-reached';
+    case grpcTypes.AppRouteStatus.UnavailableReason.NO_RELAY:
+      return 'no-relay';
+    case grpcTypes.AppRouteStatus.UnavailableReason.NONE:
+      return undefined;
+  }
+}
+
+function convertFromAppRouteStatus(status: grpcTypes.AppRouteStatus): AppRouteStatus | undefined {
+  const exit = status.getExit();
+  if (exit === undefined) {
+    return undefined;
+  }
+
+  const converted: AppRouteStatus = {
+    exit: convertFromExitChoice(exit),
+    state: 'connecting',
+    apps: status.getAppsList(),
+  };
+
+  switch (status.getState()) {
+    case grpcTypes.AppRouteStatus.State.CONNECTED:
+      converted.state = 'connected';
+      break;
+    case grpcTypes.AppRouteStatus.State.UNAVAILABLE: {
+      converted.state = 'unavailable';
+      const reason = convertFromAppRouteUnavailableReason(status.getReason());
+      if (reason !== undefined) {
+        converted.reason = reason;
+      }
+      break;
+    }
+    case grpcTypes.AppRouteStatus.State.CONNECTING:
+    case grpcTypes.AppRouteStatus.State.UNSPECIFIED:
+      break;
+  }
+
+  if (status.hasPublicIp()) {
+    converted.publicIp = status.getPublicIp();
+  }
+
+  return converted;
+}
+
+export function convertFromAppRouteStatusList(
+  list: grpcTypes.AppRouteStatusList,
+): AppRouteStatus[] {
+  return list
+    .getRoutesList()
+    .map(convertFromAppRouteStatus)
+    .filter((status): status is AppRouteStatus => status !== undefined);
 }
