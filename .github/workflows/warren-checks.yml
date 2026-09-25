@@ -45,6 +45,7 @@ on:
       # Warren test scope, so an edit touching only them must run it.
       - "talpid-types/**"
       - "talpid-cgroup/**"
+      - "talpid-macos/**"
       - "mullvad-exclude/**"
       - "warren-jni/**"
       - "warren-ios/**"
