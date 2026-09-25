@@ -129,6 +129,39 @@ function deserialize_mullvad_daemon_management_interface_AllowedIpsList(buffer_a
   return management_interface_pb.AllowedIpsList.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_mullvad_daemon_management_interface_AppExit(arg) {
+  if (!(arg instanceof management_interface_pb.AppExit)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.AppExit');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_AppExit(buffer_arg) {
+  return management_interface_pb.AppExit.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_mullvad_daemon_management_interface_AppRouteStatusList(arg) {
+  if (!(arg instanceof management_interface_pb.AppRouteStatusList)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.AppRouteStatusList');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_AppRouteStatusList(buffer_arg) {
+  return management_interface_pb.AppRouteStatusList.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_mullvad_daemon_management_interface_AppSplitMode(arg) {
+  if (!(arg instanceof management_interface_pb.AppSplitMode)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.AppSplitMode');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_AppSplitMode(buffer_arg) {
+  return management_interface_pb.AppSplitMode.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_mullvad_daemon_management_interface_AppUpgradeEvent(arg) {
   if (!(arg instanceof management_interface_pb.AppUpgradeEvent)) {
     throw new Error('Expected argument of type mullvad_daemon.management_interface.AppUpgradeEvent');
@@ -1918,6 +1951,89 @@ clearSplitTunnelApps: {
     requestDeserialize: deserialize_google_protobuf_Empty,
     responseSerialize: serialize_mullvad_daemon_management_interface_ExcludedProcessList,
     responseDeserialize: deserialize_mullvad_daemon_management_interface_ExcludedProcessList,
+  },
+  // App routing (docs/app-routing.md). The excluded apps are managed by
+// AddSplitTunnelApp and RemoveSplitTunnelApp, which persist on every
+// platform.
+setAppSplitMode: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SetAppSplitMode',
+    requestStream: false,
+    responseStream: false,
+    requestType: management_interface_pb.AppSplitMode,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_mullvad_daemon_management_interface_AppSplitMode,
+    requestDeserialize: deserialize_mullvad_daemon_management_interface_AppSplitMode,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  addIncludedApp: {
+    path: '/mullvad_daemon.management_interface.ManagementService/AddIncludedApp',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_wrappers_pb.StringValue,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_google_protobuf_StringValue,
+    requestDeserialize: deserialize_google_protobuf_StringValue,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  removeIncludedApp: {
+    path: '/mullvad_daemon.management_interface.ManagementService/RemoveIncludedApp',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_wrappers_pb.StringValue,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_google_protobuf_StringValue,
+    requestDeserialize: deserialize_google_protobuf_StringValue,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  setAppExitsEnabled: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SetAppExitsEnabled',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_wrappers_pb.BoolValue,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_google_protobuf_BoolValue,
+    requestDeserialize: deserialize_google_protobuf_BoolValue,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  // Fails with FAILED_PRECONDITION and the details "app_exit_limit" when the
+// apps would then use more different exits than there are route sessions.
+setAppExit: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SetAppExit',
+    requestStream: false,
+    responseStream: false,
+    requestType: management_interface_pb.AppExit,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_mullvad_daemon_management_interface_AppExit,
+    requestDeserialize: deserialize_mullvad_daemon_management_interface_AppExit,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  clearAppExit: {
+    path: '/mullvad_daemon.management_interface.ManagementService/ClearAppExit',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_wrappers_pb.StringValue,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_google_protobuf_StringValue,
+    requestDeserialize: deserialize_google_protobuf_StringValue,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  // One status per exit in force. Also pushed as DaemonEvent.app_routes.
+getAppRouteStatus: {
+    path: '/mullvad_daemon.management_interface.ManagementService/GetAppRouteStatus',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: management_interface_pb.AppRouteStatusList,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_mullvad_daemon_management_interface_AppRouteStatusList,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_AppRouteStatusList,
   },
   // Play payment (Android)
 initPlayPurchase: {

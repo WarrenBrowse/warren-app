@@ -112,6 +112,13 @@ interface IManagementServiceService extends grpc.ServiceDefinition<grpc.UntypedS
     setSplitTunnelState: IManagementServiceService_ISetSplitTunnelState;
     clearSplitTunnelApps: IManagementServiceService_IClearSplitTunnelApps;
     getExcludedProcesses: IManagementServiceService_IGetExcludedProcesses;
+    setAppSplitMode: IManagementServiceService_ISetAppSplitMode;
+    addIncludedApp: IManagementServiceService_IAddIncludedApp;
+    removeIncludedApp: IManagementServiceService_IRemoveIncludedApp;
+    setAppExitsEnabled: IManagementServiceService_ISetAppExitsEnabled;
+    setAppExit: IManagementServiceService_ISetAppExit;
+    clearAppExit: IManagementServiceService_IClearAppExit;
+    getAppRouteStatus: IManagementServiceService_IGetAppRouteStatus;
     initPlayPurchase: IManagementServiceService_IInitPlayPurchase;
     verifyPlayPurchase: IManagementServiceService_IVerifyPlayPurchase;
     needFullDiskPermissions: IManagementServiceService_INeedFullDiskPermissions;
@@ -1035,6 +1042,69 @@ interface IManagementServiceService_IGetExcludedProcesses extends grpc.MethodDef
     responseSerialize: grpc.serialize<management_interface_pb.ExcludedProcessList>;
     responseDeserialize: grpc.deserialize<management_interface_pb.ExcludedProcessList>;
 }
+interface IManagementServiceService_ISetAppSplitMode extends grpc.MethodDefinition<management_interface_pb.AppSplitMode, google_protobuf_empty_pb.Empty> {
+    path: "/mullvad_daemon.management_interface.ManagementService/SetAppSplitMode";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<management_interface_pb.AppSplitMode>;
+    requestDeserialize: grpc.deserialize<management_interface_pb.AppSplitMode>;
+    responseSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
+    responseDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
+}
+interface IManagementServiceService_IAddIncludedApp extends grpc.MethodDefinition<google_protobuf_wrappers_pb.StringValue, google_protobuf_empty_pb.Empty> {
+    path: "/mullvad_daemon.management_interface.ManagementService/AddIncludedApp";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<google_protobuf_wrappers_pb.StringValue>;
+    requestDeserialize: grpc.deserialize<google_protobuf_wrappers_pb.StringValue>;
+    responseSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
+    responseDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
+}
+interface IManagementServiceService_IRemoveIncludedApp extends grpc.MethodDefinition<google_protobuf_wrappers_pb.StringValue, google_protobuf_empty_pb.Empty> {
+    path: "/mullvad_daemon.management_interface.ManagementService/RemoveIncludedApp";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<google_protobuf_wrappers_pb.StringValue>;
+    requestDeserialize: grpc.deserialize<google_protobuf_wrappers_pb.StringValue>;
+    responseSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
+    responseDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
+}
+interface IManagementServiceService_ISetAppExitsEnabled extends grpc.MethodDefinition<google_protobuf_wrappers_pb.BoolValue, google_protobuf_empty_pb.Empty> {
+    path: "/mullvad_daemon.management_interface.ManagementService/SetAppExitsEnabled";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<google_protobuf_wrappers_pb.BoolValue>;
+    requestDeserialize: grpc.deserialize<google_protobuf_wrappers_pb.BoolValue>;
+    responseSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
+    responseDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
+}
+interface IManagementServiceService_ISetAppExit extends grpc.MethodDefinition<management_interface_pb.AppExit, google_protobuf_empty_pb.Empty> {
+    path: "/mullvad_daemon.management_interface.ManagementService/SetAppExit";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<management_interface_pb.AppExit>;
+    requestDeserialize: grpc.deserialize<management_interface_pb.AppExit>;
+    responseSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
+    responseDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
+}
+interface IManagementServiceService_IClearAppExit extends grpc.MethodDefinition<google_protobuf_wrappers_pb.StringValue, google_protobuf_empty_pb.Empty> {
+    path: "/mullvad_daemon.management_interface.ManagementService/ClearAppExit";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<google_protobuf_wrappers_pb.StringValue>;
+    requestDeserialize: grpc.deserialize<google_protobuf_wrappers_pb.StringValue>;
+    responseSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
+    responseDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
+}
+interface IManagementServiceService_IGetAppRouteStatus extends grpc.MethodDefinition<google_protobuf_empty_pb.Empty, management_interface_pb.AppRouteStatusList> {
+    path: "/mullvad_daemon.management_interface.ManagementService/GetAppRouteStatus";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
+    requestDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
+    responseSerialize: grpc.serialize<management_interface_pb.AppRouteStatusList>;
+    responseDeserialize: grpc.deserialize<management_interface_pb.AppRouteStatusList>;
+}
 interface IManagementServiceService_IInitPlayPurchase extends grpc.MethodDefinition<google_protobuf_empty_pb.Empty, management_interface_pb.PlayExternalObfuscatedAccountId> {
     path: "/mullvad_daemon.management_interface.ManagementService/InitPlayPurchase";
     requestStream: false;
@@ -1328,6 +1398,13 @@ export interface IManagementServiceServer extends grpc.UntypedServiceImplementat
     setSplitTunnelState: grpc.handleUnaryCall<google_protobuf_wrappers_pb.BoolValue, google_protobuf_empty_pb.Empty>;
     clearSplitTunnelApps: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, google_protobuf_empty_pb.Empty>;
     getExcludedProcesses: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, management_interface_pb.ExcludedProcessList>;
+    setAppSplitMode: grpc.handleUnaryCall<management_interface_pb.AppSplitMode, google_protobuf_empty_pb.Empty>;
+    addIncludedApp: grpc.handleUnaryCall<google_protobuf_wrappers_pb.StringValue, google_protobuf_empty_pb.Empty>;
+    removeIncludedApp: grpc.handleUnaryCall<google_protobuf_wrappers_pb.StringValue, google_protobuf_empty_pb.Empty>;
+    setAppExitsEnabled: grpc.handleUnaryCall<google_protobuf_wrappers_pb.BoolValue, google_protobuf_empty_pb.Empty>;
+    setAppExit: grpc.handleUnaryCall<management_interface_pb.AppExit, google_protobuf_empty_pb.Empty>;
+    clearAppExit: grpc.handleUnaryCall<google_protobuf_wrappers_pb.StringValue, google_protobuf_empty_pb.Empty>;
+    getAppRouteStatus: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, management_interface_pb.AppRouteStatusList>;
     initPlayPurchase: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, management_interface_pb.PlayExternalObfuscatedAccountId>;
     verifyPlayPurchase: grpc.handleUnaryCall<management_interface_pb.PlayPurchase, google_protobuf_empty_pb.Empty>;
     needFullDiskPermissions: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, google_protobuf_wrappers_pb.BoolValue>;
@@ -1648,6 +1725,27 @@ export interface IManagementServiceClient {
     getExcludedProcesses(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: management_interface_pb.ExcludedProcessList) => void): grpc.ClientUnaryCall;
     getExcludedProcesses(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.ExcludedProcessList) => void): grpc.ClientUnaryCall;
     getExcludedProcesses(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.ExcludedProcessList) => void): grpc.ClientUnaryCall;
+    setAppSplitMode(request: management_interface_pb.AppSplitMode, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    setAppSplitMode(request: management_interface_pb.AppSplitMode, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    setAppSplitMode(request: management_interface_pb.AppSplitMode, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    addIncludedApp(request: google_protobuf_wrappers_pb.StringValue, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    addIncludedApp(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    addIncludedApp(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    removeIncludedApp(request: google_protobuf_wrappers_pb.StringValue, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    removeIncludedApp(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    removeIncludedApp(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    setAppExitsEnabled(request: google_protobuf_wrappers_pb.BoolValue, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    setAppExitsEnabled(request: google_protobuf_wrappers_pb.BoolValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    setAppExitsEnabled(request: google_protobuf_wrappers_pb.BoolValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    setAppExit(request: management_interface_pb.AppExit, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    setAppExit(request: management_interface_pb.AppExit, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    setAppExit(request: management_interface_pb.AppExit, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    clearAppExit(request: google_protobuf_wrappers_pb.StringValue, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    clearAppExit(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    clearAppExit(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    getAppRouteStatus(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: management_interface_pb.AppRouteStatusList) => void): grpc.ClientUnaryCall;
+    getAppRouteStatus(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.AppRouteStatusList) => void): grpc.ClientUnaryCall;
+    getAppRouteStatus(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.AppRouteStatusList) => void): grpc.ClientUnaryCall;
     initPlayPurchase(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: management_interface_pb.PlayExternalObfuscatedAccountId) => void): grpc.ClientUnaryCall;
     initPlayPurchase(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.PlayExternalObfuscatedAccountId) => void): grpc.ClientUnaryCall;
     initPlayPurchase(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.PlayExternalObfuscatedAccountId) => void): grpc.ClientUnaryCall;
@@ -2009,6 +2107,27 @@ export class ManagementServiceClient extends grpc.Client implements IManagementS
     public getExcludedProcesses(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: management_interface_pb.ExcludedProcessList) => void): grpc.ClientUnaryCall;
     public getExcludedProcesses(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.ExcludedProcessList) => void): grpc.ClientUnaryCall;
     public getExcludedProcesses(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.ExcludedProcessList) => void): grpc.ClientUnaryCall;
+    public setAppSplitMode(request: management_interface_pb.AppSplitMode, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public setAppSplitMode(request: management_interface_pb.AppSplitMode, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public setAppSplitMode(request: management_interface_pb.AppSplitMode, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public addIncludedApp(request: google_protobuf_wrappers_pb.StringValue, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public addIncludedApp(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public addIncludedApp(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public removeIncludedApp(request: google_protobuf_wrappers_pb.StringValue, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public removeIncludedApp(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public removeIncludedApp(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public setAppExitsEnabled(request: google_protobuf_wrappers_pb.BoolValue, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public setAppExitsEnabled(request: google_protobuf_wrappers_pb.BoolValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public setAppExitsEnabled(request: google_protobuf_wrappers_pb.BoolValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public setAppExit(request: management_interface_pb.AppExit, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public setAppExit(request: management_interface_pb.AppExit, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public setAppExit(request: management_interface_pb.AppExit, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public clearAppExit(request: google_protobuf_wrappers_pb.StringValue, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public clearAppExit(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public clearAppExit(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public getAppRouteStatus(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: management_interface_pb.AppRouteStatusList) => void): grpc.ClientUnaryCall;
+    public getAppRouteStatus(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.AppRouteStatusList) => void): grpc.ClientUnaryCall;
+    public getAppRouteStatus(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.AppRouteStatusList) => void): grpc.ClientUnaryCall;
     public initPlayPurchase(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: management_interface_pb.PlayExternalObfuscatedAccountId) => void): grpc.ClientUnaryCall;
     public initPlayPurchase(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.PlayExternalObfuscatedAccountId) => void): grpc.ClientUnaryCall;
     public initPlayPurchase(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.PlayExternalObfuscatedAccountId) => void): grpc.ClientUnaryCall;

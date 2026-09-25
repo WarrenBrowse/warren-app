@@ -1960,6 +1960,11 @@ export class Settings extends jspb.Message {
     getWarrenMaxRateBps(): number;
     setWarrenMaxRateBps(value: number): Settings;
 
+    hasAppRouting(): boolean;
+    clearAppRouting(): void;
+    getAppRouting(): AppRoutingSettings | undefined;
+    setAppRouting(value?: AppRoutingSettings): Settings;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Settings.AsObject;
     static toObject(includeInstance: boolean, msg: Settings): Settings.AsObject;
@@ -1991,6 +1996,7 @@ export namespace Settings {
         warrenNConnections: number,
         warrenCustomExit?: WarrenCustomExitSettings.AsObject,
         warrenMaxRateBps: number,
+        appRouting?: AppRoutingSettings.AsObject,
     }
 }
 
@@ -3084,6 +3090,200 @@ export namespace SplitTunnelSettings {
     }
 }
 
+export class AppSplitMode extends jspb.Message { 
+    getMode(): AppSplitMode.Mode;
+    setMode(value: AppSplitMode.Mode): AppSplitMode;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): AppSplitMode.AsObject;
+    static toObject(includeInstance: boolean, msg: AppSplitMode): AppSplitMode.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: AppSplitMode, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): AppSplitMode;
+    static deserializeBinaryFromReader(message: AppSplitMode, reader: jspb.BinaryReader): AppSplitMode;
+}
+
+export namespace AppSplitMode {
+    export type AsObject = {
+        mode: AppSplitMode.Mode,
+    }
+
+    export enum Mode {
+    OFF = 0,
+    EXCLUDE = 1,
+    INCLUDE_ONLY = 2,
+    }
+
+}
+
+export class ExitChoice extends jspb.Message { 
+    getCountry(): string;
+    setCountry(value: string): ExitChoice;
+
+    hasCity(): boolean;
+    clearCity(): void;
+    getCity(): string | undefined;
+    setCity(value: string): ExitChoice;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): ExitChoice.AsObject;
+    static toObject(includeInstance: boolean, msg: ExitChoice): ExitChoice.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: ExitChoice, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ExitChoice;
+    static deserializeBinaryFromReader(message: ExitChoice, reader: jspb.BinaryReader): ExitChoice;
+}
+
+export namespace ExitChoice {
+    export type AsObject = {
+        country: string,
+        city?: string,
+    }
+}
+
+export class AppExit extends jspb.Message { 
+    getApp(): string;
+    setApp(value: string): AppExit;
+
+    hasExit(): boolean;
+    clearExit(): void;
+    getExit(): ExitChoice | undefined;
+    setExit(value?: ExitChoice): AppExit;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): AppExit.AsObject;
+    static toObject(includeInstance: boolean, msg: AppExit): AppExit.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: AppExit, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): AppExit;
+    static deserializeBinaryFromReader(message: AppExit, reader: jspb.BinaryReader): AppExit;
+}
+
+export namespace AppExit {
+    export type AsObject = {
+        app: string,
+        exit?: ExitChoice.AsObject,
+    }
+}
+
+export class AppRoutingSettings extends jspb.Message { 
+    getSplitMode(): AppSplitMode.Mode;
+    setSplitMode(value: AppSplitMode.Mode): AppRoutingSettings;
+    clearExcludedAppsList(): void;
+    getExcludedAppsList(): Array<string>;
+    setExcludedAppsList(value: Array<string>): AppRoutingSettings;
+    addExcludedApps(value: string, index?: number): string;
+    clearIncludedAppsList(): void;
+    getIncludedAppsList(): Array<string>;
+    setIncludedAppsList(value: Array<string>): AppRoutingSettings;
+    addIncludedApps(value: string, index?: number): string;
+    getAppExitsEnabled(): boolean;
+    setAppExitsEnabled(value: boolean): AppRoutingSettings;
+    clearAppExitsList(): void;
+    getAppExitsList(): Array<AppExit>;
+    setAppExitsList(value: Array<AppExit>): AppRoutingSettings;
+    addAppExits(value?: AppExit, index?: number): AppExit;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): AppRoutingSettings.AsObject;
+    static toObject(includeInstance: boolean, msg: AppRoutingSettings): AppRoutingSettings.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: AppRoutingSettings, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): AppRoutingSettings;
+    static deserializeBinaryFromReader(message: AppRoutingSettings, reader: jspb.BinaryReader): AppRoutingSettings;
+}
+
+export namespace AppRoutingSettings {
+    export type AsObject = {
+        splitMode: AppSplitMode.Mode,
+        excludedAppsList: Array<string>,
+        includedAppsList: Array<string>,
+        appExitsEnabled: boolean,
+        appExitsList: Array<AppExit.AsObject>,
+    }
+}
+
+export class AppRouteStatus extends jspb.Message { 
+
+    hasExit(): boolean;
+    clearExit(): void;
+    getExit(): ExitChoice | undefined;
+    setExit(value?: ExitChoice): AppRouteStatus;
+    getState(): AppRouteStatus.State;
+    setState(value: AppRouteStatus.State): AppRouteStatus;
+    getReason(): AppRouteStatus.UnavailableReason;
+    setReason(value: AppRouteStatus.UnavailableReason): AppRouteStatus;
+
+    hasPublicIp(): boolean;
+    clearPublicIp(): void;
+    getPublicIp(): string | undefined;
+    setPublicIp(value: string): AppRouteStatus;
+    clearAppsList(): void;
+    getAppsList(): Array<string>;
+    setAppsList(value: Array<string>): AppRouteStatus;
+    addApps(value: string, index?: number): string;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): AppRouteStatus.AsObject;
+    static toObject(includeInstance: boolean, msg: AppRouteStatus): AppRouteStatus.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: AppRouteStatus, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): AppRouteStatus;
+    static deserializeBinaryFromReader(message: AppRouteStatus, reader: jspb.BinaryReader): AppRouteStatus;
+}
+
+export namespace AppRouteStatus {
+    export type AsObject = {
+        exit?: ExitChoice.AsObject,
+        state: AppRouteStatus.State,
+        reason: AppRouteStatus.UnavailableReason,
+        publicIp?: string,
+        appsList: Array<string>,
+    }
+
+    export enum State {
+    CONNECTING = 0,
+    CONNECTED = 1,
+    UNAVAILABLE = 2,
+    }
+
+    export enum UnavailableReason {
+    NONE = 0,
+    TUNNEL_DOWN = 1,
+    NO_TOKEN = 2,
+    LIMIT_REACHED = 3,
+    NO_RELAY = 4,
+    }
+
+}
+
+export class AppRouteStatusList extends jspb.Message { 
+    clearRoutesList(): void;
+    getRoutesList(): Array<AppRouteStatus>;
+    setRoutesList(value: Array<AppRouteStatus>): AppRouteStatusList;
+    addRoutes(value?: AppRouteStatus, index?: number): AppRouteStatus;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): AppRouteStatusList.AsObject;
+    static toObject(includeInstance: boolean, msg: AppRouteStatusList): AppRouteStatusList.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: AppRouteStatusList, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): AppRouteStatusList;
+    static deserializeBinaryFromReader(message: AppRouteStatusList, reader: jspb.BinaryReader): AppRouteStatusList;
+}
+
+export namespace AppRouteStatusList {
+    export type AsObject = {
+        routesList: Array<AppRouteStatus.AsObject>,
+    }
+}
+
 export class RelaySettings extends jspb.Message { 
 
     hasCustom(): boolean;
@@ -3963,6 +4163,11 @@ export class DaemonEvent extends jspb.Message {
     getNewAccountStrike(): WarrenAccountStrikeNotice | undefined;
     setNewAccountStrike(value?: WarrenAccountStrikeNotice): DaemonEvent;
 
+    hasAppRoutes(): boolean;
+    clearAppRoutes(): void;
+    getAppRoutes(): AppRouteStatusList | undefined;
+    setAppRoutes(value?: AppRouteStatusList): DaemonEvent;
+
     getEventCase(): DaemonEvent.EventCase;
 
     serializeBinary(): Uint8Array;
@@ -3986,6 +4191,7 @@ export namespace DaemonEvent {
         newAccessMethod?: AccessMethodSetting.AsObject,
         leakInfo?: LeakInfo.AsObject,
         newAccountStrike?: WarrenAccountStrikeNotice.AsObject,
+        appRoutes?: AppRouteStatusList.AsObject,
     }
 
     export enum EventCase {
@@ -3999,6 +4205,7 @@ export namespace DaemonEvent {
         NEW_ACCESS_METHOD = 7,
         LEAK_INFO = 8,
         NEW_ACCOUNT_STRIKE = 9,
+        APP_ROUTES = 10,
     }
 
 }
