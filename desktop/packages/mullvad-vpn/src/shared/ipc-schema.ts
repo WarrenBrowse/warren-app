@@ -465,6 +465,9 @@ export const ipcSchema = {
     // A warning or an error has no counterpart: it describes something live
     // that the user cannot act on by hiding it.
     dismissNotice: send<string>(),
+    // Put a port-forwarding warning away from the banner, keyed by a digest of
+    // its case reference. It stays listed in the port-forwarding view.
+    dismissStrike: send<string>(),
   },
   account: {
     '': notifyRenderer<IAccountData | undefined>(),

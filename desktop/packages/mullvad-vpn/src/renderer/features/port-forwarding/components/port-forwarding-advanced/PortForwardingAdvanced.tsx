@@ -639,7 +639,13 @@ function natPmpShortFailure(reason: NatPmpErrorReason): string {
     case 'out-of-resources':
       return messages.pgettext('port-forwarding-view', 'no port available');
     case 'not-authorized':
-      return messages.pgettext('port-forwarding-view', 'not allowed');
+      // TRANSLATORS: Short status of a rule whose entitlement the server
+      // TRANSLATORS: refused; the app asks again on its own.
+      return messages.pgettext('port-forwarding-view', 'refused, retrying');
+    case 'no-entitlement':
+      // TRANSLATORS: Short status of a rule the account has no port
+      // TRANSLATORS: entitlement left for; the app asks again on its own.
+      return messages.pgettext('port-forwarding-view', 'no entitlement left, retrying');
     case 'unknown':
     default:
       return messages.pgettext('port-forwarding-view', 'failed');

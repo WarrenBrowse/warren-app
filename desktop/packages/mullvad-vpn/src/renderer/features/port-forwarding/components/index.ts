@@ -3,6 +3,7 @@ export * from './port-forwarding-indicator';
 export * from './port-forwarding-notifications-setting';
 export * from './port-forwarding-notifications-switch';
 export * from './port-forwarding-setting';
+export * from './port-forwarding-standing';
 export * from './port-forwarding-status';
 export * from './port-forwarding-switch';
 export * from './torrent-client';

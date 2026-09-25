@@ -101,9 +101,13 @@ export function isTorrentClientConfigError(
  * `waiting` means the exit holds no public port for the linked rule, so there
  * is nothing better to write: the client keeps the port it already has rather
  * than being pointed at a dead one.
+ *
+ * `held` means the client's port was closed after an abuse report: the app
+ * stops following port changes until the user applies a port, and `port` is
+ * the one that was closed.
  */
 export interface TorrentClientStatus {
-  state: 'off' | 'waiting' | 'pushing' | 'synced' | 'error';
+  state: 'off' | 'waiting' | 'pushing' | 'synced' | 'error' | 'held';
   port?: number;
   version?: string;
   error?: TorrentClientError;

@@ -34,6 +34,19 @@ export function torrentClientStatusLine(
       );
     case 'error':
       return status.error === undefined ? undefined : errorLine(status.error, config);
+    case 'held':
+      return sprintf(
+        // TRANSLATORS: Shown when the app stopped updating the torrent client
+        // TRANSLATORS: because its port was closed after an abuse report; the
+        // TRANSLATORS: "Apply now" button resumes. Available placeholders:
+        // TRANSLATORS: %(port)d - the forwarded port that was closed
+        // TRANSLATORS: %(client)s - the torrent client name, e.g. qBittorrent
+        messages.pgettext(
+          'port-forwarding-view',
+          'Port %(port)d was closed after an abuse report. %(client)s keeps its port until you apply one.',
+        ),
+        { port: status.port, client: torrentClientLabel(config.kind) },
+      );
     default:
       return undefined;
   }

@@ -916,6 +916,12 @@ export default class AppRenderer {
     IpcRendererEventChannel.guiSettings.dismissNotice(key);
   };
 
+  // Puts a port-forwarding warning away from the banner. It stays listed in
+  // the port-forwarding view with its case reference.
+  public dismissStrike = (key: string): void => {
+    IpcRendererEventChannel.guiSettings.dismissStrike(key);
+  };
+
   public setDismissedUpgrade = (): void => {
     IpcRendererEventChannel.upgradeVersion.dismissedUpgrade(
       this.reduxStore.getState().version.suggestedUpgrade?.version ?? '',

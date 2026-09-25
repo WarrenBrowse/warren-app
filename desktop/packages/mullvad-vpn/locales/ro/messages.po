@@ -4422,9 +4422,6 @@ msgctxt "port-forwarding-view"
 msgid "no port available"
 msgstr "niciun port disponibil"
 
-msgctxt "port-forwarding-view"
-msgid "not allowed"
-msgstr "nepermis"
 
 msgctxt "port-forwarding-view"
 msgid "open: %(port)d"
@@ -5067,3 +5064,99 @@ msgstr "Finalizează în browserul acestui dispozitiv"
 msgctxt "forum-login"
 msgid "Close"
 msgstr "Închide"
+
+msgctxt "accessibility"
+msgid "How to contest a warning"
+msgstr "Cum contești un avertisment"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "Se blochează internetul: accesul tău a fost suspendat până la %(date)s după raportări repetate de abuz privind un port redirecționat. Poți contesta la %(url)s"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "Blocarea accesului la internet: accesul dvs. a fost suspendat până la %(date)s pentru încălcarea regulilor de utilizare. Contactați asistența dacă considerați că este o greșeală."
+
+msgctxt "in-app-notifications"
+msgid "PORT FORWARDING WARNING"
+msgstr "AVERTISMENT PORT FORWARDING"
+
+msgctxt "port-forwarding-view"
+msgid "Access suspended for port-forwarding abuse until %(date)s."
+msgstr "Acces suspendat pentru abuz de port forwarding până la %(date)s."
+
+msgctxt "port-forwarding-view"
+msgid "Access suspended for port-forwarding abuse."
+msgstr "Acces suspendat pentru abuz de port forwarding."
+
+msgctxt "port-forwarding-view"
+msgid "Access suspended until %(date)s."
+msgstr "Acces suspendat până la %(date)s."
+
+msgctxt "port-forwarding-view"
+msgid "Access suspended."
+msgstr "Acces suspendat."
+
+msgctxt "port-forwarding-view"
+msgid "Case reference: %(reference)s"
+msgstr "Referința dosarului: %(reference)s"
+
+msgctxt "port-forwarding-view"
+msgid "child sexual abuse material"
+msgstr "materiale cu abuz sexual asupra minorilor"
+
+msgctxt "port-forwarding-view"
+msgid "copyright"
+msgstr "drepturi de autor"
+
+msgctxt "port-forwarding-view"
+msgid "malware"
+msgstr "malware"
+
+msgctxt "port-forwarding-view"
+msgid "no entitlement left, retrying"
+msgstr "niciun drept de port disponibil, se reîncearcă"
+
+msgctxt "port-forwarding-view"
+msgid "other"
+msgstr "altele"
+
+msgctxt "port-forwarding-view"
+msgid "phishing"
+msgstr "phishing"
+
+msgctxt "port-forwarding-view"
+msgid "Port %(port)d was closed after an abuse report. %(client)s keeps its port until you apply one."
+msgstr "Portul %(port)d a fost închis după o raportare de abuz. %(client)s își păstrează portul până când aplici unul."
+
+msgctxt "port-forwarding-view"
+msgid "refused, retrying"
+msgstr "refuzat, se reîncearcă"
+
+msgctxt "port-forwarding-view"
+msgid "scanning or intrusion"
+msgstr "scanare sau intruziune"
+
+msgctxt "port-forwarding-view"
+msgid "spam"
+msgstr "spam"
+
+msgctxt "port-forwarding-view"
+msgid "To contest a warning, write to %(email)s quoting its case reference."
+msgstr "Pentru a contesta un avertisment, scrie la %(email)s citând referința dosarului."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d of %(threshold)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "Avertismentul %(ordinal)d din %(threshold)d: portul %(port)d a fost închis pe %(day)s după o raportare de abuz (%(category)s)."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "Avertismentul %(ordinal)d: portul %(port)d a fost închis pe %(day)s după o raportare de abuz (%(category)s)."
+
+msgctxt "port-forwarding-view"
+msgid "Warnings"
+msgstr "Avertismente"
+
+msgctxt "port-forwarding-view"
+msgid "Warnings and how to contest them"
+msgstr "Avertismentele și cum le contești"

@@ -2744,9 +2744,6 @@ msgctxt "port-forwarding-view"
 msgid "no port available"
 msgstr "aucun port disponible"
 
-msgctxt "port-forwarding-view"
-msgid "not allowed"
-msgstr "non autorisé"
 
 msgctxt "port-forwarding-view"
 msgid "failed"
@@ -5070,3 +5067,99 @@ msgstr "Terminer dans le navigateur de cet appareil"
 msgctxt "forum-login"
 msgid "Close"
 msgstr "Fermer"
+
+msgctxt "accessibility"
+msgid "How to contest a warning"
+msgstr "Comment contester un avertissement"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "Blocage d'internet : votre accès a été suspendu jusqu'au %(date)s après des signalements répétés d'abus concernant un port redirigé. Vous pouvez contester à l'adresse %(url)s"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "Internet bloqué : votre accès a été suspendu jusqu'au %(date)s pour non-respect des conditions d'utilisation. Contactez le support si vous pensez qu'il s'agit d'une erreur."
+
+msgctxt "in-app-notifications"
+msgid "PORT FORWARDING WARNING"
+msgstr "AVERTISSEMENT PORT FORWARDING"
+
+msgctxt "port-forwarding-view"
+msgid "Access suspended for port-forwarding abuse until %(date)s."
+msgstr "Accès suspendu pour abus du port forwarding jusqu'au %(date)s."
+
+msgctxt "port-forwarding-view"
+msgid "Access suspended for port-forwarding abuse."
+msgstr "Accès suspendu pour abus du port forwarding."
+
+msgctxt "port-forwarding-view"
+msgid "Access suspended until %(date)s."
+msgstr "Accès suspendu jusqu'au %(date)s."
+
+msgctxt "port-forwarding-view"
+msgid "Access suspended."
+msgstr "Accès suspendu."
+
+msgctxt "port-forwarding-view"
+msgid "Case reference: %(reference)s"
+msgstr "Référence du dossier : %(reference)s"
+
+msgctxt "port-forwarding-view"
+msgid "child sexual abuse material"
+msgstr "contenus pédocriminels"
+
+msgctxt "port-forwarding-view"
+msgid "copyright"
+msgstr "droit d'auteur"
+
+msgctxt "port-forwarding-view"
+msgid "malware"
+msgstr "logiciel malveillant"
+
+msgctxt "port-forwarding-view"
+msgid "no entitlement left, retrying"
+msgstr "plus de droit de port disponible, nouvel essai"
+
+msgctxt "port-forwarding-view"
+msgid "other"
+msgstr "autre"
+
+msgctxt "port-forwarding-view"
+msgid "phishing"
+msgstr "phishing"
+
+msgctxt "port-forwarding-view"
+msgid "Port %(port)d was closed after an abuse report. %(client)s keeps its port until you apply one."
+msgstr "Le port %(port)d a été fermé après un signalement d'abus. %(client)s garde son port jusqu'à ce que vous en appliquiez un."
+
+msgctxt "port-forwarding-view"
+msgid "refused, retrying"
+msgstr "refusé, nouvel essai"
+
+msgctxt "port-forwarding-view"
+msgid "scanning or intrusion"
+msgstr "scan ou intrusion"
+
+msgctxt "port-forwarding-view"
+msgid "spam"
+msgstr "spam"
+
+msgctxt "port-forwarding-view"
+msgid "To contest a warning, write to %(email)s quoting its case reference."
+msgstr "Pour contester un avertissement, écrivez à %(email)s en citant sa référence de dossier."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d of %(threshold)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "Avertissement %(ordinal)d sur %(threshold)d : le port %(port)d a été fermé le %(day)s après un signalement (%(category)s)."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "Avertissement %(ordinal)d : le port %(port)d a été fermé le %(day)s après un signalement (%(category)s)."
+
+msgctxt "port-forwarding-view"
+msgid "Warnings"
+msgstr "Avertissements"
+
+msgctxt "port-forwarding-view"
+msgid "Warnings and how to contest them"
+msgstr "Les avertissements et comment les contester"

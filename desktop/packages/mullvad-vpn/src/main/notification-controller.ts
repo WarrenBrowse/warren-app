@@ -3,9 +3,14 @@ import os from 'os';
 import path from 'path';
 
 import { nonProdAssetSegments } from '../shared/constants/product-env';
-import { TunnelState } from '../shared/daemon-rpc-types';
+import {
+  TunnelState,
+  WarrenAccountBan,
+  WarrenAccountStrikeNotice,
+} from '../shared/daemon-rpc-types';
 import log from '../shared/logging';
 import {
+  AccountStrikeNotificationProvider,
   ConnectedNotificationProvider,
   ConnectingNotificationProvider,
   DaemonDisconnectedNotificationProvider,
@@ -117,13 +122,20 @@ export default class NotificationController {
     isWindowVisible: boolean,
     areSystemNotificationsEnabled: boolean,
     splitTunnelingSupported: boolean,
+    ban?: { ban: WarrenAccountBan | null; locale: string },
   ): boolean {
     const notificationProviders: SystemNotificationProvider[] = [
       new ConnectingNotificationProvider({ tunnelState, reconnecting: this.reconnecting }),
       new ConnectedNotificationProvider(tunnelState),
       new ReconnectingNotificationProvider(tunnelState),
       new DisconnectedNotificationProvider({ tunnelState }),
-      new ErrorNotificationProvider({ tunnelState, hasExcludedApps, splitTunnelingSupported }),
+      new ErrorNotificationProvider({
+        tunnelState,
+        hasExcludedApps,
+        splitTunnelingSupported,
+        ban: ban?.ban,
+        locale: ban?.locale,
+      }),
     ];
 
     const notificationProvider = notificationProviders.find((notification) =>
@@ -166,6 +178,21 @@ export default class NotificationController {
   ): boolean {
     return this.notify(
       new PortForwardingNotificationProvider(change).getSystemNotification(),
+      isWindowVisible,
+      areSystemNotificationsEnabled,
+    );
+  }
+
+  // A port-forward abuse strike this device had not warned about. The daemon
+  // sends each one once, and each raises exactly one notification.
+  public notifyAccountStrike(
+    notice: WarrenAccountStrikeNotice,
+    locale: string,
+    isWindowVisible: boolean,
+    areSystemNotificationsEnabled: boolean,
+  ): boolean {
+    return this.notify(
+      new AccountStrikeNotificationProvider(notice, locale).getSystemNotification(),
       isWindowVisible,
       areSystemNotificationsEnabled,
     );

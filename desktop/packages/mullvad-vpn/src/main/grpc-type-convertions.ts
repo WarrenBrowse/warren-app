@@ -61,6 +61,9 @@ import {
   TunnelParameterError,
   TunnelState,
   TunnelType,
+  WarrenAbuseCategory,
+  WarrenAccountStanding,
+  WarrenAccountStrike,
   WarrenAnnouncement,
   WarrenCustomExitSettings,
   WarrenEnvYield,
@@ -693,7 +696,65 @@ export function convertFromWarrenStatus(status: grpcTypes.WarrenStatus): WarrenS
     foreignEnvironments: status.getForeignEnvironmentsList().map(convertFromWarrenForeignEnv),
     envYield: convertFromWarrenEnvYield(status.getEnvYield()),
     announcements: status.getAnnouncementsList().map(convertFromWarrenAnnouncement),
+    accountStanding: convertFromWarrenAccountStanding(status.getAccountStanding()),
   };
+}
+
+export function convertFromWarrenAccountStanding(
+  standing: grpcTypes.WarrenAccountStanding | undefined,
+): WarrenAccountStanding | null {
+  if (standing === undefined) {
+    return null;
+  }
+  const ban = standing.getBan();
+  return {
+    strikes: standing.getStrikesList().map(convertFromWarrenAccountStrike),
+    threshold: standing.getThreshold(),
+    windowDays: standing.getWindowDays(),
+    ban: ban
+      ? {
+          reason:
+            ban.getReason() === grpcTypes.WarrenBanReason.WARREN_BAN_PORT_FORWARDING_ABUSE
+              ? 'port-forwarding-abuse'
+              : 'other',
+          bannedAtUnixSecs: ban.hasBannedAtUnixSecs() ? ban.getBannedAtUnixSecs()! : null,
+          lapsesAtUnixSecs: ban.hasLapsesAtUnixSecs() ? ban.getLapsesAtUnixSecs()! : null,
+        }
+      : null,
+  };
+}
+
+function convertFromWarrenAccountStrike(
+  strike: grpcTypes.WarrenAccountStrike,
+): WarrenAccountStrike {
+  return {
+    dayUnixSecs: strike.getDayUnixSecs(),
+    category: convertFromWarrenAbuseCategory(strike.getCategory()),
+    exitCountry: strike.hasExitCountry() ? (strike.getExitCountry() ?? null) : null,
+    port: strike.getPort(),
+    caseReference: strike.getCaseReference(),
+  };
+}
+
+function convertFromWarrenAbuseCategory(
+  category: grpcTypes.WarrenAbuseCategory,
+): WarrenAbuseCategory {
+  switch (category) {
+    case grpcTypes.WarrenAbuseCategory.WARREN_ABUSE_COPYRIGHT:
+      return 'copyright';
+    case grpcTypes.WarrenAbuseCategory.WARREN_ABUSE_MALWARE_C2:
+      return 'malware-c2';
+    case grpcTypes.WarrenAbuseCategory.WARREN_ABUSE_SPAM:
+      return 'spam';
+    case grpcTypes.WarrenAbuseCategory.WARREN_ABUSE_SCANNING:
+      return 'scanning';
+    case grpcTypes.WarrenAbuseCategory.WARREN_ABUSE_PHISHING:
+      return 'phishing';
+    case grpcTypes.WarrenAbuseCategory.WARREN_ABUSE_CSAM:
+      return 'csam';
+    default:
+      return 'other';
+  }
 }
 
 function convertFromWarrenAnnouncement(
@@ -856,6 +917,7 @@ function convertFromNatPmpMappingState(
         state: 'failed',
         errorMessage: mapping.getErrorMessage() ?? '',
         errorReason: convertFromNatPmpErrorReason(mapping.getErrorReason()),
+        retryAfterSecs: mapping.hasRetryAfterSecs() ? mapping.getRetryAfterSecs() : undefined,
       };
     case grpcTypes.NatPmpStatus.State.DISABLED:
       return { state: 'disabled' };
@@ -885,6 +947,8 @@ function convertFromNatPmpErrorReason(
       return 'out-of-resources';
     case grpcTypes.NatPmpStatus.ErrorReason.NOT_AUTHORIZED:
       return 'not-authorized';
+    case grpcTypes.NatPmpStatus.ErrorReason.NO_ENTITLEMENT:
+      return 'no-entitlement';
     case grpcTypes.NatPmpStatus.ErrorReason.UNKNOWN:
     default:
       return 'unknown';
@@ -1199,6 +1263,18 @@ export function convertFromDaemonEvent(data: grpcTypes.DaemonEvent): DaemonEvent
   const newAccessMethod = data.getNewAccessMethod();
   if (newAccessMethod !== undefined) {
     return { accessMethodSetting: convertFromApiAccessMethodSetting(newAccessMethod) };
+  }
+
+  const strikeNotice = data.getNewAccountStrike();
+  const noticeStrike = strikeNotice?.getStrike();
+  if (strikeNotice !== undefined && noticeStrike !== undefined) {
+    return {
+      newAccountStrike: {
+        strike: convertFromWarrenAccountStrike(noticeStrike),
+        ordinal: strikeNotice.getOrdinal(),
+        threshold: strikeNotice.getThreshold(),
+      },
+    };
   }
 
   // Handle unknown daemon events

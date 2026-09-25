@@ -100,6 +100,12 @@ export class TorrentClientSync {
    * settings for as long as the flapping lasts. */
   private readonly repointed = new Set<number>();
   private last?: TorrentClientStatus;
+  /** The last port the client took. */
+  private syncedPort?: number;
+  /** Set while the client is held after an abuse report on its port: the
+   * port that was closed. Survives a daemon reconnect, since only the user
+   * lifts it. */
+  private heldAfterStrike?: number;
 
   public constructor(private readonly deps: TorrentClientSyncDeps) {}
 
@@ -113,6 +119,12 @@ export class TorrentClientSync {
     }
     const linked = this.linkedRule();
     if (linked === undefined) {
+      return;
+    }
+    if (this.heldAfterStrike !== undefined) {
+      if (changes.length > 0) {
+        this.emit({ state: 'held', port: this.heldAfterStrike, at: this.deps.now() });
+      }
       return;
     }
     const change = changes.find(
@@ -135,10 +147,35 @@ export class TorrentClientSync {
     }
   }
 
+  /**
+   * A forwarded port was closed after an abuse report. When it is the
+   * client's own port (the one it listens on, or the one its rule names), the
+   * app stops following port changes: a torrent client that just drew a
+   * report and silently gets a new port carries on with what was reported,
+   * and three reports revoke the account. The user resumes with "Apply now",
+   * having read the warning.
+   */
+  public onStrike(port: number) {
+    const config = this.deps.config();
+    if (config === undefined || config.kind === 'none') {
+      return;
+    }
+    const linked = this.linkedRule();
+    const ownPorts = [this.syncedPort, linked?.internalPort, this.grantedPort()];
+    if (!ownPorts.includes(port)) {
+      return;
+    }
+    this.heldAfterStrike = port;
+    this.target = undefined;
+    this.emit({ state: 'held', port, at: this.deps.now() });
+  }
+
   /** Writes the port the linked rule holds right now, on the user's command.
    * Answers the status it ended on so the settings view can show it without
-   * waiting for the push notification. */
+   * waiting for the push notification. Lifts a hold after an abuse report:
+   * applying a port is the user's decision to carry on. */
   public async applyNow(): Promise<TorrentClientStatus> {
+    this.heldAfterStrike = undefined;
     const config = this.deps.config();
     if (config === undefined || config.kind === 'none') {
       return this.emit({ state: 'off', at: this.deps.now() });
@@ -319,6 +356,9 @@ export class TorrentClientSync {
         if (outcome === 'abandoned') {
           this.emit({ state: 'off', at: this.deps.now() });
           continue;
+        }
+        if (outcome === undefined) {
+          this.syncedPort = current;
         }
         this.emit(
           outcome === undefined

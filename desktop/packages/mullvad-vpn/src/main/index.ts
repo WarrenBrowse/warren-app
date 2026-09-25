@@ -32,6 +32,7 @@ import {
   ISettings,
   NatPmpStatus,
   TunnelState,
+  WarrenAccountStrikeNotice,
   WarrenStatus,
 } from '../shared/daemon-rpc-types';
 import { ForumAttachResult, IForumAttachRequest } from '../shared/forum-attach';
@@ -1304,6 +1305,8 @@ class ApplicationMain
           IpcMainEventChannel.settings.notifyApiAccessMethodSettingChange?.(
             daemonEvent.accessMethodSetting,
           );
+        } else if ('newAccountStrike' in daemonEvent) {
+          this.handleNewAccountStrike(daemonEvent.newAccountStrike);
         }
       },
       (error: Error) => {
@@ -1314,6 +1317,21 @@ class ApplicationMain
     this.daemonRpc.subscribeDaemonEventListener(daemonEventListener);
 
     return daemonEventListener;
+  }
+
+  // A forwarded port was closed after an abuse report and counted against the
+  // account. Raised once per strike, and never behind the port-change setting:
+  // three of these revoke the account. The torrent client stops following
+  // port changes if the closed port was its own, so a re-point never happens
+  // without the user having read this.
+  private handleNewAccountStrike(notice: WarrenAccountStrikeNotice) {
+    this.torrentClientSync.onStrike(notice.strike.port);
+    this.notificationController.notifyAccountStrike(
+      notice,
+      this.locale,
+      this.userInterface?.isWindowVisible() ?? false,
+      this.settings.gui.enableSystemNotifications,
+    );
   }
 
   // Forwards every WarrenStatus snapshot received from the daemon to
@@ -2005,6 +2023,7 @@ class ApplicationMain
       this.userInterface?.isWindowVisible() ?? false,
       this.settings.gui.enableSystemNotifications,
       this.splitTunnelingSupported,
+      { ban: this.warrenStatus?.accountStanding?.ban ?? null, locale: this.locale },
     );
 
     IpcMainEventChannel.tunnel.notify?.(tunnelState);

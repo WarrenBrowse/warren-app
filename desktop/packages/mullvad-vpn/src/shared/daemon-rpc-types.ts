@@ -220,7 +220,8 @@ export type DaemonEvent =
   | { relayList: IRelayListWithEndpointData }
   | { appVersionInfo: IAppVersionInfo }
   | { device: DeviceEvent }
-  | { accessMethodSetting: AccessMethodSetting };
+  | { accessMethodSetting: AccessMethodSetting }
+  | { newAccountStrike: WarrenAccountStrikeNotice };
 
 export type DaemonAppUpgradeEventStatusDownloadStarted = {
   type: 'APP_UPGRADE_STATUS_DOWNLOAD_STARTED';
@@ -644,8 +645,13 @@ export type NatPmpErrorReason =
   | 'suggested-port-in-use'
   // Pool exhausted, per-client quota, or rate limit.
   | 'out-of-resources'
-  // Port forwarding disabled exit-side, or source not allowed.
-  | 'not-authorized';
+  // The exit refused the entitlement the rule presented. Usually transient:
+  // the daemon asks again after `retryAfterSecs`.
+  | 'not-authorized'
+  // The rule had no entitlement to present (the wallet's batch for this
+  // epoch is used up, or none could be minted), and the exit refuses a
+  // request without one. The daemon asks again after `retryAfterSecs`.
+  | 'no-entitlement';
 
 // Lifecycle state of a single NAT-PMP mapping (one per rule).
 export type NatPmpMappingState =
@@ -667,7 +673,14 @@ export type NatPmpMappingState =
   // daemon retries automatically after `retryAfterSecs`; the UI blocks
   // the port controls and shows a deban countdown until then.
   | { state: 'rate-limited'; retryAfterSecs: number }
-  | { state: 'failed'; errorMessage: string; errorReason: NatPmpErrorReason }
+  | {
+      state: 'failed';
+      errorMessage: string;
+      errorReason: NatPmpErrorReason;
+      // Set when the daemon asks again on its own: seconds until it does, as
+      // of the refusal.
+      retryAfterSecs?: number;
+    }
   // NAT-PMP is off for this mapping (daemon reported DISABLED). Distinct
   // from 'requesting' so the UI does not spin a "requesting…" label
   // forever on a mapping that will never come up.
@@ -832,6 +845,59 @@ export interface WarrenStatus {
   // voucher code included. Empty in the steady state, and the empty list is
   // also how a withdrawal clears the card.
   announcements: WarrenAnnouncement[];
+  // Port-forward abuse standing of the wallet: the strikes still inside the
+  // window and the ban in force. `null` until the daemon learned it, and for
+  // a caller that may not see the wallet owner's identity.
+  accountStanding: WarrenAccountStanding | null;
+}
+
+// Category of the abuse report behind a strike.
+export type WarrenAbuseCategory =
+  | 'copyright'
+  | 'malware-c2'
+  | 'spam'
+  | 'scanning'
+  | 'phishing'
+  | 'csam'
+  | 'other';
+
+// A forwarded port closed after an abuse report, recorded against the account.
+export interface WarrenAccountStrike {
+  // Day of the strike, midnight UTC, in Unix seconds.
+  dayUnixSecs: number;
+  category: WarrenAbuseCategory;
+  // ISO 3166 alpha-2 country of the exit that held the port, when known.
+  exitCountry: string | null;
+  // The forwarded public port that was closed.
+  port: number;
+  // Reference to quote when contesting the strike.
+  caseReference: string;
+}
+
+export interface WarrenAccountBan {
+  reason: 'port-forwarding-abuse' | 'other';
+  // `null` when the ban is known from an issuer's refusal only.
+  bannedAtUnixSecs: number | null;
+  // `null` for a ban that does not lapse.
+  lapsesAtUnixSecs: number | null;
+}
+
+export interface WarrenAccountStanding {
+  // Oldest first.
+  strikes: WarrenAccountStrike[];
+  // Live strikes that ban the account, 0 while unknown.
+  threshold: number;
+  // Length of the sliding window in days, 0 while unknown.
+  windowDays: number;
+  ban: WarrenAccountBan | null;
+}
+
+// A strike this device had not warned about yet, sent once per strike.
+export interface WarrenAccountStrikeNotice {
+  strike: WarrenAccountStrike;
+  // Rank among the live strikes, oldest first, from 1.
+  ordinal: number;
+  threshold: number;
 }
 
 // One operator-published launch announcement, ready to render as a card: the

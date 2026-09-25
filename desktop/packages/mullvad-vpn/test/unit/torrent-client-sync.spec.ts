@@ -516,3 +516,62 @@ describe('the torrent client controller', () => {
     expect(JSON.stringify(harness.statuses)).to.not.contain(PASSWORD);
   });
 });
+
+// A port closed after an abuse report is, most of the time, the torrent
+// client's own port. Following the next grant on its own would carry on what
+// was reported, with no one having read the warning, and three warnings
+// revoke the account: the client is left on its port until the user applies
+// one.
+describe('the torrent client after an abuse report', () => {
+  it('stops following port changes when the reported port was the client own', async () => {
+    const harness = buildHarness({ rules: [autoRule(58291)] });
+    await harness.sync.onChanges([mapped(58291, 58291)]);
+
+    harness.sync.onStrike(58291);
+    await harness.sync.onChanges([mapped(58291, 60001)]);
+
+    expect(harness.natPmpWrites).to.deep.equal([]);
+    expect(harness.attempts).to.deep.equal([58291]);
+    expect(lastStatus(harness.statuses)).to.deep.equal({ state: 'held', port: 58291, at: NOW });
+  });
+
+  it('keeps following when the reported port belonged to another rule', async () => {
+    const harness = buildHarness({ rules: [rule(6881)] });
+
+    harness.sync.onStrike(50000);
+    await harness.sync.onChanges([mapped(6881, 6881)]);
+
+    expect(harness.attempts).to.deep.equal([6881]);
+  });
+
+  it('resumes when the user applies a port', async () => {
+    const harness = buildHarness({
+      rules: [rule(6881)],
+      mappings: [liveMapping(6881, 6881)],
+    });
+    harness.sync.onStrike(6881);
+
+    const status = await harness.sync.applyNow();
+
+    expect(harness.attempts).to.deep.equal([6881]);
+    expect(status).to.deep.equal({ state: 'synced', port: 6881, at: NOW });
+  });
+
+  it('stays held across a daemon reconnect', async () => {
+    const harness = buildHarness({ rules: [rule(6881)] });
+    harness.sync.onStrike(6881);
+
+    harness.sync.reset();
+    await harness.sync.onChanges([mapped(6881, 6881)]);
+
+    expect(harness.attempts).to.deep.equal([]);
+  });
+
+  it('ignores a strike while no client is configured', () => {
+    const harness = buildHarness({ kind: 'none', rules: [rule(6881)] });
+
+    harness.sync.onStrike(6881);
+
+    expect(harness.statuses).to.deep.equal([]);
+  });
+});

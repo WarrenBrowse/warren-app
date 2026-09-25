@@ -24,6 +24,7 @@ const settingsSchema: Record<keyof IGuiSettingsState, string> = {
   backupPending: 'boolean',
   dismissedAnnouncements: 'Array<string>',
   dismissedNotices: 'Array<string>',
+  dismissedStrikes: 'Array<string>',
 };
 
 const LEGACY_PENDING_PURCHASES_KEY = 'pendingPurchases';
@@ -45,6 +46,7 @@ const defaultSettings: IGuiSettingsState = {
   backupPending: false,
   dismissedAnnouncements: [],
   dismissedNotices: [],
+  dismissedStrikes: [],
 };
 
 export default class GuiSettings {
@@ -241,6 +243,22 @@ export default class GuiSettings {
 
   get dismissedNotices(): Array<string> {
     return this.stateValue.dismissedNotices ?? [];
+  }
+
+  // Port-forwarding warnings put away from the banner (see
+  // gui-settings-state.ts). Append-only and de-duplicated, like the notices.
+  public dismissStrike(key: string) {
+    if (this.dismissedStrikes.includes(key)) {
+      return;
+    }
+    this.changeStateAndNotify({
+      ...this.stateValue,
+      dismissedStrikes: [...this.dismissedStrikes, key],
+    });
+  }
+
+  get dismissedStrikes(): Array<string> {
+    return this.stateValue.dismissedStrikes ?? [];
   }
 
   public load() {

@@ -49,6 +49,9 @@ export type InAppNotificationAction =
   | {
       type: 'navigate-external';
       link: Pick<ExternalLinkProps, 'to' | 'onClick' | 'aria-label' | 'withAuth'>;
+      // Set when the banner may also be put away: the column then holds the
+      // link and a close.
+      dismiss?: () => void;
     }
   | {
       type: 'run-function';
@@ -114,6 +117,10 @@ export enum SystemNotificationCategory {
   // newest port replaces the previous toast: two of them on screen name two
   // ports and only one of them still forwards.
   portForwarding,
+  // A forwarded port closed after an abuse report and counted against the
+  // account. Apart from `portForwarding`: the closure raises a port change at
+  // about the same moment, and that toast must not replace this one.
+  accountStrike,
 }
 
 interface NotificationProvider {

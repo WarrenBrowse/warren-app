@@ -1,4 +1,5 @@
 export * from './account-expired';
+export * from './account-strike';
 export * from './close-to-account-expiry';
 export * from './block-when-disconnected';
 export * from './connected';

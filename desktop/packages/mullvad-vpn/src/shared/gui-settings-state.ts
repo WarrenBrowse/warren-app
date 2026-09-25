@@ -100,6 +100,10 @@ export interface IGuiSettingsState {
   // wording as well as the id (see the notice provider), so a notice rewritten
   // in place comes back.
   dismissedNotices?: Array<string>;
+  // Port-forwarding warnings the user has put away, one digest of the case
+  // reference per warning (never the reference itself). The warning stays
+  // listed in the port-forwarding view; only the banner goes.
+  dismissedStrikes?: Array<string>;
 }
 
 /**

@@ -29,6 +29,12 @@ describe('the torrent client status line', () => {
     );
   });
 
+  it('says the client is held after an abuse report and how to resume', () => {
+    expect(torrentClientStatusLine({ state: 'held', port: 58291, at }, config)).to.equal(
+      'Port 58291 was closed after an abuse report. qBittorrent keeps its port until you apply one.',
+    );
+  });
+
   it('shows nothing while the feature is off or a write is in the air', () => {
     expect(torrentClientStatusLine({ state: 'off', at }, config)).to.equal(undefined);
     expect(torrentClientStatusLine({ state: 'pushing', port: 58291, at }, config)).to.equal(

@@ -32,6 +32,7 @@ import {
   AppUpgradeProgressNotificationProvider,
   AppUpgradeReadyNotificationProvider,
   NewVersionNotificationProvider,
+  WarrenAccountStrikeNotificationProvider,
   WarrenAnnouncementNotificationProvider,
   WarrenConnectingStuckNotificationProvider,
   WarrenEnvStandDownNotificationProvider,
@@ -110,8 +111,11 @@ export default function NotificationArea(props: IProps) {
   const hostOffline = useHostOffline();
   const connectingStuck = useConnectingStuck();
   const exitEgressDead = useExitEgressDead();
-  const { clearEnvYield, dismissAnnouncement, dismissNotice, openAnnouncementUrl } =
+  const { clearEnvYield, dismissAnnouncement, dismissNotice, dismissStrike, openAnnouncementUrl } =
     useAppContext();
+  const dismissedStrikes = useSelector(
+    (state: IReduxState) => state.settings.guiSettings.dismissedStrikes ?? [],
+  );
   const dismissedAnnouncements = useSelector(
     (state: IReduxState) => state.settings.guiSettings.dismissedAnnouncements ?? [],
   );
@@ -250,6 +254,17 @@ export default function NotificationArea(props: IProps) {
       showFullDiskAccessSettings,
       disableSplitTunneling,
       splitTunnelingSupported,
+      ban: warrenStatus?.accountStanding?.ban,
+      locale,
+    }),
+    // Under the tunnel's own error (a ban shows there, with its lapse date),
+    // above the version and account banners: three of these revoke the
+    // account, and the reader has to see the first.
+    new WarrenAccountStrikeNotificationProvider({
+      accountStanding: warrenStatus?.accountStanding ?? null,
+      dismissedKeys: dismissedStrikes,
+      dismiss: dismissStrike,
+      locale,
     }),
     new InconsistentVersionNotificationProvider({ consistent: version.consistent }),
     new UnsupportedVersionNotificationProvider(version),
@@ -433,7 +448,7 @@ function NotificationActionWrapper({
   }, [action, setIsModalOpen, openUrl]);
 
   const dismissBanner = useCallback(() => {
-    if (action.type === 'expand-text') {
+    if (action.type === 'expand-text' || action.type === 'navigate-external') {
       action.dismiss?.();
     }
     return Promise.resolve();
@@ -448,7 +463,14 @@ function NotificationActionWrapper({
   if (action) {
     switch (action.type) {
       case 'navigate-external':
-        actionComponent = <NotificationOpenLinkAction onClick={handleClick} />;
+        actionComponent = action.dismiss ? (
+          <>
+            <NotificationOpenLinkAction onClick={handleClick} />
+            <NotificationCloseAction onClick={dismissBanner} />
+          </>
+        ) : (
+          <NotificationOpenLinkAction onClick={handleClick} />
+        );
         break;
       case 'troubleshoot-dialog':
         actionComponent = (

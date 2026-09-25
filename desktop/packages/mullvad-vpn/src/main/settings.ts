@@ -183,6 +183,10 @@ export default class Settings implements Readonly<ISettings> {
       this.guiSettings.dismissNotice(key);
     });
 
+    IpcMainEventChannel.guiSettings.handleDismissStrike((key: string) => {
+      this.guiSettings.dismissStrike(key);
+    });
+
     IpcMainEventChannel.currentVersion.handleDisplayedChangelog(() => {
       this.guiSettings.changelogDisplayedForVersion = this.currentVersion.gui;
     });

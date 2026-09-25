@@ -55,6 +55,7 @@ const BASE_STATUS: WarrenStatus = {
   foreignEnvironments: [],
   envYield: null,
   announcements: [],
+  accountStanding: null,
 };
 
 const MISMATCH: WarrenPubkeyMismatch = {

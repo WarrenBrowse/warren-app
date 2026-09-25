@@ -408,6 +408,10 @@ msgctxt "accessibility"
 msgid "Go to slide %(index)s"
 msgstr ""
 
+msgctxt "accessibility"
+msgid "How to contest a warning"
+msgstr ""
+
 #. Alt text for an illustration showing VPN traffic with DAITA.
 msgctxt "accessibility"
 msgid "Illustration showing VPN traffic with DAITA enabled"
@@ -1034,6 +1038,19 @@ msgstr ""
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr ""
+
+#. Available placeholders:
+#. %(date)s - the day the suspension ends, e.g. 24 September 2027
+#. %(url)s - the page explaining how to contest it
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr ""
+
+#. Available placeholder:
+#. %(date)s - the day the suspension ends, e.g. 24 September 2027
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been suspended until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
 msgstr ""
 
 msgctxt "auth-failure"
@@ -1895,6 +1912,10 @@ msgstr ""
 
 msgctxt "in-app-notifications"
 msgid "Please quit and restart the app."
+msgstr ""
+
+msgctxt "in-app-notifications"
+msgid "PORT FORWARDING WARNING"
 msgstr ""
 
 #. Shown under a banner whose text was too long
@@ -2885,6 +2906,26 @@ msgctxt "port-forwarding-view"
 msgid "A system notification shows the new port number."
 msgstr ""
 
+#. Available placeholder:
+#. %(date)s - the day the suspension ends, e.g. 24 September 2027
+msgctxt "port-forwarding-view"
+msgid "Access suspended for port-forwarding abuse until %(date)s."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Access suspended for port-forwarding abuse."
+msgstr ""
+
+#. Available placeholder:
+#. %(date)s - the day the suspension ends, e.g. 24 September 2027
+msgctxt "port-forwarding-view"
+msgid "Access suspended until %(date)s."
+msgstr ""
+
+msgctxt "port-forwarding-view"
+msgid "Access suspended."
+msgstr ""
+
 msgctxt "port-forwarding-view"
 msgid "Apply now"
 msgstr ""
@@ -2903,6 +2944,18 @@ msgstr ""
 #. %(url)s - the web interface address the user entered
 msgctxt "port-forwarding-view"
 msgid "Cannot reach %(client)s at %(url)s"
+msgstr ""
+
+#. The reference of the abuse case behind a warning.
+#. Available placeholder:
+#. %(reference)s - the case reference, e.g. PF-2026-0042
+msgctxt "port-forwarding-view"
+msgid "Case reference: %(reference)s"
+msgstr ""
+
+#. Category of an abuse report: child sexual abuse material.
+msgctxt "port-forwarding-view"
+msgid "child sexual abuse material"
 msgstr ""
 
 msgctxt "port-forwarding-view"
@@ -2935,6 +2988,11 @@ msgctxt "port-forwarding-view"
 msgid "Copy port number"
 msgstr ""
 
+#. Category of an abuse report: a copyright infringement notice.
+msgctxt "port-forwarding-view"
+msgid "copyright"
+msgstr ""
+
 msgctxt "port-forwarding-view"
 msgid "disabled"
 msgstr ""
@@ -2957,8 +3015,20 @@ msgctxt "port-forwarding-view"
 msgid "Last port change before a temporary block. Wait a moment before changing it again."
 msgstr ""
 
+#. Category of an abuse report: malware distribution or
+#. command and control.
+msgctxt "port-forwarding-view"
+msgid "malware"
+msgstr ""
+
 msgctxt "port-forwarding-view"
 msgid "Maximum of %(max)d ports reached"
+msgstr ""
+
+#. Short status of a rule the account has no port
+#. entitlement left for; the app asks again on its own.
+msgctxt "port-forwarding-view"
+msgid "no entitlement left, retrying"
 msgstr ""
 
 msgctxt "port-forwarding-view"
@@ -2971,10 +3041,6 @@ msgstr ""
 
 msgctxt "port-forwarding-view"
 msgid "None"
-msgstr ""
-
-msgctxt "port-forwarding-view"
-msgid "not allowed"
 msgstr ""
 
 #. Label of the setting that turns the notification
@@ -2991,6 +3057,11 @@ msgctxt "port-forwarding-view"
 msgid "Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services."
 msgstr ""
 
+#. Category of an abuse report that fits no other category.
+msgctxt "port-forwarding-view"
+msgid "other"
+msgstr ""
+
 msgctxt "port-forwarding-view"
 msgid "Password"
 msgstr ""
@@ -2999,12 +3070,26 @@ msgctxt "port-forwarding-view"
 msgid "pending…"
 msgstr ""
 
+#. Category of an abuse report.
+msgctxt "port-forwarding-view"
+msgid "phishing"
+msgstr ""
+
 msgctxt "port-forwarding-view"
 msgid "port"
 msgstr ""
 
 msgctxt "port-forwarding-view"
 msgid "Port"
+msgstr ""
+
+#. Shown when the app stopped updating the torrent client
+#. because its port was closed after an abuse report; the
+#. "Apply now" button resumes. Available placeholders:
+#. %(port)d - the forwarded port that was closed
+#. %(client)s - the torrent client name, e.g. qBittorrent
+msgctxt "port-forwarding-view"
+msgid "Port %(port)d was closed after an abuse report. %(client)s keeps its port until you apply one."
 msgstr ""
 
 msgctxt "port-forwarding-view"
@@ -3023,6 +3108,12 @@ msgctxt "port-forwarding-view"
 msgid "Protocol"
 msgstr ""
 
+#. Short status of a rule whose entitlement the server
+#. refused; the app asks again on its own.
+msgctxt "port-forwarding-view"
+msgid "refused, retrying"
+msgstr ""
+
 msgctxt "port-forwarding-view"
 msgid "Remove port"
 msgstr ""
@@ -3039,6 +3130,16 @@ msgstr ""
 #. already stored and the field is empty.
 msgctxt "port-forwarding-view"
 msgid "Saved"
+msgstr ""
+
+#. Category of an abuse report: scanning or intrusion attempts.
+msgctxt "port-forwarding-view"
+msgid "scanning or intrusion"
+msgstr ""
+
+#. Category of an abuse report.
+msgctxt "port-forwarding-view"
+msgid "spam"
 msgstr ""
 
 msgctxt "port-forwarding-view"
@@ -3061,6 +3162,12 @@ msgctxt "port-forwarding-view"
 msgid "This system cannot store the password securely"
 msgstr ""
 
+#. How to contest a warning. Available placeholder:
+#. %(email)s - the address of the abuse desk
+msgctxt "port-forwarding-view"
+msgid "To contest a warning, write to %(email)s quoting its case reference."
+msgstr ""
+
 msgctxt "port-forwarding-view"
 msgid "Too many port changes. You can change ports again in %(countdown)s."
 msgstr ""
@@ -3077,6 +3184,37 @@ msgstr ""
 
 msgctxt "port-forwarding-view"
 msgid "Waiting for a public port"
+msgstr ""
+
+#. A strike on the account. Available placeholders:
+#. %(ordinal)d - the rank of this warning, from 1
+#. %(threshold)d - the number of warnings that revokes the account
+#. %(port)d - the forwarded public port that was closed
+#. %(day)s - the day it was closed, e.g. 24 September 2026
+#. %(category)s - the kind of abuse reported, e.g. copyright
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d of %(threshold)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr ""
+
+#. A strike on the account, when the number that revokes it
+#. is not known yet. Available placeholders:
+#. %(ordinal)d - the rank of this warning, from 1
+#. %(port)d - the forwarded public port that was closed
+#. %(day)s - the day it was closed, e.g. 24 September 2026
+#. %(category)s - the kind of abuse reported, e.g. copyright
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr ""
+
+#. Title of the list of abuse warnings on the account.
+msgctxt "port-forwarding-view"
+msgid "Warnings"
+msgstr ""
+
+#. Link to the website page on abuse reports, warnings
+#. and how to contest them.
+msgctxt "port-forwarding-view"
+msgid "Warnings and how to contest them"
 msgstr ""
 
 #. Description of the torrent client section.

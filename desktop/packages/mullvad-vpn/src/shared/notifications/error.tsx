@@ -1,5 +1,6 @@
 import { sprintf } from 'sprintf-js';
 
+import { formatStandingDay } from '../account-standing';
 import { strings, urls } from '../constants';
 import {
   AuthFailedError,
@@ -7,6 +8,7 @@ import {
   ErrorStateDetails,
   TunnelParameterError,
   TunnelState,
+  WarrenAccountBan,
 } from '../daemon-rpc-types';
 import { messages } from '../gettext';
 import {
@@ -24,6 +26,10 @@ interface ErrorNotificationContext {
   tunnelState: TunnelState;
   hasExcludedApps: boolean;
   splitTunnelingSupported: boolean;
+  // The ban the daemon knows of, when it knows when the ban lapses: the
+  // suspension message then names that day.
+  ban?: WarrenAccountBan | null;
+  locale?: string;
   showFullDiskAccessSettings?: () => void;
   disableSplitTunneling?: () => void;
 }
@@ -124,6 +130,15 @@ export class ErrorNotificationProvider
     }
   }
 
+  /** The day the known ban lapses, formatted for the reader, if it does. */
+  private banLapseDay(): string | undefined {
+    const lapsesAt = this.context.ban?.lapsesAtUnixSecs;
+    if (lapsesAt === null || lapsesAt === undefined) {
+      return undefined;
+    }
+    return formatStandingDay(lapsesAt, this.context.locale ?? 'en');
+  }
+
   private getMessage(errorState: ErrorStateDetails): string {
     if (errorState.blockingError) {
       if (errorState.cause === ErrorStateCause.setFirewallPolicyError) {
@@ -164,15 +179,41 @@ export class ErrorNotificationProvider
                 'Too many simultaneous connections on this account. Disconnect another device or try connecting again shortly.',
               );
 
-            case AuthFailedError.banned:
+            case AuthFailedError.banned: {
+              const until = this.banLapseDay();
+              if (until !== undefined) {
+                return sprintf(
+                  // TRANSLATORS: Available placeholder:
+                  // TRANSLATORS: %(date)s - the day the suspension ends, e.g. 24 September 2027
+                  messages.pgettext(
+                    'auth-failure',
+                    'Blocking internet: your access has been suspended until %(date)s for a usage policy violation. Contact support if you believe this is a mistake.',
+                  ),
+                  { date: until },
+                );
+              }
               return messages.pgettext(
                 'auth-failure',
                 'Blocking internet: your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake.',
               );
+            }
 
-            case AuthFailedError.bannedPortForwarding:
+            case AuthFailedError.bannedPortForwarding: {
               // Points at the appeal procedure rather than at generic support:
               // a strike is contestable, and the page states on what grounds.
+              const until = this.banLapseDay();
+              if (until !== undefined) {
+                return sprintf(
+                  // TRANSLATORS: Available placeholders:
+                  // TRANSLATORS: %(date)s - the day the suspension ends, e.g. 24 September 2027
+                  // TRANSLATORS: %(url)s - the page explaining how to contest it
+                  messages.pgettext(
+                    'auth-failure',
+                    'Blocking internet: your access has been suspended until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s',
+                  ),
+                  { date: until, url: urls.reports },
+                );
+              }
               return sprintf(
                 messages.pgettext(
                   'auth-failure',
@@ -180,6 +221,7 @@ export class ErrorNotificationProvider
                 ),
                 { url: urls.reports },
               );
+            }
 
             case AuthFailedError.unknown:
             default:

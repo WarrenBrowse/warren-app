@@ -307,7 +307,9 @@ export function TorrentClientSetting() {
       </SettingsListItem>
 
       {line === undefined ? null : (
-        <Text variant="labelTiny" color={status?.state === 'error' ? 'red' : 'whiteAlpha60'}>
+        <Text
+          variant="labelTiny"
+          color={status?.state === 'error' || status?.state === 'held' ? 'red' : 'whiteAlpha60'}>
           {line}
         </Text>
       )}
