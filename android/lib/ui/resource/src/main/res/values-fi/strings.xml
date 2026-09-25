@@ -83,7 +83,23 @@
     <string name="update_available_description">Versio %1$s on saatavilla. Napauta ladataksesi päivityksen.</string>
     <string name="update_now">Päivitä nyt</string>
     <string name="quit">Lopeta</string>
-    <string name="split_tunneling_description">Valitse sovellukset, jotka haluat sulkea pois VPN-tunnelista.</string>
+    <string name="app_routing_description">Valitse, miten kukin sovellus muodostaa yhteyden.</string>
+    <string name="split_mode_bypass">VPN:n ohi</string>
+    <string name="split_mode_bypass_description">Valitsemasi sovellukset muodostavat yhteyden kuin VPN olisi pois päältä.</string>
+    <string name="split_mode_include_only">VPN vain näille</string>
+    <string name="split_mode_include_only_description">Vain valitsemasi sovellukset käyttävät VPN:ää.</string>
+    <string name="include_only_lockdown_warning">Huomio: Jos \"Estä yhteydet ilman VPN:ää\" -vaihtoehto on käytössä, sovelluksilla, joita et ole valinnut, ei ole pääsyä internetiin.</string>
+    <string name="include_only_banner">Vain nämä sovellukset on suojattu. Kaikki muu tällä laitteella käyttää tavallista yhteyttäsi.</string>
+    <string name="include_only_no_app">Mikään valitsemistasi sovelluksista ei ole tällä laitteella, joten kaikki sovellukset käyttävät VPN:ää, kunnes valitset jonkin.</string>
+    <string name="include_only_confirm">Vain valitsemasi sovellukset käyttävät VPN:ää. Muu osa tästä laitteesta ei ole suojattu.</string>
+    <string name="split_mode_replaces_bypass">Tämä korvaa tilan \"VPN:n ohi\". Sen sovellusluettelo säilyy.</string>
+    <string name="split_mode_replaces_include_only">Tämä korvaa tilan \"VPN vain näille\", joten kaikki sovellukset käyttävät taas VPN:ää paitsi ne, jotka ohittavat sen. Sen sovellusluettelo säilyy.</string>
+    <string name="split_mode_turn_on">Ota käyttöön</string>
+    <string name="apps_using_the_vpn">Käyttää VPN:ää</string>
+    <plurals name="vpn_only_for_apps">
+        <item quantity="one">VPN vain %1$d sovellukselle</item>
+        <item quantity="other">VPN vain %1$d sovellukselle</item>
+    </plurals>
     <string name="split_tunneling_description_warning">Huomio: Jos \"Estä yhteydet ilman VPN:ää\" -vaihtoehto on käytössä, sovelluskohtaisesti yhdistettävillä sovelluksilla ei ole pääsyä internetiin. Muista aina, että sovelluskohtainen yhdistäminen on tietosuojariski.</string>
     <string name="enable">Ota käyttöön</string>
     <string name="confirm_local_dns">Paikallinen DNS-palvelin ei toimi, ellet ota paikallisen verkon jakamista käyttöön VPN-asetuksista.</string>

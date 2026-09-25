@@ -5,10 +5,22 @@ import android.graphics.drawable.Drawable
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
+import androidx.compose.material3.Text
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.LazyListScope
@@ -31,7 +43,9 @@ import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -47,6 +61,9 @@ import com.warrenbrowse.vpn.feature.splittunneling.impl.extensions.isBelowMaxByt
 import com.warrenbrowse.vpn.lib.common.Lc
 import com.warrenbrowse.vpn.lib.model.FeatureIndicator
 import com.warrenbrowse.vpn.lib.model.PackageName
+import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
+import com.warrenbrowse.vpn.lib.ui.component.dialog.InfoConfirmationDialog
+import com.warrenbrowse.vpn.lib.ui.component.dialog.InfoConfirmationDialogTitleType
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateCloseIconButton
@@ -64,6 +81,7 @@ import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaDisabled
 import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaScrollbar
 import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaVisible
+import com.warrenbrowse.vpn.lib.ui.theme.color.warning
 import com.warrenbrowse.vpn.lib.ui.util.visible
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
@@ -77,10 +95,13 @@ private fun PreviewSplitTunnelingScreen(
     AppTheme {
         SplitTunnelingScreen(
             state = state,
-            onEnableSplitTunneling = {},
+            onSelectTab = {},
+            onSplitModeSwitch = {},
+            onConfirmModeChange = {},
+            onCancelModeChange = {},
             onShowSystemAppsClick = {},
-            onExcludeAppClick = {},
-            onIncludeAppClick = {},
+            onAddAppClick = {},
+            onRemoveAppClick = {},
             onBackClick = {},
             navigateToSearch = {},
             onResolveIcon = { null },
@@ -106,23 +127,35 @@ fun SharedTransitionScope.SplitTunneling(
                 rememberSharedContentState(key = FeatureIndicator.SPLIT_TUNNELING),
                 animatedVisibilityScope = animatedVisibilityScope,
             ),
-        onEnableSplitTunneling = viewModel::onEnableSplitTunneling,
+        onSelectTab = viewModel::onSelectTab,
+        onSplitModeSwitch = viewModel::onSplitModeSwitch,
+        onConfirmModeChange = viewModel::onConfirmModeChange,
+        onCancelModeChange = viewModel::onCancelModeChange,
         onShowSystemAppsClick = viewModel::onShowSystemAppsClick,
-        onExcludeAppClick = viewModel::onExcludeAppClick,
-        onIncludeAppClick = viewModel::onIncludeAppClick,
+        onAddAppClick = viewModel::onAddAppClick,
+        onRemoveAppClick = viewModel::onRemoveAppClick,
         onBackClick = dropUnlessResumed { navigator.goBack() },
-        navigateToSearch = dropUnlessResumed { navigator.navigate(SearchSplitTunnelingNavKey) },
+        navigateToSearch =
+            dropUnlessResumed {
+                val includeOnly =
+                    (state as? Lc.Content)?.value?.tab == SplitTunnelingTab.IncludeOnly
+                navigator.navigate(SearchSplitTunnelingNavKey(includeOnly = includeOnly))
+            },
         onResolveIcon = { packageName -> packageManager.getApplicationIconOrNull(packageName) },
     )
 }
 
 @Composable
+@Suppress("LongParameterList")
 fun SplitTunnelingScreen(
     state: Lc<Loading, SplitTunnelingUiState>,
-    onEnableSplitTunneling: (Boolean) -> Unit,
+    onSelectTab: (SplitTunnelingTab) -> Unit,
+    onSplitModeSwitch: (Boolean) -> Unit,
+    onConfirmModeChange: () -> Unit,
+    onCancelModeChange: () -> Unit,
     onShowSystemAppsClick: (show: Boolean) -> Unit,
-    onExcludeAppClick: (packageName: PackageName) -> Unit,
-    onIncludeAppClick: (packageName: PackageName) -> Unit,
+    onAddAppClick: (packageName: PackageName) -> Unit,
+    onRemoveAppClick: (packageName: PackageName) -> Unit,
     onBackClick: () -> Unit,
     onResolveIcon: (PackageName) -> Drawable?,
     navigateToSearch: () -> Unit,
@@ -140,7 +173,7 @@ fun SplitTunnelingScreen(
                 unlessIsDetail { NavigateBackIconButton(onNavigateBack = onBackClick) }
             }
         },
-        actions = { SearchButton(onClick = navigateToSearch, enabled = state.enabled()) },
+        actions = { SearchButton(onClick = navigateToSearch, enabled = state is Lc.Content) },
     ) { modifier ->
         val lazyListState = rememberLazyListState()
         LazyColumn(
@@ -162,39 +195,34 @@ fun SplitTunnelingScreen(
                     loading()
                 }
                 is Lc.Content -> {
-                    enabledToggle(
-                        enabled = state.value.enabled,
-                        onEnableSplitTunneling = onEnableSplitTunneling,
-                    )
-                    item { HorizontalDivider(color = Color.Transparent) }
+                    tabBar(tab = state.value.tab, onSelectTab = onSelectTab)
+                    modeSwitch(state = state.value, onSplitModeSwitch = onSplitModeSwitch)
+                    tabDescription(tab = state.value.tab)
+                    if (state.value.tab == SplitTunnelingTab.IncludeOnly && state.value.tabModeOn) {
+                        includeOnlyBanner(noApp = state.value.includeOnlyWithoutApps)
+                    }
                     systemAppsToggle(
                         showSystemApps = state.value.showSystemApps,
                         onShowSystemAppsClick = onShowSystemAppsClick,
-                        enabled = state.value.enabled,
+                        enabled = true,
                     )
                     appList(
                         state = state.value,
                         focusManager = focusManager,
-                        onExcludeAppClick = onExcludeAppClick,
-                        onIncludeAppClick = onIncludeAppClick,
+                        onAddAppClick = onAddAppClick,
+                        onRemoveAppClick = onRemoveAppClick,
                         onResolveIcon = onResolveIcon,
                     )
                 }
             }
         }
     }
-}
 
-private fun LazyListScope.enabledToggle(
-    enabled: Boolean,
-    onEnableSplitTunneling: (Boolean) -> Unit,
-) {
-    item {
-        SwitchListItem(
-            title = stringResource(id = R.string.enable),
-            isToggled = enabled,
-            onCellClicked = onEnableSplitTunneling,
-            position = Position.Top,
+    (state as? Lc.Content)?.value?.confirmation?.let { confirmation ->
+        ModeChangeDialog(
+            confirmation = confirmation,
+            onConfirm = onConfirmModeChange,
+            onCancel = onCancelModeChange,
         )
     }
 }
@@ -202,15 +230,168 @@ private fun LazyListScope.enabledToggle(
 private fun LazyListScope.description() {
     item(key = CommonContentKey.DESCRIPTION, contentType = ContentType.DESCRIPTION) {
         ScreenDescription(
-            text =
-                buildString {
-                    appendLine(stringResource(id = R.string.split_tunneling_description))
-                    append(stringResource(id = R.string.split_tunneling_description_warning))
-                },
+            text = stringResource(id = R.string.app_routing_description),
             modifier = Modifier.padding(bottom = Dimens.mediumPadding),
         )
     }
 }
+
+/** "Bypass VPN" and "VPN only for", in the desktop's order. */
+private fun LazyListScope.tabBar(
+    tab: SplitTunnelingTab,
+    onSelectTab: (SplitTunnelingTab) -> Unit,
+) {
+    item(key = SplitTunnelingContentKey.TABS, contentType = ContentType.OTHER_ITEM) {
+        SingleChoiceSegmentedButtonRow(
+            modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.mediumPadding)
+        ) {
+            SplitTunnelingTab.entries.forEachIndexed { index, entry ->
+                SegmentedButton(
+                    selected = tab == entry,
+                    onClick = { onSelectTab(entry) },
+                    shape =
+                        SegmentedButtonDefaults.itemShape(
+                            index = index,
+                            count = SplitTunnelingTab.entries.size,
+                        ),
+                ) {
+                    Text(stringResource(entry.label()))
+                }
+            }
+        }
+    }
+}
+
+private fun LazyListScope.modeSwitch(
+    state: SplitTunnelingUiState,
+    onSplitModeSwitch: (Boolean) -> Unit,
+) {
+    item(key = SplitTunnelingContentKey.MODE_SWITCH, contentType = ContentType.OTHER_ITEM) {
+        SwitchListItem(
+            title = stringResource(id = state.tab.label()),
+            isToggled = state.tabModeOn,
+            onCellClicked = onSplitModeSwitch,
+            position = Position.Single,
+            modifier = Modifier.animateItem(),
+        )
+    }
+}
+
+private fun LazyListScope.tabDescription(tab: SplitTunnelingTab) {
+    item(key = SplitTunnelingContentKey.TAB_DESCRIPTION, contentType = ContentType.DESCRIPTION) {
+        ScreenDescription(
+            text =
+                when (tab) {
+                    SplitTunnelingTab.Bypass ->
+                        stringResource(R.string.split_mode_bypass_description) +
+                            "\n" +
+                            stringResource(R.string.split_tunneling_description_warning)
+                    SplitTunnelingTab.IncludeOnly ->
+                        stringResource(R.string.split_mode_include_only_description) +
+                            "\n" +
+                            stringResource(R.string.include_only_lockdown_warning)
+                },
+            modifier =
+                Modifier.animateItem()
+                    .padding(top = Dimens.smallPadding, bottom = Dimens.mediumPadding),
+        )
+    }
+}
+
+/**
+ * Stays for as long as include-only is on: the rest of the device is not
+ * protected, and that should never be a surprise. With no chosen app on the
+ * device it says instead that every app uses the VPN.
+ */
+private fun LazyListScope.includeOnlyBanner(noApp: Boolean) {
+    item(key = SplitTunnelingContentKey.INCLUDE_ONLY_BANNER, contentType = ContentType.OTHER_ITEM) {
+        val shape = RoundedCornerShape(Dimens.smallPadding)
+        Row(
+            modifier =
+                Modifier.animateItem()
+                    .fillMaxWidth()
+                    .padding(bottom = Dimens.mediumPadding)
+                    .background(MaterialTheme.colorScheme.warning.copy(alpha = BANNER_FILL), shape)
+                    .border(
+                        Dimens.thinBorderWidth,
+                        MaterialTheme.colorScheme.warning.copy(alpha = BANNER_BORDER),
+                        shape,
+                    )
+                    .padding(Dimens.smallPadding)
+                    .semantics(mergeDescendants = true) {},
+            horizontalArrangement = Arrangement.spacedBy(Dimens.smallPadding),
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.ic_forum_alert_circle),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.warning,
+                modifier = Modifier.size(Dimens.smallIconSize),
+            )
+            Text(
+                text =
+                    stringResource(
+                        if (noApp) R.string.include_only_no_app else R.string.include_only_banner
+                    ),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+        }
+    }
+}
+
+@Composable
+private fun ModeChangeDialog(
+    confirmation: ModeChangeConfirmation,
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit,
+) {
+    InfoConfirmationDialog(
+        onResult = { confirmed -> if (confirmed != null) onConfirm() else onCancel() },
+        titleType = InfoConfirmationDialogTitleType.IconOnly,
+        confirmButtonTitle = stringResource(R.string.split_mode_turn_on),
+        cancelButtonTitle = stringResource(R.string.cancel),
+    ) {
+        Column(verticalArrangement = Arrangement.spacedBy(Dimens.verticalSpace)) {
+            if (confirmation.leavesDeviceUnprotected) {
+                DialogText(stringResource(R.string.include_only_confirm))
+            }
+            when (confirmation.replaces) {
+                SplitTunnelMode.Exclude ->
+                    DialogText(stringResource(R.string.split_mode_replaces_bypass))
+                SplitTunnelMode.IncludeOnly ->
+                    DialogText(stringResource(R.string.split_mode_replaces_include_only))
+                SplitTunnelMode.Off,
+                null -> Unit
+            }
+        }
+    }
+}
+
+@Composable
+private fun DialogText(text: String) {
+    Text(
+        text = text,
+        color = MaterialTheme.colorScheme.onSurface,
+        style = MaterialTheme.typography.bodySmall,
+        modifier = Modifier.fillMaxWidth(),
+    )
+}
+
+private fun SplitTunnelingTab.label(): Int =
+    when (this) {
+        SplitTunnelingTab.Bypass -> R.string.split_mode_bypass
+        SplitTunnelingTab.IncludeOnly -> R.string.split_mode_include_only
+    }
+
+/** The header over the apps on the list of this tab. */
+internal fun SplitTunnelingTab.selectedAppsHeader(): Int =
+    when (this) {
+        SplitTunnelingTab.Bypass -> R.string.exclude_applications
+        SplitTunnelingTab.IncludeOnly -> R.string.apps_using_the_vpn
+    }
+
+private const val BANNER_FILL = 0.12f
+private const val BANNER_BORDER = 0.45f
 
 private fun LazyListScope.loading() {
     item(key = CommonContentKey.PROGRESS, contentType = ContentType.PROGRESS) {
@@ -221,40 +402,42 @@ private fun LazyListScope.loading() {
 private fun LazyListScope.appList(
     state: SplitTunnelingUiState,
     focusManager: FocusManager,
-    onExcludeAppClick: (packageName: PackageName) -> Unit,
-    onIncludeAppClick: (packageName: PackageName) -> Unit,
+    onAddAppClick: (packageName: PackageName) -> Unit,
+    onRemoveAppClick: (packageName: PackageName) -> Unit,
     onResolveIcon: (PackageName) -> Drawable?,
 ) {
-    if (state.excludedApps.isNotEmpty()) {
-        excludedAppsHeaderItem(
-            key = SplitTunnelingContentKey.EXCLUDED_APPLICATIONS,
-            textId = R.string.exclude_applications,
-            enabled = state.enabled,
-            exludedAppsCount = state.excludedApps.size,
-            includedAppsCount = state.includedApps.size,
+    // Both lists stay editable while their mode is off, so the apps can be
+    // chosen before "VPN only for" is turned on rather than after.
+    if (state.selectedApps.isNotEmpty()) {
+        selectedAppsHeaderItem(
+            key = SplitTunnelingContentKey.SELECTED_APPLICATIONS,
+            textId = state.tab.selectedAppsHeader(),
+            enabled = true,
+            selectedAppsCount = state.selectedApps.size,
+            otherAppsCount = state.otherApps.size,
         )
         appItems(
-            apps = state.excludedApps,
+            apps = state.selectedApps,
             focusManager = focusManager,
-            onAppClick = onIncludeAppClick,
+            onAppClick = onRemoveAppClick,
             onResolveIcon = onResolveIcon,
-            enabled = state.enabled,
-            excluded = true,
+            enabled = true,
+            selected = true,
         )
     }
     spacer()
     headerItem(
-        key = SplitTunnelingContentKey.INCLUDED_APPLICATIONS,
+        key = SplitTunnelingContentKey.OTHER_APPLICATIONS,
         textId = R.string.all_applications,
-        enabled = state.enabled,
+        enabled = true,
     )
     appItems(
-        apps = state.includedApps,
+        apps = state.otherApps,
         focusManager = focusManager,
-        onAppClick = onExcludeAppClick,
+        onAppClick = onAddAppClick,
         onResolveIcon = onResolveIcon,
-        enabled = state.enabled,
-        excluded = false,
+        enabled = true,
+        selected = false,
     )
     spacer()
 }
@@ -265,7 +448,7 @@ internal fun LazyListScope.appItems(
     onAppClick: (PackageName) -> Unit,
     onResolveIcon: (PackageName) -> Drawable?,
     enabled: Boolean,
-    excluded: Boolean,
+    selected: Boolean,
 ) {
     itemsIndexedWithDivider(
         items = apps,
@@ -290,7 +473,7 @@ internal fun LazyListScope.appItems(
         SplitTunnelingListItem(
             title = listItem.name,
             iconState = icon,
-            isSelected = excluded,
+            isSelected = selected,
             isEnabled = enabled,
             modifier = Modifier.animateItem(),
             position =
@@ -329,12 +512,12 @@ internal fun LazyListScope.headerItem(key: String, textId: Int, enabled: Boolean
     }
 }
 
-internal fun LazyListScope.excludedAppsHeaderItem(
+internal fun LazyListScope.selectedAppsHeaderItem(
     key: String,
     textId: Int,
     enabled: Boolean,
-    exludedAppsCount: Int,
-    includedAppsCount: Int,
+    selectedAppsCount: Int,
+    otherAppsCount: Int,
 ) {
     itemWithDivider(key = key, contentType = ContentType.HEADER) {
         ListHeader(
@@ -343,8 +526,8 @@ internal fun LazyListScope.excludedAppsHeaderItem(
             trailingText =
                 stringResource(
                     R.string.x_out_of_y,
-                    exludedAppsCount,
-                    exludedAppsCount + includedAppsCount,
+                    selectedAppsCount,
+                    selectedAppsCount + otherAppsCount,
                 ),
         )
     }
@@ -371,7 +554,7 @@ internal fun LazyListScope.systemAppsToggle(
                 } else {
                     AlphaDisabled
                 },
-            position = Position.Bottom,
+            position = Position.Single,
         )
     }
 }
@@ -386,12 +569,6 @@ private fun Lc<Loading, SplitTunnelingUiState>.isModal(): Boolean =
     when (this) {
         is Lc.Loading -> value.isModal
         is Lc.Content -> value.isModal
-    }
-
-private fun Lc<Loading, SplitTunnelingUiState>.enabled(): Boolean =
-    when (this) {
-        is Lc.Loading -> false
-        is Lc.Content -> value.enabled
     }
 
 fun PackageManager.getApplicationIconOrNull(packageName: PackageName): Drawable? =
@@ -435,7 +612,11 @@ private inline fun LazyListScope.itemWithDivider(
     }
 
 internal object SplitTunnelingContentKey {
-    const val EXCLUDED_APPLICATIONS = "excluded"
+    const val TABS = "tabs"
+    const val MODE_SWITCH = "mode_switch"
+    const val TAB_DESCRIPTION = "tab_description"
+    const val INCLUDE_ONLY_BANNER = "include_only_banner"
+    const val SELECTED_APPLICATIONS = "selected"
     const val SHOW_SYSTEM_APPLICATIONS = "show_system"
-    const val INCLUDED_APPLICATIONS = "included"
+    const val OTHER_APPLICATIONS = "others"
 }

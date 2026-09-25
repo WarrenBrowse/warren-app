@@ -40,7 +40,9 @@ import com.warrenbrowse.vpn.feature.splittunneling.impl.CommonContentKey
 import com.warrenbrowse.vpn.feature.splittunneling.impl.ContentType
 import com.warrenbrowse.vpn.feature.splittunneling.impl.SplitTunnelingContentKey
 import com.warrenbrowse.vpn.feature.splittunneling.impl.appItems
-import com.warrenbrowse.vpn.feature.splittunneling.impl.excludedAppsHeaderItem
+import com.warrenbrowse.vpn.feature.splittunneling.impl.SplitTunnelingTab
+import com.warrenbrowse.vpn.feature.splittunneling.impl.selectedAppsHeader
+import com.warrenbrowse.vpn.feature.splittunneling.impl.selectedAppsHeaderItem
 import com.warrenbrowse.vpn.feature.splittunneling.impl.getApplicationIconOrNull
 import com.warrenbrowse.vpn.feature.splittunneling.impl.headerItem
 import com.warrenbrowse.vpn.lib.common.Lc
@@ -53,17 +55,18 @@ import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaScrollbar
 import org.koin.androidx.compose.koinViewModel
+import org.koin.core.parameter.parametersOf
 
 @Composable
-fun SearchSplitTunnelingScreen(navigator: Navigator) {
-    val viewModel = koinViewModel<SearchSplitTunnelingViewModel>()
+fun SearchSplitTunnelingScreen(tab: SplitTunnelingTab, navigator: Navigator) {
+    val viewModel = koinViewModel<SearchSplitTunnelingViewModel> { parametersOf(tab) }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     SearchSplitTunnelingScreen(
         state = state,
         onSearchInputChanged = viewModel::onSearchInputChanged,
-        onExcludeAppClick = viewModel::onExcludeAppClick,
-        onIncludeAppClick = viewModel::onIncludeAppClick,
+        onAddAppClick = viewModel::onAddAppClick,
+        onRemoveAppClick = viewModel::onRemoveAppClick,
         onGoBack = dropUnlessResumed { navigator.goBack() },
     )
 }
@@ -73,8 +76,8 @@ fun SearchSplitTunnelingScreen(
     state: Lc<Unit, SearchSplitTunnelingUiState>,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
     onSearchInputChanged: (String) -> Unit,
-    onExcludeAppClick: (packageName: PackageName) -> Unit,
-    onIncludeAppClick: (packageName: PackageName) -> Unit,
+    onAddAppClick: (packageName: PackageName) -> Unit,
+    onRemoveAppClick: (packageName: PackageName) -> Unit,
     onGoBack: () -> Unit,
 ) {
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -123,8 +126,8 @@ fun SearchSplitTunnelingScreen(
                         appList(
                             state = state.value,
                             focusManager = focusManager,
-                            onExcludeAppClick = onExcludeAppClick,
-                            onIncludeAppClick = onIncludeAppClick,
+                            onAddAppClick = onAddAppClick,
+                            onRemoveAppClick = onRemoveAppClick,
                             onResolveIcon = { packageName ->
                                 packageManager.getApplicationIconOrNull(packageName)
                             },
@@ -151,44 +154,44 @@ private fun LazyListScope.spacer() {
 private fun LazyListScope.appList(
     state: SearchSplitTunnelingUiState,
     focusManager: FocusManager,
-    onExcludeAppClick: (packageName: PackageName) -> Unit,
-    onIncludeAppClick: (packageName: PackageName) -> Unit,
+    onAddAppClick: (packageName: PackageName) -> Unit,
+    onRemoveAppClick: (packageName: PackageName) -> Unit,
     onResolveIcon: (PackageName) -> Drawable?,
 ) {
-    if (state.includedApps.isEmpty() && state.excludedApps.isEmpty()) {
+    if (state.otherApps.isEmpty() && state.selectedApps.isEmpty()) {
         item { NoAppsMatchingSearch(state.searchTerm) }
     }
-    if (state.excludedApps.isNotEmpty()) {
-        excludedAppsHeaderItem(
-            key = SplitTunnelingContentKey.EXCLUDED_APPLICATIONS,
-            textId = R.string.exclude_applications,
+    if (state.selectedApps.isNotEmpty()) {
+        selectedAppsHeaderItem(
+            key = SplitTunnelingContentKey.SELECTED_APPLICATIONS,
+            textId = state.tab.selectedAppsHeader(),
             enabled = true,
-            exludedAppsCount = state.excludedApps.size,
-            includedAppsCount = state.includedApps.size,
+            selectedAppsCount = state.selectedApps.size,
+            otherAppsCount = state.otherApps.size,
         )
         appItems(
-            apps = state.excludedApps,
+            apps = state.selectedApps,
             focusManager = focusManager,
-            onAppClick = onIncludeAppClick,
+            onAppClick = onRemoveAppClick,
             onResolveIcon = onResolveIcon,
             enabled = true,
-            excluded = true,
+            selected = true,
         )
         spacer()
     }
-    if (state.includedApps.isNotEmpty()) {
+    if (state.otherApps.isNotEmpty()) {
         headerItem(
-            key = SplitTunnelingContentKey.INCLUDED_APPLICATIONS,
+            key = SplitTunnelingContentKey.OTHER_APPLICATIONS,
             textId = R.string.all_applications,
             enabled = true,
         )
         appItems(
-            apps = state.includedApps,
+            apps = state.otherApps,
             focusManager = focusManager,
-            onAppClick = onExcludeAppClick,
+            onAppClick = onAddAppClick,
             onResolveIcon = onResolveIcon,
             enabled = true,
-            excluded = false,
+            selected = false,
         )
         spacer()
     }

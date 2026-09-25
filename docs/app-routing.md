@@ -1,7 +1,10 @@
 # App routing: exclude, per-app country, VPN-only-for
 
 Status: being implemented on branch `feat/per-app-exit` (2026-09-25): per-app
-country runs in the datapath on desktop (sections 2.2 to 2.6).
+country runs in the datapath on desktop (sections 2.2 to 2.6). On Android,
+exclude and include-only run on branch `feat/android-include-only`
+(2026-09-26, section 3.1); per-app country is the next Android step
+(section 3.2).
 This document is the contract the implementation lots follow. When the code and
 this file disagree, fix one of them in the same commit.
 
@@ -51,6 +54,10 @@ ExitChoice { country: CountryCode, city: Option<CityCode> }
      everything else through the main connection.
 - The split-tunneling RPCs keep their access class (owner and administrators
   only, `docs/security.md`), including the new ones.
+- On Android the settings live in `WarrenLocalSettingsRepository`
+  (SharedPreferences `split_tunneling_mode`, `split_tunneling_excluded_apps`,
+  `split_tunneling_included_apps`). The older `split_tunneling_enabled` switch
+  is read once, when no mode is stored yet, and becomes `Exclude` or `Off`.
 
 ## 2. Per-app country (in-engine, no driver, no entitlement)
 
@@ -229,13 +236,63 @@ subnet route), so an included app's names never go to the ISP.
 | macOS | the existing split-tunnel classifier (eslogger process tracking, pf route-to into the ST utun) with the decision inverted: included processes to the VPN, everything else to the default interface. Needs Full Disk Access, like exclude. |
 | Windows | the unmodified, Microsoft-signed Mullvad driver with the address pair swapped (tunnel address registered as "internet", physical as "tunnel") and the included apps registered as split; the tunnel gets its own `0.0.0.0/0` with a higher metric than the physical default instead of the two `/1` halves; winfw gets a policy that permits non-included apps. IPv6: when the tunnel has no IPv6, winfw blocks included apps' IPv6 (by app id) so no IPv6 flow escapes. Included apps cannot reach the LAN. |
 | Linux | an `included` cgroup marked in nft; the tunnel table lookup (pref 51) becomes conditional on that mark (warrenguard-route-split gains the parameter); marked traffic that would leave through anything but the tunnel is dropped; launched through `warren-include`, the mirror of `warren-exclude`, same owner-only rule. |
-| Android | `VpnService.Builder.addAllowedApplication`, with a guard refusing an empty or fully uninstalled list (Android would otherwise capture everything), and the same allow list on every blackhole plan. |
+| Android | `VpnService.Builder.addAllowedApplication`, never mixed with `addDisallowedApplication` in one builder (Android refuses it). Details in section 3.1. |
 | iOS | not available. |
 
 The GUI shows a persistent, calm warning while include-only is active: a
-banner in the tab ("Only these apps are protected. The rest of your device
-uses your normal connection.") and a short label on the main screen under the
-connection state. Turning the mode on asks for one confirmation.
+banner in the tab ("Only these apps are protected. Everything else on this
+device uses your normal connection.") and a short label on the main screen
+under the connection state. Turning the mode on asks for one confirmation.
+
+### 3.1 Android
+
+Implementation: `lib/model/.../AppRouting.kt` (the resolution),
+`app/.../service/WarrenTunInterfacePlan.kt` (`tunAppRouting`, the plans),
+`WarrenQuinnAdapter.kt` (the drop policy), `WarrenTunnelPlatform.kt` (the
+builder calls).
+
+- The allow list is the included packages installed on the device, plus Warren
+  itself. Warren has to be on it: the in-tunnel egress probe and the NAT-PMP
+  client are sockets of the app aimed at the tunnel gateway, and outside the
+  VPN they would reach the physical network, where the probe convicts a
+  healthy exit. Everything else about Warren's own traffic is as in a full
+  tunnel: the relay and token-mint sockets are protected, and the other API
+  calls go through the tunnel.
+- Guard: a builder given no allowed package, or only packages it cannot find,
+  captures every app. So an include-only list with no installed package never
+  reaches the builder as an allow list: the tunnel is a full tunnel, which
+  keeps the chosen apps protected, and the screen says so ("None of the apps
+  you chose is on this device, so every app uses the VPN until you choose
+  one."). The connect screen label counts only installed apps, and is absent
+  in that case.
+- Every blackhole plan carries the same allow list: the included apps stay
+  captured while the tunnel is down, and every other app stays online. In
+  exclude mode the blackhole still captures every app, excluded ones
+  included, as before.
+- In include-only a drop stays blocked whatever the lockdown setting: a
+  flapping tunnel parks behind the blackhole instead of releasing traffic, and
+  an expired account blocks instead of releasing, because the blackhole strands
+  no other app and releasing would let an included app out in clear.
+- A list change reconnects a connected tunnel, and replaces a blackhole that is
+  up (new one established first, old one closed after), so an app added while
+  blocked is held at once.
+- The system setting "Block connections without VPN" blocks every app outside
+  the VPN, so with it on only the included apps have Internet; the tab says so.
+- DNS: an included app resolves through the tunnel like any tunneled app. An
+  app outside the list uses the physical network's resolver, as an excluded
+  app does (`split-tunneling.md`).
+
+### 3.2 Android per-app country: the next step
+
+Not implemented, and the tab is not shown on Android. The route sessions and
+the router are the desktop ones (sections 2.2 to 2.4) ported into
+`warren-jni`; what Android lacks is the flow owner. Every packet of a tunneled
+app already reaches the engine through the TUN, and
+`ConnectivityManager.getConnectionOwnerUid` (API 29+, callable by the active
+VPN app) answers the uid owning a TCP or UDP 5-tuple seen there, which
+`PackageManager.getPackagesForUid` names. The lookup is a Binder call, so it
+follows the desktop rules: once per new flow, never per packet, and an
+unresolved owner goes through the main connection.
 
 ## 4. Platform availability
 

@@ -83,7 +83,23 @@
     <string name="update_available_description">A versão %1$s está disponível. Toque para transferir a atualização.</string>
     <string name="update_now">Atualizar agora</string>
     <string name="quit">Sair</string>
-    <string name="split_tunneling_description">Escolha as aplicações que deseja excluir do túnel VPN.</string>
+    <string name="app_routing_description">Escolha como cada aplicação se liga.</string>
+    <string name="split_mode_bypass">Fora da VPN</string>
+    <string name="split_mode_bypass_description">As aplicações que escolher ligam-se como se a VPN estivesse desligada.</string>
+    <string name="split_mode_include_only">VPN só para</string>
+    <string name="split_mode_include_only_description">Só as aplicações que escolher usam a VPN.</string>
+    <string name="include_only_lockdown_warning">Atenção: se a opção \"Bloquear ligações sem VPN\" estiver ativada, as aplicações que não escolheu não terão Internet.</string>
+    <string name="include_only_banner">Só estas aplicações estão protegidas. Tudo o resto neste dispositivo usa a sua ligação normal.</string>
+    <string name="include_only_no_app">Nenhuma das aplicações escolhidas está neste dispositivo, por isso todas as aplicações usam a VPN até escolher uma.</string>
+    <string name="include_only_confirm">Só as aplicações que escolher vão usar a VPN. O resto deste dispositivo não ficará protegido.</string>
+    <string name="split_mode_replaces_bypass">Isto substitui \"Fora da VPN\". A sua lista de aplicações aí é mantida.</string>
+    <string name="split_mode_replaces_include_only">Isto substitui \"VPN só para\": todas as aplicações voltam a usar a VPN, exceto as que deixar de fora. A sua lista de aplicações aí é mantida.</string>
+    <string name="split_mode_turn_on">Ativar</string>
+    <string name="apps_using_the_vpn">Na VPN</string>
+    <plurals name="vpn_only_for_apps">
+        <item quantity="one">VPN só para %1$d aplicação</item>
+        <item quantity="other">VPN só para %1$d aplicações</item>
+    </plurals>
     <string name="split_tunneling_description_warning">Atenção: se a opção \"Bloquear ligações sem VPN\" estiver ativada, as aplicações divididas não terão Internet. Tenha sempre em mente que o túnel dividido representa um risco para a privacidade.</string>
     <string name="enable">Ativar</string>
     <string name="confirm_local_dns">O servidor DNS local não funcionará a menos que ative a \"Partilha de rede local\" nas definições de VPN.</string>

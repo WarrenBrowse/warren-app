@@ -83,7 +83,23 @@
     <string name="update_available_description">نسخهٔ %1$s در دسترس است. برای دانلود به‌روزرسانی ضربه بزنید.</string>
     <string name="update_now">به‌روزرسانی اکنون</string>
     <string name="quit">خروج</string>
-    <string name="split_tunneling_description">اپلیکیشن‌هایی را که می‌خواهید از تونل VPN خارج کنید انتخاب نمایید.</string>
+    <string name="app_routing_description">انتخاب کنید هر اپلیکیشن چگونه متصل شود.</string>
+    <string name="split_mode_bypass">خارج از VPN</string>
+    <string name="split_mode_bypass_description">اپلیکیشن‌هایی که انتخاب می‌کنید طوری متصل می‌شوند که انگار VPN خاموش است.</string>
+    <string name="split_mode_include_only">VPN فقط برای</string>
+    <string name="split_mode_include_only_description">فقط اپلیکیشن‌هایی که انتخاب می‌کنید از VPN استفاده می‌کنند.</string>
+    <string name="include_only_lockdown_warning">توجه: اگر «مسدود کردن اتصال‌ها بدون VPN» فعال باشد، اپلیکیشن‌هایی که انتخاب نکرده‌اید به اینترنت دسترسی نخواهند داشت.</string>
+    <string name="include_only_banner">فقط این اپلیکیشن‌ها محافظت می‌شوند. بقیه این دستگاه از اتصال عادی شما استفاده می‌کند.</string>
+    <string name="include_only_no_app">هیچ‌یک از اپلیکیشن‌های انتخاب‌شده روی این دستگاه نیست، بنابراین تا وقتی یکی را انتخاب کنید، همه اپلیکیشن‌ها از VPN استفاده می‌کنند.</string>
+    <string name="include_only_confirm">فقط اپلیکیشن‌هایی که انتخاب می‌کنید از VPN استفاده خواهند کرد. بقیه این دستگاه محافظت نخواهد شد.</string>
+    <string name="split_mode_replaces_bypass">این جایگزین «خارج از VPN» می‌شود. فهرست اپلیکیشن‌های شما در آنجا حفظ می‌شود.</string>
+    <string name="split_mode_replaces_include_only">این جایگزین «VPN فقط برای» می‌شود، بنابراین همه اپلیکیشن‌ها دوباره از VPN استفاده می‌کنند، به‌جز آن‌هایی که خارج از VPN هستند. فهرست اپلیکیشن‌های شما در آنجا حفظ می‌شود.</string>
+    <string name="split_mode_turn_on">روشن کردن</string>
+    <string name="apps_using_the_vpn">در VPN</string>
+    <plurals name="vpn_only_for_apps">
+        <item quantity="one">VPN فقط برای %1$d اپلیکیشن</item>
+        <item quantity="other">VPN فقط برای %1$d اپلیکیشن</item>
+    </plurals>
     <string name="split_tunneling_description_warning">توجه: اگر «مسدود کردن اتصال‌ها بدون VPN» فعال باشد، اپلیکیشن‌های تفکیک‌شده به اینترنت دسترسی نخواهند داشت. همیشه در نظر داشته باشید که تونل‌گذاری تفکیک‌شده یک خطر برای حریم خصوصی است.</string>
     <string name="enable">فعال کردن</string>
     <string name="confirm_local_dns">سرور DNS محلی تنها زمانی کار می‌کند که «اشتراک‌گذاری شبکهٔ محلی» را در تنظیمات VPN فعال کنید.</string>

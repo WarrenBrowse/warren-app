@@ -83,7 +83,23 @@
     <string name="update_available_description">Sürüm %1$s kullanılabilir. Güncellemeyi indirmek için dokunun.</string>
     <string name="update_now">Şimdi güncelle</string>
     <string name="quit">Çık</string>
-    <string name="split_tunneling_description">VPN tünelinden hariç tutmak istediğiniz uygulamaları seçin.</string>
+    <string name="app_routing_description">Her uygulamanın nasıl bağlanacağını seçin.</string>
+    <string name="split_mode_bypass">VPN dışında</string>
+    <string name="split_mode_bypass_description">Seçtiğiniz uygulamalar, VPN kapalıymış gibi bağlanır.</string>
+    <string name="split_mode_include_only">Yalnızca seçilenlere VPN</string>
+    <string name="split_mode_include_only_description">VPN\'i yalnızca seçtiğiniz uygulamalar kullanır.</string>
+    <string name="include_only_lockdown_warning">Dikkat: \"VPN üzerinden olmayan bağlantıları engelle\" seçeneği etkinse, seçmediğiniz uygulamalarda internet kullanılamayacaktır.</string>
+    <string name="include_only_banner">Yalnızca bu uygulamalar korunuyor. Bu cihazdaki diğer her şey normal bağlantınızı kullanır.</string>
+    <string name="include_only_no_app">Seçtiğiniz uygulamaların hiçbiri bu cihazda yok, bu nedenle siz bir uygulama seçene kadar tüm uygulamalar VPN\'i kullanır.</string>
+    <string name="include_only_confirm">VPN\'i yalnızca seçtiğiniz uygulamalar kullanacak. Bu cihazın geri kalanı korunmayacak.</string>
+    <string name="split_mode_replaces_bypass">Bu, \"VPN dışında\" modunun yerini alır. Oradaki uygulama listeniz korunur.</string>
+    <string name="split_mode_replaces_include_only">Bu, \"Yalnızca seçilenlere VPN\" modunun yerini alır; VPN dışında kalanlar hariç tüm uygulamalar yeniden VPN\'i kullanır. Oradaki uygulama listeniz korunur.</string>
+    <string name="split_mode_turn_on">Aç</string>
+    <string name="apps_using_the_vpn">VPN\'i kullanıyor</string>
+    <plurals name="vpn_only_for_apps">
+        <item quantity="one">%1$d uygulama için VPN</item>
+        <item quantity="other">%1$d uygulama için VPN</item>
+    </plurals>
     <string name="split_tunneling_description_warning">Dikkat: \"VPN üzerinden olmayan bağlantıları engelle\" seçeneği etkinse, bölünmüş uygulamalarda internet kullanılamayacaktır. Bölünmüş tünellemenin, gizlilik riski taşıdığını her zaman göz önünde bulundurun.</string>
     <string name="enable">Etkinleştir</string>
     <string name="confirm_local_dns">VPN ayarlarındaki \"Yerel Ağ Paylaşımı\" seçeneğini etkinleştirmediğiniz sürece yerel DNS sunucusu etkinleşmez.</string>

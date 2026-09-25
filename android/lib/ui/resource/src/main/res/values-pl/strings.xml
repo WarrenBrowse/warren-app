@@ -83,7 +83,25 @@
     <string name="update_available_description">Wersja %1$s jest dostępna. Dotknij, aby pobrać aktualizację.</string>
     <string name="update_now">Aktualizuj teraz</string>
     <string name="quit">Zakończ</string>
-    <string name="split_tunneling_description">Wybierz aplikacje, które chcesz wykluczyć z tunelu VPN.</string>
+    <string name="app_routing_description">Wybierz, jak łączy się każda aplikacja.</string>
+    <string name="split_mode_bypass">Poza VPN</string>
+    <string name="split_mode_bypass_description">Wybrane aplikacje łączą się tak, jakby VPN był wyłączony.</string>
+    <string name="split_mode_include_only">VPN tylko dla</string>
+    <string name="split_mode_include_only_description">Tylko wybrane aplikacje korzystają z VPN.</string>
+    <string name="include_only_lockdown_warning">Uwaga: jeśli opcja „Blokuj połączenia bez pośrednictwa sieci VPN” jest włączona, aplikacje, których nie wybrano, nie będą miały dostępu do Internetu.</string>
+    <string name="include_only_banner">Chronione są tylko te aplikacje. Cała reszta tego urządzenia korzysta ze zwykłego połączenia.</string>
+    <string name="include_only_no_app">Żadnej z wybranych aplikacji nie ma na tym urządzeniu, więc wszystkie aplikacje korzystają z VPN, dopóki nie wybierzesz którejś.</string>
+    <string name="include_only_confirm">Tylko wybrane aplikacje będą korzystać z VPN. Reszta tego urządzenia nie będzie chroniona.</string>
+    <string name="split_mode_replaces_bypass">To zastępuje tryb „Poza VPN”. Twoja lista aplikacji w nim zostaje zachowana.</string>
+    <string name="split_mode_replaces_include_only">To zastępuje tryb „VPN tylko dla”, więc wszystkie aplikacje znów korzystają z VPN, oprócz tych, które go omijają. Twoja lista aplikacji w nim zostaje zachowana.</string>
+    <string name="split_mode_turn_on">Włącz</string>
+    <string name="apps_using_the_vpn">Korzystają z VPN</string>
+    <plurals name="vpn_only_for_apps">
+        <item quantity="one">VPN tylko dla %1$d aplikacji</item>
+        <item quantity="few">VPN tylko dla %1$d aplikacji</item>
+        <item quantity="many">VPN tylko dla %1$d aplikacji</item>
+        <item quantity="other">VPN tylko dla %1$d aplikacji</item>
+    </plurals>
     <string name="split_tunneling_description_warning">Uwaga: jeśli opcja „Blokuj połączenia bez pośrednictwa sieci VPN” jest włączona, wówczas aplikacje dzielące nie będą miały dostępu do Internetu. Należy pamiętać, że dzielone tunelowanie stanowi zagrożenie dla prywatności.</string>
     <string name="enable">Włącz</string>
     <string name="confirm_local_dns">Lokalny serwer DNS nie będzie działał, dopóki nie włączysz opcji „Udostępnianie sieci lokalnej” w obszarze Ustawienia VPN.</string>

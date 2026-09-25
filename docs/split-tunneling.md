@@ -72,6 +72,9 @@ Otherwise DNS won't work.
 
 In other words: Excluded apps behave as if there was no VPN tunnel running at all.
 
+With "VPN only for" (include-only, `app-routing.md` section 3.1), a chosen app behaves as a
+normal app above, and every other app behaves as an excluded app.
+
 ## Other limitations
 
 Several limitations exist that relate to interprocess communication. An app is excluded if its path
