@@ -8,6 +8,18 @@
   Réseau Warren avec les totaux en direct. Les chiffres en direct d'une exit n'apparaissent qu'à
   partir de 20 personnes connectées dessus, pour que le trafic de personne ne puisse y être isolé.
   Les chiffres s'affichent dès que la mise à jour serveur correspondante est en ligne.
+- [Windows, macOS, Linux] Afficher les avertissements enregistrés sur votre compte quand un port
+  redirigé est fermé après un signalement d'abus : une notification par avertissement, une
+  bannière avec sa référence de dossier et un lien pour le contester, et la liste complète dans
+  la vue port forwarding. Après un avertissement sur son port, le client torrent cesse de suivre
+  les changements de port jusqu'à ce que vous appliquiez de nouveau un port.
+  `warren account standing` affiche les avertissements, et `warren port-forward status` les
+  liste sous les ports. Les avertissements s'affichent dès que la mise à jour serveur
+  correspondante est en ligne.
+- [Windows, macOS, Linux] Afficher la suspension d'un compte sans d'abord tenter de se connecter,
+  avec le jour où elle prend fin quand il y en a un.
+- [Windows, macOS, Linux] Dire pourquoi le serveur a refusé un port redirigé, plus de droit de port
+  disponible ou refus, et redemander automatiquement, au lieu d'un échec générique.
 
 ### Corrigé
 - [Linux] Redémarrer l'application à l'installation d'une mise à jour sur Arch Linux et ses

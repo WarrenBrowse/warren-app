@@ -31,6 +31,16 @@ Line wrap the file at 100 chars.                                              Th
   each exit in the location list and on the connection card, and a new Warren network view with
   live totals. An exit's live figures appear once 20 people share it, so no one's traffic can be
   singled out. The figures show up as soon as the matching server update is live.
+- [Windows, macOS, Linux] Show the warnings recorded against your account when a forwarded port
+  is closed after an abuse report: a notification for each warning, a banner with its case
+  reference and a link to contest it, and the full list in the port forwarding view. After a
+  warning on its port, the torrent client stops following port changes until you apply a port
+  again. `warren account standing` prints the warnings, and `warren port-forward status` lists
+  them under the ports. The warnings show up as soon as the matching server update is live.
+- [Windows, macOS, Linux] Show a suspended account's suspension without trying to connect first,
+  with the day it ends when there is one.
+- [Windows, macOS, Linux] Say why the server refused a forwarded port, no entitlement left or
+  refused, and ask again automatically, instead of a generic failure.
 
 ### Fixed
 - [Linux] Restart the app when an update is installed on Arch Linux and its derivatives, and on a

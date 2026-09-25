@@ -22,6 +22,17 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   Rețeaua Warren cu totalurile în direct. Cifrele în direct ale unui exit apar doar de la 20 de
   persoane conectate pe el, ca traficul nimănui să nu poată fi izolat. Cifrele apar imediat ce
   actualizarea de server corespunzătoare e activă.
+- [Windows, macOS, Linux] Vezi avertismentele înregistrate pe contul tău când un port redirecționat
+  e închis după o raportare de abuz: o notificare pentru fiecare avertisment, un banner cu
+  referința dosarului și un link pentru contestare, și lista completă în vederea port forwarding.
+  După un avertisment pe portul său, clientul torrent nu mai urmează schimbările de port până când
+  aplici din nou un port. `warren account standing` afișează avertismentele, iar
+  `warren port-forward status` le listează sub porturi. Avertismentele apar imediat ce
+  actualizarea de server corespunzătoare e activă.
+- [Windows, macOS, Linux] Afișează suspendarea unui cont fără a încerca mai întâi conectarea, cu
+  ziua în care se încheie, când există.
+- [Windows, macOS, Linux] Spune de ce serverul a refuzat un port redirecționat, niciun drept de port
+  disponibil sau refuz, și reîncearcă automat, în loc de un eșec generic.
 
 ### Reparat
 - [Linux] Repornește aplicația la instalarea unei actualizări pe Arch Linux și derivatele sale, și
