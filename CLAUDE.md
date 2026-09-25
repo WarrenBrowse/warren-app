@@ -130,6 +130,18 @@ are already JPEG so a PNG imageset conserves nothing, and it cost 10 MB of
 `Assets.car`. The two alpha layers stay PNG. Formats, measurements and the
 procedure for adding a country: [`docs/SCENERY-ART.md`](docs/SCENERY-ART.md).
 
+## The browser extension copies this design
+
+warren-extension takes its design from this repo, byte for byte, pinned to one
+commit: the scenery layers and `scenery.json`, `assets/icons`,
+`assets/images/flags`, the lockup SVGs, the Open Sans and Source Sans Pro
+fonts, and the token tables of `src/renderer/lib/foundations/variables`, which
+it writes out as CSS under these same `--names`. So renaming a CSS variable, an
+icon file or a token table export breaks its next `pnpm design:sync`, and a
+change here reaches the extension only when it syncs (its CI refuses a copy
+that differs from its pin; `scripts/pin-drift.sh` in the workspace reports the
+lag). Map: warren-extension `docs/ARCHITECTURE.md`.
+
 ## Language and typography: repo-specific notes
 
 The shared conventions rule already mandates English-only code and comments, the
