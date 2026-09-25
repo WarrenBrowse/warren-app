@@ -244,7 +244,7 @@ impl TunnelState for DisconnectedState {
             }
             #[cfg(windows)]
             Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {
-                let _ = shared_values.set_split_apps(apps, result_tx);
+                let _ = shared_values.set_split_apps(apps, result_tx, false);
                 SameState(self)
             }
             #[cfg(target_os = "linux")]
