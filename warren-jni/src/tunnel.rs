@@ -207,6 +207,7 @@ pub enum TunnelStartError {
 pub async fn run_session(
     tun: AndroidTun,
     signing_key: SigningKey,
+    blinding: warren_api::BlindingKey,
     config: WarrenTunnelConfig,
     status: &'static crate::status_watch::StatusCell,
     cancel_rx: oneshot::Receiver<()>,
@@ -221,7 +222,7 @@ pub async fn run_session(
     // Pass tokens are presented at setup so the exit admits the session
     // without learning the wallet; an empty stack (nothing minted yet, epoch
     // drained, no issuance) keeps the v6 wallet-signed path.
-    let session_tokens = crate::token_provider::provider_for(signing_key.clone());
+    let session_tokens = crate::token_provider::provider_for(signing_key.clone(), blinding);
 
     // Port entitlements ride the same wallet and the same coarse refresh
     // (warren-core doc 99): without one, the exit falls back to its per-client
@@ -404,8 +405,8 @@ async fn run_multi_hop_session(
     let exit_mlkem768_pubkey: Option<Vec<u8>> = None;
 
     // v7 anonymous admission (default, warren-core doc 64). The supervisor calls
-    // the provider once per session establishment, so every redial presents a
-    // FRESH token: replaying a spent serial would be refused. `presented`
+    // the provider once per session establishment and is handed the whole
+    // current batch, which it walks past any serial the exit refuses. `presented`
     // records whether a stack actually rode the last setup, which is what lets a
     // rejection be attributed to the TOKEN instead of the subscription.
     let presented = Arc::new(AtomicBool::new(false));

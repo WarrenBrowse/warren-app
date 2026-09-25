@@ -6,29 +6,29 @@
 //! One [`warren_api::TokenManager`] per wallet, process-lived: built the first
 //! time a wallet connects and reused across reconnects, so its RAM token store
 //! and its once-per-epoch issuance bookkeeping survive between sessions. A
-//! background task tops it up (current epoch plus the published prefetch
-//! horizon) on a coarse timer. The per-dial stack source only POPS: minting at
-//! connect time would let the issuer correlate the wallet's mint request with
-//! the exit's spend and re-link what the blind signature unlinks.
+//! background task tops it up (current epoch plus [`MINT_HORIZON_EPOCHS`]) on
+//! a coarse timer. A dial never mints: minting at connect time would let the
+//! issuer correlate the wallet's mint request with the exit's spend and
+//! re-link what the blind signature unlinks.
 //!
-//! Android lifecycle (WHY the store is persisted here, unlike the twins): the
-//! VpnService process is killed and restarted by the system routinely, and
-//! issuance is once per wallet and epoch, so a RAM-only store made every
-//! process death strand the already-issued epochs at the issuer: the
-//! replacement process got `already_issued` for the whole minted window and
-//! rode the v6 wallet-identified fallback for up to the full prefetch window
-//! (~2 days), largely defeating v7 anonymity in practice. Two mitigations,
-//! composed:
-//! - the store is persisted as the SDK's seed-free [`warren_api::PersistedTokens`]
-//!   bundle in app-private storage (`allowBackup=false`, so it never reaches a
-//!   cloud backup) and restored at process start, so the first dial after a
-//!   process death is v7 again; the bundle carries only anonymous bearer
-//!   tokens, never the seed, the wallet or anything the token structure does
-//!   not already carry. It is rewritten after each pop, so a spent token is
-//!   not restorable (no double-spend rejection on redial).
-//! - minting is capped at [`MINT_HORIZON_EPOCHS`] ahead instead of the whole
-//!   published window, which bounds both the bearer value at rest and the
-//!   `already_issued` dead zone if the bundle is ever lost (~hours, not days).
+//! The batch is blinded from the wallet seed ([`BlindingKey`]), so every
+//! client of the wallet holds the same tokens and the issuer serves the batch
+//! again to whoever asks for it with the same blinding. An exit leases each
+//! serial to one live session in the whole fleet, so a dial is handed the
+//! whole current-epoch batch and the engine walks it, redialling with the next
+//! token when the exit refuses one. Nothing is consumed: a redial costs no
+//! token.
+//!
+//! Android lifecycle: the VpnService process is killed and restarted by the
+//! system routinely. The store is persisted as the SDK's seed-free
+//! [`warren_api::PersistedTokens`] bundle in app-private storage
+//! (`allowBackup=false`, so it never reaches a cloud backup) after each
+//! refresh and restored at process start, so the first dial after a process
+//! death is v7 before the issuer has answered the replacement process; the
+//! bundle carries only anonymous bearer tokens, never the seed, the wallet or
+//! anything the token structure does not already carry. Minting is capped at
+//! [`MINT_HORIZON_EPOCHS`] ahead instead of the whole published window, which
+//! bounds the bearer value at rest and the signed requests a launch costs.
 //!
 //! Tokens still never cross the JNI boundary into Kotlin.
 
@@ -38,24 +38,35 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
-use warren_api::{HttpTransport, PersistedTokens, TokenManager, WarrenApiClient};
+use warren_api::{BlindingKey, HttpTransport, PersistedTokens, TokenManager, WarrenApiClient};
 use warrenguard_token::TOKEN_LEN;
+
+/// The most tokens one setup request may carry: the default admission sends
+/// the whole stack at once, and the wire refuses to decode a request with
+/// more.
+const MAX_PRESENTED_TOKENS: usize = 8;
+
+#[cfg(all(target_os = "android", feature = "tunnel"))]
+const _: () = assert!(MAX_PRESENTED_TOKENS == warrenguard_wire::MAX_SESSION_TOKENS);
 
 /// Epochs minted ahead of the current one (current + horizon per refresh
 /// tick). With hourly issuer epochs and the 10 minute refresh cadence this
 /// keeps ~3 h of runway through an API outage while bounding what a lost or
 /// stolen bundle is worth. The issuer evaluates each requested epoch
-/// independently, so the narrowed request needs no server-side change.
+/// independently, so the narrowed request needs no server-side change, and it
+/// serves a derived batch again, so a narrow window loses nothing across a
+/// process death.
 const MINT_HORIZON_EPOCHS: u64 = 2;
 
 /// Unix-seconds clock seam. The clock is a system boundary (shared TDD rule):
 /// tests drive epochs deterministically, production wires the system clock.
 type NowFn = Arc<dyn Fn() -> u64 + Send + Sync>;
 
-/// Pop-only source of the per-session token stack, in the serialized form the
-/// tunnel layer wraps into wire `SessionToken`s. An empty stack means "no
-/// token this epoch" and keeps the v6 wallet-signed path (availability over a
-/// temporary anonymity downgrade, matching desktop and iOS).
+/// Source of the per-session token stack, in the serialized form the tunnel
+/// layer wraps into wire `SessionToken`s: the current epoch's batch, never
+/// consumed. An empty stack means "no token this epoch" and keeps the v6
+/// wallet-signed path (availability over a temporary anonymity downgrade,
+/// matching desktop and iOS).
 pub(crate) type StackSource = Arc<dyn Fn() -> Vec<[u8; TOKEN_LEN]> + Send + Sync>;
 
 /// The on-disk home of the seed-free token bundle, written atomically
@@ -125,14 +136,16 @@ impl<T: HttpTransport + 'static> TokenMint<T> {
         }
     }
 
-    /// The pop-only stack source for `wallet_pubkey`. First sight of a wallet
-    /// builds its manager (via `make_client`, which owns the wallet identity),
-    /// restores the persisted bundle into it, and starts its background
-    /// refresh; later calls reuse both, so the factory runs at most once per
-    /// wallet and process.
+    /// The stack source for `wallet_pubkey`. First sight of a wallet builds
+    /// its manager (via `make_client`, which owns the wallet identity, and
+    /// `key`, the wallet's session blinding key), restores the persisted
+    /// bundle into it, and starts its background refresh; later calls reuse
+    /// both, so the factory runs at most once per wallet and process and a
+    /// later `key` is dropped unused.
     pub(crate) fn stack_source(
         &self,
         wallet_pubkey: [u8; 32],
+        key: BlindingKey,
         make_client: impl FnOnce() -> WarrenApiClient<T>,
     ) -> StackSource {
         let manager = {
@@ -141,7 +154,7 @@ impl<T: HttpTransport + 'static> TokenMint<T> {
                 .entry(wallet_pubkey)
                 .or_insert_with(|| {
                     let manager = Arc::new(
-                        TokenManager::new(Arc::new(make_client()))
+                        TokenManager::new(Arc::new(make_client()), key)
                             .with_mint_horizon(MINT_HORIZON_EPOCHS),
                     );
                     if let Some(persist) = &self.persist
@@ -157,17 +170,9 @@ impl<T: HttpTransport + 'static> TokenMint<T> {
                 .clone()
         };
         let now = self.now.clone();
-        let persist = self.persist.clone();
         Arc::new(move || {
-            let stack = manager.take_current_stack(now());
-            // Persist AFTER the pop so a process death can only ever forget an
-            // unspent token (re-mintable next epoch), never resurrect a spent
-            // one (whose replay the exit would reject).
-            if !stack.is_empty()
-                && let Some(persist) = &persist
-            {
-                persist.save(&manager);
-            }
+            let mut stack = manager.session_stack(now());
+            stack.truncate(MAX_PRESENTED_TOKENS);
             stack
         })
     }
@@ -187,19 +192,20 @@ fn spawn_refresh<T: HttpTransport + 'static>(
         loop {
             tick.tick().await;
             let n = now();
-            match manager.refresh_auto(n).await {
+            match manager.refresh(n).await {
                 // Log the current-epoch stock so a successful-but-empty refresh
-                // (issuer already_issued this account+epoch, e.g. a prior process
-                // minted a batch that died unpersisted with it) is distinguishable
-                // from a mint that actually stocked tokens. 3600 = prod hourly
-                // issuer epoch (directory epoch_secs); no secret material logged.
+                // (the issuer refused this account's epoch) is distinguishable
+                // from a mint that actually stocked tokens. No secret material
+                // logged.
                 Ok(()) => {
                     if let Some(persist) = &persist {
                         persist.save(&manager);
                     }
                     log::info!(
                         "Warren v7 token refresh ok (current-epoch tokens={})",
-                        manager.available(n / 3600)
+                        manager
+                            .epoch_at(n)
+                            .map_or(0, |epoch| manager.available(epoch))
                     );
                 }
                 // Transient: the store keeps vending what it already holds and
@@ -221,7 +227,7 @@ mod android {
     use std::sync::{Arc, OnceLock};
 
     use ed25519_dalek::SigningKey;
-    use warren_api::WarrenApiClient;
+    use warren_api::{BlindingKey, WarrenApiClient};
     use warren_identity::WarrenIdentity;
     use warrenguard_transport::supervisor::SessionTokenProvider;
     use warrenguard_wire::SessionToken;
@@ -266,11 +272,15 @@ mod android {
     /// API. The minting identity is built from the SAME Ed25519 key the tunnel
     /// handshake signs with ([`WarrenIdentity::from_signing_key`], no
     /// re-derivation), so the minting wallet is bit-for-bit the subscribed
-    /// wallet. The returned closure pops one token per dial and never mints.
-    pub(crate) fn provider_for(signing_key: SigningKey) -> SessionTokenProvider {
+    /// wallet, and `blinding` is that wallet's session blinding key. The
+    /// returned closure hands each dial the current batch and never mints.
+    pub(crate) fn provider_for(
+        signing_key: SigningKey,
+        blinding: BlindingKey,
+    ) -> SessionTokenProvider {
         let mint = MINT.get_or_init(|| TokenMint::new(Arc::new(now_unix_secs), persist_file()));
         let wallet_pubkey = signing_key.verifying_key().to_bytes();
-        let source = mint.stack_source(wallet_pubkey, move || {
+        let source = mint.stack_source(wallet_pubkey, blinding, move || {
             WarrenApiClient::new(
                 crate::product::PRODUCT_API_URL.to_owned(),
                 WarrenIdentity::from_signing_key(signing_key),
@@ -293,17 +303,19 @@ mod tests {
     use rand010::rngs::StdRng;
     use warren_api::transport::{HttpRequest, HttpResponse, HttpTransport, TransportError};
     use warren_api::{
-        TokenEpochResponse, TokenIssueRequest, TokenIssueResponse, TokenIssuerDirectory,
-        TokenIssuerKey, WarrenApiClient,
+        BlindingKey, TokenEpochResponse, TokenIssueRequest, TokenIssueResponse,
+        TokenIssuerDirectory, TokenIssuerKey, WarrenApiClient,
     };
     use warren_identity::WarrenIdentity;
     use warrenguard_token::IssuerSecretKey;
 
-    use super::{NowFn, PersistFile, TokenMint};
+    use super::{MAX_PRESENTED_TOKENS, NowFn, PersistFile, StackSource, TokenMint};
 
     const EPOCH_SECS: u64 = 3600;
     const QUOTA: u32 = 3;
     const NOW: u64 = 100 * EPOCH_SECS + 5;
+    const WALLET_A: [u8; 32] = [0x33; 32];
+    const WALLET_B: [u8; 32] = [0x44; 32];
 
     /// Observable state of the fake issuer, shared with the test body. The
     /// HTTP transport is the mocked system boundary (as in warren-api's own
@@ -311,6 +323,7 @@ mod tests {
     /// vended tokens are real tokens.
     struct IssuerState {
         keys: HashMap<u64, IssuerSecretKey>,
+        quota: u32,
         refuse_issuance: AtomicBool,
         fail_transport: AtomicBool,
         issue_calls: AtomicUsize,
@@ -321,6 +334,10 @@ mod tests {
 
     impl FakeIssuer {
         fn new(epochs: &[u64]) -> Self {
+            Self::with_quota(epochs, QUOTA)
+        }
+
+        fn with_quota(epochs: &[u64], quota: u32) -> Self {
             let mut rng = StdRng::seed_from_u64(4242);
             let keys = epochs
                 .iter()
@@ -328,6 +345,7 @@ mod tests {
                 .collect();
             Self(Arc::new(IssuerState {
                 keys,
+                quota,
                 refuse_issuance: AtomicBool::new(false),
                 fail_transport: AtomicBool::new(false),
                 issue_calls: AtomicUsize::new(0),
@@ -356,9 +374,10 @@ mod tests {
                 token_type: 2,
                 epoch_secs: EPOCH_SECS,
                 context_label: "warren/session-token/v1".to_owned(),
-                quota_per_epoch: QUOTA,
+                quota_per_epoch: self.0.quota,
                 prefetch_epochs: 48,
                 keys,
+                attribution_verifying_key_hex: None,
             }
         }
     }
@@ -388,6 +407,7 @@ mod tests {
                         blind_signatures: Vec::new(),
                         token_key_id: None,
                         reject_reason: Some("not_subscribed".to_owned()),
+                        attribution_tags: Vec::new(),
                     });
                     continue;
                 }
@@ -406,18 +426,26 @@ mod tests {
                     blind_signatures: sigs,
                     token_key_id: Some(sk.public_key().key_id().to_hex()),
                     reject_reason: None,
+                    attribution_tags: Vec::new(),
                 });
             }
             ok(serde_json::to_vec(&TokenIssueResponse { epochs }).unwrap())
         }
     }
 
-    fn client(issuer: &FakeIssuer) -> WarrenApiClient<FakeIssuer> {
+    fn client(issuer: &FakeIssuer, wallet: [u8; 32]) -> WarrenApiClient<FakeIssuer> {
         WarrenApiClient::new(
             "https://api.example.test",
-            WarrenIdentity::from_seed(&[0x33; 32]),
+            WarrenIdentity::from_seed(&wallet),
             issuer.clone(),
         )
+    }
+
+    /// Wallet A's source: its identity and its session blinding key.
+    fn source_a(mint: &TokenMint<FakeIssuer>, issuer: &FakeIssuer) -> StackSource {
+        mint.stack_source([1; 32], BlindingKey::session(&WALLET_A), || {
+            client(issuer, WALLET_A)
+        })
     }
 
     /// A movable epoch clock: the handle steps time, the `NowFn` reads it.
@@ -439,31 +467,41 @@ mod tests {
     }
 
     #[tokio::test(start_paused = true)]
-    async fn first_wallet_sight_mints_in_the_background_and_dials_pop_one_token() {
+    async fn first_wallet_sight_mints_in_the_background_and_every_dial_draws_the_batch() {
         let issuer = FakeIssuer::new(&[100, 101]);
         let (_t, now) = clock(NOW);
         let mint = TokenMint::new(now, None);
-        let source = mint.stack_source([1; 32], || client(&issuer));
+        let source = source_a(&mint, &issuer);
 
-        // The background refresh (not any take) fills the store: one issue
+        // The background refresh (not any dial) fills the store: one issue
         // request per published epoch.
         let state = issuer.0.clone();
         wait_for(|| state.issue_calls.load(Ordering::SeqCst) >= 2).await;
 
-        // One token per dial until the epoch drains...
-        for _ in 0..QUOTA {
-            assert_eq!(source().len(), 1, "one token per admission");
-        }
-        // ...then the empty stack signals the v6 wallet-signed fallback.
-        assert!(source().is_empty(), "a drained epoch must fall back to v6");
+        // Every dial is handed the whole batch: a dial spends nothing.
+        let first = source();
+        assert_eq!(first.len(), QUOTA as usize);
+        assert_eq!(source(), first, "a redial is handed the same batch");
 
-        // Exhaustion must never trigger a mint at take time (issuance timing
-        // would mirror session timing and re-link wallet and exit).
+        // A dial must never trigger a mint (issuance timing would mirror
+        // session timing and re-link wallet and exit).
         let calls = state.issue_calls.load(Ordering::SeqCst);
         for _ in 0..3 {
-            assert!(source().is_empty());
+            let _ = source();
         }
         assert_eq!(state.issue_calls.load(Ordering::SeqCst), calls);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_dial_presents_no_more_tokens_than_one_setup_may_carry() {
+        let issuer = FakeIssuer::with_quota(&[100], 12);
+        let (_t, now) = clock(NOW);
+        let mint = TokenMint::new(now, None);
+        let source = source_a(&mint, &issuer);
+        let state = issuer.0.clone();
+        wait_for(|| state.issue_calls.load(Ordering::SeqCst) >= 1).await;
+
+        assert_eq!(source().len(), MAX_PRESENTED_TOKENS);
     }
 
     #[tokio::test(start_paused = true)]
@@ -471,40 +509,41 @@ mod tests {
         let issuer = FakeIssuer::new(&[100]);
         let (_t, now) = clock(NOW);
         let mint = TokenMint::new(now, None);
-        let first = mint.stack_source([1; 32], || client(&issuer));
+        let first = source_a(&mint, &issuer);
         let state = issuer.0.clone();
         wait_for(|| state.issue_calls.load(Ordering::SeqCst) >= 1).await;
-        assert_eq!(first().len(), 1);
 
         // A reconnect of the same wallet must not build a second manager (the
-        // factory does not run) and pops from the same remaining stock.
-        let second = mint.stack_source([1; 32], || unreachable!("manager must be reused"));
-        for _ in 0..(QUOTA - 1) {
-            assert_eq!(second().len(), 1);
-        }
-        assert!(second().is_empty(), "both sources drain one shared stock");
-        assert!(first().is_empty());
+        // factory does not run) and draws the same stock.
+        let second = mint.stack_source([1; 32], BlindingKey::session(&WALLET_A), || {
+            unreachable!("manager must be reused")
+        });
+        assert_eq!(second(), first());
     }
 
     #[tokio::test(start_paused = true)]
-    async fn distinct_wallets_mint_and_drain_independently() {
+    async fn distinct_wallets_hold_batches_of_their_own() {
         let a = FakeIssuer::new(&[100]);
         let b = FakeIssuer::new(&[100]);
         let (_t, now) = clock(NOW);
         let mint = TokenMint::new(now, None);
-        let source_a = mint.stack_source([1; 32], || client(&a));
-        let source_b = mint.stack_source([2; 32], || client(&b));
+        let source_a = source_a(&mint, &a);
+        let source_b = mint.stack_source([2; 32], BlindingKey::session(&WALLET_B), || {
+            client(&b, WALLET_B)
+        });
         let (sa, sb) = (a.0.clone(), b.0.clone());
         wait_for(move || {
             sa.issue_calls.load(Ordering::SeqCst) >= 1 && sb.issue_calls.load(Ordering::SeqCst) >= 1
         })
         .await;
 
-        for _ in 0..QUOTA {
-            assert_eq!(source_a().len(), 1);
-        }
-        assert!(source_a().is_empty());
-        assert_eq!(source_b().len(), 1, "wallet B keeps its own stock");
+        let (stack_a, stack_b) = (source_a(), source_b());
+        assert_eq!(
+            stack_b.len(),
+            QUOTA as usize,
+            "wallet B keeps its own stock"
+        );
+        assert!(stack_a.iter().all(|token| !stack_b.contains(token)));
     }
 
     #[tokio::test(start_paused = true)]
@@ -512,7 +551,7 @@ mod tests {
         let issuer = FakeIssuer::new(&[100]);
         let (_t, now) = clock(NOW);
         let mint = TokenMint::new(now, None);
-        let source = mint.stack_source([1; 32], || client(&issuer));
+        let source = source_a(&mint, &issuer);
         let state = issuer.0.clone();
         wait_for(|| state.issue_calls.load(Ordering::SeqCst) >= 1).await;
 
@@ -521,7 +560,7 @@ mod tests {
         state.fail_transport.store(true, Ordering::SeqCst);
         tokio::time::advance(Duration::from_secs(600)).await;
         tokio::task::yield_now().await;
-        assert_eq!(source().len(), 1);
+        assert_eq!(source().len(), QUOTA as usize);
     }
 
     #[tokio::test(start_paused = true)]
@@ -530,7 +569,7 @@ mod tests {
         issuer.0.refuse_issuance.store(true, Ordering::SeqCst);
         let (_t, now) = clock(NOW);
         let mint = TokenMint::new(now, None);
-        let source = mint.stack_source([1; 32], || client(&issuer));
+        let source = source_a(&mint, &issuer);
         let state = issuer.0.clone();
         wait_for(|| state.issue_calls.load(Ordering::SeqCst) >= 1).await;
 
@@ -545,7 +584,7 @@ mod tests {
         issuer.0.fail_transport.store(true, Ordering::SeqCst);
         let (_t, now) = clock(NOW);
         let mint = TokenMint::new(now, None);
-        let source = mint.stack_source([1; 32], || client(&issuer));
+        let source = source_a(&mint, &issuer);
 
         // The API is unreachable: every dial stays on the v6 path, no panic.
         assert!(source().is_empty());
@@ -556,14 +595,17 @@ mod tests {
         let issuer = FakeIssuer::new(&[100, 101]);
         let (t, now) = clock(NOW);
         let mint = TokenMint::new(now, None);
-        let source = mint.stack_source([1; 32], || client(&issuer));
+        let source = source_a(&mint, &issuer);
         let state = issuer.0.clone();
         wait_for(|| state.issue_calls.load(Ordering::SeqCst) >= 2).await;
+        let current = source();
 
         // Epoch rollover: the prefetched next-epoch batch takes over without
         // any new mint (the background refresh already stocked it).
         t.store(101 * EPOCH_SECS + 1, Ordering::SeqCst);
-        assert_eq!(source().len(), 1);
+        let next = source();
+        assert_eq!(next.len(), QUOTA as usize);
+        assert!(next.iter().all(|token| !current.contains(token)));
 
         // Beyond the published window nothing is spendable: empty stack (v6).
         t.store(103 * EPOCH_SECS + 1, Ordering::SeqCst);
@@ -573,13 +615,12 @@ mod tests {
     #[tokio::test(start_paused = true)]
     async fn the_mint_horizon_caps_the_background_prefetch() {
         // The issuer publishes a 50-epoch window; the Android policy must ask
-        // only for current..=current+MINT_HORIZON_EPOCHS, so a dead process
-        // strands hours of already_issued epochs, not days.
+        // only for current..=current+MINT_HORIZON_EPOCHS.
         let published: Vec<u64> = (100..150).collect();
         let issuer = FakeIssuer::new(&published);
         let (_t, now) = clock(NOW);
         let mint = TokenMint::new(now, None);
-        let _source = mint.stack_source([1; 32], || client(&issuer));
+        let _source = source_a(&mint, &issuer);
 
         let state = issuer.0.clone();
         wait_for(|| state.issue_calls.load(Ordering::SeqCst) >= 3).await;
@@ -598,35 +639,32 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         let path = dir.path().join("v7-tokens.json");
 
-        // First process: mints, pops one token, persists as it goes.
+        // First process: mints and persists after its refresh.
         let issuer = FakeIssuer::new(&[100]);
-        {
+        let first_batch = {
             let (_t, now) = clock(NOW);
             let mint = TokenMint::new(now, Some(PersistFile::new(path.clone())));
-            let source = mint.stack_source([1; 32], || client(&issuer));
+            let source = source_a(&mint, &issuer);
             let state = issuer.0.clone();
             wait_for(|| state.issue_calls.load(Ordering::SeqCst) >= 1).await;
             wait_for(|| path.exists()).await;
-            assert_eq!(source().len(), 1, "first process spends one token");
-        }
+            source()
+        };
 
-        // Replacement process: the issuer refuses everything (already_issued)
-        // AND the transport may as well be down; the restored bundle alone
-        // must make the first dial v7.
+        // Replacement process with the transport down: the restored bundle
+        // alone must make the first dial v7.
         let offline = FakeIssuer::new(&[100]);
         offline.0.fail_transport.store(true, Ordering::SeqCst);
         let (_t, now) = clock(NOW);
         let mint = TokenMint::new(now, Some(PersistFile::new(path)));
-        let source = mint.stack_source([1; 32], || client(&offline));
+        let source = source_a(&mint, &offline);
+        let mut restored = source();
+        let mut first_batch = first_batch;
+        restored.sort_unstable();
+        first_batch.sort_unstable();
         assert_eq!(
-            source().len(),
-            1,
-            "the first dial after process death pops a restored token"
-        );
-        assert_eq!(source().len(), 1, "the rest of the batch was restored too");
-        assert!(
-            source().is_empty(),
-            "the token spent by the first process must not resurrect"
+            restored, first_batch,
+            "the first dial after process death draws the restored batch"
         );
     }
 }

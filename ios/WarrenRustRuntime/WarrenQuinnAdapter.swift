@@ -32,8 +32,9 @@ public struct WarrenTunnelConfig: Sendable {
     public let exitPubkey: Data
     /// "IP:port" of the exit relay.
     public let exitEndpoint: String
-    /// 32-byte Ed25519 signing key derived from the user wallet
-    /// (see `WarrenWallet.seed`).
+    /// The 32-byte wallet seed (`WarrenWallet.seed`). The tunnel derives
+    /// from it the node key it signs with and the blinding key of the
+    /// wallet's anonymous session tokens.
     public let walletSigningKey: Data
     /// Optional multi-hop entry relay configuration. When nil, the tunnel
     /// is single-hop directly to `exitEndpoint`.

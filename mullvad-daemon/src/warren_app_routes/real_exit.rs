@@ -2,16 +2,22 @@
 //! section 6).
 //!
 //! Runs the production router, a main session and the production route
-//! sessions with no TUN device: a userspace packet channel stands in for it,
+//! sessions, every one of them admitted on the wallet's anonymous tokens
+//! through the daemon's own token source, with no TUN device: a userspace
+//! packet channel stands in for it,
 //! and a minimal TCP client plays two apps at once, telling them apart by the
 //! local port a stub owner resolver maps to each app's executable. Each app
 //! fetches its public address over plain HTTP. Nothing on the host's routes,
 //! firewall or DNS is touched: the sessions' sockets are ordinary UDP sockets.
 //!
 //! ```text
-//! WARREN_MNEMONIC="$(cat ~/.warren/beta-probe-wallet.mnemonic)" \
+//! WARREN_MNEMONIC="$(cat ~/.warren/app-routing-test-wallet.mnemonic)" \
 //!   cargo test -p mullvad-daemon --lib real_exit -- --ignored --nocapture
 //! ```
+//!
+//! The wallet needs a subscription on the beta API and two free serials this
+//! epoch: its batch is derived from its seed, so a wallet whose epoch was
+//! issued to a client blinding at random is refused the batch it asks for.
 //!
 //! `WARREN_MAIN_COUNTRY` and `WARREN_ROUTE_COUNTRY` choose the two exits;
 //! by default the first two countries the directory lists.
@@ -35,16 +41,14 @@ use talpid_app_routing::{
     router::SessionAddresses,
 };
 use talpid_warren_tunnel::{
-    MultiHopConfig, SessionTokenProvider,
+    MultiHopConfig, SessionTokenProvider, SessionTokenSource,
     app_routes::{
         AppRoutesPlan, RelaySink, RouteController, RouteReport, RouteSessionConfig,
-        RouteSessionState, RouteSessions, RouteUnavailable, RoutedTun, RoutingTable, SessionEvent,
-        SessionEvents, SupervisorRouteSessions,
+        RouteSessionState, RouteUnavailable, RoutedTun, RoutingTable, SupervisorRouteSessions,
     },
-    make_session_token_provider,
 };
 use tokio::sync::{mpsc, watch};
-use warren_api::WarrenApiClient;
+use warren_api::{BlindingKey, TokenManager, WarrenApiClient};
 use warren_identity::WarrenIdentity;
 use warrenguard_backoff::Backoff;
 use warrenguard_transport::{
@@ -417,18 +421,31 @@ async fn relay_list_addresses(http: &reqwest::Client) -> HashMap<String, Ipv4Add
         .collect()
 }
 
-fn counting(provider: SessionTokenProvider) -> (SessionTokenProvider, Arc<AtomicU32>) {
-    let handed = Arc::new(AtomicU32::new(0));
-    let count = Arc::clone(&handed);
-    let provider: SessionTokenProvider = Arc::new(move || {
-        let stack = provider();
-        count.fetch_add(
-            u32::try_from(stack.len()).unwrap_or(u32::MAX),
-            Ordering::SeqCst,
-        );
-        stack
+/// What a token source handed its sessions: how many stacks, and the token
+/// each one led with (compared, never printed: a token is a bearer
+/// credential).
+#[derive(Default)]
+struct Handed {
+    stacks: AtomicU32,
+    leads: Mutex<Vec<Vec<u8>>>,
+}
+
+fn counting(source: SessionTokenSource) -> (SessionTokenSource, Arc<Handed>) {
+    let handed = Arc::new(Handed::default());
+    let record = Arc::clone(&handed);
+    let source: SessionTokenSource = Arc::new(move || {
+        let provider = source();
+        let record = Arc::clone(&record);
+        Arc::new(move || {
+            let stack = provider();
+            if let Some(lead) = stack.first() {
+                record.stacks.fetch_add(1, Ordering::SeqCst);
+                record.leads.lock().unwrap().push(lead.0.to_vec());
+            }
+            stack
+        }) as SessionTokenProvider
     });
-    (provider, handed)
+    (source, handed)
 }
 
 fn reports_into(
@@ -473,7 +490,7 @@ async fn a_routed_app_leaves_from_its_own_exit_and_never_through_main() {
         eprintln!("WARREN_MNEMONIC is not set: skipped");
         return;
     };
-    let identity = WarrenIdentity::from_mnemonic(mnemonic.trim()).expect("a valid mnemonic");
+    let mut identity = WarrenIdentity::from_mnemonic(mnemonic.trim()).expect("a valid mnemonic");
     drop(mnemonic);
     let http = reqwest::Client::builder()
         .timeout(Duration::from_secs(20))
@@ -559,38 +576,42 @@ async fn a_routed_app_leaves_from_its_own_exit_and_never_through_main() {
         listed_ip(&route_circuit)
     );
 
-    // Anonymous tokens for this epoch alone, minted with the SDK like the
-    // daemon's: the issuer mints once per account and epoch, and the probe
-    // wallet is shared, so tokens minted ahead and dropped with this process
-    // would be lost to every other run.
-    let issuer = WarrenApiClient::new(
-        API.to_owned(),
-        WarrenIdentity::from_signing_key(identity.signing_key()),
-        crate::warren_api_transport::WarrenApiTransport::new(),
+    // The wallet's batch for this epoch alone, minted by the daemon's own
+    // manager (blinded from the wallet seed) and vended through the daemon's
+    // own per-session source: the main session and the route session each
+    // open a provider of their own, as in the tunnel.
+    let seed = identity
+        .take_seed()
+        .expect("a mnemonic identity keeps its seed");
+    let manager = Arc::new(
+        TokenManager::new(
+            Arc::new(WarrenApiClient::new(
+                API.to_owned(),
+                identity,
+                crate::warren_api_transport::WarrenApiTransport::new(),
+            )),
+            BlindingKey::session(&seed),
+        )
+        .with_mint_horizon(0),
     );
-    let keys = issuer.token_keys().await.expect("token issuer directory");
-    let epoch = now / keys.epoch_secs;
-    let minted: Vec<_> = {
-        use rand010::SeedableRng;
-        let mut rng = rand010::rngs::StdRng::from_rng(&mut rand010::rng());
-        match warren_api::tokens::mint_tokens(&issuer, &keys, &[epoch], &mut rng).await {
-            Ok(batches) => batches
-                .into_iter()
-                .flat_map(|batch| batch.tokens)
-                .map(|token| token.serialize())
-                .collect(),
-            Err(error) => {
-                println!("minting this epoch's tokens: {error:?}");
-                Vec::new()
-            }
-        }
-    };
-    let tokens_minted = minted.len();
-    println!("tokens minted for this epoch: {tokens_minted}");
-    let store = Arc::new(Mutex::new(minted));
-    let (provider, handed) = counting(make_session_token_provider(Arc::new(move || {
-        store.lock().unwrap().pop().into_iter().collect()
-    })));
+    drop(seed);
+    if let Err(error) = manager.refresh(now).await {
+        panic!("minting this epoch's tokens: {error}");
+    }
+    let held = manager
+        .epoch_at(now)
+        .map_or(0, |epoch| manager.available(epoch));
+    println!("tokens held for this epoch: {held}");
+    assert!(
+        held >= 2,
+        "the main session and the route session each need a serial"
+    );
+    let source = crate::warren_token_provider::session_source(
+        Arc::clone(&manager),
+        Arc::new(crate::warren_artifact_refresh::now_unix),
+    );
+    let (main_source, main_handed) = counting(Arc::clone(&source));
+    let (route_source, route_handed) = counting(source);
 
     // The userspace TUN.
     let (to_tunnel, from_apps) = mpsc::channel(1024);
@@ -604,12 +625,13 @@ async fn a_routed_app_leaves_from_its_own_exit_and_never_through_main() {
         from_tunnel,
     };
 
-    // The main session, admitted on the wallet so the epoch's tokens are
-    // left to the route.
+    // The main session, under the main session's default admission (tokens,
+    // else the wallet) but with a key that is no wallet: an exit that admits
+    // it can only have admitted a token.
     let ip_assign = IpAssignChannel::new();
-    let (main, mut main_rx) = MultiHopSupervisor::new(wallet_supervisor_config(
+    let (main, mut main_rx) = MultiHopSupervisor::new(main_supervisor_config(
         &main_circuit,
-        identity.signing_key(),
+        main_source(),
         ip_assign.clone(),
     ));
     let main_task = tokio::spawn(main.run());
@@ -620,6 +642,12 @@ async fn a_routed_app_leaves_from_its_own_exit_and_never_through_main() {
     })
     .await
     .expect("the main session came up");
+    let main_stacks = main_handed.stacks.load(Ordering::SeqCst);
+    println!("main session: admitted on a token ({main_stacks} stack handed, no wallet key)");
+    assert!(
+        main_stacks >= 1,
+        "the main session was handed a token stack"
+    );
     let main_ip = ip_assign
         .subscribe()
         .borrow()
@@ -634,25 +662,10 @@ async fn a_routed_app_leaves_from_its_own_exit_and_never_through_main() {
     };
 
     // The route sessions, driven by the production controller, on the
-    // production tokens-only sessions when this epoch has tokens. Without
-    // one, a wallet-admitted stand-in carries the route, so the router, the
-    // translation and the controller are still exercised against real exits;
-    // token admission is then not proven by this run.
-    let token_admitted = tokens_minted > 0;
-    let sessions = if token_admitted {
-        let mut config = RouteSessionConfig::new(Some(provider));
-        config.retry_unavailable_after = Duration::from_secs(5);
-        HarnessSessions::Tokens(SupervisorRouteSessions::new(
-            tokio::runtime::Handle::current(),
-            config,
-        ))
-    } else {
-        println!(
-            "NO TOKEN THIS EPOCH: the route runs on a wallet-admitted stand-in session; \
-             token admission is not proven by this run"
-        );
-        HarnessSessions::Wallet(identity.signing_key())
-    };
+    // production tokens-only sessions.
+    let mut config = RouteSessionConfig::new(Some(route_source));
+    config.retry_unavailable_after = Duration::from_secs(5);
+    let sessions = SupervisorRouteSessions::new(tokio::runtime::Handle::current(), config);
     let (reports_tx, mut reports_rx) = watch::channel(Vec::new());
     let controller = RouteController::new(
         Arc::clone(&table),
@@ -688,14 +701,23 @@ async fn a_routed_app_leaves_from_its_own_exit_and_never_through_main() {
         seen.contains(&RouteSessionState::Connected),
         "the route session came up"
     );
-    let tokens_handed = handed.load(Ordering::SeqCst);
-    println!("tokens the route session was handed: {tokens_handed}");
-    if token_admitted {
-        assert!(
-            tokens_handed >= 1,
-            "the route session was admitted on a token"
-        );
-    }
+    let route_stacks = route_handed.stacks.load(Ordering::SeqCst);
+    println!("route session: admitted on a token only ({route_stacks} stack handed)");
+    assert!(
+        route_stacks >= 1,
+        "the route session was handed a token stack"
+    );
+    let main_leads = main_handed.leads.lock().unwrap().clone();
+    assert!(
+        route_handed
+            .leads
+            .lock()
+            .unwrap()
+            .iter()
+            .all(|lead| !main_leads.contains(lead)),
+        "the route session never led with the main session's serial"
+    );
+    println!("route session led with a serial of its own");
 
     let echo = tokio::net::lookup_host((ECHO_HOST, 80))
         .await
@@ -774,7 +796,8 @@ async fn a_routed_app_leaves_from_its_own_exit_and_never_through_main() {
     // A route session without a token is unavailable: it never presents the
     // wallet instead.
     let (empty_reports_tx, mut empty_reports_rx) = watch::channel(Vec::new());
-    let mut empty = RouteSessionConfig::new(Some(Arc::new(Vec::new)));
+    let no_tokens: SessionTokenSource = Arc::new(|| Arc::new(Vec::new) as SessionTokenProvider);
+    let mut empty = RouteSessionConfig::new(Some(no_tokens));
     empty.retry_unavailable_after = Duration::from_secs(60);
     let tokenless = RouteController::new(
         RoutingTable::new(StubOwners),
@@ -813,11 +836,11 @@ async fn a_routed_app_leaves_from_its_own_exit_and_never_through_main() {
     main_task.abort();
 }
 
-/// A supervisor admitted on the wallet, for the harness's own main session
-/// and its stand-in route session.
-fn wallet_supervisor_config(
+/// The harness's main session: the tunnel's main supervisor reduced to one
+/// connection, with a random key in place of the wallet's.
+fn main_supervisor_config(
     circuit: &MultiHopConfig,
-    key: ed25519_dalek::SigningKey,
+    tokens: SessionTokenProvider,
     ip_assign: IpAssignChannel,
 ) -> SupervisorConfig {
     SupervisorConfig {
@@ -826,7 +849,7 @@ fn wallet_supervisor_config(
         exit_x25519_multihop_pubkey: circuit.exit.exit_x25519_multihop_pubkey,
         exit_mlkem768_pubkey: circuit.exit.exit_mlkem768_pubkey.clone(),
         operational_pubkey: circuit.operational_pubkey,
-        client_signing: key,
+        client_signing: ed25519_dalek::SigningKey::from_bytes(&rand::random()),
         bind_addr: SocketAddr::from((Ipv4Addr::UNSPECIFIED, 0)),
         enable_gso: false,
         use_warren_obfuscation: true,
@@ -845,70 +868,6 @@ fn wallet_supervisor_config(
         on_overlap_swapped: None,
         on_dial_refused: None,
         on_path_rtt: None,
-        session_token_provider: None,
-    }
-}
-
-type HarnessDevice = talpid_warren_tunnel::app_routes::RouteTun<ChannelTun, StubOwners>;
-
-/// The production sessions, or the harness's wallet-admitted stand-in.
-enum HarnessSessions {
-    Tokens(SupervisorRouteSessions),
-    Wallet(ed25519_dalek::SigningKey),
-}
-
-/// Aborts the stand-in session's task when dropped.
-struct StandIn(tokio::task::JoinHandle<()>);
-
-impl Drop for StandIn {
-    fn drop(&mut self) {
-        self.0.abort();
-    }
-}
-
-impl RouteSessions<HarnessDevice> for HarnessSessions {
-    type Handle = Box<dyn Send>;
-
-    fn start(
-        &mut self,
-        circuit: &MultiHopConfig,
-        device: HarnessDevice,
-        events: SessionEvents,
-    ) -> Self::Handle {
-        match self {
-            Self::Tokens(sessions) => Box::new(sessions.start(circuit, device, events)),
-            Self::Wallet(key) => {
-                let config = |ip_assign| wallet_supervisor_config(circuit, key.clone(), ip_assign);
-                let ip_assign = IpAssignChannel::new();
-                let (supervisor, mut rx) = MultiHopSupervisor::new(config(ip_assign.clone()));
-                Box::new(StandIn(tokio::spawn(async move {
-                    events.send(SessionEvent::Connecting);
-                    let run = supervisor.run();
-                    tokio::pin!(run);
-                    tokio::select! {
-                        _ = &mut run => return,
-                        _ = async {
-                            while rx.borrow_and_update().is_none() {
-                                if rx.changed().await.is_err() {
-                                    std::future::pending::<()>().await;
-                                }
-                            }
-                        } => {}
-                    }
-                    let Some(spec) = *ip_assign.subscribe().borrow() else {
-                        return;
-                    };
-                    events.send(SessionEvent::Connected(SessionAddresses {
-                        v4: Some(spec.assigned),
-                        v6: None,
-                    }));
-                    let _ = tokio::join!(
-                        run,
-                        run_uplink(rx.clone(), device.clone()),
-                        run_downlink(rx, device, None),
-                    );
-                })))
-            }
-        }
+        session_token_provider: Some(tokens),
     }
 }

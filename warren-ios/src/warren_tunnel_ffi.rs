@@ -46,8 +46,9 @@ pub struct WarrenTunnelParametersC {
     /// Null-terminated UTF-8 "IP:port" of the exit relay.
     pub exit_endpoint: *const c_char,
     /// The 32-byte wallet seed, as `warren_wallet_seed_from_mnemonic` derives
-    /// it. The tunnel signs with the node key `derive_node_key` derives from
-    /// it, the wallet's identity.
+    /// it. The tunnel derives from it both the node key it signs with (the
+    /// wallet's identity, `derive_node_key`) and the blinding key of the
+    /// wallet's anonymous session tokens.
     pub wallet_signing_seed: [u8; 32],
     /// Optional multi-hop entry relay. Superseded by directory-driven
     /// selection (the entry relay is chosen from `multihop_directory_json`),
@@ -1179,6 +1180,7 @@ fn spawn_multi_hop(
     pin_store_path: Option<String>,
     nat_pmp: NatPmpConfig,
     signing_key: ed25519_dalek::SigningKey,
+    blinding: warren_api::BlindingKey,
 ) {
     use std::sync::atomic::Ordering;
 
@@ -1324,6 +1326,7 @@ fn spawn_multi_hop(
         // falls back to the v6 wallet-signed path.
         let session_token_provider = Some(crate::warren_token_provider::provider_for(
             signing_key.clone(),
+            blinding,
         ));
         // ADR-0006 idle cover: resolved from the same `WARREN_IDLE_COVER` knob the
         // desktop daemon reads, coupled to DAITA (off on this path) so the two
@@ -1993,10 +1996,12 @@ pub unsafe extern "C" fn warren_tunnel_start(
             return std::ptr::null_mut();
         };
 
-        // The wallet's node key, from the wallet seed. Zeroize on drop is
-        // provided by `ed25519-dalek` via the `zeroize` feature already
-        // enabled in `warren-ios/Cargo.toml`.
+        // The wallet's node key and its session-token blinding key, both
+        // from the wallet seed. Zeroize on drop is provided by
+        // `ed25519-dalek` (the `zeroize` feature enabled in
+        // `warren-ios/Cargo.toml`) and by `BlindingKey` itself.
         let signing_key = tunnel_signing_key(&params.wallet_signing_seed);
+        let blinding = warren_api::BlindingKey::session(&params.wallet_signing_seed);
 
         // Client opt-in for NAT-PMP port forwarding. The multi-hop reassign
         // task binds the refresh loop to the exit-assigned inner IPv4 once it
@@ -2045,6 +2050,7 @@ pub unsafe extern "C" fn warren_tunnel_start(
             pin_store_path,
             nat_pmp,
             signing_key,
+            blinding,
         );
         // Box the Arc so the FFI sees a single owner ; clones live
         // inside spawned tasks via the Arc.

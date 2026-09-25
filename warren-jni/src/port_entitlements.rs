@@ -211,8 +211,8 @@ mod tests {
     use rand010::rngs::StdRng;
     use warren_api::transport::{HttpRequest, HttpResponse, HttpTransport, TransportError};
     use warren_api::{
-        TokenEpochResponse, TokenIssueRequest, TokenIssueResponse, TokenIssuerDirectory,
-        TokenIssuerKey, WarrenApiClient,
+        AttributionTag, PubkeyHex, TokenEpochResponse, TokenIssueRequest, TokenIssueResponse,
+        TokenIssuerDirectory, TokenIssuerKey, WarrenApiClient,
     };
     use warren_identity::WarrenIdentity;
     use warrenguard_token::IssuerSecretKey;
@@ -222,6 +222,33 @@ mod tests {
     const EPOCH_SECS: u64 = 3600;
     const QUOTA: u32 = 5;
     const NOW: u64 = 100 * EPOCH_SECS + 5;
+
+    /// The issuer's attribution signing key, whose verifying half its
+    /// directory publishes: the client refuses a batch whose tags it cannot
+    /// check.
+    fn attribution_key() -> ed25519_dalek::SigningKey {
+        ed25519_dalek::SigningKey::from_bytes(&[0x42; 32])
+    }
+
+    /// A tag laid out by hand from the contract's layout and signed by the
+    /// attribution key. The ciphertext is filler: only the issuer can open a
+    /// tag, and the client never tries.
+    fn tag(epoch: u64) -> AttributionTag {
+        use ed25519_dalek::Signer;
+        use warren_contract::pf_attribution::{
+            CIPHERTEXT_LEN, NONCE_LEN, TAG_VERSION, signing_preimage,
+        };
+
+        let nonce = [0x07; NONCE_LEN];
+        let ciphertext = [0x08; CIPHERTEXT_LEN];
+        let signature = attribution_key().sign(&signing_preimage(epoch, &nonce, &ciphertext));
+        let mut raw = vec![TAG_VERSION];
+        raw.extend_from_slice(&epoch.to_be_bytes());
+        raw.extend_from_slice(&nonce);
+        raw.extend_from_slice(&ciphertext);
+        raw.extend_from_slice(&signature.to_bytes());
+        AttributionTag::from_bytes(&raw).expect("a hand-built tag parses")
+    }
 
     /// Observable state of the fake issuer, shared with the test body. The
     /// HTTP transport is the mocked system boundary; the blind-RSA crypto is
@@ -275,6 +302,12 @@ mod tests {
                 quota_per_epoch: QUOTA,
                 prefetch_epochs: 48,
                 keys,
+                attribution_verifying_key_hex: Some(
+                    PubkeyHex::try_from(
+                        hex::encode(attribution_key().verifying_key().as_bytes()).as_str(),
+                    )
+                    .unwrap(),
+                ),
             }
         }
     }
@@ -306,10 +339,12 @@ mod tests {
                         blind_signatures: Vec::new(),
                         token_key_id: None,
                         reject_reason: Some("not_subscribed".to_owned()),
+                        attribution_tags: Vec::new(),
                     });
                     continue;
                 }
                 let sk = self.0.keys.get(&e.epoch).expect("key for requested epoch");
+                let tags = e.blinded.iter().map(|_| tag(e.epoch)).collect();
                 epochs.push(TokenEpochResponse {
                     epoch: e.epoch,
                     issued: true,
@@ -323,6 +358,7 @@ mod tests {
                         .collect(),
                     token_key_id: Some(sk.public_key().key_id().to_hex()),
                     reject_reason: None,
+                    attribution_tags: tags,
                 });
             }
             ok(serde_json::to_vec(&TokenIssueResponse { epochs }).unwrap())

@@ -577,13 +577,20 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
         // Zeroizing so it is wiped immediately after key derivation - it never
         // enters the async task nor persists for the session lifetime.
         let mnemonic_zeroing = Zeroizing::new(String::from_java(&jnix_env, mnemonic));
-        let signing_key = match crate::wallet::signing_key_from_mnemonic(&mnemonic_zeroing) {
-            Ok(k) => k,
+        let seed = match warren_identity::seed_from_mnemonic(&mnemonic_zeroing) {
+            Ok(seed) => seed,
             Err(e) => {
                 let _ = jnix_env.throw(format!("wallet key derive failed: {e}"));
                 return -1;
             }
         };
+        let signing_key = warren_identity::derive_node_key(&seed);
+        // The anonymous-token batches are blinded from the wallet seed, so
+        // every client of the wallet holds the same batch. The seed is
+        // zeroized on drop: only the node key and the one-way blinding key
+        // outlive it.
+        let blinding = warren_api::BlindingKey::session(&seed);
+        drop(seed);
         // mnemonic_zeroing is dropped (and zeroized) here.
         drop(mnemonic_zeroing);
 
@@ -608,6 +615,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
         let task = runtime.spawn(crate::tunnel::run_session(
             tun,
             signing_key,
+            blinding,
             config,
             &SESSION_STATUS,
             cancel_rx,

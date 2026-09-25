@@ -164,8 +164,9 @@ typedef struct WarrenTunnelParametersC {
   const char *exit_endpoint;
   /**
    * The 32-byte wallet seed, as `warren_wallet_seed_from_mnemonic` derives
-   * it. The tunnel signs with the node key `derive_node_key` derives from
-   * it, the wallet's identity.
+   * it. The tunnel derives from it both the node key it signs with (the
+   * wallet's identity, `derive_node_key`) and the blinding key of the
+   * wallet's anonymous session tokens.
    */
   uint8_t wallet_signing_seed[32];
   /**

@@ -1138,8 +1138,7 @@ impl ParametersGenerator {
             inner.warren_api_url.as_ref(),
             inner.warren_identity_seed.as_ref(),
         ) {
-            params.session_token_provider =
-                Some(crate::warren_token_provider::provider_for(api_url, seed));
+            params.session_tokens = Some(crate::warren_token_provider::source_for(api_url, seed));
             // Port entitlements ride the same wallet and the same coarse
             // refresh: without one, every exit applies its per-session quota
             // and a subscriber's forwarded ports multiply by the number of

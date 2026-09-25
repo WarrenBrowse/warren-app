@@ -9,9 +9,13 @@
 //!
 //! The identity is built from the SAME Ed25519 signing key the tunnel uses for
 //! its handshake ([`WarrenIdentity::from_signing_key`], no re-derivation), so
-//! the minting wallet is bit-for-bit the subscribed wallet. v7 is the default;
-//! on token exhaustion the provider returns an empty stack and the supervisor
-//! falls back to the v6 wallet-signed path.
+//! the minting wallet is bit-for-bit the subscribed wallet, and the batch is
+//! blinded from the wallet seed, so every client of the wallet holds the same
+//! tokens. An exit leases each serial to one live session in the whole fleet:
+//! every dial is handed the whole current-epoch batch and the engine walks it,
+//! redialling with the next token when the exit refuses one. Nothing is
+//! consumed. v7 is the default; with no token this epoch the provider returns
+//! an empty stack and the supervisor falls back to the v6 wallet-signed path.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -19,7 +23,7 @@ use std::time::Duration;
 
 use ed25519_dalek::SigningKey;
 use warren_api::reqwest_transport::ReqwestTransport;
-use warren_api::{TokenManager, WarrenApiClient};
+use warren_api::{BlindingKey, TokenManager, WarrenApiClient};
 use warren_identity::WarrenIdentity;
 use warrenguard_transport::supervisor::SessionTokenProvider;
 use warrenguard_wire::SessionToken;
@@ -47,17 +51,18 @@ fn spawn_refresh(manager: Arc<Manager>) {
         let mut tick = tokio::time::interval(Duration::from_secs(600));
         loop {
             tick.tick().await;
-            if let Err(e) = manager.refresh_auto(now_unix_secs()).await {
+            if let Err(e) = manager.refresh(now_unix_secs()).await {
                 tracing::warn!(error = %e, "Warren v7 token refresh failed (keeping existing tokens)");
             }
         }
     });
 }
 
-/// The v7 token provider for `signing_key`'s wallet. Builds (and starts
-/// refreshing) a manager the first time a wallet is seen; reuses it after. The
-/// returned closure pops one token per session and never mints.
-pub(crate) fn provider_for(signing_key: SigningKey) -> SessionTokenProvider {
+/// The v7 token provider for `signing_key`'s wallet, whose session blinding
+/// key is `blinding`. Builds (and starts refreshing) a manager the first time
+/// a wallet is seen; reuses it after. The returned closure hands each dial the
+/// current batch, at most what one setup request may carry, and never mints.
+pub(crate) fn provider_for(signing_key: SigningKey, blinding: BlindingKey) -> SessionTokenProvider {
     let pubkey = signing_key.verifying_key().to_bytes();
 
     let map = MANAGERS.get_or_init(|| Mutex::new(HashMap::new()));
@@ -71,7 +76,7 @@ pub(crate) fn provider_for(signing_key: SigningKey) -> SessionTokenProvider {
                     WarrenIdentity::from_signing_key(signing_key),
                     ReqwestTransport::new(),
                 );
-                let manager = Arc::new(TokenManager::new(Arc::new(client)));
+                let manager = Arc::new(TokenManager::new(Arc::new(client), blinding));
                 spawn_refresh(manager.clone());
                 manager
             })
@@ -80,8 +85,9 @@ pub(crate) fn provider_for(signing_key: SigningKey) -> SessionTokenProvider {
 
     Arc::new(move || {
         manager
-            .take_current_stack(now_unix_secs())
+            .session_stack(now_unix_secs())
             .into_iter()
+            .take(warrenguard_wire::MAX_SESSION_TOKENS)
             .map(SessionToken)
             .collect()
     })

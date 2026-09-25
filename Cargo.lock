@@ -3131,7 +3131,6 @@ dependencies = [
  "objc2-foundation 0.3.2",
  "objc2-service-management",
  "paranoid-android",
- "rand 0.10.1",
  "rand 0.9.4",
  "regex",
  "reqwest",
@@ -6713,24 +6712,31 @@ dependencies = [
 name = "warren-api"
 version = "0.0.1"
 dependencies = [
+ "crypto-bigint",
  "data-encoding",
+ "der 0.8.1",
+ "ed25519-dalek",
  "hex",
+ "hkdf",
  "rand 0.10.1",
  "rand 0.8.6",
  "reqwest",
  "serde",
  "serde_json",
+ "sha2",
  "thiserror 2.0.18",
  "warren-contract",
  "warren-discovery-core",
  "warren-identity",
  "warrenguard-token",
+ "zeroize",
 ]
 
 [[package]]
 name = "warren-contract"
 version = "0.0.1"
 dependencies = [
+ "base64",
  "blake2",
  "bs58",
  "ed25519-dalek",
@@ -6740,6 +6746,7 @@ dependencies = [
  "sha2",
  "thiserror 2.0.18",
  "warrenguard-wire",
+ "zeroize",
 ]
 
 [[package]]
@@ -6783,6 +6790,7 @@ dependencies = [
  "thiserror 2.0.18",
  "warren-contract",
  "warrenguard-identity",
+ "zeroize",
 ]
 
 [[package]]

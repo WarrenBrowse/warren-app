@@ -28,14 +28,12 @@ use warrenguard_transport::{
         ExitDrainingChannel, run_downlink, run_downlink_with_daita, run_idle_cover, run_uplink,
         run_uplink_with_daita,
     },
-    supervisor::{
-        ClientWatch, MultiHopSupervisor, SessionAdmission, SessionTokenProvider, SupervisorConfig,
-    },
+    supervisor::{ClientWatch, MultiHopSupervisor, SessionAdmission, SupervisorConfig},
 };
 use warrenguard_transport_core::PacketDevice;
 
 use super::{RouteUnavailable, SessionEvent, controller::RouteSessions, datapath::RouteTun};
-use crate::{MultiHopConfig, multi_hop_bind_addr, multi_hop_daita_shared};
+use crate::{MultiHopConfig, SessionTokenSource, multi_hop_bind_addr, multi_hop_daita_shared};
 
 /// How long a route session waits after it could not run before it tries
 /// again. Tokens are minted on a coarse timer and a serial is released when
@@ -53,10 +51,10 @@ pub type RelayEscape = Arc<dyn Fn(SocketAddr) -> BoxFuture<'static, ()> + Send +
 /// token source.
 #[derive(Clone)]
 pub struct RouteSessionConfig {
-    /// The daemon's token provider. `None` leaves every route without a
-    /// token, hence unavailable: a route session never falls back to the
-    /// wallet.
-    pub token_provider: Option<SessionTokenProvider>,
+    /// The daemon's token source, which opens each route supervisor a
+    /// provider of its own. `None` leaves every route without a token, hence
+    /// unavailable: a route session never falls back to the wallet.
+    pub token_source: Option<SessionTokenSource>,
     pub wants_ipv6: bool,
     pub enable_daita: bool,
     pub idle_cover: bool,
@@ -70,9 +68,9 @@ pub struct RouteSessionConfig {
 }
 
 impl RouteSessionConfig {
-    pub fn new(token_provider: Option<SessionTokenProvider>) -> Self {
+    pub fn new(token_source: Option<SessionTokenSource>) -> Self {
         Self {
-            token_provider,
+            token_source,
             wants_ipv6: false,
             enable_daita: false,
             idle_cover: false,
@@ -183,7 +181,7 @@ pub(crate) fn route_supervisor_config(
         on_overlap_swapped: None,
         on_dial_refused: None,
         on_path_rtt: None,
-        session_token_provider: config.token_provider.clone(),
+        session_token_provider: config.token_source.as_ref().map(|open| open()),
     }
 }
 
@@ -382,6 +380,7 @@ mod tests {
     use std::sync::atomic::{AtomicU32, Ordering};
 
     use warrenguard_multihop::RejectionReason;
+    use warrenguard_transport::supervisor::SessionTokenProvider;
 
     use super::*;
 
@@ -389,14 +388,24 @@ mod tests {
         crate::app_routes::test_support::circuit(7, 9)
     }
 
-    fn counting_provider() -> (SessionTokenProvider, Arc<AtomicU32>) {
-        let calls = Arc::new(AtomicU32::new(0));
-        let counted = Arc::clone(&calls);
-        let provider: SessionTokenProvider = Arc::new(move || {
-            counted.fetch_add(1, Ordering::Relaxed);
-            Vec::new()
-        });
-        (provider, calls)
+    /// A token source that counts the providers it opens and the stacks they
+    /// hand out.
+    fn counting_source() -> (SessionTokenSource, Arc<AtomicU32>, Arc<AtomicU32>) {
+        let opened = Arc::new(AtomicU32::new(0));
+        let drawn = Arc::new(AtomicU32::new(0));
+        let source: SessionTokenSource = {
+            let opened = Arc::clone(&opened);
+            let drawn = Arc::clone(&drawn);
+            Arc::new(move || {
+                opened.fetch_add(1, Ordering::Relaxed);
+                let drawn = Arc::clone(&drawn);
+                Arc::new(move || {
+                    drawn.fetch_add(1, Ordering::Relaxed);
+                    Vec::new()
+                }) as SessionTokenProvider
+            })
+        };
+        (source, opened, drawn)
     }
 
     #[test]
@@ -415,14 +424,25 @@ mod tests {
     }
 
     #[test]
-    fn a_route_supervisor_presents_the_tokens_of_the_daemons_provider() {
-        let (provider, calls) = counting_provider();
-        let config = RouteSessionConfig::new(Some(provider));
+    fn a_route_supervisor_presents_the_tokens_of_the_daemons_source() {
+        let (source, _opened, drawn) = counting_source();
+        let config = RouteSessionConfig::new(Some(source));
 
         let built = route_supervisor_config(&circuit(), &config, IpAssignChannel::new());
         let _ = (built.session_token_provider.expect("a token provider"))();
 
-        assert_eq!(calls.load(Ordering::Relaxed), 1);
+        assert_eq!(drawn.load(Ordering::Relaxed), 1);
+    }
+
+    #[test]
+    fn each_route_supervisor_opens_a_token_provider_of_its_own() {
+        let (source, opened, _drawn) = counting_source();
+        let config = RouteSessionConfig::new(Some(source));
+
+        let _first = route_supervisor_config(&circuit(), &config, IpAssignChannel::new());
+        let _second = route_supervisor_config(&circuit(), &config, IpAssignChannel::new());
+
+        assert_eq!(opened.load(Ordering::Relaxed), 2);
     }
 
     #[test]

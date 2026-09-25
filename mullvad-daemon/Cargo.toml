@@ -224,9 +224,6 @@ mockito = { workspace = true }
 # and a main session of its own over a userspace packet channel, against real
 # beta exits, without a TUN device.
 talpid-app-routing = { path = "../talpid-app-routing" }
-# The blinding RNG the SDK's minting takes, for the harness to mint the
-# current epoch alone and hear why the issuer refuses it.
-rand010 = { package = "rand", version = "0.10" }
 warrenguard-backoff = { path = "../../warrenguard/crates/warrenguard-backoff" }
 warrenguard-transport = { path = "../../warrenguard/crates/warrenguard-transport" }
 warrenguard-transport-core = { path = "../../warrenguard/crates/warrenguard-transport-core" }
