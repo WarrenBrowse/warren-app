@@ -317,6 +317,24 @@ impl MullvadProxyClient {
         Ok(())
     }
 
+    /// Replaces the networks shared while LAN access is allowed. `None` resets them to the
+    /// built-in private ranges.
+    pub async fn set_lan_networks(
+        &mut self,
+        networks: Option<Vec<ipnetwork::IpNetwork>>,
+    ) -> Result<()> {
+        let request = types::LanNetworks {
+            custom: networks.is_some(),
+            networks: networks
+                .unwrap_or_default()
+                .iter()
+                .map(ToString::to_string)
+                .collect(),
+        };
+        self.0.set_lan_networks(request).await?;
+        Ok(())
+    }
+
     pub async fn set_show_beta_releases(&mut self, state: bool) -> Result<()> {
         self.0.set_show_beta_releases(state).await?;
         Ok(())

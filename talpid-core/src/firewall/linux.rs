@@ -16,8 +16,7 @@ use std::{
 use talpid_cgroup::v2::CGroup2;
 use talpid_tunnel::TunnelMetadata;
 use talpid_types::net::{
-    ALLOWED_LAN_MULTICAST_NETS, ALLOWED_LAN_NETS, AllowedEndpoint, AllowedTunnelTraffic, Endpoint,
-    TransportProtocol,
+    ALLOWED_LAN_MULTICAST_NETS, AllowedEndpoint, AllowedTunnelTraffic, Endpoint, TransportProtocol,
 };
 use talpid_types::split_tunnel::INCLUDE_FWMARK;
 
@@ -901,6 +900,7 @@ impl<'a> PolicyBatch<'a> {
                 allow_lan,
                 allowed_endpoint,
                 allowed_tunnel_traffic,
+                ..
             } => {
                 for endpoint in peer_endpoints {
                     self.add_allow_tunnel_endpoint_rules(endpoint, fwmark);
@@ -936,6 +936,7 @@ impl<'a> PolicyBatch<'a> {
                 tunnel,
                 allow_lan,
                 dns_config,
+                ..
             } => {
                 for endpoint in peer_endpoints {
                     self.add_allow_tunnel_endpoint_rules(endpoint, fwmark);
@@ -982,6 +983,7 @@ impl<'a> PolicyBatch<'a> {
             FirewallPolicy::Blocked {
                 allow_lan,
                 allowed_endpoint,
+                ..
             } => {
                 if let Some(endpoint) = allowed_endpoint {
                     self.add_allow_endpoint_rules(endpoint);
@@ -994,7 +996,7 @@ impl<'a> PolicyBatch<'a> {
         };
 
         if allow_lan {
-            self.add_allow_lan_rules();
+            self.add_allow_lan_rules(policy.lan_networks());
         }
 
         if include_only {
@@ -1257,11 +1259,11 @@ impl<'a> PolicyBatch<'a> {
         }
     }
 
-    fn add_allow_lan_rules(&mut self) {
+    fn add_allow_lan_rules(&mut self, lan_networks: &[IpNetwork]) {
         // Output and forward chains
         for chain in &[&self.out_chain, &self.forward_chain] {
             // LAN -> LAN
-            for net in ALLOWED_LAN_NETS {
+            for &net in lan_networks {
                 let mut out_rule = Rule::new(chain);
                 check_net(&mut out_rule, End::Dst, net);
                 add_verdict(&mut out_rule, &Verdict::Accept);
@@ -1279,7 +1281,7 @@ impl<'a> PolicyBatch<'a> {
 
         // Input chain
         // LAN -> LAN
-        for net in ALLOWED_LAN_NETS {
+        for &net in lan_networks {
             let mut in_rule = Rule::new(&self.in_chain);
             check_net(&mut in_rule, End::Src, net);
             add_verdict(&mut in_rule, &Verdict::Accept);

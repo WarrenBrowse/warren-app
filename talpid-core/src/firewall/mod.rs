@@ -93,6 +93,8 @@ pub enum FirewallPolicy {
         tunnel: Option<TunnelMetadata>,
         /// Flag setting if communication with LAN networks should be possible.
         allow_lan: bool,
+        /// The unicast networks reachable outside the tunnel when `allow_lan` is set.
+        lan_networks: Vec<IpNetwork>,
         /// Host that should be reachable while connecting.
         allowed_endpoint: AllowedEndpoint,
         /// Networks for which to permit in-tunnel traffic.
@@ -113,6 +115,8 @@ pub enum FirewallPolicy {
         tunnel: TunnelMetadata,
         /// Flag setting if communication with LAN networks should be possible.
         allow_lan: bool,
+        /// The unicast networks reachable outside the tunnel when `allow_lan` is set.
+        lan_networks: Vec<IpNetwork>,
         /// Servers that are allowed to respond to DNS requests.
         #[cfg(not(target_os = "android"))]
         dns_config: ResolvedDnsConfig,
@@ -125,6 +129,8 @@ pub enum FirewallPolicy {
     Blocked {
         /// Flag setting if communication with LAN networks should be possible.
         allow_lan: bool,
+        /// The unicast networks reachable outside the tunnel when `allow_lan` is set.
+        lan_networks: Vec<IpNetwork>,
         /// Host that should be reachable while in the blocked state.
         allowed_endpoint: Option<AllowedEndpoint>,
     },
@@ -184,6 +190,15 @@ impl FirewallPolicy {
             FirewallPolicy::Connecting { allow_lan, .. }
             | FirewallPolicy::Connected { allow_lan, .. }
             | FirewallPolicy::Blocked { allow_lan, .. } => *allow_lan,
+        }
+    }
+
+    /// Return the unicast networks reachable outside the tunnel when LAN traffic is allowed
+    pub fn lan_networks(&self) -> &[IpNetwork] {
+        match self {
+            FirewallPolicy::Connecting { lan_networks, .. }
+            | FirewallPolicy::Connected { lan_networks, .. }
+            | FirewallPolicy::Blocked { lan_networks, .. } => lan_networks,
         }
     }
 
@@ -312,6 +327,8 @@ pub struct FirewallArguments {
     pub initial_state: InitialFirewallState,
     /// This argument is required for the blocked state to configure the firewall correctly.
     pub allow_lan: bool,
+    /// The unicast networks reachable outside the tunnel when `allow_lan` is set.
+    pub lan_networks: Vec<IpNetwork>,
     /// Specifies the cgroup2 and firewall mark used to identify traffic that is allowed to be
     /// excluded from the tunnel and _leaked_ during blocked states.
     #[cfg(target_os = "linux")]

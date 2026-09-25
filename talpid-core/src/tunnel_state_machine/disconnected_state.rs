@@ -85,6 +85,7 @@ impl DisconnectedState {
         let result = if shared_values.lockdown_mode.bool() {
             let policy = FirewallPolicy::Blocked {
                 allow_lan: shared_values.allow_lan,
+                lan_networks: shared_values.lan_networks.clone(),
                 allowed_endpoint: Some(shared_values.allowed_endpoint.clone()),
             };
 
@@ -170,8 +171,8 @@ impl TunnelState for DisconnectedState {
         use self::EventConsequence::*;
 
         match runtime.block_on(commands.next()) {
-            Some(TunnelCommand::AllowLan(allow_lan, complete_tx)) => {
-                if shared_values.set_allow_lan(allow_lan) {
+            Some(TunnelCommand::AllowLan(allow_lan, lan_networks, complete_tx)) => {
+                if shared_values.set_allow_lan(allow_lan, lan_networks) {
                     Self::set_firewall_policy(shared_values, false);
                 }
                 let _ = complete_tx.send(());

@@ -41,8 +41,8 @@ impl DisconnectingState {
         shared_values: &mut SharedTunnelStateValues,
     ) -> EventConsequence {
         match command {
-            Some(TunnelCommand::AllowLan(allow_lan, complete_tx)) => {
-                let _ = shared_values.set_allow_lan(allow_lan);
+            Some(TunnelCommand::AllowLan(allow_lan, lan_networks, complete_tx)) => {
+                let _ = shared_values.set_allow_lan(allow_lan, lan_networks);
                 let _ = complete_tx.send(());
             }
             #[cfg(not(target_os = "android"))]

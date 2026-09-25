@@ -24,6 +24,7 @@ use crate::{
     mpsc::Sender,
     offline,
 };
+use ipnetwork::IpNetwork;
 #[cfg(target_os = "linux")]
 use talpid_cgroup::v2::CGroup2;
 use talpid_dns::{DnsConfig, DnsMonitor};
@@ -171,6 +172,8 @@ pub enum Error {
 pub struct InitialTunnelState {
     /// Whether to allow LAN traffic when not in the (non-blocking) disconnected state.
     pub allow_lan: bool,
+    /// The unicast networks reachable outside the tunnel when `allow_lan` is set.
+    pub lan_networks: Vec<IpNetwork>,
     /// Block traffic unless connected to the VPN.
     #[cfg(not(target_os = "android"))]
     pub lockdown_mode: LockdownMode,
@@ -286,8 +289,8 @@ pub async fn spawn(
 
 /// Representation of external commands for the tunnel state machine.
 pub enum TunnelCommand {
-    /// Enable or disable LAN access in the firewall.
-    AllowLan(bool, oneshot::Sender<()>),
+    /// Enable or disable LAN access in the firewall, and set the unicast networks it covers.
+    AllowLan(bool, Vec<IpNetwork>, oneshot::Sender<()>),
     /// Endpoint that should never be blocked. `()` is sent to the
     /// channel after attempting to set the firewall policy, regardless
     /// of whether it succeeded.
@@ -478,6 +481,7 @@ impl TunnelStateMachine {
             #[cfg(target_os = "android")]
             initial_state: InitialFirewallState::None,
             allow_lan: args.settings.allow_lan,
+            lan_networks: args.settings.lan_networks.clone(),
             #[cfg(target_os = "linux")]
             linux_ids: args.linux_ids,
         };
@@ -610,6 +614,7 @@ impl TunnelStateMachine {
             route_manager: args.route_manager,
             _offline_monitor: offline_monitor,
             allow_lan: args.settings.allow_lan,
+            lan_networks: args.settings.lan_networks,
             #[cfg(not(target_os = "android"))]
             lockdown_mode: args.settings.lockdown_mode,
             connectivity,
@@ -838,6 +843,8 @@ struct SharedTunnelStateValues {
     _offline_monitor: offline::MonitorHandle,
     /// Should LAN access be allowed outside the tunnel.
     allow_lan: bool,
+    /// The unicast networks reachable outside the tunnel when `allow_lan` is set.
+    lan_networks: Vec<IpNetwork>,
     /// Should network access be allowed when in the disconnected state.
     #[cfg(not(target_os = "android"))]
     lockdown_mode: LockdownMode,
@@ -946,9 +953,11 @@ impl SharedTunnelStateValues {
             .map_err(|error| ErrorStateCause::from(&error))
     }
 
-    pub fn set_allow_lan(&mut self, allow_lan: bool) -> bool {
-        if self.allow_lan != allow_lan {
+    /// Returns whether either value changed, so the caller knows to reapply the firewall.
+    pub fn set_allow_lan(&mut self, allow_lan: bool, lan_networks: Vec<IpNetwork>) -> bool {
+        if self.allow_lan != allow_lan || self.lan_networks != lan_networks {
             self.allow_lan = allow_lan;
+            self.lan_networks = lan_networks;
             true
         } else {
             false
