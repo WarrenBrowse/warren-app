@@ -9,12 +9,13 @@ use futures::{
 use mullvad_api::{StatusCode, rest::Error as RestError};
 use mullvad_management_interface::types::FromProtobufTypeError;
 use mullvad_management_interface::{
-    Code, Request, Response, ServerJoinHandle, Status,
+    Bytes, Code, Request, Response, ServerJoinHandle, Status,
     types::{self, daemon_event, management_service_server::ManagementService},
 };
 use mullvad_types::relay_constraints::GeographicLocationConstraint;
 use mullvad_types::{
     account::AccountNumber,
+    app_routing::{AppRouteStatus, AppRoutingError, ExitChoice},
     relay_constraints::{
         ObfuscationSettings, RelayOverride, RelaySettings, allowed_ip::AllowedIps,
     },
@@ -462,7 +463,8 @@ fn withhold_event_identity(
         daemon_event::Event::TunnelState(_)
         | daemon_event::Event::RelayList(_)
         | daemon_event::Event::VersionInfo(_)
-        | daemon_event::Event::LeakInfo(_) => {}
+        | daemon_event::Event::LeakInfo(_)
+        | daemon_event::Event::AppRoutes(_) => {}
     }
     Some(event)
 }
@@ -2091,44 +2093,32 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
-    #[cfg(any(windows, target_os = "android", target_os = "macos"))]
     async fn add_split_tunnel_app(&self, request: Request<String>) -> ServiceResult<()> {
         let call = Self::call_of(&request);
-        use mullvad_types::settings::SplitApp;
         log::debug!("add_split_tunnel_app");
-        let path = SplitApp::from(request.into_inner());
+        let app =
+            types::app_routing::app_id(&request.into_inner()).map_err(map_protobuf_type_err)?;
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(&call, DaemonCommand::AddSplitTunnelApp(tx, path))?;
+        self.send_command_to_daemon(&call, DaemonCommand::AddSplitTunnelApp(tx, app))?;
         self.wait_for_result(rx)
             .await?
             .map_err(map_daemon_error)
             .map(Response::new)
     }
 
-    #[cfg(target_os = "linux")]
-    async fn add_split_tunnel_app(&self, _: Request<String>) -> ServiceResult<()> {
-        Ok(Response::new(()))
-    }
-
-    #[cfg(any(windows, target_os = "android", target_os = "macos"))]
     async fn remove_split_tunnel_app(&self, request: Request<String>) -> ServiceResult<()> {
         let call = Self::call_of(&request);
-        use mullvad_types::settings::SplitApp;
         log::debug!("remove_split_tunnel_app");
-        let path = SplitApp::from(request.into_inner());
+        let app =
+            types::app_routing::app_id(&request.into_inner()).map_err(map_protobuf_type_err)?;
         let (tx, rx) = oneshot::channel();
-        self.send_command_to_daemon(&call, DaemonCommand::RemoveSplitTunnelApp(tx, path))?;
+        self.send_command_to_daemon(&call, DaemonCommand::RemoveSplitTunnelApp(tx, app))?;
         self.wait_for_result(rx)
             .await?
             .map_err(map_daemon_error)
             .map(Response::new)
     }
-    #[cfg(target_os = "linux")]
-    async fn remove_split_tunnel_app(&self, _: Request<String>) -> ServiceResult<()> {
-        Ok(Response::new(()))
-    }
 
-    #[cfg(any(windows, target_os = "android", target_os = "macos"))]
     async fn clear_split_tunnel_apps(&self, request: Request<()>) -> ServiceResult<()> {
         let call = Self::call_of(&request);
         log::debug!("clear_split_tunnel_apps");
@@ -2139,12 +2129,7 @@ impl ManagementService for ManagementServiceImpl {
             .map_err(map_daemon_error)
             .map(Response::new)
     }
-    #[cfg(target_os = "linux")]
-    async fn clear_split_tunnel_apps(&self, _: Request<()>) -> ServiceResult<()> {
-        Ok(Response::new(()))
-    }
 
-    #[cfg(any(windows, target_os = "android", target_os = "macos"))]
     async fn set_split_tunnel_state(&self, request: Request<bool>) -> ServiceResult<()> {
         let call = Self::call_of(&request);
         log::debug!("set_split_tunnel_state");
@@ -2156,9 +2141,100 @@ impl ManagementService for ManagementServiceImpl {
             .map_err(map_daemon_error)
             .map(Response::new)
     }
-    #[cfg(target_os = "linux")]
-    async fn set_split_tunnel_state(&self, _: Request<bool>) -> ServiceResult<()> {
-        Ok(Response::new(()))
+
+    async fn set_app_split_mode(&self, request: Request<types::AppSplitMode>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
+        log::debug!("set_app_split_mode");
+        let mode = types::app_routing::split_mode(request.into_inner().mode)
+            .map_err(map_protobuf_type_err)?;
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(&call, DaemonCommand::SetAppSplitMode(tx, mode))?;
+        self.wait_for_result(rx)
+            .await?
+            .map_err(map_daemon_error)
+            .map(Response::new)
+    }
+
+    async fn add_included_app(&self, request: Request<String>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
+        log::debug!("add_included_app");
+        let app =
+            types::app_routing::app_id(&request.into_inner()).map_err(map_protobuf_type_err)?;
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(&call, DaemonCommand::AddIncludedApp(tx, app))?;
+        self.wait_for_result(rx)
+            .await?
+            .map_err(map_daemon_error)
+            .map(Response::new)
+    }
+
+    async fn remove_included_app(&self, request: Request<String>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
+        log::debug!("remove_included_app");
+        let app =
+            types::app_routing::app_id(&request.into_inner()).map_err(map_protobuf_type_err)?;
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(&call, DaemonCommand::RemoveIncludedApp(tx, app))?;
+        self.wait_for_result(rx)
+            .await?
+            .map_err(map_daemon_error)
+            .map(Response::new)
+    }
+
+    async fn set_app_exits_enabled(&self, request: Request<bool>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
+        log::debug!("set_app_exits_enabled");
+        let enabled = request.into_inner();
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(&call, DaemonCommand::SetAppExitsEnabled(tx, enabled))?;
+        self.wait_for_result(rx)
+            .await?
+            .map_err(map_daemon_error)
+            .map(Response::new)
+    }
+
+    async fn set_app_exit(&self, request: Request<types::AppExit>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
+        log::debug!("set_app_exit");
+        let entry = request.into_inner();
+        let app = types::app_routing::app_id(&entry.app).map_err(map_protobuf_type_err)?;
+        let Some(exit) = entry.exit else {
+            return Err(Status::invalid_argument("missing exit"));
+        };
+        let exit = ExitChoice::try_from(exit).map_err(map_protobuf_type_err)?;
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(&call, DaemonCommand::SetAppExit(tx, app, exit))?;
+        self.wait_for_result(rx)
+            .await?
+            .map_err(map_daemon_error)
+            .map(Response::new)
+    }
+
+    async fn clear_app_exit(&self, request: Request<String>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
+        log::debug!("clear_app_exit");
+        let app =
+            types::app_routing::app_id(&request.into_inner()).map_err(map_protobuf_type_err)?;
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(&call, DaemonCommand::ClearAppExit(tx, app))?;
+        self.wait_for_result(rx)
+            .await?
+            .map_err(map_daemon_error)
+            .map(Response::new)
+    }
+
+    async fn get_app_route_status(
+        &self,
+        request: Request<()>,
+    ) -> ServiceResult<types::AppRouteStatusList> {
+        let call = Self::call_of(&request);
+        log::debug!("get_app_route_status");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(&call, DaemonCommand::GetAppRouteStatus(tx))?;
+        let statuses = self.wait_for_result(rx).await?;
+        Ok(Response::new(types::AppRouteStatusList {
+            routes: statuses.iter().map(types::AppRouteStatus::from).collect(),
+        }))
     }
 
     #[cfg(windows)]
@@ -2792,14 +2868,23 @@ impl ManagementInterfaceEventBroadcaster {
         })
     }
 
+    /// Notify where the session of each exit in force stands.
+    pub(crate) fn notify_app_routes(&self, statuses: Vec<AppRouteStatus>) {
+        self.notify(types::DaemonEvent {
+            event: Some(daemon_event::Event::AppRoutes(types::AppRouteStatusList {
+                routes: statuses.iter().map(types::AppRouteStatus::from).collect(),
+            })),
+        })
+    }
+
     /// Notify that the settings changed.
     ///
     /// Sends settings to all `settings` subscribers of the management interface.
     pub(crate) fn notify_settings(&self, settings: Settings) {
         log::debug!("Broadcasting new settings");
         self.notify(types::DaemonEvent {
-            event: Some(daemon_event::Event::Settings(types::Settings::from(
-                &settings,
+            event: Some(daemon_event::Event::Settings(Box::new(
+                types::Settings::from(&settings),
             ))),
         })
     }
@@ -2988,7 +3073,21 @@ fn map_daemon_error(error: crate::Error) -> Status {
             Status::unauthenticated(error.to_string())
         }
         DaemonError::VersionCheckError(error) => map_version_check_error(error),
+        DaemonError::AppRouting(error) => map_app_routing_error(error),
         error => Status::unknown(error.to_string()),
+    }
+}
+
+/// A refused app routing change. Reaching the exit limit is a state the GUI
+/// explains, so it carries a code; the others are malformed requests.
+fn map_app_routing_error(error: AppRoutingError) -> Status {
+    match error {
+        AppRoutingError::TooManyAppExits { .. } => Status::with_details(
+            Code::FailedPrecondition,
+            error.to_string(),
+            Bytes::from_static(mullvad_management_interface::APP_EXIT_LIMIT_DETAILS),
+        ),
+        _ => Status::invalid_argument(error.to_string()),
     }
 }
 
@@ -3490,7 +3589,9 @@ mod tests {
     #[test]
     fn another_account_gets_settings_events_without_proxy_credentials() {
         let event = types::DaemonEvent {
-            event: Some(daemon_event::Event::Settings(settings_with_proxy_secrets())),
+            event: Some(daemon_event::Event::Settings(Box::new(
+                settings_with_proxy_secrets(),
+            ))),
         };
 
         let Some(types::DaemonEvent {
@@ -3501,8 +3602,8 @@ mod tests {
         };
         let mut expected = settings_with_proxy_secrets();
         withhold_settings_secrets(&mut expected, false);
-        assert_eq!(settings, expected);
-        assert_ne!(settings, settings_with_proxy_secrets());
+        assert_eq!(*settings, expected);
+        assert_ne!(*settings, settings_with_proxy_secrets());
     }
 
     /// One broadcast, two subscribers: each gets what its own caller may see,

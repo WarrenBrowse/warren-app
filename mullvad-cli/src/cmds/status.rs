@@ -65,6 +65,9 @@ impl Status {
                         println!("{}", crate::standing::CONTEST_LINE);
                     }
                 }
+                DaemonEvent::AppRoutes(routes) => {
+                    print_debug_or_json(&args, "New app routes", &routes)?;
+                }
                 DaemonEvent::LeakDetected(leak) => {
                     #[derive(Debug, Serialize)]
                     struct Leak {

@@ -41,15 +41,15 @@ impl SplitTunnel {
         match self {
             SplitTunnel::Get { list_processes } => {
                 let mut rpc = MullvadProxyClient::new().await?;
-                let settings = rpc.get_settings().await?.split_tunnel;
+                let settings = rpc.get_settings().await?.app_routing;
 
-                let enable_exclusions = BooleanOption::from(settings.enable_exclusions);
+                let enable_exclusions = BooleanOption::from(settings.exclusions_active());
 
                 println!("Split tunneling state: {enable_exclusions}");
 
                 println!("Excluded applications:");
-                for path in &settings.apps {
-                    println!("{}", path.display());
+                for app in &settings.excluded_apps {
+                    println!("{}", app.as_str());
                 }
 
                 if list_processes {

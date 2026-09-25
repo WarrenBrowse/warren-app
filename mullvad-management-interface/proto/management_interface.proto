@@ -295,6 +295,20 @@ service ManagementService {
   rpc ClearSplitTunnelApps(google.protobuf.Empty) returns (google.protobuf.Empty) {}
   rpc GetExcludedProcesses(google.protobuf.Empty) returns (ExcludedProcessList) {}
 
+  // App routing (docs/app-routing.md). The excluded apps are managed by
+  // AddSplitTunnelApp and RemoveSplitTunnelApp, which persist on every
+  // platform.
+  rpc SetAppSplitMode(AppSplitMode) returns (google.protobuf.Empty) {}
+  rpc AddIncludedApp(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
+  rpc RemoveIncludedApp(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
+  rpc SetAppExitsEnabled(google.protobuf.BoolValue) returns (google.protobuf.Empty) {}
+  // Fails with FAILED_PRECONDITION and the details "app_exit_limit" when the
+  // apps would then use more different exits than there are route sessions.
+  rpc SetAppExit(AppExit) returns (google.protobuf.Empty) {}
+  rpc ClearAppExit(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
+  // One status per exit in force. Also pushed as DaemonEvent.app_routes.
+  rpc GetAppRouteStatus(google.protobuf.Empty) returns (AppRouteStatusList) {}
+
   // Play payment (Android)
   rpc InitPlayPurchase(google.protobuf.Empty) returns (PlayExternalObfuscatedAccountId) {}
   rpc VerifyPlayPurchase(PlayPurchase) returns (google.protobuf.Empty) {}
@@ -842,6 +856,9 @@ message Settings {
   WarrenCustomExitSettings warren_custom_exit = 21;
   // 0 = unset (unlimited). Cf. SetWarrenMaxRateBps rpc.
   uint64 warren_max_rate_bps = 22;
+  // Exclude, include-only and per-app exits. `split_tunnel` above mirrors
+  // its exclusion part for clients that predate it.
+  AppRoutingSettings app_routing = 23;
 }
 
 // Advanced "custom exit" override persisted in
@@ -1388,6 +1405,59 @@ message SplitTunnelSettings {
   repeated string apps = 2;
 }
 
+message AppSplitMode {
+  enum Mode {
+    OFF = 0;
+    EXCLUDE = 1;
+    INCLUDE_ONLY = 2;
+  }
+  Mode mode = 1;
+}
+
+message ExitChoice {
+  // Two-letter country code, lowercase.
+  string country = 1;
+  // City code within the country; absent for any city.
+  optional string city = 2;
+}
+
+message AppExit {
+  string app = 1;
+  ExitChoice exit = 2;
+}
+
+message AppRoutingSettings {
+  AppSplitMode.Mode split_mode = 1;
+  repeated string excluded_apps = 2;
+  repeated string included_apps = 3;
+  bool app_exits_enabled = 4;
+  repeated AppExit app_exits = 5;
+}
+
+message AppRouteStatus {
+  enum State {
+    CONNECTING = 0;
+    CONNECTED = 1;
+    UNAVAILABLE = 2;
+  }
+  // Set when the state is UNAVAILABLE.
+  enum UnavailableReason {
+    NONE = 0;
+    TUNNEL_DOWN = 1;
+    NO_TOKEN = 2;
+    LIMIT_REACHED = 3;
+    NO_RELAY = 4;
+  }
+  ExitChoice exit = 1;
+  State state = 2;
+  UnavailableReason reason = 3;
+  // The address the apps of this exit appear from, when known.
+  optional string public_ip = 4;
+  repeated string apps = 5;
+}
+
+message AppRouteStatusList { repeated AppRouteStatus routes = 1; }
+
 message RelaySettings {
   oneof endpoint {
     CustomRelaySettings custom = 1;
@@ -1591,6 +1661,7 @@ message DaemonEvent {
     AccessMethodSetting new_access_method = 7;
     LeakInfo leak_info = 8;
     WarrenAccountStrikeNotice new_account_strike = 9;
+    AppRouteStatusList app_routes = 10;
   }
 }
 

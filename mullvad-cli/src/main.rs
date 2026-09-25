@@ -101,6 +101,11 @@ enum Cli {
     #[clap(subcommand)]
     SplitTunnel(split_tunnel::SplitTunnel),
 
+    /// Choose which apps bypass the VPN, which apps alone use it, and which
+    /// apps leave the Internet from a country of their own
+    #[clap(subcommand)]
+    AppRouting(app_routing::AppRouting),
+
     /// Return the state of the VPN tunnel
     Status {
         #[clap(subcommand)]
@@ -258,6 +263,7 @@ async fn run() -> Result<()> {
         Cli::Tunnel(cmd) => cmd.handle().await,
         Cli::PortForward(cmd) => cmd.handle().await,
         Cli::SplitTunnel(cmd) => cmd.handle().await,
+        Cli::AppRouting(cmd) => cmd.handle().await,
         Cli::Status { cmd, args } => status::handle(cmd, args).await,
         Cli::CustomList(cmd) => cmd.handle().await,
         Cli::ImportSettings { file } => patch::import(file).await,

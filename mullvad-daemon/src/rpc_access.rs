@@ -178,6 +178,13 @@ rpc_classes! {
         RemoveSplitTunnelApp => ControlMachine,
         SetSplitTunnelState => ControlMachine,
         ClearSplitTunnelApps => ControlMachine,
+        SetAppSplitMode => ControlMachine,
+        AddIncludedApp => ControlMachine,
+        RemoveIncludedApp => ControlMachine,
+        SetAppExitsEnabled => ControlMachine,
+        SetAppExit => ControlMachine,
+        ClearAppExit => ControlMachine,
+        GetAppRouteStatus => ReadPublic,
         GetExcludedProcesses => ReadPublic,
         NeedFullDiskPermissions => ReadPublic,
         CheckVolumes => ControlMachine,
@@ -358,6 +365,27 @@ mod tests {
             &table,
             relay_selector_service_server::SERVICE_NAME,
         );
+    }
+
+    /// Invariant 5 of docs/app-routing.md: the split modes, the app lists and
+    /// the per-app exits change only for the owner and administrators.
+    #[test]
+    fn app_routing_changes_are_for_the_owner() {
+        for method in [
+            "SetAppSplitMode",
+            "AddIncludedApp",
+            "RemoveIncludedApp",
+            "SetAppExitsEnabled",
+            "SetAppExit",
+            "ClearAppExit",
+            "AddSplitTunnelApp",
+            "RemoveSplitTunnelApp",
+            "ClearSplitTunnelApps",
+            "SetSplitTunnelState",
+        ] {
+            let path = format!("/{}/{method}", management_service_server::SERVICE_NAME);
+            assert_eq!(classify(&path), Some(RpcClass::ControlMachine), "{method}");
+        }
     }
 
     /// The anchors of the policy, each named once so a reclassification is a

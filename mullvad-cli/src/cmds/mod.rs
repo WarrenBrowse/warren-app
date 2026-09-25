@@ -4,6 +4,7 @@ use std::{io::stdin, ops::Deref};
 pub mod account;
 pub mod anti_censorship;
 pub mod api_access;
+pub mod app_routing;
 pub mod auto_connect;
 pub mod beta_program;
 pub mod custom_list;
