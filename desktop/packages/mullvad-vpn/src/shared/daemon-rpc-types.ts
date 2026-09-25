@@ -220,7 +220,8 @@ export type DaemonEvent =
   | { relayList: IRelayListWithEndpointData }
   | { appVersionInfo: IAppVersionInfo }
   | { device: DeviceEvent }
-  | { accessMethodSetting: AccessMethodSetting };
+  | { accessMethodSetting: AccessMethodSetting }
+  | { appRoutes: AppRouteStatus[] };
 
 export type DaemonAppUpgradeEventStatusDownloadStarted = {
   type: 'APP_UPGRADE_STATUS_DOWNLOAD_STARTED';
@@ -527,6 +528,9 @@ export interface ISettings {
   relaySettings: RelaySettings;
   tunnelOptions: ITunnelOptions;
   splitTunnel: SplitTunnelSettings;
+  // Exclude, include-only and per-app exits (docs/app-routing.md).
+  // `splitTunnel` mirrors the exclusion part for older code paths.
+  appRouting: AppRoutingSettings;
   obfuscationSettings: ObfuscationSettings;
   customLists: CustomLists;
   recents?: Recents;
@@ -922,6 +926,48 @@ export type SplitTunnelSettings = {
   enableExclusions: boolean;
   appsList: string[];
 };
+
+// Which split mode is in force. Exclude and include-only are mutually
+// exclusive; both app lists are kept whatever the mode.
+export type AppSplitMode = 'off' | 'exclude' | 'include-only';
+
+// Where an app leaves the Internet: a lowercase two-letter country code and,
+// optionally, a city code within it. `se` and `se`/`got` are two exits.
+export type ExitChoice = {
+  country: string;
+  city?: string;
+};
+
+export type AppExit = {
+  app: string;
+  exit: ExitChoice;
+};
+
+export type AppRoutingSettings = {
+  splitMode: AppSplitMode;
+  excludedApps: string[];
+  includedApps: string[];
+  appExitsEnabled: boolean;
+  appExits: AppExit[];
+};
+
+export type AppRouteState = 'connecting' | 'connected' | 'unavailable';
+
+export type AppRouteUnavailableReason = 'tunnel-down' | 'no-token' | 'limit-reached' | 'no-relay';
+
+// The live state of one exit in force and the apps that use it.
+export type AppRouteStatus = {
+  exit: ExitChoice;
+  state: AppRouteState;
+  // Set when `state` is 'unavailable'.
+  reason?: AppRouteUnavailableReason;
+  publicIp?: string;
+  apps: string[];
+};
+
+// Outcome of `SetAppExit`: the daemon refuses an exit that would take the
+// apps past the number of route sessions it can open.
+export type SetAppExitOutcome = { result: 'ok' } | { result: 'limit-reached' };
 
 export type LwoSettings = {
   port: Constraint<number>;

@@ -30,6 +30,13 @@ export function getDefaultSettings(): ISettings {
       enableExclusions: true,
       appsList: [],
     },
+    appRouting: {
+      splitMode: 'exclude',
+      excludedApps: [],
+      includedApps: [],
+      appExitsEnabled: false,
+      appExits: [],
+    },
     relaySettings: {
       normal: getDefaultRelaySettingsNormal(),
     },
