@@ -138,9 +138,9 @@ Implementation (`mullvad-daemon/src/warren_app_routes.rs`,
   `SessionAdmission::TokensOnly`, a random signing key (the wallet never
   enters it), one connection, and none of the hooks that feed process-wide
   state (dial-refusal cooldown, session placement, reconnect counter, entry
-  RTT store, drain reactor). It pops its tokens from the daemon's provider.
-  After an end a retry may fix (no token, refused, failed) it waits 60 s and
-  dials again. A drain its exit announces is recorded like the main one's,
+  RTT store, drain reactor). Its tokens come from the daemon's token source
+  (see Tokens below). After an end a retry may fix (no token, refused,
+  failed) it waits 60 s and dials again. A drain its exit announces is recorded like the main one's,
   and the new plan moves the route to another exit.
 - The plan's policy is installed before the main pumps carry their first
   packet, and a new plan's before the firewall is asked for the new relays:
@@ -155,6 +155,31 @@ Implementation (`mullvad-daemon/src/warren_app_routes.rs`,
   left to the main session.
 - A route session shares one process-wide state with the main session on
   purpose: the engine's memory of whether this network lets QUIC through.
+
+Tokens (`mullvad-daemon/src/warren_token_provider.rs`):
+
+- The wallet's batch is blinded from its seed, so every client of the wallet
+  holds the same three tokens an epoch, and an exit leases each serial to one
+  live session in the whole fleet. A session is handed the whole current-epoch
+  batch and never consumes it. The exit spends the first token of a setup
+  that verifies: a route session (tokens-only admission) sends the lead token
+  alone, the main session (default admission) sends the whole stack, and when
+  the exit refuses the lead the engine redials leading with the next one. A
+  reconnect costs no token.
+- The tunnel opens a provider of its own for the main session and for each
+  route session (`SessionTokenSource`). A provider holds the serial its
+  session leads with until the session's supervisor is dropped: no other
+  session of the daemon leads with it, and the session leads with it again
+  when it redials, which the exit renews in place.
+- The hold follows the lead, not the serial the exit admitted: the engine does
+  not say which token of a walked stack it was admitted on, so after a refusal
+  the hold sits on the refused serial. A serial another session holds
+  therefore goes to the tail of a stack and never out of it, since it may be
+  the one serial the exit would renew for this session.
+- The main session keeps the engine's default admission: with no token this
+  epoch it logs in with the wallet, and when the exit refuses every token of
+  the batch the session ends on the exit's rejection (every serial of the
+  wallet is held elsewhere, which is the wallet's device limit).
 
 ### 2.3 Address translation
 
@@ -273,19 +298,24 @@ connection state. Turning the mode on asks for one confirmation.
 - Real exits: a harness that runs the router with real Warren sessions to two
   beta exits and fetches the public IP through each (runs on macOS without
   touching the host network):
-  `WARREN_MNEMONIC="$(cat ~/.warren/beta-probe-wallet.mnemonic)" cargo test -p
-  mullvad-daemon --lib real_exit -- --ignored --nocapture`
+  `WARREN_MNEMONIC="$(cat ~/.warren/app-routing-test-wallet.mnemonic)" cargo
+  test -p mullvad-daemon --lib real_exit -- --ignored --nocapture`
   (`mullvad-daemon/src/warren_app_routes/real_exit.rs`). It mints the current
-  epoch's tokens only. When the issuer answers `already_issued` (the probe
-  wallet is shared, and any process that mints ahead takes every published
-  epoch), the route runs on a wallet-admitted stand-in session and the run
-  says so: the router, the translation and the controller are then exercised
-  against real exits, token admission is not. Measured 2026-09-26 on beta
-  (RO main and DE route, then FI main and FR route): each app appeared from
-  its own exit's listed address, the routed app failed once its route was
-  stopped while the unrouted one kept working, none of the routed app's
-  packets reached the main session, and a tokens-only route session with no
-  token reported `no token` and never connected.
+  epoch's batch with the daemon's manager and hands it out through the
+  daemon's token source. Both sessions are admitted on tokens: the main one
+  under its default admission but with a random key in place of the wallet's,
+  so an exit that admits it can only have admitted a token, and the route
+  session under tokens-only admission. The wallet needs a subscription and
+  two free serials this epoch; a wallet whose epoch was issued to a client
+  blinding at random is refused its derived batch. Measured 2026-09-26 on beta
+  (RO main and DE route, then FI main and FR route, both with a wallet-admitted
+  main session): each app appeared from its own exit's listed address, the
+  routed app failed once its route was stopped while the unrouted one kept
+  working, none of the routed app's packets reached the main session, and a
+  tokens-only route session with no token reported `no token` and never
+  connected. Measured again 2026-09-26 with both sessions on tokens (RO main
+  135.136.59.234, DE route 167.233.127.54): the same results, and the route
+  session led with a serial other than the main session's.
   The full daemon in a Linux VM (per-app country,
   include-only, exclude); the daemon in the Windows ARM64 VM (include-only
   with the swapped driver, per-app country).
