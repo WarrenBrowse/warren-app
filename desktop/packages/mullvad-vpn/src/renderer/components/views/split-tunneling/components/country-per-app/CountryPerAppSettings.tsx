@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import {
   appExitFor,
   appRouteLine,
+  countryNeedsIncludedLaunch,
   exitChoicesInUse,
   MAX_APP_EXITS,
   resolveApplications,
@@ -174,6 +175,14 @@ export function CountryPerAppSettings() {
         )}
         checked={routing.appExitsEnabled}
         onCheckedChange={setAppExitsEnabled}>
+        {countryNeedsIncludedLaunch(platform, routing.splitMode) && (
+          <HeaderSubTitle role="note">
+            {messages.pgettext(
+              'split-tunneling-view',
+              'VPN only for is on: an app uses its country when you open it from VPN only for.',
+            )}
+          </HeaderSubTitle>
+        )}
         {refused && <HeaderSubTitle role="alert">{appExitLimitText()}</HeaderSubTitle>}
       </TabHeader>
 

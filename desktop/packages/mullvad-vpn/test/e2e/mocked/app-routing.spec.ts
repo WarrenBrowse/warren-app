@@ -315,6 +315,8 @@ test.describe('App routing', () => {
     await util.expectRoute(RoutePath.main);
 
     await expect(page.getByTestId('include-only-label')).toHaveText('VPN only for 3 apps');
+    await expect(page.getByText('Only selected apps are protected')).toBeVisible();
+    await expect(page.getByText('You are protected')).not.toBeVisible();
     await expect(page.getByTestId('app-countries-indicator')).toHaveText(
       '2 apps in other countries',
     );

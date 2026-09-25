@@ -8,6 +8,8 @@ export interface IApplication {
 
 export interface ISplitTunnelingApplication extends IApplication {
   deletable: boolean;
+  // Set on Linux when the app runs no program a per-app country can name.
+  routingLimitation?: 'flatpak' | 'snap' | 'script';
 }
 
 export interface ILinuxApplication extends IApplication {

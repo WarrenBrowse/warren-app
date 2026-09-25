@@ -95,23 +95,28 @@ export function IncludeOnlyLabel() {
     [openAppRouting],
   );
 
-  const { vpnOnlyForCount } = appRoutingSummary(routing, statuses, platform);
-  if (vpnOnlyForCount === undefined) {
+  const { includeOnly, vpnOnlyForCount } = appRoutingSummary(routing, statuses, platform);
+  if (!includeOnly) {
     return null;
   }
 
-  const label = sprintf(
-    // TRANSLATORS: Label under the connection state while only the chosen
-    // TRANSLATORS: apps use the VPN. Available placeholders:
-    // TRANSLATORS: %(count)d - the number of apps that use the VPN
-    messages.npgettext(
-      'connect-view',
-      'VPN only for %(count)d app',
-      'VPN only for %(count)d apps',
-      vpnOnlyForCount,
-    ),
-    { count: vpnOnlyForCount },
-  );
+  const label =
+    vpnOnlyForCount === undefined
+      ? // TRANSLATORS: Label under the connection state while only the apps
+        // TRANSLATORS: the user opens from "VPN only for" use the VPN.
+        messages.pgettext('connect-view', 'VPN only for chosen apps')
+      : sprintf(
+          // TRANSLATORS: Label under the connection state while only the chosen
+          // TRANSLATORS: apps use the VPN. Available placeholders:
+          // TRANSLATORS: %(count)d - the number of apps that use the VPN
+          messages.npgettext(
+            'connect-view',
+            'VPN only for %(count)d app',
+            'VPN only for %(count)d apps',
+            vpnOnlyForCount,
+          ),
+          { count: vpnOnlyForCount },
+        );
 
   return (
     <StyledIncludeOnlyLabel type="button" onClick={open} data-testid="include-only-label">
