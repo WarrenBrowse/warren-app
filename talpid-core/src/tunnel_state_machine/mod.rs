@@ -482,7 +482,9 @@ impl TunnelStateMachine {
         )]
         let mut firewall = Firewall::from_args(fw_args).map_err(Error::InitFirewallError)?;
         #[cfg(target_os = "linux")]
-        firewall.set_include_only(args.settings.split_apps.mode == SplitTunnelMode::IncludeOnly);
+        let split_mode = enforceable_mode(args.settings.split_apps.mode, firewall.can_include());
+        #[cfg(target_os = "linux")]
+        firewall.set_include_only(split_mode == SplitTunnelMode::IncludeOnly);
         // Adopt the user's lockdown setting before any policy is applied, so a
         // daemon that dies early (a crash, a failed upgrade, a kill during an
         // install) tears down with the persistence its owner actually asked
@@ -531,7 +533,7 @@ impl TunnelStateMachine {
             &args.settings.split_apps,
         );
 
-        #[cfg(any(target_os = "windows", target_os = "linux"))]
+        #[cfg(target_os = "windows")]
         let split_mode = args.settings.split_apps.mode;
 
         #[cfg(target_os = "macos")]
@@ -738,6 +740,18 @@ pub trait TunnelParametersGenerator: Send + 'static {
     }
 }
 
+/// The mode the firewall and the routes can enforce. Include-only with no
+/// way to select the included apps falls back to the full tunnel: everything
+/// is tunneled, where the other way round no app would be.
+#[cfg(target_os = "linux")]
+fn enforceable_mode(requested: SplitTunnelMode, can_include: bool) -> SplitTunnelMode {
+    if requested == SplitTunnelMode::IncludeOnly && !can_include {
+        log::error!("Include-only cannot select the included apps; tunneling everything");
+        return SplitTunnelMode::Exclude;
+    }
+    requested
+}
+
 /// Values that are common to all tunnel states.
 struct SharedTunnelStateValues {
     /// Management of excluded apps.
@@ -942,10 +956,11 @@ impl SharedTunnelStateValues {
     /// (`warren-exclude`, `warren-include`), so only the mode is used.
     #[cfg(target_os = "linux")]
     pub fn set_split_apps(&mut self, apps: SplitApps) -> bool {
-        let mode_changed = self.split_mode != apps.mode;
-        self.split_mode = apps.mode;
+        let mode = enforceable_mode(apps.mode, self.firewall.can_include());
+        let mode_changed = self.split_mode != mode;
+        self.split_mode = mode;
         self.firewall
-            .set_include_only(apps.mode == SplitTunnelMode::IncludeOnly);
+            .set_include_only(mode == SplitTunnelMode::IncludeOnly);
         mode_changed
     }
 
@@ -1165,5 +1180,21 @@ mod connectivity_debounce_tests {
         drop(cmd_tx);
         drop(offline_tx);
         let _ = task.await;
+    }
+}
+
+#[cfg(all(test, target_os = "linux"))]
+mod enforceable_mode_tests {
+    use super::{SplitTunnelMode, enforceable_mode};
+
+    #[test]
+    fn include_only_that_cannot_select_its_apps_tunnels_everything() {
+        let fallback = enforceable_mode(SplitTunnelMode::IncludeOnly, false);
+        let kept = enforceable_mode(SplitTunnelMode::IncludeOnly, true);
+        let exclusion = enforceable_mode(SplitTunnelMode::Exclude, false);
+
+        assert_eq!(fallback, SplitTunnelMode::Exclude);
+        assert_eq!(kept, SplitTunnelMode::IncludeOnly);
+        assert_eq!(exclusion, SplitTunnelMode::Exclude);
     }
 }

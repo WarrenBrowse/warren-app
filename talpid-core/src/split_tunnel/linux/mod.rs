@@ -19,14 +19,27 @@ use crate::firewall;
 /// This should be an arbitrary but unique integer.
 pub const MARK: u32 = 0xf41;
 
+mod inet_sockets;
+
 /// Errors related to split tunneling.
 #[derive(thiserror::Error, Debug)]
-#[error("Error in split tunneling")]
 pub enum Error {
     /// Errors related to split tunneling.
+    #[error("Error in split tunneling")]
     SplitTunnel(#[from] anyhow::Error),
     /// Errors related to cgroups.
+    #[error("Error in split tunneling")]
     CGroup(#[from] talpid_cgroup::Error),
+    /// The process holds open Internet connections, which would carry on
+    /// outside the tunnel.
+    #[error(
+        "The process has open Internet connections, which would stay outside the tunnel: \
+         start it with warren-include instead"
+    )]
+    HasOpenConnections,
+    /// Its open sockets could not be listed, so it cannot be known safe.
+    #[error("The process's open connections could not be listed")]
+    ListConnections(#[source] std::io::Error),
 }
 
 /// Manages PIDs in the linux cgroup used for vpn tunnel exclusion.
@@ -85,16 +98,38 @@ impl PidManager {
         // `warren-include` joins this same cgroup and, running setuid root,
         // cannot trust its caller's environment to find it.
         let root = CGroup2::open(talpid_cgroup::CGROUP2_DEFAULT_MOUNT_PATH)?;
-        let included = root.create_or_open_child(INCLUDE_CGROUP_NAME)?;
-        assert_nft_supports_cgroup2(&included)
+        // Probed on the root, which always exists: creating the included
+        // cgroup first would leave one `warren-include` can join while the
+        // firewall cannot select it.
+        assert_nft_supports_cgroup2(&root)
             .context("cgroup2 not supported by nftables, are you running an old kernel?")?;
+        let included = root.create_or_open_child(INCLUDE_CGROUP_NAME)?;
         Ok(IncludedCGroup { root, included })
     }
 
     /// Add a PID to the include-only cgroup, to have it tunneled while
     /// everything else is not.
+    ///
+    /// Only the sockets a process opens after the move are selected, so a
+    /// process holding an Internet socket is refused, and put back where it
+    /// was. The check runs after the move: a socket opened in between is
+    /// then selected, and one opened before it is still open and seen.
     pub fn add_included(&self, pid: pid_t) -> Result<(), Error> {
-        Ok(self.included()?.included.add_pid(Pid::from_raw(pid))?)
+        let cgroups = self.included()?;
+        let pid = Pid::from_raw(pid);
+        let proc_dir = std::path::PathBuf::from(format!("/proc/{pid}"));
+        let previous = previous_cgroup2(&proc_dir);
+        cgroups.included.add_pid(pid)?;
+        let refusal = match inet_sockets::holds_inet_socket(&proc_dir) {
+            Ok(false) => return Ok(()),
+            Ok(true) => Error::HasOpenConnections,
+            Err(error) => Error::ListConnections(error),
+        };
+        match previous {
+            Some(previous) => previous.add_pid(pid)?,
+            None => cgroups.root.add_pid(pid)?,
+        }
+        Err(refusal)
     }
 
     /// Move a PID out of the include-only cgroup.
@@ -324,6 +359,15 @@ impl Inner {
             Inner::CGroup2(..) => None,
         }
     }
+}
+
+/// The cgroup2 a process is in, read from `/proc/<pid>/cgroup`, so a refused
+/// inclusion can put it back.
+fn previous_cgroup2(proc_dir: &std::path::Path) -> Option<CGroup2> {
+    let cgroups = std::fs::read_to_string(proc_dir.join("cgroup")).ok()?;
+    let path = cgroups.lines().find_map(|line| line.strip_prefix("0::"))?;
+    let path = path.trim_start_matches('/');
+    CGroup2::open(std::path::Path::new(talpid_cgroup::CGROUP2_DEFAULT_MOUNT_PATH).join(path)).ok()
 }
 
 /// Check whether we can create an nft table with a `socket cgroupv2 level x` rule.
