@@ -6705,18 +6705,14 @@ dependencies = [
 name = "warren-api"
 version = "0.0.1"
 dependencies = [
- "crypto-bigint",
  "data-encoding",
- "der 0.8.1",
  "ed25519-dalek",
  "hex",
- "hkdf",
  "rand 0.10.1",
  "rand 0.8.6",
  "reqwest",
  "serde",
  "serde_json",
- "sha2",
  "thiserror 2.0.18",
  "warren-contract",
  "warren-discovery-core",
@@ -6783,7 +6779,6 @@ dependencies = [
  "thiserror 2.0.18",
  "warren-contract",
  "warrenguard-identity",
- "zeroize",
 ]
 
 [[package]]
