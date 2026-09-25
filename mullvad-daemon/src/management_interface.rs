@@ -374,6 +374,25 @@ fn withhold_account_secrets(status: &mut types::WarrenStatus, may_see_secrets: b
     status.account_standing = None;
 }
 
+/// The status a failed standing fetch answers. An API that predates the
+/// endpoint answers 404, which is not an outage: the caller is told the
+/// standing is not reported there, rather than to retry.
+fn standing_fetch_status(error: &crate::warren_account_standing::FetchError) -> Status {
+    use crate::warren_account_standing::FetchError;
+    match error {
+        FetchError::NoWallet => Status::failed_precondition("no Warren wallet is installed"),
+        FetchError::WalletChanged => {
+            Status::aborted("the Warren wallet changed while its standing was fetched")
+        }
+        FetchError::Api(warren_api::ClientError::ServerStatus { status: 404, .. }) => {
+            Status::unimplemented("this Warren API does not report the account standing yet")
+        }
+        FetchError::Api(_) | FetchError::Stopped => {
+            Status::unavailable("the account standing could not be fetched")
+        }
+    }
+}
+
 /// Empties the credentials of a custom API access method: a proxy's
 /// username and password, a Shadowsocks password.
 fn withhold_access_method_secrets(method: &mut types::AccessMethodSetting) {
@@ -1087,23 +1106,14 @@ impl ManagementService for ManagementServiceImpl {
         &self,
         request: Request<()>,
     ) -> ServiceResult<types::WarrenAccountStanding> {
-        use crate::warren_account_standing::FetchError;
         let call = Self::call_of(&request);
         log::debug!("get_warren_account_standing");
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(&call, DaemonCommand::GetWarrenAccountStanding(tx))?;
-        match self.wait_for_result(rx).await? {
-            Ok(standing) => Ok(Response::new(types::WarrenAccountStanding::from(&standing))),
-            Err(FetchError::NoWallet) => {
-                Err(Status::failed_precondition("no Warren wallet is installed"))
-            }
-            Err(FetchError::WalletChanged) => Err(Status::aborted(
-                "the Warren wallet changed while its standing was fetched",
-            )),
-            Err(FetchError::Api(_) | FetchError::Stopped) => Err(Status::unavailable(
-                "the account standing could not be fetched",
-            )),
-        }
+        self.wait_for_result(rx)
+            .await?
+            .map(|standing| Response::new(types::WarrenAccountStanding::from(&standing)))
+            .map_err(|error| standing_fetch_status(&error))
     }
 
     /// Snapshot of the live Warren tunnel status read directly from
@@ -3178,6 +3188,28 @@ mod tests {
 
     /// The standing names the ports the owner forwarded and the abuse cases
     /// against the account: another local account reads none of it.
+    #[test]
+    fn an_api_without_the_standing_endpoint_is_not_reported_as_an_outage() {
+        use crate::warren_account_standing::FetchError;
+        let missing = FetchError::Api(warren_api::ClientError::ServerStatus {
+            status: 404,
+            body: String::new(),
+        });
+        let down = FetchError::Api(warren_api::ClientError::ServerStatus {
+            status: 503,
+            body: String::new(),
+        });
+
+        assert_eq!(
+            super::standing_fetch_status(&missing).code(),
+            mullvad_management_interface::Code::Unimplemented
+        );
+        assert_eq!(
+            super::standing_fetch_status(&down).code(),
+            mullvad_management_interface::Code::Unavailable
+        );
+    }
+
     #[test]
     fn a_caller_that_does_not_own_the_wallet_reads_no_standing() {
         let mut status = status_with_a_strike();
