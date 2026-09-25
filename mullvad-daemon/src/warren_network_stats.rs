@@ -29,7 +29,10 @@ const MAX_WINDOW_SECS: u64 = 3600;
 /// clock ahead of the server's would otherwise expire every snapshot on
 /// arrival and turn each frontend poll into a request.
 const MIN_REFETCH: Duration = Duration::from_secs(15);
-/// How long an API without the endpoint is believed before asking again.
+/// How long an API without the endpoint is believed before asking again. It
+/// will not grow one within minutes. A captive portal or a proxy answering 404
+/// is believed as long, which only delays the figures and never shows wrong
+/// ones.
 const UNSUPPORTED_TTL: Duration = Duration::from_secs(10 * 60);
 
 /// A snapshot that passed the sanity check, with the two fields the cache
@@ -68,7 +71,31 @@ pub enum StatsError {
     #[error("the network stats endpoint answered HTTP {0}")]
     Status(u16),
     #[error("the network stats body was rejected: {0}")]
-    InvalidBody(&'static str),
+    InvalidBody(InvalidBody),
+    /// The previous attempt failed less than [`MIN_REFETCH`] ago: a failing
+    /// API is not asked again on every local call.
+    #[error("the previous network stats request failed moments ago")]
+    RecentlyFailed,
+}
+
+/// Why a body was not passed through.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, thiserror::Error)]
+#[non_exhaustive]
+pub enum InvalidBody {
+    #[error("larger than any fleet snapshot")]
+    TooLarge,
+    #[error("not UTF-8")]
+    NotUtf8,
+    #[error("not JSON")]
+    NotJson,
+    #[error("not a JSON object")]
+    NotAnObject,
+    #[error("unsupported schema version")]
+    UnsupportedVersion,
+    #[error("no generated_at")]
+    NoGeneratedAt,
+    #[error("no window_secs")]
+    NoWindow,
 }
 
 /// One exit of the signed relay list, named both ways: the `exit_id` the
@@ -84,7 +111,7 @@ fn endpoint_url(api_base: &str) -> String {
     format!("{}/v1/network/stats", api_base.trim_end_matches('/'))
 }
 
-/// Classify an HTTP answer. `Err` is transient and never cached.
+/// Classify an HTTP answer. `Err` is transient.
 fn classify(status: u16, body: &[u8]) -> Result<StatsOutcome, StatsError> {
     match status {
         200 => sanity_check(body).map(StatsOutcome::Snapshot),
@@ -96,26 +123,25 @@ fn classify(status: u16, body: &[u8]) -> Result<StatsOutcome, StatsError> {
 /// Accepts a body only when it is a JSON object of the supported version that
 /// says when its window closed and how long it lasts.
 fn sanity_check(body: &[u8]) -> Result<StatsSnapshot, StatsError> {
+    let invalid = StatsError::InvalidBody;
     if body.len() > MAX_BODY_BYTES {
-        return Err(StatsError::InvalidBody("larger than any fleet snapshot"));
+        return Err(invalid(InvalidBody::TooLarge));
     }
-    let json = std::str::from_utf8(body).map_err(|_| StatsError::InvalidBody("not UTF-8"))?;
+    let json = std::str::from_utf8(body).map_err(|_| invalid(InvalidBody::NotUtf8))?;
     let value: serde_json::Value =
-        serde_json::from_str(json).map_err(|_| StatsError::InvalidBody("not JSON"))?;
-    let object = value
-        .as_object()
-        .ok_or(StatsError::InvalidBody("not a JSON object"))?;
+        serde_json::from_str(json).map_err(|_| invalid(InvalidBody::NotJson))?;
+    let object = value.as_object().ok_or(invalid(InvalidBody::NotAnObject))?;
     if object.get("version").and_then(serde_json::Value::as_u64) != Some(SUPPORTED_VERSION) {
-        return Err(StatsError::InvalidBody("unsupported schema version"));
+        return Err(invalid(InvalidBody::UnsupportedVersion));
     }
     let generated_at = object
         .get("generated_at")
         .and_then(serde_json::Value::as_u64)
-        .ok_or(StatsError::InvalidBody("no generated_at"))?;
+        .ok_or(invalid(InvalidBody::NoGeneratedAt))?;
     let window_secs = object
         .get("window_secs")
         .and_then(serde_json::Value::as_u64)
-        .ok_or(StatsError::InvalidBody("no window_secs"))?;
+        .ok_or(invalid(InvalidBody::NoWindow))?;
     Ok(StatsSnapshot {
         json: json.to_owned(),
         generated_at,
@@ -134,17 +160,25 @@ fn exit_hostnames_of(list: &WarrenRelayList) -> Vec<ExitHostname> {
         .collect()
 }
 
+/// What the last attempt left behind: an answer, or only the fact that it
+/// failed (the error itself is not kept, it may hold a transport handle).
+enum Attempt {
+    Answered(StatsOutcome),
+    Failed,
+}
+
 struct CachedOutcome {
-    outcome: StatsOutcome,
+    attempt: Attempt,
     fetched_at: Instant,
 }
 
 impl CachedOutcome {
     fn is_fresh(&self, now: Instant, now_unix: u64) -> bool {
         let age = now.saturating_duration_since(self.fetched_at);
-        match &self.outcome {
-            StatsOutcome::Unsupported => age < UNSUPPORTED_TTL,
-            StatsOutcome::Snapshot(snapshot) => {
+        match &self.attempt {
+            Attempt::Failed => age < MIN_REFETCH,
+            Attempt::Answered(StatsOutcome::Unsupported) => age < UNSUPPORTED_TTL,
+            Attempt::Answered(StatsOutcome::Snapshot(snapshot)) => {
                 let window = snapshot.window_secs.clamp(MIN_WINDOW_SECS, MAX_WINDOW_SECS);
                 // The snapshot cannot outlive one window from the moment it
                 // was fetched, which bounds a local clock that runs behind.
@@ -209,7 +243,8 @@ impl WarrenNetworkStats {
     /// # Errors
     ///
     /// Every [`StatsError`] is transient: no API base yet, a transport
-    /// failure, an unexpected status, or a body that failed the sanity check.
+    /// failure, an unexpected status, a body that failed the sanity check, or
+    /// a previous failure too recent to ask again.
     pub async fn get(&self) -> Result<StatsOutcome, StatsError> {
         let now_unix = std::time::SystemTime::now()
             .duration_since(std::time::UNIX_EPOCH)
@@ -233,14 +268,20 @@ impl WarrenNetworkStats {
             .as_ref()
             .filter(|cached| cached.is_fresh(now, now_unix))
         {
-            return Ok(cached.outcome.clone());
+            return match &cached.attempt {
+                Attempt::Answered(outcome) => Ok(outcome.clone()),
+                Attempt::Failed => Err(StatsError::RecentlyFailed),
+            };
         }
-        let outcome = fetch().await?;
+        let result = fetch().await;
         *cache = Some(CachedOutcome {
-            outcome: outcome.clone(),
+            attempt: match &result {
+                Ok(outcome) => Attempt::Answered(outcome.clone()),
+                Err(_) => Attempt::Failed,
+            },
             fetched_at: now,
         });
-        Ok(outcome)
+        result
     }
 
     async fn fetch(&self) -> Result<StatsOutcome, StatsError> {
@@ -264,16 +305,30 @@ impl WarrenNetworkStats {
             .send()
             .await
             .map_err(StatsError::Transport)?;
-        if response
-            .content_length()
-            .is_some_and(|length| length > MAX_BODY_BYTES as u64)
-        {
-            return Err(StatsError::InvalidBody("larger than any fleet snapshot"));
-        }
         let status = response.status().as_u16();
-        let body = response.bytes().await.map_err(StatsError::Transport)?;
+        let body = read_bounded(response).await?;
         classify(status, &body)
     }
+}
+
+/// The body, read chunk by chunk and abandoned as soon as it outgrows any
+/// fleet snapshot, whether or not the server announced its length.
+async fn read_bounded(mut response: reqwest::Response) -> Result<Vec<u8>, StatsError> {
+    let too_large = StatsError::InvalidBody(InvalidBody::TooLarge);
+    if response
+        .content_length()
+        .is_some_and(|length| length > MAX_BODY_BYTES as u64)
+    {
+        return Err(too_large);
+    }
+    let mut body = Vec::new();
+    while let Some(chunk) = response.chunk().await.map_err(StatsError::Transport)? {
+        if body.len() + chunk.len() > MAX_BODY_BYTES {
+            return Err(too_large);
+        }
+        body.extend_from_slice(&chunk);
+    }
+    Ok(body)
 }
 
 #[cfg(test)]
@@ -346,7 +401,7 @@ mod tests {
     fn sanity_check_rejects_a_body_that_is_not_json() {
         assert!(matches!(
             sanity_check(b"<html>captive portal</html>"),
-            Err(StatsError::InvalidBody(_))
+            Err(StatsError::InvalidBody(InvalidBody::NotJson))
         ));
     }
 
@@ -354,7 +409,7 @@ mod tests {
     fn sanity_check_rejects_json_that_is_not_an_object() {
         assert!(matches!(
             sanity_check(b"[1,2,3]"),
-            Err(StatsError::InvalidBody(_))
+            Err(StatsError::InvalidBody(InvalidBody::NotAnObject))
         ));
     }
 
@@ -363,7 +418,7 @@ mod tests {
         let body = FIXTURE.replace(r#""version":1"#, r#""version":2"#);
         assert!(matches!(
             sanity_check(body.as_bytes()),
-            Err(StatsError::InvalidBody(_))
+            Err(StatsError::InvalidBody(InvalidBody::UnsupportedVersion))
         ));
     }
 
@@ -372,7 +427,7 @@ mod tests {
         let body = FIXTURE.replace(r#""window_secs":60,"#, "");
         assert!(matches!(
             sanity_check(body.as_bytes()),
-            Err(StatsError::InvalidBody(_))
+            Err(StatsError::InvalidBody(InvalidBody::NoWindow))
         ));
     }
 
@@ -384,7 +439,7 @@ mod tests {
         );
         assert!(matches!(
             sanity_check(body.as_bytes()),
-            Err(StatsError::InvalidBody(_))
+            Err(StatsError::InvalidBody(InvalidBody::TooLarge))
         ));
     }
 
@@ -392,7 +447,7 @@ mod tests {
     fn a_snapshot_is_fresh_until_its_window_closes() {
         let fetched_at = Instant::now();
         let cached = CachedOutcome {
-            outcome: snapshot(1_000, 60),
+            attempt: Attempt::Answered(snapshot(1_000, 60)),
             fetched_at,
         };
         let later = fetched_at + Duration::from_secs(30);
@@ -406,7 +461,7 @@ mod tests {
         // frontend poll would become a request.
         let fetched_at = Instant::now();
         let cached = CachedOutcome {
-            outcome: snapshot(1_000, 60),
+            attempt: Attempt::Answered(snapshot(1_000, 60)),
             fetched_at,
         };
         assert!(cached.is_fresh(fetched_at + Duration::from_secs(5), 99_999));
@@ -418,7 +473,7 @@ mod tests {
         // Local clock far behind: `generated_at + window` would never pass.
         let fetched_at = Instant::now();
         let cached = CachedOutcome {
-            outcome: snapshot(1_000, 60),
+            attempt: Attempt::Answered(snapshot(1_000, 60)),
             fetched_at,
         };
         assert!(!cached.is_fresh(fetched_at + Duration::from_secs(60), 0));
@@ -428,7 +483,7 @@ mod tests {
     fn the_window_used_for_caching_is_clamped_to_the_server_range() {
         let fetched_at = Instant::now();
         let cached = CachedOutcome {
-            outcome: snapshot(1_000, 1_000_000),
+            attempt: Attempt::Answered(snapshot(1_000, 1_000_000)),
             fetched_at,
         };
         let after_max = fetched_at + Duration::from_secs(MAX_WINDOW_SECS);
@@ -439,7 +494,7 @@ mod tests {
     fn an_unsupported_answer_is_believed_for_its_ttl() {
         let fetched_at = Instant::now();
         let cached = CachedOutcome {
-            outcome: StatsOutcome::Unsupported,
+            attempt: Attempt::Answered(StatsOutcome::Unsupported),
             fetched_at,
         };
         assert!(cached.is_fresh(fetched_at + UNSUPPORTED_TTL - Duration::from_secs(1), 0));
@@ -503,7 +558,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn get_does_not_cache_a_failure() {
+    async fn get_does_not_ask_a_failing_api_again_within_the_refetch_floor() {
         let stats = WarrenNetworkStats::new();
         let calls = AtomicUsize::new(0);
         let t0 = Instant::now();
@@ -515,17 +570,182 @@ mod tests {
                 counting_fetch(&calls, Err(StatsError::Status(502))),
             )
             .await;
-        let retried = stats
+        let held_back = stats
             .get_with(
-                t0 + Duration::from_secs(1),
-                1_001,
+                t0 + MIN_REFETCH - Duration::from_secs(1),
+                1_014,
                 counting_fetch(&calls, Ok(snapshot(1_000, 60))),
             )
             .await;
 
-        assert!(failed.is_err());
+        assert!(matches!(failed, Err(StatsError::Status(502))));
+        assert!(matches!(held_back, Err(StatsError::RecentlyFailed)));
+        assert_eq!(calls.load(Ordering::SeqCst), 1);
+    }
+
+    #[tokio::test]
+    async fn get_asks_again_once_the_refetch_floor_after_a_failure_has_passed() {
+        let stats = WarrenNetworkStats::new();
+        let calls = AtomicUsize::new(0);
+        let t0 = Instant::now();
+
+        let _ = stats
+            .get_with(
+                t0,
+                1_000,
+                counting_fetch(&calls, Err(StatsError::Status(502))),
+            )
+            .await;
+        let retried = stats
+            .get_with(
+                t0 + MIN_REFETCH,
+                1_015,
+                counting_fetch(&calls, Ok(snapshot(1_000, 60))),
+            )
+            .await;
+
         assert_eq!(retried.expect("second attempt"), snapshot(1_000, 60));
         assert_eq!(calls.load(Ordering::SeqCst), 2);
+    }
+
+    #[tokio::test]
+    async fn concurrent_callers_on_an_expired_entry_share_one_fetch() {
+        let stats = WarrenNetworkStats::new();
+        let calls = AtomicUsize::new(0);
+        let (release, held) = tokio::sync::oneshot::channel::<()>();
+        let t0 = Instant::now();
+
+        let first = stats.get_with(t0, 1_000, || {
+            calls.fetch_add(1, Ordering::SeqCst);
+            async move {
+                // Held open until the second caller is waiting on the cache.
+                held.await.expect("released");
+                Ok(snapshot(1_000, 60))
+            }
+        });
+        let second = stats.get_with(t0, 1_000, || {
+            calls.fetch_add(1, Ordering::SeqCst);
+            std::future::ready(Ok(snapshot(2_000, 60)))
+        });
+        let releaser = async {
+            tokio::task::yield_now().await;
+            release.send(()).expect("first fetch still waiting");
+        };
+
+        let (first, second, ()) = tokio::join!(first, second, releaser);
+
+        assert_eq!(calls.load(Ordering::SeqCst), 1);
+        assert_eq!(first.expect("fetched"), second.expect("shared"));
+    }
+
+    #[tokio::test]
+    async fn get_without_an_api_base_is_not_configured() {
+        let result = WarrenNetworkStats::new().get().await;
+
+        assert!(matches!(result, Err(StatsError::NotConfigured)));
+    }
+
+    async fn stats_from(server: &mockito::ServerGuard) -> WarrenNetworkStats {
+        let stats = WarrenNetworkStats::new();
+        stats.set_api_base(server.url());
+        stats
+    }
+
+    #[tokio::test]
+    async fn fetch_passes_a_served_snapshot_through_verbatim() {
+        let mut server = mockito::Server::new_async().await;
+        let mock = server
+            .mock("GET", "/v1/network/stats")
+            .with_status(200)
+            .with_body(FIXTURE)
+            .create_async()
+            .await;
+
+        let outcome = stats_from(&server).await.get().await.expect("served");
+
+        let StatsOutcome::Snapshot(snapshot) = outcome else {
+            panic!("a 200 must yield a snapshot");
+        };
+        assert_eq!(snapshot.json(), FIXTURE);
+        mock.assert_async().await;
+    }
+
+    #[tokio::test]
+    async fn fetch_maps_a_404_to_unsupported() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/v1/network/stats")
+            .with_status(404)
+            .create_async()
+            .await;
+
+        let outcome = stats_from(&server)
+            .await
+            .get()
+            .await
+            .expect("stable answer");
+
+        assert_eq!(outcome, StatsOutcome::Unsupported);
+    }
+
+    #[tokio::test]
+    async fn fetch_rejects_a_body_announced_larger_than_any_snapshot() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+
+        // Announces far more than it sends and never closes: only a refusal
+        // on the announced length returns before the fetch timeout.
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0")
+            .await
+            .expect("bind");
+        let addr = listener.local_addr().expect("local addr");
+        tokio::spawn(async move {
+            let (mut socket, _) = listener.accept().await.expect("accept");
+            let mut request = [0u8; 4096];
+            let _ = socket.read(&mut request).await;
+            let head = format!(
+                "HTTP/1.1 200 OK\r\ncontent-length: {}\r\n\r\n",
+                MAX_BODY_BYTES * 4
+            );
+            let _ = socket.write_all(head.as_bytes()).await;
+            let _ = socket.write_all(FIXTURE.as_bytes()).await;
+            std::future::pending::<()>().await;
+        });
+        let stats = WarrenNetworkStats::new();
+        stats.set_api_base(format!("http://{addr}"));
+
+        let result = tokio::time::timeout(Duration::from_secs(5), stats.get())
+            .await
+            .expect("refused on the announced length, before any timeout");
+
+        assert!(matches!(
+            result,
+            Err(StatsError::InvalidBody(InvalidBody::TooLarge))
+        ));
+    }
+
+    #[tokio::test]
+    async fn fetch_stops_reading_an_unannounced_body_past_the_limit() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/v1/network/stats")
+            .with_status(200)
+            // Never ends: only the bound on the read makes the fetch return
+            // before its timeout.
+            .with_chunked_body(|writer| {
+                let chunk = vec![b' '; 64 * 1024];
+                loop {
+                    writer.write_all(&chunk)?;
+                }
+            })
+            .create_async()
+            .await;
+
+        let result = stats_from(&server).await.get().await;
+
+        assert!(matches!(
+            result,
+            Err(StatsError::InvalidBody(InvalidBody::TooLarge))
+        ));
     }
 
     fn relay(seed: u8) -> WarrenRelay {
