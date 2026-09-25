@@ -117,9 +117,8 @@ mod inner {
 
     /// Launch a program in the cgroup that routes it the way `launch` says.
     ///
-    /// Note: Set the `TALPID_EXCLUSION_CGROUP` env variable to control where the root cgroup is
-    /// mounted for exclusion. See (README.md)[../../README.md#Environment-variables-used-by-the-service] for
-    /// details. Inclusion always uses the default cgroup2 mount.
+    /// Both launchers use the default cgroup2 mount and find the net_cls one
+    /// in `/proc/mounts`, never a path from the caller's environment.
     pub fn main(launch: Launch) {
         let Err(error) = run(launch);
 
@@ -210,7 +209,9 @@ mod inner {
 
     #[cfg(feature = "cgroup2")]
     fn exclude(pid: Pid) -> Result<(), Error> {
-        let result = CGroup2::open_root()
+        // The fixed mount, never `open_root`: that one honours an override
+        // from the environment, which a setuid program must not trust.
+        let result = CGroup2::open(CGROUP2_DEFAULT_MOUNT_PATH)
             .and_then(|root_cgroup2| root_cgroup2.create_or_open_child(SPLIT_TUNNEL_CGROUP_NAME))
             .and_then(|exclusion_cgroup2| exclusion_cgroup2.add_pid(pid));
 

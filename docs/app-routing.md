@@ -259,10 +259,16 @@ subnet route), so an included app's names never go to the ISP.
 
 ### 3.1 Linux
 
-The daemon creates the cgroup at start; `warren-include` only joins it (it never
-creates one, so an app can never land in a cgroup the firewall does not know)
-and refuses to run the program when it is missing. `warren split-tunnel add
-<pid>` puts a running process in it while include-only is on. Exclusion and
+The daemon creates the cgroup at start, after checking that nftables can match
+cgroup2 sockets; `warren-include` only joins it (it never creates one, so an app
+can never land in a cgroup the firewall does not know) and refuses to run the
+program when it is missing. When include-only cannot select anything (no
+cgroup2 socket matching), a persisted include-only falls back to the full
+tunnel, never to an untunneled host. `warren split-tunnel add <pid>` puts a
+running process in it while include-only is on, but only one that holds no
+Internet socket: a socket keeps the cgroup it was created in, so an open
+connection would carry on outside the tunnel. A process that has one is put
+back and refused, with the advice to start it through `warren-include`. Exclusion and
 include-only never shape the same state: switching modes reapplies the
 firewall and reconnects the tunnel so the routes follow; cgroup membership is
 kept, so switching back restores it, and a process left in the cgroup of the
@@ -274,10 +280,10 @@ and `include_only_tail`):
 - the mangle chain marks the included cgroup's sockets (`socket cgroupv2`)
   and every later packet of their connections (conntrack mark), which the
   route chain reroutes into table 100;
-- while connected, traffic to the tunnel resolvers is marked the same way:
-  the system resolver belongs to no app, and the tunnel address is a `/32`
-  with no subnet route, so without the mark it would leave on the physical
-  network;
+- while connected, traffic to the tunnel resolvers, on any port, is marked the
+  same way: the system resolver belongs to no app, and the tunnel address is a
+  `/32` with no subnet route, so without the mark it would leave on the
+  physical network;
 - an included socket connects before its first packet is marked, with the
   physical source address, so included traffic leaving through the tunnel is
   masqueraded; replies are re-marked in prerouting for the reverse-path check
@@ -289,6 +295,9 @@ and `include_only_tail`):
   tunnel is connected (connecting, error, lockdown) included traffic is
   rejected at once in the output hook;
 - included DNS reaches only the tunnel resolvers, as in the full tunnel;
+- a packet arriving outside the tunnel for an included socket, a listener
+  included, is dropped: an included app's open port never answers the
+  physical network, which would tie its exit address to the real one;
 - everything else is accepted both ways in every state, blocked ones
   included, except probes for the tunnel address.
 
@@ -297,8 +306,16 @@ Validated in a Debian 13 VM (kernel 6.12) against a beta exit: an included
 with the daemon cut from the network the included app times out, then is
 refused at once in the connecting state, while the rest of the VM keeps
 working; no packet to the included app's destination, no DNS and no tunnel
-source address appeared on the physical interface. Included apps cannot reach
-the LAN: their traffic, LAN destinations included, goes to the tunnel.
+source address appeared on the physical interface; name lookups by included
+and other apps alike produced no packet on it either. A listening included app
+was unreachable from a peer on the physical side while a normal one answered.
+
+Limits: included apps cannot reach the LAN (their traffic, LAN destinations
+included, goes to the tunnel). A local DNS forwarder that is not included
+(dnscrypt-proxy, a DNS-over-TLS stub) sends the names it resolves for included
+apps to its own upstream outside the tunnel; only the system resolver pointed
+at the tunnel resolver is covered. In the disconnected state without lockdown
+nothing is tunneled, as with the full tunnel.
 
 The GUI shows a persistent, calm warning while include-only is active: a
 banner in the tab ("Only these apps are protected. The rest of your device
