@@ -16,6 +16,8 @@ use crate::{
     flow::{FlowKey, Transport},
 };
 
+#[cfg(any(target_os = "linux", test))]
+mod conntrack;
 #[cfg(any(target_os = "macos", test))]
 mod pcblist;
 #[cfg(any(windows, test))]
