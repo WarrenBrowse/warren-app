@@ -157,6 +157,9 @@ impl Firewall {
             FirewallPolicy::Connecting { .. } | FirewallPolicy::Blocked { .. }
         );
 
+        // `lan_networks` is not applied here: winfw compiles its LAN filters from
+        // `ALLOWED_LAN_NETS` (lannetworks.h), so Windows always shares the built-in ranges and
+        // the desktop app does not offer to customise them on this platform.
         let apply_result = match policy {
             FirewallPolicy::Connecting {
                 peer_endpoints,
@@ -165,6 +168,7 @@ impl Firewall {
                 allow_lan,
                 allowed_endpoint,
                 allowed_tunnel_traffic,
+                ..
             } => {
                 let cfg = &WinFwSettings::new(allow_lan);
                 self.set_connecting_state(
@@ -182,6 +186,7 @@ impl Firewall {
                 tunnel,
                 allow_lan,
                 dns_config,
+                ..
             } => {
                 let cfg = &WinFwSettings::new(allow_lan);
                 self.set_connected_state(
@@ -195,6 +200,7 @@ impl Firewall {
             FirewallPolicy::Blocked {
                 allow_lan,
                 allowed_endpoint,
+                ..
             } => {
                 let cfg = &WinFwSettings::new(allow_lan);
                 self.set_blocked_state(

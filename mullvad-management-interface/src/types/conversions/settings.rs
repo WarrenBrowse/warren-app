@@ -73,8 +73,42 @@ impl From<&mullvad_types::settings::Settings> for proto::Settings {
             warren_custom_exit: Some(proto::WarrenCustomExitSettings::from(
                 &settings.warren_custom_exit,
             )),
+            lan_networks: Some(proto::LanNetworks {
+                networks: settings
+                    .lan_networks()
+                    .iter()
+                    .map(ToString::to_string)
+                    .collect(),
+                custom: settings.custom_lan_networks.is_some(),
+            }),
         }
     }
+}
+
+/// The networks a client asked to share, or `None` for the built-in private ranges.
+///
+/// # Errors
+///
+/// [`FromProtobufTypeError::InvalidArgument`] for an entry that is not a network in CIDR
+/// notation, or one too broad to be a local network.
+pub fn custom_lan_networks(
+    lan_networks: proto::LanNetworks,
+) -> Result<Option<Vec<ipnetwork::IpNetwork>>, FromProtobufTypeError> {
+    if !lan_networks.custom {
+        return Ok(None);
+    }
+    let networks = lan_networks
+        .networks
+        .iter()
+        .map(|network| {
+            network.parse().map_err(|_| {
+                FromProtobufTypeError::invalid_argument(format!("{network} is not a network"))
+            })
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    mullvad_types::settings::validate_lan_networks(networks)
+        .map(Some)
+        .map_err(|error| FromProtobufTypeError::invalid_argument(error.to_string()))
 }
 
 impl From<&mullvad_types::settings::WarrenMultiHopSettings> for proto::WarrenMultiHopSettings {
@@ -348,6 +382,11 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
                 relay_settings,
             )?,
             allow_lan: settings.allow_lan,
+            custom_lan_networks: settings
+                .lan_networks
+                .map(custom_lan_networks)
+                .transpose()?
+                .flatten(),
             #[cfg(not(target_os = "android"))]
             lockdown_mode: settings.lockdown_mode,
             auto_connect: settings.auto_connect,
@@ -698,5 +737,77 @@ mod warren_nat_pmp_conversion_tests {
             internal_port: 0,
         };
         assert!(WarrenNatPmpSettings::try_from(proto).is_err());
+    }
+}
+
+#[cfg(test)]
+mod lan_networks_conversion_tests {
+    use super::*;
+    use mullvad_types::settings::Settings;
+    use talpid_types::net::ALLOWED_LAN_NETS;
+
+    fn lan_networks(networks: &[&str], custom: bool) -> proto::LanNetworks {
+        proto::LanNetworks {
+            networks: networks.iter().map(|n| n.to_string()).collect(),
+            custom,
+        }
+    }
+
+    /// The UI shows the list the firewall is using, so an uncustomised
+    /// daemon still sends the built-in ranges, marked as not custom.
+    #[test]
+    fn default_settings_send_the_built_in_ranges_as_not_custom() {
+        let proto = proto::Settings::from(&Settings::default());
+        let sent = proto.lan_networks.expect("always sent");
+        assert!(!sent.custom);
+        let expected: Vec<String> = ALLOWED_LAN_NETS.iter().map(|n| n.to_string()).collect();
+        assert_eq!(sent.networks, expected);
+    }
+
+    #[test]
+    fn a_custom_list_survives_a_settings_round_trip() {
+        let original = Settings {
+            custom_lan_networks: Some(vec![
+                "192.168.0.0/16".parse().unwrap(),
+                "400::/7".parse().unwrap(),
+            ]),
+            ..Default::default()
+        };
+        let back = Settings::try_from(proto::Settings::from(&original)).expect("round trip");
+        assert_eq!(back.custom_lan_networks, original.custom_lan_networks);
+    }
+
+    /// `custom = false` is how a client resets the list, whatever it lists.
+    #[test]
+    fn not_custom_means_the_built_in_ranges() {
+        let parsed = custom_lan_networks(lan_networks(&["400::/7"], false)).expect("valid");
+        assert_eq!(parsed, None);
+    }
+
+    #[test]
+    fn a_custom_list_is_validated_and_normalised() {
+        let parsed =
+            custom_lan_networks(lan_networks(&["192.168.1.7/24", "400::/7"], true)).expect("valid");
+        assert_eq!(
+            parsed,
+            Some(vec![
+                "192.168.1.0/24".parse().unwrap(),
+                "400::/7".parse().unwrap()
+            ])
+        );
+    }
+
+    #[test]
+    fn rejects_a_string_that_is_not_a_network() {
+        let error =
+            custom_lan_networks(lan_networks(&["my-server"], true)).expect_err("not a network");
+        assert!(matches!(error, FromProtobufTypeError::InvalidArgument(_)));
+    }
+
+    #[test]
+    fn rejects_a_network_too_broad_to_be_local() {
+        let error = custom_lan_networks(lan_networks(&["0.0.0.0/0"], true))
+            .expect_err("a default route is not a local network");
+        assert!(matches!(error, FromProtobufTypeError::InvalidArgument(_)));
     }
 }

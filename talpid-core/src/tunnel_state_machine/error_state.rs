@@ -7,6 +7,8 @@ use crate::firewall::FirewallPolicy;
 #[cfg(target_os = "macos")]
 use crate::resolver::LOCAL_DNS_RESOLVER;
 use futures::StreamExt;
+#[cfg(not(target_os = "android"))]
+use ipnetwork::IpNetwork;
 #[cfg(target_os = "macos")]
 use talpid_dns::DnsConfig;
 #[cfg(not(target_os = "android"))]
@@ -52,9 +54,14 @@ fn reconnects_on_connectivity(
 /// daemon must keep reaching the API from this state to fetch relays and
 /// recover on its own) and, when enabled, LAN.
 #[cfg(not(target_os = "android"))]
-fn blocked_policy(allow_lan: bool, allowed_endpoint: AllowedEndpoint) -> FirewallPolicy {
+fn blocked_policy(
+    allow_lan: bool,
+    lan_networks: Vec<IpNetwork>,
+    allowed_endpoint: AllowedEndpoint,
+) -> FirewallPolicy {
     FirewallPolicy::Blocked {
         allow_lan,
+        lan_networks,
         allowed_endpoint: Some(allowed_endpoint),
     }
 }
@@ -126,6 +133,7 @@ impl ErrorState {
         // here, and one Disconnect click resets the firewall.
         let policy = blocked_policy(
             shared_values.allow_lan,
+            shared_values.lan_networks.clone(),
             shared_values.allowed_endpoint.clone(),
         );
 
@@ -167,8 +175,8 @@ impl TunnelState for ErrorState {
         use self::EventConsequence::*;
 
         match runtime.block_on(commands.next()) {
-            Some(TunnelCommand::AllowLan(allow_lan, complete_tx)) => {
-                let consequence = if shared_values.set_allow_lan(allow_lan) {
+            Some(TunnelCommand::AllowLan(allow_lan, lan_networks, complete_tx)) => {
+                let consequence = if shared_values.set_allow_lan(allow_lan, lan_networks) {
                     #[cfg(target_os = "android")]
                     if let Err(_err) = shared_values.restart_tunnel(true) {
                         NewState(Self::enter(
@@ -383,10 +391,11 @@ mod tests {
             clients: AllowedClients::Root,
         };
 
-        match blocked_policy(false, api.clone()) {
+        match blocked_policy(false, vec![], api.clone()) {
             FirewallPolicy::Blocked {
                 allow_lan,
                 allowed_endpoint,
+                ..
             } => {
                 assert!(!allow_lan, "LAN must stay blocked when not opted in");
                 assert_eq!(

@@ -15,6 +15,9 @@ use std::collections::HashSet;
 use talpid_types::net::GenericTunnelOptions;
 
 mod dns;
+mod lan;
+
+pub use lan::{LanNetworkError, validate_lan_networks};
 
 /// The version used by the current version of the code. Should always be the
 /// latest version that exists in `SettingsVersion`.
@@ -93,6 +96,12 @@ pub struct Settings {
     pub update_default_location: bool,
     /// If the daemon should allow communication with private (LAN) networks.
     pub allow_lan: bool,
+    /// The networks shared while `allow_lan` is on, when the user replaced the
+    /// built-in private ranges. `None` shares the built-in ranges; resetting
+    /// the list goes back to `None`, so a later change to the defaults still
+    /// reaches a user who never customised it. See [`Settings::lan_networks`].
+    #[serde(default)]
+    pub custom_lan_networks: Option<Vec<ipnetwork::IpNetwork>>,
     /// Extra level of kill switch. When this setting is on, the disconnected state will block
     /// the firewall to not allow any traffic in or out.
     #[cfg(not(target_os = "android"))]
@@ -622,6 +631,7 @@ impl Default for Settings {
             custom_lists: CustomListsSettings::default(),
             api_access_methods: access_method::Settings::default(),
             allow_lan: false,
+            custom_lan_networks: None,
             #[cfg(not(target_os = "android"))]
             lockdown_mode: false,
             auto_connect: false,
