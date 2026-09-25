@@ -7,10 +7,15 @@
 //! belongs to a flow that route carries, with its destination translated back.
 //!
 //! Failure rules, from `docs/app-routing.md`:
-//! - a flow whose owner cannot be found, even in a snapshot taken after its
-//!   packet arrived, goes through the main session;
+//! - a new flow is attributed only from a socket snapshot taken after its
+//!   packet arrived, never from an older one that a reused port could fool;
+//! - a flow whose owner cannot be found even then goes through the main
+//!   session, except a TCP segment of a connection already under way, which
+//!   is dropped: that connection may have been routed;
 //! - a flow of a routed app is dropped while its route is not connected, and
-//!   never falls back to the main session.
+//!   never falls back to the main session;
+//! - a later fragment whose first fragment was not seen is dropped, since its
+//!   datagram may be a routed app's.
 
 use std::{
     collections::HashMap,
@@ -20,8 +25,8 @@ use std::{
 };
 
 use crate::{
-    app::{AppMatcher, DecisionCache, PathFlavor, ProcessKey},
-    flow::{self, Classified, Direction, FlowKey, FlowTable, FragmentKey},
+    app::{AppMatcher, DecisionCache, PathFlavor},
+    flow::{self, Classified, Direction, FlowKey, FlowTable, FragmentKey, Transport},
     ip, nat,
     owner::OwnerResolver,
 };
@@ -38,7 +43,7 @@ const SWEEP_INTERVAL: Duration = Duration::from_secs(5);
 pub struct RouteId(pub u8);
 
 /// The inner addresses a session sends from.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, PartialEq, Eq, Default)]
 pub struct SessionAddresses {
     pub v4: Option<Ipv4Addr>,
     pub v6: Option<Ipv6Addr>,
@@ -59,6 +64,17 @@ pub enum RouteState {
     Connecting,
     Connected(SessionAddresses),
     Unavailable,
+}
+
+// A session's inner addresses tie traffic to an exit: render which families
+// are set, never the addresses.
+impl std::fmt::Debug for SessionAddresses {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("SessionAddresses")
+            .field("v4", &self.v4.is_some())
+            .field("v6", &self.v6.is_some())
+            .finish()
+    }
 }
 
 /// Why a policy is refused.
@@ -149,6 +165,59 @@ pub struct Counters {
 enum Binding {
     Main,
     Route(RouteId),
+    /// Neither main nor a route may carry it.
+    Blocked,
+}
+
+const FLAG_SYN: u8 = 0x02;
+const FLAG_ACK: u8 = 0x10;
+
+/// The first fragments seen in one direction, so the later ones follow them.
+struct FragmentMap {
+    entries: HashMap<FragmentKey, (Binding, Instant)>,
+}
+
+impl FragmentMap {
+    fn new() -> Self {
+        Self {
+            entries: HashMap::new(),
+        }
+    }
+
+    /// Records the binding of a datagram. A full map drops its expired
+    /// entries, then its oldest one, so a burst of fragments costs the
+    /// oldest datagram rather than every datagram in flight.
+    fn remember(&mut self, fragment: FragmentKey, binding: Binding, now: Instant) {
+        if self.entries.len() >= FRAGMENT_CAPACITY && !self.entries.contains_key(&fragment) {
+            self.expire(now);
+            if self.entries.len() >= FRAGMENT_CAPACITY
+                && let Some(oldest) = self
+                    .entries
+                    .iter()
+                    .min_by_key(|(_, (_, seen))| *seen)
+                    .map(|(key, _)| *key)
+            {
+                self.entries.remove(&oldest);
+            }
+        }
+        self.entries.insert(fragment, (binding, now));
+    }
+
+    fn get(&self, fragment: &FragmentKey, now: Instant) -> Option<Binding> {
+        self.entries
+            .get(fragment)
+            .filter(|(_, seen)| now.saturating_duration_since(*seen) <= FRAGMENT_TIMEOUT)
+            .map(|(binding, _)| *binding)
+    }
+
+    fn expire(&mut self, now: Instant) {
+        self.entries
+            .retain(|_, (_, seen)| now.saturating_duration_since(*seen) <= FRAGMENT_TIMEOUT);
+    }
+
+    fn clear(&mut self) {
+        self.entries.clear();
+    }
 }
 
 /// Routes packets for one policy at a time. Not thread-safe by design: it
@@ -158,9 +227,11 @@ pub struct Router<R> {
     policy: Policy,
     flows: Option<FlowTable<Binding>>,
     flow_capacity: usize,
-    fragments: HashMap<(Direction, FragmentKey), (Binding, Instant)>,
+    uplink_fragments: FragmentMap,
+    downlink_fragments: FragmentMap,
     decisions: DecisionCache<RouteId>,
-    refreshed_in_burst: bool,
+    /// When the resolver's view was last read from the OS.
+    snapshot_taken: Option<Instant>,
     last_sweep: Option<Instant>,
     counters: Counters,
 }
@@ -178,9 +249,10 @@ impl<R: OwnerResolver> Router<R> {
             policy: Policy::inactive(),
             flows: None,
             flow_capacity,
-            fragments: HashMap::new(),
+            uplink_fragments: FragmentMap::new(),
+            downlink_fragments: FragmentMap::new(),
             decisions: DecisionCache::new(PROCESS_CAPACITY),
-            refreshed_in_burst: false,
+            snapshot_taken: None,
             last_sweep: None,
             counters: Counters::default(),
         }
@@ -193,12 +265,14 @@ impl<R: OwnerResolver> Router<R> {
             // Allocated on first use: a router that never routes costs no
             // table.
             self.flows = Some(FlowTable::new(self.flow_capacity));
-            self.fragments.reserve(FRAGMENT_CAPACITY);
+            self.uplink_fragments.entries.reserve(FRAGMENT_CAPACITY);
+            self.downlink_fragments.entries.reserve(FRAGMENT_CAPACITY);
         }
         if let Some(flows) = &mut self.flows {
             flows.clear();
         }
-        self.fragments.clear();
+        self.uplink_fragments.clear();
+        self.downlink_fragments.clear();
         self.decisions.clear();
         self.policy = policy;
     }
@@ -210,19 +284,15 @@ impl<R: OwnerResolver> Router<R> {
         }
     }
 
-    /// Marks the start of a batch of packets read together. A new flow that
-    /// misses the socket snapshot forces one fresh snapshot per batch, which
-    /// then serves every other new flow of the batch.
-    pub fn begin_burst(&mut self) {
-        self.refreshed_in_burst = false;
-    }
-
-    /// Decides for an uplink packet, rewriting its source when routed.
-    pub fn uplink(&mut self, packet: &mut [u8], now: Instant) -> Verdict {
+    /// Decides for an uplink packet that arrived at `arrived`, rewriting its
+    /// source when routed. `arrived` is when the packet was read from the
+    /// TUN device: a new flow is only attributed from a view of the OS taken
+    /// after that.
+    pub fn uplink(&mut self, packet: &mut [u8], arrived: Instant) -> Verdict {
         if !self.policy.is_active() {
             return Verdict::Main;
         }
-        self.sweep(now);
+        self.sweep(arrived);
         let Ok(classified) = flow::classify(packet, Direction::Uplink) else {
             return Verdict::Main;
         };
@@ -232,21 +302,26 @@ impl<R: OwnerResolver> Router<R> {
                 tcp_flags,
                 fragment,
             } => {
-                let binding = self.flow_binding(key, tcp_flags, now);
+                let binding = self.flow_binding(key, tcp_flags, arrived);
                 if let Some(fragment) = fragment {
-                    self.remember_fragment(Direction::Uplink, fragment, binding, now);
+                    self.uplink_fragments.remember(fragment, binding, arrived);
                 }
                 binding
             }
             Classified::LaterFragment(fragment) => self
-                .fragment_binding(Direction::Uplink, fragment, now)
-                .unwrap_or(Binding::Main),
+                .uplink_fragments
+                .get(&fragment, arrived)
+                .unwrap_or(Binding::Blocked),
             Classified::IcmpError { key } => {
                 // The host's own error about a routed flow would need its
                 // quoted packet translated too; losing it costs the remote
                 // end a timeout, sending it through main would reveal it.
-                return match self.lookup(&key, Direction::Uplink, 0, now) {
-                    Some(Binding::Route(_)) => self.dropped(),
+                return match self
+                    .flows
+                    .as_ref()
+                    .and_then(|flows| flows.peek(&key, arrived))
+                {
+                    Some(Binding::Route(_) | Binding::Blocked) => self.dropped(),
                     _ => Verdict::Main,
                 };
             }
@@ -269,7 +344,8 @@ impl<R: OwnerResolver> Router<R> {
         let Ok(classified) = flow::classify(packet, Direction::Downlink) else {
             return self.not_delivered();
         };
-        let (binding, main) = match classified {
+        let ours = Some(Binding::Route(route));
+        let main = match classified {
             Classified::Flow {
                 key,
                 tcp_flags,
@@ -278,35 +354,47 @@ impl<R: OwnerResolver> Router<R> {
                 let Some((original, main)) = self.original_flow(key, addresses) else {
                     return self.not_delivered();
                 };
-                let binding = self.lookup(&original, Direction::Downlink, tcp_flags, now);
-                if let (Some(binding), Some(fragment)) = (binding, fragment) {
-                    self.remember_fragment(Direction::Downlink, fragment, binding, now);
+                // Only a flow this route carries may have its state moved by
+                // what the route delivers.
+                if self.peek(&original, now) != ours {
+                    return self.not_delivered();
                 }
-                (binding, main)
+                self.lookup(&original, Direction::Downlink, tcp_flags, now);
+                if let Some(fragment) = fragment {
+                    self.downlink_fragments
+                        .remember(fragment, Binding::Route(route), now);
+                }
+                main
             }
             Classified::IcmpError { key } => {
                 let Some((original, main)) = self.original_flow(key, addresses) else {
                     return self.not_delivered();
                 };
-                (self.lookup(&original, Direction::Downlink, 0, now), main)
+                if self.peek(&original, now) != ours {
+                    return self.not_delivered();
+                }
+                main
             }
             Classified::LaterFragment(fragment) => {
                 let Some(main) = self.policy.main.for_family_of(fragment.dst) else {
                     return self.not_delivered();
                 };
-                (
-                    self.fragment_binding(Direction::Downlink, fragment, now),
-                    main,
-                )
+                if self.downlink_fragments.get(&fragment, now) != ours {
+                    return self.not_delivered();
+                }
+                main
             }
             Classified::Other => return self.not_delivered(),
         };
-        if binding != Some(Binding::Route(route)) || nat::rewrite_destination(packet, main).is_err()
-        {
+        if nat::rewrite_destination(packet, main).is_err() {
             return self.not_delivered();
         }
         self.counters.routed_packets += 1;
         Delivery::Deliver
+    }
+
+    pub fn counters(&self) -> Counters {
+        self.counters
     }
 
     /// The flow as the host knows it, for a packet a route delivered to its
@@ -324,13 +412,17 @@ impl<R: OwnerResolver> Router<R> {
         Some((original, main))
     }
 
-    fn flow_binding(&mut self, key: FlowKey, tcp_flags: u8, now: Instant) -> Binding {
-        if let Some(binding) = self.lookup(&key, Direction::Uplink, tcp_flags, now) {
+    fn flow_binding(&mut self, key: FlowKey, tcp_flags: u8, arrived: Instant) -> Binding {
+        // A connection opening on a 5-tuple that is still known is a new
+        // connection, possibly from another program: attribute it again.
+        let opening = is_opening(key, tcp_flags);
+        if !opening && let Some(binding) = self.lookup(&key, Direction::Uplink, tcp_flags, arrived)
+        {
             return binding;
         }
-        let binding = self.attribute(&key);
+        let binding = self.attribute(&key, opening, arrived);
         if let Some(flows) = &mut self.flows {
-            flows.insert(key, binding, Direction::Uplink, tcp_flags, now);
+            flows.insert(key, binding, Direction::Uplink, tcp_flags, arrived);
         }
         binding
     }
@@ -345,26 +437,37 @@ impl<R: OwnerResolver> Router<R> {
         self.flows.as_mut()?.lookup(key, direction, tcp_flags, now)
     }
 
-    /// Finds the app behind a new flow: its socket's owner, then that
-    /// process's decision, looked up once per process instance.
-    fn attribute(&mut self, key: &FlowKey) -> Binding {
+    fn peek(&self, key: &FlowKey, now: Instant) -> Option<Binding> {
+        self.flows.as_ref()?.peek(key, now)
+    }
+
+    /// Finds the app behind a new flow: its socket's owner in a view of the
+    /// OS taken after the packet arrived, then that process's decision,
+    /// looked up once per process.
+    fn attribute(&mut self, key: &FlowKey, opening: bool, arrived: Instant) -> Binding {
         self.counters.new_flows += 1;
-        let mut owner = self.resolver.socket_owner(key);
-        if owner.is_none() && !self.refreshed_in_burst {
-            self.refreshed_in_burst = true;
-            self.counters.refreshes += 1;
-            if self.resolver.refresh().is_err() {
-                self.counters.refresh_errors += 1;
-            }
-            owner = self.resolver.socket_owner(key);
+        // No OS table lists ICMP sockets: an echo is documented to go through
+        // main, and asking would only cost a snapshot.
+        if key.transport == Transport::IcmpEcho {
+            return Binding::Main;
         }
-        let Some((pid, start_time)) =
-            owner.and_then(|pid| Some((pid, self.resolver.start_time(pid)?)))
+        self.ensure_fresh_view(arrived);
+        let Some((pid, process)) = self
+            .resolver
+            .socket_owner(key)
+            .and_then(|pid| Some((pid, self.resolver.process_key(pid)?)))
         else {
             self.counters.unresolved_flows += 1;
-            return Binding::Main;
+            // A TCP segment that does not open a connection belongs to one
+            // under way, and an ownerless socket is one closing: its
+            // connection may have been routed, so its last segments are
+            // better lost than seen on main.
+            return if key.transport == Transport::Tcp && !opening {
+                Binding::Blocked
+            } else {
+                Binding::Main
+            };
         };
-        let process = ProcessKey { pid, start_time };
         let route = match self.decisions.get(process) {
             Some(route) => route,
             None => {
@@ -379,9 +482,23 @@ impl<R: OwnerResolver> Router<R> {
         route.map_or(Binding::Main, Binding::Route)
     }
 
+    /// Reads the OS again unless the current view was taken after `arrived`.
+    fn ensure_fresh_view(&mut self, arrived: Instant) {
+        if self.snapshot_taken.is_some_and(|taken| taken >= arrived) {
+            return;
+        }
+        self.counters.refreshes += 1;
+        if self.resolver.refresh().is_err() {
+            self.counters.refresh_errors += 1;
+        }
+        self.snapshot_taken = Some(Instant::now());
+    }
+
     fn apply_uplink(&mut self, binding: Binding, packet: &mut [u8]) -> Verdict {
-        let Binding::Route(route) = binding else {
-            return Verdict::Main;
+        let route = match binding {
+            Binding::Main => return Verdict::Main,
+            Binding::Blocked => return self.dropped(),
+            Binding::Route(route) => route,
         };
         let Some(RouteState::Connected(addresses)) =
             self.policy.routes.get(usize::from(route.0)).copied()
@@ -415,35 +532,6 @@ impl<R: OwnerResolver> Router<R> {
         Delivery::Drop
     }
 
-    fn remember_fragment(
-        &mut self,
-        direction: Direction,
-        fragment: FragmentKey,
-        binding: Binding,
-        now: Instant,
-    ) {
-        if self.fragments.len() >= FRAGMENT_CAPACITY {
-            self.fragments
-                .retain(|_, (_, seen)| now.saturating_duration_since(*seen) <= FRAGMENT_TIMEOUT);
-            if self.fragments.len() >= FRAGMENT_CAPACITY {
-                self.fragments.clear();
-            }
-        }
-        self.fragments.insert((direction, fragment), (binding, now));
-    }
-
-    fn fragment_binding(
-        &self,
-        direction: Direction,
-        fragment: FragmentKey,
-        now: Instant,
-    ) -> Option<Binding> {
-        self.fragments
-            .get(&(direction, fragment))
-            .filter(|(_, seen)| now.saturating_duration_since(*seen) <= FRAGMENT_TIMEOUT)
-            .map(|(binding, _)| *binding)
-    }
-
     fn sweep(&mut self, now: Instant) {
         if self
             .last_sweep
@@ -455,13 +543,13 @@ impl<R: OwnerResolver> Router<R> {
         if let Some(flows) = &mut self.flows {
             flows.expire(now);
         }
-        self.fragments
-            .retain(|_, (_, seen)| now.saturating_duration_since(*seen) <= FRAGMENT_TIMEOUT);
+        self.uplink_fragments.expire(now);
+        self.downlink_fragments.expire(now);
     }
+}
 
-    pub fn counters(&self) -> Counters {
-        self.counters
-    }
+fn is_opening(key: FlowKey, tcp_flags: u8) -> bool {
+    key.transport == Transport::Tcp && tcp_flags & FLAG_SYN != 0 && tcp_flags & FLAG_ACK == 0
 }
 
 #[cfg(test)]
@@ -471,6 +559,7 @@ pub(crate) mod fake {
     use std::{collections::HashMap, path::PathBuf};
 
     use crate::{
+        app::ProcessKey,
         flow::FlowKey,
         owner::{OwnerError, OwnerResolver},
     };
@@ -479,7 +568,7 @@ pub(crate) mod fake {
     pub struct Calls {
         pub socket_owner: u32,
         pub refresh: u32,
-        pub start_time: u32,
+        pub process_key: u32,
         pub executable: u32,
     }
 
@@ -521,9 +610,13 @@ pub(crate) mod fake {
             Ok(())
         }
 
-        fn start_time(&mut self, pid: u32) -> Option<u64> {
-            self.calls.start_time += 1;
-            self.processes.get(&pid).map(|(start, _)| *start)
+        fn process_key(&mut self, pid: u32) -> Option<ProcessKey> {
+            self.calls.process_key += 1;
+            self.processes.get(&pid).map(|(start_time, _)| ProcessKey {
+                pid,
+                start_time: *start_time,
+                image: 0,
+            })
         }
 
         fn executable(&mut self, pid: u32) -> Option<PathBuf> {
@@ -682,7 +775,6 @@ mod tests {
         let after_first = router.resolver.calls;
 
         for _ in 0..100 {
-            router.begin_burst();
             let mut packet = tcp_v4(MAIN, REMOTE, 50000, 443, TCP_ACK, b"data");
             assert_eq!(
                 router.uplink(&mut packet, start),
@@ -700,8 +792,6 @@ mod tests {
         os.socket(tcp_flow(50001), 30);
         let mut router = router(os);
         let start = now();
-
-        router.begin_burst();
         router.uplink(&mut syn(50000), start);
         router.uplink(&mut syn(50001), start);
 
@@ -712,11 +802,8 @@ mod tests {
     fn an_unresolvable_flow_goes_to_main_after_one_fresh_snapshot() {
         let mut router = router(os());
         let start = now();
-
-        router.begin_burst();
         let first = router.uplink(&mut syn(50000), start);
         let second_flow = router.uplink(&mut syn(50001), start);
-        router.begin_burst();
         let again = router.uplink(&mut tcp_v4(MAIN, REMOTE, 50000, 443, TCP_ACK, b""), start);
 
         assert_eq!(
@@ -728,15 +815,13 @@ mod tests {
     }
 
     #[test]
-    fn a_new_burst_may_refresh_again() {
+    fn a_packet_that_arrived_after_the_snapshot_gets_a_fresh_one() {
         let mut router = router(os());
         let start = now();
-        router.begin_burst();
         router.uplink(&mut syn(50000), start);
         router.resolver.socket(tcp_flow(50001), 10);
 
-        router.begin_burst();
-        let verdict = router.uplink(&mut syn(50001), start);
+        let verdict = router.uplink(&mut syn(50001), start + Duration::from_secs(1));
 
         assert_eq!(verdict, Verdict::Route(RouteId(0)));
         assert_eq!(router.resolver.calls.refresh, 2);
@@ -778,8 +863,6 @@ mod tests {
         router.uplink(&mut syn(50000), start);
         router.resolver.process(10, 9999, OTHER);
         router.resolver.socket(tcp_flow(50001), 10);
-
-        router.begin_burst();
         let verdict = router.uplink(&mut syn(50001), start);
 
         assert_eq!(verdict, Verdict::Main);
@@ -812,7 +895,10 @@ mod tests {
         let calls = router.resolver.calls;
 
         router.set_route_state(RouteId(0), connected(ROUTE0));
-        let verdict = router.uplink(&mut syn(50000), start);
+        let verdict = router.uplink(
+            &mut tcp_v4(MAIN, REMOTE, 50000, 443, TCP_ACK, b"data"),
+            start,
+        );
 
         assert_eq!(verdict, Verdict::Route(RouteId(0)));
         assert_eq!(router.resolver.calls, calls);
@@ -1010,17 +1096,189 @@ mod tests {
         let datagram = udp_v4(MAIN, REMOTE, 50000, 443, &[5; 64]);
         let mut first = as_v4_fragment(datagram.clone(), 77, 0, true);
         let mut later = as_v4_fragment(datagram, 77, 4, false);
-        let mut unknown = as_v4_fragment(udp_v4(MAIN, REMOTE, 50009, 443, &[5; 64]), 78, 4, false);
 
         let first_verdict = router.uplink(&mut first, start);
         let later_verdict = router.uplink(&mut later, start);
-        let unknown_verdict = router.uplink(&mut unknown, start);
 
         assert_eq!(first_verdict, Verdict::Route(RouteId(0)));
         assert_eq!(later_verdict, Verdict::Route(RouteId(0)));
         assert_eq!(&later[12..16], &ROUTE0);
         assert!(ipv4_header_ok(&later));
-        assert_eq!(unknown_verdict, Verdict::Main);
+    }
+
+    #[test]
+    fn a_later_fragment_whose_first_was_not_seen_is_dropped() {
+        let mut router = router(os());
+        let mut unknown = as_v4_fragment(udp_v4(MAIN, REMOTE, 50009, 443, &[5; 64]), 78, 4, false);
+
+        let verdict = router.uplink(&mut unknown, now());
+
+        assert_eq!(verdict, Verdict::Drop);
+    }
+
+    #[test]
+    fn a_full_fragment_map_forgets_its_oldest_datagram_first() {
+        let mut os = os();
+        os.socket(udp_flow(50000), 30);
+        let mut router = router(os);
+        let start = now();
+        let datagram = udp_v4(MAIN, REMOTE, 50000, 443, &[5; 64]);
+        for (index, id) in (0..=FRAGMENT_CAPACITY as u16).enumerate() {
+            let mut first = as_v4_fragment(datagram.clone(), id, 0, true);
+            router.uplink(&mut first, start + Duration::from_millis(index as u64));
+        }
+        let at = start + Duration::from_secs(1);
+
+        let oldest = router.uplink(&mut as_v4_fragment(datagram.clone(), 0, 4, false), at);
+        let next = router.uplink(&mut as_v4_fragment(datagram, 1, 4, false), at);
+
+        assert_eq!((oldest, next), (Verdict::Drop, Verdict::Main));
+    }
+
+    #[test]
+    fn a_route_cannot_flush_the_fragments_of_another_route() {
+        let mut os = os();
+        os.socket(udp_flow(50000), 10);
+        let mut router = router(os);
+        let start = now();
+        router.uplink(&mut udp_v4(MAIN, REMOTE, 50000, 443, b"q"), start);
+        let answer = udp_v4(REMOTE, ROUTE0, 443, 50000, &[6; 64]);
+        router.downlink(
+            RouteId(0),
+            &mut as_v4_fragment(answer.clone(), 1, 0, true),
+            start,
+        );
+        // Route 1 claims route 0's flow with fragments of its own.
+        let claim = udp_v4(REMOTE, ROUTE1, 443, 50000, &[6; 64]);
+        for id in 1000..1000 + 2 * FRAGMENT_CAPACITY as u16 {
+            router.downlink(
+                RouteId(1),
+                &mut as_v4_fragment(claim.clone(), id, 0, true),
+                start,
+            );
+        }
+
+        let later = router.downlink(RouteId(0), &mut as_v4_fragment(answer, 1, 4, false), start);
+
+        assert_eq!(later, Delivery::Deliver);
+    }
+
+    #[test]
+    fn a_route_cannot_close_a_flow_it_does_not_carry() {
+        let mut os = os();
+        os.socket(tcp_flow(50000), 10);
+        let mut router = router(os);
+        let start = now();
+        router.uplink(&mut syn(50000), start);
+        let reset = tcp_v4(REMOTE, ROUTE1, 443, 50000, TCP_RST, b"");
+
+        let delivery = router.downlink(RouteId(1), &mut reset.clone(), start);
+        let later = start + crate::flow::CLOSING_LINGER * 3;
+        router.uplink(&mut tcp_v4(MAIN, REMOTE, 50000, 443, TCP_ACK, b""), later);
+
+        assert_eq!(delivery, Delivery::Drop);
+        assert_eq!(router.counters().new_flows, 1);
+    }
+
+    #[test]
+    fn a_route_cannot_deliver_an_icmp_error_about_a_flow_it_does_not_carry() {
+        let mut os = os();
+        os.socket(udp_flow(50000), 10);
+        let mut router = router(os);
+        let start = now();
+        router.uplink(&mut udp_v4(MAIN, REMOTE, 50000, 443, b"q"), start);
+        let claimed = udp_v4(ROUTE1, REMOTE, 50000, 443, &[1; 32]);
+
+        let delivery = router.downlink(
+            RouteId(1),
+            &mut icmp_v4_error([203, 0, 113, 1], ROUTE1, &claimed[..28]),
+            start,
+        );
+
+        assert_eq!(delivery, Delivery::Drop);
+    }
+
+    #[test]
+    fn a_route_sharing_another_routes_address_cannot_deliver_its_fragments() {
+        let mut os = os();
+        os.socket(udp_flow(50000), 10);
+        let mut router = router(os);
+        router.set_route_state(RouteId(1), connected(ROUTE0));
+        let start = now();
+        router.uplink(&mut udp_v4(MAIN, REMOTE, 50000, 443, b"q"), start);
+        let answer = udp_v4(REMOTE, ROUTE0, 443, 50000, &[6; 64]);
+        router.downlink(
+            RouteId(0),
+            &mut as_v4_fragment(answer.clone(), 1, 0, true),
+            start,
+        );
+
+        let later = router.downlink(RouteId(1), &mut as_v4_fragment(answer, 1, 4, false), start);
+
+        assert_eq!(later, Delivery::Drop);
+    }
+
+    #[test]
+    fn a_stale_snapshot_is_not_trusted_for_a_packet_that_arrived_after_it() {
+        // Another app held the flow's port when the snapshot was taken, and
+        // the browser holds it by the time its packet arrives.
+        let mut os = os();
+        os.socket(tcp_flow(50000), 30);
+        os.socket(udp_flow(50001), 30);
+        let mut router = router(os);
+        let start = now();
+        router.uplink(&mut syn(50000), start);
+        router.resolver.socket(udp_flow(50001), 10);
+
+        let verdict = router.uplink(
+            &mut udp_v4(MAIN, REMOTE, 50001, 443, b"quic"),
+            start + Duration::from_secs(1),
+        );
+
+        assert_eq!(verdict, Verdict::Route(RouteId(0)));
+    }
+
+    #[test]
+    fn a_tcp_segment_of_a_connection_without_a_live_owner_is_dropped() {
+        let mut router = router(os());
+
+        let verdict = router.uplink(
+            &mut tcp_v4(MAIN, REMOTE, 50000, 443, TCP_ACK | TCP_FIN, b""),
+            now(),
+        );
+
+        assert_eq!(verdict, Verdict::Drop);
+    }
+
+    #[test]
+    fn a_connection_opening_on_a_known_tuple_is_attributed_again() {
+        let mut os = os();
+        os.socket(tcp_flow(50000), 10);
+        let mut router = router(os);
+        let start = now();
+        router.uplink(&mut syn(50000), start);
+        router.resolver.socket(tcp_flow(50000), 30);
+
+        let verdict = router.uplink(&mut syn(50000), start + Duration::from_secs(1));
+
+        assert_eq!(verdict, Verdict::Main);
+    }
+
+    #[test]
+    fn an_echo_goes_to_main_without_asking_the_os() {
+        let mut router = router(os());
+
+        let verdict = router.uplink(&mut icmp_echo_v4(MAIN, REMOTE, 7, true), now());
+
+        assert_eq!(verdict, Verdict::Main);
+        assert_eq!(router.resolver.calls, fake::Calls::default());
+    }
+
+    #[test]
+    fn a_route_state_renders_without_its_addresses() {
+        let rendered = format!("{:?}", connected(ROUTE0));
+
+        assert!(!rendered.contains("10.99.0.7"), "{rendered}");
     }
 
     #[test]
@@ -1060,7 +1318,6 @@ mod tests {
             )
             .unwrap(),
         );
-        router.begin_burst();
         let verdict = router.uplink(&mut syn(50000), start);
 
         assert_eq!(verdict, Verdict::Main);

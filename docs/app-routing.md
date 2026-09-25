@@ -63,9 +63,9 @@ the local socket:
 
 | OS | API | measured / expected cost |
 |---|---|---|
-| macOS | `sysctl net.inet.{tcp,udp}.pcblist_n` (`xinpcb_n`, `xsocket_n.so_last_pid`, `so_e_pid` when non-zero), then `proc_pidpath` | 0.8 ms TCP dump, 0.1 ms UDP, unprivileged (2026-09-25 probe) |
+| macOS | `sysctl net.inet.{tcp,udp}.pcblist_n` (`xinpcb_n`, `xsocket_n.so_last_pid`, `so_e_pid` when non-zero), then `proc_pidpath` | 0.8 ms TCP dump, 0.1 ms UDP, unprivileged (2026-09-25 probe); 0.42 ms for both tables of 366 sockets through `talpid-app-routing` in a release build |
 | Windows | `GetExtendedTcpTable(TCP_TABLE_OWNER_PID_ALL)`, `GetExtendedUdpTable(UDP_TABLE_OWNER_PID)`, then `QueryFullProcessImageNameW` | to measure |
-| Linux | `NETLINK_SOCK_DIAG` exact lookup (inode), inode to pid through a cached `/proc/*/fd` index, then `/proc/<pid>/exe` | to measure |
+| Linux | `NETLINK_SOCK_DIAG` exact lookup (inode; UDP takes the pair as a packet reaching the socket carries it, TCP the socket's own, measured on 6.8), inode to pid through an index of `/proc/*/fd` checked against that process's descriptors, then `/proc/<pid>/exe` | to measure |
 | Android | `ConnectivityManager.getConnectionOwnerUid` (API 29+) | later lot |
 
 Rules:
@@ -74,14 +74,31 @@ Rules:
   probe notes) and pin the layout with a test that opens a real socket and finds
   its own pid.
 - Unconnected UDP sockets have no remote address: match them on the local port.
-- One table snapshot serves a burst of new flows; a miss forces one fresh
-  snapshot. The hot path never calls the OS for a packet of a known flow.
+- A new flow is attributed only from a view of the OS taken after its packet
+  arrived: the first new flow of a batch read from the TUN takes a fresh
+  snapshot, and every other new flow of the batch reuses it. A hit in an older
+  snapshot is never trusted, since the port may have changed hands since. On
+  Linux the socket lookup is live, and the inode index is rebuilt at most once
+  per batch. The hot path never calls the OS for a packet of a known flow.
 - Classification is fully bypassed (zero per-packet cost) while no app has a
   country.
-- A pid decision is cached by (pid, process start time), never by pid alone.
+- A pid decision is cached by (pid, process start time, program), never by pid
+  alone: a process keeps its pid and start time across `exec`, so the program
+  is identified too (the pid version on macOS, the executable's inode on
+  Linux; a Windows process never replaces its image).
 - A flow whose owner cannot be resolved after the fresh snapshot goes through
   the main connection. That is the documented behavior, and it never leaves the
-  tunnel.
+  tunnel. Two exceptions fail closed instead: a TCP segment that does not open
+  a connection (anything but a bare SYN) belongs to a connection under way, so
+  an ownerless one is closing and may have been routed, and it is dropped; and
+  a UDP port shared by two processes' unconnected sockets cannot be
+  attributed, so it counts as unresolved.
+- ICMP echo is not attributed (no OS table lists ICMP sockets) and goes through
+  the main connection.
+- A later fragment follows the decision made for its first fragment; one whose
+  first fragment was not seen is dropped. A bare SYN on a 5-tuple still known
+  opens a new connection, possibly from another program, and is attributed
+  again.
 
 ### 2.2 Sessions per country, shared
 

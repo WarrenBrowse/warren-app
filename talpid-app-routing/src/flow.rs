@@ -113,7 +113,7 @@ pub fn classify(packet: &[u8], direction: Direction) -> Result<Classified, Packe
     let fragment_key = FragmentKey {
         src,
         dst,
-        protocol: layout.protocol,
+        protocol: fragment.protocol,
         id: fragment.id,
     };
     if fragment.first {
@@ -389,15 +389,37 @@ impl<V: Copy> FlowTable<V> {
     }
 
     /// Frees a sixteenth of the table, oldest activity first, so a table
-    /// under pressure pays for one scan per many inserts.
+    /// under pressure pays for one scan per many inserts. Flows seen at the
+    /// same instant are counted one by one, so a batch sharing one timestamp
+    /// does not empty the table.
     fn evict_least_recent(&mut self) {
+        let count = (self.entries.len() / 16).max(1);
         self.eviction.clear();
         self.eviction
             .extend(self.entries.values().map(|entry| entry.last_seen));
-        let nth = (self.eviction.len() / 16).min(self.eviction.len().saturating_sub(1));
-        let (_, cutoff, _) = self.eviction.select_nth_unstable(nth);
+        let (_, cutoff, _) = self.eviction.select_nth_unstable(count - 1);
         let cutoff = *cutoff;
-        self.entries.retain(|_, entry| entry.last_seen > cutoff);
+        let older = self.eviction.iter().filter(|seen| **seen < cutoff).count();
+        let mut ties = count - older;
+        self.entries.retain(|_, entry| {
+            if entry.last_seen < cutoff {
+                return false;
+            }
+            if entry.last_seen == cutoff && ties > 0 {
+                ties -= 1;
+                return false;
+            }
+            true
+        });
+    }
+
+    /// The value recorded for `key` if the flow is live, without counting
+    /// anything as activity: for a packet not yet known to belong to it.
+    pub fn peek(&self, key: &FlowKey, now: Instant) -> Option<V> {
+        self.entries
+            .get(key)
+            .filter(|entry| !is_expired(key.transport, entry, now))
+            .map(|entry| entry.value)
     }
 
     pub fn len(&self) -> usize {
@@ -575,6 +597,36 @@ mod tests {
         let later = classify(&later, Direction::Uplink).unwrap();
 
         assert_eq!(first_key, key(Transport::Udp, 50006, 443));
+        assert_eq!(later, Classified::LaterFragment(fragment.unwrap()));
+    }
+
+    #[test]
+    fn ipv6_fragments_share_a_key_when_an_extension_header_follows_the_fragment_header() {
+        let mut first = as_v6_fragment(
+            udp_v6(LOCAL6, REMOTE6, 50008, 443, &[1; 16]),
+            5,
+            0,
+            true,
+            false,
+        );
+        first[40] = 60;
+        first.splice(48..48, [17u8, 0, 1, 4, 0, 0, 0, 0]);
+        let payload_len = (first.len() - 40) as u16;
+        first[4..6].copy_from_slice(&payload_len.to_be_bytes());
+        let mut later = as_v6_fragment(
+            udp_v6(LOCAL6, REMOTE6, 50008, 443, &[1; 16]),
+            5,
+            3,
+            false,
+            false,
+        );
+        later[40] = 60;
+
+        let Classified::Flow { fragment, .. } = classify(&first, Direction::Uplink).unwrap() else {
+            panic!("the first fragment is a flow packet");
+        };
+        let later = classify(&later, Direction::Uplink).unwrap();
+
         assert_eq!(later, Classified::LaterFragment(fragment.unwrap()));
     }
 
@@ -807,6 +859,81 @@ mod tests {
         assert_eq!(
             table.lookup(&key(Transport::Tcp, 1, 443), Direction::Uplink, 0, later),
             Some(1)
+        );
+    }
+
+    #[test]
+    fn eviction_frees_a_sixteenth_even_when_every_flow_was_seen_at_once() {
+        let capacity = 64;
+        let mut table = FlowTable::new(capacity);
+        let now = t0();
+        for port in 0..capacity as u16 {
+            table.insert(
+                key(Transport::Tcp, port, 443),
+                port,
+                Direction::Uplink,
+                TCP_SYN,
+                now,
+            );
+        }
+
+        table.insert(
+            key(Transport::Tcp, 1000, 443),
+            1000,
+            Direction::Uplink,
+            TCP_SYN,
+            now,
+        );
+
+        assert_eq!(table.len(), capacity - capacity / 16 + 1);
+    }
+
+    #[test]
+    fn peeking_at_a_flow_does_not_count_as_activity() {
+        let mut table = FlowTable::new(8);
+        let now = t0();
+        let flow = key(Transport::Udp, 1, 53);
+        table.insert(flow, 'u', Direction::Uplink, 0, now);
+
+        let peeked = table.peek(&flow, now + UDP_IDLE - Duration::from_secs(1));
+        let later = table.lookup(
+            &flow,
+            Direction::Uplink,
+            0,
+            now + UDP_IDLE + Duration::from_secs(1),
+        );
+
+        assert_eq!((peeked, later), (Some('u'), None));
+    }
+
+    #[test]
+    fn peeking_misses_an_expired_flow() {
+        let mut table = FlowTable::new(8);
+        let now = t0();
+        let flow = key(Transport::Udp, 1, 53);
+        table.insert(flow, 'u', Direction::Uplink, 0, now);
+
+        assert_eq!(table.peek(&flow, now + UDP_IDLE * 2), None);
+    }
+
+    #[test]
+    fn clearing_forgets_every_flow() {
+        let mut table = FlowTable::new(8);
+        let now = t0();
+        table.insert(
+            key(Transport::Tcp, 1, 443),
+            1,
+            Direction::Uplink,
+            TCP_SYN,
+            now,
+        );
+
+        table.clear();
+
+        assert!(table.is_empty());
+        assert_eq!(
+            table.lookup(&key(Transport::Tcp, 1, 443), Direction::Uplink, 0, now),
+            None
         );
     }
 

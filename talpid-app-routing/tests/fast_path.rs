@@ -15,6 +15,7 @@ use std::{
 };
 
 use talpid_app_routing::{
+    app::ProcessKey,
     flow::FlowKey,
     owner::{OwnerError, OwnerResolver},
     router::{Delivery, Policy, RouteId, RouteState, Router, SessionAddresses, Verdict},
@@ -94,9 +95,13 @@ impl OwnerResolver for OneSocket {
         Ok(())
     }
 
-    fn start_time(&mut self, _pid: u32) -> Option<u64> {
+    fn process_key(&mut self, pid: u32) -> Option<ProcessKey> {
         self.count();
-        Some(1)
+        Some(ProcessKey {
+            pid,
+            start_time: 1,
+            image: 1,
+        })
     }
 
     fn executable(&mut self, _pid: u32) -> Option<PathBuf> {
@@ -175,7 +180,6 @@ fn a_known_routed_flow_costs_no_allocation_and_no_os_call() {
 
     let allocations = allocations_during(|| {
         for _ in 0..10_000 {
-            router.begin_burst();
             up.copy_from_slice(&uplink);
             down.copy_from_slice(&downlink);
             assert_eq!(router.uplink(&mut up, start), Verdict::Route(RouteId(0)));

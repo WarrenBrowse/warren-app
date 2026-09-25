@@ -40,6 +40,10 @@ pub(crate) enum Family {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct Fragment {
     pub id: u32,
+    /// The protocol every fragment of the datagram names: the IPv4 protocol
+    /// field, or the Next Header of the IPv6 Fragment header, which a later
+    /// fragment carries too while the headers after it are only in the first.
+    pub protocol: u8,
     /// The first fragment is the only one that carries the transport header.
     pub first: bool,
 }
@@ -138,6 +142,7 @@ fn locate_v4(packet: &[u8], quoted: bool) -> Result<Layout, PacketError> {
     let offset = flags_offset & 0x1fff;
     let fragment = (more_fragments || offset != 0).then(|| Fragment {
         id: u32::from(u16::from_be_bytes([packet[4], packet[5]])),
+        protocol: packet[9],
         first: offset == 0,
     });
     Ok(Layout {
@@ -193,6 +198,7 @@ fn locate_v6(packet: &[u8], quoted: bool) -> Result<Layout, PacketError> {
                 let field = u16::from_be_bytes([header[2], header[3]]);
                 fragment = Some(Fragment {
                     id: u32::from_be_bytes([header[4], header[5], header[6], header[7]]),
+                    protocol: header[0],
                     first: field >> 3 == 0,
                 });
                 8
@@ -279,6 +285,7 @@ mod tests {
             layout.fragment,
             Some(Fragment {
                 id: 0x4242,
+                protocol: PROTO_UDP,
                 first: true
             })
         );
@@ -295,6 +302,7 @@ mod tests {
             layout.fragment,
             Some(Fragment {
                 id: 0x4242,
+                protocol: PROTO_UDP,
                 first: false
             })
         );
@@ -346,7 +354,14 @@ mod tests {
 
         assert_eq!(layout.protocol, PROTO_UDP);
         assert_eq!(layout.l4_offset, 56);
-        assert_eq!(layout.fragment, Some(Fragment { id: 7, first: true }));
+        assert_eq!(
+            layout.fragment,
+            Some(Fragment {
+                id: 7,
+                protocol: PROTO_UDP,
+                first: true
+            })
+        );
     }
 
     #[test]
@@ -359,6 +374,7 @@ mod tests {
             layout.fragment,
             Some(Fragment {
                 id: 7,
+                protocol: PROTO_UDP,
                 first: false
             })
         );
@@ -379,6 +395,7 @@ mod tests {
             layout.fragment,
             Some(Fragment {
                 id: 7,
+                protocol: V6_DEST_OPTS,
                 first: false
             })
         );

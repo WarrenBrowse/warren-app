@@ -20,7 +20,7 @@ use super::{
     OwnerError, OwnerResolver, SocketTable,
     win_tables::{self, TableKind},
 };
-use crate::flow::FlowKey;
+use crate::{app::ProcessKey, flow::FlowKey};
 
 const TABLES: [TableKind; 4] = [
     TableKind::Tcp4,
@@ -52,8 +52,11 @@ impl OwnerResolver for SystemResolver {
         self.table.clear();
         let result = TABLES.iter().try_for_each(|kind| {
             let len = read_table(*kind, &mut self.buffer).map_err(OwnerError::SocketTable)?;
-            // SAFETY: the buffer holds at least `len` initialized bytes, and a
-            // `u32` slice is valid to read as bytes.
+            // The API reports how much it wrote; never read past what the
+            // buffer holds whatever it reports.
+            let len = len.min(self.buffer.len() * 4);
+            // SAFETY: `len` is within the buffer, and a `u32` slice is valid
+            // to read as bytes.
             let bytes =
                 unsafe { std::slice::from_raw_parts(self.buffer.as_ptr().cast::<u8>(), len) };
             win_tables::parse(bytes, *kind, &mut self.table)
@@ -65,7 +68,7 @@ impl OwnerResolver for SystemResolver {
         result
     }
 
-    fn start_time(&mut self, pid: u32) -> Option<u64> {
+    fn process_key(&mut self, pid: u32) -> Option<ProcessKey> {
         let process = Process::open(pid)?;
         let mut creation = FILETIME::default();
         let mut unused = [FILETIME::default(); 3];
@@ -73,8 +76,12 @@ impl OwnerResolver for SystemResolver {
         // SAFETY: the handle is open with query rights and every out pointer
         // is a valid FILETIME.
         let ok = unsafe { GetProcessTimes(process.0, &raw mut creation, exit, kernel, user) };
-        (ok != 0)
-            .then(|| (u64::from(creation.dwHighDateTime) << 32) | u64::from(creation.dwLowDateTime))
+        (ok != 0).then(|| ProcessKey {
+            pid,
+            start_time: (u64::from(creation.dwHighDateTime) << 32)
+                | u64::from(creation.dwLowDateTime),
+            image: 0,
+        })
     }
 
     fn executable(&mut self, pid: u32) -> Option<PathBuf> {
@@ -185,18 +192,18 @@ mod tests {
     }
 
     #[test]
-    fn reads_the_executable_and_a_stable_start_time_of_this_process() {
+    fn reads_the_executable_and_a_stable_key_of_this_process() {
         let mut resolver = SystemResolver::new();
         let pid = std::process::id();
 
         let executable = resolver.executable(pid);
-        let first = resolver.start_time(pid);
+        let first = resolver.process_key(pid);
 
         assert_eq!(
             executable.map(|path| std::fs::canonicalize(path).unwrap()),
             Some(std::fs::canonicalize(std::env::current_exe().unwrap()).unwrap())
         );
-        assert!(first.is_some());
-        assert_eq!(first, resolver.start_time(pid));
+        assert_eq!(first.map(|key| key.pid), Some(pid));
+        assert_eq!(first, resolver.process_key(pid));
     }
 }
