@@ -59,6 +59,9 @@ impl Status {
                 DaemonEvent::NewAccessMethod(access_method) => {
                     print_debug_or_json(&args, "New access method", &access_method)?;
                 }
+                DaemonEvent::AppRoutes(routes) => {
+                    print_debug_or_json(&args, "New app routes", &routes)?;
+                }
                 DaemonEvent::LeakDetected(leak) => {
                     #[derive(Debug, Serialize)]
                     struct Leak {

@@ -5,13 +5,14 @@ use futures::{Stream, StreamExt};
 #[cfg(all(daita, not(target_os = "android")))]
 use mullvad_types::wireguard::DaitaSettings;
 use mullvad_types::{
-    access_method::AccessMethodSetting, device::DeviceEvent, relay_list::RelayList,
-    settings::Settings, states::TunnelState, version::AppVersionInfo,
+    access_method::AccessMethodSetting, app_routing::AppRouteStatus, device::DeviceEvent,
+    relay_list::RelayList, settings::Settings, states::TunnelState, version::AppVersionInfo,
 };
 #[cfg(not(target_os = "android"))]
 use mullvad_types::{
     access_method::{self, AccessMethod},
     account::{AccountData, AccountNumber, VoucherSubmission},
+    app_routing::{ExitChoice, SplitMode},
     custom_list::{CustomList, Id},
     device::DeviceState,
     features::FeatureIndicators,
@@ -48,6 +49,7 @@ pub enum DaemonEvent {
     Device(DeviceEvent),
     NewAccessMethod(AccessMethodSetting),
     LeakDetected(LeakInfo),
+    AppRoutes(Vec<AppRouteStatus>),
 }
 
 impl TryFrom<types::daemon_event::Event> for DaemonEvent {
@@ -58,7 +60,7 @@ impl TryFrom<types::daemon_event::Event> for DaemonEvent {
             types::daemon_event::Event::TunnelState(state) => TunnelState::try_from(state)
                 .map(DaemonEvent::TunnelState)
                 .map_err(Error::InvalidResponse),
-            types::daemon_event::Event::Settings(settings) => Settings::try_from(settings)
+            types::daemon_event::Event::Settings(settings) => Settings::try_from(*settings)
                 .map(|settings| DaemonEvent::Settings(Box::new(settings)))
                 .map_err(Error::InvalidResponse),
             types::daemon_event::Event::RelayList(list) => RelayList::try_from(list)
@@ -83,6 +85,13 @@ impl TryFrom<types::daemon_event::Event> for DaemonEvent {
             types::daemon_event::Event::LeakInfo(leak) => {
                 LeakInfo::try_from(leak).map(DaemonEvent::LeakDetected)
             }
+            types::daemon_event::Event::AppRoutes(list) => list
+                .routes
+                .into_iter()
+                .map(AppRouteStatus::try_from)
+                .collect::<std::result::Result<_, _>>()
+                .map(DaemonEvent::AppRoutes)
+                .map_err(Error::InvalidResponse),
         }
     }
 }
@@ -659,6 +668,65 @@ impl MullvadProxyClient {
         Ok(())
     }
 
+    pub async fn set_app_split_mode(&mut self, mode: SplitMode) -> Result<()> {
+        self.0
+            .set_app_split_mode(types::AppSplitMode {
+                mode: types::app_split_mode::Mode::from(mode) as i32,
+            })
+            .await?;
+        Ok(())
+    }
+
+    pub async fn add_included_app<P: AsRef<Path>>(&mut self, path: P) -> Result<()> {
+        let path = path.as_ref().to_str().ok_or(Error::PathMustBeUtf8)?;
+        self.0.add_included_app(path.to_owned()).await?;
+        Ok(())
+    }
+
+    pub async fn remove_included_app<P: AsRef<Path>>(&mut self, path: P) -> Result<()> {
+        let path = path.as_ref().to_str().ok_or(Error::PathMustBeUtf8)?;
+        self.0.remove_included_app(path.to_owned()).await?;
+        Ok(())
+    }
+
+    pub async fn set_app_exits_enabled(&mut self, enabled: bool) -> Result<()> {
+        self.0.set_app_exits_enabled(enabled).await?;
+        Ok(())
+    }
+
+    /// Chooses the exit `app` leaves through.
+    ///
+    /// # Errors
+    ///
+    /// [`Error::AppExitLimit`] when the apps would then use more different
+    /// exits than there are route sessions.
+    pub async fn set_app_exit<P: AsRef<Path>>(&mut self, app: P, exit: &ExitChoice) -> Result<()> {
+        let app = app.as_ref().to_str().ok_or(Error::PathMustBeUtf8)?;
+        self.0
+            .set_app_exit(types::AppExit {
+                app: app.to_owned(),
+                exit: Some(types::ExitChoice::from(exit)),
+            })
+            .await
+            .map_err(map_app_routing_error)?;
+        Ok(())
+    }
+
+    pub async fn clear_app_exit<P: AsRef<Path>>(&mut self, app: P) -> Result<()> {
+        let app = app.as_ref().to_str().ok_or(Error::PathMustBeUtf8)?;
+        self.0.clear_app_exit(app.to_owned()).await?;
+        Ok(())
+    }
+
+    pub async fn get_app_route_status(&mut self) -> Result<Vec<AppRouteStatus>> {
+        let list = self.0.get_app_route_status(()).await?.into_inner();
+        list.routes
+            .into_iter()
+            .map(AppRouteStatus::try_from)
+            .collect::<std::result::Result<_, _>>()
+            .map_err(Error::InvalidResponse)
+    }
+
     #[cfg(target_os = "windows")]
     pub async fn get_excluded_processes(&mut self) -> Result<Vec<ExcludedProcess>> {
         let procs = self.0.get_excluded_processes(()).await?.into_inner();
@@ -745,6 +813,14 @@ fn map_device_error(status: Status) -> Error {
         Code::Unauthenticated => Error::InvalidAccount,
         Code::AlreadyExists => Error::AlreadyLoggedIn,
         Code::NotFound => Error::DeviceNotFound,
+        _other => Error::Rpc(Box::new(status)),
+    }
+}
+
+#[cfg(not(target_os = "android"))]
+fn map_app_routing_error(status: Status) -> Error {
+    match (status.code(), status.details()) {
+        (Code::FailedPrecondition, crate::APP_EXIT_LIMIT_DETAILS) => Error::AppExitLimit,
         _other => Error::Rpc(Box::new(status)),
     }
 }

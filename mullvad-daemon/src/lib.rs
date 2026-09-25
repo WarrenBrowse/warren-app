@@ -160,8 +160,10 @@ use mullvad_encrypted_dns_proxy::state::EncryptedDnsProxyState;
 use mullvad_relay_selector::RelaySelector;
 #[cfg(target_os = "android")]
 use mullvad_types::account::{PlayExternalObfuscatedAccountId, PlayPurchase};
-#[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
-use mullvad_types::settings::SplitApp;
+use mullvad_types::app_routing::{
+    AppId, AppRouteState, AppRouteStatus, AppRoutingError, AppRoutingSettings, ExitChoice,
+    SplitMode, UnavailableReason,
+};
 #[cfg(daita)]
 use mullvad_types::wireguard::DaitaSettings;
 use mullvad_types::{
@@ -193,8 +195,6 @@ use mullvad_update::version::rollout::Rollout;
 use relay_list::{RelayListUpdater, RelayListUpdaterHandle};
 use settings::SettingsPersister;
 use std::collections::BTreeSet;
-#[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
-use std::collections::HashSet;
 #[cfg(target_os = "android")]
 use std::os::unix::io::RawFd;
 use std::{
@@ -291,9 +291,36 @@ fn macos_split_tunnel_enable_allowed() -> Result<(), Error> {
     }
 }
 
-#[cfg(any(target_os = "windows", target_os = "android"))]
+#[cfg(not(target_os = "macos"))]
 fn macos_split_tunnel_enable_allowed() -> Result<(), Error> {
     Ok(())
+}
+
+/// One status per exit in force. Route sessions live inside the main
+/// connection, so none can run while it is down; while it is up, a route with
+/// no session of its own yet is connecting.
+fn app_route_statuses(routing: &AppRoutingSettings, tunnel_connected: bool) -> Vec<AppRouteStatus> {
+    routing.route_statuses(|_| {
+        if tunnel_connected {
+            (AppRouteState::Connecting, None)
+        } else {
+            (
+                AppRouteState::Unavailable(UnavailableReason::TunnelDown),
+                None,
+            )
+        }
+    })
+}
+
+/// The split mode the pre-app-routing switch asks for: on is exclusion; off
+/// ends exclusion but leaves include-only alone, since that switch never knew
+/// of it.
+fn split_mode_for_state(current: SplitMode, enable_exclusions: bool) -> SplitMode {
+    match (enable_exclusions, current) {
+        (true, _) => SplitMode::Exclude,
+        (false, SplitMode::Exclude) => SplitMode::Off,
+        (false, other) => other,
+    }
 }
 
 #[derive(thiserror::Error, Debug)]
@@ -353,6 +380,9 @@ pub enum Error {
          connectivity. It will become available in signed releases."
     )]
     MacosSplitTunnelUnsupported,
+
+    #[error("The app routing change is invalid")]
+    AppRouting(#[source] AppRoutingError),
 
     #[error("An account is already set")]
     AlreadyLoggedIn,
@@ -712,17 +742,27 @@ pub enum DaemonCommand {
     #[cfg(target_os = "linux")]
     ClearSplitTunnelProcesses(ResponseTx<(), split_tunnel::Error>),
     /// Exclude traffic of an application from the tunnel
-    #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
-    AddSplitTunnelApp(ResponseTx<(), Error>, SplitApp),
+    AddSplitTunnelApp(ResponseTx<(), Error>, AppId),
     /// Remove application from list of apps to exclude from the tunnel
-    #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
-    RemoveSplitTunnelApp(ResponseTx<(), Error>, SplitApp),
+    RemoveSplitTunnelApp(ResponseTx<(), Error>, AppId),
     /// Clear list of apps to exclude from the tunnel
-    #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
     ClearSplitTunnelApps(ResponseTx<(), Error>),
     /// Enable or disable split tunneling
-    #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
     SetSplitTunnelState(ResponseTx<(), Error>, bool),
+    /// Choose the split mode: off, exclude or include-only
+    SetAppSplitMode(ResponseTx<(), Error>, SplitMode),
+    /// Add an app to the apps alone in the tunnel in include-only mode
+    AddIncludedApp(ResponseTx<(), Error>, AppId),
+    /// Remove an app from the apps alone in the tunnel in include-only mode
+    RemoveIncludedApp(ResponseTx<(), Error>, AppId),
+    /// Turn the per-app exits on or off
+    SetAppExitsEnabled(ResponseTx<(), Error>, bool),
+    /// Choose the exit an app leaves through
+    SetAppExit(ResponseTx<(), Error>, AppId, ExitChoice),
+    /// Send an app back through the main connection
+    ClearAppExit(ResponseTx<(), Error>, AppId),
+    /// Where the session of each exit in force stands
+    GetAppRouteStatus(oneshot::Sender<Vec<AppRouteStatus>>),
     /// Returns all processes currently being excluded from the tunnel
     #[cfg(target_os = "windows")]
     GetSplitTunnelProcesses(ResponseTx<Vec<ExcludedProcess>, split_tunnel::Error>),
@@ -810,8 +850,7 @@ pub(crate) enum InternalDaemonEvent {
     LocationEvent(LocationEventData),
     /// A generic event for when any settings change.
     SettingsChanged,
-    /// The split tunnel paths or state were updated.
-    #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
+    /// The split tunnel paths or mode were updated.
     ExcludedPathsEvent(ExcludedPathsUpdate, oneshot::Sender<Result<(), Error>>),
     /// A network leak was detected.
     LeakDetected(LeakInfo),
@@ -834,10 +873,9 @@ pub(crate) enum InternalDaemonEvent {
     },
 }
 
-#[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
 pub(crate) enum ExcludedPathsUpdate {
-    SetState(bool),
-    SetPaths(HashSet<SplitApp>),
+    SetMode(SplitMode),
+    SetPaths(BTreeSet<AppId>),
 }
 
 /// How long the daemon waits for the shutdown that `prepare-restart` promised
@@ -1446,13 +1484,12 @@ impl Daemon {
         }
 
         #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
-        let exclude_paths = if settings.split_tunnel.enable_exclusions {
+        let exclude_paths = if settings.app_routing.exclusions_active() {
             settings
-                .split_tunnel
-                .apps
+                .app_routing
+                .excluded_apps
                 .iter()
-                .cloned()
-                .map(SplitApp::to_tunnel_command_repr)
+                .map(AppId::to_tunnel_command_repr)
                 .collect()
         } else {
             vec![]
@@ -2396,7 +2433,6 @@ impl Daemon {
             SettingsChanged => {
                 self.update_feature_indicators_on_settings_changed();
             }
-            #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
             ExcludedPathsEvent(update, tx) => self.handle_new_excluded_paths(update, tx).await,
             LeakDetected(leak_info) => {
                 log::warn!("Network leak detected! Please contact Warren support.");
@@ -2847,6 +2883,11 @@ impl Daemon {
         self.management_interface
             .notifier()
             .notify_new_state(tunnel_state);
+        // Route sessions live inside the main connection, so their state
+        // follows it.
+        if !self.settings.app_routing.effective_app_exits().is_empty() {
+            self.publish_app_routes();
+        }
         self.fetch_am_i_mullvad();
     }
 
@@ -3158,14 +3199,50 @@ impl Daemon {
             RemoveSplitTunnelProcess(tx, pid) => self.on_remove_split_tunnel_process(tx, pid),
             #[cfg(target_os = "linux")]
             ClearSplitTunnelProcesses(tx) => self.on_clear_split_tunnel_processes(tx),
-            #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
             AddSplitTunnelApp(tx, app) => self.on_add_split_tunnel_app(tx, app),
-            #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
             RemoveSplitTunnelApp(tx, path) => self.on_remove_split_tunnel_app(tx, path),
-            #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
             ClearSplitTunnelApps(tx) => self.on_clear_split_tunnel_apps(tx),
-            #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
             SetSplitTunnelState(tx, enabled) => self.on_set_split_tunnel_state(tx, enabled),
+            SetAppSplitMode(tx, mode) => self.on_set_app_split_mode(tx, mode),
+            AddIncludedApp(tx, app) => {
+                self.update_app_routing(tx, "add_included_app response", |routing| {
+                    routing.included_apps.insert(app);
+                    Ok(())
+                })
+                .await
+            }
+            RemoveIncludedApp(tx, app) => {
+                self.update_app_routing(tx, "remove_included_app response", |routing| {
+                    routing.included_apps.remove(&app);
+                    Ok(())
+                })
+                .await
+            }
+            SetAppExitsEnabled(tx, enabled) => {
+                self.update_app_routing(tx, "set_app_exits_enabled response", |routing| {
+                    routing.app_exits_enabled = enabled;
+                    Ok(())
+                })
+                .await
+            }
+            SetAppExit(tx, app, exit) => {
+                self.update_app_routing(tx, "set_app_exit response", |routing| {
+                    routing.set_app_exit(app, exit)
+                })
+                .await
+            }
+            ClearAppExit(tx, app) => {
+                self.update_app_routing(tx, "clear_app_exit response", |routing| {
+                    routing.app_exits.remove(&app);
+                    Ok(())
+                })
+                .await
+            }
+            GetAppRouteStatus(tx) => Self::oneshot_send(
+                tx,
+                self.app_route_statuses(),
+                "get_app_route_status response",
+            ),
             #[cfg(target_os = "windows")]
             GetSplitTunnelProcesses(tx) => self.on_get_split_tunnel_processes(tx),
             #[cfg(target_os = "windows")]
@@ -3353,19 +3430,17 @@ impl Daemon {
         }
     }
 
-    #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
     async fn handle_new_excluded_paths(
         &mut self,
         update: ExcludedPathsUpdate,
         tx: ResponseTx<(), Error>,
     ) {
         let save_result = match update {
-            ExcludedPathsUpdate::SetState(state) => {
-                let split_tunnel_was_enabled =
-                    self.settings.settings().split_tunnel.enable_exclusions;
+            ExcludedPathsUpdate::SetMode(mode) => {
+                let split_tunnel_was_enabled = self.settings.app_routing.exclusions_active();
                 let save_result = self
                     .settings
-                    .update(move |settings| settings.split_tunnel.enable_exclusions = state)
+                    .update(move |settings| settings.app_routing.split_mode = mode)
                     .await
                     .map_err(Error::SettingsError);
                 // If the user enables split tunneling without also enabling Full Disk Access
@@ -3380,7 +3455,7 @@ impl Daemon {
                 // reconnect if the user disables split tunneling while in the error state. This
                 // code can be removed if we ever remove our dependency on FDA.
                 if cfg!(target_os = "macos") {
-                    let split_tunnel_will_be_disabled = !state;
+                    let split_tunnel_will_be_disabled = mode != SplitMode::Exclude;
                     if self.tunnel_state.is_in_error_state()
                         && split_tunnel_was_enabled
                         && split_tunnel_will_be_disabled
@@ -3392,11 +3467,52 @@ impl Daemon {
             }
             ExcludedPathsUpdate::SetPaths(paths) => self
                 .settings
-                .update(move |settings| settings.split_tunnel.apps = paths)
+                .update(move |settings| settings.app_routing.excluded_apps = paths)
                 .await
                 .map_err(Error::SettingsError),
         };
+        // Excluding an app takes its exit out of force. A client without app
+        // exits hears nothing, and a GUI that predates this event is spared
+        // one it cannot read.
+        if save_result.is_ok() && !self.settings.app_routing.app_exits.is_empty() {
+            self.publish_app_routes();
+        }
         let _ = tx.send(save_result.map(|_| ()));
+    }
+
+    /// Applies `change` to the app routing settings and saves them, or
+    /// answers why the change is refused and leaves them as they were.
+    async fn update_app_routing(
+        &mut self,
+        tx: ResponseTx<(), Error>,
+        response_msg: &'static str,
+        change: impl FnOnce(&mut AppRoutingSettings) -> Result<(), AppRoutingError>,
+    ) {
+        let mut app_routing = self.settings.app_routing.clone();
+        if let Err(error) = change(&mut app_routing) {
+            Self::oneshot_send(tx, Err(Error::AppRouting(error)), response_msg);
+            return;
+        }
+        let result = self
+            .settings
+            .update(move |settings| settings.app_routing = app_routing)
+            .await
+            .map(|_| ())
+            .map_err(Error::SettingsError);
+        if result.is_ok() {
+            self.publish_app_routes();
+        }
+        Self::oneshot_send(tx, result, response_msg);
+    }
+
+    fn app_route_statuses(&self) -> Vec<AppRouteStatus> {
+        app_route_statuses(&self.settings.app_routing, self.tunnel_state.is_connected())
+    }
+
+    fn publish_app_routes(&self) {
+        self.management_interface
+            .notifier()
+            .notify_app_routes(self.app_route_statuses());
     }
 
     async fn on_set_target_state(
@@ -4333,34 +4449,32 @@ impl Daemon {
         settings: Settings,
         update: ExcludedPathsUpdate,
     ) {
+        let routing = &settings.app_routing;
         let new_list = match update {
             ExcludedPathsUpdate::SetPaths(ref paths) => {
-                if *paths == settings.split_tunnel.apps {
+                if *paths == routing.excluded_apps {
                     Self::oneshot_send(tx, Ok(()), response_msg);
                     return;
                 }
                 paths.iter()
             }
-            ExcludedPathsUpdate::SetState(_) => settings.split_tunnel.apps.iter(),
+            ExcludedPathsUpdate::SetMode(_) => routing.excluded_apps.iter(),
         };
         let new_state = match update {
-            ExcludedPathsUpdate::SetPaths(_) => settings.split_tunnel.enable_exclusions,
-            ExcludedPathsUpdate::SetState(state) => {
-                if state == settings.split_tunnel.enable_exclusions {
+            ExcludedPathsUpdate::SetPaths(_) => routing.exclusions_active(),
+            ExcludedPathsUpdate::SetMode(mode) => {
+                if mode == routing.split_mode {
                     Self::oneshot_send(tx, Ok(()), response_msg);
                     return;
                 }
-                state
+                mode == SplitMode::Exclude
             }
         };
 
         // Update the tunnel state
-        if new_state || new_state != settings.split_tunnel.enable_exclusions {
+        if new_state || new_state != routing.exclusions_active() {
             let tunnel_list = if new_state {
-                new_list
-                    .cloned()
-                    .map(SplitApp::to_tunnel_command_repr)
-                    .collect()
+                new_list.map(AppId::to_tunnel_command_repr).collect()
             } else {
                 vec![]
             };
@@ -4404,20 +4518,15 @@ impl Daemon {
         settings: Settings,
         update: ExcludedPathsUpdate,
     ) {
+        let routing = &settings.app_routing;
         let tunnel_list = match update {
-            ExcludedPathsUpdate::SetPaths(ref paths) if settings.split_tunnel.enable_exclusions => {
-                paths
-                    .iter()
-                    .cloned()
-                    .map(SplitApp::to_tunnel_command_repr)
-                    .collect()
+            ExcludedPathsUpdate::SetPaths(ref paths) if routing.exclusions_active() => {
+                paths.iter().map(AppId::to_tunnel_command_repr).collect()
             }
-            ExcludedPathsUpdate::SetState(true) => settings
-                .split_tunnel
-                .apps
+            ExcludedPathsUpdate::SetMode(SplitMode::Exclude) => routing
+                .excluded_apps
                 .iter()
-                .cloned()
-                .map(SplitApp::to_tunnel_command_repr)
+                .map(AppId::to_tunnel_command_repr)
                 .collect(),
             _ => vec![],
         };
@@ -4445,8 +4554,22 @@ impl Daemon {
         });
     }
 
-    #[cfg(any(target_os = "windows", target_os = "macos", target_os = "android"))]
-    fn on_add_split_tunnel_app(&mut self, tx: ResponseTx<(), Error>, app: SplitApp) {
+    /// Update the split app paths in the settings. Exclusion on Linux is
+    /// launch based (`warren-exclude`), so the tunnel has no list to update.
+    #[cfg(target_os = "linux")]
+    fn set_split_tunnel_paths(
+        &mut self,
+        tx: ResponseTx<(), Error>,
+        _response_msg: &'static str,
+        _settings: Settings,
+        update: ExcludedPathsUpdate,
+    ) {
+        let _ = self
+            .tx
+            .send(InternalDaemonEvent::ExcludedPathsEvent(update, tx));
+    }
+
+    fn on_add_split_tunnel_app(&mut self, tx: ResponseTx<(), Error>, app: AppId) {
         // Refuse to add an excluded app on a build where split tunneling
         // cannot actually run (unsigned macOS): doing so would
         // half-initialise the ES/BPF stack and corrupt routing. No-op on
@@ -4458,7 +4581,7 @@ impl Daemon {
         let settings = self.settings.to_settings();
 
         let excluded_apps = {
-            let mut apps = settings.split_tunnel.apps.clone();
+            let mut apps = settings.app_routing.excluded_apps.clone();
             apps.insert(app);
             apps
         };
@@ -4471,13 +4594,12 @@ impl Daemon {
         );
     }
 
-    #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
-    fn on_remove_split_tunnel_app(&mut self, tx: ResponseTx<(), Error>, app: impl Into<SplitApp>) {
+    fn on_remove_split_tunnel_app(&mut self, tx: ResponseTx<(), Error>, app: AppId) {
         let settings = self.settings.to_settings();
 
         let excluded_apps = {
-            let mut apps = settings.split_tunnel.apps.clone();
-            apps.remove(&app.into());
+            let mut apps = settings.app_routing.excluded_apps.clone();
+            apps.remove(&app);
             apps
         };
 
@@ -4489,35 +4611,52 @@ impl Daemon {
         );
     }
 
-    #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
     fn on_clear_split_tunnel_apps(&mut self, tx: ResponseTx<(), Error>) {
         let settings = self.settings.to_settings();
-        let new_list = HashSet::new();
         self.set_split_tunnel_paths(
             tx,
             "clear_split_tunnel_apps response",
             settings,
-            ExcludedPathsUpdate::SetPaths(new_list),
+            ExcludedPathsUpdate::SetPaths(BTreeSet::new()),
         );
     }
 
-    #[cfg(any(target_os = "windows", target_os = "android", target_os = "macos"))]
+    /// The pre-app-routing switch: on selects exclusion, off leaves
+    /// exclusion and keeps include-only, which it never knew about.
     fn on_set_split_tunnel_state(&mut self, tx: ResponseTx<(), Error>, state: bool) {
-        // Only ENABLING is gated: turning split tunneling OFF (or leaving
+        let current = self.settings.app_routing.split_mode;
+        let mode = split_mode_for_state(current, state);
+        self.set_split_mode(tx, "set_split_tunnel_state response", mode);
+    }
+
+    fn on_set_app_split_mode(&mut self, tx: ResponseTx<(), Error>, mode: SplitMode) {
+        self.set_split_mode(tx, "set_app_split_mode response", mode);
+    }
+
+    fn set_split_mode(
+        &mut self,
+        tx: ResponseTx<(), Error>,
+        response_msg: &'static str,
+        mode: SplitMode,
+    ) {
+        // Only ENABLING a split mode is gated: turning it OFF (or leaving
         // it off) must always be allowed so a user can recover. On an
         // unsigned macOS build, enabling is refused before any ES/BPF
         // setup, preventing the half-initialised state that breaks
-        // connectivity and crashes on quit.
-        if state && let Err(e) = macos_split_tunnel_enable_allowed() {
-            Self::oneshot_send(tx, Err(e), "set_split_tunnel_state response");
+        // connectivity and crashes on quit. Include-only rests on the same
+        // classifier as exclusion.
+        if mode != SplitMode::Off
+            && let Err(e) = macos_split_tunnel_enable_allowed()
+        {
+            Self::oneshot_send(tx, Err(e), response_msg);
             return;
         }
         let settings = self.settings.to_settings();
         self.set_split_tunnel_paths(
             tx,
-            "set_split_tunnel_state response",
+            response_msg,
             settings,
-            ExcludedPathsUpdate::SetState(state),
+            ExcludedPathsUpdate::SetMode(mode),
         );
     }
 
@@ -6854,5 +6993,72 @@ mod restart_lockdown_deadman_tests {
     fn a_daemon_that_armed_nothing_is_left_alone() {
         assert_eq!(restart_lockdown_verdict(false, false), None);
         assert_eq!(restart_lockdown_verdict(false, true), None);
+    }
+}
+
+#[cfg(test)]
+mod app_route_status_tests {
+    use super::app_route_statuses;
+    use mullvad_types::app_routing::{
+        AppId, AppRouteState, AppRoutingSettings, ExitChoice, UnavailableReason,
+    };
+
+    fn routing() -> AppRoutingSettings {
+        let mut routing = AppRoutingSettings {
+            app_exits_enabled: true,
+            ..Default::default()
+        };
+        #[cfg(not(windows))]
+        let app = AppId::parse("/opt/app/browser").unwrap();
+        #[cfg(windows)]
+        let app = AppId::parse(r"C:\app\browser.exe").unwrap();
+        routing
+            .set_app_exit(app, ExitChoice::new("se", None).unwrap())
+            .unwrap();
+        routing
+    }
+
+    #[test]
+    fn a_route_is_unavailable_while_the_main_connection_is_down() {
+        let statuses = app_route_statuses(&routing(), false);
+
+        assert_eq!(statuses.len(), 1);
+        assert_eq!(
+            statuses[0].state,
+            AppRouteState::Unavailable(UnavailableReason::TunnelDown)
+        );
+    }
+
+    #[test]
+    fn a_route_is_connecting_once_the_main_connection_is_up() {
+        let statuses = app_route_statuses(&routing(), true);
+
+        assert_eq!(statuses[0].state, AppRouteState::Connecting);
+    }
+}
+
+#[cfg(test)]
+mod split_mode_for_state_tests {
+    use super::split_mode_for_state;
+    use mullvad_types::app_routing::SplitMode;
+
+    #[test]
+    fn the_legacy_switch_turns_exclusion_on_from_any_mode() {
+        for current in [SplitMode::Off, SplitMode::Exclude, SplitMode::IncludeOnly] {
+            assert_eq!(split_mode_for_state(current, true), SplitMode::Exclude);
+        }
+    }
+
+    #[test]
+    fn the_legacy_switch_turns_off_only_exclusion() {
+        assert_eq!(
+            split_mode_for_state(SplitMode::Exclude, false),
+            SplitMode::Off
+        );
+        assert_eq!(split_mode_for_state(SplitMode::Off, false), SplitMode::Off);
+        assert_eq!(
+            split_mode_for_state(SplitMode::IncludeOnly, false),
+            SplitMode::IncludeOnly
+        );
     }
 }

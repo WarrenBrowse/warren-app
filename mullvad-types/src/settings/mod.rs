@@ -1,5 +1,6 @@
 use crate::{
     access_method,
+    app_routing::AppRoutingSettings,
     constraints::Constraint,
     custom_list::CustomListsSettings,
     relay_constraints::{
@@ -10,8 +11,6 @@ use crate::{
     wireguard,
 };
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-#[cfg(any(windows, target_os = "android", target_os = "macos"))]
-use std::collections::HashSet;
 use talpid_types::net::GenericTunnelOptions;
 
 mod dns;
@@ -20,7 +19,7 @@ mod dns;
 /// latest version that exists in `SettingsVersion`.
 /// This should be bumped when a new version is introduced along with a migration
 /// being added to `mullvad-daemon`.
-pub const CURRENT_SETTINGS_VERSION: SettingsVersion = SettingsVersion::V16;
+pub const CURRENT_SETTINGS_VERSION: SettingsVersion = SettingsVersion::V17;
 
 #[derive(Debug, PartialEq, Eq, PartialOrd, Clone, Copy)]
 #[repr(u32)]
@@ -40,6 +39,7 @@ pub enum SettingsVersion {
     V14 = 14,
     V15 = 15,
     V16 = 16,
+    V17 = 17,
 }
 
 impl<'de> Deserialize<'de> for SettingsVersion {
@@ -63,6 +63,7 @@ impl<'de> Deserialize<'de> for SettingsVersion {
             v if v == SettingsVersion::V14 as u32 => Ok(SettingsVersion::V14),
             v if v == SettingsVersion::V15 as u32 => Ok(SettingsVersion::V15),
             v if v == SettingsVersion::V16 as u32 => Ok(SettingsVersion::V16),
+            v if v == SettingsVersion::V17 as u32 => Ok(SettingsVersion::V17),
             v => Err(serde::de::Error::custom(format!(
                 "{v} is not a valid SettingsVersion"
             ))),
@@ -106,9 +107,9 @@ pub struct Settings {
     pub relay_overrides: Vec<RelayOverride>,
     /// Whether to notify users of beta updates.
     pub show_beta_releases: bool,
-    /// Split tunneling settings
-    #[cfg(any(windows, target_os = "android", target_os = "macos"))]
-    pub split_tunnel: SplitTunnelSettings,
+    /// Which apps bypass the tunnel, which alone use it, and which leave
+    /// through an exit of their own.
+    pub app_routing: AppRoutingSettings,
     /// Specifies settings schema version
     pub settings_version: SettingsVersion,
     /// Stores the user's recently connected locations. If None recents have been disabled by the user.
@@ -521,82 +522,6 @@ impl TryFrom<&RelaySettings> for Recent {
     }
 }
 
-#[cfg(any(windows, target_os = "android", target_os = "macos"))]
-#[derive(Debug, Clone, Default, Deserialize, Serialize, PartialEq)]
-pub struct SplitTunnelSettings {
-    /// Toggles split tunneling on or off
-    pub enable_exclusions: bool,
-    /// Set of applications to exclude from the tunnel.
-    pub apps: HashSet<SplitApp>,
-}
-
-/// An application whose traffic should be excluded from any active tunnel.
-#[cfg(any(windows, target_os = "macos"))]
-#[derive(Debug, Clone, Eq, Hash, PartialEq, Serialize, Deserialize)]
-pub struct SplitApp(std::path::PathBuf);
-
-/// An application whose traffic should be excluded from any active tunnel.
-#[cfg(target_os = "android")]
-#[derive(Debug, Clone, Eq, Hash, PartialEq, Serialize, Deserialize)]
-pub struct SplitApp(String);
-
-#[cfg(any(windows, target_os = "macos"))]
-impl SplitApp {
-    /// Convert the underlying path to a [`String`].
-    /// This function will fail if the underlying path string is not valid UTF-8. See
-    /// [`std::ffi::OsStr::to_str`] for details.
-    pub fn to_string(self) -> Option<String> {
-        self.0.as_os_str().to_str().map(str::to_string)
-    }
-
-    /// This is the String-representation as expected by `TunnelCommand::SetExcludedApps`
-    pub fn to_tunnel_command_repr(self) -> std::ffi::OsString {
-        self.0.as_os_str().to_owned()
-    }
-
-    pub fn display(&self) -> std::path::Display<'_> {
-        self.0.display()
-    }
-}
-
-#[cfg(target_os = "android")]
-impl SplitApp {
-    /// Convert the underlying app name to a [`String`].
-    ///
-    /// # Note
-    /// This function is fallible due to the Window's dito being fallible, and it is convenient to
-    /// have the same API across all platforms.
-    pub fn to_string(self) -> Option<String> {
-        Some(self.0)
-    }
-
-    /// This is the String-representation as expected by [`SetExcludedApps`].
-    pub fn to_tunnel_command_repr(self) -> String {
-        self.0
-    }
-}
-
-#[cfg(any(windows, target_os = "macos"))]
-impl From<String> for SplitApp {
-    fn from(value: String) -> Self {
-        SplitApp::from(std::path::PathBuf::from(value))
-    }
-}
-
-#[cfg(any(windows, target_os = "macos"))]
-impl From<std::path::PathBuf> for SplitApp {
-    fn from(value: std::path::PathBuf) -> Self {
-        SplitApp(value)
-    }
-}
-
-#[cfg(target_os = "android")]
-impl From<String> for SplitApp {
-    fn from(value: String) -> Self {
-        SplitApp(value)
-    }
-}
-
 impl Default for Settings {
     fn default() -> Self {
         Settings {
@@ -628,8 +553,7 @@ impl Default for Settings {
             tunnel_options: TunnelOptions::default(),
             relay_overrides: vec![],
             show_beta_releases: false,
-            #[cfg(any(windows, target_os = "android", target_os = "macos"))]
-            split_tunnel: SplitTunnelSettings::default(),
+            app_routing: AppRoutingSettings::default(),
             settings_version: CURRENT_SETTINGS_VERSION,
             recents: Some(vec![]),
             #[cfg(not(target_os = "android"))]

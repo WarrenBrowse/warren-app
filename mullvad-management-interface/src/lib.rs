@@ -35,6 +35,8 @@ pub use types::{RelaySelectorService, RelaySelectorServiceClient, RelaySelectorS
 
 pub const API_ACCESS_METHOD_EXISTS_DETAILS: &[u8] = b"api_access_method_exists";
 pub const CUSTOM_LIST_LIST_NOT_FOUND_DETAILS: &[u8] = b"custom_list_list_not_found";
+/// Details of the status refusing an app exit beyond the route sessions.
+pub const APP_EXIT_LIMIT_DETAILS: &[u8] = b"app_exit_limit";
 pub const CUSTOM_LIST_LIST_EXISTS_DETAILS: &[u8] = b"custom_list_list_exists";
 pub const CUSTOM_LIST_LIST_NAME_TOO_LONG_DETAILS: &[u8] = b"custom_list_list_name_too_long";
 
@@ -125,6 +127,9 @@ pub enum Error {
 
     #[error("Failed to parse IP Address")]
     IpAddr(#[from] std::net::AddrParseError),
+
+    #[error("No more different exits can be chosen for apps")]
+    AppExitLimit,
 }
 
 impl From<tonic::Status> for Error {

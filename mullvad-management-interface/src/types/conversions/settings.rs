@@ -3,26 +3,17 @@ use mullvad_types::settings::CURRENT_SETTINGS_VERSION;
 
 impl From<&mullvad_types::settings::Settings> for proto::Settings {
     fn from(settings: &mullvad_types::settings::Settings) -> Self {
+        // Clients that predate app routing read the exclusion part here.
         #[cfg(any(windows, target_os = "android", target_os = "macos"))]
-        let split_tunnel = {
-            let apps = settings
-                .split_tunnel
-                .apps
+        let split_tunnel = Some(proto::SplitTunnelSettings {
+            enable_exclusions: settings.app_routing.exclusions_active(),
+            apps: settings
+                .app_routing
+                .excluded_apps
                 .iter()
-                .filter_map(|app| match app.clone().to_string() {
-                    None => {
-                        log::error!("Failed to convert application to string: {:?}", app);
-                        None
-                    }
-                    string => string,
-                })
-                .collect();
-
-            Some(proto::SplitTunnelSettings {
-                enable_exclusions: settings.split_tunnel.enable_exclusions,
-                apps,
-            })
-        };
+                .map(|app| app.as_str().to_owned())
+                .collect(),
+        });
         #[cfg(target_os = "linux")]
         let split_tunnel = None;
 
@@ -40,6 +31,7 @@ impl From<&mullvad_types::settings::Settings> for proto::Settings {
                 &settings.obfuscation_settings,
             )),
             split_tunnel,
+            app_routing: Some(proto::AppRoutingSettings::from(&settings.app_routing)),
             custom_lists: Some(proto::CustomListSettings::from(
                 settings.custom_lists.clone(),
             )),
@@ -336,12 +328,13 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
                 .ok_or(FromProtobufTypeError::invalid_argument(
                     "missing api access methods settings",
                 ))?;
-        #[cfg(any(windows, target_os = "android", target_os = "macos"))]
-        let split_tunnel = settings
-            .split_tunnel
-            .ok_or(FromProtobufTypeError::invalid_argument(
-                "missing split tunnel options",
-            ))?;
+        let app_routing = match (settings.app_routing, settings.split_tunnel) {
+            (Some(app_routing), _) => {
+                mullvad_types::app_routing::AppRoutingSettings::try_from(app_routing)?
+            }
+            (None, Some(split_tunnel)) => app_routing_from_split_tunnel(split_tunnel)?,
+            (None, None) => mullvad_types::app_routing::AppRoutingSettings::default(),
+        };
 
         Ok(Self {
             relay_settings: mullvad_types::relay_constraints::RelaySettings::try_from(
@@ -358,8 +351,7 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
                 .map(mullvad_types::relay_constraints::RelayOverride::try_from)
                 .collect::<Result<Vec<_>, _>>()?,
             show_beta_releases: settings.show_beta_releases,
-            #[cfg(any(windows, target_os = "android", target_os = "macos"))]
-            split_tunnel: mullvad_types::settings::SplitTunnelSettings::from(split_tunnel),
+            app_routing,
             obfuscation_settings: mullvad_types::relay_constraints::ObfuscationSettings::try_from(
                 obfuscation_settings,
             )?,
@@ -431,15 +423,24 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
     }
 }
 
-#[cfg(any(windows, target_os = "android", target_os = "macos"))]
-impl From<proto::SplitTunnelSettings> for mullvad_types::settings::SplitTunnelSettings {
-    fn from(value: proto::SplitTunnelSettings) -> Self {
-        use mullvad_types::settings::{SplitApp, SplitTunnelSettings};
-        SplitTunnelSettings {
-            enable_exclusions: value.enable_exclusions,
-            apps: value.apps.into_iter().map(SplitApp::from).collect(),
-        }
-    }
+/// The app routing of a client that only knows split tunneling.
+fn app_routing_from_split_tunnel(
+    value: proto::SplitTunnelSettings,
+) -> Result<mullvad_types::app_routing::AppRoutingSettings, FromProtobufTypeError> {
+    use mullvad_types::app_routing::{AppRoutingSettings, SplitMode};
+    Ok(AppRoutingSettings {
+        split_mode: if value.enable_exclusions {
+            SplitMode::Exclude
+        } else {
+            SplitMode::Off
+        },
+        excluded_apps: value
+            .apps
+            .iter()
+            .map(|app| super::app_routing::app_id(app))
+            .collect::<Result<_, _>>()?,
+        ..Default::default()
+    })
 }
 
 impl TryFrom<proto::TunnelOptions> for mullvad_types::settings::TunnelOptions {
@@ -698,5 +699,87 @@ mod warren_nat_pmp_conversion_tests {
             internal_port: 0,
         };
         assert!(WarrenNatPmpSettings::try_from(proto).is_err());
+    }
+}
+
+#[cfg(test)]
+mod app_routing_settings_tests {
+    use super::*;
+    use mullvad_types::{
+        app_routing::{AppId, AppRoutingSettings, SplitMode},
+        settings::Settings,
+    };
+
+    #[cfg(not(windows))]
+    const APP: &str = "/opt/app/browser";
+    #[cfg(windows)]
+    const APP: &str = r"C:\app\browser.exe";
+
+    fn excluding() -> Settings {
+        let mut settings = Settings::default();
+        settings.app_routing.split_mode = SplitMode::Exclude;
+        settings
+            .app_routing
+            .excluded_apps
+            .insert(AppId::parse(APP).unwrap());
+        settings
+    }
+
+    #[test]
+    fn app_routing_survives_the_settings_wire() {
+        let mut settings = excluding();
+        let app = AppId::parse(APP).unwrap();
+        settings.app_routing.included_apps.insert(app.clone());
+        settings.app_routing.app_exits_enabled = true;
+        settings
+            .app_routing
+            .set_app_exit(
+                app,
+                mullvad_types::app_routing::ExitChoice::new("se", None).unwrap(),
+            )
+            .unwrap();
+
+        let back = Settings::try_from(proto::Settings::from(&settings)).unwrap();
+
+        assert_eq!(back.app_routing, settings.app_routing);
+    }
+
+    #[cfg(any(windows, target_os = "macos"))]
+    #[test]
+    fn older_clients_see_the_exclusions_as_split_tunneling() {
+        let wire = proto::Settings::from(&excluding());
+
+        assert_eq!(
+            wire.split_tunnel,
+            Some(proto::SplitTunnelSettings {
+                enable_exclusions: true,
+                apps: vec![APP.to_owned()],
+            })
+        );
+    }
+
+    #[test]
+    fn settings_from_an_older_client_take_its_split_tunneling() {
+        let mut wire = proto::Settings::from(&Settings::default());
+        wire.app_routing = None;
+        wire.split_tunnel = Some(proto::SplitTunnelSettings {
+            enable_exclusions: true,
+            apps: vec![APP.to_owned()],
+        });
+
+        let settings = Settings::try_from(wire).unwrap();
+
+        assert_eq!(settings.app_routing, excluding().app_routing);
+    }
+
+    #[test]
+    fn settings_without_either_take_the_defaults() {
+        let mut wire = proto::Settings::from(&excluding());
+        wire.app_routing = None;
+        wire.split_tunnel = None;
+
+        let settings = Settings::try_from(wire).unwrap();
+
+        assert_eq!(settings.app_routing, AppRoutingSettings::default());
     }
 }

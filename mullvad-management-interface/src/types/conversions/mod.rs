@@ -2,6 +2,7 @@ use std::str::FromStr;
 
 mod access_method;
 mod account;
+pub mod app_routing;
 mod custom_list;
 mod custom_tunnel;
 mod device;

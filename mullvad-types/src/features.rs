@@ -179,7 +179,7 @@ pub fn compute_feature_indicators(
     server_ip_override: bool,
 ) -> FeatureIndicators {
     #[cfg(any(windows, target_os = "android", target_os = "macos"))]
-    let split_tunneling = settings.split_tunnel.enable_exclusions;
+    let split_tunneling = settings.app_routing.exclusions_active();
     #[cfg(not(any(windows, target_os = "android", target_os = "macos")))]
     let split_tunneling = false;
 

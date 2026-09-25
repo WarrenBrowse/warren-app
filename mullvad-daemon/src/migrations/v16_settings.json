@@ -1,0 +1,147 @@
+{
+  "relay_settings": {
+    "normal": {
+      "location": "any",
+      "providers": "any",
+      "ownership": "any",
+      "wireguard_constraints": {
+        "ip_version": "any",
+        "allowed_ips": "any",
+        "use_multihop": false,
+        "entry_location": "any",
+        "entry_providers": "any",
+        "entry_ownership": "any"
+      }
+    }
+  },
+  "obfuscation_settings": {
+    "selected_obfuscation": "auto",
+    "udp2tcp": {
+      "port": "any"
+    },
+    "shadowsocks": {
+      "port": "any"
+    },
+    "wireguard_port": {
+      "port": "any"
+    },
+    "lwo": {
+      "port": "any"
+    }
+  },
+  "custom_lists": {
+    "custom_lists": []
+  },
+  "api_access_methods": {
+    "direct": {
+      "id": "a84c582d-a452-46ac-ae52-9d885d1340d0",
+      "name": "Direct",
+      "enabled": true,
+      "access_method": {
+        "built_in": "direct"
+      }
+    },
+    "mullvad_bridges": {
+      "id": "10ea0c5a-b8d2-4f73-8229-892fc95ce730",
+      "name": "Warren Bridges",
+      "enabled": false,
+      "access_method": {
+        "built_in": "bridge"
+      }
+    },
+    "encrypted_dns_proxy": {
+      "id": "741e0194-4d03-48e0-887b-46ab1006eb60",
+      "name": "Encrypted DNS proxy",
+      "enabled": false,
+      "access_method": {
+        "built_in": "encrypted_dns_proxy"
+      }
+    },
+    "domain_fronting": {
+      "id": "8d45a1f5-4be5-4aec-8990-27322384381b",
+      "name": "Domain fronting",
+      "enabled": false,
+      "access_method": {
+        "built_in": "domain_fronting"
+      }
+    },
+    "custom": []
+  },
+  "update_default_location": true,
+  "allow_lan": false,
+  "lockdown_mode": false,
+  "auto_connect": false,
+  "tunnel_options": {
+    "wireguard": {
+      "mtu": null,
+      "quantum_resistant": "on",
+      "daita": {
+        "enabled": false,
+        "use_multihop_if_necessary": true
+      },
+      "userspace": false
+    },
+    "generic": {
+      "enable_ipv6": false
+    },
+    "dns_options": {
+      "state": "default",
+      "default_options": {
+        "block_ads": false,
+        "block_trackers": false,
+        "block_malware": false,
+        "block_adult_content": false,
+        "block_gambling": false,
+        "block_social_media": false
+      },
+      "custom_options": {
+        "addresses": []
+      },
+      "allow_external_dns": false
+    }
+  },
+  "relay_overrides": [],
+  "show_beta_releases": false,
+  "split_tunnel": {
+    "enable_exclusions": true,
+    "apps": [
+      "/Applications/Firefox.app/Contents/MacOS/firefox"
+    ]
+  },
+  "settings_version": 16,
+  "recents": [],
+  "rollout_threshold_seed": null,
+  "warren_api_url": null,
+  "warren_n_connections": null,
+  "warren_max_rate_bps": null,
+  "warren_multi_hop": {
+    "enabled": false,
+    "entry_country": "",
+    "exit_country": "",
+    "hpke_epoch_rotation": {
+      "secs": 14400,
+      "nanos": 0
+    }
+  },
+  "warren_nat_pmp": {
+    "enabled": false,
+    "lifetime_secs": 3600,
+    "rules": [],
+    "protocol": "Udp",
+    "suggested_external_port": 0,
+    "internal_port": 0
+  },
+  "warren_pinned_exit_pubkeys": {
+    "entries": {}
+  },
+  "warren_custom_exit": {
+    "enabled": false,
+    "endpoint": "",
+    "pubkey_hex": "",
+    "x25519_multihop_pubkey_hex": "",
+    "exit_id_hex": "",
+    "cover_domain": null,
+    "label": ""
+  },
+  "warren_env_yield": null
+}
