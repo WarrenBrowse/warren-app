@@ -44,6 +44,7 @@ on:
       # so an edit touching only them must run it.
       - "warren-forum/**"
       - "warren-product-env/**"
+      - "warren-standing/**"
       # The client-rule fixtures are replayed by the warren-forum and
       # warren-product-env suites and by the desktop unit suite, all in this
       # scope; the golden-vector submodule pin and its declaration decide what

@@ -43,6 +43,7 @@ members = [
   "warren-incidents",
   "warren-nm-vpn-service",
   "warren-product-env",
+  "warren-standing",
   "windows-installer",
 ]
 exclude = ["ci/ios/test-router/raas"]

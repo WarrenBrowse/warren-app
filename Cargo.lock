@@ -6970,6 +6970,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "warren-standing"
+version = "0.0.0"
+dependencies = [
+ "hex",
+ "serde",
+ "serde_json",
+ "sha2",
+ "thiserror 2.0.18",
+ "warren-api",
+]
+
+[[package]]
 name = "warrenguard-backoff"
 version = "0.1.0"
 dependencies = [

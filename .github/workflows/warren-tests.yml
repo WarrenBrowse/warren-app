@@ -86,7 +86,7 @@ jobs:
             -p mullvad-setup \
             -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p talpid-dbus \
             -p warren-jni -p warren-ios -p warren-forum -p warren-product-env \
-            -p mullvad-update -p mullvad-release \
+            -p warren-standing -p mullvad-update -p mullvad-release \
             -- --check
 
       # Sub-second, and it guards the release notes every surface shows: the
@@ -173,7 +173,7 @@ jobs:
             -p mullvad-management-interface -p mullvad-cli -p mullvad-paths \
             -p mullvad-setup \
             -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p talpid-dbus -p warren-jni \
-            -p warren-forum -p warren-product-env -p warren-ios \
+            -p warren-forum -p warren-product-env -p warren-ios -p warren-standing \
             -p mullvad-update -p mullvad-release \
             --features mullvad-update/sign,mullvad-update/client
 
@@ -185,7 +185,7 @@ jobs:
         timeout-minutes: 20
         run: |
           crates="mullvad-daemon mullvad-api mullvad-cli talpid-warren-tunnel talpid-core talpid-dns talpid-dbus"
-          crates="$crates warren-jni warren-forum warren-product-env warren-ios"
+          crates="$crates warren-jni warren-forum warren-product-env warren-ios warren-standing"
           crates="$crates mullvad-paths mullvad-setup"
           crates="$crates mullvad-update mullvad-release"
           for crate in $crates; do
