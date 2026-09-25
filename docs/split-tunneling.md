@@ -1,17 +1,60 @@
 # Split tunneling
 
-Split tunneling allows excluding selected apps from the VPN tunnel. These apps will communicate with the network as if Warren VPN was disconnected or not even running.
+Split tunneling decides, app by app, whether traffic goes through the VPN. In the app it is the
+**App routing** page, with three modes. The design, the datapath and the tests behind them are in
+[app routing](app-routing.md).
+
+## The three modes
+
+| mode (tab) | what the user gets |
+|-|-|
+| **Bypass VPN** (exclude) | The chosen apps communicate with the network as if Warren VPN were disconnected. Every other app uses the VPN. |
+| **VPN only for** (include-only) | Only the chosen apps use the VPN, and they never reach the Internet outside it, also while the tunnel reconnects. The rest of the device uses the normal connection. System DNS keeps going through the tunnel resolver. |
+| **Country per app** | Each chosen app leaves the Internet from a country of its own, through a second Warren session; every other tunneled app keeps the main connection. At most 2 countries at a time besides the main connection. |
+
+Bypass VPN and VPN only for exclude each other: one split mode is on at a time, and switching keeps
+both lists. Country per app composes with either:
+
+* an app in Bypass VPN bypasses the VPN, and its country is ignored;
+* in VPN only for, an app with a country is in the VPN and leaves from its country. On Linux,
+  where an app joins the VPN when it is opened through `warren-include`, that holds for the app
+  opened from the VPN only for tab;
+* an app whose country's session is connecting or down gets no traffic at all until it is up. It
+  never falls back to the main connection or to the normal one.
+
+While VPN only for is on, the main screen says "Only selected apps are protected" under the
+connection state, with the number of apps in the VPN (on Linux, without a number, since the apps
+are chosen when they are opened).
+
+### Where each mode is available
+
+| mode | Windows | macOS | Linux | Android | iOS |
+|-|-|-|-|-|-|
+| Bypass VPN | yes | macOS 13 or later, signed build, Full Disk Access | yes, apps opened through `warren-exclude` | yes | no |
+| VPN only for | not yet: the tab says it is coming soon, and the daemon refuses the mode | macOS 13 or later, signed build, Full Disk Access | cgroup v2 with nftables socket matching; apps opened through `warren-include` | being implemented | no |
+| Country per app | yes* | yes, no Full Disk Access needed | yes*, for apps whose program can be named (below) | not yet | no |
+
+*: implemented; the datapath has been run against real exits on macOS only so far.
+
+On macOS the daemon answers `split_tunnel_is_supported` false for an unsigned build or a macOS older
+than 13, and `need_full_disk_permissions` for the grant; the App routing page says which one is
+missing and links the Full Disk Access pane when that is it.
+
+On Linux a per-app country names the program the kernel runs. A desktop entry is followed through
+`PATH`, symlinks and a shell wrapper whose last line execs a fixed program with `"$@"`. A Flatpak or
+Snap app, or one started by a script whose program cannot be read, cannot take a country, and its
+row says so; picking the real program with **Find another app** works for the script case.
 
 ## Vocabulary
 
 * **Split tunneling** - The name of the feature.
-* **Excluded app** - An app that only communicates outside of the VPN tunnel.
-* **Included app** - An app that only communicates inside the VPN tunnel (when the tunnel is up).
-  This is the default for all apps until they have been explicitly excluded.
+* **Excluded app** - An app that only communicates outside of the VPN tunnel (Bypass VPN).
+* **Included app** - An app that communicates inside the VPN tunnel. Outside VPN only for, this is
+  every app that is not excluded; in VPN only for, only the chosen apps and those with a country.
 * **To exclude** - The act of enabling split tunneling for a specific app, excluding its traffic
   from the VPN tunnel.
-* **To include** - The act of disabling split tunneling for a specific app, including its traffic
-  in the VPN tunnel again.
+* **To include** - Putting an app's traffic in the VPN tunnel: removing it from Bypass VPN, or
+  adding it to VPN only for.
 
 ## DNS
 
