@@ -373,6 +373,8 @@ export const ipcSchema = {
     importText: invoke<string, void>(),
     apiAccessMethodSettingChange: notifyRenderer<AccessMethodSetting>(),
     setAllowLan: invoke<boolean, void>(),
+    // `undefined` resets the list to the built-in private ranges.
+    setLanNetworks: invoke<string[] | undefined, void>(),
     // Persistent warren-api URL (empty string = unset). Daemon restart
     // required to apply.
     setWarrenApiUrl: invoke<string, void>(),

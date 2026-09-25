@@ -60,7 +60,7 @@ export function VpnSettingsView() {
                     <AutoConnectSetting />
                   </FlexColumn>
 
-                  <AllowLanSetting />
+                  <AllowLanSetting position="solo" />
 
                   <FlexColumn gap="small">
                     <DnsBlockerSettings position="solo" />

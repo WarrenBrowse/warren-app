@@ -1912,6 +1912,11 @@ export class Settings extends jspb.Message {
     getWarrenMaxRateBps(): number;
     setWarrenMaxRateBps(value: number): Settings;
 
+    hasLanNetworks(): boolean;
+    clearLanNetworks(): void;
+    getLanNetworks(): LanNetworks | undefined;
+    setLanNetworks(value?: LanNetworks): Settings;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Settings.AsObject;
     static toObject(includeInstance: boolean, msg: Settings): Settings.AsObject;
@@ -1943,6 +1948,32 @@ export namespace Settings {
         warrenNConnections: number,
         warrenCustomExit?: WarrenCustomExitSettings.AsObject,
         warrenMaxRateBps: number,
+        lanNetworks?: LanNetworks.AsObject,
+    }
+}
+
+export class LanNetworks extends jspb.Message { 
+    clearNetworksList(): void;
+    getNetworksList(): Array<string>;
+    setNetworksList(value: Array<string>): LanNetworks;
+    addNetworks(value: string, index?: number): string;
+    getCustom(): boolean;
+    setCustom(value: boolean): LanNetworks;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): LanNetworks.AsObject;
+    static toObject(includeInstance: boolean, msg: LanNetworks): LanNetworks.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: LanNetworks, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): LanNetworks;
+    static deserializeBinaryFromReader(message: LanNetworks, reader: jspb.BinaryReader): LanNetworks;
+}
+
+export namespace LanNetworks {
+    export type AsObject = {
+        networksList: Array<string>,
+        custom: boolean,
     }
 }
 

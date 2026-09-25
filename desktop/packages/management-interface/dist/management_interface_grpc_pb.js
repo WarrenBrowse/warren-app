@@ -316,6 +316,17 @@ function deserialize_mullvad_daemon_management_interface_ForumReportRequest(buff
   return management_interface_pb.ForumReportRequest.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_mullvad_daemon_management_interface_LanNetworks(arg) {
+  if (!(arg instanceof management_interface_pb.LanNetworks)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.LanNetworks');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_LanNetworks(buffer_arg) {
+  return management_interface_pb.LanNetworks.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_mullvad_daemon_management_interface_LogFilter(arg) {
   if (!(arg instanceof management_interface_pb.LogFilter)) {
     throw new Error('Expected argument of type mullvad_daemon.management_interface.LogFilter');
@@ -841,6 +852,19 @@ getSettings: {
     responseType: google_protobuf_empty_pb.Empty,
     requestSerialize: serialize_google_protobuf_BoolValue,
     requestDeserialize: deserialize_google_protobuf_BoolValue,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  // Replace the networks shared while allow_lan is on. `custom = false` resets
+// them to the built-in private ranges and ignores `networks`.
+setLanNetworks: {
+    path: '/mullvad_daemon.management_interface.ManagementService/SetLanNetworks',
+    requestStream: false,
+    responseStream: false,
+    requestType: management_interface_pb.LanNetworks,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_mullvad_daemon_management_interface_LanNetworks,
+    requestDeserialize: deserialize_mullvad_daemon_management_interface_LanNetworks,
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },

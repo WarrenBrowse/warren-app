@@ -3644,6 +3644,10 @@ msgid "%(mbps)d Mbps"
 msgstr ""
 
 msgctxt "vpn-settings-view"
+msgid "Add a network"
+msgstr ""
+
+msgctxt "vpn-settings-view"
 msgid "Add a server"
 msgstr ""
 
@@ -3749,6 +3753,16 @@ msgstr ""
 
 msgctxt "vpn-settings-view"
 msgid "Endpoint"
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Enter a network in CIDR notation, such as 192.168.1.0/24 or fd00::/8."
+msgstr ""
+
+#. Placeholder of the field where the user types a network to share
+#. outside the tunnel, in CIDR notation.
+msgctxt "vpn-settings-view"
+msgid "Enter a network, e.g. 192.168.1.0/24"
 msgstr ""
 
 msgctxt "vpn-settings-view"
@@ -3865,6 +3879,12 @@ msgctxt "vpn-settings-view"
 msgid "Reset pinned exit keys?"
 msgstr ""
 
+#. Restores the list of networks shared outside the tunnel
+#. to the built-in private IP ranges.
+msgctxt "vpn-settings-view"
+msgid "Reset to default"
+msgstr ""
+
 msgctxt "vpn-settings-view"
 msgid "Server IP override"
 msgstr ""
@@ -3928,9 +3948,21 @@ msgctxt "vpn-settings-view"
 msgid "This might cause issues on certain websites, services, and apps."
 msgstr ""
 
+msgctxt "vpn-settings-view"
+msgid "This network cannot be shared."
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "This network is too broad to be shared outside the tunnel."
+msgstr ""
+
 #. Label for settings that enables tracker blocking.
 msgctxt "vpn-settings-view"
 msgid "Trackers"
+msgstr ""
+
+msgctxt "vpn-settings-view"
+msgid "Traffic to these networks goes outside the VPN tunnel."
 msgstr ""
 
 #. Placeholder shown when no bandwidth limit is set.

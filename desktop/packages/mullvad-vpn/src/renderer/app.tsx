@@ -713,6 +713,12 @@ export default class AppRenderer {
     actions.settings.updateAllowLan(allowLan);
   };
 
+  // `undefined` resets the list to the built-in private ranges. Redux follows from the settings
+  // event, since the daemon normalises the list.
+  public setLanNetworks = async (networks?: string[]) => {
+    await IpcRendererEventChannel.settings.setLanNetworks(networks);
+  };
+
   // Persistent warren-api URL. Empty string → unset on the daemon
   // side (= fallback to upstream Mullvad backend). Daemon restart is
   // required to apply.
@@ -1070,6 +1076,7 @@ export default class AppRenderer {
     const reduxSettings = this.reduxActions.settings;
 
     reduxSettings.updateAllowLan(newSettings.allowLan);
+    reduxSettings.updateLanNetworks(newSettings.lanNetworks);
     reduxSettings.updateWarrenApiUrl(newSettings.warrenApiUrl);
     reduxSettings.updateWarrenMaxRateBps(newSettings.warrenMaxRateBps);
     reduxSettings.updateWarrenMultiHop(newSettings.warrenMultiHop);

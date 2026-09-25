@@ -540,6 +540,10 @@ export function convertFromSettings(settings: grpcTypes.Settings): ISettings | u
   const warrenMultiHop = convertFromWarrenMultiHopSettings(settings.getWarrenMultiHop());
   const warrenNatPmp = convertFromNatPmpSettings(settings.getWarrenNatPmp());
   const warrenCustomExit = convertFromWarrenCustomExitSettings(settings.getWarrenCustomExit());
+  const lanNetworks = {
+    networks: settingsObject.lanNetworks?.networksList ?? [],
+    custom: settingsObject.lanNetworks?.custom ?? false,
+  };
   return {
     ...settings.toObject(),
     relaySettings,
@@ -555,6 +559,7 @@ export function convertFromSettings(settings: grpcTypes.Settings): ISettings | u
     warrenMultiHop,
     warrenNatPmp,
     warrenCustomExit,
+    lanNetworks,
   };
 }
 
