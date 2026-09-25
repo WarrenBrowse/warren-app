@@ -1,5 +1,6 @@
 pub mod access_method;
 pub mod account;
+pub mod app_routing;
 pub mod auth_failed;
 pub mod constraints;
 pub mod custom_list;
