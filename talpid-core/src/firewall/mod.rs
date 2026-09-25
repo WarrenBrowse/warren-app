@@ -327,8 +327,6 @@ pub struct FirewallArguments {
     pub initial_state: InitialFirewallState,
     /// This argument is required for the blocked state to configure the firewall correctly.
     pub allow_lan: bool,
-    /// The unicast networks reachable outside the tunnel when `allow_lan` is set.
-    pub lan_networks: Vec<IpNetwork>,
     /// Specifies the cgroup2 and firewall mark used to identify traffic that is allowed to be
     /// excluded from the tunnel and _leaked_ during blocked states.
     #[cfg(target_os = "linux")]
