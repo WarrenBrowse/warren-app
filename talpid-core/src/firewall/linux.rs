@@ -176,6 +176,12 @@ impl Firewall {
         self.include_only = include_only;
     }
 
+    /// Whether include-only can select anything: without the included
+    /// cgroup, no rule could tell an included app from the rest.
+    pub fn can_include(&self) -> bool {
+        self.included_cgroup2.is_some()
+    }
+
     /// Apply a [`FirewallPolicy`] by setting up [`table_name`] nftable.
     pub fn apply_policy(&mut self, policy: FirewallPolicy) -> Result<()> {
         let table = Table::new(table_name(), ProtoFamily::Inet);
@@ -472,13 +478,12 @@ impl<'a> PolicyBatch<'a> {
     ) -> Result<()> {
         match *rule {
             IncludeRule::TunnelDnsAsIncluded(server) => {
-                for protocol in [TransportProtocol::Udp, TransportProtocol::Tcp] {
-                    let mut nft_rule = Rule::new(&self.mangle_chain);
-                    check_port(&mut nft_rule, protocol, End::Dst, 53);
-                    check_ip(&mut nft_rule, End::Dst, server);
-                    set_include_marks(&mut nft_rule);
-                    self.batch.add(&nft_rule, nftnl::MsgType::Add);
-                }
+                // Every port, not only 53: a resolver reached over TLS or by
+                // anything else must not take the physical route either.
+                let mut nft_rule = Rule::new(&self.mangle_chain);
+                check_ip(&mut nft_rule, End::Dst, server);
+                set_include_marks(&mut nft_rule);
+                self.batch.add(&nft_rule, nftnl::MsgType::Add);
             }
             IncludeRule::MarkIncludedSockets => {
                 let Some(cgroup) = included_cgroup2 else {
@@ -555,6 +560,22 @@ impl<'a> PolicyBatch<'a> {
                     check_not_iface(&mut nft_rule, Direction::In, tunnel)?;
                 }
                 check_ct_included(&mut nft_rule);
+                add_verdict(&mut nft_rule, &Verdict::Drop);
+                self.batch.add(&nft_rule, nftnl::MsgType::Add);
+            }
+            IncludeRule::DropArrivalsForIncludedSockets(tunnel) => {
+                let Some(cgroup) = included_cgroup2 else {
+                    return Ok(());
+                };
+                // The input hook looks the receiving socket up, listeners
+                // included, so a connection to an included app's open port
+                // never starts outside the tunnel.
+                let mut nft_rule = Rule::new(&self.in_chain);
+                if let Some(tunnel) = tunnel {
+                    check_not_iface(&mut nft_rule, Direction::In, tunnel)?;
+                }
+                nft_rule.add_expr(&nft_expr!(socket cgroupv2 level 1));
+                nft_rule.add_expr(&nft_expr!(cmp == cgroup.inode()));
                 add_verdict(&mut nft_rule, &Verdict::Drop);
                 self.batch.add(&nft_rule, nftnl::MsgType::Add);
             }
@@ -1465,9 +1486,9 @@ const INCLUDE_CT_MARK: u32 = 0xf42;
 /// checked without root.
 #[derive(Debug, PartialEq)]
 enum IncludeRule<'a> {
-    /// Traffic to a tunnel resolver is carried like an included app's, so
-    /// the system resolver, which no app owns, keeps resolving through the
-    /// tunnel and never on the physical network.
+    /// Traffic to a tunnel resolver, on any port, is carried like an
+    /// included app's, so the system resolver, which no app owns, keeps
+    /// resolving through the tunnel and never on the physical network.
     TunnelDnsAsIncluded(IpAddr),
     /// Marks the connections of the included cgroup's sockets.
     MarkIncludedSockets,
@@ -1490,6 +1511,10 @@ enum IncludeRule<'a> {
     DropIncludedOffTunnel(Option<&'a str>),
     /// Drops packets of included connections that arrive outside the tunnel.
     DropIncludedArrivingOffTunnel(Option<&'a str>),
+    /// Drops packets that arrive outside the tunnel for an included socket,
+    /// a listener included: an included app's open port must not answer the
+    /// physical network, which would tie its exit address to the real one.
+    DropArrivalsForIncludedSockets(Option<&'a str>),
     /// Marks replies arriving on the tunnel for the reverse-path check.
     RemarkIncludedReplies(&'a str),
     /// Gives included traffic leaving through the tunnel the tunnel address.
@@ -1549,6 +1574,7 @@ fn include_only_head(policy: &FirewallPolicy) -> Vec<IncludeRule<'_>> {
     rules.extend([
         IncludeRule::DropIncludedOffTunnel(tunnel),
         IncludeRule::DropIncludedArrivingOffTunnel(tunnel),
+        IncludeRule::DropArrivalsForIncludedSockets(tunnel),
     ]);
     if let Some(tunnel) = tunnel {
         rules.extend([
@@ -1674,6 +1700,10 @@ mod include_only_tests {
                 head.contains(&IncludeRule::DropIncludedOffTunnel(None)),
                 "{head:?}"
             );
+            assert!(
+                head.contains(&IncludeRule::DropArrivalsForIncludedSockets(None)),
+                "{head:?}"
+            );
         }
     }
 
@@ -1690,6 +1720,7 @@ mod include_only_tests {
         assert!(!head.contains(&IncludeRule::RejectIncluded));
         assert!(head.contains(&IncludeRule::DropIncludedOffTunnel(Some(TUN))));
         assert!(head.contains(&IncludeRule::DropIncludedArrivingOffTunnel(Some(TUN))));
+        assert!(head.contains(&IncludeRule::DropArrivalsForIncludedSockets(Some(TUN))));
         assert!(head.contains(&IncludeRule::RemarkIncludedReplies(TUN)));
         assert!(head.contains(&IncludeRule::MasqueradeIncludedIntoTunnel(TUN)));
     }

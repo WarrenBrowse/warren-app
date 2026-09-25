@@ -392,6 +392,12 @@ impl Firewall {
         self.inner.set_include_only(include_only);
     }
 
+    /// Whether include-only can select the included apps' traffic here.
+    #[cfg(target_os = "linux")]
+    pub fn can_include(&self) -> bool {
+        self.inner.can_include()
+    }
+
     /// Sets whether the firewall should persist the blocking rules across a reboot.
     #[cfg(target_os = "windows")]
     pub fn persist(&mut self, persist: bool) {

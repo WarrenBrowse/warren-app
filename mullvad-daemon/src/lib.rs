@@ -318,6 +318,18 @@ fn tunnel_split_apps(routing: &AppRoutingSettings) -> SplitApps {
     SplitApps { mode, apps }
 }
 
+/// `split_apps`, or the full tunnel when include-only is requested and
+/// cannot run: a persisted include-only must never leave the included apps
+/// unselected while the rest of the host is untunneled.
+#[cfg(target_os = "linux")]
+fn enforceable_split_apps(split_apps: SplitApps, include_only_supported: bool) -> SplitApps {
+    if split_apps.mode == SplitTunnelMode::IncludeOnly && !include_only_supported {
+        log::error!("Include-only is unavailable on this system; tunneling everything");
+        return SplitApps::default();
+    }
+    split_apps
+}
+
 /// What the tunnel excludes for `routing`: the excluded apps while
 /// excluding, nothing otherwise.
 #[cfg(target_os = "android")]
@@ -1813,7 +1825,15 @@ impl Daemon {
                     .endpoint,
                 reset_firewall: *target_state != TargetState::Secured,
                 #[cfg(not(target_os = "android"))]
-                split_apps: tunnel_split_apps(&settings.app_routing),
+                split_apps: {
+                    let split_apps = tunnel_split_apps(&settings.app_routing);
+                    #[cfg(target_os = "linux")]
+                    let split_apps = enforceable_split_apps(
+                        split_apps,
+                        split_tunneling_pid_manager.include_only_supported(),
+                    );
+                    split_apps
+                },
                 #[cfg(target_os = "android")]
                 exclude_paths,
             },
@@ -3508,6 +3528,9 @@ impl Daemon {
         }
 
         let split_apps = tunnel_split_apps(&app_routing);
+        #[cfg(target_os = "linux")]
+        let split_apps =
+            enforceable_split_apps(split_apps, self.exclude_pids.include_only_supported());
         if split_apps == tunnel_split_apps(&self.settings.app_routing) {
             let _ = self
                 .tx
@@ -6992,6 +7015,29 @@ mod split_mode_for_state_tests {
         assert_eq!(
             split_mode_for_state(SplitMode::IncludeOnly, false),
             SplitMode::IncludeOnly
+        );
+    }
+}
+
+#[cfg(all(test, target_os = "linux"))]
+mod enforceable_split_apps_tests {
+    use super::enforceable_split_apps;
+    use talpid_types::split_tunnel::{SplitApps, SplitTunnelMode};
+
+    #[test]
+    fn unsupported_include_only_falls_back_to_the_full_tunnel() {
+        let include_only = SplitApps {
+            mode: SplitTunnelMode::IncludeOnly,
+            apps: vec![],
+        };
+
+        assert_eq!(
+            enforceable_split_apps(include_only.clone(), false),
+            SplitApps::default()
+        );
+        assert_eq!(
+            enforceable_split_apps(include_only.clone(), true),
+            include_only
         );
     }
 }
