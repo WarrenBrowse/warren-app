@@ -183,11 +183,14 @@ impl SplitTunnel {
     /// Set the split mode and the applications it diverts. In both modes the
     /// driver splits the listed apps; the mode decides which address it
     /// moves them to (see `driver_addresses`).
+    ///
+    /// Returns whether the mode was taken: a refused one leaves the driver
+    /// as it was, list included, and the error goes to `result_tx`.
     pub fn set_split_apps(
         &mut self,
         apps: &SplitApps,
         result_tx: oneshot::Sender<Result<(), Error>>,
-    ) {
+    ) -> bool {
         if let SplitTunnelState::Initialized(state) = &mut self.state
             && state.mode != apps.mode
         {
@@ -196,7 +199,7 @@ impl SplitTunnel {
             // reconnect that follows a mode change registers them again.
             if let Err(error) = state.clear_tunnel_addresses() {
                 let _ = result_tx.send(Err(error));
-                return;
+                return false;
             }
             state.mode = apps.mode;
         }
@@ -205,6 +208,7 @@ impl SplitTunnel {
             SplitTunnelState::Initialized(state) => state.set_paths(paths, result_tx),
             SplitTunnelState::Failed(state) => state.set_paths(paths, result_tx),
         }
+        true
     }
 
     /// Set a list of applications to exclude from the tunnel.

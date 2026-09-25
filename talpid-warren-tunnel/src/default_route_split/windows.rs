@@ -139,12 +139,16 @@ impl TunnelRoutes {
             // SAFETY: `row` was initialized by `InitializeIpForwardEntry`, then
             // given a valid prefix, next hop and interface.
             let status = unsafe { CreateIpForwardEntry2(&raw const row) };
-            if status != NO_ERROR && status != ERROR_OBJECT_ALREADY_EXISTS {
+            match status {
+                NO_ERROR => installed.rows.push(row),
+                // Not ours to remove later.
+                ERROR_OBJECT_ALREADY_EXISTS => (),
                 // `installed` drops here and removes what went in.
-                return Err(std::io::Error::from_raw_os_error(status as i32))
-                    .context("failed to add an include-only route");
+                _ => {
+                    return Err(std::io::Error::from_raw_os_error(status as i32))
+                        .context("failed to add an include-only route");
+                }
             }
-            installed.rows.push(row);
         }
         log::info!(
             "Include-only routing installed: {} routes on the tunnel",

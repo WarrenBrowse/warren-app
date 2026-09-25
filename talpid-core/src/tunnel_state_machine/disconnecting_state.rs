@@ -103,7 +103,7 @@ impl DisconnectingState {
             #[cfg(windows)]
             Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {
                 // The state entered next applies the mode.
-                let _ = shared_values.set_split_apps(apps, result_tx);
+                let _ = shared_values.set_split_apps(apps, result_tx, false);
             }
             #[cfg(target_os = "linux")]
             Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {

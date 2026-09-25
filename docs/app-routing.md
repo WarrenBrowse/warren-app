@@ -324,6 +324,12 @@ nothing is tunneled, as with the full tunnel.
 
 ### 3.2 Windows
 
+**Status: implemented, not enabled.** `talpid_core::split_tunnel::INCLUDE_ONLY_READY`
+is `false`: the daemon refuses include-only on Windows and a persisted one falls
+back to the full tunnel, with an empty split set (the included apps as the
+driver's split set would be excluded). Two blockers, below, have to be closed
+and validated in the Windows VM before it is turned on.
+
 Nothing in the driver changes: `talpid-core/src/split_tunnel/driver_addresses.rs`
 hands it the address pair swapped (the physical address as its "tunnel"
 address, the VPN address as its "internet" one) and the included apps as the
@@ -347,22 +353,44 @@ left to winfw.
   `Medium`, above `BlockAll`, below the driver's filters), which lets IPv4 go
   outside the tunnel for every app the driver does not hold back. DNS keeps the
   full tunnel's rules (port 53 only to the tunnel resolvers over the tunnel).
-  Connecting, error and lockdown keep blocking everything: before the driver
-  has its addresses nothing tells an included app from another.
-- IPv6 outside the tunnel stays blocked for every app. The driver guards one
-  physical IPv6 address and an interface usually holds several (temporary
-  addresses), and a permit by app id would miss an included app's children,
-  which the driver splits by inheritance, so apps outside the VPN use IPv4
-  only while include-only is on. This replaces the per-app IPv6 block the
-  first design named: it is stricter and cannot miss a process.
+  The connecting, error and lockdown policies add no permit (but see
+  blocker 1 for what the driver itself lets through).
+- winfw adds no IPv6 permit: the driver guards one physical IPv6 address and
+  an interface usually holds several (temporary addresses), and a permit by
+  app id would miss an included app's children, which the driver splits by
+  inheritance.
+- A mode change while connected applies the blocked policy before the driver
+  lets go of the included apps, and the driver's refusal of a mode leaves the
+  tunnel state machine on the old one.
 - With the driver not loaded, include-only is refused, and a persisted one
   falls back to the full tunnel.
 
-Residual limits: an included app that binds a UDP socket explicitly to the
-address of an interface other than the physical default one is neither rebound
-nor blocked by the driver; included apps cannot reach the LAN.
+Included apps cannot reach the LAN.
 
-**Blocker for beta and staging.** The driver adds its filters to winfw's
+**Blocker 1, the driver's own permit.** The driver installs
+`PermitNonTunnel` (`firewall/filters.cpp:228-330`, weight `ST_HIGH`, condition
+local address not its "tunnel" address, in winfw's baseline sublayer), whose
+callout soft-permits every split app. With the swapped pair that means: an
+included app is permitted from every source address but the one physical
+address the driver holds, in every state where the driver has addresses
+(connected, connecting after the interface is up, and the error and lockdown
+states, which register the physical address with the reserved one). A UDP
+socket an included app binds to a second interface's IPv4 address, or to a
+global IPv6 address other than the registered one, leaves outside the tunnel,
+past winfw's `BlockAll`, which sits at weight `Min` in the same sublayer.
+Closing it takes either a driver change (in this mode, skip `PermitNonTunnel`
+and hard-block split apps whose local address is not the "internet" one), or a
+winfw hard block in a sublayer of its own for traffic leaving by any interface
+but the tunnel and loopback from any local address but the physical and VPN
+ones; a block in another sublayer outweighs the driver's soft permit. The
+second keeps the driver unmodified and costs non-included apps the second
+interface while include-only is on. Also to settle then: `PermitNonTunnelIpv4`
+has no condition, so the system resolver's DNS over HTTPS or TLS to a resolver
+configured on the physical adapter passes it (port 53 stays blocked); exclude
+Dnscache's app id from the permit, or block ports 443 and 853 to those
+resolvers.
+
+**Blocker 2, beta and staging.** The driver adds its filters to winfw's
 baseline and DNS sublayers by their hardcoded Mullvad GUIDs
 (`firewall/identifiers.h:132,140`), while winfw salts every GUID per product
 environment (`mullvadguids.cpp`, `WarrenEnvGuid`; the salt is 0 on prod only).
@@ -373,8 +401,8 @@ unsalted (shared by environments installed side by side, with each side
 tolerating the other's sublayer on add and on delete), which needs a Windows
 test run before it lands.
 
-What the Windows VM run must check, on a build whose sublayers the driver can
-reach (prod, or beta once the blocker is fixed):
+What the Windows VM run must check, once both blockers are closed and
+`INCLUDE_ONLY_READY` is set, on a build whose sublayers the driver can reach:
 
 1. `warren-beta app-routing mode include-only` then `include add` for a
    browser: connect, and compare the browser's public address (exit) with
@@ -389,7 +417,9 @@ reach (prod, or beta once the blocker is fixed):
    network is back, and a packet capture on the physical adapter (`pktmon`)
    shows no packet of the included app and no DNS query.
 5. IPv6 on a dual-stack network: the included app never reaches an IPv6
-   destination outside the tunnel; other apps fall back to IPv4.
+   destination outside the tunnel; other apps fall back to IPv4. With a
+   second adapter up, an included app's UDP socket bound to that adapter's
+   address gets nothing (blocker 1).
 6. The browser's child processes (renderers, the network service) egress from
    the exit too.
 7. Switch include-only off and on while connected: the routes, the WFP filters
