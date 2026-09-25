@@ -29,6 +29,9 @@ use crate::warren_multi_hop_directory::{
     ClientLocality, detect_client_locality, select_circuit, select_one_hop_circuit,
 };
 
+#[cfg(test)]
+mod real_exit;
+
 /// How each exit in force is served, by exit.
 pub(crate) type Resolutions = BTreeMap<ExitChoice, Resolution>;
 
