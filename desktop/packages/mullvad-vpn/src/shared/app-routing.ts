@@ -1,6 +1,7 @@
 import type {
   AppExit,
   AppRouteStatus,
+  AppRouteUnavailableReason,
   AppRoutingSettings,
   AppSplitMode,
   ExitChoice,
@@ -205,4 +206,108 @@ export function buildCountryOptions(
     }
   }
   return options.sort(byName);
+}
+
+export type SplitModeAvailability =
+  | 'available'
+  | 'checking'
+  | 'needs-full-disk-access'
+  | 'needs-signed-build'
+  | 'needs-newer-macos'
+  | 'unsupported';
+
+// Whether Bypass VPN and VPN only for can run. Both rest on the same
+// classifier, so they share one answer; per-app countries need none of this.
+// On macOS the daemon refuses a build it cannot run the classifier on (an
+// unsigned one), and the classifier needs Full Disk Access for eslogger.
+export function splitModeAvailability(input: {
+  platform: Platform;
+  supported: boolean;
+  needsFullDiskAccess: boolean | undefined;
+  isMacOs13OrNewer: boolean;
+}): SplitModeAvailability {
+  if (input.platform !== 'darwin') {
+    return input.supported ? 'available' : 'unsupported';
+  }
+  if (!input.isMacOs13OrNewer) {
+    return 'needs-newer-macos';
+  }
+  if (!input.supported) {
+    return 'needs-signed-build';
+  }
+  if (input.needsFullDiskAccess === undefined) {
+    return 'checking';
+  }
+  return input.needsFullDiskAccess ? 'needs-full-disk-access' : 'available';
+}
+
+export type AppRouteLine =
+  | { kind: 'paused' }
+  | { kind: 'bypassed' }
+  | { kind: 'waiting' }
+  | { kind: 'connecting' }
+  | { kind: 'connected'; publicIp?: string }
+  | { kind: 'unavailable'; reason?: AppRouteUnavailableReason };
+
+// The status line under an app that has a country. A country that is not in
+// force says why before any route state, which could be a stale push.
+export function appRouteLine(
+  routing: AppRoutingSettings,
+  statuses: readonly AppRouteStatus[],
+  app: string,
+  platform: Platform,
+): AppRouteLine {
+  const displayState = appExitDisplayState(routing, app, platform);
+  if (displayState === 'paused' || displayState === 'bypassed') {
+    return { kind: displayState };
+  }
+  const status = routeStatusForApp(statuses, app, platform);
+  switch (status?.state) {
+    case undefined:
+      return { kind: 'waiting' };
+    case 'connecting':
+      return { kind: 'connecting' };
+    case 'connected':
+      return { kind: 'connected', publicIp: status.publicIp };
+    case 'unavailable':
+      return { kind: 'unavailable', reason: status.reason };
+  }
+}
+
+export function exitChoiceNames(
+  exit: ExitChoice,
+  locations: readonly RelayLocationCountry[],
+  translate: (name: string) => string,
+): { country: string; city?: string } {
+  const country = locations.find((location) => location.code === exit.country);
+  const countryName = country ? translate(country.name) : exit.country.toUpperCase();
+  if (exit.city === undefined) {
+    return { country: countryName };
+  }
+  const city = country?.cities.find((candidate) => candidate.code === exit.city);
+  return { country: countryName, city: city ? translate(city.name) : exit.city.toUpperCase() };
+}
+
+type RoutedApplication = { absolutepath: string; name: string; icon?: string; deletable: boolean };
+
+// The apps behind a list of ids: named by what the main process read for the
+// id, else by the app list, else after the file, since an id can come from the
+// CLI or a list scanned on another occasion.
+export function resolveApplications<T extends RoutedApplication>(
+  ids: readonly string[],
+  metadata: readonly T[],
+  catalog: readonly T[],
+  platform: Platform,
+): Array<T | RoutedApplication> {
+  const find = (list: readonly T[], id: string) =>
+    list.find((application) => sameAppId(application.absolutepath, id, platform));
+  return ids.map(
+    (id) =>
+      find(metadata, id) ??
+      find(catalog, id) ?? {
+        absolutepath: id,
+        name: id.split(/[\\/]/).pop() || id,
+        deletable: false,
+      },
+  );
 }

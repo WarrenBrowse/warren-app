@@ -1,7 +1,7 @@
 import { Locator, type Page } from 'playwright';
 
 export const createSelectors = (page: Page) => ({
-  heading: () => page.getByRole('heading', { level: 1, name: 'Split tunneling' }),
+  heading: () => page.getByRole('heading', { level: 1, name: 'App routing' }),
   splitTunnelingSwitch: () => page.getByRole('switch'),
   splitApplicationsList: () => page.getByTestId('split-applications'),
   nonSplitApplicationsList: () => page.getByTestId('non-split-applications'),

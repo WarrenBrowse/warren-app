@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import { useAppContext } from '../../../../../../../../../../context';
+import { useAppContext } from '../../../../../../../../context';
 
 export function useRestartDaemon() {
   const { daemonPrepareRestart } = useAppContext();

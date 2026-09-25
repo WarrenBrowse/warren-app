@@ -30,13 +30,12 @@ import {
 // Warren context is implicit (the host app *is* Warren VPN). The
 // upstream component is kept around in the `components` barrel so a
 // future rebase against Mullvad doesn't dirty-diff the import.
-import { useShowDebug, useShowSplitTunneling, useShowSubSettings } from './hooks';
+import { useShowDebug, useShowSubSettings } from './hooks';
 
 export function SettingsView() {
   const pop = usePop();
 
   const showSubSettings = useShowSubSettings();
-  const showSplitTunneling = useShowSplitTunneling();
   const showDebug = useShowDebug();
 
   return (
@@ -65,7 +64,7 @@ export function SettingsView() {
                         <VpnSettingsListItem />
                         <UserInterfaceSettingsListItem />
                       </FlexColumn>
-                      {showSplitTunneling && <SplitTunnelingListItem position="solo" />}
+                      <SplitTunnelingListItem position="solo" />
                     </>
                   ) : (
                     <UserInterfaceSettingsListItem position="solo" />
