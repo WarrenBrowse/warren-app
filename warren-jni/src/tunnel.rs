@@ -449,8 +449,8 @@ async fn run_multi_hop_session(
     let exit_mlkem768_pubkey: Option<Vec<u8>> = None;
 
     // v7 anonymous admission (default, warren-core doc 64). The supervisor calls
-    // the provider once per session establishment, so every redial presents a
-    // FRESH token: replaying a spent serial would be refused. `presented`
+    // the provider once per session establishment and is handed the whole
+    // current batch, which it walks past any serial the exit refuses. `presented`
     // records whether a stack actually rode the last setup, which is what lets a
     // rejection be attributed to the TOKEN instead of the subscription.
     let presented = Arc::new(AtomicBool::new(false));

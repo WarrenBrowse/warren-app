@@ -1151,7 +1151,7 @@ impl ParametersGenerator {
             inner.warren_api_url.as_ref(),
             inner.warren_identity_seed.as_ref(),
         ) {
-            params.session_token_provider = Some(crate::warren_token_provider::provider_for(
+            params.session_tokens = Some(crate::warren_token_provider::source_for(
                 api_url,
                 seed,
                 inner.warren_standing.as_ref(),

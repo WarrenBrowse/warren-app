@@ -32,8 +32,9 @@ public struct WarrenTunnelConfig: Sendable {
     public let exitPubkey: Data
     /// "IP:port" of the exit relay.
     public let exitEndpoint: String
-    /// 32-byte wallet seed (`WarrenWallet.seed`). The Rust tunnel derives
-    /// the signing key from it, so this is never the Ed25519 secret itself.
+    /// The 32-byte wallet seed (`WarrenWallet.seed`). The tunnel derives
+    /// from it the node key it signs with and the blinding key of the
+    /// wallet's anonymous session tokens.
     public let walletSigningKey: Data
     /// Optional multi-hop entry relay configuration. When nil, the tunnel
     /// is single-hop directly to `exitEndpoint`.

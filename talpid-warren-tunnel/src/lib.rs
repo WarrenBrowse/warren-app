@@ -246,12 +246,25 @@ use warrenguard_wire::WarrenExitAddr;
 pub use warrenguard_wire::features;
 
 pub use warrenguard_transport::supervisor::SessionTokenProvider;
+/// The length of one serialized session token, for daemon code that hands
+/// token bytes to [`make_session_token_provider`].
+pub use warrenguard_wire::SESSION_TOKEN_LEN;
+
+/// Opens the token provider of ONE session. The tunnel opens one for its main
+/// session and one for each route session it starts, so the daemon can keep
+/// the sessions of one wallet from leading with the same serial: the exit
+/// leases a serial to a single live session in the whole fleet.
+pub type SessionTokenSource = std::sync::Arc<dyn Fn() -> SessionTokenProvider + Send + Sync>;
 
 /// Wraps a source of serialized token bytes (one 354-byte Privacy Pass token
-/// each, e.g. `warren_api::TokenManager::take_current_stack`) into a
+/// each, e.g. `warren_api::TokenManager::session_stack`) into a
 /// [`SessionTokenProvider`] the multi-hop supervisor consumes. Lets the daemon
 /// supply v7 tokens without depending on `warrenguard-wire` directly. An empty
 /// stack keeps the v6 wallet-signed path.
+///
+/// The stack is cut to the first [`warrenguard_wire::MAX_SESSION_TOKENS`]: the
+/// default admission sends the whole stack in one setup request, and an exit
+/// refuses to decode a setup request that carries more.
 #[must_use]
 pub fn make_session_token_provider(
     take_stack: std::sync::Arc<
@@ -261,6 +274,7 @@ pub fn make_session_token_provider(
     std::sync::Arc::new(move || {
         take_stack()
             .into_iter()
+            .take(warrenguard_wire::MAX_SESSION_TOKENS)
             .map(warrenguard_wire::SessionToken)
             .collect()
     })
@@ -615,14 +629,16 @@ pub struct WarrenTunnelParameters {
     /// verbatim through this field.
     pub enable_daita: bool,
 
-    /// Anonymous v7 session-token provider (Privacy Pass, warren-core doc 64). When set and
-    /// it yields a non-empty stack, the session presents `IpRequestV7` and the
-    /// exit admits on the token, never learning the account pubkey. `None` (or
-    /// an empty stack on token exhaustion) keeps the v6 wallet-signed path. The
-    /// daemon sources this from its long-lived `warren_api::TokenManager`, which
-    /// mints on unlock/timer; the provider itself only pops (no connect-time
-    /// issuance).
-    pub session_token_provider: Option<warrenguard_transport::supervisor::SessionTokenProvider>,
+    /// Anonymous v7 session tokens (Privacy Pass, warren-core doc 64): the
+    /// main session and every route session each open their own provider from
+    /// it. When a provider yields a non-empty stack, the session presents
+    /// `IpRequestV7` and the exit admits on a token, never learning the
+    /// account pubkey. `None` (or an empty stack when no token is held this
+    /// epoch) keeps the main session on the v6 wallet-signed path, and leaves
+    /// every route session unavailable. The daemon sources this from its
+    /// long-lived `warren_api::TokenManager`, which mints on a timer; a
+    /// provider never mints and never consumes.
+    pub session_tokens: Option<SessionTokenSource>,
 
     /// Per-rule port entitlements (warren-core doc 99). When set, every
     /// NAT-PMP request carries the credential its rule's slot holds, and the
@@ -1620,7 +1636,7 @@ impl WarrenTunnelMonitor {
             // Anonymous v7 admission when the daemon supplied a token provider
             // (default in the app): the exit admits on a Privacy Pass token and
             // never learns the wallet. Empty stack / None falls back to v6.
-            session_token_provider: params.session_token_provider.clone(),
+            session_token_provider: params.session_tokens.as_ref().map(|open| open()),
         };
         let (supervisor, mut client_rx) = MultiHopSupervisor::new(supervisor_config);
         // A rebuilt tunnel continues the session the previous one held rather
@@ -2247,8 +2263,7 @@ impl WarrenTunnelMonitor {
         // main pumps carry their first packet, so no packet of a routed or
         // blocked app goes through the main session while its route starts.
         let app_routes_controller = params.app_routes_rx.clone().map(|plan_rx| {
-            let mut config =
-                app_routes::RouteSessionConfig::new(params.session_token_provider.clone());
+            let mut config = app_routes::RouteSessionConfig::new(params.session_tokens.clone());
             config.wants_ipv6 = wants_ipv6;
             config.enable_daita = params.enable_daita;
             config.idle_cover = mh_idle_cover;
@@ -4034,6 +4049,21 @@ mod tests {
     use super::*;
     use warrenguard_wire::WarrenPubkey;
 
+    #[test]
+    fn a_session_presents_no_more_tokens_than_one_setup_may_carry() {
+        let stack: Vec<[u8; warrenguard_wire::SESSION_TOKEN_LEN]> = (0..12u8)
+            .map(|i| [i; warrenguard_wire::SESSION_TOKEN_LEN])
+            .collect();
+        let expected: Vec<u8> = (0..warrenguard_wire::MAX_SESSION_TOKENS)
+            .map(|i| u8::try_from(i).unwrap())
+            .collect();
+        let provider = make_session_token_provider(Arc::new(move || stack.clone()));
+
+        let presented: Vec<u8> = provider().iter().map(|token| token.0[0]).collect();
+
+        assert_eq!(presented, expected);
+    }
+
     /// A serialized no-op maybenot machine (same vector warrenguard-daita
     /// pins): a valid grant the framework can actually load.
     const NO_OP_MACHINE: &str = "02eNpjYEAHjOgCAAA0AAI=";
@@ -4271,7 +4301,7 @@ mod tests {
             max_rate_control_rx: None,
             bypass_cidrs: Vec::new(),
             enable_daita: false,
-            session_token_provider: None,
+            session_tokens: None,
             port_entitlement_provider: None,
             app_routes_rx: None,
             on_app_routes: None,
@@ -4368,7 +4398,7 @@ mod tests {
             max_rate_control_rx: None,
             bypass_cidrs: Vec::new(),
             enable_daita: false,
-            session_token_provider: None,
+            session_tokens: None,
             port_entitlement_provider: None,
             app_routes_rx: None,
             on_app_routes: None,
@@ -4432,7 +4462,7 @@ mod tests {
             max_rate_control_rx: None,
             bypass_cidrs: Vec::new(),
             enable_daita: false,
-            session_token_provider: None,
+            session_tokens: None,
             port_entitlement_provider: None,
             app_routes_rx: None,
             on_app_routes: None,
