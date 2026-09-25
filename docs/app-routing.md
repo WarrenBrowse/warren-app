@@ -213,7 +213,7 @@ route session is `connecting` until it reports, `connected` with its exit's
 address, or `unavailable` (`no token`; `limit` when the exit refused every
 token, the usual cause being serials held by live sessions; `no relay` when
 nothing matches or the session failed). The public IP is the address the exit
-node is listed on: each exit of the fleet egresses from it (measured on beta,
+node is listed on: each exit egresses from it (measured on four beta exits,
 section 6).
 
 ## 3. VPN only for (include-only)
@@ -276,7 +276,16 @@ connection state. Turning the mode on asks for one confirmation.
   `WARREN_MNEMONIC="$(cat ~/.warren/beta-probe-wallet.mnemonic)" cargo test -p
   mullvad-daemon --lib real_exit -- --ignored --nocapture`
   (`mullvad-daemon/src/warren_app_routes/real_exit.rs`). It mints the current
-  epoch's tokens only; a wallet whose epoch was already minted elsewhere shows
-  the route `unavailable (no token)`. The full daemon in a Linux VM (per-app country,
+  epoch's tokens only. When the issuer answers `already_issued` (the probe
+  wallet is shared, and any process that mints ahead takes every published
+  epoch), the route runs on a wallet-admitted stand-in session and the run
+  says so: the router, the translation and the controller are then exercised
+  against real exits, token admission is not. Measured 2026-09-26 on beta
+  (RO main and DE route, then FI main and FR route): each app appeared from
+  its own exit's listed address, the routed app failed once its route was
+  stopped while the unrouted one kept working, none of the routed app's
+  packets reached the main session, and a tokens-only route session with no
+  token reported `no token` and never connected.
+  The full daemon in a Linux VM (per-app country,
   include-only, exclude); the daemon in the Windows ARM64 VM (include-only
   with the swapped driver, per-app country).
