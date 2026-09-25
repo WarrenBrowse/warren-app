@@ -141,6 +141,9 @@ sign_sums() ( # sign_sums <sums> <seed hex> <trusted keys file>
 
 	umask 022
 	cp "$work/SHA256SUMS.sig" "$sums.sshsig"
+	# cp keeps the 0600 the signature was made with under umask 077, and the
+	# update host serves the file as a user that could not read it.
+	chmod 0644 "$sums.sshsig"
 	echo "signed $sums" >&2
 )
 

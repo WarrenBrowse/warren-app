@@ -90,6 +90,11 @@ refuse "and in no other namespace" sshsig_verifies "$D" file
 	&& ok "byte for byte the pinned vector" \
 	|| fail "byte for byte the pinned vector (got $(sha256 "$D/SHA256SUMS.sshsig"))"
 [ ! -e "$D/SHA256SUMS.sig" ] && ok "and nothing else is written" || fail "and nothing else is written"
+# Served as a static file by a web server that does not run as root: a 0600
+# signature answered 403 on the update host (beta-v1.1.35).
+[ "$(ls -l "$D/SHA256SUMS.sshsig" | cut -c1-10)" = "-rw-r--r--" ] \
+	&& ok "and the signature is readable by everyone" \
+	|| fail "and the signature is readable by everyone (got $(ls -l "$D/SHA256SUMS.sshsig" | cut -c1-10))"
 
 printf 'b' >> "$D/SHA256SUMS"
 refuse "a list changed after signing no longer verifies" sshsig_verifies "$D"
