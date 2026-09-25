@@ -302,6 +302,32 @@ const GUID &MullvadGuids::Filter_Baseline_PermitLanService_Inbound_Ipv6()
 }
 
 //static
+const GUID &MullvadGuids::Filter_Baseline_PermitNonTunnel_Outbound_Ipv4()
+{
+	static const GUID g = WarrenEnvGuid({
+		0x61182a60,
+		0x2077,
+		0x4fd7,
+		{ 0xaf, 0xde, 0x86, 0x76, 0x85, 0x81, 0xfb, 0xaf }
+	});
+
+	return g;
+}
+
+//static
+const GUID &MullvadGuids::Filter_Baseline_PermitNonTunnel_Inbound_Ipv4()
+{
+	static const GUID g = WarrenEnvGuid({
+		0x3a368879,
+		0x2fd4,
+		0x4506,
+		{ 0xb2, 0x8b, 0x53, 0xca, 0xc4, 0x3e, 0xc6, 0x5 }
+	});
+
+	return g;
+}
+
+//static
 const GUID &MullvadGuids::Filter_Baseline_PermitLoopback_Outbound_Ipv4()
 {
 	static const GUID g = WarrenEnvGuid({

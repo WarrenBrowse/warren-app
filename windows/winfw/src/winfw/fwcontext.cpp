@@ -10,6 +10,7 @@
 #include "rules/baseline/permitdhcpserver.h"
 #include "rules/baseline/permitlan.h"
 #include "rules/baseline/permitlanservice.h"
+#include "rules/baseline/permitnontunnelipv4.h"
 #include "rules/baseline/permitloopback.h"
 #include "rules/baseline/permitvpntunnel.h"
 #include "rules/baseline/permitvpntunnelservice.h"
@@ -357,6 +358,11 @@ bool FwContext::applyPolicyConnected
 		std::nullopt,
 		exitEndpointIp
 	));
+
+	if (settings.permitNonTunnelIpv4)
+	{
+		ruleset.emplace_back(std::make_unique<baseline::PermitNonTunnelIpv4>());
+	}
 
 	const auto status = applyRuleset(ruleset);
 

@@ -81,7 +81,7 @@ pub use linux::DefaultRouteSplitV6Guard;
 #[cfg(target_os = "macos")]
 pub use warrenguard_route_split::default_route_split_macos::DefaultRouteSplitV6Guard;
 #[cfg(target_os = "windows")]
-pub use warrenguard_route_split::default_route_split_windows::DefaultRouteSplitV6Guard;
+pub use windows::DefaultRouteSplitV6Guard;
 
 #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
 pub use v6_stub::DefaultRouteSplitV6Guard;
@@ -104,25 +104,65 @@ pub use v6_stub::DefaultRouteSplitV6Guard;
 //
 // So macOS gets the real guard and the others a no-op: not an unsupported
 // target, a platform whose own block already fails fast.
+/// Route metric of the tunnel's own default route in include-only mode on
+/// Windows. The effective metric adds the interface's, so the physical
+/// default route stays the best one for every app the split tunnel driver
+/// does not bind to the tunnel address.
+#[cfg(any(windows, test))]
+pub const INCLUDE_ONLY_DEFAULT_ROUTE_METRIC: u32 = 9000;
+
+/// One route on the tunnel interface: destination, prefix length, metric.
+#[cfg(any(windows, test))]
+pub type TunnelRoute = (std::net::IpAddr, u8, u32);
+
+/// The routes an include-only tunnel gets on Windows for one address family:
+/// a default route that loses to the physical one, which only sockets bound
+/// to the tunnel address (the included apps') take, and a host route to each
+/// resolver of that family, so the system resolver, which binds nothing,
+/// still reaches them through the tunnel.
+#[cfg(any(windows, test))]
+pub fn include_only_routes(
+    family_default: std::net::IpAddr,
+    resolvers: &[std::net::IpAddr],
+) -> Vec<TunnelRoute> {
+    let host_prefix = if family_default.is_ipv4() { 32 } else { 128 };
+    std::iter::once((family_default, 0, INCLUDE_ONLY_DEFAULT_ROUTE_METRIC))
+        .chain(
+            resolvers
+                .iter()
+                .filter(|resolver| resolver.is_ipv4() == family_default.is_ipv4())
+                .map(|resolver| (*resolver, host_prefix, 0)),
+        )
+        .collect()
+}
+
 /// Installs the IPv4 split-default for `tun_name`.
 ///
 /// `include_only` ("VPN only for these apps") keeps the physical default
 /// route for everything but the included apps: Linux scopes the tunnel lookup
-/// to the include mark. macOS installs the full split whatever the mode,
-/// because its split tunnel classifies every packet these routes send to the
-/// tunnel and moves the others back to the physical interface itself.
+/// to the include mark; Windows gives the tunnel [`include_only_routes`]
+/// instead of the two halves. macOS installs the full split whatever the
+/// mode, because its split tunnel classifies every packet these routes send
+/// to the tunnel and moves the others back to the physical interface itself.
+/// `resolvers` are the tunnel resolvers, which only Windows routes.
 pub async fn install_v4(
     exit_ip: std::net::Ipv4Addr,
     tun_name: &str,
     include_only: bool,
+    resolvers: &[std::net::IpAddr],
 ) -> anyhow::Result<DefaultRouteSplitGuard> {
     #[cfg(target_os = "macos")]
     {
-        let _ = include_only;
+        let _ = (include_only, resolvers);
         DefaultRouteSplitGuard::install(exit_ip, tun_name).await
     }
-    #[cfg(not(target_os = "macos"))]
+    #[cfg(target_os = "windows")]
     {
+        DefaultRouteSplitGuard::install(exit_ip, tun_name, include_only, resolvers).await
+    }
+    #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+    {
+        let _ = resolvers;
         DefaultRouteSplitGuard::install(exit_ip, tun_name, include_only).await
     }
 }
@@ -132,25 +172,24 @@ pub async fn install_v6(
     exit_ip_v6: Option<std::net::Ipv6Addr>,
     tun_name: &str,
     include_only: bool,
+    resolvers: &[std::net::IpAddr],
 ) -> anyhow::Result<DefaultRouteSplitV6Guard> {
     #[cfg(any(
         target_os = "linux",
         not(any(target_os = "macos", target_os = "windows"))
     ))]
     {
+        let _ = resolvers;
         DefaultRouteSplitV6Guard::install(exit_ip_v6, tun_name, include_only).await
     }
     #[cfg(target_os = "macos")]
     {
-        let _ = include_only;
+        let _ = (include_only, resolvers);
         DefaultRouteSplitV6Guard::install(exit_ip_v6, tun_name).await
     }
     #[cfg(target_os = "windows")]
     {
-        if include_only {
-            anyhow::bail!("include-only IPv6 routing is not available on this platform");
-        }
-        DefaultRouteSplitV6Guard::install(exit_ip_v6, tun_name).await
+        DefaultRouteSplitV6Guard::install(exit_ip_v6, tun_name, include_only, resolvers).await
     }
 }
 
@@ -316,7 +355,7 @@ mod facade_tests {
             // the Linux wrapper or the warrenguard-route-split macOS/Windows ports diverge
             // from the (Ipv4Addr, &str) signature.
             let guard: anyhow::Result<DefaultRouteSplitGuard> =
-                install_v4(exit_ip, tun_name, false).await;
+                install_v4(exit_ip, tun_name, false, &[]).await;
             if let Ok(g) = guard {
                 let _: anyhow::Result<()> = g.uninstall().await;
             }
@@ -332,11 +371,43 @@ mod facade_tests {
         let _exercise = async {
             let exit_ip_v6: Option<Ipv6Addr> = Some("2a01:4f8:1::2".parse().unwrap());
             let guard: anyhow::Result<DefaultRouteSplitV6Guard> =
-                install_v6(exit_ip_v6, "tun0", false).await;
+                install_v6(exit_ip_v6, "tun0", false, &[]).await;
             if let Ok(g) = guard {
                 let _: anyhow::Result<()> = g.uninstall().await;
             }
         };
         let _ = &_exercise;
+    }
+}
+
+#[cfg(test)]
+mod include_only_route_tests {
+    use super::{INCLUDE_ONLY_DEFAULT_ROUTE_METRIC, include_only_routes};
+    use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+
+    const GATEWAY: IpAddr = IpAddr::V4(Ipv4Addr::new(10, 66, 0, 1));
+    const GATEWAY_V6: IpAddr = IpAddr::V6(Ipv6Addr::new(0xfc00, 0xbbbb, 0, 0, 0, 0, 0, 1));
+
+    #[test]
+    fn the_tunnel_default_route_loses_to_the_physical_one() {
+        let routes = include_only_routes(Ipv4Addr::UNSPECIFIED.into(), &[]);
+
+        assert_eq!(
+            routes,
+            [(
+                IpAddr::V4(Ipv4Addr::UNSPECIFIED),
+                0,
+                INCLUDE_ONLY_DEFAULT_ROUTE_METRIC
+            )]
+        );
+    }
+
+    #[test]
+    fn each_resolver_of_the_family_gets_a_host_route() {
+        let v4 = include_only_routes(Ipv4Addr::UNSPECIFIED.into(), &[GATEWAY, GATEWAY_V6]);
+        let v6 = include_only_routes(Ipv6Addr::UNSPECIFIED.into(), &[GATEWAY, GATEWAY_V6]);
+
+        assert_eq!(v4[1..], [(GATEWAY, 32, 0)]);
+        assert_eq!(v6[1..], [(GATEWAY_V6, 128, 0)]);
     }
 }

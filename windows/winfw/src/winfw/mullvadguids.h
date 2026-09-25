@@ -76,6 +76,9 @@ public:
 	static const GUID &Filter_Baseline_PermitLanService_Inbound_Ipv4();
 	static const GUID &Filter_Baseline_PermitLanService_Inbound_Ipv6();
 
+	static const GUID &Filter_Baseline_PermitNonTunnel_Outbound_Ipv4();
+	static const GUID &Filter_Baseline_PermitNonTunnel_Inbound_Ipv4();
+
 	static const GUID &Filter_Baseline_PermitLoopback_Outbound_Ipv4();
 	static const GUID &Filter_Baseline_PermitLoopback_Inbound_Ipv4();
 	static const GUID &Filter_Baseline_PermitLoopback_Outbound_Ipv6();

@@ -108,7 +108,7 @@ pub(super) fn sweep_foreign_generations(salts: &[u32]) -> Result<u32, FirewallPo
         WinFw_SweepForeignGenerations(
             salts.as_ptr(),
             u32::try_from(salts.len()).expect("the environment table is tiny"),
-            &mut removed,
+            &raw mut removed,
         )
     };
     sweep.into_result().map(|()| removed)

@@ -158,6 +158,7 @@ pub fn assemble_from_last_good(
         max_rate_control_rx: None,
         bypass_cidrs,
         include_only: false,
+        tunnel_resolvers: Vec::new(),
         enable_daita: false,
         session_tokens: None,
         port_entitlement_provider: None,
@@ -345,6 +346,7 @@ pub fn assemble_for_attempt(
         // (default) preserves the prior behaviour.
         bypass_cidrs,
         include_only: false,
+        tunnel_resolvers: Vec::new(),
         // DAITA v2 opt-in. assemble() always starts at `false`;
         // the caller (`ParametersGenerator::produce_warren_tunnel_params`)
         // mutates this field post-assemble based on the live
@@ -466,6 +468,7 @@ pub fn assemble_failover_for_attempt(
         max_rate_control_rx: None,
         bypass_cidrs,
         include_only: false,
+        tunnel_resolvers: Vec::new(),
         enable_daita: false,
         session_tokens: None,
         port_entitlement_provider: None,
@@ -653,6 +656,7 @@ pub fn assemble_custom(
         max_rate_control_rx: None,
         bypass_cidrs,
         include_only: false,
+        tunnel_resolvers: Vec::new(),
         enable_daita: false,
         session_tokens: None,
         port_entitlement_provider: None,
