@@ -1,0 +1,812 @@
+//! Keeps the route sessions in line with the daemon's plan.
+//!
+//! The controller owns the route sessions of one tunnel. On every plan it
+//! stops the sessions whose circuit left the plan, names the relays of the
+//! remaining and new ones to the firewall and waits until it took them, then
+//! starts the new sessions and hands the router the apps of each route. Each
+//! session's state feeds the router, so a route that is not connected drops
+//! its apps' packets, and the daemon, which shows it.
+//!
+//! Sessions are kept in fixed slots, one [`RouteId`] each, and one more route
+//! past the slots carries the blocked apps: a route that is never connected.
+
+use std::sync::Arc;
+
+use futures::future::BoxFuture;
+use talpid_app_routing::{
+    owner::OwnerResolver,
+    router::{Policy, RouteId, RouteState, SessionAddresses},
+};
+use tokio::sync::{mpsc, watch};
+use warrenguard_multihop::RelayDescriptorSigned;
+use warrenguard_transport_core::PacketDevice;
+
+use super::{
+    AppRouteObserver, AppRoutesPlan, MAX_ROUTE_SESSIONS, PlannedRoute, RouteReport,
+    RouteSessionState, SessionEvent, circuit_identity,
+    datapath::{RouteTun, RoutingTable},
+};
+use crate::MultiHopConfig;
+
+/// The route past the session slots, never connected, that blocks the apps
+/// whose exit cannot be served.
+const BLOCKED: RouteId = RouteId(MAX_ROUTE_SESSIONS as u8);
+
+/// Names to the firewall every relay the route sessions may reach outside the
+/// tunnel, and resolves once it applied them.
+pub type RelaySink =
+    Arc<dyn Fn(Vec<RelayDescriptorSigned>) -> BoxFuture<'static, ()> + Send + Sync>;
+
+/// Starts route sessions. The handle ends its session when dropped.
+pub trait RouteSessions<T>: Send + 'static {
+    type Handle: Send + 'static;
+
+    /// Starts a session dialing `circuit` and carrying the packets of
+    /// `device`. It reports through `events`, starting from connecting.
+    fn start(&mut self, circuit: &MultiHopConfig, device: T, events: SessionEvents)
+    -> Self::Handle;
+
+    /// Ends a session and resolves once it released what it held.
+    fn stop(handle: Self::Handle) -> BoxFuture<'static, ()> {
+        Box::pin(async move { drop(handle) })
+    }
+}
+
+/// A session's line to the controller, tagged so the reports of a session
+/// that was replaced in its slot are ignored.
+pub struct SessionEvents {
+    tx: mpsc::UnboundedSender<Tagged>,
+    slot: usize,
+    generation: u64,
+}
+
+impl SessionEvents {
+    pub fn send(&self, event: SessionEvent) {
+        let _ = self.tx.send(Tagged {
+            slot: self.slot,
+            generation: self.generation,
+            event,
+        });
+    }
+}
+
+struct Tagged {
+    slot: usize,
+    generation: u64,
+    event: SessionEvent,
+}
+
+struct Slot<H> {
+    identity: ([u8; 16], [u8; 16]),
+    relay: RelayDescriptorSigned,
+    apps: Vec<String>,
+    state: RouteSessionState,
+    addresses: Option<SessionAddresses>,
+    generation: u64,
+    session: H,
+}
+
+impl<H> Slot<H> {
+    fn route_state(&self) -> RouteState {
+        match (self.state, self.addresses) {
+            (RouteSessionState::Connected, Some(addresses)) => RouteState::Connected(addresses),
+            (RouteSessionState::Unavailable(_), _) => RouteState::Unavailable,
+            _ => RouteState::Connecting,
+        }
+    }
+}
+
+/// The route sessions of one tunnel.
+pub struct RouteController<D, R, S>
+where
+    D: PacketDevice + Clone,
+    R: OwnerResolver + Send + 'static,
+    S: RouteSessions<RouteTun<D, R>>,
+{
+    table: Arc<RoutingTable<R>>,
+    device: D,
+    sessions: S,
+    /// The main session's inner addresses, the only sources the router
+    /// translates.
+    main: SessionAddresses,
+    name_relays: RelaySink,
+    observer: Option<AppRouteObserver>,
+    slots: Vec<Option<Slot<S::Handle>>>,
+    blocked_apps: Vec<String>,
+    events_tx: mpsc::UnboundedSender<Tagged>,
+    events_rx: mpsc::UnboundedReceiver<Tagged>,
+    next_generation: u64,
+    reported: Option<Vec<RouteReport>>,
+}
+
+impl<D, R, S> RouteController<D, R, S>
+where
+    D: PacketDevice + Clone,
+    R: OwnerResolver + Send + 'static,
+    S: RouteSessions<RouteTun<D, R>>,
+{
+    pub fn new(
+        table: Arc<RoutingTable<R>>,
+        device: D,
+        sessions: S,
+        main: SessionAddresses,
+        name_relays: RelaySink,
+        observer: Option<AppRouteObserver>,
+    ) -> Self {
+        let (events_tx, events_rx) = mpsc::unbounded_channel();
+        Self {
+            table,
+            device,
+            sessions,
+            main,
+            name_relays,
+            observer,
+            slots: (0..MAX_ROUTE_SESSIONS).map(|_| None).collect(),
+            blocked_apps: Vec::new(),
+            events_tx,
+            events_rx,
+            next_generation: 0,
+            reported: None,
+        }
+    }
+
+    /// Follows `plan` until its sender is gone or `shutdown` resolves, then
+    /// stops every session and waits until they released what they held.
+    pub async fn run(
+        mut self,
+        mut plan: watch::Receiver<AppRoutesPlan>,
+        shutdown: impl std::future::Future<Output = ()>,
+    ) {
+        tokio::pin!(shutdown);
+        let first = plan.borrow_and_update().clone();
+        self.apply(&first).await;
+        loop {
+            tokio::select! {
+                () = &mut shutdown => break,
+                changed = plan.changed() => {
+                    if changed.is_err() {
+                        break;
+                    }
+                    let next = plan.borrow_and_update().clone();
+                    self.apply(&next).await;
+                }
+                Some(tagged) = self.events_rx.recv() => self.handle_event(tagged),
+            }
+        }
+        self.stop_all().await;
+    }
+
+    async fn stop_all(&mut self) {
+        let mut stopping = Vec::new();
+        for (index, slot) in self.slots.iter_mut().enumerate() {
+            if let Some(slot) = slot.take() {
+                self.table.close_route(route_id(index));
+                stopping.push(S::stop(slot.session));
+            }
+        }
+        futures::future::join_all(stopping).await;
+    }
+
+    /// Brings the sessions and the router in line with `plan`.
+    pub async fn apply(&mut self, plan: &AppRoutesPlan) {
+        let (served, over_limit) = plan
+            .routes
+            .split_at(plan.routes.len().min(MAX_ROUTE_SESSIONS));
+        if !over_limit.is_empty() {
+            log::warn!(
+                "App routing: {} route sessions asked for, at most {MAX_ROUTE_SESSIONS} run; \
+                 the apps of the others are blocked",
+                plan.routes.len()
+            );
+        }
+
+        let mut stopping = Vec::new();
+        for (index, slot) in self.slots.iter_mut().enumerate() {
+            let kept = slot.as_ref().is_some_and(|slot| {
+                served
+                    .iter()
+                    .any(|route| circuit_identity(&route.circuit) == slot.identity)
+            });
+            if !kept && let Some(slot) = slot.take() {
+                self.table.close_route(route_id(index));
+                stopping.push(S::stop(slot.session));
+            }
+        }
+        // A stopped session's relay is no longer named below, so it must be
+        // gone before the firewall hears it.
+        futures::future::join_all(stopping).await;
+
+        let mut starting: Vec<&PlannedRoute> = Vec::new();
+        for route in served {
+            let identity = circuit_identity(&route.circuit);
+            match self
+                .slots
+                .iter_mut()
+                .flatten()
+                .find(|slot| slot.identity == identity)
+            {
+                Some(slot) => slot.apps.clone_from(&route.apps),
+                None => starting.push(route),
+            }
+        }
+
+        // The firewall lets a route's relay through before its session
+        // dials, so the first handshake is not dropped.
+        let relays = self
+            .slots
+            .iter()
+            .flatten()
+            .map(|slot| slot.relay.clone())
+            .chain(starting.iter().map(|route| route.circuit.relay.clone()))
+            .collect();
+        (self.name_relays)(relays).await;
+
+        for route in starting {
+            let Some(index) = self.slots.iter().position(Option::is_none) else {
+                break;
+            };
+            self.start(index, route);
+        }
+
+        self.blocked_apps = plan
+            .blocked_apps
+            .iter()
+            .chain(over_limit.iter().flat_map(|route| &route.apps))
+            .cloned()
+            .collect();
+        self.set_policy();
+        self.report();
+    }
+
+    fn start(&mut self, index: usize, route: &PlannedRoute) {
+        let id = route_id(index);
+        let queue = self.table.open_route(id);
+        self.table.set_route_state(id, RouteState::Connecting);
+        let device = RouteTun::new(self.device.clone(), Arc::clone(&self.table), id, queue);
+        let generation = self.next_generation;
+        self.next_generation += 1;
+        let events = SessionEvents {
+            tx: self.events_tx.clone(),
+            slot: index,
+            generation,
+        };
+        let session = self.sessions.start(&route.circuit, device, events);
+        self.slots[index] = Some(Slot {
+            identity: circuit_identity(&route.circuit),
+            relay: route.circuit.relay.clone(),
+            apps: route.apps.clone(),
+            state: RouteSessionState::Connecting,
+            addresses: None,
+            generation,
+            session,
+        });
+    }
+
+    fn handle_event(&mut self, tagged: Tagged) {
+        let Some(Some(slot)) = self.slots.get_mut(tagged.slot) else {
+            return;
+        };
+        if slot.generation != tagged.generation {
+            return;
+        }
+        (slot.state, slot.addresses) = match tagged.event {
+            SessionEvent::Connecting => (RouteSessionState::Connecting, None),
+            SessionEvent::Connected(addresses) => (RouteSessionState::Connected, Some(addresses)),
+            SessionEvent::Unavailable(reason) => (RouteSessionState::Unavailable(reason), None),
+        };
+        let state = slot.route_state();
+        self.table.set_route_state(route_id(tagged.slot), state);
+        self.report();
+    }
+
+    fn set_policy(&self) {
+        let mut routes: Vec<RouteState> = self
+            .slots
+            .iter()
+            .map(|slot| {
+                slot.as_ref()
+                    .map_or(RouteState::Unavailable, Slot::route_state)
+            })
+            .collect();
+        routes.push(RouteState::Unavailable);
+        let apps: Vec<(&str, RouteId)> = self
+            .slots
+            .iter()
+            .enumerate()
+            .filter_map(|(index, slot)| Some((index, slot.as_ref()?)))
+            .flat_map(|(index, slot)| {
+                slot.apps
+                    .iter()
+                    .map(move |app| (app.as_str(), route_id(index)))
+            })
+            .chain(self.blocked_apps.iter().map(|app| (app.as_str(), BLOCKED)))
+            .collect();
+        let active = !apps.is_empty();
+        match Policy::new(self.main, apps, routes) {
+            Ok(policy) => self.table.set_policy(policy, active),
+            // Unreachable: every route id above indexes `routes`. The table
+            // keeps the policy it has rather than let an app fall to main.
+            Err(error) => log::error!("App routing policy refused: {error}"),
+        }
+    }
+
+    fn report(&mut self) {
+        let reports: Vec<RouteReport> = self
+            .slots
+            .iter()
+            .flatten()
+            .map(|slot| RouteReport {
+                exit_id: slot.identity.1,
+                state: slot.state,
+            })
+            .collect();
+        if self.reported.as_ref() == Some(&reports) {
+            return;
+        }
+        self.reported = Some(reports.clone());
+        if let Some(observer) = &self.observer {
+            observer(reports);
+        }
+    }
+}
+
+impl<D, R, S> Drop for RouteController<D, R, S>
+where
+    D: PacketDevice + Clone,
+    R: OwnerResolver + Send + 'static,
+    S: RouteSessions<RouteTun<D, R>>,
+{
+    fn drop(&mut self) {
+        // The sessions end with their handles; their apps stay blocked by
+        // the policy until the table itself goes.
+        for (index, slot) in self.slots.iter_mut().enumerate() {
+            if slot.take().is_some() {
+                self.table.close_route(route_id(index));
+            }
+        }
+    }
+}
+
+fn route_id(index: usize) -> RouteId {
+    RouteId(u8::try_from(index).unwrap_or(u8::MAX))
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{
+        net::Ipv4Addr,
+        sync::{
+            Mutex,
+            atomic::{AtomicBool, Ordering},
+        },
+        time::Duration,
+    };
+
+    use warrenguard_transport_core::FakeTun;
+
+    use super::*;
+    use crate::app_routes::{RouteUnavailable, datapath::RoutedTun, test_support::*};
+
+    type Device = RouteTun<FakeTun, TwoApps>;
+
+    struct Started {
+        events: SessionEvents,
+        device: Device,
+        alive: Arc<AtomicBool>,
+    }
+
+    /// Records every session started and every relay set named, in order.
+    #[derive(Clone, Default)]
+    struct World {
+        started: Arc<Mutex<Vec<Started>>>,
+        log: Arc<Mutex<Vec<String>>>,
+        reports: Arc<Mutex<Vec<Vec<RouteReport>>>>,
+    }
+
+    struct FakeHandle(Arc<AtomicBool>);
+
+    impl Drop for FakeHandle {
+        fn drop(&mut self) {
+            self.0.store(false, Ordering::SeqCst);
+        }
+    }
+
+    impl RouteSessions<Device> for World {
+        type Handle = FakeHandle;
+
+        fn start(
+            &mut self,
+            circuit: &MultiHopConfig,
+            device: Device,
+            events: SessionEvents,
+        ) -> FakeHandle {
+            let alive = Arc::new(AtomicBool::new(true));
+            self.log
+                .lock()
+                .unwrap()
+                .push(format!("start {}", circuit.relay.endpoint));
+            self.started.lock().unwrap().push(Started {
+                events,
+                device,
+                alive: Arc::clone(&alive),
+            });
+            FakeHandle(alive)
+        }
+    }
+
+    impl World {
+        fn sink(&self) -> RelaySink {
+            let log = Arc::clone(&self.log);
+            Arc::new(move |relays: Vec<RelayDescriptorSigned>| {
+                let named: Vec<String> = relays.iter().map(|r| r.endpoint.to_string()).collect();
+                log.lock()
+                    .unwrap()
+                    .push(format!("name [{}]", named.join(",")));
+                Box::pin(async {})
+            })
+        }
+
+        fn observer(&self) -> AppRouteObserver {
+            let reports = Arc::clone(&self.reports);
+            Arc::new(move |report| reports.lock().unwrap().push(report))
+        }
+
+        fn starts(&self) -> usize {
+            self.started.lock().unwrap().len()
+        }
+
+        fn log(&self) -> Vec<String> {
+            self.log.lock().unwrap().clone()
+        }
+
+        /// The session started `nth`, as the controller knows it.
+        fn send(&self, nth: usize, event: SessionEvent) {
+            self.started.lock().unwrap()[nth].events.send(event);
+        }
+
+        fn device(&self, nth: usize) -> Device {
+            self.started.lock().unwrap()[nth].device.clone()
+        }
+
+        fn alive(&self, nth: usize) -> bool {
+            self.started.lock().unwrap()[nth]
+                .alive
+                .load(Ordering::SeqCst)
+        }
+
+        fn last_report(&self) -> Vec<RouteReport> {
+            self.reports
+                .lock()
+                .unwrap()
+                .last()
+                .cloned()
+                .unwrap_or_default()
+        }
+    }
+
+    fn route(relay: u8, apps: &[&str]) -> PlannedRoute {
+        PlannedRoute {
+            circuit: circuit(relay, relay),
+            apps: apps.iter().map(|app| (*app).to_owned()).collect(),
+        }
+    }
+
+    fn plan(routes: Vec<PlannedRoute>) -> AppRoutesPlan {
+        AppRoutesPlan {
+            routes,
+            blocked_apps: Vec::new(),
+        }
+    }
+
+    fn connected(v4: Ipv4Addr) -> SessionEvent {
+        SessionEvent::Connected(SessionAddresses {
+            v4: Some(v4),
+            v6: None,
+        })
+    }
+
+    struct Rig {
+        world: World,
+        tun: FakeTun,
+        table: Arc<RoutingTable<TwoApps>>,
+        os: TwoApps,
+        controller: RouteController<FakeTun, TwoApps, World>,
+    }
+
+    impl Rig {
+        fn new() -> Self {
+            let world = World::default();
+            let tun = FakeTun::new();
+            let os = TwoApps::default();
+            let table = RoutingTable::new(os.clone());
+            let controller = RouteController::new(
+                Arc::clone(&table),
+                tun.clone(),
+                world.clone(),
+                SessionAddresses {
+                    v4: Some(MAIN),
+                    v6: None,
+                },
+                world.sink(),
+                Some(world.observer()),
+            );
+            Self {
+                world,
+                tun,
+                table,
+                os,
+                controller,
+            }
+        }
+
+        /// Hands the controller what the sessions reported so far.
+        fn deliver_events(&mut self) {
+            while let Ok(tagged) = self.controller.events_rx.try_recv() {
+                self.controller.handle_event(tagged);
+            }
+        }
+
+        /// Where an opening from `port` goes: main, or route session `nth`.
+        async fn opening_goes(&self, port: u16) -> Where {
+            let routed = RoutedTun::new(self.tun.clone(), Arc::clone(&self.table));
+            self.tun.inject_inbound(syn(port));
+            if let Ok(Ok(packet)) =
+                tokio::time::timeout(Duration::from_millis(50), routed.recv()).await
+            {
+                assert_eq!(source(&packet), MAIN, "main gets the packet untouched");
+                return Where::Main;
+            }
+            for nth in 0..self.world.starts() {
+                if let Ok(Some(packet)) = self.world.device(nth).try_recv() {
+                    return Where::Route(nth, source(&packet));
+                }
+            }
+            Where::Dropped
+        }
+    }
+
+    #[derive(Debug, PartialEq, Eq)]
+    enum Where {
+        Main,
+        Route(usize, Ipv4Addr),
+        Dropped,
+    }
+
+    #[tokio::test]
+    async fn starts_a_session_for_a_planned_route_and_routes_its_app_once_connected() {
+        let mut rig = Rig::new();
+
+        rig.controller
+            .apply(&plan(vec![route(1, &[BROWSER])]))
+            .await;
+        rig.world.send(0, connected(ROUTE));
+        rig.deliver_events();
+
+        assert_eq!(rig.world.starts(), 1);
+        assert_eq!(rig.opening_goes(BROWSER_PORT).await, Where::Route(0, ROUTE));
+        assert_eq!(rig.opening_goes(EDITOR_PORT).await, Where::Main);
+    }
+
+    #[tokio::test]
+    async fn names_a_routes_relay_to_the_firewall_before_its_session_dials() {
+        let mut rig = Rig::new();
+
+        rig.controller
+            .apply(&plan(vec![route(1, &[BROWSER])]))
+            .await;
+
+        assert_eq!(
+            rig.world.log(),
+            vec!["name [192.0.2.1:443]", "start 192.0.2.1:443"]
+        );
+    }
+
+    #[tokio::test]
+    async fn a_route_that_is_still_connecting_drops_its_apps_packets() {
+        let mut rig = Rig::new();
+
+        rig.controller
+            .apply(&plan(vec![route(1, &[BROWSER])]))
+            .await;
+
+        assert_eq!(rig.opening_goes(BROWSER_PORT).await, Where::Dropped);
+    }
+
+    #[tokio::test]
+    async fn a_session_gone_unavailable_blocks_its_apps_and_is_reported() {
+        let mut rig = Rig::new();
+        rig.controller
+            .apply(&plan(vec![route(1, &[BROWSER])]))
+            .await;
+        rig.world.send(0, connected(ROUTE));
+        rig.deliver_events();
+
+        rig.world
+            .send(0, SessionEvent::Unavailable(RouteUnavailable::NoToken));
+        rig.deliver_events();
+
+        assert_eq!(rig.opening_goes(BROWSER_PORT).await, Where::Dropped);
+        assert_eq!(
+            rig.world.last_report(),
+            vec![RouteReport {
+                exit_id: [1; 16],
+                state: RouteSessionState::Unavailable(RouteUnavailable::NoToken),
+            }]
+        );
+    }
+
+    #[tokio::test]
+    async fn apps_of_one_route_share_its_session() {
+        let mut rig = Rig::new();
+
+        rig.controller
+            .apply(&plan(vec![route(1, &[BROWSER, EDITOR])]))
+            .await;
+        rig.world.send(0, connected(ROUTE));
+        rig.deliver_events();
+
+        assert_eq!(rig.world.starts(), 1);
+        assert_eq!(rig.opening_goes(BROWSER_PORT).await, Where::Route(0, ROUTE));
+        assert_eq!(rig.opening_goes(EDITOR_PORT).await, Where::Route(0, ROUTE));
+    }
+
+    #[tokio::test]
+    async fn a_new_plan_keeps_the_sessions_it_still_asks_for() {
+        let mut rig = Rig::new();
+        rig.controller
+            .apply(&plan(vec![route(1, &[BROWSER])]))
+            .await;
+        rig.world.send(0, connected(ROUTE));
+        rig.deliver_events();
+
+        rig.controller
+            .apply(&plan(vec![route(1, &[BROWSER]), route(2, &[EDITOR])]))
+            .await;
+
+        assert_eq!(rig.world.starts(), 2);
+        assert!(rig.world.alive(0));
+        assert_eq!(rig.opening_goes(BROWSER_PORT).await, Where::Route(0, ROUTE));
+    }
+
+    #[tokio::test]
+    async fn a_route_left_out_of_the_plan_is_stopped_and_its_relay_no_longer_named() {
+        let mut rig = Rig::new();
+        rig.controller
+            .apply(&plan(vec![route(1, &[BROWSER]), route(2, &[EDITOR])]))
+            .await;
+
+        rig.controller.apply(&plan(vec![route(2, &[EDITOR])])).await;
+
+        assert!(!rig.world.alive(0));
+        assert!(rig.world.alive(1));
+        assert_eq!(rig.world.log().last().unwrap(), "name [192.0.2.2:443]");
+        assert_eq!(rig.opening_goes(BROWSER_PORT).await, Where::Main);
+    }
+
+    #[tokio::test]
+    async fn at_most_two_sessions_run_and_the_apps_of_the_others_are_blocked() {
+        let mut rig = Rig::new();
+
+        rig.controller
+            .apply(&plan(vec![
+                route(1, &[]),
+                route(2, &[]),
+                route(3, &[BROWSER]),
+            ]))
+            .await;
+
+        assert_eq!(rig.world.starts(), 2);
+        assert_eq!(rig.opening_goes(BROWSER_PORT).await, Where::Dropped);
+    }
+
+    #[tokio::test]
+    async fn a_blocked_app_never_reaches_main() {
+        let mut rig = Rig::new();
+
+        rig.controller
+            .apply(&AppRoutesPlan {
+                routes: Vec::new(),
+                blocked_apps: vec![BROWSER.to_owned()],
+            })
+            .await;
+
+        assert_eq!(rig.opening_goes(BROWSER_PORT).await, Where::Dropped);
+        assert_eq!(rig.opening_goes(EDITOR_PORT).await, Where::Main);
+    }
+
+    #[tokio::test]
+    async fn a_replaced_sessions_late_report_is_ignored() {
+        let mut rig = Rig::new();
+        rig.controller
+            .apply(&plan(vec![route(1, &[BROWSER])]))
+            .await;
+        rig.controller.apply(&plan(Vec::new())).await;
+        rig.controller
+            .apply(&plan(vec![route(1, &[BROWSER])]))
+            .await;
+
+        rig.world.send(0, connected(ROUTE));
+        rig.deliver_events();
+
+        assert_eq!(rig.opening_goes(BROWSER_PORT).await, Where::Dropped);
+    }
+
+    #[tokio::test]
+    async fn the_observer_hears_a_state_once_per_change() {
+        let mut rig = Rig::new();
+        rig.controller
+            .apply(&plan(vec![route(1, &[BROWSER])]))
+            .await;
+
+        rig.world.send(0, SessionEvent::Connecting);
+        rig.deliver_events();
+
+        assert_eq!(
+            *rig.world.reports.lock().unwrap(),
+            vec![vec![RouteReport {
+                exit_id: [1; 16],
+                state: RouteSessionState::Connecting,
+            }]]
+        );
+    }
+
+    #[tokio::test]
+    async fn a_plan_without_routes_leaves_the_main_path_without_os_questions() {
+        let mut rig = Rig::new();
+
+        rig.controller.apply(&plan(Vec::new())).await;
+
+        assert_eq!(rig.opening_goes(BROWSER_PORT).await, Where::Main);
+        assert_eq!(rig.os.calls.load(Ordering::Relaxed), 0);
+    }
+
+    #[tokio::test]
+    async fn run_follows_the_plan_and_ends_the_sessions_with_its_sender() {
+        let rig = Rig::new();
+        let world = rig.world.clone();
+        let (plan_tx, plan_rx) = watch::channel(plan(Vec::new()));
+        let running = tokio::spawn(rig.controller.run(plan_rx, std::future::pending()));
+
+        plan_tx.send_replace(plan(vec![route(1, &[BROWSER])]));
+        tokio::time::timeout(Duration::from_secs(1), async {
+            while world.starts() == 0 {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .expect("the session started");
+        drop(plan_tx);
+        tokio::time::timeout(Duration::from_secs(1), running)
+            .await
+            .expect("run ended")
+            .unwrap();
+
+        assert!(!world.alive(0));
+    }
+
+    #[tokio::test]
+    async fn run_stops_the_sessions_on_shutdown() {
+        let rig = Rig::new();
+        let world = rig.world.clone();
+        let (_plan_tx, plan_rx) = watch::channel(plan(vec![route(1, &[BROWSER])]));
+        let (stop_tx, stop_rx) = tokio::sync::oneshot::channel::<()>();
+        let running = tokio::spawn(rig.controller.run(plan_rx, async move {
+            let _ = stop_rx.await;
+        }));
+        tokio::time::timeout(Duration::from_secs(1), async {
+            while world.starts() == 0 {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .expect("the session started");
+
+        stop_tx.send(()).unwrap();
+        tokio::time::timeout(Duration::from_secs(1), running)
+            .await
+            .expect("run ended")
+            .unwrap();
+
+        assert!(!world.alive(0));
+    }
+}

@@ -12,6 +12,10 @@
 //! sockets (root, or the daemon executable on Windows) to a relay of the
 //! verified directory. No traffic of the user's leaves outside the tunnel
 //! through it.
+//!
+//! The route sessions of per-app exits dial relays of their own, from the
+//! same sockets: the fence names them next to the main session's, whatever
+//! the main session migrates to.
 
 use std::sync::{Arc, Weak};
 
@@ -39,6 +43,22 @@ struct Peers {
     landed: Vec<Endpoint>,
     /// The relays of migrations dialled since it landed there.
     pending: Vec<Endpoint>,
+    /// The relays of the route sessions.
+    routes: Vec<Endpoint>,
+}
+
+impl Peers {
+    /// Every endpoint named, each once: a route session may enter through
+    /// the main session's relay.
+    fn named(&self) -> Vec<Endpoint> {
+        let mut named: Vec<Endpoint> = Vec::new();
+        for endpoint in self.landed.iter().chain(&self.pending).chain(&self.routes) {
+            if !named.contains(endpoint) {
+                named.push(*endpoint);
+            }
+        }
+        named
+    }
 }
 
 impl PeerFence {
@@ -47,6 +67,7 @@ impl PeerFence {
             peers: tokio::sync::Mutex::new(Peers {
                 landed: relay_endpoints(in_use),
                 pending: Vec::new(),
+                routes: Vec::new(),
             }),
             sink,
         }
@@ -62,8 +83,7 @@ impl PeerFence {
                 peers.pending.push(endpoint);
             }
         }
-        let named = peers.landed.iter().chain(&peers.pending).copied().collect();
-        (self.sink)(named).await;
+        (self.sink)(peers.named()).await;
     }
 
     /// The session landed on `relay`: name it alone.
@@ -71,8 +91,15 @@ impl PeerFence {
         let mut peers = self.peers.lock().await;
         peers.landed = relay_endpoints(relay);
         peers.pending.clear();
-        let named = peers.landed.clone();
-        (self.sink)(named).await;
+        (self.sink)(peers.named()).await;
+    }
+
+    /// Name the relays of the route sessions, in place of the ones named
+    /// before, and resolve once the firewall took them.
+    pub(crate) async fn name_routes(&self, relays: &[RelayDescriptorSigned]) {
+        let mut peers = self.peers.lock().await;
+        peers.routes = relays.iter().flat_map(relay_endpoints).collect();
+        (self.sink)(peers.named()).await;
     }
 }
 
@@ -390,6 +417,59 @@ mod tests {
                 "198.51.100.2:443".parse::<SocketAddr>().unwrap(),
                 "198.51.100.3:443".parse::<SocketAddr>().unwrap(),
             ]
+        );
+    }
+
+    #[tokio::test]
+    async fn the_route_sessions_relays_are_named_next_to_the_main_one() {
+        let log: Log = Arc::default();
+        let fence = PeerFence::new(&relay("198.51.100.1:443", None), firewall(&log));
+
+        fence.name_routes(&[relay("198.51.100.5:443", None)]).await;
+
+        let mut both = udp_and_tcp("198.51.100.1:443");
+        both.extend(udp_and_tcp("198.51.100.5:443"));
+        assert_eq!(*log.lock().unwrap(), vec![Step::Named(both), Step::Applied]);
+    }
+
+    #[tokio::test]
+    async fn a_main_migration_keeps_the_route_sessions_relays_named() {
+        let log: Log = Arc::default();
+        let fence = PeerFence::new(&relay("198.51.100.1:443", None), firewall(&log));
+        fence.name_routes(&[relay("198.51.100.5:443", None)]).await;
+        log.lock().unwrap().clear();
+
+        fence.landed_on(&relay("198.51.100.2:443", None)).await;
+
+        let mut both = udp_and_tcp("198.51.100.2:443");
+        both.extend(udp_and_tcp("198.51.100.5:443"));
+        assert_eq!(*log.lock().unwrap(), vec![Step::Named(both), Step::Applied]);
+    }
+
+    #[tokio::test]
+    async fn route_relays_named_again_replace_the_previous_ones() {
+        let log: Log = Arc::default();
+        let fence = PeerFence::new(&relay("198.51.100.1:443", None), firewall(&log));
+        fence.name_routes(&[relay("198.51.100.5:443", None)]).await;
+        log.lock().unwrap().clear();
+
+        fence.name_routes(&[relay("198.51.100.6:443", None)]).await;
+
+        let mut both = udp_and_tcp("198.51.100.1:443");
+        both.extend(udp_and_tcp("198.51.100.6:443"));
+        assert_eq!(*log.lock().unwrap(), vec![Step::Named(both), Step::Applied]);
+    }
+
+    #[tokio::test]
+    async fn a_route_entering_through_the_main_relay_names_it_once() {
+        let log: Log = Arc::default();
+        let fence = PeerFence::new(&relay("198.51.100.1:443", None), firewall(&log));
+
+        fence.name_routes(&[relay("198.51.100.1:443", None)]).await;
+
+        assert_eq!(
+            *log.lock().unwrap(),
+            vec![Step::Named(udp_and_tcp("198.51.100.1:443")), Step::Applied]
         );
     }
 

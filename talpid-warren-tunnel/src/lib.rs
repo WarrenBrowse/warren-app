@@ -276,6 +276,9 @@ pub fn make_session_token_provider(
 pub type PortEntitlementProvider = std::sync::Arc<dyn Fn(usize) -> Option<Vec<u8>> + Send + Sync>;
 
 mod adapter;
+/// Per-app exits: route sessions next to the main one, and the router
+/// between the TUN device and the sessions.
+pub mod app_routes;
 mod rate_limiter;
 // macOS-only: the carrier bind (`IP_BOUND_IF`) and its self-healing egress
 // guard are a macOS-specific policy (Linux escapes by fwmark, Windows by
@@ -627,6 +630,15 @@ pub struct WarrenTunnelParameters {
     /// on its configured per-client quota.
     pub port_entitlement_provider: Option<PortEntitlementProvider>,
 
+    /// Per-app exits (`docs/app-routing.md`): the route sessions the daemon
+    /// asks for, followed live, without a reconnect of the main session.
+    /// `None` leaves every packet on the main session (tests, platforms
+    /// without per-app exits).
+    pub app_routes_rx: Option<tokio::sync::watch::Receiver<app_routes::AppRoutesPlan>>,
+
+    /// Told the state of every route session whenever one of them changes.
+    pub on_app_routes: Option<app_routes::AppRouteObserver>,
+
     /// Daemon cache directory, for the state a tunnel wants to survive a
     /// daemon restart without belonging in settings: the macOS carrier
     /// egress guard's per-network verdicts (`carrier_verdict_cache`) and the
@@ -666,6 +678,10 @@ impl std::fmt::Debug for WarrenTunnelParameters {
             )
             .field("bypass_cidrs", &self.bypass_cidrs)
             .field("enable_daita", &self.enable_daita)
+            .field(
+                "app_routes_rx",
+                &self.app_routes_rx.as_ref().map(|_| "<watch-rx>"),
+            )
             .finish()
     }
 }
@@ -1191,6 +1207,35 @@ pub struct WarrenTunnelMonitor {
     /// drops its owned manager on exit, which calls `cancel()` via
     /// the manager's `Drop` impl.
     nat_pmp_controller: Option<tokio::task::JoinHandle<()>>,
+
+    /// The route sessions of per-app exits. `Some` iff
+    /// [`WarrenTunnelParameters::app_routes_rx`] was wired.
+    app_routes: Option<AppRoutesTask>,
+}
+
+/// The task keeping the route sessions in line with the daemon's plan.
+struct AppRoutesTask {
+    stop_tx: tokio::sync::oneshot::Sender<()>,
+    task: tokio::task::JoinHandle<()>,
+}
+
+/// How long the route sessions get to release the TUN device at teardown.
+const APP_ROUTES_SHUTDOWN_BOUND: std::time::Duration = std::time::Duration::from_secs(2);
+
+impl AppRoutesTask {
+    /// Stops every route session and waits until they released the TUN
+    /// device, which the next tunnel may reopen under the same name.
+    async fn shutdown(self) {
+        let _ = self.stop_tx.send(());
+        let task = self.task;
+        let abort = task.abort_handle();
+        if tokio::time::timeout(APP_ROUTES_SHUTDOWN_BOUND, task)
+            .await
+            .is_err()
+        {
+            abort.abort();
+        }
+    }
 }
 
 /// Backend-specific task ownership.
@@ -1774,6 +1819,13 @@ impl WarrenTunnelMonitor {
             });
         }
         let packet_device = rate_limiter.wrap(MullvadTunPacketDevice::new(async_device));
+        // Per-app exits: the router sits between the TUN device and every
+        // session. It stays inactive, one atomic load per packet, until the
+        // daemon routes an app, and the route sessions write their downlink
+        // through the same rate-limited device as the main session.
+        let routing_table = app_routes::RoutingTable::new(app_routes::HostResolver::new());
+        let main_device =
+            app_routes::RoutedTun::new(packet_device.clone(), Arc::clone(&routing_table));
 
         // Startup event sequence - order is load-bearing:
         //
@@ -2179,7 +2231,7 @@ impl WarrenTunnelMonitor {
         let daita_state_changed = std::sync::Arc::new(tokio::sync::Notify::new());
 
         let uplink_rx = client_rx.clone();
-        let uplink_device = packet_device.clone();
+        let uplink_device = main_device.clone();
         let uplink_daita = daita_shared.clone();
         let uplink_notify = daita_state_changed.clone();
         let uplink_handle = runtime.spawn(async move {
@@ -2212,7 +2264,7 @@ impl WarrenTunnelMonitor {
         });
 
         let downlink_rx = client_rx.clone();
-        let downlink_device = packet_device.clone();
+        let downlink_device = main_device.clone();
         let downlink_drain_channel = exit_draining_channel.clone();
         let downlink_daita = daita_shared.clone();
         let downlink_notify = daita_state_changed.clone();
@@ -2465,6 +2517,48 @@ impl WarrenTunnelMonitor {
             controller: nat_pmp_controller,
         } = spawn_nat_pmp_runtime(&runtime, params);
 
+        // Route sessions start once the tunnel is Up: the connected state
+        // is the one that names their relays to the firewall.
+        let app_routes = params.app_routes_rx.clone().map(|plan_rx| {
+            let mut config =
+                app_routes::RouteSessionConfig::new(params.session_token_provider.clone());
+            config.wants_ipv6 = wants_ipv6;
+            config.enable_daita = params.enable_daita;
+            config.idle_cover = mh_idle_cover;
+            config.socket_bypass = socket_bypass;
+            config.on_exit_draining = params.on_exit_draining.clone();
+            #[cfg(target_os = "macos")]
+            {
+                config.relay_escape = Some(macos_relay_escape(
+                    args.route_manager.clone(),
+                    metadata.interface.clone(),
+                ));
+            }
+            let name_relays: app_routes::RelaySink = {
+                let fence = Arc::clone(&fence);
+                Arc::new(move |relays| {
+                    let fence = Arc::clone(&fence);
+                    Box::pin(async move { fence.name_routes(&relays).await })
+                })
+            };
+            let controller = app_routes::RouteController::new(
+                Arc::clone(&routing_table),
+                packet_device.clone(),
+                app_routes::SupervisorRouteSessions::new(runtime.clone(), config),
+                talpid_app_routing::router::SessionAddresses {
+                    v4: Some(tun_ip),
+                    v6: tun_ipv6,
+                },
+                name_relays,
+                params.on_app_routes.clone(),
+            );
+            let (stop_tx, stop_rx) = tokio::sync::oneshot::channel::<()>();
+            let task = runtime.spawn(controller.run(plan_rx, async move {
+                let _ = stop_rx.await;
+            }));
+            AppRoutesTask { stop_tx, task }
+        });
+
         Ok(Self {
             runtime,
             backend: MonitorBackend::MultiHop {
@@ -2492,6 +2586,7 @@ impl WarrenTunnelMonitor {
             v6_unreachable_guard,
             nat_pmp_managers,
             nat_pmp_controller,
+            app_routes,
         })
     }
 
@@ -2521,6 +2616,7 @@ impl WarrenTunnelMonitor {
             v6_unreachable_guard,
             nat_pmp_managers,
             nat_pmp_controller,
+            app_routes,
         } = self;
 
         // IMPORTANT: do NOT tear down the NAT-PMP runtime here. `wait()`
@@ -2707,6 +2803,12 @@ impl WarrenTunnelMonitor {
             await_controller_shutdown(&runtime, h);
         }
         let natpmp_ms = natpmp_t.elapsed().as_millis();
+
+        // The route sessions hold the TUN device too: they are gone before
+        // the pumps release it below.
+        if let Some(app_routes) = app_routes {
+            runtime.block_on(app_routes.shutdown());
+        }
 
         // Uninstall the split-default policy routing before aborting
         // the pump, mirroring the install order. Best-effort: log a
@@ -3576,6 +3678,25 @@ fn build_warren_tunnel_routes_macos_ordered(
     (bypass, defaults)
 }
 
+/// The escape a route session's carrier needs on a macOS network where the
+/// main session's could not be bound to the physical interface: the relay's
+/// `/32` route outside the tunnel, the same one the main carrier uses there.
+#[cfg(target_os = "macos")]
+fn macos_relay_escape(
+    route_manager: talpid_routing::RouteManagerHandle,
+    tun_iface: String,
+) -> app_routes::session::RelayEscape {
+    std::sync::Arc::new(move |relay: std::net::SocketAddr| {
+        let route_manager = route_manager.clone();
+        let (escape, _) = build_warren_tunnel_routes_macos_ordered(&tun_iface, &[relay.ip()]);
+        Box::pin(async move {
+            if let Err(e) = route_manager.add_routes(escape.into_iter().collect()).await {
+                log::warn!("App routing: the route relay escape could not be installed: {e}");
+            }
+        })
+    })
+}
+
 /// Local QUIC bind address for the multi-hop client: always wildcard,
 /// NEVER the detected physical source IP. An unconnected UDP socket
 /// picks its source address per packet from the live routing table,
@@ -3918,6 +4039,8 @@ mod tests {
             enable_daita: false,
             session_token_provider: None,
             port_entitlement_provider: None,
+            app_routes_rx: None,
+            on_app_routes: None,
             cache_dir: None,
         };
         let s = format!("{params:?}");
@@ -4013,6 +4136,8 @@ mod tests {
             enable_daita: false,
             session_token_provider: None,
             port_entitlement_provider: None,
+            app_routes_rx: None,
+            on_app_routes: None,
             cache_dir: None,
         };
         let s = format!("{params:?}");
@@ -4075,6 +4200,8 @@ mod tests {
             enable_daita: false,
             session_token_provider: None,
             port_entitlement_provider: None,
+            app_routes_rx: None,
+            on_app_routes: None,
             cache_dir: None,
         };
         let s = format!("{params:?}");
