@@ -603,8 +603,13 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
             // The dismissal is recorded against the notice's own key, so a
             // later notice, or a rewrite of this one, raises the banner again.
             onClickDismissNotice = {
-                (uiState.inAppNotification as? InAppNotification.OperatorNotice)?.let {
-                    connectViewModel.dismissNotice(it.notice.dismissalKey)
+                when (val shown = uiState.inAppNotification) {
+                    is InAppNotification.OperatorNotice ->
+                        connectViewModel.dismissNotice(shown.notice.dismissalKey)
+                    // Keyed on the strike, so the next one raises the banner.
+                    is InAppNotification.AccountStrike ->
+                        connectViewModel.dismissNotice(shown.notice.strike.dismissalKey)
+                    else -> Unit
                 }
             },
             // By announcement id, and for good: the card is an event rather

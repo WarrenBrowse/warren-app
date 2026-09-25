@@ -9,6 +9,7 @@
     <!-- Abuse-report appeal page, named on the port-forwarding page and in the
          suspension notice so the strike that can follow is foreseeable. -->
     <string name="reports_url" translatable="false">https://warren.ro/signalements</string>
+    <string name="abuse_contact_email" translatable="false">abuse@warrenbrowse.com</string>
     <string name="local_network_sharing_ip_ranges_plain" translatable="false">10.0.0.0/8\n172.16.0.0/12\n192.168.0.0/16\n169.254.0.0/16\nfe80::/10\nfc00::/7</string>
     <string name="community_forum_url" translatable="false">https://forum.warrenbrowse.com</string>
     <!-- Public help page (desktop `urls.help`): the triage door for a user who

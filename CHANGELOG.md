@@ -21,6 +21,18 @@ Line wrap the file at 100 chars.                                              Th
 * **Fixed**: for any bug fixes.
 * **Security**: in case of vulnerabilities.
 
+## [Unreleased]
+### Added
+- [Android] Show the warnings recorded against your account when a forwarded port is closed after
+  an abuse report: a notification for each warning, a banner with its case reference that opens
+  the page on contesting it, and the full list in the port forwarding screen with the address to
+  write to. The warnings show up as soon as the matching server update is live.
+- [Android] Show a suspended account's suspension, with the day it ends when there is one, as soon
+  as the app learns of it, instead of trying exit after exit. The connection stops and does not
+  retry until the suspension ends.
+- [Android] Say why the server refused a forwarded port, no entitlement left or refused, and ask
+  again automatically, instead of stopping on a generic failure.
+
 ## [1.1.35] - 2026-09-25
 ### Added
 - [Linux] Install updates from the app, as on Windows and macOS. The app downloads the new

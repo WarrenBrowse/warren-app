@@ -260,14 +260,7 @@ class ConnectionProxy(private val tunnelStateProvider: WarrenTunnelStateProvider
                         // (NOT FirewallPolicyError, which means the firewall
                         // could not be applied and wrongly tells the user to
                         // send a problem report).
-                        cause = when {
-                            info.expired ->
-                                ErrorStateCause.AuthFailed(AuthFailedError.ExpiredAccount)
-                            info.noDialableNetwork ->
-                                ErrorStateCause.WarrenNoDialableNetwork
-                            info.flapping -> ErrorStateCause.WarrenTunnelFlapping
-                            else -> ErrorStateCause.WarrenKillSwitchActive
-                        },
+                        cause = blockingCause(info),
                         isBlocking = true,
                     ),
                 )
@@ -276,12 +269,31 @@ class ConnectionProxy(private val tunnelStateProvider: WarrenTunnelStateProvider
     // An expired/revoked subscription is an auth failure (actionable: renew),
     // not a generic tunnel start error. A release after flapping is the policy
     // with lockdown mode off, and names itself.
-    private fun failedCause(info: WarrenConnectedInfo.Failed): ErrorStateCause =
-        when {
+    private fun failedCause(info: WarrenConnectedInfo.Failed): ErrorStateCause {
+        val ban = banOf(info.reason, info.banLapsesAtUnixSecs)
+        return when {
+            ban != null -> ErrorStateCause.AuthFailed(ban)
             info.expired -> ErrorStateCause.AuthFailed(AuthFailedError.ExpiredAccount)
             info.flapping -> ErrorStateCause.WarrenTrafficReleased
             else -> ErrorStateCause.StartTunnelError
         }
+    }
+
+    // A suspension outranks every other cause: no network, exit or retry
+    // changes it before it lapses.
+    private fun blockingCause(info: WarrenConnectedInfo.Blocking): ErrorStateCause {
+        val ban = banOf(info.reason, info.banLapsesAtUnixSecs)
+        return when {
+            ban != null -> ErrorStateCause.AuthFailed(ban)
+            info.expired -> ErrorStateCause.AuthFailed(AuthFailedError.ExpiredAccount)
+            info.noDialableNetwork -> ErrorStateCause.WarrenNoDialableNetwork
+            info.flapping -> ErrorStateCause.WarrenTunnelFlapping
+            else -> ErrorStateCause.WarrenKillSwitchActive
+        }
+    }
+
+    private fun banOf(reason: String, lapsesAtUnixSecs: Long?): AuthFailedError? =
+        AuthFailedError.banOf(reason, lapsesAtUnixSecs)
 
     private fun buildTunnelEndpoint(info: WarrenConnectedInfo.Connected): TunnelEndpoint =
         TunnelEndpoint(

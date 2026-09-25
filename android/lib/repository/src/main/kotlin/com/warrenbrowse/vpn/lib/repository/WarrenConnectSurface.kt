@@ -116,11 +116,15 @@ sealed interface WarrenConnectedInfo {
      *
      * [flapping] is set when the tunnel dropped too many times in a short window with lockdown mode
      * off: the retry loop stopped and traffic went back to the regular network, outside the VPN.
+     *
+     * A [reason] opening on a `[BANNED*]` token is a suspension (warren-core doc 105), which ends
+     * on its own at [banLapsesAtUnixSecs] when that is known.
      */
     data class Failed(
         val reason: String,
         val expired: Boolean = false,
         val flapping: Boolean = false,
+        val banLapsesAtUnixSecs: Long? = null,
     ) : WarrenConnectedInfo
 
     /**
@@ -138,12 +142,15 @@ sealed interface WarrenConnectedInfo {
      * [noDialableNetwork] is set while the retry is parked on a network carrying no address family
      * a relay dial can use (an IPv6-only mobile network against an IPv4-only entry fleet). The
      * phone has working internet, so the error must not read as "offline": waiting cannot end it.
+     *
+     * A [reason] opening on a `[BANNED*]` token is a suspension, as for [Failed].
      */
     data class Blocking(
         val reason: String,
         val flapping: Boolean = false,
         val expired: Boolean = false,
         val noDialableNetwork: Boolean = false,
+        val banLapsesAtUnixSecs: Long? = null,
     ) : WarrenConnectedInfo
 }
 

@@ -38,6 +38,34 @@ class NatPmpStatusLabelTest {
             { " - retry in ${fmtArgs()[0]}s" }
         every { getString(eq(R.string.tunnel_natpmp_status_failed_reason), any()) } answers
             { " - ${fmtArgs()[0]}" }
+        every { getString(eq(R.string.tunnel_natpmp_status_refused_no_entitlement), any()) } answers
+            { "Status: no entitlement left, retrying in ${fmtArgs()[0]}s" }
+        every { getString(eq(R.string.tunnel_natpmp_status_refused_entitlement), any()) } answers
+            { "Status: refused, retrying in ${fmtArgs()[0]}s" }
+    }
+
+    @Test
+    fun `a refusal for want of an entitlement says so and when it is asked again`() {
+        assertEquals(
+            "Status: no entitlement left, retrying in 30s",
+            natPmpStatusLabel(
+                context,
+                tunnelConnected = true,
+                json = """{"state":"refused","refusal":"no_entitlement","retry_in_secs":30}""",
+            ),
+        )
+    }
+
+    @Test
+    fun `a refused entitlement says it was refused and when it is asked again`() {
+        assertEquals(
+            "Status: refused, retrying in 2s",
+            natPmpStatusLabel(
+                context,
+                tunnelConnected = true,
+                json = """{"state":"refused","refusal":"entitlement_refused","retry_in_secs":2}""",
+            ),
+        )
     }
 
     @Test

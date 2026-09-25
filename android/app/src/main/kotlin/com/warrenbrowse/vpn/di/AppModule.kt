@@ -39,12 +39,18 @@ import com.warrenbrowse.vpn.lib.pushnotification.NotificationChannelFactory
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationManager
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationProvider
 import com.warrenbrowse.vpn.lib.pushnotification.forum.ForumActivityNotificationProvider
+import com.warrenbrowse.vpn.lib.pushnotification.standing.AccountStrikeNotificationProvider
 import com.warrenbrowse.vpn.lib.pushnotification.tunnelstate.TunnelStateNotificationProvider
 import com.warrenbrowse.vpn.lib.repository.AccountRepository
 import com.warrenbrowse.vpn.lib.repository.AndroidKeystoreWalletRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
+import com.warrenbrowse.vpn.lib.repository.AccountStrikeAlerts
 import com.warrenbrowse.vpn.lib.repository.ForumActivityAlerts
+import com.warrenbrowse.vpn.lib.repository.WarrenAccountStandingRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenAccountStandingState
+import com.warrenbrowse.vpn.lib.repository.WarrenStandingBridge
+import com.warrenbrowse.vpn.app.standing.WarrenAccountStandingPoller
 import com.warrenbrowse.vpn.lib.repository.ForumActivityOpenRequests
 import com.warrenbrowse.vpn.lib.repository.ForumActivityRepository
 import com.warrenbrowse.vpn.lib.repository.ForumActivityState
@@ -109,7 +115,8 @@ val appModule = module {
     // this interface (lives in lib/repository). The concrete impl
     // lives in `:app/jni/WarrenJniBridgeImpl` so the `lib/<x>` modules
     // never reach into `:app`.
-    single<WarrenJniBridge> { WarrenJniBridgeImpl() }
+    single { WarrenJniBridgeImpl() } binds
+        arrayOf(WarrenJniBridge::class, WarrenStandingBridge::class)
 
     single<WalletRepository> {
         AndroidKeystoreWalletRepository(context = androidContext(), jni = get())
@@ -286,6 +293,18 @@ val appModule = module {
         )
     }
     single { ForumActivityOpenRequests() }
+    // The wallet's port-forward abuse standing (warren-core doc 105): in
+    // memory only, re-read on every service start; which strikes were already
+    // announced is Rust's to remember, as digests.
+    single { WarrenAccountStandingRepository() } bind WarrenAccountStandingState::class
+    single {
+        WarrenAccountStandingPoller(
+            jni = get(),
+            state = get(),
+            alerts = get(),
+            wallet = get(),
+        )
+    }
     single<WarrenSupportReporter> {
         WarrenSupportReporterImpl(
             context = androidContext(),
@@ -307,6 +326,7 @@ val appModule = module {
 
     single { NotificationChannel.TunnelUpdates } bind NotificationChannel::class
     single { NotificationChannel.ForumActivity } bind NotificationChannel::class
+    single { NotificationChannel.AccountStanding } bind NotificationChannel::class
     single { NotificationChannelFactory(get(), get(), getAll()) } withOptions { createdAtStart() }
     single { NotificationManagerCompat.from(androidContext()) }
     single { NotificationManager(get(), getAll(), get(), MainScope()) } withOptions
@@ -325,6 +345,8 @@ val appModule = module {
     } bind NotificationProvider::class
     single { ForumActivityNotificationProvider(get<NotificationChannel.ForumActivity>().id) } binds
         arrayOf(NotificationProvider::class, ForumActivityAlerts::class)
+    single { AccountStrikeNotificationProvider(get<NotificationChannel.AccountStanding>().id) } binds
+        arrayOf(NotificationProvider::class, AccountStrikeAlerts::class)
     // Compile-time product facts for lib modules (they cannot read the
     // app BuildConfig): the beta flavor drives the BETA banner and the
     // payment-surface masking.

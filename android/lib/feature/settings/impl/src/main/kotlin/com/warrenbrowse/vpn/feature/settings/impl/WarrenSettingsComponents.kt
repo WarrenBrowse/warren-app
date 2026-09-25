@@ -734,19 +734,34 @@ internal fun natPmpStatusLabel(
                 (jsonField(json, "retry_after_secs")?.let {
                     context.getString(R.string.tunnel_natpmp_status_rate_limited_retry, it)
                 } ?: "")
-        "failed" ->
-            context.getString(R.string.tunnel_natpmp_status_failed) +
-                when (val reason = jsonField(json, "reason")) {
-                    // A followed port taken by another client on a new exit:
-                    // surface a friendly, actionable line instead of the raw
-                    // enum name (the exit applies strict honour-or-error).
-                    "SuggestedPortInUse" ->
-                        context.getString(R.string.tunnel_natpmp_status_failed_port_in_use)
-                    null -> ""
-                    else -> context.getString(R.string.tunnel_natpmp_status_failed_reason, reason)
-                }
+        "failed" -> natPmpFailedLabel(context, json)
+        "refused" -> natPmpRefusedLabel(context, json)
         else -> natPmpNoMappingLabel(context, tunnelConnected)
     }
+
+private fun natPmpFailedLabel(context: android.content.Context, json: String): String =
+    context.getString(R.string.tunnel_natpmp_status_failed) +
+        when (val reason = jsonField(json, "reason")) {
+            // A followed port taken by another client on a new exit: surface a
+            // friendly, actionable line instead of the raw enum name (the exit
+            // applies strict honour-or-error).
+            "SuggestedPortInUse" -> context.getString(R.string.tunnel_natpmp_status_failed_port_in_use)
+            null -> ""
+            else -> context.getString(R.string.tunnel_natpmp_status_failed_reason, reason)
+        }
+
+/**
+ * The exit refused the request as not authorized (warren-core doc 105): what
+ * was missing, and when Rust asks again on its own.
+ */
+private fun natPmpRefusedLabel(context: android.content.Context, json: String): String {
+    val retry = jsonField(json, "retry_in_secs") ?: "0"
+    return if (jsonField(json, "refusal") == "entitlement_refused") {
+        context.getString(R.string.tunnel_natpmp_status_refused_entitlement, retry)
+    } else {
+        context.getString(R.string.tunnel_natpmp_status_refused_no_entitlement, retry)
+    }
+}
 
 /**
  * The line shown when no mapping is live. Only a connected tunnel can be idle;

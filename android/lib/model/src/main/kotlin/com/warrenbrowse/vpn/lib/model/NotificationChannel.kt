@@ -17,4 +17,14 @@ sealed interface NotificationChannel {
         private const val CHANNEL_ID = "forum_activity"
         override val id: NotificationChannelId = NotificationChannelId(CHANNEL_ID)
     }
+
+    /**
+     * Port-forward abuse warnings on the account (warren-core doc 105). Default
+     * importance: three of them revoke the account, so the first must be seen,
+     * unlike the forum's low band.
+     */
+    data object AccountStanding : NotificationChannel {
+        private const val CHANNEL_ID = "account_standing"
+        override val id: NotificationChannelId = NotificationChannelId(CHANNEL_ID)
+    }
 }

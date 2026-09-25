@@ -27,6 +27,7 @@ class NotificationChannelFactory(
         when (this) {
             NotificationChannel.TunnelUpdates -> NotificationChannel.TunnelUpdates.toChannel()
             NotificationChannel.ForumActivity -> NotificationChannel.ForumActivity.toChannel()
+            NotificationChannel.AccountStanding -> NotificationChannel.AccountStanding.toChannel()
         }
 
     // The launcher badge is the Android stand-in for the desktop tray dot: it
@@ -37,6 +38,15 @@ class NotificationChannelFactory(
             .setDescription(resources.getString(R.string.forum_activity_channel_description))
             .setShowBadge(true)
             .setVibrationEnabled(false)
+            .build()
+
+    // Default importance: three warnings revoke the account, so the first one
+    // must not be a silent badge.
+    private fun NotificationChannel.AccountStanding.toChannel(): NotificationChannelCompat =
+        NotificationChannelCompat.Builder(id.value, NotificationManager.IMPORTANCE_DEFAULT)
+            .setName(resources.getString(R.string.account_strike_channel_name))
+            .setDescription(resources.getString(R.string.account_strike_channel_description))
+            .setShowBadge(true)
             .build()
 
     private fun NotificationChannel.TunnelUpdates.toChannel(): NotificationChannelCompat =

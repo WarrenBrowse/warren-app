@@ -57,6 +57,7 @@ import com.warrenbrowse.vpn.lib.usecase.inappnotification.InAppNotificationUseCa
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.LaunchAnnouncementNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.NewChangelogNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.OperatorNoticeNotificationUseCase
+import com.warrenbrowse.vpn.lib.usecase.inappnotification.AccountStrikeNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.StandDownSetting
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.TunnelStateNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.UpdateAvailableNotificationUseCase
@@ -145,6 +146,10 @@ val uiModule = module {
     // that message is the one thing the user must read, and the states it hides
     // are still legible in the connect card's own status.
     single { OperatorNoticeNotificationUseCase(get(), get()) } bind
+        InAppNotificationUseCase::class
+    // A port-forward strike on the account (warren-core doc 105): three revoke
+    // the account, so the newest one holds the slot until it is put away.
+    single { AccountStrikeNotificationUseCase(get(), get()) } bind
         InAppNotificationUseCase::class
     single { NewChangelogNotificationUseCase(get()) } bind InAppNotificationUseCase::class
     // Coexistence with a higher-priority product environment (prod over

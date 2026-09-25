@@ -60,6 +60,9 @@ interface WarrenTunnelPlatform {
 
     fun natPmpStatus(): String
 
+    /** What the last session was blocked for, read on a `Banned` edge. */
+    fun banVerdict(): String
+
     fun autoRecoveryCount(): Int
 
     /** Engine datapath verdict; see the `PATH_HEALTH_*` constants. */
@@ -174,6 +177,8 @@ class AndroidTunnelPlatform(
     override fun tunnelStatus(): Int = WarrenJni.getTunnelStatus()
 
     override fun natPmpStatus(): String = WarrenJni.getNatPmpStatus()
+
+    override fun banVerdict(): String = WarrenJni.getBanVerdict()
 
     override fun autoRecoveryCount(): Int = WarrenJni.getAutoRecoveryCount()
 

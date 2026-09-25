@@ -1,5 +1,9 @@
 package com.warrenbrowse.vpn.app.service
 
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+
 // Tunnel lifecycle state owned by `WarrenQuinnAdapter`. Mirrors the int code
 // returned by `WarrenJni.getTunnelStatus()`:
 //   0 = Disconnected
@@ -67,11 +71,16 @@ sealed class WarrenTunnelState {
      * [flapping] is set when the tunnel dropped too many times in a short
      * window with lockdown mode off: the retry loop stopped and the traffic
      * went back to the regular network, outside the VPN, and the UI says so.
+     *
+     * A [reason] opening on a `[BANNED*]` token is a suspension (warren-core
+     * doc 105), terminal like an expiry, lapsing at [banLapsesAtUnixSecs] when
+     * that is known.
      */
     data class Failed(
         val reason: String,
         val expired: Boolean = false,
         val flapping: Boolean = false,
+        val banLapsesAtUnixSecs: Long? = null,
     ) : WarrenTunnelState()
 
     /**
@@ -102,6 +111,7 @@ sealed class WarrenTunnelState {
         val flapping: Boolean = false,
         val expired: Boolean = false,
         val noDialableNetwork: Boolean = false,
+        val banLapsesAtUnixSecs: Long? = null,
     ) : WarrenTunnelState()
 
     companion object {
@@ -118,5 +128,33 @@ sealed class WarrenTunnelState {
             4 -> Failed("subscription expired", expired = true)
             else -> Failed("native status code $code")
         }
+    }
+}
+
+/**
+ * What `getBanVerdict` says a session was blocked for: the auth-failed
+ * [reason], opening on its `[BANNED*]` token, and when the ban lapses, `null`
+ * when the source did not say (an exit's refusal carries no date).
+ */
+data class BanVerdict(val reason: String, val lapsesAtUnixSecs: Long?) {
+    companion object {
+        /** A ban the native side could not describe: the generic suspension. */
+        val UNKNOWN = BanVerdict("[BANNED] access suspended", null)
+
+        /** Reads the JNI answer; anything unreadable is [UNKNOWN], still a ban. */
+        fun parse(json: String): BanVerdict =
+            try {
+                val obj = Json.parseToJsonElement(json) as? JsonObject
+                val reason = (obj?.get("reason") as? JsonPrimitive)?.content
+                val lapses =
+                    (obj?.get("lapses_at_unix_secs") as? JsonPrimitive)?.content?.toLongOrNull()
+                if (reason.isNullOrEmpty() || !reason.startsWith("[BANNED")) {
+                    UNKNOWN
+                } else {
+                    BanVerdict(reason, lapses)
+                }
+            } catch (e: IllegalArgumentException) {
+                UNKNOWN
+            }
     }
 }

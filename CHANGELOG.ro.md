@@ -11,6 +11,18 @@ Titlurile `## [X.Y.Z]` trebuie să rămână identice cu cele din `CHANGELOG.md`
 extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`,
 `[Windows]`, `[linux]`) este citit de aplicație, păstrați-l ca atare.
 
+## [Unreleased]
+### Adăugat
+- [Android] Vezi avertismentele înregistrate pe contul tău când un port redirecționat e închis după
+  o raportare de abuz: o notificare pentru fiecare avertisment, un banner cu referința dosarului
+  care deschide pagina despre contestare, și lista completă în ecranul port forwarding cu adresa la
+  care să scrii. Avertismentele apar imediat ce actualizarea de server corespunzătoare e activă.
+- [Android] Vezi suspendarea contului, cu ziua în care se încheie când există una, imediat ce
+  aplicația află de ea, în loc să încerce un exit după altul. Conexiunea se oprește și nu mai
+  reîncearcă până la sfârșitul suspendării.
+- [Android] Află de ce serverul a refuzat un port redirecționat, niciun drept de port disponibil
+  sau refuzat, iar aplicația cere din nou automat, în loc să se oprească pe un eșec generic.
+
 ## [1.1.35] - 2026-09-25
 ### Adăugat
 - [Linux] Instalează actualizările din aplicație, ca pe Windows și macOS. Aplicația descarcă

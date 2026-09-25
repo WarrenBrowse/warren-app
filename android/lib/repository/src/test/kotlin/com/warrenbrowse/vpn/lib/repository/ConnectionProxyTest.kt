@@ -2,6 +2,7 @@ package com.warrenbrowse.vpn.lib.repository
 
 import app.cash.turbine.test
 import com.warrenbrowse.vpn.lib.model.ActionAfterDisconnect
+import com.warrenbrowse.vpn.lib.model.AuthFailedError
 import com.warrenbrowse.vpn.lib.model.ErrorStateCause
 import com.warrenbrowse.vpn.lib.model.FeatureIndicator
 import com.warrenbrowse.vpn.lib.model.TunnelState
@@ -277,6 +278,35 @@ class ConnectionProxyTest {
         val cause = state.errorState.cause
         assertTrue(cause is ErrorStateCause.AuthFailed)
         assertTrue((cause as ErrorStateCause.AuthFailed).isCausedByExpiredAccount())
+    }
+
+    @Test
+    fun `a blocked port-forwarding ban carries the suspension with its lapse`() = runTest {
+        val state =
+            mapped(
+                WarrenConnectedInfo.Blocking(
+                    "[BANNED_PORT_FORWARDING] access suspended for port-forwarding abuse",
+                    banLapsesAtUnixSecs = 1_821_536_000,
+                )
+            ) as TunnelState.Error
+
+        assertTrue(state.errorState.isBlocking)
+        assertEquals(
+            AuthFailedError.BannedPortForwarding(1_821_536_000),
+            (state.errorState.cause as ErrorStateCause.AuthFailed).error,
+        )
+    }
+
+    @Test
+    fun `a released ban is a non-blocking suspension rather than a start error`() = runTest {
+        val state =
+            mapped(WarrenConnectedInfo.Failed("[BANNED] access suspended")) as TunnelState.Error
+
+        assertFalse(state.errorState.isBlocking)
+        assertEquals(
+            AuthFailedError.Banned(null),
+            (state.errorState.cause as ErrorStateCause.AuthFailed).error,
+        )
     }
 
     @Test

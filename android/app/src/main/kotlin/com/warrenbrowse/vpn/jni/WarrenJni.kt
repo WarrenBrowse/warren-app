@@ -374,13 +374,34 @@ object WarrenJni {
 
     /**
      * Returns the live NAT-PMP port-forwarding status as a JSON object: `{"state":
-     * "idle"|"requesting"|"mapped"|"rate_limited"|"failed", "external_port": Int?, "lifetime_secs":
-     * Int?, "retry_after_secs": Int?, "reason": String?}`
+     * "idle"|"requesting"|"mapped"|"rate_limited"|"failed"|"refused", "external_port": Int?,
+     * "lifetime_secs": Int?, "retry_after_secs": Int?, "reason": String?}`. `refused` is an exit
+     * refusing the request as not authorized, with `"refusal":"no_entitlement"|"entitlement_refused"`
+     * and `"retry_in_secs"` until the native side asks again on its own.
      *
      * Read on every [awaitStatusChange] wake. `idle` when port forwarding is off or no mapping is
      * active.
      */
     external fun getNatPmpStatus(): String
+
+    /**
+     * What the last session ended on with status `Banned` (6) was blocked for:
+     * `{"reason":"[BANNED_PORT_FORWARDING] ...","lapses_at_unix_secs":N|null}`, or `{}`.
+     */
+    external fun getBanVerdict(): String
+
+    /**
+     * The wallet's port-forward abuse standing (`GET /v1/account/standing`), signed with the wallet
+     * key and sent in Rust over the VpnService-protected transport. Returns
+     * `{"ok":..,"reported":..,"standing":..,"new_strikes":[..]}`: `reported` is false on an API
+     * that does not serve the standing yet, and `new_strikes` lists each strike this device has not
+     * warned about, exactly once. Blocks on a network GET: invoke off the main thread. Never log the
+     * mnemonic, nor a case reference or port the answer carries.
+     */
+    external fun accountStanding(mnemonic: String): String
+
+    /** Forgets the standing of the wallet that left the device, the strike ledger on disk too. */
+    external fun forgetAccountStanding()
 
     /**
      * Returns a JSON-encoded array of relay descriptors. Each entry is a `RelayInfo`-shaped object

@@ -25,6 +25,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.core.text.HtmlCompat
 import java.net.InetAddress
@@ -35,6 +37,8 @@ import com.warrenbrowse.vpn.lib.model.ErrorStateCause
 import com.warrenbrowse.vpn.lib.model.InAppNotification
 import com.warrenbrowse.vpn.lib.model.ParameterGenerationError
 import com.warrenbrowse.vpn.lib.model.StatusLevel
+import com.warrenbrowse.vpn.lib.model.StrikeNotice
+import com.warrenbrowse.vpn.lib.common.util.AccountStandingText
 import com.warrenbrowse.vpn.lib.model.WarrenAnnouncement
 import com.warrenbrowse.vpn.lib.model.WarrenNotice
 import com.warrenbrowse.vpn.lib.model.WarrenNoticeLevel
@@ -143,6 +147,8 @@ fun InAppNotification.toNotificationData(
             )
         is InAppNotification.OperatorNotice ->
             operatorNoticeBannerData(statusLevel, notice, onClickDismissNotice)
+        is InAppNotification.AccountStrike ->
+            accountStrikeBannerData(statusLevel, notice, onClickDismissNotice)
         InAppNotification.HostOffline ->
             NotificationData(
                 title = stringResource(id = R.string.no_internet_connection),
@@ -381,6 +387,44 @@ private const val ANNOUNCEMENT_BANNER_MAX_LINES = 2
  * desktop's expand-text action): the publication cap is 500 characters, which
  * no banner can hold without pushing the connect card off the screen.
  */
+/**
+ * A port-forward strike (desktop `WarrenAccountStrikeNotificationProvider`):
+ * the warning with its case reference, the text opening the page that says how
+ * to contest it, and the single action slot putting the banner away. The
+ * warning stays listed in the port-forwarding screen, and the next strike
+ * raises the banner again.
+ */
+@Composable
+private fun accountStrikeBannerData(
+    statusLevel: StatusLevel,
+    notice: StrikeNotice,
+    onDismiss: () -> Unit,
+): NotificationData {
+    val context = LocalContext.current
+    val locale = LocalConfiguration.current.locales[0]
+    val openReports = LocalUriHandler.current.createUriHook(stringResource(R.string.reports_url))
+    val text =
+        AccountStandingText.warning(context, notice, locale) +
+            " " +
+            AccountStandingText.caseReference(context, notice.strike)
+    return NotificationData(
+        title = AnnotatedString(stringResource(R.string.account_strike_banner_title)),
+        message =
+            ClickableText(
+                text = AnnotatedString(text),
+                onClick = openReports,
+                contentDescription = stringResource(R.string.account_strike_contest_link),
+            ),
+        statusLevel = statusLevel,
+        action =
+            NotificationAction(
+                Icons.Rounded.Clear,
+                onClick = onDismiss,
+                contentDescription = stringResource(R.string.dismiss),
+            ),
+    )
+}
+
 @Composable
 private fun operatorNoticeBannerData(
     statusLevel: StatusLevel,
@@ -551,12 +595,16 @@ private fun ErrorState.troubleshootSteps(): String? {
     }
 }
 
+// Whether blocking or released, a suspension names its appeal page.
 private fun ErrorState.isPortForwardingBan(): Boolean {
     val cause = this.cause
-    return isBlocking &&
-        cause is ErrorStateCause.AuthFailed &&
-        cause.error == AuthFailedError.BannedPortForwarding
+    return cause is ErrorStateCause.AuthFailed &&
+        cause.error is AuthFailedError.BannedPortForwarding
 }
+
+private fun ErrorStateCause.isBan(): Boolean =
+    this is ErrorStateCause.AuthFailed &&
+        (error is AuthFailedError.Banned || error is AuthFailedError.BannedPortForwarding)
 
 private fun ErrorState.isReportWorthy(): Boolean {
     val cause = this.cause
@@ -614,7 +662,9 @@ private fun ErrorState.title(): String {
 private fun ErrorState.message(): AnnotatedString {
     val cause = this.cause
     return when {
-        isBlocking || cause is ErrorStateCause.WarrenTrafficReleased ->
+        // A released suspension says what it is too: "unable to block all
+        // traffic" would send the user after a problem the ban explains.
+        isBlocking || cause is ErrorStateCause.WarrenTrafficReleased || cause.isBan() ->
             cause.errorMessageId().formatWithHtml()
         else -> stringResource(R.string.failed_to_block_internet).formatWithHtml()
     }
@@ -656,18 +706,33 @@ private fun ErrorStateCause.errorMessageId(): String =
 /**
  * The suspension copy for a forwarded-port ban names the appeal page, so the
  * URL is interpolated: telling the user to contact support with no channel is
- * the dead end this replaces. Every other auth failure is a plain resource.
+ * the dead end this replaces. A ban whose lapse is known says until when, in
+ * the UTC day the API writes it in. Every other auth failure is a plain
+ * resource.
  */
 @Composable
-private fun AuthFailedError.authFailedMessage(): String =
-    if (this == AuthFailedError.BannedPortForwarding) {
-        stringResource(
-            R.string.auth_failed_banned_port_forwarding,
-            stringResource(R.string.reports_url),
-        )
-    } else {
-        stringResource(errorMessageId())
+private fun AuthFailedError.authFailedMessage(): String {
+    val locale = LocalConfiguration.current.locales[0]
+    return when (this) {
+        is AuthFailedError.BannedPortForwarding ->
+            lapsesAtUnixSecs?.let {
+                stringResource(
+                    R.string.auth_failed_banned_port_forwarding_until,
+                    AccountStandingText.day(it, locale),
+                    stringResource(R.string.reports_url),
+                )
+            }
+                ?: stringResource(
+                    R.string.auth_failed_banned_port_forwarding,
+                    stringResource(R.string.reports_url),
+                )
+        is AuthFailedError.Banned ->
+            lapsesAtUnixSecs?.let {
+                stringResource(R.string.auth_failed_banned_until, AccountStandingText.day(it, locale))
+            } ?: stringResource(R.string.auth_failed_banned)
+        else -> stringResource(errorMessageId())
     }
+}
 
 private fun AuthFailedError.errorMessageId(): Int =
     when (this) {
@@ -677,8 +742,8 @@ private fun AuthFailedError.errorMessageId(): Int =
         // A ban is a suspension, not a renewable expiry: distinct copy so the
         // user contacts support rather than trying to top up. The
         // port-forwarding ban names the forwarded-port cause specifically.
-        AuthFailedError.Banned -> R.string.auth_failed_banned
-        AuthFailedError.BannedPortForwarding -> R.string.auth_failed_banned_port_forwarding
+        is AuthFailedError.Banned -> R.string.auth_failed_banned
+        is AuthFailedError.BannedPortForwarding -> R.string.auth_failed_banned_port_forwarding
         // Only the truly unknown cause is generic enough to ask the user to
         // report it; the other causes above have a specific, actionable copy.
         AuthFailedError.Unknown -> R.string.auth_failed

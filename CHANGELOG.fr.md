@@ -12,6 +12,19 @@ notes du tout. Les en-têtes `## [X.Y.Z]` doivent rester identiques à ceux de
 version. Le préfixe de plateforme (`[macOS]`, `[Windows]`, `[linux]`) est lu
 par l'application, gardez-le tel quel.
 
+## [Unreleased]
+### Ajouté
+- [Android] Afficher les avertissements enregistrés sur votre compte quand un port redirigé est
+  fermé après un signalement d'abus : une notification par avertissement, une bannière avec sa
+  référence de dossier qui ouvre la page expliquant comment le contester, et la liste complète dans
+  l'écran port forwarding avec l'adresse à laquelle écrire. Les avertissements s'affichent dès que
+  la mise à jour serveur correspondante est en ligne.
+- [Android] Afficher la suspension d'un compte, avec le jour où elle prend fin quand il y en a un,
+  dès que l'application l'apprend, au lieu d'essayer une exit après l'autre. La connexion s'arrête
+  et ne réessaie pas avant la fin de la suspension.
+- [Android] Dire pourquoi le serveur a refusé un port redirigé, plus de droit de port disponible
+  ou refusé, et redemander automatiquement, au lieu de s'arrêter sur un échec générique.
+
 ## [1.1.35] - 2026-09-25
 ### Ajouté
 - [Linux] Installer les mises à jour depuis l'application, comme sur Windows et macOS.

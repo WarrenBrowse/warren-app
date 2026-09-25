@@ -14,6 +14,7 @@ import kotlinx.coroutines.launch
 import com.warrenbrowse.vpn.lib.model.Notification
 import com.warrenbrowse.vpn.lib.model.NotificationUpdate
 import com.warrenbrowse.vpn.lib.pushnotification.forum.toNotification
+import com.warrenbrowse.vpn.lib.pushnotification.standing.toNotification
 import com.warrenbrowse.vpn.lib.pushnotification.tunnelstate.toNotification
 
 @OptIn(FlowPreview::class)
@@ -27,7 +28,10 @@ class NotificationManager(
     init {
         scope.launch {
             notificationProviders
-                .map { it.notifications.debounce(NOTIFICATION_DEBOUNCE) }
+                .map {
+                    if (it.debounced) it.notifications.debounce(NOTIFICATION_DEBOUNCE)
+                    else it.notifications
+                }
                 .merge()
                 .collect { notificationUpdate ->
                     when (notificationUpdate) {
@@ -63,6 +67,7 @@ class NotificationManager(
         when (this) {
             is Notification.Tunnel -> toNotification(context)
             is Notification.Forum -> toNotification(context)
+            is Notification.AccountStrike -> toNotification(context)
         }
 
     companion object {

@@ -116,6 +116,21 @@ sealed class InAppNotification {
         override val priority: Long = 1004
     }
 
+    /**
+     * A forwarded port was closed after an abuse report and counted against
+     * the account (warren-core doc 105): "warning N of 3", with the case
+     * reference to quote when contesting it. Above the plain blocked banner and
+     * the version and account banners, because three of these revoke the
+     * account and the reader has to see the first; under the tunnel's own
+     * error, which is where a ban shows, with its lapse date. It can be put
+     * away, keyed by the strike, and the next strike raises it again (desktop
+     * `WarrenAccountStrikeNotificationProvider`).
+     */
+    data class AccountStrike(val notice: StrikeNotice) : InAppNotification() {
+        override val statusLevel = StatusLevel.Warning
+        override val priority: Long = 1003
+    }
+
     data object TunnelStateBlocked : InAppNotification() {
         override val statusLevel = StatusLevel.None
         override val priority: Long = 1003

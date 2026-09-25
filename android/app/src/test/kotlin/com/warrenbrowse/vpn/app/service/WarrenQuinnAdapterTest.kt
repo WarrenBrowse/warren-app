@@ -63,6 +63,7 @@ class WarrenQuinnAdapterTest {
         const val STATUS_DISCONNECTED = 0
         const val STATUS_RECONNECTING = 3
         const val STATUS_EXIT_LEAVING = 5
+        const val STATUS_BANNED = 6
 
         const val PHRASE =
             "abandon abandon abandon abandon abandon abandon " +
@@ -234,6 +235,12 @@ class WarrenQuinnAdapterTest {
         var families: RelayFamilies = RelayFamilies.V4_ONLY
 
         override fun relayFamilies(directoryRaw: String?): RelayFamilies = families
+
+        /** What `getBanVerdict` answers after a `Banned` edge. */
+        @Volatile
+        var banVerdict: String = "{}"
+
+        override fun banVerdict(): String = banVerdict
     }
 
     private fun config() = WarrenTunnelConfig(
@@ -594,6 +601,37 @@ class WarrenQuinnAdapterTest {
 
         platform.health = PATH_HEALTH_HEALTHY
         awaitReal("recovery must clear the wedge") { !adapter.pathWedged.value }
+        adapter.disconnect()
+    }
+
+    @Test
+    fun `ensure a ban blocks with its token and lapse and is never redialed`() = runTest {
+        // A suspension is terminal: no exit admits a banned wallet until the ban
+        // lapses, so a retry would only knock on the same refusal. The block
+        // keeps the verdict's [BANNED*] token, which is what the card keys the
+        // suspension message on, and the lapse it dates the message with.
+        val platform = RecordingPlatform()
+        platform.banVerdict =
+            """{"reason":"[BANNED_PORT_FORWARDING] access suspended for port-forwarding abuse",""" +
+                """"lapses_at_unix_secs":1821536000}"""
+        val adapter = adapterWith(platform, dropRetryGraceMs = 50L)
+        adapter.connect(config(), Mnemonic(PHRASE))
+        awaitReal("the session must reach Connected") {
+            adapter.state.value is WarrenTunnelState.Connected
+        }
+        platform.calls.clear()
+
+        platform.status = STATUS_BANNED
+        awaitReal("the ban must block", { adapter.state.value.toString() }) {
+            adapter.state.value is WarrenTunnelState.Blocking
+        }
+
+        val blocked = adapter.state.value as WarrenTunnelState.Blocking
+        assertTrue(blocked.reason.startsWith("[BANNED_PORT_FORWARDING] "), blocked.reason)
+        assertEquals(1_821_536_000L, blocked.banLapsesAtUnixSecs)
+        assertFalse(blocked.expired, "a suspension is not an expiry")
+        withContext(Dispatchers.Default) { delay(500) }
+        assertFalse(CONNECT_TUNNEL in platform.calls, "a banned wallet must not be redialed")
         adapter.disconnect()
     }
 

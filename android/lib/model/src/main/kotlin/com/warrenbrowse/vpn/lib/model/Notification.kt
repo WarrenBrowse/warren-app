@@ -21,4 +21,17 @@ sealed interface Notification {
         override val actions: List<NotificationAction> = emptyList()
         override val ongoing: Boolean = false
     }
+
+    /**
+     * A new port-forward strike on the account, raised once per strike: Rust
+     * hands each one over exactly once, and remembers across process deaths
+     * which it already handed over.
+     */
+    data class AccountStrike(
+        override val channelId: NotificationChannelId,
+        val notice: StrikeNotice,
+    ) : Notification {
+        override val actions: List<NotificationAction> = emptyList()
+        override val ongoing: Boolean = false
+    }
 }

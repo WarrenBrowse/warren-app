@@ -85,14 +85,33 @@ sealed interface AuthFailedError {
     data object TooManyConnections : AuthFailedError
 
     // Warren: the account was explicitly revoked (banned) by the operator (its
-    // pubkey is on the exit's signed CRL). Distinct from ExpiredAccount
-    // (renewable) so the app shows a suspension rather than a renew prompt.
-    data object Banned : AuthFailedError
+    // pubkey is on the signed CRL). Distinct from ExpiredAccount (renewable) so
+    // the app shows a suspension rather than a renew prompt. [lapsesAtUnixSecs]
+    // is when it ends on its own, null when the source did not say.
+    data class Banned(val lapsesAtUnixSecs: Long? = null) : AuthFailedError
 
-    // Warren: banned specifically for port-forwarding abuse (the exit sealed the
-    // port-forwarding reason code). Distinct from Banned only so the app can
-    // show a forwarded-port-specific suspension; both are equally fatal.
-    data object BannedPortForwarding : AuthFailedError
+    // Warren: banned specifically for port-forwarding abuse (warren-core doc
+    // 105). Distinct from Banned only so the app can show a forwarded-port
+    // specific suspension; both are equally fatal.
+    data class BannedPortForwarding(val lapsesAtUnixSecs: Long? = null) : AuthFailedError
 
     data object Unknown : AuthFailedError
+
+    companion object {
+        private val TOKEN = Regex("""^\[([A-Z_]+)\]""")
+
+        /**
+         * The ban an auth-failed reason names by its leading `[TOKEN]`, the
+         * form the Rust side writes it in (`warren_standing::Ban::auth_failed_reason`,
+         * the desktop `mullvad-types` `AuthFailed` parser reads the same):
+         * `[BANNED_PORT_FORWARDING]` or `[BANNED]`. `null` for any other
+         * reason, which is not a ban.
+         */
+        fun banOf(reason: String, lapsesAtUnixSecs: Long?): AuthFailedError? =
+            when (TOKEN.find(reason)?.groupValues?.get(1)) {
+                "BANNED_PORT_FORWARDING" -> BannedPortForwarding(lapsesAtUnixSecs)
+                "BANNED" -> Banned(lapsesAtUnixSecs)
+                else -> null
+            }
+    }
 }

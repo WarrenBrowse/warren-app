@@ -13,6 +13,7 @@ import com.warrenbrowse.talpid.LifecycleVpnService
 import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.connect.WarrenConnectUseCase
 import com.warrenbrowse.vpn.app.connectivity.WarrenConnectivityMonitor
+import com.warrenbrowse.vpn.app.standing.WarrenAccountStandingPoller
 import com.warrenbrowse.vpn.app.service.notifications.ForegroundNotificationManager
 import com.warrenbrowse.vpn.di.vpnServiceModule
 import com.warrenbrowse.vpn.lib.common.constant.KEY_CONNECT_ACTION
@@ -24,7 +25,9 @@ import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationChannelFactory
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationManager
 import com.warrenbrowse.vpn.lib.repository.MnemonicCache
+import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -117,6 +120,21 @@ class WarrenVpnService : LifecycleVpnService() {
         }
         lifecycleScope.launch {
             quinnAdapter.pathWedged.collect { wedged -> quinnStateProxy.updatePathWedged(wedged) }
+        }
+        // The port-forward standing (warren-core doc 105) is polled for as long
+        // as this service lives: while the app is on screen, which binds it,
+        // and while a tunnel is up, which is the only time a forwarded port,
+        // and so a strike, can exist. A strike then reaches the shade even
+        // with the app in the background. Nothing leaves before the privacy
+        // disclosure is accepted.
+        lifecycleScope.launch {
+            getKoin()
+                .get<WarrenAccountStandingPoller>()
+                .runWhile(
+                    getKoin().get<UserPreferencesRepository>().preferencesFlow().map {
+                        it.isPrivacyDisclosureAccepted
+                    }
+                )
         }
         lifecycleScope.launch {
             quinnAdapter.effectiveMtu.collect { mtu -> quinnStateProxy.updateEffectiveMtu(mtu) }

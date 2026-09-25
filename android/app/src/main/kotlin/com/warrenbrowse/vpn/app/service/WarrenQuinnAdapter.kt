@@ -390,6 +390,21 @@ class WarrenQuinnAdapter(
                         if (failOverNow) scheduleExitFailover()
                         break
                     }
+                    if (code == STATUS_BANNED) {
+                        // Terminal like an expiry: the wallet is suspended
+                        // (warren-core doc 105) and no exit admits it before
+                        // the ban lapses. The verdict says for what and until
+                        // when.
+                        val verdict = BanVerdict.parse(platform.banVerdict())
+                        lock.withLock {
+                            if (userInitiatedDisconnect) {
+                                _state.value = WarrenTunnelState.Disconnected
+                            } else {
+                                onSessionBanned(sessionConfig, verdict)
+                            }
+                        }
+                        break
+                    }
                     if (code == STATUS_UNAUTHORIZED) {
                         // Terminal: the exit refused the account (lapsed /
                         // revoked subscription). Retrying cannot recover it,
@@ -676,6 +691,7 @@ class WarrenQuinnAdapter(
         reason: String,
         flapping: Boolean = false,
         expired: Boolean = false,
+        banLapsesAtUnixSecs: Long? = null,
     ) {
         if (blockingFd == null) {
             val fd = platform.establish(planTunInterface(config, blocking = true))
@@ -688,7 +704,13 @@ class WarrenQuinnAdapter(
                     "WarrenQuinnAdapter: blackhole establish failed; keeping current " +
                         "interface as fail-closed blackhole ($reason)"
                 )
-                _state.value = WarrenTunnelState.Blocking(reason, flapping, expired)
+                _state.value =
+                    WarrenTunnelState.Blocking(
+                        reason,
+                        flapping,
+                        expired,
+                        banLapsesAtUnixSecs = banLapsesAtUnixSecs,
+                    )
                 return
             }
             blockingFd = fd
@@ -699,7 +721,13 @@ class WarrenQuinnAdapter(
             activeFd = null
             Logger.w("WarrenQuinnAdapter: lockdown engaged, traffic blocked ($reason)")
         }
-        _state.value = WarrenTunnelState.Blocking(reason, flapping, expired)
+        _state.value =
+            WarrenTunnelState.Blocking(
+                reason,
+                flapping,
+                expired,
+                banLapsesAtUnixSecs = banLapsesAtUnixSecs,
+            )
     }
 
     /**
@@ -722,6 +750,35 @@ class WarrenQuinnAdapter(
             Logger.w("WarrenQuinnAdapter: account unauthorized; releasing (subscription expired)")
             releaseTraffic()
             _state.value = WarrenTunnelState.Failed("subscription expired", expired = true)
+        }
+    }
+
+    /**
+     * Handle a suspended wallet (warren-core doc 105), the way [onSessionExpired]
+     * handles a lapsed one: never a reconnect, the kill switch kept under
+     * lockdown, traffic released otherwise. The state carries the verdict's
+     * `[BANNED*]` reason and lapse, which the card reads the suspension from.
+     * Must be called holding [lock].
+     */
+    private fun onSessionBanned(config: WarrenTunnelConfig, verdict: BanVerdict) {
+        _natPmpStatus.value = NATPMP_IDLE
+        _effectiveMtu.value = null
+        flapDetector.reset()
+        if (config.lockdownMode) {
+            Logger.w("WarrenQuinnAdapter: account banned; blocking")
+            enterBlockingMode(
+                config,
+                verdict.reason,
+                banLapsesAtUnixSecs = verdict.lapsesAtUnixSecs,
+            )
+        } else {
+            Logger.w("WarrenQuinnAdapter: account banned; releasing")
+            releaseTraffic()
+            _state.value =
+                WarrenTunnelState.Failed(
+                    verdict.reason,
+                    banLapsesAtUnixSecs = verdict.lapsesAtUnixSecs,
+                )
         }
     }
 
@@ -1103,6 +1160,7 @@ class WarrenQuinnAdapter(
                 )
             STATUS_RECONNECTING -> reconnectingFrom(config)
             STATUS_UNAUTHORIZED -> WarrenTunnelState.Failed("subscription expired", expired = true)
+            STATUS_BANNED -> WarrenTunnelState.Failed(BanVerdict.UNKNOWN.reason)
             else -> WarrenTunnelState.Failed("native status code $code")
         }
 
@@ -1119,6 +1177,10 @@ class WarrenQuinnAdapter(
         // The exit is leaving: fail over at once. Mirrors
         // `warren_jni::redial::SessionStatus::ExitLeaving`.
         const val STATUS_EXIT_LEAVING = 5
+
+        // The wallet is banned; `getBanVerdict` says why and until when.
+        // Mirrors `warren_jni::redial::SessionStatus::Banned`.
+        const val STATUS_BANNED = 6
 
         /**
          * Ceiling on one wait for a native status wake. The engine wakes the

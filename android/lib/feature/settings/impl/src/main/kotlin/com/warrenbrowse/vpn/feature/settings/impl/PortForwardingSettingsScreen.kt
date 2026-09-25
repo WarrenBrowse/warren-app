@@ -16,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
@@ -27,6 +28,10 @@ import com.warrenbrowse.vpn.common.compose.clickableAnnotatedString
 import com.warrenbrowse.vpn.common.compose.unlessIsDetail
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.settings.api.WarrenLocationPickerNavKey
+import com.warrenbrowse.vpn.lib.common.util.AccountStandingText
+import com.warrenbrowse.vpn.lib.model.AccountStanding
+import com.warrenbrowse.vpn.lib.model.StrikeNotice
+import com.warrenbrowse.vpn.lib.repository.WarrenAccountStandingState
 import com.warrenbrowse.vpn.lib.repository.WarrenConnectedInfo
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
@@ -56,6 +61,7 @@ fun WarrenPortForwardingSettings(navigator: Navigator) {
     val tunnelStateProvider = koinInject<WarrenTunnelStateProvider>()
     val reconnectInvoker = koinInject<WarrenQuinnReconnectInvoker>()
     val natPmpStatusProvider = koinInject<WarrenNatPmpStatusProvider>()
+    val standingState = koinInject<WarrenAccountStandingState>()
 
     val natPmp by repo.natPmpEnabled.collectAsStateWithLifecycle()
     val natPmpProtocol by repo.natPmpProtocol.collectAsStateWithLifecycle()
@@ -64,6 +70,7 @@ fun WarrenPortForwardingSettings(navigator: Navigator) {
     val natPmpStatusJson by natPmpStatusProvider.natPmpStatus.collectAsStateWithLifecycle()
     val exitPin by repo.exitPin.collectAsStateWithLifecycle()
     val connectedInfo by tunnelStateProvider.connectedInfo.collectAsStateWithLifecycle()
+    val standing by standingState.standing.collectAsStateWithLifecycle()
 
     // The NAT-PMP status describes the mapping on the exit the live tunnel was
     // built for, and it keeps reporting it until the next mapping lands. So a
@@ -100,6 +107,8 @@ fun WarrenPortForwardingSettings(navigator: Navigator) {
             )
 
             AbuseNotice()
+
+            standing?.let { AccountStandingSection(it) }
 
             ToggleCell(
                 title = stringResource(R.string.tunnel_natpmp_title),
@@ -138,6 +147,63 @@ fun WarrenPortForwardingSettings(navigator: Navigator) {
                     onChooseAnotherExit = { navigator.navigate(WarrenLocationPickerNavKey()) },
                 )
             }
+        }
+    }
+}
+
+/**
+ * The account's port-forward standing (warren-core doc 105 §5.4, desktop
+ * `PortForwardingStanding`): the ban in force with the day it lapses, then
+ * every live warning with its case reference, and how to contest one. The
+ * references are shown here and in the strike notice only, the one place the
+ * reader needs them to write to the abuse desk.
+ */
+@Composable
+private fun AccountStandingSection(standing: AccountStanding) {
+    val context = LocalContext.current
+    val locale = LocalConfiguration.current.locales[0]
+    val ban = standing.ban?.takeIf { it.inForce }
+    if (ban == null && standing.strikes.isEmpty()) return
+    Column(verticalArrangement = Arrangement.spacedBy(Dimens.smallPadding)) {
+        ban?.let {
+            Text(
+                text = AccountStandingText.ban(context, it, locale),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.error,
+            )
+        }
+        if (standing.strikes.isNotEmpty()) {
+            Text(
+                text = stringResource(R.string.account_standing_title),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            standing.strikes.forEachIndexed { index, strike ->
+                val notice = StrikeNotice(strike, ordinal = index + 1, threshold = standing.threshold)
+                Text(
+                    text =
+                        AccountStandingText.warning(context, notice, locale) +
+                            " " +
+                            AccountStandingText.caseReference(context, strike),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+            }
+            val uriHandler = LocalUriHandler.current
+            val email = stringResource(R.string.abuse_contact_email)
+            Text(
+                text = clickableAnnotatedString(
+                    text = stringResource(R.string.account_strike_contest),
+                    argument = email,
+                    linkStyle = SpanStyle(
+                        color = MaterialTheme.colorScheme.onSurface,
+                        textDecoration = TextDecoration.Underline,
+                    ),
+                    onClick = { uriHandler.openUri("mailto:$email") },
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
         }
     }
 }

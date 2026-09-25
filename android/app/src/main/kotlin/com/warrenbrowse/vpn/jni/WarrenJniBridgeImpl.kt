@@ -1,6 +1,7 @@
 package com.warrenbrowse.vpn.jni
 
 import com.warrenbrowse.vpn.lib.repository.WarrenJniBridge
+import com.warrenbrowse.vpn.lib.repository.WarrenStandingBridge
 import com.warrenbrowse.vpn.lib.repository.WarrenVersionVerdict
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.booleanOrNull
@@ -23,7 +24,13 @@ import kotlinx.serialization.json.jsonPrimitive
  * etc.) intentionally do NOT appear here; they stay app-private.
  */
 @Suppress("TooManyFunctions") // one delegation per JNI export: the count is the surface's size
-class WarrenJniBridgeImpl : WarrenJniBridge {
+class WarrenJniBridgeImpl : WarrenJniBridge, WarrenStandingBridge {
+    override fun accountStanding(mnemonic: String): String = ready {
+        WarrenJni.accountStanding(mnemonic)
+    }
+
+    override fun forgetAccountStanding() = ready { WarrenJni.forgetAccountStanding() }
+
     override fun generateMnemonic(): String = ready { WarrenJni.generateMnemonic() }
 
     override fun mnemonicPubkeySs58(mnemonic: String): String = ready {
