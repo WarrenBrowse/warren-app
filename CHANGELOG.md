@@ -32,6 +32,14 @@ Line wrap the file at 100 chars.                                              Th
   retry until the suspension ends.
 - [Android] Say why the server refused a forwarded port, no entitlement left or refused, and ask
   again automatically, instead of stopping on a generic failure.
+- [iOS] Show the warnings recorded against your account when a forwarded port is closed after an
+  abuse report: a notification for each warning, a banner with its case reference that opens the
+  page on contesting it, and the full list in the port forwarding screen with the address to write
+  to. The warnings show up as soon as the matching server update is live.
+- [iOS] Show a suspended account's suspension, with the day it ends when there is one, instead of
+  a plain disconnection, and stop the connection when the suspension is learned during a session.
+- [iOS] Say when the server refuses a forwarded port for want of an entitlement, and ask again
+  automatically instead of stopping on the first refusal.
 
 ## [1.1.35] - 2026-09-25
 ### Added

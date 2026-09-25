@@ -40,15 +40,28 @@ fn now_unix_secs() -> u64 {
         .unwrap_or(0)
 }
 
-fn spawn_refresh(manager: Arc<Manager>) {
+fn spawn_refresh(manager: Arc<Manager>, wallet_pubkey: [u8; 32]) {
     tokio::spawn(async move {
         // First tick fires immediately (top up before the first connect), then
         // every 10 min. The manager mints only epochs it has not minted yet.
         let mut tick = tokio::time::interval(Duration::from_secs(600));
         loop {
             tick.tick().await;
-            if let Err(e) = manager.refresh_auto(now_unix_secs()).await {
-                tracing::warn!(error = %e, "Warren v7 token refresh failed (keeping existing tokens)");
+            let now = now_unix_secs();
+            if let Err(e) = manager.refresh_auto(now).await {
+                // The issuer refuses a banned wallet (warren-core doc 105 §5.3):
+                // that goes to the standing, which blocks the tunnel before an
+                // exit is dialed. A v7 client never presents its wallet to an
+                // exit, so this is how it learns of the ban at all.
+                if crate::warren_standing_ffi::tunnel_store().on_refresh_error(
+                    &wallet_pubkey,
+                    &e,
+                    now,
+                ) {
+                    tracing::warn!("Warren v7 token refresh refused: the account is banned");
+                } else {
+                    tracing::warn!(error = %e, "Warren v7 token refresh failed (keeping existing tokens)");
+                }
             }
         }
     });
@@ -72,7 +85,7 @@ pub(crate) fn provider_for(signing_key: SigningKey) -> SessionTokenProvider {
                     ReqwestTransport::new(),
                 );
                 let manager = Arc::new(TokenManager::new(Arc::new(client)));
-                spawn_refresh(manager.clone());
+                spawn_refresh(manager.clone(), pubkey);
                 manager
             })
             .clone()

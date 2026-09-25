@@ -33,6 +33,7 @@ on:
       # path named after it.
       - "warren-forum/**"
       - "warren-incidents/**"
+      - "warren-standing/**"
       - "warren-product-env/**"
       # Replayed by the Swift unit tests: the scenery placement formula, the
       # forum link classes, the outcome envelopes.

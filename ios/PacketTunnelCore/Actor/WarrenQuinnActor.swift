@@ -176,7 +176,7 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
         // NAT-PMP events are state-neutral (surfaced via the App Group
         // broadcast layer), so they never touch the observed state.
         switch event {
-        case .natPmpMapped, .natPmpRenewed, .natPmpFailed, .natPmpRateLimited:
+        case .natPmpMapped, .natPmpRenewed, .natPmpFailed, .natPmpRateLimited, .natPmpRefused:
             return
         default:
             break
@@ -206,7 +206,16 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
             // a plain disconnect, none of that ran and the user was told
             // nothing at all.
             nextState = .error(ObservedBlockedState(reason: .accountExpired))
-        case .natPmpMapped, .natPmpRenewed, .natPmpFailed, .natPmpRateLimited:
+        case .banned(let reason, _):
+            // A suspension, which neither the out-of-time screen nor a plain
+            // disconnect describes. Its `[BANNED*]` token says whether it is
+            // for port-forwarding abuse; the lapse reaches the app through
+            // the App Group, written by the broadcast of the same event.
+            let blocked: BlockedStateReason =
+                WarrenBanReason.of(authFailedReason: reason) == .portForwarding
+                ? .accountBannedPortForwarding : .accountBanned
+            nextState = .error(ObservedBlockedState(reason: blocked))
+        case .natPmpMapped, .natPmpRenewed, .natPmpFailed, .natPmpRateLimited, .natPmpRefused:
             stateLock.unlock()
             return
         }

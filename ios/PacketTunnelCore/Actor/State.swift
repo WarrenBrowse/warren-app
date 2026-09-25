@@ -227,6 +227,14 @@ public enum BlockedStateReason: String, Codable, Equatable, Sendable {
     /// Account is expired.
     case accountExpired
 
+    /// The wallet is banned (warren-core doc 105), for any reason but
+    /// port-forwarding abuse. A suspension, not an expiry: renewing does not
+    /// lift it.
+    case accountBanned
+
+    /// The wallet is banned for port-forwarding abuse.
+    case accountBannedPortForwarding
+
     /// Device revoked.
     case deviceRevoked
 
@@ -254,7 +262,8 @@ public enum BlockedStateReason: String, Codable, Equatable, Sendable {
             .noRelaysSatisfyingFilterConstraints, .noRelaysSatisfyingObfuscationSettings, .readSettings,
             .invalidRelayPublicKey, .noRelaysSatisfyingObfuscationPortConstraints, .offline:
             return true
-        case .deviceRevoked, .deviceLoggedOut, .tunnelAdapter, .accountExpired, .invalidAccount, .unknown:
+        case .deviceRevoked, .deviceLoggedOut, .tunnelAdapter, .accountExpired, .invalidAccount, .unknown,
+            .accountBanned, .accountBannedPortForwarding:
             return false
         }
     }

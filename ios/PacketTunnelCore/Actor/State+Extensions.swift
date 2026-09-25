@@ -206,7 +206,8 @@ extension BlockedStateReason {
             .noRelaysSatisfyingDaitaConstraints, .readSettings, .invalidAccount,
             .accountExpired, .deviceRevoked, .unknown, .deviceLoggedOut, .outdatedSchema,
             .invalidRelayPublicKey, .noRelaysSatisfyingPortConstraints, .tunnelAdapter,
-            .noRelaysSatisfyingObfuscationPortConstraints, .offline:
+            .noRelaysSatisfyingObfuscationPortConstraints, .offline, .accountBanned,
+            .accountBannedPortForwarding:
             return false
         }
     }

@@ -19,6 +19,8 @@
 //! - voucher:      unsigned `POST /v1/register`    -> `{ expires_at }`
 //! - delete:       signed `DELETE /v1/account`
 //! - campaign:     signed `GET /v1/campaign/{id}/voucher` -> `{ code }`
+//! - standing:     signed `GET /v1/account/standing` -> the envelope of
+//!   `warren_standing::StandingStore::on_poll`
 //!
 //! Memory ownership: each call returns a heap `CString` holding a JSON
 //! envelope. The caller MUST free it via `warren_wallet_free_mnemonic`
@@ -342,4 +344,91 @@ pub unsafe extern "C" fn warren_account_delete(seed: *const u8) -> *mut c_char {
             Err(error) => err_client_json(&error),
         }
     })
+}
+
+/// Reads the ledger directory argument of the standing calls.
+///
+/// # Safety
+/// `dir`, when non-null, must be a valid null-terminated C string.
+unsafe fn read_dir(dir: *const c_char) -> Option<std::path::PathBuf> {
+    if dir.is_null() {
+        return None;
+    }
+    // SAFETY: `dir` is a valid null-terminated C string (precondition).
+    let dir = unsafe { CStr::from_ptr(dir) }.to_str().ok()?;
+    (!dir.is_empty()).then(|| std::path::PathBuf::from(dir))
+}
+
+/// Signed `GET /v1/account/standing` (warren-core doc 105 §5.4): the wallet's
+/// live port-forward strikes with their case references, the ban with its
+/// lapse, and the strikes this device has not warned about yet, each exactly
+/// once. Which strikes were announced is remembered in a ledger of digests in
+/// `ledger_dir`, the app's own container.
+///
+/// Returns the envelope `warren_standing::StandingStore::on_poll` documents,
+/// `{"ok":..,"reported":..,"standing":..,"new_strikes":[..]}`: `reported` is
+/// false on an API that does not serve the standing yet, which is quiet. The
+/// case references and ports go to the account's own screens and nowhere
+/// else, never to a log.
+///
+/// # Safety
+/// `seed`, when non-null, must point to at least 32 readable bytes;
+/// `ledger_dir`, when non-null, must be a valid null-terminated C string. The
+/// returned pointer must be freed once via `warren_wallet_free_mnemonic`.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn warren_account_standing(
+    seed: *const u8,
+    ledger_dir: *const c_char,
+) -> *mut c_char {
+    crate::ffi_guard(std::ptr::null_mut(), || {
+        // SAFETY: `seed` upholds the documented precondition.
+        let Some(seed) = (unsafe { read_seed(seed) }) else {
+            return err_input_json("null seed");
+        };
+        // SAFETY: `ledger_dir` upholds the documented precondition.
+        let Some(dir) = (unsafe { read_dir(ledger_dir) }) else {
+            return err_input_json("null ledger directory");
+        };
+        let handle = match crate::warren_ios_runtime() {
+            Ok(handle) => handle,
+            Err(error) => return err_input_json(&format!("runtime unavailable: {error}")),
+        };
+        let identity = WarrenIdentity::from_seed(&seed);
+        let wallet_pubkey = identity.public_key();
+        let client =
+            WarrenApiClient::new(WARREN_API_URL.to_owned(), identity, ReqwestTransport::new());
+        let result = handle.block_on(client.account_standing());
+        if let Err(ClientError::ServerStatus { status, .. }) = &result
+            && *status != 404
+        {
+            // The status only: the body may echo identity material.
+            tracing::warn!(status, "account standing refused by the server");
+        }
+        into_cstring(crate::warren_standing_ffi::app_store(&dir).on_poll(
+            &wallet_pubkey,
+            result,
+            now_unix_secs(),
+        ))
+    })
+}
+
+/// The wallet left this device: forgets its standing and which of its strikes
+/// were announced, the ledger in `ledger_dir` included.
+///
+/// # Safety
+/// `ledger_dir`, when non-null, must be a valid null-terminated C string.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn warren_account_standing_forget(ledger_dir: *const c_char) {
+    crate::ffi_guard((), || {
+        // SAFETY: `ledger_dir` upholds the documented precondition.
+        if let Some(dir) = unsafe { read_dir(ledger_dir) } {
+            crate::warren_standing_ffi::app_store(&dir).forget();
+        }
+    })
+}
+
+fn now_unix_secs() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |d| d.as_secs())
 }

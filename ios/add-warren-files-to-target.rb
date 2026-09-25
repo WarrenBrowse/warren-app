@@ -18,6 +18,13 @@ project = Xcodeproj::Project.open(PROJECT_PATH)
 
 # Map of (file path relative to `ios/`) -> target name.
 FILES_TO_ADD = {
+  # Port-forward abuse standing (warren-core doc 105): the envelope and the
+  # signed poll, the feed and its banner, and their tests.
+  "WarrenRustRuntime/WarrenAccountStanding.swift" => "WarrenRustRuntime",
+  "WarrenRustRuntimeTests/WarrenAccountStandingTests.swift" => "WarrenRustRuntimeTests",
+  "WarrenVPN/Classes/WarrenAccountStandingFeed.swift" => "WarrenVPN",
+  "WarrenVPN/Notifications/Notification Providers/WarrenAccountStrikeNotificationProvider.swift" => "WarrenVPN",
+  "WarrenVPNTests/MullvadVPN/Classes/WarrenAccountStandingFeedTests.swift" => "WarrenVPNTests",
   # UI appearance / brand tokens (consumed by both UIKit + SwiftUI).
   "WarrenVPN/UI appearance/UIColor+Warren.swift" => "WarrenVPN",
 

@@ -202,6 +202,10 @@ public enum WarrenTunnelEvent: Sendable {
     /// `disconnected`, which is what a refusal used to arrive as, leaving the
     /// app to report a tunnel that simply went down with no reason.
     case unauthorized
+    /// The wallet is banned (warren-core doc 105): the auth-failed `reason`,
+    /// opening on its `[BANNED*]` token, and when the ban lapses, `nil` when
+    /// the source did not say. Terminal like `unauthorized`.
+    case banned(reason: String, lapsesAt: Date?)
     case reconnecting
     case failover(toExit: String)
     case natPmpMapped(internalPort: UInt16, externalPort: UInt16, lifetime: UInt32)
@@ -211,6 +215,27 @@ public enum WarrenTunnelEvent: Sendable {
     /// class of its own, not a failure: the request will work again on its
     /// own, and the screen can say when.
     case natPmpRateLimited(retryAfter: UInt32)
+    /// The exit refused the mapping as not authorized and the tunnel asks
+    /// again on its own in `retryIn` seconds. `refusal` is `no_entitlement`
+    /// or `entitlement_refused`.
+    case natPmpRefused(refusal: String, retryIn: UInt32)
+}
+
+/// What an auth-failed reason says about a ban (warren-core doc 105), read off
+/// its leading `[TOKEN]`, the form `warren_standing::Ban::auth_failed_reason`
+/// writes and the desktop and Android read.
+public enum WarrenBanReason: Equatable, Sendable {
+    /// Banned for port-forwarding abuse.
+    case portForwarding
+    /// Banned for any other reason.
+    case other
+
+    /// The ban `reason` names, `nil` when it names none.
+    public static func of(authFailedReason reason: String) -> WarrenBanReason? {
+        if reason.hasPrefix("[BANNED_PORT_FORWARDING]") { return .portForwarding }
+        if reason.hasPrefix("[BANNED]") { return .other }
+        return nil
+    }
 }
 
 /// What the goodput prober makes of the live datapath.
@@ -501,6 +526,7 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
         // Named rather than swallowed by the default arm below, which is what
         // turned a policy refusal into a plain disconnect.
         case Unauthorized: mappedState = .failed("subscription expired")
+        case Banned: mappedState = .failed("account banned")
         default: mappedState = .disconnected
         }
         let connectedDuration: UInt64? =
@@ -887,6 +913,13 @@ private let eventCallbackBridge:
         case EventConnected: mapped = .connected
         case EventDisconnected: mapped = .disconnected
         case EventUnauthorized: mapped = .unauthorized
+        case EventBanned:
+            let reason = event.data_ban_reason.flatMap { String(cString: $0) } ?? ""
+            let lapses = event.data_ban_lapses_at_unix_secs
+            mapped = .banned(
+                reason: reason,
+                lapsesAt: lapses == 0 ? nil : Date(timeIntervalSince1970: TimeInterval(lapses))
+            )
         case EventReconnecting: mapped = .reconnecting
         case EventFailover:
             let country = event.data_failover_country_code.flatMap { String(cString: $0) } ?? ""
@@ -904,6 +937,9 @@ private let eventCallbackBridge:
             mapped = .natPmpFailed(reason: reason)
         case EventNatPmpRateLimited:
             mapped = .natPmpRateLimited(retryAfter: event.data_nat_pmp_retry_after_seconds)
+        case EventNatPmpRefused:
+            let refusal = event.data_nat_pmp_failure_reason.flatMap { String(cString: $0) } ?? ""
+            mapped = .natPmpRefused(refusal: refusal, retryIn: event.data_nat_pmp_retry_after_seconds)
         default:
             return
         }

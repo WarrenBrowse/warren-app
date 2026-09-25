@@ -67,6 +67,12 @@ pub(crate) enum NatPmpEventKind {
     Failed { reason: String },
     /// The exit is refusing new allocations for `retry_after_secs`.
     RateLimited { retry_after_secs: u32 },
+    /// The exit refused the mapping as not authorized (warren-core doc 105)
+    /// and the tunnel asks again after `retry_in_secs`.
+    Refused {
+        refusal: warren_standing::PortRefusal,
+        retry_in_secs: u32,
+    },
     /// Event with no FFI representation: `Cancelled` lands here, since
     /// teardown already resets what the screen shows.
     Ignored,
@@ -135,7 +141,26 @@ pub(crate) fn project_natpmp_event(kind: &NatPmpEventKind) -> Option<NatPmpFfiEv
             reason: None,
             retry_after_secs: *retry_after_secs,
         }),
+        NatPmpEventKind::Refused {
+            refusal,
+            retry_in_secs,
+        } => Some(NatPmpFfiEvent {
+            tag: WarrenTunnelEventTagC::EventNatPmpRefused,
+            external_port: 0,
+            lifetime_secs: 0,
+            reason: Some(refusal_name(*refusal).to_owned()),
+            retry_after_secs: *retry_in_secs,
+        }),
         NatPmpEventKind::Ignored => None,
+    }
+}
+
+/// The name a refusal crosses the FFI under, the same words Android's status
+/// JSON uses.
+fn refusal_name(refusal: warren_standing::PortRefusal) -> &'static str {
+    match refusal {
+        warren_standing::PortRefusal::NoEntitlement => "no_entitlement",
+        warren_standing::PortRefusal::EntitlementRefused => "entitlement_refused",
     }
 }
 
@@ -245,6 +270,22 @@ mod tests {
             let ffi = project_natpmp_event(&kind).expect("must project");
             assert_eq!(ffi.retry_after_secs, 0, "{kind:?}");
         }
+    }
+
+    /// A refusal says what was missing and when the tunnel asks again, and it
+    /// is not a failure: the screen shows a retry, not a dead end.
+    #[test]
+    fn a_refusal_names_what_was_refused_and_when_it_is_asked_again() {
+        let ffi = project_natpmp_event(&NatPmpEventKind::Refused {
+            refusal: warren_standing::PortRefusal::NoEntitlement,
+            retry_in_secs: 30,
+        })
+        .expect("a refusal is shown");
+
+        assert_eq!(ffi.tag, WarrenTunnelEventTagC::EventNatPmpRefused);
+        assert_eq!(ffi.reason.as_deref(), Some("no_entitlement"));
+        assert_eq!(ffi.retry_after_secs, 30);
+        assert_eq!(ffi.external_port, 0);
     }
 
     #[test]

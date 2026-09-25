@@ -101,6 +101,7 @@ public protocol AppPreferencesDataSource {
     var hasCompletedWarrenOnboarding: Bool { get set }
     var warrenAcknowledgedFailoverCount: Int { get set }
     var warrenDismissedAnnouncements: [String] { get set }
+    var warrenDismissedStrikes: [String] { get set }
 }
 
 enum AppStorageKey: String {
@@ -117,6 +118,7 @@ enum AppStorageKey: String {
     case warrenAcknowledgedFailoverCount
     case warrenEnvStandDown
     case warrenDismissedAnnouncements
+    case warrenDismissedStrikes
 }
 
 public final class AppPreferences: AppPreferencesDataSource {
@@ -179,4 +181,10 @@ public final class AppPreferences: AppPreferencesDataSource {
     /// something the reader has dealt with.
     @CompositeStorage(key: AppStorageKey.warrenDismissedAnnouncements.rawValue, container: .standard)
     public var warrenDismissedAnnouncements: [String] = []
+
+    /// Digests of the port-forward strikes whose banner the reader has put
+    /// away (warren-core doc 105). A digest, never the case reference, so the
+    /// preferences name no case; the next strike raises the banner again.
+    @CompositeStorage(key: AppStorageKey.warrenDismissedStrikes.rawValue, container: .standard)
+    public var warrenDismissedStrikes: [String] = []
 }

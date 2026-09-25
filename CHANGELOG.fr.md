@@ -24,6 +24,16 @@ par l'application, gardez-le tel quel.
   et ne réessaie pas avant la fin de la suspension.
 - [Android] Dire pourquoi le serveur a refusé un port redirigé, plus de droit de port disponible
   ou refusé, et redemander automatiquement, au lieu de s'arrêter sur un échec générique.
+- [iOS] Afficher les avertissements enregistrés sur votre compte quand un port redirigé est fermé
+  après un signalement d'abus : une notification par avertissement, une bannière avec sa référence
+  de dossier qui ouvre la page expliquant comment le contester, et la liste complète dans l'écran
+  port forwarding avec l'adresse à laquelle écrire. Les avertissements s'affichent dès que la mise
+  à jour serveur correspondante est en ligne.
+- [iOS] Afficher la suspension d'un compte, avec le jour où elle prend fin quand il y en a un, au
+  lieu d'une simple déconnexion, et arrêter la connexion quand la suspension est apprise en cours
+  de session.
+- [iOS] Dire quand le serveur refuse un port redirigé faute de droit de port, et redemander
+  automatiquement au lieu de s'arrêter au premier refus.
 
 ## [1.1.35] - 2026-09-25
 ### Ajouté

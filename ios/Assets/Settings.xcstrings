@@ -14992,6 +14992,3582 @@
           }
         }
       }
+    },
+    "Access suspended for port-forwarding abuse until %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access suspended for port-forwarding abuse until %@."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تعليق الوصول بسبب إساءة استخدام إعادة توجيه المنافذ حتى %@."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adgang suspenderet for misbrug af port forwarding indtil %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zugang bis %@ wegen Port-Forwarding-Missbrauchs gesperrt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acceso suspendido por abuso del port forwarding hasta el %@."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دسترسی به دلیل سوءاستفاده از هدایت درگاه تا %@ معلق شد."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Käyttöoikeus keskeytetty port forwardingin väärinkäytön vuoksi %@ asti."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accès suspendu pour abus du port forwarding jusqu'au %@."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accesso sospeso per abuso del port forwarding fino al %@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ポート転送の不正利用により、%@ までアクセスが停止されています。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포트 포워딩 남용으로 %@까지 액세스가 정지되었습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ပို့တ် ပြန်ညွှန်းခြင်းကို အလွဲသုံးမှုကြောင့် %@ အထိ ဝင်ရောက်ခွင့်ကို ဆိုင်းငံ့ထားသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilgang suspendert for misbruk av port forwarding frem til %@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toegang opgeschort wegens misbruik van port forwarding tot %@."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dostęp zawieszony za nadużycie port forwarding do %@."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acesso suspenso por abuso do port forwarding até %@."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acces suspendat pentru abuz de port forwarding până la %@."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступ приостановлен до %@ за злоупотребление переадресацией портов."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åtkomsten avstängd för missbruk av port forwarding fram till %@."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การเข้าถึงถูกระงับจนถึง %@ เนื่องจากใช้การส่งต่อพอร์ตในทางที่ผิด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port forwarding kötüye kullanımı nedeniyle erişim %@ tarihine kadar askıya alındı."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступ призупинено до %@ за зловживання переадресацією портів."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "因滥用端口转发，访问权限已暂停至 %@。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "因濫用連接埠轉發，存取權限已暫停至 %@。"
+          }
+        }
+      }
+    },
+    "Access suspended for port-forwarding abuse.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access suspended for port-forwarding abuse."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تعليق الوصول بسبب إساءة استخدام إعادة توجيه المنافذ."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adgang suspenderet for misbrug af port forwarding."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zugang wegen Port-Forwarding-Missbrauchs gesperrt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acceso suspendido por abuso del port forwarding."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دسترسی به دلیل سوءاستفاده از هدایت درگاه معلق شد."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Käyttöoikeus keskeytetty port forwardingin väärinkäytön vuoksi."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accès suspendu pour abus du port forwarding."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accesso sospeso per abuso del port forwarding."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ポート転送の不正利用により、アクセスが停止されています。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포트 포워딩 남용으로 액세스가 정지되었습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ပို့တ် ပြန်ညွှန်းခြင်းကို အလွဲသုံးမှုကြောင့် ဝင်ရောက်ခွင့်ကို ဆိုင်းငံ့ထားသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilgang suspendert for misbruk av port forwarding."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toegang opgeschort wegens misbruik van port forwarding."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dostęp zawieszony za nadużycie port forwarding."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acesso suspenso por abuso do port forwarding."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acces suspendat pentru abuz de port forwarding."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступ приостановлен за злоупотребление переадресацией портов."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åtkomsten avstängd för missbruk av port forwarding."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การเข้าถึงถูกระงับเนื่องจากใช้การส่งต่อพอร์ตในทางที่ผิด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port forwarding kötüye kullanımı nedeniyle erişim askıya alındı."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступ призупинено за зловживання переадресацією портів."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "因滥用端口转发，访问权限已暂停。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "因濫用連接埠轉發，存取權限已暫停。"
+          }
+        }
+      }
+    },
+    "Access suspended until %@.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access suspended until %@."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تعليق الوصول حتى %@."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adgang suspenderet indtil %@."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zugang bis %@ gesperrt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acceso suspendido hasta el %@."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دسترسی تا %@ معلق شد."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Käyttöoikeus keskeytetty %@ asti."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accès suspendu jusqu'au %@."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accesso sospeso fino al %@."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ までアクセスが停止されています。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@까지 액세스가 정지되었습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ အထိ ဝင်ရောက်ခွင့်ကို ဆိုင်းငံ့ထားသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilgang suspendert frem til %@."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toegang opgeschort tot %@."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dostęp zawieszony do %@."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acesso suspenso até %@."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acces suspendat până la %@."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступ приостановлен до %@."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åtkomsten avstängd fram till %@."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การเข้าถึงถูกระงับจนถึง %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erişim %@ tarihine kadar askıya alındı."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступ призупинено до %@."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "访问权限已暂停至 %@。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "存取權限已暫停至 %@。"
+          }
+        }
+      }
+    },
+    "Access suspended.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Access suspended."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تعليق الوصول."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Adgang suspenderet."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zugang gesperrt."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acceso suspendido."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دسترسی معلق شد."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Käyttöoikeus keskeytetty."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accès suspendu."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accesso sospeso."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "アクセスが停止されています。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "액세스가 정지되었습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဝင်ရောက်ခွင့်ကို ဆိုင်းငံ့ထားသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilgang suspendert."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Toegang opgeschort."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dostęp zawieszony."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acesso suspenso."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acces suspendat."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступ приостановлен."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Åtkomsten avstängd."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การเข้าถึงถูกระงับ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Erişim askıya alındı."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Доступ призупинено."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "访问权限已暂停。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "存取權限已暫停。"
+          }
+        }
+      }
+    },
+    "Case reference: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Case reference: %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مرجع الملف: %@"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sagsreference: %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktenzeichen: %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referencia del caso: %@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شماره پرونده: %@"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tapauksen viite: %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Référence du dossier : %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riferimento della pratica: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "案件番号: %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "사건 번호: %@"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အမှုတွဲ ရည်ညွှန်းချက်: %@"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Saksreferanse: %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dossierreferentie: %@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Numer sprawy: %@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referência do processo: %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Referința dosarului: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номер дела: %@"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ärendereferens: %@"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "หมายเลขอ้างอิงกรณี: %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dosya referansı: %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Номер справи: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "案件编号：%@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "案件編號：%@"
+          }
+        }
+      }
+    },
+    "PORT FORWARDING WARNING": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PORT FORWARDING WARNING"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مخالفة إعادة توجيه المنافذ"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PORT FORWARDING-ADVARSEL"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PORT-FORWARDING-VERSTOSS"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FALTA DE PORT FORWARDING"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تخلف هدایت درگاه"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PORT FORWARDING -RIKE"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AVERTISSEMENT PORT FORWARDING"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "RICHIAMO PORT FORWARDING"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ポート転送の違反"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포트 포워딩 위반"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ပို့တ် ပြန်ညွှန်းခြင်း သတိပေးအမှတ်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PORT FORWARDING-PRIKK"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PORT FORWARDING-OVERTREDING"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "OSTRZEŻENIE PORT FORWARDING"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "FALTA DE PORT FORWARDING"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "AVERTISMENT PORT FORWARDING"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "НАРУШЕНИЕ ПРИ ПЕРЕАДРЕСАЦИИ ПОРТОВ"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PORT FORWARDING-PRICK"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การละเมิดการส่งต่อพอร์ต"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "PORT FORWARDING İHLALİ"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ПОРУШЕННЯ ПІД ЧАС ПЕРЕАДРЕСАЦІЇ ПОРТІВ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "端口转发违规"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連接埠轉發違規"
+          }
+        }
+      }
+    },
+    "Port forwarding warning": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port forwarding warning"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مخالفة إعادة توجيه المنافذ"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port forwarding-advarsel"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port-Forwarding-Verstoß"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta de port forwarding"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تخلف هدایت درگاه"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port forwarding -rike"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avertissement port forwarding"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Richiamo port forwarding"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ポート転送の違反"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포트 포워딩 위반"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ပို့တ် ပြန်ညွှန်းခြင်း သတိပေးအမှတ်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port forwarding-prikk"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port forwarding-overtreding"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ostrzeżenie port forwarding"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta de port forwarding"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avertisment port forwarding"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нарушение при переадресации портов"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port forwarding-prick"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การละเมิดการส่งต่อพอร์ต"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Port forwarding ihlali"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Порушення під час переадресації портів"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "端口转发违规"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "連接埠轉發違規"
+          }
+        }
+      }
+    },
+    "Status: no entitlement left, retrying in %1$@s": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: no entitlement left, retrying in %1$@s"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحالة: لم يتبقَّ حق فتح منفذ، إعادة المحاولة خلال %1$@ ثانية"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: ingen porttilladelse tilbage, prøver igen om %1$@s"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: kein Port-Kontingent mehr, erneuter Versuch in %1$@s"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado: sin derecho de puerto disponible, reintento en %1$@s"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وضعیت: سهمیه درگاه باقی نمانده، تلاش مجدد در %1$@ ثانیه"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tila: porttioikeus käytetty loppuun, uudelleenyritys %1$@s kuluttua"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statut : plus de droit de port disponible, nouvel essai dans %1$@s"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stato: nessun diritto di porta disponibile, nuovo tentativo tra %1$@s"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ステータス: ポート利用枠なし、%1$@ 秒後に再試行"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "상태: 남은 포트 권한 없음, %1$@초 후 재시도"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အခြေအနေ: ပို့တ်ခွင့် မကျန်တော့ပါ၊ %1$@s အတွင်း ပြန်ကြိုးစားမည်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: ingen porttillatelse igjen, prøver på nytt om %1$@s"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: geen poortrecht meer over, opnieuw proberen over %1$@s"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: brak uprawnienia do portu, ponowna próba za %1$@s"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado: sem direito de porta disponível, nova tentativa em %1$@s"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stare: niciun drept de port disponibil, se reîncearcă în %1$@s"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Статус: права на порт исчерпаны, повтор через %1$@с"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: inget porttillstånd kvar, försöker igen om %1$@s"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "สถานะ: ไม่มีสิทธิ์เปิดพอร์ตเหลือแล้ว ลองใหม่ใน %1$@s"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durum: bağlantı noktası hakkı kalmadı, %1$@s içinde yeniden denenecek"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Статус: права на порт вичерпано, повтор через %1$@с"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "状态：已无端口额度，%1$@ 秒后重试"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "狀態：已無連接埠額度，%1$@ 秒後重試"
+          }
+        }
+      }
+    },
+    "Status: refused, retrying in %1$@s": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: refused, retrying in %1$@s"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحالة: مرفوض، إعادة المحاولة خلال %1$@ ثانية"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: afvist, prøver igen om %1$@s"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: abgelehnt, erneuter Versuch in %1$@s"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado: rechazado, reintento en %1$@s"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وضعیت: رد شد، تلاش مجدد در %1$@ ثانیه"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tila: hylätty, uudelleenyritys %1$@s kuluttua"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statut : refusé, nouvel essai dans %1$@s"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stato: rifiutato, nuovo tentativo tra %1$@s"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ステータス: 拒否、%1$@ 秒後に再試行"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "상태: 거부됨, %1$@초 후 재시도"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အခြေအနေ: ငြင်းပယ်ခံရသည်၊ %1$@s အတွင်း ပြန်ကြိုးစားမည်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: avvist, prøver på nytt om %1$@s"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: geweigerd, opnieuw proberen over %1$@s"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: odrzucono, ponowna próba za %1$@s"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado: recusado, nova tentativa em %1$@s"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stare: refuzat, se reîncearcă în %1$@s"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Статус: отказано, повтор через %1$@с"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: nekad, försöker igen om %1$@s"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "สถานะ: ถูกปฏิเสธ ลองใหม่ใน %1$@s"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durum: reddedildi, %1$@s içinde yeniden denenecek"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Статус: відмовлено, повтор через %1$@с"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "状态：已拒绝，%1$@ 秒后重试"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "狀態：已拒絕，%1$@ 秒後重試"
+          }
+        }
+      }
+    },
+    "To contest a warning, write to %@ quoting its case reference.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To contest a warning, write to %@ quoting its case reference."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "للاعتراض على مخالفة، راسل %@ مع ذكر مرجع ملفها."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Skriv til %@ med sagsreferencen for at bestride en advarsel."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Um einen Verstoß anzufechten, schreib an %@ und gib sein Aktenzeichen an."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para recurrir una falta, escribe a %@ indicando su referencia de caso."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برای اعتراض به یک تخلف، با ذکر شماره پرونده آن به %@ بنویسید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voit riitauttaa rikkeen kirjoittamalla osoitteeseen %@ ja mainitsemalla tapauksen viitteen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pour contester un avertissement, écrivez à %@ en citant sa référence de dossier."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Per contestare un richiamo, scrivi a %@ indicando il riferimento della pratica."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "違反に異議を申し立てるには、案件番号を記載して %@ までご連絡ください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "위반에 이의를 제기하려면 사건 번호를 기재하여 %@(으)로 연락하세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သတိပေးအမှတ်ကို အယူခံဝင်ရန် ၎င်း၏ အမှုတွဲ ရည်ညွှန်းချက်ကို ဖော်ပြ၍ %@ သို့ စာရေးပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For å bestride en prikk, skriv til %@ og oppgi saksreferansen."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Om bezwaar te maken tegen een overtreding, schrijf je naar %@ met vermelding van de dossierreferentie."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aby zakwestionować ostrzeżenie, napisz na %@, podając jego numer sprawy."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para contestar uma falta, escreva para %@ indicando a respetiva referência do processo."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pentru a contesta un avertisment, scrie la %@ citând referința dosarului."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Чтобы оспорить нарушение, напишите на %@, указав номер дела."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Om du vill bestrida en prick, skriv till %@ och ange ärendereferensen."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "หากต้องการโต้แย้งการละเมิด ให้เขียนถึง %@ โดยระบุหมายเลขอ้างอิงกรณี"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bir ihlale itiraz etmek için dosya referansını belirterek %@ adresine yazın."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Щоб оскаржити порушення, напишіть на %@, вказавши номер справи."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "如需对违规提出申诉，请写信至 %@ 并注明其案件编号。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "如需對違規提出申訴，請寫信至 %@ 並註明其案件編號。"
+          }
+        }
+      }
+    },
+    "Warning %1$ld of %2$ld: port %3$ld was closed on %4$@ after an abuse report (%5$@).": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warning %1$ld of %2$ld: port %3$ld was closed on %4$@ after an abuse report (%5$@)."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المخالفة %1$ld من %2$ld: أُغلق المنفذ %3$ld في %4$@ بعد بلاغ إساءة استخدام (%5$@)."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advarsel %1$ld af %2$ld: port %3$ld blev lukket den %4$@ efter en misbrugsrapport (%5$@)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verstoß %1$ld von %2$ld: Port %3$ld wurde am %4$@ nach einer Missbrauchsmeldung geschlossen (%5$@)."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta %1$ld de %2$ld: el puerto %3$ld se cerró el %4$@ tras un informe de abuso (%5$@)."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تخلف %1$ld از %2$ld: درگاه %3$ld در %4$@ پس از گزارش سوءاستفاده بسته شد (%5$@)."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rike %1$ld/%2$ld: portti %3$ld suljettiin %4$@ väärinkäyttöilmoituksen jälkeen (%5$@)."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avertissement %1$ld sur %2$ld : le port %3$ld a été fermé le %4$@ après un signalement (%5$@)."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Richiamo %1$ld di %2$ld: la porta %3$ld è stata chiusa il %4$@ dopo una segnalazione di abuso (%5$@)."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "違反 %1$ld/%2$ld: 不正利用の報告 (%5$@) を受けて、%4$@ にポート %3$ld を閉じました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "위반 %1$ld/%2$ld: 남용 신고(%5$@)에 따라 %4$@에 포트 %3$ld을(를) 닫았습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သတိပေးအမှတ် %1$ld / %2$ld: အလွဲသုံးမှု အစီရင်ခံစာ (%5$@) ကြောင့် ပို့တ် %3$ld ကို %4$@ တွင် ပိတ်ခဲ့သည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prikk %1$ld av %2$ld: port %3$ld ble stengt %4$@ etter en misbruksrapport (%5$@)."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overtreding %1$ld van %2$ld: poort %3$ld is op %4$@ gesloten na een misbruikmelding (%5$@)."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ostrzeżenie %1$ld z %2$ld: port %3$ld został zamknięty %4$@ po zgłoszeniu nadużycia (%5$@)."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta %1$ld de %2$ld: a porta %3$ld foi fechada em %4$@ após uma denúncia de abuso (%5$@)."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avertismentul %1$ld din %2$ld: portul %3$ld a fost închis pe %4$@ după o raportare de abuz (%5$@)."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нарушение %1$ld из %2$ld: порт %3$ld закрыт %4$@ после жалобы на злоупотребление (%5$@)."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prick %1$ld av %2$ld: port %3$ld stängdes den %4$@ efter en missbruksanmälan (%5$@)."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การละเมิดครั้งที่ %1$ld จาก %2$ld: พอร์ต %3$ld ถูกปิดเมื่อ %4$@ หลังมีรายงานการใช้งานในทางที่ผิด (%5$@)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İhlal %1$ld/%2$ld: %3$ld numaralı bağlantı noktası, bir kötüye kullanım bildiriminin ardından %4$@ tarihinde kapatıldı (%5$@)."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Порушення %1$ld з %2$ld: порт %3$ld закрито %4$@ після скарги на зловживання (%5$@)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "违规 %1$ld/%2$ld：端口 %3$ld 因滥用举报（%5$@）已于 %4$@ 关闭。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "違規 %1$ld/%2$ld：連接埠 %3$ld 因濫用檢舉（%5$@）已於 %4$@ 關閉。"
+          }
+        }
+      }
+    },
+    "Warning %1$ld: port %2$ld was closed on %3$@ after an abuse report (%4$@).": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warning %1$ld: port %2$ld was closed on %3$@ after an abuse report (%4$@)."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المخالفة %1$ld: أُغلق المنفذ %2$ld في %3$@ بعد بلاغ إساءة استخدام (%4$@)."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advarsel %1$ld: port %2$ld blev lukket den %3$@ efter en misbrugsrapport (%4$@)."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verstoß %1$ld: Port %2$ld wurde am %3$@ nach einer Missbrauchsmeldung geschlossen (%4$@)."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta %1$ld: el puerto %2$ld se cerró el %3$@ tras un informe de abuso (%4$@)."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تخلف %1$ld: درگاه %2$ld در %3$@ پس از گزارش سوءاستفاده بسته شد (%4$@)."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rike %1$ld: portti %2$ld suljettiin %3$@ väärinkäyttöilmoituksen jälkeen (%4$@)."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avertissement %1$ld : le port %2$ld a été fermé le %3$@ après un signalement (%4$@)."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Richiamo %1$ld: la porta %2$ld è stata chiusa il %3$@ dopo una segnalazione di abuso (%4$@)."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "違反 %1$ld: 不正利用の報告 (%4$@) を受けて、%3$@ にポート %2$ld を閉じました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "위반 %1$ld: 남용 신고(%4$@)에 따라 %3$@에 포트 %2$ld을(를) 닫았습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သတိပေးအမှတ် %1$ld: အလွဲသုံးမှု အစီရင်ခံစာ (%4$@) ကြောင့် ပို့တ် %2$ld ကို %3$@ တွင် ပိတ်ခဲ့သည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prikk %1$ld: port %2$ld ble stengt %3$@ etter en misbruksrapport (%4$@)."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overtreding %1$ld: poort %2$ld is op %3$@ gesloten na een misbruikmelding (%4$@)."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ostrzeżenie %1$ld: port %2$ld został zamknięty %3$@ po zgłoszeniu nadużycia (%4$@)."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta %1$ld: a porta %2$ld foi fechada em %3$@ após uma denúncia de abuso (%4$@)."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avertismentul %1$ld: portul %2$ld a fost închis pe %3$@ după o raportare de abuz (%4$@)."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нарушение %1$ld: порт %2$ld закрыт %3$@ после жалобы на злоупотребление (%4$@)."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prick %1$ld: port %2$ld stängdes den %3$@ efter en missbruksanmälan (%4$@)."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การละเมิดครั้งที่ %1$ld: พอร์ต %2$ld ถูกปิดเมื่อ %3$@ หลังมีรายงานการใช้งานในทางที่ผิด (%4$@)"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İhlal %1$ld: %2$ld numaralı bağlantı noktası, bir kötüye kullanım bildiriminin ardından %3$@ tarihinde kapatıldı (%4$@)."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Порушення %1$ld: порт %2$ld закрито %3$@ після скарги на зловживання (%4$@)."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "违规 %1$ld：端口 %2$ld 因滥用举报（%4$@）已于 %3$@ 关闭。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "違規 %1$ld：連接埠 %2$ld 因濫用檢舉（%4$@）已於 %3$@ 關閉。"
+          }
+        }
+      }
+    },
+    "Warnings": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warnings"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المخالفات"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Advarsler"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Verstöße"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Faltas"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تخلفات"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rikkeet"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avertissements"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Richiami"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "違反"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "위반"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သတိပေးအမှတ်များ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prikker"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Overtredingen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ostrzeżenia"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Faltas"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avertismente"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Нарушения"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prickar"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การละเมิด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "İhlaller"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Порушення"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "违规记录"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "違規紀錄"
+          }
+        }
+      }
+    },
+    "Your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تعليق وصولك بعد بلاغات إساءة استخدام متكررة بشأن منفذ مُعاد توجيهه. يمكنك الاعتراض على ذلك عبر %@"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Din adgang er suspenderet efter gentagne misbrugsrapporter om en videresendt port. Du kan bestride dette på %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Zugang wurde nach wiederholten Missbrauchsmeldungen zu einem weitergeleiteten Port gesperrt. Du kannst dagegen Einspruch erheben unter %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu acceso ha sido suspendido tras varios informes de abuso relacionados con un puerto reenviado. Puedes recurrir esta decisión en %@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دسترسی شما پس از گزارش‌های مکرر سوءاستفاده درباره یک درگاه هدایت‌شده معلق شد. می‌توانید در %@ اعتراض کنید"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Käyttöoikeutesi on keskeytetty toistuvien väärinkäyttöilmoitusten vuoksi, jotka koskevat ohjattua porttia. Voit riitauttaa tämän osoitteessa %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre accès a été suspendu après des signalements d'abus répétés concernant un port redirigé. Vous pouvez contester cette décision sur %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il tuo accesso è stato sospeso dopo ripetute segnalazioni di abuso relative a una porta inoltrata. Puoi contestare la decisione su %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "転送ポートに関する不正利用の報告が繰り返されたため、アクセスが停止されました。異議申し立ては %@ から行えます"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포워딩된 포트에 대한 남용 신고가 반복되어 액세스가 정지되었습니다. %@ 에서 이의를 제기할 수 있습니다"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ပြန်ညွှန်းထားသော ပို့တ်နှင့်ပတ်သက်၍ အလွဲသုံးမှု အစီရင်ခံစာများ ထပ်ခါထပ်ခါ ရရှိပြီးနောက် သင့်ဝင်ရောက်ခွင့်ကို ဆိုင်းငံ့ထားသည်။ %@ တွင် အယူခံဝင်နိုင်သည်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilgangen din er suspendert etter gjentatte misbruksrapporter om en videresendt port. Du kan bestride dette på %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je toegang is opgeschort na herhaalde misbruikmeldingen over een doorgeschakelde poort. Je kunt hiertegen bezwaar maken op %@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Twój dostęp został zawieszony po powtarzających się zgłoszeniach nadużyć dotyczących przekierowanego portu. Możesz to zakwestionować na %@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O seu acesso foi suspenso após denúncias repetidas de abuso relacionadas com uma porta encaminhada. Pode contestar em %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accesul dvs. a fost suspendat după raportări repetate de abuz privind un port redirecționat. Puteți contesta la %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш доступ приостановлен после повторных жалоб на злоупотребления с переадресованным портом. Оспорить решение можно на %@"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Din åtkomst har stängts av efter upprepade missbruksanmälningar om en vidarebefordrad port. Du kan bestrida detta på %@"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การเข้าถึงของคุณถูกระงับหลังมีรายงานการใช้งานในทางที่ผิดซ้ำ ๆ เกี่ยวกับพอร์ตที่ส่งต่อ คุณสามารถโต้แย้งได้ที่ %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yönlendirilen bir bağlantı noktasıyla ilgili tekrarlanan kötüye kullanım bildirimleri sonrasında erişiminiz askıya alındı. Buna %@ adresinden itiraz edebilirsiniz"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш доступ призупинено після повторних скарг на зловживання переадресованим портом. Оскаржити рішення можна на %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "因转发端口被多次举报滥用，你的访问权限已被暂停。你可以在 %@ 提出申诉"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "因轉發連接埠遭多次檢舉濫用，您的存取權限已遭暫停。您可以在 %@ 提出申訴"
+          }
+        }
+      }
+    },
+    "Your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تعليق وصولك بسبب مخالفة سياسة الاستخدام. تواصل مع الدعم إذا كنت تعتقد أن هذا خطأ."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Din adgang er suspenderet på grund af en overtrædelse af brugspolitikken. Kontakt support, hvis du mener, at dette er en fejl."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Zugang wurde wegen eines Verstoßes gegen die Nutzungsrichtlinie gesperrt. Wende dich an den Support, wenn du das für einen Fehler hältst."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu acceso ha sido suspendido por incumplir la política de uso. Contacta con el soporte si crees que se trata de un error."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دسترسی شما به دلیل نقض سیاست استفاده معلق شده است. اگر فکر می‌کنید این یک اشتباه است، با پشتیبانی تماس بگیرید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Käyttöoikeutesi on keskeytetty käyttöehtojen rikkomisen vuoksi. Ota yhteyttä tukeen, jos uskot tämän olevan virhe."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre accès a été suspendu pour non-respect des conditions d'utilisation. Contactez le support si vous pensez qu'il s'agit d'une erreur."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il tuo accesso è stato sospeso per violazione della politica di utilizzo. Contatta l’assistenza se ritieni che si tratti di un errore."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "利用ポリシー違反のためアクセスが停止されました。誤りだと思われる場合はサポートにお問い合わせください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이용 정책 위반으로 액세스가 정지되었습니다. 잘못된 조치라고 생각되면 지원팀에 문의하세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အသုံးပြုမှု မူဝါဒ ချိုးဖောက်မှုကြောင့် သင့်ဝင်ရောက်ခွင့်ကို ဆိုင်းငံ့ထားသည်။ မှားယွင်းသည်ဟု ယူဆပါက အထောက်အပံ့သို့ ဆက်သွယ်ပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilgangen din er suspendert på grunn av brudd på bruksvilkårene. Kontakt kundestøtte hvis du mener dette er en feil."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je toegang is opgeschort wegens schending van het gebruiksbeleid. Neem contact op met de ondersteuning als je denkt dat dit een vergissing is."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Twój dostęp został zawieszony z powodu naruszenia zasad użytkowania. Skontaktuj się z pomocą techniczną, jeśli uważasz, że to pomyłka."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O seu acesso foi suspenso por violação da política de utilização. Contacte o suporte se considerar que se trata de um erro."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accesul dvs. a fost suspendat pentru încălcarea politicii de utilizare. Contactați asistența dacă credeți că este o greșeală."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш доступ приостановлен за нарушение правил использования. Обратитесь в поддержку, если считаете это ошибкой."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Din åtkomst har stängts av på grund av ett brott mot användningspolicyn. Kontakta supporten om du tror att detta är ett misstag."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การเข้าถึงของคุณถูกระงับเนื่องจากละเมิดนโยบายการใช้งาน ติดต่อฝ่ายสนับสนุนหากคุณคิดว่านี่เป็นความผิดพลาด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kullanım politikası ihlali nedeniyle erişiminiz askıya alındı. Bunun bir hata olduğunu düşünüyorsanız destek ekibine başvurun."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш доступ призупинено за порушення правил використання. Зверніться до підтримки, якщо вважаєте це помилкою."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "因违反使用政策，你的访问权限已被暂停。如果你认为这是误判，请联系支持团队。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "因違反使用政策，您的存取權限已遭暫停。若您認為這是誤判，請聯絡支援團隊。"
+          }
+        }
+      }
+    },
+    "Your access has been suspended until %1$@ after repeated abuse reports about a forwarded port. You can contest this at %2$@": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your access has been suspended until %1$@ after repeated abuse reports about a forwarded port. You can contest this at %2$@"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تعليق وصولك حتى %1$@ بعد بلاغات إساءة استخدام متكررة بشأن منفذ مُعاد توجيهه. يمكنك الاعتراض على ذلك عبر %2$@"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Din adgang er suspenderet indtil %1$@ efter gentagne misbrugsrapporter om en videresendt port. Du kan bestride dette på %2$@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Zugang wurde nach wiederholten Missbrauchsmeldungen zu einem weitergeleiteten Port bis %1$@ gesperrt. Du kannst dagegen Einspruch erheben unter %2$@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu acceso ha sido suspendido hasta el %1$@ tras varios informes de abuso relacionados con un puerto reenviado. Puedes recurrir esta decisión en %2$@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دسترسی شما پس از گزارش‌های مکرر سوءاستفاده درباره یک درگاه هدایت‌شده تا %1$@ معلق شد. می‌توانید در %2$@ اعتراض کنید"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Käyttöoikeutesi on keskeytetty %1$@ asti toistuvien väärinkäyttöilmoitusten vuoksi, jotka koskevat ohjattua porttia. Voit riitauttaa tämän osoitteessa %2$@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre accès a été suspendu jusqu'au %1$@ après des signalements d'abus répétés concernant un port redirigé. Vous pouvez contester cette décision sur %2$@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il tuo accesso è stato sospeso fino al %1$@ dopo ripetute segnalazioni di abuso relative a una porta inoltrata. Puoi contestare la decisione su %2$@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "転送ポートに関する不正利用の報告が繰り返されたため、%1$@ までアクセスが停止されました。異議申し立ては %2$@ から行えます"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "포워딩된 포트에 대한 남용 신고가 반복되어 %1$@까지 액세스가 정지되었습니다. %2$@ 에서 이의를 제기할 수 있습니다"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ပြန်ညွှန်းထားသော ပို့တ်နှင့်ပတ်သက်၍ အလွဲသုံးမှု အစီရင်ခံစာများ ထပ်ခါထပ်ခါ ရရှိပြီးနောက် သင့်ဝင်ရောက်ခွင့်ကို %1$@ အထိ ဆိုင်းငံ့ထားသည်။ %2$@ တွင် အယူခံဝင်နိုင်သည်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilgangen din er suspendert frem til %1$@ etter gjentatte misbruksrapporter om en videresendt port. Du kan bestride dette på %2$@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je toegang is opgeschort tot %1$@ na herhaalde misbruikmeldingen over een doorgeschakelde poort. Je kunt hiertegen bezwaar maken op %2$@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Twój dostęp został zawieszony do %1$@ po powtarzających się zgłoszeniach nadużyć dotyczących przekierowanego portu. Możesz to zakwestionować na %2$@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O seu acesso foi suspenso até %1$@ após denúncias repetidas de abuso relacionadas com uma porta encaminhada. Pode contestar em %2$@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accesul dvs. a fost suspendat până la %1$@ după raportări repetate de abuz privind un port redirecționat. Puteți contesta la %2$@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш доступ приостановлен до %1$@ после повторных жалоб на злоупотребления с переадресованным портом. Оспорить решение можно на %2$@"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Din åtkomst har stängts av fram till %1$@ efter upprepade missbruksanmälningar om en vidarebefordrad port. Du kan bestrida detta på %2$@"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การเข้าถึงของคุณถูกระงับจนถึง %1$@ หลังมีรายงานการใช้งานในทางที่ผิดซ้ำ ๆ เกี่ยวกับพอร์ตที่ส่งต่อ คุณสามารถโต้แย้งได้ที่ %2$@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yönlendirilen bir bağlantı noktasıyla ilgili tekrarlanan kötüye kullanım bildirimleri sonrasında erişiminiz %1$@ tarihine kadar askıya alındı. Buna %2$@ adresinden itiraz edebilirsiniz"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш доступ призупинено до %1$@ після повторних скарг на зловживання переадресованим портом. Оскаржити рішення можна на %2$@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "因转发端口被多次举报滥用，你的访问权限已被暂停至 %1$@。你可以在 %2$@ 提出申诉"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "因轉發連接埠遭多次檢舉濫用，您的存取權限已遭暫停至 %1$@。您可以在 %2$@ 提出申訴"
+          }
+        }
+      }
+    },
+    "Your access has been suspended until %@ for a usage policy violation. Contact support if you believe this is a mistake.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your access has been suspended until %@ for a usage policy violation. Contact support if you believe this is a mistake."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تعليق وصولك حتى %@ بسبب مخالفة سياسة الاستخدام. تواصل مع الدعم إذا كنت تعتقد أن هذا خطأ."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Din adgang er suspenderet indtil %@ på grund af en overtrædelse af brugspolitikken. Kontakt support, hvis du mener, at dette er en fejl."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Zugang wurde wegen eines Verstoßes gegen die Nutzungsrichtlinie bis %@ gesperrt. Wende dich an den Support, wenn du das für einen Fehler hältst."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu acceso ha sido suspendido hasta el %@ por incumplir la política de uso. Contacta con el soporte si crees que se trata de un error."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دسترسی شما به دلیل نقض سیاست استفاده تا %@ معلق شده است. اگر فکر می‌کنید این یک اشتباه است، با پشتیبانی تماس بگیرید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Käyttöoikeutesi on keskeytetty %@ asti käyttöehtojen rikkomisen vuoksi. Ota yhteyttä tukeen, jos uskot tämän olevan virhe."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre accès a été suspendu jusqu'au %@ pour non-respect des conditions d'utilisation. Contactez le support si vous pensez qu'il s'agit d'une erreur."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il tuo accesso è stato sospeso fino al %@ per violazione della politica di utilizzo. Contatta l'assistenza se ritieni che si tratti di un errore."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "利用ポリシー違反のため、%@ までアクセスが停止されました。誤りだと思われる場合はサポートにお問い合わせください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이용 정책 위반으로 %@까지 액세스가 정지되었습니다. 잘못된 조치라고 생각되면 지원팀에 문의하세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အသုံးပြုမှု မူဝါဒ ချိုးဖောက်မှုကြောင့် သင့်ဝင်ရောက်ခွင့်ကို %@ အထိ ဆိုင်းငံ့ထားသည်။ မှားယွင်းသည်ဟု ယူဆပါက အထောက်အပံ့သို့ ဆက်သွယ်ပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tilgangen din er suspendert frem til %@ på grunn av brudd på bruksvilkårene. Kontakt kundestøtte hvis du mener dette er en feil."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je toegang is opgeschort tot %@ wegens schending van het gebruiksbeleid. Neem contact op met de ondersteuning als je denkt dat dit een vergissing is."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Twój dostęp został zawieszony do %@ z powodu naruszenia zasad użytkowania. Skontaktuj się z pomocą techniczną, jeśli uważasz, że to pomyłka."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O seu acesso foi suspenso até %@ por violação da política de utilização. Contacte o suporte se considerar que se trata de um erro."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Accesul dvs. a fost suspendat până la %@ pentru încălcarea politicii de utilizare. Contactați asistența dacă credeți că este o greșeală."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш доступ приостановлен до %@ за нарушение правил использования. Обратитесь в поддержку, если считаете это ошибкой."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Din åtkomst har stängts av fram till %@ på grund av ett brott mot användningspolicyn. Kontakta supporten om du tror att detta är ett misstag."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การเข้าถึงของคุณถูกระงับจนถึง %@ เนื่องจากละเมิดนโยบายการใช้งาน ติดต่อฝ่ายสนับสนุนหากคุณคิดว่านี่เป็นความผิดพลาด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kullanım politikası ihlali nedeniyle erişiminiz %@ tarihine kadar askıya alındı. Bunun bir hata olduğunu düşünüyorsanız destek ekibine başvurun."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваш доступ призупинено до %@ за порушення правил використання. Зверніться до підтримки, якщо вважаєте це помилкою."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "因违反使用政策，你的访问权限已被暂停至 %@。如果你认为这是误判，请联系支持团队。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "因違反使用政策，您的存取權限已遭暫停至 %@。若您認為這是誤判，請聯絡支援團隊。"
+          }
+        }
+      }
+    },
+    "child sexual abuse material": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "child sexual abuse material"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مواد الاعتداء الجنسي على الأطفال"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "materiale med seksuelt misbrug af børn"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Darstellungen sexuellen Kindesmissbrauchs"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "material de abuso sexual infantil"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محتوای سوءاستفاده جنسی از کودکان"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "lasten seksuaalista hyväksikäyttöä sisältävä materiaali"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "contenus pédocriminels"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "materiale pedopornografico"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "児童性的虐待コンテンツ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아동 성착취물"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ကလေးသူငယ် လိင်ပိုင်းဆိုင်ရာ အလွဲသုံးစားပြုမှု ပစ္စည်းများ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "materiale som viser seksuelle overgrep mot barn"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "materiaal van seksueel misbruik van kinderen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "materiały przedstawiające seksualne wykorzystywanie dzieci"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "material de abuso sexual de menores"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "materiale cu abuz sexual asupra minorilor"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "материалы сексуального насилия над детьми"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "material med sexuella övergrepp mot barn"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "สื่อการล่วงละเมิดทางเพศเด็ก"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "çocuk cinsel istismarı materyali"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "матеріали сексуального насильства над дітьми"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "儿童性虐待材料"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "兒童性虐待內容"
+          }
+        }
+      }
+    },
+    "copyright": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "copyright"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حقوق النشر"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ophavsret"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Urheberrecht"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "derechos de autor"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حق نشر"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tekijänoikeus"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "droit d'auteur"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "diritto d'autore"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "著作権"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "저작권"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "မူပိုင်ခွင့်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "opphavsrett"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "auteursrecht"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "prawa autorskie"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "direitos de autor"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "drepturi de autor"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "авторское право"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "upphovsrätt"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ลิขสิทธิ์"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "telif hakkı"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "авторське право"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "版权"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "著作權"
+          }
+        }
+      }
+    },
+    "malware": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "malware"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "برمجيات خبيثة"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "malware"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Malware"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "malware"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بدافزار"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "malware"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "logiciel malveillant"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "malware"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "マルウェア"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "멀웨어"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "malware"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "malware"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "malware"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "malware"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "malware"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "malware"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "вредоносное ПО"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "malware"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "มัลแวร์"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "malware"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "шкідливе ПЗ"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "恶意软件"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "惡意軟體"
+          }
+        }
+      }
+    },
+    "other": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "other"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أخرى"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "andet"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sonstiges"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "otro"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سایر"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "muu"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "autre"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "altro"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "その他"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기타"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အခြား"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "annet"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "overig"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "inne"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "outro"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "altele"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "другое"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "övrigt"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "อื่น ๆ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "diğer"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "інше"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他"
+          }
+        }
+      }
+    },
+    "phishing": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "phishing"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تصيّد احتيالي"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "phishing"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Phishing"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "phishing"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فیشینگ"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "phishing"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "phishing"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "phishing"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "フィッシング"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "피싱"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "phishing"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "phishing"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "phishing"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "phishing"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "phishing"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "phishing"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "фишинг"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "phishing"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ฟิชชิง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "phishing"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "фішинг"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "网络钓鱼"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "網路釣魚"
+          }
+        }
+      }
+    },
+    "scanning or intrusion": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "scanning or intrusion"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فحص أو اختراق"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "scanning eller indtrængen"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Scan oder Eindringversuch"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "escaneo o intrusión"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسکن یا نفوذ"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "skannaus tai tunkeutuminen"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "scan ou intrusion"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "scansione o intrusione"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スキャンまたは侵入"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "스캔 또는 침입"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "စကင်ဖတ်ခြင်း သို့မဟုတ် ကျူးကျော်ဝင်ရောက်ခြင်း"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "skanning eller inntrenging"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "scannen of inbraakpoging"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "skanowanie lub włamanie"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "varrimento ou intrusão"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "scanare sau intruziune"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "сканирование или вторжение"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "skanning eller intrång"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การสแกนหรือการบุกรุก"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "tarama veya izinsiz giriş"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "сканування або вторгнення"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "扫描或入侵"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "掃描或入侵"
+          }
+        }
+      }
+    },
+    "spam": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "spam"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رسائل مزعجة"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "spam"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Spam"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "spam"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هرزنامه"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "spam"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "spam"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "spam"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "スパム"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "스팸"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "spam"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "spam"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "spam"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "spam"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "spam"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "spam"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "спам"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "spam"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "สแปม"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "spam"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "спам"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "垃圾信息"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "垃圾訊息"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

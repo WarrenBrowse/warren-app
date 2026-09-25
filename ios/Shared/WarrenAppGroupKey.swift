@@ -72,6 +72,19 @@ public enum WarrenAppGroupKey: String, CaseIterable {
 
     case natPmpRateLimitedAt = "WarrenTunnel.natPmpRateLimitedAt"
 
+    /// `String`. What the exit refused the last mapping for, as not
+    /// authorized (warren-core doc 105): `no_entitlement` or
+    /// `entitlement_refused`. The tunnel asks again on its own after
+    /// `natPmpRetryAfterSeconds`, counted from `natPmpRefusedAt` (`Date`).
+    case natPmpRefusal = "WarrenTunnel.natPmpRefusal"
+
+    case natPmpRefusedAt = "WarrenTunnel.natPmpRefusedAt"
+
+    /// `Date`. When the ban the tunnel was last blocked for lapses
+    /// (warren-core doc 105), for the suspension message. Absent when the
+    /// source did not say.
+    case accountBanLapsesAt = "WarrenTunnel.accountBanLapsesAt"
+
     /// `Int`. The goodput prober's verdict for the live session, as
     /// `WarrenPathHealth`. The supervisor's dead-path watches see QUIC
     /// keep-alives, so this is the only signal that can see an exit that

@@ -25,6 +25,10 @@ public enum WarrenPortForwardingState: Equatable, Sendable {
     case failed(portConflict: Bool)
     /// The exit is refusing new allocations for a while longer.
     case rateLimited(remaining: TimeInterval)
+    /// The exit refused the mapping as not authorized (warren-core doc 105):
+    /// for want of an entitlement, or refusing the one presented. The tunnel
+    /// asks again on its own in `retryIn`.
+    case refused(noEntitlement: Bool, retryIn: TimeInterval)
 }
 
 /// The category the engine reports when the port the user pinned is already
@@ -53,6 +57,11 @@ public enum WarrenPortForwarding {
             return .mapped(port: port, renewsIn: renewCountdown(snapshot: snapshot, now: now))
         case "failed":
             return .failed(portConflict: snapshot.failureReason == warrenPortInUseReason)
+        case "refused":
+            return .refused(
+                noEntitlement: snapshot.refusal != "entitlement_refused",
+                retryIn: refusalRetryIn(snapshot: snapshot, now: now)
+            )
         default:
             return .requesting
         }
@@ -86,6 +95,13 @@ public enum WarrenPortForwarding {
         }
         let remaining = at.addingTimeInterval(TimeInterval(seconds)).timeIntervalSince(now)
         return remaining > 0 ? remaining : nil
+    }
+
+    /// Seconds until the tunnel asks again after a refusal, clamped at zero
+    /// while the new request is in flight.
+    static func refusalRetryIn(snapshot: WarrenNatPmpSnapshot, now: Date) -> TimeInterval {
+        guard let at = snapshot.refusedAt, let seconds = snapshot.retryAfterSeconds else { return 0 }
+        return max(0, at.addingTimeInterval(TimeInterval(seconds)).timeIntervalSince(now))
     }
 
     /// Whether the two recoveries from a port conflict may be offered. Both

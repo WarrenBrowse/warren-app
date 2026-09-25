@@ -22,6 +22,14 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   reîncearcă până la sfârșitul suspendării.
 - [Android] Află de ce serverul a refuzat un port redirecționat, niciun drept de port disponibil
   sau refuzat, iar aplicația cere din nou automat, în loc să se oprească pe un eșec generic.
+- [iOS] Vezi avertismentele înregistrate pe contul tău când un port redirecționat e închis după o
+  raportare de abuz: o notificare pentru fiecare avertisment, un banner cu referința dosarului care
+  deschide pagina despre contestare, și lista completă în ecranul port forwarding cu adresa la care
+  să scrii. Avertismentele apar imediat ce actualizarea de server corespunzătoare e activă.
+- [iOS] Vezi suspendarea contului, cu ziua în care se încheie când există una, în loc de o simplă
+  deconectare, iar conexiunea se oprește când suspendarea e aflată în timpul unei sesiuni.
+- [iOS] Află când serverul refuză un port redirecționat din lipsă de drept de port, iar aplicația
+  cere din nou automat în loc să se oprească la primul refuz.
 
 ## [1.1.35] - 2026-09-25
 ### Adăugat

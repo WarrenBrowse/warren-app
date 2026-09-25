@@ -73,6 +73,10 @@ mod forum;
 #[cfg(any(all(target_os = "ios", feature = "tunnel"), test))]
 mod warren_natpmp_ffi;
 
+// The port-forward standing stores of the extension and the app (warren-core
+// doc 105). Cross-platform so the host suite runs its tests.
+mod warren_standing_ffi;
+
 // iOS-only modules that reference libc, tokio, mullvad-api, etc.
 #[cfg(target_os = "ios")]
 mod warren_account_ffi;

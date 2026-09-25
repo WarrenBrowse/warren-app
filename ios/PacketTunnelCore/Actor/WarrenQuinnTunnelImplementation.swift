@@ -474,6 +474,24 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
             defaults.set("rate-limited", forKey: WarrenAppGroupKey.natPmpStatus.rawValue)
             defaults.set(Int(retryAfter), forKey: WarrenAppGroupKey.natPmpRetryAfterSeconds.rawValue)
             defaults.set(Date(), forKey: WarrenAppGroupKey.natPmpRateLimitedAt.rawValue)
+        case .natPmpRefused(let refusal, let retryIn):
+            // Not a failure: the tunnel asks again on its own, and the screen
+            // says what was refused and counts down to the next try.
+            defaults.set("refused", forKey: WarrenAppGroupKey.natPmpStatus.rawValue)
+            defaults.set(refusal, forKey: WarrenAppGroupKey.natPmpRefusal.rawValue)
+            defaults.set(Int(retryIn), forKey: WarrenAppGroupKey.natPmpRetryAfterSeconds.rawValue)
+            defaults.set(Date(), forKey: WarrenAppGroupKey.natPmpRefusedAt.rawValue)
+            defaults.removeObject(forKey: WarrenAppGroupKey.natPmpExternalPort.rawValue)
+        case .banned(_, let lapsesAt):
+            // The day the suspension ends, for the message the app shows.
+            // Removed when unknown, so a previous ban's date is never shown
+            // for this one.
+            if let lapsesAt {
+                defaults.set(lapsesAt, forKey: WarrenAppGroupKey.accountBanLapsesAt.rawValue)
+            } else {
+                defaults.removeObject(forKey: WarrenAppGroupKey.accountBanLapsesAt.rawValue)
+            }
+            Self.clearNatPmpKeys(in: defaults)
         case .disconnected, .unauthorized:
             // The mapping dies with the session (the exit frees the lease
             // and the refresh loop is torn down), so a stale "open" must
@@ -498,6 +516,8 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         defaults.removeObject(forKey: WarrenAppGroupKey.natPmpFailureReason.rawValue)
         defaults.removeObject(forKey: WarrenAppGroupKey.natPmpRetryAfterSeconds.rawValue)
         defaults.removeObject(forKey: WarrenAppGroupKey.natPmpRateLimitedAt.rawValue)
+        defaults.removeObject(forKey: WarrenAppGroupKey.natPmpRefusal.rawValue)
+        defaults.removeObject(forKey: WarrenAppGroupKey.natPmpRefusedAt.rawValue)
     }
 
     /// Mirror an exit-pubkey TOFU mismatch into the App Group `UserDefaults`

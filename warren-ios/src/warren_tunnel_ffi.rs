@@ -155,6 +155,10 @@ pub enum WarrenTunnelStateC {
     /// app could only say "disconnected" while the desktop daemon names the
     /// lapsed subscription and Android offers to renew.
     Unauthorized = 5,
+    /// The wallet is banned (warren-core doc 105): learned from the token
+    /// issuer's refusal before any dial, or from the exit's CRL rejection.
+    /// Terminal like `Unauthorized`, and the event says why and until when.
+    Banned = 6,
 }
 
 /// Tunnel status snapshot.
@@ -207,6 +211,15 @@ pub enum WarrenTunnelEventTagC {
     /// in `data_nat_pmp_retry_after_seconds`, so the screen can say when the
     /// controls come back instead of leaving them inert with no reason.
     EventNatPmpRateLimited = 9,
+    /// Terminal counterpart of `Banned`. Carries the auth-failed reason,
+    /// opening on its `[BANNED*]` token, in `data_ban_reason`, and the lapse
+    /// in `data_ban_lapses_at_unix_secs` (`0` when unknown).
+    EventBanned = 10,
+    /// The exit refused the mapping as not authorized and the tunnel asks
+    /// again on its own after `data_nat_pmp_retry_after_seconds`.
+    /// `data_nat_pmp_failure_reason` is `no_entitlement` or
+    /// `entitlement_refused`.
+    EventNatPmpRefused = 11,
 }
 
 /// Tagged-union event payload.
@@ -226,8 +239,14 @@ pub struct WarrenTunnelEventC {
     /// NatPmpFailed : null-terminated UTF-8 reason.
     pub data_nat_pmp_failure_reason: *const c_char,
     /// NatPmpRateLimited : seconds until the exit accepts an allocation
-    /// again. Zero for every other event.
+    /// again. NatPmpRefused : seconds until the tunnel asks again. Zero for
+    /// every other event.
     pub data_nat_pmp_retry_after_seconds: u32,
+    /// Banned : null-terminated UTF-8 auth-failed reason, opening on its
+    /// `[BANNED*]` token.
+    pub data_ban_reason: *const c_char,
+    /// Banned : when the ban lapses, Unix seconds; `0` when unknown.
+    pub data_ban_lapses_at_unix_secs: u64,
 }
 
 /// Event callback signature. Called from a Tokio task on the
@@ -389,6 +408,9 @@ enum TerminalVerdict {
     /// The exit said this account may not use it, which on this client means
     /// the subscription has lapsed.
     Unauthorized,
+    /// The wallet is banned: learned from an issuer, the standing, or the
+    /// exit's CRL rejection.
+    Banned,
     /// Everything else: the user disconnected, the tunnel was torn down, or
     /// the refusal was one iOS has nowhere to explain yet.
     Ordinary,
@@ -404,12 +426,11 @@ impl From<Option<warrenguard_multihop::RejectionReason>> for TerminalVerdict {
             Some(RejectionReason::NotAllowlisted | RejectionReason::PolicyRefused) => {
                 Self::Unauthorized
             }
-            // A ban and an exhausted address pool are refusals too, but an
-            // expiry prompt is the wrong thing to say about either, so they
-            // stay ordinary until iOS has somewhere to say them.
-            Some(RejectionReason::Banned(_) | RejectionReason::IpExhausted) | None => {
-                Self::Ordinary
-            }
+            Some(RejectionReason::Banned(_)) => Self::Banned,
+            // An exhausted address pool is a refusal too, but an expiry prompt
+            // is the wrong thing to say about it, so it stays ordinary until
+            // iOS has somewhere to say it.
+            Some(RejectionReason::IpExhausted) | None => Self::Ordinary,
         }
     }
 }
@@ -425,6 +446,10 @@ fn terminal_for(verdict: TerminalVerdict) -> (WarrenTunnelStateC, WarrenTunnelEv
         TerminalVerdict::Unauthorized => (
             WarrenTunnelStateC::Unauthorized,
             WarrenTunnelEventTagC::EventUnauthorized,
+        ),
+        TerminalVerdict::Banned => (
+            WarrenTunnelStateC::Banned,
+            WarrenTunnelEventTagC::EventBanned,
         ),
         TerminalVerdict::Ordinary => (
             WarrenTunnelStateC::Disconnected,
@@ -641,6 +666,10 @@ mod handle_impl {
         /// observer closure outlives a single connect; process-lifetime,
         /// no persistence.
         pub entry_rtt: Arc<Mutex<warren_discovery_core::RttCache>>,
+        /// The ban this session ends on (warren-core doc 105), set before
+        /// the terminal edge so it can say what the suspension is for and
+        /// until when.
+        pub ban: Mutex<Option<warren_standing::Ban>>,
     }
 
     impl WarrenTunnelHandleImpl {
@@ -672,6 +701,7 @@ mod handle_impl {
                 supervisor: Mutex::new(None),
                 watchdog: Mutex::new(None),
                 entry_rtt: Arc::new(Mutex::new(warren_discovery_core::RttCache::new())),
+                ban: Mutex::new(None),
             })
         }
 
@@ -792,6 +822,8 @@ mod handle_impl {
                 data_nat_pmp_lifetime_seconds: 0,
                 data_nat_pmp_failure_reason: std::ptr::null(),
                 data_nat_pmp_retry_after_seconds: 0,
+                data_ban_reason: std::ptr::null(),
+                data_ban_lapses_at_unix_secs: 0,
             };
             let Ok(cb_entry) = self.event_callback.lock() else {
                 return;
@@ -861,6 +893,8 @@ mod handle_impl {
                 data_nat_pmp_lifetime_seconds: ffi.lifetime_secs,
                 data_nat_pmp_failure_reason: reason_ptr,
                 data_nat_pmp_retry_after_seconds: ffi.retry_after_secs,
+                data_ban_reason: std::ptr::null(),
+                data_ban_lapses_at_unix_secs: 0,
             };
             let Ok(cb_entry) = self.event_callback.lock() else {
                 return;
@@ -877,6 +911,54 @@ mod handle_impl {
                 (entry.callback)(&raw const event, entry.context);
             }
             // `reason_c` drops here, after the callback has returned.
+        }
+
+        /// Record the ban this session ends on. The terminal edge reads it.
+        pub fn record_ban(&self, ban: warren_standing::Ban) {
+            if let Ok(mut slot) = self.ban.lock() {
+                *slot = Some(ban);
+            }
+        }
+
+        /// The ban this session ended on, if any.
+        pub fn recorded_ban(&self) -> Option<warren_standing::Ban> {
+            self.ban.lock().ok().and_then(|slot| *slot)
+        }
+
+        /// Fire `EventBanned` with the recorded ban's reason and lapse. The
+        /// reason C-string lives for the whole callback, as in
+        /// [`Self::fire_natpmp_event`].
+        pub fn fire_ban_event(&self) {
+            let Some(ban) = self.recorded_ban() else {
+                return;
+            };
+            let Ok(reason_c) = std::ffi::CString::new(ban.auth_failed_reason()) else {
+                return;
+            };
+            let event = super::WarrenTunnelEventC {
+                tag: super::WarrenTunnelEventTagC::EventBanned,
+                data_failover_country_code: std::ptr::null(),
+                data_nat_pmp_external_port: 0,
+                data_nat_pmp_internal_port: 0,
+                data_nat_pmp_lifetime_seconds: 0,
+                data_nat_pmp_failure_reason: std::ptr::null(),
+                data_nat_pmp_retry_after_seconds: 0,
+                data_ban_reason: reason_c.as_ptr(),
+                data_ban_lapses_at_unix_secs: ban.lapses_at_unix_secs.unwrap_or(0),
+            };
+            let Ok(cb_entry) = self.event_callback.lock() else {
+                return;
+            };
+            let Some(entry) = cb_entry.as_ref() else {
+                return;
+            };
+            // SAFETY: callback + context come from Swift via
+            // `warren_tunnel_set_event_callback`. The event pointer and the
+            // borrowed reason C-string are valid for the duration of the call;
+            // Swift copies the string before returning.
+            unsafe {
+                (entry.callback)(&raw const event, entry.context);
+            }
         }
 
         /// Snapshot of the current state discriminant.
@@ -1157,7 +1239,20 @@ fn spawn_multi_hop(
     use warrenguard_transport::supervisor::{MultiHopSupervisor, SupervisorConfig};
 
     let arc_for_task = std::sync::Arc::clone(&arc);
+    let wallet_pubkey = signing_key.verifying_key().to_bytes();
     arc.runtime.spawn(async move {
+        // A wallet known to be banned is refused before it dials (warren-core
+        // doc 105 §5.3): the token issuer said so, and an exit would only say
+        // it again.
+        if let Some(ban) =
+            crate::warren_standing_ffi::tunnel_store().ban_in_force(&wallet_pubkey, now_secs())
+        {
+            tracing::warn!("Warren account is banned; not dialing");
+            arc_for_task.record_ban(ban);
+            arc_for_task.set_state(WarrenTunnelStateC::Banned);
+            arc_for_task.fire_ban_event();
+            return;
+        }
         arc_for_task.set_state(WarrenTunnelStateC::Connecting);
         let first_attempt = !arc_for_task.has_connected_once.load(Ordering::Acquire);
         arc_for_task.fire_event(if first_attempt {
@@ -1544,9 +1639,23 @@ fn spawn_multi_hop(
         // Without it a policy refusal was indistinguishable from an ordinary
         // teardown by the time the watch loop ended.
         let fatal_rx = supervisor.fatal_rx();
+        let ban_arc = std::sync::Arc::clone(&arc_for_task);
         tokio::spawn(async move {
-            if let Err(e) = supervisor.run().await {
-                tracing::error!(error = %e, "multi-hop supervisor terminated");
+            // A ban learned while the session runs ends it, the way the desktop
+            // daemon blocks its tunnel: tokens minted before the ban would
+            // otherwise keep an admitted session alive for their whole
+            // prefetch horizon. Dropping the supervisor closes its session
+            // watch, which is what ends the state loop below.
+            tokio::select! {
+                end = supervisor.run() => {
+                    if let Err(e) = end {
+                        tracing::error!(error = %e, "multi-hop supervisor terminated");
+                    }
+                }
+                ban = ban_arrives(wallet_pubkey) => {
+                    tracing::warn!("Warren account was banned during the session; ending it");
+                    ban_arc.record_ban(ban);
+                }
             }
         });
 
@@ -1654,10 +1763,45 @@ fn spawn_multi_hop(
                 break;
             }
         }
-        let (terminal_state, terminal_event) = terminal_for((*fatal_rx.borrow()).into());
+        let fatal = *fatal_rx.borrow();
+        if let Some(warrenguard_multihop::RejectionReason::Banned(code)) = fatal {
+            let ban = crate::warren_standing_ffi::tunnel_store().on_exit_ban(
+                &wallet_pubkey,
+                code,
+                now_secs(),
+            );
+            arc_for_task.record_ban(ban);
+        }
+        let verdict = if arc_for_task.recorded_ban().is_some() {
+            TerminalVerdict::Banned
+        } else {
+            fatal.into()
+        };
+        let (terminal_state, terminal_event) = terminal_for(verdict);
         arc_for_task.set_state(terminal_state);
-        arc_for_task.fire_event(terminal_event);
+        if terminal_event == WarrenTunnelEventTagC::EventBanned {
+            arc_for_task.fire_ban_event();
+        } else {
+            arc_for_task.fire_event(terminal_event);
+        }
     });
+}
+
+/// The ban on the session's wallet, when the extension's standing learns of
+/// one (the token issuer's refusal from a background refresh). Pending
+/// forever when none comes.
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
+async fn ban_arrives(wallet_pubkey: [u8; 32]) -> warren_standing::Ban {
+    let store = crate::warren_standing_ffi::tunnel_store();
+    let mut changes = store.subscribe();
+    loop {
+        if let Some(ban) = store.ban_in_force(&wallet_pubkey, now_secs()) {
+            return ban;
+        }
+        if changes.changed().await.is_err() {
+            std::future::pending::<()>().await;
+        }
+    }
 }
 
 // ---- NAT-PMP port forwarding (feature-gated) ----
@@ -1784,8 +1928,19 @@ const DEFAULT_NATPMP_LIFETIME_SECS: u32 = 3600;
 /// [`maybe_spawn_nat_pmp`] means NAT-PMP was disabled for this session.
 #[cfg(all(target_os = "ios", feature = "tunnel"))]
 struct NatPmpGuard {
-    refresh: warrenguard_natpmp_client::RefreshLoopHandle,
+    refresh: std::sync::Arc<std::sync::Mutex<RefreshSlot>>,
     drain: tokio::task::JoinHandle<()>,
+}
+
+/// The refresh loop the session runs, replaced when a refused mapping is asked
+/// for again. `cancelled` settles the one race the replacement opens: an abort
+/// cannot preempt the drain between spawning a loop and storing it here, so a
+/// teardown in that window marks the slot and the drain cancels what it just
+/// spawned instead of leaving it renewing for a tunnel that is gone.
+#[cfg(all(target_os = "ios", feature = "tunnel"))]
+struct RefreshSlot {
+    current: Option<warrenguard_natpmp_client::RefreshLoopHandle>,
+    cancelled: bool,
 }
 
 #[cfg(all(target_os = "ios", feature = "tunnel"))]
@@ -1796,7 +1951,12 @@ impl Drop for NatPmpGuard {
         // separate "cleared" FFI event tag and no NAT-PMP status atomic to
         // reset (the mapping is surfaced purely through events), so the
         // tunnel session teardown is what clears the user-visible state.
-        self.refresh.cancel();
+        if let Ok(mut slot) = self.refresh.lock() {
+            slot.cancelled = true;
+            if let Some(mut refresh) = slot.current.take() {
+                refresh.cancel();
+            }
+        }
         self.drain.abort();
     }
 }
@@ -1859,19 +2019,67 @@ fn maybe_spawn_nat_pmp(
     };
     let (tx, mut rx) =
         tokio::sync::mpsc::unbounded_channel::<warrenguard_natpmp_client::NatPmpEvent>();
-    let refresh = warrenguard_natpmp_client::spawn_refresh_loop_from_addr(
-        server,
-        proto,
-        0,
-        suggested_external_port,
-        lifetime_secs,
-        suggestion,
-        tx,
-        Some(bind_addr),
-    );
+    let spawn_loop = move |tx| {
+        warrenguard_natpmp_client::spawn_refresh_loop_from_addr(
+            server,
+            proto,
+            0,
+            suggested_external_port,
+            lifetime_secs,
+            suggestion,
+            tx,
+            Some(bind_addr),
+        )
+    };
+    let refresh = std::sync::Arc::new(std::sync::Mutex::new(RefreshSlot {
+        current: Some(spawn_loop(tx.clone())),
+        cancelled: false,
+    }));
+    let respawn_slot = std::sync::Arc::clone(&refresh);
     let drain_arc = std::sync::Arc::clone(arc);
     let drain = tokio::spawn(async move {
+        let mut refusals = warren_standing::RefusalCount::default();
         while let Some(event) = rx.recv().await {
+            match &event {
+                warrenguard_natpmp_client::NatPmpEvent::Mapped { .. }
+                | warrenguard_natpmp_client::NatPmpEvent::Renewed { .. } => refusals.on_granted(),
+                // The engine stops on a refusal, which it takes for permanent.
+                // It is not (warren-core doc 105): the exit refuses a request
+                // without an entitlement, and one comes with the next mint or
+                // epoch, so the mapping is asked for again on the schedule
+                // every client shares. This client presents no entitlement.
+                warrenguard_natpmp_client::NatPmpEvent::Failed {
+                    reason: warrenguard_natpmp_client::NatPmpFailureReason::NotAuthorized,
+                    ..
+                } => {
+                    let (refusal, retry_in_secs) = refusals.on_refused(false);
+                    tracing::info!(
+                        retry_in_secs,
+                        "NAT-PMP request refused as not authorized, asking again"
+                    );
+                    let kind = crate::warren_natpmp_ffi::NatPmpEventKind::Refused {
+                        refusal,
+                        retry_in_secs,
+                    };
+                    if let Some(ffi) = crate::warren_natpmp_ffi::project_natpmp_event(&kind) {
+                        drain_arc.fire_natpmp_event(&ffi);
+                    }
+                    tokio::time::sleep(std::time::Duration::from_secs(u64::from(retry_in_secs)))
+                        .await;
+                    let fresh = spawn_loop(tx.clone());
+                    let Ok(mut slot) = respawn_slot.lock() else {
+                        break;
+                    };
+                    if slot.cancelled {
+                        let mut fresh = fresh;
+                        fresh.cancel();
+                        break;
+                    }
+                    slot.current = Some(fresh);
+                    continue;
+                }
+                _ => {}
+            }
             // Remember the granted external port (and its transport) so the
             // next session after an exit change re-suggests it: the public
             // port follows the client. Only a grant carries a port; 0 is
@@ -2717,13 +2925,18 @@ mod tests {
         assert_eq!(event, super::WarrenTunnelEventTagC::EventUnauthorized);
     }
 
-    /// A ban and an exhausted address pool are refusals too, but an expiry
-    /// prompt is the wrong thing to say about either, and iOS has nowhere else
-    /// to say them yet. They stay on the plain path rather than claiming the
-    /// subscription lapsed.
     /// Everything that is not a refusal of this account: the user
-    /// disconnected, the tunnel was torn down, or the refusal was a ban or an
-    /// exhausted address pool, which an expiry prompt would misdescribe.
+    /// disconnected, the tunnel was torn down, or the refusal was an exhausted
+    /// address pool, which an expiry prompt would misdescribe.
+    /// A ban is a suspension, which neither the expiry prompt nor a plain
+    /// disconnect describes: it ends on a state and an event of its own.
+    #[test]
+    fn a_banned_session_ends_banned() {
+        let (state, event) = super::terminal_for(super::TerminalVerdict::Banned);
+        assert_eq!(state, super::WarrenTunnelStateC::Banned);
+        assert_eq!(event, super::WarrenTunnelEventTagC::EventBanned);
+    }
+
     #[test]
     fn anything_else_ends_plainly_disconnected() {
         let (state, event) = super::terminal_for(super::TerminalVerdict::Ordinary);

@@ -73,6 +73,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     /// The launch announcements this installation holds, and the foreground
     /// poll that keeps them current.
     nonisolated(unsafe) private var launchAnnouncements: WarrenLaunchAnnouncements?
+    /// The wallet's port-forward standing (warren-core doc 105), and the
+    /// foreground poll that keeps it current.
+    nonisolated(unsafe) private var accountStanding: WarrenAccountStandingFeed?
     /// The view controller the full announcement is presented on, resolved at
     /// presentation time so the sheet lands over whatever is on screen. The
     /// scene that owns the window supplies it, like the forum flow's.
@@ -305,6 +308,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // operator published while the app was away; the poll it starts keeps
         // a long foreground session current.
         launchAnnouncements?.startPolling()
+        accountStanding?.startPolling()
     }
 
     @objc private func willResignActive(_ notification: Notification) {
@@ -313,6 +317,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         // Nothing is fetched from the background: a background cadence would
         // make the app a periodic beacon for a card nobody is looking at.
         launchAnnouncements?.stopPolling()
+        accountStanding?.stopPolling()
     }
 
     @objc private func didEnterBackground(_ notification: Notification) {
@@ -474,6 +479,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             WarrenFailoverNotificationProvider(acknowledgeStore: appPreferences),
             makeEnvStandDownNotificationProvider(),
             makeAnnouncementNotificationProvider(),
+            makeAccountStrikeNotificationProvider(),
         ]
         UNUserNotificationCenter.current().delegate = self
     }
@@ -540,6 +546,90 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             DispatchQueue.main.async { NotificationManager.shared.updateNotifications() }
         }
         return provider
+    }
+
+    /// The port-forward standing feed and its banner (warren-core doc 105).
+    /// Built together so the banner is re-evaluated the moment the standing
+    /// moves, and the port-forwarding screen reads the same feed.
+    private func makeAccountStrikeNotificationProvider() -> WarrenAccountStrikeNotificationProvider {
+        let feed = WarrenAccountStandingFeed(
+            backend: WarrenAccountStandingFeed.Backend(
+                hasWallet: { (try? WarrenWalletKeychain.loadSecure()) != nil },
+                poll: {
+                    // The poll signs and blocks on an HTTP round trip, so it
+                    // runs on the queue the other wallet-signed lookup uses.
+                    await withCheckedContinuation {
+                        (continuation: CheckedContinuation<WarrenStandingPoll?, Never>) in
+                        Self.campaignVoucherQueue.async {
+                            continuation.resume(returning: Self.pollAccountStanding())
+                        }
+                    }
+                },
+                forget: {
+                    guard let directory = Self.standingLedgerDirectory() else { return }
+                    WarrenAccountClient.forgetAccountStanding(ledgerDirectory: directory)
+                },
+                announce: { notice in Self.announceStrike(notice) }
+            )
+        )
+        accountStanding = feed
+        WarrenAccountStandingFeed.current = feed
+        let provider = WarrenAccountStrikeNotificationProvider(
+            source: { [weak feed] in feed?.standing },
+            dismissStore: appPreferences,
+            openContestPage: {
+                guard let url = URL(string: WarrenAccountStandingText.reportsURL) else { return }
+                MainActor.assumeIsolated { UIApplication.shared.open(url) }
+            }
+        )
+        feed.didChange = {
+            DispatchQueue.main.async { NotificationManager.shared.updateNotifications() }
+        }
+        return provider
+    }
+
+    /// Where the strike ledger lives: the app's own container, never the App
+    /// Group the extension shares. It holds digests only.
+    nonisolated private static func standingLedgerDirectory() -> URL? {
+        guard let directory = try? FileManager.default.url(
+            for: .applicationSupportDirectory,
+            in: .userDomainMask,
+            appropriateFor: nil,
+            create: true
+        ) else {
+            return nil
+        }
+        return directory
+    }
+
+    /// One signed standing poll, `nil` when the wallet cannot be read. The
+    /// wallet is read the way the campaign lookup reads it.
+    nonisolated private static func pollAccountStanding() -> WarrenStandingPoll? {
+        guard let directory = standingLedgerDirectory(),
+            let mnemonic = try? WarrenWalletKeychain.loadSecure(),
+            let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
+        else {
+            return nil
+        }
+        defer { wallet.forgetSecret() }
+        return WarrenAccountClient.accountStanding(seed: wallet.seed, ledgerDirectory: directory)
+    }
+
+    /// One system notification per new strike: three of them revoke the
+    /// account, so each is a warning the reader must see even when the banner
+    /// is not on screen. Keyed on the strike, so a repeat replaces its own.
+    nonisolated private static func announceStrike(_ notice: WarrenStrikeNotice) {
+        let content = UNMutableNotificationContent()
+        content.title = String(localized: "Port forwarding warning", table: "Settings")
+        content.body = WarrenAccountStandingText.warning(notice) + " "
+            + WarrenAccountStandingText.caseReference(notice.strike)
+        content.sound = .default
+        let request = UNNotificationRequest(
+            identifier: "warren-" + notice.strike.dismissalKey,
+            content: content,
+            trigger: nil
+        )
+        UNUserNotificationCenter.current().add(request)
     }
 
     /// Where the blocking, wallet-signed campaign lookup runs.

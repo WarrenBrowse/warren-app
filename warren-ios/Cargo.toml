@@ -60,6 +60,10 @@ tracing = "0.1"
 mullvad-update = { path = "../mullvad-update" }
 mullvad-version = { path = "../mullvad-version" }
 warren-product-env = { path = "../warren-product-env" }
+# Port-forward abuse standing (warren-core doc 105): the store both processes
+# keep, the envelope the app renders and the refusal schedule, shared with
+# Android and the desktop daemon. Cross-platform so the host tests build.
+warren-standing = { path = "../warren-standing" }
 
 [target.'cfg(target_os = "ios")'.dependencies]
 futures = { workspace = true }
@@ -130,6 +134,7 @@ cbindgen = { version = "0.28.0", default-features = false }
 # build on every host without adding anything to the shipped staticlib.
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros", "rt", "sync", "time"] }
+tempfile = "3"
 
 [features]
 default = []

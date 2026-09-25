@@ -19,6 +19,7 @@
 //
 
 import SwiftUI
+import WarrenRustRuntime
 import WarrenSettings
 
 /// Snapshot of the NAT-PMP mapping surface broadcast by the tunnel
@@ -34,6 +35,11 @@ struct WarrenNatPmpSnapshot: Equatable {
     var failureReason: String?
     var retryAfterSeconds: Int?
     var rateLimitedAt: Date?
+    /// What the exit refused the last mapping for as not authorized
+    /// (`no_entitlement` or `entitlement_refused`), and when; the tunnel asks
+    /// again after `retryAfterSeconds`.
+    var refusal: String?
+    var refusedAt: Date?
 
     static func read(fromSuite suiteName: String?) -> WarrenNatPmpSnapshot {
         guard let suiteName, let defaults = UserDefaults(suiteName: suiteName) else {
@@ -47,7 +53,9 @@ struct WarrenNatPmpSnapshot: Equatable {
             lifetimeSeconds: defaults.object(forKey: WarrenAppGroupKey.natPmpLifetimeSeconds.rawValue) as? Int,
             failureReason: defaults.string(forKey: WarrenAppGroupKey.natPmpFailureReason.rawValue),
             retryAfterSeconds: defaults.object(forKey: WarrenAppGroupKey.natPmpRetryAfterSeconds.rawValue) as? Int,
-            rateLimitedAt: defaults.object(forKey: WarrenAppGroupKey.natPmpRateLimitedAt.rawValue) as? Date
+            rateLimitedAt: defaults.object(forKey: WarrenAppGroupKey.natPmpRateLimitedAt.rawValue) as? Date,
+            refusal: defaults.string(forKey: WarrenAppGroupKey.natPmpRefusal.rawValue),
+            refusedAt: defaults.object(forKey: WarrenAppGroupKey.natPmpRefusedAt.rawValue) as? Date
         )
     }
 }
@@ -97,6 +105,11 @@ final class WarrenNatPmpSettingsViewModel: ObservableObject {
 
     func snapshot() -> WarrenNatPmpSnapshot {
         WarrenNatPmpSnapshot(fromSuite: ApplicationConfiguration.securityGroupIdentifier)
+    }
+
+    /// The standing the app last heard, `nil` while nothing is known.
+    func standing() -> WarrenAccountStanding? {
+        WarrenAccountStandingFeed.current?.standing
     }
 
     func state(now: Date) -> WarrenPortForwardingState {
@@ -182,6 +195,12 @@ public struct WarrenNatPmpSettingsView: View {
                     abuseNotice
                 }
                 .font(.warrenMicro)
+            }
+
+            if let standing = viewModel.standing(), Self.hasStandingToShow(standing) {
+                Section(String(localized: "Warnings", table: "Settings")) {
+                    Self.standingRows(standing)
+                }
             }
 
             if viewModel.isEnabled {
@@ -321,6 +340,16 @@ public struct WarrenNatPmpSettingsView: View {
             )
             .font(.warrenMicro)
             .foregroundColor(.Warren.error)
+        case let .refused(noEntitlement, retryIn):
+            Text(
+                String(
+                    format: noEntitlement
+                        ? String(localized: "Status: no entitlement left, retrying in %1$@s", table: "Settings")
+                        : String(localized: "Status: refused, retrying in %1$@s", table: "Settings"),
+                    String(Int(retryIn.rounded(.up))))
+            )
+            .font(.warrenMicro)
+            .foregroundColor(.white.opacity(0.7))
         case let .failed(portConflict):
             if portConflict {
                 Text(String(localized: "That port is already taken on this exit.", table: "Settings"))
@@ -337,9 +366,40 @@ public struct WarrenNatPmpSettingsView: View {
         }
     }
 
+    /// The account's standing (warren-core doc 105): the ban in force with the
+    /// day it lapses, every live warning with its case reference, and how to
+    /// contest one. The references are shown here and in the strike notice
+    /// only, the one place the reader needs them to write to the abuse desk.
+    private static func standingRows(_ standing: WarrenAccountStanding) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            if let ban = standing.ban, ban.inForce {
+                Text(WarrenAccountStandingText.ban(ban))
+                    .foregroundColor(.Warren.error)
+            }
+            ForEach(Array(standing.strikes.enumerated()), id: \.offset) { index, strike in
+                Text(
+                    WarrenAccountStandingText.warning(
+                        WarrenStrikeNotice(strike: strike, ordinal: index + 1, threshold: standing.threshold)
+                    ) + " " + WarrenAccountStandingText.caseReference(strike)
+                )
+            }
+            if !standing.strikes.isEmpty {
+                Text(WarrenAccountStandingText.contest())
+                    .foregroundColor(.white.opacity(0.7))
+            }
+        }
+        .font(.warrenMicro)
+    }
+
+    /// Whether the standing has anything to show: a ban in force or a live
+    /// warning.
+    static func hasStandingToShow(_ standing: WarrenAccountStanding) -> Bool {
+        standing.ban?.inForce == true || !standing.strikes.isEmpty
+    }
+
     /// The page that states the strike rule and the way to contest one, the
     /// same the Android screen links.
-    static let abuseReportsURL = "https://warren.ro/signalements"
+    static let abuseReportsURL = WarrenAccountStandingText.reportsURL
 
     private static func lifetimeLabel(_ seconds: UInt32) -> String {
         let formatter = DateComponentsFormatter()

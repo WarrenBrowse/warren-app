@@ -53,6 +53,25 @@ final class WarrenPortForwardingTests: XCTestCase {
         XCTAssertEqual(state(snapshot()), .requesting)
     }
 
+    /// An exit refusing the mapping as not authorized (warren-core doc 105) is
+    /// not a dead end: the tunnel asks again, and the screen says what was
+    /// missing and when.
+    func testARefusalForWantOfAnEntitlementCountsDownToTheNextTry() {
+        var refused = snapshot(status: "refused", retryAfterSeconds: 30)
+        refused.refusal = "no_entitlement"
+        refused.refusedAt = now.addingTimeInterval(-10)
+
+        XCTAssertEqual(state(refused), .refused(noEntitlement: true, retryIn: 20))
+    }
+
+    func testARefusedEntitlementIsNamedApart() {
+        var refused = snapshot(status: "refused", retryAfterSeconds: 2)
+        refused.refusal = "entitlement_refused"
+        refused.refusedAt = now
+
+        XCTAssertEqual(state(refused), .refused(noEntitlement: false, retryIn: 2))
+    }
+
     /// The client renews at half the granted lifetime, so the countdown is
     /// half of it minus what has passed.
     func testAGrantCarriesItsPortAndTheCountdownToTheNextRenewal() {

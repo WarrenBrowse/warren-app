@@ -67,6 +67,19 @@ typedef enum WarrenTunnelEventTagC {
    * controls come back instead of leaving them inert with no reason.
    */
   EventNatPmpRateLimited = 9,
+  /**
+   * Terminal counterpart of `Banned`. Carries the auth-failed reason,
+   * opening on its `[BANNED*]` token, in `data_ban_reason`, and the lapse
+   * in `data_ban_lapses_at_unix_secs` (`0` when unknown).
+   */
+  EventBanned = 10,
+  /**
+   * The exit refused the mapping as not authorized and the tunnel asks
+   * again on its own after `data_nat_pmp_retry_after_seconds`.
+   * `data_nat_pmp_failure_reason` is `no_entitlement` or
+   * `entitlement_refused`.
+   */
+  EventNatPmpRefused = 11,
 } WarrenTunnelEventTagC;
 
 /**
@@ -92,6 +105,12 @@ typedef enum WarrenTunnelStateC {
    * lapsed subscription and Android offers to renew.
    */
   Unauthorized = 5,
+  /**
+   * The wallet is banned (warren-core doc 105): learned from the token
+   * issuer's refusal before any dial, or from the exit's CRL rejection.
+   * Terminal like `Unauthorized`, and the event says why and until when.
+   */
+  Banned = 6,
 } WarrenTunnelStateC;
 
 typedef struct ApiContext ApiContext;
@@ -299,9 +318,19 @@ typedef struct WarrenTunnelEventC {
   const char *data_nat_pmp_failure_reason;
   /**
    * NatPmpRateLimited : seconds until the exit accepts an allocation
-   * again. Zero for every other event.
+   * again. NatPmpRefused : seconds until the tunnel asks again. Zero for
+   * every other event.
    */
   uint32_t data_nat_pmp_retry_after_seconds;
+  /**
+   * Banned : null-terminated UTF-8 auth-failed reason, opening on its
+   * `[BANNED*]` token.
+   */
+  const char *data_ban_reason;
+  /**
+   * Banned : when the ban lapses, Unix seconds; `0` when unknown.
+   */
+  uint64_t data_ban_lapses_at_unix_secs;
 } WarrenTunnelEventC;
 
 /**
@@ -962,6 +991,35 @@ char *warren_account_campaign_voucher(const uint8_t *seed, const char *campaign_
  * returned pointer must be freed once via `warren_wallet_free_mnemonic`.
  */
 char *warren_account_delete(const uint8_t *seed);
+
+/**
+ * Signed `GET /v1/account/standing` (warren-core doc 105 §5.4): the wallet's
+ * live port-forward strikes with their case references, the ban with its
+ * lapse, and the strikes this device has not warned about yet, each exactly
+ * once. Which strikes were announced is remembered in a ledger of digests in
+ * `ledger_dir`, the app's own container.
+ *
+ * Returns the envelope `warren_standing::StandingStore::on_poll` documents,
+ * `{"ok":..,"reported":..,"standing":..,"new_strikes":[..]}`: `reported` is
+ * false on an API that does not serve the standing yet, which is quiet. The
+ * case references and ports go to the account's own screens and nowhere
+ * else, never to a log.
+ *
+ * # Safety
+ * `seed`, when non-null, must point to at least 32 readable bytes;
+ * `ledger_dir`, when non-null, must be a valid null-terminated C string. The
+ * returned pointer must be freed once via `warren_wallet_free_mnemonic`.
+ */
+char *warren_account_standing(const uint8_t *seed, const char *ledger_dir);
+
+/**
+ * The wallet left this device: forgets its standing and which of its strikes
+ * were announced, the ledger in `ledger_dir` included.
+ *
+ * # Safety
+ * `ledger_dir`, when non-null, must be a valid null-terminated C string.
+ */
+void warren_account_standing_forget(const char *ledger_dir);
 
 /**
  * Sign and submit a forum-login challenge for `sid` to the connect `host`.
