@@ -6,6 +6,8 @@ import log from '../../../../shared/logging';
 import { useAppContext } from '../../../context';
 import { useSelector } from '../../../redux/store';
 
+// Failures are logged without their message: one raised while resolving a
+// picked program can name its path, and here a path is tied to an exit.
 export function useAppRouting() {
   const routing = useSelector((state) => state.settings.appRouting);
   const statuses = useSelector((state) => state.settings.appRouteStatus);
@@ -16,8 +18,8 @@ export function useAppRouting() {
     async (mode: AppSplitMode) => {
       try {
         await app.setAppSplitMode(mode);
-      } catch (e) {
-        log.error('Could not set the split mode', (e as Error).message);
+      } catch {
+        log.error('Could not set the split mode');
       }
     },
     [app],
@@ -27,8 +29,8 @@ export function useAppRouting() {
     async (enabled: boolean) => {
       try {
         await app.setAppExitsEnabled(enabled);
-      } catch (e) {
-        log.error('Could not switch the per-app countries', (e as Error).message);
+      } catch {
+        log.error('Could not switch the per-app countries');
       }
     },
     [app],
@@ -43,8 +45,8 @@ export function useAppRouting() {
     ): Promise<SetAppExitOutcome | undefined> => {
       try {
         return await app.setAppExit(application, exit);
-      } catch (e) {
-        log.error('Could not set the country of an app', (e as Error).message);
+      } catch {
+        log.error('Could not set the country of an app');
         return undefined;
       }
     },
@@ -55,8 +57,8 @@ export function useAppRouting() {
     async (application: string) => {
       try {
         await app.clearAppExit(application);
-      } catch (e) {
-        log.error('Could not clear the country of an app', (e as Error).message);
+      } catch {
+        log.error('Could not clear the country of an app');
       }
     },
     [app],
@@ -66,8 +68,8 @@ export function useAppRouting() {
     async (application: ISplitTunnelingApplication | string) => {
       try {
         await app.addIncludedApp(application);
-      } catch (e) {
-        log.error('Could not add an app to VPN only for', (e as Error).message);
+      } catch {
+        log.error('Could not add an app to VPN only for');
       }
     },
     [app],
@@ -77,8 +79,8 @@ export function useAppRouting() {
     async (application: string) => {
       try {
         await app.removeIncludedApp(application);
-      } catch (e) {
-        log.error('Could not remove an app from VPN only for', (e as Error).message);
+      } catch {
+        log.error('Could not remove an app from VPN only for');
       }
     },
     [app],
