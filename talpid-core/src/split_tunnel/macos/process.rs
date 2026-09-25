@@ -11,6 +11,7 @@ use libc::pid_t;
 use serde::{Deserialize, de::Error as _};
 use std::{
     collections::{HashMap, HashSet},
+    ffi::OsStr,
     fmt, io,
     path::{Path, PathBuf},
     process::Stdio,
@@ -19,14 +20,20 @@ use std::{
 };
 use talpid_macos::process::{list_pids, process_path};
 use talpid_platform_metadata::MacosVersion;
-use talpid_types::{split_tunnel::SplitTunnelMode, tunnel::ErrorStateCause};
-use tokio::{
-    io::{AsyncBufReadExt, AsyncRead, BufReader},
-    sync::OnceCell,
-};
+use talpid_types::{ErrorExt, split_tunnel::SplitTunnelMode, tunnel::ErrorStateCause};
+use tokio::io::{AsyncBufReadExt, AsyncRead, BufReader};
 
 const SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(3);
-const EARLY_FAIL_TIMEOUT: Duration = Duration::from_millis(500);
+/// How long the Full Disk Access probe waits for eslogger to report an event
+/// or an error. Past it the answer is inconclusive, which counts as denied.
+const PROBE_TIMEOUT: Duration = Duration::from_secs(2);
+/// How often the probe starts a short-lived process, so that a working
+/// eslogger has an event to report even on an idle machine.
+const PROBE_EVENT_INTERVAL: Duration = Duration::from_millis(100);
+/// Lets an unsigned build run the split tunnel, for local testing only: its
+/// Full Disk Access grant is lost at every rebuild. Read from the daemon's own
+/// environment, which only root sets.
+const ALLOW_UNSIGNED_ENV: &str = "WARREN_ALLOW_UNSIGNED_SPLIT_TUNNEL";
 
 static MIN_OS_VERSION: LazyLock<MacosVersion> =
     LazyLock::new(|| MacosVersion::from_raw_version("13.0.0").unwrap());
@@ -44,6 +51,10 @@ pub enum Error {
     /// The app requires TCC approval from the user.
     #[error("The app needs TCC approval from the user for Full Disk Access")]
     NeedFullDiskPermissions,
+    /// The daemon is not signed with a certificate anchored at Apple, so a
+    /// Full Disk Access grant would not survive the next update.
+    #[error("The split tunnel needs a signed build")]
+    NeedsSignedBuild,
     /// eslogger failed due to an unknown error
     #[error("eslogger returned an error")]
     MonitorFailed(#[source] io::Error),
@@ -80,6 +91,10 @@ impl ProcessMonitor {
     pub async fn spawn() -> Result<ProcessMonitorHandle, Error> {
         check_os_version_support()?;
 
+        if !build_is_trusted() {
+            return Err(Error::NeedsSignedBuild);
+        }
+
         if !has_full_disk_access().await {
             return Err(Error::NeedFullDiskPermissions);
         }
@@ -98,71 +113,172 @@ impl ProcessMonitor {
     }
 }
 
-/// Return whether the process has full-disk access
-/// If it cannot be determined that access is available, it is assumed to be available
-pub async fn has_full_disk_access() -> bool {
-    static HAS_TCC_APPROVAL: OnceCell<bool> = OnceCell::const_new();
-    *HAS_TCC_APPROVAL
-        .get_or_try_init(|| async {
-            let mut proc = spawn_eslogger()?;
+/// Whether the split tunnel can run on this machine with this build.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Capability {
+    /// Everything it needs is in place.
+    Supported,
+    /// `/usr/bin/eslogger` needs Full Disk Access, and it has not been
+    /// granted, or the probe could not confirm it.
+    NeedsFullDiskAccess,
+    /// The daemon is ad-hoc signed or unsigned: a Full Disk Access grant
+    /// would not survive an update, so the split tunnel is refused.
+    NeedsSignedBuild,
+    /// macOS is older than the version eslogger requires.
+    UnsupportedOs,
+}
 
-            let stdout = proc.stdout.take().unwrap();
-            let stderr = proc.stderr.take().unwrap();
-            drop(proc.stdin.take());
-
-            let has_full_disk_access = parse_logger_status(stdout, stderr).await == NeedFda::No;
-            Ok::<bool, Error>(has_full_disk_access)
+impl std::fmt::Display for Capability {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Capability::Supported => "the split tunnel can run",
+            Capability::NeedsFullDiskAccess => {
+                "the split tunnel needs Full Disk Access for /usr/bin/eslogger"
+            }
+            Capability::NeedsSignedBuild => "the split tunnel needs a signed build",
+            Capability::UnsupportedOs => "the split tunnel needs macOS 13 or later",
         })
-        .await
-        .unwrap_or(&true)
+    }
 }
 
+/// Whether the split tunnel can run, checked before anything is set up. The
+/// build and the OS are checked first, then Full Disk Access with a live
+/// probe; an inconclusive probe counts as a missing grant.
+pub async fn capability() -> Capability {
+    if check_os_version_support().is_err() {
+        return Capability::UnsupportedOs;
+    }
+    if !build_is_trusted() {
+        return Capability::NeedsSignedBuild;
+    }
+    if has_full_disk_access().await {
+        Capability::Supported
+    } else {
+        Capability::NeedsFullDiskAccess
+    }
+}
+
+/// Whether this build on this OS can run the split tunnel at all, Full Disk
+/// Access aside.
+pub fn build_supports_split_tunnel() -> bool {
+    check_os_version_support().is_ok() && build_is_trusted()
+}
+
+fn build_is_trusted() -> bool {
+    static TRUSTED: LazyLock<bool> = LazyLock::new(|| {
+        signature_allows_split_tunnel(
+            talpid_macos::code_signing::running_code_is_apple_anchored(),
+            std::env::var_os(ALLOW_UNSIGNED_ENV).as_deref(),
+        )
+    });
+    *TRUSTED
+}
+
+fn signature_allows_split_tunnel(apple_anchored: bool, allow_unsigned: Option<&OsStr>) -> bool {
+    if apple_anchored {
+        return true;
+    }
+    let allowed = allow_unsigned == Some(OsStr::new("1"));
+    if allowed {
+        log::warn!(
+            "Running the split tunnel on an unsigned build: its Full Disk Access grant is lost at \
+             every rebuild"
+        );
+    }
+    allowed
+}
+
+/// Return whether eslogger has Full Disk Access. Only a conclusive grant
+/// counts: an inconclusive probe answers no. A grant is remembered for the
+/// life of the process, a refusal is probed again, so a grant the user gives
+/// later is seen without a restart.
+pub async fn has_full_disk_access() -> bool {
+    static GRANTED: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+    if GRANTED.load(std::sync::atomic::Ordering::Relaxed) {
+        return true;
+    }
+    let status = probe_full_disk_access().await;
+    if status != FdaStatus::Granted {
+        log::debug!("Full Disk Access probe: {status:?}");
+        return false;
+    }
+    GRANTED.store(true, std::sync::atomic::Ordering::Relaxed);
+    true
+}
+
+/// What the Full Disk Access probe concluded.
 #[derive(Debug, PartialEq)]
-enum NeedFda {
-    Yes,
-    No,
+enum FdaStatus {
+    /// eslogger reported an event: its Endpoint Security client runs.
+    Granted,
+    /// eslogger said it lacks the permission.
+    Denied,
+    /// Anything else: it failed otherwise, said nothing, or never started.
+    Inconclusive,
 }
 
-/// Return whether `proc` reports that full-disk access is unavailable based on its output
-/// If it cannot be determined that access is available, it is assumed to be available
+async fn probe_full_disk_access() -> FdaStatus {
+    let mut proc = match spawn_eslogger() {
+        Ok(proc) => proc,
+        Err(error) => {
+            log::error!(
+                "{}",
+                error.display_chain_with_msg("Failed to probe eslogger")
+            );
+            return FdaStatus::Inconclusive;
+        }
+    };
+
+    let stdout = proc.stdout.take().unwrap();
+    let stderr = proc.stderr.take().unwrap();
+    drop(proc.stdin.take());
+
+    // A working eslogger prints nothing until a process forks, execs or exits.
+    let events = tokio::spawn(async {
+        loop {
+            let _ = tokio::process::Command::new("/usr/bin/true")
+                .stdin(Stdio::null())
+                .stdout(Stdio::null())
+                .stderr(Stdio::null())
+                .status()
+                .await;
+            tokio::time::sleep(PROBE_EVENT_INTERVAL).await;
+        }
+    });
+    let status = parse_logger_status(stdout, stderr).await;
+    events.abort();
+    status
+}
+
+/// What eslogger's output says about its access, within [`PROBE_TIMEOUT`].
 async fn parse_logger_status(
     stdout: impl AsyncRead + Unpin + Send + 'static,
     stderr: impl AsyncRead + Unpin + Send + 'static,
-) -> NeedFda {
+) -> FdaStatus {
     let stderr = BufReader::new(stderr);
     let mut stderr_lines = stderr.lines();
 
     let stdout = BufReader::new(stdout);
     let mut stdout_lines = stdout.lines();
 
-    let mut need_full_disk_access = tokio::spawn(async move {
+    let status = async move {
         tokio::select! {
             biased; result = stderr_lines.next_line() => {
-                let Ok(Some(line)) = result else {
-                    return NeedFda::No;
-                };
-                if let Some(Error::NeedFullDiskPermissions) = parse_eslogger_error(&line) {
-                    return NeedFda::Yes;
+                match result {
+                    Ok(Some(line)) if matches!(
+                        parse_eslogger_error(&line),
+                        Some(Error::NeedFullDiskPermissions)
+                    ) => FdaStatus::Denied,
+                    _ => FdaStatus::Inconclusive,
                 }
-                NeedFda::No
             }
-            Ok(Some(_)) = stdout_lines.next_line() => {
-                // Received output, but not an err
-                NeedFda::No
-            }
+            Ok(Some(_)) = stdout_lines.next_line() => FdaStatus::Granted,
         }
-    });
+    };
 
-    let deadline = tokio::time::sleep(EARLY_FAIL_TIMEOUT);
-
-    tokio::select! {
-        // Received standard err/out
-        biased; need_full_disk_access = &mut need_full_disk_access => {
-            need_full_disk_access.unwrap_or(NeedFda::No)
-        }
-        // Timed out while checking for full-disk access
-        _ = deadline => NeedFda::No,
-    }
+    tokio::time::timeout(PROBE_TIMEOUT, status)
+        .await
+        .unwrap_or(FdaStatus::Inconclusive)
 }
 
 /// Run until the process exits or `stop_rx` is signaled
@@ -832,76 +948,82 @@ mod test {
     /// If the process prints 'ES_NEW_CLIENT_RESULT_ERR_NOT_PERMITTED' to stderr, full-disk access
     /// is denied.
     #[tokio::test]
-    async fn test_parse_logger_status_missing_access() {
-        let need_fda = parse_logger_status(
+    async fn a_permission_error_means_access_is_denied() {
+        let status = parse_logger_status(
             &[][..],
             b"ES_NEW_CLIENT_RESULT_ERR_NOT_PERMITTED\n".as_slice(),
         )
         .await;
 
-        assert_eq!(
-            need_fda,
-            NeedFda::Yes,
-            "expected 'NeedFda::Yes' when ES_NEW_CLIENT_RESULT_ERR_NOT_PERMITTED was present"
-        );
+        assert_eq!(status, FdaStatus::Denied);
     }
 
-    /// If process exits without 'ES_NEW_CLIENT_RESULT_ERR_NOT_PERMITTED', assume full-disk access
-    /// is available.
     #[tokio::test]
-    async fn test_parse_logger_status_immediate_exit() {
-        let need_fda = parse_logger_status(
-            b"nothing to see here\n".as_slice(),
-            b"nothing to see here\n".as_slice(),
-        )
-        .await;
+    async fn an_event_means_access_is_granted() {
+        let stdout = output("{\"version\":10}\n", Duration::ZERO);
+        let stderr = output("This will never be printed\n", Duration::MAX);
 
-        assert_eq!(
-            need_fda,
-            NeedFda::No,
-            "expected 'NeedFda::No' on immediate exit",
-        );
+        let status = parse_logger_status(stdout, stderr).await;
+
+        assert_eq!(status, FdaStatus::Granted);
     }
 
-    /// Check that [parse_logger_status] returns within a reasonable timeframe.
-    /// "Reasonable" being within [EARLY_FAIL_TIMEOUT].
+    #[tokio::test]
+    async fn another_error_is_inconclusive() {
+        let stdout = output("This will never be printed\n", Duration::MAX);
+
+        let status =
+            parse_logger_status(stdout, b"eslogger: must be run as root\n".as_slice()).await;
+
+        assert_eq!(status, FdaStatus::Inconclusive);
+    }
+
+    /// eslogger exited without a word on either stream.
+    #[tokio::test]
+    async fn an_exit_without_output_is_inconclusive() {
+        let status = parse_logger_status(&[][..], &[][..]).await;
+
+        assert_eq!(status, FdaStatus::Inconclusive);
+    }
+
+    /// A denial printed late is still read, well within [PROBE_TIMEOUT].
     #[tokio::test(start_paused = true)]
-    async fn test_parse_logger_status_responsive() {
+    async fn a_late_denial_is_read_in_time() {
         let start = tokio::time::Instant::now();
         let stdout = output("This will never be printed\n", Duration::MAX);
         let stderr = output(
             "ES_NEW_CLIENT_RESULT_ERR_NOT_PERMITTED\n",
-            EARLY_FAIL_TIMEOUT / 2,
+            PROBE_TIMEOUT / 4,
         );
         tokio::time::resume();
 
-        let need_fda = parse_logger_status(stdout, stderr).await;
+        let status = parse_logger_status(stdout, stderr).await;
 
         tokio::time::pause();
-
-        assert_eq!(
-            need_fda,
-            NeedFda::Yes,
-            "expected 'NeedFda::Yes' when ES_NEW_CLIENT_RESULT_ERR_NOT_PERMITTED was eventually printed to stderr"
-        );
-
-        // Assert that we did not spend more time waiting than we should
-        assert!(start.elapsed() < EARLY_FAIL_TIMEOUT);
+        assert_eq!(status, FdaStatus::Denied);
+        assert!(start.elapsed() < PROBE_TIMEOUT);
     }
 
-    /// Check that [parse_logger_status] doesn't get stuck because nothing is ever output
-    /// to std{out,err}. It should time out with the assumption that full-disk access is available.
-    #[tokio::test]
-    async fn test_parse_logger_status_timeout() {
+    /// Silence on both streams never reads as a grant.
+    #[tokio::test(start_paused = true)]
+    async fn silence_is_inconclusive() {
         let stdout = output("This will never be printed\n", Duration::MAX);
         let stderr = output("This will never be printed\n", Duration::MAX);
 
-        let need_fda = parse_logger_status(stdout, stderr).await;
+        let status = parse_logger_status(stdout, stderr).await;
 
-        assert_eq!(
-            need_fda,
-            NeedFda::No,
-            "expected 'NeedFda::No' when nothing was ever printed to stdout or stderr"
-        );
+        assert_eq!(status, FdaStatus::Inconclusive);
+    }
+
+    #[test]
+    fn an_ad_hoc_build_needs_the_explicit_override() {
+        assert!(signature_allows_split_tunnel(true, None));
+        assert!(!signature_allows_split_tunnel(false, None));
+        assert!(!signature_allows_split_tunnel(false, Some(OsStr::new("0"))));
+        assert!(!signature_allows_split_tunnel(
+            false,
+            Some(OsStr::new("yes"))
+        ));
+        assert!(signature_allows_split_tunnel(false, Some(OsStr::new("1"))));
     }
 }

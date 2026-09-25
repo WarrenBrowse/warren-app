@@ -27,6 +27,8 @@ pub use tun::VpnInterface;
 /// Check whether the current process has full-disk access enabled.
 /// This is required by the process monitor.
 pub use process::has_full_disk_access;
+/// Whether the split tunnel can run here, and why not.
+pub use process::{Capability, build_supports_split_tunnel, capability};
 
 /// Errors caused by split tunneling
 #[derive(Debug, Clone)]

@@ -402,6 +402,7 @@ function newConfig() {
       category: 'public.app-category.tools',
       icon: distAssets(`icon-macos${productEnv.iconSuffix}.icns`),
       notarize: shouldNotarize,
+      sign: signMacApp,
       extendInfo: {
         LSUIElement: true,
         NSUserNotificationAlertStyle: 'banner',
@@ -898,6 +899,31 @@ function buildAssets(relativePath) {
   return root(path.join('build', relativePath));
 }
 
+// Every nested binary is signed with the inherited Electron entitlements (JIT,
+// unsigned executable memory), which the Chromium helpers need. The daemon gets
+// none: it runs as root, spawns eslogger, and opens utun, /dev/bpf and /dev/pf,
+// none of which the hardened runtime restricts. Its signing identifier comes from
+// the Info.plist the daemon's build script embeds, so it is stable per product
+// environment and a Full Disk Access grant survives an update.
+const MAC_DAEMON_ENTITLEMENTS = distAssets('macos/warren-daemon.entitlements');
+
+function macSignOptionsForFile(filePath, fileOptions) {
+  if (path.basename(filePath) !== 'warren-daemon') {
+    return fileOptions;
+  }
+  return { ...fileOptions, entitlements: MAC_DAEMON_ENTITLEMENTS };
+}
+
+async function signMacApp(options) {
+  const { signAsync } = require('@electron/osx-sign');
+  const optionsForFile = options.optionsForFile;
+  await signAsync({
+    ...options,
+    optionsForFile: (filePath) =>
+      macSignOptionsForFile(filePath, optionsForFile ? optionsForFile(filePath) : {}),
+  });
+}
+
 function distAssets(relativePath) {
   return root(path.join('dist-assets', relativePath));
 }
@@ -992,3 +1018,5 @@ exports.packWin = packWin;
 exports.packMac = packMac;
 exports.packLinux = packLinux;
 exports.linuxAfterPack = linuxAfterPack;
+exports.macSignOptionsForFile = macSignOptionsForFile;
+exports.MAC_DAEMON_ENTITLEMENTS = MAC_DAEMON_ENTITLEMENTS;
