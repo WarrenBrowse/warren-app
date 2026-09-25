@@ -105,7 +105,10 @@ layers (landscape, burrow, Bula), so they only line up if every client ships the
 same canvas. When new master art arrives, drop it in `new-da/calques/`
 (git-ignored, unlike a folder named anything else) and run
 `desktop/packages/mullvad-vpn/scripts/process-scenery.sh`, which emits desktop,
-Android and iOS in one pass. Converting a layer by hand, or regenerating one
+Android and iOS in one pass from the layers listed in
+`assets/images/scenery/scenery.json`. That table (layers, countries, phase rows)
+is also what the renderer and the browser extension read, so a new country is
+one entry there; the extension then takes it with `pnpm design:sync`. Converting a layer by hand, or regenerating one
 platform alone, is what left Singapore photoreal on desktop for a whole release.
 `test/unit/scenery-assets.spec.ts` gates it.
 
