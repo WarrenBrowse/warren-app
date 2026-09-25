@@ -1,4 +1,5 @@
-### Reparat
-- [macOS] Repară actualizarea aplicației de la versiunea 1.1.32, care se oprea cu „Instalarea a
-  eșuat". Programul de instalare cerea aplicației care rula să se pregătească de actualizare
-  dintr-un cont de la care aplicația nu mai acceptă comenzi și se oprea când aceasta refuza.
+### Adăugat
+- [Linux] Instalează actualizările din aplicație, ca pe Windows și macOS. Aplicația descarcă
+  noua versiune, o verifică cu manifestul de actualizare semnat, o predă managerului de pachete
+  al distribuției (apt, dnf, zypper sau pacman) și repornește cu noua versiune. `warren upgrade`
+  face același lucru dintr-un terminal.

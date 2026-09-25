@@ -12,6 +12,13 @@ notes du tout. Les en-têtes `## [X.Y.Z]` doivent rester identiques à ceux de
 version. Le préfixe de plateforme (`[macOS]`, `[Windows]`, `[linux]`) est lu
 par l'application, gardez-le tel quel.
 
+## [1.1.35] - 2026-09-25
+### Ajouté
+- [Linux] Installer les mises à jour depuis l'application, comme sur Windows et macOS.
+  L'application télécharge la nouvelle version, la vérifie avec le manifeste de mise à jour signé,
+  la confie au gestionnaire de paquets de la distribution (apt, dnf, zypper ou pacman) et
+  redémarre sur la nouvelle version. `warren upgrade` fait de même depuis un terminal.
+
 ## [1.1.34] - 2026-09-24
 ### Corrigé
 - [macOS] Corriger la mise à jour de l'application depuis la version 1.1.32, qui s'arrêtait sur

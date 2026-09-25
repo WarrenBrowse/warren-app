@@ -11,6 +11,13 @@ Titlurile `## [X.Y.Z]` trebuie să rămână identice cu cele din `CHANGELOG.md`
 extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`,
 `[Windows]`, `[linux]`) este citit de aplicație, păstrați-l ca atare.
 
+## [1.1.35] - 2026-09-25
+### Adăugat
+- [Linux] Instalează actualizările din aplicație, ca pe Windows și macOS. Aplicația descarcă
+  noua versiune, o verifică cu manifestul de actualizare semnat, o predă managerului de pachete
+  al distribuției (apt, dnf, zypper sau pacman) și repornește cu noua versiune. `warren upgrade`
+  face același lucru dintr-un terminal.
+
 ## [1.1.34] - 2026-09-24
 ### Reparat
 - [macOS] Repară actualizarea aplicației de la versiunea 1.1.32, care se oprea cu „Instalarea a

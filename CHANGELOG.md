@@ -21,6 +21,13 @@ Line wrap the file at 100 chars.                                              Th
 * **Fixed**: for any bug fixes.
 * **Security**: in case of vulnerabilities.
 
+## [1.1.35] - 2026-09-25
+### Added
+- [Linux] Install updates from the app, as on Windows and macOS. The app downloads the new
+  version, checks it against the signed update manifest, hands it to the package manager of the
+  distribution (apt, dnf, zypper or pacman) and restarts on the new version. `warren upgrade`
+  does the same from a terminal.
+
 ## [1.1.34] - 2026-09-24
 ### Fixed
 - [macOS] Fix updating the app from version 1.1.32, which stopped with "The installation failed".

@@ -1,4 +1,5 @@
-### Fixed
-- [macOS] Fix updating the app from version 1.1.32, which stopped with "The installation failed".
-  The installer asked the running app to prepare for the update from an account the app no longer
-  accepts commands from, and stopped when it refused.
+### Added
+- [Linux] Install updates from the app, as on Windows and macOS. The app downloads the new
+  version, checks it against the signed update manifest, hands it to the package manager of the
+  distribution (apt, dnf, zypper or pacman) and restarts on the new version. `warren upgrade`
+  does the same from a terminal.
