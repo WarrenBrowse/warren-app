@@ -160,6 +160,7 @@ import TunnelStateHandler, {
 import UserInterface, { UserInterfaceDelegate } from './user-interface';
 import Version, { GUI_VERSION } from './version';
 import { announcementUrlToOpen } from './warren-announcement-links';
+import { fetchWarrenNetworkStats } from './warren-network-stats';
 
 const execAsync = util.promisify(exec);
 
@@ -1610,6 +1611,7 @@ class ApplicationMain
       }
       return result;
     });
+    IpcMainEventChannel.warrenNetworkStats.handleGet(() => fetchWarrenNetworkStats(this.daemonRpc));
     IpcMainEventChannel.forumActivity.handleMarkSeen(async () => {
       if (await markForumNotificationsSeen(this.daemonRpc)) {
         this.forumActivityMonitor.setObservedUnread(0);

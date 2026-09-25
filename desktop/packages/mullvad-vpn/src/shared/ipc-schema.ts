@@ -49,6 +49,7 @@ import {
   IWindowShapeParameters,
 } from './ipc-types';
 import { LogLevel } from './logging-types';
+import { WarrenNetworkStatsResult } from './network-stats';
 import { RenewalUiState } from './renewal';
 import { RoutePath } from './routes';
 import {
@@ -342,6 +343,11 @@ export const ipcSchema = {
   // this channel; the renderer dispatches it into the redux store.
   warrenStatus: {
     '': notifyRenderer<WarrenStatus>(),
+  },
+  // Public network transparency snapshot (warren-core doc 106). Asked by a
+  // visible surface only, once per window; the daemon caches per window.
+  warrenNetworkStats: {
+    get: invoke<void, WarrenNetworkStatsResult>(),
   },
   // NAT-PMP port-forwarding live status. Same pattern as
   // `warrenStatus`: main subscribes to the daemon NatPmpStatusUpdates

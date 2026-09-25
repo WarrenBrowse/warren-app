@@ -35,6 +35,7 @@ import {
   WarrenPubkeyMismatch,
   WarrenStatus,
 } from '../shared/daemon-rpc-types';
+import { ExitHostname } from '../shared/network-stats';
 import { daemonRpcPath } from './daemon-rpc-path';
 import { ConnectionObserver, GrpcClient, noConnectionError } from './grpc-client';
 import {
@@ -48,6 +49,7 @@ import {
   convertFromRelayList,
   convertFromSettings,
   convertFromTunnelState,
+  convertFromWarrenNetworkStats,
   convertFromWarrenStatus,
   convertToApiAccessMethodSetting,
   convertToCustomList,
@@ -543,6 +545,19 @@ export class DaemonRpc extends GrpcClient {
       this.client.setWarrenCustomExit,
       proto,
     );
+  }
+
+  // The public network stats body, passed through as the daemon received it,
+  // plus the exit_id to relay hostname join. An empty body means the API
+  // predates the endpoint.
+  public async getWarrenNetworkStats(): Promise<{
+    snapshotJson: string;
+    exitHostnames: ExitHostname[];
+  }> {
+    const response = await this.callEmpty<grpcTypes.WarrenNetworkStats>(
+      this.client.getWarrenNetworkStats,
+    );
+    return convertFromWarrenNetworkStats(response);
   }
 
   public async getWarrenStatus(): Promise<WarrenStatus> {

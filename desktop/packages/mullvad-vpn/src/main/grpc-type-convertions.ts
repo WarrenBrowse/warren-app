@@ -72,6 +72,7 @@ import {
   wrapConstraint,
 } from '../shared/daemon-rpc-types';
 import log from '../shared/logging';
+import { ExitHostname } from '../shared/network-stats';
 import { parseSuggestedUpgradeChangelog } from './changelog';
 
 export class ResponseParseError extends Error {
@@ -641,6 +642,18 @@ export function convertToWarrenMultiHopSettings(
   duration.setNanos((settings.hpkeEpochRotationMs % 1000) * 1_000_000);
   proto.setHpkeEpochRotation(duration);
   return proto;
+}
+
+export function convertFromWarrenNetworkStats(stats: grpcTypes.WarrenNetworkStats): {
+  snapshotJson: string;
+  exitHostnames: ExitHostname[];
+} {
+  return {
+    snapshotJson: stats.getSnapshotJson(),
+    exitHostnames: stats
+      .getExitHostnamesList()
+      .map((exit) => ({ exitId: exit.getExitId(), hostname: exit.getHostname() })),
+  };
 }
 
 export function convertFromWarrenStatus(status: grpcTypes.WarrenStatus): WarrenStatus {
