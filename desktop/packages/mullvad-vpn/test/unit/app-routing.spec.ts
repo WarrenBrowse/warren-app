@@ -5,10 +5,12 @@ import {
   appRouteLine,
   appRoutingSummary,
   buildCountryOptions,
+  countryNeedsIncludedLaunch,
   effectiveAppExits,
   effectiveIncludedApps,
   exitChoiceNames,
   exitChoicesInUse,
+  includeOnlyTabState,
   modeChangeConfirmation,
   resolveApplications,
   routeStatusForApp,
@@ -183,6 +185,19 @@ describe('appRoutingSummary, for the main screen', () => {
     const routing = settings({ splitMode: 'exclude', includedApps: [SLACK] });
 
     expect(appRoutingSummary(routing, [], 'darwin').vpnOnlyForCount).toBeUndefined();
+    expect(appRoutingSummary(routing, [], 'darwin').includeOnly).toBe(false);
+  });
+
+  it('says include-only is on without a count on Linux, where apps join when opened', () => {
+    const routing = settings({
+      splitMode: 'include-only',
+      appExits: [{ app: '/usr/lib/firefox/firefox', exit: { country: 'se' } }],
+    });
+
+    const summary = appRoutingSummary(routing, [], 'linux');
+
+    expect(summary.includeOnly).toBe(true);
+    expect(summary.vpnOnlyForCount).toBeUndefined();
   });
 
   it('counts the apps that leave from their own country', () => {
@@ -288,6 +303,33 @@ describe('buildCountryOptions, for the per-app country picker', () => {
     const options = buildCountryOptions(locations, 'sue', (name) => french[name] ?? name);
 
     expect(options.map((option) => option.name)).toEqual(['Suede']);
+  });
+});
+
+describe('countryNeedsIncludedLaunch, for the Country per app tab', () => {
+  it('holds on Linux in include-only mode, where only apps opened from VPN only for are in it', () => {
+    expect(countryNeedsIncludedLaunch('linux', 'include-only')).toBe(true);
+  });
+
+  it('holds nowhere else: the daemon includes an app with a country itself', () => {
+    expect(countryNeedsIncludedLaunch('linux', 'exclude')).toBe(false);
+    expect(countryNeedsIncludedLaunch('darwin', 'include-only')).toBe(false);
+  });
+});
+
+describe('includeOnlyTabState, for the VPN only for tab', () => {
+  it('is coming soon on Windows, whose daemon refuses include-only for now', () => {
+    expect(includeOnlyTabState('win32', 'off')).toBe('coming-soon');
+    expect(includeOnlyTabState('win32', 'exclude')).toBe('coming-soon');
+  });
+
+  it('stays open on Windows while include-only is somehow on, so it can be turned off', () => {
+    expect(includeOnlyTabState('win32', 'include-only')).toBe('available');
+  });
+
+  it('is available on macOS and Linux', () => {
+    expect(includeOnlyTabState('darwin', 'off')).toBe('available');
+    expect(includeOnlyTabState('linux', 'off')).toBe('available');
   });
 });
 

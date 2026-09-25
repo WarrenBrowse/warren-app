@@ -5096,3 +5096,31 @@ msgid "VPN only for %(count)d app"
 msgid_plural "VPN only for %(count)d apps"
 msgstr[0] "VPN ciblé pour %(count)d app"
 msgstr[1] "VPN ciblé pour %(count)d apps"
+
+msgctxt "connect-view"
+msgid "VPN only for chosen apps"
+msgstr "VPN ciblé pour les apps choisies"
+
+msgctxt "tunnel-control"
+msgid "Only selected apps are protected"
+msgstr "Seules les apps choisies sont protégées"
+
+msgctxt "split-tunneling-view"
+msgid "VPN only for is coming soon on Windows."
+msgstr "Le VPN ciblé arrive bientôt sur Windows."
+
+msgctxt "split-tunneling-view"
+msgid "VPN only for is on: an app uses its country when you open it from VPN only for."
+msgstr "Le VPN ciblé est activé : une app utilise son pays quand vous l'ouvrez depuis VPN ciblé."
+
+msgctxt "split-tunneling-view"
+msgid "Flatpak apps cannot use a country yet"
+msgstr "Les apps Flatpak ne peuvent pas encore utiliser un pays"
+
+msgctxt "split-tunneling-view"
+msgid "Snap apps cannot use a country yet"
+msgstr "Les apps Snap ne peuvent pas encore utiliser un pays"
+
+msgctxt "split-tunneling-view"
+msgid "Opens through a script: pick its program with Find another app"
+msgstr "S'ouvre via un script : choisissez son programme avec Trouver une autre application"

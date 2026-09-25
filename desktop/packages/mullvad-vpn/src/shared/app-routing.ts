@@ -115,7 +115,9 @@ export function routeStatusForApp(
 }
 
 export type AppRoutingSummary = {
-  // Set only while include-only is on.
+  includeOnly: boolean;
+  // Set only while include-only is on, and never on Linux, where an app joins
+  // the VPN when it is opened from Warren rather than from a list.
   vpnOnlyForCount?: number;
   appsWithOwnCountry: number;
   // A route that cannot run for a reason of its own. A route waiting for the
@@ -128,9 +130,11 @@ export function appRoutingSummary(
   statuses: readonly AppRouteStatus[],
   platform: Platform,
 ): AppRoutingSummary {
+  const includeOnly = routing.splitMode === 'include-only';
   return {
+    includeOnly,
     vpnOnlyForCount:
-      routing.splitMode === 'include-only'
+      includeOnly && platform !== 'linux'
         ? effectiveIncludedApps(routing, platform).length
         : undefined,
     appsWithOwnCountry: effectiveAppExits(routing, platform).length,
@@ -206,6 +210,26 @@ export function buildCountryOptions(
     }
   }
   return options.sort(byName);
+}
+
+// Linux includes an app by opening it in the included cgroup, so a country
+// chosen for an app in include-only mode takes effect only for the app opened
+// from VPN only for; elsewhere the daemon includes an app with a country itself.
+export function countryNeedsIncludedLaunch(platform: Platform, splitMode: AppSplitMode): boolean {
+  return platform === 'linux' && splitMode === 'include-only';
+}
+
+export type IncludeOnlyTabState = 'available' | 'coming-soon';
+
+// The Windows daemon refuses to turn include-only on until its driver work is
+// done (`INCLUDE_ONLY_READY` in talpid-core), so the tab is not offered there.
+// It stays open while the mode is on anyway, since turning it off must always
+// be possible.
+export function includeOnlyTabState(
+  platform: Platform,
+  splitMode: AppSplitMode,
+): IncludeOnlyTabState {
+  return platform === 'win32' && splitMode !== 'include-only' ? 'coming-soon' : 'available';
 }
 
 export type SplitModeAvailability =

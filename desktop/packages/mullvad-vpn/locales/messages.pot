@@ -1292,6 +1292,11 @@ msgid_plural "VPN only for %(count)d apps"
 msgstr[0] ""
 msgstr[1] ""
 
+#. the user opens from "VPN only for" use the VPN.
+msgctxt "connect-view"
+msgid "VPN only for chosen apps"
+msgstr ""
+
 msgctxt "connect-view"
 msgid "You have no more VPN time left on this account."
 msgstr ""
@@ -3494,6 +3499,11 @@ msgctxt "split-tunneling-view"
 msgid "Find another app"
 msgstr ""
 
+#. Line under a Flatpak app in the "Country per app" list.
+msgctxt "split-tunneling-view"
+msgid "Flatpak apps cannot use a country yet"
+msgstr ""
+
 msgctxt "split-tunneling-view"
 msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not be excluded from the VPN tunnel."
 msgstr ""
@@ -3547,6 +3557,13 @@ msgctxt "split-tunneling-view"
 msgid "Open System Settings"
 msgstr ""
 
+#. Line under an app started by a launcher script, which
+#. Warren cannot follow. "Find another app" is the button
+#. at the bottom of the list.
+msgctxt "split-tunneling-view"
+msgid "Opens through a script: pick its program with Find another app"
+msgstr ""
+
 #. This error message is shown if the user tries to launch a Linux desktop
 #. entry file that doesn't contain the required 'Exec' value.
 msgctxt "split-tunneling-view"
@@ -3573,6 +3590,11 @@ msgstr ""
 
 msgctxt "split-tunneling-view"
 msgid "Restart Warren Service"
+msgstr ""
+
+#. Line under a Snap app in the "Country per app" list.
+msgctxt "split-tunneling-view"
+msgid "Snap apps cannot use a country yet"
 msgstr ""
 
 msgctxt "split-tunneling-view"
@@ -3630,6 +3652,16 @@ msgstr ""
 
 msgctxt "split-tunneling-view"
 msgid "VPN only for"
+msgstr ""
+
+#. One line under the App routing tabs on Windows, where
+#. the "VPN only for" mode is not available yet.
+msgctxt "split-tunneling-view"
+msgid "VPN only for is coming soon on Windows."
+msgstr ""
+
+msgctxt "split-tunneling-view"
+msgid "VPN only for is on: an app uses its country when you open it from VPN only for."
 msgstr ""
 
 msgctxt "split-tunneling-view"
@@ -3784,6 +3816,12 @@ msgstr ""
 #. Secondary line shown while the tunnel is being torn down.
 msgctxt "tunnel-control"
 msgid "Disconnecting..."
+msgstr ""
+
+#. Secondary line shown below the status title while only
+#. the apps chosen in "VPN only for" use the VPN.
+msgctxt "tunnel-control"
+msgid "Only selected apps are protected"
 msgstr ""
 
 msgctxt "tunnel-control"

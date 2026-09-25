@@ -7,7 +7,10 @@ contextBridge.exposeInMainWorld('ipc', IpcRendererEventChannel);
 contextBridge.exposeInMainWorld('env', {
   e2e: process.env.CI,
   development: process.env.NODE_ENV === 'development',
-  platform: process.platform,
+  // The mocked end-to-end suite renders the views of another platform.
+  platform:
+    (process.env.CI === 'e2e' && (process.env.WARREN_E2E_PLATFORM as NodeJS.Platform)) ||
+    process.platform,
 });
 
 if (process.env.CI) {

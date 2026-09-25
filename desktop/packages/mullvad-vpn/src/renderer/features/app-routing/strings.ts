@@ -1,7 +1,30 @@
 import { sprintf } from 'sprintf-js';
 
 import { AppRouteLine, MAX_APP_EXITS, SplitModeAvailability } from '../../../shared/app-routing';
+import { ISplitTunnelingApplication } from '../../../shared/application-types';
 import { messages } from '../../../shared/gettext';
+
+// Why an app of the Linux list cannot be given a country.
+export function routingLimitationText(
+  limitation: NonNullable<ISplitTunnelingApplication['routingLimitation']>,
+): string {
+  switch (limitation) {
+    case 'flatpak':
+      // TRANSLATORS: Line under a Flatpak app in the "Country per app" list.
+      return messages.pgettext('split-tunneling-view', 'Flatpak apps cannot use a country yet');
+    case 'snap':
+      // TRANSLATORS: Line under a Snap app in the "Country per app" list.
+      return messages.pgettext('split-tunneling-view', 'Snap apps cannot use a country yet');
+    case 'script':
+      // TRANSLATORS: Line under an app started by a launcher script, which
+      // TRANSLATORS: Warren cannot follow. "Find another app" is the button
+      // TRANSLATORS: at the bottom of the list.
+      return messages.pgettext(
+        'split-tunneling-view',
+        'Opens through a script: pick its program with Find another app',
+      );
+  }
+}
 
 export function appRouteLineText(line: AppRouteLine): string {
   switch (line.kind) {

@@ -7,10 +7,11 @@ import { ISplitTunnelingApplication } from '../../../../../../shared/application
 import { ExitChoice } from '../../../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../../../shared/gettext';
 import { CountryChip, RouteStatusLine } from '../../../../../features/app-routing/components';
+import { routingLimitationText } from '../../../../../features/app-routing/strings';
 import { IconButton } from '../../../../../lib/components';
 import { colors, spacings } from '../../../../../lib/foundations';
 import { Container } from '../../../../cell';
-import { normalText } from '../../../../common-styles';
+import { normalText, tinyText } from '../../../../common-styles';
 import { ApplicationIcon } from '../application-icon';
 
 const StyledRow = styled(Container)({
@@ -41,6 +42,13 @@ const StyledName = styled.span({
   overflow: 'hidden',
   textOverflow: 'ellipsis',
   whiteSpace: 'nowrap',
+});
+
+// Unlike a route status, this line never changes, so it may wrap.
+const StyledLimitation = styled.span({
+  ...tinyText,
+  fontWeight: 400,
+  color: colors.whiteAlpha60,
 });
 
 export type AppCountryRowProps = {
@@ -90,18 +98,26 @@ export function AppCountryRow({
           { application: application.name },
         );
 
+  const limitation =
+    application.routingLimitation && routingLimitationText(application.routingLimitation);
+
   return (
     <StyledRow data-testid="app-country-row">
       <ApplicationIcon icon={application.icon} />
       <StyledText>
         <StyledName title={application.name}>{application.name}</StyledName>
-        {line && <RouteStatusLine line={line} />}
+        {limitation ? (
+          <StyledLimitation>{limitation}</StyledLimitation>
+        ) : (
+          line && <RouteStatusLine line={line} />
+        )}
       </StyledText>
       <StyledActions>
         <CountryChip
           country={exit?.country}
           label={chipLabel}
           accessibleLabel={chipAccessibleLabel}
+          disabled={limitation !== undefined}
           onClick={pick}
         />
         {onClear && (

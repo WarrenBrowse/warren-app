@@ -10,7 +10,7 @@ import {
 import { messages } from '../shared/gettext';
 import { LaunchApplicationResult } from '../shared/ipc-schema';
 import { Scheduler } from '../shared/scheduler';
-import { ExecutableLookup, resolveLaunchCommand } from './linux-app-routing';
+import { ExecutableLookup, resolveLaunchTarget } from './linux-app-routing';
 import {
   DesktopEntry,
   findIconPath,
@@ -186,26 +186,53 @@ const executableLookup: ExecutableLookup = {
     }
   },
   realpath: (candidate) => fs.realpath(candidate),
+  readScript: async (candidate) => {
+    try {
+      const file = await fs.open(candidate, 'r');
+      try {
+        const buffer = Buffer.alloc(64 * 1024);
+        const { bytesRead } = await file.read(buffer, 0, buffer.length, 0);
+        const text = buffer.subarray(0, bytesRead).toString('utf8');
+        return text.startsWith('#!') ? text : undefined;
+      } finally {
+        await file.close();
+      }
+    } catch {
+      return undefined;
+    }
+  },
 };
 
 // The desktop apps keyed by the program they run, which is what a per-app
-// country names on Linux. An app whose program cannot be found is left out.
+// country names on Linux. An app whose program cannot be named is kept, keyed
+// by its desktop entry and marked with the reason, so its row can say why it
+// takes no country. An app whose program cannot be found is left out.
 export async function getPathBasedApplications(
   locale: string,
 ): Promise<ISplitTunnelingApplication[]> {
   const applications: ISplitTunnelingApplication[] = [];
   for (const application of await getApplications(locale)) {
-    const executable = await resolveLaunchCommand(formatExec(application.exec), executableLookup);
-    if (
-      executable !== undefined &&
-      !applications.some((known) => known.absolutepath === executable)
-    ) {
-      applications.push({
-        absolutepath: executable,
-        name: application.name,
-        icon: application.icon,
-        deletable: false,
-      });
+    const target = await resolveLaunchTarget(formatExec(application.exec), executableLookup);
+    if (target === undefined) {
+      continue;
+    }
+    const entry: ISplitTunnelingApplication =
+      target.kind === 'program'
+        ? {
+            absolutepath: target.path,
+            name: application.name,
+            icon: application.icon,
+            deletable: false,
+          }
+        : {
+            absolutepath: application.absolutepath,
+            name: application.name,
+            icon: application.icon,
+            deletable: false,
+            routingLimitation: target.reason,
+          };
+    if (!applications.some((known) => known.absolutepath === entry.absolutepath)) {
+      applications.push(entry);
     }
   }
   return applications;
@@ -215,5 +242,6 @@ export async function getPathBasedApplications(
 // program it runs, anything else to the file it links to.
 export async function resolveExecutablePath(selected: string): Promise<string> {
   const argv = await getLaunchCommand(selected);
-  return (await resolveLaunchCommand(argv, executableLookup)) ?? selected;
+  const target = await resolveLaunchTarget(argv, executableLookup);
+  return target?.kind === 'program' ? target.path : selected;
 }
