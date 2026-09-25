@@ -12,8 +12,10 @@ ci/stage-release-assets.sh):
     x86 and arm64).
   - Windows: the per-arch `-windows-x64.exe` -> x86, `-windows-arm64.exe` ->
     arm64 (the `-windows-universal.exe` downloader is not listed per-arch).
-  - Linux: none. The release is listed without installers (the daemon's
-    `allow_empty` path); the GUI sends Linux users to the download page.
+  - Linux: one installer per package format (`package_format`: deb,
+    deb-sysvinit, rpm, pacman) and architecture. An install no format fits
+    still learns of the release (the daemon's `allow_empty` path) and is sent
+    to the download page.
 
 Also emits `downloads.json`, the website-facing manifest consumed by the
 warren.ro download page: latest downloadable version per platform with EVERY
@@ -334,6 +336,44 @@ def windows_installers(release_dir: Path, version: str, asset_base: str,
     return installers
 
 
+# Filename architecture token of a Linux package -> metadata architecture.
+LINUX_ARCH_TOKENS = {"amd64": "x86", "x86_64": "x86", "arm64": "arm64", "aarch64": "arm64"}
+
+# (extension, flavor) of a Linux package -> its `package_format` in linux.json,
+# the name the daemon matches against the package manager owning its install
+# (mullvad-update/src/linux.rs, PackageFormat::manifest_name). The NixOS flake
+# is absent on purpose: a NixOS system is upgraded by its configuration.
+LINUX_PACKAGE_FORMATS = {
+    ("deb", ""): "deb",
+    ("deb", "sysvinit"): "deb-sysvinit",
+    ("rpm", ""): "rpm",
+    ("pacman", ""): "pacman",
+}
+
+
+def linux_installers(release_dir: Path, version: str, asset_base: str,
+                     artifact_prefix: str = "WarrenVPN") -> list:
+    """Every Linux package the in-app updater can install, one per format and arch."""
+    installers = []
+    prefix = f"{artifact_prefix}-{version}-"
+    for path in sorted(release_dir.glob(f"{prefix}linux-*")):
+        parts = split_asset_name(path.name[len(prefix):])
+        if parts is None:
+            continue
+        _, arch_token, flavor, fmt = parts
+        package_format = LINUX_PACKAGE_FORMATS.get((fmt, flavor))
+        if package_format is None:
+            continue
+        architecture = LINUX_ARCH_TOKENS.get(arch_token)
+        if architecture is None:
+            print(f"  skipping unknown Linux arch token in {path.name}", file=sys.stderr)
+            continue
+        entry = installer_entry(path, architecture, asset_base)
+        entry["package_format"] = package_format
+        installers.append(entry)
+    return installers
+
+
 def split_asset_name(rest: str) -> tuple[str, str, str, str] | None:
     """Split `<platform>-<arch>[-<flavor>].<ext>` into its four parts.
 
@@ -613,8 +653,10 @@ def main() -> int:
                                   args.artifact_prefix),
         "windows": windows_installers(release_dir, args.version, asset_base,
                                       args.artifact_prefix),
-        # Linux: installer-less release (the daemon's allow_empty path).
-        "linux": [],
+        # Linux: one package per format and architecture; the daemon installs
+        # the one matching the package manager that owns its install.
+        "linux": linux_installers(release_dir, args.version, asset_base,
+                                  args.artifact_prefix),
         # Mobile: store-installed, so the OS store performs the actual update.
         # The manifest only carries the latest version + minimum_supported_version
         # so the app can show "update available" / hard-block and deep-link to the

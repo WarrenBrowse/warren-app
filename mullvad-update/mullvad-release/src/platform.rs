@@ -391,6 +391,7 @@ impl Platform {
                 // NOTE: Empty versions are allowed on Linux
                 allow_empty: self == &Platform::Linux,
                 lowest_metadata_version: MIN_VERIFY_METADATA_VERSION,
+                package_format: None,
             };
             version_info.push(VersionInfo::try_from_response(
                 &params,

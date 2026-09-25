@@ -217,6 +217,7 @@ where
             allow_empty: false,
             // The downloader allows any version
             lowest_metadata_version: mullvad_update::version::MIN_VERIFY_METADATA_VERSION,
+            package_format: None,
         };
 
         let err = match version_provider.get_version_info(&version_params).await {

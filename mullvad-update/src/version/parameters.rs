@@ -12,6 +12,10 @@ pub struct VersionParameters {
     /// Lowest allowed `metadata_version` in the version data
     /// Typically the current version plus 1
     pub lowest_metadata_version: usize,
+    /// Package format of the running install (`deb`, `rpm`, ...), which selects
+    /// among the installers of one architecture. `None` on macOS and Windows,
+    /// and on a Linux install no package manager owns.
+    pub package_format: Option<String>,
 }
 
 /// Installer architecture

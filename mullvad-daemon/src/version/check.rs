@@ -34,10 +34,10 @@ pub(super) type VersionCheckResult = std::result::Result<VersionCache, ()>;
 /// router.
 ///
 /// Detection (is there a newer version? is the running one still supported?)
-/// runs on every desktop platform. The in-app download/install step is gated
-/// separately by the `in_app_upgrade` cfg (Windows + macOS); on Linux the
-/// metadata carries no installers and the GUI points the user at the download
-/// page instead.
+/// runs on every desktop platform, and so does the in-app download (the
+/// `in_app_upgrade` cfg). On Linux the installer is the package of the format
+/// that owns this install; an install no known package manager owns still
+/// learns of new versions, and the GUI sends it to the download page.
 ///
 /// `refresh_rx` is woken by the router whenever a frontend asks for a fresh
 /// check; the poller otherwise re-checks on a fixed interval.
@@ -86,6 +86,7 @@ async fn version_updater_loop(
         let interval = match check_once(
             platform,
             architecture,
+            installed_package_format().await,
             rollout_threshold_seed,
             lowest_metadata_version,
         )
@@ -121,6 +122,25 @@ async fn version_updater_loop(
     }
 }
 
+/// The package format of this install, asked again at every check until it
+/// is known, so a query that failed once does not turn in-app upgrades off.
+#[cfg(not(target_os = "android"))]
+#[cfg_attr(not(target_os = "linux"), expect(clippy::unused_async))]
+async fn installed_package_format() -> Option<String> {
+    #[cfg(target_os = "linux")]
+    {
+        match tokio::task::spawn_blocking(super::linux_upgrade::installed_package_format).await {
+            Ok(format) => format.map(|format| format.manifest_name().to_owned()),
+            Err(error) => {
+                log::error!("Package format detection failed: {error}");
+                None
+            }
+        }
+    }
+    #[cfg(not(target_os = "linux"))]
+    None
+}
+
 /// Perform a single signed-metadata fetch and turn it into a [`VersionCache`].
 ///
 /// Signature verification and anti-rollback are enforced inside
@@ -129,6 +149,7 @@ async fn version_updater_loop(
 async fn check_once(
     platform: mullvad_update::api::MetaRepositoryPlatform,
     architecture: mullvad_update::format::Architecture,
+    package_format: Option<String>,
     rollout_threshold_seed: Option<u32>,
     lowest_metadata_version: usize,
 ) -> anyhow::Result<VersionCache> {
@@ -168,10 +189,13 @@ async fn check_once(
     let params = VersionParameters {
         architecture,
         rollout,
-        // Linux ships no in-app installers, so accept installer-less releases
-        // there; Windows and macOS require a matching installer.
-        allow_empty: !cfg!(in_app_upgrade),
+        // A Linux install whose format has no installer in a release (NixOS,
+        // an unpackaged build, a release predating Linux installers) must
+        // still learn of it, for the manual update and the forced-update gate.
+        // Windows and macOS require a matching installer.
+        allow_empty: cfg!(target_os = "linux"),
         lowest_metadata_version,
+        package_format,
     };
 
     let version_info = VersionInfo::try_from_response(&params, response.signed)

@@ -471,6 +471,9 @@ export type AppVersionInfoSuggestedUpgrade = {
   changelog: IChangelog;
   verifiedInstallerPath?: string;
   version: string;
+  // No installer of this release fits this install (a Linux install no
+  // supported package manager owns): only the download page can upgrade it.
+  manualInstallOnly?: boolean;
 };
 
 export interface IAppVersionInfo {

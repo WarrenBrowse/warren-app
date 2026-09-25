@@ -30,8 +30,9 @@ const StyledMessage = styled.span(smallText, {
 // Forced-update screen shown when the daemon reports the running version is no
 // longer supported. It replaces the whole UI so the app cannot be used until
 // it is updated. The download/verify/install machinery is the same `Footer`
-// the voluntary "Update available" view uses; on Linux (no in-app installer)
-// that footer falls back to a manual download link. The header carries no
+// the voluntary "Update available" view uses; for an install no published
+// installer fits (a Linux system no supported package manager owns), that
+// footer opens the download page instead. The header carries no
 // settings or account button so there is no way out except updating or
 // quitting.
 export function BlockedUpdateView() {

@@ -789,6 +789,9 @@ pub enum DaemonCommand {
     AppUpgradeAbort(ResponseTx<(), version::Error>),
     /// Return the storage path for the installers during in-app upgrades.
     GetAppUpgradeCacheDir(ResponseTx<PathBuf, version::Error>),
+    /// Install the downloaded and verified upgrade (Linux only). Answers the
+    /// path of the file the detached upgrade job reports its outcome to.
+    AppUpgradeInstall(ResponseTx<PathBuf, version::Error>),
 }
 
 /// All events that can happen in the daemon. Sent from various threads and exposed interfaces.
@@ -3215,6 +3218,7 @@ impl Daemon {
             AppUpgrade(tx) => self.on_app_upgrade(tx).await,
             AppUpgradeAbort(tx) => self.on_app_upgrade_abort(tx).await,
             GetAppUpgradeCacheDir(tx) => self.on_get_app_upgrade_cache_dir(tx).await,
+            AppUpgradeInstall(tx) => self.on_app_upgrade_install(tx),
             GetBridges(tx) => self.on_get_bridges(tx),
             #[cfg(target_os = "android")]
             DeleteAccount(tx) => self.on_delete_account(tx),
@@ -5959,6 +5963,26 @@ impl Daemon {
 
             Self::oneshot_send(tx, Ok(()), "on_app_upgrade_abort response")
         };
+    }
+
+    fn on_app_upgrade_install(&self, tx: ResponseTx<PathBuf, version::Error>) {
+        // Answered from a task: starting the job re-hashes the whole package,
+        // which must not hold up the daemon's event loop.
+        #[cfg(target_os = "linux")]
+        {
+            let version_handle = self.version_handle.clone();
+            tokio::spawn(async move {
+                let result = version_handle.install_application().await;
+                Self::oneshot_send(tx, result, "on_app_upgrade_install response");
+            });
+        }
+        // Every other platform launches its installer from the GUI.
+        #[cfg(not(target_os = "linux"))]
+        Self::oneshot_send(
+            tx,
+            Err(version::Error::InstallUnsupported),
+            "on_app_upgrade_install response",
+        );
     }
 
     #[cfg_attr(not(in_app_upgrade), expect(clippy::unused_async))]

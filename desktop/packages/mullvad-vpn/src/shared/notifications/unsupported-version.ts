@@ -33,20 +33,21 @@ export class UnsupportedVersionNotificationProvider
       message: this.getMessage(),
       category: SystemNotificationCategory.newVersion,
       severity: SystemNotificationSeverityType.high,
-      action: this.context.suggestedUpgrade
-        ? {
-            type: 'navigate-internal',
-            link: {
-              to: RoutePath.appUpgrade,
+      action:
+        this.context.suggestedUpgrade && !this.context.suggestedUpgrade.manualInstallOnly
+          ? {
+              type: 'navigate-internal',
+              link: {
+                to: RoutePath.appUpgrade,
+              },
+            }
+          : {
+              type: 'navigate-external',
+              link: {
+                text: messages.pgettext('notifications', 'Upgrade'),
+                to: getDownloadUrl(this.context.suggestedIsBeta ?? false),
+              },
             },
-          }
-        : {
-            type: 'navigate-external',
-            link: {
-              text: messages.pgettext('notifications', 'Upgrade'),
-              to: getDownloadUrl(this.context.suggestedIsBeta ?? false),
-            },
-          },
       presentOnce: { value: true, name: this.constructor.name },
       suppressInDevelopment: true,
     };
@@ -77,15 +78,13 @@ export class UnsupportedVersionNotificationProvider
   }
 
   private getInAppNotificationAction(): InAppNotificationAction {
-    if (this.context.suggestedUpgrade) {
-      if (process.platform !== 'linux') {
-        return {
-          type: 'navigate-internal',
-          link: {
-            to: RoutePath.appUpgrade,
-          },
-        };
-      }
+    if (this.context.suggestedUpgrade && !this.context.suggestedUpgrade.manualInstallOnly) {
+      return {
+        type: 'navigate-internal',
+        link: {
+          to: RoutePath.appUpgrade,
+        },
+      };
     }
 
     return {

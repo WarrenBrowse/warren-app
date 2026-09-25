@@ -3505,6 +3505,8 @@ export class SuggestedUpgrade extends jspb.Message {
 
     getChangelogTranslationsMap(): jspb.Map<string, string>;
     clearChangelogTranslationsMap(): void;
+    getManualInstallOnly(): boolean;
+    setManualInstallOnly(value: boolean): SuggestedUpgrade;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): SuggestedUpgrade.AsObject;
@@ -3523,6 +3525,7 @@ export namespace SuggestedUpgrade {
         verifiedInstallerPath?: string,
 
         changelogTranslationsMap: Array<[string, string]>,
+        manualInstallOnly: boolean,
     }
 }
 

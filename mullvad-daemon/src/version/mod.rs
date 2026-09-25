@@ -2,6 +2,8 @@ use std::io;
 
 pub mod check;
 pub mod downloader;
+#[cfg(target_os = "linux")]
+pub mod linux_upgrade;
 pub mod router;
 
 #[derive(thiserror::Error, Debug)]
@@ -41,6 +43,16 @@ pub enum Error {
 
     #[error("Version cache update was aborted")]
     UpdateAborted,
+
+    #[error("No downloaded and verified upgrade to install")]
+    NoVerifiedInstaller,
+
+    #[error("The daemon installs upgrades on Linux only; this platform's app runs its installer")]
+    InstallUnsupported,
+
+    #[cfg(target_os = "linux")]
+    #[error("Failed to start the upgrade")]
+    Install(#[source] linux_upgrade::Error),
 }
 
 /// Contains the date of the git commit this was built from

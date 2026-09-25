@@ -317,6 +317,11 @@ service ManagementService {
   rpc AppUpgradeAbort(google.protobuf.Empty) returns (google.protobuf.Empty) {}
   rpc AppUpgradeEventsListen(google.protobuf.Empty) returns (stream AppUpgradeEvent) {}
   rpc GetAppUpgradeCacheDir(google.protobuf.Empty) returns (google.protobuf.StringValue) {}
+  // Linux only: hand the verified package of the suggested upgrade to the
+  // package manager that owns this install. The upgrade runs detached from the
+  // daemon, which it restarts; the reply is the path of the file the job
+  // writes its outcome to ("running", then "exit <code>").
+  rpc AppUpgradeInstall(google.protobuf.Empty) returns (google.protobuf.StringValue) {}
 
   rpc SetLogFilter(LogFilter) returns (google.protobuf.Empty) {}
   rpc LogListen(google.protobuf.Empty) returns (stream LogMessage) {}
@@ -1423,6 +1428,10 @@ message SuggestedUpgrade {
   // language. Empty for a release published without translations, in which case
   // `changelog` (English) is what gets shown.
   map<string, string> changelog_translations = 4;
+  // No installer of this release fits this install (a Linux install no
+  // package manager of a published format owns, such as NixOS): the upgrade
+  // can only be done by hand, from the download page.
+  bool manual_install_only = 5;
 }
 
 message AppVersionInfo {

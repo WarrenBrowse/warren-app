@@ -159,6 +159,64 @@ class DropVersions(unittest.TestCase):
         self.assertEqual(list(kept), ["linux"])
 
 
+class LinuxInstallers(unittest.TestCase):
+    """linux.json lists one installer per package format and architecture.
+
+    The daemon installs the package of the format that owns the running install
+    (the `package_format` field), so a missing or mislabelled entry leaves that
+    distribution without an in-app upgrade, and a wrong one hands it a package
+    its package manager cannot install.
+    """
+
+    BASE = "https://api.beta.warrenbrowse.com/updates/desktop"
+    FILES = [
+        "WarrenVPN-Beta-1.2.3-linux-amd64.deb",
+        "WarrenVPN-Beta-1.2.3-linux-arm64.deb",
+        "WarrenVPN-Beta-1.2.3-linux-amd64-sysvinit.deb",
+        "WarrenVPN-Beta-1.2.3-linux-x86_64.rpm",
+        "WarrenVPN-Beta-1.2.3-linux-aarch64.rpm",
+        "WarrenVPN-Beta-1.2.3-linux-x86_64.pacman",
+        "WarrenVPN-Beta-1.2.3-linux-aarch64.pacman",
+        "WarrenVPN-Beta-1.2.3-linux-x86_64-nixos.tar.gz",
+        "WarrenVPN-Beta-1.2.3-linux-amd64.deb.torrent",
+        "WarrenVPN-Beta-1.2.3-windows-x64.exe",
+    ]
+
+    def installers(self) -> list:
+        with tempfile.TemporaryDirectory() as tmp:
+            release_dir = Path(tmp)
+            for name in self.FILES:
+                (release_dir / name).write_bytes(name.encode())
+            return bvm.linux_installers(release_dir, "1.2.3", self.BASE, "WarrenVPN-Beta")
+
+    def test_each_package_is_listed_under_its_format_and_architecture(self):
+        listed = {(i["package_format"], i["architecture"]) for i in self.installers()}
+        self.assertEqual(
+            listed,
+            {
+                ("deb", "x86"),
+                ("deb", "arm64"),
+                ("deb-sysvinit", "x86"),
+                ("rpm", "x86"),
+                ("rpm", "arm64"),
+                ("pacman", "x86"),
+                ("pacman", "arm64"),
+            },
+        )
+
+    def test_an_installer_carries_what_the_updater_verifies(self):
+        rpm = next(i for i in self.installers() if i["package_format"] == "rpm"
+                   and i["architecture"] == "arm64")
+        name = "WarrenVPN-Beta-1.2.3-linux-aarch64.rpm"
+        self.assertEqual(rpm["urls"], [f"{self.BASE}/{name}"])
+        self.assertEqual(rpm["size"], len(name))
+        self.assertEqual(len(rpm["sha256"]), 64)
+
+    def test_the_nixos_flake_is_not_an_installer(self):
+        # A NixOS system is upgraded by its own configuration, never in place.
+        self.assertFalse(any("nixos" in i["urls"][0] for i in self.installers()))
+
+
 class SiteAssetsWithTorrents(unittest.TestCase):
     """The download page's BitTorrent half is generated here.
 

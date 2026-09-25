@@ -24,6 +24,7 @@ pub mod status;
 pub mod tunnel;
 pub mod tunnel_state;
 pub mod unblock;
+pub mod upgrade;
 pub mod version;
 pub mod warren;
 

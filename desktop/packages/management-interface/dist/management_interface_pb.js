@@ -27617,7 +27617,8 @@ proto.mullvad_daemon.management_interface.SuggestedUpgrade.toObject = function(i
     version: jspb.Message.getFieldWithDefault(msg, 1, ""),
     changelog: jspb.Message.getFieldWithDefault(msg, 2, ""),
     verifiedInstallerPath: jspb.Message.getFieldWithDefault(msg, 3, ""),
-    changelogTranslationsMap: (f = msg.getChangelogTranslationsMap()) ? f.toObject(includeInstance, undefined) : []
+    changelogTranslationsMap: (f = msg.getChangelogTranslationsMap()) ? f.toObject(includeInstance, undefined) : [],
+    manualInstallOnly: jspb.Message.getBooleanFieldWithDefault(msg, 5, false)
   };
 
   if (includeInstance) {
@@ -27672,6 +27673,10 @@ proto.mullvad_daemon.management_interface.SuggestedUpgrade.deserializeBinaryFrom
         jspb.Map.deserializeBinary(message, reader, jspb.BinaryReader.prototype.readString, jspb.BinaryReader.prototype.readString, null, "", "");
          });
       break;
+    case 5:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setManualInstallOnly(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -27725,6 +27730,13 @@ proto.mullvad_daemon.management_interface.SuggestedUpgrade.serializeBinaryToWrit
   f = message.getChangelogTranslationsMap(true);
   if (f && f.getLength() > 0) {
     f.serializeBinary(4, writer, jspb.BinaryWriter.prototype.writeString, jspb.BinaryWriter.prototype.writeString);
+  }
+  f = message.getManualInstallOnly();
+  if (f) {
+    writer.writeBool(
+      5,
+      f
+    );
   }
 };
 
@@ -27821,6 +27833,24 @@ proto.mullvad_daemon.management_interface.SuggestedUpgrade.prototype.getChangelo
 proto.mullvad_daemon.management_interface.SuggestedUpgrade.prototype.clearChangelogTranslationsMap = function() {
   this.getChangelogTranslationsMap().clear();
   return this;};
+
+
+/**
+ * optional bool manual_install_only = 5;
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.SuggestedUpgrade.prototype.getManualInstallOnly = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 5, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.mullvad_daemon.management_interface.SuggestedUpgrade} returns this
+ */
+proto.mullvad_daemon.management_interface.SuggestedUpgrade.prototype.setManualInstallOnly = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 5, value);
+};
 
 
 

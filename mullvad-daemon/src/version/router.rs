@@ -73,6 +73,17 @@ impl VersionRouterHandle {
         result_rx.await.map_err(|_| Error::VersionRouterClosed)
     }
 
+    /// Hand the verified package of the suggested upgrade to the package
+    /// manager, and return the path of the file the upgrade job reports to.
+    #[cfg(target_os = "linux")]
+    pub async fn install_application(&self) -> Result<PathBuf> {
+        let (result_tx, result_rx) = oneshot::channel();
+        self.tx
+            .send(Message::InstallApplication { result_tx })
+            .map_err(|_| Error::VersionRouterClosed)?;
+        result_rx.await.map_err(|_| Error::VersionRouterClosed)?
+    }
+
     #[cfg(in_app_upgrade)]
     pub async fn get_cache_dir(&self) -> Result<PathBuf> {
         let (result_tx, result_rx) = oneshot::channel();
@@ -155,6 +166,11 @@ enum Message {
     /// Get the cache dir
     #[cfg(in_app_upgrade)]
     GetCacheDir { result_tx: oneshot::Sender<PathBuf> },
+    /// Install the downloaded and verified upgrade
+    #[cfg(target_os = "linux")]
+    InstallApplication {
+        result_tx: oneshot::Sender<Result<PathBuf>>,
+    },
 }
 
 #[derive(Debug)]
@@ -180,6 +196,11 @@ enum State {
         version_cache: VersionCache,
         /// Path to verified installer
         verified_installer_path: PathBuf,
+        /// The release the installer was downloaded and verified for. The
+        /// cache can change under it (a republished manifest of the same
+        /// version), and the install re-verifies against what was downloaded.
+        #[cfg_attr(not(target_os = "linux"), expect(dead_code))]
+        downloaded: mullvad_update::version::Metadata,
     },
 }
 
@@ -355,7 +376,34 @@ where
             Message::GetCacheDir { result_tx } => {
                 let _ = result_tx.send(self.cache_dir.clone());
             }
+            #[cfg(target_os = "linux")]
+            Message::InstallApplication { result_tx } => self.install_application(result_tx),
         }
+    }
+
+    /// Start the upgrade job for the installer this router downloaded and
+    /// verified. Only that file is ever installed: the request names nothing,
+    /// so a caller can never make root install a package of its choosing.
+    #[cfg(target_os = "linux")]
+    fn install_application(&self, result_tx: oneshot::Sender<Result<PathBuf>>) {
+        let State::Downloaded {
+            verified_installer_path,
+            downloaded,
+            ..
+        } = &self.state
+        else {
+            log::warn!("Refusing to install an upgrade in state {}", self.state);
+            let _ = result_tx.send(Err(Error::NoVerifiedInstaller));
+            return;
+        };
+        let package = verified_installer_path.clone();
+        let expected_sha256 = downloaded.sha256;
+        tokio::spawn(async move {
+            let result = super::linux_upgrade::start(&package, expected_sha256)
+                .await
+                .map_err(Error::Install);
+            let _ = result_tx.send(result);
+        });
     }
 
     /// Handle new version info
@@ -515,6 +563,7 @@ where
             State::Downloaded {
                 version_cache,
                 verified_installer_path,
+                ..
             } => Some(to_app_version_info(
                 version_cache,
                 self.beta_program,
@@ -743,12 +792,14 @@ async fn wait_for_update(state: &mut State) -> Option<AppVersionInfo> {
                                 .changelog_translations
                                 .clone(),
                             verified_installer_path: Some(verified_installer_path.clone()),
+                            manual_install_only: false,
                         }
                     }),
                 };
                 *state = State::Downloaded {
                     version_cache: version_cache.clone(),
                     verified_installer_path,
+                    downloaded: upgrading_to_version.clone(),
                 };
                 Some(app_update_info)
             }
@@ -786,6 +837,7 @@ fn to_app_version_info(
         #[cfg(not(target_os = "android"))]
         suggested_upgrade: recommended_version_upgrade(&cache.version_info, beta_program).map(
             |version| SuggestedUpgrade {
+                manual_install_only: version.urls.is_empty(),
                 version: version.version,
                 changelog: version.changelog,
                 changelog_translations: version.changelog_translations,
@@ -1301,6 +1353,45 @@ mod test {
                 .try_recv()
                 .expect("Version event should be sent"),
             "Version event sent to the daemon should be the same as the one sent to the requester"
+        );
+    }
+
+    /// Root installs only the package this router downloaded and verified:
+    /// with none held, an install request is refused rather than acted on.
+    #[cfg(target_os = "linux")]
+    #[tokio::test(start_paused = true)]
+    async fn install_is_refused_without_a_verified_download() {
+        let (mut version_router, _channels) = make_version_router::<SuccessfulAppDownloader>();
+        version_router.on_new_version(get_new_stable_version_cache());
+
+        let (result_tx, result_rx) = oneshot::channel();
+        version_router.install_application(result_tx);
+
+        assert!(matches!(
+            result_rx.await.expect("the router answers"),
+            Err(Error::NoVerifiedInstaller)
+        ));
+    }
+
+    /// A release whose installers leave this install out (the manifest has
+    /// no package of its format) is announced as a manual upgrade.
+    #[test]
+    fn a_release_without_an_installer_for_this_install_is_manual() {
+        let mut cache = get_new_stable_version_cache();
+        cache.version_info.stable.urls.clear();
+        let info = to_app_version_info(&cache, false, None);
+        assert!(
+            info.suggested_upgrade
+                .expect("an upgrade is suggested")
+                .manual_install_only
+        );
+
+        let info = to_app_version_info(&get_new_stable_version_cache(), false, None);
+        assert!(
+            !info
+                .suggested_upgrade
+                .expect("an upgrade is suggested")
+                .manual_install_only
         );
     }
 

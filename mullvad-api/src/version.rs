@@ -114,9 +114,10 @@ impl AppVersionProxy {
             let params = VersionParameters {
                 architecture,
                 rollout,
-                // NOTE: On Linux, version metadata contains no installers
+                // NOTE: A Linux release may have no installer for this install
                 allow_empty: cfg!(target_os = "linux"),
                 lowest_metadata_version,
+                package_format: None,
             };
 
             let current_version =

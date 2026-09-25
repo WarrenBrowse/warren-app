@@ -132,6 +132,10 @@ enum Cli {
     /// and available versions
     Version,
 
+    /// Download, verify and install the available update, like the app's
+    /// "Update" button (installing it from here is Linux only)
+    Upgrade,
+
     /// Generate completion scripts for the specified shell
     #[cfg(all(unix, not(target_os = "android")))]
     #[command(hide = true)]
@@ -246,6 +250,7 @@ async fn run() -> Result<()> {
         Cli::ApiAccess(cmd) => cmd.handle().await,
         Cli::Unblock(cmd) => cmd.handle().await,
         Cli::Version => version::print().await,
+        Cli::Upgrade => upgrade::handle().await,
         Cli::FactoryReset { assume_yes } => reset::handle_factory_reset(assume_yes).await,
         Cli::ResetSettings { assume_yes } => reset::handle_settings_reset(assume_yes).await,
         Cli::Relay(cmd) => cmd.handle().await,

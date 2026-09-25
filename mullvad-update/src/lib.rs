@@ -10,6 +10,9 @@ mod defaults;
 
 pub mod version;
 
+/// Package-manager side of in-app upgrades on Linux
+pub mod linux;
+
 /// Parser and serializer for version metadata
 pub mod format;
 

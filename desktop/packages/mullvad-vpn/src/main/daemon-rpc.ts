@@ -162,6 +162,12 @@ export class DaemonRpc extends GrpcClient {
     void this.callEmpty(this.client.appUpgradeAbort);
   }
 
+  /** Linux: have the daemon install the package it downloaded and verified. */
+  public async appUpgradeInstall(): Promise<string> {
+    const response = await this.callEmpty<StringValue>(this.client.appUpgradeInstall);
+    return response.getValue();
+  }
+
   public async getAppUpgradeCacheDir(): Promise<string> {
     const response = await this.callEmpty<StringValue>(this.client.getAppUpgradeCacheDir);
     return response.getValue();

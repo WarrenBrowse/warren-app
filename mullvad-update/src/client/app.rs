@@ -1,18 +1,21 @@
-#![cfg(any(target_os = "macos", target_os = "windows"))]
+#![cfg(any(target_os = "macos", target_os = "windows", target_os = "linux"))]
 
 //! This module implements the flow of downloading and verifying the app.
 
+#[cfg(not(target_os = "linux"))]
+use std::{ffi::OsString, time::Duration};
 use std::{
-    ffi::OsString,
     future::Future,
     path::{Path, PathBuf},
-    time::Duration,
 };
 
+#[cfg(not(target_os = "linux"))]
 use anyhow::{Context, bail};
+#[cfg(not(target_os = "linux"))]
 use tokio::{process::Command, time::timeout};
 
 use crate::fetch;
+#[cfg(not(target_os = "linux"))]
 use crate::format::installer::Installer;
 use crate::format::response::SignedResponse;
 use crate::verify::{AppVerifier, Sha256Verifier};
@@ -43,6 +46,9 @@ pub struct AppDownloaderParameters<AppProgress> {
     /// Directory to store the installer in.
     /// Ensure that this has proper permissions set.
     pub cache_dir: PathBuf,
+    /// Package format of the installer, which names the downloaded file
+    #[cfg(target_os = "linux")]
+    pub package_format: crate::linux::PackageFormat,
 }
 
 /// See the [module-level documentation](self).
@@ -75,6 +81,7 @@ pub trait AppCache: Send {
 }
 
 /// How long to wait for the installer to exit before returning
+#[cfg(not(target_os = "linux"))]
 const INSTALLER_STARTUP_TIMEOUT: Duration = Duration::from_millis(500);
 
 /// Download the app and signature, and verify the installer's signature
@@ -124,7 +131,14 @@ pub struct InstallerFile<const VERIFIED: bool> {
 
 impl<AppProgress: fetch::ProgressUpdater> AppDownloader for HttpAppDownloader<AppProgress> {
     async fn download_executable(mut self) -> Result<impl DownloadedInstaller, DownloadError> {
+        #[cfg(not(target_os = "linux"))]
         let bin_path = bin_path(&self.params.app_version, &self.params.cache_dir);
+        #[cfg(target_os = "linux")]
+        let bin_path = bin_path(
+            &self.params.app_version,
+            self.params.package_format,
+            &self.params.cache_dir,
+        );
         fetch::get_to_file(
             &bin_path,
             &self.params.app_url,
@@ -170,6 +184,19 @@ impl DownloadedInstaller for InstallerFile<false> {
     }
 }
 
+// On Linux the daemon hands the verified package to the package manager
+// itself (see `crate::linux`): no installer program exists to launch.
+#[cfg(target_os = "linux")]
+impl VerifiedInstaller for InstallerFile<true> {
+    async fn install(self) -> Result<(), DownloadError> {
+        Err(DownloadError::Launch(std::io::Error::new(
+            std::io::ErrorKind::Unsupported,
+            "a Linux package is installed by the daemon, not launched",
+        )))
+    }
+}
+
+#[cfg(not(target_os = "linux"))]
 impl VerifiedInstaller for InstallerFile<true> {
     async fn install(self) -> Result<(), DownloadError> {
         let launch_path = &self.launch_path();
@@ -193,6 +220,20 @@ impl VerifiedInstaller for InstallerFile<true> {
     }
 }
 
+/// Where the package of `app_version` is downloaded to.
+#[cfg(target_os = "linux")]
+pub fn bin_path(
+    app_version: &mullvad_version::Version,
+    package_format: crate::linux::PackageFormat,
+    cache_dir: &Path,
+) -> PathBuf {
+    cache_dir.join(format!(
+        "warren-{app_version}.{}",
+        package_format.file_extension()
+    ))
+}
+
+#[cfg(not(target_os = "linux"))]
 pub fn bin_path(app_version: &mullvad_version::Version, cache_dir: &Path) -> PathBuf {
     #[cfg(windows)]
     let bin_filename = format!("warren-{app_version}.exe");
@@ -203,6 +244,7 @@ pub fn bin_path(app_version: &mullvad_version::Version, cache_dir: &Path) -> Pat
     cache_dir.join(bin_filename)
 }
 
+#[cfg(not(target_os = "linux"))]
 impl InstallerFile<false> {
     /// Create an unverified [InstallerFile] from a cache_dir and some metadata.
     pub fn try_from_installer(
@@ -230,6 +272,7 @@ impl InstallerFile<false> {
     }
 }
 
+#[cfg(not(target_os = "linux"))]
 impl InstallerFile<true> {
     fn launch_path(&self) -> PathBuf {
         #[cfg(target_os = "windows")]

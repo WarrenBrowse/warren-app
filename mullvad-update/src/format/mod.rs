@@ -111,4 +111,31 @@ mod test {
             })
         );
     }
+
+    #[test]
+    fn package_format_is_omitted_when_absent_and_read_when_present() {
+        use crate::format::{Architecture, installer::Installer};
+
+        // The macOS and Windows manifests carry no package format, and their
+        // signed bytes must not change because the field exists.
+        let installer = Installer {
+            architecture: Architecture::X86,
+            urls: vec![],
+            size: 1,
+            sha256: String::new(),
+            package_format: None,
+        };
+        let serialized = serde_json::to_value(&installer).unwrap();
+        assert!(serialized.get("package_format").is_none());
+
+        let linux: Installer = serde_json::from_value(serde_json::json!({
+            "architecture": "arm64",
+            "urls": [],
+            "size": 1,
+            "sha256": "",
+            "package_format": "rpm",
+        }))
+        .expect("a Linux installer must parse");
+        assert_eq!(linux.package_format.as_deref(), Some("rpm"));
+    }
 }

@@ -32,6 +32,10 @@ pub enum Error {
 
     #[error("Could not select URL for app update")]
     NoUrlFound,
+
+    #[cfg(target_os = "linux")]
+    #[error("No package manager owns this install, so it cannot be upgraded in place")]
+    NotPackaged,
 }
 
 pub type Result<T> = std::result::Result<T, Error>;
@@ -105,6 +109,23 @@ where
             let _ = event_tx.send(AppUpgradeEvent::Error(AppUpgradeError::GeneralError));
         })?
     };
+    // Tests run from a binary no package manager owns.
+    #[cfg(target_os = "linux")]
+    let package_format = if cfg!(test) {
+        mullvad_update::linux::PackageFormat::Deb
+    } else {
+        let format = tokio::task::spawn_blocking(super::linux_upgrade::installed_package_format)
+            .await
+            .map_err(Error::from)
+            .and_then(|format| format.ok_or(Error::NotPackaged));
+        format.inspect_err(|err| {
+            log::error!("{}", err.display_chain());
+            let _ = event_tx.send(AppUpgradeEvent::Error(AppUpgradeError::GeneralError));
+        })?
+    };
+    #[cfg(target_os = "linux")]
+    let bin_path = bin_path(&metadata.version, package_format, &download_dir);
+    #[cfg(not(target_os = "linux"))]
     let bin_path = bin_path(&metadata.version, &download_dir);
 
     let params = AppDownloaderParameters {
@@ -114,6 +135,8 @@ where
         app_progress: ProgressUpdater::new(server_from_url(&url), event_tx.clone()),
         app_sha256: metadata.sha256,
         cache_dir: download_dir,
+        #[cfg(target_os = "linux")]
+        package_format,
     };
     let downloader = D::from(params);
 

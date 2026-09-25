@@ -50,6 +50,7 @@ insta = { workspace = true }
 mockito = { workspace = true }
 proptest = { workspace = true }
 rand = { workspace = true }
+tempfile = "3"
 tokio = { workspace = true, features = ["fs", "macros", "net", "test-util", "time"] }
 
 [features]

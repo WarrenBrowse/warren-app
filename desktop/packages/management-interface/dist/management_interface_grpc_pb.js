@@ -2064,6 +2064,21 @@ appUpgrade: {
     responseSerialize: serialize_google_protobuf_StringValue,
     responseDeserialize: deserialize_google_protobuf_StringValue,
   },
+  // Linux only: hand the verified package of the suggested upgrade to the
+// package manager that owns this install. The upgrade runs detached from the
+// daemon, which it restarts; the reply is the path of the file the job
+// writes its outcome to ("running", then "exit <code>").
+appUpgradeInstall: {
+    path: '/mullvad_daemon.management_interface.ManagementService/AppUpgradeInstall',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: google_protobuf_wrappers_pb.StringValue,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_google_protobuf_StringValue,
+    responseDeserialize: deserialize_google_protobuf_StringValue,
+  },
   setLogFilter: {
     path: '/mullvad_daemon.management_interface.ManagementService/SetLogFilter',
     requestStream: false,

@@ -1,11 +1,11 @@
 import { usePushAppUpgrade } from '../../../../../../history/hooks';
-import { isPlatform } from '../../../../../../utils';
+import { useVersionSuggestedUpgrade } from '../../../../../../redux/hooks';
 import { useOpenDownloadUrl } from './useOpenDownloadUrl';
 
 export const useHandleClick = () => {
   const openDownloadUrl = useOpenDownloadUrl();
   const pushAppUpgrade = usePushAppUpgrade();
-  const isLinux = isPlatform('linux');
+  const { suggestedUpgrade } = useVersionSuggestedUpgrade();
 
-  return isLinux ? openDownloadUrl : pushAppUpgrade;
+  return suggestedUpgrade?.manualInstallOnly ? openDownloadUrl : pushAppUpgrade;
 };

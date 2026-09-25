@@ -184,6 +184,11 @@ rpc_classes! {
         SetRolloutThresholdSeed => ControlMachine,
         AppUpgrade => ControlMachine,
         AppUpgradeAbort => ControlMachine,
+        // Runs the package manager as root with no OS elevation prompt, unlike
+        // the installers macOS and Windows launch. What it can install is
+        // bounded: only the package the daemon downloaded for a newer release
+        // of the signed manifest and verified itself; the request names none.
+        AppUpgradeInstall => ControlMachine,
         AppUpgradeEventsListen => ReadPublic,
         GetAppUpgradeCacheDir => ReadPublic,
     }

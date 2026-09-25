@@ -6,6 +6,7 @@ import { DaemonAppUpgradeEvent } from '../shared/daemon-rpc-types';
 import log from '../shared/logging';
 import { DaemonRpc, SubscriptionListener } from './daemon-rpc';
 import { IpcMainEventChannel } from './ipc-event-channel';
+import { readStatus, runLinuxUpgrade, spawnRelauncher } from './linux-app-upgrade';
 
 /** Effects [`startVerifiedInstaller`] can trigger, injected so the decision
  * logic is testable without Electron or a daemon. */
@@ -71,6 +72,12 @@ export default class AppUpgrade {
         getVersionInfo: () => this.daemonRpc.getVersionInfo(),
         restartUpgrade: () => this.daemonRpc.appUpgrade(),
         launchInstaller: async (verifiedInstallerPath) => {
+          if (process.platform === 'linux') {
+            // The package sits in a root-only cache and only the daemon may
+            // install it, so there is nothing for this process to check or run.
+            void this.startLinuxUpgrade();
+            return;
+          }
           await this.checkInstallerPath(verifiedInstallerPath);
           this.startInstaller(verifiedInstallerPath);
         },
@@ -105,6 +112,35 @@ export default class AppUpgrade {
     this.daemonRpc.subscribeAppUpgradeEventListener(daemonAppUpgradeEventListener);
 
     return daemonAppUpgradeEventListener;
+  }
+
+  private startLinuxUpgrade() {
+    log.info('Asking the daemon to install the verified upgrade package');
+    return runLinuxUpgrade({
+      installUpgrade: () => this.daemonRpc.appUpgradeInstall(),
+      spawnRelauncher,
+      readStatus,
+      sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+      notifyStarted: () => {
+        IpcMainEventChannel.app.notifyUpgradeEvent?.({
+          type: 'APP_UPGRADE_STATUS_STARTED_INSTALLER',
+        });
+      },
+      notifyInstallFailed: () => {
+        log.error('The package manager failed to install the upgrade');
+        IpcMainEventChannel.app.notifyUpgradeError?.('INSTALLER_FAILED');
+        IpcMainEventChannel.app.notifyUpgradeEvent?.({
+          type: 'APP_UPGRADE_STATUS_EXITED_INSTALLER',
+        });
+      },
+      notifyStartFailed: () => {
+        log.error('The daemon could not start the upgrade');
+        IpcMainEventChannel.app.notifyUpgradeError?.('START_INSTALLER_FAILED');
+        IpcMainEventChannel.app.notifyUpgradeEvent?.({
+          type: 'APP_UPGRADE_STATUS_MANUAL_START_INSTALLER',
+        });
+      },
+    });
   }
 
   private async checkInstallerPath(verifiedInstallerPath: string) {

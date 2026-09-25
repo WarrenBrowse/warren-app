@@ -179,6 +179,29 @@ impl MullvadProxyClient {
         AppVersionInfo::try_from(version_info).map_err(Error::InvalidResponse)
     }
 
+    /// Start downloading and verifying the suggested upgrade.
+    pub async fn app_upgrade(&mut self) -> Result<()> {
+        self.0.app_upgrade(()).await?;
+        Ok(())
+    }
+
+    /// Progress of the download started by [`Self::app_upgrade`].
+    pub async fn app_upgrade_events_listen<'a>(
+        &mut self,
+    ) -> Result<impl Stream<Item = Result<mullvad_types::version::AppUpgradeEvent>> + 'a> {
+        let listener = self.0.app_upgrade_events_listen(()).await?.into_inner();
+        Ok(listener.map(|item| {
+            mullvad_types::version::AppUpgradeEvent::try_from(item?).map_err(Error::InvalidResponse)
+        }))
+    }
+
+    /// Linux: install the downloaded and verified upgrade. Returns the file
+    /// the detached upgrade job writes its outcome to.
+    pub async fn app_upgrade_install(&mut self) -> Result<std::path::PathBuf> {
+        let path = self.0.app_upgrade_install(()).await?.into_inner();
+        Ok(std::path::PathBuf::from(path))
+    }
+
     pub async fn get_relay_locations(&mut self) -> Result<RelayList> {
         let list = self.0.get_relay_locations(()).await?.into_inner();
         mullvad_types::relay_list::RelayList::try_from(list).map_err(Error::InvalidResponse)

@@ -220,6 +220,9 @@ tokio = { workspace = true, features = ["test-util"] }
 # (`warren-api/tests/sdk_client_wire_compat.rs`), so this repo carries no
 # dependency on warren-core.
 mockito = { workspace = true }
+# The Linux upgrade tests stage a package and its checksum in a scratch dir.
+sha2 = { workspace = true }
+tempfile = "3"
 
 [target.'cfg(any(unix, windows))'.dependencies]
 mullvad-update = { path = "../mullvad-update", features = ["client"] }

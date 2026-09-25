@@ -49,6 +49,9 @@ pub struct SuggestedUpgrade {
     pub changelog_translations: std::collections::BTreeMap<String, String>,
     /// Path to the available installer, iff it has been verified
     pub verified_installer_path: Option<std::path::PathBuf>,
+    /// No installer of this release fits this install, so it can only be
+    /// upgraded by hand (a Linux install no known package manager owns)
+    pub manual_install_only: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

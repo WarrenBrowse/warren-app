@@ -45,6 +45,7 @@ impl From<SuggestedUpgrade> for proto::SuggestedUpgrade {
             verified_installer_path: suggested_upgrade
                 .verified_installer_path
                 .and_then(|path| path.to_str().map(str::to_owned)),
+            manual_install_only: suggested_upgrade.manual_install_only,
         }
     }
 }
@@ -70,6 +71,7 @@ impl TryFrom<proto::SuggestedUpgrade> for SuggestedUpgrade {
                 .into_iter()
                 .collect(),
             verified_installer_path,
+            manual_install_only: suggested_upgrade.manual_install_only,
         })
     }
 }

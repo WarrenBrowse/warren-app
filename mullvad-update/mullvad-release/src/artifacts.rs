@@ -46,6 +46,7 @@ pub async fn generate_installer_details(
         urls,
         size: file_size.try_into().context("Invalid file size")?,
         sha256: hex::encode(checksum),
+        package_format: None,
     })
 }
 

@@ -3078,6 +3078,7 @@ dependencies = [
  "itertools",
  "mullvad-management-interface",
  "mullvad-types",
+ "mullvad-update",
  "mullvad-version",
  "natord",
  "nix 0.31.2",
@@ -3137,6 +3138,7 @@ dependencies = [
  "security-framework",
  "serde",
  "serde_json",
+ "sha2",
  "talpid-core",
  "talpid-dbus",
  "talpid-dns",
@@ -3148,6 +3150,7 @@ dependencies = [
  "talpid-types",
  "talpid-warren-tunnel",
  "talpid-windows",
+ "tempfile",
  "thiserror 2.0.18",
  "tikv-jemallocator",
  "tokio",
@@ -3417,6 +3420,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "strum",
+ "tempfile",
  "thiserror 2.0.18",
  "tokio",
  "vec1",
@@ -6698,6 +6702,7 @@ name = "warren-api"
 version = "0.0.1"
 dependencies = [
  "data-encoding",
+ "ed25519-dalek",
  "hex",
  "rand 0.10.1",
  "rand 0.8.6",
@@ -6709,12 +6714,14 @@ dependencies = [
  "warren-discovery-core",
  "warren-identity",
  "warrenguard-token",
+ "zeroize",
 ]
 
 [[package]]
 name = "warren-contract"
 version = "0.0.1"
 dependencies = [
+ "base64",
  "blake2",
  "bs58",
  "ed25519-dalek",
@@ -6724,6 +6731,7 @@ dependencies = [
  "sha2",
  "thiserror 2.0.18",
  "warrenguard-wire",
+ "zeroize",
 ]
 
 [[package]]

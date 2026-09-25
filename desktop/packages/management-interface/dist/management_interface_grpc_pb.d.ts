@@ -126,6 +126,7 @@ interface IManagementServiceService extends grpc.ServiceDefinition<grpc.UntypedS
     appUpgradeAbort: IManagementServiceService_IAppUpgradeAbort;
     appUpgradeEventsListen: IManagementServiceService_IAppUpgradeEventsListen;
     getAppUpgradeCacheDir: IManagementServiceService_IGetAppUpgradeCacheDir;
+    appUpgradeInstall: IManagementServiceService_IAppUpgradeInstall;
     setLogFilter: IManagementServiceService_ISetLogFilter;
     logListen: IManagementServiceService_ILogListen;
     getMigrationEvent: IManagementServiceService_IGetMigrationEvent;
@@ -1158,6 +1159,15 @@ interface IManagementServiceService_IGetAppUpgradeCacheDir extends grpc.MethodDe
     responseSerialize: grpc.serialize<google_protobuf_wrappers_pb.StringValue>;
     responseDeserialize: grpc.deserialize<google_protobuf_wrappers_pb.StringValue>;
 }
+interface IManagementServiceService_IAppUpgradeInstall extends grpc.MethodDefinition<google_protobuf_empty_pb.Empty, google_protobuf_wrappers_pb.StringValue> {
+    path: "/mullvad_daemon.management_interface.ManagementService/AppUpgradeInstall";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
+    requestDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
+    responseSerialize: grpc.serialize<google_protobuf_wrappers_pb.StringValue>;
+    responseDeserialize: grpc.deserialize<google_protobuf_wrappers_pb.StringValue>;
+}
 interface IManagementServiceService_ISetLogFilter extends grpc.MethodDefinition<management_interface_pb.LogFilter, google_protobuf_empty_pb.Empty> {
     path: "/mullvad_daemon.management_interface.ManagementService/SetLogFilter";
     requestStream: false;
@@ -1312,6 +1322,7 @@ export interface IManagementServiceServer extends grpc.UntypedServiceImplementat
     appUpgradeAbort: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, google_protobuf_empty_pb.Empty>;
     appUpgradeEventsListen: grpc.handleServerStreamingCall<google_protobuf_empty_pb.Empty, management_interface_pb.AppUpgradeEvent>;
     getAppUpgradeCacheDir: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, google_protobuf_wrappers_pb.StringValue>;
+    appUpgradeInstall: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, google_protobuf_wrappers_pb.StringValue>;
     setLogFilter: grpc.handleUnaryCall<management_interface_pb.LogFilter, google_protobuf_empty_pb.Empty>;
     logListen: grpc.handleServerStreamingCall<google_protobuf_empty_pb.Empty, management_interface_pb.LogMessage>;
     getMigrationEvent: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, management_interface_pb.SplitFilterMigration>;
@@ -1656,6 +1667,9 @@ export interface IManagementServiceClient {
     getAppUpgradeCacheDir(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
     getAppUpgradeCacheDir(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
     getAppUpgradeCacheDir(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
+    appUpgradeInstall(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
+    appUpgradeInstall(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
+    appUpgradeInstall(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
     setLogFilter(request: management_interface_pb.LogFilter, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     setLogFilter(request: management_interface_pb.LogFilter, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     setLogFilter(request: management_interface_pb.LogFilter, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
@@ -2008,6 +2022,9 @@ export class ManagementServiceClient extends grpc.Client implements IManagementS
     public getAppUpgradeCacheDir(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
     public getAppUpgradeCacheDir(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
     public getAppUpgradeCacheDir(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
+    public appUpgradeInstall(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
+    public appUpgradeInstall(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
+    public appUpgradeInstall(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
     public setLogFilter(request: management_interface_pb.LogFilter, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public setLogFilter(request: management_interface_pb.LogFilter, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public setLogFilter(request: management_interface_pb.LogFilter, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;

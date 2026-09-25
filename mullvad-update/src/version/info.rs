@@ -60,9 +60,17 @@ impl VersionInfo {
         // Filter out dev versions
         .filter(|release| !release.version.is_dev())
         .flat_map(|Release { version, changelog, changelog_translations, installers, .. }| {
-            if installers.is_empty() && params.allow_empty {
-                // HACK: If there are no installers (e.g. on Linux), return the version anyway
-                return Some(anyhow::Ok(Metadata {
+            let installer = installers
+                .into_iter()
+                // Find the installer for this architecture and package format (assumed unique)
+                .find(|installer| {
+                    params.architecture == installer.architecture
+                        && params.package_format == installer.package_format
+                });
+            let Some(Installer { urls, size, sha256, .. }) = installer else {
+                // No installer for this system (e.g. a Linux install no package manager owns):
+                // return the version anyway when allowed, so the client still learns of it
+                return params.allow_empty.then(|| anyhow::Ok(Metadata {
                     version,
                     size: 0,
                     urls: vec![],
@@ -70,25 +78,21 @@ impl VersionInfo {
                     changelog_translations,
                     sha256: [0u8; 32],
                 }));
-            }
-            installers
-                .into_iter()
-                // Find installer for the requested architecture (assumed to be unique)
-                .find(|installer| params.architecture == installer.architecture)
-                // Map each artifact to a [Version]
-                .map(|Installer { urls, size, sha256,.. }| {
-                    anyhow::Ok(Metadata {
-                        version,
-                        size,
-                        urls,
-                        changelog,
-                        changelog_translations,
-                        sha256: hex::decode(sha256)
-                        .context("Invalid checksum hex")?
-                        .try_into()
-                        .map_err(|_| anyhow::anyhow!("Invalid checksum length"))?,
-                    })
-                })
+            };
+            let sha256 = hex::decode(sha256)
+                .context("Invalid checksum hex")
+                .and_then(|hash| {
+                    hash.try_into()
+                        .map_err(|_| anyhow::anyhow!("Invalid checksum length"))
+                });
+            Some(sha256.map(|sha256| Metadata {
+                version,
+                size,
+                urls,
+                changelog,
+                changelog_translations,
+                sha256,
+            }))
         }).try_collect()?;
 
         // Find latest stable version
@@ -188,6 +192,7 @@ mod test {
             rollout: FULLY_ROLLED_OUT,
             allow_empty: false,
             lowest_metadata_version: 0,
+            package_format: None,
         };
 
         // Expect: The available latest versions for X86, where the rollout is 1.
@@ -208,6 +213,7 @@ mod test {
             rollout: SUPPORTED_VERSION,
             allow_empty: false,
             lowest_metadata_version: 0,
+            package_format: None,
         };
 
         let info = VersionInfo::try_from_response(&params, response.signed)?;
@@ -228,6 +234,7 @@ mod test {
             rollout: SUPPORTED_VERSION,
             allow_empty: true,
             lowest_metadata_version: 0,
+            package_format: None,
         };
 
         let info = VersionInfo::try_from_response(&params, response.signed)?;
@@ -248,6 +255,7 @@ mod test {
             rollout: SUPPORTED_VERSION,
             allow_empty: true,
             lowest_metadata_version: 0,
+            package_format: None,
         };
 
         let info = VersionInfo::try_from_response(&params, response.signed.clone())?;
@@ -260,6 +268,7 @@ mod test {
             rollout: IGNORE,
             allow_empty: true,
             lowest_metadata_version: 0,
+            package_format: None,
         };
 
         let info = VersionInfo::try_from_response(&params, response.signed)?;
@@ -267,6 +276,97 @@ mod test {
         // Expect: There is an even higher version where the rollout is zero.
         assert_yaml_snapshot!(info);
 
+        Ok(())
+    }
+
+    fn linux_installer(architecture: Architecture, package_format: &str) -> Installer {
+        Installer {
+            architecture,
+            urls: vec![format!("https://example.test/warren-{package_format}")],
+            size: 1,
+            sha256: "00".repeat(32),
+            package_format: Some(package_format.to_owned()),
+        }
+    }
+
+    fn linux_response() -> Response {
+        let release = |version: &str, installers: Vec<Installer>| Release {
+            version: version.parse().unwrap(),
+            changelog: String::new(),
+            changelog_translations: Default::default(),
+            installers,
+            rollout: Rollout::complete(),
+        };
+        Response {
+            metadata_version: 1,
+            metadata_expiry: chrono::DateTime::UNIX_EPOCH,
+            minimum_supported_version: None,
+            releases: vec![
+                release("2025.1", vec![]),
+                release(
+                    "2025.2",
+                    vec![
+                        linux_installer(Architecture::X86, "deb"),
+                        linux_installer(Architecture::X86, "rpm"),
+                        linux_installer(Architecture::X86, "pacman"),
+                        linux_installer(Architecture::Arm64, "deb"),
+                    ],
+                ),
+            ],
+        }
+    }
+
+    fn linux_params(architecture: Architecture, package_format: Option<&str>) -> VersionParameters {
+        VersionParameters {
+            architecture,
+            rollout: FULLY_ROLLED_OUT,
+            allow_empty: true,
+            lowest_metadata_version: 0,
+            package_format: package_format.map(str::to_owned),
+        }
+    }
+
+    /// A Linux release lists one installer per package format and architecture,
+    /// and handing an rpm to a dpkg system installs nothing: the format picks
+    /// the installer as much as the architecture does.
+    #[test]
+    fn a_linux_client_gets_the_installer_of_its_own_package_format() -> anyhow::Result<()> {
+        let info = VersionInfo::try_from_response(
+            &linux_params(Architecture::X86, Some("rpm")),
+            linux_response(),
+        )?;
+
+        assert_eq!(info.stable.version, "2025.2".parse().unwrap());
+        assert_eq!(info.stable.urls, vec!["https://example.test/warren-rpm"]);
+        Ok(())
+    }
+
+    /// A system the release has no package for (an arm64 Arch, NixOS) must
+    /// still learn that the version exists, or it never hears about the update
+    /// nor about a forced one. It gets the version without an installer, which
+    /// sends it to the manual path.
+    #[test]
+    fn a_linux_client_without_a_matching_package_still_learns_the_version() -> anyhow::Result<()> {
+        let info = VersionInfo::try_from_response(
+            &linux_params(Architecture::Arm64, Some("pacman")),
+            linux_response(),
+        )?;
+
+        assert_eq!(info.stable.version, "2025.2".parse().unwrap());
+        assert!(info.stable.urls.is_empty());
+        Ok(())
+    }
+
+    /// A client that does not name a package format (macOS, Windows) never
+    /// takes a Linux package for its installer.
+    #[test]
+    fn a_client_without_a_package_format_never_gets_a_linux_package() -> anyhow::Result<()> {
+        let info = VersionInfo::try_from_response(
+            &linux_params(Architecture::X86, None),
+            linux_response(),
+        )?;
+
+        assert!(info.stable.urls.is_empty());
         Ok(())
     }
 

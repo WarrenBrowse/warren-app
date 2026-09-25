@@ -2372,6 +2372,24 @@ impl ManagementService for ManagementServiceImpl {
         ))
     }
 
+    async fn app_upgrade_install(&self, request: Request<()>) -> ServiceResult<String> {
+        let call = Self::call_of(&request);
+        log::debug!("app_upgrade_install");
+
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(&call, DaemonCommand::AppUpgradeInstall(tx))?;
+
+        let path = self
+            .wait_for_result(rx)
+            .await?
+            .map_err(map_version_check_error)?;
+
+        path.into_os_string()
+            .into_string()
+            .map(Response::new)
+            .map_err(|_| Status::internal("the status path is not valid UTF-8"))
+    }
+
     async fn get_app_upgrade_cache_dir(&self, request: Request<()>) -> ServiceResult<String> {
         let call = Self::call_of(&request);
         log::debug!("get_app_upgrade_cache_dir");
@@ -2900,6 +2918,10 @@ fn map_version_check_error(error: crate::version::Error) -> Status {
         crate::version::Error::Download(..)
         | crate::version::Error::ReadVersionCache(..)
         | crate::version::Error::ApiCheck(..) => Status::unavailable(error.to_string()),
+        crate::version::Error::InstallUnsupported => Status::unimplemented(error.to_string()),
+        crate::version::Error::NoVerifiedInstaller => {
+            Status::failed_precondition(error.to_string())
+        }
         _ => Status::unknown(error.to_string()),
     }
 }

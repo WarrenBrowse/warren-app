@@ -5,7 +5,6 @@ import { Flex, Icon } from '../../../../../lib/components';
 import { Dot } from '../../../../../lib/components/dot';
 import { ListItem, ListItemProps } from '../../../../../lib/components/list-item';
 import { useVersionSuggestedUpgrade } from '../../../../../redux/hooks';
-import { isPlatform } from '../../../../../utils';
 import { useHandleClick } from './hooks';
 
 export type UpdateAvailableListItemProps = Omit<ListItemProps, 'children'>;
@@ -17,7 +16,6 @@ const StyledText = styled(ListItem.Item.Text)`
 export function UpdateAvailableListItem(props: UpdateAvailableListItemProps) {
   const { suggestedUpgrade } = useVersionSuggestedUpgrade();
 
-  const isLinux = isPlatform('linux');
   const handleClick = useHandleClick();
 
   return (
@@ -35,7 +33,7 @@ export function UpdateAvailableListItem(props: UpdateAvailableListItemProps) {
           </Flex>
           <ListItem.Item.ActionGroup>
             <Dot variant="warning" size="small" />
-            <Icon icon={isLinux ? 'external' : 'chevron-right'} />
+            <Icon icon={suggestedUpgrade?.manualInstallOnly ? 'external' : 'chevron-right'} />
           </ListItem.Item.ActionGroup>
         </ListItem.Item>
       </ListItem.Trigger>
