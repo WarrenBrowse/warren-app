@@ -38,7 +38,7 @@ const featureIndicatorWithoutOption: FeatureIndicatorTestOption[] = [
     testId: 'split tunneling',
     featureIndicator: FeatureIndicator.splitTunneling,
     route: RoutePath.splitTunneling,
-    featureIndicatorLabel: 'Split tunneling',
+    featureIndicatorLabel: 'Bypass VPN',
     skip: process.platform === 'linux',
   },
   {
