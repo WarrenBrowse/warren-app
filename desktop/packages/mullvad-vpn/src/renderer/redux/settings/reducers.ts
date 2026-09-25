@@ -8,6 +8,7 @@ import {
   CustomLists,
   IDaitaSettings,
   IDnsOptions,
+  ILanNetworks,
   IpVersion,
   IWireguardEndpointData,
   LiftedConstraint,
@@ -87,6 +88,7 @@ export interface ISettingsReduxState {
   relayLocations: IRelayLocationCountryRedux[];
   wireguardEndpointData: IWireguardEndpointData;
   allowLan: boolean;
+  lanNetworks: ILanNetworks;
   enableIpv6: boolean;
   lockdownMode: boolean;
   showBetaReleases: boolean;
@@ -167,6 +169,7 @@ const initialState: ISettingsReduxState = {
   relayLocations: [],
   wireguardEndpointData: { portRanges: [], udp2tcpPorts: [] },
   allowLan: false,
+  lanNetworks: { networks: [], custom: false },
   enableIpv6: true,
   lockdownMode: false,
   showBetaReleases: false,
@@ -282,6 +285,12 @@ export default function (
       return {
         ...state,
         allowLan: action.allowLan,
+      };
+
+    case 'UPDATE_LAN_NETWORKS':
+      return {
+        ...state,
+        lanNetworks: action.lanNetworks,
       };
 
     case 'UPDATE_WARREN_API_URL':

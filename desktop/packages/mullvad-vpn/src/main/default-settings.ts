@@ -23,6 +23,7 @@ export function getDefaultRelaySettingsNormal(): IRelaySettingsNormal {
 export function getDefaultSettings(): ISettings {
   return {
     allowLan: false,
+    lanNetworks: { networks: [], custom: false },
     autoConnect: false,
     lockdownMode: false,
     showBetaReleases: false,
