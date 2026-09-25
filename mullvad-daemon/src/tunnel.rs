@@ -327,6 +327,25 @@ struct InnerParametersGenerator {
     /// [`WarrenTunnelParameters::max_rate_control_rx`] at parameter
     /// production so fresh tunnels start on the current value.
     max_rate_control_tx: tokio::sync::watch::Sender<Option<u64>>,
+    /// Per-app exits: resolves each app's exit against the directory and the
+    /// main circuit, and publishes the route plan every tunnel follows.
+    app_routes: crate::warren_app_routes::RoutePlanner,
+}
+
+impl InnerParametersGenerator {
+    /// Resolves the app exits again against the current main circuit and
+    /// the exits currently draining.
+    fn replan_app_routes(&mut self) {
+        let now = warren_now_unix_secs();
+        let drained: Vec<[u8; 16]> = self
+            .warren_drained_exits
+            .iter()
+            .filter(|(_, at)| now.saturating_sub(*at) < WARREN_DRAINED_EXIT_TTL_SECS)
+            .map(|(id, _)| *id)
+            .collect();
+        self.app_routes
+            .replan(self.warren_multi_hop.as_ref(), &drained);
+    }
 }
 
 /// Update message produced by the verify hook and
@@ -454,7 +473,44 @@ impl ParametersGenerator {
             // overrides via [`set_warren_max_rate_bps`] when applying
             // the persisted user setting at boot.
             max_rate_control_tx: tokio::sync::watch::Sender::new(None),
+            app_routes: crate::warren_app_routes::RoutePlanner::new(),
         })))
+    }
+
+    /// The app routing settings the route plan follows. A change reaches
+    /// the running tunnel's route sessions without a reconnect.
+    pub async fn set_app_routing(&self, settings: mullvad_types::app_routing::AppRoutingSettings) {
+        let mut inner = self.0.lock().await;
+        inner.app_routes.set_settings(settings);
+        inner.replan_app_routes();
+    }
+
+    /// The verified directory and the multi-hop shape of the main
+    /// connection, which the app exits are resolved against. Called by the
+    /// directory updater after each pass.
+    pub async fn set_warren_route_directory(
+        &self,
+        directory: Arc<warren_discovery_core::VerifiedMultiHopDirectory>,
+        multi_hop: mullvad_types::settings::WarrenMultiHopSettings,
+    ) {
+        let mut inner = self.0.lock().await;
+        inner.app_routes.set_directory(directory, multi_hop);
+        inner.replan_app_routes();
+    }
+
+    /// Where the daemon hears how each exit in force is served.
+    pub async fn app_route_resolutions(
+        &self,
+    ) -> tokio::sync::watch::Receiver<crate::warren_app_routes::Resolutions> {
+        self.0.lock().await.app_routes.resolutions_rx()
+    }
+
+    /// Where every tunnel reports how its route sessions stand.
+    pub async fn set_app_route_observer(
+        &self,
+        observer: talpid_warren_tunnel::app_routes::AppRouteObserver,
+    ) {
+        self.0.lock().await.app_routes.observer = Some(observer);
     }
 
     /// Wire the channel that forwards verify-hook events
@@ -628,6 +684,8 @@ impl ParametersGenerator {
         } else {
             inner.warren_drained_exits.push((exit_id, now));
         }
+        // A route session on the draining exit moves to another one.
+        inner.replan_app_routes();
     }
 
     /// ADR 36: snapshot of currently-excluded drained exit ids, pruning
@@ -887,7 +945,11 @@ impl ParametersGenerator {
     /// value). Mirrors the runtime-mutation pattern of
     /// [`Self::set_warren_enable_daita`].
     pub async fn set_warren_multi_hop(&self, cfg: Option<MultiHopConfig>) {
-        self.0.lock().await.warren_multi_hop = cfg;
+        let mut inner = self.0.lock().await;
+        inner.warren_multi_hop = cfg;
+        // An app whose exit the main circuit now matches rides the main
+        // session, and one it left needs a route of its own.
+        inner.replan_app_routes();
     }
 
     /// The circuit the next tunnel start would use.
@@ -1566,6 +1628,12 @@ impl ParametersGenerator {
         // tunnel's rate limiter follows `set_warren_max_rate_bps`
         // pushes and reads the current value at start via `borrow()`.
         params.max_rate_control_rx = Some(inner.max_rate_control_tx.subscribe());
+        // Per-app exits run where a flow can be attributed to its app.
+        #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
+        {
+            params.app_routes_rx = Some(inner.app_routes.plan_rx());
+            params.on_app_routes = inner.app_routes.observer.clone();
+        }
         Ok(params)
     }
 

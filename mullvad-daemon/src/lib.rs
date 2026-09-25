@@ -58,6 +58,8 @@ mod warren_api_dns;
 /// transport cannot be told how to resolve, and these calls must reach the
 /// API through the address cache rather than through system DNS.
 mod warren_api_transport;
+/// Which session each app's exit goes through, and what the user sees of it.
+mod warren_app_routes;
 /// Shared policy pieces of the periodic signed-artifact refreshers
 /// (fast retry, ETag conditional GET, atomic cache write).
 mod warren_artifact_refresh;
@@ -167,8 +169,7 @@ use mullvad_relay_selector::RelaySelector;
 #[cfg(target_os = "android")]
 use mullvad_types::account::{PlayExternalObfuscatedAccountId, PlayPurchase};
 use mullvad_types::app_routing::{
-    AppId, AppRouteState, AppRouteStatus, AppRoutingError, AppRoutingSettings, ExitChoice,
-    SplitMode, UnavailableReason,
+    AppId, AppRouteStatus, AppRoutingError, AppRoutingSettings, ExitChoice, SplitMode,
 };
 #[cfg(daita)]
 use mullvad_types::wireguard::DaitaSettings;
@@ -300,22 +301,6 @@ fn macos_split_tunnel_enable_allowed() -> Result<(), Error> {
 #[cfg(not(target_os = "macos"))]
 fn macos_split_tunnel_enable_allowed() -> Result<(), Error> {
     Ok(())
-}
-
-/// One status per exit in force. Route sessions live inside the main
-/// connection, so none can run while it is down; while it is up, a route with
-/// no session of its own yet is connecting.
-fn app_route_statuses(routing: &AppRoutingSettings, tunnel_connected: bool) -> Vec<AppRouteStatus> {
-    routing.route_statuses(|_| {
-        if tunnel_connected {
-            (AppRouteState::Connecting, None)
-        } else {
-            (
-                AppRouteState::Unavailable(UnavailableReason::TunnelDown),
-                None,
-            )
-        }
-    })
 }
 
 /// Whether moving from `current` to `requested` turns a split mode on, the
@@ -939,6 +924,10 @@ pub(crate) enum InternalDaemonEvent {
         env: warren_product_env::ProductEnv,
         state: Option<warren_env_arbitration::ForeignDaemonState>,
     },
+    /// The tunnel's route sessions changed state.
+    AppRouteReports(Vec<talpid_warren_tunnel::app_routes::RouteReport>),
+    /// The app exits were resolved again.
+    AppRoutesPlanned,
 }
 
 pub(crate) enum ExcludedPathsUpdate {
@@ -1233,6 +1222,12 @@ pub struct Daemon {
     /// product publishes a complete and honest list from the first snapshot.
     #[cfg(not(target_os = "android"))]
     warren_foreign_envs: Vec<warren_env_arbitration::ForeignEnvObservation>,
+    /// How each exit in force is served, as last resolved.
+    app_route_resolutions: tokio::sync::watch::Receiver<warren_app_routes::Resolutions>,
+    /// How the tunnel's route sessions stand, as last reported.
+    app_route_reports: Vec<talpid_warren_tunnel::app_routes::RouteReport>,
+    /// The route statuses clients last heard, so they hear only changes.
+    app_routes_published: Vec<AppRouteStatus>,
 }
 pub struct DaemonConfig {
     pub log_dir: Option<PathBuf>,
@@ -1856,6 +1851,54 @@ impl Daemon {
             });
         }
 
+        // Per-app exits: the generator resolves them and every tunnel
+        // follows the plan; what the route sessions report, and each new
+        // resolution, comes back here to be shown.
+        let app_route_resolutions = {
+            let reports_tx = internal_event_tx.clone();
+            parameters_generator
+                .set_app_route_observer(Arc::new(move |reports| {
+                    let _ = reports_tx.send(InternalDaemonEvent::AppRouteReports(reports));
+                }))
+                .await;
+            let (routing_tx, mut routing_rx) =
+                tokio::sync::watch::channel(settings.app_routing.clone());
+            settings.register_change_listener(move |settings| {
+                routing_tx.send_if_modified(|routing| {
+                    let changed = *routing != settings.app_routing;
+                    if changed {
+                        routing.clone_from(&settings.app_routing);
+                    }
+                    changed
+                });
+            });
+            // One task, so the generator sees the changes in their order.
+            let routing_generator = parameters_generator.clone();
+            tokio::spawn(async move {
+                loop {
+                    let routing = routing_rx.borrow_and_update().clone();
+                    routing_generator.set_app_routing(routing).await;
+                    if routing_rx.changed().await.is_err() {
+                        return;
+                    }
+                }
+            });
+            let resolutions = parameters_generator.app_route_resolutions().await;
+            let mut planned_rx = resolutions.clone();
+            let planned_tx = internal_event_tx.clone();
+            tokio::spawn(async move {
+                while planned_rx.changed().await.is_ok() {
+                    if planned_tx
+                        .send(InternalDaemonEvent::AppRoutesPlanned)
+                        .is_err()
+                    {
+                        return;
+                    }
+                }
+            });
+            resolutions
+        };
+
         let param_gen_relay_settings = parameters_generator.clone();
         settings.register_change_listener(move |settings| {
             let settings = settings.clone();
@@ -2396,6 +2439,9 @@ impl Daemon {
             warren_foreign_envs: warren_env_arbitration::seed_observations(
                 warren_product_env::CURRENT,
             ),
+            app_route_resolutions,
+            app_route_reports: Vec::new(),
+            app_routes_published: Vec::new(),
         };
 
         // Cross-environment arbitration: watch every OTHER product
@@ -2577,6 +2623,11 @@ impl Daemon {
             WarrenForeignEnvObserved { env, state } => {
                 self.handle_warren_foreign_env_observed(env, state).await;
             }
+            AppRouteReports(reports) => {
+                self.app_route_reports = reports;
+                self.publish_app_routes_if_changed();
+            }
+            AppRoutesPlanned => self.publish_app_routes_if_changed(),
         }
         should_stop
     }
@@ -3014,11 +3065,12 @@ impl Daemon {
         self.management_interface
             .notifier()
             .notify_new_state(tunnel_state);
-        // Route sessions live inside the main connection, so their state
-        // follows it.
-        if !self.settings.app_routing.effective_app_exits().is_empty() {
-            self.publish_app_routes();
+        // Route sessions live inside the main connection: what the last
+        // tunnel reported about them no longer holds once it is down.
+        if !self.tunnel_state.is_connected() {
+            self.app_route_reports.clear();
         }
+        self.publish_app_routes_if_changed();
         self.fetch_am_i_mullvad();
     }
 
@@ -3569,7 +3621,6 @@ impl Daemon {
         update: ExcludedPathsUpdate,
         tx: ResponseTx<(), Error>,
     ) {
-        let routes_before = self.app_route_statuses();
         let save_result = match update {
             ExcludedPathsUpdate::SetMode(mode) => {
                 let split_tunnel_was_enabled = self.settings.app_routing.exclusions_active();
@@ -3607,7 +3658,7 @@ impl Daemon {
                 .map_err(Error::SettingsError),
         };
         // Excluding an app takes its exit out of force.
-        self.publish_app_routes_if_changed(routes_before);
+        self.publish_app_routes_if_changed();
         let _ = tx.send(save_result.map(|_| ()));
     }
 
@@ -3624,36 +3675,35 @@ impl Daemon {
             Self::oneshot_send(tx, Err(Error::AppRouting(error)), response_msg);
             return;
         }
-        let routes_before = self.app_route_statuses();
         let result = self
             .settings
             .update(move |settings| settings.app_routing = app_routing)
             .await
             .map(|_| ())
             .map_err(Error::SettingsError);
-        self.publish_app_routes_if_changed(routes_before);
+        self.publish_app_routes_if_changed();
         Self::oneshot_send(tx, result, response_msg);
     }
 
     fn app_route_statuses(&self) -> Vec<AppRouteStatus> {
-        app_route_statuses(&self.settings.app_routing, self.tunnel_state.is_connected())
+        warren_app_routes::statuses(
+            &self.settings.app_routing,
+            self.tunnel_state.is_connected(),
+            &self.app_route_resolutions.borrow(),
+            &self.app_route_reports,
+        )
     }
 
-    fn publish_app_routes(&self) {
-        self.management_interface
-            .notifier()
-            .notify_app_routes(self.app_route_statuses());
-    }
-
-    /// Publishes the route statuses when they differ from `before`, so
-    /// clients hear of a change, and a client that never chose an exit (or a
-    /// GUI that predates this event) hears nothing.
-    fn publish_app_routes_if_changed(&self, before: Vec<AppRouteStatus>) {
-        let after = self.app_route_statuses();
-        if after != before {
+    /// Publishes the route statuses when they differ from what clients last
+    /// heard, so a client that never chose an exit (or a GUI that predates
+    /// this event) hears nothing.
+    fn publish_app_routes_if_changed(&mut self) {
+        let statuses = self.app_route_statuses();
+        if statuses != self.app_routes_published {
+            self.app_routes_published.clone_from(&statuses);
             self.management_interface
                 .notifier()
-                .notify_app_routes(after);
+                .notify_app_routes(statuses);
         }
     }
 
@@ -7277,47 +7327,6 @@ mod restart_lockdown_deadman_tests {
     fn a_daemon_that_armed_nothing_is_left_alone() {
         assert_eq!(restart_lockdown_verdict(false, false), None);
         assert_eq!(restart_lockdown_verdict(false, true), None);
-    }
-}
-
-#[cfg(test)]
-mod app_route_status_tests {
-    use super::app_route_statuses;
-    use mullvad_types::app_routing::{
-        AppId, AppRouteState, AppRoutingSettings, ExitChoice, UnavailableReason,
-    };
-
-    fn routing() -> AppRoutingSettings {
-        let mut routing = AppRoutingSettings {
-            app_exits_enabled: true,
-            ..Default::default()
-        };
-        #[cfg(not(windows))]
-        let app = AppId::parse("/opt/app/browser").unwrap();
-        #[cfg(windows)]
-        let app = AppId::parse(r"C:\app\browser.exe").unwrap();
-        routing
-            .set_app_exit(app, ExitChoice::new("se", None).unwrap())
-            .unwrap();
-        routing
-    }
-
-    #[test]
-    fn a_route_is_unavailable_while_the_main_connection_is_down() {
-        let statuses = app_route_statuses(&routing(), false);
-
-        assert_eq!(statuses.len(), 1);
-        assert_eq!(
-            statuses[0].state,
-            AppRouteState::Unavailable(UnavailableReason::TunnelDown)
-        );
-    }
-
-    #[test]
-    fn a_route_is_connecting_once_the_main_connection_is_up() {
-        let statuses = app_route_statuses(&routing(), true);
-
-        assert_eq!(statuses[0].state, AppRouteState::Connecting);
     }
 }
 

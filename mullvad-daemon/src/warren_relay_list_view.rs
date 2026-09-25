@@ -171,7 +171,7 @@ pub(crate) fn relay_hostname(relay: &WarrenRelay) -> String {
 /// (`ascii_lower`, `-` instead of space, removes non
 /// `[a-z0-9-]` characters). No uniqueness guarantee - `(country_code,
 /// city_code)` must remain unique on the warren-api producer side.
-fn slugify(s: &str) -> String {
+pub(crate) fn slugify(s: &str) -> String {
     let lowered = s.to_lowercase().replace([' ', '_'], "-");
     lowered
         .chars()
