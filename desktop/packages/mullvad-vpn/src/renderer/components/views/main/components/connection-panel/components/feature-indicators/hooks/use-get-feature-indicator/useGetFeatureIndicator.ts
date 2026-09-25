@@ -100,8 +100,10 @@ export const useGetFeatureIndicator = () => {
   }, [history]);
 
   const gotoSplitTunnelingFeature = React.useCallback(() => {
+    // The daemon raises this indicator for exclusion only.
     history.push(RoutePath.splitTunneling, {
       transition: TransitionType.show,
+      options: [{ type: 'app-routing-tab', tab: 'bypass' }],
     });
   }, [history]);
 
@@ -247,7 +249,7 @@ export const useGetFeatureIndicator = () => {
       onClick: gotoLockdownModeFeature,
     },
     [FeatureIndicator.splitTunneling]: {
-      label: strings.splitTunneling,
+      label: messages.pgettext('split-tunneling-view', 'Bypass VPN'),
       onClick: gotoSplitTunnelingFeature,
     },
     [FeatureIndicator.serverIpOverride]: {
