@@ -3,6 +3,11 @@
   noua versiune, o verifică cu manifestul de actualizare semnat, o predă managerului de pachete
   al distribuției (apt, dnf, zypper sau pacman) și repornește cu noua versiune. `warren upgrade`
   face același lucru dintr-un terminal.
+- [Windows, macOS, Linux] Vezi cât de încărcată e rețeaua Warren: un inel de sarcină și numărul de
+  persoane de pe fiecare exit în lista de locații și pe cardul de conexiune, plus o nouă vedere
+  Rețeaua Warren cu totalurile în direct. Cifrele în direct ale unui exit apar doar de la 20 de
+  persoane conectate pe el, ca traficul nimănui să nu poată fi izolat. Cifrele apar imediat ce
+  actualizarea de server corespunzătoare e activă.
 
 ### Reparat
 - [Linux] Repornește aplicația la instalarea unei actualizări pe Arch Linux și derivatele sale, și

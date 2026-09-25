@@ -3,6 +3,10 @@
   version, checks it against the signed update manifest, hands it to the package manager of the
   distribution (apt, dnf, zypper or pacman) and restarts on the new version. `warren upgrade`
   does the same from a terminal.
+- [Windows, macOS, Linux] See how busy the Warren network is: a load ring and the number of people on
+  each exit in the location list and on the connection card, and a new Warren network view with
+  live totals. An exit's live figures appear once 20 people share it, so no one's traffic can be
+  singled out. The figures show up as soon as the matching server update is live.
 
 ### Fixed
 - [Linux] Restart the app when an update is installed on Arch Linux and its derivatives, and on a

@@ -3,6 +3,11 @@
   L'application télécharge la nouvelle version, la vérifie avec le manifeste de mise à jour signé,
   la confie au gestionnaire de paquets de la distribution (apt, dnf, zypper ou pacman) et
   redémarre sur la nouvelle version. `warren upgrade` fait de même depuis un terminal.
+- [Windows, macOS, Linux] Voir la charge du réseau Warren : un anneau de charge et le nombre de
+  personnes sur chaque exit dans la liste des lieux et sur la carte de connexion, et une nouvelle vue
+  Réseau Warren avec les totaux en direct. Les chiffres en direct d'une exit n'apparaissent qu'à
+  partir de 20 personnes connectées dessus, pour que le trafic de personne ne puisse y être isolé.
+  Les chiffres s'affichent dès que la mise à jour serveur correspondante est en ligne.
 
 ### Corrigé
 - [Linux] Redémarrer l'application à l'installation d'une mise à jour sur Arch Linux et ses
