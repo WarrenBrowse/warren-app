@@ -35,7 +35,9 @@ const AF_INET: u8 = 2;
 const AF_INET6: u8 = 10;
 const IPPROTO_TCP: u8 = 6;
 const IPPROTO_UDP: u8 = 17;
-const ENOENT: i32 = 2;
+const EPERM: i32 = 1;
+const EINVAL: i32 = 22;
+const EOPNOTSUPP: i32 = 95;
 
 /// A request for the connection whose reply direction is `flow` seen from
 /// the far end, which is how the TUN device shows a translated connection.
@@ -89,8 +91,9 @@ pub fn request(sequence: u32, flow: &FlowKey) -> Option<Vec<u8>> {
 pub enum Reply {
     /// The connection, as its socket sees it.
     Original(FlowKey),
-    /// No such connection.
-    Absent,
+    /// The flow already names its socket: no such connection, one the far
+    /// end opened, or a failure the next flow may not meet.
+    AsSeen,
     /// The kernel refuses to answer (no privilege, no conntrack): asking
     /// again will not help.
     Refused,
@@ -98,9 +101,8 @@ pub enum Reply {
     Other,
 }
 
-/// Reads the answer to the [`request`] numbered `sequence` about a flow of
-/// `transport`.
-pub fn parse_reply(reply: &[u8], sequence: u32, transport: Transport) -> Reply {
+/// Reads the answer to the [`request`] numbered `sequence` about `flow`.
+pub fn parse_reply(reply: &[u8], sequence: u32, flow: &FlowKey) -> Reply {
     let (Some(length), Some(kind), Some(seq)) = (word(reply, 0), half(reply, 4), word(reply, 8))
     else {
         return Reply::Other;
@@ -112,10 +114,11 @@ pub fn parse_reply(reply: &[u8], sequence: u32, transport: Transport) -> Reply {
         return Reply::Other;
     };
     if kind == NLMSG_ERROR {
-        return match word(message, NLMSG_HDR_LEN).map(|code| -(code as i32)) {
-            Some(ENOENT) => Reply::Absent,
-            Some(_) => Reply::Refused,
-            None => Reply::Other,
+        // The kernel sends the errno negated; zero is an acknowledgement.
+        return match word(message, NLMSG_HDR_LEN).map(|code| (code as i32).wrapping_neg()) {
+            None | Some(0) => Reply::Other,
+            Some(EPERM | EINVAL | EOPNOTSUPP) => Reply::Refused,
+            Some(_) => Reply::AsSeen,
         };
     }
     if kind != (NFNL_SUBSYS_CTNETLINK << 8) | IPCTNL_MSG_CT_NEW {
@@ -124,13 +127,25 @@ pub fn parse_reply(reply: &[u8], sequence: u32, transport: Transport) -> Reply {
     let Some(attributes) = message.get(NLMSG_HDR_LEN + NFGENMSG_LEN..) else {
         return Reply::Other;
     };
-    find(attributes, CTA_TUPLE_ORIG)
-        .and_then(|tuple| original(tuple, transport))
-        .map_or(Reply::Other, Reply::Original)
+    let tuple = |kind| find(attributes, kind).and_then(ends);
+    let (Some(original), Some(reply)) = (tuple(CTA_TUPLE_ORIG), tuple(CTA_TUPLE_REPLY)) else {
+        return Reply::Other;
+    };
+    // The kernel matches the tuple asked about against either direction. Only
+    // a match on the reply one means this side opened the connection, whose
+    // original source is then the socket's end.
+    if reply != (flow.remote, flow.local) {
+        return Reply::AsSeen;
+    }
+    Reply::Original(FlowKey {
+        transport: flow.transport,
+        local: original.0,
+        remote: original.1,
+    })
 }
 
-/// The flow a `CTA_TUPLE_ORIG` names: its source is the socket's end.
-fn original(tuple: &[u8], transport: Transport) -> Option<FlowKey> {
+/// The source and destination a conntrack tuple names.
+fn ends(tuple: &[u8]) -> Option<(SocketAddr, SocketAddr)> {
     let ip = find(tuple, CTA_TUPLE_IP)?;
     let proto = find(tuple, CTA_TUPLE_PROTO)?;
     let (src, dst) = match (find(ip, CTA_IP_V4_SRC), find(ip, CTA_IP_V4_DST)) {
@@ -152,11 +167,10 @@ fn original(tuple: &[u8], transport: Transport) -> Option<FlowKey> {
             .and_then(|bytes| <[u8; 2]>::try_from(bytes).ok())
             .map(u16::from_be_bytes)
     };
-    Some(FlowKey {
-        transport,
-        local: SocketAddr::new(src, port(CTA_PROTO_SRC_PORT)?),
-        remote: SocketAddr::new(dst, port(CTA_PROTO_DST_PORT)?),
-    })
+    Some((
+        SocketAddr::new(src, port(CTA_PROTO_SRC_PORT)?),
+        SocketAddr::new(dst, port(CTA_PROTO_DST_PORT)?),
+    ))
 }
 
 fn attribute(kind: u16, payload: &[u8]) -> Vec<u8> {
@@ -203,6 +217,8 @@ fn word(bytes: &[u8], at: usize) -> Option<u32> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    const ENOENT: i32 = 2;
 
     fn masqueraded() -> FlowKey {
         FlowKey {
@@ -262,14 +278,15 @@ mod tests {
         message
     }
 
-    fn error(sequence: u32, code: i32) -> Vec<u8> {
+    /// An error answer carrying `errno` as the kernel does, negated.
+    fn error(sequence: u32, errno: i32) -> Vec<u8> {
         let mut message = Vec::new();
         message.extend_from_slice(&36u32.to_ne_bytes());
         message.extend_from_slice(&NLMSG_ERROR.to_ne_bytes());
         message.extend_from_slice(&0u16.to_ne_bytes());
         message.extend_from_slice(&sequence.to_ne_bytes());
         message.extend_from_slice(&0u32.to_ne_bytes());
-        message.extend_from_slice(&(-code).to_ne_bytes());
+        message.extend_from_slice(&errno.wrapping_neg().to_ne_bytes());
         message.resize(36, 0);
         message
     }
@@ -330,24 +347,54 @@ mod tests {
             ..masqueraded()
         };
 
-        let reply = parse_reply(&answer(9, original, masqueraded()), 9, Transport::Tcp);
+        let reply = parse_reply(&answer(9, original, masqueraded()), 9, &masqueraded());
 
         assert_eq!(reply, Reply::Original(original));
     }
 
     #[test]
-    fn a_missing_connection_is_absent_and_any_other_error_a_refusal() {
-        assert_eq!(
-            parse_reply(&error(3, ENOENT), 3, Transport::Tcp),
-            Reply::Absent
-        );
-        assert_eq!(parse_reply(&error(3, 1), 3, Transport::Tcp), Reply::Refused);
+    fn takes_a_connection_the_far_end_opened_as_seen() {
+        // The lookup matches either direction, and here the pair asked about
+        // is the connection's original one: the far end opened it.
+        let inbound = FlowKey {
+            transport: Transport::Tcp,
+            local: masqueraded().remote,
+            remote: masqueraded().local,
+        };
+
+        let reply = parse_reply(&answer(9, inbound, inbound), 9, &masqueraded());
+
+        assert_eq!(reply, Reply::AsSeen);
+    }
+
+    #[test]
+    fn a_missing_connection_or_a_passing_failure_is_taken_as_seen() {
+        let flow = masqueraded();
+
+        assert_eq!(parse_reply(&error(3, ENOENT), 3, &flow), Reply::AsSeen);
+        // ENOBUFS: the next flow may well get an answer.
+        assert_eq!(parse_reply(&error(3, 105), 3, &flow), Reply::AsSeen);
+        assert_eq!(parse_reply(&error(3, i32::MIN), 3, &flow), Reply::AsSeen);
+    }
+
+    #[test]
+    fn no_privilege_or_no_conntrack_is_a_refusal() {
+        let flow = masqueraded();
+
+        for errno in [EPERM, EINVAL, EOPNOTSUPP] {
+            assert_eq!(parse_reply(&error(3, errno), 3, &flow), Reply::Refused);
+        }
+    }
+
+    #[test]
+    fn an_acknowledgement_is_not_an_answer() {
+        assert_eq!(parse_reply(&error(3, 0), 3, &masqueraded()), Reply::Other);
     }
 
     #[test]
     fn skips_a_reply_to_an_earlier_request() {
         let reply = answer(4, masqueraded(), masqueraded());
 
-        assert_eq!(parse_reply(&reply, 5, Transport::Tcp), Reply::Other);
+        assert_eq!(parse_reply(&reply, 5, &masqueraded()), Reply::Other);
     }
 }

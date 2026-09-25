@@ -82,7 +82,11 @@ impl SystemResolver {
         let fd = match &self.conntrack {
             Some(socket) => socket.as_raw_fd(),
             None => {
-                let socket = open_netlink(libc::NETLINK_NETFILTER).ok()?;
+                let Ok(socket) = open_netlink(libc::NETLINK_NETFILTER) else {
+                    // A kernel without conntrack over netlink stays without it.
+                    self.conntrack_refused = true;
+                    return None;
+                };
                 let fd = socket.as_raw_fd();
                 self.conntrack = Some(socket);
                 fd
@@ -95,9 +99,9 @@ impl SystemResolver {
         self.reply.resize(8192, 0);
         loop {
             let received = receive(fd, &mut self.reply)?;
-            match conntrack::parse_reply(&self.reply[..received], self.sequence, flow.transport) {
+            match conntrack::parse_reply(&self.reply[..received], self.sequence, flow) {
                 conntrack::Reply::Original(original) => return Some(original),
-                conntrack::Reply::Absent => return None,
+                conntrack::Reply::AsSeen => return None,
                 conntrack::Reply::Refused => {
                     self.conntrack_refused = true;
                     return None;
@@ -449,21 +453,33 @@ mod tests {
         assert!(status.success(), "{command}");
     }
 
+    /// Moves the calling thread to a network namespace of its own where
+    /// connections to 127.0.0.2 are translated from 127.0.0.3, the way
+    /// include-only masquerades an included connection into the tunnel.
+    /// Conntrack then tracks every connection of the namespace.
+    fn enter_translating_namespace() {
+        // SAFETY: plain syscall; the result is checked.
+        assert_eq!(unsafe { libc::unshare(libc::CLONE_NEWNET) }, 0);
+        run("ip link set lo up && ip addr add 127.0.0.3/8 dev lo");
+        run(
+            "nft add table ip include_test && nft add chain ip include_test post \
+             '{ type nat hook postrouting priority 100; }' && \
+             nft add rule ip include_test post ip daddr 127.0.0.2 snat to 127.0.0.3",
+        );
+    }
+
+    fn inode_of(socket: &impl AsRawFd) -> u64 {
+        std::fs::metadata(format!("/proc/self/fd/{}", socket.as_raw_fd()))
+            .unwrap()
+            .ino()
+    }
+
     #[test]
     #[ignore = "needs root and nft; runs in a network namespace of its own"]
     fn finds_a_connection_masqueraded_on_its_way_to_the_tunnel() {
         // A thread of its own, since the namespace it enters is the thread's.
         std::thread::spawn(|| {
-            // SAFETY: plain syscall; the result is checked.
-            assert_eq!(unsafe { libc::unshare(libc::CLONE_NEWNET) }, 0);
-            run("ip link set lo up && ip addr add 127.0.0.3/8 dev lo");
-            // Stands in for include-only's masquerade into the tunnel: the
-            // socket's source is rewritten after it was chosen.
-            run(
-                "nft add table ip include_test && nft add chain ip include_test post \
-                 '{ type nat hook postrouting priority 100; }' && \
-                 nft add rule ip include_test post ip daddr 127.0.0.2 snat to 127.0.0.3",
-            );
+            enter_translating_namespace();
             let listener = TcpListener::bind("127.0.0.2:0").unwrap();
             let client = TcpStream::connect(listener.local_addr().unwrap()).unwrap();
             let (accepted, seen_from) = listener.accept().unwrap();
@@ -478,6 +494,30 @@ mod tests {
             });
 
             assert_eq!(owner, Some(std::process::id()));
+        })
+        .join()
+        .unwrap();
+    }
+
+    #[test]
+    #[ignore = "needs root and nft; runs in a network namespace of its own"]
+    fn finds_the_accepted_socket_of_a_connection_the_far_end_opened() {
+        std::thread::spawn(|| {
+            enter_translating_namespace();
+            let listener = TcpListener::bind("127.0.0.4:0").unwrap();
+            let _client = TcpStream::connect(listener.local_addr().unwrap()).unwrap();
+            let (accepted, peer) = listener.accept().unwrap();
+            let flow = FlowKey {
+                transport: Transport::Tcp,
+                local: accepted.local_addr().unwrap(),
+                remote: peer,
+            };
+            let mut resolver = SystemResolver::new();
+
+            // Both ends are this process's, so only the socket tells them apart.
+            let socket_flow = resolver.original(&flow).unwrap_or(flow);
+
+            assert_eq!(resolver.inode(&socket_flow), Some(inode_of(&accepted)));
         })
         .join()
         .unwrap();
