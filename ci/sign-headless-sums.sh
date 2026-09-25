@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Signs the SHA256SUMS of a warren-cli headless release with the Warren update
-# key, which is what lets the installers prove the release came from us.
+# Signs the SHA256SUMS of a warren-cli headless release, or of a desktop
+# release, with the Warren update key, which is what lets the installers prove
+# the release came from us.
 #
 #   WARREN_UPDATE_SIGNING_KEY=<64-hex seed> bash ci/sign-headless-sums.sh <SHA256SUMS>
 #
@@ -22,7 +23,9 @@
 set -euo pipefail
 export LC_ALL=C
 
-SUMS_DOMAIN='warren-cli-sha256sums/1'
+# The desktop release signs its own list under warren-desktop-sha256sums/1
+# (WARREN_SUMS_NAMESPACE), which its Linux install script verifies.
+SUMS_DOMAIN="${WARREN_SUMS_NAMESPACE:-warren-cli-sha256sums/1}"
 
 die() {
 	echo "sign-headless-sums: $*" >&2

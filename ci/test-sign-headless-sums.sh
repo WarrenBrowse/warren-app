@@ -94,6 +94,16 @@ refuse "and in no other namespace" sshsig_verifies "$D" file
 printf 'b' >> "$D/SHA256SUMS"
 refuse "a list changed after signing no longer verifies" sshsig_verifies "$D"
 
+echo "the desktop list"
+# The desktop app's list gets its own namespace, so a desktop signature can
+# never stand in for a CLI one, nor the reverse.
+list "$D"
+expect "a list is signed in the namespace it is given" \
+	env WARREN_SUMS_NAMESPACE=warren-desktop-sha256sums/1 \
+	bash -c ". '$SCRIPT_DIR/sign-headless-sums.sh'; sign_sums '$D/SHA256SUMS' $TEST_SEED '$TMP/trusted'"
+expect "and verifies there" sshsig_verifies "$D" warren-desktop-sha256sums/1
+refuse "but not as a CLI list" sshsig_verifies "$D"
+
 echo "refusals"
 list "$D"
 OTHER_SEED=8888888888888888888888888888888888888888888888888888888888888888

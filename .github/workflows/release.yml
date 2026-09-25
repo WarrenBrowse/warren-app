@@ -1435,6 +1435,29 @@ jobs:
           cp unsigned/downloads.json signed/downloads.json
           ls -lh signed
 
+      # The Linux install script the download page shows (curl ... | sh) is
+      # served beside the packages it picks from, and refuses a checksum list
+      # the release key did not sign. The list gets its own namespace, so the
+      # signature can never pass for the headless CLI's list, nor the reverse.
+      - name: Sign the checksum list and render the Linux install script
+        if: env.WARREN_UPDATE_SIGNING_KEY != ''
+        env:
+          WARREN_SUMS_NAMESPACE: warren-desktop-sha256sums/1
+        run: |
+          bash ci/sign-headless-sums.sh release-files/SHA256SUMS
+          base="$WARREN_UPDATE_METADATA_BASE"
+          prefix=WarrenVPN
+          if [ "$WARREN_CHANNEL" = beta ]; then
+            base="$WARREN_UPDATE_METADATA_BASE_BETA"
+            prefix=WarrenVPN-Beta
+          fi
+          sed -e "s|@UPDATES_URL@|${base%/}|" -e "s|@ARTIFACT_PREFIX@|${prefix}|" \
+            dist-assets/linux/install.sh > release-files/install.sh
+          if grep -q '@UPDATES_URL@\|@ARTIFACT_PREFIX@' release-files/install.sh; then
+            echo "::error::the Linux install script still carries a placeholder"
+            exit 1
+          fi
+
       - name: Preflight ssh client
         if: env.WARREN_UPDATE_SIGNING_KEY != '' && env.WARREN_UPDATES_SSH_KEY != ''
         run: |
@@ -1511,7 +1534,7 @@ jobs:
             batch=""
           }
           n=0
-          for f in $missing SHA256SUMS; do
+          for f in $missing SHA256SUMS SHA256SUMS.sshsig install.sh; do
             (
               set -o pipefail
               cd release-files

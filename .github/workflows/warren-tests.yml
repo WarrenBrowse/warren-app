@@ -102,6 +102,12 @@ jobs:
       - name: CLI checksum-list signer (shell tests)
         run: bash ci/test-sign-headless-sums.sh
 
+      # The one-command Linux installer on the download page resolves a file
+      # name out of the release's naming conventions and refuses a list the
+      # release key did not sign, so both are pinned here.
+      - name: Linux install script (shell tests)
+        run: bash ci/test-linux-install.sh
+
       # The installers extract the headless bundles as root, which restores
       # the owner each entry records.
       - name: Headless bundle archive (shell tests)

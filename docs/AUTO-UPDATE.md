@@ -60,9 +60,9 @@ The daemon polls every 6 hours (5 min retry on error) and on demand when a
 frontend asks. It fetches `{base}/{platform}.json`, verifies the ed25519
 signature against the trusted pubkey(s), enforces the `metadata_version`
 anti-rollback floor, picks the installer for the running CPU architecture, and
-emits an `AppVersionInfo` to the GUI. Detection runs on macOS, Windows and
-Linux; the in-app *install* step is gated to macOS/Windows (`in_app_upgrade`
-cfg), while Linux is sent to the download page.
+emits an `AppVersionInfo` to the GUI. Detection and the in-app install run on
+macOS, Windows and Linux (`in_app_upgrade` cfg). On Linux the installer also
+has to match the package format that owns the install; see "Linux" below.
 
 ### Forced update (the `minimum_supported_version` lever)
 
@@ -79,8 +79,8 @@ supported = current_version >= minimum_supported_version      (if the field is s
 change). In the renderer, `BlockingUpdateGate` replaces the entire UI with
 `BlockedUpdateView` when `connectedToDaemon && consistent && !supported`. The
 gate is non-escapable; the only actions are "Update" (runs the existing in-app
-upgrade flow, or the download page on Linux) and "Quit". The VPN is left
-running.
+upgrade flow, or the download page for an install no published package fits)
+and "Quit". The VPN is left running.
 
 To force an update, set the repo variable `WARREN_UPDATE_MIN_VERSION` (see
 below) so the next published manifest declares the new floor. It is graduated:
@@ -96,6 +96,66 @@ scripts/release/set-update-min-version.sh 1.2.0      # block clients below 1.2.0
 scripts/release/set-update-min-version.sh --unset    # back to optional updates
 scripts/release/set-update-min-version.sh --beta 1.0.0   # the beta channel's floor
 ```
+
+## Linux
+
+A Linux release ships one package per format, and only the package manager
+that owns the running install can upgrade it, as root. So the flow differs from
+macOS and Windows after the download:
+
+1. **Which package.** At startup the daemon asks `dpkg-query -S`, `rpm -qf` and
+   `pacman -Qqo` which package owns its own binary, and accepts only its own
+   product package (`warren-vpn`, `warren-vpn-beta`, or the `-sysvinit` repack):
+   the headless daemon package ships the same binary and must never be
+   "upgraded" into the desktop app. A Nix store path, a tarball or an unknown
+   owner has no format (`mullvad-update/src/linux.rs`).
+2. **Which installer.** `linux.json` lists each package with its
+   `package_format`; the daemon picks the one matching its format and
+   architecture. A release with none for this install (NixOS, a format a
+   release stopped shipping) is still reported, with `manual_install_only` set
+   on the suggested upgrade, so the GUI and `warren upgrade` send it to the
+   download page and the forced-update gate keeps working.
+3. **Download and verify.** Same downloader as macOS and Windows, into the
+   root-owned cache, checked against the signed manifest's SHA-256. The file
+   keeps its format's extension: apt and dnf only read an argument as a local
+   file when it ends in `.deb` or `.rpm`.
+4. **Install.** The GUI (or `warren upgrade`) calls `AppUpgradeInstall`. The
+   request names no file: the daemon re-checks the checksum of the package it
+   verified itself and hands it to the package manager (`apt-get install`,
+   `dnf install`, `zypper install --allow-unsigned-rpm`, `yum`, `rpm -U` or
+   `pacman -U`). The package's scripts stop the daemon halfway through, so the
+   job cannot be the daemon's child: it runs as a transient systemd unit
+   (`<product>-upgrade`, whose fixed name makes systemd refuse a second
+   concurrent upgrade) or, without systemd, in a session of its own (`setsid
+   -f`). It writes `running`, then `exit <code>`, to
+   `/run/<product>-upgrade.status`, and the package manager's output to
+   `app-upgrade.log` in the daemon's log directory
+   (`mullvad-daemon/src/version/linux_upgrade.rs`).
+5. **Relaunch.** The package scripts close the GUI (`before-remove.sh`), so
+   before asking for the install the GUI starts a detached shell script that
+   waits for the status file to leave `running` and then starts the new GUI,
+   unless the old one is still alive because the upgrade failed before closing
+   it (`desktop/.../src/main/linux-app-upgrade.ts`). A failed package manager
+   reaches the GUI through the same file, as `INSTALLER_FAILED`.
+
+The first install has no app to do this, so the download page leads Linux
+visitors with a command, `curl -fsSL https://<site>/install.sh | sh`. The site
+serves a bootstrap that runs `dist-assets/linux/install.sh`, which every
+release renders for its channel and publishes on the update host beside the
+packages. It picks the format from the package manager present (not from the
+distribution's name), the package from the signed `SHA256SUMS`, checks the
+list's signature (`SHA256SUMS.sshsig`, namespace
+`warren-desktop-sha256sums/1`, made by `ci/sign-headless-sums.sh`) and the
+package's checksum, and installs it. Tests: `ci/test-linux-install.sh`.
+
+What that signature covers, and what it does not: it binds the packages to
+the release key, so a mirror or a tampered file on the update host cannot
+substitute a package. The script itself is served by that same host, so
+whoever controls the host can serve a script that skips the check; the trust
+in the first install is the trust in the update host's TLS, as for any direct
+download from it. Any signed list verifies, an older one included, so a first
+install can land on an older release; the app then updates itself forward
+through the manifest, whose `metadata_version` floor refuses a rollback.
 
 ## Signing key
 
@@ -203,7 +263,8 @@ publishes it non-draft once they are all green). It:
    manifest to bump `metadata_version` monotonically (anti-rollback) and to keep
    older releases listed, and injects `minimum_supported_version` from the repo
    variable. Mapping: macOS `.pkg` is universal (listed for both arches),
-   Windows `.exe` is per-arch, Linux is installer-less.
+   Windows `.exe` is per-arch, Linux lists one package per format and arch
+   (`package_format`: `deb`, `deb-sysvinit`, `rpm`, `pacman`).
 4. Signs each `{platform}.json` with `WARREN_UPDATE_SIGNING_KEY`, which the
    signer reads from its environment and refuses on its command line.
 5. `scp`s the signed JSON to the host (and always uploads them as a run
@@ -248,7 +309,7 @@ manifests for a release that is still a draft.
 | --- | --- | --- | --- |
 | macOS | yes | yes (`.pkg` via `open`) | yes (blocking screen) |
 | Windows | yes | yes (`.exe /inapp`) | yes (blocking screen) |
-| Linux | yes | no (download page) | yes (blocking screen, manual update) |
+| Linux | yes | yes (the daemon hands the package to apt, dnf, zypper or pacman) | yes (blocking screen) |
 | Android | planned | planned (direct APK) / store-managed (Play) | planned |
 | iOS | planned | not possible (App Store only) | planned (version-check + store redirect) |
 
@@ -256,8 +317,8 @@ manifests for a release that is still a draft.
 
 The **server side is reused as-is** and is **already wired**: the CI emits and
 signs `android.json` and `ios.json` next to the desktop manifests (same job,
-same ed25519 key, same Caddy `/updates/` host). They use the same installer-less
-`Response` shape as the Linux manifest, i.e. the latest version + changelog +
+same ed25519 key, same Caddy `/updates/` host). They use the same
+`Response` shape with no installer, i.e. the latest version + changelog +
 `minimum_supported_version` (mobile never self-downloads an installer; the store
 performs the update). What remains is **client** work, and mobile stores
 constrain what is possible.
