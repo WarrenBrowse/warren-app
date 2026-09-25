@@ -386,6 +386,13 @@ mod tests {
             let path = format!("/{}/{method}", management_service_server::SERVICE_NAME);
             assert_eq!(classify(&path), Some(RpcClass::ControlMachine), "{method}");
         }
+        // Reading them is open to every account, like the settings that
+        // already list the same apps.
+        let read = format!(
+            "/{}/GetAppRouteStatus",
+            management_service_server::SERVICE_NAME
+        );
+        assert_eq!(classify(&read), Some(RpcClass::ReadPublic));
     }
 
     /// The anchors of the policy, each named once so a reclassification is a

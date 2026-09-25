@@ -318,6 +318,51 @@ fn app_route_statuses(routing: &AppRoutingSettings, tunnel_connected: bool) -> V
     })
 }
 
+/// Whether moving from `current` to `requested` turns a split mode on, the
+/// only change the unsigned-macOS gate refuses: turning one off, or leaving
+/// it as it is, must always be possible so a user can recover.
+fn turns_a_split_mode_on(current: SplitMode, requested: SplitMode) -> bool {
+    requested != SplitMode::Off && requested != current
+}
+
+/// What an exclusion update asks of the tunnel, on the platforms where the
+/// tunnel holds the excluded list (Windows, Android).
+#[cfg(any(target_os = "windows", target_os = "android", test))]
+#[derive(Debug, PartialEq, Eq)]
+enum ExclusionChange {
+    /// Nothing to do: the settings already say this.
+    Unchanged,
+    /// Replace the tunnel's list with this one, then save.
+    SendToTunnel(Vec<AppId>),
+    /// Save only: the tunnel's list stays what it is.
+    SaveOnly,
+}
+
+#[cfg(any(target_os = "windows", target_os = "android", test))]
+fn exclusion_change(routing: &AppRoutingSettings, update: &ExcludedPathsUpdate) -> ExclusionChange {
+    let (list, excluding) = match update {
+        ExcludedPathsUpdate::SetPaths(paths) => {
+            if *paths == routing.excluded_apps {
+                return ExclusionChange::Unchanged;
+            }
+            (paths, routing.exclusions_active())
+        }
+        ExcludedPathsUpdate::SetMode(mode) => {
+            if *mode == routing.split_mode {
+                return ExclusionChange::Unchanged;
+            }
+            (&routing.excluded_apps, *mode == SplitMode::Exclude)
+        }
+    };
+    if excluding {
+        ExclusionChange::SendToTunnel(list.iter().cloned().collect())
+    } else if routing.exclusions_active() {
+        ExclusionChange::SendToTunnel(vec![])
+    } else {
+        ExclusionChange::SaveOnly
+    }
+}
+
 /// The split mode the pre-app-routing switch asks for: on is exclusion; off
 /// ends exclusion but leaves include-only alone, since that switch never knew
 /// of it.
@@ -3524,6 +3569,7 @@ impl Daemon {
         update: ExcludedPathsUpdate,
         tx: ResponseTx<(), Error>,
     ) {
+        let routes_before = self.app_route_statuses();
         let save_result = match update {
             ExcludedPathsUpdate::SetMode(mode) => {
                 let split_tunnel_was_enabled = self.settings.app_routing.exclusions_active();
@@ -3560,12 +3606,8 @@ impl Daemon {
                 .await
                 .map_err(Error::SettingsError),
         };
-        // Excluding an app takes its exit out of force. A client without app
-        // exits hears nothing, and a GUI that predates this event is spared
-        // one it cannot read.
-        if save_result.is_ok() && !self.settings.app_routing.app_exits.is_empty() {
-            self.publish_app_routes();
-        }
+        // Excluding an app takes its exit out of force.
+        self.publish_app_routes_if_changed(routes_before);
         let _ = tx.send(save_result.map(|_| ()));
     }
 
@@ -3582,15 +3624,14 @@ impl Daemon {
             Self::oneshot_send(tx, Err(Error::AppRouting(error)), response_msg);
             return;
         }
+        let routes_before = self.app_route_statuses();
         let result = self
             .settings
             .update(move |settings| settings.app_routing = app_routing)
             .await
             .map(|_| ())
             .map_err(Error::SettingsError);
-        if result.is_ok() {
-            self.publish_app_routes();
-        }
+        self.publish_app_routes_if_changed(routes_before);
         Self::oneshot_send(tx, result, response_msg);
     }
 
@@ -3602,6 +3643,18 @@ impl Daemon {
         self.management_interface
             .notifier()
             .notify_app_routes(self.app_route_statuses());
+    }
+
+    /// Publishes the route statuses when they differ from `before`, so
+    /// clients hear of a change, and a client that never chose an exit (or a
+    /// GUI that predates this event) hears nothing.
+    fn publish_app_routes_if_changed(&self, before: Vec<AppRouteStatus>) {
+        let after = self.app_route_statuses();
+        if after != before {
+            self.management_interface
+                .notifier()
+                .notify_app_routes(after);
+        }
     }
 
     async fn on_set_target_state(
@@ -4560,64 +4613,45 @@ impl Daemon {
         settings: Settings,
         update: ExcludedPathsUpdate,
     ) {
-        let routing = &settings.app_routing;
-        let new_list = match update {
-            ExcludedPathsUpdate::SetPaths(ref paths) => {
-                if *paths == routing.excluded_apps {
-                    Self::oneshot_send(tx, Ok(()), response_msg);
-                    return;
-                }
-                paths.iter()
+        let tunnel_list = match exclusion_change(&settings.app_routing, &update) {
+            ExclusionChange::Unchanged => {
+                Self::oneshot_send(tx, Ok(()), response_msg);
+                return;
             }
-            ExcludedPathsUpdate::SetMode(_) => routing.excluded_apps.iter(),
-        };
-        let new_state = match update {
-            ExcludedPathsUpdate::SetPaths(_) => routing.exclusions_active(),
-            ExcludedPathsUpdate::SetMode(mode) => {
-                if mode == routing.split_mode {
-                    Self::oneshot_send(tx, Ok(()), response_msg);
-                    return;
-                }
-                mode == SplitMode::Exclude
+            ExclusionChange::SaveOnly => {
+                let _ = self
+                    .tx
+                    .send(InternalDaemonEvent::ExcludedPathsEvent(update, tx));
+                return;
+            }
+            ExclusionChange::SendToTunnel(apps) => {
+                apps.iter().map(AppId::to_tunnel_command_repr).collect()
             }
         };
 
-        // Update the tunnel state
-        if new_state || new_state != routing.exclusions_active() {
-            let tunnel_list = if new_state {
-                new_list.map(AppId::to_tunnel_command_repr).collect()
-            } else {
-                vec![]
-            };
+        let (result_tx, result_rx) = oneshot::channel();
+        self.send_tunnel_command(TunnelCommand::SetExcludedApps(result_tx, tunnel_list));
+        let daemon_tx = self.tx.clone();
 
-            let (result_tx, result_rx) = oneshot::channel();
-            self.send_tunnel_command(TunnelCommand::SetExcludedApps(result_tx, tunnel_list));
-            let daemon_tx = self.tx.clone();
-
-            tokio::spawn(async move {
-                match result_rx.await {
-                    Ok(Ok(_)) => (),
-                    Ok(Err(error)) => {
-                        log::error!(
-                            "{}",
-                            error.display_chain_with_msg("Failed to set excluded apps list")
-                        );
-                        Self::oneshot_send(tx, Err(Error::SplitTunnelError(error)), response_msg);
-                        return;
-                    }
-                    Err(_) => {
-                        log::error!("The tunnel failed to return a result");
-                        return;
-                    }
+        tokio::spawn(async move {
+            match result_rx.await {
+                Ok(Ok(_)) => (),
+                Ok(Err(error)) => {
+                    log::error!(
+                        "{}",
+                        error.display_chain_with_msg("Failed to set excluded apps list")
+                    );
+                    Self::oneshot_send(tx, Err(Error::SplitTunnelError(error)), response_msg);
+                    return;
                 }
+                Err(_) => {
+                    log::error!("The tunnel failed to return a result");
+                    return;
+                }
+            }
 
-                let _ = daemon_tx.send(InternalDaemonEvent::ExcludedPathsEvent(update, tx));
-            });
-        } else {
-            let _ = self
-                .tx
-                .send(InternalDaemonEvent::ExcludedPathsEvent(update, tx));
-        }
+            let _ = daemon_tx.send(InternalDaemonEvent::ExcludedPathsEvent(update, tx));
+        });
     }
 
     /// Update the split app paths in both the settings and tunnel
@@ -4750,13 +4784,12 @@ impl Daemon {
         response_msg: &'static str,
         mode: SplitMode,
     ) {
-        // Only ENABLING a split mode is gated: turning it OFF (or leaving
-        // it off) must always be allowed so a user can recover. On an
-        // unsigned macOS build, enabling is refused before any ES/BPF
-        // setup, preventing the half-initialised state that breaks
-        // connectivity and crashes on quit. Include-only rests on the same
-        // classifier as exclusion.
-        if mode != SplitMode::Off
+        // On an unsigned macOS build, turning a split mode on is refused
+        // before any ES/BPF setup, preventing the half-initialised state that
+        // breaks connectivity and crashes on quit. Include-only rests on the
+        // same classifier as exclusion.
+        let current = self.settings.app_routing.split_mode;
+        if turns_a_split_mode_on(current, mode)
             && let Err(e) = macos_split_tunnel_enable_allowed()
         {
             Self::oneshot_send(tx, Err(e), response_msg);
@@ -7311,5 +7344,110 @@ mod split_mode_for_state_tests {
             split_mode_for_state(SplitMode::IncludeOnly, false),
             SplitMode::IncludeOnly
         );
+    }
+}
+
+#[cfg(test)]
+mod split_mode_gate_tests {
+    use super::turns_a_split_mode_on;
+    use mullvad_types::app_routing::SplitMode::{Exclude, IncludeOnly, Off};
+
+    #[test]
+    fn only_a_change_to_a_mode_other_than_off_is_gated() {
+        assert!(turns_a_split_mode_on(Off, Exclude));
+        assert!(turns_a_split_mode_on(Exclude, IncludeOnly));
+        assert!(!turns_a_split_mode_on(Exclude, Off));
+        assert!(!turns_a_split_mode_on(IncludeOnly, IncludeOnly));
+    }
+}
+
+#[cfg(test)]
+mod exclusion_change_tests {
+    use super::{ExcludedPathsUpdate, ExclusionChange, exclusion_change};
+    use mullvad_types::app_routing::{AppId, AppRoutingSettings, SplitMode};
+    use std::collections::BTreeSet;
+
+    #[cfg(not(windows))]
+    const APPS: [&str; 2] = ["/opt/app/browser", "/opt/app/mailer"];
+    #[cfg(windows)]
+    const APPS: [&str; 2] = [r"C:\app\browser.exe", r"C:\app\mailer.exe"];
+
+    fn apps(raw: &[&str]) -> BTreeSet<AppId> {
+        raw.iter().map(|app| AppId::parse(app).unwrap()).collect()
+    }
+
+    fn routing(mode: SplitMode) -> AppRoutingSettings {
+        AppRoutingSettings {
+            split_mode: mode,
+            excluded_apps: apps(&APPS[..1]),
+            ..Default::default()
+        }
+    }
+
+    fn change(mode: SplitMode, update: ExcludedPathsUpdate) -> ExclusionChange {
+        exclusion_change(&routing(mode), &update)
+    }
+
+    fn send(raw: &[&str]) -> ExclusionChange {
+        ExclusionChange::SendToTunnel(apps(raw).into_iter().collect())
+    }
+
+    #[test]
+    fn a_new_list_reaches_the_tunnel_only_while_excluding() {
+        let excluding = change(
+            SplitMode::Exclude,
+            ExcludedPathsUpdate::SetPaths(apps(&APPS)),
+        );
+        let off = change(SplitMode::Off, ExcludedPathsUpdate::SetPaths(apps(&APPS)));
+        let including = change(
+            SplitMode::IncludeOnly,
+            ExcludedPathsUpdate::SetPaths(apps(&APPS)),
+        );
+
+        assert_eq!(excluding, send(&APPS));
+        assert_eq!(off, ExclusionChange::SaveOnly);
+        assert_eq!(including, ExclusionChange::SaveOnly);
+    }
+
+    #[test]
+    fn an_unchanged_list_or_mode_changes_nothing() {
+        let same_list = change(
+            SplitMode::Exclude,
+            ExcludedPathsUpdate::SetPaths(apps(&APPS[..1])),
+        );
+        let same_mode = change(SplitMode::Off, ExcludedPathsUpdate::SetMode(SplitMode::Off));
+
+        assert_eq!(same_list, ExclusionChange::Unchanged);
+        assert_eq!(same_mode, ExclusionChange::Unchanged);
+    }
+
+    #[test]
+    fn entering_exclusion_sends_the_list_and_leaving_it_empties_the_tunnel_list() {
+        let entering = change(
+            SplitMode::Off,
+            ExcludedPathsUpdate::SetMode(SplitMode::Exclude),
+        );
+        let to_off = change(
+            SplitMode::Exclude,
+            ExcludedPathsUpdate::SetMode(SplitMode::Off),
+        );
+        let to_include = change(
+            SplitMode::Exclude,
+            ExcludedPathsUpdate::SetMode(SplitMode::IncludeOnly),
+        );
+
+        assert_eq!(entering, send(&APPS[..1]));
+        assert_eq!(to_off, send(&[]));
+        assert_eq!(to_include, send(&[]));
+    }
+
+    #[test]
+    fn switching_between_modes_without_exclusion_touches_no_tunnel() {
+        let change = change(
+            SplitMode::IncludeOnly,
+            ExcludedPathsUpdate::SetMode(SplitMode::Off),
+        );
+
+        assert_eq!(change, ExclusionChange::SaveOnly);
     }
 }

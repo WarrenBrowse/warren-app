@@ -3247,9 +3247,10 @@ export namespace AppRouteStatus {
     }
 
     export enum State {
-    CONNECTING = 0,
-    CONNECTED = 1,
-    UNAVAILABLE = 2,
+    UNSPECIFIED = 0,
+    CONNECTING = 1,
+    CONNECTED = 2,
+    UNAVAILABLE = 3,
     }
 
     export enum UnavailableReason {

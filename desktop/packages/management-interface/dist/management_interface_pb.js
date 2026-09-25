@@ -25935,9 +25935,10 @@ proto.mullvad_daemon.management_interface.AppRouteStatus.serializeBinaryToWriter
  * @enum {number}
  */
 proto.mullvad_daemon.management_interface.AppRouteStatus.State = {
-  CONNECTING: 0,
-  CONNECTED: 1,
-  UNAVAILABLE: 2
+  UNSPECIFIED: 0,
+  CONNECTING: 1,
+  CONNECTED: 2,
+  UNAVAILABLE: 3
 };
 
 /**

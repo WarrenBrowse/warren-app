@@ -941,3 +941,31 @@ impl RelaySelectorClient {
         Ok(result)
     }
 }
+
+#[cfg(all(test, not(target_os = "android")))]
+mod app_routing_error_tests {
+    use super::*;
+
+    #[test]
+    fn the_exit_limit_refusal_becomes_its_own_error() {
+        let refusal = Status::with_details(
+            Code::FailedPrecondition,
+            "limit",
+            crate::Bytes::from_static(crate::APP_EXIT_LIMIT_DETAILS),
+        );
+
+        assert!(matches!(
+            map_app_routing_error(refusal),
+            Error::AppExitLimit
+        ));
+    }
+
+    #[test]
+    fn any_other_refusal_stays_an_rpc_error() {
+        let other = Status::failed_precondition("something else");
+        let malformed = Status::invalid_argument("bad app");
+
+        assert!(matches!(map_app_routing_error(other), Error::Rpc(_)));
+        assert!(matches!(map_app_routing_error(malformed), Error::Rpc(_)));
+    }
+}

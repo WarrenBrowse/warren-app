@@ -91,8 +91,10 @@ impl TryFrom<proto::AppRoutingSettings> for AppRoutingSettings {
     type Error = FromProtobufTypeError;
 
     fn try_from(settings: proto::AppRoutingSettings) -> Result<Self, Self::Error> {
-        let apps = |apps: &[String]| -> Result<std::collections::BTreeSet<AppId>, _> {
-            apps.iter().map(|app| app_id(app)).collect()
+        // These come from the daemon, which validated them when they were
+        // chosen: read them back as they are.
+        let apps = |apps: &[String]| -> std::collections::BTreeSet<AppId> {
+            apps.iter().map(|app| AppId::lenient(app)).collect()
         };
         let app_exits = settings
             .app_exits
@@ -101,13 +103,13 @@ impl TryFrom<proto::AppRoutingSettings> for AppRoutingSettings {
                 let exit = entry
                     .exit
                     .ok_or(FromProtobufTypeError::invalid_argument("missing app exit"))?;
-                Ok((app_id(&entry.app)?, ExitChoice::try_from(exit)?))
+                Ok((AppId::lenient(&entry.app), ExitChoice::try_from(exit)?))
             })
             .collect::<Result<_, FromProtobufTypeError>>()?;
         Ok(Self {
             split_mode: split_mode(settings.split_mode)?,
-            excluded_apps: apps(&settings.excluded_apps)?,
-            included_apps: apps(&settings.included_apps)?,
+            excluded_apps: apps(&settings.excluded_apps),
+            included_apps: apps(&settings.included_apps),
             app_exits_enabled: settings.app_exits_enabled,
             app_exits,
         })
@@ -152,6 +154,7 @@ impl TryFrom<proto::AppRouteStatus> for AppRouteStatus {
         let invalid = FromProtobufTypeError::invalid_argument;
         let state =
             match State::try_from(status.state).map_err(|_| invalid("unknown route state"))? {
+                State::Unspecified => return Err(invalid("a route needs a state")),
                 State::Connecting => AppRouteState::Connecting,
                 State::Connected => AppRouteState::Connected,
                 State::Unavailable => AppRouteState::Unavailable(
@@ -172,11 +175,7 @@ impl TryFrom<proto::AppRouteStatus> for AppRouteStatus {
                 .public_ip
                 .map(|ip| ip.parse().map_err(|_| invalid("invalid public address")))
                 .transpose()?,
-            apps: status
-                .apps
-                .iter()
-                .map(|app| app_id(app))
-                .collect::<Result<_, _>>()?,
+            apps: status.apps.iter().map(|app| AppId::lenient(app)).collect(),
         })
     }
 }
@@ -244,9 +243,21 @@ mod tests {
     }
 
     #[test]
-    fn refuses_an_invalid_app_or_exit() {
-        let mut bad_app = proto::AppRoutingSettings::from(&settings());
-        bad_app.included_apps.push(String::new());
+    fn keeps_an_app_id_the_daemon_holds_even_if_it_names_no_app() {
+        let mut wire = proto::AppRoutingSettings::from(&settings());
+        wire.included_apps.push("relative-path".to_owned());
+
+        let settings = AppRoutingSettings::try_from(wire).unwrap();
+
+        assert!(
+            settings
+                .included_apps
+                .contains(&AppId::lenient("relative-path"))
+        );
+    }
+
+    #[test]
+    fn refuses_an_invalid_exit_or_client_app_id() {
         let mut bad_exit = proto::AppRoutingSettings::from(&settings());
         bad_exit.app_exits[0].exit = Some(proto::ExitChoice {
             country: "sweden".to_owned(),
@@ -255,7 +266,6 @@ mod tests {
         let mut missing_exit = proto::AppRoutingSettings::from(&settings());
         missing_exit.app_exits[0].exit = None;
 
-        assert!(AppRoutingSettings::try_from(bad_app).is_err());
         assert!(AppRoutingSettings::try_from(bad_exit).is_err());
         assert!(AppRoutingSettings::try_from(missing_exit).is_err());
         assert!(app_id("").is_err());
@@ -293,6 +303,19 @@ mod tests {
 
             assert_eq!(&back, status);
         }
+    }
+
+    #[test]
+    fn refuses_a_route_without_a_state() {
+        let mut wire = proto::AppRouteStatus::from(&AppRouteStatus {
+            exit: ExitChoice::new("se", None).unwrap(),
+            state: AppRouteState::Connected,
+            public_ip: None,
+            apps: vec![],
+        });
+        wire.state = proto::app_route_status::State::Unspecified as i32;
+
+        assert!(AppRouteStatus::try_from(wire).is_err());
     }
 
     #[test]

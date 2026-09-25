@@ -1436,9 +1436,10 @@ message AppRoutingSettings {
 
 message AppRouteStatus {
   enum State {
-    CONNECTING = 0;
-    CONNECTED = 1;
-    UNAVAILABLE = 2;
+    UNSPECIFIED = 0;
+    CONNECTING = 1;
+    CONNECTED = 2;
+    UNAVAILABLE = 3;
   }
   // Set when the state is UNAVAILABLE.
   enum UnavailableReason {
