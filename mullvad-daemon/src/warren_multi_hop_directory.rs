@@ -1779,6 +1779,13 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                     }
                 }
             }
+            // Per-app exits resolve against the same directory and the same
+            // multi-hop shape as the main circuit.
+            if let Some(dir) = cached_dir.as_ref() {
+                cfg.parameters_generator
+                    .set_warren_route_directory(std::sync::Arc::new(dir.clone()), settings.clone())
+                    .await;
+            }
             // Answer the callers waiting on this pass: a drain reactor
             // rebuilds on `Rebuild` (another circuit, no live handle) and keeps
             // the session on `Stay` (no directory, no other exit, circuit
