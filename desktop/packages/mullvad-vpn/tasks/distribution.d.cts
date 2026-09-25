@@ -4,7 +4,7 @@
 export declare function newConfig(): {
   appId: string;
   productName: string;
-  mac: { icon: string };
+  mac: { icon: string; sign: unknown };
   linux: { icon: string };
   win: { icon: string };
   nsis: { installerSidebar: string };
@@ -23,3 +23,8 @@ export declare function linuxAfterPack(
     addElectronFuses(context: { appOutDir: string }, fuses: unknown): Promise<unknown>;
   };
 }) => Promise<void>;
+export declare const MAC_DAEMON_ENTITLEMENTS: string;
+export declare function macSignOptionsForFile<T extends object>(
+  filePath: string,
+  fileOptions: T,
+): T | (T & { entitlements: string });

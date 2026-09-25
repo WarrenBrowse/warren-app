@@ -251,7 +251,7 @@ subnet route), so an included app's names never go to the ISP.
 
 | OS | mechanism |
 |---|---|
-| macOS | the existing split-tunnel classifier (eslogger process tracking, pf route-to into the ST utun) with the decision inverted: included processes to the VPN, everything else to the default interface. Needs Full Disk Access, like exclude. |
+| macOS | the existing split-tunnel classifier (eslogger process tracking, pf route-to into the ST utun) with the decision inverted: included processes to the VPN, everything else to the default interface. A packet is attributed to the pktap effective pid when there is one, so WebKit's network process working for Safari counts as Safari. A process the monitor does not know yet is dropped, and an included packet without the tunnel address is dropped. System DNS to the tunnel resolver never reaches the classifier (a pf rule passes it on the tunnel first). The error and blocked states block everything, the rest of the system included. Needs Full Disk Access and a signed build, like exclude. |
 | Windows | the unmodified, Microsoft-signed Mullvad driver with the address pair swapped (tunnel address registered as "internet", physical as "tunnel") and the included apps registered as split; the tunnel gets its own `0.0.0.0/0` with a higher metric than the physical default instead of the two `/1` halves; winfw gets a policy that permits non-included apps. IPv6: when the tunnel has no IPv6, winfw blocks included apps' IPv6 (by app id) so no IPv6 flow escapes. Included apps cannot reach the LAN. |
 | Linux | an `included` cgroup (`warren-inclusions`, cgroup2) marked in nft; the tunnel table lookup (pref 51) becomes conditional on that mark (`TunLookupScope::Marked`) and the exclusion bypass (pref 49) is not installed; marked traffic that would leave through anything but the tunnel is dropped; launched through `warren-include`, the mirror of `warren-exclude`, same owner-only rule. Details below. |
 | Android | `VpnService.Builder.addAllowedApplication`, with a guard refusing an empty or fully uninstalled list (Android would otherwise capture everything), and the same allow list on every blackhole plan. |
@@ -307,14 +307,19 @@ connection state. Turning the mode on asks for one confirmation.
 
 ## 4. Platform availability
 
-- **macOS exclude and include-only** need Full Disk Access for
-  `/usr/bin/eslogger` (Apple's binary carries the Endpoint Security
-  entitlement; Warren does not need it). The compile-time `macos-split-tunnel`
-  feature is replaced by a runtime probe that runs before any utun, pf or BPF
-  setup and fails closed on an inconclusive answer. On an ad-hoc signed build
-  the grant does not survive an update, so the GUI explains that and links the
-  Full Disk Access pane. With a Developer ID signature (stable designated
-  requirement) the grant persists.
+- **macOS exclude and include-only** need Full Disk Access for the daemon that
+  spawns `/usr/bin/eslogger` (Apple's binary carries the Endpoint Security
+  entitlement; Warren does not need it). A runtime check replaces the old
+  compile-time `macos-split-tunnel` feature: it runs before any utun, pf or BPF
+  setup, refuses a daemon whose own signature is not anchored at Apple (an
+  ad-hoc build loses the grant at every update), and counts an inconclusive
+  Full Disk Access probe as missing. `split_tunnel_is_supported` answers whether
+  the build and the OS can run it; `need_full_disk_permissions` answers the
+  grant. The GUI reads them as: supported and granted, split tunneling works;
+  supported and not granted, it links the Full Disk Access pane; not supported
+  on macOS 13 or later, it needs a signed build; older macOS, not available.
+  The signature, the identifier and what to verify on the first Developer ID
+  build: `docs/macos-signing.md`.
 - **Per-app country** needs neither Full Disk Access nor a driver on any
   desktop OS.
 - **Windows** ships the driver as-is (x64 and ARM64 binaries are in

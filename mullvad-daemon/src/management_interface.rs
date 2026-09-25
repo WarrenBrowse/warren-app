@@ -1852,7 +1852,18 @@ impl ManagementService for ManagementServiceImpl {
         Ok(self.wait_for_result(rx).await.map(Response::new)?)
     }
 
-    #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+    /// Whether this build on this macOS can run the split tunnel. Full Disk
+    /// Access is reported apart, by `need_full_disk_permissions`, so a client
+    /// on macOS 13 or later reading `false` here knows the build is unsigned.
+    #[cfg(target_os = "macos")]
+    async fn split_tunnel_is_supported(&self, _: Request<()>) -> ServiceResult<bool> {
+        log::debug!("split_tunnel_is_supported");
+        Ok(Response::new(
+            talpid_core::split_tunnel::build_supports_split_tunnel(),
+        ))
+    }
+
+    #[cfg(not(any(target_os = "linux", target_os = "windows", target_os = "macos")))]
     async fn split_tunnel_is_supported(&self, _: Request<()>) -> ServiceResult<bool> {
         log::error!("split_tunnel_is_supported is not available on this platform");
         Ok(Response::new(false))
@@ -2838,8 +2849,12 @@ fn map_daemon_error(error: crate::Error) -> Status {
         #[cfg(target_os = "android")]
         DaemonError::VerifyPlayPurchase(error) => map_device_error(&error),
         DaemonError::SplitTunnelError(error) => map_split_tunnel_error(error),
-        #[cfg(target_os = "linux")]
+        #[cfg(any(target_os = "linux", target_os = "windows"))]
         DaemonError::IncludeOnlyUnavailable => Status::failed_precondition(error.to_string()),
+        #[cfg(target_os = "macos")]
+        DaemonError::MacosSplitTunnelUnavailable(_) => {
+            Status::failed_precondition(error.to_string())
+        }
         DaemonError::AccountHistory(error) => map_account_history_error(error),
         DaemonError::NoAccountNumber | DaemonError::NoAccountNumberHistory => {
             Status::unauthenticated(error.to_string())

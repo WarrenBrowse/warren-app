@@ -41,6 +41,8 @@ fn main() {
     }
 
     if matches!(target_os(), Os::Macos) {
+        embed_info_plist(&out_dir);
+
         // Set the minimum version of macOS on which mullvad-daemon can run.
         cfg_select! {
             target_arch = "x86_64"  => { println!("cargo:rustc-env=MACOSX_DEPLOYMENT_TARGET=10.12"); }
@@ -48,6 +50,39 @@ fn main() {
             _ => {}
         }
     }
+}
+
+/// Embeds an Info.plist in the daemon binary. `codesign` takes a Mach-O's
+/// identifier from the `CFBundleIdentifier` of its embedded Info.plist, so
+/// whichever tool signs the daemon (electron-builder included) gives it a
+/// stable identifier per product environment. The designated requirement a
+/// Full Disk Access grant is recorded against is that identifier and the
+/// team, so the grant survives an update, and the prod and beta daemons
+/// never share one.
+fn embed_info_plist(out_dir: &std::path::Path) {
+    println!("cargo::rerun-if-env-changed=WARREN_PRODUCT_ENV");
+    let identifier = format!("{}.daemon", warren_product_env::CURRENT.application_id());
+    let plist = format!(
+        r#"<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CFBundleIdentifier</key>
+	<string>{identifier}</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>warren-daemon</string>
+</dict>
+</plist>
+"#
+    );
+    let path = out_dir.join("Info.plist");
+    fs::write(&path, plist).unwrap();
+    println!(
+        "cargo::rustc-link-arg-bin=warren-daemon=-Wl,-sectcreate,__TEXT,__info_plist,{}",
+        path.display()
+    );
 }
 
 fn commit_date() -> String {

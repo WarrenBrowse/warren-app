@@ -622,7 +622,7 @@ fn classify_and_send(
             }
         }
         RoutingDecision::Drop => {
-            log::trace!("Dropped packet from pid {}", packet.header.pth_pid);
+            log::trace!("Dropped a packet of a process the monitor does not know yet");
         }
     }
 }

@@ -8,8 +8,10 @@ license.workspace = true
 
 [target.'cfg(target_os="macos")'.dependencies]
 anyhow.workspace = true
+core-foundation = "0.10"
 libc = "0.2.172"
 log.workspace = true
+security-framework = "3.7"
 tokio = { workspace = true, features = ["process"] }
 
 [lints]
