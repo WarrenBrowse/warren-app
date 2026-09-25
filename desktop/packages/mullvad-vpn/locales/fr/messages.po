@@ -2217,8 +2217,8 @@ msgid "Active subscribers"
 msgstr "Abonnés actifs"
 
 msgctxt "network-stats"
-msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows its load band alone."
-msgstr "Un serveur de sortie n’affiche ses chiffres en direct que tant qu’au moins %(threshold)d personnes l’utilisent, pour que le trafic de personne ne puisse être isolé. En dessous, il n’affiche que sa tranche de charge."
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour."
+msgstr "Un serveur de sortie n’affiche ses chiffres en direct que tant qu’au moins %(threshold)d personnes l’utilisent, pour que le trafic de personne ne puisse être isolé. En dessous, il n’affiche que sa tranche de charge sur la dernière heure, et tant que d’autres serveurs sont en direct, il entre dans les totaux du réseau à l’heure."
 
 msgctxt "network-stats"
 msgid "CPU %(percent)s"
@@ -2231,10 +2231,6 @@ msgstr "Données transportées, 24 h"
 msgctxt "network-stats"
 msgid "Download"
 msgstr "Téléchargement"
-
-msgctxt "network-stats"
-msgid "Every figure covers one closed window of %(seconds)d seconds, and changes only when the next one closes."
-msgstr "Chaque chiffre couvre une fenêtre close de %(seconds)d secondes et ne change qu’à la clôture de la suivante."
 
 msgctxt "network-stats"
 msgid "Exits"
@@ -2265,6 +2261,10 @@ msgid "Live figures appear once %(threshold)d people share an exit, so no one's 
 msgstr "Les chiffres en direct apparaissent dès que %(threshold)d personnes partagent un serveur de sortie, pour que le trafic de personne ne puisse être isolé."
 
 msgctxt "network-stats"
+msgid "Live figures cover one closed window of %(seconds)d seconds and change only when the next one closes. The 24-hour figures are counted by clock hour."
+msgstr "Les chiffres en direct couvrent une fenêtre close de %(seconds)d secondes et ne changent qu’à la clôture de la suivante. Les chiffres sur 24 heures sont comptés par heure pleine."
+
+msgctxt "network-stats"
 msgid "load"
 msgstr "charge"
 
@@ -2277,8 +2277,8 @@ msgid "Load is the busier direction of the link against its capacity, or the pro
 msgstr "La charge est le sens le plus chargé du lien rapporté à sa capacité, ou l’utilisation du processeur, selon ce qui est le plus proche de la saturation."
 
 msgctxt "network-stats"
-msgid "Load over the last 15 minutes"
-msgstr "Charge sur les 15 dernières minutes"
+msgid "Load over the last hour"
+msgstr "Charge sur la dernière heure"
 
 msgctxt "network-stats"
 msgid "Load unknown"

@@ -2160,8 +2160,8 @@ msgid "Active subscribers"
 msgstr "有效訂閱者"
 
 msgctxt "network-stats"
-msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows its load band alone."
-msgstr "出口伺服器僅在至少有 %(threshold)d 人使用時才顯示即時數據，以免任何人的流量被單獨辨識。低於此人數時，只顯示其負載等級。"
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour."
+msgstr "出口伺服器僅在至少有 %(threshold)d 人使用時才顯示即時數據，以免任何人的流量被單獨辨識。低於此人數時，只顯示其過去一小時的負載等級；在其他出口伺服器顯示即時數據期間，它按小時計入整個網路的總數。"
 
 msgctxt "network-stats"
 msgid "CPU %(percent)s"
@@ -2174,10 +2174,6 @@ msgstr "傳輸資料量（24 小時）"
 msgctxt "network-stats"
 msgid "Download"
 msgstr "下載"
-
-msgctxt "network-stats"
-msgid "Every figure covers one closed window of %(seconds)d seconds, and changes only when the next one closes."
-msgstr "每個數值對應一個已結束的 %(seconds)d 秒時間區間，只有在下一個區間結束時才會變化。"
 
 msgctxt "network-stats"
 msgid "Exits"
@@ -2208,6 +2204,10 @@ msgid "Live figures appear once %(threshold)d people share an exit, so no one's 
 msgstr "當有 %(threshold)d 人共用一台出口伺服器時才會顯示即時數據，以免任何人的流量被單獨辨識。"
 
 msgctxt "network-stats"
+msgid "Live figures cover one closed window of %(seconds)d seconds and change only when the next one closes. The 24-hour figures are counted by clock hour."
+msgstr "即時數據對應一個已結束的 %(seconds)d 秒時間區間，只有在下一個區間結束時才會變化。24 小時數據以整點小時統計。"
+
+msgctxt "network-stats"
 msgid "load"
 msgstr "負載"
 
@@ -2220,8 +2220,8 @@ msgid "Load is the busier direction of the link against its capacity, or the pro
 msgstr "負載取線路較繁忙方向相對其容量的比例與處理器使用率中較接近飽和的一個。"
 
 msgctxt "network-stats"
-msgid "Load over the last 15 minutes"
-msgstr "過去 15 分鐘的負載"
+msgid "Load over the last hour"
+msgstr "過去一小時的負載"
 
 msgctxt "network-stats"
 msgid "Load unknown"

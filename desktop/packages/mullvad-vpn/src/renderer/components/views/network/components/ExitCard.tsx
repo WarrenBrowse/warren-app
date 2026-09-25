@@ -181,8 +181,8 @@ export function ExitCard({ exit, stats, place, stale }: ExitCardProps) {
               <StyledLabel>
                 {
                   // TRANSLATORS: Under the load band of a quiet exit: the band
-                  // TRANSLATORS: describes the last closed 15 minutes.
-                  messages.pgettext('network-stats', 'Load over the last 15 minutes')
+                  // TRANSLATORS: describes the last clock hour.
+                  messages.pgettext('network-stats', 'Load over the last hour')
                 }
               </StyledLabel>
             )}

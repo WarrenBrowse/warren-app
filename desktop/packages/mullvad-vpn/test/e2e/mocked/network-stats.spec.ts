@@ -78,10 +78,13 @@ function snapshotJson(): string {
     throughput_bps: Math.round(260e6 + 60e6 * Math.sin(index / 6) + index * 1e6),
     load_percent: 35,
   }));
-  fixture.history = Array.from({ length: 96 }, (_, index) => ({
-    t: fixture.generated_at - (95 - index) * 900,
-    connected: Math.round(45 + 20 * Math.sin(index / 12)),
-    throughput_bps: Math.round(400e6 + 250e6 * Math.sin(index / 12 + 0.5)),
+  // The reference server withholds the uptime, and counts the fleet history
+  // by clock hour.
+  delete fixture.exits[0].uptime_secs;
+  fixture.history = Array.from({ length: 24 }, (_, index) => ({
+    t: fixture.generated_at - (23 - index) * 3600,
+    connected: Math.round(45 + 20 * Math.sin(index / 3)),
+    throughput_bps: Math.round(400e6 + 250e6 * Math.sin(index / 3 + 0.5)),
   }));
   fixture.exits.push({
     exit_id: OFFLINE_ID,
@@ -177,6 +180,8 @@ test.describe('Network stats', () => {
     await expect(page.getByTestId('network-connected')).toHaveText('57');
     await expect(page.getByTestId('network-exit-card')).toHaveCount(3);
     await expect(page.getByTestId('network-methodology')).toBeVisible();
+    await expect(page.getByText('Load over the last hour')).toBeVisible();
+    await expect(page.getByText(/^Up (\d|less)/)).toHaveCount(0);
     await page.waitForTimeout(1000);
     await page.screenshot({ path: `${SHOTS}/network-view.png` });
 

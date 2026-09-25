@@ -2178,8 +2178,8 @@ msgid "Active subscribers"
 msgstr "Aktywni subskrybenci"
 
 msgctxt "network-stats"
-msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows its load band alone."
-msgstr "Serwer wyjściowy pokazuje dane na żywo tylko wtedy, gdy korzysta z niego co najmniej %(threshold)d osób, aby niczyjego ruchu nie dało się wyodrębnić. Poniżej tego progu pokazuje tylko poziom obciążenia."
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour."
+msgstr "Serwer wyjściowy pokazuje dane na żywo tylko wtedy, gdy korzysta z niego co najmniej %(threshold)d osób, aby niczyjego ruchu nie dało się wyodrębnić. Poniżej tego progu pokazuje tylko poziom obciążenia z ostatniej godziny, a gdy inne serwery pokazują dane na żywo, wchodzi do sum sieci w ujęciu godzinowym."
 
 msgctxt "network-stats"
 msgid "CPU %(percent)s"
@@ -2192,10 +2192,6 @@ msgstr "Przesłane dane, 24 h"
 msgctxt "network-stats"
 msgid "Download"
 msgstr "Pobieranie"
-
-msgctxt "network-stats"
-msgid "Every figure covers one closed window of %(seconds)d seconds, and changes only when the next one closes."
-msgstr "Każda wartość obejmuje jedno zamknięte okno %(seconds)d sekund i zmienia się dopiero po zamknięciu następnego."
 
 msgctxt "network-stats"
 msgid "Exits"
@@ -2226,6 +2222,10 @@ msgid "Live figures appear once %(threshold)d people share an exit, so no one's 
 msgstr "Dane na żywo pojawiają się, gdy %(threshold)d osób korzysta z jednego serwera wyjściowego, aby niczyjego ruchu nie dało się wyodrębnić."
 
 msgctxt "network-stats"
+msgid "Live figures cover one closed window of %(seconds)d seconds and change only when the next one closes. The 24-hour figures are counted by clock hour."
+msgstr "Dane na żywo obejmują jedno zamknięte okno %(seconds)d sekund i zmieniają się dopiero po zamknięciu następnego. Dane z 24 godzin są liczone według pełnych godzin."
+
+msgctxt "network-stats"
 msgid "load"
 msgstr "obciążenie"
 
@@ -2238,8 +2238,8 @@ msgid "Load is the busier direction of the link against its capacity, or the pro
 msgstr "Obciążenie to bardziej zajęty kierunek łącza względem jego przepustowości albo użycie procesora, zależnie od tego, co jest bliżej nasycenia."
 
 msgctxt "network-stats"
-msgid "Load over the last 15 minutes"
-msgstr "Obciążenie w ostatnich 15 minutach"
+msgid "Load over the last hour"
+msgstr "Obciążenie z ostatniej godziny"
 
 msgctxt "network-stats"
 msgid "Load unknown"

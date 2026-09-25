@@ -128,6 +128,12 @@ describe('FleetCard', () => {
 });
 
 describe('ExitCard', () => {
+  it('dates the band of a quiet exit to the last hour', () => {
+    const html = withStore(<ExitCard exit={QUIET_EXIT} stats={STATS} stale={false} />);
+
+    expect(html).toContain('Load over the last hour');
+  });
+
   it('says nothing about uptime when the server withholds it', () => {
     const exit = { ...LIVE_EXIT, uptimeSecs: undefined };
 
