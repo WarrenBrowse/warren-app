@@ -6,13 +6,13 @@ import { useAfterTransition } from '../../../../../lib/transition-hooks';
 import { useEffectEvent } from '../../../../../lib/utility-hooks';
 import { ApplicationSearchBar } from '../application-search-bar';
 import { ApplicationSearchNoResult } from '../application-search-no-result';
+import { AddApplicationFilePickerButton, ApplicationLists, SplitModeHeader } from './components';
 import {
-  AddApplicationFilePickerButton,
-  ApplicationLists,
-  SplitTunnelingSettingsHeader,
-} from './components';
-import { useCanEditSplitTunneling, useShowNoSearchResult } from './hooks';
-import { useFetchNeedFullDiskPermissions, useShowApplicationLists } from './hooks';
+  useCanEditSplitTunneling,
+  useFullDiskAccessCheck,
+  useShowApplicationLists,
+  useShowNoSearchResult,
+} from './hooks';
 import {
   SplitTunnelingSettingsContextProvider,
   useSplitTunnelingSettingsContext,
@@ -22,17 +22,12 @@ function SettingsInner() {
   const { getSplitTunnelingApplications } = useAppContext();
   const { loadingDiskPermissions, searchTerm, setApplications, setSearchTerm } =
     useSplitTunnelingSettingsContext();
-  const fetchNeedFullDiskPermissions = useFetchNeedFullDiskPermissions();
   const runAfterTransition = useAfterTransition();
   const canEditSplitTunneling = useCanEditSplitTunneling();
   const showApplicationLists = useShowApplicationLists();
   const showNoSearchResult = useShowNoSearchResult();
 
-  useEffect((): void | (() => void) => {
-    if (window.env.platform === 'darwin') {
-      void fetchNeedFullDiskPermissions();
-    }
-  }, [fetchNeedFullDiskPermissions]);
+  useFullDiskAccessCheck();
 
   const onMount = useEffectEvent(() => {
     runAfterTransition(async () => {
@@ -55,7 +50,7 @@ function SettingsInner() {
 
   return (
     <>
-      <SplitTunnelingSettingsHeader />
+      <SplitModeHeader mode="exclude" />
       {loadingDiskPermissions && (
         <Flex justifyContent="center" margin={{ top: 'large' }}>
           <Spinner size="big" />

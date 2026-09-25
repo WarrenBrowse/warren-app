@@ -10,3 +10,5 @@ export * from './use-has-split-applications';
 export * from './use-scroll-to-top';
 export * from './use-show-application-lists';
 export * from './use-show-no-search-result';
+export * from './use-split-mode-availability';
+export * from './use-full-disk-access-check';

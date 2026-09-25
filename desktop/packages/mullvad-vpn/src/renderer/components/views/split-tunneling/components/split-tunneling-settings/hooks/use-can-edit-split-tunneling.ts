@@ -1,11 +1,9 @@
-import { useSelector } from '../../../../../../redux/store';
-import { useSplitTunnelingSettingsContext } from '../SplitTunnelingSettingsContext';
+import { useAppRouting } from '../../../../../../features/app-routing/hooks';
+import { useSplitModeAvailability } from './use-split-mode-availability';
 
 export function useCanEditSplitTunneling() {
-  const { splitTunnelingAvailable } = useSplitTunnelingSettingsContext();
-  const splitTunnelingEnabled = useSelector((state) => state.settings.splitTunneling);
+  const { routing } = useAppRouting();
+  const availability = useSplitModeAvailability();
 
-  const canEditSplitTunneling = splitTunnelingEnabled && (splitTunnelingAvailable ?? false);
-
-  return canEditSplitTunneling;
+  return routing.splitMode === 'exclude' && availability === 'available';
 }

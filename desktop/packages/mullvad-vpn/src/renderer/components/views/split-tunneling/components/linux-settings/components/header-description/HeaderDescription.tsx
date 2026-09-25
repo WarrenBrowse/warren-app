@@ -10,7 +10,7 @@ import { useLinuxSettingsContext } from '../../LinuxSettingsContext';
 import { useShowUnsupportedDialog } from './hooks';
 
 export function HeaderDescription() {
-  const { splitTunnelingSupported } = useLinuxSettingsContext();
+  const { launchMode, splitTunnelingSupported } = useLinuxSettingsContext();
   const message = sprintf(
     // TRANSLATORS: Information about split tunneling not being supported on the system.
     // TRANSLATORS: Available placeholders:
@@ -50,6 +50,13 @@ export function HeaderDescription() {
           </span>
         </FlexColumn>
       </FlexRow>
+    );
+  }
+
+  if (launchMode === 'include') {
+    return messages.pgettext(
+      'split-tunneling-view',
+      'Click on an app to launch it. It uses the VPN until you close it, and nothing else does.',
     );
   }
 

@@ -51,7 +51,15 @@ export type ScrollToAnchorOption = {
   id: ScrollToAnchorId;
 };
 
-export type LocationStateOptions = ScrollToAnchorOption;
+// The tabs of the App routing view.
+export type AppRoutingTab = 'bypass' | 'countries' | 'include-only';
+
+export type AppRoutingTabOption = {
+  type: 'app-routing-tab';
+  tab: AppRoutingTab;
+};
+
+export type LocationStateOptions = ScrollToAnchorOption | AppRoutingTabOption;
 
 /**
  * A run of inline text inside a changelog block. The parser resolves Markdown

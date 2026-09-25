@@ -2,11 +2,17 @@ import React, { useMemo, useState } from 'react';
 
 import { type ILinuxSplitTunnelingApplication } from '../../../../../../shared/application-types';
 
+// `exclude` launches through warren-exclude (Bypass VPN), `include` through
+// warren-include (VPN only for).
+export type LinuxLaunchMode = 'exclude' | 'include';
+
 type LinuxSettingsContextProviderProps = {
   children: React.ReactNode;
+  launchMode: LinuxLaunchMode;
 };
 
 type LinuxSettingsContext = {
+  launchMode: LinuxLaunchMode;
   applications?: ILinuxSplitTunnelingApplication[];
   browseError?: string;
   searchTerm: string;
@@ -29,7 +35,10 @@ export const useLinuxSettingsContext = (): LinuxSettingsContext => {
   return context;
 };
 
-export function LinuxSettingsContextProvider({ children }: LinuxSettingsContextProviderProps) {
+export function LinuxSettingsContextProvider({
+  children,
+  launchMode,
+}: LinuxSettingsContextProviderProps) {
   const [applications, setApplications] = useState<ILinuxSplitTunnelingApplication[]>();
   const [browseError, setBrowseError] = useState<string>();
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,6 +49,7 @@ export function LinuxSettingsContextProvider({ children }: LinuxSettingsContextP
 
   const value = useMemo(
     () => ({
+      launchMode,
       applications,
       browseError,
       searchTerm,
@@ -52,6 +62,7 @@ export function LinuxSettingsContextProvider({ children }: LinuxSettingsContextP
       splitTunnelingSupported,
     }),
     [
+      launchMode,
       applications,
       browseError,
       searchTerm,
