@@ -5858,6 +5858,7 @@ name = "talpid-warren-tunnel"
 version = "0.0.0"
 dependencies = [
  "anyhow",
+ "bytes",
  "ed25519-dalek",
  "futures",
  "ipnetwork",
@@ -5866,6 +5867,7 @@ dependencies = [
  "parking_lot",
  "rand 0.9.4",
  "static_assertions",
+ "talpid-app-routing",
  "talpid-routing",
  "talpid-tunnel",
  "talpid-types",

@@ -7,9 +7,13 @@ repository.workspace = true
 license.workspace = true
 
 [dependencies]
+# `PacketDevice::send_batch_bytes`, which the app-routing device forwards.
+bytes = { workspace = true }
 futures = { workspace = true }
 ipnetwork = { workspace = true }
 talpid-routing = { path = "../talpid-routing" }
+# Per-app exits: flow attribution, address translation and route decisions.
+talpid-app-routing = { path = "../talpid-app-routing" }
 talpid-tunnel = { path = "../talpid-tunnel" }
 talpid-types = { path = "../talpid-types" }
 thiserror = { workspace = true }
