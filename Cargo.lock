@@ -5889,6 +5889,7 @@ dependencies = [
  "warrenguard-transport-core",
  "warrenguard-tun-core",
  "warrenguard-wire",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

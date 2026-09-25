@@ -387,7 +387,7 @@ impl Firewall {
     /// Chooses between the full tunnel and include-only ("VPN only for these
     /// apps") for the policies applied from now on. The applied policy is
     /// unchanged until the next [`Self::apply_policy`].
-    #[cfg(target_os = "linux")]
+    #[cfg(any(target_os = "linux", windows))]
     pub fn set_include_only(&mut self, include_only: bool) {
         self.inner.set_include_only(include_only);
     }

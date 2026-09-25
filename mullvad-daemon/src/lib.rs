@@ -3653,9 +3653,10 @@ impl Daemon {
         if turns_include_only_on && !self.exclude_pids.include_only_supported() {
             return Err(Error::IncludeOnlyUnavailable);
         }
-        // The split tunnel driver is not driven for include-only yet.
+        // Include-only rests on the split tunnel driver holding the included
+        // apps back from the physical network the firewall then opens.
         #[cfg(target_os = "windows")]
-        if turns_include_only_on {
+        if turns_include_only_on && !self.tunnel_state_machine_handle.split_tunnel().is_loaded() {
             return Err(Error::IncludeOnlyUnavailable);
         }
         #[cfg(not(any(target_os = "linux", target_os = "windows")))]

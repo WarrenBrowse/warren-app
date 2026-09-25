@@ -107,6 +107,13 @@ nix = { workspace = true, features = ["net"] }
 # `AddressFamily` for the migration watchdog's default-route gate
 # (`talpid_routing::get_best_default_route` takes it on Windows).
 talpid-windows = { path = "../talpid-windows" }
+# The include-only routes on the tunnel interface (IP Helper API).
+windows-sys = { workspace = true, features = [
+  "Win32_Foundation",
+  "Win32_NetworkManagement_IpHelper",
+  "Win32_NetworkManagement_Ndis",
+  "Win32_Networking_WinSock",
+] }
 
 [dev-dependencies]
 # Compile-time trait-implementation assertions used in the test module
