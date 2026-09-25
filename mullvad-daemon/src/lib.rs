@@ -263,39 +263,16 @@ pub enum GuardedSettingError {
     EnvYield(#[from] warren_env_arbitration::EnvYieldError),
 }
 
-/// Whether macOS split tunneling is usable in THIS build.
-///
-/// macOS split tunneling relies on Endpoint Security, which requires a
-/// signed build carrying the `com.apple.developer.endpoint-security.client`
-/// entitlement plus Full Disk Access. Unsigned / ad-hoc builds cannot
-/// obtain an ES client, so enabling ST half-initialises (the TUN + BPF
-/// are created but ES is denied), which corrupts routing (the exit route
-/// loops into a tunnel -> no downlink -> "connects but no internet") and
-/// crashes the GUI on quit. The capability is therefore gated behind the
-/// `macos-split-tunnel` cargo feature, set ONLY on signed release builds.
+/// Refuses to turn the macOS split tunnel on unless `capability` says it
+/// can run, before any utun, pf or BPF setup: an unsigned build or a missing
+/// Full Disk Access grant would otherwise half-initialise it, which loops the
+/// exit route into a tunnel and blocks the connection.
 #[cfg(target_os = "macos")]
-#[must_use]
-pub(crate) const fn macos_split_tunnel_supported() -> bool {
-    cfg!(feature = "macos-split-tunnel")
-}
-
-/// Gate for the macOS split-tunnel **enable** path. `Ok` on every
-/// non-macOS desktop platform; on macOS, `Err`
-/// ([`Error::MacosSplitTunnelUnsupported`]) unless this is a signed
-/// build (feature `macos-split-tunnel`). Returning the error BEFORE any
-/// TUN/BPF/ES setup is what prevents the half-initialised broken state.
-#[cfg(target_os = "macos")]
-fn macos_split_tunnel_enable_allowed() -> Result<(), Error> {
-    if macos_split_tunnel_supported() {
-        Ok(())
-    } else {
-        Err(Error::MacosSplitTunnelUnsupported)
+fn macos_split_tunnel_available(capability: split_tunnel::Capability) -> Result<(), Error> {
+    match capability {
+        split_tunnel::Capability::Supported => Ok(()),
+        unavailable => Err(Error::MacosSplitTunnelUnavailable(unavailable)),
     }
-}
-
-#[cfg(not(target_os = "macos"))]
-fn macos_split_tunnel_enable_allowed() -> Result<(), Error> {
-    Ok(())
 }
 
 /// One status per exit in force. Route sessions live inside the main
@@ -427,18 +404,13 @@ pub enum Error {
     #[error("Split tunneling error")]
     SplitTunnelError(#[source] split_tunnel::Error),
 
-    #[cfg(target_os = "linux")]
-    #[error("Include-only needs cgroup v2 with nftables socket matching, which this system lacks")]
+    #[cfg(any(target_os = "linux", target_os = "windows"))]
+    #[error("Include-only is not available on this system")]
     IncludeOnlyUnavailable,
 
     #[cfg(target_os = "macos")]
-    #[error(
-        "Split tunneling is unavailable in this build: macOS split tunneling needs Endpoint \
-         Security, which requires a signed build (Developer ID + endpoint-security entitlement) \
-         and Full Disk Access. Enabling it on an unsigned build half-initialises and breaks \
-         connectivity. It will become available in signed releases."
-    )]
-    MacosSplitTunnelUnsupported,
+    #[error("Split tunneling is unavailable: {0}")]
+    MacosSplitTunnelUnavailable(split_tunnel::Capability),
 
     #[error("The app routing change is invalid")]
     AppRouting(#[source] AppRoutingError),
@@ -3248,39 +3220,44 @@ impl Daemon {
             RemoveSplitTunnelProcess(tx, pid) => self.on_remove_split_tunnel_process(tx, pid),
             #[cfg(target_os = "linux")]
             ClearSplitTunnelProcesses(tx) => self.on_clear_split_tunnel_processes(tx),
-            AddSplitTunnelApp(tx, app) => self.on_add_split_tunnel_app(tx, app),
-            RemoveSplitTunnelApp(tx, path) => self.on_remove_split_tunnel_app(tx, path),
-            ClearSplitTunnelApps(tx) => self.on_clear_split_tunnel_apps(tx),
-            SetSplitTunnelState(tx, enabled) => self.on_set_split_tunnel_state(tx, enabled),
-            SetAppSplitMode(tx, mode) => self.on_set_app_split_mode(tx, mode),
+            AddSplitTunnelApp(tx, app) => self.on_add_split_tunnel_app(tx, app).await,
+            RemoveSplitTunnelApp(tx, path) => self.on_remove_split_tunnel_app(tx, path).await,
+            ClearSplitTunnelApps(tx) => self.on_clear_split_tunnel_apps(tx).await,
+            SetSplitTunnelState(tx, enabled) => self.on_set_split_tunnel_state(tx, enabled).await,
+            SetAppSplitMode(tx, mode) => self.on_set_app_split_mode(tx, mode).await,
             AddIncludedApp(tx, app) => {
                 self.update_app_routing(tx, "add_included_app response", |routing| {
                     routing.included_apps.insert(app);
                     Ok(())
                 })
+                .await
             }
             RemoveIncludedApp(tx, app) => {
                 self.update_app_routing(tx, "remove_included_app response", |routing| {
                     routing.included_apps.remove(&app);
                     Ok(())
                 })
+                .await
             }
             SetAppExitsEnabled(tx, enabled) => {
                 self.update_app_routing(tx, "set_app_exits_enabled response", |routing| {
                     routing.app_exits_enabled = enabled;
                     Ok(())
                 })
+                .await
             }
             SetAppExit(tx, app, exit) => {
                 self.update_app_routing(tx, "set_app_exit response", |routing| {
                     routing.set_app_exit(app, exit)
                 })
+                .await
             }
             ClearAppExit(tx, app) => {
                 self.update_app_routing(tx, "clear_app_exit response", |routing| {
                     routing.app_exits.remove(&app);
                     Ok(())
                 })
+                .await
             }
             GetAppRouteStatus(tx) => Self::oneshot_send(
                 tx,
@@ -3514,7 +3491,7 @@ impl Daemon {
     /// Applies `change` to the app routing, hands the tunnel what it diverts
     /// when that changes, and saves; or answers why the change is refused
     /// and leaves everything as it was.
-    fn update_app_routing(
+    async fn update_app_routing(
         &mut self,
         tx: ResponseTx<(), Error>,
         response_msg: &'static str,
@@ -3525,7 +3502,7 @@ impl Daemon {
             Self::oneshot_send(tx, Err(Error::AppRouting(error)), response_msg);
             return;
         }
-        if let Err(error) = self.check_split_tunnel_change(&app_routing) {
+        if let Err(error) = self.check_split_tunnel_change(&app_routing).await {
             Self::oneshot_send(tx, Err(error), response_msg);
             return;
         }
@@ -3574,19 +3551,28 @@ impl Daemon {
     /// Refuses a change the split tunnel cannot carry out here. Turning a
     /// split mode off, or leaving it as it is, is never refused, so a user
     /// can always recover.
-    fn check_split_tunnel_change(&self, routing: &AppRoutingSettings) -> Result<(), Error> {
-        let turns_on =
-            !engages_split_tunnel(&self.settings.app_routing) && engages_split_tunnel(routing);
-        if turns_on {
-            macos_split_tunnel_enable_allowed()?;
+    #[cfg_attr(
+        not(target_os = "macos"),
+        expect(clippy::unused_async, reason = "only the macOS probe awaits")
+    )]
+    async fn check_split_tunnel_change(&self, routing: &AppRoutingSettings) -> Result<(), Error> {
+        #[cfg(target_os = "macos")]
+        if !engages_split_tunnel(&self.settings.app_routing) && engages_split_tunnel(routing) {
+            macos_split_tunnel_available(split_tunnel::capability().await)?;
         }
+        let turns_include_only_on = routing.split_mode == SplitMode::IncludeOnly
+            && self.settings.app_routing.split_mode != SplitMode::IncludeOnly;
         #[cfg(target_os = "linux")]
-        if routing.split_mode == SplitMode::IncludeOnly
-            && self.settings.app_routing.split_mode != SplitMode::IncludeOnly
-            && !self.exclude_pids.include_only_supported()
-        {
+        if turns_include_only_on && !self.exclude_pids.include_only_supported() {
             return Err(Error::IncludeOnlyUnavailable);
         }
+        // The split tunnel driver is not driven for include-only yet.
+        #[cfg(target_os = "windows")]
+        if turns_include_only_on {
+            return Err(Error::IncludeOnlyUnavailable);
+        }
+        #[cfg(not(any(target_os = "linux", target_os = "windows")))]
+        let _ = turns_include_only_on;
         Ok(())
     }
 
@@ -4566,43 +4552,48 @@ impl Daemon {
         Self::oneshot_send(tx, result, "clear_split_tunnel_processes response");
     }
 
-    fn on_add_split_tunnel_app(&mut self, tx: ResponseTx<(), Error>, app: AppId) {
+    async fn on_add_split_tunnel_app(&mut self, tx: ResponseTx<(), Error>, app: AppId) {
         self.update_app_routing(tx, "add_split_tunnel_app response", |routing| {
             routing.excluded_apps.insert(app);
             Ok(())
-        });
+        })
+        .await;
     }
 
-    fn on_remove_split_tunnel_app(&mut self, tx: ResponseTx<(), Error>, app: AppId) {
+    async fn on_remove_split_tunnel_app(&mut self, tx: ResponseTx<(), Error>, app: AppId) {
         self.update_app_routing(tx, "remove_split_tunnel_app response", |routing| {
             routing.excluded_apps.remove(&app);
             Ok(())
-        });
+        })
+        .await;
     }
 
-    fn on_clear_split_tunnel_apps(&mut self, tx: ResponseTx<(), Error>) {
+    async fn on_clear_split_tunnel_apps(&mut self, tx: ResponseTx<(), Error>) {
         self.update_app_routing(tx, "clear_split_tunnel_apps response", |routing| {
             routing.excluded_apps.clear();
             Ok(())
-        });
+        })
+        .await;
     }
 
     /// The pre-app-routing switch: on selects exclusion, off leaves
     /// exclusion and keeps include-only, which it never knew about.
-    fn on_set_split_tunnel_state(&mut self, tx: ResponseTx<(), Error>, state: bool) {
+    async fn on_set_split_tunnel_state(&mut self, tx: ResponseTx<(), Error>, state: bool) {
         let current = self.settings.app_routing.split_mode;
         let mode = split_mode_for_state(current, state);
         self.update_app_routing(tx, "set_split_tunnel_state response", |routing| {
             routing.split_mode = mode;
             Ok(())
-        });
+        })
+        .await;
     }
 
-    fn on_set_app_split_mode(&mut self, tx: ResponseTx<(), Error>, mode: SplitMode) {
+    async fn on_set_app_split_mode(&mut self, tx: ResponseTx<(), Error>, mode: SplitMode) {
         self.update_app_routing(tx, "set_app_split_mode response", |routing| {
             routing.split_mode = mode;
             Ok(())
-        });
+        })
+        .await;
     }
 
     #[cfg(target_os = "windows")]
@@ -6795,34 +6786,23 @@ pub async fn cleanup_old_rpc_socket(rpc_socket_path: impl AsRef<std::path::Path>
 
 #[cfg(all(test, target_os = "macos"))]
 mod macos_split_tunnel_gate_tests {
-    use super::{Error, macos_split_tunnel_enable_allowed, macos_split_tunnel_supported};
+    use super::{Error, macos_split_tunnel_available, split_tunnel::Capability};
 
     #[test]
-    fn unsigned_macos_build_reports_split_tunnel_unsupported() {
-        // The `macos-split-tunnel` feature is OFF in the default (=
-        // unsigned) build, so split tunneling must report unsupported.
-        // Guards against accidentally shipping it enabled before the app
-        // is signed (which would reintroduce the connects-but-no-internet
-        // + quit-crash regression two users hit at ST activation).
-        assert!(
-            !macos_split_tunnel_supported(),
-            "macOS split tunneling must be unsupported unless built with the \
-             `macos-split-tunnel` (signed-release) feature"
-        );
-    }
+    fn the_split_tunnel_turns_on_only_when_it_can_run() {
+        assert!(macos_split_tunnel_available(Capability::Supported).is_ok());
+        for unavailable in [
+            Capability::NeedsFullDiskAccess,
+            Capability::NeedsSignedBuild,
+            Capability::UnsupportedOs,
+        ] {
+            let refusal = macos_split_tunnel_available(unavailable);
 
-    #[test]
-    fn enabling_split_tunnel_is_refused_on_unsigned_macos() {
-        // The enable gate must return the explicit, non-destructive error
-        // BEFORE any ES/BPF/TUN setup, so a user cannot reach the
-        // half-initialised state that loops the exit route into a tunnel
-        // (downlink=0) and crashes the GUI on quit.
-        let err = macos_split_tunnel_enable_allowed()
-            .expect_err("enabling ST on an unsigned macOS build must be refused");
-        assert!(
-            matches!(err, Error::MacosSplitTunnelUnsupported),
-            "must be the explicit MacosSplitTunnelUnsupported error, got: {err:?}"
-        );
+            assert!(
+                matches!(refusal, Err(Error::MacosSplitTunnelUnavailable(why)) if why == unavailable),
+                "{refusal:?}"
+            );
+        }
     }
 }
 
