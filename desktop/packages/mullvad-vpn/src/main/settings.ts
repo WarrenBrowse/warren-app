@@ -217,6 +217,9 @@ export default class Settings implements Readonly<ISettings> {
   public get splitTunnel() {
     return this.settingsValue.splitTunnel;
   }
+  public get appRouting() {
+    return this.settingsValue.appRouting;
+  }
   public get obfuscationSettings() {
     return this.settingsValue.obfuscationSettings;
   }
