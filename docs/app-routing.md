@@ -166,9 +166,9 @@ subnet route), so an included app's names never go to the ISP.
 | iOS | not available. |
 
 The GUI shows a persistent, calm warning while include-only is active: a
-banner in the tab ("Only these apps are protected. The rest of your device
-uses your normal connection.") and a short label on the main screen under the
-connection state. Turning the mode on asks for one confirmation.
+banner in the tab ("Only these apps are protected. Everything else on this
+device uses your normal connection.") and a short label on the main screen
+under the connection state. Turning the mode on asks for one confirmation.
 
 ## 4. Platform availability
 
@@ -208,3 +208,36 @@ connection state. Turning the mode on asks for one confirmation.
   touching the host network); the full daemon in a Linux VM (per-app country,
   include-only, exclude); the daemon in the Windows ARM64 VM (include-only
   with the swapped driver, per-app country).
+
+## 7. Desktop GUI
+
+The view keeps the split tunneling route (`RoutePath.splitTunneling`), renamed
+**App routing**, with the three tabs above; a link opens a given tab through
+the `app-routing-tab` location option. The rules it shows are computed in
+`desktop/packages/mullvad-vpn/src/shared/app-routing.ts`, which mirrors the
+daemon (precedence, the limit of `MAX_APP_EXITS` distinct exits) so the GUI
+explains a refusal before making it, and still maps the daemon's
+`app_exit_limit` answer when it comes.
+
+- **Country per app** gives an app its exit in one click: a chip on each row
+  opens a searchable country and city picker that only reports the choice and
+  never moves the main connection. Choosing a country while the tab switch is
+  off turns it on. A country the limit refuses stays listed, disabled, with
+  why; at the limit, a country whose city is in use opens on its cities.
+- Each app with a country shows its route state from `AppRouteStatus` (pushed
+  as `DaemonEvent.app_routes`): connecting, connected with its public IP, or
+  the reason it is unavailable. A route waiting for the main connection is not
+  shown as a fault.
+- **Bypass VPN** and **VPN only for** share one availability answer: on macOS
+  the daemon's `SplitTunnelIsSupported` false means a build that cannot run the
+  classifier (the GUI says it needs a signed build), then `NeedFullDiskPermissions`
+  drives the existing Full Disk Access steps. Turning a mode off is never
+  refused. Turning include-only on, or switching between the two modes, goes
+  through one confirmation; both lists are kept.
+- On Linux both modes are launch based (`warren-exclude`, `warren-include`) and
+  per-app countries are path based: a desktop entry is keyed by the program it
+  runs, resolved through `PATH` and symlinks. A shell script wrapper resolves to
+  the script, which the router never sees running.
+- The main screen shows "VPN only for N apps" under the connection state and
+  "N apps in other countries" among the feature badges (red when a route cannot
+  run), both opening their tab.
