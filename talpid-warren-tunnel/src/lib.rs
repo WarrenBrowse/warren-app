@@ -757,7 +757,9 @@ pub enum NatPmpRefusal {
 #[must_use]
 pub fn nat_pmp_refusal_retry_secs(refusal: NatPmpRefusal, attempt: u32) -> u32 {
     const REFUSED: [u32; 6] = [2, 10, 30, 60, 120, 300];
-    const MISSING: [u32; 5] = [30, 60, 120, 300, 600];
+    // Starts short: the first mint of a wallet can still be in flight when
+    // the first request goes out.
+    const MISSING: [u32; 6] = [5, 30, 60, 120, 300, 600];
     let table: &[u32] = match refusal {
         NatPmpRefusal::EntitlementRefused => &REFUSED,
         NatPmpRefusal::NoEntitlement => &MISSING,
@@ -2987,38 +2989,47 @@ fn per_rule_observer(
     std::sync::Arc::new(move |evt| mapping_observer(id, NatPmpRuleEvent::Engine(evt)))
 }
 
-/// What a rule's refresh loop tells its controller besides the daemon.
+/// What a rule's refresh loop tells its controller besides the daemon, with
+/// the generation of the loop that said it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum RuleSignal {
     /// The exit refused the rule as not authorized; the loop has stopped.
-    Refused(NatPmpRuleId),
+    Refused(NatPmpRuleId, u64),
     /// The exit granted or renewed the rule.
-    Granted(NatPmpRuleId),
+    Granted(NatPmpRuleId, u64),
 }
 
 /// [`per_rule_observer`] for the live-reconfig controller: a not-authorized
 /// refusal goes to the controller instead of the daemon, which hears it from
 /// the controller with what it means and when it is asked again.
+///
+/// `generation` is read when a signal is sent: the controller bumps it before
+/// it replaces the loop, so a signal the old loop queued is told apart from
+/// the new loop's and dropped.
 fn controller_rule_observer(
     mapping_observer: NatPmpMappingObserver,
     id: NatPmpRuleId,
     signals: tokio::sync::mpsc::UnboundedSender<RuleSignal>,
+    generation: std::sync::Arc<std::sync::atomic::AtomicU64>,
 ) -> NatPmpEventObserver {
-    std::sync::Arc::new(move |evt| match evt {
-        NatPmpEvent::Failed {
-            reason: NatPmpFailureReason::NotAuthorized,
-            ..
-        } => {
-            let _ = signals.send(RuleSignal::Refused(id));
-        }
-        evt => {
-            if matches!(
-                evt,
-                NatPmpEvent::Mapped { .. } | NatPmpEvent::Renewed { .. }
-            ) {
-                let _ = signals.send(RuleSignal::Granted(id));
+    std::sync::Arc::new(move |evt| {
+        let current = generation.load(std::sync::atomic::Ordering::Acquire);
+        match evt {
+            NatPmpEvent::Failed {
+                reason: NatPmpFailureReason::NotAuthorized,
+                ..
+            } => {
+                let _ = signals.send(RuleSignal::Refused(id, current));
             }
-            mapping_observer(id, NatPmpRuleEvent::Engine(evt));
+            evt => {
+                if matches!(
+                    evt,
+                    NatPmpEvent::Mapped { .. } | NatPmpEvent::Renewed { .. }
+                ) {
+                    let _ = signals.send(RuleSignal::Granted(id, current));
+                }
+                mapping_observer(id, NatPmpRuleEvent::Engine(evt));
+            }
         }
     })
 }
@@ -3081,6 +3092,22 @@ async fn run_nat_pmp_controller(
         refusals: u32,
         /// When the controller asks again after a refusal.
         retry_at: Option<tokio::time::Instant>,
+        /// Bumped each time the rule's loop is replaced, so the signals of a
+        /// loop that is gone are not taken for the current one's.
+        generation: std::sync::Arc<std::sync::atomic::AtomicU64>,
+    }
+
+    impl ManagerState {
+        /// Replaces the rule's loop with one on `cfg`.
+        async fn restart(&mut self, cfg: &NatPmpConfig) {
+            self.generation
+                .fetch_add(1, std::sync::atomic::Ordering::AcqRel);
+            self.manager.reconfigure(cfg).await;
+        }
+
+        fn current_generation(&self) -> u64 {
+            self.generation.load(std::sync::atomic::Ordering::Acquire)
+        }
     }
 
     /// The lowest slot no live rule holds. Reusing a freed slot (rather than
@@ -3162,7 +3189,7 @@ async fn run_nat_pmp_controller(
                         );
                     } else {
                         log::info!("Warren NAT-PMP controller: live reconfigure rule {id:?}");
-                        st.manager.reconfigure(&per_rule_cfg).await;
+                        st.restart(&per_rule_cfg).await;
                         st.applied_cfg = per_rule_cfg;
                         st.applied_at = std::time::Instant::now();
                         st.refusals = 0;
@@ -3171,8 +3198,13 @@ async fn run_nat_pmp_controller(
                 }
                 None => {
                     log::info!("Warren NAT-PMP controller: spawning refresh loop for rule {id:?}");
-                    let observer =
-                        controller_rule_observer(mapping_observer.clone(), id, signals.clone());
+                    let generation = std::sync::Arc::new(std::sync::atomic::AtomicU64::new(0));
+                    let observer = controller_rule_observer(
+                        mapping_observer.clone(),
+                        id,
+                        signals.clone(),
+                        generation.clone(),
+                    );
                     let slot = lowest_free_slot(managers);
                     let presented = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
                     let credential = entitlements.as_ref().map(|provider| {
@@ -3203,6 +3235,7 @@ async fn run_nat_pmp_controller(
                             presented,
                             refusals: 0,
                             retry_at: None,
+                            generation,
                         },
                     );
                 }
@@ -3223,15 +3256,22 @@ async fn run_nat_pmp_controller(
         mapping_observer: &NatPmpMappingObserver,
     ) {
         match signal {
-            RuleSignal::Granted(id) => {
-                if let Some(st) = managers.get_mut(&id) {
+            RuleSignal::Granted(id, generation) => {
+                if let Some(st) = managers.get_mut(&id)
+                    && st.current_generation() == generation
+                {
                     st.refusals = 0;
                     st.retry_at = None;
                 }
             }
-            RuleSignal::Refused(id) => {
-                // A rule removed since its loop answered has nothing to retry.
-                let Some(st) = managers.get_mut(&id) else {
+            RuleSignal::Refused(id, generation) => {
+                // A rule removed since its loop answered has nothing to retry,
+                // and a loop replaced since then refused nothing the current
+                // one asked.
+                let Some(st) = managers
+                    .get_mut(&id)
+                    .filter(|st| st.current_generation() == generation)
+                else {
                     return;
                 };
                 st.refusals = st.refusals.saturating_add(1);
@@ -3267,7 +3307,7 @@ async fn run_nat_pmp_controller(
                 st.retry_at = None;
                 log::info!("Warren NAT-PMP controller: asking again for refused rule {id:?}");
                 let cfg = st.applied_cfg.clone();
-                st.manager.reconfigure(&cfg).await;
+                st.restart(&cfg).await;
             }
         }
     }
@@ -5078,9 +5118,9 @@ mod tests {
     }
 
     #[test]
-    fn a_missing_entitlement_is_asked_again_on_the_mint_cadence() {
+    fn a_missing_entitlement_is_asked_again_soon_then_on_the_mint_cadence() {
         let retry = |n| nat_pmp_refusal_retry_secs(NatPmpRefusal::NoEntitlement, n);
-        assert_eq!(retry(1), 30);
+        assert_eq!(retry(1), 5, "the first mint may still be landing");
         assert_eq!(retry(99), 600, "the wait stops growing");
     }
 
@@ -5161,7 +5201,7 @@ mod tests {
         let reported = refusals.lock().unwrap().clone();
         assert_eq!(reported.len(), 1, "{reported:?}");
         assert_eq!(reported[0].1, NatPmpRefusal::NoEntitlement);
-        assert_eq!(reported[0].2, 30);
+        assert_eq!(reported[0].2, 5);
     }
 
     fn natpmp_cfg(lifetime_secs: u32) -> NatPmpConfig {

@@ -28,12 +28,25 @@ impl std::fmt::Debug for NewStrike {
 }
 
 /// What changed, for the client to publish.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct StandingUpdate {
+    /// The wallet the standing is about, `None` with no wallet. A client
+    /// that switched wallets since compares it with the one it holds and
+    /// drops an update about another: one wallet's ban never blocks the next.
+    pub wallet: Option<String>,
     /// The standing now known, `None` when nothing is (no wallet).
     pub standing: Option<Standing>,
     /// Strikes to warn about, each exactly once per device.
     pub new_strikes: Vec<NewStrike>,
+}
+
+impl std::fmt::Debug for StandingUpdate {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("StandingUpdate")
+            .field("standing", &self.standing)
+            .field("new_strikes", &self.new_strikes.len())
+            .finish_non_exhaustive()
+    }
 }
 
 /// Holds the current wallet's standing and the device's strike ledger.
@@ -41,11 +54,19 @@ pub struct StandingUpdate {
 /// The wallet key is whatever stable handle the client has for its wallet
 /// (the SS58 address); it is compared, never logged. A different key starts
 /// from nothing, so one wallet's ban never blocks the next one.
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct StandingTracker {
     ledger: StrikeLedger,
     wallet: Option<String>,
     standing: Option<Standing>,
+}
+
+impl std::fmt::Debug for StandingTracker {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("StandingTracker")
+            .field("standing", &self.standing)
+            .finish_non_exhaustive()
+    }
 }
 
 impl StandingTracker {
@@ -83,13 +104,25 @@ impl StandingTracker {
         self.publish(Some(standing), new_strikes)
     }
 
-    /// An issuer refused `wallet` as banned. Known before any standing
-    /// answer, and it does not override one that already carries a ban: that
-    /// one also knows when the ban took effect.
-    pub fn on_issuance_ban(&mut self, wallet: &str, ban: Ban) -> Option<StandingUpdate> {
+    /// An issuer refused `wallet` as banned at `now_unix_secs`. Known before
+    /// any standing answer, and it does not override a ban the standing
+    /// answered that still holds: that one also knows when it took effect. A
+    /// lapsed one gives way, since the refusal says the wallet is banned again.
+    pub fn on_issuance_ban(
+        &mut self,
+        wallet: &str,
+        ban: Ban,
+        now_unix_secs: u64,
+    ) -> Option<StandingUpdate> {
         self.switch_to(wallet);
         let standing = match self.standing.clone() {
-            Some(standing) if standing.ban.is_some() => standing,
+            Some(standing)
+                if standing
+                    .ban
+                    .is_some_and(|held| held.in_force(now_unix_secs)) =>
+            {
+                standing
+            }
             Some(standing) => Standing {
                 ban: Some(ban),
                 ..standing
@@ -99,9 +132,12 @@ impl StandingTracker {
         self.publish(Some(standing), Vec::new())
     }
 
-    /// The client holds no wallet any more (logged out).
+    /// The client holds no wallet any more (logged out). Which strikes were
+    /// announced is forgotten with it: the device keeps no trace of the
+    /// account's cases once the account is gone from it.
     pub fn on_no_wallet(&mut self) -> Option<StandingUpdate> {
         self.wallet = None;
+        self.ledger = StrikeLedger::new();
         self.publish(None, Vec::new())
     }
 
@@ -143,6 +179,7 @@ impl StandingTracker {
         }
         self.standing.clone_from(&standing);
         Some(StandingUpdate {
+            wallet: self.wallet.clone(),
             standing,
             new_strikes,
         })
@@ -257,7 +294,7 @@ mod tests {
         let mut tracker = StandingTracker::default();
 
         let update = tracker
-            .on_issuance_ban(WALLET, issuance_ban())
+            .on_issuance_ban(WALLET, issuance_ban(), 0)
             .expect("a ban is news");
 
         assert_eq!(update.standing, Some(Standing::ban_only(issuance_ban())));
@@ -269,7 +306,7 @@ mod tests {
         let mut tracker = StandingTracker::default();
         tracker.on_standing(WALLET, answer(&[], Some(account_ban())));
 
-        assert_eq!(tracker.on_issuance_ban(WALLET, issuance_ban()), None);
+        assert_eq!(tracker.on_issuance_ban(WALLET, issuance_ban(), 0), None);
         assert_eq!(
             tracker.ban_in_force(0).and_then(|b| b.banned_at_unix_secs),
             Some(5_000)
@@ -277,11 +314,40 @@ mod tests {
     }
 
     #[test]
+    fn an_issuance_ban_replaces_a_ban_that_has_lapsed() {
+        let mut tracker = StandingTracker::default();
+        tracker.on_standing(WALLET, answer(&[], Some(account_ban())));
+
+        tracker.on_issuance_ban(WALLET, issuance_ban(), 9_000);
+
+        assert_eq!(tracker.standing().and_then(|s| s.ban), Some(issuance_ban()));
+    }
+
+    #[test]
+    fn an_update_names_the_wallet_it_is_about() {
+        let mut tracker = StandingTracker::default();
+
+        let update = tracker.on_standing(WALLET, answer(&[], None)).unwrap();
+
+        assert_eq!(update.wallet.as_deref(), Some(WALLET));
+        assert_eq!(tracker.on_no_wallet().unwrap().wallet, None);
+    }
+
+    #[test]
+    fn debug_never_renders_the_wallet() {
+        let mut tracker = StandingTracker::default();
+        let update = tracker.on_standing(WALLET, answer(&[], None)).unwrap();
+
+        assert!(!format!("{tracker:?}").contains(WALLET));
+        assert!(!format!("{update:?}").contains(WALLET));
+    }
+
+    #[test]
     fn an_issuance_ban_joins_the_strikes_already_known() {
         let mut tracker = StandingTracker::default();
         tracker.on_standing(WALLET, answer(&[("PF-1", 50000)], None));
 
-        tracker.on_issuance_ban(WALLET, issuance_ban());
+        tracker.on_issuance_ban(WALLET, issuance_ban(), 0);
 
         let standing = tracker.standing().expect("known");
         assert_eq!(standing.strikes.len(), 1);
@@ -291,7 +357,7 @@ mod tests {
     #[test]
     fn a_lifted_ban_clears_on_the_next_answer() {
         let mut tracker = StandingTracker::default();
-        tracker.on_issuance_ban(WALLET, issuance_ban());
+        tracker.on_issuance_ban(WALLET, issuance_ban(), 0);
 
         let update = tracker
             .on_standing(WALLET, answer(&[], None))
@@ -304,7 +370,7 @@ mod tests {
     #[test]
     fn a_lapsed_ban_is_not_in_force() {
         let mut tracker = StandingTracker::default();
-        tracker.on_issuance_ban(WALLET, issuance_ban());
+        tracker.on_issuance_ban(WALLET, issuance_ban(), 0);
 
         assert_eq!(tracker.ban_in_force(9_000), None);
     }
@@ -315,7 +381,7 @@ mod tests {
         tracker.on_standing(WALLET, answer(&[("PF-1", 50000)], Some(account_ban())));
 
         let update = tracker
-            .on_issuance_ban("wallet-b", issuance_ban())
+            .on_issuance_ban("wallet-b", issuance_ban(), 0)
             .expect("another wallet is news");
 
         assert_eq!(update.standing, Some(Standing::ban_only(issuance_ban())));
@@ -324,12 +390,22 @@ mod tests {
     #[test]
     fn logging_out_forgets_the_standing() {
         let mut tracker = StandingTracker::default();
-        tracker.on_issuance_ban(WALLET, issuance_ban());
+        tracker.on_issuance_ban(WALLET, issuance_ban(), 0);
 
         let update = tracker.on_no_wallet().expect("forgetting is news");
 
         assert_eq!(update.standing, None);
         assert_eq!(tracker.ban_in_force(0), None);
         assert_eq!(tracker.on_no_wallet(), None);
+    }
+
+    #[test]
+    fn logging_out_forgets_which_strikes_were_announced() {
+        let mut tracker = StandingTracker::default();
+        tracker.on_standing(WALLET, answer(&[("PF-1", 50000)], None));
+
+        tracker.on_no_wallet();
+
+        assert_eq!(tracker.ledger(), &StrikeLedger::new());
     }
 }

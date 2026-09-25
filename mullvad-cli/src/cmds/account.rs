@@ -52,8 +52,9 @@ pub enum Account {
     /// asked of the Warren API now.
     ///
     /// A forwarded port reported for abuse is closed and recorded as a
-    /// warning; three warnings in 90 days suspend the account. Each warning
-    /// carries the case reference to quote when contesting it.
+    /// warning, and enough warnings inside the window suspend the account
+    /// (the output states both numbers). Each warning carries the case
+    /// reference to quote when contesting it.
     Standing {
         /// Print the standing as one JSON object on one line.
         #[arg(long)]

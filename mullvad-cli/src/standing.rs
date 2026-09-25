@@ -51,6 +51,22 @@ fn utc_day(unix_secs: u64) -> String {
         .map_or_else(|| "?".to_owned(), |day| day.format("%Y-%m-%d").to_string())
 }
 
+/// A case reference as the terminal may print it. The reference comes from
+/// the API over TLS alone, so a control character in it is escaped rather
+/// than handed to the terminal.
+fn printable(reference: &str) -> String {
+    reference
+        .chars()
+        .flat_map(|c| {
+            if c.is_control() {
+                c.escape_default().collect::<Vec<_>>()
+            } else {
+                vec![c]
+            }
+        })
+        .collect()
+}
+
 /// One warning, as the user reads it: "Warning 1 of 3: public port N was
 /// closed on DAY after an abuse report (category). Case reference: REF".
 pub fn strike_line(strike: &AccountStrike, ordinal: u32, threshold: u32) -> String {
@@ -64,7 +80,7 @@ pub fn strike_line(strike: &AccountStrike, ordinal: u32, threshold: u32) -> Stri
         strike.port,
         utc_day(strike.day_unix_secs),
         category_label(strike.category),
-        strike.case_reference,
+        printable(&strike.case_reference),
     )
 }
 
@@ -228,6 +244,14 @@ pub(crate) mod tests {
             "Warning 1 of 3: public port 51413 was closed on 2026-09-24 after an abuse \
              report (copyright). Case reference: PF-2026-0042"
         );
+    }
+
+    #[test]
+    fn a_case_reference_cannot_drive_the_terminal() {
+        let line = strike_line(&strike(51413, "PF-1\u{1b}[2J"), 1, 3);
+
+        assert!(!line.contains('\u{1b}'), "{line:?}");
+        assert!(line.ends_with("Case reference: PF-1\\u{1b}[2J"), "{line:?}");
     }
 
     #[test]

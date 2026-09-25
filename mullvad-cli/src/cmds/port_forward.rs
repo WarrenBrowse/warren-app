@@ -80,8 +80,9 @@ pub struct StatusArgs {
     /// the snapshot and exit 0. Exit 1 when there is no rule to wait for
     /// (port forwarding off, or no rule configured), exit 2 when
     /// --timeout expires, exit 3 when a rule failed. A refusal the daemon
-    /// asks again for on its own (the exit refused the rule's entitlement)
-    /// keeps the wait going, like a rate limit.
+    /// asks again for on its own (the rule's entitlement refused or not
+    /// available yet) keeps the wait going, like a rate limit: pair it with
+    /// --timeout.
     #[arg(long, conflicts_with = "watch")]
     wait: bool,
 
@@ -681,13 +682,16 @@ fn wait_verdict(mappings: &[Mapping]) -> WaitVerdict {
     WaitVerdict::Keep
 }
 
-/// A refusal of the rule's entitlement the daemon asks again for on its
-/// own. It usually heals within a cycle (the entitlement was still held by
-/// this client's previous address, or belonged to the epoch that just
-/// ended), so a wait treats it as in flight. A rule with no entitlement at
-/// all is not one of these: the batch will not grow before the next epoch.
+/// A refusal the daemon asks again for on its own: the rule's entitlement
+/// refused (usually healed within a cycle, the serial still being held by
+/// this client's previous address or belonging to the epoch that just ended)
+/// or not available yet (the first mint still landing, or the batch used up
+/// until the next epoch). A wait treats both as in flight, like a rate limit.
 fn retried_refusal(m: &Mapping) -> bool {
-    m.error_reason == Some(ErrorReason::NotAuthorized as i32) && m.retry_after_secs.is_some()
+    matches!(
+        m.error_reason.map(ErrorReason::try_from),
+        Some(Ok(ErrorReason::NotAuthorized | ErrorReason::NoEntitlement))
+    ) && m.retry_after_secs.is_some()
 }
 
 /// The standing as the daemon last knew it. Never fails the status: a
@@ -1276,8 +1280,14 @@ mod tests {
     }
 
     #[test]
-    fn wait_gives_up_on_a_rule_with_no_entitlement() {
-        let snapshot = [refused(ErrorReason::NoEntitlement, Some(600))];
+    fn wait_keeps_going_while_the_daemon_waits_for_an_entitlement() {
+        let snapshot = [refused(ErrorReason::NoEntitlement, Some(5))];
+        assert_eq!(wait_verdict(&snapshot), WaitVerdict::Keep);
+    }
+
+    #[test]
+    fn wait_gives_up_on_a_refusal_nobody_retries() {
+        let snapshot = [refused(ErrorReason::NotAuthorized, None)];
         assert_eq!(wait_verdict(&snapshot), WaitVerdict::Failed);
     }
 

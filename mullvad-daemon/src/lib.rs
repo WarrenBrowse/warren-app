@@ -1110,11 +1110,14 @@ pub struct Daemon {
     /// receive the resulting snapshots without polling.
     warren_status_cache: warren_status::WarrenStatusCache,
     /// Polls the wallet's port-forward standing and takes the issuers' ban
-    /// refusals. `None` only without a Warren identity at boot.
+    /// refusals.
     warren_standing_monitor: Option<warren_account_standing::StandingMonitor>,
-    /// The standing as the monitor last reported it. Read on every connect:
-    /// a ban in force blocks instead of dialing.
-    warren_account_standing: Option<warren_standing::Standing>,
+    /// The standing as the monitor last reported it, with the wallet it is
+    /// about. Read on every connect: a ban in force blocks instead of dialing.
+    warren_account_standing: Option<(String, warren_standing::Standing)>,
+    /// Whether the daemon itself blocked the tunnel for a ban, which is what
+    /// a lifted or lapsed ban reconnects.
+    warren_blocked_for_ban: bool,
     /// Armed by [`warren_status::auto_recovery_step`] on state edges
     /// that only automation produces (blocked error while Secured,
     /// tunnel dying under a live Connected); a Connected arriving with
@@ -2277,6 +2280,7 @@ impl Daemon {
             warren_status_cache,
             warren_standing_monitor,
             warren_account_standing: None,
+            warren_blocked_for_ban: false,
             warren_auto_recovery_pending: false,
             warren_identity,
             warren_multi_hop_directory_active,
@@ -3542,8 +3546,10 @@ impl Daemon {
         let settings_dir = self.settings_dir.clone();
         let identity = self.warren_identity.clone();
         // Nothing published for the identity being left behind may reach the
-        // fresh one: a card carries an account's own voucher code.
+        // fresh one: a card carries an account's own voucher code, and a
+        // standing its strikes and ban.
         self.warren_status_cache.forget_announcements();
+        self.forget_warren_standing();
         tokio::spawn(async move {
             let result = async {
                 if let Ok(data) = account_manager.data().await
@@ -3916,7 +3922,7 @@ impl Daemon {
     /// **No-log policy**: never the content of `mnemonic`, just the
     /// result, whether identity changed, and the public pubkey hex.
     fn on_set_warren_mnemonic(
-        &self,
+        &mut self,
         tx: oneshot::Sender<std::io::Result<()>>,
         mnemonic: zeroize::Zeroizing<String>,
     ) {
@@ -3943,6 +3949,7 @@ impl Daemon {
         // The published card carries the code drawn for the identity that
         // just went away. The next refresh republishes what this one holds.
         self.warren_status_cache.forget_announcements();
+        self.forget_warren_standing();
 
         // Step 2 - determine whether a `login()` under the new pubkey
         // is needed before acknowledging, so the GUI does not observe a
@@ -4154,6 +4161,7 @@ impl Daemon {
         // code drawn for it. Done before the logout itself, so a failure
         // halfway cannot leave one account's code in front of the next one.
         self.warren_status_cache.forget_announcements();
+        self.forget_warren_standing();
         let logout_result = self.account_manager.logout().await.map_err(|error| {
             log::error!("{}", error.display_chain_with_msg("Logout failed"));
             Error::LogoutError(error)
@@ -6068,27 +6076,47 @@ impl Daemon {
     }
 
     fn connect_tunnel(&mut self) {
-        if let Some(monitor) = &self.warren_standing_monitor {
-            monitor.poke();
-        }
         // A v7 session never shows the wallet to the exit, so the exit cannot
         // refuse a banned account there: the ban the issuers answered is the
         // only place it shows, and dialing would only hide it.
         if let Some(ban) = self.warren_ban_in_force() {
             log::info!("Not connecting: the Warren account is suspended");
-            self.send_tunnel_command(TunnelCommand::Block(ErrorStateCause::AuthFailed(Some(
-                ban.auth_failed_reason(),
-            ))));
+            self.block_for_ban(&ban);
             return;
         }
+        // Only a connect that dials asks for a fresh standing. The blocked
+        // state retries every minute, and polling on each of those would turn
+        // the standing into a per-minute request; the regular poll is what
+        // lifts a ban.
+        if let Some(monitor) = &self.warren_standing_monitor {
+            monitor.poke();
+        }
+        self.warren_blocked_for_ban = false;
         self.send_tunnel_command(TunnelCommand::Connect);
     }
 
-    /// The ban on the wallet that holds right now, if any.
+    fn block_for_ban(&mut self, ban: &warren_standing::Ban) {
+        self.warren_blocked_for_ban = true;
+        self.send_tunnel_command(TunnelCommand::Block(ErrorStateCause::AuthFailed(Some(
+            ban.auth_failed_reason(),
+        ))));
+    }
+
+    /// The address of the installed wallet, `None` when none is.
+    fn current_warren_wallet(&self) -> Option<String> {
+        warren_sdk_client::wallet_of(&self.warren_identity.seed_handle())
+    }
+
+    /// The ban on the installed wallet that holds right now, if any. A
+    /// standing about another wallet never counts: it is the previous
+    /// identity's, published before the switch landed.
     fn warren_ban_in_force(&self) -> Option<warren_standing::Ban> {
-        self.warren_account_standing
-            .as_ref()
-            .and_then(|standing| standing.ban)
+        let (wallet, standing) = self.warren_account_standing.as_ref()?;
+        if self.current_warren_wallet().as_deref() != Some(wallet.as_str()) {
+            return None;
+        }
+        standing
+            .ban
             .filter(|ban| ban.in_force(warren_account_standing::now_unix_secs()))
     }
 
@@ -6107,8 +6135,11 @@ impl Daemon {
     }
 
     fn handle_warren_account_standing(&mut self, update: warren_standing::StandingUpdate) {
-        let was_banned = self.warren_ban_in_force().is_some();
-        self.warren_account_standing.clone_from(&update.standing);
+        if update.wallet.is_some() && update.wallet != self.current_warren_wallet() {
+            log::debug!("Dropping the standing of a wallet that is no longer installed");
+            return;
+        }
+        self.warren_account_standing = update.wallet.clone().zip(update.standing.clone());
         self.warren_status_cache
             .set_account_standing(update.standing);
         for notice in &update.new_strikes {
@@ -6118,22 +6149,31 @@ impl Daemon {
         }
         let action = warren_account_standing::ban_action(
             self.warren_ban_in_force(),
-            was_banned,
+            self.warren_blocked_for_ban,
             *self.target_state == TargetState::Secured,
             self.tunnel_blocked_for_ban(),
         );
         match action {
-            warren_account_standing::BanAction::Block(reason) => {
+            warren_account_standing::BanAction::Block(ban) => {
                 log::info!("Blocking: the Warren account is suspended");
-                self.send_tunnel_command(TunnelCommand::Block(ErrorStateCause::AuthFailed(Some(
-                    reason,
-                ))));
+                self.block_for_ban(&ban);
             }
             warren_account_standing::BanAction::Reconnect => {
                 log::info!("Reconnecting: the Warren account suspension is over");
                 self.connect_tunnel();
             }
             warren_account_standing::BanAction::Nothing => {}
+        }
+    }
+
+    /// Drops everything known about the standing of the wallet being left
+    /// behind, and has the monitor ask for the next one's.
+    fn forget_warren_standing(&mut self) {
+        self.warren_account_standing = None;
+        self.warren_status_cache.set_account_standing(None);
+        self.management_interface.notifier().forget_owner_backlog();
+        if let Some(monitor) = &self.warren_standing_monitor {
+            monitor.wallet_changed();
         }
     }
 
@@ -6158,7 +6198,8 @@ impl Daemon {
         });
     }
 
-    fn disconnect_tunnel(&self) {
+    fn disconnect_tunnel(&mut self) {
+        self.warren_blocked_for_ban = false;
         self.send_tunnel_command(TunnelCommand::Disconnect);
     }
 

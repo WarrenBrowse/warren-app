@@ -45,6 +45,14 @@ pub(crate) fn sentinel_seed() -> Zeroizing<[u8; 32]> {
     Zeroizing::new([0u8; 32])
 }
 
+/// The address of the wallet `seed` holds, `None` while the logged-out
+/// sentinel stands in for one.
+#[must_use]
+pub(crate) fn wallet_of(seed: &SharedWarrenSeed) -> Option<String> {
+    let guard = seed.read().expect("warren seed RwLock poisoned");
+    (**guard != *sentinel_seed()).then(|| WarrenIdentity::from_seed(&guard).address())
+}
+
 fn snapshot_identity(seed: &SharedWarrenSeed) -> WarrenIdentity {
     let guard = seed.read().expect("warren seed RwLock poisoned");
     WarrenIdentity::from_seed(&guard)
@@ -85,8 +93,7 @@ impl SharedWarrenApiClient {
     /// logged-out sentinel stands in for one.
     #[must_use]
     pub fn wallet(&self) -> Option<String> {
-        let guard = self.seed.read().expect("warren seed RwLock poisoned");
-        (**guard != *sentinel_seed()).then(|| WarrenIdentity::from_seed(&guard).address())
+        wallet_of(&self.seed)
     }
 
     /// Same as [`Self::new`], reusing a transport the caller already holds, so

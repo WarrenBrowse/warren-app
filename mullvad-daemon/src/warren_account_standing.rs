@@ -34,6 +34,10 @@ pub(crate) const MIN_POKE_GAP: Duration = Duration::from_secs(60);
 /// File name of the strike ledger in the daemon cache directory.
 const LEDGER_FILE: &str = "warren-strike-ledger.json";
 
+/// How long after a wallet change the standing of the new wallet is asked
+/// for: long enough for the identity swap that announced the change to land.
+pub(crate) const WALLET_CHANGE_SETTLE: Duration = Duration::from_secs(2);
+
 /// Wall-clock Unix seconds, the clock a ban's lapse is written in.
 pub(crate) fn now_unix_secs() -> u64 {
     std::time::SystemTime::now()
@@ -72,6 +76,10 @@ pub enum FetchError {
     /// The API did not answer the standing.
     #[error("the account standing could not be fetched")]
     Api(#[source] ClientError),
+    /// The wallet changed while the answer was on its way, so it is about
+    /// the previous one.
+    #[error("the Warren wallet changed while its standing was fetched")]
+    WalletChanged,
     /// The monitor task is gone (daemon shutting down).
     #[error("the account standing monitor has stopped")]
     Stopped,
@@ -79,6 +87,8 @@ pub enum FetchError {
 
 enum Command {
     Poke,
+    Poll,
+    WalletChanged,
     IssuanceBan { wallet: String, ban: Ban },
     FetchNow(oneshot::Sender<Result<Standing, FetchError>>),
 }
@@ -100,8 +110,15 @@ impl StandingMonitor {
     ) -> Self {
         let (tx, rx) = mpsc::unbounded_channel();
         let ledger_path = cache_dir.map(|dir| dir.join(LEDGER_FILE));
-        tokio::spawn(run(source, ledger_path, rx, on_update));
+        tokio::spawn(run(source, ledger_path, tx.clone(), rx, on_update));
         Self { tx }
+    }
+
+    /// The installed wallet changed (created, restored, logged out): forget
+    /// the previous one's standing now, and ask for the new one's once the
+    /// swap has landed.
+    pub(crate) fn wallet_changed(&self) {
+        let _ = self.tx.send(Command::WalletChanged);
     }
 
     /// Asks for a poll now, unless one ran less than [`MIN_POKE_GAP`] ago.
@@ -135,6 +152,7 @@ struct Monitor {
 async fn run(
     source: Arc<dyn StandingSource>,
     ledger_path: Option<PathBuf>,
+    tx: mpsc::UnboundedSender<Command>,
     mut rx: mpsc::UnboundedReceiver<Command>,
     on_update: Arc<dyn Fn(StandingUpdate) + Send + Sync>,
 ) {
@@ -163,6 +181,17 @@ async fn run(
                         let _ = monitor.poll().await;
                     }
                 }
+                Some(Command::Poll) => {
+                    let _ = monitor.poll().await;
+                }
+                Some(Command::WalletChanged) => {
+                    monitor.forget_wallet();
+                    let tx = tx.clone();
+                    tokio::spawn(async move {
+                        tokio::time::sleep(WALLET_CHANGE_SETTLE).await;
+                        let _ = tx.send(Command::Poll);
+                    });
+                }
                 Some(Command::IssuanceBan { wallet, ban }) => monitor.issuance_ban(&wallet, ban),
                 Some(Command::FetchNow(reply)) => {
                     let _ = reply.send(monitor.poll().await);
@@ -176,24 +205,28 @@ impl Monitor {
     async fn poll(&mut self) -> Result<Standing, FetchError> {
         self.last_poll = Some(tokio::time::Instant::now());
         let Some(wallet) = self.source.wallet() else {
-            if let Some(update) = self.tracker.on_no_wallet() {
-                (self.on_update)(update);
-            }
+            self.forget_wallet();
             return Err(FetchError::NoWallet);
         };
         let response = match self.source.fetch().await {
             Ok(response) => response,
             Err(error) => {
                 // The client's Display carries a status code at most, never
-                // the body, which may echo identity material.
-                log::warn!("Warren account standing poll failed (keeping the last): {error}");
+                // the body, which may echo identity material. An API that
+                // predates the endpoint answers 404 on every poll, which says
+                // nothing about this client worth a warning each time.
+                if matches!(error, ClientError::ServerStatus { status: 404, .. }) {
+                    log::debug!("The Warren API does not serve the account standing yet");
+                } else {
+                    log::warn!("Warren account standing poll failed (keeping the last): {error}");
+                }
                 return Err(FetchError::Api(error));
             }
         };
         // The wallet may have changed during the fetch; the answer is about
         // the one it was signed for, which is the one asked before it.
         if self.source.wallet().as_deref() != Some(wallet.as_str()) {
-            return Err(FetchError::NoWallet);
+            return Err(FetchError::WalletChanged);
         }
         let before = self.tracker.ledger().clone();
         let update = self.tracker.on_standing(&wallet, response);
@@ -212,8 +245,18 @@ impl Monitor {
         if self.source.wallet().as_deref() != Some(wallet) {
             return;
         }
-        if let Some(update) = self.tracker.on_issuance_ban(wallet, ban) {
+        if let Some(update) = self.tracker.on_issuance_ban(wallet, ban, now_unix_secs()) {
             (self.on_update)(update);
+        }
+    }
+
+    fn forget_wallet(&mut self) {
+        let had_ledger = *self.tracker.ledger() != StrikeLedger::new();
+        if let Some(update) = self.tracker.on_no_wallet() {
+            (self.on_update)(update);
+        }
+        if had_ledger {
+            self.persist_ledger();
         }
     }
 
@@ -230,8 +273,8 @@ impl Monitor {
 /// What the daemon does with the tunnel once the standing changed.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) enum BanAction {
-    /// Enter the blocking error state with this auth-failed reason.
-    Block(String),
+    /// Enter the blocking error state for this ban.
+    Block(Ban),
     /// The ban that blocked the tunnel is gone: connect again.
     Reconnect,
     /// Leave the tunnel alone.
@@ -240,20 +283,22 @@ pub(crate) enum BanAction {
 
 /// Decides [`BanAction`].
 ///
-/// `ban` is the ban in force now, `was_banned` whether one was in force
-/// before this change, `secured` whether the user wants a tunnel, and
-/// `blocked_for_ban` whether the tunnel already sits in the error state a ban
-/// puts it in. A ban blocks only a tunnel the user asked for: a disconnected
-/// client stays disconnected, and the suspension shows on its next connect.
+/// `ban` is the ban in force now, `daemon_blocked` whether the daemon itself
+/// blocked the tunnel for a ban, `secured` whether the user wants a tunnel,
+/// and `blocked_for_ban` whether the tunnel sits in the error state a ban puts
+/// it in. A ban blocks only a tunnel the user asked for: a disconnected client
+/// stays disconnected, and the suspension shows on its next connect. Only a
+/// block the daemon made is lifted here: an exit's own ban rejection stays for
+/// the exit to lift.
 pub(crate) fn ban_action(
     ban: Option<Ban>,
-    was_banned: bool,
+    daemon_blocked: bool,
     secured: bool,
     blocked_for_ban: bool,
 ) -> BanAction {
     match ban {
-        Some(ban) if secured && !blocked_for_ban => BanAction::Block(ban.auth_failed_reason()),
-        None if was_banned && secured && blocked_for_ban => BanAction::Reconnect,
+        Some(ban) if secured && !blocked_for_ban => BanAction::Block(ban),
+        None if daemon_blocked && secured && blocked_for_ban => BanAction::Reconnect,
         _ => BanAction::Nothing,
     }
 }
@@ -290,9 +335,19 @@ fn load_ledger(path: &Path) -> StrikeLedger {
     }
 }
 
+/// Writes `bytes` to `path` through a sibling file renamed into place, owner
+/// read and write only: the cache directory is readable by every local
+/// account, and even digests say how many strikes the owner has had and when.
 fn write_atomically(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
+    use std::io::Write as _;
     let tmp = path.with_extension("json.tmp");
-    std::fs::write(&tmp, bytes)?;
+    let mut options = std::fs::OpenOptions::new();
+    options.write(true).create(true).truncate(true);
+    #[cfg(unix)]
+    std::os::unix::fs::OpenOptionsExt::mode(&mut options, 0o600);
+    let mut file = options.open(&tmp)?;
+    file.write_all(bytes)?;
+    file.sync_all()?;
     std::fs::rename(&tmp, path)
 }
 
@@ -462,7 +517,7 @@ mod tests {
     fn a_ban_blocks_a_tunnel_the_user_asked_for() {
         assert_eq!(
             ban_action(Some(ban()), false, true, false),
-            BanAction::Block(ban().auth_failed_reason())
+            BanAction::Block(ban())
         );
     }
 
@@ -483,13 +538,40 @@ mod tests {
     }
 
     #[test]
-    fn a_lifted_ban_reconnects_the_tunnel_it_blocked() {
+    fn a_lifted_or_lapsed_ban_reconnects_the_tunnel_the_daemon_blocked() {
         assert_eq!(ban_action(None, true, true, true), BanAction::Reconnect);
     }
 
     #[test]
-    fn good_standing_leaves_the_tunnel_alone() {
+    fn a_ban_the_exit_reported_is_not_lifted_here() {
         assert_eq!(ban_action(None, false, true, true), BanAction::Nothing);
+    }
+
+    /// The daemon recognises its own block by parsing the reason back, so the
+    /// token the shared model writes and the one `mullvad-types` reads must
+    /// stay the same spelling.
+    #[test]
+    fn the_ban_reason_parses_back_to_the_suspension_it_names() {
+        use mullvad_types::auth_failed::AuthFailed;
+        let pf = ban().auth_failed_reason();
+        let other = Ban {
+            reason: BanReasonCode::Other,
+            ..ban()
+        }
+        .auth_failed_reason();
+
+        assert!(matches!(
+            AuthFailed::from(pf.as_str()),
+            AuthFailed::BannedPortForwarding
+        ));
+        assert!(matches!(
+            AuthFailed::from(other.as_str()),
+            AuthFailed::Banned
+        ));
+    }
+
+    #[test]
+    fn good_standing_leaves_the_tunnel_alone() {
         assert_eq!(ban_action(None, true, true, false), BanAction::Nothing);
     }
 
@@ -577,6 +659,44 @@ mod tests {
         ));
         assert_eq!(source.fetches(), 1);
         assert_eq!(updates.lock().unwrap().last().unwrap().standing, None);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_wallet_change_forgets_the_standing_then_asks_for_the_new_one() {
+        let source = FakeSource::new(answer(&["PF-1"]));
+        let (updates, sink) = collector();
+        let monitor = StandingMonitor::spawn(source.clone(), None, sink);
+        settle().await;
+        *source.wallet.lock().unwrap() = Some("wallet-b".to_owned());
+
+        monitor.wallet_changed();
+        settle().await;
+        let forgotten = updates.lock().unwrap().last().cloned().unwrap();
+        assert_eq!((forgotten.wallet, forgotten.standing), (None, None));
+
+        tokio::time::advance(WALLET_CHANGE_SETTLE).await;
+        settle().await;
+        let fresh = updates.lock().unwrap().last().cloned().unwrap();
+        assert_eq!(fresh.wallet.as_deref(), Some("wallet-b"));
+        assert_eq!(source.fetches(), 2);
+    }
+
+    #[cfg(unix)]
+    #[tokio::test(start_paused = true)]
+    async fn only_the_daemon_account_can_read_the_ledger() {
+        use std::os::unix::fs::PermissionsExt as _;
+        let dir = tempfile::tempdir().unwrap();
+        let source = FakeSource::new(answer(&["PF-1"]));
+        let (_updates, sink) = collector();
+        let _monitor = StandingMonitor::spawn(source.clone(), Some(dir.path().to_owned()), sink);
+        settle().await;
+
+        let mode = std::fs::metadata(dir.path().join(LEDGER_FILE))
+            .unwrap()
+            .permissions()
+            .mode();
+
+        assert_eq!(mode & 0o777, 0o600);
     }
 
     #[tokio::test(start_paused = true)]

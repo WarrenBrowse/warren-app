@@ -50,9 +50,38 @@ pub enum Error {
 
 pub type AppUpgradeBroadcast = tokio::sync::broadcast::Sender<version::AppUpgradeEvent>;
 
+/// Owner-only events no owner was listening for when they happened, handed to
+/// the next owner that subscribes. Locked before the subscriber list wherever
+/// both are held, so a subscription and a broadcast cannot miss each other.
+type OwnerBacklog = Arc<Mutex<Vec<types::DaemonEvent>>>;
+
+/// How many undelivered owner events are kept. A strike notice is the only one
+/// today, and three of them ban the account, so a real account never reaches
+/// this; it only bounds memory against a misbehaving API.
+const OWNER_BACKLOG_CAP: usize = 16;
+
+/// Adds `subscriber` to the event stream, first handing it the owner events
+/// that waited for an owner when it may see them.
+fn register_events_subscriber(
+    backlog: &OwnerBacklog,
+    subscriptions: &Mutex<Vec<EventsSubscriber>>,
+    wallet_access: &crate::wallet_access::WalletAccessControl,
+    subscriber: EventsSubscriber,
+) {
+    let mut backlog = backlog.lock().unwrap();
+    let mut subscriptions = subscriptions.lock().unwrap();
+    if wallet_access.may_see_identity(subscriber.peer.as_ref()) {
+        for event in backlog.drain(..) {
+            let _ = subscriber.tx.send(Ok(event));
+        }
+    }
+    subscriptions.push(subscriber);
+}
+
 struct ManagementServiceImpl {
     daemon_tx: DaemonCommandSender,
     subscriptions: Arc<Mutex<Vec<EventsSubscriber>>>,
+    owner_backlog: OwnerBacklog,
     pub app_upgrade_broadcast: AppUpgradeBroadcast,
     log_reload_handle: crate::logging::LogHandle,
     /// Direct handle on the live Warren status cache. Read by
@@ -515,13 +544,15 @@ impl ManagementService for ManagementServiceImpl {
 
     async fn events_listen(&self, request: Request<()>) -> ServiceResult<Self::EventsListenStream> {
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
-
-        let mut subscriptions = self.subscriptions.lock().unwrap();
-        subscriptions.push(EventsSubscriber {
-            tx,
-            peer: Self::peer_of(&request),
-        });
-
+        register_events_subscriber(
+            &self.owner_backlog,
+            &self.subscriptions,
+            &self.wallet_access,
+            EventsSubscriber {
+                tx,
+                peer: Self::peer_of(&request),
+            },
+        );
         Ok(Response::new(UnboundedReceiverStream::new(rx)))
     }
 
@@ -1066,6 +1097,9 @@ impl ManagementService for ManagementServiceImpl {
             Err(FetchError::NoWallet) => {
                 Err(Status::failed_precondition("no Warren wallet is installed"))
             }
+            Err(FetchError::WalletChanged) => Err(Status::aborted(
+                "the Warren wallet changed while its standing was fetched",
+            )),
             Err(FetchError::Api(_) | FetchError::Stopped) => Err(Status::unavailable(
                 "the account standing could not be fetched",
             )),
@@ -2603,6 +2637,7 @@ impl ManagementInterfaceServer {
         warren_identity: Arc<crate::warren_identity_manager::WarrenIdentityManager>,
     ) -> Result<ManagementInterfaceServer, Error> {
         let subscriptions = Arc::<Mutex<Vec<EventsSubscriber>>>::default();
+        let owner_backlog = OwnerBacklog::default();
 
         // NOTE: It is important that the channel buffer size is kept at 0. When sending a signal
         // to abort the gRPC server, the sender can be awaited to know when the gRPC server has
@@ -2619,6 +2654,7 @@ impl ManagementInterfaceServer {
         let management_service = ManagementServiceImpl {
             daemon_tx,
             subscriptions: subscriptions.clone(),
+            owner_backlog: owner_backlog.clone(),
             app_upgrade_broadcast,
             log_reload_handle,
             warren_status_cache: warren_status_cache.clone(),
@@ -2649,6 +2685,7 @@ impl ManagementInterfaceServer {
 
         let broadcast = ManagementInterfaceEventBroadcaster {
             subscriptions,
+            owner_backlog,
             wallet_access,
         };
 
@@ -2689,21 +2726,34 @@ impl ManagementInterfaceServer {
 #[derive(Clone)]
 pub struct ManagementInterfaceEventBroadcaster {
     subscriptions: Arc<Mutex<Vec<EventsSubscriber>>>,
+    owner_backlog: OwnerBacklog,
     wallet_access: Arc<crate::wallet_access::WalletAccessControl>,
 }
 
 impl ManagementInterfaceEventBroadcaster {
     fn notify(&self, value: types::DaemonEvent) {
+        self.notify_counting_owners(value);
+    }
+
+    /// Broadcasts `value` and answers whether a subscriber that may see the
+    /// owner's identity received it.
+    fn notify_counting_owners(&self, value: types::DaemonEvent) -> bool {
+        let mut owners = false;
         let mut subscriptions = self.subscriptions.lock().unwrap();
         subscriptions.retain(|subscriber| {
             let may_see = self
                 .wallet_access
                 .may_see_identity(subscriber.peer.as_ref());
             match withhold_event_identity(value.clone(), may_see) {
-                Some(event) => subscriber.tx.send(Ok(event)).is_ok(),
+                Some(event) => {
+                    let sent = subscriber.tx.send(Ok(event)).is_ok();
+                    owners |= sent && may_see;
+                    sent
+                }
                 None => !subscriber.tx.is_closed(),
             }
         });
+        owners
     }
 
     /// Notify that the tunnel state changed.
@@ -2800,13 +2850,27 @@ impl ManagementInterfaceEventBroadcaster {
 
     /// Notify that a port-forward abuse strike this device had not warned
     /// about yet is live. Sent once per strike; owner-only.
+    ///
+    /// The daemon usually learns of a strike on its first poll after boot,
+    /// before any GUI is attached, so a notice no owner received waits for the
+    /// next owner that subscribes rather than being lost.
     pub(crate) fn notify_new_account_strike(&self, notice: &warren_standing::NewStrike) {
         log::debug!("Broadcasting a new account strike");
-        self.notify(types::DaemonEvent {
+        let event = types::DaemonEvent {
             event: Some(daemon_event::Event::NewAccountStrike(
                 types::WarrenAccountStrikeNotice::from(notice),
             )),
-        })
+        };
+        let mut backlog = self.owner_backlog.lock().unwrap();
+        if !self.notify_counting_owners(event.clone()) && backlog.len() < OWNER_BACKLOG_CAP {
+            backlog.push(event);
+        }
+    }
+
+    /// Drops the notices waiting for an owner: the account they are about is
+    /// no longer the one installed.
+    pub(crate) fn forget_owner_backlog(&self) {
+        self.owner_backlog.lock().unwrap().clear();
     }
 
     /// Notify that the api access method changed.
@@ -3348,6 +3412,7 @@ mod tests {
                     peer: Some(mullvad_management_interface::PeerCredentials::unix(1001, 0)),
                 },
             ])),
+            owner_backlog: super::OwnerBacklog::default(),
             wallet_access: access,
         };
 
@@ -3363,6 +3428,75 @@ mod tests {
             2,
             "a subscriber shown nothing is still subscribed"
         );
+    }
+
+    fn a_notice() -> warren_standing::NewStrike {
+        warren_standing::NewStrike::try_from(types::WarrenAccountStrikeNotice {
+            strike: Some(a_strike()),
+            ordinal: 1,
+            threshold: 3,
+        })
+        .unwrap()
+    }
+
+    /// The daemon learns of a strike on its first poll after boot, usually
+    /// before the GUI is attached: the notice must wait for the owner rather
+    /// than be lost, and must never go to another account.
+    #[test]
+    fn a_strike_notice_no_owner_heard_waits_for_the_next_owner() {
+        let scratch = crate::wallet_access::test_support::Scratch::new("backlog");
+        scratch
+            .store()
+            .save(&mullvad_management_interface::Principal::Uid(1000))
+            .unwrap();
+        let access = std::sync::Arc::new(crate::wallet_access::WalletAccessControl::new(
+            scratch.store(),
+            || true,
+            false,
+            crate::wallet_access::test_support::NoConsole,
+        ));
+        let (other_tx, mut other_rx) = tokio::sync::mpsc::unbounded_channel();
+        let broadcaster = super::ManagementInterfaceEventBroadcaster {
+            subscriptions: std::sync::Arc::new(std::sync::Mutex::new(vec![
+                super::EventsSubscriber {
+                    tx: other_tx,
+                    peer: Some(mullvad_management_interface::PeerCredentials::unix(1001, 0)),
+                },
+            ])),
+            owner_backlog: super::OwnerBacklog::default(),
+            wallet_access: access.clone(),
+        };
+
+        broadcaster.notify_new_account_strike(&a_notice());
+
+        let (late_other_tx, mut late_other_rx) = tokio::sync::mpsc::unbounded_channel();
+        super::register_events_subscriber(
+            &broadcaster.owner_backlog,
+            &broadcaster.subscriptions,
+            &access,
+            super::EventsSubscriber {
+                tx: late_other_tx,
+                peer: Some(mullvad_management_interface::PeerCredentials::unix(1001, 0)),
+            },
+        );
+        let (owner_tx, mut owner_rx) = tokio::sync::mpsc::unbounded_channel();
+        super::register_events_subscriber(
+            &broadcaster.owner_backlog,
+            &broadcaster.subscriptions,
+            &access,
+            super::EventsSubscriber {
+                tx: owner_tx,
+                peer: Some(mullvad_management_interface::PeerCredentials::unix(1000, 0)),
+            },
+        );
+
+        assert!(other_rx.try_recv().is_err());
+        assert!(late_other_rx.try_recv().is_err());
+        assert!(matches!(
+            owner_rx.try_recv().unwrap().unwrap().event,
+            Some(daemon_event::Event::NewAccountStrike(_))
+        ));
+        assert!(broadcaster.owner_backlog.lock().unwrap().is_empty());
     }
 
     #[test]
