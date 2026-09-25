@@ -16,7 +16,7 @@ use std::{
     path::PathBuf,
 };
 
-use super::{OwnerError, OwnerResolver};
+use super::{OwnerError, OwnerResolver, conntrack};
 use crate::{
     app::ProcessKey,
     flow::{FlowKey, Transport},
@@ -36,6 +36,11 @@ const INODE_AT: usize = NLMSG_HDR_LEN + 4 + 48 + 16;
 #[derive(Default)]
 pub struct SystemResolver {
     socket: Option<OwnedFd>,
+    /// The conntrack socket, and whether the kernel refused to answer on it
+    /// once already (no privilege, no conntrack), which asking again would
+    /// not change.
+    conntrack: Option<OwnedFd>,
+    conntrack_refused: bool,
     inodes: HashMap<u64, u32>,
     /// Set by a refresh, spent by the first index rebuild after it.
     may_rebuild: bool,
@@ -66,40 +71,54 @@ impl SystemResolver {
         self.query(protocol, src, dst)
     }
 
+    /// The pair the socket of `flow` holds, when the firewall translated the
+    /// connection on its way to the TUN device.
+    fn original(&mut self, flow: &FlowKey) -> Option<FlowKey> {
+        if self.conntrack_refused {
+            return None;
+        }
+        self.sequence = self.sequence.wrapping_add(1);
+        let request = conntrack::request(self.sequence, flow)?;
+        let fd = match &self.conntrack {
+            Some(socket) => socket.as_raw_fd(),
+            None => {
+                let socket = open_netlink(libc::NETLINK_NETFILTER).ok()?;
+                let fd = socket.as_raw_fd();
+                self.conntrack = Some(socket);
+                fd
+            }
+        };
+        if send(fd, &request) < 0 {
+            self.conntrack = None;
+            return None;
+        }
+        self.reply.resize(8192, 0);
+        loop {
+            let received = receive(fd, &mut self.reply)?;
+            match conntrack::parse_reply(&self.reply[..received], self.sequence, flow.transport) {
+                conntrack::Reply::Original(original) => return Some(original),
+                conntrack::Reply::Absent => return None,
+                conntrack::Reply::Refused => {
+                    self.conntrack_refused = true;
+                    return None;
+                }
+                conntrack::Reply::Other => continue,
+            }
+        }
+    }
+
     fn query(&mut self, protocol: u8, src: SocketAddr, dst: SocketAddr) -> Option<u64> {
         let fd = self.socket().ok()?;
         self.sequence = self.sequence.wrapping_add(1);
         let request = request(self.sequence, protocol, src, dst);
-        // SAFETY: `request` is a readable buffer of the length passed, and a
-        // zeroed sockaddr_nl addresses the kernel.
-        let sent = unsafe {
-            let mut kernel: libc::sockaddr_nl = std::mem::zeroed();
-            kernel.nl_family = libc::AF_NETLINK as libc::sa_family_t;
-            libc::sendto(
-                fd,
-                request.as_ptr().cast::<c_void>(),
-                request.len(),
-                0,
-                std::ptr::from_ref(&kernel).cast::<libc::sockaddr>(),
-                size_of::<libc::sockaddr_nl>() as libc::socklen_t,
-            )
-        };
+        let sent = send(fd, &request);
         if sent < 0 {
             self.socket = None;
             return None;
         }
         self.reply.resize(8192, 0);
         loop {
-            // SAFETY: `reply` is writable for the length passed.
-            let received = unsafe {
-                libc::recv(
-                    fd,
-                    self.reply.as_mut_ptr().cast::<c_void>(),
-                    self.reply.len(),
-                    0,
-                )
-            };
-            let received = usize::try_from(received).ok()?;
+            let received = receive(fd, &mut self.reply)?;
             match parse_reply(&self.reply[..received], self.sequence) {
                 Reply::Inode(inode) => return Some(inode),
                 Reply::Absent => return None,
@@ -112,38 +131,8 @@ impl SystemResolver {
         if let Some(socket) = &self.socket {
             return Ok(socket.as_raw_fd());
         }
-        // SAFETY: plain socket creation; the result is checked.
-        let fd = unsafe {
-            libc::socket(
-                libc::AF_NETLINK,
-                libc::SOCK_DGRAM | libc::SOCK_CLOEXEC,
-                libc::NETLINK_SOCK_DIAG,
-            )
-        };
-        if fd < 0 {
-            return Err(io::Error::last_os_error());
-        }
-        // SAFETY: `fd` is a fresh descriptor this struct now owns.
-        let socket = unsafe { OwnedFd::from_raw_fd(fd) };
-        // A reply that never comes must not stall the packet path, so a
-        // socket that cannot time out is not used at all.
-        let timeout = libc::timeval {
-            tv_sec: 0,
-            tv_usec: 200_000,
-        };
-        // SAFETY: `timeout` is a valid timeval of the length passed.
-        let status = unsafe {
-            libc::setsockopt(
-                fd,
-                libc::SOL_SOCKET,
-                libc::SO_RCVTIMEO,
-                std::ptr::from_ref(&timeout).cast::<c_void>(),
-                size_of::<libc::timeval>() as libc::socklen_t,
-            )
-        };
-        if status != 0 {
-            return Err(io::Error::last_os_error());
-        }
+        let socket = open_netlink(libc::NETLINK_SOCK_DIAG)?;
+        let fd = socket.as_raw_fd();
         self.socket = Some(socket);
         Ok(fd)
     }
@@ -151,8 +140,11 @@ impl SystemResolver {
 
 impl OwnerResolver for SystemResolver {
     fn socket_owner(&mut self, flow: &FlowKey) -> Option<u32> {
+        // Include-only masquerades an included connection into the tunnel,
+        // so its socket is found by the pair it had before.
+        let flow = self.original(flow).unwrap_or(*flow);
         // No socket for this flow is a final answer: the lookup is live.
-        let inode = self.inode(flow)?;
+        let inode = self.inode(&flow)?;
         if let Some(pid) = self.inodes.get(&inode).copied()
             && holds_socket(pid, inode)
         {
@@ -205,6 +197,67 @@ impl SystemResolver {
             }
         }
     }
+}
+
+/// A netlink socket of `protocol` whose replies time out, since a reply that
+/// never comes must not stall the packet path.
+fn open_netlink(protocol: i32) -> io::Result<OwnedFd> {
+    // SAFETY: plain socket creation; the result is checked.
+    let fd = unsafe {
+        libc::socket(
+            libc::AF_NETLINK,
+            libc::SOCK_DGRAM | libc::SOCK_CLOEXEC,
+            protocol,
+        )
+    };
+    if fd < 0 {
+        return Err(io::Error::last_os_error());
+    }
+    // SAFETY: `fd` is a fresh descriptor this function now owns.
+    let socket = unsafe { OwnedFd::from_raw_fd(fd) };
+    let timeout = libc::timeval {
+        tv_sec: 0,
+        tv_usec: 200_000,
+    };
+    // SAFETY: `timeout` is a valid timeval of the length passed.
+    let status = unsafe {
+        libc::setsockopt(
+            fd,
+            libc::SOL_SOCKET,
+            libc::SO_RCVTIMEO,
+            std::ptr::from_ref(&timeout).cast::<c_void>(),
+            size_of::<libc::timeval>() as libc::socklen_t,
+        )
+    };
+    if status != 0 {
+        return Err(io::Error::last_os_error());
+    }
+    Ok(socket)
+}
+
+/// Sends `request` to the kernel.
+fn send(fd: i32, request: &[u8]) -> isize {
+    // SAFETY: `request` is a readable buffer of the length passed, and a
+    // zeroed sockaddr_nl addresses the kernel.
+    unsafe {
+        let mut kernel: libc::sockaddr_nl = std::mem::zeroed();
+        kernel.nl_family = libc::AF_NETLINK as libc::sa_family_t;
+        libc::sendto(
+            fd,
+            request.as_ptr().cast::<c_void>(),
+            request.len(),
+            0,
+            std::ptr::from_ref(&kernel).cast::<libc::sockaddr>(),
+            size_of::<libc::sockaddr_nl>() as libc::socklen_t,
+        )
+    }
+}
+
+/// The length of the next reply, read into `reply`; `None` on a timeout.
+fn receive(fd: i32, reply: &mut [u8]) -> Option<usize> {
+    // SAFETY: `reply` is writable for the length passed.
+    let received = unsafe { libc::recv(fd, reply.as_mut_ptr().cast::<c_void>(), reply.len(), 0) };
+    usize::try_from(received).ok()
 }
 
 /// The inodes of the sockets `pid` holds. A process that exits or is not
@@ -385,6 +438,49 @@ mod tests {
 
         assert_eq!(accepted_side, Some(std::process::id()));
         assert_eq!(udp_side, Some(std::process::id()));
+    }
+
+    /// Runs `command` in the network namespace of the calling thread.
+    fn run(command: &str) {
+        let status = std::process::Command::new("/bin/sh")
+            .args(["-c", command])
+            .status()
+            .unwrap();
+        assert!(status.success(), "{command}");
+    }
+
+    #[test]
+    #[ignore = "needs root and nft; runs in a network namespace of its own"]
+    fn finds_a_connection_masqueraded_on_its_way_to_the_tunnel() {
+        // A thread of its own, since the namespace it enters is the thread's.
+        std::thread::spawn(|| {
+            // SAFETY: plain syscall; the result is checked.
+            assert_eq!(unsafe { libc::unshare(libc::CLONE_NEWNET) }, 0);
+            run("ip link set lo up && ip addr add 127.0.0.3/8 dev lo");
+            // Stands in for include-only's masquerade into the tunnel: the
+            // socket's source is rewritten after it was chosen.
+            run(
+                "nft add table ip include_test && nft add chain ip include_test post \
+                 '{ type nat hook postrouting priority 100; }' && \
+                 nft add rule ip include_test post ip daddr 127.0.0.2 snat to 127.0.0.3",
+            );
+            let listener = TcpListener::bind("127.0.0.2:0").unwrap();
+            let client = TcpStream::connect(listener.local_addr().unwrap()).unwrap();
+            let (accepted, seen_from) = listener.accept().unwrap();
+            assert_ne!(seen_from.ip(), client.local_addr().unwrap().ip());
+            let mut resolver = SystemResolver::new();
+            resolver.refresh().unwrap();
+
+            let owner = resolver.socket_owner(&FlowKey {
+                transport: Transport::Tcp,
+                local: seen_from,
+                remote: accepted.local_addr().unwrap(),
+            });
+
+            assert_eq!(owner, Some(std::process::id()));
+        })
+        .join()
+        .unwrap();
     }
 
     #[test]
