@@ -271,8 +271,9 @@ pub fn make_session_token_provider(
 /// A slot is a rule's stable place in the subscriber's per-epoch batch: one
 /// entitlement buys one forwarded port (warren-core doc 99), so two live rules
 /// must never draw the same one. `None` for a slot means the subscriber has no
-/// entitlement left, and the exit then applies its configured quota, which is
-/// the documented degrade path.
+/// entitlement left: the Map request then goes out without an envelope, the
+/// exit refuses it (warren-core doc 105), and the controller reports the rule
+/// as having no entitlement and asks again later.
 pub type PortEntitlementProvider = std::sync::Arc<dyn Fn(usize) -> Option<Vec<u8>> + Send + Sync>;
 
 mod adapter;
@@ -623,8 +624,9 @@ pub struct WarrenTunnelParameters {
     /// Per-rule port entitlements (warren-core doc 99). When set, every
     /// NAT-PMP request carries the credential its rule's slot holds, and the
     /// exit bounds the subscriber's forwarded ports across the whole fleet
-    /// instead of per session. `None` (or an exhausted batch) leaves the exit
-    /// on its configured per-client quota.
+    /// instead of per session. `None`, or an exhausted batch, sends the request
+    /// without an entitlement envelope, which the exit refuses (warren-core doc
+    /// 105).
     pub port_entitlement_provider: Option<PortEntitlementProvider>,
 
     /// Daemon cache directory, for the state a tunnel wants to survive a

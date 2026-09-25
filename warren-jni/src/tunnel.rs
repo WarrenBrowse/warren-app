@@ -1017,12 +1017,11 @@ fn maybe_spawn_nat_pmp(
     ));
     let refresh_slot = refresh.clone();
     let starter = tokio::spawn(async move {
-        // The engine reads the credential once per cycle, and the first cycle
-        // decides whether the exit counts this port against the subscriber's
-        // fleet-wide entitlement or against its own per-client quota. The mint
-        // is cold on Android (the VpnService process is created at connect), so
-        // give it a bounded head start rather than spending the whole first
-        // lease un-entitled.
+        // The engine reads the credential once per cycle, and the exit refuses
+        // a first request that carries no entitlement envelope (warren-core doc
+        // 105). The mint is cold on Android (the VpnService process is created
+        // at connect), so give it a bounded head start rather than having the
+        // first request refused.
         let entitlement_present = crate::port_entitlements::await_first_credential(
             &entitlements,
             ENTITLEMENT_GRACE,
@@ -1031,8 +1030,8 @@ fn maybe_spawn_nat_pmp(
         .await
         .is_some();
         // Presence only: a credential is bearer material and never reaches a
-        // log. `false` is the documented degrade, otherwise indistinguishable
-        // from a working chain.
+        // log. `false` means the first request goes out bare and the exit
+        // refuses it, which nothing else in the log would explain.
         log::info!(
             "NAT-PMP refresh loop spawned (server={server}, bind_addr={bind_addr}, entitlement={entitlement_present})"
         );
