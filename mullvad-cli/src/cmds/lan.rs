@@ -74,6 +74,8 @@ impl Networks {
         match self {
             Networks::Add { network } => networks.push(network),
             Networks::Remove { network } => {
+                // The daemon stores networks with their host bits cleared.
+                let network = IpNetwork::new(network.network(), network.prefix())?;
                 let before = networks.len();
                 networks.retain(|shared| *shared != network);
                 if networks.len() == before {

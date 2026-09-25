@@ -17,7 +17,7 @@ use talpid_types::net::GenericTunnelOptions;
 mod dns;
 mod lan;
 
-pub use lan::{LanNetworkError, validate_lan_networks};
+pub use lan::{LanNetworkError, MAX_LAN_NETWORKS, validate_lan_networks};
 
 /// The version used by the current version of the code. Should always be the
 /// latest version that exists in `SettingsVersion`.

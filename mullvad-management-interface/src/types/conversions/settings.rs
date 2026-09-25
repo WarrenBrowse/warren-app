@@ -79,7 +79,7 @@ impl From<&mullvad_types::settings::Settings> for proto::Settings {
                     .iter()
                     .map(ToString::to_string)
                     .collect(),
-                custom: settings.custom_lan_networks.is_some(),
+                custom: settings.valid_custom_lan_networks().is_some(),
             }),
         }
     }

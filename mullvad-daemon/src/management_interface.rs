@@ -654,6 +654,13 @@ impl ManagementService for ManagementServiceImpl {
         let call = Self::call_of(&request);
         let networks =
             types::custom_lan_networks(request.into_inner()).map_err(map_protobuf_type_err)?;
+        // Windows compiles its LAN filters into winfw and Android routes the built-in ranges
+        // around the VPN, so a list accepted here would be reported as shared and not enforced.
+        if networks.is_some() && cfg!(any(windows, target_os = "android")) {
+            return Err(Status::unimplemented(
+                "custom local networks are not supported on this platform",
+            ));
+        }
         // The count only: a custom network can be the user's own public range.
         log::debug!(
             "set_lan_networks({})",

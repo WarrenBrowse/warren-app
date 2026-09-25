@@ -475,7 +475,6 @@ impl TunnelStateMachine {
             #[cfg(target_os = "android")]
             initial_state: InitialFirewallState::None,
             allow_lan: args.settings.allow_lan,
-            lan_networks: args.settings.lan_networks.clone(),
             #[cfg(target_os = "linux")]
             linux_ids: args.linux_ids,
         };
