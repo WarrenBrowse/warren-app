@@ -536,6 +536,12 @@ pub enum DaemonCommand {
     SetRelaySettings(ResponseTx<(), settings::Error>, RelaySettings),
     /// Set the allow LAN setting.
     SetAllowLan(ResponseTx<(), settings::Error>, bool),
+    /// Set the networks shared while LAN access is allowed. `None` restores the built-in
+    /// private ranges. Validated by the caller.
+    SetLanNetworks(
+        ResponseTx<(), settings::Error>,
+        Option<Vec<ipnetwork::IpNetwork>>,
+    ),
     /// Persistent URL `Settings::warren_api_url`. Empty string ->
     /// unset (= None on the Settings side).
     SetWarrenApiUrl(ResponseTx<(), settings::Error>, String),
@@ -1748,6 +1754,7 @@ impl Daemon {
         let tunnel_state_machine_handle = tunnel_state_machine::spawn(
             tunnel_state_machine::InitialTunnelState {
                 allow_lan: settings.allow_lan,
+                lan_networks: settings.lan_networks(),
                 #[cfg(not(target_os = "android"))]
                 lockdown_mode: LockdownMode::from(settings.lockdown_mode),
                 dns_config: dns::addresses_from_options(&settings.tunnel_options.dns_options),
@@ -3050,6 +3057,7 @@ impl Daemon {
             ClearAccountHistory(tx) => self.on_clear_account_history(tx).await,
             SetRelaySettings(tx, update) => self.on_set_relay_settings(tx, update).await,
             SetAllowLan(tx, allow_lan) => self.on_set_allow_lan(tx, allow_lan).await,
+            SetLanNetworks(tx, networks) => self.on_set_lan_networks(tx, networks).await,
             SetWarrenApiUrl(tx, url) => self.on_set_warren_api_url(tx, url).await,
             SetWarrenNConnections(tx, n) => self.on_set_warren_n_connections(tx, n).await,
             SetWarrenMaxRateBps(tx, bps) => self.on_set_warren_max_rate_bps(tx, bps).await,
@@ -4604,6 +4612,7 @@ impl Daemon {
                 if settings_changed {
                     self.send_tunnel_command(TunnelCommand::AllowLan(
                         allow_lan,
+                        self.settings.lan_networks(),
                         oneshot_map(tx, |tx, ()| {
                             Self::oneshot_send(tx, Ok(()), "set_allow_lan response");
                         }),
@@ -4615,6 +4624,36 @@ impl Daemon {
             Err(e) => {
                 log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
                 Self::oneshot_send(tx, Err(e), "set_allow_lan response");
+            }
+        }
+    }
+
+    async fn on_set_lan_networks(
+        &mut self,
+        tx: ResponseTx<(), settings::Error>,
+        networks: Option<Vec<ipnetwork::IpNetwork>>,
+    ) {
+        match self
+            .settings
+            .update(move |settings| settings.custom_lan_networks = networks)
+            .await
+        {
+            Ok(settings_changed) => {
+                if settings_changed {
+                    self.send_tunnel_command(TunnelCommand::AllowLan(
+                        self.settings.allow_lan,
+                        self.settings.lan_networks(),
+                        oneshot_map(tx, |tx, ()| {
+                            Self::oneshot_send(tx, Ok(()), "set_lan_networks response");
+                        }),
+                    ));
+                } else {
+                    Self::oneshot_send(tx, Ok(()), "set_lan_networks response");
+                }
+            }
+            Err(e) => {
+                log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
+                Self::oneshot_send(tx, Err(e), "set_lan_networks response");
             }
         }
     }
@@ -5630,7 +5669,11 @@ impl Daemon {
         }
 
         let (tx, _rx) = oneshot::channel();
-        self.send_tunnel_command(TunnelCommand::AllowLan(self.settings.allow_lan, tx));
+        self.send_tunnel_command(TunnelCommand::AllowLan(
+            self.settings.allow_lan,
+            self.settings.lan_networks(),
+            tx,
+        ));
 
         let (tx, _rx) = oneshot::channel();
         let dns = dns::addresses_from_options(&self.settings.tunnel_options.dns_options);

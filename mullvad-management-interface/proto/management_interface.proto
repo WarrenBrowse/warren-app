@@ -40,6 +40,9 @@ service ManagementService {
   rpc GetSettings(google.protobuf.Empty) returns (Settings) {}
   rpc ResetSettings(google.protobuf.Empty) returns (google.protobuf.Empty) {}
   rpc SetAllowLan(google.protobuf.BoolValue) returns (google.protobuf.Empty) {}
+  // Replace the networks shared while allow_lan is on. `custom = false` resets
+  // them to the built-in private ranges and ignores `networks`.
+  rpc SetLanNetworks(LanNetworks) returns (google.protobuf.Empty) {}
   rpc SetShowBetaReleases(google.protobuf.BoolValue) returns (google.protobuf.Empty) {}
   rpc SetLockdownMode(google.protobuf.BoolValue) returns (google.protobuf.Empty) {}
   rpc SetAutoConnect(google.protobuf.BoolValue) returns (google.protobuf.Empty) {}
@@ -803,6 +806,17 @@ message Settings {
   WarrenCustomExitSettings warren_custom_exit = 21;
   // 0 = unset (unlimited). Cf. SetWarrenMaxRateBps rpc.
   uint64 warren_max_rate_bps = 22;
+  // The networks shared while allow_lan is on. Cf. SetLanNetworks rpc.
+  LanNetworks lan_networks = 23;
+}
+
+// The unicast networks reachable outside the tunnel while allow_lan is on,
+// in CIDR notation ("192.168.0.0/16", "400::/7"). The multicast and
+// broadcast ranges are always shared along with them and are not listed.
+message LanNetworks {
+  repeated string networks = 1;
+  // False while `networks` is the built-in list of private ranges.
+  bool custom = 2;
 }
 
 // Advanced "custom exit" override persisted in

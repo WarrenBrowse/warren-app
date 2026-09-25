@@ -650,6 +650,30 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
+    async fn set_lan_networks(&self, request: Request<types::LanNetworks>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
+        let networks =
+            types::custom_lan_networks(request.into_inner()).map_err(map_protobuf_type_err)?;
+        // Windows compiles its LAN filters into winfw and Android routes the built-in ranges
+        // around the VPN, so a list accepted here would be reported as shared and not enforced.
+        if networks.is_some() && cfg!(any(windows, target_os = "android")) {
+            return Err(Status::unimplemented(
+                "custom local networks are not supported on this platform",
+            ));
+        }
+        // The count only: a custom network can be the user's own public range.
+        log::debug!(
+            "set_lan_networks({})",
+            networks
+                .as_ref()
+                .map_or("default".to_owned(), |n| format!("{} custom", n.len()))
+        );
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(&call, DaemonCommand::SetLanNetworks(tx, networks))?;
+        self.wait_for_result(rx).await??;
+        Ok(Response::new(()))
+    }
+
     async fn set_warren_api_url(&self, request: Request<String>) -> ServiceResult<()> {
         let call = Self::call_of(&request);
         let warren_api_url = request.into_inner();
@@ -2611,8 +2635,8 @@ impl ManagementInterfaceEventBroadcaster {
     pub(crate) fn notify_settings(&self, settings: Settings) {
         log::debug!("Broadcasting new settings");
         self.notify(types::DaemonEvent {
-            event: Some(daemon_event::Event::Settings(types::Settings::from(
-                &settings,
+            event: Some(daemon_event::Event::Settings(Box::new(
+                types::Settings::from(&settings),
             ))),
         })
     }
@@ -3076,7 +3100,9 @@ mod tests {
     #[test]
     fn another_account_gets_settings_events_without_proxy_credentials() {
         let event = types::DaemonEvent {
-            event: Some(daemon_event::Event::Settings(settings_with_proxy_secrets())),
+            event: Some(daemon_event::Event::Settings(Box::new(
+                settings_with_proxy_secrets(),
+            ))),
         };
 
         let Some(types::DaemonEvent {
@@ -3087,8 +3113,8 @@ mod tests {
         };
         let mut expected = settings_with_proxy_secrets();
         withhold_settings_secrets(&mut expected, false);
-        assert_eq!(settings, expected);
-        assert_ne!(settings, settings_with_proxy_secrets());
+        assert_eq!(*settings, expected);
+        assert_ne!(*settings, settings_with_proxy_secrets());
     }
 
     /// One broadcast, two subscribers: each gets what its own caller may see,

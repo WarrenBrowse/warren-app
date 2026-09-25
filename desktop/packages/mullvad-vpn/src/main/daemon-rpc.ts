@@ -496,6 +496,14 @@ export class DaemonRpc extends GrpcClient {
     await this.callBool(this.client.setAllowLan, allowLan);
   }
 
+  // `undefined` resets the list to the built-in private ranges.
+  public async setLanNetworks(networks?: string[]): Promise<void> {
+    const lanNetworks = new grpcTypes.LanNetworks();
+    lanNetworks.setCustom(networks !== undefined);
+    lanNetworks.setNetworksList(networks ?? []);
+    await this.call<grpcTypes.LanNetworks, Empty>(this.client.setLanNetworks, lanNetworks);
+  }
+
   // Persistent warren-api URL. Empty string → unset on the daemon
   // side (= fallback to upstream Mullvad backend). Daemon restart is
   // required to apply (see `resolve_warren_api_config` on the Rust

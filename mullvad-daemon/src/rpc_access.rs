@@ -82,6 +82,7 @@ rpc_classes! {
         GetSettings => ReadPublic,
         ResetSettings => ControlMachine,
         SetAllowLan => ControlMachine,
+        SetLanNetworks => ControlMachine,
         SetShowBetaReleases => ControlMachine,
         SetLockdownMode => ControlMachine,
         SetAutoConnect => ControlMachine,

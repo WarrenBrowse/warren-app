@@ -519,8 +519,16 @@ export type CustomListError = { type: 'name already exists' };
 
 export type AccessMethodExistsError = { type: 'name already exists' };
 
+// The unicast networks reachable outside the tunnel while local network sharing is on, in CIDR
+// notation. `custom` is false while they are the built-in private ranges.
+export interface ILanNetworks {
+  networks: string[];
+  custom: boolean;
+}
+
 export interface ISettings {
   allowLan: boolean;
+  lanNetworks: ILanNetworks;
   autoConnect: boolean;
   lockdownMode: boolean;
   showBetaReleases: boolean;

@@ -90,6 +90,7 @@ anyhow = { workspace = true }
 base64 = "0.22.0"
 chrono = { workspace = true }
 iana-time-zone = "0.1"
+ipnetwork = { workspace = true }
 clap = { workspace = true }
 either = "1.11"
 futures = { workspace = true }

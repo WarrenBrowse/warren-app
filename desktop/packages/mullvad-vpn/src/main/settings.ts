@@ -33,6 +33,9 @@ export default class Settings implements Readonly<ISettings> {
     IpcMainEventChannel.settings.handleSetAllowLan((allowLan) =>
       this.daemonRpc.setAllowLan(allowLan),
     );
+    IpcMainEventChannel.settings.handleSetLanNetworks((networks) =>
+      this.daemonRpc.setLanNetworks(networks),
+    );
     // IPC handler for the warren-api URL.
     IpcMainEventChannel.settings.handleSetWarrenApiUrl((url) =>
       this.daemonRpc.setWarrenApiUrl(url),
@@ -198,6 +201,9 @@ export default class Settings implements Readonly<ISettings> {
 
   public get allowLan() {
     return this.settingsValue.allowLan;
+  }
+  public get lanNetworks() {
+    return this.settingsValue.lanNetworks;
   }
   public get autoConnect() {
     return this.settingsValue.autoConnect;

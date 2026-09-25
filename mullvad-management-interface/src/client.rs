@@ -58,7 +58,7 @@ impl TryFrom<types::daemon_event::Event> for DaemonEvent {
             types::daemon_event::Event::TunnelState(state) => TunnelState::try_from(state)
                 .map(DaemonEvent::TunnelState)
                 .map_err(Error::InvalidResponse),
-            types::daemon_event::Event::Settings(settings) => Settings::try_from(settings)
+            types::daemon_event::Event::Settings(settings) => Settings::try_from(*settings)
                 .map(|settings| DaemonEvent::Settings(Box::new(settings)))
                 .map_err(Error::InvalidResponse),
             types::daemon_event::Event::RelayList(list) => RelayList::try_from(list)
@@ -275,6 +275,24 @@ impl MullvadProxyClient {
 
     pub async fn set_allow_lan(&mut self, state: bool) -> Result<()> {
         self.0.set_allow_lan(state).await?;
+        Ok(())
+    }
+
+    /// Replaces the networks shared while LAN access is allowed. `None` resets them to the
+    /// built-in private ranges.
+    pub async fn set_lan_networks(
+        &mut self,
+        networks: Option<Vec<ipnetwork::IpNetwork>>,
+    ) -> Result<()> {
+        let request = types::LanNetworks {
+            custom: networks.is_some(),
+            networks: networks
+                .unwrap_or_default()
+                .iter()
+                .map(ToString::to_string)
+                .collect(),
+        };
+        self.0.set_lan_networks(request).await?;
         Ok(())
     }
 
