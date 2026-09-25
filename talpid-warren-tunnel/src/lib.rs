@@ -718,7 +718,53 @@ impl NatPmpRule {
 /// [`NatPmpRuleId`] of the rule that produced it, so the daemon can keep
 /// a per-rule status entry (multi-port). The controller wraps this into a
 /// per-rule [`NatPmpEventObserver`] for each [`NatPmpManager`] it spawns.
-pub type NatPmpMappingObserver = std::sync::Arc<dyn Fn(NatPmpRuleId, NatPmpEvent) + Send + Sync>;
+pub type NatPmpMappingObserver =
+    std::sync::Arc<dyn Fn(NatPmpRuleId, NatPmpRuleEvent) + Send + Sync>;
+
+/// What the daemon learns about one rule.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum NatPmpRuleEvent {
+    /// An event of the rule's refresh loop, as the engine emitted it.
+    Engine(NatPmpEvent),
+    /// The exit refused the rule's Map request as not authorized, and the
+    /// controller asks again on its own after `retry_in_secs`.
+    Refused {
+        /// What the rule presented, which is what the refusal means.
+        refusal: NatPmpRefusal,
+        /// Seconds until the controller asks again.
+        retry_in_secs: u32,
+    },
+}
+
+/// Why the exit refused a rule as not authorized (RFC 6886 result code 2),
+/// as far as the client can tell (warren-core doc 105: the exit refuses a Map
+/// request that carries no valid entitlement envelope).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NatPmpRefusal {
+    /// The rule had no entitlement to present: the wallet's batch for this
+    /// epoch is used up, none could be minted, or the wallet is banned.
+    NoEntitlement,
+    /// The exit refused the entitlement the rule presented. Usually transient:
+    /// the serial is still held by this client's previous tunnel address
+    /// until the exit reaps it, or it belongs to the epoch that just ended.
+    EntitlementRefused,
+}
+
+/// Seconds the controller waits before asking again after the `attempt`-th
+/// refusal in a row (from 1). A refused entitlement usually heals within a
+/// cycle, so it is asked again soon; a missing one only comes back with the
+/// next mint or the next epoch, so it is asked for on the refresh cadence.
+#[must_use]
+pub fn nat_pmp_refusal_retry_secs(refusal: NatPmpRefusal, attempt: u32) -> u32 {
+    const REFUSED: [u32; 6] = [2, 10, 30, 60, 120, 300];
+    const MISSING: [u32; 5] = [30, 60, 120, 300, 600];
+    let table: &[u32] = match refusal {
+        NatPmpRefusal::EntitlementRefused => &REFUSED,
+        NatPmpRefusal::NoEntitlement => &MISSING,
+    };
+    let index = usize::try_from(attempt.saturating_sub(1)).unwrap_or(usize::MAX);
+    table.get(index).or(table.last()).copied().unwrap_or(600)
+}
 
 /// NAT-PMP port-forwarding configuration carried by
 /// [`WarrenTunnelParameters::nat_pmp`].
@@ -2938,7 +2984,43 @@ fn per_rule_observer(
     mapping_observer: NatPmpMappingObserver,
     id: NatPmpRuleId,
 ) -> NatPmpEventObserver {
-    std::sync::Arc::new(move |evt| mapping_observer(id, evt))
+    std::sync::Arc::new(move |evt| mapping_observer(id, NatPmpRuleEvent::Engine(evt)))
+}
+
+/// What a rule's refresh loop tells its controller besides the daemon.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum RuleSignal {
+    /// The exit refused the rule as not authorized; the loop has stopped.
+    Refused(NatPmpRuleId),
+    /// The exit granted or renewed the rule.
+    Granted(NatPmpRuleId),
+}
+
+/// [`per_rule_observer`] for the live-reconfig controller: a not-authorized
+/// refusal goes to the controller instead of the daemon, which hears it from
+/// the controller with what it means and when it is asked again.
+fn controller_rule_observer(
+    mapping_observer: NatPmpMappingObserver,
+    id: NatPmpRuleId,
+    signals: tokio::sync::mpsc::UnboundedSender<RuleSignal>,
+) -> NatPmpEventObserver {
+    std::sync::Arc::new(move |evt| match evt {
+        NatPmpEvent::Failed {
+            reason: NatPmpFailureReason::NotAuthorized,
+            ..
+        } => {
+            let _ = signals.send(RuleSignal::Refused(id));
+        }
+        evt => {
+            if matches!(
+                evt,
+                NatPmpEvent::Mapped { .. } | NatPmpEvent::Renewed { .. }
+            ) {
+                let _ = signals.send(RuleSignal::Granted(id));
+            }
+            mapping_observer(id, NatPmpRuleEvent::Engine(evt));
+        }
+    })
 }
 
 /// Controller task body: owns the [`NatPmpManager`] across its
@@ -2992,6 +3074,13 @@ async fn run_nat_pmp_controller(
         /// never draw the same entitlement and a rule that outlives an epoch
         /// picks up the next batch at the same slot.
         slot: usize,
+        /// Whether the last request carried an entitlement, which is what
+        /// tells a refused entitlement from a missing one.
+        presented: std::sync::Arc<std::sync::atomic::AtomicBool>,
+        /// Refusals in a row since the last grant.
+        refusals: u32,
+        /// When the controller asks again after a refusal.
+        retry_at: Option<tokio::time::Instant>,
     }
 
     /// The lowest slot no live rule holds. Reusing a freed slot (rather than
@@ -3012,6 +3101,7 @@ async fn run_nat_pmp_controller(
         bind_addr: Option<std::net::IpAddr>,
         mapping_observer: NatPmpMappingObserver,
         entitlements: Option<PortEntitlementProvider>,
+        signals: tokio::sync::mpsc::UnboundedSender<RuleSignal>,
     }
 
     /// Reconcile the running per-rule managers against a desired config:
@@ -3029,6 +3119,7 @@ async fn run_nat_pmp_controller(
             bind_addr,
             mapping_observer,
             entitlements,
+            signals,
         } = ctx;
         let (server, bind_addr) = (*server, *bind_addr);
         let cfg = desired.filter(|c| c.enabled);
@@ -3046,7 +3137,7 @@ async fn run_nat_pmp_controller(
             if let Some(mut st) = managers.remove(&id) {
                 log::info!("Warren NAT-PMP controller: releasing removed rule {id:?}");
                 st.manager.release().await;
-                mapping_observer(id, NatPmpEvent::Cancelled);
+                mapping_observer(id, NatPmpRuleEvent::Engine(NatPmpEvent::Cancelled));
             }
         }
 
@@ -3074,16 +3165,25 @@ async fn run_nat_pmp_controller(
                         st.manager.reconfigure(&per_rule_cfg).await;
                         st.applied_cfg = per_rule_cfg;
                         st.applied_at = std::time::Instant::now();
+                        st.refusals = 0;
+                        st.retry_at = None;
                     }
                 }
                 None => {
                     log::info!("Warren NAT-PMP controller: spawning refresh loop for rule {id:?}");
-                    let observer = per_rule_observer(mapping_observer.clone(), id);
+                    let observer =
+                        controller_rule_observer(mapping_observer.clone(), id, signals.clone());
                     let slot = lowest_free_slot(managers);
+                    let presented = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
                     let credential = entitlements.as_ref().map(|provider| {
                         let provider = provider.clone();
-                        std::sync::Arc::new(move || provider(slot))
-                            as warrenguard_natpmp_client::CredentialProvider
+                        let presented = presented.clone();
+                        std::sync::Arc::new(move || {
+                            let credential = provider(slot);
+                            presented
+                                .store(credential.is_some(), std::sync::atomic::Ordering::Relaxed);
+                            credential
+                        }) as warrenguard_natpmp_client::CredentialProvider
                     });
                     let manager = NatPmpManager::start_with_credential(
                         runtime,
@@ -3100,6 +3200,9 @@ async fn run_nat_pmp_controller(
                             applied_cfg: per_rule_cfg,
                             applied_at: std::time::Instant::now(),
                             slot,
+                            presented,
+                            refusals: 0,
+                            retry_at: None,
                         },
                     );
                 }
@@ -3112,13 +3215,79 @@ async fn run_nat_pmp_controller(
         initial_config.as_ref().is_some_and(|c| c.enabled)
     );
 
+    /// Records a rule signal and, on a refusal, tells the daemon what it
+    /// means and when the rule is asked for again.
+    fn on_signal(
+        managers: &mut HashMap<NatPmpRuleId, ManagerState>,
+        signal: RuleSignal,
+        mapping_observer: &NatPmpMappingObserver,
+    ) {
+        match signal {
+            RuleSignal::Granted(id) => {
+                if let Some(st) = managers.get_mut(&id) {
+                    st.refusals = 0;
+                    st.retry_at = None;
+                }
+            }
+            RuleSignal::Refused(id) => {
+                // A rule removed since its loop answered has nothing to retry.
+                let Some(st) = managers.get_mut(&id) else {
+                    return;
+                };
+                st.refusals = st.refusals.saturating_add(1);
+                let refusal = if st.presented.load(std::sync::atomic::Ordering::Relaxed) {
+                    NatPmpRefusal::EntitlementRefused
+                } else {
+                    NatPmpRefusal::NoEntitlement
+                };
+                let retry_in_secs = nat_pmp_refusal_retry_secs(refusal, st.refusals);
+                st.retry_at = Some(
+                    tokio::time::Instant::now()
+                        + std::time::Duration::from_secs(u64::from(retry_in_secs)),
+                );
+                log::info!(
+                    "Warren NAT-PMP controller: rule {id:?} refused ({refusal:?}), asking again in {retry_in_secs}s"
+                );
+                mapping_observer(
+                    id,
+                    NatPmpRuleEvent::Refused {
+                        refusal,
+                        retry_in_secs,
+                    },
+                );
+            }
+        }
+    }
+
+    /// Asks again for every refused rule whose wait is over.
+    async fn retry_due(managers: &mut HashMap<NatPmpRuleId, ManagerState>) {
+        let now = tokio::time::Instant::now();
+        for (id, st) in managers.iter_mut() {
+            if st.retry_at.is_some_and(|at| at <= now) {
+                st.retry_at = None;
+                log::info!("Warren NAT-PMP controller: asking again for refused rule {id:?}");
+                let cfg = st.applied_cfg.clone();
+                st.manager.reconfigure(&cfg).await;
+            }
+        }
+    }
+
+    async fn sleep_until_retry(at: Option<tokio::time::Instant>) {
+        match at {
+            Some(at) => tokio::time::sleep_until(at).await,
+            None => std::future::pending().await,
+        }
+    }
+
     let mut managers: HashMap<NatPmpRuleId, ManagerState> = HashMap::new();
+    let (signals, mut signals_rx) = tokio::sync::mpsc::unbounded_channel::<RuleSignal>();
     let ctx = SpawnContext {
         runtime,
         server,
         bind_addr,
-        mapping_observer,
+        mapping_observer: mapping_observer.clone(),
         entitlements,
+        signals,
     };
     reconcile(
         &mut managers,
@@ -3128,21 +3297,33 @@ async fn run_nat_pmp_controller(
     )
     .await;
 
-    while control_rx.changed().await.is_ok() {
-        // Borrow then clone immediately so we hold the watch's
-        // internal read lock for the minimal possible duration.
-        let new_cfg_opt: Option<NatPmpConfig> = control_rx.borrow().clone();
-        log::info!(
-            "Warren NAT-PMP controller: change observed (wanted_enabled={})",
-            new_cfg_opt.as_ref().is_some_and(|c| c.enabled)
-        );
-        reconcile(
-            &mut managers,
-            new_cfg_opt.as_ref(),
-            &ctx,
-            RECONFIGURE_DEBOUNCE,
-        )
-        .await;
+    loop {
+        let next_retry = managers.values().filter_map(|st| st.retry_at).min();
+        tokio::select! {
+            changed = control_rx.changed() => {
+                if changed.is_err() {
+                    break;
+                }
+                // Borrow then clone immediately so we hold the watch's
+                // internal read lock for the minimal possible duration.
+                let new_cfg_opt: Option<NatPmpConfig> = control_rx.borrow().clone();
+                log::info!(
+                    "Warren NAT-PMP controller: change observed (wanted_enabled={})",
+                    new_cfg_opt.as_ref().is_some_and(|c| c.enabled)
+                );
+                reconcile(
+                    &mut managers,
+                    new_cfg_opt.as_ref(),
+                    &ctx,
+                    RECONFIGURE_DEBOUNCE,
+                )
+                .await;
+            }
+            Some(signal) = signals_rx.recv() => {
+                on_signal(&mut managers, signal, &mapping_observer);
+            }
+            () = sleep_until_retry(next_retry) => retry_due(&mut managers).await,
+        }
     }
 
     // Watch sender dropped → daemon teardown. The managers drop here,
@@ -4810,12 +4991,177 @@ mod tests {
     type NatPmpEventLog = Arc<StdMutex<Vec<(NatPmpRuleId, NatPmpEvent)>>>;
 
     fn collector_observer() -> (NatPmpMappingObserver, NatPmpEventLog) {
-        let log: NatPmpEventLog = Arc::new(StdMutex::new(Vec::new()));
-        let log_for_obs = log.clone();
-        let observer: NatPmpMappingObserver = Arc::new(move |id, evt| {
-            log_for_obs.lock().expect("observer lock").push((id, evt));
-        });
+        let (observer, log, _refusals) = collector_observer_with_refusals();
         (observer, log)
+    }
+
+    /// `(rule, refusal, retry_in_secs)` per refusal the controller reported.
+    type RefusalLog = Arc<StdMutex<Vec<(NatPmpRuleId, NatPmpRefusal, u32)>>>;
+
+    fn collector_observer_with_refusals() -> (NatPmpMappingObserver, NatPmpEventLog, RefusalLog) {
+        let log: NatPmpEventLog = Arc::new(StdMutex::new(Vec::new()));
+        let refusals: RefusalLog = Arc::new(StdMutex::new(Vec::new()));
+        let log_for_obs = log.clone();
+        let refusals_for_obs = refusals.clone();
+        let observer: NatPmpMappingObserver = Arc::new(move |id, evt| match evt {
+            NatPmpRuleEvent::Engine(evt) => {
+                log_for_obs.lock().expect("observer lock").push((id, evt));
+            }
+            NatPmpRuleEvent::Refused {
+                refusal,
+                retry_in_secs,
+            } => {
+                refusals_for_obs
+                    .lock()
+                    .expect("observer lock")
+                    .push((id, refusal, retry_in_secs));
+            }
+        });
+        (observer, log, refusals)
+    }
+
+    /// Answers NotAuthorized (RFC result code 2) to the first `refusals`
+    /// Map requests, then grants `49000 + internal_port` like the other
+    /// stubs: the exit refusing an entitlement it will accept later.
+    async fn spawn_refusing_stub(refusals: usize) -> std::net::SocketAddr {
+        let sock = UdpSocket::bind("127.0.0.1:0").await.expect("bind");
+        let addr = sock.local_addr().expect("addr");
+        tokio::spawn(async move {
+            let mut buf = [0u8; 1024];
+            let mut refused = 0;
+            loop {
+                let (n, peer) = match sock.recv_from(&mut buf).await {
+                    Ok(v) => v,
+                    Err(_) => return,
+                };
+                let (internal_port, lifetime) = match parse_request(&buf[..n]) {
+                    Ok(warrenguard_natpmp_protocol::Request::Map {
+                        internal_port,
+                        lifetime_secs,
+                        ..
+                    }) => (internal_port, lifetime_secs),
+                    _ => continue,
+                };
+                let refuse = lifetime != 0 && refused < refusals;
+                if refuse {
+                    refused += 1;
+                }
+                let resp = serialize_response(&NatPmpResponse::Map {
+                    proto: MapProto::Udp,
+                    result_code: if refuse {
+                        ResultCode::NotAuthorized
+                    } else {
+                        ResultCode::Success
+                    },
+                    epoch_secs: 0,
+                    internal_port,
+                    external_port: if refuse {
+                        0
+                    } else {
+                        49000u16.saturating_add(internal_port)
+                    },
+                    lifetime_secs: if refuse { 0 } else { lifetime },
+                    rate_limit: None,
+                });
+                let _ = sock.send_to(&resp, peer).await;
+            }
+        });
+        addr
+    }
+
+    #[test]
+    fn a_refused_entitlement_is_asked_again_soon_then_less_often() {
+        let retry = |n| nat_pmp_refusal_retry_secs(NatPmpRefusal::EntitlementRefused, n);
+        assert_eq!(retry(1), 2);
+        assert!(retry(2) > retry(1));
+        assert_eq!(retry(99), 300, "the wait stops growing");
+    }
+
+    #[test]
+    fn a_missing_entitlement_is_asked_again_on_the_mint_cadence() {
+        let retry = |n| nat_pmp_refusal_retry_secs(NatPmpRefusal::NoEntitlement, n);
+        assert_eq!(retry(1), 30);
+        assert_eq!(retry(99), 600, "the wait stops growing");
+    }
+
+    #[tokio::test]
+    async fn a_refused_entitlement_is_reported_and_asked_again_until_granted() {
+        let server = spawn_refusing_stub(1).await;
+        let (observer, log, refusals) = collector_observer_with_refusals();
+        let cfg = natpmp_cfg(60);
+        let (_tx, rx) = tokio::sync::watch::channel(Some(cfg.clone()));
+        let entitlements: PortEntitlementProvider = Arc::new(|_| Some(vec![7; 8]));
+
+        let runtime = tokio::runtime::Handle::current();
+        let handle = runtime.spawn(run_nat_pmp_controller(
+            runtime.clone(),
+            server,
+            None,
+            observer,
+            Some(cfg),
+            rx,
+            Some(entitlements),
+        ));
+
+        let mapped = |log: &NatPmpEventLog| {
+            log.lock()
+                .unwrap()
+                .iter()
+                .any(|(_, e)| matches!(e, NatPmpEvent::Mapped { .. }))
+        };
+        for _ in 0..250 {
+            if mapped(&log) {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+        handle.abort();
+
+        let reported = refusals.lock().unwrap().clone();
+        assert_eq!(reported.len(), 1, "{reported:?}");
+        assert_eq!(reported[0].1, NatPmpRefusal::EntitlementRefused);
+        assert_eq!(reported[0].2, 2);
+        assert!(
+            !log.lock()
+                .unwrap()
+                .iter()
+                .any(|(_, e)| matches!(e, NatPmpEvent::Failed { .. })),
+            "a refusal the controller retries is not a failure of the rule"
+        );
+        assert!(mapped(&log), "the retry must reach the grant");
+    }
+
+    #[tokio::test]
+    async fn a_rule_with_no_entitlement_is_reported_as_such() {
+        let server = spawn_refusing_stub(usize::MAX).await;
+        let (observer, _log, refusals) = collector_observer_with_refusals();
+        let cfg = natpmp_cfg(60);
+        let (_tx, rx) = tokio::sync::watch::channel(Some(cfg.clone()));
+        let exhausted: PortEntitlementProvider = Arc::new(|_| None);
+
+        let runtime = tokio::runtime::Handle::current();
+        let handle = runtime.spawn(run_nat_pmp_controller(
+            runtime.clone(),
+            server,
+            None,
+            observer,
+            Some(cfg),
+            rx,
+            Some(exhausted),
+        ));
+
+        for _ in 0..100 {
+            if !refusals.lock().unwrap().is_empty() {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+        handle.abort();
+
+        let reported = refusals.lock().unwrap().clone();
+        assert_eq!(reported.len(), 1, "{reported:?}");
+        assert_eq!(reported[0].1, NatPmpRefusal::NoEntitlement);
+        assert_eq!(reported[0].2, 30);
     }
 
     fn natpmp_cfg(lifetime_secs: u32) -> NatPmpConfig {

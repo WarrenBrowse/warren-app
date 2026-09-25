@@ -22,6 +22,9 @@ tokio = { workspace = true, features = ["io-util", "macros", "net", "rt", "sync"
 tonic = { workspace = true }
 tower = { workspace = true }
 vec1 = { workspace = true }
+# The wallet's port-forward standing travels on the wire as the model the
+# daemon and the mobile FFI crates share.
+warren-standing = { path = "../warren-standing" }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros", "rt"] }

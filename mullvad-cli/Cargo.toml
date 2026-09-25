@@ -37,6 +37,9 @@ thiserror = { workspace = true }
 # `warren version` states the compiled environment and its API host without
 # needing a daemon to answer.
 warren-product-env = { path = "../warren-product-env" }
+# `account standing` and `port-forward status` print the wallet's
+# port-forward warnings from the model the daemon publishes.
+warren-standing = { path = "../warren-standing" }
 # `process` and `time`: `port-forward status --exec` spawns the user's hook
 # through the platform's shell and kills it when it outlives its budget.
 tokio = { workspace = true, features = [

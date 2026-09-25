@@ -223,6 +223,13 @@ service ManagementService {
   // event (Mapped / Renewed / Failed / Cancelled).
   rpc NatPmpStatusUpdates(google.protobuf.Empty) returns (stream NatPmpStatus) {}
 
+  // Port-forward abuse standing of the wallet (warren-core doc 105), asked
+  // of the API now rather than read from the last poll, which
+  // WarrenStatus.account_standing carries. Owner-only: the strikes name the
+  // ports the account forwarded and the cases against it. UNAVAILABLE when
+  // the API cannot be reached, FAILED_PRECONDITION without a wallet.
+  rpc GetWarrenAccountStanding(google.protobuf.Empty) returns (WarrenAccountStanding) {}
+
   // Account management
   rpc CreateNewAccount(google.protobuf.Empty) returns (google.protobuf.StringValue) {}
   rpc LoginAccount(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
@@ -1000,6 +1007,75 @@ message WarrenStatus {
   // one. Empty in the steady state; the empty list is also how a
   // withdrawal clears the card.
   repeated WarrenAnnouncement announcements = 18;
+  // Port-forward abuse standing of the wallet, from the last poll of the
+  // standing endpoint or from an issuer that refused the wallet as banned
+  // (warren-core doc 105). Absent until one of them answered, and without a
+  // wallet. Withheld from a caller that may not see the owner's identity: it
+  // names the ports the account forwarded and the cases against it.
+  WarrenAccountStanding account_standing = 19;
+}
+
+// The wallet's port-forward abuse standing.
+message WarrenAccountStanding {
+  // Strikes still inside the sliding window, oldest first.
+  repeated WarrenAccountStrike strikes = 1;
+  // Live strikes that ban the account (3). 0 while only an issuer's ban
+  // refusal is known: that answer does not carry it.
+  uint32 threshold = 2;
+  // Length of the sliding window in days (90), 0 when unknown as above.
+  uint32 window_days = 3;
+  // The ban in force. Absent in good standing.
+  WarrenAccountBan ban = 4;
+}
+
+// One strike: a forwarded port closed after an abuse report.
+message WarrenAccountStrike {
+  // Day of the strike, midnight UTC, Unix seconds.
+  uint64 day_unix_secs = 1;
+  WarrenAbuseCategory category = 2;
+  // ISO 3166 alpha-2 country of the exit that held the port, when known.
+  optional string exit_country = 3;
+  // The forwarded public port that was closed.
+  uint32 port = 4;
+  // Reference to quote when contesting the strike.
+  string case_reference = 5;
+}
+
+enum WarrenAbuseCategory {
+  // Any category this build does not know.
+  WARREN_ABUSE_OTHER = 0;
+  WARREN_ABUSE_COPYRIGHT = 1;
+  WARREN_ABUSE_MALWARE_C2 = 2;
+  WARREN_ABUSE_SPAM = 3;
+  WARREN_ABUSE_SCANNING = 4;
+  WARREN_ABUSE_PHISHING = 5;
+  WARREN_ABUSE_CSAM = 6;
+}
+
+message WarrenAccountBan {
+  WarrenBanReason reason = 1;
+  // When the ban took effect. Absent when it is known from an issuer's
+  // refusal only.
+  optional uint64 banned_at_unix_secs = 2;
+  // When it lapses on its own. Absent for a ban that does not lapse.
+  optional uint64 lapses_at_unix_secs = 3;
+}
+
+enum WarrenBanReason {
+  // Any other revocation.
+  WARREN_BAN_OTHER = 0;
+  // Three port-forward abuse strikes inside the window.
+  WARREN_BAN_PORT_FORWARDING_ABUSE = 1;
+}
+
+// A strike this device has not warned about yet. Sent once per strike on
+// the event stream, owner-only, so a UI raises one notification per strike.
+message WarrenAccountStrikeNotice {
+  WarrenAccountStrike strike = 1;
+  // Its rank among the live strikes, oldest first, from 1.
+  uint32 ordinal = 2;
+  // Live strikes that ban the account.
+  uint32 threshold = 3;
 }
 
 // One operator-published launch announcement, ready to render as a card.
@@ -1236,14 +1312,21 @@ message NatPmpStatus {
     SUGGESTED_PORT_IN_USE = 1;
     // Out of resources: pool exhausted, per-client quota, or rate limit.
     OUT_OF_RESOURCES = 2;
-    // Port forwarding not authorised (disabled exit-side / source not
-    // allowed).
+    // The exit refused the entitlement this rule presented. Usually
+    // transient (the entitlement is still held by this client's previous
+    // address, or belongs to the epoch that just ended): the daemon asks
+    // again after `retry_after_secs`.
     NOT_AUTHORIZED = 3;
+    // The rule had no entitlement to present (the wallet's batch for this
+    // epoch is used up, or none could be minted) and the exit refuses a
+    // request without one. The daemon asks again after `retry_after_secs`.
+    NO_ENTITLEMENT = 4;
   }
   optional ErrorReason error_reason = 5;
-  // Set when state == RATE_LIMITED. Seconds the user must wait before a
-  // rate-limit slot frees and a new port change is accepted. Drives the
-  // UI deban countdown.
+  // Set when state == RATE_LIMITED: seconds the user must wait before a
+  // rate-limit slot frees and a new port change is accepted, the UI deban
+  // countdown. Also set when state == FAILED with NOT_AUTHORIZED or
+  // NO_ENTITLEMENT: seconds until the daemon asks again on its own.
   optional uint32 retry_after_secs = 6;
   // Set when state == MAPPED. Per-source rate-limit slots still
   // available, as reported by the exit. The UI warns at <= 1 and blocks
@@ -1503,6 +1586,7 @@ message DaemonEvent {
     RemoveDeviceEvent remove_device = 6;
     AccessMethodSetting new_access_method = 7;
     LeakInfo leak_info = 8;
+    WarrenAccountStrikeNotice new_account_strike = 9;
   }
 }
 

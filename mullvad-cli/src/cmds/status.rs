@@ -59,6 +59,12 @@ impl Status {
                 DaemonEvent::NewAccessMethod(access_method) => {
                     print_debug_or_json(&args, "New access method", &access_method)?;
                 }
+                DaemonEvent::NewAccountStrike(notice) => {
+                    if !print_debug_or_json(&args, "New port forwarding warning", &notice)? {
+                        println!("{}", crate::standing::notice_line(&notice));
+                        println!("{}", crate::standing::CONTEST_LINE);
+                    }
+                }
                 DaemonEvent::LeakDetected(leak) => {
                     #[derive(Debug, Serialize)]
                     struct Leak {

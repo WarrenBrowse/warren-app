@@ -166,6 +166,30 @@ fn nat_pmp_mapping_to_proto(
             error_reason: Some(nat_pmp_error_reason_to_i32(reason)),
             ..base
         },
+        NatPmpStateSnapshot::Refused {
+            refusal,
+            retry_in_secs,
+        } => {
+            use talpid_warren_tunnel::NatPmpRefusal;
+            use types::nat_pmp_status::ErrorReason;
+            let (reason, what) = match refusal {
+                NatPmpRefusal::NoEntitlement => (
+                    ErrorReason::NoEntitlement,
+                    "no port entitlement left to present",
+                ),
+                NatPmpRefusal::EntitlementRefused => (
+                    ErrorReason::NotAuthorized,
+                    "the exit refused this port's entitlement",
+                ),
+            };
+            Mapping {
+                state: State::Failed as i32,
+                error_message: Some(format!("{what}, asking again in {retry_in_secs}s")),
+                error_reason: Some(reason as i32),
+                retry_after_secs: Some(*retry_in_secs),
+                ..base
+            }
+        }
     }
 }
 
@@ -293,17 +317,24 @@ fn warren_status_snapshot_to_proto(
                 voucher_code: a.voucher_code,
             })
             .collect(),
+        account_standing: snap
+            .account_standing
+            .as_ref()
+            .map(types::WarrenAccountStanding::from),
     }
 }
 
 /// Empties every account-bound secret the status carries unless the caller
 /// may see the owner's identity.
 ///
-/// Today that is the announcement voucher code, a bearer token worth a month
-/// of service. Every local account may read the status, and should be able
-/// to, so a code riding this snapshot would be the owner's voucher handed to
-/// every other account on the machine. The operator's own text is not
-/// withheld: the card still reads exactly as published, without the code.
+/// The announcement voucher code is a bearer token worth a month of service.
+/// Every local account may read the status, and should be able to, so a code
+/// riding this snapshot would be the owner's voucher handed to every other
+/// account on the machine. The operator's own text is not withheld: the card
+/// still reads exactly as published, without the code.
+///
+/// The account standing names the ports the owner forwarded and the abuse
+/// cases against the account, which is the owner's business alone.
 fn withhold_account_secrets(status: &mut types::WarrenStatus, may_see_secrets: bool) {
     if may_see_secrets {
         return;
@@ -311,6 +342,7 @@ fn withhold_account_secrets(status: &mut types::WarrenStatus, may_see_secrets: b
     for announcement in &mut status.announcements {
         announcement.voucher_code = None;
     }
+    status.account_standing = None;
 }
 
 /// Empties the credentials of a custom API access method: a proxy's
@@ -376,7 +408,9 @@ fn withhold_event_identity(
     match event.event.as_mut()? {
         daemon_event::Event::Settings(settings) => withhold_settings_secrets(settings, false),
         daemon_event::Event::NewAccessMethod(method) => withhold_access_method_secrets(method),
-        daemon_event::Event::Device(_) | daemon_event::Event::RemoveDevice(_) => return None,
+        daemon_event::Event::Device(_)
+        | daemon_event::Event::RemoveDevice(_)
+        | daemon_event::Event::NewAccountStrike(_) => return None,
         daemon_event::Event::TunnelState(_)
         | daemon_event::Event::RelayList(_)
         | daemon_event::Event::VersionInfo(_)
@@ -1014,6 +1048,26 @@ impl ManagementService for ManagementServiceImpl {
             // error can quote the request.
             Err(crate::ForumReportSignError::Build(_)) => Err(Status::invalid_argument(
                 "report_json must be a JSON object without a log_gz_b64 field",
+            )),
+        }
+    }
+
+    async fn get_warren_account_standing(
+        &self,
+        request: Request<()>,
+    ) -> ServiceResult<types::WarrenAccountStanding> {
+        use crate::warren_account_standing::FetchError;
+        let call = Self::call_of(&request);
+        log::debug!("get_warren_account_standing");
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(&call, DaemonCommand::GetWarrenAccountStanding(tx))?;
+        match self.wait_for_result(rx).await? {
+            Ok(standing) => Ok(Response::new(types::WarrenAccountStanding::from(&standing))),
+            Err(FetchError::NoWallet) => {
+                Err(Status::failed_precondition("no Warren wallet is installed"))
+            }
+            Err(FetchError::Api(_) | FetchError::Stopped) => Err(Status::unavailable(
+                "the account standing could not be fetched",
             )),
         }
     }
@@ -2744,6 +2798,17 @@ impl ManagementInterfaceEventBroadcaster {
         })
     }
 
+    /// Notify that a port-forward abuse strike this device had not warned
+    /// about yet is live. Sent once per strike; owner-only.
+    pub(crate) fn notify_new_account_strike(&self, notice: &warren_standing::NewStrike) {
+        log::debug!("Broadcasting a new account strike");
+        self.notify(types::DaemonEvent {
+            event: Some(daemon_event::Event::NewAccountStrike(
+                types::WarrenAccountStrikeNotice::from(notice),
+            )),
+        })
+    }
+
     /// Notify that the api access method changed.
     pub(crate) fn notify_new_access_method_event(
         &self,
@@ -2979,6 +3044,108 @@ mod tests {
             status.announcements[0].voucher_code.as_deref(),
             Some("ABCDEFGHJKMNPQRS")
         );
+    }
+
+    fn refused_rule(
+        refusal: talpid_warren_tunnel::NatPmpRefusal,
+    ) -> crate::warren_status::NatPmpMappingSnapshot {
+        crate::warren_status::NatPmpMappingSnapshot {
+            internal_port: 6881,
+            protocol: talpid_warren_tunnel::NatPmpProto::Both,
+            state: crate::warren_status::NatPmpStateSnapshot::Refused {
+                refusal,
+                retry_in_secs: 30,
+            },
+        }
+    }
+
+    #[test]
+    fn a_rule_with_no_entitlement_says_so_and_when_it_is_asked_again() {
+        let mapping = super::nat_pmp_mapping_to_proto(&refused_rule(
+            talpid_warren_tunnel::NatPmpRefusal::NoEntitlement,
+        ));
+
+        assert_eq!(mapping.state, types::nat_pmp_status::State::Failed as i32);
+        assert_eq!(
+            mapping.error_reason,
+            Some(types::nat_pmp_status::ErrorReason::NoEntitlement as i32)
+        );
+        assert_eq!(mapping.retry_after_secs, Some(30));
+        assert_eq!(
+            mapping.error_message.as_deref(),
+            Some("no port entitlement left to present, asking again in 30s")
+        );
+    }
+
+    #[test]
+    fn a_refused_entitlement_reads_as_not_authorized() {
+        let mapping = super::nat_pmp_mapping_to_proto(&refused_rule(
+            talpid_warren_tunnel::NatPmpRefusal::EntitlementRefused,
+        ));
+
+        assert_eq!(
+            mapping.error_reason,
+            Some(types::nat_pmp_status::ErrorReason::NotAuthorized as i32)
+        );
+        assert_eq!(mapping.retry_after_secs, Some(30));
+    }
+
+    fn a_strike() -> types::WarrenAccountStrike {
+        types::WarrenAccountStrike {
+            day_unix_secs: 1_790_035_200,
+            category: types::WarrenAbuseCategory::WarrenAbuseCopyright as i32,
+            exit_country: Some("FI".to_owned()),
+            port: 51413,
+            case_reference: "PF-2026-0042".to_owned(),
+        }
+    }
+
+    fn status_with_a_strike() -> types::WarrenStatus {
+        types::WarrenStatus {
+            account_standing: Some(types::WarrenAccountStanding {
+                strikes: vec![a_strike()],
+                threshold: 3,
+                window_days: 90,
+                ban: None,
+            }),
+            ..Default::default()
+        }
+    }
+
+    /// The standing names the ports the owner forwarded and the abuse cases
+    /// against the account: another local account reads none of it.
+    #[test]
+    fn a_caller_that_does_not_own_the_wallet_reads_no_standing() {
+        let mut status = status_with_a_strike();
+
+        withhold_account_secrets(&mut status, false);
+
+        assert_eq!(status.account_standing, None);
+    }
+
+    #[test]
+    fn the_wallet_owner_reads_its_standing() {
+        let mut status = status_with_a_strike();
+
+        withhold_account_secrets(&mut status, true);
+
+        assert_eq!(status, status_with_a_strike());
+    }
+
+    #[test]
+    fn another_account_gets_no_strike_notice_and_the_owner_does() {
+        let notice = types::DaemonEvent {
+            event: Some(daemon_event::Event::NewAccountStrike(
+                types::WarrenAccountStrikeNotice {
+                    strike: Some(a_strike()),
+                    ordinal: 1,
+                    threshold: 3,
+                },
+            )),
+        };
+
+        assert_eq!(withhold_event_identity(notice.clone(), false), None);
+        assert_eq!(withhold_event_identity(notice.clone(), true), Some(notice));
     }
 
     fn custom_method(proxy: types::custom_proxy::ProxyMethod) -> types::AccessMethodSetting {

@@ -271,6 +271,9 @@ struct InnerParametersGenerator {
     /// the connection pool survives between asks. Built lazily because the
     /// address-cache resolver it picks up is installed after the daemon boots.
     warren_api_transport: Option<crate::warren_api_transport::WarrenApiTransport>,
+    /// Where the token and entitlement refresh tasks report an issuer that
+    /// refused the wallet as banned. Set once at boot.
+    warren_standing: Option<crate::warren_account_standing::StandingMonitor>,
     /// TOFU pubkey-pinning table, keyed by `exit_id` hex.
     /// Refreshed from `Settings::warren_pinned_exit_pubkeys` on every
     /// `set_settings` call. The verify hook in
@@ -436,6 +439,7 @@ impl ParametersGenerator {
             warren_migration_candidates: std::collections::VecDeque::new(),
             warren_api_url,
             warren_api_transport: None,
+            warren_standing: None,
             warren_pinned_exit_pubkeys: mullvad_types::settings::WarrenPinnedExitPubkeys::default(),
             warren_pin_update_tx: None,
             last_warren_location: None,
@@ -463,6 +467,15 @@ impl ParametersGenerator {
         tx: Option<tokio::sync::mpsc::UnboundedSender<WarrenPinUpdate>>,
     ) {
         self.0.lock().await.warren_pin_update_tx = tx;
+    }
+
+    /// Wire the account standing monitor the credential refresh tasks report
+    /// a ban refusal to. Called once at boot.
+    pub async fn set_warren_standing_monitor(
+        &self,
+        monitor: crate::warren_account_standing::StandingMonitor,
+    ) {
+        self.0.lock().await.warren_standing = Some(monitor);
     }
 
     /// Outcome of `trust_new_exit_key` consumed by the
@@ -1070,14 +1083,19 @@ impl ParametersGenerator {
             inner.warren_api_url.as_ref(),
             inner.warren_identity_seed.as_ref(),
         ) {
-            params.session_token_provider =
-                Some(crate::warren_token_provider::provider_for(api_url, seed));
+            params.session_token_provider = Some(crate::warren_token_provider::provider_for(
+                api_url,
+                seed,
+                inner.warren_standing.as_ref(),
+            ));
             // Port entitlements ride the same wallet and the same coarse
-            // refresh: without one, every exit applies its per-session quota
-            // and a subscriber's forwarded ports multiply by the number of
-            // sessions it holds (warren-core doc 99).
-            params.port_entitlement_provider =
-                Some(crate::warren_port_entitlements::provider_for(api_url, seed));
+            // refresh. The exit refuses a Map request without one (warren-core
+            // doc 105), so a wallet without this provider forwards no port.
+            params.port_entitlement_provider = Some(crate::warren_port_entitlements::provider_for(
+                api_url,
+                seed,
+                inner.warren_standing.as_ref(),
+            ));
         }
         // TOFU pubkey-pinning verify hook,
         // active on both the single-hop and the multi-hop paths.
@@ -1482,12 +1500,18 @@ impl ParametersGenerator {
         {
             let cache_for_nat_pmp = inner.warren_status_cache.clone();
             let sticky = inner.warren_nat_pmp_sticky.clone();
-            let observer: NatPmpMappingObserver = Arc::new(move |id, event| {
-                // Remember the granted external port per rule so the next exit
-                // is asked for the SAME port (the port follows the client
-                // across a server change).
-                record_granted_external_port(&sticky, id, &event);
-                cache_for_nat_pmp.record_nat_pmp_event(id, event);
+            let observer: NatPmpMappingObserver = Arc::new(move |id, event| match event {
+                talpid_warren_tunnel::NatPmpRuleEvent::Engine(event) => {
+                    // Remember the granted external port per rule so the next
+                    // exit is asked for the SAME port (the port follows the
+                    // client across a server change).
+                    record_granted_external_port(&sticky, id, &event);
+                    cache_for_nat_pmp.record_nat_pmp_event(id, event);
+                }
+                talpid_warren_tunnel::NatPmpRuleEvent::Refused {
+                    refusal,
+                    retry_in_secs,
+                } => cache_for_nat_pmp.record_nat_pmp_refusal(id, refusal, retry_in_secs),
             });
             params.nat_pmp_observer = Some(observer);
         }

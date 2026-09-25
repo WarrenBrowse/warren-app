@@ -18,6 +18,7 @@ mod split_tunnel;
 mod states;
 mod version;
 mod warren_diagnostics;
+mod warren_standing;
 mod wireguard;
 
 #[derive(thiserror::Error, Debug)]

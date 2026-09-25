@@ -70,6 +70,7 @@ interface IManagementServiceService extends grpc.ServiceDefinition<grpc.UntypedS
     getNatPmpSettings: IManagementServiceService_IGetNatPmpSettings;
     setNatPmpSettings: IManagementServiceService_ISetNatPmpSettings;
     natPmpStatusUpdates: IManagementServiceService_INatPmpStatusUpdates;
+    getWarrenAccountStanding: IManagementServiceService_IGetWarrenAccountStanding;
     createNewAccount: IManagementServiceService_ICreateNewAccount;
     loginAccount: IManagementServiceService_ILoginAccount;
     logoutAccount: IManagementServiceService_ILogoutAccount;
@@ -654,6 +655,15 @@ interface IManagementServiceService_INatPmpStatusUpdates extends grpc.MethodDefi
     requestDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
     responseSerialize: grpc.serialize<management_interface_pb.NatPmpStatus>;
     responseDeserialize: grpc.deserialize<management_interface_pb.NatPmpStatus>;
+}
+interface IManagementServiceService_IGetWarrenAccountStanding extends grpc.MethodDefinition<google_protobuf_empty_pb.Empty, management_interface_pb.WarrenAccountStanding> {
+    path: "/mullvad_daemon.management_interface.ManagementService/GetWarrenAccountStanding";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
+    requestDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
+    responseSerialize: grpc.serialize<management_interface_pb.WarrenAccountStanding>;
+    responseDeserialize: grpc.deserialize<management_interface_pb.WarrenAccountStanding>;
 }
 interface IManagementServiceService_ICreateNewAccount extends grpc.MethodDefinition<google_protobuf_empty_pb.Empty, google_protobuf_wrappers_pb.StringValue> {
     path: "/mullvad_daemon.management_interface.ManagementService/CreateNewAccount";
@@ -1266,6 +1276,7 @@ export interface IManagementServiceServer extends grpc.UntypedServiceImplementat
     getNatPmpSettings: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, management_interface_pb.NatPmpSettings>;
     setNatPmpSettings: grpc.handleUnaryCall<management_interface_pb.NatPmpSettings, google_protobuf_empty_pb.Empty>;
     natPmpStatusUpdates: grpc.handleServerStreamingCall<google_protobuf_empty_pb.Empty, management_interface_pb.NatPmpStatus>;
+    getWarrenAccountStanding: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, management_interface_pb.WarrenAccountStanding>;
     createNewAccount: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, google_protobuf_wrappers_pb.StringValue>;
     loginAccount: grpc.handleUnaryCall<google_protobuf_wrappers_pb.StringValue, google_protobuf_empty_pb.Empty>;
     logoutAccount: grpc.handleUnaryCall<google_protobuf_wrappers_pb.StringValue, google_protobuf_empty_pb.Empty>;
@@ -1501,6 +1512,9 @@ export interface IManagementServiceClient {
     setNatPmpSettings(request: management_interface_pb.NatPmpSettings, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     natPmpStatusUpdates(request: google_protobuf_empty_pb.Empty, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<management_interface_pb.NatPmpStatus>;
     natPmpStatusUpdates(request: google_protobuf_empty_pb.Empty, metadata?: grpc.Metadata, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<management_interface_pb.NatPmpStatus>;
+    getWarrenAccountStanding(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: management_interface_pb.WarrenAccountStanding) => void): grpc.ClientUnaryCall;
+    getWarrenAccountStanding(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.WarrenAccountStanding) => void): grpc.ClientUnaryCall;
+    getWarrenAccountStanding(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.WarrenAccountStanding) => void): grpc.ClientUnaryCall;
     createNewAccount(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
     createNewAccount(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
     createNewAccount(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
@@ -1856,6 +1870,9 @@ export class ManagementServiceClient extends grpc.Client implements IManagementS
     public setNatPmpSettings(request: management_interface_pb.NatPmpSettings, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public natPmpStatusUpdates(request: google_protobuf_empty_pb.Empty, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<management_interface_pb.NatPmpStatus>;
     public natPmpStatusUpdates(request: google_protobuf_empty_pb.Empty, metadata?: grpc.Metadata, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<management_interface_pb.NatPmpStatus>;
+    public getWarrenAccountStanding(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: management_interface_pb.WarrenAccountStanding) => void): grpc.ClientUnaryCall;
+    public getWarrenAccountStanding(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.WarrenAccountStanding) => void): grpc.ClientUnaryCall;
+    public getWarrenAccountStanding(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.WarrenAccountStanding) => void): grpc.ClientUnaryCall;
     public createNewAccount(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
     public createNewAccount(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
     public createNewAccount(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;

@@ -113,6 +113,9 @@ warren-product-env = { path = "../warren-product-env" }
 # the crate the Android and iOS FFI share, so the desktop signs the same bytes
 # the mobile clients send; the daemon only supplies the signer.
 warren-forum = { path = "../warren-forum" }
+# The wallet's port-forward strikes and ban, merged from the standing poll and
+# the issuers' ban refusals the same way on every client.
+warren-standing = { path = "../warren-standing" }
 # Warren fork - fetches `GET /v1/exits` at boot to bootstrap
 # `<cache_dir>/warren-relays.json` from warren-api. Public endpoint
 # (no client signature); the server-signed v2 response is verified at

@@ -3,6 +3,7 @@ use clap::Parser;
 
 mod cmds;
 mod format;
+mod standing;
 use cmds::*;
 
 pub const BIN_NAME: &str = env!("CARGO_BIN_NAME");

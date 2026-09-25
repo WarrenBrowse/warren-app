@@ -116,6 +116,9 @@ rpc_classes! {
         GetNatPmpSettings => ReadPublic,
         SetNatPmpSettings => ControlMachine,
         NatPmpStatusUpdates => ReadPublic,
+        // The strikes name the ports the owner forwarded and the cases
+        // against the account.
+        GetWarrenAccountStanding => Identity,
 
         // The wallet and the forum signatures made with its key.
         GetWarrenMnemonic => Identity,

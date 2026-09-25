@@ -12,6 +12,10 @@
 //! logged-out sentinel wallet with no subscription) the provider returns an
 //! empty stack and the supervisor falls back to the v6 wallet-signed path, so
 //! the tunnel always works.
+//!
+//! An issuer that refuses the wallet as banned is reported to the account
+//! standing monitor, which blocks the tunnel with the suspension before any
+//! exit is dialed (warren-core doc 105 §5.3).
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -21,6 +25,7 @@ use talpid_warren_tunnel::{SessionTokenProvider, make_session_token_provider};
 use warren_api::{TokenManager, WarrenApiClient};
 use warren_identity::WarrenIdentity;
 
+use crate::warren_account_standing::StandingMonitor;
 use crate::warren_api_transport::WarrenApiTransport;
 use crate::warren_sdk_client::SharedWarrenSeed;
 
@@ -37,7 +42,7 @@ fn now_unix_secs() -> u64 {
         .unwrap_or(0)
 }
 
-fn spawn_refresh(manager: Arc<Manager>) {
+fn spawn_refresh(manager: Arc<Manager>, wallet: String, standing: Option<StandingMonitor>) {
     tokio::spawn(async move {
         // First tick fires immediately (top up before the first connect), then
         // every 10 min. The manager mints only epochs it has not minted yet.
@@ -46,6 +51,7 @@ fn spawn_refresh(manager: Arc<Manager>) {
             tick.tick().await;
             if let Err(e) = manager.refresh_auto(now_unix_secs()).await {
                 log::warn!("Warren v7 token refresh failed (keeping existing tokens): {e}");
+                crate::warren_account_standing::report_if_banned(standing.as_ref(), &wallet, &e);
             }
         }
     });
@@ -54,7 +60,12 @@ fn spawn_refresh(manager: Arc<Manager>) {
 /// The v7 token provider for `seed`'s wallet against `api_url`. Builds (and
 /// starts refreshing) a manager the first time a wallet is seen; reuses it
 /// after. The returned closure pops one token per session and never mints.
-pub(crate) fn provider_for(api_url: &str, seed: &SharedWarrenSeed) -> SessionTokenProvider {
+/// A ban the issuer answers goes to `standing`.
+pub(crate) fn provider_for(
+    api_url: &str,
+    seed: &SharedWarrenSeed,
+    standing: Option<&StandingMonitor>,
+) -> SessionTokenProvider {
     let seed_bytes: [u8; 32] = **seed.read().expect("warren seed RwLock poisoned");
     let key = WarrenIdentity::from_seed(&seed_bytes).address();
 
@@ -62,7 +73,7 @@ pub(crate) fn provider_for(api_url: &str, seed: &SharedWarrenSeed) -> SessionTok
     let manager = {
         let mut guard = map.lock().expect("token manager map poisoned");
         guard
-            .entry(key)
+            .entry(key.clone())
             .or_insert_with(|| {
                 let client = WarrenApiClient::new(
                     api_url.to_owned(),
@@ -70,7 +81,7 @@ pub(crate) fn provider_for(api_url: &str, seed: &SharedWarrenSeed) -> SessionTok
                     WarrenApiTransport::new(),
                 );
                 let manager = Arc::new(TokenManager::new(Arc::new(client)));
-                spawn_refresh(manager.clone());
+                spawn_refresh(manager.clone(), key, standing.cloned());
                 manager
             })
             .clone()

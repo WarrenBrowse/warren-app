@@ -14,7 +14,9 @@ use std::time::{Duration, Instant};
 
 use std::collections::HashMap;
 
-use talpid_warren_tunnel::{NatPmpEvent, NatPmpFailureReason, NatPmpProto, NatPmpRuleId};
+use talpid_warren_tunnel::{
+    NatPmpEvent, NatPmpFailureReason, NatPmpProto, NatPmpRefusal, NatPmpRuleId,
+};
 use tokio::sync::watch;
 
 /// Snapshot of the NAT-PMP refresh loop, surfaced to the UI alongside
@@ -70,6 +72,15 @@ pub enum NatPmpStateSnapshot {
         /// show e.g. "this port is already in use" for a strict
         /// suggested-port rejection instead of a raw English string.
         reason: NatPmpFailureReason,
+    },
+    /// The exit refused the rule as not authorized, and the controller asks
+    /// again after `retry_in_secs`. The UI says whether the rule had no
+    /// entitlement to present or had it refused.
+    Refused {
+        /// What the rule presented.
+        refusal: NatPmpRefusal,
+        /// Seconds until the controller asks again, as of the refusal.
+        retry_in_secs: u32,
     },
 }
 
@@ -267,6 +278,11 @@ pub struct WarrenStatusSnapshot {
     /// renderer has no second query to make, and the daemon is the only
     /// side that holds the wallet the code was drawn for.
     pub announcements: Vec<crate::warren_announcements_updater::DisplayAnnouncement>,
+    /// Port-forward abuse standing of the wallet (warren-core doc 105), from
+    /// the last standing poll or an issuer's ban refusal. `None` until one of
+    /// them answered, and without a wallet. Account-bound: the management
+    /// interface withholds it from a caller that may not see the owner.
+    pub account_standing: Option<warren_standing::Standing>,
 }
 
 /// One other product environment, as the watcher last saw it.
@@ -319,6 +335,7 @@ impl Default for WarrenStatusSnapshot {
             foreign_environments: Vec::new(),
             env_yield: None,
             announcements: Vec::new(),
+            account_standing: None,
         }
     }
 }
@@ -363,6 +380,7 @@ struct InternalState {
     foreign_environments: Vec<ForeignEnvSnapshot>,
     env_yield: Option<EnvYieldSnapshot>,
     announcements: Vec<crate::warren_announcements_updater::DisplayAnnouncement>,
+    account_standing: Option<warren_standing::Standing>,
 }
 
 impl Default for InternalState {
@@ -387,6 +405,7 @@ impl Default for InternalState {
             foreign_environments: Vec::new(),
             env_yield: None,
             announcements: Vec::new(),
+            account_standing: None,
         }
     }
 }
@@ -460,6 +479,7 @@ impl WarrenStatusCache {
             foreign_environments: inner.foreign_environments.clone(),
             env_yield: inner.env_yield.clone(),
             announcements: inner.announcements.clone(),
+            account_standing: inner.account_standing.clone(),
         }
     }
 
@@ -644,6 +664,31 @@ impl WarrenStatusCache {
                     inner.nat_pmp.remove(&id);
                 }
             }
+            Self::snapshot_of(&inner)
+        };
+        let _ = self.tx.send_replace(snapshot);
+    }
+
+    /// Record that the exit refused `id` as not authorized and when the
+    /// controller asks again.
+    pub fn record_nat_pmp_refusal(
+        &self,
+        id: NatPmpRuleId,
+        refusal: NatPmpRefusal,
+        retry_in_secs: u32,
+    ) {
+        let snapshot = {
+            let mut inner = self
+                .state
+                .write()
+                .expect("warren_status state lock poisoned");
+            inner.nat_pmp.insert(
+                id,
+                NatPmpStateSnapshot::Refused {
+                    refusal,
+                    retry_in_secs,
+                },
+            );
             Self::snapshot_of(&inner)
         };
         let _ = self.tx.send_replace(snapshot);
@@ -881,6 +926,23 @@ impl WarrenStatusCache {
         let _ = self.tx.send_replace(snapshot);
     }
 
+    /// Record the wallet's port-forward standing. Idempotent: an equal
+    /// standing does not wake the UI.
+    pub fn set_account_standing(&self, standing: Option<warren_standing::Standing>) {
+        let snapshot = {
+            let mut inner = self
+                .state
+                .write()
+                .expect("warren_status state lock poisoned");
+            if inner.account_standing == standing {
+                return;
+            }
+            inner.account_standing = standing;
+            Self::snapshot_of(&inner)
+        };
+        let _ = self.tx.send_replace(snapshot);
+    }
+
     /// Push the state that is already held, unchanged.
     ///
     /// What a subscriber is shown is not only the state: the account-bound
@@ -1109,6 +1171,41 @@ mod tests {
         assert!(rx.has_changed().unwrap_or(false));
         let s = rx.borrow_and_update();
         assert!(!s.obfuscation_active);
+    }
+
+    fn banned_standing() -> warren_standing::Standing {
+        warren_standing::Standing::ban_only(warren_standing::Ban {
+            reason: warren_standing::BanReasonCode::PortForwardingAbuse,
+            banned_at_unix_secs: None,
+            lapses_at_unix_secs: Some(1_821_571_200),
+        })
+    }
+
+    #[test]
+    fn a_new_account_standing_is_published() {
+        let cache = WarrenStatusCache::new();
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+
+        cache.set_account_standing(Some(banned_standing()));
+
+        assert!(rx.has_changed().unwrap_or(false));
+        assert_eq!(
+            rx.borrow_and_update().account_standing,
+            Some(banned_standing())
+        );
+    }
+
+    #[test]
+    fn an_unchanged_account_standing_does_not_wake_the_ui() {
+        let cache = WarrenStatusCache::new();
+        cache.set_account_standing(Some(banned_standing()));
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+
+        cache.set_account_standing(Some(banned_standing()));
+
+        assert!(!rx.has_changed().unwrap_or(false));
     }
 
     #[test]
@@ -1454,6 +1551,21 @@ mod tests {
             }
             other => panic!("expected Failed, got {other:?}"),
         }
+    }
+
+    #[test]
+    fn a_refusal_is_recorded_with_its_meaning_and_its_retry() {
+        let cache = WarrenStatusCache::new();
+
+        cache.record_nat_pmp_refusal(rule(22), NatPmpRefusal::NoEntitlement, 30);
+
+        assert_eq!(
+            only_state(&cache),
+            NatPmpStateSnapshot::Refused {
+                refusal: NatPmpRefusal::NoEntitlement,
+                retry_in_secs: 30,
+            }
+        );
     }
 
     #[test]

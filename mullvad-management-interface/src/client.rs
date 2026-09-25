@@ -48,6 +48,8 @@ pub enum DaemonEvent {
     Device(DeviceEvent),
     NewAccessMethod(AccessMethodSetting),
     LeakDetected(LeakInfo),
+    /// A port-forward abuse strike this device had not warned about yet.
+    NewAccountStrike(warren_standing::NewStrike),
 }
 
 impl TryFrom<types::daemon_event::Event> for DaemonEvent {
@@ -82,6 +84,11 @@ impl TryFrom<types::daemon_event::Event> for DaemonEvent {
             }
             types::daemon_event::Event::LeakInfo(leak) => {
                 LeakInfo::try_from(leak).map(DaemonEvent::LeakDetected)
+            }
+            types::daemon_event::Event::NewAccountStrike(notice) => {
+                warren_standing::NewStrike::try_from(notice)
+                    .map(DaemonEvent::NewAccountStrike)
+                    .map_err(Error::InvalidResponse)
             }
         }
     }
@@ -413,6 +420,25 @@ impl MullvadProxyClient {
     ) -> Result<impl Stream<Item = Result<types::NatPmpStatus>>> {
         let listener = self.0.nat_pmp_status_updates(()).await?.into_inner();
         Ok(listener.map(|item| item.map_err(Error::from)))
+    }
+
+    /// The wallet's port-forward abuse standing, asked of the API now.
+    pub async fn get_warren_account_standing(&mut self) -> Result<warren_standing::Standing> {
+        let standing = self.0.get_warren_account_standing(()).await?.into_inner();
+        warren_standing::Standing::try_from(standing).map_err(Error::InvalidResponse)
+    }
+
+    /// The wallet's port-forward abuse standing as of the daemon's last
+    /// poll, without asking the API. `None` while nothing is known.
+    pub async fn get_cached_warren_account_standing(
+        &mut self,
+    ) -> Result<Option<warren_standing::Standing>> {
+        let status = self.0.get_warren_status(()).await?.into_inner();
+        status
+            .account_standing
+            .map(warren_standing::Standing::try_from)
+            .transpose()
+            .map_err(Error::InvalidResponse)
     }
 
     pub async fn set_wireguard_mtu(&mut self, mtu: Option<u16>) -> Result<()> {

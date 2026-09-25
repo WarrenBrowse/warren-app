@@ -9,8 +9,12 @@
 //! The provider is keyed by SLOT, not by rule: one entitlement buys one
 //! forwarded port, so the tunnel's controller owns which rule holds which
 //! slot and this module only answers "what does slot n hold right now".
-//! An exhausted batch answers `None`, and the exit then applies its
-//! configured per-client quota.
+//! An exhausted batch answers `None`: the rule's Map request then goes out
+//! without an entitlement envelope, the exit refuses it (warren-core doc 105),
+//! and the controller says so on the rule and asks again later.
+//!
+//! An issuer that refuses the wallet as banned is reported to the account
+//! standing monitor, like the session-token refresh does.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};
@@ -20,6 +24,7 @@ use talpid_warren_tunnel::PortEntitlementProvider;
 use warren_api::{PortEntitlementManager, WarrenApiClient};
 use warren_identity::WarrenIdentity;
 
+use crate::warren_account_standing::StandingMonitor;
 use crate::warren_api_transport::WarrenApiTransport;
 use crate::warren_sdk_client::SharedWarrenSeed;
 
@@ -37,20 +42,26 @@ fn now_unix_secs() -> u64 {
         .unwrap_or(0)
 }
 
-fn spawn_refresh(manager: Arc<Manager>) {
+fn spawn_refresh(manager: Arc<Manager>, wallet: String, standing: Option<StandingMonitor>) {
     tokio::spawn(async move {
         let mut tick = tokio::time::interval(Duration::from_secs(600));
         loop {
             tick.tick().await;
             if let Err(e) = manager.refresh_auto(now_unix_secs()).await {
                 log::warn!("Warren port-entitlement refresh failed (keeping existing): {e}");
+                crate::warren_account_standing::report_if_banned(standing.as_ref(), &wallet, &e);
             }
         }
     });
 }
 
-/// The entitlement provider for `seed`'s wallet against `api_url`.
-pub(crate) fn provider_for(api_url: &str, seed: &SharedWarrenSeed) -> PortEntitlementProvider {
+/// The entitlement provider for `seed`'s wallet against `api_url`. A ban the
+/// issuer answers goes to `standing`.
+pub(crate) fn provider_for(
+    api_url: &str,
+    seed: &SharedWarrenSeed,
+    standing: Option<&StandingMonitor>,
+) -> PortEntitlementProvider {
     let seed_bytes: [u8; 32] = **seed.read().expect("warren seed RwLock poisoned");
     let key = WarrenIdentity::from_seed(&seed_bytes).address();
 
@@ -58,7 +69,7 @@ pub(crate) fn provider_for(api_url: &str, seed: &SharedWarrenSeed) -> PortEntitl
     let manager = {
         let mut guard = map.lock().expect("entitlement manager map poisoned");
         guard
-            .entry(key)
+            .entry(key.clone())
             .or_insert_with(|| {
                 let client = WarrenApiClient::new(
                     api_url.to_owned(),
@@ -66,7 +77,7 @@ pub(crate) fn provider_for(api_url: &str, seed: &SharedWarrenSeed) -> PortEntitl
                     WarrenApiTransport::new(),
                 );
                 let manager = Arc::new(PortEntitlementManager::new(Arc::new(client)));
-                spawn_refresh(manager.clone());
+                spawn_refresh(manager.clone(), key, standing.cloned());
                 manager
             })
             .clone()

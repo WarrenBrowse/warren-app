@@ -47,6 +47,18 @@ pub enum Account {
         /// Voucher code to submit (prefer the prompt or standard input)
         voucher: Option<String>,
     },
+
+    /// Show the port-forwarding warnings on this account and any suspension,
+    /// asked of the Warren API now.
+    ///
+    /// A forwarded port reported for abuse is closed and recorded as a
+    /// warning; three warnings in 90 days suspend the account. Each warning
+    /// carries the case reference to quote when contesting it.
+    Standing {
+        /// Print the standing as one JSON object on one line.
+        #[arg(long)]
+        json: bool,
+    },
 }
 
 impl Account {
@@ -58,7 +70,27 @@ impl Account {
             Account::Logout => Self::logout(&mut rpc).await,
             Account::Get { verbose } => Self::get(&mut rpc, verbose).await,
             Account::Redeem { voucher } => Self::redeem_voucher(&mut rpc, voucher).await,
+            Account::Standing { json } => Self::standing(&mut rpc, json).await,
         }
+    }
+
+    async fn standing(rpc: &mut MullvadProxyClient, json: bool) -> Result<()> {
+        let standing = rpc
+            .get_warren_account_standing()
+            .await
+            .context("failed to fetch the account standing")?;
+        if json {
+            println!(
+                "{}",
+                serde_json::to_string(&crate::standing::StandingJson::from(&standing))
+                    .context("failed to format the account standing as JSON")?
+            );
+            return Ok(());
+        }
+        for line in crate::standing::report_lines(&standing) {
+            println!("{line}");
+        }
+        Ok(())
     }
 
     async fn create(rpc: &mut MullvadProxyClient) -> Result<()> {

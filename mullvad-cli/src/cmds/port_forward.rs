@@ -24,6 +24,9 @@ use mullvad_management_interface::{
 };
 use serde::Serialize;
 use std::{io::Write as _, time::Duration};
+use warren_standing::Standing;
+
+use crate::standing::{StandingJson, status_lines};
 
 /// Exit codes of `port-forward status --wait`, so a wrapper script can
 /// branch on the verdict without reading any output.
@@ -76,7 +79,9 @@ pub struct StatusArgs {
     /// Block until every rule holds a granted public port, then print
     /// the snapshot and exit 0. Exit 1 when there is no rule to wait for
     /// (port forwarding off, or no rule configured), exit 2 when
-    /// --timeout expires, exit 3 when a rule failed.
+    /// --timeout expires, exit 3 when a rule failed. A refusal the daemon
+    /// asks again for on its own (the exit refused the rule's entitlement)
+    /// keeps the wait going, like a rate limit.
     #[arg(long, conflicts_with = "watch")]
     wait: bool,
 
@@ -223,12 +228,13 @@ impl PortForward {
 
     async fn status(args: StatusArgs) -> Result<()> {
         let mut rpc = MullvadProxyClient::new().await?;
+        let mut standing_rpc = rpc.clone();
         // The daemon backs this stream with a `watch` channel, so the
         // first item is always the current snapshot: a single `next()`
         // gives the one-shot view without a separate query RPC.
         let mut stream = rpc.nat_pmp_status_updates().await?;
         if args.wait {
-            return Self::wait_for_grant(&mut stream, &args).await;
+            return Self::wait_for_grant(&mut stream, &mut standing_rpc, &args).await;
         }
         if args.watch && !args.json {
             println!("Watching NAT-PMP status (Ctrl-C to stop)...");
@@ -240,7 +246,8 @@ impl PortForward {
         let mut previous: Vec<Mapping> = Vec::new();
         while let Some(status) = stream.next().await {
             let mappings = status?.mappings;
-            print_status(&mappings, args.json)?;
+            let standing = cached_standing(&mut standing_rpc).await;
+            print_status(&mappings, standing.as_ref(), args.json)?;
             if !args.watch {
                 break;
             }
@@ -257,7 +264,11 @@ impl PortForward {
     /// Read snapshots until every rule holds a grant, then leave with the
     /// verdict's exit code. Generic over the stream so the RPC type does
     /// not have to be spelled out here.
-    async fn wait_for_grant<S>(stream: &mut S, args: &StatusArgs) -> Result<()>
+    async fn wait_for_grant<S>(
+        stream: &mut S,
+        standing_rpc: &mut MullvadProxyClient,
+        args: &StatusArgs,
+    ) -> Result<()>
     where
         S: futures::Stream<Item = std::result::Result<NatPmpStatus, ManagementError>> + Unpin,
     {
@@ -274,7 +285,10 @@ impl PortForward {
                     Ok(item) => item,
                     // The wait ended on the verdict it was still
                     // keeping, which is what the timeout code means.
-                    Err(_) => return finish_wait(&last, args.json, WaitVerdict::Keep),
+                    Err(_) => {
+                        let standing = cached_standing(standing_rpc).await;
+                        return finish_wait(&last, standing.as_ref(), args.json, WaitVerdict::Keep);
+                    }
                 },
                 None => stream.next().await,
             };
@@ -284,7 +298,10 @@ impl PortForward {
             let mappings = status?.mappings;
             match wait_verdict(&mappings) {
                 WaitVerdict::Keep => last = mappings,
-                verdict => return finish_wait(&mappings, args.json, verdict),
+                verdict => {
+                    let standing = cached_standing(standing_rpc).await;
+                    return finish_wait(&mappings, standing.as_ref(), args.json, verdict);
+                }
             }
         }
     }
@@ -432,16 +449,19 @@ fn mapping_line(m: &Mapping) -> String {
     }
 }
 
-/// Print one line per live mapping, or an explicit empty notice so the
-/// operator can tell "no rules / feature off" from a missed update.
-fn print_mappings(mappings: &[Mapping]) {
-    if mappings.is_empty() {
-        println!("No active mappings (port forwarding off or no rules).");
-        return;
-    }
-    for m in mappings {
-        println!("{}", mapping_line(m));
-    }
+/// One line per live mapping, or an explicit empty notice so the operator
+/// can tell "no rules / feature off" from a missed update, then the
+/// port-forwarding warnings when the account has any. The mapping lines
+/// come first and read exactly as they always did: the Warren container
+/// parses them.
+fn status_human_lines(mappings: &[Mapping], standing: Option<&Standing>) -> Vec<String> {
+    let mut lines = if mappings.is_empty() {
+        vec!["No active mappings (port forwarding off or no rules).".to_owned()]
+    } else {
+        mappings.iter().map(mapping_line).collect()
+    };
+    lines.extend(status_lines(standing));
+    lines
 }
 
 /// One indented line describing a configured rule, as `port-forward get`
@@ -517,6 +537,7 @@ fn error_reason_json_label(reason: i32) -> &'static str {
         Ok(ErrorReason::SuggestedPortInUse) => "suggested_port_in_use",
         Ok(ErrorReason::OutOfResources) => "out_of_resources",
         Ok(ErrorReason::NotAuthorized) => "not_authorized",
+        Ok(ErrorReason::NoEntitlement) => "no_entitlement",
         Ok(ErrorReason::Unknown) | Err(_) => "unknown",
     }
 }
@@ -545,10 +566,13 @@ struct RuleJson<'a> {
 ///
 /// Every optional field is serialized as `null` rather than omitted, so
 /// a consumer can read `.mappings[0].external_port` without first
-/// testing that the key exists.
+/// testing that the key exists. `standing` is the wallet's port-forward
+/// abuse standing, `null` while the daemon knows none or does not show it
+/// to this caller.
 #[derive(Serialize)]
 struct StatusJson<'a> {
     mappings: Vec<MappingJson<'a>>,
+    standing: Option<StandingJson<'a>>,
 }
 
 #[derive(Serialize)]
@@ -585,8 +609,9 @@ fn settings_json(settings: &NatPmpSettings) -> Result<String> {
 
 /// The one-line JSON object `port-forward status --json` prints, once
 /// per snapshot.
-fn status_json(mappings: &[Mapping]) -> Result<String> {
+fn status_json(mappings: &[Mapping], standing: Option<&Standing>) -> Result<String> {
     let view = StatusJson {
+        standing: standing.map(StandingJson::from),
         mappings: mappings
             .iter()
             .map(|m| MappingJson {
@@ -609,12 +634,14 @@ fn status_json(mappings: &[Mapping]) -> Result<String> {
 /// Print one status snapshot in the mode the caller asked for. JSON mode
 /// flushes, so a `--watch --json` consumer reading the pipe sees each
 /// snapshot when it happens rather than when the buffer fills.
-fn print_status(mappings: &[Mapping], json: bool) -> Result<()> {
+fn print_status(mappings: &[Mapping], standing: Option<&Standing>, json: bool) -> Result<()> {
     if !json {
-        print_mappings(mappings);
+        for line in status_human_lines(mappings, standing) {
+            println!("{line}");
+        }
         return Ok(());
     }
-    println!("{}", status_json(mappings)?);
+    println!("{}", status_json(mappings, standing)?);
     std::io::stdout()
         .flush()
         .context("Failed to flush the JSON status line")
@@ -642,13 +669,35 @@ fn wait_verdict(mappings: &[Mapping]) -> WaitVerdict {
     if mappings.is_empty() {
         return WaitVerdict::Nothing;
     }
-    if mappings.iter().any(|m| m.state == State::Failed as i32) {
+    if mappings
+        .iter()
+        .any(|m| m.state == State::Failed as i32 && !retried_refusal(m))
+    {
         return WaitVerdict::Failed;
     }
     if mappings.iter().all(|m| m.state == State::Mapped as i32) {
         return WaitVerdict::Done;
     }
     WaitVerdict::Keep
+}
+
+/// A refusal of the rule's entitlement the daemon asks again for on its
+/// own. It usually heals within a cycle (the entitlement was still held by
+/// this client's previous address, or belonged to the epoch that just
+/// ended), so a wait treats it as in flight. A rule with no entitlement at
+/// all is not one of these: the batch will not grow before the next epoch.
+fn retried_refusal(m: &Mapping) -> bool {
+    m.error_reason == Some(ErrorReason::NotAuthorized as i32) && m.retry_after_secs.is_some()
+}
+
+/// The standing as the daemon last knew it. Never fails the status: a
+/// daemon that cannot answer it, or withholds it from this caller, leaves
+/// the port lines as they are.
+async fn cached_standing(rpc: &mut MullvadProxyClient) -> Option<Standing> {
+    rpc.get_cached_warren_account_standing()
+        .await
+        .ok()
+        .flatten()
 }
 
 /// The exit code a `--wait` leaves with, for the verdict it ended on.
@@ -668,8 +717,13 @@ fn wait_exit_code(verdict: WaitVerdict) -> i32 {
 
 /// Print the snapshot a `--wait` ended on and leave with its code. The
 /// zero case returns so `main` closes the process normally.
-fn finish_wait(mappings: &[Mapping], json: bool, verdict: WaitVerdict) -> Result<()> {
-    print_status(mappings, json)?;
+fn finish_wait(
+    mappings: &[Mapping],
+    standing: Option<&Standing>,
+    json: bool,
+    verdict: WaitVerdict,
+) -> Result<()> {
+    print_status(mappings, standing, json)?;
     match wait_exit_code(verdict) {
         0 => Ok(()),
         // `print_status` has already flushed the line above.
@@ -1037,11 +1091,11 @@ mod tests {
             ..Default::default()
         };
         assert_eq!(
-            status_json(&[m]).expect("status must serialize"),
+            status_json(&[m], None).expect("status must serialize"),
             "{\"mappings\":[{\"internal_port\":6881,\"protocol\":\"both\",\"state\":\"mapped\",\
              \"external_port\":58291,\"lifetime_granted_secs\":3600,\"error_reason\":null,\
              \"error_message\":null,\"retry_after_secs\":null,\"attempts_remaining\":null,\
-             \"window_reset_secs\":null}]}"
+             \"window_reset_secs\":null}],\"standing\":null}"
         );
     }
 
@@ -1056,11 +1110,12 @@ mod tests {
             ..Default::default()
         };
         assert_eq!(
-            status_json(&[m]).expect("status must serialize"),
+            status_json(&[m], None).expect("status must serialize"),
             "{\"mappings\":[{\"internal_port\":6881,\"protocol\":\"tcp\",\"state\":\"failed\",\
              \"external_port\":null,\"lifetime_granted_secs\":null,\
              \"error_reason\":\"suggested_port_in_use\",\"error_message\":\"port in use\",\
-             \"retry_after_secs\":null,\"attempts_remaining\":null,\"window_reset_secs\":null}]}"
+             \"retry_after_secs\":null,\"attempts_remaining\":null,\"window_reset_secs\":null}],\
+             \"standing\":null}"
         );
     }
 
@@ -1078,8 +1133,60 @@ mod tests {
         // The human notice must not leak into the JSON: a consumer reads
         // an empty array, never a sentence.
         assert_eq!(
-            status_json(&[]).expect("an empty status must serialize"),
-            "{\"mappings\":[]}"
+            status_json(&[], None).expect("an empty status must serialize"),
+            "{\"mappings\":[],\"standing\":null}"
+        );
+    }
+
+    #[test]
+    fn good_standing_leaves_the_human_status_as_it_was() {
+        let mappings = [mapped(6881, Proto::Both, 58291)];
+        let clean = crate::standing::tests::standing(Vec::new(), None);
+
+        assert_eq!(
+            status_human_lines(&mappings, Some(&clean)),
+            ["6881/TCP+UDP: MAPPED, public port 58291"]
+        );
+        assert_eq!(
+            status_human_lines(&[], None),
+            ["No active mappings (port forwarding off or no rules)."]
+        );
+    }
+
+    #[test]
+    fn warnings_follow_the_mapping_lines() {
+        let mappings = [mapped(6881, Proto::Both, 58291)];
+        let warned = crate::standing::tests::standing(
+            vec![crate::standing::tests::strike(51413, "PF-2026-0042")],
+            None,
+        );
+
+        let lines = status_human_lines(&mappings, Some(&warned));
+
+        assert_eq!(lines[0], "6881/TCP+UDP: MAPPED, public port 58291");
+        assert!(
+            lines[1].starts_with("Warning 1 of 3: public port 51413 "),
+            "{lines:?}"
+        );
+        assert_eq!(lines.len(), 3);
+    }
+
+    #[test]
+    fn status_json_carries_the_standing_when_known() {
+        let standing = crate::standing::tests::standing(
+            vec![crate::standing::tests::strike(51413, "PF-2026-0042")],
+            None,
+        );
+
+        let json = status_json(&[], Some(&standing)).expect("status must serialize");
+
+        assert!(
+            json.starts_with("{\"mappings\":[],\"standing\":{\"threshold\":3,"),
+            "{json}"
+        );
+        assert!(
+            json.contains("\"case_reference\":\"PF-2026-0042\""),
+            "{json}"
         );
     }
 
@@ -1116,6 +1223,10 @@ mod tests {
             "not_authorized"
         );
         assert_eq!(
+            error_reason_json_label(ErrorReason::NoEntitlement as i32),
+            "no_entitlement"
+        );
+        assert_eq!(
             error_reason_json_label(ErrorReason::Unknown as i32),
             "unknown"
         );
@@ -1147,6 +1258,26 @@ mod tests {
             mapped(6881, Proto::Both, 58291),
             in_state(51820, Proto::Udp, State::Failed),
         ];
+        assert_eq!(wait_verdict(&snapshot), WaitVerdict::Failed);
+    }
+
+    fn refused(reason: ErrorReason, retry_after_secs: Option<u32>) -> Mapping {
+        Mapping {
+            error_reason: Some(reason as i32),
+            retry_after_secs,
+            ..in_state(51820, Proto::Udp, State::Failed)
+        }
+    }
+
+    #[test]
+    fn wait_keeps_going_through_a_refusal_the_daemon_asks_again_for() {
+        let snapshot = [refused(ErrorReason::NotAuthorized, Some(60))];
+        assert_eq!(wait_verdict(&snapshot), WaitVerdict::Keep);
+    }
+
+    #[test]
+    fn wait_gives_up_on_a_rule_with_no_entitlement() {
+        let snapshot = [refused(ErrorReason::NoEntitlement, Some(600))];
         assert_eq!(wait_verdict(&snapshot), WaitVerdict::Failed);
     }
 

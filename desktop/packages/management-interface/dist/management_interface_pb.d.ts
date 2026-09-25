@@ -2234,6 +2234,11 @@ export class WarrenStatus extends jspb.Message {
     setAnnouncementsList(value: Array<WarrenAnnouncement>): WarrenStatus;
     addAnnouncements(value?: WarrenAnnouncement, index?: number): WarrenAnnouncement;
 
+    hasAccountStanding(): boolean;
+    clearAccountStanding(): void;
+    getAccountStanding(): WarrenAccountStanding | undefined;
+    setAccountStanding(value?: WarrenAccountStanding): WarrenStatus;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): WarrenStatus.AsObject;
     static toObject(includeInstance: boolean, msg: WarrenStatus): WarrenStatus.AsObject;
@@ -2264,6 +2269,137 @@ export namespace WarrenStatus {
         foreignEnvironmentsList: Array<WarrenForeignEnv.AsObject>,
         envYield?: WarrenEnvYield.AsObject,
         announcementsList: Array<WarrenAnnouncement.AsObject>,
+        accountStanding?: WarrenAccountStanding.AsObject,
+    }
+}
+
+export class WarrenAccountStanding extends jspb.Message { 
+    clearStrikesList(): void;
+    getStrikesList(): Array<WarrenAccountStrike>;
+    setStrikesList(value: Array<WarrenAccountStrike>): WarrenAccountStanding;
+    addStrikes(value?: WarrenAccountStrike, index?: number): WarrenAccountStrike;
+    getThreshold(): number;
+    setThreshold(value: number): WarrenAccountStanding;
+    getWindowDays(): number;
+    setWindowDays(value: number): WarrenAccountStanding;
+
+    hasBan(): boolean;
+    clearBan(): void;
+    getBan(): WarrenAccountBan | undefined;
+    setBan(value?: WarrenAccountBan): WarrenAccountStanding;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenAccountStanding.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenAccountStanding): WarrenAccountStanding.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenAccountStanding, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenAccountStanding;
+    static deserializeBinaryFromReader(message: WarrenAccountStanding, reader: jspb.BinaryReader): WarrenAccountStanding;
+}
+
+export namespace WarrenAccountStanding {
+    export type AsObject = {
+        strikesList: Array<WarrenAccountStrike.AsObject>,
+        threshold: number,
+        windowDays: number,
+        ban?: WarrenAccountBan.AsObject,
+    }
+}
+
+export class WarrenAccountStrike extends jspb.Message { 
+    getDayUnixSecs(): number;
+    setDayUnixSecs(value: number): WarrenAccountStrike;
+    getCategory(): WarrenAbuseCategory;
+    setCategory(value: WarrenAbuseCategory): WarrenAccountStrike;
+
+    hasExitCountry(): boolean;
+    clearExitCountry(): void;
+    getExitCountry(): string | undefined;
+    setExitCountry(value: string): WarrenAccountStrike;
+    getPort(): number;
+    setPort(value: number): WarrenAccountStrike;
+    getCaseReference(): string;
+    setCaseReference(value: string): WarrenAccountStrike;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenAccountStrike.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenAccountStrike): WarrenAccountStrike.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenAccountStrike, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenAccountStrike;
+    static deserializeBinaryFromReader(message: WarrenAccountStrike, reader: jspb.BinaryReader): WarrenAccountStrike;
+}
+
+export namespace WarrenAccountStrike {
+    export type AsObject = {
+        dayUnixSecs: number,
+        category: WarrenAbuseCategory,
+        exitCountry?: string,
+        port: number,
+        caseReference: string,
+    }
+}
+
+export class WarrenAccountBan extends jspb.Message { 
+    getReason(): WarrenBanReason;
+    setReason(value: WarrenBanReason): WarrenAccountBan;
+
+    hasBannedAtUnixSecs(): boolean;
+    clearBannedAtUnixSecs(): void;
+    getBannedAtUnixSecs(): number | undefined;
+    setBannedAtUnixSecs(value: number): WarrenAccountBan;
+
+    hasLapsesAtUnixSecs(): boolean;
+    clearLapsesAtUnixSecs(): void;
+    getLapsesAtUnixSecs(): number | undefined;
+    setLapsesAtUnixSecs(value: number): WarrenAccountBan;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenAccountBan.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenAccountBan): WarrenAccountBan.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenAccountBan, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenAccountBan;
+    static deserializeBinaryFromReader(message: WarrenAccountBan, reader: jspb.BinaryReader): WarrenAccountBan;
+}
+
+export namespace WarrenAccountBan {
+    export type AsObject = {
+        reason: WarrenBanReason,
+        bannedAtUnixSecs?: number,
+        lapsesAtUnixSecs?: number,
+    }
+}
+
+export class WarrenAccountStrikeNotice extends jspb.Message { 
+
+    hasStrike(): boolean;
+    clearStrike(): void;
+    getStrike(): WarrenAccountStrike | undefined;
+    setStrike(value?: WarrenAccountStrike): WarrenAccountStrikeNotice;
+    getOrdinal(): number;
+    setOrdinal(value: number): WarrenAccountStrikeNotice;
+    getThreshold(): number;
+    setThreshold(value: number): WarrenAccountStrikeNotice;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenAccountStrikeNotice.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenAccountStrikeNotice): WarrenAccountStrikeNotice.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenAccountStrikeNotice, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenAccountStrikeNotice;
+    static deserializeBinaryFromReader(message: WarrenAccountStrikeNotice, reader: jspb.BinaryReader): WarrenAccountStrikeNotice;
+}
+
+export namespace WarrenAccountStrikeNotice {
+    export type AsObject = {
+        strike?: WarrenAccountStrike.AsObject,
+        ordinal: number,
+        threshold: number,
     }
 }
 
@@ -2797,6 +2933,7 @@ export namespace NatPmpStatus {
     SUGGESTED_PORT_IN_USE = 1,
     OUT_OF_RESOURCES = 2,
     NOT_AUTHORIZED = 3,
+    NO_ENTITLEMENT = 4,
     }
 
 }
@@ -3821,6 +3958,11 @@ export class DaemonEvent extends jspb.Message {
     getLeakInfo(): LeakInfo | undefined;
     setLeakInfo(value?: LeakInfo): DaemonEvent;
 
+    hasNewAccountStrike(): boolean;
+    clearNewAccountStrike(): void;
+    getNewAccountStrike(): WarrenAccountStrikeNotice | undefined;
+    setNewAccountStrike(value?: WarrenAccountStrikeNotice): DaemonEvent;
+
     getEventCase(): DaemonEvent.EventCase;
 
     serializeBinary(): Uint8Array;
@@ -3843,6 +3985,7 @@ export namespace DaemonEvent {
         removeDevice?: RemoveDeviceEvent.AsObject,
         newAccessMethod?: AccessMethodSetting.AsObject,
         leakInfo?: LeakInfo.AsObject,
+        newAccountStrike?: WarrenAccountStrikeNotice.AsObject,
     }
 
     export enum EventCase {
@@ -3855,6 +3998,7 @@ export namespace DaemonEvent {
         REMOVE_DEVICE = 6,
         NEW_ACCESS_METHOD = 7,
         LEAK_INFO = 8,
+        NEW_ACCOUNT_STRIKE = 9,
     }
 
 }
@@ -4499,6 +4643,21 @@ export enum Ownership {
     ANY = 0,
     MULLVAD_OWNED = 1,
     RENTED = 2,
+}
+
+export enum WarrenAbuseCategory {
+    WARREN_ABUSE_OTHER = 0,
+    WARREN_ABUSE_COPYRIGHT = 1,
+    WARREN_ABUSE_MALWARE_C2 = 2,
+    WARREN_ABUSE_SPAM = 3,
+    WARREN_ABUSE_SCANNING = 4,
+    WARREN_ABUSE_PHISHING = 5,
+    WARREN_ABUSE_CSAM = 6,
+}
+
+export enum WarrenBanReason {
+    WARREN_BAN_OTHER = 0,
+    WARREN_BAN_PORT_FORWARDING_ABUSE = 1,
 }
 
 export enum WarrenNoticeLevel {

@@ -20,8 +20,8 @@
 use std::sync::{Arc, RwLock};
 
 use warren_api::{
-    ClientError, IncidentExitDownRequest, IncidentPubkeyMismatchRequest, RegisterAccountRequest,
-    RegisterAccountResponse, SubscriptionResponse, WarrenApiClient,
+    AccountStandingResponse, ClientError, IncidentExitDownRequest, IncidentPubkeyMismatchRequest,
+    RegisterAccountRequest, RegisterAccountResponse, SubscriptionResponse, WarrenApiClient,
 };
 use warren_identity::WarrenIdentity;
 use zeroize::Zeroizing;
@@ -81,6 +81,14 @@ impl SharedWarrenApiClient {
         snapshot_identity(&self.seed).address()
     }
 
+    /// The address of the wallet backing this client, `None` while the
+    /// logged-out sentinel stands in for one.
+    #[must_use]
+    pub fn wallet(&self) -> Option<String> {
+        let guard = self.seed.read().expect("warren seed RwLock poisoned");
+        (**guard != *sentinel_seed()).then(|| WarrenIdentity::from_seed(&guard).address())
+    }
+
     /// Same as [`Self::new`], reusing a transport the caller already holds, so
     /// its connection pool is not thrown away with the wrapper.
     #[must_use]
@@ -113,6 +121,12 @@ impl SharedWarrenApiClient {
     /// account is outside the campaign's cohort.
     pub async fn campaign_voucher(&self, campaign_id: &str) -> Result<Option<String>, ClientError> {
         self.client().campaign_voucher(campaign_id).await
+    }
+
+    /// Signed `GET /v1/account/standing`: the wallet's port-forward abuse
+    /// strikes and ban.
+    pub async fn account_standing(&self) -> Result<AccountStandingResponse, ClientError> {
+        self.client().account_standing().await
     }
 
     /// Signed `DELETE /v1/account`.
@@ -189,6 +203,29 @@ mod tests {
         let after = client.address();
         assert_ne!(before, after, "address must change after a seed hot-swap");
         assert_eq!(after, WarrenIdentity::from_seed(&[2u8; 32]).address());
+    }
+
+    #[test]
+    fn a_real_wallet_is_named_by_its_address() {
+        let client = SharedWarrenApiClient::new(
+            "https://api.example.test".to_owned(),
+            seed_handle([7u8; 32]),
+        );
+
+        assert_eq!(
+            client.wallet(),
+            Some(WarrenIdentity::from_seed(&[7u8; 32]).address())
+        );
+    }
+
+    #[test]
+    fn the_logged_out_sentinel_is_no_wallet() {
+        let client = SharedWarrenApiClient::new(
+            "https://api.example.test".to_owned(),
+            seed_handle(*sentinel_seed()),
+        );
+
+        assert_eq!(client.wallet(), None);
     }
 
     #[test]

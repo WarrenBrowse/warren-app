@@ -591,6 +591,17 @@ function deserialize_mullvad_daemon_management_interface_VoucherSubmission(buffe
   return management_interface_pb.VoucherSubmission.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_mullvad_daemon_management_interface_WarrenAccountStanding(arg) {
+  if (!(arg instanceof management_interface_pb.WarrenAccountStanding)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.WarrenAccountStanding');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_WarrenAccountStanding(buffer_arg) {
+  return management_interface_pb.WarrenAccountStanding.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_mullvad_daemon_management_interface_WarrenCustomExitSettings(arg) {
   if (!(arg instanceof management_interface_pb.WarrenCustomExitSettings)) {
     throw new Error('Expected argument of type mullvad_daemon.management_interface.WarrenCustomExitSettings');
@@ -1426,6 +1437,22 @@ natPmpStatusUpdates: {
     requestDeserialize: deserialize_google_protobuf_Empty,
     responseSerialize: serialize_mullvad_daemon_management_interface_NatPmpStatus,
     responseDeserialize: deserialize_mullvad_daemon_management_interface_NatPmpStatus,
+  },
+  // Port-forward abuse standing of the wallet (warren-core doc 105), asked
+// of the API now rather than read from the last poll, which
+// WarrenStatus.account_standing carries. Owner-only: the strikes name the
+// ports the account forwarded and the cases against it. UNAVAILABLE when
+// the API cannot be reached, FAILED_PRECONDITION without a wallet.
+getWarrenAccountStanding: {
+    path: '/mullvad_daemon.management_interface.ManagementService/GetWarrenAccountStanding',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: management_interface_pb.WarrenAccountStanding,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_mullvad_daemon_management_interface_WarrenAccountStanding,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_WarrenAccountStanding,
   },
   // Account management
 createNewAccount: {
