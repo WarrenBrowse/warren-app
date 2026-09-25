@@ -2,6 +2,7 @@
 set -eu
 
 chmod u+s "/usr/bin/warren-exclude"
+chmod u+s "/usr/bin/warren-include"
 
 # No management-socket group is provisioned: every local account can connect,
 # and the daemon authorizes each RPC against the caller's uid (only the wallet's

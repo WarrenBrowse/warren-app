@@ -253,9 +253,52 @@ subnet route), so an included app's names never go to the ISP.
 |---|---|
 | macOS | the existing split-tunnel classifier (eslogger process tracking, pf route-to into the ST utun) with the decision inverted: included processes to the VPN, everything else to the default interface. Needs Full Disk Access, like exclude. |
 | Windows | the unmodified, Microsoft-signed Mullvad driver with the address pair swapped (tunnel address registered as "internet", physical as "tunnel") and the included apps registered as split; the tunnel gets its own `0.0.0.0/0` with a higher metric than the physical default instead of the two `/1` halves; winfw gets a policy that permits non-included apps. IPv6: when the tunnel has no IPv6, winfw blocks included apps' IPv6 (by app id) so no IPv6 flow escapes. Included apps cannot reach the LAN. |
-| Linux | an `included` cgroup marked in nft; the tunnel table lookup (pref 51) becomes conditional on that mark (warrenguard-route-split gains the parameter); marked traffic that would leave through anything but the tunnel is dropped; launched through `warren-include`, the mirror of `warren-exclude`, same owner-only rule. |
+| Linux | an `included` cgroup (`warren-inclusions`, cgroup2) marked in nft; the tunnel table lookup (pref 51) becomes conditional on that mark (`TunLookupScope::Marked`) and the exclusion bypass (pref 49) is not installed; marked traffic that would leave through anything but the tunnel is dropped; launched through `warren-include`, the mirror of `warren-exclude`, same owner-only rule. Details below. |
 | Android | `VpnService.Builder.addAllowedApplication`, with a guard refusing an empty or fully uninstalled list (Android would otherwise capture everything), and the same allow list on every blackhole plan. |
 | iOS | not available. |
+
+### 3.1 Linux
+
+The daemon creates the cgroup at start; `warren-include` only joins it (it never
+creates one, so an app can never land in a cgroup the firewall does not know)
+and refuses to run the program when it is missing. `warren split-tunnel add
+<pid>` puts a running process in it while include-only is on. Exclusion and
+include-only never shape the same state: switching modes reapplies the
+firewall and reconnects the tunnel so the routes follow; cgroup membership is
+kept, so switching back restores it, and a process left in the cgroup of the
+mode not in force is simply routed like any other.
+
+The nftables policy (`talpid-core/src/firewall/linux.rs`, `include_only_head`
+and `include_only_tail`):
+
+- the mangle chain marks the included cgroup's sockets (`socket cgroupv2`)
+  and every later packet of their connections (conntrack mark), which the
+  route chain reroutes into table 100;
+- while connected, traffic to the tunnel resolvers is marked the same way:
+  the system resolver belongs to no app, and the tunnel address is a `/32`
+  with no subnet route, so without the mark it would leave on the physical
+  network;
+- an included socket connects before its first packet is marked, with the
+  physical source address, so included traffic leaving through the tunnel is
+  masqueraded; replies are re-marked in prerouting for the reverse-path check
+  (`src_valid_mark=1`);
+- the output hook reports the device a packet was routed to before the mark,
+  so it cannot tell where a rerouted packet leaves. Included traffic is
+  therefore accepted there while connected, and a postrouting filter drops any
+  included packet leaving by anything but loopback and the tunnel. Before the
+  tunnel is connected (connecting, error, lockdown) included traffic is
+  rejected at once in the output hook;
+- included DNS reaches only the tunnel resolvers, as in the full tunnel;
+- everything else is accepted both ways in every state, blocked ones
+  included, except probes for the tunnel address.
+
+Validated in a Debian 13 VM (kernel 6.12) against a beta exit: an included
+`curl` egresses from the exit address while the rest of the VM keeps its own;
+with the daemon cut from the network the included app times out, then is
+refused at once in the connecting state, while the rest of the VM keeps
+working; no packet to the included app's destination, no DNS and no tunnel
+source address appeared on the physical interface. Included apps cannot reach
+the LAN: their traffic, LAN destinations included, goes to the tunnel.
 
 The GUI shows a persistent, calm warning while include-only is active: a
 banner in the tab ("Only these apps are protected. The rest of your device

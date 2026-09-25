@@ -2,13 +2,17 @@
 name = "mullvad-exclude"
 edition.workspace = true
 rust-version.workspace = true
-description = "Runs programs outside the Mullvad VPN tunnel on Linux"
+description = "Runs programs outside the Warren VPN tunnel, or alone inside it, on Linux"
 repository.workspace = true
 license.workspace = true
 
 [[bin]]
 name = "warren-exclude"
 path = "src/main.rs"
+
+[[bin]]
+name = "warren-include"
+path = "src/bin/include.rs"
 
 [dependencies]
 serde_json = { workspace = true }

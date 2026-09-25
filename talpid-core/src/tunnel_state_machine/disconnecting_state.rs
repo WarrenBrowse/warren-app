@@ -101,8 +101,14 @@ impl DisconnectingState {
                 shared_values.bypass_socket(fd, done_tx);
             }
             #[cfg(windows)]
-            Some(TunnelCommand::SetExcludedApps(result_tx, paths)) => {
-                shared_values.exclude_paths(paths, result_tx);
+            Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {
+                // The state entered next applies the mode.
+                let _ = shared_values.set_split_apps(apps, result_tx);
+            }
+            #[cfg(target_os = "linux")]
+            Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {
+                let _ = shared_values.set_split_apps(apps);
+                let _ = result_tx.send(Ok(()));
             }
             #[cfg(target_os = "android")]
             Some(TunnelCommand::SetExcludedApps(result_tx, paths)) => {
@@ -110,8 +116,8 @@ impl DisconnectingState {
                 let _ = result_tx.send(Ok(()));
             }
             #[cfg(target_os = "macos")]
-            Some(TunnelCommand::SetExcludedApps(result_tx, paths)) => {
-                let _ = result_tx.send(shared_values.set_exclude_paths(paths).map(|_| ()));
+            Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {
+                let _ = result_tx.send(shared_values.set_split_apps(apps).map(|_| ()));
             }
         };
 

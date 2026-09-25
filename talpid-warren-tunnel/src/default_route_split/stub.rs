@@ -23,7 +23,7 @@ impl DefaultRouteSplitGuard {
     /// Always returns an error on platforms without a Warren-specific
     /// default-route split recipe. The caller logs the error and the
     /// tunnel comes up without routing the host's default traffic.
-    pub async fn install(_exit_ip: Ipv4Addr, _tun_name: &str) -> Result<Self> {
+    pub async fn install(_exit_ip: Ipv4Addr, _tun_name: &str, _include_only: bool) -> Result<Self> {
         Err(anyhow!(
             "Warren default-route split not implemented on this platform; \
              tunnel up but Internet traffic NOT captured by the TUN"

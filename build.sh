@@ -372,7 +372,7 @@ function build {
         -p mullvad-problem-report --bin warren-problem-report
     )
     if [[ ("$(uname -s)" == "Linux") ]]; then
-        cargo_crates_to_build+=(-p mullvad-exclude --bin warren-exclude)
+        cargo_crates_to_build+=(-p mullvad-exclude --bin warren-exclude --bin warren-include)
         # NetworkManager VPN service plugin: what makes the desktop's own
         # network indicator show Warren as a VPN.
         cargo_crates_to_build+=(-p warren-nm-vpn-service --bin warren-nm-vpn-service)
@@ -412,6 +412,7 @@ function build {
             warren-problem-report
             warren-setup
             warren-exclude
+            warren-include
             warren-nm-vpn-service
         )
     elif [[ ("$(uname -s)" == "MINGW"*) ]]; then

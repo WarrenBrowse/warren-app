@@ -10,6 +10,12 @@ pub mod v2;
 
 pub const SPLIT_TUNNEL_CGROUP_NAME: &str = "mullvad-exclusions";
 
+/// The cgroup2 whose processes alone are tunneled in include-only mode
+/// ("VPN only for these apps"). Created by the daemon; `warren-include` only
+/// ever joins it, so an included app never lands in a cgroup the firewall
+/// does not know.
+pub const INCLUDE_CGROUP_NAME: &str = "warren-inclusions";
+
 /// The path where linux normally mounts the cgroup2 filesystem.
 pub const CGROUP2_DEFAULT_MOUNT_PATH: &str = "/sys/fs/cgroup";
 

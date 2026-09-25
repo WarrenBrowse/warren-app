@@ -2,6 +2,7 @@
 set -eu
 
 chmod u+s "/usr/bin/warren-exclude"
+chmod u+s "/usr/bin/warren-include"
 ln -sf /opt/Warren\ VPN/resources/warren-problem-report /usr/bin/warren-problem-report
 
 # No management-socket group is provisioned: the daemon exposes the socket to

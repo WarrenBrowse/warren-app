@@ -5,16 +5,14 @@
 
 use anyhow::Context;
 use libc::pid_t;
-#[cfg(feature = "cgroup2")]
 use nftnl::{Batch, Chain, Hook, MsgType, Policy, ProtoFamily, Rule, Table, nft_expr};
 use nix::unistd::Pid;
 use talpid_cgroup::{
-    SPLIT_TUNNEL_CGROUP_NAME,
+    INCLUDE_CGROUP_NAME, SPLIT_TUNNEL_CGROUP_NAME,
     v1::{CGroup1, NET_CLS_CLASSID},
     v2::CGroup2,
 };
 
-#[cfg(feature = "cgroup2")]
 use crate::firewall;
 
 /// Value used to mark packets and associated connections.
@@ -37,6 +35,15 @@ pub enum Error {
 /// <https://docs.kernel.org/admin-guide/cgroup-v2.html>
 pub struct PidManager {
     inner: Result<Inner, Error>,
+    /// The include-only cgroup. cgroup2 only, whatever the `cgroup2`
+    /// feature says for exclusion: the firewall selects its sockets with
+    /// `socket cgroupv2`, which has no cgroup v1 counterpart.
+    included: Result<IncludedCGroup, Error>,
+}
+
+struct IncludedCGroup {
+    root: CGroup2,
+    included: CGroup2,
 }
 
 enum Inner {
@@ -65,7 +72,78 @@ impl PidManager {
             log::error!("Failed to initialize split-tunneling: {e:?}");
         };
 
-        PidManager { inner }
+        let included = Self::new_included();
+        if let Err(e) = &included {
+            log::error!("Include-only is unavailable: {e:?}");
+        }
+
+        PidManager { inner, included }
+    }
+
+    fn new_included() -> Result<IncludedCGroup, Error> {
+        // The fixed mount path, never an override from the environment:
+        // `warren-include` joins this same cgroup and, running setuid root,
+        // cannot trust its caller's environment to find it.
+        let root = CGroup2::open(talpid_cgroup::CGROUP2_DEFAULT_MOUNT_PATH)?;
+        let included = root.create_or_open_child(INCLUDE_CGROUP_NAME)?;
+        assert_nft_supports_cgroup2(&included)
+            .context("cgroup2 not supported by nftables, are you running an old kernel?")?;
+        Ok(IncludedCGroup { root, included })
+    }
+
+    /// Add a PID to the include-only cgroup, to have it tunneled while
+    /// everything else is not.
+    pub fn add_included(&self, pid: pid_t) -> Result<(), Error> {
+        Ok(self.included()?.included.add_pid(Pid::from_raw(pid))?)
+    }
+
+    /// Move a PID out of the include-only cgroup.
+    pub fn remove_included(&self, pid: pid_t) -> Result<(), Error> {
+        Ok(self.included()?.root.add_pid(Pid::from_raw(pid))?)
+    }
+
+    /// Return the PIDs in the include-only cgroup.
+    pub fn list_included(&mut self) -> Result<Vec<pid_t>, Error> {
+        Ok(self.included_mut()?.included.list_pids()?)
+    }
+
+    /// Move every PID out of the include-only cgroup.
+    pub fn clear_included(&mut self) -> Result<(), Error> {
+        for pid in self.list_included()? {
+            self.remove_included(pid)?;
+        }
+        Ok(())
+    }
+
+    /// Whether include-only can run here.
+    pub fn include_only_supported(&self) -> bool {
+        self.included.is_ok()
+    }
+
+    /// A handle to the include-only cgroup, for the firewall.
+    pub fn included_cgroup(&self) -> Option<CGroup2> {
+        self.included()
+            .ok()?
+            .included
+            .try_clone()
+            .inspect_err(|e| log::error!("Failed to clone file handle to cgroup2: {e}"))
+            .ok()
+    }
+
+    fn included(&self) -> Result<&IncludedCGroup, Error> {
+        self.included
+            .as_ref()
+            .ok()
+            .context("Include-only is not available")
+            .map_err(Into::into)
+    }
+
+    fn included_mut(&mut self) -> Result<&mut IncludedCGroup, Error> {
+        self.included
+            .as_mut()
+            .ok()
+            .context("Include-only is not available")
+            .map_err(Into::into)
     }
 
     fn new_inner() -> Result<Inner, Error> {
@@ -258,7 +336,6 @@ impl Inner {
 // Consider either having this module take ownership of setting up the split-tunneling nft rules,
 // or moving this logic into the firewall module and coupling it with the actual firewall rules we
 // set up.
-#[cfg(feature = "cgroup2")]
 fn assert_nft_supports_cgroup2(cgroup: &CGroup2) -> Result<(), Error> {
     let table_name = c"mullvad-test-cgroup2-capability";
 

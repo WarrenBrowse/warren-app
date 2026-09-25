@@ -23,7 +23,10 @@ pub struct DefaultRouteSplitGuard(
 );
 
 impl DefaultRouteSplitGuard {
-    pub async fn install(_exit_ip: Ipv4Addr, tun_name: &str) -> Result<Self> {
+    pub async fn install(_exit_ip: Ipv4Addr, tun_name: &str, include_only: bool) -> Result<Self> {
+        if include_only {
+            anyhow::bail!("include-only routing is not available on this platform");
+        }
         let inner =
             warrenguard_route_split::default_route_split_windows::DefaultRouteSplitGuard::install(
                 tun_name,

@@ -24,7 +24,11 @@ use std::{
 };
 use talpid_routing::{CallbackHandle, EventType, RouteManagerHandle, get_best_default_route};
 use talpid_tunnel::TunnelMetadata;
-use talpid_types::{ErrorExt, split_tunnel::ExcludedProcess, tunnel::ErrorStateCause};
+use talpid_types::{
+    ErrorExt,
+    split_tunnel::{ExcludedProcess, SplitApps, SplitTunnelMode},
+    tunnel::ErrorStateCause,
+};
 use talpid_windows::{
     io::Overlapped,
     net::{AddressFamily, get_ip_address_for_interface},
@@ -111,6 +115,15 @@ pub enum Error {
     Unavailable,
 }
 
+/// The paths the driver must split for `apps`. Include-only is refused
+/// until the driver is driven for it, rather than having its apps excluded.
+fn excluded_paths(apps: &SplitApps) -> Result<&[OsString], Error> {
+    match apps.mode {
+        SplitTunnelMode::Exclude => Ok(&apps.apps),
+        SplitTunnelMode::IncludeOnly => Err(Error::Unavailable),
+    }
+}
+
 /// Manages applications whose traffic to exclude from the tunnel.
 pub struct SplitTunnel {
     state: SplitTunnelState,
@@ -125,14 +138,18 @@ impl SplitTunnel {
     /// Initialize the split tunnel device.
     ///
     /// If initialization fails, split tunneling will be disabled/unavailable.
-    pub fn new<T: AsRef<OsStr>>(
+    pub fn new(
         runtime: tokio::runtime::Handle,
         resource_dir: PathBuf,
         daemon_tx: Weak<mpsc::UnboundedSender<TunnelCommand>>,
         volume_update_rx: mpsc::UnboundedReceiver<()>,
         route_manager: RouteManagerHandle,
-        initial_paths: &[T],
+        initial_apps: &SplitApps,
     ) -> Self {
+        let initial_paths = excluded_paths(initial_apps).unwrap_or_else(|error| {
+            log::error!("{}", error.display_chain());
+            &[]
+        });
         let state = InitializedSplitTunnelState::new(
             runtime,
             resource_dir,
@@ -171,12 +188,19 @@ impl SplitTunnel {
         split_tunnel
     }
 
-    /// Set a list of applications to exclude from the tunnel.
-    pub fn set_paths<T: AsRef<OsStr>>(
+    /// Set the split mode and the applications it diverts.
+    pub fn set_split_apps(
         &mut self,
-        paths: &[T],
+        apps: &SplitApps,
         result_tx: oneshot::Sender<Result<(), Error>>,
     ) {
+        let paths = match excluded_paths(apps) {
+            Ok(paths) => paths,
+            Err(error) => {
+                let _ = result_tx.send(Err(error));
+                return;
+            }
+        };
         match &mut self.state {
             SplitTunnelState::Initialized(state) => state.set_paths(paths, result_tx),
             SplitTunnelState::Failed(state) => state.set_paths(paths, result_tx),

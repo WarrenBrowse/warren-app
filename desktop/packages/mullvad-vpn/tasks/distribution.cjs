@@ -137,6 +137,7 @@ function transformEnvAssetText(text) {
       // Installed binary names.
       .replace(/\/usr\/bin\/warren-daemon(?![-\w])/g, `/usr/bin/warren-daemon${envSuffix}`)
       .replace(/\/usr\/bin\/warren-exclude(?![-\w])/g, `/usr/bin/warren-exclude${envSuffix}`)
+      .replace(/\/usr\/bin\/warren-include(?![-\w])/g, `/usr/bin/warren-include${envSuffix}`)
       .replace(
         /\/usr\/(local\/)?bin\/warren-problem-report(?![-\w])/g,
         `/usr/$1bin/warren-problem-report${envSuffix}`,
@@ -524,6 +525,8 @@ function newConfig() {
           `=/usr/bin/warren-daemon${envSuffix}`,
         distAssets(path.join(getLinuxTargetSubdir(), 'warren-exclude')) +
           `=/usr/bin/warren-exclude${envSuffix}`,
+        distAssets(path.join(getLinuxTargetSubdir(), 'warren-include')) +
+          `=/usr/bin/warren-include${envSuffix}`,
         // NetworkManager VPN service plugin: what makes GNOME and KDE show a
         // VPN is up. Inert where NetworkManager is absent, so it adds no
         // package dependency. Not in /usr/bin: nobody runs it by hand,
@@ -570,6 +573,8 @@ function newConfig() {
           `=/usr/bin/warren-daemon${envSuffix}`,
         distAssets(path.join(getLinuxTargetSubdir(), 'warren-exclude')) +
           `=/usr/bin/warren-exclude${envSuffix}`,
+        distAssets(path.join(getLinuxTargetSubdir(), 'warren-include')) +
+          `=/usr/bin/warren-include${envSuffix}`,
         // NetworkManager VPN service plugin: what makes GNOME and KDE show a
         // VPN is up. Inert where NetworkManager is absent, so it adds no
         // package dependency. Not in /usr/bin: nobody runs it by hand,
@@ -622,6 +627,8 @@ function newConfig() {
           `=/usr/bin/warren-daemon${envSuffix}`,
         distAssets(path.join(getLinuxTargetSubdir(), 'warren-exclude')) +
           `=/usr/bin/warren-exclude${envSuffix}`,
+        distAssets(path.join(getLinuxTargetSubdir(), 'warren-include')) +
+          `=/usr/bin/warren-include${envSuffix}`,
         // NetworkManager VPN service plugin: what makes GNOME and KDE show a
         // VPN is up. Inert where NetworkManager is absent, so it adds no
         // package dependency. Not in /usr/bin: nobody runs it by hand,

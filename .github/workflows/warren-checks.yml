@@ -40,6 +40,12 @@ on:
       # Decides per packet which session an app's traffic leaves through, and
       # blocks it when that session is down.
       - "talpid-app-routing/**"
+      # The split tunnel's shared types, the cgroups it moves processes into,
+      # and the setuid launchers that move them: tested and linted in the
+      # Warren test scope, so an edit touching only them must run it.
+      - "talpid-types/**"
+      - "talpid-cgroup/**"
+      - "mullvad-exclude/**"
       - "warren-jni/**"
       - "warren-ios/**"
       # Both are tested and linted in the Warren test scope (the forum request

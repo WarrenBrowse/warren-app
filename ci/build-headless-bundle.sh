@@ -115,7 +115,7 @@ case "$platform" in
         # deliberately absent from both: it exists to put a VPN indicator in a
         # desktop's network menu, and this bundle installs on machines that
         # have neither.
-        for binary in warren warren-daemon warren-exclude; do
+        for binary in warren warren-daemon warren-exclude warren-include; do
             require "$rel/$binary" "release binary"
             install -m 0755 "$rel/$binary" "$stage/bin/$binary"
         done

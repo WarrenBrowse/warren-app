@@ -16,15 +16,12 @@ use self::{
     disconnecting_state::{AfterDisconnect, DisconnectingState},
     error_state::ErrorState,
 };
-#[cfg(any(windows, target_os = "android", target_os = "macos"))]
 use crate::split_tunnel;
 use crate::{
     firewall::{Firewall, FirewallArguments, InitialFirewallState},
     mpsc::Sender,
     offline,
 };
-#[cfg(any(target_os = "windows", target_os = "macos"))]
-use std::ffi::OsString;
 #[cfg(target_os = "linux")]
 use talpid_cgroup::v2::CGroup2;
 use talpid_dns::{DnsConfig, DnsMonitor};
@@ -34,6 +31,10 @@ use talpid_tunnel::TunnelMetadata;
 use talpid_tunnel::{TunnelEvent, tun_provider::TunProvider};
 #[cfg(target_os = "macos")]
 use talpid_types::ErrorExt;
+#[cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))]
+use talpid_types::split_tunnel::SplitApps;
+#[cfg(any(target_os = "windows", target_os = "linux"))]
+use talpid_types::split_tunnel::SplitTunnelMode;
 
 use futures::{
     StreamExt,
@@ -178,9 +179,9 @@ pub struct InitialTunnelState {
     pub allowed_endpoint: AllowedEndpoint,
     /// Whether to reset any existing firewall rules when initializing the disconnected state.
     pub reset_firewall: bool,
-    /// Programs to exclude from the tunnel using the split tunnel driver.
-    #[cfg(any(target_os = "windows", target_os = "macos"))]
-    pub exclude_paths: Vec<OsString>,
+    /// What the split tunnel diverts, and which way.
+    #[cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))]
+    pub split_apps: SplitApps,
     /// Apps to exclude from the tunnel.
     #[cfg(target_os = "android")]
     pub exclude_paths: Vec<String>,
@@ -201,6 +202,8 @@ pub struct LinuxNetworkingIdentifiers {
     /// The net_cls id of the v1 cgroup used for split tunneling.
     /// This is used as a fallback to [`Self::excluded_cgroup2`] since old kernels don't support cgroups v2.
     pub net_cls: Option<u32>,
+    /// The cgroup2 whose processes alone are tunneled in include-only mode.
+    pub included_cgroup2: Option<CGroup2>,
 }
 
 /// Spawn the tunnel state machine thread, returning a channel for sending tunnel commands.
@@ -304,12 +307,9 @@ pub enum TunnelCommand {
     /// Bypass a socket, allowing traffic to flow through outside the tunnel.
     #[cfg(target_os = "android")]
     BypassSocket(RawFd, oneshot::Sender<()>),
-    /// Set applications that are allowed to send and receive traffic outside of the tunnel.
-    #[cfg(any(target_os = "windows", target_os = "macos"))]
-    SetExcludedApps(
-        oneshot::Sender<Result<(), split_tunnel::Error>>,
-        Vec<OsString>,
-    ),
+    /// Set the split mode and the apps it diverts.
+    #[cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))]
+    SetSplitApps(oneshot::Sender<Result<(), split_tunnel::Error>>, SplitApps),
     /// Set applications that are allowed to send and receive traffic outside of the tunnel.
     #[cfg(target_os = "android")]
     SetExcludedApps(
@@ -476,8 +476,13 @@ impl TunnelStateMachine {
             linux_ids: args.linux_ids,
         };
 
-        #[cfg_attr(not(target_os = "windows"), expect(unused_mut))]
+        #[cfg_attr(
+            not(any(target_os = "windows", target_os = "linux")),
+            expect(unused_mut)
+        )]
         let mut firewall = Firewall::from_args(fw_args).map_err(Error::InitFirewallError)?;
+        #[cfg(target_os = "linux")]
+        firewall.set_include_only(args.settings.split_apps.mode == SplitTunnelMode::IncludeOnly);
         // Adopt the user's lockdown setting before any policy is applied, so a
         // daemon that dies early (a crash, a failed upgrade, a kill during an
         // install) tears down with the persistence its owner actually asked
@@ -523,20 +528,14 @@ impl TunnelStateMachine {
             args.command_tx.clone(),
             volume_update_rx,
             args.route_manager.clone(),
-            &args.settings.exclude_paths,
+            &args.settings.split_apps,
         );
 
+        #[cfg(any(target_os = "windows", target_os = "linux"))]
+        let split_mode = args.settings.split_apps.mode;
+
         #[cfg(target_os = "macos")]
-        if let Err(error) = split_tunnel
-            .set_exclude_paths(
-                args.settings
-                    .exclude_paths
-                    .iter()
-                    .map(PathBuf::from)
-                    .collect(),
-            )
-            .await
-        {
+        if let Err(error) = split_tunnel.set_split_apps(args.settings.split_apps).await {
             log::error!(
                 "{}",
                 error.display_chain_with_msg("Failed to set initial split tunnel paths")
@@ -546,6 +545,8 @@ impl TunnelStateMachine {
         let mut shared_values = SharedTunnelStateValues {
             #[cfg(any(target_os = "windows", target_os = "macos"))]
             split_tunnel,
+            #[cfg(any(target_os = "windows", target_os = "linux"))]
+            split_mode,
             #[cfg(target_os = "android")]
             excluded_packages: args.settings.exclude_paths,
             runtime,
@@ -746,6 +747,11 @@ struct SharedTunnelStateValues {
     split_tunnel: split_tunnel::SplitTunnel,
     #[cfg(target_os = "macos")]
     split_tunnel: split_tunnel::Handle,
+    /// The split mode the firewall and the tunnel's routes enforce. The
+    /// routes follow a change only at the next connect, so a change while a
+    /// tunnel is up reconnects it.
+    #[cfg(any(target_os = "windows", target_os = "linux"))]
+    split_mode: SplitTunnelMode,
     #[cfg(target_os = "android")]
     excluded_packages: Vec<String>,
     runtime: tokio::runtime::Handle,
@@ -807,11 +813,11 @@ impl SharedTunnelStateValues {
 
     /// Return whether a split tunnel interface was added or removed
     #[cfg(target_os = "macos")]
-    pub fn set_exclude_paths(&mut self, paths: Vec<OsString>) -> Result<bool, split_tunnel::Error> {
+    pub fn set_split_apps(&mut self, apps: SplitApps) -> Result<bool, split_tunnel::Error> {
         self.runtime.block_on(async {
             let had_interface = self.split_tunnel.interface().await.is_some();
             self.split_tunnel
-                .set_exclude_paths(paths.into_iter().map(PathBuf::from).collect())
+                .set_split_apps(apps)
                 .await
                 .inspect_err(|error| {
                     log::error!(
@@ -915,13 +921,38 @@ impl SharedTunnelStateValues {
         let _ = tx.send(());
     }
 
+    /// Hands `apps` to the split tunnel driver, and returns whether the
+    /// mode changed: the routes of a tunnel that is up still follow the old
+    /// one.
     #[cfg(windows)]
-    pub fn exclude_paths(
+    pub fn set_split_apps(
         &mut self,
-        paths: Vec<OsString>,
+        apps: SplitApps,
         tx: oneshot::Sender<Result<(), split_tunnel::Error>>,
-    ) {
-        self.split_tunnel.set_paths(&paths, tx);
+    ) -> bool {
+        let mode_changed = self.split_mode != apps.mode;
+        self.split_mode = apps.mode;
+        self.split_tunnel.set_split_apps(&apps, tx);
+        mode_changed
+    }
+
+    /// Adopts the mode of `apps` for the firewall, and returns whether it
+    /// changed: the policy in force and the routes of a tunnel that is up
+    /// still follow the old one. Linux chooses the apps at launch
+    /// (`warren-exclude`, `warren-include`), so only the mode is used.
+    #[cfg(target_os = "linux")]
+    pub fn set_split_apps(&mut self, apps: SplitApps) -> bool {
+        let mode_changed = self.split_mode != apps.mode;
+        self.split_mode = apps.mode;
+        self.firewall
+            .set_include_only(apps.mode == SplitTunnelMode::IncludeOnly);
+        mode_changed
+    }
+
+    /// Whether the tunnel's routes carry only the included apps' traffic.
+    #[cfg(any(target_os = "windows", target_os = "linux"))]
+    pub fn include_only(&self) -> bool {
+        self.split_mode == SplitTunnelMode::IncludeOnly
     }
 
     /// Update the set of excluded paths (split tunnel apps) for the tunnel provider.

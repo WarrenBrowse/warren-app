@@ -384,6 +384,14 @@ impl Firewall {
         self.inner.reset_policy_all_generations()
     }
 
+    /// Chooses between the full tunnel and include-only ("VPN only for these
+    /// apps") for the policies applied from now on. The applied policy is
+    /// unchanged until the next [`Self::apply_policy`].
+    #[cfg(target_os = "linux")]
+    pub fn set_include_only(&mut self, include_only: bool) {
+        self.inner.set_include_only(include_only);
+    }
+
     /// Sets whether the firewall should persist the blocking rules across a reboot.
     #[cfg(target_os = "windows")]
     pub fn persist(&mut self, persist: bool) {

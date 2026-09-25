@@ -83,7 +83,7 @@ pub enum Error {
 }
 
 /// Routing decision made for an outbound packet
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RoutingDecision {
     /// Send outgoing packets through the default interface
     DefaultInterface,

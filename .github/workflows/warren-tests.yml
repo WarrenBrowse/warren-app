@@ -85,7 +85,7 @@ jobs:
             -p mullvad-management-interface -p mullvad-cli -p mullvad-paths \
             -p mullvad-setup \
             -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p talpid-dbus \
-            -p talpid-app-routing \
+            -p talpid-app-routing -p talpid-types -p talpid-cgroup -p mullvad-exclude \
             -p warren-jni -p warren-ios -p warren-forum -p warren-product-env \
             -p warren-standing -p mullvad-update -p mullvad-release \
             -- --check
@@ -178,7 +178,7 @@ jobs:
             -p mullvad-management-interface -p mullvad-cli -p mullvad-paths \
             -p mullvad-setup \
             -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p talpid-dbus -p warren-jni \
-            -p talpid-app-routing \
+            -p talpid-app-routing -p talpid-types -p talpid-cgroup -p mullvad-exclude \
             -p warren-forum -p warren-product-env -p warren-ios -p warren-standing \
             -p mullvad-update -p mullvad-release \
             --features mullvad-update/sign,mullvad-update/client
@@ -194,6 +194,7 @@ jobs:
           crates="$crates warren-jni warren-forum warren-product-env warren-ios warren-standing"
           crates="$crates mullvad-paths mullvad-setup"
           crates="$crates mullvad-update mullvad-release talpid-app-routing"
+          crates="$crates talpid-types talpid-cgroup mullvad-exclude"
           for crate in $crates; do
             cargo clippy --no-deps --locked -p "$crate" -- -D warnings
           done

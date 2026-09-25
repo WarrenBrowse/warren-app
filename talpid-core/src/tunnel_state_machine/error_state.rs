@@ -287,13 +287,21 @@ impl TunnelState for ErrorState {
                 SameState(self)
             }
             #[cfg(windows)]
-            Some(TunnelCommand::SetExcludedApps(result_tx, paths)) => {
-                shared_values.exclude_paths(paths, result_tx);
+            Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {
+                let _ = shared_values.set_split_apps(apps, result_tx);
+                SameState(self)
+            }
+            #[cfg(target_os = "linux")]
+            Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {
+                if shared_values.set_split_apps(apps) {
+                    let _ = Self::set_firewall_policy(shared_values);
+                }
+                let _ = result_tx.send(Ok(()));
                 SameState(self)
             }
             #[cfg(target_os = "macos")]
-            Some(TunnelCommand::SetExcludedApps(result_tx, paths)) => {
-                let _ = result_tx.send(shared_values.set_exclude_paths(paths).map(|_| ()));
+            Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {
+                let _ = result_tx.send(shared_values.set_split_apps(apps).map(|_| ()));
                 SameState(self)
             }
         }

@@ -5,7 +5,11 @@ use std::{
     sync::{Arc, Weak},
 };
 use talpid_routing::RouteManagerHandle;
-use talpid_types::{ErrorExt, tunnel::ErrorStateCause};
+use talpid_types::{
+    ErrorExt,
+    split_tunnel::{SplitApps, SplitTunnelMode},
+    tunnel::ErrorStateCause,
+};
 use tokio::sync::{mpsc, oneshot};
 
 use self::process::ExclusionStatus;
@@ -107,9 +111,10 @@ enum Message {
     },
     /// Shut down split tunnel service
     Shutdown { result_tx: oneshot::Sender<()> },
-    /// Set paths to exclude from the VPN tunnel
-    SetExcludePaths {
+    /// Set the split mode and the paths it diverts
+    SetSplitApps {
         result_tx: oneshot::Sender<Result<(), Error>>,
+        mode: SplitTunnelMode,
         paths: HashSet<PathBuf>,
     },
     /// Update VPN tunnel interface
@@ -150,10 +155,14 @@ impl Handle {
         result_rx.await.ok()?
     }
 
-    /// Set paths to exclude
-    pub async fn set_exclude_paths(&self, paths: HashSet<PathBuf>) -> Result<(), Error> {
+    /// Set the split mode and the apps it diverts
+    pub async fn set_split_apps(&self, apps: SplitApps) -> Result<(), Error> {
         let (result_tx, result_rx) = oneshot::channel();
-        let _ = self.tx.send(Message::SetExcludePaths { result_tx, paths });
+        let _ = self.tx.send(Message::SetSplitApps {
+            result_tx,
+            mode: apps.mode,
+            paths: apps.apps.into_iter().map(PathBuf::from).collect(),
+        });
         result_rx.await.map_err(|_| Error::unavailable())?
     }
 
@@ -267,8 +276,12 @@ impl SplitTunnel {
                 self.shutdown_tx = Some(result_tx);
                 return false;
             }
-            Message::SetExcludePaths { result_tx, paths } => {
-                let _ = result_tx.send(self.state.set_exclude_paths(paths).await);
+            Message::SetSplitApps {
+                result_tx,
+                mode,
+                paths,
+            } => {
+                let _ = result_tx.send(self.state.set_split_apps(mode, paths).await);
             }
             Message::SetTunnel {
                 result_tx,
@@ -398,24 +411,30 @@ impl State {
         matches!(self, State::Active { .. })
     }
 
-    /// Set paths to exclude. For a non-empty path, this will initialize split tunneling if a tunnel
-    /// device is also set.
-    async fn set_exclude_paths(&mut self, paths: HashSet<PathBuf>) -> Result<(), Error> {
-        self.transition(move |self_| self_.set_exclude_paths_inner(paths))
+    /// Set the split mode and its paths. When they engage the split tunnel (include-only, or
+    /// paths to exclude), this initializes split tunneling if a tunnel device is also set.
+    async fn set_split_apps(
+        &mut self,
+        mode: SplitTunnelMode,
+        paths: HashSet<PathBuf>,
+    ) -> Result<(), Error> {
+        self.transition(move |self_| self_.set_split_apps_inner(mode, paths))
             .await
     }
 
-    async fn set_exclude_paths_inner(
+    async fn set_split_apps_inner(
         mut self,
+        mode: SplitTunnelMode,
         paths: HashSet<PathBuf>,
     ) -> Result<Self, ErrorWithTransition> {
+        let engaged = engages_split_tunnel(mode, &paths);
         match self {
             // If there are currently no paths and no process monitor, initialize it
-            State::NoExclusions { route_manager } if !paths.is_empty() => {
+            State::NoExclusions { route_manager } if engaged => {
                 log::debug!("Initializing process monitor");
 
                 let process = process::ProcessMonitor::spawn().await?;
-                process.states().exclude_paths(paths);
+                process.states().set_split_apps(mode, paths);
 
                 Ok(State::ProcessMonitorOnly {
                     route_manager,
@@ -426,11 +445,11 @@ impl State {
             State::StandBy {
                 route_manager,
                 vpn_interface,
-            } if !paths.is_empty() => {
+            } if engaged => {
                 log::debug!("Initializing process monitor");
 
                 let process = process::ProcessMonitor::spawn().await?;
-                process.states().exclude_paths(paths);
+                process.states().set_split_apps(mode, paths);
 
                 State::ProcessMonitorOnly {
                     route_manager,
@@ -439,10 +458,10 @@ impl State {
                 .set_tunnel_inner(vpn_interface)
                 .await
             }
-            // If 'paths' is empty, do nothing
+            // If nothing engages the split tunnel, do nothing
             State::NoExclusions { .. } | State::StandBy { .. } => Ok(self),
-            // If 'paths' is empty but split tunneling was enabled for an active VPN connection,
-            // disable split tunneling while caching the VPN interface.
+            // If nothing engages the split tunnel any more but it was enabled for an active VPN
+            // connection, disable split tunneling while caching the VPN interface.
             //
             // Note that the point is to drop the split tunnel handle to clean up the split tunnel
             // interface from the user's system.
@@ -451,7 +470,7 @@ impl State {
                 mut process,
                 tun_handle,
                 vpn_interface,
-            } if paths.is_empty() => {
+            } if !engaged => {
                 if let Err(error) = tun_handle.shutdown().await {
                     log::error!("Failed to stop split tunnel: {error}");
                 }
@@ -469,15 +488,15 @@ impl State {
             | State::ProcessMonitorOnly {
                 ref mut process, ..
             } => {
-                process.states().exclude_paths(paths);
+                process.states().set_split_apps(mode, paths);
                 Ok(self)
             }
-            // If 'paths' is empty, transition out of the failed state
+            // If nothing engages the split tunnel, transition out of the failed state
             State::Failed {
                 route_manager,
                 vpn_interface,
                 cause: _,
-            } if paths.is_empty() => {
+            } if !engaged => {
                 log::debug!("Transitioning out of split tunnel error state");
 
                 match vpn_interface {
@@ -618,14 +637,9 @@ impl State {
                     Some(vpn_interface.clone()),
                     route_manager.clone(),
                     Box::new(move |packet| {
-                        match states.get_process_status(packet.header.pth_pid) {
-                            ExclusionStatus::Excluded => tun::RoutingDecision::DefaultInterface,
-                            ExclusionStatus::Included => tun::RoutingDecision::VpnTunnel,
-                            ExclusionStatus::Unknown => {
-                                // TODO: Delay decision until next exec
-                                tun::RoutingDecision::Drop
-                            }
-                        }
+                        let pid = attributed_pid(packet.header.pth_pid, packet.header.pth_epid);
+                        let (mode, status) = states.lookup(pid);
+                        routing_decision(mode, status)
                     }),
                 )
                 .await;
@@ -699,6 +713,41 @@ impl State {
     }
 }
 
+/// Whether `mode` and `paths` need the split tunnel. Include-only needs it
+/// even with no path: everything else must still leave outside the tunnel.
+fn engages_split_tunnel(mode: SplitTunnelMode, paths: &HashSet<PathBuf>) -> bool {
+    mode == SplitTunnelMode::IncludeOnly || !paths.is_empty()
+}
+
+/// The process a packet is attributed to. A delegated socket (WebKit's
+/// network process working for Safari, for one) carries the process it acts
+/// for as its effective pid, and that is the app the user chose.
+fn attributed_pid(pid: libc::pid_t, effective_pid: libc::pid_t) -> libc::pid_t {
+    if effective_pid != 0 {
+        effective_pid
+    } else {
+        pid
+    }
+}
+
+/// Where a packet of a process with `status` goes under `mode`. `Listed`
+/// means the process belongs to one of the split tunnel's paths. A process
+/// the monitor does not know yet is dropped in both modes: it may belong to
+/// an included app, and it must not be tunneled if it is excluded.
+fn routing_decision(mode: SplitTunnelMode, status: ExclusionStatus) -> tun::RoutingDecision {
+    match (mode, status) {
+        (_, ExclusionStatus::Unknown) => tun::RoutingDecision::Drop,
+        (SplitTunnelMode::Exclude, ExclusionStatus::Listed)
+        | (SplitTunnelMode::IncludeOnly, ExclusionStatus::Unlisted) => {
+            tun::RoutingDecision::DefaultInterface
+        }
+        (SplitTunnelMode::Exclude, ExclusionStatus::Unlisted)
+        | (SplitTunnelMode::IncludeOnly, ExclusionStatus::Listed) => {
+            tun::RoutingDecision::VpnTunnel
+        }
+    }
+}
+
 struct ErrorWithTransition {
     error: Error,
     next_state: Option<State>,
@@ -710,5 +759,60 @@ impl<T: Into<Error>> From<T> for ErrorWithTransition {
             error: error.into(),
             next_state: None,
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn exclusion_sends_listed_processes_outside_and_the_rest_through_the_tunnel() {
+        let listed = routing_decision(SplitTunnelMode::Exclude, ExclusionStatus::Listed);
+        let unlisted = routing_decision(SplitTunnelMode::Exclude, ExclusionStatus::Unlisted);
+
+        assert_eq!(listed, tun::RoutingDecision::DefaultInterface);
+        assert_eq!(unlisted, tun::RoutingDecision::VpnTunnel);
+    }
+
+    #[test]
+    fn include_only_tunnels_listed_processes_and_sends_the_rest_outside() {
+        let listed = routing_decision(SplitTunnelMode::IncludeOnly, ExclusionStatus::Listed);
+        let unlisted = routing_decision(SplitTunnelMode::IncludeOnly, ExclusionStatus::Unlisted);
+
+        assert_eq!(listed, tun::RoutingDecision::VpnTunnel);
+        assert_eq!(unlisted, tun::RoutingDecision::DefaultInterface);
+    }
+
+    #[test]
+    fn an_unknown_process_is_dropped_in_every_mode() {
+        for mode in [SplitTunnelMode::Exclude, SplitTunnelMode::IncludeOnly] {
+            assert_eq!(
+                routing_decision(mode, ExclusionStatus::Unknown),
+                tun::RoutingDecision::Drop
+            );
+        }
+    }
+
+    #[test]
+    fn a_delegated_packet_belongs_to_the_process_it_acts_for() {
+        const WEBKIT_NETWORKING: libc::pid_t = 812;
+        const SAFARI: libc::pid_t = 640;
+
+        assert_eq!(attributed_pid(WEBKIT_NETWORKING, SAFARI), SAFARI);
+        assert_eq!(attributed_pid(WEBKIT_NETWORKING, 0), WEBKIT_NETWORKING);
+    }
+
+    #[test]
+    fn include_only_engages_the_split_tunnel_without_paths() {
+        let no_paths = HashSet::new();
+        let one_path = HashSet::from([PathBuf::from("/Applications/Firefox.app")]);
+
+        assert!(engages_split_tunnel(
+            SplitTunnelMode::IncludeOnly,
+            &no_paths
+        ));
+        assert!(!engages_split_tunnel(SplitTunnelMode::Exclude, &no_paths));
+        assert!(engages_split_tunnel(SplitTunnelMode::Exclude, &one_path));
     }
 }
