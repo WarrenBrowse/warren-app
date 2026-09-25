@@ -45,8 +45,9 @@ pub struct WarrenTunnelParametersC {
     pub exit_pubkey: [u8; 32],
     /// Null-terminated UTF-8 "IP:port" of the exit relay.
     pub exit_endpoint: *const c_char,
-    /// 32-byte Ed25519 signing seed derived from the user wallet
-    /// (see `warren_wallet_seed_from_mnemonic` + `derive_node_key`).
+    /// The 32-byte wallet seed, as `warren_wallet_seed_from_mnemonic` derives
+    /// it. The tunnel signs with the node key `derive_node_key` derives from
+    /// it, the wallet's identity.
     pub wallet_signing_seed: [u8; 32],
     /// Optional multi-hop entry relay. Superseded by directory-driven
     /// selection (the entry relay is chosen from `multihop_directory_json`),
@@ -357,6 +358,36 @@ fn notify_path_change() {
 #[cfg(any(all(target_os = "ios", feature = "tunnel"), test))]
 async fn next_path_change(rx: &mut tokio::sync::mpsc::UnboundedReceiver<()>) -> bool {
     rx.recv().await.is_some()
+}
+
+/// The key the tunnel signs with for the wallet `seed`: the wallet's node key,
+/// the identity its address and its subscription belong to.
+#[cfg(any(all(target_os = "ios", feature = "tunnel"), test))]
+fn tunnel_signing_key(seed: &[u8; 32]) -> ed25519_dalek::SigningKey {
+    warren_identity::derive_node_key(seed)
+}
+
+#[cfg(test)]
+mod tunnel_key_tests {
+    use super::tunnel_signing_key;
+
+    #[test]
+    fn the_tunnel_signs_as_the_wallet_the_app_shows() {
+        let seed = [0x5a; 32];
+        let mut wallet_pubkey = [0u8; 32];
+        // SAFETY: both buffers are 32 bytes, as the FFI requires.
+        let rc = unsafe {
+            crate::warren_wallet_ffi::warren_wallet_derive_pubkey(
+                seed.as_ptr(),
+                wallet_pubkey.as_mut_ptr(),
+            )
+        };
+        assert_eq!(rc, 0);
+
+        let signing = tunnel_signing_key(&seed);
+
+        assert_eq!(signing.verifying_key().to_bytes(), wallet_pubkey);
+    }
 }
 
 /// One edge of the multi-hop session-watch loop.
@@ -1962,10 +1993,10 @@ pub unsafe extern "C" fn warren_tunnel_start(
             return std::ptr::null_mut();
         };
 
-        // Wallet signing key from the Ed25519 seed bytes. Zeroize on
-        // drop is provided by `ed25519-dalek` via the `zeroize` feature
-        // already enabled in `warren-ios/Cargo.toml`.
-        let signing_key = ed25519_dalek::SigningKey::from_bytes(&params.wallet_signing_seed);
+        // The wallet's node key, from the wallet seed. Zeroize on drop is
+        // provided by `ed25519-dalek` via the `zeroize` feature already
+        // enabled in `warren-ios/Cargo.toml`.
+        let signing_key = tunnel_signing_key(&params.wallet_signing_seed);
 
         // Client opt-in for NAT-PMP port forwarding. The multi-hop reassign
         // task binds the refresh loop to the exit-assigned inner IPv4 once it
