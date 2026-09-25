@@ -17,20 +17,26 @@ designer as a numbered version (V14, V15, ...) of full-canvas masters.
    its English relay-list `countryName`, `master`, `iosImageset`). Then run
    `process-scenery.sh` with no arguments; it encodes exactly the layers that
    table lists.
-3. A new country also needs its line in the Android and iOS resolvers
-   (`ConnectionPhase.kt`, `MapViewController.swift`); the desktop renderer reads
-   the table itself.
-4. Commit the regenerated assets and the table. `test/unit/scenery-assets.spec.ts`
-   is the gate: the table must name every shipped layer and nothing else, and
-   every country in it must be mapped on Android and iOS. It runs in
-   `warren-checks`.
+3. `process-scenery.sh` ends by running `scripts/gen-scenery-tables.mjs`, which
+   rewrites the `GENERATED scenery table` blocks of the Android and iOS
+   resolvers (`ConnectionPhase.kt`, `MapViewController.swift`: countries by ISO
+   code and English name, the three layers, one exhaustive row per phase). The
+   desktop renderer and the browser extension read `scenery.json` directly.
+   After editing only the phase rows, run `node scripts/gen-scenery-tables.mjs`
+   on its own. Never edit a generated block by hand.
+4. Commit the regenerated assets, the table and the two generated blocks.
+   `test/unit/scenery-assets.spec.ts` is the gate: the table must name every
+   shipped layer and nothing else, and both generated blocks must match it. It
+   runs in `warren-checks`.
 5. Run `pnpm design:sync` in warren-extension and commit there: the browser
    extension ships the same layers, the same table and the same tokens, pinned
    to this repo's commit (its CI refuses a copy that drifts from its pin).
 
 The same table carries the phase rows (which landscape, whether Bula shows,
-blur, accent and title colour tokens), which this app's renderer and the
-extension both read.
+blur, accent and title colour tokens): the desktop renderer and the extension
+read them, Android and iOS get them generated. The accent and title colours are
+read from it on desktop and in the extension only; the mobile themes map a
+phase to their own Material and UIKit colours.
 
 **Never convert a layer by hand, and never regenerate one platform alone.** That
 is not a style preference: the layers are pre-registered full-frame images that

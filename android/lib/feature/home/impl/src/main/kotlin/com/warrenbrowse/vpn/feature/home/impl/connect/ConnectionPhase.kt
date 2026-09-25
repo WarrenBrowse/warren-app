@@ -82,42 +82,69 @@ data class SceneryState(
     val blurred: Boolean,
 )
 
-// Only these exits have bespoke art; every other country falls back to the
-// plaine, same as desktop and iOS.
+// BEGIN GENERATED scenery table: scripts/gen-scenery-tables.mjs from scenery.json, do not edit.
+
+/** Which landscape a phase shows (the exit country, or the plain), and the other two layers. */
+internal data class SceneryRow(
+    val countryLandscape: Boolean,
+    val showBula: Boolean,
+    val blurred: Boolean,
+)
+
+internal object SceneryTable {
+    @DrawableRes val plain: Int = R.drawable.scenery_plaine
+    @DrawableRes val burrow: Int = R.drawable.scenery_terrier
+    @DrawableRes val bula: Int = R.drawable.scenery_bula
+
+    /** Keyed by the lower-case ISO code and the lower-case English relay-list name. */
+    val countries: Map<String, Int> =
+        mapOf(
+            "de" to R.drawable.scenery_germany,
+            "germany" to R.drawable.scenery_germany,
+            "fi" to R.drawable.scenery_finland,
+            "finland" to R.drawable.scenery_finland,
+            "nl" to R.drawable.scenery_netherlands,
+            "netherlands" to R.drawable.scenery_netherlands,
+            "sg" to R.drawable.scenery_singapore,
+            "singapore" to R.drawable.scenery_singapore,
+        )
+
+    fun row(phase: ConnectionPhase): SceneryRow =
+        when (phase) {
+            ConnectionPhase.Exposed ->
+                SceneryRow(countryLandscape = false, showBula = true, blurred = false)
+            ConnectionPhase.Connecting ->
+                SceneryRow(countryLandscape = true, showBula = true, blurred = true)
+            ConnectionPhase.Protected ->
+                SceneryRow(countryLandscape = true, showBula = false, blurred = false)
+            ConnectionPhase.Interrupted ->
+                SceneryRow(countryLandscape = true, showBula = false, blurred = true)
+            ConnectionPhase.Blocked ->
+                SceneryRow(countryLandscape = false, showBula = false, blurred = true)
+        }
+}
+
+// END GENERATED scenery table
+
+// Only the countries in the table have bespoke art; every other one falls back
+// to the plaine, same as desktop and iOS.
 @DrawableRes
 internal fun countryLandscape(exitCountry: String?): Int =
-    when (exitCountry?.trim()?.lowercase()) {
-        "de", "germany" -> R.drawable.scenery_germany
-        "fi", "finland" -> R.drawable.scenery_finland
-        "nl", "netherlands" -> R.drawable.scenery_netherlands
-        "sg", "singapore" -> R.drawable.scenery_singapore
-        else -> R.drawable.scenery_plaine
-    }
+    SceneryTable.countries[exitCountry?.trim()?.lowercase()] ?: SceneryTable.plain
 
 // Without a tunnel the backdrop is the watched plain, so an unprotected screen
 // shows what unprotected means, and the country art is reserved for the states
-// where traffic really goes there.
-fun resolveScenery(phase: ConnectionPhase, exitCountry: String?): SceneryState =
-    when (phase) {
-        ConnectionPhase.Exposed ->
-            SceneryState(R.drawable.scenery_plaine, showBula = true, blurred = false)
-        ConnectionPhase.Connecting ->
-            SceneryState(countryLandscape(exitCountry), showBula = true, blurred = true)
-        ConnectionPhase.Protected ->
-            SceneryState(countryLandscape(exitCountry), showBula = false, blurred = false)
-        ConnectionPhase.Interrupted ->
-            SceneryState(countryLandscape(exitCountry), showBula = false, blurred = true)
-        // Kill switch: the rabbit is tucked in, so the watched world outside is
-        // only seen through the blur, never sharp like the exposed state.
-        ConnectionPhase.Blocked ->
-            SceneryState(R.drawable.scenery_plaine, showBula = false, blurred = true)
-    }
+// where traffic really goes there. The rows come from scenery.json.
+fun resolveScenery(phase: ConnectionPhase, exitCountry: String?): SceneryState {
+    val row = SceneryTable.row(phase)
+    val landscape = if (row.countryLandscape) countryLandscape(exitCountry) else SceneryTable.plain
+    return SceneryState(landscape, showBula = row.showBula, blurred = row.blurred)
+}
 
 /**
  * The masters the first home frame draws whatever the phase: the watched
  * plain behind an exposed screen, the burrow and Bula. Warmed before the
  * Connect screen is reached so that frame decodes nothing on the main thread.
  */
-@Suppress("FunctionOnlyReturningConstant")
 internal fun firstFrameMasters(): List<Int> =
-    listOf(R.drawable.scenery_plaine, R.drawable.scenery_terrier, R.drawable.scenery_bula)
+    listOf(SceneryTable.plain, SceneryTable.burrow, SceneryTable.bula)

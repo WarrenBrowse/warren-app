@@ -111,6 +111,11 @@ describe('resolveScenery interrupted', () => {
 });
 
 describe('resolveCountryImage', () => {
+  it('also takes the ISO code, as Android, iOS and the browser extension do', () => {
+    expect(resolveCountryImage('DE')).toMatch(/germany\.webp$/);
+    expect(resolveCountryImage(' sg ')).toMatch(/singapore\.webp$/);
+  });
+
   it('maps the supported exits to their cityscape, case-insensitively', () => {
     expect(resolveCountryImage('Germany')).toMatch(/germany\.webp$/);
     expect(resolveCountryImage('netherlands')).toMatch(/netherlands\.webp$/);

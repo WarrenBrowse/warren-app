@@ -161,23 +161,13 @@ describe('scenery.json is the one table of layers', () => {
     expect(script).not.toMatch(/^LAYERS=\(/m);
   });
 
-  // Android and iOS resolve the exit country in their own code; a country added
-  // here and forgotten there would ship its art to one platform only.
-  it('maps every country layer on Android and iOS', () => {
-    const kotlin = readFileSync(
-      path.join(
-        REPO,
-        'android/lib/feature/home/impl/src/main/kotlin/com/warrenbrowse/vpn/feature/home/impl/connect/ConnectionPhase.kt',
-      ),
-      'utf8',
-    );
-    const swift = readFileSync(
-      path.join(REPO, 'ios/WarrenVPN/View controllers/Tunnel/MapViewController.swift'),
-      'utf8',
-    );
-    for (const layer of manifest.layers.filter((l) => l.role === 'country')) {
-      expect(kotlin, layer.slug).toContain(`R.drawable.scenery_${layer.slug}`);
-      expect(swift, layer.slug).toContain(`"${layer.iosImageset}"`);
+  // Android and iOS resolve the scene in their own code. That code is generated
+  // from this table by scripts/gen-scenery-tables.mjs (process-scenery.sh runs
+  // it), so a country or a phase row can never exist on one platform only.
+  it('is what the Android and iOS scenery tables are generated from, and they are current', async () => {
+    const { generatedTables } = await import('../../scripts/gen-scenery-tables.mjs');
+    for (const table of generatedTables(REPO)) {
+      expect(readFileSync(table.file, 'utf8'), table.file).toBe(table.expected);
     }
   });
 });

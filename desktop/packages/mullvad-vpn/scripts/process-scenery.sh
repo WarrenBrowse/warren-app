@@ -102,5 +102,8 @@ JSON
   echo "  $slug"
 done <<<"$LAYER_ROWS"
 
+# The Android and iOS resolvers carry their own copy of the table, generated.
+node "$SCRIPT_DIR/gen-scenery-tables.mjs"
+
 echo "Done. Then commit, and run \`pnpm design:sync\` in warren-extension so the"
 echo "browser extension ships the same layers."

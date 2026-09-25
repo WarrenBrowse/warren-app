@@ -325,18 +325,44 @@ final class MapViewController: UIViewController, MKMapViewDelegate {
 /// `TunnelViewController.usesSceneryBackdrop` switches between this and the
 /// legacy `MapViewController`, which is kept intact so reverting is trivial.
 final class SceneryViewController: UIViewController {
-    // Only these exits have dedicated cityscape art; every other country falls
-    // back to the generic plain. Keys are the normalized (lower-case, trimmed)
-    // relay-list English country names, matching the desktop scenery lookup.
+    // Only the countries in the table have dedicated cityscape art; every other
+    // country falls back to the generic plain, the open plain with the two
+    // cameras trained on it: home when no tunnel carries the traffic, and the
+    // backdrop of any exit with no bespoke art.
+    // BEGIN GENERATED scenery table: scripts/gen-scenery-tables.mjs from scenery.json, do not edit.
+    // Keyed by the lower-case ISO code and the lower-case English relay-list name.
     private static let countryImages: [String: String] = [
-        "finland": "SceneryFinland",
+        "de": "SceneryGermany",
         "germany": "SceneryGermany",
+        "fi": "SceneryFinland",
+        "finland": "SceneryFinland",
+        "nl": "SceneryNetherlands",
         "netherlands": "SceneryNetherlands",
+        "sg": "ScenerySingapore",
         "singapore": "ScenerySingapore",
     ]
-    // The open plain, with the two cameras trained on it: home when no tunnel
-    // carries the traffic, and the backdrop of any exit with no bespoke art.
     private static let plainImageName = "SceneryPlaine"
+    private static let burrowImageName = "SceneryTerrier"
+    private static let bulaImageName = "SceneryBula"
+
+    // Which landscape a phase shows (the exit country, or the plain), and the other two layers.
+    private static func sceneryRow(
+        _ phase: ConnectionPhase
+    ) -> (countryLandscape: Bool, showsBula: Bool, blurred: Bool) {
+        switch phase {
+        case .exposed:
+            return (countryLandscape: false, showsBula: true, blurred: false)
+        case .connecting:
+            return (countryLandscape: true, showsBula: true, blurred: true)
+        case .protected:
+            return (countryLandscape: true, showsBula: false, blurred: false)
+        case .interrupted:
+            return (countryLandscape: true, showsBula: false, blurred: true)
+        case .blocked:
+            return (countryLandscape: false, showsBula: false, blurred: true)
+        }
+    }
+    // END GENERATED scenery table
 
     // Hiding slides Bula this share of the height down into the burrow.
     private static let bulaHideDrop: CGFloat = 0.03
@@ -482,7 +508,7 @@ final class SceneryViewController: UIViewController {
         let parts = Self.burrowLayerParts()
         foregroundView.image = parts?.head
         foregroundGroundView.image = parts?.ground
-        bulaView.image = UIImage(named: "SceneryBula")
+        bulaView.image = UIImage(named: Self.bulaImageName)
 
         NotificationCenter.default.addObserver(
             self,
@@ -510,7 +536,7 @@ final class SceneryViewController: UIViewController {
     /// is invisible, and only the lower half is ever stretched.
     private static func burrowLayerParts() -> (head: UIImage, ground: UIImage)? {
         if let cached = burrowParts { return cached }
-        guard let source = UIImage(named: "SceneryTerrier"), let cgImage = source.cgImage else {
+        guard let source = UIImage(named: Self.burrowImageName), let cgImage = source.cgImage else {
             return nil
         }
         let split = Int(
@@ -678,25 +704,15 @@ final class SceneryViewController: UIViewController {
     // and the country art is reserved for the states where traffic really goes
     // there.
     private static func resolveScenery(phase: ConnectionPhase, exitCountry: String?) -> Scenery {
-        switch phase {
-        case .exposed:
-            return Scenery(imageName: plainImageName, showsBula: true, blurred: false)
-        case .connecting:
-            // Background swaps to the target country and blurs; the rabbit is
-            // left outside until the tunnel is actually up.
-            return Scenery(imageName: countryImage(for: exitCountry), showsBula: true, blurred: true)
-        case .protected:
-            return Scenery(imageName: countryImage(for: exitCountry), showsBula: false, blurred: false)
-        case .interrupted:
-            // Nominally-up tunnel with nothing flowing: same visual language
-            // as the connecting transition (blurred city) so the scene reads
-            // "not settled", with the rabbit still tucked in (fail-closed).
-            return Scenery(imageName: countryImage(for: exitCountry), showsBula: false, blurred: true)
-        case .blocked:
-            // Kill switch: the rabbit is tucked in, so the watched world
-            // outside is only seen through the blur, never sharp like exposed.
-            return Scenery(imageName: plainImageName, showsBula: false, blurred: true)
-        }
+        // The rows come from scenery.json: connecting and interrupted blur the
+        // landscape ("not settled"), Bula stays outside until the tunnel is up,
+        // and the kill switch shows the watched plain through the blur.
+        let row = sceneryRow(phase)
+        return Scenery(
+            imageName: row.countryLandscape ? countryImage(for: exitCountry) : plainImageName,
+            showsBula: row.showsBula,
+            blurred: row.blurred
+        )
     }
 
     private static func countryImage(for country: String?) -> String {

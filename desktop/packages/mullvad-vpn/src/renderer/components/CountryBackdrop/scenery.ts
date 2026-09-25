@@ -7,12 +7,16 @@ const SCENERY_BASE = 'assets/images/scenery';
 // scenery.json is the one table of layers and phases, shared with the browser
 // extension (its design sync copies it) and process-scenery.sh. Only the
 // countries it lists have dedicated art; every other one falls back to the
-// plain. Keys here are the normalized (lower-case, trimmed) English relay-list
-// country name, which is what the daemon reports.
+// plain. Keys are normalized (lower-case, trimmed): the English relay-list
+// country name, which is what the daemon reports, and the ISO code, which is
+// how Android, iOS and the browser extension look it up.
 const COUNTRY_IMAGE: Readonly<Record<string, string>> = Object.fromEntries(
   sceneryManifest.layers
     .filter((layer) => layer.role === 'country')
-    .map((layer) => [(layer.countryName ?? '').toLowerCase(), `${layer.slug}.webp`]),
+    .flatMap((layer) => [
+      [(layer.countryName ?? '').toLowerCase(), `${layer.slug}.webp`],
+      [(layer.country ?? '').toLowerCase(), `${layer.slug}.webp`],
+    ]),
 );
 
 const layerFile = (role: string) => {
