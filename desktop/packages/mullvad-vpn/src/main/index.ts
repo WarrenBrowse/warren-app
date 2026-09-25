@@ -1499,9 +1499,9 @@ class ApplicationMain
             },
         );
       }
-    } catch (e) {
-      const error = e as Error;
-      log.warn(`Failed to read the routed applications: ${error.message}`);
+    } catch {
+      // The message can name an app's path, which here is tied to an exit.
+      log.warn('Failed to read the routed applications');
       return;
     }
 
