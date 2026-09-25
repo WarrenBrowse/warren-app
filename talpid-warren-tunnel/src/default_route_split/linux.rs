@@ -23,12 +23,26 @@
 use std::net::{Ipv4Addr, Ipv6Addr};
 
 use anyhow::Result;
+use warrenguard_route_split::default_route_split::{IncludeFwmark, TunLookupScope};
 
 /// Firewall mark the nftables split-tunnel rules apply (as packet `meta mark`)
 /// to traffic from excluded processes. Mirrors `mullvad_types::TUNNEL_FWMARK`
 /// (kept as a local literal to avoid a `mullvad-types` dependency edge from
 /// this crate). Hex form so it matches the `ip rule show` display.
 const SPLIT_TUNNEL_FWMARK: &str = "0x6d6f6c65";
+
+/// What the tunnel lookup captures, and the exclusion bypass that goes with
+/// it. Exclusion and include-only never coexist: an include-only tunnel drops
+/// the excluded-app bypass, so its pref-49 rule can never send marked traffic
+/// around the tunnel.
+fn route_selection(include_only: bool) -> Result<(Option<&'static str>, TunLookupScope)> {
+    if include_only {
+        let mark = IncludeFwmark::new(talpid_types::split_tunnel::INCLUDE_FWMARK)?;
+        Ok((None, TunLookupScope::Marked(mark)))
+    } else {
+        Ok((Some(SPLIT_TUNNEL_FWMARK), TunLookupScope::AllTraffic))
+    }
+}
 
 /// Linux default-route split guard. Wraps the shared warrenguard-route-split guard and
 /// injects the desktop daemon's split-tunnel fwmark bypass. Exposes the same
@@ -46,14 +60,20 @@ impl DefaultRouteSplitGuard {
     /// see the module docs. The synchronous teardown on `Drop` and the
     /// ownership-scoped crash recovery come from the wrapped
     /// warrenguard-route-split guard.
-    pub async fn install(exit_ip: Ipv4Addr, tun_name: &str) -> Result<Self> {
-        let inner = warrenguard_route_split::default_route_split::DefaultRouteSplitGuard::install(
-            exit_ip,
-            tun_name,
-            &[],
-            Some(SPLIT_TUNNEL_FWMARK),
-        )
-        .await?;
+    ///
+    /// With `include_only`, only traffic carrying the include mark enters the
+    /// tunnel; the firewall marks it and drops it anywhere else.
+    pub async fn install(exit_ip: Ipv4Addr, tun_name: &str, include_only: bool) -> Result<Self> {
+        let (split_tunnel_fwmark, scope) = route_selection(include_only)?;
+        let inner =
+            warrenguard_route_split::default_route_split::DefaultRouteSplitGuard::install_scoped(
+                exit_ip,
+                tun_name,
+                &[],
+                split_tunnel_fwmark,
+                scope,
+            )
+            .await?;
         Ok(Self(inner))
     }
 
@@ -77,12 +97,18 @@ impl DefaultRouteSplitV6Guard {
     /// Install the v6 split-default routing for `tun_name`, plus the
     /// split-tunnel fwmark bypass on the v6 rule database. Teardown on `Drop`
     /// comes from the wrapped warrenguard-route-split guard.
-    pub async fn install(exit_ip_v6: Option<Ipv6Addr>, tun_name: &str) -> Result<Self> {
+    pub async fn install(
+        exit_ip_v6: Option<Ipv6Addr>,
+        tun_name: &str,
+        include_only: bool,
+    ) -> Result<Self> {
+        let (split_tunnel_fwmark, scope) = route_selection(include_only)?;
         let inner =
-            warrenguard_route_split::default_route_split::DefaultRouteSplitV6Guard::install(
+            warrenguard_route_split::default_route_split::DefaultRouteSplitV6Guard::install_scoped(
                 exit_ip_v6,
                 tun_name,
-                Some(SPLIT_TUNNEL_FWMARK),
+                split_tunnel_fwmark,
+                scope,
             )
             .await?;
         Ok(Self(inner))
@@ -91,5 +117,31 @@ impl DefaultRouteSplitV6Guard {
     /// Remove the v6 routing. Idempotent and best-effort; see the wrapped guard.
     pub async fn uninstall(self) -> Result<()> {
         self.0.uninstall().await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn include_only_scopes_the_lookup_to_the_include_mark_and_drops_the_exclusion_bypass() {
+        let (bypass, scope) = route_selection(true).unwrap();
+
+        assert_eq!(bypass, None);
+        assert_eq!(
+            scope,
+            TunLookupScope::Marked(
+                IncludeFwmark::new(talpid_types::split_tunnel::INCLUDE_FWMARK).unwrap()
+            )
+        );
+    }
+
+    #[test]
+    fn a_full_tunnel_keeps_the_exclusion_bypass_and_captures_everything() {
+        let (bypass, scope) = route_selection(false).unwrap();
+
+        assert_eq!(bypass, Some(SPLIT_TUNNEL_FWMARK));
+        assert_eq!(scope, TunLookupScope::AllTraffic);
     }
 }

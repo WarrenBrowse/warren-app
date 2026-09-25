@@ -479,9 +479,22 @@ impl ConnectedState {
                 SameState(self)
             }
             #[cfg(windows)]
-            Some(TunnelCommand::SetExcludedApps(result_tx, paths)) => {
-                shared_values.exclude_paths(paths, result_tx);
-                SameState(self)
+            Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {
+                if shared_values.set_split_apps(apps, result_tx) {
+                    self.disconnect(shared_values, AfterDisconnect::Reconnect(0))
+                } else {
+                    SameState(self)
+                }
+            }
+            #[cfg(target_os = "linux")]
+            Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {
+                let mode_changed = shared_values.set_split_apps(apps);
+                let _ = result_tx.send(Ok(()));
+                if mode_changed {
+                    self.disconnect(shared_values, AfterDisconnect::Reconnect(0))
+                } else {
+                    SameState(self)
+                }
             }
             #[cfg(target_os = "android")]
             Some(TunnelCommand::SetExcludedApps(result_tx, paths)) => {
@@ -494,8 +507,8 @@ impl ConnectedState {
                 }
             }
             #[cfg(target_os = "macos")]
-            Some(TunnelCommand::SetExcludedApps(result_tx, paths)) => {
-                match shared_values.set_exclude_paths(paths) {
+            Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {
+                match shared_values.set_split_apps(apps) {
                     Ok(interface_changed) => {
                         let _ = result_tx.send(Ok(()));
 

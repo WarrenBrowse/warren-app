@@ -6707,6 +6707,7 @@ name = "warren-api"
 version = "0.0.1"
 dependencies = [
  "data-encoding",
+ "ed25519-dalek",
  "hex",
  "rand 0.10.1",
  "rand 0.8.6",
@@ -6718,12 +6719,14 @@ dependencies = [
  "warren-discovery-core",
  "warren-identity",
  "warrenguard-token",
+ "zeroize",
 ]
 
 [[package]]
 name = "warren-contract"
 version = "0.0.1"
 dependencies = [
+ "base64",
  "blake2",
  "bs58",
  "ed25519-dalek",
@@ -6733,6 +6736,7 @@ dependencies = [
  "sha2",
  "thiserror 2.0.18",
  "warrenguard-wire",
+ "zeroize",
 ]
 
 [[package]]

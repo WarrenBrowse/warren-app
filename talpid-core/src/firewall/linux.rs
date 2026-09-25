@@ -19,6 +19,7 @@ use talpid_types::net::{
     ALLOWED_LAN_MULTICAST_NETS, ALLOWED_LAN_NETS, AllowedEndpoint, AllowedTunnelTraffic, Endpoint,
     TransportProtocol,
 };
+use talpid_types::split_tunnel::INCLUDE_FWMARK;
 
 /// Priority for rules that tag split tunneling packets. Equals NF_IP_PRI_MANGLE.
 const MANGLE_CHAIN_PRIORITY: i32 = libc::NF_IP_PRI_MANGLE;
@@ -84,6 +85,7 @@ const FORWARD_CHAIN_NAME: &CStr = c"forward";
 const PREROUTING_CHAIN_NAME: &CStr = c"prerouting";
 const MANGLE_CHAIN_NAME: &CStr = c"mangle";
 const NAT_CHAIN_NAME: &CStr = c"nat";
+const POSTROUTING_CHAIN_NAME: &CStr = c"postrouting";
 
 /// Allows controlling whether firewall rules should have packet counters or not from an env
 /// variable. Useful for debugging the rules.
@@ -126,16 +128,24 @@ pub struct Firewall {
     /// The net_cls id of the v1 cgroup used for split tunneling.
     /// This is used as a fallback to [`Self::excluded_cgroup2`] since old kernels don't support cgroups v2.
     net_cls: Option<u32>,
+    /// The cgroup2 whose processes alone are tunneled while [`Self::include_only`] holds.
+    included_cgroup2: Option<CGroup2>,
+    /// "VPN only for these apps": only the included cgroup's traffic is kept
+    /// in the tunnel, everything else leaves outside it. Exclusion is off
+    /// meanwhile, so the two modes never shape the same policy.
+    include_only: bool,
 }
 
 impl Firewall {
     /// Create a `Firewall` from a `FirewallArguments`.
     pub fn from_args(args: FirewallArguments) -> Result<Self> {
-        Firewall::new(
+        let mut firewall = Firewall::new(
             args.linux_ids.fwmark,
             args.linux_ids.excluded_cgroup2,
             args.linux_ids.net_cls,
-        )
+        )?;
+        firewall.included_cgroup2 = args.linux_ids.included_cgroup2;
+        Ok(firewall)
     }
 
     /// Create a `Firewall`.
@@ -155,7 +165,15 @@ impl Firewall {
             fwmark,
             excluded_cgroup2,
             net_cls,
+            included_cgroup2: None,
+            include_only: false,
         })
+    }
+
+    /// Chooses between the full tunnel (with launch-based exclusion) and
+    /// include-only for the policies applied from now on.
+    pub fn set_include_only(&mut self, include_only: bool) {
+        self.include_only = include_only;
     }
 
     /// Apply a [`FirewallPolicy`] by setting up [`table_name`] nftable.
@@ -350,6 +368,7 @@ struct PolicyBatch<'a> {
     prerouting_chain: Chain<'a>,
     mangle_chain: Chain<'a>,
     nat_chain: Chain<'a>,
+    postrouting_chain: Chain<'a>,
 }
 
 impl<'a> PolicyBatch<'a> {
@@ -395,6 +414,14 @@ impl<'a> PolicyBatch<'a> {
         nat_chain.set_policy(nftnl::Policy::Accept);
         batch.add(&nat_chain, nftnl::MsgType::Add);
 
+        // The output hook sees the device a packet was routed to before the
+        // mangle chain re-marked it; only postrouting sees where it leaves.
+        let mut postrouting_chain = Chain::new(POSTROUTING_CHAIN_NAME, table);
+        postrouting_chain.set_hook(nftnl::Hook::PostRouting, libc::NF_IP_PRI_FILTER);
+        postrouting_chain.set_type(nftnl::ChainType::Filter);
+        postrouting_chain.set_policy(nftnl::Policy::Accept);
+        batch.add(&postrouting_chain, nftnl::MsgType::Add);
+
         PolicyBatch {
             batch,
             in_chain,
@@ -403,6 +430,7 @@ impl<'a> PolicyBatch<'a> {
             prerouting_chain,
             mangle_chain,
             nat_chain,
+            postrouting_chain,
         }
     }
 
@@ -414,16 +442,156 @@ impl<'a> PolicyBatch<'a> {
         firewall: &Firewall,
     ) -> Result<FinalizedBatch> {
         self.add_loopback_rules()?;
-        // TODO: Investigate if these rules could/should be handled by PidManager instead.
-        // It would allow for the firewall to be set up in a secure way even though split tunneling
-        // does not work, which is okay. It would also allow us to de-duplicate some copy-paste
-        // code which is present both in this module and in PidManager ..
-        self.add_split_tunneling_rules(policy, firewall)?;
+        let include_only = firewall.include_only.then_some(&firewall.included_cgroup2);
+        match include_only {
+            Some(included_cgroup2) => {
+                for rule in include_only_head(policy) {
+                    self.add_include_only_rule(&rule, included_cgroup2.as_ref())?;
+                }
+            }
+            // TODO: Investigate if these rules could/should be handled by PidManager instead.
+            // It would allow for the firewall to be set up in a secure way even though split
+            // tunneling does not work, which is okay. It would also allow us to de-duplicate
+            // some copy-paste code which is present both in this module and in PidManager ..
+            None => self.add_split_tunneling_rules(policy, firewall)?,
+        }
         self.add_dhcp_client_rules();
         self.add_ndp_rules();
-        self.add_policy_specific_rules(policy, firewall.fwmark)?;
+        self.add_policy_specific_rules(policy, firewall.fwmark, include_only.is_some())?;
 
         Ok(self.batch.finalize())
+    }
+
+    /// Adds one include-only rule. `included_cgroup2` is `None` when the
+    /// cgroup could not be set up: no process can then be included, so the
+    /// socket selector is left out and the other rules match nothing.
+    fn add_include_only_rule(
+        &mut self,
+        rule: &IncludeRule<'_>,
+        included_cgroup2: Option<&CGroup2>,
+    ) -> Result<()> {
+        match *rule {
+            IncludeRule::TunnelDnsAsIncluded(server) => {
+                for protocol in [TransportProtocol::Udp, TransportProtocol::Tcp] {
+                    let mut nft_rule = Rule::new(&self.mangle_chain);
+                    check_port(&mut nft_rule, protocol, End::Dst, 53);
+                    check_ip(&mut nft_rule, End::Dst, server);
+                    set_include_marks(&mut nft_rule);
+                    self.batch.add(&nft_rule, nftnl::MsgType::Add);
+                }
+            }
+            IncludeRule::MarkIncludedSockets => {
+                let Some(cgroup) = included_cgroup2 else {
+                    return Ok(());
+                };
+                // `level 1`: the included cgroup sits right under the root and
+                // every process launched in it stays in it (see the exclusion
+                // selector below for the kernel rules this relies on).
+                let mut nft_rule = Rule::new(&self.mangle_chain);
+                nft_rule.add_expr(&nft_expr!(socket cgroupv2 level 1));
+                nft_rule.add_expr(&nft_expr!(cmp == cgroup.inode()));
+                set_include_marks(&mut nft_rule);
+                self.batch.add(&nft_rule, nftnl::MsgType::Add);
+            }
+            IncludeRule::RemarkIncludedConnections => {
+                // Packets with no full socket (a TCP reset from a timewait
+                // socket, for one) still belong to their connection.
+                let mut nft_rule = Rule::new(&self.mangle_chain);
+                check_ct_included(&mut nft_rule);
+                nft_rule.add_expr(&nft_expr!(immediate data INCLUDE_FWMARK));
+                nft_rule.add_expr(&nft_expr!(meta mark set));
+                self.batch.add(&nft_rule, nftnl::MsgType::Add);
+            }
+            IncludeRule::RejectIncluded => {
+                let mut nft_rule = Rule::new(&self.out_chain);
+                check_ct_included(&mut nft_rule);
+                add_verdict(
+                    &mut nft_rule,
+                    &Verdict::Reject(RejectionType::Icmp(IcmpCode::PortUnreach)),
+                );
+                self.batch.add(&nft_rule, nftnl::MsgType::Add);
+            }
+            IncludeRule::AcceptIncludedDns(server) => {
+                for protocol in [TransportProtocol::Udp, TransportProtocol::Tcp] {
+                    let mut nft_rule = Rule::new(&self.out_chain);
+                    check_ct_included(&mut nft_rule);
+                    check_port(&mut nft_rule, protocol, End::Dst, 53);
+                    check_ip(&mut nft_rule, End::Dst, server);
+                    add_verdict(&mut nft_rule, &Verdict::Accept);
+                    self.batch.add(&nft_rule, nftnl::MsgType::Add);
+                }
+            }
+            IncludeRule::RejectIncludedOtherDns => {
+                for protocol in [TransportProtocol::Udp, TransportProtocol::Tcp] {
+                    let mut nft_rule = Rule::new(&self.out_chain);
+                    check_ct_included(&mut nft_rule);
+                    check_port(&mut nft_rule, protocol, End::Dst, 53);
+                    add_verdict(
+                        &mut nft_rule,
+                        &Verdict::Reject(RejectionType::Icmp(IcmpCode::PortUnreach)),
+                    );
+                    self.batch.add(&nft_rule, nftnl::MsgType::Add);
+                }
+            }
+            IncludeRule::AcceptIncluded => {
+                let mut nft_rule = Rule::new(&self.out_chain);
+                check_ct_included(&mut nft_rule);
+                add_verdict(&mut nft_rule, &Verdict::Accept);
+                self.batch.add(&nft_rule, nftnl::MsgType::Add);
+            }
+            IncludeRule::DropIncludedOffTunnel(tunnel) => {
+                let mut nft_rule = Rule::new(&self.postrouting_chain);
+                check_not_iface(&mut nft_rule, Direction::Out, "lo")?;
+                if let Some(tunnel) = tunnel {
+                    check_not_iface(&mut nft_rule, Direction::Out, tunnel)?;
+                }
+                check_ct_included(&mut nft_rule);
+                add_verdict(&mut nft_rule, &Verdict::Drop);
+                self.batch.add(&nft_rule, nftnl::MsgType::Add);
+            }
+            IncludeRule::DropIncludedArrivingOffTunnel(tunnel) => {
+                let mut nft_rule = Rule::new(&self.in_chain);
+                if let Some(tunnel) = tunnel {
+                    check_not_iface(&mut nft_rule, Direction::In, tunnel)?;
+                }
+                check_ct_included(&mut nft_rule);
+                add_verdict(&mut nft_rule, &Verdict::Drop);
+                self.batch.add(&nft_rule, nftnl::MsgType::Add);
+            }
+            IncludeRule::RemarkIncludedReplies(tunnel) => {
+                // Replies carry the include mark so a strict reverse-path
+                // check finds their source through the tunnel table.
+                let mut nft_rule = Rule::new(&self.prerouting_chain);
+                check_iface(&mut nft_rule, Direction::In, tunnel)?;
+                check_ct_included(&mut nft_rule);
+                nft_rule.add_expr(&nft_expr!(immediate data INCLUDE_FWMARK));
+                nft_rule.add_expr(&nft_expr!(meta mark set));
+                self.batch.add(&nft_rule, nftnl::MsgType::Add);
+            }
+            IncludeRule::MasqueradeIncludedIntoTunnel(tunnel) => {
+                // An included socket connects before its first packet is
+                // marked, so it carries the physical source address `main`
+                // chose; the exit must see the tunnel's instead.
+                let mut nft_rule = Rule::new(&self.nat_chain);
+                check_iface(&mut nft_rule, Direction::Out, tunnel)?;
+                check_ct_included(&mut nft_rule);
+                nft_rule.add_expr(&nft_expr!(masquerade));
+                self.batch.add(&nft_rule, nftnl::MsgType::Add);
+            }
+            IncludeRule::BlockTunnelAddressProbes(tunnel) => {
+                self.add_block_cve_2019_14899(tunnel);
+            }
+            IncludeRule::AcceptNotIncluded => {
+                for chain in [&self.out_chain, &self.forward_chain, &self.in_chain] {
+                    let mut nft_rule = Rule::new(chain);
+                    nft_rule.add_expr(&nft_expr!(ct mark));
+                    nft_rule.add_expr(&nft_expr!(cmp != INCLUDE_CT_MARK));
+                    add_verdict(&mut nft_rule, &Verdict::Accept);
+                    self.batch.add(&nft_rule, nftnl::MsgType::Add);
+                }
+            }
+        }
+        Ok(())
     }
 
     /// Allow split-tunneled traffic outside the tunnel.
@@ -699,7 +867,12 @@ impl<'a> PolicyBatch<'a> {
         }
     }
 
-    fn add_policy_specific_rules(&mut self, policy: &FirewallPolicy, fwmark: u32) -> Result<()> {
+    fn add_policy_specific_rules(
+        &mut self,
+        policy: &FirewallPolicy,
+        fwmark: u32,
+        include_only: bool,
+    ) -> Result<()> {
         let allow_lan = match policy {
             FirewallPolicy::Connecting {
                 peer_endpoints,
@@ -801,6 +974,12 @@ impl<'a> PolicyBatch<'a> {
 
         if allow_lan {
             self.add_allow_lan_rules();
+        }
+
+        if include_only {
+            for rule in include_only_tail(policy) {
+                self.add_include_only_rule(&rule, None)?;
+            }
         }
 
         // Reject any remaining outgoing traffic
@@ -1277,6 +1456,136 @@ fn check_ct_established(rule: &mut Rule<'_>) {
     rule.add_expr(&nft_expr!(cmp != 0u32));
 }
 
+/// Conntrack mark of the connections an include-only tunnel carries. Distinct
+/// from the exclusion mark ([`split_tunnel::MARK`]).
+const INCLUDE_CT_MARK: u32 = 0xf42;
+
+/// What include-only adds to a policy, by rule, in the order it is added.
+/// Kept apart from the netfilter batch so the shape of every state can be
+/// checked without root.
+#[derive(Debug, PartialEq)]
+enum IncludeRule<'a> {
+    /// Traffic to a tunnel resolver is carried like an included app's, so
+    /// the system resolver, which no app owns, keeps resolving through the
+    /// tunnel and never on the physical network.
+    TunnelDnsAsIncluded(IpAddr),
+    /// Marks the connections of the included cgroup's sockets.
+    MarkIncludedSockets,
+    /// Marks every packet of an included connection for the tunnel lookup.
+    RemarkIncludedConnections,
+    /// Rejects included traffic in the output hook: there is no tunnel to
+    /// carry it yet, so it fails at once instead of timing out.
+    RejectIncluded,
+    /// Lets included traffic reach one of the resolvers the policy allows.
+    AcceptIncludedDns(IpAddr),
+    /// Rejects included DNS to any other resolver, as the full tunnel does.
+    RejectIncludedOtherDns,
+    /// Accepts included traffic in the output hook. The device that hook
+    /// reports is the one the socket was routed to before the include mark
+    /// sent the packet to the tunnel, so it cannot tell where the packet
+    /// leaves: [`Self::DropIncludedOffTunnel`] does, after routing.
+    AcceptIncluded,
+    /// Drops included traffic leaving by any interface but loopback and
+    /// this tunnel, or but loopback when there is no tunnel.
+    DropIncludedOffTunnel(Option<&'a str>),
+    /// Drops packets of included connections that arrive outside the tunnel.
+    DropIncludedArrivingOffTunnel(Option<&'a str>),
+    /// Marks replies arriving on the tunnel for the reverse-path check.
+    RemarkIncludedReplies(&'a str),
+    /// Gives included traffic leaving through the tunnel the tunnel address.
+    MasqueradeIncludedIntoTunnel(&'a str),
+    /// Drops probes for the tunnel address, which accepting the physical
+    /// network's inbound traffic would otherwise let in.
+    BlockTunnelAddressProbes(&'a TunnelMetadata),
+    /// Lets everything that is not included go, both ways.
+    AcceptNotIncluded,
+}
+
+fn policy_tunnel(policy: &FirewallPolicy) -> Option<&TunnelMetadata> {
+    match policy {
+        FirewallPolicy::Connecting { tunnel, .. } => tunnel.as_ref(),
+        FirewallPolicy::Connected { tunnel, .. } => Some(tunnel),
+        FirewallPolicy::Blocked { .. } => None,
+    }
+}
+
+/// The include-only rules that precede every other rule of the policy but
+/// the loopback ones. Included traffic only flows while connected; before
+/// that the tunnel carries nothing of the user's.
+fn include_only_head(policy: &FirewallPolicy) -> Vec<IncludeRule<'_>> {
+    let connected = match policy {
+        FirewallPolicy::Connected {
+            tunnel, dns_config, ..
+        } => Some((tunnel.interface.as_str(), dns_config)),
+        _ => None,
+    };
+    let tunnel = connected.map(|(tunnel, _)| tunnel);
+    let mut rules = Vec::new();
+    if let Some((_, dns_config)) = connected {
+        rules.extend(
+            super::allowed_tunnel_dns(dns_config)
+                .into_iter()
+                .map(IncludeRule::TunnelDnsAsIncluded),
+        );
+    }
+    rules.extend([
+        IncludeRule::MarkIncludedSockets,
+        IncludeRule::RemarkIncludedConnections,
+    ]);
+    match connected {
+        Some((_, dns_config)) => {
+            if !dns_config.allow_external_dns() {
+                rules.extend(
+                    super::allowed_tunnel_dns(dns_config)
+                        .into_iter()
+                        .map(IncludeRule::AcceptIncludedDns),
+                );
+                rules.push(IncludeRule::RejectIncludedOtherDns);
+            }
+            rules.push(IncludeRule::AcceptIncluded);
+        }
+        None => rules.push(IncludeRule::RejectIncluded),
+    }
+    rules.extend([
+        IncludeRule::DropIncludedOffTunnel(tunnel),
+        IncludeRule::DropIncludedArrivingOffTunnel(tunnel),
+    ]);
+    if let Some(tunnel) = tunnel {
+        rules.extend([
+            IncludeRule::RemarkIncludedReplies(tunnel),
+            IncludeRule::MasqueradeIncludedIntoTunnel(tunnel),
+        ]);
+    }
+    rules
+}
+
+/// The include-only rules that come after the policy's own, right before
+/// the final reject: the rest of the host keeps its normal connection in
+/// every state, blocked ones included.
+fn include_only_tail(policy: &FirewallPolicy) -> Vec<IncludeRule<'_>> {
+    let mut rules = Vec::new();
+    if let Some(tunnel) = policy_tunnel(policy) {
+        rules.push(IncludeRule::BlockTunnelAddressProbes(tunnel));
+    }
+    rules.push(IncludeRule::AcceptNotIncluded);
+    rules
+}
+
+fn set_include_marks(rule: &mut Rule<'_>) {
+    rule.add_expr(&nft_expr!(immediate data INCLUDE_CT_MARK));
+    rule.add_expr(&nft_expr!(ct mark set));
+    rule.add_expr(&nft_expr!(immediate data INCLUDE_FWMARK));
+    rule.add_expr(&nft_expr!(meta mark set));
+    if *ADD_COUNTERS {
+        rule.add_expr(&nft_expr!(counter));
+    }
+}
+
+fn check_ct_included(rule: &mut Rule<'_>) {
+    rule.add_expr(&nft_expr!(ct mark));
+    rule.add_expr(&nft_expr!(cmp == INCLUDE_CT_MARK));
+}
+
 fn add_verdict(rule: &mut Rule<'_>, verdict: &expr::Verdict) {
     if *ADD_COUNTERS {
         rule.add_expr(&nft_expr!(counter));
@@ -1301,4 +1610,153 @@ fn lock_down_arp_ignore_sysctl() -> io::Result<()> {
         _ => log::trace!("Not locking down arp_ignore since it is set to {current_arp_ignore}"),
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod include_only_tests {
+    use super::*;
+    use std::net::Ipv4Addr;
+    use talpid_dns::DnsConfig;
+
+    const TUN: &str = "wg0-warren";
+    const GATEWAY: IpAddr = IpAddr::V4(Ipv4Addr::new(10, 66, 0, 1));
+
+    fn tunnel() -> TunnelMetadata {
+        TunnelMetadata {
+            interface: TUN.to_owned(),
+            ips: vec![IpAddr::V4(Ipv4Addr::new(10, 66, 0, 2))],
+            ipv4_gateway: Ipv4Addr::new(10, 66, 0, 1),
+            ipv6_gateway: None,
+            daita_active: false,
+            effective_mtu: None,
+            legs_bonded: 0,
+            legs_not_delivering: 0,
+        }
+    }
+
+    fn connected() -> FirewallPolicy {
+        FirewallPolicy::Connected {
+            peer_endpoints: vec![],
+            tunnel: tunnel(),
+            allow_lan: false,
+            dns_config: DnsConfig::default().resolve(&[GATEWAY]),
+        }
+    }
+
+    fn blocked() -> FirewallPolicy {
+        FirewallPolicy::Blocked {
+            allow_lan: false,
+            allowed_endpoint: None,
+        }
+    }
+
+    fn connecting() -> FirewallPolicy {
+        FirewallPolicy::Connecting {
+            peer_endpoints: vec![],
+            tunnel: Some(tunnel()),
+            allow_lan: false,
+            allowed_endpoint: AllowedEndpoint {
+                endpoint: Endpoint::new(Ipv4Addr::LOCALHOST, 443, TransportProtocol::Tcp),
+                clients: talpid_types::net::AllowedClients::Root,
+            },
+            allowed_tunnel_traffic: AllowedTunnelTraffic::All,
+        }
+    }
+
+    #[test]
+    fn included_traffic_fails_at_once_until_the_tunnel_is_connected() {
+        for policy in [blocked(), connecting()] {
+            let head = include_only_head(&policy);
+
+            assert!(head.contains(&IncludeRule::RejectIncluded), "{head:?}");
+            assert!(!head.contains(&IncludeRule::AcceptIncluded), "{head:?}");
+            assert!(
+                head.contains(&IncludeRule::DropIncludedOffTunnel(None)),
+                "{head:?}"
+            );
+        }
+    }
+
+    /// The regression the real-network test found: a check of the output
+    /// device in the output hook sees the device the socket was routed to
+    /// before the include mark, so it rejected every included packet.
+    #[test]
+    fn a_connected_host_judges_where_included_traffic_leaves_after_routing() {
+        let policy = connected();
+
+        let head = include_only_head(&policy);
+
+        assert!(head.contains(&IncludeRule::AcceptIncluded));
+        assert!(!head.contains(&IncludeRule::RejectIncluded));
+        assert!(head.contains(&IncludeRule::DropIncludedOffTunnel(Some(TUN))));
+        assert!(head.contains(&IncludeRule::DropIncludedArrivingOffTunnel(Some(TUN))));
+        assert!(head.contains(&IncludeRule::RemarkIncludedReplies(TUN)));
+        assert!(head.contains(&IncludeRule::MasqueradeIncludedIntoTunnel(TUN)));
+    }
+
+    #[test]
+    fn included_dns_reaches_only_the_tunnel_resolvers() {
+        let policy = connected();
+
+        let head = include_only_head(&policy);
+        let position = |wanted: &IncludeRule<'_>| head.iter().position(|rule| rule == wanted);
+
+        assert!(
+            position(&IncludeRule::AcceptIncludedDns(GATEWAY))
+                < position(&IncludeRule::RejectIncludedOtherDns)
+        );
+        assert!(
+            position(&IncludeRule::RejectIncludedOtherDns) < position(&IncludeRule::AcceptIncluded)
+        );
+    }
+
+    #[test]
+    fn the_tunnel_resolvers_are_reached_like_an_included_app_while_connected() {
+        let connected = connected();
+        let blocked = blocked();
+
+        let connected_head = include_only_head(&connected);
+        let blocked_head = include_only_head(&blocked);
+
+        assert!(connected_head.contains(&IncludeRule::TunnelDnsAsIncluded(GATEWAY)));
+        assert!(
+            !blocked_head
+                .iter()
+                .any(|rule| matches!(rule, IncludeRule::TunnelDnsAsIncluded(_))),
+            "{blocked_head:?}"
+        );
+    }
+
+    #[test]
+    fn included_sockets_are_marked_before_their_traffic_is_judged() {
+        let policy = connected();
+
+        let head = include_only_head(&policy);
+        let position = |wanted: &IncludeRule<'_>| head.iter().position(|rule| rule == wanted);
+
+        assert!(
+            position(&IncludeRule::MarkIncludedSockets) < position(&IncludeRule::AcceptIncluded)
+        );
+    }
+
+    #[test]
+    fn the_rest_of_the_host_keeps_its_connection_in_every_state() {
+        for policy in [connected(), blocked()] {
+            let tail = include_only_tail(&policy);
+
+            assert_eq!(tail.last(), Some(&IncludeRule::AcceptNotIncluded));
+        }
+    }
+
+    #[test]
+    fn probes_for_the_tunnel_address_stay_blocked_while_the_rest_is_accepted() {
+        let policy = connected();
+
+        let tail = include_only_tail(&policy);
+
+        assert_eq!(
+            tail.first(),
+            Some(&IncludeRule::BlockTunnelAddressProbes(&tunnel()))
+        );
+    }
 }

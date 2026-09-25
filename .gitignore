@@ -11,6 +11,7 @@
 /dist-assets/mullvad-daemon
 /dist-assets/mullvad-daemon.exe
 /dist-assets/warren-exclude
+/dist-assets/warren-include
 /dist-assets/warren-setup
 /dist-assets/warren-setup.exe
 /dist-assets/warren-problem-report
