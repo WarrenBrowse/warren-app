@@ -2143,6 +2143,175 @@ msgctxt "navigation-bar"
 msgid "API access"
 msgstr "API 액세스"
 
+msgctxt "network-stats"
+msgid "%(capacity)s link"
+msgstr "%(capacity)s 회선"
+
+msgctxt "network-stats"
+msgid "%(online)d of %(total)d"
+msgstr "%(online)d / %(total)d"
+
+msgctxt "network-stats"
+msgid "Accounts"
+msgstr "계정"
+
+msgctxt "network-stats"
+msgid "Active subscribers"
+msgstr "활성 구독자"
+
+msgctxt "network-stats"
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows its load band alone."
+msgstr "출구 서버는 최소 %(threshold)d명이 사용하는 동안에만 실시간 수치를 표시합니다. 누구의 트래픽도 식별되지 않도록 하기 위해서입니다. 그보다 적으면 부하 수준만 표시합니다."
+
+msgctxt "network-stats"
+msgid "CPU %(percent)s"
+msgstr "CPU %(percent)s"
+
+msgctxt "network-stats"
+msgid "Data carried, 24 h"
+msgstr "전송된 데이터, 24시간"
+
+msgctxt "network-stats"
+msgid "Download"
+msgstr "다운로드"
+
+msgctxt "network-stats"
+msgid "Every figure covers one closed window of %(seconds)d seconds, and changes only when the next one closes."
+msgstr "각 수치는 %(seconds)d초 동안의 닫힌 구간 하나를 나타내며, 다음 구간이 닫힐 때만 바뀝니다."
+
+msgctxt "network-stats"
+msgid "Exits"
+msgstr "출구 서버"
+
+msgctxt "network-stats"
+msgid "Exits online"
+msgstr "온라인 출구 서버"
+
+msgctxt "network-stats"
+msgid "High load"
+msgstr "높은 부하"
+
+msgctxt "network-stats"
+msgid "How these numbers are computed"
+msgstr "이 수치의 계산 방법"
+
+msgctxt "network-stats"
+msgid "Limited by bandwidth"
+msgstr "대역폭에 의해 제한됨"
+
+msgctxt "network-stats"
+msgid "Limited by CPU"
+msgstr "CPU에 의해 제한됨"
+
+msgctxt "network-stats"
+msgid "Live figures appear once %(threshold)d people share an exit, so no one's traffic can be singled out."
+msgstr "%(threshold)d명이 출구 서버를 함께 쓰면 실시간 수치가 표시됩니다. 누구의 트래픽도 식별되지 않도록 하기 위해서입니다."
+
+msgctxt "network-stats"
+msgid "load"
+msgstr "부하"
+
+msgctxt "network-stats"
+msgid "Load %(load)s, %(people)s people"
+msgstr "부하 %(load)s, %(people)s명"
+
+msgctxt "network-stats"
+msgid "Load is the busier direction of the link against its capacity, or the processor use, whichever is closer to saturation."
+msgstr "부하는 회선에서 더 붐비는 방향의 용량 대비 비율 또는 프로세서 사용률 중 포화에 더 가까운 값입니다."
+
+msgctxt "network-stats"
+msgid "Load over the last 15 minutes"
+msgstr "최근 15분간의 부하"
+
+msgctxt "network-stats"
+msgid "Load unknown"
+msgstr "부하 알 수 없음"
+
+msgctxt "network-stats"
+msgid "Low load"
+msgstr "낮은 부하"
+
+msgctxt "network-stats"
+msgid "Moderate load"
+msgstr "보통 부하"
+
+msgctxt "network-stats"
+msgid "network load"
+msgstr "네트워크 부하"
+
+msgctxt "network-stats"
+msgid "Network load %(load)s"
+msgstr "네트워크 부하 %(load)s"
+
+msgctxt "network-stats"
+msgid "Offline"
+msgstr "오프라인"
+
+msgctxt "network-stats"
+msgid "People connected now"
+msgstr "현재 접속자"
+
+msgctxt "network-stats"
+msgid "People per exit are rounded down to steps of %(step)d. The total for the whole network is exact."
+msgstr "출구 서버별 인원은 %(step)d 단위로 내림합니다. 네트워크 전체 합계는 정확합니다."
+
+msgctxt "network-stats"
+msgid "People, 24 h"
+msgstr "인원, 24시간"
+
+msgctxt "network-stats"
+msgid "Saturated"
+msgstr "포화"
+
+msgctxt "network-stats"
+msgid "Show the Warren network"
+msgstr "Warren 네트워크 보기"
+
+msgctxt "network-stats"
+msgid "The network figures are not available right now."
+msgstr "지금은 네트워크 수치를 볼 수 없습니다."
+
+msgctxt "network-stats"
+msgid "Throughput"
+msgstr "처리량"
+
+msgctxt "network-stats"
+msgid "Throughput, 24 h"
+msgstr "처리량, 24시간"
+
+msgctxt "network-stats"
+msgid "Up %(days)d day"
+msgid_plural "Up %(days)d days"
+msgstr[0] "%(days)d일째 가동 중"
+
+msgctxt "network-stats"
+msgid "Up less than a day"
+msgstr "가동 1일 미만"
+
+msgctxt "network-stats"
+msgid "Updated %(hours)d h ago"
+msgstr "%(hours)d시간 전 업데이트"
+
+msgctxt "network-stats"
+msgid "Updated %(minutes)d min ago"
+msgstr "%(minutes)d분 전 업데이트"
+
+msgctxt "network-stats"
+msgid "Updated %(seconds)d s ago"
+msgstr "%(seconds)d초 전 업데이트"
+
+msgctxt "network-stats"
+msgid "Upload"
+msgstr "업로드"
+
+msgctxt "network-stats"
+msgid "Warren network"
+msgstr "Warren 네트워크"
+
+msgctxt "network-stats"
+msgid "Your exit, live"
+msgstr "내 출구 서버, 실시간"
+
 #. The system notification displayed to the user when the account credit is close to expiry.
 #. Available placeholder:
 #. %(duration)s - remaining time, e.g. "2 days"

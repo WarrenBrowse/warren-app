@@ -2149,6 +2149,176 @@ msgctxt "navigation-bar"
 msgid "API access"
 msgstr "API-toegang"
 
+msgctxt "network-stats"
+msgid "%(capacity)s link"
+msgstr "%(capacity)s-verbinding"
+
+msgctxt "network-stats"
+msgid "%(online)d of %(total)d"
+msgstr "%(online)d van %(total)d"
+
+msgctxt "network-stats"
+msgid "Accounts"
+msgstr "Accounts"
+
+msgctxt "network-stats"
+msgid "Active subscribers"
+msgstr "Actieve abonnees"
+
+msgctxt "network-stats"
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows its load band alone."
+msgstr "Een exitserver toont live cijfers alleen zolang minstens %(threshold)d mensen hem gebruiken, zodat niemands verkeer eruit te pikken is. Daaronder toont hij alleen zijn belastingsniveau."
+
+msgctxt "network-stats"
+msgid "CPU %(percent)s"
+msgstr "CPU %(percent)s"
+
+msgctxt "network-stats"
+msgid "Data carried, 24 h"
+msgstr "Overgedragen data, 24 u"
+
+msgctxt "network-stats"
+msgid "Download"
+msgstr "Download"
+
+msgctxt "network-stats"
+msgid "Every figure covers one closed window of %(seconds)d seconds, and changes only when the next one closes."
+msgstr "Elk cijfer beslaat één afgesloten venster van %(seconds)d seconden en verandert pas als het volgende sluit."
+
+msgctxt "network-stats"
+msgid "Exits"
+msgstr "Exitservers"
+
+msgctxt "network-stats"
+msgid "Exits online"
+msgstr "Exitservers online"
+
+msgctxt "network-stats"
+msgid "High load"
+msgstr "Hoge belasting"
+
+msgctxt "network-stats"
+msgid "How these numbers are computed"
+msgstr "Hoe deze cijfers worden berekend"
+
+msgctxt "network-stats"
+msgid "Limited by bandwidth"
+msgstr "Beperkt door bandbreedte"
+
+msgctxt "network-stats"
+msgid "Limited by CPU"
+msgstr "Beperkt door CPU"
+
+msgctxt "network-stats"
+msgid "Live figures appear once %(threshold)d people share an exit, so no one's traffic can be singled out."
+msgstr "Live cijfers verschijnen zodra %(threshold)d mensen een exitserver delen, zodat niemands verkeer eruit te pikken is."
+
+msgctxt "network-stats"
+msgid "load"
+msgstr "belasting"
+
+msgctxt "network-stats"
+msgid "Load %(load)s, %(people)s people"
+msgstr "Belasting %(load)s, %(people)s mensen"
+
+msgctxt "network-stats"
+msgid "Load is the busier direction of the link against its capacity, or the processor use, whichever is closer to saturation."
+msgstr "De belasting is de drukste richting van de verbinding ten opzichte van de capaciteit, of het processorgebruik, afhankelijk van wat het dichtst bij verzadiging zit."
+
+msgctxt "network-stats"
+msgid "Load over the last 15 minutes"
+msgstr "Belasting over de laatste 15 minuten"
+
+msgctxt "network-stats"
+msgid "Load unknown"
+msgstr "Belasting onbekend"
+
+msgctxt "network-stats"
+msgid "Low load"
+msgstr "Lage belasting"
+
+msgctxt "network-stats"
+msgid "Moderate load"
+msgstr "Gemiddelde belasting"
+
+msgctxt "network-stats"
+msgid "network load"
+msgstr "netwerkbelasting"
+
+msgctxt "network-stats"
+msgid "Network load %(load)s"
+msgstr "Netwerkbelasting %(load)s"
+
+msgctxt "network-stats"
+msgid "Offline"
+msgstr "Offline"
+
+msgctxt "network-stats"
+msgid "People connected now"
+msgstr "Nu verbonden mensen"
+
+msgctxt "network-stats"
+msgid "People per exit are rounded down to steps of %(step)d. The total for the whole network is exact."
+msgstr "Mensen per exitserver worden naar beneden afgerond op stappen van %(step)d. Het totaal voor het hele netwerk is exact."
+
+msgctxt "network-stats"
+msgid "People, 24 h"
+msgstr "Mensen, 24 u"
+
+msgctxt "network-stats"
+msgid "Saturated"
+msgstr "Verzadigd"
+
+msgctxt "network-stats"
+msgid "Show the Warren network"
+msgstr "Warren-netwerk tonen"
+
+msgctxt "network-stats"
+msgid "The network figures are not available right now."
+msgstr "De netwerkcijfers zijn nu niet beschikbaar."
+
+msgctxt "network-stats"
+msgid "Throughput"
+msgstr "Doorvoer"
+
+msgctxt "network-stats"
+msgid "Throughput, 24 h"
+msgstr "Doorvoer, 24 u"
+
+msgctxt "network-stats"
+msgid "Up %(days)d day"
+msgid_plural "Up %(days)d days"
+msgstr[0] "Sinds %(days)d dag actief"
+msgstr[1] "Sinds %(days)d dagen actief"
+
+msgctxt "network-stats"
+msgid "Up less than a day"
+msgstr "Minder dan een dag actief"
+
+msgctxt "network-stats"
+msgid "Updated %(hours)d h ago"
+msgstr "%(hours)d u geleden bijgewerkt"
+
+msgctxt "network-stats"
+msgid "Updated %(minutes)d min ago"
+msgstr "%(minutes)d min geleden bijgewerkt"
+
+msgctxt "network-stats"
+msgid "Updated %(seconds)d s ago"
+msgstr "%(seconds)d s geleden bijgewerkt"
+
+msgctxt "network-stats"
+msgid "Upload"
+msgstr "Upload"
+
+msgctxt "network-stats"
+msgid "Warren network"
+msgstr "Warren-netwerk"
+
+msgctxt "network-stats"
+msgid "Your exit, live"
+msgstr "Je exitserver, live"
+
 #. The system notification displayed to the user when the account credit is close to expiry.
 #. Available placeholder:
 #. %(duration)s - remaining time, e.g. "2 days"

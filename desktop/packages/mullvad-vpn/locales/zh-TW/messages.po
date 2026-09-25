@@ -2143,6 +2143,175 @@ msgctxt "navigation-bar"
 msgid "API access"
 msgstr "API 存取"
 
+msgctxt "network-stats"
+msgid "%(capacity)s link"
+msgstr "%(capacity)s 線路"
+
+msgctxt "network-stats"
+msgid "%(online)d of %(total)d"
+msgstr "%(online)d / %(total)d"
+
+msgctxt "network-stats"
+msgid "Accounts"
+msgstr "帳戶"
+
+msgctxt "network-stats"
+msgid "Active subscribers"
+msgstr "有效訂閱者"
+
+msgctxt "network-stats"
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows its load band alone."
+msgstr "出口伺服器僅在至少有 %(threshold)d 人使用時才顯示即時數據，以免任何人的流量被單獨辨識。低於此人數時，只顯示其負載等級。"
+
+msgctxt "network-stats"
+msgid "CPU %(percent)s"
+msgstr "CPU %(percent)s"
+
+msgctxt "network-stats"
+msgid "Data carried, 24 h"
+msgstr "傳輸資料量（24 小時）"
+
+msgctxt "network-stats"
+msgid "Download"
+msgstr "下載"
+
+msgctxt "network-stats"
+msgid "Every figure covers one closed window of %(seconds)d seconds, and changes only when the next one closes."
+msgstr "每個數值對應一個已結束的 %(seconds)d 秒時間區間，只有在下一個區間結束時才會變化。"
+
+msgctxt "network-stats"
+msgid "Exits"
+msgstr "出口伺服器"
+
+msgctxt "network-stats"
+msgid "Exits online"
+msgstr "上線中的出口伺服器"
+
+msgctxt "network-stats"
+msgid "High load"
+msgstr "高負載"
+
+msgctxt "network-stats"
+msgid "How these numbers are computed"
+msgstr "這些數字如何計算"
+
+msgctxt "network-stats"
+msgid "Limited by bandwidth"
+msgstr "受頻寬限制"
+
+msgctxt "network-stats"
+msgid "Limited by CPU"
+msgstr "受 CPU 限制"
+
+msgctxt "network-stats"
+msgid "Live figures appear once %(threshold)d people share an exit, so no one's traffic can be singled out."
+msgstr "當有 %(threshold)d 人共用一台出口伺服器時才會顯示即時數據，以免任何人的流量被單獨辨識。"
+
+msgctxt "network-stats"
+msgid "load"
+msgstr "負載"
+
+msgctxt "network-stats"
+msgid "Load %(load)s, %(people)s people"
+msgstr "負載 %(load)s，%(people)s 人"
+
+msgctxt "network-stats"
+msgid "Load is the busier direction of the link against its capacity, or the processor use, whichever is closer to saturation."
+msgstr "負載取線路較繁忙方向相對其容量的比例與處理器使用率中較接近飽和的一個。"
+
+msgctxt "network-stats"
+msgid "Load over the last 15 minutes"
+msgstr "過去 15 分鐘的負載"
+
+msgctxt "network-stats"
+msgid "Load unknown"
+msgstr "負載未知"
+
+msgctxt "network-stats"
+msgid "Low load"
+msgstr "低負載"
+
+msgctxt "network-stats"
+msgid "Moderate load"
+msgstr "中等負載"
+
+msgctxt "network-stats"
+msgid "network load"
+msgstr "網路負載"
+
+msgctxt "network-stats"
+msgid "Network load %(load)s"
+msgstr "網路負載 %(load)s"
+
+msgctxt "network-stats"
+msgid "Offline"
+msgstr "離線"
+
+msgctxt "network-stats"
+msgid "People connected now"
+msgstr "目前連線人數"
+
+msgctxt "network-stats"
+msgid "People per exit are rounded down to steps of %(step)d. The total for the whole network is exact."
+msgstr "每台出口伺服器的人數以 %(step)d 為級距無條件捨去。整個網路的總數是精確的。"
+
+msgctxt "network-stats"
+msgid "People, 24 h"
+msgstr "人數（24 小時）"
+
+msgctxt "network-stats"
+msgid "Saturated"
+msgstr "飽和"
+
+msgctxt "network-stats"
+msgid "Show the Warren network"
+msgstr "顯示 Warren 網路"
+
+msgctxt "network-stats"
+msgid "The network figures are not available right now."
+msgstr "目前無法取得網路數據。"
+
+msgctxt "network-stats"
+msgid "Throughput"
+msgstr "傳輸量"
+
+msgctxt "network-stats"
+msgid "Throughput, 24 h"
+msgstr "傳輸量（24 小時）"
+
+msgctxt "network-stats"
+msgid "Up %(days)d day"
+msgid_plural "Up %(days)d days"
+msgstr[0] "已運作 %(days)d 天"
+
+msgctxt "network-stats"
+msgid "Up less than a day"
+msgstr "已運作不到 1 天"
+
+msgctxt "network-stats"
+msgid "Updated %(hours)d h ago"
+msgstr "%(hours)d 小時前更新"
+
+msgctxt "network-stats"
+msgid "Updated %(minutes)d min ago"
+msgstr "%(minutes)d 分鐘前更新"
+
+msgctxt "network-stats"
+msgid "Updated %(seconds)d s ago"
+msgstr "%(seconds)d 秒前更新"
+
+msgctxt "network-stats"
+msgid "Upload"
+msgstr "上傳"
+
+msgctxt "network-stats"
+msgid "Warren network"
+msgstr "Warren 網路"
+
+msgctxt "network-stats"
+msgid "Your exit, live"
+msgstr "你的出口伺服器（即時）"
+
 #. The system notification displayed to the user when the account credit is close to expiry.
 #. Available placeholder:
 #. %(duration)s - remaining time, e.g. "2 days"

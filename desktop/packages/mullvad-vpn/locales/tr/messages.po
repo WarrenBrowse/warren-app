@@ -2149,6 +2149,176 @@ msgctxt "navigation-bar"
 msgid "API access"
 msgstr "API erişimi"
 
+msgctxt "network-stats"
+msgid "%(capacity)s link"
+msgstr "%(capacity)s bağlantı"
+
+msgctxt "network-stats"
+msgid "%(online)d of %(total)d"
+msgstr "%(online)d / %(total)d"
+
+msgctxt "network-stats"
+msgid "Accounts"
+msgstr "Hesaplar"
+
+msgctxt "network-stats"
+msgid "Active subscribers"
+msgstr "Aktif aboneler"
+
+msgctxt "network-stats"
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows its load band alone."
+msgstr "Bir çıkış sunucusu, canlı rakamlarını yalnızca en az %(threshold)d kişi onu kullandığı sürece gösterir; böylece kimsenin trafiği ayırt edilemez. Bunun altında yalnızca yük seviyesini gösterir."
+
+msgctxt "network-stats"
+msgid "CPU %(percent)s"
+msgstr "CPU %(percent)s"
+
+msgctxt "network-stats"
+msgid "Data carried, 24 h"
+msgstr "Taşınan veri, 24 sa"
+
+msgctxt "network-stats"
+msgid "Download"
+msgstr "İndirme"
+
+msgctxt "network-stats"
+msgid "Every figure covers one closed window of %(seconds)d seconds, and changes only when the next one closes."
+msgstr "Her rakam %(seconds)d saniyelik kapanmış bir pencereyi kapsar ve yalnızca bir sonraki kapandığında değişir."
+
+msgctxt "network-stats"
+msgid "Exits"
+msgstr "Çıkış sunucuları"
+
+msgctxt "network-stats"
+msgid "Exits online"
+msgstr "Çevrimiçi çıkış sunucuları"
+
+msgctxt "network-stats"
+msgid "High load"
+msgstr "Yüksek yük"
+
+msgctxt "network-stats"
+msgid "How these numbers are computed"
+msgstr "Bu rakamlar nasıl hesaplanır"
+
+msgctxt "network-stats"
+msgid "Limited by bandwidth"
+msgstr "Bant genişliğiyle sınırlı"
+
+msgctxt "network-stats"
+msgid "Limited by CPU"
+msgstr "CPU ile sınırlı"
+
+msgctxt "network-stats"
+msgid "Live figures appear once %(threshold)d people share an exit, so no one's traffic can be singled out."
+msgstr "Canlı rakamlar, %(threshold)d kişi bir çıkış sunucusunu paylaştığında görünür; böylece kimsenin trafiği ayırt edilemez."
+
+msgctxt "network-stats"
+msgid "load"
+msgstr "yük"
+
+msgctxt "network-stats"
+msgid "Load %(load)s, %(people)s people"
+msgstr "Yük %(load)s, %(people)s kişi"
+
+msgctxt "network-stats"
+msgid "Load is the busier direction of the link against its capacity, or the processor use, whichever is closer to saturation."
+msgstr "Yük, bağlantının daha yoğun yönünün kapasitesine oranı ya da işlemci kullanımıdır; hangisi doygunluğa daha yakınsa."
+
+msgctxt "network-stats"
+msgid "Load over the last 15 minutes"
+msgstr "Son 15 dakikadaki yük"
+
+msgctxt "network-stats"
+msgid "Load unknown"
+msgstr "Yük bilinmiyor"
+
+msgctxt "network-stats"
+msgid "Low load"
+msgstr "Düşük yük"
+
+msgctxt "network-stats"
+msgid "Moderate load"
+msgstr "Orta yük"
+
+msgctxt "network-stats"
+msgid "network load"
+msgstr "ağ yükü"
+
+msgctxt "network-stats"
+msgid "Network load %(load)s"
+msgstr "Ağ yükü %(load)s"
+
+msgctxt "network-stats"
+msgid "Offline"
+msgstr "Çevrimdışı"
+
+msgctxt "network-stats"
+msgid "People connected now"
+msgstr "Şu an bağlı kişiler"
+
+msgctxt "network-stats"
+msgid "People per exit are rounded down to steps of %(step)d. The total for the whole network is exact."
+msgstr "Çıkış sunucusu başına kişi sayısı %(step)d'lik adımlarla aşağı yuvarlanır. Tüm ağın toplamı kesindir."
+
+msgctxt "network-stats"
+msgid "People, 24 h"
+msgstr "Kişiler, 24 sa"
+
+msgctxt "network-stats"
+msgid "Saturated"
+msgstr "Doygun"
+
+msgctxt "network-stats"
+msgid "Show the Warren network"
+msgstr "Warren ağını göster"
+
+msgctxt "network-stats"
+msgid "The network figures are not available right now."
+msgstr "Ağ rakamları şu anda kullanılamıyor."
+
+msgctxt "network-stats"
+msgid "Throughput"
+msgstr "Aktarım hızı"
+
+msgctxt "network-stats"
+msgid "Throughput, 24 h"
+msgstr "Aktarım hızı, 24 sa"
+
+msgctxt "network-stats"
+msgid "Up %(days)d day"
+msgid_plural "Up %(days)d days"
+msgstr[0] "%(days)d gündür çalışıyor"
+msgstr[1] "%(days)d gündür çalışıyor"
+
+msgctxt "network-stats"
+msgid "Up less than a day"
+msgstr "Bir günden kısa süredir çalışıyor"
+
+msgctxt "network-stats"
+msgid "Updated %(hours)d h ago"
+msgstr "%(hours)d sa önce güncellendi"
+
+msgctxt "network-stats"
+msgid "Updated %(minutes)d min ago"
+msgstr "%(minutes)d dk önce güncellendi"
+
+msgctxt "network-stats"
+msgid "Updated %(seconds)d s ago"
+msgstr "%(seconds)d sn önce güncellendi"
+
+msgctxt "network-stats"
+msgid "Upload"
+msgstr "Yükleme"
+
+msgctxt "network-stats"
+msgid "Warren network"
+msgstr "Warren ağı"
+
+msgctxt "network-stats"
+msgid "Your exit, live"
+msgstr "Çıkış sunucunuz, canlı"
+
 #. The system notification displayed to the user when the account credit is close to expiry.
 #. Available placeholder:
 #. %(duration)s - remaining time, e.g. "2 days"

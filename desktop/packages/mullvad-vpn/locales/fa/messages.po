@@ -2149,6 +2149,176 @@ msgctxt "navigation-bar"
 msgid "API access"
 msgstr "دسترسی به API"
 
+msgctxt "network-stats"
+msgid "%(capacity)s link"
+msgstr "پیوند %(capacity)s"
+
+msgctxt "network-stats"
+msgid "%(online)d of %(total)d"
+msgstr "%(online)d از %(total)d"
+
+msgctxt "network-stats"
+msgid "Accounts"
+msgstr "حساب‌ها"
+
+msgctxt "network-stats"
+msgid "Active subscribers"
+msgstr "مشترکان فعال"
+
+msgctxt "network-stats"
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows its load band alone."
+msgstr "سرور خروجی فقط تا زمانی که دست‌کم %(threshold)d نفر از آن استفاده می‌کنند ارقام زنده را نشان می‌دهد تا ترافیک هیچ‌کس قابل تشخیص نباشد. کمتر از آن، فقط سطح بارش را نشان می‌دهد."
+
+msgctxt "network-stats"
+msgid "CPU %(percent)s"
+msgstr "CPU %(percent)s"
+
+msgctxt "network-stats"
+msgid "Data carried, 24 h"
+msgstr "داده منتقل‌شده، ۲۴ ساعت"
+
+msgctxt "network-stats"
+msgid "Download"
+msgstr "دانلود"
+
+msgctxt "network-stats"
+msgid "Every figure covers one closed window of %(seconds)d seconds, and changes only when the next one closes."
+msgstr "هر رقم یک بازه بسته‌شده %(seconds)d ثانیه‌ای را پوشش می‌دهد و فقط وقتی بازه بعدی بسته شود تغییر می‌کند."
+
+msgctxt "network-stats"
+msgid "Exits"
+msgstr "سرورهای خروجی"
+
+msgctxt "network-stats"
+msgid "Exits online"
+msgstr "سرورهای خروجی آنلاین"
+
+msgctxt "network-stats"
+msgid "High load"
+msgstr "بار زیاد"
+
+msgctxt "network-stats"
+msgid "How these numbers are computed"
+msgstr "این ارقام چگونه محاسبه می‌شوند"
+
+msgctxt "network-stats"
+msgid "Limited by bandwidth"
+msgstr "محدود به پهنای باند"
+
+msgctxt "network-stats"
+msgid "Limited by CPU"
+msgstr "محدود به CPU"
+
+msgctxt "network-stats"
+msgid "Live figures appear once %(threshold)d people share an exit, so no one's traffic can be singled out."
+msgstr "ارقام زنده وقتی ظاهر می‌شوند که %(threshold)d نفر یک سرور خروجی را به اشتراک بگذارند تا ترافیک هیچ‌کس قابل تشخیص نباشد."
+
+msgctxt "network-stats"
+msgid "load"
+msgstr "بار"
+
+msgctxt "network-stats"
+msgid "Load %(load)s, %(people)s people"
+msgstr "بار %(load)s، %(people)s نفر"
+
+msgctxt "network-stats"
+msgid "Load is the busier direction of the link against its capacity, or the processor use, whichever is closer to saturation."
+msgstr "بار، جهت شلوغ‌تر پیوند نسبت به ظرفیت آن یا میزان استفاده از پردازنده است، هر کدام که به اشباع نزدیک‌تر باشد."
+
+msgctxt "network-stats"
+msgid "Load over the last 15 minutes"
+msgstr "بار در ۱۵ دقیقه گذشته"
+
+msgctxt "network-stats"
+msgid "Load unknown"
+msgstr "بار نامشخص"
+
+msgctxt "network-stats"
+msgid "Low load"
+msgstr "بار کم"
+
+msgctxt "network-stats"
+msgid "Moderate load"
+msgstr "بار متوسط"
+
+msgctxt "network-stats"
+msgid "network load"
+msgstr "بار شبکه"
+
+msgctxt "network-stats"
+msgid "Network load %(load)s"
+msgstr "بار شبکه %(load)s"
+
+msgctxt "network-stats"
+msgid "Offline"
+msgstr "آفلاین"
+
+msgctxt "network-stats"
+msgid "People connected now"
+msgstr "افراد متصل در حال حاضر"
+
+msgctxt "network-stats"
+msgid "People per exit are rounded down to steps of %(step)d. The total for the whole network is exact."
+msgstr "تعداد افراد هر سرور خروجی با گام‌های %(step)d به پایین گرد می‌شود. مجموع کل شبکه دقیق است."
+
+msgctxt "network-stats"
+msgid "People, 24 h"
+msgstr "افراد، ۲۴ ساعت"
+
+msgctxt "network-stats"
+msgid "Saturated"
+msgstr "اشباع"
+
+msgctxt "network-stats"
+msgid "Show the Warren network"
+msgstr "نمایش شبکه Warren"
+
+msgctxt "network-stats"
+msgid "The network figures are not available right now."
+msgstr "ارقام شبکه در حال حاضر در دسترس نیست."
+
+msgctxt "network-stats"
+msgid "Throughput"
+msgstr "توان عملیاتی"
+
+msgctxt "network-stats"
+msgid "Throughput, 24 h"
+msgstr "توان عملیاتی، ۲۴ ساعت"
+
+msgctxt "network-stats"
+msgid "Up %(days)d day"
+msgid_plural "Up %(days)d days"
+msgstr[0] "%(days)d روز فعال"
+msgstr[1] "%(days)d روز فعال"
+
+msgctxt "network-stats"
+msgid "Up less than a day"
+msgstr "کمتر از یک روز فعال"
+
+msgctxt "network-stats"
+msgid "Updated %(hours)d h ago"
+msgstr "%(hours)d ساعت پیش به‌روز شد"
+
+msgctxt "network-stats"
+msgid "Updated %(minutes)d min ago"
+msgstr "%(minutes)d دقیقه پیش به‌روز شد"
+
+msgctxt "network-stats"
+msgid "Updated %(seconds)d s ago"
+msgstr "%(seconds)d ثانیه پیش به‌روز شد"
+
+msgctxt "network-stats"
+msgid "Upload"
+msgstr "آپلود"
+
+msgctxt "network-stats"
+msgid "Warren network"
+msgstr "شبکه Warren"
+
+msgctxt "network-stats"
+msgid "Your exit, live"
+msgstr "سرور خروجی شما، زنده"
+
 #. The system notification displayed to the user when the account credit is close to expiry.
 #. Available placeholder:
 #. %(duration)s - remaining time, e.g. "2 days"

@@ -2365,6 +2365,245 @@ msgctxt "navigation-bar"
 msgid "API access"
 msgstr ""
 
+#. Link capacity of an exit, e.g. "1.0 Gbit/s link".
+#. Available placeholders:
+#. %(capacity)s - the capacity with its unit
+msgctxt "network-stats"
+msgid "%(capacity)s link"
+msgstr ""
+
+#. Exits online out of all exits, e.g. "2 of 3".
+#. Available placeholders:
+#. %(online)d - exits serving now
+#. %(total)d - exits known to the network
+msgctxt "network-stats"
+msgid "%(online)d of %(total)d"
+msgstr ""
+
+#. Wallets registered on Warren, expired or not.
+msgctxt "network-stats"
+msgid "Accounts"
+msgstr ""
+
+#. Wallets with subscription time left.
+msgctxt "network-stats"
+msgid "Active subscribers"
+msgstr ""
+
+#. Available placeholders:
+#. %(threshold)d - fewest people an exit must carry for its live figures to show
+msgctxt "network-stats"
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows its load band alone."
+msgstr ""
+
+#. Processor use of an exit, e.g. "CPU 21%".
+#. Available placeholders:
+#. %(percent)s - the percentage with its sign
+msgctxt "network-stats"
+msgid "CPU %(percent)s"
+msgstr ""
+
+#. Bytes carried for users over the last 24 hours.
+msgctxt "network-stats"
+msgid "Data carried, 24 h"
+msgstr ""
+
+#. Accessibility label of the download rate of an exit.
+msgctxt "network-stats"
+msgid "Download"
+msgstr ""
+
+#. Available placeholders:
+#. %(seconds)d - length of one measuring window, in seconds
+msgctxt "network-stats"
+msgid "Every figure covers one closed window of %(seconds)d seconds, and changes only when the next one closes."
+msgstr ""
+
+#. Heading of the list of Warren exits.
+msgctxt "network-stats"
+msgid "Exits"
+msgstr ""
+
+#. Warren exits serving now.
+msgctxt "network-stats"
+msgid "Exits online"
+msgstr ""
+
+#. Load band of a Warren exit: close to its limit.
+msgctxt "network-stats"
+msgid "High load"
+msgstr ""
+
+#. Heading of the note on how the network figures are made.
+msgctxt "network-stats"
+msgid "How these numbers are computed"
+msgstr ""
+
+#. What sets the load of an exit: its network link.
+msgctxt "network-stats"
+msgid "Limited by bandwidth"
+msgstr ""
+
+#. What sets the load of an exit: its processor.
+msgctxt "network-stats"
+msgid "Limited by CPU"
+msgstr ""
+
+#. Why a quiet Warren exit shows its load band and nothing else.
+#. Available placeholders:
+#. %(threshold)d - fewest people an exit must carry for its live figures to show
+msgctxt "network-stats"
+msgid "Live figures appear once %(threshold)d people share an exit, so no one's traffic can be singled out."
+msgstr ""
+
+#. Caption under the load percentage of one exit.
+msgctxt "network-stats"
+msgid "load"
+msgstr ""
+
+#. Accessibility label of the load of one Warren exit.
+#. Available placeholders:
+#. %(load)s - the load, e.g. "37%" or "Low load"
+#. %(people)s - how many people use the exit, e.g. "40+" or "< 20"
+msgctxt "network-stats"
+msgid "Load %(load)s, %(people)s people"
+msgstr ""
+
+msgctxt "network-stats"
+msgid "Load is the busier direction of the link against its capacity, or the processor use, whichever is closer to saturation."
+msgstr ""
+
+#. Under the load band of a quiet exit: the band
+#. describes the last closed 15 minutes.
+msgctxt "network-stats"
+msgid "Load over the last 15 minutes"
+msgstr ""
+
+#. Shown when the load of a Warren exit is not known.
+msgctxt "network-stats"
+msgid "Load unknown"
+msgstr ""
+
+#. Load band of a Warren exit: plenty of room.
+msgctxt "network-stats"
+msgid "Low load"
+msgstr ""
+
+#. Load band of a Warren exit: busy, still comfortable.
+msgctxt "network-stats"
+msgid "Moderate load"
+msgstr ""
+
+#. Caption under the load percentage of the whole network.
+msgctxt "network-stats"
+msgid "network load"
+msgstr ""
+
+#. Accessibility label of the load of the whole Warren network.
+#. Available placeholders:
+#. %(load)s - the load, e.g. "23%"
+msgctxt "network-stats"
+msgid "Network load %(load)s"
+msgstr ""
+
+#. A Warren exit that is not serving right now.
+msgctxt "network-stats"
+msgid "Offline"
+msgstr ""
+
+#. Label of the exact number of people connected to Warren.
+msgctxt "network-stats"
+msgid "People connected now"
+msgstr ""
+
+#. Available placeholders:
+#. %(step)d - the step per-exit people counts are rounded down to
+msgctxt "network-stats"
+msgid "People per exit are rounded down to steps of %(step)d. The total for the whole network is exact."
+msgstr ""
+
+#. Caption of the chart of people connected over 24 hours.
+msgctxt "network-stats"
+msgid "People, 24 h"
+msgstr ""
+
+#. Load band of a Warren exit: at its limit.
+msgctxt "network-stats"
+msgid "Saturated"
+msgstr ""
+
+#. Accessibility label of the exit load on the connection card,
+#. which opens the live figures of the Warren network.
+msgctxt "network-stats"
+msgid "Show the Warren network"
+msgstr ""
+
+#. Shown when no network figures could be read.
+msgctxt "network-stats"
+msgid "The network figures are not available right now."
+msgstr ""
+
+#. Traffic through the whole network right now.
+msgctxt "network-stats"
+msgid "Throughput"
+msgstr ""
+
+#. Caption of the chart of network throughput over 24 hours.
+msgctxt "network-stats"
+msgid "Throughput, 24 h"
+msgstr ""
+
+#. How long an exit has run, in whole days.
+#. Available placeholders:
+#. %(days)d - whole days
+msgctxt "network-stats"
+msgid "Up %(days)d day"
+msgid_plural "Up %(days)d days"
+msgstr[0] ""
+msgstr[1] ""
+
+#. An exit that has run for less than one day.
+msgctxt "network-stats"
+msgid "Up less than a day"
+msgstr ""
+
+#. Age of the network figures on screen.
+#. Available placeholders:
+#. %(hours)d - whole hours since the figures were measured
+msgctxt "network-stats"
+msgid "Updated %(hours)d h ago"
+msgstr ""
+
+#. Age of the network figures on screen.
+#. Available placeholders:
+#. %(minutes)d - whole minutes since the figures were measured
+msgctxt "network-stats"
+msgid "Updated %(minutes)d min ago"
+msgstr ""
+
+#. Age of the network figures on screen.
+#. Available placeholders:
+#. %(seconds)d - whole seconds since the figures were measured
+msgctxt "network-stats"
+msgid "Updated %(seconds)d s ago"
+msgstr ""
+
+#. Accessibility label of the upload rate of an exit.
+msgctxt "network-stats"
+msgid "Upload"
+msgstr ""
+
+#. Title of the view with the live figures of the Warren network.
+#. Navigation button to the live figures of the Warren network.
+msgctxt "network-stats"
+msgid "Warren network"
+msgstr ""
+
+#. Heading of the live figures of the exit carrying the tunnel.
+msgctxt "network-stats"
+msgid "Your exit, live"
+msgstr ""
+
 #. The system notification displayed to the user when the account credit is close to expiry.
 #. Available placeholder:
 #. %(duration)s - remaining time, e.g. "2 days"

@@ -2149,6 +2149,176 @@ msgctxt "navigation-bar"
 msgid "API access"
 msgstr "API-Zugriff"
 
+msgctxt "network-stats"
+msgid "%(capacity)s link"
+msgstr "%(capacity)s-Anbindung"
+
+msgctxt "network-stats"
+msgid "%(online)d of %(total)d"
+msgstr "%(online)d von %(total)d"
+
+msgctxt "network-stats"
+msgid "Accounts"
+msgstr "Konten"
+
+msgctxt "network-stats"
+msgid "Active subscribers"
+msgstr "Aktive Abonnenten"
+
+msgctxt "network-stats"
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows its load band alone."
+msgstr "Ein Exit-Server zeigt Live-Werte nur, solange ihn mindestens %(threshold)d Personen nutzen, damit sich niemandes Datenverkehr herausgreifen lässt. Darunter zeigt er nur seine Laststufe."
+
+msgctxt "network-stats"
+msgid "CPU %(percent)s"
+msgstr "CPU %(percent)s"
+
+msgctxt "network-stats"
+msgid "Data carried, 24 h"
+msgstr "Übertragene Daten, 24 h"
+
+msgctxt "network-stats"
+msgid "Download"
+msgstr "Download"
+
+msgctxt "network-stats"
+msgid "Every figure covers one closed window of %(seconds)d seconds, and changes only when the next one closes."
+msgstr "Jeder Wert umfasst ein abgeschlossenes Zeitfenster von %(seconds)d Sekunden und ändert sich erst, wenn das nächste abgeschlossen ist."
+
+msgctxt "network-stats"
+msgid "Exits"
+msgstr "Exit-Server"
+
+msgctxt "network-stats"
+msgid "Exits online"
+msgstr "Exit-Server online"
+
+msgctxt "network-stats"
+msgid "High load"
+msgstr "Hohe Last"
+
+msgctxt "network-stats"
+msgid "How these numbers are computed"
+msgstr "So werden diese Zahlen berechnet"
+
+msgctxt "network-stats"
+msgid "Limited by bandwidth"
+msgstr "Begrenzt durch Bandbreite"
+
+msgctxt "network-stats"
+msgid "Limited by CPU"
+msgstr "Begrenzt durch CPU"
+
+msgctxt "network-stats"
+msgid "Live figures appear once %(threshold)d people share an exit, so no one's traffic can be singled out."
+msgstr "Live-Werte erscheinen, sobald sich %(threshold)d Personen einen Exit-Server teilen, damit sich niemandes Datenverkehr herausgreifen lässt."
+
+msgctxt "network-stats"
+msgid "load"
+msgstr "Last"
+
+msgctxt "network-stats"
+msgid "Load %(load)s, %(people)s people"
+msgstr "Last %(load)s, %(people)s Personen"
+
+msgctxt "network-stats"
+msgid "Load is the busier direction of the link against its capacity, or the processor use, whichever is closer to saturation."
+msgstr "Die Last ist die stärker genutzte Richtung der Anbindung im Verhältnis zu ihrer Kapazität oder die Prozessorauslastung, je nachdem, was näher an der Sättigung liegt."
+
+msgctxt "network-stats"
+msgid "Load over the last 15 minutes"
+msgstr "Last der letzten 15 Minuten"
+
+msgctxt "network-stats"
+msgid "Load unknown"
+msgstr "Last unbekannt"
+
+msgctxt "network-stats"
+msgid "Low load"
+msgstr "Geringe Last"
+
+msgctxt "network-stats"
+msgid "Moderate load"
+msgstr "Mittlere Last"
+
+msgctxt "network-stats"
+msgid "network load"
+msgstr "Netzwerklast"
+
+msgctxt "network-stats"
+msgid "Network load %(load)s"
+msgstr "Netzwerklast %(load)s"
+
+msgctxt "network-stats"
+msgid "Offline"
+msgstr "Offline"
+
+msgctxt "network-stats"
+msgid "People connected now"
+msgstr "Jetzt verbundene Personen"
+
+msgctxt "network-stats"
+msgid "People per exit are rounded down to steps of %(step)d. The total for the whole network is exact."
+msgstr "Personen pro Exit-Server werden auf Stufen von %(step)d abgerundet. Die Summe für das gesamte Netzwerk ist exakt."
+
+msgctxt "network-stats"
+msgid "People, 24 h"
+msgstr "Personen, 24 h"
+
+msgctxt "network-stats"
+msgid "Saturated"
+msgstr "Ausgelastet"
+
+msgctxt "network-stats"
+msgid "Show the Warren network"
+msgstr "Warren-Netzwerk anzeigen"
+
+msgctxt "network-stats"
+msgid "The network figures are not available right now."
+msgstr "Die Netzwerkzahlen sind gerade nicht verfügbar."
+
+msgctxt "network-stats"
+msgid "Throughput"
+msgstr "Durchsatz"
+
+msgctxt "network-stats"
+msgid "Throughput, 24 h"
+msgstr "Durchsatz, 24 h"
+
+msgctxt "network-stats"
+msgid "Up %(days)d day"
+msgid_plural "Up %(days)d days"
+msgstr[0] "Seit %(days)d Tag in Betrieb"
+msgstr[1] "Seit %(days)d Tagen in Betrieb"
+
+msgctxt "network-stats"
+msgid "Up less than a day"
+msgstr "Seit weniger als einem Tag in Betrieb"
+
+msgctxt "network-stats"
+msgid "Updated %(hours)d h ago"
+msgstr "Vor %(hours)d h aktualisiert"
+
+msgctxt "network-stats"
+msgid "Updated %(minutes)d min ago"
+msgstr "Vor %(minutes)d min aktualisiert"
+
+msgctxt "network-stats"
+msgid "Updated %(seconds)d s ago"
+msgstr "Vor %(seconds)d s aktualisiert"
+
+msgctxt "network-stats"
+msgid "Upload"
+msgstr "Upload"
+
+msgctxt "network-stats"
+msgid "Warren network"
+msgstr "Warren-Netzwerk"
+
+msgctxt "network-stats"
+msgid "Your exit, live"
+msgstr "Ihr Exit-Server, live"
+
 #. The system notification displayed to the user when the account credit is close to expiry.
 #. Available placeholder:
 #. %(duration)s - remaining time, e.g. "2 days"

@@ -2143,6 +2143,175 @@ msgctxt "navigation-bar"
 msgid "API access"
 msgstr "API ရယူသုံးစွဲခွင့်"
 
+msgctxt "network-stats"
+msgid "%(capacity)s link"
+msgstr "%(capacity)s လိုင်း"
+
+msgctxt "network-stats"
+msgid "%(online)d of %(total)d"
+msgstr "%(total)d ခုအနက် %(online)d ခု"
+
+msgctxt "network-stats"
+msgid "Accounts"
+msgstr "အကောင့်များ"
+
+msgctxt "network-stats"
+msgid "Active subscribers"
+msgstr "အသက်ဝင်သော စာရင်းသွင်းသူများ"
+
+msgctxt "network-stats"
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows its load band alone."
+msgstr "ထွက်ပေါက်ဆာဗာသည် အနည်းဆုံး %(threshold)d ဦး အသုံးပြုနေချိန်တွင်သာ တိုက်ရိုက်ကိန်းဂဏန်းများကို ပြသည်။ မည်သူ၏ traffic ကိုမျှ ခွဲခြားမသိနိုင်စေရန် ဖြစ်သည်။ ထို့ထက်နည်းပါက ဝန်အဆင့်ကိုသာ ပြသည်။"
+
+msgctxt "network-stats"
+msgid "CPU %(percent)s"
+msgstr "CPU %(percent)s"
+
+msgctxt "network-stats"
+msgid "Data carried, 24 h"
+msgstr "သယ်ဆောင်ခဲ့သော ဒေတာ၊ ၂၄ နာရီ"
+
+msgctxt "network-stats"
+msgid "Download"
+msgstr "ဒေါင်းလုဒ်"
+
+msgctxt "network-stats"
+msgid "Every figure covers one closed window of %(seconds)d seconds, and changes only when the next one closes."
+msgstr "ကိန်းဂဏန်းတစ်ခုစီသည် ပိတ်ပြီးသော %(seconds)d စက္ကန့် အချိန်ကွက်တစ်ခုကို ဖော်ပြပြီး နောက်တစ်ခု ပိတ်မှသာ ပြောင်းလဲသည်။"
+
+msgctxt "network-stats"
+msgid "Exits"
+msgstr "ထွက်ပေါက်ဆာဗာများ"
+
+msgctxt "network-stats"
+msgid "Exits online"
+msgstr "အွန်လိုင်းရှိ ထွက်ပေါက်ဆာဗာများ"
+
+msgctxt "network-stats"
+msgid "High load"
+msgstr "ဝန်များ"
+
+msgctxt "network-stats"
+msgid "How these numbers are computed"
+msgstr "ဤကိန်းဂဏန်းများကို တွက်ချက်ပုံ"
+
+msgctxt "network-stats"
+msgid "Limited by bandwidth"
+msgstr "bandwidth ဖြင့် ကန့်သတ်ထားသည်"
+
+msgctxt "network-stats"
+msgid "Limited by CPU"
+msgstr "CPU ဖြင့် ကန့်သတ်ထားသည်"
+
+msgctxt "network-stats"
+msgid "Live figures appear once %(threshold)d people share an exit, so no one's traffic can be singled out."
+msgstr "ထွက်ပေါက်ဆာဗာတစ်ခုကို %(threshold)d ဦး မျှသုံးသည်နှင့် တိုက်ရိုက်ကိန်းဂဏန်းများ ပေါ်လာသည်။ မည်သူ၏ traffic ကိုမျှ ခွဲခြားမသိနိုင်စေရန် ဖြစ်သည်။"
+
+msgctxt "network-stats"
+msgid "load"
+msgstr "ဝန်"
+
+msgctxt "network-stats"
+msgid "Load %(load)s, %(people)s people"
+msgstr "ဝန် %(load)s၊ လူ %(people)s ဦး"
+
+msgctxt "network-stats"
+msgid "Load is the busier direction of the link against its capacity, or the processor use, whichever is closer to saturation."
+msgstr "ဝန်ဆိုသည်မှာ လိုင်း၏ ပိုမိုအလုပ်များသော ဦးတည်ချက်ကို ၎င်း၏စွမ်းရည်နှင့် နှိုင်းယှဉ်ချက် သို့မဟုတ် ပရိုဆက်ဆာ အသုံးပြုမှု ဖြစ်ပြီး ပြည့်နှက်မှုနှင့် ပိုနီးသည့်တန်ဖိုးကို ယူသည်။"
+
+msgctxt "network-stats"
+msgid "Load over the last 15 minutes"
+msgstr "နောက်ဆုံး ၁၅ မိနစ်အတွင်း ဝန်"
+
+msgctxt "network-stats"
+msgid "Load unknown"
+msgstr "ဝန် မသိရ"
+
+msgctxt "network-stats"
+msgid "Low load"
+msgstr "ဝန်နည်း"
+
+msgctxt "network-stats"
+msgid "Moderate load"
+msgstr "ဝန်အလယ်အလတ်"
+
+msgctxt "network-stats"
+msgid "network load"
+msgstr "ကွန်ရက်ဝန်"
+
+msgctxt "network-stats"
+msgid "Network load %(load)s"
+msgstr "ကွန်ရက်ဝန် %(load)s"
+
+msgctxt "network-stats"
+msgid "Offline"
+msgstr "အော့ဖ်လိုင်း"
+
+msgctxt "network-stats"
+msgid "People connected now"
+msgstr "ယခု ချိတ်ဆက်ထားသူများ"
+
+msgctxt "network-stats"
+msgid "People per exit are rounded down to steps of %(step)d. The total for the whole network is exact."
+msgstr "ထွက်ပေါက်ဆာဗာတစ်ခုစီရှိ လူဦးရေကို %(step)d ဦးအဆင့်ဖြင့် အောက်သို့ ပိုင်းဖြတ်သည်။ ကွန်ရက်တစ်ခုလုံး၏ စုစုပေါင်းမှာ တိကျသည်။"
+
+msgctxt "network-stats"
+msgid "People, 24 h"
+msgstr "လူဦးရေ၊ ၂၄ နာရီ"
+
+msgctxt "network-stats"
+msgid "Saturated"
+msgstr "ပြည့်နှက်"
+
+msgctxt "network-stats"
+msgid "Show the Warren network"
+msgstr "Warren ကွန်ရက်ကို ပြပါ"
+
+msgctxt "network-stats"
+msgid "The network figures are not available right now."
+msgstr "ကွန်ရက် ကိန်းဂဏန်းများကို ယခု မရရှိနိုင်ပါ။"
+
+msgctxt "network-stats"
+msgid "Throughput"
+msgstr "ဖြတ်သန်းနှုန်း"
+
+msgctxt "network-stats"
+msgid "Throughput, 24 h"
+msgstr "ဖြတ်သန်းနှုန်း၊ ၂၄ နာရီ"
+
+msgctxt "network-stats"
+msgid "Up %(days)d day"
+msgid_plural "Up %(days)d days"
+msgstr[0] "%(days)d ရက် လည်ပတ်နေသည်"
+
+msgctxt "network-stats"
+msgid "Up less than a day"
+msgstr "တစ်ရက်အောက် လည်ပတ်နေသည်"
+
+msgctxt "network-stats"
+msgid "Updated %(hours)d h ago"
+msgstr "%(hours)d နာရီ အကြာက အပ်ဒိတ်လုပ်ခဲ့သည်"
+
+msgctxt "network-stats"
+msgid "Updated %(minutes)d min ago"
+msgstr "%(minutes)d မိနစ် အကြာက အပ်ဒိတ်လုပ်ခဲ့သည်"
+
+msgctxt "network-stats"
+msgid "Updated %(seconds)d s ago"
+msgstr "%(seconds)d စက္ကန့် အကြာက အပ်ဒိတ်လုပ်ခဲ့သည်"
+
+msgctxt "network-stats"
+msgid "Upload"
+msgstr "အပ်လုဒ်"
+
+msgctxt "network-stats"
+msgid "Warren network"
+msgstr "Warren ကွန်ရက်"
+
+msgctxt "network-stats"
+msgid "Your exit, live"
+msgstr "သင့် ထွက်ပေါက်ဆာဗာ၊ တိုက်ရိုက်"
+
 #. The system notification displayed to the user when the account credit is close to expiry.
 #. Available placeholder:
 #. %(duration)s - remaining time, e.g. "2 days"

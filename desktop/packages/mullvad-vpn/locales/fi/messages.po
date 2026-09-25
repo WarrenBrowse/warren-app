@@ -2149,6 +2149,176 @@ msgctxt "navigation-bar"
 msgid "API access"
 msgstr "Ohjelmointirajapinnan käyttö"
 
+msgctxt "network-stats"
+msgid "%(capacity)s link"
+msgstr "%(capacity)s:n yhteys"
+
+msgctxt "network-stats"
+msgid "%(online)d of %(total)d"
+msgstr "%(online)d / %(total)d"
+
+msgctxt "network-stats"
+msgid "Accounts"
+msgstr "Tilit"
+
+msgctxt "network-stats"
+msgid "Active subscribers"
+msgstr "Aktiiviset tilaajat"
+
+msgctxt "network-stats"
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows its load band alone."
+msgstr "Lähtöpalvelin näyttää reaaliaikaiset luvut vain niin kauan kuin vähintään %(threshold)d henkilöä käyttää sitä, jotta kenenkään liikennettä ei voi erottaa. Sitä vähemmällä se näyttää vain kuormitustasonsa."
+
+msgctxt "network-stats"
+msgid "CPU %(percent)s"
+msgstr "CPU %(percent)s"
+
+msgctxt "network-stats"
+msgid "Data carried, 24 h"
+msgstr "Siirretty data, 24 h"
+
+msgctxt "network-stats"
+msgid "Download"
+msgstr "Lataus"
+
+msgctxt "network-stats"
+msgid "Every figure covers one closed window of %(seconds)d seconds, and changes only when the next one closes."
+msgstr "Jokainen luku kattaa yhden päättyneen %(seconds)d sekunnin ikkunan ja muuttuu vasta, kun seuraava päättyy."
+
+msgctxt "network-stats"
+msgid "Exits"
+msgstr "Lähtöpalvelimet"
+
+msgctxt "network-stats"
+msgid "Exits online"
+msgstr "Lähtöpalvelimia verkossa"
+
+msgctxt "network-stats"
+msgid "High load"
+msgstr "Korkea kuorma"
+
+msgctxt "network-stats"
+msgid "How these numbers are computed"
+msgstr "Näin luvut lasketaan"
+
+msgctxt "network-stats"
+msgid "Limited by bandwidth"
+msgstr "Kaistanleveyden rajoittama"
+
+msgctxt "network-stats"
+msgid "Limited by CPU"
+msgstr "Suorittimen rajoittama"
+
+msgctxt "network-stats"
+msgid "Live figures appear once %(threshold)d people share an exit, so no one's traffic can be singled out."
+msgstr "Reaaliaikaiset luvut tulevat näkyviin, kun %(threshold)d henkilöä jakaa lähtöpalvelimen, jotta kenenkään liikennettä ei voi erottaa."
+
+msgctxt "network-stats"
+msgid "load"
+msgstr "kuorma"
+
+msgctxt "network-stats"
+msgid "Load %(load)s, %(people)s people"
+msgstr "Kuorma %(load)s, %(people)s henkilöä"
+
+msgctxt "network-stats"
+msgid "Load is the busier direction of the link against its capacity, or the processor use, whichever is closer to saturation."
+msgstr "Kuorma on yhteyden kiireisemmän suunnan osuus sen kapasiteetista tai suorittimen käyttö, kumpi on lähempänä kyllästymistä."
+
+msgctxt "network-stats"
+msgid "Load over the last 15 minutes"
+msgstr "Kuorma viimeisten 15 minuutin ajalta"
+
+msgctxt "network-stats"
+msgid "Load unknown"
+msgstr "Kuorma tuntematon"
+
+msgctxt "network-stats"
+msgid "Low load"
+msgstr "Matala kuorma"
+
+msgctxt "network-stats"
+msgid "Moderate load"
+msgstr "Kohtalainen kuorma"
+
+msgctxt "network-stats"
+msgid "network load"
+msgstr "verkon kuorma"
+
+msgctxt "network-stats"
+msgid "Network load %(load)s"
+msgstr "Verkon kuorma %(load)s"
+
+msgctxt "network-stats"
+msgid "Offline"
+msgstr "Offline"
+
+msgctxt "network-stats"
+msgid "People connected now"
+msgstr "Yhdistettyjä henkilöitä nyt"
+
+msgctxt "network-stats"
+msgid "People per exit are rounded down to steps of %(step)d. The total for the whole network is exact."
+msgstr "Henkilömäärät lähtöpalvelinta kohden pyöristetään alaspäin %(step)d:n portain. Koko verkon summa on tarkka."
+
+msgctxt "network-stats"
+msgid "People, 24 h"
+msgstr "Henkilöt, 24 h"
+
+msgctxt "network-stats"
+msgid "Saturated"
+msgstr "Kyllästynyt"
+
+msgctxt "network-stats"
+msgid "Show the Warren network"
+msgstr "Näytä Warren-verkko"
+
+msgctxt "network-stats"
+msgid "The network figures are not available right now."
+msgstr "Verkon lukuja ei ole juuri nyt saatavilla."
+
+msgctxt "network-stats"
+msgid "Throughput"
+msgstr "Läpäisy"
+
+msgctxt "network-stats"
+msgid "Throughput, 24 h"
+msgstr "Läpäisy, 24 h"
+
+msgctxt "network-stats"
+msgid "Up %(days)d day"
+msgid_plural "Up %(days)d days"
+msgstr[0] "Käynnissä %(days)d päivän"
+msgstr[1] "Käynnissä %(days)d päivää"
+
+msgctxt "network-stats"
+msgid "Up less than a day"
+msgstr "Käynnissä alle päivän"
+
+msgctxt "network-stats"
+msgid "Updated %(hours)d h ago"
+msgstr "Päivitetty %(hours)d h sitten"
+
+msgctxt "network-stats"
+msgid "Updated %(minutes)d min ago"
+msgstr "Päivitetty %(minutes)d min sitten"
+
+msgctxt "network-stats"
+msgid "Updated %(seconds)d s ago"
+msgstr "Päivitetty %(seconds)d s sitten"
+
+msgctxt "network-stats"
+msgid "Upload"
+msgstr "Lähetys"
+
+msgctxt "network-stats"
+msgid "Warren network"
+msgstr "Warren-verkko"
+
+msgctxt "network-stats"
+msgid "Your exit, live"
+msgstr "Lähtöpalvelimesi, reaaliajassa"
+
 #. The system notification displayed to the user when the account credit is close to expiry.
 #. Available placeholder:
 #. %(duration)s - remaining time, e.g. "2 days"

@@ -2173,6 +2173,180 @@ msgctxt "navigation-bar"
 msgid "API access"
 msgstr "الوصول إلى واجهة API"
 
+msgctxt "network-stats"
+msgid "%(capacity)s link"
+msgstr "رابط %(capacity)s"
+
+msgctxt "network-stats"
+msgid "%(online)d of %(total)d"
+msgstr "%(online)d من %(total)d"
+
+msgctxt "network-stats"
+msgid "Accounts"
+msgstr "الحسابات"
+
+msgctxt "network-stats"
+msgid "Active subscribers"
+msgstr "المشتركون النشطون"
+
+msgctxt "network-stats"
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows its load band alone."
+msgstr "لا يعرض خادم الخروج أرقامه المباشرة إلا ما دام %(threshold)d شخصًا على الأقل يستخدمونه، حتى لا يمكن تمييز حركة مرور أي شخص. دون ذلك يعرض مستوى حمله فقط."
+
+msgctxt "network-stats"
+msgid "CPU %(percent)s"
+msgstr "المعالج %(percent)s"
+
+msgctxt "network-stats"
+msgid "Data carried, 24 h"
+msgstr "البيانات المنقولة، 24 ساعة"
+
+msgctxt "network-stats"
+msgid "Download"
+msgstr "التنزيل"
+
+msgctxt "network-stats"
+msgid "Every figure covers one closed window of %(seconds)d seconds, and changes only when the next one closes."
+msgstr "يغطي كل رقم نافذة مغلقة مدتها %(seconds)d ثانية، ولا يتغير إلا عند إغلاق النافذة التالية."
+
+msgctxt "network-stats"
+msgid "Exits"
+msgstr "خوادم الخروج"
+
+msgctxt "network-stats"
+msgid "Exits online"
+msgstr "خوادم الخروج المتصلة"
+
+msgctxt "network-stats"
+msgid "High load"
+msgstr "حمل مرتفع"
+
+msgctxt "network-stats"
+msgid "How these numbers are computed"
+msgstr "كيف تُحسب هذه الأرقام"
+
+msgctxt "network-stats"
+msgid "Limited by bandwidth"
+msgstr "محدود بعرض النطاق"
+
+msgctxt "network-stats"
+msgid "Limited by CPU"
+msgstr "محدود بالمعالج"
+
+msgctxt "network-stats"
+msgid "Live figures appear once %(threshold)d people share an exit, so no one's traffic can be singled out."
+msgstr "تظهر الأرقام المباشرة عندما يتشارك %(threshold)d شخصًا خادم خروج واحدًا، حتى لا يمكن تمييز حركة مرور أي شخص."
+
+msgctxt "network-stats"
+msgid "load"
+msgstr "الحمل"
+
+msgctxt "network-stats"
+msgid "Load %(load)s, %(people)s people"
+msgstr "الحمل %(load)s، الأشخاص %(people)s"
+
+msgctxt "network-stats"
+msgid "Load is the busier direction of the link against its capacity, or the processor use, whichever is closer to saturation."
+msgstr "الحمل هو الاتجاه الأكثر انشغالًا في الرابط مقارنة بسعته، أو استخدام المعالج، أيهما أقرب إلى التشبع."
+
+msgctxt "network-stats"
+msgid "Load over the last 15 minutes"
+msgstr "الحمل خلال آخر 15 دقيقة"
+
+msgctxt "network-stats"
+msgid "Load unknown"
+msgstr "الحمل غير معروف"
+
+msgctxt "network-stats"
+msgid "Low load"
+msgstr "حمل منخفض"
+
+msgctxt "network-stats"
+msgid "Moderate load"
+msgstr "حمل متوسط"
+
+msgctxt "network-stats"
+msgid "network load"
+msgstr "حمل الشبكة"
+
+msgctxt "network-stats"
+msgid "Network load %(load)s"
+msgstr "حمل الشبكة %(load)s"
+
+msgctxt "network-stats"
+msgid "Offline"
+msgstr "غير متصل"
+
+msgctxt "network-stats"
+msgid "People connected now"
+msgstr "الأشخاص المتصلون الآن"
+
+msgctxt "network-stats"
+msgid "People per exit are rounded down to steps of %(step)d. The total for the whole network is exact."
+msgstr "يُقرَّب عدد الأشخاص لكل خادم خروج إلى الأسفل بخطوات قدرها %(step)d. أما مجموع الشبكة كلها فدقيق."
+
+msgctxt "network-stats"
+msgid "People, 24 h"
+msgstr "الأشخاص، 24 ساعة"
+
+msgctxt "network-stats"
+msgid "Saturated"
+msgstr "مشبع"
+
+msgctxt "network-stats"
+msgid "Show the Warren network"
+msgstr "عرض شبكة Warren"
+
+msgctxt "network-stats"
+msgid "The network figures are not available right now."
+msgstr "أرقام الشبكة غير متاحة حاليًا."
+
+msgctxt "network-stats"
+msgid "Throughput"
+msgstr "الإنتاجية"
+
+msgctxt "network-stats"
+msgid "Throughput, 24 h"
+msgstr "الإنتاجية، 24 ساعة"
+
+msgctxt "network-stats"
+msgid "Up %(days)d day"
+msgid_plural "Up %(days)d days"
+msgstr[0] "يعمل منذ %(days)d يوم"
+msgstr[1] "يعمل منذ %(days)d يوم"
+msgstr[2] "يعمل منذ يومين (%(days)d)"
+msgstr[3] "يعمل منذ %(days)d أيام"
+msgstr[4] "يعمل منذ %(days)d يومًا"
+msgstr[5] "يعمل منذ %(days)d يوم"
+
+msgctxt "network-stats"
+msgid "Up less than a day"
+msgstr "يعمل منذ أقل من يوم"
+
+msgctxt "network-stats"
+msgid "Updated %(hours)d h ago"
+msgstr "حُدِّث قبل %(hours)d س"
+
+msgctxt "network-stats"
+msgid "Updated %(minutes)d min ago"
+msgstr "حُدِّث قبل %(minutes)d د"
+
+msgctxt "network-stats"
+msgid "Updated %(seconds)d s ago"
+msgstr "حُدِّث قبل %(seconds)d ث"
+
+msgctxt "network-stats"
+msgid "Upload"
+msgstr "الرفع"
+
+msgctxt "network-stats"
+msgid "Warren network"
+msgstr "شبكة Warren"
+
+msgctxt "network-stats"
+msgid "Your exit, live"
+msgstr "خادم الخروج الخاص بك، مباشرة"
+
 #. The system notification displayed to the user when the account credit is close to expiry.
 #. Available placeholder:
 #. %(duration)s - remaining time, e.g. "2 days"

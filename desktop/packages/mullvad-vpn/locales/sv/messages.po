@@ -2149,6 +2149,176 @@ msgctxt "navigation-bar"
 msgid "API access"
 msgstr "API-åtkomst"
 
+msgctxt "network-stats"
+msgid "%(capacity)s link"
+msgstr "%(capacity)s-länk"
+
+msgctxt "network-stats"
+msgid "%(online)d of %(total)d"
+msgstr "%(online)d av %(total)d"
+
+msgctxt "network-stats"
+msgid "Accounts"
+msgstr "Konton"
+
+msgctxt "network-stats"
+msgid "Active subscribers"
+msgstr "Aktiva prenumeranter"
+
+msgctxt "network-stats"
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows its load band alone."
+msgstr "En utgångsserver visar livesiffror bara så länge minst %(threshold)d personer använder den, så att ingens trafik kan pekas ut. Under det visar den bara sin belastningsnivå."
+
+msgctxt "network-stats"
+msgid "CPU %(percent)s"
+msgstr "CPU %(percent)s"
+
+msgctxt "network-stats"
+msgid "Data carried, 24 h"
+msgstr "Överförd data, 24 h"
+
+msgctxt "network-stats"
+msgid "Download"
+msgstr "Nedladdning"
+
+msgctxt "network-stats"
+msgid "Every figure covers one closed window of %(seconds)d seconds, and changes only when the next one closes."
+msgstr "Varje siffra gäller ett avslutat fönster på %(seconds)d sekunder och ändras först när nästa stängs."
+
+msgctxt "network-stats"
+msgid "Exits"
+msgstr "Utgångsservrar"
+
+msgctxt "network-stats"
+msgid "Exits online"
+msgstr "Utgångsservrar online"
+
+msgctxt "network-stats"
+msgid "High load"
+msgstr "Hög belastning"
+
+msgctxt "network-stats"
+msgid "How these numbers are computed"
+msgstr "Så beräknas siffrorna"
+
+msgctxt "network-stats"
+msgid "Limited by bandwidth"
+msgstr "Begränsad av bandbredd"
+
+msgctxt "network-stats"
+msgid "Limited by CPU"
+msgstr "Begränsad av CPU"
+
+msgctxt "network-stats"
+msgid "Live figures appear once %(threshold)d people share an exit, so no one's traffic can be singled out."
+msgstr "Livesiffror visas så snart %(threshold)d personer delar en utgångsserver, så att ingens trafik kan pekas ut."
+
+msgctxt "network-stats"
+msgid "load"
+msgstr "belastning"
+
+msgctxt "network-stats"
+msgid "Load %(load)s, %(people)s people"
+msgstr "Belastning %(load)s, %(people)s personer"
+
+msgctxt "network-stats"
+msgid "Load is the busier direction of the link against its capacity, or the processor use, whichever is closer to saturation."
+msgstr "Belastningen är länkens mest använda riktning i förhållande till kapaciteten, eller processoranvändningen, beroende på vilken som är närmast mättnad."
+
+msgctxt "network-stats"
+msgid "Load over the last 15 minutes"
+msgstr "Belastning de senaste 15 minuterna"
+
+msgctxt "network-stats"
+msgid "Load unknown"
+msgstr "Okänd belastning"
+
+msgctxt "network-stats"
+msgid "Low load"
+msgstr "Låg belastning"
+
+msgctxt "network-stats"
+msgid "Moderate load"
+msgstr "Måttlig belastning"
+
+msgctxt "network-stats"
+msgid "network load"
+msgstr "nätverksbelastning"
+
+msgctxt "network-stats"
+msgid "Network load %(load)s"
+msgstr "Nätverksbelastning %(load)s"
+
+msgctxt "network-stats"
+msgid "Offline"
+msgstr "Offline"
+
+msgctxt "network-stats"
+msgid "People connected now"
+msgstr "Anslutna personer nu"
+
+msgctxt "network-stats"
+msgid "People per exit are rounded down to steps of %(step)d. The total for the whole network is exact."
+msgstr "Personer per utgångsserver avrundas nedåt i steg om %(step)d. Summan för hela nätverket är exakt."
+
+msgctxt "network-stats"
+msgid "People, 24 h"
+msgstr "Personer, 24 h"
+
+msgctxt "network-stats"
+msgid "Saturated"
+msgstr "Mättad"
+
+msgctxt "network-stats"
+msgid "Show the Warren network"
+msgstr "Visa Warren-nätverket"
+
+msgctxt "network-stats"
+msgid "The network figures are not available right now."
+msgstr "Nätverkssiffrorna är inte tillgängliga just nu."
+
+msgctxt "network-stats"
+msgid "Throughput"
+msgstr "Genomströmning"
+
+msgctxt "network-stats"
+msgid "Throughput, 24 h"
+msgstr "Genomströmning, 24 h"
+
+msgctxt "network-stats"
+msgid "Up %(days)d day"
+msgid_plural "Up %(days)d days"
+msgstr[0] "I drift i %(days)d dag"
+msgstr[1] "I drift i %(days)d dagar"
+
+msgctxt "network-stats"
+msgid "Up less than a day"
+msgstr "I drift i mindre än en dag"
+
+msgctxt "network-stats"
+msgid "Updated %(hours)d h ago"
+msgstr "Uppdaterad för %(hours)d h sedan"
+
+msgctxt "network-stats"
+msgid "Updated %(minutes)d min ago"
+msgstr "Uppdaterad för %(minutes)d min sedan"
+
+msgctxt "network-stats"
+msgid "Updated %(seconds)d s ago"
+msgstr "Uppdaterad för %(seconds)d s sedan"
+
+msgctxt "network-stats"
+msgid "Upload"
+msgstr "Uppladdning"
+
+msgctxt "network-stats"
+msgid "Warren network"
+msgstr "Warren-nätverket"
+
+msgctxt "network-stats"
+msgid "Your exit, live"
+msgstr "Din utgångsserver, live"
+
 #. The system notification displayed to the user when the account credit is close to expiry.
 #. Available placeholder:
 #. %(duration)s - remaining time, e.g. "2 days"

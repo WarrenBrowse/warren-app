@@ -2161,6 +2161,178 @@ msgctxt "navigation-bar"
 msgid "API access"
 msgstr "Доступ до API"
 
+msgctxt "network-stats"
+msgid "%(capacity)s link"
+msgstr "Канал %(capacity)s"
+
+msgctxt "network-stats"
+msgid "%(online)d of %(total)d"
+msgstr "%(online)d з %(total)d"
+
+msgctxt "network-stats"
+msgid "Accounts"
+msgstr "Облікові записи"
+
+msgctxt "network-stats"
+msgid "Active subscribers"
+msgstr "Активні передплатники"
+
+msgctxt "network-stats"
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows its load band alone."
+msgstr "Вихідний сервер показує дані в реальному часі, лише поки ним користуються щонайменше %(threshold)d осіб, щоб нічий трафік не можна було виокремити. Нижче цього порогу він показує лише рівень навантаження."
+
+msgctxt "network-stats"
+msgid "CPU %(percent)s"
+msgstr "ЦП %(percent)s"
+
+msgctxt "network-stats"
+msgid "Data carried, 24 h"
+msgstr "Передано даних, 24 год"
+
+msgctxt "network-stats"
+msgid "Download"
+msgstr "Завантаження"
+
+msgctxt "network-stats"
+msgid "Every figure covers one closed window of %(seconds)d seconds, and changes only when the next one closes."
+msgstr "Кожне значення охоплює одне завершене вікно в %(seconds)d секунд і змінюється лише після закриття наступного."
+
+msgctxt "network-stats"
+msgid "Exits"
+msgstr "Вихідні сервери"
+
+msgctxt "network-stats"
+msgid "Exits online"
+msgstr "Вихідні сервери в мережі"
+
+msgctxt "network-stats"
+msgid "High load"
+msgstr "Високе навантаження"
+
+msgctxt "network-stats"
+msgid "How these numbers are computed"
+msgstr "Як рахуються ці цифри"
+
+msgctxt "network-stats"
+msgid "Limited by bandwidth"
+msgstr "Обмежено пропускною здатністю"
+
+msgctxt "network-stats"
+msgid "Limited by CPU"
+msgstr "Обмежено процесором"
+
+msgctxt "network-stats"
+msgid "Live figures appear once %(threshold)d people share an exit, so no one's traffic can be singled out."
+msgstr "Дані в реальному часі з’являються, коли вихідним сервером користуються %(threshold)d осіб, щоб нічий трафік не можна було виокремити."
+
+msgctxt "network-stats"
+msgid "load"
+msgstr "навантаження"
+
+msgctxt "network-stats"
+msgid "Load %(load)s, %(people)s people"
+msgstr "Навантаження %(load)s, людей: %(people)s"
+
+msgctxt "network-stats"
+msgid "Load is the busier direction of the link against its capacity, or the processor use, whichever is closer to saturation."
+msgstr "Навантаження це більш зайнятий напрямок каналу відносно його пропускної здатності або використання процесора, залежно від того, що ближче до насичення."
+
+msgctxt "network-stats"
+msgid "Load over the last 15 minutes"
+msgstr "Навантаження за останні 15 хвилин"
+
+msgctxt "network-stats"
+msgid "Load unknown"
+msgstr "Навантаження невідоме"
+
+msgctxt "network-stats"
+msgid "Low load"
+msgstr "Низьке навантаження"
+
+msgctxt "network-stats"
+msgid "Moderate load"
+msgstr "Помірне навантаження"
+
+msgctxt "network-stats"
+msgid "network load"
+msgstr "навантаження мережі"
+
+msgctxt "network-stats"
+msgid "Network load %(load)s"
+msgstr "Навантаження мережі %(load)s"
+
+msgctxt "network-stats"
+msgid "Offline"
+msgstr "Не в мережі"
+
+msgctxt "network-stats"
+msgid "People connected now"
+msgstr "Підключено зараз"
+
+msgctxt "network-stats"
+msgid "People per exit are rounded down to steps of %(step)d. The total for the whole network is exact."
+msgstr "Кількість людей на вихідному сервері округлюється вниз із кроком %(step)d. Підсумок для всієї мережі точний."
+
+msgctxt "network-stats"
+msgid "People, 24 h"
+msgstr "Люди, 24 год"
+
+msgctxt "network-stats"
+msgid "Saturated"
+msgstr "Перевантажений"
+
+msgctxt "network-stats"
+msgid "Show the Warren network"
+msgstr "Показати мережу Warren"
+
+msgctxt "network-stats"
+msgid "The network figures are not available right now."
+msgstr "Дані мережі зараз недоступні."
+
+msgctxt "network-stats"
+msgid "Throughput"
+msgstr "Пропускна здатність"
+
+msgctxt "network-stats"
+msgid "Throughput, 24 h"
+msgstr "Пропускна здатність, 24 год"
+
+msgctxt "network-stats"
+msgid "Up %(days)d day"
+msgid_plural "Up %(days)d days"
+msgstr[0] "Працює %(days)d день"
+msgstr[1] "Працює %(days)d дні"
+msgstr[2] "Працює %(days)d днів"
+msgstr[3] "Працює %(days)d дня"
+
+msgctxt "network-stats"
+msgid "Up less than a day"
+msgstr "Працює менше доби"
+
+msgctxt "network-stats"
+msgid "Updated %(hours)d h ago"
+msgstr "Оновлено %(hours)d год тому"
+
+msgctxt "network-stats"
+msgid "Updated %(minutes)d min ago"
+msgstr "Оновлено %(minutes)d хв тому"
+
+msgctxt "network-stats"
+msgid "Updated %(seconds)d s ago"
+msgstr "Оновлено %(seconds)d с тому"
+
+msgctxt "network-stats"
+msgid "Upload"
+msgstr "Надсилання"
+
+msgctxt "network-stats"
+msgid "Warren network"
+msgstr "Мережа Warren"
+
+msgctxt "network-stats"
+msgid "Your exit, live"
+msgstr "Ваш вихідний сервер у реальному часі"
+
 #. The system notification displayed to the user when the account credit is close to expiry.
 #. Available placeholder:
 #. %(duration)s - remaining time, e.g. "2 days"

@@ -2143,6 +2143,175 @@ msgctxt "navigation-bar"
 msgid "API access"
 msgstr "การเข้าถึง API"
 
+msgctxt "network-stats"
+msgid "%(capacity)s link"
+msgstr "ลิงก์ %(capacity)s"
+
+msgctxt "network-stats"
+msgid "%(online)d of %(total)d"
+msgstr "%(online)d จาก %(total)d"
+
+msgctxt "network-stats"
+msgid "Accounts"
+msgstr "บัญชี"
+
+msgctxt "network-stats"
+msgid "Active subscribers"
+msgstr "ผู้สมัครสมาชิกที่ใช้งานอยู่"
+
+msgctxt "network-stats"
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows its load band alone."
+msgstr "เซิร์ฟเวอร์ทางออกจะแสดงตัวเลขสดเฉพาะเมื่อมีผู้ใช้อย่างน้อย %(threshold)d คน เพื่อไม่ให้ระบุทราฟฟิกของใครได้ หากน้อยกว่านั้นจะแสดงเพียงระดับโหลด"
+
+msgctxt "network-stats"
+msgid "CPU %(percent)s"
+msgstr "CPU %(percent)s"
+
+msgctxt "network-stats"
+msgid "Data carried, 24 h"
+msgstr "ข้อมูลที่รับส่ง 24 ชม."
+
+msgctxt "network-stats"
+msgid "Download"
+msgstr "ดาวน์โหลด"
+
+msgctxt "network-stats"
+msgid "Every figure covers one closed window of %(seconds)d seconds, and changes only when the next one closes."
+msgstr "ตัวเลขแต่ละค่าครอบคลุมช่วงเวลาที่ปิดแล้ว %(seconds)d วินาที และจะเปลี่ยนเมื่อช่วงถัดไปปิดเท่านั้น"
+
+msgctxt "network-stats"
+msgid "Exits"
+msgstr "เซิร์ฟเวอร์ทางออก"
+
+msgctxt "network-stats"
+msgid "Exits online"
+msgstr "เซิร์ฟเวอร์ทางออกที่ออนไลน์"
+
+msgctxt "network-stats"
+msgid "High load"
+msgstr "โหลดสูง"
+
+msgctxt "network-stats"
+msgid "How these numbers are computed"
+msgstr "วิธีคำนวณตัวเลขเหล่านี้"
+
+msgctxt "network-stats"
+msgid "Limited by bandwidth"
+msgstr "จำกัดด้วยแบนด์วิดท์"
+
+msgctxt "network-stats"
+msgid "Limited by CPU"
+msgstr "จำกัดด้วย CPU"
+
+msgctxt "network-stats"
+msgid "Live figures appear once %(threshold)d people share an exit, so no one's traffic can be singled out."
+msgstr "ตัวเลขสดจะแสดงเมื่อมี %(threshold)d คนใช้เซิร์ฟเวอร์ทางออกร่วมกัน เพื่อไม่ให้ระบุทราฟฟิกของใครได้"
+
+msgctxt "network-stats"
+msgid "load"
+msgstr "โหลด"
+
+msgctxt "network-stats"
+msgid "Load %(load)s, %(people)s people"
+msgstr "โหลด %(load)s, %(people)s คน"
+
+msgctxt "network-stats"
+msgid "Load is the busier direction of the link against its capacity, or the processor use, whichever is closer to saturation."
+msgstr "โหลดคือทิศทางที่หนาแน่นกว่าของลิงก์เทียบกับความจุ หรือการใช้โปรเซสเซอร์ แล้วแต่ว่าค่าใดใกล้จุดอิ่มตัวกว่า"
+
+msgctxt "network-stats"
+msgid "Load over the last 15 minutes"
+msgstr "โหลดใน 15 นาทีที่ผ่านมา"
+
+msgctxt "network-stats"
+msgid "Load unknown"
+msgstr "ไม่ทราบโหลด"
+
+msgctxt "network-stats"
+msgid "Low load"
+msgstr "โหลดต่ำ"
+
+msgctxt "network-stats"
+msgid "Moderate load"
+msgstr "โหลดปานกลาง"
+
+msgctxt "network-stats"
+msgid "network load"
+msgstr "โหลดเครือข่าย"
+
+msgctxt "network-stats"
+msgid "Network load %(load)s"
+msgstr "โหลดเครือข่าย %(load)s"
+
+msgctxt "network-stats"
+msgid "Offline"
+msgstr "ออฟไลน์"
+
+msgctxt "network-stats"
+msgid "People connected now"
+msgstr "ผู้เชื่อมต่อขณะนี้"
+
+msgctxt "network-stats"
+msgid "People per exit are rounded down to steps of %(step)d. The total for the whole network is exact."
+msgstr "จำนวนคนต่อเซิร์ฟเวอร์ทางออกจะปัดลงเป็นขั้นละ %(step)d คน ยอดรวมของทั้งเครือข่ายเป็นค่าที่แน่นอน"
+
+msgctxt "network-stats"
+msgid "People, 24 h"
+msgstr "จำนวนคน 24 ชม."
+
+msgctxt "network-stats"
+msgid "Saturated"
+msgstr "อิ่มตัว"
+
+msgctxt "network-stats"
+msgid "Show the Warren network"
+msgstr "แสดงเครือข่าย Warren"
+
+msgctxt "network-stats"
+msgid "The network figures are not available right now."
+msgstr "ขณะนี้ไม่มีตัวเลขของเครือข่าย"
+
+msgctxt "network-stats"
+msgid "Throughput"
+msgstr "ปริมาณงาน"
+
+msgctxt "network-stats"
+msgid "Throughput, 24 h"
+msgstr "ปริมาณงาน 24 ชม."
+
+msgctxt "network-stats"
+msgid "Up %(days)d day"
+msgid_plural "Up %(days)d days"
+msgstr[0] "ทำงานมา %(days)d วัน"
+
+msgctxt "network-stats"
+msgid "Up less than a day"
+msgstr "ทำงานมาไม่ถึงหนึ่งวัน"
+
+msgctxt "network-stats"
+msgid "Updated %(hours)d h ago"
+msgstr "อัปเดตเมื่อ %(hours)d ชม. ที่แล้ว"
+
+msgctxt "network-stats"
+msgid "Updated %(minutes)d min ago"
+msgstr "อัปเดตเมื่อ %(minutes)d นาทีที่แล้ว"
+
+msgctxt "network-stats"
+msgid "Updated %(seconds)d s ago"
+msgstr "อัปเดตเมื่อ %(seconds)d วินาทีที่แล้ว"
+
+msgctxt "network-stats"
+msgid "Upload"
+msgstr "อัปโหลด"
+
+msgctxt "network-stats"
+msgid "Warren network"
+msgstr "เครือข่าย Warren"
+
+msgctxt "network-stats"
+msgid "Your exit, live"
+msgstr "เซิร์ฟเวอร์ทางออกของคุณ แบบสด"
+
 #. The system notification displayed to the user when the account credit is close to expiry.
 #. Available placeholder:
 #. %(duration)s - remaining time, e.g. "2 days"
