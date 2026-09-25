@@ -109,6 +109,8 @@ fn push(
 /// IP version.
 fn ends(inpcb: &[u8]) -> Option<(SocketAddr, Option<SocketAddr>)> {
     let vflag = inpcb[INP_VFLAG];
+    // Both flags are set only on a dual-stack socket bound to the wildcard,
+    // whose addresses are all zero whichever way they are read.
     let addr = |at: usize| -> Option<IpAddr> {
         if vflag & INP_IPV4 != 0 {
             let octets: [u8; 4] = inpcb[at + V4_IN_UNION..at + 16].try_into().ok()?;

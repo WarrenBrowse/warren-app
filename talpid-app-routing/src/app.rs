@@ -11,7 +11,7 @@
 //!   separator, as the file system does.
 //! - Linux: the executable path.
 
-use std::{collections::HashMap, ffi::OsStr, hash::Hash};
+use std::{collections::HashMap, ffi::OsStr, fmt, hash::Hash};
 
 /// The path conventions of an operating system.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -69,7 +69,7 @@ fn linux_key(path: &str) -> String {
 }
 
 /// Maps executables to the value chosen for their app.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct AppMatcher<V> {
     flavor: PathFlavor,
     apps: HashMap<String, V>,
@@ -106,17 +106,48 @@ impl<V: Copy> AppMatcher<V> {
     }
 }
 
-/// A process instance: a pid is recycled, a pid with its start time is not.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+// The chosen apps are paths on the user's machine and pids tie traffic to a
+// program: none of these types renders either, so a stray `{:?}` cannot put
+// them in a log.
+impl<V> fmt::Debug for AppMatcher<V> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("AppMatcher")
+            .field("flavor", &self.flavor)
+            .field("apps", &self.apps.len())
+            .finish()
+    }
+}
+
+impl fmt::Debug for ProcessKey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("ProcessKey(..)")
+    }
+}
+
+impl<V> fmt::Debug for DecisionCache<V> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("DecisionCache")
+            .field("processes", &self.decisions.len())
+            .finish()
+    }
+}
+
+/// A process running one program: a pid is recycled, and a process keeps
+/// both its pid and its start time across `exec`, so the program it runs is
+/// part of the key.
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct ProcessKey {
     pub pid: u32,
     /// Start time in the OS's own unit; only compared for equality.
     pub start_time: u64,
+    /// Changes when the process replaces its program: the pid version on
+    /// macOS, the executable's inode on Linux, zero on Windows, where a
+    /// process never replaces its image.
+    pub image: u64,
 }
 
 /// The decision made for each process instance, so the executable of a
 /// process is looked up once however many flows it opens.
-#[derive(Debug)]
 pub struct DecisionCache<V> {
     decisions: HashMap<ProcessKey, Option<V>>,
     capacity: usize,
@@ -271,6 +302,7 @@ mod tests {
             ProcessKey {
                 pid: 42,
                 start_time: 1000,
+                image: 0,
             },
             Some('r'),
         );
@@ -278,14 +310,48 @@ mod tests {
         let same = cache.get(ProcessKey {
             pid: 42,
             start_time: 1000,
+            image: 0,
         });
         let recycled = cache.get(ProcessKey {
             pid: 42,
             start_time: 2000,
+            image: 0,
         });
 
         assert_eq!(same, Some(Some('r')));
         assert_eq!(recycled, None);
+    }
+
+    #[test]
+    fn a_process_that_ran_another_program_does_not_keep_the_decision() {
+        let mut cache = DecisionCache::<u8>::new(8);
+        let before = ProcessKey {
+            pid: 42,
+            start_time: 1000,
+            image: 1,
+        };
+        cache.insert(before, None);
+
+        let after_exec = cache.get(ProcessKey { image: 2, ..before });
+
+        assert_eq!(after_exec, None);
+    }
+
+    #[test]
+    fn matchers_keys_and_caches_render_without_paths_or_pids() {
+        let matcher = AppMatcher::new(PathFlavor::Linux, [("/opt/secret-app", 1u8)]);
+        let key = ProcessKey {
+            pid: 424242,
+            start_time: 1,
+            image: 1,
+        };
+        let mut cache = DecisionCache::new(8);
+        cache.insert(key, Some(1u8));
+
+        let rendered = format!("{matcher:?} {key:?} {cache:?}");
+
+        assert!(!rendered.contains("secret-app"), "{rendered}");
+        assert!(!rendered.contains("424242"), "{rendered}");
     }
 
     #[test]
@@ -295,6 +361,7 @@ mod tests {
             ProcessKey {
                 pid: 7,
                 start_time: 1,
+                image: 0,
             },
             None,
         );
@@ -302,7 +369,8 @@ mod tests {
         assert_eq!(
             cache.get(ProcessKey {
                 pid: 7,
-                start_time: 1
+                start_time: 1,
+                image: 0,
             }),
             Some(None)
         );
@@ -312,13 +380,21 @@ mod tests {
     fn a_full_cache_starts_over() {
         let mut cache = DecisionCache::new(4);
         for pid in 0..4 {
-            cache.insert(ProcessKey { pid, start_time: 0 }, Some(pid));
+            cache.insert(
+                ProcessKey {
+                    pid,
+                    start_time: 0,
+                    image: 0,
+                },
+                Some(pid),
+            );
         }
 
         cache.insert(
             ProcessKey {
                 pid: 99,
                 start_time: 0,
+                image: 0,
             },
             Some(99),
         );
@@ -327,7 +403,8 @@ mod tests {
         assert_eq!(
             cache.get(ProcessKey {
                 pid: 99,
-                start_time: 0
+                start_time: 0,
+                image: 0,
             }),
             Some(Some(99))
         );

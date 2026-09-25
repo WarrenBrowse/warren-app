@@ -11,7 +11,10 @@ use std::{
     path::PathBuf,
 };
 
-use crate::flow::{FlowKey, Transport};
+use crate::{
+    app::ProcessKey,
+    flow::{FlowKey, Transport},
+};
 
 #[cfg(any(target_os = "macos", test))]
 mod pcblist;
@@ -44,21 +47,23 @@ pub enum OwnerError {
 
 /// Answers, for a flow seen on the TUN device, which process owns it.
 pub trait OwnerResolver {
-    /// The pid owning the local socket of `flow` in the current view, `None`
-    /// when the view does not have it.
+    /// The pid owning the local socket of `flow`, answered from a view of
+    /// the OS no older than the last [`Self::refresh`]. `None` when that view
+    /// has no such socket, or no single owner for it.
     fn socket_owner(&mut self, flow: &FlowKey) -> Option<u32>;
 
-    /// Replaces the current view with a fresh one read from the OS.
+    /// Makes the next answers reflect the OS as it is now.
     ///
     /// # Errors
     ///
     /// An [`OwnerError`] when the OS tables cannot be read or parsed; the
-    /// previous view is then empty rather than stale.
+    /// view is then empty rather than stale.
     fn refresh(&mut self) -> Result<(), OwnerError>;
 
-    /// When a live process started, in the OS's own unit, so a recycled pid
-    /// is told apart. `None` once the process has exited.
-    fn start_time(&mut self, pid: u32) -> Option<u64>;
+    /// The identity of a live process and of the program it runs, so neither
+    /// a recycled pid nor an `exec` inherits a decision. `None` once the
+    /// process has exited.
+    fn process_key(&mut self, pid: u32) -> Option<ProcessKey>;
 
     /// The executable a live process runs.
     fn executable(&mut self, pid: u32) -> Option<PathBuf>;
@@ -112,8 +117,9 @@ impl SocketTable {
     }
 
     /// The pid owning the local socket of `flow`: the connected socket with
-    /// exactly this pair of ends, else for UDP an unconnected socket on the
-    /// local port. ICMP sockets are not in these tables.
+    /// exactly this pair of ends, else for UDP the unconnected socket on the
+    /// local port, when a single process holds it. ICMP sockets are not in
+    /// these tables.
     pub fn owner(&self, flow: &FlowKey) -> Option<u32> {
         let key = (transport_rank(flow.transport), flow.local.port());
         let start = self.records.partition_point(|record| {
@@ -124,16 +130,20 @@ impl SocketTable {
             .take_while(|record| (transport_rank(record.transport), record.local.port()) == key)
             .filter(|record| record.pid != 0 && local_matches(record.local.ip(), flow.local.ip()));
         let mut unconnected = None;
+        let mut shared = false;
         for record in candidates {
             match record.remote {
                 Some(remote) if remote == flow.remote => return Some(record.pid),
-                None if flow.transport == Transport::Udp => {
-                    unconnected = unconnected.or(Some(record.pid))
-                }
+                None if flow.transport == Transport::Udp => match unconnected {
+                    None => unconnected = Some(record.pid),
+                    Some(pid) => shared |= pid != record.pid,
+                },
                 _ => {}
             }
         }
-        unconnected
+        // Two processes on one port (SO_REUSEPORT, mDNS): which one sent the
+        // packet cannot be told.
+        if shared { None } else { unconnected }
     }
 }
 
@@ -259,6 +269,20 @@ mod tests {
         ]);
 
         assert_eq!(table.owner(&flow(Transport::Udp, 5353, 53)), Some(6));
+    }
+
+    #[test]
+    fn a_port_shared_by_unconnected_sockets_of_two_processes_has_no_single_owner() {
+        let any = IpAddr::from([0, 0, 0, 0]);
+        let table = table(&[
+            record(Transport::Udp, addr(any, 5353), None, 5),
+            record(Transport::Udp, addr(any, 5353), None, 5),
+            record(Transport::Udp, addr(any, 5354), None, 6),
+            record(Transport::Udp, addr(any, 5354), None, 7),
+        ]);
+
+        assert_eq!(table.owner(&flow(Transport::Udp, 5353, 53)), Some(5));
+        assert_eq!(table.owner(&flow(Transport::Udp, 5354, 53)), None);
     }
 
     #[test]

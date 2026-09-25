@@ -11,7 +11,10 @@ use std::{
 };
 
 use super::{OwnerError, OwnerResolver, SocketTable, pcblist};
-use crate::flow::{FlowKey, Transport};
+use crate::{
+    app::ProcessKey,
+    flow::{FlowKey, Transport},
+};
 
 const EXPORTS: [(&CStr, Transport); 2] = [
     (c"net.inet.tcp.pcblist_n", Transport::Tcp),
@@ -49,26 +52,15 @@ impl OwnerResolver for SystemResolver {
         result
     }
 
-    fn start_time(&mut self, pid: u32) -> Option<u64> {
-        let pid = c_int::try_from(pid).ok()?;
-        let mut info = MaybeUninit::<libc::proc_bsdinfo>::zeroed();
-        let size = c_int::try_from(size_of::<libc::proc_bsdinfo>()).ok()?;
-        // SAFETY: `info` is writable for `size` bytes, the size passed.
-        let written = unsafe {
-            libc::proc_pidinfo(
-                pid,
-                libc::PROC_PIDTBSDINFO,
-                0,
-                info.as_mut_ptr().cast::<c_void>(),
-                size,
-            )
-        };
-        if written != size {
-            return None;
-        }
-        // SAFETY: the kernel filled the whole struct, and it is plain data.
-        let info = unsafe { info.assume_init() };
-        Some(info.pbi_start_tvsec * 1_000_000 + info.pbi_start_tvusec)
+    fn process_key(&mut self, pid: u32) -> Option<ProcessKey> {
+        let raw_pid = c_int::try_from(pid).ok()?;
+        let bsd: libc::proc_bsdinfo = pid_info(raw_pid, libc::PROC_PIDTBSDINFO)?;
+        let ids: ProcUniqIdentifierInfo = pid_info(raw_pid, PROC_PIDUNIQIDENTIFIERINFO)?;
+        Some(ProcessKey {
+            pid,
+            start_time: bsd.pbi_start_tvsec * 1_000_000 + bsd.pbi_start_tvusec,
+            image: u64::from(ids.p_idversion.cast_unsigned()),
+        })
     }
 
     fn executable(&mut self, pid: u32) -> Option<PathBuf> {
@@ -81,6 +73,37 @@ impl OwnerResolver for SystemResolver {
         let len = usize::try_from(len).ok().filter(|len| *len > 0)?;
         Some(PathBuf::from(OsStr::from_bytes(&path[..len])))
     }
+}
+
+/// `PROC_PIDUNIQIDENTIFIERINFO` from XNU's `sys/proc_info.h`, which the libc
+/// crate does not declare.
+const PROC_PIDUNIQIDENTIFIERINFO: c_int = 17;
+
+/// `struct proc_uniqidentifierinfo`. Its `p_idversion` is the pid version
+/// audit tokens carry: the kernel gives a process a new one when it execs, so
+/// it tells two programs run by one process apart.
+#[repr(C)]
+#[derive(Clone, Copy)]
+struct ProcUniqIdentifierInfo {
+    p_uuid: [u8; 16],
+    p_uniqueid: u64,
+    p_puniqueid: u64,
+    p_idversion: i32,
+    p_orig_ppidversion: i32,
+    p_reserve2: u64,
+    p_reserve3: u64,
+}
+
+/// One `proc_pidinfo` flavor, read whole or not at all.
+fn pid_info<T: Copy>(pid: c_int, flavor: c_int) -> Option<T> {
+    let mut info = MaybeUninit::<T>::zeroed();
+    let size = c_int::try_from(size_of::<T>()).ok()?;
+    // SAFETY: `info` is writable for `size` bytes, the size passed.
+    let written =
+        unsafe { libc::proc_pidinfo(pid, flavor, 0, info.as_mut_ptr().cast::<c_void>(), size) };
+    // SAFETY: the kernel filled the whole struct, and `T` is plain data for
+    // which any bytes are a valid value.
+    (written == size).then(|| unsafe { info.assume_init() })
 }
 
 /// Reads a sysctl into `buffer`, growing it as needed, and returns the length
@@ -230,18 +253,18 @@ mod tests {
     }
 
     #[test]
-    fn reads_the_executable_and_a_stable_start_time_of_a_live_process() {
+    fn reads_the_executable_and_a_stable_key_of_a_live_process() {
         let mut resolver = SystemResolver::new();
         let pid = std::process::id();
 
         let executable = resolver
             .executable(pid)
             .map(|path| std::fs::canonicalize(path).unwrap());
-        let first = resolver.start_time(pid);
-        let second = resolver.start_time(pid);
+        let first = resolver.process_key(pid);
+        let second = resolver.process_key(pid);
 
         assert_eq!(executable, Some(own_executable()));
-        assert!(first.is_some());
+        assert_eq!(first.map(|key| key.pid), Some(pid));
         assert_eq!(first, second);
     }
 
@@ -257,8 +280,8 @@ mod tests {
             .spawn()
             .unwrap();
 
-        let own = resolver.start_time(std::process::id()).unwrap();
-        let later = resolver.start_time(child.id()).unwrap();
+        let own = resolver.process_key(std::process::id()).unwrap().start_time;
+        let later = resolver.process_key(child.id()).unwrap().start_time;
         child.kill().unwrap();
         child.wait().unwrap();
 
@@ -267,11 +290,42 @@ mod tests {
     }
 
     #[test]
-    fn a_process_that_does_not_exist_has_no_start_time_nor_executable() {
+    fn a_process_that_execs_another_program_gets_another_key() {
+        let mut child = std::process::Command::new("/bin/sh")
+            .args(["-c", "read line; exec /bin/sleep 5"])
+            .stdin(std::process::Stdio::piped())
+            .spawn()
+            .unwrap();
+        let mut resolver = SystemResolver::new();
+        let pid = child.id();
+        let shell = resolver.process_key(pid).unwrap();
+
+        use std::io::Write;
+        child.stdin.as_mut().unwrap().write_all(b"go\n").unwrap();
+        let sleeping = (0..200).find_map(|_| {
+            std::thread::sleep(std::time::Duration::from_millis(10));
+            let path = resolver.executable(pid)?;
+            (path.ends_with("sleep"))
+                .then(|| resolver.process_key(pid))
+                .flatten()
+        });
+        child.kill().unwrap();
+        child.wait().unwrap();
+
+        let sleeping = sleeping.expect("the shell execs sleep");
+        assert_eq!(
+            (sleeping.pid, sleeping.start_time),
+            (shell.pid, shell.start_time)
+        );
+        assert_ne!(sleeping.image, shell.image);
+    }
+
+    #[test]
+    fn a_process_that_does_not_exist_has_no_key_nor_executable() {
         let mut resolver = SystemResolver::new();
         let unused = i32::MAX as u32;
 
-        assert_eq!(resolver.start_time(unused), None);
+        assert_eq!(resolver.process_key(unused), None);
         assert_eq!(resolver.executable(unused), None);
     }
 

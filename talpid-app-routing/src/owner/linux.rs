@@ -1,18 +1,26 @@
 //! The Linux resolver: an exact `NETLINK_SOCK_DIAG` lookup for the socket of
-//! one flow, then its inode's owner through an index of `/proc/*/fd`, which is
-//! the snapshot a refresh rebuilds.
+//! one flow, which is live, then its inode's owner through an index of
+//! `/proc/*/fd`. An index entry is checked against that process's own
+//! descriptors before it is trusted, and a miss rebuilds the whole index at
+//! most once per refresh, since the walk reads every process's descriptors.
 
 use std::{
     collections::HashMap,
     ffi::c_void,
     io,
     net::{IpAddr, SocketAddr},
-    os::fd::{AsRawFd, FromRawFd, OwnedFd},
+    os::{
+        fd::{AsRawFd, FromRawFd, OwnedFd},
+        unix::fs::MetadataExt,
+    },
     path::PathBuf,
 };
 
 use super::{OwnerError, OwnerResolver};
-use crate::flow::{FlowKey, Transport};
+use crate::{
+    app::ProcessKey,
+    flow::{FlowKey, Transport},
+};
 
 const SOCK_DIAG_BY_FAMILY: u16 = 20;
 const NLMSG_ERROR: u16 = 2;
@@ -29,6 +37,8 @@ const INODE_AT: usize = NLMSG_HDR_LEN + 4 + 48 + 16;
 pub struct SystemResolver {
     socket: Option<OwnedFd>,
     inodes: HashMap<u64, u32>,
+    /// Set by a refresh, spent by the first index rebuild after it.
+    may_rebuild: bool,
     sequence: u32,
     reply: Vec<u8>,
 }
@@ -115,13 +125,14 @@ impl SystemResolver {
         }
         // SAFETY: `fd` is a fresh descriptor this struct now owns.
         let socket = unsafe { OwnedFd::from_raw_fd(fd) };
-        // A reply that never comes must not stall the packet path.
+        // A reply that never comes must not stall the packet path, so a
+        // socket that cannot time out is not used at all.
         let timeout = libc::timeval {
             tv_sec: 0,
             tv_usec: 200_000,
         };
         // SAFETY: `timeout` is a valid timeval of the length passed.
-        unsafe {
+        let status = unsafe {
             libc::setsockopt(
                 fd,
                 libc::SOL_SOCKET,
@@ -130,6 +141,9 @@ impl SystemResolver {
                 size_of::<libc::timeval>() as libc::socklen_t,
             )
         };
+        if status != 0 {
+            return Err(io::Error::last_os_error());
+        }
         self.socket = Some(socket);
         Ok(fd)
     }
@@ -137,13 +151,47 @@ impl SystemResolver {
 
 impl OwnerResolver for SystemResolver {
     fn socket_owner(&mut self, flow: &FlowKey) -> Option<u32> {
+        // No socket for this flow is a final answer: the lookup is live.
         let inode = self.inode(flow)?;
+        if let Some(pid) = self.inodes.get(&inode).copied()
+            && holds_socket(pid, inode)
+        {
+            return Some(pid);
+        }
+        if !self.may_rebuild {
+            return None;
+        }
+        self.may_rebuild = false;
+        self.rebuild_index();
         self.inodes.get(&inode).copied()
     }
 
     fn refresh(&mut self) -> Result<(), OwnerError> {
+        self.may_rebuild = true;
+        Ok(())
+    }
+
+    fn process_key(&mut self, pid: u32) -> Option<ProcessKey> {
+        let stat = std::fs::read_to_string(format!("/proc/{pid}/stat")).ok()?;
+        let executable = std::fs::metadata(format!("/proc/{pid}/exe")).ok()?;
+        Some(ProcessKey {
+            pid,
+            start_time: parse_start_time(&stat)?,
+            image: executable.ino(),
+        })
+    }
+
+    fn executable(&mut self, pid: u32) -> Option<PathBuf> {
+        std::fs::read_link(format!("/proc/{pid}/exe")).ok()
+    }
+}
+
+impl SystemResolver {
+    fn rebuild_index(&mut self) {
         self.inodes.clear();
-        let processes = std::fs::read_dir("/proc").map_err(OwnerError::SocketTable)?;
+        let Ok(processes) = std::fs::read_dir("/proc") else {
+            return;
+        };
         for process in processes.flatten() {
             let Some(pid) = process
                 .file_name()
@@ -152,30 +200,25 @@ impl OwnerResolver for SystemResolver {
             else {
                 continue;
             };
-            // A process that exits or is not ours to inspect is skipped.
-            let Ok(fds) = std::fs::read_dir(process.path().join("fd")) else {
-                continue;
-            };
-            for fd in fds.flatten() {
-                if let Some(inode) = std::fs::read_link(fd.path())
-                    .ok()
-                    .and_then(|target| socket_inode(target.as_os_str().to_str()?))
-                {
-                    self.inodes.entry(inode).or_insert(pid);
-                }
+            for inode in socket_inodes(pid) {
+                self.inodes.entry(inode).or_insert(pid);
             }
         }
-        Ok(())
     }
+}
 
-    fn start_time(&mut self, pid: u32) -> Option<u64> {
-        let stat = std::fs::read_to_string(format!("/proc/{pid}/stat")).ok()?;
-        parse_start_time(&stat)
-    }
+/// The inodes of the sockets `pid` holds. A process that exits or is not
+/// ours to inspect holds none as far as this can see.
+fn socket_inodes(pid: u32) -> impl Iterator<Item = u64> {
+    std::fs::read_dir(format!("/proc/{pid}/fd"))
+        .into_iter()
+        .flatten()
+        .flatten()
+        .filter_map(|fd| socket_inode(std::fs::read_link(fd.path()).ok()?.as_os_str().to_str()?))
+}
 
-    fn executable(&mut self, pid: u32) -> Option<PathBuf> {
-        std::fs::read_link(format!("/proc/{pid}/exe")).ok()
-    }
+fn holds_socket(pid: u32, inode: u64) -> bool {
+    socket_inodes(pid).any(|held| held == inode)
 }
 
 /// The inode in a `/proc/<pid>/fd` link to a socket, `socket:[12345]`.
@@ -345,18 +388,100 @@ mod tests {
     }
 
     #[test]
-    fn reads_the_executable_and_a_stable_start_time_of_this_process() {
+    fn reads_the_executable_and_a_stable_key_of_this_process() {
         let mut resolver = SystemResolver::new();
         let pid = std::process::id();
 
         let executable = resolver.executable(pid);
-        let first = resolver.start_time(pid);
+        let first = resolver.process_key(pid);
 
         assert_eq!(
             executable.map(|path| std::fs::canonicalize(path).unwrap()),
             Some(std::fs::canonicalize(std::env::current_exe().unwrap()).unwrap())
         );
-        assert!(first.is_some());
-        assert_eq!(first, resolver.start_time(pid));
+        assert_eq!(first.map(|key| key.pid), Some(pid));
+        assert_eq!(first, resolver.process_key(pid));
+    }
+
+    #[test]
+    fn a_process_that_execs_another_program_gets_another_key() {
+        let mut child = std::process::Command::new("/bin/sh")
+            .args(["-c", "read line; exec sleep 5"])
+            .stdin(std::process::Stdio::piped())
+            .spawn()
+            .unwrap();
+        let mut resolver = SystemResolver::new();
+        let pid = child.id();
+        let shell = resolver.process_key(pid).unwrap();
+
+        use std::io::Write;
+        child.stdin.as_mut().unwrap().write_all(b"go\n").unwrap();
+        let sleeping = (0..200).find_map(|_| {
+            std::thread::sleep(std::time::Duration::from_millis(10));
+            let path = resolver.executable(pid)?;
+            (path.ends_with("sleep"))
+                .then(|| resolver.process_key(pid))
+                .flatten()
+        });
+        child.kill().unwrap();
+        child.wait().unwrap();
+
+        let sleeping = sleeping.expect("the shell execs sleep");
+        assert_eq!(
+            (sleeping.pid, sleeping.start_time),
+            (shell.pid, shell.start_time)
+        );
+        assert_ne!(sleeping.image, shell.image);
+    }
+
+    #[test]
+    fn a_socket_handed_to_another_process_is_attributed_to_it() {
+        let socket = UdpSocket::bind("0.0.0.0:0").unwrap();
+        let flow = FlowKey {
+            transport: Transport::Udp,
+            local: SocketAddr::new([10, 64, 0, 2].into(), socket.local_addr().unwrap().port()),
+            remote: "198.51.100.9:53".parse().unwrap(),
+        };
+        let mut resolver = SystemResolver::new();
+        resolver.refresh().unwrap();
+        assert_eq!(resolver.socket_owner(&flow), Some(std::process::id()));
+        let mut command = std::process::Command::new("sleep");
+        command
+            .arg("5")
+            .stdin(std::process::Stdio::from(OwnedFd::from(socket)));
+        let mut child = command.spawn().unwrap();
+        drop(command);
+
+        resolver.refresh().unwrap();
+        let owner = resolver.socket_owner(&flow);
+        child.kill().unwrap();
+        child.wait().unwrap();
+
+        assert_eq!(owner, Some(child.id()));
+    }
+
+    #[test]
+    fn a_socket_opened_after_the_index_was_built_is_found_after_a_refresh() {
+        let mut resolver = SystemResolver::new();
+        resolver.refresh().unwrap();
+        let early = UdpSocket::bind("0.0.0.0:0").unwrap();
+        let early_flow = FlowKey {
+            transport: Transport::Udp,
+            local: SocketAddr::new([10, 64, 0, 2].into(), early.local_addr().unwrap().port()),
+            remote: "198.51.100.9:53".parse().unwrap(),
+        };
+        assert_eq!(resolver.socket_owner(&early_flow), Some(std::process::id()));
+        let late = UdpSocket::bind("0.0.0.0:0").unwrap();
+        let late_flow = FlowKey {
+            local: SocketAddr::new([10, 64, 0, 2].into(), late.local_addr().unwrap().port()),
+            ..early_flow
+        };
+
+        let before_refresh = resolver.socket_owner(&late_flow);
+        resolver.refresh().unwrap();
+        let after_refresh = resolver.socket_owner(&late_flow);
+
+        assert_eq!(before_refresh, None);
+        assert_eq!(after_refresh, Some(std::process::id()));
     }
 }
