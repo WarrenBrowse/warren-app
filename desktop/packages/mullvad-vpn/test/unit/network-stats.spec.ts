@@ -66,6 +66,26 @@ describe('parseNetworkStats', () => {
     expect(stats.history[0]).toEqual({ t: 1789999100, connected: 55, throughputBps: 420000000 });
   });
 
+  it('reads the load band of the fleet', () => {
+    expect(fixture().fleet.loadLevel).toBe('low');
+  });
+
+  it('reads an absent fleet load band as unknown', () => {
+    const json = withJson((json) => {
+      delete (json.fleet as Record<string, unknown>).load_level;
+    });
+
+    expect(parseNetworkStats(json)!.fleet.loadLevel).toBe('unknown');
+  });
+
+  it('leaves the uptime absent when the server withholds it', () => {
+    const json = withJson((json) => {
+      delete (json.exits as Array<Record<string, unknown>>)[0].uptime_secs;
+    });
+
+    expect(parseNetworkStats(json)!.exits[0].uptimeSecs).toBeUndefined();
+  });
+
   it('leaves the optional figures of a band-only exit absent rather than zero', () => {
     const quiet = fixture().exits[1];
 

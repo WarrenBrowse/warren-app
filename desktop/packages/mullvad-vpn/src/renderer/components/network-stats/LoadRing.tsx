@@ -2,7 +2,7 @@ import React from 'react';
 import styled from 'styled-components';
 
 import { LoadLevel } from '../../../shared/network-stats';
-import { Colors, colors, loadLevelColors, loadRingTrackColor } from '../../lib/foundations';
+import { colors, loadLevelColors, loadRingTrackColor } from '../../lib/foundations';
 import { arcDashOffset, ringGeometry } from '../../lib/network-stats';
 
 const SIZES = {
@@ -57,22 +57,12 @@ export type LoadRingProps = {
   percent?: number;
   // Offline or stale: drawn in the neutral grey whatever the band.
   muted?: boolean;
-  // A load that has no band (the fleet's) is drawn in this colour instead.
-  color?: Colors;
   children?: React.ReactNode;
 } & Pick<React.AriaAttributes, 'aria-label' | 'aria-hidden'>;
 
-export function LoadRing({
-  size,
-  level,
-  percent,
-  muted,
-  color: colorOverride,
-  children,
-  ...aria
-}: LoadRingProps) {
+export function LoadRing({ size, level, percent, muted, children, ...aria }: LoadRingProps) {
   const { diameter, stroke, bandStroke } = SIZES[size];
-  const color = colors[muted ? 'whiteOnDarkBlue40' : (colorOverride ?? loadLevelColors[level])];
+  const color = colors[muted ? 'whiteOnDarkBlue40' : loadLevelColors[level]];
   const bandOnly = percent === undefined;
   const { center, radius, circumference } = ringGeometry(diameter, bandOnly ? bandStroke : stroke);
 

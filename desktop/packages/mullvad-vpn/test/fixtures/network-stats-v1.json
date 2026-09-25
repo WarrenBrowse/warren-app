@@ -17,6 +17,7 @@
     "upload_bps": 50000000,
     "capacity_bps": 2000000000,
     "load_percent": 23,
+    "load_level": "low",
     "transferred_24h_bytes": 9000000000000,
     "peak_connected_24h": 80,
     "peak_throughput_24h_bps": 900000000

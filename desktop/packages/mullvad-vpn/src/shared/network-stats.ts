@@ -40,6 +40,8 @@ export interface ExitStats {
   loadLevel: LoadLevel;
   loadDriver?: LoadDriver;
   cpuPercent?: number;
+  // Withheld by the reference server (a restart would be dated by it), so
+  // absent in practice.
   uptimeSecs?: number;
   history: ExitHistoryPoint[];
 }
@@ -62,11 +64,15 @@ export interface NetworkStats {
     uploadBps: number;
     capacityBps: number;
     loadPercent: number;
+    // Same bands as an exit's; `unknown` when the server sends none.
+    loadLevel: LoadLevel;
+    // Counted by clock hour over the last 24 of them.
     transferred24hBytes: number;
     peakConnected24h: number;
     peakThroughput24hBps: number;
   };
   exits: ExitStats[];
+  // One point per clock hour over the last 24 hours, oldest first.
   history: FleetHistoryPoint[];
 }
 
@@ -240,6 +246,7 @@ function parse(json: Json): NetworkStats {
       uploadBps: requiredNumber(fleet, 'upload_bps'),
       capacityBps: requiredNumber(fleet, 'capacity_bps'),
       loadPercent: Math.min(100, requiredNumber(fleet, 'load_percent')),
+      loadLevel: loadLevel(fleet.load_level),
       transferred24hBytes: requiredNumber(fleet, 'transferred_24h_bytes'),
       peakConnected24h: requiredNumber(fleet, 'peak_connected_24h'),
       peakThroughput24hBps: requiredNumber(fleet, 'peak_throughput_24h_bps'),

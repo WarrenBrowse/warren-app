@@ -3,7 +3,7 @@ import styled from 'styled-components';
 
 import { messages } from '../../../../../shared/gettext';
 import { formatBytes, formatPercent, NetworkStats } from '../../../../../shared/network-stats';
-import { colors, fleetLoadRingColor, spacings } from '../../../../lib/foundations';
+import { colors, spacings } from '../../../../lib/foundations';
 import { useTweenedNumber } from '../../../../lib/network-stats';
 import { useSelector } from '../../../../redux/store';
 import { LiveIndicator, LoadRing, Sparkline, ThroughputPair } from '../../../network-stats';
@@ -81,8 +81,7 @@ export function FleetCard({ stats, stale }: FleetCardProps) {
         </StyledCount>
         <LoadRing
           size="large"
-          level="unknown"
-          color={fleetLoadRingColor}
+          level={stats.fleet.loadLevel}
           percent={stats.fleet.loadPercent}
           aria-label={sprintf(
             // TRANSLATORS: Accessibility label of the load of the whole Warren network.

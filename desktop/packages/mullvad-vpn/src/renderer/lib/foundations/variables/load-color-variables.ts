@@ -14,7 +14,3 @@ export const loadLevelColors: Record<LoadLevel, Colors> = {
 
 // The unfilled part of a load ring.
 export const loadRingTrackColor: Colors = 'whiteAlpha20';
-
-// The fleet has a load but no band: its ring is drawn neutral, bright enough
-// to read, so it never borrows the meaning of a band colour.
-export const fleetLoadRingColor: Colors = 'whiteOnDarkBlue80';
