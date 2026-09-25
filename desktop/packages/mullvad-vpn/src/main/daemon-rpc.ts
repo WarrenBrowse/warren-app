@@ -7,12 +7,15 @@ import {
   AccessMethodExistsError,
   AccessMethodSetting,
   AccountDataResponse,
+  AppRouteStatus,
+  AppSplitMode,
   CustomListError,
   CustomProxy,
   DaemonAppUpgradeEvent,
   DaemonEvent,
   DeviceState,
   DisconnectSource,
+  ExitChoice,
   IAppVersionInfo,
   ICustomList,
   IDnsOptions,
@@ -26,6 +29,7 @@ import {
   ObfuscationSettings,
   ObfuscationType,
   RelaySettings,
+  SetAppExitOutcome,
   TrustNewExitKeyOutcome,
   TunnelState,
   VoucherResponse,
@@ -35,10 +39,12 @@ import {
   WarrenPubkeyMismatch,
   WarrenStatus,
 } from '../shared/daemon-rpc-types';
+import { isAppExitLimitError } from './app-routing-errors';
 import { daemonRpcPath } from './daemon-rpc-path';
 import { ConnectionObserver, GrpcClient, noConnectionError } from './grpc-client';
 import {
   convertFromApiAccessMethodSetting,
+  convertFromAppRouteStatusList,
   convertFromAppUpgradeEvent,
   convertFromAppVersionInfo,
   convertFromDaemonEvent,
@@ -50,6 +56,8 @@ import {
   convertFromTunnelState,
   convertFromWarrenStatus,
   convertToApiAccessMethodSetting,
+  convertToAppExit,
+  convertToAppSplitMode,
   convertToCustomList,
   convertToCustomProxy,
   convertToNatPmpSettings,
@@ -851,6 +859,51 @@ export class DaemonRpc extends GrpcClient {
       this.client.needFullDiskPermissions,
     );
     return needFullDiskPermissions.getValue();
+  }
+
+  public async setAppSplitMode(mode: AppSplitMode): Promise<void> {
+    await this.call<grpcTypes.AppSplitMode, Empty>(
+      this.client.setAppSplitMode,
+      convertToAppSplitMode(mode),
+    );
+  }
+
+  public async addIncludedApp(path: string): Promise<void> {
+    await this.callString(this.client.addIncludedApp, path);
+  }
+
+  public async removeIncludedApp(path: string): Promise<void> {
+    await this.callString(this.client.removeIncludedApp, path);
+  }
+
+  public async setAppExitsEnabled(enabled: boolean): Promise<void> {
+    await this.callBool(this.client.setAppExitsEnabled, enabled);
+  }
+
+  public async setAppExit(app: string, exit: ExitChoice): Promise<SetAppExitOutcome> {
+    try {
+      await this.call<grpcTypes.AppExit, Empty>(
+        this.client.setAppExit,
+        convertToAppExit(app, exit),
+      );
+      return { result: 'ok' };
+    } catch (error) {
+      if (isAppExitLimitError(error)) {
+        return { result: 'limit-reached' };
+      }
+      throw error;
+    }
+  }
+
+  public async clearAppExit(app: string): Promise<void> {
+    await this.callString(this.client.clearAppExit, app);
+  }
+
+  public async getAppRouteStatus(): Promise<AppRouteStatus[]> {
+    const response = await this.callEmpty<grpcTypes.AppRouteStatusList>(
+      this.client.getAppRouteStatus,
+    );
+    return convertFromAppRouteStatusList(response);
   }
 
   public async checkVolumes(): Promise<void> {

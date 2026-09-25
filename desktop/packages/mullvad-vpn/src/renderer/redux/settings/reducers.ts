@@ -3,6 +3,8 @@ import { ISplitTunnelingApplication } from '../../../shared/application-types';
 import {
   AccessMethodSetting,
   ApiAccessMethodSettings,
+  AppRouteStatus,
+  AppRoutingSettings,
   CustomLists,
   IDaitaSettings,
   IDnsOptions,
@@ -125,6 +127,11 @@ export interface ISettingsReduxState {
   splitTunneling: boolean;
   splitTunnelingApplications: ISplitTunnelingApplication[];
   splitTunnelingSupported: boolean;
+  appRouting: AppRoutingSettings;
+  // The live state of each per-app exit in force.
+  appRouteStatus: AppRouteStatus[];
+  // Name and icon of the included apps and the apps with a country.
+  appRoutingApplications: ISplitTunnelingApplication[];
   obfuscationSettings: ObfuscationSettings;
   customLists: CustomLists;
   recents?: Recents;
@@ -214,6 +221,15 @@ const initialState: ISettingsReduxState = {
   splitTunneling: false,
   splitTunnelingApplications: [],
   splitTunnelingSupported: false,
+  appRouting: {
+    splitMode: 'off',
+    excludedApps: [],
+    includedApps: [],
+    appExitsEnabled: false,
+    appExits: [],
+  },
+  appRouteStatus: [],
+  appRoutingApplications: [],
   obfuscationSettings: {
     selectedObfuscation: ObfuscationType.auto,
     udp2tcpSettings: {
@@ -395,6 +411,24 @@ export default function (
       return {
         ...state,
         splitTunnelingSupported: action.supported,
+      };
+
+    case 'UPDATE_APP_ROUTING':
+      return {
+        ...state,
+        appRouting: action.appRouting,
+      };
+
+    case 'SET_APP_ROUTE_STATUS':
+      return {
+        ...state,
+        appRouteStatus: action.statuses,
+      };
+
+    case 'SET_APP_ROUTING_APPLICATIONS':
+      return {
+        ...state,
+        appRoutingApplications: action.applications,
       };
 
     case 'SET_OBFUSCATION_SETTINGS':

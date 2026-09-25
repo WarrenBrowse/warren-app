@@ -24,6 +24,8 @@ import { urls } from '../shared/constants';
 import { DaemonAccessRefusal } from '../shared/daemon-access-refusal';
 import {
   AccessMethodSetting,
+  AppRouteStatus,
+  AppRoutingSettings,
   DaemonAppUpgradeEvent,
   DaemonEvent,
   DeviceEvent,
@@ -280,6 +282,12 @@ class ApplicationMain
   private translations: ITranslations = { locale: this.locale };
 
   private splitTunnelingApplications?: ISplitTunnelingApplication[];
+
+  private appRouteStatus: AppRouteStatus[] = [];
+  private appRoutingApplications?: ISplitTunnelingApplication[];
+  // Scanning the desktop entries and resolving every command is slow, and the
+  // app list rarely changes while the app runs.
+  private linuxPathBasedApplications?: Promise<ISplitTunnelingApplication[]>;
 
   private macOsScrollbarVisibility?: MacOsScrollbarVisibility;
 
@@ -1107,6 +1115,14 @@ class ApplicationMain
       return this.handleBootstrapError(error);
     }
 
+    // A daemon without app routing answers UNIMPLEMENTED: no route, no fault.
+    try {
+      this.setAppRouteStatus(await this.daemonRpc.getAppRouteStatus());
+    } catch (e) {
+      const error = e as Error;
+      log.warn(`Failed to fetch the app route status: ${error.message}`);
+    }
+
     // fetch current api access method
     try {
       this.currentApiAccessMethod = await this.daemonRpc.getCurrentApiAccessMethod();
@@ -1299,6 +1315,8 @@ class ApplicationMain
           this.version.setLatestVersion(daemonEvent.appVersionInfo);
         } else if ('device' in daemonEvent) {
           this.account.handleDeviceEvent(daemonEvent.device);
+        } else if ('appRoutes' in daemonEvent) {
+          this.setAppRouteStatus(daemonEvent.appRoutes);
         } else if ('accessMethodSetting' in daemonEvent) {
           IpcMainEventChannel.settings.notifyApiAccessMethodSettingChange?.(
             daemonEvent.accessMethodSetting,
@@ -1409,6 +1427,70 @@ class ApplicationMain
     IpcMainEventChannel.settings.notify?.(newSettings);
 
     void this.updateSplitTunnelingApplications(newSettings.splitTunnel.appsList);
+    void this.updateAppRoutingApplications(newSettings.appRouting);
+  }
+
+  private setAppRouteStatus(statuses: AppRouteStatus[]) {
+    this.appRouteStatus = statuses;
+    IpcMainEventChannel.appRouting.notifyRoutes?.(statuses);
+  }
+
+  private getLinuxPathBasedApplications(updateCache = false) {
+    if (updateCache || this.linuxPathBasedApplications === undefined) {
+      this.linuxPathBasedApplications = this.linuxSplitTunneling!.getPathBasedApplications(
+        this.locale,
+      );
+    }
+    return this.linuxPathBasedApplications;
+  }
+
+  private async updateAppRoutingApplications(appRouting: AppRoutingSettings): Promise<void> {
+    const paths = [
+      ...new Set([...appRouting.includedApps, ...appRouting.appExits.map((entry) => entry.app)]),
+    ];
+
+    let applications: ISplitTunnelingApplication[] = [];
+    try {
+      if (paths.length === 0) {
+        applications = [];
+      } else if (this.splitTunneling) {
+        ({ applications } = await this.splitTunneling.getMetadataForApplications(paths));
+      } else if (this.linuxSplitTunneling) {
+        const known = await this.getLinuxPathBasedApplications();
+        applications = paths.map(
+          (appPath) =>
+            known.find((application) => application.absolutepath === appPath) ?? {
+              absolutepath: appPath,
+              name: path.basename(appPath),
+              deletable: false,
+            },
+        );
+      }
+    } catch (e) {
+      const error = e as Error;
+      log.warn(`Failed to read the routed applications: ${error.message}`);
+      return;
+    }
+
+    this.appRoutingApplications = applications;
+    IpcMainEventChannel.appRouting.notifyApplications?.(applications);
+  }
+
+  // An app picked with the file dialog is resolved to the executable the
+  // daemon matches, and remembered so it stays in the app list.
+  private async resolveRoutedApplication(
+    application: ISplitTunnelingApplication | string,
+  ): Promise<string> {
+    if (typeof application !== 'string') {
+      return application.absolutepath;
+    }
+    if (this.linuxSplitTunneling) {
+      return this.linuxSplitTunneling.resolveExecutablePath(application);
+    }
+    const executablePath = await this.splitTunnelingApi.resolveExecutablePath(application);
+    this.settings.gui.addBrowsedForSplitTunnelingApplications(executablePath);
+    await this.splitTunnelingApi.addApplicationPathToCache(application);
+    return executablePath;
   }
 
   private handleNewTunnelState(newState: TunnelState) {
@@ -1448,6 +1530,8 @@ class ApplicationMain
       translations: this.translations,
       splitTunnelingApplications: this.splitTunnelingApplications,
       splitTunnelingSupported: this.splitTunnelingSupported,
+      appRouteStatus: this.appRouteStatus,
+      appRoutingApplications: this.appRoutingApplications,
       macOsScrollbarVisibility: this.macOsScrollbarVisibility,
       purchaseInFlight: this.purchaseFlow.polling,
       changelog: this.changelog ?? [],
@@ -1547,6 +1631,35 @@ class ApplicationMain
     });
     IpcMainEventChannel.macOsSplitTunneling.handleNeedFullDiskPermissions(() => {
       return this.daemonRpc.needFullDiskPermissions();
+    });
+    IpcMainEventChannel.linuxSplitTunneling.handleLaunchIncludedApplication((application) => {
+      return this.linuxSplitTunneling!.launchApplication(application, 'warren-include');
+    });
+
+    IpcMainEventChannel.appRouting.handleGetApplications(async (updateCaches) => {
+      if (this.linuxSplitTunneling) {
+        const applications = await this.getLinuxPathBasedApplications(updateCaches);
+        return { fromCache: !updateCaches, applications };
+      }
+      return this.splitTunnelingApi.getApplications(updateCaches);
+    });
+    IpcMainEventChannel.appRouting.handleSetSplitMode((mode) => {
+      return this.daemonRpc.setAppSplitMode(mode);
+    });
+    IpcMainEventChannel.appRouting.handleAddIncludedApp(async (application) => {
+      await this.daemonRpc.addIncludedApp(await this.resolveRoutedApplication(application));
+    });
+    IpcMainEventChannel.appRouting.handleRemoveIncludedApp((application) => {
+      return this.daemonRpc.removeIncludedApp(application);
+    });
+    IpcMainEventChannel.appRouting.handleSetAppExitsEnabled((enabled) => {
+      return this.daemonRpc.setAppExitsEnabled(enabled);
+    });
+    IpcMainEventChannel.appRouting.handleSetAppExit(async ({ application, exit }) => {
+      return this.daemonRpc.setAppExit(await this.resolveRoutedApplication(application), exit);
+    });
+    IpcMainEventChannel.appRouting.handleClearAppExit((application) => {
+      return this.daemonRpc.clearAppExit(application);
     });
 
     IpcMainEventChannel.app.handleQuit((source: DisconnectSource) =>
