@@ -46,7 +46,8 @@ The option is named after the channel (`services.warren-vpn` on prod,
 can sit on one machine without merging into a single service.
 
 Enabling it installs the daemon, the CLI (`warren`), the desktop app, loads the
-`tun` module and registers the setuid wrapper `warren-exclude` needs.
+`tun` module and registers the setuid wrappers `warren-exclude` and `warren-include`
+need.
 
 ### Options
 
@@ -55,6 +56,7 @@ Enabling it installs the daemon, the CLI (`warren`), the desktop app, loads the
 | `enable` | `false` | runs the daemon and installs the app |
 | `package` | this flake's | the package providing the daemon, CLI and app |
 | `enableExcludeWrapper` | `true` | setuid wrapper behind `warren-exclude`, which sends one process around the tunnel |
+| `enableIncludeWrapper` | `true` | setuid wrapper behind `warren-include`, which runs one process inside the tunnel while "VPN only for these apps" is on |
 | `enableEarlyBootBlocking` | `false` | blocks traffic before the network comes up, closing the boot window |
 
 `enableEarlyBootBlocking` is what the `.deb` installs everywhere else. It is off

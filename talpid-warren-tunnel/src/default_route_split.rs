@@ -104,6 +104,56 @@ pub use v6_stub::DefaultRouteSplitV6Guard;
 //
 // So macOS gets the real guard and the others a no-op: not an unsupported
 // target, a platform whose own block already fails fast.
+/// Installs the IPv4 split-default for `tun_name`.
+///
+/// `include_only` ("VPN only for these apps") keeps the physical default
+/// route for everything but the included apps: Linux scopes the tunnel lookup
+/// to the include mark. macOS installs the full split whatever the mode,
+/// because its split tunnel classifies every packet these routes send to the
+/// tunnel and moves the others back to the physical interface itself.
+pub async fn install_v4(
+    exit_ip: std::net::Ipv4Addr,
+    tun_name: &str,
+    include_only: bool,
+) -> anyhow::Result<DefaultRouteSplitGuard> {
+    #[cfg(target_os = "macos")]
+    {
+        let _ = include_only;
+        DefaultRouteSplitGuard::install(exit_ip, tun_name).await
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        DefaultRouteSplitGuard::install(exit_ip, tun_name, include_only).await
+    }
+}
+
+/// IPv6 counterpart of [`install_v4`].
+pub async fn install_v6(
+    exit_ip_v6: Option<std::net::Ipv6Addr>,
+    tun_name: &str,
+    include_only: bool,
+) -> anyhow::Result<DefaultRouteSplitV6Guard> {
+    #[cfg(any(
+        target_os = "linux",
+        not(any(target_os = "macos", target_os = "windows"))
+    ))]
+    {
+        DefaultRouteSplitV6Guard::install(exit_ip_v6, tun_name, include_only).await
+    }
+    #[cfg(target_os = "macos")]
+    {
+        let _ = include_only;
+        DefaultRouteSplitV6Guard::install(exit_ip_v6, tun_name).await
+    }
+    #[cfg(target_os = "windows")]
+    {
+        if include_only {
+            anyhow::bail!("include-only IPv6 routing is not available on this platform");
+        }
+        DefaultRouteSplitV6Guard::install(exit_ip_v6, tun_name).await
+    }
+}
+
 #[cfg(target_os = "macos")]
 pub use warrenguard_route_split::default_route_split_macos::Ipv6UnreachableGuard;
 
@@ -146,6 +196,7 @@ mod v6_stub {
         pub async fn install(
             _exit_ip_v6: Option<Ipv6Addr>,
             _tun_name: &str,
+            _include_only: bool,
         ) -> anyhow::Result<Self> {
             anyhow::bail!("IPv6 split-default routing not supported on this target")
         }
@@ -225,7 +276,10 @@ pub fn force_route_cleanup() {
 
 #[cfg(test)]
 mod facade_tests {
-    use super::{DefaultRouteSplitGuard, DefaultRouteSplitV6Guard, Ipv6UnreachableGuard};
+    use super::{
+        DefaultRouteSplitGuard, DefaultRouteSplitV6Guard, Ipv6UnreachableGuard, install_v4,
+        install_v6,
+    };
     use std::net::{Ipv4Addr, Ipv6Addr};
 
     #[test]
@@ -262,7 +316,7 @@ mod facade_tests {
             // the Linux wrapper or the warrenguard-route-split macOS/Windows ports diverge
             // from the (Ipv4Addr, &str) signature.
             let guard: anyhow::Result<DefaultRouteSplitGuard> =
-                DefaultRouteSplitGuard::install(exit_ip, tun_name).await;
+                install_v4(exit_ip, tun_name, false).await;
             if let Ok(g) = guard {
                 let _: anyhow::Result<()> = g.uninstall().await;
             }
@@ -278,7 +332,7 @@ mod facade_tests {
         let _exercise = async {
             let exit_ip_v6: Option<Ipv6Addr> = Some("2a01:4f8:1::2".parse().unwrap());
             let guard: anyhow::Result<DefaultRouteSplitV6Guard> =
-                DefaultRouteSplitV6Guard::install(exit_ip_v6, "tun0").await;
+                install_v6(exit_ip_v6, "tun0", false).await;
             if let Ok(g) = guard {
                 let _: anyhow::Result<()> = g.uninstall().await;
             }

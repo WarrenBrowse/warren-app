@@ -2837,8 +2837,9 @@ fn map_daemon_error(error: crate::Error) -> Status {
         DaemonError::VoucherSubmission(error) => map_device_error(&error),
         #[cfg(target_os = "android")]
         DaemonError::VerifyPlayPurchase(error) => map_device_error(&error),
-        #[cfg(any(target_os = "windows", target_os = "macos"))]
         DaemonError::SplitTunnelError(error) => map_split_tunnel_error(error),
+        #[cfg(target_os = "linux")]
+        DaemonError::IncludeOnlyUnavailable => Status::failed_precondition(error.to_string()),
         DaemonError::AccountHistory(error) => map_account_history_error(error),
         DaemonError::NoAccountNumber | DaemonError::NoAccountNumberHistory => {
             Status::unauthenticated(error.to_string())
@@ -2879,7 +2880,7 @@ fn map_split_tunnel_error(error: talpid_core::split_tunnel::Error) -> Status {
     }
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(not(windows))]
 /// Converts [`talpid_core::split_tunnel::Error`] into a tonic status.
 fn map_split_tunnel_error(error: talpid_core::split_tunnel::Error) -> Status {
     Status::unknown(error.to_string())

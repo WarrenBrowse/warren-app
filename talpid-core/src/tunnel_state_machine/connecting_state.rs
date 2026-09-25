@@ -213,7 +213,11 @@ impl ConnectingState {
             return ErrorState::enter(shared_values, cause);
         }
 
-        let warren_params = match shared_values.runtime.block_on(
+        #[cfg_attr(
+            not(any(target_os = "windows", target_os = "linux")),
+            expect(unused_mut)
+        )]
+        let mut warren_params = match shared_values.runtime.block_on(
             shared_values
                 .tunnel_parameters_generator
                 .generate_warren_tunnel_params(retry_attempt),
@@ -226,6 +230,13 @@ impl ConnectingState {
                 );
             }
         };
+
+        // The routes follow the mode the firewall enforces, never a settings
+        // snapshot of their own, so the two cannot disagree.
+        #[cfg(any(target_os = "windows", target_os = "linux"))]
+        {
+            warren_params.include_only = shared_values.include_only();
+        }
 
         // Pre-handshake firewall for the Warren tunnel: the
         // `BackendParams::Warren` variant exposes the candidate exit IPs via
@@ -596,9 +607,22 @@ impl ConnectingState {
                 SameState(self)
             }
             #[cfg(windows)]
-            Some(TunnelCommand::SetExcludedApps(result_tx, paths)) => {
-                shared_values.exclude_paths(paths, result_tx);
-                SameState(self)
+            Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {
+                if shared_values.set_split_apps(apps, result_tx) {
+                    self.disconnect(shared_values, AfterDisconnect::Reconnect(0))
+                } else {
+                    SameState(self)
+                }
+            }
+            #[cfg(target_os = "linux")]
+            Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {
+                let mode_changed = shared_values.set_split_apps(apps);
+                let _ = result_tx.send(Ok(()));
+                if mode_changed {
+                    self.disconnect(shared_values, AfterDisconnect::Reconnect(0))
+                } else {
+                    SameState(self)
+                }
             }
             #[cfg(target_os = "android")]
             Some(TunnelCommand::SetExcludedApps(result_tx, paths)) => {
@@ -611,8 +635,8 @@ impl ConnectingState {
                 }
             }
             #[cfg(target_os = "macos")]
-            Some(TunnelCommand::SetExcludedApps(result_tx, paths)) => {
-                match shared_values.set_exclude_paths(paths) {
+            Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {
+                match shared_values.set_split_apps(apps) {
                     Ok(added_device) => {
                         let _ = result_tx.send(Ok(()));
 

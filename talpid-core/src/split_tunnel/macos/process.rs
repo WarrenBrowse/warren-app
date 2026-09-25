@@ -11,15 +11,15 @@ use libc::pid_t;
 use serde::{Deserialize, de::Error as _};
 use std::{
     collections::{HashMap, HashSet},
-    io,
-    path::PathBuf,
+    fmt, io,
+    path::{Path, PathBuf},
     process::Stdio,
     sync::{Arc, LazyLock, Mutex},
     time::Duration,
 };
 use talpid_macos::process::{list_pids, process_path};
 use talpid_platform_metadata::MacosVersion;
-use talpid_types::tunnel::ErrorStateCause;
+use talpid_types::{split_tunnel::SplitTunnelMode, tunnel::ErrorStateCause};
 use tokio::{
     io::{AsyncBufReadExt, AsyncRead, BufReader},
     sync::OnceCell,
@@ -277,27 +277,38 @@ impl ProcessMonitorHandle {
     }
 }
 
-/// Controls the known exclusion states of all processes
+/// Controls the known split states of all processes
 #[derive(Debug, Clone)]
 pub struct ProcessStates {
     inner: Arc<Mutex<InnerProcessStates>>,
 }
 
 /// Possible states of each process
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ExclusionStatus {
-    /// The process should be excluded from the VPN
-    Excluded,
-    /// The process should not be excluded from the VPN
-    Included,
+    /// The process belongs to one of the split tunnel's paths, itself or
+    /// through an ancestor: excluded in exclude mode, included in include-only
+    Listed,
+    /// The process belongs to none of the paths
+    Unlisted,
     /// The process is unknown
     Unknown,
 }
 
-#[derive(Debug)]
 struct InnerProcessStates {
     processes: HashMap<pid_t, ProcessInfo>,
-    exclude_paths: HashSet<PathBuf>,
+    mode: SplitTunnelMode,
+    paths: HashSet<PathBuf>,
+}
+
+impl fmt::Debug for InnerProcessStates {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("InnerProcessStates")
+            .field("processes", &self.processes.len())
+            .field("mode", &self.mode)
+            .field("paths", &self.paths.len())
+            .finish()
+    }
 }
 
 impl ProcessStates {
@@ -305,14 +316,15 @@ impl ProcessStates {
     fn new() -> Result<Self, Error> {
         let mut states = InnerProcessStates {
             processes: HashMap::new(),
-            exclude_paths: HashSet::new(),
+            mode: SplitTunnelMode::default(),
+            paths: HashSet::new(),
         };
 
         let processes = list_pids().map_err(Error::InitializePids)?;
 
         for pid in processes {
             let path = process_path(pid).map_err(|error| Error::FindProcessPath(error, pid))?;
-            states.processes.insert(pid, ProcessInfo::included(path));
+            states.processes.insert(pid, ProcessInfo::unlisted(path));
         }
 
         Ok(ProcessStates {
@@ -320,42 +332,53 @@ impl ProcessStates {
         })
     }
 
-    pub fn exclude_paths(&self, paths: HashSet<PathBuf>) {
+    pub fn set_split_apps(&self, mode: SplitTunnelMode, paths: HashSet<PathBuf>) {
         let mut inner = self.inner.lock().unwrap();
-
-        for info in inner.processes.values_mut() {
-            // Remove no-longer excluded paths from exclusion list
-            let mut new_exclude_paths: HashSet<_> = info
-                .excluded_by_paths
-                .intersection(&paths)
-                .cloned()
-                .collect();
-
-            // Check if own path is excluded
-            if paths.contains(&info.exec_path) && !new_exclude_paths.contains(&info.exec_path) {
-                new_exclude_paths.insert(info.exec_path.clone());
-            }
-
-            info.excluded_by_paths = new_exclude_paths;
-        }
-
-        inner.exclude_paths = paths;
+        inner.set_split_apps(mode, paths);
     }
 
-    pub fn get_process_status(&self, pid: pid_t) -> ExclusionStatus {
+    /// The split mode in force and the status of `pid`, read together so a
+    /// packet is never judged by a mode and a list that do not belong together.
+    pub fn lookup(&self, pid: pid_t) -> (SplitTunnelMode, ExclusionStatus) {
         let inner = self.inner.lock().unwrap();
-        match inner.processes.get(&pid) {
-            Some(val) if val.is_excluded() => ExclusionStatus::Excluded,
-            Some(_) => ExclusionStatus::Included,
-            None => ExclusionStatus::Unknown,
-        }
+        (inner.mode, inner.status(pid))
     }
 }
 
+/// The paths among `paths` that `exec_path` belongs to: the executable
+/// itself, or an app bundle it lives in, so Chromium helpers and Electron
+/// renderers belong to their app.
+fn listing_paths<'a>(
+    exec_path: &'a Path,
+    paths: &'a HashSet<PathBuf>,
+) -> impl Iterator<Item = &'a PathBuf> + 'a {
+    paths.iter().filter(move |path| exec_path.starts_with(path))
+}
+
 impl InnerProcessStates {
+    fn set_split_apps(&mut self, mode: SplitTunnelMode, paths: HashSet<PathBuf>) {
+        for info in self.processes.values_mut() {
+            // Keep what is still listed, inherited listings included
+            let mut listed_by: HashSet<_> = info.listed_by.intersection(&paths).cloned().collect();
+            listed_by.extend(listing_paths(&info.exec_path, &paths).cloned());
+            info.listed_by = listed_by;
+        }
+
+        self.mode = mode;
+        self.paths = paths;
+    }
+
+    fn status(&self, pid: pid_t) -> ExclusionStatus {
+        match self.processes.get(&pid) {
+            Some(info) if info.is_listed() => ExclusionStatus::Listed,
+            Some(_) => ExclusionStatus::Unlisted,
+            None => ExclusionStatus::Unknown,
+        }
+    }
+
     fn handle_message(&mut self, msg: ESMessage) {
         let Some(pid) = msg.process.audit_token.checked_pid() else {
-            log::trace!("eslogger returned bad pid: {msg:?}");
+            log::trace!("eslogger returned a bad pid");
             return;
         };
 
@@ -366,88 +389,81 @@ impl InnerProcessStates {
         }
     }
 
-    // For new processes, inherit all exclusion state from the parent, if there is one.
-    // Otherwise, look up excluded paths
+    // For new processes, inherit the split state from the parent, if there is one.
+    // Otherwise, look up the paths
     fn handle_fork(&mut self, parent_pid: pid_t, exec_path: PathBuf, msg: ESForkEvent) {
         let Some(pid) = msg.child.audit_token.checked_pid() else {
-            log::trace!("eslogger returned bad pid: {msg:?}");
+            log::trace!("eslogger returned a bad child pid");
             return;
         };
 
         if self.processes.contains_key(&pid) {
-            log::error!("Conflicting pid! State already contains {pid}");
+            log::error!("Conflicting pid in the process table");
         }
 
-        // Inherit exclusion status from parent
+        // Inherit the split state from the parent
         let base_info = match self.processes.get(&parent_pid) {
             Some(parent_info) => parent_info.to_owned(),
             None => {
-                log::error!("{pid}: Unknown parent pid {parent_pid}!");
-                ProcessInfo::included(exec_path)
+                log::error!("Fork from an unknown parent pid");
+                let mut info = ProcessInfo::unlisted(exec_path);
+                info.listed_by
+                    .extend(listing_paths(&info.exec_path, &self.paths).cloned());
+                info
             }
         };
-
-        // no exec yet; only pid and parent pid change
-        if base_info.is_excluded() {
-            log::trace!(
-                "{pid} excluded (inherited from {parent_pid}) (exclude paths: {:?}",
-                base_info.excluded_by_paths
-            );
-        }
 
         self.processes.insert(pid, base_info);
     }
 
     fn handle_exec(&mut self, pid: pid_t, msg: ESExecEvent) {
         let Some(info) = self.processes.get_mut(&pid) else {
-            log::error!("exec received for unknown pid {pid}");
+            log::error!("exec received for an unknown pid");
             return;
         };
         if msg.target.executable.path_truncated {
-            log::error!(
-                "Ignoring process {pid} with truncated path: {}",
-                msg.target.executable.path
-            );
+            log::error!("Ignoring an exec with a truncated path");
             return;
         }
 
         info.exec_path = PathBuf::from(msg.target.executable.path);
-
-        // If the path is already excluded, no need to add it again
-        if info.excluded_by_paths.contains(&info.exec_path) {
-            return;
-        }
-
-        // Exclude if path is excluded
-        if self.exclude_paths.contains(&info.exec_path) {
-            info.excluded_by_paths.insert(info.exec_path.clone());
-            log::trace!("Excluding {pid} by path: {}", info.exec_path.display());
-        }
+        info.listed_by
+            .extend(listing_paths(&info.exec_path, &self.paths).cloned());
     }
 
     fn handle_exit(&mut self, pid: pid_t) {
         if self.processes.remove(&pid).is_none() {
-            log::error!("exit syscall for unknown pid {pid}");
+            log::error!("exit syscall for an unknown pid");
         }
     }
 }
 
-#[derive(Debug, Clone)]
+// The executable path and the paths it is listed by name the user's apps: no
+// log line renders them.
+#[derive(Clone)]
 struct ProcessInfo {
     exec_path: PathBuf,
-    excluded_by_paths: HashSet<PathBuf>,
+    listed_by: HashSet<PathBuf>,
+}
+
+impl fmt::Debug for ProcessInfo {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("ProcessInfo")
+            .field("listed", &self.is_listed())
+            .finish_non_exhaustive()
+    }
 }
 
 impl ProcessInfo {
-    fn included(exec_path: PathBuf) -> Self {
+    fn unlisted(exec_path: PathBuf) -> Self {
         ProcessInfo {
             exec_path,
-            excluded_by_paths: HashSet::new(),
+            listed_by: HashSet::new(),
         }
     }
 
-    fn is_excluded(&self) -> bool {
-        !self.excluded_by_paths.is_empty()
+    fn is_listed(&self) -> bool {
+        !self.listed_by.is_empty()
     }
 }
 
@@ -692,6 +708,109 @@ mod test {
             let result = serde_json::from_str::<ESMessage>(s);
             insta::assert_debug_snapshot!((s, result));
         }
+    }
+
+    fn states_with(pid: pid_t, exec_path: &str) -> InnerProcessStates {
+        InnerProcessStates {
+            processes: HashMap::from([(pid, ProcessInfo::unlisted(PathBuf::from(exec_path)))]),
+            mode: SplitTunnelMode::Exclude,
+            paths: HashSet::new(),
+        }
+    }
+
+    fn fork(child: pid_t) -> ESForkEvent {
+        ESForkEvent {
+            child: ESForkChild {
+                audit_token: ESAuditToken { pid: child },
+            },
+        }
+    }
+
+    fn exec(path: &str) -> ESExecEvent {
+        ESExecEvent {
+            target: EsExecTarget {
+                executable: EsExecTargetExecutable {
+                    path: path.to_owned(),
+                    path_truncated: false,
+                },
+            },
+        }
+    }
+
+    const FIREFOX: &str = "/Applications/Firefox.app";
+
+    #[test]
+    fn a_helper_inside_a_listed_bundle_is_listed() {
+        let mut states = states_with(
+            10,
+            "/Applications/Firefox.app/Contents/MacOS/plugin-container",
+        );
+
+        states.set_split_apps(
+            SplitTunnelMode::IncludeOnly,
+            HashSet::from([PathBuf::from(FIREFOX)]),
+        );
+
+        assert_eq!(states.status(10), ExclusionStatus::Listed);
+    }
+
+    #[test]
+    fn a_sibling_bundle_sharing_a_name_prefix_is_not_listed() {
+        let mut states = states_with(10, "/Applications/Firefox.app Beta/Contents/MacOS/firefox");
+
+        states.set_split_apps(
+            SplitTunnelMode::Exclude,
+            HashSet::from([PathBuf::from(FIREFOX)]),
+        );
+
+        assert_eq!(states.status(10), ExclusionStatus::Unlisted);
+    }
+
+    #[test]
+    fn a_child_inherits_the_listing_of_its_parent_across_exec() {
+        let mut states = states_with(10, "/Applications/Firefox.app/Contents/MacOS/firefox");
+        states.set_split_apps(
+            SplitTunnelMode::IncludeOnly,
+            HashSet::from([PathBuf::from(FIREFOX)]),
+        );
+
+        states.handle_fork(10, PathBuf::from("/usr/bin/true"), fork(11));
+        states.handle_exec(11, exec("/usr/bin/curl"));
+
+        assert_eq!(states.status(11), ExclusionStatus::Listed);
+    }
+
+    #[test]
+    fn exec_into_a_listed_app_lists_the_process() {
+        let mut states = states_with(10, "/bin/zsh");
+        states.set_split_apps(
+            SplitTunnelMode::Exclude,
+            HashSet::from([PathBuf::from(FIREFOX)]),
+        );
+
+        states.handle_exec(10, exec("/Applications/Firefox.app/Contents/MacOS/firefox"));
+
+        assert_eq!(states.status(10), ExclusionStatus::Listed);
+    }
+
+    #[test]
+    fn removing_a_path_unlists_its_processes() {
+        let mut states = states_with(10, "/Applications/Firefox.app/Contents/MacOS/firefox");
+        states.set_split_apps(
+            SplitTunnelMode::Exclude,
+            HashSet::from([PathBuf::from(FIREFOX)]),
+        );
+
+        states.set_split_apps(SplitTunnelMode::Exclude, HashSet::new());
+
+        assert_eq!(states.status(10), ExclusionStatus::Unlisted);
+    }
+
+    #[test]
+    fn a_process_the_monitor_never_saw_is_unknown() {
+        let states = states_with(10, "/bin/zsh");
+
+        assert_eq!(states.status(11), ExclusionStatus::Unknown);
     }
 
     #[test]

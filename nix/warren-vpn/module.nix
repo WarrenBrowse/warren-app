@@ -53,6 +53,16 @@ in
         default = true;
       };
 
+    enableIncludeWrapper =
+      mkEnableOption ''
+        the setuid wrapper behind `warren-include`, the command that runs a process
+        inside the tunnel while "VPN only for these apps" is on. Turn it off on a
+        machine where setuid binaries are a concern: everything else keeps working
+      ''
+      // {
+        default = true;
+      };
+
     enableEarlyBootBlocking = mkEnableOption ''
       a unit that blocks all traffic before the network is configured, closing the
       window between boot and the daemon taking over. It matches what the .deb
@@ -83,6 +93,15 @@ in
       owner = "root";
       group = "root";
       source = getExe' cfg.package "warren-exclude${release.suffix}";
+    };
+
+    # Include-only tunnels a single process by moving it into a cgroup2 the
+    # daemon created, which needs the same privileges.
+    security.wrappers.${"warren-include${release.suffix}"} = mkIf cfg.enableIncludeWrapper {
+      setuid = true;
+      owner = "root";
+      group = "root";
+      source = getExe' cfg.package "warren-include${release.suffix}";
     };
 
     # The daemon writes the tunnel's DNS through systemd-resolved when it is

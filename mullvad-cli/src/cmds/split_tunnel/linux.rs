@@ -3,16 +3,18 @@ use clap::Subcommand;
 use mullvad_management_interface::MullvadProxyClient;
 
 /// Manage split tunneling. To launch applications outside the tunnel, use the program
-/// 'warren-exclude' instead of this command
+/// 'warren-exclude' instead of this command; to launch them inside it while "VPN only for these
+/// apps" is on, use 'warren-include'. The processes are the excluded ones, or the included ones
+/// in include-only mode.
 #[derive(Subcommand, Debug)]
 pub enum SplitTunnel {
-    /// List all processes that are excluded from the tunnel
+    /// List all processes that are excluded from the tunnel (included, in include-only mode)
     List,
-    /// Add a PID to exclude from the tunnel
+    /// Add a PID to exclude from the tunnel (to include, in include-only mode)
     Add { pid: i32 },
-    /// Stop excluding a PID from the tunnel
+    /// Stop excluding (including) a PID
     Delete { pid: i32 },
-    /// Stop excluding all processes from the tunnel
+    /// Stop excluding (including) all processes
     Clear,
 }
 
@@ -25,7 +27,7 @@ impl SplitTunnel {
                     .get_split_tunnel_processes()
                     .await?;
 
-                println!("Excluded PIDs:");
+                println!("Split PIDs:");
                 for pid in &pids {
                     println!("{pid}");
                 }
@@ -37,7 +39,7 @@ impl SplitTunnel {
                     .await?
                     .add_split_tunnel_process(pid)
                     .await?;
-                println!("Excluding process");
+                println!("Splitting process");
                 Ok(())
             }
             SplitTunnel::Delete { pid } => {
@@ -45,7 +47,7 @@ impl SplitTunnel {
                     .await?
                     .remove_split_tunnel_process(pid)
                     .await?;
-                println!("Stopped excluding process");
+                println!("Stopped splitting process");
                 Ok(())
             }
             SplitTunnel::Clear => {
@@ -53,7 +55,7 @@ impl SplitTunnel {
                     .await?
                     .clear_split_tunnel_processes()
                     .await?;
-                println!("Stopped excluding all processes");
+                println!("Stopped splitting all processes");
                 Ok(())
             }
         }
