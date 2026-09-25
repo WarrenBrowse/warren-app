@@ -13,9 +13,9 @@
 //! single preferred-port model, so today that is slot 0.
 //!
 //! An exhausted batch, an unreachable API and a wallet the issuer refuses all
-//! answer `None`, and the exit then applies its configured per-client quota.
-//! Degrading that way is the documented behaviour: an outage costs the
-//! fleet-wide cap, never the feature.
+//! answer `None`. The Map request then goes out without an envelope, which the
+//! exit refuses (warren-core doc 105): the attribution tag inside the envelope
+//! is mandatory for a forwarded port.
 
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -86,10 +86,9 @@ impl<T: HttpTransport + 'static> EntitlementMint<T> {
 /// The engine reads the credential once per NAT-PMP cycle, and the first cycle
 /// starts milliseconds after the handshake. On Android the VpnService process
 /// is created at connect, so the mint is cold every session and that first
-/// request would always go out bare, leaving the port on the exit's per-client
-/// quota for the whole lease. The wait runs off the datapath (the tunnel is
-/// already carrying traffic) and it is bounded: a mint that never lands must
-/// delay the mapping, never withhold it.
+/// request would always go out bare, and the exit refuses a bare request. The
+/// wait runs off the datapath (the tunnel is already carrying traffic) and it
+/// is bounded: a mint that never lands must delay the mapping, never hang it.
 pub(crate) async fn await_first_credential(
     source: &CredentialSource,
     grace: Duration,
@@ -131,8 +130,8 @@ fn spawn_refresh<T: HttpTransport + 'static>(
                 // Presence only, never the credential: a refresh that answered
                 // 200 and stocked nothing (the issuer already served this
                 // account this epoch, or refused it) is otherwise
-                // indistinguishable from one that did, and the two degrade to
-                // the same silent per-client quota at the exit.
+                // indistinguishable from one that did, and the first shows up
+                // only as a Map request the exit refuses.
                 Ok(()) => log::info!(
                     "Warren port-entitlement refresh ok (slot stocked={})",
                     manager.credential_for_slot(probe_slot, n).is_some()
@@ -207,12 +206,16 @@ mod tests {
     use std::time::Duration;
 
     use data_encoding::BASE64URL_NOPAD;
+    use ed25519_dalek::{Signer, SigningKey};
     use rand010::SeedableRng;
     use rand010::rngs::StdRng;
     use warren_api::transport::{HttpRequest, HttpResponse, HttpTransport, TransportError};
     use warren_api::{
-        TokenEpochResponse, TokenIssueRequest, TokenIssueResponse, TokenIssuerDirectory,
-        TokenIssuerKey, WarrenApiClient,
+        AttributionTag, PubkeyHex, TokenEpochResponse, TokenIssueRequest, TokenIssueResponse,
+        TokenIssuerDirectory, TokenIssuerKey, WarrenApiClient,
+    };
+    use warren_contract::pf_attribution::{
+        CIPHERTEXT_LEN, NONCE_LEN, TAG_VERSION, signing_preimage,
     };
     use warren_identity::WarrenIdentity;
     use warrenguard_token::IssuerSecretKey;
@@ -228,6 +231,10 @@ mod tests {
     /// the real engine code, so vended entitlements are real credentials.
     struct IssuerState {
         keys: HashMap<u64, IssuerSecretKey>,
+        /// Signs the attribution tag paired with every entitlement. The tag's
+        /// ciphertext is filler: only warren-api can open one, and the client
+        /// only checks the signature and the epoch before stocking it.
+        attribution_key: SigningKey,
         refuse_issuance: AtomicBool,
         fail_transport: AtomicBool,
         issue_calls: AtomicUsize,
@@ -244,6 +251,7 @@ mod tests {
                     .iter()
                     .map(|&e| (e, IssuerSecretKey::generate(&mut rng).unwrap()))
                     .collect(),
+                attribution_key: SigningKey::from_bytes(&[0x42; 32]),
                 refuse_issuance: AtomicBool::new(false),
                 fail_transport: AtomicBool::new(false),
                 issue_calls: AtomicUsize::new(0),
@@ -275,7 +283,28 @@ mod tests {
                 quota_per_epoch: QUOTA,
                 prefetch_epochs: 48,
                 keys,
+                attribution_verifying_key_hex: Some(
+                    PubkeyHex::try_from(
+                        hex::encode(self.0.attribution_key.verifying_key().as_bytes()).as_str(),
+                    )
+                    .unwrap(),
+                ),
             }
+        }
+
+        fn tag(&self, epoch: u64, filler: u8) -> AttributionTag {
+            let nonce = [filler; NONCE_LEN];
+            let ciphertext = [filler; CIPHERTEXT_LEN];
+            let signature =
+                self.0
+                    .attribution_key
+                    .sign(&signing_preimage(epoch, &nonce, &ciphertext));
+            let mut raw = vec![TAG_VERSION];
+            raw.extend_from_slice(&epoch.to_be_bytes());
+            raw.extend_from_slice(&nonce);
+            raw.extend_from_slice(&ciphertext);
+            raw.extend_from_slice(&signature.to_bytes());
+            AttributionTag::from_bytes(&raw).unwrap()
         }
     }
 
@@ -306,6 +335,7 @@ mod tests {
                         blind_signatures: Vec::new(),
                         token_key_id: None,
                         reject_reason: Some("not_subscribed".to_owned()),
+                        attribution_tags: Vec::new(),
                     });
                     continue;
                 }
@@ -323,6 +353,9 @@ mod tests {
                         .collect(),
                     token_key_id: Some(sk.public_key().key_id().to_hex()),
                     reject_reason: None,
+                    attribution_tags: (0..e.blinded.len())
+                        .map(|i| self.tag(e.epoch, u8::try_from(i).unwrap()))
+                        .collect(),
                 });
             }
             ok(serde_json::to_vec(&TokenIssueResponse { epochs }).unwrap())
@@ -480,8 +513,8 @@ mod tests {
         let mint = EntitlementMint::new(now);
         let source = mint.credential_source([1; 32], 0, || client(&issuer));
 
-        // Degrade, never refuse: the grace expires and the mapping still goes
-        // out, on the exit's own quota.
+        // The grace expires and the mapping still goes out, bare: the exit
+        // refuses it, and the rule's status says why.
         let started = tokio::time::Instant::now();
         let credential = super::await_first_credential(
             &source,
@@ -528,8 +561,8 @@ mod tests {
             "an issuer that refuses must not fabricate a credential"
         );
 
-        // Degrade, never refuse: the mapping still goes out, and the exit
-        // applies its own per-client quota to it.
+        // The mapping still goes out, bare, and the exit refuses it: the
+        // client must never borrow another slot's envelope to avoid that.
         let datagram = first_map_request(Some(source)).await;
         assert_eq!(
             datagram.len(),
