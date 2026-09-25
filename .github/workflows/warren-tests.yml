@@ -237,6 +237,22 @@ jobs:
         timeout-minutes: 10
         run: cargo clippy --no-deps --locked -p talpid-app-routing --all-targets -- -D warnings
 
+      # The macOS split tunnel (the process classifier, the Full Disk Access
+      # probe, the check that the daemon's own signature is anchored at Apple)
+      # compiles on no other runner, and the signature test reads real
+      # binaries on disk.
+      - name: cargo test the macOS split tunnel
+        timeout-minutes: 20
+        run: |
+          cargo test --locked -p talpid-macos
+          cargo test --locked -p talpid-core --lib split_tunnel
+
+      - name: cargo clippy the macOS split tunnel
+        timeout-minutes: 10
+        run: |
+          cargo clippy --no-deps --locked -p talpid-macos --all-targets -- -D warnings
+          cargo clippy --no-deps --locked -p talpid-core -- -D warnings
+
       # warren-ios's FFI modules are `#![cfg(target_os = "ios")]`, so the Linux
       # job above compiles none of them: the whole forum login preflight (the
       # reqwest client, the SessionPreflight match, the corrected timestamp)
