@@ -118,14 +118,18 @@ final class WarrenAccountStandingFeed: @unchecked Sendable {
     /// The wallet, the signed poll and the notification, injected so the whole
     /// feed can be driven without the keychain, the network or the system.
     struct Backend {
-        /// Whether this device holds a wallet at all.
-        var hasWallet: () -> Bool
+        /// The SS58 address of the wallet this device holds, `nil` without
+        /// one. It keys what the feed holds, and it never reaches a log.
+        var walletAddress: () async -> String?
         /// One signed poll, `nil` when it could not be made.
         var poll: () async -> WarrenStandingPoll?
-        /// The wallet left: Rust forgets its standing and its ledger.
+        /// Rust forgets the standing and the ledger of a wallet that left.
         var forget: () -> Void
         /// One system notification for one new strike.
         var announce: (WarrenStrikeNotice) -> Void
+        /// A wallet left: its delivered strike notifications and its banner
+        /// dismissals go with it.
+        var clearTraces: () -> Void
     }
 
     /// The feed the port-forwarding screen reads, set by the app delegate.
@@ -138,6 +142,8 @@ final class WarrenAccountStandingFeed: @unchecked Sendable {
     private let backend: Backend
     private let lock = NSLock()
     private var held: WarrenAccountStanding?
+    /// The wallet `held` belongs to.
+    private var heldFor: String?
     private var lastAnswer: Date?
     private var timer: Timer?
 
@@ -182,19 +188,18 @@ final class WarrenAccountStandingFeed: @unchecked Sendable {
     /// One poll, published.
     ///
     /// A failed poll keeps what is shown: the last answer still holds better
-    /// than nothing, and the next tick asks again. A device that holds no
-    /// wallet any more forgets the one that left, standing and ledger both.
+    /// than nothing, and the next tick asks again. A wallet that is no longer
+    /// the one on this device takes its standing with it first, so the next
+    /// account never reads the previous one's cases.
     func refresh(now: Date = Date()) async {
-        guard backend.hasWallet() else {
-            let had = lock.withLock { () -> Bool in
-                defer {
-                    held = nil
-                    lastAnswer = nil
-                }
-                return held != nil
-            }
+        let address = await backend.walletAddress()
+        let previous = lock.withLock { heldFor }
+        if let previous, previous != address {
+            walletDidLeave()
+        }
+        guard let address else {
+            // No wallet: a ledger a previous run left behind goes too.
             backend.forget()
-            if had { didChange?() }
             return
         }
         guard let poll = await backend.poll(), poll.ok else {
@@ -203,10 +208,26 @@ final class WarrenAccountStandingFeed: @unchecked Sendable {
         }
         let changed = lock.withLock { () -> Bool in
             lastAnswer = now
+            heldFor = address
             defer { held = poll.standing }
             return held != poll.standing
         }
+        // Bounded by the parser (`WarrenStandingPoll.maxStrikes`).
         poll.newStrikes.forEach(backend.announce)
         if changed { didChange?() }
+    }
+
+    /// The wallet left this device (logged out, erased or replaced): what the
+    /// feed holds, the ledger, the delivered notifications and the banner
+    /// dismissals all go, at once rather than at the next poll.
+    func walletDidLeave() {
+        lock.withLock {
+            held = nil
+            heldFor = nil
+            lastAnswer = nil
+        }
+        backend.forget()
+        backend.clearTraces()
+        didChange?()
     }
 }

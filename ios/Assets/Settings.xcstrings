@@ -18568,6 +18568,155 @@
           }
         }
       }
+    },
+    "A forwarded port was closed after an abuse report. Open Warren to see the warning.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A forwarded port was closed after an abuse report. Open Warren to see the warning."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أُغلق منفذ مُعاد توجيهه بعد بلاغ إساءة استخدام. افتح Warren لعرض المخالفة."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En videresendt port blev lukket efter en misbrugsrapport. Åbn Warren for at se advarslen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein weitergeleiteter Port wurde nach einer Missbrauchsmeldung geschlossen. Öffne Warren, um den Verstoß zu sehen."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Se ha cerrado un puerto reenviado tras un informe de abuso. Abre Warren para ver la falta."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یک درگاه هدایت‌شده پس از گزارش سوءاستفاده بسته شد. برای دیدن تخلف، Warren را باز کنید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohjattu portti suljettiin väärinkäyttöilmoituksen jälkeen. Avaa Warren nähdäksesi rikkeen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un port redirigé a été fermé après un signalement d'abus. Ouvrez Warren pour voir l'avertissement."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una porta inoltrata è stata chiusa dopo una segnalazione di abuso. Apri Warren per vedere il richiamo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不正利用の報告を受けて、転送ポートが閉じられました。Warren を開いて違反を確認してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "남용 신고로 포워딩된 포트가 닫혔습니다. Warren을 열어 위반 내용을 확인하세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အလွဲသုံးမှု အစီရင်ခံစာကြောင့် ပြန်ညွှန်းထားသော ပို့တ်တစ်ခုကို ပိတ်ခဲ့သည်။ သတိပေးအမှတ်ကို ကြည့်ရန် Warren ကို ဖွင့်ပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En videresendt port ble stengt etter en misbruksrapport. Åpne Warren for å se prikken."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een doorgeschakelde poort is gesloten na een misbruikmelding. Open Warren om de overtreding te bekijken."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Przekierowany port został zamknięty po zgłoszeniu nadużycia. Otwórz Warren, aby zobaczyć ostrzeżenie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uma porta encaminhada foi fechada após uma denúncia de abuso. Abra o Warren para ver a falta."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un port redirecționat a fost închis după o raportare de abuz. Deschide Warren pentru a vedea avertismentul."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Переадресованный порт закрыт после жалобы на злоупотребление. Откройте Warren, чтобы посмотреть нарушение."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En vidarebefordrad port stängdes efter en missbruksanmälan. Öppna Warren för att se pricken."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "พอร์ตที่ส่งต่อถูกปิดหลังมีรายงานการใช้งานในทางที่ผิด เปิด Warren เพื่อดูการละเมิด"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Yönlendirilen bir bağlantı noktası, bir kötüye kullanım bildiriminin ardından kapatıldı. İhlali görmek için Warren'ı açın."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Переадресований порт закрито після скарги на зловживання. Відкрийте Warren, щоб переглянути порушення."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一个转发端口因滥用举报已被关闭。打开 Warren 查看违规详情。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "一個轉發連接埠因濫用檢舉已遭關閉。開啟 Warren 查看違規詳情。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

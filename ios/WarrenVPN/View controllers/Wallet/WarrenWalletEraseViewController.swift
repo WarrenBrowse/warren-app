@@ -143,6 +143,8 @@ final class WarrenWalletEraseViewController: UIViewController {
     private func performWipe() {
         do {
             try WarrenWalletKeychain.delete()
+            // The erased wallet's port-forward standing goes with it.
+            WarrenAccountStandingFeed.current?.walletDidLeave()
             // Reset the onboarding flag so the next app launch routes
             // back through the OnboardingWizard (cf.
             // `ApplicationCoordinator.evaluateNextRoutes()` guard).

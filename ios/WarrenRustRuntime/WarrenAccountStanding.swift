@@ -118,6 +118,11 @@ public struct WarrenStandingPoll: Equatable, Sendable {
     /// exactly once: Rust remembers across launches which it already did.
     public let newStrikes: [WarrenStrikeNotice]
 
+    /// Strikes read from one answer, at most. Three ban the account, so a
+    /// longer list is a broken or hostile answer, and neither the screen nor
+    /// the notifications should grow with it.
+    public static let maxStrikes = 10
+
     /// Reads the `{"ok","reported","standing","new_strikes"}` envelope, `nil`
     /// when it is not one. A malformed strike is dropped rather than failing
     /// the whole standing.
@@ -128,7 +133,8 @@ public struct WarrenStandingPoll: Equatable, Sendable {
         else {
             return nil
         }
-        let newStrikes = (root["new_strikes"] as? [[String: Any]] ?? []).compactMap { row -> WarrenStrikeNotice? in
+        let newStrikes = (root["new_strikes"] as? [[String: Any]] ?? []).prefix(maxStrikes).compactMap {
+            row -> WarrenStrikeNotice? in
             guard let strike = (row["strike"] as? [String: Any]).flatMap(strike(from:)),
                 let ordinal = row["ordinal"] as? Int
             else {
@@ -155,7 +161,7 @@ public struct WarrenStandingPoll: Equatable, Sendable {
             )
         }
         return WarrenAccountStanding(
-            strikes: (object["strikes"] as? [[String: Any]] ?? []).compactMap(strike(from:)),
+            strikes: (object["strikes"] as? [[String: Any]] ?? []).prefix(maxStrikes).compactMap(strike(from:)),
             threshold: object["threshold"] as? Int ?? 0,
             windowDays: object["window_days"] as? Int ?? 0,
             ban: ban

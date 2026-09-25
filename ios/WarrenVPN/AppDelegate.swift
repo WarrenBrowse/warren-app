@@ -554,7 +554,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     private func makeAccountStrikeNotificationProvider() -> WarrenAccountStrikeNotificationProvider {
         let feed = WarrenAccountStandingFeed(
             backend: WarrenAccountStandingFeed.Backend(
-                hasWallet: { (try? WarrenWalletKeychain.loadSecure()) != nil },
+                walletAddress: {
+                    await withCheckedContinuation { (continuation: CheckedContinuation<String?, Never>) in
+                        Self.campaignVoucherQueue.async {
+                            continuation.resume(returning: Self.standingWalletAddress())
+                        }
+                    }
+                },
                 poll: {
                     // The poll signs and blocks on an HTTP round trip, so it
                     // runs on the queue the other wallet-signed lookup uses.
@@ -569,7 +575,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
                     guard let directory = Self.standingLedgerDirectory() else { return }
                     WarrenAccountClient.forgetAccountStanding(ledgerDirectory: directory)
                 },
-                announce: { notice in Self.announceStrike(notice) }
+                announce: { notice in Self.announceStrike(notice) },
+                clearTraces: { [weak self] in
+                    Self.removeDeliveredStrikeNotifications()
+                    self?.appPreferences.warrenDismissedStrikes = []
+                }
             )
         )
         accountStanding = feed
@@ -588,10 +598,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         return provider
     }
 
-    /// Where the strike ledger lives: the app's own container, never the App
-    /// Group the extension shares. It holds digests only.
+    /// Where the strike ledger lives: a directory of its own in the app's
+    /// container, never the App Group the extension shares, and excluded from
+    /// iCloud and device backups. The ledger holds digests only, but a digest
+    /// of a known case reference still confirms the strike to whoever holds a
+    /// copy, so no copy leaves the device.
     nonisolated private static func standingLedgerDirectory() -> URL? {
-        guard let directory = try? FileManager.default.url(
+        guard let support = try? FileManager.default.url(
             for: .applicationSupportDirectory,
             in: .userDomainMask,
             appropriateFor: nil,
@@ -599,7 +612,39 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         ) else {
             return nil
         }
+        var directory = support.appendingPathComponent("WarrenStanding", isDirectory: true)
+        do {
+            try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+            var values = URLResourceValues()
+            values.isExcludedFromBackup = true
+            try directory.setResourceValues(values)
+        } catch {
+            return nil
+        }
         return directory
+    }
+
+    /// The SS58 address of the wallet on this device, `nil` without one. It
+    /// keys what the standing feed holds and is never logged.
+    nonisolated private static func standingWalletAddress() -> String? {
+        guard let mnemonic = try? WarrenWalletKeychain.loadSecure(),
+            let wallet = try? WarrenWallet.fromMnemonic(mnemonic)
+        else {
+            return nil
+        }
+        defer { wallet.forgetSecret() }
+        return wallet.publicKeyAddress
+    }
+
+    /// The identifier prefix of the strike notifications, so the ones a
+    /// departed wallet received can be taken down together.
+    nonisolated private static let strikeNotificationPrefix = "warren-strike:"
+
+    nonisolated private static func removeDeliveredStrikeNotifications() {
+        UNUserNotificationCenter.current().getDeliveredNotifications { delivered in
+            let ids = delivered.map(\.request.identifier).filter { $0.hasPrefix(strikeNotificationPrefix) }
+            UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ids)
+        }
     }
 
     /// One signed standing poll, `nil` when the wallet cannot be read. The
@@ -618,13 +663,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
     /// One system notification per new strike: three of them revoke the
     /// account, so each is a warning the reader must see even when the banner
     /// is not on screen. Keyed on the strike, so a repeat replaces its own.
+    ///
+    /// The text is generic on purpose: a notification can show on the lock
+    /// screen, in Notification Center and on a paired watch, and the port,
+    /// the category and the case reference are the account's business only.
+    /// They are in the banner and the port-forwarding screen.
     nonisolated private static func announceStrike(_ notice: WarrenStrikeNotice) {
         let content = UNMutableNotificationContent()
         content.title = String(localized: "Port forwarding warning", table: "Settings")
-        content.body = WarrenAccountStandingText.warning(notice) + " "
-            + WarrenAccountStandingText.caseReference(notice.strike)
+        content.body = String(
+            localized: "A forwarded port was closed after an abuse report. Open Warren to see the warning.",
+            table: "Settings"
+        )
         content.sound = .default
         let request = UNNotificationRequest(
+            // The dismissal key already starts with `strike:`.
             identifier: "warren-" + notice.strike.dismissalKey,
             content: content,
             trigger: nil

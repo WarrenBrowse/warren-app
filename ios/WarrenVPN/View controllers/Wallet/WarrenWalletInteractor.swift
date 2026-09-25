@@ -437,6 +437,8 @@ public final class WarrenWalletInteractor: @unchecked Sendable {
         queue.async { [weak self] in
             do {
                 try WarrenWalletKeychain.delete()
+                // The forgotten wallet's port-forward standing goes with it.
+                WarrenAccountStandingFeed.current?.walletDidLeave()
                 Task { @MainActor in
                     completion(.success(()))
                 }

@@ -21,6 +21,9 @@ enum WarrenWalletLogout {
         } catch {
             logger.error("Failed to delete wallet on logout: \(error)")
         }
+        // The port-forward standing of the wallet that left goes with it, on
+        // screen and on disk, rather than at the next poll.
+        WarrenAccountStandingFeed.current?.walletDidLeave()
         // No browsing-history store exists yet; clear it here once one lands.
         tunnelManager.setDeviceState(.loggedOut, persist: true)
     }

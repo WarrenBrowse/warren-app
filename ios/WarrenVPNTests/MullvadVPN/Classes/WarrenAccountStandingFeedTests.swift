@@ -30,9 +30,10 @@ private func standing(_ references: String...) -> WarrenAccountStanding {
 /// Records what the feed asked of the outside world.
 private final class Recorder: @unchecked Sendable {
     var polls: [WarrenStandingPoll?]
-    var hasWallet = true
+    var wallet: String? = "wallet-a"
     var announced: [WarrenStrikeNotice] = []
     var forgets = 0
+    var traceClears = 0
 
     init(polls: [WarrenStandingPoll?]) {
         self.polls = polls
@@ -40,10 +41,11 @@ private final class Recorder: @unchecked Sendable {
 
     var backend: WarrenAccountStandingFeed.Backend {
         WarrenAccountStandingFeed.Backend(
-            hasWallet: { self.hasWallet },
+            walletAddress: { self.wallet },
             poll: { self.polls.isEmpty ? nil : self.polls.removeFirst() },
             forget: { self.forgets += 1 },
-            announce: { self.announced.append($0) }
+            announce: { self.announced.append($0) },
+            clearTraces: { self.traceClears += 1 }
         )
     }
 }
@@ -98,11 +100,40 @@ final class WarrenAccountStandingFeedTests: XCTestCase {
         let feed = WarrenAccountStandingFeed(backend: recorder.backend)
         await feed.refresh(now: now)
 
-        recorder.hasWallet = false
+        recorder.wallet = nil
         await feed.refresh(now: now)
 
         XCTAssertNil(feed.standing)
+        XCTAssertGreaterThanOrEqual(recorder.forgets, 1)
+        XCTAssertEqual(recorder.traceClears, 1)
+    }
+
+    /// The next account must never read the previous one's cases, not even
+    /// until its own first answer lands.
+    func testAnotherWalletNeverSeesThePreviousOnesStanding() async {
+        let shown = WarrenStandingPoll(ok: true, reported: true, standing: standing("PF-1"), newStrikes: [])
+        let recorder = Recorder(polls: [shown, nil])
+        let feed = WarrenAccountStandingFeed(backend: recorder.backend)
+        await feed.refresh(now: now)
+
+        recorder.wallet = "wallet-b"
+        await feed.refresh(now: now)
+
+        XCTAssertNil(feed.standing, "the failed poll of the new wallet shows nothing of the old one")
+        XCTAssertEqual(recorder.traceClears, 1)
+    }
+
+    func testALogoutTakesTheStandingDownAtOnce() async {
+        let shown = WarrenStandingPoll(ok: true, reported: true, standing: standing("PF-1"), newStrikes: [])
+        let recorder = Recorder(polls: [shown])
+        let feed = WarrenAccountStandingFeed(backend: recorder.backend)
+        await feed.refresh(now: now)
+
+        feed.walletDidLeave()
+
+        XCTAssertNil(feed.standing)
         XCTAssertEqual(recorder.forgets, 1)
+        XCTAssertEqual(recorder.traceClears, 1)
     }
 
     func testTheBannerShowsTheNewestStrikeUntilItIsPutAway() {

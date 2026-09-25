@@ -56,6 +56,19 @@ final class WarrenAccountStandingTests: XCTestCase {
         XCTAssertNil(poll.standing)
     }
 
+    func testAFloodOfStrikesIsBounded() throws {
+        let rows = (1...50).map { index -> String in
+            let strike = strikeJSON.replacingOccurrences(of: "PF-1", with: "PF-\(index)")
+            return "{\"strike\":\(strike),\"ordinal\":\(index),\"threshold\":3}"
+        }
+        let envelope =
+            "{\"ok\":true,\"reported\":true,\"standing\":null,\"new_strikes\":[" + rows.joined(separator: ",") + "]}"
+
+        let poll = try XCTUnwrap(WarrenStandingPoll.parse(envelope: envelope))
+
+        XCTAssertEqual(poll.newStrikes.count, WarrenStandingPoll.maxStrikes)
+    }
+
     func testAnUnreadableEnvelopeIsNoPoll() {
         XCTAssertNil(WarrenStandingPoll.parse(envelope: "not json"))
         XCTAssertNil(WarrenStandingPoll.parse(envelope: nil))
