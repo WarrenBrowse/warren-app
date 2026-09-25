@@ -28,6 +28,11 @@ Line wrap the file at 100 chars.                                              Th
   distribution (apt, dnf, zypper or pacman) and restarts on the new version. `warren upgrade`
   does the same from a terminal.
 
+### Fixed
+- [Linux] Restart the app's background service when an update is installed on a system without the
+  `which` command, as on minimal Fedora, openSUSE and Arch installs. The update left the previous
+  version running until the next reboot.
+
 ## [1.1.34] - 2026-09-24
 ### Fixed
 - [macOS] Fix updating the app from version 1.1.32, which stopped with "The installation failed".

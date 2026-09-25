@@ -108,6 +108,11 @@ jobs:
       - name: Linux install script (shell tests)
         run: bash ci/test-linux-install.sh
 
+      # An upgrade on a system without `which` used to leave the previous
+      # daemon running on a deleted binary.
+      - name: Linux maintainer scripts (shell tests)
+        run: bash ci/test-linux-maintainer-scripts.sh
+
       # The installers extract the headless bundles as root, which restores
       # the owner each entry records.
       - name: Headless bundle archive (shell tests)

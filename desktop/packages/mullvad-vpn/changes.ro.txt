@@ -3,3 +3,8 @@
   noua versiune, o verifică cu manifestul de actualizare semnat, o predă managerului de pachete
   al distribuției (apt, dnf, zypper sau pacman) și repornește cu noua versiune. `warren upgrade`
   face același lucru dintr-un terminal.
+
+### Reparat
+- [Linux] Repornește serviciul aplicației la instalarea unei actualizări pe un sistem fără comanda
+  `which`, ca instalările minimale de Fedora, openSUSE și Arch. Actualizarea lăsa versiunea
+  anterioară să ruleze până la următoarea repornire.

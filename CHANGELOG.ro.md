@@ -18,6 +18,11 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   al distribuției (apt, dnf, zypper sau pacman) și repornește cu noua versiune. `warren upgrade`
   face același lucru dintr-un terminal.
 
+### Reparat
+- [Linux] Repornește serviciul aplicației la instalarea unei actualizări pe un sistem fără comanda
+  `which`, ca instalările minimale de Fedora, openSUSE și Arch. Actualizarea lăsa versiunea
+  anterioară să ruleze până la următoarea repornire.
+
 ## [1.1.34] - 2026-09-24
 ### Reparat
 - [macOS] Repară actualizarea aplicației de la versiunea 1.1.32, care se oprea cu „Instalarea a

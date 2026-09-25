@@ -19,6 +19,11 @@ par l'application, gardez-le tel quel.
   la confie au gestionnaire de paquets de la distribution (apt, dnf, zypper ou pacman) et
   redémarre sur la nouvelle version. `warren upgrade` fait de même depuis un terminal.
 
+### Corrigé
+- [Linux] Redémarrer le service de l'application à l'installation d'une mise à jour sur un système
+  sans la commande `which`, comme les installations minimales de Fedora, openSUSE et Arch. La mise
+  à jour laissait tourner la version précédente jusqu'au redémarrage suivant.
+
 ## [1.1.34] - 2026-09-24
 ### Corrigé
 - [macOS] Corriger la mise à jour de l'application depuis la version 1.1.32, qui s'arrêtait sur

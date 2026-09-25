@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eu
 
-if which systemctl &> /dev/null && systemctl is-system-running | grep -vq offline &> /dev/null; then
+if command -v systemctl &> /dev/null && systemctl is-system-running | grep -vq offline &> /dev/null; then
     if systemctl status warren-daemon &> /dev/null; then
         # Arm the detached update guard first: it stages its own copy outside
         # this package and registers a systemd transient timer, so a machine

@@ -3,3 +3,8 @@
   L'application télécharge la nouvelle version, la vérifie avec le manifeste de mise à jour signé,
   la confie au gestionnaire de paquets de la distribution (apt, dnf, zypper ou pacman) et
   redémarre sur la nouvelle version. `warren upgrade` fait de même depuis un terminal.
+
+### Corrigé
+- [Linux] Redémarrer le service de l'application à l'installation d'une mise à jour sur un système
+  sans la commande `which`, comme les installations minimales de Fedora, openSUSE et Arch. La mise
+  à jour laissait tourner la version précédente jusqu'au redémarrage suivant.
