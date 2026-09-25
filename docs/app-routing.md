@@ -1,7 +1,11 @@
 # App routing: exclude, per-app country, VPN-only-for
 
-Status: being implemented on branch `feat/per-app-exit` (2026-09-25): per-app
-country runs in the datapath on desktop (sections 2.2 to 2.6).
+Status on branch `feat/per-app-exit` (2026-09-26), which carries the three
+lots integrated: per-app country runs in the datapath on desktop (sections 2.2
+to 2.6, real exits measured from macOS); include-only runs on macOS and Linux
+(section 3) and is held back on Windows (section 3.2); the desktop GUI covers
+all three tabs (section 7); section 3.3 is how the modes and the countries
+combine. Android include-only is a lot of its own, not on this branch.
 This document is the contract the implementation lots follow. When the code and
 this file disagree, fix one of them in the same commit.
 
@@ -46,7 +50,10 @@ ExitChoice { country: CountryCode, city: Option<CityCode> }
   2. while `split_mode == IncludeOnly` and `app_exits_enabled`, an app with an
      `app_exits` entry is treated as included (choosing a country for an app
      in that mode is enough to put it in the VPN; with the countries switched
-     off, the entry puts nothing in the VPN);
+     off, the entry puts nothing in the VPN). On Linux the tunnel takes no
+     list, since an app joins the included cgroup when it is opened through
+     `warren-include`, so there this holds for the app opened that way
+     (section 3.3);
   3. otherwise an app with an `app_exits` entry leaves through its country, and
      everything else through the main connection.
 - The split-tunneling RPCs keep their access class (owner and administrators
@@ -429,6 +436,51 @@ What the Windows VM run must check, once both blockers are closed and
    from the ISP address while the rest uses the exit.
 
 
+### 3.3 Include-only and exclusion with per-app countries
+
+The split mode decides which packets reach the Warren TUN device; the router
+(section 2) then sends each tunneled flow to its app's session. Nothing else
+couples them, and the daemon computes both from one `AppRoutingSettings`
+(`effective_app_exits`, `effective_included_apps` in `mullvad-types`), so they
+cannot disagree about an app.
+
+- **Exclude and a country.** An excluded app's packets never reach the TUN, and
+  its exit is out of the plan (`effective_app_exits` drops it), so no route
+  session is opened for it alone. Excluded wins.
+- **Include-only and a country, macOS.** The daemon hands the classifier the
+  included apps and every app with a country in force. An included packet goes
+  into the tunnel utun with the tunnel address as its source, which is also the
+  socket's local address, so the owner lookup finds the app and the router
+  sends it to its country.
+- **Include-only and a country, Linux.** The included cgroup's traffic is marked
+  into the tunnel table and masqueraded to the tunnel address (section 3.1),
+  so the TUN shows the translated pair while the socket holds the physical
+  address. The Linux resolver asks conntrack for the connection's original
+  tuple first (`NETLINK_NETFILTER`, `IPCTNL_MSG_CT_GET` by the reply tuple,
+  `talpid-app-routing/src/owner/conntrack.rs`), then looks the socket up by
+  that tuple. The conntrack entry is confirmed in postrouting, before the
+  packet can be read from the TUN. Without the translation the answer is the
+  same pair, and without conntrack (or without the privilege, which the daemon
+  has) the lookup falls back to the pair as seen. Tested in a network
+  namespace of its own with a SNAT rule standing in for the masquerade
+  (`finds_a_connection_masqueraded_on_its_way_to_the_tunnel`, root and nft,
+  ignored by default). Downlink, the router restores the main tunnel address
+  and conntrack the physical one.
+- **Include-only and a country, Windows.** Held back with include-only itself.
+  The swapped driver binds an included socket to the tunnel address, which is
+  what the owner lookup matches.
+- **Mode switches while route sessions run.** On Linux and Windows a mode
+  change while connecting or connected reconnects the tunnel: the route
+  sessions are stopped and awaited with the old tunnel, and the new one starts
+  them from the plan in force, which the generator republishes once the
+  settings are saved (a route change never reconnects the main session by
+  itself). On macOS the classifier takes the new split apps in place and the
+  route sessions keep running; the plan follows the saved settings live, so an
+  app that becomes excluded loses its route and a session no app uses any
+  more is stopped. Re-applying the firewall after a split change keeps the
+  route sessions' relays allowed, since the connected state keeps the relay
+  list the tunnel last reported.
+
 ## 4. Platform availability
 
 - **macOS exclude and include-only** need Full Disk Access for the daemon that
@@ -487,7 +539,9 @@ What the Windows VM run must check, once both blockers are closed and
   tokens-only route session with no token reported `no token` and never
   connected. Measured again 2026-09-26 with both sessions on tokens (RO main
   135.136.59.234, DE route 167.233.127.54): the same results, and the route
-  session led with a serial other than the main session's.
+  session led with a serial other than the main session's. Run again on the
+  integrated branch (modes, GUI and datapath, warrenguard `88f4ed0`) the same
+  day, with the same results on the same exits.
   The full daemon in a Linux VM (per-app country,
   include-only, exclude); the daemon in the Windows ARM64 VM (include-only
   with the swapped driver, per-app country).
@@ -519,8 +573,23 @@ explains a refusal before making it, and still maps the daemon's
   through one confirmation; both lists are kept.
 - On Linux both modes are launch based (`warren-exclude`, `warren-include`) and
   per-app countries are path based: a desktop entry is keyed by the program it
-  runs, resolved through `PATH` and symlinks. A shell script wrapper resolves to
-  the script, which the router never sees running.
-- The main screen shows "VPN only for N apps" under the connection state and
-  "N apps in other countries" among the feature badges (red when a route cannot
-  run), both opening their tab.
+  runs, resolved through `PATH`, symlinks and shell wrappers whose last line
+  is `exec [-a NAME] PROGRAM ... "$@"` with a literal program
+  (`desktop/packages/mullvad-vpn/src/main/linux-app-routing.ts`). A Flatpak or
+  Snap app, or a script whose program cannot be read, is listed with the
+  reason and offers no country; the file picker reaches the real program. In
+  include-only mode the tab says a country applies to the app opened from VPN
+  only for.
+- On Windows the VPN only for tab is disabled with one line saying it is
+  coming soon, since the daemon refuses the mode there
+  (`includeOnlyTabState`); it stays usable while the mode is somehow on, so it
+  can be turned off.
+- While include-only is on, the connection card's line under the state reads
+  "Only selected apps are protected" instead of "You are protected", above the
+  "VPN only for N apps" label (no count on Linux). "N apps in other countries"
+  sits among the feature badges (red when a route cannot run). Both open their
+  tab.
+- The mocked Playwright specs `app-routing.spec.ts`,
+  `app-routing-windows.spec.ts` and `app-routing-linux.spec.ts` render the
+  Windows and Linux views on any host through `WARREN_E2E_PLATFORM`, which the
+  preload reads only under the end-to-end harness (`CI=e2e`).
