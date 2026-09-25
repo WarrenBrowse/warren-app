@@ -46,6 +46,9 @@ tun08 = { package = "tun", version = "0.8.5", default-features = false, features
 # The expected warrenguard checkout SHA is pinned in `.warrenguard-version`
 # at the warren-app repo root.
 warrenguard-transport = { path = "../../warrenguard/crates/warrenguard-transport", features = ["system-vpn", "pq-hpke"] }
+# How a refused forwarded port is read and retried, shared with the mobile
+# clients that drive the NAT-PMP refresh loop themselves.
+warren-standing = { path = "../warren-standing" }
 warrenguard-transport-core = { path = "../../warrenguard/crates/warrenguard-transport-core" }
 warrenguard-daita = { path = "../../warrenguard/crates/warrenguard-daita" }
 warrenguard-pump = { path = "../../warrenguard/crates/warrenguard-pump" }

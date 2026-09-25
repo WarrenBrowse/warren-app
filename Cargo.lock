@@ -5864,6 +5864,7 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "tun 0.8.7",
+ "warren-standing",
  "warrenguard-backoff",
  "warrenguard-config",
  "warrenguard-daita",

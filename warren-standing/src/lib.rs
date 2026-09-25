@@ -20,9 +20,11 @@
 //! reference.
 
 mod ledger;
+mod port_refusal;
 mod tracker;
 
 pub use ledger::{LedgerError, StrikeLedger};
+pub use port_refusal::PortRefusal;
 pub use tracker::{NewStrike, StandingTracker, StandingUpdate};
 pub use warren_api::{AbuseCategory, AccountStrike, BanReasonCode};
 

@@ -738,37 +738,9 @@ pub enum NatPmpRuleEvent {
     },
 }
 
-/// Why the exit refused a rule as not authorized (RFC 6886 result code 2),
-/// as far as the client can tell (warren-core doc 105: the exit refuses a Map
-/// request that carries no valid entitlement envelope).
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum NatPmpRefusal {
-    /// The rule had no entitlement to present: the wallet's batch for this
-    /// epoch is used up, none could be minted, or the wallet is banned.
-    NoEntitlement,
-    /// The exit refused the entitlement the rule presented. Usually transient:
-    /// the serial is still held by this client's previous tunnel address
-    /// until the exit reaps it, or it belongs to the epoch that just ended.
-    EntitlementRefused,
-}
-
-/// Seconds the controller waits before asking again after the `attempt`-th
-/// refusal in a row (from 1). A refused entitlement usually heals within a
-/// cycle, so it is asked again soon; a missing one only comes back with the
-/// next mint or the next epoch, so it is asked for on the refresh cadence.
-#[must_use]
-pub fn nat_pmp_refusal_retry_secs(refusal: NatPmpRefusal, attempt: u32) -> u32 {
-    const REFUSED: [u32; 6] = [2, 10, 30, 60, 120, 300];
-    // Starts short: the first mint of a wallet can still be in flight when
-    // the first request goes out.
-    const MISSING: [u32; 6] = [5, 30, 60, 120, 300, 600];
-    let table: &[u32] = match refusal {
-        NatPmpRefusal::EntitlementRefused => &REFUSED,
-        NatPmpRefusal::NoEntitlement => &MISSING,
-    };
-    let index = usize::try_from(attempt.saturating_sub(1)).unwrap_or(usize::MAX);
-    table.get(index).or(table.last()).copied().unwrap_or(600)
-}
+/// Why the exit refused a rule as not authorized, and when the controller
+/// asks again: the policy every client shares.
+pub use warren_standing::PortRefusal as NatPmpRefusal;
 
 /// NAT-PMP port-forwarding configuration carried by
 /// [`WarrenTunnelParameters::nat_pmp`].
@@ -3277,12 +3249,10 @@ async fn run_nat_pmp_controller(
                     return;
                 };
                 st.refusals = st.refusals.saturating_add(1);
-                let refusal = if st.presented.load(std::sync::atomic::Ordering::Relaxed) {
-                    NatPmpRefusal::EntitlementRefused
-                } else {
-                    NatPmpRefusal::NoEntitlement
-                };
-                let retry_in_secs = nat_pmp_refusal_retry_secs(refusal, st.refusals);
+                let refusal = NatPmpRefusal::of_request(
+                    st.presented.load(std::sync::atomic::Ordering::Relaxed),
+                );
+                let retry_in_secs = refusal.retry_after_secs(st.refusals);
                 st.retry_at = Some(
                     tokio::time::Instant::now()
                         + std::time::Duration::from_secs(u64::from(retry_in_secs)),
@@ -5109,21 +5079,6 @@ mod tests {
             }
         });
         addr
-    }
-
-    #[test]
-    fn a_refused_entitlement_is_asked_again_soon_then_less_often() {
-        let retry = |n| nat_pmp_refusal_retry_secs(NatPmpRefusal::EntitlementRefused, n);
-        assert_eq!(retry(1), 2);
-        assert!(retry(2) > retry(1));
-        assert_eq!(retry(99), 300, "the wait stops growing");
-    }
-
-    #[test]
-    fn a_missing_entitlement_is_asked_again_soon_then_on_the_mint_cadence() {
-        let retry = |n| nat_pmp_refusal_retry_secs(NatPmpRefusal::NoEntitlement, n);
-        assert_eq!(retry(1), 5, "the first mint may still be landing");
-        assert_eq!(retry(99), 600, "the wait stops growing");
     }
 
     #[tokio::test]
