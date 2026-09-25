@@ -79,9 +79,19 @@ impl AppIdFlavor {
 /// Matching an executable to an app id (the outermost bundle on macOS, case on
 /// Windows) is the router's business; an app id keeps what the user chose,
 /// normalized only in ways that cannot change which app it names.
-#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize)]
 #[serde(transparent)]
 pub struct AppId(String);
+
+// Settings written before app ids were normalized (the split tunneling list)
+// hold paths as the user typed them; reading them normalized is what lets a
+// later removal, which is normalized, find them.
+impl<'de> Deserialize<'de> for AppId {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let raw = String::deserialize(deserializer)?;
+        Ok(Self::lenient(&raw))
+    }
+}
 
 impl AppId {
     /// Validates and normalizes `raw` for the host platform.
@@ -148,6 +158,19 @@ impl AppId {
         }
     }
 
+    /// An app id the daemon already holds, read back from its settings or
+    /// its answers: normalized when it is valid, kept as it is otherwise, so
+    /// nothing saved is lost, rejected or left unremovable on the way back.
+    /// Input from a client goes through [`Self::parse`] instead.
+    pub fn lenient(raw: &str) -> Self {
+        Self::lenient_as(AppIdFlavor::HOST, raw)
+    }
+
+    /// As [`Self::lenient`], for the conventions of `flavor`.
+    pub fn lenient_as(flavor: AppIdFlavor, raw: &str) -> Self {
+        Self::parse_as(flavor, raw).unwrap_or_else(|_| Self(raw.to_owned()))
+    }
+
     pub fn as_str(&self) -> &str {
         &self.0
     }
@@ -174,7 +197,7 @@ impl fmt::Debug for AppId {
 }
 
 /// The exit an app leaves through: a country, and optionally a city in it.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
 #[serde(try_from = "ExitChoiceRepr", into = "ExitChoiceRepr")]
 pub struct ExitChoice {
     country: CountryCode,
@@ -223,6 +246,13 @@ impl ExitChoice {
     }
 }
 
+// Where an app's traffic leaves is exit identity: no log line renders it.
+impl fmt::Debug for ExitChoice {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str("ExitChoice(..)")
+    }
+}
+
 impl TryFrom<ExitChoiceRepr> for ExitChoice {
     type Error = AppRoutingError;
 
@@ -251,6 +281,9 @@ pub struct AppRoutingSettings {
     pub included_apps: BTreeSet<AppId>,
     /// The master switch of the per-app exits.
     pub app_exits_enabled: bool,
+    /// At most [`MAX_APP_EXITS`] different exits through
+    /// [`Self::set_app_exit`]; a settings file edited by hand may hold more,
+    /// so whatever opens route sessions caps them itself.
     pub app_exits: BTreeMap<AppId, ExitChoice>,
 }
 
@@ -359,12 +392,22 @@ pub enum UnavailableReason {
 
 /// What the user sees for one exit: the state of its session, the public
 /// address its apps appear from when known, and the apps that use it.
-#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[derive(Clone, PartialEq, Eq, Serialize)]
 pub struct AppRouteStatus {
     pub exit: ExitChoice,
     pub state: AppRouteState,
     pub public_ip: Option<IpAddr>,
     pub apps: Vec<AppId>,
+}
+
+impl fmt::Debug for AppRouteStatus {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("AppRouteStatus")
+            .field("state", &self.state)
+            .field("public_ip", &self.public_ip.is_some())
+            .field("apps", &self.apps.len())
+            .finish_non_exhaustive()
+    }
 }
 
 #[cfg(test)]
@@ -439,6 +482,59 @@ mod tests {
         assert_eq!(package.unwrap().as_str(), "org.mozilla.firefox");
         assert_eq!(path.map(|_| ()), Err(AppRoutingError::NotPackageName));
         assert_eq!(single.map(|_| ()), Err(AppRoutingError::NotPackageName));
+    }
+
+    #[test]
+    fn a_stored_app_id_is_read_back_normalized_when_valid() {
+        let trailing = AppId::lenient_as(AppIdFlavor::Unix, "/Applications/Firefox.app/");
+        let forward = AppId::lenient_as(AppIdFlavor::Windows, "C:/Tools/app.exe");
+
+        assert_eq!(trailing.as_str(), "/Applications/Firefox.app");
+        assert_eq!(forward.as_str(), r"C:\Tools\app.exe");
+    }
+
+    #[test]
+    fn a_stored_app_id_that_names_no_app_is_kept_as_it_is() {
+        let relative = AppId::lenient_as(AppIdFlavor::Unix, "firefox");
+
+        assert_eq!(relative.as_str(), "firefox");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn persisted_lists_merge_entries_that_name_the_same_app() {
+        let json = r#"{"excluded_apps": ["/opt/app/browser/", "/opt/app/browser"]}"#;
+
+        let settings: AppRoutingSettings = serde_json::from_str(json).unwrap();
+
+        let apps: Vec<&str> = settings.excluded_apps.iter().map(AppId::as_str).collect();
+        assert_eq!(apps, ["/opt/app/browser"]);
+    }
+
+    #[test]
+    fn an_exit_choice_renders_without_its_location() {
+        let rendered = format!("{:?}", ExitChoice::new("zq", Some("qxq")).unwrap());
+
+        assert!(
+            !rendered.contains("zq") && !rendered.contains("qxq"),
+            "{rendered}"
+        );
+    }
+
+    #[test]
+    fn a_route_status_renders_without_its_exit_or_address() {
+        let status = AppRouteStatus {
+            exit: ExitChoice::new("zq", Some("qxq")).unwrap(),
+            state: AppRouteState::Connected,
+            public_ip: Some("203.0.113.5".parse().unwrap()),
+            apps: vec![app("/opt/app/browser")],
+        };
+
+        let rendered = format!("{status:?}");
+
+        for secret in ["zq", "qxq", "203.0.113.5", "browser"] {
+            assert!(!rendered.contains(secret), "{secret} in {rendered}");
+        }
     }
 
     #[test]

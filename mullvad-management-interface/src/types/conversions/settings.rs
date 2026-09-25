@@ -332,7 +332,7 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
             (Some(app_routing), _) => {
                 mullvad_types::app_routing::AppRoutingSettings::try_from(app_routing)?
             }
-            (None, Some(split_tunnel)) => app_routing_from_split_tunnel(split_tunnel)?,
+            (None, Some(split_tunnel)) => app_routing_from_split_tunnel(split_tunnel),
             (None, None) => mullvad_types::app_routing::AppRoutingSettings::default(),
         };
 
@@ -426,21 +426,17 @@ impl TryFrom<proto::Settings> for mullvad_types::settings::Settings {
 /// The app routing of a client that only knows split tunneling.
 fn app_routing_from_split_tunnel(
     value: proto::SplitTunnelSettings,
-) -> Result<mullvad_types::app_routing::AppRoutingSettings, FromProtobufTypeError> {
-    use mullvad_types::app_routing::{AppRoutingSettings, SplitMode};
-    Ok(AppRoutingSettings {
+) -> mullvad_types::app_routing::AppRoutingSettings {
+    use mullvad_types::app_routing::{AppId, AppRoutingSettings, SplitMode};
+    AppRoutingSettings {
         split_mode: if value.enable_exclusions {
             SplitMode::Exclude
         } else {
             SplitMode::Off
         },
-        excluded_apps: value
-            .apps
-            .iter()
-            .map(|app| super::app_routing::app_id(app))
-            .collect::<Result<_, _>>()?,
+        excluded_apps: value.apps.iter().map(|app| AppId::lenient(app)).collect(),
         ..Default::default()
-    })
+    }
 }
 
 impl TryFrom<proto::TunnelOptions> for mullvad_types::settings::TunnelOptions {

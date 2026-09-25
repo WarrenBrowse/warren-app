@@ -2970,6 +2970,30 @@ fn map_protobuf_type_err(err: types::FromProtobufTypeError) -> Status {
 }
 
 #[cfg(test)]
+mod app_routing_error_tests {
+    use super::{Code, map_app_routing_error};
+    use mullvad_types::app_routing::AppRoutingError;
+
+    #[test]
+    fn the_exit_limit_is_a_precondition_with_its_own_code() {
+        let status = map_app_routing_error(AppRoutingError::TooManyAppExits { limit: 2 });
+
+        assert_eq!(status.code(), Code::FailedPrecondition);
+        assert_eq!(
+            status.details(),
+            mullvad_management_interface::APP_EXIT_LIMIT_DETAILS
+        );
+    }
+
+    #[test]
+    fn any_other_refusal_is_an_invalid_argument() {
+        let status = map_app_routing_error(AppRoutingError::InvalidCountry);
+
+        assert_eq!(status.code(), Code::InvalidArgument);
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use super::{
         daemon_event, types, withhold_account_secrets, withhold_event_identity,

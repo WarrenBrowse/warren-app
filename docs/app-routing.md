@@ -42,9 +42,10 @@ ExitChoice { country: CountryCode, city: Option<CityCode> }
 - Precedence, enforced in the daemon and never only in the GUI:
   1. an app in `excluded_apps` while `split_mode == Exclude` is outside the
      tunnel, and its `app_exits` entry is ignored;
-  2. while `split_mode == IncludeOnly`, an app with an `app_exits` entry is
-     treated as included (choosing a country for an app in that mode is enough
-     to put it in the VPN);
+  2. while `split_mode == IncludeOnly` and `app_exits_enabled`, an app with an
+     `app_exits` entry is treated as included (choosing a country for an app
+     in that mode is enough to put it in the VPN; with the countries switched
+     off, the entry puts nothing in the VPN);
   3. otherwise an app with an `app_exits` entry leaves through its country, and
      everything else through the main connection.
 - The split-tunneling RPCs keep their access class (owner and administrators
@@ -113,8 +114,9 @@ Rules:
   route session never falls back to the wallet-signed v6 login.** When no token
   is available the route is shown as unavailable and its apps are blocked.
 - At most **2** route sessions at a time (main + 2 = the 3 session tokens of an
-  epoch, `TOKEN_QUOTA_PER_EPOCH`). The GUI prevents a third distinct country and
-  says why.
+  epoch, `TOKEN_QUOTA_PER_EPOCH`). The daemon refuses a third distinct
+  `ExitChoice` (a country, or a city in one: `se` and `se`/`got` are two) with
+  `FAILED_PRECONDITION` and the details `app_exit_limit`, and the GUI says why.
 
 ### 2.3 Address translation
 

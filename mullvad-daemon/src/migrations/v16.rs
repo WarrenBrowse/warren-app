@@ -91,6 +91,23 @@ mod test {
         assert!(settings.app_routing.excluded_apps.contains(&firefox));
     }
 
+    /// A path saved as typed, with a trailing slash, is read back in the form
+    /// a removal request takes, so the user can still remove it.
+    #[cfg(unix)]
+    #[test]
+    fn a_migrated_app_is_read_back_in_the_form_a_removal_takes() {
+        let mut settings = json!({
+            "split_tunnel": { "enable_exclusions": true, "apps": ["/opt/app/browser/"] },
+            "settings_version": SettingsVersion::V16 as u64,
+        });
+
+        migrate(&mut settings).unwrap();
+
+        let settings: Settings = serde_json::from_value(settings).unwrap();
+        let removal = AppId::parse("/opt/app/browser").unwrap();
+        assert!(settings.app_routing.excluded_apps.contains(&removal));
+    }
+
     #[test]
     fn keeps_the_apps_of_disabled_exclusions() {
         let mut settings = json!({
