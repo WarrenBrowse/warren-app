@@ -16,6 +16,7 @@ import { messages, relayLocations } from '../../../../../../../../shared/gettext
 import { colors } from '../../../../../../../lib/foundations';
 import { useSelector } from '../../../../../../../redux/store';
 import { tinyText } from '../../../../../../common-styles';
+import { ConnectedExitLive } from '../connected-exit-load';
 
 interface Endpoint {
   ip: string;
@@ -151,6 +152,7 @@ export function ConnectionDetails() {
         </StyledIpLabelContainer>
       </StyledIpTable>
       <WarrenStatusRows />
+      {tunnelState.state === 'connected' && <ConnectedExitLive />}
     </StyledConnectionDetailsContainer>
   );
 }

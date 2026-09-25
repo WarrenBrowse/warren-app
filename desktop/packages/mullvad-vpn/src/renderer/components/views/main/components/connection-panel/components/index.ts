@@ -8,3 +8,4 @@ export * from './hostname';
 export * from './location';
 export * from './multihop-indicator';
 export * from './select-location-buttons';
+export * from './connected-exit-load';

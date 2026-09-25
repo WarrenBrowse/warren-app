@@ -15,6 +15,9 @@ export enum RoutePath {
   // rather than a popover: this app opens Account and Settings the same
   // way, and a dropdown over the connect screen exists nowhere else.
   forumActivity = '/forum-activity',
+  // Live network transparency (warren-core doc 106), opened from Settings and
+  // from the exit load shown on the connection card.
+  warrenNetwork = '/network',
   keys = '/account/keys',
   restoreKeys = '/account/keys/restore',
   userInterfaceSettings = '/settings/interface',

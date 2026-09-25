@@ -9,7 +9,7 @@ import { type ListItemProps } from '../../../../../lib/components/list-item';
 import { useScrollPositionContext } from '../../ScrollPositionContext';
 import { getLocationListItemMapProps } from '../../utils';
 import { Location } from '../location-list-item';
-import { GeographicalLocationTrailingActions } from './components';
+import { GeographicalLocationTrailingActions, LocationExitLoad } from './components';
 import {
   GeographicalLocationProvider,
   useGeographicalLocationContext,
@@ -95,6 +95,9 @@ function GeographicalLocationImpl({
               <Location.Accordion.Header.Item.Title>
                 {location.label}
               </Location.Accordion.Header.Item.Title>
+              {(location.type === 'relay' || !showChildren) && (
+                <LocationExitLoad location={location} />
+              )}
             </Location.Accordion.Header.Item>
           </Location.Accordion.Header.ItemTrigger>
           <GeographicalLocationTrailingActions location={location} />

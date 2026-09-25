@@ -8,15 +8,23 @@ import { useSelector } from '../../../../../../../redux/store';
 import { smallText } from '../../../../../../common-styles';
 import Marquee from '../../../../../../Marquee';
 import { ConnectionPanelAccordion } from '../../../../styles';
+import { ConnectedExitLoad } from '../connected-exit-load';
 
 const StyledAccordion = styled(ConnectionPanelAccordion)({
   flexShrink: 0,
 });
 
+const StyledHostnameRow = styled.div({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+});
+
 const StyledHostname = styled.span(smallText, {
   color: colors.whiteAlpha60,
   fontWeight: '400',
-  flexShrink: 0,
+  flex: '1 1 auto',
+  minWidth: 0,
   minHeight: '1em',
 });
 
@@ -27,9 +35,12 @@ export function Hostname() {
 
   return (
     <StyledAccordion expanded={tunnelState === 'connecting' || tunnelState === 'connected'}>
-      <StyledHostname data-testid="hostname-line">
-        <Marquee>{text}</Marquee>
-      </StyledHostname>
+      <StyledHostnameRow>
+        <StyledHostname data-testid="hostname-line">
+          <Marquee>{text}</Marquee>
+        </StyledHostname>
+        {tunnelState === 'connected' && <ConnectedExitLoad />}
+      </StyledHostnameRow>
     </StyledAccordion>
   );
 }

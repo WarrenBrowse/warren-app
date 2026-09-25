@@ -12,6 +12,7 @@ import {
   AppInfoListItem,
   DaitaListItem,
   DebugListItem,
+  NetworkListItem,
   PortForwardingListItem,
   QuitButton,
   ReplayOnboardingListItem,
@@ -73,6 +74,7 @@ export function SettingsView() {
                   <ApiAccessMethodsListItem position="solo" />
 
                   <FlexColumn>
+                    <NetworkListItem />
                     <SupportListItem />
                     <AppInfoListItem />
                   </FlexColumn>
