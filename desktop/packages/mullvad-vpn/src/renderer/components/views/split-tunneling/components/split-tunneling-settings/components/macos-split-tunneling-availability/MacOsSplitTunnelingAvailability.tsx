@@ -1,7 +1,7 @@
-import { messages } from '../../../../../../../../../../shared/gettext';
-import { useAppContext } from '../../../../../../../../../context';
-import { Button, Flex, FootnoteMini } from '../../../../../../../../../lib/components';
-import { HeaderSubTitle } from '../../../../../../../../SettingsHeader';
+import { messages } from '../../../../../../../../shared/gettext';
+import { useAppContext } from '../../../../../../../context';
+import { Button, Flex, FootnoteMini } from '../../../../../../../lib/components';
+import { HeaderSubTitle } from '../../../../../../SettingsHeader';
 import { useRestartDaemon } from './hooks';
 
 export function MacOsSplitTunnelingAvailability() {
@@ -13,7 +13,7 @@ export function MacOsSplitTunnelingAvailability() {
       <HeaderSubTitle>
         {messages.pgettext(
           'split-tunneling-view',
-          'To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings.',
+          'To use this, enable “Full disk access” for “Warren VPN” in the macOS system settings.',
         )}
       </HeaderSubTitle>
       <Flex flexDirection="column" gap="small">

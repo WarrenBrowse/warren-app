@@ -1,6 +1,10 @@
 import { useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 
+import {
+  AppCountriesIndicator,
+  IncludeOnlyLabel,
+} from '../../../../../features/app-routing/components';
 import { PortForwardingIndicator } from '../../../../../features/port-forwarding/components';
 import { IconButton } from '../../../../../lib/components';
 import { getConnectionPhase, getPhaseAccentColor } from '../../../../../lib/connection-phase';
@@ -141,6 +145,7 @@ export function ConnectionPanel() {
           <FeatureIndicators />
           <MultihopIndicator />
           <PortForwardingIndicator />
+          <AppCountriesIndicator />
         </StyledFeatureBadges>
         <StyledCard $accent={accent}>
           {allowExpand && (
@@ -152,6 +157,7 @@ export function ConnectionPanel() {
           )}
           <StyledConnectionStatusContainer $expanded={expanded} onClick={toggleExpanded}>
             <ConnectionStatus />
+            <IncludeOnlyLabel />
             <Location />
             <Hostname />
           </StyledConnectionStatusContainer>

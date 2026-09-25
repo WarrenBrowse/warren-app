@@ -2,14 +2,18 @@ import { describe, expect, it } from 'vitest';
 
 import {
   appExitDisplayState,
+  appRouteLine,
   appRoutingSummary,
   buildCountryOptions,
   effectiveAppExits,
   effectiveIncludedApps,
+  exitChoiceNames,
   exitChoicesInUse,
   modeChangeConfirmation,
+  resolveApplications,
   routeStatusForApp,
   sameAppId,
+  splitModeAvailability,
   wouldExceedAppExitLimit,
 } from '../../src/shared/app-routing';
 import type { AppRouteStatus, AppRoutingSettings } from '../../src/shared/daemon-rpc-types';
@@ -284,5 +288,145 @@ describe('buildCountryOptions, for the per-app country picker', () => {
     const options = buildCountryOptions(locations, 'sue', (name) => french[name] ?? name);
 
     expect(options.map((option) => option.name)).toEqual(['Suede']);
+  });
+});
+
+describe('splitModeAvailability, for Bypass VPN and VPN only for', () => {
+  const base = { supported: true, needsFullDiskAccess: false, isMacOs13OrNewer: true };
+
+  it('is available where the daemon supports it', () => {
+    expect(splitModeAvailability({ ...base, platform: 'win32' })).toBe('available');
+    expect(splitModeAvailability({ ...base, platform: 'darwin' })).toBe('available');
+  });
+
+  it('is unsupported on a Windows or Linux system the daemon refuses', () => {
+    expect(splitModeAvailability({ ...base, platform: 'linux', supported: false })).toBe(
+      'unsupported',
+    );
+  });
+
+  it('needs a signed build on a macOS build the daemon refuses', () => {
+    expect(splitModeAvailability({ ...base, platform: 'darwin', supported: false })).toBe(
+      'needs-signed-build',
+    );
+  });
+
+  it('needs macOS 13 before anything else', () => {
+    expect(
+      splitModeAvailability({
+        ...base,
+        platform: 'darwin',
+        supported: false,
+        isMacOs13OrNewer: false,
+      }),
+    ).toBe('needs-newer-macos');
+  });
+
+  it('needs Full Disk Access on macOS until it is granted', () => {
+    expect(splitModeAvailability({ ...base, platform: 'darwin', needsFullDiskAccess: true })).toBe(
+      'needs-full-disk-access',
+    );
+  });
+
+  it('is still being checked on macOS while the answer is unknown', () => {
+    expect(
+      splitModeAvailability({ ...base, platform: 'darwin', needsFullDiskAccess: undefined }),
+    ).toBe('checking');
+  });
+});
+
+describe('appRouteLine, the status under an app with a country', () => {
+  const routing = settings({ appExits: [{ app: FIREFOX, exit: { country: 'se' } }] });
+  const connected: AppRouteStatus = {
+    exit: { country: 'se' },
+    state: 'connected',
+    publicIp: '198.51.100.7',
+    apps: [FIREFOX],
+  };
+
+  it('shows the address the app appears from once its route is up', () => {
+    expect(appRouteLine(routing, [connected], FIREFOX, 'darwin')).toEqual({
+      kind: 'connected',
+      publicIp: '198.51.100.7',
+    });
+  });
+
+  it('shows why a route cannot run', () => {
+    const noRelay: AppRouteStatus = { ...connected, state: 'unavailable', reason: 'no-relay' };
+
+    expect(appRouteLine(routing, [noRelay], FIREFOX, 'darwin')).toEqual({
+      kind: 'unavailable',
+      reason: 'no-relay',
+    });
+  });
+
+  it('shows the route connecting', () => {
+    const connecting: AppRouteStatus = { ...connected, state: 'connecting' };
+
+    expect(appRouteLine(routing, [connecting], FIREFOX, 'darwin')).toEqual({
+      kind: 'connecting',
+    });
+  });
+
+  it('waits for the VPN while no route carries the app', () => {
+    expect(appRouteLine(routing, [], FIREFOX, 'darwin')).toEqual({ kind: 'waiting' });
+  });
+
+  it('says the country is off rather than any stale route state', () => {
+    const off = { ...routing, appExitsEnabled: false };
+
+    expect(appRouteLine(off, [connected], FIREFOX, 'darwin')).toEqual({ kind: 'paused' });
+  });
+
+  it('says the app bypasses the VPN when Bypass takes it out', () => {
+    const bypass = { ...routing, splitMode: 'exclude' as const, excludedApps: [FIREFOX] };
+
+    expect(appRouteLine(bypass, [], FIREFOX, 'darwin')).toEqual({ kind: 'bypassed' });
+  });
+});
+
+describe('exitChoiceNames, for labels', () => {
+  const locations = [
+    {
+      name: 'Sweden',
+      code: 'se',
+      cities: [{ name: 'Gothenburg', code: 'got', relays: [{ active: true }] }],
+    },
+  ];
+  const french = (name: string) => ({ Sweden: 'Suede', Gothenburg: 'Goteborg' })[name] ?? name;
+
+  it('names the country and city from the relay list, translated', () => {
+    expect(exitChoiceNames({ country: 'se', city: 'got' }, locations, french)).toEqual({
+      country: 'Suede',
+      city: 'Goteborg',
+    });
+  });
+
+  it('falls back to the code of a location the relay list no longer has', () => {
+    expect(exitChoiceNames({ country: 'xk', city: 'prn' }, locations, french)).toEqual({
+      country: 'XK',
+      city: 'PRN',
+    });
+  });
+});
+
+describe('resolveApplications, which names the apps a list of ids holds', () => {
+  const firefox = { absolutepath: FIREFOX, name: 'Firefox', deletable: false };
+  const slack = { absolutepath: SLACK, name: 'Slack', icon: 'data:slack', deletable: true };
+
+  it('prefers the name the main process read for the id', () => {
+    const catalog = [{ ...firefox, name: 'Firefox from the catalog' }];
+
+    expect(resolveApplications([FIREFOX], [firefox], catalog, 'darwin')).toEqual([firefox]);
+  });
+
+  it('falls back to the app list, whatever the case of the id', () => {
+    expect(resolveApplications([SLACK.toLowerCase()], [], [slack], 'darwin')).toEqual([slack]);
+  });
+
+  it('names an app nobody knows after its file', () => {
+    expect(resolveApplications(['C:\\Tools\\curl.exe'], [], [], 'win32')).toEqual([
+      { absolutepath: 'C:\\Tools\\curl.exe', name: 'curl.exe', deletable: false },
+    ]);
   });
 });

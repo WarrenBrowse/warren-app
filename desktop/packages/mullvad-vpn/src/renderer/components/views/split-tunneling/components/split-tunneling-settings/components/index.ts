@@ -1,3 +1,4 @@
 export * from './add-application-file-picker-button';
 export * from './application-lists';
-export * from './split-tunneling-settings-header';
+export * from './macos-split-tunneling-availability';
+export * from './split-mode-header';

@@ -1,13 +1,30 @@
 import { sprintf } from 'sprintf-js';
 
 import { messages } from '../../../../../../../../../../../../../shared/gettext';
+import { useLinuxSettingsContext } from '../../../../../../../LinuxSettingsContext';
 import { useApplication, useDisabled } from '../../../hooks';
 
 export function useWarningMessage() {
   const application = useApplication();
   const disabled = useDisabled();
+  const { launchMode } = useLinuxSettingsContext();
 
   const applicationName = application.name;
+
+  if (launchMode === 'include') {
+    return sprintf(
+      disabled
+        ? messages.pgettext(
+            'split-tunneling-view',
+            '%(applicationName)s is problematic and can’t be launched through the VPN alone.',
+          )
+        : messages.pgettext(
+            'split-tunneling-view',
+            'If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not use the VPN.',
+          ),
+      { applicationName },
+    );
+  }
 
   if (disabled) {
     return sprintf(
