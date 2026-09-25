@@ -37,7 +37,8 @@ siblings=(
 
 for pair in "${siblings[@]}"; do
   name="${pair%%:*}"
-  if [[ ! -d "$parent/$name/.git" ]]; then
+  # `-e`: a sibling checked out as a git worktree has a `.git` file.
+  if [[ ! -e "$parent/$name/.git" ]]; then
     echo "error: sibling repo not found at $parent/$name (run 'mani sync' first)" >&2
     exit 1
   fi
