@@ -16,6 +16,8 @@ use self::{
     disconnecting_state::{AfterDisconnect, DisconnectingState},
     error_state::ErrorState,
 };
+#[cfg(windows)]
+use crate::firewall::FirewallPolicy;
 use crate::split_tunnel;
 use crate::{
     firewall::{Firewall, FirewallArguments, InitialFirewallState},
@@ -29,7 +31,7 @@ use talpid_routing::RouteManagerHandle;
 #[cfg(target_os = "macos")]
 use talpid_tunnel::TunnelMetadata;
 use talpid_tunnel::{TunnelEvent, tun_provider::TunProvider};
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "windows"))]
 use talpid_types::ErrorExt;
 #[cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))]
 use talpid_types::split_tunnel::SplitApps;
@@ -538,8 +540,19 @@ impl TunnelStateMachine {
         #[cfg(target_os = "windows")]
         let split_mode = enforceable_mode(
             args.settings.split_apps.mode,
-            split_tunnel.handle().is_loaded(),
+            split_tunnel::INCLUDE_ONLY_READY && split_tunnel.handle().is_loaded(),
         );
+        // A fallback must not leave the included apps as the driver's split
+        // set, which would exclude exactly them.
+        #[cfg(target_os = "windows")]
+        let split_tunnel = {
+            let mut split_tunnel = split_tunnel;
+            if split_mode != args.settings.split_apps.mode {
+                let (tx, _rx) = oneshot::channel();
+                split_tunnel.set_split_apps(&SplitApps::default(), tx);
+            }
+            split_tunnel
+        };
         #[cfg(target_os = "windows")]
         firewall.set_include_only(split_mode == SplitTunnelMode::IncludeOnly);
 
@@ -945,19 +958,50 @@ impl SharedTunnelStateValues {
     /// Hands `apps` to the split tunnel driver, and returns whether the
     /// mode changed: the routes of a tunnel that is up still follow the old
     /// one.
+    ///
+    /// `leaving_permit` is set by a state whose firewall policy may open the
+    /// physical network to non-included apps: a mode change then blocks
+    /// before the driver lets go of the included apps.
     #[cfg(windows)]
     pub fn set_split_apps(
         &mut self,
         apps: SplitApps,
         tx: oneshot::Sender<Result<(), split_tunnel::Error>>,
+        leaving_permit: bool,
     ) -> bool {
-        let mode = enforceable_mode(apps.mode, self.split_tunnel.handle().is_loaded());
+        let mode = enforceable_mode(apps.mode, self.windows_include_only_ready());
+        // Tunneling everything with the included apps as the driver's split
+        // set would exclude exactly them.
+        let apps = if mode == apps.mode {
+            apps
+        } else {
+            SplitApps::default()
+        };
+        if mode != self.split_mode && leaving_permit {
+            let blocked = FirewallPolicy::Blocked {
+                allow_lan: self.allow_lan,
+                allowed_endpoint: Some(self.allowed_endpoint.clone()),
+            };
+            if let Err(error) = self.firewall.apply_policy(blocked) {
+                log::error!(
+                    "{}",
+                    error.display_chain_with_msg("Failed to block before a split mode change")
+                );
+            }
+        }
+        if !self.split_tunnel.set_split_apps(&apps, tx) {
+            return false;
+        }
         let mode_changed = self.split_mode != mode;
         self.split_mode = mode;
         self.firewall
             .set_include_only(mode == SplitTunnelMode::IncludeOnly);
-        self.split_tunnel.set_split_apps(&apps, tx);
         mode_changed
+    }
+
+    #[cfg(windows)]
+    fn windows_include_only_ready(&self) -> bool {
+        split_tunnel::INCLUDE_ONLY_READY && self.split_tunnel.handle().is_loaded()
     }
 
     /// Adopts the mode of `apps` for the firewall, and returns whether it

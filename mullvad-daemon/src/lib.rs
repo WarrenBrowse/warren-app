@@ -312,7 +312,7 @@ fn tunnel_split_apps(routing: &AppRoutingSettings) -> SplitApps {
 /// `split_apps`, or the full tunnel when include-only is requested and
 /// cannot run: a persisted include-only must never leave the included apps
 /// unselected while the rest of the host is untunneled.
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "windows"))]
 fn enforceable_split_apps(split_apps: SplitApps, include_only_supported: bool) -> SplitApps {
     if split_apps.mode == SplitTunnelMode::IncludeOnly && !include_only_supported {
         log::error!("Include-only is unavailable on this system; tunneling everything");
@@ -1939,6 +1939,11 @@ impl Daemon {
                         split_apps,
                         split_tunneling_pid_manager.include_only_supported(),
                     );
+                    // Whether the driver loads is only known once the tunnel
+                    // state machine has started it, which checks again.
+                    #[cfg(target_os = "windows")]
+                    let split_apps =
+                        enforceable_split_apps(split_apps, split_tunnel::INCLUDE_ONLY_READY);
                     split_apps
                 },
                 #[cfg(target_os = "android")]
@@ -3684,6 +3689,8 @@ impl Daemon {
         #[cfg(target_os = "linux")]
         let split_apps =
             enforceable_split_apps(split_apps, self.exclude_pids.include_only_supported());
+        #[cfg(target_os = "windows")]
+        let split_apps = enforceable_split_apps(split_apps, self.windows_include_only_ready());
         if split_apps == tunnel_split_apps(&self.settings.app_routing) {
             let _ = self
                 .tx
@@ -3727,6 +3734,12 @@ impl Daemon {
     /// Refuses a change the split tunnel cannot carry out here. Turning a
     /// split mode off, or leaving it as it is, is never refused, so a user
     /// can always recover.
+    #[cfg(target_os = "windows")]
+    fn windows_include_only_ready(&self) -> bool {
+        split_tunnel::INCLUDE_ONLY_READY
+            && self.tunnel_state_machine_handle.split_tunnel().is_loaded()
+    }
+
     #[cfg_attr(
         not(target_os = "macos"),
         expect(clippy::unused_async, reason = "only the macOS probe awaits")
@@ -3745,7 +3758,7 @@ impl Daemon {
         // Include-only rests on the split tunnel driver holding the included
         // apps back from the physical network the firewall then opens.
         #[cfg(target_os = "windows")]
-        if turns_include_only_on && !self.tunnel_state_machine_handle.split_tunnel().is_loaded() {
+        if turns_include_only_on && !self.windows_include_only_ready() {
             return Err(Error::IncludeOnlyUnavailable);
         }
         #[cfg(not(any(target_os = "linux", target_os = "windows")))]
@@ -7294,7 +7307,7 @@ mod split_mode_for_state_tests {
     }
 }
 
-#[cfg(all(test, target_os = "linux"))]
+#[cfg(all(test, any(target_os = "linux", target_os = "windows")))]
 mod enforceable_split_apps_tests {
     use super::enforceable_split_apps;
     use talpid_types::split_tunnel::{SplitApps, SplitTunnelMode};

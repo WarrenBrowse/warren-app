@@ -487,7 +487,7 @@ impl ConnectedState {
             }
             #[cfg(windows)]
             Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {
-                if shared_values.set_split_apps(apps, result_tx) {
+                if shared_values.set_split_apps(apps, result_tx, true) {
                     self.disconnect(shared_values, AfterDisconnect::Reconnect(0))
                 } else {
                     SameState(self)
