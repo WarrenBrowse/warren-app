@@ -13,9 +13,11 @@ import {
 import { Url } from '../shared/constants';
 import {
   AccessMethodSetting,
+  AppSplitMode,
   CustomProxy,
   DeviceEvent,
   DisconnectSource,
+  ExitChoice,
   IAccountData,
   IAppVersionInfo,
   ICustomList,
@@ -337,6 +339,14 @@ export default class AppRenderer {
       this.reduxActions.settings.setSplitTunnelingSupported(supported);
     });
 
+    IpcRendererEventChannel.appRouting.listenRoutes((statuses) => {
+      this.reduxActions.settings.setAppRouteStatus(statuses);
+    });
+
+    IpcRendererEventChannel.appRouting.listenApplications((applications) => {
+      this.reduxActions.settings.setAppRoutingApplications(applications);
+    });
+
     IpcRendererEventChannel.window.listenFocus((focus: boolean) => {
       this.reduxActions.userInterface.setWindowFocused(focus);
     });
@@ -441,6 +451,10 @@ export default class AppRenderer {
     }
 
     this.reduxActions.settings.setSplitTunnelingSupported(initialState.splitTunnelingSupported);
+    this.reduxActions.settings.setAppRouteStatus(initialState.appRouteStatus);
+    if (initialState.appRoutingApplications) {
+      this.reduxActions.settings.setAppRoutingApplications(initialState.appRoutingApplications);
+    }
 
     this.updateLocation();
 
@@ -553,6 +567,22 @@ export default class AppRenderer {
     IpcRendererEventChannel.splitTunneling.forgetManuallyAddedApplication(application);
   public needFullDiskPermissions = () =>
     IpcRendererEventChannel.macOsSplitTunneling.needFullDiskPermissions();
+  public launchIncludedApplication = (application: ILinuxSplitTunnelingApplication | string) =>
+    IpcRendererEventChannel.linuxSplitTunneling.launchIncludedApplication(application);
+  public getAppRoutingApplications = (updateCaches = false) =>
+    IpcRendererEventChannel.appRouting.getApplications(updateCaches);
+  public setAppSplitMode = (mode: AppSplitMode) =>
+    IpcRendererEventChannel.appRouting.setSplitMode(mode);
+  public addIncludedApp = (application: ISplitTunnelingApplication | string) =>
+    IpcRendererEventChannel.appRouting.addIncludedApp(application);
+  public removeIncludedApp = (application: string) =>
+    IpcRendererEventChannel.appRouting.removeIncludedApp(application);
+  public setAppExitsEnabled = (enabled: boolean) =>
+    IpcRendererEventChannel.appRouting.setAppExitsEnabled(enabled);
+  public setAppExit = (application: ISplitTunnelingApplication | string, exit: ExitChoice) =>
+    IpcRendererEventChannel.appRouting.setAppExit({ application, exit });
+  public clearAppExit = (application: string) =>
+    IpcRendererEventChannel.appRouting.clearAppExit(application);
   public setObfuscationSettings = (obfuscationSettings: ObfuscationSettings) =>
     IpcRendererEventChannel.settings.setObfuscationSettings(obfuscationSettings);
   public setEnableDaita = (value: boolean) =>
@@ -1083,6 +1113,7 @@ export default class AppRenderer {
     reduxSettings.updateWireguardDaita(newSettings.tunnelOptions.daita);
     reduxSettings.updateDnsOptions(newSettings.tunnelOptions.dns);
     reduxSettings.updateSplitTunnelingState(newSettings.splitTunnel.enableExclusions);
+    reduxSettings.updateAppRouting(newSettings.appRouting);
     reduxSettings.updateObfuscationSettings(newSettings.obfuscationSettings);
     reduxSettings.updateCustomLists(newSettings.customLists);
     reduxSettings.updateApiAccessMethods(newSettings.apiAccessMethods);

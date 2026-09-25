@@ -7,11 +7,14 @@ import { DaemonAccessRefusal } from './daemon-access-refusal';
 import {
   AccessMethodExistsError,
   AccessMethodSetting,
+  AppRouteStatus,
+  AppSplitMode,
   CustomListError,
   CustomProxy,
   DeviceEvent,
   DeviceState,
   DisconnectSource,
+  ExitChoice,
   IAccountData,
   IAppVersionInfo,
   ICustomList,
@@ -25,6 +28,7 @@ import {
   NewCustomList,
   ObfuscationSettings,
   RelaySettings,
+  SetAppExitOutcome,
   TrustNewExitKeyOutcome,
   TunnelState,
   VoucherResponse,
@@ -114,6 +118,11 @@ export interface IAppStateSnapshot {
   // boot (the `notifyIsSupported` push alone races a window that opens
   // after the daemon already bootstrapped).
   splitTunnelingSupported: boolean;
+  // The live state of each per-app exit in force, and the name and icon of
+  // every app the app routing settings name. Part of the snapshot so the main
+  // screen shows them on first paint.
+  appRouteStatus: AppRouteStatus[];
+  appRoutingApplications?: ISplitTunnelingApplication[];
   macOsScrollbarVisibility?: MacOsScrollbarVisibility;
   changelog: IChangelog;
   navigationHistory?: IHistoryObject;
@@ -516,6 +525,12 @@ export const ipcSchema = {
   linuxSplitTunneling: {
     getApplications: invoke<void, ILinuxSplitTunnelingApplication[]>(),
     launchApplication: invoke<ILinuxSplitTunnelingApplication | string, LaunchApplicationResult>(),
+    // Launches a program as one of the only ones inside the tunnel, for the
+    // include-only mode, through `warren-include`.
+    launchIncludedApplication: invoke<
+      ILinuxSplitTunnelingApplication | string,
+      LaunchApplicationResult
+    >(),
   },
   macOsSplitTunneling: {
     needFullDiskPermissions: invoke<void, boolean>(),
@@ -532,5 +547,28 @@ export const ipcSchema = {
     forgetManuallyAddedApplication: invoke<ISplitTunnelingApplication, void>(),
     getSupported: invoke<void, boolean>(),
     isSupported: notifyRenderer<boolean>(),
+  },
+  // Exclude, include-only and per-app exits (docs/app-routing.md). The
+  // excluded apps keep going through `splitTunneling`. An app is either one of
+  // the listed applications or a path the user picked, which the main process
+  // resolves to the executable the daemon matches.
+  appRouting: {
+    routes: notifyRenderer<AppRouteStatus[]>(),
+    applications: notifyRenderer<ISplitTunnelingApplication[]>(),
+    // Every app a per-app exit or the include-only list can name, on every
+    // platform (on Linux, the desktop entries keyed by the program they run).
+    getApplications: invoke<
+      boolean,
+      { fromCache: boolean; applications: ISplitTunnelingApplication[] }
+    >(),
+    setSplitMode: invoke<AppSplitMode, void>(),
+    addIncludedApp: invoke<ISplitTunnelingApplication | string, void>(),
+    removeIncludedApp: invoke<string, void>(),
+    setAppExitsEnabled: invoke<boolean, void>(),
+    setAppExit: invoke<
+      { application: ISplitTunnelingApplication | string; exit: ExitChoice },
+      SetAppExitOutcome
+    >(),
+    clearAppExit: invoke<string, void>(),
   },
 };
