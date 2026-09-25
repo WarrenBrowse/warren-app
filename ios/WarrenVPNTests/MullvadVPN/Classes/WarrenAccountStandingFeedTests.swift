@@ -154,7 +154,14 @@ final class WarrenAccountStandingFeedTests: XCTestCase {
         )
     }
 
-    func testAStrikeDayIsTheUTCDayItWasRecordedOn() {
+    /// The API dates a strike and a ban's lapse at their UTC day (midnight
+    /// UTC). Read in local time west of Greenwich, both would move to the day
+    /// before, so the reader's zone is set there to prove it is not used.
+    func testAStrikeDayIsTheUTCDayItWasRecordedOnWhereverTheReaderIs() {
+        let previous = NSTimeZone.default
+        NSTimeZone.default = TimeZone(identifier: "America/Los_Angeles")!
+        defer { NSTimeZone.default = previous }
+
         let day = WarrenAccountStandingText.day(
             Date(timeIntervalSince1970: 1_790_208_000),
             locale: Locale(identifier: "en_US")
