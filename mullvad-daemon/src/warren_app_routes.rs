@@ -18,8 +18,8 @@ use mullvad_types::{
 use talpid_warren_tunnel::{
     MultiHopConfig,
     app_routes::{
-        AppRouteObserver, AppRoutesPlan, MAX_ROUTE_SESSIONS, PlannedRoute, RouteReport,
-        RouteSessionState, RouteUnavailable,
+        AppRoutesPlan, MAX_ROUTE_SESSIONS, MainRoute, PlannedRoute, RouteReport, RouteSessionState,
+        RouteUnavailable,
     },
 };
 use tokio::sync::watch;
@@ -42,8 +42,23 @@ pub(crate) struct RoutePlanner {
     circuits: BTreeMap<ExitChoice, MultiHopConfig>,
     plan_tx: watch::Sender<AppRoutesPlan>,
     resolutions_tx: watch::Sender<Resolutions>,
-    /// Handed to every tunnel, to hear how its route sessions stand.
-    pub observer: Option<AppRouteObserver>,
+    /// Hears how the route sessions of a tunnel stand, with the number of
+    /// that tunnel, so a report of a tunnel already replaced is told apart.
+    pub observer: Option<TunnelRouteObserver>,
+    tunnels: u64,
+}
+
+/// Receives the route session states of the tunnel with the given number.
+pub(crate) type TunnelRouteObserver = Arc<dyn Fn(u64, Vec<RouteReport>) + Send + Sync>;
+
+/// The main circuit the app exits are resolved against. A custom exit is not
+/// the directory's circuit, so while one is on, no exit is left to the main
+/// session.
+pub(crate) fn planning_main_circuit(
+    directory_circuit: Option<&MultiHopConfig>,
+    custom_exit_active: bool,
+) -> Option<&MultiHopConfig> {
+    directory_circuit.filter(|_| !custom_exit_active)
 }
 
 impl RoutePlanner {
@@ -56,7 +71,23 @@ impl RoutePlanner {
             plan_tx: watch::Sender::new(AppRoutesPlan::default()),
             resolutions_tx: watch::Sender::new(Resolutions::new()),
             observer: None,
+            tunnels: 0,
         }
+    }
+
+    /// The observer for the next tunnel: its reports carry that tunnel's
+    /// number.
+    #[cfg_attr(
+        target_os = "android",
+        expect(dead_code, reason = "per-app exits run on desktop only")
+    )]
+    pub fn observer_for_next_tunnel(
+        &mut self,
+    ) -> Option<talpid_warren_tunnel::app_routes::AppRouteObserver> {
+        self.tunnels += 1;
+        let tunnel = self.tunnels;
+        let observer = self.observer.clone()?;
+        Some(Arc::new(move |reports| observer(tunnel, reports)))
     }
 
     pub fn set_settings(&mut self, settings: AppRoutingSettings) {
@@ -74,6 +105,10 @@ impl RoutePlanner {
         self.multi_hop = multi_hop;
     }
 
+    #[cfg_attr(
+        target_os = "android",
+        expect(dead_code, reason = "per-app exits run on desktop only")
+    )]
     pub fn plan_rx(&self) -> watch::Receiver<AppRoutesPlan> {
         self.plan_tx.subscribe()
     }
@@ -189,7 +224,16 @@ pub(crate) fn plan(
             .main_circuit
             .filter(|main| exit_matches(inputs.directory, &main.exit, choice))
         {
-            let public_ip = exit_public_ip(inputs.directory, main.exit.exit_id.as_bytes());
+            let exit_id = *main.exit.exit_id.as_bytes();
+            let public_ip = exit_public_ip(inputs.directory, &exit_id);
+            let main_apps = &mut planned.tunnel.main_apps;
+            match main_apps.iter_mut().find(|route| route.exit_id == exit_id) {
+                Some(route) => route.apps.extend(apps),
+                None => main_apps.push(MainRoute {
+                    exit_id,
+                    apps: apps.collect(),
+                }),
+            }
             planned
                 .resolutions
                 .insert(choice.clone(), Resolution::Main { public_ip });
@@ -567,6 +611,13 @@ mod tests {
 
         assert!(planned.tunnel.routes.is_empty());
         assert!(planned.tunnel.blocked_apps.is_empty());
+        assert!(
+            planned.tunnel.main_apps
+                == vec![MainRoute {
+                    exit_id: [1; 16],
+                    apps: vec![app("browser").as_str().to_owned()],
+                }]
+        );
         assert_eq!(
             planned.resolutions[&choice("se", None)],
             Resolution::Main {
@@ -732,6 +783,32 @@ mod tests {
         );
 
         assert_eq!(planned.tunnel.blocked_apps, vec![app("browser").as_str()]);
+    }
+
+    #[test]
+    fn while_a_custom_exit_is_on_no_exit_is_left_to_the_main_session() {
+        let dir = fleet();
+        let main = main_in(&dir, "se");
+
+        assert!(planning_main_circuit(Some(&main), true).is_none());
+        assert!(planning_main_circuit(Some(&main), false).is_some());
+    }
+
+    #[test]
+    fn each_tunnel_reports_under_a_number_of_its_own() {
+        let heard: Arc<std::sync::Mutex<Vec<u64>>> = Arc::default();
+        let mut planner = RoutePlanner::new();
+        let record = Arc::clone(&heard);
+        planner.observer = Some(Arc::new(move |tunnel, _| {
+            record.lock().unwrap().push(tunnel)
+        }));
+
+        let first = planner.observer_for_next_tunnel().unwrap();
+        let second = planner.observer_for_next_tunnel().unwrap();
+        second(Vec::new());
+        first(Vec::new());
+
+        assert_eq!(*heard.lock().unwrap(), vec![2, 1]);
     }
 
     fn one_route() -> (AppRoutingSettings, BTreeMap<ExitChoice, Resolution>) {

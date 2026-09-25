@@ -8,6 +8,12 @@
 //! counter, the entry RTT store, the drain reactor's escalation cooldown).
 //! Those describe the main session; a route session writing them would move
 //! the main session's decisions.
+//!
+//! One piece of process-wide state is shared on purpose: the engine's memory
+//! of whether this network lets QUIC through (`udp_hostility`), which every
+//! supervisor feeds and reads. It describes the network both sessions cross,
+//! so a route that keeps dying there can make the main session try its TCP
+//! carrier first.
 
 use std::{net::SocketAddr, sync::Arc, time::Duration};
 
@@ -257,7 +263,9 @@ async fn run_supervised<T: PacketDevice + Clone>(
                     Ok(()) => RouteUnavailable::Failed,
                 };
             }
-            Some(()) = pumps.next(), if !pumps.is_empty() => {}
+            // A pump that ended leaves the route carrying nothing in one
+            // direction while the supervisor says it is up: start over.
+            Some(()) = pumps.next(), if !pumps.is_empty() => return RouteUnavailable::Failed,
             changed = client_rx.changed(), if watching => {
                 if changed.is_err() {
                     // The supervisor is ending; its result says why.

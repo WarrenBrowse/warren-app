@@ -343,8 +343,11 @@ impl InnerParametersGenerator {
             .filter(|(_, at)| now.saturating_sub(*at) < WARREN_DRAINED_EXIT_TTL_SECS)
             .map(|(id, _)| *id)
             .collect();
-        self.app_routes
-            .replan(self.warren_multi_hop.as_ref(), &drained);
+        let main = crate::warren_app_routes::planning_main_circuit(
+            self.warren_multi_hop.as_ref(),
+            self.warren_custom_exit.is_active(),
+        );
+        self.app_routes.replan(main, &drained);
     }
 }
 
@@ -505,10 +508,11 @@ impl ParametersGenerator {
         self.0.lock().await.app_routes.resolutions_rx()
     }
 
-    /// Where every tunnel reports how its route sessions stand.
+    /// Where every tunnel reports how its route sessions stand, with its
+    /// number.
     pub async fn set_app_route_observer(
         &self,
-        observer: talpid_warren_tunnel::app_routes::AppRouteObserver,
+        observer: crate::warren_app_routes::TunnelRouteObserver,
     ) {
         self.0.lock().await.app_routes.observer = Some(observer);
     }
@@ -929,7 +933,9 @@ impl ParametersGenerator {
         &self,
         custom: mullvad_types::settings::WarrenCustomExitSettings,
     ) {
-        self.0.lock().await.warren_custom_exit = custom;
+        let mut inner = self.0.lock().await;
+        inner.warren_custom_exit = custom;
+        inner.replan_app_routes();
     }
 
     /// Sets the user's Warren multi-hop config. `Some(cfg)`
@@ -1632,7 +1638,7 @@ impl ParametersGenerator {
         #[cfg(any(target_os = "linux", target_os = "macos", target_os = "windows"))]
         {
             params.app_routes_rx = Some(inner.app_routes.plan_rx());
-            params.on_app_routes = inner.app_routes.observer.clone();
+            params.on_app_routes = inner.app_routes.observer_for_next_tunnel();
         }
         Ok(params)
     }

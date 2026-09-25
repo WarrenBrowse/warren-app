@@ -1,6 +1,7 @@
 # App routing: exclude, per-app country, VPN-only-for
 
-Status: design, being implemented on branch `feat/per-app-exit` (2026-09-25).
+Status: being implemented on branch `feat/per-app-exit` (2026-09-25): per-app
+country runs in the datapath on desktop (sections 2.2 to 2.6).
 This document is the contract the implementation lots follow. When the code and
 this file disagree, fix one of them in the same commit.
 
@@ -117,6 +118,43 @@ Rules:
   epoch, `TOKEN_QUOTA_PER_EPOCH`). The daemon refuses a third distinct
   `ExitChoice` (a country, or a city in one: `se` and `se`/`got` are two) with
   `FAILED_PRECONDITION` and the details `app_exit_limit`, and the GUI says why.
+  The planner and the tunnel each cap again, since a settings file edited by
+  hand may hold more: the apps of an exit past the cap are blocked.
+
+Implementation (`mullvad-daemon/src/warren_app_routes.rs`,
+`talpid-warren-tunnel/src/app_routes/`):
+
+- The daemon's parameters generator resolves the exits in force every time
+  one of its inputs changes (app routing settings, verified directory, main
+  circuit, draining exits) and publishes an `AppRoutesPlan` on a watch
+  channel. Every tunnel follows it live: a settings change starts or stops
+  route sessions and never reconnects the main one. An unchanged plan is not
+  republished, and the circuit a choice resolved to is kept while it stays
+  valid, so a directory refresh does not move a route.
+- A city choice matches the directory node whose city slug is the relay-list
+  city code. A route has as many hops as the main connection, and a two-hop
+  route keeps the main connection's entry constraint.
+- A route session runs the engine's supervisor and pumps with
+  `SessionAdmission::TokensOnly`, a random signing key (the wallet never
+  enters it), one connection, and none of the hooks that feed process-wide
+  state (dial-refusal cooldown, session placement, reconnect counter, entry
+  RTT store, drain reactor). It pops its tokens from the daemon's provider.
+  After an end a retry may fix (no token, refused, failed) it waits 60 s and
+  dials again. A drain its exit announces is recorded like the main one's,
+  and the new plan moves the route to another exit.
+- The plan's policy is installed before the main pumps carry their first
+  packet, and a new plan's before the firewall is asked for the new relays:
+  a planned app's packets are dropped until its route is connected, never
+  sent through the main session meanwhile. Route sessions are started once
+  the main tunnel is up, and stopped (and awaited, so the TUN device is
+  released) before the main pumps at teardown.
+- An exit the main circuit already matches is carried by the main session
+  only while the main session is on the exit the plan assumed (the tunnel
+  follows the exit of the live session, across migrations); otherwise its
+  apps are dropped until the next plan. While a custom exit is on, no exit is
+  left to the main session.
+- A route session shares one process-wide state with the main session on
+  purpose: the engine's memory of whether this network lets QUIC through.
 
 ### 2.3 Address translation
 
@@ -128,6 +166,11 @@ changed: a 5-tuple is unique on the host, so the mapping is one to one per
 session. A routed IPv6 flow whose route session has no IPv6 is dropped (the
 app falls back to IPv4 through happy eyeballs).
 
+Only IP headers are translated: a protocol that writes the local address into
+its payload (WebRTC host candidates without mDNS, SIP, FTP `PORT`) carries the
+main session's inner address through the route's exit, which ties the two
+sessions together at that exit.
+
 ### 2.4 Fail closed, per app
 
 - A route session that is connecting, reconnecting or failed drops its apps'
@@ -135,7 +178,20 @@ app falls back to IPv4 through happy eyeballs).
 - The main connection keeps its existing state machine and kill switch; route
   sessions live inside the connected state and are torn down with it.
 - The firewall allows the route sessions' relay endpoints exactly like the main
-  one (`peer_endpoints` is a list).
+  one (`peer_endpoints` is a list). The tunnel's `PeerFence` names them next to
+  the main session's relay, whatever the main session migrates to, through
+  `TunnelEvent::PeerEndpoints`; a new route's relay is named, and the policy
+  applied, before its session dials, and a removed route's relay is unnamed
+  only once its session is gone. macOS pf, Linux nft and Windows winfw each
+  install one allow rule per named endpoint (the daemon's own sockets only),
+  so no firewall code changed. The route session's carrier escapes the tunnel
+  the way the main one does (`SocketBypass`), and on a macOS network where the
+  bind is cached as black-holing, through the relay's `/32` route.
+- The router sits between the TUN device and every session as a
+  `PacketDevice` wrapper: the main pumps read `RoutedTun`, which takes a
+  routed app's packets out of the main path, and each route session's pumps
+  read and write a `RouteTun`. While no app has an exit, the main path costs
+  one relaxed atomic load per packet.
 
 ### 2.5 DNS
 
@@ -148,6 +204,17 @@ country; sites that geolocate by client IP see that country.
 
 For each routed app: its flag, the country, the live state (connecting,
 connected, unavailable), and the public IP it appears from.
+
+The daemon combines the resolution of each exit with what the tunnel reports
+about its route sessions, and publishes `DaemonEvent.app_routes` when that
+changes: tunnel not connected is `unavailable (tunnel down)`; an exit the main
+connection already matches is `connected` with the main exit's address; a
+route session is `connecting` until it reports, `connected` with its exit's
+address, or `unavailable` (`no token`; `limit` when the exit refused every
+token, the usual cause being serials held by live sessions; `no relay` when
+nothing matches or the session failed). The public IP is the address the exit
+node is listed on: each exit of the fleet egresses from it (measured on beta,
+section 6).
 
 ## 3. VPN only for (include-only)
 
@@ -205,6 +272,11 @@ connection state. Turning the mode on asks for one confirmation.
   fail closed per app, downlink translation).
 - Real exits: a harness that runs the router with real Warren sessions to two
   beta exits and fetches the public IP through each (runs on macOS without
-  touching the host network); the full daemon in a Linux VM (per-app country,
+  touching the host network):
+  `WARREN_MNEMONIC="$(cat ~/.warren/beta-probe-wallet.mnemonic)" cargo test -p
+  mullvad-daemon --lib real_exit -- --ignored --nocapture`
+  (`mullvad-daemon/src/warren_app_routes/real_exit.rs`). It mints the current
+  epoch's tokens only; a wallet whose epoch was already minted elsewhere shows
+  the route `unavailable (no token)`. The full daemon in a Linux VM (per-app country,
   include-only, exclude); the daemon in the Windows ARM64 VM (include-only
   with the swapped driver, per-app country).
