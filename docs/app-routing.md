@@ -459,12 +459,16 @@ cannot disagree about an app.
   tuple first (`NETLINK_NETFILTER`, `IPCTNL_MSG_CT_GET` by the reply tuple,
   `talpid-app-routing/src/owner/conntrack.rs`), then looks the socket up by
   that tuple. The conntrack entry is confirmed in postrouting, before the
-  packet can be read from the TUN. Without the translation the answer is the
-  same pair, and without conntrack (or without the privilege, which the daemon
-  has) the lookup falls back to the pair as seen. Tested in a network
-  namespace of its own with a SNAT rule standing in for the masquerade
-  (`finds_a_connection_masqueraded_on_its_way_to_the_tunnel`, root and nft,
-  ignored by default). Downlink, the router restores the main tunnel address
+  packet can be read from the TUN. The kernel matches the tuple against either
+  direction, so the original tuple is used only when the reply direction
+  matched: a connection the far end opened is looked up as seen, as is one
+  conntrack does not know. Without conntrack over netlink, or without the
+  privilege (the daemon has it), the resolver stops asking and looks every
+  flow up as seen. Tested in a network namespace of its own with a SNAT rule
+  standing in for the masquerade, root and nft, ignored by default:
+  `finds_a_connection_masqueraded_on_its_way_to_the_tunnel` and
+  `finds_the_accepted_socket_of_a_connection_the_far_end_opened`, run in a
+  privileged Linux container on 2026-09-26. Downlink, the router restores the main tunnel address
   and conntrack the physical one.
 - **Include-only and a country, Windows.** Held back with include-only itself.
   The swapped driver binds an included socket to the tunnel address, which is
