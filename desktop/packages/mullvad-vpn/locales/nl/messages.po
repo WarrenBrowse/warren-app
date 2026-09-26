@@ -1096,12 +1096,8 @@ msgid "You are logged in with an invalid account number. Please log out and try 
 msgstr "U bent aangemeld met een ongeldig accountnummer. Meld af en probeer een ander account."
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "Internet geblokkeerd: uw toegang is opgeschort wegens schending van het gebruiksbeleid. Neem contact op met de ondersteuning als u denkt dat dit een vergissing is."
-
-msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended for abuse on a forwarded port. Contact support if you believe this is a mistake."
-msgstr "Internet geblokkeerd: uw toegang is opgeschort wegens misbruik van een doorgeschakelde poort. Neem contact op met de ondersteuning als u denkt dat dit een vergissing is."
+msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "Internet geblokkeerd: uw toegang is ingetrokken wegens schending van het gebruiksbeleid. Neem contact op met de ondersteuning als u denkt dat dit een vergissing is."
 
 msgctxt "auth-failure"
 msgid "Unable to authenticate account. Please report the problem on our community forum."
@@ -5493,8 +5489,8 @@ msgid "Forum name"
 msgstr "Forumnaam"
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "Internet wordt geblokkeerd: je toegang is opgeschort na herhaalde misbruikmeldingen over een doorgestuurde poort. Je kunt hiertegen bezwaar maken op %(url)s"
+msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "Internet wordt geblokkeerd: je toegang is ingetrokken na herhaalde misbruikmeldingen over een doorgestuurde poort. Je kunt hiertegen bezwaar maken op %(url)s"
 
 msgctxt "forum-activity-view"
 msgid "%(actor)s liked your post"
@@ -5579,7 +5575,7 @@ msgid "Open"
 msgstr "Openen"
 
 msgctxt "port-forwarding-view"
-msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
 msgstr "Een doorgestuurde poort is bereikbaar vanaf internet. Als een derde misbruik meldt dat daarvandaan komt, sluiten we de poort en noteren we een overtreding op je account; drie overtredingen binnen 90 dagen trekken de toegang in. Details en bezwaar maken: %(url)s"
 
 msgctxt "port-forwarding-view"

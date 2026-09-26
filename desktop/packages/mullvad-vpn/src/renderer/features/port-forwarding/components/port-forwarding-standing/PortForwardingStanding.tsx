@@ -8,7 +8,7 @@ import { useSelector } from '../../../../redux/store';
 import { standingSection } from '../../standing';
 
 /**
- * The wallet's port-forwarding warnings and any suspension, each warning with
+ * The wallet's port-forwarding warnings and any revocation, each warning with
  * the case reference a contest quotes. Renders nothing in good standing.
  *
  * Every live warning is listed here, including those the banner was put away

@@ -114,10 +114,10 @@ function RenewalCard() {
       ? `${renewalState.cardBrand} \u2022\u2022\u2022\u2022 ${renewalState.cardLast4}`
       : undefined;
   // TRANSLATORS: Shown on the automatic renewal block while the account is
-  // TRANSLATORS: suspended: a suspended account cannot receive the time.
+  // TRANSLATORS: revoked: a revoked account cannot receive the time.
   const pausedByBan = messages.pgettext(
     'account-view',
-    'Paused while access is suspended: nothing is charged.',
+    'Paused while access is revoked: nothing is charged.',
   );
   // Permanent in-app half of the pre-renewal notice: the next renewal
   // date stays visible whenever the account view is open.

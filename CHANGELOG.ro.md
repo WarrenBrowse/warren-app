@@ -37,21 +37,23 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   o raportare de abuz: o notificare pentru fiecare avertisment, un banner cu referința dosarului
   care deschide pagina despre contestare, și lista completă în ecranul port forwarding cu adresa la
   care să scrii. Avertismentele apar imediat ce actualizarea de server corespunzătoare e activă.
-- [Android] Vezi suspendarea contului, cu ziua în care se încheie când există una, imediat ce
+- [Android] Vezi revocarea contului, cu ziua în care se încheie când există una, imediat ce
   aplicația află de ea, în loc să încerce un exit după altul. Conexiunea se oprește și nu mai
-  reîncearcă până la sfârșitul suspendării.
+  reîncearcă până la sfârșitul revocării.
 - [Android] Află de ce serverul a refuzat un port redirecționat, niciun drept de port disponibil
   sau refuzat, iar aplicația cere din nou automat, în loc să se oprească pe un eșec generic.
 - [iOS] Vezi avertismentele înregistrate pe contul tău când un port redirecționat e închis după o
   raportare de abuz: o notificare pentru fiecare avertisment, un banner cu referința dosarului care
   deschide pagina despre contestare, și lista completă în ecranul port forwarding cu adresa la care
   să scrii. Avertismentele apar imediat ce actualizarea de server corespunzătoare e activă.
-- [iOS] Vezi suspendarea contului, cu ziua în care se încheie când există una, în loc de o simplă
-  deconectare, iar conexiunea se oprește când suspendarea e aflată în timpul unei sesiuni.
+- [iOS] Vezi revocarea contului, cu ziua în care se încheie când există una, în loc de o simplă
+  deconectare, iar conexiunea se oprește când revocarea e aflată în timpul unei sesiuni.
 - [iOS] Află când serverul refuză un port redirecționat din lipsă de drept de port, iar aplicația
   cere din nou automat în loc să se oprească la primul refuz.
 
 ### Modificat
+- Numește revocare blocarea unui cont și avertisment fiecare raportare de abuz înregistrată
+  pentru un port redirecționat, cuvintele folosite de condițiile publicate.
 - [Windows, macOS, Linux] Setările se salvează în formatul versiunea 17, care conține App routing.
   Aplicațiile excluse din VPN trec în Bypass VPN.
 
@@ -66,28 +68,28 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   platforme, astfel încât serverele care îl cer acordă portul în loc să-l refuze.
 - [iOS] Semnează conexiunea cu portofelul afișat în aplicație. Folosea o cheie derivată din aceeași
   frază de recuperare, dar diferită de adresa afișată, așa că serverele nu vedeau abonamentul pe ea.
-- [Windows, macOS, Linux] Păstrează un voucher cumpărat pe care un cont suspendat nu l-a putut
+- [Windows, macOS, Linux] Păstrează un voucher cumpărat pe care un cont revocat nu l-a putut
   folosi, spune de ce și nu mai întreabă serverul iar și iar. Voucherul rămâne valabil după
-  suspendare. Nici celelalte refuzuri care nu spun nimic despre voucher (prea multe încercări) nu
+  revocare. Nici celelalte refuzuri care nu spun nimic despre voucher (prea multe încercări) nu
   îl mai șterg.
-- [Windows, macOS, Linux] Nicio reînnoire automată nu se încasează cât timp contul e suspendat,
+- [Windows, macOS, Linux] Nicio reînnoire automată nu se încasează cât timp contul e revocat,
   iar vederea contului o spune.
-- [Android] Păstrează un voucher cumpărat pe care un cont suspendat nu l-a putut folosi, arată
-  suspendarea cu ziua în care se încheie când e cunoscută și nu mai întreabă serverul. O eroare a
+- [Android] Păstrează un voucher cumpărat pe care un cont revocat nu l-a putut folosi, arată
+  revocarea cu ziua în care se încheie când e cunoscută și nu mai întreabă serverul. O eroare a
   serverului nu mai șterge un voucher cumpărat.
-- [iOS] Vezi suspendarea când un voucher sau o achiziție App Store e refuzată pentru un cont
-  suspendat. Nicio achiziție nu pornește, iar o achiziție deja plătită rămâne în așteptare, ca să
-  fie creditată după încheierea suspendării.
-- [Windows, macOS, Linux] Păstrează un voucher cumpărat pe care suspendarea l-a refuzat și după o
+- [iOS] Vezi revocarea când un voucher sau o achiziție App Store e refuzată pentru un cont
+  revocat. Nicio achiziție nu pornește, iar o achiziție deja plătită rămâne în așteptare, ca să
+  fie creditată după încheierea revocării.
+- [Windows, macOS, Linux] Păstrează un voucher cumpărat pe care revocarea l-a refuzat și după o
   repornire a aplicației sau a serviciului, sigilat de keychain-ul sistemului, și îl folosește
-  singur la sfârșitul suspendării, inclusiv când aceasta pur și simplu expiră. E șters doar după
+  singur la sfârșitul revocării, inclusiv când aceasta pur și simplu expiră. E șters doar după
   ce e folosit sau refuzat definitiv (necunoscut, deja folosit sau expirat). Fără keychain (Linux
   fără keyring), e păstrat doar pe durata sesiunii, niciodată scris în clar.
 - [Windows, macOS, Linux] Textul unui refuz al serverului nu mai apare în mesajele de eroare și
   în jurnalele serviciului.
-- [Android] Păstrează un voucher cumpărat pe care suspendarea l-a refuzat și după o repornire a
+- [Android] Păstrează un voucher cumpărat pe care revocarea l-a refuzat și după o repornire a
   aplicației, sigilat de o cheie din Android Keystore, și îl folosește singur la sfârșitul
-  suspendării sau la repornirea aplicației. E șters doar după ce e folosit sau refuzat definitiv.
+  revocării sau la repornirea aplicației. E șters doar după ce e folosit sau refuzat definitiv.
 
 ## [1.1.35] - 2026-09-25
 ### Adăugat

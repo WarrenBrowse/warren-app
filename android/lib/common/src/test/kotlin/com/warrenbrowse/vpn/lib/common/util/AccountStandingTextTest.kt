@@ -17,12 +17,12 @@ class AccountStandingTextTest {
     private val context: Context = mockk {
         every { getString(R.string.abuse_category_copyright) } returns "copyright"
         every { getString(R.string.account_ban_port_forwarding) } returns
-            "Access suspended for port-forwarding abuse."
-        every { getString(R.string.account_ban) } returns "Access suspended."
+            "Access revoked for port-forwarding abuse."
+        every { getString(R.string.account_ban) } returns "Access revoked."
         every { getString(eq(R.string.account_ban_port_forwarding_until), any()) } answers
-            { "Access suspended for port-forwarding abuse until ${args(this)[0]}." }
+            { "Access revoked for port-forwarding abuse until ${args(this)[0]}." }
         every { getString(eq(R.string.account_ban_until), any()) } answers
-            { "Access suspended until ${args(this)[0]}." }
+            { "Access revoked until ${args(this)[0]}." }
         every { getString(eq(R.string.account_strike_warning), *anyVararg()) } answers
             {
                 val a = args(this)
@@ -81,19 +81,19 @@ class AccountStandingTextTest {
         val ban = AccountBan(portForwarding = true, lapsesAtUnixSecs = 1_821_744_000, inForce = true)
 
         assertEquals(
-            "Access suspended for port-forwarding abuse until September 24, 2027.",
+            "Access revoked for port-forwarding abuse until September 24, 2027.",
             AccountStandingText.ban(context, ban, Locale.US),
         )
         assertEquals(
-            "Access suspended for port-forwarding abuse.",
+            "Access revoked for port-forwarding abuse.",
             AccountStandingText.ban(context, ban.copy(lapsesAtUnixSecs = null), Locale.US),
         )
     }
 
     @Test
-    fun `any other ban says only that access is suspended`() {
+    fun `any other ban says only that access is revoked`() {
         val ban = AccountBan(portForwarding = false, lapsesAtUnixSecs = null, inForce = true)
 
-        assertEquals("Access suspended.", AccountStandingText.ban(context, ban, Locale.US))
+        assertEquals("Access revoked.", AccountStandingText.ban(context, ban, Locale.US))
     }
 }

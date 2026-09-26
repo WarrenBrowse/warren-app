@@ -1120,12 +1120,8 @@ msgid "You are logged in with an invalid account number. Please log out and try 
 msgstr "لقد سجَّلت دخولك برقم حساب غير صالح. يُرجى تسجيل الخروج وتجربة حساب آخر."
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "حظر الإنترنت: تم تعليق وصولك بسبب مخالفة سياسة الاستخدام. تواصل مع الدعم إذا كنت ترى أن ذلك خطأ."
-
-msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended for abuse on a forwarded port. Contact support if you believe this is a mistake."
-msgstr "حظر الإنترنت: تم تعليق وصولك بسبب إساءة استخدام منفذ مُعاد توجيهه. تواصل مع الدعم إذا كنت ترى أن ذلك خطأ."
+msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "حظر الإنترنت: تم إلغاء وصولك بسبب مخالفة سياسة الاستخدام. تواصل مع الدعم إذا كنت ترى أن ذلك خطأ."
 
 msgctxt "auth-failure"
 msgid "Unable to authenticate account. Please report the problem on our community forum."
@@ -5540,8 +5536,8 @@ msgid "Forum name"
 msgstr "اسم المنتدى"
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "حظر الإنترنت: تم تعليق وصولك بعد بلاغات إساءة متكررة بشأن منفذ معاد توجيهه. يمكنك الاعتراض على ذلك عبر %(url)s"
+msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "حظر الإنترنت: تم إلغاء وصولك بعد بلاغات إساءة متكررة بشأن منفذ معاد توجيهه. يمكنك الاعتراض على ذلك عبر %(url)s"
 
 msgctxt "forum-activity-view"
 msgid "%(actor)s liked your post"
@@ -5630,7 +5626,7 @@ msgid "Open"
 msgstr "فتح"
 
 msgctxt "port-forwarding-view"
-msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
 msgstr "المنفذ المعاد توجيهه يمكن الوصول إليه من الإنترنت. إذا أبلغ طرف ثالث عن إساءة صادرة منه، نغلق المنفذ ونسجل مخالفة على حسابك؛ ثلاث مخالفات خلال 90 يومًا تلغي الوصول. التفاصيل وكيفية الاعتراض: %(url)s"
 
 msgctxt "port-forwarding-view"

@@ -360,8 +360,8 @@ const fn get_auth_failed_message(auth_failed: AuthFailed) -> &'static str {
     const INVALID_ACCOUNT_MSG: &str = "You've logged in with an account number that is not valid. Please log out and try another one.";
     const EXPIRED_ACCOUNT_MSG: &str = "You have no more VPN time left on this account. Please log in on our website to buy more credit.";
     const TOO_MANY_CONNECTIONS_MSG: &str = "This account has too many simultaneous connections. Disconnect another device or try connecting again shortly.";
-    const BANNED_MSG: &str = "Your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake.";
-    const BANNED_PF_MSG: &str = "Your access has been suspended for abuse on a forwarded port. Contact support if you believe this is a mistake.";
+    const BANNED_MSG: &str = "Your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake.";
+    const BANNED_PF_MSG: &str = "Your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at https://warren.ro/signalements";
     const UNKNOWN_MSG: &str = "Unknown error.";
 
     match auth_failed {
@@ -397,6 +397,21 @@ mod tests {
             legs_not_delivering,
             tunnel_type: TunnelType::Warren,
         }
+    }
+
+    /// The published terms call the 12-month ban a revocation, and the port
+    /// forwarding one is contested on the reports page rather than through
+    /// generic support.
+    #[test]
+    fn a_ban_reads_as_a_revocation() {
+        assert_eq!(
+            get_auth_failed_message(AuthFailed::Banned),
+            "Your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
+        );
+        assert_eq!(
+            get_auth_failed_message(AuthFailed::BannedPortForwarding),
+            "Your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at https://warren.ro/signalements"
+        );
     }
 
     #[test]

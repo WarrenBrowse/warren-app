@@ -65,9 +65,9 @@ extension BlockedStateReason {
         }
     }
 
-    /// A suspension (warren-core doc 105), with the day it ends when the
+    /// A revocation (warren-core doc 105), with the day it ends when the
     /// extension learned it, and for a port-forwarding ban the page that says
-    /// how to contest it: a suspension, unlike an expiry, is not lifted by
+    /// how to contest it: a revocation, unlike an expiry, is not lifted by
     /// renewing.
     private static func banMessage(portForwarding: Bool) -> String {
         let lapsesAt = UserDefaults(suiteName: ApplicationConfiguration.securityGroupIdentifier)?
@@ -78,7 +78,7 @@ extension BlockedStateReason {
         case let (true, until?):
             return String(
                 format: String(
-                    localized: "Your access has been suspended until %1$@ after repeated abuse reports about a forwarded port. You can contest this at %2$@",
+                    localized: "Your access has been revoked until %1$@ after repeated abuse reports about a forwarded port. You can contest this at %2$@",
                     table: "Settings"
                 ),
                 until, reportsURL
@@ -86,7 +86,7 @@ extension BlockedStateReason {
         case (true, nil):
             return String(
                 format: String(
-                    localized: "Your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %@",
+                    localized: "Your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %@",
                     table: "Settings"
                 ),
                 reportsURL
@@ -94,14 +94,14 @@ extension BlockedStateReason {
         case let (false, until?):
             return String(
                 format: String(
-                    localized: "Your access has been suspended until %@ for a usage policy violation. Contact support if you believe this is a mistake.",
+                    localized: "Your access has been revoked until %@ for a usage policy violation. Contact support if you believe this is a mistake.",
                     table: "Settings"
                 ),
                 until
             )
         case (false, nil):
             return String(
-                localized: "Your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake.",
+                localized: "Your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake.",
                 table: "Settings"
             )
         }

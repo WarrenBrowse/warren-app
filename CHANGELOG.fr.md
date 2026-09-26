@@ -39,9 +39,9 @@ par l'application, gardez-le tel quel.
   référence de dossier qui ouvre la page expliquant comment le contester, et la liste complète dans
   l'écran port forwarding avec l'adresse à laquelle écrire. Les avertissements s'affichent dès que
   la mise à jour serveur correspondante est en ligne.
-- [Android] Afficher la suspension d'un compte, avec le jour où elle prend fin quand il y en a un,
+- [Android] Afficher la révocation d'un compte, avec le jour où elle prend fin quand il y en a un,
   dès que l'application l'apprend, au lieu d'essayer une exit après l'autre. La connexion s'arrête
-  et ne réessaie pas avant la fin de la suspension.
+  et ne réessaie pas avant la fin de la révocation.
 - [Android] Dire pourquoi le serveur a refusé un port redirigé, plus de droit de port disponible
   ou refusé, et redemander automatiquement, au lieu de s'arrêter sur un échec générique.
 - [iOS] Afficher les avertissements enregistrés sur votre compte quand un port redirigé est fermé
@@ -49,13 +49,15 @@ par l'application, gardez-le tel quel.
   de dossier qui ouvre la page expliquant comment le contester, et la liste complète dans l'écran
   port forwarding avec l'adresse à laquelle écrire. Les avertissements s'affichent dès que la mise
   à jour serveur correspondante est en ligne.
-- [iOS] Afficher la suspension d'un compte, avec le jour où elle prend fin quand il y en a un, au
-  lieu d'une simple déconnexion, et arrêter la connexion quand la suspension est apprise en cours
+- [iOS] Afficher la révocation d'un compte, avec le jour où elle prend fin quand il y en a un, au
+  lieu d'une simple déconnexion, et arrêter la connexion quand la révocation est apprise en cours
   de session.
 - [iOS] Dire quand le serveur refuse un port redirigé faute de droit de port, et redemander
   automatiquement au lieu de s'arrêter au premier refus.
 
 ### Modifié
+- Appeler révocation le blocage d'un compte, et avertissement chaque signalement d'abus inscrit
+  pour un port redirigé : ce sont les mots des conditions publiées.
 - [Windows, macOS, Linux] Enregistrer les réglages au format version 17, qui contient le routage
   des apps. Les apps que vous aviez exclues du VPN passent dans Hors VPN.
 
@@ -71,27 +73,27 @@ par l'application, gardez-le tel quel.
 - [iOS] Signer la connexion avec le portefeuille affiché dans l'application. Elle utilisait une clé
   issue de la même phrase de récupération mais différente de l'adresse affichée, si bien que les
   serveurs n'y voyaient pas l'abonnement.
-- [Windows, macOS, Linux] Garder un bon acheté qu'un compte suspendu n'a pas pu utiliser, dire
-  pourquoi, et ne plus redemander sans cesse au serveur. Le bon reste valable après la suspension.
+- [Windows, macOS, Linux] Garder un bon acheté qu'un compte révoqué n'a pas pu utiliser, dire
+  pourquoi, et ne plus redemander sans cesse au serveur. Le bon reste valable après la révocation.
   Les autres refus qui ne disent rien du bon (trop de tentatives) ne l'effacent plus non plus.
-- [Windows, macOS, Linux] Ne prélever aucun renouvellement automatique pendant la suspension du
+- [Windows, macOS, Linux] Ne prélever aucun renouvellement automatique pendant la révocation du
   compte, et l'indiquer sur la vue du compte.
-- [Android] Garder un bon acheté qu'un compte suspendu n'a pas pu utiliser, afficher la
-  suspension avec le jour où elle prend fin quand il est connu, et ne plus redemander au serveur.
+- [Android] Garder un bon acheté qu'un compte révoqué n'a pas pu utiliser, afficher la
+  révocation avec le jour où elle prend fin quand il est connu, et ne plus redemander au serveur.
   Une erreur du serveur n'efface plus un bon acheté.
-- [iOS] Afficher la suspension quand un bon ou un achat App Store est refusé pour un compte
-  suspendu. Aucun achat ne démarre, et un achat déjà payé reste en attente, pour être crédité une
-  fois la suspension terminée.
-- [Windows, macOS, Linux] Garder un bon acheté que la suspension a refusé même après un
+- [iOS] Afficher la révocation quand un bon ou un achat App Store est refusé pour un compte
+  révoqué. Aucun achat ne démarre, et un achat déjà payé reste en attente, pour être crédité une
+  fois la révocation terminée.
+- [Windows, macOS, Linux] Garder un bon acheté que la révocation a refusé même après un
   redémarrage de l'application ou du service, scellé par le trousseau du système, et l'utiliser
-  de lui-même à la fin de la suspension, y compris quand elle arrive simplement à son terme. Il
+  de lui-même à la fin de la révocation, y compris quand elle arrive simplement à son terme. Il
   n'est effacé qu'une fois utilisé ou refusé définitivement (inconnu, déjà utilisé ou expiré). Sans
   trousseau (Linux sans keyring), il est gardé pour la session seulement, jamais écrit en clair.
 - [Windows, macOS, Linux] Ne plus reprendre le texte d'un refus du serveur dans les messages
   d'erreur et les journaux du service.
-- [Android] Garder un bon acheté que la suspension a refusé même après un redémarrage de
+- [Android] Garder un bon acheté que la révocation a refusé même après un redémarrage de
   l'application, scellé par une clé de l'Android Keystore, et l'utiliser de lui-même à la fin de la
-  suspension ou au redémarrage de l'application. Il n'est effacé qu'une fois utilisé ou refusé
+  révocation ou au redémarrage de l'application. Il n'est effacé qu'une fois utilisé ou refusé
   définitivement.
 
 ## [1.1.35] - 2026-09-25

@@ -54,13 +54,13 @@ export function bannedVoucherLines(
   const ban = banInForce(standing, nowMs);
   return [
     ban === undefined
-      ? messages.pgettext('port-forwarding-view', 'Access suspended.')
+      ? messages.pgettext('port-forwarding-view', 'Access revoked.')
       : banLine(ban, locale),
     // TRANSLATORS: Shown when a voucher could not be redeemed because the
-    // TRANSLATORS: account is suspended. The voucher was left unused.
+    // TRANSLATORS: account is revoked. The voucher was left unused.
     messages.pgettext(
       'redeem-voucher-view',
-      'The voucher was not used: keep it and redeem it once the suspension ends.',
+      'The voucher was not used: keep it and redeem it once the revocation ends.',
     ),
   ];
 }
@@ -70,23 +70,23 @@ function banLine(ban: WarrenAccountBan, locale: string): string {
     ban.lapsesAtUnixSecs === null ? undefined : formatStandingDay(ban.lapsesAtUnixSecs, locale);
   if (ban.reason === 'port-forwarding-abuse') {
     return until === undefined
-      ? messages.pgettext('port-forwarding-view', 'Access suspended for port-forwarding abuse.')
+      ? messages.pgettext('port-forwarding-view', 'Access revoked for port-forwarding abuse.')
       : sprintf(
           // TRANSLATORS: Available placeholder:
-          // TRANSLATORS: %(date)s - the day the suspension ends, e.g. 24 September 2027
+          // TRANSLATORS: %(date)s - the day the revocation ends, e.g. 24 September 2027
           messages.pgettext(
             'port-forwarding-view',
-            'Access suspended for port-forwarding abuse until %(date)s.',
+            'Access revoked for port-forwarding abuse until %(date)s.',
           ),
           { date: until },
         );
   }
   return until === undefined
-    ? messages.pgettext('port-forwarding-view', 'Access suspended.')
+    ? messages.pgettext('port-forwarding-view', 'Access revoked.')
     : sprintf(
         // TRANSLATORS: Available placeholder:
-        // TRANSLATORS: %(date)s - the day the suspension ends, e.g. 24 September 2027
-        messages.pgettext('port-forwarding-view', 'Access suspended until %(date)s.'),
+        // TRANSLATORS: %(date)s - the day the revocation ends, e.g. 24 September 2027
+        messages.pgettext('port-forwarding-view', 'Access revoked until %(date)s.'),
         { date: until },
       );
 }

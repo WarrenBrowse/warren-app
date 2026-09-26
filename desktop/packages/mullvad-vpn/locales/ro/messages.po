@@ -613,8 +613,8 @@ msgid "Paid until"
 msgstr "Plătit până la"
 
 msgctxt "account-view"
-msgid "Paused while access is suspended: nothing is charged."
-msgstr "În pauză cât timp accesul este suspendat: nu se încasează nimic."
+msgid "Paused while access is revoked: nothing is charged."
+msgstr "În pauză cât timp accesul este revocat: nu se încasează nimic."
 
 msgctxt "account-view"
 msgid "Public key"
@@ -1150,12 +1150,8 @@ msgid "You are logged in with an invalid public key. Please log out and try anot
 msgstr "V-ați autentificat cu o cheie publică nevalidă. Vă rugăm să vă deconectați și să încercați cu o altă cheie."
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "Blocarea accesului la internet: accesul dvs. a fost suspendat pentru încălcarea regulilor de utilizare. Contactați asistența dacă considerați că este o greșeală."
-
-msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended for abuse on a forwarded port. Contact support if you believe this is a mistake."
-msgstr "Blocarea accesului la internet: accesul dvs. a fost suspendat pentru abuz pe un port redirecționat. Contactați asistența dacă considerați că este o greșeală."
+msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "Blocarea accesului la internet: accesul dvs. a fost revocat pentru încălcarea regulilor de utilizare. Contactați asistența dacă considerați că este o greșeală."
 
 msgctxt "auth-failure"
 msgid "Unable to authenticate account. Please report the problem on our community forum."
@@ -2794,8 +2790,8 @@ msgid "Redeem"
 msgstr "Valorificați"
 
 msgctxt "redeem-voucher-view"
-msgid "The voucher was not used: keep it and redeem it once the suspension ends."
-msgstr "Voucherul nu a fost folosit: păstrați-l și valorificați-l după încheierea suspendării."
+msgid "The voucher was not used: keep it and redeem it once the revocation ends."
+msgstr "Voucherul nu a fost folosit: păstrați-l și valorificați-l după încheierea revocării."
 
 msgctxt "redeem-voucher-view"
 msgid "Verifying voucher..."
@@ -4647,8 +4643,8 @@ msgid "Forum name"
 msgstr "Nume pe forum"
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "Se blochează internetul: accesul tău a fost suspendat după raportări repetate de abuz privind un port redirecționat. Poți contesta la %(url)s"
+msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "Se blochează internetul: accesul dvs. a fost revocat după raportări repetate de abuz privind un port redirecționat. Puteți contesta la %(url)s"
 
 msgctxt "forum-activity-view"
 msgid "%(actor)s liked your post"
@@ -4734,8 +4730,8 @@ msgid "Open"
 msgstr "Deschide"
 
 msgctxt "port-forwarding-view"
-msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
-msgstr "Un port redirecționat este accesibil de pe internet. Dacă un terț raportează un abuz care provine de acolo, închidem portul și înregistrăm un avertisment în contul tău; trei avertismente în 90 de zile revocă accesul. Detalii și cum contești: %(url)s"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
+msgstr "Un port redirecționat este accesibil de pe internet. Dacă un terț raportează un abuz care provine de acolo, închidem portul și înregistrăm un avertisment în contul dvs.; trei avertismente în 90 de zile duc la revocarea accesului. Detalii și cum contestați: %(url)s"
 
 msgctxt "port-forwarding-view"
 msgid "%(client)s now listens on port %(port)d"
@@ -5075,35 +5071,35 @@ msgstr "Închide"
 
 msgctxt "accessibility"
 msgid "How to contest a warning"
-msgstr "Cum contești un avertisment"
+msgstr "Cum contestați un avertisment"
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "Se blochează internetul: accesul tău a fost suspendat până la %(date)s după raportări repetate de abuz privind un port redirecționat. Poți contesta la %(url)s"
+msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "Se blochează internetul: accesul dvs. a fost revocat până la %(date)s după raportări repetate de abuz privind un port redirecționat. Puteți contesta la %(url)s"
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "Blocarea accesului la internet: accesul dvs. a fost suspendat până la %(date)s pentru încălcarea regulilor de utilizare. Contactați asistența dacă considerați că este o greșeală."
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "Blocarea accesului la internet: accesul dvs. a fost revocat până la %(date)s pentru încălcarea regulilor de utilizare. Contactați asistența dacă considerați că este o greșeală."
 
 msgctxt "in-app-notifications"
 msgid "PORT FORWARDING WARNING"
 msgstr "AVERTISMENT PORT FORWARDING"
 
 msgctxt "port-forwarding-view"
-msgid "Access suspended for port-forwarding abuse until %(date)s."
-msgstr "Acces suspendat pentru abuz de port forwarding până la %(date)s."
+msgid "Access revoked for port-forwarding abuse until %(date)s."
+msgstr "Acces revocat pentru abuz de port forwarding până la %(date)s."
 
 msgctxt "port-forwarding-view"
-msgid "Access suspended for port-forwarding abuse."
-msgstr "Acces suspendat pentru abuz de port forwarding."
+msgid "Access revoked for port-forwarding abuse."
+msgstr "Acces revocat pentru abuz de port forwarding."
 
 msgctxt "port-forwarding-view"
-msgid "Access suspended until %(date)s."
-msgstr "Acces suspendat până la %(date)s."
+msgid "Access revoked until %(date)s."
+msgstr "Acces revocat până la %(date)s."
 
 msgctxt "port-forwarding-view"
-msgid "Access suspended."
-msgstr "Acces suspendat."
+msgid "Access revoked."
+msgstr "Acces revocat."
 
 msgctxt "port-forwarding-view"
 msgid "Case reference: %(reference)s"
@@ -5151,7 +5147,7 @@ msgstr "spam"
 
 msgctxt "port-forwarding-view"
 msgid "To contest a warning, write to %(email)s quoting its case reference."
-msgstr "Pentru a contesta un avertisment, scrie la %(email)s citând referința dosarului."
+msgstr "Pentru a contesta un avertisment, scrieți la %(email)s citând referința dosarului."
 
 msgctxt "port-forwarding-view"
 msgid "Warning %(ordinal)d of %(threshold)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
@@ -5167,4 +5163,4 @@ msgstr "Avertismente"
 
 msgctxt "port-forwarding-view"
 msgid "Warnings and how to contest them"
-msgstr "Avertismentele și cum le contești"
+msgstr "Avertismentele și cum le contestați"

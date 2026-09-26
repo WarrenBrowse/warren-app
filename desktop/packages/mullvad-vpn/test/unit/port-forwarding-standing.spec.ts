@@ -59,7 +59,7 @@ describe('the port-forwarding view standing section', () => {
     );
 
     expect(section?.ban).to.equal(
-      'Access suspended for port-forwarding abuse until September 24, 2027.',
+      'Access revoked for port-forwarding abuse until September 24, 2027.',
     );
   });
 
@@ -87,12 +87,12 @@ describe('a voucher redemption the ban refused', () => {
 
   it('names the ban and its end, and tells the user to keep the voucher', () => {
     expect(bannedVoucherLines(standing([], ban), 'en', NOW_MS)).to.deep.equal([
-      'Access suspended for port-forwarding abuse until September 24, 2027.',
-      'The voucher was not used: keep it and redeem it once the suspension ends.',
+      'Access revoked for port-forwarding abuse until September 24, 2027.',
+      'The voucher was not used: keep it and redeem it once the revocation ends.',
     ]);
   });
 
-  it('names a suspension even before the standing reports it', () => {
-    expect(bannedVoucherLines(null, 'en', NOW_MS)[0]).to.equal('Access suspended.');
+  it('names a revocation even before the standing reports it', () => {
+    expect(bannedVoucherLines(null, 'en', NOW_MS)[0]).to.equal('Access revoked.');
   });
 });

@@ -33,9 +33,9 @@ class SubscriptionLabelTest {
         every { getString(eq(R.string.subscription_voucher_redeemed), any()) } answers
             { "Voucher redeemed - subscription expires ${fmtArgs()[0]}" }
         every { getString(eq(R.string.account_ban_port_forwarding_until), any()) } answers
-            { "Access suspended for port-forwarding abuse until ${fmtArgs()[0]}." }
+            { "Access revoked for port-forwarding abuse until ${fmtArgs()[0]}." }
         every { getString(R.string.voucher_kept_while_banned) } returns
-            "The voucher was not used: keep it and redeem it once the suspension ends."
+            "The voucher was not used: keep it and redeem it once the revocation ends."
     }
 
     @Test
@@ -43,8 +43,8 @@ class SubscriptionLabelTest {
         val ban = AccountBan(portForwarding = true, lapsesAtUnixSecs = 1_821_744_000, inForce = true)
 
         assertEquals(
-            "Access suspended for port-forwarding abuse until September 24, 2027. " +
-                "The voucher was not used: keep it and redeem it once the suspension ends.",
+            "Access revoked for port-forwarding abuse until September 24, 2027. " +
+                "The voucher was not used: keep it and redeem it once the revocation ends.",
             voucherLabel(context, WarrenVoucherOutcome.Banned(ban), Locale.US),
         )
     }

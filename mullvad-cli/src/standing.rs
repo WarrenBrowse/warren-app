@@ -89,11 +89,11 @@ pub fn notice_line(notice: &NewStrike) -> String {
     strike_line(&notice.strike, notice.ordinal, notice.threshold)
 }
 
-/// The suspension line, with its lapse date when there is one.
+/// The revocation line, with its lapse date when there is one.
 pub fn ban_line(ban: &Ban) -> String {
     let why = match ban.reason {
-        BanReasonCode::PortForwardingAbuse => "Account suspended for port-forwarding abuse",
-        _ => "Account suspended",
+        BanReasonCode::PortForwardingAbuse => "Account revoked for port-forwarding abuse",
+        _ => "Account revoked",
     };
     match ban.lapses_at_unix_secs {
         Some(lapses_at) => format!("{why} until {}.", utc_day(lapses_at)),
@@ -263,7 +263,7 @@ pub(crate) mod tests {
     fn a_ban_names_its_lapse_day() {
         assert_eq!(
             ban_line(&pf_ban(Some(DAY + 365 * 86_400))),
-            "Account suspended for port-forwarding abuse until 2027-09-24."
+            "Account revoked for port-forwarding abuse until 2027-09-24."
         );
     }
 
@@ -275,7 +275,7 @@ pub(crate) mod tests {
                 banned_at_unix_secs: None,
                 lapses_at_unix_secs: None,
             }),
-            "Account suspended."
+            "Account revoked."
         );
     }
 
@@ -302,7 +302,7 @@ pub(crate) mod tests {
     fn a_ban_leads_the_status_lines() {
         let lines = status_lines(Some(&standing(Vec::new(), Some(pf_ban(None)))));
 
-        assert_eq!(lines, ["Account suspended for port-forwarding abuse."]);
+        assert_eq!(lines, ["Account revoked for port-forwarding abuse."]);
     }
 
     #[test]

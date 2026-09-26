@@ -1090,12 +1090,8 @@ msgid "You are logged in with an invalid account number. Please log out and try 
 msgstr "您登录时使用的帐号无效。请退出并尝试其他帐号。"
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "正在阻止网络：因违反使用政策，您的访问权限已被暂停。如果您认为这是误判，请联系支持团队。"
-
-msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended for abuse on a forwarded port. Contact support if you believe this is a mistake."
-msgstr "正在阻止网络：因转发端口存在滥用行为，您的访问权限已被暂停。如果您认为这是误判，请联系支持团队。"
+msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "正在阻止网络：因违反使用政策，您的访问权限已被撤销。如果您认为这是误判，请联系支持团队。"
 
 msgctxt "auth-failure"
 msgid "Unable to authenticate account. Please report the problem on our community forum."
@@ -5465,8 +5461,8 @@ msgid "Forum name"
 msgstr "论坛名称"
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "正在阻断网络：由于转发端口被反复举报滥用，您的访问已被暂停。您可以在 %(url)s 提出申诉"
+msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "正在阻断网络：由于转发端口被反复举报滥用，您的访问已被撤销。您可以在 %(url)s 提出申诉"
 
 msgctxt "forum-activity-view"
 msgid "%(actor)s liked your post"
@@ -5550,7 +5546,7 @@ msgid "Open"
 msgstr "打开"
 
 msgctxt "port-forwarding-view"
-msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
 msgstr "转发端口可以从互联网访问。如果第三方举报来自该端口的滥用行为，我们会关闭端口并在你的账户上记一次违规；90 天内三次将吊销访问权限。详情与申诉方式：%(url)s"
 
 msgctxt "port-forwarding-view"

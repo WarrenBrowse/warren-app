@@ -574,9 +574,9 @@ msgid "Paid until"
 msgstr ""
 
 #. Shown on the automatic renewal block while the account is
-#. suspended: a suspended account cannot receive the time.
+#. revoked: a revoked account cannot receive the time.
 msgctxt "account-view"
-msgid "Paused while access is suspended: nothing is charged."
+msgid "Paused while access is revoked: nothing is charged."
 msgstr ""
 
 msgctxt "account-view"
@@ -1039,24 +1039,24 @@ msgid "Blocking internet: account is out of time"
 msgstr ""
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
 msgstr ""
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake."
+msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
 msgstr ""
 
 #. Available placeholders:
-#. %(date)s - the day the suspension ends, e.g. 24 September 2027
+#. %(date)s - the day the revocation ends, e.g. 24 September 2027
 #. %(url)s - the page explaining how to contest it
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
 msgstr ""
 
 #. Available placeholder:
-#. %(date)s - the day the suspension ends, e.g. 24 September 2027
+#. %(date)s - the day the revocation ends, e.g. 24 September 2027
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
 msgstr ""
 
 msgctxt "auth-failure"
@@ -2927,7 +2927,7 @@ msgid "+ Add a port"
 msgstr ""
 
 msgctxt "port-forwarding-view"
-msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
 msgstr ""
 
 #. Description of the port-forwarding notification setting.
@@ -2936,23 +2936,23 @@ msgid "A system notification shows the new port number."
 msgstr ""
 
 #. Available placeholder:
-#. %(date)s - the day the suspension ends, e.g. 24 September 2027
+#. %(date)s - the day the revocation ends, e.g. 24 September 2027
 msgctxt "port-forwarding-view"
-msgid "Access suspended for port-forwarding abuse until %(date)s."
+msgid "Access revoked for port-forwarding abuse until %(date)s."
 msgstr ""
 
 msgctxt "port-forwarding-view"
-msgid "Access suspended for port-forwarding abuse."
+msgid "Access revoked for port-forwarding abuse."
 msgstr ""
 
 #. Available placeholder:
-#. %(date)s - the day the suspension ends, e.g. 24 September 2027
+#. %(date)s - the day the revocation ends, e.g. 24 September 2027
 msgctxt "port-forwarding-view"
-msgid "Access suspended until %(date)s."
+msgid "Access revoked until %(date)s."
 msgstr ""
 
 msgctxt "port-forwarding-view"
-msgid "Access suspended."
+msgid "Access revoked."
 msgstr ""
 
 msgctxt "port-forwarding-view"
@@ -3215,7 +3215,7 @@ msgctxt "port-forwarding-view"
 msgid "Waiting for a public port"
 msgstr ""
 
-#. A strike on the account. Available placeholders:
+#. A warning on the account. Available placeholders:
 #. %(ordinal)d - the rank of this warning, from 1
 #. %(threshold)d - the number of warnings that revokes the account
 #. %(port)d - the forwarded public port that was closed
@@ -3225,7 +3225,7 @@ msgctxt "port-forwarding-view"
 msgid "Warning %(ordinal)d of %(threshold)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
 msgstr ""
 
-#. A strike on the account, when the number that revokes it
+#. A warning on the account, when the number that revokes it
 #. is not known yet. Available placeholders:
 #. %(ordinal)d - the rank of this warning, from 1
 #. %(port)d - the forwarded public port that was closed
@@ -3284,9 +3284,9 @@ msgid "Redeem"
 msgstr ""
 
 #. Shown when a voucher could not be redeemed because the
-#. account is suspended. The voucher was left unused.
+#. account is revoked. The voucher was left unused.
 msgctxt "redeem-voucher-view"
-msgid "The voucher was not used: keep it and redeem it once the suspension ends."
+msgid "The voucher was not used: keep it and redeem it once the revocation ends."
 msgstr ""
 
 msgctxt "redeem-voucher-view"

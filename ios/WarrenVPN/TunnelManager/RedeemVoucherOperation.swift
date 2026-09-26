@@ -95,7 +95,7 @@ class RedeemVoucherOperation: ResultOperation<REST.SubmitVoucherResponse>, @unch
             return VoucherRedemptionError(
                 message: WarrenAccountStandingText.ban(ban) + " "
                     + String(
-                        localized: "The voucher was not used: keep it and redeem it once the suspension ends.",
+                        localized: "The voucher was not used: keep it and redeem it once the revocation ends.",
                         table: "Settings"
                     )
             )

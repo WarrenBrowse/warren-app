@@ -11417,7 +11417,7 @@
         }
       }
     },
-    "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, Warren closes the port and records a strike on the account; three strikes within 90 days revoke access.": {
+    "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, Warren closes the port and records a warning on the account; three warnings within 90 days revoke access.": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
@@ -11441,7 +11441,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, Warren closes the port and records a strike on the account; three strikes within 90 days revoke access."
+            "value": "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, Warren closes the port and records a warning on the account; three warnings within 90 days revoke access."
           }
         },
         "es": {
@@ -11465,7 +11465,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un port redirigé est joignable depuis internet. Si un tiers signale un abus qui en provient, Warren ferme le port et inscrit un avertissement au compte ; trois avertissements en 90 jours retirent l'accès."
+            "value": "Un port redirigé est joignable depuis internet. Si un tiers signale un abus qui en provient, Warren ferme le port et inscrit un avertissement au compte ; trois avertissements en 90 jours révoquent l'accès."
           }
         },
         "it": {
@@ -11519,7 +11519,7 @@
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un port redirecționat este accesibil din internet. Dacă un terț raportează un abuz venit de acolo, Warren închide portul și înregistrează un avertisment pe cont; trei avertismente în 90 de zile retrag accesul."
+            "value": "Un port redirecționat este accesibil din internet. Dacă un terț raportează un abuz venit de acolo, Warren închide portul și înregistrează un avertisment pe cont; trei avertismente în 90 de zile duc la revocarea accesului."
           }
         },
         "ru": {
@@ -11864,7 +11864,7 @@
         }
       }
     },
-    "Details, and how to contest a strike": {
+    "Details, and how to contest a warning": {
       "extractionState": "manual",
       "localizations": {
         "ar": {
@@ -11888,7 +11888,7 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Details, and how to contest a strike"
+            "value": "Details, and how to contest a warning"
           }
         },
         "es": {
@@ -14993,598 +14993,598 @@
         }
       }
     },
-    "Access suspended for port-forwarding abuse until %@.": {
+    "Access revoked for port-forwarding abuse until %@.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Access suspended for port-forwarding abuse until %@."
+            "value": "Access revoked for port-forwarding abuse until %@."
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تم تعليق الوصول بسبب إساءة استخدام إعادة توجيه المنافذ حتى %@."
+            "value": "تم إلغاء الوصول بسبب إساءة استخدام إعادة توجيه المنافذ حتى %@."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adgang suspenderet for misbrug af port forwarding indtil %@."
+            "value": "Adgang inddraget for misbrug af port forwarding indtil %@."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zugang bis %@ wegen Port-Forwarding-Missbrauchs gesperrt."
+            "value": "Zugang bis %@ wegen Port-Forwarding-Missbrauchs entzogen."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acceso suspendido por abuso del port forwarding hasta el %@."
+            "value": "Acceso revocado por abuso del port forwarding hasta el %@."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "دسترسی به دلیل سوءاستفاده از هدایت درگاه تا %@ معلق شد."
+            "value": "دسترسی به دلیل سوءاستفاده از هدایت درگاه تا %@ لغو شد."
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Käyttöoikeus keskeytetty port forwardingin väärinkäytön vuoksi %@ asti."
+            "value": "Käyttöoikeus peruttu port forwardingin väärinkäytön vuoksi %@ asti."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accès suspendu pour abus du port forwarding jusqu'au %@."
+            "value": "Accès révoqué pour abus du port forwarding jusqu'au %@."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accesso sospeso per abuso del port forwarding fino al %@."
+            "value": "Accesso revocato per abuso del port forwarding fino al %@."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ポート転送の不正利用により、%@ までアクセスが停止されています。"
+            "value": "ポート転送の不正利用により、%@ までアクセスが取り消されています。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "포트 포워딩 남용으로 %@까지 액세스가 정지되었습니다."
+            "value": "포트 포워딩 남용으로 %@까지 액세스가 취소되었습니다."
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "ပို့တ် ပြန်ညွှန်းခြင်းကို အလွဲသုံးမှုကြောင့် %@ အထိ ဝင်ရောက်ခွင့်ကို ဆိုင်းငံ့ထားသည်။"
+            "value": "ပို့တ် ပြန်ညွှန်းခြင်းကို အလွဲသုံးမှုကြောင့် %@ အထိ ဝင်ရောက်ခွင့်ကို ရုပ်သိမ်းထားသည်။"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tilgang suspendert for misbruk av port forwarding frem til %@."
+            "value": "Tilgang tilbakekalt for misbruk av port forwarding frem til %@."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Toegang opgeschort wegens misbruik van port forwarding tot %@."
+            "value": "Toegang ingetrokken wegens misbruik van port forwarding tot %@."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dostęp zawieszony za nadużycie port forwarding do %@."
+            "value": "Dostęp cofnięty za nadużycie port forwarding do %@."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acesso suspenso por abuso do port forwarding até %@."
+            "value": "Acesso revogado por abuso do port forwarding até %@."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acces suspendat pentru abuz de port forwarding până la %@."
+            "value": "Acces revocat pentru abuz de port forwarding până la %@."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Доступ приостановлен до %@ за злоупотребление переадресацией портов."
+            "value": "Доступ отозван до %@ за злоупотребление переадресацией портов."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Åtkomsten avstängd för missbruk av port forwarding fram till %@."
+            "value": "Åtkomsten återkallad för missbruk av port forwarding fram till %@."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "การเข้าถึงถูกระงับจนถึง %@ เนื่องจากใช้การส่งต่อพอร์ตในทางที่ผิด"
+            "value": "การเข้าถึงถูกเพิกถอนจนถึง %@ เนื่องจากใช้การส่งต่อพอร์ตในทางที่ผิด"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Port forwarding kötüye kullanımı nedeniyle erişim %@ tarihine kadar askıya alındı."
+            "value": "Port forwarding kötüye kullanımı nedeniyle erişim %@ tarihine kadar iptal edildi."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Доступ призупинено до %@ за зловживання переадресацією портів."
+            "value": "Доступ відкликано до %@ за зловживання переадресацією портів."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "因滥用端口转发，访问权限已暂停至 %@。"
+            "value": "因滥用端口转发，访问权限已撤销至 %@。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "因濫用連接埠轉發，存取權限已暫停至 %@。"
+            "value": "因濫用連接埠轉發，存取權限已撤銷至 %@。"
           }
         }
       }
     },
-    "Access suspended for port-forwarding abuse.": {
+    "Access revoked for port-forwarding abuse.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Access suspended for port-forwarding abuse."
+            "value": "Access revoked for port-forwarding abuse."
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تم تعليق الوصول بسبب إساءة استخدام إعادة توجيه المنافذ."
+            "value": "تم إلغاء الوصول بسبب إساءة استخدام إعادة توجيه المنافذ."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adgang suspenderet for misbrug af port forwarding."
+            "value": "Adgang inddraget for misbrug af port forwarding."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zugang wegen Port-Forwarding-Missbrauchs gesperrt."
+            "value": "Zugang wegen Port-Forwarding-Missbrauchs entzogen."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acceso suspendido por abuso del port forwarding."
+            "value": "Acceso revocado por abuso del port forwarding."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "دسترسی به دلیل سوءاستفاده از هدایت درگاه معلق شد."
+            "value": "دسترسی به دلیل سوءاستفاده از هدایت درگاه لغو شد."
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Käyttöoikeus keskeytetty port forwardingin väärinkäytön vuoksi."
+            "value": "Käyttöoikeus peruttu port forwardingin väärinkäytön vuoksi."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accès suspendu pour abus du port forwarding."
+            "value": "Accès révoqué pour abus du port forwarding."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accesso sospeso per abuso del port forwarding."
+            "value": "Accesso revocato per abuso del port forwarding."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ポート転送の不正利用により、アクセスが停止されています。"
+            "value": "ポート転送の不正利用により、アクセスが取り消されています。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "포트 포워딩 남용으로 액세스가 정지되었습니다."
+            "value": "포트 포워딩 남용으로 액세스가 취소되었습니다."
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "ပို့တ် ပြန်ညွှန်းခြင်းကို အလွဲသုံးမှုကြောင့် ဝင်ရောက်ခွင့်ကို ဆိုင်းငံ့ထားသည်။"
+            "value": "ပို့တ် ပြန်ညွှန်းခြင်းကို အလွဲသုံးမှုကြောင့် ဝင်ရောက်ခွင့်ကို ရုပ်သိမ်းထားသည်။"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tilgang suspendert for misbruk av port forwarding."
+            "value": "Tilgang tilbakekalt for misbruk av port forwarding."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Toegang opgeschort wegens misbruik van port forwarding."
+            "value": "Toegang ingetrokken wegens misbruik van port forwarding."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dostęp zawieszony za nadużycie port forwarding."
+            "value": "Dostęp cofnięty za nadużycie port forwarding."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acesso suspenso por abuso do port forwarding."
+            "value": "Acesso revogado por abuso do port forwarding."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acces suspendat pentru abuz de port forwarding."
+            "value": "Acces revocat pentru abuz de port forwarding."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Доступ приостановлен за злоупотребление переадресацией портов."
+            "value": "Доступ отозван за злоупотребление переадресацией портов."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Åtkomsten avstängd för missbruk av port forwarding."
+            "value": "Åtkomsten återkallad för missbruk av port forwarding."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "การเข้าถึงถูกระงับเนื่องจากใช้การส่งต่อพอร์ตในทางที่ผิด"
+            "value": "การเข้าถึงถูกเพิกถอนเนื่องจากใช้การส่งต่อพอร์ตในทางที่ผิด"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Port forwarding kötüye kullanımı nedeniyle erişim askıya alındı."
+            "value": "Port forwarding kötüye kullanımı nedeniyle erişim iptal edildi."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Доступ призупинено за зловживання переадресацією портів."
+            "value": "Доступ відкликано за зловживання переадресацією портів."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "因滥用端口转发，访问权限已暂停。"
+            "value": "因滥用端口转发，访问权限已撤销。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "因濫用連接埠轉發，存取權限已暫停。"
+            "value": "因濫用連接埠轉發，存取權限已撤銷。"
           }
         }
       }
     },
-    "Access suspended until %@.": {
+    "Access revoked until %@.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Access suspended until %@."
+            "value": "Access revoked until %@."
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تم تعليق الوصول حتى %@."
+            "value": "تم إلغاء الوصول حتى %@."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adgang suspenderet indtil %@."
+            "value": "Adgang inddraget indtil %@."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zugang bis %@ gesperrt."
+            "value": "Zugang bis %@ entzogen."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acceso suspendido hasta el %@."
+            "value": "Acceso revocado hasta el %@."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "دسترسی تا %@ معلق شد."
+            "value": "دسترسی تا %@ لغو شد."
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Käyttöoikeus keskeytetty %@ asti."
+            "value": "Käyttöoikeus peruttu %@ asti."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accès suspendu jusqu'au %@."
+            "value": "Accès révoqué jusqu'au %@."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accesso sospeso fino al %@."
+            "value": "Accesso revocato fino al %@."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ までアクセスが停止されています。"
+            "value": "%@ までアクセスが取り消されています。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@까지 액세스가 정지되었습니다."
+            "value": "%@까지 액세스가 취소되었습니다."
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "%@ အထိ ဝင်ရောက်ခွင့်ကို ဆိုင်းငံ့ထားသည်။"
+            "value": "%@ အထိ ဝင်ရောက်ခွင့်ကို ရုပ်သိမ်းထားသည်။"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tilgang suspendert frem til %@."
+            "value": "Tilgang tilbakekalt frem til %@."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Toegang opgeschort tot %@."
+            "value": "Toegang ingetrokken tot %@."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dostęp zawieszony do %@."
+            "value": "Dostęp cofnięty do %@."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acesso suspenso até %@."
+            "value": "Acesso revogado até %@."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acces suspendat până la %@."
+            "value": "Acces revocat până la %@."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Доступ приостановлен до %@."
+            "value": "Доступ отозван до %@."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Åtkomsten avstängd fram till %@."
+            "value": "Åtkomsten återkallad fram till %@."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "การเข้าถึงถูกระงับจนถึง %@"
+            "value": "การเข้าถึงถูกเพิกถอนจนถึง %@"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Erişim %@ tarihine kadar askıya alındı."
+            "value": "Erişim %@ tarihine kadar iptal edildi."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Доступ призупинено до %@."
+            "value": "Доступ відкликано до %@."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "访问权限已暂停至 %@。"
+            "value": "访问权限已撤销至 %@。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "存取權限已暫停至 %@。"
+            "value": "存取權限已撤銷至 %@。"
           }
         }
       }
     },
-    "Access suspended.": {
+    "Access revoked.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Access suspended."
+            "value": "Access revoked."
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تم تعليق الوصول."
+            "value": "تم إلغاء الوصول."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Adgang suspenderet."
+            "value": "Adgang inddraget."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Zugang gesperrt."
+            "value": "Zugang entzogen."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acceso suspendido."
+            "value": "Acceso revocado."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "دسترسی معلق شد."
+            "value": "دسترسی لغو شد."
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Käyttöoikeus keskeytetty."
+            "value": "Käyttöoikeus peruttu."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accès suspendu."
+            "value": "Accès révoqué."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accesso sospeso."
+            "value": "Accesso revocato."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "アクセスが停止されています。"
+            "value": "アクセスが取り消されています。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "액세스가 정지되었습니다."
+            "value": "액세스가 취소되었습니다."
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "ဝင်ရောက်ခွင့်ကို ဆိုင်းငံ့ထားသည်။"
+            "value": "ဝင်ရောက်ခွင့်ကို ရုပ်သိမ်းထားသည်။"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tilgang suspendert."
+            "value": "Tilgang tilbakekalt."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Toegang opgeschort."
+            "value": "Toegang ingetrokken."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dostęp zawieszony."
+            "value": "Dostęp cofnięty."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acesso suspenso."
+            "value": "Acesso revogado."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acces suspendat."
+            "value": "Acces revocat."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Доступ приостановлен."
+            "value": "Доступ отозван."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Åtkomsten avstängd."
+            "value": "Åtkomsten återkallad."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "การเข้าถึงถูกระงับ"
+            "value": "การเข้าถึงถูกเพิกถอน"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Erişim askıya alındı."
+            "value": "Erişim iptal edildi."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Доступ призупинено."
+            "value": "Доступ відкликано."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "访问权限已暂停。"
+            "value": "访问权限已撤销。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "存取權限已暫停。"
+            "value": "存取權限已撤銷。"
           }
         }
       }
@@ -16436,7 +16436,7 @@
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pentru a contesta un avertisment, scrie la %@ citând referința dosarului."
+            "value": "Pentru a contesta un avertisment, scrieți la %@ citând referința dosarului."
           }
         },
         "ru": {
@@ -16930,598 +16930,598 @@
         }
       }
     },
-    "Your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %@": {
+    "Your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %@"
+            "value": "Your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %@"
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تم تعليق وصولك بعد بلاغات إساءة استخدام متكررة بشأن منفذ مُعاد توجيهه. يمكنك الاعتراض على ذلك عبر %@"
+            "value": "تم إلغاء وصولك بعد بلاغات إساءة استخدام متكررة بشأن منفذ مُعاد توجيهه. يمكنك الاعتراض على ذلك عبر %@"
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Din adgang er suspenderet efter gentagne misbrugsrapporter om en videresendt port. Du kan bestride dette på %@"
+            "value": "Din adgang er inddraget efter gentagne misbrugsrapporter om en videresendt port. Du kan bestride dette på %@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dein Zugang wurde nach wiederholten Missbrauchsmeldungen zu einem weitergeleiteten Port gesperrt. Du kannst dagegen Einspruch erheben unter %@"
+            "value": "Dein Zugang wurde nach wiederholten Missbrauchsmeldungen zu einem weitergeleiteten Port entzogen. Du kannst dagegen Einspruch erheben unter %@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tu acceso ha sido suspendido tras varios informes de abuso relacionados con un puerto reenviado. Puedes recurrir esta decisión en %@"
+            "value": "Tu acceso ha sido revocado tras varios informes de abuso relacionados con un puerto reenviado. Puedes recurrir esta decisión en %@"
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "دسترسی شما پس از گزارش‌های مکرر سوءاستفاده درباره یک درگاه هدایت‌شده معلق شد. می‌توانید در %@ اعتراض کنید"
+            "value": "دسترسی شما پس از گزارش‌های مکرر سوءاستفاده درباره یک درگاه هدایت‌شده لغو شد. می‌توانید در %@ اعتراض کنید"
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Käyttöoikeutesi on keskeytetty toistuvien väärinkäyttöilmoitusten vuoksi, jotka koskevat ohjattua porttia. Voit riitauttaa tämän osoitteessa %@"
+            "value": "Käyttöoikeutesi on peruttu toistuvien väärinkäyttöilmoitusten vuoksi, jotka koskevat ohjattua porttia. Voit riitauttaa tämän osoitteessa %@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Votre accès a été suspendu après des signalements d'abus répétés concernant un port redirigé. Vous pouvez contester cette décision sur %@"
+            "value": "Votre accès a été révoqué après des signalements d'abus répétés concernant un port redirigé. Vous pouvez contester cette décision sur %@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il tuo accesso è stato sospeso dopo ripetute segnalazioni di abuso relative a una porta inoltrata. Puoi contestare la decisione su %@"
+            "value": "Il tuo accesso è stato revocato dopo ripetute segnalazioni di abuso relative a una porta inoltrata. Puoi contestare la decisione su %@"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "転送ポートに関する不正利用の報告が繰り返されたため、アクセスが停止されました。異議申し立ては %@ から行えます"
+            "value": "転送ポートに関する不正利用の報告が繰り返されたため、アクセスが取り消されました。異議申し立ては %@ から行えます"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "포워딩된 포트에 대한 남용 신고가 반복되어 액세스가 정지되었습니다. %@ 에서 이의를 제기할 수 있습니다"
+            "value": "포워딩된 포트에 대한 남용 신고가 반복되어 액세스가 취소되었습니다. %@ 에서 이의를 제기할 수 있습니다"
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "ပြန်ညွှန်းထားသော ပို့တ်နှင့်ပတ်သက်၍ အလွဲသုံးမှု အစီရင်ခံစာများ ထပ်ခါထပ်ခါ ရရှိပြီးနောက် သင့်ဝင်ရောက်ခွင့်ကို ဆိုင်းငံ့ထားသည်။ %@ တွင် အယူခံဝင်နိုင်သည်"
+            "value": "ပြန်ညွှန်းထားသော ပို့တ်နှင့်ပတ်သက်၍ အလွဲသုံးမှု အစီရင်ခံစာများ ထပ်ခါထပ်ခါ ရရှိပြီးနောက် သင့်ဝင်ရောက်ခွင့်ကို ရုပ်သိမ်းထားသည်။ %@ တွင် အယူခံဝင်နိုင်သည်"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tilgangen din er suspendert etter gjentatte misbruksrapporter om en videresendt port. Du kan bestride dette på %@"
+            "value": "Tilgangen din er tilbakekalt etter gjentatte misbruksrapporter om en videresendt port. Du kan bestride dette på %@"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je toegang is opgeschort na herhaalde misbruikmeldingen over een doorgeschakelde poort. Je kunt hiertegen bezwaar maken op %@"
+            "value": "Je toegang is ingetrokken na herhaalde misbruikmeldingen over een doorgeschakelde poort. Je kunt hiertegen bezwaar maken op %@"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Twój dostęp został zawieszony po powtarzających się zgłoszeniach nadużyć dotyczących przekierowanego portu. Możesz to zakwestionować na %@"
+            "value": "Twój dostęp został cofnięty po powtarzających się zgłoszeniach nadużyć dotyczących przekierowanego portu. Możesz to zakwestionować na %@"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "O seu acesso foi suspenso após denúncias repetidas de abuso relacionadas com uma porta encaminhada. Pode contestar em %@"
+            "value": "O seu acesso foi revogado após denúncias repetidas de abuso relacionadas com uma porta encaminhada. Pode contestar em %@"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accesul dvs. a fost suspendat după raportări repetate de abuz privind un port redirecționat. Puteți contesta la %@"
+            "value": "Accesul dvs. a fost revocat după raportări repetate de abuz privind un port redirecționat. Puteți contesta la %@"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ваш доступ приостановлен после повторных жалоб на злоупотребления с переадресованным портом. Оспорить решение можно на %@"
+            "value": "Ваш доступ отозван после повторных жалоб на злоупотребления с переадресованным портом. Оспорить решение можно на %@"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Din åtkomst har stängts av efter upprepade missbruksanmälningar om en vidarebefordrad port. Du kan bestrida detta på %@"
+            "value": "Din åtkomst har återkallats efter upprepade missbruksanmälningar om en vidarebefordrad port. Du kan bestrida detta på %@"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "การเข้าถึงของคุณถูกระงับหลังมีรายงานการใช้งานในทางที่ผิดซ้ำ ๆ เกี่ยวกับพอร์ตที่ส่งต่อ คุณสามารถโต้แย้งได้ที่ %@"
+            "value": "การเข้าถึงของคุณถูกเพิกถอนหลังมีรายงานการใช้งานในทางที่ผิดซ้ำ ๆ เกี่ยวกับพอร์ตที่ส่งต่อ คุณสามารถโต้แย้งได้ที่ %@"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yönlendirilen bir bağlantı noktasıyla ilgili tekrarlanan kötüye kullanım bildirimleri sonrasında erişiminiz askıya alındı. Buna %@ adresinden itiraz edebilirsiniz"
+            "value": "Yönlendirilen bir bağlantı noktasıyla ilgili tekrarlanan kötüye kullanım bildirimleri sonrasında erişiminiz iptal edildi. Buna %@ adresinden itiraz edebilirsiniz"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ваш доступ призупинено після повторних скарг на зловживання переадресованим портом. Оскаржити рішення можна на %@"
+            "value": "Ваш доступ відкликано після повторних скарг на зловживання переадресованим портом. Оскаржити рішення можна на %@"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "因转发端口被多次举报滥用，你的访问权限已被暂停。你可以在 %@ 提出申诉"
+            "value": "因转发端口被多次举报滥用，你的访问权限已被撤销。你可以在 %@ 提出申诉"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "因轉發連接埠遭多次檢舉濫用，您的存取權限已遭暫停。您可以在 %@ 提出申訴"
+            "value": "因轉發連接埠遭多次檢舉濫用，您的存取權限已遭撤銷。您可以在 %@ 提出申訴"
           }
         }
       }
     },
-    "Your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake.": {
+    "Your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake."
+            "value": "Your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تم تعليق وصولك بسبب مخالفة سياسة الاستخدام. تواصل مع الدعم إذا كنت تعتقد أن هذا خطأ."
+            "value": "تم إلغاء وصولك بسبب مخالفة سياسة الاستخدام. تواصل مع الدعم إذا كنت تعتقد أن هذا خطأ."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Din adgang er suspenderet på grund af en overtrædelse af brugspolitikken. Kontakt support, hvis du mener, at dette er en fejl."
+            "value": "Din adgang er inddraget på grund af en overtrædelse af brugspolitikken. Kontakt support, hvis du mener, at dette er en fejl."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dein Zugang wurde wegen eines Verstoßes gegen die Nutzungsrichtlinie gesperrt. Wende dich an den Support, wenn du das für einen Fehler hältst."
+            "value": "Dein Zugang wurde wegen eines Verstoßes gegen die Nutzungsrichtlinie entzogen. Wende dich an den Support, wenn du das für einen Fehler hältst."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tu acceso ha sido suspendido por incumplir la política de uso. Contacta con el soporte si crees que se trata de un error."
+            "value": "Tu acceso ha sido revocado por incumplir la política de uso. Contacta con el soporte si crees que se trata de un error."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "دسترسی شما به دلیل نقض سیاست استفاده معلق شده است. اگر فکر می‌کنید این یک اشتباه است، با پشتیبانی تماس بگیرید."
+            "value": "دسترسی شما به دلیل نقض سیاست استفاده لغو شده است. اگر فکر می‌کنید این یک اشتباه است، با پشتیبانی تماس بگیرید."
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Käyttöoikeutesi on keskeytetty käyttöehtojen rikkomisen vuoksi. Ota yhteyttä tukeen, jos uskot tämän olevan virhe."
+            "value": "Käyttöoikeutesi on peruttu käyttöehtojen rikkomisen vuoksi. Ota yhteyttä tukeen, jos uskot tämän olevan virhe."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Votre accès a été suspendu pour non-respect des conditions d'utilisation. Contactez le support si vous pensez qu'il s'agit d'une erreur."
+            "value": "Votre accès a été révoqué pour non-respect des conditions d'utilisation. Contactez le support si vous pensez qu'il s'agit d'une erreur."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il tuo accesso è stato sospeso per violazione della politica di utilizzo. Contatta l’assistenza se ritieni che si tratti di un errore."
+            "value": "Il tuo accesso è stato revocato per violazione della politica di utilizzo. Contatta l’assistenza se ritieni che si tratti di un errore."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "利用ポリシー違反のためアクセスが停止されました。誤りだと思われる場合はサポートにお問い合わせください。"
+            "value": "利用ポリシー違反のためアクセスが取り消されました。誤りだと思われる場合はサポートにお問い合わせください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이용 정책 위반으로 액세스가 정지되었습니다. 잘못된 조치라고 생각되면 지원팀에 문의하세요."
+            "value": "이용 정책 위반으로 액세스가 취소되었습니다. 잘못된 조치라고 생각되면 지원팀에 문의하세요."
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "အသုံးပြုမှု မူဝါဒ ချိုးဖောက်မှုကြောင့် သင့်ဝင်ရောက်ခွင့်ကို ဆိုင်းငံ့ထားသည်။ မှားယွင်းသည်ဟု ယူဆပါက အထောက်အပံ့သို့ ဆက်သွယ်ပါ။"
+            "value": "အသုံးပြုမှု မူဝါဒ ချိုးဖောက်မှုကြောင့် သင့်ဝင်ရောက်ခွင့်ကို ရုပ်သိမ်းထားသည်။ မှားယွင်းသည်ဟု ယူဆပါက အထောက်အပံ့သို့ ဆက်သွယ်ပါ။"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tilgangen din er suspendert på grunn av brudd på bruksvilkårene. Kontakt kundestøtte hvis du mener dette er en feil."
+            "value": "Tilgangen din er tilbakekalt på grunn av brudd på bruksvilkårene. Kontakt kundestøtte hvis du mener dette er en feil."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je toegang is opgeschort wegens schending van het gebruiksbeleid. Neem contact op met de ondersteuning als je denkt dat dit een vergissing is."
+            "value": "Je toegang is ingetrokken wegens schending van het gebruiksbeleid. Neem contact op met de ondersteuning als je denkt dat dit een vergissing is."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Twój dostęp został zawieszony z powodu naruszenia zasad użytkowania. Skontaktuj się z pomocą techniczną, jeśli uważasz, że to pomyłka."
+            "value": "Twój dostęp został cofnięty z powodu naruszenia zasad użytkowania. Skontaktuj się z pomocą techniczną, jeśli uważasz, że to pomyłka."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "O seu acesso foi suspenso por violação da política de utilização. Contacte o suporte se considerar que se trata de um erro."
+            "value": "O seu acesso foi revogado por violação da política de utilização. Contacte o suporte se considerar que se trata de um erro."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accesul dvs. a fost suspendat pentru încălcarea politicii de utilizare. Contactați asistența dacă credeți că este o greșeală."
+            "value": "Accesul dvs. a fost revocat pentru încălcarea politicii de utilizare. Contactați asistența dacă credeți că este o greșeală."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ваш доступ приостановлен за нарушение правил использования. Обратитесь в поддержку, если считаете это ошибкой."
+            "value": "Ваш доступ отозван за нарушение правил использования. Обратитесь в поддержку, если считаете это ошибкой."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Din åtkomst har stängts av på grund av ett brott mot användningspolicyn. Kontakta supporten om du tror att detta är ett misstag."
+            "value": "Din åtkomst har återkallats på grund av ett brott mot användningspolicyn. Kontakta supporten om du tror att detta är ett misstag."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "การเข้าถึงของคุณถูกระงับเนื่องจากละเมิดนโยบายการใช้งาน ติดต่อฝ่ายสนับสนุนหากคุณคิดว่านี่เป็นความผิดพลาด"
+            "value": "การเข้าถึงของคุณถูกเพิกถอนเนื่องจากละเมิดนโยบายการใช้งาน ติดต่อฝ่ายสนับสนุนหากคุณคิดว่านี่เป็นความผิดพลาด"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kullanım politikası ihlali nedeniyle erişiminiz askıya alındı. Bunun bir hata olduğunu düşünüyorsanız destek ekibine başvurun."
+            "value": "Kullanım politikası ihlali nedeniyle erişiminiz iptal edildi. Bunun bir hata olduğunu düşünüyorsanız destek ekibine başvurun."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ваш доступ призупинено за порушення правил використання. Зверніться до підтримки, якщо вважаєте це помилкою."
+            "value": "Ваш доступ відкликано за порушення правил використання. Зверніться до підтримки, якщо вважаєте це помилкою."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "因违反使用政策，你的访问权限已被暂停。如果你认为这是误判，请联系支持团队。"
+            "value": "因违反使用政策，你的访问权限已被撤销。如果你认为这是误判，请联系支持团队。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "因違反使用政策，您的存取權限已遭暫停。若您認為這是誤判，請聯絡支援團隊。"
+            "value": "因違反使用政策，您的存取權限已遭撤銷。若您認為這是誤判，請聯絡支援團隊。"
           }
         }
       }
     },
-    "Your access has been suspended until %1$@ after repeated abuse reports about a forwarded port. You can contest this at %2$@": {
+    "Your access has been revoked until %1$@ after repeated abuse reports about a forwarded port. You can contest this at %2$@": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your access has been suspended until %1$@ after repeated abuse reports about a forwarded port. You can contest this at %2$@"
+            "value": "Your access has been revoked until %1$@ after repeated abuse reports about a forwarded port. You can contest this at %2$@"
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تم تعليق وصولك حتى %1$@ بعد بلاغات إساءة استخدام متكررة بشأن منفذ مُعاد توجيهه. يمكنك الاعتراض على ذلك عبر %2$@"
+            "value": "تم إلغاء وصولك حتى %1$@ بعد بلاغات إساءة استخدام متكررة بشأن منفذ مُعاد توجيهه. يمكنك الاعتراض على ذلك عبر %2$@"
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Din adgang er suspenderet indtil %1$@ efter gentagne misbrugsrapporter om en videresendt port. Du kan bestride dette på %2$@"
+            "value": "Din adgang er inddraget indtil %1$@ efter gentagne misbrugsrapporter om en videresendt port. Du kan bestride dette på %2$@"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dein Zugang wurde nach wiederholten Missbrauchsmeldungen zu einem weitergeleiteten Port bis %1$@ gesperrt. Du kannst dagegen Einspruch erheben unter %2$@"
+            "value": "Dein Zugang wurde nach wiederholten Missbrauchsmeldungen zu einem weitergeleiteten Port bis %1$@ entzogen. Du kannst dagegen Einspruch erheben unter %2$@"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tu acceso ha sido suspendido hasta el %1$@ tras varios informes de abuso relacionados con un puerto reenviado. Puedes recurrir esta decisión en %2$@"
+            "value": "Tu acceso ha sido revocado hasta el %1$@ tras varios informes de abuso relacionados con un puerto reenviado. Puedes recurrir esta decisión en %2$@"
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "دسترسی شما پس از گزارش‌های مکرر سوءاستفاده درباره یک درگاه هدایت‌شده تا %1$@ معلق شد. می‌توانید در %2$@ اعتراض کنید"
+            "value": "دسترسی شما پس از گزارش‌های مکرر سوءاستفاده درباره یک درگاه هدایت‌شده تا %1$@ لغو شد. می‌توانید در %2$@ اعتراض کنید"
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Käyttöoikeutesi on keskeytetty %1$@ asti toistuvien väärinkäyttöilmoitusten vuoksi, jotka koskevat ohjattua porttia. Voit riitauttaa tämän osoitteessa %2$@"
+            "value": "Käyttöoikeutesi on peruttu %1$@ asti toistuvien väärinkäyttöilmoitusten vuoksi, jotka koskevat ohjattua porttia. Voit riitauttaa tämän osoitteessa %2$@"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Votre accès a été suspendu jusqu'au %1$@ après des signalements d'abus répétés concernant un port redirigé. Vous pouvez contester cette décision sur %2$@"
+            "value": "Votre accès a été révoqué jusqu'au %1$@ après des signalements d'abus répétés concernant un port redirigé. Vous pouvez contester cette décision sur %2$@"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il tuo accesso è stato sospeso fino al %1$@ dopo ripetute segnalazioni di abuso relative a una porta inoltrata. Puoi contestare la decisione su %2$@"
+            "value": "Il tuo accesso è stato revocato fino al %1$@ dopo ripetute segnalazioni di abuso relative a una porta inoltrata. Puoi contestare la decisione su %2$@"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "転送ポートに関する不正利用の報告が繰り返されたため、%1$@ までアクセスが停止されました。異議申し立ては %2$@ から行えます"
+            "value": "転送ポートに関する不正利用の報告が繰り返されたため、%1$@ までアクセスが取り消されました。異議申し立ては %2$@ から行えます"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "포워딩된 포트에 대한 남용 신고가 반복되어 %1$@까지 액세스가 정지되었습니다. %2$@ 에서 이의를 제기할 수 있습니다"
+            "value": "포워딩된 포트에 대한 남용 신고가 반복되어 %1$@까지 액세스가 취소되었습니다. %2$@ 에서 이의를 제기할 수 있습니다"
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "ပြန်ညွှန်းထားသော ပို့တ်နှင့်ပတ်သက်၍ အလွဲသုံးမှု အစီရင်ခံစာများ ထပ်ခါထပ်ခါ ရရှိပြီးနောက် သင့်ဝင်ရောက်ခွင့်ကို %1$@ အထိ ဆိုင်းငံ့ထားသည်။ %2$@ တွင် အယူခံဝင်နိုင်သည်"
+            "value": "ပြန်ညွှန်းထားသော ပို့တ်နှင့်ပတ်သက်၍ အလွဲသုံးမှု အစီရင်ခံစာများ ထပ်ခါထပ်ခါ ရရှိပြီးနောက် သင့်ဝင်ရောက်ခွင့်ကို %1$@ အထိ ရုပ်သိမ်းထားသည်။ %2$@ တွင် အယူခံဝင်နိုင်သည်"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tilgangen din er suspendert frem til %1$@ etter gjentatte misbruksrapporter om en videresendt port. Du kan bestride dette på %2$@"
+            "value": "Tilgangen din er tilbakekalt frem til %1$@ etter gjentatte misbruksrapporter om en videresendt port. Du kan bestride dette på %2$@"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je toegang is opgeschort tot %1$@ na herhaalde misbruikmeldingen over een doorgeschakelde poort. Je kunt hiertegen bezwaar maken op %2$@"
+            "value": "Je toegang is ingetrokken tot %1$@ na herhaalde misbruikmeldingen over een doorgeschakelde poort. Je kunt hiertegen bezwaar maken op %2$@"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Twój dostęp został zawieszony do %1$@ po powtarzających się zgłoszeniach nadużyć dotyczących przekierowanego portu. Możesz to zakwestionować na %2$@"
+            "value": "Twój dostęp został cofnięty do %1$@ po powtarzających się zgłoszeniach nadużyć dotyczących przekierowanego portu. Możesz to zakwestionować na %2$@"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "O seu acesso foi suspenso até %1$@ após denúncias repetidas de abuso relacionadas com uma porta encaminhada. Pode contestar em %2$@"
+            "value": "O seu acesso foi revogado até %1$@ após denúncias repetidas de abuso relacionadas com uma porta encaminhada. Pode contestar em %2$@"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accesul dvs. a fost suspendat până la %1$@ după raportări repetate de abuz privind un port redirecționat. Puteți contesta la %2$@"
+            "value": "Accesul dvs. a fost revocat până la %1$@ după raportări repetate de abuz privind un port redirecționat. Puteți contesta la %2$@"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ваш доступ приостановлен до %1$@ после повторных жалоб на злоупотребления с переадресованным портом. Оспорить решение можно на %2$@"
+            "value": "Ваш доступ отозван до %1$@ после повторных жалоб на злоупотребления с переадресованным портом. Оспорить решение можно на %2$@"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Din åtkomst har stängts av fram till %1$@ efter upprepade missbruksanmälningar om en vidarebefordrad port. Du kan bestrida detta på %2$@"
+            "value": "Din åtkomst har återkallats fram till %1$@ efter upprepade missbruksanmälningar om en vidarebefordrad port. Du kan bestrida detta på %2$@"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "การเข้าถึงของคุณถูกระงับจนถึง %1$@ หลังมีรายงานการใช้งานในทางที่ผิดซ้ำ ๆ เกี่ยวกับพอร์ตที่ส่งต่อ คุณสามารถโต้แย้งได้ที่ %2$@"
+            "value": "การเข้าถึงของคุณถูกเพิกถอนจนถึง %1$@ หลังมีรายงานการใช้งานในทางที่ผิดซ้ำ ๆ เกี่ยวกับพอร์ตที่ส่งต่อ คุณสามารถโต้แย้งได้ที่ %2$@"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Yönlendirilen bir bağlantı noktasıyla ilgili tekrarlanan kötüye kullanım bildirimleri sonrasında erişiminiz %1$@ tarihine kadar askıya alındı. Buna %2$@ adresinden itiraz edebilirsiniz"
+            "value": "Yönlendirilen bir bağlantı noktasıyla ilgili tekrarlanan kötüye kullanım bildirimleri sonrasında erişiminiz %1$@ tarihine kadar iptal edildi. Buna %2$@ adresinden itiraz edebilirsiniz"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ваш доступ призупинено до %1$@ після повторних скарг на зловживання переадресованим портом. Оскаржити рішення можна на %2$@"
+            "value": "Ваш доступ відкликано до %1$@ після повторних скарг на зловживання переадресованим портом. Оскаржити рішення можна на %2$@"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "因转发端口被多次举报滥用，你的访问权限已被暂停至 %1$@。你可以在 %2$@ 提出申诉"
+            "value": "因转发端口被多次举报滥用，你的访问权限已被撤销至 %1$@。你可以在 %2$@ 提出申诉"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "因轉發連接埠遭多次檢舉濫用，您的存取權限已遭暫停至 %1$@。您可以在 %2$@ 提出申訴"
+            "value": "因轉發連接埠遭多次檢舉濫用，您的存取權限已遭撤銷至 %1$@。您可以在 %2$@ 提出申訴"
           }
         }
       }
     },
-    "Your access has been suspended until %@ for a usage policy violation. Contact support if you believe this is a mistake.": {
+    "Your access has been revoked until %@ for a usage policy violation. Contact support if you believe this is a mistake.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your access has been suspended until %@ for a usage policy violation. Contact support if you believe this is a mistake."
+            "value": "Your access has been revoked until %@ for a usage policy violation. Contact support if you believe this is a mistake."
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تم تعليق وصولك حتى %@ بسبب مخالفة سياسة الاستخدام. تواصل مع الدعم إذا كنت تعتقد أن هذا خطأ."
+            "value": "تم إلغاء وصولك حتى %@ بسبب مخالفة سياسة الاستخدام. تواصل مع الدعم إذا كنت تعتقد أن هذا خطأ."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Din adgang er suspenderet indtil %@ på grund af en overtrædelse af brugspolitikken. Kontakt support, hvis du mener, at dette er en fejl."
+            "value": "Din adgang er inddraget indtil %@ på grund af en overtrædelse af brugspolitikken. Kontakt support, hvis du mener, at dette er en fejl."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dein Zugang wurde wegen eines Verstoßes gegen die Nutzungsrichtlinie bis %@ gesperrt. Wende dich an den Support, wenn du das für einen Fehler hältst."
+            "value": "Dein Zugang wurde wegen eines Verstoßes gegen die Nutzungsrichtlinie bis %@ entzogen. Wende dich an den Support, wenn du das für einen Fehler hältst."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tu acceso ha sido suspendido hasta el %@ por incumplir la política de uso. Contacta con el soporte si crees que se trata de un error."
+            "value": "Tu acceso ha sido revocado hasta el %@ por incumplir la política de uso. Contacta con el soporte si crees que se trata de un error."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "دسترسی شما به دلیل نقض سیاست استفاده تا %@ معلق شده است. اگر فکر می‌کنید این یک اشتباه است، با پشتیبانی تماس بگیرید."
+            "value": "دسترسی شما به دلیل نقض سیاست استفاده تا %@ لغو شده است. اگر فکر می‌کنید این یک اشتباه است، با پشتیبانی تماس بگیرید."
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Käyttöoikeutesi on keskeytetty %@ asti käyttöehtojen rikkomisen vuoksi. Ota yhteyttä tukeen, jos uskot tämän olevan virhe."
+            "value": "Käyttöoikeutesi on peruttu %@ asti käyttöehtojen rikkomisen vuoksi. Ota yhteyttä tukeen, jos uskot tämän olevan virhe."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Votre accès a été suspendu jusqu'au %@ pour non-respect des conditions d'utilisation. Contactez le support si vous pensez qu'il s'agit d'une erreur."
+            "value": "Votre accès a été révoqué jusqu'au %@ pour non-respect des conditions d'utilisation. Contactez le support si vous pensez qu'il s'agit d'une erreur."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il tuo accesso è stato sospeso fino al %@ per violazione della politica di utilizzo. Contatta l'assistenza se ritieni che si tratti di un errore."
+            "value": "Il tuo accesso è stato revocato fino al %@ per violazione della politica di utilizzo. Contatta l'assistenza se ritieni che si tratti di un errore."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "利用ポリシー違反のため、%@ までアクセスが停止されました。誤りだと思われる場合はサポートにお問い合わせください。"
+            "value": "利用ポリシー違反のため、%@ までアクセスが取り消されました。誤りだと思われる場合はサポートにお問い合わせください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이용 정책 위반으로 %@까지 액세스가 정지되었습니다. 잘못된 조치라고 생각되면 지원팀에 문의하세요."
+            "value": "이용 정책 위반으로 %@까지 액세스가 취소되었습니다. 잘못된 조치라고 생각되면 지원팀에 문의하세요."
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "အသုံးပြုမှု မူဝါဒ ချိုးဖောက်မှုကြောင့် သင့်ဝင်ရောက်ခွင့်ကို %@ အထိ ဆိုင်းငံ့ထားသည်။ မှားယွင်းသည်ဟု ယူဆပါက အထောက်အပံ့သို့ ဆက်သွယ်ပါ။"
+            "value": "အသုံးပြုမှု မူဝါဒ ချိုးဖောက်မှုကြောင့် သင့်ဝင်ရောက်ခွင့်ကို %@ အထိ ရုပ်သိမ်းထားသည်။ မှားယွင်းသည်ဟု ယူဆပါက အထောက်အပံ့သို့ ဆက်သွယ်ပါ။"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tilgangen din er suspendert frem til %@ på grunn av brudd på bruksvilkårene. Kontakt kundestøtte hvis du mener dette er en feil."
+            "value": "Tilgangen din er tilbakekalt frem til %@ på grunn av brudd på bruksvilkårene. Kontakt kundestøtte hvis du mener dette er en feil."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je toegang is opgeschort tot %@ wegens schending van het gebruiksbeleid. Neem contact op met de ondersteuning als je denkt dat dit een vergissing is."
+            "value": "Je toegang is ingetrokken tot %@ wegens schending van het gebruiksbeleid. Neem contact op met de ondersteuning als je denkt dat dit een vergissing is."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Twój dostęp został zawieszony do %@ z powodu naruszenia zasad użytkowania. Skontaktuj się z pomocą techniczną, jeśli uważasz, że to pomyłka."
+            "value": "Twój dostęp został cofnięty do %@ z powodu naruszenia zasad użytkowania. Skontaktuj się z pomocą techniczną, jeśli uważasz, że to pomyłka."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "O seu acesso foi suspenso até %@ por violação da política de utilização. Contacte o suporte se considerar que se trata de um erro."
+            "value": "O seu acesso foi revogado até %@ por violação da política de utilização. Contacte o suporte se considerar que se trata de um erro."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accesul dvs. a fost suspendat până la %@ pentru încălcarea politicii de utilizare. Contactați asistența dacă credeți că este o greșeală."
+            "value": "Accesul dvs. a fost revocat până la %@ pentru încălcarea politicii de utilizare. Contactați asistența dacă credeți că este o greșeală."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ваш доступ приостановлен до %@ за нарушение правил использования. Обратитесь в поддержку, если считаете это ошибкой."
+            "value": "Ваш доступ отозван до %@ за нарушение правил использования. Обратитесь в поддержку, если считаете это ошибкой."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Din åtkomst har stängts av fram till %@ på grund av ett brott mot användningspolicyn. Kontakta supporten om du tror att detta är ett misstag."
+            "value": "Din åtkomst har återkallats fram till %@ på grund av ett brott mot användningspolicyn. Kontakta supporten om du tror att detta är ett misstag."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "การเข้าถึงของคุณถูกระงับจนถึง %@ เนื่องจากละเมิดนโยบายการใช้งาน ติดต่อฝ่ายสนับสนุนหากคุณคิดว่านี่เป็นความผิดพลาด"
+            "value": "การเข้าถึงของคุณถูกเพิกถอนจนถึง %@ เนื่องจากละเมิดนโยบายการใช้งาน ติดต่อฝ่ายสนับสนุนหากคุณคิดว่านี่เป็นความผิดพลาด"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kullanım politikası ihlali nedeniyle erişiminiz %@ tarihine kadar askıya alındı. Bunun bir hata olduğunu düşünüyorsanız destek ekibine başvurun."
+            "value": "Kullanım politikası ihlali nedeniyle erişiminiz %@ tarihine kadar iptal edildi. Bunun bir hata olduğunu düşünüyorsanız destek ekibine başvurun."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ваш доступ призупинено до %@ за порушення правил використання. Зверніться до підтримки, якщо вважаєте це помилкою."
+            "value": "Ваш доступ відкликано до %@ за порушення правил використання. Зверніться до підтримки, якщо вважаєте це помилкою."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "因违反使用政策，你的访问权限已被暂停至 %@。如果你认为这是误判，请联系支持团队。"
+            "value": "因违反使用政策，你的访问权限已被撤销至 %@。如果你认为这是误判，请联系支持团队。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "因違反使用政策，您的存取權限已遭暫停至 %@。若您認為這是誤判，請聯絡支援團隊。"
+            "value": "因違反使用政策，您的存取權限已遭撤銷至 %@。若您認為這是誤判，請聯絡支援團隊。"
           }
         }
       }
@@ -18671,7 +18671,7 @@
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Un port redirecționat a fost închis după o raportare de abuz. Deschide Warren pentru a vedea avertismentul."
+            "value": "Un port redirecționat a fost închis după o raportare de abuz. Deschideți Warren pentru a vedea avertismentul."
           }
         },
         "ru": {
@@ -18867,300 +18867,300 @@
         }
       }
     },
-    "Your purchase is kept and will be credited once the suspension ends.": {
+    "Your purchase is kept and will be credited once the revocation ends.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Your purchase is kept and will be credited once the suspension ends."
+            "value": "Your purchase is kept and will be credited once the revocation ends."
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تم الاحتفاظ بمشترياتك وستُضاف إلى حسابك بعد انتهاء التعليق."
+            "value": "تم الاحتفاظ بمشترياتك وستُضاف إلى حسابك بعد انتهاء مدة الإلغاء."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dit køb er gemt og bliver krediteret, når suspenderingen er slut."
+            "value": "Dit køb er gemt og bliver krediteret, når inddragelsen er slut."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dein Kauf bleibt erhalten und wird gutgeschrieben, sobald die Sperre endet."
+            "value": "Dein Kauf bleibt erhalten und wird gutgeschrieben, sobald der Entzug endet."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tu compra se conserva y se abonará cuando termine la suspensión."
+            "value": "Tu compra se conserva y se abonará cuando termine la revocación."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "خرید شما حفظ شده و پس از پایان تعلیق اعمال می‌شود."
+            "value": "خرید شما حفظ شده و پس از پایان دورهٔ لغو اعمال می‌شود."
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ostoksesi säilyy, ja se hyvitetään, kun jäädytys päättyy."
+            "value": "Ostoksesi säilyy, ja se hyvitetään, kun peruutus päättyy."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Votre achat est conservé et sera crédité une fois la suspension terminée."
+            "value": "Votre achat est conservé et sera crédité une fois la révocation terminée."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il tuo acquisto viene conservato e sarà accreditato al termine della sospensione."
+            "value": "Il tuo acquisto viene conservato e sarà accreditato al termine della revoca."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "購入は保持され、停止が終了した時点で反映されます。"
+            "value": "購入は保持され、取り消し期間が終了した時点で反映されます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "구매 내역은 보관되며 정지가 끝나면 적용됩니다."
+            "value": "구매 내역은 보관되며 취소 기간이 끝나면 적용됩니다."
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "သင့်ဝယ်ယူမှုကို သိမ်းထားပြီး ဆိုင်းငံ့မှု ပြီးဆုံးသည့်အခါ ထည့်သွင်းပေးပါမည်။"
+            "value": "သင့်ဝယ်ယူမှုကို သိမ်းထားပြီး ရုပ်သိမ်းမှု ပြီးဆုံးသည့်အခါ ထည့်သွင်းပေးပါမည်။"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kjøpet ditt er tatt vare på og blir kreditert når suspensjonen er over."
+            "value": "Kjøpet ditt er tatt vare på og blir kreditert når tilbakekallingen er over."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Je aankoop blijft bewaard en wordt bijgeschreven zodra de opschorting voorbij is."
+            "value": "Je aankoop blijft bewaard en wordt bijgeschreven zodra de intrekking voorbij is."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Twój zakup został zachowany i zostanie zaliczony po zakończeniu zawieszenia."
+            "value": "Twój zakup został zachowany i zostanie zaliczony po zakończeniu okresu cofnięcia."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "A sua compra fica guardada e será creditada quando a suspensão terminar."
+            "value": "A sua compra fica guardada e será creditada quando a revogação terminar."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Achiziția dvs. este păstrată și va fi creditată după încheierea suspendării."
+            "value": "Achiziția dvs. este păstrată și va fi creditată după încheierea revocării."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Покупка сохранена и будет зачислена после окончания блокировки."
+            "value": "Покупка сохранена и будет зачислена после окончания срока отзыва."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ditt köp sparas och krediteras när avstängningen är slut."
+            "value": "Ditt köp sparas och krediteras när återkallelsen är slut."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "การซื้อของคุณถูกเก็บไว้และจะได้รับเครดิตเมื่อการระงับสิ้นสุดลง"
+            "value": "การซื้อของคุณถูกเก็บไว้และจะได้รับเครดิตเมื่อการเพิกถอนสิ้นสุดลง"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Satın alımınız saklanır ve askıya alma sona erdiğinde hesabınıza eklenir."
+            "value": "Satın alımınız saklanır ve iptal süresi sona erdiğinde hesabınıza eklenir."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Покупку збережено, її буде зараховано після завершення призупинення."
+            "value": "Покупку збережено, її буде зараховано після завершення строку відкликання."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "您的购买已保留，将在暂停结束后计入。"
+            "value": "您的购买已保留，将在撤销期结束后计入。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "您的購買已保留，將在停權結束後計入。"
+            "value": "您的購買已保留，將在撤銷期結束後計入。"
           }
         }
       }
     },
-    "The voucher was not used: keep it and redeem it once the suspension ends.": {
+    "The voucher was not used: keep it and redeem it once the revocation ends.": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The voucher was not used: keep it and redeem it once the suspension ends."
+            "value": "The voucher was not used: keep it and redeem it once the revocation ends."
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "لم تُستخدم القسيمة: احتفظ بها واستبدلها بعد انتهاء التعليق."
+            "value": "لم تُستخدم القسيمة: احتفظ بها واستبدلها بعد انتهاء مدة الإلغاء."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Voucheren blev ikke brugt: gem den, og indløs den, når suspenderingen er slut."
+            "value": "Voucheren blev ikke brugt: gem den, og indløs den, når inddragelsen er slut."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der Gutschein wurde nicht verwendet: Bewahre ihn auf und löse ihn ein, sobald die Sperre endet."
+            "value": "Der Gutschein wurde nicht verwendet: Bewahre ihn auf und löse ihn ein, sobald der Entzug endet."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El cupón no se ha usado: consérvalo y canjéalo cuando termine la suspensión."
+            "value": "El cupón no se ha usado: consérvalo y canjéalo cuando termine la revocación."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "کد تخفیف استفاده نشد: آن را نگه دارید و پس از پایان تعلیق از آن استفاده کنید."
+            "value": "کد تخفیف استفاده نشد: آن را نگه دارید و پس از پایان دورهٔ لغو از آن استفاده کنید."
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kuponkia ei käytetty: säilytä se ja lunasta se, kun jäädytys päättyy."
+            "value": "Kuponkia ei käytetty: säilytä se ja lunasta se, kun peruutus päättyy."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le bon n’a pas été utilisé : gardez-le et utilisez-le une fois la suspension terminée."
+            "value": "Le bon n’a pas été utilisé : gardez-le et utilisez-le une fois la révocation terminée."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il voucher non è stato usato: conservalo e riscattalo al termine della sospensione."
+            "value": "Il voucher non è stato usato: conservalo e riscattalo al termine della revoca."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "バウチャーは使用されていません。保管しておき、停止が終了したら引き換えてください。"
+            "value": "バウチャーは使用されていません。保管しておき、取り消し期間が終了したら引き換えてください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "바우처는 사용되지 않았습니다. 보관해 두었다가 정지가 끝나면 사용하세요."
+            "value": "바우처는 사용되지 않았습니다. 보관해 두었다가 취소 기간이 끝나면 사용하세요."
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "Voucher ကို အသုံးမပြုရသေးပါ။ သိမ်းထားပြီး ဆိုင်းငံ့မှု ပြီးဆုံးသည့်အခါ အသုံးပြုပါ။"
+            "value": "Voucher ကို အသုံးမပြုရသေးပါ။ သိမ်းထားပြီး ရုပ်သိမ်းမှု ပြီးဆုံးသည့်အခါ အသုံးပြုပါ။"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kupongen ble ikke brukt: ta vare på den og løs den inn når suspensjonen er over."
+            "value": "Kupongen ble ikke brukt: ta vare på den og løs den inn når tilbakekallingen er over."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "De voucher is niet gebruikt: bewaar hem en wissel hem in zodra de opschorting voorbij is."
+            "value": "De voucher is niet gebruikt: bewaar hem en wissel hem in zodra de intrekking voorbij is."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Voucher nie został wykorzystany: zachowaj go i zrealizuj po zakończeniu zawieszenia."
+            "value": "Voucher nie został wykorzystany: zachowaj go i zrealizuj po zakończeniu okresu cofnięcia."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "O voucher não foi usado: guarde-o e resgate-o quando a suspensão terminar."
+            "value": "O voucher não foi usado: guarde-o e resgate-o quando a revogação terminar."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Voucherul nu a fost folosit: păstrați-l și valorificați-l după încheierea suspendării."
+            "value": "Voucherul nu a fost folosit: păstrați-l și valorificați-l după încheierea revocării."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ваучер не был использован: сохраните его и активируйте после окончания блокировки."
+            "value": "Ваучер не был использован: сохраните его и активируйте после окончания срока отзыва."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vouchern användes inte: spara den och lös in den när avstängningen är slut."
+            "value": "Vouchern användes inte: spara den och lös in den när återkallelsen är slut."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ยังไม่ได้ใช้บัตรกำนัล โปรดเก็บไว้และใช้เมื่อการระงับสิ้นสุดลง"
+            "value": "ยังไม่ได้ใช้บัตรกำนัล โปรดเก็บไว้และใช้เมื่อการเพิกถอนสิ้นสุดลง"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Kupon kullanılmadı: saklayın ve askıya alma sona erdiğinde kullanın."
+            "value": "Kupon kullanılmadı: saklayın ve iptal süresi sona erdiğinde kullanın."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ваучер не використано: збережіть його та активуйте після завершення призупинення."
+            "value": "Ваучер не використано: збережіть його та активуйте після завершення строку відкликання."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "兑换码未被使用：请保留，待暂停结束后再兑换。"
+            "value": "兑换码未被使用：请保留，待撤销期结束后再兑换。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "優惠券未被使用：請保留，待停權結束後再兌換。"
+            "value": "優惠券未被使用：請保留，待撤銷期結束後再兌換。"
           }
         }
       }

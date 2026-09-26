@@ -103,7 +103,7 @@ export enum AuthFailedError {
   // Warren: account explicitly revoked (banned) by the operator.
   banned,
   // Warren: banned specifically for port-forwarding abuse, so the app shows a
-  // forwarded-port suspension message. Same fatal handling as banned.
+  // forwarded-port revocation message. Same fatal handling as banned.
   bannedPortForwarding,
 }
 

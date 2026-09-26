@@ -27,7 +27,7 @@ interface ErrorNotificationContext {
   hasExcludedApps: boolean;
   splitTunnelingSupported: boolean;
   // The ban the daemon knows of, when it knows when the ban lapses: the
-  // suspension message then names that day.
+  // revocation message then names that day.
   ban?: WarrenAccountBan | null;
   locale?: string;
   showFullDiskAccessSettings?: () => void;
@@ -184,17 +184,17 @@ export class ErrorNotificationProvider
               if (until !== undefined) {
                 return sprintf(
                   // TRANSLATORS: Available placeholder:
-                  // TRANSLATORS: %(date)s - the day the suspension ends, e.g. 24 September 2027
+                  // TRANSLATORS: %(date)s - the day the revocation ends, e.g. 24 September 2027
                   messages.pgettext(
                     'auth-failure',
-                    'Blocking internet: your access has been suspended until %(date)s for a usage policy violation. Contact support if you believe this is a mistake.',
+                    'Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake.',
                   ),
                   { date: until },
                 );
               }
               return messages.pgettext(
                 'auth-failure',
-                'Blocking internet: your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake.',
+                'Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake.',
               );
             }
 
@@ -205,11 +205,11 @@ export class ErrorNotificationProvider
               if (until !== undefined) {
                 return sprintf(
                   // TRANSLATORS: Available placeholders:
-                  // TRANSLATORS: %(date)s - the day the suspension ends, e.g. 24 September 2027
+                  // TRANSLATORS: %(date)s - the day the revocation ends, e.g. 24 September 2027
                   // TRANSLATORS: %(url)s - the page explaining how to contest it
                   messages.pgettext(
                     'auth-failure',
-                    'Blocking internet: your access has been suspended until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s',
+                    'Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s',
                   ),
                   { date: until, url: urls.reports },
                 );
@@ -217,7 +217,7 @@ export class ErrorNotificationProvider
               return sprintf(
                 messages.pgettext(
                   'auth-failure',
-                  'Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s',
+                  'Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s',
                 ),
                 { url: urls.reports },
               );

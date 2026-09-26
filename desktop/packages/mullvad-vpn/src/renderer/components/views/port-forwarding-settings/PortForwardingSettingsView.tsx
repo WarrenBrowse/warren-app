@@ -67,13 +67,13 @@ export function PortForwardingSettingsView() {
                     </Text>
                     {/* An open port is reachable by anyone, so a third-party abuse
                         report can reach us about it. Saying so here, rather than
-                        only in the terms, is what makes the strike that follows
+                        only in the terms, is what makes the warning that follows
                         foreseeable to whoever opens the port. */}
                     <Text variant="labelTiny" color="whiteAlpha60">
                       {sprintf(
                         messages.pgettext(
                           'port-forwarding-view',
-                          'A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s',
+                          'A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s',
                         ),
                         { url: urls.reports },
                       )}

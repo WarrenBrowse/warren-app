@@ -1096,12 +1096,8 @@ msgid "You are logged in with an invalid account number. Please log out and try 
 msgstr "Geçersiz bir hesap numarası ile giriş yaptınız. Lütfen çıkış yapın ve farklı bir hesap numarası ile tekrar deneyin."
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "İnternet bağlantısı engelleniyor: kullanım kurallarını ihlal ettiğiniz için erişiminiz askıya alındı. Bunun bir hata olduğunu düşünüyorsanız destek ekibiyle iletişime geçin."
-
-msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended for abuse on a forwarded port. Contact support if you believe this is a mistake."
-msgstr "İnternet bağlantısı engelleniyor: yönlendirilmiş bir bağlantı noktasındaki kötüye kullanım nedeniyle erişiminiz askıya alındı. Bunun bir hata olduğunu düşünüyorsanız destek ekibiyle iletişime geçin."
+msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "İnternet bağlantısı engelleniyor: kullanım kurallarını ihlal ettiğiniz için erişiminiz iptal edildi. Bunun bir hata olduğunu düşünüyorsanız destek ekibiyle iletişime geçin."
 
 msgctxt "auth-failure"
 msgid "Unable to authenticate account. Please report the problem on our community forum."
@@ -5493,8 +5489,8 @@ msgid "Forum name"
 msgstr "Forum adı"
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "İnternet engelleniyor: yönlendirilmiş bir bağlantı noktasıyla ilgili tekrarlanan kötüye kullanım bildirimleri sonrasında erişiminiz askıya alındı. %(url)s adresinden itiraz edebilirsiniz"
+msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "İnternet engelleniyor: yönlendirilmiş bir bağlantı noktasıyla ilgili tekrarlanan kötüye kullanım bildirimleri sonrasında erişiminiz iptal edildi. %(url)s adresinden itiraz edebilirsiniz"
 
 msgctxt "forum-activity-view"
 msgid "%(actor)s liked your post"
@@ -5579,7 +5575,7 @@ msgid "Open"
 msgstr "Aç"
 
 msgctxt "port-forwarding-view"
-msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
 msgstr "Yönlendirilmiş bir bağlantı noktasına internetten erişilebilir. Üçüncü bir taraf oradan gelen bir kötüye kullanımı bildirirse bağlantı noktasını kapatır ve hesabınıza bir ihlal kaydederiz; 90 gün içinde üç ihlal erişimi iptal eder. Ayrıntılar ve itiraz yolu: %(url)s"
 
 msgctxt "port-forwarding-view"

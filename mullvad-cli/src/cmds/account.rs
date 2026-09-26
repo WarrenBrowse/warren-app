@@ -48,11 +48,11 @@ pub enum Account {
         voucher: Option<String>,
     },
 
-    /// Show the port-forwarding warnings on this account and any suspension,
+    /// Show the port-forwarding warnings on this account and any revocation,
     /// asked of the Warren API now.
     ///
     /// A forwarded port reported for abuse is closed and recorded as a
-    /// warning, and enough warnings inside the window suspend the account
+    /// warning, and enough warnings inside the window revoke the account
     /// (the output states both numbers). Each warning carries the case
     /// reference to quote when contesting it.
     Standing {

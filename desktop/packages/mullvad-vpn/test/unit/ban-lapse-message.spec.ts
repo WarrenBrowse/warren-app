@@ -29,7 +29,7 @@ function message(authFailedError: AuthFailedError, ban: WarrenAccountBan | null)
 /** 2027-09-24T00:00:00Z. */
 const LAPSE = 1_821_744_000;
 
-describe('the suspension message', () => {
+describe('the revocation message', () => {
   it('names the day a port-forwarding ban lapses', () => {
     expect(
       message(AuthFailedError.bannedPortForwarding, {
@@ -38,7 +38,7 @@ describe('the suspension message', () => {
         lapsesAtUnixSecs: LAPSE,
       }),
     ).to.equal(
-      `Blocking internet: your access has been suspended until September 24, 2027 after repeated abuse reports about a forwarded port. You can contest this at ${urls.reports}`,
+      `Blocking internet: your access has been revoked until September 24, 2027 after repeated abuse reports about a forwarded port. You can contest this at ${urls.reports}`,
     );
   });
 
@@ -49,12 +49,12 @@ describe('the suspension message', () => {
         bannedAtUnixSecs: null,
         lapsesAtUnixSecs: LAPSE,
       }),
-    ).to.contain('suspended until September 24, 2027 for a usage policy violation');
+    ).to.contain('revoked until September 24, 2027 for a usage policy violation');
   });
 
   it('names no day when the lapse is unknown', () => {
     expect(message(AuthFailedError.bannedPortForwarding, null)).to.equal(
-      `Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at ${urls.reports}`,
+      `Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at ${urls.reports}`,
     );
   });
 });

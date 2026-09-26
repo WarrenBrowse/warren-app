@@ -1090,12 +1090,8 @@ msgid "You are logged in with an invalid account number. Please log out and try 
 msgstr "您登入時所使用的帳號無效。請登出並嘗試其他帳號。"
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "正在封鎖網路：因違反使用政策，您的存取權已遭停用。若您認為這是誤判，請聯絡支援團隊。"
-
-msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended for abuse on a forwarded port. Contact support if you believe this is a mistake."
-msgstr "正在封鎖網路：因轉發連接埠遭濫用，您的存取權已遭停用。若您認為這是誤判，請聯絡支援團隊。"
+msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "正在封鎖網路：因違反使用政策，您的存取權已遭撤銷。若您認為這是誤判，請聯絡支援團隊。"
 
 msgctxt "auth-failure"
 msgid "Unable to authenticate account. Please report the problem on our community forum."
@@ -5465,8 +5461,8 @@ msgid "Forum name"
 msgstr "論壇名稱"
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "正在封鎖網路：由於轉送連接埠遭反覆檢舉濫用，您的存取已被暫停。您可以在 %(url)s 提出申訴"
+msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "正在封鎖網路：由於轉送連接埠遭反覆檢舉濫用，您的存取已被撤銷。您可以在 %(url)s 提出申訴"
 
 msgctxt "forum-activity-view"
 msgid "%(actor)s liked your post"
@@ -5550,7 +5546,7 @@ msgid "Open"
 msgstr "開啟"
 
 msgctxt "port-forwarding-view"
-msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
 msgstr "轉送連接埠可以從網際網路存取。如果第三方檢舉來自該連接埠的濫用行為，我們會關閉連接埠並在你的帳戶上記一次違規；90 天內三次將撤銷存取權限。詳情與申訴方式：%(url)s"
 
 msgctxt "port-forwarding-view"

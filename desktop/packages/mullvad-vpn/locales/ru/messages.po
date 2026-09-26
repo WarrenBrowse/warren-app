@@ -1108,12 +1108,8 @@ msgid "You are logged in with an invalid account number. Please log out and try 
 msgstr "Вы вошли в систему под недействительным номером учетной записи. Выйдите из системы и попробуйте еще раз."
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "Интернет блокируется: ваш доступ приостановлен за нарушение правил использования. Обратитесь в поддержку, если считаете это ошибкой."
-
-msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended for abuse on a forwarded port. Contact support if you believe this is a mistake."
-msgstr "Интернет блокируется: ваш доступ приостановлен из-за злоупотребления переадресованным портом. Обратитесь в поддержку, если считаете это ошибкой."
+msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "Интернет блокируется: ваш доступ отозван за нарушение правил использования. Обратитесь в поддержку, если считаете это ошибкой."
 
 msgctxt "auth-failure"
 msgid "Unable to authenticate account. Please report the problem on our community forum."
@@ -5523,8 +5519,8 @@ msgid "Forum name"
 msgstr "Имя на форуме"
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "Интернет заблокирован: ваш доступ приостановлен после неоднократных жалоб на злоупотребление перенаправленным портом. Оспорить можно по адресу %(url)s"
+msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "Интернет заблокирован: ваш доступ отозван после неоднократных жалоб на злоупотребление перенаправленным портом. Оспорить можно по адресу %(url)s"
 
 msgctxt "forum-activity-view"
 msgid "%(actor)s liked your post"
@@ -5611,7 +5607,7 @@ msgid "Open"
 msgstr "Открыть"
 
 msgctxt "port-forwarding-view"
-msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
 msgstr "Перенаправленный порт доступен из интернета. Если третья сторона пожалуется на злоупотребление с него, мы закроем порт и запишем нарушение в вашу учётную запись; три нарушения за 90 дней отзывают доступ. Подробности и порядок обжалования: %(url)s"
 
 msgctxt "port-forwarding-view"

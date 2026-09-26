@@ -1096,12 +1096,8 @@ msgid "You are logged in with an invalid account number. Please log out and try 
 msgstr "Du är inloggad med ett ogiltigt kontonummer. Logga ut och försök med ett annat."
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "Blockerar internet: din åtkomst har stängts av på grund av ett brott mot användarvillkoren. Kontakta supporten om du tror att det är ett misstag."
-
-msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended for abuse on a forwarded port. Contact support if you believe this is a mistake."
-msgstr "Blockerar internet: din åtkomst har stängts av på grund av missbruk av en vidarebefordrad port. Kontakta supporten om du tror att det är ett misstag."
+msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "Blockerar internet: din åtkomst har återkallats på grund av ett brott mot användarvillkoren. Kontakta supporten om du tror att det är ett misstag."
 
 msgctxt "auth-failure"
 msgid "Unable to authenticate account. Please report the problem on our community forum."
@@ -5493,8 +5489,8 @@ msgid "Forum name"
 msgstr "Forumnamn"
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "Blockerar internet: din åtkomst har stängts av efter upprepade anmälningar om missbruk av en vidarebefordrad port. Du kan bestrida detta på %(url)s"
+msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "Blockerar internet: din åtkomst har återkallats efter upprepade anmälningar om missbruk av en vidarebefordrad port. Du kan bestrida detta på %(url)s"
 
 msgctxt "forum-activity-view"
 msgid "%(actor)s liked your post"
@@ -5579,7 +5575,7 @@ msgid "Open"
 msgstr "Öppna"
 
 msgctxt "port-forwarding-view"
-msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
 msgstr "En vidarebefordrad port går att nå från internet. Om en tredje part anmäler missbruk därifrån stänger vi porten och noterar en varning på ditt konto; tre varningar inom 90 dagar återkallar åtkomsten. Detaljer och hur du bestrider: %(url)s"
 
 msgctxt "port-forwarding-view"

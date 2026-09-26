@@ -76,7 +76,7 @@ export function strikeWarning(
   };
   if (threshold === 0) {
     return sprintf(
-      // TRANSLATORS: A strike on the account, when the number that revokes it
+      // TRANSLATORS: A warning on the account, when the number that revokes it
       // TRANSLATORS: is not known yet. Available placeholders:
       // TRANSLATORS: %(ordinal)d - the rank of this warning, from 1
       // TRANSLATORS: %(port)d - the forwarded public port that was closed
@@ -90,7 +90,7 @@ export function strikeWarning(
     );
   }
   return sprintf(
-    // TRANSLATORS: A strike on the account. Available placeholders:
+    // TRANSLATORS: A warning on the account. Available placeholders:
     // TRANSLATORS: %(ordinal)d - the rank of this warning, from 1
     // TRANSLATORS: %(threshold)d - the number of warnings that revokes the account
     // TRANSLATORS: %(port)d - the forwarded public port that was closed

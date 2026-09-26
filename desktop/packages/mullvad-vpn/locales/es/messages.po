@@ -1096,12 +1096,8 @@ msgid "You are logged in with an invalid account number. Please log out and try 
 msgstr "Ha iniciado la sesión con un número de cuenta no válido. Cierre la sesión y pruebe con otro número de cuenta."
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "Bloqueando la conexión a Internet: su acceso ha sido suspendido por incumplir la política de uso. Póngase en contacto con el servicio de asistencia si cree que se trata de un error."
-
-msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended for abuse on a forwarded port. Contact support if you believe this is a mistake."
-msgstr "Bloqueando la conexión a Internet: su acceso ha sido suspendido por abuso de un puerto reenviado. Póngase en contacto con el servicio de asistencia si cree que se trata de un error."
+msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "Bloqueando la conexión a Internet: su acceso ha sido revocado por incumplir la política de uso. Póngase en contacto con el servicio de asistencia si cree que se trata de un error."
 
 msgctxt "auth-failure"
 msgid "Unable to authenticate account. Please report the problem on our community forum."
@@ -5493,8 +5489,8 @@ msgid "Forum name"
 msgstr "Nombre en el foro"
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "Bloqueando internet: tu acceso ha sido suspendido tras denuncias repetidas de abuso sobre un puerto redirigido. Puedes impugnarlo en %(url)s"
+msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "Bloqueando internet: tu acceso ha sido revocado tras denuncias repetidas de abuso sobre un puerto redirigido. Puedes impugnarlo en %(url)s"
 
 msgctxt "forum-activity-view"
 msgid "%(actor)s liked your post"
@@ -5579,7 +5575,7 @@ msgid "Open"
 msgstr "Abrir"
 
 msgctxt "port-forwarding-view"
-msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
 msgstr "Un puerto redirigido es accesible desde internet. Si un tercero denuncia un abuso procedente de él, cerramos el puerto y anotamos un aviso en tu cuenta; tres avisos en 90 días revocan el acceso. Detalles y cómo impugnarlo: %(url)s"
 
 msgctxt "port-forwarding-view"

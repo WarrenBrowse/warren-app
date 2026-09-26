@@ -23,7 +23,7 @@ enum WarrenAccountStandingText {
     static let abuseContact = "abuse@warrenbrowse.com"
 
     /// The page that states the strike rule and how to contest a warning or a
-    /// suspension, the one the desktop and Android link.
+    /// revocation, the one the desktop and Android link.
     static let reportsURL = "https://warren.ro/signalements"
 
     /// A day as the reader writes it. A strike is recorded at day precision,
@@ -92,15 +92,15 @@ enum WarrenAccountStandingText {
         switch (ban.portForwarding, until) {
         case let (true, until?):
             return String(
-                format: String(localized: "Access suspended for port-forwarding abuse until %@.", table: "Settings"),
+                format: String(localized: "Access revoked for port-forwarding abuse until %@.", table: "Settings"),
                 until
             )
         case (true, nil):
-            return String(localized: "Access suspended for port-forwarding abuse.", table: "Settings")
+            return String(localized: "Access revoked for port-forwarding abuse.", table: "Settings")
         case let (false, until?):
-            return String(format: String(localized: "Access suspended until %@.", table: "Settings"), until)
+            return String(format: String(localized: "Access revoked until %@.", table: "Settings"), until)
         case (false, nil):
-            return String(localized: "Access suspended.", table: "Settings")
+            return String(localized: "Access revoked.", table: "Settings")
         }
     }
 }
@@ -218,7 +218,7 @@ final class WarrenAccountStandingFeed: @unchecked Sendable {
     }
 
     /// A call that credits time (a voucher redemption, a StoreKit payment call)
-    /// was refused for `ban`: the suspension shows at once, and the next poll
+    /// was refused for `ban`: the revocation shows at once, and the next poll
     /// asks the signed standing, which also knows when it lapses. A ban the
     /// poll already answered and that still holds stays, the Swift twin of
     /// `StandingTracker::on_issuance_ban`.

@@ -1090,12 +1090,8 @@ msgid "You are logged in with an invalid account number. Please log out and try 
 msgstr "မှားနေသည့် အကောင့်နံပါတ်ဖြင့် စနစ်တွင်း ဝင်ရောက်ထားပါသည်။ စနစ်တွင်းမှ ထွက်ပြီး အခြားတစ်ခုဖြင့် ကြိုးစားကြည့်ပါ။"
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "အင်တာနက် ပိတ်ဆို့နေပါသည်: အသုံးပြုမှု မူဝါဒကို ချိုးဖောက်သောကြောင့် သင့်ဝင်ရောက်ခွင့်ကို ဆိုင်းငံ့ထားပါသည်။ မှားယွင်းနေသည်ဟု ယူဆပါက ပံ့ပိုးကူညီရေးကို ဆက်သွယ်ပါ။"
-
-msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended for abuse on a forwarded port. Contact support if you believe this is a mistake."
-msgstr "အင်တာနက် ပိတ်ဆို့နေပါသည်: ပြန်ညွှန်းထားသော ပို့တ်ကို အလွဲသုံးစားပြုသောကြောင့် သင့်ဝင်ရောက်ခွင့်ကို ဆိုင်းငံ့ထားပါသည်။ မှားယွင်းနေသည်ဟု ယူဆပါက ပံ့ပိုးကူညီရေးကို ဆက်သွယ်ပါ။"
+msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "အင်တာနက် ပိတ်ဆို့နေပါသည်: အသုံးပြုမှု မူဝါဒကို ချိုးဖောက်သောကြောင့် သင့်ဝင်ရောက်ခွင့်ကို ရုပ်သိမ်းထားပါသည်။ မှားယွင်းနေသည်ဟု ယူဆပါက ပံ့ပိုးကူညီရေးကို ဆက်သွယ်ပါ။"
 
 msgctxt "auth-failure"
 msgid "Unable to authenticate account. Please report the problem on our community forum."
@@ -5468,8 +5464,8 @@ msgid "Forum name"
 msgstr "ဖိုရမ်အမည်"
 
 msgctxt "auth-failure"
-msgid "Blocking internet: your access has been suspended after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "အင်တာနက်ကို ပိတ်ဆို့နေသည်။ ထပ်ဆင့်ပို့ထားသော port နှင့်ပတ်သက်၍ အလွဲသုံးစားမှု အကြိမ်ကြိမ် တိုင်ကြားခံရပြီးနောက် သင်၏ဝင်ရောက်ခွင့်ကို ရပ်ဆိုင်းထားသည်။ %(url)s တွင် အယူခံဝင်နိုင်သည်"
+msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "အင်တာနက်ကို ပိတ်ဆို့နေသည်။ ထပ်ဆင့်ပို့ထားသော port နှင့်ပတ်သက်၍ အလွဲသုံးစားမှု အကြိမ်ကြိမ် တိုင်ကြားခံရပြီးနောက် သင်၏ဝင်ရောက်ခွင့်ကို ရုပ်သိမ်းထားသည်။ %(url)s တွင် အယူခံဝင်နိုင်သည်"
 
 msgctxt "forum-activity-view"
 msgid "%(actor)s liked your post"
@@ -5553,7 +5549,7 @@ msgid "Open"
 msgstr "ဖွင့်ရန်"
 
 msgctxt "port-forwarding-view"
-msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a strike on your account; three strikes within 90 days revoke access. Details and how to contest: %(url)s"
+msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
 msgstr "ထပ်ဆင့်ပို့ထားသော port ကို အင်တာနက်မှ ဝင်ရောက်နိုင်သည်။ ၎င်းမှ အလွဲသုံးစားမှုကို တတိယအဖွဲ့က တိုင်ကြားပါက port ကို ပိတ်ပြီး သင့်အကောင့်တွင် ချိုးဖောက်မှုတစ်ခု မှတ်တမ်းတင်သည်။ ရက် ၉၀ အတွင်း သုံးကြိမ်ဆိုလျှင် ဝင်ရောက်ခွင့် ရုပ်သိမ်းသည်။ အသေးစိတ်နှင့် အယူခံနည်း: %(url)s"
 
 msgctxt "port-forwarding-view"

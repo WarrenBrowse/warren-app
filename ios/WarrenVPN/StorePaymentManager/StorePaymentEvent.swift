@@ -72,7 +72,7 @@ enum StorePaymentError: Error {
         case let .bannedAfterPayment(ban):
             WarrenAccountStandingText.ban(ban) + " "
                 + String(
-                    localized: "Your purchase is kept and will be credited once the suspension ends.",
+                    localized: "Your purchase is kept and will be credited once the revocation ends.",
                     table: "Settings"
                 )
         case .restorationError:

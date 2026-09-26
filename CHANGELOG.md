@@ -45,21 +45,23 @@ Line wrap the file at 100 chars.                                              Th
   an abuse report: a notification for each warning, a banner with its case reference that opens
   the page on contesting it, and the full list in the port forwarding screen with the address to
   write to. The warnings show up as soon as the matching server update is live.
-- [Android] Show a suspended account's suspension, with the day it ends when there is one, as soon
+- [Android] Show an account's revocation, with the day it ends when there is one, as soon
   as the app learns of it, instead of trying exit after exit. The connection stops and does not
-  retry until the suspension ends.
+  retry until the revocation ends.
 - [Android] Say why the server refused a forwarded port, no entitlement left or refused, and ask
   again automatically, instead of stopping on a generic failure.
 - [iOS] Show the warnings recorded against your account when a forwarded port is closed after an
   abuse report: a notification for each warning, a banner with its case reference that opens the
   page on contesting it, and the full list in the port forwarding screen with the address to write
   to. The warnings show up as soon as the matching server update is live.
-- [iOS] Show a suspended account's suspension, with the day it ends when there is one, instead of
-  a plain disconnection, and stop the connection when the suspension is learned during a session.
+- [iOS] Show an account's revocation, with the day it ends when there is one, instead of
+  a plain disconnection, and stop the connection when the revocation is learned during a session.
 - [iOS] Say when the server refuses a forwarded port for want of an entitlement, and ask again
   automatically instead of stopping on the first refusal.
 
 ### Changed
+- Call the ban of an account a revocation, and each abuse report recorded against a forwarded
+  port a warning, the words the published terms use.
 - [Windows, macOS, Linux] Save the settings in format version 17, which holds app routing. The apps
   you excluded from the VPN move to Bypass VPN.
 
@@ -74,27 +76,27 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Sign the connection with the wallet shown in the app. It used a key derived from the same
   recovery phrase but different from the displayed address, so the servers did not see the
   subscription on it.
-- [Windows, macOS, Linux] Keep a purchased voucher that a suspended account could not redeem, say
+- [Windows, macOS, Linux] Keep a purchased voucher that a revoked account could not redeem, say
   why, and do not ask the server again and again. The voucher stays valid for after the
-  suspension. Other refusals that say nothing about the voucher (too many attempts) no longer
+  revocation. Other refusals that say nothing about the voucher (too many attempts) no longer
   discard it either.
-- [Windows, macOS, Linux] Charge no automatic renewal while the account is suspended, and say so
+- [Windows, macOS, Linux] Charge no automatic renewal while the account is revoked, and say so
   on the account view.
-- [Android] Keep a purchased voucher that a suspended account could not redeem, show the
-  suspension with the day it ends when known, and stop asking the server again. A server error no
+- [Android] Keep a purchased voucher that a revoked account could not redeem, show the
+  revocation with the day it ends when known, and stop asking the server again. A server error no
   longer discards a purchased voucher.
-- [iOS] Show the suspension when a voucher or an App Store purchase is refused for a suspended
+- [iOS] Show the revocation when a voucher or an App Store purchase is refused for a revoked
   account. No purchase starts, and a purchase already paid stays pending, to be credited once the
-  suspension ends.
-- [Windows, macOS, Linux] Keep a purchased voucher that a suspension refused across restarts of
+  revocation ends.
+- [Windows, macOS, Linux] Keep a purchased voucher that a revocation refused across restarts of
   the app and of the service, sealed by the system keychain, and redeem it by itself once the
-  suspension ends, including when it simply runs out. It is erased only once redeemed or refused
+  revocation ends, including when it simply runs out. It is erased only once redeemed or refused
   for good (unknown, used or expired). Without a keychain (Linux with no keyring) it is kept for
   the session only, never written in the clear.
 - [Windows, macOS, Linux] Keep the text of a server refusal out of the service's error messages
   and logs.
-- [Android] Keep a purchased voucher that a suspension refused across restarts of the app, sealed
-  by a key of the Android Keystore, and redeem it by itself once the suspension ends or when the
+- [Android] Keep a purchased voucher that a revocation refused across restarts of the app, sealed
+  by a key of the Android Keystore, and redeem it by itself once the revocation ends or when the
   app starts again. It is erased only once redeemed or refused for good.
 
 ## [1.1.35] - 2026-09-25

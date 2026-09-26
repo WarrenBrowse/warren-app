@@ -251,10 +251,10 @@ public struct WarrenNatPmpSettingsView: View {
     /// port.
     @ViewBuilder
     private var abuseNotice: some View {
-        Text(String(localized: "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, Warren closes the port and records a strike on the account; three strikes within 90 days revoke access.", table: "Settings"))
+        Text(String(localized: "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, Warren closes the port and records a warning on the account; three warnings within 90 days revoke access.", table: "Settings"))
             .foregroundColor(.white.opacity(0.7))
         if let url = URL(string: Self.abuseReportsURL) {
-            Button(String(localized: "Details, and how to contest a strike", table: "Settings")) {
+            Button(String(localized: "Details, and how to contest a warning", table: "Settings")) {
                 openURL(url)
             }
             .font(.warrenMicro)
