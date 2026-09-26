@@ -100,6 +100,15 @@ impl<V: Copy> AppMatcher<V> {
         self.apps.is_empty()
     }
 
+    /// The same apps, without their values.
+    #[cfg(any(target_os = "linux", test))]
+    pub(crate) fn apps_only(&self) -> AppMatcher<()> {
+        AppMatcher {
+            flavor: self.flavor,
+            apps: self.apps.keys().map(|app| (app.clone(), ())).collect(),
+        }
+    }
+
     /// The value of the app `executable` belongs to.
     pub fn lookup(&self, executable: &OsStr) -> Option<V> {
         self.apps.get(&app_key(self.flavor, executable)).copied()

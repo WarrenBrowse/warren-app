@@ -34,7 +34,8 @@ are chosen when they are opened).
 | VPN only for | not yet: the tab says it is coming soon, and the daemon refuses the mode | macOS 13 or later, signed build, Full Disk Access | cgroup v2 with nftables socket matching; apps opened through `warren-include` | yes | no |
 | Country per app | yes* | yes, no Full Disk Access needed | yes*, for apps whose program can be named (below) | not yet | no |
 
-*: implemented; the datapath has been run against real exits on macOS only so far.
+*: implemented; the datapath has been run against real exits on macOS and on Linux (a Debian 13
+VM), not yet on Windows.
 
 On macOS the daemon answers `split_tunnel_is_supported` false for an unsigned build or a macOS older
 than 13, and `need_full_disk_permissions` for the grant; the App routing page says which one is
