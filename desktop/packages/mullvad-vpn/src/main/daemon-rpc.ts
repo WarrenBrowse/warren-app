@@ -462,7 +462,9 @@ export class DaemonRpc extends GrpcClient {
         this.client.pullPurchaseVoucher,
         claimCode,
       );
-      return { type: 'pulled', voucher: response.getValue() };
+      const voucher = response.getValue();
+      // An empty voucher would ask the daemon for the configured auto-voucher.
+      return voucher === '' ? { type: 'error' } : { type: 'pulled', voucher };
     } catch (e) {
       return pullFailureOfStatus((e as grpc.ServiceError).code);
     }

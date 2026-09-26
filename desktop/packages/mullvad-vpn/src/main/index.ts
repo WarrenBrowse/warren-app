@@ -73,6 +73,7 @@ import { shortenWarrenPubKey } from '../shared/utils';
 import Account, { AccountDelegate, LocaleProvider } from './account';
 import AppUpgrade from './app-upgrade';
 import { getOpenAtLogin } from './autostart';
+import BanLiftWatch from './ban-lift-watch';
 import { readChangelog, setChangelogLocale } from './changelog';
 import {
   CommandLineOptions,
@@ -307,6 +308,14 @@ class ApplicationMain
 
   private purchaseFlow: PurchaseFlow;
   private purchaseFlowResumed = false;
+  // A ban pauses the client-side renewal and holds back the redemption of a
+  // pulled voucher; its end, by a lift or by its lapse, resumes both.
+  private banWatch = new BanLiftWatch((banned) => {
+    this.renewalFlow?.maybeSchedule();
+    if (!banned) {
+      void this.purchaseFlow?.checkPendingNow(true);
+    }
+  });
   private renewalFlow: RenewalFlow;
 
   private relayList?: IRelayListWithEndpointData;
@@ -789,6 +798,7 @@ class ApplicationMain
 
     this.userInterface?.dispose();
     this.notificationController.dispose();
+    this.banWatch.dispose();
 
     // Unsubscribe the event handler
     try {
@@ -1346,17 +1356,8 @@ class ApplicationMain
   private subscribeWarrenStatusEvents(): SubscriptionListener<WarrenStatus> {
     const listener = new SubscriptionListener(
       (snapshot: WarrenStatus) => {
-        const wasBanned = this.accountBanInForce() !== undefined;
         this.warrenStatus = snapshot;
-        const banned = this.accountBanInForce() !== undefined;
-        if (wasBanned !== banned) {
-          // A ban pauses the client-side renewal, and its end resumes it.
-          this.renewalFlow?.maybeSchedule();
-        }
-        if (wasBanned && !banned) {
-          // A voucher a ban refused waits, sealed, for this moment.
-          void this.purchaseFlow?.checkPendingNow(true);
-        }
+        this.banWatch.observe(snapshot.accountStanding);
         // Same document the renderer badges from, so the banner, the tray
         // dot and the bell can never disagree.
         this.forumActivityMonitor.setDigest(snapshot.forumDigest);

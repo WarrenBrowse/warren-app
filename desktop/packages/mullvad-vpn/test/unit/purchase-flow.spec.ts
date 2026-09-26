@@ -362,6 +362,27 @@ describe('PurchaseFlow active poll', () => {
     flow.dispose();
   });
 
+  it('does not redeem a pulled voucher once the account changed during the pull', async () => {
+    let switchAccount = () => {};
+    const { delegate, submitted, setTag } = makeDelegate({
+      pull: (code) => {
+        switchAccount();
+        return Promise.resolve(pulledFor(code));
+      },
+    });
+    switchAccount = () => setTag('acct2');
+    const store = new FakeStore();
+    const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
+
+    await flow.start();
+    const code = persistedCode(store);
+    await vi.advanceTimersByTimeAsync(ACTIVE_POLL_INTERVAL_MS);
+
+    expect(submitted).toEqual([]);
+    expect(store.entries).toEqual([heldEntry(code, T0)]);
+    flow.dispose();
+  });
+
   it('never overlaps two daemon calls when one is slow', async () => {
     let resolveFirst: ((response: PurchaseVoucherPull) => void) | undefined;
     let calls = 0;
@@ -496,6 +517,45 @@ describe('PurchaseFlow.checkPendingNow', () => {
     expect(pulled).toEqual([]);
     expect(submitted).toEqual([voucherOf(wpidA)]);
     expect(store.entries).toEqual([]);
+    flow.dispose();
+  });
+
+  it('stamps the logged-in account on a voucher it pulls for an untagged purchase', async () => {
+    const { delegate } = makeDelegate({ redeem: () => Promise.resolve(banned) });
+    const store = new FakeStore([`${wpidA}:${T0 - 60_000}`]);
+    const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
+
+    await flow.checkPendingNow(true);
+
+    expect(store.entries).toEqual([heldEntry(wpidA, T0 - 60_000, 'acct1')]);
+    flow.dispose();
+  });
+
+  it('runs a forced check asked for while another check is in flight once that one ends', async () => {
+    // The ban lifts while a check that skipped the held voucher waits on
+    // another purchase's pull: the check the lift asks for must still run.
+    let release = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const { delegate, submitted, setBanned } = makeDelegate({
+      pull: async () => {
+        await gate;
+        return notPaid;
+      },
+    });
+    setBanned(true);
+    const store = new FakeStore([heldEntry(wpidA, T0 - 60_000), `${wpidB}:${T0 - 60_000}`]);
+    const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
+
+    const first = flow.checkPendingNow(true);
+    setBanned(false);
+    const second = flow.checkPendingNow(true);
+    release();
+    await first;
+    await second;
+
+    await vi.waitFor(() => expect(submitted).toEqual([voucherOf(wpidA)]));
     flow.dispose();
   });
 

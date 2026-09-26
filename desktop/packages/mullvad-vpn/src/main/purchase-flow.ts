@@ -83,6 +83,9 @@ export default class PurchaseFlow {
   private activeDeadlineMs = 0;
   private submitInFlight = false;
   private checkInFlight = false;
+  // A forced check asked for while another ran: the running one may already
+  // have skipped what the caller wants tried now (a ban that just lifted).
+  private forcedCheckPending = false;
   private lastCheckMs?: number;
   private pollingState = false;
 
@@ -149,6 +152,7 @@ export default class PurchaseFlow {
   public async checkPendingNow(force = false): Promise<void> {
     const now = Date.now();
     if (this.checkInFlight) {
+      this.forcedCheckPending ||= force;
       return;
     }
     if (
@@ -169,6 +173,10 @@ export default class PurchaseFlow {
       await this.checkEntries(entries);
     } finally {
       this.checkInFlight = false;
+    }
+    if (this.forcedCheckPending) {
+      this.forcedCheckPending = false;
+      await this.checkPendingNow(true);
     }
   }
 
@@ -304,7 +312,8 @@ export default class PurchaseFlow {
 
   // One step of a purchase: pull its voucher if the entry holds none yet,
   // seal it into the entry, then redeem it unless a ban is known.
-  private async advance(entry: PendingPurchase): Promise<Advance> {
+  private async advance(pending: PendingPurchase): Promise<Advance> {
+    let entry = pending;
     let voucher = entry.voucher;
     if (voucher === undefined) {
       const pulled = await this.delegate.pullPurchaseVoucher(claimCode(entry.claim));
@@ -313,11 +322,19 @@ export default class PurchaseFlow {
       }
       voucher = pulled.voucher;
       // Before the first redemption: the server handed the voucher out once,
-      // and a restart must not lose the only copy of a paid secret.
+      // and where the platform can seal it a restart must not lose the only
+      // copy of a paid secret. The daemon pulled it for the account logged in
+      // now, which an untagged purchase takes as its owner.
+      entry = { ...entry, tag: entry.tag ?? this.delegate.accountTag() };
       this.holdVoucher(entry, voucher);
     }
     if (this.delegate.accountBanned()) {
       return 'banned';
+    }
+    // The redemption credits whoever is logged in when it lands, and the
+    // account may have changed during the pull.
+    if (entry.tag !== undefined && this.delegate.accountTag() !== entry.tag) {
+      return 'pending';
     }
 
     const response = await this.delegate.submitVoucher(voucher);
