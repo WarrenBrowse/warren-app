@@ -87,10 +87,12 @@ interface IPreferredLocaleDescriptor {
 type LoginState = 'none' | 'logging in' | 'creating account';
 
 const SUPPORTED_LOCALE_LIST = [
+  { name: 'العربية', code: 'ar' },
   { name: 'Dansk', code: 'da' },
   { name: 'Deutsch', code: 'de' },
   { name: 'English', code: 'en' },
   { name: 'Español', code: 'es' },
+  { name: 'فارسی', code: 'fa' },
   { name: 'Suomi', code: 'fi' },
   { name: 'Français', code: 'fr' },
   { name: 'Italiano', code: 'it' },
@@ -106,6 +108,7 @@ const SUPPORTED_LOCALE_LIST = [
   { name: 'Svenska', code: 'sv' },
   { name: 'ภาษาไทย', code: 'th' },
   { name: 'Türkçe', code: 'tr' },
+  { name: 'Українська', code: 'uk' },
   { name: '简体中文', code: 'zh-CN' },
   { name: '繁體中文', code: 'zh-TW' },
 ];

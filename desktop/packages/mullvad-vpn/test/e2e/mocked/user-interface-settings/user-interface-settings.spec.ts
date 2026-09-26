@@ -160,6 +160,24 @@ test.describe('User interface settings', () => {
   });
 
   test.describe('Select language', () => {
+    test('Should lay the app out right to left in Arabic and Persian', async () => {
+      const root = page.locator('html');
+      await routes.userInterfaceSettings.gotoSelectLanguage();
+
+      for (const [language, lang, dir] of [
+        ['العربية', 'ar', 'rtl'],
+        ['Українська', 'uk', 'ltr'],
+        ['فارسی', 'fa', 'rtl'],
+        ['English', 'en', 'ltr'],
+      ]) {
+        await routes.selectLanguage.selectLanguage(language);
+        await expect(root).toHaveAttribute('lang', lang);
+        await expect(root).toHaveAttribute('dir', dir);
+      }
+
+      await routes.selectLanguage.goBack();
+    });
+
     ['Svenska', 'Deutsch', 'English', 'System default'].forEach((language) => {
       test(`Should change language to ${language}`, async () => {
         await routes.userInterfaceSettings.gotoSelectLanguage();

@@ -76,8 +76,7 @@ class ApplicationMain {
   }
 
   private onReady = async () => {
-    // A spec can open straight in any catalog, including those the language picker does not list
-    // (ar, fa, uk), which are otherwise reachable only through the system locale.
+    // A spec can open straight in any catalog without going through the language picker.
     this.updateCurrentLocale((CI_E2E && process.env.WARREN_E2E_LOCALE) || 'en');
 
     const window = new BrowserWindow({
