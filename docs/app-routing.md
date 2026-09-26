@@ -6,7 +6,10 @@ exits measured from macOS and Windows); include-only runs on macOS, Linux and
 Windows (section 3, the Windows run in section 3.2); the desktop GUI covers all
 three tabs (section 7); section 3.3 is how the modes and the countries combine.
 On Android, exclude and include-only run (section 3.4); per-app country is the
-next Android step (section 3.5).
+next Android step (section 3.5). Route sessions are admitted by the main
+session's anchor where the server offers it, with no token each and no
+artificial limit on the number of countries (section 2.2, warren-core doc 107);
+the live proof of the anchor path waits for the server side to be turned on.
 This document is the contract the implementation lots follow. When the code and
 this file disagree, fix one of them in the same commit.
 
@@ -143,15 +146,23 @@ Rules:
 - If a choice resolves to the main connection's exit, those apps simply use the
   main session.
 - Each extra session is a full Warren session (the production datapath, same
-  supervisor as the main tunnel). It presents v7 anonymous tokens only: **a
-  route session never falls back to the wallet-signed v6 login.** When no token
-  is available the route is shown as unavailable and its apps are blocked.
-- At most **2** route sessions at a time (main + 2 = the 3 session tokens of an
-  epoch, `TOKEN_QUOTA_PER_EPOCH`). The daemon refuses a third distinct
-  `ExitChoice` (a country, or a city in one: `se` and `se`/`got` are two) with
-  `FAILED_PRECONDITION` and the details `app_exit_limit`, and the GUI says why.
-  The planner and the tunnel each cap again, since a settings file edited by
-  hand may hold more: the apps of an exit past the cap are blocked.
+  supervisor as the main tunnel). It is admitted against the main session's
+  anchor where the server offers route admission (warren-core doc 107), and on
+  v7 anonymous tokens otherwise: **a route session never falls back to the
+  wallet-signed v6 login.** When neither can admit it the route is shown as
+  unavailable and its apps are blocked.
+- Any number of distinct `ExitChoice`s is accepted (a country, or a city in
+  one: `se` and `se`/`got` are two); the settings and the RPC refuse none. How
+  many route sessions run at once is the server's answer, followed live by the
+  tunnel (`route_capacity`): `max_routes` of the anchor once the control plane
+  bound it (R = 32 on the server today), and 2 otherwise (main + 2 = the 3
+  session tokens of an epoch, `TOKEN_QUOTA_PER_EPOCH`), the case of a server
+  with route admission off, a main session with no verdict yet, or one that
+  cannot anchor. The routes of the plan past that number are reported
+  `waiting for a free route`, their apps blocked, and start as soon as the
+  answer grows or the plan shrinks; when it shrinks (an anchor lost), the
+  routes past it are stopped and wait again. The router names a route with one
+  byte, which bounds a tunnel at 255 route sessions whatever the server says.
 
 Implementation (`mullvad-daemon/src/warren_app_routes.rs`,
 `talpid-warren-tunnel/src/app_routes/`):
@@ -166,14 +177,14 @@ Implementation (`mullvad-daemon/src/warren_app_routes.rs`,
 - A city choice matches the directory node whose city slug is the relay-list
   city code. A route has as many hops as the main connection, and a two-hop
   route keeps the main connection's entry constraint.
-- A route session runs the engine's supervisor and pumps with
-  `SessionAdmission::TokensOnly`, a random signing key (the wallet never
-  enters it), one connection, and none of the hooks that feed process-wide
-  state (dial-refusal cooldown, session placement, reconnect counter, entry
-  RTT store, drain reactor). Its tokens come from the daemon's token source
-  (see Tokens below). After an end a retry may fix (no token, refused,
-  failed) it waits 60 s and dials again. A drain its exit announces is recorded like the main one's,
-  and the new plan moves the route to another exit.
+- A route session runs the engine's supervisor and pumps with a random
+  signing key (the wallet never enters it), one connection, and none of the
+  hooks that feed process-wide state (dial-refusal cooldown, session
+  placement, reconnect counter, entry RTT store, drain reactor). It is
+  admitted by anchor or on tokens (see Route admission by anchor, and Tokens,
+  below). After an end a retry may fix (no token, refused, failed) it waits
+  60 s and dials again. A drain its exit announces is recorded like the main
+  one's, and the new plan moves the route to another exit.
 - The plan's policy is installed before the main pumps carry their first
   packet, and a new plan's before the firewall is asked for the new relays:
   a planned app's packets are dropped until its route is connected, never
@@ -187,6 +198,41 @@ Implementation (`mullvad-daemon/src/warren_app_routes.rs`,
   left to the main session.
 - A route session shares one process-wide state with the main session on
   purpose: the engine's memory of whether this network lets QUIC through.
+
+Route admission by anchor (warren-core doc 107 sections 10 and 11;
+`talpid-warren-tunnel/src/app_routes/session.rs`, `route_anchor_for` in
+`talpid-warren-tunnel/src/lib.rs`):
+
+- The daemon's token manager reads the `route_admission` block of the session
+  token directory on every refresh (warren-sdk-rs `TokenManager::route_admission`,
+  validated: version 1, a usable X25519 key under a non-reserved key id, a
+  non-zero R); the tunnel reads it through `RouteAdmissionSource`, the key when
+  it starts and the listed exits before each route dial. An unusable or absent
+  block reads as no route admission.
+- A tunnel with per-app routes wired builds one `RouteAnchorHandle` from that
+  key and hands it to its main supervisor (`with_route_anchor`) and to every
+  route session. A tunnel without per-app routes does not anchor. The anchor
+  secret stays inside the engine: it never crosses the daemon's gRPC or any
+  FFI, and nothing logs it, a locator, a serial or an exit id.
+- A v6 (wallet-signed) main session never anchors: the engine answers
+  `Unavailable` and every route runs on tokens.
+- A route to an exit the directory lists is dialed under
+  `SessionAdmission::Route` while the anchor is bound or still waiting for its
+  verdict (the engine waits up to 90 s for it before dialing). Any
+  `MultiHopError::RouteRefused` (a `RouteRejected` code, a plain `Rejected`
+  from an exit predating route admission, an anchor that is unavailable, a
+  `RouteEnded`) is answered at once by the same route under `TokensOnly`, as
+  routes ran before anchors. An exit that answered `not offered`, or predates
+  route admission, is not asked by anchor again for the tunnel's life; any
+  other refusal is asked by anchor again at the next attempt. A route to an
+  exit the directory does not list, or with an anchor known unusable, runs on
+  tokens directly.
+- A route admitted by anchor is handed no token provider at all, so it holds
+  no serial and leaves the wallet's three tokens to the main session and the
+  routes that need them.
+- Known limit: the tunnel reads the key when it starts. A tunnel started
+  before the daemon's first directory read (right after a daemon start) does
+  not anchor, and its routes run on tokens until the next tunnel.
 
 Tokens (`mullvad-daemon/src/warren_token_provider.rs`):
 
@@ -274,9 +320,11 @@ about its route sessions, and publishes `DaemonEvent.app_routes` when that
 changes: tunnel not connected is `unavailable (tunnel down)`; an exit the main
 connection already matches is `connected` with the main exit's address; a
 route session is `connecting` until it reports, `connected` with its exit's
-address, or `unavailable` (`no token`; `limit` when the exit refused every
-token, the usual cause being serials held by live sessions; `no relay` when
-nothing matches or the session failed). The public IP is the address the exit
+address, `waiting for a free route` when it is past what the server admits at
+once (section 2.2), or `unavailable` (`no token`; `limit` when a route on
+tokens was refused every token, the usual cause being serials held by the
+account's other sessions; `no relay` when nothing matches or the session
+failed). The public IP is the address the exit
 node is listed on: each exit egresses from it (measured on four beta exits,
 section 6).
 
@@ -633,19 +681,31 @@ unresolved owner goes through the main connection.
   sockets on the host OS.
 - Integration: the router between a fake TUN and two fake sessions (routing,
   fail closed per app, downlink translation).
-- Real exits: a harness that runs the router with real Warren sessions to two
-  beta exits and fetches the public IP through each (runs on macOS without
-  touching the host network):
+- Real exits: a harness that runs the router with a main session and a route
+  session to every other beta exit, and fetches the public IP through each
+  (runs on macOS without touching the host network):
   `WARREN_MNEMONIC="$(cat ~/.warren/app-routing-test-wallet.mnemonic)" cargo
   test -p mullvad-daemon --lib real_exit -- --ignored --nocapture`
   (`mullvad-daemon/src/warren_app_routes/real_exit.rs`). It mints the current
   epoch's batch with the daemon's manager and hands it out through the
-  daemon's token source. Both sessions are admitted on tokens: the main one
-  under its default admission but with a random key in place of the wallet's,
-  so an exit that admits it can only have admitted a token, and the route
-  session under tokens-only admission. The wallet needs a subscription and
-  two free serials this epoch; a wallet whose epoch was issued to a client
-  blinding at random is refused its derived batch. Measured 2026-09-26 on beta
+  daemon's token source. The main session is admitted on a token, under its
+  default admission but with a random key in place of the wallet's, so an
+  exit that admits it can only have admitted a token. When the token
+  directory offers route admission the main session anchors and the routes
+  to the listed exits are admitted by anchor, with no token each; otherwise
+  every route runs on tokens under tokens-only admission, two at most, and
+  the others wait. The wallet needs a subscription and free serials this
+  epoch; a wallet whose epoch was issued to a client blinding at random is
+  refused its derived batch. `WARREN_MAX_ROUTES` caps the number of routes.
+  Measured 2026-09-26 on beta with route admission not yet offered by the
+  token directory (the token fallback): main on RO 135.136.59.234, five
+  routes planned (DE, FI, FR, NL, SG); DE (167.233.127.54) and FI
+  (37.27.217.153) connected on tokens and each app appeared from its exit's
+  listed address, FR, NL and SG were reported waiting for a free route and
+  their apps got nothing, no routed packet reached the main session, the
+  unrouted app kept the main exit, and a stopped route blocked its app. The
+  anchor path's live proof is left to the validation run once the server side
+  is on. Measured earlier the same day on beta
   (RO main and DE route, then FI main and FR route, both with a wallet-admitted
   main session): each app appeared from its own exit's listed address, the
   routed app failed once its route was stopped while the unrouted one kept
@@ -683,15 +743,15 @@ The view keeps the split tunneling route (`RoutePath.splitTunneling`), renamed
 **App routing**, with the three tabs above; a link opens a given tab through
 the `app-routing-tab` location option. The rules it shows are computed in
 `desktop/packages/mullvad-vpn/src/shared/app-routing.ts`, which mirrors the
-daemon (precedence, the limit of `MAX_APP_EXITS` distinct exits) so the GUI
-explains a refusal before making it, and still maps the daemon's
-`app_exit_limit` answer when it comes.
+daemon's precedence. There is no limit on the number of countries to mirror:
+a route past what the server admits shows `Waiting for a free route` on its
+row.
 
 - **Country per app** gives an app its exit in one click: a chip on each row
   opens a searchable country and city picker that only reports the choice and
   never moves the main connection. Choosing a country while the tab switch is
-  off turns it on. A country the limit refuses stays listed, disabled, with
-  why; at the limit, a country whose city is in use opens on its cities.
+  off turns it on. Every country and city with an active server can be
+  chosen.
 - Each app with a country shows its route state from `AppRouteStatus` (pushed
   as `DaemonEvent.app_routes`): connecting, connected with its public IP, or
   the reason it is unavailable. A route waiting for the main connection is not

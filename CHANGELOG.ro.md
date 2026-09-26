@@ -16,11 +16,13 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [Windows, macOS, Linux] Split tunneling devine Rutare aplicații, cu trei file. „Fără VPN” ține
   aplicațiile alese în afara VPN-ului, ca înainte. „Țară per aplicație” trimite fiecare aplicație
   aleasă spre Internet printr-un exit din propria țară sau propriul oraș, în timp ce toate celelalte
-  aplicații păstrează conexiunea principală: până la două țări sau orașe pe lângă cea principală,
-  iar o aplicație a cărei țară nu poate fi atinsă e blocată în loc să fie trimisă pe altă cale. „VPN
-  selectiv” pune în VPN doar aplicațiile alese și lasă restul sistemului pe conexiunea obișnuită.
-  „Fără VPN” și „VPN selectiv” se înlocuiesc reciproc; „Țară per aplicație” funcționează cu oricare.
-  `warren app-routing` face același lucru dintr-un terminal.
+  aplicații păstrează conexiunea principală. Numărul de țări sau orașe nu e fix: rulează în același
+  timp câte admite serverul (o rută nu mai consumă un token de sesiune acolo unde serverul oferă
+  asta, iar unde nu, rulează două deodată), o țară peste acest număr așteaptă să se elibereze o
+  rută, iar o aplicație a cărei țară nu poate fi atinsă e blocată în loc să fie trimisă pe altă
+  cale. „VPN selectiv” pune în VPN doar aplicațiile alese și lasă restul sistemului pe conexiunea
+  obișnuită. „Fără VPN” și „VPN selectiv” se înlocuiesc reciproc; „Țară per aplicație” funcționează
+  cu oricare. `warren app-routing` face același lucru dintr-un terminal.
 - [Windows] Oferă „VPN selectiv”.
 - [Linux] Oferă „VPN selectiv” pentru aplicațiile deschise prin `warren-include`, pe sistemele cu
   cgroup v2 și nftables. O țară per aplicație funcționează pentru aplicațiile al căror program poate

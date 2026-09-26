@@ -26,11 +26,12 @@ Line wrap the file at 100 chars.                                              Th
 - [Windows, macOS, Linux] Replace Split tunneling with App routing, in three tabs. Bypass VPN keeps
   the apps you choose outside the VPN, as before. Country per app sends each app you choose to the
   Internet through an exit in its own country or city, while every other app keeps the main
-  connection: up to two countries or cities besides the main one, and an app whose country cannot
-  be reached is blocked rather than sent another way. VPN only for puts only the apps you choose in
-  the VPN and leaves the rest of the system on your normal connection. Bypass VPN and VPN only for
-  replace each other; Country per app works with either. `warren app-routing` does the same from a
-  terminal.
+  connection. There is no set number of countries or cities: as many run at once as the server
+  admits (routes spend no session token where the server offers it, and two run at once where it
+  does not), a country past that waits for a free route, and an app whose country cannot be reached
+  is blocked rather than sent another way. VPN only for puts only the apps you choose in the VPN and
+  leaves the rest of the system on your normal connection. Bypass VPN and VPN only for replace each
+  other; Country per app works with either. `warren app-routing` does the same from a terminal.
 - [Windows] Offer VPN only for.
 - [Linux] Offer VPN only for, for apps opened through `warren-include`, on systems with cgroup v2
   and nftables. A country per app works for apps whose program can be named, and the app list says

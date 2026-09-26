@@ -17,11 +17,14 @@ par l'application, gardez-le tel quel.
 - [Windows, macOS, Linux] Remplacer le split tunneling par le routage des apps, en trois onglets.
   Hors VPN garde les apps choisies en dehors du VPN, comme avant. Pays par app fait sortir chaque
   app choisie sur Internet par une exit dans son propre pays ou sa propre ville, pendant que toutes
-  les autres apps gardent la connexion principale : jusqu'à deux pays ou villes en plus de la
-  principale, et une app dont le pays est injoignable est bloquée plutôt qu'envoyée par un autre
-  chemin. VPN ciblé ne met dans le VPN que les apps choisies et laisse le reste du système sur votre
-  connexion habituelle. Hors VPN et VPN ciblé se remplacent l'un l'autre ; Pays par app fonctionne
-  avec les deux. `warren app-routing` fait de même depuis un terminal.
+  les autres apps gardent la connexion principale. Le nombre de pays ou de villes n'est pas fixé :
+  il en tourne à la fois autant que le serveur en admet (une route ne consomme plus de jeton de
+  session là où le serveur le propose, et deux tournent à la fois là où il ne le propose pas), un
+  pays au-delà attend qu'une route se libère, et une app dont le pays est injoignable est bloquée
+  plutôt qu'envoyée par un autre chemin. VPN ciblé ne met dans le VPN que les apps choisies et
+  laisse le reste du système sur votre connexion habituelle. Hors VPN et VPN ciblé se remplacent
+  l'un l'autre ; Pays par app fonctionne avec les deux. `warren app-routing` fait de même depuis un
+  terminal.
 - [Windows] Proposer VPN ciblé.
 - [Linux] Proposer VPN ciblé pour les apps ouvertes avec `warren-include`, sur les systèmes avec
   cgroup v2 et nftables. Un pays par app fonctionne pour les apps dont le programme peut être
