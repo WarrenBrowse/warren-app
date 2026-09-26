@@ -86,14 +86,14 @@
     <string name="app_routing_description">Scegli come si connette ogni app.</string>
     <string name="split_mode_bypass">Fuori dalla VPN</string>
     <string name="split_mode_bypass_description">Le app che scegli si connettono come se la VPN fosse disattivata.</string>
-    <string name="split_mode_include_only">VPN solo per</string>
+    <string name="split_mode_include_only">VPN selettiva</string>
     <string name="split_mode_include_only_description">Solo le app che scegli usano la VPN.</string>
     <string name="include_only_lockdown_warning">Attenzione: se è abilitata l\'opzione \"Blocca connessioni senza VPN\", le app che non hai scelto non avranno Internet.</string>
     <string name="include_only_banner">Solo queste app sono protette. Tutto il resto di questo dispositivo usa la tua connessione normale.</string>
     <string name="include_only_no_app">Nessuna delle app scelte è su questo dispositivo, quindi tutte le app usano la VPN finché non ne scegli una.</string>
     <string name="include_only_confirm">Solo le app che scegli useranno la VPN. Il resto di questo dispositivo non sarà protetto.</string>
-    <string name="split_mode_replaces_bypass">Questo sostituisce \"Fuori dalla VPN\". Il tuo elenco di app lì viene mantenuto.</string>
-    <string name="split_mode_replaces_include_only">Questo sostituisce \"VPN solo per\": tutte le app tornano a usare la VPN tranne quelle che lasci fuori. Il tuo elenco di app lì viene mantenuto.</string>
+    <string name="split_mode_replaces_bypass">Questa opzione sostituisce \"Fuori dalla VPN\". Il suo elenco di app viene conservato.</string>
+    <string name="split_mode_replaces_include_only">Questa opzione sostituisce \"VPN selettiva\": tutte le app tornano a usare la VPN tranne quelle che lasci fuori. Il suo elenco di app viene conservato.</string>
     <string name="split_mode_turn_on">Attiva</string>
     <string name="apps_using_the_vpn">Nella VPN</string>
     <plurals name="vpn_only_for_apps">
