@@ -1091,7 +1091,7 @@ msgstr "잘못된 계정 번호로 로그인했습니다. 로그아웃한 후 �
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "인터넷 차단: 이용 정책 위반으로 액세스가 취소되었습니다. 잘못된 조치라고 생각되면 지원팀에 문의하세요."
+msgstr "인터넷 차단 중: 이용 정책 위반으로 액세스가 취소되었습니다. 잘못된 조치라고 생각되면 지원팀에 문의하세요."
 
 msgctxt "auth-failure"
 msgid "Unable to authenticate account. Please report the problem on our community forum."
@@ -2585,7 +2585,7 @@ msgstr "비활성화됨"
 
 msgctxt "port-forwarding-view"
 msgid "How to set up your torrent client"
-msgstr "토렌트 클라이언트 설정 방법"
+msgstr "torrent 클라이언트 설정 방법"
 
 msgctxt "port-forwarding-view"
 msgid "Notify me when a public port changes"
@@ -5656,7 +5656,7 @@ msgstr "%(daita)s는 네트워크 노이즈를 추가하고 모든 패킷을 동
 
 msgctxt "wireguard-settings-view"
 msgid "%(daita)s is not active on the current server: this connection is not protected by it. Reconnect or select a different location."
-msgstr "%(daita)s가 현재 서버에서 활성화되어 있지 않습니다. 이 연결은 %(daita)s로 보호되지 않습니다. 다시 연결하거나 다른 위치를 선택하세요."
+msgstr "%(daita)s가 현재 서버에서 활성화되어 있지 않습니다. 이 연결은 그 보호를 받지 않습니다. 다시 연결하거나 다른 위치를 선택하세요."
 
 msgctxt "wireguard-settings-view"
 msgid "Even when encrypted, the data packets entering and leaving your device can be analyzed by AI to reveal your activity."
@@ -5680,7 +5680,7 @@ msgstr "포럼 이름"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "인터넷 차단 중: 전달된 포트에 대한 남용 신고가 반복되어 접근이 취소되었습니다. %(url)s 에서 이의를 제기할 수 있습니다"
+msgstr "인터넷 차단 중: 포워딩된 포트에 대한 남용 신고가 반복되어 액세스가 취소되었습니다. %(url)s 에서 이의를 제기할 수 있습니다"
 
 msgctxt "forum-activity-view"
 msgid "%(actor)s liked your post"
@@ -5765,7 +5765,7 @@ msgstr "열기"
 
 msgctxt "port-forwarding-view"
 msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
-msgstr "전달된 포트는 인터넷에서 접근할 수 있습니다. 제3자가 해당 포트에서 발생한 남용을 신고하면 포트를 닫고 계정에 위반을 기록합니다. 90일 안에 세 번이면 접근이 취소됩니다. 자세한 내용과 이의 제기: %(url)s"
+msgstr "포워딩된 포트는 인터넷에서 접근할 수 있습니다. 제3자가 해당 포트에서 발생한 남용을 신고하면 포트를 닫고 계정에 경고를 기록합니다. 90일 안에 경고가 세 번 기록되면 액세스가 취소됩니다. 자세한 내용과 이의 제기: %(url)s"
 
 msgctxt "port-forwarding-view"
 msgid "%(client)s now listens on port %(port)d"
@@ -5833,11 +5833,11 @@ msgstr "사용자 이름"
 
 msgctxt "port-forwarding-view"
 msgid "Waiting for a public port"
-msgstr "공개 포트를 기다리는 중"
+msgstr "공용 포트를 기다리는 중"
 
 msgctxt "port-forwarding-view"
 msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client’s web interface first."
-msgstr "Warren은 공개 포트를 torrent 클라이언트에 입력하고 변경될 때마다 업데이트할 수 있습니다. 먼저 클라이언트의 웹 인터페이스를 켜 주세요."
+msgstr "Warren은 공용 포트를 torrent 클라이언트에 입력하고 변경될 때마다 업데이트할 수 있습니다. 먼저 클라이언트의 웹 인터페이스를 켜 주세요."
 
 msgctxt "port-forwarding-view"
 msgid "Web interface address"
@@ -6102,3 +6102,155 @@ msgstr "이 기기의 브라우저에서 완료"
 msgctxt "forum-login"
 msgid "Close"
 msgstr "닫기"
+
+msgctxt "accessibility"
+msgid "Community forum"
+msgstr "커뮤니티 포럼"
+
+msgctxt "accessibility"
+msgid "How to contest a warning"
+msgstr "경고에 이의를 제기하는 방법"
+
+msgctxt "account-view"
+msgid "Paused while access is revoked: nothing is charged."
+msgstr "액세스가 취소된 동안 일시 중지되며, 요금이 청구되지 않습니다."
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "인터넷 차단 중: 포워딩된 포트에 대한 남용 신고가 반복되어 %(date)s까지 액세스가 취소되었습니다. %(url)s 에서 이의를 제기할 수 있습니다"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "인터넷 차단 중: 이용 정책 위반으로 %(date)s까지 액세스가 취소되었습니다. 잘못된 조치라고 생각되면 지원팀에 문의하세요."
+
+msgctxt "connect-view"
+msgid "Degraded bond"
+msgstr "본딩 저하"
+
+msgctxt "connect-view"
+msgid "Degraded bond (%(stalled)s of %(bonded)s)"
+msgstr "본딩 저하(%(bonded)s개 중 %(stalled)s개 중단)"
+
+msgctxt "in-app-notifications"
+msgid "%(product)s has taken priority on this device, so this build disconnected and turned its kill switch off."
+msgstr "이 기기에서 %(product)s이(가) 우선하므로 이 빌드는 연결을 끊고 킬 스위치를 껐습니다."
+
+msgctxt "in-app-notifications"
+msgid "%(product)s holds the tunnel on this device. It stands down on its own as soon as you connect here."
+msgstr "현재 이 기기의 터널은 %(product)s이(가) 사용하고 있습니다. 여기에서 연결하면 해당 빌드는 자동으로 대기 상태로 전환됩니다."
+
+msgctxt "in-app-notifications"
+msgid "ANOTHER BUILD IS CONNECTED"
+msgstr "다른 빌드가 연결됨"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back"
+msgstr "이 빌드 다시 사용"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back."
+msgstr "이 빌드 다시 사용하기"
+
+msgctxt "in-app-notifications"
+msgid "PORT FORWARDING WARNING"
+msgstr "포트 포워딩 경고"
+
+msgctxt "in-app-notifications"
+msgid "RECONNECTED AFTER A CRASH"
+msgstr "비정상 종료 후 다시 연결됨"
+
+msgctxt "in-app-notifications"
+msgid "STANDING BY"
+msgstr "대기 중"
+
+msgctxt "in-app-notifications"
+msgid "You can bring it back once %(product)s is disconnected."
+msgstr "%(product)s의 연결이 끊어지면 이 빌드를 다시 사용할 수 있습니다."
+
+msgctxt "in-app-notifications"
+msgid "Your device did not shut down cleanly, so Warren restored your previous connection. Neither auto-connect nor launch on start-up is on. Disconnect if you did not want this."
+msgstr "기기가 정상적으로 종료되지 않아 Warren이 이전 연결을 복원했습니다. 자동 연결과 시작 시 앱 실행 설정은 모두 꺼져 있습니다. 원하지 않았다면 연결을 끊으세요."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse until %(date)s."
+msgstr "포트 포워딩 남용으로 %(date)s까지 액세스가 취소되었습니다."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse."
+msgstr "포트 포워딩 남용으로 액세스가 취소되었습니다."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked until %(date)s."
+msgstr "%(date)s까지 액세스가 취소되었습니다."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked."
+msgstr "액세스가 취소되었습니다."
+
+msgctxt "port-forwarding-view"
+msgid "Case reference: %(reference)s"
+msgstr "사건 번호: %(reference)s"
+
+msgctxt "port-forwarding-view"
+msgid "child sexual abuse material"
+msgstr "아동 성착취물"
+
+msgctxt "port-forwarding-view"
+msgid "copyright"
+msgstr "저작권"
+
+msgctxt "port-forwarding-view"
+msgid "malware"
+msgstr "멀웨어"
+
+msgctxt "port-forwarding-view"
+msgid "no entitlement left, retrying"
+msgstr "남은 포트 권한 없음, 재시도 중"
+
+msgctxt "port-forwarding-view"
+msgid "other"
+msgstr "기타"
+
+msgctxt "port-forwarding-view"
+msgid "phishing"
+msgstr "피싱"
+
+msgctxt "port-forwarding-view"
+msgid "Port %(port)d was closed after an abuse report. %(client)s keeps its port until you apply one."
+msgstr "남용 신고로 포트 %(port)d이(가) 닫혔습니다. 새 포트를 적용할 때까지 %(client)s은(는) 기존 포트를 유지합니다."
+
+msgctxt "port-forwarding-view"
+msgid "refused, retrying"
+msgstr "거부됨, 재시도 중"
+
+msgctxt "port-forwarding-view"
+msgid "scanning or intrusion"
+msgstr "스캔 또는 침입"
+
+msgctxt "port-forwarding-view"
+msgid "spam"
+msgstr "스팸"
+
+msgctxt "port-forwarding-view"
+msgid "To contest a warning, write to %(email)s quoting its case reference."
+msgstr "경고에 이의를 제기하려면 사건 번호를 기재하여 %(email)s(으)로 연락하세요."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d of %(threshold)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "경고 %(ordinal)d/%(threshold)d: 남용 신고(%(category)s)에 따라 %(day)s에 포트 %(port)d을(를) 닫았습니다."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "경고 %(ordinal)d: 남용 신고(%(category)s)에 따라 %(day)s에 포트 %(port)d을(를) 닫았습니다."
+
+msgctxt "port-forwarding-view"
+msgid "Warnings"
+msgstr "경고"
+
+msgctxt "port-forwarding-view"
+msgid "Warnings and how to contest them"
+msgstr "경고 및 이의 제기 방법"
+
+msgctxt "redeem-voucher-view"
+msgid "The voucher was not used: keep it and redeem it once the revocation ends."
+msgstr "바우처가 사용되지 않았습니다. 보관해 두었다가 액세스 취소 기간이 끝나면 사용하세요."

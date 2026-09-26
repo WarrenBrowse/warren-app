@@ -1097,7 +1097,7 @@ msgstr "U bent aangemeld met een ongeldig accountnummer. Meld af en probeer een 
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "Internet geblokkeerd: uw toegang is ingetrokken wegens schending van het gebruiksbeleid. Neem contact op met de ondersteuning als u denkt dat dit een vergissing is."
+msgstr "Internet geblokkeerd: je toegang is ingetrokken wegens schending van het gebruiksbeleid. Neem contact op met de ondersteuning als je denkt dat dit een vergissing is."
 
 msgctxt "auth-failure"
 msgid "Unable to authenticate account. Please report the problem on our community forum."
@@ -5391,11 +5391,11 @@ msgstr "+ Een poort toevoegen"
 
 msgctxt "port-forwarding-view"
 msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
-msgstr "Elke poort die u toevoegt wordt op de exitserver geopend en doorgestuurd naar dezelfde poort op uw apparaat. Wijzigingen worden direct toegepast, zonder dat opnieuw verbinden nodig is."
+msgstr "Elke poort die je toevoegt, wordt op de exitserver geopend en doorgestuurd naar dezelfde poort op je apparaat. Wijzigingen worden direct toegepast, zonder dat opnieuw verbinden nodig is."
 
 msgctxt "port-forwarding-view"
 msgid "Last port change before a temporary block. Wait a moment before changing it again."
-msgstr "Laatste poortwijziging vóór een tijdelijke blokkade. Wacht even voordat u hem opnieuw wijzigt."
+msgstr "Laatste poortwijziging vóór een tijdelijke blokkade. Wacht even voordat je hem opnieuw wijzigt."
 
 msgctxt "port-forwarding-view"
 msgid "Maximum of %(max)d ports reached"
@@ -5423,11 +5423,11 @@ msgstr "Status: wachten op een actieve tunnelverbinding om de poorttoewijzingen 
 
 msgctxt "port-forwarding-view"
 msgid "This port is already in your list."
-msgstr "Deze poort staat al in uw lijst."
+msgstr "Deze poort staat al in je lijst."
 
 msgctxt "port-forwarding-view"
 msgid "Too many port changes. You can change ports again in %(countdown)s."
-msgstr "Te veel poortwijzigingen. U kunt poorten opnieuw wijzigen over %(countdown)s."
+msgstr "Te veel poortwijzigingen. Je kunt poorten opnieuw wijzigen over %(countdown)s."
 
 msgctxt "port-forwarding-view"
 msgid "applying…"
@@ -5710,7 +5710,7 @@ msgstr "Forumnaam"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "Internet wordt geblokkeerd: je toegang is ingetrokken na herhaalde misbruikmeldingen over een doorgestuurde poort. Je kunt hiertegen bezwaar maken op %(url)s"
+msgstr "Internet geblokkeerd: je toegang is ingetrokken na herhaalde misbruikmeldingen over een doorgestuurde poort. Je kunt hiertegen bezwaar maken op %(url)s"
 
 msgctxt "forum-activity-view"
 msgid "%(actor)s liked your post"
@@ -5796,7 +5796,7 @@ msgstr "Openen"
 
 msgctxt "port-forwarding-view"
 msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
-msgstr "Een doorgestuurde poort is bereikbaar vanaf internet. Als een derde misbruik meldt dat daarvandaan komt, sluiten we de poort en noteren we een overtreding op je account; drie overtredingen binnen 90 dagen trekken de toegang in. Details en bezwaar maken: %(url)s"
+msgstr "Een doorgestuurde poort is bereikbaar vanaf internet. Als een derde misbruik meldt dat daarvandaan komt, sluiten we de poort en noteren we een waarschuwing op je account; drie waarschuwingen binnen 90 dagen trekken de toegang in. Details en bezwaar maken: %(url)s"
 
 msgctxt "port-forwarding-view"
 msgid "%(client)s now listens on port %(port)d"
@@ -6133,3 +6133,155 @@ msgstr "Afronden in de browser van dit apparaat"
 msgctxt "forum-login"
 msgid "Close"
 msgstr "Sluiten"
+
+msgctxt "accessibility"
+msgid "Community forum"
+msgstr "Community-forum"
+
+msgctxt "accessibility"
+msgid "How to contest a warning"
+msgstr "Hoe je bezwaar maakt tegen een waarschuwing"
+
+msgctxt "account-view"
+msgid "Paused while access is revoked: nothing is charged."
+msgstr "Gepauzeerd zolang de toegang is ingetrokken: er wordt niets in rekening gebracht."
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "Internet geblokkeerd: je toegang is tot %(date)s ingetrokken na herhaalde misbruikmeldingen over een doorgestuurde poort. Je kunt hiertegen bezwaar maken op %(url)s"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "Internet geblokkeerd: je toegang is tot %(date)s ingetrokken wegens schending van het gebruiksbeleid. Neem contact op met de ondersteuning als je denkt dat dit een vergissing is."
+
+msgctxt "connect-view"
+msgid "Degraded bond"
+msgstr "Verminderde bundeling"
+
+msgctxt "connect-view"
+msgid "Degraded bond (%(stalled)s of %(bonded)s)"
+msgstr "Verminderde bundeling (%(stalled)s van %(bonded)s)"
+
+msgctxt "in-app-notifications"
+msgid "%(product)s has taken priority on this device, so this build disconnected and turned its kill switch off."
+msgstr "%(product)s heeft op dit apparaat voorrang gekregen, dus deze versie heeft de verbinding verbroken en de killswitch uitgeschakeld."
+
+msgctxt "in-app-notifications"
+msgid "%(product)s holds the tunnel on this device. It stands down on its own as soon as you connect here."
+msgstr "%(product)s gebruikt de tunnel op dit apparaat en geeft hem vanzelf vrij zodra u hier verbinding maakt."
+
+msgctxt "in-app-notifications"
+msgid "ANOTHER BUILD IS CONNECTED"
+msgstr "EEN ANDERE VERSIE IS VERBONDEN"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back"
+msgstr "Deze versie weer activeren"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back."
+msgstr "Deze versie weer activeren."
+
+msgctxt "in-app-notifications"
+msgid "PORT FORWARDING WARNING"
+msgstr "WAARSCHUWING POORTDOORSCHAKELING"
+
+msgctxt "in-app-notifications"
+msgid "RECONNECTED AFTER A CRASH"
+msgstr "OPNIEUW VERBONDEN NA EEN CRASH"
+
+msgctxt "in-app-notifications"
+msgid "STANDING BY"
+msgstr "STAND-BY"
+
+msgctxt "in-app-notifications"
+msgid "You can bring it back once %(product)s is disconnected."
+msgstr "U kunt deze versie weer activeren zodra %(product)s de verbinding heeft verbroken."
+
+msgctxt "in-app-notifications"
+msgid "Your device did not shut down cleanly, so Warren restored your previous connection. Neither auto-connect nor launch on start-up is on. Disconnect if you did not want this."
+msgstr "Uw apparaat is niet correct afgesloten, dus Warren heeft uw vorige verbinding hersteld. Automatisch verbinden en Lanceren bij opstarten staan allebei uit. Verbreek de verbinding als u dit niet wilde."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse until %(date)s."
+msgstr "Toegang tot %(date)s ingetrokken wegens misbruik van poortdoorschakeling."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse."
+msgstr "Toegang ingetrokken wegens misbruik van poortdoorschakeling."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked until %(date)s."
+msgstr "Toegang ingetrokken tot %(date)s."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked."
+msgstr "Toegang ingetrokken."
+
+msgctxt "port-forwarding-view"
+msgid "Case reference: %(reference)s"
+msgstr "Dossierreferentie: %(reference)s"
+
+msgctxt "port-forwarding-view"
+msgid "child sexual abuse material"
+msgstr "materiaal van seksueel misbruik van kinderen"
+
+msgctxt "port-forwarding-view"
+msgid "copyright"
+msgstr "auteursrecht"
+
+msgctxt "port-forwarding-view"
+msgid "malware"
+msgstr "malware"
+
+msgctxt "port-forwarding-view"
+msgid "no entitlement left, retrying"
+msgstr "geen poortrecht meer, nieuwe poging"
+
+msgctxt "port-forwarding-view"
+msgid "other"
+msgstr "overig"
+
+msgctxt "port-forwarding-view"
+msgid "phishing"
+msgstr "phishing"
+
+msgctxt "port-forwarding-view"
+msgid "Port %(port)d was closed after an abuse report. %(client)s keeps its port until you apply one."
+msgstr "Poort %(port)d is gesloten na een misbruikmelding. %(client)s behoudt zijn huidige poort totdat je een nieuwe toepast."
+
+msgctxt "port-forwarding-view"
+msgid "refused, retrying"
+msgstr "geweigerd, nieuwe poging"
+
+msgctxt "port-forwarding-view"
+msgid "scanning or intrusion"
+msgstr "scannen of inbraakpoging"
+
+msgctxt "port-forwarding-view"
+msgid "spam"
+msgstr "spam"
+
+msgctxt "port-forwarding-view"
+msgid "To contest a warning, write to %(email)s quoting its case reference."
+msgstr "Wil je bezwaar maken tegen een waarschuwing? Schrijf dan naar %(email)s en vermeld de dossierreferentie."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d of %(threshold)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "Waarschuwing %(ordinal)d van %(threshold)d: poort %(port)d is op %(day)s gesloten na een misbruikmelding (%(category)s)."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "Waarschuwing %(ordinal)d: poort %(port)d is op %(day)s gesloten na een misbruikmelding (%(category)s)."
+
+msgctxt "port-forwarding-view"
+msgid "Warnings"
+msgstr "Waarschuwingen"
+
+msgctxt "port-forwarding-view"
+msgid "Warnings and how to contest them"
+msgstr "Waarschuwingen en hoe je bezwaar maakt"
+
+msgctxt "redeem-voucher-view"
+msgid "The voucher was not used: keep it and redeem it once the revocation ends."
+msgstr "De voucher is niet gebruikt: bewaar hem en wissel hem in zodra de intrekking voorbij is."

@@ -5387,3 +5387,51 @@ msgstr "Pas encore de pays pour les apps Snap"
 msgctxt "split-tunneling-view"
 msgid "Opens through a script: pick its program with Find another app"
 msgstr "S'ouvre via un script : choisissez son programme avec « Trouver une autre application »"
+
+msgctxt "accessibility"
+msgid "Community forum"
+msgstr "Forum communautaire"
+
+msgctxt "connect-view"
+msgid "Degraded bond"
+msgstr "Chemins dégradés"
+
+msgctxt "connect-view"
+msgid "Degraded bond (%(stalled)s of %(bonded)s)"
+msgstr "Chemins dégradés (%(stalled)s sur %(bonded)s)"
+
+msgctxt "in-app-notifications"
+msgid "%(product)s has taken priority on this device, so this build disconnected and turned its kill switch off."
+msgstr "%(product)s est prioritaire sur cet appareil : cette version s'est déconnectée et a désactivé son coupe-circuit."
+
+msgctxt "in-app-notifications"
+msgid "%(product)s holds the tunnel on this device. It stands down on its own as soon as you connect here."
+msgstr "%(product)s occupe le tunnel sur cet appareil. Il cède la place de lui-même dès que vous vous connectez ici."
+
+msgctxt "in-app-notifications"
+msgid "ANOTHER BUILD IS CONNECTED"
+msgstr "UNE AUTRE VERSION EST CONNECTÉE"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back"
+msgstr "Réactiver cette version"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back."
+msgstr "Réactiver cette version."
+
+msgctxt "in-app-notifications"
+msgid "RECONNECTED AFTER A CRASH"
+msgstr "RECONNECTÉ APRÈS UN PLANTAGE"
+
+msgctxt "in-app-notifications"
+msgid "STANDING BY"
+msgstr "EN ATTENTE"
+
+msgctxt "in-app-notifications"
+msgid "You can bring it back once %(product)s is disconnected."
+msgstr "Vous pourrez la réactiver une fois %(product)s déconnecté."
+
+msgctxt "in-app-notifications"
+msgid "Your device did not shut down cleanly, so Warren restored your previous connection. Neither auto-connect nor launch on start-up is on. Disconnect if you did not want this."
+msgstr "Votre appareil ne s'est pas éteint correctement, Warren a donc rétabli votre connexion précédente. Ni la connexion automatique ni le lancement au démarrage ne sont activés. Déconnectez-vous si vous ne le souhaitiez pas."

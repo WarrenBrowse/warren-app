@@ -5697,7 +5697,7 @@ msgstr "نام انجمن"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "مسدود کردن اینترنت: دسترسی شما پس از گزارش‌های مکرر سوءاستفاده درباره یک درگاه بازارسالی‌شده لغو شد. می‌توانید در %(url)s اعتراض کنید"
+msgstr "مسدود کردن اینترنت: دسترسی شما پس از گزارش‌های مکرر سوءاستفاده دربارهٔ یک درگاه هدایت‌شده لغو شده است. می‌توانید در %(url)s اعتراض کنید"
 
 msgctxt "forum-activity-view"
 msgid "%(actor)s liked your post"
@@ -5783,7 +5783,7 @@ msgstr "باز کردن"
 
 msgctxt "port-forwarding-view"
 msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
-msgstr "درگاه بازارسالی‌شده از اینترنت در دسترس است. اگر شخص ثالثی سوءاستفاده از آن را گزارش کند، درگاه را می‌بندیم و یک تخلف برای حساب شما ثبت می‌کنیم؛ سه تخلف در ۹۰ روز دسترسی را لغو می‌کند. جزئیات و شیوهٔ اعتراض: %(url)s"
+msgstr "درگاه هدایت‌شده از اینترنت در دسترس است. اگر شخص ثالثی سوءاستفاده از آن را گزارش کند، درگاه را می‌بندیم و یک اخطار برای حساب شما ثبت می‌کنیم؛ سه اخطار در ۹۰ روز دسترسی را لغو می‌کند. جزئیات و شیوهٔ اعتراض: %(url)s"
 
 msgctxt "port-forwarding-view"
 msgid "%(client)s now listens on port %(port)d"
@@ -6120,3 +6120,155 @@ msgstr "تکمیل در مرورگر همین دستگاه"
 msgctxt "forum-login"
 msgid "Close"
 msgstr "بستن"
+
+msgctxt "accessibility"
+msgid "Community forum"
+msgstr "انجمن جامعه"
+
+msgctxt "accessibility"
+msgid "How to contest a warning"
+msgstr "شیوهٔ اعتراض به اخطار"
+
+msgctxt "account-view"
+msgid "Paused while access is revoked: nothing is charged."
+msgstr "در مدت لغو دسترسی متوقف است: هیچ مبلغی کسر نمی‌شود."
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "مسدود کردن اینترنت: دسترسی شما پس از گزارش‌های مکرر سوءاستفاده دربارهٔ یک درگاه هدایت‌شده تا %(date)s لغو شده است. می‌توانید در %(url)s اعتراض کنید"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "مسدود کردن اینترنت: دسترسی شما به‌دلیل نقض سیاست استفاده تا %(date)s لغو شده است. اگر فکر می‌کنید اشتباهی رخ داده، با پشتیبانی تماس بگیرید."
+
+msgctxt "connect-view"
+msgid "Degraded bond"
+msgstr "افت تجمیع اتصال‌ها"
+
+msgctxt "connect-view"
+msgid "Degraded bond (%(stalled)s of %(bonded)s)"
+msgstr "افت تجمیع اتصال‌ها (%(stalled)s از %(bonded)s)"
+
+msgctxt "in-app-notifications"
+msgid "%(product)s has taken priority on this device, so this build disconnected and turned its kill switch off."
+msgstr "روی این دستگاه، %(product)s اولویت را در دست گرفته است؛ بنابراین این نسخه اتصال را قطع کرد و کلید قطع خود را خاموش کرد."
+
+msgctxt "in-app-notifications"
+msgid "%(product)s holds the tunnel on this device. It stands down on its own as soon as you connect here."
+msgstr "در حال حاضر تونل این دستگاه در اختیار %(product)s است. به‌محض اینکه از اینجا متصل شوید، خودبه‌خود کنار می‌رود."
+
+msgctxt "in-app-notifications"
+msgid "ANOTHER BUILD IS CONNECTED"
+msgstr "نسخهٔ دیگری متصل است"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back"
+msgstr "بازگرداندن این نسخه"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back."
+msgstr "این نسخه را برگردانید."
+
+msgctxt "in-app-notifications"
+msgid "PORT FORWARDING WARNING"
+msgstr "اخطار هدایت درگاه"
+
+msgctxt "in-app-notifications"
+msgid "RECONNECTED AFTER A CRASH"
+msgstr "پس از توقف ناگهانی دوباره متصل شد"
+
+msgctxt "in-app-notifications"
+msgid "STANDING BY"
+msgstr "در حالت انتظار"
+
+msgctxt "in-app-notifications"
+msgid "You can bring it back once %(product)s is disconnected."
+msgstr "پس از قطع شدن اتصال %(product)s می‌توانید آن را برگردانید."
+
+msgctxt "in-app-notifications"
+msgid "Your device did not shut down cleanly, so Warren restored your previous connection. Neither auto-connect nor launch on start-up is on. Disconnect if you did not want this."
+msgstr "دستگاه شما به‌درستی خاموش نشد، بنابراین Warren اتصال قبلی شما را بازگرداند. نه اتصال خودکار روشن است و نه اجرای اپلیکیشن هنگام شروع سیستم. اگر این را نمی‌خواستید، اتصال را قطع کنید."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse until %(date)s."
+msgstr "دسترسی به‌دلیل سوءاستفاده از هدایت درگاه تا %(date)s لغو شد."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse."
+msgstr "دسترسی به‌دلیل سوءاستفاده از هدایت درگاه لغو شد."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked until %(date)s."
+msgstr "دسترسی تا %(date)s لغو شد."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked."
+msgstr "دسترسی لغو شد."
+
+msgctxt "port-forwarding-view"
+msgid "Case reference: %(reference)s"
+msgstr "شمارهٔ پرونده: %(reference)s"
+
+msgctxt "port-forwarding-view"
+msgid "child sexual abuse material"
+msgstr "محتوای سوءاستفادهٔ جنسی از کودکان"
+
+msgctxt "port-forwarding-view"
+msgid "copyright"
+msgstr "حق نشر"
+
+msgctxt "port-forwarding-view"
+msgid "malware"
+msgstr "بدافزار"
+
+msgctxt "port-forwarding-view"
+msgid "no entitlement left, retrying"
+msgstr "سهمیهٔ درگاه باقی نمانده، در حال تلاش دوباره"
+
+msgctxt "port-forwarding-view"
+msgid "other"
+msgstr "سایر"
+
+msgctxt "port-forwarding-view"
+msgid "phishing"
+msgstr "فیشینگ"
+
+msgctxt "port-forwarding-view"
+msgid "Port %(port)d was closed after an abuse report. %(client)s keeps its port until you apply one."
+msgstr "درگاه %(port)d پس از گزارش سوءاستفاده بسته شد. درگاه فعلی %(client)s تا زمانی که درگاه جدیدی اعمال کنید تغییر نمی‌کند."
+
+msgctxt "port-forwarding-view"
+msgid "refused, retrying"
+msgstr "رد شد، در حال تلاش دوباره"
+
+msgctxt "port-forwarding-view"
+msgid "scanning or intrusion"
+msgstr "اسکن یا نفوذ"
+
+msgctxt "port-forwarding-view"
+msgid "spam"
+msgstr "هرزنامه"
+
+msgctxt "port-forwarding-view"
+msgid "To contest a warning, write to %(email)s quoting its case reference."
+msgstr "برای اعتراض به یک اخطار، با ذکر شمارهٔ پرونده‌اش به %(email)s بنویسید."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d of %(threshold)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "اخطار %(ordinal)d از %(threshold)d: درگاه %(port)d در %(day)s پس از گزارش سوءاستفاده بسته شد (%(category)s)."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "اخطار %(ordinal)d: درگاه %(port)d در %(day)s پس از گزارش سوءاستفاده بسته شد (%(category)s)."
+
+msgctxt "port-forwarding-view"
+msgid "Warnings"
+msgstr "اخطارها"
+
+msgctxt "port-forwarding-view"
+msgid "Warnings and how to contest them"
+msgstr "اخطارها و شیوهٔ اعتراض به آن‌ها"
+
+msgctxt "redeem-voucher-view"
+msgid "The voucher was not used: keep it and redeem it once the revocation ends."
+msgstr "ووچر استفاده نشد: آن را نگه دارید و پس از پایان دورهٔ لغو دسترسی، فعالش کنید."

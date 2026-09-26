@@ -1091,7 +1091,7 @@ msgstr "無効なアカウント番号でログインしています。いった
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."
-msgstr "インターネットをブロック中: 利用ポリシー違反によりアクセスが取り消されました。誤りだと思われる場合はサポートにお問い合わせください。"
+msgstr "インターネットをブロック中: 利用ポリシー違反により、アクセスが取り消されました。誤りだと思われる場合はサポートにお問い合わせください。"
 
 msgctxt "auth-failure"
 msgid "Unable to authenticate account. Please report the problem on our community forum."
@@ -2428,11 +2428,11 @@ msgstr "今すぐ更新するにはここをクリックしてください"
 
 msgctxt "notifications"
 msgid "Port forwarding: public port %(port)d is no longer open"
-msgstr "ポート転送: パブリックポート %(port)d は開いていません"
+msgstr "ポート転送: 公開ポート %(port)d は開いていません"
 
 msgctxt "notifications"
 msgid "Port forwarding: public port %(port)d is open"
-msgstr "ポート転送: パブリックポート %(port)d が開きました"
+msgstr "ポート転送: 公開ポート %(port)d が開きました"
 
 msgctxt "notifications"
 msgid "Reconnecting"
@@ -2585,11 +2585,11 @@ msgstr "無効"
 
 msgctxt "port-forwarding-view"
 msgid "How to set up your torrent client"
-msgstr "トレントクライアントの設定方法"
+msgstr "torrent クライアントの設定方法"
 
 msgctxt "port-forwarding-view"
 msgid "Notify me when a public port changes"
-msgstr "パブリックポートが変わったら通知する"
+msgstr "公開ポートが変わったら通知する"
 
 msgctxt "port-forwarding-view"
 msgid "This public port is already in use on this exit. Keep your port by switching exit, let the exit assign a free public port, or type another port above."
@@ -5656,7 +5656,7 @@ msgstr "%(daita)s はネットワークノイズを追加し、すべてのパ�
 
 msgctxt "wireguard-settings-view"
 msgid "%(daita)s is not active on the current server: this connection is not protected by it. Reconnect or select a different location."
-msgstr "%(daita)s は現在のサーバーでは有効になっていません。この接続は %(daita)s で保護されていません。再接続するか、別の場所を選択してください。"
+msgstr "%(daita)s は現在のサーバーでは有効になっていません。この接続はその保護を受けていません。再接続するか、別の場所を選択してください。"
 
 msgctxt "wireguard-settings-view"
 msgid "Even when encrypted, the data packets entering and leaving your device can be analyzed by AI to reveal your activity."
@@ -5680,7 +5680,7 @@ msgstr "フォーラム名"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "インターネットをブロックしています。転送ポートに関する不正利用の報告が繰り返されたため、アクセスが取り消されました。%(url)s で異議を申し立てられます"
+msgstr "インターネットをブロック中: 転送ポートに関する不正利用の報告が繰り返されたため、アクセスが取り消されました。%(url)s で異議を申し立てられます"
 
 msgctxt "forum-activity-view"
 msgid "%(actor)s liked your post"
@@ -5765,7 +5765,7 @@ msgstr "開く"
 
 msgctxt "port-forwarding-view"
 msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
-msgstr "転送ポートはインターネットから到達できます。第三者がそこからの不正利用を報告した場合、ポートを閉じ、アカウントに違反を記録します。90 日以内に 3 回でアクセスを取り消します。詳細と異議申し立て: %(url)s"
+msgstr "転送ポートはインターネットから到達できます。第三者がそこからの不正利用を報告した場合、ポートを閉じ、アカウントに警告を記録します。90 日以内に警告が 3 回記録されると、アクセスを取り消します。詳細と異議申し立て: %(url)s"
 
 msgctxt "port-forwarding-view"
 msgid "%(client)s now listens on port %(port)d"
@@ -6102,3 +6102,155 @@ msgstr "このデバイスのブラウザで完了"
 msgctxt "forum-login"
 msgid "Close"
 msgstr "閉じる"
+
+msgctxt "accessibility"
+msgid "Community forum"
+msgstr "コミュニティフォーラム"
+
+msgctxt "accessibility"
+msgid "How to contest a warning"
+msgstr "警告に異議を申し立てる方法"
+
+msgctxt "account-view"
+msgid "Paused while access is revoked: nothing is charged."
+msgstr "アクセスの取り消し中は一時停止され、料金は発生しません。"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "インターネットをブロック中: 転送ポートに関する不正利用の報告が繰り返されたため、%(date)s までアクセスが取り消されました。%(url)s で異議を申し立てられます"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "インターネットをブロック中: 利用ポリシー違反により、%(date)s までアクセスが取り消されました。誤りだと思われる場合はサポートにお問い合わせください。"
+
+msgctxt "connect-view"
+msgid "Degraded bond"
+msgstr "ボンディング低下"
+
+msgctxt "connect-view"
+msgid "Degraded bond (%(stalled)s of %(bonded)s)"
+msgstr "ボンディング低下 (%(bonded)s 本中 %(stalled)s 本停止)"
+
+msgctxt "in-app-notifications"
+msgid "%(product)s has taken priority on this device, so this build disconnected and turned its kill switch off."
+msgstr "このデバイスでは %(product)s が優先されるため、このビルドは接続を切断し、キルスイッチをオフにしました。"
+
+msgctxt "in-app-notifications"
+msgid "%(product)s holds the tunnel on this device. It stands down on its own as soon as you connect here."
+msgstr "このデバイスのトンネルは現在 %(product)s が使用しています。ここで接続すると、そちらは自動的に待機状態に移ります。"
+
+msgctxt "in-app-notifications"
+msgid "ANOTHER BUILD IS CONNECTED"
+msgstr "別のビルドが接続中"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back"
+msgstr "このビルドを再開"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back."
+msgstr "このビルドを再開する"
+
+msgctxt "in-app-notifications"
+msgid "PORT FORWARDING WARNING"
+msgstr "ポート転送の警告"
+
+msgctxt "in-app-notifications"
+msgid "RECONNECTED AFTER A CRASH"
+msgstr "クラッシュ後に再接続しました"
+
+msgctxt "in-app-notifications"
+msgid "STANDING BY"
+msgstr "待機中"
+
+msgctxt "in-app-notifications"
+msgid "You can bring it back once %(product)s is disconnected."
+msgstr "%(product)s の接続が切断されると、このビルドを再開できます。"
+
+msgctxt "in-app-notifications"
+msgid "Your device did not shut down cleanly, so Warren restored your previous connection. Neither auto-connect nor launch on start-up is on. Disconnect if you did not want this."
+msgstr "デバイスが正常にシャットダウンされなかったため、Warren は以前の接続を復元しました。「自動接続」と「システム起動時にアプリを起動」はどちらもオフになっています。この接続を望まない場合は、接続を解除してください。"
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse until %(date)s."
+msgstr "ポート転送の不正利用により、%(date)s までアクセスが取り消されています。"
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse."
+msgstr "ポート転送の不正利用により、アクセスが取り消されています。"
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked until %(date)s."
+msgstr "%(date)s までアクセスが取り消されています。"
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked."
+msgstr "アクセスが取り消されています。"
+
+msgctxt "port-forwarding-view"
+msgid "Case reference: %(reference)s"
+msgstr "案件番号: %(reference)s"
+
+msgctxt "port-forwarding-view"
+msgid "child sexual abuse material"
+msgstr "児童性的虐待コンテンツ"
+
+msgctxt "port-forwarding-view"
+msgid "copyright"
+msgstr "著作権"
+
+msgctxt "port-forwarding-view"
+msgid "malware"
+msgstr "マルウェア"
+
+msgctxt "port-forwarding-view"
+msgid "no entitlement left, retrying"
+msgstr "ポート利用枠なし、再試行中"
+
+msgctxt "port-forwarding-view"
+msgid "other"
+msgstr "その他"
+
+msgctxt "port-forwarding-view"
+msgid "phishing"
+msgstr "フィッシング"
+
+msgctxt "port-forwarding-view"
+msgid "Port %(port)d was closed after an abuse report. %(client)s keeps its port until you apply one."
+msgstr "不正利用の報告を受けて、ポート %(port)d を閉じました。新しいポートを適用するまで、%(client)s は現在のポートを使い続けます。"
+
+msgctxt "port-forwarding-view"
+msgid "refused, retrying"
+msgstr "拒否、再試行中"
+
+msgctxt "port-forwarding-view"
+msgid "scanning or intrusion"
+msgstr "スキャンまたは侵入"
+
+msgctxt "port-forwarding-view"
+msgid "spam"
+msgstr "スパム"
+
+msgctxt "port-forwarding-view"
+msgid "To contest a warning, write to %(email)s quoting its case reference."
+msgstr "警告に異議を申し立てるには、案件番号を記載して %(email)s までご連絡ください。"
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d of %(threshold)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "警告 %(ordinal)d/%(threshold)d: 不正利用の報告 (%(category)s) を受けて、%(day)s にポート %(port)d を閉じました。"
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "警告 %(ordinal)d: 不正利用の報告 (%(category)s) を受けて、%(day)s にポート %(port)d を閉じました。"
+
+msgctxt "port-forwarding-view"
+msgid "Warnings"
+msgstr "警告"
+
+msgctxt "port-forwarding-view"
+msgid "Warnings and how to contest them"
+msgstr "警告と異議申し立ての方法"
+
+msgctxt "redeem-voucher-view"
+msgid "The voucher was not used: keep it and redeem it once the revocation ends."
+msgstr "バウチャーは使用されませんでした。保管しておき、アクセスの取り消しが終了したら使用してください。"

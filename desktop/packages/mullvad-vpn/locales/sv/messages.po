@@ -6133,3 +6133,155 @@ msgstr "Slutför i den här enhetens webbläsare"
 msgctxt "forum-login"
 msgid "Close"
 msgstr "Stäng"
+
+msgctxt "accessibility"
+msgid "Community forum"
+msgstr "Gemenskapsforum"
+
+msgctxt "accessibility"
+msgid "How to contest a warning"
+msgstr "Så här bestrider du en varning"
+
+msgctxt "account-view"
+msgid "Paused while access is revoked: nothing is charged."
+msgstr "Pausad medan åtkomsten är återkallad: inget debiteras."
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "Blockerar internet: din åtkomst har återkallats fram till %(date)s efter upprepade anmälningar om missbruk av en vidarebefordrad port. Du kan bestrida detta på %(url)s"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "Blockerar internet: din åtkomst har återkallats fram till %(date)s på grund av ett brott mot användarvillkoren. Kontakta supporten om du tror att det är ett misstag."
+
+msgctxt "connect-view"
+msgid "Degraded bond"
+msgstr "Försämrad bonding"
+
+msgctxt "connect-view"
+msgid "Degraded bond (%(stalled)s of %(bonded)s)"
+msgstr "Försämrad bonding (%(stalled)s av %(bonded)s)"
+
+msgctxt "in-app-notifications"
+msgid "%(product)s has taken priority on this device, so this build disconnected and turned its kill switch off."
+msgstr "%(product)s har fått företräde på den här enheten, så den här versionen kopplade från och stängde av sin Kill Switch."
+
+msgctxt "in-app-notifications"
+msgid "%(product)s holds the tunnel on this device. It stands down on its own as soon as you connect here."
+msgstr "%(product)s använder tunneln på den här enheten. Den släpper tunneln automatiskt så snart du ansluter här."
+
+msgctxt "in-app-notifications"
+msgid "ANOTHER BUILD IS CONNECTED"
+msgstr "EN ANNAN VERSION ÄR ANSLUTEN"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back"
+msgstr "Återaktivera den här versionen"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back."
+msgstr "Återaktivera den här versionen."
+
+msgctxt "in-app-notifications"
+msgid "PORT FORWARDING WARNING"
+msgstr "VARNING FÖR PORTVIDAREBEFORDRAN"
+
+msgctxt "in-app-notifications"
+msgid "RECONNECTED AFTER A CRASH"
+msgstr "ÅTERANSLUTEN EFTER EN KRASCH"
+
+msgctxt "in-app-notifications"
+msgid "STANDING BY"
+msgstr "I VÄNTELÄGE"
+
+msgctxt "in-app-notifications"
+msgid "You can bring it back once %(product)s is disconnected."
+msgstr "Du kan återaktivera den när %(product)s har kopplats från."
+
+msgctxt "in-app-notifications"
+msgid "Your device did not shut down cleanly, so Warren restored your previous connection. Neither auto-connect nor launch on start-up is on. Disconnect if you did not want this."
+msgstr "Din enhet stängdes inte av korrekt, så Warren återställde din tidigare anslutning. Varken \"Anslut automatiskt\" eller \"Starta appen vid uppstart\" är aktiverat. Koppla från om du inte ville detta."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse until %(date)s."
+msgstr "Åtkomsten återkallad för missbruk av portvidarebefordran fram till %(date)s."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse."
+msgstr "Åtkomsten återkallad för missbruk av portvidarebefordran."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked until %(date)s."
+msgstr "Åtkomsten återkallad fram till %(date)s."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked."
+msgstr "Åtkomsten återkallad."
+
+msgctxt "port-forwarding-view"
+msgid "Case reference: %(reference)s"
+msgstr "Ärendereferens: %(reference)s"
+
+msgctxt "port-forwarding-view"
+msgid "child sexual abuse material"
+msgstr "material med sexuella övergrepp mot barn"
+
+msgctxt "port-forwarding-view"
+msgid "copyright"
+msgstr "upphovsrätt"
+
+msgctxt "port-forwarding-view"
+msgid "malware"
+msgstr "malware"
+
+msgctxt "port-forwarding-view"
+msgid "no entitlement left, retrying"
+msgstr "inget porttillstånd kvar, försöker igen"
+
+msgctxt "port-forwarding-view"
+msgid "other"
+msgstr "övrigt"
+
+msgctxt "port-forwarding-view"
+msgid "phishing"
+msgstr "phishing"
+
+msgctxt "port-forwarding-view"
+msgid "Port %(port)d was closed after an abuse report. %(client)s keeps its port until you apply one."
+msgstr "Port %(port)d stängdes efter en missbruksanmälan. %(client)s behåller sin port tills du tillämpar en ny."
+
+msgctxt "port-forwarding-view"
+msgid "refused, retrying"
+msgstr "nekad, försöker igen"
+
+msgctxt "port-forwarding-view"
+msgid "scanning or intrusion"
+msgstr "skanning eller intrång"
+
+msgctxt "port-forwarding-view"
+msgid "spam"
+msgstr "spam"
+
+msgctxt "port-forwarding-view"
+msgid "To contest a warning, write to %(email)s quoting its case reference."
+msgstr "Om du vill bestrida en varning, skriv till %(email)s och ange ärendereferensen."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d of %(threshold)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "Varning %(ordinal)d av %(threshold)d: port %(port)d stängdes den %(day)s efter en missbruksanmälan (%(category)s)."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "Varning %(ordinal)d: port %(port)d stängdes den %(day)s efter en missbruksanmälan (%(category)s)."
+
+msgctxt "port-forwarding-view"
+msgid "Warnings"
+msgstr "Varningar"
+
+msgctxt "port-forwarding-view"
+msgid "Warnings and how to contest them"
+msgstr "Varningar och hur du bestrider dem"
+
+msgctxt "redeem-voucher-view"
+msgid "The voucher was not used: keep it and redeem it once the revocation ends."
+msgstr "Kupongen användes inte: spara den och lös in den när återkallelsen är slut."

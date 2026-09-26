@@ -5225,7 +5225,7 @@ msgstr "這是您的公鑰。請妥善保存！"
 
 msgctxt "connect-view"
 msgid "Port forwarding: %(ports)s"
-msgstr "通訊埠轉送：%(ports)s"
+msgstr "連接埠轉發：%(ports)s"
 
 msgctxt "connection-info"
 msgid "Multihop (2 hops)"
@@ -5245,47 +5245,47 @@ msgstr "您的伺服器正在更新。Warren 已自動將您切換到另一台�
 
 msgctxt "port-forwarding-view"
 msgid "+ Add a port"
-msgstr "+ 新增通訊埠"
+msgstr "+ 新增連接埠"
 
 msgctxt "port-forwarding-view"
 msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
-msgstr "您新增的每個通訊埠都會在出口伺服器上開啟，並轉送至您裝置上的相同通訊埠。變更會立即生效，無需重新連線。"
+msgstr "您新增的每個連接埠都會在出口伺服器上開啟，並轉發至您裝置上的相同連接埠。變更會立即生效，無需重新連線。"
 
 msgctxt "port-forwarding-view"
 msgid "Last port change before a temporary block. Wait a moment before changing it again."
-msgstr "這是暫時封鎖前的最後一次通訊埠變更。請稍候片刻再進行變更。"
+msgstr "這是暫時封鎖前的最後一次連接埠變更。請稍候片刻再進行變更。"
 
 msgctxt "port-forwarding-view"
 msgid "Maximum of %(max)d ports reached"
-msgstr "已達到 %(max)d 個通訊埠的上限"
+msgstr "已達到 %(max)d 個連接埠的上限"
 
 msgctxt "port-forwarding-view"
 msgid "No port yet. Add one to open it on the exit."
-msgstr "目前尚無通訊埠。新增一個即可在出口伺服器上開啟它。"
+msgstr "目前尚無連接埠。新增一個即可在出口伺服器上開啟它。"
 
 msgctxt "port-forwarding-view"
 msgid "Port"
-msgstr "通訊埠"
+msgstr "連接埠"
 
 msgctxt "port-forwarding-view"
 msgid "Port must be between 49152 and 65535."
-msgstr "通訊埠必須介於 49152 與 65535 之間。"
+msgstr "連接埠必須介於 49152 與 65535 之間。"
 
 msgctxt "port-forwarding-view"
 msgid "Remove port"
-msgstr "移除通訊埠"
+msgstr "移除連接埠"
 
 msgctxt "port-forwarding-view"
 msgid "Status: waiting for an active tunnel connection to set up the port mappings."
-msgstr "狀態：正在等待使用中的通道連線以建立通訊埠對應。"
+msgstr "狀態：正在等待使用中的通道連線以建立連接埠對應。"
 
 msgctxt "port-forwarding-view"
 msgid "This port is already in your list."
-msgstr "此通訊埠已在您的清單中。"
+msgstr "此連接埠已在您的清單中。"
 
 msgctxt "port-forwarding-view"
 msgid "Too many port changes. You can change ports again in %(countdown)s."
-msgstr "通訊埠變更次數過多。您可在 %(countdown)s 後再次變更通訊埠。"
+msgstr "連接埠變更次數過多。您可在 %(countdown)s 後再次變更連接埠。"
 
 msgctxt "port-forwarding-view"
 msgid "applying…"
@@ -5297,7 +5297,7 @@ msgstr "失敗"
 
 msgctxt "port-forwarding-view"
 msgid "no port available"
-msgstr "無可用通訊埠"
+msgstr "無可用連接埠"
 
 msgctxt "port-forwarding-view"
 msgid "not allowed"
@@ -5313,11 +5313,11 @@ msgstr "處理中…"
 
 msgctxt "port-forwarding-view"
 msgid "port"
-msgstr "通訊埠"
+msgstr "連接埠"
 
 msgctxt "port-forwarding-view"
 msgid "port in use"
-msgstr "通訊埠使用中"
+msgstr "連接埠使用中"
 
 msgctxt "port-forwarding-view"
 msgid "requesting…"
@@ -5680,7 +5680,7 @@ msgstr "論壇名稱"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "正在封鎖網路：由於轉送連接埠遭反覆檢舉濫用，您的存取已被撤銷。您可以在 %(url)s 提出申訴"
+msgstr "正在封鎖網路：由於轉發連接埠遭反覆檢舉濫用，您的存取權已遭撤銷。您可以在 %(url)s 提出申訴"
 
 msgctxt "forum-activity-view"
 msgid "%(actor)s liked your post"
@@ -5765,7 +5765,7 @@ msgstr "開啟"
 
 msgctxt "port-forwarding-view"
 msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
-msgstr "轉送連接埠可以從網際網路存取。如果第三方檢舉來自該連接埠的濫用行為，我們會關閉連接埠並在你的帳戶上記一次違規；90 天內三次將撤銷存取權限。詳情與申訴方式：%(url)s"
+msgstr "轉發連接埠可以從網際網路存取。如果第三方檢舉來自該連接埠的濫用行為，我們會關閉連接埠並在您的帳戶上記錄一次警告；90 天內累計三次警告將撤銷存取權限。詳情與申訴方式：%(url)s"
 
 msgctxt "port-forwarding-view"
 msgid "%(client)s now listens on port %(port)d"
@@ -5833,11 +5833,11 @@ msgstr "使用者名稱"
 
 msgctxt "port-forwarding-view"
 msgid "Waiting for a public port"
-msgstr "正在等待公用連接埠"
+msgstr "正在等待公開連接埠"
 
 msgctxt "port-forwarding-view"
 msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client’s web interface first."
-msgstr "Warren 可以將公用連接埠填入你的 torrent 用戶端，並在連接埠變更時自動更新。請先啟用用戶端的 web 介面。"
+msgstr "Warren 可以將公開連接埠填入您的 torrent 用戶端，並在連接埠變更時自動更新。請先啟用用戶端的 Web 介面。"
 
 msgctxt "port-forwarding-view"
 msgid "Web interface address"
@@ -6102,3 +6102,155 @@ msgstr "在此裝置的瀏覽器中完成"
 msgctxt "forum-login"
 msgid "Close"
 msgstr "關閉"
+
+msgctxt "accessibility"
+msgid "Community forum"
+msgstr "社群論壇"
+
+msgctxt "accessibility"
+msgid "How to contest a warning"
+msgstr "如何對警告提出申訴"
+
+msgctxt "account-view"
+msgid "Paused while access is revoked: nothing is charged."
+msgstr "存取權限撤銷期間已暫停：不會收取任何費用。"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "正在封鎖網路：由於轉發連接埠遭反覆檢舉濫用，您的存取權已遭撤銷，直至 %(date)s。您可以在 %(url)s 提出申訴"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "正在封鎖網路：因違反使用政策，您的存取權已遭撤銷，直至 %(date)s。若您認為這是誤判，請聯絡支援團隊。"
+
+msgctxt "connect-view"
+msgid "Degraded bond"
+msgstr "聚合連線已降級"
+
+msgctxt "connect-view"
+msgid "Degraded bond (%(stalled)s of %(bonded)s)"
+msgstr "聚合連線已降級（%(stalled)s/%(bonded)s 條停滯）"
+
+msgctxt "in-app-notifications"
+msgid "%(product)s has taken priority on this device, so this build disconnected and turned its kill switch off."
+msgstr "%(product)s 已在此裝置上取得優先權，因此此版本已中斷連線並關閉了終止開關。"
+
+msgctxt "in-app-notifications"
+msgid "%(product)s holds the tunnel on this device. It stands down on its own as soon as you connect here."
+msgstr "此裝置上的通道目前由 %(product)s 使用。您在此處連線後，它會自動讓出通道。"
+
+msgctxt "in-app-notifications"
+msgid "ANOTHER BUILD IS CONNECTED"
+msgstr "另一版本已連線"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back"
+msgstr "恢復使用此版本"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back."
+msgstr "恢復使用此版本"
+
+msgctxt "in-app-notifications"
+msgid "PORT FORWARDING WARNING"
+msgstr "連接埠轉發警告"
+
+msgctxt "in-app-notifications"
+msgid "RECONNECTED AFTER A CRASH"
+msgstr "當機後已重新連線"
+
+msgctxt "in-app-notifications"
+msgid "STANDING BY"
+msgstr "待命中"
+
+msgctxt "in-app-notifications"
+msgid "You can bring it back once %(product)s is disconnected."
+msgstr "%(product)s 中斷連線後，您即可恢復使用此版本。"
+
+msgctxt "in-app-notifications"
+msgid "Your device did not shut down cleanly, so Warren restored your previous connection. Neither auto-connect nor launch on start-up is on. Disconnect if you did not want this."
+msgstr "您的裝置未正常關機，因此 Warren 已還原您先前的連線。「自動連線」和「啟動時啟動應用程式」皆未開啟。如果這不是您想要的，請中斷連線。"
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse until %(date)s."
+msgstr "因濫用連接埠轉發，存取權限已撤銷至 %(date)s。"
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse."
+msgstr "因濫用連接埠轉發，存取權限已撤銷。"
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked until %(date)s."
+msgstr "存取權限已撤銷至 %(date)s。"
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked."
+msgstr "存取權限已撤銷。"
+
+msgctxt "port-forwarding-view"
+msgid "Case reference: %(reference)s"
+msgstr "案件編號：%(reference)s"
+
+msgctxt "port-forwarding-view"
+msgid "child sexual abuse material"
+msgstr "兒童性虐待內容"
+
+msgctxt "port-forwarding-view"
+msgid "copyright"
+msgstr "著作權"
+
+msgctxt "port-forwarding-view"
+msgid "malware"
+msgstr "惡意軟體"
+
+msgctxt "port-forwarding-view"
+msgid "no entitlement left, retrying"
+msgstr "已無連接埠額度，正在重試"
+
+msgctxt "port-forwarding-view"
+msgid "other"
+msgstr "其他"
+
+msgctxt "port-forwarding-view"
+msgid "phishing"
+msgstr "網路釣魚"
+
+msgctxt "port-forwarding-view"
+msgid "Port %(port)d was closed after an abuse report. %(client)s keeps its port until you apply one."
+msgstr "連接埠 %(port)d 因濫用檢舉已遭關閉。在您套用新連接埠之前，%(client)s 會繼續使用原連接埠。"
+
+msgctxt "port-forwarding-view"
+msgid "refused, retrying"
+msgstr "已拒絕，正在重試"
+
+msgctxt "port-forwarding-view"
+msgid "scanning or intrusion"
+msgstr "掃描或入侵"
+
+msgctxt "port-forwarding-view"
+msgid "spam"
+msgstr "垃圾訊息"
+
+msgctxt "port-forwarding-view"
+msgid "To contest a warning, write to %(email)s quoting its case reference."
+msgstr "如需對警告提出申訴，請寄信至 %(email)s 並註明案件編號。"
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d of %(threshold)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "警告 %(ordinal)d/%(threshold)d：連接埠 %(port)d 因濫用檢舉（%(category)s）已於 %(day)s 關閉。"
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "警告 %(ordinal)d：連接埠 %(port)d 因濫用檢舉（%(category)s）已於 %(day)s 關閉。"
+
+msgctxt "port-forwarding-view"
+msgid "Warnings"
+msgstr "警告紀錄"
+
+msgctxt "port-forwarding-view"
+msgid "Warnings and how to contest them"
+msgstr "警告紀錄與申訴方式"
+
+msgctxt "redeem-voucher-view"
+msgid "The voucher was not used: keep it and redeem it once the revocation ends."
+msgstr "優惠券未被使用：請保留，待存取權限撤銷期結束後再兌換。"

@@ -5710,7 +5710,7 @@ msgstr "Foorumin nimi"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "Estetään internet: käyttöoikeutesi on peruttu toistuvien väärinkäyttöilmoitusten vuoksi, jotka koskevat edelleenohjattua porttia. Voit riitauttaa tämän osoitteessa %(url)s"
+msgstr "Verkkoyhteys estetään: käyttöoikeutesi on peruttu toistuvien väärinkäyttöilmoitusten vuoksi, jotka koskevat edelleenohjattua porttia. Voit riitauttaa tämän osoitteessa %(url)s"
 
 msgctxt "forum-activity-view"
 msgid "%(actor)s liked your post"
@@ -5796,7 +5796,7 @@ msgstr "Avaa"
 
 msgctxt "port-forwarding-view"
 msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
-msgstr "Edelleenohjattu portti on tavoitettavissa internetistä. Jos kolmas osapuoli ilmoittaa siitä tulevasta väärinkäytöstä, suljemme portin ja kirjaamme tilillesi rikkeen; kolme rikettä 90 päivän sisällä peruuttaa käyttöoikeuden. Tiedot ja riitauttaminen: %(url)s"
+msgstr "Edelleenohjattu portti on tavoitettavissa internetistä. Jos kolmas osapuoli ilmoittaa siitä tulevasta väärinkäytöstä, suljemme portin ja kirjaamme tilillesi varoituksen; kolme varoitusta 90 päivän sisällä peruuttaa käyttöoikeuden. Tiedot ja riitauttaminen: %(url)s"
 
 msgctxt "port-forwarding-view"
 msgid "%(client)s now listens on port %(port)d"
@@ -6133,3 +6133,155 @@ msgstr "Viimeistele tämän laitteen selaimessa"
 msgctxt "forum-login"
 msgid "Close"
 msgstr "Sulje"
+
+msgctxt "accessibility"
+msgid "Community forum"
+msgstr "Yhteisöfoorumi"
+
+msgctxt "accessibility"
+msgid "How to contest a warning"
+msgstr "Näin riitautat varoituksen"
+
+msgctxt "account-view"
+msgid "Paused while access is revoked: nothing is charged."
+msgstr "Keskeytetty käyttöoikeuden peruutuksen ajaksi: mitään ei veloiteta."
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "Verkkoyhteys estetään: käyttöoikeutesi on peruttu %(date)s asti toistuvien väärinkäyttöilmoitusten vuoksi, jotka koskevat edelleenohjattua porttia. Voit riitauttaa tämän osoitteessa %(url)s"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "Verkkoyhteys estetään: käyttöoikeutesi on peruttu %(date)s asti käyttöehtojen rikkomisen vuoksi. Ota yhteyttä tukeen, jos tämä on mielestäsi virhe."
+
+msgctxt "connect-view"
+msgid "Degraded bond"
+msgstr "Heikentynyt niputus"
+
+msgctxt "connect-view"
+msgid "Degraded bond (%(stalled)s of %(bonded)s)"
+msgstr "Heikentynyt niputus (%(stalled)s/%(bonded)s)"
+
+msgctxt "in-app-notifications"
+msgid "%(product)s has taken priority on this device, so this build disconnected and turned its kill switch off."
+msgstr "%(product)s on saanut etusijan tässä laitteessa, joten tämä versio katkaisi yhteyden ja poisti tappokytkimensä käytöstä."
+
+msgctxt "in-app-notifications"
+msgid "%(product)s holds the tunnel on this device. It stands down on its own as soon as you connect here."
+msgstr "%(product)s käyttää tunnelia tässä laitteessa. Se väistyy automaattisesti heti, kun yhdistät tästä versiosta."
+
+msgctxt "in-app-notifications"
+msgid "ANOTHER BUILD IS CONNECTED"
+msgstr "TOINEN VERSIO ON YHDISTETTY"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back"
+msgstr "Ota tämä versio takaisin käyttöön"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back."
+msgstr "Ota tämä versio takaisin käyttöön."
+
+msgctxt "in-app-notifications"
+msgid "PORT FORWARDING WARNING"
+msgstr "PORTTIOHJAUKSEN VAROITUS"
+
+msgctxt "in-app-notifications"
+msgid "RECONNECTED AFTER A CRASH"
+msgstr "YHDISTETTY UUDELLEEN KAATUMISEN JÄLKEEN"
+
+msgctxt "in-app-notifications"
+msgid "STANDING BY"
+msgstr "ODOTUSTILASSA"
+
+msgctxt "in-app-notifications"
+msgid "You can bring it back once %(product)s is disconnected."
+msgstr "Voit ottaa sen takaisin käyttöön, kun %(product)s on katkaissut yhteytensä."
+
+msgctxt "in-app-notifications"
+msgid "Your device did not shut down cleanly, so Warren restored your previous connection. Neither auto-connect nor launch on start-up is on. Disconnect if you did not want this."
+msgstr "Laitteesi ei sammunut asianmukaisesti, joten Warren palautti edellisen yhteytesi. Automaattinen yhteys ja sovelluksen käynnistys järjestelmän käynnistyessä ovat kumpikin pois käytöstä. Katkaise yhteys, jos et halunnut tätä."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse until %(date)s."
+msgstr "Käyttöoikeus peruttu porttiohjauksen väärinkäytön vuoksi %(date)s asti."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse."
+msgstr "Käyttöoikeus peruttu porttiohjauksen väärinkäytön vuoksi."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked until %(date)s."
+msgstr "Käyttöoikeus peruttu %(date)s asti."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked."
+msgstr "Käyttöoikeus peruttu."
+
+msgctxt "port-forwarding-view"
+msgid "Case reference: %(reference)s"
+msgstr "Tapauksen viite: %(reference)s"
+
+msgctxt "port-forwarding-view"
+msgid "child sexual abuse material"
+msgstr "lasten seksuaalista hyväksikäyttöä sisältävä materiaali"
+
+msgctxt "port-forwarding-view"
+msgid "copyright"
+msgstr "tekijänoikeus"
+
+msgctxt "port-forwarding-view"
+msgid "malware"
+msgstr "malware"
+
+msgctxt "port-forwarding-view"
+msgid "no entitlement left, retrying"
+msgstr "porttioikeus käytetty loppuun, yritetään uudelleen"
+
+msgctxt "port-forwarding-view"
+msgid "other"
+msgstr "muu"
+
+msgctxt "port-forwarding-view"
+msgid "phishing"
+msgstr "phishing"
+
+msgctxt "port-forwarding-view"
+msgid "Port %(port)d was closed after an abuse report. %(client)s keeps its port until you apply one."
+msgstr "Portti %(port)d suljettiin väärinkäyttöilmoituksen jälkeen. %(client)s säilyttää porttinsa, kunnes otat uuden käyttöön."
+
+msgctxt "port-forwarding-view"
+msgid "refused, retrying"
+msgstr "hylätty, yritetään uudelleen"
+
+msgctxt "port-forwarding-view"
+msgid "scanning or intrusion"
+msgstr "skannaus tai tunkeutuminen"
+
+msgctxt "port-forwarding-view"
+msgid "spam"
+msgstr "spam"
+
+msgctxt "port-forwarding-view"
+msgid "To contest a warning, write to %(email)s quoting its case reference."
+msgstr "Voit riitauttaa varoituksen kirjoittamalla osoitteeseen %(email)s ja mainitsemalla tapauksen viitteen."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d of %(threshold)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "Varoitus %(ordinal)d/%(threshold)d: portti %(port)d suljettiin %(day)s väärinkäyttöilmoituksen jälkeen (%(category)s)."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "Varoitus %(ordinal)d: portti %(port)d suljettiin %(day)s väärinkäyttöilmoituksen jälkeen (%(category)s)."
+
+msgctxt "port-forwarding-view"
+msgid "Warnings"
+msgstr "Varoitukset"
+
+msgctxt "port-forwarding-view"
+msgid "Warnings and how to contest them"
+msgstr "Varoitukset ja niiden riitauttaminen"
+
+msgctxt "redeem-voucher-view"
+msgid "The voucher was not used: keep it and redeem it once the revocation ends."
+msgstr "Kuponkia ei käytetty: säilytä se ja lunasta se, kun käyttöoikeuden peruutus päättyy."

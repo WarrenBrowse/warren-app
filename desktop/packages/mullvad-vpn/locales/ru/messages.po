@@ -5744,7 +5744,7 @@ msgstr "Имя на форуме"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "Интернет заблокирован: ваш доступ отозван после неоднократных жалоб на злоупотребление перенаправленным портом. Оспорить можно по адресу %(url)s"
+msgstr "Интернет блокируется: ваш доступ отозван после неоднократных жалоб на злоупотребление перенаправленным портом. Оспорить можно по адресу %(url)s"
 
 msgctxt "forum-activity-view"
 msgid "%(actor)s liked your post"
@@ -5832,7 +5832,7 @@ msgstr "Открыть"
 
 msgctxt "port-forwarding-view"
 msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
-msgstr "Перенаправленный порт доступен из интернета. Если третья сторона пожалуется на злоупотребление с него, мы закроем порт и запишем нарушение в вашу учётную запись; три нарушения за 90 дней отзывают доступ. Подробности и порядок обжалования: %(url)s"
+msgstr "Перенаправленный порт доступен из интернета. Если третья сторона пожалуется на злоупотребление с него, мы закроем порт и запишем предупреждение в вашу учётную запись; три предупреждения за 90 дней приводят к отзыву доступа. Подробности и порядок оспаривания: %(url)s"
 
 msgctxt "port-forwarding-view"
 msgid "%(client)s now listens on port %(port)d"
@@ -6169,3 +6169,155 @@ msgstr "Завершить в браузере этого устройства"
 msgctxt "forum-login"
 msgid "Close"
 msgstr "Закрыть"
+
+msgctxt "accessibility"
+msgid "Community forum"
+msgstr "Форум сообщества"
+
+msgctxt "accessibility"
+msgid "How to contest a warning"
+msgstr "Как оспорить предупреждение"
+
+msgctxt "account-view"
+msgid "Paused while access is revoked: nothing is charged."
+msgstr "Приостановлено, пока доступ отозван: оплата не списывается."
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "Интернет блокируется: ваш доступ отозван до %(date)s после неоднократных жалоб на злоупотребление перенаправленным портом. Оспорить можно по адресу %(url)s"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "Интернет блокируется: ваш доступ отозван до %(date)s за нарушение правил использования. Обратитесь в поддержку, если считаете это ошибкой."
+
+msgctxt "connect-view"
+msgid "Degraded bond"
+msgstr "Агрегация ослаблена"
+
+msgctxt "connect-view"
+msgid "Degraded bond (%(stalled)s of %(bonded)s)"
+msgstr "Агрегация ослаблена (%(stalled)s/%(bonded)s)"
+
+msgctxt "in-app-notifications"
+msgid "%(product)s has taken priority on this device, so this build disconnected and turned its kill switch off."
+msgstr "Приоритет на этом устройстве теперь у %(product)s, поэтому эта сборка отключилась и выключила функцию аварийного отключения."
+
+msgctxt "in-app-notifications"
+msgid "%(product)s holds the tunnel on this device. It stands down on its own as soon as you connect here."
+msgstr "Туннель на этом устройстве удерживает %(product)s. Как только вы подключитесь здесь, туннель автоматически перейдёт к этой сборке."
+
+msgctxt "in-app-notifications"
+msgid "ANOTHER BUILD IS CONNECTED"
+msgstr "ПОДКЛЮЧЕНА ДРУГАЯ СБОРКА"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back"
+msgstr "Вернуть эту сборку"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back."
+msgstr "Вернуть эту сборку."
+
+msgctxt "in-app-notifications"
+msgid "PORT FORWARDING WARNING"
+msgstr "ПРЕДУПРЕЖДЕНИЕ ПО ПЕРЕАДРЕСАЦИИ ПОРТОВ"
+
+msgctxt "in-app-notifications"
+msgid "RECONNECTED AFTER A CRASH"
+msgstr "ПОВТОРНОЕ ПОДКЛЮЧЕНИЕ ПОСЛЕ СБОЯ"
+
+msgctxt "in-app-notifications"
+msgid "STANDING BY"
+msgstr "В РЕЖИМЕ ОЖИДАНИЯ"
+
+msgctxt "in-app-notifications"
+msgid "You can bring it back once %(product)s is disconnected."
+msgstr "Вы сможете вернуть её после отключения %(product)s."
+
+msgctxt "in-app-notifications"
+msgid "Your device did not shut down cleanly, so Warren restored your previous connection. Neither auto-connect nor launch on start-up is on. Disconnect if you did not want this."
+msgstr "Устройство было выключено некорректно, поэтому Warren восстановил предыдущее подключение. Ни автоподключение, ни автозапуск при загрузке системы не включены. Отключитесь, если вы этого не хотели."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse until %(date)s."
+msgstr "Доступ отозван до %(date)s за злоупотребление переадресацией портов."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse."
+msgstr "Доступ отозван за злоупотребление переадресацией портов."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked until %(date)s."
+msgstr "Доступ отозван до %(date)s."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked."
+msgstr "Доступ отозван."
+
+msgctxt "port-forwarding-view"
+msgid "Case reference: %(reference)s"
+msgstr "Номер дела: %(reference)s"
+
+msgctxt "port-forwarding-view"
+msgid "child sexual abuse material"
+msgstr "материалы сексуального насилия над детьми"
+
+msgctxt "port-forwarding-view"
+msgid "copyright"
+msgstr "авторское право"
+
+msgctxt "port-forwarding-view"
+msgid "malware"
+msgstr "вредоносное ПО"
+
+msgctxt "port-forwarding-view"
+msgid "no entitlement left, retrying"
+msgstr "права на порт исчерпаны, повторная попытка"
+
+msgctxt "port-forwarding-view"
+msgid "other"
+msgstr "другое"
+
+msgctxt "port-forwarding-view"
+msgid "phishing"
+msgstr "фишинг"
+
+msgctxt "port-forwarding-view"
+msgid "Port %(port)d was closed after an abuse report. %(client)s keeps its port until you apply one."
+msgstr "Порт %(port)d закрыт после жалобы на злоупотребление. %(client)s сохранит свой порт, пока вы не примените новый."
+
+msgctxt "port-forwarding-view"
+msgid "refused, retrying"
+msgstr "отказано, повторная попытка"
+
+msgctxt "port-forwarding-view"
+msgid "scanning or intrusion"
+msgstr "сканирование или вторжение"
+
+msgctxt "port-forwarding-view"
+msgid "spam"
+msgstr "спам"
+
+msgctxt "port-forwarding-view"
+msgid "To contest a warning, write to %(email)s quoting its case reference."
+msgstr "Чтобы оспорить предупреждение, напишите на %(email)s, указав номер дела."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d of %(threshold)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "Предупреждение %(ordinal)d из %(threshold)d: порт %(port)d закрыт %(day)s после жалобы на злоупотребление (%(category)s)."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "Предупреждение %(ordinal)d: порт %(port)d закрыт %(day)s после жалобы на злоупотребление (%(category)s)."
+
+msgctxt "port-forwarding-view"
+msgid "Warnings"
+msgstr "Предупреждения"
+
+msgctxt "port-forwarding-view"
+msgid "Warnings and how to contest them"
+msgstr "Предупреждения и порядок их оспаривания"
+
+msgctxt "redeem-voucher-view"
+msgid "The voucher was not used: keep it and redeem it once the revocation ends."
+msgstr "Ваучер не был использован: сохраните его и погасите после окончания срока отзыва доступа."

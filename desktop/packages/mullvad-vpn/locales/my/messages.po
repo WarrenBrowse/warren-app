@@ -3322,7 +3322,7 @@ msgstr "VMware ကို ထည့်သွင်းထားမှုမှ ဖ
 
 msgctxt "troubleshoot"
 msgid "Unable to communicate with the split tunnel driver."
-msgstr "Split Tunnel Driver နှင့် ဆက်သွယ်၍ မရနိုင်ပါ။"
+msgstr "Split Tunnel ဒရိုက်ဗာနှင့် ဆက်သွယ်၍ မရနိုင်ပါ။"
 
 msgctxt "troubleshoot"
 msgid "Unable to start tunnel connection because of a failure when creating the tunnel device. This is often caused by conflicts with the VMware Bridge Protocol."
@@ -3463,7 +3463,7 @@ msgstr "ဤဆက်တင်များကို ဖွင့်ရန် အ�
 #. %(preferencesPageName)s - The page title showed on top in the preferences page.
 msgctxt "vpn-settings-view"
 msgid "Disable all <b>DNS content blockers</b> above to activate this setting."
-msgstr "ဤဆက်တင်ကို သက်ဝင်လုပ်ဆောင်ရန် အထက်ပါ <b>DNS content blockers</b> အားလုံးကို ပိတ်ပါ။"
+msgstr "ဤဆက်တင်ကို သက်ဝင်လုပ်ဆောင်ရန် အထက်ပါ <b>DNS အကြောင်းအရာ ပိတ်ဆို့မှုများ</b> အားလုံးကို ပိတ်ပါ။"
 
 msgctxt "vpn-settings-view"
 msgid "DNS content blockers"
@@ -3602,11 +3602,11 @@ msgstr "လော့ခ်ဒေါင်းစနစ်ကို ဖွင်�
 
 msgctxt "vpn-settings-view"
 msgid "Exit ID"
-msgstr "Exit ID"
+msgstr "ထွက်ပေါက်ဆာဗာ ID"
 
 msgctxt "vpn-settings-view"
 msgid "Public key"
-msgstr "Public key"
+msgstr "အများသုံးသော့"
 
 #. Value shown for the bandwidth limit in beta builds.
 #. Available placeholders:
@@ -5196,7 +5196,7 @@ msgstr "သော့များကို အရန်သိမ်းရန်"
 
 msgctxt "account-view"
 msgid "Public key"
-msgstr "Public key"
+msgstr "အများသုံးသော့"
 
 msgctxt "api-access-methods-view"
 msgid "The CDN used is Datapacket’s CDN77. The CDN can only observe the proxied TLS traffic, not the contents."
@@ -5228,7 +5228,7 @@ msgstr "ဤသည်မှာ သင်၏ public key ဖြစ်သည်။ �
 
 msgctxt "connect-view"
 msgid "Port forwarding: %(ports)s"
-msgstr "Port forwarding: %(ports)s"
+msgstr "ပို့တ် ပြန်ညွှန်းခြင်း: %(ports)s"
 
 msgctxt "connection-info"
 msgid "Multihop (2 hops)"
@@ -5248,47 +5248,47 @@ msgstr "သင့်ဆာဗာကို အပ်ဒိတ်လုပ်န�
 
 msgctxt "port-forwarding-view"
 msgid "+ Add a port"
-msgstr "+ Port တစ်ခု ထည့်ရန်"
+msgstr "+ ပို့တ်တစ်ခု ထည့်ရန်"
 
 msgctxt "port-forwarding-view"
 msgid "Each port you add is opened on the exit and forwarded to the same port on your device. Changes apply immediately, no reconnection needed."
-msgstr "သင်ထည့်သော port တိုင်းကို exit တွင် ဖွင့်ပြီး သင့်စက်ပစ္စည်းရှိ port တူသို့ ပြန်လည်ပို့ဆောင်ပေးသည်။ အပြောင်းအလဲများသည် ချက်ချင်းအကျိုးသက်ရောက်ပြီး ပြန်လည်ချိတ်ဆက်ရန် မလိုအပ်ပါ။"
+msgstr "သင်ထည့်သော ပို့တ်တိုင်းကို ထွက်ပေါက်ဆာဗာတွင် ဖွင့်ပြီး သင့်စက်ပစ္စည်းရှိ တူညီသော ပို့တ်သို့ ပြန်လည်ပို့ဆောင်ပေးသည်။ ပြောင်းလဲမှုများသည် ပြန်လည်ချိတ်ဆက်ရန် မလိုဘဲ ချက်ချင်း အကျိုးသက်ရောက်သည်။"
 
 msgctxt "port-forwarding-view"
 msgid "Last port change before a temporary block. Wait a moment before changing it again."
-msgstr "ယာယီပိတ်ဆို့မှုမတိုင်မီ နောက်ဆုံး port ပြောင်းလဲမှု။ ထပ်မံပြောင်းလဲခြင်းမပြုမီ ခဏစောင့်ပါ။"
+msgstr "ယာယီပိတ်ဆို့မှု မတိုင်မီ နောက်ဆုံး ပို့တ်ပြောင်းလဲမှု ဖြစ်သည်။ ထပ်မံမပြောင်းလဲမီ ခဏစောင့်ပါ။"
 
 msgctxt "port-forwarding-view"
 msgid "Maximum of %(max)d ports reached"
-msgstr "အများဆုံး port %(max)d ခု ပြည့်သွားပြီ"
+msgstr "အများဆုံး ပို့တ် %(max)d ခု ပြည့်သွားပြီ"
 
 msgctxt "port-forwarding-view"
 msgid "No port yet. Add one to open it on the exit."
-msgstr "Port မရှိသေးပါ။ Exit တွင် ဖွင့်ရန် တစ်ခု ထည့်ပါ။"
+msgstr "ပို့တ် မရှိသေးပါ။ ထွက်ပေါက်ဆာဗာတွင် ဖွင့်ရန် တစ်ခု ထည့်ပါ။"
 
 msgctxt "port-forwarding-view"
 msgid "Port"
-msgstr "Port"
+msgstr "ပို့တ်"
 
 msgctxt "port-forwarding-view"
 msgid "Port must be between 49152 and 65535."
-msgstr "Port သည် 49152 နှင့် 65535 ကြားတွင် ရှိရမည်။"
+msgstr "ပို့တ်သည် 49152 နှင့် 65535 ကြားရှိရမည်။"
 
 msgctxt "port-forwarding-view"
 msgid "Remove port"
-msgstr "Port ကို ဖယ်ရှားရန်"
+msgstr "ပို့တ်ကို ဖယ်ရှားရန်"
 
 msgctxt "port-forwarding-view"
 msgid "Status: waiting for an active tunnel connection to set up the port mappings."
-msgstr "အခြေအနေ - port mapping များ ပြုလုပ်ရန် တက်ကြွသော tunnel ချိတ်ဆက်မှုကို စောင့်ဆိုင်းနေသည်။"
+msgstr "အခြေအနေ: ပို့တ်ပြန်ညွှန်းမှုများ သတ်မှတ်ရန် အသက်ဝင်နေသော ဥမင်ချိတ်ဆက်မှုကို စောင့်ဆိုင်းနေသည်။"
 
 msgctxt "port-forwarding-view"
 msgid "This port is already in your list."
-msgstr "ဤ port သည် သင့်စာရင်းတွင် ရှိနှင့်ပြီးဖြစ်သည်။"
+msgstr "ဤပို့တ်သည် သင့်စာရင်းတွင် ရှိပြီးဖြစ်သည်။"
 
 msgctxt "port-forwarding-view"
 msgid "Too many port changes. You can change ports again in %(countdown)s."
-msgstr "Port ပြောင်းလဲမှု များလွန်းသည်။ %(countdown)s အကြာတွင် port များကို ထပ်မံပြောင်းလဲနိုင်သည်။"
+msgstr "ပို့တ်ပြောင်းလဲမှု များလွန်းသည်။ %(countdown)s အကြာတွင် ပို့တ်များကို ထပ်မံပြောင်းလဲနိုင်သည်။"
 
 msgctxt "port-forwarding-view"
 msgid "applying…"
@@ -5300,7 +5300,7 @@ msgstr "မအောင်မြင်ပါ"
 
 msgctxt "port-forwarding-view"
 msgid "no port available"
-msgstr "port မရရှိနိုင်ပါ"
+msgstr "ပို့တ် မရရှိနိုင်ပါ"
 
 msgctxt "port-forwarding-view"
 msgid "not allowed"
@@ -5308,7 +5308,7 @@ msgstr "ခွင့်မပြုပါ"
 
 msgctxt "port-forwarding-view"
 msgid "open: %(port)d"
-msgstr "ဖွင့်ထား - %(port)d"
+msgstr "ဖွင့်ထား: %(port)d"
 
 msgctxt "port-forwarding-view"
 msgid "pending…"
@@ -5316,11 +5316,11 @@ msgstr "ဆိုင်းငံ့ဆဲ…"
 
 msgctxt "port-forwarding-view"
 msgid "port"
-msgstr "port"
+msgstr "ပို့တ်"
 
 msgctxt "port-forwarding-view"
 msgid "port in use"
-msgstr "port အသုံးပြုဆဲ"
+msgstr "ပို့တ် အသုံးပြုဆဲ"
 
 msgctxt "port-forwarding-view"
 msgid "requesting…"
@@ -5332,7 +5332,7 @@ msgstr "သင်သည် voucher code အစား public key တစ်ခု 
 
 msgctxt "settings-view"
 msgid "Port forwarding"
-msgstr "Port forwarding"
+msgstr "ပို့တ် ပြန်ညွှန်းခြင်း"
 
 msgctxt "settings-view"
 msgid "Replay onboarding"
@@ -5376,7 +5376,7 @@ msgstr "ပင်ထိုးမှုအသစ်များ မပြုလ�
 
 msgctxt "vpn-settings-view"
 msgid "Warren api URL"
-msgstr "Warren api URL"
+msgstr "Warren API လိပ်စာ (URL)"
 
 msgctxt "warren-multi-hop-view"
 msgid "Entry country"
@@ -5392,7 +5392,7 @@ msgstr "အသုံးပြုသူ IP နှင့် ဦးတည်ရာ 
 
 msgctxt "warren-multi-hop-view"
 msgid "Multihop"
-msgstr "Multihop"
+msgstr "မာလ်တီဟော့ပ်"
 
 msgctxt "warren-multi-hop-view"
 msgid "Restart the Warren daemon after changing this setting."
@@ -5400,7 +5400,7 @@ msgstr "ဤဆက်တင်ကို ပြောင်းလဲပြီး�
 
 msgctxt "warren-multi-hop-view"
 msgid "Routes your traffic through two Warren relays using HPKE end-to-end encryption. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never your IP. Pattern inspired by Apple Private Relay."
-msgstr "သင်၏အသွားအလာကို HPKE end-to-end encryption အသုံးပြု၍ Warren relay နှစ်ခုမှတစ်ဆင့် လမ်းကြောင်းပေးသည်။ ဝင်ရောက်သည့် relay သည် ciphertext ကိုသာ မြင်ရသည်၊ exit သည် ဖွင့်ပြီးသား payload ကိုသာ မြင်ရပြီး သင်၏ IP ကို ဘယ်တော့မှ မမြင်ရပါ။ Apple Private Relay မှ စံနမူနာယူထားသော ပုံစံဖြစ်သည်။"
+msgstr "HPKE အစမှအဆုံး ကုဒ်ဝှက်စနစ်ကို အသုံးပြု၍ သင့်ကူးလူးမှုကို Warren ရီလေး နှစ်ခုမှတစ်ဆင့် လမ်းကြောင်းပေးပါသည်။ အဝင် ရီလေးသည် ကုဒ်ဝှက်ထားသော ဒေတာကိုသာ မြင်ရပြီး ထွက်ပေါက်ဆာဗာသည် ကုဒ်ဖြည်ပြီးသော ဒေတာကိုသာ မြင်ရကာ သင့် IP ကို ဘယ်တော့မှ မမြင်ရပါ။ Apple Private Relay ကို စံနမူနာယူထားသော ပုံစံ ဖြစ်ပါသည်။"
 
 msgctxt "warren-multi-hop-view"
 msgid "Trade-off: roughly half the single-hop bandwidth. Off by default; opt-in for privacy. Daemon restart required after changing this setting."
@@ -5408,11 +5408,11 @@ msgstr "အလဲအလှယ် - single-hop bandwidth ၏ ထက်ဝက်�
 
 msgctxt "warren-multi-hop-view"
 msgid "Warren multi-hop"
-msgstr "Warren multi-hop"
+msgstr "Warren မာလ်တီဟော့ပ်"
 
 msgctxt "warren-multi-hop-view"
 msgid "When enabled, traffic is routed through two Warren relays (entry then exit) using HPKE end-to-end encryption between the client and the exit. The entry relay only sees ciphertext; the exit only sees the decrypted payload, never the user IP."
-msgstr "ဖွင့်ထားသည့်အခါ အသွားအလာကို client နှင့် exit အကြား HPKE end-to-end encryption အသုံးပြု၍ Warren relay နှစ်ခုမှတစ်ဆင့် (ဝင်ရောက်ပြီးနောက် ထွက်ခွာ) လမ်းကြောင်းပေးသည်။ ဝင်ရောက်သည့် relay သည် ciphertext ကိုသာ မြင်ရသည်၊ exit သည် ဖွင့်ပြီးသား payload ကိုသာ မြင်ရပြီး အသုံးပြုသူ IP ကို ဘယ်တော့မှ မမြင်ရပါ။"
+msgstr "ဖွင့်ထားသည့်အခါ ကူးလူးမှုကို Warren ရီလေး နှစ်ခု (အဝင်၊ ထို့နောက် အထွက်) မှတစ်ဆင့် လမ်းကြောင်းပေးပြီး ကလိုင်းယင့်နှင့် ထွက်ပေါက်ဆာဗာအကြား HPKE အစမှအဆုံး ကုဒ်ဝှက်စနစ်ကို အသုံးပြုပါသည်။ အဝင် ရီလေးသည် ကုဒ်ဝှက်ထားသော ဒေတာကိုသာ မြင်ရပြီး ထွက်ပေါက်ဆာဗာသည် ကုဒ်ဖြည်ပြီးသော ဒေတာကိုသာ မြင်ရကာ အသုံးပြုသူ၏ IP ကို ဘယ်တော့မှ မမြင်ရပါ။"
 
 msgctxt "warren-multi-hop-view"
 msgid "auto"
@@ -5424,7 +5424,7 @@ msgstr "Cryptographic မကိုက်ညီမှု အသေးစိတ်
 
 msgctxt "warren-pubkey-warning"
 msgid "Exit ID"
-msgstr "Exit ID"
+msgstr "ထွက်ပေါက်ဆာဗာ ID"
 
 msgctxt "warren-pubkey-warning"
 msgid "Location"
@@ -5480,7 +5480,7 @@ msgstr "နောက်ဆုံး"
 
 msgctxt "warren-status-view"
 msgid "Obfuscation"
-msgstr "Obfuscation"
+msgstr "အသွင်ဖျက်ခြင်း (Obfuscation)"
 
 msgctxt "warren-status-view"
 msgid "Reconnects"
@@ -5683,7 +5683,7 @@ msgstr "ဖိုရမ်အမည်"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "အင်တာနက်ကို ပိတ်ဆို့နေသည်။ ထပ်ဆင့်ပို့ထားသော port နှင့်ပတ်သက်၍ အလွဲသုံးစားမှု အကြိမ်ကြိမ် တိုင်ကြားခံရပြီးနောက် သင်၏ဝင်ရောက်ခွင့်ကို ရုပ်သိမ်းထားသည်။ %(url)s တွင် အယူခံဝင်နိုင်သည်"
+msgstr "အင်တာနက် ပိတ်ဆို့နေပါသည်: ပြန်ညွှန်းထားသော ပို့တ်နှင့်ပတ်သက်၍ အလွဲသုံးမှု အစီရင်ခံစာများ ထပ်ခါထပ်ခါ ရရှိပြီးနောက် သင့်ဝင်ရောက်ခွင့်ကို ရုပ်သိမ်းထားပါသည်။ %(url)s တွင် အယူခံဝင်နိုင်ပါသည်"
 
 msgctxt "forum-activity-view"
 msgid "%(actor)s liked your post"
@@ -5768,11 +5768,11 @@ msgstr "ဖွင့်ရန်"
 
 msgctxt "port-forwarding-view"
 msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
-msgstr "ထပ်ဆင့်ပို့ထားသော port ကို အင်တာနက်မှ ဝင်ရောက်နိုင်သည်။ ၎င်းမှ အလွဲသုံးစားမှုကို တတိယအဖွဲ့က တိုင်ကြားပါက port ကို ပိတ်ပြီး သင့်အကောင့်တွင် ချိုးဖောက်မှုတစ်ခု မှတ်တမ်းတင်သည်။ ရက် ၉၀ အတွင်း သုံးကြိမ်ဆိုလျှင် ဝင်ရောက်ခွင့် ရုပ်သိမ်းသည်။ အသေးစိတ်နှင့် အယူခံနည်း: %(url)s"
+msgstr "ပြန်ညွှန်းထားသော ပို့တ်ကို အင်တာနက်မှ ဝင်ရောက်နိုင်သည်။ ၎င်းမှ လာသော အလွဲသုံးမှုကို တတိယအဖွဲ့က တိုင်ကြားပါက ပို့တ်ကို ပိတ်ပြီး သင့်အကောင့်တွင် သတိပေးအမှတ်တစ်ခု မှတ်တမ်းတင်သည်။ ရက် ၉၀ အတွင်း သတိပေးအမှတ် သုံးခု ရရှိပါက ဝင်ရောက်ခွင့်ကို ရုပ်သိမ်းသည်။ အသေးစိတ်နှင့် အယူခံနည်း: %(url)s"
 
 msgctxt "port-forwarding-view"
 msgid "%(client)s now listens on port %(port)d"
-msgstr "%(client)s သည် ယခု port %(port)d တွင် နားထောင်နေသည်"
+msgstr "%(client)s သည် ယခု ပို့တ် %(port)d တွင် နားထောင်နေသည်"
 
 msgctxt "port-forwarding-view"
 msgid "%(client)s refused the login"
@@ -5780,7 +5780,7 @@ msgstr "%(client)s က အကောင့်ဝင်ခြင်းကို �
 
 msgctxt "port-forwarding-view"
 msgid "%(client)s rejected the port: %(detail)s"
-msgstr "%(client)s က port ကို ငြင်းပယ်ခဲ့သည်: %(detail)s"
+msgstr "%(client)s က ပို့တ်ကို ငြင်းပယ်ခဲ့သည်: %(detail)s"
 
 msgctxt "port-forwarding-view"
 msgid "Apply now"
@@ -5800,7 +5800,7 @@ msgstr "%(client)s သို့ ချိတ်ဆက်ပြီးပါပြ
 
 msgctxt "port-forwarding-view"
 msgid "Connected to %(client)s %(version)s, listening on port %(port)d"
-msgstr "%(client)s %(version)s သို့ ချိတ်ဆက်ပြီးပါပြီ၊ port %(port)d တွင် နားထောင်နေသည်"
+msgstr "%(client)s %(version)s သို့ ချိတ်ဆက်ပြီးပါပြီ၊ ပို့တ် %(port)d တွင် နားထောင်နေသည်"
 
 msgctxt "port-forwarding-view"
 msgid "None"
@@ -5836,11 +5836,11 @@ msgstr "အသုံးပြုသူအမည်"
 
 msgctxt "port-forwarding-view"
 msgid "Waiting for a public port"
-msgstr "အများသုံး port ကို စောင့်ဆိုင်းနေသည်"
+msgstr "အများသုံးပို့တ်ကို စောင့်ဆိုင်းနေသည်"
 
 msgctxt "port-forwarding-view"
 msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client’s web interface first."
-msgstr "Warren သည် အများသုံး port ကို သင့် torrent ကလိုင်းယင့်တွင် ထည့်သွင်းပြီး ပြောင်းလဲတိုင်း အသစ်ပြင်ပေးနိုင်ပါသည်။ ကလိုင်းယင့်၏ web interface ကို ဦးစွာ ဖွင့်ပါ။"
+msgstr "Warren သည် အများသုံးပို့တ်ကို သင့် torrent ကလိုင်းယင့်တွင် ထည့်သွင်းပြီး ပြောင်းလဲတိုင်း အသစ်ပြင်ပေးနိုင်ပါသည်။ ကလိုင်းယင့်၏ web interface ကို ဦးစွာ ဖွင့်ပါ။"
 
 msgctxt "port-forwarding-view"
 msgid "Web interface address"
@@ -6105,3 +6105,155 @@ msgstr "ဤစက်ပစ္စည်း၏ ဘရောက်ဆာတွင�
 msgctxt "forum-login"
 msgid "Close"
 msgstr "ပိတ်ရန်"
+
+msgctxt "accessibility"
+msgid "Community forum"
+msgstr "အသိုက်အဝန်း ဖိုရမ်"
+
+msgctxt "accessibility"
+msgid "How to contest a warning"
+msgstr "သတိပေးအမှတ်ကို အယူခံဝင်နည်း"
+
+msgctxt "account-view"
+msgid "Paused while access is revoked: nothing is charged."
+msgstr "ဝင်ရောက်ခွင့် ရုပ်သိမ်းထားစဉ်အတွင်း ရပ်ဆိုင်းထားပါသည်။ မည်သည့်ငွေမျှ ဖြတ်တောက်မည် မဟုတ်ပါ။"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "အင်တာနက် ပိတ်ဆို့နေပါသည်: ပြန်ညွှန်းထားသော ပို့တ်နှင့်ပတ်သက်၍ အလွဲသုံးမှု အစီရင်ခံစာများ ထပ်ခါထပ်ခါ ရရှိပြီးနောက် သင့်ဝင်ရောက်ခွင့်ကို %(date)s အထိ ရုပ်သိမ်းထားပါသည်။ %(url)s တွင် အယူခံဝင်နိုင်ပါသည်"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "အင်တာနက် ပိတ်ဆို့နေပါသည်: အသုံးပြုမှု မူဝါဒကို ချိုးဖောက်သောကြောင့် သင့်ဝင်ရောက်ခွင့်ကို %(date)s အထိ ရုပ်သိမ်းထားပါသည်။ မှားယွင်းနေသည်ဟု ယူဆပါက ပံ့ပိုးကူညီရေးကို ဆက်သွယ်ပါ။"
+
+msgctxt "connect-view"
+msgid "Degraded bond"
+msgstr "ပေါင်းစပ်ချိတ်ဆက်မှု အားနည်းနေသည်"
+
+msgctxt "connect-view"
+msgid "Degraded bond (%(stalled)s of %(bonded)s)"
+msgstr "ပေါင်းစပ်ချိတ်ဆက်မှု အားနည်းနေသည် (%(bonded)s ခုအနက် %(stalled)s ခု ရပ်တန့်)"
+
+msgctxt "in-app-notifications"
+msgid "%(product)s has taken priority on this device, so this build disconnected and turned its kill switch off."
+msgstr "ဤစက်ပစ္စည်းတွင် %(product)s က ဦးစားပေးဖြစ်လာသောကြောင့် ဤဗားရှင်းသည် ချိတ်ဆက်မှုကို ဖြုတ်ပြီး ၎င်း၏ Kill Switch ကို ပိတ်လိုက်ပါသည်။"
+
+msgctxt "in-app-notifications"
+msgid "%(product)s holds the tunnel on this device. It stands down on its own as soon as you connect here."
+msgstr "ဤစက်ပစ္စည်းတွင် %(product)s က Tunnel ကို အသုံးပြုထားပါသည်။ ဤနေရာမှ သင်ချိတ်ဆက်သည်နှင့် ၎င်းသည် အလိုအလျောက် ရပ်နားပေးပါမည်။"
+
+msgctxt "in-app-notifications"
+msgid "ANOTHER BUILD IS CONNECTED"
+msgstr "အခြားဗားရှင်းတစ်ခု ချိတ်ဆက်ထားသည်"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back"
+msgstr "ဤဗားရှင်းကို ပြန်လည်အသုံးပြုရန်"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back."
+msgstr "ဤဗားရှင်းကို ပြန်လည်အသုံးပြုပါ။"
+
+msgctxt "in-app-notifications"
+msgid "PORT FORWARDING WARNING"
+msgstr "ပို့တ် ပြန်ညွှန်းခြင်း သတိပေးအမှတ်"
+
+msgctxt "in-app-notifications"
+msgid "RECONNECTED AFTER A CRASH"
+msgstr "စနစ် ပျက်ကျပြီးနောက် ပြန်လည်ချိတ်ဆက်ထားသည်"
+
+msgctxt "in-app-notifications"
+msgid "STANDING BY"
+msgstr "စောင့်ဆိုင်းနေသည်"
+
+msgctxt "in-app-notifications"
+msgid "You can bring it back once %(product)s is disconnected."
+msgstr "%(product)s ၏ ချိတ်ဆက်မှု ဖြုတ်ပြီးသည်နှင့် ဤဗားရှင်းကို ပြန်လည်အသုံးပြုနိုင်ပါသည်။"
+
+msgctxt "in-app-notifications"
+msgid "Your device did not shut down cleanly, so Warren restored your previous connection. Neither auto-connect nor launch on start-up is on. Disconnect if you did not want this."
+msgstr "သင့်စက်ပစ္စည်း ပုံမှန်အတိုင်း ပိတ်မသွားခဲ့သောကြောင့် Warren က သင့်ယခင် ချိတ်ဆက်မှုကို ပြန်လည်ရယူပေးခဲ့ပါသည်။ “အော်တို ချိတ်ဆက်မှု” နှင့် “စက်အတွင်း စတင်ဝင်ရောက်ချိန်တွင် အက်ပ်ကို စတင်ဆောင်ရွက်မှု” နှစ်ခုစလုံးကို ဖွင့်မထားပါ။ ဤသို့ မလိုလားပါက ချိတ်ဆက်မှုကို ဖြုတ်ပါ။"
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse until %(date)s."
+msgstr "ပို့တ် ပြန်ညွှန်းခြင်းကို အလွဲသုံးမှုကြောင့် %(date)s အထိ ဝင်ရောက်ခွင့်ကို ရုပ်သိမ်းထားသည်။"
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse."
+msgstr "ပို့တ် ပြန်ညွှန်းခြင်းကို အလွဲသုံးမှုကြောင့် ဝင်ရောက်ခွင့်ကို ရုပ်သိမ်းထားသည်။"
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked until %(date)s."
+msgstr "%(date)s အထိ ဝင်ရောက်ခွင့်ကို ရုပ်သိမ်းထားသည်။"
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked."
+msgstr "ဝင်ရောက်ခွင့်ကို ရုပ်သိမ်းထားသည်။"
+
+msgctxt "port-forwarding-view"
+msgid "Case reference: %(reference)s"
+msgstr "အမှုတွဲ ရည်ညွှန်းချက်: %(reference)s"
+
+msgctxt "port-forwarding-view"
+msgid "child sexual abuse material"
+msgstr "ကလေးသူငယ် လိင်ပိုင်းဆိုင်ရာ အလွဲသုံးစားပြုမှု ပစ္စည်းများ"
+
+msgctxt "port-forwarding-view"
+msgid "copyright"
+msgstr "မူပိုင်ခွင့်"
+
+msgctxt "port-forwarding-view"
+msgid "malware"
+msgstr "malware"
+
+msgctxt "port-forwarding-view"
+msgid "no entitlement left, retrying"
+msgstr "ပို့တ်ခွင့် မကျန်တော့ပါ၊ ပြန်ကြိုးစားနေသည်"
+
+msgctxt "port-forwarding-view"
+msgid "other"
+msgstr "အခြား"
+
+msgctxt "port-forwarding-view"
+msgid "phishing"
+msgstr "phishing"
+
+msgctxt "port-forwarding-view"
+msgid "Port %(port)d was closed after an abuse report. %(client)s keeps its port until you apply one."
+msgstr "အလွဲသုံးမှု အစီရင်ခံစာကြောင့် ပို့တ် %(port)d ကို ပိတ်လိုက်သည်။ သင် ပို့တ်အသစ်တစ်ခုကို အသုံးချသည်အထိ %(client)s သည် ၎င်း၏ လက်ရှိပို့တ်ကို ဆက်ထားပါမည်။"
+
+msgctxt "port-forwarding-view"
+msgid "refused, retrying"
+msgstr "ငြင်းပယ်ခံရသည်၊ ပြန်ကြိုးစားနေသည်"
+
+msgctxt "port-forwarding-view"
+msgid "scanning or intrusion"
+msgstr "စကင်ဖတ်ခြင်း သို့မဟုတ် ကျူးကျော်ဝင်ရောက်ခြင်း"
+
+msgctxt "port-forwarding-view"
+msgid "spam"
+msgstr "spam"
+
+msgctxt "port-forwarding-view"
+msgid "To contest a warning, write to %(email)s quoting its case reference."
+msgstr "သတိပေးအမှတ်ကို အယူခံဝင်ရန် ၎င်း၏ အမှုတွဲ ရည်ညွှန်းချက်ကို ဖော်ပြ၍ %(email)s သို့ စာရေးပါ။"
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d of %(threshold)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "သတိပေးအမှတ် %(ordinal)d / %(threshold)d: အလွဲသုံးမှု အစီရင်ခံစာ (%(category)s) ကြောင့် ပို့တ် %(port)d ကို %(day)s တွင် ပိတ်ခဲ့သည်။"
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "သတိပေးအမှတ် %(ordinal)d: အလွဲသုံးမှု အစီရင်ခံစာ (%(category)s) ကြောင့် ပို့တ် %(port)d ကို %(day)s တွင် ပိတ်ခဲ့သည်။"
+
+msgctxt "port-forwarding-view"
+msgid "Warnings"
+msgstr "သတိပေးအမှတ်များ"
+
+msgctxt "port-forwarding-view"
+msgid "Warnings and how to contest them"
+msgstr "သတိပေးအမှတ်များနှင့် အယူခံနည်း"
+
+msgctxt "redeem-voucher-view"
+msgid "The voucher was not used: keep it and redeem it once the revocation ends."
+msgstr "ဘောက်ချာကို အသုံးမပြုရသေးပါ။ သိမ်းထားပြီး ရုပ်သိမ်းမှု ပြီးဆုံးသည့်အခါ လဲယူပါ။"

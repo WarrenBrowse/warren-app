@@ -5710,7 +5710,7 @@ msgstr "Nome sul forum"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "Internet bloccato: il tuo accesso è stato revocato dopo ripetute segnalazioni di abuso su una porta inoltrata. Puoi contestare all'indirizzo %(url)s"
+msgstr "Blocco di Internet: il tuo accesso è stato revocato dopo ripetute segnalazioni di abuso su una porta inoltrata. Puoi contestare all'indirizzo %(url)s"
 
 msgctxt "forum-activity-view"
 msgid "%(actor)s liked your post"
@@ -6133,3 +6133,155 @@ msgstr "Completa nel browser di questo dispositivo"
 msgctxt "forum-login"
 msgid "Close"
 msgstr "Chiudi"
+
+msgctxt "accessibility"
+msgid "Community forum"
+msgstr "Forum della community"
+
+msgctxt "accessibility"
+msgid "How to contest a warning"
+msgstr "Come contestare un richiamo"
+
+msgctxt "account-view"
+msgid "Paused while access is revoked: nothing is charged."
+msgstr "In pausa finché l'accesso è revocato: non viene addebitato nulla."
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "Blocco di Internet: il tuo accesso è stato revocato fino al %(date)s dopo ripetute segnalazioni di abuso su una porta inoltrata. Puoi contestare all'indirizzo %(url)s"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "Blocco di Internet: il tuo accesso è stato revocato fino al %(date)s per una violazione delle condizioni d'uso. Contatta l'assistenza se ritieni che si tratti di un errore."
+
+msgctxt "connect-view"
+msgid "Degraded bond"
+msgstr "Aggregazione degradata"
+
+msgctxt "connect-view"
+msgid "Degraded bond (%(stalled)s of %(bonded)s)"
+msgstr "Aggregazione degradata (%(stalled)s di %(bonded)s)"
+
+msgctxt "in-app-notifications"
+msgid "%(product)s has taken priority on this device, so this build disconnected and turned its kill switch off."
+msgstr "%(product)s ha preso la priorità su questo dispositivo, quindi questa versione si è disconnessa e ha disattivato il kill switch."
+
+msgctxt "in-app-notifications"
+msgid "%(product)s holds the tunnel on this device. It stands down on its own as soon as you connect here."
+msgstr "%(product)s occupa il tunnel su questo dispositivo. Lo cederà automaticamente non appena ti connetti da qui."
+
+msgctxt "in-app-notifications"
+msgid "ANOTHER BUILD IS CONNECTED"
+msgstr "UN'ALTRA VERSIONE È CONNESSA"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back"
+msgstr "Riattiva questa versione"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back."
+msgstr "Riattiva questa versione."
+
+msgctxt "in-app-notifications"
+msgid "PORT FORWARDING WARNING"
+msgstr "RICHIAMO PER L'INOLTRO DELLE PORTE"
+
+msgctxt "in-app-notifications"
+msgid "RECONNECTED AFTER A CRASH"
+msgstr "RICONNESSO DOPO UN ARRESTO ANOMALO"
+
+msgctxt "in-app-notifications"
+msgid "STANDING BY"
+msgstr "IN ATTESA"
+
+msgctxt "in-app-notifications"
+msgid "You can bring it back once %(product)s is disconnected."
+msgstr "Potrai riattivarla dopo la disconnessione di %(product)s."
+
+msgctxt "in-app-notifications"
+msgid "Your device did not shut down cleanly, so Warren restored your previous connection. Neither auto-connect nor launch on start-up is on. Disconnect if you did not want this."
+msgstr "Il dispositivo non si è spento correttamente, quindi Warren ha ripristinato la connessione precedente. Né la connessione automatica né l'apertura dell'app all'avvio sono attive. Disconnettiti se non lo volevi."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse until %(date)s."
+msgstr "Accesso revocato per abuso dell'inoltro delle porte fino al %(date)s."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse."
+msgstr "Accesso revocato per abuso dell'inoltro delle porte."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked until %(date)s."
+msgstr "Accesso revocato fino al %(date)s."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked."
+msgstr "Accesso revocato."
+
+msgctxt "port-forwarding-view"
+msgid "Case reference: %(reference)s"
+msgstr "Riferimento della pratica: %(reference)s"
+
+msgctxt "port-forwarding-view"
+msgid "child sexual abuse material"
+msgstr "materiale pedopornografico"
+
+msgctxt "port-forwarding-view"
+msgid "copyright"
+msgstr "diritto d'autore"
+
+msgctxt "port-forwarding-view"
+msgid "malware"
+msgstr "malware"
+
+msgctxt "port-forwarding-view"
+msgid "no entitlement left, retrying"
+msgstr "nessun diritto di porta disponibile, nuovo tentativo"
+
+msgctxt "port-forwarding-view"
+msgid "other"
+msgstr "altro"
+
+msgctxt "port-forwarding-view"
+msgid "phishing"
+msgstr "phishing"
+
+msgctxt "port-forwarding-view"
+msgid "Port %(port)d was closed after an abuse report. %(client)s keeps its port until you apply one."
+msgstr "La porta %(port)d è stata chiusa dopo una segnalazione di abuso. %(client)s mantiene la porta attuale finché non ne applichi una nuova."
+
+msgctxt "port-forwarding-view"
+msgid "refused, retrying"
+msgstr "rifiutato, nuovo tentativo"
+
+msgctxt "port-forwarding-view"
+msgid "scanning or intrusion"
+msgstr "scansione o intrusione"
+
+msgctxt "port-forwarding-view"
+msgid "spam"
+msgstr "spam"
+
+msgctxt "port-forwarding-view"
+msgid "To contest a warning, write to %(email)s quoting its case reference."
+msgstr "Per contestare un richiamo, scrivi a %(email)s indicando il riferimento della pratica."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d of %(threshold)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "Richiamo %(ordinal)d di %(threshold)d: la porta %(port)d è stata chiusa il %(day)s dopo una segnalazione di abuso (%(category)s)."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "Richiamo %(ordinal)d: la porta %(port)d è stata chiusa il %(day)s dopo una segnalazione di abuso (%(category)s)."
+
+msgctxt "port-forwarding-view"
+msgid "Warnings"
+msgstr "Richiami"
+
+msgctxt "port-forwarding-view"
+msgid "Warnings and how to contest them"
+msgstr "I richiami e come contestarli"
+
+msgctxt "redeem-voucher-view"
+msgid "The voucher was not used: keep it and redeem it once the revocation ends."
+msgstr "Il voucher non è stato usato: conservalo e riscattalo al termine della revoca."

@@ -238,7 +238,7 @@ msgid "On"
 msgstr "เปิด"
 
 msgid "Open URL"
-msgstr "Open URL"
+msgstr "เปิด URL"
 
 msgid "Optional"
 msgstr "ไม่บังคับ"
@@ -5277,7 +5277,7 @@ msgstr "ลบพอร์ต"
 
 msgctxt "port-forwarding-view"
 msgid "Status: waiting for an active tunnel connection to set up the port mappings."
-msgstr "สถานะ: กำลังรอการเชื่อมต่ออุโมงค์ที่ใช้งานอยู่เพื่อตั้งค่าการจับคู่พอร์ต"
+msgstr "สถานะ: กำลังรอการเชื่อมต่ออุโมงค์ที่ใช้งานอยู่เพื่อตั้งค่าการแมปพอร์ต"
 
 msgctxt "port-forwarding-view"
 msgid "This port is already in your list."
@@ -5656,7 +5656,7 @@ msgstr "%(daita)s เพิ่มสัญญาณรบกวนเครื�
 
 msgctxt "wireguard-settings-view"
 msgid "%(daita)s is not active on the current server: this connection is not protected by it. Reconnect or select a different location."
-msgstr "%(daita)s ไม่ได้ทำงานบนเซิร์ฟเวอร์ปัจจุบัน การเชื่อมต่อนี้จึงไม่ได้รับการปกป้องจาก %(daita)s เชื่อมต่อใหม่หรือเลือกตำแหน่งอื่น"
+msgstr "%(daita)s ไม่ได้ทำงานบนเซิร์ฟเวอร์ปัจจุบัน การเชื่อมต่อนี้จึงไม่ได้รับการปกป้องจากฟีเจอร์นี้ เชื่อมต่อใหม่หรือเลือกตำแหน่งอื่น"
 
 msgctxt "wireguard-settings-view"
 msgid "Even when encrypted, the data packets entering and leaving your device can be analyzed by AI to reveal your activity."
@@ -5680,7 +5680,7 @@ msgstr "ชื่อในฟอรัม"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "กำลังบล็อกอินเทอร์เน็ต การเข้าถึงของคุณถูกเพิกถอนหลังมีรายงานการละเมิดซ้ำ ๆ เกี่ยวกับพอร์ตที่ส่งต่อ คุณสามารถโต้แย้งได้ที่ %(url)s"
+msgstr "กำลังบล็อกอินเทอร์เน็ต: การเข้าถึงของคุณถูกเพิกถอนหลังมีรายงานการใช้งานในทางที่ผิดซ้ำ ๆ เกี่ยวกับพอร์ตที่ส่งต่อ คุณสามารถโต้แย้งได้ที่ %(url)s"
 
 msgctxt "forum-activity-view"
 msgid "%(actor)s liked your post"
@@ -5765,7 +5765,7 @@ msgstr "เปิด"
 
 msgctxt "port-forwarding-view"
 msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
-msgstr "พอร์ตที่ส่งต่อสามารถเข้าถึงได้จากอินเทอร์เน็ต หากบุคคลที่สามรายงานการละเมิดที่มาจากพอร์ตนี้ เราจะปิดพอร์ตและบันทึกการกระทำผิดไว้ในบัญชีของคุณ สามครั้งภายใน 90 วันจะเพิกถอนสิทธิ์การใช้งาน รายละเอียดและวิธีโต้แย้ง: %(url)s"
+msgstr "พอร์ตที่ส่งต่อสามารถเข้าถึงได้จากอินเทอร์เน็ต หากบุคคลที่สามรายงานการใช้งานในทางที่ผิดที่มาจากพอร์ตนี้ เราจะปิดพอร์ตและบันทึกคำเตือนไว้ในบัญชีของคุณ หากได้รับคำเตือนสามครั้งภายใน 90 วัน การเข้าถึงจะถูกเพิกถอน รายละเอียดและวิธีโต้แย้ง: %(url)s"
 
 msgctxt "port-forwarding-view"
 msgid "%(client)s now listens on port %(port)d"
@@ -6102,3 +6102,155 @@ msgstr "ทำให้เสร็จในเบราว์เซอร์ข
 msgctxt "forum-login"
 msgid "Close"
 msgstr "ปิด"
+
+msgctxt "accessibility"
+msgid "Community forum"
+msgstr "ฟอรัมชุมชน"
+
+msgctxt "accessibility"
+msgid "How to contest a warning"
+msgstr "วิธีโต้แย้งคำเตือน"
+
+msgctxt "account-view"
+msgid "Paused while access is revoked: nothing is charged."
+msgstr "หยุดชั่วคราวขณะที่การเข้าถึงถูกเพิกถอน จะไม่มีการเรียกเก็บเงินใด ๆ"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "กำลังบล็อกอินเทอร์เน็ต: การเข้าถึงของคุณถูกเพิกถอนจนถึง %(date)s หลังมีรายงานการใช้งานในทางที่ผิดซ้ำ ๆ เกี่ยวกับพอร์ตที่ส่งต่อ คุณสามารถโต้แย้งได้ที่ %(url)s"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "กำลังบล็อกอินเทอร์เน็ต: การเข้าถึงของคุณถูกเพิกถอนจนถึง %(date)s เนื่องจากละเมิดนโยบายการใช้งาน หากคุณคิดว่านี่เป็นความผิดพลาด โปรดติดต่อฝ่ายสนับสนุน"
+
+msgctxt "connect-view"
+msgid "Degraded bond"
+msgstr "การเชื่อมต่อแบบรวมไม่เต็มประสิทธิภาพ"
+
+msgctxt "connect-view"
+msgid "Degraded bond (%(stalled)s of %(bonded)s)"
+msgstr "การเชื่อมต่อแบบรวมไม่เต็มประสิทธิภาพ (ค้าง %(stalled)s จาก %(bonded)s)"
+
+msgctxt "in-app-notifications"
+msgid "%(product)s has taken priority on this device, so this build disconnected and turned its kill switch off."
+msgstr "%(product)s ได้รับลำดับความสำคัญบนอุปกรณ์นี้ บิลด์นี้จึงตัดการเชื่อมต่อและปิดคิลสวิตช์ของตัวเองแล้ว"
+
+msgctxt "in-app-notifications"
+msgid "%(product)s holds the tunnel on this device. It stands down on its own as soon as you connect here."
+msgstr "%(product)s กำลังใช้อุโมงค์บนอุปกรณ์นี้ และจะหลีกทางให้เองทันทีที่คุณเชื่อมต่อจากที่นี่"
+
+msgctxt "in-app-notifications"
+msgid "ANOTHER BUILD IS CONNECTED"
+msgstr "บิลด์อื่นเชื่อมต่ออยู่"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back"
+msgstr "กลับมาใช้บิลด์นี้"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back."
+msgstr "กลับมาใช้บิลด์นี้อีกครั้ง"
+
+msgctxt "in-app-notifications"
+msgid "PORT FORWARDING WARNING"
+msgstr "คำเตือนการส่งต่อพอร์ต"
+
+msgctxt "in-app-notifications"
+msgid "RECONNECTED AFTER A CRASH"
+msgstr "เชื่อมต่อใหม่หลังระบบขัดข้อง"
+
+msgctxt "in-app-notifications"
+msgid "STANDING BY"
+msgstr "อยู่ในโหมดรอ"
+
+msgctxt "in-app-notifications"
+msgid "You can bring it back once %(product)s is disconnected."
+msgstr "คุณจะกลับมาใช้บิลด์นี้ได้เมื่อ %(product)s ตัดการเชื่อมต่อแล้ว"
+
+msgctxt "in-app-notifications"
+msgid "Your device did not shut down cleanly, so Warren restored your previous connection. Neither auto-connect nor launch on start-up is on. Disconnect if you did not want this."
+msgstr "อุปกรณ์ของคุณไม่ได้ปิดเครื่องตามปกติ Warren จึงกู้คืนการเชื่อมต่อก่อนหน้าของคุณ ทั้งที่การตั้งค่า “เชื่อมต่ออัตโนมัติ” และ “เปิดใช้แอปทันทีที่เปิดเครื่อง” ปิดอยู่ทั้งคู่ หากคุณไม่ต้องการเช่นนี้ โปรดตัดการเชื่อมต่อ"
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse until %(date)s."
+msgstr "การเข้าถึงถูกเพิกถอนจนถึง %(date)s เนื่องจากใช้การส่งต่อพอร์ตในทางที่ผิด"
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse."
+msgstr "การเข้าถึงถูกเพิกถอนเนื่องจากใช้การส่งต่อพอร์ตในทางที่ผิด"
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked until %(date)s."
+msgstr "การเข้าถึงถูกเพิกถอนจนถึง %(date)s"
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked."
+msgstr "การเข้าถึงถูกเพิกถอน"
+
+msgctxt "port-forwarding-view"
+msgid "Case reference: %(reference)s"
+msgstr "หมายเลขอ้างอิงกรณี: %(reference)s"
+
+msgctxt "port-forwarding-view"
+msgid "child sexual abuse material"
+msgstr "สื่อการล่วงละเมิดทางเพศเด็ก"
+
+msgctxt "port-forwarding-view"
+msgid "copyright"
+msgstr "ลิขสิทธิ์"
+
+msgctxt "port-forwarding-view"
+msgid "malware"
+msgstr "มัลแวร์"
+
+msgctxt "port-forwarding-view"
+msgid "no entitlement left, retrying"
+msgstr "ไม่มีสิทธิ์เปิดพอร์ตเหลือแล้ว กำลังลองใหม่"
+
+msgctxt "port-forwarding-view"
+msgid "other"
+msgstr "อื่น ๆ"
+
+msgctxt "port-forwarding-view"
+msgid "phishing"
+msgstr "ฟิชชิง"
+
+msgctxt "port-forwarding-view"
+msgid "Port %(port)d was closed after an abuse report. %(client)s keeps its port until you apply one."
+msgstr "พอร์ต %(port)d ถูกปิดหลังมีรายงานการใช้งานในทางที่ผิด %(client)s จะใช้พอร์ตเดิมต่อไปจนกว่าคุณจะนำพอร์ตใหม่ไปใช้"
+
+msgctxt "port-forwarding-view"
+msgid "refused, retrying"
+msgstr "ถูกปฏิเสธ กำลังลองใหม่"
+
+msgctxt "port-forwarding-view"
+msgid "scanning or intrusion"
+msgstr "การสแกนหรือการบุกรุก"
+
+msgctxt "port-forwarding-view"
+msgid "spam"
+msgstr "สแปม"
+
+msgctxt "port-forwarding-view"
+msgid "To contest a warning, write to %(email)s quoting its case reference."
+msgstr "หากต้องการโต้แย้งคำเตือน ให้เขียนถึง %(email)s โดยระบุหมายเลขอ้างอิงกรณีของคำเตือนนั้น"
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d of %(threshold)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "คำเตือนครั้งที่ %(ordinal)d จาก %(threshold)d: พอร์ต %(port)d ถูกปิดเมื่อ %(day)s หลังมีรายงานการใช้งานในทางที่ผิด (%(category)s)"
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "คำเตือนครั้งที่ %(ordinal)d: พอร์ต %(port)d ถูกปิดเมื่อ %(day)s หลังมีรายงานการใช้งานในทางที่ผิด (%(category)s)"
+
+msgctxt "port-forwarding-view"
+msgid "Warnings"
+msgstr "คำเตือน"
+
+msgctxt "port-forwarding-view"
+msgid "Warnings and how to contest them"
+msgstr "คำเตือนและวิธีโต้แย้ง"
+
+msgctxt "redeem-voucher-view"
+msgid "The voucher was not used: keep it and redeem it once the revocation ends."
+msgstr "ยังไม่ได้ใช้บัตรกำนัล โปรดเก็บไว้และแลกใช้เมื่อการเพิกถอนสิ้นสุดลง"

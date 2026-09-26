@@ -5832,7 +5832,7 @@ msgstr "Відкрити"
 
 msgctxt "port-forwarding-view"
 msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
-msgstr "Перенаправлений порт доступний з інтернету. Якщо третя сторона поскаржиться на зловживання з нього, ми закриємо порт і запишемо порушення до вашого облікового запису; три порушення за 90 днів скасовують доступ. Подробиці та порядок оскарження: %(url)s"
+msgstr "Перенаправлений порт доступний з інтернету. Якщо третя сторона поскаржиться на зловживання з нього, ми закриємо порт і запишемо попередження до вашого облікового запису; три попередження за 90 днів призводять до відкликання доступу. Подробиці та порядок оскарження: %(url)s"
 
 msgctxt "port-forwarding-view"
 msgid "%(client)s now listens on port %(port)d"
@@ -6169,3 +6169,155 @@ msgstr "Завершити в браузері цього пристрою"
 msgctxt "forum-login"
 msgid "Close"
 msgstr "Закрити"
+
+msgctxt "accessibility"
+msgid "Community forum"
+msgstr "Форум спільноти"
+
+msgctxt "accessibility"
+msgid "How to contest a warning"
+msgstr "Як оскаржити попередження"
+
+msgctxt "account-view"
+msgid "Paused while access is revoked: nothing is charged."
+msgstr "Призупинено на час відкликання доступу: кошти не списуються."
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "Інтернет заблоковано: ваш доступ відкликано до %(date)s після повторних скарг на зловживання перенаправленим портом. Оскаржити можна за адресою %(url)s"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "Інтернет заблоковано: ваш доступ відкликано до %(date)s за порушення правил користування. Зверніться до підтримки, якщо вважаєте це помилкою."
+
+msgctxt "connect-view"
+msgid "Degraded bond"
+msgstr "Агрегацію з’єднань послаблено"
+
+msgctxt "connect-view"
+msgid "Degraded bond (%(stalled)s of %(bonded)s)"
+msgstr "Агрегацію з’єднань послаблено (не працюють: %(stalled)s з %(bonded)s)"
+
+msgctxt "in-app-notifications"
+msgid "%(product)s has taken priority on this device, so this build disconnected and turned its kill switch off."
+msgstr "Пріоритет на цьому пристрої тепер у %(product)s, тому ця збірка відключилася та вимкнула аварійний вимикач."
+
+msgctxt "in-app-notifications"
+msgid "%(product)s holds the tunnel on this device. It stands down on its own as soon as you connect here."
+msgstr "Тунель на цьому пристрої утримує %(product)s. Щойно ви підключитеся тут, тунель автоматично перейде до цієї збірки."
+
+msgctxt "in-app-notifications"
+msgid "ANOTHER BUILD IS CONNECTED"
+msgstr "ПІДКЛЮЧЕНО ІНШУ ЗБІРКУ"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back"
+msgstr "Повернути цю збірку"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back."
+msgstr "Повернути цю збірку."
+
+msgctxt "in-app-notifications"
+msgid "PORT FORWARDING WARNING"
+msgstr "ПОПЕРЕДЖЕННЯ ЩОДО ПЕРЕАДРЕСАЦІЇ ПОРТІВ"
+
+msgctxt "in-app-notifications"
+msgid "RECONNECTED AFTER A CRASH"
+msgstr "ПОВТОРНЕ ПІДКЛЮЧЕННЯ ПІСЛЯ ЗБОЮ"
+
+msgctxt "in-app-notifications"
+msgid "STANDING BY"
+msgstr "У РЕЖИМІ ОЧІКУВАННЯ"
+
+msgctxt "in-app-notifications"
+msgid "You can bring it back once %(product)s is disconnected."
+msgstr "Ви зможете повернути її після відключення %(product)s."
+
+msgctxt "in-app-notifications"
+msgid "Your device did not shut down cleanly, so Warren restored your previous connection. Neither auto-connect nor launch on start-up is on. Disconnect if you did not want this."
+msgstr "Пристрій вимкнувся некоректно, тому Warren відновив попереднє підключення. Ні автопідключення, ні автозапуск під час завантаження системи не ввімкнено. Відключіться, якщо ви цього не хотіли."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse until %(date)s."
+msgstr "Доступ відкликано до %(date)s за зловживання переадресацією портів."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse."
+msgstr "Доступ відкликано за зловживання переадресацією портів."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked until %(date)s."
+msgstr "Доступ відкликано до %(date)s."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked."
+msgstr "Доступ відкликано."
+
+msgctxt "port-forwarding-view"
+msgid "Case reference: %(reference)s"
+msgstr "Номер справи: %(reference)s"
+
+msgctxt "port-forwarding-view"
+msgid "child sexual abuse material"
+msgstr "матеріали сексуального насильства над дітьми"
+
+msgctxt "port-forwarding-view"
+msgid "copyright"
+msgstr "авторське право"
+
+msgctxt "port-forwarding-view"
+msgid "malware"
+msgstr "шкідливе ПЗ"
+
+msgctxt "port-forwarding-view"
+msgid "no entitlement left, retrying"
+msgstr "права на порт вичерпано, повторна спроба"
+
+msgctxt "port-forwarding-view"
+msgid "other"
+msgstr "інше"
+
+msgctxt "port-forwarding-view"
+msgid "phishing"
+msgstr "фішинг"
+
+msgctxt "port-forwarding-view"
+msgid "Port %(port)d was closed after an abuse report. %(client)s keeps its port until you apply one."
+msgstr "Порт %(port)d закрито після скарги на зловживання. %(client)s зберігатиме свій порт, доки ви не застосуєте новий."
+
+msgctxt "port-forwarding-view"
+msgid "refused, retrying"
+msgstr "відмовлено, повторна спроба"
+
+msgctxt "port-forwarding-view"
+msgid "scanning or intrusion"
+msgstr "сканування або вторгнення"
+
+msgctxt "port-forwarding-view"
+msgid "spam"
+msgstr "спам"
+
+msgctxt "port-forwarding-view"
+msgid "To contest a warning, write to %(email)s quoting its case reference."
+msgstr "Щоб оскаржити попередження, напишіть на %(email)s, вказавши номер справи."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d of %(threshold)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "Попередження %(ordinal)d з %(threshold)d: порт %(port)d закрито %(day)s після скарги на зловживання (%(category)s)."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "Попередження %(ordinal)d: порт %(port)d закрито %(day)s після скарги на зловживання (%(category)s)."
+
+msgctxt "port-forwarding-view"
+msgid "Warnings"
+msgstr "Попередження"
+
+msgctxt "port-forwarding-view"
+msgid "Warnings and how to contest them"
+msgstr "Попередження та порядок їх оскарження"
+
+msgctxt "redeem-voucher-view"
+msgid "The voucher was not used: keep it and redeem it once the revocation ends."
+msgstr "Ваучер не використано: збережіть його та використайте, коли завершиться строк відкликання доступу."

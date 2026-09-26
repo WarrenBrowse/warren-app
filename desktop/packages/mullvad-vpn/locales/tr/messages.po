@@ -5710,7 +5710,7 @@ msgstr "Forum adı"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "İnternet engelleniyor: yönlendirilmiş bir bağlantı noktasıyla ilgili tekrarlanan kötüye kullanım bildirimleri sonrasında erişiminiz iptal edildi. %(url)s adresinden itiraz edebilirsiniz"
+msgstr "İnternet bağlantısı engelleniyor: yönlendirilmiş bir bağlantı noktasıyla ilgili tekrarlanan kötüye kullanım bildirimleri sonrasında erişiminiz iptal edildi. %(url)s adresinden itiraz edebilirsiniz"
 
 msgctxt "forum-activity-view"
 msgid "%(actor)s liked your post"
@@ -5796,7 +5796,7 @@ msgstr "Aç"
 
 msgctxt "port-forwarding-view"
 msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
-msgstr "Yönlendirilmiş bir bağlantı noktasına internetten erişilebilir. Üçüncü bir taraf oradan gelen bir kötüye kullanımı bildirirse bağlantı noktasını kapatır ve hesabınıza bir ihlal kaydederiz; 90 gün içinde üç ihlal erişimi iptal eder. Ayrıntılar ve itiraz yolu: %(url)s"
+msgstr "Yönlendirilmiş bir bağlantı noktasına internetten erişilebilir. Üçüncü bir taraf oradan gelen bir kötüye kullanımı bildirirse bağlantı noktasını kapatır ve hesabınıza bir uyarı kaydederiz; 90 gün içinde üç uyarı erişimin iptal edilmesine yol açar. Ayrıntılar ve itiraz yolu: %(url)s"
 
 msgctxt "port-forwarding-view"
 msgid "%(client)s now listens on port %(port)d"
@@ -6133,3 +6133,155 @@ msgstr "Bu cihazın tarayıcısında tamamla"
 msgctxt "forum-login"
 msgid "Close"
 msgstr "Kapat"
+
+msgctxt "accessibility"
+msgid "Community forum"
+msgstr "Topluluk forumu"
+
+msgctxt "accessibility"
+msgid "How to contest a warning"
+msgstr "Bir uyarıya nasıl itiraz edilir"
+
+msgctxt "account-view"
+msgid "Paused while access is revoked: nothing is charged."
+msgstr "Erişim iptal edildiği sürece duraklatıldı: herhangi bir ücret alınmaz."
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "İnternet bağlantısı engelleniyor: yönlendirilmiş bir bağlantı noktasıyla ilgili tekrarlanan kötüye kullanım bildirimleri sonrasında erişiminiz %(date)s tarihine kadar iptal edildi. %(url)s adresinden itiraz edebilirsiniz"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "İnternet bağlantısı engelleniyor: kullanım kurallarını ihlal ettiğiniz için erişiminiz %(date)s tarihine kadar iptal edildi. Bunun bir hata olduğunu düşünüyorsanız destek ekibiyle iletişime geçin."
+
+msgctxt "connect-view"
+msgid "Degraded bond"
+msgstr "Birleştirme zayıfladı"
+
+msgctxt "connect-view"
+msgid "Degraded bond (%(stalled)s of %(bonded)s)"
+msgstr "Birleştirme zayıfladı (%(stalled)s/%(bonded)s)"
+
+msgctxt "in-app-notifications"
+msgid "%(product)s has taken priority on this device, so this build disconnected and turned its kill switch off."
+msgstr "%(product)s bu cihazda öncelik kazandı, bu nedenle bu sürüm bağlantıyı kesti ve kill switch özelliğini kapattı."
+
+msgctxt "in-app-notifications"
+msgid "%(product)s holds the tunnel on this device. It stands down on its own as soon as you connect here."
+msgstr "Bu cihazdaki tüneli %(product)s tutuyor. Buradan bağlandığınız anda kendiliğinden geri çekilir."
+
+msgctxt "in-app-notifications"
+msgid "ANOTHER BUILD IS CONNECTED"
+msgstr "BAŞKA BİR SÜRÜM BAĞLI"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back"
+msgstr "Bu sürümü geri getir"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back."
+msgstr "Bu sürümü geri getir."
+
+msgctxt "in-app-notifications"
+msgid "PORT FORWARDING WARNING"
+msgstr "BAĞLANTI NOKTASI YÖNLENDİRME UYARISI"
+
+msgctxt "in-app-notifications"
+msgid "RECONNECTED AFTER A CRASH"
+msgstr "ÇÖKME SONRASINDA YENİDEN BAĞLANILDI"
+
+msgctxt "in-app-notifications"
+msgid "STANDING BY"
+msgstr "BEKLEMEDE"
+
+msgctxt "in-app-notifications"
+msgid "You can bring it back once %(product)s is disconnected."
+msgstr "%(product)s bağlı olmadığında bu sürümü geri getirebilirsiniz."
+
+msgctxt "in-app-notifications"
+msgid "Your device did not shut down cleanly, so Warren restored your previous connection. Neither auto-connect nor launch on start-up is on. Disconnect if you did not want this."
+msgstr "Cihazınız düzgün kapanmadığı için Warren önceki bağlantınızı geri yükledi. Ne otomatik bağlanma ne de uygulamayı başlangıçta açma ayarı açık. Bunu istemediyseniz bağlantıyı kesin."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse until %(date)s."
+msgstr "Bağlantı noktası yönlendirmenin kötüye kullanılması nedeniyle erişim %(date)s tarihine kadar iptal edildi."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse."
+msgstr "Bağlantı noktası yönlendirmenin kötüye kullanılması nedeniyle erişim iptal edildi."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked until %(date)s."
+msgstr "Erişim %(date)s tarihine kadar iptal edildi."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked."
+msgstr "Erişim iptal edildi."
+
+msgctxt "port-forwarding-view"
+msgid "Case reference: %(reference)s"
+msgstr "Dosya referansı: %(reference)s"
+
+msgctxt "port-forwarding-view"
+msgid "child sexual abuse material"
+msgstr "çocuk cinsel istismarı materyali"
+
+msgctxt "port-forwarding-view"
+msgid "copyright"
+msgstr "telif hakkı"
+
+msgctxt "port-forwarding-view"
+msgid "malware"
+msgstr "malware"
+
+msgctxt "port-forwarding-view"
+msgid "no entitlement left, retrying"
+msgstr "bağlantı noktası hakkı kalmadı, yeniden deneniyor"
+
+msgctxt "port-forwarding-view"
+msgid "other"
+msgstr "diğer"
+
+msgctxt "port-forwarding-view"
+msgid "phishing"
+msgstr "phishing"
+
+msgctxt "port-forwarding-view"
+msgid "Port %(port)d was closed after an abuse report. %(client)s keeps its port until you apply one."
+msgstr "%(port)d numaralı bağlantı noktası bir kötüye kullanım bildiriminin ardından kapatıldı. Siz yenisini uygulayana kadar %(client)s mevcut bağlantı noktasını korur."
+
+msgctxt "port-forwarding-view"
+msgid "refused, retrying"
+msgstr "reddedildi, yeniden deneniyor"
+
+msgctxt "port-forwarding-view"
+msgid "scanning or intrusion"
+msgstr "tarama veya izinsiz giriş"
+
+msgctxt "port-forwarding-view"
+msgid "spam"
+msgstr "spam"
+
+msgctxt "port-forwarding-view"
+msgid "To contest a warning, write to %(email)s quoting its case reference."
+msgstr "Bir uyarıya itiraz etmek için dosya referansını belirterek %(email)s adresine yazın."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d of %(threshold)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "Uyarı %(ordinal)d/%(threshold)d: %(port)d numaralı bağlantı noktası, bir kötüye kullanım bildiriminin ardından %(day)s tarihinde kapatıldı (%(category)s)."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "Uyarı %(ordinal)d: %(port)d numaralı bağlantı noktası, bir kötüye kullanım bildiriminin ardından %(day)s tarihinde kapatıldı (%(category)s)."
+
+msgctxt "port-forwarding-view"
+msgid "Warnings"
+msgstr "Uyarılar"
+
+msgctxt "port-forwarding-view"
+msgid "Warnings and how to contest them"
+msgstr "Uyarılar ve bunlara nasıl itiraz edilir"
+
+msgctxt "redeem-voucher-view"
+msgid "The voucher was not used: keep it and redeem it once the revocation ends."
+msgstr "Kupon kullanılmadı: saklayın ve erişim iptali sona erdiğinde kullanın."

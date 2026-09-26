@@ -5855,7 +5855,7 @@ msgstr "فتح"
 
 msgctxt "port-forwarding-view"
 msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
-msgstr "المنفذ المعاد توجيهه يمكن الوصول إليه من الإنترنت. إذا أبلغ طرف ثالث عن إساءة صادرة منه، نغلق المنفذ ونسجل مخالفة على حسابك؛ ثلاث مخالفات خلال 90 يومًا تلغي الوصول. التفاصيل وكيفية الاعتراض: %(url)s"
+msgstr "المنفذ المعاد توجيهه يمكن الوصول إليه من الإنترنت. إذا أبلغ طرف ثالث عن إساءة صادرة منه، نغلق المنفذ ونسجل تحذيرًا على حسابك؛ ثلاثة تحذيرات خلال 90 يومًا تلغي الوصول. التفاصيل وكيفية الاعتراض: %(url)s"
 
 msgctxt "port-forwarding-view"
 msgid "%(client)s now listens on port %(port)d"
@@ -6192,3 +6192,155 @@ msgstr "أكمل في متصفح هذا الجهاز"
 msgctxt "forum-login"
 msgid "Close"
 msgstr "إغلاق"
+
+msgctxt "accessibility"
+msgid "Community forum"
+msgstr "منتدى المجتمع"
+
+msgctxt "accessibility"
+msgid "How to contest a warning"
+msgstr "كيفية الاعتراض على تحذير"
+
+msgctxt "account-view"
+msgid "Paused while access is revoked: nothing is charged."
+msgstr "متوقِّف مؤقتًا طوال مدة إلغاء الوصول: لا يُخصم أي مبلغ."
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "حظر الإنترنت: تم إلغاء وصولك حتى %(date)s بعد بلاغات إساءة متكررة بشأن منفذ معاد توجيهه. يمكنك الاعتراض على ذلك عبر %(url)s"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "حظر الإنترنت: تم إلغاء وصولك حتى %(date)s بسبب مخالفة سياسة الاستخدام. تواصل مع الدعم إذا كنت ترى أن ذلك خطأ."
+
+msgctxt "connect-view"
+msgid "Degraded bond"
+msgstr "تدهور تجميع الاتصالات"
+
+msgctxt "connect-view"
+msgid "Degraded bond (%(stalled)s of %(bonded)s)"
+msgstr "تدهور تجميع الاتصالات (%(stalled)s من %(bonded)s)"
+
+msgctxt "in-app-notifications"
+msgid "%(product)s has taken priority on this device, so this build disconnected and turned its kill switch off."
+msgstr "أصبحت الأولوية على هذا الجهاز لـ %(product)s، لذلك قطع هذا الإصدار الاتصال وعطَّل مفتاح الإيقاف التلقائي الخاص به."
+
+msgctxt "in-app-notifications"
+msgid "%(product)s holds the tunnel on this device. It stands down on its own as soon as you connect here."
+msgstr "يستخدم %(product)s النفق على هذا الجهاز حاليًا، وسيتنحّى من تلقاء نفسه فور اتصالك من هنا."
+
+msgctxt "in-app-notifications"
+msgid "ANOTHER BUILD IS CONNECTED"
+msgstr "إصدار آخر متصل"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back"
+msgstr "إعادة تفعيل هذا الإصدار"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back."
+msgstr "أعِد تفعيل هذا الإصدار."
+
+msgctxt "in-app-notifications"
+msgid "PORT FORWARDING WARNING"
+msgstr "تحذير بشأن إعادة توجيه المنافذ"
+
+msgctxt "in-app-notifications"
+msgid "RECONNECTED AFTER A CRASH"
+msgstr "تمت إعادة الاتصال بعد تعطُّل مفاجئ"
+
+msgctxt "in-app-notifications"
+msgid "STANDING BY"
+msgstr "في وضع الانتظار"
+
+msgctxt "in-app-notifications"
+msgid "You can bring it back once %(product)s is disconnected."
+msgstr "يمكنك إعادة تفعيله بعد قطع اتصال %(product)s."
+
+msgctxt "in-app-notifications"
+msgid "Your device did not shut down cleanly, so Warren restored your previous connection. Neither auto-connect nor launch on start-up is on. Disconnect if you did not want this."
+msgstr "لم يتم إيقاف تشغيل جهازك بشكل سليم، لذلك استعاد Warren اتصالك السابق. خيارا الاتصال التلقائي وتشغيل التطبيق عند بدء التشغيل غير مفعَّلين. اقطع الاتصال إذا لم تكن ترغب في ذلك."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse until %(date)s."
+msgstr "تم إلغاء الوصول بسبب إساءة استخدام إعادة توجيه المنافذ حتى %(date)s."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse."
+msgstr "تم إلغاء الوصول بسبب إساءة استخدام إعادة توجيه المنافذ."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked until %(date)s."
+msgstr "تم إلغاء الوصول حتى %(date)s."
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked."
+msgstr "تم إلغاء الوصول."
+
+msgctxt "port-forwarding-view"
+msgid "Case reference: %(reference)s"
+msgstr "مرجع الملف: %(reference)s"
+
+msgctxt "port-forwarding-view"
+msgid "child sexual abuse material"
+msgstr "مواد الاعتداء الجنسي على الأطفال"
+
+msgctxt "port-forwarding-view"
+msgid "copyright"
+msgstr "حقوق النشر"
+
+msgctxt "port-forwarding-view"
+msgid "malware"
+msgstr "برمجيات خبيثة"
+
+msgctxt "port-forwarding-view"
+msgid "no entitlement left, retrying"
+msgstr "لم يتبقَّ حق لفتح منفذ، جارٍ إعادة المحاولة"
+
+msgctxt "port-forwarding-view"
+msgid "other"
+msgstr "أخرى"
+
+msgctxt "port-forwarding-view"
+msgid "phishing"
+msgstr "تصيّد احتيالي"
+
+msgctxt "port-forwarding-view"
+msgid "Port %(port)d was closed after an abuse report. %(client)s keeps its port until you apply one."
+msgstr "أُغلق المنفذ %(port)d بعد بلاغ إساءة استخدام. سيحتفظ %(client)s بمنفذه الحالي إلى أن تطبِّق منفذًا جديدًا."
+
+msgctxt "port-forwarding-view"
+msgid "refused, retrying"
+msgstr "مرفوض، جارٍ إعادة المحاولة"
+
+msgctxt "port-forwarding-view"
+msgid "scanning or intrusion"
+msgstr "فحص أو اختراق"
+
+msgctxt "port-forwarding-view"
+msgid "spam"
+msgstr "رسائل مزعجة"
+
+msgctxt "port-forwarding-view"
+msgid "To contest a warning, write to %(email)s quoting its case reference."
+msgstr "للاعتراض على تحذير، راسل %(email)s مع ذكر مرجع ملفه."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d of %(threshold)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "التحذير %(ordinal)d من %(threshold)d: أُغلق المنفذ %(port)d في %(day)s بعد بلاغ إساءة استخدام (%(category)s)."
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "التحذير %(ordinal)d: أُغلق المنفذ %(port)d في %(day)s بعد بلاغ إساءة استخدام (%(category)s)."
+
+msgctxt "port-forwarding-view"
+msgid "Warnings"
+msgstr "التحذيرات"
+
+msgctxt "port-forwarding-view"
+msgid "Warnings and how to contest them"
+msgstr "التحذيرات وكيفية الاعتراض عليها"
+
+msgctxt "redeem-voucher-view"
+msgid "The voucher was not used: keep it and redeem it once the revocation ends."
+msgstr "لم تُستخدم القسيمة: احتفظ بها واستردَّها بعد انتهاء مدة إلغاء الوصول."

@@ -5386,3 +5386,51 @@ msgstr "Avertismente"
 msgctxt "port-forwarding-view"
 msgid "Warnings and how to contest them"
 msgstr "Avertismentele și cum le contestați"
+
+msgctxt "accessibility"
+msgid "Community forum"
+msgstr "Forumul comunității"
+
+msgctxt "connect-view"
+msgid "Degraded bond"
+msgstr "Căi degradate"
+
+msgctxt "connect-view"
+msgid "Degraded bond (%(stalled)s of %(bonded)s)"
+msgstr "Căi degradate (%(stalled)s din %(bonded)s)"
+
+msgctxt "in-app-notifications"
+msgid "%(product)s has taken priority on this device, so this build disconnected and turned its kill switch off."
+msgstr "%(product)s are prioritate pe acest dispozitiv, așa că această versiune s-a deconectat și și-a dezactivat Kill Switch-ul."
+
+msgctxt "in-app-notifications"
+msgid "%(product)s holds the tunnel on this device. It stands down on its own as soon as you connect here."
+msgstr "%(product)s folosește tunelul pe acest dispozitiv. Se retrage singur imediat ce vă conectați aici."
+
+msgctxt "in-app-notifications"
+msgid "ANOTHER BUILD IS CONNECTED"
+msgstr "ALTĂ VERSIUNE ESTE CONECTATĂ"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back"
+msgstr "Reactivați această versiune"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back."
+msgstr "Reactivați această versiune."
+
+msgctxt "in-app-notifications"
+msgid "RECONNECTED AFTER A CRASH"
+msgstr "RECONECTAT DUPĂ O OPRIRE NEAȘTEPTATĂ"
+
+msgctxt "in-app-notifications"
+msgid "STANDING BY"
+msgstr "ÎN AȘTEPTARE"
+
+msgctxt "in-app-notifications"
+msgid "You can bring it back once %(product)s is disconnected."
+msgstr "O veți putea reactiva după ce %(product)s se deconectează."
+
+msgctxt "in-app-notifications"
+msgid "Your device did not shut down cleanly, so Warren restored your previous connection. Neither auto-connect nor launch on start-up is on. Disconnect if you did not want this."
+msgstr "Dispozitivul dvs. nu s-a oprit corect, așa că Warren a restabilit conexiunea anterioară. Nici conectarea automată, nici lansarea aplicației la pornirea sistemului nu sunt activate. Deconectați-vă dacă nu ați dorit acest lucru."

@@ -2581,7 +2581,7 @@ msgstr "复制端口号"
 
 msgctxt "port-forwarding-view"
 msgid "How to set up your torrent client"
-msgstr "如何设置你的 torrent 客户端"
+msgstr "如何设置您的 torrent 客户端"
 
 msgctxt "port-forwarding-view"
 msgid "Notify me when a public port changes"
@@ -5680,7 +5680,7 @@ msgstr "论坛名称"
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgstr "正在阻断网络：由于转发端口被反复举报滥用，您的访问已被撤销。您可以在 %(url)s 提出申诉"
+msgstr "正在阻止网络：由于转发端口被反复举报滥用，您的访问权限已被撤销。您可以在 %(url)s 提出申诉"
 
 msgctxt "forum-activity-view"
 msgid "%(actor)s liked your post"
@@ -5765,7 +5765,7 @@ msgstr "打开"
 
 msgctxt "port-forwarding-view"
 msgid "A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %(url)s"
-msgstr "转发端口可以从互联网访问。如果第三方举报来自该端口的滥用行为，我们会关闭端口并在你的账户上记一次违规；90 天内三次将吊销访问权限。详情与申诉方式：%(url)s"
+msgstr "转发端口可以从互联网访问。如果第三方举报来自该端口的滥用行为，我们会关闭端口并在您的帐户上记录一次警告；90 天内累计三次警告将撤销访问权限。详情与申诉方式：%(url)s"
 
 msgctxt "port-forwarding-view"
 msgid "%(client)s now listens on port %(port)d"
@@ -5837,7 +5837,7 @@ msgstr "正在等待公共端口"
 
 msgctxt "port-forwarding-view"
 msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client’s web interface first."
-msgstr "Warren 可以把公共端口填入你的 torrent 客户端，并在端口变化时自动更新。请先启用客户端的 web 界面。"
+msgstr "Warren 可以把公共端口填入您的 torrent 客户端，并在端口变化时自动更新。请先启用客户端的 Web 界面。"
 
 msgctxt "port-forwarding-view"
 msgid "Web interface address"
@@ -6102,3 +6102,155 @@ msgstr "在此设备的浏览器中完成"
 msgctxt "forum-login"
 msgid "Close"
 msgstr "关闭"
+
+msgctxt "accessibility"
+msgid "Community forum"
+msgstr "社区论坛"
+
+msgctxt "accessibility"
+msgid "How to contest a warning"
+msgstr "如何对警告提出申诉"
+
+msgctxt "account-view"
+msgid "Paused while access is revoked: nothing is charged."
+msgstr "访问权限撤销期间已暂停：不会产生任何扣费。"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgstr "正在阻止网络：由于转发端口被反复举报滥用，您的访问权限已被撤销，直至 %(date)s。您可以在 %(url)s 提出申诉"
+
+msgctxt "auth-failure"
+msgid "Blocking internet: your access has been revoked until %(date)s for a usage policy violation. Contact support if you believe this is a mistake."
+msgstr "正在阻止网络：因违反使用政策，您的访问权限已被撤销，直至 %(date)s。如果您认为这是误判，请联系支持团队。"
+
+msgctxt "connect-view"
+msgid "Degraded bond"
+msgstr "聚合连接已降级"
+
+msgctxt "connect-view"
+msgid "Degraded bond (%(stalled)s of %(bonded)s)"
+msgstr "聚合连接已降级（%(stalled)s/%(bonded)s 条停滞）"
+
+msgctxt "in-app-notifications"
+msgid "%(product)s has taken priority on this device, so this build disconnected and turned its kill switch off."
+msgstr "%(product)s 已在此设备上取得优先权，因此此版本已断开连接并关闭了终止开关。"
+
+msgctxt "in-app-notifications"
+msgid "%(product)s holds the tunnel on this device. It stands down on its own as soon as you connect here."
+msgstr "此设备上的隧道目前由 %(product)s 占用。您在此处连接后，它会自动让出隧道。"
+
+msgctxt "in-app-notifications"
+msgid "ANOTHER BUILD IS CONNECTED"
+msgstr "另一版本已连接"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back"
+msgstr "恢复使用此版本"
+
+msgctxt "in-app-notifications"
+msgid "Bring this build back."
+msgstr "恢复使用此版本"
+
+msgctxt "in-app-notifications"
+msgid "PORT FORWARDING WARNING"
+msgstr "端口转发警告"
+
+msgctxt "in-app-notifications"
+msgid "RECONNECTED AFTER A CRASH"
+msgstr "崩溃后已重新连接"
+
+msgctxt "in-app-notifications"
+msgid "STANDING BY"
+msgstr "待命中"
+
+msgctxt "in-app-notifications"
+msgid "You can bring it back once %(product)s is disconnected."
+msgstr "%(product)s 断开连接后，您即可恢复使用此版本。"
+
+msgctxt "in-app-notifications"
+msgid "Your device did not shut down cleanly, so Warren restored your previous connection. Neither auto-connect nor launch on start-up is on. Disconnect if you did not want this."
+msgstr "您的设备未正常关机，因此 Warren 恢复了您之前的连接。“自动连接”和“设备启动时启动应用”均未开启。如果这不是您想要的，请断开连接。"
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse until %(date)s."
+msgstr "因滥用端口转发，访问权限已撤销至 %(date)s。"
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked for port-forwarding abuse."
+msgstr "因滥用端口转发，访问权限已撤销。"
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked until %(date)s."
+msgstr "访问权限已撤销至 %(date)s。"
+
+msgctxt "port-forwarding-view"
+msgid "Access revoked."
+msgstr "访问权限已撤销。"
+
+msgctxt "port-forwarding-view"
+msgid "Case reference: %(reference)s"
+msgstr "案件编号：%(reference)s"
+
+msgctxt "port-forwarding-view"
+msgid "child sexual abuse material"
+msgstr "儿童性虐待材料"
+
+msgctxt "port-forwarding-view"
+msgid "copyright"
+msgstr "版权"
+
+msgctxt "port-forwarding-view"
+msgid "malware"
+msgstr "恶意软件"
+
+msgctxt "port-forwarding-view"
+msgid "no entitlement left, retrying"
+msgstr "已无端口额度，正在重试"
+
+msgctxt "port-forwarding-view"
+msgid "other"
+msgstr "其他"
+
+msgctxt "port-forwarding-view"
+msgid "phishing"
+msgstr "网络钓鱼"
+
+msgctxt "port-forwarding-view"
+msgid "Port %(port)d was closed after an abuse report. %(client)s keeps its port until you apply one."
+msgstr "端口 %(port)d 因滥用举报已被关闭。在您应用新端口之前，%(client)s 会继续使用原端口。"
+
+msgctxt "port-forwarding-view"
+msgid "refused, retrying"
+msgstr "已拒绝，正在重试"
+
+msgctxt "port-forwarding-view"
+msgid "scanning or intrusion"
+msgstr "扫描或入侵"
+
+msgctxt "port-forwarding-view"
+msgid "spam"
+msgstr "垃圾信息"
+
+msgctxt "port-forwarding-view"
+msgid "To contest a warning, write to %(email)s quoting its case reference."
+msgstr "如需对警告提出申诉，请发送邮件至 %(email)s 并注明案件编号。"
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d of %(threshold)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "警告 %(ordinal)d/%(threshold)d：端口 %(port)d 因滥用举报（%(category)s）已于 %(day)s 关闭。"
+
+msgctxt "port-forwarding-view"
+msgid "Warning %(ordinal)d: port %(port)d was closed on %(day)s after an abuse report (%(category)s)."
+msgstr "警告 %(ordinal)d：端口 %(port)d 因滥用举报（%(category)s）已于 %(day)s 关闭。"
+
+msgctxt "port-forwarding-view"
+msgid "Warnings"
+msgstr "警告记录"
+
+msgctxt "port-forwarding-view"
+msgid "Warnings and how to contest them"
+msgstr "警告记录与申诉方式"
+
+msgctxt "redeem-voucher-view"
+msgid "The voucher was not used: keep it and redeem it once the revocation ends."
+msgstr "优惠券未被使用：请保留，待访问权限撤销期结束后再兑换。"
