@@ -32,7 +32,7 @@ permissions:
 jobs:
   smoke:
     name: Repack and build against the published .deb
-    runs-on: [self-hosted, Linux, X64, docker, macstudio-docker]
+    runs-on: [self-hosted, Linux, X64, libra-docker]
     timeout-minutes: 90
     steps:
       - name: Checkout repository

@@ -72,7 +72,7 @@ jobs:
   # a standalone run cannot disagree about what they are building.
   resolve:
     name: Resolve channel and version
-    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
+    runs-on: [self-hosted, Linux, X64, libra]
     timeout-minutes: 10
     outputs:
       channel: ${{ steps.resolve.outputs.channel }}
@@ -150,7 +150,7 @@ jobs:
     needs: [resolve]
     outputs:
       sums: ${{ steps.sums.outputs.sums }}
-    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
+    runs-on: [self-hosted, Linux, X64, libra]
     timeout-minutes: 90
     # clang avoids the intermittent gcc cc1 SIGSEGV under x86_64-Rosetta (same as release.yml).
     env:
@@ -519,7 +519,7 @@ jobs:
   finalise:
     name: Publish the warren-cli release
     needs: [resolve, linux, linux-arm64, macos, windows]
-    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
+    runs-on: [self-hosted, Linux, X64, libra]
     timeout-minutes: 20
     # A draft release is invisible to the install one-liner: its asset URLs
     # answer 404 without a token, and the API does not list it. The pipeline

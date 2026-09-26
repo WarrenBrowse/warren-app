@@ -17,7 +17,7 @@ on:
 jobs:
   daemon-warren-tests:
     name: Daemon Warren crates (cargo test)
-    runs-on: [self-hosted, Linux, ARM64, macstudio-arm64]
+    runs-on: [self-hosted, Linux, X64, libra]
     # Backstop so a wedged test/compile fails in minutes instead of sitting at
     # the GitHub 6h max and blocking a fleet runner. A healthy native-arm64 run
     # is ~3-4 min (the runner volume persists the cargo target cache), so 45 is
@@ -233,7 +233,7 @@ jobs:
 
   desktop-warren-typecheck:
     name: Desktop Warren UI (type-check + lint)
-    runs-on: [self-hosted, Linux, ARM64, macstudio-arm64]
+    runs-on: [self-hosted, Linux, X64, libra]
     # Backstop so a wedged npm/tsc/eslint can never sit on the shared runner
     # until the GitHub 6h max. A healthy run is ~2 min.
     timeout-minutes: 20

@@ -43,7 +43,7 @@ permissions:
 jobs:
   sign:
     name: Sign ${{ inputs.tag }}
-    runs-on: [self-hosted, Linux, ARM64, macstudio-arm64]
+    runs-on: [self-hosted, Linux, X64, libra]
     timeout-minutes: 20
     env:
       GH_TOKEN: ${{ secrets.WARREN_CLI_RELEASE_TOKEN }}

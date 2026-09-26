@@ -135,7 +135,7 @@ jobs:
   # is skipped. The two series never sort together, so the beta line can start
   # at beta-v0.0.1 while the prod line sits at v1.16.2.
   tag-guard:
-    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
+    runs-on: [self-hosted, Linux, X64, libra]
     timeout-minutes: 10
     outputs:
       channel: ${{ steps.channel.outputs.channel }}
@@ -325,7 +325,7 @@ jobs:
     # Routed to the Mac Studio x86_64 Rosetta container runner (macstudio-rosetta).
     # The Debian LXC runner stays registered but lacks this label, so it is no
     # longer selected for this job.
-    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
+    runs-on: [self-hosted, Linux, X64, libra]
     timeout-minutes: 130
     # Build C dependencies (tikv-jemalloc-sys, etc.) with clang, not gcc: under
     # the x86_64-Rosetta emulation gcc's cc1 intermittently SIGSEGVs mid-compile
@@ -506,7 +506,7 @@ jobs:
   build-linux-sysvinit:
     name: Build Linux .deb (sysvinit)
     needs: [tag-guard, build-linux]
-    runs-on: [self-hosted, Linux, X64, docker, macstudio-docker]
+    runs-on: [self-hosted, Linux, X64, libra-docker]
     timeout-minutes: 40
     env:
       TAG_NAME: ${{ github.ref_name }}
@@ -555,7 +555,7 @@ jobs:
   build-nixos:
     name: Build NixOS flake
     needs: [tag-guard, build-linux]
-    runs-on: [self-hosted, Linux, X64, docker, macstudio-docker]
+    runs-on: [self-hosted, Linux, X64, libra-docker]
     # The first run on a fresh runner downloads the whole nixpkgs closure the
     # Electron dependencies pull in; later runs reuse the /nix docker volume.
     timeout-minutes: 90
@@ -1093,7 +1093,7 @@ jobs:
       - build-ios
       - build-android
       - release-headless
-    runs-on: [self-hosted, Linux, X64, macstudio-rosetta]
+    runs-on: [self-hosted, Linux, X64, libra]
     timeout-minutes: 15
     # Publish as long as it's a tag and the desktop builds (macOS, Linux x86_64
     # and arm64, Windows, the two extra Linux flavours included) AND Android all
