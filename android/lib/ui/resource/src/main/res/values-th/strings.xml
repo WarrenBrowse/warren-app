@@ -656,6 +656,7 @@
     <string name="account_ban_port_forwarding">การเข้าถึงถูกระงับเนื่องจากใช้การส่งต่อพอร์ตในทางที่ผิด</string>
     <string name="account_ban_until">การเข้าถึงถูกระงับจนถึง %1$s</string>
     <string name="account_ban">การเข้าถึงถูกระงับ</string>
+    <string name="voucher_kept_while_banned">ยังไม่ได้ใช้บัตรกำนัล โปรดเก็บไว้และใช้เมื่อการระงับสิ้นสุดลง</string>
     <string name="auth_failed_banned_port_forwarding_until">การเข้าถึงของคุณถูกระงับจนถึง %1$s หลังมีรายงานการใช้งานในทางที่ผิดซ้ำ ๆ เกี่ยวกับพอร์ตที่ส่งต่อ คุณสามารถโต้แย้งได้ที่ %2$s</string>
     <string name="auth_failed_banned_until">การเข้าถึงของคุณถูกระงับจนถึง %1$s เนื่องจากละเมิดนโยบายการใช้งาน ติดต่อฝ่ายสนับสนุนหากคุณคิดว่านี่เป็นความผิดพลาด</string>
     <string name="abuse_category_copyright">ลิขสิทธิ์</string>

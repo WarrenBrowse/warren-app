@@ -656,6 +656,7 @@
     <string name="account_ban_port_forwarding">因滥用端口转发，访问权限已暂停。</string>
     <string name="account_ban_until">访问权限已暂停至 %1$s。</string>
     <string name="account_ban">访问权限已暂停。</string>
+    <string name="voucher_kept_while_banned">兑换码未被使用：请保留，待暂停结束后再兑换。</string>
     <string name="auth_failed_banned_port_forwarding_until">因转发端口被多次举报滥用，你的访问权限已被暂停至 %1$s。你可以在 %2$s 提出申诉</string>
     <string name="auth_failed_banned_until">因违反使用政策，你的访问权限已被暂停至 %1$s。如果你认为这是误判，请联系支持团队。</string>
     <string name="abuse_category_copyright">版权</string>

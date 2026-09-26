@@ -668,6 +668,7 @@
     <string name="account_ban_port_forwarding">Доступ приостановлен за злоупотребление переадресацией портов.</string>
     <string name="account_ban_until">Доступ приостановлен до %1$s.</string>
     <string name="account_ban">Доступ приостановлен.</string>
+    <string name="voucher_kept_while_banned">Ваучер не был использован: сохраните его и активируйте после окончания блокировки.</string>
     <string name="auth_failed_banned_port_forwarding_until">Ваш доступ приостановлен до %1$s после повторных жалоб на злоупотребления с переадресованным портом. Оспорить решение можно на %2$s</string>
     <string name="auth_failed_banned_until">Ваш доступ приостановлен до %1$s за нарушение правил использования. Обратитесь в поддержку, если считаете это ошибкой.</string>
     <string name="abuse_category_copyright">авторское право</string>

@@ -2026,7 +2026,11 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_redeemVoucher<'lo
     let voucher_secret = String::from_java(&jnix_env, voucher);
     let json = match redeem_voucher_inner(&phrase, &voucher_secret) {
         Ok(expires_at) => serde_json::json!({"ok": true, "expires_at": expires_at}).to_string(),
-        Err(e) => {
+        Err(RedeemError::Banned(ban)) => {
+            log::warn!("redeemVoucher: the account is banned; the voucher is kept");
+            warren_standing::ban_refusal_envelope(&ban).to_string()
+        }
+        Err(RedeemError::Failed(e)) => {
             // "purchase pending" is the expected steady state of a purchase poll
             // (webhook not landed yet), not a failure: keep it at debug so the
             // 5s poll does not spam warnings for the whole 10-minute window.
@@ -2066,7 +2070,7 @@ static PULLED_UNREGISTERED: Mutex<std::collections::BTreeMap<String, String>> =
 /// surfaces `purchase pending` so the Kotlin poll keeps trying within its own
 /// deadline.
 #[cfg(target_os = "android")]
-fn redeem_voucher_inner(mnemonic: &str, voucher_or_claim: &str) -> Result<u64, String> {
+fn redeem_voucher_inner(mnemonic: &str, voucher_or_claim: &str) -> Result<u64, RedeemError> {
     let runtime = RUNTIME
         .get()
         .ok_or_else(|| "initLogger must be called before redeemVoucher".to_owned())?;
@@ -2074,6 +2078,11 @@ fn redeem_voucher_inner(mnemonic: &str, voucher_or_claim: &str) -> Result<u64, S
         .map_err(|e| format!("invalid mnemonic: {e}"))?;
     let pubkey = warren_api::PubkeySs58::try_from(pubkey_ss58.as_str())
         .map_err(|e| format!("invalid pubkey: {e}"))?;
+    // The standing store keys the wallet by its public key.
+    #[cfg(feature = "tunnel")]
+    let wallet_pubkey = warren_identity::WarrenIdentity::from_mnemonic(mnemonic)
+        .map(|identity| identity.public_key())
+        .ok();
     let client = unsigned_warren_client();
     let claim = crate::purchase_claim::parse(voucher_or_claim);
     let wpid = claim.as_ref().map(|c| c.wpid.clone());
@@ -2099,7 +2108,7 @@ fn redeem_voucher_inner(mnemonic: &str, voucher_or_claim: &str) -> Result<u64, S
                             secret
                         }
                         // Webhook not landed yet (or id expired): keep polling.
-                        None => return Err("purchase pending".to_owned()),
+                        None => return Err("purchase pending".to_owned().into()),
                     },
                 }
             }
@@ -2120,44 +2129,74 @@ fn redeem_voucher_inner(mnemonic: &str, voucher_or_claim: &str) -> Result<u64, S
             referral_code: None,
         };
         // The pull consumed the single-use mapping, so a transient register
-        // failure would burn the paid voucher: retry transport errors a few
-        // times (a server 4xx is final). On a pulled wpid the cache lets the
-        // next poll keep retrying the register even past these attempts.
+        // failure would burn the paid voucher: retry transport errors and
+        // server errors a few times (a 4xx is final). On a pulled wpid the
+        // cache lets the next poll keep retrying the register even past these
+        // attempts, and only a verdict on the voucher itself drops it.
         let mut last_err = None;
         for attempt in 0u32..3 {
             if attempt > 0 {
                 tokio::time::sleep(std::time::Duration::from_secs(2)).await;
             }
-            match client.register(&req).await {
+            let e = match client.register(&req).await {
                 Ok(resp) => {
                     if let Some(wpid) = &wpid {
                         PULLED_UNREGISTERED.lock().remove(wpid);
                     }
                     return Ok(resp.expires_at);
                 }
-                Err(e @ warren_api::ClientError::ServerStatus { .. }) => {
-                    // Final server verdict (e.g. already-redeemed means a prior
-                    // attempt landed): drop the cache so the poll stops replaying.
+                Err(e) => e,
+            };
+            match crate::purchase_claim::classify_register_failure(&e) {
+                crate::purchase_claim::RegisterFailure::Transient => last_err = Some(e),
+                crate::purchase_claim::RegisterFailure::Banned(ban) => {
+                    #[cfg(feature = "tunnel")]
+                    let ban = wallet_pubkey
+                        .and_then(|wallet| {
+                            crate::standing::store().on_ban_refusal(&wallet, &e, unix_now())
+                        })
+                        .unwrap_or(ban);
+                    return Err(RedeemError::Banned(ban));
+                }
+                crate::purchase_claim::RegisterFailure::VoucherDead => {
                     if let Some(wpid) = &wpid {
                         PULLED_UNREGISTERED.lock().remove(wpid);
                     }
-                    return Err(format!("register failed: {e}"));
+                    return Err(format!("register failed: {e}").into());
                 }
-                Err(e) => last_err = Some(e),
+                crate::purchase_claim::RegisterFailure::Refused => {
+                    return Err(format!("register failed: {e}").into());
+                }
             }
         }
         // Transport still down: keep the cached secret for the next poll.
         Err(format!(
             "register failed: {}",
             last_err.expect("loop ran at least once")
-        ))
+        )
+        .into())
     })
 }
 
 #[cfg(not(target_os = "android"))]
 #[allow(dead_code)]
-fn redeem_voucher_inner(_mnemonic: &str, _voucher_secret: &str) -> Result<u64, String> {
-    Err("redeemVoucher is Android-only".to_owned())
+fn redeem_voucher_inner(_mnemonic: &str, _voucher_secret: &str) -> Result<u64, RedeemError> {
+    Err("redeemVoucher is Android-only".to_owned().into())
+}
+
+/// Why `redeemVoucher` did not credit the wallet.
+enum RedeemError {
+    /// The wallet is banned: the voucher was not consumed and stays the
+    /// user's, and a pulled secret stays cached for after the ban.
+    Banned(warren_standing::Ban),
+    /// Any other failure, with a loggable class and no secret in it.
+    Failed(String),
+}
+
+impl From<String> for RedeemError {
+    fn from(message: String) -> Self {
+        Self::Failed(message)
+    }
 }
 
 // ---------------------------------------------------------------------------

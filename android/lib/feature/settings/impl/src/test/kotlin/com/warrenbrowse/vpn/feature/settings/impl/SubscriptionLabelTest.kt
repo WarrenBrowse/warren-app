@@ -1,11 +1,13 @@
 package com.warrenbrowse.vpn.feature.settings.impl
 
 import android.content.Context
+import com.warrenbrowse.vpn.lib.model.AccountBan
 import com.warrenbrowse.vpn.lib.repository.WarrenVoucherOutcome
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import io.mockk.MockKAnswerScope
 import io.mockk.every
 import io.mockk.mockk
+import java.util.Locale
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
@@ -30,6 +32,21 @@ class SubscriptionLabelTest {
             "Couldn't redeem voucher. Check the code and try again."
         every { getString(eq(R.string.subscription_voucher_redeemed), any()) } answers
             { "Voucher redeemed - subscription expires ${fmtArgs()[0]}" }
+        every { getString(eq(R.string.account_ban_port_forwarding_until), any()) } answers
+            { "Access suspended for port-forwarding abuse until ${fmtArgs()[0]}." }
+        every { getString(R.string.voucher_kept_while_banned) } returns
+            "The voucher was not used: keep it and redeem it once the suspension ends."
+    }
+
+    @Test
+    fun `a ban refusal names the ban with its end and keeps the voucher`() {
+        val ban = AccountBan(portForwarding = true, lapsesAtUnixSecs = 1_821_744_000, inForce = true)
+
+        assertEquals(
+            "Access suspended for port-forwarding abuse until September 24, 2027. " +
+                "The voucher was not used: keep it and redeem it once the suspension ends.",
+            voucherLabel(context, WarrenVoucherOutcome.Banned(ban), Locale.US),
+        )
     }
 
     @Test

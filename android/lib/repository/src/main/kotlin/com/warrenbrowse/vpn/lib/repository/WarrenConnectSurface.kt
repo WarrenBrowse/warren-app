@@ -1,6 +1,7 @@
 package com.warrenbrowse.vpn.lib.repository
 
 import androidx.fragment.app.FragmentActivity
+import com.warrenbrowse.vpn.lib.model.AccountBan
 import kotlinx.coroutines.flow.StateFlow
 
 /**
@@ -338,6 +339,13 @@ sealed interface WarrenVoucherOutcome {
     data object AuthorizationDenied : WarrenVoucherOutcome
 
     data object WalletNotReady : WarrenVoucherOutcome
+
+    /**
+     * The wallet is banned (warren-core doc 105 §5.3). The server refused before
+     * consuming anything: the voucher is still worth its time once the ban ends,
+     * and a purchase stays claimable.
+     */
+    data class Banned(val ban: AccountBan) : WarrenVoucherOutcome
 
     data class Failure(val message: String) : WarrenVoucherOutcome
 }

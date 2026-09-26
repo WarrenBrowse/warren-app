@@ -55,6 +55,7 @@ import com.warrenbrowse.vpn.common.compose.unlessIsDetail
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.login.api.WarrenKeysNavKey
 import com.warrenbrowse.vpn.feature.login.api.WarrenWalletNavKey
+import com.warrenbrowse.vpn.lib.common.util.AccountStandingText
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.model.wallet.shortWarrenAddress
 import com.warrenbrowse.vpn.lib.repository.ForumIdentityRepository
@@ -558,6 +559,7 @@ private fun BackupPhraseRow(onClick: () -> Unit) {
 internal fun voucherLabel(
     context: android.content.Context,
     outcome: WarrenVoucherOutcome,
+    locale: java.util.Locale = java.util.Locale.getDefault(),
 ): String = when (outcome) {
     is WarrenVoucherOutcome.Success -> {
         val date = java.time.Instant.ofEpochSecond(outcome.expiresAtUnixSecs)
@@ -570,6 +572,11 @@ internal fun voucherLabel(
         context.getString(R.string.subscription_authorization_cancelled)
     WarrenVoucherOutcome.WalletNotReady ->
         context.getString(R.string.subscription_wallet_not_ready)
+    // The refusal consumed nothing (warren-core doc 105 §5.3): say why, and that
+    // the voucher is still worth its time once the suspension ends.
+    is WarrenVoucherOutcome.Banned ->
+        AccountStandingText.ban(context, outcome.ban, locale) + " " +
+            context.getString(R.string.voucher_kept_while_banned)
     is WarrenVoucherOutcome.Failure ->
         context.getString(R.string.subscription_voucher_redeem_failed)
 }

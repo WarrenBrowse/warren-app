@@ -660,6 +660,7 @@
     <string name="account_ban_port_forwarding">Acceso suspendido por abuso del port forwarding.</string>
     <string name="account_ban_until">Acceso suspendido hasta el %1$s.</string>
     <string name="account_ban">Acceso suspendido.</string>
+    <string name="voucher_kept_while_banned">El cupón no se ha usado: consérvalo y canjéalo cuando termine la suspensión.</string>
     <string name="auth_failed_banned_port_forwarding_until">Tu acceso ha sido suspendido hasta el %1$s tras varios informes de abuso relacionados con un puerto reenviado. Puedes recurrir esta decisión en %2$s</string>
     <string name="auth_failed_banned_until">Tu acceso ha sido suspendido hasta el %1$s por incumplir la política de uso. Contacta con el soporte si crees que se trata de un error.</string>
     <string name="abuse_category_copyright">derechos de autor</string>

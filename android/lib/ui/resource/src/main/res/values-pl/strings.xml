@@ -668,6 +668,7 @@
     <string name="account_ban_port_forwarding">Dostęp zawieszony za nadużycie port forwarding.</string>
     <string name="account_ban_until">Dostęp zawieszony do %1$s.</string>
     <string name="account_ban">Dostęp zawieszony.</string>
+    <string name="voucher_kept_while_banned">Voucher nie został wykorzystany: zachowaj go i zrealizuj po zakończeniu zawieszenia.</string>
     <string name="auth_failed_banned_port_forwarding_until">Twój dostęp został zawieszony do %1$s po powtarzających się zgłoszeniach nadużyć dotyczących przekierowanego portu. Możesz to zakwestionować na %2$s</string>
     <string name="auth_failed_banned_until">Twój dostęp został zawieszony do %1$s z powodu naruszenia zasad użytkowania. Skontaktuj się z pomocą techniczną, jeśli uważasz, że to pomyłka.</string>
     <string name="abuse_category_copyright">prawa autorskie</string>

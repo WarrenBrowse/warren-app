@@ -676,6 +676,7 @@
     <string name="account_ban_port_forwarding">تم تعليق الوصول بسبب إساءة استخدام إعادة توجيه المنافذ.</string>
     <string name="account_ban_until">تم تعليق الوصول حتى %1$s.</string>
     <string name="account_ban">تم تعليق الوصول.</string>
+    <string name="voucher_kept_while_banned">لم تُستخدم القسيمة: احتفظ بها واستبدلها بعد انتهاء التعليق.</string>
     <string name="auth_failed_banned_port_forwarding_until">تم تعليق وصولك حتى %1$s بعد بلاغات إساءة استخدام متكررة بشأن منفذ مُعاد توجيهه. يمكنك الاعتراض على ذلك عبر %2$s</string>
     <string name="auth_failed_banned_until">تم تعليق وصولك حتى %1$s بسبب مخالفة سياسة الاستخدام. تواصل مع الدعم إذا كنت تعتقد أن هذا خطأ.</string>
     <string name="abuse_category_copyright">حقوق النشر</string>

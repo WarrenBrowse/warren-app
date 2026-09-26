@@ -660,6 +660,7 @@
     <string name="account_ban_port_forwarding">Zugang wegen Port-Forwarding-Missbrauchs gesperrt.</string>
     <string name="account_ban_until">Zugang bis %1$s gesperrt.</string>
     <string name="account_ban">Zugang gesperrt.</string>
+    <string name="voucher_kept_while_banned">Der Gutschein wurde nicht verwendet: Bewahre ihn auf und löse ihn ein, sobald die Sperre endet.</string>
     <string name="auth_failed_banned_port_forwarding_until">Dein Zugang wurde nach wiederholten Missbrauchsmeldungen zu einem weitergeleiteten Port bis %1$s gesperrt. Du kannst dagegen Einspruch erheben unter %2$s</string>
     <string name="auth_failed_banned_until">Dein Zugang wurde wegen eines Verstoßes gegen die Nutzungsrichtlinie bis %1$s gesperrt. Wende dich an den Support, wenn du das für einen Fehler hältst.</string>
     <string name="abuse_category_copyright">Urheberrecht</string>

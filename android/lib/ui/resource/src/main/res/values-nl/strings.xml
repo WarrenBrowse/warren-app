@@ -660,6 +660,7 @@
     <string name="account_ban_port_forwarding">Toegang opgeschort wegens misbruik van port forwarding.</string>
     <string name="account_ban_until">Toegang opgeschort tot %1$s.</string>
     <string name="account_ban">Toegang opgeschort.</string>
+    <string name="voucher_kept_while_banned">De voucher is niet gebruikt: bewaar hem en wissel hem in zodra de opschorting voorbij is.</string>
     <string name="auth_failed_banned_port_forwarding_until">Je toegang is opgeschort tot %1$s na herhaalde misbruikmeldingen over een doorgeschakelde poort. Je kunt hiertegen bezwaar maken op %2$s</string>
     <string name="auth_failed_banned_until">Je toegang is opgeschort tot %1$s wegens schending van het gebruiksbeleid. Neem contact op met de ondersteuning als je denkt dat dit een vergissing is.</string>
     <string name="abuse_category_copyright">auteursrecht</string>

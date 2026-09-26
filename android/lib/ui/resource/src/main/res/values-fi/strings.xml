@@ -660,6 +660,7 @@
     <string name="account_ban_port_forwarding">Käyttöoikeus keskeytetty port forwardingin väärinkäytön vuoksi.</string>
     <string name="account_ban_until">Käyttöoikeus keskeytetty %1$s asti.</string>
     <string name="account_ban">Käyttöoikeus keskeytetty.</string>
+    <string name="voucher_kept_while_banned">Kuponkia ei käytetty: säilytä se ja lunasta se, kun jäädytys päättyy.</string>
     <string name="auth_failed_banned_port_forwarding_until">Käyttöoikeutesi on keskeytetty %1$s asti toistuvien väärinkäyttöilmoitusten vuoksi, jotka koskevat ohjattua porttia. Voit riitauttaa tämän osoitteessa %2$s</string>
     <string name="auth_failed_banned_until">Käyttöoikeutesi on keskeytetty %1$s asti käyttöehtojen rikkomisen vuoksi. Ota yhteyttä tukeen, jos uskot tämän olevan virhe.</string>
     <string name="abuse_category_copyright">tekijänoikeus</string>

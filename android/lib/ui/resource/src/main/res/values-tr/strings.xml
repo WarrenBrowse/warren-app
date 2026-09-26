@@ -660,6 +660,7 @@
     <string name="account_ban_port_forwarding">Port forwarding kötüye kullanımı nedeniyle erişim askıya alındı.</string>
     <string name="account_ban_until">Erişim %1$s tarihine kadar askıya alındı.</string>
     <string name="account_ban">Erişim askıya alındı.</string>
+    <string name="voucher_kept_while_banned">Kupon kullanılmadı: saklayın ve askıya alma sona erdiğinde kullanın.</string>
     <string name="auth_failed_banned_port_forwarding_until">Yönlendirilen bir bağlantı noktasıyla ilgili tekrarlanan kötüye kullanım bildirimleri sonrasında erişiminiz %1$s tarihine kadar askıya alındı. Buna %2$s adresinden itiraz edebilirsiniz</string>
     <string name="auth_failed_banned_until">Kullanım politikası ihlali nedeniyle erişiminiz %1$s tarihine kadar askıya alındı. Bunun bir hata olduğunu düşünüyorsanız destek ekibine başvurun.</string>
     <string name="abuse_category_copyright">telif hakkı</string>

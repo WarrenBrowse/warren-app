@@ -185,7 +185,9 @@ val appModule = module {
         WarrenIncidentReporter::class
 
     // Subscription-status fetch: biometric unlock + signed GET /v1/subscription.
-    single { WarrenSubscriptionUseCase(walletRepository = get(), localSettings = get()) } bind
+    single {
+        WarrenSubscriptionUseCase(walletRepository = get(), localSettings = get(), standing = get())
+    } bind
         WarrenSubscriptionInvoker::class
 
     // Community-forum wallet login (doc 55): the deep-link consent controller and

@@ -656,6 +656,7 @@
     <string name="account_ban_port_forwarding">ポート転送の不正利用により、アクセスが停止されています。</string>
     <string name="account_ban_until">%1$s までアクセスが停止されています。</string>
     <string name="account_ban">アクセスが停止されています。</string>
+    <string name="voucher_kept_while_banned">バウチャーは使用されていません。保管しておき、停止が終了したら引き換えてください。</string>
     <string name="auth_failed_banned_port_forwarding_until">転送ポートに関する不正利用の報告が繰り返されたため、%1$s までアクセスが停止されました。異議申し立ては %2$s から行えます</string>
     <string name="auth_failed_banned_until">利用ポリシー違反のため、%1$s までアクセスが停止されました。誤りだと思われる場合はサポートにお問い合わせください。</string>
     <string name="abuse_category_copyright">著作権</string>

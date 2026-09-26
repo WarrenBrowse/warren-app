@@ -668,6 +668,7 @@
     <string name="account_ban_port_forwarding">Доступ призупинено за зловживання переадресацією портів.</string>
     <string name="account_ban_until">Доступ призупинено до %1$s.</string>
     <string name="account_ban">Доступ призупинено.</string>
+    <string name="voucher_kept_while_banned">Ваучер не використано: збережіть його та активуйте після завершення призупинення.</string>
     <string name="auth_failed_banned_port_forwarding_until">Ваш доступ призупинено до %1$s після повторних скарг на зловживання переадресованим портом. Оскаржити рішення можна на %2$s</string>
     <string name="auth_failed_banned_until">Ваш доступ призупинено до %1$s за порушення правил використання. Зверніться до підтримки, якщо вважаєте це помилкою.</string>
     <string name="abuse_category_copyright">авторське право</string>

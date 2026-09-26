@@ -660,6 +660,7 @@
     <string name="account_ban_port_forwarding">دسترسی به دلیل سوءاستفاده از هدایت درگاه معلق شد.</string>
     <string name="account_ban_until">دسترسی تا %1$s معلق شد.</string>
     <string name="account_ban">دسترسی معلق شد.</string>
+    <string name="voucher_kept_while_banned">کد تخفیف استفاده نشد: آن را نگه دارید و پس از پایان تعلیق از آن استفاده کنید.</string>
     <string name="auth_failed_banned_port_forwarding_until">دسترسی شما پس از گزارش‌های مکرر سوءاستفاده درباره یک درگاه هدایت‌شده تا %1$s معلق شد. می‌توانید در %2$s اعتراض کنید</string>
     <string name="auth_failed_banned_until">دسترسی شما به دلیل نقض سیاست استفاده تا %1$s معلق شده است. اگر فکر می‌کنید این یک اشتباه است، با پشتیبانی تماس بگیرید.</string>
     <string name="abuse_category_copyright">حق نشر</string>

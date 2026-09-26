@@ -698,6 +698,7 @@
     <string name="account_ban_port_forwarding">Access suspended for port-forwarding abuse.</string>
     <string name="account_ban_until">Access suspended until %1$s.</string>
     <string name="account_ban">Access suspended.</string>
+    <string name="voucher_kept_while_banned">The voucher was not used: keep it and redeem it once the suspension ends.</string>
     <string name="auth_failed_banned_port_forwarding_until">Your access has been suspended until %1$s after repeated abuse reports about a forwarded port. You can contest this at %2$s</string>
     <string name="auth_failed_banned_until">Your access has been suspended until %1$s for a usage policy violation. Contact support if you believe this is a mistake.</string>
     <string name="abuse_category_copyright">copyright</string>

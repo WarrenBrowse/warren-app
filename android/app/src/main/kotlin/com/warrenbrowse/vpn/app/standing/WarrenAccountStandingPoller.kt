@@ -239,13 +239,19 @@ private fun standingOf(obj: JsonObject): AccountStanding =
         threshold = obj.int("threshold") ?: 0,
         windowDays = obj.int("window_days") ?: 0,
         ban =
-            (obj["ban"] as? JsonObject)?.let { ban ->
-                AccountBan(
-                    portForwarding = ban.string("reason") == "port_forwarding_abuse",
-                    lapsesAtUnixSecs = ban.long("lapses_at_unix_secs"),
-                    inForce = ban.bool("in_force") ?: true,
-                )
-            },
+            (obj["ban"] as? JsonObject)?.let(::accountBanOf),
+    )
+
+/**
+ * A ban as Rust writes it, in the standing envelope and in the refusal of a
+ * voucher redemption (`warren_standing::ban_refusal_envelope`), which carries
+ * no `in_force`: a refusal is a ban that holds.
+ */
+internal fun accountBanOf(ban: JsonObject): AccountBan =
+    AccountBan(
+        portForwarding = ban.string("reason") == "port_forwarding_abuse",
+        lapsesAtUnixSecs = ban.long("lapses_at_unix_secs"),
+        inForce = ban.bool("in_force") ?: true,
     )
 
 private fun strikeOf(obj: JsonObject): AccountStrike? {

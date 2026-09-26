@@ -656,6 +656,7 @@
     <string name="account_ban_port_forwarding">因濫用連接埠轉發，存取權限已暫停。</string>
     <string name="account_ban_until">存取權限已暫停至 %1$s。</string>
     <string name="account_ban">存取權限已暫停。</string>
+    <string name="voucher_kept_while_banned">優惠券未被使用：請保留，待停權結束後再兌換。</string>
     <string name="auth_failed_banned_port_forwarding_until">因轉發連接埠遭多次檢舉濫用，您的存取權限已遭暫停至 %1$s。您可以在 %2$s 提出申訴</string>
     <string name="auth_failed_banned_until">因違反使用政策，您的存取權限已遭暫停至 %1$s。若您認為這是誤判，請聯絡支援團隊。</string>
     <string name="abuse_category_copyright">著作權</string>

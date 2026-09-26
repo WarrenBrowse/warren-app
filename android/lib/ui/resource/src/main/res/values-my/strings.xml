@@ -656,6 +656,7 @@
     <string name="account_ban_port_forwarding">ပို့တ် ပြန်ညွှန်းခြင်းကို အလွဲသုံးမှုကြောင့် ဝင်ရောက်ခွင့်ကို ဆိုင်းငံ့ထားသည်။</string>
     <string name="account_ban_until">%1$s အထိ ဝင်ရောက်ခွင့်ကို ဆိုင်းငံ့ထားသည်။</string>
     <string name="account_ban">ဝင်ရောက်ခွင့်ကို ဆိုင်းငံ့ထားသည်။</string>
+    <string name="voucher_kept_while_banned">Voucher ကို အသုံးမပြုရသေးပါ။ သိမ်းထားပြီး ဆိုင်းငံ့မှု ပြီးဆုံးသည့်အခါ အသုံးပြုပါ။</string>
     <string name="auth_failed_banned_port_forwarding_until">ပြန်ညွှန်းထားသော ပို့တ်နှင့်ပတ်သက်၍ အလွဲသုံးမှု အစီရင်ခံစာများ ထပ်ခါထပ်ခါ ရရှိပြီးနောက် သင့်ဝင်ရောက်ခွင့်ကို %1$s အထိ ဆိုင်းငံ့ထားသည်။ %2$s တွင် အယူခံဝင်နိုင်သည်</string>
     <string name="auth_failed_banned_until">အသုံးပြုမှု မူဝါဒ ချိုးဖောက်မှုကြောင့် သင့်ဝင်ရောက်ခွင့်ကို %1$s အထိ ဆိုင်းငံ့ထားသည်။ မှားယွင်းသည်ဟု ယူဆပါက အထောက်အပံ့သို့ ဆက်သွယ်ပါ။</string>
     <string name="abuse_category_copyright">မူပိုင်ခွင့်</string>

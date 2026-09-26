@@ -7,6 +7,7 @@ import com.warrenbrowse.vpn.jni.WarrenNativeRuntime
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.PurchaseClaim
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenAccountStandingState
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionOutcome
@@ -37,6 +38,7 @@ import kotlinx.serialization.json.long
 class WarrenSubscriptionUseCase(
     private val walletRepository: WalletRepository,
     private val localSettings: WarrenLocalSettingsRepository,
+    private val standing: WarrenAccountStandingState,
 ) : WarrenSubscriptionInvoker {
 
     // App-scoped (not tied to any screen) so the purchase poll survives the
@@ -111,8 +113,18 @@ class WarrenSubscriptionUseCase(
                     Logger.e(throwable = e) { "WarrenJni.redeemVoucher threw" }
                     return@use WarrenVoucherOutcome.Failure(e.message ?: "JNI redeemVoucher threw")
                 }
-                parseVoucherJson(rawJson)
+                parseVoucherJson(rawJson).also(::showBan)
             }
+        }
+    }
+
+    /**
+     * A redemption the ban refused shows the suspension at once, on the screens
+     * that render the standing, without waiting for the next standing poll.
+     */
+    private fun showBan(outcome: WarrenVoucherOutcome) {
+        if (outcome is WarrenVoucherOutcome.Banned) {
+            standing.setStanding(withRefusalBan(standing.standing.value, outcome.ban))
         }
     }
 
@@ -158,6 +170,13 @@ class WarrenSubscriptionUseCase(
                             WarrenVoucherOutcome.Failure(e.message ?: "JNI redeemVoucher threw")
                         }
                     }
+                    if (outcome is WarrenVoucherOutcome.Banned) {
+                        // The answer will not change within this poll. The
+                        // pulled voucher stays cached in Rust for this
+                        // process, unredeemed on the server.
+                        showBan(outcome)
+                        return@launch
+                    }
                     if (outcome is WarrenVoucherOutcome.Success) {
                         // Write the credited expiry to the shared StateFlow so
                         // every screen observing it (account "Paid until", the
@@ -171,19 +190,6 @@ class WarrenSubscriptionUseCase(
                 mnemonic.close()
             }
         }
-    }
-
-    private fun parseVoucherJson(rawJson: String): WarrenVoucherOutcome = try {
-        val root = Json.parseToJsonElement(rawJson).jsonObject
-        if (root["ok"]?.jsonPrimitive?.boolean == true) {
-            val expiresAt = root["expires_at"]?.jsonPrimitive?.long
-                ?: return WarrenVoucherOutcome.Failure("missing expires_at")
-            WarrenVoucherOutcome.Success(expiresAt)
-        } else {
-            WarrenVoucherOutcome.Failure(root["error"]?.jsonPrimitive?.content ?: "redeem failed")
-        }
-    } catch (e: Exception) {
-        WarrenVoucherOutcome.Failure("invalid JNI response: ${e.message}")
     }
 
     private fun parseOutcome(rawJson: String): WarrenSubscriptionOutcome = try {

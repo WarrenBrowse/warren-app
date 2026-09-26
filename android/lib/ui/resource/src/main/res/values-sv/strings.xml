@@ -660,6 +660,7 @@
     <string name="account_ban_port_forwarding">Åtkomsten avstängd för missbruk av port forwarding.</string>
     <string name="account_ban_until">Åtkomsten avstängd fram till %1$s.</string>
     <string name="account_ban">Åtkomsten avstängd.</string>
+    <string name="voucher_kept_while_banned">Vouchern användes inte: spara den och lös in den när avstängningen är slut.</string>
     <string name="auth_failed_banned_port_forwarding_until">Din åtkomst har stängts av fram till %1$s efter upprepade missbruksanmälningar om en vidarebefordrad port. Du kan bestrida detta på %2$s</string>
     <string name="auth_failed_banned_until">Din åtkomst har stängts av fram till %1$s på grund av ett brott mot användningspolicyn. Kontakta supporten om du tror att detta är ett misstag.</string>
     <string name="abuse_category_copyright">upphovsrätt</string>

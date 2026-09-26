@@ -668,6 +668,7 @@
     <string name="account_ban_port_forwarding">Acces suspendat pentru abuz de port forwarding.</string>
     <string name="account_ban_until">Acces suspendat până la %1$s.</string>
     <string name="account_ban">Acces suspendat.</string>
+    <string name="voucher_kept_while_banned">Voucherul nu a fost folosit: păstrați-l și valorificați-l după încheierea suspendării.</string>
     <string name="auth_failed_banned_port_forwarding_until">Accesul dvs. a fost suspendat până la %1$s după raportări repetate de abuz privind un port redirecționat. Puteți contesta la %2$s</string>
     <string name="auth_failed_banned_until">Accesul dvs. a fost suspendat până la %1$s pentru încălcarea politicii de utilizare. Contactați asistența dacă credeți că este o greșeală.</string>
     <string name="abuse_category_copyright">drepturi de autor</string>

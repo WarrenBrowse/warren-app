@@ -660,6 +660,7 @@
     <string name="account_ban_port_forwarding">Adgang suspenderet for misbrug af port forwarding.</string>
     <string name="account_ban_until">Adgang suspenderet indtil %1$s.</string>
     <string name="account_ban">Adgang suspenderet.</string>
+    <string name="voucher_kept_while_banned">Voucheren blev ikke brugt: gem den, og indløs den, når suspenderingen er slut.</string>
     <string name="auth_failed_banned_port_forwarding_until">Din adgang er suspenderet indtil %1$s efter gentagne misbrugsrapporter om en videresendt port. Du kan bestride dette på %2$s</string>
     <string name="auth_failed_banned_until">Din adgang er suspenderet indtil %1$s på grund af en overtrædelse af brugspolitikken. Kontakt support, hvis du mener, at dette er en fejl.</string>
     <string name="abuse_category_copyright">ophavsret</string>
