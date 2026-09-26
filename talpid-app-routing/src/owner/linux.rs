@@ -1143,10 +1143,17 @@ mod tests {
         assert!(runs(&mut resolver, owner, &me));
     }
 
+    /// Whether the kernel lets this process listen to process events is up to
+    /// the host (a container may be refused), so the listening socket is
+    /// a stand-in: what is under test is that the resolver lets go of it.
     #[test]
     fn with_no_program_to_watch_the_resolver_stops_following_processes() {
         let me = std::env::current_exe().unwrap();
-        let mut resolver = SystemResolver::new();
+        let listening = UdpSocket::bind("127.0.0.1:0").unwrap();
+        let mut resolver = SystemResolver {
+            process_events: ProcessEvents::Open(EventSocket(OwnedFd::from(listening))),
+            ..SystemResolver::default()
+        };
         resolver.watch_programs(&programs(&[&me]));
         resolver.refresh().unwrap();
 
