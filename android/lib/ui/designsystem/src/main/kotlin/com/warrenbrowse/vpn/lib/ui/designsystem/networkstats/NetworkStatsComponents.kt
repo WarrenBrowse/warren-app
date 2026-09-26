@@ -41,7 +41,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.warrenbrowse.vpn.lib.model.LoadLevel
@@ -52,18 +51,6 @@ import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha80
 import com.warrenbrowse.vpn.lib.ui.theme.color.pending
 import com.warrenbrowse.vpn.lib.ui.theme.color.positive
 import com.warrenbrowse.vpn.lib.ui.theme.color.warning
-
-/** The three ring sizes every surface draws. */
-enum class LoadRingSize(val diameter: Dp, val stroke: Dp, val bandStroke: Dp) {
-    /** A text line of the connection card: must fit inside it. */
-    TINY(14.dp, 2.5.dp, 1.5.dp),
-
-    /** Location list rows. */
-    SMALL(22.dp, 3.dp, 2.dp),
-
-    /** Exit cards and the fleet header. */
-    LARGE(104.dp, 8.dp, 3.dp),
-}
 
 // The snapshot changes once per window; the ring glides to the new value over this long.
 private const val TWEEN_MILLIS = 800

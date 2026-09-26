@@ -9,7 +9,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenRelaySummary
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-class WarrenNetworkCardsTest {
+class NetworkExitCardTest {
 
     private fun exit(id: Char, country: String, city: String, online: Boolean = true) =
         ExitStats(

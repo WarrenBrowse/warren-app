@@ -265,6 +265,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
 
     val state by connectViewModel.uiState.collectAsStateWithLifecycle()
     val connectedExitLoad by connectViewModel.connectedExitLoad.collectAsStateWithLifecycle()
+    val onOpenNetwork = dropUnlessResumed { navigator.navigate(WarrenNetworkNavKey) }
     // Time-to-fully-drawn ends at this screen's first frame: `am start -W`
     // stops at the splash, and every input of that first frame (tunnel state,
     // wallet, pin, cached labels) is a synchronous local read, so no later
@@ -552,8 +553,10 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
             ConnectScreen(
                 state = uiState,
                 snackbarHostState = snackbarHostState,
-                connectedExitLoad = connectedExitLoad,
-                onNetworkClick = dropUnlessResumed { navigator.navigate(WarrenNetworkNavKey) },
+                exitLoad =
+                    connectedExitLoad?.let { load ->
+                        { CompactExitLoad(load, onOpenNetwork) }
+                    },
                 showBetaBadge = productFlags.isBeta,
                 betaCapBps = betaCapBps,
                 betaCapResolved = betaCapResolved,
@@ -769,21 +772,11 @@ fun ConnectScreen(
     // for a wallet with no forum account, nothing when the setting is off.
     forumSlot: ForumHeaderSlot? = null,
     onForumClick: () -> Unit = {},
-    // The load of the exit carrying the tunnel, null while there is none to show.
-    connectedExitLoad: ConnectedExitLoad? = null,
-    onNetworkClick: () -> Unit = {},
+    // The load of the exit carrying the tunnel, closing the location line; null while there is
+    // none to show.
+    exitLoad: (@Composable () -> Unit)? = null,
 ) {
-    // The header paints its own glyphs black over the pale scenery sky; the
-    // OS status bar right above it must follow (desktop header tone "dark"),
-    // or a white clock sits on the same sky. Restored to the app-wide light
-    // glyphs when the screen leaves composition.
-    val view = LocalView.current
-    DisposableEffect(view) {
-        val window = (view.context as? Activity)?.window
-        val controller = window?.let { WindowCompat.getInsetsController(it, view) }
-        controller?.isAppearanceLightStatusBars = true
-        onDispose { controller?.isAppearanceLightStatusBars = false }
-    }
+    DarkStatusBarGlyphs()
     val contentFocusRequester = remember { FocusRequester() }
 
     val content =
@@ -816,8 +809,7 @@ fun ConnectScreen(
                 onClickDismissNotice,
                 onClickDismissAnnouncement,
                 onClickReEnableAfterStandDown,
-                connectedExitLoad,
-                onNetworkClick,
+                exitLoad,
             )
         }
 
@@ -893,8 +885,7 @@ private fun Content(
     onClickDismissNotice: () -> Unit,
     onClickDismissAnnouncement: () -> Unit,
     onClickReEnableAfterStandDown: () -> Unit,
-    connectedExitLoad: ConnectedExitLoad?,
-    onNetworkClick: () -> Unit,
+    exitLoad: (@Composable () -> Unit)?,
 ) {
     // The card's top edge in root coordinates, fed to the backdrop at draw
     // time so the burrow foreground clears the card in every state, tracking
@@ -991,8 +982,7 @@ private fun Content(
                     ) {
                         ConnectionCard(
                             state = state,
-                            connectedExitLoad = connectedExitLoad,
-                            onNetworkClick = onNetworkClick,
+                            exitLoad = exitLoad,
                             focusRequester = focusRequester,
                             onSwitchLocationClick = onSwitchLocationClick,
                             onDisconnectClick = onDisconnectClick,
@@ -1167,8 +1157,7 @@ internal fun Modifier.marqueeLine(): Modifier =
 @Composable
 private fun ConnectionCard(
     state: ConnectUiState,
-    connectedExitLoad: ConnectedExitLoad?,
-    onNetworkClick: () -> Unit,
+    exitLoad: (@Composable () -> Unit)?,
     modifier: Modifier = Modifier,
     focusRequester: FocusRequester,
     onSwitchLocationClick: () -> Unit,
@@ -1217,8 +1206,7 @@ private fun ConnectionCard(
                 state.location,
                 expanded,
                 onIncludeOnlyLabelClick = onIncludeOnlyLabelClick,
-                connectedExitLoad = connectedExitLoad,
-                onNetworkClick = onNetworkClick,
+                exitLoad = exitLoad,
             ) {
                 expanded = !expanded
             }
@@ -1329,8 +1317,7 @@ private fun ConnectionCardHeader(
     location: GeoIpLocation?,
     expanded: Boolean,
     onIncludeOnlyLabelClick: () -> Unit,
-    connectedExitLoad: ConnectedExitLoad?,
-    onNetworkClick: () -> Unit,
+    exitLoad: (@Composable () -> Unit)?,
     onToggleExpand: () -> Unit,
 ) {
     Column(
@@ -1382,9 +1369,7 @@ private fun ConnectionCardHeader(
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                     )
-                    if (connectedExitLoad != null) {
-                        CompactExitLoad(connectedExitLoad, onNetworkClick)
-                    }
+                    exitLoad?.invoke()
                 }
                 val hostnameText = location.hostnameText()
                 AnimatedContent(hostnameText, label = "hostname") {
@@ -1435,6 +1420,22 @@ private fun IncludeOnlyLabel(count: Int, onClick: () -> Unit) {
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurface,
         )
+    }
+}
+
+/**
+ * The header paints its own glyphs black over the pale scenery sky; the OS status bar right above
+ * it must follow (desktop header tone "dark"), or a white clock sits on the same sky. Restored to
+ * the app-wide light glyphs when the screen leaves composition.
+ */
+@Composable
+private fun DarkStatusBarGlyphs() {
+    val view = LocalView.current
+    DisposableEffect(view) {
+        val window = (view.context as? Activity)?.window
+        val controller = window?.let { WindowCompat.getInsetsController(it, view) }
+        controller?.isAppearanceLightStatusBars = true
+        onDispose { controller?.isAppearanceLightStatusBars = false }
     }
 }
 

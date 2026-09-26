@@ -17,8 +17,8 @@ internal fun connectedExitLoad(
     relays: List<WarrenRelaySummary>,
     snapshot: WarrenNetworkStats?,
 ): ConnectedExitLoad? {
-    val host = endpoint.hostLiteral() ?: return null
-    val relay = relays.firstOrNull { it.endpoint.substringBeforeLast(':') == host } ?: return null
-    val exit = snapshot?.exit(relay.exitId) ?: return null
-    return ConnectedExitLoad(exit, snapshot)
+    val host = endpoint.hostLiteral()
+    val relay = relays.firstOrNull { host != null && it.endpoint.substringBeforeLast(':') == host }
+    val exit = relay?.let { snapshot?.exit(it.exitId) }
+    return if (snapshot != null && exit != null) ConnectedExitLoad(exit, snapshot) else null
 }
