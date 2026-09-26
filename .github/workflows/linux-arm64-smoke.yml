@@ -3,13 +3,13 @@
 #
 # Runs the arm64 half of the Linux release on demand: the same
 # `./build.sh --optimize` and the same staging script as release.yml's
-# `build-linux-arm64` job, on the same aarch64 pool. Publishes nothing, uploads
-# nothing, touches no release.
+# `build-linux-arm64` job, on the same arm64 runner and image. Publishes
+# nothing, uploads nothing, touches no release.
 #
 # It exists because that job GATES the release. arm64 packaging depends on
 # things nothing else exercises (electron-builder shipping an aarch64 fpm, rpm
-# and bsdtar on the arm64 pool), so without this workflow the first sign of a
-# break would be a blocked release tag, an hour into a build. release.yml stays
+# and bsdtar in the arm64 job image), so without this workflow the first sign
+# of a break would be a blocked release tag, an hour into a build. release.yml stays
 # the authority for what the job does; keep the two build steps in step.
 #
 # What it deliberately does NOT cover: staging under a release version, the
@@ -34,13 +34,18 @@ permissions:
 jobs:
   arm64-packaging:
     name: Build and package Warren VPN for arm64
-    runs-on: [self-hosted, Linux, ARM64, macstudio-arm64]
+    # GitHub-hosted, inside the Debian 11 job image (glibc 2.31): the floor of
+    # every Linux binary shipped to users, which ubuntu-24.04 itself (2.39)
+    # would raise. Image: workspace scripts/ci-runners/Dockerfile.job.
+    runs-on: ubuntu-24.04-arm
+    container:
+      image: ghcr.io/warrenbrowse/warren-ci-linux:bullseye-e03e4fc686d82f6b1cbea663ec9032c76960b5ee
+      options: --user root
     timeout-minutes: 130
     env:
       WARREN_CHANNEL: ${{ inputs.channel }}
       # Several arm64 runners share one 16-core Colima VM; same cap as
       # warren-tests.yml, for neighbourliness.
-      CARGO_BUILD_JOBS: "6"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
