@@ -19,10 +19,15 @@ case "$(uname -s)" in
     HOST="${arch}-apple-darwin"
     ;;
   MINGW*|MSYS_NT*)
-    arch="$(powershell -Command "(Get-CimInstance Win32_OperatingSystem).OSArchitecture")"
-    # OSArchitecture is localized (e.g. "ARM 64" in English, "Processeur ARM 64 bits"
-    # in French), so match the architecture loosely instead of a fixed prefix.
-    if [[ $arch == *ARM*64* ]]; then
+    # The machine's native architecture, which Git Bash's own `uname -m` does
+    # not give on ARM64 (Git Bash runs x64-emulated there). Read from the
+    # registry, not from PowerShell: `powershell -Command
+    # "(Get-CimInstance ...).OSArchitecture"` hung for good on a Codemagic
+    # windows_x2 machine (2026-09-26), taking two release builds with it. The
+    # value is AMD64 or ARM64 and, unlike OSArchitecture, never localized.
+    arch="$(MSYS_NO_PATHCONV=1 reg query 'HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment' \
+      /v PROCESSOR_ARCHITECTURE < /dev/null | tr -d '\r' | awk '$1 == "PROCESSOR_ARCHITECTURE" { print $3 }')"
+    if [[ $arch == ARM64 ]]; then
         HOST="aarch64-pc-windows-msvc"
     else
         HOST="x86_64-pc-windows-msvc"
