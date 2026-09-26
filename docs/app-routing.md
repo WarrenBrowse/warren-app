@@ -720,3 +720,9 @@ explains a refusal before making it, and still maps the daemon's
   `app-routing-windows.spec.ts` and `app-routing-linux.spec.ts` render the
   Windows and Linux views on any host through `WARREN_E2E_PLATFORM`, which the
   preload reads only under the end-to-end harness (`CI=e2e`).
+- `app-routing-locales.spec.ts` opens the view in other catalogs through
+  `WARREN_E2E_LOCALE` (read by the mocked main under the same harness, and the
+  only way to reach ar, fa and uk, which the language picker does not list),
+  fails when a tab label is clipped or widens its tab, and screenshots each
+  state per locale. `APP_ROUTING_LOCALES=all` renders every catalog; run it
+  after changing any App routing copy.
