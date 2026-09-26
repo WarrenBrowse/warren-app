@@ -93,12 +93,12 @@
     <string name="include_only_no_app">Seçtiğiniz uygulamaların hiçbiri bu cihazda yok, bu nedenle siz bir uygulama seçene kadar tüm uygulamalar VPN\'i kullanır.</string>
     <string name="include_only_confirm">VPN\'i yalnızca seçtiğiniz uygulamalar kullanacak. Bu cihazın geri kalanı korunmayacak.</string>
     <string name="split_mode_replaces_bypass">Bu, \"VPN dışında\" modunun yerini alır. Oradaki uygulama listeniz korunur.</string>
-    <string name="split_mode_replaces_include_only">Bu, \"Yalnızca seçilenlere VPN\" modunun yerini alır; VPN dışında kalanlar hariç tüm uygulamalar yeniden VPN\'i kullanır. Oradaki uygulama listeniz korunur.</string>
+    <string name="split_mode_replaces_include_only">Bu, \"Yalnızca seçilenlere VPN\" modunun yerini alır; VPN dışında bıraktıklarınız hariç tüm uygulamalar yeniden VPN\'i kullanır. Oradaki uygulama listeniz korunur.</string>
     <string name="split_mode_turn_on">Aç</string>
-    <string name="apps_using_the_vpn">VPN\'i kullanıyor</string>
+    <string name="apps_using_the_vpn">VPN\'i kullananlar</string>
     <plurals name="vpn_only_for_apps">
-        <item quantity="one">%1$d uygulama için VPN</item>
-        <item quantity="other">%1$d uygulama için VPN</item>
+        <item quantity="one">Yalnızca %1$d uygulama için VPN</item>
+        <item quantity="other">Yalnızca %1$d uygulama için VPN</item>
     </plurals>
     <string name="split_tunneling_description_warning">Dikkat: \"VPN üzerinden olmayan bağlantıları engelle\" seçeneği etkinse, bölünmüş uygulamalarda internet kullanılamayacaktır. Bölünmüş tünellemenin, gizlilik riski taşıdığını her zaman göz önünde bulundurun.</string>
     <string name="enable">Etkinleştir</string>

@@ -1194,6 +1194,14 @@ msgid "%(DAITA)s: Multihop"
 msgstr "%(DAITA)s: многократный переход"
 
 msgctxt "connect-view"
+msgid "%(count)d app in another country"
+msgid_plural "%(count)d apps in other countries"
+msgstr[0] "%(count)d приложение в другой стране"
+msgstr[1] "%(count)d приложения в других странах"
+msgstr[2] "%(count)d приложений в других странах"
+msgstr[3] "%(count)d приложения в других странах"
+
+msgctxt "connect-view"
 msgid "Active features"
 msgstr "Активные функции"
 
@@ -1264,6 +1272,18 @@ msgstr "На нашем сайте вы сможете узнать о поле�
 msgctxt "connect-view"
 msgid "To start using the app, you first need to add time to your account."
 msgstr "Чтобы пользоваться приложением, нужно добавить время на учетную запись."
+
+msgctxt "connect-view"
+msgid "VPN only for %(count)d app"
+msgid_plural "VPN only for %(count)d apps"
+msgstr[0] "VPN только для %(count)d приложения"
+msgstr[1] "VPN только для %(count)d приложений"
+msgstr[2] "VPN только для %(count)d приложений"
+msgstr[3] "VPN только для %(count)d приложения"
+
+msgctxt "connect-view"
+msgid "VPN only for chosen apps"
+msgstr "VPN только для выбранных приложений"
 
 msgctxt "connect-view"
 msgid "Voucher was successfully redeemed"
@@ -2860,6 +2880,10 @@ msgctxt "split-tunneling-view"
 msgid "%(applicationName)s is problematic and can’t be excluded from the VPN tunnel."
 msgstr "%(applicationName)s является проблемным и не может быть исключено из туннеля VPN."
 
+msgctxt "split-tunneling-view"
+msgid "%(applicationName)s is problematic and can’t be launched through the VPN alone."
+msgstr "С приложением %(applicationName)s возникла проблема: его нельзя запустить так, чтобы VPN использовало только оно."
+
 #. Information about split tunneling not being supported on the system.
 #. Available placeholders:
 #. %(splitTunneling)s - will be replaced with Split tunneling
@@ -2876,8 +2900,48 @@ msgid "All apps"
 msgstr "Все приложения"
 
 msgctxt "split-tunneling-view"
+msgid "App routing"
+msgstr "Маршрутизация приложений"
+
+msgctxt "split-tunneling-view"
+msgid "Apps can use %(limit)d countries at a time. Pick one already in use, or remove one first."
+msgstr "Приложения могут использовать не более %(limit)d стран одновременно. Выберите уже используемую страну или сначала удалите одну."
+
+msgctxt "split-tunneling-view"
+msgid "Bypass VPN"
+msgstr "В обход VPN"
+
+msgctxt "split-tunneling-view"
+msgid "Bypasses the VPN"
+msgstr "Обходит VPN"
+
+msgctxt "split-tunneling-view"
+msgid "Change the country of %(application)s, now %(country)s"
+msgstr "Сменить страну для %(application)s, сейчас: %(country)s"
+
+msgctxt "split-tunneling-view"
+msgid "Choose"
+msgstr "Выбрать"
+
+msgctxt "split-tunneling-view"
+msgid "Choose a country for %(application)s"
+msgstr "Выбрать страну для %(application)s"
+
+msgctxt "split-tunneling-view"
+msgid "Choose how each app connects."
+msgstr "Выберите, как подключается каждое приложение."
+
+msgctxt "split-tunneling-view"
 msgid "Choose the apps you want to exclude from the VPN tunnel."
 msgstr "Выберите приложения, которые нужно исключить из туннеля VPN."
+
+msgctxt "split-tunneling-view"
+msgid "Choose the country an app appears from. Other apps keep your main connection. Up to %(limit)d countries at a time."
+msgstr "Выберите страну, из которой приложение будет выходить в интернет. Остальные приложения используют основное подключение. Не более %(limit)d стран одновременно."
+
+msgctxt "split-tunneling-view"
+msgid "Cities in %(country)s"
+msgstr "%(country)s: города"
 
 #. Link for learning more
 msgctxt "split-tunneling-view"
@@ -2885,8 +2949,44 @@ msgid "Click here to learn more"
 msgstr "Нажмите здесь, чтобы узнать больше"
 
 msgctxt "split-tunneling-view"
+msgid "Click on an app to launch it. It uses the VPN until you close it, and nothing else does."
+msgstr "Щелкните по приложению, чтобы запустить его. Только оно будет использовать VPN, пока вы его не закроете."
+
+msgctxt "split-tunneling-view"
 msgid "Click on an app to launch it. Its traffic will bypass the VPN tunnel until you close it."
 msgstr "Щелкните по ярлыку приложения для запуска. Трафик приложения будет обходить туннель VPN, пока вы не закроете его."
+
+msgctxt "split-tunneling-view"
+msgid "Connected"
+msgstr "Подключено"
+
+msgctxt "split-tunneling-view"
+msgid "Connected, IP %(ip)s"
+msgstr "Подключено, IP %(ip)s"
+
+msgctxt "split-tunneling-view"
+msgid "Connecting..."
+msgstr "Подключение..."
+
+msgctxt "split-tunneling-view"
+msgid "Countries"
+msgstr "Страны"
+
+msgctxt "split-tunneling-view"
+msgid "Country"
+msgstr "Страна"
+
+msgctxt "split-tunneling-view"
+msgid "Country for %(application)s"
+msgstr "Страна для %(application)s"
+
+msgctxt "split-tunneling-view"
+msgid "Country limit reached"
+msgstr "Достигнут лимит стран"
+
+msgctxt "split-tunneling-view"
+msgid "Country per app"
+msgstr "Страна для приложения"
 
 msgctxt "split-tunneling-view"
 msgid "Enabled \"Full disk access\" and still having issues?"
@@ -2902,8 +3002,20 @@ msgid "Find another app"
 msgstr "Найти другое приложение"
 
 msgctxt "split-tunneling-view"
+msgid "Flatpak apps cannot use a country yet"
+msgstr "Приложениям Flatpak пока нельзя назначить страну"
+
+msgctxt "split-tunneling-view"
 msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not be excluded from the VPN tunnel."
 msgstr "Если приложение уже работает, закройте %(applicationName)s, и только после этого запускайте его отсюда. В противном случае его не удастся исключить из туннеля VPN."
+
+msgctxt "split-tunneling-view"
+msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not use the VPN."
+msgstr "Если приложение уже работает, закройте %(applicationName)s, и только после этого запускайте его отсюда. Иначе оно может не использовать VPN."
+
+msgctxt "split-tunneling-view"
+msgid "In use"
+msgstr "Используется"
 
 #. Button label for launching an application with split tunneling.
 msgctxt "split-tunneling-view"
@@ -2911,8 +3023,40 @@ msgid "Launch"
 msgstr "Запустить"
 
 msgctxt "split-tunneling-view"
+msgid "Limit reached"
+msgstr "Лимит исчерпан"
+
+msgctxt "split-tunneling-view"
+msgid "No server there"
+msgstr "Нет серверов в этом месте"
+
+msgctxt "split-tunneling-view"
+msgid "No session token left"
+msgstr "Не осталось токенов сеанса"
+
+msgctxt "split-tunneling-view"
+msgid "Off, uses the main connection"
+msgstr "Выкл., основное подключение"
+
+msgctxt "split-tunneling-view"
+msgid "Only the apps you choose use the VPN."
+msgstr "VPN используют только выбранные приложения."
+
+msgctxt "split-tunneling-view"
+msgid "Only the apps you choose will use the VPN. The rest of this device will not be protected."
+msgstr "VPN будут использовать только выбранные приложения. Остальная часть устройства не будет защищена."
+
+msgctxt "split-tunneling-view"
+msgid "Only these apps are protected. Everything else on this device uses your normal connection."
+msgstr "Защищены только эти приложения. Всё остальное на этом устройстве использует обычное подключение."
+
+msgctxt "split-tunneling-view"
 msgid "Open System Settings"
 msgstr "Открыть системные настройки"
+
+msgctxt "split-tunneling-view"
+msgid "Opens through a script: pick its program with Find another app"
+msgstr "Открывается через скрипт: выберите его программу кнопкой «Найти другое приложение»"
 
 #. This error message is shown if the user tries to launch a Linux desktop
 #. entry file that doesn't contain the required 'Exec' value.
@@ -2928,8 +3072,40 @@ msgid "Please try again or send a problem report."
 msgstr "Повторите попытку или отправьте сообщение о проблеме."
 
 msgctxt "split-tunneling-view"
+msgid "Remove country"
+msgstr "Удалить страну"
+
+msgctxt "split-tunneling-view"
+msgid "Remove the country of %(application)s"
+msgstr "Удалить страну для %(application)s"
+
+msgctxt "split-tunneling-view"
 msgid "Restart Warren Service"
 msgstr "Перезапустить сервис Warren"
+
+msgctxt "split-tunneling-view"
+msgid "Snap apps cannot use a country yet"
+msgstr "Приложениям Snap пока нельзя назначить страну"
+
+msgctxt "split-tunneling-view"
+msgid "The apps you choose connect as if the VPN were off."
+msgstr "Выбранные приложения подключаются так, будто VPN выключен."
+
+msgctxt "split-tunneling-view"
+msgid "This build of Warren VPN cannot do this. It needs a signed build."
+msgstr "Эта сборка Warren VPN не поддерживает эту функцию. Нужна подписанная сборка."
+
+msgctxt "split-tunneling-view"
+msgid "This needs macOS 13 or newer."
+msgstr "Требуется macOS 13 или новее."
+
+msgctxt "split-tunneling-view"
+msgid "This replaces Bypass VPN. Your list of apps there is kept."
+msgstr "Это заменит режим «В обход VPN». Ваш список приложений в нём сохранится."
+
+msgctxt "split-tunneling-view"
+msgid "This replaces VPN only for, so every app uses the VPN again except the ones you bypass. Your list of apps there is kept."
+msgstr "Это заменит режим «VPN для выбранных»: все приложения снова будут использовать VPN, кроме тех, что идут в обход. Ваш список приложений в нём сохранится."
 
 #. Information about split tunneling being unavailable due to
 #. missing support in the user's operating system.
@@ -2943,10 +3119,54 @@ msgctxt "split-tunneling-view"
 msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
 msgstr "Для использования раздельного туннелирования включите полный доступ к диску для Warren VPN в системных настройках macOS."
 
+msgctxt "split-tunneling-view"
+msgid "To use this, enable “Full disk access” for “Warren VPN” in the macOS system settings."
+msgstr "Чтобы использовать эту функцию, включите «Полный доступ к диску» для Warren VPN в системных настройках macOS."
+
+msgctxt "split-tunneling-view"
+msgid "Turn on"
+msgstr "Включить"
+
 #. Error message showed in a dialog when an application fails to launch.
 msgctxt "split-tunneling-view"
 msgid "Unable to launch selection. %(detailedErrorMessage)s"
 msgstr "Не удалось запустить выбор. %(detailedErrorMessage)s"
+
+msgctxt "split-tunneling-view"
+msgid "Unavailable"
+msgstr "Недоступно"
+
+msgctxt "split-tunneling-view"
+msgid "Uses the VPN through its country"
+msgstr "Использует VPN через свою страну"
+
+msgctxt "split-tunneling-view"
+msgid "Using the VPN"
+msgstr "Используют VPN"
+
+msgctxt "split-tunneling-view"
+msgid "VPN only for"
+msgstr "VPN для выбранных"
+
+msgctxt "split-tunneling-view"
+msgid "VPN only for is on: an app uses its country when you open it from VPN only for."
+msgstr "Режим «VPN для выбранных» включен: приложение использует свою страну, если открыть его из вкладки «VPN для выбранных»."
+
+msgctxt "split-tunneling-view"
+msgid "VPN only for is on: every app you did not choose there already bypasses the VPN."
+msgstr "Режим «VPN для выбранных» включен: все приложения, которые вы там не выбрали, уже идут в обход VPN."
+
+msgctxt "split-tunneling-view"
+msgid "Waiting for the VPN"
+msgstr "Ожидание VPN"
+
+msgctxt "split-tunneling-view"
+msgid "With a country"
+msgstr "Со своей страной"
+
+msgctxt "split-tunneling-view"
+msgid "Your system does not support this."
+msgstr "Ваша система этого не поддерживает."
 
 #. Button label for continuing problem report submission with an outdated app version.
 msgctxt "support-view"
@@ -3150,6 +3370,10 @@ msgstr "Если эти действия не помогли, сообщите �
 msgctxt "tunnel-control"
 msgid "Connect"
 msgstr "Подключиться"
+
+msgctxt "tunnel-control"
+msgid "Only selected apps are protected"
+msgstr "Защищены только выбранные приложения"
 
 msgctxt "tunnel-control"
 msgid "Switch location"
