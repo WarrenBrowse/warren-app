@@ -2961,6 +2961,23 @@ fn map_daemon_error(error: crate::Error) -> Status {
         DaemonError::LoginError(error) => map_device_error(&error),
         DaemonError::LogoutError(error) => map_device_error(&error),
         DaemonError::DeleteAccountError(error) => map_device_error(&error),
+        // NOT_FOUND is how the GUI knows an unknown voucher and drops a held
+        // one; a missing device is no verdict on the voucher.
+        DaemonError::VoucherSubmission(
+            error @ (device::Error::NoDevice | device::Error::InvalidDevice),
+        ) => Status::new(Code::Unauthenticated, error.to_string()),
+        // The GUI reads these three codes as a verdict on the voucher and drops a
+        // held one: only the voucher errors above may carry them, never a
+        // throttle or a stray 404 from the API.
+        DaemonError::VoucherSubmission(device::Error::OtherRestError(error)) => {
+            let status = map_rest_error(&error);
+            match status.code() {
+                Code::NotFound | Code::ResourceExhausted | Code::FailedPrecondition => {
+                    Status::new(Code::Unknown, status.message())
+                }
+                _ => status,
+            }
+        }
         DaemonError::VoucherSubmission(error) => map_device_error(&error),
         #[cfg(target_os = "android")]
         DaemonError::VerifyPlayPurchase(error) => map_device_error(&error),
@@ -3089,6 +3106,52 @@ fn map_protobuf_type_err(err: types::FromProtobufTypeError) -> Status {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn a_voucher_submitted_without_a_device_is_not_read_as_an_invalid_voucher() {
+        // The GUI drops a held purchase voucher on NOT_FOUND, the code of an
+        // unknown voucher. A logout racing the redemption must not cost it.
+        for error in [
+            crate::device::Error::NoDevice,
+            crate::device::Error::InvalidDevice,
+        ] {
+            let status = super::map_daemon_error(crate::Error::VoucherSubmission(error));
+
+            assert_ne!(status.code(), super::Code::NotFound, "{status:?}");
+        }
+        let unknown = super::map_daemon_error(crate::Error::VoucherSubmission(
+            crate::device::Error::InvalidVoucher,
+        ));
+        assert_eq!(unknown.code(), super::Code::NotFound);
+    }
+
+    #[test]
+    fn a_throttled_or_misrouted_redemption_is_not_read_as_a_verdict_on_the_voucher() {
+        // RESOURCE_EXHAUSTED reads as "already used" and NOT_FOUND as "unknown"
+        // in the GUI, which then drops a held purchase voucher. Only the
+        // voucher errors may carry them.
+        for status in [
+            mullvad_api::rest::StatusCode::TOO_MANY_REQUESTS,
+            mullvad_api::rest::StatusCode::NOT_FOUND,
+        ] {
+            let mapped = super::map_daemon_error(crate::Error::VoucherSubmission(
+                crate::device::Error::OtherRestError(mullvad_api::rest::Error::ApiError(
+                    status,
+                    format!("warren-api {}", status.as_u16()),
+                )),
+            ));
+
+            assert!(
+                !matches!(
+                    mapped.code(),
+                    super::Code::NotFound
+                        | super::Code::ResourceExhausted
+                        | super::Code::FailedPrecondition
+                ),
+                "{status}: {mapped:?}"
+            );
+        }
+    }
+
     use super::{
         daemon_event, types, withhold_account_secrets, withhold_event_identity,
         withhold_settings_secrets,
