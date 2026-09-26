@@ -1543,6 +1543,20 @@ createNewAccount: {
     responseSerialize: serialize_mullvad_daemon_management_interface_VoucherSubmission,
     responseDeserialize: deserialize_mullvad_daemon_management_interface_VoucherSubmission,
   },
+  // The voucher an app-initiated purchase paid for, pulled with its claim
+// code (wpid then pull secret) and returned unredeemed, so the caller can
+// seal it before it submits it. UNAVAILABLE while the payment has not landed.
+pullPurchaseVoucher: {
+    path: '/mullvad_daemon.management_interface.ManagementService/PullPurchaseVoucher',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_wrappers_pb.StringValue,
+    responseType: google_protobuf_wrappers_pb.StringValue,
+    requestSerialize: serialize_google_protobuf_StringValue,
+    requestDeserialize: deserialize_google_protobuf_StringValue,
+    responseSerialize: serialize_google_protobuf_StringValue,
+    responseDeserialize: deserialize_google_protobuf_StringValue,
+  },
   // Android only
 deleteAccount: {
     path: '/mullvad_daemon.management_interface.ManagementService/DeleteAccount',

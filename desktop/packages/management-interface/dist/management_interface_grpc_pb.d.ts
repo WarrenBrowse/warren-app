@@ -79,6 +79,7 @@ interface IManagementServiceService extends grpc.ServiceDefinition<grpc.UntypedS
     clearAccountHistory: IManagementServiceService_IClearAccountHistory;
     getWwwAuthToken: IManagementServiceService_IGetWwwAuthToken;
     submitVoucher: IManagementServiceService_ISubmitVoucher;
+    pullPurchaseVoucher: IManagementServiceService_IPullPurchaseVoucher;
     deleteAccount: IManagementServiceService_IDeleteAccount;
     getDevice: IManagementServiceService_IGetDevice;
     updateDevice: IManagementServiceService_IUpdateDevice;
@@ -737,6 +738,15 @@ interface IManagementServiceService_ISubmitVoucher extends grpc.MethodDefinition
     responseSerialize: grpc.serialize<management_interface_pb.VoucherSubmission>;
     responseDeserialize: grpc.deserialize<management_interface_pb.VoucherSubmission>;
 }
+interface IManagementServiceService_IPullPurchaseVoucher extends grpc.MethodDefinition<google_protobuf_wrappers_pb.StringValue, google_protobuf_wrappers_pb.StringValue> {
+    path: "/mullvad_daemon.management_interface.ManagementService/PullPurchaseVoucher";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<google_protobuf_wrappers_pb.StringValue>;
+    requestDeserialize: grpc.deserialize<google_protobuf_wrappers_pb.StringValue>;
+    responseSerialize: grpc.serialize<google_protobuf_wrappers_pb.StringValue>;
+    responseDeserialize: grpc.deserialize<google_protobuf_wrappers_pb.StringValue>;
+}
 interface IManagementServiceService_IDeleteAccount extends grpc.MethodDefinition<google_protobuf_empty_pb.Empty, google_protobuf_empty_pb.Empty> {
     path: "/mullvad_daemon.management_interface.ManagementService/DeleteAccount";
     requestStream: false;
@@ -1285,6 +1295,7 @@ export interface IManagementServiceServer extends grpc.UntypedServiceImplementat
     clearAccountHistory: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, google_protobuf_empty_pb.Empty>;
     getWwwAuthToken: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, google_protobuf_wrappers_pb.StringValue>;
     submitVoucher: grpc.handleUnaryCall<google_protobuf_wrappers_pb.StringValue, management_interface_pb.VoucherSubmission>;
+    pullPurchaseVoucher: grpc.handleUnaryCall<google_protobuf_wrappers_pb.StringValue, google_protobuf_wrappers_pb.StringValue>;
     deleteAccount: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, google_protobuf_empty_pb.Empty>;
     getDevice: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, management_interface_pb.DeviceState>;
     updateDevice: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, google_protobuf_empty_pb.Empty>;
@@ -1539,6 +1550,9 @@ export interface IManagementServiceClient {
     submitVoucher(request: google_protobuf_wrappers_pb.StringValue, callback: (error: grpc.ServiceError | null, response: management_interface_pb.VoucherSubmission) => void): grpc.ClientUnaryCall;
     submitVoucher(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.VoucherSubmission) => void): grpc.ClientUnaryCall;
     submitVoucher(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.VoucherSubmission) => void): grpc.ClientUnaryCall;
+    pullPurchaseVoucher(request: google_protobuf_wrappers_pb.StringValue, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
+    pullPurchaseVoucher(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
+    pullPurchaseVoucher(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
     deleteAccount(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     deleteAccount(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     deleteAccount(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
@@ -1897,6 +1911,9 @@ export class ManagementServiceClient extends grpc.Client implements IManagementS
     public submitVoucher(request: google_protobuf_wrappers_pb.StringValue, callback: (error: grpc.ServiceError | null, response: management_interface_pb.VoucherSubmission) => void): grpc.ClientUnaryCall;
     public submitVoucher(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: management_interface_pb.VoucherSubmission) => void): grpc.ClientUnaryCall;
     public submitVoucher(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: management_interface_pb.VoucherSubmission) => void): grpc.ClientUnaryCall;
+    public pullPurchaseVoucher(request: google_protobuf_wrappers_pb.StringValue, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
+    public pullPurchaseVoucher(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
+    public pullPurchaseVoucher(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
     public deleteAccount(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public deleteAccount(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public deleteAccount(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;

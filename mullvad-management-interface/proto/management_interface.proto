@@ -239,6 +239,10 @@ service ManagementService {
   rpc ClearAccountHistory(google.protobuf.Empty) returns (google.protobuf.Empty) {}
   rpc GetWwwAuthToken(google.protobuf.Empty) returns (google.protobuf.StringValue) {}
   rpc SubmitVoucher(google.protobuf.StringValue) returns (VoucherSubmission) {}
+  // The voucher an app-initiated purchase paid for, pulled with its claim
+  // code (wpid then pull secret) and returned unredeemed, so the caller can
+  // seal it before it submits it. UNAVAILABLE while the payment has not landed.
+  rpc PullPurchaseVoucher(google.protobuf.StringValue) returns (google.protobuf.StringValue) {}
   // Android only
   rpc DeleteAccount(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 

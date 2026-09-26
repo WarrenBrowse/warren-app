@@ -1687,6 +1687,19 @@ impl ManagementService for ManagementServiceImpl {
             .map_err(map_daemon_error)
     }
 
+    /// The voucher a purchase paid for, pulled and handed back unredeemed so
+    /// the GUI seals it before it redeems it. Neither the claim nor the
+    /// voucher is logged.
+    async fn pull_purchase_voucher(&self, request: Request<String>) -> ServiceResult<String> {
+        let call = Self::call_of(&request);
+        log::debug!("pull_purchase_voucher");
+        let claim = zeroize::Zeroizing::new(request.into_inner());
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(&call, DaemonCommand::PullPurchaseVoucher(tx, claim))?;
+        let voucher = self.wait_for_result(rx).await?.map_err(map_daemon_error)?;
+        Ok(Response::new((*voucher).clone()))
+    }
+
     // Device management
     async fn get_device(&self, request: Request<()>) -> ServiceResult<types::DeviceState> {
         let call = Self::call_of(&request);

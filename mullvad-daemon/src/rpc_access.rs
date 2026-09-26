@@ -138,6 +138,7 @@ rpc_classes! {
         ClearAccountHistory => Identity,
         GetWwwAuthToken => Identity,
         SubmitVoucher => Identity,
+        PullPurchaseVoucher => Identity,
         DeleteAccount => Identity,
         GetDevice => Identity,
         UpdateDevice => Identity,

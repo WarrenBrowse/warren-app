@@ -282,6 +282,19 @@ impl AccountManagerHandle {
             .await
     }
 
+    /// The voucher the purchase `claim` names, pulled for the logged-in
+    /// account and handed back unredeemed, so the GUI seals it before it asks
+    /// for its redemption.
+    pub async fn pull_purchase_voucher(
+        &self,
+        claim: String,
+    ) -> Result<zeroize::Zeroizing<String>, Error> {
+        let pubkey = self.data().await?.pubkey().ok_or(Error::NoDevice)?.clone();
+        self.warren_identity_service
+            .pull_purchase_voucher(pubkey, claim)
+            .await
+    }
+
     pub async fn check_expiry(&self) -> Result<DateTime<Utc>, Error> {
         self.send_command(AccountManagerCommand::CheckExpiry).await
     }

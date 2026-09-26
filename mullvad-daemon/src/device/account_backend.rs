@@ -21,6 +21,7 @@ use chrono::Utc;
 use mullvad_api::AccountsProxy;
 use mullvad_api::rest;
 use mullvad_types::account::{AccountData, AccountNumber, VoucherSubmission};
+use zeroize::Zeroizing;
 
 use crate::warren_sdk_client::SharedWarrenApiClient;
 
@@ -69,6 +70,15 @@ pub trait WarrenAccountBackend: Send + Sync {
         account: AccountNumber,
         voucher: String,
     ) -> BoxFut<Result<VoucherSubmission, rest::Error>>;
+
+    /// Collects the voucher an app-initiated purchase paid for, without
+    /// redeeming it: `claim` is the purchase's claim code (wpid then pull
+    /// secret). `None` while the payment has not queued one.
+    fn pull_purchase_voucher(
+        &self,
+        account: AccountNumber,
+        claim: String,
+    ) -> BoxFut<Result<Option<Zeroizing<String>>, rest::Error>>;
 }
 
 /// Thin wrap of the legacy Mullvad `AccountsProxy`. Delegates each
@@ -113,6 +123,14 @@ impl WarrenAccountBackend for RemoteAccountBackend {
         let proxy = self.proxy.clone();
         Box::pin(async move { proxy.submit_voucher(account, voucher).await })
     }
+
+    fn pull_purchase_voucher(
+        &self,
+        _account: AccountNumber,
+        _claim: String,
+    ) -> BoxFut<Result<Option<Zeroizing<String>>, rest::Error>> {
+        Box::pin(async move { Err(rest::Error::Aborted) })
+    }
 }
 
 /// Warren-Remote backend - implements
@@ -141,11 +159,14 @@ pub struct WarrenRemoteAccountBackend {
     /// secret instead of 404-ing forever. In-memory only: a daemon
     /// crash inside that window still loses the secret (accepted
     /// residual, doc 35 section 7).
-    pulled_unregistered: Arc<std::sync::Mutex<std::collections::HashMap<String, String>>>,
+    pulled_unregistered: PulledVouchers,
     /// Where a ban a redemption refusal carries goes: the daemon's standing
     /// monitor, so the app shows why the voucher was not credited.
     ban_sink: Option<BanSink>,
 }
+
+/// Pulled voucher secrets not redeemed yet, keyed by wpid.
+type PulledVouchers = Arc<std::sync::Mutex<std::collections::HashMap<String, String>>>;
 
 /// Receives the ban an API refusal of `wallet` carries (warren-core doc 105
 /// §5.3). The wallet is its SS58 address, compared by the receiver and never
@@ -251,44 +272,21 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
             // pull the queued secret from the API with the pull secret
             // first, then redeem it as usual.
             let claim = as_purchase_claim(&voucher);
-            let wpid = claim.as_ref().map(|c| c.wpid.clone());
             let voucher = match &claim {
-                Some(PurchaseClaim { wpid, pull_secret }) => {
-                    // A previous poll may have pulled the secret and
-                    // then failed the register: the server-side
-                    // mapping is consumed, the cache is the only copy.
-                    let cached = pulled_unregistered
-                        .lock()
-                        .expect("not poisoned")
-                        .get(wpid)
-                        .cloned();
-                    match cached {
-                        Some(secret) => secret,
-                        None => match client
-                            .pull_pending_voucher(wpid, pull_secret)
-                            .await
-                            .map_err(map_client_error)?
-                        {
-                            Some(secret) => {
-                                pulled_unregistered
-                                    .lock()
-                                    .expect("not poisoned")
-                                    .insert(wpid.clone(), secret.clone());
-                                secret
-                            }
-                            // Webhook not landed yet (or id expired):
-                            // the GUI keeps polling on this signal.
-                            None => {
-                                return Err(rest::Error::ApiError(
-                                    rest::StatusCode::NOT_FOUND,
-                                    mullvad_api::VOUCHER_NOT_READY.to_owned(),
-                                ));
-                            }
-                        },
+                Some(claim) => match collect_pulled(&client, &pulled_unregistered, claim).await? {
+                    Some(secret) => secret,
+                    // Webhook not landed yet (or id expired): the GUI
+                    // keeps polling on this signal.
+                    None => {
+                        return Err(rest::Error::ApiError(
+                            rest::StatusCode::NOT_FOUND,
+                            mullvad_api::VOUCHER_NOT_READY.to_owned(),
+                        ));
                     }
-                }
+                },
                 None => voucher,
             };
+            let redeemed = Zeroizing::new(voucher.clone());
 
             // An EMPTY voucher asks the server to redeem its configured
             // auto-voucher (beta onboarding / "refresh access"):
@@ -356,13 +354,8 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
                         if status < 500 =>
                     {
                         let mapped = map_voucher_register_error(e);
-                        if voucher_is_dead(&mapped)
-                            && let Some(wpid) = &wpid
-                        {
-                            pulled_unregistered
-                                .lock()
-                                .expect("not poisoned")
-                                .remove(wpid);
+                        if voucher_is_dead(&mapped) {
+                            forget_pulled(&pulled_unregistered, &redeemed);
                         }
                         // An earlier attempt may have landed with its
                         // response lost: a replay then 409s although the
@@ -396,12 +389,7 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
                     ));
                 }
             };
-            if let Some(wpid) = &wpid {
-                pulled_unregistered
-                    .lock()
-                    .expect("not poisoned")
-                    .remove(wpid);
-            }
+            forget_pulled(&pulled_unregistered, &redeemed);
             let new_expiry = expiry_from_unix_secs(resp.expires_at)?;
             // The voucher's OWN granted duration, straight from the
             // server. Deriving it from `expires_at - now` would report
@@ -415,6 +403,69 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
             })
         })
     }
+
+    fn pull_purchase_voucher(
+        &self,
+        account: AccountNumber,
+        claim: String,
+    ) -> BoxFut<Result<Option<Zeroizing<String>>, rest::Error>> {
+        let client = self.client.clone();
+        let pulled_unregistered = self.pulled_unregistered.clone();
+        let claim = as_purchase_claim(&Zeroizing::new(claim));
+        Box::pin(async move {
+            // Before the pull, which spends the server's single-use mapping.
+            check_account_matches_identity(&account, &client.address())?;
+            let Some(claim) = claim else {
+                return Err(rest::Error::ApiError(
+                    rest::StatusCode::BAD_REQUEST,
+                    mullvad_api::INVALID_VOUCHER.to_owned(),
+                ));
+            };
+            Ok(collect_pulled(&client, &pulled_unregistered, &claim)
+                .await?
+                .map(Zeroizing::new))
+        })
+    }
+}
+
+/// The voucher `claim` paid for: the copy this process already pulled, or a
+/// fresh pull, kept until its redemption or a verdict on it. The server hands
+/// a voucher out once, so a caller that loses the answer (a register that
+/// failed, a GUI that died before sealing it) finds it here again. `None`
+/// while the payment has queued nothing.
+async fn collect_pulled(
+    client: &SharedWarrenApiClient,
+    pulled_unregistered: &PulledVouchers,
+    claim: &PurchaseClaim,
+) -> Result<Option<String>, rest::Error> {
+    let cached = pulled_unregistered
+        .lock()
+        .expect("not poisoned")
+        .get(&claim.wpid)
+        .cloned();
+    if cached.is_some() {
+        return Ok(cached);
+    }
+    let pulled = client
+        .pull_pending_voucher(&claim.wpid, &claim.pull_secret)
+        .await
+        .map_err(map_client_error)?;
+    if let Some(secret) = &pulled {
+        pulled_unregistered
+            .lock()
+            .expect("not poisoned")
+            .insert(claim.wpid.clone(), secret.clone());
+    }
+    Ok(pulled)
+}
+
+/// Drops this process's copy of a pulled voucher once it is redeemed or dead,
+/// whether it was redeemed through its claim or, sealed by the GUI, as itself.
+fn forget_pulled(pulled_unregistered: &PulledVouchers, voucher: &str) {
+    pulled_unregistered
+        .lock()
+        .expect("not poisoned")
+        .retain(|_, secret| secret != voucher);
 }
 
 /// An app-initiated purchase the GUI asks the daemon to collect: the
@@ -457,7 +508,7 @@ fn as_purchase_claim(input: &str) -> Option<PurchaseClaim> {
 /// The Warren backend instead returns structured `{"error": "<human
 /// message>"}` JSON bodies (see `warren_api::handlers::subscription::
 /// register`). The generic [`map_client_error`] flattens those into
-/// opaque `"warren-api <status>: <body>"` strings, which match none of
+/// opaque `"warren-api <status>"` strings, which match none of
 /// the legacy codes and fall through to `OtherRestError` →
 /// `Code::InvalidArgument` → the frontend's generic "An error occurred"
 /// toast. Translating each known Warren body into the matching legacy
@@ -468,9 +519,9 @@ fn as_purchase_claim(input: &str) -> Option<PurchaseClaim> {
 /// messages in `warren-api` are part of an internal contract but are
 /// not versioned, so a future edit (`"voucher unknown or invalid" →
 /// "Voucher is invalid."`) should still route correctly. Should a
-/// rewrite ever break the substring, the fallback preserves the raw
-/// body in the error log for diagnostics - and the user gets the
-/// generic toast rather than a silent failure.
+/// rewrite ever break the substring, the user gets the generic toast
+/// rather than a silent failure; the body itself never leaves this
+/// function (see [`refusal_message`]).
 fn map_voucher_register_error(err: warren_api::ClientError) -> rest::Error {
     use warren_api::ClientError;
     match err {
@@ -500,25 +551,21 @@ fn map_voucher_register_error(err: warren_api::ClientError) -> rest::Error {
             if let Some(code_str) = mullvad_code {
                 return rest::Error::ApiError(code, code_str.to_owned());
             }
-            // "pubkey already registered" and any other 4xx fall
-            // through to the generic path: the user sees a generic
-            // error, and the operator gets the raw body in the
-            // daemon log to triage. "pubkey already registered"
-            // specifically should not normally happen here - it
-            // would mean `get_account_data` returned 404 for a
-            // pubkey that the server side still has on file, which
-            // is a server-state inconsistency worth investigating.
-            let msg = if body.is_empty() {
-                format!("warren-api {status}")
-            } else {
-                format!("warren-api {status}: {body}")
-            };
-            rest::Error::ApiError(code, msg)
+            // "pubkey already registered" and any other 4xx fall through
+            // to the generic path, which the user sees as a generic error.
+            rest::Error::ApiError(code, refusal_message(status))
         }
         // Transport / serde / clock -> infra down. Same convention
         // as the generic `map_client_error`.
         _ => rest::Error::Aborted,
     }
+}
+
+/// The message of a refusal no code names: its status alone. The body stays
+/// out, since it may echo identity material (an address, a pubkey) and this
+/// message reaches the daemon log and the GUI.
+fn refusal_message(status: u16) -> String {
+    format!("warren-api {status}")
 }
 
 /// Reconstructs `expiry: DateTime<Utc>` from `expires_at: u64` (unix
@@ -542,15 +589,10 @@ fn expiry_from_unix_secs(secs: u64) -> Result<chrono::DateTime<Utc>, rest::Error
 pub(super) fn map_client_error(err: warren_api::ClientError) -> rest::Error {
     use warren_api::ClientError;
     match err {
-        ClientError::ServerStatus { status, body } => {
+        ClientError::ServerStatus { status, .. } => {
             let code = rest::StatusCode::from_u16(status)
                 .unwrap_or(rest::StatusCode::INTERNAL_SERVER_ERROR);
-            let msg = if body.is_empty() {
-                format!("warren-api {status}")
-            } else {
-                format!("warren-api {status}: {body}")
-            };
-            rest::Error::ApiError(code, msg)
+            rest::Error::ApiError(code, refusal_message(status))
         }
         // Transport / serde / clock -> infra down.
         _ => rest::Error::Aborted,
@@ -1290,28 +1332,35 @@ mod tests {
     }
 
     #[test]
-    fn map_voucher_register_error_pubkey_already_registered_falls_through() {
-        // "pubkey already registered" is a server-state inconsistency
-        // that should be diagnosable in the daemon log - fall through
-        // to the opaque body to preserve the raw context.
+    fn a_register_refusal_it_cannot_name_carries_the_status_and_no_server_body() {
+        // A server body may echo identity material, and this message reaches
+        // the daemon log and the GUI: only the status survives. Nor may it
+        // pass for a legacy voucher code.
         let err = super::map_voucher_register_error(server_status(
             409,
-            r#"{"error":"pubkey already registered"}"#,
+            r#"{"error":"pubkey already registered","pubkey":"wbSECRETADDRESS"}"#,
         ));
         match err {
             rest::Error::ApiError(code, msg) => {
                 assert_eq!(code.as_u16(), 409);
-                assert!(
-                    msg.contains("pubkey already registered"),
-                    "raw body must be preserved for diagnostics, got: {msg}"
-                );
-                // Critically, NOT mapped to a Mullvad legacy code:
-                // the user gets the generic toast and the operator
-                // gets the precise body in the log.
-                assert_ne!(msg, mullvad_api::INVALID_VOUCHER);
-                assert_ne!(msg, mullvad_api::VOUCHER_USED);
+                assert_eq!(msg, "warren-api 409");
             }
-            other => panic!("expected ApiError(409, raw body), got {other:?}"),
+            other => panic!("expected ApiError(409, status only), got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn an_account_call_refusal_carries_the_status_and_no_server_body() {
+        let err = super::map_client_error(server_status(
+            403,
+            r#"{"error":"forbidden","ip":"198.51.100.7"}"#,
+        ));
+        match err {
+            rest::Error::ApiError(code, msg) => {
+                assert_eq!(code.as_u16(), 403);
+                assert_eq!(msg, "warren-api 403");
+            }
+            other => panic!("expected ApiError(403, status only), got {other:?}"),
         }
     }
 
@@ -1430,5 +1479,166 @@ mod tests {
             rest::Error::Aborted => {}
             other => panic!("expected Aborted, got {other:?}"),
         }
+    }
+
+    // ===================================================================
+    // The GUI collects a purchase in two steps: it asks for the pulled
+    // voucher, seals it in its own store, and only then redeems it, so the
+    // only copy of a paid secret never lives in this process alone.
+    // ===================================================================
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn a_pulled_voucher_is_handed_back_again_without_a_second_pull() {
+        // The pull is single-use on the server: a GUI that lost the first
+        // answer (it crashed before sealing it) must still get the voucher.
+        let mut server = mockito::Server::new_async().await;
+        let wpid = "1111222233334444555566667777aaaa";
+        let pull = server
+            .mock("POST", format!("/v1/checkout/{wpid}/voucher").as_str())
+            .match_body(pull_body())
+            .with_status(200)
+            .with_body(r#"{"voucher_secret":"XXXX-YYYY-ZZZZ-WWWW"}"#)
+            .expect(1)
+            .create_async()
+            .await;
+        let seed = [80u8; 32];
+        let pubkey_ss58 = address_for_seed(seed);
+        let backend = WarrenRemoteAccountBackend::new(client_with_seed(server.url(), seed));
+
+        for _ in 0..2 {
+            let pulled = backend
+                .pull_purchase_voucher(pubkey_ss58.clone(), claim_code(wpid))
+                .await
+                .expect("the pull succeeds");
+            assert_eq!(
+                pulled.as_deref().map(String::as_str),
+                Some("XXXX-YYYY-ZZZZ-WWWW")
+            );
+        }
+        pull.assert_async().await;
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn a_purchase_not_settled_yet_has_no_voucher_to_hand_back() {
+        let mut server = mockito::Server::new_async().await;
+        let wpid = "2222333344445555666677778888bbbb";
+        let _pull = server
+            .mock("POST", format!("/v1/checkout/{wpid}/voucher").as_str())
+            .with_status(404)
+            .create_async()
+            .await;
+        let seed = [81u8; 32];
+        let backend = WarrenRemoteAccountBackend::new(client_with_seed(server.url(), seed));
+
+        let pulled = backend
+            .pull_purchase_voucher(address_for_seed(seed), claim_code(wpid))
+            .await
+            .expect("a 404 is an answer, not a failure");
+
+        assert!(pulled.is_none());
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn a_pull_for_another_wallet_or_of_a_non_claim_sends_nothing() {
+        let mut server = mockito::Server::new_async().await;
+        let pull = server
+            .mock(
+                "POST",
+                mockito::Matcher::Regex("^/v1/checkout/.*".to_owned()),
+            )
+            .expect(0)
+            .create_async()
+            .await;
+        let seed = [82u8; 32];
+        let backend = WarrenRemoteAccountBackend::new(client_with_seed(server.url(), seed));
+
+        let desync = backend
+            .pull_purchase_voucher(
+                address_for_seed([83u8; 32]),
+                claim_code("3333444455556666777788889999cccc"),
+            )
+            .await
+            .expect_err("a mismatched account is refused");
+        let not_a_claim = backend
+            .pull_purchase_voucher(address_for_seed(seed), "AAAA-BBBB-CCCC-DDDD".to_owned())
+            .await
+            .expect_err("a voucher is not a purchase to collect");
+
+        assert!(
+            matches!(&desync, rest::Error::ApiError(_, msg) if msg == mullvad_api::WARREN_IDENTITY_DESYNC),
+            "{desync:?}"
+        );
+        assert!(
+            matches!(&not_a_claim, rest::Error::ApiError(_, msg) if msg == mullvad_api::INVALID_VOUCHER),
+            "{not_a_claim:?}"
+        );
+        pull.assert_async().await;
+    }
+
+    async fn pulled_then_redeemed(register_status: usize, register_body: &str) -> Vec<String> {
+        let mut server = mockito::Server::new_async().await;
+        let wpid = "4444555566667777888899990000dddd";
+        let _pull = server
+            .mock("POST", format!("/v1/checkout/{wpid}/voucher").as_str())
+            .with_status(200)
+            .with_body(r#"{"voucher_secret":"XXXX-YYYY-ZZZZ-WWWW"}"#)
+            .create_async()
+            .await;
+        let _sub = server
+            .mock("GET", "/v1/subscription")
+            .with_status(404)
+            .create_async()
+            .await;
+        let _register = server
+            .mock("POST", "/v1/register")
+            .with_status(register_status)
+            .with_body(register_body)
+            .create_async()
+            .await;
+        let seed = [84u8; 32];
+        let pubkey_ss58 = address_for_seed(seed);
+        let backend = WarrenRemoteAccountBackend::new(client_with_seed(server.url(), seed));
+        backend
+            .pull_purchase_voucher(pubkey_ss58.clone(), claim_code(wpid))
+            .await
+            .expect("the pull succeeds");
+
+        let _ = backend
+            .submit_voucher(pubkey_ss58, "XXXX-YYYY-ZZZZ-WWWW".to_owned())
+            .await;
+        cached_secrets(&backend)
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn the_daemon_copy_of_a_pulled_voucher_goes_with_its_redemption() {
+        let now = now_secs();
+        let left = pulled_then_redeemed(
+            201,
+            &format!(
+                r#"{{"expires_at":{},"added_secs":2592000}}"#,
+                now + 2_592_000
+            ),
+        )
+        .await;
+
+        assert!(left.is_empty(), "{left:?}");
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn the_daemon_copy_of_a_pulled_voucher_goes_with_a_verdict_on_it() {
+        let left = pulled_then_redeemed(400, r#"{"error":"voucher unknown or invalid"}"#).await;
+
+        assert!(left.is_empty(), "{left:?}");
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn the_daemon_copy_of_a_pulled_voucher_outlives_a_ban() {
+        let left = pulled_then_redeemed(
+            403,
+            r#"{"error":"banned","reason_code":"port_forwarding_abuse"}"#,
+        )
+        .await;
+
+        assert_eq!(left, vec!["XXXX-YYYY-ZZZZ-WWWW"]);
     }
 }

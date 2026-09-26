@@ -515,6 +515,13 @@ pub enum DaemonCommand {
     ),
     /// Submit voucher to add time to the current account. Returns time added in seconds
     SubmitVoucher(ResponseTx<VoucherSubmission, Error>, String),
+    /// Collect the voucher an app-initiated purchase paid for, unredeemed.
+    /// The claim carries the purchase's pull secret, and the answer the
+    /// voucher itself: both are wiped on drop.
+    PullPurchaseVoucher(
+        ResponseTx<zeroize::Zeroizing<String>, Error>,
+        zeroize::Zeroizing<String>,
+    ),
     /// Request account history
     GetAccountHistory(oneshot::Sender<Option<AccountNumber>>),
     /// Remove the last used account, if there is one
@@ -3119,6 +3126,7 @@ impl Daemon {
             }
             SetWarrenMnemonic(tx, mnemonic) => self.on_set_warren_mnemonic(tx, mnemonic),
             SubmitVoucher(tx, voucher) => self.on_submit_voucher(tx, voucher),
+            PullPurchaseVoucher(tx, claim) => self.on_pull_purchase_voucher(tx, claim),
             GetRelayLocations(tx) => self.on_get_relay_locations(tx),
             UpdateRelayLocations => self.on_update_relay_locations().await,
             UpdateDefaultLocationCountry(tx) => self.on_update_default_location(tx).await,
@@ -4075,6 +4083,24 @@ impl Daemon {
                     .await
                     .map_err(Error::VoucherSubmission),
                 "submit_voucher response",
+            );
+        });
+    }
+
+    fn on_pull_purchase_voucher(
+        &mut self,
+        tx: ResponseTx<zeroize::Zeroizing<String>, Error>,
+        claim: zeroize::Zeroizing<String>,
+    ) {
+        let manager = self.account_manager.clone();
+        tokio::spawn(async move {
+            Self::oneshot_send(
+                tx,
+                manager
+                    .pull_purchase_voucher(claim.as_str().to_owned())
+                    .await
+                    .map_err(Error::VoucherSubmission),
+                "pull_purchase_voucher response",
             );
         });
     }

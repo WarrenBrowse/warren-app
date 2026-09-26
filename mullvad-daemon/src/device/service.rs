@@ -94,6 +94,24 @@ impl WarrenIdentityService {
         result.map_err(map_rest_error)
     }
 
+    /// Collects the voucher an app-initiated purchase paid for, without
+    /// redeeming it. Not retried: the GUI polls this until the payment lands.
+    pub async fn pull_purchase_voucher(
+        &self,
+        pubkey: WarrenPubKey,
+        claim: String,
+    ) -> Result<zeroize::Zeroizing<String>, Error> {
+        match self
+            .backend
+            .pull_purchase_voucher(pubkey.as_str().to_owned(), claim)
+            .await
+            .map_err(map_rest_error)?
+        {
+            Some(voucher) => Ok(voucher),
+            None => Err(Error::VoucherNotReady),
+        }
+    }
+
     #[cfg(target_os = "android")]
     pub async fn init_play_purchase(
         &self,
