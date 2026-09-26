@@ -157,6 +157,10 @@ jobs:
     container:
       image: ghcr.io/warrenbrowse/warren-ci-linux:bullseye-e03e4fc686d82f6b1cbea663ec9032c76960b5ee
       options: --user root
+    # A container job's steps default to sh, which has no pipefail.
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 90
     # clang avoids the intermittent gcc cc1 SIGSEGV under x86_64-Rosetta (same as release.yml).
     env:
@@ -265,6 +269,10 @@ jobs:
     container:
       image: ghcr.io/warrenbrowse/warren-ci-linux:bullseye-e03e4fc686d82f6b1cbea663ec9032c76960b5ee
       options: --user root
+    # A container job's steps default to sh, which has no pipefail.
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 90
     env:
       # Several arm64 runners share one 16-core Colima VM; same cap as
