@@ -26,32 +26,32 @@ msgstr "%(wireguard)s portu"
 
 msgid "1 day"
 msgid_plural "%d days"
-msgstr[0] "1 gün"
+msgstr[0] "%d gün"
 msgstr[1] "%d gün"
 
 msgid "1 day left"
 msgid_plural "%d days left"
-msgstr[0] "1 gün kaldı"
+msgstr[0] "%d gün kaldı"
 msgstr[1] "%d gün kaldı"
 
 msgid "1 month"
 msgid_plural "%d months"
-msgstr[0] "1 ay"
+msgstr[0] "%d ay"
 msgstr[1] "%d ay"
 
 msgid "1 month left"
 msgid_plural "%d months left"
-msgstr[0] "1 ay kaldı"
+msgstr[0] "%d ay kaldı"
 msgstr[1] "%d ay kaldı"
 
 msgid "1 year"
 msgid_plural "%d years"
-msgstr[0] "1 yıl"
+msgstr[0] "%d yıl"
 msgstr[1] "%d yıl"
 
 msgid "1 year left"
 msgid_plural "%d years left"
-msgstr[0] "1 yıl kaldı"
+msgstr[0] "%d yıl kaldı"
 msgstr[1] "%d yıl kaldı"
 
 msgid "Account paid until %(expiry)s."
@@ -4783,12 +4783,12 @@ msgstr[1] "%d ay"
 
 msgid "1 day left on this account"
 msgid_plural "%d days left on this account"
-msgstr[0] "Bu hesapta 1 gün kaldı"
+msgstr[0] "Bu hesapta %d gün kaldı"
 msgstr[1] "Bu hesapta %d gün kaldı"
 
 msgid "1 year left on this account"
 msgid_plural "%d years left on this account"
-msgstr[0] "Bu hesapta 1 yıl kaldı"
+msgstr[0] "Bu hesapta %d yıl kaldı"
 msgstr[1] "Bu hesapta %d yıl kaldı"
 
 msgid "Account credit expires in a day"
