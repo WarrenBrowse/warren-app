@@ -206,6 +206,9 @@ fn state_label(state: AppRouteState) -> &'static str {
         AppRouteState::Unavailable(UnavailableReason::NoRelay) => {
             "unavailable, no server in this location"
         }
+        AppRouteState::Unavailable(UnavailableReason::WaitingForRoute) => {
+            "waiting for a free route"
+        }
     }
 }
 
@@ -232,9 +235,7 @@ mod tests {
             ..Default::default()
         };
         settings.included_apps.insert(app(BROWSER));
-        settings
-            .set_app_exit(app(BROWSER), ExitChoice::new("se", Some("got")).unwrap())
-            .unwrap();
+        settings.set_app_exit(app(BROWSER), ExitChoice::new("se", Some("got")).unwrap());
 
         let rendered = render_settings(&settings);
 
@@ -289,6 +290,7 @@ mod tests {
             UnavailableReason::NoToken,
             UnavailableReason::LimitReached,
             UnavailableReason::NoRelay,
+            UnavailableReason::WaitingForRoute,
         ]
         .map(|reason| state_label(AppRouteState::Unavailable(reason)));
 
@@ -299,6 +301,7 @@ mod tests {
                 "unavailable, no session token left",
                 "unavailable, the session limit is reached",
                 "unavailable, no server in this location",
+                "waiting for a free route",
             ]
         );
     }

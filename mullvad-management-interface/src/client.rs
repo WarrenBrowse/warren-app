@@ -744,11 +744,6 @@ impl MullvadProxyClient {
     }
 
     /// Chooses the exit `app` leaves through.
-    ///
-    /// # Errors
-    ///
-    /// [`Error::AppExitLimit`] when the apps would then use more different
-    /// exits than there are route sessions.
     pub async fn set_app_exit<P: AsRef<Path>>(&mut self, app: P, exit: &ExitChoice) -> Result<()> {
         let app = app.as_ref().to_str().ok_or(Error::PathMustBeUtf8)?;
         self.0
@@ -756,8 +751,7 @@ impl MullvadProxyClient {
                 app: app.to_owned(),
                 exit: Some(types::ExitChoice::from(exit)),
             })
-            .await
-            .map_err(map_app_routing_error)?;
+            .await?;
         Ok(())
     }
 
@@ -867,14 +861,6 @@ fn map_device_error(status: Status) -> Error {
 }
 
 #[cfg(not(target_os = "android"))]
-fn map_app_routing_error(status: Status) -> Error {
-    match (status.code(), status.details()) {
-        (Code::FailedPrecondition, crate::APP_EXIT_LIMIT_DETAILS) => Error::AppExitLimit,
-        _other => Error::Rpc(Box::new(status)),
-    }
-}
-
-#[cfg(not(target_os = "android"))]
 fn map_custom_list_error(status: Status) -> Error {
     match (status.code(), status.details()) {
         (Code::NotFound, crate::CUSTOM_LIST_LIST_NOT_FOUND_DETAILS) => {
@@ -939,33 +925,5 @@ impl RelaySelectorClient {
     ) -> Result<crate::types::relay_selector::RelayPartitions> {
         let result = self.0.partition_relays(predicate).await?.into_inner();
         Ok(result)
-    }
-}
-
-#[cfg(all(test, not(target_os = "android")))]
-mod app_routing_error_tests {
-    use super::*;
-
-    #[test]
-    fn the_exit_limit_refusal_becomes_its_own_error() {
-        let refusal = Status::with_details(
-            Code::FailedPrecondition,
-            "limit",
-            crate::Bytes::from_static(crate::APP_EXIT_LIMIT_DETAILS),
-        );
-
-        assert!(matches!(
-            map_app_routing_error(refusal),
-            Error::AppExitLimit
-        ));
-    }
-
-    #[test]
-    fn any_other_refusal_stays_an_rpc_error() {
-        let other = Status::failed_precondition("something else");
-        let malformed = Status::invalid_argument("bad app");
-
-        assert!(matches!(map_app_routing_error(other), Error::Rpc(_)));
-        assert!(matches!(map_app_routing_error(malformed), Error::Rpc(_)));
     }
 }

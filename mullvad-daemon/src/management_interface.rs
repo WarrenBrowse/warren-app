@@ -9,7 +9,7 @@ use futures::{
 use mullvad_api::{StatusCode, rest::Error as RestError};
 use mullvad_management_interface::types::FromProtobufTypeError;
 use mullvad_management_interface::{
-    Bytes, Code, Request, Response, ServerJoinHandle, Status,
+    Code, Request, Response, ServerJoinHandle, Status,
     types::{self, daemon_event, management_service_server::ManagementService},
 };
 use mullvad_types::relay_constraints::GeographicLocationConstraint;
@@ -3094,17 +3094,10 @@ fn map_daemon_error(error: crate::Error) -> Status {
     }
 }
 
-/// A refused app routing change. Reaching the exit limit is a state the GUI
-/// explains, so it carries a code; the others are malformed requests.
+/// A refused app routing change: always a malformed request, since any
+/// number of exits is accepted.
 fn map_app_routing_error(error: AppRoutingError) -> Status {
-    match error {
-        AppRoutingError::TooManyAppExits { .. } => Status::with_details(
-            Code::FailedPrecondition,
-            error.to_string(),
-            Bytes::from_static(mullvad_management_interface::APP_EXIT_LIMIT_DETAILS),
-        ),
-        _ => Status::invalid_argument(error.to_string()),
-    }
+    Status::invalid_argument(error.to_string())
 }
 
 #[cfg(windows)]
@@ -3225,18 +3218,7 @@ mod app_routing_error_tests {
     use mullvad_types::app_routing::AppRoutingError;
 
     #[test]
-    fn the_exit_limit_is_a_precondition_with_its_own_code() {
-        let status = map_app_routing_error(AppRoutingError::TooManyAppExits { limit: 2 });
-
-        assert_eq!(status.code(), Code::FailedPrecondition);
-        assert_eq!(
-            status.details(),
-            mullvad_management_interface::APP_EXIT_LIMIT_DETAILS
-        );
-    }
-
-    #[test]
-    fn any_other_refusal_is_an_invalid_argument() {
+    fn a_refused_app_routing_change_is_an_invalid_argument() {
         let status = map_app_routing_error(AppRoutingError::InvalidCountry);
 
         assert_eq!(status.code(), Code::InvalidArgument);

@@ -3259,6 +3259,7 @@ export namespace AppRouteStatus {
     NO_TOKEN = 2,
     LIMIT_REACHED = 3,
     NO_RELAY = 4,
+    WAITING_FOR_ROUTE = 5,
     }
 
 }

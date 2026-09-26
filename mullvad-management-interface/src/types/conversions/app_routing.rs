@@ -129,6 +129,7 @@ impl From<&AppRouteStatus> for proto::AppRouteStatus {
                     UnavailableReason::NoToken => Reason::NoToken,
                     UnavailableReason::LimitReached => Reason::LimitReached,
                     UnavailableReason::NoRelay => Reason::NoRelay,
+                    UnavailableReason::WaitingForRoute => Reason::WaitingForRoute,
                 },
             ),
         };
@@ -164,6 +165,7 @@ impl TryFrom<proto::AppRouteStatus> for AppRouteStatus {
                         Reason::NoToken => UnavailableReason::NoToken,
                         Reason::LimitReached => UnavailableReason::LimitReached,
                         Reason::NoRelay => UnavailableReason::NoRelay,
+                        Reason::WaitingForRoute => UnavailableReason::WaitingForRoute,
                     },
                 ),
             };
@@ -203,12 +205,8 @@ mod tests {
         };
         settings.excluded_apps.insert(app(APPS[0]));
         settings.included_apps.insert(app(APPS[1]));
-        settings
-            .set_app_exit(app(APPS[2]), ExitChoice::new("se", Some("got")).unwrap())
-            .unwrap();
-        settings
-            .set_app_exit(app(APPS[1]), ExitChoice::new("de", None).unwrap())
-            .unwrap();
+        settings.set_app_exit(app(APPS[2]), ExitChoice::new("se", Some("got")).unwrap());
+        settings.set_app_exit(app(APPS[1]), ExitChoice::new("de", None).unwrap());
         settings
     }
 
@@ -292,6 +290,7 @@ mod tests {
             UnavailableReason::NoToken,
             UnavailableReason::LimitReached,
             UnavailableReason::NoRelay,
+            UnavailableReason::WaitingForRoute,
         ]
         .map(|reason| AppRouteStatus {
             state: AppRouteState::Unavailable(reason),

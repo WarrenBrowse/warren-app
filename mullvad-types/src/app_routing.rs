@@ -14,10 +14,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::location::{CityCode, CountryCode};
 
-/// Route sessions that can run next to the main one: the three session
-/// tokens of an epoch, minus the main session's.
-pub const MAX_APP_EXITS: usize = 2;
-
 /// Which split mode is in force. The two lists are kept whatever the mode, so
 /// switching back restores them.
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -46,8 +42,6 @@ pub enum AppRoutingError {
     InvalidCountry,
     #[error("the city is not a city code")]
     InvalidCity,
-    #[error("at most {limit} different exits can be chosen for apps")]
-    TooManyAppExits { limit: usize },
 }
 
 /// The conventions an app id follows on one platform.
@@ -281,9 +275,9 @@ pub struct AppRoutingSettings {
     pub included_apps: BTreeSet<AppId>,
     /// The master switch of the per-app exits.
     pub app_exits_enabled: bool,
-    /// At most [`MAX_APP_EXITS`] different exits through
-    /// [`Self::set_app_exit`]; a settings file edited by hand may hold more,
-    /// so whatever opens route sessions caps them itself.
+    /// Any number of different exits: how many route sessions run at once
+    /// is the server's answer, which the tunnel follows live, so a choice
+    /// past it waits for a free route rather than being refused here.
     pub app_exits: BTreeMap<AppId, ExitChoice>,
 }
 
@@ -293,27 +287,9 @@ impl AppRoutingSettings {
         self.split_mode == SplitMode::Exclude
     }
 
-    /// Chooses `exit` for `app`.
-    ///
-    /// # Errors
-    ///
-    /// [`AppRoutingError::TooManyAppExits`] when the apps would then use more
-    /// than [`MAX_APP_EXITS`] different exits. The settings are unchanged.
-    pub fn set_app_exit(&mut self, app: AppId, exit: ExitChoice) -> Result<(), AppRoutingError> {
-        let distinct: BTreeSet<&ExitChoice> = self
-            .app_exits
-            .iter()
-            .filter(|(other, _)| **other != app)
-            .map(|(_, choice)| choice)
-            .chain(std::iter::once(&exit))
-            .collect();
-        if distinct.len() > MAX_APP_EXITS {
-            return Err(AppRoutingError::TooManyAppExits {
-                limit: MAX_APP_EXITS,
-            });
-        }
+    /// Chooses `exit` for `app`, replacing any earlier choice.
+    pub fn set_app_exit(&mut self, app: AppId, exit: ExitChoice) {
         self.app_exits.insert(app, exit);
-        Ok(())
     }
 
     /// The exits in force, after the precedence rules: none while the master
@@ -388,6 +364,9 @@ pub enum UnavailableReason {
     LimitReached,
     /// No exit matches the choice.
     NoRelay,
+    /// Every route the server admits right now is in use: this one starts as
+    /// soon as one is free.
+    WaitingForRoute,
 }
 
 /// What the user sees for one exit: the state of its session, the public
@@ -577,51 +556,27 @@ mod tests {
     }
 
     #[test]
-    fn allows_as_many_distinct_exits_as_route_sessions() {
+    fn apps_may_use_as_many_distinct_exits_as_they_like() {
         let mut settings = AppRoutingSettings::default();
-        settings.set_app_exit(app("/a"), exit("se")).unwrap();
-        settings.set_app_exit(app("/b"), exit("de")).unwrap();
-        settings.set_app_exit(app("/c"), exit("de")).unwrap();
+        let countries = ["se", "de", "fr", "nl", "ro", "fi"];
 
-        let third = settings.set_app_exit(app("/d"), exit("fr"));
+        for (n, country) in countries.iter().enumerate() {
+            settings.set_app_exit(app(&format!("/{n}")), exit(country));
+        }
 
-        assert_eq!(
-            third,
-            Err(AppRoutingError::TooManyAppExits {
-                limit: MAX_APP_EXITS
-            })
-        );
-        assert!(!settings.app_exits.contains_key(&app("/d")));
+        assert_eq!(settings.app_exits.len(), countries.len());
+        assert_eq!(settings.app_exits.get(&app("/5")), Some(&exit("fi")));
     }
 
     #[test]
-    fn moving_an_app_to_a_new_exit_frees_its_old_one() {
+    fn choosing_another_exit_for_an_app_replaces_its_old_one() {
         let mut settings = AppRoutingSettings::default();
-        settings.set_app_exit(app("/a"), exit("se")).unwrap();
-        settings.set_app_exit(app("/b"), exit("de")).unwrap();
+        settings.set_app_exit(app("/a"), exit("se"));
 
-        let moved = settings.set_app_exit(app("/a"), exit("fr"));
+        settings.set_app_exit(app("/a"), exit("fr"));
 
-        assert_eq!(moved, Ok(()));
+        assert_eq!(settings.app_exits.len(), 1);
         assert_eq!(settings.app_exits.get(&app("/a")), Some(&exit("fr")));
-    }
-
-    #[test]
-    fn a_city_makes_a_distinct_exit() {
-        let mut settings = AppRoutingSettings::default();
-        settings.set_app_exit(app("/a"), exit("se")).unwrap();
-        settings
-            .set_app_exit(app("/b"), ExitChoice::new("se", Some("got")).unwrap())
-            .unwrap();
-
-        let third = settings.set_app_exit(app("/c"), ExitChoice::new("se", Some("sto")).unwrap());
-
-        assert_eq!(
-            third,
-            Err(AppRoutingError::TooManyAppExits {
-                limit: MAX_APP_EXITS
-            })
-        );
     }
 
     fn routed(mode: SplitMode) -> AppRoutingSettings {
@@ -632,8 +587,8 @@ mod tests {
         };
         settings.excluded_apps.insert(app("/excluded"));
         settings.included_apps.insert(app("/included"));
-        settings.set_app_exit(app("/excluded"), exit("se")).unwrap();
-        settings.set_app_exit(app("/routed"), exit("de")).unwrap();
+        settings.set_app_exit(app("/excluded"), exit("se"));
+        settings.set_app_exit(app("/routed"), exit("de"));
         settings
     }
 
@@ -705,9 +660,7 @@ mod tests {
     #[test]
     fn reports_one_status_per_exit_in_force_with_its_apps() {
         let mut settings = routed(SplitMode::Exclude);
-        settings
-            .set_app_exit(app("/also-routed"), exit("de"))
-            .unwrap();
+        settings.set_app_exit(app("/also-routed"), exit("de"));
         let ip: IpAddr = "203.0.113.5".parse().unwrap();
 
         let statuses = settings.route_statuses(|_| (AppRouteState::Connected, Some(ip)));
@@ -731,12 +684,10 @@ mod tests {
             ..Default::default()
         };
         settings.included_apps.insert(app("/usr/bin/curl"));
-        settings
-            .set_app_exit(
-                app("/usr/bin/curl"),
-                ExitChoice::new("se", Some("got")).unwrap(),
-            )
-            .unwrap();
+        settings.set_app_exit(
+            app("/usr/bin/curl"),
+            ExitChoice::new("se", Some("got")).unwrap(),
+        );
 
         let json = serde_json::to_value(&settings).unwrap();
 

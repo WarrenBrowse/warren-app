@@ -3426,7 +3426,8 @@ impl Daemon {
             }
             SetAppExit(tx, app, exit) => {
                 self.update_app_routing(tx, "set_app_exit response", |routing| {
-                    routing.set_app_exit(app, exit)
+                    routing.set_app_exit(app, exit);
+                    Ok(())
                 })
                 .await
             }
@@ -7357,9 +7358,7 @@ mod tunnel_split_apps_tests {
             app_exits_enabled: true,
             ..Default::default()
         };
-        routing
-            .set_app_exit(app(APPS[2]), ExitChoice::new("se", None).unwrap())
-            .unwrap();
+        routing.set_app_exit(app(APPS[2]), ExitChoice::new("se", None).unwrap());
         routing
     }
 

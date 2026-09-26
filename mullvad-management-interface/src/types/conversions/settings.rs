@@ -727,13 +727,10 @@ mod app_routing_settings_tests {
         let app = AppId::parse(APP).unwrap();
         settings.app_routing.included_apps.insert(app.clone());
         settings.app_routing.app_exits_enabled = true;
-        settings
-            .app_routing
-            .set_app_exit(
-                app,
-                mullvad_types::app_routing::ExitChoice::new("se", None).unwrap(),
-            )
-            .unwrap();
+        settings.app_routing.set_app_exit(
+            app,
+            mullvad_types::app_routing::ExitChoice::new("se", None).unwrap(),
+        );
 
         let back = Settings::try_from(proto::Settings::from(&settings)).unwrap();
 
