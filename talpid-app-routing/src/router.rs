@@ -28,7 +28,7 @@ use crate::{
     app::{AppMatcher, DecisionCache, PathFlavor},
     flow::{self, Classified, Direction, FlowKey, FlowTable, FragmentKey, Transport},
     ip, nat,
-    owner::OwnerResolver,
+    owner::{OwnerResolver, SocketOwner},
 };
 
 /// Flows tracked at most, once routing is active.
@@ -274,6 +274,9 @@ impl<R: OwnerResolver> Router<R> {
         self.uplink_fragments.clear();
         self.downlink_fragments.clear();
         self.decisions.clear();
+        self.resolver.watch_programs(&policy.apps);
+        // The resolver's view was taken for the old programs.
+        self.snapshot_taken = None;
         self.policy = policy;
     }
 
@@ -452,10 +455,26 @@ impl<R: OwnerResolver> Router<R> {
             return Binding::Main;
         }
         self.ensure_fresh_view(arrived);
-        let Some((pid, process)) = self
-            .resolver
-            .socket_owner(key)
-            .and_then(|pid| Some((pid, self.resolver.process_key(pid)?)))
+        // A connection under way may already be routed, and seeing its
+        // remaining segments through main would tie its two exits together:
+        // only a holder found among every process lets it through main. A
+        // new flow may be sent there on the narrower search, as an owner
+        // never found would be.
+        let under_way = key.transport == Transport::Tcp && !opening;
+        let owner = if under_way {
+            self.resolver
+                .socket_owner(key)
+                .map_or(SocketOwner::Unknown, SocketOwner::Process)
+        } else {
+            self.resolver.owner(key)
+        };
+        let pid = match owner {
+            SocketOwner::Process(pid) => Some(pid),
+            // A live socket that no process of a routed program holds.
+            SocketOwner::Unwatched => return Binding::Main,
+            SocketOwner::Unknown => None,
+        };
+        let Some((pid, process)) = pid.and_then(|pid| Some((pid, self.resolver.process_key(pid)?)))
         else {
             self.counters.unresolved_flows += 1;
             // A TCP segment that does not open a connection belongs to one
@@ -487,11 +506,14 @@ impl<R: OwnerResolver> Router<R> {
         if self.snapshot_taken.is_some_and(|taken| taken >= arrived) {
             return;
         }
+        // The view covers what happened before the read began, not what
+        // happened while it ran.
+        let started = Instant::now();
         self.counters.refreshes += 1;
         if self.resolver.refresh().is_err() {
             self.counters.refresh_errors += 1;
         }
-        self.snapshot_taken = Some(Instant::now());
+        self.snapshot_taken = Some(started);
     }
 
     fn apply_uplink(&mut self, binding: Binding, packet: &mut [u8]) -> Verdict {
@@ -559,9 +581,9 @@ pub(crate) mod fake {
     use std::{collections::HashMap, path::PathBuf};
 
     use crate::{
-        app::ProcessKey,
+        app::{AppMatcher, ProcessKey},
         flow::FlowKey,
-        owner::{OwnerError, OwnerResolver},
+        owner::{OwnerError, OwnerResolver, SocketOwner},
     };
 
     #[derive(Default, Debug, Clone, Copy, PartialEq, Eq)]
@@ -581,6 +603,16 @@ pub(crate) mod fake {
         snapshot: HashMap<FlowKey, u32>,
         pub calls: Calls,
         pub fail_refresh: bool,
+        /// How long reading the OS takes.
+        pub refresh_takes: std::time::Duration,
+        /// Whether this OS searches only the watched programs' processes, as
+        /// Linux does, and says so for a socket another process holds.
+        pub narrows: bool,
+        /// The programs the router last named.
+        pub watched: Option<AppMatcher<()>>,
+        /// Processes of a watched program the narrowed search misses, as
+        /// one whose start event was lost would be.
+        pub missed: std::collections::HashSet<u32>,
     }
 
     impl FakeOs {
@@ -594,14 +626,42 @@ pub(crate) mod fake {
         }
     }
 
+    impl FakeOs {
+        fn is_watched(&self, pid: u32) -> bool {
+            let program = self.processes.get(&pid).map(|(_, path)| path);
+            match (&self.watched, program) {
+                (Some(watched), Some(program)) => watched.lookup(program.as_os_str()).is_some(),
+                _ => false,
+            }
+        }
+    }
+
     impl OwnerResolver for FakeOs {
         fn socket_owner(&mut self, flow: &FlowKey) -> Option<u32> {
             self.calls.socket_owner += 1;
             self.snapshot.get(flow).copied()
         }
 
+        fn owner(&mut self, flow: &FlowKey) -> SocketOwner {
+            self.calls.socket_owner += 1;
+            match self.snapshot.get(flow).copied() {
+                Some(pid)
+                    if self.narrows && (!self.is_watched(pid) || self.missed.contains(&pid)) =>
+                {
+                    SocketOwner::Unwatched
+                }
+                Some(pid) => SocketOwner::Process(pid),
+                None => SocketOwner::Unknown,
+            }
+        }
+
+        fn watch_programs<V: Copy>(&mut self, programs: &AppMatcher<V>) {
+            self.watched = Some(programs.apps_only());
+        }
+
         fn refresh(&mut self) -> Result<(), OwnerError> {
             self.calls.refresh += 1;
+            std::thread::sleep(self.refresh_takes);
             if self.fail_refresh {
                 self.snapshot.clear();
                 return Err(OwnerError::UnknownLayout);
@@ -783,6 +843,111 @@ mod tests {
         }
 
         assert_eq!(router.resolver.calls, after_first);
+    }
+
+    #[test]
+    fn the_router_names_the_programs_it_routes_to_the_resolver() {
+        let router = router(os());
+
+        let watched = router.resolver.watched.as_ref().unwrap();
+
+        assert!(watched.lookup(OsStr::new(BROWSER)).is_some());
+        assert!(watched.lookup(OsStr::new(MAILER)).is_some());
+        assert!(watched.lookup(OsStr::new(OTHER)).is_none());
+    }
+
+    #[test]
+    fn a_flow_an_unwatched_process_holds_goes_to_main_without_asking_for_its_program() {
+        let mut os = os();
+        os.narrows = true;
+        os.socket(tcp_flow(50000), 30);
+        let mut router = router(os);
+
+        let verdict = router.uplink(&mut syn(50000), now());
+
+        assert_eq!(verdict, Verdict::Main);
+        assert_eq!(router.counters().unresolved_flows, 0);
+        assert_eq!(
+            (
+                router.resolver.calls.process_key,
+                router.resolver.calls.executable
+            ),
+            (0, 0)
+        );
+    }
+
+    #[test]
+    fn a_connection_under_way_that_an_unwatched_process_holds_stays_on_main() {
+        let mut os = os();
+        os.narrows = true;
+        os.socket(tcp_flow(50000), 30);
+        let mut router = router(os);
+
+        let verdict = router.uplink(
+            &mut tcp_v4(MAIN, REMOTE, 50000, 443, TCP_ACK, b"data"),
+            now(),
+        );
+
+        assert_eq!(verdict, Verdict::Main);
+    }
+
+    #[test]
+    fn a_connection_under_way_is_searched_for_among_every_process() {
+        let mut os = os();
+        os.narrows = true;
+        os.missed.insert(10);
+        os.socket(tcp_flow(50000), 10);
+        let mut router = router(os);
+
+        let verdict = router.uplink(
+            &mut tcp_v4(MAIN, REMOTE, 50000, 443, TCP_ACK, b"data"),
+            now(),
+        );
+
+        assert_eq!(verdict, Verdict::Route(RouteId(0)));
+    }
+
+    #[test]
+    fn a_flow_a_watched_process_holds_takes_its_route_when_the_os_narrows() {
+        let mut os = os();
+        os.narrows = true;
+        os.socket(tcp_flow(50000), 10);
+        let mut router = router(os);
+
+        let verdict = router.uplink(&mut syn(50000), now());
+
+        assert_eq!(verdict, Verdict::Route(RouteId(0)));
+    }
+
+    #[test]
+    fn a_new_policy_is_never_answered_from_a_view_taken_before_it() {
+        let mut os = os();
+        os.socket(tcp_flow(50000), 10);
+        os.socket(tcp_flow(50001), 20);
+        let mut router = router(os);
+        let start = now();
+        router.uplink(&mut syn(50000), start);
+
+        router.set_policy(policy(connected(ROUTE0), connected(ROUTE1)));
+        router.uplink(&mut syn(50001), start);
+
+        assert_eq!(router.resolver.calls.refresh, 2);
+    }
+
+    #[test]
+    fn a_flow_that_arrived_while_the_os_was_being_read_gets_a_view_of_its_own() {
+        let mut os = os();
+        os.socket(tcp_flow(50000), 10);
+        os.socket(tcp_flow(50001), 20);
+        os.refresh_takes = Duration::from_millis(50);
+        let mut router = router(os);
+        let before = now();
+        router.uplink(&mut syn(50000), before);
+
+        // Read from the TUN device while the first view was being taken.
+        router.uplink(&mut syn(50001), before + Duration::from_millis(25));
+
+        assert_eq!(router.resolver.calls.refresh, 2);
     }
 
     #[test]

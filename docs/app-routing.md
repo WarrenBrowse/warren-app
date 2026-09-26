@@ -79,7 +79,7 @@ the local socket:
 |---|---|---|
 | macOS | `sysctl net.inet.{tcp,udp}.pcblist_n` (`xinpcb_n`, `xsocket_n.so_last_pid`, `so_e_pid` when non-zero), then `proc_pidpath` | 0.8 ms TCP dump, 0.1 ms UDP, unprivileged (2026-09-25 probe); 0.42 ms for both tables of 366 sockets through `talpid-app-routing` in a release build |
 | Windows | `GetExtendedTcpTable(TCP_TABLE_OWNER_PID_ALL)`, `GetExtendedUdpTable(UDP_TABLE_OWNER_PID)`, then `QueryFullProcessImageNameW` | to measure |
-| Linux | `NETLINK_SOCK_DIAG` exact lookup (inode; UDP takes the pair as a packet reaching the socket carries it, TCP the socket's own, measured on 6.8), inode to pid through an index of `/proc/*/fd` checked against that process's descriptors, then `/proc/<pid>/exe` | to measure |
+| Linux | `NETLINK_SOCK_DIAG` exact lookup (inode; UDP takes the pair as a packet reaching the socket carries it, TCP the socket's own, measured on 6.8), inode to pid through an index of the `/proc/<pid>/fd` of the processes running a routed program, checked against that process's descriptors, then `/proc/<pid>/exe`. Those processes are followed through the proc connector (fork, exec and exit events) | per new flow, release build, Debian 13 VM with 433 processes and 1,500 to 3,000 TCP sockets (2026-09-26): 3 µs while no routed program runs; 0.5 to 0.7 ms (p99 1.1 ms) while a routed program holding 600 to 800 sockets runs, since its descriptors are read again for each new flow; 4.5 to 5.2 ms (p99 5.7 to 6.4 ms) when every process is searched, as before the search was narrowed and still for a TCP segment under way |
 | Android | `ConnectivityManager.getConnectionOwnerUid` (API 29+) | later lot |
 
 Rules:
@@ -93,7 +93,27 @@ Rules:
   snapshot, and every other new flow of the batch reuses it. A hit in an older
   snapshot is never trusted, since the port may have changed hands since. On
   Linux the socket lookup is live, and the inode index is rebuilt at most once
-  per batch. The hot path never calls the OS for a packet of a known flow.
+  per refresh. The hot path never calls the OS for a packet of a known flow.
+- On Linux a new flow is searched for only among the processes running a
+  routed program: reading every process's descriptors costs milliseconds per
+  new flow on a busy host, under the lock the main pump takes for every
+  packet. A live socket none of them holds belongs to an app without a
+  country, and the flow goes through the main connection, as one whose owner
+  is never found does. A TCP segment of a connection under way is still
+  searched for among every process, so it goes through main only when its
+  holder is found and runs no routed program; otherwise it is dropped, since
+  the connection may have been routed. The router names the routed programs
+  with each policy, and the resolver then reads every process's program and
+  follows the proc connector's fork, exec and exit events, which the kernel
+  queues before the process they name can open a socket. Every process's
+  program is read again when events may be missing: a full queue, a gap in a
+  CPU's event numbers (the kernel drops an event it cannot allocate without
+  reporting it), a broken socket, no events at all (a kernel without
+  `CONFIG_PROC_EVENTS`, a network namespace other than the host's, an
+  unprivileged process on a kernel before 6.6, retried every 30 s), and in
+  any case at least once a second, for what no event reports (a program
+  swapped in without an exec, as CRIU does). A read of every program costs
+  0.3 to 0.6 ms for 430 processes.
 - Classification is fully bypassed (zero per-packet cost) while no app has a
   country.
 - A pid decision is cached by (pid, process start time, program), never by pid
@@ -192,6 +212,13 @@ Tokens (`mullvad-daemon/src/warren_token_provider.rs`):
   epoch it logs in with the wallet, and when the exit refuses every token of
   the batch the session ends on the exit's rejection (every serial of the
   wallet is held elsewhere, which is the wallet's device limit).
+- The wallet's batches are minted in the background, when the first tunnel
+  starts and every 10 minutes after; a failed round is retried after 15 s,
+  then 30 s, doubling up to the 10 minutes. The first round fails at times
+  (seen twice in the Linux VM right after the daemon started and connected,
+  `all API hosts are unreachable`, cause not established), and with the
+  fixed period route sessions then went 10 minutes without a token; with the
+  retry they connected 60 s after the connect, at their own next attempt.
 
 ### 2.3 Address translation
 
@@ -480,17 +507,21 @@ cannot disagree about an app.
   what the owner lookup matches.
 - **Android.** No per-app country yet (section 3.5), so the split mode alone
   decides.
-- **Mode switches while route sessions run.** On Linux and Windows a mode
-  change while connecting or connected reconnects the tunnel: the route
+- **Mode switches while route sessions run.** On Linux a change to or from
+  include-only, and on Windows a mode change, while connecting or connected
+  reconnects the tunnel: the route
   sessions are stopped and awaited with the old tunnel, and the new one starts
   them from the plan in force, which the generator republishes once the
   settings are saved (a route change never reconnects the main session by
   itself). On macOS the classifier takes the new split apps in place and the
   route sessions keep running; the plan follows the saved settings live, so an
   app that becomes excluded loses its route and a session no app uses any
-  more is stopped. Re-applying the firewall after a split change keeps the
-  route sessions' relays allowed, since the connected state keeps the relay
-  list the tunnel last reported.
+  more is stopped. On Linux, switching between off and exclude changes
+  nothing in the tunnel (exclusion is chosen at launch), so the main session
+  and the route sessions keep running and the plan follows the settings as on
+  macOS. Re-applying the firewall after a split change keeps the route
+  sessions' relays allowed, since the connected state keeps the relay list the
+  tunnel last reported.
 
 ### 3.4 Android
 
@@ -603,9 +634,26 @@ unresolved owner goes through the main connection.
   session led with a serial other than the main session's. Run again on the
   integrated branch (modes, GUI and datapath, warrenguard `88f4ed0`) the same
   day, with the same results on the same exits.
-  The full daemon in a Linux VM (per-app country,
-  include-only, exclude); the daemon in the Windows ARM64 VM (include-only
-  with the swapped driver, per-app country).
+  The full daemon in a Debian 13 VM (kernel 6.12, aarch64, release build,
+  beta, 2026-09-26, `warren-exclude` and `warren-include` setuid as packaged),
+  main session on RO 135.136.59.234: a copy of `curl` with DE egressed from
+  167.233.127.54, one with FR from 135.136.60.142 and every other program
+  from the main exit, the three sessions admitted on the wallet's three
+  tokens at once. With the DE relay blocked by nft inside the VM the DE app
+  got nothing (its route `connecting`, curl timing out) while the main exit
+  kept answering, and it recovered once unblocked. Include-only: an app opened
+  through `warren-include` with DE egressed from DE, another from RO, and a
+  program not included from the VM's own address. Exclusion won over a
+  country: the excluded app egressed from the VM's own address, and the same
+  program started normally from RO. Adding or changing a country never
+  reconnected the main session; switching to or from include-only did, and
+  the routes came back. A capture on the physical interface over all of it
+  held no packet to the IP echo service, no DNS and no tunnel source
+  address. The same checks passed again with 300 more processes and 800 more
+  sockets on the VM. FI, NL and SG refused all three tokens as route exits
+  while a serial was free (FR admitted it seconds later): a matter for those
+  exits, not looked into from the client. The daemon in the Windows ARM64 VM
+  (include-only with the swapped driver, per-app country) is still to run.
 
 ## 7. Desktop GUI
 

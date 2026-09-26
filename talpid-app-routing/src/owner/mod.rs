@@ -12,7 +12,7 @@ use std::{
 };
 
 use crate::{
-    app::ProcessKey,
+    app::{AppMatcher, ProcessKey},
     flow::{FlowKey, Transport},
 };
 
@@ -20,6 +20,8 @@ use crate::{
 mod conntrack;
 #[cfg(any(target_os = "macos", test))]
 mod pcblist;
+#[cfg(any(target_os = "linux", test))]
+mod proc_events;
 #[cfg(any(windows, test))]
 mod win_tables;
 
@@ -47,12 +49,50 @@ pub enum OwnerError {
     UnknownLayout,
 }
 
+/// Who holds the local socket of a flow.
+#[derive(Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive]
+pub enum SocketOwner {
+    /// This process holds it.
+    Process(u32),
+    /// The socket is live and held, and no process running one of the
+    /// programs of [`OwnerResolver::watch_programs`] holds it.
+    Unwatched,
+    /// No live socket, or no single process holding it.
+    Unknown,
+}
+
+// A pid ties a flow to a program: never rendered.
+impl std::fmt::Debug for SocketOwner {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(match self {
+            Self::Process(_) => "Process(..)",
+            Self::Unwatched => "Unwatched",
+            Self::Unknown => "Unknown",
+        })
+    }
+}
+
 /// Answers, for a flow seen on the TUN device, which process owns it.
 pub trait OwnerResolver {
     /// The pid owning the local socket of `flow`, answered from a view of
-    /// the OS no older than the last [`Self::refresh`]. `None` when that view
-    /// has no such socket, or no single owner for it.
+    /// the OS no older than the last [`Self::refresh`], among every process
+    /// whatever the watched programs. `None` when that view has no such
+    /// socket, or no single owner for it.
     fn socket_owner(&mut self, flow: &FlowKey) -> Option<u32>;
+
+    /// As [`Self::socket_owner`], and a resolver that narrows its search to
+    /// the watched programs answers [`SocketOwner::Unwatched`] for a socket
+    /// that only another process holds.
+    fn owner(&mut self, flow: &FlowKey) -> SocketOwner {
+        self.socket_owner(flow)
+            .map_or(SocketOwner::Unknown, SocketOwner::Process)
+    }
+
+    /// The programs whose processes the answers are about. A resolver may
+    /// search only their processes, since the owner of any other socket
+    /// takes no route.
+    fn watch_programs<V: Copy>(&mut self, _programs: &AppMatcher<V>) {}
 
     /// Makes the next answers reflect the OS as it is now.
     ///
