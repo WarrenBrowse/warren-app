@@ -613,6 +613,10 @@ msgid "Paid until"
 msgstr "Plătit până la"
 
 msgctxt "account-view"
+msgid "Paused while access is suspended: nothing is charged."
+msgstr "În pauză cât timp accesul este suspendat: nu se încasează nimic."
+
+msgctxt "account-view"
 msgid "Public key"
 msgstr "Cheie publică"
 
@@ -2788,6 +2792,10 @@ msgstr "Se pare că ați introdus o cheie publică în loc de un voucher. Dacă 
 msgctxt "redeem-voucher-view"
 msgid "Redeem"
 msgstr "Valorificați"
+
+msgctxt "redeem-voucher-view"
+msgid "The voucher was not used: keep it and redeem it once the suspension ends."
+msgstr "Voucherul nu a fost folosit: păstrați-l și valorificați-l după încheierea suspendării."
 
 msgctxt "redeem-voucher-view"
 msgid "Verifying voucher..."

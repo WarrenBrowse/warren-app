@@ -1,3 +1,4 @@
+import { WarrenAccountBan } from '../shared/daemon-rpc-types';
 import log from '../shared/logging';
 import { RenewalUiState } from '../shared/renewal';
 import { mintPurchaseClaim, pullSecretHash, PurchaseClaim } from './purchase-claim';
@@ -80,6 +81,10 @@ export type RenewOutcome =
 
 export interface RenewalFlowDelegate {
   accountTag(): string | undefined;
+  // The ban in force on the logged-in account, undefined when none is
+  // known. A banned wallet cannot credit time (warren-core doc 105 section
+  // 5.3), so a charge would only buy a voucher left waiting for the ban.
+  accountBan(): WarrenAccountBan | undefined;
   // ISO 8601 expiry of the logged-in account, undefined when unknown.
   accountExpiry(): string | undefined;
   // POST {checkout}/v1/checkout/renew; DELETE for cancel.
@@ -174,6 +179,7 @@ export default class RenewalFlow {
   private fireTimer?: NodeJS.Timeout;
   private inFlight = false;
   private cancelInFlight = false;
+  private pausedByBan = false;
 
   public constructor(
     private delegate: RenewalFlowDelegate,
@@ -270,6 +276,16 @@ export default class RenewalFlow {
     const state = this.eligibleState();
     const expiry = this.delegate.accountExpiry();
     if (!state || expiry === undefined) {
+      return;
+    }
+    // Nothing is noticed, reminded nor charged during a ban; the UI state
+    // says why. The next evaluation after the ban resumes the cycle.
+    const banned = this.delegate.accountBan() !== undefined;
+    if (banned !== this.pausedByBan) {
+      this.pausedByBan = banned;
+      this.delegate.notifyStateChange(this.toUiState(state));
+    }
+    if (banned) {
       return;
     }
     const expiryMs = Date.parse(expiry);
@@ -393,6 +409,12 @@ export default class RenewalFlow {
     const expiryMs = Date.parse(expiry);
     if (!this.noticeCompliant(state, period, expiryMs)) {
       this.persist({ ...state, scheduledFireMs: undefined });
+      return;
+    }
+    if (this.delegate.accountBan() !== undefined) {
+      // Banned after the timer was armed: the charge instant stays drawn,
+      // so the cycle resumes where it stood once the ban is gone.
+      this.delegate.notifyStateChange(this.toUiState(state));
       return;
     }
 
@@ -538,6 +560,7 @@ export default class RenewalFlow {
       cardLast4: state.cardLast4,
       renewsAtMs: expiry !== undefined ? Date.parse(expiry) : undefined,
       lastChargeMs: state.lastChargeMs,
+      pausedByBan: this.delegate.accountBan() !== undefined ? true : undefined,
     };
   }
 

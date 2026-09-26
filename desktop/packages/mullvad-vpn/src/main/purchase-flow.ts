@@ -264,8 +264,12 @@ export default class PurchaseFlow {
       const response = await this.delegate.submitVoucher(claimCode(claim));
       // 'not_ready' (webhook not landed) and 'error' keep polling.
       // 'success' credits the account; 'already_used' means the
-      // mapping was already consumed.
-      if (response.type === 'success' || response.type === 'already_used') {
+      // mapping was already consumed. 'banned' will not change within
+      // this poll: the purchase stays persisted for after the ban, since
+      // the refusal consumed nothing.
+      if (response.type === 'banned') {
+        this.stopActivePoll();
+      } else if (response.type === 'success' || response.type === 'already_used') {
         this.removeEntry(claim);
         this.stopActivePoll();
         if (response.type === 'success') {

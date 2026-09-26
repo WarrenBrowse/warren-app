@@ -606,6 +606,10 @@ msgid "Paid until"
 msgstr "Payé jusqu'au"
 
 msgctxt "account-view"
+msgid "Paused while access is suspended: nothing is charged."
+msgstr "En pause pendant la suspension de l'accès : rien n'est prélevé."
+
+msgctxt "account-view"
 msgid "Public key (wallet address)"
 msgstr "Clé publique (adresse du portefeuille)"
 
@@ -2776,6 +2780,10 @@ msgstr "Vous semblez avoir saisi une clé publique plutôt qu'un code de bon. Si
 msgctxt "redeem-voucher-view"
 msgid "Redeem"
 msgstr "Échanger"
+
+msgctxt "redeem-voucher-view"
+msgid "The voucher was not used: keep it and redeem it once the suspension ends."
+msgstr "Le bon n'a pas été utilisé : gardez-le et échangez-le une fois la suspension terminée."
 
 msgctxt "redeem-voucher-view"
 msgid "Verifying voucher..."

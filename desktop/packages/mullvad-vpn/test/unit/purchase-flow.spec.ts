@@ -19,6 +19,7 @@ const invalid: VoucherResponse = { type: 'invalid' };
 const notReady: VoucherResponse = { type: 'not_ready' };
 const error: VoucherResponse = { type: 'error' };
 const alreadyUsed: VoucherResponse = { type: 'already_used' };
+const banned: VoucherResponse = { type: 'banned' };
 const success: VoucherResponse = {
   type: 'success',
   newExpiry: new Date(T0 + 30 * 24 * 3600_000).toISOString(),
@@ -260,6 +261,23 @@ describe('PurchaseFlow active poll', () => {
     expect(submitted).toHaveLength(1);
     expect(store.entries).toEqual([]);
     expect(flow.polling).toBe(false);
+    flow.dispose();
+  });
+
+  it('stops polling on banned and keeps the purchase for after the ban', async () => {
+    // warren-core doc 105 section 5.3: the ban refused the redemption before
+    // consuming the voucher, so the purchase is still the user's. Polling
+    // cannot change the answer, and dropping the entry would lose it.
+    const { delegate, submitted } = makeDelegate(() => Promise.resolve(banned));
+    const store = new FakeStore();
+    const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
+
+    await flow.start();
+    await vi.advanceTimersByTimeAsync(3 * ACTIVE_POLL_INTERVAL_MS);
+
+    expect(submitted).toHaveLength(1);
+    expect(flow.polling).toBe(false);
+    expect(store.entries).toHaveLength(1);
     flow.dispose();
   });
 

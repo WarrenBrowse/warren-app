@@ -113,10 +113,17 @@ function RenewalCard() {
     renewalState.cardBrand && renewalState.cardLast4
       ? `${renewalState.cardBrand} \u2022\u2022\u2022\u2022 ${renewalState.cardLast4}`
       : undefined;
+  // TRANSLATORS: Shown on the automatic renewal block while the account is
+  // TRANSLATORS: suspended: a suspended account cannot receive the time.
+  const pausedByBan = messages.pgettext(
+    'account-view',
+    'Paused while access is suspended: nothing is charged.',
+  );
   // Permanent in-app half of the pre-renewal notice: the next renewal
   // date stays visible whenever the account view is open.
-  const renewsOn =
-    renewalState.renewsAtMs !== undefined
+  const renewsOn = renewalState.pausedByBan
+    ? pausedByBan
+    : renewalState.renewsAtMs !== undefined
       ? sprintf(
           // TRANSLATORS: Permanent line showing the next automatic renewal date.
           // TRANSLATORS: Available placeholder:

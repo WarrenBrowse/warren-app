@@ -13,4 +13,7 @@ export interface RenewalUiState {
   renewsAtMs?: number;
   /** Last successful renewal charge (receipt display). */
   lastChargeMs?: number;
+  /** The account is banned: nothing is charged until the ban ends, since a
+   *  banned wallet cannot credit the time it would buy (warren-core doc 105). */
+  pausedByBan?: true;
 }

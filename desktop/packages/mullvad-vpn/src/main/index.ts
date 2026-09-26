@@ -16,6 +16,7 @@ import util from 'util';
 import { gzipSync } from 'zlib';
 
 import { hasExpired } from '../shared/account-expiry';
+import { banInForce } from '../shared/account-standing';
 import {
   ISplitTunnelingApplication,
   ISplitTunnelingAppListRetriever,
@@ -32,6 +33,7 @@ import {
   ISettings,
   NatPmpStatus,
   TunnelState,
+  WarrenAccountBan,
   WarrenAccountStrikeNotice,
   WarrenStatus,
 } from '../shared/daemon-rpc-types';
@@ -342,6 +344,7 @@ class ApplicationMain
     this.renewalFlow = new RenewalFlow(
       {
         accountTag: () => this.currentAccountTag(),
+        accountBan: () => this.accountBanInForce(),
         accountExpiry: () => this.account.accountData?.expiry,
         requestRenew: (body) => this.requestRenew(body),
         requestCancel: async (customerId, renewalToken) => {
@@ -1341,7 +1344,12 @@ class ApplicationMain
   private subscribeWarrenStatusEvents(): SubscriptionListener<WarrenStatus> {
     const listener = new SubscriptionListener(
       (snapshot: WarrenStatus) => {
+        const wasBanned = this.accountBanInForce() !== undefined;
         this.warrenStatus = snapshot;
+        if (wasBanned !== (this.accountBanInForce() !== undefined)) {
+          // A ban pauses the client-side renewal, and its end resumes it.
+          this.renewalFlow?.maybeSchedule();
+        }
         // Same document the renderer badges from, so the banner, the tray
         // dot and the bell can never disagree.
         this.forumActivityMonitor.setDigest(snapshot.forumDigest);
@@ -2077,6 +2085,10 @@ class ApplicationMain
       default:
         return 'unreachable';
     }
+  }
+
+  private accountBanInForce(): WarrenAccountBan | undefined {
+    return banInForce(this.warrenStatus?.accountStanding, Date.now());
   }
 
   private loggedInPubkey(): string | undefined {

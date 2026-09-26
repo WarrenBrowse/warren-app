@@ -14,6 +14,7 @@ import RenewalFlow, {
   RenewOutcome,
   renewOutcomeOfHttpStatus,
 } from '../../src/main/renewal-flow';
+import { WarrenAccountBan } from '../../src/shared/daemon-rpc-types';
 
 // The purchase whose voucher the app just redeemed.
 const REDEEMED: PurchaseClaim = { wpid: 'f'.repeat(32), secret: 'e'.repeat(64) };
@@ -45,8 +46,10 @@ class FakeDelegate implements RenewalFlowDelegate {
   public failures = 0;
   public disabled = 0;
   public onRenew?: () => void;
+  public ban: WarrenAccountBan | undefined;
 
   accountTag = () => this.tag;
+  accountBan = () => this.ban;
   accountExpiry = () => this.expiry;
   requestRenew = (body: Record<string, unknown>) => {
     this.renewCalls.push(body);
@@ -169,6 +172,51 @@ describe('RenewalFlow', () => {
     expect(delegate.renewCalls[0].notice_shown_at).toBe(
       Math.floor((expiryMs - RENEWAL_NOTICE_LEAD_MS) / 1000),
     );
+  });
+
+  it('charges nothing while the account is banned, and says why', async () => {
+    // warren-core doc 105 section 6: a banned wallet cannot credit time, so a
+    // charge would only buy a voucher left waiting for the ban to end.
+    delegate.expiry = new Date(Date.now() + 2 * DAY_MS).toISOString();
+    store.state = noticedState(delegate.expiry);
+    delegate.ban = {
+      reason: 'port-forwarding-abuse',
+      bannedAtUnixSecs: null,
+      lapsesAtUnixSecs: null,
+    };
+
+    await runWindow();
+
+    expect(delegate.renewCalls).toHaveLength(0);
+    expect(delegate.reminders).toBe(0);
+    expect(flow.uiState?.pausedByBan).toBe(true);
+  });
+
+  it('does not fire a charge armed before the ban arrived', async () => {
+    delegate.expiry = new Date(Date.now() + 2 * DAY_MS).toISOString();
+    store.state = noticedState(delegate.expiry);
+    flow.resume();
+    expect(delegate.reminders).toBe(1);
+
+    delegate.ban = { reason: 'other', bannedAtUnixSecs: null, lapsesAtUnixSecs: null };
+    await vi.advanceTimersByTimeAsync(RENEWAL_WINDOW_MS);
+
+    expect(delegate.renewCalls).toHaveLength(0);
+    expect(store.state?.attempt).toBe(0);
+  });
+
+  it('charges again once the ban is gone', async () => {
+    delegate.expiry = new Date(Date.now() + 2 * DAY_MS).toISOString();
+    store.state = noticedState(delegate.expiry);
+    delegate.ban = { reason: 'other', bannedAtUnixSecs: null, lapsesAtUnixSecs: null };
+    flow.resume();
+
+    delegate.ban = undefined;
+    flow.maybeSchedule();
+    await vi.advanceTimersByTimeAsync(RENEWAL_WINDOW_MS);
+
+    expect(delegate.renewCalls).toHaveLength(1);
+    expect(flow.uiState?.pausedByBan).toBeUndefined();
   });
 
   it('refuses to adopt without OS encryption (fail closed)', async () => {

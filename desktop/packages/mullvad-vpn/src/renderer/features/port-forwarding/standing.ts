@@ -41,6 +41,30 @@ export function standingSection(
   };
 }
 
+/**
+ * What the voucher view says when a ban refused the redemption: the ban, with
+ * its end once the standing knows it, and that the voucher is still worth its
+ * time, since the refusal consumed nothing (warren-core doc 105 section 5.3).
+ */
+export function bannedVoucherLines(
+  standing: WarrenAccountStanding | null,
+  locale: string,
+  nowMs: number,
+): string[] {
+  const ban = banInForce(standing, nowMs);
+  return [
+    ban === undefined
+      ? messages.pgettext('port-forwarding-view', 'Access suspended.')
+      : banLine(ban, locale),
+    // TRANSLATORS: Shown when a voucher could not be redeemed because the
+    // TRANSLATORS: account is suspended. The voucher was left unused.
+    messages.pgettext(
+      'redeem-voucher-view',
+      'The voucher was not used: keep it and redeem it once the suspension ends.',
+    ),
+  ];
+}
+
 function banLine(ban: WarrenAccountBan, locale: string): string {
   const until =
     ban.lapsesAtUnixSecs === null ? undefined : formatStandingDay(ban.lapsesAtUnixSecs, locale);

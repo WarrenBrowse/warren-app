@@ -62,6 +62,7 @@ import {
   convertToWarrenMultiHopSettings,
   ensureExists,
 } from './grpc-type-convertions';
+import { voucherFailureOfStatus } from './voucher-response';
 
 const DAEMON_RPC_PATH = daemonRpcPath(
   process.platform,
@@ -448,22 +449,7 @@ export class DaemonRpc extends GrpcClient {
         newExpiry,
       };
     } catch (e) {
-      const error = e as grpc.ServiceError;
-      if (error.code) {
-        switch (error.code) {
-          case grpc.status.NOT_FOUND:
-            return { type: 'invalid' };
-          case grpc.status.RESOURCE_EXHAUSTED:
-            return { type: 'already_used' };
-          case grpc.status.FAILED_PRECONDITION:
-            return { type: 'expired' };
-          // Also emitted on daemon-transport failures: both mean
-          // "nothing definitive happened, retry later".
-          case grpc.status.UNAVAILABLE:
-            return { type: 'not_ready' };
-        }
-      }
-      return { type: 'error' };
+      return voucherFailureOfStatus((e as grpc.ServiceError).code);
     }
   }
 

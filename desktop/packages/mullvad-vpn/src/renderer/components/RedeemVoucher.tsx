@@ -7,6 +7,7 @@ import { formatRelativeDate } from '../../shared/date-helper';
 import { messages } from '../../shared/gettext';
 import { isWarrenPubKey, isWarrenVoucher } from '../../shared/utils';
 import { useAppContext } from '../context';
+import { bannedVoucherLines } from '../features/port-forwarding/standing';
 import { Button, ButtonProps, Flex, Spinner } from '../lib/components';
 import { IconBadge } from '../lib/icon-badge';
 import { useSelector } from '../redux/store';
@@ -203,6 +204,8 @@ export function RedeemVoucherInput(props: IRedeemVoucherInputProps) {
 
 export function RedeemVoucherResponse() {
   const { response, submitting, submittedValue } = useContext(RedeemVoucherContext);
+  const standing = useSelector((state) => state.settings.warrenStatus?.accountStanding ?? null);
+  const locale = useSelector((state) => state.userInterface.locale);
 
   if (submitting) {
     return (
@@ -246,6 +249,14 @@ export function RedeemVoucherResponse() {
           <StyledErrorResponse>
             {messages.pgettext('redeem-voucher-view', 'Voucher code has expired.')}
           </StyledErrorResponse>
+        );
+      case 'banned':
+        return (
+          <>
+            {bannedVoucherLines(standing, locale, Date.now()).map((line) => (
+              <StyledErrorResponse key={line}>{line}</StyledErrorResponse>
+            ))}
+          </>
         );
       case 'not_ready':
       case 'error':

@@ -573,6 +573,12 @@ msgctxt "account-view"
 msgid "Paid until"
 msgstr ""
 
+#. Shown on the automatic renewal block while the account is
+#. suspended: a suspended account cannot receive the time.
+msgctxt "account-view"
+msgid "Paused while access is suspended: nothing is charged."
+msgstr ""
+
 msgctxt "account-view"
 msgid "Public key (wallet address)"
 msgstr ""
@@ -3252,6 +3258,12 @@ msgstr ""
 #. Button label for voucher redemption.
 msgctxt "redeem-voucher-view"
 msgid "Redeem"
+msgstr ""
+
+#. Shown when a voucher could not be redeemed because the
+#. account is suspended. The voucher was left unused.
+msgctxt "redeem-voucher-view"
+msgid "The voucher was not used: keep it and redeem it once the suspension ends."
 msgstr ""
 
 msgctxt "redeem-voucher-view"

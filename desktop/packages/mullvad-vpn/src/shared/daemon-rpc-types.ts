@@ -1027,7 +1027,7 @@ export interface ISocketAddress {
 
 export type VoucherResponse =
   | { type: 'success'; newExpiry: string; secondsAdded: number }
-  | { type: 'invalid' | 'already_used' | 'expired' | 'not_ready' | 'error' };
+  | { type: 'invalid' | 'already_used' | 'expired' | 'not_ready' | 'banned' | 'error' };
 
 export interface SocksAuth {
   username: string;

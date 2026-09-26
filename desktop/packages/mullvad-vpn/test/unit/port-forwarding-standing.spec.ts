@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 
-import { standingSection } from '../../src/renderer/features/port-forwarding/standing';
+import {
+  bannedVoucherLines,
+  standingSection,
+} from '../../src/renderer/features/port-forwarding/standing';
 import { WarrenAccountStanding, WarrenAccountStrike } from '../../src/shared/daemon-rpc-types';
 
 /** 2026-09-24T00:00:00Z. */
@@ -72,5 +75,24 @@ describe('the port-forwarding view standing section', () => {
     );
 
     expect(section?.ban).to.equal(undefined);
+  });
+});
+
+describe('a voucher redemption the ban refused', () => {
+  const ban = {
+    reason: 'port-forwarding-abuse' as const,
+    bannedAtUnixSecs: DAY,
+    lapsesAtUnixSecs: DAY + 365 * 86_400,
+  };
+
+  it('names the ban and its end, and tells the user to keep the voucher', () => {
+    expect(bannedVoucherLines(standing([], ban), 'en', NOW_MS)).to.deep.equal([
+      'Access suspended for port-forwarding abuse until September 24, 2027.',
+      'The voucher was not used: keep it and redeem it once the suspension ends.',
+    ]);
+  });
+
+  it('names a suspension even before the standing reports it', () => {
+    expect(bannedVoucherLines(null, 'en', NOW_MS)[0]).to.equal('Access suspended.');
   });
 });
