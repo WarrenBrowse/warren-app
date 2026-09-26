@@ -251,4 +251,4 @@ phase under `ci/codemagic/watchdog.sh`, which kills a step that goes silent
 on an idle machine. The watchdog is canonical here; warren-sdk-rs,
 warren-sdk-ts and wclaude carry copies, so a change lands here and is copied
 to the three others in the same campaign. Its native Windows cases run in
-warren-tests.yml's `windows-watchdog` job. Traps: the `warren-codemagic` skill.
+warren-tests.yml's `windows-watchdog` job. Traps: the `warren-windows-ci` skill.
