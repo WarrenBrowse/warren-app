@@ -3073,10 +3073,6 @@ msgid "App routing"
 msgstr "Rutare aplicații"
 
 msgctxt "split-tunneling-view"
-msgid "Apps can use %(limit)d countries at a time. Pick one already in use, or remove one first."
-msgstr "Aplicațiile pot folosi %(limit)d țări simultan. Alegeți una deja folosită sau eliminați mai întâi una."
-
-msgctxt "split-tunneling-view"
 msgid "Bypass VPN"
 msgstr "Fără VPN"
 
@@ -3105,8 +3101,8 @@ msgid "Choose the apps you want to exclude from the VPN tunnel."
 msgstr "Alegeți aplicațiile pe care doriți să le excludeți din tunelul VPN."
 
 msgctxt "split-tunneling-view"
-msgid "Choose the country an app appears from. Other apps keep your main connection. Up to %(limit)d countries at a time."
-msgstr "Alegeți țara din care se conectează o aplicație. Celelalte aplicații păstrează conexiunea principală. Maximum %(limit)d țări simultan."
+msgid "Choose the country an app appears from. Other apps keep your main connection."
+msgstr "Alegeți țara din care se conectează o aplicație. Celelalte aplicații păstrează conexiunea principală."
 
 msgctxt "split-tunneling-view"
 msgid "Cities in %(country)s"
@@ -3150,8 +3146,12 @@ msgid "Country for %(application)s"
 msgstr "Țara pentru %(application)s"
 
 msgctxt "split-tunneling-view"
-msgid "Country limit reached"
-msgstr "Limită de țări atinsă"
+msgid "Session limit reached"
+msgstr "Limită de sesiuni atinsă"
+
+msgctxt "split-tunneling-view"
+msgid "Waiting for a free route"
+msgstr "Se așteaptă o rută liberă"
 
 msgctxt "split-tunneling-view"
 msgid "Country per app"
@@ -3190,10 +3190,6 @@ msgstr "Folosită"
 msgctxt "split-tunneling-view"
 msgid "Launch"
 msgstr "Lansare"
-
-msgctxt "split-tunneling-view"
-msgid "Limit reached"
-msgstr "Limită atinsă"
 
 msgctxt "split-tunneling-view"
 msgid "No server there"

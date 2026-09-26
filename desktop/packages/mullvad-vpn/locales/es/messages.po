@@ -2886,10 +2886,6 @@ msgid "App routing"
 msgstr "Enrutamiento de aplicaciones"
 
 msgctxt "split-tunneling-view"
-msgid "Apps can use %(limit)d countries at a time. Pick one already in use, or remove one first."
-msgstr "Las aplicaciones pueden usar %(limit)d países a la vez. Elija uno que ya esté en uso o quite uno primero."
-
-msgctxt "split-tunneling-view"
 msgid "Bypass VPN"
 msgstr "Fuera de la VPN"
 
@@ -2918,8 +2914,8 @@ msgid "Choose the apps you want to exclude from the VPN tunnel."
 msgstr "Seleccione las aplicaciones que quiera excluir del túnel VPN."
 
 msgctxt "split-tunneling-view"
-msgid "Choose the country an app appears from. Other apps keep your main connection. Up to %(limit)d countries at a time."
-msgstr "Elija desde qué país se conecta una aplicación. Las demás aplicaciones mantienen su conexión principal. Hasta %(limit)d países a la vez."
+msgid "Choose the country an app appears from. Other apps keep your main connection."
+msgstr "Elija desde qué país se conecta una aplicación. Las demás aplicaciones mantienen su conexión principal."
 
 msgctxt "split-tunneling-view"
 msgid "Cities in %(country)s"
@@ -2963,8 +2959,12 @@ msgid "Country for %(application)s"
 msgstr "País de %(application)s"
 
 msgctxt "split-tunneling-view"
-msgid "Country limit reached"
-msgstr "Límite de países alcanzado"
+msgid "Session limit reached"
+msgstr "Límite de sesiones alcanzado"
+
+msgctxt "split-tunneling-view"
+msgid "Waiting for a free route"
+msgstr "Esperando una ruta libre"
 
 msgctxt "split-tunneling-view"
 msgid "Country per app"
@@ -3003,10 +3003,6 @@ msgstr "En uso"
 msgctxt "split-tunneling-view"
 msgid "Launch"
 msgstr "Iniciar"
-
-msgctxt "split-tunneling-view"
-msgid "Limit reached"
-msgstr "Límite alcanzado"
 
 msgctxt "split-tunneling-view"
 msgid "No server there"

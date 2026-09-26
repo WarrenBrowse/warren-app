@@ -2877,10 +2877,6 @@ msgid "App routing"
 msgstr "အက်ပ် လမ်းကြောင်းပေးခြင်း"
 
 msgctxt "split-tunneling-view"
-msgid "Apps can use %(limit)d countries at a time. Pick one already in use, or remove one first."
-msgstr "အက်ပ်များသည် တစ်ပြိုင်နက် နိုင်ငံ %(limit)d ခုအထိ သုံးနိုင်ပါသည်။ သုံးနေပြီးသား နိုင်ငံတစ်ခုကို ရွေးပါ သို့မဟုတ် တစ်ခုကို ဦးစွာ ဖယ်ရှားပါ။"
-
-msgctxt "split-tunneling-view"
 msgid "Bypass VPN"
 msgstr "VPN ကို ကျော်ရန်"
 
@@ -2909,8 +2905,8 @@ msgid "Choose the apps you want to exclude from the VPN tunnel."
 msgstr "VPN Tunnel မှ ဖယ်ထုတ်လိုသည့် အက်ပ်များကို ရွေးချယ်ပါ။"
 
 msgctxt "split-tunneling-view"
-msgid "Choose the country an app appears from. Other apps keep your main connection. Up to %(limit)d countries at a time."
-msgstr "အက်ပ်တစ်ခုကို မည်သည့်နိုင်ငံမှ ချိတ်ဆက်သကဲ့သို့ ပေါ်စေမည်ကို ရွေးပါ။ အခြားအက်ပ်များသည် သင်၏ ပင်မချိတ်ဆက်မှုကို ဆက်သုံးပါသည်။ တစ်ပြိုင်နက် နိုင်ငံ %(limit)d ခုအထိ။"
+msgid "Choose the country an app appears from. Other apps keep your main connection."
+msgstr "အက်ပ်တစ်ခုကို မည်သည့်နိုင်ငံမှ ချိတ်ဆက်သကဲ့သို့ ပေါ်စေမည်ကို ရွေးပါ။ အခြားအက်ပ်များသည် သင်၏ ပင်မချိတ်ဆက်မှုကို ဆက်သုံးပါသည်။"
 
 msgctxt "split-tunneling-view"
 msgid "Cities in %(country)s"
@@ -2954,8 +2950,12 @@ msgid "Country for %(application)s"
 msgstr "%(application)s အတွက် နိုင်ငံ"
 
 msgctxt "split-tunneling-view"
-msgid "Country limit reached"
-msgstr "နိုင်ငံ အကန့်အသတ် ပြည့်ပြီ"
+msgid "Session limit reached"
+msgstr "ဆက်ရှင် အကန့်အသတ် ပြည့်ပြီ"
+
+msgctxt "split-tunneling-view"
+msgid "Waiting for a free route"
+msgstr "လမ်းကြောင်းလွတ် စောင့်နေသည်"
 
 msgctxt "split-tunneling-view"
 msgid "Country per app"
@@ -2994,10 +2994,6 @@ msgstr "သုံးနေသည်"
 msgctxt "split-tunneling-view"
 msgid "Launch"
 msgstr "စတင်ဆောင်ရွက်ရန်"
-
-msgctxt "split-tunneling-view"
-msgid "Limit reached"
-msgstr "အကန့်အသတ် ပြည့်ပြီ"
 
 msgctxt "split-tunneling-view"
 msgid "No server there"

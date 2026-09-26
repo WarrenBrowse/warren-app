@@ -5197,8 +5197,8 @@ msgid "Only the apps you choose use the VPN."
 msgstr "Seules les apps choisies utilisent le VPN."
 
 msgctxt "split-tunneling-view"
-msgid "Choose the country an app appears from. Other apps keep your main connection. Up to %(limit)d countries at a time."
-msgstr "Choisissez de quel pays une app se connecte. Les autres apps gardent votre connexion principale. Jusqu'à %(limit)d pays à la fois."
+msgid "Choose the country an app appears from. Other apps keep your main connection."
+msgstr "Choisissez de quel pays une app se connecte. Les autres apps gardent votre connexion principale."
 
 msgctxt "split-tunneling-view"
 msgid "Only these apps are protected. Everything else on this device uses your normal connection."
@@ -5273,16 +5273,8 @@ msgid "In use"
 msgstr "Utilisé"
 
 msgctxt "split-tunneling-view"
-msgid "Limit reached"
-msgstr "Limite atteinte"
-
-msgctxt "split-tunneling-view"
 msgid "Choose"
 msgstr "Choisir"
-
-msgctxt "split-tunneling-view"
-msgid "Apps can use %(limit)d countries at a time. Pick one already in use, or remove one first."
-msgstr "Les apps peuvent utiliser %(limit)d pays à la fois. Choisissez-en un déjà utilisé, ou retirez-en un d'abord."
 
 msgctxt "split-tunneling-view"
 msgid "Off, uses the main connection"
@@ -5313,8 +5305,12 @@ msgid "No session token left"
 msgstr "Plus de token de session"
 
 msgctxt "split-tunneling-view"
-msgid "Country limit reached"
-msgstr "Limite de pays atteinte"
+msgid "Session limit reached"
+msgstr "Limite de sessions atteinte"
+
+msgctxt "split-tunneling-view"
+msgid "Waiting for a free route"
+msgstr "En attente d'une route libre"
 
 msgctxt "split-tunneling-view"
 msgid "No server there"

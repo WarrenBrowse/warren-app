@@ -2877,10 +2877,6 @@ msgid "App routing"
 msgstr "应用路由"
 
 msgctxt "split-tunneling-view"
-msgid "Apps can use %(limit)d countries at a time. Pick one already in use, or remove one first."
-msgstr "应用最多可同时使用 %(limit)d 个国家。请选择一个已在使用的国家，或先移除一个。"
-
-msgctxt "split-tunneling-view"
 msgid "Bypass VPN"
 msgstr "绕过 VPN"
 
@@ -2909,8 +2905,8 @@ msgid "Choose the apps you want to exclude from the VPN tunnel."
 msgstr "选择您想要从 VPN 隧道中排除的应用。"
 
 msgctxt "split-tunneling-view"
-msgid "Choose the country an app appears from. Other apps keep your main connection. Up to %(limit)d countries at a time."
-msgstr "选择应用对外显示的国家。其他应用继续使用您的主连接。最多同时使用 %(limit)d 个国家。"
+msgid "Choose the country an app appears from. Other apps keep your main connection."
+msgstr "选择应用对外显示的国家。其他应用继续使用您的主连接。"
 
 msgctxt "split-tunneling-view"
 msgid "Cities in %(country)s"
@@ -2954,8 +2950,12 @@ msgid "Country for %(application)s"
 msgstr "%(application)s 的国家"
 
 msgctxt "split-tunneling-view"
-msgid "Country limit reached"
-msgstr "已达国家上限"
+msgid "Session limit reached"
+msgstr "已达会话上限"
+
+msgctxt "split-tunneling-view"
+msgid "Waiting for a free route"
+msgstr "正在等待空闲路由"
 
 msgctxt "split-tunneling-view"
 msgid "Country per app"
@@ -2994,10 +2994,6 @@ msgstr "使用中"
 msgctxt "split-tunneling-view"
 msgid "Launch"
 msgstr "启动"
-
-msgctxt "split-tunneling-view"
-msgid "Limit reached"
-msgstr "已达上限"
 
 msgctxt "split-tunneling-view"
 msgid "No server there"

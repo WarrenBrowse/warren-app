@@ -95,6 +95,7 @@ const appRouting: AppRoutingSettings = {
   appExits: [
     { app: FIREFOX.absolutepath, exit: { country: 'se' } },
     { app: STEAM.absolutepath, exit: { country: 'de' } },
+    { app: SLACK.absolutepath, exit: { country: 'ch' } },
   ],
 };
 
@@ -105,8 +106,28 @@ const statuses: AppRouteStatus[] = [
     publicIp: '198.51.100.7',
     apps: [FIREFOX.absolutepath],
   },
-  { exit: { country: 'de' }, state: 'unavailable', reason: 'no-token', apps: [STEAM.absolutepath] },
+  {
+    exit: { country: 'de' },
+    state: 'unavailable',
+    reason: 'limit-reached',
+    apps: [STEAM.absolutepath],
+  },
+  {
+    exit: { country: 'ch' },
+    state: 'unavailable',
+    reason: 'waiting-for-route',
+    apps: [SLACK.absolutepath],
+  },
 ];
+
+// Text an element cannot show in full, even where it would end in an ellipsis.
+async function truncated(locator: Locator): Promise<string[]> {
+  return locator.evaluateAll((elements) =>
+    elements
+      .filter((element) => element.scrollWidth > element.clientWidth + 1)
+      .map((element) => element.textContent ?? ''),
+  );
+}
 
 // Text an element cannot show in full: wider than its box and not ellipsized on purpose.
 async function clipped(locator: Locator): Promise<string[]> {
@@ -234,6 +255,20 @@ for (const locale of LOCALES) {
 
       await tabs.nth(1).click();
       await expect(page.getByTestId('apps-with-country')).toBeVisible();
+      await expect(page.getByRole('tabpanel')).toContainText(
+        t(
+          'split-tunneling-view',
+          'Choose the country an app appears from. Other apps keep your main connection.',
+        ),
+      );
+      // A status line ends in an ellipsis rather than wrap, so a translation that does not
+      // fit would lose its end: both lines must show in full.
+      for (const line of ['Waiting for a free route', 'Session limit reached']) {
+        const text = t('split-tunneling-view', line);
+        const element = page.getByTestId('apps-with-country').getByTitle(text, { exact: true });
+        await expect(element).toHaveText(text);
+        expect(await truncated(element)).toEqual([]);
+      }
       await shot('03-countries');
 
       await tabs.nth(0).click();

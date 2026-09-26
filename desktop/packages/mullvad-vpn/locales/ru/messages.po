@@ -2904,10 +2904,6 @@ msgid "App routing"
 msgstr "Маршрутизация приложений"
 
 msgctxt "split-tunneling-view"
-msgid "Apps can use %(limit)d countries at a time. Pick one already in use, or remove one first."
-msgstr "Приложения могут использовать не более %(limit)d стран одновременно. Выберите уже используемую страну или сначала удалите одну."
-
-msgctxt "split-tunneling-view"
 msgid "Bypass VPN"
 msgstr "В обход VPN"
 
@@ -2936,8 +2932,8 @@ msgid "Choose the apps you want to exclude from the VPN tunnel."
 msgstr "Выберите приложения, которые нужно исключить из туннеля VPN."
 
 msgctxt "split-tunneling-view"
-msgid "Choose the country an app appears from. Other apps keep your main connection. Up to %(limit)d countries at a time."
-msgstr "Выберите страну, из которой приложение будет выходить в интернет. Остальные приложения используют основное подключение. Не более %(limit)d стран одновременно."
+msgid "Choose the country an app appears from. Other apps keep your main connection."
+msgstr "Выберите страну, из которой приложение будет выходить в интернет. Остальные приложения используют основное подключение."
 
 msgctxt "split-tunneling-view"
 msgid "Cities in %(country)s"
@@ -2981,8 +2977,12 @@ msgid "Country for %(application)s"
 msgstr "Страна для %(application)s"
 
 msgctxt "split-tunneling-view"
-msgid "Country limit reached"
-msgstr "Достигнут лимит стран"
+msgid "Session limit reached"
+msgstr "Достигнут лимит сеансов"
+
+msgctxt "split-tunneling-view"
+msgid "Waiting for a free route"
+msgstr "Ждёт свободный маршрут"
 
 msgctxt "split-tunneling-view"
 msgid "Country per app"
@@ -3021,10 +3021,6 @@ msgstr "Используется"
 msgctxt "split-tunneling-view"
 msgid "Launch"
 msgstr "Запустить"
-
-msgctxt "split-tunneling-view"
-msgid "Limit reached"
-msgstr "Лимит исчерпан"
 
 msgctxt "split-tunneling-view"
 msgid "No server there"

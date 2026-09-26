@@ -2886,10 +2886,6 @@ msgid "App routing"
 msgstr "Sovellusreititys"
 
 msgctxt "split-tunneling-view"
-msgid "Apps can use %(limit)d countries at a time. Pick one already in use, or remove one first."
-msgstr "Sovellukset voivat käyttää enintään %(limit)d maata kerrallaan. Valitse jo käytössä oleva maa tai poista ensin jokin."
-
-msgctxt "split-tunneling-view"
 msgid "Bypass VPN"
 msgstr "Ilman VPN:ää"
 
@@ -2918,8 +2914,8 @@ msgid "Choose the apps you want to exclude from the VPN tunnel."
 msgstr "Valitse sovellukset, jotka haluat sulkea pois VPN-tunnelista."
 
 msgctxt "split-tunneling-view"
-msgid "Choose the country an app appears from. Other apps keep your main connection. Up to %(limit)d countries at a time."
-msgstr "Valitse maa, josta sovellus näyttää yhdistävän. Muut sovellukset käyttävät edelleen pääyhteyttäsi. Enintään %(limit)d maata kerrallaan."
+msgid "Choose the country an app appears from. Other apps keep your main connection."
+msgstr "Valitse maa, josta sovellus näyttää yhdistävän. Muut sovellukset käyttävät edelleen pääyhteyttäsi."
 
 msgctxt "split-tunneling-view"
 msgid "Cities in %(country)s"
@@ -2963,8 +2959,12 @@ msgid "Country for %(application)s"
 msgstr "Sovelluksen %(application)s maa"
 
 msgctxt "split-tunneling-view"
-msgid "Country limit reached"
-msgstr "Maiden enimmäismäärä täynnä"
+msgid "Session limit reached"
+msgstr "Istuntojen enimmäismäärä täynnä"
+
+msgctxt "split-tunneling-view"
+msgid "Waiting for a free route"
+msgstr "Odotetaan vapaata reittiä"
 
 msgctxt "split-tunneling-view"
 msgid "Country per app"
@@ -3003,10 +3003,6 @@ msgstr "Käytössä"
 msgctxt "split-tunneling-view"
 msgid "Launch"
 msgstr "Käynnistä"
-
-msgctxt "split-tunneling-view"
-msgid "Limit reached"
-msgstr "Raja täynnä"
 
 msgctxt "split-tunneling-view"
 msgid "No server there"

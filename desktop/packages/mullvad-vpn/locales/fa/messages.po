@@ -2886,10 +2886,6 @@ msgid "App routing"
 msgstr "مسیریابی اپلیکیشن‌ها"
 
 msgctxt "split-tunneling-view"
-msgid "Apps can use %(limit)d countries at a time. Pick one already in use, or remove one first."
-msgstr "اپلیکیشن‌ها می‌توانند هم‌زمان از %(limit)d کشور استفاده کنند. یکی از کشورهای در حال استفاده را انتخاب کنید، یا ابتدا یکی را حذف کنید."
-
-msgctxt "split-tunneling-view"
 msgid "Bypass VPN"
 msgstr "خارج از VPN"
 
@@ -2918,8 +2914,8 @@ msgid "Choose the apps you want to exclude from the VPN tunnel."
 msgstr "اپلیکیشن‌هایی را که می‌خواهید از تونل VPN خارج کنید انتخاب نمایید."
 
 msgctxt "split-tunneling-view"
-msgid "Choose the country an app appears from. Other apps keep your main connection. Up to %(limit)d countries at a time."
-msgstr "کشوری را انتخاب کنید که اپلیکیشن از آن دیده شود. بقیهٔ اپلیکیشن‌ها از اتصال اصلی شما استفاده می‌کنند. حداکثر %(limit)d کشور هم‌زمان."
+msgid "Choose the country an app appears from. Other apps keep your main connection."
+msgstr "کشوری را انتخاب کنید که اپلیکیشن از آن دیده شود. بقیهٔ اپلیکیشن‌ها از اتصال اصلی شما استفاده می‌کنند."
 
 msgctxt "split-tunneling-view"
 msgid "Cities in %(country)s"
@@ -2963,8 +2959,12 @@ msgid "Country for %(application)s"
 msgstr "کشور %(application)s"
 
 msgctxt "split-tunneling-view"
-msgid "Country limit reached"
-msgstr "سقف کشورها پر شد"
+msgid "Session limit reached"
+msgstr "سقف نشست‌ها پر شد"
+
+msgctxt "split-tunneling-view"
+msgid "Waiting for a free route"
+msgstr "در انتظار مسیر آزاد"
 
 msgctxt "split-tunneling-view"
 msgid "Country per app"
@@ -3003,10 +3003,6 @@ msgstr "در حال استفاده"
 msgctxt "split-tunneling-view"
 msgid "Launch"
 msgstr "اجرا"
-
-msgctxt "split-tunneling-view"
-msgid "Limit reached"
-msgstr "سقف پر شد"
 
 msgctxt "split-tunneling-view"
 msgid "No server there"

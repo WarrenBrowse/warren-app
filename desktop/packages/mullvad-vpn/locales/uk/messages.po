@@ -2904,10 +2904,6 @@ msgid "App routing"
 msgstr "Маршрутизація застосунків"
 
 msgctxt "split-tunneling-view"
-msgid "Apps can use %(limit)d countries at a time. Pick one already in use, or remove one first."
-msgstr "Застосунки можуть використовувати не більше %(limit)d країн одночасно. Виберіть країну, яка вже використовується, або спершу вилучіть одну."
-
-msgctxt "split-tunneling-view"
 msgid "Bypass VPN"
 msgstr "В обхід VPN"
 
@@ -2936,8 +2932,8 @@ msgid "Choose the apps you want to exclude from the VPN tunnel."
 msgstr "Виберіть застосунки, які ви хочете виключити з VPN-тунелю."
 
 msgctxt "split-tunneling-view"
-msgid "Choose the country an app appears from. Other apps keep your main connection. Up to %(limit)d countries at a time."
-msgstr "Виберіть країну, з якої застосунок виходитиме в інтернет. Інші застосунки використовують основне підключення. Не більше %(limit)d країн одночасно."
+msgid "Choose the country an app appears from. Other apps keep your main connection."
+msgstr "Виберіть країну, з якої застосунок виходитиме в інтернет. Інші застосунки використовують основне підключення."
 
 msgctxt "split-tunneling-view"
 msgid "Cities in %(country)s"
@@ -2981,8 +2977,12 @@ msgid "Country for %(application)s"
 msgstr "Країна для %(application)s"
 
 msgctxt "split-tunneling-view"
-msgid "Country limit reached"
-msgstr "Досягнуто ліміту країн"
+msgid "Session limit reached"
+msgstr "Досягнуто ліміту сеансів"
+
+msgctxt "split-tunneling-view"
+msgid "Waiting for a free route"
+msgstr "Чекає на вільний маршрут"
 
 msgctxt "split-tunneling-view"
 msgid "Country per app"
@@ -3021,10 +3021,6 @@ msgstr "Використовується"
 msgctxt "split-tunneling-view"
 msgid "Launch"
 msgstr "Запустити"
-
-msgctxt "split-tunneling-view"
-msgid "Limit reached"
-msgstr "Ліміт вичерпано"
 
 msgctxt "split-tunneling-view"
 msgid "No server there"

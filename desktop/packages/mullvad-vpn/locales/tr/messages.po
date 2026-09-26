@@ -2886,10 +2886,6 @@ msgid "App routing"
 msgstr "Uygulama yönlendirme"
 
 msgctxt "split-tunneling-view"
-msgid "Apps can use %(limit)d countries at a time. Pick one already in use, or remove one first."
-msgstr "Uygulamalar aynı anda en fazla %(limit)d ülke kullanabilir. Zaten kullanılan bir ülkeyi seçin veya önce birini kaldırın."
-
-msgctxt "split-tunneling-view"
 msgid "Bypass VPN"
 msgstr "VPN dışında"
 
@@ -2918,8 +2914,8 @@ msgid "Choose the apps you want to exclude from the VPN tunnel."
 msgstr "VPN tünelinden hariç tutmak istediğiniz uygulamaları seçin."
 
 msgctxt "split-tunneling-view"
-msgid "Choose the country an app appears from. Other apps keep your main connection. Up to %(limit)d countries at a time."
-msgstr "Bir uygulamanın hangi ülkeden görüneceğini seçin. Diğer uygulamalar ana bağlantınızı kullanmaya devam eder. Aynı anda en fazla %(limit)d ülke."
+msgid "Choose the country an app appears from. Other apps keep your main connection."
+msgstr "Bir uygulamanın hangi ülkeden görüneceğini seçin. Diğer uygulamalar ana bağlantınızı kullanmaya devam eder."
 
 msgctxt "split-tunneling-view"
 msgid "Cities in %(country)s"
@@ -2963,8 +2959,12 @@ msgid "Country for %(application)s"
 msgstr "%(application)s uygulamasının ülkesi"
 
 msgctxt "split-tunneling-view"
-msgid "Country limit reached"
-msgstr "Ülke sınırı doldu"
+msgid "Session limit reached"
+msgstr "Oturum sınırı doldu"
+
+msgctxt "split-tunneling-view"
+msgid "Waiting for a free route"
+msgstr "Boş bir rota bekleniyor"
 
 msgctxt "split-tunneling-view"
 msgid "Country per app"
@@ -3003,10 +3003,6 @@ msgstr "Kullanımda"
 msgctxt "split-tunneling-view"
 msgid "Launch"
 msgstr "Başlat"
-
-msgctxt "split-tunneling-view"
-msgid "Limit reached"
-msgstr "Sınır doldu"
 
 msgctxt "split-tunneling-view"
 msgid "No server there"

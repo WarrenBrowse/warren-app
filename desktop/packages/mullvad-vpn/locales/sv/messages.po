@@ -2886,10 +2886,6 @@ msgid "App routing"
 msgstr "Approutning"
 
 msgctxt "split-tunneling-view"
-msgid "Apps can use %(limit)d countries at a time. Pick one already in use, or remove one first."
-msgstr "Appar kan använda %(limit)d länder åt gången. Välj ett som redan används eller ta bort ett först."
-
-msgctxt "split-tunneling-view"
 msgid "Bypass VPN"
 msgstr "Förbi VPN"
 
@@ -2918,8 +2914,8 @@ msgid "Choose the apps you want to exclude from the VPN tunnel."
 msgstr "Välj de appar du vill exkludera från VPN-tunneln."
 
 msgctxt "split-tunneling-view"
-msgid "Choose the country an app appears from. Other apps keep your main connection. Up to %(limit)d countries at a time."
-msgstr "Välj vilket land en app ska synas från. Andra appar behåller din huvudanslutning. Upp till %(limit)d länder åt gången."
+msgid "Choose the country an app appears from. Other apps keep your main connection."
+msgstr "Välj vilket land en app ska synas från. Andra appar behåller din huvudanslutning."
 
 msgctxt "split-tunneling-view"
 msgid "Cities in %(country)s"
@@ -2963,8 +2959,12 @@ msgid "Country for %(application)s"
 msgstr "Land för %(application)s"
 
 msgctxt "split-tunneling-view"
-msgid "Country limit reached"
-msgstr "Max antal länder nått"
+msgid "Session limit reached"
+msgstr "Max antal sessioner nått"
+
+msgctxt "split-tunneling-view"
+msgid "Waiting for a free route"
+msgstr "Väntar på en ledig rutt"
 
 msgctxt "split-tunneling-view"
 msgid "Country per app"
@@ -3003,10 +3003,6 @@ msgstr "Används"
 msgctxt "split-tunneling-view"
 msgid "Launch"
 msgstr "Starta"
-
-msgctxt "split-tunneling-view"
-msgid "Limit reached"
-msgstr "Gräns nådd"
 
 msgctxt "split-tunneling-view"
 msgid "No server there"
