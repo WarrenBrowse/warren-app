@@ -16,6 +16,9 @@ interface PurchaseVoucherBridge {
     /** `WarrenJni.pullPurchaseVoucher`: the voucher a purchase paid for, unredeemed. */
     fun pullPurchaseVoucher(claimCode: String): String
 
+    /** `WarrenJni.mnemonicPubkeySs58`: the wallet a redemption signed with [mnemonic] credits. */
+    fun walletOf(mnemonic: String): String
+
     /** `WarrenJni.redeemVoucher`. */
     fun redeemVoucher(mnemonic: String, voucher: String): String
 }
@@ -23,6 +26,8 @@ interface PurchaseVoucherBridge {
 object WarrenJniPurchaseVoucherBridge : PurchaseVoucherBridge {
     override fun pullPurchaseVoucher(claimCode: String): String =
         WarrenJni.pullPurchaseVoucher(claimCode)
+
+    override fun walletOf(mnemonic: String): String = WarrenJni.mnemonicPubkeySs58(mnemonic)
 
     override fun redeemVoucher(mnemonic: String, voucher: String): String =
         WarrenJni.redeemVoucher(mnemonic, voucher)
@@ -72,23 +77,25 @@ class PurchaseVoucherKeeper(
     private val store: PendingVoucherStore,
 ) {
     /**
-     * One step of a purchase poll: pulls the voucher [claimCode] paid for, holds it for
-     * [wallet], then redeems it. `null` while the payment has queued nothing, or the pull
-     * failed: the poll asks again.
+     * One step of a purchase poll: pulls the voucher [claimCode] paid for, holds it for the
+     * wallet [phrase] signs for, then redeems it. `null` while the payment has queued nothing, or
+     * the pull failed: the poll asks again. A voucher the store could not seal is not redeemed:
+     * the hold throws, and the engine's copy serves the next attempt.
      */
-    fun collect(claimCode: String, wallet: String, phrase: String): WarrenVoucherOutcome? {
+    fun collect(claimCode: String, phrase: String): WarrenVoucherOutcome? {
         val pulled = parsePullJson(bridge.pullPurchaseVoucher(claimCode))
         if (pulled !is PurchasePull.Pulled) return null
-        val pending = PendingVoucher(wallet, pulled.voucher)
+        val pending = PendingVoucher(bridge.walletOf(phrase), pulled.voucher)
         store.hold(pending)
         return redeem(pending, phrase)
     }
 
     /**
-     * Redeems every voucher held for [wallet], and stops at the first ban: the others would be
-     * refused the same way. Vouchers held for another wallet wait for it.
+     * Redeems every voucher held for the wallet [phrase] signs for, and stops at the first ban:
+     * the others would be refused the same way. Vouchers held for another wallet wait for it.
      */
-    fun redeemHeld(wallet: String, phrase: String): List<WarrenVoucherOutcome> {
+    fun redeemHeld(phrase: String): List<WarrenVoucherOutcome> {
+        val wallet = bridge.walletOf(phrase)
         val outcomes = mutableListOf<WarrenVoucherOutcome>()
         for (pending in store.all().filter { it.wallet == wallet }) {
             val outcome = redeem(pending, phrase)

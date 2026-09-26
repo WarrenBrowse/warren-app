@@ -149,7 +149,7 @@ class WarrenSubscriptionUseCase(
         deadlineMs: Long,
     ) {
         pollScope.launch {
-            val wallet = walletAddress() ?: return@launch
+            if (walletRepository.state.value is WalletState.Absent) return@launch
             // Routine signing: read silently, no prompt (see WarrenConnectUseCase).
             val mnemonic = try {
                 walletRepository.readMnemonic()
@@ -166,7 +166,7 @@ class WarrenSubscriptionUseCase(
                     val outcome = withContext(Dispatchers.IO) {
                         WarrenNativeRuntime.awaitReadyBlocking()
                         try {
-                            purchases.collect(claim.code, wallet, mnemonic.phrase)
+                            purchases.collect(claim.code, mnemonic.phrase)
                         } catch (e: Exception) {
                             WarrenVoucherOutcome.Failure(e.message ?: "JNI purchase collect threw")
                         }
@@ -216,7 +216,7 @@ class WarrenSubscriptionUseCase(
             WarrenNativeRuntime.awaitReadyBlocking()
             mnemonic.use { m ->
                 try {
-                    purchases.redeemHeld(wallet, m.phrase)
+                    purchases.redeemHeld(m.phrase)
                 } catch (e: Exception) {
                     Logger.w { "redeemHeldVouchers failed (${e::class.simpleName})" }
                     emptyList()

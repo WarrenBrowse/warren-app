@@ -58,7 +58,7 @@ import com.warrenbrowse.vpn.app.connect.WarrenJniPurchaseVoucherBridge
 import com.warrenbrowse.vpn.lib.repository.AndroidKeystoreBlobSealer
 import com.warrenbrowse.vpn.lib.repository.PendingVoucherStore
 import com.warrenbrowse.vpn.lib.repository.SealedPendingVoucherStore
-import com.warrenbrowse.vpn.lib.repository.SharedPreferencesBlobSlot
+import com.warrenbrowse.vpn.lib.repository.SharedPreferencesBlobShelf
 import com.warrenbrowse.vpn.lib.repository.ForumActivityOpenRequests
 import com.warrenbrowse.vpn.lib.repository.ForumActivityRepository
 import com.warrenbrowse.vpn.lib.repository.ForumActivityState
@@ -195,7 +195,7 @@ val appModule = module {
     // A pulled purchase voucher is sealed with a Keystore key before its redemption, so a
     // restart during a ban that refuses it cannot lose a paid secret (warren-core doc 105).
     single<PendingVoucherStore> {
-        SealedPendingVoucherStore(AndroidKeystoreBlobSealer(), SharedPreferencesBlobSlot(androidContext()))
+        SealedPendingVoucherStore(AndroidKeystoreBlobSealer(), SharedPreferencesBlobShelf(androidContext()))
     }
     single { PurchaseVoucherKeeper(WarrenJniPurchaseVoucherBridge, get()) }
     single {

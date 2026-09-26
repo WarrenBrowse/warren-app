@@ -4,6 +4,7 @@ import com.warrenbrowse.vpn.lib.repository.PendingVoucher
 import com.warrenbrowse.vpn.lib.repository.PendingVoucherStore
 import com.warrenbrowse.vpn.lib.repository.WarrenVoucherOutcome
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
@@ -12,10 +13,12 @@ class PurchaseVoucherKeeperTest {
 
     private class MemoryStore : PendingVoucherStore {
         val held = mutableListOf<PendingVoucher>()
+        var diskFull = false
 
         override fun all(): List<PendingVoucher> = held.toList()
 
         override fun hold(pending: PendingVoucher) {
+            if (diskFull) throw java.io.IOException("disk full")
             if (pending !in held) held += pending
         }
 
@@ -38,6 +41,10 @@ class PurchaseVoucherKeeperTest {
             return pull
         }
 
+        // The wallet a phrase signs for: the redemption credits it, whatever the UI shows.
+        override fun walletOf(mnemonic: String): String =
+            if (mnemonic == PHRASE) WALLET else OTHER_WALLET
+
         override fun redeemVoucher(mnemonic: String, voucher: String): String {
             calls += "redeem $voucher"
             heldAtRedemption = store?.all()
@@ -51,23 +58,40 @@ class PurchaseVoucherKeeperTest {
 
     @Test
     fun `a pulled voucher is sealed in the store before its redemption is asked for`() {
-        keeper.collect(CLAIM, WALLET, PHRASE)
+        keeper.collect(CLAIM, PHRASE)
 
         assertEquals(listOf(PendingVoucher(WALLET, VOUCHER)), bridge.heldAtRedemption)
+    }
+
+    @Test
+    fun `a voucher that could not be sealed is not redeemed`() {
+        store.diskFull = true
+
+        assertFailsWith<java.io.IOException> { keeper.collect(CLAIM, PHRASE) }
+        assertEquals(listOf("pull"), bridge.calls)
+    }
+
+    @Test
+    fun `a pulled voucher is held for the wallet the phrase signs for`() {
+        bridge.redeem = { """{"ok":false,"error":"register failed: server returned status 503"}""" }
+
+        keeper.collect(CLAIM, OTHER_PHRASE)
+
+        assertEquals(listOf(PendingVoucher(OTHER_WALLET, VOUCHER)), store.held)
     }
 
     @Test
     fun `nothing is redeemed while the payment has queued nothing`() {
         bridge.pull = """{"ok":false,"error":"purchase pending"}"""
 
-        assertNull(keeper.collect(CLAIM, WALLET, PHRASE))
+        assertNull(keeper.collect(CLAIM, PHRASE))
         assertEquals(listOf("pull"), bridge.calls)
         assertTrue(store.held.isEmpty())
     }
 
     @Test
     fun `a redeemed voucher leaves the store`() {
-        val outcome = keeper.collect(CLAIM, WALLET, PHRASE)
+        val outcome = keeper.collect(CLAIM, PHRASE)
 
         assertEquals(WarrenVoucherOutcome.Success(1_800_000_000), outcome)
         assertTrue(store.held.isEmpty())
@@ -77,7 +101,7 @@ class PurchaseVoucherKeeperTest {
     fun `a verdict on the voucher itself removes it`() {
         bridge.redeem = { """{"ok":false,"error":"voucher rejected"}""" }
 
-        assertEquals(WarrenVoucherOutcome.Rejected, keeper.collect(CLAIM, WALLET, PHRASE))
+        assertEquals(WarrenVoucherOutcome.Rejected, keeper.collect(CLAIM, PHRASE))
         assertTrue(store.held.isEmpty())
     }
 
@@ -91,7 +115,7 @@ class PurchaseVoucherKeeperTest {
             )) {
             bridge.redeem = { answer }
 
-            keeper.collect(CLAIM, WALLET, PHRASE)
+            keeper.collect(CLAIM, PHRASE)
 
             assertEquals(listOf(PendingVoucher(WALLET, VOUCHER)), store.held, answer)
         }
@@ -104,7 +128,7 @@ class PurchaseVoucherKeeperTest {
         store.hold(PendingVoucher(WALLET, "EEEE-FFFF-GGGG-HHHH"))
         bridge.redeem = { """{"ok":false,"error":"banned","ban":{"reason":"other"}}""" }
 
-        val outcomes = keeper.redeemHeld(WALLET, PHRASE)
+        val outcomes = keeper.redeemHeld(PHRASE)
 
         assertEquals(listOf("redeem $VOUCHER"), bridge.calls)
         assertEquals(1, outcomes.size)
@@ -116,7 +140,7 @@ class PurchaseVoucherKeeperTest {
         store.hold(PendingVoucher(WALLET, VOUCHER))
         store.hold(PendingVoucher(OTHER_WALLET, "AAAA-BBBB-CCCC-DDDD"))
 
-        keeper.redeemHeld(WALLET, PHRASE)
+        keeper.redeemHeld(PHRASE)
 
         assertEquals(listOf(PendingVoucher(OTHER_WALLET, "AAAA-BBBB-CCCC-DDDD")), store.held)
         assertTrue(keeper.holds(OTHER_WALLET))
@@ -128,6 +152,7 @@ class PurchaseVoucherKeeperTest {
         const val OTHER_WALLET = "wb5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
         const val CLAIM = "claim"
         const val PHRASE = "phrase"
+        const val OTHER_PHRASE = "other phrase"
         const val VOUCHER = "QWRT-YPLK-JHGF-DSAZ"
         const val PULLED = """{"ok":true,"voucher":"$VOUCHER"}"""
         const val REDEEMED = """{"ok":true,"expires_at":1800000000}"""

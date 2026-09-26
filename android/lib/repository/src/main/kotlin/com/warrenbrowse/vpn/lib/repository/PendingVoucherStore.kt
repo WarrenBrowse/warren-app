@@ -6,6 +6,7 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
 import co.touchlab.kermit.Logger
+import java.io.IOException
 import java.security.GeneralSecurityException
 import java.security.KeyStore
 import javax.crypto.Cipher
@@ -45,76 +46,79 @@ interface BlobSealer {
     fun open(sealed: ByteArray): ByteArray
 }
 
-/** Where one sealed blob lives; `null` means none. */
-interface BlobSlot {
-    fun read(): ByteArray?
+/** Where the sealed blobs live, each under a name of its own. */
+interface BlobShelf {
+    fun all(): Map<String, ByteArray>
 
-    fun write(blob: ByteArray?)
+    /** @throws IOException when the blob did not reach the disk. */
+    fun put(name: String, blob: ByteArray)
+
+    fun remove(name: String)
 }
 
-/** The pending vouchers as one sealed blob, rewritten whole on every change. */
-class SealedPendingVoucherStore(private val sealer: BlobSealer, private val slot: BlobSlot) :
+/**
+ * The pending vouchers, each sealed on its own under a random name. A blob this run cannot open
+ * (a Keystore that failed once, a key dropped for good) is left exactly where it is: it is not
+ * listed, and no other voucher's write or removal touches it.
+ */
+class SealedPendingVoucherStore(private val sealer: BlobSealer, private val shelf: BlobShelf) :
     PendingVoucherStore {
 
-    @Synchronized override fun all(): List<PendingVoucher> = load()
+    @Synchronized override fun all(): List<PendingVoucher> = opened().values.toList()
 
+    /** @throws IOException when the voucher did not reach the disk. */
     @Synchronized
     override fun hold(pending: PendingVoucher) {
-        val held = load()
-        if (pending !in held) {
-            save(held + pending)
+        if (pending !in opened().values) {
+            shelf.put(newName(), sealer.seal(encode(pending)))
         }
     }
 
     @Synchronized
     override fun forget(voucher: String) {
-        val held = load()
-        val kept = held.filterNot { it.voucher == voucher }
-        if (kept.size != held.size) {
-            save(kept)
-        }
+        opened().filterValues { it.voucher == voucher }.keys.forEach(shelf::remove)
     }
 
-    private fun load(): List<PendingVoucher> {
-        val blob = slot.read() ?: return emptyList()
-        return try {
+    private fun opened(): Map<String, PendingVoucher> =
+        shelf.all().mapNotNull { (name, blob) -> open(blob)?.let { name to it } }.toMap()
+
+    private fun open(blob: ByteArray): PendingVoucher? =
+        try {
             decode(sealer.open(blob))
         } catch (e: GeneralSecurityException) {
-            // A key the system dropped (a lock-screen reset, a restore on another device) cannot
-            // open what it sealed. The class name only: the message could quote the input.
-            Logger.w { "Pending vouchers unreadable (${e::class.simpleName})" }
-            emptyList()
+            // The class name only: the message could quote the input.
+            Logger.w { "A pending voucher is unreadable (${e::class.simpleName})" }
+            null
         } catch (e: IllegalArgumentException) {
-            Logger.w { "Pending vouchers unreadable (${e::class.simpleName})" }
-            emptyList()
+            Logger.w { "A pending voucher is unreadable (${e::class.simpleName})" }
+            null
         }
-    }
 
-    private fun save(held: List<PendingVoucher>) {
-        slot.write(if (held.isEmpty()) null else sealer.seal(encode(held)))
-    }
+    // `wallet:voucher`, each field base64 so no separator can collide.
+    private fun encode(pending: PendingVoucher): ByteArray =
+        "${b64(pending.wallet)}:${b64(pending.voucher)}".toByteArray(Charsets.UTF_8)
 
-    // One `wallet:voucher` line per voucher, each field base64 so no separator can collide.
-    private fun encode(held: List<PendingVoucher>): ByteArray =
-        held
-            .joinToString("\n") { "${b64(it.wallet)}:${b64(it.voucher)}" }
-            .toByteArray(Charsets.UTF_8)
-
-    private fun decode(plain: ByteArray): List<PendingVoucher> =
+    private fun decode(plain: ByteArray): PendingVoucher? =
         try {
-            String(plain, Charsets.UTF_8).lines().mapNotNull { line ->
-                val fields = line.split(':')
-                if (fields.size == 2) PendingVoucher(unb64(fields[0]), unb64(fields[1])) else null
-            }
+            val fields = String(plain, Charsets.UTF_8).split(':')
+            if (fields.size == 2) PendingVoucher(unb64(fields[0]), unb64(fields[1])) else null
         } finally {
             plain.fill(0)
         }
+
+    private fun newName(): String =
+        ByteArray(NAME_BYTES).also { random.nextBytes(it) }.joinToString("") { "%02x".format(it) }
 
     private fun b64(value: String): String =
         java.util.Base64.getEncoder().encodeToString(value.toByteArray(Charsets.UTF_8))
 
     private fun unb64(value: String): String =
         String(java.util.Base64.getDecoder().decode(value), Charsets.UTF_8)
+
+    private companion object {
+        const val NAME_BYTES = 16
+        val random = java.security.SecureRandom()
+    }
 }
 
 /**
@@ -168,35 +172,40 @@ class AndroidKeystoreBlobSealer(private val alias: String = KEY_ALIAS) : BlobSea
 }
 
 /**
- * A blob in the app's private preferences, beside the wallet's ciphertext. The app sets
- * `allowBackup=false`, so it stays on the device.
+ * The blobs in the app's own private preferences file, beside the wallet's ciphertext. The app
+ * sets `allowBackup=false` and excludes its preferences from device transfers, so they stay on
+ * the device.
  */
-class SharedPreferencesBlobSlot(private val prefs: SharedPreferences, private val key: String) :
-    BlobSlot {
-    constructor(
-        context: Context
-    ) : this(context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE), BLOB_KEY)
+class SharedPreferencesBlobShelf(private val prefs: SharedPreferences) : BlobShelf {
+    constructor(context: Context) : this(context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE))
 
-    override fun read(): ByteArray? =
-        prefs.getString(key, null)?.let {
-            try {
-                Base64.decode(it, Base64.NO_WRAP)
-            } catch (e: IllegalArgumentException) {
-                Logger.w { "Pending vouchers blob malformed (${e::class.simpleName})" }
-                null
-            }
+    override fun all(): Map<String, ByteArray> =
+        prefs.all.mapNotNull { (name, value) ->
+            val blob =
+                (value as? String)?.let {
+                    try {
+                        Base64.decode(it, Base64.NO_WRAP)
+                    } catch (e: IllegalArgumentException) {
+                        Logger.w { "A pending voucher blob is malformed (${e::class.simpleName})" }
+                        null
+                    }
+                }
+            blob?.let { name to it }
+        }.toMap()
+
+    // commit, not apply: a voucher held for a redemption about to be sent must be on disk before
+    // the request leaves.
+    override fun put(name: String, blob: ByteArray) {
+        if (!prefs.edit().putString(name, Base64.encodeToString(blob, Base64.NO_WRAP)).commit()) {
+            throw IOException("the pending voucher did not reach the disk")
         }
+    }
 
-    override fun write(blob: ByteArray?) {
-        // commit, not apply: a voucher held for a redemption about to be sent must be on disk
-        // before the request leaves.
-        val editor = prefs.edit()
-        if (blob == null) editor.remove(key) else editor.putString(key, Base64.encodeToString(blob, Base64.NO_WRAP))
-        editor.commit()
+    override fun remove(name: String) {
+        prefs.edit().remove(name).commit()
     }
 
     private companion object {
         const val PREFS_NAME = "warren_pending_vouchers"
-        const val BLOB_KEY = "sealed"
     }
 }
