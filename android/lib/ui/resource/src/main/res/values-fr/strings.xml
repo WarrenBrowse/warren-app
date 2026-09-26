@@ -92,8 +92,8 @@
     <string name="include_only_banner">Seules ces apps sont protégées. Tout le reste de cet appareil utilise votre connexion normale.</string>
     <string name="include_only_no_app">Aucune des apps choisies n\'est installée sur cet appareil : toutes les apps passent donc par le VPN jusqu\'à ce que vous en choisissiez une.</string>
     <string name="include_only_confirm">Seules les apps choisies utiliseront le VPN. Le reste de cet appareil ne sera pas protégé.</string>
-    <string name="split_mode_replaces_bypass">Cela remplace « Hors VPN ». Votre liste d\'apps y est conservée.</string>
-    <string name="split_mode_replaces_include_only">Cela remplace le VPN ciblé : toutes les apps repassent par le VPN, sauf celles que vous en sortez. Votre liste d\'apps y est conservée.</string>
+    <string name="split_mode_replaces_bypass">Cela remplace « Hors VPN ». Sa liste d\'apps est conservée.</string>
+    <string name="split_mode_replaces_include_only">Cela remplace « VPN ciblé » : toutes les apps repassent par le VPN, sauf celles que vous mettez hors VPN. Sa liste d\'apps est conservée.</string>
     <string name="split_mode_turn_on">Activer</string>
     <string name="apps_using_the_vpn">Dans le VPN</string>
     <plurals name="vpn_only_for_apps">

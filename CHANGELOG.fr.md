@@ -29,7 +29,7 @@ par l'application, gardez-le tel quel.
   app Flatpak ou Snap, ou un script).
 - [macOS] Proposer Hors VPN et VPN ciblé dans l'app signée, sur macOS 13 ou plus récent, une fois
   « Accès complet au disque » accordé. Les versions publiées avaient le split tunneling désactivé.
-  La vue Routage des apps indique lequel des deux manque. Pays par app n'a pas besoin de « Accès
+  La vue Routage des apps indique lequel des deux manque. Pays par app n'a pas besoin de l'« Accès
   complet au disque ».
 - [Android] Ajouter VPN ciblé à côté de Hors VPN : seules les apps choisies utilisent le VPN, et
   elles restent bloquées tant que le VPN est coupé. Quand aucune des apps choisies n'est installée,
