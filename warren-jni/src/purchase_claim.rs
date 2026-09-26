@@ -66,9 +66,68 @@ pub(crate) fn classify_register_failure(error: &warren_api::ClientError) -> Regi
     }
 }
 
+/// Voucher secrets pulled for a purchase and not redeemed yet, keyed by wpid.
+/// The server hands a voucher out once, so a caller that lost the answer (a
+/// register that failed, Kotlin dying before it sealed the voucher) finds it
+/// here again for the life of the process.
+/// Each voucher is a paid bearer secret: wiped when it leaves.
+pub(crate) struct PulledVouchers(
+    parking_lot::Mutex<std::collections::BTreeMap<String, Zeroizing<String>>>,
+);
+
+impl PulledVouchers {
+    pub(crate) const fn new() -> Self {
+        Self(parking_lot::Mutex::new(std::collections::BTreeMap::new()))
+    }
+
+    pub(crate) fn get(&self, wpid: &str) -> Option<Zeroizing<String>> {
+        self.0.lock().get(wpid).cloned()
+    }
+
+    pub(crate) fn keep(&self, wpid: &str, voucher: &str) {
+        self.0
+            .lock()
+            .insert(wpid.to_owned(), Zeroizing::new(voucher.to_owned()));
+    }
+
+    /// Drops every copy of `voucher` once it is redeemed or dead, whether it
+    /// was redeemed through its claim or, sealed by Kotlin, as itself.
+    pub(crate) fn forget(&self, voucher: &str) {
+        self.0.lock().retain(|_, kept| kept.as_str() != voucher);
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    use super::{RegisterFailure, classify_register_failure, parse};
+    use super::{PulledVouchers, RegisterFailure, classify_register_failure, parse};
+
+    #[test]
+    fn a_pulled_voucher_is_found_again_under_its_purchase() {
+        let pulled = PulledVouchers::new();
+
+        pulled.keep("aaaa", "XXXX-YYYY-ZZZZ-WWWW");
+
+        assert_eq!(
+            pulled.get("aaaa").as_deref().map(String::as_str),
+            Some("XXXX-YYYY-ZZZZ-WWWW")
+        );
+        assert!(pulled.get("bbbb").is_none());
+    }
+
+    #[test]
+    fn a_redeemed_or_dead_voucher_leaves_every_purchase_it_was_kept_under() {
+        let pulled = PulledVouchers::new();
+        pulled.keep("aaaa", "XXXX-YYYY-ZZZZ-WWWW");
+        pulled.keep("bbbb", "QQQQ-RRRR-SSSS-TTTT");
+
+        pulled.forget("XXXX-YYYY-ZZZZ-WWWW");
+
+        assert!(pulled.get("aaaa").is_none());
+        assert_eq!(
+            pulled.get("bbbb").as_deref().map(String::as_str),
+            Some("QQQQ-RRRR-SSSS-TTTT")
+        );
+    }
     use warren_api::{BanReasonCode, ClientError};
 
     fn refused(status: u16, body: &str) -> ClientError {

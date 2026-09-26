@@ -2030,6 +2030,10 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_redeemVoucher<'lo
             log::warn!("redeemVoucher: the account is banned; the voucher is kept");
             warren_standing::ban_refusal_envelope(&ban).to_string()
         }
+        Err(RedeemError::VoucherRejected) => {
+            log::warn!("redeemVoucher: the voucher is unknown, spent or expired");
+            serde_json::json!({"ok": false, "error": VOUCHER_REJECTED}).to_string()
+        }
         Err(RedeemError::Failed(e)) => {
             // "purchase pending" is the expected steady state of a purchase poll
             // (webhook not landed yet), not a failure: keep it at debug so the
@@ -2049,15 +2053,86 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_redeemVoucher<'lo
 }
 
 /// Voucher secrets pulled from `POST /v1/checkout/{wpid}/voucher` whose
-/// `POST /v1/register` has not landed yet, keyed by wpid. The pull consumes
-/// the server-side single-use mapping, so without this a transient register
-/// failure would burn a PAID voucher: every subsequent poll would re-pull and
-/// 404 forever. In-memory only (mirrors the desktop daemon's
-/// `pulled_unregistered`; a process death inside that window loses the secret,
-/// accepted residual per doc 35).
+/// redemption has not landed yet. The pull consumes the server-side
+/// single-use mapping, so this is the copy a repeated pull finds again for
+/// the life of the process; the lasting copy is the one Kotlin seals in the
+/// Keystore-backed pending voucher store before it asks for a redemption.
 #[cfg(target_os = "android")]
-static PULLED_UNREGISTERED: Mutex<std::collections::BTreeMap<String, String>> =
-    Mutex::new(std::collections::BTreeMap::new());
+static PULLED_UNREGISTERED: crate::purchase_claim::PulledVouchers =
+    crate::purchase_claim::PulledVouchers::new();
+
+/// The error `redeemVoucher` answers for a verdict on the voucher itself
+/// (unknown, spent, cancelled or expired): the only refusal after which a
+/// held voucher is worth nothing.
+const VOUCHER_REJECTED: &str = "voucher rejected";
+
+/// Collect the voucher an app-initiated purchase paid for, WITHOUT redeeming
+/// it: `claim` is the purchase's claim code (wpid then pull secret). Returns
+/// `{"ok":true,"voucher":"..."}`, `{"ok":false,"error":"purchase pending"}`
+/// while the payment has queued nothing, or `{"ok":false,"error":"..."}`.
+/// Kotlin seals the voucher before it redeems it; nothing here logs it.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_pullPurchaseVoucher<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    claim: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let claim = Zeroizing::new(String::from_java(&jnix_env, claim));
+    let json = match pull_purchase_voucher_inner(&claim) {
+        Ok(Some(voucher)) => {
+            Zeroizing::new(serde_json::json!({"ok": true, "voucher": voucher.as_str()}).to_string())
+        }
+        Ok(None) => Zeroizing::new(
+            serde_json::json!({"ok": false, "error": "purchase pending"}).to_string(),
+        ),
+        Err(e) => {
+            log::warn!("pullPurchaseVoucher failed");
+            Zeroizing::new(serde_json::json!({"ok": false, "error": e}).to_string())
+        }
+    };
+    match jnix_env.new_string(json.as_str()) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+#[cfg(target_os = "android")]
+fn pull_purchase_voucher_inner(claim: &str) -> Result<Option<Zeroizing<String>>, String> {
+    let runtime = RUNTIME
+        .get()
+        .ok_or_else(|| "initLogger must be called before pullPurchaseVoucher".to_owned())?;
+    let claim = crate::purchase_claim::parse(claim).ok_or_else(|| "not a purchase".to_owned())?;
+    let client = unsigned_warren_client();
+    runtime.block_on(collect_pulled(client, &claim))
+}
+
+#[cfg(not(target_os = "android"))]
+#[allow(dead_code)]
+fn pull_purchase_voucher_inner(_claim: &str) -> Result<Option<Zeroizing<String>>, String> {
+    Err("pullPurchaseVoucher is Android-only".to_owned())
+}
+
+/// The voucher `claim` paid for: this process's copy, or a fresh pull, kept
+/// until its redemption or a verdict on it. `None` while nothing is queued.
+#[cfg(target_os = "android")]
+async fn collect_pulled(
+    client: &warren_api::WarrenApiClient<ApiTransport>,
+    claim: &crate::purchase_claim::PurchaseClaim,
+) -> Result<Option<Zeroizing<String>>, String> {
+    if let Some(voucher) = PULLED_UNREGISTERED.get(&claim.wpid) {
+        return Ok(Some(voucher));
+    }
+    let pulled = client
+        .pull_pending_voucher(&claim.wpid, &claim.pull_secret)
+        .await
+        .map_err(|e| format!("pull pending voucher failed: {e}"))?
+        .map(Zeroizing::new);
+    if let Some(voucher) = &pulled {
+        PULLED_UNREGISTERED.keep(&claim.wpid, voucher);
+    }
+    Ok(pulled)
+}
 
 /// Redeem a voucher OR claim an app-initiated purchase (doc 35).
 ///
@@ -2080,35 +2155,18 @@ fn redeem_voucher_inner(mnemonic: &str, voucher_or_claim: &str) -> Result<u64, R
         .map_err(|e| format!("invalid pubkey: {e}"))?;
     let client = unsigned_warren_client();
     let claim = crate::purchase_claim::parse(voucher_or_claim);
-    let wpid = claim.as_ref().map(|c| c.wpid.clone());
 
     runtime.block_on(async move {
         let voucher_secret = match &claim {
-            Some(crate::purchase_claim::PurchaseClaim { wpid, pull_secret }) => {
-                // A previous poll may have pulled the secret then failed the
-                // register: the server mapping is single-use, so this cache is
-                // the only remaining copy of a paid voucher. Reuse before pull.
-                let cached = PULLED_UNREGISTERED.lock().get(wpid).cloned();
-                match cached {
-                    Some(secret) => secret,
-                    None => match client
-                        .pull_pending_voucher(wpid, pull_secret)
-                        .await
-                        .map_err(|e| format!("pull pending voucher failed: {e}"))?
-                    {
-                        Some(secret) => {
-                            PULLED_UNREGISTERED
-                                .lock()
-                                .insert(wpid.clone(), secret.clone());
-                            secret
-                        }
-                        // Webhook not landed yet (or id expired): keep polling.
-                        None => return Err("purchase pending".to_owned().into()),
-                    },
-                }
-            }
+            Some(claim) => match collect_pulled(client, claim).await? {
+                // The request DTO owns a plain String; this copy leaves with it.
+                Some(secret) => (*secret).clone(),
+                // Webhook not landed yet (or id expired): keep polling.
+                None => return Err("purchase pending".to_owned().into()),
+            },
             None => voucher_or_claim.to_owned(),
         };
+        let redeemed = Zeroizing::new(voucher_secret.clone());
 
         // An EMPTY voucher asks the server to redeem its configured
         // auto-voucher (beta onboarding / refresh access): the field is
@@ -2135,9 +2193,7 @@ fn redeem_voucher_inner(mnemonic: &str, voucher_or_claim: &str) -> Result<u64, R
             }
             let e = match client.register(&req).await {
                 Ok(resp) => {
-                    if let Some(wpid) = &wpid {
-                        PULLED_UNREGISTERED.lock().remove(wpid);
-                    }
+                    PULLED_UNREGISTERED.forget(&redeemed);
                     return Ok(resp.expires_at);
                 }
                 Err(e) => e,
@@ -2160,10 +2216,8 @@ fn redeem_voucher_inner(mnemonic: &str, voucher_or_claim: &str) -> Result<u64, R
                     return Err(RedeemError::Banned(ban));
                 }
                 crate::purchase_claim::RegisterFailure::VoucherDead => {
-                    if let Some(wpid) = &wpid {
-                        PULLED_UNREGISTERED.lock().remove(wpid);
-                    }
-                    return Err(format!("register failed: {e}").into());
+                    PULLED_UNREGISTERED.forget(&redeemed);
+                    return Err(RedeemError::VoucherRejected);
                 }
                 crate::purchase_claim::RegisterFailure::Refused => {
                     return Err(format!("register failed: {e}").into());
@@ -2190,6 +2244,8 @@ enum RedeemError {
     /// The wallet is banned: the voucher was not consumed and stays the
     /// user's, and a pulled secret stays cached for after the ban.
     Banned(warren_standing::Ban),
+    /// A verdict on the voucher itself: unknown, spent, cancelled or expired.
+    VoucherRejected,
     /// Any other failure, with a loggable class and no secret in it.
     Failed(String),
 }
