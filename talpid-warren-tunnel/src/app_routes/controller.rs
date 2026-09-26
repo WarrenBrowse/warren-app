@@ -26,8 +26,8 @@ use warrenguard_transport::route_anchor::AnchorState;
 use warrenguard_transport_core::PacketDevice;
 
 use super::{
-    AppRouteObserver, AppRoutesPlan, MAX_ROUTE_SESSIONS, MainRoute, RouteReport, RouteSessionState,
-    SessionEvent, TOKEN_ROUTE_SESSIONS, circuit_identity,
+    AppRouteObserver, AppRoutesPlan, MAX_ROUTE_SESSIONS, MainRoute, PlannedRoute, RouteReport,
+    RouteSessionState, SessionEvent, TOKEN_ROUTE_SESSIONS, circuit_identity,
     datapath::{RouteTun, RoutingTable},
     route_capacity,
 };
@@ -235,7 +235,15 @@ where
             tokio::select! {
                 () = &mut shutdown => break,
                 state = anchor_changed(&mut anchor) => match state {
-                    Some(state) => self.set_capacity(route_capacity(Some(state))).await,
+                    // Only a bound anchor sets the capacity. One that becomes
+                    // unavailable after it was bound leaves its routes up:
+                    // they stay admitted at their exits until the control
+                    // plane ends them (warren-core doc 107 section 12), and a
+                    // route it ends falls back to a token.
+                    Some(state @ AnchorState::Anchored { .. }) => {
+                        self.set_capacity(route_capacity(Some(state))).await;
+                    }
+                    Some(AnchorState::Unanchored | AnchorState::Unavailable) => {}
                     // The main supervisor is gone with the tunnel; what it
                     // last said stands until the plan's sender goes too.
                     None => anchor = None,
@@ -275,15 +283,17 @@ where
     /// Brings the sessions and the router in line with `plan`.
     pub async fn apply(&mut self, plan: &AppRoutesPlan) {
         self.plan = plan.clone();
-        let capacity = self.capacity;
+        let served: Vec<([u8; 16], [u8; 16])> = self
+            .partition(plan)
+            .0
+            .iter()
+            .map(|route| circuit_identity(&route.circuit))
+            .collect();
         let mut stopping = Vec::new();
         for (index, slot) in self.slots.iter_mut().enumerate() {
-            let kept = slot.as_ref().is_some_and(|slot| {
-                plan.routes
-                    .iter()
-                    .take(capacity)
-                    .any(|route| circuit_identity(&route.circuit) == slot.identity())
-            });
+            let kept = slot
+                .as_ref()
+                .is_some_and(|slot| served.contains(&slot.identity()));
             if !kept && let Some(slot) = slot.take() {
                 self.table.close_route(route_id(index));
                 stopping.extend(slot.session.map(S::stop));
@@ -324,8 +334,29 @@ where
 
     /// Takes a slot for each new route of `plan` and gives every route its
     /// apps, without starting anything.
+    /// The routes of `plan` that may hold a session now, and those that wait:
+    /// first the routes that already hold one, in plan order, so a route
+    /// added to the plan never takes the place of a live one, then the
+    /// others, up to the capacity.
+    fn partition<'p>(
+        &self,
+        plan: &'p AppRoutesPlan,
+    ) -> (Vec<&'p PlannedRoute>, Vec<&'p PlannedRoute>) {
+        let (live, new): (Vec<&PlannedRoute>, Vec<&PlannedRoute>) =
+            plan.routes.iter().partition(|route| {
+                let identity = circuit_identity(&route.circuit);
+                self.slots
+                    .iter()
+                    .flatten()
+                    .any(|slot| slot.identity() == identity)
+            });
+        let mut served: Vec<&PlannedRoute> = live.into_iter().chain(new).collect();
+        let waiting = served.split_off(served.len().min(self.capacity));
+        (served, waiting)
+    }
+
     fn reserve(&mut self, plan: &AppRoutesPlan) {
-        let (served, over_limit) = plan.routes.split_at(plan.routes.len().min(self.capacity));
+        let (served, over_limit) = self.partition(plan);
         if !over_limit.is_empty() {
             log::debug!(
                 "App routing: {} route sessions asked for, {} may run now; the others wait",
@@ -399,6 +430,7 @@ where
             SessionEvent::Connecting => (RouteSessionState::Connecting, None),
             SessionEvent::Connected(addresses) => (RouteSessionState::Connected, Some(addresses)),
             SessionEvent::Unavailable(reason) => (RouteSessionState::Unavailable(reason), None),
+            SessionEvent::Waiting => (RouteSessionState::Waiting, None),
         };
         let state = slot.route_state();
         self.table.set_route_state(route_id(tagged.slot), state);
@@ -846,6 +878,30 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn a_route_added_past_the_capacity_waits_instead_of_replacing_a_live_one() {
+        let mut rig = Rig::new();
+        rig.controller
+            .apply(&plan(vec![route(2, &[EDITOR]), route(3, &[BROWSER])]))
+            .await;
+
+        rig.controller
+            .apply(&plan(vec![
+                route(1, &[]),
+                route(2, &[EDITOR]),
+                route(3, &[BROWSER]),
+            ]))
+            .await;
+
+        assert_eq!(rig.world.starts(), 2);
+        assert!(rig.world.alive(0));
+        assert!(rig.world.alive(1));
+        assert!(rig.world.last_report().contains(&RouteReport {
+            exit_id: [1; 16],
+            state: RouteSessionState::Waiting,
+        }));
+    }
+
+    #[tokio::test]
     async fn a_larger_capacity_starts_the_waiting_routes() {
         let mut rig = Rig::new();
         rig.controller.apply(&three_routes()).await;
@@ -880,6 +936,55 @@ mod tests {
             rig.world.log().last().unwrap(),
             "name [192.0.2.1:443,192.0.2.2:443]"
         );
+    }
+
+    #[tokio::test]
+    async fn a_session_waiting_for_a_token_route_is_reported_waiting_with_its_apps_held() {
+        let mut rig = Rig::new();
+        rig.controller
+            .apply(&plan(vec![route(1, &[BROWSER])]))
+            .await;
+
+        rig.world.send(0, SessionEvent::Waiting);
+        rig.deliver_events();
+
+        assert_eq!(rig.opening_goes(BROWSER_PORT).await, Where::Dropped);
+        assert_eq!(
+            rig.world.last_report(),
+            vec![RouteReport {
+                exit_id: [1; 16],
+                state: RouteSessionState::Waiting,
+            }]
+        );
+    }
+
+    #[tokio::test]
+    async fn run_keeps_the_routes_of_an_anchor_that_goes_unavailable_once_bound() {
+        let rig = Rig::new();
+        let world = rig.world.clone();
+        let (_plan_tx, plan_rx) = watch::channel(three_routes());
+        let (anchor_tx, anchor_rx) = watch::channel(AnchorState::Anchored { max_routes: 32 });
+        let running = tokio::spawn(rig.controller.run(
+            plan_rx,
+            watch::channel(None).1,
+            Some(anchor_rx),
+            std::future::pending(),
+        ));
+        tokio::time::timeout(Duration::from_secs(1), async {
+            while world.starts() < 3 {
+                tokio::task::yield_now().await;
+            }
+        })
+        .await
+        .expect("the anchor admits three routes");
+
+        anchor_tx.send_replace(AnchorState::Unavailable);
+        for _ in 0..50 {
+            tokio::task::yield_now().await;
+        }
+
+        assert!((0..3).all(|nth| world.alive(nth)));
+        running.abort();
     }
 
     #[tokio::test]

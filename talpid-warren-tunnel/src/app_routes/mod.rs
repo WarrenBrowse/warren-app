@@ -205,6 +205,8 @@ pub enum SessionEvent {
     /// Up, sending from these inner addresses.
     Connected(SessionAddresses),
     Unavailable(RouteUnavailable),
+    /// Waiting for one of the routes the tokens admit at once to be free.
+    Waiting,
 }
 
 #[cfg(test)]

@@ -51,8 +51,8 @@ use warrenguard_transport::{
 use warrenguard_transport_core::PacketDevice;
 
 use super::{
-    RouteAdmissionSource, RouteUnavailable, SessionEvent, controller::RouteSessions,
-    datapath::RouteTun,
+    RouteAdmissionSource, RouteUnavailable, SessionEvent, TOKEN_ROUTE_SESSIONS,
+    controller::RouteSessions, datapath::RouteTun,
 };
 use crate::{MultiHopConfig, SessionTokenSource, multi_hop_bind_addr, multi_hop_daita_shared};
 
@@ -83,6 +83,11 @@ pub struct RouteSessionConfig {
     pub route_admission: Option<Arc<dyn RouteAdmissionSource>>,
     /// Exits whose refusal of a route by anchor holds for the anchor's life.
     refused_by_anchor: Arc<Mutex<HashSet<[u8; 16]>>>,
+    /// One permit per route that may run on tokens at once: the wallet's
+    /// batch less the main session's serial. Past them a route waits rather
+    /// than walk the serials the other sessions hold, which would show its
+    /// exit the main session's serial.
+    token_routes: Arc<tokio::sync::Semaphore>,
     pub wants_ipv6: bool,
     pub enable_daita: bool,
     pub idle_cover: bool,
@@ -102,6 +107,7 @@ impl RouteSessionConfig {
             anchor: None,
             route_admission: None,
             refused_by_anchor: Arc::default(),
+            token_routes: Arc::new(tokio::sync::Semaphore::new(TOKEN_ROUTE_SESSIONS)),
             wants_ipv6: false,
             enable_daita: false,
             idle_cover: false,
@@ -338,7 +344,8 @@ async fn run_route_session<T: PacketDevice + Clone>(
 
 /// The life of the route to `exit`: each attempt dials by anchor when it can
 /// and on a token otherwise, a refusal by anchor is followed at once by a
-/// dial on a token, and an attempt that ends otherwise waits
+/// dial on a token, a dial on a token waits for one of the token routes to be
+/// free, and an attempt that ends otherwise waits
 /// [`RouteSessionConfig::retry_unavailable_after`] before the next one.
 async fn route_loop<F, Fut>(
     exit: [u8; 16],
@@ -351,30 +358,49 @@ async fn route_loop<F, Fut>(
 {
     loop {
         report(SessionEvent::Connecting);
-        let mut admission = config.admission_for(&exit);
-        let reason = loop {
-            let by_anchor = matches!(admission, SessionAdmission::Route(_));
-            match dial(admission).await {
-                SessionEnd::Refused(refusal) if by_anchor => {
-                    if refusal_lasts(refusal) {
-                        config.remember_refusal(exit);
+        let reason = 'attempt: {
+            if let admission @ SessionAdmission::Route(_) = config.admission_for(&exit) {
+                match dial(admission).await {
+                    SessionEnd::Refused(refusal) => {
+                        if refusal_lasts(refusal) {
+                            config.remember_refusal(exit);
+                        }
+                        log::info!(
+                            "App routing: a route by anchor was not admitted ({refusal}); \
+                             it runs on a token instead"
+                        );
                     }
-                    log::info!(
-                        "App routing: a route by anchor was not admitted ({refusal}); \
-                         it runs on a token instead"
-                    );
-                    report(SessionEvent::Connecting);
-                    admission = SessionAdmission::TokensOnly;
+                    SessionEnd::Unavailable(reason) => break 'attempt reason,
                 }
+            }
+            let Some(_permit) = token_route_permit(config, &report).await else {
+                break 'attempt RouteUnavailable::Failed;
+            };
+            report(SessionEvent::Connecting);
+            match dial(SessionAdmission::TokensOnly).await {
+                SessionEnd::Unavailable(reason) => reason,
                 // A route on tokens is never refused as a route by anchor.
-                SessionEnd::Refused(_) => break RouteUnavailable::Failed,
-                SessionEnd::Unavailable(reason) => break reason,
+                SessionEnd::Refused(_) => RouteUnavailable::Failed,
             }
         };
         log::info!("App routing: a route session ended ({reason:?}); retrying later");
         report(SessionEvent::Unavailable(reason));
         tokio::time::sleep(config.retry_unavailable_after).await;
     }
+}
+
+/// One of the routes the tokens admit at once, waited for (and reported
+/// waiting) while every one is taken. `None` only if the permits were closed,
+/// which nothing does.
+async fn token_route_permit(
+    config: &RouteSessionConfig,
+    report: &impl Fn(SessionEvent),
+) -> Option<tokio::sync::OwnedSemaphorePermit> {
+    if let Ok(permit) = Arc::clone(&config.token_routes).try_acquire_owned() {
+        return Some(permit);
+    }
+    report(SessionEvent::Waiting);
+    Arc::clone(&config.token_routes).acquire_owned().await.ok()
 }
 
 /// One supervisor's life: reports each session it publishes, and says why it
@@ -906,5 +932,54 @@ mod tests {
 
         assert_eq!(dials.by_anchor()[..2], [false, false]);
         assert_eq!(dials.gaps()[0], config.retry_unavailable_after);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn at_most_the_token_routes_run_on_tokens_at_once_and_the_others_wait() {
+        let config = anchored(&[]);
+        let dialed = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let waiting = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let spawn_route = |exit: u8| {
+            let (config, dialed, waiting) =
+                (config.clone(), Arc::clone(&dialed), Arc::clone(&waiting));
+            tokio::spawn(async move {
+                route_loop(
+                    [exit; 16],
+                    &config,
+                    |event| {
+                        if event == SessionEvent::Waiting {
+                            waiting.fetch_add(1, Ordering::SeqCst);
+                        }
+                    },
+                    |_admission| {
+                        dialed.fetch_add(1, Ordering::SeqCst);
+                        // Connected on a token, for as long as it lives.
+                        std::future::pending::<SessionEnd>()
+                    },
+                )
+                .await;
+            })
+        };
+        let routes: Vec<_> = (1..=TOKEN_ROUTE_SESSIONS as u8 + 1)
+            .map(spawn_route)
+            .collect();
+        tokio::time::sleep(Duration::from_secs(1)).await;
+        let (dialed_first, waiting_first) = (
+            dialed.load(Ordering::SeqCst),
+            waiting.load(Ordering::SeqCst),
+        );
+
+        routes[0].abort();
+        tokio::time::sleep(Duration::from_secs(1)).await;
+
+        assert_eq!((dialed_first, waiting_first), (TOKEN_ROUTE_SESSIONS, 1));
+        assert_eq!(
+            dialed.load(Ordering::SeqCst),
+            TOKEN_ROUTE_SESSIONS + 1,
+            "the waiting route dials once a token route is free"
+        );
+        for route in routes {
+            route.abort();
+        }
     }
 }

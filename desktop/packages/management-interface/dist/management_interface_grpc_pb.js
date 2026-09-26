@@ -1999,8 +1999,8 @@ setAppSplitMode: {
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },
-  // Fails with FAILED_PRECONDITION and the details "app_exit_limit" when the
-// apps would then use more different exits than there are route sessions.
+  // Any number of different exits is accepted: a route past what the server
+// admits at once is reported WAITING_FOR_ROUTE.
 setAppExit: {
     path: '/mullvad_daemon.management_interface.ManagementService/SetAppExit',
     requestStream: false,

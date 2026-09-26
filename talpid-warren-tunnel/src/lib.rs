@@ -727,11 +727,12 @@ impl std::fmt::Debug for WarrenTunnelParameters {
     }
 }
 
-/// The anchor of this tunnel's main session: one when the tunnel runs
-/// per-app routes and the token directory offers route admission, so its
-/// routes need no token each. A tunnel without per-app routes does not
-/// anchor, which keeps its session unknown to the route admission control
-/// plane.
+/// The anchor of this tunnel's main session: one when the tunnel can run
+/// per-app routes (the daemon wires a plan into every desktop tunnel, with a
+/// country set or not) and the token directory offers route admission, so a
+/// country chosen while connected gets its route without a reconnect of the
+/// main session. A tunnel that cannot run per-app routes (no plan wired) does
+/// not anchor.
 fn route_anchor_for(params: &WarrenTunnelParameters) -> Option<RouteAnchorHandle> {
     params.app_routes_rx.as_ref()?;
     let kem = params.route_admission.as_ref()?.kem()?;
@@ -5876,7 +5877,7 @@ mod route_anchor_tests {
     }
 
     #[test]
-    fn a_tunnel_without_per_app_routes_never_anchors() {
+    fn a_tunnel_that_cannot_run_per_app_routes_never_anchors() {
         assert!(route_anchor_for(&params(false, Some(offering()))).is_none());
     }
 
