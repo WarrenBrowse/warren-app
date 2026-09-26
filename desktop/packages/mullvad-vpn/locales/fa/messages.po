@@ -1182,6 +1182,12 @@ msgid "%(DAITA)s: Multihop"
 msgstr "%(DAITA)s: مولتی‌هاپ"
 
 msgctxt "connect-view"
+msgid "%(count)d app in another country"
+msgid_plural "%(count)d apps in other countries"
+msgstr[0] "%(count)d اپلیکیشن در کشوری دیگر"
+msgstr[1] "%(count)d اپلیکیشن در کشورهای دیگر"
+
+msgctxt "connect-view"
 msgid "Active features"
 msgstr "ویژگی‌های فعال"
 
@@ -1252,6 +1258,16 @@ msgstr "برای ادامهٔ مسیرتان به‌عنوان یک نینجای
 msgctxt "connect-view"
 msgid "To start using the app, you first need to add time to your account."
 msgstr "برای شروع استفاده از اپلیکیشن، ابتدا باید به حساب خود زمان اضافه کنید."
+
+msgctxt "connect-view"
+msgid "VPN only for %(count)d app"
+msgid_plural "VPN only for %(count)d apps"
+msgstr[0] "VPN فقط برای %(count)d اپلیکیشن"
+msgstr[1] "VPN فقط برای %(count)d اپلیکیشن"
+
+msgctxt "connect-view"
+msgid "VPN only for chosen apps"
+msgstr "VPN فقط برای اپلیکیشن‌های انتخاب‌شده"
 
 msgctxt "connect-view"
 msgid "Voucher was successfully redeemed"
@@ -2846,6 +2862,10 @@ msgctxt "split-tunneling-view"
 msgid "%(applicationName)s is problematic and can’t be excluded from the VPN tunnel."
 msgstr "‏%(applicationName)s مشکل‌ساز است و نمی‌توان آن را از تونل VPN خارج کرد."
 
+msgctxt "split-tunneling-view"
+msgid "%(applicationName)s is problematic and can’t be launched through the VPN alone."
+msgstr "اپلیکیشن %(applicationName)s مشکل‌ساز است و نمی‌توان آن را به‌تنهایی از طریق VPN اجرا کرد."
+
 #. Information about split tunneling not being supported on the system.
 #. Available placeholders:
 #. %(splitTunneling)s - will be replaced with Split tunneling
@@ -2862,8 +2882,48 @@ msgid "All apps"
 msgstr "همهٔ اپلیکیشن‌ها"
 
 msgctxt "split-tunneling-view"
+msgid "App routing"
+msgstr "مسیریابی اپلیکیشن‌ها"
+
+msgctxt "split-tunneling-view"
+msgid "Apps can use %(limit)d countries at a time. Pick one already in use, or remove one first."
+msgstr "اپلیکیشن‌ها می‌توانند هم‌زمان از %(limit)d کشور استفاده کنند. یکی از کشورهای در حال استفاده را انتخاب کنید، یا ابتدا یکی را حذف کنید."
+
+msgctxt "split-tunneling-view"
+msgid "Bypass VPN"
+msgstr "خارج از VPN"
+
+msgctxt "split-tunneling-view"
+msgid "Bypasses the VPN"
+msgstr "خارج از VPN"
+
+msgctxt "split-tunneling-view"
+msgid "Change the country of %(application)s, now %(country)s"
+msgstr "تغییر کشور %(application)s، کشور فعلی: %(country)s"
+
+msgctxt "split-tunneling-view"
+msgid "Choose"
+msgstr "انتخاب"
+
+msgctxt "split-tunneling-view"
+msgid "Choose a country for %(application)s"
+msgstr "انتخاب کشور برای %(application)s"
+
+msgctxt "split-tunneling-view"
+msgid "Choose how each app connects."
+msgstr "انتخاب کنید هر اپلیکیشن چگونه متصل شود."
+
+msgctxt "split-tunneling-view"
 msgid "Choose the apps you want to exclude from the VPN tunnel."
 msgstr "اپلیکیشن‌هایی را که می‌خواهید از تونل VPN خارج کنید انتخاب نمایید."
+
+msgctxt "split-tunneling-view"
+msgid "Choose the country an app appears from. Other apps keep your main connection. Up to %(limit)d countries at a time."
+msgstr "کشوری را انتخاب کنید که اپلیکیشن از آن دیده شود. بقیهٔ اپلیکیشن‌ها از اتصال اصلی شما استفاده می‌کنند. حداکثر %(limit)d کشور هم‌زمان."
+
+msgctxt "split-tunneling-view"
+msgid "Cities in %(country)s"
+msgstr "شهرهای %(country)s"
 
 #. Link for learning more
 msgctxt "split-tunneling-view"
@@ -2871,8 +2931,44 @@ msgid "Click here to learn more"
 msgstr "برای کسب اطلاعات بیشتر اینجا کلیک کنید"
 
 msgctxt "split-tunneling-view"
+msgid "Click on an app to launch it. It uses the VPN until you close it, and nothing else does."
+msgstr "روی یک اپلیکیشن کلیک کنید تا اجرا شود. تا وقتی آن را نبسته‌اید، فقط همین اپلیکیشن از VPN استفاده می‌کند."
+
+msgctxt "split-tunneling-view"
 msgid "Click on an app to launch it. Its traffic will bypass the VPN tunnel until you close it."
 msgstr "روی یک اپلیکیشن کلیک کنید تا اجرا شود. تا زمانی که اپلیکیشن باز است، ترافیک آن از تونل VPN عبور نمی‌کند."
+
+msgctxt "split-tunneling-view"
+msgid "Connected"
+msgstr "متصل"
+
+msgctxt "split-tunneling-view"
+msgid "Connected, IP %(ip)s"
+msgstr "متصل، IP %(ip)s"
+
+msgctxt "split-tunneling-view"
+msgid "Connecting..."
+msgstr "در حال اتصال..."
+
+msgctxt "split-tunneling-view"
+msgid "Countries"
+msgstr "کشورها"
+
+msgctxt "split-tunneling-view"
+msgid "Country"
+msgstr "کشور"
+
+msgctxt "split-tunneling-view"
+msgid "Country for %(application)s"
+msgstr "کشور %(application)s"
+
+msgctxt "split-tunneling-view"
+msgid "Country limit reached"
+msgstr "سقف کشورها پر شد"
+
+msgctxt "split-tunneling-view"
+msgid "Country per app"
+msgstr "کشور هر اپلیکیشن"
 
 msgctxt "split-tunneling-view"
 msgid "Enabled \"Full disk access\" and still having issues?"
@@ -2888,8 +2984,20 @@ msgid "Find another app"
 msgstr "پیدا کردن اپلیکیشن دیگر"
 
 msgctxt "split-tunneling-view"
+msgid "Flatpak apps cannot use a country yet"
+msgstr "اپلیکیشن‌های Flatpak هنوز نمی‌توانند کشور داشته باشند"
+
+msgctxt "split-tunneling-view"
 msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not be excluded from the VPN tunnel."
 msgstr "اگر %(applicationName)s در حال اجرا است، ابتدا آن را ببندید و سپس از اینجا اجرا کنید؛ در غیر این صورت ممکن است از تونل VPN مستثنا نشود."
+
+msgctxt "split-tunneling-view"
+msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not use the VPN."
+msgstr "اگر %(applicationName)s در حال اجرا است، ابتدا آن را ببندید و سپس از اینجا اجرا کنید؛ در غیر این صورت ممکن است از VPN استفاده نکند."
+
+msgctxt "split-tunneling-view"
+msgid "In use"
+msgstr "در حال استفاده"
 
 #. Button label for launching an application with split tunneling.
 msgctxt "split-tunneling-view"
@@ -2897,8 +3005,40 @@ msgid "Launch"
 msgstr "اجرا"
 
 msgctxt "split-tunneling-view"
+msgid "Limit reached"
+msgstr "سقف پر شد"
+
+msgctxt "split-tunneling-view"
+msgid "No server there"
+msgstr "آنجا سروری نیست"
+
+msgctxt "split-tunneling-view"
+msgid "No session token left"
+msgstr "توکن نشستی باقی نمانده"
+
+msgctxt "split-tunneling-view"
+msgid "Off, uses the main connection"
+msgstr "خاموش، اتصال اصلی"
+
+msgctxt "split-tunneling-view"
+msgid "Only the apps you choose use the VPN."
+msgstr "فقط اپلیکیشن‌هایی که انتخاب می‌کنید از VPN استفاده می‌کنند."
+
+msgctxt "split-tunneling-view"
+msgid "Only the apps you choose will use the VPN. The rest of this device will not be protected."
+msgstr "فقط اپلیکیشن‌هایی که انتخاب می‌کنید از VPN استفاده خواهند کرد. بقیهٔ این دستگاه محافظت نخواهد شد."
+
+msgctxt "split-tunneling-view"
+msgid "Only these apps are protected. Everything else on this device uses your normal connection."
+msgstr "فقط این اپلیکیشن‌ها محافظت می‌شوند. بقیهٔ این دستگاه از اتصال عادی شما استفاده می‌کند."
+
+msgctxt "split-tunneling-view"
 msgid "Open System Settings"
 msgstr "تنظیمات سیستم را باز کنید"
+
+msgctxt "split-tunneling-view"
+msgid "Opens through a script: pick its program with Find another app"
+msgstr "با اسکریپت باز می‌شود: برنامهٔ آن را با «پیدا کردن اپلیکیشن دیگر» انتخاب کنید"
 
 #. This error message is shown if the user tries to launch a Linux desktop
 #. entry file that doesn't contain the required 'Exec' value.
@@ -2914,8 +3054,40 @@ msgid "Please try again or send a problem report."
 msgstr "لطفاً دوباره امتحان کنید یا یک گزارش مشکل ارسال نمایید."
 
 msgctxt "split-tunneling-view"
+msgid "Remove country"
+msgstr "حذف کشور"
+
+msgctxt "split-tunneling-view"
+msgid "Remove the country of %(application)s"
+msgstr "حذف کشور %(application)s"
+
+msgctxt "split-tunneling-view"
 msgid "Restart Warren Service"
 msgstr "راه‌اندازی مجدد سرویس Warren"
+
+msgctxt "split-tunneling-view"
+msgid "Snap apps cannot use a country yet"
+msgstr "اپلیکیشن‌های Snap هنوز نمی‌توانند کشور داشته باشند"
+
+msgctxt "split-tunneling-view"
+msgid "The apps you choose connect as if the VPN were off."
+msgstr "اپلیکیشن‌هایی که انتخاب می‌کنید طوری متصل می‌شوند که انگار VPN خاموش است."
+
+msgctxt "split-tunneling-view"
+msgid "This build of Warren VPN cannot do this. It needs a signed build."
+msgstr "این نسخه از Warren VPN نمی‌تواند این کار را انجام دهد. به نسخهٔ امضاشده نیاز است."
+
+msgctxt "split-tunneling-view"
+msgid "This needs macOS 13 or newer."
+msgstr "این قابلیت به macOS 13 یا جدیدتر نیاز دارد."
+
+msgctxt "split-tunneling-view"
+msgid "This replaces Bypass VPN. Your list of apps there is kept."
+msgstr "این جایگزین «خارج از VPN» می‌شود. فهرست اپلیکیشن‌های شما در آنجا حفظ می‌شود."
+
+msgctxt "split-tunneling-view"
+msgid "This replaces VPN only for, so every app uses the VPN again except the ones you bypass. Your list of apps there is kept."
+msgstr "این جایگزین «VPN انتخابی» می‌شود، بنابراین همهٔ اپلیکیشن‌ها دوباره از VPN استفاده می‌کنند، به‌جز آن‌هایی که خارج از VPN هستند. فهرست اپلیکیشن‌های شما در آنجا حفظ می‌شود."
 
 #. Information about split tunneling being unavailable due to
 #. missing support in the user's operating system.
@@ -2929,10 +3101,54 @@ msgctxt "split-tunneling-view"
 msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
 msgstr "برای استفاده از تونل‌گذاری تفکیک‌شده، لطفاً «دسترسی کامل به دیسک» را برای «Warren VPN» در تنظیمات سیستم macOS فعال کنید."
 
+msgctxt "split-tunneling-view"
+msgid "To use this, enable “Full disk access” for “Warren VPN” in the macOS system settings."
+msgstr "برای استفاده از این قابلیت، «دسترسی کامل به دیسک» را برای «Warren VPN» در تنظیمات سیستم macOS فعال کنید."
+
+msgctxt "split-tunneling-view"
+msgid "Turn on"
+msgstr "روشن کردن"
+
 #. Error message showed in a dialog when an application fails to launch.
 msgctxt "split-tunneling-view"
 msgid "Unable to launch selection. %(detailedErrorMessage)s"
 msgstr "امکان اجرای انتخاب وجود ندارد. %(detailedErrorMessage)s"
+
+msgctxt "split-tunneling-view"
+msgid "Unavailable"
+msgstr "ناموجود"
+
+msgctxt "split-tunneling-view"
+msgid "Uses the VPN through its country"
+msgstr "از طریق کشور خودش از VPN استفاده می‌کند"
+
+msgctxt "split-tunneling-view"
+msgid "Using the VPN"
+msgstr "در VPN"
+
+msgctxt "split-tunneling-view"
+msgid "VPN only for"
+msgstr "VPN انتخابی"
+
+msgctxt "split-tunneling-view"
+msgid "VPN only for is on: an app uses its country when you open it from VPN only for."
+msgstr "«VPN انتخابی» روشن است: اپلیکیشن فقط وقتی از کشور خودش استفاده می‌کند که آن را از «VPN انتخابی» باز کنید."
+
+msgctxt "split-tunneling-view"
+msgid "VPN only for is on: every app you did not choose there already bypasses the VPN."
+msgstr "«VPN انتخابی» روشن است: هر اپلیکیشنی که آنجا انتخاب نکرده‌اید، از قبل خارج از VPN است."
+
+msgctxt "split-tunneling-view"
+msgid "Waiting for the VPN"
+msgstr "در انتظار VPN"
+
+msgctxt "split-tunneling-view"
+msgid "With a country"
+msgstr "دارای کشور"
+
+msgctxt "split-tunneling-view"
+msgid "Your system does not support this."
+msgstr "سیستم شما از این قابلیت پشتیبانی نمی‌کند."
 
 #. Button label for continuing problem report submission with an outdated app version.
 msgctxt "support-view"
@@ -3136,6 +3352,10 @@ msgstr "اگر این مراحل کارساز نبود، لطفاً مشکل ر�
 msgctxt "tunnel-control"
 msgid "Connect"
 msgstr "اتصال"
+
+msgctxt "tunnel-control"
+msgid "Only selected apps are protected"
+msgstr "فقط اپلیکیشن‌های انتخاب‌شده محافظت می‌شوند"
 
 msgctxt "tunnel-control"
 msgid "Switch location"
