@@ -67,8 +67,8 @@ impl Engine {
                 ptr::null(),
                 RPC_C_AUTHN_DEFAULT as u32,
                 ptr::null(),
-                &session,
-                &mut handle,
+                &raw const session,
+                &raw mut handle,
             )
         };
         assert_eq!(status, 0, "FwpmEngineOpen0");
@@ -80,7 +80,7 @@ impl Engine {
     fn sublayer_owner(&self, key: GUID) -> Option<Option<u128>> {
         let mut sublayer: *mut FWPM_SUBLAYER0 = ptr::null_mut();
         // SAFETY: valid handle and out pointer.
-        let status = unsafe { FwpmSubLayerGetByKey0(self.0, &key, &mut sublayer) };
+        let status = unsafe { FwpmSubLayerGetByKey0(self.0, &raw const key, &raw mut sublayer) };
         if status == FWP_E_SUBLAYER_NOT_FOUND as u32 {
             return None;
         }
@@ -99,14 +99,22 @@ impl Engine {
         let mut found = Vec::new();
         let mut enum_handle: HANDLE = ptr::null_mut();
         // SAFETY: valid handle and out pointer.
-        let status = unsafe { FwpmFilterCreateEnumHandle0(self.0, ptr::null(), &mut enum_handle) };
+        let status =
+            unsafe { FwpmFilterCreateEnumHandle0(self.0, ptr::null(), &raw mut enum_handle) };
         assert_eq!(status, 0, "FwpmFilterCreateEnumHandle0");
         loop {
             let mut entries: *mut *mut FWPM_FILTER0 = ptr::null_mut();
             let mut returned = 0u32;
             // SAFETY: valid handles and out pointers.
-            let status =
-                unsafe { FwpmFilterEnum0(self.0, enum_handle, 100, &mut entries, &mut returned) };
+            let status = unsafe {
+                FwpmFilterEnum0(
+                    self.0,
+                    enum_handle,
+                    100,
+                    &raw mut entries,
+                    &raw mut returned,
+                )
+            };
             assert_eq!(status, 0, "FwpmFilterEnum0");
             for i in 0..returned as usize {
                 // SAFETY: the engine returned `returned` valid entries.
@@ -134,14 +142,22 @@ impl Engine {
         let mut names = Vec::new();
         let mut enum_handle: HANDLE = ptr::null_mut();
         // SAFETY: valid handle and out pointer.
-        let status = unsafe { FwpmFilterCreateEnumHandle0(self.0, ptr::null(), &mut enum_handle) };
+        let status =
+            unsafe { FwpmFilterCreateEnumHandle0(self.0, ptr::null(), &raw mut enum_handle) };
         assert_eq!(status, 0, "FwpmFilterCreateEnumHandle0");
         loop {
             let mut entries: *mut *mut FWPM_FILTER0 = ptr::null_mut();
             let mut returned = 0u32;
             // SAFETY: valid handles and out pointers.
-            let status =
-                unsafe { FwpmFilterEnum0(self.0, enum_handle, 100, &mut entries, &mut returned) };
+            let status = unsafe {
+                FwpmFilterEnum0(
+                    self.0,
+                    enum_handle,
+                    100,
+                    &raw mut entries,
+                    &raw mut returned,
+                )
+            };
             assert_eq!(status, 0, "FwpmFilterEnum0");
             for i in 0..returned as usize {
                 // SAFETY: the engine returned `returned` valid entries.
@@ -181,7 +197,7 @@ impl Engine {
             ..Default::default()
         };
         // SAFETY: valid handle and provider.
-        let status = unsafe { FwpmProviderAdd0(self.0, &provider, ptr::null_mut()) };
+        let status = unsafe { FwpmProviderAdd0(self.0, &raw const provider, ptr::null_mut()) };
         assert_eq!(status, 0, "FwpmProviderAdd0");
     }
 
@@ -199,7 +215,7 @@ impl Engine {
             ..Default::default()
         };
         // SAFETY: valid handle and sublayer.
-        let status = unsafe { FwpmSubLayerAdd0(self.0, &sublayer, ptr::null_mut()) };
+        let status = unsafe { FwpmSubLayerAdd0(self.0, &raw const sublayer, ptr::null_mut()) };
         assert_eq!(status, 0, "FwpmSubLayerAdd0");
     }
 
@@ -221,7 +237,7 @@ impl Engine {
                 name: name.as_mut_ptr(),
                 description: ptr::null_mut(),
             },
-            providerKey: &mut provider,
+            providerKey: &raw mut provider,
             layerKey: FWPM_LAYER_ALE_AUTH_CONNECT_V4,
             subLayerKey: sublayer,
             weight: FWP_VALUE0 {
@@ -229,7 +245,7 @@ impl Engine {
                 ..Default::default()
             },
             numFilterConditions: 1,
-            filterCondition: &mut condition,
+            filterCondition: &raw mut condition,
             action: FWPM_ACTION0 {
                 r#type: FWP_ACTION_PERMIT,
                 ..Default::default()
@@ -238,7 +254,8 @@ impl Engine {
         };
         let mut id = 0u64;
         // SAFETY: valid handle; every pointer in `filter` outlives the call.
-        let status = unsafe { FwpmFilterAdd0(self.0, &filter, ptr::null_mut(), &mut id) };
+        let status =
+            unsafe { FwpmFilterAdd0(self.0, &raw const filter, ptr::null_mut(), &raw mut id) };
         assert_eq!(status, 0, "FwpmFilterAdd0");
     }
 }
