@@ -83,6 +83,7 @@
     <string name="update_available_description">الإصدار %1$s متوفر. اضغط لتنزيل التحديث.</string>
     <string name="update_now">حدّث الآن</string>
     <string name="quit">خروج</string>
+    <string name="app_routing">توجيه التطبيقات</string>
     <string name="app_routing_description">اختر كيف يتصل كل تطبيق.</string>
     <string name="split_mode_bypass">خارج VPN</string>
     <string name="split_mode_bypass_description">تتصل التطبيقات التي تختارها كما لو كانت VPN متوقفة.</string>

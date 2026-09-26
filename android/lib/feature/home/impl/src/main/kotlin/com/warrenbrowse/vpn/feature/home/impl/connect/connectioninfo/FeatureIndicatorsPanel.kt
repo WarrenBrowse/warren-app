@@ -208,7 +208,7 @@ private fun FeatureIndicator.label(natPmpStatus: String): String {
     val resource =
         when (this) {
             FeatureIndicator.QUANTUM_RESISTANCE -> R.string.feature_quantum_resistant
-            FeatureIndicator.SPLIT_TUNNELING -> R.string.split_tunneling
+            FeatureIndicator.SPLIT_TUNNELING -> R.string.app_routing
             FeatureIndicator.SHADOWSOCKS -> R.string.shadowsocks
             FeatureIndicator.UDP_2_TCP -> R.string.udp_over_tcp
             FeatureIndicator.QUIC -> R.string.quic

@@ -83,6 +83,7 @@
     <string name="update_available_description">มีเวอร์ชัน %1$s แล้ว แตะเพื่อดาวน์โหลดการอัปเดต</string>
     <string name="update_now">อัปเดตเดี๋ยวนี้</string>
     <string name="quit">ออก</string>
+    <string name="app_routing">การกำหนดเส้นทางแอป</string>
     <string name="app_routing_description">เลือกวิธีที่แต่ละแอปเชื่อมต่อ</string>
     <string name="split_mode_bypass">ข้าม VPN</string>
     <string name="split_mode_bypass_description">แอปที่คุณเลือกจะเชื่อมต่อเหมือนปิด VPN อยู่</string>

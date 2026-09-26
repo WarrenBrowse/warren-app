@@ -83,6 +83,7 @@
     <string name="update_available_description">Versjon %1$s er tilgjengelig. Trykk for å laste ned oppdateringen.</string>
     <string name="update_now">Oppdater nå</string>
     <string name="quit">Avslutt</string>
+    <string name="app_routing">Appruting</string>
     <string name="app_routing_description">Velg hvordan hver app kobler til.</string>
     <string name="split_mode_bypass">Utenom VPN</string>
     <string name="split_mode_bypass_description">Appene du velger, kobler til som om VPN var av.</string>

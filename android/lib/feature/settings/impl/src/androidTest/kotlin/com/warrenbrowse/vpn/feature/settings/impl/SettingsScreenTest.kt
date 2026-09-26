@@ -70,7 +70,7 @@ class SettingsScreenTest {
         onNodeWithText("Multihop").assertExists()
         onNodeWithText("Port forwarding").assertExists()
         onNodeWithText("VPN settings").assertExists()
-        onNodeWithText("Split tunneling").assertExists()
+        onNodeWithText("App routing").assertExists()
         onNodeWithText("App info").assertExists()
     }
 
@@ -93,7 +93,7 @@ class SettingsScreenTest {
         )
         // Assert
         onNodeWithText("VPN settings").assertDoesNotExist()
-        onNodeWithText("Split tunneling").assertDoesNotExist()
+        onNodeWithText("App routing").assertDoesNotExist()
         onNodeWithText("App info").assertExists()
     }
 }

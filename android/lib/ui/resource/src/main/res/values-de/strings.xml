@@ -83,6 +83,7 @@
     <string name="update_available_description">Version %1$s ist verfügbar. Tippe, um das Update herunterzuladen.</string>
     <string name="update_now">Jetzt aktualisieren</string>
     <string name="quit">Beenden</string>
+    <string name="app_routing">App-Routing</string>
     <string name="app_routing_description">Legen Sie fest, wie sich jede App verbindet.</string>
     <string name="split_mode_bypass">VPN umgehen</string>
     <string name="split_mode_bypass_description">Die ausgewählten Apps verbinden sich, als wäre das VPN aus.</string>

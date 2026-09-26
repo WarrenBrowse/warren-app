@@ -83,6 +83,7 @@
     <string name="update_available_description">La version %1$s est disponible. Appuyez pour télécharger la mise à jour.</string>
     <string name="update_now">Mettre à jour maintenant</string>
     <string name="quit">Quitter</string>
+    <string name="app_routing">Routage des apps</string>
     <string name="app_routing_description">Choisissez comment chaque app se connecte.</string>
     <string name="split_mode_bypass">Hors VPN</string>
     <string name="split_mode_bypass_description">Les apps choisies se connectent comme si le VPN était coupé.</string>

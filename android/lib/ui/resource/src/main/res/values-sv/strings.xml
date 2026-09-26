@@ -83,6 +83,7 @@
     <string name="update_available_description">Version %1$s är tillgänglig. Tryck för att hämta uppdateringen.</string>
     <string name="update_now">Uppdatera nu</string>
     <string name="quit">Avsluta</string>
+    <string name="app_routing">Approutning</string>
     <string name="app_routing_description">Välj hur varje app ansluter.</string>
     <string name="split_mode_bypass">Förbi VPN</string>
     <string name="split_mode_bypass_description">Apparna du väljer ansluter som om VPN var avstängt.</string>

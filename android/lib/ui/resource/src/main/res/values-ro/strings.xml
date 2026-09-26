@@ -85,6 +85,7 @@
     <string name="update_available_description">Versiunea %1$s este disponibilă. Atingeți pentru a descărca actualizarea.</string>
     <string name="update_now">Actualizați acum</string>
     <string name="quit">Ieșire</string>
+    <string name="app_routing">Rutare aplicații</string>
     <string name="app_routing_description">Alegeți cum se conectează fiecare aplicație.</string>
     <string name="split_mode_bypass">Fără VPN</string>
     <string name="split_mode_bypass_description">Aplicațiile alese se conectează ca și cum VPN-ul ar fi oprit.</string>

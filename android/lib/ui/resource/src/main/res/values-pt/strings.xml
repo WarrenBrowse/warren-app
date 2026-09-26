@@ -83,6 +83,7 @@
     <string name="update_available_description">A versão %1$s está disponível. Toque para transferir a atualização.</string>
     <string name="update_now">Atualizar agora</string>
     <string name="quit">Sair</string>
+    <string name="app_routing">Encaminhamento de aplicações</string>
     <string name="app_routing_description">Escolha como cada aplicação se liga.</string>
     <string name="split_mode_bypass">Fora da VPN</string>
     <string name="split_mode_bypass_description">As aplicações que escolher ligam-se como se a VPN estivesse desligada.</string>

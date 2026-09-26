@@ -83,6 +83,7 @@
     <string name="update_available_description">Versio %1$s on saatavilla. Napauta ladataksesi päivityksen.</string>
     <string name="update_now">Päivitä nyt</string>
     <string name="quit">Lopeta</string>
+    <string name="app_routing">Sovellusreititys</string>
     <string name="app_routing_description">Valitse, miten kukin sovellus muodostaa yhteyden.</string>
     <string name="split_mode_bypass">Ilman VPN:ää</string>
     <string name="split_mode_bypass_description">Valitsemasi sovellukset muodostavat yhteyden kuin VPN olisi pois päältä.</string>

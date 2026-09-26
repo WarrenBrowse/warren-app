@@ -350,7 +350,7 @@ private fun Account(onWalletClick: () -> Unit) {
 @Composable
 private fun SplitTunneling(onSplitTunnelingCellClick: () -> Unit) {
     NavigationListItem(
-        title = stringResource(id = R.string.split_tunneling),
+        title = stringResource(id = R.string.app_routing),
         onClick = onSplitTunnelingCellClick,
         position = Position.Bottom,
     )

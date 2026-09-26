@@ -83,6 +83,7 @@
     <string name="update_available_description">Version %1$s er tilgængelig. Tryk for at hente opdateringen.</string>
     <string name="update_now">Opdater nu</string>
     <string name="quit">Afslut</string>
+    <string name="app_routing">App-routing</string>
     <string name="app_routing_description">Vælg, hvordan hver app opretter forbindelse.</string>
     <string name="split_mode_bypass">Uden om VPN</string>
     <string name="split_mode_bypass_description">De apps, du vælger, opretter forbindelse, som om VPN var slået fra.</string>

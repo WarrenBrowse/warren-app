@@ -165,7 +165,7 @@ fun SplitTunnelingScreen(
 
     ScaffoldWithSmallTopBar(
         modifier = modifier.fillMaxSize(),
-        appBarTitle = stringResource(id = R.string.split_tunneling),
+        appBarTitle = stringResource(id = R.string.app_routing),
         navigationIcon = {
             if (state.isModal()) {
                 NavigateCloseIconButton(onNavigateClose = onBackClick)

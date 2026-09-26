@@ -83,6 +83,7 @@
     <string name="update_available_description">Sürüm %1$s kullanılabilir. Güncellemeyi indirmek için dokunun.</string>
     <string name="update_now">Şimdi güncelle</string>
     <string name="quit">Çık</string>
+    <string name="app_routing">Uygulama yönlendirme</string>
     <string name="app_routing_description">Her uygulamanın nasıl bağlanacağını seçin.</string>
     <string name="split_mode_bypass">VPN dışında</string>
     <string name="split_mode_bypass_description">Seçtiğiniz uygulamalar, VPN kapalıymış gibi bağlanır.</string>

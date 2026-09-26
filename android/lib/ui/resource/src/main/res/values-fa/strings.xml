@@ -83,6 +83,7 @@
     <string name="update_available_description">نسخهٔ %1$s در دسترس است. برای دانلود به‌روزرسانی ضربه بزنید.</string>
     <string name="update_now">به‌روزرسانی اکنون</string>
     <string name="quit">خروج</string>
+    <string name="app_routing">مسیریابی اپلیکیشن‌ها</string>
     <string name="app_routing_description">انتخاب کنید هر اپلیکیشن چگونه متصل شود.</string>
     <string name="split_mode_bypass">خارج از VPN</string>
     <string name="split_mode_bypass_description">اپلیکیشن‌هایی که انتخاب می‌کنید طوری متصل می‌شوند که انگار VPN خاموش است.</string>

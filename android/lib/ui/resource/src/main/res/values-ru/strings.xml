@@ -83,6 +83,7 @@
     <string name="update_available_description">Доступна версия %1$s. Нажмите, чтобы загрузить обновление.</string>
     <string name="update_now">Обновить сейчас</string>
     <string name="quit">Выйти</string>
+    <string name="app_routing">Маршрутизация приложений</string>
     <string name="app_routing_description">Выберите, как подключается каждое приложение.</string>
     <string name="split_mode_bypass">В обход VPN</string>
     <string name="split_mode_bypass_description">Выбранные приложения подключаются так, будто VPN выключен.</string>

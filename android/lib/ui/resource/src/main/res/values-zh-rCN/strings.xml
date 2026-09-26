@@ -83,6 +83,7 @@
     <string name="update_available_description">版本 %1$s 已发布。点按以下载更新。</string>
     <string name="update_now">立即更新</string>
     <string name="quit">退出</string>
+    <string name="app_routing">应用路由</string>
     <string name="app_routing_description">选择每个应用的连接方式。</string>
     <string name="split_mode_bypass">绕过 VPN</string>
     <string name="split_mode_bypass_description">您选择的应用会像 VPN 已关闭一样进行连接。</string>

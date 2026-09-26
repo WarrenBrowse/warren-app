@@ -83,6 +83,7 @@
     <string name="update_available_description">ဗားရှင်း %1$s ရနိုင်ပါပြီ။ အပ်ဒိတ်ကို ဒေါင်းလုဒ်ရန် တို့ပါ။</string>
     <string name="update_now">ယခု အပ်ဒိတ်လုပ်ပါ</string>
     <string name="quit">ထွက်ရန်</string>
+    <string name="app_routing">အက်ပ် လမ်းကြောင်းပေးခြင်း</string>
     <string name="app_routing_description">အက်ပ်တစ်ခုစီ ချိတ်ဆက်ပုံကို ရွေးပါ။</string>
     <string name="split_mode_bypass">VPN ကို ကျော်ရန်</string>
     <string name="split_mode_bypass_description">သင်ရွေးသော အက်ပ်များသည် VPN ပိတ်ထားသကဲ့သို့ ချိတ်ဆက်ပါသည်။</string>

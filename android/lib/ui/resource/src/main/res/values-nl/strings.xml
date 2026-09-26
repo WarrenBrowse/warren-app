@@ -83,6 +83,7 @@
     <string name="update_available_description">Versie %1$s is beschikbaar. Tik om de update te downloaden.</string>
     <string name="update_now">Nu bijwerken</string>
     <string name="quit">Afsluiten</string>
+    <string name="app_routing">App-routing</string>
     <string name="app_routing_description">Kies hoe elke app verbinding maakt.</string>
     <string name="split_mode_bypass">Buiten de VPN</string>
     <string name="split_mode_bypass_description">De apps die u kiest maken verbinding alsof de VPN uit staat.</string>
