@@ -648,7 +648,8 @@ async fn every_routed_app_leaves_from_its_own_exit_and_never_through_main() {
             )),
             BlindingKey::session(&seed),
         )
-        .with_mint_horizon(0),
+        .with_mint_horizon(0)
+        .with_server_pubkey_pins([crate::warren_product_config::WARREN_SERVER_PUBKEY_HEX]),
     );
     drop(seed);
     if let Err(error) = manager.refresh(now).await {
@@ -768,7 +769,7 @@ async fn every_routed_app_leaves_from_its_own_exit_and_never_through_main() {
     let mut config = RouteSessionConfig::new(Some(route_source));
     config.anchor = anchor.clone();
     config.route_admission = Some(Arc::new(
-        crate::warren_token_provider::DirectoryRouteAdmission(Arc::clone(&manager)),
+        crate::warren_token_provider::DirectoryRouteAdmission::of(Arc::clone(&manager)),
     ));
     config.retry_unavailable_after = Duration::from_secs(5);
     let sessions = SupervisorRouteSessions::new(tokio::runtime::Handle::current(), config);

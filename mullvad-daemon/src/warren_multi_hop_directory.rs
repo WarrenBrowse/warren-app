@@ -2910,6 +2910,7 @@ mod tests {
             Some(circuit.clone()),
             crate::warren_status::WarrenStatusCache::new(),
             None,
+            crate::warren_token_provider::RouteKemTrust::default(),
         )
     }
 

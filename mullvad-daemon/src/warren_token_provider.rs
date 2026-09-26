@@ -38,9 +38,16 @@
 //! The same manager reads the route admission block of the token directory
 //! on each refresh (warren-core doc 107): [`route_admission_for`] hands the
 //! tunnel the key its main session anchors with and the exits that admit
-//! routes by anchor, as the last directory announced them.
+//! routes by anchor, as the last directory announced them. The key is used
+//! only under the signature of a server key the daemon pins (doc 107 section
+//! 6.5, [`RouteKemTrust`]). The last signed block is kept in the daemon's
+//! cache directory, so a tunnel started before this run's first directory
+//! read (right after a daemon start) anchors with it rather than not at all:
+//! the engine takes a main session's anchor only when its supervisor is
+//! built, so a key that arrives later reaches the next tunnel only.
 
 use std::collections::HashMap;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock, PoisonError};
 use std::time::Duration;
 
@@ -48,7 +55,10 @@ use talpid_warren_tunnel::{
     SESSION_TOKEN_LEN, SessionTokenSource, app_routes::RouteAdmissionSource,
     make_session_token_provider,
 };
-use warren_api::{BlindingKey, HttpTransport, SerialLease, TokenManager, WarrenApiClient};
+use warren_api::{
+    BlindingKey, HttpTransport, RouteAdmission, SerialLease, TokenManager, WarrenApiClient,
+};
+use warren_contract::dto::RouteAdmissionInfo;
 use warren_identity::WarrenIdentity;
 
 use crate::warren_account_standing::StandingMonitor;
@@ -98,14 +108,80 @@ where
     }
 }
 
-fn spawn_refresh(manager: Arc<Manager>, wallet: String, standing: Option<StandingMonitor>) {
+/// What the daemon trusts to sign the route KEM key of the token directory,
+/// and where it keeps the last signed block across a restart.
+#[derive(Clone, Debug, Default)]
+pub(crate) struct RouteKemTrust {
+    /// The API server keys the daemon pins (the same pins its relay list and
+    /// multi-hop directory are verified against). Empty: no route admission.
+    pub server_pins: Vec<String>,
+    /// The file the last signed block is kept in. `None` keeps nothing.
+    pub remembered_at: Option<PathBuf>,
+}
+
+/// The file, in the daemon's cache directory, that keeps the last signed
+/// route admission block.
+pub(crate) const REMEMBERED_ROUTE_ADMISSION: &str = "warren-route-admission.json";
+
+/// Keeps `admission`'s signed block at `path`, or removes the file when the
+/// directory offers no route admission. Best effort: a block that could not
+/// be kept only costs the next daemon start its anchor until the first
+/// directory read.
+fn remember_route_admission(path: &Path, admission: Option<&RouteAdmission>) {
+    let Some(admission) = admission else {
+        match std::fs::remove_file(path) {
+            Ok(()) => {}
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(error) => log::debug!("Could not forget the route admission block: {error}"),
+        }
+        return;
+    };
+    let Ok(block) = serde_json::to_vec(admission.info()) else {
+        return;
+    };
+    if std::fs::read(path).is_ok_and(|kept| kept == block) {
+        return;
+    }
+    let temporary = path.with_extension("json.tmp");
+    let written =
+        std::fs::write(&temporary, &block).and_then(|()| std::fs::rename(&temporary, path));
+    if let Err(error) = written {
+        log::debug!("Could not keep the route admission block: {error}");
+    }
+}
+
+/// The block kept at `path`, trusted again only as far as its signature:
+/// verified against `server_pins` at `now`, like a block just fetched.
+fn remembered_route_admission(
+    path: &Path,
+    server_pins: &[String],
+    now: u64,
+) -> Option<RouteAdmission> {
+    let info: RouteAdmissionInfo = serde_json::from_slice(&std::fs::read(path).ok()?).ok()?;
+    let pins: Vec<&str> = server_pins.iter().map(String::as_str).collect();
+    RouteAdmission::from_info(&info, &pins, now).ok()
+}
+
+fn spawn_refresh(
+    manager: Arc<Manager>,
+    wallet: String,
+    standing: Option<StandingMonitor>,
+    remembered_at: Option<PathBuf>,
+) {
     // The manager mints only epochs it has not minted yet.
     tokio::spawn(refresh_forever(move || {
         let manager = Arc::clone(&manager);
         let wallet = wallet.clone();
         let standing = standing.clone();
+        let remembered_at = remembered_at.clone();
         async move {
-            match manager.refresh(now_unix_secs()).await {
+            let refreshed = manager.refresh(now_unix_secs()).await;
+            if let Some(path) = remembered_at.as_deref()
+                && manager.epoch_at(now_unix_secs()).is_some()
+            {
+                remember_route_admission(path, manager.route_admission().as_ref());
+            }
+            match refreshed {
                 Ok(_) => true,
                 Err(e) => {
                     log::warn!("Warren v7 token refresh failed (keeping existing tokens): {e}");
@@ -129,41 +205,89 @@ pub(crate) fn source_for(
     api_url: &str,
     seed: &SharedWarrenSeed,
     standing: Option<&StandingMonitor>,
+    trust: &RouteKemTrust,
 ) -> SessionTokenSource {
     session_source(
-        manager_for(api_url, seed, standing),
+        manager_for(api_url, seed, standing, trust),
         Arc::new(now_unix_secs),
     )
 }
 
 /// Route admission by anchor for `seed`'s wallet against `api_url`, as the
-/// token directory the wallet's manager last fetched announces it. The same
-/// manager as [`source_for`]'s.
+/// token directory the wallet's manager last fetched announces it, its key
+/// signed by one of `trust`'s pins. The same manager as [`source_for`]'s.
 pub(crate) fn route_admission_for(
     api_url: &str,
     seed: &SharedWarrenSeed,
     standing: Option<&StandingMonitor>,
+    trust: &RouteKemTrust,
 ) -> Arc<dyn RouteAdmissionSource> {
-    Arc::new(DirectoryRouteAdmission(manager_for(
-        api_url, seed, standing,
-    )))
+    Arc::new(DirectoryRouteAdmission::new(
+        manager_for(api_url, seed, standing, trust),
+        trust.clone(),
+        Arc::new(now_unix_secs),
+    ))
 }
 
 /// Route admission as a manager's last directory announced it: read at each
 /// call, so a refresh that finds the server turned it on or off reaches the
-/// next tunnel and the next route dial.
-pub(crate) struct DirectoryRouteAdmission<T>(pub Arc<TokenManager<T>>);
+/// next tunnel and the next route dial, and never past the validity the
+/// server signed. Before the manager's first directory read, the block kept
+/// by an earlier run stands in, verified again.
+pub(crate) struct DirectoryRouteAdmission<T> {
+    manager: Arc<TokenManager<T>>,
+    trust: RouteKemTrust,
+    now: Arc<dyn Fn() -> u64 + Send + Sync>,
+    /// The kept block, read and verified once: a daemon that cannot reach
+    /// the API asks for the key before every route dial, and the file only
+    /// changes with a refresh, which supersedes it.
+    kept: OnceLock<Option<RouteAdmission>>,
+}
+
+impl<T: HttpTransport> DirectoryRouteAdmission<T> {
+    pub(crate) fn new(
+        manager: Arc<TokenManager<T>>,
+        trust: RouteKemTrust,
+        now: Arc<dyn Fn() -> u64 + Send + Sync>,
+    ) -> Self {
+        Self {
+            manager,
+            trust,
+            now,
+            kept: OnceLock::new(),
+        }
+    }
+
+    /// Over `manager` alone, with nothing kept: the manager's own pins decide.
+    #[cfg(test)]
+    pub(crate) fn of(manager: Arc<TokenManager<T>>) -> Self {
+        Self::new(manager, RouteKemTrust::default(), Arc::new(now_unix_secs))
+    }
+
+    fn current(&self) -> Option<RouteAdmission> {
+        let now = (self.now)();
+        // The daemon never restores a token bundle, so a known epoch length
+        // means the manager has read the directory in this run.
+        if self.manager.epoch_at(now).is_some() {
+            return self.manager.route_admission_at(now);
+        }
+        self.kept
+            .get_or_init(|| {
+                let path = self.trust.remembered_at.as_deref()?;
+                remembered_route_admission(path, &self.trust.server_pins, now)
+            })
+            .clone()
+            .filter(|admission| now < admission.valid_until())
+    }
+}
 
 impl<T: HttpTransport + Send + Sync> RouteAdmissionSource for DirectoryRouteAdmission<T> {
     fn kem(&self) -> Option<warrenguard_multihop::RouteKemPublicKey> {
-        self.0
-            .route_admission()
-            .map(|admission| admission.kem().clone())
+        self.current().map(|admission| admission.kem().clone())
     }
 
     fn offers_routes(&self, exit_id: &[u8; 16]) -> bool {
-        self.0
-            .route_admission()
+        self.current()
             .is_some_and(|admission| admission.offers_routes(exit_id))
     }
 }
@@ -173,6 +297,7 @@ fn manager_for(
     api_url: &str,
     seed: &SharedWarrenSeed,
     standing: Option<&StandingMonitor>,
+    trust: &RouteKemTrust,
 ) -> Arc<Manager> {
     let seed_bytes = seed.read().unwrap_or_else(PoisonError::into_inner);
     let identity = WarrenIdentity::from_seed(&seed_bytes);
@@ -185,11 +310,16 @@ fn manager_for(
         .or_insert_with(|| {
             let client =
                 WarrenApiClient::new(api_url.to_owned(), identity, WarrenApiTransport::new());
-            let manager = Arc::new(TokenManager::new(
-                Arc::new(client),
-                BlindingKey::session(&seed_bytes),
-            ));
-            spawn_refresh(manager.clone(), key, standing.cloned());
+            let manager = Arc::new(
+                TokenManager::new(Arc::new(client), BlindingKey::session(&seed_bytes))
+                    .with_server_pubkey_pins(trust.server_pins.iter().cloned()),
+            );
+            spawn_refresh(
+                manager.clone(),
+                key,
+                standing.cloned(),
+                trust.remembered_at.clone(),
+            );
             manager
         })
         .clone()
@@ -490,41 +620,103 @@ mod tests {
         }
     }
 
+    /// The API server key: it signs the route KEM key, which it also derives.
+    const SERVER_SEED: [u8; 32] = [0x71; 32];
+
+    fn server_pin() -> String {
+        hex::encode(
+            ed25519_dalek::SigningKey::from_bytes(&SERVER_SEED)
+                .verifying_key()
+                .as_bytes(),
+        )
+    }
+
     fn route_kem() -> warrenguard_multihop::RouteKemPublicKey {
-        warrenguard_multihop::RouteKemSecretKey::derive(&[0x71; 32], 1)
+        kem_of(&SERVER_SEED)
+    }
+
+    fn kem_of(seed: &[u8; 32]) -> warrenguard_multihop::RouteKemPublicKey {
+        warrenguard_multihop::RouteKemSecretKey::derive(seed, 1)
             .unwrap()
             .public_key()
             .clone()
     }
 
+    /// The block a server with route admission on serves for `kem`, signed
+    /// by the server key until `valid_until`.
+    fn signed_block(
+        kem: &warrenguard_multihop::RouteKemPublicKey,
+        valid_until: u64,
+    ) -> serde_json::Value {
+        let mut info = warren_contract::dto::RouteAdmissionInfo {
+            version: 1,
+            kem_key_id: 1,
+            kem_pubkey_hex: warren_contract::dto::PubkeyHex::try_from(
+                hex::encode(kem.to_bytes()).as_str(),
+            )
+            .unwrap(),
+            max_routes_per_anchor: 32,
+            exit_ids_hex: vec![warren_contract::dto::ExitId::from_bytes([9; 16])],
+            kem_signature: None,
+        };
+        info.kem_signature = Some(warren_contract::route_kem::sign(
+            &info,
+            &ed25519_dalek::SigningKey::from_bytes(&SERVER_SEED),
+            valid_until,
+        ));
+        serde_json::to_value(info).unwrap()
+    }
+
+    fn manager_over(block: Option<serde_json::Value>) -> Arc<TokenManager<Directory>> {
+        let seed = [0x42; 32];
+        Arc::new(
+            TokenManager::new(
+                Arc::new(WarrenApiClient::new(
+                    "https://api.example.test",
+                    WarrenIdentity::from_seed(&seed),
+                    Directory(block),
+                )),
+                BlindingKey::session(&seed),
+            )
+            .with_server_pubkey_pins([server_pin()]),
+        )
+    }
+
+    fn admission_over(
+        manager: Arc<TokenManager<Directory>>,
+        remembered_at: Option<std::path::PathBuf>,
+    ) -> super::DirectoryRouteAdmission<Directory> {
+        admission_at(manager, remembered_at, Arc::new(AtomicU64::new(NOW)))
+    }
+
+    fn admission_at(
+        manager: Arc<TokenManager<Directory>>,
+        remembered_at: Option<std::path::PathBuf>,
+        clock: Arc<AtomicU64>,
+    ) -> super::DirectoryRouteAdmission<Directory> {
+        super::DirectoryRouteAdmission::new(
+            manager,
+            super::RouteKemTrust {
+                server_pins: vec![server_pin()],
+                remembered_at,
+            },
+            Arc::new(move || clock.load(Ordering::Relaxed)),
+        )
+    }
+
     async fn admission_after_refresh(
         block: Option<serde_json::Value>,
     ) -> super::DirectoryRouteAdmission<Directory> {
-        let seed = [0x42; 32];
-        let manager = TokenManager::new(
-            Arc::new(WarrenApiClient::new(
-                "https://api.example.test",
-                WarrenIdentity::from_seed(&seed),
-                Directory(block),
-            )),
-            BlindingKey::session(&seed),
-        );
+        let manager = manager_over(block);
         manager.refresh(NOW).await.expect("the directory is read");
-        super::DirectoryRouteAdmission(Arc::new(manager))
+        admission_over(manager, None)
     }
 
     #[tokio::test]
     async fn the_tunnel_is_handed_the_route_admission_the_directory_announces() {
         use talpid_warren_tunnel::app_routes::RouteAdmissionSource;
-        let block = serde_json::json!({
-            "version": 1,
-            "kem_key_id": 1,
-            "kem_pubkey_hex": hex::encode(route_kem().to_bytes()),
-            "max_routes_per_anchor": 32,
-            "exit_ids_hex": ["09090909090909090909090909090909"],
-        });
 
-        let admission = admission_after_refresh(Some(block)).await;
+        let admission = admission_after_refresh(Some(signed_block(&route_kem(), NOW + 60))).await;
 
         assert_eq!(
             admission.kem().map(|kem| kem.to_bytes()),
@@ -535,6 +727,22 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn a_route_kem_key_no_pinned_server_key_signed_is_not_handed_to_the_tunnel() {
+        use talpid_warren_tunnel::app_routes::RouteAdmissionSource;
+        let mut substituted = signed_block(&route_kem(), NOW + 60);
+        substituted["kem_pubkey_hex"] = hex::encode(kem_of(&[0x72; 32]).to_bytes()).into();
+        let mut unsigned = signed_block(&route_kem(), NOW + 60);
+        unsigned.as_object_mut().unwrap().remove("kem_signature");
+
+        for block in [substituted, unsigned] {
+            let admission = admission_after_refresh(Some(block)).await;
+
+            assert!(admission.kem().is_none());
+            assert!(!admission.offers_routes(&[9; 16]));
+        }
+    }
+
+    #[tokio::test]
     async fn without_route_admission_in_the_directory_no_route_is_offered() {
         use talpid_warren_tunnel::app_routes::RouteAdmissionSource;
 
@@ -542,5 +750,97 @@ mod tests {
 
         assert!(admission.kem().is_none());
         assert!(!admission.offers_routes(&[9; 16]));
+    }
+
+    /// The block an earlier run kept, written the way a refresh keeps it.
+    async fn kept_block(dir: &std::path::Path, block: serde_json::Value) -> std::path::PathBuf {
+        let path = dir.join(super::REMEMBERED_ROUTE_ADMISSION);
+        let manager = manager_over(Some(block));
+        manager.refresh(NOW).await.expect("the directory is read");
+        super::remember_route_admission(&path, manager.route_admission().as_ref());
+        path
+    }
+
+    #[tokio::test]
+    async fn before_the_first_directory_read_the_block_an_earlier_run_kept_is_used() {
+        use talpid_warren_tunnel::app_routes::RouteAdmissionSource;
+        let dir = tempfile::tempdir().unwrap();
+        let path = kept_block(dir.path(), signed_block(&route_kem(), NOW + 60)).await;
+
+        let admission = admission_over(manager_over(None), Some(path));
+
+        assert_eq!(
+            admission.kem().map(|kem| kem.to_bytes()),
+            Some(route_kem().to_bytes()),
+            "a tunnel started before this run's first directory read anchors"
+        );
+        assert!(admission.offers_routes(&[9; 16]));
+    }
+
+    #[tokio::test]
+    async fn a_kept_block_is_trusted_only_as_far_as_its_signature() {
+        use talpid_warren_tunnel::app_routes::RouteAdmissionSource;
+        let dir = tempfile::tempdir().unwrap();
+        let expired = kept_block(dir.path(), signed_block(&route_kem(), NOW + 60)).await;
+        let expired_admission = admission_at(
+            manager_over(None),
+            Some(expired.clone()),
+            Arc::new(AtomicU64::new(NOW + 60)),
+        );
+        let substituted = dir.path().join("substituted.json");
+        let mut block: serde_json::Value =
+            serde_json::from_slice(&std::fs::read(&expired).unwrap()).unwrap();
+        block["kem_pubkey_hex"] = hex::encode(kem_of(&[0x72; 32]).to_bytes()).into();
+        std::fs::write(&substituted, serde_json::to_vec(&block).unwrap()).unwrap();
+
+        assert!(expired_admission.kem().is_none(), "an expired signature");
+        assert!(
+            admission_over(manager_over(None), Some(substituted))
+                .kem()
+                .is_none(),
+            "a key written over the kept one"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_key_is_withdrawn_once_its_signature_ends_whichever_block_it_came_from() {
+        use talpid_warren_tunnel::app_routes::RouteAdmissionSource;
+        let dir = tempfile::tempdir().unwrap();
+        let path = kept_block(dir.path(), signed_block(&route_kem(), NOW + 60)).await;
+        let fetched = manager_over(Some(signed_block(&route_kem(), NOW + 60)));
+        fetched.refresh(NOW).await.expect("the directory is read");
+        let clock = Arc::new(AtomicU64::new(NOW));
+        let from_the_kept_block = admission_at(manager_over(None), Some(path), Arc::clone(&clock));
+        let from_the_directory = admission_at(fetched, None, Arc::clone(&clock));
+        assert!(from_the_kept_block.kem().is_some() && from_the_directory.kem().is_some());
+
+        clock.store(NOW + 60, Ordering::Relaxed);
+
+        assert!(from_the_kept_block.kem().is_none(), "kept block");
+        assert!(
+            from_the_directory.kem().is_none(),
+            "a directory that cannot be fetched again does not stretch the signature"
+        );
+    }
+
+    #[tokio::test]
+    async fn the_first_directory_read_supersedes_and_rewrites_the_kept_block() {
+        use talpid_warren_tunnel::app_routes::RouteAdmissionSource;
+        let dir = tempfile::tempdir().unwrap();
+        let path = kept_block(dir.path(), signed_block(&route_kem(), NOW + 60)).await;
+        let manager = manager_over(None);
+        manager.refresh(NOW).await.expect("the directory is read");
+
+        let admission = admission_over(Arc::clone(&manager), Some(path.clone()));
+
+        assert!(
+            admission.kem().is_none(),
+            "a server that turned route admission off is followed at once"
+        );
+        super::remember_route_admission(&path, manager.route_admission().as_ref());
+        assert!(
+            !path.exists(),
+            "and the next run does not anchor with the old key"
+        );
     }
 }

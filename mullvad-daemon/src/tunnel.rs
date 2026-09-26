@@ -274,6 +274,12 @@ struct InnerParametersGenerator {
     /// Where the token and entitlement refresh tasks report an issuer that
     /// refused the wallet as banned. Set once at boot.
     warren_standing: Option<crate::warren_account_standing::StandingMonitor>,
+    /// The API server keys the daemon pins, which alone may vouch for the
+    /// route KEM key of the token directory (warren-core doc 107 section
+    /// 6.5), and where the last signed block is kept. Fixed at construction,
+    /// before any tunnel can build the wallet's token manager with it; empty
+    /// pins leave every route on tokens.
+    warren_route_kem_trust: crate::warren_token_provider::RouteKemTrust,
     /// TOFU pubkey-pinning table, keyed by `exit_id` hex.
     /// Refreshed from `Settings::warren_pinned_exit_pubkeys` on every
     /// `set_settings` call. The verify hook in
@@ -418,7 +424,7 @@ impl ParametersGenerator {
     /// drives.
     #[expect(
         clippy::too_many_arguments,
-        reason = "Constructor for the daemon-side params generator: the inputs are all required (3 upstream + 5 Warren). Bundling them into a config struct just to satisfy clippy would obscure the call site at lib.rs."
+        reason = "Constructor for the daemon-side params generator: the inputs are all required (3 upstream + 7 Warren). Bundling them into a config struct just to satisfy clippy would obscure the call site at lib.rs."
     )]
     pub fn new_with_optional_warren(
         relay_selector: RelaySelector,
@@ -430,6 +436,7 @@ impl ParametersGenerator {
         warren_multi_hop: Option<MultiHopConfig>,
         warren_status_cache: WarrenStatusCache,
         warren_api_url: Option<String>,
+        warren_route_kem_trust: crate::warren_token_provider::RouteKemTrust,
     ) -> Self {
         Self(Arc::new(Mutex::new(InnerParametersGenerator {
             tunnel_options,
@@ -462,6 +469,7 @@ impl ParametersGenerator {
             warren_api_url,
             warren_api_transport: None,
             warren_standing: None,
+            warren_route_kem_trust,
             warren_pinned_exit_pubkeys: mullvad_types::settings::WarrenPinnedExitPubkeys::default(),
             warren_pin_update_tx: None,
             last_warren_location: None,
@@ -1151,18 +1159,22 @@ impl ParametersGenerator {
             inner.warren_api_url.as_ref(),
             inner.warren_identity_seed.as_ref(),
         ) {
+            // Route admission by anchor (warren-core doc 107) rides the same
+            // wallet's token directory: with per-app routes, the main session
+            // anchors and its routes need no token each where it is offered,
+            // under a key one of the daemon's pinned server keys signed.
+            let route_kem_trust = &inner.warren_route_kem_trust;
             params.session_tokens = Some(crate::warren_token_provider::source_for(
                 api_url,
                 seed,
                 inner.warren_standing.as_ref(),
+                route_kem_trust,
             ));
-            // Route admission by anchor (warren-core doc 107) rides the same
-            // wallet's token directory: with per-app routes, the main session
-            // anchors and its routes need no token each where it is offered.
             params.route_admission = Some(crate::warren_token_provider::route_admission_for(
                 api_url,
                 seed,
                 inner.warren_standing.as_ref(),
+                route_kem_trust,
             ));
             // Port entitlements ride the same wallet and the same coarse
             // refresh. The exit refuses a Map request without one (warren-core

@@ -1734,6 +1734,14 @@ impl Daemon {
             warren_multi_hop,
             warren_status_cache.clone(),
             warren_api_url_for_params,
+            warren_token_provider::RouteKemTrust {
+                server_pins: warren_server_pubkey.clone().into_iter().collect(),
+                remembered_at: Some(
+                    config
+                        .cache_dir
+                        .join(warren_token_provider::REMEMBERED_ROUTE_ADMISSION),
+                ),
+            },
         );
         // Snapshot the persisted DAITA opt-in onto the
         // parameters generator at boot. Without this, the first
