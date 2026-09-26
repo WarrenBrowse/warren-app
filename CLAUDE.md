@@ -246,6 +246,8 @@ flags, and the SYSTEM dev service needed to run the daemon:
 The released Windows installers and headless bundle are built on Codemagic, not
 on a GitHub runner: `codemagic.yaml` and `ci/codemagic/` define the builds, and
 release.yml / release-daemon.yml start them through
-`.github/actions/codemagic-build`, the proxy the other Warren repos pin from
-here. A change to that action lands here first, then in each consumer's pin.
+`.github/actions/codemagic-build`. That proxy and `ci/codemagic/watchdog.sh`
+are canonical here; warren-sdk-rs, warren-sdk-ts and wclaude carry
+byte-identical copies, so a change to either lands here and is copied to the
+three others in the same campaign.
 Contract, cache and traps: the `warren-codemagic` skill.
