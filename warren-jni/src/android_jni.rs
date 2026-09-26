@@ -2078,11 +2078,6 @@ fn redeem_voucher_inner(mnemonic: &str, voucher_or_claim: &str) -> Result<u64, R
         .map_err(|e| format!("invalid mnemonic: {e}"))?;
     let pubkey = warren_api::PubkeySs58::try_from(pubkey_ss58.as_str())
         .map_err(|e| format!("invalid pubkey: {e}"))?;
-    // The standing store keys the wallet by its public key.
-    #[cfg(feature = "tunnel")]
-    let wallet_pubkey = warren_identity::WarrenIdentity::from_mnemonic(mnemonic)
-        .map(|identity| identity.public_key())
-        .ok();
     let client = unsigned_warren_client();
     let claim = crate::purchase_claim::parse(voucher_or_claim);
     let wpid = claim.as_ref().map(|c| c.wpid.clone());
@@ -2150,10 +2145,16 @@ fn redeem_voucher_inner(mnemonic: &str, voucher_or_claim: &str) -> Result<u64, R
             match crate::purchase_claim::classify_register_failure(&e) {
                 crate::purchase_claim::RegisterFailure::Transient => last_err = Some(e),
                 crate::purchase_claim::RegisterFailure::Banned(ban) => {
+                    // The standing store keys the wallet by its public key.
                     #[cfg(feature = "tunnel")]
-                    let ban = wallet_pubkey
-                        .and_then(|wallet| {
-                            crate::standing::store().on_ban_refusal(&wallet, &e, unix_now())
+                    let ban = warren_identity::WarrenIdentity::from_mnemonic(mnemonic)
+                        .ok()
+                        .and_then(|identity| {
+                            crate::standing::store().on_ban_refusal(
+                                &identity.public_key(),
+                                &e,
+                                unix_now(),
+                            )
                         })
                         .unwrap_or(ban);
                     return Err(RedeemError::Banned(ban));
