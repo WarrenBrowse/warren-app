@@ -211,9 +211,15 @@ Route admission by anchor (warren-core doc 107 sections 10 and 11;
   block reads as no route admission.
 - A tunnel with per-app routes wired builds one `RouteAnchorHandle` from that
   key and hands it to its main supervisor (`with_route_anchor`) and to every
-  route session. A tunnel without per-app routes does not anchor. The anchor
-  secret stays inside the engine: it never crosses the daemon's gRPC or any
-  FFI, and nothing logs it, a locator, a serial or an exit id.
+  route session. The daemon wires a plan into every desktop tunnel, so every
+  desktop main session anchors while the directory offers a key, a country
+  set or not: the engine takes the anchor only before the supervisor runs,
+  and a country chosen while connected then gets its route without a
+  reconnect of the main session. The cost for a user with no country is one
+  small control datagram after each main setup, and an anchor record in the
+  API's RAM tied to a serial it already leases. The anchor secret stays
+  inside the engine: it never crosses the daemon's gRPC or any FFI, and
+  nothing logs it, a locator, a serial or an exit id.
 - A v6 (wallet-signed) main session never anchors: the engine answers
   `Unavailable` and every route runs on tokens.
 - A route to an exit the directory lists is dialed under
@@ -230,6 +236,23 @@ Route admission by anchor (warren-core doc 107 sections 10 and 11;
 - A route admitted by anchor is handed no token provider at all, so it holds
   no serial and leaves the wallet's three tokens to the main session and the
   routes that need them.
+- At most 2 routes of a tunnel run on tokens at once, whatever the capacity:
+  a route that has to run on tokens while two do is reported
+  `waiting for a free route` and dials once one ends. Past the free serials a
+  route would walk the serials the other sessions hold, which would show its
+  exit the main session's serial.
+- The capacity follows a bound anchor only: an anchor that becomes
+  unavailable after it was bound (an API restart, a lost anchor the API
+  cannot take back at once) leaves the running routes up, since they stay
+  admitted at their exits until the control plane ends them (doc 107 section
+  12); a route it ends falls back to a token, within the 2 token routes.
+- A route added to the plan past the capacity waits; it never takes the place
+  of a route that already runs.
+- Residuals: a route that fell back to tokens stays on its token while it is
+  up, even once the anchor could admit it again; and the route KEM key is
+  trusted on TLS alone, like the issuer keys beside it in the token
+  directory, so whoever can serve that document can serve a key of its own
+  (see warren-core doc 107 sections 13 and 20).
 - Known limit: the tunnel reads the key when it starts. A tunnel started
   before the daemon's first directory read (right after a daemon start) does
   not anchor, and its routes run on tokens until the next tunnel.
