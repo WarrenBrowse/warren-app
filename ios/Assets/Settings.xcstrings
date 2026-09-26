@@ -18717,6 +18717,453 @@
           }
         }
       }
+    },
+    "No payment was taken.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No payment was taken."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم يُقتطع أي مبلغ."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der blev ikke trukket nogen betaling."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es wurde nichts abgebucht."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se ha realizado ningún cobro."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هیچ پرداختی انجام نشد."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Maksua ei veloitettu."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aucun paiement n’a été prélevé."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Non è stato addebitato alcun pagamento."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "支払いは行われていません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "결제되지 않았습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ငွေပေးချေမှု မပြုလုပ်ရသေးပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingen betaling ble trukket."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er is niets afgeschreven."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie pobrano żadnej płatności."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nenhum pagamento foi cobrado."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nu a fost încasată nicio plată."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оплата не списана."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ingen betalning drogs."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไม่มีการเรียกเก็บเงิน"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Herhangi bir ödeme alınmadı."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Оплату не списано."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未扣款。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "未扣款。"
+          }
+        }
+      }
+    },
+    "Your purchase is kept and will be credited once the suspension ends.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your purchase is kept and will be credited once the suspension ends."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم الاحتفاظ بمشترياتك وستُضاف إلى حسابك بعد انتهاء التعليق."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit køb er gemt og bliver krediteret, når suspenderingen er slut."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dein Kauf bleibt erhalten und wird gutgeschrieben, sobald die Sperre endet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu compra se conserva y se abonará cuando termine la suspensión."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خرید شما حفظ شده و پس از پایان تعلیق اعمال می‌شود."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ostoksesi säilyy, ja se hyvitetään, kun jäädytys päättyy."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Votre achat est conservé et sera crédité une fois la suspension terminée."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il tuo acquisto viene conservato e sarà accreditato al termine della sospensione."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "購入は保持され、停止が終了した時点で反映されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "구매 내역은 보관되며 정지가 끝나면 적용됩니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သင့်ဝယ်ယူမှုကို သိမ်းထားပြီး ဆိုင်းငံ့မှု ပြီးဆုံးသည့်အခါ ထည့်သွင်းပေးပါမည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kjøpet ditt er tatt vare på og blir kreditert når suspensjonen er over."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Je aankoop blijft bewaard en wordt bijgeschreven zodra de opschorting voorbij is."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Twój zakup został zachowany i zostanie zaliczony po zakończeniu zawieszenia."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A sua compra fica guardada e será creditada quando a suspensão terminar."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Achiziția dvs. este păstrată și va fi creditată după încheierea suspendării."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Покупка сохранена и будет зачислена после окончания блокировки."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ditt köp sparas och krediteras när avstängningen är slut."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "การซื้อของคุณถูกเก็บไว้และจะได้รับเครดิตเมื่อการระงับสิ้นสุดลง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Satın alımınız saklanır ve askıya alma sona erdiğinde hesabınıza eklenir."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Покупку збережено, її буде зараховано після завершення призупинення."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "您的购买已保留，将在暂停结束后计入。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "您的購買已保留，將在停權結束後計入。"
+          }
+        }
+      }
+    },
+    "The voucher was not used: keep it and redeem it once the suspension ends.": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The voucher was not used: keep it and redeem it once the suspension ends."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم تُستخدم القسيمة: احتفظ بها واستبدلها بعد انتهاء التعليق."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voucheren blev ikke brugt: gem den, og indløs den, når suspenderingen er slut."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Der Gutschein wurde nicht verwendet: Bewahre ihn auf und löse ihn ein, sobald die Sperre endet."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El cupón no se ha usado: consérvalo y canjéalo cuando termine la suspensión."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "کد تخفیف استفاده نشد: آن را نگه دارید و پس از پایان تعلیق از آن استفاده کنید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kuponkia ei käytetty: säilytä se ja lunasta se, kun jäädytys päättyy."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le bon n’a pas été utilisé : gardez-le et utilisez-le une fois la suspension terminée."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il voucher non è stato usato: conservalo e riscattalo al termine della sospensione."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "バウチャーは使用されていません。保管しておき、停止が終了したら引き換えてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "바우처는 사용되지 않았습니다. 보관해 두었다가 정지가 끝나면 사용하세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voucher ကို အသုံးမပြုရသေးပါ။ သိမ်းထားပြီး ဆိုင်းငံ့မှု ပြီးဆုံးသည့်အခါ အသုံးပြုပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kupongen ble ikke brukt: ta vare på den og løs den inn når suspensjonen er over."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De voucher is niet gebruikt: bewaar hem en wissel hem in zodra de opschorting voorbij is."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voucher nie został wykorzystany: zachowaj go i zrealizuj po zakończeniu zawieszenia."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O voucher não foi usado: guarde-o e resgate-o quando a suspensão terminar."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Voucherul nu a fost folosit: păstrați-l și valorificați-l după încheierea suspendării."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваучер не был использован: сохраните его и активируйте после окончания блокировки."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vouchern användes inte: spara den och lös in den när avstängningen är slut."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ยังไม่ได้ใช้บัตรกำนัล โปรดเก็บไว้และใช้เมื่อการระงับสิ้นสุดลง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kupon kullanılmadı: saklayın ve askıya alma sona erdiğinde kullanın."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ваучер не використано: збережіть його та активуйте після завершення призупинення."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "兑换码未被使用：请保留，待暂停结束后再兑换。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "優惠券未被使用：請保留，待停權結束後再兌換。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

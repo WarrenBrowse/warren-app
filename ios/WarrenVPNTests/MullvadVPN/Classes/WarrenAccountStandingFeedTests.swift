@@ -55,6 +55,29 @@ private final class DismissStore: WarrenStrikeDismissing {
 }
 
 final class WarrenAccountStandingFeedTests: XCTestCase {
+    func testABanRefusalShowsAtOnceBeforeAnyPoll() {
+        let feed = WarrenAccountStandingFeed(backend: Recorder(polls: []).backend)
+        let ban = WarrenAccountBan(portForwarding: true, lapsesAt: nil, inForce: true)
+
+        feed.didRefuse(for: ban)
+
+        XCTAssertEqual(feed.standing?.ban, ban)
+    }
+
+    func testABanRefusalLeavesTheBanThePollAnsweredWhichKnowsItsLapse() async {
+        let known = WarrenAccountBan(
+            portForwarding: true, lapsesAt: Date(timeIntervalSince1970: 1_821_536_000), inForce: true
+        )
+        let banned = WarrenAccountStanding(strikes: [], threshold: 3, windowDays: 90, ban: known)
+        let recorder = Recorder(polls: [WarrenStandingPoll(ok: true, reported: true, standing: banned, newStrikes: [])])
+        let feed = WarrenAccountStandingFeed(backend: recorder.backend)
+        await feed.refresh(now: now)
+
+        feed.didRefuse(for: WarrenAccountBan(portForwarding: true, lapsesAt: nil, inForce: true))
+
+        XCTAssertEqual(feed.standing?.ban, known)
+    }
+
     func testEachNewStrikeIsAnnouncedOnceAndTheSameStandingAgainAnnouncesNothing() async {
         let first = WarrenStandingPoll(
             ok: true, reported: true, standing: standing("PF-1"),

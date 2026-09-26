@@ -82,6 +82,8 @@ final actor StorePaymentManager {
     func purchase(product: Product) async {
         logger.debug("Purchasing product: \(product.id)")
 
+        // A failed init (a banned wallet included) ends the purchase here,
+        // before StoreKit is asked to charge anything.
         let token: UUID
         do {
             token = try await self.getPaymentToken()
@@ -250,7 +252,9 @@ final actor StorePaymentManager {
             addToProcessedTransactions(verification)
             didPurchaseMoreTime(outcome: .timeAdded(timeFromProduct(id: transaction.productID)))
         } catch {
-            didFailUploadingReceipt()
+            // Not finished: the next start presents the transaction again,
+            // which is what credits it once a ban has ended.
+            didFailUploadingReceipt(error: error)
         }
     }
 
@@ -324,12 +328,20 @@ final actor StorePaymentManager {
 
     private func didFailFetchingToken(error: Error) {
         logger.debug("Did fail fetching token, with error: \(error)")
-        notifyObservers(of: .failed(.getPaymentToken(error)))
+        let failure = StorePaymentError.ofTokenFailure(error)
+        if case let .bannedBeforePayment(ban) = failure {
+            WarrenAccountStandingFeed.current?.didRefuse(for: ban)
+        }
+        notifyObservers(of: .failed(failure))
     }
 
-    private func didFailUploadingReceipt() {
+    private func didFailUploadingReceipt(error: Error) {
         logger.debug("Did fail uploading receipt")
-        notifyObservers(of: .failed(.receiptUpload))
+        let failure = StorePaymentError.ofUploadFailure(error)
+        if case let .bannedAfterPayment(ban) = failure {
+            WarrenAccountStandingFeed.current?.didRefuse(for: ban)
+        }
+        notifyObservers(of: .failed(failure))
     }
 
     private func didFailVerification(

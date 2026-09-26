@@ -48,6 +48,11 @@ public enum WarrenAccountError: Error, Equatable {
     /// 410 cancelled, 429 rate-limited). The response body is never
     /// surfaced (a 4xx body can echo request context).
     case server(status: Int, message: String)
+    /// The wallet is banned (warren-core doc 105 section 5.3). The server
+    /// refused before consuming anything: a voucher stays unredeemed, no
+    /// StoreKit purchase may start after a banned init, and a banned check
+    /// leaves the transaction unclaimed, to be presented once the ban ends.
+    case banned(WarrenAccountBan)
 }
 
 /// Outcome of a `POST /v1/forum/login` (community-forum wallet login, doc 55):
@@ -607,7 +612,7 @@ public enum WarrenAccountClient {
     // MARK: - Envelope parsing
 
     /// Parsed shape of the JSON envelope returned by the FFI.
-    private enum Envelope {
+    enum Envelope: Equatable {
         case okExpiry(Date)
         case okToken(String)
         case okVoid
@@ -621,7 +626,11 @@ public enum WarrenAccountClient {
             return .failure(.transport("FFI returned a null result"))
         }
         defer { warren_wallet_free_mnemonic(raw) }
-        let jsonString = String(cString: raw)
+        return envelope(fromJSON: String(cString: raw))
+    }
+
+    /// Decodes one account call envelope (`warren_account_ffi`).
+    static func envelope(fromJSON jsonString: String) -> Result<Envelope, WarrenAccountError> {
         guard let data = jsonString.data(using: .utf8),
               let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             return .failure(.transport("FFI returned an unparseable envelope"))
@@ -640,6 +649,17 @@ public enum WarrenAccountClient {
         }
 
         let message = object["error"] as? String ?? "unknown error"
+        if message == "banned", let ban = object["ban"] as? [String: Any] {
+            // A refusal is a ban that holds, whether or not it says when it
+            // lapses (the unsigned `/v1/register` does not).
+            return .success(.failure(.banned(WarrenAccountBan(
+                portForwarding: ban["reason"] as? String == "port_forwarding_abuse",
+                lapsesAt: (ban["lapses_at_unix_secs"] as? NSNumber).map {
+                    Date(timeIntervalSince1970: $0.doubleValue)
+                },
+                inForce: true
+            ))))
+        }
         if let status = object["status"] as? NSNumber {
             return .success(.failure(.server(status: status.intValue, message: message)))
         }

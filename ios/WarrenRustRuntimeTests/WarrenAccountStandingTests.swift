@@ -108,4 +108,34 @@ final class WarrenAccountStandingTests: XCTestCase {
         XCTAssertEqual(WarrenBanReason.of(authFailedReason: "[BANNED] exit rejected"), .other)
         XCTAssertNil(WarrenBanReason.of(authFailedReason: "subscription expired"))
     }
+
+    // MARK: - The ban refusal of an account call (warren-core doc 105 section 5.3)
+
+    func testABanRefusalOfAnAccountCallIsATypedBanWithItsLapse() {
+        let envelope =
+            #"{"ok":false,"error":"banned","ban":{"reason":"port_forwarding_abuse","lapses_at_unix_secs":1821536000}}"#
+
+        let ban = WarrenAccountBan(
+            portForwarding: true,
+            lapsesAt: Date(timeIntervalSince1970: 1_821_536_000),
+            inForce: true
+        )
+        XCTAssertEqual(WarrenAccountClient.envelope(fromJSON: envelope), .success(.failure(.banned(ban))))
+    }
+
+    func testABanRefusalWithoutALapseIsABanWithNoKnownEnd() {
+        let envelope = #"{"ok":false,"error":"banned","ban":{"reason":"other","lapses_at_unix_secs":null}}"#
+
+        let ban = WarrenAccountBan(portForwarding: false, lapsesAt: nil, inForce: true)
+        XCTAssertEqual(WarrenAccountClient.envelope(fromJSON: envelope), .success(.failure(.banned(ban))))
+    }
+
+    func testAnyOtherRefusalKeepsItsStatus() {
+        let envelope = #"{"ok":false,"error":"server returned status 409","status":409}"#
+
+        XCTAssertEqual(
+            WarrenAccountClient.envelope(fromJSON: envelope),
+            .success(.failure(.server(status: 409, message: "server returned status 409")))
+        )
+    }
 }

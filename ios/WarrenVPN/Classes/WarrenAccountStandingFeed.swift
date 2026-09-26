@@ -217,6 +217,30 @@ final class WarrenAccountStandingFeed: @unchecked Sendable {
         if changed { didChange?() }
     }
 
+    /// A call that credits time (a voucher redemption, a StoreKit payment call)
+    /// was refused for `ban`: the suspension shows at once, and the next poll
+    /// asks the signed standing, which also knows when it lapses. A ban the
+    /// poll already answered and that still holds stays, the Swift twin of
+    /// `StandingTracker::on_issuance_ban`.
+    func didRefuse(for ban: WarrenAccountBan) {
+        let changed = lock.withLock { () -> Bool in
+            let merged: WarrenAccountStanding
+            if let held, held.ban?.inForce == true {
+                merged = held
+            } else if let held {
+                merged = WarrenAccountStanding(
+                    strikes: held.strikes, threshold: held.threshold, windowDays: held.windowDays, ban: ban
+                )
+            } else {
+                merged = WarrenAccountStanding(strikes: [], threshold: 0, windowDays: 0, ban: ban)
+            }
+            lastAnswer = nil
+            defer { held = merged }
+            return held != merged
+        }
+        if changed { didChange?() }
+    }
+
     /// The wallet left this device (logged out, erased or replaced): what the
     /// feed holds, the ledger, the delivered notifications and the banner
     /// dismissals all go, at once rather than at the next poll.

@@ -88,6 +88,18 @@ class RedeemVoucherOperation: ResultOperation<REST.SubmitVoucherResponse>, @unch
     /// error. The HTTP status carries the rejection reason; the response
     /// body is never surfaced.
     private static func mapVoucherError(_ error: WarrenWalletInteractorError) -> Error {
+        if case let .account(.banned(ban)) = error {
+            // Refused before the voucher was consumed (warren-core doc 105
+            // section 5.3): it is still worth its time once the ban ends.
+            WarrenAccountStandingFeed.current?.didRefuse(for: ban)
+            return VoucherRedemptionError(
+                message: WarrenAccountStandingText.ban(ban) + " "
+                    + String(
+                        localized: "The voucher was not used: keep it and redeem it once the suspension ends.",
+                        table: "Settings"
+                    )
+            )
+        }
         guard case let .account(accountError) = error,
               case let .server(status, _) = accountError else {
             return VoucherRedemptionError(message: NSLocalizedString(

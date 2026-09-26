@@ -34,6 +34,8 @@
 //!   Swift side maps `status` to a localized message; the response body
 //!   is deliberately NOT surfaced because a 4xx body can echo request
 //!   context).
+//! - `{"ok":false,"error":"banned","ban":{"reason":..,"lapses_at_unix_secs":N|null}}`
+//!   (the wallet is banned: `warren_standing::ban_refusal_envelope`).
 //!
 //! Blocking: each call `block_on`s the shared iOS tokio runtime. The
 //! Swift facade (`WarrenAccountClient`) invokes them off the main thread.
@@ -97,8 +99,14 @@ fn err_input_json(msg: &str) -> *mut c_char {
 
 /// `{"ok":false,...}` envelope for a [`ClientError`]. The server status
 /// is surfaced (when present) so Swift can map it to a localized message;
-/// the raw response body is never surfaced.
+/// the raw response body is never surfaced. A ban refusal (warren-core doc
+/// 105 §5.3) gets its typed envelope, the one Android reads too: Swift
+/// shows the suspension, keeps the voucher and leaves a StoreKit transaction
+/// unfinished for after the ban.
 fn err_client_json(err: &ClientError) -> *mut c_char {
+    if let Some(ban) = warren_standing::Ban::from_client_error(err) {
+        return into_cstring(warren_standing::ban_refusal_envelope(&ban).to_string());
+    }
     let value = match err {
         ClientError::ServerStatus { status, .. } => {
             json!({ "ok": false, "error": err.to_string(), "status": status })

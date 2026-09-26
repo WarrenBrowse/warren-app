@@ -6,6 +6,7 @@
 //
 
 import StoreKit
+import WarrenRustRuntime
 
 enum StorePaymentEvent {
     /// Successful payment
@@ -35,6 +36,13 @@ enum StorePaymentError: Error {
     /// The user already spent money but we failed to upload the receipt to
     /// the API. The receipt can be uploaded again later.
     case receiptUpload
+    /// The wallet is banned, so warren-api opened no payment session and
+    /// StoreKit was never asked to charge (warren-core doc 105 section 5.3).
+    case bannedBeforePayment(WarrenAccountBan)
+    /// The wallet is banned, so warren-api left the paid transaction
+    /// unclaimed. It stays unfinished: StoreKit presents it again at every
+    /// start, and it credits the wallet once the ban ends.
+    case bannedAfterPayment(WarrenAccountBan)
     /// Purchase restoration was unsuccessful.
     case restorationError
     /// StoreKit returned no purchasable products (no store account, region
@@ -58,6 +66,15 @@ enum StorePaymentError: Error {
                 "Failed to upload one or more receipts to Warren servers. Try again later or contact support for help.",
                 comment: ""
             )
+        case let .bannedBeforePayment(ban):
+            WarrenAccountStandingText.ban(ban) + " "
+                + String(localized: "No payment was taken.", table: "Settings")
+        case let .bannedAfterPayment(ban):
+            WarrenAccountStandingText.ban(ban) + " "
+                + String(
+                    localized: "Your purchase is kept and will be credited once the suspension ends.",
+                    table: "Settings"
+                )
         case .restorationError:
             NSLocalizedString(
                 "Could not restore previous purchases. Try again later or contact support.",
@@ -71,5 +88,32 @@ enum StorePaymentError: Error {
         case .unknown:
             NSLocalizedString("Unexpected error occured.", comment: "")
         }
+    }
+}
+
+extension StorePaymentError {
+    /// The failure a payment token request ends the purchase with, before
+    /// StoreKit is asked for anything.
+    static func ofTokenFailure(_ error: Error) -> StorePaymentError {
+        if let ban = bannedAccount(error) {
+            return .bannedBeforePayment(ban)
+        }
+        return .getPaymentToken(error)
+    }
+
+    /// The failure a receipt upload ends a paid purchase with. Either way the
+    /// transaction stays unfinished, for the next start to present again.
+    static func ofUploadFailure(_ error: Error) -> StorePaymentError {
+        if let ban = bannedAccount(error) {
+            return .bannedAfterPayment(ban)
+        }
+        return .receiptUpload
+    }
+
+    private static func bannedAccount(_ error: Error) -> WarrenAccountBan? {
+        guard case let .account(.banned(ban)) = error as? WarrenWalletInteractorError else {
+            return nil
+        }
+        return ban
     }
 }

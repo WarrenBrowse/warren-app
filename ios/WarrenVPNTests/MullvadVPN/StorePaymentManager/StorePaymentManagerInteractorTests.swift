@@ -184,4 +184,42 @@ final class StorePaymentManagerInteractorTests: XCTestCase {
             XCTAssertEqual(error as? WarrenWalletInteractorError, .noWallet)
         }
     }
+
+    // MARK: - A banned wallet (warren-core doc 105 section 5.3)
+
+    private let ban = WarrenAccountBan(portForwarding: true, lapsesAt: nil, inForce: true)
+
+    func test_aBannedInit_failsBeforeAnyPaymentWithTheBan() {
+        let error = StorePaymentError.ofTokenFailure(WarrenWalletInteractorError.account(.banned(ban)))
+
+        guard case let .bannedBeforePayment(got) = error else {
+            return XCTFail("Expected bannedBeforePayment, got \(error)")
+        }
+        XCTAssertEqual(got, ban)
+    }
+
+    func test_anyOtherInitFailure_staysATokenFailure() {
+        let error = StorePaymentError.ofTokenFailure(
+            WarrenWalletInteractorError.account(.server(status: 503, message: "down"))
+        )
+
+        guard case .getPaymentToken = error else {
+            return XCTFail("Expected getPaymentToken, got \(error)")
+        }
+    }
+
+    func test_aBannedCheck_keepsThePurchaseForAfterTheBan() {
+        let error = StorePaymentError.ofUploadFailure(WarrenWalletInteractorError.account(.banned(ban)))
+
+        guard case let .bannedAfterPayment(got) = error else {
+            return XCTFail("Expected bannedAfterPayment, got \(error)")
+        }
+        XCTAssertEqual(got, ban)
+    }
+
+    func test_anyOtherCheckFailure_staysAReceiptUploadFailure() {
+        guard case .receiptUpload = StorePaymentError.ofUploadFailure(StorePaymentError.unknown) else {
+            return XCTFail("Expected receiptUpload")
+        }
+    }
 }
