@@ -5,8 +5,11 @@ description: >
   replayed into this job's log as the step ends, cancelling this job cancels
   the build, and on success the build's outputs are rebuilt into out-dir and
   verified against the checksum list the build wrote. Every Warren Windows job
-  runs through it; the other repos consume it from warren-app pinned by SHA.
-  Contract and trade-offs: the warren-codemagic skill in the workspace.
+  runs through it. Canonical copy in warren-app; warren-sdk-rs, warren-sdk-ts
+  and wclaude carry byte-identical copies of this directory, because GitHub
+  cannot fetch an action out of warren-app (its tree holds an absolute
+  symlink the action extractor refuses). Contract and trade-offs: the
+  warren-codemagic skill in the workspace.
 inputs:
   app-id:
     description: Codemagic application id of this repository (repo variable CODEMAGIC_APP_ID).
