@@ -28,20 +28,16 @@ test.describe('App routing on Windows', () => {
     await util?.closePage();
   });
 
-  test('does not offer VPN only for, which the Windows daemon refuses for now', async () => {
+  test('offers VPN only for like the other tabs', async () => {
     const includeOnly = page.getByRole('tab', { name: 'VPN only for' });
 
-    await expect(includeOnly).toBeDisabled();
-    await expect(page.getByTestId('include-only-coming-soon')).toHaveText(
-      'VPN only for is coming soon on Windows.',
-    );
-    await expect(page.getByRole('tab', { name: 'Bypass VPN' })).toHaveAttribute(
-      'aria-selected',
-      'true',
-    );
+    await expect(includeOnly).toBeEnabled();
+    await expect(page.getByTestId('include-only-coming-soon')).toHaveCount(0);
     await page.getByRole('tab', { name: 'Bypass VPN' }).focus();
     await page.keyboard.press('End');
-    await expect(page.getByRole('tab', { name: 'Country per app' })).toBeFocused();
-    await page.screenshot({ path: `${SCREENSHOTS}/16-windows-include-only-coming-soon.png` });
+    await expect(includeOnly).toBeFocused();
+    await includeOnly.click();
+    await expect(includeOnly).toHaveAttribute('aria-selected', 'true');
+    await page.screenshot({ path: `${SCREENSHOTS}/16-windows-include-only.png` });
   });
 });

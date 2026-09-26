@@ -5376,10 +5376,6 @@ msgid "Only selected apps are protected"
 msgstr "Seules les apps choisies sont protégées"
 
 msgctxt "split-tunneling-view"
-msgid "VPN only for is coming soon on Windows."
-msgstr "Le VPN ciblé arrive bientôt sur Windows."
-
-msgctxt "split-tunneling-view"
 msgid "VPN only for is on: an app uses its country when you open it from VPN only for."
 msgstr "Le VPN ciblé est activé : une app utilise son pays quand vous l'ouvrez depuis VPN ciblé."
 

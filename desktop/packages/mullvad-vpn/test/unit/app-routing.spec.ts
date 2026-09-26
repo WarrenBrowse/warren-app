@@ -10,7 +10,6 @@ import {
   effectiveIncludedApps,
   exitChoiceNames,
   exitChoicesInUse,
-  includeOnlyTabState,
   modeChangeConfirmation,
   resolveApplications,
   routeStatusForApp,
@@ -314,22 +313,6 @@ describe('countryNeedsIncludedLaunch, for the Country per app tab', () => {
   it('holds nowhere else: the daemon includes an app with a country itself', () => {
     expect(countryNeedsIncludedLaunch('linux', 'exclude')).toBe(false);
     expect(countryNeedsIncludedLaunch('darwin', 'include-only')).toBe(false);
-  });
-});
-
-describe('includeOnlyTabState, for the VPN only for tab', () => {
-  it('is coming soon on Windows, whose daemon refuses include-only for now', () => {
-    expect(includeOnlyTabState('win32', 'off')).toBe('coming-soon');
-    expect(includeOnlyTabState('win32', 'exclude')).toBe('coming-soon');
-  });
-
-  it('stays open on Windows while include-only is somehow on, so it can be turned off', () => {
-    expect(includeOnlyTabState('win32', 'include-only')).toBe('available');
-  });
-
-  it('is available on macOS and Linux', () => {
-    expect(includeOnlyTabState('darwin', 'off')).toBe('available');
-    expect(includeOnlyTabState('linux', 'off')).toBe('available');
   });
 });
 
