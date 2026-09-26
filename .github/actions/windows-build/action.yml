@@ -1,0 +1,48 @@
+name: Windows build
+description: >
+  Run one ci/codemagic/windows-*.sh entry point on this GitHub-hosted Windows
+  runner, phase by phase, each under the step watchdog, then check the outputs
+  against the checksum list the build wrote and move them to out-dir. The job
+  sets the build inputs the scripts read (WARREN_SHA, WARREN_CHANNEL,
+  WARREN_VERSION, WARREN_API_URL).
+inputs:
+  script:
+    description: Entry point, relative to the repository root
+    required: true
+  phases:
+    description: Space-separated phases, run in order
+    required: true
+  out-dir:
+    description: Where the verified outputs land
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Build, one watchdog-guarded phase at a time
+      shell: bash
+      env:
+        SCRIPT: ${{ inputs.script }}
+        PHASES: ${{ inputs.phases }}
+      run: |
+        set -euo pipefail
+        for phase in $PHASES; do
+          echo "::group::$SCRIPT $phase"
+          bash ci/codemagic/watchdog.sh bash "$SCRIPT" "$phase"
+          echo "::endgroup::"
+        done
+
+    # Nothing missing, nothing altered, nothing extra: the list is written by
+    # the build itself (export_outputs in ci/codemagic/windows-env.sh).
+    - name: Check the outputs against the build's own checksum list
+      shell: bash
+      env:
+        OUT_DIR: ${{ inputs.out-dir }}
+      run: |
+        set -euo pipefail
+        cd cm-out
+        sha256sum -c codemagic.sha256
+        listed="$(sed -E 's/^[0-9a-f]{64} [ *]//' codemagic.sha256 | sort)"
+        present="$(find . -maxdepth 1 -type f ! -name codemagic.sha256 -printf '%f\n' | sort)"
+        [ "$listed" = "$present" ] || { echo "::error::cm-out/ does not match its checksum list"; exit 1; }
+        mkdir -p "../$OUT_DIR"
+        while IFS= read -r f; do mv -- "$f" "../$OUT_DIR/"; done <<< "$present"

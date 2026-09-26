@@ -243,11 +243,12 @@ flags, and the SYSTEM dev service needed to run the daemon:
 [`docs/WINDOWS-DEV.md`](docs/WINDOWS-DEV.md). The VM side is the
 `warren-windows-vm` skill.
 
-The released Windows installers and headless bundle are built on Codemagic, not
-on a GitHub runner: `codemagic.yaml` and `ci/codemagic/` define the builds, and
-release.yml / release-daemon.yml start them through
-`.github/actions/codemagic-build`. That proxy and `ci/codemagic/watchdog.sh`
-are canonical here; warren-sdk-rs, warren-sdk-ts and wclaude carry
-byte-identical copies, so a change to either lands here and is copied to the
-three others in the same campaign.
-Contract, cache and traps: the `warren-codemagic` skill.
+The released Windows installers and headless bundle are built on GitHub-hosted
+`windows-2025` runners, free for this public repo: release.yml and
+release-daemon.yml run `ci/codemagic/windows-*.sh` (named after the Codemagic
+machines they were written for) through `.github/actions/windows-build`, each
+phase under `ci/codemagic/watchdog.sh`, which kills a step that goes silent
+on an idle machine. The watchdog is canonical here; warren-sdk-rs,
+warren-sdk-ts and wclaude carry copies, so a change lands here and is copied
+to the three others in the same campaign. Its native Windows cases run in
+warren-tests.yml's `windows-watchdog` job. Traps: the `warren-codemagic` skill.

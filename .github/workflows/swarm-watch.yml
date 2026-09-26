@@ -32,7 +32,7 @@ permissions:
 jobs:
   watch:
     name: ${{ matrix.channel }} swarm
-    runs-on: [self-hosted, Linux, X64, libra]
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     strategy:
       fail-fast: false

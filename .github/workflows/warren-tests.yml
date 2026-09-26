@@ -17,18 +17,12 @@ on:
 jobs:
   daemon-warren-tests:
     name: Daemon Warren crates (cargo test)
-    runs-on: [self-hosted, Linux, X64, libra]
+    # GitHub-hosted: free and unlimited for a public repo, a fresh VM every
+    # run, so the compiled tree comes back through the rust cache below.
+    runs-on: ubuntu-24.04
     # Backstop so a wedged test/compile fails in minutes instead of sitting at
-    # the GitHub 6h max and blocking a fleet runner. A healthy native-arm64 run
-    # is ~3-4 min (the runner volume persists the cargo target cache), so 45 is
-    # a generous ceiling.
+    # the GitHub 6h max.
     timeout-minutes: 45
-    env:
-      # Cap build parallelism so several fleet jobs can share the 16-core Colima
-      # VM without thrashing (multiple macstudio-arm64 runners live on it).
-      # Native arm64 has none of the x86-Rosetta jobserver-deadlock failure modes
-      # the old runner needed retry guards for, so this is purely neighbourliness.
-      CARGO_BUILD_JOBS: "6"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -64,6 +58,7 @@ jobs:
           # toolchain needs the rustfmt component (the action installs only
           # clippy by default).
           rustup-components: clippy rustfmt
+          rust-cache-targets: "true"
 
       - name: cargo fmt --check (Warren scope)
         # Gate fmt in addition to clippy/test to avoid style drifts
@@ -267,9 +262,9 @@ jobs:
 
   desktop-warren-typecheck:
     name: Desktop Warren UI (type-check + lint)
-    runs-on: [self-hosted, Linux, X64, libra]
-    # Backstop so a wedged npm/tsc/eslint can never sit on the shared runner
-    # until the GitHub 6h max. A healthy run is ~2 min.
+    runs-on: ubuntu-24.04
+    # Backstop so a wedged npm/tsc/eslint can never run until the GitHub 6h
+    # max. A healthy run is ~2 min.
     timeout-minutes: 20
     defaults:
       run:
@@ -369,19 +364,10 @@ jobs:
         shell: bash
         run: python3 ci/test_torrentlib.py
 
-      # Every Windows artifact reaches a release through the Codemagic proxy:
-      # it picks the commit the Windows machine builds, turns the build's end
-      # state into this job's verdict, and refuses any output the build did
-      # not checksum. Offline: the API round trip belongs to the live jobs.
-      - name: Codemagic proxy unit tests
-        working-directory: .
-        shell: bash
-        run: python3 .github/actions/codemagic-build/test_codemagic_build.py
-
-      # Every Codemagic step runs under the watchdog that kills a step gone
+      # Every Windows build step runs under the watchdog that kills a step gone
       # silent (the first release build hung 42 minutes on a child waiting for
-      # stdin). The suite also fails if a codemagic.yaml step escapes it.
-      - name: Codemagic step watchdog tests
+      # stdin). The suite also fails if a workflow runs a build step outside it.
+      - name: Windows step watchdog tests
         working-directory: .
         shell: bash
         run: bash ci/codemagic/test-watchdog.sh
@@ -416,3 +402,23 @@ jobs:
         working-directory: .
         shell: bash
         run: bash ci/test-git-config-global.sh
+
+  windows-watchdog:
+    name: Windows step watchdog (native cases)
+    # What the Unix suite stubs out, on the machine the release builds use:
+    # native process trees, the CPU of the command's own tree, and the two
+    # traps that once hung a build (a captured PowerShell, build.sh's host
+    # probe), each guarded to a minute.
+    runs-on: windows-2025
+    timeout-minutes: 20
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v5
+      - name: Watchdog suite, native Windows cases included
+        run: bash ci/codemagic/selftest.sh watchdog
+      - name: Windows PowerShell as the build starts it
+        run: bash ci/codemagic/selftest.sh powershell
+      - name: build.sh prologue
+        run: bash ci/codemagic/selftest.sh prologue

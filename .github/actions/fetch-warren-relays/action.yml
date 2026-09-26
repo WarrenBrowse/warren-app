@@ -37,6 +37,6 @@ runs:
       env:
         WARREN_API_URL: ${{ inputs.warren-api-url }}
         WARREN_EXPECTED_PUBKEY: ${{ inputs.expected-pubkey }}
-      # Shared with the Codemagic Windows builds (ci/codemagic/), so the bake
-      # and its signature gate have one implementation.
+      # Shared with the Windows builds (ci/codemagic/), so the bake and its
+      # signature gate have one implementation.
       run: bash ci/fetch-warren-relays.sh "$WARREN_API_URL" "$WARREN_EXPECTED_PUBKEY"

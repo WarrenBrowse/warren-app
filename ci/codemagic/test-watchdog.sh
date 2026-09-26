@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# Tests for ci/codemagic/watchdog.sh, the guard every Codemagic step runs
-# under. It exists because a build once sat 42 minutes on a process waiting for
-# stdin with nothing to show for it: the guard must kill a silent, idle command
+# Tests for watchdog.sh, the guard every Windows build step runs under. It
+# exists because a build once sat 42 minutes on a process waiting for stdin
+# with nothing to show for it: the guard must kill a silent, idle command
 # quickly, never kill one that is working, and pass the command's own exit
 # status through untouched.
 #
@@ -153,14 +153,19 @@ if case "$(uname -s)" in MINGW* | MSYS*) true ;; *) false ;; esac; then
 fi
 
 # The guard only protects the steps that go through it: every Git Bash step of
-# this repository's codemagic.yaml must run under watchdog.sh.
+# this repository's codemagic.yaml, if it has one, and every workflow or action
+# line that runs a script of this directory must go through watchdog.sh. The
+# test suite itself and the self-test are exempt.
 root="$here"
-while [ "$root" != / ] && [ ! -f "$root/codemagic.yaml" ]; do root="$(dirname "$root")"; done
-yaml="$root/codemagic.yaml"
-steps="$(grep -c "bash.exe'" "$yaml")"
-unguarded="$(grep "bash.exe'" "$yaml" | grep -vc 'codemagic/watchdog.sh ')"
-{ echo "codemagic.yaml: $steps Git Bash step(s)"; grep "bash.exe'" "$yaml" | grep -v 'codemagic/watchdog.sh '; } > "$tmp/out"
-check "every Git Bash step of codemagic.yaml runs under the watchdog" \
+while [ "$root" != / ] && [ ! -d "$root/.github" ]; do root="$(dirname "$root")"; done
+dir="$(basename "$here")"
+: > "$tmp/steps"
+[ -f "$root/codemagic.yaml" ] && grep "bash.exe'" "$root/codemagic.yaml" >> "$tmp/steps"
+grep -rhoE "bash [^ ]*$dir/[a-z-]+\.sh.*" "$root/.github" | grep -vE "(test-watchdog|selftest)\.sh" >> "$tmp/steps"
+steps="$(grep -c . "$tmp/steps")"
+unguarded="$(grep -vcE "$dir/watchdog\.sh " "$tmp/steps")"
+{ echo "$steps build step(s) found, unguarded:"; grep -vE "$dir/watchdog\.sh " "$tmp/steps"; } > "$tmp/out"
+check "every Windows build step runs under the watchdog" \
     "[ $steps -gt 0 ] && [ $unguarded -eq 0 ]"
 
 [ "$failures" -eq 0 ] || { echo "$failures failure(s)"; exit 1; }
