@@ -59,6 +59,16 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Show the suspension when a voucher or an App Store purchase is refused for a suspended
   account. No purchase starts, and a purchase already paid stays pending, to be credited once the
   suspension ends.
+- [Windows, macOS, Linux] Keep a purchased voucher that a suspension refused across restarts of
+  the app and of the service, sealed by the system keychain, and redeem it by itself once the
+  suspension ends, including when it simply runs out. It is erased only once redeemed or refused
+  for good (unknown, used or expired). Without a keychain (Linux with no keyring) it is kept for
+  the session only, never written in the clear.
+- [Windows, macOS, Linux] Keep the text of a server refusal out of the service's error messages
+  and logs.
+- [Android] Keep a purchased voucher that a suspension refused across restarts of the app, sealed
+  by a key of the Android Keystore, and redeem it by itself once the suspension ends or when the
+  app starts again. It is erased only once redeemed or refused for good.
 
 ## [1.1.35] - 2026-09-25
 ### Added

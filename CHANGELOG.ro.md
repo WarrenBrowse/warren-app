@@ -48,6 +48,16 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Vezi suspendarea când un voucher sau o achiziție App Store e refuzată pentru un cont
   suspendat. Nicio achiziție nu pornește, iar o achiziție deja plătită rămâne în așteptare, ca să
   fie creditată după încheierea suspendării.
+- [Windows, macOS, Linux] Păstrează un voucher cumpărat pe care suspendarea l-a refuzat și după o
+  repornire a aplicației sau a serviciului, sigilat de keychain-ul sistemului, și îl folosește
+  singur la sfârșitul suspendării, inclusiv când aceasta pur și simplu expiră. E șters doar după
+  ce e folosit sau refuzat definitiv (necunoscut, deja folosit sau expirat). Fără keychain (Linux
+  fără keyring), e păstrat doar pe durata sesiunii, niciodată scris în clar.
+- [Windows, macOS, Linux] Textul unui refuz al serverului nu mai apare în mesajele de eroare și
+  în jurnalele serviciului.
+- [Android] Păstrează un voucher cumpărat pe care suspendarea l-a refuzat și după o repornire a
+  aplicației, sigilat de o cheie din Android Keystore, și îl folosește singur la sfârșitul
+  suspendării sau la repornirea aplicației. E șters doar după ce e folosit sau refuzat definitiv.
 
 ## [1.1.35] - 2026-09-25
 ### Adăugat

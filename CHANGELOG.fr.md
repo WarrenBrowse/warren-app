@@ -52,6 +52,17 @@ par l'application, gardez-le tel quel.
 - [iOS] Afficher la suspension quand un bon ou un achat App Store est refusé pour un compte
   suspendu. Aucun achat ne démarre, et un achat déjà payé reste en attente, pour être crédité une
   fois la suspension terminée.
+- [Windows, macOS, Linux] Garder un bon acheté que la suspension a refusé même après un
+  redémarrage de l'application ou du service, scellé par le trousseau du système, et l'utiliser
+  de lui-même à la fin de la suspension, y compris quand elle arrive simplement à son terme. Il
+  n'est effacé qu'une fois utilisé ou refusé définitivement (inconnu, déjà utilisé ou expiré). Sans
+  trousseau (Linux sans keyring), il est gardé pour la session seulement, jamais écrit en clair.
+- [Windows, macOS, Linux] Ne plus reprendre le texte d'un refus du serveur dans les messages
+  d'erreur et les journaux du service.
+- [Android] Garder un bon acheté que la suspension a refusé même après un redémarrage de
+  l'application, scellé par une clé de l'Android Keystore, et l'utiliser de lui-même à la fin de la
+  suspension ou au redémarrage de l'application. Il n'est effacé qu'une fois utilisé ou refusé
+  définitivement.
 
 ## [1.1.35] - 2026-09-25
 ### Ajouté
