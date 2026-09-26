@@ -31,7 +31,7 @@ are chosen when they are opened).
 | mode | Windows | macOS | Linux | Android | iOS |
 |-|-|-|-|-|-|
 | Bypass VPN | yes | macOS 13 or later, signed build, Full Disk Access | yes, apps opened through `warren-exclude` | yes | no |
-| VPN only for | not yet: the tab says it is coming soon, and the daemon refuses the mode | macOS 13 or later, signed build, Full Disk Access | cgroup v2 with nftables socket matching; apps opened through `warren-include` | being implemented | no |
+| VPN only for | not yet: the tab says it is coming soon, and the daemon refuses the mode | macOS 13 or later, signed build, Full Disk Access | cgroup v2 with nftables socket matching; apps opened through `warren-include` | yes | no |
 | Country per app | yes* | yes, no Full Disk Access needed | yes*, for apps whose program can be named (below) | not yet | no |
 
 *: implemented; the datapath has been run against real exits on macOS only so far.
@@ -114,6 +114,9 @@ possible to exclude public custom DNS in that case.
 Otherwise DNS won't work.
 
 In other words: Excluded apps behave as if there was no VPN tunnel running at all.
+
+With "VPN only for" (include-only, `app-routing.md` section 3.4), a chosen app behaves as a
+normal app above, and every other app behaves as an excluded app.
 
 ## Other limitations
 

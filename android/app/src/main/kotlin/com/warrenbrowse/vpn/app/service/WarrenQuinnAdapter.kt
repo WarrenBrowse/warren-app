@@ -11,6 +11,8 @@ import com.warrenbrowse.talpid.model.Connectivity
 import com.warrenbrowse.vpn.app.connectivity.RelayFamilies
 import com.warrenbrowse.vpn.app.connectivity.canDialRelay
 import com.warrenbrowse.vpn.app.connectivity.isOnlineWithNoDialableFamily
+import com.warrenbrowse.vpn.lib.model.AppRouting
+import com.warrenbrowse.vpn.lib.model.resolveAppRouting
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import kotlinx.coroutines.CoroutineDispatcher
@@ -192,10 +194,12 @@ class WarrenQuinnAdapter(
         // Re-establish the TUN when the split-tunnelling selection changes while
         // connected, so newly excluded/included apps take effect without a
         // manual reconnect. The current-value emission is skipped (drop(1)); a
-        // reconnect only fires from a settled Connected state.
+        // reconnect only fires from a settled Connected state. A blackhole up
+        // at that moment is replaced instead: an app just added to an
+        // include-only list is not held by the one already up.
         scope.launch {
-            combine(settings.splitTunnelingEnabled, settings.excludedApps) { enabled, apps ->
-                if (enabled) apps else emptySet()
+            combine(settings.splitMode, settings.excludedApps, settings.includedApps) { _, _, _ ->
+                currentAppRouting()
             }
                 .drop(1)
                 .distinctUntilChanged()
@@ -203,14 +207,45 @@ class WarrenQuinnAdapter(
                     if (activeConfig != null && _state.value is WarrenTunnelState.Connected) {
                         Logger.i("split-tunnelling selection changed; re-establishing tunnel")
                         reconnect()
+                    } else {
+                        refreshBlackhole()
                     }
                 }
         }
     }
 
-    /** Package names to route outside the tunnel, or empty when split off. */
-    private fun currentExcludedApps(): Set<String> =
-        if (settings.splitTunnelingEnabled.value) settings.excludedApps.value else emptySet()
+    /** The apps the TUN captures, from the split settings and the installed apps. */
+    private fun currentAppRouting(): AppRouting =
+        tunAppRouting(
+            resolveAppRouting(
+                settings.splitMode.value,
+                settings.excludedApps.value,
+                settings.includedApps.value,
+                platform::isAppInstalled,
+            ),
+            platform.selfPackage,
+        )
+
+    /**
+     * Whether a drop keeps traffic blocked whatever the flap guard says.
+     * Include-only does: its blackhole holds only the included apps, so
+     * releasing strands nobody and would let an included app out in clear.
+     */
+    private fun failsClosed(config: WarrenTunnelConfig): Boolean =
+        config.lockdownMode || currentAppRouting() is AppRouting.OnlyFor
+
+    private fun blackholePlan(config: WarrenTunnelConfig): WarrenTunInterfacePlan =
+        planTunInterface(config, blocking = true, appRouting = currentAppRouting())
+
+    /** Replace a blackhole that is up with one for the current selection, new one first. */
+    private suspend fun refreshBlackhole() = lock.withLock {
+        val config = activeConfig ?: return@withLock
+        val stale = blockingFd ?: return@withLock
+        val fd = platform.establish(blackholePlan(config)) ?: return@withLock
+        blockingFd = fd
+        stale.close()
+        Logger.i("split-tunnelling selection changed; blackhole re-established")
+    }
 
     /**
      * Establish a Quinn session. Ownership of [mnemonic] transfers to the
@@ -625,7 +660,7 @@ class WarrenQuinnAdapter(
     }
 
     private fun buildTunInterface(config: WarrenTunnelConfig): ParcelFileDescriptor? =
-        platform.establish(planTunInterface(config, excludedApps = currentExcludedApps()))
+        platform.establish(planTunInterface(config, appRouting = currentAppRouting()))
 
     /**
      * Handle the active tunnel going down. Must be called holding [lock].
@@ -649,7 +684,7 @@ class WarrenQuinnAdapter(
         // the Mullvad fail-closed model and lives in KillSwitchPolicy.
         val flapping =
             !userInitiatedDisconnect && flapDetector.recordDrop(SystemClock.elapsedRealtime())
-        when (KillSwitchPolicy.decide(userInitiatedDisconnect, flapping, config.lockdownMode)) {
+        when (KillSwitchPolicy.decide(userInitiatedDisconnect, flapping, failsClosed(config))) {
             KillSwitchAction.RELEASE -> {
                 // The one path that returns traffic to the bare network. It
                 // runs for a user teardown, and with lockdown mode off for a
@@ -694,7 +729,7 @@ class WarrenQuinnAdapter(
         banLapsesAtUnixSecs: Long? = null,
     ) {
         if (blockingFd == null) {
-            val fd = platform.establish(planTunInterface(config, blocking = true))
+            val fd = platform.establish(blackholePlan(config))
             if (fd == null) {
                 // Could not stand up the dedicated blackhole. Keep whatever
                 // interface is currently up (the active TUN with a dead pump)
@@ -743,7 +778,7 @@ class WarrenQuinnAdapter(
         _natPmpStatus.value = NATPMP_IDLE
         _effectiveMtu.value = null
         flapDetector.reset()
-        if (config.lockdownMode) {
+        if (failsClosed(config)) {
             Logger.w("WarrenQuinnAdapter: account unauthorized; blocking (subscription expired)")
             enterBlockingMode(config, "subscription expired", flapping = false, expired = true)
         } else {
@@ -957,7 +992,7 @@ class WarrenQuinnAdapter(
                 // window without a TUN. The blackhole is torn down by
                 // connect() -> exitBlockingMode() on success.
                 if (blockingFd == null) {
-                    val fd = platform.establish(planTunInterface(config, blocking = true))
+                    val fd = platform.establish(blackholePlan(config))
                     if (fd != null) {
                         blockingFd = fd
                     } else {
@@ -1021,7 +1056,7 @@ class WarrenQuinnAdapter(
                     // live interface, so traffic stays captured until the
                     // failover exit is up (connect() drops the blackhole).
                     if (blockingFd == null) {
-                        val fd = platform.establish(planTunInterface(config, blocking = true))
+                        val fd = platform.establish(blackholePlan(config))
                         if (fd != null) {
                             blockingFd = fd
                         } else {

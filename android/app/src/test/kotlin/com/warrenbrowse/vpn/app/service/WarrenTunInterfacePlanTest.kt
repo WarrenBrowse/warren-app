@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.app.service
 
+import com.warrenbrowse.vpn.lib.model.AppRouting
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -134,14 +135,52 @@ class WarrenTunInterfacePlanTest {
 
     @Test
     fun `split tunnelling excluded apps are carried into the active plan`() {
-        val plan = planTunInterface(config(), excludedApps = setOf("com.foo", "com.bar"))
-        assertEquals(setOf("com.foo", "com.bar"), plan.excludedApps)
+        val routing = AppRouting.Bypass(setOf("com.foo", "com.bar"))
+        val plan = planTunInterface(config(), appRouting = routing)
+        assertEquals(routing, plan.appRouting)
     }
 
     @Test
     fun `blocking plan never excludes apps so the kill switch captures everything`() {
-        val plan = planTunInterface(config(), blocking = true, excludedApps = setOf("com.foo"))
-        assertTrue(plan.excludedApps.isEmpty())
+        val plan =
+            planTunInterface(config(), blocking = true, appRouting = AppRouting.Bypass(setOf("com.foo")))
+        assertEquals(AppRouting.AllApps, plan.appRouting)
+    }
+
+    @Test
+    fun `include-only apps are the only ones carried into the active plan`() {
+        val routing = AppRouting.OnlyFor(setOf("com.bank", "com.warren"))
+        val plan = planTunInterface(config(), appRouting = routing)
+        assertEquals(routing, plan.appRouting)
+    }
+
+    @Test
+    fun `the include-only blackhole captures the included apps and leaves every other app online`() {
+        // A kill switch that captured every app here would take the whole
+        // device offline for a mode that promised to leave it alone; one that
+        // captured fewer would let an included app out while the tunnel is down.
+        val routing = AppRouting.OnlyFor(setOf("com.bank", "com.warren"))
+        val plan = planTunInterface(config(), blocking = true, appRouting = routing)
+        assertTrue(plan.blocking)
+        assertEquals(routing, plan.appRouting)
+    }
+
+    @Test
+    fun `include-only carries warren itself so its in-tunnel probes reach the gateway`() {
+        // The egress probe and the NAT-PMP client are sockets of this app aimed
+        // at the tunnel gateway: outside the allow list they would go to the
+        // physical network and convict a healthy exit.
+        assertEquals(
+            AppRouting.OnlyFor(setOf("com.bank", "com.warren")),
+            tunAppRouting(AppRouting.OnlyFor(setOf("com.bank")), selfPackage = "com.warren"),
+        )
+    }
+
+    @Test
+    fun `warren is never added to a bypass list or a full tunnel`() {
+        val bypass = AppRouting.Bypass(setOf("com.chat"))
+        assertEquals(bypass, tunAppRouting(bypass, selfPackage = "com.warren"))
+        assertEquals(AppRouting.AllApps, tunAppRouting(AppRouting.AllApps, selfPackage = "com.warren"))
     }
 
     @Test

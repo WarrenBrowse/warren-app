@@ -10,6 +10,7 @@ import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.app.connectivity.RelayFamilies
 import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.jni.WarrenNativeRuntime
+import com.warrenbrowse.vpn.lib.model.AppRouting
 
 /**
  * Every platform and native call [WarrenQuinnAdapter] makes, behind one seam.
@@ -100,6 +101,12 @@ interface WarrenTunnelPlatform {
      * which keeps the gate behaving as it did rather than guessing.
      */
     fun relayFamilies(directoryRaw: String?): RelayFamilies
+
+    /** This app's own package name. */
+    val selfPackage: String
+
+    /** Whether [packageName] is installed on the device right now. */
+    fun isAppInstalled(packageName: String): Boolean
 }
 
 /** The production [WarrenTunnelPlatform]: real `VpnService`, real JNI. */
@@ -136,17 +143,7 @@ class AndroidTunnelPlatform(
                 Logger.w(throwable = e) { "skipping invalid DNS server $it" }
             }
         }
-        // Split tunnelling: route excluded apps outside the tunnel. A package
-        // that is no longer installed throws NameNotFoundException; skip it
-        // rather than abort the whole interface. Never on a blocking plan (its
-        // excludedApps is empty), so the kill switch always captures everything.
-        plan.excludedApps.forEach { pkg ->
-            try {
-                builder.addDisallowedApplication(pkg)
-            } catch (e: PackageManager.NameNotFoundException) {
-                Logger.w(throwable = e) { "skipping excluded app not installed: $pkg" }
-            }
-        }
+        applyAppRouting(builder, plan.appRouting)
         // establish() validates the full config in the system process and
         // throws IllegalArgumentException ("Cannot set address") on a rejected
         // combination (e.g. an IPv6 address with MTU < the 1280 v6 minimum).
@@ -157,6 +154,33 @@ class AndroidTunnelPlatform(
         } catch (e: IllegalArgumentException) {
             Logger.e(throwable = e) { "VpnService.Builder.establish() rejected the plan" }
             null
+        }
+    }
+
+    // A package uninstalled since the plan was made throws
+    // NameNotFoundException; skip it rather than abort the whole interface.
+    // The package is not logged: which apps a user routes is theirs.
+    // An allow list can never end up empty here (which would capture every
+    // app): include-only always carries this app, installed by definition.
+    private fun applyAppRouting(builder: VpnService.Builder, routing: AppRouting) {
+        when (routing) {
+            AppRouting.AllApps -> Unit
+            is AppRouting.Bypass ->
+                routing.packages.forEach { pkg ->
+                    try {
+                        builder.addDisallowedApplication(pkg)
+                    } catch (_: PackageManager.NameNotFoundException) {
+                        Logger.w { "skipping an excluded app that is no longer installed" }
+                    }
+                }
+            is AppRouting.OnlyFor ->
+                routing.packages.forEach { pkg ->
+                    try {
+                        builder.addAllowedApplication(pkg)
+                    } catch (_: PackageManager.NameNotFoundException) {
+                        Logger.w { "skipping an included app that is no longer installed" }
+                    }
+                }
         }
     }
 
@@ -231,6 +255,17 @@ class AndroidTunnelPlatform(
         // device for a fault that is not its network's.
         return if (mask == 0) RelayFamilies.V4_ONLY else RelayFamilies(mask)
     }
+
+    override val selfPackage: String
+        get() = vpnService.packageName
+
+    override fun isAppInstalled(packageName: String): Boolean =
+        try {
+            vpnService.packageManager.getApplicationInfo(packageName, 0)
+            true
+        } catch (_: PackageManager.NameNotFoundException) {
+            false
+        }
 }
 
 /** Paired goodput probes deliver at both size classes. */

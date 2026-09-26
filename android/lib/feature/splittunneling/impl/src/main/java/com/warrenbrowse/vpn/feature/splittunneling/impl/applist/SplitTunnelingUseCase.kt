@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
+import com.warrenbrowse.vpn.feature.splittunneling.impl.SplitTunnelingTab
 import com.warrenbrowse.vpn.lib.model.PackageName
 import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
@@ -15,34 +16,40 @@ class SplitTunnelingUseCase(
     private val preferencesRepository: UserPreferencesRepository,
     private val dispatcher: CoroutineDispatcher,
 ) {
-    operator fun invoke(): Flow<SplitApps> =
+    /** The installed apps, split by whether they are on the list of the [tab] shown. */
+    operator fun invoke(tab: Flow<SplitTunnelingTab>): Flow<SplitApps> =
         combine(
                 flow { emit(applicationsProvider.apps()) },
                 splitTunnelingRepository.excludedApps,
-                splitTunnelingRepository.splitTunnelingEnabled,
+                splitTunnelingRepository.includedApps,
                 preferencesRepository.showSystemAppsSplitTunneling(),
-            ) { allApps, exclusions, splitTunnelingEnabled, showSystemApps ->
-                val exclusions = if (splitTunnelingEnabled) exclusions else emptySet()
+                tab,
+            ) { allApps, excluded, included, showSystemApps, shownTab ->
+                val chosen =
+                    when (shownTab) {
+                        SplitTunnelingTab.Bypass -> excluded
+                        SplitTunnelingTab.IncludeOnly -> included
+                    }
                 SplitApps(
                     allApps =
                         if (showSystemApps) allApps
-                        else allApps.filter { !it.isSystemApp || it.packageName in exclusions },
-                    exclusions = exclusions,
+                        else allApps.filter { !it.isSystemApp || it.packageName in chosen },
+                    chosen = chosen,
                 )
             }
             .flowOn(dispatcher)
 }
 
-data class SplitApps(private val allApps: List<AppData>, private val exclusions: Set<PackageName>) {
-    val includedApps: List<AppData>
-    val excludedApps: List<AppData>
+data class SplitApps(private val allApps: List<AppData>, private val chosen: Set<PackageName>) {
+    val selectedApps: List<AppData>
+    val otherApps: List<AppData>
 
     init {
         allApps
-            .partition { appData -> exclusions.contains(appData.packageName) }
-            .also { (exclusions, inclusions) ->
-                includedApps = inclusions
-                excludedApps = exclusions
+            .partition { appData -> chosen.contains(appData.packageName) }
+            .also { (selected, others) ->
+                selectedApps = selected
+                otherApps = others
             }
     }
 }

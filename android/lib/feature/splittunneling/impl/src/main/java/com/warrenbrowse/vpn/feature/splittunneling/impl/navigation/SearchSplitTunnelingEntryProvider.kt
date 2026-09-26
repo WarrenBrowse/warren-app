@@ -6,12 +6,18 @@ import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.core.animation.slideInHorizontalTransition
 import com.warrenbrowse.vpn.core.scene.ListDetailSceneStrategy
 import com.warrenbrowse.vpn.feature.splittunneling.api.SearchSplitTunnelingNavKey
+import com.warrenbrowse.vpn.feature.splittunneling.impl.SplitTunnelingTab
 import com.warrenbrowse.vpn.feature.splittunneling.impl.search.SearchSplitTunnelingScreen
 
 fun EntryProviderScope<NavKey2>.searchSplitTunnelingEntry(navigator: Navigator) {
     entry<SearchSplitTunnelingNavKey>(
         metadata = ListDetailSceneStrategy.detailPane() + slideInHorizontalTransition()
-    ) { _ ->
-        SearchSplitTunnelingScreen(navigator = navigator)
+    ) { navArgs ->
+        SearchSplitTunnelingScreen(
+            tab =
+                if (navArgs.includeOnly) SplitTunnelingTab.IncludeOnly
+                else SplitTunnelingTab.Bypass,
+            navigator = navigator,
+        )
     }
 }

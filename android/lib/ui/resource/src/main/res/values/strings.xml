@@ -86,7 +86,23 @@
     <string name="update_available_description">Version %1$s is available. Tap to download the update.</string>
     <string name="update_now">Update now</string>
     <string name="quit">Quit</string>
-    <string name="split_tunneling_description">Choose the apps you want to exclude from the VPN tunnel.</string>
+    <string name="app_routing_description">Choose how each app connects.</string>
+    <string name="split_mode_bypass">Bypass VPN</string>
+    <string name="split_mode_bypass_description">The apps you choose connect as if the VPN were off.</string>
+    <string name="split_mode_include_only">VPN only for</string>
+    <string name="split_mode_include_only_description">Only the apps you choose use the VPN.</string>
+    <string name="include_only_lockdown_warning">Attention: If \"Block connections without VPN\" is enabled, the apps you did not choose will not have Internet.</string>
+    <string name="include_only_banner">Only these apps are protected. Everything else on this device uses your normal connection.</string>
+    <string name="include_only_no_app">None of the apps you chose is on this device, so every app uses the VPN until you choose one.</string>
+    <string name="include_only_confirm">Only the apps you choose will use the VPN. The rest of this device will not be protected.</string>
+    <string name="split_mode_replaces_bypass">This replaces Bypass VPN. Your list of apps there is kept.</string>
+    <string name="split_mode_replaces_include_only">This replaces VPN only for, so every app uses the VPN again except the ones you bypass. Your list of apps there is kept.</string>
+    <string name="split_mode_turn_on">Turn on</string>
+    <string name="apps_using_the_vpn">Using the VPN</string>
+    <plurals name="vpn_only_for_apps">
+        <item quantity="one">VPN only for %1$d app</item>
+        <item quantity="other">VPN only for %1$d apps</item>
+    </plurals>
     <string name="split_tunneling_description_warning">Attention: If \"Block connections without VPN\" is enabled, split apps will not have Internet. Always keep in mind that split tunneling is a privacy risk.</string>
     <string name="enable">Enable</string>
     <string name="confirm_local_dns">The local DNS server will not work unless you enable \"Local Network Sharing\" under VPN settings.</string>

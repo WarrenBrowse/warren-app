@@ -83,7 +83,23 @@
     <string name="update_available_description">Version %1$s ist verfügbar. Tippe, um das Update herunterzuladen.</string>
     <string name="update_now">Jetzt aktualisieren</string>
     <string name="quit">Beenden</string>
-    <string name="split_tunneling_description">Wählen Sie die Apps aus, die Sie aus dem VPN-Tunnel ausschließen möchten.</string>
+    <string name="app_routing_description">Legen Sie fest, wie sich jede App verbindet.</string>
+    <string name="split_mode_bypass">VPN umgehen</string>
+    <string name="split_mode_bypass_description">Die ausgewählten Apps verbinden sich, als wäre das VPN aus.</string>
+    <string name="split_mode_include_only">VPN nur für</string>
+    <string name="split_mode_include_only_description">Nur die ausgewählten Apps nutzen das VPN.</string>
+    <string name="include_only_lockdown_warning">Achtung! Wenn „Verbindungen ohne VPN blockieren“ aktiviert ist, haben die nicht ausgewählten Apps keine Internetverbindung.</string>
+    <string name="include_only_banner">Nur diese Apps sind geschützt. Alles andere auf diesem Gerät nutzt Ihre normale Verbindung.</string>
+    <string name="include_only_no_app">Keine der ausgewählten Apps ist auf diesem Gerät installiert, daher nutzen alle Apps das VPN, bis Sie eine auswählen.</string>
+    <string name="include_only_confirm">Nur die ausgewählten Apps werden das VPN nutzen. Der Rest dieses Geräts wird nicht geschützt.</string>
+    <string name="split_mode_replaces_bypass">Dies ersetzt „VPN umgehen“. Ihre dortige App-Liste bleibt erhalten.</string>
+    <string name="split_mode_replaces_include_only">Dies ersetzt „VPN nur für“: Alle Apps nutzen wieder das VPN, außer denen, die das VPN umgehen. Ihre dortige App-Liste bleibt erhalten.</string>
+    <string name="split_mode_turn_on">Einschalten</string>
+    <string name="apps_using_the_vpn">Im VPN</string>
+    <plurals name="vpn_only_for_apps">
+        <item quantity="one">VPN nur für %1$d App</item>
+        <item quantity="other">VPN nur für %1$d Apps</item>
+    </plurals>
     <string name="split_tunneling_description_warning">Achtung! Wenn „Verbindungen ohne VPN blockieren“ aktiviert ist, haben Split-Apps keine Internetverbindung. Denken Sie immer daran, dass Split-Tunneling ein Datenschutzrisiko darstellt.</string>
     <string name="enable">Aktivieren</string>
     <string name="confirm_local_dns">Der lokale DNS-Server wird nicht funktionieren, solange „Teilen im lokalen Netzwerk“ nicht in den VPN-Einstellungen aktiviert ist.</string>

@@ -83,7 +83,23 @@
     <string name="update_available_description">La version %1$s est disponible. Appuyez pour télécharger la mise à jour.</string>
     <string name="update_now">Mettre à jour maintenant</string>
     <string name="quit">Quitter</string>
-    <string name="split_tunneling_description">Choisissez les applications que vous souhaitez exclure du tunnel VPN.</string>
+    <string name="app_routing_description">Choisissez comment chaque app se connecte.</string>
+    <string name="split_mode_bypass">Hors VPN</string>
+    <string name="split_mode_bypass_description">Les apps choisies se connectent comme si le VPN était coupé.</string>
+    <string name="split_mode_include_only">VPN ciblé</string>
+    <string name="split_mode_include_only_description">Seules les apps choisies utilisent le VPN.</string>
+    <string name="include_only_lockdown_warning">Attention : si l\'option « Bloquer les connexions sans VPN » est activée, les apps que vous n\'avez pas choisies n\'auront pas accès à Internet.</string>
+    <string name="include_only_banner">Seules ces apps sont protégées. Tout le reste de cet appareil utilise votre connexion normale.</string>
+    <string name="include_only_no_app">Aucune des apps choisies n\'est installée sur cet appareil : toutes les apps passent donc par le VPN jusqu\'à ce que vous en choisissiez une.</string>
+    <string name="include_only_confirm">Seules les apps choisies utiliseront le VPN. Le reste de cet appareil ne sera pas protégé.</string>
+    <string name="split_mode_replaces_bypass">Cela remplace « Hors VPN ». Votre liste d\'apps y est conservée.</string>
+    <string name="split_mode_replaces_include_only">Cela remplace le VPN ciblé : toutes les apps repassent par le VPN, sauf celles que vous en sortez. Votre liste d\'apps y est conservée.</string>
+    <string name="split_mode_turn_on">Activer</string>
+    <string name="apps_using_the_vpn">Dans le VPN</string>
+    <plurals name="vpn_only_for_apps">
+        <item quantity="one">VPN ciblé pour %1$d app</item>
+        <item quantity="other">VPN ciblé pour %1$d apps</item>
+    </plurals>
     <string name="split_tunneling_description_warning">Attention : si l\'option « Bloquer les connexions sans VPN » est activée, les applications partagées n\'auront pas accès à Internet. Gardez toujours à l\'esprit que le split tunneling présente un risque pour la vie privée.</string>
     <string name="enable">Activer</string>
     <string name="confirm_local_dns">Le serveur DNS local ne fonctionnera pas si vous n\'activez pas le « Partage du réseau local » dans les paramètres VPN.</string>

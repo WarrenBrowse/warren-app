@@ -29,6 +29,7 @@ import com.warrenbrowse.vpn.lib.repository.ChangelogRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
+import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenAutoRecoveryProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenHostOfflineProvider
@@ -59,6 +60,7 @@ class ConnectViewModel(
     private val localSettings: WarrenLocalSettingsRepository,
     hostOfflineProvider: WarrenHostOfflineProvider,
     autoRecoveryProvider: WarrenAutoRecoveryProvider,
+    splitTunneling: SplitTunnelingRepository,
     private val exitSwitchedNotificationUseCase: ExitSwitchedNotificationUseCase,
     private val envStandDownUseCase: EnvStandDownUseCase,
 ) : ViewModel() {
@@ -84,7 +86,12 @@ class ConnectViewModel(
                     wedged ->
                     offline || wedged
                 },
-                autoRecoveryProvider.autoRecoveryCount,
+                // Paired to stay within the eight inputs `combine` takes.
+                autoRecoveryProvider.autoRecoveryCount.combine(splitTunneling.vpnOnlyForCount) {
+                    count,
+                    vpnOnlyFor ->
+                    count to vpnOnlyFor
+                },
                 // The pinned location below is derived from the relay
                 // catalogue, which is fetched asynchronously. Without this
                 // input the first pass latches the empty cold-cache snapshot
@@ -98,7 +105,7 @@ class ConnectViewModel(
                 lastKnownDisconnectedLocation,
                 exitPin,
                 hostOffline,
-                autoRecoveryCount,
+                (autoRecoveryCount, vpnOnlyForCount),
                 relays ->
                 // Warren's relay list carries no coordinates and there is no
                 // device-GeoIP service, so the Warren tunnel state never reports
@@ -156,6 +163,7 @@ class ConnectViewModel(
                     isPlayBuild = isPlayBuild,
                     hostOffline = hostOffline,
                     autoRecoveryCount = autoRecoveryCount,
+                    vpnOnlyForCount = vpnOnlyForCount,
                 )
             }
             .stateIn(

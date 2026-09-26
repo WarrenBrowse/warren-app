@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
 
 /** Trust-on-first-use verdict for an exit's pinned public key. */
 sealed interface ExitKeyVerdict {
@@ -89,18 +90,25 @@ class WarrenLocalSettingsRepository(context: Context) : WarrenEnvStandDownStore 
     private val _allowLan = MutableStateFlow(prefs.getBoolean(KEY_ALLOW_LAN, false))
     val allowLan: StateFlow<Boolean> = _allowLan.asStateFlow()
 
-    /** Split tunnelling master switch: when off, [excludedApps] is ignored. */
-    private val _splitTunnelingEnabled =
-        MutableStateFlow(prefs.getBoolean(KEY_SPLIT_TUNNELING_ENABLED, false))
-    val splitTunnelingEnabled: StateFlow<Boolean> = _splitTunnelingEnabled.asStateFlow()
+    /** Which of [excludedApps] or [includedApps] is in force, if either. */
+    private val _splitMode = MutableStateFlow(readSplitMode())
+    val splitMode: StateFlow<SplitTunnelMode> = _splitMode.asStateFlow()
 
     /**
      * Package names routed OUTSIDE the tunnel (VpnService.Builder
-     * `addDisallowedApplication`). Applied only while [splitTunnelingEnabled].
+     * `addDisallowedApplication`). Applied only in [SplitTunnelMode.Exclude].
      */
     private val _excludedApps =
         MutableStateFlow(prefs.getStringSet(KEY_EXCLUDED_APPS, emptySet())?.toSet() ?: emptySet())
     val excludedApps: StateFlow<Set<String>> = _excludedApps.asStateFlow()
+
+    /**
+     * The only package names routed INTO the tunnel (VpnService.Builder
+     * `addAllowedApplication`). Applied only in [SplitTunnelMode.IncludeOnly].
+     */
+    private val _includedApps =
+        MutableStateFlow(prefs.getStringSet(KEY_INCLUDED_APPS, emptySet())?.toSet() ?: emptySet())
+    val includedApps: StateFlow<Set<String>> = _includedApps.asStateFlow()
 
     /**
      * Whether the first-launch onboarding wizard has been completed. Gates
@@ -283,21 +291,56 @@ class WarrenLocalSettingsRepository(context: Context) : WarrenEnvStandDownStore 
         _multiHopEnabled.value = enabled
     }
 
-    fun setSplitTunnelingEnabled(enabled: Boolean) {
-        prefs.edit().putBoolean(KEY_SPLIT_TUNNELING_ENABLED, enabled).apply()
-        _splitTunnelingEnabled.value = enabled
+    fun setSplitMode(mode: SplitTunnelMode) {
+        prefs.edit().putString(KEY_SPLIT_MODE, mode.storedValue()).apply()
+        _splitMode.value = mode
     }
 
-    fun addExcludedApp(packageName: String) = updateExcludedApps { it + packageName }
+    // Before the split mode existed a single switch turned the excluded list on
+    // or off. Its value becomes the mode once, and the mode is written back at
+    // once so the switch is never read again.
+    private fun readSplitMode(): SplitTunnelMode {
+        val stored = prefs.getString(KEY_SPLIT_MODE, null)
+        if (stored != null) {
+            return SplitTunnelMode.entries.firstOrNull { it.storedValue() == stored }
+                ?: SplitTunnelMode.Off
+        }
+        val migrated =
+            if (prefs.getBoolean(KEY_SPLIT_TUNNELING_ENABLED, false)) SplitTunnelMode.Exclude
+            else SplitTunnelMode.Off
+        prefs.edit().putString(KEY_SPLIT_MODE, migrated.storedValue()).apply()
+        return migrated
+    }
 
-    fun removeExcludedApp(packageName: String) = updateExcludedApps { it - packageName }
+    private fun SplitTunnelMode.storedValue(): String =
+        when (this) {
+            SplitTunnelMode.Off -> SPLIT_MODE_OFF
+            SplitTunnelMode.Exclude -> SPLIT_MODE_EXCLUDE
+            SplitTunnelMode.IncludeOnly -> SPLIT_MODE_INCLUDE_ONLY
+        }
 
-    private fun updateExcludedApps(transform: (Set<String>) -> Set<String>) {
-        val updated = transform(_excludedApps.value)
+    fun addExcludedApp(packageName: String) =
+        updateAppSet(KEY_EXCLUDED_APPS, _excludedApps) { it + packageName }
+
+    fun removeExcludedApp(packageName: String) =
+        updateAppSet(KEY_EXCLUDED_APPS, _excludedApps) { it - packageName }
+
+    fun addIncludedApp(packageName: String) =
+        updateAppSet(KEY_INCLUDED_APPS, _includedApps) { it + packageName }
+
+    fun removeIncludedApp(packageName: String) =
+        updateAppSet(KEY_INCLUDED_APPS, _includedApps) { it - packageName }
+
+    private fun updateAppSet(
+        key: String,
+        flow: MutableStateFlow<Set<String>>,
+        transform: (Set<String>) -> Set<String>,
+    ) {
+        val updated = transform(flow.value)
         // Store a fresh set: SharedPreferences keeps a reference to the passed
         // set and its own getStringSet return value must not be mutated.
-        prefs.edit().putStringSet(KEY_EXCLUDED_APPS, HashSet(updated)).apply()
-        _excludedApps.value = updated
+        prefs.edit().putStringSet(key, HashSet(updated)).apply()
+        flow.value = updated
     }
 
     fun setEntryCountry(country: String?) = setCountry(KEY_ENTRY_COUNTRY, country, _entryCountry)
@@ -767,6 +810,11 @@ class WarrenLocalSettingsRepository(context: Context) : WarrenEnvStandDownStore 
     private const val KEY_ALLOW_LAN = "allow_lan"
     private const val KEY_SPLIT_TUNNELING_ENABLED = "split_tunneling_enabled"
     private const val KEY_EXCLUDED_APPS = "split_tunneling_excluded_apps"
+    private const val KEY_INCLUDED_APPS = "split_tunneling_included_apps"
+    private const val KEY_SPLIT_MODE = "split_tunneling_mode"
+    private const val SPLIT_MODE_OFF = "off"
+    private const val SPLIT_MODE_EXCLUDE = "exclude"
+    private const val SPLIT_MODE_INCLUDE_ONLY = "include_only"
     private const val KEY_ONBOARDING_DONE = "onboarding_completed"
     private const val KEY_TUNNEL_MTU = "tunnel_mtu"
     const val MTU_MIN = 576

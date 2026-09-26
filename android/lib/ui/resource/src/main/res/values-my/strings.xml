@@ -83,7 +83,22 @@
     <string name="update_available_description">ဗားရှင်း %1$s ရနိုင်ပါပြီ။ အပ်ဒိတ်ကို ဒေါင်းလုဒ်ရန် တို့ပါ။</string>
     <string name="update_now">ယခု အပ်ဒိတ်လုပ်ပါ</string>
     <string name="quit">ထွက်ရန်</string>
-    <string name="split_tunneling_description">VPN Tunnel မှ ဖယ်ထုတ်လိုသည့် အက်ပ်များကို ရွေးချယ်ပါ။</string>
+    <string name="app_routing_description">အက်ပ်တစ်ခုစီ ချိတ်ဆက်ပုံကို ရွေးပါ။</string>
+    <string name="split_mode_bypass">VPN ကို ကျော်ရန်</string>
+    <string name="split_mode_bypass_description">သင်ရွေးသော အက်ပ်များသည် VPN ပိတ်ထားသကဲ့သို့ ချိတ်ဆက်ပါသည်။</string>
+    <string name="split_mode_include_only">VPN သုံးမည့်အက်ပ်များ</string>
+    <string name="split_mode_include_only_description">သင်ရွေးသော အက်ပ်များသာ VPN ကို သုံးပါသည်။</string>
+    <string name="include_only_lockdown_warning">သတိပြုရန်- \"VPN မသုံးဘဲချိတ်ဆက်မှုများကို ပိတ်ဆို့ရန်\" ကို ဖွင့်ထားပါက သင်မရွေးထားသော အက်ပ်များသည် အင်တာနက်သုံး၍ရမည်မဟုတ်ပါ။</string>
+    <string name="include_only_banner">ဤအက်ပ်များသာ ကာကွယ်ထားပါသည်။ ဤစက်ပေါ်ရှိ ကျန်အရာအားလုံးသည် သင်၏ ပုံမှန်ချိတ်ဆက်မှုကို သုံးပါသည်။</string>
+    <string name="include_only_no_app">သင်ရွေးထားသော အက်ပ်များထဲမှ တစ်ခုမျှ ဤစက်ပေါ်တွင် မရှိသဖြင့် သင်တစ်ခုရွေးသည်အထိ အက်ပ်အားလုံး VPN ကို သုံးပါသည်။</string>
+    <string name="include_only_confirm">သင်ရွေးသော အက်ပ်များသာ VPN ကို သုံးပါမည်။ ဤစက်၏ ကျန်အပိုင်းကို ကာကွယ်မည်မဟုတ်ပါ။</string>
+    <string name="split_mode_replaces_bypass">၎င်းသည် \"VPN ကို ကျော်ရန်\" ကို အစားထိုးပါသည်။ ထိုနေရာရှိ သင်၏အက်ပ်စာရင်းကို ဆက်ထားပါမည်။</string>
+    <string name="split_mode_replaces_include_only">၎င်းသည် \"VPN သုံးမည့်အက်ပ်များ\" ကို အစားထိုးသဖြင့် VPN ကို ကျော်သော အက်ပ်များမှလွဲ၍ အက်ပ်အားလုံး VPN ကို ပြန်သုံးပါမည်။ ထိုနေရာရှိ သင်၏အက်ပ်စာရင်းကို ဆက်ထားပါမည်။</string>
+    <string name="split_mode_turn_on">ဖွင့်ရန်</string>
+    <string name="apps_using_the_vpn">VPN သုံးနေသည်</string>
+    <plurals name="vpn_only_for_apps">
+        <item quantity="other">အက်ပ် %1$d ခုအတွက်သာ VPN</item>
+    </plurals>
     <string name="split_tunneling_description_warning">သတိပြုရန်- \"VPN မသုံးဘဲချိတ်ဆက်မှုများကို ပိတ်ဆို့ရန်\" ကို ဖွင့်ထားပါက Split အက်ပ်များသည် အင်တာနက်သုံး၍ရမည်မဟုတ်ပါ။ တစ်စိတ်တစ်ပိုင်း လိုင်းကျော်သုံးခြင်းသည် ကိုယ်ရေးလုံခြုံမှုအန္တရာယ်ဖြစ်စေကြောင်း အမြဲသတိရပါ။</string>
     <string name="enable">ဖွင့်ရန်</string>
     <string name="confirm_local_dns">လိုကယ် DNS ဆာဗာသည် VPN ဆက်တင်များအောက်ရှိ \"လိုကယ် ကွန်ရက် ဝေမျှမှု\"ကို မဖွင့်မချင်း အလုပ်လုပ်မည် မဟုတ်ပါ။</string>

@@ -8,8 +8,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import com.warrenbrowse.vpn.feature.splittunneling.impl.SplitTunnelingTab
 import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.SplitTunnelingUseCase
 import com.warrenbrowse.vpn.lib.common.Lc
 import com.warrenbrowse.vpn.lib.common.constant.VIEW_MODEL_STOP_TIMEOUT
@@ -17,6 +19,7 @@ import com.warrenbrowse.vpn.lib.model.PackageName
 import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
 
 class SearchSplitTunnelingViewModel(
+    private val tab: SplitTunnelingTab,
     splitTunnelingUseCase: SplitTunnelingUseCase,
     private val splitTunnelingRepository: SplitTunnelingRepository,
     private val dispatcher: CoroutineDispatcher,
@@ -24,16 +27,17 @@ class SearchSplitTunnelingViewModel(
     private val _searchTerm = MutableStateFlow(EMPTY_SEARCH_TERM)
 
     val uiState: StateFlow<Lc<Unit, SearchSplitTunnelingUiState>> =
-        combine(splitTunnelingUseCase(), _searchTerm) { splitApps, searchTerm ->
+        combine(splitTunnelingUseCase(flowOf(tab)), _searchTerm) { splitApps, searchTerm ->
                 Lc.Content(
                     SearchSplitTunnelingUiState(
                         searchTerm = searchTerm,
-                        excludedApps =
-                            splitApps.excludedApps.filter {
+                        tab = tab,
+                        selectedApps =
+                            splitApps.selectedApps.filter {
                                 it.name.contains(searchTerm, ignoreCase = true)
                             },
-                        includedApps =
-                            splitApps.includedApps.filter {
+                        otherApps =
+                            splitApps.otherApps.filter {
                                 it.name.contains(searchTerm, ignoreCase = true)
                             },
                     )
@@ -49,12 +53,23 @@ class SearchSplitTunnelingViewModel(
         viewModelScope.launch { _searchTerm.emit(searchTerm) }
     }
 
-    fun onIncludeAppClick(packageName: PackageName) {
-        viewModelScope.launch(dispatcher) { splitTunnelingRepository.includeApp(packageName) }
+    fun onAddAppClick(packageName: PackageName) {
+        viewModelScope.launch(dispatcher) {
+            when (tab) {
+                SplitTunnelingTab.Bypass -> splitTunnelingRepository.addExcludedApp(packageName)
+                SplitTunnelingTab.IncludeOnly -> splitTunnelingRepository.addIncludedApp(packageName)
+            }
+        }
     }
 
-    fun onExcludeAppClick(packageName: PackageName) {
-        viewModelScope.launch(dispatcher) { splitTunnelingRepository.excludeApp(packageName) }
+    fun onRemoveAppClick(packageName: PackageName) {
+        viewModelScope.launch(dispatcher) {
+            when (tab) {
+                SplitTunnelingTab.Bypass -> splitTunnelingRepository.removeExcludedApp(packageName)
+                SplitTunnelingTab.IncludeOnly ->
+                    splitTunnelingRepository.removeIncludedApp(packageName)
+            }
+        }
     }
 
     companion object {

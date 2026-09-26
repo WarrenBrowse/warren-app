@@ -85,7 +85,24 @@
     <string name="update_available_description">Versiunea %1$s este disponibilă. Atingeți pentru a descărca actualizarea.</string>
     <string name="update_now">Actualizați acum</string>
     <string name="quit">Ieșire</string>
-    <string name="split_tunneling_description">Alegeți aplicațiile pe care doriți să le excludeți din tunelul VPN.</string>
+    <string name="app_routing_description">Alegeți cum se conectează fiecare aplicație.</string>
+    <string name="split_mode_bypass">Ocolește VPN</string>
+    <string name="split_mode_bypass_description">Aplicațiile alese se conectează ca și cum VPN-ul ar fi oprit.</string>
+    <string name="split_mode_include_only">VPN doar pentru</string>
+    <string name="split_mode_include_only_description">Doar aplicațiile alese folosesc VPN-ul.</string>
+    <string name="include_only_lockdown_warning">Atenție: Dacă \"Blocați conexiunile fără VPN\" este activat, aplicațiile pe care nu le-ați ales nu vor avea internet.</string>
+    <string name="include_only_banner">Doar aceste aplicații sunt protejate. Restul acestui dispozitiv folosește conexiunea obișnuită.</string>
+    <string name="include_only_no_app">Niciuna dintre aplicațiile alese nu este pe acest dispozitiv, așa că toate aplicațiile folosesc VPN-ul până alegeți una.</string>
+    <string name="include_only_confirm">Doar aplicațiile alese vor folosi VPN-ul. Restul acestui dispozitiv nu va fi protejat.</string>
+    <string name="split_mode_replaces_bypass">Aceasta înlocuiește \"Ocolește VPN\". Lista de aplicații de acolo se păstrează.</string>
+    <string name="split_mode_replaces_include_only">Aceasta înlocuiește \"VPN doar pentru\", deci toate aplicațiile folosesc din nou VPN-ul, cu excepția celor care îl ocolesc. Lista de aplicații de acolo se păstrează.</string>
+    <string name="split_mode_turn_on">Activează</string>
+    <string name="apps_using_the_vpn">Folosesc VPN-ul</string>
+    <plurals name="vpn_only_for_apps">
+        <item quantity="one">VPN doar pentru %1$d aplicație</item>
+        <item quantity="few">VPN doar pentru %1$d aplicații</item>
+        <item quantity="other">VPN doar pentru %1$d de aplicații</item>
+    </plurals>
     <string name="split_tunneling_description_warning">Atenție: Dacă \"Blocați conexiunile fără VPN\" este activat, aplicațiile excluse nu vor avea internet. Rețineți întotdeauna că tunelarea divizată reprezintă un risc de confidențialitate.</string>
     <string name="enable">Activează</string>
     <string name="confirm_local_dns">Serverul DNS local nu va funcționa decât dacă activați \"Partajare în rețeaua locală\" din setările VPN.</string>
