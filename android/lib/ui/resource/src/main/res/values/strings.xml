@@ -742,7 +742,7 @@
     <string name="network_stats_limited_by_bandwidth">Limited by bandwidth</string>
     <string name="network_stats_limited_by_cpu">Limited by CPU</string>
     <string name="network_stats_band_last_hour">Load over the last hour</string>
-    <string name="network_stats_live_threshold_note">Live figures appear once %1$d people share an exit, so no one\'s traffic can be singled out.</string>
+    <string name="network_stats_live_threshold_note">Live figures appear once %1$d people share an exit, so no one’s traffic can be singled out.</string>
     <string name="network_stats_download">Download</string>
     <string name="network_stats_upload">Upload</string>
     <string name="network_stats_updated_seconds">Updated %1$d s ago</string>
@@ -763,7 +763,7 @@
     <string name="network_stats_unavailable">The network figures are not available right now.</string>
     <string name="network_stats_methodology_title">How these numbers are computed</string>
     <string name="network_stats_methodology_window">Live figures cover one closed window of %1$d seconds and change only when the next one closes. The 24-hour figures are counted by clock hour.</string>
-    <string name="network_stats_methodology_threshold">An exit shows live figures only while at least %1$d people use it, so no one\'s traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour.</string>
+    <string name="network_stats_methodology_threshold">An exit shows live figures only while at least %1$d people use it, so no one’s traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour.</string>
     <string name="network_stats_methodology_rounding">People per exit are rounded down to steps of %1$d. The network total is exact while no exit shows live figures, and rounded down the same way while one does.</string>
     <string name="network_stats_methodology_load">Load is the busier direction of the link against its capacity, or the processor use, whichever is closer to saturation.</string>
 </resources>
