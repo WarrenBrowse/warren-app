@@ -55,8 +55,56 @@ public:
 	MullvadGuids() = delete;
 
 	static const GUID &Provider();
+
+	//
+	// The sublayers the baseline and DNS filters are installed to, which is
+	// the shared pair unless `UseSharedSublayers(false)` was called.
+	//
 	static const GUID &SublayerBaseline();
 	static const GUID &SublayerDns();
+
+	//
+	// The split tunnel driver adds its filters to the baseline and DNS
+	// sublayers by keys fixed in its signed binary (win-split-tunnel,
+	// firewall/identifiers.h). Its permits only outweigh our block-all when
+	// both sit in one sublayer, so these two keys are never salted: every
+	// product environment uses the same pair (sharedsublayers.h).
+	//
+	static const GUID &SharedSublayerBaseline();
+	static const GUID &SharedSublayerDns();
+
+	//
+	// Salted keys used instead when another environment's (or another
+	// product's) policy is live in the shared pair: mixing two kill switches
+	// in one sublayer lets either one's permits override the other's
+	// block-all. Distinct from the shared keys in production too.
+	//
+	static const GUID &PrivateSublayerBaseline();
+	static const GUID &PrivateSublayerDns();
+
+	static void UseSharedSublayers(bool shared);
+	static bool UsingSharedSublayers();
+
+	//
+	// "VPN only for these apps": the hard block holding the included apps to
+	// the tunnel lives alone here, so no permit in another sublayer, the
+	// driver's included, can outweigh it.
+	//
+	static const GUID &SublayerIncludeOnly();
+
+	//
+	// A filter of ours in each shared sublayer for as long as a context uses
+	// it, which is how every other environment (and our own sweeps) can tell
+	// the sublayer is in use even while no policy is applied.
+	//
+	static const GUID &Filter_SharedSublayer_Claim_Baseline();
+	static const GUID &Filter_SharedSublayer_Claim_Dns();
+
+	//
+	// Provider of the split tunnel driver's filters (win-split-tunnel,
+	// firewall/identifiers.h, ST_FW_PROVIDER_KEY).
+	//
+	static const GUID &SplitTunnelDriverProvider();
 
 	//
 	// Filter identifiers

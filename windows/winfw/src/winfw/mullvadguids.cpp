@@ -27,28 +27,148 @@ const GUID &MullvadGuids::ProviderPersistent()
 	return g;
 }
 
-//static
-const GUID &MullvadGuids::SublayerBaseline()
+namespace
 {
-	static const GUID g = WarrenEnvGuid({
+
+constexpr GUID BaseSublayerBaseline()
+{
+	return {
 		0xc78056ff,
 		0x2bc1,
 		0x4211,
 		{ 0xaa, 0xdd, 0x7f, 0x35, 0x8d, 0xef, 0x20, 0x2d }
+	};
+}
+
+constexpr GUID BaseSublayerDns()
+{
+	return {
+		0x60090787,
+		0xcca1,
+		0x4937,
+		{ 0xaa, 0xce, 0x51, 0x25, 0x6e, 0xf4, 0x81, 0xf3 }
+	};
+}
+
+//
+// The environment salt alone would give production its shared keys back, so
+// the private keys also flip a bit the shared ones never carry.
+//
+constexpr GUID PrivateSublayerGuid(GUID g)
+{
+	g = WarrenEnvGuid(g);
+	g.Data2 ^= 0x0001;
+	return g;
+}
+
+bool g_useSharedSublayers = true;
+
+} // anonymous namespace
+
+//static
+const GUID &MullvadGuids::SublayerBaseline()
+{
+	return g_useSharedSublayers ? SharedSublayerBaseline() : PrivateSublayerBaseline();
+}
+
+//static
+const GUID &MullvadGuids::SublayerDns()
+{
+	return g_useSharedSublayers ? SharedSublayerDns() : PrivateSublayerDns();
+}
+
+//static
+const GUID &MullvadGuids::SharedSublayerBaseline()
+{
+	static const GUID g = BaseSublayerBaseline();
+
+	return g;
+}
+
+//static
+const GUID &MullvadGuids::SharedSublayerDns()
+{
+	static const GUID g = BaseSublayerDns();
+
+	return g;
+}
+
+//static
+const GUID &MullvadGuids::PrivateSublayerBaseline()
+{
+	static const GUID g = PrivateSublayerGuid(BaseSublayerBaseline());
+
+	return g;
+}
+
+//static
+const GUID &MullvadGuids::PrivateSublayerDns()
+{
+	static const GUID g = PrivateSublayerGuid(BaseSublayerDns());
+
+	return g;
+}
+
+//static
+void MullvadGuids::UseSharedSublayers(bool shared)
+{
+	g_useSharedSublayers = shared;
+}
+
+//static
+bool MullvadGuids::UsingSharedSublayers()
+{
+	return g_useSharedSublayers;
+}
+
+//static
+const GUID &MullvadGuids::SublayerIncludeOnly()
+{
+	static const GUID g = WarrenEnvGuid({
+		0x0b2a69f9,
+		0x107e,
+		0x464d,
+		{ 0xb1, 0xa0, 0x0a, 0x0b, 0x60, 0x56, 0xea, 0xad }
 	});
 
 	return g;
 }
 
 //static
-const GUID &MullvadGuids::SublayerDns()
+const GUID &MullvadGuids::Filter_SharedSublayer_Claim_Baseline()
 {
 	static const GUID g = WarrenEnvGuid({
-		0x60090787,
-		0xcca1,
-		0x4937,
-		{ 0xaa, 0xce, 0x51, 0x25, 0x6e, 0xf4, 0x81, 0xf3 }
+		0x21e10017,
+		0xe2cc,
+		0x4122,
+		{ 0xac, 0x04, 0x05, 0x2f, 0x1d, 0xde, 0xae, 0x62 }
 	});
+
+	return g;
+}
+
+//static
+const GUID &MullvadGuids::Filter_SharedSublayer_Claim_Dns()
+{
+	static const GUID g = WarrenEnvGuid({
+		0x6d8a3c41,
+		0x0f5e,
+		0x4b27,
+		{ 0x9a, 0x31, 0x5c, 0x0e, 0x77, 0x42, 0xd1, 0x9b }
+	});
+
+	return g;
+}
+
+//static
+const GUID &MullvadGuids::SplitTunnelDriverProvider()
+{
+	static const GUID g = {
+		0xe2c114ee,
+		0xf32a,
+		0x4264,
+		{ 0xa6, 0xcb, 0x3f, 0xa7, 0x99, 0x63, 0x56, 0xd9 }
+	};
 
 	return g;
 }

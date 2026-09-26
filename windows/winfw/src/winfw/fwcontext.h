@@ -54,6 +54,13 @@ public:
 
 	bool reset();
 
+	//
+	// "VPN only for these apps": holds `apps` to the tunnel interface and
+	// loopback in every policy from now on (an empty list lifts it), and
+	// re-applies the active policy at once so no state runs without it.
+	//
+	bool setIncludedApps(const std::vector<std::wstring> &apps);
+
 	enum class Policy
 	{
 		Connecting,
@@ -77,11 +84,21 @@ private:
 	bool applyBlockedBaseConfiguration(const WinFwSettings &settings, const std::optional<WinFwAllowedEndpoint> &allowedEndpoint, uint32_t &checkpoint);
 	bool applyCommonBaseConfiguration(SessionController &controller, wfp::FilterEngine &engine);
 
-	bool applyRuleset(const Ruleset &ruleset);
+	bool applyPolicy(Ruleset &&ruleset, const std::optional<std::wstring> &tunnelInterfaceAlias, Policy policy);
 	bool applyRulesetDirectly(const Ruleset &ruleset, SessionController &controller);
+	Ruleset composeIncludeOnlyGuard(const std::optional<std::wstring> &tunnelInterfaceAlias) const;
 
 	std::unique_ptr<SessionController> m_sessionController;
 
 	uint32_t m_baseline;
 	Policy m_activePolicy;
+
+	//
+	// The active policy's rules and tunnel interface, kept so a change of the
+	// included apps can re-apply the policy with a new guard.
+	//
+	Ruleset m_activeRuleset;
+	std::optional<std::wstring> m_activeTunnelInterfaceAlias;
+
+	std::vector<std::wstring> m_includedApps;
 };

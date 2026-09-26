@@ -313,3 +313,39 @@ WinFw_SweepForeignGenerations(
 	uint32_t saltCount,
 	uint32_t *removedObjects
 );
+
+//
+// SetIncludedApps:
+//
+// "VPN only for these apps". Holds the given apps (executable paths) to the
+// tunnel interface and loopback in every policy from now on, and re-applies
+// the active policy at once, so no state runs without the hold. Zero apps
+// lift it. An app whose path does not resolve is skipped.
+//
+// The split tunnel driver soft-permits the apps it splits from any local
+// address but the one physical address it holds, even in the blocked states,
+// which this hard block overrides.
+//
+extern "C"
+WINFW_LINKAGE
+WINFW_POLICY_STATUS
+WINFW_API
+WinFw_SetIncludedApps(
+	const wchar_t * const *apps,
+	size_t numApps
+);
+
+//
+// SplitTunnelSublayersShared:
+//
+// Whether the baseline and DNS filters live in the sublayers the split tunnel
+// driver adds its own filters to. False when another environment's or
+// another product's policy was live in them at initialization: the driver's
+// permits would then land in that policy instead of ours, so split tunneling
+// must not be engaged. False before initialization.
+//
+extern "C"
+WINFW_LINKAGE
+bool
+WINFW_API
+WinFw_SplitTunnelSublayersShared();

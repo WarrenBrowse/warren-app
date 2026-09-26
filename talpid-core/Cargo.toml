@@ -104,6 +104,10 @@ features = [
   "Win32_UI_WindowsAndMessaging",
 ]
 
+[target.'cfg(windows)'.dev-dependencies.windows-sys]
+workspace = true
+features = ["Win32_NetworkManagement_WindowsFilteringPlatform"]
+
 [features]
 cgroup2 = []
 
