@@ -47,6 +47,18 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Sign the connection with the wallet shown in the app. It used a key derived from the same
   recovery phrase but different from the displayed address, so the servers did not see the
   subscription on it.
+- [Windows, macOS, Linux] Keep a purchased voucher that a suspended account could not redeem, say
+  why, and do not ask the server again and again. The voucher stays valid for after the
+  suspension. Other refusals that say nothing about the voucher (too many attempts) no longer
+  discard it either.
+- [Windows, macOS, Linux] Charge no automatic renewal while the account is suspended, and say so
+  on the account view.
+- [Android] Keep a purchased voucher that a suspended account could not redeem, show the
+  suspension with the day it ends when known, and stop asking the server again. A server error no
+  longer discards a purchased voucher.
+- [iOS] Show the suspension when a voucher or an App Store purchase is refused for a suspended
+  account. No purchase starts, and a purchase already paid stays pending, to be credited once the
+  suspension ends.
 
 ## [1.1.35] - 2026-09-25
 ### Added

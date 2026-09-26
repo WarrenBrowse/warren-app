@@ -41,6 +41,17 @@ par l'application, gardez-le tel quel.
 - [iOS] Signer la connexion avec le portefeuille affiché dans l'application. Elle utilisait une clé
   issue de la même phrase de récupération mais différente de l'adresse affichée, si bien que les
   serveurs n'y voyaient pas l'abonnement.
+- [Windows, macOS, Linux] Garder un bon acheté qu'un compte suspendu n'a pas pu utiliser, dire
+  pourquoi, et ne plus redemander sans cesse au serveur. Le bon reste valable après la suspension.
+  Les autres refus qui ne disent rien du bon (trop de tentatives) ne l'effacent plus non plus.
+- [Windows, macOS, Linux] Ne prélever aucun renouvellement automatique pendant la suspension du
+  compte, et l'indiquer sur la vue du compte.
+- [Android] Garder un bon acheté qu'un compte suspendu n'a pas pu utiliser, afficher la
+  suspension avec le jour où elle prend fin quand il est connu, et ne plus redemander au serveur.
+  Une erreur du serveur n'efface plus un bon acheté.
+- [iOS] Afficher la suspension quand un bon ou un achat App Store est refusé pour un compte
+  suspendu. Aucun achat ne démarre, et un achat déjà payé reste en attente, pour être crédité une
+  fois la suspension terminée.
 
 ## [1.1.35] - 2026-09-25
 ### Ajouté

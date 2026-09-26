@@ -36,6 +36,18 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   platforme, astfel încât serverele care îl cer acordă portul în loc să-l refuze.
 - [iOS] Semnează conexiunea cu portofelul afișat în aplicație. Folosea o cheie derivată din aceeași
   frază de recuperare, dar diferită de adresa afișată, așa că serverele nu vedeau abonamentul pe ea.
+- [Windows, macOS, Linux] Păstrează un voucher cumpărat pe care un cont suspendat nu l-a putut
+  folosi, spune de ce și nu mai întreabă serverul iar și iar. Voucherul rămâne valabil după
+  suspendare. Nici celelalte refuzuri care nu spun nimic despre voucher (prea multe încercări) nu
+  îl mai șterg.
+- [Windows, macOS, Linux] Nicio reînnoire automată nu se încasează cât timp contul e suspendat,
+  iar vederea contului o spune.
+- [Android] Păstrează un voucher cumpărat pe care un cont suspendat nu l-a putut folosi, arată
+  suspendarea cu ziua în care se încheie când e cunoscută și nu mai întreabă serverul. O eroare a
+  serverului nu mai șterge un voucher cumpărat.
+- [iOS] Vezi suspendarea când un voucher sau o achiziție App Store e refuzată pentru un cont
+  suspendat. Nicio achiziție nu pornește, iar o achiziție deja plătită rămâne în așteptare, ca să
+  fie creditată după încheierea suspendării.
 
 ## [1.1.35] - 2026-09-25
 ### Adăugat
