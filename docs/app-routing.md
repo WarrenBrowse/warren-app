@@ -205,10 +205,23 @@ Route admission by anchor (warren-core doc 107 sections 10 and 11;
 
 - The daemon's token manager reads the `route_admission` block of the session
   token directory on every refresh (warren-sdk-rs `TokenManager::route_admission`,
-  validated: version 1, a usable X25519 key under a non-reserved key id, a
-  non-zero R); the tunnel reads it through `RouteAdmissionSource`, the key when
-  it starts and the listed exits before each route dial. An unusable or absent
-  block reads as no route admission.
+  validated: version 1, the KEM key signed by the API server key the daemon
+  pins for its relay list and multi-hop directory and still inside its
+  validity (warren-core doc 107 section 6.5), a usable X25519 key under a
+  non-reserved key id, a non-zero R); the tunnel reads it through
+  `RouteAdmissionSource`, the key when it starts and the listed exits before
+  each route dial. An unusable, unsigned, badly signed or absent block reads
+  as no route admission: the anchor and every locator are sealed only to a
+  key the server key vouched for, since whoever could serve a key of its own
+  would open them and link the main session to its routes.
+- The daemon keeps the last signed block in its cache directory
+  (`warren-route-admission.json`, `mullvad-daemon/src/warren_token_provider.rs`),
+  and until the first directory read of a run it hands the tunnel that block,
+  verified again (signature and validity) exactly as a fetched one. So a
+  tunnel started right after a daemon start anchors: its main session binds
+  the anchor at its first setup admitted on a token. The first directory read
+  supersedes the kept block, and a directory without route admission removes
+  it.
 - A tunnel with per-app routes wired builds one `RouteAnchorHandle` from that
   key and hands it to its main supervisor (`with_route_anchor`) and to every
   route session. The daemon wires a plan into every desktop tunnel, so every
@@ -248,14 +261,27 @@ Route admission by anchor (warren-core doc 107 sections 10 and 11;
   12); a route it ends falls back to a token, within the 2 token routes.
 - A route added to the plan past the capacity waits; it never takes the place
   of a route that already runs.
-- Residuals: a route that fell back to tokens stays on its token while it is
-  up, even once the anchor could admit it again; and the route KEM key is
-  trusted on TLS alone, like the issuer keys beside it in the token
-  directory, so whoever can serve that document can serve a key of its own
-  (see warren-core doc 107 sections 13 and 20).
-- Known limit: the tunnel reads the key when it starts. A tunnel started
-  before the daemon's first directory read (right after a daemon start) does
-  not anchor, and its routes run on tokens until the next tunnel.
+- A route that runs on a token moves to the anchor once it could be admitted
+  that way (`upgrade_by_anchor` in `app_routes/session.rs`), so it stops
+  holding one of the wallet's three serials: once the anchor is bound and the
+  directory lists the route's exit, a session by anchor to the same exit is
+  dialed next to the token one; when it is up (its exit assigned its
+  addresses), the route's packets move to it and only then does the session
+  on the token end, releasing its serial and its place among the two token
+  routes. The route has a live session throughout; the packets in flight at
+  the switch may be lost, and connections the route carried are reset by the
+  exit, since the new session has its own inner address there, as a route's
+  reconnect resets them. A move that fails leaves the
+  route on its token and is tried again 60 s later; an exit that refuses
+  routes by anchor for good (`not offered`, or one predating route admission)
+  is not asked again; a route whose by-anchor session was just refused waits
+  60 s before a move, so a route cannot flap between the two.
+- Known limit: the engine takes a main session's anchor only when its
+  supervisor is built, and the anchor carries the key. A tunnel started with
+  no key at all (the first run on a machine, or a kept block whose signature
+  expired) does not anchor, and its routes run on tokens until the next
+  tunnel the daemon builds (its next reconnect); from then on they move to the
+  anchor as above.
 
 Tokens (`mullvad-daemon/src/warren_token_provider.rs`):
 
