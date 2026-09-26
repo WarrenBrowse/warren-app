@@ -115,6 +115,8 @@ on:
       - ".github/workflows/warren-tests.yml"
       - ".config/nextest.toml"
       - ".github/actions/mullvad-build-env/**"
+      - ".github/actions/codemagic-build/**"
+      - "codemagic.yaml"
   pull_request:
     branches:
       - main

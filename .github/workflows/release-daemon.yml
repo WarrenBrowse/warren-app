@@ -38,6 +38,8 @@
 #   WARREN_CORE_RO_TOKEN       read access to the sibling repos, as release.yml
 #   WARREN_CLI_RELEASE_TOKEN   contents:write on WarrenBrowse/warren-cli
 #   WARREN_UPDATE_SIGNING_KEY  the Warren update key, signs SHA256SUMS
+#   CODEMAGIC_API_TOKEN        org secret, drives the Windows build on Codemagic
+#                              (with the CODEMAGIC_APP_ID repo variable)
 
 name: release-daemon
 
@@ -411,85 +413,38 @@ jobs:
     needs: [resolve]
     outputs:
       sums: ${{ steps.sums.outputs.sums }}
-    runs-on: [self-hosted, Windows, macstudio-win]
-    timeout-minutes: 140
+    # Built on a Codemagic windows_x2 machine (codemagic.yaml
+    # `windows-headless`, ci/codemagic/windows-headless.sh): winfw in Release
+    # with its WFP keys salt-verified for this channel, then the daemon, CLI,
+    # setup and problem-report binaries, assembled with warren-cli's installer.
+    # This job starts the build on this commit, replays its step logs, and only
+    # receives files whose checksums match the list the build wrote. It runs no
+    # repo code, hence the GitHub-hosted runner.
+    #
     # Blocking, like every other platform, since daemon-beta-v1.1.15 (the first
     # run to produce a complete bundle: winfw.dll, wintun.dll and the
-    # split-tunnel driver, with the WFP keys salt-verified). A release that
-    # advertises Windows and silently ships without its zip is the failure
-    # nobody notices until a user cannot find their build, which is the same
-    # reason the sysvinit and NixOS jobs gate the app release.
-    #
-    # The marginal risk is small: the GUI's own Windows job already gates every
-    # app release and runs on this same pool, so the two fail together far more
-    # often than apart.
-    env:
-      WARREN_PRODUCT_ENV: ${{ needs.resolve.outputs.channel }}
-      WARREN_VERSION: ${{ needs.resolve.outputs.version }}
+    # split-tunnel driver). A release that advertises Windows and silently
+    # ships without its zip is the failure nobody notices until a user cannot
+    # find their build. Codemagic runs one build at a time on this plan and an
+    # app release starts two, so the budget covers waiting behind the other.
+    runs-on: ubuntu-latest
+    timeout-minutes: 260
     steps:
-      - name: Set git config for long paths
-        run: git config --system core.longpaths true
       - uses: actions/checkout@v5
-      - name: Stamp the release version
-        uses: ./.github/actions/stamp-headless-version
+      - uses: ./.github/actions/codemagic-build
         with:
-          version: ${{ needs.resolve.outputs.version }}
-      - uses: ./.github/actions/mullvad-build-env
-        with:
-          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
-          # Keyed into the Windows modules cache: the channel decides the WFP
-          # GUID salt, and a slot shared across channels ships the wrong keys.
-          product-env: ${{ needs.resolve.outputs.channel }}
-      - name: Checkout warren-cli (install assets)
-        uses: actions/checkout@v5
-        with:
-          repository: WarrenBrowse/warren-cli
-          path: warren-cli
-          token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
-      - name: Bake Warren exit list bootstrap
-        uses: ./.github/actions/fetch-warren-relays
-        with:
-          warren-api-url: ${{ needs.resolve.outputs.api-url }}
-      - name: Build Windows C modules (winfw, Release)
-        shell: bash
-        # winfw must be built in Release: talpid-core links the release cargo
-        # build against windows/winfw/bin/x64-Release/winfw.lib. The script
-        # defaults to Debug, which left x64-Release/winfw.lib missing -> LNK1181.
-        env:
-          CPP_BUILD_MODES: Release
-          CPP_BUILD_TARGETS: x64
-        run: |
-          bash ci/run-with-runner-retry.sh \
-            ./build-windows-modules.sh --max-concurrent-processes 2 build winfw
-      - name: Verify the winfw WFP keys carry this channel's salt
-        shell: bash
-        # beta-v1.1.9 shipped a beta build whose winfw.dll carried PRODUCTION
-        # WFP keys, and every connected Windows host updating into it was walled
-        # by its predecessor's kill switch. The headless bundle ships the same
-        # dll, so it runs the same check on its own output.
-        run: |
-          bash ci/verify-winfw-salt.sh windows/winfw/bin/x64-Release/winfw.dll \
-            "${{ needs.resolve.outputs.channel }}"
-      - name: Build daemon + CLI (release)
-        shell: bash
-        # The runner is Windows-on-ARM (macstudio-win); Warren ships x64 only, so
-        # build the x86_64 target explicitly instead of the host default (arm64),
-        # which would otherwise emit an aarch64 daemon into target/release.
-        #
-        # Through the retry wrapper because this job now gates the publish: the
-        # pool intermittently fails to SPAWN rustc, naming a dependency that
-        # never got a chance to be wrong, and a release must not die on that.
-        # A real compile error still fails on the first attempt.
-        run: |
-          bash ci/run-with-runner-retry.sh \
-            cargo build --release --target x86_64-pc-windows-msvc \
-              -p mullvad-daemon -p mullvad-cli -p mullvad-setup -p mullvad-problem-report
-      - name: Assemble the bundle
-        shell: bash
-        run: bash ci/build-headless-bundle.sh windows "${WARREN_VERSION:-0.0.0}" warren-cli
-      # The checksums the signed list is made from, computed here where the
-      # files were built rather than read back from the draft, which anyone
-      # able to write warren-cli releases could change before finalise signs.
+          app-id: ${{ vars.CODEMAGIC_APP_ID }}
+          workflow: windows-headless
+          token: ${{ secrets.CODEMAGIC_API_TOKEN }}
+          out-dir: release-assets
+          inputs: |
+            channel=${{ needs.resolve.outputs.channel }}
+            version=${{ needs.resolve.outputs.version }}
+            api_url=${{ needs.resolve.outputs.api-url }}
+      # The checksums the signed list is made from, taken from the files the
+      # build produced (verified against its own list on the way here) rather
+      # than read back from the draft, which anyone able to write warren-cli
+      # releases could change before finalise signs.
       - name: Checksums of what this job built
         id: sums
         shell: bash

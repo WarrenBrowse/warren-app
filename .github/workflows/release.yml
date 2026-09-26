@@ -69,10 +69,10 @@
 #   WARREN_NOTARIZE_KEYCHAIN, WARREN_NOTARIZE_KEYCHAIN_PROFILE
 #     Apple notarytool credentials for stapling the .pkg installer.
 #
-#   WARREN_CSC_LINK_WIN, WARREN_CSC_KEY_PASSWORD_WIN
-#     Windows Authenticode certificate (.pfx base64-encoded) and its password.
-#     The .pfx is imported into the Windows cert store and the thumbprint is
-#     resolved at runtime, then signtool references that thumbprint.
+#   CODEMAGIC_API_TOKEN (org secret) and CODEMAGIC_APP_ID (repo variable)
+#     The Windows installers are built on Codemagic (build-windows); the
+#     token starts and follows the build. Windows signing credentials live in
+#     the Codemagic app's `windows_signing` variable group, not here.
 #
 #   WARREN_UPDATE_SIGNING_KEY  (publish-update-metadata)
 #     Dedicated, offline-generated Ed25519 secret (hex) that signs the
@@ -618,155 +618,39 @@ jobs:
   build-windows:
     name: Build Windows MSI
     needs: [tag-guard, tests]
-    runs-on: [self-hosted, Windows, macstudio-win]
-    timeout-minutes: 140
-    # Windows binaries are signed with Azure Trusted Signing (cloud HSM).
-    # Since 1 June 2023 (CA/Browser Forum Code Signing Baseline Requirements),
-    # OV/EV code-signing private keys must live on FIPS 140-2 hardware, so the
-    # legacy "import a downloadable .pfx and sign by thumbprint" model no longer
-    # works for newly issued public certificates. Trusted Signing keeps the key
-    # in Azure and signs via signtool's dlib, so no key material ever touches
-    # the runner. build.sh selects this path via WARREN_WIN_SIGN_BACKEND.
-    env:
-      WARREN_CHANNEL: ${{ needs.tag-guard.outputs.channel }}
-      WARREN_VERSION: ${{ needs.tag-guard.outputs.version }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
-      TRUSTED_SIGNING_ENDPOINT: ${{ secrets.TRUSTED_SIGNING_ENDPOINT }}
-      TRUSTED_SIGNING_ACCOUNT: ${{ secrets.TRUSTED_SIGNING_ACCOUNT }}
-      TRUSTED_SIGNING_PROFILE: ${{ secrets.TRUSTED_SIGNING_PROFILE }}
+    # Built on a Codemagic windows_x2 machine (codemagic.yaml `windows-release`,
+    # ci/codemagic/windows-release.sh): native x64, and a fresh VM for every
+    # build, so no intermediate of another channel can reach a release (the
+    # beta-v1.1.9 winfw.dll carried prod WFP keys through a restored cache).
+    # This job starts the build on this commit, replays its step logs, and
+    # publishes only the installers whose checksums match the list the build
+    # wrote. It runs no repo code, hence the GitHub-hosted runner.
+    #
+    # Codemagic runs one build at a time on this plan, and a release starts two
+    # (this one and the headless bundle's), so the budget covers a full
+    # 120-minute build waiting behind another.
+    #
+    # Windows binaries are signed with Azure Trusted Signing (cloud HSM) when
+    # the Codemagic `windows_signing` variable group of the warren-app app holds
+    # AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET,
+    # TRUSTED_SIGNING_ENDPOINT, TRUSTED_SIGNING_ACCOUNT and
+    # TRUSTED_SIGNING_PROFILE; since 1 June 2023 an OV/EV code-signing key must
+    # live on FIPS 140-2 hardware, so the downloadable-.pfx model no longer
+    # works. The group is empty today and the installers ship unsigned.
+    runs-on: ubuntu-latest
+    timeout-minutes: 260
     steps:
-      - name: Set git config for long paths
-        run: git config --system core.longpaths true
-
-      - name: Checkout repository
-        uses: actions/checkout@v5
-
-      - uses: ./.github/actions/mullvad-build-env
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/codemagic-build
         with:
-          rust-cache-targets: "true"
-          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
-          # Keyed into the Windows modules cache: the channel decides the WFP
-          # GUID salt, and a slot shared across channels ships the wrong keys.
-          product-env: ${{ needs.tag-guard.outputs.channel }}
-
-      - name: Bake Warren exit list bootstrap
-        uses: ./.github/actions/fetch-warren-relays
-        with:
-          warren-api-url: ${{ needs.tag-guard.outputs.api-url }}
-
-      - name: Install Trusted Signing client (resolve signtool dlib)
-        if: env.AZURE_CLIENT_ID != ''
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $pkgRoot = Join-Path $env:RUNNER_TEMP "trusted-signing"
-          New-Item -ItemType Directory -Force -Path $pkgRoot | Out-Null
-          # Ensure nuget.exe is available (self-hosted runners may not ship it).
-          $nuget = 'nuget'
-          if (-not (Get-Command nuget -ErrorAction SilentlyContinue)) {
-            $nuget = Join-Path $env:RUNNER_TEMP 'nuget.exe'
-            Invoke-WebRequest -Uri https://dist.nuget.org/win-x86-commandline/latest/nuget.exe -OutFile $nuget
-          }
-          # Azure.CodeSigning.Dlib.dll ships in the Microsoft.Trusted.Signing.Client package.
-          & $nuget install Microsoft.Trusted.Signing.Client -OutputDirectory $pkgRoot -Source https://api.nuget.org/v3/index.json
-          $dlib = Get-ChildItem -Path $pkgRoot -Recurse -Filter Azure.CodeSigning.Dlib.dll |
-            Where-Object { $_.FullName -match '\\x64\\' } | Select-Object -First 1
-          if (-not $dlib) { throw "Azure.CodeSigning.Dlib.dll not found under $pkgRoot" }
-          "WARREN_TS_DLIB=$($dlib.FullName)" >> $env:GITHUB_ENV
-
-      - name: Write Trusted Signing metadata
-        if: env.AZURE_CLIENT_ID != ''
-        shell: pwsh
-        run: |
-          $ErrorActionPreference = 'Stop'
-          $meta = @{
-            Endpoint               = $env:TRUSTED_SIGNING_ENDPOINT
-            CodeSigningAccountName = $env:TRUSTED_SIGNING_ACCOUNT
-            CertificateProfileName = $env:TRUSTED_SIGNING_PROFILE
-          } | ConvertTo-Json
-          $metaPath = Join-Path $env:RUNNER_TEMP "trusted-signing-metadata.json"
-          $meta | Out-File -FilePath $metaPath -Encoding ascii
-          "WARREN_TS_METADATA=$metaPath" >> $env:GITHUB_ENV
-          "WARREN_WIN_SIGN_BACKEND=trusted-signing" >> $env:GITHUB_ENV
-
-      # Self-heal a corrupt electron-builder winCodeSign cache on the persistent
-      # runner. A partial extraction (e.g. rcedit-x64.exe missing) is trusted and
-      # never re-downloaded, failing `pack:win` with ERR_ELECTRON_BUILDER_CANNOT_EXECUTE
-      # even for unsigned builds (rcedit stamps the .exe resources). Purge the
-      # winCodeSign cache when its rcedit is absent so electron-builder refetches.
-      - name: Heal electron-builder winCodeSign cache
-        shell: pwsh
-        run: |
-          $roots = @(
-            (Join-Path $env:WINDIR 'SystemTemp\electron-builder-cache\winCodeSign'),
-            (Join-Path $env:LOCALAPPDATA 'electron-builder\Cache\winCodeSign'),
-            (Join-Path $env:TEMP 'electron-builder-cache\winCodeSign')
-          )
-          foreach ($cache in $roots) {
-            if (Test-Path $cache) {
-              $rcedit = Get-ChildItem -Path $cache -Recurse -Filter 'rcedit-x64.exe' -ErrorAction SilentlyContinue
-              if (-not $rcedit) {
-                Write-Host "Purging corrupt winCodeSign cache (rcedit missing): $cache"
-                Remove-Item -Recurse -Force $cache -ErrorAction SilentlyContinue
-              } else {
-                Write-Host "winCodeSign cache OK: $cache"
-              }
-            }
-          }
-
-      # Warren ships x64 Windows only. The runner is Windows-on-ARM (macstudio-win),
-      # so build the x86_64 target cross-compiled with the native ARM64 MSVC tools
-      # instead of --universal, whose aarch64 half has no shippable target.
-      - name: Build (signed via Trusted Signing)
-        if: env.WARREN_CHANNEL == 'prod' && env.AZURE_CLIENT_ID != ''
-        shell: bash
-        env:
-          TARGETS: x86_64-pc-windows-msvc
-        # Via build-with-retry.sh so a transient linker failure (LNK1181 "cannot
-        # open input file windows.0.52.0.lib", a shared cargo-registry / persistent
-        # target race under concurrent runners) triggers a clean-target retry
-        # instead of failing the whole release, exactly as the macOS job does.
-        run: bash ci/build-with-retry.sh --optimize --sign
-
-      - name: Build (unsigned, signing assets missing)
-        if: env.WARREN_CHANNEL == 'prod' && env.AZURE_CLIENT_ID == ''
-        shell: bash
-        env:
-          TARGETS: x86_64-pc-windows-msvc
-        run: |
-          echo "::warning::AZURE_CLIENT_ID secret not set; producing unsigned dev build."
-          bash ci/build-with-retry.sh --optimize
-
-      - name: Stage release assets (harmonized names)
-        if: env.WARREN_CHANNEL == 'prod'
-        shell: bash
-        run: bash ci/stage-release-assets.sh windows "$WARREN_VERSION"
-
-      # Beta channel: WARREN_PRODUCT_ENV=beta build (own appId, NSIS GUID and
-      # product name so it coexists with the prod install; artifacts
-      # WarrenVPN-Beta-*). Same signing posture as prod.
-      - name: Build beta (signed via Trusted Signing)
-        if: env.WARREN_CHANNEL == 'beta' && env.AZURE_CLIENT_ID != ''
-        shell: bash
-        env:
-          TARGETS: x86_64-pc-windows-msvc
-          WARREN_PRODUCT_ENV: beta
-        run: bash ci/build-with-retry.sh --optimize --sign
-
-      - name: Build beta (unsigned, signing assets missing)
-        if: env.WARREN_CHANNEL == 'beta' && env.AZURE_CLIENT_ID == ''
-        shell: bash
-        env:
-          TARGETS: x86_64-pc-windows-msvc
-          WARREN_PRODUCT_ENV: beta
-        run: bash ci/build-with-retry.sh --optimize
-
-      - name: Stage beta release assets
-        if: env.WARREN_CHANNEL == 'beta'
-        shell: bash
-        run: bash ci/stage-release-assets.sh windows "$WARREN_VERSION" beta
+          app-id: ${{ vars.CODEMAGIC_APP_ID }}
+          workflow: windows-release
+          token: ${{ secrets.CODEMAGIC_API_TOKEN }}
+          out-dir: release-assets
+          inputs: |
+            channel=${{ needs.tag-guard.outputs.channel }}
+            version=${{ needs.tag-guard.outputs.version }}
+            api_url=${{ needs.tag-guard.outputs.api-url }}
 
       # Release-asset storage is not subject to the Actions artifact quota (see
       # the Linux job). Publish the installer straight to the draft release.

@@ -1,0 +1,167 @@
+# Windows builds of Warren VPN, run on Codemagic windows_x2 machines.
+#
+# Nothing here triggers on its own: no webhook is installed and no workflow has
+# a `triggering` section. Each build is started by a GitHub Actions job through
+# .github/actions/codemagic-build, which passes the job's commit as `sha`,
+# replays the step logs, and publishes the verified outputs itself. A build can
+# also be started by hand from the Codemagic UI, which prompts for the inputs.
+#
+# The PowerShell steps below are the only code taken from the ref Codemagic
+# cloned (the branch or tag head); everything after the checkout runs from the
+# requested commit. PowerShell 5.1 is the machine's shell and strips inner
+# double quotes from native-command arguments, so bash is only ever handed a
+# script file, never an inline command.
+#
+# Every bash step runs under ci/codemagic/watchdog.sh, which kills a step that
+# prints nothing for 5 minutes on an idle machine or for 30 minutes at all:
+# Codemagic itself only stops a build at max_build_duration.
+# ci/codemagic/test-watchdog.sh fails CI if a step escapes it.
+
+definitions:
+  inputs: &inputs
+    sha:
+      description: Commit to build (full SHA)
+    channel:
+      description: Release channel
+      type: choice
+      options: [prod, beta]
+      default: prod
+    version:
+      description: Release version without channel prefix (empty for a dev build)
+      default: ""
+    api_url:
+      description: API host whose signed exit list is baked in
+      default: https://api.warrenbrowse.com
+  environment: &environment
+    groups:
+      - windows_signing
+    vars:
+      CM_RECURSIVE_SUBMODULE_INIT: "false"
+      WARREN_SHA: ${{ inputs.sha }}
+      WARREN_CHANNEL: ${{ inputs.channel }}
+      WARREN_VERSION: ${{ inputs.version }}
+      WARREN_API_URL: ${{ inputs.api_url }}
+  # Downloads only, never a build output (ci/codemagic/windows-env.sh says
+  # why): the pinned tools, rustup's toolchains, cargo's registry and git
+  # sources, and the npm, Electron and Go module download caches. Codemagic
+  # keeps one cache per workflow for 14 days;
+  # `scripts/codemagic-cache.sh clear warren-app` in the workspace empties it.
+  download_cache: &download_cache
+    cache_paths:
+      - ~/cm-tools
+      - ~/.rustup
+      - ~/.cargo/bin
+      - ~/.cargo/registry
+      - ~/.cargo/git
+      - ~/go/pkg/mod
+      - ~/AppData/Local/npm-cache
+      - ~/AppData/Local/electron/Cache
+  pre_clone: &pre_clone
+    - name: Allow long paths
+      script: git config --system core.longpaths true
+  checkout: &checkout
+    name: Check out the requested commit
+    script: |
+      git -c http.lowSpeedLimit=1000 -c http.lowSpeedTime=60 fetch --no-tags --depth=1 origin $env:WARREN_SHA
+      if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      git checkout --detach --quiet $env:WARREN_SHA
+      exit $LASTEXITCODE
+
+workflows:
+  windows-release:
+    name: Windows installers (NSIS/MSI)
+    instance_type: windows_x2
+    max_build_duration: 120
+    inputs: *inputs
+    labels:
+      - ${{ inputs.channel }} ${{ inputs.version }}
+    environment: *environment
+    cache: *download_cache
+    pre_clone_scripts: *pre_clone
+    scripts:
+      - *checkout
+      - name: Prepare the tree and the toolchains
+        script: |
+          & 'C:\Program Files\Git\bin\bash.exe' ci/codemagic/watchdog.sh bash ci/codemagic/windows-release.sh prepare
+          exit $LASTEXITCODE
+      - name: Check out the siblings and bake the exit list
+        script: |
+          & 'C:\Program Files\Git\bin\bash.exe' ci/codemagic/watchdog.sh bash ci/codemagic/windows-release.sh sources
+          exit $LASTEXITCODE
+      - name: Build the installers (build.sh)
+        script: |
+          & 'C:\Program Files\Git\bin\bash.exe' ci/codemagic/watchdog.sh bash ci/codemagic/windows-release.sh build
+          exit $LASTEXITCODE
+      - name: Stage the installers
+        script: |
+          & 'C:\Program Files\Git\bin\bash.exe' ci/codemagic/watchdog.sh bash ci/codemagic/windows-release.sh stage
+          exit $LASTEXITCODE
+    artifacts:
+      - cm-out/*
+
+  windows-headless:
+    name: Windows headless bundle (daemon + CLI)
+    instance_type: windows_x2
+    max_build_duration: 120
+    inputs: *inputs
+    labels:
+      - ${{ inputs.channel }} ${{ inputs.version }}
+    environment: *environment
+    cache: *download_cache
+    pre_clone_scripts: *pre_clone
+    scripts:
+      - *checkout
+      - name: Prepare the tree and the toolchains
+        script: |
+          & 'C:\Program Files\Git\bin\bash.exe' ci/codemagic/watchdog.sh bash ci/codemagic/windows-headless.sh prepare
+          exit $LASTEXITCODE
+      - name: Check out the siblings and bake the exit list
+        script: |
+          & 'C:\Program Files\Git\bin\bash.exe' ci/codemagic/watchdog.sh bash ci/codemagic/windows-headless.sh sources
+          exit $LASTEXITCODE
+      - name: Build winfw and the daemon
+        script: |
+          & 'C:\Program Files\Git\bin\bash.exe' ci/codemagic/watchdog.sh bash ci/codemagic/windows-headless.sh build
+          exit $LASTEXITCODE
+      - name: Assemble the bundle
+        script: |
+          & 'C:\Program Files\Git\bin\bash.exe' ci/codemagic/watchdog.sh bash ci/codemagic/windows-headless.sh bundle
+          exit $LASTEXITCODE
+    artifacts:
+      - cm-out/*
+
+  windows-selftest:
+    name: Windows machine self-test (watchdog, idle CPU, build prologue)
+    instance_type: windows_x2
+    max_build_duration: 30
+    inputs:
+      sha:
+        description: Commit to test (full SHA)
+    environment:
+      vars:
+        CM_RECURSIVE_SUBMODULE_INIT: "false"
+        WARREN_SHA: ${{ inputs.sha }}
+    pre_clone_scripts: *pre_clone
+    scripts:
+      - *checkout
+      - name: MSYS process tree as Windows sees it
+        script: |
+          & 'C:\Program Files\Git\bin\bash.exe' ci/codemagic/watchdog.sh bash ci/codemagic/selftest.sh tree
+          exit $LASTEXITCODE
+      - name: Watchdog suite, native Windows cases included
+        script: |
+          & 'C:\Program Files\Git\bin\bash.exe' ci/codemagic/watchdog.sh bash ci/codemagic/selftest.sh watchdog
+          exit $LASTEXITCODE
+      - name: Idle CPU of this machine
+        script: |
+          & 'C:\Program Files\Git\bin\bash.exe' ci/codemagic/watchdog.sh bash ci/codemagic/selftest.sh idle-cpu
+          exit $LASTEXITCODE
+      - name: Windows PowerShell as the build starts it
+        script: |
+          & 'C:\Program Files\Git\bin\bash.exe' ci/codemagic/watchdog.sh bash ci/codemagic/selftest.sh powershell
+          exit $LASTEXITCODE
+      - name: build.sh prologue, traced
+        script: |
+          $env:WATCHDOG_SILENT_MAX = "120"
+          & 'C:\Program Files\Git\bin\bash.exe' ci/codemagic/watchdog.sh bash ci/codemagic/selftest.sh prologue
+          exit $LASTEXITCODE

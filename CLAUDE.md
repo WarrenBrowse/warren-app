@@ -242,3 +242,10 @@ ones from PowerShell. Prerequisites, the build wrappers and their per-env
 flags, and the SYSTEM dev service needed to run the daemon:
 [`docs/WINDOWS-DEV.md`](docs/WINDOWS-DEV.md). The VM side is the
 `warren-windows-vm` skill.
+
+The released Windows installers and headless bundle are built on Codemagic, not
+on a GitHub runner: `codemagic.yaml` and `ci/codemagic/` define the builds, and
+release.yml / release-daemon.yml start them through
+`.github/actions/codemagic-build`, the proxy the other Warren repos pin from
+here. A change to that action lands here first, then in each consumer's pin.
+Contract, cache and traps: the `warren-codemagic` skill.

@@ -369,6 +369,23 @@ jobs:
         shell: bash
         run: python3 ci/test_torrentlib.py
 
+      # Every Windows artifact reaches a release through the Codemagic proxy:
+      # it picks the commit the Windows machine builds, turns the build's end
+      # state into this job's verdict, and refuses any output the build did
+      # not checksum. Offline: the API round trip belongs to the live jobs.
+      - name: Codemagic proxy unit tests
+        working-directory: .
+        shell: bash
+        run: python3 .github/actions/codemagic-build/test_codemagic_build.py
+
+      # Every Codemagic step runs under the watchdog that kills a step gone
+      # silent (the first release build hung 42 minutes on a child waiting for
+      # stdin). The suite also fails if a codemagic.yaml step escapes it.
+      - name: Codemagic step watchdog tests
+        working-directory: .
+        shell: bash
+        run: bash ci/codemagic/test-watchdog.sh
+
       # The swarm checker is what stops a release from shipping magnet links
       # nothing seeds, so a misread of the UDP tracker protocol would either
       # pass a dead swarm or red a live release. Offline: only the protocol
