@@ -311,6 +311,21 @@ export function exitUsersLabel(
   return `${exit.connected}+`;
 }
 
+/**
+ * The fleet people count, `shown` being the (possibly tweened) value. Exact
+ * while no exit is live; while one is, the server floors the total to the
+ * rounding step so the quiet part cannot be subtracted back out, and the label
+ * says so.
+ */
+export function fleetConnectedLabel(
+  stats: Pick<NetworkStats, 'exits'>,
+  shown: number,
+  locale: string,
+): string {
+  const count = new Intl.NumberFormat(locale).format(shown);
+  return stats.exits.some((exit) => exit.live) ? `${count}+` : count;
+}
+
 /** Every exit of the snapshot the relay list knows, keyed by relay hostname. */
 export function joinExitsByHostname(
   stats: NetworkStats,

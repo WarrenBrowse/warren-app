@@ -2270,8 +2270,8 @@ msgid "People connected now"
 msgstr "Şu an bağlı kişiler"
 
 msgctxt "network-stats"
-msgid "People per exit are rounded down to steps of %(step)d. The total for the whole network is exact."
-msgstr "Çıkış sunucusu başına kişi sayısı %(step)d'lik adımlarla aşağı yuvarlanır. Tüm ağın toplamı kesindir."
+msgid "People per exit are rounded down to steps of %(step)d. The network total is exact while no exit shows live figures, and rounded down the same way while one does."
+msgstr "Çıkış sunucusu başına kişi sayısı %(step)d'lik adımlarla aşağı yuvarlanır. Ağın toplamı, hiçbir çıkış sunucusu canlı rakam göstermediği sürece kesindir; biri gösterdiğinde aynı şekilde aşağı yuvarlanır."
 
 msgctxt "network-stats"
 msgid "People, 24 h"

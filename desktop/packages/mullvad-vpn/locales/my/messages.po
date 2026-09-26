@@ -2262,8 +2262,8 @@ msgid "People connected now"
 msgstr "ယခု ချိတ်ဆက်ထားသူများ"
 
 msgctxt "network-stats"
-msgid "People per exit are rounded down to steps of %(step)d. The total for the whole network is exact."
-msgstr "ထွက်ပေါက်ဆာဗာတစ်ခုစီရှိ လူဦးရေကို %(step)d ဦးအဆင့်ဖြင့် အောက်သို့ ပိုင်းဖြတ်သည်။ ကွန်ရက်တစ်ခုလုံး၏ စုစုပေါင်းမှာ တိကျသည်။"
+msgid "People per exit are rounded down to steps of %(step)d. The network total is exact while no exit shows live figures, and rounded down the same way while one does."
+msgstr "ထွက်ပေါက်ဆာဗာတစ်ခုစီရှိ လူဦးရေကို %(step)d ဦးအဆင့်ဖြင့် အောက်သို့ ပိုင်းဖြတ်သည်။ ထွက်ပေါက်ဆာဗာတစ်ခုမျှ တိုက်ရိုက်ကိန်းဂဏန်းများ မပြသသရွေ့ ကွန်ရက်စုစုပေါင်းမှာ တိကျပြီး တစ်ခုခု ပြသသောအခါ ထိုနည်းအတိုင်း အောက်သို့ ပိုင်းဖြတ်သည်။"
 
 msgctxt "network-stats"
 msgid "People, 24 h"

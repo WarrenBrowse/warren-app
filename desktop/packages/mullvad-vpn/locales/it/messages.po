@@ -2270,8 +2270,8 @@ msgid "People connected now"
 msgstr "Persone connesse ora"
 
 msgctxt "network-stats"
-msgid "People per exit are rounded down to steps of %(step)d. The total for the whole network is exact."
-msgstr "Le persone per server di uscita sono arrotondate per difetto a multipli di %(step)d. Il totale dell'intera rete è esatto."
+msgid "People per exit are rounded down to steps of %(step)d. The network total is exact while no exit shows live figures, and rounded down the same way while one does."
+msgstr "Le persone per server di uscita sono arrotondate per difetto a multipli di %(step)d. Il totale della rete è esatto finché nessun server di uscita mostra dati in tempo reale, e viene arrotondato per difetto allo stesso modo quando uno li mostra."
 
 msgctxt "network-stats"
 msgid "People, 24 h"

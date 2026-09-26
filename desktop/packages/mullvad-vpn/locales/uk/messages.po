@@ -2286,8 +2286,8 @@ msgid "People connected now"
 msgstr "Підключено зараз"
 
 msgctxt "network-stats"
-msgid "People per exit are rounded down to steps of %(step)d. The total for the whole network is exact."
-msgstr "Кількість людей на вихідному сервері округлюється вниз із кроком %(step)d. Підсумок для всієї мережі точний."
+msgid "People per exit are rounded down to steps of %(step)d. The network total is exact while no exit shows live figures, and rounded down the same way while one does."
+msgstr "Кількість людей на вихідному сервері округлюється вниз із кроком %(step)d. Підсумок для мережі точний, доки жоден вихідний сервер не показує дані наживо, і округлюється вниз так само, коли якийсь їх показує."
 
 msgctxt "network-stats"
 msgid "People, 24 h"

@@ -2270,8 +2270,8 @@ msgid "People connected now"
 msgstr "Yhdistettyjä henkilöitä nyt"
 
 msgctxt "network-stats"
-msgid "People per exit are rounded down to steps of %(step)d. The total for the whole network is exact."
-msgstr "Henkilömäärät lähtöpalvelinta kohden pyöristetään alaspäin %(step)d:n portain. Koko verkon summa on tarkka."
+msgid "People per exit are rounded down to steps of %(step)d. The network total is exact while no exit shows live figures, and rounded down the same way while one does."
+msgstr "Henkilömäärät lähtöpalvelinta kohden pyöristetään alaspäin %(step)d:n portain. Verkon summa on tarkka niin kauan kuin mikään lähtöpalvelin ei näytä reaaliaikaisia lukuja, ja se pyöristetään alaspäin samalla tavalla, kun jokin näyttää."
 
 msgctxt "network-stats"
 msgid "People, 24 h"

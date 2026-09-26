@@ -2262,8 +2262,8 @@ msgid "People connected now"
 msgstr "현재 접속자"
 
 msgctxt "network-stats"
-msgid "People per exit are rounded down to steps of %(step)d. The total for the whole network is exact."
-msgstr "출구 서버별 인원은 %(step)d 단위로 내림합니다. 네트워크 전체 합계는 정확합니다."
+msgid "People per exit are rounded down to steps of %(step)d. The network total is exact while no exit shows live figures, and rounded down the same way while one does."
+msgstr "출구 서버별 인원은 %(step)d 단위로 내림합니다. 네트워크 합계는 실시간 수치를 표시하는 출구 서버가 없을 때는 정확하며, 하나라도 표시하면 같은 방식으로 내림합니다."
 
 msgctxt "network-stats"
 msgid "People, 24 h"

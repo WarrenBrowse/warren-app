@@ -112,6 +112,12 @@ function withStore(element: React.ReactElement): string {
 }
 
 describe('FleetCard', () => {
+  it('marks the people count as a floor while an exit is live', () => {
+    const html = withStore(<FleetCard stats={STATS} stale={false} />);
+
+    expect(html).toMatch(/data-testid="network-connected"[^>]*>57\+</);
+  });
+
   it('colours the fleet ring by the fleet load band', () => {
     const html = withStore(<FleetCard stats={STATS} stale={false} />);
 

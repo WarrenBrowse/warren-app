@@ -2262,8 +2262,8 @@ msgid "People connected now"
 msgstr "当前连接人数"
 
 msgctxt "network-stats"
-msgid "People per exit are rounded down to steps of %(step)d. The total for the whole network is exact."
-msgstr "每个出口服务器的人数按 %(step)d 的步长向下取整。整个网络的总数是精确的。"
+msgid "People per exit are rounded down to steps of %(step)d. The network total is exact while no exit shows live figures, and rounded down the same way while one does."
+msgstr "每个出口服务器的人数按 %(step)d 的步长向下取整。只要没有出口服务器显示实时数据，网络总数就是精确的；一旦有出口服务器显示，总数也按同样方式向下取整。"
 
 msgctxt "network-stats"
 msgid "People, 24 h"

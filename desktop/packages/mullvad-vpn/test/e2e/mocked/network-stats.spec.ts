@@ -177,7 +177,7 @@ test.describe('Network stats', () => {
     await page.getByTestId('connected-exit-load').click();
     await util.expectRoute(RoutePath.warrenNetwork);
 
-    await expect(page.getByTestId('network-connected')).toHaveText('57');
+    await expect(page.getByTestId('network-connected')).toHaveText('57+');
     await expect(page.getByTestId('network-exit-card')).toHaveCount(3);
     await expect(page.getByTestId('network-methodology')).toBeVisible();
     await expect(page.getByText('Load over the last hour')).toBeVisible();

@@ -2,7 +2,12 @@ import { sprintf } from 'sprintf-js';
 import styled from 'styled-components';
 
 import { messages } from '../../../../../shared/gettext';
-import { formatBytes, formatPercent, NetworkStats } from '../../../../../shared/network-stats';
+import {
+  fleetConnectedLabel,
+  formatBytes,
+  formatPercent,
+  NetworkStats,
+} from '../../../../../shared/network-stats';
 import { colors, spacings } from '../../../../lib/foundations';
 import { useTweenedNumber } from '../../../../lib/network-stats';
 import { useSelector } from '../../../../redux/store';
@@ -77,7 +82,9 @@ export function FleetCard({ stats, stale }: FleetCardProps) {
 
       <StyledHero>
         <StyledCount>
-          <StyledBigNumber data-testid="network-connected">{count(connected)}</StyledBigNumber>
+          <StyledBigNumber data-testid="network-connected">
+            {fleetConnectedLabel(stats, connected, locale)}
+          </StyledBigNumber>
         </StyledCount>
         <LoadRing
           size="large"

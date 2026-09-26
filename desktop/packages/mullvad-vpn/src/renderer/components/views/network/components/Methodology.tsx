@@ -75,7 +75,7 @@ export function Methodology({ stats }: { stats: NetworkStats }) {
             // TRANSLATORS: %(step)d - the step per-exit people counts are rounded down to
             messages.pgettext(
               'network-stats',
-              'People per exit are rounded down to steps of %(step)d. The total for the whole network is exact.',
+              'People per exit are rounded down to steps of %(step)d. The network total is exact while no exit shows live figures, and rounded down the same way while one does.',
             ),
             { step: stats.exitUsersRounding },
           )}

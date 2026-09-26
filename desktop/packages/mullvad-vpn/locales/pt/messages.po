@@ -2270,8 +2270,8 @@ msgid "People connected now"
 msgstr "Pessoas ligadas agora"
 
 msgctxt "network-stats"
-msgid "People per exit are rounded down to steps of %(step)d. The total for the whole network is exact."
-msgstr "As pessoas por servidor de saída são arredondadas para baixo em passos de %(step)d. O total de toda a rede é exato."
+msgid "People per exit are rounded down to steps of %(step)d. The network total is exact while no exit shows live figures, and rounded down the same way while one does."
+msgstr "As pessoas por servidor de saída são arredondadas para baixo em passos de %(step)d. O total da rede é exato enquanto nenhum servidor de saída mostra valores em direto, e é arredondado para baixo da mesma forma quando algum os mostra."
 
 msgctxt "network-stats"
 msgid "People, 24 h"

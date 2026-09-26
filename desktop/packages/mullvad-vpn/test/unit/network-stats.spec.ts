@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest';
 import {
   exitDisplayMode,
   exitUsersLabel,
+  fleetConnectedLabel,
   formatBitsPerSecond,
   formatBytes,
   formatPercent,
@@ -277,5 +278,25 @@ describe('pollIntervalMs', () => {
   it('keeps the window inside the range the server accepts', () => {
     expect(pollIntervalMs(1)).toBe(30_000);
     expect(pollIntervalMs(100_000)).toBe(3_600_000);
+  });
+});
+
+describe('fleetConnectedLabel', () => {
+  it('shows the fleet count as a floor while an exit is live', () => {
+    expect(fleetConnectedLabel(fixture(), 57, 'en')).toBe('57+');
+  });
+
+  it('shows the fleet count exactly while no exit is live', () => {
+    const stats = fixture();
+    const quiet = { ...stats, exits: stats.exits.map((exit) => ({ ...exit, live: false })) };
+
+    expect(fleetConnectedLabel(quiet, 57, 'en')).toBe('57');
+  });
+
+  it('groups digits by the locale', () => {
+    const stats = fixture();
+    const quiet = { ...stats, exits: [] };
+
+    expect(fleetConnectedLabel(quiet, 1234, 'en')).toBe('1,234');
   });
 });
