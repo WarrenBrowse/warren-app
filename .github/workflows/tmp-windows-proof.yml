@@ -7,40 +7,16 @@ on:
 permissions:
   contents: read
 jobs:
-  build:
-    name: ${{ matrix.script }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - script: ci/codemagic/windows-release.sh
-            phases: prepare sources build stage
-    runs-on: windows-2025
-    timeout-minutes: 150
-    env:
-      WARREN_SHA: ${{ github.sha }}
-      WARREN_CHANNEL: beta
-      WARREN_VERSION: "1.1.35"
-      WARREN_API_URL: https://api.beta.warrenbrowse.com
-    steps:
-      - name: Allow long paths
-        run: git config --system core.longpaths true
-      - uses: actions/checkout@v5
-      - uses: ./.github/actions/windows-build
-        with:
-          script: ${{ matrix.script }}
-          phases: ${{ matrix.phases }}
-          out-dir: release-assets
-      - name: List the outputs
-        shell: bash
-        run: ls -la release-assets; for z in release-assets/*.zip; do [ -f "$z" ] && unzip -l "$z"; done; true
-
   linux-x64-app:
     name: linux x64 app packages in the job image
     runs-on: ubuntu-24.04
     container:
       image: ghcr.io/warrenbrowse/warren-ci-linux:bullseye-e03e4fc686d82f6b1cbea663ec9032c76960b5ee
       options: --user root
+    # A container job's steps default to sh, which has no pipefail.
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 130
     env:
       CC: clang
@@ -67,23 +43,3 @@ jobs:
           find x -type f \( -path '*/bin/*' -o -name '*.so*' -o -name 'warren*' -o -name 'mullvad*' \) -print0 \
             | xargs -0 -I{} sh -c 'objdump -T "{}" 2>/dev/null | grep -o "GLIBC_[0-9.]*" || true' | sort -uV | tail -3
           df -h / .
-
-  nixos-flake:
-    name: NixOS flake from the published beta .deb
-    runs-on: ubuntu-24.04
-    timeout-minutes: 90
-    steps:
-      - uses: actions/checkout@v5
-      - name: Resolve and download the published .deb
-        run: |
-          set -euo pipefail
-          base=https://api.beta.warrenbrowse.com/updates/desktop
-          select='.platforms.linux.assets[] | select(.format == "deb" and .architecture == "x64" and (has("flavor") | not))'
-          m="$(curl -fsSL "$base/downloads.json")"
-          url="$(printf '%s' "$m" | jq -r "$select | .url" | head -1)"
-          version="$(printf '%s' "$m" | jq -r '.platforms.linux.version')"
-          mkdir -p downloads && curl -fsSL -o "downloads/$(basename "$url")" "$url"
-          { echo "WARREN_DEB=$(basename "$url")"; echo "WARREN_VERSION=$version"; echo "WARREN_ASSET_BASE=$base"; } >> "$GITHUB_ENV"
-      - run: bash ci/stage-nixos-flake.sh "downloads/$WARREN_DEB" nixos-stage "$WARREN_VERSION" "$WARREN_ASSET_BASE"
-      - run: bash ci/build-nixos-flake.sh nixos-stage "downloads/$WARREN_DEB" "out/flake.tar.gz"
-      - run: ls -lh out/
