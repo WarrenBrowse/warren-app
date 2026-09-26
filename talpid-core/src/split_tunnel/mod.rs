@@ -1,13 +1,14 @@
 #[cfg(any(windows, test))]
 mod driver_addresses;
+#[cfg(any(windows, test))]
+pub mod include_hold;
 
-/// Whether include-only may run on Windows. Not yet: the unmodified driver
+/// Whether include-only may run on Windows. The unmodified driver
 /// soft-permits the apps it splits from every source address but its
-/// "tunnel" one, so an included app binding a second interface's address
-/// would leave outside the tunnel, and on beta and staging the driver cannot
-/// reach winfw's salted sublayers at all (`docs/app-routing.md` §3.2).
+/// "tunnel" one; winfw's hold (`include_hold`) is what keeps an included app
+/// binding another address inside the tunnel (`docs/app-routing.md` §3.2).
 #[cfg(windows)]
-pub const INCLUDE_ONLY_READY: bool = false;
+pub const INCLUDE_ONLY_READY: bool = true;
 
 #[cfg(target_os = "linux")]
 mod linux;

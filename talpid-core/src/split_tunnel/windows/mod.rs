@@ -427,7 +427,7 @@ impl InitializedSplitTunnelState {
             Self::spawn_request_thread(resource_dir, volume_update_rx, excluded_processes.clone())?;
 
         let (event_thread, quit_event) =
-            Self::spawn_event_listener(handle, excluded_processes.clone())?;
+            Self::spawn_event_listener(handle, excluded_processes.clone(), daemon_tx.clone())?;
 
         Ok(InitializedSplitTunnelState {
             runtime,
@@ -447,6 +447,7 @@ impl InitializedSplitTunnelState {
     fn spawn_event_listener(
         handle: Arc<driver::DeviceHandle>,
         excluded_processes: Arc<RwLock<HashMap<usize, ExcludedProcess>>>,
+        daemon_tx: Weak<mpsc::UnboundedSender<TunnelCommand>>,
     ) -> Result<(std::thread::JoinHandle<()>, Arc<Event>), Error> {
         let mut event_overlapped = Overlapped::new(Some(
             Event::new(true, false).map_err(Error::EventThreadError)?,
@@ -459,6 +460,7 @@ impl InitializedSplitTunnelState {
         let event_thread = std::thread::spawn(move || {
             log::debug!("Starting split tunnel event thread");
             let mut data_buffer = vec![];
+            let mut reported_images: Vec<OsString> = Vec::new();
 
             loop {
                 // Wait until either the next event is received or the quit event is signaled.
@@ -482,12 +484,46 @@ impl InitializedSplitTunnelState {
                 };
 
                 Self::handle_event(event_id, event_body, &excluded_processes);
+                Self::report_split_images(&excluded_processes, &mut reported_images, &daemon_tx);
             }
 
             log::debug!("Stopping split tunnel event thread");
         });
 
         Ok((event_thread, quit_event_copy))
+    }
+
+    /// Tells the state machine which executables the driver splits whenever
+    /// that set changes: under include-only the firewall holds each of them
+    /// to the tunnel, children of an included app of another executable
+    /// included (`include_hold`).
+    fn report_split_images(
+        excluded_processes: &RwLock<HashMap<usize, ExcludedProcess>>,
+        reported: &mut Vec<OsString>,
+        daemon_tx: &Weak<mpsc::UnboundedSender<TunnelCommand>>,
+    ) {
+        let mut images: Vec<OsString> = excluded_processes
+            .read()
+            .unwrap()
+            .values()
+            .map(|process| process.image.clone().into_os_string())
+            .collect();
+        images.sort();
+        images.dedup();
+        if images == *reported {
+            return;
+        }
+        let Some(daemon_tx) = daemon_tx.upgrade() else {
+            return;
+        };
+        if daemon_tx
+            .unbounded_send(TunnelCommand::FollowSplitTunnel(
+                super::include_hold::DriverReport::Splitting(images.clone()),
+            ))
+            .is_ok()
+        {
+            *reported = images;
+        }
     }
 
     fn fetch_next_event(
