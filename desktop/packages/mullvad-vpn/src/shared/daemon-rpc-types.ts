@@ -1022,7 +1022,12 @@ export type AppRoutingSettings = {
 
 export type AppRouteState = 'connecting' | 'connected' | 'unavailable';
 
-export type AppRouteUnavailableReason = 'tunnel-down' | 'no-token' | 'limit-reached' | 'no-relay';
+export type AppRouteUnavailableReason =
+  | 'tunnel-down'
+  | 'no-token'
+  | 'limit-reached'
+  | 'no-relay'
+  | 'waiting-for-route';
 
 // The live state of one exit in force and the apps that use it.
 export type AppRouteStatus = {
@@ -1033,10 +1038,6 @@ export type AppRouteStatus = {
   publicIp?: string;
   apps: string[];
 };
-
-// Outcome of `SetAppExit`: the daemon refuses an exit that would take the
-// apps past the number of route sessions it can open.
-export type SetAppExitOutcome = { result: 'ok' } | { result: 'limit-reached' };
 
 export type LwoSettings = {
   port: Constraint<number>;

@@ -7,10 +7,6 @@ import type {
   ExitChoice,
 } from './daemon-rpc-types';
 
-// Route sessions besides the main connection: the three session tokens of an
-// epoch, one of them the main one. Mirrors `MAX_APP_EXITS` in mullvad-types.
-export const MAX_APP_EXITS = 2;
-
 type Platform = NodeJS.Platform;
 
 // Windows and macOS paths are case insensitive (the daemon and the app list
@@ -39,19 +35,6 @@ export function exitChoicesInUse(appExits: readonly AppExit[]): ExitChoice[] {
     }
   }
   return exits;
-}
-
-// Whether the daemon would refuse `exit` for `app` with `app_exit_limit`. It
-// counts every saved choice, whatever the switch and the split mode, so the
-// GUI does too.
-export function wouldExceedAppExitLimit(
-  appExits: readonly AppExit[],
-  app: string,
-  exit: ExitChoice,
-  platform: Platform,
-): boolean {
-  const others = appExits.filter((entry) => !sameAppId(entry.app, app, platform));
-  return exitChoicesInUse([...others, { app, exit }]).length > MAX_APP_EXITS;
 }
 
 export function appExitFor(
@@ -121,7 +104,8 @@ export type AppRoutingSummary = {
   vpnOnlyForCount?: number;
   appsWithOwnCountry: number;
   // A route that cannot run for a reason of its own. A route waiting for the
-  // main connection is not a fault.
+  // main connection is not a fault; one waiting for a free route is, since
+  // its apps do not leave from their country meanwhile.
   anyRouteUnavailable: boolean;
 };
 

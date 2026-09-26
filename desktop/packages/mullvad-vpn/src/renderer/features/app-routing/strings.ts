@@ -1,6 +1,6 @@
 import { sprintf } from 'sprintf-js';
 
-import { AppRouteLine, MAX_APP_EXITS, SplitModeAvailability } from '../../../shared/app-routing';
+import { AppRouteLine, SplitModeAvailability } from '../../../shared/app-routing';
 import { ISplitTunnelingApplication } from '../../../shared/application-types';
 import { messages } from '../../../shared/gettext';
 
@@ -59,26 +59,21 @@ export function appRouteLineText(line: AppRouteLine): string {
           // TRANSLATORS: session tokens and none is left for now.
           return messages.pgettext('split-tunneling-view', 'No session token left');
         case 'limit-reached':
-          return messages.pgettext('split-tunneling-view', 'Country limit reached');
+          // TRANSLATORS: Every anonymous session token of the account is in
+          // TRANSLATORS: use by its other connections, so this per-app
+          // TRANSLATORS: connection cannot get one.
+          return messages.pgettext('split-tunneling-view', 'Session limit reached');
+        case 'waiting-for-route':
+          // TRANSLATORS: The server runs a limited number of per-app
+          // TRANSLATORS: connections at once and all of them are in use. This
+          // TRANSLATORS: one starts by itself as soon as one is free.
+          return messages.pgettext('split-tunneling-view', 'Waiting for a free route');
         case 'no-relay':
           return messages.pgettext('split-tunneling-view', 'No server there');
         case undefined:
           return messages.pgettext('split-tunneling-view', 'Unavailable');
       }
   }
-}
-
-export function appExitLimitText(): string {
-  return sprintf(
-    // TRANSLATORS: Shown in the country picker once the limit is reached.
-    // TRANSLATORS: Available placeholders:
-    // TRANSLATORS: %(limit)d - the number of countries apps can use at once
-    messages.pgettext(
-      'split-tunneling-view',
-      'Apps can use %(limit)d countries at a time. Pick one already in use, or remove one first.',
-    ),
-    { limit: MAX_APP_EXITS },
-  );
 }
 
 // One line for a split mode the device cannot run, or undefined when the view

@@ -1,7 +1,7 @@
 import React from 'react';
 
 import { ISplitTunnelingApplication } from '../../../../shared/application-types';
-import { AppSplitMode, ExitChoice, SetAppExitOutcome } from '../../../../shared/daemon-rpc-types';
+import { AppSplitMode, ExitChoice } from '../../../../shared/daemon-rpc-types';
 import log from '../../../../shared/logging';
 import { useAppContext } from '../../../context';
 import { useSelector } from '../../../redux/store';
@@ -36,18 +36,15 @@ export function useAppRouting() {
     [app],
   );
 
-  // Answers the daemon's verdict so the picker can explain a refusal; any
-  // other failure is logged and reported as not applied.
+  // Answers whether the choice was applied; a failure is logged.
   const setAppExit = React.useCallback(
-    async (
-      application: ISplitTunnelingApplication | string,
-      exit: ExitChoice,
-    ): Promise<SetAppExitOutcome | undefined> => {
+    async (application: ISplitTunnelingApplication | string, exit: ExitChoice) => {
       try {
-        return await app.setAppExit(application, exit);
+        await app.setAppExit(application, exit);
+        return true;
       } catch {
         log.error('Could not set the country of an app');
-        return undefined;
+        return false;
       }
     },
     [app],

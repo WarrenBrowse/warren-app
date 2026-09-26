@@ -145,6 +145,11 @@ test.describe('App routing', () => {
     await expect(tab('Country per app')).toHaveAttribute('aria-selected', 'true');
     await expect(tab('Country per app')).toBeFocused();
     await expect(page.getByTestId('apps-without-country')).toContainText('Spotify');
+    const description = page.getByRole('tabpanel');
+    await expect(description).toContainText(
+      'Choose the country an app appears from. Other apps keep your main connection.',
+    );
+    await expect(description).not.toContainText('at a time');
     await screenshot('02-countries-empty');
   });
 
@@ -156,7 +161,7 @@ test.describe('App routing', () => {
 
     await picker.getByPlaceholder('Search for...').fill('swe');
     const [request] = await Promise.all([
-      util.ipc.appRouting.setAppExit.expect({ result: 'ok' }),
+      util.ipc.appRouting.setAppExit.expect(undefined),
       picker.getByRole('button', { name: 'Sweden', exact: true }).click(),
     ]);
     expect(request).toEqual({ application: FIREFOX, exit: { country: 'se' } });
@@ -176,7 +181,7 @@ test.describe('App routing', () => {
     await screenshot('04-country-set');
   });
 
-  test('explains the limit instead of failing', async () => {
+  test('offers a third country while two are in use', async () => {
     await pushState(
       {
         appExits: [
@@ -193,8 +198,8 @@ test.describe('App routing', () => {
         },
         {
           exit: { country: 'de', city: 'ber' },
-          state: 'unavailable',
-          reason: 'no-token',
+          state: 'connected',
+          publicIp: '198.51.100.8',
           apps: [SLACK.absolutepath],
         },
       ],
@@ -202,34 +207,73 @@ test.describe('App routing', () => {
 
     await page.getByRole('button', { name: 'Choose a country for Steam' }).click();
     const picker = page.getByTestId('country-picker');
-    const france = picker.getByRole('button', { name: /^France/ });
-    await expect(france).toHaveAttribute('aria-disabled', 'true');
-    await expect(france).toContainText('Limit reached');
-    await expect(picker.getByRole('note')).toContainText('Apps can use 2 countries at a time.');
     await expect(picker.getByRole('button', { name: /^Sweden/ })).toContainText('In use');
-    // Berlin is in use, so Germany opens on its cities.
-    await expect(picker.getByRole('button', { name: /^Berlin/ })).toContainText('In use');
-    await screenshot('05-limit');
+    await expect(picker.locator('[aria-disabled="true"]')).toHaveCount(0);
+    await expect(picker.getByRole('note')).toHaveCount(0);
+    // Only the app's own country opens on its cities.
+    await expect(picker.getByRole('button', { name: /^Berlin/ })).toHaveCount(0);
+    await screenshot('05-third-country-picker');
 
-    // A refused option stays focusable and says why; clicking it does nothing.
-    await france.click({ force: true });
-    await expect(picker).toBeVisible();
-    await page.keyboard.press('Escape');
-    await expect(picker).not.toBeVisible();
-    await screenshot('06-two-countries');
-  });
-
-  test('says why when the daemon refuses a country', async () => {
-    await pushState({ appExits: [{ app: FIREFOX.absolutepath, exit: { country: 'se' } }] });
-
-    await page.getByRole('button', { name: 'Choose a country for Steam' }).click();
-    const picker = page.getByTestId('country-picker');
-    await Promise.all([
-      util.ipc.appRouting.setAppExit.expect({ result: 'limit-reached' }),
+    const [request] = await Promise.all([
+      util.ipc.appRouting.setAppExit.expect(undefined),
       picker.getByRole('button', { name: /^France/ }).click(),
     ]);
+    expect(request).toEqual({ application: STEAM, exit: { country: 'fr' } });
+    await expect(picker).not.toBeVisible();
+  });
 
-    await expect(page.getByRole('alert')).toContainText('Apps can use 2 countries at a time.');
+  test('saves a fourth country and says when its route waits for a free one', async () => {
+    const threeCountries = [
+      { app: FIREFOX.absolutepath, exit: { country: 'se' } },
+      { app: SLACK.absolutepath, exit: { country: 'de', city: 'ber' } },
+      { app: STEAM.absolutepath, exit: { country: 'fr' } },
+    ];
+    await pushState({ appExits: threeCountries });
+
+    await page.getByRole('button', { name: 'Choose a country for Spotify' }).click();
+    const picker = page.getByTestId('country-picker');
+    await expect(picker.locator('[aria-disabled="true"]')).toHaveCount(0);
+    const [request] = await Promise.all([
+      util.ipc.appRouting.setAppExit.expect(undefined),
+      picker.getByRole('button', { name: /^Switzerland/ }).click(),
+    ]);
+    expect(request).toEqual({ application: SPOTIFY, exit: { country: 'ch' } });
+
+    await pushState(
+      { appExits: [...threeCountries, { app: SPOTIFY.absolutepath, exit: { country: 'ch' } }] },
+      [
+        {
+          exit: { country: 'se' },
+          state: 'connected',
+          publicIp: '198.51.100.7',
+          apps: [FIREFOX.absolutepath],
+        },
+        {
+          exit: { country: 'de', city: 'ber' },
+          state: 'connected',
+          publicIp: '198.51.100.8',
+          apps: [SLACK.absolutepath],
+        },
+        {
+          exit: { country: 'fr' },
+          state: 'unavailable',
+          reason: 'limit-reached',
+          apps: [STEAM.absolutepath],
+        },
+        {
+          exit: { country: 'ch' },
+          state: 'unavailable',
+          reason: 'waiting-for-route',
+          apps: [SPOTIFY.absolutepath],
+        },
+      ],
+    );
+
+    const rows = page.getByTestId('apps-with-country').getByTestId('app-country-row');
+    await expect(rows).toHaveCount(4);
+    await expect(rows.filter({ hasText: 'Spotify' })).toContainText('Waiting for a free route');
+    await expect(rows.filter({ hasText: 'Steam' })).toContainText('Session limit reached');
+    await screenshot('06-four-countries');
   });
 
   test('asks once before VPN only for leaves the device unprotected', async () => {

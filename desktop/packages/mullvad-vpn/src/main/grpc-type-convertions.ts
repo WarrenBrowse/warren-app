@@ -1829,6 +1829,8 @@ function convertFromAppRouteUnavailableReason(
       return 'limit-reached';
     case grpcTypes.AppRouteStatus.UnavailableReason.NO_RELAY:
       return 'no-relay';
+    case grpcTypes.AppRouteStatus.UnavailableReason.WAITING_FOR_ROUTE:
+      return 'waiting-for-route';
     case grpcTypes.AppRouteStatus.UnavailableReason.NONE:
       return undefined;
   }

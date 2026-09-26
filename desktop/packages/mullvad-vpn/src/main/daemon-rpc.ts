@@ -30,7 +30,6 @@ import {
   ObfuscationType,
   PurchaseVoucherPull,
   RelaySettings,
-  SetAppExitOutcome,
   TrustNewExitKeyOutcome,
   TunnelState,
   VoucherResponse,
@@ -41,7 +40,6 @@ import {
   WarrenStatus,
 } from '../shared/daemon-rpc-types';
 import { ExitHostname } from '../shared/network-stats';
-import { isAppExitLimitError } from './app-routing-errors';
 import { daemonRpcPath } from './daemon-rpc-path';
 import { ConnectionObserver, GrpcClient, noConnectionError } from './grpc-client';
 import {
@@ -904,19 +902,8 @@ export class DaemonRpc extends GrpcClient {
     await this.callBool(this.client.setAppExitsEnabled, enabled);
   }
 
-  public async setAppExit(app: string, exit: ExitChoice): Promise<SetAppExitOutcome> {
-    try {
-      await this.call<grpcTypes.AppExit, Empty>(
-        this.client.setAppExit,
-        convertToAppExit(app, exit),
-      );
-      return { result: 'ok' };
-    } catch (error) {
-      if (isAppExitLimitError(error)) {
-        return { result: 'limit-reached' };
-      }
-      throw error;
-    }
+  public async setAppExit(app: string, exit: ExitChoice): Promise<void> {
+    await this.call<grpcTypes.AppExit, Empty>(this.client.setAppExit, convertToAppExit(app, exit));
   }
 
   public async clearAppExit(app: string): Promise<void> {

@@ -1,8 +1,6 @@
-import * as grpc from '@grpc/grpc-js';
 import * as grpcTypes from 'management-interface/management-interface/grpc-types';
 import { describe, expect, it } from 'vitest';
 
-import { isAppExitLimitError } from '../../src/main/app-routing-errors';
 import {
   convertFromAppRoutingSettings,
   convertFromDaemonEvent,
@@ -130,6 +128,27 @@ describe('convertFromDaemonEvent', () => {
     expect(reasonOf(Reason.LIMIT_REACHED)).toBe('limit-reached');
     expect(reasonOf(Reason.NO_RELAY)).toBe('no-relay');
   });
+
+  it('names a route waiting for the server to admit it', () => {
+    const list = new grpcTypes.AppRouteStatusList().setRoutesList([
+      new grpcTypes.AppRouteStatus()
+        .setExit(exitChoice('fr'))
+        .setState(State.UNAVAILABLE)
+        .setReason(Reason.WAITING_FOR_ROUTE)
+        .setAppsList(['/usr/bin/steam']),
+    ]);
+
+    expect(convertFromDaemonEvent(new grpcTypes.DaemonEvent().setAppRoutes(list))).toEqual({
+      appRoutes: [
+        {
+          exit: { country: 'fr' },
+          state: 'unavailable',
+          reason: 'waiting-for-route',
+          apps: ['/usr/bin/steam'],
+        },
+      ],
+    });
+  });
 });
 
 describe('the requests sent to the daemon', () => {
@@ -151,38 +170,5 @@ describe('the requests sent to the daemon', () => {
     expect(convertToAppSplitMode('off').getMode()).toBe(Mode.OFF);
     expect(convertToAppSplitMode('exclude').getMode()).toBe(Mode.EXCLUDE);
     expect(convertToAppSplitMode('include-only').getMode()).toBe(Mode.INCLUDE_ONLY);
-  });
-});
-
-describe('isAppExitLimitError', () => {
-  function serviceError(code: grpc.status, details?: string): grpc.ServiceError {
-    const metadata = new grpc.Metadata();
-    if (details !== undefined) {
-      metadata.set('grpc-status-details-bin', Buffer.from(details));
-    }
-    return Object.assign(new Error('refused'), { code, details: 'refused', metadata });
-  }
-
-  it('recognizes the refusal of a third country', () => {
-    expect(
-      isAppExitLimitError(serviceError(grpc.status.FAILED_PRECONDITION, 'app_exit_limit')),
-    ).toBe(true);
-  });
-
-  it('does not take another failed precondition for the limit', () => {
-    expect(
-      isAppExitLimitError(serviceError(grpc.status.FAILED_PRECONDITION, 'custom_list_exists')),
-    ).toBe(false);
-  });
-
-  it('does not take the same details under another code for the limit', () => {
-    expect(isAppExitLimitError(serviceError(grpc.status.INVALID_ARGUMENT, 'app_exit_limit'))).toBe(
-      false,
-    );
-  });
-
-  it('answers false for anything that is not a gRPC error', () => {
-    expect(isAppExitLimitError(new Error('boom'))).toBe(false);
-    expect(isAppExitLimitError(undefined)).toBe(false);
   });
 });

@@ -3784,13 +3784,6 @@ msgctxt "split-tunneling-view"
 msgid "App routing"
 msgstr ""
 
-#. Shown in the country picker once the limit is reached.
-#. Available placeholders:
-#. %(limit)d - the number of countries apps can use at once
-msgctxt "split-tunneling-view"
-msgid "Apps can use %(limit)d countries at a time. Pick one already in use, or remove one first."
-msgstr ""
-
 msgctxt "split-tunneling-view"
 msgid "Bypass VPN"
 msgstr ""
@@ -3825,10 +3818,8 @@ msgid "Choose how each app connects."
 msgstr ""
 
 #. Description of the "Country per app" tab.
-#. Available placeholders:
-#. %(limit)d - how many countries apps can use at once
 msgctxt "split-tunneling-view"
-msgid "Choose the country an app appears from. Other apps keep your main connection. Up to %(limit)d countries at a time."
+msgid "Choose the country an app appears from. Other apps keep your main connection."
 msgstr ""
 
 #. Accessibility label of the button listing the
@@ -3882,10 +3873,6 @@ msgid "Country for %(application)s"
 msgstr ""
 
 msgctxt "split-tunneling-view"
-msgid "Country limit reached"
-msgstr ""
-
-msgctxt "split-tunneling-view"
 msgid "Country per app"
 msgstr ""
 
@@ -3922,10 +3909,6 @@ msgstr ""
 #. Button label for launching an application with split tunneling.
 msgctxt "split-tunneling-view"
 msgid "Launch"
-msgstr ""
-
-msgctxt "split-tunneling-view"
-msgid "Limit reached"
 msgstr ""
 
 msgctxt "split-tunneling-view"
@@ -3993,6 +3976,13 @@ msgstr ""
 
 msgctxt "split-tunneling-view"
 msgid "Restart Warren Service"
+msgstr ""
+
+#. Every anonymous session token of the account is in
+#. use by its other connections, so this per-app
+#. connection cannot get one.
+msgctxt "split-tunneling-view"
+msgid "Session limit reached"
 msgstr ""
 
 #. Line under a Snap app in the "Country per app" list.
@@ -4063,6 +4053,13 @@ msgstr ""
 
 msgctxt "split-tunneling-view"
 msgid "VPN only for is on: every app you did not choose there already bypasses the VPN."
+msgstr ""
+
+#. The server runs a limited number of per-app
+#. connections at once and all of them are in use. This
+#. one starts by itself as soon as one is free.
+msgctxt "split-tunneling-view"
+msgid "Waiting for a free route"
 msgstr ""
 
 msgctxt "split-tunneling-view"

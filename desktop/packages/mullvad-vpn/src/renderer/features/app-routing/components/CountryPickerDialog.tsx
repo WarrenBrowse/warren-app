@@ -11,7 +11,6 @@ import { Icon, IconButton } from '../../../lib/components';
 import { Dialog } from '../../../lib/components/dialog';
 import { colors, spacings } from '../../../lib/foundations';
 import { useSelector } from '../../../redux/store';
-import { appExitLimitText } from '../strings';
 import { CountryFlag } from './CountryFlag';
 
 const StyledList = styled.ul({
@@ -50,15 +49,12 @@ const StyledOption = styled.button<{ $indent?: boolean }>((props) => ({
   color: colors.white,
   textAlign: 'start',
   cursor: 'default',
-  '&&:not([aria-disabled="true"]):hover': {
+  '&&:hover': {
     backgroundColor: colors.blue60,
   },
   '&&:focus-visible': {
     outline: `2px solid ${colors.white}`,
     outlineOffset: '-2px',
-  },
-  '&&[aria-disabled="true"]': {
-    color: colors.whiteAlpha40,
   },
 }));
 
@@ -75,13 +71,6 @@ const StyledTag = styled.span({
   flexShrink: 0,
 });
 
-const StyledNote = styled.p({
-  ...tinyText,
-  fontWeight: 400,
-  margin: 0,
-  color: colors.whiteAlpha80,
-});
-
 const StyledEmpty = styled.p({
   ...tinyText,
   fontWeight: 400,
@@ -96,8 +85,6 @@ export type CountryPickerDialogProps = {
   applicationName: string;
   current?: ExitChoice;
   exitsInUse: ExitChoice[];
-  // Whether the daemon would refuse this exit for the app (the country limit).
-  isBlocked: (exit: ExitChoice) => boolean;
   onSelect: (exit: ExitChoice) => void;
   onRemove?: () => void;
 };
@@ -110,30 +97,21 @@ export function CountryPickerDialog({
   applicationName,
   current,
   exitsInUse,
-  isBlocked,
   onSelect,
   onRemove,
 }: CountryPickerDialogProps) {
   const relayLocations = useSelector((state) => state.settings.relayLocations);
   const [searchTerm, setSearchTerm] = React.useState('');
-  // Opens on the app's own country and, once the limit bites, on every
-  // country whose city is in use, since those cities are the choices left.
-  const [expanded, setExpanded] = React.useState<ReadonlySet<string>>(() => {
-    const open = new Set<string>(current ? [current.country] : []);
-    for (const exit of exitsInUse) {
-      if (exit.city !== undefined && isBlocked({ country: exit.country })) {
-        open.add(exit.country);
-      }
-    }
-    return open;
-  });
+  // Opens on the app's own country.
+  const [expanded, setExpanded] = React.useState<ReadonlySet<string>>(
+    () => new Set<string>(current ? [current.country] : []),
+  );
 
   const translate = React.useCallback((name: string) => relayLocationsCatalog.gettext(name), []);
   const options = React.useMemo(
     () => buildCountryOptions(relayLocations, searchTerm, translate),
     [relayLocations, searchTerm, translate],
   );
-  const anyBlocked = options.some((option) => isBlocked({ country: option.country }));
 
   const close = React.useCallback(() => onOpenChange(false), [onOpenChange]);
   const toggleCountry = React.useCallback(
@@ -163,7 +141,6 @@ export function CountryPickerDialog({
               )}
             </Dialog.Title>
             <SearchBar searchTerm={searchTerm} onSearch={setSearchTerm} />
-            {anyBlocked && <StyledNote role="note">{appExitLimitText()}</StyledNote>}
             {options.length === 0 ? (
               <StyledEmpty>{messages.gettext('Try a different search.')}</StyledEmpty>
             ) : (
@@ -174,7 +151,6 @@ export function CountryPickerDialog({
                     option={option}
                     current={current}
                     exitsInUse={exitsInUse}
-                    isBlocked={isBlocked}
                     // A search that only matched cities shows them straight away.
                     expanded={expanded.has(option.country) || searchTerm !== ''}
                     onToggle={toggleCountry}
@@ -206,7 +182,6 @@ type CountryOptionItemProps = {
   option: CountryOption;
   current?: ExitChoice;
   exitsInUse: ExitChoice[];
-  isBlocked: (exit: ExitChoice) => boolean;
   expanded: boolean;
   onToggle: (country: string) => void;
   onSelect: (exit: ExitChoice) => void;
@@ -216,7 +191,6 @@ function CountryOptionItem({
   option,
   current,
   exitsInUse,
-  isBlocked,
   expanded,
   onToggle,
   onSelect,
@@ -235,7 +209,6 @@ function CountryOptionItem({
           flag
           current={current}
           exitsInUse={exitsInUse}
-          isBlocked={isBlocked}
           onSelect={onSelect}
         />
         {showCities && (
@@ -266,7 +239,6 @@ function CountryOptionItem({
                   indent
                   current={current}
                   exitsInUse={exitsInUse}
-                  isBlocked={isBlocked}
                   onSelect={onSelect}
                 />
               </StyledRow>
@@ -285,7 +257,6 @@ type ExitOptionButtonProps = {
   indent?: boolean;
   current?: ExitChoice;
   exitsInUse: ExitChoice[];
-  isBlocked: (exit: ExitChoice) => boolean;
   onSelect: (exit: ExitChoice) => void;
 };
 
@@ -296,34 +267,19 @@ function ExitOptionButton({
   indent,
   current,
   exitsInUse,
-  isBlocked,
   onSelect,
 }: ExitOptionButtonProps) {
   const selected = current !== undefined && sameExitChoice(current, exit);
   const inUse = exitsInUse.some((used) => sameExitChoice(used, exit));
-  const blocked = !selected && isBlocked(exit);
 
-  // A refused option stays focusable, so a keyboard user hears why it is off.
-  const onClick = React.useCallback(() => {
-    if (!blocked) {
-      onSelect(exit);
-    }
-  }, [blocked, exit, onSelect]);
+  const onClick = React.useCallback(() => onSelect(exit), [exit, onSelect]);
 
   return (
-    <StyledOption
-      type="button"
-      $indent={indent}
-      aria-pressed={selected}
-      aria-disabled={blocked}
-      onClick={onClick}>
+    <StyledOption type="button" $indent={indent} aria-pressed={selected} onClick={onClick}>
       {flag && <CountryFlag country={exit.country} />}
       <StyledOptionName>{label}</StyledOptionName>
       {inUse && !selected && (
         <StyledTag>{messages.pgettext('split-tunneling-view', 'In use')}</StyledTag>
-      )}
-      {blocked && (
-        <StyledTag>{messages.pgettext('split-tunneling-view', 'Limit reached')}</StyledTag>
       )}
       {selected && <Icon icon="checkmark" size="small" color="green" />}
     </StyledOption>

@@ -28,7 +28,6 @@ import {
   NewCustomList,
   ObfuscationSettings,
   RelaySettings,
-  SetAppExitOutcome,
   TrustNewExitKeyOutcome,
   TunnelState,
   VoucherResponse,
@@ -576,7 +575,7 @@ export const ipcSchema = {
     setAppExitsEnabled: invoke<boolean, void>(),
     setAppExit: invoke<
       { application: ISplitTunnelingApplication | string; exit: ExitChoice },
-      SetAppExitOutcome
+      void
     >(),
     clearAppExit: invoke<string, void>(),
   },

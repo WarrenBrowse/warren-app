@@ -15,7 +15,6 @@ import {
   routeStatusForApp,
   sameAppId,
   splitModeAvailability,
-  wouldExceedAppExitLimit,
 } from '../../src/shared/app-routing';
 import type { AppRouteStatus, AppRoutingSettings } from '../../src/shared/daemon-rpc-types';
 
@@ -41,31 +40,6 @@ describe('sameAppId', () => {
 
   it('respects case on Linux, where two such paths name two programs', () => {
     expect(sameAppId('/usr/bin/Foo', '/usr/bin/foo', 'linux')).toBe(false);
-  });
-});
-
-describe('wouldExceedAppExitLimit mirrors the daemon rule', () => {
-  const twoCountries = [
-    { app: FIREFOX, exit: { country: 'se' } },
-    { app: SLACK, exit: { country: 'de' } },
-  ];
-
-  it('refuses a third distinct exit', () => {
-    expect(wouldExceedAppExitLimit(twoCountries, STEAM, { country: 'fr' }, 'darwin')).toBe(true);
-  });
-
-  it('accepts an exit already used by another app, since they share a session', () => {
-    expect(wouldExceedAppExitLimit(twoCountries, STEAM, { country: 'se' }, 'darwin')).toBe(false);
-  });
-
-  it('accepts moving an app that holds one of the two exits to a new one', () => {
-    expect(wouldExceedAppExitLimit(twoCountries, SLACK, { country: 'fr' }, 'darwin')).toBe(false);
-  });
-
-  it('counts a city as a different exit from its country', () => {
-    expect(
-      wouldExceedAppExitLimit(twoCountries, STEAM, { country: 'se', city: 'got' }, 'darwin'),
-    ).toBe(true);
   });
 });
 
@@ -224,6 +198,20 @@ describe('appRoutingSummary, for the main screen', () => {
 
     expect(appRoutingSummary(routing, down, 'darwin').anyRouteUnavailable).toBe(false);
     expect(appRoutingSummary(routing, noToken, 'darwin').anyRouteUnavailable).toBe(true);
+  });
+
+  it('flags a route waiting for a free one, since the app does not leave from its country', () => {
+    const routing = settings({ appExits: [{ app: FIREFOX, exit: { country: 'se' } }] });
+    const waiting: AppRouteStatus[] = [
+      {
+        exit: { country: 'se' },
+        state: 'unavailable',
+        reason: 'waiting-for-route',
+        apps: [FIREFOX],
+      },
+    ];
+
+    expect(appRoutingSummary(routing, waiting, 'darwin').anyRouteUnavailable).toBe(true);
   });
 });
 

@@ -1,5 +1,4 @@
 import React from 'react';
-import { sprintf } from 'sprintf-js';
 import styled from 'styled-components';
 
 import {
@@ -7,16 +6,13 @@ import {
   appRouteLine,
   countryNeedsIncludedLaunch,
   exitChoicesInUse,
-  MAX_APP_EXITS,
   resolveApplications,
-  wouldExceedAppExitLimit,
 } from '../../../../../../shared/app-routing';
 import { ISplitTunnelingApplication } from '../../../../../../shared/application-types';
 import { ExitChoice } from '../../../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../../../shared/gettext';
 import { CountryPickerDialog } from '../../../../../features/app-routing/components';
 import { useAppRouting, useExitChoiceNames } from '../../../../../features/app-routing/hooks';
-import { appExitLimitText } from '../../../../../features/app-routing/strings';
 import { Button, Flex, Spinner } from '../../../../../lib/components';
 import { Section, SectionTitle } from '../../../../cell';
 import { HeaderSubTitle } from '../../../../SettingsHeader';
@@ -60,7 +56,6 @@ export function CountryPerAppSettings() {
   const exitNames = useExitChoiceNames();
   const [searchTerm, setSearchTerm] = React.useState('');
   const [picking, setPicking] = React.useState<Picking>();
-  const [refused, setRefused] = React.useState(false);
 
   const exitLabel = React.useCallback(
     (exit: ExitChoice) => {
@@ -96,7 +91,6 @@ export function CountryPerAppSettings() {
   );
 
   const pick = React.useCallback((application: ISplitTunnelingApplication) => {
-    setRefused(false);
     setPicking({ application, id: application.absolutepath, name: application.name });
   }, []);
 
@@ -104,7 +98,6 @@ export function CountryPerAppSettings() {
     messages.pgettext('split-tunneling-view', 'Choose'),
     setBrowsing,
     (filePath: string) => {
-      setRefused(false);
       setPicking({ application: filePath, id: filePath, name: basename(filePath) });
     },
     getFilePickerOptionsForPlatform(),
@@ -114,14 +107,10 @@ export function CountryPerAppSettings() {
     async (exit: ExitChoice) => {
       if (picking === undefined) return;
       setPicking(undefined);
-      const outcome = await setAppExit(picking.application, exit);
-      if (outcome?.result === 'limit-reached') {
-        setRefused(true);
-        return;
-      }
+      const applied = await setAppExit(picking.application, exit);
       // Choosing a country is asking for it: a switched off tab would make
       // the choice do nothing.
-      if (outcome?.result === 'ok' && !routing.appExitsEnabled) {
+      if (applied && !routing.appExitsEnabled) {
         await setAppExitsEnabled(true);
       }
       if (typeof picking.application === 'string') {
@@ -150,12 +139,6 @@ export function CountryPerAppSettings() {
   }, []);
 
   const pickedExit = picking ? appExitFor(routing, picking.id, platform) : undefined;
-  const isBlocked = React.useCallback(
-    (exit: ExitChoice) =>
-      picking !== undefined &&
-      wouldExceedAppExitLimit(routing.appExits, picking.id, exit, platform),
-    [picking, platform, routing.appExits],
-  );
 
   const showNoResult = searchTerm !== '' && routed.length === 0 && others.length === 0;
 
@@ -163,16 +146,13 @@ export function CountryPerAppSettings() {
     <>
       <TabHeader
         label={tabLabel('countries')}
-        description={sprintf(
+        description={
           // TRANSLATORS: Description of the "Country per app" tab.
-          // TRANSLATORS: Available placeholders:
-          // TRANSLATORS: %(limit)d - how many countries apps can use at once
           messages.pgettext(
             'split-tunneling-view',
-            'Choose the country an app appears from. Other apps keep your main connection. Up to %(limit)d countries at a time.',
-          ),
-          { limit: MAX_APP_EXITS },
-        )}
+            'Choose the country an app appears from. Other apps keep your main connection.',
+          )
+        }
         checked={routing.appExitsEnabled}
         onCheckedChange={setAppExitsEnabled}>
         {countryNeedsIncludedLaunch(platform, routing.splitMode) && (
@@ -183,7 +163,6 @@ export function CountryPerAppSettings() {
             )}
           </HeaderSubTitle>
         )}
-        {refused && <HeaderSubTitle role="alert">{appExitLimitText()}</HeaderSubTitle>}
       </TabHeader>
 
       <ApplicationSearchBar searchTerm={searchTerm} onSearch={setSearchTerm} disableAutoFocus />
@@ -255,7 +234,6 @@ export function CountryPerAppSettings() {
           applicationName={picking.name}
           current={pickedExit}
           exitsInUse={exitChoicesInUse(routing.appExits)}
-          isBlocked={isBlocked}
           onSelect={choose}
           onRemove={pickedExit ? removePicked : undefined}
         />
