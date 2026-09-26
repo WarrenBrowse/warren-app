@@ -415,6 +415,9 @@ jobs:
       run:
         shell: bash
     steps:
+      # The desktop tree has paths past Windows' 260-character limit.
+      - name: Allow long paths
+        run: git config --system core.longpaths true
       - uses: actions/checkout@v5
       - name: Watchdog suite, native Windows cases included
         run: bash ci/codemagic/selftest.sh watchdog
