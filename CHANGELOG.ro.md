@@ -13,26 +13,26 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 
 ## [Unreleased]
 ### Adăugat
-- [Windows, macOS, Linux] Split tunneling devine App routing, cu trei file. Bypass VPN ține
-  aplicațiile alese în afara VPN-ului, ca înainte. Country per app trimite fiecare aplicație aleasă
-  spre Internet printr-un exit din propria țară sau propriul oraș, în timp ce toate celelalte
+- [Windows, macOS, Linux] Split tunneling devine Rutare aplicații, cu trei file. „Fără VPN” ține
+  aplicațiile alese în afara VPN-ului, ca înainte. „Țară per aplicație” trimite fiecare aplicație
+  aleasă spre Internet printr-un exit din propria țară sau propriul oraș, în timp ce toate celelalte
   aplicații păstrează conexiunea principală: până la două țări sau orașe pe lângă cea principală,
-  iar o aplicație a cărei țară nu poate fi atinsă e blocată în loc să fie trimisă pe altă cale. VPN
-  only for pune în VPN doar aplicațiile alese și lasă restul sistemului pe conexiunea obișnuită.
-  Bypass VPN și VPN only for se înlocuiesc una pe alta; Country per app funcționează cu oricare.
+  iar o aplicație a cărei țară nu poate fi atinsă e blocată în loc să fie trimisă pe altă cale. „VPN
+  selectiv” pune în VPN doar aplicațiile alese și lasă restul sistemului pe conexiunea obișnuită.
+  „Fără VPN” și „VPN selectiv” se înlocuiesc reciproc; „Țară per aplicație” funcționează cu oricare.
   `warren app-routing` face același lucru dintr-un terminal.
-- [Windows] Oferă VPN only for.
-- [Linux] Oferă VPN only for pentru aplicațiile deschise prin `warren-include`, pe sistemele cu
-  cgroup v2 și nftables. O țară per aplicație funcționează pentru aplicațiile al căror program
-  poate fi identificat, iar lista de aplicații spune de ce una nu poate primi o țară (o aplicație
-  Flatpak sau Snap, sau un script).
-- [macOS] Oferă Bypass VPN și VPN only for în aplicația semnată, pe macOS 13 sau mai nou, după
-  acordarea opțiunii „Acces complet la disc”. Versiunile publicate aveau split tunneling
-  dezactivat. Vederea App routing spune care dintre cele două lipsește. Country per app nu are
-  nevoie de „Acces complet la disc”.
-- [Android] Adaugă VPN doar pentru lângă Ocolește VPN: doar aplicațiile alese folosesc VPN-ul și
-  rămân blocate cât timp VPN-ul e oprit. Când niciuna dintre aplicațiile alese nu e instalată,
-  toate aplicațiile folosesc VPN-ul până când alegi una.
+- [Windows] Oferă „VPN selectiv”.
+- [Linux] Oferă „VPN selectiv” pentru aplicațiile deschise prin `warren-include`, pe sistemele cu
+  cgroup v2 și nftables. O țară per aplicație funcționează pentru aplicațiile al căror program poate
+  fi identificat, iar lista de aplicații spune de ce una nu poate primi o țară (o aplicație Flatpak
+  sau Snap, sau un script).
+- [macOS] Oferă „Fără VPN” și „VPN selectiv” în aplicația semnată, pe macOS 13 sau mai nou, după
+  acordarea opțiunii „Acces complet la disc”. Versiunile publicate aveau split tunneling dezactivat.
+  Vederea Rutare aplicații spune care dintre cele două lipsește. „Țară per aplicație” nu are nevoie
+  de „Acces complet la disc”.
+- [Android] Adaugă „VPN selectiv” lângă „Fără VPN”: doar aplicațiile alese folosesc VPN-ul și rămân
+  blocate cât timp VPN-ul e oprit. Când niciuna dintre aplicațiile alese nu e instalată, toate
+  aplicațiile folosesc VPN-ul până când alegi una.
 - [Android] Vezi avertismentele înregistrate pe contul tău când un port redirecționat e închis după
   o raportare de abuz: o notificare pentru fiecare avertisment, un banner cu referința dosarului
   care deschide pagina despre contestare, și lista completă în ecranul port forwarding cu adresa la
@@ -54,12 +54,12 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 ### Modificat
 - Numește revocare blocarea unui cont și avertisment fiecare raportare de abuz înregistrată
   pentru un port redirecționat, cuvintele folosite de condițiile publicate.
-- [Windows, macOS, Linux] Setările se salvează în formatul versiunea 17, care conține App routing.
-  Aplicațiile excluse din VPN trec în Bypass VPN.
+- [Windows, macOS, Linux] Setările se salvează în formatul versiunea 17, care conține Rutare
+  aplicații. Aplicațiile excluse din VPN trec în „Fără VPN”.
 
 ### Reparat
-- [Windows] Repară Bypass VPN în aplicația beta, care refuza să pornească cu „The sublayer does
-  not exist”.
+- [Windows] Repară „Fără VPN” în aplicația beta, care refuza să pornească cu „The sublayer does not
+  exist”.
 - Tokenurile de sesiune anonime sunt împărțite între dispozitivele aceluiași portofel. Fiecare
   dispozitiv derivă aceleași tokenuri din portofel, așa că un al doilea dispozitiv se conectează cu
   ele în loc să revină la o autentificare care identifică portofelul față de exit, iar o reconectare
