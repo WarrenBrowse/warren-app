@@ -162,9 +162,27 @@ pub struct WarrenRemoteAccountBackend {
     ban_sink: Option<BanSink>,
 }
 
-/// Pulled voucher secrets not redeemed yet, keyed by wpid. Each is a paid
-/// bearer secret, wiped when it leaves.
-type PulledVouchers = Arc<std::sync::Mutex<std::collections::HashMap<String, Zeroizing<String>>>>;
+/// Pulled voucher secrets not redeemed yet, keyed by wpid.
+type PulledVouchers = Arc<std::sync::Mutex<std::collections::HashMap<String, PulledVoucher>>>;
+
+/// A voucher this process pulled, with the pull secret that collected it:
+/// the wpid names the purchase in URLs and proves nothing, so the copy is
+/// handed back against the same secret the server asked for. Both are paid
+/// bearer secrets, wiped when they leave.
+#[derive(Clone)]
+struct PulledVoucher {
+    pull_secret: Zeroizing<String>,
+    voucher: Zeroizing<String>,
+}
+
+/// Compares two secrets in time independent of where they first differ.
+fn same_secret(a: &str, b: &str) -> bool {
+    a.len() == b.len()
+        && a.bytes()
+            .zip(b.bytes())
+            .fold(0u8, |diff, (x, y)| diff | (x ^ y))
+            == 0
+}
 
 /// Receives the ban an API refusal of `wallet` carries (warren-core doc 105
 /// §5.3). The wallet is its SS58 address, compared by the receiver and never
@@ -440,19 +458,23 @@ async fn collect_pulled(
         .expect("not poisoned")
         .get(&claim.wpid)
         .cloned();
-    if cached.is_some() {
-        return Ok(cached);
+    if let Some(cached) = cached {
+        // A wrong secret gets what the server gives it: nothing to collect.
+        return Ok(same_secret(&cached.pull_secret, &claim.pull_secret).then_some(cached.voucher));
     }
     let pulled = client
         .pull_pending_voucher(&claim.wpid, &claim.pull_secret)
         .await
         .map_err(map_client_error)?
         .map(Zeroizing::new);
-    if let Some(secret) = &pulled {
-        pulled_unregistered
-            .lock()
-            .expect("not poisoned")
-            .insert(claim.wpid.clone(), secret.clone());
+    if let Some(voucher) = &pulled {
+        pulled_unregistered.lock().expect("not poisoned").insert(
+            claim.wpid.clone(),
+            PulledVoucher {
+                pull_secret: claim.pull_secret.clone(),
+                voucher: voucher.clone(),
+            },
+        );
     }
     Ok(pulled)
 }
@@ -463,7 +485,7 @@ fn forget_pulled(pulled_unregistered: &PulledVouchers, voucher: &str) {
     pulled_unregistered
         .lock()
         .expect("not poisoned")
-        .retain(|_, secret| secret.as_str() != voucher);
+        .retain(|_, pulled| pulled.voucher.as_str() != voucher);
 }
 
 /// An app-initiated purchase the GUI asks the daemon to collect: the
@@ -960,7 +982,7 @@ mod tests {
             .lock()
             .expect("not poisoned")
             .values()
-            .map(|secret| secret.as_str().to_owned())
+            .map(|pulled| pulled.voucher.as_str().to_owned())
             .collect()
     }
 
@@ -1514,6 +1536,37 @@ mod tests {
             );
         }
         pull.assert_async().await;
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn the_kept_copy_answers_only_the_purchase_s_own_pull_secret() {
+        // The wpid travels in URLs and proves nothing (doc 35 §14): the copy
+        // kept after the pull is handed back against the same secret as the
+        // server's pull, and a wrong one reads like the server's single 404.
+        let mut server = mockito::Server::new_async().await;
+        let wpid = "5555666677778888999900001111eeee";
+        let _pull = server
+            .mock("POST", format!("/v1/checkout/{wpid}/voucher").as_str())
+            .match_body(pull_body())
+            .with_status(200)
+            .with_body(r#"{"voucher_secret":"XXXX-YYYY-ZZZZ-WWWW"}"#)
+            .expect(1)
+            .create_async()
+            .await;
+        let seed = [85u8; 32];
+        let pubkey_ss58 = address_for_seed(seed);
+        let backend = WarrenRemoteAccountBackend::new(client_with_seed(server.url(), seed));
+        backend
+            .pull_purchase_voucher(pubkey_ss58.clone(), claim_code(wpid))
+            .await
+            .expect("the pull succeeds");
+
+        let guessed = backend
+            .pull_purchase_voucher(pubkey_ss58, format!("{wpid}{}", "cd".repeat(32)))
+            .await
+            .expect("a wrong secret is an answer, not a failure");
+
+        assert!(guessed.is_none());
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
