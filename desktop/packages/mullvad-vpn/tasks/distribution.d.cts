@@ -28,6 +28,7 @@ export declare function macSignOptionsForFile<T extends object>(
   filePath: string,
   fileOptions: T,
 ): T | (T & { entitlements: string });
-export declare function macSignIdentityOptions<T extends { identity?: string | null }>(
-  options: T,
-): T | (T & { identity: string; identityValidation: boolean });
+export declare function macSignIdentityOptions(options: {
+  identity?: string | null;
+  [key: string]: unknown;
+}): { identity?: string | null; identityValidation?: boolean; [key: string]: unknown };
