@@ -2,6 +2,7 @@ package com.warrenbrowse.vpn.lib.repository
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -612,6 +613,83 @@ class WarrenLocalSettingsRepositoryTest {
         repo.trustExitKey("exit-2", "key-b")
         assertEquals(2, repo.resetExitKeyPins())
         assertEquals(0, repo.resetExitKeyPins())
+    }
+
+    @Test
+    fun `an install that had split tunnelling on migrates to the exclude mode`() {
+        every { mockPrefs.getBoolean("split_tunneling_enabled", false) } returns true
+        every { mockPrefs.getStringSet("split_tunneling_excluded_apps", any()) } returns
+            mutableSetOf("org.chat")
+
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        assertEquals(SplitTunnelMode.Exclude, repo.splitMode.value)
+        assertEquals(setOf("org.chat"), repo.excludedApps.value)
+        verify { mockEditor.putString("split_tunneling_mode", "exclude") }
+    }
+
+    @Test
+    fun `an install that had split tunnelling off migrates to the off mode`() {
+        every { mockPrefs.getBoolean("split_tunneling_enabled", false) } returns false
+
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        assertEquals(SplitTunnelMode.Off, repo.splitMode.value)
+        verify { mockEditor.putString("split_tunneling_mode", "off") }
+    }
+
+    @Test
+    fun `a stored split mode wins over the legacy switch`() {
+        every { mockPrefs.getBoolean("split_tunneling_enabled", false) } returns true
+        every { mockPrefs.getString("split_tunneling_mode", null) } returns "include_only"
+
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        assertEquals(SplitTunnelMode.IncludeOnly, repo.splitMode.value)
+        verify(exactly = 0) { mockEditor.putString("split_tunneling_mode", any()) }
+    }
+
+    @Test
+    fun `an unreadable stored split mode reads back as off`() {
+        every { mockPrefs.getBoolean("split_tunneling_enabled", false) } returns true
+        every { mockPrefs.getString("split_tunneling_mode", null) } returns "sideways"
+
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        assertEquals(SplitTunnelMode.Off, repo.splitMode.value)
+    }
+
+    @Test
+    fun `switching the split mode keeps both app lists`() {
+        every { mockPrefs.getString("split_tunneling_mode", null) } returns "exclude"
+        every { mockPrefs.getStringSet("split_tunneling_excluded_apps", any()) } returns
+            mutableSetOf("org.chat")
+        every { mockPrefs.getStringSet("split_tunneling_included_apps", any()) } returns
+            mutableSetOf("org.bank")
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        repo.setSplitMode(SplitTunnelMode.IncludeOnly)
+
+        assertEquals(SplitTunnelMode.IncludeOnly, repo.splitMode.value)
+        assertEquals(setOf("org.chat"), repo.excludedApps.value)
+        assertEquals(setOf("org.bank"), repo.includedApps.value)
+        verify { mockEditor.putString("split_tunneling_mode", "include_only") }
+        verify(exactly = 0) { mockEditor.putStringSet(any(), any()) }
+    }
+
+    @Test
+    fun `included apps are added and removed through to disk`() {
+        every { mockPrefs.getStringSet(any(), any()) } answers { secondArg<Set<String>?>()?.toMutableSet() }
+        every { mockEditor.putStringSet(any(), any()) } returns mockEditor
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        repo.addIncludedApp("org.bank")
+        repo.addIncludedApp("org.browser")
+        repo.removeIncludedApp("org.bank")
+
+        assertEquals(setOf("org.browser"), repo.includedApps.value)
+        verify { mockEditor.putStringSet("split_tunneling_included_apps", setOf("org.browser")) }
+        assertEquals(emptySet<String>(), repo.excludedApps.value)
     }
 
     @Test

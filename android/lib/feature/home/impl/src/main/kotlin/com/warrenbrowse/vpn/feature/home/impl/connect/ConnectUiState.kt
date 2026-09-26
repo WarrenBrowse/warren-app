@@ -32,6 +32,10 @@ data class ConnectUiState(
     // Automatic recoveries since process start (native redials + retry-loop
     // successes); shown as the "Reconnections" connection-details row.
     val autoRecoveryCount: Int = 0,
+    // How many apps use the VPN while "VPN only for" is on, null otherwise;
+    // the label under the connection state that says the rest of the device
+    // is not protected.
+    val vpnOnlyForCount: Int? = null,
 ) {
 
     companion object {

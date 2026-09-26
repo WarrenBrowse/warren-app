@@ -13,6 +13,7 @@ import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.AppData
 import com.warrenbrowse.vpn.lib.common.Lc
 import com.warrenbrowse.vpn.lib.common.toLc
 import com.warrenbrowse.vpn.lib.model.PackageName
+import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
 import com.warrenbrowse.vpn.screen.test.createEdgeToEdgeComposeExtension
 import com.warrenbrowse.vpn.screen.test.setContentWithTheme
 import org.junit.jupiter.api.AfterEach
@@ -36,10 +37,9 @@ class SplitTunnelingScreenTest {
 
     private fun ComposeContext.initScreen(
         state: Lc<Loading, SplitTunnelingUiState>,
-        onEnableSplitTunneling: (Boolean) -> Unit = {},
         onShowSystemAppsClick: (show: Boolean) -> Unit = {},
-        onExcludeAppClick: (packageName: PackageName) -> Unit = {},
-        onIncludeAppClick: (packageName: PackageName) -> Unit = {},
+        onAddAppClick: (packageName: PackageName) -> Unit = {},
+        onRemoveAppClick: (packageName: PackageName) -> Unit = {},
         onBackClick: () -> Unit = {},
         onResolveIcon: (PackageName) -> Drawable? = { null },
         navigateToSearch: () -> Unit = {},
@@ -47,10 +47,13 @@ class SplitTunnelingScreenTest {
         setContentWithTheme {
             SplitTunnelingScreen(
                 state = state,
-                onEnableSplitTunneling = onEnableSplitTunneling,
+                onSelectTab = {},
+                onSplitModeSwitch = {},
+                onConfirmModeChange = {},
+                onCancelModeChange = {},
                 onShowSystemAppsClick = onShowSystemAppsClick,
-                onExcludeAppClick = onExcludeAppClick,
-                onIncludeAppClick = onIncludeAppClick,
+                onAddAppClick = onAddAppClick,
+                onRemoveAppClick = onRemoveAppClick,
                 onBackClick = onBackClick,
                 onResolveIcon = onResolveIcon,
                 navigateToSearch = navigateToSearch,
@@ -81,9 +84,9 @@ class SplitTunnelingScreenTest {
         initScreen(
             state =
                 SplitTunnelingUiState(
-                        enabled = true,
-                        excludedApps = listOf(excludedApp),
-                        includedApps = listOf(includedApp),
+                        splitMode = SplitTunnelMode.Exclude,
+                        selectedApps = listOf(excludedApp),
+                        otherApps = listOf(includedApp),
                         showSystemApps = false,
                     )
                     .toLc()
@@ -107,9 +110,9 @@ class SplitTunnelingScreenTest {
         initScreen(
             state =
                 SplitTunnelingUiState(
-                        enabled = true,
-                        excludedApps = emptyList(),
-                        includedApps = listOf(includedApp),
+                        splitMode = SplitTunnelMode.Exclude,
+                        selectedApps = emptyList(),
+                        otherApps = listOf(includedApp),
                         showSystemApps = false,
                     )
                     .toLc()
@@ -136,13 +139,13 @@ class SplitTunnelingScreenTest {
         initScreen(
             state =
                 SplitTunnelingUiState(
-                        enabled = true,
-                        excludedApps = listOf(excludedApp),
-                        includedApps = listOf(includedApp),
+                        splitMode = SplitTunnelMode.Exclude,
+                        selectedApps = listOf(excludedApp),
+                        otherApps = listOf(includedApp),
                         showSystemApps = false,
                     )
                     .toLc(),
-            onExcludeAppClick = mockedClickHandler,
+            onAddAppClick = mockedClickHandler,
         )
 
         // Act
@@ -163,13 +166,13 @@ class SplitTunnelingScreenTest {
         initScreen(
             state =
                 SplitTunnelingUiState(
-                        enabled = true,
-                        excludedApps = listOf(excludedApp),
-                        includedApps = listOf(includedApp),
+                        splitMode = SplitTunnelMode.Exclude,
+                        selectedApps = listOf(excludedApp),
+                        otherApps = listOf(includedApp),
                         showSystemApps = false,
                     )
                     .toLc(),
-            onIncludeAppClick = mockedClickHandler,
+            onRemoveAppClick = mockedClickHandler,
         )
 
         // Act
@@ -190,9 +193,9 @@ class SplitTunnelingScreenTest {
         initScreen(
             state =
                 SplitTunnelingUiState(
-                        enabled = true,
-                        excludedApps = listOf(excludedApp),
-                        includedApps = listOf(includedApp),
+                        splitMode = SplitTunnelMode.Exclude,
+                        selectedApps = listOf(excludedApp),
+                        otherApps = listOf(includedApp),
                         showSystemApps = false,
                     )
                     .toLc(),
@@ -212,8 +215,7 @@ class SplitTunnelingScreenTest {
         private val INCLUDED_APP_PACKAGE_NAME = PackageName("included-pkg")
         private const val INCLUDED_APP_NAME = "Included Name"
         private const val TITLE = "Split tunneling"
-        private const val DESCRIPTION =
-            "Lets you select apps that should access the Internet directly without going through the VPN tunnel."
+        private const val DESCRIPTION = "Choose how each app connects."
         private const val EXCLUDED_APPLICATIONS = "Excluded applications"
         private const val SHOW_SYSTEM_APPS = "Show system apps"
         private const val ALL_APPLICATIONS = "All applications"

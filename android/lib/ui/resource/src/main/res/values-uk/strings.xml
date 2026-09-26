@@ -83,7 +83,25 @@
     <string name="update_available_description">Доступна версія %1$s. Торкніться, щоб завантажити оновлення.</string>
     <string name="update_now">Оновити зараз</string>
     <string name="quit">Вийти</string>
-    <string name="split_tunneling_description">Виберіть застосунки, які ви хочете виключити з VPN-тунелю.</string>
+    <string name="app_routing_description">Виберіть, як під’єднується кожен застосунок.</string>
+    <string name="split_mode_bypass">В обхід VPN</string>
+    <string name="split_mode_bypass_description">Вибрані застосунки під’єднуються так, ніби VPN вимкнено.</string>
+    <string name="split_mode_include_only">VPN лише для</string>
+    <string name="split_mode_include_only_description">VPN використовують лише вибрані застосунки.</string>
+    <string name="include_only_lockdown_warning">Увага: якщо ввімкнено функцію «Блокувати з’єднання без VPN», застосунки, які ви не вибрали, не матимуть доступу до інтернету.</string>
+    <string name="include_only_banner">Захищені лише ці застосунки. Усе інше на цьому пристрої використовує звичайне з’єднання.</string>
+    <string name="include_only_no_app">Жодного з вибраних застосунків немає на цьому пристрої, тому всі застосунки використовують VPN, доки ви не виберете хоча б один.</string>
+    <string name="include_only_confirm">VPN використовуватимуть лише вибрані застосунки. Решта цього пристрою не буде захищена.</string>
+    <string name="split_mode_replaces_bypass">Це замінить режим «В обхід VPN». Ваш список застосунків у ньому збережеться.</string>
+    <string name="split_mode_replaces_include_only">Це замінить режим «VPN лише для»: усі застосунки знову використовуватимуть VPN, крім тих, що йдуть в обхід. Ваш список застосунків у ньому збережеться.</string>
+    <string name="split_mode_turn_on">Увімкнути</string>
+    <string name="apps_using_the_vpn">Використовують VPN</string>
+    <plurals name="vpn_only_for_apps">
+        <item quantity="one">VPN лише для %1$d застосунку</item>
+        <item quantity="few">VPN лише для %1$d застосунків</item>
+        <item quantity="many">VPN лише для %1$d застосунків</item>
+        <item quantity="other">VPN лише для %1$d застосунку</item>
+    </plurals>
     <string name="split_tunneling_description_warning">Увага: якщо ввімкнено функцію «Блокувати з’єднання без VPN», застосунки, до яких застосовано роздільне тунелювання, не працюватимуть. Пам’ятайте, що роздільне тунелювання несе ризик для конфіденційності.</string>
     <string name="enable">Увімкнути</string>
     <string name="confirm_local_dns">Локальний DNS-сервер не працюватиме, якщо в налаштуваннях VPN не ввімкнено «Обмін даними в локальній мережі».</string>

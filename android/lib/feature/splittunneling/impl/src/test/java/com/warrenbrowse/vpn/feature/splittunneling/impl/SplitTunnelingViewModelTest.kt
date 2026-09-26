@@ -2,15 +2,16 @@ package com.warrenbrowse.vpn.feature.splittunneling.impl
 
 import androidx.lifecycle.viewModelScope
 import app.cash.turbine.test
-import arrow.core.right
-import io.mockk.coEvery
-import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.unmockkAll
+import io.mockk.verify
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -22,6 +23,7 @@ import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.SplitTunnelingUs
 import com.warrenbrowse.vpn.lib.common.Lc
 import com.warrenbrowse.vpn.lib.common.test.TestCoroutineRule
 import com.warrenbrowse.vpn.lib.model.PackageName
+import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
 import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import org.junit.jupiter.api.AfterEach
@@ -36,18 +38,28 @@ import org.junit.jupiter.api.extension.ExtendWith
 class SplitTunnelingViewModelTest {
 
     private val mockedApplicationsProvider = mockk<ApplicationsProvider>()
-    private val mockedSplitTunnelingRepository = mockk<SplitTunnelingRepository>()
+    private val mockedSplitTunnelingRepository = mockk<SplitTunnelingRepository>(relaxed = true)
     private val mockedUserPreferencesRepository = mockk<UserPreferencesRepository>()
     private lateinit var testSubject: SplitTunnelingViewModel
 
+    private val splitMode = MutableStateFlow(SplitTunnelMode.Off)
     private val excludedApps: MutableStateFlow<Set<PackageName>> = MutableStateFlow(emptySet())
-    private val enabled: MutableStateFlow<Boolean> = MutableStateFlow(true)
+    private val includedApps: MutableStateFlow<Set<PackageName>> = MutableStateFlow(emptySet())
     private val showSystemApps: MutableStateFlow<Boolean> = MutableStateFlow(false)
+
+    private val chat = AppData(PackageName("org.chat"), 0, "Chat")
+    private val bank = AppData(PackageName("org.bank"), 0, "Bank")
+    private val maps = AppData(PackageName("org.maps"), 0, "Maps")
 
     @BeforeEach
     fun setup() {
-        every { mockedSplitTunnelingRepository.splitTunnelingEnabled } returns enabled
+        every { mockedSplitTunnelingRepository.splitMode } returns splitMode
         every { mockedSplitTunnelingRepository.excludedApps } returns excludedApps
+        every { mockedSplitTunnelingRepository.includedApps } returns includedApps
+        every { mockedSplitTunnelingRepository.setSplitMode(any()) } answers
+            {
+                splitMode.value = firstArg()
+            }
         every { mockedUserPreferencesRepository.showSystemAppsSplitTunneling() } returns
             showSystemApps
     }
@@ -61,141 +73,134 @@ class SplitTunnelingViewModelTest {
     @Test
     fun `initial state should be loading`() = runTest {
         initTestSubject(emptyList())
-        val actualState: Lc<Loading, SplitTunnelingUiState> = testSubject.uiState.value
 
-        val initialExpectedState = Lc.Loading(Loading())
-
-        assertIs<Lc.Loading<Loading>>(actualState)
-        assertEquals(initialExpectedState, actualState)
+        assertIs<Lc.Loading<Loading>>(testSubject.uiState.value)
     }
 
     @Test
-    fun `empty app list should work`() = runTest {
-        initTestSubject(emptyList())
-        val expectedState =
-            SplitTunnelingUiState(
-                enabled = true,
-                excludedApps = emptyList(),
-                includedApps = emptyList(),
-                showSystemApps = false,
-            )
+    fun `the bypass tab lists the excluded apps as chosen`() = runTest {
+        excludedApps.value = setOf(chat.packageName)
+        includedApps.value = setOf(bank.packageName)
+        initTestSubject(listOf(bank, chat, maps))
+
         testSubject.uiState.test {
-            val item = awaitItem()
-            assertIs<Lc.Content<SplitTunnelingUiState>>(item)
-            assertEquals(expectedState, item.value)
+            val state = awaitContent()
+            assertEquals(SplitTunnelingTab.Bypass, state.tab)
+            assertEquals(listOf(chat), state.selectedApps)
+            assertEquals(listOf(bank, maps), state.otherApps)
         }
     }
 
     @Test
-    fun `includedApps and excludedApps should both be included in uiState`() = runTest {
-        val appExcluded = AppData(PackageName("test.excluded"), 0, "testName1")
-        val appNotExcluded = AppData(PackageName("test.not.excluded"), 0, "testName2")
+    fun `the screen opens on vpn only for while include-only is on and lists its apps`() =
+        runTest {
+            splitMode.value = SplitTunnelMode.IncludeOnly
+            excludedApps.value = setOf(chat.packageName)
+            includedApps.value = setOf(bank.packageName)
+            initTestSubject(listOf(bank, chat, maps))
 
-        initTestSubject(listOf(appExcluded, appNotExcluded))
-        excludedApps.value = setOf(appExcluded.packageName)
+            testSubject.uiState.test {
+                val state = awaitContent()
+                assertEquals(SplitTunnelingTab.IncludeOnly, state.tab)
+                assertTrue(state.tabModeOn)
+                assertEquals(listOf(bank), state.selectedApps)
+                assertEquals(listOf(chat, maps), state.otherApps)
+            }
+        }
 
-        val expectedState =
-            SplitTunnelingUiState(
-                enabled = true,
-                excludedApps = listOf(appExcluded),
-                includedApps = listOf(appNotExcluded),
-                showSystemApps = false,
-            )
+    @Test
+    fun `an app tapped in a tab is added to or removed from that tab's list`() = runTest {
+        includedApps.value = setOf(bank.packageName)
+        initTestSubject(listOf(bank, chat))
+
+        testSubject.onAddAppClick(chat.packageName)
+        testSubject.onSelectTab(SplitTunnelingTab.IncludeOnly)
+        testSubject.onAddAppClick(chat.packageName)
+        testSubject.onRemoveAppClick(bank.packageName)
+
+        verify { mockedSplitTunnelingRepository.addExcludedApp(chat.packageName) }
+        verify { mockedSplitTunnelingRepository.addIncludedApp(chat.packageName) }
+        verify { mockedSplitTunnelingRepository.removeIncludedApp(bank.packageName) }
+        verify(exactly = 0) { mockedSplitTunnelingRepository.addIncludedApp(bank.packageName) }
+    }
+
+    @Test
+    fun `turning vpn only for on waits for the confirmation`() = runTest {
+        initTestSubject(listOf(bank))
+        testSubject.onSelectTab(SplitTunnelingTab.IncludeOnly)
 
         testSubject.uiState.test {
-            val actualState = awaitItem()
-            assertIs<Lc.Content<SplitTunnelingUiState>>(actualState)
-            assertEquals(expectedState, actualState.value)
+            awaitContent()
+            testSubject.onSplitModeSwitch(true)
+            assertEquals(
+                ModeChangeConfirmation(leavesDeviceUnprotected = true, replaces = null),
+                awaitContent().confirmation,
+            )
+            verify(exactly = 0) { mockedSplitTunnelingRepository.setSplitMode(any()) }
+
+            testSubject.onConfirmModeChange()
+            verify { mockedSplitTunnelingRepository.setSplitMode(SplitTunnelMode.IncludeOnly) }
+            val applied = expectMostRecentContent()
+            assertNull(applied.confirmation)
+            assertEquals(SplitTunnelMode.IncludeOnly, applied.splitMode)
         }
     }
 
     @Test
-    fun `include app should work`() = runTest {
-        val app = AppData(PackageName("test"), 0, "testName")
-
-        initTestSubject(listOf(app))
-        excludedApps.value = setOf(app.packageName)
-
-        val expectedStateBeforeAction =
-            SplitTunnelingUiState(
-                enabled = true,
-                excludedApps = listOf(app),
-                includedApps = emptyList(),
-                showSystemApps = false,
-            )
-        val expectedStateAfterAction =
-            SplitTunnelingUiState(
-                enabled = true,
-                excludedApps = emptyList(),
-                includedApps = listOf(app),
-                showSystemApps = false,
-            )
-        coEvery { mockedSplitTunnelingRepository.includeApp(app.packageName) } returns Unit.right()
+    fun `a cancelled confirmation leaves the mode as it was`() = runTest {
+        splitMode.value = SplitTunnelMode.IncludeOnly
+        initTestSubject(listOf(bank))
+        testSubject.onSelectTab(SplitTunnelingTab.Bypass)
 
         testSubject.uiState.test {
-            val beforeAction = awaitItem()
-            assertIs<Lc.Content<SplitTunnelingUiState>>(beforeAction)
-            assertEquals(expectedStateBeforeAction, beforeAction.value)
-            testSubject.onIncludeAppClick(app.packageName)
-            excludedApps.value = emptySet()
-            val afterAction = awaitItem()
-            assertIs<Lc.Content<SplitTunnelingUiState>>(afterAction)
-            assertEquals(expectedStateAfterAction, afterAction.value)
+            awaitContent()
+            testSubject.onSplitModeSwitch(true)
+            assertEquals(SplitTunnelMode.IncludeOnly, awaitContent().confirmation?.replaces)
 
-            coVerify { mockedSplitTunnelingRepository.includeApp(app.packageName) }
+            testSubject.onCancelModeChange()
+            assertNull(awaitContent().confirmation)
+            verify(exactly = 0) { mockedSplitTunnelingRepository.setSplitMode(any()) }
         }
     }
 
     @Test
-    fun `onExcludeApp should result in new uiState with app excluded`() = runTest {
-        val app = AppData(PackageName("test"), 0, "testName")
+    fun `a change that needs no confirmation applies at once`() = runTest {
+        initTestSubject(listOf(bank))
 
-        initTestSubject(listOf(app))
+        testSubject.onSplitModeSwitch(true)
+        testSubject.onSelectTab(SplitTunnelingTab.IncludeOnly)
+        splitMode.value = SplitTunnelMode.IncludeOnly
+        testSubject.onSplitModeSwitch(false)
 
-        val expectedStateBeforeAction =
-            SplitTunnelingUiState(
-                enabled = true,
-                excludedApps = emptyList(),
-                includedApps = listOf(app),
-                showSystemApps = false,
-            )
-
-        val expectedStateAfterAction =
-            SplitTunnelingUiState(
-                enabled = true,
-                excludedApps = listOf(app),
-                includedApps = emptyList(),
-                showSystemApps = false,
-            )
-
-        coEvery { mockedSplitTunnelingRepository.excludeApp(app.packageName) } returns Unit.right()
-
-        testSubject.uiState.test {
-            val beforeAction = awaitItem()
-            assertIs<Lc.Content<SplitTunnelingUiState>>(beforeAction)
-            assertEquals(expectedStateBeforeAction, beforeAction.value)
-            testSubject.onExcludeAppClick(app.packageName)
-            excludedApps.value = setOf(app.packageName)
-            val afterAction = awaitItem()
-            assertIs<Lc.Content<SplitTunnelingUiState>>(afterAction)
-            assertEquals(expectedStateAfterAction, afterAction.value)
-
-            coVerify { mockedSplitTunnelingRepository.excludeApp(app.packageName) }
-        }
+        verify { mockedSplitTunnelingRepository.setSplitMode(SplitTunnelMode.Exclude) }
+        verify { mockedSplitTunnelingRepository.setSplitMode(SplitTunnelMode.Off) }
     }
 
     @Test
-    fun `when split tunneling is disabled uiState should be disabled`() = runTest {
-        initTestSubject(emptyList())
-        enabled.value = false
-
-        val expectedState = SplitTunnelingUiState(enabled = false)
+    fun `include-only with no chosen app on the device is named`() = runTest {
+        splitMode.value = SplitTunnelMode.IncludeOnly
+        includedApps.value = setOf(PackageName("org.uninstalled"))
+        initTestSubject(listOf(bank))
 
         testSubject.uiState.test {
-            val actualState = awaitItem()
-            assertIs<Lc.Content<SplitTunnelingUiState>>(actualState)
-            assertEquals(expectedState, actualState.value)
+            assertTrue(awaitContent().includeOnlyWithoutApps)
+            includedApps.value = setOf(bank.packageName)
+            assertFalse(awaitContent().includeOnlyWithoutApps)
         }
+    }
+
+    private suspend fun app.cash.turbine.ReceiveTurbine<Lc<Loading, SplitTunnelingUiState>>
+        .awaitContent(): SplitTunnelingUiState {
+        var item = awaitItem()
+        while (item !is Lc.Content) item = awaitItem()
+        return item.value
+    }
+
+    private fun app.cash.turbine.ReceiveTurbine<Lc<Loading, SplitTunnelingUiState>>
+        .expectMostRecentContent(): SplitTunnelingUiState {
+        val item = expectMostRecentItem()
+        assertIs<Lc.Content<SplitTunnelingUiState>>(item)
+        return item.value
     }
 
     private fun initTestSubject(appList: List<AppData>) {

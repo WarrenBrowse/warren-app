@@ -96,7 +96,17 @@ val uiModule = module {
 
     single { ChangelogRepository(get(), get(), get()) }
     single { RelayListRepository() }
-    single { SplitTunnelingRepository(get()) }
+    single {
+        val packageManager = androidContext().packageManager
+        SplitTunnelingRepository(get()) { packageName ->
+            try {
+                packageManager.getApplicationInfo(packageName, 0)
+                true
+            } catch (_: PackageManager.NameNotFoundException) {
+                false
+            }
+        }
+    }
     single { SplitTunnelingUseCase(get(), get(), get(), Dispatchers.IO) }
     single { SplashCompleteRepository() }
     single {
@@ -228,6 +238,7 @@ val uiModule = module {
             localSettings = get(),
             hostOfflineProvider = get(),
             autoRecoveryProvider = get(),
+            splitTunneling = get(),
             exitSwitchedNotificationUseCase = get(),
             envStandDownUseCase = get(),
         )
@@ -253,7 +264,9 @@ val uiModule = module {
         SplitTunnelingViewModel(isModal = params.get(), get(), get(), get(), Dispatchers.IO)
     }
 
-    viewModel { SearchSplitTunnelingViewModel(get(), get(), Dispatchers.IO) }
+    viewModel { params ->
+        SearchSplitTunnelingViewModel(tab = params.get(), get(), get(), Dispatchers.IO)
+    }
 
     // This view model must be single so we correctly attach lifecycle and share it with activity
     single { WarrenAppViewModel() }

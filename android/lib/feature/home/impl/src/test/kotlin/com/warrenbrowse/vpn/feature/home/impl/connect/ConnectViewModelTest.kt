@@ -30,6 +30,7 @@ import com.warrenbrowse.vpn.lib.repository.ChangelogRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 import com.warrenbrowse.vpn.lib.repository.ExitPin
+import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenAutoRecoveryProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenHostOfflineProvider
@@ -81,6 +82,8 @@ class ConnectViewModelTest {
     // Host-offline + auto-recovery surfaces
     private val hostOfflineFlow = MutableStateFlow(false)
     private val autoRecoveryCountFlow = MutableStateFlow(0)
+    private val vpnOnlyForCountFlow = MutableStateFlow<Int?>(null)
+    private val mockSplitTunneling: SplitTunnelingRepository = mockk()
     private val mockHostOfflineProvider: WarrenHostOfflineProvider = mockk()
     private val mockAutoRecoveryProvider: WarrenAutoRecoveryProvider = mockk()
 
@@ -106,6 +109,7 @@ class ConnectViewModelTest {
         every { mockWarrenLocalSettings.exitPin } returns exitPinFlow
         every { mockHostOfflineProvider.hostOffline } returns hostOfflineFlow
         every { mockAutoRecoveryProvider.autoRecoveryCount } returns autoRecoveryCountFlow
+        every { mockSplitTunneling.vpnOnlyForCount } returns vpnOnlyForCountFlow
         every { mockRelayProvider.list() } returns emptyList()
         every { mockRelayProvider.catalogue } returns MutableStateFlow(emptyList())
         every { mockPathHealthProvider.pathWedged } returns pathWedgedFlow
@@ -133,6 +137,7 @@ class ConnectViewModelTest {
                 localSettings = mockWarrenLocalSettings,
                 hostOfflineProvider = mockHostOfflineProvider,
                 autoRecoveryProvider = mockAutoRecoveryProvider,
+                splitTunneling = mockSplitTunneling,
                 exitSwitchedNotificationUseCase = mockk(relaxed = true),
                 envStandDownUseCase = mockk(relaxed = true),
             )
@@ -147,6 +152,17 @@ class ConnectViewModelTest {
     @Test
     fun `uiState should emit initial state by default`() = runTest {
         viewModel.uiState.test { assertEquals(ConnectUiState.INITIAL, awaitItem()) }
+    }
+
+    @Test
+    fun `the include-only label carries the number of apps using the vpn`() = runTest {
+        viewModel.uiState.test {
+            assertEquals(null, awaitItem().vpnOnlyForCount)
+            vpnOnlyForCountFlow.value = 3
+            assertEquals(3, awaitItem().vpnOnlyForCount)
+            vpnOnlyForCountFlow.value = null
+            assertEquals(null, awaitItem().vpnOnlyForCount)
+        }
     }
 
     @Test

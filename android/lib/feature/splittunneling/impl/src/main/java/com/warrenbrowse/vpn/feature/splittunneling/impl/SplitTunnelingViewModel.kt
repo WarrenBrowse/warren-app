@@ -3,6 +3,7 @@ package com.warrenbrowse.vpn.feature.splittunneling.impl
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
@@ -13,6 +14,7 @@ import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.SplitTunnelingUs
 import com.warrenbrowse.vpn.lib.common.Lc
 import com.warrenbrowse.vpn.lib.common.constant.VIEW_MODEL_STOP_TIMEOUT
 import com.warrenbrowse.vpn.lib.model.PackageName
+import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
 import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 
@@ -24,19 +26,36 @@ class SplitTunnelingViewModel(
     private val dispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
+    // The screen opens on the tab of the mode in force, so a user sent here by
+    // the "VPN only for" label lands on its list.
+    private val tab =
+        MutableStateFlow(
+            if (splitTunnelingRepository.splitMode.value == SplitTunnelMode.IncludeOnly) {
+                SplitTunnelingTab.IncludeOnly
+            } else {
+                SplitTunnelingTab.Bypass
+            }
+        )
+
+    private val pendingMode = MutableStateFlow<SplitTunnelMode?>(null)
+
     val uiState: StateFlow<Lc<Loading, SplitTunnelingUiState>> =
         combine(
-                splitTunnelingUseCase(),
-                splitTunnelingRepository.splitTunnelingEnabled,
+                splitTunnelingUseCase(tab),
+                splitTunnelingRepository.splitMode,
                 userPreferencesRepository.showSystemAppsSplitTunneling(),
-            ) { splitApps, enabled, showSystemApps ->
+                tab,
+                pendingMode,
+            ) { splitApps, mode, showSystemApps, shownTab, pending ->
                 Lc.Content(
                     SplitTunnelingUiState(
-                        enabled = enabled,
-                        excludedApps = splitApps.excludedApps,
-                        includedApps = splitApps.includedApps,
+                        splitMode = mode,
+                        tab = shownTab,
+                        selectedApps = splitApps.selectedApps,
+                        otherApps = splitApps.otherApps,
                         showSystemApps = showSystemApps,
                         isModal = isModal,
+                        confirmation = pending?.let { modeChangeConfirmation(mode, it) },
                     )
                 )
             }
@@ -46,18 +65,53 @@ class SplitTunnelingViewModel(
                 Lc.Loading(Loading(isModal = isModal)),
             )
 
-    fun onEnableSplitTunneling(isEnabled: Boolean) {
-        viewModelScope.launch(dispatcher) {
-            splitTunnelingRepository.enableSplitTunneling(isEnabled)
+    fun onSelectTab(selected: SplitTunnelingTab) {
+        tab.value = selected
+    }
+
+    /** The switch of the shown tab. */
+    fun onSplitModeSwitch(on: Boolean) {
+        val next = if (on) tab.value.mode else SplitTunnelMode.Off
+        if (modeChangeConfirmation(splitTunnelingRepository.splitMode.value, next) != null) {
+            pendingMode.value = next
+        } else {
+            applyMode(next)
         }
     }
 
-    fun onIncludeAppClick(packageName: PackageName) {
-        viewModelScope.launch(dispatcher) { splitTunnelingRepository.includeApp(packageName) }
+    fun onConfirmModeChange() {
+        val next = pendingMode.value ?: return
+        pendingMode.value = null
+        applyMode(next)
     }
 
-    fun onExcludeAppClick(packageName: PackageName) {
-        viewModelScope.launch(dispatcher) { splitTunnelingRepository.excludeApp(packageName) }
+    fun onCancelModeChange() {
+        pendingMode.value = null
+    }
+
+    private fun applyMode(mode: SplitTunnelMode) {
+        viewModelScope.launch(dispatcher) { splitTunnelingRepository.setSplitMode(mode) }
+    }
+
+    fun onAddAppClick(packageName: PackageName) {
+        val shown = tab.value
+        viewModelScope.launch(dispatcher) {
+            when (shown) {
+                SplitTunnelingTab.Bypass -> splitTunnelingRepository.addExcludedApp(packageName)
+                SplitTunnelingTab.IncludeOnly -> splitTunnelingRepository.addIncludedApp(packageName)
+            }
+        }
+    }
+
+    fun onRemoveAppClick(packageName: PackageName) {
+        val shown = tab.value
+        viewModelScope.launch(dispatcher) {
+            when (shown) {
+                SplitTunnelingTab.Bypass -> splitTunnelingRepository.removeExcludedApp(packageName)
+                SplitTunnelingTab.IncludeOnly ->
+                    splitTunnelingRepository.removeIncludedApp(packageName)
+            }
+        }
     }
 
     fun onShowSystemAppsClick(show: Boolean) {

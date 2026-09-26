@@ -5,6 +5,7 @@ import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.AppData
 import com.warrenbrowse.vpn.lib.common.Lc
 import com.warrenbrowse.vpn.lib.common.toLc
 import com.warrenbrowse.vpn.lib.model.PackageName
+import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
 import com.warrenbrowse.vpn.lib.ui.resource.R
 
 class SplitTunnelingUiStatePreviewParameterProvider :
@@ -12,16 +13,17 @@ class SplitTunnelingUiStatePreviewParameterProvider :
     override val values =
         sequenceOf(
             SplitTunnelingUiState(
-                    enabled = true,
-                    excludedApps = excludedApps,
-                    includedApps = includedApps,
+                    splitMode = SplitTunnelMode.Exclude,
+                    selectedApps = excludedApps,
+                    otherApps = includedApps,
                     showSystemApps = true,
                 )
                 .toLc(),
             SplitTunnelingUiState(
-                    enabled = true,
-                    excludedApps = excludedApps,
-                    includedApps = includedApps.filter { !it.isSystemApp },
+                    splitMode = SplitTunnelMode.IncludeOnly,
+                    tab = SplitTunnelingTab.IncludeOnly,
+                    selectedApps = excludedApps,
+                    otherApps = includedApps.filter { !it.isSystemApp },
                     showSystemApps = false,
                 )
                 .toLc(),

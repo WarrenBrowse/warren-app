@@ -1,5 +1,7 @@
 package com.warrenbrowse.vpn.app.service
 
+import com.warrenbrowse.vpn.lib.model.AppRouting
+
 /**
  * Pure description of the `VpnService.Builder` interface to establish for a
  * given [WarrenTunnelConfig]. Extracted from [WarrenQuinnAdapter] so the
@@ -24,11 +26,11 @@ data class WarrenTunInterfacePlan(
      */
     val blocking: Boolean,
     /**
-     * Package names to route OUTSIDE the tunnel via
-     * `VpnService.Builder.addDisallowedApplication` (split tunnelling). Always
-     * empty for a [blocking] kill-switch plan, which must capture everything.
+     * Which apps the interface captures (split tunnelling). A [blocking] plan
+     * captures every app, except in include-only where it captures exactly the
+     * allow list of the live plan (see [planTunInterface]).
      */
-    val excludedApps: Set<String> = emptySet(),
+    val appRouting: AppRouting = AppRouting.AllApps,
 ) {
     data class TunCidr(val address: String, val prefixLength: Int)
 }
@@ -77,11 +79,15 @@ object WarrenTunDefaults {
  *   capture, no DNS, no pump. Used while the real tunnel is down under
  *   lockdown so traffic stays blocked rather than falling back to the
  *   physical network.
+ * @param appRouting the apps the interface captures, from [tunAppRouting].
+ *   The blackhole ignores a bypass list (an excluded app is blocked with the
+ *   rest) and keeps an include-only allow list: every included app stays
+ *   captured, and every other app keeps the network the mode left it on.
  */
 fun planTunInterface(
     config: WarrenTunnelConfig,
     blocking: Boolean = false,
-    excludedApps: Set<String> = emptySet(),
+    appRouting: AppRouting = AppRouting.AllApps,
 ): WarrenTunInterfacePlan {
     val addresses = mutableListOf(
         WarrenTunInterfacePlan.TunCidr(WarrenTunDefaults.IPV4_ADDRESS, WarrenTunDefaults.IPV4_PREFIX),
@@ -108,6 +114,7 @@ fun planTunInterface(
             dnsServers = emptyList(),
             mtu = WarrenTunDefaults.MTU,
             blocking = true,
+            appRouting = appRouting as? AppRouting.OnlyFor ?: AppRouting.AllApps,
         )
     }
 
@@ -153,9 +160,26 @@ fun planTunInterface(
         // makes VpnService.Builder.establish() throw "Cannot set address".
         mtu = config.mtu.coerceIn(if (config.enableIpv6) IPV6_MIN_MTU else MIN_MTU, MAX_MTU),
         blocking = false,
-        excludedApps = excludedApps,
+        appRouting = appRouting,
     )
 }
+
+/**
+ * The routing the interface applies for [routing] resolved from the settings.
+ *
+ * Include-only carries this app too: the in-tunnel egress probe and the
+ * NAT-PMP client are sockets of this app aimed at the tunnel gateway, and
+ * outside the allow list they would reach the physical network instead, where
+ * the probe convicts a healthy exit. The rest is as in a full tunnel: the
+ * relay and token-mint sockets are protected by the engine, and this app's
+ * other API calls go through the tunnel.
+ */
+fun tunAppRouting(routing: AppRouting, selfPackage: String): AppRouting =
+    when (routing) {
+        is AppRouting.OnlyFor -> AppRouting.OnlyFor(routing.packages + selfPackage)
+        AppRouting.AllApps,
+        is AppRouting.Bypass -> routing
+    }
 
 private const val MIN_MTU = 576
 private const val MAX_MTU = WarrenTunDefaults.MTU

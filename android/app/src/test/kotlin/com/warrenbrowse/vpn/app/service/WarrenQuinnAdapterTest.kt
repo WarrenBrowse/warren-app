@@ -8,6 +8,8 @@ import android.os.SystemClock
 import com.warrenbrowse.talpid.model.Connectivity
 import com.warrenbrowse.talpid.model.IpAvailability
 import com.warrenbrowse.vpn.app.connectivity.RelayFamilies
+import com.warrenbrowse.vpn.lib.model.AppRouting
+import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import io.mockk.every
@@ -63,6 +65,9 @@ class WarrenQuinnAdapterTest {
         const val STATUS_DISCONNECTED = 0
         const val STATUS_RECONNECTING = 3
         const val STATUS_EXIT_LEAVING = 5
+        const val STATUS_UNAUTHORIZED = 4
+
+        const val SELF_PACKAGE = "com.warrenbrowse.vpn.test"
 
         const val PHRASE =
             "abandon abandon abandon abandon abandon abandon " +
@@ -130,9 +135,21 @@ class WarrenQuinnAdapterTest {
         @Volatile
         var blackholeFails = false
 
+        /** Every plan the adapter asked the platform to establish, in order. */
+        val plans = java.util.Collections.synchronizedList(mutableListOf<WarrenTunInterfacePlan>())
+
+        /** The packages the device reports as installed. */
+        @Volatile
+        var installed: Set<String> = emptySet()
+
+        override val selfPackage: String = SELF_PACKAGE
+
+        override fun isAppInstalled(packageName: String): Boolean = packageName in installed
+
         override fun establish(plan: WarrenTunInterfacePlan): ParcelFileDescriptor? {
             val call = if (plan.blocking) ESTABLISH_BLACKHOLE else ESTABLISH_LIVE
             calls += call
+            plans += plan
             threads[call] = Thread.currentThread().name
             if (plan.blocking && blackholeFails) return null
             return if (plan.blocking) blackholeTun else liveTun
@@ -250,10 +267,13 @@ class WarrenQuinnAdapterTest {
         hasFailoverExit: (WarrenTunnelConfig) -> Boolean = { false },
         dropRetryGraceMs: Long = 15_000L,
         connectivity: MutableStateFlow<Connectivity> = MutableStateFlow(Connectivity.PresumeOnline),
+        splitMode: MutableStateFlow<SplitTunnelMode> = MutableStateFlow(SplitTunnelMode.Off),
+        includedApps: MutableStateFlow<Set<String>> = MutableStateFlow(emptySet()),
     ): WarrenQuinnAdapter {
         val settings = mockk<WarrenLocalSettingsRepository>(relaxed = true)
-        every { settings.splitTunnelingEnabled } returns MutableStateFlow(false)
+        every { settings.splitMode } returns splitMode
         every { settings.excludedApps } returns MutableStateFlow(emptySet())
+        every { settings.includedApps } returns includedApps
         return WarrenQuinnAdapter(
             vpnService = mockk<VpnService>(relaxed = true),
             connectivityManager = mockk<ConnectivityManager>(relaxed = true),
@@ -1237,6 +1257,172 @@ class WarrenQuinnAdapterTest {
                 unmockkStatic(SystemClock::class)
             }
         }
+
+    /** An include-only adapter, connected, with [installed] on the device. */
+    private suspend fun includeOnlyAdapter(
+        platform: RecordingPlatform,
+        included: MutableStateFlow<Set<String>>,
+        installed: Set<String>,
+        lockdown: Boolean = true,
+        dropRetryGraceMs: Long = 15_000L,
+    ): WarrenQuinnAdapter {
+        platform.installed = installed
+        val adapter =
+            adapterWith(
+                platform,
+                dropRetryGraceMs = dropRetryGraceMs,
+                splitMode = MutableStateFlow(SplitTunnelMode.IncludeOnly),
+                includedApps = included,
+            )
+        adapter.connect(config().copy(lockdownMode = lockdown), Mnemonic(PHRASE))
+        awaitReal("the session must reach Connected") {
+            adapter.state.value is WarrenTunnelState.Connected
+        }
+        return adapter
+    }
+
+    /**
+     * Include-only hands Android an allow list, and the blackhole a drop brings
+     * up captures exactly that list: an included app stays off the bare network
+     * while the tunnel is down, and every other app stays online.
+     */
+    @Test
+    fun `ensure include-only tunnels the included apps and blackholes the same apps on a drop`() =
+        runTest {
+            mockkStatic(SystemClock::class)
+            every { SystemClock.elapsedRealtime() } returns 0L
+            try {
+                val platform = RecordingPlatform()
+                val adapter =
+                    includeOnlyAdapter(
+                        platform,
+                        MutableStateFlow(setOf("org.bank", "org.gone")),
+                        installed = setOf("org.bank"),
+                    )
+
+                platform.status = STATUS_DISCONNECTED
+                awaitReal("the drop must bring the blackhole up") {
+                    platform.plans.toList().any { it.blocking }
+                }
+
+                val expected = AppRouting.OnlyFor(setOf("org.bank", SELF_PACKAGE))
+                val plans = platform.plans.toList()
+                assertEquals(expected, plans.first { !it.blocking }.appRouting)
+                assertEquals(expected, plans.first { it.blocking }.appRouting)
+                adapter.disconnect()
+            } finally {
+                unmockkStatic(SystemClock::class)
+            }
+        }
+
+    /**
+     * An include-only list with nothing installed must not reach the builder as
+     * an allow list: Android would capture every app while the settings claim
+     * only some are protected. The tunnel is a full tunnel instead.
+     */
+    @Test
+    fun `ensure include-only with no installed app dials a full tunnel`() = runTest {
+        val platform = RecordingPlatform()
+        val adapter =
+            includeOnlyAdapter(platform, MutableStateFlow(setOf("org.gone")), installed = emptySet())
+
+        assertEquals(AppRouting.AllApps, platform.plans.toList().single().appRouting)
+        adapter.disconnect()
+    }
+
+    /**
+     * Without lockdown a flapping tunnel hands the whole device back to the
+     * bare network. In include-only the blackhole only holds the included
+     * apps, so there is nobody to strand and an included app would leak: it
+     * stays blocked instead.
+     */
+    @Test
+    fun `ensure a flapping include-only tunnel stays blocked without lockdown`() = runTest {
+        mockkStatic(SystemClock::class)
+        every { SystemClock.elapsedRealtime() } returns 0L
+        try {
+            val platform = RecordingPlatform()
+            val adapter =
+                includeOnlyAdapter(
+                    platform,
+                    MutableStateFlow(setOf("org.bank")),
+                    installed = setOf("org.bank"),
+                    lockdown = false,
+                    dropRetryGraceMs = 0L,
+                )
+
+            platform.statusOnConnect = STATUS_DISCONNECTED
+            platform.status = STATUS_DISCONNECTED
+            awaitReal(
+                "the flapping tunnel must park behind the blackhole",
+                detail = { "${adapter.state.value}" },
+            ) {
+                (adapter.state.value as? WarrenTunnelState.Blocking)?.flapping == true
+            }
+            adapter.disconnect()
+        } finally {
+            unmockkStatic(SystemClock::class)
+        }
+    }
+
+    /** A lapsed subscription is the error state: an included app stays blocked there too. */
+    @Test
+    fun `ensure an expired include-only session stays blocked without lockdown`() = runTest {
+        val platform = RecordingPlatform()
+        val adapter =
+            includeOnlyAdapter(
+                platform,
+                MutableStateFlow(setOf("org.bank")),
+                installed = setOf("org.bank"),
+                lockdown = false,
+            )
+
+        platform.status = STATUS_UNAUTHORIZED
+        awaitReal("the expiry must block", detail = { "${adapter.state.value}" }) {
+            (adapter.state.value as? WarrenTunnelState.Blocking)?.expired == true
+        }
+        adapter.disconnect()
+    }
+
+    /**
+     * An app added to the list while the blackhole is up is an included app
+     * the old blackhole does not hold: the blackhole is replaced with the new
+     * list before the old one goes, so no interface gap opens either.
+     */
+    @Test
+    fun `ensure a list change while blocked replaces the blackhole with the new list`() = runTest {
+        mockkStatic(SystemClock::class)
+        every { SystemClock.elapsedRealtime() } returns 0L
+        try {
+            val platform = RecordingPlatform()
+            val included = MutableStateFlow(setOf("org.bank"))
+            val adapter =
+                includeOnlyAdapter(platform, included, installed = setOf("org.bank", "org.mail"))
+            platform.status = STATUS_DISCONNECTED
+            awaitReal("the drop must bring the blackhole up") {
+                adapter.state.value is WarrenTunnelState.Blocking
+            }
+            platform.calls.clear()
+
+            included.value = setOf("org.bank", "org.mail")
+            awaitReal("the blackhole must follow the list", detail = { "${platform.calls}" }) {
+                "close(blackhole)" in platform.calls.toList()
+            }
+
+            val calls = platform.calls.toList()
+            assertTrue(
+                calls.indexOf(ESTABLISH_BLACKHOLE) in 0 until calls.indexOf("close(blackhole)"),
+                "the new blackhole must be up before the old one closes, got: $calls",
+            )
+            assertEquals(
+                AppRouting.OnlyFor(setOf("org.bank", "org.mail", SELF_PACKAGE)),
+                platform.plans.toList().last().appRouting,
+            )
+            adapter.disconnect()
+        } finally {
+            unmockkStatic(SystemClock::class)
+        }
+    }
 
     /**
      * The system revoke has to return promptly, so its teardown wait is

@@ -83,7 +83,22 @@
     <string name="update_available_description">版本 %1$s 已发布。点按以下载更新。</string>
     <string name="update_now">立即更新</string>
     <string name="quit">退出</string>
-    <string name="split_tunneling_description">选择您想要从 VPN 隧道中排除的应用。</string>
+    <string name="app_routing_description">选择每个应用的连接方式。</string>
+    <string name="split_mode_bypass">绕过 VPN</string>
+    <string name="split_mode_bypass_description">您选择的应用会像 VPN 已关闭一样进行连接。</string>
+    <string name="split_mode_include_only">仅限指定应用</string>
+    <string name="split_mode_include_only_description">只有您选择的应用使用 VPN。</string>
+    <string name="include_only_lockdown_warning">注意：如果启用了“屏蔽未使用 VPN 的所有连接”，您未选择的应用将无法连接互联网。</string>
+    <string name="include_only_banner">只有这些应用受到保护。此设备上的其他一切都使用您的普通连接。</string>
+    <string name="include_only_no_app">您选择的应用都不在此设备上，因此在您选择一个应用之前，所有应用都会使用 VPN。</string>
+    <string name="include_only_confirm">只有您选择的应用会使用 VPN。此设备的其余部分将不受保护。</string>
+    <string name="split_mode_replaces_bypass">这将取代“绕过 VPN”。您在那里的应用列表会保留。</string>
+    <string name="split_mode_replaces_include_only">这将取代“仅限指定应用”，因此除了绕过 VPN 的应用外，所有应用都会重新使用 VPN。您在那里的应用列表会保留。</string>
+    <string name="split_mode_turn_on">开启</string>
+    <string name="apps_using_the_vpn">使用 VPN</string>
+    <plurals name="vpn_only_for_apps">
+        <item quantity="other">仅 %1$d 个应用使用 VPN</item>
+    </plurals>
     <string name="split_tunneling_description_warning">注意：如果启用了“屏蔽未使用 VPN 的所有连接”，分割应用将无法连接互联网。请牢记，分割隧道存在隐私风险。</string>
     <string name="enable">启用</string>
     <string name="confirm_local_dns">除非您在 VPN 设置下启用“本地网络共享”，否则本地 DNS 服务器将不会运行。</string>

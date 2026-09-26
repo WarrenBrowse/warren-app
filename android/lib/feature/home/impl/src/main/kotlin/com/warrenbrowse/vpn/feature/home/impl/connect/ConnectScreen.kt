@@ -179,6 +179,12 @@ import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaScrollbar
 import com.warrenbrowse.vpn.lib.ui.util.visible
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.semantics.Role
+import com.warrenbrowse.vpn.lib.ui.theme.color.warning
 
 private const val CONNECT_BUTTON_THROTTLE_MILLIS = 1000
 
@@ -973,6 +979,9 @@ private fun Content(
                             onConnectClick = onConnectClick,
                             shuffleEnabled = shuffleEnabled,
                             onShuffleClick = onShuffleClick,
+                            onIncludeOnlyLabelClick = {
+                                onNavigateToFeature(FeatureIndicator.SPLIT_TUNNELING)
+                            },
                         )
                     }
                     WarrenMainFooter(
@@ -1145,6 +1154,7 @@ private fun ConnectionCard(
     onConnectClick: () -> Unit,
     shuffleEnabled: Boolean,
     onShuffleClick: () -> Unit,
+    onIncludeOnlyLabelClick: () -> Unit,
 ) {
     // The expansion survives connecting <-> connected (a reconnect must not
     // collapse the panel the user opened) and resets on the way out of them,
@@ -1179,7 +1189,14 @@ private fun ConnectionCard(
                     horizontal = Dimens.mediumPadding,
                 )
         ) {
-            ConnectionCardHeader(state, state.location, expanded) { expanded = !expanded }
+            ConnectionCardHeader(
+                state,
+                state.location,
+                expanded,
+                onIncludeOnlyLabelClick = onIncludeOnlyLabelClick,
+            ) {
+                expanded = !expanded
+            }
 
             // The body is available in exactly the states that offer the
             // chevron, so the affordance can never open onto nothing.
@@ -1286,6 +1303,7 @@ private fun ConnectionCardHeader(
     state: ConnectUiState,
     location: GeoIpLocation?,
     expanded: Boolean,
+    onIncludeOnlyLabelClick: () -> Unit,
     onToggleExpand: () -> Unit,
 ) {
     Column(
@@ -1299,6 +1317,9 @@ private fun ConnectionCardHeader(
     ) {
         val hasTunnel = state.tunnelState.isConnectingOrConnected()
         ConnectionCardStatusRow(state, location, expanded, hasTunnel)
+        state.vpnOnlyForCount?.let { count ->
+            IncludeOnlyLabel(count = count, onClick = onIncludeOnlyLabelClick)
+        }
 
         // The exit location reads under the status only once a tunnel exists;
         // while disconnected the selector button already names the chosen exit
@@ -1346,6 +1367,44 @@ private fun ConnectionCardHeader(
         }
     }
 }
+
+/**
+ * Under the connection state while only chosen apps use the VPN (desktop
+ * IncludeOnlyLabel), so the rest of the device being unprotected is never a
+ * surprise, whatever the tunnel is doing. It opens the list those apps are on.
+ */
+@Composable
+private fun IncludeOnlyLabel(count: Int, onClick: () -> Unit) {
+    val shape = RoundedCornerShape(INCLUDE_ONLY_LABEL_RADIUS)
+    val warning = MaterialTheme.colorScheme.warning
+    Row(
+        modifier =
+            Modifier.padding(top = Dimens.smallPadding)
+                .clip(shape)
+                .background(warning.copy(alpha = INCLUDE_ONLY_LABEL_FILL))
+                .border(Dimens.thinBorderWidth, warning.copy(alpha = INCLUDE_ONLY_LABEL_BORDER), shape)
+                .clickable(role = Role.Button, onClick = onClick)
+                .padding(horizontal = Dimens.smallPadding, vertical = Dimens.tinyPadding),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Dimens.tinyPadding),
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.ic_forum_alert_circle),
+            contentDescription = null,
+            tint = warning,
+            modifier = Modifier.size(Dimens.smallIconSize),
+        )
+        Text(
+            text = pluralStringResource(R.plurals.vpn_only_for_apps, count, count),
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+    }
+}
+
+private val INCLUDE_ONLY_LABEL_RADIUS = 6.dp
+private const val INCLUDE_ONLY_LABEL_FILL = 0.12f
+private const val INCLUDE_ONLY_LABEL_BORDER = 0.45f
 
 @Composable
 private fun GeoIpLocation?.asString(): String {
