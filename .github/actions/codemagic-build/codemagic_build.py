@@ -39,6 +39,7 @@ API_V3 = "https://codemagic.io/api/v3"
 OUT_DIR = "cm-out"
 SUMS_NAME = "codemagic.sha256"
 HEARTBEAT = 300
+LOG_ATTEMPTS = 3
 TERMINAL = {"finished", "failed", "canceled", "timeout", "skipped"}
 INPUT_KEY = re.compile(r"^[a-zA-Z]\w*$")
 FULL_SHA = re.compile(r"^[0-9a-f]{40}$")
@@ -114,6 +115,11 @@ def running_step(build):
         if action.get("startedAt") and action.get("status") is None:
             return (action.get("name", "?"), action["startedAt"])
     return None
+
+
+def retry_log(text, attempts):
+    """Whether a step log read empty is worth reading again later."""
+    return not text.strip() and attempts < LOG_ATTEMPTS
 
 
 def clean_log(text):
@@ -261,14 +267,21 @@ def run(args):
     signal.signal(signal.SIGTERM, cancel)
     signal.signal(signal.SIGINT, cancel)
 
-    def replay(steps):
-        for name, step_status, url in steps:
+    def replay(steps, final=False):
+        """Print the logs that arrived; return the steps to read again."""
+        later = []
+        for name, step_status, url, attempts in steps:
             log = clean_log(client.request("GET", url).decode(errors="replace")) if url else ""
-            _group(f"{name} [{step_status}]", log)
+            if url and retry_log(log, attempts) and not final:
+                later.append((name, step_status, url, attempts + 1))
+            else:
+                _group(f"{name} [{step_status}]", log or "(Codemagic returned no log for this step)\n")
+        return later
 
-    # A step reports its end before its log is flushed (measured: a script
-    # step's log read at that moment came back empty), so each log is read one
-    # poll after its step ended, and the last ones after a grace period.
+    # A step reports its end before its log is flushed: read at that moment,
+    # and even one poll later, a script step's log came back empty. Each log
+    # is read one poll after its step ended and read again while it is empty,
+    # up to LOG_ATTEMPTS polls; the last ones get the same retries 20 s apart.
     # A running step's log cannot be read, so the job says which step is
     # running and repeats it every HEARTBEAT seconds: a long step and a hung
     # one then look different in the job log only by what follows, never by
@@ -280,16 +293,19 @@ def run(args):
         if status != last:
             print(f"status: {status}", flush=True)
             last = status
-        replay(pending)
+        pending = replay(pending)
         step = running_step(build)
         if step and (step != current or time.monotonic() - beat >= HEARTBEAT):
             first = step != current
             current, beat = step, time.monotonic()
             print(f"{'running' if first else 'still running'}: {step[0]} (since {step[1]})", flush=True)
-        pending = finished_steps(build, seen)
+        pending += [(n, st, u, 0) for n, st, u in finished_steps(build, seen)]
         if is_terminal(status):
-            time.sleep(10)
-            replay(pending + finished_steps(build, seen))
+            for attempt in range(LOG_ATTEMPTS + 1):
+                time.sleep(20)
+                pending = replay(pending, final=attempt == LOG_ATTEMPTS)
+                if not pending:
+                    break
             break
         time.sleep(args.poll_seconds)
 

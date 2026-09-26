@@ -140,6 +140,19 @@ class RunningStep(unittest.TestCase):
         self.assertIsNone(cb.running_step(build))
 
 
+class LogRetry(unittest.TestCase):
+    def test_retries_an_empty_log_a_few_times(self):
+        # Measured: a step's log read 20 s after its end can still be empty.
+        self.assertTrue(cb.retry_log("", 0))
+        self.assertTrue(cb.retry_log("  \n", 2))
+
+    def test_gives_up_after_the_last_attempt(self):
+        self.assertFalse(cb.retry_log("", cb.LOG_ATTEMPTS))
+
+    def test_prints_a_log_that_arrived(self):
+        self.assertFalse(cb.retry_log("22 checks, 0 failure(s)\n", 0))
+
+
 class CleanLog(unittest.TestCase):
     def test_strips_the_markup_codemagic_wraps_commands_in(self):
         raw = '<span style="color:#268BD2">&gt; git clone x</span>\nHEAD &amp; tail\n'
