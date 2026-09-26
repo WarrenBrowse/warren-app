@@ -4,8 +4,9 @@
 //! Holds one [`warren_api::TokenManager`] per wallet (process-lived, keyed by
 //! the ss58 address), spawns a background refresh task the first time a wallet
 //! is seen (mint the current epoch + prefetch horizon on a coarse timer, never
-//! at connect, so issuance timing does not mirror session timing), and hands
-//! the tunnel a [`SessionTokenSource`].
+//! at each connect, so issuance timing does not mirror session timing; a
+//! failed round is retried sooner), and hands the tunnel a
+//! [`SessionTokenSource`].
 //!
 //! The batch is derived from the wallet seed, so every client of the wallet
 //! holds the same tokens, and an exit leases each serial to one live session in
@@ -55,18 +56,49 @@ fn now_unix_secs() -> u64 {
         .unwrap_or(0)
 }
 
+/// The coarse refresh period, and the first wait after a failed round. A
+/// failure doubles the wait, up to the period: the first round runs when the
+/// first tunnel starts, and while its firewall is still connecting the API
+/// cannot be reached, which left route sessions without a token for the
+/// whole period.
+const REFRESH_PERIOD: Duration = Duration::from_secs(600);
+const FIRST_RETRY: Duration = Duration::from_secs(15);
+
+/// Runs `refresh` now and after each wait: the period once a round succeeds,
+/// a shorter one after a failure.
+async fn refresh_forever<F, R>(mut refresh: F)
+where
+    F: FnMut() -> R,
+    R: std::future::Future<Output = bool>,
+{
+    let mut retry = FIRST_RETRY;
+    loop {
+        let wait = if refresh().await {
+            retry = FIRST_RETRY;
+            REFRESH_PERIOD
+        } else {
+            let wait = retry;
+            retry = (retry * 2).min(REFRESH_PERIOD);
+            wait
+        };
+        tokio::time::sleep(wait).await;
+    }
+}
+
 fn spawn_refresh(manager: Arc<Manager>) {
-    tokio::spawn(async move {
-        // First tick fires immediately (top up before the first connect), then
-        // every 10 min. The manager mints only epochs it has not minted yet.
-        let mut tick = tokio::time::interval(Duration::from_secs(600));
-        loop {
-            tick.tick().await;
-            if let Err(e) = manager.refresh(now_unix_secs()).await {
-                log::warn!("Warren v7 token refresh failed (keeping existing tokens): {e}");
+    // The manager mints only epochs it has not minted yet.
+    tokio::spawn(refresh_forever(move || {
+        let manager = Arc::clone(&manager);
+        async move {
+            match manager.refresh(now_unix_secs()).await {
+                Ok(_) => true,
+                Err(e) => {
+                    log::warn!("Warren v7 token refresh failed (keeping existing tokens): {e}");
+                    false
+                }
             }
         }
-    });
+    }));
 }
 
 /// The v7 token source for `seed`'s wallet against `api_url`. Builds (and
@@ -235,6 +267,39 @@ mod tests {
 
     fn lead(provider: &SessionTokenProvider) -> [u8; SESSION_TOKEN_LEN] {
         provider().first().expect("a token").0
+    }
+
+    /// When each round of a refresh task runs, in seconds from its start,
+    /// given whether each round succeeds.
+    async fn refresh_rounds(outcomes: &[bool]) -> Vec<u64> {
+        let start = tokio::time::Instant::now();
+        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+        let mut outcomes = outcomes.to_vec().into_iter();
+        let task = tokio::spawn(super::refresh_forever(move || {
+            let _ = tx.send(start.elapsed().as_secs());
+            let outcome = outcomes.next().unwrap_or(true);
+            async move { outcome }
+        }));
+        let mut rounds = Vec::new();
+        while rounds.len() < 5 {
+            rounds.push(rx.recv().await.expect("the task runs"));
+        }
+        task.abort();
+        rounds
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_failed_refresh_is_retried_soon_and_sooner_than_the_period() {
+        let rounds = refresh_rounds(&[false, false, true, true, true]).await;
+
+        assert_eq!(rounds, [0, 15, 45, 645, 1245]);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn retries_back_off_up_to_the_period() {
+        let rounds = refresh_rounds(&[false; 5]).await;
+
+        assert_eq!(rounds, [0, 15, 45, 105, 225]);
     }
 
     #[test]
