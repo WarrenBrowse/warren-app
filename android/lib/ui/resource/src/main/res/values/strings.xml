@@ -60,7 +60,7 @@
     <string name="warren_tunnel_flapping">Your network looks unstable: the tunnel reconnected too many times in a row. Reconnect once your connection has settled.</string>
     <string name="warren_kill_switch_active">The kill switch is keeping your traffic blocked while the tunnel is down. Your connection is protected; it will resume automatically once the tunnel is back.</string>
     <string name="warren_no_dialable_network_title">NETWORK WITHOUT IPv4</string>
-    <string name="warren_no_dialable_network">This network gives your device no IPv4 address, and Warren\'s entry points answer on IPv4 only, so the tunnel cannot be dialled here. The kill switch is keeping your traffic blocked: disconnect to get your internet back, or move to a network that provides IPv4.</string>
+    <string name="warren_no_dialable_network">This network gives your device no IPv4 address, and Warren’s entry points answer on IPv4 only, so the tunnel cannot be dialled here. The kill switch is keeping your traffic blocked: disconnect to get your internet back, or move to a network that provides IPv4.</string>
     <string name="warren_traffic_released_title">TRAFFIC OUTSIDE THE VPN</string>
     <string name="warren_traffic_released">Your connection kept dropping, so Warren stopped retrying and your traffic now goes through your regular network, outside the VPN. To stay blocked instead when this happens, turn on Lockdown mode in VPN settings.</string>
     <string name="warren_traffic_released_notification">Traffic outside the VPN</string>
@@ -284,7 +284,7 @@
     <string name="tunnel_natpmp_subtitle">Request a stable external port from the exit (BitTorrent, hosting).</string>
     <string name="tunnel_anti_censorship_section">Anti-censorship</string>
     <string name="tunnel_exit_key_pinning_section">Exit key pinning</string>
-    <string name="tunnel_exit_key_pinning_desc">Warren pins each exit\'s key on first use and refuses to connect if it changes. Reset the pins only if you expect a legitimate key rotation; the next connect re-pins.</string>
+    <string name="tunnel_exit_key_pinning_desc">Warren pins each exit’s key on first use and refuses to connect if it changes. Reset the pins only if you expect a legitimate key rotation; the next connect re-pins.</string>
     <string name="tunnel_reset_pinned_keys">Reset pinned exit keys</string>
     <string name="tunnel_reset_pinned_keys_confirm_title">Reset pinned exit keys?</string>
     <string name="tunnel_reset_pinned_keys_confirm_body_1">Every Warren exit you previously connected to will be re-pinned on the next connection (trust on first use).</string>
@@ -358,7 +358,7 @@
     <string name="subscription_authorization_cancelled">Authorization canceled.</string>
     <string name="subscription_wallet_not_ready">Set up your wallet first.</string>
     <string name="subscription_voucher_redeemed">Voucher redeemed - subscription expires %1$s</string>
-    <string name="subscription_voucher_redeem_failed">Couldn\'t redeem voucher. Check the code and try again.</string>
+    <string name="subscription_voucher_redeem_failed">Couldn’t redeem voucher. Check the code and try again.</string>
     <string name="location_exit_relay_title">Select location</string>
     <string name="location_no_relays_available">No locations available yet. Check your connection and try again.</string>
     <string name="location_search_hint">Search locations or servers</string>
@@ -397,13 +397,13 @@
     <string name="onboarding_prop_obfuscation_title">Always-on obfuscation</string>
     <string name="onboarding_prop_obfuscation_body">Your traffic looks like ordinary HTTPS browsing (HTTP/3 mimicry).</string>
     <string name="onboarding_prop_no_logs_title">No logs, no tracking</string>
-    <string name="onboarding_prop_no_logs_body">We can\'t tie traffic to you - there\'s no account identity to log.</string>
+    <string name="onboarding_prop_no_logs_body">We can’t tie traffic to you - there’s no account identity to log.</string>
     <string name="onboarding_prop_keys_title">You hold the keys</string>
     <string name="onboarding_prop_keys_body">A 12-word recovery phrase is your only credential. Back it up safely.</string>
     <string name="onboarding_get_started">Get started</string>
     <string name="onboarding_skip">Skip for now</string>
     <string name="onboarding_subscription_title">Your subscription</string>
-    <string name="onboarding_subscription_body">You don\'t have an active subscription yet. Plans start at a few euros per month: no recurring billing, no account creation, pay as you go.</string>
+    <string name="onboarding_subscription_body">You don’t have an active subscription yet. Plans start at a few euros per month: no recurring billing, no account creation, pay as you go.</string>
     <string name="onboarding_subscription_active">You have an active subscription. You are all set.</string>
     <string name="onboarding_subscription_view_plans">View plans (opens in your browser)</string>
     <string name="onboarding_subscription_restore">I already have a subscription</string>
@@ -452,7 +452,7 @@
     <string name="out_of_time_title">Out of time</string>
     <string name="out_of_time_recovery_browser">Either buy credit on our website or redeem a voucher.</string>
     <string name="out_of_time_recovery_disconnect">To add more, you will need to disconnect and access the Internet with an unsecure connection.</string>
-    <string name="out_of_time_completed_payment">I\'ve completed payment</string>
+    <string name="out_of_time_completed_payment">I’ve completed payment</string>
     <string name="out_of_time_disconnect_dialog_title">Disconnect to buy credit?</string>
     <string name="out_of_time_disconnect_dialog_message">Warren will stop protecting this device, then open the checkout in your browser.</string>
     <string name="out_of_time_disconnect_dialog_confirm">Disconnect and open checkout</string>
@@ -569,7 +569,7 @@
     <string name="forum_login_result_approved">Signed in to the Warren forum.</string>
     <string name="forum_login_result_subscription_required">Forum access requires a Warren subscription. This wallet has never subscribed.</string>
     <string name="forum_login_result_wallet_not_ready">Set up your Warren wallet first.</string>
-    <string name="forum_login_result_clock_skew">Sign-in refused: this device\'s clock is off by more than a minute. Enable automatic date and time, then start again from the browser page.</string>
+    <string name="forum_login_result_clock_skew">Sign-in refused: this device’s clock is off by more than a minute. Enable automatic date and time, then start again from the browser page.</string>
     <string name="forum_login_result_expired">This sign-in request has expired. Start again from the browser page.</string>
     <string name="forum_login_result_failure">Sign-in failed. Please try again in a moment.</string>
     <string name="forum_login_handoff_title">Finishing the sign-in in your browser</string>
@@ -578,12 +578,12 @@
     <string name="forum_login_code_title">Your 6-digit code</string>
     <string name="forum_login_code_warning">Type this code on the sign-in page of your other device. Never read it out or send it to anyone, including someone who says they are from Warren.</string>
     <string name="forum_login_code_relayed_warning">This link was for a sign-in on another device, but it did not say so. If someone sent it to you, they are trying to sign in as you: do not give them this code.</string>
-    <string name="forum_login_finish_here">Finish in this device\'s browser</string>
+    <string name="forum_login_finish_here">Finish in this device’s browser</string>
     <string name="forum_tunnel_busy">The VPN is connecting or blocked. Wait for it to connect, or disconnect it, then try again.</string>
 
     <!-- Forum sign-in by code, the in-app bug report, the account forum name. -->
     <string name="forum_sign_in_code">Sign in to the forum with a code</string>
-    <string name="forum_sign_in_code_row_subtitle">When the forum\'s "Open the Warren app" button did nothing</string>
+    <string name="forum_sign_in_code_row_subtitle">When the forum’s "Open the Warren app" button did nothing</string>
     <string name="forum_sign_in_code_intro">On the forum sign-in page, the session code is shown under the button. Type it here to approve that sign-in from this app. The page keeps waiting while you do.</string>
     <string name="forum_sign_in_code_label">Sign-in code</string>
     <string name="forum_sign_in_code_invalid">A sign-in code is 32 letters and digits, as shown on the forum page.</string>
@@ -639,7 +639,7 @@
     <string name="report_problem_open_topic">Open the topic</string>
     <string name="report_problem_error_subscription">Forum access requires a Warren subscription. This wallet has never subscribed: use the help form on the website instead.</string>
     <string name="report_problem_open_help_form">Open the help form</string>
-    <string name="report_problem_error_clock">This device\'s clock is off by more than a minute. Enable automatic date and time, then send again.</string>
+    <string name="report_problem_error_clock">This device’s clock is off by more than a minute. Enable automatic date and time, then send again.</string>
     <string name="report_problem_error_rate_limited">Too many reports from this wallet for now. Please try again later.</string>
     <string name="report_problem_error_too_large">The logs are too large to send.</string>
     <string name="report_problem_error_upload_timeout">Sending the logs took too long on this connection.</string>

@@ -2194,7 +2194,7 @@ msgid "Active subscribers"
 msgstr "Активные подписчики"
 
 msgctxt "network-stats"
-msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour."
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one’s traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour."
 msgstr "Выходной сервер показывает данные в реальном времени, только пока им пользуются не менее %(threshold)d человек, чтобы ничей трафик нельзя было выделить. Ниже этого порога он показывает только уровень нагрузки за последний час, а пока другие серверы показывают данные в реальном времени, входит в итоги сети по часам."
 
 msgctxt "network-stats"
@@ -2234,7 +2234,7 @@ msgid "Limited by CPU"
 msgstr "Ограничено процессором"
 
 msgctxt "network-stats"
-msgid "Live figures appear once %(threshold)d people share an exit, so no one's traffic can be singled out."
+msgid "Live figures appear once %(threshold)d people share an exit, so no one’s traffic can be singled out."
 msgstr "Данные в реальном времени появляются, когда выходным сервером пользуются %(threshold)d человек, чтобы ничей трафик нельзя было выделить."
 
 msgctxt "network-stats"
@@ -3697,15 +3697,15 @@ msgid "Set only when the exit runs a public TLS certificate (X.509 mode). Leave 
 msgstr "Указывайте, только если на выходном сервере используется публичный TLS-сертификат (режим X.509). Оставьте поле пустым для режима необработанного ключа по умолчанию."
 
 msgctxt "vpn-settings-view"
-msgid "The exit's Ed25519 public key, 64 hexadecimal characters."
+msgid "The exit’s Ed25519 public key, 64 hexadecimal characters."
 msgstr "Открытый ключ Ed25519 выходного сервера, 64 шестнадцатеричных символа."
 
 msgctxt "vpn-settings-view"
-msgid "The exit's routing id, 32 hexadecimal characters."
+msgid "The exit’s routing id, 32 hexadecimal characters."
 msgstr "Идентификатор маршрутизации выходного сервера, 32 шестнадцатеричных символа."
 
 msgctxt "vpn-settings-view"
-msgid "The exit's X25519 multi-hop key, 64 hexadecimal characters."
+msgid "The exit’s X25519 multi-hop key, 64 hexadecimal characters."
 msgstr "Многопереходный ключ X25519 выходного сервера, 64 шестнадцатеричных символа."
 
 msgctxt "vpn-settings-view"
@@ -4998,7 +4998,7 @@ msgid "Write down these 12 words in order and keep them somewhere safe. They are
 msgstr "Запишите эти 12 слов по порядку и храните их в надёжном месте. Это единственный способ восстановить вашу подписку, если вы потеряете доступ к этому устройству."
 
 msgctxt "warren-onboarding"
-msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgid "You don’t have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
 msgstr "У вас пока нет активной подписки. Тарифы начинаются от нескольких евро в месяц, никаких повторяющихся платежей, никакого создания аккаунта, оплата по факту использования."
 
 msgctxt "warren-onboarding"
@@ -5311,7 +5311,7 @@ msgid "Write these 12 words down and keep them safe. They are the only way to re
 msgstr "Запишите эти 12 слов и храните их в надёжном месте. Это единственный способ восстановить вашу учётную запись, если вы потеряете это устройство."
 
 msgctxt "connect-view"
-msgid "I've completed payment"
+msgid "I’ve completed payment"
 msgstr "Я завершил оплату"
 
 msgctxt "device-management"
@@ -5323,7 +5323,7 @@ msgid "Your session has ended. To connect again, you will need to log back in."
 msgstr "Ваш сеанс завершён. Чтобы подключиться снова, вам потребуется войти заново."
 
 msgctxt "notifications"
-msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "Обнаружено несоответствие идентификатора сервера. Открытый ключ выходного узла изменился."
 
 msgctxt "vpn-settings-view"
@@ -5556,7 +5556,7 @@ msgid "Multihop"
 msgstr "Multihop"
 
 msgctxt "forum-login"
-msgid "Sign-in refused: this computer's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
+msgid "Sign-in refused: this computer’s clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
 msgstr "Вход отклонён: часы этого компьютера расходятся более чем на минуту. Включите автоматическую дату и время, затем начните заново со страницы браузера."
 
 msgctxt "forum-login"
@@ -5903,7 +5903,7 @@ msgid "Waiting for a public port"
 msgstr "Ожидание публичного порта"
 
 msgctxt "port-forwarding-view"
-msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client's web interface first."
+msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client’s web interface first."
 msgstr "Warren может вписать публичный порт в ваш torrent-клиент и обновлять его при каждом изменении. Сначала включите веб-интерфейс клиента."
 
 msgctxt "port-forwarding-view"
@@ -5943,7 +5943,7 @@ msgid "Sign in to the forum with a code"
 msgstr "Войти на форум по коду"
 
 msgctxt "forum-sign-in-code"
-msgid "When the forum's \"Open the Warren app\" button did nothing"
+msgid "When the forum’s \"Open the Warren app\" button did nothing"
 msgstr "Если кнопка \"Открыть приложение Warren\" на форуме ничего не сделала"
 
 msgctxt "forum-sign-in-code"
@@ -6091,7 +6091,7 @@ msgid "The report could not be sent. Check the connection and try again."
 msgstr "Не удалось отправить отчёт. Проверьте подключение и попробуйте снова."
 
 msgctxt "report-problem"
-msgid "This device's clock is off by more than a minute. Enable automatic date and time, then send again."
+msgid "This device’s clock is off by more than a minute. Enable automatic date and time, then send again."
 msgstr "Часы этого устройства отклоняются более чем на минуту. Включите автоматическую дату и время и отправьте снова."
 
 msgctxt "report-problem"
@@ -6163,7 +6163,7 @@ msgid "Type this code on the sign-in page of your other device. Never read it ou
 msgstr "Введите этот код на странице входа на другом устройстве. Никогда не зачитывайте его и никому не отправляйте, даже тому, кто называет себя сотрудником Warren."
 
 msgctxt "forum-login"
-msgid "Finish in this device's browser"
+msgid "Finish in this device’s browser"
 msgstr "Завершить в браузере этого устройства"
 
 msgctxt "forum-login"

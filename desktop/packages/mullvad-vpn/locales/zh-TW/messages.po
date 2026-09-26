@@ -2170,7 +2170,7 @@ msgid "Active subscribers"
 msgstr "有效訂閱者"
 
 msgctxt "network-stats"
-msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour."
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one’s traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour."
 msgstr "出口伺服器僅在至少有 %(threshold)d 人使用時才顯示即時數據，以免任何人的流量被單獨辨識。低於此人數時，只顯示其過去一小時的負載等級；在其他出口伺服器顯示即時數據期間，它按小時計入整個網路的總數。"
 
 msgctxt "network-stats"
@@ -2210,7 +2210,7 @@ msgid "Limited by CPU"
 msgstr "受 CPU 限制"
 
 msgctxt "network-stats"
-msgid "Live figures appear once %(threshold)d people share an exit, so no one's traffic can be singled out."
+msgid "Live figures appear once %(threshold)d people share an exit, so no one’s traffic can be singled out."
 msgstr "當有 %(threshold)d 人共用一台出口伺服器時才會顯示即時數據，以免任何人的流量被單獨辨識。"
 
 msgctxt "network-stats"
@@ -3678,15 +3678,15 @@ msgid "Set only when the exit runs a public TLS certificate (X.509 mode). Leave 
 msgstr "僅當出口伺服器使用公開 TLS 憑證（X.509 模式）時才需設定。預設的原始金鑰模式請留空。"
 
 msgctxt "vpn-settings-view"
-msgid "The exit's Ed25519 public key, 64 hexadecimal characters."
+msgid "The exit’s Ed25519 public key, 64 hexadecimal characters."
 msgstr "出口伺服器的 Ed25519 公鑰，共 64 個十六進位字元。"
 
 msgctxt "vpn-settings-view"
-msgid "The exit's X25519 multi-hop key, 64 hexadecimal characters."
+msgid "The exit’s X25519 multi-hop key, 64 hexadecimal characters."
 msgstr "出口伺服器的 X25519 多點跳躍金鑰，共 64 個十六進位字元。"
 
 msgctxt "vpn-settings-view"
-msgid "The exit's routing id, 32 hexadecimal characters."
+msgid "The exit’s routing id, 32 hexadecimal characters."
 msgstr "出口伺服器的路由 ID，共 32 個十六進位字元。"
 
 msgctxt "vpn-settings-view"
@@ -5027,7 +5027,7 @@ msgid "Write down these 12 words in order and keep them somewhere safe. They are
 msgstr "請依序抄下這 12 個字並妥善保管於安全之處。若您失去對此裝置的存取權，這是還原訂閱的唯一方式。"
 
 msgctxt "warren-onboarding"
-msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgid "You don’t have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
 msgstr "您目前尚無有效的訂閱。方案每月僅需數歐元起，不自動續費、不需建立帳號，用多少付多少。"
 
 msgctxt "warren-onboarding"
@@ -5135,7 +5135,7 @@ msgid "Write these 12 words down and keep them safe. They are the only way to re
 msgstr "請寫下這 12 個單字並妥善保管。如果您遺失此裝置，它們是復原您帳戶的唯一方式。"
 
 msgctxt "connect-view"
-msgid "I've completed payment"
+msgid "I’ve completed payment"
 msgstr "我已完成付款"
 
 msgctxt "device-management"
@@ -5147,7 +5147,7 @@ msgid "Your session has ended. To connect again, you will need to log back in."
 msgstr "您的工作階段已結束。若要重新連線，您需要重新登入。"
 
 msgctxt "notifications"
-msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "偵測到伺服器身分不符。出口節點的公開金鑰已變更。"
 
 msgctxt "vpn-settings-view"
@@ -5492,7 +5492,7 @@ msgid "never"
 msgstr "從未"
 
 msgctxt "forum-login"
-msgid "Sign-in refused: this computer's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
+msgid "Sign-in refused: this computer’s clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
 msgstr "登入遭拒：此電腦的時鐘偏差超過一分鐘。請開啟自動設定日期與時間，然後從瀏覽器頁面重新開始。"
 
 msgctxt "forum-login"
@@ -5836,7 +5836,7 @@ msgid "Waiting for a public port"
 msgstr "正在等待公用連接埠"
 
 msgctxt "port-forwarding-view"
-msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client's web interface first."
+msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client’s web interface first."
 msgstr "Warren 可以將公用連接埠填入你的 torrent 用戶端，並在連接埠變更時自動更新。請先啟用用戶端的 web 介面。"
 
 msgctxt "port-forwarding-view"
@@ -5876,7 +5876,7 @@ msgid "Sign in to the forum with a code"
 msgstr "使用代碼登入論壇"
 
 msgctxt "forum-sign-in-code"
-msgid "When the forum's \"Open the Warren app\" button did nothing"
+msgid "When the forum’s \"Open the Warren app\" button did nothing"
 msgstr "當論壇上的「開啟 Warren 應用程式」按鈕沒有反應時"
 
 msgctxt "forum-sign-in-code"
@@ -6024,7 +6024,7 @@ msgid "The report could not be sent. Check the connection and try again."
 msgstr "無法傳送報告。請檢查網路連線後重試。"
 
 msgctxt "report-problem"
-msgid "This device's clock is off by more than a minute. Enable automatic date and time, then send again."
+msgid "This device’s clock is off by more than a minute. Enable automatic date and time, then send again."
 msgstr "此裝置的時鐘偏差超過一分鐘。請開啟自動日期和時間，然後重新傳送。"
 
 msgctxt "report-problem"
@@ -6096,7 +6096,7 @@ msgid "Type this code on the sign-in page of your other device. Never read it ou
 msgstr "請在您另一台裝置的登入頁面上輸入此代碼。切勿唸出或傳送給任何人，包括自稱來自 Warren 的人。"
 
 msgctxt "forum-login"
-msgid "Finish in this device's browser"
+msgid "Finish in this device’s browser"
 msgstr "在此裝置的瀏覽器中完成"
 
 msgctxt "forum-login"

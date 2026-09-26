@@ -319,7 +319,7 @@ export function TorrentClientSetting() {
           // TRANSLATORS: Description of the torrent client section.
           messages.pgettext(
             'port-forwarding-view',
-            "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client's web interface first.",
+            'Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client’s web interface first.',
           )
         }
       </Text>

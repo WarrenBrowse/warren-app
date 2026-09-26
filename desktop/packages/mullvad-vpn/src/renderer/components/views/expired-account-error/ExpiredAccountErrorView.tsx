@@ -280,7 +280,7 @@ function CheckSubscriptionButton() {
         <Button.Text>
           {purchaseInFlight
             ? messages.pgettext('connect-view', 'Checking... (click to refresh now)')
-            : messages.pgettext('connect-view', "I've completed payment")}
+            : messages.pgettext('connect-view', 'I’ve completed payment')}
         </Button.Text>
       )}
     </Button>

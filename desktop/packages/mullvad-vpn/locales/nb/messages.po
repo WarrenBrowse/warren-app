@@ -2178,7 +2178,7 @@ msgid "Active subscribers"
 msgstr "Aktive abonnenter"
 
 msgctxt "network-stats"
-msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour."
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one’s traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour."
 msgstr "En utgangsserver viser bare sanntidstall så lenge minst %(threshold)d personer bruker den, slik at ingens trafikk kan pekes ut. Under det viser den bare belastningsnivået sitt for den siste timen, og så lenge andre utgangsservere viser sanntidstall, telles den med i nettverkets totaler per time."
 
 msgctxt "network-stats"
@@ -2218,7 +2218,7 @@ msgid "Limited by CPU"
 msgstr "Begrenset av CPU"
 
 msgctxt "network-stats"
-msgid "Live figures appear once %(threshold)d people share an exit, so no one's traffic can be singled out."
+msgid "Live figures appear once %(threshold)d people share an exit, so no one’s traffic can be singled out."
 msgstr "Sanntidstall vises så snart %(threshold)d personer deler en utgangsserver, slik at ingens trafikk kan pekes ut."
 
 msgctxt "network-stats"
@@ -3679,15 +3679,15 @@ msgid "Set only when the exit runs a public TLS certificate (X.509 mode). Leave 
 msgstr "Angi dette bare når utgangsserveren bruker et offentlig TLS-sertifikat (X.509-modus). La feltet stå tomt for standardmodusen med rå nøkler."
 
 msgctxt "vpn-settings-view"
-msgid "The exit's Ed25519 public key, 64 hexadecimal characters."
+msgid "The exit’s Ed25519 public key, 64 hexadecimal characters."
 msgstr "Utgangsserverens offentlige Ed25519-nøkkel, 64 heksadesimale tegn."
 
 msgctxt "vpn-settings-view"
-msgid "The exit's routing id, 32 hexadecimal characters."
+msgid "The exit’s routing id, 32 hexadecimal characters."
 msgstr "Utgangsserverens rutings-ID, 32 heksadesimale tegn."
 
 msgctxt "vpn-settings-view"
-msgid "The exit's X25519 multi-hop key, 64 hexadecimal characters."
+msgid "The exit’s X25519 multi-hop key, 64 hexadecimal characters."
 msgstr "Utgangsserverens X25519-multihoppnøkkel, 64 heksadesimale tegn."
 
 msgctxt "vpn-settings-view"
@@ -4964,7 +4964,7 @@ msgid "Write down these 12 words in order and keep them somewhere safe. They are
 msgstr "Skriv ned disse 12 ordene i rekkefølge, og oppbevar dem på et trygt sted. De er den eneste måten å gjenopprette abonnementet ditt på hvis du mister tilgangen til denne enheten."
 
 msgctxt "warren-onboarding"
-msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgid "You don’t have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
 msgstr "Du har ennå ikke et aktivt abonnement. Planene starter på noen få euro per måned, ingen gjentakende fakturering, ingen kontoregistrering, betal etter bruk."
 
 msgctxt "warren-onboarding"
@@ -5277,7 +5277,7 @@ msgid "Write these 12 words down and keep them safe. They are the only way to re
 msgstr "Skriv ned disse 12 ordene og oppbevar dem trygt. De er den eneste måten å gjenopprette kontoen din på hvis du mister denne enheten."
 
 msgctxt "connect-view"
-msgid "I've completed payment"
+msgid "I’ve completed payment"
 msgstr "Jeg har fullført betalingen"
 
 msgctxt "device-management"
@@ -5289,7 +5289,7 @@ msgid "Your session has ended. To connect again, you will need to log back in."
 msgstr "Økten din er avsluttet. For å koble til igjen må du logge inn på nytt."
 
 msgctxt "notifications"
-msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "Avvik i serveridentitet oppdaget. Den offentlige nøkkelen til utgangsnoden er endret."
 
 msgctxt "vpn-settings-view"
@@ -5522,7 +5522,7 @@ msgid "Multihop"
 msgstr "Multihop"
 
 msgctxt "forum-login"
-msgid "Sign-in refused: this computer's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
+msgid "Sign-in refused: this computer’s clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
 msgstr "Pålogging avvist: klokken på denne datamaskinen er mer enn ett minutt feil. Slå på automatisk dato og klokkeslett, og start på nytt fra nettlesersiden."
 
 msgctxt "forum-login"
@@ -5867,7 +5867,7 @@ msgid "Waiting for a public port"
 msgstr "Venter på en offentlig port"
 
 msgctxt "port-forwarding-view"
-msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client's web interface first."
+msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client’s web interface first."
 msgstr "Warren kan skrive den offentlige porten inn i torrent-klienten din og oppdatere den hver gang den endres. Slå på klientens webgrensesnitt først."
 
 msgctxt "port-forwarding-view"
@@ -5907,7 +5907,7 @@ msgid "Sign in to the forum with a code"
 msgstr "Logg inn på forumet med en kode"
 
 msgctxt "forum-sign-in-code"
-msgid "When the forum's \"Open the Warren app\" button did nothing"
+msgid "When the forum’s \"Open the Warren app\" button did nothing"
 msgstr "Når knappen \"Åpne Warren-appen\" på forumet ikke gjorde noe"
 
 msgctxt "forum-sign-in-code"
@@ -6055,7 +6055,7 @@ msgid "The report could not be sent. Check the connection and try again."
 msgstr "Rapporten kunne ikke sendes. Sjekk tilkoblingen og prøv igjen."
 
 msgctxt "report-problem"
-msgid "This device's clock is off by more than a minute. Enable automatic date and time, then send again."
+msgid "This device’s clock is off by more than a minute. Enable automatic date and time, then send again."
 msgstr "Klokken på denne enheten avviker med mer enn ett minutt. Slå på automatisk dato og klokkeslett, og send på nytt."
 
 msgctxt "report-problem"
@@ -6127,7 +6127,7 @@ msgid "Type this code on the sign-in page of your other device. Never read it ou
 msgstr "Skriv inn denne koden på innloggingssiden på den andre enheten din. Les den aldri høyt, og send den aldri til noen, heller ikke til noen som sier at de er fra Warren."
 
 msgctxt "forum-login"
-msgid "Finish in this device's browser"
+msgid "Finish in this device’s browser"
 msgstr "Fullfør i denne enhetens nettleser"
 
 msgctxt "forum-login"

@@ -2170,7 +2170,7 @@ msgid "Active subscribers"
 msgstr "활성 구독자"
 
 msgctxt "network-stats"
-msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour."
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one’s traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour."
 msgstr "출구 서버는 최소 %(threshold)d명이 사용하는 동안에만 실시간 수치를 표시합니다. 누구의 트래픽도 식별되지 않도록 하기 위해서입니다. 그보다 적으면 최근 1시간의 부하 수준만 표시하며, 다른 출구 서버가 실시간인 동안에는 시간 단위로 네트워크 합계에 포함됩니다."
 
 msgctxt "network-stats"
@@ -2210,7 +2210,7 @@ msgid "Limited by CPU"
 msgstr "CPU에 의해 제한됨"
 
 msgctxt "network-stats"
-msgid "Live figures appear once %(threshold)d people share an exit, so no one's traffic can be singled out."
+msgid "Live figures appear once %(threshold)d people share an exit, so no one’s traffic can be singled out."
 msgstr "%(threshold)d명이 출구 서버를 함께 쓰면 실시간 수치가 표시됩니다. 누구의 트래픽도 식별되지 않도록 하기 위해서입니다."
 
 msgctxt "network-stats"
@@ -3678,15 +3678,15 @@ msgid "Set only when the exit runs a public TLS certificate (X.509 mode). Leave 
 msgstr "출구 서버가 공개 TLS 인증서를 사용하는 경우(X.509 모드)에만 설정하세요. 기본 원시 키 모드에서는 비워 두세요."
 
 msgctxt "vpn-settings-view"
-msgid "The exit's Ed25519 public key, 64 hexadecimal characters."
+msgid "The exit’s Ed25519 public key, 64 hexadecimal characters."
 msgstr "출구 서버의 Ed25519 공개 키, 16진수 64자."
 
 msgctxt "vpn-settings-view"
-msgid "The exit's routing id, 32 hexadecimal characters."
+msgid "The exit’s routing id, 32 hexadecimal characters."
 msgstr "출구 서버의 라우팅 ID, 16진수 32자."
 
 msgctxt "vpn-settings-view"
-msgid "The exit's X25519 multi-hop key, 64 hexadecimal characters."
+msgid "The exit’s X25519 multi-hop key, 64 hexadecimal characters."
 msgstr "출구 서버의 X25519 멀티홉 키, 16진수 64자."
 
 msgctxt "vpn-settings-view"
@@ -5027,7 +5027,7 @@ msgid "Write down these 12 words in order and keep them somewhere safe. They are
 msgstr "이 12단어를 순서대로 적어 안전한 곳에 보관하세요. 이 기기에 접근할 수 없게 될 경우 구독을 복구할 수 있는 유일한 방법입니다."
 
 msgctxt "warren-onboarding"
-msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgid "You don’t have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
 msgstr "아직 활성 구독이 없습니다. 요금제는 월 몇 유로부터 시작하며, 정기 결제도 계정 생성도 없이 사용한 만큼만 지불합니다."
 
 msgctxt "warren-onboarding"
@@ -5135,7 +5135,7 @@ msgid "Write these 12 words down and keep them safe. They are the only way to re
 msgstr "이 12개 단어를 적어 안전하게 보관하세요. 이 기기를 분실할 경우 계정을 복구할 수 있는 유일한 방법입니다."
 
 msgctxt "connect-view"
-msgid "I've completed payment"
+msgid "I’ve completed payment"
 msgstr "결제를 완료했습니다"
 
 msgctxt "device-management"
@@ -5147,7 +5147,7 @@ msgid "Your session has ended. To connect again, you will need to log back in."
 msgstr "세션이 종료되었습니다. 다시 연결하려면 다시 로그인해야 합니다."
 
 msgctxt "notifications"
-msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "서버 ID 불일치가 감지되었습니다. 출구 노드의 공개 키가 변경되었습니다."
 
 msgctxt "vpn-settings-view"
@@ -5492,7 +5492,7 @@ msgid "never"
 msgstr "없음"
 
 msgctxt "forum-login"
-msgid "Sign-in refused: this computer's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
+msgid "Sign-in refused: this computer’s clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
 msgstr "로그인이 거부되었습니다. 이 컴퓨터의 시계가 1분 이상 어긋나 있습니다. 날짜 및 시간 자동 설정을 켜고 브라우저 페이지에서 다시 시작하세요."
 
 msgctxt "forum-login"
@@ -5836,7 +5836,7 @@ msgid "Waiting for a public port"
 msgstr "공개 포트를 기다리는 중"
 
 msgctxt "port-forwarding-view"
-msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client's web interface first."
+msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client’s web interface first."
 msgstr "Warren은 공개 포트를 torrent 클라이언트에 입력하고 변경될 때마다 업데이트할 수 있습니다. 먼저 클라이언트의 웹 인터페이스를 켜 주세요."
 
 msgctxt "port-forwarding-view"
@@ -5876,7 +5876,7 @@ msgid "Sign in to the forum with a code"
 msgstr "코드로 포럼에 로그인"
 
 msgctxt "forum-sign-in-code"
-msgid "When the forum's \"Open the Warren app\" button did nothing"
+msgid "When the forum’s \"Open the Warren app\" button did nothing"
 msgstr "포럼의 \"Warren 앱 열기\" 버튼이 아무 반응이 없을 때"
 
 msgctxt "forum-sign-in-code"
@@ -6024,7 +6024,7 @@ msgid "The report could not be sent. Check the connection and try again."
 msgstr "보고서를 보낼 수 없습니다. 연결을 확인하고 다시 시도하세요."
 
 msgctxt "report-problem"
-msgid "This device's clock is off by more than a minute. Enable automatic date and time, then send again."
+msgid "This device’s clock is off by more than a minute. Enable automatic date and time, then send again."
 msgstr "이 기기의 시계가 1분 이상 어긋나 있습니다. 자동 날짜 및 시간을 켠 다음 다시 보내세요."
 
 msgctxt "report-problem"
@@ -6096,7 +6096,7 @@ msgid "Type this code on the sign-in page of your other device. Never read it ou
 msgstr "이 코드를 다른 기기의 로그인 페이지에 입력하세요. Warren 직원이라고 말하는 사람을 포함해 누구에게도 이 코드를 읽어 주거나 보내지 마세요."
 
 msgctxt "forum-login"
-msgid "Finish in this device's browser"
+msgid "Finish in this device’s browser"
 msgstr "이 기기의 브라우저에서 완료"
 
 msgctxt "forum-login"

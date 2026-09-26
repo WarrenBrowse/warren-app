@@ -64,7 +64,7 @@ export function Methodology({ stats }: { stats: NetworkStats }) {
             // TRANSLATORS: %(threshold)d - fewest people an exit must carry for its live figures to show
             messages.pgettext(
               'network-stats',
-              "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour.",
+              'An exit shows live figures only while at least %(threshold)d people use it, so no one’s traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour.',
             ),
             { threshold: stats.exitLiveThreshold },
           )}

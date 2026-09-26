@@ -116,7 +116,7 @@ export function noticeForForumLoginResult(result: ForumLoginResult): string | un
     case 'clock-skew':
       return messages.pgettext(
         'forum-login',
-        "Sign-in refused: this computer's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page.",
+        'Sign-in refused: this computer’s clock is off by more than a minute. Enable automatic date and time, then start again from the browser page.',
       );
     case 'expired':
       return messages.pgettext(

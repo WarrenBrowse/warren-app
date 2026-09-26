@@ -185,7 +185,7 @@ export function WarrenCustomExitSetting(props: WarrenCustomExitSettingProps) {
             onCommit={setPubkeyHex}
             description={messages.pgettext(
               'vpn-settings-view',
-              "The exit's Ed25519 public key, 64 hexadecimal characters.",
+              'The exit’s Ed25519 public key, 64 hexadecimal characters.',
             )}
           />
           <CustomExitField
@@ -196,7 +196,7 @@ export function WarrenCustomExitSetting(props: WarrenCustomExitSettingProps) {
             onCommit={setX25519MultihopPubkeyHex}
             description={messages.pgettext(
               'vpn-settings-view',
-              "The exit's X25519 multi-hop key, 64 hexadecimal characters.",
+              'The exit’s X25519 multi-hop key, 64 hexadecimal characters.',
             )}
           />
           <CustomExitField
@@ -207,7 +207,7 @@ export function WarrenCustomExitSetting(props: WarrenCustomExitSettingProps) {
             onCommit={setExitIdHex}
             description={messages.pgettext(
               'vpn-settings-view',
-              "The exit's routing id, 32 hexadecimal characters.",
+              'The exit’s routing id, 32 hexadecimal characters.',
             )}
           />
           <CustomExitField

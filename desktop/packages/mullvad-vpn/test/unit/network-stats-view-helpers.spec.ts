@@ -182,7 +182,7 @@ describe('labels', () => {
 
   it('explains the live threshold with the value the snapshot carries', () => {
     expect(liveThresholdNote(20)).toBe(
-      "Live figures appear once 20 people share an exit, so no one's traffic can be singled out.",
+      'Live figures appear once 20 people share an exit, so no one’s traffic can be singled out.',
     );
   });
 });

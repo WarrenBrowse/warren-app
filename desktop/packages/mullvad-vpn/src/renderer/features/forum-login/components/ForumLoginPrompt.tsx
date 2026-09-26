@@ -260,7 +260,7 @@ function ForumLoginCompletion({ completion, onReveal, onClose }: ForumLoginCompl
     buttons.push(
       <Button key="finish" variant="success" disabled={finishing} onClick={finishInBrowser}>
         <Button.Text>
-          {messages.pgettext('forum-login', "Finish in this device's browser")}
+          {messages.pgettext('forum-login', 'Finish in this device’s browser')}
         </Button.Text>
       </Button>,
     );

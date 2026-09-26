@@ -27,7 +27,7 @@ export function ForumSignInCodeButton() {
             // TRANSLATORS: Subtitle of that row: when the fallback is for.
             messages.pgettext(
               'forum-sign-in-code',
-              'When the forum\'s "Open the Warren app" button did nothing',
+              'When the forum’s "Open the Warren app" button did nothing',
             )
           }
         </SettingsNavigationListItem.Footer.Text>

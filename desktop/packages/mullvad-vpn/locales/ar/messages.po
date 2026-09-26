@@ -2210,7 +2210,7 @@ msgid "Active subscribers"
 msgstr "المشتركون النشطون"
 
 msgctxt "network-stats"
-msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour."
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one’s traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour."
 msgstr "لا يعرض خادم الخروج أرقامه المباشرة إلا ما دام %(threshold)d شخصًا على الأقل يستخدمونه، حتى لا يمكن تمييز حركة مرور أي شخص. دون ذلك يعرض مستوى حمله خلال الساعة الأخيرة فقط، وما دامت خوادم أخرى تعرض أرقامًا مباشرة يدخل في مجاميع الشبكة بالساعة."
 
 msgctxt "network-stats"
@@ -2250,7 +2250,7 @@ msgid "Limited by CPU"
 msgstr "محدود بالمعالج"
 
 msgctxt "network-stats"
-msgid "Live figures appear once %(threshold)d people share an exit, so no one's traffic can be singled out."
+msgid "Live figures appear once %(threshold)d people share an exit, so no one’s traffic can be singled out."
 msgstr "تظهر الأرقام المباشرة عندما يتشارك %(threshold)d شخصًا خادم خروج واحدًا، حتى لا يمكن تمييز حركة مرور أي شخص."
 
 msgctxt "network-stats"
@@ -3723,15 +3723,15 @@ msgid "Set only when the exit runs a public TLS certificate (X.509 mode). Leave 
 msgstr "اضبطه فقط عندما يستخدم خادم الخروج شهادة TLS عامة (وضع X.509). اتركه فارغًا لوضع المفتاح الخام الافتراضي."
 
 msgctxt "vpn-settings-view"
-msgid "The exit's Ed25519 public key, 64 hexadecimal characters."
+msgid "The exit’s Ed25519 public key, 64 hexadecimal characters."
 msgstr "مفتاح Ed25519 العام لخادم الخروج، 64 حرفًا ست عشريًا."
 
 msgctxt "vpn-settings-view"
-msgid "The exit's routing id, 32 hexadecimal characters."
+msgid "The exit’s routing id, 32 hexadecimal characters."
 msgstr "معرّف التوجيه لخادم الخروج، 32 حرفًا ست عشريًا."
 
 msgctxt "vpn-settings-view"
-msgid "The exit's X25519 multi-hop key, 64 hexadecimal characters."
+msgid "The exit’s X25519 multi-hop key, 64 hexadecimal characters."
 msgstr "مفتاح X25519 للقفز المتعدد لخادم الخروج، 64 حرفًا ست عشريًا."
 
 msgctxt "vpn-settings-view"
@@ -5112,7 +5112,7 @@ msgid "Write down these 12 words in order and keep them somewhere safe. They are
 msgstr "دوّن هذه الكلمات الـ12 بالترتيب واحتفظ بها في مكان آمن. فهي الطريقة الوحيدة لاستعادة اشتراكك إذا فقدت الوصول إلى هذا الجهاز."
 
 msgctxt "warren-onboarding"
-msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgid "You don’t have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
 msgstr "ليس لديك اشتراك نشط بعد. تبدأ الباقات من بضعة يوروهات شهرياً، بلا فوترة متكررة، وبلا إنشاء حساب، وتدفع حسب الاستخدام."
 
 msgctxt "warren-onboarding"
@@ -5220,7 +5220,7 @@ msgid "Write these 12 words down and keep them safe. They are the only way to re
 msgstr "اكتب هذه الكلمات الـ 12 واحتفظ بها في مكان آمن. إنها الطريقة الوحيدة لاستعادة حسابك إذا فقدت هذا الجهاز."
 
 msgctxt "connect-view"
-msgid "I've completed payment"
+msgid "I’ve completed payment"
 msgstr "لقد أكملت الدفع"
 
 msgctxt "device-management"
@@ -5232,7 +5232,7 @@ msgid "Your session has ended. To connect again, you will need to log back in."
 msgstr "انتهت جلستك. لإعادة الاتصال، ستحتاج إلى تسجيل الدخول مرة أخرى."
 
 msgctxt "notifications"
-msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "تم اكتشاف عدم تطابق في هوية الخادم. لقد تغيّر المفتاح العام لعقدة الخروج."
 
 msgctxt "vpn-settings-view"
@@ -5577,7 +5577,7 @@ msgid "never"
 msgstr "أبدًا"
 
 msgctxt "forum-login"
-msgid "Sign-in refused: this computer's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
+msgid "Sign-in refused: this computer’s clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
 msgstr "تعذّر تسجيل الدخول: ساعة هذا الحاسوب منحرفة بأكثر من دقيقة. فعّل التاريخ والوقت التلقائيين ثم ابدأ من جديد من صفحة المتصفح."
 
 msgctxt "forum-login"
@@ -5926,7 +5926,7 @@ msgid "Waiting for a public port"
 msgstr "في انتظار منفذ عام"
 
 msgctxt "port-forwarding-view"
-msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client's web interface first."
+msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client’s web interface first."
 msgstr "يمكن لـ Warren إدخال المنفذ العام في عميل torrent لديك وتحديثه كلما تغير. فعّل أولاً واجهة الويب الخاصة بالعميل."
 
 msgctxt "port-forwarding-view"
@@ -5966,7 +5966,7 @@ msgid "Sign in to the forum with a code"
 msgstr "تسجيل الدخول إلى المنتدى برمز"
 
 msgctxt "forum-sign-in-code"
-msgid "When the forum's \"Open the Warren app\" button did nothing"
+msgid "When the forum’s \"Open the Warren app\" button did nothing"
 msgstr "عندما لا يفعل زر \"فتح تطبيق Warren\" في المنتدى شيئًا"
 
 msgctxt "forum-sign-in-code"
@@ -6114,7 +6114,7 @@ msgid "The report could not be sent. Check the connection and try again."
 msgstr "تعذر إرسال التقرير. تحقق من الاتصال وحاول مجددًا."
 
 msgctxt "report-problem"
-msgid "This device's clock is off by more than a minute. Enable automatic date and time, then send again."
+msgid "This device’s clock is off by more than a minute. Enable automatic date and time, then send again."
 msgstr "ساعة هذا الجهاز منحرفة بأكثر من دقيقة. فعّل التاريخ والوقت التلقائيين، ثم أرسل مجددًا."
 
 msgctxt "report-problem"
@@ -6186,7 +6186,7 @@ msgid "Type this code on the sign-in page of your other device. Never read it ou
 msgstr "اكتب هذا الرمز في صفحة تسجيل الدخول على جهازك الآخر. لا تقرأه بصوت عالٍ ولا ترسله إلى أي أحد، ولا حتى إلى من يدّعي أنه من Warren."
 
 msgctxt "forum-login"
-msgid "Finish in this device's browser"
+msgid "Finish in this device’s browser"
 msgstr "أكمل في متصفح هذا الجهاز"
 
 msgctxt "forum-login"

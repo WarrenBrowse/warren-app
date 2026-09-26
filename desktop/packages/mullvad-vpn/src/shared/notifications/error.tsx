@@ -332,7 +332,7 @@ export class ErrorNotificationProvider
       case TunnelParameterError.warrenPubkeyMismatch:
         return messages.pgettext(
           'notifications',
-          "Server identity mismatch detected. The exit node's public key has changed.",
+          'Server identity mismatch detected. The exit node’s public key has changed.',
         );
     }
   }

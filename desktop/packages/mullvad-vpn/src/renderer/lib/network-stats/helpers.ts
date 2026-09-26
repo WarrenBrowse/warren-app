@@ -173,7 +173,7 @@ export function liveThresholdNote(threshold: number): string {
     // TRANSLATORS: %(threshold)d - fewest people an exit must carry for its live figures to show
     messages.pgettext(
       'network-stats',
-      "Live figures appear once %(threshold)d people share an exit, so no one's traffic can be singled out.",
+      'Live figures appear once %(threshold)d people share an exit, so no one’s traffic can be singled out.',
     ),
     { threshold },
   );

@@ -502,7 +502,7 @@ final class WarrenForumAttachFlow: @unchecked Sendable {
                 "The logs are too large to send.", comment: "Forum attach refused, the report is over the cap")
         case .clockSkew:
             return NSLocalizedString(
-                "This device's clock is off by more than a minute. Enable automatic date and time, then send again.",
+                "This device’s clock is off by more than a minute. Enable automatic date and time, then send again.",
                 comment: "Forum attach refused, the device clock is outside the accepted window")
         case .serverError:
             return NSLocalizedString(

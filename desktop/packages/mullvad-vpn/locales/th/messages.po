@@ -2170,7 +2170,7 @@ msgid "Active subscribers"
 msgstr "ผู้สมัครสมาชิกที่ใช้งานอยู่"
 
 msgctxt "network-stats"
-msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour."
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one’s traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour."
 msgstr "เซิร์ฟเวอร์ทางออกจะแสดงตัวเลขสดเฉพาะเมื่อมีผู้ใช้อย่างน้อย %(threshold)d คน เพื่อไม่ให้ระบุทราฟฟิกของใครได้ หากน้อยกว่านั้นจะแสดงเพียงระดับโหลดในชั่วโมงที่ผ่านมา และขณะที่เซิร์ฟเวอร์อื่นแสดงตัวเลขสด จะนับรวมในยอดรวมของเครือข่ายเป็นรายชั่วโมง"
 
 msgctxt "network-stats"
@@ -2210,7 +2210,7 @@ msgid "Limited by CPU"
 msgstr "จำกัดด้วย CPU"
 
 msgctxt "network-stats"
-msgid "Live figures appear once %(threshold)d people share an exit, so no one's traffic can be singled out."
+msgid "Live figures appear once %(threshold)d people share an exit, so no one’s traffic can be singled out."
 msgstr "ตัวเลขสดจะแสดงเมื่อมี %(threshold)d คนใช้เซิร์ฟเวอร์ทางออกร่วมกัน เพื่อไม่ให้ระบุทราฟฟิกของใครได้"
 
 msgctxt "network-stats"
@@ -3678,15 +3678,15 @@ msgid "Set only when the exit runs a public TLS certificate (X.509 mode). Leave 
 msgstr "ตั้งค่าเฉพาะเมื่อเซิร์ฟเวอร์ทางออกใช้ใบรับรอง TLS สาธารณะ (โหมด X.509) เว้นว่างไว้สำหรับโหมดกุญแจดิบซึ่งเป็นค่าเริ่มต้น"
 
 msgctxt "vpn-settings-view"
-msgid "The exit's Ed25519 public key, 64 hexadecimal characters."
+msgid "The exit’s Ed25519 public key, 64 hexadecimal characters."
 msgstr "กุญแจสาธารณะ Ed25519 ของเซิร์ฟเวอร์ทางออก จำนวน 64 ตัวอักษรฐานสิบหก"
 
 msgctxt "vpn-settings-view"
-msgid "The exit's routing id, 32 hexadecimal characters."
+msgid "The exit’s routing id, 32 hexadecimal characters."
 msgstr "รหัสเส้นทางของเซิร์ฟเวอร์ทางออก จำนวน 32 ตัวอักษรฐานสิบหก"
 
 msgctxt "vpn-settings-view"
-msgid "The exit's X25519 multi-hop key, 64 hexadecimal characters."
+msgid "The exit’s X25519 multi-hop key, 64 hexadecimal characters."
 msgstr "กุญแจมัลติฮอป X25519 ของเซิร์ฟเวอร์ทางออก จำนวน 64 ตัวอักษรฐานสิบหก"
 
 msgctxt "vpn-settings-view"
@@ -5027,7 +5027,7 @@ msgid "Write down these 12 words in order and keep them somewhere safe. They are
 msgstr "จด 12 คำนี้ตามลำดับและเก็บไว้ในที่ปลอดภัย นี่คือวิธีเดียวที่จะกู้คืนการสมัครสมาชิกของคุณ หากคุณสูญเสียการเข้าถึงอุปกรณ์นี้"
 
 msgctxt "warren-onboarding"
-msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgid "You don’t have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
 msgstr "คุณยังไม่มีการสมัครสมาชิกที่ใช้งานอยู่ แพ็กเกจเริ่มต้นเพียงไม่กี่ยูโรต่อเดือน ไม่มีการเรียกเก็บเงินอัตโนมัติ ไม่ต้องสร้างบัญชี จ่ายตามการใช้งาน"
 
 msgctxt "warren-onboarding"
@@ -5135,7 +5135,7 @@ msgid "Write these 12 words down and keep them safe. They are the only way to re
 msgstr "จดคำ 12 คำเหล่านี้และเก็บไว้ในที่ปลอดภัย คำเหล่านี้เป็นวิธีเดียวที่จะกู้คืนบัญชีของคุณหากคุณทำอุปกรณ์นี้หาย"
 
 msgctxt "connect-view"
-msgid "I've completed payment"
+msgid "I’ve completed payment"
 msgstr "ฉันชำระเงินเสร็จแล้ว"
 
 msgctxt "device-management"
@@ -5147,7 +5147,7 @@ msgid "Your session has ended. To connect again, you will need to log back in."
 msgstr "เซสชันของคุณสิ้นสุดลงแล้ว หากต้องการเชื่อมต่ออีกครั้ง คุณจะต้องเข้าสู่ระบบใหม่"
 
 msgctxt "notifications"
-msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "ตรวจพบข้อมูลประจำตัวเซิร์ฟเวอร์ไม่ตรงกัน คีย์สาธารณะของโหนดทางออกมีการเปลี่ยนแปลง"
 
 msgctxt "vpn-settings-view"
@@ -5492,7 +5492,7 @@ msgid "never"
 msgstr "ไม่เคย"
 
 msgctxt "forum-login"
-msgid "Sign-in refused: this computer's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
+msgid "Sign-in refused: this computer’s clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
 msgstr "การลงชื่อเข้าใช้ถูกปฏิเสธ นาฬิกาของคอมพิวเตอร์เครื่องนี้คลาดเคลื่อนเกินหนึ่งนาที เปิดใช้วันที่และเวลาอัตโนมัติ แล้วเริ่มใหม่จากหน้าเบราว์เซอร์"
 
 msgctxt "forum-login"
@@ -5836,7 +5836,7 @@ msgid "Waiting for a public port"
 msgstr "กำลังรอพอร์ตสาธารณะ"
 
 msgctxt "port-forwarding-view"
-msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client's web interface first."
+msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client’s web interface first."
 msgstr "Warren สามารถใส่พอร์ตสาธารณะลงในไคลเอ็นต์ torrent ของคุณ และอัปเดตให้ทุกครั้งที่พอร์ตเปลี่ยน กรุณาเปิดใช้งานเว็บอินเทอร์เฟซของไคลเอ็นต์ก่อน"
 
 msgctxt "port-forwarding-view"
@@ -5876,7 +5876,7 @@ msgid "Sign in to the forum with a code"
 msgstr "ลงชื่อเข้าใช้ฟอรัมด้วยรหัส"
 
 msgctxt "forum-sign-in-code"
-msgid "When the forum's \"Open the Warren app\" button did nothing"
+msgid "When the forum’s \"Open the Warren app\" button did nothing"
 msgstr "เมื่อปุ่ม \"เปิดแอป Warren\" บนฟอรัมไม่ทำงาน"
 
 msgctxt "forum-sign-in-code"
@@ -6024,7 +6024,7 @@ msgid "The report could not be sent. Check the connection and try again."
 msgstr "ไม่สามารถส่งรายงานได้ ตรวจสอบการเชื่อมต่อแล้วลองอีกครั้ง"
 
 msgctxt "report-problem"
-msgid "This device's clock is off by more than a minute. Enable automatic date and time, then send again."
+msgid "This device’s clock is off by more than a minute. Enable automatic date and time, then send again."
 msgstr "นาฬิกาของอุปกรณ์นี้คลาดเคลื่อนเกินหนึ่งนาที เปิดวันที่และเวลาอัตโนมัติ แล้วส่งอีกครั้ง"
 
 msgctxt "report-problem"
@@ -6096,7 +6096,7 @@ msgid "Type this code on the sign-in page of your other device. Never read it ou
 msgstr "พิมพ์โค้ดนี้ในหน้าลงชื่อเข้าใช้บนอุปกรณ์อีกเครื่องของคุณ ห้ามอ่านออกเสียงหรือส่งให้ผู้ใด แม้แต่ผู้ที่อ้างว่ามาจาก Warren"
 
 msgctxt "forum-login"
-msgid "Finish in this device's browser"
+msgid "Finish in this device’s browser"
 msgstr "ทำให้เสร็จในเบราว์เซอร์ของอุปกรณ์นี้"
 
 msgctxt "forum-login"

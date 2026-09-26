@@ -73506,12 +73506,12 @@
         }
       }
     },
-    "Sign-in refused: this device's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page.": {
+    "Sign-in refused: this device’s clock is off by more than a minute. Enable automatic date and time, then start again from the browser page.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sign-in refused: this device's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
+            "value": "Sign-in refused: this device’s clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
           }
         },
         "ar": {
@@ -83448,12 +83448,12 @@
         }
       }
     },
-    "This device's clock is off by more than a minute. Enable automatic date and time, then send again.": {
+    "This device’s clock is off by more than a minute. Enable automatic date and time, then send again.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This device's clock is off by more than a minute. Enable automatic date and time, then send again."
+            "value": "This device’s clock is off by more than a minute. Enable automatic date and time, then send again."
           }
         },
         "ar": {
@@ -102334,12 +102334,12 @@
         }
       }
     },
-    "Finish in this device's browser": {
+    "Finish in this device’s browser": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Finish in this device's browser"
+            "value": "Finish in this device’s browser"
           }
         },
         "ar": {

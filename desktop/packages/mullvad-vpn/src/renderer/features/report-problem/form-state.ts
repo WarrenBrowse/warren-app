@@ -260,7 +260,7 @@ export function noticeForForumReportResult(result: ForumReportResult): ReportNot
       return {
         text: messages.pgettext(
           'report-problem',
-          "This device's clock is off by more than a minute. Enable automatic date and time, then send again.",
+          'This device’s clock is off by more than a minute. Enable automatic date and time, then send again.',
         ),
       };
     case 'rate-limited':

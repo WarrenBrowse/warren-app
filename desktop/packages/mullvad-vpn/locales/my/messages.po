@@ -2170,7 +2170,7 @@ msgid "Active subscribers"
 msgstr "အသက်ဝင်သော စာရင်းသွင်းသူများ"
 
 msgctxt "network-stats"
-msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one's traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour."
+msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one’s traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour."
 msgstr "ထွက်ပေါက်ဆာဗာသည် အနည်းဆုံး %(threshold)d ဦး အသုံးပြုနေချိန်တွင်သာ တိုက်ရိုက်ကိန်းဂဏန်းများကို ပြသည်။ မည်သူ၏ traffic ကိုမျှ ခွဲခြားမသိနိုင်စေရန် ဖြစ်သည်။ ထို့ထက်နည်းပါက နောက်ဆုံးတစ်နာရီ၏ ဝန်အဆင့်ကိုသာ ပြပြီး အခြားဆာဗာများ တိုက်ရိုက်ဖြစ်နေစဉ် ကွန်ရက်စုစုပေါင်းတွင် နာရီအလိုက် ထည့်တွက်သည်။"
 
 msgctxt "network-stats"
@@ -2210,7 +2210,7 @@ msgid "Limited by CPU"
 msgstr "CPU ဖြင့် ကန့်သတ်ထားသည်"
 
 msgctxt "network-stats"
-msgid "Live figures appear once %(threshold)d people share an exit, so no one's traffic can be singled out."
+msgid "Live figures appear once %(threshold)d people share an exit, so no one’s traffic can be singled out."
 msgstr "ထွက်ပေါက်ဆာဗာတစ်ခုကို %(threshold)d ဦး မျှသုံးသည်နှင့် တိုက်ရိုက်ကိန်းဂဏန်းများ ပေါ်လာသည်။ မည်သူ၏ traffic ကိုမျှ ခွဲခြားမသိနိုင်စေရန် ဖြစ်သည်။"
 
 msgctxt "network-stats"
@@ -3678,15 +3678,15 @@ msgid "Set only when the exit runs a public TLS certificate (X.509 mode). Leave 
 msgstr "ထွက်ပေါက်ဆာဗာတွင် အများသုံး TLS လက်မှတ် (X.509 မုဒ်) အသုံးပြုမှသာ သတ်မှတ်ပါ။ မူရင်း raw-key မုဒ်အတွက် အလွတ်ထားပါ။"
 
 msgctxt "vpn-settings-view"
-msgid "The exit's Ed25519 public key, 64 hexadecimal characters."
+msgid "The exit’s Ed25519 public key, 64 hexadecimal characters."
 msgstr "ထွက်ပေါက်ဆာဗာ၏ Ed25519 အများသုံးသော့၊ hexadecimal စာလုံး 64 လုံး။"
 
 msgctxt "vpn-settings-view"
-msgid "The exit's routing id, 32 hexadecimal characters."
+msgid "The exit’s routing id, 32 hexadecimal characters."
 msgstr "ထွက်ပေါက်ဆာဗာ၏ လမ်းကြောင်း ID၊ hexadecimal စာလုံး 32 လုံး။"
 
 msgctxt "vpn-settings-view"
-msgid "The exit's X25519 multi-hop key, 64 hexadecimal characters."
+msgid "The exit’s X25519 multi-hop key, 64 hexadecimal characters."
 msgstr "ထွက်ပေါက်ဆာဗာ၏ X25519 မာလ်တီဟော့ပ် သော့၊ hexadecimal စာလုံး 64 လုံး။"
 
 msgctxt "vpn-settings-view"
@@ -5030,7 +5030,7 @@ msgid "Write down these 12 words in order and keep them somewhere safe. They are
 msgstr "ဤစကားလုံး ၁၂ လုံးကို အစီအစဉ်အတိုင်း ရေးမှတ်ပြီး လုံခြုံသော နေရာတွင် သိမ်းထားပါ။ ဤစက်ပစ္စည်းကို အသုံးပြုခွင့် ဆုံးရှုံးသွားပါက သင်၏ စာရင်းသွင်းမှုကို ပြန်လည်ရယူရန် တစ်ခုတည်းသော နည်းလမ်းဖြစ်သည်။"
 
 msgctxt "warren-onboarding"
-msgid "You don't have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
+msgid "You don’t have an active subscription yet. Plans start at a few euros per month - no recurring billing, no account creation, pay as you go."
 msgstr "သင်တွင် အသက်ဝင်နေသော စာရင်းသွင်းမှု မရှိသေးပါ။ အစီအစဉ်များသည် တစ်လလျှင် ယူရို အနည်းငယ်မှ စတင်သည် - ထပ်ခါတလဲလဲ ငွေတောင်းခံမှု မရှိ၊ အကောင့်ဖွင့်ရန် မလို၊ သုံးသလောက် ပေးဆောင်ပါ။"
 
 msgctxt "warren-onboarding"
@@ -5138,7 +5138,7 @@ msgid "Write these 12 words down and keep them safe. They are the only way to re
 msgstr "ဤစကားလုံး ၁၂ လုံးကို ချရေး၍ လုံခြုံစွာ သိမ်းဆည်းပါ။ ဤစက်ပစ္စည်းကို ပျောက်ဆုံးပါက သင်၏အကောင့်ကို ပြန်လည်ရယူရန် တစ်ခုတည်းသော နည်းလမ်းဖြစ်သည်။"
 
 msgctxt "connect-view"
-msgid "I've completed payment"
+msgid "I’ve completed payment"
 msgstr "ကျွန်ုပ် ငွေပေးချေမှု ပြီးဆုံးပါပြီ"
 
 msgctxt "device-management"
@@ -5150,7 +5150,7 @@ msgid "Your session has ended. To connect again, you will need to log back in."
 msgstr "သင်၏ စက်ရှင် ပြီးဆုံးသွားပါပြီ။ ပြန်လည်ချိတ်ဆက်ရန် ထပ်မံ၍ လော့ဂ်အင်ဝင်ရန် လိုအပ်ပါသည်။"
 
 msgctxt "notifications"
-msgid "Server identity mismatch detected. The exit node's public key has changed."
+msgid "Server identity mismatch detected. The exit node’s public key has changed."
 msgstr "ဆာဗာ အထောက်အထား မကိုက်ညီမှု တွေ့ရှိသည်။ ထွက်ပေါက်နုဒ်၏ အများသုံးသော့ ပြောင်းလဲသွားပါသည်။"
 
 msgctxt "vpn-settings-view"
@@ -5495,7 +5495,7 @@ msgid "never"
 msgstr "ဘယ်တော့မှ"
 
 msgctxt "forum-login"
-msgid "Sign-in refused: this computer's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
+msgid "Sign-in refused: this computer’s clock is off by more than a minute. Enable automatic date and time, then start again from the browser page."
 msgstr "လက်မှတ်ထိုးဝင်ခြင်း ငြင်းပယ်ခံရသည်။ ဤကွန်ပျူတာ၏ နာရီသည် တစ်မိနစ်ကျော် လွဲနေသည်။ ရက်စွဲနှင့်အချိန် အလိုအလျောက်ကို ဖွင့်ပြီး ဘရောက်ဆာစာမျက်နှာမှ ပြန်စပါ။"
 
 msgctxt "forum-login"
@@ -5839,7 +5839,7 @@ msgid "Waiting for a public port"
 msgstr "အများသုံး port ကို စောင့်ဆိုင်းနေသည်"
 
 msgctxt "port-forwarding-view"
-msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client's web interface first."
+msgid "Warren can enter the public port into your torrent client and update it whenever it changes. Enable the client’s web interface first."
 msgstr "Warren သည် အများသုံး port ကို သင့် torrent ကလိုင်းယင့်တွင် ထည့်သွင်းပြီး ပြောင်းလဲတိုင်း အသစ်ပြင်ပေးနိုင်ပါသည်။ ကလိုင်းယင့်၏ web interface ကို ဦးစွာ ဖွင့်ပါ။"
 
 msgctxt "port-forwarding-view"
@@ -5879,7 +5879,7 @@ msgid "Sign in to the forum with a code"
 msgstr "ကုဒ်ဖြင့် ဖိုရမ်သို့ ဝင်ရောက်ရန်"
 
 msgctxt "forum-sign-in-code"
-msgid "When the forum's \"Open the Warren app\" button did nothing"
+msgid "When the forum’s \"Open the Warren app\" button did nothing"
 msgstr "ဖိုရမ်ရှိ \"Warren အက်ပ်ကို ဖွင့်ရန်\" ခလုတ်က ဘာမှ မဖြစ်သောအခါ"
 
 msgctxt "forum-sign-in-code"
@@ -6027,7 +6027,7 @@ msgid "The report could not be sent. Check the connection and try again."
 msgstr "အစီရင်ခံစာ ပေးပို့၍ မရပါ။ ချိတ်ဆက်မှုကို စစ်ဆေးပြီး ထပ်ကြိုးစားပါ။"
 
 msgctxt "report-problem"
-msgid "This device's clock is off by more than a minute. Enable automatic date and time, then send again."
+msgid "This device’s clock is off by more than a minute. Enable automatic date and time, then send again."
 msgstr "ဤစက်၏ နာရီသည် တစ်မိနစ်ကျော် လွဲနေသည်။ အလိုအလျောက် ရက်စွဲနှင့် အချိန်ကို ဖွင့်ပြီး ပြန်ပို့ပါ။"
 
 msgctxt "report-problem"
@@ -6099,7 +6099,7 @@ msgid "Type this code on the sign-in page of your other device. Never read it ou
 msgstr "ဤကုဒ်ကို သင့်အခြားစက်ပစ္စည်း၏ ဝင်ရောက်မှုစာမျက်နှာတွင် ရိုက်ထည့်ပါ။ Warren မှဖြစ်သည်ဟု ပြောသူ အပါအဝင် မည်သူ့ကိုမျှ ဖတ်ပြခြင်း သို့မဟုတ် ပို့ပေးခြင်း လုံးဝမပြုပါနှင့်။"
 
 msgctxt "forum-login"
-msgid "Finish in this device's browser"
+msgid "Finish in this device’s browser"
 msgstr "ဤစက်ပစ္စည်း၏ ဘရောက်ဆာတွင် အပြီးသတ်ပါ"
 
 msgctxt "forum-login"

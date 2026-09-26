@@ -415,7 +415,7 @@ final class WarrenForumLoginFlow: @unchecked Sendable {
                 comment: "Forum login refused, no subscription")
         case .clockSkew:
             message = NSLocalizedString(
-                "Sign-in refused: this device's clock is off by more than a minute. Enable automatic date and time, then start again from the browser page.",
+                "Sign-in refused: this device’s clock is off by more than a minute. Enable automatic date and time, then start again from the browser page.",
                 comment: "Forum login refused, device clock outside the accepted window")
         case .expired:
             message = NSLocalizedString(
@@ -542,7 +542,7 @@ struct WarrenForumLoginCompletionView: View {
             if let finishInBrowser {
                 Button(
                     NSLocalizedString(
-                        "Finish in this device's browser",
+                        "Finish in this device’s browser",
                         comment: "Forum login, opens the handoff page after a typed sign-in code"),
                     action: finishInBrowser
                 )
