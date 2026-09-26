@@ -2120,7 +2120,7 @@ async fn collect_pulled(
     client: &warren_api::WarrenApiClient<ApiTransport>,
     claim: &crate::purchase_claim::PurchaseClaim,
 ) -> Result<Option<Zeroizing<String>>, String> {
-    if let Some(voucher) = PULLED_UNREGISTERED.get(&claim.wpid) {
+    if let Some(voucher) = PULLED_UNREGISTERED.get(claim) {
         return Ok(Some(voucher));
     }
     let pulled = client
@@ -2129,7 +2129,7 @@ async fn collect_pulled(
         .map_err(|e| format!("pull pending voucher failed: {e}"))?
         .map(Zeroizing::new);
     if let Some(voucher) = &pulled {
-        PULLED_UNREGISTERED.keep(&claim.wpid, voucher);
+        PULLED_UNREGISTERED.keep(claim, voucher);
     }
     Ok(pulled)
 }

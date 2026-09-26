@@ -70,61 +70,103 @@ pub(crate) fn classify_register_failure(error: &warren_api::ClientError) -> Regi
 /// The server hands a voucher out once, so a caller that lost the answer (a
 /// register that failed, Kotlin dying before it sealed the voucher) finds it
 /// here again for the life of the process.
-/// Each voucher is a paid bearer secret: wiped when it leaves.
-pub(crate) struct PulledVouchers(
-    parking_lot::Mutex<std::collections::BTreeMap<String, Zeroizing<String>>>,
-);
+/// Each entry keeps the pull secret that collected its voucher: the wpid
+/// names the purchase in URLs and proves nothing, so the copy is handed back
+/// against the same secret the server asked for. Both are paid bearer
+/// secrets, wiped when they leave.
+pub(crate) struct PulledVouchers(parking_lot::Mutex<std::collections::BTreeMap<String, Kept>>);
+
+/// The pull secret that collected a voucher, and the voucher.
+type Kept = (Zeroizing<String>, Zeroizing<String>);
 
 impl PulledVouchers {
     pub(crate) const fn new() -> Self {
         Self(parking_lot::Mutex::new(std::collections::BTreeMap::new()))
     }
 
-    pub(crate) fn get(&self, wpid: &str) -> Option<Zeroizing<String>> {
-        self.0.lock().get(wpid).cloned()
+    /// The voucher kept for `claim`, if its pull secret is the one that
+    /// collected it.
+    pub(crate) fn get(&self, claim: &PurchaseClaim) -> Option<Zeroizing<String>> {
+        let kept = self.0.lock();
+        let (pull_secret, voucher) = kept.get(&claim.wpid)?;
+        same_secret(pull_secret, &claim.pull_secret).then(|| voucher.clone())
     }
 
-    pub(crate) fn keep(&self, wpid: &str, voucher: &str) {
-        self.0
-            .lock()
-            .insert(wpid.to_owned(), Zeroizing::new(voucher.to_owned()));
+    pub(crate) fn keep(&self, claim: &PurchaseClaim, voucher: &str) {
+        self.0.lock().insert(
+            claim.wpid.clone(),
+            (
+                claim.pull_secret.clone(),
+                Zeroizing::new(voucher.to_owned()),
+            ),
+        );
     }
 
     /// Drops every copy of `voucher` once it is redeemed or dead, whether it
     /// was redeemed through its claim or, sealed by Kotlin, as itself.
     pub(crate) fn forget(&self, voucher: &str) {
-        self.0.lock().retain(|_, kept| kept.as_str() != voucher);
+        self.0
+            .lock()
+            .retain(|_, (_, kept)| kept.as_str() != voucher);
     }
+}
+
+/// Compares two secrets in time independent of where they first differ.
+fn same_secret(a: &str, b: &str) -> bool {
+    a.len() == b.len()
+        && a.bytes()
+            .zip(b.bytes())
+            .fold(0u8, |diff, (x, y)| diff | (x ^ y))
+            == 0
 }
 
 #[cfg(test)]
 mod tests {
     use super::{PulledVouchers, RegisterFailure, classify_register_failure, parse};
 
+    fn claim(wpid_char: char, secret_char: char) -> super::PurchaseClaim {
+        parse(&format!(
+            "{}{}",
+            wpid_char.to_string().repeat(32),
+            secret_char.to_string().repeat(64)
+        ))
+        .expect("96 hex chars are a claim")
+    }
+
     #[test]
     fn a_pulled_voucher_is_found_again_under_its_purchase() {
         let pulled = PulledVouchers::new();
 
-        pulled.keep("aaaa", "XXXX-YYYY-ZZZZ-WWWW");
+        pulled.keep(&claim('a', '1'), "XXXX-YYYY-ZZZZ-WWWW");
 
         assert_eq!(
-            pulled.get("aaaa").as_deref().map(String::as_str),
+            pulled.get(&claim('a', '1')).as_deref().map(String::as_str),
             Some("XXXX-YYYY-ZZZZ-WWWW")
         );
-        assert!(pulled.get("bbbb").is_none());
+        assert!(pulled.get(&claim('b', '1')).is_none());
+    }
+
+    #[test]
+    fn the_kept_copy_answers_only_the_purchase_s_own_pull_secret() {
+        // The wpid travels in URLs and proves nothing (warren-core doc 35).
+        let pulled = PulledVouchers::new();
+
+        pulled.keep(&claim('a', '1'), "XXXX-YYYY-ZZZZ-WWWW");
+
+        assert!(pulled.get(&claim('a', '2')).is_none());
     }
 
     #[test]
     fn a_redeemed_or_dead_voucher_leaves_every_purchase_it_was_kept_under() {
         let pulled = PulledVouchers::new();
-        pulled.keep("aaaa", "XXXX-YYYY-ZZZZ-WWWW");
-        pulled.keep("bbbb", "QQQQ-RRRR-SSSS-TTTT");
+        pulled.keep(&claim('a', '1'), "XXXX-YYYY-ZZZZ-WWWW");
+        pulled.keep(&claim('b', '1'), "QQQQ-RRRR-SSSS-TTTT");
 
         pulled.forget("XXXX-YYYY-ZZZZ-WWWW");
 
-        assert!(pulled.get("aaaa").is_none());
+        assert!(pulled.get(&claim('a', '1')).is_none());
         assert_eq!(
-            pulled.get("bbbb").as_deref().map(String::as_str),
+            pulled.get(&claim('b', '1')).as_deref().map(String::as_str),
             Some("QQQQ-RRRR-SSSS-TTTT")
         );
     }
