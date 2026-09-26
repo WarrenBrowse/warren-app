@@ -58,12 +58,20 @@ Line wrap the file at 100 chars.                                              Th
   a plain disconnection, and stop the connection when the revocation is learned during a session.
 - [iOS] Say when the server refuses a forwarded port for want of an entitlement, and ask again
   automatically instead of stopping on the first refusal.
+- [Windows, macOS, Linux] Lay the app out right to left in Arabic and Persian: text, lists,
+  switches, dialogs and navigation read from the right, and addresses keep their left-to-right
+  order.
+- [Windows, macOS, Linux] Offer Arabic, Persian and Ukrainian in the language list. They were only
+  reachable through the system language.
 
 ### Changed
 - Call the ban of an account a revocation, and each abuse report recorded against a forwarded
   port a warning, the words the published terms use.
 - [Windows, macOS, Linux] Save the settings in format version 17, which holds app routing. The apps
   you excluded from the VPN move to Bypass VPN.
+- [Windows, macOS, Linux] Translate every string of the app that was still in English, in all 23
+  languages.
+- [Android] Name the split tunneling screen App routing in every language, as on desktop.
 
 ### Fixed
 - [Windows] Fix Bypass VPN in the beta app, which refused to turn on with "The sublayer does not
@@ -98,6 +106,8 @@ Line wrap the file at 100 chars.                                              Th
 - [Android] Keep a purchased voucher that a revocation refused across restarts of the app, sealed
   by a key of the Android Keystore, and redeem it by itself once the revocation ends or when the
   app starts again. It is erased only once redeemed or refused for good.
+- [Windows, macOS, Linux] Show the real number of days, months and apps in Persian. Every duration
+  read "1 day".
 
 ## [1.1.35] - 2026-09-25
 ### Added

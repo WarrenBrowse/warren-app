@@ -50,12 +50,20 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   deconectare, iar conexiunea se oprește când revocarea e aflată în timpul unei sesiuni.
 - [iOS] Află când serverul refuză un port redirecționat din lipsă de drept de port, iar aplicația
   cere din nou automat în loc să se oprească la primul refuz.
+- [Windows, macOS, Linux] Aplicația se afișează de la dreapta la stânga în arabă și persană:
+  textele, listele, comutatoarele, dialogurile și navigarea se citesc de la dreapta, iar adresele
+  își păstrează ordinea de la stânga la dreapta.
+- [Windows, macOS, Linux] Araba, persana și ucraineana apar în lista de limbi. Până acum se puteau
+  alege doar prin limba sistemului.
 
 ### Modificat
 - Numește revocare blocarea unui cont și avertisment fiecare raportare de abuz înregistrată
   pentru un port redirecționat, cuvintele folosite de condițiile publicate.
 - [Windows, macOS, Linux] Setările se salvează în formatul versiunea 17, care conține Rutare
   aplicații. Aplicațiile excluse din VPN trec în „Fără VPN”.
+- [Windows, macOS, Linux] Toate textele aplicației care rămăseseră în engleză sunt traduse, în toate
+  cele 23 de limbi.
+- [Android] Ecranul de split tunneling se numește Rutare aplicații în toate limbile, ca pe desktop.
 
 ### Reparat
 - [Windows] Repară „Fără VPN” în aplicația beta, care refuza să pornească cu „The sublayer does not
@@ -90,6 +98,8 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [Android] Păstrează un voucher cumpărat pe care revocarea l-a refuzat și după o repornire a
   aplicației, sigilat de o cheie din Android Keystore, și îl folosește singur la sfârșitul
   revocării sau la repornirea aplicației. E șters doar după ce e folosit sau refuzat definitiv.
+- [Windows, macOS, Linux] În persană apare numărul real de zile, luni și aplicații: fiecare durată
+  apărea ca „1 zi”.
 
 ## [1.1.35] - 2026-09-25
 ### Adăugat

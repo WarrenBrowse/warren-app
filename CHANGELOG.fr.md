@@ -54,12 +54,21 @@ par l'application, gardez-le tel quel.
   de session.
 - [iOS] Dire quand le serveur refuse un port redirigé faute de droit de port, et redemander
   automatiquement au lieu de s'arrêter au premier refus.
+- [Windows, macOS, Linux] Afficher l'application de droite à gauche en arabe et en persan : textes,
+  listes, interrupteurs, fenêtres de dialogue et navigation se lisent depuis la droite, et les
+  adresses gardent leur ordre de gauche à droite.
+- [Windows, macOS, Linux] Proposer l'arabe, le persan et l'ukrainien dans la liste des langues. On
+  ne pouvait les obtenir que par la langue du système.
 
 ### Modifié
 - Appeler révocation le blocage d'un compte, et avertissement chaque signalement d'abus inscrit
   pour un port redirigé : ce sont les mots des conditions publiées.
 - [Windows, macOS, Linux] Enregistrer les réglages au format version 17, qui contient le routage
   des apps. Les apps que vous aviez exclues du VPN passent dans Hors VPN.
+- [Windows, macOS, Linux] Traduire toutes les phrases de l'application qui restaient en anglais,
+  dans les 23 langues.
+- [Android] Nommer l'écran de split tunneling Routage des apps dans toutes les langues, comme sur
+  ordinateur.
 
 ### Corrigé
 - [Windows] Corriger Hors VPN dans l'app beta, qui refusait de s'activer avec « The sublayer does
@@ -95,6 +104,8 @@ par l'application, gardez-le tel quel.
   l'application, scellé par une clé de l'Android Keystore, et l'utiliser de lui-même à la fin de la
   révocation ou au redémarrage de l'application. Il n'est effacé qu'une fois utilisé ou refusé
   définitivement.
+- [Windows, macOS, Linux] Afficher le vrai nombre de jours, de mois et d'apps en persan : chaque
+  durée s'affichait « 1 jour ».
 
 ## [1.1.35] - 2026-09-25
 ### Ajouté
