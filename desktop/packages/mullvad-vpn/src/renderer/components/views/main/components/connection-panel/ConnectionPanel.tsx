@@ -82,7 +82,7 @@ const StyledCard = styled.div<{ $accent: string }>((props) => ({
   '&::before': {
     content: '""',
     position: 'absolute',
-    left: 0,
+    insetInlineStart: 0,
     top: 0,
     bottom: 0,
     width: '3px',
@@ -103,12 +103,12 @@ const StyledCustomScrollbars = styled(CustomScrollbars)({
   flexShrink: 1,
 });
 
-// Sits to the LEFT of the country flag, which owns the top-right corner in
+// Sits before the country flag, which owns the top end corner in
 // every state so it never appears to move when the chevron comes and goes.
 const StyledConnectionPanelChevron = styled(IconButton)({
   position: 'absolute',
   top: '16px',
-  right: '46px',
+  insetInlineEnd: '46px',
   width: 'fit-content',
 });
 

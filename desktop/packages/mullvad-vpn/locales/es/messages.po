@@ -6285,3 +6285,11 @@ msgstr "Los avisos y cómo impugnarlos"
 msgctxt "redeem-voucher-view"
 msgid "The voucher was not used: keep it and redeem it once the revocation ends."
 msgstr "El cupón no se ha usado: consérvalo y canjéalo cuando termine la revocación."
+
+msgctxt "list-format"
+msgid ", "
+msgstr ", "
+
+msgctxt "connect-view"
+msgid "%(country)s, %(city)s"
+msgstr "%(country)s, %(city)s"

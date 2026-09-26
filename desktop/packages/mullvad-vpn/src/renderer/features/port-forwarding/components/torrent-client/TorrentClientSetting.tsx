@@ -203,7 +203,7 @@ export function TorrentClientSetting() {
 
       <SettingsListItem>
         <SettingsListItem.Item>
-          <FlexColumn gap="medium" style={{ width: '100%', paddingRight: spacings.medium }}>
+          <FlexColumn gap="medium" style={{ width: '100%', paddingInlineEnd: spacings.medium }}>
             <StyledField>
               <Text variant="labelTiny" color="whiteAlpha60">
                 {messages.pgettext('port-forwarding-view', 'Client')}

@@ -64,6 +64,7 @@ import { ForumAttachPrompt } from './features/forum-attach';
 import { ForumLoginPrompt } from './features/forum-login';
 import { WarrenPubKeyWarning } from './features/warren-pubkey-warning';
 import { Theme } from './lib/components';
+import { applyDocumentLocale } from './lib/document-locale';
 import { getNavigationBase } from './lib/functions/navigation-base';
 import History from './lib/history';
 import { loadTranslations } from './lib/load-translations';
@@ -372,7 +373,10 @@ export default class AppRenderer {
     // Request the initial state from the main process
     const initialState = IpcRendererEventChannel.state.get();
 
-    this.setLocale(initialState.translations.locale);
+    this.setLocale(
+      initialState.translations.locale,
+      initialState.translations.messages !== undefined,
+    );
     loadTranslations(
       messages,
       initialState.translations.locale,
@@ -912,7 +916,7 @@ export default class AppRenderer {
       await IpcRendererEventChannel.guiSettings.setPreferredLocale(preferredLocale);
 
     // set current locale
-    this.setLocale(translations.locale);
+    this.setLocale(translations.locale, translations.messages !== undefined);
 
     // load translations for new locale
     loadTranslations(messages, translations.locale, translations.messages);
@@ -1023,8 +1027,9 @@ export default class AppRenderer {
     }
   }
 
-  private setLocale(locale: string) {
+  private setLocale(locale: string, hasCatalog: boolean) {
     this.reduxActions.userInterface.updateLocale(locale);
+    applyDocumentLocale(document.documentElement, locale, hasCatalog);
   }
 
   private setReduxRelaySettings(relaySettings: RelaySettings) {

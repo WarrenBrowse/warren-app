@@ -3,8 +3,8 @@ import styled from 'styled-components';
 import { buttonText } from './common-styles';
 
 export const StyledLabel = styled.span<{ $textOffset: number }>(buttonText, (props) => ({
-  paddingLeft: props.$textOffset > 0 ? `${props.$textOffset}px` : 0,
-  paddingRight: props.$textOffset < 0 ? `${-props.$textOffset}px` : 0,
+  paddingInlineStart: props.$textOffset > 0 ? `${props.$textOffset}px` : 0,
+  paddingInlineEnd: props.$textOffset < 0 ? `${-props.$textOffset}px` : 0,
   textAlign: 'center',
   wordBreak: 'break-word',
 }));

@@ -6254,3 +6254,11 @@ msgstr "警告记录与申诉方式"
 msgctxt "redeem-voucher-view"
 msgid "The voucher was not used: keep it and redeem it once the revocation ends."
 msgstr "优惠券未被使用：请保留，待访问权限撤销期结束后再兑换。"
+
+msgctxt "list-format"
+msgid ", "
+msgstr "、"
+
+msgctxt "connect-view"
+msgid "%(country)s, %(city)s"
+msgstr "%(country)s%(city)s"

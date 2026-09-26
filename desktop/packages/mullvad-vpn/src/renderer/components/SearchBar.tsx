@@ -42,7 +42,7 @@ export const StyledClearButton = styled(IconButton)({
   position: 'absolute',
   top: '50%',
   transform: 'translateY(-50%)',
-  right: '9px',
+  insetInlineEnd: '9px',
 });
 
 export const StyledClearIcon = styled(Icon)({
@@ -56,7 +56,7 @@ export const StyledSearchIcon = styled(Icon)({
   position: 'absolute',
   top: '50%',
   transform: 'translateY(-50%)',
-  left: '8px',
+  insetInlineStart: '8px',
   [`${StyledSearchInput}:focus ~ &&`]: {
     backgroundColor: colors.blue,
   },

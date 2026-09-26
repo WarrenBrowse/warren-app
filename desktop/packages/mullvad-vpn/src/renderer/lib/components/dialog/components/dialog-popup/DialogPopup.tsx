@@ -20,8 +20,9 @@ export const StyledDialogPopup = styled.dialog`
   user-select: none;
 
   display: none;
-  top: 50%;
-  left: 50%;
+  // The modal dialog's user-agent insets are logical: in a right-to-left document they pin its
+  // right edge, which then wins over left and pushes the dialog off screen.
+  inset: 50% auto auto 50%;
   translate: -50% -50%;
 
   padding: ${spacings.medium};

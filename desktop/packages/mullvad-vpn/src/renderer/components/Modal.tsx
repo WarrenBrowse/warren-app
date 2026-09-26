@@ -130,7 +130,9 @@ const StyledModalAlert = styled.div<{ $visible: boolean; $closing: boolean }>((p
     flexDirection: 'column',
     backgroundColor: colors.darkBlue,
     borderRadius: '11px',
-    padding: '16px 0 16px 16px',
+    paddingBlock: '16px',
+    paddingInlineStart: '16px',
+    paddingInlineEnd: 0,
     maxHeight: '80vh',
     opacity: props.$visible && !props.$closing ? 1 : 0,
     transform,
@@ -140,7 +142,7 @@ const StyledModalAlert = styled.div<{ $visible: boolean; $closing: boolean }>((p
 });
 
 const StyledCustomScrollbars = styled(CustomScrollbars)({
-  paddingRight: '16px',
+  paddingInlineEnd: '16px',
 });
 
 const ModalAlertIcon = styled.div({
@@ -156,7 +158,7 @@ const ModalAlertButtonGroupContainer = styled.div({
 const ModalAlertButtonContainer = styled.div({
   display: 'flex',
   flexDirection: 'column',
-  marginRight: '16px',
+  marginInlineEnd: '16px',
 });
 
 interface IModalAlertBaseProps {
@@ -368,6 +370,6 @@ export const ModalMessage = styled.span(tinyText, {
 
 export const ModalMessageList = styled.ul({
   listStyle: 'disc outside',
-  paddingLeft: '20px',
+  paddingInlineStart: '20px',
   color: colors.whiteAlpha60,
 });

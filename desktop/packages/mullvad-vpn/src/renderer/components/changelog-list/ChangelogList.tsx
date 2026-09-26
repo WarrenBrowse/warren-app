@@ -11,9 +11,9 @@ const StyledList = styled.ul`
   flex-direction: column;
   gap: ${spacings.medium};
   list-style-type: disc;
-  padding-left: 0;
+  padding-inline-start: 0;
   li {
-    margin-left: 1.5em;
+    margin-inline-start: 1.5em;
   }
 `;
 

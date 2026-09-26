@@ -16,7 +16,7 @@ const StyledDiv = styled.div<{
 
 export const ProgressRange = () => {
   const { percent, disabled } = useProgress();
-  const transform = `translateX(${percent - 100}%)`;
+  const transform = `translateX(calc(var(--inline-sign) * ${percent - 100}%))`;
 
   return (
     <StyledDiv disabled={disabled} style={{ '--transform': transform } as React.CSSProperties} />

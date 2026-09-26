@@ -10,8 +10,23 @@ export type IconProps = {
   className?: string;
 } & React.HTMLAttributes<HTMLDivElement>;
 
-export const StyledIcon = styled.div<{ $color: string; $size: number; $src: string }>`
-  ${({ $size, $src, $color }) => {
+// Icons that point along the reading direction (forward, back) and so face the other way in
+// right-to-left languages. The individual `scale` property composes with any `transform` a
+// caller sets.
+const MIRRORED_ICONS: ReadonlySet<string> = new Set([
+  'chevron-left',
+  'chevron-left-circle',
+  'chevron-right',
+  'chevron-right-circle',
+]);
+
+export const StyledIcon = styled.div<{
+  $color: string;
+  $size: number;
+  $src: string;
+  $mirrored?: boolean;
+}>`
+  ${({ $size, $src, $color, $mirrored }) => {
     return css`
       flex-shrink: 0;
       width: ${$size}px;
@@ -19,6 +34,12 @@ export const StyledIcon = styled.div<{ $color: string; $size: number; $src: stri
       mask: url(${$src}) no-repeat center;
       mask-size: contain;
       background-color: ${$color};
+      ${$mirrored &&
+      css`
+        &:dir(rtl) {
+          scale: -1 1;
+        }
+      `}
     `;
   }}
 `;
@@ -41,5 +62,14 @@ export const Icon = ({
   const src = iconProp.startsWith('data:') ? iconProp : `assets/icons/${icon}.svg`;
 
   const color = colors[colorProp];
-  return <StyledIcon $src={src} $size={iconSizes[size]} $color={color} role="img" {...props} />;
+  return (
+    <StyledIcon
+      $src={src}
+      $size={iconSizes[size]}
+      $color={color}
+      $mirrored={MIRRORED_ICONS.has(iconProp)}
+      role="img"
+      {...props}
+    />
+  );
 };

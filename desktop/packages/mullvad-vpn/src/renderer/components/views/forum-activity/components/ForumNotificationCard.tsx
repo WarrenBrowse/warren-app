@@ -26,10 +26,11 @@ const StyledCard = styled.button<{ $unread: boolean; $clickable: boolean }>`
   // The whole point of the fix: without it the flex child refuses to shrink
   // below its longest word and the card overflows the window sideways.
   min-width: 0;
-  padding: ${spacings.small} ${spacings.medium} ${spacings.small} ${spacings.small};
+  padding-block: ${spacings.small};
+  padding-inline: ${spacings.small} ${spacings.medium};
   border: none;
   border-radius: ${Radius.radius12};
-  text-align: left;
+  text-align: start;
   background-color: ${({ $unread }) => ($unread ? colors.blue40 : colors.blue10)};
   cursor: ${({ $clickable }) => ($clickable ? 'pointer' : 'default')};
 

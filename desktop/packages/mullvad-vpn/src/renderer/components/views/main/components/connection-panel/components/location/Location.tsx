@@ -1,7 +1,8 @@
+import { sprintf } from 'sprintf-js';
 import styled from 'styled-components';
 
 import { TunnelState } from '../../../../../../../../shared/daemon-rpc-types';
-import { relayLocations } from '../../../../../../../../shared/gettext';
+import { messages, relayLocations } from '../../../../../../../../shared/gettext';
 import { colors } from '../../../../../../../lib/foundations';
 import { useSelector } from '../../../../../../../redux/store';
 import { largeText } from '../../../../../../common-styles';
@@ -41,7 +42,15 @@ function getLocationText(tunnelState: TunnelState, country?: string, city?: stri
   switch (tunnelState.state) {
     case 'connected':
     case 'connecting':
-      return city ? `${country}, ${city}` : country;
+      return city
+        ? sprintf(
+            // TRANSLATORS: The exit location under the connection status. Available placeholders:
+            // TRANSLATORS: %(country)s - the country of the exit, e.g. Sweden
+            // TRANSLATORS: %(city)s - its city, e.g. Gothenburg
+            messages.pgettext('connect-view', '%(country)s, %(city)s'),
+            { country, city },
+          )
+        : country;
     case 'disconnecting':
     case 'disconnected':
       return country;

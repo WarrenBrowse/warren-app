@@ -6,6 +6,16 @@
   outline: 0;
 }
 
+/* The sign of the inline axis, for the transforms that must mirror in right-to-left languages
+   (switch thumbs, sliding labels, progress bars). */
+html {
+  --inline-sign: 1;
+}
+
+html[dir='rtl'] {
+  --inline-sign: -1;
+}
+
 html {
   -webkit-font-smoothing: antialiased;
   user-select: none;

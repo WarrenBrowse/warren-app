@@ -6344,3 +6344,11 @@ msgstr "التحذيرات وكيفية الاعتراض عليها"
 msgctxt "redeem-voucher-view"
 msgid "The voucher was not used: keep it and redeem it once the revocation ends."
 msgstr "لم تُستخدم القسيمة: احتفظ بها واستردَّها بعد انتهاء مدة إلغاء الوصول."
+
+msgctxt "list-format"
+msgid ", "
+msgstr "، "
+
+msgctxt "connect-view"
+msgid "%(country)s, %(city)s"
+msgstr "%(country)s، %(city)s"

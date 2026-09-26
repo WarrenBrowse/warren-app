@@ -24,8 +24,8 @@ export const StyledLocationAccordionHeader = styled(LocationAccordionHeaderRoot)
     ${StyledAccordionHeader} {
       margin-top: 1px;
       ${StyledAccordionHeaderItem}, ${StyledListItemTrailingAction} {
-        border-top-left-radius: 0;
-        border-top-right-radius: 0;
+        border-start-start-radius: 0;
+        border-start-end-radius: 0;
       }
     }
   }
@@ -36,8 +36,8 @@ export const StyledLocationAccordionHeader = styled(LocationAccordionHeaderRoot)
     + ${StyledAccordionContent} {
       ${StyledAccordionHeader}:last-child {
         ${StyledAccordionHeaderItem}, ${StyledListItemTrailingAction} {
-          border-bottom-left-radius: 0;
-          border-bottom-right-radius: 0;
+          border-end-start-radius: 0;
+          border-end-end-radius: 0;
         }
       }
     }

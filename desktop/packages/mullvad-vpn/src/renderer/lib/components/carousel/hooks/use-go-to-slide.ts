@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { inlineSign } from '../../../document-locale';
 import { useCarouselContext } from '../CarouselContext';
 
 // Scroll to a specific slide.
@@ -9,7 +10,7 @@ export function useGoToSlide() {
     (slide: number) => {
       if (slidesRef.current) {
         const width = slidesRef.current.offsetWidth;
-        slidesRef.current.scrollTo({ left: width * slide });
+        slidesRef.current.scrollTo({ left: width * slide * inlineSign(slidesRef.current) });
       }
     },
     [slidesRef],

@@ -22,7 +22,7 @@ interface SectionTitleProps {
 }
 
 export const SectionTitle = styled(Row)<SectionTitleProps>(buttonText, (props) => ({
-  paddingRight: spacings.medium,
+  paddingInlineEnd: spacings.medium,
   color: props.disabled ? colors.whiteAlpha20 : colors.white,
   fontWeight: props.$thin ? 400 : 600,
   fontSize: props.$thin ? '15px' : '18px',
@@ -49,7 +49,7 @@ export function Section(props: SectionProps) {
 
 const StyledChevronButton = styled(ChevronButton)({
   padding: 0,
-  marginRight: spacings.medium,
+  marginInlineEnd: spacings.medium,
 });
 
 const StyledTitleContainer = styled(Container)({

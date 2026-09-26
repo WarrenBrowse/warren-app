@@ -13,12 +13,14 @@ import {
   IRelayListCountry,
 } from '../../../src/shared/daemon-rpc-types';
 import { RoutePath } from '../../../src/shared/routes';
+import { textDirection } from '../../../src/shared/text-direction';
 import { mockData } from '../mock-data';
 import { MockedTestUtils, startMockedApp } from './mocked-utils';
 
 // The App routing view is narrow (three tabs side by side, chips and badges), so every catalog
-// is rendered here and checked for clipped labels. Screenshots land in
-// <APP_ROUTING_SCREENSHOTS>/<locale>/ for whoever changes the copy.
+// is rendered here and checked for clipped labels, and Arabic and Persian are checked to be laid
+// out right to left. Screenshots land in <APP_ROUTING_SCREENSHOTS>/<locale>/ for whoever changes
+// the copy.
 // APP_ROUTING_LOCALES=all renders every catalog; the default is a sample of scripts and lengths.
 const SCREENSHOTS = process.env.APP_ROUTING_SCREENSHOTS ?? 'test-results/app-routing';
 const LOCALES_DIR = path.resolve(import.meta.dirname, '../../../locales');
@@ -30,6 +32,7 @@ const LOCALES = requested === 'all' ? ALL_LOCALES : requested.split(',');
 
 function catalog(locale: string) {
   const parsed = po.parse(fs.readFileSync(path.join(LOCALES_DIR, locale, 'messages.po')));
+  // An empty context looks up the messages extracted without one.
   return (context: string, msgid: string) => {
     const msgstr = parsed.translations[context]?.[msgid]?.msgstr[0];
     expect(msgstr, `${locale} translates "${msgid}"`).toBeTruthy();
@@ -162,6 +165,12 @@ for (const locale of LOCALES) {
       await util?.closePage();
     });
 
+    test('lays out in the reading direction of the catalog', async () => {
+      const root = page.locator('html');
+      await expect(root).toHaveAttribute('lang', locale);
+      await expect(root).toHaveAttribute('dir', textDirection(locale));
+    });
+
     test('fits the main screen labels', async () => {
       await expect(
         page.getByText(t('tunnel-control', 'Only selected apps are protected')),
@@ -171,6 +180,24 @@ for (const locale of LOCALES) {
       await expect(page.getByTestId('app-countries-indicator')).toBeVisible();
       expect(await clipped(label)).toEqual([]);
       await shot('01-main');
+    });
+
+    test('renders the settings', async () => {
+      await page.getByRole('button', { name: t('', 'Settings'), exact: true }).click();
+      await util.expectRoute(RoutePath.settings);
+      await expect(
+        page.getByRole('heading', { level: 1, name: t('settings-view', 'Settings') }),
+      ).toBeVisible();
+      await shot('07-settings');
+
+      await page.getByText(t('settings-view', 'User interface settings'), { exact: true }).click();
+      await util.expectRoute(RoutePath.userInterfaceSettings);
+      await shot('08-user-interface-settings');
+
+      await page.getByRole('button', { name: t('', 'Back'), exact: true }).click();
+      await util.expectRoute(RoutePath.settings);
+      await page.getByRole('button', { name: t('', 'Close'), exact: true }).click();
+      await util.expectRoute(RoutePath.main);
     });
 
     test('fits the three tabs', async () => {
@@ -193,6 +220,16 @@ for (const locale of LOCALES) {
         elements.map((element) => element.getBoundingClientRect().width),
       );
       expect(Math.max(...widths) - Math.min(...widths)).toBeLessThan(2);
+      // The first tab sits on the side the catalog is read from.
+      const [first, last] = await Promise.all([
+        tabs.nth(0).boundingBox(),
+        tabs.nth(2).boundingBox(),
+      ]);
+      if (textDirection(locale) === 'rtl') {
+        expect(first!.x).toBeGreaterThan(last!.x);
+      } else {
+        expect(first!.x).toBeLessThan(last!.x);
+      }
       await shot('02-include-only');
 
       await tabs.nth(1).click();

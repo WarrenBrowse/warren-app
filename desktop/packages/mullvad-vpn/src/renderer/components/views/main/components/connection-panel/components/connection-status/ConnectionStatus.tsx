@@ -29,10 +29,10 @@ const StyledTextColumn = styled.div({
   minWidth: 0,
 });
 
-// The flag hugs the right edge in EVERY state so it never appears to move; the
-// expand chevron (only present when expandable) slots in on its left instead.
+// The flag hugs the end edge in EVERY state so it never appears to move; the
+// expand chevron (only present when expandable) slots in before it instead.
 const StyledFlagSlot = styled.div({
-  marginLeft: 'auto',
+  marginInlineStart: 'auto',
   display: 'flex',
   alignItems: 'center',
 });

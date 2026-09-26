@@ -11,7 +11,7 @@ import { CellDisabledContext, Container } from './Container';
 const inputTextStyles: React.CSSProperties = {
   ...normalText,
   height: '18px',
-  textAlign: 'right',
+  textAlign: 'end',
   padding: '0px',
 };
 
@@ -256,7 +256,7 @@ const StyledInputWrapper = styled.div<{ $marginLeft: number }>(normalText, (prop
   position: 'relative',
   flex: 1,
   width: '171px',
-  marginLeft: props.$marginLeft + 'px',
+  marginInlineStart: props.$marginLeft + 'px',
   lineHeight: '24px',
   minHeight: '24px',
   fontWeight: 400,
@@ -276,7 +276,9 @@ const StyledTextArea = styled.textarea<{ $invalid?: boolean }>(normalText, (prop
   lineHeight: '24px',
   fontWeight: 400,
   resize: 'none',
-  padding: '10px 25px 10px 0',
+  paddingBlock: '10px',
+  paddingInlineStart: 0,
+  paddingInlineEnd: '25px',
   color: props.$invalid ? colors.red : 'auto',
 }));
 
@@ -285,7 +287,7 @@ const StyledInputFiller = styled.div({
   overflowWrap: 'break-word',
   minHeight: '24px',
   color: colors.transparent,
-  marginRight: '25px',
+  marginInlineEnd: '25px',
 });
 
 const StyledIconButton = styled(IconButton)<{ $disabled: boolean }>(({ $disabled }) => ({

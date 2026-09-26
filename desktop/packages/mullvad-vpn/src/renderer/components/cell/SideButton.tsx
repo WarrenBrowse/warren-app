@@ -9,8 +9,8 @@ export const SideButton = styled.button<ButtonColors & { $noSeparator?: boolean 
   (props) => ({
     position: 'relative',
     alignSelf: 'stretch',
-    paddingLeft: measurements.horizontalViewMargin,
-    paddingRight: measurements.horizontalViewMargin,
+    paddingInlineStart: measurements.horizontalViewMargin,
+    paddingInlineEnd: measurements.horizontalViewMargin,
     border: 0,
 
     '&&::before': {
@@ -18,7 +18,7 @@ export const SideButton = styled.button<ButtonColors & { $noSeparator?: boolean 
       position: 'absolute',
       margin: 'auto',
       top: 0,
-      left: 0,
+      insetInlineStart: 0,
       bottom: 0,
       height: '50%',
       width: '1px',

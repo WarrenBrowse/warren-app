@@ -6,8 +6,8 @@ import SearchBar, { type ISearchBarProps } from '../../../../SearchBar';
 export type SearchBarProps = ISearchBarProps;
 
 export const StyledSearchBar = styled(SearchBar)({
-  marginLeft: measurements.horizontalViewMargin,
-  marginRight: measurements.horizontalViewMargin,
+  marginInlineStart: measurements.horizontalViewMargin,
+  marginInlineEnd: measurements.horizontalViewMargin,
   marginBottom: measurements.buttonVerticalMargin,
 });
 

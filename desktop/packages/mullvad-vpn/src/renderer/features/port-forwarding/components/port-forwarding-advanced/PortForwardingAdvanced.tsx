@@ -59,7 +59,7 @@ const StyledInput = styled.input<{ $disabled: boolean; $invalid: boolean }>(
     fontFamily: 'inherit',
     fontSize: '14px',
     padding: '4px 0',
-    textAlign: 'right',
+    textAlign: 'end',
     width: '7ch',
     cursor: $disabled ? 'not-allowed' : 'text',
     '&:focus': {
@@ -108,7 +108,7 @@ const StyledAddButton = styled.button<{ $disabled: boolean }>(({ $disabled }) =>
   fontFamily: 'inherit',
   fontSize: '14px',
   padding: '4px 0',
-  textAlign: 'left',
+  textAlign: 'start',
   '&:hover': {
     textDecoration: $disabled ? 'none' : 'underline',
   },
@@ -116,7 +116,7 @@ const StyledAddButton = styled.button<{ $disabled: boolean }>(({ $disabled }) =>
 
 const StyledStatus = styled.div({
   minWidth: '11ch',
-  textAlign: 'right',
+  textAlign: 'end',
 });
 
 // The granted port and its copy button read as one unit, pinned to the right
@@ -133,7 +133,7 @@ const StyledMappedStatus = styled.div({
 const StyledConflictBlock = styled.div({
   paddingTop: '6px',
   paddingBottom: '8px',
-  paddingLeft: '2px',
+  paddingInlineStart: '2px',
 });
 
 const StyledConflictActions = styled.div({
@@ -151,7 +151,7 @@ const StyledLinkButton = styled.button<{ $disabled: boolean }>(({ $disabled }) =
   fontFamily: 'inherit',
   fontSize: '13px',
   padding: 0,
-  textAlign: 'left',
+  textAlign: 'start',
   '&:hover': {
     textDecoration: $disabled ? 'none' : 'underline',
   },
@@ -283,7 +283,7 @@ export function PortForwardingAdvanced() {
     <FlexColumn gap="small">
       <SettingsListItem anchorId="port-forwarding-advanced">
         <SettingsListItem.Item>
-          <FlexColumn gap="medium" style={{ width: '100%', paddingRight: spacings.medium }}>
+          <FlexColumn gap="medium" style={{ width: '100%', paddingInlineEnd: spacings.medium }}>
             {rules.length === 0 ? (
               <Text variant="bodySmall" color="whiteAlpha60">
                 {messages.pgettext(

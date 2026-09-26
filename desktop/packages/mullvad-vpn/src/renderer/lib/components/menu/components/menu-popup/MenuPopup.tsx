@@ -29,7 +29,7 @@ export const StyledMenuPopup = styled.div<{ $popoverId: string }>`
       position-anchor: --${$popoverId};
       position-try-fallbacks: flip-block, flip-inline;
       top: calc(anchor(bottom) + ${spacings.tiny});
-      right: anchor(center);
+      inset-inline-end: anchor(center);
 
       opacity: var(--initial-opacity);
       scale: var(--initial-scale);

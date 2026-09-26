@@ -35,7 +35,7 @@ export const StyledListItemItem = styled(FlexRow)<{
       border-radius: ${Radius.radius16};
 
       > :first-child {
-        padding-left: ${$paddingLeft};
+        padding-inline-start: ${$paddingLeft};
       }
 
       ${$animation}

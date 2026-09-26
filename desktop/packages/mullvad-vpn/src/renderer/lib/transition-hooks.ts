@@ -98,13 +98,16 @@ export function useViewTransitions(onTransition?: () => void): Location<Location
 }
 
 function animateNavigation(transition: TransitionType) {
+  // A pushed view enters from the side the text is read towards, so the slide mirrors in
+  // right-to-left languages.
+  const inlineSign = document.documentElement.dir === 'rtl' ? -1 : 1;
   const oldInFront = transition === TransitionType.dismiss || transition === TransitionType.pop;
   const oldZIndex = oldInFront ? 2 : 0;
 
   document.documentElement.animate(
     [
       { transform: 'translate(0%, 0%)', zIndex: oldZIndex },
-      { transform: oldToTransform[transition], zIndex: oldZIndex },
+      { transform: oldToTransform[transition](inlineSign), zIndex: oldZIndex },
     ],
     {
       duration: TRANSITION_DURATION,
@@ -113,7 +116,7 @@ function animateNavigation(transition: TransitionType) {
     },
   );
   document.documentElement.animate(
-    [{ transform: newFromTransform[transition] }, { transform: 'translate(0%, 0%)' }],
+    [{ transform: newFromTransform[transition](inlineSign) }, { transform: 'translate(0%, 0%)' }],
     {
       duration: TRANSITION_DURATION,
       easing: 'ease-in-out',
@@ -122,18 +125,18 @@ function animateNavigation(transition: TransitionType) {
   );
 }
 
-const oldToTransform = {
-  [TransitionType.show]: 'translateY(0%)',
-  [TransitionType.dismiss]: 'translateY(100%)',
-  [TransitionType.push]: 'translateX(-33%)',
-  [TransitionType.pop]: 'translateX(100%)',
-  [TransitionType.none]: '',
+const oldToTransform: Record<TransitionType, (inlineSign: number) => string> = {
+  [TransitionType.show]: () => 'translateY(0%)',
+  [TransitionType.dismiss]: () => 'translateY(100%)',
+  [TransitionType.push]: (inlineSign) => `translateX(${-33 * inlineSign}%)`,
+  [TransitionType.pop]: (inlineSign) => `translateX(${100 * inlineSign}%)`,
+  [TransitionType.none]: () => '',
 };
 
-const newFromTransform = {
-  [TransitionType.show]: 'translateY(100%)',
-  [TransitionType.dismiss]: 'translateY(0%)',
-  [TransitionType.push]: 'translateX(100%)',
-  [TransitionType.pop]: 'translateX(-33%)',
-  [TransitionType.none]: '',
+const newFromTransform: Record<TransitionType, (inlineSign: number) => string> = {
+  [TransitionType.show]: () => 'translateY(100%)',
+  [TransitionType.dismiss]: () => 'translateY(0%)',
+  [TransitionType.push]: (inlineSign) => `translateX(${100 * inlineSign}%)`,
+  [TransitionType.pop]: (inlineSign) => `translateX(${-33 * inlineSign}%)`,
+  [TransitionType.none]: () => '',
 };

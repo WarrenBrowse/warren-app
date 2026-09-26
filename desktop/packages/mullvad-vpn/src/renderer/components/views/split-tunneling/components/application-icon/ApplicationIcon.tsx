@@ -6,12 +6,12 @@ import { CellImage } from '../../../../cell';
 import { disabledApplication, type DisabledApplicationProps } from '../../utils';
 
 export const StyledIcon = styled(CellImage)<DisabledApplicationProps>(disabledApplication, {
-  marginRight: spacings.small,
+  marginInlineEnd: spacings.small,
 });
 
 export const StyledIconPlaceholder = styled.div({
   width: '35px',
-  marginRight: spacings.small,
+  marginInlineEnd: spacings.small,
 });
 
 export type ApplicationIconProps = {

@@ -5435,3 +5435,11 @@ msgstr "Vous pourrez la réactiver une fois %(product)s déconnecté."
 msgctxt "in-app-notifications"
 msgid "Your device did not shut down cleanly, so Warren restored your previous connection. Neither auto-connect nor launch on start-up is on. Disconnect if you did not want this."
 msgstr "Votre appareil ne s'est pas éteint correctement, Warren a donc rétabli votre connexion précédente. Ni la connexion automatique ni le lancement au démarrage ne sont activés. Déconnectez-vous si vous ne le souhaitiez pas."
+
+msgctxt "list-format"
+msgid ", "
+msgstr ", "
+
+msgctxt "connect-view"
+msgid "%(country)s, %(city)s"
+msgstr "%(country)s, %(city)s"

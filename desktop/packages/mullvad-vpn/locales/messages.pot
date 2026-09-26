@@ -1150,6 +1150,13 @@ msgid_plural "%(count)d apps in other countries"
 msgstr[0] ""
 msgstr[1] ""
 
+#. The exit location under the connection status. Available placeholders:
+#. %(country)s - the country of the exit, e.g. Sweden
+#. %(city)s - its city, e.g. Gothenburg
+msgctxt "connect-view"
+msgid "%(country)s, %(city)s"
+msgstr ""
+
 #. This is used as a feature indicator to show that DAITA is enabled through
 #. multihop.
 #. Available placeholders:
@@ -2269,6 +2276,13 @@ msgstr ""
 
 msgctxt "launch-view"
 msgid "Warren VPN will restore internet access without VPN protection."
+msgstr ""
+
+#. Separator placed between the items of a short list, such as forwarded ports
+#. ("6881 TCP, 51413 UDP") or a city and its country. Keep the trailing space if
+#. your language puts one after its comma.
+msgctxt "list-format"
+msgid ", "
 msgstr ""
 
 #. This is used for appending information about a location.

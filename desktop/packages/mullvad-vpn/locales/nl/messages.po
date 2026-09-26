@@ -6285,3 +6285,11 @@ msgstr "Waarschuwingen en hoe je bezwaar maakt"
 msgctxt "redeem-voucher-view"
 msgid "The voucher was not used: keep it and redeem it once the revocation ends."
 msgstr "De voucher is niet gebruikt: bewaar hem en wissel hem in zodra de intrekking voorbij is."
+
+msgctxt "list-format"
+msgid ", "
+msgstr ", "
+
+msgctxt "connect-view"
+msgid "%(country)s, %(city)s"
+msgstr "%(country)s, %(city)s"

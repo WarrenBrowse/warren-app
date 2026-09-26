@@ -6254,3 +6254,11 @@ msgstr "警告と異議申し立ての方法"
 msgctxt "redeem-voucher-view"
 msgid "The voucher was not used: keep it and redeem it once the revocation ends."
 msgstr "バウチャーは使用されませんでした。保管しておき、アクセスの取り消しが終了したら使用してください。"
+
+msgctxt "list-format"
+msgid ", "
+msgstr "、"
+
+msgctxt "connect-view"
+msgid "%(country)s, %(city)s"
+msgstr "%(country)s、%(city)s"

@@ -14,15 +14,15 @@ export const StyledListItemTrailingActions = styled(FlexRow)`
 
   // Add border radius to last action
   & > ${StyledListItemTrailingAction}:last-child {
-    border-top-right-radius: ${Radius.radius16};
-    border-bottom-right-radius: ${Radius.radius16};
+    border-start-end-radius: ${Radius.radius16};
+    border-end-end-radius: ${Radius.radius16};
   }
 
   // If last action is nested inside a trigger, add margin and border radius
   & > :last-child ${StyledListItemTrailingAction} {
-    margin-left: 2px;
-    border-top-right-radius: ${Radius.radius16};
-    border-bottom-right-radius: ${Radius.radius16};
+    margin-inline-start: 2px;
+    border-start-end-radius: ${Radius.radius16};
+    border-end-end-radius: ${Radius.radius16};
   }
 `;
 

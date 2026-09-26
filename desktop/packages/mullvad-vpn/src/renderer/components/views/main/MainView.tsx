@@ -48,7 +48,8 @@ const StyledMain = styled.main`
 // notification. Renders nothing outside beta builds.
 const StyledBetaBadge = styled.div`
   align-self: flex-start;
-  margin: 16px 0 0 16px;
+  margin-top: 16px;
+  margin-inline-start: 16px;
 `;
 
 export function MainView() {

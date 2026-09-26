@@ -81,12 +81,12 @@ const StyledRadioButtonContainer = styled.div({
   display: 'flex',
   alignItems: 'center',
   flexWrap: 'nowrap',
-  marginLeft: '16px',
+  marginInlineStart: '16px',
 });
 
 const StyledRadioButtonLabel = styled.label(smallNormalText, {
   color: colors.white,
-  marginLeft: '8px',
+  marginInlineStart: '8px',
 });
 
 interface RadioButtonProps<T extends string> {

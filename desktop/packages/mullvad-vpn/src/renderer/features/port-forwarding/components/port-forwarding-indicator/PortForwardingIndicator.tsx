@@ -6,6 +6,7 @@ import { messages } from '../../../../../shared/gettext';
 import { RoutePath } from '../../../../../shared/routes';
 import { FeatureIndicator } from '../../../../lib/components';
 import { TransitionType, useHistory } from '../../../../lib/history';
+import { joinList } from '../../../../lib/list-format';
 import { useSelector } from '../../../../redux/store';
 import { usePortForwarding } from '../../hooks';
 import { protocolLabel } from '../../mapping';
@@ -71,7 +72,7 @@ export function PortForwardingIndicator() {
     return null;
   }
 
-  const ports = open.map((m) => `${m.port} ${protocolLabel(m.protocol)}`).join(', ');
+  const ports = joinList(open.map((m) => `${m.port} ${protocolLabel(m.protocol)}`));
   const label = sprintf(
     // TRANSLATORS: Active-feature chip on the main screen, shown when
     // TRANSLATORS: port forwarding is active. Available placeholders:

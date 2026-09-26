@@ -34,8 +34,8 @@ export const StyledListItem = styled(StyledListItemRoot)<{
       &&:has(> ${StyledListItemTrailingActions}, > ${StyledListItemTrigger}:nth-child(2)) {
         grid-template-columns: 1fr auto;
         ${StyledListItemItem} {
-          border-top-right-radius: var(--disabled-border-radius);
-          border-bottom-right-radius: var(--disabled-border-radius);
+          border-start-end-radius: var(--disabled-border-radius);
+          border-end-end-radius: var(--disabled-border-radius);
         }
       }
 
@@ -47,11 +47,11 @@ export const StyledListItem = styled(StyledListItemRoot)<{
             ${StyledListItemRoot} + & {
               margin-top: 1px;
               ${StyledListItemItem} {
-                border-top-left-radius: var(--disabled-border-radius);
-                border-top-right-radius: var(--disabled-border-radius);
+                border-start-start-radius: var(--disabled-border-radius);
+                border-start-end-radius: var(--disabled-border-radius);
               }
               ${StyledListItemTrailingAction} {
-                border-top-right-radius: var(--disabled-border-radius);
+                border-start-end-radius: var(--disabled-border-radius);
               }
             }
           `;
@@ -67,11 +67,11 @@ export const StyledListItem = styled(StyledListItemRoot)<{
             // If directly followed by another ListItem
             &:has(+ ${StyledListItemRoot}) {
               ${StyledListItemItem} {
-                border-bottom-left-radius: var(--disabled-border-radius);
-                border-bottom-right-radius: var(--disabled-border-radius);
+                border-end-start-radius: var(--disabled-border-radius);
+                border-end-end-radius: var(--disabled-border-radius);
               }
               ${StyledListItemTrailingAction} {
-                border-bottom-right-radius: var(--disabled-border-radius);
+                border-end-end-radius: var(--disabled-border-radius);
               }
             }
           `;
@@ -87,11 +87,11 @@ export const StyledListItem = styled(StyledListItemRoot)<{
             && {
               margin-top: 1px;
               ${StyledListItemItem} {
-                border-top-left-radius: var(--disabled-border-radius);
-                border-top-right-radius: var(--disabled-border-radius);
+                border-start-start-radius: var(--disabled-border-radius);
+                border-start-end-radius: var(--disabled-border-radius);
               }
               ${StyledListItemTrailingAction} {
-                border-top-right-radius: var(--disabled-border-radius);
+                border-start-end-radius: var(--disabled-border-radius);
               }
             }
           `;
@@ -106,11 +106,11 @@ export const StyledListItem = styled(StyledListItemRoot)<{
           return css`
             && {
               ${StyledListItemItem} {
-                border-bottom-left-radius: var(--disabled-border-radius);
-                border-bottom-right-radius: var(--disabled-border-radius);
+                border-end-start-radius: var(--disabled-border-radius);
+                border-end-end-radius: var(--disabled-border-radius);
               }
               ${StyledListItemTrailingAction} {
-                border-bottom-right-radius: var(--disabled-border-radius);
+                border-end-end-radius: var(--disabled-border-radius);
               }
             }
           `;

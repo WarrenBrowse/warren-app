@@ -9,7 +9,7 @@ export const StyledTextFieldIcon = styled(Icon)`
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
-  left: ${spacings.small};
+  inset-inline-start: ${spacings.small};
 `;
 
 export const TextFieldIcon = (props: TextFieldIconProps) => {

@@ -5,8 +5,8 @@ import { CellTintedIcon } from '../../../../../../../../../../cell';
 import { useWarningColor } from '../../hooks';
 
 export const StyledCellWarningIcon = styled(CellTintedIcon)({
-  marginLeft: spacings.small,
-  marginRight: spacings.tiny,
+  marginInlineStart: spacings.small,
+  marginInlineEnd: spacings.tiny,
 });
 
 export function WarningIcon() {

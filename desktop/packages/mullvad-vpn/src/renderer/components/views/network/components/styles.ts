@@ -35,7 +35,7 @@ export const StyledValue = styled.span({
   fontWeight: 600,
   lineHeight: '18px',
   fontVariantNumeric: 'tabular-nums',
-  textAlign: 'right',
+  textAlign: 'end',
 });
 
 export const StyledRingValue = styled.span({

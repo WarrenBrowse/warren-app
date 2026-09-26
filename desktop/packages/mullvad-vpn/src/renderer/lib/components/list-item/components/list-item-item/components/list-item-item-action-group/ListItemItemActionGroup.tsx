@@ -30,13 +30,13 @@ export const StyledListItemItemActionGroup = styled.div`
   // If there is a single text field child, make it take automatic width with margin
   &&:has(${StyledTextField}):has(> :last-child:nth-child(1)) {
     grid-template-columns: auto;
-    margin-right: ${spacings.small};
+    margin-inline-end: ${spacings.small};
   }
 
   // If there is a single text child, make it take automatic width with margin
   &&:has(${StyledText}):has(> :last-child:nth-child(1)) {
     grid-template-columns: auto;
-    margin-right: ${spacings.medium};
+    margin-inline-end: ${spacings.medium};
   }
 `;
 

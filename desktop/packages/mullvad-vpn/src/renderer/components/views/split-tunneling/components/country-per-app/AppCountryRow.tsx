@@ -27,7 +27,9 @@ const StyledText = styled.div({
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
-  padding: `8px ${spacings.small} 8px 0`,
+  paddingBlock: '8px',
+  paddingInlineStart: 0,
+  paddingInlineEnd: spacings.small,
 });
 
 const StyledActions = styled.div({

@@ -21,7 +21,7 @@ const StyledTitle = styled.h2(tinyText, {
 });
 
 const StyledInfoButton = styled(InfoButton)({
-  marginLeft: '6px',
+  marginInlineStart: '6px',
 });
 
 export const StyledSettingsGroup = styled.div({});

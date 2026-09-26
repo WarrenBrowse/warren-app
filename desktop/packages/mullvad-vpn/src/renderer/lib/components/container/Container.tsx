@@ -11,8 +11,8 @@ export type ContainerProps = FlexProps & {
 
 export const StyledContainer = styled(Flex)<{ $horizontalMargin: string }>`
   ${({ $horizontalMargin }) => css`
-    margin-left: ${$horizontalMargin};
-    margin-right: ${$horizontalMargin};
+    margin-inline-start: ${$horizontalMargin};
+    margin-inline-end: ${$horizontalMargin};
   `}
 `;
 

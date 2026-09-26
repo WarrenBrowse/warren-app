@@ -6285,3 +6285,11 @@ msgstr "Verwarnungen und wie Sie Einspruch erheben"
 msgctxt "redeem-voucher-view"
 msgid "The voucher was not used: keep it and redeem it once the revocation ends."
 msgstr "Der Gutschein wurde nicht verwendet: Bewahren Sie ihn auf und lösen Sie ihn ein, sobald der Zugangsentzug endet."
+
+msgctxt "list-format"
+msgid ", "
+msgstr ", "
+
+msgctxt "connect-view"
+msgid "%(country)s, %(city)s"
+msgstr "%(country)s, %(city)s"

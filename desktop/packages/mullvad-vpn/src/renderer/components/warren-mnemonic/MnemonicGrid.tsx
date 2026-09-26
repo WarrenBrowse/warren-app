@@ -40,7 +40,7 @@ const StyledWord = styled.div`
 
 const StyledIndex = styled.span`
   min-width: 20px;
-  text-align: right;
+  text-align: end;
   color: ${colors.whiteAlpha60};
   font-size: 11px;
 `;

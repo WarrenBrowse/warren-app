@@ -26,7 +26,7 @@ const StyledList = styled.ul({
   flexDirection: 'column',
   gap: '6px',
   margin: 0,
-  paddingLeft: '18px',
+  paddingInlineStart: '18px',
   listStyleType: 'disc',
   color: colors.whiteAlpha80,
   '& > li::marker': {

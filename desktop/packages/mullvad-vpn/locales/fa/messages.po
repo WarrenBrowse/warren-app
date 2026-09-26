@@ -3267,7 +3267,7 @@ msgstr "باز کردن %(mullvadVpn)s"
 
 msgctxt "tray-icon-tooltip"
 msgid "%(city)s, %(country)s"
-msgstr "%(city)s, %(country)s"
+msgstr "%(city)s، %(country)s"
 
 msgctxt "tray-icon-tooltip"
 msgid "Connected. %(location)s"
@@ -6272,3 +6272,11 @@ msgstr "اخطارها و شیوهٔ اعتراض به آن‌ها"
 msgctxt "redeem-voucher-view"
 msgid "The voucher was not used: keep it and redeem it once the revocation ends."
 msgstr "ووچر استفاده نشد: آن را نگه دارید و پس از پایان دورهٔ لغو دسترسی، فعالش کنید."
+
+msgctxt "list-format"
+msgid ", "
+msgstr "، "
+
+msgctxt "connect-view"
+msgid "%(country)s, %(city)s"
+msgstr "%(country)s، %(city)s"

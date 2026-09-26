@@ -32,7 +32,7 @@ const StyledScrollable = styled.div<{ $fillContainer?: boolean }>((props) => ({
 const StyledTrack = styled.div<{ $canScroll: boolean; $show: boolean }>((props) => ({
   position: 'absolute',
   top: 0,
-  right: 0,
+  insetInlineEnd: 0,
   bottom: 0,
   width: '16px',
   backgroundColor: props.$show ? 'rgba(0, 0, 0, 0.2)' : 'rgba(0, 0, 0, 0)',
@@ -46,7 +46,7 @@ const StyledThumb = styled.div<{ $show: boolean; $isDragging: boolean; $wide: bo
   (props) => ({
     position: 'absolute',
     top: 0,
-    right: 0,
+    insetInlineEnd: 0,
     borderRadius: props.$wide ? '6px' : '4px',
     width: props.$wide ? '12px' : '8px',
     transition:

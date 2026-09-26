@@ -46,7 +46,10 @@ export default function ClipboardLabel(props: IProps) {
 
   return (
     <StyledLabelContainer>
-      <StyledLabel {...otherProps}>{displayValue ?? value}</StyledLabel>
+      <StyledLabel {...otherProps}>
+        {/* Copyable values are keys and addresses, which read left to right in every language. */}
+        <bdi dir="ltr">{displayValue ?? value}</bdi>
+      </StyledLabel>
       <Flex gap="medium">
         {justCopied ? (
           <Icon icon="checkmark" color="green"></Icon>

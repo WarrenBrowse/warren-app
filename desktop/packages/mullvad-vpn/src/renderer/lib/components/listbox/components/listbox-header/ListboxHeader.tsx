@@ -8,8 +8,8 @@ export type ListboxHeaderProps = ListItemProps;
 
 export const StyledListboxHeader = styled(ListItem)`
   ${StyledListItemItem} {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
+    border-end-start-radius: 0;
+    border-end-end-radius: 0;
   }
 `;
 

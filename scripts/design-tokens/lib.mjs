@@ -159,13 +159,10 @@ function componentTokens(repoRoot, colors, radius) {
   const banner = read(repoRoot, SOURCES.notificationBanner);
   const collapsible = block(banner, 'Collapsible');
   const bannerContent = block(banner, 'Content');
-  const [bannerPadTop, bannerPadEnd, , bannerPadStart] = match(
-    bannerContent,
-    /padding: '(\d+px \d+px \d+px \d+px)'/,
-    'banner padding',
-  )
-    .split(' ')
-    .map((v) => Number(v.replace('px', '')));
+  // Logical sides, so that the banner mirrors in right-to-left languages.
+  const bannerPadTop = num(bannerContent, /paddingBlock: '(\d+)px'/, 'banner padding block');
+  const bannerPadStart = num(bannerContent, /paddingInlineStart: '(\d+)px'/, 'banner padding start');
+  const bannerPadEnd = num(bannerContent, /paddingInlineEnd: '(\d+)px'/, 'banner padding end');
   const bannerEdgeColor = match(collapsible, /borderTop: `2px solid \$\{colors\.(\w+)\}`/, 'banner edge');
 
   const scenery = read(repoRoot, SOURCES.scenery);
@@ -257,8 +254,10 @@ function componentTokens(repoRoot, colors, radius) {
     },
     navigation: {
       duration: ms(num(nav, /const TRANSITION_DURATION = (\d+);/, 'nav duration')),
-      pushNewFrom: ratio(num(block(nav, 'newFromTransform'), /\[TransitionType\.push\]: 'translateX\((\d+)%\)'/, 'push new') / 100),
-      pushOldTo: ratio(num(block(nav, 'oldToTransform'), /\[TransitionType\.push\]: 'translateX\((-?\d+)%\)'/, 'push old') / 100),
+      // The slides are written for a left-to-right reading and multiplied by the sign of the
+      // inline axis, so the factor is the left-to-right offset.
+      pushNewFrom: ratio(num(block(nav, 'newFromTransform'), /\[TransitionType\.push\]: \(inlineSign\) => `translateX\(\$\{(-?\d+) \* inlineSign\}%\)`/, 'push new') / 100),
+      pushOldTo: ratio(num(block(nav, 'oldToTransform'), /\[TransitionType\.push\]: \(inlineSign\) => `translateX\(\$\{(-?\d+) \* inlineSign\}%\)`/, 'push old') / 100),
     },
   };
 }

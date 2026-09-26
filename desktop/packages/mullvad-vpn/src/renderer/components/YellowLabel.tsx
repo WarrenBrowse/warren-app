@@ -10,7 +10,7 @@ export default styled.span({
   fontWeight: 800,
   lineHeight: '20px',
   padding: '1px 8px',
-  marginLeft: '8px',
+  marginInlineStart: '8px',
   background: colors.yellow,
   borderRadius: '5px',
   textAlign: 'center',

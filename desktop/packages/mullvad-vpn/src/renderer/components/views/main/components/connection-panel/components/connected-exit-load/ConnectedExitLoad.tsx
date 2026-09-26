@@ -98,7 +98,7 @@ const StyledLiveBlock = styled.button({
   border: `1px solid ${colors.whiteAlpha20}`,
   borderRadius: Radius.radius12,
   background: 'none',
-  textAlign: 'left',
+  textAlign: 'start',
   cursor: 'pointer',
   '&:hover': {
     borderColor: colors.whiteAlpha40,

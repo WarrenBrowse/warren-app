@@ -6254,3 +6254,11 @@ msgstr "경고 및 이의 제기 방법"
 msgctxt "redeem-voucher-view"
 msgid "The voucher was not used: keep it and redeem it once the revocation ends."
 msgstr "바우처가 사용되지 않았습니다. 보관해 두었다가 액세스 취소 기간이 끝나면 사용하세요."
+
+msgctxt "list-format"
+msgid ", "
+msgstr ", "
+
+msgctxt "connect-view"
+msgid "%(country)s, %(city)s"
+msgstr "%(country)s, %(city)s"

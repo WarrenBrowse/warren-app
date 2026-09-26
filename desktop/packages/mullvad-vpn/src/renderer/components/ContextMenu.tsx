@@ -110,8 +110,8 @@ const StyledMenu = styled.div<StyledMenuProps>((props) => {
     position: 'absolute',
     top: props.$direction === 'up' ? 'auto' : oppositeSide,
     bottom: props.$direction === 'up' ? oppositeSide : 'auto',
-    left: props.$align === 'left' ? iconMargin : 'auto',
-    right: props.$align === 'left' ? 'auto' : iconMargin,
+    insetInlineStart: props.$align === 'left' ? iconMargin : 'auto',
+    insetInlineEnd: props.$align === 'left' ? 'auto' : iconMargin,
     padding: '7px 4px',
     background: colors.blue40,
     border: `1px solid ${colors.darkBlue}`,
@@ -126,7 +126,7 @@ const StyledMenuItem = styled.button(smallText, (props) => ({
   lineHeight: `${ITEM_HEIGHT}px`,
   background: colors.transparent,
   border: 'none',
-  textAlign: 'left',
+  textAlign: 'start',
   color: props.disabled ? colors.whiteAlpha40 : colors.white,
 
   '&&:hover': {

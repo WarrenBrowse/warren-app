@@ -7,6 +7,7 @@ import type { GeographicalLocation } from '../../../../../features/locations/typ
 import { FootnoteMiniSemiBold } from '../../../../../lib/components';
 import { FlexColumn } from '../../../../../lib/components/flex-column';
 import { spacings } from '../../../../../lib/foundations';
+import { joinList } from '../../../../../lib/list-format';
 import { Location } from '../location-list-item';
 import { useLocationListsContext } from '../location-lists/LocationListsContext';
 import { RecentGeographicalLocationTrailingActions } from './components';
@@ -29,7 +30,7 @@ function RecentGeographicalLocationImpl({
   const { handleSelect } = useLocationListsContext();
 
   const locationBreadcrumbs = useLocationBreadcrumbs(location);
-  const breadcrumbsSubLabel = locationBreadcrumbs.join(', ');
+  const breadcrumbsSubLabel = joinList(locationBreadcrumbs);
 
   const disabled = location.disabled || disabledProp;
 

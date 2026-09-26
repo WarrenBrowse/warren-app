@@ -46,7 +46,7 @@ const RowCard = styled.button`
   border: none;
   background-color: ${colors.blue10};
   cursor: pointer;
-  text-align: left;
+  text-align: start;
 `;
 
 export interface BetaBadgeProps {

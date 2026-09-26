@@ -32,7 +32,7 @@ const StyledErrorDetails = styled.pre({
   wordBreak: 'break-word',
   fontSize: '11px',
   lineHeight: '15px',
-  textAlign: 'left',
+  textAlign: 'start',
   color: 'rgba(255, 255, 255, 0.6)',
   backgroundColor: 'rgba(0, 0, 0, 0.2)',
   borderRadius: '4px',

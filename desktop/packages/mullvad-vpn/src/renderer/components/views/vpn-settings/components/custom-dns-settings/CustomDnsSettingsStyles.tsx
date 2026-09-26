@@ -11,11 +11,11 @@ export const StyledAddCustomDnsLabel = styled(Cell.Label)<{ $paddingLeft?: numbe
   fontFamily: 'Open Sans',
   fontWeight: 400,
   fontSize: '16px',
-  paddingLeft: (props.$paddingLeft ?? 32) + 'px',
+  paddingInlineStart: (props.$paddingLeft ?? 32) + 'px',
   whiteSpace: 'pre-wrap',
   overflowWrap: 'break-word',
   width: '171px',
-  marginRight: '25px',
+  marginInlineEnd: '25px',
 }));
 
 export const StyledItemContainer = styled(Cell.Container)({
@@ -48,11 +48,11 @@ export const StyledLabel = styled(Cell.Label)({
   fontFamily: 'Open Sans',
   fontWeight: 400,
   fontSize: '16px',
-  paddingLeft: '32px',
+  paddingInlineStart: '32px',
   whiteSpace: 'pre-wrap',
   overflowWrap: 'break-word',
   width: '171px',
-  marginRight: '25px',
+  marginInlineEnd: '25px',
 });
 
 export const StyledRemoveButton = styled.button({

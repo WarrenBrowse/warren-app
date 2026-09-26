@@ -25,8 +25,8 @@ export const StyledListboxOption = styled(ListItem)<{
           // If it is the first child is followed by another option
           &:first-child:has(+ ${StyledListItemRoot}) {
             ${StyledListboxOptionItem} {
-              border-top-left-radius: var(--disabled-border-radius);
-              border-top-right-radius: var(--disabled-border-radius);
+              border-start-start-radius: var(--disabled-border-radius);
+              border-start-end-radius: var(--disabled-border-radius);
             }
           }
         `;

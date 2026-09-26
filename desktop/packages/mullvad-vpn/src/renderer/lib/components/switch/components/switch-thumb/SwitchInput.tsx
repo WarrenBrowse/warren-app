@@ -50,7 +50,7 @@ export const StyledSwitchInput = styled.input<{
       &&::before {
         content: '';
         position: absolute;
-        left: 2px;
+        inset-inline-start: 2px;
         background-color: ${$indicatorColor};
 
         min-width: 12px;
@@ -62,7 +62,8 @@ export const StyledSwitchInput = styled.input<{
         transition:
           transform var(--transition-duration) ease-out,
           background-color var(--transition-duration) linear;
-        transform: translateX(${$checked ? '12px' : '0px'}) scale(var(--scale));
+        transform: translateX(calc(var(--inline-sign) * ${$checked ? '12px' : '0px'}))
+          scale(var(--scale));
       }
     `;
   }}

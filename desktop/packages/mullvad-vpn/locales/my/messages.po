@@ -6257,3 +6257,11 @@ msgstr "သတိပေးအမှတ်များနှင့် အယူ�
 msgctxt "redeem-voucher-view"
 msgid "The voucher was not used: keep it and redeem it once the revocation ends."
 msgstr "ဘောက်ချာကို အသုံးမပြုရသေးပါ။ သိမ်းထားပြီး ရုပ်သိမ်းမှု ပြီးဆုံးသည့်အခါ လဲယူပါ။"
+
+msgctxt "list-format"
+msgid ", "
+msgstr "၊ "
+
+msgctxt "connect-view"
+msgid "%(country)s, %(city)s"
+msgstr "%(country)s၊ %(city)s"

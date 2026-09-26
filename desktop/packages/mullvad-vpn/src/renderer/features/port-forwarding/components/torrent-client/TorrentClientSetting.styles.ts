@@ -18,7 +18,7 @@ export const StyledInput = styled.input({
   fontFamily: 'inherit',
   fontSize: '14px',
   padding: '4px 0',
-  textAlign: 'right',
+  textAlign: 'end',
   minWidth: 0,
   flex: '1 1 20ch',
   '&:focus': {
@@ -60,7 +60,7 @@ export const StyledButton = styled.button<{ $disabled: boolean }>(({ $disabled }
   fontFamily: 'inherit',
   fontSize: '13px',
   padding: 0,
-  textAlign: 'left',
+  textAlign: 'start',
   '&:hover': {
     textDecoration: $disabled ? 'none' : 'underline',
   },

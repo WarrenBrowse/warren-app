@@ -72,7 +72,11 @@ export const AppMainHeaderPubKey = () => {
         // TRANSLATORS: describe the button which copies the public key to the
         // TRANSLATORS: clipboard.
         aria-label={messages.pgettext('accessibility', 'Copy public key')}>
-        <StyledPubKey color={dark ? 'black' : 'white'}>{formatWarrenPubKey(pubkey)}</StyledPubKey>
+        {/* An address reads left to right in every language; without this, the digits on either
+            side of the ellipsis swap places in Arabic and Persian. */}
+        <StyledPubKey color={dark ? 'black' : 'white'} dir="ltr">
+          {formatWarrenPubKey(pubkey)}
+        </StyledPubKey>
         <Icon
           icon={justCopied ? 'checkmark' : 'copy'}
           size="small"

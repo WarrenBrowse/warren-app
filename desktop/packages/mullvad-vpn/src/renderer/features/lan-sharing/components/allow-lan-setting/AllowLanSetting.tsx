@@ -12,7 +12,7 @@ export type AllowLanSettingProps = Omit<ListItemProps, 'children'>;
 
 const LanIpRanges = styled.ul({
   listStyle: 'disc outside',
-  marginLeft: spacings.large,
+  marginInlineStart: spacings.large,
 });
 
 export function AllowLanSetting(props: AllowLanSettingProps) {

@@ -23,12 +23,10 @@ const top = (value: Spacings) => {
   };
 };
 
-const right = (value: Spacings) => {
-  const paddingRight = spacings[value];
-  return {
-    paddingRight,
-  };
-};
+// `left` and `right` follow the reading direction, so that they mirror in Arabic and Persian.
+const right = (value: Spacings) => ({
+  paddingInlineEnd: spacings[value],
+});
 
 const bottom = (value: Spacings) => {
   const paddingBottom = spacings[value];
@@ -37,12 +35,9 @@ const bottom = (value: Spacings) => {
   };
 };
 
-const left = (value: Spacings) => {
-  const paddingLeft = spacings[value];
-  return {
-    paddingLeft,
-  };
-};
+const left = (value: Spacings) => ({
+  paddingInlineStart: spacings[value],
+});
 
 export const padding: Record<keyof LayoutSpacings, (value: Spacings) => React.CSSProperties> = {
   all,

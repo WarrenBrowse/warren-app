@@ -8,7 +8,7 @@ import { ExitLoadSummary } from '../../../../../../network-stats';
 
 const StyledTrailing = styled.span({
   display: 'flex',
-  marginRight: spacings.small,
+  marginInlineEnd: spacings.small,
 });
 
 export type LocationExitLoadProps = {

@@ -25,7 +25,7 @@ export const StyledSelectableLabelIcon = styled(ListItem.Item.Icon)<{ $selected:
       transition:
         opacity var(--transition-duration) ease-in,
         transform var(--transition-duration) ease-out;
-      transform: ${$selected ? 'translateX(0)' : 'translateX(-16px)'};
+      transform: translateX(calc(var(--inline-sign) * ${$selected ? '0px' : '-16px'}));
       opacity: ${$selected ? 1 : 0};
       visibility: ${$selected ? 'visible' : 'hidden'};
     `;
@@ -37,12 +37,12 @@ const StyledText = styled(Text)<{ $selected: boolean; $disabled: boolean }>`
     --transition-duration: 0.15s;
 
     transition: transform var(--transition-duration) ease-out;
-    transform: translateX(${$selected ? 32 : 0}px);
+    transform: translateX(calc(var(--inline-sign) * ${$selected ? 32 : 0}px));
 
     ${() => {
       if ($selected) {
         return css`
-          margin-right: ${spacings.big};
+          margin-inline-end: ${spacings.big};
         `;
       }
       return null;

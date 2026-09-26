@@ -42,7 +42,7 @@ const Header = styled.div({
 // so the whole notification area keeps one vocabulary for severity.
 const HeaderIndicator = styled(NotificationIndicator)({
   marginTop: '7px',
-  marginRight: 0,
+  marginInlineEnd: 0,
 });
 
 const Headline = styled(Text)({

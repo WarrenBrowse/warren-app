@@ -44,10 +44,10 @@ const StyledLink = styled.a<{
     }
 
     > ${StyledLinkIcon}:first-child:not(:only-child) {
-      margin-right: 2px;
+      margin-inline-end: 2px;
     }
     > ${StyledLinkIcon}:last-child:not(:only-child) {
-      margin-left: 2px;
+      margin-inline-start: 2px;
     }
   `;
 });

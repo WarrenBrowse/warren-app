@@ -37,7 +37,7 @@ const StyledText = styled.div({
   minWidth: 0,
   display: 'flex',
   flexDirection: 'column',
-  paddingRight: spacings.small,
+  paddingInlineEnd: spacings.small,
 });
 
 const StyledName = styled.span({

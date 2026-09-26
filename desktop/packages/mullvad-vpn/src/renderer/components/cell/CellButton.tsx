@@ -20,8 +20,8 @@ const StyledCellButton = styled(Row)<IStyledCellButtonProps>((props) => {
   const backgroundColorHover = props.$selected ? colors.green : colors.blue80;
 
   return {
-    paddingRight: spacings.medium,
-    paddingLeft: spacings.medium,
+    paddingInlineEnd: spacings.medium,
+    paddingInlineStart: spacings.medium,
     flex: 1,
     alignContent: 'center',
     cursor: 'default',

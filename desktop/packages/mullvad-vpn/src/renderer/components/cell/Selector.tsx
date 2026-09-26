@@ -16,7 +16,7 @@ const StyledTitleLabel = styled(Cell.SectionTitle)({
 });
 
 const StyledInfoButton = styled(InfoButton)({
-  marginRight: spacings.medium,
+  marginInlineEnd: spacings.medium,
 });
 
 export interface SelectorItem<T> {
@@ -138,7 +138,7 @@ export default function Selector<T, U>(props: SelectorProps<T, U>) {
 
 const StyledCellIcon = styled(Icon)<{ $visible: boolean }>((props) => ({
   opacity: props.$visible ? 1 : 0,
-  marginRight: '8px',
+  marginInlineEnd: '8px',
 }));
 
 interface SelectorCellProps<T> {

@@ -12,7 +12,7 @@ const StyledLabel = styled.div<{ disabled: boolean }>(buttonText, (props) => ({
   margin: '10px 0',
   flex: 1,
   color: props.disabled ? colors.whiteAlpha40 : colors.white,
-  textAlign: 'left',
+  textAlign: 'start',
 
   [`${LabelContainer} &&`]: {
     marginTop: '0px',
@@ -29,7 +29,7 @@ const StyledLabel = styled.div<{ disabled: boolean }>(buttonText, (props) => ({
 const StyledSubText = styled.span<{ disabled: boolean }>(tinyText, (props) => ({
   color: props.disabled ? colors.whiteAlpha20 : colors.whiteAlpha60,
   flex: -1,
-  textAlign: 'right',
+  textAlign: 'end',
   margin: `0 ${spacings.small}`,
 }));
 

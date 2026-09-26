@@ -9,17 +9,17 @@ const ButtonRow = styled.div({
 });
 
 const MainButton = styled(Button)({
-  borderTopRightRadius: 0,
-  borderBottomRightRadius: 0,
-  paddingLeft: '44px',
+  borderStartEndRadius: 0,
+  borderEndEndRadius: 0,
+  paddingInlineStart: '44px',
   '&:focus-visible': {
     zIndex: 10,
   },
 });
 
 const SideButton = styled(Button)({
-  borderTopLeftRadius: 0,
-  borderBottomLeftRadius: 0,
+  borderStartStartRadius: 0,
+  borderEndStartRadius: 0,
   '&:focus-visible': {
     zIndex: 10,
   },

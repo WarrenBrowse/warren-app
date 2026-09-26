@@ -25,12 +25,10 @@ const top = (value: Spacings) => {
   };
 };
 
-const right = (value: Spacings) => {
-  const marginRight = spacings[value];
-  return {
-    marginRight,
-  };
-};
+// `left` and `right` follow the reading direction, so that they mirror in Arabic and Persian.
+const right = (value: Spacings) => ({
+  marginInlineEnd: spacings[value],
+});
 
 const bottom = (value: Spacings) => {
   const marginBottom = spacings[value];
@@ -39,12 +37,9 @@ const bottom = (value: Spacings) => {
   };
 };
 
-const left = (value: Spacings) => {
-  const marginLeft = spacings[value];
-  return {
-    marginLeft,
-  };
-};
+const left = (value: Spacings) => ({
+  marginInlineStart: spacings[value],
+});
 
 export const margin: Record<keyof LayoutSpacings, (value: Spacings) => React.CSSProperties> = {
   all,

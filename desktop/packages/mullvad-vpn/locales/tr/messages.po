@@ -6285,3 +6285,11 @@ msgstr "Uyarılar ve bunlara nasıl itiraz edilir"
 msgctxt "redeem-voucher-view"
 msgid "The voucher was not used: keep it and redeem it once the revocation ends."
 msgstr "Kupon kullanılmadı: saklayın ve erişim iptali sona erdiğinde kullanın."
+
+msgctxt "list-format"
+msgid ", "
+msgstr ", "
+
+msgctxt "connect-view"
+msgid "%(country)s, %(city)s"
+msgstr "%(country)s, %(city)s"

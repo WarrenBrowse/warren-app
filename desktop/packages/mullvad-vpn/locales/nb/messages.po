@@ -6285,3 +6285,11 @@ msgstr "Advarsler og hvordan du bestrider dem"
 msgctxt "redeem-voucher-view"
 msgid "The voucher was not used: keep it and redeem it once the revocation ends."
 msgstr "Kupongen ble ikke brukt: ta vare på den og løs den inn når tilbakekallingen er over."
+
+msgctxt "list-format"
+msgid ", "
+msgstr ", "
+
+msgctxt "connect-view"
+msgid "%(country)s, %(city)s"
+msgstr "%(country)s, %(city)s"

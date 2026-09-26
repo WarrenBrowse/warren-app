@@ -23,13 +23,13 @@ const StyledSettingsRow = styled.label<{ $invalid: boolean }>((props) => ({
 
   [`${StyledSettingsGroup} &&:not(:last-child)`]: {
     marginBottom: '1px',
-    borderBottomLeftRadius: 0,
-    borderBottomRightRadius: 0,
+    borderEndStartRadius: 0,
+    borderEndEndRadius: 0,
   },
 
   [`${StyledSettingsGroup} &&:not(:first-child)`]: {
-    borderTopLeftRadius: 0,
-    borderTopRightRadius: 0,
+    borderStartStartRadius: 0,
+    borderStartEndRadius: 0,
   },
 
   borderWidth: '1px',
@@ -59,14 +59,14 @@ const StyledInputContainer = styled.div({
 const StyledSettingsRowErrorMessage = styled.div(tinyText, {
   display: 'flex',
   alignItems: 'center',
-  marginLeft: measurements.horizontalViewMargin,
-  marginRight: measurements.horizontalViewMargin,
+  marginInlineStart: measurements.horizontalViewMargin,
+  marginInlineEnd: measurements.horizontalViewMargin,
   marginTop: '5px',
   color: colors.whiteAlpha60,
 });
 
 const StyledErrorMessageAlertIcon = styled(Icon)({
-  marginRight: '5px',
+  marginInlineEnd: '5px',
 });
 
 interface SettingsRowContext {

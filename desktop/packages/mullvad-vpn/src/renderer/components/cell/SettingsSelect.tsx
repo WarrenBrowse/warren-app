@@ -36,7 +36,7 @@ const StyledItems = styled.div<{ $direction: 'down' | 'up' }>((props) => ({
   position: 'absolute',
   top: props.$direction === 'down' ? 'calc(100% + 4px)' : 'auto',
   bottom: props.$direction === 'up' ? 'calc(100% + 4px)' : 'auto',
-  right: '-1px',
+  insetInlineEnd: '-1px',
   backgroundColor: colors.darkBlue,
   border: `1px ${colors.darkerBlue50} solid`,
   borderRadius: '4px',
@@ -62,7 +62,7 @@ const StyledSelectedContainerInner = styled.div({
 const StyledSelectedText = styled.span({
   display: 'inline-block',
   maxWidth: 'calc(100% - 30px)',
-  marginLeft: '12px',
+  marginInlineStart: '12px',
   whiteSpace: 'nowrap',
   textOverflow: 'ellipsis',
   overflow: 'hidden',
@@ -78,8 +78,8 @@ const StyledInvisibleItemsInner = styled.div({
 });
 
 const StyledChevron = styled(Icon)({
-  marginLeft: '6px',
-  marginRight: '5px',
+  marginInlineStart: '6px',
+  marginInlineEnd: '5px',
 });
 
 interface SettingsSelectProps<T extends string> {
@@ -221,8 +221,8 @@ const StyledItem = styled.div<{ $selected: boolean }>((props) => ({
   alignItems: 'center',
   borderRadius: '4px',
   lineHeight: '22px',
-  paddingLeft: props.$selected ? '0px' : '23px',
-  paddingRight: '18px',
+  paddingInlineStart: props.$selected ? '0px' : '23px',
+  paddingInlineEnd: '18px',
   whiteSpace: 'nowrap',
   '&&:hover': {
     backgroundColor: colors.blue,
@@ -230,8 +230,8 @@ const StyledItem = styled.div<{ $selected: boolean }>((props) => ({
 }));
 
 const TickIcon = styled(Icon)({
-  marginLeft: '5px',
-  marginRight: '6px',
+  marginInlineStart: '5px',
+  marginInlineEnd: '6px',
 });
 
 interface ItemProps<T extends string> {

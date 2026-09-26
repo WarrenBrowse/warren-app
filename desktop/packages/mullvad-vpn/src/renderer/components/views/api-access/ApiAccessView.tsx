@@ -44,7 +44,7 @@ const StyledTestResultCircle = styled.div<{ $result: boolean }>((props) => ({
   height: '10px',
   borderRadius: '50%',
   backgroundColor: props.$result ? colors.green : colors.red,
-  marginRight: spacings.small,
+  marginInlineEnd: spacings.small,
 }));
 
 // This component is the topmost component in the API access view.

@@ -6285,3 +6285,11 @@ msgstr "Varoitukset ja niiden riitauttaminen"
 msgctxt "redeem-voucher-view"
 msgid "The voucher was not used: keep it and redeem it once the revocation ends."
 msgstr "Kuponkia ei käytetty: säilytä se ja lunasta se, kun käyttöoikeuden peruutus päättyy."
+
+msgctxt "list-format"
+msgid ", "
+msgstr ", "
+
+msgctxt "connect-view"
+msgid "%(country)s, %(city)s"
+msgstr "%(country)s, %(city)s"

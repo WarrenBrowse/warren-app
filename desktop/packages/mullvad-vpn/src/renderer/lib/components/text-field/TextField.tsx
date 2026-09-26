@@ -32,7 +32,7 @@ export const StyledTextField = styled.div`
   &&:has(> ${StyledTextFieldIcon} + ${StyledTextFieldInput}) {
     ${StyledTextFieldInput} {
       // Icon size is 18px
-      padding-left: calc(${spacings.small} + 18px + ${spacings.tiny});
+      padding-inline-start: calc(${spacings.small} + 18px + ${spacings.tiny});
     }
   }
 
@@ -40,7 +40,7 @@ export const StyledTextField = styled.div`
   &&:has(> ${StyledTextFieldInput} + ${StyledTextFieldIconButton}) {
     ${StyledTextFieldInput} {
       // Icon size is 18px
-      padding-right: calc(${spacings.small} + 18px + ${spacings.tiny});
+      padding-inline-end: calc(${spacings.small} + 18px + ${spacings.tiny});
     }
   }
 `;

@@ -21,11 +21,11 @@ export const StyledAccordionHeader = styled(StyledAccordionHeaderRoot)`
 
   &:has(+ ${StyledAccordionContent}) {
     ${StyledAccordionHeaderItem} {
-      border-bottom-left-radius: 0;
-      border-bottom-right-radius: 0;
+      border-end-start-radius: 0;
+      border-end-end-radius: 0;
     }
     ${StyledListItemTrailingAction} {
-      border-bottom-right-radius: 0;
+      border-end-end-radius: 0;
     }
   }
 `;

@@ -11,7 +11,7 @@ import { useSelector } from '../../../redux/store';
 const StyledTimeLeftLabel = styled(LabelTinySemiBold)({
   // Hug the right edge of the header row even when the left-hand pubkey slot
   // is empty (single child under justify-content: space-between).
-  marginLeft: 'auto',
+  marginInlineStart: 'auto',
   whiteSpace: 'nowrap',
 });
 

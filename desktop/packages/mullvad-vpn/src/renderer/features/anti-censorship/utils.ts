@@ -1,4 +1,5 @@
 import { isInRanges } from '../../../shared/utils';
+import { joinList } from '../../lib/list-format';
 
 export function validatePort(value: number, allowedPortRanges: [number, number][]): boolean {
   return isInRanges(value, allowedPortRanges);
@@ -11,7 +12,7 @@ export function validatePortString(value: string, allowedPortRanges: [number, nu
 }
 
 export function formatPortRanges(portRanges: [number, number][]): string {
-  return portRanges
-    .map(([start, end]) => (start === end ? `${start}` : `${start}-${end}`))
-    .join(', ');
+  return joinList(
+    portRanges.map(([start, end]) => (start === end ? `${start}` : `${start}-${end}`)),
+  );
 }

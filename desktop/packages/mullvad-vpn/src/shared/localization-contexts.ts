@@ -55,4 +55,5 @@ export type LocalizationContexts =
   | 'forum-attach'
   | 'report-problem'
   | 'custom-list-feature'
-  | 'locations-feature';
+  | 'locations-feature'
+  | 'list-format';

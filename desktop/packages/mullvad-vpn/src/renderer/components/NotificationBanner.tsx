@@ -154,7 +154,7 @@ export const NotificationContent = styled.div.attrs({ id: NOTIFICATION_AREA_ID }
   flexDirection: 'column',
   gap: '2px',
   flex: 1,
-  paddingRight: '4px',
+  paddingInlineEnd: '4px',
   minWidth: 0,
 });
 
@@ -182,7 +182,7 @@ export const NotificationIndicator = styled.div<INotificationIndicatorProps>((pr
   // Centred on the title's line box rather than on its cap height, so the dot
   // reads as part of the title line: (20px line height - 10px dot) / 2.
   marginTop: '5px',
-  marginRight: '8px',
+  marginInlineEnd: '8px',
   backgroundColor: props.$type
     ? notificationIndicatorTypeColorMap[props.$type]
     : colors.transparent,
@@ -211,7 +211,9 @@ const Collapsible = styled(motion.div)({
 const Content = styled.section({
   display: 'flex',
   flexDirection: 'row',
-  padding: '10px 12px 10px 16px',
+  paddingBlock: '10px',
+  paddingInlineStart: '16px',
+  paddingInlineEnd: '12px',
   height: 'fit-content',
 });
 
