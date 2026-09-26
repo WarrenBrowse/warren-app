@@ -219,19 +219,6 @@ export function countryNeedsIncludedLaunch(platform: Platform, splitMode: AppSpl
   return platform === 'linux' && splitMode === 'include-only';
 }
 
-export type IncludeOnlyTabState = 'available' | 'coming-soon';
-
-// The Windows daemon refuses to turn include-only on until its driver work is
-// done (`INCLUDE_ONLY_READY` in talpid-core), so the tab is not offered there.
-// It stays open while the mode is on anyway, since turning it off must always
-// be possible.
-export function includeOnlyTabState(
-  platform: Platform,
-  splitMode: AppSplitMode,
-): IncludeOnlyTabState {
-  return platform === 'win32' && splitMode !== 'include-only' ? 'coming-soon' : 'available';
-}
-
 export type SplitModeAvailability =
   | 'available'
   | 'checking'

@@ -3654,12 +3654,6 @@ msgctxt "split-tunneling-view"
 msgid "VPN only for"
 msgstr ""
 
-#. One line under the App routing tabs on Windows, where
-#. the "VPN only for" mode is not available yet.
-msgctxt "split-tunneling-view"
-msgid "VPN only for is coming soon on Windows."
-msgstr ""
-
 msgctxt "split-tunneling-view"
 msgid "VPN only for is on: an app uses its country when you open it from VPN only for."
 msgstr ""
