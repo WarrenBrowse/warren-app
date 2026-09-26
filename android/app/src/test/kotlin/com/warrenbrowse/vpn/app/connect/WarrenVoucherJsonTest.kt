@@ -48,6 +48,37 @@ class WarrenVoucherJsonTest {
     }
 
     @Test
+    fun `a verdict on the voucher itself is its own outcome`() {
+        assertEquals(
+            WarrenVoucherOutcome.Rejected,
+            parseVoucherJson("""{"ok":false,"error":"voucher rejected"}"""),
+        )
+    }
+
+    @Test
+    fun `a pulled voucher comes back as itself`() {
+        assertEquals(
+            PurchasePull.Pulled("QWRT-YPLK-JHGF-DSAZ"),
+            parsePullJson("""{"ok":true,"voucher":"QWRT-YPLK-JHGF-DSAZ"}"""),
+        )
+    }
+
+    @Test
+    fun `a purchase the payment has not settled has nothing to pull yet`() {
+        assertEquals(
+            PurchasePull.NotReady,
+            parsePullJson("""{"ok":false,"error":"purchase pending"}"""),
+        )
+    }
+
+    @Test
+    fun `a failed or malformed pull is a failure, never a voucher`() {
+        assertEquals(PurchasePull.Failed, parsePullJson("""{"ok":false,"error":"not a purchase"}"""))
+        assertEquals(PurchasePull.Failed, parsePullJson("""{"ok":true,"voucher":""}"""))
+        assertEquals(PurchasePull.Failed, parsePullJson("not json"))
+    }
+
+    @Test
     fun `any other refusal is a failure`() {
         assertEquals(
             WarrenVoucherOutcome.Failure("register failed: server returned status 409"),

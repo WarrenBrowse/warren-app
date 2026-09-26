@@ -14,7 +14,8 @@ import kotlinx.serialization.json.long
 
 /**
  * The outcome of `WarrenJni.redeemVoucher`: `{"ok":true,"expires_at":N}`, the
- * ban refusal `{"ok":false,"error":"banned","ban":{..}}`, or
+ * ban refusal `{"ok":false,"error":"banned","ban":{..}}`, the verdict on the
+ * voucher `{"ok":false,"error":"voucher rejected"}`, or
  * `{"ok":false,"error":"<class>"}`.
  */
 @Suppress("TooGenericExceptionCaught")
@@ -28,6 +29,7 @@ internal fun parseVoucherJson(rawJson: String): WarrenVoucherOutcome =
                 root["expires_at"]?.jsonPrimitive?.long?.let { WarrenVoucherOutcome.Success(it) }
                     ?: WarrenVoucherOutcome.Failure("missing expires_at")
             error == "banned" && ban != null -> WarrenVoucherOutcome.Banned(accountBanOf(ban))
+            error == VOUCHER_REJECTED -> WarrenVoucherOutcome.Rejected
             else -> WarrenVoucherOutcome.Failure(error ?: "redeem failed")
         }
     } catch (e: Exception) {
@@ -46,3 +48,6 @@ internal fun withRefusalBan(standing: AccountStanding?, ban: AccountBan): Accoun
         standing.ban?.inForce == true -> standing
         else -> standing.copy(ban = ban)
     }
+
+/** The error `redeemVoucher` answers for an unknown, spent, cancelled or expired voucher. */
+private const val VOUCHER_REJECTED = "voucher rejected"

@@ -52,6 +52,13 @@ import com.warrenbrowse.vpn.lib.repository.WarrenAccountStandingRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenAccountStandingState
 import com.warrenbrowse.vpn.lib.repository.WarrenStandingBridge
 import com.warrenbrowse.vpn.app.standing.WarrenAccountStandingPoller
+import com.warrenbrowse.vpn.app.connect.HeldVoucherRedeemer
+import com.warrenbrowse.vpn.app.connect.PurchaseVoucherKeeper
+import com.warrenbrowse.vpn.app.connect.WarrenJniPurchaseVoucherBridge
+import com.warrenbrowse.vpn.lib.repository.AndroidKeystoreBlobSealer
+import com.warrenbrowse.vpn.lib.repository.PendingVoucherStore
+import com.warrenbrowse.vpn.lib.repository.SealedPendingVoucherStore
+import com.warrenbrowse.vpn.lib.repository.SharedPreferencesBlobSlot
 import com.warrenbrowse.vpn.lib.repository.ForumActivityOpenRequests
 import com.warrenbrowse.vpn.lib.repository.ForumActivityRepository
 import com.warrenbrowse.vpn.lib.repository.ForumActivityState
@@ -185,10 +192,25 @@ val appModule = module {
         WarrenIncidentReporter::class
 
     // Subscription-status fetch: biometric unlock + signed GET /v1/subscription.
+    // A pulled purchase voucher is sealed with a Keystore key before its redemption, so a
+    // restart during a ban that refuses it cannot lose a paid secret (warren-core doc 105).
+    single<PendingVoucherStore> {
+        SealedPendingVoucherStore(AndroidKeystoreBlobSealer(), SharedPreferencesBlobSlot(androidContext()))
+    }
+    single { PurchaseVoucherKeeper(WarrenJniPurchaseVoucherBridge, get()) }
     single {
-        WarrenSubscriptionUseCase(walletRepository = get(), localSettings = get(), standing = get())
+        WarrenSubscriptionUseCase(
+            walletRepository = get(),
+            localSettings = get(),
+            standing = get(),
+            purchases = get(),
+        )
     } bind
         WarrenSubscriptionInvoker::class
+    single {
+        val subscriptions = get<WarrenSubscriptionUseCase>()
+        HeldVoucherRedeemer(standing = get(), wallet = get()) { subscriptions.redeemHeldVouchers() }
+    }
 
     // Community-forum wallet login (doc 55): the deep-link consent controller and
     // the sign + POST use case. `WarrenJni.forumLogin` signs AND sends in Rust.

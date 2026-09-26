@@ -496,6 +496,15 @@ object WarrenJni {
     external fun redeemVoucher(mnemonic: String, voucher: String): String
 
     /**
+     * Collect the voucher an app-initiated purchase paid for WITHOUT redeeming it: [claimCode] is
+     * the wpid then the pull secret. Returns `{"ok": true, "voucher": ".."}`, `{"ok": false,
+     * "error": "purchase pending"}` while the payment has queued nothing, or `{"ok": false,
+     * "error": ".."}`. The server hands a voucher out once, so the caller seals it before it
+     * redeems it. Blocks on a network call: invoke off the main thread.
+     */
+    external fun pullPurchaseVoucher(claimCode: String): String
+
+    /**
      * Fetch the public `GET /v1/network` environment descriptor (unauthenticated display data:
      * environment label, degraded flag, default bandwidth cap, payments flag). Returns
      * `{"ok":true,"environment":...,"degraded":...,"default_rate_bps":..., "payments_enabled":...}`

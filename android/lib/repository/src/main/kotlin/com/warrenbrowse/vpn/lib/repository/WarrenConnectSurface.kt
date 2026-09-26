@@ -347,6 +347,9 @@ sealed interface WarrenVoucherOutcome {
      */
     data class Banned(val ban: AccountBan) : WarrenVoucherOutcome
 
+    /** The voucher is unknown, spent, cancelled or expired: it is worth nothing any more. */
+    data object Rejected : WarrenVoucherOutcome
+
     data class Failure(val message: String) : WarrenVoucherOutcome
 }
 

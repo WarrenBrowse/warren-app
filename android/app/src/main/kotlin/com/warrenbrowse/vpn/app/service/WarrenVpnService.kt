@@ -14,6 +14,7 @@ import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.connect.WarrenConnectUseCase
 import com.warrenbrowse.vpn.app.connectivity.WarrenConnectivityMonitor
 import com.warrenbrowse.vpn.app.standing.WarrenAccountStandingPoller
+import com.warrenbrowse.vpn.app.connect.HeldVoucherRedeemer
 import com.warrenbrowse.vpn.app.service.notifications.ForegroundNotificationManager
 import com.warrenbrowse.vpn.di.vpnServiceModule
 import com.warrenbrowse.vpn.lib.common.constant.KEY_CONNECT_ACTION
@@ -121,21 +122,7 @@ class WarrenVpnService : LifecycleVpnService() {
         lifecycleScope.launch {
             quinnAdapter.pathWedged.collect { wedged -> quinnStateProxy.updatePathWedged(wedged) }
         }
-        // The port-forward standing (warren-core doc 105) is polled for as long
-        // as this service lives: while the app is on screen, which binds it,
-        // and while a tunnel is up, which is the only time a forwarded port,
-        // and so a strike, can exist. A strike then reaches the shade even
-        // with the app in the background. Nothing leaves before the privacy
-        // disclosure is accepted.
-        lifecycleScope.launch {
-            getKoin()
-                .get<WarrenAccountStandingPoller>()
-                .runWhile(
-                    getKoin().get<UserPreferencesRepository>().preferencesFlow().map {
-                        it.isPrivacyDisclosureAccepted
-                    }
-                )
-        }
+        launchAccountStanding()
         lifecycleScope.launch {
             quinnAdapter.effectiveMtu.collect { mtu -> quinnStateProxy.updateEffectiveMtu(mtu) }
         }
@@ -178,6 +165,26 @@ class WarrenVpnService : LifecycleVpnService() {
         // The Rust runtime and logger are the application's (`WarrenApplication`
         // initialises them before any component runs); the service starts
         // nothing of its own on the main thread.
+    }
+
+    // The port-forward standing (warren-core doc 105) is polled for as long
+    // as this service lives: while the app is on screen, which binds it,
+    // and while a tunnel is up, which is the only time a forwarded port,
+    // and so a strike, can exist. A strike then reaches the shade even
+    // with the app in the background. A voucher a ban refused waits, sealed,
+    // for that same poll to learn the ban ended. Nothing leaves before the
+    // privacy disclosure is accepted.
+    private fun launchAccountStanding() {
+        val disclosureAccepted =
+            getKoin().get<UserPreferencesRepository>().preferencesFlow().map {
+                it.isPrivacyDisclosureAccepted
+            }
+        lifecycleScope.launch {
+            getKoin().get<WarrenAccountStandingPoller>().runWhile(disclosureAccepted)
+        }
+        lifecycleScope.launch {
+            getKoin().get<HeldVoucherRedeemer>().runWhile(disclosureAccepted)
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {

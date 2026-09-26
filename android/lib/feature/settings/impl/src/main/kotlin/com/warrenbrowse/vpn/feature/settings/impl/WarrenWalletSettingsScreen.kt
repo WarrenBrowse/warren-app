@@ -577,6 +577,7 @@ internal fun voucherLabel(
     is WarrenVoucherOutcome.Banned ->
         AccountStandingText.ban(context, outcome.ban, locale) + " " +
             context.getString(R.string.voucher_kept_while_banned)
+    WarrenVoucherOutcome.Rejected,
     is WarrenVoucherOutcome.Failure ->
         context.getString(R.string.subscription_voucher_redeem_failed)
 }

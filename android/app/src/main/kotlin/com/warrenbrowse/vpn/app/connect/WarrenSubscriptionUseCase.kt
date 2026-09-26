@@ -39,6 +39,7 @@ class WarrenSubscriptionUseCase(
     private val walletRepository: WalletRepository,
     private val localSettings: WarrenLocalSettingsRepository,
     private val standing: WarrenAccountStandingState,
+    private val purchases: PurchaseVoucherKeeper,
 ) : WarrenSubscriptionInvoker {
 
     // App-scoped (not tied to any screen) so the purchase poll survives the
@@ -148,7 +149,7 @@ class WarrenSubscriptionUseCase(
         deadlineMs: Long,
     ) {
         pollScope.launch {
-            if (walletRepository.state.value is WalletState.Absent) return@launch
+            val wallet = walletAddress() ?: return@launch
             // Routine signing: read silently, no prompt (see WarrenConnectUseCase).
             val mnemonic = try {
                 walletRepository.readMnemonic()
@@ -165,24 +166,27 @@ class WarrenSubscriptionUseCase(
                     val outcome = withContext(Dispatchers.IO) {
                         WarrenNativeRuntime.awaitReadyBlocking()
                         try {
-                            parseVoucherJson(WarrenJni.redeemVoucher(mnemonic.phrase, claim.code))
+                            purchases.collect(claim.code, wallet, mnemonic.phrase)
                         } catch (e: Exception) {
-                            WarrenVoucherOutcome.Failure(e.message ?: "JNI redeemVoucher threw")
+                            WarrenVoucherOutcome.Failure(e.message ?: "JNI purchase collect threw")
                         }
                     }
-                    if (outcome is WarrenVoucherOutcome.Banned) {
+                    when (outcome) {
                         // The answer will not change within this poll. The
-                        // pulled voucher stays cached in Rust for this
-                        // process, unredeemed on the server.
-                        showBan(outcome)
-                        return@launch
-                    }
-                    if (outcome is WarrenVoucherOutcome.Success) {
-                        // Write the credited expiry to the shared StateFlow so
-                        // every screen observing it (account "Paid until", the
-                        // home header "Time left") refreshes automatically.
-                        localSettings.setCachedSubscriptionExpiry(outcome.expiresAtUnixSecs)
-                        return@launch
+                        // pulled voucher waits, sealed, for the ban to end.
+                        is WarrenVoucherOutcome.Banned -> {
+                            showBan(outcome)
+                            return@launch
+                        }
+                        is WarrenVoucherOutcome.Success -> {
+                            // Write the credited expiry to the shared StateFlow so
+                            // every screen observing it (account "Paid until", the
+                            // home header "Time left") refreshes automatically.
+                            localSettings.setCachedSubscriptionExpiry(outcome.expiresAtUnixSecs)
+                            return@launch
+                        }
+                        WarrenVoucherOutcome.Rejected -> return@launch
+                        else -> Unit
                     }
                     delay(intervalMs)
                 }
@@ -191,6 +195,50 @@ class WarrenSubscriptionUseCase(
             }
         }
     }
+
+    /**
+     * Redeems the vouchers pulled for this wallet that a ban, or a restart, left waiting in the
+     * sealed pending voucher store. Silent: no prompt, and nothing to do without a held voucher.
+     */
+    // The Keystore read and the JNI call are system boundaries: whatever they throw is one round
+    // skipped, retried at the next start or the next end of a ban, never a crash.
+    @Suppress("TooGenericExceptionCaught")
+    suspend fun redeemHeldVouchers() {
+        val wallet = walletAddress()
+        if (wallet == null || !withContext(Dispatchers.IO) { purchases.holds(wallet) }) return
+        val mnemonic = try {
+            walletRepository.readMnemonic()
+        } catch (e: Exception) {
+            Logger.w { "redeemHeldVouchers: wallet unreadable (${e::class.simpleName})" }
+            null
+        } ?: return
+        val outcomes = withContext(Dispatchers.IO) {
+            WarrenNativeRuntime.awaitReadyBlocking()
+            mnemonic.use { m ->
+                try {
+                    purchases.redeemHeld(wallet, m.phrase)
+                } catch (e: Exception) {
+                    Logger.w { "redeemHeldVouchers failed (${e::class.simpleName})" }
+                    emptyList()
+                }
+            }
+        }
+        outcomes.forEach { outcome ->
+            when (outcome) {
+                is WarrenVoucherOutcome.Success ->
+                    localSettings.setCachedSubscriptionExpiry(outcome.expiresAtUnixSecs)
+                is WarrenVoucherOutcome.Banned -> showBan(outcome)
+                else -> Unit
+            }
+        }
+    }
+
+    private fun walletAddress(): String? =
+        when (val state = walletRepository.state.value) {
+            is WalletState.Locked -> state.pubkey.value
+            is WalletState.Ready -> state.pubkey.value
+            else -> null
+        }
 
     private fun parseOutcome(rawJson: String): WarrenSubscriptionOutcome = try {
         val root = Json.parseToJsonElement(rawJson).jsonObject
