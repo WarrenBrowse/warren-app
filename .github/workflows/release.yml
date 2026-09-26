@@ -317,27 +317,22 @@ jobs:
   build-linux:
     name: Build Linux .deb/.rpm/.pacman
     needs: [tag-guard, tests]
-    # Routed to the Mac Studio x86_64 Rosetta container runner (macstudio-rosetta).
-    # The Debian LXC runner stays registered but lacks this label, so it is no
-    # longer selected for this job.
-    runs-on: [self-hosted, Linux, X64, libra]
+    # GitHub-hosted, inside the Debian 11 job image (glibc 2.31): the floor of
+    # every Linux binary shipped to users, which ubuntu-24.04 itself (2.39)
+    # would raise. Image: workspace scripts/ci-runners/Dockerfile.job.
+    runs-on: ubuntu-24.04
+    container:
+      image: ghcr.io/warrenbrowse/warren-ci-linux:bullseye-e03e4fc686d82f6b1cbea663ec9032c76960b5ee
+      options: --user root
     timeout-minutes: 130
-    # Build C dependencies (tikv-jemalloc-sys, etc.) with clang, not gcc: under
-    # the x86_64-Rosetta emulation gcc's cc1 intermittently SIGSEGVs mid-compile
-    # ("internal compiler error: Segmentation fault ... cc1"), failing the build
-    # nondeterministically. clang is stable under Rosetta (same fix warren-core
-    # CI uses for its vendored-OpenSSL build). cc-rs honours CC/CXX for all C/C++
-    # deps the Rust build shells out to.
+    # C dependencies (tikv-jemalloc-sys, etc.) are built with clang, as every
+    # shipped x86_64 package has been since the Rosetta runners, whose gcc cc1
+    # crashed mid-compile. cc-rs honours CC/CXX.
     env:
       CC: clang
       CXX: clang++
       WARREN_CHANNEL: ${{ needs.tag-guard.outputs.channel }}
       WARREN_VERSION: ${{ needs.tag-guard.outputs.version }}
-      # The Rosetta runners share the same 48 GiB Colima VM as the eight arm64
-      # ones; an uncapped x86_64 build (20 rustc under emulation) next to the
-      # arm64 and headless release jobs is what the VM's OOM killer answered on
-      # beta-v1.1.21. Ten keeps a healthy build well inside the 55 min attempt.
-      CARGO_BUILD_JOBS: "10"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
@@ -411,25 +406,25 @@ jobs:
           retention-days: 1
 
   # The same three packages for 64-bit ARM (Raspberry Pi 4/5 and the ARM cloud
-  # instances), built NATIVELY on the aarch64 Colima pool rather than
-  # cross-compiled from the x86_64 one. Both pools live on the same Apple
-  # Silicon Mac, so arm64 is the machine's own architecture: this job needs none
-  # of the Rosetta workarounds the x86_64 job carries (no CC=clang against the
-  # gcc cc1 crash, no whole-build retry on a SIGSEGV signature), and the same
-  # pool already compiles the whole daemon on every push through
-  # warren-tests.yml. Cross-compiling would instead need a second sysroot and
+  # instances), built NATIVELY on GitHub's arm64 runners rather than
+  # cross-compiled from x86_64: cross-compiling would need a second sysroot and
   # would leave the aarch64 packages built by a path nothing else exercises.
   build-linux-arm64:
     name: Build Linux arm64 .deb/.rpm/.pacman
     needs: [tag-guard, tests]
-    runs-on: [self-hosted, Linux, ARM64, macstudio-arm64]
+    # GitHub-hosted, inside the Debian 11 job image (glibc 2.31): the floor of
+    # every Linux binary shipped to users, which ubuntu-24.04 itself (2.39)
+    # would raise. Image: workspace scripts/ci-runners/Dockerfile.job.
+    runs-on: ubuntu-24.04-arm
+    container:
+      image: ghcr.io/warrenbrowse/warren-ci-linux:bullseye-e03e4fc686d82f6b1cbea663ec9032c76960b5ee
+      options: --user root
     timeout-minutes: 130
     env:
       WARREN_CHANNEL: ${{ needs.tag-guard.outputs.channel }}
       WARREN_VERSION: ${{ needs.tag-guard.outputs.version }}
       # Several arm64 runners share one 16-core Colima VM, so cap the build
       # parallelism the way warren-tests.yml does. Neighbourliness, not safety.
-      CARGO_BUILD_JOBS: "6"
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5

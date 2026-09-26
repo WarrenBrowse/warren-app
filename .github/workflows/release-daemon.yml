@@ -150,7 +150,13 @@ jobs:
     needs: [resolve]
     outputs:
       sums: ${{ steps.sums.outputs.sums }}
-    runs-on: [self-hosted, Linux, X64, libra]
+    # GitHub-hosted, inside the Debian 11 job image (glibc 2.31): the floor of
+    # every Linux binary shipped to users, which ubuntu-24.04 itself (2.39)
+    # would raise. Image: workspace scripts/ci-runners/Dockerfile.job.
+    runs-on: ubuntu-24.04
+    container:
+      image: ghcr.io/warrenbrowse/warren-ci-linux:bullseye-e03e4fc686d82f6b1cbea663ec9032c76960b5ee
+      options: --user root
     timeout-minutes: 90
     # clang avoids the intermittent gcc cc1 SIGSEGV under x86_64-Rosetta (same as release.yml).
     env:
@@ -252,12 +258,17 @@ jobs:
     # several runners compile at once, exactly as on the x86_64 pool.
     # This job is what makes the one-line installer work on an ARM server
     # (Raspberry Pi, Ampere/Graviton instances).
-    runs-on: [self-hosted, Linux, ARM64, macstudio-arm64]
+    # GitHub-hosted, inside the Debian 11 job image (glibc 2.31): the floor of
+    # every Linux binary shipped to users, which ubuntu-24.04 itself (2.39)
+    # would raise. Image: workspace scripts/ci-runners/Dockerfile.job.
+    runs-on: ubuntu-24.04-arm
+    container:
+      image: ghcr.io/warrenbrowse/warren-ci-linux:bullseye-e03e4fc686d82f6b1cbea663ec9032c76960b5ee
+      options: --user root
     timeout-minutes: 90
     env:
       # Several arm64 runners share one 16-core Colima VM; same cap as
       # warren-tests.yml, for neighbourliness.
-      CARGO_BUILD_JOBS: "6"
       WARREN_PRODUCT_ENV: ${{ needs.resolve.outputs.channel }}
       WARREN_VERSION: ${{ needs.resolve.outputs.version }}
     steps:
