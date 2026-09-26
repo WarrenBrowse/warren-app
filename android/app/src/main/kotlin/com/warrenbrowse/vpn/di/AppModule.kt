@@ -64,6 +64,7 @@ import com.warrenbrowse.vpn.lib.repository.ForumActivityRepository
 import com.warrenbrowse.vpn.lib.repository.ForumActivityState
 import com.warrenbrowse.vpn.lib.repository.ForumIdentityRepository
 import com.warrenbrowse.vpn.lib.repository.ForumNotificationsReader
+import com.warrenbrowse.vpn.lib.repository.ForumPreflight
 import com.warrenbrowse.vpn.lib.repository.ForumIdentityWalletBinding
 import com.warrenbrowse.vpn.lib.repository.ForumSignInRequests
 import com.warrenbrowse.vpn.lib.repository.LocaleRepository
@@ -79,6 +80,8 @@ import com.warrenbrowse.vpn.lib.repository.WarrenJniBridge
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenNetworkInfoProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenNetworkStatsProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenNetworkStatsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenAnnouncementRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenAnnouncementState
 import com.warrenbrowse.vpn.lib.repository.WarrenNoticeRepository
@@ -384,6 +387,19 @@ val appModule = module {
     // reads the live bandwidth cap from it).
     single { WarrenNetworkInfoUseCase(bridge = get(), scope = MainScope()) } bind
         WarrenNetworkInfoProvider::class
+
+    // Public /v1/network/stats feed. It polls only while a surface collects it, so nothing starts
+    // it from the activity the way the notices are.
+    single {
+        val tunnelState = get<WarrenTunnelStateProvider>()
+        WarrenNetworkStatsRepository(
+            bridge = get(),
+            scope = get<ApplicationScope>(),
+            deferred = {
+                ForumPreflight.of(tunnelState.connectedInfo.value) is ForumPreflight.Defer
+            },
+        )
+    } bind WarrenNetworkStatsProvider::class
 
     // With a single flavor dimension AGP does not emit `FLAVOR_infrastructure`;
     // the canonical flavor name surfaces via `BuildConfig.FLAVOR` directly.

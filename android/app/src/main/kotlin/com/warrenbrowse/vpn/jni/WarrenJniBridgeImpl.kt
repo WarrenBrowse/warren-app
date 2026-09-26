@@ -54,6 +54,8 @@ class WarrenJniBridgeImpl : WarrenJniBridge, WarrenStandingBridge {
 
     override fun fetchNetworkInfo(): String = ready { WarrenJni.fetchNetworkInfo() }
 
+    override fun fetchNetworkStats(): String = ready { WarrenJni.fetchNetworkStats() }
+
     override fun forumLogin(mnemonic: String, sid: String, host: String): String = ready {
         WarrenJni.forumLogin(mnemonic, sid, host)
     }

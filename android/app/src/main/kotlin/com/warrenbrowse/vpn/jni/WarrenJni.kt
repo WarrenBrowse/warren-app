@@ -513,6 +513,13 @@ object WarrenJni {
     external fun fetchNetworkInfo(): String
 
     /**
+     * One fetch of the public `GET /v1/network/stats` snapshot, bounded and version-checked:
+     * `{"ok":true,"stats":{..}}` or `{"ok":false,"reason":".."}`. Blocks on a network fetch; call
+     * off the main thread.
+     */
+    external fun fetchNetworkStats(): String
+
+    /**
      * Both verdicts of the signed `android.json` update manifest from one fetch, as
      * `{"supported":bool,"latest":"x.y.z"}`: whether the running version may keep running (the
      * forced-update gate) and the newest stable release strictly newer than [currentVersion]

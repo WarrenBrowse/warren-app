@@ -167,5 +167,4 @@ object WarrenNetworkStatsParser {
 
     private fun JsonObject.requiredArray(key: String): JsonArray =
         get(key) as? JsonArray ?: throw Malformed()
-
 }

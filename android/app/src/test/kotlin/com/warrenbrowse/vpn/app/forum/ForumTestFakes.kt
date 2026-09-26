@@ -209,6 +209,8 @@ internal class FakeJniBridge(
 
     override fun fetchNetworkInfo(): String = error("unused")
 
+    override fun fetchNetworkStats(): String = error("unused")
+
     override fun forumLogin(mnemonic: String, sid: String, host: String): String {
         loginCalls++
         return loginAnswer()

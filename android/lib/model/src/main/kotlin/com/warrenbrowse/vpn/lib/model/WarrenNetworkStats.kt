@@ -1,14 +1,14 @@
 package com.warrenbrowse.vpn.lib.model
 
 /**
- * The public network transparency snapshot (`GET /v1/network/stats`, warren-core doc 106), as
- * the UI reads it.
+ * The public network transparency snapshot (`GET /v1/network/stats`, warren-core doc 106), as the
+ * UI reads it.
  *
  * Rust passes the body through untouched after checking it is a version 1 JSON object, so the
  * parser in [WarrenNetworkStatsParser] is the only place that knows the wire shape. It follows the
  * contract's evolution rules: unknown fields are ignored, an unknown band or driver reads as
- * [LoadLevel.UNKNOWN] / [LoadDriver.UNKNOWN], and an optional figure the server left out stays
- * null instead of turning into a zero the UI would then display.
+ * [LoadLevel.UNKNOWN] / [LoadDriver.UNKNOWN], and an optional figure the server left out stays null
+ * instead of turning into a zero the UI would then display.
  *
  * `uptime_secs` is deliberately not modelled: the reference server withholds it (a drop to zero
  * dates a restart), and a client that read it would have a field to render.
@@ -128,8 +128,8 @@ enum class LoadDriver {
 }
 
 /**
- * What an exit may show. [BAND] is the common case on a young network: under the live threshold
- * the snapshot carries the exit's load band and nothing else.
+ * What an exit may show. [BAND] is the common case on a young network: under the live threshold the
+ * snapshot carries the exit's load band and nothing else.
  */
 enum class ExitDisplayMode {
     OFFLINE,
@@ -149,8 +149,8 @@ sealed interface PeopleCount {
 }
 
 /**
- * The people on [exit], never exact: a floor to the rounding step while live, and "fewer than
- * the threshold" while not.
+ * The people on [exit], never exact: a floor to the rounding step while live, and "fewer than the
+ * threshold" while not.
  */
 fun WarrenNetworkStats.peopleOn(exit: ExitStats): PeopleCount =
     when {

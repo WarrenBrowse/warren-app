@@ -12,8 +12,8 @@ import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
 /**
- * The snapshot is parsed tolerantly: the server may add fields and enum values at any time
- * without bumping the version, and a client that shipped before them must keep rendering.
+ * The snapshot is parsed tolerantly: the server may add fields and enum values at any time without
+ * bumping the version, and a client that shipped before them must keep rendering.
  */
 class WarrenNetworkStatsParserTest {
 
@@ -204,10 +204,7 @@ class WarrenNetworkStatsParserTest {
     fun `the ok envelope yields the snapshot`() {
         val fetch = WarrenNetworkStatsParser.parseEnvelope("""{"ok":true,"stats":$fixture}""")
 
-        assertEquals(
-            NetworkStatsFetch.Snapshot(WarrenNetworkStatsParser.parse(fixture)!!),
-            fetch,
-        )
+        assertEquals(NetworkStatsFetch.Snapshot(WarrenNetworkStatsParser.parse(fixture)!!), fetch)
     }
 
     @Test

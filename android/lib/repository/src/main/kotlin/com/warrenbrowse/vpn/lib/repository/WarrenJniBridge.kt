@@ -54,6 +54,15 @@ interface WarrenJniBridge {
     fun fetchNetworkInfo(): String
 
     /**
+     * One fetch of the public network stats snapshot (`GET /v1/network/stats`), bounded and
+     * version-checked in Rust. Returns `{"ok":true,"stats":{..}}` with the document as served, or
+     * `{"ok":false,"reason":".."}` where `unavailable` is a 404 and `version` a schema this build
+     * does not read (`transport`, `status`, `too_large`, `malformed` are transient).
+     * Unauthenticated display data. Blocks on a network fetch: invoke off the main thread.
+     */
+    fun fetchNetworkStats(): String
+
+    /**
      * Sign and submit the community-forum login for [sid] against the
      * allowlisted connect [host] in Rust (`POST /v1/forum/login`); the wallet
      * signature never surfaces here. Returns the JSON envelope of
