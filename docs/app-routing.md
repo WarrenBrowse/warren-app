@@ -1,12 +1,12 @@
 # App routing: exclude, per-app country, VPN-only-for
 
-Status on branch `feat/per-app-exit` (2026-09-26), which carries the four
-lots integrated: per-app country runs in the datapath on desktop (sections 2.2
-to 2.6, real exits measured from macOS and Windows); include-only runs on
-macOS, Linux and Windows (section 3, the Windows run in section 3.2); the desktop GUI covers
-all three tabs (section 7); section 3.3 is how the modes and the countries
-combine. On Android, exclude and include-only run (section 3.4); per-app
-country is the next Android step (section 3.5).
+Status on `main` (2026-09-26), which carries the four lots integrated:
+per-app country runs in the datapath on desktop (sections 2.2 to 2.6, real
+exits measured from macOS and Windows); include-only runs on macOS, Linux and
+Windows (section 3, the Windows run in section 3.2); the desktop GUI covers all
+three tabs (section 7); section 3.3 is how the modes and the countries combine.
+On Android, exclude and include-only run (section 3.4); per-app country is the
+next Android step (section 3.5).
 This document is the contract the implementation lots follow. When the code and
 this file disagree, fix one of them in the same commit.
 
@@ -675,7 +675,7 @@ unresolved owner goes through the main connection.
   sockets on the VM. FI, NL and SG refused all three tokens as route exits
   while a serial was free (FR admitted it seconds later): a matter for those
   exits, not looked into from the client. The daemon in the Windows ARM64 VM
-  (include-only with the swapped driver, per-app country) is still to run.
+  (include-only with the swapped driver, per-app country): section 3.2.
 
 ## 7. Desktop GUI
 
