@@ -489,14 +489,17 @@ impl<R: OwnerResolver> Router<R> {
         };
         let route = match self.decisions.get(process) {
             Some(route) => route,
-            None => {
-                let route = self
-                    .resolver
-                    .executable(pid)
-                    .and_then(|path| self.policy.apps.lookup(path.as_os_str()));
-                self.decisions.insert(process, route);
-                route
-            }
+            None => match self.resolver.executable(pid) {
+                Some(path) => {
+                    let route = self.policy.apps.lookup(path.as_os_str());
+                    self.decisions.insert(process, route);
+                    route
+                }
+                // The process is gone, or going: not a program known to take
+                // no route, so nothing is remembered about it.
+                None if under_way => return Binding::Blocked,
+                None => None,
+            },
         };
         route.map_or(Binding::Main, Binding::Route)
     }
@@ -613,6 +616,9 @@ pub(crate) mod fake {
         /// Processes of a watched program the narrowed search misses, as
         /// one whose start event was lost would be.
         pub missed: std::collections::HashSet<u32>,
+        /// Processes whose program cannot be read, as one that exits between
+        /// two reads.
+        pub unreadable: std::collections::HashSet<u32>,
     }
 
     impl FakeOs {
@@ -681,6 +687,9 @@ pub(crate) mod fake {
 
         fn executable(&mut self, pid: u32) -> Option<PathBuf> {
             self.calls.executable += 1;
+            if self.unreadable.contains(&pid) {
+                return None;
+            }
             self.processes.get(&pid).map(|(_, path)| path.clone())
         }
     }
@@ -905,6 +914,37 @@ mod tests {
         );
 
         assert_eq!(verdict, Verdict::Route(RouteId(0)));
+    }
+
+    #[test]
+    fn a_connection_under_way_whose_program_cannot_be_read_is_dropped() {
+        let mut os = os();
+        os.unreadable.insert(10);
+        os.socket(tcp_flow(50000), 10);
+        let mut router = router(os);
+
+        let verdict = router.uplink(
+            &mut tcp_v4(MAIN, REMOTE, 50000, 443, TCP_ACK, b"data"),
+            now(),
+        );
+
+        assert_eq!(verdict, Verdict::Drop);
+    }
+
+    #[test]
+    fn a_program_that_could_not_be_read_is_read_again_for_the_next_flow() {
+        let mut os = os();
+        os.unreadable.insert(10);
+        os.socket(tcp_flow(50000), 10);
+        os.socket(tcp_flow(50001), 10);
+        let mut router = router(os);
+        let first = router.uplink(&mut syn(50000), now());
+
+        router.resolver.unreadable.clear();
+        let second = router.uplink(&mut syn(50001), now());
+
+        assert_eq!(first, Verdict::Main);
+        assert_eq!(second, Verdict::Route(RouteId(0)));
     }
 
     #[test]
