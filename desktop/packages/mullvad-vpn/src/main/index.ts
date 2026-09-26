@@ -326,13 +326,15 @@ class ApplicationMain
     // never from renderer input, so it can go straight to the shell.
     this.purchaseFlow = new PurchaseFlow(
       {
-        submitVoucher: (code) => this.account.submitVoucher(code),
+        pullPurchaseVoucher: (code) => this.daemonRpc.pullPurchaseVoucher(code),
+        submitVoucher: (voucher) => this.account.submitVoucher(voucher),
         openUrl: (url) => shell.openExternal(url),
         notifyPurchasePolling: (polling) => IpcMainEventChannel.account.notifyPurchase?.(polling),
         // Redemption credits whoever is logged in, so purchases are
         // stamped with a non-reversible account tag (never the raw
         // pubkey: gui_settings.json must stay identity-free).
         accountTag: () => this.currentAccountTag(),
+        accountBanned: () => this.accountBanInForce() !== undefined,
         onRedeemed: (claim) => void this.renewalFlow.adopt(claim),
       },
       new SealedPendingPurchaseStore(new SafeStorageSecretStore(), () =>
@@ -1346,9 +1348,14 @@ class ApplicationMain
       (snapshot: WarrenStatus) => {
         const wasBanned = this.accountBanInForce() !== undefined;
         this.warrenStatus = snapshot;
-        if (wasBanned !== (this.accountBanInForce() !== undefined)) {
+        const banned = this.accountBanInForce() !== undefined;
+        if (wasBanned !== banned) {
           // A ban pauses the client-side renewal, and its end resumes it.
           this.renewalFlow?.maybeSchedule();
+        }
+        if (wasBanned && !banned) {
+          // A voucher a ban refused waits, sealed, for this moment.
+          void this.purchaseFlow?.checkPendingNow(true);
         }
         // Same document the renderer badges from, so the banner, the tray
         // dot and the bell can never disagree.

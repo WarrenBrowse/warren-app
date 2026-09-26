@@ -25,6 +25,7 @@ import {
   NewCustomList,
   ObfuscationSettings,
   ObfuscationType,
+  PurchaseVoucherPull,
   RelaySettings,
   TrustNewExitKeyOutcome,
   TunnelState,
@@ -62,7 +63,7 @@ import {
   convertToWarrenMultiHopSettings,
   ensureExists,
 } from './grpc-type-convertions';
-import { voucherFailureOfStatus } from './voucher-response';
+import { pullFailureOfStatus, voucherFailureOfStatus } from './voucher-response';
 
 const DAEMON_RPC_PATH = daemonRpcPath(
   process.platform,
@@ -450,6 +451,20 @@ export class DaemonRpc extends GrpcClient {
       };
     } catch (e) {
       return voucherFailureOfStatus((e as grpc.ServiceError).code);
+    }
+  }
+
+  // The voucher is a bearer secret: the caller seals it before redeeming it,
+  // and nothing here logs it.
+  public async pullPurchaseVoucher(claimCode: string): Promise<PurchaseVoucherPull> {
+    try {
+      const response = await this.callString<StringValue>(
+        this.client.pullPurchaseVoucher,
+        claimCode,
+      );
+      return { type: 'pulled', voucher: response.getValue() };
+    } catch (e) {
+      return pullFailureOfStatus((e as grpc.ServiceError).code);
     }
   }
 

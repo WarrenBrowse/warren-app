@@ -8,6 +8,8 @@ import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('electron', () => ({ app: { getPath: () => '/nonexistent' } }));
 
 import { SealedPendingPurchaseStore } from '../../src/main/pending-purchase-store';
+import { claimCode } from '../../src/main/purchase-claim';
+import PurchaseFlow, { PurchaseFlowDelegate } from '../../src/main/purchase-flow';
 import { SecretStore } from '../../src/main/torrent-client/password-store';
 import log from '../../src/shared/logging';
 import { LogLevel } from '../../src/shared/logging-types';
@@ -115,5 +117,58 @@ describe('the pending purchases', () => {
     storeWith(fakeSecrets()).set([ENTRY]);
 
     expect(fs.statSync(FILE).mode & 0o777).toBe(0o600);
+  });
+});
+
+// The voucher a purchase paid for, once pulled, exists nowhere else: the
+// server hands it out once. A ban that refuses its redemption may last a
+// year, so it has to outlive the process that pulled it.
+describe('a pulled voucher a ban refused', () => {
+  const VOUCHER = 'QWRT-YPLK-JHGF-DSAZ';
+  const CLAIM = claimCode({ wpid: 'e'.repeat(32), secret: SECRET });
+
+  function delegate(banned: { now: boolean }, calls: string[]): PurchaseFlowDelegate {
+    return {
+      pullPurchaseVoucher: (code) => {
+        calls.push(`pull ${code}`);
+        return Promise.resolve({ type: 'pulled', voucher: VOUCHER });
+      },
+      submitVoucher: (voucher) => {
+        calls.push(`redeem ${voucher}`);
+        return Promise.resolve(
+          banned.now
+            ? { type: 'banned' }
+            : { type: 'success', newExpiry: '2027-01-01T00:00:00.000Z', secondsAdded: 2_592_000 },
+        );
+      },
+      openUrl: () => Promise.resolve(),
+      notifyPurchasePolling: () => {},
+      accountTag: () => 'acct1',
+      accountBanned: () => false,
+    };
+  }
+
+  it('survives a restart sealed, and is redeemed once the ban lifts', async () => {
+    const banned = { now: true };
+    const calls: string[] = [];
+    // Paid while the app was closed, past the active poll's window.
+    storeWith(fakeSecrets()).set([`${CLAIM}:${Date.now() - 3_600_000}:acct1`]);
+    const first = new PurchaseFlow(delegate(banned, calls), storeWith(fakeSecrets()), '');
+    first.resume();
+    await vi.waitFor(() => expect(calls).toEqual([`pull ${CLAIM}`, `redeem ${VOUCHER}`]));
+    first.dispose();
+
+    const sealed = fs.readFileSync(FILE);
+    expect(sealed.toString('utf8')).not.toContain(VOUCHER);
+    expect(sealed.toString('utf8')).not.toContain(encodeURIComponent(VOUCHER));
+
+    banned.now = false;
+    calls.length = 0;
+    const second = new PurchaseFlow(delegate(banned, calls), storeWith(fakeSecrets()), '');
+    second.resume();
+    await vi.waitFor(() => expect(fs.existsSync(FILE)).toBe(false));
+    second.dispose();
+
+    expect(calls).toEqual([`redeem ${VOUCHER}`]);
   });
 });

@@ -1,6 +1,6 @@
 import * as grpc from '@grpc/grpc-js';
 
-import { VoucherResponse } from '../shared/daemon-rpc-types';
+import { PurchaseVoucherPull, VoucherResponse } from '../shared/daemon-rpc-types';
 
 /**
  * The refusal a failed `SubmitVoucher` call stands for, from the status code
@@ -25,4 +25,13 @@ export function voucherFailureOfStatus(code: grpc.status | undefined): VoucherRe
     default:
       return { type: 'error' };
   }
+}
+
+/**
+ * Why a failed `PullPurchaseVoucher` call brought no voucher back. The daemon
+ * answers UNAVAILABLE while the payment has queued nothing, the steady state of
+ * a purchase poll; anything else is an error the poll retries as well.
+ */
+export function pullFailureOfStatus(code: grpc.status | undefined): PurchaseVoucherPull {
+  return code === grpc.status.UNAVAILABLE ? { type: 'not_ready' } : { type: 'error' };
 }

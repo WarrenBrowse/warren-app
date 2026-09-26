@@ -10,13 +10,13 @@ import PurchaseFlow, {
   PendingPurchaseStore,
   PurchaseFlowDelegate,
 } from '../../src/main/purchase-flow';
-import { VoucherResponse } from '../../src/shared/daemon-rpc-types';
+import { PurchaseVoucherPull, VoucherResponse } from '../../src/shared/daemon-rpc-types';
 
 const PURCHASE_URL = 'https://checkout.warrenbrowse.com/';
 const T0 = 1_750_000_000_000;
 
 const invalid: VoucherResponse = { type: 'invalid' };
-const notReady: VoucherResponse = { type: 'not_ready' };
+const expired: VoucherResponse = { type: 'expired' };
 const error: VoucherResponse = { type: 'error' };
 const alreadyUsed: VoucherResponse = { type: 'already_used' };
 const banned: VoucherResponse = { type: 'banned' };
@@ -26,6 +26,19 @@ const success: VoucherResponse = {
   secondsAdded: 30 * 24 * 3600,
 };
 
+const notPaid: PurchaseVoucherPull = { type: 'not_ready' };
+const pullFailed: PurchaseVoucherPull = { type: 'error' };
+
+// The voucher the fake daemon pulls for a claim: distinct per purchase, and
+// with a character the entry format has to escape.
+function voucherOf(code: string): string {
+  return `V:${code.slice(0, 8)}`;
+}
+
+function pulledFor(code: string): PurchaseVoucherPull {
+  return { type: 'pulled', voucher: voucherOf(code) };
+}
+
 class FakeStore implements PendingPurchaseStore {
   constructor(public entries: string[] = []) {}
   public get = () => [...this.entries];
@@ -34,15 +47,29 @@ class FakeStore implements PendingPurchaseStore {
   };
 }
 
-function makeDelegate(responses: () => Promise<VoucherResponse>, initialTag = 'acct1') {
+interface FakeDaemon {
+  // Answers a pull for a claim code; the default pulls its voucher.
+  pull?: (code: string) => Promise<PurchaseVoucherPull>;
+  // Answers a redemption; the default redeems.
+  redeem?: (voucher: string) => Promise<VoucherResponse>;
+}
+
+function makeDelegate(daemon: FakeDaemon = {}, initialTag = 'acct1') {
+  const pulled: string[] = [];
   const submitted: string[] = [];
   const opened: string[] = [];
   const pollingStates: boolean[] = [];
+  const redeemedClaims: string[] = [];
   let tag: string | undefined = initialTag;
+  let isBanned = false;
   const delegate: PurchaseFlowDelegate = {
-    submitVoucher: (code: string) => {
-      submitted.push(code);
-      return responses();
+    pullPurchaseVoucher: (code: string) => {
+      pulled.push(code);
+      return daemon.pull ? daemon.pull(code) : Promise.resolve(pulledFor(code));
+    },
+    submitVoucher: (voucher: string) => {
+      submitted.push(voucher);
+      return daemon.redeem ? daemon.redeem(voucher) : Promise.resolve(success);
     },
     openUrl: (url: string) => {
       opened.push(url);
@@ -52,14 +79,22 @@ function makeDelegate(responses: () => Promise<VoucherResponse>, initialTag = 'a
       pollingStates.push(polling);
     },
     accountTag: () => tag,
+    accountBanned: () => isBanned,
+    onRedeemed: (claim) => {
+      redeemedClaims.push(claim.wpid);
+    },
   };
   const setTag = (newTag: string | undefined) => {
     tag = newTag;
   };
-  return { delegate, submitted, opened, pollingStates, setTag };
+  const setBanned = (value: boolean) => {
+    isBanned = value;
+  };
+  return { delegate, pulled, submitted, opened, pollingStates, redeemedClaims, setTag, setBanned };
 }
 
-const alwaysInvalid = () => Promise.resolve(invalid);
+// A daemon whose payment never lands: every pull finds nothing.
+const unpaid: FakeDaemon = { pull: () => Promise.resolve(notPaid) };
 
 // The claim code the flow persisted for its newest purchase: the wpid the
 // URL shows followed by the pull secret it never shows.
@@ -72,6 +107,11 @@ function fixtureCode(hexChar: string): string {
   return claimCode({ wpid: hexChar.repeat(32), secret: hexChar.repeat(64) });
 }
 
+// A persisted entry that already holds its pulled voucher.
+function heldEntry(code: string, startedMs: number, tag = 'acct1'): string {
+  return `${code}:${startedMs}:${tag}:${encodeURIComponent(voucherOf(code))}`;
+}
+
 describe('PurchaseFlow.start', () => {
   beforeEach(() => {
     vi.useFakeTimers({ now: T0 });
@@ -81,7 +121,7 @@ describe('PurchaseFlow.start', () => {
   });
 
   it('opens the checkout bound to a fresh wpid and the hash of a fresh pull secret', async () => {
-    const { delegate, opened } = makeDelegate(alwaysInvalid);
+    const { delegate, opened } = makeDelegate(unpaid);
     const store = new FakeStore();
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
@@ -100,7 +140,7 @@ describe('PurchaseFlow.start', () => {
   });
 
   it('mints a different wpid for every purchase', async () => {
-    const { delegate, opened } = makeDelegate(alwaysInvalid);
+    const { delegate, opened } = makeDelegate(unpaid);
     const flow = new PurchaseFlow(delegate, new FakeStore(), PURCHASE_URL);
 
     await flow.start();
@@ -112,7 +152,7 @@ describe('PurchaseFlow.start', () => {
   });
 
   it('appends the shortened account chip as a URL fragment only when provided', async () => {
-    const { delegate, opened } = makeDelegate(alwaysInvalid);
+    const { delegate, opened } = makeDelegate(unpaid);
     const flow = new PurchaseFlow(delegate, new FakeStore(), PURCHASE_URL);
 
     await flow.start('wb7kgy…hP9DnB');
@@ -122,7 +162,7 @@ describe('PurchaseFlow.start', () => {
   });
 
   it('persists the pending purchase stamped with the initiating account so a restart can resume it', async () => {
-    const { delegate, opened } = makeDelegate(alwaysInvalid);
+    const { delegate, opened } = makeDelegate(unpaid);
     const store = new FakeStore();
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
@@ -136,7 +176,7 @@ describe('PurchaseFlow.start', () => {
   });
 
   it('rolls back the persisted entry and rethrows when the browser cannot be opened', async () => {
-    const { delegate } = makeDelegate(alwaysInvalid);
+    const { delegate } = makeDelegate(unpaid);
     delegate.openUrl = () => Promise.reject(new Error('no browser'));
     const store = new FakeStore();
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
@@ -153,7 +193,7 @@ describe('PurchaseFlow.start', () => {
       { length: MAX_PENDING_PURCHASES },
       (_, i) => `${fixtureCode(String(i))}:${T0 - (i + 1) * 60_000}`,
     );
-    const { delegate } = makeDelegate(alwaysInvalid);
+    const { delegate } = makeDelegate(unpaid);
     const store = new FakeStore(preloaded);
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
@@ -166,6 +206,23 @@ describe('PurchaseFlow.start', () => {
     expect(store.entries.some((entry) => entry.includes(`:${T0}:`))).toBe(true);
     flow.dispose();
   });
+
+  it('never caps away a purchase whose voucher it holds', async () => {
+    const held = heldEntry(fixtureCode('f'), T0 - 400 * 24 * 3600_000);
+    const preloaded = Array.from(
+      { length: MAX_PENDING_PURCHASES },
+      (_, i) => `${fixtureCode(String(i))}:${T0 - (i + 1) * 60_000}`,
+    );
+    const { delegate } = makeDelegate(unpaid);
+    const store = new FakeStore([held, ...preloaded]);
+    const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
+
+    await flow.start();
+
+    expect(store.entries).toContain(held);
+    expect(store.entries).toHaveLength(MAX_PENDING_PURCHASES + 1);
+    flow.dispose();
+  });
 });
 
 describe('PurchaseFlow active poll', () => {
@@ -176,11 +233,11 @@ describe('PurchaseFlow active poll', () => {
     vi.useRealTimers();
   });
 
-  it('polls submitVoucher with the claim code every interval until success, then stops and clears the entry', async () => {
-    const responses = [invalid, invalid, success];
-    const { delegate, submitted, pollingStates } = makeDelegate(() =>
-      Promise.resolve(responses.shift() ?? invalid),
-    );
+  it('pulls every interval until the payment lands, then redeems the voucher, stops and clears the entry', async () => {
+    const pulls = [notPaid, notPaid];
+    const { delegate, pulled, submitted, pollingStates, redeemedClaims } = makeDelegate({
+      pull: (code) => Promise.resolve(pulls.shift() ?? pulledFor(code)),
+    });
     const store = new FakeStore();
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
@@ -188,110 +245,136 @@ describe('PurchaseFlow active poll', () => {
     const code = persistedCode(store);
 
     await vi.advanceTimersByTimeAsync(3 * ACTIVE_POLL_INTERVAL_MS);
-    expect(submitted).toEqual([code, code, code]);
+    expect(pulled).toEqual([code, code, code]);
+    expect(submitted).toEqual([voucherOf(code)]);
+    expect(redeemedClaims).toEqual([code.slice(0, 32)]);
     expect(store.entries).toEqual([]);
     expect(flow.polling).toBe(false);
 
-    // Redeemed: no further polls.
     await vi.advanceTimersByTimeAsync(3 * ACTIVE_POLL_INTERVAL_MS);
-    expect(submitted).toHaveLength(3);
+    expect(pulled).toHaveLength(3);
     expect(pollingStates).toEqual([true, false]);
     flow.dispose();
   });
 
-  it('keeps polling through transient errors', async () => {
-    const responses = [error, error, invalid];
-    const { delegate, submitted } = makeDelegate(() =>
-      Promise.resolve(responses.shift() ?? invalid),
-    );
-    const flow = new PurchaseFlow(delegate, new FakeStore(), PURCHASE_URL);
-
-    await flow.start();
-    await vi.advanceTimersByTimeAsync(4 * ACTIVE_POLL_INTERVAL_MS);
-
-    expect(submitted.length).toBeGreaterThanOrEqual(4);
-    expect(flow.polling).toBe(true);
-    flow.dispose();
-  });
-
-  it('keeps polling on not_ready until the webhook lands', async () => {
-    const responses = [notReady, notReady, success];
-    const { delegate, submitted } = makeDelegate(() =>
-      Promise.resolve(responses.shift() ?? notReady),
-    );
+  it('seals the pulled voucher in the store before it asks for its redemption', async () => {
+    let storedAtRedemption: string[] = [];
     const store = new FakeStore();
+    const { delegate } = makeDelegate({
+      redeem: () => {
+        storedAtRedemption = store.get();
+        return Promise.resolve(error);
+      },
+    });
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
     await flow.start();
-    await vi.advanceTimersByTimeAsync(3 * ACTIVE_POLL_INTERVAL_MS);
+    const code = persistedCode(store);
+    await vi.advanceTimersByTimeAsync(ACTIVE_POLL_INTERVAL_MS);
 
-    expect(submitted.length).toBe(3);
-    expect(store.entries).toEqual([]);
-    expect(flow.polling).toBe(false);
+    expect(storedAtRedemption).toEqual([heldEntry(code, T0)]);
     flow.dispose();
   });
 
-  it('keeps polling when submitVoucher rejects (daemon hiccup)', async () => {
+  it('keeps polling through failed pulls, a daemon hiccup included', async () => {
     let calls = 0;
-    const { delegate, submitted } = makeDelegate(() => {
-      calls += 1;
-      return calls === 1 ? Promise.reject(new Error('rpc down')) : Promise.resolve(invalid);
+    const { delegate, pulled } = makeDelegate({
+      pull: () => {
+        calls += 1;
+        return calls === 1 ? Promise.reject(new Error('rpc down')) : Promise.resolve(pullFailed);
+      },
     });
     const flow = new PurchaseFlow(delegate, new FakeStore(), PURCHASE_URL);
 
     await flow.start();
-    await vi.advanceTimersByTimeAsync(2 * ACTIVE_POLL_INTERVAL_MS);
+    await vi.advanceTimersByTimeAsync(3 * ACTIVE_POLL_INTERVAL_MS);
 
-    expect(submitted.length).toBe(2);
+    expect(pulled).toHaveLength(3);
     expect(flow.polling).toBe(true);
     flow.dispose();
   });
 
-  it('stops on already_used (another device pulled the voucher) and clears the entry', async () => {
-    const responses = [alreadyUsed];
-    const { delegate, submitted } = makeDelegate(() =>
-      Promise.resolve(responses.shift() ?? invalid),
-    );
+  it('redeems the voucher it holds again, without a second pull, after a failed redemption', async () => {
+    const redemptions = [error];
+    const { delegate, pulled, submitted } = makeDelegate({
+      redeem: () => Promise.resolve(redemptions.shift() ?? success),
+    });
     const store = new FakeStore();
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
     await flow.start();
+    const code = persistedCode(store);
     await vi.advanceTimersByTimeAsync(2 * ACTIVE_POLL_INTERVAL_MS);
 
-    expect(submitted).toHaveLength(1);
+    expect(pulled).toEqual([code]);
+    expect(submitted).toEqual([voucherOf(code), voucherOf(code)]);
     expect(store.entries).toEqual([]);
-    expect(flow.polling).toBe(false);
     flow.dispose();
   });
 
-  it('stops polling on banned and keeps the purchase for after the ban', async () => {
+  it('forgets the voucher on a verdict on it, and only then', async () => {
+    for (const verdict of [invalid, alreadyUsed, expired]) {
+      const { delegate, submitted } = makeDelegate({ redeem: () => Promise.resolve(verdict) });
+      const store = new FakeStore();
+      const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
+
+      await flow.start();
+      await vi.advanceTimersByTimeAsync(2 * ACTIVE_POLL_INTERVAL_MS);
+
+      expect(submitted, verdict.type).toHaveLength(1);
+      expect(store.entries, verdict.type).toEqual([]);
+      expect(flow.polling, verdict.type).toBe(false);
+      flow.dispose();
+    }
+  });
+
+  it('stops polling on banned and keeps the voucher sealed for after the ban', async () => {
     // warren-core doc 105 section 5.3: the ban refused the redemption before
-    // consuming the voucher, so the purchase is still the user's. Polling
-    // cannot change the answer, and dropping the entry would lose it.
-    const { delegate, submitted } = makeDelegate(() => Promise.resolve(banned));
+    // consuming the voucher, so it is still the user's. Polling cannot
+    // change the answer, and dropping the entry would lose a paid secret.
+    const { delegate, submitted } = makeDelegate({ redeem: () => Promise.resolve(banned) });
     const store = new FakeStore();
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
     await flow.start();
+    const code = persistedCode(store);
     await vi.advanceTimersByTimeAsync(3 * ACTIVE_POLL_INTERVAL_MS);
 
     expect(submitted).toHaveLength(1);
     expect(flow.polling).toBe(false);
-    expect(store.entries).toHaveLength(1);
+    expect(store.entries).toEqual([heldEntry(code, T0)]);
     flow.dispose();
   });
 
-  it('never overlaps two submitVoucher calls when one is slow', async () => {
-    let resolveFirst: ((response: VoucherResponse) => void) | undefined;
+  it('collects and seals the voucher but redeems nothing while a ban is known', async () => {
+    const { delegate, submitted, setBanned } = makeDelegate();
+    setBanned(true);
+    const store = new FakeStore();
+    const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
+
+    await flow.start();
+    const code = persistedCode(store);
+    await vi.advanceTimersByTimeAsync(2 * ACTIVE_POLL_INTERVAL_MS);
+
+    expect(submitted).toEqual([]);
+    expect(store.entries).toEqual([heldEntry(code, T0)]);
+    expect(flow.polling).toBe(false);
+    flow.dispose();
+  });
+
+  it('never overlaps two daemon calls when one is slow', async () => {
+    let resolveFirst: ((response: PurchaseVoucherPull) => void) | undefined;
     let calls = 0;
-    const { delegate } = makeDelegate(() => {
-      calls += 1;
-      if (calls === 1) {
-        return new Promise<VoucherResponse>((resolve) => {
-          resolveFirst = resolve;
-        });
-      }
-      return Promise.resolve(invalid);
+    const { delegate } = makeDelegate({
+      pull: () => {
+        calls += 1;
+        if (calls === 1) {
+          return new Promise<PurchaseVoucherPull>((resolve) => {
+            resolveFirst = resolve;
+          });
+        }
+        return Promise.resolve(notPaid);
+      },
     });
     const flow = new PurchaseFlow(delegate, new FakeStore(), PURCHASE_URL);
 
@@ -299,32 +382,32 @@ describe('PurchaseFlow active poll', () => {
     await vi.advanceTimersByTimeAsync(4 * ACTIVE_POLL_INTERVAL_MS);
     expect(calls).toBe(1);
 
-    resolveFirst?.(invalid);
+    resolveFirst?.(notPaid);
     await vi.advanceTimersByTimeAsync(ACTIVE_POLL_INTERVAL_MS);
     expect(calls).toBe(2);
     flow.dispose();
   });
 
   it('gives up at the active deadline but keeps the pending entry for later checks', async () => {
-    const { delegate, submitted, pollingStates } = makeDelegate(alwaysInvalid);
+    const { delegate, pulled, pollingStates } = makeDelegate(unpaid);
     const store = new FakeStore();
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
     await flow.start();
     await vi.advanceTimersByTimeAsync(ACTIVE_POLL_DURATION_MS + 2 * ACTIVE_POLL_INTERVAL_MS);
 
-    const countAtDeadline = submitted.length;
+    const countAtDeadline = pulled.length;
     expect(flow.polling).toBe(false);
     expect(store.entries).toHaveLength(1);
     expect(pollingStates).toEqual([true, false]);
 
     await vi.advanceTimersByTimeAsync(5 * ACTIVE_POLL_INTERVAL_MS);
-    expect(submitted).toHaveLength(countAtDeadline);
+    expect(pulled).toHaveLength(countAtDeadline);
     flow.dispose();
   });
 
   it('restarts the poll on the new purchase when the user opens checkout again', async () => {
-    const { delegate, submitted, opened } = makeDelegate(alwaysInvalid);
+    const { delegate, pulled, opened } = makeDelegate(unpaid);
     const store = new FakeStore();
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
@@ -336,19 +419,19 @@ describe('PurchaseFlow active poll', () => {
       .find((code) => code.startsWith(secondWpid));
 
     await vi.advanceTimersByTimeAsync(ACTIVE_POLL_INTERVAL_MS);
-    expect(submitted).toEqual([secondCode]);
+    expect(pulled).toEqual([secondCode]);
     flow.dispose();
   });
 
   it('stops the active poll when the account changes mid-purchase (no cross-account credit)', async () => {
-    const { delegate, submitted, setTag } = makeDelegate(alwaysInvalid);
+    const { delegate, pulled, setTag } = makeDelegate(unpaid);
     const flow = new PurchaseFlow(delegate, new FakeStore(), PURCHASE_URL);
 
     await flow.start();
     setTag('acct2');
     await vi.advanceTimersByTimeAsync(2 * ACTIVE_POLL_INTERVAL_MS);
 
-    expect(submitted).toEqual([]);
+    expect(pulled).toEqual([]);
     expect(flow.polling).toBe(false);
     flow.dispose();
   });
@@ -366,112 +449,156 @@ describe('PurchaseFlow.checkPendingNow', () => {
   const wpidB = fixtureCode('b');
 
   it('drops a persisted entry that holds no pull secret, which could never be collected', async () => {
-    const { delegate, submitted } = makeDelegate(alwaysInvalid);
+    const { delegate, pulled } = makeDelegate(unpaid);
     const store = new FakeStore([`${'d'.repeat(32)}:${T0 - 60_000}`]);
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
     await flow.checkPendingNow(true);
 
-    expect(submitted).toEqual([]);
+    expect(pulled).toEqual([]);
     expect(store.entries).toEqual([]);
     flow.dispose();
   });
 
-  it('submits every persisted claim and clears only the redeemed ones', async () => {
-    const { delegate, submitted } = makeDelegate(() =>
-      Promise.resolve(submitted[submitted.length - 1] === wpidA ? success : invalid),
-    );
+  it('collects every persisted claim and clears only the redeemed ones', async () => {
+    const { delegate, pulled } = makeDelegate({
+      pull: (code) => Promise.resolve(code === wpidA ? pulledFor(code) : notPaid),
+    });
     const store = new FakeStore([`${wpidA}:${T0 - 60_000}`, `${wpidB}:${T0 - 120_000}`]);
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
     await flow.checkPendingNow();
 
-    expect(submitted.sort()).toEqual([wpidA, wpidB]);
+    expect(pulled.sort()).toEqual([wpidA, wpidB]);
     expect(store.entries).toEqual([`${wpidB}:${T0 - 120_000}`]);
     flow.dispose();
   });
 
-  it('prunes entries older than the server pending TTL without submitting them', async () => {
-    const { delegate, submitted } = makeDelegate(alwaysInvalid);
+  it('prunes a claim older than the server pending TTL without pulling it', async () => {
+    const { delegate, pulled } = makeDelegate(unpaid);
     const store = new FakeStore([`${wpidA}:${T0 - PENDING_PURCHASE_TTL_MS - 1}`]);
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
     await flow.checkPendingNow();
 
+    expect(pulled).toEqual([]);
+    expect(store.entries).toEqual([]);
+    flow.dispose();
+  });
+
+  it('redeems a voucher it holds past the pull TTL, without pulling again', async () => {
+    const { delegate, pulled, submitted } = makeDelegate();
+    const store = new FakeStore([heldEntry(wpidA, T0 - 300 * 24 * 3600_000)]);
+    const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
+
+    await flow.checkPendingNow(true);
+
+    expect(pulled).toEqual([]);
+    expect(submitted).toEqual([voucherOf(wpidA)]);
+    expect(store.entries).toEqual([]);
+    flow.dispose();
+  });
+
+  it('keeps a held voucher through a throttle or a server error', async () => {
+    for (const refusal of [error, { type: 'not_ready' } as VoucherResponse]) {
+      const { delegate, submitted } = makeDelegate({ redeem: () => Promise.resolve(refusal) });
+      const entry = heldEntry(wpidA, T0 - 60_000);
+      const store = new FakeStore([entry]);
+      const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
+
+      await flow.checkPendingNow(true);
+
+      expect(submitted, refusal.type).toHaveLength(1);
+      expect(store.entries, refusal.type).toEqual([entry]);
+      flow.dispose();
+    }
+  });
+
+  it('leaves a held voucher alone while a ban is known, and redeems it once the ban lifts', async () => {
+    const { delegate, submitted, setBanned } = makeDelegate();
+    setBanned(true);
+    const store = new FakeStore([heldEntry(wpidA, T0 - 60_000)]);
+    const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
+
+    await flow.checkPendingNow(true);
     expect(submitted).toEqual([]);
+
+    setBanned(false);
+    await flow.checkPendingNow(true);
+
+    expect(submitted).toEqual([voucherOf(wpidA)]);
     expect(store.entries).toEqual([]);
     flow.dispose();
   });
 
   it('is throttled against rapid focus events, and force bypasses the throttle', async () => {
-    const { delegate, submitted } = makeDelegate(alwaysInvalid);
+    const { delegate, pulled } = makeDelegate(unpaid);
     const store = new FakeStore([`${wpidA}:${T0 - 60_000}`]);
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
     await flow.checkPendingNow();
     await flow.checkPendingNow();
-    expect(submitted).toHaveLength(1);
+    expect(pulled).toHaveLength(1);
 
     await flow.checkPendingNow(true);
-    expect(submitted).toHaveLength(2);
+    expect(pulled).toHaveLength(2);
 
     vi.setSystemTime(T0 + PENDING_CHECK_THROTTLE_MS + 1);
     await flow.checkPendingNow();
-    expect(submitted).toHaveLength(3);
+    expect(pulled).toHaveLength(3);
     flow.dispose();
   });
 
   it('does nothing when there is no pending purchase', async () => {
-    const { delegate, submitted } = makeDelegate(alwaysInvalid);
+    const { delegate, pulled, submitted } = makeDelegate(unpaid);
     const flow = new PurchaseFlow(delegate, new FakeStore(), PURCHASE_URL);
 
     await flow.checkPendingNow();
 
+    expect(pulled).toEqual([]);
     expect(submitted).toEqual([]);
     flow.dispose();
   });
 
   it('skips purchases stamped for another account but keeps them persisted', async () => {
-    const { delegate, submitted } = makeDelegate(alwaysInvalid);
-    const store = new FakeStore([`${wpidA}:${T0 - 60_000}:other`]);
+    const { delegate, pulled, submitted } = makeDelegate();
+    const held = heldEntry(wpidB, T0 - 60_000, 'other');
+    const store = new FakeStore([`${wpidA}:${T0 - 60_000}:other`, held]);
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
     await flow.checkPendingNow(true);
 
+    expect(pulled).toEqual([]);
     expect(submitted).toEqual([]);
-    expect(store.entries).toEqual([`${wpidA}:${T0 - 60_000}:other`]);
+    expect(store.entries).toEqual([`${wpidA}:${T0 - 60_000}:other`, held]);
     flow.dispose();
   });
 
   it('redeems a foreign purchase once its account logs back in', async () => {
-    const responses = [success];
-    const { delegate, submitted, setTag } = makeDelegate(
-      () => Promise.resolve(responses.shift() ?? invalid),
-      'acctB',
-    );
+    const { delegate, pulled, setTag } = makeDelegate({}, 'acctB');
     const store = new FakeStore([`${wpidA}:${T0 - 60_000}:acctA`]);
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
     await flow.checkPendingNow(true);
-    expect(submitted).toEqual([]);
+    expect(pulled).toEqual([]);
 
     setTag('acctA');
     await flow.checkPendingNow(true);
 
-    expect(submitted).toEqual([wpidA]);
+    expect(pulled).toEqual([wpidA]);
     expect(store.entries).toEqual([]);
     flow.dispose();
   });
 
-  it('leaves the wpid owned by the active poll to the poll (no concurrent duplicate submit)', async () => {
-    const { delegate, submitted } = makeDelegate(alwaysInvalid);
+  it('leaves the wpid owned by the active poll to the poll (no concurrent duplicate pull)', async () => {
+    const { delegate, pulled } = makeDelegate(unpaid);
     const store = new FakeStore();
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
     await flow.start();
     await flow.checkPendingNow(true);
 
-    expect(submitted).toEqual([]);
+    expect(pulled).toEqual([]);
     flow.dispose();
   });
 });
@@ -488,7 +615,7 @@ describe('PurchaseFlow.resume', () => {
 
   it('restarts the active poll for a purchase younger than the active window (app restarted mid-payment)', async () => {
     const startedMs = T0 - 2 * 60_000;
-    const { delegate, submitted, pollingStates } = makeDelegate(alwaysInvalid);
+    const { delegate, pulled, pollingStates } = makeDelegate(unpaid);
     const store = new FakeStore([`${wpid}:${startedMs}`]);
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
@@ -497,7 +624,7 @@ describe('PurchaseFlow.resume', () => {
     expect(pollingStates).toEqual([true]);
 
     await vi.advanceTimersByTimeAsync(ACTIVE_POLL_INTERVAL_MS);
-    expect(submitted).toEqual([wpid]);
+    expect(pulled).toEqual([wpid]);
 
     // The deadline is anchored on the ORIGINAL start time (T0 - 2min +
     // 10min = T0 + 8min): just past it the poll must have stopped. A
@@ -507,14 +634,14 @@ describe('PurchaseFlow.resume', () => {
       ACTIVE_POLL_DURATION_MS - 2 * 60_000 + ACTIVE_POLL_INTERVAL_MS,
     );
     expect(flow.polling).toBe(false);
-    const countAtDeadline = submitted.length;
+    const countAtDeadline = pulled.length;
     await vi.advanceTimersByTimeAsync(5 * ACTIVE_POLL_INTERVAL_MS);
-    expect(submitted).toHaveLength(countAtDeadline);
+    expect(pulled).toHaveLength(countAtDeadline);
     flow.dispose();
   });
 
   it('does not start a poll for a purchase stamped by another account', async () => {
-    const { delegate, submitted } = makeDelegate(alwaysInvalid);
+    const { delegate, pulled } = makeDelegate(unpaid);
     const store = new FakeStore([`${wpid}:${T0 - 60_000}:other`]);
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
@@ -522,13 +649,13 @@ describe('PurchaseFlow.resume', () => {
     await vi.advanceTimersByTimeAsync(ACTIVE_POLL_INTERVAL_MS);
 
     expect(flow.polling).toBe(false);
-    expect(submitted).toEqual([]);
+    expect(pulled).toEqual([]);
     expect(store.entries).toHaveLength(1);
     flow.dispose();
   });
 
   it('clamps a future start time (clock set back) so the resumed poll stays bounded', async () => {
-    const { delegate } = makeDelegate(alwaysInvalid);
+    const { delegate } = makeDelegate(unpaid);
     const store = new FakeStore([`${wpid}:${T0 + 60 * 60_000}`]);
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
@@ -542,7 +669,7 @@ describe('PurchaseFlow.resume', () => {
 
   it('does not restart the poll for an old purchase but still checks it once', async () => {
     const startedMs = T0 - ACTIVE_POLL_DURATION_MS - 60_000;
-    const { delegate, submitted } = makeDelegate(alwaysInvalid);
+    const { delegate, pulled } = makeDelegate(unpaid);
     const store = new FakeStore([`${wpid}:${startedMs}`]);
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
@@ -550,14 +677,13 @@ describe('PurchaseFlow.resume', () => {
     await vi.advanceTimersByTimeAsync(1);
 
     expect(flow.polling).toBe(false);
-    expect(submitted).toEqual([wpid]);
+    expect(pulled).toEqual([wpid]);
     flow.dispose();
   });
 
   it('redeems a persisted purchase found at startup (paid while the app was closed)', async () => {
     const startedMs = T0 - 3 * 60_000;
-    const responses = [success];
-    const { delegate } = makeDelegate(() => Promise.resolve(responses.shift() ?? invalid));
+    const { delegate } = makeDelegate();
     const store = new FakeStore([`${wpid}:${startedMs}`]);
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
@@ -569,14 +695,31 @@ describe('PurchaseFlow.resume', () => {
     flow.dispose();
   });
 
+  // The restart case the voucher is sealed for: a ban refused it, the app
+  // went away, and the next run knows no ban.
+  it('redeems at startup a voucher a previous run held through a ban, without polling it', async () => {
+    const { delegate, pulled, submitted } = makeDelegate();
+    const store = new FakeStore([heldEntry(wpid, T0 - 60_000)]);
+    const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
+
+    flow.resume();
+    await vi.advanceTimersByTimeAsync(1);
+
+    expect(flow.polling).toBe(false);
+    expect(pulled).toEqual([]);
+    expect(submitted).toEqual([voucherOf(wpid)]);
+    expect(store.entries).toEqual([]);
+    flow.dispose();
+  });
+
   it('is a no-op with nothing persisted', async () => {
-    const { delegate, submitted, pollingStates } = makeDelegate(alwaysInvalid);
+    const { delegate, pulled, pollingStates } = makeDelegate(unpaid);
     const flow = new PurchaseFlow(delegate, new FakeStore(), PURCHASE_URL);
 
     flow.resume();
     await vi.advanceTimersByTimeAsync(ACTIVE_POLL_INTERVAL_MS);
 
-    expect(submitted).toEqual([]);
+    expect(pulled).toEqual([]);
     expect(pollingStates).toEqual([]);
     expect(flow.polling).toBe(false);
     flow.dispose();
@@ -585,7 +728,8 @@ describe('PurchaseFlow.resume', () => {
 
 // Each entry carries the pull secret that collects a paid voucher. Past the
 // server's pending TTL the voucher is gone and the secret collects nothing,
-// so it is erased then, whether or not anything else reads the store.
+// so it is erased then, whether or not anything else reads the store. A
+// voucher already pulled has no such day.
 describe('PurchaseFlow expiry', () => {
   beforeEach(() => {
     vi.useFakeTimers({ now: T0 });
@@ -595,7 +739,7 @@ describe('PurchaseFlow expiry', () => {
   });
 
   it('erases a purchase at the end of its day while the app runs', async () => {
-    const { delegate } = makeDelegate(() => Promise.resolve(notReady));
+    const { delegate } = makeDelegate(unpaid);
     const store = new FakeStore();
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
     await flow.start();
@@ -608,8 +752,21 @@ describe('PurchaseFlow expiry', () => {
     flow.dispose();
   });
 
+  it('keeps a voucher it holds past the end of the day', async () => {
+    const { delegate } = makeDelegate();
+    const held = heldEntry(fixtureCode('a'), T0 - 60_000);
+    const store = new FakeStore([held]);
+    const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
+
+    flow.forgetExpired();
+    await vi.advanceTimersByTimeAsync(2 * PENDING_PURCHASE_TTL_MS);
+
+    expect(store.entries).toEqual([held]);
+    flow.dispose();
+  });
+
   it('erases at startup what a previous run left past its day', () => {
-    const { delegate, submitted } = makeDelegate(alwaysInvalid);
+    const { delegate, pulled } = makeDelegate(unpaid);
     const young = `${fixtureCode('b')}:${T0 - 60_000}:acct1`;
     const store = new FakeStore([`${fixtureCode('a')}:${T0 - PENDING_PURCHASE_TTL_MS - 1}`, young]);
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
@@ -617,7 +774,7 @@ describe('PurchaseFlow expiry', () => {
     flow.forgetExpired();
 
     expect(store.entries).toEqual([young]);
-    expect(submitted).toEqual([]);
+    expect(pulled).toEqual([]);
     flow.dispose();
   });
 
@@ -626,7 +783,7 @@ describe('PurchaseFlow expiry', () => {
   // the first time the flow saw it, and from what it stored, not from a
   // start that keeps sliding with the clock.
   it('erases a purchase started in the future a day after it was first seen', async () => {
-    const { delegate } = makeDelegate(alwaysInvalid);
+    const { delegate } = makeDelegate(unpaid);
     const store = new FakeStore([`${fixtureCode('b')}:${T0 + 3_600_000}:acct1`]);
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 
@@ -638,7 +795,7 @@ describe('PurchaseFlow expiry', () => {
   });
 
   it('erases a purchase a previous run left at the end of its day', async () => {
-    const { delegate } = makeDelegate(alwaysInvalid);
+    const { delegate } = makeDelegate(unpaid);
     const store = new FakeStore([`${fixtureCode('b')}:${T0 - 60_000}:acct1`]);
     const flow = new PurchaseFlow(delegate, store, PURCHASE_URL);
 

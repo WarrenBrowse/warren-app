@@ -1029,6 +1029,12 @@ export type VoucherResponse =
   | { type: 'success'; newExpiry: string; secondsAdded: number }
   | { type: 'invalid' | 'already_used' | 'expired' | 'not_ready' | 'banned' | 'error' };
 
+// What the daemon answers when asked for the voucher an app-initiated
+// purchase paid for: the voucher itself, unredeemed, or why there is none.
+export type PurchaseVoucherPull =
+  | { type: 'pulled'; voucher: string }
+  | { type: 'not_ready' | 'error' };
+
 export interface SocksAuth {
   username: string;
   password: string;
