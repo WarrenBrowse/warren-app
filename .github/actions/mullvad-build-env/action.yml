@@ -304,17 +304,7 @@ runs:
       # the app ships WITHOUT the Warren GSO/obfuscation patches. Fail loudly.
       if: ${{ inputs.engine-token != '' || inputs.warren-core-token != '' }}
       shell: bash
-      run: |
-        set -euo pipefail
-        if ! grep -Eq 'warren-quinn' Cargo.lock; then
-          echo "::error::Cargo.lock does not pin the warren-quinn fork; the [patch.crates-io] git-dep is not locked. Regenerate Cargo.lock with the quinn-fork present (cargo update -p quinn -p quinn-proto -p quinn-udp) and commit it."
-          exit 1
-        fi
-        if ! cargo metadata --locked --format-version=1 >/dev/null; then
-          echo "::error::Cargo.lock is out of sync with the workspace; regenerate it (cargo update -w) with the quinn-fork present and commit it."
-          exit 1
-        fi
-        echo "coherence OK: Cargo.lock pins the Warren quinn fork."
+      run: bash ci/check-quinn-fork-lock.sh
 
     # x86 for NSIS plugins; aarch64 for the --universal (x64+ARM64) Windows build
     - name: Install Rust Windows targets
