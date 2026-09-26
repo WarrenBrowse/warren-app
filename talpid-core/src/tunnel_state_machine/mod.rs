@@ -1048,6 +1048,7 @@ impl SharedTunnelStateValues {
         if mode != self.split_mode && leaving_permit {
             let blocked = FirewallPolicy::Blocked {
                 allow_lan: self.allow_lan,
+                lan_networks: self.lan_networks.clone(),
                 allowed_endpoint: Some(self.allowed_endpoint.clone()),
             };
             if let Err(error) = self.firewall.apply_policy(blocked) {

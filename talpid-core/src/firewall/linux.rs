@@ -1667,6 +1667,7 @@ mod include_only_tests {
             peer_endpoints: vec![],
             tunnel: tunnel(),
             allow_lan: false,
+            lan_networks: vec![],
             dns_config: DnsConfig::default().resolve(&[GATEWAY]),
         }
     }
@@ -1674,6 +1675,7 @@ mod include_only_tests {
     fn blocked() -> FirewallPolicy {
         FirewallPolicy::Blocked {
             allow_lan: false,
+            lan_networks: vec![],
             allowed_endpoint: None,
         }
     }
@@ -1683,6 +1685,7 @@ mod include_only_tests {
             peer_endpoints: vec![],
             tunnel: Some(tunnel()),
             allow_lan: false,
+            lan_networks: vec![],
             allowed_endpoint: AllowedEndpoint {
                 endpoint: Endpoint::new(Ipv4Addr::LOCALHOST, 443, TransportProtocol::Tcp),
                 clients: talpid_types::net::AllowedClients::Root,
