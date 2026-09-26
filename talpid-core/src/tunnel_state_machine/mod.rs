@@ -312,6 +312,10 @@ pub enum TunnelCommand {
     /// Set the split mode and the apps it diverts.
     #[cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))]
     SetSplitApps(oneshot::Sender<Result<(), split_tunnel::Error>>, SplitApps),
+    /// What the Windows split tunnel driver took on, which the firewall's
+    /// include-only hold follows (`split_tunnel::include_hold`).
+    #[cfg(target_os = "windows")]
+    FollowSplitTunnel(split_tunnel::include_hold::DriverReport),
     /// Set applications that are allowed to send and receive traffic outside of the tunnel.
     #[cfg(target_os = "android")]
     SetExcludedApps(
@@ -536,23 +540,46 @@ impl TunnelStateMachine {
         );
 
         // Include-only needs the driver to hold the included apps back from
-        // the physical network the firewall then opens.
+        // the physical network the firewall then opens, and winfw to hold
+        // them to the tunnel against the driver's own permits. Any split mode
+        // needs the driver's filters to land in this firewall's sublayers.
         #[cfg(target_os = "windows")]
-        let split_mode = enforceable_mode(
-            args.settings.split_apps.mode,
-            split_tunnel::INCLUDE_ONLY_READY && split_tunnel.handle().is_loaded(),
-        );
-        // A fallback must not leave the included apps as the driver's split
-        // set, which would exclude exactly them.
-        #[cfg(target_os = "windows")]
-        let split_tunnel = {
+        let (split_tunnel, split_mode, hold, held_apps) = {
             let mut split_tunnel = split_tunnel;
-            if split_mode != args.settings.split_apps.mode {
-                let (tx, _rx) = oneshot::channel();
-                split_tunnel.set_split_apps(&SplitApps::default(), tx);
+            let mut split_apps = args.settings.split_apps.clone();
+            let include_only_ready =
+                split_tunnel::INCLUDE_ONLY_READY && split_tunnel.handle().is_loaded();
+            if enforceable_mode(split_apps.mode, include_only_ready) != split_apps.mode {
+                split_apps = SplitApps::default();
             }
-            split_tunnel
+            if split_apps.engages_split_tunnel() && !firewall.split_tunnel_sublayers_shared() {
+                log::warn!(
+                    "Another firewall policy holds the split tunnel's sublayers; \
+                     tunneling every app"
+                );
+                split_apps = SplitApps::default();
+            }
+            let mut held = split_tunnel::include_hold::held_apps(&split_apps);
+            if let Err(error) = firewall.set_included_apps(&held) {
+                log::error!(
+                    "{}",
+                    error.display_chain_with_msg(
+                        "Failed to hold the included apps to the tunnel; tunneling every app"
+                    )
+                );
+                split_apps = SplitApps::default();
+                held = Vec::new();
+            }
+            // A fallback must not leave the included apps as the driver's
+            // split set, which would exclude exactly them.
+            if split_apps != args.settings.split_apps {
+                let (tx, _rx) = oneshot::channel();
+                split_tunnel.set_split_apps(&split_apps, tx);
+            }
+            let hold = split_tunnel::include_hold::Hold::new(&split_apps);
+            (split_tunnel, split_apps.mode, hold, held)
         };
+
         #[cfg(target_os = "windows")]
         firewall.set_include_only(split_mode == SplitTunnelMode::IncludeOnly);
 
@@ -569,6 +596,12 @@ impl TunnelStateMachine {
             split_tunnel,
             #[cfg(any(target_os = "windows", target_os = "linux"))]
             split_mode,
+            #[cfg(target_os = "windows")]
+            hold,
+            #[cfg(target_os = "windows")]
+            held_apps,
+            #[cfg(target_os = "windows")]
+            command_tx: args.command_tx.clone(),
             #[cfg(target_os = "android")]
             excluded_packages: args.settings.exclude_paths,
             runtime,
@@ -786,6 +819,16 @@ struct SharedTunnelStateValues {
     /// tunnel is up reconnects it.
     #[cfg(any(target_os = "windows", target_os = "linux"))]
     split_mode: SplitTunnelMode,
+    /// Which apps winfw must hold to the tunnel under include-only
+    /// (`split_tunnel::include_hold`).
+    #[cfg(target_os = "windows")]
+    hold: split_tunnel::include_hold::Hold,
+    /// The apps winfw holds now.
+    #[cfg(target_os = "windows")]
+    held_apps: Vec<std::ffi::OsString>,
+    /// Where the driver's confirmations come back to the state machine.
+    #[cfg(target_os = "windows")]
+    command_tx: std::sync::Weak<mpsc::UnboundedSender<TunnelCommand>>,
     #[cfg(target_os = "android")]
     excluded_packages: Vec<String>,
     runtime: tokio::runtime::Handle,
@@ -977,6 +1020,23 @@ impl SharedTunnelStateValues {
         } else {
             SplitApps::default()
         };
+        // The driver would add its permits to another policy's sublayers.
+        if apps.engages_split_tunnel() && !self.firewall.split_tunnel_sublayers_shared() {
+            log::error!("Another firewall policy holds the split tunnel's sublayers");
+            let _ = tx.send(Err(split_tunnel::Error::Unavailable));
+            return false;
+        }
+        let request = self.hold.request(&apps);
+        if let Err(error) = self.apply_hold() {
+            log::error!(
+                "{}",
+                error.display_chain_with_msg("Failed to hold the included apps to the tunnel")
+            );
+            self.hold
+                .follow(split_tunnel::include_hold::DriverReport::Refused(request));
+            let _ = tx.send(Err(split_tunnel::Error::Unavailable));
+            return false;
+        }
         if mode != self.split_mode && leaving_permit {
             let blocked = FirewallPolicy::Blocked {
                 allow_lan: self.allow_lan,
@@ -989,14 +1049,98 @@ impl SharedTunnelStateValues {
                 );
             }
         }
-        if !self.split_tunnel.set_split_apps(&apps, tx) {
+        let (driver_tx, driver_rx) = oneshot::channel();
+        let taken = self.split_tunnel.set_split_apps(&apps, driver_tx);
+        self.follow_driver_result(driver_rx, tx, request);
+        if !taken {
+            self.hold
+                .follow(split_tunnel::include_hold::DriverReport::Refused(request));
+            self.follow_hold();
             return false;
         }
         let mode_changed = self.split_mode != mode;
         self.split_mode = mode;
         self.firewall
             .set_include_only(mode == SplitTunnelMode::IncludeOnly);
+        self.follow_hold();
         mode_changed
+    }
+
+    /// Hands the driver's answer to the caller, after telling the state
+    /// machine it took the list: only then may the hold let go of the apps
+    /// the previous list held. A list the driver did not take keeps them
+    /// held, since the driver still splits them.
+    #[cfg(windows)]
+    fn follow_driver_result(
+        &self,
+        driver_rx: oneshot::Receiver<Result<(), split_tunnel::Error>>,
+        tx: oneshot::Sender<Result<(), split_tunnel::Error>>,
+        request: split_tunnel::include_hold::RequestId,
+    ) {
+        use split_tunnel::include_hold::DriverReport;
+
+        let command_tx = self.command_tx.clone();
+        self.runtime.spawn(async move {
+            let result = driver_rx
+                .await
+                .unwrap_or(Err(split_tunnel::Error::SplitTunnelDown));
+            let report = if result.is_ok() {
+                DriverReport::Taken(request)
+            } else {
+                DriverReport::Refused(request)
+            };
+            if let Some(command_tx) = command_tx.upgrade() {
+                let _ = command_tx.unbounded_send(TunnelCommand::FollowSplitTunnel(report));
+            }
+            let _ = tx.send(result);
+        });
+    }
+
+    /// Follows what the split tunnel driver reports with the firewall's
+    /// include-only hold.
+    #[cfg(windows)]
+    pub fn follow_split_tunnel(&mut self, report: split_tunnel::include_hold::DriverReport) {
+        self.hold.follow(report);
+        self.follow_hold();
+    }
+
+    /// Puts the hold in place. A failure leaves the previous hold in force
+    /// and is retried by the next change.
+    #[cfg(windows)]
+    fn follow_hold(&mut self) {
+        if let Err(error) = self.apply_hold() {
+            log::error!(
+                "{}",
+                error.display_chain_with_msg("Failed to update the included apps' hold")
+            );
+        }
+    }
+
+    /// Puts the hold in force when it changed. A transaction that fails on a
+    /// busy filtering engine is tried again, since an app the driver splits
+    /// is unheld until it succeeds.
+    #[cfg(windows)]
+    fn apply_hold(&mut self) -> Result<(), crate::firewall::Error> {
+        let apps = self.hold.apps();
+        let unchanged = apps.len() == self.held_apps.len()
+            && apps.iter().all(|app| self.held_apps.contains(app));
+        if unchanged {
+            return Ok(());
+        }
+        let mut attempt = 0;
+        loop {
+            match self.firewall.set_included_apps(&apps) {
+                Ok(()) => {
+                    self.held_apps = apps;
+                    return Ok(());
+                }
+                Err(error) if attempt >= 2 => return Err(error),
+                Err(_) => {
+                    attempt += 1;
+                    std::thread::sleep(std::time::Duration::from_millis(50 << attempt));
+                }
+            }
+        }
     }
 
     #[cfg(windows)]

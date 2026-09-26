@@ -291,6 +291,11 @@ impl TunnelState for ErrorState {
                 let _ = shared_values.set_split_apps(apps, result_tx, false);
                 SameState(self)
             }
+            #[cfg(windows)]
+            Some(TunnelCommand::FollowSplitTunnel(report)) => {
+                shared_values.follow_split_tunnel(report);
+                SameState(self)
+            }
             #[cfg(target_os = "linux")]
             Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {
                 if shared_values.set_split_apps(apps) {

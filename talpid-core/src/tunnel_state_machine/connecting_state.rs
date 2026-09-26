@@ -622,6 +622,11 @@ impl ConnectingState {
                     SameState(self)
                 }
             }
+            #[cfg(windows)]
+            Some(TunnelCommand::FollowSplitTunnel(report)) => {
+                shared_values.follow_split_tunnel(report);
+                SameState(self)
+            }
             #[cfg(target_os = "linux")]
             Some(TunnelCommand::SetSplitApps(result_tx, apps)) => {
                 let mode_changed = shared_values.set_split_apps(apps);
