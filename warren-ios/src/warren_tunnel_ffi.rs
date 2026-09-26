@@ -1397,6 +1397,11 @@ fn spawn_multi_hop(
             signing_key.clone(),
             session_blinding,
         ));
+        // Port entitlements ride the same wallet and the same coarse refresh
+        // (warren-core doc 99). Built even when port forwarding is off, so
+        // issuance timing never mirrors the moment the user turns it on.
+        let port_entitlements =
+            crate::warren_port_entitlements::provider_for(signing_key.clone());
         // ADR-0006 idle cover: resolved from the same `WARREN_IDLE_COVER` knob the
         // desktop daemon reads, coupled to DAITA (off on this path) so the two
         // covers never both run. This single bool drives BOTH the dial config
@@ -1682,6 +1687,8 @@ fn spawn_multi_hop(
         let mut reassign_rx = ip_assign_channel.subscribe();
         drop(ip_assign_channel);
         let reassign_arc = std::sync::Arc::clone(&arc_for_task);
+        let reassign_entitlements = port_entitlements.clone();
+        let rule_slots = warren_standing::entitlements::RuleSlots::new();
         tokio::spawn(async move {
             let mut current: Option<std::net::Ipv4Addr> = None;
             // NAT-PMP port forwarding for the multi-hop path. The refresh loop
@@ -1708,7 +1715,15 @@ fn spawn_multi_hop(
                     // re-bind never leaves two refresh loops racing the same
                     // mapping.
                     drop(nat_pmp_guard.take());
-                    nat_pmp_guard = maybe_spawn_nat_pmp(&reassign_arc, nat_pmp, spec.assigned);
+                    nat_pmp_guard = maybe_spawn_nat_pmp(
+                        &reassign_arc,
+                        nat_pmp,
+                        spec.assigned,
+                        crate::warren_port_entitlements::rule_entitlement(
+                            &rule_slots,
+                            reassign_entitlements.clone(),
+                        ),
+                    );
                 }
                 if reassign_rx.changed().await.is_err() {
                     break;
@@ -1919,19 +1934,16 @@ const DEFAULT_NATPMP_LIFETIME_SECS: u32 = 3600;
 /// [`maybe_spawn_nat_pmp`] means NAT-PMP was disabled for this session.
 #[cfg(all(target_os = "ios", feature = "tunnel"))]
 struct NatPmpGuard {
-    refresh: std::sync::Arc<std::sync::Mutex<RefreshSlot>>,
+    /// Where the drain task leaves the handle that cancels the refresh loop,
+    /// and where this teardown picks it up; its `Cancelled` state settles the
+    /// race between them (see [`warren_standing::NatPmpSlot`]).
+    refresh: std::sync::Arc<
+        std::sync::Mutex<warren_standing::NatPmpSlot<warrenguard_natpmp_client::RefreshLoopHandle>>,
+    >,
     drain: tokio::task::JoinHandle<()>,
-}
-
-/// The refresh loop the session runs, replaced when a refused mapping is asked
-/// for again. `cancelled` settles the one race the replacement opens: an abort
-/// cannot preempt the drain between spawning a loop and storing it here, so a
-/// teardown in that window marks the slot and the drain cancels what it just
-/// spawned instead of leaving it renewing for a tunnel that is gone.
-#[cfg(all(target_os = "ios", feature = "tunnel"))]
-struct RefreshSlot {
-    current: Option<warrenguard_natpmp_client::RefreshLoopHandle>,
-    cancelled: bool,
+    /// The rule's entitlement slot, freed with the rule. Dropped after the
+    /// loop is cancelled, so a rule rebuilt next draws the same slot.
+    _entitlement_slot: warren_standing::entitlements::SlotLease,
 }
 
 #[cfg(all(target_os = "ios", feature = "tunnel"))]
@@ -1944,15 +1956,14 @@ impl Drop for NatPmpGuard {
         // tunnel session teardown is what clears the user-visible state.
         // Poisoning is recovered from: skipping the cancel would leave the
         // loop renewing a mapping for a tunnel that is gone.
-        let mut slot = self
+        let running = self
             .refresh
             .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner);
-        slot.cancelled = true;
-        if let Some(mut refresh) = slot.current.take() {
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .cancel();
+        if let Some(mut refresh) = running {
             refresh.cancel();
         }
-        drop(slot);
         self.drain.abort();
     }
 }
@@ -1972,11 +1983,17 @@ impl Drop for NatPmpGuard {
 /// C ABI, the same three knobs the Android JSON config carries. An unset
 /// external port still follows the client across exit changes via the
 /// process-global statics.
+///
+/// Every request carries the entitlement envelope of the rule's slot
+/// (warren-core doc 105: the exit refuses a Map request without one), read
+/// once per refresh cycle, so a mapping that outlives an epoch presents the
+/// next batch at its next renewal without the loop restarting.
 #[cfg(all(target_os = "ios", feature = "tunnel"))]
 fn maybe_spawn_nat_pmp(
     arc: &std::sync::Arc<handle_impl::WarrenTunnelHandleImpl>,
     config: NatPmpConfig,
     bind_ipv4: std::net::Ipv4Addr,
+    entitlement: crate::warren_port_entitlements::RuleEntitlement,
 ) -> Option<NatPmpGuard> {
     use std::sync::atomic::Ordering;
 
@@ -1986,10 +2003,10 @@ fn maybe_spawn_nat_pmp(
     let server = warrenguard_natpmp_client::default_server_addr();
     let bind_addr = std::net::IpAddr::V4(bind_ipv4);
     let is_tcp = config.is_tcp;
-    let proto = if is_tcp {
-        warrenguard_natpmp_client::MapProtocol::Tcp
+    let protos = if is_tcp {
+        warrenguard_natpmp_client::ForwardProtos::Tcp
     } else {
-        warrenguard_natpmp_client::MapProtocol::Udp
+        warrenguard_natpmp_client::ForwardProtos::Udp
     };
     // The user's pin, or (auto) the last port an exit granted us this process
     // so it follows the client across an exit change, but only when the
@@ -2013,42 +2030,73 @@ fn maybe_spawn_nat_pmp(
     } else {
         config.lifetime_secs
     };
+    let credential = entitlement.source.clone();
+    let presented = entitlement.presented.clone();
     let (tx, mut rx) =
         tokio::sync::mpsc::unbounded_channel::<warrenguard_natpmp_client::NatPmpEvent>();
     let spawn_loop = move |tx| {
-        warrenguard_natpmp_client::spawn_refresh_loop_from_addr(
-            server,
-            proto,
-            0,
-            suggested_external_port,
-            lifetime_secs,
-            suggestion,
+        warrenguard_natpmp_client::spawn_refresh_loop_with(
+            warrenguard_natpmp_client::RefreshLoopConfig {
+                server,
+                protos,
+                internal_port: 0,
+                suggested_external_port,
+                lifetime_secs,
+                suggestion,
+                bind_addr: Some(bind_addr),
+                credential: Some(credential.clone()),
+            },
             tx,
-            Some(bind_addr),
         )
     };
-    let refresh = std::sync::Arc::new(std::sync::Mutex::new(RefreshSlot {
-        current: Some(spawn_loop(tx.clone())),
-        cancelled: false,
-    }));
+    // The loop is started by the drain task once the mint had its head
+    // start, so a teardown during that wait finds nothing to cancel yet and
+    // marks the slot `Cancelled` instead.
+    let refresh = std::sync::Arc::new(std::sync::Mutex::new(warren_standing::NatPmpSlot::Pending));
     let respawn_slot = std::sync::Arc::clone(&refresh);
     let drain_arc = std::sync::Arc::clone(arc);
+    let first_credential = entitlement.source.clone();
     let drain = tokio::spawn(async move {
+        // The extension process can start at connect with a cold mint, and
+        // the exit refuses a bare request. Off the datapath: the tunnel
+        // already carries traffic while this runs.
+        let carried = warren_standing::entitlements::await_first_credential(
+            &first_credential,
+            warren_standing::entitlements::FIRST_CREDENTIAL_GRACE,
+            warren_standing::entitlements::FIRST_CREDENTIAL_POLL,
+        )
+        .await
+        .is_some();
+        // Presence only: an envelope is bearer material and never reaches a
+        // log. `false` means the first request goes out bare and is refused,
+        // which nothing else in the log would explain.
+        tracing::info!(entitlement = carried, "NAT-PMP refresh loop spawned");
+        let first = spawn_loop(tx.clone());
+        let orphan = respawn_slot
+            .lock()
+            .unwrap_or_else(std::sync::PoisonError::into_inner)
+            .store(first);
+        if let Some(mut orphan) = orphan {
+            orphan.cancel();
+            return;
+        }
         let mut refusals = warren_standing::RefusalCount::default();
         while let Some(event) = rx.recv().await {
             match &event {
                 warrenguard_natpmp_client::NatPmpEvent::Mapped { .. }
                 | warrenguard_natpmp_client::NatPmpEvent::Renewed { .. } => refusals.on_granted(),
                 // The engine stops on a refusal, which it takes for permanent.
-                // It is not (warren-core doc 105): the exit refuses a request
-                // without an entitlement, and one comes with the next mint or
-                // epoch, so the mapping is asked for again on the schedule
-                // every client shares. This client presents no entitlement.
+                // It is not (warren-core doc 105): a missing entitlement comes
+                // with the next mint or epoch, and a refused one is usually the
+                // serial the previous inner address still holds until the exit
+                // reaps it, so the mapping is asked for again on the schedule
+                // every client shares.
                 warrenguard_natpmp_client::NatPmpEvent::Failed {
                     reason: warrenguard_natpmp_client::NatPmpFailureReason::NotAuthorized,
                     ..
                 } => {
-                    let (refusal, retry_in_secs) = refusals.on_refused(false);
+                    let (refusal, retry_in_secs) =
+                        refusals.on_refused(presented.load(Ordering::Relaxed));
                     tracing::info!(
                         retry_in_secs,
                         "NAT-PMP request refused as not authorized, asking again"
@@ -2063,15 +2111,17 @@ fn maybe_spawn_nat_pmp(
                     tokio::time::sleep(std::time::Duration::from_secs(u64::from(retry_in_secs)))
                         .await;
                     let fresh = spawn_loop(tx.clone());
-                    let mut slot = respawn_slot
+                    // Same race as the first spawn: a teardown between the
+                    // spawn and the store leaves this task holding the only
+                    // handle.
+                    let orphan = respawn_slot
                         .lock()
-                        .unwrap_or_else(std::sync::PoisonError::into_inner);
-                    if slot.cancelled {
-                        let mut fresh = fresh;
-                        fresh.cancel();
+                        .unwrap_or_else(std::sync::PoisonError::into_inner)
+                        .store(fresh);
+                    if let Some(mut orphan) = orphan {
+                        orphan.cancel();
                         break;
                     }
-                    slot.current = Some(fresh);
                     continue;
                 }
                 _ => {}
@@ -2093,7 +2143,11 @@ fn maybe_spawn_nat_pmp(
             }
         }
     });
-    Some(NatPmpGuard { refresh, drain })
+    Some(NatPmpGuard {
+        refresh,
+        drain,
+        _entitlement_slot: entitlement.lease,
+    })
 }
 
 /// Reduce a `warrenguard_natpmp_client::NatPmpEvent` to the host-available

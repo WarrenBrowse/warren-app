@@ -1,7 +1,7 @@
-// The NAT-PMP refresh loop's slot: where the starter task leaves the handle
-// that cancels the loop, and where the session teardown picks it up. Pure
-// state machine, host-tested; the wiring that fills it is Android-gated in
-// `tunnel`.
+//! The NAT-PMP refresh loop's slot: where the task that starts the loop leaves
+//! the handle that cancels it, and where the session teardown picks it up.
+//! Pure state machine, shared by the Android and iOS tunnels, which both start
+//! the loop only once the entitlement mint had its head start.
 
 /// What the session knows about its NAT-PMP refresh loop.
 ///
@@ -17,7 +17,7 @@
 /// it, and a starter that finds it cancels the loop itself instead of storing
 /// a handle into a guard that no longer exists.
 #[derive(Debug)]
-pub(crate) enum NatPmpSlot<H> {
+pub enum NatPmpSlot<H> {
     /// No loop yet: the starter is still waiting on the entitlement mint.
     Pending,
     /// The loop is running, and this handle cancels it.
@@ -29,7 +29,7 @@ pub(crate) enum NatPmpSlot<H> {
 impl<H> NatPmpSlot<H> {
     /// End the session: marks the slot cancelled and hands back the handle to
     /// cancel, if the loop had already been stored.
-    pub(crate) fn cancel(&mut self) -> Option<H> {
+    pub fn cancel(&mut self) -> Option<H> {
         match std::mem::replace(self, Self::Cancelled) {
             Self::Running(handle) => Some(handle),
             Self::Pending | Self::Cancelled => None,
@@ -41,7 +41,7 @@ impl<H> NatPmpSlot<H> {
     /// Hands the handle straight back when the session is already over, which
     /// is the caller's cue to cancel the loop it just started rather than
     /// leave it running for the life of the process.
-    pub(crate) fn store(&mut self, handle: H) -> Option<H> {
+    pub fn store(&mut self, handle: H) -> Option<H> {
         if matches!(self, Self::Cancelled) {
             Some(handle)
         } else {

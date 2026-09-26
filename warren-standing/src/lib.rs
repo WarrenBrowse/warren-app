@@ -18,13 +18,20 @@
 //! else: the types here render neither through `Debug`, and the ledger that
 //! remembers which strikes were announced stores only a digest of each case
 //! reference.
+//!
+//! [`entitlements`] is the other half of a forwarded port: the per-wallet
+//! entitlement mint and the slot each rule draws its envelope from, the piece
+//! the desktop daemon, Android and iOS present on every NAT-PMP request.
 
+pub mod entitlements;
 mod ledger;
+mod natpmp_slot;
 mod port_refusal;
 mod store;
 mod tracker;
 
 pub use ledger::{LedgerError, StrikeLedger};
+pub use natpmp_slot::NatPmpSlot;
 pub use port_refusal::{PortRefusal, RefusalCount};
 pub use store::{LEDGER_FILE, StandingStore, ban_verdict_json};
 pub use tracker::{NewStrike, StandingTracker, StandingUpdate};

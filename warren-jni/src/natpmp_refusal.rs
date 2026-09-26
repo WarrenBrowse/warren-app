@@ -9,13 +9,8 @@
 //! waits the same way. Pure and host-tested; the task that drives it is
 //! Android-gated in `tunnel`.
 
-use std::sync::Arc;
-use std::sync::atomic::{AtomicBool, Ordering};
-
 use warren_standing::PortRefusal;
 use warrenguard_natpmp_client::{NatPmpEvent, NatPmpFailureReason};
-
-use crate::port_entitlements::CredentialSource;
 
 /// What one refresh-loop event means for the refusal count.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -39,19 +34,6 @@ impl MapOutcome {
             _ => Self::Other,
         }
     }
-}
-
-/// Wraps `source` so `presented` records whether the last request carried an
-/// entitlement, which is what tells a refused entitlement from a missing one.
-pub(crate) fn recording_presence(
-    source: CredentialSource,
-    presented: Arc<AtomicBool>,
-) -> CredentialSource {
-    Arc::new(move || {
-        let credential = source();
-        presented.store(credential.is_some(), Ordering::Relaxed);
-        credential
-    })
 }
 
 /// The status Kotlin polls while a refused rule waits:
@@ -95,19 +77,6 @@ mod tests {
             }),
             MapOutcome::Other
         );
-    }
-
-    #[test]
-    fn the_presence_of_the_last_credential_is_recorded() {
-        let presented = Arc::new(AtomicBool::new(true));
-        let bare = recording_presence(Arc::new(|| None), presented.clone());
-
-        assert_eq!(bare(), None);
-        assert!(!presented.load(Ordering::Relaxed));
-
-        let carried = recording_presence(Arc::new(|| Some(vec![1, 2])), presented.clone());
-        assert_eq!(carried(), Some(vec![1, 2]));
-        assert!(presented.load(Ordering::Relaxed));
     }
 
     #[test]

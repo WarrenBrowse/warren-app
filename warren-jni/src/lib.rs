@@ -68,11 +68,6 @@ mod rate_limited_tun;
 // wiring that consumes it is Android-gated in `tunnel`.
 mod natpmp_follow;
 
-// The NAT-PMP refresh loop's slot, and the teardown race it settles
-// (host-tested); the task that fills it is Android-gated in `tunnel`.
-#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
-mod natpmp_slot;
-
 // What the NAT-PMP path does when an exit refuses a Map request as not
 // authorized (warren-core doc 105), host-tested; the task that restarts the
 // refused loop is Android-gated in `tunnel`.
@@ -108,11 +103,10 @@ mod entry_families;
 #[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 mod token_provider;
 
-// Port-forwarding entitlements (warren-core doc 99): the per-wallet, per-slot
-// credential mint is host-tested with a mock issuer against the engine's real
-// NAT-PMP loop; the provider that feeds the mapping request is Android-gated
-// inside.
-#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
+// Port-forwarding entitlements (warren-core doc 99): the Android wiring of the
+// mint shared with desktop and iOS (`warren_standing::entitlements`, where it
+// is host-tested against the engine's real NAT-PMP loop).
+#[cfg(all(target_os = "android", feature = "tunnel"))]
 mod port_entitlements;
 
 // The process-lived port-forward standing store (warren-core doc 105), whose

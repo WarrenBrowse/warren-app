@@ -6894,7 +6894,6 @@ dependencies = [
  "warrenguard-daita",
  "warrenguard-multihop",
  "warrenguard-natpmp-client",
- "warrenguard-natpmp-protocol",
  "warrenguard-pump",
  "warrenguard-ratelimit",
  "warrenguard-tls",
@@ -6985,8 +6984,11 @@ dependencies = [
 name = "warren-standing"
 version = "0.0.0"
 dependencies = [
+ "data-encoding",
+ "ed25519-dalek",
  "hex",
  "log",
+ "rand 0.10.1",
  "serde",
  "serde_json",
  "sha2",
@@ -6994,6 +6996,11 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "warren-api",
+ "warren-contract",
+ "warren-identity",
+ "warrenguard-natpmp-client",
+ "warrenguard-natpmp-protocol",
+ "warrenguard-token",
 ]
 
 [[package]]

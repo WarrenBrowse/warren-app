@@ -31,6 +31,10 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Află când serverul refuză un port redirecționat din lipsă de drept de port, iar aplicația
   cere din nou automat în loc să se oprească la primul refuz.
 
+### Reparat
+- [iOS] Prezintă un drept de port cu fiecare cerere de port redirecționat, ca pe celelalte
+  platforme, astfel încât serverele care îl cer acordă portul în loc să-l refuze.
+
 ## [1.1.35] - 2026-09-25
 ### Adăugat
 - [Linux] Instalează actualizările din aplicație, ca pe Windows și macOS. Aplicația descarcă

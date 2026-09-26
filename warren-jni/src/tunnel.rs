@@ -969,10 +969,10 @@ struct NatPmpGuard {
     /// Where `starter` leaves the handle that cancels the refresh loop, and
     /// where this teardown picks it up. The third state
     /// (`NatPmpSlot::Cancelled`) is what settles the race between them; see
-    /// [`crate::natpmp_slot::NatPmpSlot`].
+    /// [`warren_standing::NatPmpSlot`].
     refresh: std::sync::Arc<
         parking_lot::Mutex<
-            crate::natpmp_slot::NatPmpSlot<warrenguard_natpmp_client::RefreshLoopHandle>,
+            warren_standing::NatPmpSlot<warrenguard_natpmp_client::RefreshLoopHandle>,
         >,
     >,
     starter: tokio::task::JoinHandle<()>,
@@ -1001,14 +1001,6 @@ impl Drop for NatPmpGuard {
         self.drain.abort();
     }
 }
-
-/// How long the first mapping request waits for the entitlement mint before
-/// going out bare. Sized off the observed cold-start cost of the twin v7 token
-/// mint on the same protected transport (~2.5 s on the emulator), with margin
-/// for a slow mobile network. Off the datapath: the tunnel already carries
-/// traffic while this runs.
-const ENTITLEMENT_GRACE: std::time::Duration = std::time::Duration::from_secs(8);
-const ENTITLEMENT_POLL: std::time::Duration = std::time::Duration::from_millis(250);
 
 /// Last NAT-PMP external port granted by an exit in this process, so an
 /// auto-mode forward keeps the same public port when the user changes exit:
@@ -1076,13 +1068,14 @@ fn maybe_spawn_nat_pmp(
         warrenguard_natpmp_client::ForwardProtos::Udp
     };
     let refresh = std::sync::Arc::new(parking_lot::Mutex::new(
-        crate::natpmp_slot::NatPmpSlot::Pending,
+        warren_standing::NatPmpSlot::Pending,
     ));
     let refresh_slot = refresh.clone();
     // Whether the last request carried an entitlement: an exit's refusal
     // means something else with and without one.
     let presented = std::sync::Arc::new(AtomicBool::new(false));
-    let entitlements = crate::natpmp_refusal::recording_presence(entitlements, presented.clone());
+    let entitlements =
+        warren_standing::entitlements::recording_presence(entitlements, presented.clone());
     // The entitlement is consulted once per refresh cycle rather than captured
     // once: a credential is valid for its own epoch only, so a mapping that
     // outlives an epoch presents the next batch at its next renewal, without
@@ -1120,17 +1113,15 @@ fn maybe_spawn_nat_pmp(
         // first request refused.
         let entitlement_present = crate::port_entitlements::await_first_credential(
             &entitlements,
-            ENTITLEMENT_GRACE,
-            ENTITLEMENT_POLL,
+            warren_standing::entitlements::FIRST_CREDENTIAL_GRACE,
+            warren_standing::entitlements::FIRST_CREDENTIAL_POLL,
         )
         .await
         .is_some();
         // Presence only: a credential is bearer material and never reaches a
         // log. `false` means the first request goes out bare and the exit
         // refuses it, which nothing else in the log would explain.
-        log::info!(
-            "NAT-PMP refresh loop spawned (server={server}, bind_addr={bind_addr}, entitlement={entitlement_present})"
-        );
+        log::info!("NAT-PMP refresh loop spawned (entitlement={entitlement_present})");
         let handle = spawn_loop(tx);
         // The session may have ended while this task was between the spawn
         // above and this store, a window no abort can interrupt. The slot

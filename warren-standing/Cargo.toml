@@ -2,7 +2,7 @@
 name = "warren-standing"
 edition.workspace = true
 rust-version.workspace = true
-description = "Port-forward abuse standing of a Warren wallet as the clients see it: strikes, ban, and which strikes the user was already told about"
+description = "Port forwarding as every Warren client does it: the entitlement mint and slots, the refusal schedule, and the wallet's abuse standing (strikes, ban, and which strikes the user was already told about)"
 repository.workspace = true
 license.workspace = true
 
@@ -21,14 +21,26 @@ serde_json = { workspace = true }
 sha2 = { workspace = true }
 hex = "0.4"
 thiserror = { workspace = true }
-# The mobile store wakes the tunnel on a ban through a watch channel; `sync`
-# only, no runtime.
-tokio = { workspace = true, features = ["sync"] }
+# The mobile store wakes the tunnel on a ban through a watch channel, and the
+# entitlement mint (`entitlements`, shared by the desktop daemon, Android and
+# iOS) tops its batch up on a timer task.
+tokio = { workspace = true, features = ["sync", "rt", "time"] }
 log = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3"
-tokio = { workspace = true, features = ["sync", "rt", "macros", "time"] }
+tokio = { workspace = true, features = ["sync", "rt", "rt-multi-thread", "macros", "time", "test-util", "net"] }
+# The entitlement mint is tested against a fake issuer running the real
+# blind-RSA and attribution-tag code, and through the engine's own NAT-PMP
+# refresh loop, so the envelope is observed where the exit reads it.
+warrenguard-token = { path = "../../warrenguard/crates/warrenguard-token" }
+warrenguard-natpmp-client = { path = "../../warrenguard/crates/warrenguard-natpmp-client" }
+warrenguard-natpmp-protocol = { path = "../../warrenguard/crates/warrenguard-natpmp-protocol" }
+warren-contract = { path = "../../warren-contract" }
+warren-identity = { path = "../../warren-sdk-rs/crates/warren-identity" }
+ed25519-dalek = { version = "=2.2.0", features = ["zeroize", "rand_core"] }
+data-encoding = "2"
+rand010 = { package = "rand", version = "0.10" }
 
 [lints]
 workspace = true

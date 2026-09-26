@@ -72,6 +72,8 @@ mod forum;
 // `warren_multihop_generation`.
 #[cfg(any(all(target_os = "ios", feature = "tunnel"), test))]
 mod warren_natpmp_ffi;
+#[cfg(any(all(target_os = "ios", feature = "tunnel"), test))]
+mod warren_port_entitlements;
 
 // The port-forward standing stores of the extension and the app (warren-core
 // doc 105). Cross-platform so the host suite runs its tests.

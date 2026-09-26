@@ -41,6 +41,10 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Say when the server refuses a forwarded port for want of an entitlement, and ask again
   automatically instead of stopping on the first refusal.
 
+### Fixed
+- [iOS] Present a port entitlement with each forwarded port request, as the other platforms do, so
+  the servers that require one grant the port instead of refusing it.
+
 ## [1.1.35] - 2026-09-25
 ### Added
 - [Linux] Install updates from the app, as on Windows and macOS. The app downloads the new

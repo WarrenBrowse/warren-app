@@ -35,6 +35,10 @@ par l'application, gardez-le tel quel.
 - [iOS] Dire quand le serveur refuse un port redirigé faute de droit de port, et redemander
   automatiquement au lieu de s'arrêter au premier refus.
 
+### Corrigé
+- [iOS] Présenter un droit de port avec chaque demande de port redirigé, comme les autres
+  plateformes, pour que les serveurs qui l'exigent accordent le port au lieu de le refuser.
+
 ## [1.1.35] - 2026-09-25
 ### Ajouté
 - [Linux] Installer les mises à jour depuis l'application, comme sur Windows et macOS.
