@@ -176,6 +176,9 @@ mod notices;
 #[cfg(any(test, target_os = "android"))]
 mod announcements;
 
+#[cfg(any(test, target_os = "android"))]
+mod network_stats;
+
 // The forum flows' JNI exports (login, cancel, report, collection), split
 // from the datapath bridge so the forum surface reads as one module.
 #[cfg(target_os = "android")]

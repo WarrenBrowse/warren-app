@@ -1493,6 +1493,56 @@ fn fetch_network_info_json() -> String {
     }
 }
 
+/// One fetch of the public network transparency snapshot
+/// (`GET /v1/network/stats`, warren-core doc 106), sanity-checked and wrapped
+/// by [`crate::network_stats::envelope`]: `{"ok":true,"stats":{..}}` with the
+/// document as served, or `{"ok":false,"reason":".."}` where `unavailable`
+/// means the API does not serve it (404).
+///
+/// It rides the shared API transport like every other `/v1` call; the route is
+/// public, unauthenticated and byte-identical for every caller, so nothing
+/// about the account is sent. Kotlin owns the cadence (once per window, only
+/// while a surface showing the figures is on screen). Blocks on a network GET:
+/// invoke off the main thread.
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_fetchNetworkStats<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let json = fetch_network_stats_json();
+    match jnix_env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+fn fetch_network_stats_json() -> String {
+    use crate::network_stats::{Fetched, envelope, stats_url};
+    use warren_api::transport::{HttpRequest, HttpTransport, Method};
+
+    let Some(runtime) = RUNTIME.get() else {
+        log::warn!("network stats: initLogger must run first");
+        return envelope(Fetched::Transport);
+    };
+    let request = HttpRequest {
+        method: Method::Get,
+        url: stats_url(PRODUCT_API_URL),
+        headers: Vec::new(),
+        body: Vec::new(),
+        use_sni: true,
+    };
+    let fetched = match runtime.block_on(api_transport().execute(request)) {
+        Ok(response) if response.status == 200 => Fetched::Body(response.body),
+        Ok(response) => Fetched::Status(response.status),
+        Err(_) => {
+            log::debug!("network stats: fetch failed");
+            Fetched::Transport
+        }
+    };
+    envelope(fetched)
+}
+
 /// The verified operator broadcast notices held for this process, and the
 /// generation high-water mark that guards them. In memory only, like the
 /// daemon's: a notice is a live statement, never read off a disk cache.
