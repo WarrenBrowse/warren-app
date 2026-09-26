@@ -34,6 +34,7 @@ import com.warrenbrowse.vpn.feature.settings.api.ForumSignInCodeNavKey
 import com.warrenbrowse.vpn.feature.settings.api.ReportProblemNavKey
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenDaitaSettingsNavKey
+import com.warrenbrowse.vpn.feature.settings.api.WarrenNetworkNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenMultihopSettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenPortForwardingSettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenTunnelSettingsNavKey
@@ -143,6 +144,8 @@ fun Settings(navigator: Navigator) {
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(ReportProblemNavKey) },
         onForumSignInCodeClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(ForumSignInCodeNavKey) },
+        onNetworkClick =
+            dropUnlessResumed { navigator.navigateReplaceIfDetailPane(WarrenNetworkNavKey) },
         onReplayOnboardingClick = dropUnlessResumed { replayOnboarding(localSettings, navigator) },
         onBackClick = dropUnlessResumed { navigator.goBackUntil(SettingsNavKey, inclusive = true) },
     )
@@ -167,6 +170,7 @@ fun SettingsScreen(
     onReportProblemClick: () -> Unit = {},
     onForumSignInCodeClick: () -> Unit = {},
     onReplayOnboardingClick: () -> Unit = {},
+    onNetworkClick: () -> Unit = {},
 ) {
     ScaffoldWithSmallTopBar(
         appBarTitle = stringResource(id = R.string.settings),
@@ -206,6 +210,7 @@ fun SettingsScreen(
                         onReportProblemClick = onReportProblemClick,
                         onForumSignInCodeClick = onForumSignInCodeClick,
                         onReplayOnboardingClick = onReplayOnboardingClick,
+                        onNetworkClick = onNetworkClick,
                     )
                 }
             }
@@ -230,6 +235,7 @@ private fun LazyListScope.content(
     onReportProblemClick: () -> Unit = {},
     onForumSignInCodeClick: () -> Unit = {},
     onReplayOnboardingClick: () -> Unit = {},
+    onNetworkClick: () -> Unit = {},
 ) {
     if (showBetaBadge) {
         item {
@@ -286,6 +292,18 @@ private fun LazyListScope.content(
             title = stringResource(id = R.string.settings_notifications),
             onClick = onNotificationSettingsCellClick,
             position = if (onLanguageClick != null) Position.Bottom else Position.Single,
+        )
+    }
+
+    item { Spacer(modifier = Modifier.height(Dimens.cellVerticalSpacing)) }
+
+    // The network's live figures, beside App info: both describe the service rather than
+    // configure it.
+    item {
+        NavigationListItem(
+            title = stringResource(id = R.string.network_stats_title),
+            onClick = onNetworkClick,
+            position = Position.Single,
         )
     }
 

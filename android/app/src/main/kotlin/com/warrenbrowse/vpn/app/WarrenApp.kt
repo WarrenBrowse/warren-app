@@ -63,6 +63,7 @@ import com.warrenbrowse.vpn.feature.language.impl.navigation.languageEntry
 import com.warrenbrowse.vpn.feature.login.impl.navigation.walletEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.walletSettingsEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenDaitaSettingsEntry
+import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenNetworkEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenLocationPickerEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenMultihopSettingsEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenPortForwardingSettingsEntry
@@ -212,6 +213,7 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         warrenMultihopSettingsEntry(nav3)
         warrenPortForwardingSettingsEntry(nav3)
         warrenLocationPickerEntry(nav3)
+        warrenNetworkEntry(nav3)
         noDaemonEntry(nav3)
         notificationEntry(nav3)
         onboardingEntry(nav3)
