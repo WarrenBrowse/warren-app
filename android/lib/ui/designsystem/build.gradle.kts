@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.warren.android.library)
     alias(libs.plugins.compose)
+    alias(libs.plugins.warren.unit.test)
 }
 
 android {
