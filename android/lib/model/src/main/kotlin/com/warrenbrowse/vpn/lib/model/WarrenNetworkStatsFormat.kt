@@ -84,6 +84,12 @@ object NetworkStatsClock {
     fun isStale(stats: WarrenNetworkStats, nowMillis: Long): Boolean =
         ageSecs(stats, nowMillis) > STALE_AFTER_WINDOWS.toLong() * stats.windowSecs
 
+    /** Milliseconds until [isStale] turns true, zero once it has. */
+    fun millisUntilStale(stats: WarrenNetworkStats, nowMillis: Long): Long {
+        val firstStaleSec = stats.generatedAt + STALE_AFTER_WINDOWS.toLong() * stats.windowSecs + 1
+        return (firstStaleSec * MILLIS - nowMillis).coerceAtLeast(0)
+    }
+
     fun age(ageSecs: Long): SnapshotAge =
         when {
             ageSecs < MINUTE -> SnapshotAge.Seconds(ageSecs)

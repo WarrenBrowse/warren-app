@@ -10,6 +10,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -120,10 +121,24 @@ fun SnapshotFreshness(stats: WarrenNetworkStats, modifier: Modifier = Modifier) 
     }
 }
 
-/** Whether [stats] is older than three windows right now; re-evaluated every second. */
+/**
+ * Whether [stats] is older than three windows. Flips once, when that moment comes, rather than
+ * ticking: a whole location list reads it.
+ */
 @Composable
-fun rememberSnapshotStale(stats: WarrenNetworkStats): Boolean =
-    NetworkStatsClock.isStale(stats, rememberNowMillis())
+fun rememberSnapshotStale(stats: WarrenNetworkStats): Boolean {
+    var stale by
+        remember(stats) {
+            mutableStateOf(NetworkStatsClock.isStale(stats, System.currentTimeMillis()))
+        }
+    LaunchedEffect(stats) {
+        if (!stale) {
+            delay(NetworkStatsClock.millisUntilStale(stats, System.currentTimeMillis()))
+            stale = true
+        }
+    }
+    return stale
+}
 
 /**
  * The load of one exit at a glance: the ring, the percentage or the band name (colour is never the

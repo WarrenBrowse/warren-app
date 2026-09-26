@@ -89,6 +89,13 @@ class WarrenNetworkStatsFormatTest {
     }
 
     @Test
+    fun `the wait until a snapshot goes stale ends at the first stale millisecond`() {
+        assertEquals(1_000, NetworkStatsClock.millisUntilStale(stats, 1_180_000))
+        assertTrue(NetworkStatsClock.isStale(stats, 1_180_000 + 1_000))
+        assertEquals(0, NetworkStatsClock.millisUntilStale(stats, 2_000_000))
+    }
+
+    @Test
     fun `the age is told in seconds, then minutes, then hours`() {
         assertEquals(SnapshotAge.Seconds(59), NetworkStatsClock.age(59))
         assertEquals(SnapshotAge.Minutes(1), NetworkStatsClock.age(60))

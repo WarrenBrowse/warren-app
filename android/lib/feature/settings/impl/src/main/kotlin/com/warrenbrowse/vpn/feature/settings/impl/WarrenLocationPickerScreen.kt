@@ -89,6 +89,12 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import com.warrenbrowse.vpn.lib.model.WarrenNetworkStats
+import com.warrenbrowse.vpn.lib.repository.WarrenNetworkStatsProvider
+import com.warrenbrowse.vpn.lib.ui.component.networkstats.ExitLoadSummary
+import com.warrenbrowse.vpn.lib.ui.component.networkstats.rememberSnapshotStale
+import com.warrenbrowse.vpn.lib.ui.designsystem.networkstats.LoadRingSize
+import androidx.compose.foundation.layout.Row
 import org.koin.compose.koinInject
 
 /** Fade between the loading, empty and populated catalogue, and between rows. */
@@ -199,6 +205,13 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
     // Opening the picker takes the snapshot while it is fresh (the daemon's
     // hourly cadence); only the user's Retry forces a fetch.
     val relays by relayProvider.catalogue.collectAsStateWithLifecycle()
+    // Collected with the lifecycle: the feed polls only while this list is on screen and the app
+    // is in the foreground, and shows nothing at all while no snapshot is held (the endpoint not
+    // deployed yet included).
+    val networkStats by
+        koinInject<WarrenNetworkStatsProvider>().state.collectAsStateWithLifecycle()
+    val statsSnapshot = networkStats.snapshot
+    val statsStale = statsSnapshot?.let { rememberSnapshotStale(it) } ?: false
     var refreshTick by rememberSaveable { mutableStateOf(0) }
     var refreshing by remember { mutableStateOf(true) }
     LaunchedEffect(refreshTick) {
@@ -397,6 +410,8 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
                                         PickerRowContent(
                                             row = row,
                                             inFlight = inFlight,
+                                            networkStats = statsSnapshot,
+                                            networkStatsStale = statsStale,
                                             onApplyPin = applyPin,
                                             onEntryPick = { country ->
                                                 pickerScope = applyEntryPick(
@@ -608,6 +623,8 @@ private fun SearchField(query: String, onQueryChange: (String) -> Unit, onSearch
 private fun LazyItemScope.PickerRowContent(
     row: PickerRow,
     inFlight: Boolean,
+    networkStats: WarrenNetworkStats?,
+    networkStatsStale: Boolean,
     onApplyPin: (ExitPin) -> Unit,
     onEntryPick: (String?) -> Unit,
     onToggleCountry: (String) -> Unit,
@@ -749,9 +766,23 @@ private fun LazyItemScope.PickerRowContent(
                 stringResource(R.string.location_exit_ordinal, row.title, row.ordinal)
             }
             val section = row.section
+            val exitStats = networkStats?.exit(row.relay.exitId)
             ExitCell(
                 modifier = itemModifier,
                 title = label,
+                load =
+                    if (networkStats != null && exitStats != null) {
+                        {
+                            ExitLoadSummary(
+                                exit = exitStats,
+                                stats = networkStats,
+                                ringSize = LoadRingSize.SMALL,
+                                stale = networkStatsStale,
+                            )
+                        }
+                    } else {
+                        null
+                    },
                 selected = row.isPinned,
                 active = row.relay.active,
                 isEnabled = row.relay.active && !inFlight,
@@ -981,6 +1012,7 @@ private fun ExitCell(
     onLongClick: (() -> Unit)? = null,
     menu: @Composable (() -> Unit)? = null,
     active: Boolean = true,
+    load: @Composable (() -> Unit)? = null,
 ) {
     val colors = ListItemDefaults.colors()
     val trailing: @Composable (BoxScope.() -> Unit)? = if (menu == null) {
@@ -1022,12 +1054,21 @@ private fun ExitCell(
             }
         },
         content = {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleSmall,
-                color = colors.headlineColor(enabled = isEnabled, selected = selected),
-                modifier = Modifier.align(Alignment.CenterStart),
-            )
+            // The exit's load closes the label line, inside the row's tap area, so the menu keeps
+            // the trailing edge to itself.
+            Row(
+                modifier = Modifier.align(Alignment.CenterStart).fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(Dimens.smallPadding),
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = colors.headlineColor(enabled = isEnabled, selected = selected),
+                    modifier = Modifier.weight(1f),
+                )
+                load?.invoke()
+            }
         },
         trailingContent = trailing,
     )
