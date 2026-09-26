@@ -206,4 +206,24 @@ mod tests {
         assert_eq!(first.map(|key| key.pid), Some(pid));
         assert_eq!(first, resolver.process_key(pid));
     }
+
+    /// The cost the router pays for one fresh snapshot, printed for the
+    /// record: `cargo test -p talpid-app-routing -- --ignored --nocapture`.
+    #[test]
+    #[ignore = "a measurement, not a check"]
+    fn measure_the_cost_of_a_snapshot() {
+        let mut resolver = SystemResolver::new();
+        resolver.refresh().unwrap();
+        let rounds = 200u32;
+        let start = std::time::Instant::now();
+        for _ in 0..rounds {
+            resolver.refresh().unwrap();
+        }
+        let per_snapshot = start.elapsed() / rounds;
+        println!(
+            "snapshot of {} sockets: {:?} per refresh over {rounds} refreshes",
+            resolver.table.len(),
+            per_snapshot
+        );
+    }
 }
