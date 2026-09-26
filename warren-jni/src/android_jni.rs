@@ -588,6 +588,14 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
                 return -1;
             }
         };
+        let session_blinding =
+            match crate::wallet::session_blinding_from_mnemonic(&mnemonic_zeroing) {
+                Ok(k) => k,
+                Err(e) => {
+                    let _ = jnix_env.throw(format!("wallet key derive failed: {e}"));
+                    return -1;
+                }
+            };
         // mnemonic_zeroing is dropped (and zeroized) here.
         drop(mnemonic_zeroing);
 
@@ -612,6 +620,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
         let task = runtime.spawn(crate::tunnel::run_session(
             tun,
             signing_key,
+            session_blinding,
             config,
             &SESSION_STATUS,
             cancel_rx,

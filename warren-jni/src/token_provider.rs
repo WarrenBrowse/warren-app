@@ -38,7 +38,9 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
-use warren_api::{HttpTransport, PersistedTokens, TokenClientError, TokenManager, WarrenApiClient};
+use warren_api::{
+    BlindingKey, HttpTransport, PersistedTokens, TokenClientError, TokenManager, WarrenApiClient,
+};
 use warrenguard_token::TOKEN_LEN;
 
 /// Epochs minted ahead of the current one (current + horizon per refresh
@@ -141,22 +143,24 @@ impl<T: HttpTransport + 'static> TokenMint<T> {
     }
 
     /// The pop-only stack source for `wallet_pubkey`. First sight of a wallet
-    /// builds its manager (via `make_client`, which owns the wallet identity),
+    /// builds its manager (via `make_wallet`, which owns the wallet identity
+    /// and the key its batches are blinded with),
     /// restores the persisted bundle into it, and starts its background
     /// refresh; later calls reuse both, so the factory runs at most once per
     /// wallet and process.
     pub(crate) fn stack_source(
         &self,
         wallet_pubkey: [u8; 32],
-        make_client: impl FnOnce() -> WarrenApiClient<T>,
+        make_wallet: impl FnOnce() -> (WarrenApiClient<T>, BlindingKey),
     ) -> StackSource {
         let manager = {
             let mut managers = self.managers.lock();
             managers
                 .entry(wallet_pubkey)
                 .or_insert_with(|| {
+                    let (client, blinding) = make_wallet();
                     let manager = Arc::new(
-                        TokenManager::new(Arc::new(make_client()))
+                        TokenManager::new(Arc::new(client), blinding)
                             .with_mint_horizon(MINT_HORIZON_EPOCHS),
                     );
                     if let Some(persist) = &self.persist
@@ -210,7 +214,7 @@ fn spawn_refresh<T: HttpTransport + 'static>(
         loop {
             tick.tick().await;
             let n = now();
-            match manager.refresh_auto(n).await {
+            match manager.refresh(n).await {
                 // Log the current-epoch stock so a successful-but-empty refresh
                 // (issuer already_issued this account+epoch, e.g. a prior process
                 // minted a batch that died unpersisted with it) is distinguishable
@@ -253,7 +257,7 @@ mod android {
     use std::sync::{Arc, OnceLock};
 
     use ed25519_dalek::SigningKey;
-    use warren_api::WarrenApiClient;
+    use warren_api::{BlindingKey, WarrenApiClient};
     use warren_identity::WarrenIdentity;
     use warrenguard_transport::supervisor::SessionTokenProvider;
     use warrenguard_wire::SessionToken;
@@ -298,8 +302,13 @@ mod android {
     /// API. The minting identity is built from the SAME Ed25519 key the tunnel
     /// handshake signs with ([`WarrenIdentity::from_signing_key`], no
     /// re-derivation), so the minting wallet is bit-for-bit the subscribed
-    /// wallet. The returned closure pops one token per dial and never mints.
-    pub(crate) fn provider_for(signing_key: SigningKey) -> SessionTokenProvider {
+    /// wallet. `blinding` is that wallet's session blinding key, so every
+    /// client of the wallet asks for the same batch and the issuer serves each
+    /// of them. The returned closure pops one token per dial and never mints.
+    pub(crate) fn provider_for(
+        signing_key: SigningKey,
+        blinding: BlindingKey,
+    ) -> SessionTokenProvider {
         let mint = MINT.get_or_init(|| {
             TokenMint::new(Arc::new(now_unix_secs), persist_file()).with_ban_sink(Arc::new(
                 |wallet, error| {
@@ -309,10 +318,13 @@ mod android {
         });
         let wallet_pubkey = signing_key.verifying_key().to_bytes();
         let source = mint.stack_source(wallet_pubkey, move || {
-            WarrenApiClient::new(
-                crate::product::PRODUCT_API_URL.to_owned(),
-                WarrenIdentity::from_signing_key(signing_key),
-                ProtectedTransport::new(),
+            (
+                WarrenApiClient::new(
+                    crate::product::PRODUCT_API_URL.to_owned(),
+                    WarrenIdentity::from_signing_key(signing_key),
+                    ProtectedTransport::new(),
+                ),
+                blinding,
             )
         });
         Arc::new(move || source().into_iter().map(SessionToken).collect())
@@ -331,8 +343,8 @@ mod tests {
     use rand010::rngs::StdRng;
     use warren_api::transport::{HttpRequest, HttpResponse, HttpTransport, TransportError};
     use warren_api::{
-        TokenEpochResponse, TokenIssueRequest, TokenIssueResponse, TokenIssuerDirectory,
-        TokenIssuerKey, WarrenApiClient,
+        BlindingKey, TokenEpochResponse, TokenIssueRequest, TokenIssueResponse,
+        TokenIssuerDirectory, TokenIssuerKey, WarrenApiClient,
     };
     use warren_identity::WarrenIdentity;
     use warrenguard_token::IssuerSecretKey;
@@ -355,6 +367,8 @@ mod tests {
         ban_wallet: AtomicBool,
         fail_transport: AtomicBool,
         issue_calls: AtomicUsize,
+        /// The blinded messages of every issue request, in arrival order.
+        blinded: parking_lot::Mutex<Vec<Vec<String>>>,
     }
 
     #[derive(Clone)]
@@ -373,6 +387,7 @@ mod tests {
                 ban_wallet: AtomicBool::new(false),
                 fail_transport: AtomicBool::new(false),
                 issue_calls: AtomicUsize::new(0),
+                blinded: parking_lot::Mutex::new(Vec::new()),
             }))
         }
 
@@ -429,6 +444,10 @@ mod tests {
                 });
             }
             let req: TokenIssueRequest = serde_json::from_slice(&request.body).unwrap();
+            self.0
+                .blinded
+                .lock()
+                .extend(req.epochs.iter().map(|e| e.blinded.clone()));
             let mut epochs = Vec::new();
             for e in &req.epochs {
                 if self.0.refuse_issuance.load(Ordering::SeqCst) {
@@ -464,11 +483,14 @@ mod tests {
         }
     }
 
-    fn client(issuer: &FakeIssuer) -> WarrenApiClient<FakeIssuer> {
-        WarrenApiClient::new(
-            "https://api.example.test",
-            WarrenIdentity::from_seed(&[0x33; 32]),
-            issuer.clone(),
+    fn client(issuer: &FakeIssuer) -> (WarrenApiClient<FakeIssuer>, BlindingKey) {
+        (
+            WarrenApiClient::new(
+                "https://api.example.test",
+                WarrenIdentity::from_seed(&[0x33; 32]),
+                issuer.clone(),
+            ),
+            BlindingKey::session(&[0x33; 32]),
         )
     }
 
@@ -516,6 +538,46 @@ mod tests {
             assert!(source().is_empty());
         }
         assert_eq!(state.issue_calls.load(Ordering::SeqCst), calls);
+    }
+
+    /// Two installs of one wallet ask for the same batch, the one the desktop
+    /// app and the extension derive from the wallet seed, so the issuer serves
+    /// all of them (warren-core doc 103 section 11). A key blinded from the
+    /// tunnel's signing key instead would be a batch no other client sends.
+    #[tokio::test(start_paused = true)]
+    async fn every_install_of_a_wallet_asks_for_the_batch_its_seed_derives() {
+        const MNEMONIC: &str = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        let seed = warren_identity::seed_from_mnemonic(MNEMONIC).unwrap();
+        let issuer = FakeIssuer::new(&[100]);
+        let batch_of = |blinding: BlindingKey| {
+            let issuer = issuer.clone();
+            async move {
+                let mint = TokenMint::new(now_fixed(), None);
+                let _source = mint.stack_source([1; 32], || (client(&issuer).0, blinding));
+                let state = issuer.0.clone();
+                let before = state.blinded.lock().len();
+                wait_for(|| state.blinded.lock().len() > before).await;
+                state.blinded.lock().last().cloned().unwrap()
+            }
+        };
+
+        let first =
+            batch_of(crate::wallet::session_blinding_from_mnemonic(MNEMONIC).unwrap()).await;
+        let reinstall =
+            batch_of(crate::wallet::session_blinding_from_mnemonic(MNEMONIC).unwrap()).await;
+        let canonical = batch_of(BlindingKey::session(&seed)).await;
+        let from_signing_key = batch_of(BlindingKey::session(
+            &warren_identity::derive_node_key(&seed).to_bytes(),
+        ))
+        .await;
+
+        assert_eq!(first, reinstall);
+        assert_eq!(first, canonical, "the batch every other client derives");
+        assert_ne!(first, from_signing_key);
+    }
+
+    fn now_fixed() -> NowFn {
+        Arc::new(|| NOW)
     }
 
     #[tokio::test(start_paused = true)]

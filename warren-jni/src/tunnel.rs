@@ -207,6 +207,7 @@ pub enum TunnelStartError {
 pub async fn run_session(
     tun: AndroidTun,
     signing_key: SigningKey,
+    session_blinding: warren_api::BlindingKey,
     config: WarrenTunnelConfig,
     status: &'static crate::status_watch::StatusCell,
     cancel_rx: oneshot::Receiver<()>,
@@ -221,7 +222,7 @@ pub async fn run_session(
     // Pass tokens are presented at setup so the exit admits the session
     // without learning the wallet; an empty stack (nothing minted yet, epoch
     // drained, no issuance) keeps the v6 wallet-signed path.
-    let session_tokens = crate::token_provider::provider_for(signing_key.clone());
+    let session_tokens = crate::token_provider::provider_for(signing_key.clone(), session_blinding);
 
     // Port entitlements ride the same wallet and the same coarse refresh
     // (warren-core doc 99): without one, the exit falls back to its per-client

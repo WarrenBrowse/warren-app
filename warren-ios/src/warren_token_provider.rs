@@ -19,7 +19,7 @@ use std::time::Duration;
 
 use ed25519_dalek::SigningKey;
 use warren_api::reqwest_transport::ReqwestTransport;
-use warren_api::{TokenManager, WarrenApiClient};
+use warren_api::{BlindingKey, TokenManager, WarrenApiClient};
 use warren_identity::WarrenIdentity;
 use warrenguard_transport::supervisor::SessionTokenProvider;
 use warrenguard_wire::SessionToken;
@@ -53,7 +53,7 @@ fn spawn_refresh(manager: Arc<Manager>, wallet_pubkey: [u8; 32]) {
         loop {
             tick.tick().await;
             let now = now_unix_secs();
-            if let Err(e) = manager.refresh_auto(now).await {
+            if let Err(e) = manager.refresh(now).await {
                 // The issuer refuses a banned wallet (warren-core doc 105 §5.3):
                 // that goes to the standing, which blocks the tunnel before an
                 // exit is dialed. A v7 client never presents its wallet to an
@@ -83,7 +83,10 @@ fn spawn_refresh(manager: Arc<Manager>, wallet_pubkey: [u8; 32]) {
 /// The v7 token provider for `signing_key`'s wallet. Builds (and starts
 /// refreshing) a manager the first time a wallet is seen; reuses it after. The
 /// returned closure pops one token per session and never mints.
-pub(crate) fn provider_for(signing_key: SigningKey) -> SessionTokenProvider {
+///
+/// `blinding` is the wallet's session blinding key: every client of the
+/// wallet derives the same batch with it, so the issuer serves each of them.
+pub(crate) fn provider_for(signing_key: SigningKey, blinding: BlindingKey) -> SessionTokenProvider {
     let pubkey = signing_key.verifying_key().to_bytes();
 
     let map = MANAGERS.get_or_init(|| Mutex::new(HashMap::new()));
@@ -97,7 +100,7 @@ pub(crate) fn provider_for(signing_key: SigningKey) -> SessionTokenProvider {
                     WarrenIdentity::from_signing_key(signing_key),
                     ReqwestTransport::new(),
                 );
-                let manager = Arc::new(TokenManager::new(Arc::new(client)));
+                let manager = Arc::new(TokenManager::new(Arc::new(client), blinding));
                 spawn_refresh(manager.clone(), pubkey);
                 manager
             })

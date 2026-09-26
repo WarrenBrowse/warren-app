@@ -1236,6 +1236,7 @@ fn spawn_multi_hop(
     pin_store_path: Option<String>,
     nat_pmp: NatPmpConfig,
     signing_key: ed25519_dalek::SigningKey,
+    session_blinding: warren_api::BlindingKey,
 ) {
     use std::sync::atomic::Ordering;
 
@@ -1394,6 +1395,7 @@ fn spawn_multi_hop(
         // falls back to the v6 wallet-signed path.
         let session_token_provider = Some(crate::warren_token_provider::provider_for(
             signing_key.clone(),
+            session_blinding,
         ));
         // ADR-0006 idle cover: resolved from the same `WARREN_IDLE_COVER` knob the
         // desktop daemon reads, coupled to DAITA (off on this path) so the two
@@ -2168,6 +2170,10 @@ pub unsafe extern "C" fn warren_tunnel_start(
         // drop is provided by `ed25519-dalek` via the `zeroize` feature
         // already enabled in `warren-ios/Cargo.toml`.
         let signing_key = ed25519_dalek::SigningKey::from_bytes(&params.wallet_signing_seed);
+        // The session-token batch is blinded from the wallet seed, as every
+        // other client of the wallet blinds it, so the issuer serves each of
+        // them the same batch (warren-core doc 103 section 11).
+        let session_blinding = warren_api::BlindingKey::session(&params.wallet_signing_seed);
 
         // Client opt-in for NAT-PMP port forwarding. The multi-hop reassign
         // task binds the refresh loop to the exit-assigned inner IPv4 once it
@@ -2216,6 +2222,7 @@ pub unsafe extern "C" fn warren_tunnel_start(
             pin_store_path,
             nat_pmp,
             signing_key,
+            session_blinding,
         );
         // Box the Arc so the FFI sees a single owner ; clones live
         // inside spawned tasks via the Arc.

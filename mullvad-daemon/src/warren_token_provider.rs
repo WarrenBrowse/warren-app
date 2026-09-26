@@ -22,7 +22,7 @@ use std::sync::{Arc, Mutex, OnceLock};
 use std::time::Duration;
 
 use talpid_warren_tunnel::{SessionTokenProvider, make_session_token_provider};
-use warren_api::{TokenManager, WarrenApiClient};
+use warren_api::{BlindingKey, TokenManager, WarrenApiClient};
 use warren_identity::WarrenIdentity;
 
 use crate::warren_account_standing::StandingMonitor;
@@ -49,7 +49,7 @@ fn spawn_refresh(manager: Arc<Manager>, wallet: String, standing: Option<Standin
         let mut tick = tokio::time::interval(Duration::from_secs(600));
         loop {
             tick.tick().await;
-            if let Err(e) = manager.refresh_auto(now_unix_secs()).await {
+            if let Err(e) = manager.refresh(now_unix_secs()).await {
                 log::warn!("Warren v7 token refresh failed (keeping existing tokens): {e}");
                 crate::warren_account_standing::report_if_banned(standing.as_ref(), &wallet, &e);
             }
@@ -80,7 +80,10 @@ pub(crate) fn provider_for(
                     WarrenIdentity::from_seed(&seed_bytes),
                     WarrenApiTransport::new(),
                 );
-                let manager = Arc::new(TokenManager::new(Arc::new(client)));
+                let manager = Arc::new(TokenManager::new(
+                    Arc::new(client),
+                    BlindingKey::session(&seed_bytes),
+                ));
                 spawn_refresh(manager.clone(), key, standing.cloned());
                 manager
             })
