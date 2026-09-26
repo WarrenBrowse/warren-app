@@ -14,6 +14,26 @@ par l'application, gardez-le tel quel.
 
 ## [Unreleased]
 ### Ajouté
+- [Windows, macOS, Linux] Remplacer le split tunneling par le routage des apps, en trois onglets.
+  Hors VPN garde les apps choisies en dehors du VPN, comme avant. Pays par app fait sortir chaque
+  app choisie sur Internet par une exit dans son propre pays ou sa propre ville, pendant que toutes
+  les autres apps gardent la connexion principale : jusqu'à deux pays ou villes en plus de la
+  principale, et une app dont le pays est injoignable est bloquée plutôt qu'envoyée par un autre
+  chemin. VPN ciblé ne met dans le VPN que les apps choisies et laisse le reste du système sur votre
+  connexion habituelle. Hors VPN et VPN ciblé se remplacent l'un l'autre ; Pays par app fonctionne
+  avec les deux. `warren app-routing` fait de même depuis un terminal.
+- [Windows] Proposer VPN ciblé.
+- [Linux] Proposer VPN ciblé pour les apps ouvertes avec `warren-include`, sur les systèmes avec
+  cgroup v2 et nftables. Un pays par app fonctionne pour les apps dont le programme peut être
+  identifié, et la liste des apps dit pourquoi quand l'une d'elles ne peut pas en prendre un (une
+  app Flatpak ou Snap, ou un script).
+- [macOS] Proposer Hors VPN et VPN ciblé dans l'app signée, sur macOS 13 ou plus récent, une fois
+  « Accès complet au disque » accordé. Les versions publiées avaient le split tunneling désactivé.
+  La vue Routage des apps indique lequel des deux manque. Pays par app n'a pas besoin de « Accès
+  complet au disque ».
+- [Android] Ajouter VPN ciblé à côté de Hors VPN : seules les apps choisies utilisent le VPN, et
+  elles restent bloquées tant que le VPN est coupé. Quand aucune des apps choisies n'est installée,
+  toutes les apps utilisent le VPN jusqu'à ce que vous en choisissiez une.
 - [Android] Afficher les avertissements enregistrés sur votre compte quand un port redirigé est
   fermé après un signalement d'abus : une notification par avertissement, une bannière avec sa
   référence de dossier qui ouvre la page expliquant comment le contester, et la liste complète dans
@@ -35,7 +55,17 @@ par l'application, gardez-le tel quel.
 - [iOS] Dire quand le serveur refuse un port redirigé faute de droit de port, et redemander
   automatiquement au lieu de s'arrêter au premier refus.
 
+### Modifié
+- [Windows, macOS, Linux] Enregistrer les réglages au format version 17, qui contient le routage
+  des apps. Les apps que vous aviez exclues du VPN passent dans Hors VPN.
+
 ### Corrigé
+- [Windows] Corriger Hors VPN dans l'app beta, qui refusait de s'activer avec « The sublayer does
+  not exist ».
+- Partager les tokens de session anonymes entre les appareils d'un même portefeuille. Chaque
+  appareil dérive les mêmes tokens du portefeuille, si bien qu'un deuxième appareil se connecte
+  avec eux au lieu de se rabattre sur une connexion qui identifie le portefeuille auprès de l'exit,
+  et une reconnexion ne consomme plus de token.
 - [iOS] Présenter un droit de port avec chaque demande de port redirigé, comme les autres
   plateformes, pour que les serveurs qui l'exigent accordent le port au lieu de le refuser.
 - [iOS] Signer la connexion avec le portefeuille affiché dans l'application. Elle utilisait une clé

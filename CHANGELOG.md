@@ -23,6 +23,24 @@ Line wrap the file at 100 chars.                                              Th
 
 ## [Unreleased]
 ### Added
+- [Windows, macOS, Linux] Replace Split tunneling with App routing, in three tabs. Bypass VPN keeps
+  the apps you choose outside the VPN, as before. Country per app sends each app you choose to the
+  Internet through an exit in its own country or city, while every other app keeps the main
+  connection: up to two countries or cities besides the main one, and an app whose country cannot
+  be reached is blocked rather than sent another way. VPN only for puts only the apps you choose in
+  the VPN and leaves the rest of the system on your normal connection. Bypass VPN and VPN only for
+  replace each other; Country per app works with either. `warren app-routing` does the same from a
+  terminal.
+- [Windows] Offer VPN only for.
+- [Linux] Offer VPN only for, for apps opened through `warren-include`, on systems with cgroup v2
+  and nftables. A country per app works for apps whose program can be named, and the app list says
+  why when one cannot take a country (a Flatpak or Snap app, or a script).
+- [macOS] Offer Bypass VPN and VPN only for in the signed app on macOS 13 or later, once Full Disk
+  Access is granted. Released builds had split tunneling turned off. The App routing view says
+  which of the two is missing. Country per app needs no Full Disk Access.
+- [Android] Add VPN only for next to Bypass VPN: only the apps you choose use the VPN, and they stay
+  blocked while the VPN is down. When none of the apps you chose is installed, every app uses the
+  VPN until you choose one.
 - [Android] Show the warnings recorded against your account when a forwarded port is closed after
   an abuse report: a notification for each warning, a banner with its case reference that opens
   the page on contesting it, and the full list in the port forwarding screen with the address to
@@ -41,7 +59,16 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Say when the server refuses a forwarded port for want of an entitlement, and ask again
   automatically instead of stopping on the first refusal.
 
+### Changed
+- [Windows, macOS, Linux] Save the settings in format version 17, which holds app routing. The apps
+  you excluded from the VPN move to Bypass VPN.
+
 ### Fixed
+- [Windows] Fix Bypass VPN in the beta app, which refused to turn on with "The sublayer does not
+  exist".
+- Share the anonymous session tokens between the devices of one wallet. Every device derives the
+  same tokens from the wallet, so a second device connects on them instead of falling back to a
+  login that identifies the wallet to the exit, and a reconnect no longer uses up a token.
 - [iOS] Present a port entitlement with each forwarded port request, as the other platforms do, so
   the servers that require one grant the port instead of refusing it.
 - [iOS] Sign the connection with the wallet shown in the app. It used a key derived from the same
