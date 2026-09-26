@@ -2,6 +2,7 @@
 #include "fwcontext.h"
 #include "mullvadobjects.h"
 #include "objectpurger.h"
+#include "sharedsublayers.h"
 #include "rules/ifirewallrule.h"
 #include "rules/ports.h"
 #include "rules/baseline/blockall.h"
@@ -20,6 +21,8 @@
 #include "rules/dns/permittunnel.h"
 #include "rules/dns/permitnontunnel.h"
 #include "rules/multi/permitendpoint.h"
+#include "rules/includeonly/blockoutsidetunnel.h"
+#include "rules/includeonly/blocksystemresolver.h"
 #include <libwfp/transaction.h>
 #include <libwfp/filterengine.h>
 #include <libcommon/error.h>
@@ -300,14 +303,7 @@ bool FwContext::applyPolicyConnecting
 		}
 	}
 
-	const auto status = applyRuleset(ruleset);
-
-	if (status)
-	{
-		m_activePolicy = Policy::Connecting;
-	}
-
-	return status;
+	return applyPolicy(std::move(ruleset), tunnelInterfaceAlias, Policy::Connecting);
 }
 
 bool FwContext::applyPolicyConnected
@@ -362,28 +358,18 @@ bool FwContext::applyPolicyConnected
 	if (settings.permitNonTunnelIpv4)
 	{
 		ruleset.emplace_back(std::make_unique<baseline::PermitNonTunnelIpv4>());
+		ruleset.emplace_back(std::make_unique<includeonly::BlockSystemResolverOffTunnel>(
+			includeonly::BlockSystemResolverOffTunnel::SystemResolverAccount(),
+			tunnelInterfaceAlias
+		));
 	}
 
-	const auto status = applyRuleset(ruleset);
-
-	if (status)
-	{
-		m_activePolicy = Policy::Connected;
-	}
-
-	return status;
+	return applyPolicy(std::move(ruleset), tunnelInterfaceAlias, Policy::Connected);
 }
 
 bool FwContext::applyPolicyBlocked(const WinFwSettings &settings, const std::optional<WinFwAllowedEndpoint> &allowedEndpoint)
 {
-	const auto status = applyRuleset(composePolicyBlocked(settings, allowedEndpoint));
-
-	if (status)
-	{
-		m_activePolicy = Policy::Blocked;
-	}
-
-	return status;
+	return applyPolicy(composePolicyBlocked(settings, allowedEndpoint), std::nullopt, Policy::Blocked);
 }
 
 bool FwContext::reset()
@@ -396,6 +382,36 @@ bool FwContext::reset()
 	if (status)
 	{
 		m_activePolicy = Policy::None;
+		m_activeRuleset.clear();
+		m_activeTunnelInterfaceAlias.reset();
+	}
+
+	return status;
+}
+
+bool FwContext::setIncludedApps(const std::vector<std::wstring> &apps)
+{
+	if (Policy::None == m_activePolicy)
+	{
+		m_includedApps = apps;
+		return true;
+	}
+
+	auto previous = std::move(m_includedApps);
+	m_includedApps = apps;
+
+	const auto guard = composeIncludeOnlyGuard(m_activeTunnelInterfaceAlias);
+
+	const auto status = m_sessionController->executeTransaction([&](SessionController &controller, wfp::FilterEngine &)
+	{
+		controller.revert(m_baseline);
+		return applyRulesetDirectly(m_activeRuleset, controller)
+			&& applyRulesetDirectly(guard, controller);
+	});
+
+	if (false == status)
+	{
+		m_includedApps = std::move(previous);
 	}
 
 	return status;
@@ -445,7 +461,9 @@ bool FwContext::applyBlockedBaseConfiguration(const WinFwSettings &settings, con
 		//
 		checkpoint = controller.peekCheckpoint();
 
-		return applyRulesetDirectly(composePolicyBlocked(settings, allowedEndpoint), controller);
+		m_activeRuleset = composePolicyBlocked(settings, allowedEndpoint);
+
+		return applyRulesetDirectly(m_activeRuleset, controller);
 	});
 }
 
@@ -457,21 +475,70 @@ bool FwContext::applyCommonBaseConfiguration(SessionController &controller, wfp:
 	//
 	ObjectPurger::GetRemoveAllFunctor()(engine);
 
+	const auto share = shared_sublayers::MayAdopt(engine, MullvadGuids::Provider());
+
+	MullvadGuids::UseSharedSublayers(share);
+
 	//
-	// Install structural objects
+	// Install structural objects. The shared sublayers belong to no provider,
+	// so they are installed outside the session's journal, which only ever
+	// reverts what it can own.
 	//
-	return controller.addProvider(*MullvadObjects::Provider())
-		&& controller.addSublayer(*MullvadObjects::SublayerBaseline())
-		&& controller.addSublayer(*MullvadObjects::SublayerDns());
+	if (false == controller.addProvider(*MullvadObjects::Provider()))
+	{
+		return false;
+	}
+
+	if (share)
+	{
+		shared_sublayers::Install(engine);
+
+		if (false == shared_sublayers::Claim(controller))
+		{
+			return false;
+		}
+	}
+	else if (false == controller.addSublayer(*MullvadObjects::SublayerBaseline())
+		|| false == controller.addSublayer(*MullvadObjects::SublayerDns()))
+	{
+		return false;
+	}
+
+	return controller.addSublayer(*MullvadObjects::SublayerIncludeOnly());
 }
 
-bool FwContext::applyRuleset(const Ruleset &ruleset)
+bool FwContext::applyPolicy(Ruleset &&ruleset, const std::optional<std::wstring> &tunnelInterfaceAlias, Policy policy)
 {
-	return m_sessionController->executeTransaction([&](SessionController &controller, wfp::FilterEngine &)
+	const auto guard = composeIncludeOnlyGuard(tunnelInterfaceAlias);
+
+	const auto status = m_sessionController->executeTransaction([&](SessionController &controller, wfp::FilterEngine &)
 	{
 		controller.revert(m_baseline);
-		return applyRulesetDirectly(ruleset, controller);
+		return applyRulesetDirectly(ruleset, controller)
+			&& applyRulesetDirectly(guard, controller);
 	});
+
+	if (status)
+	{
+		m_activeRuleset = std::move(ruleset);
+		m_activeTunnelInterfaceAlias = tunnelInterfaceAlias;
+		m_activePolicy = policy;
+	}
+
+	return status;
+}
+
+FwContext::Ruleset FwContext::composeIncludeOnlyGuard(const std::optional<std::wstring> &tunnelInterfaceAlias) const
+{
+	Ruleset guard;
+
+	if (false == m_includedApps.empty())
+	{
+		guard.emplace_back(std::make_unique<includeonly::BlockOutsideTunnel>(
+			m_includedApps, tunnelInterfaceAlias));
+	}
+
+	return guard;
 }
 
 bool FwContext::applyRulesetDirectly(const Ruleset &ruleset, SessionController &controller)

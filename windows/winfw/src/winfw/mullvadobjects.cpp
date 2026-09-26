@@ -46,6 +46,21 @@ std::unique_ptr<wfp::SublayerBuilder> MullvadObjects::SublayerDns()
 }
 
 //static
+std::unique_ptr<wfp::SublayerBuilder> MullvadObjects::SublayerIncludeOnly()
+{
+	auto builder = std::make_unique<wfp::SublayerBuilder>();
+
+	(*builder)
+		.name(L"Mullvad VPN include-only")
+		.description(L"Filters that hold the apps of \"VPN only for these apps\" to the tunnel")
+		.key(MullvadGuids::SublayerIncludeOnly())
+		.provider(MullvadGuids::Provider())
+		.weight(MAXUINT16);
+
+	return builder;
+}
+
+//static
 std::unique_ptr<wfp::ProviderBuilder> MullvadObjects::ProviderPersistent()
 {
 	auto builder = std::make_unique<wfp::ProviderBuilder>();

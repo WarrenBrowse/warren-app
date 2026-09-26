@@ -3,6 +3,7 @@
 #include "fwcontext.h"
 #include "objectpurger.h"
 #include "mullvadobjects.h"
+#include "mullvadguids.h"
 #include "rules/persistent/blockall.h"
 #include "rules/baseline/blockall.h"
 #include "libwfp/ipnetwork.h"
@@ -138,6 +139,18 @@ std::optional<T> MakeOptional(T* object)
 	return std::make_optional(*object);
 }
 
+void LogSublayerSharing()
+{
+	if (nullptr == g_logSink || MullvadGuids::UsingSharedSublayers())
+	{
+		return;
+	}
+
+	g_logSink(MULLVAD_LOG_LEVEL_WARNING,
+		"Another firewall policy is live in the sublayers shared with the split tunnel driver; "
+		"using private sublayers, so split tunneling cannot be engaged", g_logSinkContext);
+}
+
 } // anonymous namespace
 
 WINFW_LINKAGE
@@ -167,6 +180,8 @@ WinFw_Initialize(
 		g_logSinkContext = logSinkContext;
 
 		g_fwContext = new FwContext(timeout_ms);
+
+		LogSublayerSharing();
 	}
 	catch (std::exception &err)
 	{
@@ -220,6 +235,8 @@ WinFw_InitializeBlocked(
 		g_logSinkContext = logSinkContext;
 
 		g_fwContext = new FwContext(timeout_ms, *settings, MakeOptional(allowedEndpoint));
+
+		LogSublayerSharing();
 	}
 	catch (std::exception &err)
 	{
@@ -751,4 +768,68 @@ WinFw_SweepForeignGenerations(
 	{
 		return WINFW_POLICY_STATUS_GENERAL_FAILURE;
 	}
+}
+
+WINFW_LINKAGE
+WINFW_POLICY_STATUS
+WINFW_API
+WinFw_SetIncludedApps(
+	const wchar_t * const *apps,
+	size_t numApps
+)
+{
+	if (nullptr == g_fwContext)
+	{
+		return WINFW_POLICY_STATUS_GENERAL_FAILURE;
+	}
+
+	try
+	{
+		if (nullptr == apps && 0 != numApps)
+		{
+			THROW_ERROR("Invalid argument: apps");
+		}
+
+		std::vector<std::wstring> included;
+		included.reserve(numApps);
+
+		for (size_t i = 0; i < numApps; ++i)
+		{
+			if (nullptr == apps[i])
+			{
+				THROW_ERROR("Invalid argument: apps");
+			}
+
+			included.emplace_back(apps[i]);
+		}
+
+		return g_fwContext->setIncludedApps(included)
+			? WINFW_POLICY_STATUS_SUCCESS
+			: WINFW_POLICY_STATUS_GENERAL_FAILURE;
+	}
+	catch (common::error::WindowsException &err)
+	{
+		return HandlePolicyException(err);
+	}
+	catch (std::exception &err)
+	{
+		if (nullptr != g_logSink)
+		{
+			g_logSink(MULLVAD_LOG_LEVEL_ERROR, err.what(), g_logSinkContext);
+		}
+
+		return WINFW_POLICY_STATUS_GENERAL_FAILURE;
+	}
+	catch (...)
+	{
+		return WINFW_POLICY_STATUS_GENERAL_FAILURE;
+	}
+}
+
+WINFW_LINKAGE
+bool
+WINFW_API
+WinFw_SplitTunnelSublayersShared()
+{
+	return nullptr != g_fwContext && MullvadGuids::UsingSharedSublayers();
 }

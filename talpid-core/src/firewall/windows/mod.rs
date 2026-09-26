@@ -17,6 +17,8 @@ mod ffi;
 
 mod hyperv;
 mod winfw;
+#[cfg(test)]
+mod winfw_tests;
 
 const HYPERV_LEAK_WARNING_MSG: &str = "Hyper-V (e.g. WSL machines) may leak in blocked states.";
 
@@ -74,6 +76,10 @@ pub enum Error {
     /// Failure to reset firewall policies
     #[error("Failed to reset firewall policies")]
     ResettingPolicy(#[source] FirewallPolicyError),
+
+    /// Failure to hold the apps of include-only to the tunnel
+    #[error("Failed to hold the included apps to the tunnel")]
+    HoldingIncludedApps(#[source] FirewallPolicyError),
 }
 
 /// The Windows implementation for the firewall.
@@ -154,6 +160,19 @@ impl Firewall {
     /// applied from now on.
     pub fn set_include_only(&mut self, include_only: bool) {
         self.include_only = include_only;
+    }
+
+    /// Holds `apps` to the tunnel interface and loopback in every policy,
+    /// the one in force included; an empty list lifts the hold.
+    pub fn set_included_apps(&mut self, apps: &[std::ffi::OsString]) -> Result<(), Error> {
+        winfw::set_included_apps(apps).map_err(Error::HoldingIncludedApps)
+    }
+
+    /// Whether the split tunnel driver's filters would land in this
+    /// firewall's policy. False when another policy held the sublayers the
+    /// driver uses when this one started.
+    pub fn split_tunnel_sublayers_shared(&self) -> bool {
+        winfw::split_tunnel_sublayers_shared()
     }
 
     pub fn apply_policy(&mut self, policy: FirewallPolicy) -> Result<(), Error> {

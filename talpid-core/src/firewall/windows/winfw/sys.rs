@@ -48,7 +48,7 @@ mod tests {
     }
 }
 
-#[expect(dead_code)]
+#[cfg_attr(not(test), expect(dead_code))]
 #[repr(u32)]
 #[derive(Clone, Copy)]
 pub enum WinFwCleanupPolicy {
@@ -209,6 +209,20 @@ unsafe extern "system" {
         salt_count: u32,
         removed_objects: *mut u32,
     ) -> WinFwPolicyStatus;
+
+    /// Holds the given apps to the tunnel interface and loopback in every
+    /// policy, re-applying the active one at once.
+    ///
+    /// `apps` must point to `num_apps` valid null-terminated wide strings
+    /// (or be null with `num_apps` zero); the callee copies them.
+    #[link_name = "WinFw_SetIncludedApps"]
+    pub fn WinFw_SetIncludedApps(
+        apps: *const *const libc::wchar_t,
+        num_apps: usize,
+    ) -> WinFwPolicyStatus;
+
+    #[link_name = "WinFw_SplitTunnelSublayersShared"]
+    pub fn WinFw_SplitTunnelSublayersShared() -> bool;
 }
 
 pub type LogSink = extern "system" fn(level: log::Level, msg: *const c_char, context: *mut c_void);

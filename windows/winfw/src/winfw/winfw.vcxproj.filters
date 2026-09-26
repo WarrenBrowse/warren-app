@@ -61,6 +61,13 @@
     <ClCompile Include="rules\multi\permitendpoint.cpp">
       <Filter>rules\multi</Filter>
     </ClCompile>
+    <ClCompile Include="rules\includeonly\blockoutsidetunnel.cpp">
+      <Filter>rules\includeonly</Filter>
+    </ClCompile>
+    <ClCompile Include="rules\includeonly\blocksystemresolver.cpp">
+      <Filter>rules\includeonly</Filter>
+    </ClCompile>
+    <ClCompile Include="sharedsublayers.cpp" />
     <ClCompile Include="rules\dns\permitloopback.cpp">
       <Filter>rules\dns</Filter>
     </ClCompile>
@@ -135,6 +142,13 @@
     <ClInclude Include="rules\multi\permitendpoint.h">
       <Filter>rules\multi</Filter>
     </ClInclude>
+    <ClInclude Include="rules\includeonly\blockoutsidetunnel.h">
+      <Filter>rules\includeonly</Filter>
+    </ClInclude>
+    <ClInclude Include="rules\includeonly\blocksystemresolver.h">
+      <Filter>rules\includeonly</Filter>
+    </ClInclude>
+    <ClInclude Include="sharedsublayers.h" />
     <ClInclude Include="rules\dns\permitloopback.h">
       <Filter>rules\dns</Filter>
     </ClInclude>
@@ -154,6 +168,9 @@
     </Filter>
     <Filter Include="rules\persistent">
       <UniqueIdentifier>{d98577af-1119-4c3a-8a04-d24f461ee61c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rules\includeonly">
+      <UniqueIdentifier>{8024497c-3763-48d8-802d-b8e0c2080499}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>

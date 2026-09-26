@@ -392,6 +392,21 @@ impl Firewall {
         self.inner.set_include_only(include_only);
     }
 
+    /// Holds `apps` to the tunnel and loopback in every policy, the one in
+    /// force included. Include-only's guard against the split tunnel
+    /// driver's own permits; an empty list lifts it.
+    #[cfg(windows)]
+    pub fn set_included_apps(&mut self, apps: &[std::ffi::OsString]) -> Result<(), Error> {
+        self.inner.set_included_apps(apps)
+    }
+
+    /// Whether the split tunnel driver's filters would land in this
+    /// firewall's policy.
+    #[cfg(windows)]
+    pub fn split_tunnel_sublayers_shared(&self) -> bool {
+        self.inner.split_tunnel_sublayers_shared()
+    }
+
     /// Whether include-only can select the included apps' traffic here.
     #[cfg(target_os = "linux")]
     pub fn can_include(&self) -> bool {

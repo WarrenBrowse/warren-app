@@ -1,7 +1,7 @@
 //! Safe bindings for the WinFW library.
 
 use super::{AllowedEndpoint, AllowedTunnelTraffic, Error, WideCString, widestring_ip};
-use std::{net::IpAddr, ptr};
+use std::{ffi::OsString, net::IpAddr, ptr};
 use talpid_types::{net::TransportProtocol, tunnel::FirewallPolicyError};
 
 mod sys;
@@ -112,6 +112,24 @@ pub(super) fn sweep_foreign_generations(salts: &[u32]) -> Result<u32, FirewallPo
         )
     };
     sweep.into_result().map(|()| removed)
+}
+
+/// Hold `apps` to the tunnel interface and loopback in every policy, and
+/// re-apply the active policy at once. An empty list lifts the hold.
+pub(super) fn set_included_apps(apps: &[OsString]) -> Result<(), FirewallPolicyError> {
+    let apps: Vec<WideCString> = apps.iter().map(WideCString::from_os_str_truncate).collect();
+    let app_ptrs: Vec<*const u16> = apps.iter().map(|app| app.as_ptr()).collect();
+    // SAFETY: `app_ptrs` holds `app_ptrs.len()` pointers to the null-terminated
+    // strings of `apps`, both alive until the call returns; the callee copies them.
+    let result = unsafe { WinFw_SetIncludedApps(app_ptrs.as_ptr(), app_ptrs.len()) };
+    result.into_result()
+}
+
+/// Whether winfw's baseline and DNS filters share the sublayers the split
+/// tunnel driver adds its own filters to.
+pub(super) fn split_tunnel_sublayers_shared() -> bool {
+    // SAFETY: Always safe to call; answers false before initialization.
+    unsafe { WinFw_SplitTunnelSublayersShared() }
 }
 
 /// Apply blocking firewall rules Sets the underlying active policy to Blocked. Exceptions

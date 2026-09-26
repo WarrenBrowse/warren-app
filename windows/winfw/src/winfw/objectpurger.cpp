@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "objectpurger.h"
 #include "mullvadguids.h"
+#include "sharedsublayers.h"
 #include "libwfp/filterengine.h"
 #include "libwfp/objectdeleter.h"
 #include "libwfp/transaction.h"
@@ -63,6 +64,8 @@ ObjectPurger::RemovalFunctor ObjectPurger::GetRemoveAllFunctor()
 		{
 			wfp::ObjectDeleter::DeleteSublayer(engine, sublayer);
 		}
+
+		shared_sublayers::RemoveUnused(engine, filtersToRemove);
 
 		wfp::ObjectDeleter::DeleteProvider(engine, MullvadGuids::Provider());
 		wfp::ObjectDeleter::DeleteProvider(engine, MullvadGuids::ProviderPersistent());
@@ -130,6 +133,8 @@ ObjectPurger::RemovalFunctor ObjectPurger::GetRemoveAllGenerationsFunctor(
 			wfp::ObjectDeleter::DeleteSublayer(engine, sublayer);
 		}
 
+		shared_sublayers::RemoveUnused(engine, filtersToRemove);
+
 		for (const auto &provider : providers)
 		{
 			wfp::ObjectDeleter::DeleteProvider(engine, provider);
@@ -179,6 +184,8 @@ ObjectPurger::RemovalFunctor ObjectPurger::GetRemoveNonPersistentFunctor()
 		{
 			wfp::ObjectDeleter::DeleteSublayer(engine, sublayer);
 		}
+
+		shared_sublayers::RemoveUnused(engine, filtersToRemove);
 
 		wfp::ObjectDeleter::DeleteProvider(engine, MullvadGuids::Provider());
 	};
