@@ -43,7 +43,7 @@ permissions:
 jobs:
   sign:
     name: Sign ${{ inputs.tag }}
-    runs-on: [self-hosted, Linux, X64, libra]
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     env:
       GH_TOKEN: ${{ secrets.WARREN_CLI_RELEASE_TOKEN }}

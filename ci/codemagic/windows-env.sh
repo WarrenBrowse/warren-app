@@ -1,35 +1,30 @@
 # shellcheck shell=bash
 #
-# Build environment for a Codemagic windows_x2 machine, sourced by the
-# ci/codemagic/windows-*.sh entry points (Git Bash).
+# Build environment for a Windows release build, sourced by the
+# ci/codemagic/windows-*.sh entry points (Git Bash). They run on GitHub-hosted
+# windows-2025 runners through .github/actions/windows-build; the directory
+# keeps the name of the Codemagic machines they were written for.
 #
-# Every build starts on a fresh VM (Windows Server 2022, x64, VS 2022 17.14,
-# Windows SDK 10.0.26100, Git, Node 20, Python 3.9) that carries none of the
-# tools the self-hosted runner had installed, so each one is fetched here at
-# the version the GitHub jobs use: rustup (the toolchain itself comes from
+# Every build starts on a fresh VM that carries none of the tools the old
+# self-hosted runner had installed, so each one is fetched here at the version
+# the other jobs use: rustup (the toolchain itself comes from
 # rust-toolchain.toml), protoc 23.x (arduino/setup-protoc@v3's default series),
 # zig 0.14.1 and Go 1.21.3 (mullvad-build-env), and the Node version pinned in
 # desktop/package.json's volta block.
 #
-# What codemagic.yaml caches between builds is downloads only: the tools under
-# $CM_TOOLS, rustup's toolchains, cargo's registry and git sources, and the npm
-# and Electron download caches. Never a build output: a release must not
-# inherit an intermediate from another channel (the beta-v1.1.9 winfw.dll
-# carried prod WFP keys out of a restored cache), so target/ and windows/*/bin
-# are rebuilt on every run.
-#
-# Each tool lives in a directory named after its version, so a restored cache
-# is reused only when it holds exactly the pinned version: bumping a pin here or
-# in rust-toolchain.toml installs the new one and drops the old from the cache.
-# `scripts/codemagic-cache.sh clear warren-app` in the workspace empties it.
+# Nothing is cached between builds. A release must never inherit an
+# intermediate from another channel (the beta-v1.1.9 winfw.dll carried prod
+# WFP keys out of a restored cache), so target/ and windows/*/bin are rebuilt
+# on every run. Each tool lives in a directory named after its version under
+# $CM_TOOLS, so bumping a pin here or in rust-toolchain.toml is all it takes.
 
 set -euo pipefail
 
-# The step's PowerShell hands bash a stdin pipe it never closes, and Windows
-# PowerShell 5.1 started from bash reads its stdin to the end before running
-# -Command: scripts/utils/host's architecture probe then waits forever. That
-# silently hung the first Codemagic release build for 42 minutes before
-# build.sh printed its first line. Nothing here reads stdin.
+# A caller can hand bash a stdin pipe it never closes, and Windows PowerShell
+# 5.1 started from bash reads its stdin to the end before running -Command:
+# scripts/utils/host's architecture probe then waits forever. That silently
+# hung the first Codemagic release build for 42 minutes before build.sh
+# printed its first line. Nothing here reads stdin.
 exec < /dev/null
 
 
@@ -173,8 +168,8 @@ checkout_sibling() { # checkout_sibling <repo> <pin file>
     echo "$repo @ $(git -C "../$repo" rev-parse HEAD)"
 }
 
-# Write outputs flat into cm-out/ with the checksum list the GitHub proxy
-# (.github/actions/codemagic-build) verifies before anything is published.
+# Write outputs flat into cm-out/ with the checksum list
+# .github/actions/windows-build verifies before anything is published.
 export_outputs() { # export_outputs <file>...
     rm -rf cm-out
     mkdir -p cm-out

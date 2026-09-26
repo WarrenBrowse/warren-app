@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 #
-# Codemagic `windows-selftest` workflow: checks, on the real Windows machine,
-# what the Unix CI cannot. Run it by hand (Codemagic UI, or the proxy) after
-# changing the watchdog or when a Windows step misbehaves.
+# Checks, on a real Windows machine, what the Unix CI cannot. warren-tests.yml
+# runs the watchdog, powershell and prologue phases on windows-2025; run the
+# others by hand when a Windows step misbehaves.
 #
 #   ci/codemagic/selftest.sh <watchdog|idle-cpu|powershell|tree|prologue>
 set -euo pipefail

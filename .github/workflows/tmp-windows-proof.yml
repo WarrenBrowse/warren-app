@@ -1,0 +1,38 @@
+# Throwaway: proves the native Windows release builds on this branch before it
+# lands. Removed before merge.
+name: tmp windows proof
+on:
+  push:
+    branches: [ci/github-hosted]
+permissions:
+  contents: read
+jobs:
+  build:
+    name: ${{ matrix.script }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - script: ci/codemagic/windows-release.sh
+            phases: prepare sources build stage
+          - script: ci/codemagic/windows-headless.sh
+            phases: prepare sources build bundle
+    runs-on: windows-2025
+    timeout-minutes: 150
+    env:
+      WARREN_SHA: ${{ github.sha }}
+      WARREN_CHANNEL: beta
+      WARREN_VERSION: ""
+      WARREN_API_URL: https://api.beta.warrenbrowse.com
+    steps:
+      - name: Allow long paths
+        run: git config --system core.longpaths true
+      - uses: actions/checkout@v5
+      - uses: ./.github/actions/windows-build
+        with:
+          script: ${{ matrix.script }}
+          phases: ${{ matrix.phases }}
+          out-dir: release-assets
+      - name: List the outputs
+        shell: bash
+        run: ls -la release-assets; for z in release-assets/*.zip; do [ -f "$z" ] && unzip -l "$z"; done; true

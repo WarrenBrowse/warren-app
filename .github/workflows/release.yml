@@ -69,11 +69,6 @@
 #   WARREN_NOTARIZE_KEYCHAIN, WARREN_NOTARIZE_KEYCHAIN_PROFILE
 #     Apple notarytool credentials for stapling the .pkg installer.
 #
-#   CODEMAGIC_API_TOKEN (org secret) and CODEMAGIC_APP_ID (repo variable)
-#     The Windows installers are built on Codemagic (build-windows); the
-#     token starts and follows the build. Windows signing credentials live in
-#     the Codemagic app's `windows_signing` variable group, not here.
-#
 #   WARREN_UPDATE_SIGNING_KEY  (publish-update-metadata)
 #     Dedicated, offline-generated Ed25519 secret (hex) that signs the
 #     auto-update manifests. Its public key must match
@@ -135,7 +130,7 @@ jobs:
   # is skipped. The two series never sort together, so the beta line can start
   # at beta-v0.0.1 while the prod line sits at v1.16.2.
   tag-guard:
-    runs-on: [self-hosted, Linux, X64, libra]
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     outputs:
       channel: ${{ steps.channel.outputs.channel }}
@@ -506,7 +501,7 @@ jobs:
   build-linux-sysvinit:
     name: Build Linux .deb (sysvinit)
     needs: [tag-guard, build-linux]
-    runs-on: [self-hosted, Linux, X64, libra-docker]
+    runs-on: ubuntu-24.04
     timeout-minutes: 40
     env:
       TAG_NAME: ${{ github.ref_name }}
@@ -555,7 +550,7 @@ jobs:
   build-nixos:
     name: Build NixOS flake
     needs: [tag-guard, build-linux]
-    runs-on: [self-hosted, Linux, X64, libra-docker]
+    runs-on: ubuntu-24.04
     # The first run on a fresh runner downloads the whole nixpkgs closure the
     # Electron dependencies pull in; later runs reuse the /nix docker volume.
     timeout-minutes: 90
@@ -618,39 +613,35 @@ jobs:
   build-windows:
     name: Build Windows MSI
     needs: [tag-guard, tests]
-    # Built on a Codemagic windows_x2 machine (codemagic.yaml `windows-release`,
-    # ci/codemagic/windows-release.sh): native x64, and a fresh VM for every
-    # build, so no intermediate of another channel can reach a release (the
-    # beta-v1.1.9 winfw.dll carried prod WFP keys through a restored cache).
-    # This job starts the build on this commit, replays its step logs, and
-    # publishes only the installers whose checksums match the list the build
-    # wrote. It runs no repo code, hence the GitHub-hosted runner.
+    # Built natively on a GitHub-hosted Windows runner (free for a public
+    # repo) by ci/codemagic/windows-release.sh, each phase under the step
+    # watchdog. A fresh VM for every build and no restored build cache, so no
+    # intermediate of another channel can reach a release (the beta-v1.1.9
+    # winfw.dll carried prod WFP keys through a restored cache).
     #
-    # Codemagic runs one build at a time on this plan, and a release starts two
-    # (this one and the headless bundle's), so the budget covers a full
-    # 120-minute build waiting behind another.
-    #
-    # Windows binaries are signed with Azure Trusted Signing (cloud HSM) when
-    # the Codemagic `windows_signing` variable group of the warren-app app holds
+    # Windows binaries are signed with Azure Trusted Signing (cloud HSM) once
     # AZURE_TENANT_ID, AZURE_CLIENT_ID, AZURE_CLIENT_SECRET,
     # TRUSTED_SIGNING_ENDPOINT, TRUSTED_SIGNING_ACCOUNT and
-    # TRUSTED_SIGNING_PROFILE; since 1 June 2023 an OV/EV code-signing key must
-    # live on FIPS 140-2 hardware, so the downloadable-.pfx model no longer
-    # works. The group is empty today and the installers ship unsigned.
-    runs-on: ubuntu-latest
-    timeout-minutes: 260
+    # TRUSTED_SIGNING_PROFILE reach the build's environment; since 1 June 2023
+    # an OV/EV code-signing key must live on FIPS 140-2 hardware, so the
+    # downloadable-.pfx model no longer works. None is set today and the
+    # installers ship unsigned.
+    runs-on: windows-2025
+    timeout-minutes: 150
+    env:
+      WARREN_SHA: ${{ github.sha }}
+      WARREN_CHANNEL: ${{ needs.tag-guard.outputs.channel }}
+      WARREN_VERSION: ${{ needs.tag-guard.outputs.version }}
+      WARREN_API_URL: ${{ needs.tag-guard.outputs.api-url }}
     steps:
+      - name: Allow long paths
+        run: git config --system core.longpaths true
       - uses: actions/checkout@v5
-      - uses: ./.github/actions/codemagic-build
+      - uses: ./.github/actions/windows-build
         with:
-          app-id: ${{ vars.CODEMAGIC_APP_ID }}
-          workflow: windows-release
-          token: ${{ secrets.CODEMAGIC_API_TOKEN }}
+          script: ci/codemagic/windows-release.sh
+          phases: prepare sources build stage
           out-dir: release-assets
-          inputs: |
-            channel=${{ needs.tag-guard.outputs.channel }}
-            version=${{ needs.tag-guard.outputs.version }}
-            api_url=${{ needs.tag-guard.outputs.api-url }}
 
       # Release-asset storage is not subject to the Actions artifact quota (see
       # the Linux job). Publish the installer straight to the draft release.
