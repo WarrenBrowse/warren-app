@@ -88,12 +88,12 @@
     <string name="split_mode_bypass_description">Appene du velger, kobler til som om VPN var av.</string>
     <string name="split_mode_include_only">VPN bare for</string>
     <string name="split_mode_include_only_description">Bare appene du velger, bruker VPN.</string>
-    <string name="include_only_lockdown_warning">Merk: Hvis «Blokker tilkoblinger uten VPN» er aktivert, har ikke appene du ikke har valgt, internettilgang.</string>
+    <string name="include_only_lockdown_warning">Merk: Hvis «Blokker tilkoblinger uten VPN» er aktivert, får appene du ikke har valgt, ingen internettilgang.</string>
     <string name="include_only_banner">Bare disse appene er beskyttet. Alt annet på denne enheten bruker den vanlige tilkoblingen din.</string>
     <string name="include_only_no_app">Ingen av de valgte appene er på denne enheten, så alle apper bruker VPN til du velger en.</string>
     <string name="include_only_confirm">Bare appene du velger, vil bruke VPN. Resten av denne enheten blir ikke beskyttet.</string>
     <string name="split_mode_replaces_bypass">Dette erstatter «Utenom VPN». Listen over apper der beholdes.</string>
-    <string name="split_mode_replaces_include_only">Dette erstatter «VPN bare for», så alle apper bruker VPN igjen, unntatt dem som går utenom. Listen over apper der beholdes.</string>
+    <string name="split_mode_replaces_include_only">Dette erstatter «VPN bare for», så alle apper bruker VPN igjen, unntatt dem som går utenom VPN. Listen over apper der beholdes.</string>
     <string name="split_mode_turn_on">Slå på</string>
     <string name="apps_using_the_vpn">Bruker VPN</string>
     <plurals name="vpn_only_for_apps">

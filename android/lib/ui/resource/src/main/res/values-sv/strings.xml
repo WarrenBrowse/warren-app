@@ -88,12 +88,12 @@
     <string name="split_mode_bypass_description">Apparna du väljer ansluter som om VPN var avstängt.</string>
     <string name="split_mode_include_only">VPN endast för</string>
     <string name="split_mode_include_only_description">Endast apparna du väljer använder VPN.</string>
-    <string name="include_only_lockdown_warning">Obs! Om \"Blockera anslutningar utan VPN\" är aktiverat kommer apparna du inte har valt inte att ha internet.</string>
+    <string name="include_only_lockdown_warning">Obs! Om \"Blockera anslutningar utan VPN\" är aktiverat har apparna du inte har valt ingen internetanslutning.</string>
     <string name="include_only_banner">Endast dessa appar är skyddade. Allt annat på den här enheten använder din vanliga anslutning.</string>
     <string name="include_only_no_app">Ingen av de valda apparna finns på den här enheten, så alla appar använder VPN tills du väljer en.</string>
     <string name="include_only_confirm">Endast apparna du väljer kommer att använda VPN. Resten av den här enheten skyddas inte.</string>
     <string name="split_mode_replaces_bypass">Detta ersätter \"Förbi VPN\". Din lista med appar där behålls.</string>
-    <string name="split_mode_replaces_include_only">Detta ersätter \"VPN endast för\", så alla appar använder VPN igen utom de som går förbi. Din lista med appar där behålls.</string>
+    <string name="split_mode_replaces_include_only">Detta ersätter \"VPN endast för\", så alla appar använder VPN igen utom de som går förbi VPN. Din lista med appar där behålls.</string>
     <string name="split_mode_turn_on">Slå på</string>
     <string name="apps_using_the_vpn">Använder VPN</string>
     <plurals name="vpn_only_for_apps">
