@@ -164,6 +164,7 @@ pub fn assemble_from_last_good(
         port_entitlement_provider: None,
         app_routes_rx: None,
         on_app_routes: None,
+        route_admission: None,
         cache_dir: mullvad_paths::cache_dir().ok(),
     }
 }
@@ -358,6 +359,7 @@ pub fn assemble_for_attempt(
         port_entitlement_provider: None,
         app_routes_rx: None,
         on_app_routes: None,
+        route_admission: None,
         cache_dir: mullvad_paths::cache_dir().ok(),
     })
 }
@@ -474,6 +476,7 @@ pub fn assemble_failover_for_attempt(
         port_entitlement_provider: None,
         app_routes_rx: None,
         on_app_routes: None,
+        route_admission: None,
         cache_dir: mullvad_paths::cache_dir().ok(),
     })
 }
@@ -662,6 +665,7 @@ pub fn assemble_custom(
         port_entitlement_provider: None,
         app_routes_rx: None,
         on_app_routes: None,
+        route_admission: None,
         cache_dir: mullvad_paths::cache_dir().ok(),
     })
 }

@@ -34,12 +34,20 @@
 //! An issuer that refuses the wallet as banned is reported to the account
 //! standing monitor, which blocks the tunnel with the suspension before any
 //! exit is dialed (warren-core doc 105 §5.3).
+//!
+//! The same manager reads the route admission block of the token directory
+//! on each refresh (warren-core doc 107): [`route_admission_for`] hands the
+//! tunnel the key its main session anchors with and the exits that admit
+//! routes by anchor, as the last directory announced them.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock, PoisonError};
 use std::time::Duration;
 
-use talpid_warren_tunnel::{SESSION_TOKEN_LEN, SessionTokenSource, make_session_token_provider};
+use talpid_warren_tunnel::{
+    SESSION_TOKEN_LEN, SessionTokenSource, app_routes::RouteAdmissionSource,
+    make_session_token_provider,
+};
 use warren_api::{BlindingKey, HttpTransport, SerialLease, TokenManager, WarrenApiClient};
 use warren_identity::WarrenIdentity;
 
@@ -122,28 +130,69 @@ pub(crate) fn source_for(
     seed: &SharedWarrenSeed,
     standing: Option<&StandingMonitor>,
 ) -> SessionTokenSource {
+    session_source(
+        manager_for(api_url, seed, standing),
+        Arc::new(now_unix_secs),
+    )
+}
+
+/// Route admission by anchor for `seed`'s wallet against `api_url`, as the
+/// token directory the wallet's manager last fetched announces it. The same
+/// manager as [`source_for`]'s.
+pub(crate) fn route_admission_for(
+    api_url: &str,
+    seed: &SharedWarrenSeed,
+    standing: Option<&StandingMonitor>,
+) -> Arc<dyn RouteAdmissionSource> {
+    Arc::new(DirectoryRouteAdmission(manager_for(
+        api_url, seed, standing,
+    )))
+}
+
+/// Route admission as a manager's last directory announced it: read at each
+/// call, so a refresh that finds the server turned it on or off reaches the
+/// next tunnel and the next route dial.
+pub(crate) struct DirectoryRouteAdmission<T>(pub Arc<TokenManager<T>>);
+
+impl<T: HttpTransport + Send + Sync> RouteAdmissionSource for DirectoryRouteAdmission<T> {
+    fn kem(&self) -> Option<warrenguard_multihop::RouteKemPublicKey> {
+        self.0
+            .route_admission()
+            .map(|admission| admission.kem().clone())
+    }
+
+    fn offers_routes(&self, exit_id: &[u8; 16]) -> bool {
+        self.0
+            .route_admission()
+            .is_some_and(|admission| admission.offers_routes(exit_id))
+    }
+}
+
+/// The wallet's manager, built and refreshed from its first use.
+fn manager_for(
+    api_url: &str,
+    seed: &SharedWarrenSeed,
+    standing: Option<&StandingMonitor>,
+) -> Arc<Manager> {
     let seed_bytes = seed.read().unwrap_or_else(PoisonError::into_inner);
     let identity = WarrenIdentity::from_seed(&seed_bytes);
     let key = identity.address();
 
     let map = MANAGERS.get_or_init(|| Mutex::new(HashMap::new()));
-    let manager = {
-        let mut guard = map.lock().expect("token manager map poisoned");
-        guard
-            .entry(key.clone())
-            .or_insert_with(|| {
-                let client =
-                    WarrenApiClient::new(api_url.to_owned(), identity, WarrenApiTransport::new());
-                let manager = Arc::new(TokenManager::new(
-                    Arc::new(client),
-                    BlindingKey::session(&seed_bytes),
-                ));
-                spawn_refresh(manager.clone(), key, standing.cloned());
-                manager
-            })
-            .clone()
-    };
-    session_source(manager, Arc::new(now_unix_secs))
+    let mut guard = map.lock().expect("token manager map poisoned");
+    guard
+        .entry(key.clone())
+        .or_insert_with(|| {
+            let client =
+                WarrenApiClient::new(api_url.to_owned(), identity, WarrenApiTransport::new());
+            let manager = Arc::new(TokenManager::new(
+                Arc::new(client),
+                BlindingKey::session(&seed_bytes),
+            ));
+            spawn_refresh(manager.clone(), key, standing.cloned());
+            manager
+        })
+        .clone()
 }
 
 /// Opens, for each session, a provider over `manager`'s batch that holds the
@@ -410,5 +459,88 @@ mod tests {
         let open = source_over(&[]).0;
 
         assert!(open()().is_empty());
+    }
+
+    /// An issuer whose directory carries `route_admission` and no key to
+    /// mint with: a refresh reads the block and asks for nothing else.
+    struct Directory(Option<serde_json::Value>);
+
+    impl warren_api::HttpTransport for Directory {
+        async fn execute(
+            &self,
+            request: warren_api::HttpRequest,
+        ) -> Result<warren_api::HttpResponse, warren_api::TransportError> {
+            assert!(request.url.ends_with("/v1/tokens/keys"), "{}", request.url);
+            let mut body = serde_json::json!({
+                "issuer_name": "api.example.test",
+                "token_type": 2,
+                "epoch_secs": EPOCH_SECS,
+                "context_label": "warren/session-token/v1",
+                "quota_per_epoch": 3,
+                "prefetch_epochs": 0,
+                "keys": [],
+            });
+            if let Some(block) = &self.0 {
+                body["route_admission"] = block.clone();
+            }
+            Ok(warren_api::HttpResponse {
+                status: 200,
+                body: serde_json::to_vec(&body).unwrap(),
+            })
+        }
+    }
+
+    fn route_kem() -> warrenguard_multihop::RouteKemPublicKey {
+        warrenguard_multihop::RouteKemSecretKey::derive(&[0x71; 32], 1)
+            .unwrap()
+            .public_key()
+            .clone()
+    }
+
+    async fn admission_after_refresh(
+        block: Option<serde_json::Value>,
+    ) -> super::DirectoryRouteAdmission<Directory> {
+        let seed = [0x42; 32];
+        let manager = TokenManager::new(
+            Arc::new(WarrenApiClient::new(
+                "https://api.example.test",
+                WarrenIdentity::from_seed(&seed),
+                Directory(block),
+            )),
+            BlindingKey::session(&seed),
+        );
+        manager.refresh(NOW).await.expect("the directory is read");
+        super::DirectoryRouteAdmission(Arc::new(manager))
+    }
+
+    #[tokio::test]
+    async fn the_tunnel_is_handed_the_route_admission_the_directory_announces() {
+        use talpid_warren_tunnel::app_routes::RouteAdmissionSource;
+        let block = serde_json::json!({
+            "version": 1,
+            "kem_key_id": 1,
+            "kem_pubkey_hex": hex::encode(route_kem().to_bytes()),
+            "max_routes_per_anchor": 32,
+            "exit_ids_hex": ["09090909090909090909090909090909"],
+        });
+
+        let admission = admission_after_refresh(Some(block)).await;
+
+        assert_eq!(
+            admission.kem().map(|kem| kem.to_bytes()),
+            Some(route_kem().to_bytes())
+        );
+        assert!(admission.offers_routes(&[9; 16]));
+        assert!(!admission.offers_routes(&[8; 16]));
+    }
+
+    #[tokio::test]
+    async fn without_route_admission_in_the_directory_no_route_is_offered() {
+        use talpid_warren_tunnel::app_routes::RouteAdmissionSource;
+
+        let admission = admission_after_refresh(None).await;
+
+        assert!(admission.kem().is_none());
+        assert!(!admission.offers_routes(&[9; 16]));
     }
 }

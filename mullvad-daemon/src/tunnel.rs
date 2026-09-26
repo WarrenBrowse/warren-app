@@ -1156,6 +1156,14 @@ impl ParametersGenerator {
                 seed,
                 inner.warren_standing.as_ref(),
             ));
+            // Route admission by anchor (warren-core doc 107) rides the same
+            // wallet's token directory: with per-app routes, the main session
+            // anchors and its routes need no token each where it is offered.
+            params.route_admission = Some(crate::warren_token_provider::route_admission_for(
+                api_url,
+                seed,
+                inner.warren_standing.as_ref(),
+            ));
             // Port entitlements ride the same wallet and the same coarse
             // refresh. The exit refuses a Map request without one (warren-core
             // doc 105), so a wallet without this provider forwards no port.

@@ -18,8 +18,7 @@ use mullvad_types::{
 use talpid_warren_tunnel::{
     MultiHopConfig,
     app_routes::{
-        AppRoutesPlan, MAX_ROUTE_SESSIONS, MainRoute, PlannedRoute, RouteReport, RouteSessionState,
-        RouteUnavailable,
+        AppRoutesPlan, MainRoute, PlannedRoute, RouteReport, RouteSessionState, RouteUnavailable,
     },
 };
 use tokio::sync::watch;
@@ -258,10 +257,8 @@ pub(crate) fn plan(
             .position(|route| route.circuit.exit.exit_id.as_bytes() == &exit_id)
         {
             Some(shared) => routes[shared].apps.extend(apps),
-            None if routes.len() >= MAX_ROUTE_SESSIONS => {
-                planned.block(choice, apps, UnavailableReason::LimitReached);
-                continue;
-            }
+            // No cap here: the tunnel runs as many as the server admits and
+            // reports the others waiting.
             None => routes.push(PlannedRoute {
                 circuit: circuit.clone(),
                 apps: apps.collect(),
@@ -325,6 +322,12 @@ fn route_state(
     let reason = match state {
         RouteSessionState::Connecting => return (AppRouteState::Connecting, None),
         RouteSessionState::Connected => return (AppRouteState::Connected, public_ip),
+        RouteSessionState::Waiting => {
+            return (
+                AppRouteState::Unavailable(UnavailableReason::WaitingForRoute),
+                None,
+            );
+        }
         RouteSessionState::Unavailable(reason) => reason,
     };
     let reason = match reason {
@@ -649,7 +652,7 @@ mod tests {
     }
 
     #[test]
-    fn a_third_distinct_exit_is_refused_and_its_apps_blocked() {
+    fn every_distinct_exit_is_planned_whatever_their_number() {
         let dir = fleet();
         let main = main_in(&dir, "se");
 
@@ -663,12 +666,12 @@ mod tests {
             &BTreeMap::new(),
         );
 
-        assert_eq!(planned.tunnel.routes.len(), MAX_ROUTE_SESSIONS);
-        assert_eq!(planned.tunnel.blocked_apps, vec![app("c").as_str()]);
-        assert_eq!(
+        assert_eq!(planned.tunnel.routes.len(), 3);
+        assert!(planned.tunnel.blocked_apps.is_empty());
+        assert!(matches!(
             planned.resolutions[&choice("fi", None)],
-            Resolution::Unavailable(UnavailableReason::LimitReached)
-        );
+            Resolution::Route { .. }
+        ));
     }
 
     #[test]
@@ -940,6 +943,23 @@ mod tests {
         assert_eq!(
             shown[0].state,
             AppRouteState::Unavailable(UnavailableReason::LimitReached)
+        );
+    }
+
+    #[test]
+    fn a_route_past_what_the_server_admits_waits_for_a_free_one() {
+        let (settings, resolutions) = one_route();
+
+        let shown = statuses(
+            &settings,
+            true,
+            &resolutions,
+            &report(RouteSessionState::Waiting),
+        );
+
+        assert_eq!(
+            shown[0].state,
+            AppRouteState::Unavailable(UnavailableReason::WaitingForRoute)
         );
     }
 

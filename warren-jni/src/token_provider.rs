@@ -427,6 +427,7 @@ mod tests {
                 prefetch_epochs: 48,
                 keys,
                 attribution_verifying_key_hex: None,
+                route_admission: None,
             }
         }
     }

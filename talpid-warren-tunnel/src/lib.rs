@@ -27,6 +27,7 @@ use talpid_tunnel::{
 };
 use talpid_types::net::AllowedTunnelTraffic;
 use warrenguard_multihop::{ExitDescriptorSigned, RejectionReason, RelayDescriptorSigned};
+use warrenguard_transport::route_anchor::{RouteAnchorConfig, RouteAnchorHandle};
 // Re-exported below so downstream crates (talpid-core, mullvad-daemon)
 // can construct `MultiHopConfig` without depending on warrenguard-multihop
 // directly. Same pattern as `warren-relay-selector::warren_types`.
@@ -669,6 +670,13 @@ pub struct WarrenTunnelParameters {
     /// Told the state of every route session whenever one of them changes.
     pub on_app_routes: Option<app_routes::AppRouteObserver>,
 
+    /// Route admission by anchor as the token directory announces it
+    /// (warren-core doc 107). With per-app routes wired and a key on offer,
+    /// the main session anchors and routes to the exits it lists are
+    /// admitted against that anchor instead of a token each. `None` runs
+    /// every route on tokens.
+    pub route_admission: Option<std::sync::Arc<dyn app_routes::RouteAdmissionSource>>,
+
     /// Daemon cache directory, for the state a tunnel wants to survive a
     /// daemon restart without belonging in settings: the macOS carrier
     /// egress guard's per-network verdicts (`carrier_verdict_cache`) and the
@@ -714,8 +722,20 @@ impl std::fmt::Debug for WarrenTunnelParameters {
                 "app_routes_rx",
                 &self.app_routes_rx.as_ref().map(|_| "<watch-rx>"),
             )
+            .field("route_admission", &self.route_admission.is_some())
             .finish()
     }
+}
+
+/// The anchor of this tunnel's main session: one when the tunnel runs
+/// per-app routes and the token directory offers route admission, so its
+/// routes need no token each. A tunnel without per-app routes does not
+/// anchor, which keeps its session unknown to the route admission control
+/// plane.
+fn route_anchor_for(params: &WarrenTunnelParameters) -> Option<RouteAnchorHandle> {
+    params.app_routes_rx.as_ref()?;
+    let kem = params.route_admission.as_ref()?.kem()?;
+    Some(RouteAnchorHandle::new(RouteAnchorConfig { kem }))
 }
 
 /// Stable identity of a NAT-PMP port-forward rule, matching how the
@@ -1652,7 +1672,12 @@ impl WarrenTunnelMonitor {
             // never learns the wallet. Empty stack / None falls back to v6.
             session_token_provider: params.session_tokens.as_ref().map(|open| open()),
         };
+        let route_anchor = route_anchor_for(params);
         let (supervisor, mut client_rx) = MultiHopSupervisor::new(supervisor_config);
+        let supervisor = match &route_anchor {
+            Some(anchor) => supervisor.with_route_anchor(anchor.clone()),
+            None => supervisor,
+        };
         // A rebuilt tunnel continues the session the previous one held rather
         // than starting an independent one, so the exit keeps it on the same
         // inner address and everything keyed on that address (forwarded ports
@@ -2288,6 +2313,8 @@ impl WarrenTunnelMonitor {
         // blocked app goes through the main session while its route starts.
         let app_routes_controller = params.app_routes_rx.clone().map(|plan_rx| {
             let mut config = app_routes::RouteSessionConfig::new(params.session_tokens.clone());
+            config.anchor = route_anchor.clone();
+            config.route_admission = params.route_admission.clone();
             config.wants_ipv6 = wants_ipv6;
             config.enable_daita = params.enable_daita;
             config.idle_cover = mh_idle_cover;
@@ -2323,7 +2350,8 @@ impl WarrenTunnelMonitor {
                 .as_ref()
                 .map(|bundle| *bundle.exit_id().as_bytes());
             controller.seed(&plan_rx.borrow(), main_exit);
-            (controller, plan_rx, client_rx.clone())
+            let anchor_rx = route_anchor.as_ref().map(RouteAnchorHandle::state);
+            (controller, plan_rx, client_rx.clone(), anchor_rx)
         });
 
         // Spawn the uplink + downlink pumps. Each consumes a clone of
@@ -2627,39 +2655,40 @@ impl WarrenTunnelMonitor {
         // is the one that names their relays to the firewall. The controller
         // follows the exit the main session is on, for the apps the plan
         // leaves on it.
-        let app_routes = app_routes_controller.map(|(controller, plan_rx, mut sessions)| {
-            let (stop_tx, stop_rx) = tokio::sync::oneshot::channel::<()>();
-            let task = runtime.spawn(async move {
-                let exit_of = |sessions: &warrenguard_transport::supervisor::ClientWatch| {
-                    sessions
-                        .borrow()
-                        .as_ref()
-                        .map(|bundle| *bundle.exit_id().as_bytes())
-                };
-                let (exit_tx, exit_rx) = tokio::sync::watch::channel(exit_of(&sessions));
-                // While the main session redials it carries nothing, so the
-                // last exit it was on stands until it lands again.
-                let follow = async move {
-                    while sessions.changed().await.is_ok() {
-                        if let Some(exit) = exit_of(&sessions) {
-                            exit_tx.send_if_modified(|current| {
-                                let moved = *current != Some(exit);
-                                *current = Some(exit);
-                                moved
-                            });
+        let app_routes =
+            app_routes_controller.map(|(controller, plan_rx, mut sessions, anchor_rx)| {
+                let (stop_tx, stop_rx) = tokio::sync::oneshot::channel::<()>();
+                let task = runtime.spawn(async move {
+                    let exit_of = |sessions: &warrenguard_transport::supervisor::ClientWatch| {
+                        sessions
+                            .borrow()
+                            .as_ref()
+                            .map(|bundle| *bundle.exit_id().as_bytes())
+                    };
+                    let (exit_tx, exit_rx) = tokio::sync::watch::channel(exit_of(&sessions));
+                    // While the main session redials it carries nothing, so the
+                    // last exit it was on stands until it lands again.
+                    let follow = async move {
+                        while sessions.changed().await.is_ok() {
+                            if let Some(exit) = exit_of(&sessions) {
+                                exit_tx.send_if_modified(|current| {
+                                    let moved = *current != Some(exit);
+                                    *current = Some(exit);
+                                    moved
+                                });
+                            }
                         }
+                        std::future::pending::<()>().await;
+                    };
+                    tokio::select! {
+                        () = controller.run(plan_rx, exit_rx, anchor_rx, async move {
+                            let _ = stop_rx.await;
+                        }) => {}
+                        () = follow => {}
                     }
-                    std::future::pending::<()>().await;
-                };
-                tokio::select! {
-                    () = controller.run(plan_rx, exit_rx, async move {
-                        let _ = stop_rx.await;
-                    }) => {}
-                    () = follow => {}
-                }
+                });
+                AppRoutesTask { stop_tx, task }
             });
-            AppRoutesTask { stop_tx, task }
-        });
 
         Ok(Self {
             runtime,
@@ -4331,6 +4360,7 @@ mod tests {
             port_entitlement_provider: None,
             app_routes_rx: None,
             on_app_routes: None,
+            route_admission: None,
             cache_dir: None,
         };
         let s = format!("{params:?}");
@@ -4430,6 +4460,7 @@ mod tests {
             port_entitlement_provider: None,
             app_routes_rx: None,
             on_app_routes: None,
+            route_admission: None,
             cache_dir: None,
         };
         let s = format!("{params:?}");
@@ -4496,6 +4527,7 @@ mod tests {
             port_entitlement_provider: None,
             app_routes_rx: None,
             on_app_routes: None,
+            route_admission: None,
             cache_dir: None,
         };
         let s = format!("{params:?}");
@@ -5766,5 +5798,91 @@ mod tests {
             cancelled, 1,
             "a removed rule must report its teardown exactly once; events: {snapshot:?}"
         );
+    }
+}
+
+#[cfg(test)]
+mod route_anchor_tests {
+    use std::sync::Arc;
+
+    use warrenguard_multihop::{RouteKemPublicKey, RouteKemSecretKey};
+    use warrenguard_wire::WarrenPubkey;
+
+    use super::*;
+
+    struct Directory(Option<RouteKemPublicKey>);
+
+    impl app_routes::RouteAdmissionSource for Directory {
+        fn kem(&self) -> Option<RouteKemPublicKey> {
+            self.0.clone()
+        }
+
+        fn offers_routes(&self, _exit_id: &[u8; 16]) -> bool {
+            true
+        }
+    }
+
+    fn offering() -> Directory {
+        Directory(Some(
+            RouteKemSecretKey::derive(&[0x71; 32], 1)
+                .unwrap()
+                .public_key()
+                .clone(),
+        ))
+    }
+
+    fn params(routes: bool, directory: Option<Directory>) -> WarrenTunnelParameters {
+        WarrenTunnelParameters {
+            exit_id: RelayExitId::ZERO,
+            country_code: String::new(),
+            city: String::new(),
+            exit_addr: WarrenExitAddr::new(WarrenPubkey::from_bytes([1u8; 32])),
+            signing_key: SigningKey::from_bytes(&[0u8; 32]),
+            n_connections: 1,
+            features: 0,
+            multi_hop: None,
+            alpn_protocols: Vec::new(),
+            on_reconnect: None,
+            on_path_rtt: None,
+            on_exit_draining: None,
+            on_egress_verdict: None,
+            warren_register_migrate_handle: None,
+            warren_drain_migrate: None,
+            warren_dial_refused: None,
+            warren_pre_swap_check: None,
+            warren_on_overlap_swapped: None,
+            nat_pmp: None,
+            nat_pmp_observer: None,
+            nat_pmp_control_rx: None,
+            max_rate_control_rx: None,
+            bypass_cidrs: Vec::new(),
+            include_only: false,
+            tunnel_resolvers: Vec::new(),
+            enable_daita: false,
+            session_tokens: None,
+            port_entitlement_provider: None,
+            app_routes_rx: routes
+                .then(|| tokio::sync::watch::channel(app_routes::AppRoutesPlan::default()).1),
+            on_app_routes: None,
+            route_admission: directory
+                .map(|d| Arc::new(d) as Arc<dyn app_routes::RouteAdmissionSource>),
+            cache_dir: None,
+        }
+    }
+
+    #[test]
+    fn a_tunnel_with_per_app_routes_anchors_when_route_admission_is_offered() {
+        assert!(route_anchor_for(&params(true, Some(offering()))).is_some());
+    }
+
+    #[test]
+    fn a_tunnel_without_per_app_routes_never_anchors() {
+        assert!(route_anchor_for(&params(false, Some(offering()))).is_none());
+    }
+
+    #[test]
+    fn a_tunnel_without_route_admission_on_offer_does_not_anchor() {
+        assert!(route_anchor_for(&params(true, None)).is_none());
+        assert!(route_anchor_for(&params(true, Some(Directory(None)))).is_none());
     }
 }

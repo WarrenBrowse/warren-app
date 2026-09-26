@@ -5,13 +5,17 @@
 //! [`AppRoutesPlan`] on a watch channel. The tunnel runs one route session per
 //! planned circuit next to the main session ([`controller`]), and puts the
 //! router of `talpid-app-routing` between the TUN device and the sessions
-//! ([`datapath`]). Route sessions are admitted on anonymous tokens only
-//! ([`session`]), and a route that is not connected drops its apps' packets:
-//! they never go through the main session, and never outside the tunnel.
+//! ([`datapath`]). Route sessions are admitted against the main session's
+//! anchor where the server offers it (warren-core doc 107), and on anonymous
+//! tokens otherwise ([`session`]); never on the wallet. A route that is not
+//! connected drops its apps' packets: they never go through the main session,
+//! and never outside the tunnel.
 
 use std::sync::Arc;
 
 use talpid_app_routing::router::SessionAddresses;
+use warrenguard_multihop::RouteKemPublicKey;
+use warrenguard_transport::route_anchor::AnchorState;
 
 use crate::MultiHopConfig;
 
@@ -62,10 +66,38 @@ impl talpid_app_routing::owner::OwnerResolver for HostResolver {
     }
 }
 
-/// Route sessions that may run next to the main one: the three session
-/// tokens of an epoch, minus the main session's. Enforced here whatever the
-/// plan asks, since a settings file edited by hand may ask for more.
-pub const MAX_ROUTE_SESSIONS: usize = 2;
+/// Route sessions that may run next to the main one while routes are admitted
+/// on tokens: the three session tokens of an epoch, minus the main session's.
+pub const TOKEN_ROUTE_SESSIONS: usize = 2;
+
+/// The most route sessions a tunnel runs, whatever the server admits: the
+/// router names a route with one byte, and one more id holds the apps that
+/// cannot be served.
+pub const MAX_ROUTE_SESSIONS: usize = u8::MAX as usize;
+
+/// How many route sessions may run next to the main one: what the main
+/// session's anchor admits once the server bound it, and what the tokens
+/// admit otherwise (no anchor, no verdict yet, or none to be had).
+pub fn route_capacity(anchor: Option<AnchorState>) -> usize {
+    match anchor {
+        Some(AnchorState::Anchored { max_routes }) => {
+            usize::from(max_routes).clamp(TOKEN_ROUTE_SESSIONS, MAX_ROUTE_SESSIONS)
+        }
+        Some(AnchorState::Unanchored | AnchorState::Unavailable) | None => TOKEN_ROUTE_SESSIONS,
+    }
+}
+
+/// Route admission by anchor as the control plane announces it in its token
+/// directory: the key a main session anchors with, and which exits admit
+/// routes that way. Read when a tunnel starts (the key) and before each route
+/// dial (the exits), so a directory refresh reaches the next dial.
+pub trait RouteAdmissionSource: Send + Sync {
+    /// The route KEM key, while the directory offers route admission.
+    fn kem(&self) -> Option<RouteKemPublicKey>;
+
+    /// Whether the exit with this multihop id admits routes by anchor.
+    fn offers_routes(&self, exit_id: &[u8; 16]) -> bool;
+}
 
 /// One route session the daemon asks for: the circuit it dials, and the apps
 /// (their app ids, as the router matches them) that leave through it.
@@ -142,6 +174,9 @@ pub enum RouteSessionState {
     Connecting,
     Connected,
     Unavailable(RouteUnavailable),
+    /// Every route the server admits right now is taken: this one has no
+    /// session yet, and starts as soon as one is free.
+    Waiting,
 }
 
 /// The state of the route session of one exit.
@@ -170,4 +205,44 @@ pub enum SessionEvent {
     /// Up, sending from these inner addresses.
     Connected(SessionAddresses),
     Unavailable(RouteUnavailable),
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_bound_anchor_admits_what_the_server_said() {
+        assert_eq!(
+            route_capacity(Some(AnchorState::Anchored { max_routes: 32 })),
+            32
+        );
+    }
+
+    #[test]
+    fn routes_run_on_tokens_until_an_anchor_is_bound() {
+        for anchor in [
+            None,
+            Some(AnchorState::Unanchored),
+            Some(AnchorState::Unavailable),
+        ] {
+            assert_eq!(route_capacity(anchor), TOKEN_ROUTE_SESSIONS, "{anchor:?}");
+        }
+    }
+
+    #[test]
+    fn an_anchor_never_admits_fewer_routes_than_the_tokens() {
+        assert_eq!(
+            route_capacity(Some(AnchorState::Anchored { max_routes: 1 })),
+            TOKEN_ROUTE_SESSIONS
+        );
+    }
+
+    #[test]
+    fn the_router_ids_bound_what_an_anchor_admits() {
+        assert_eq!(
+            route_capacity(Some(AnchorState::Anchored { max_routes: 4096 })),
+            MAX_ROUTE_SESSIONS
+        );
+    }
 }

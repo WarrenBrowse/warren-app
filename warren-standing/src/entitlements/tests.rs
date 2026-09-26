@@ -98,6 +98,7 @@ impl FakeIssuer {
                 )
                 .unwrap(),
             ),
+            route_admission: None,
         }
     }
 

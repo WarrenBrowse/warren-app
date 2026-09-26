@@ -6739,6 +6739,7 @@ dependencies = [
  "warren-contract",
  "warren-discovery-core",
  "warren-identity",
+ "warrenguard-multihop",
  "warrenguard-token",
  "zeroize",
 ]
