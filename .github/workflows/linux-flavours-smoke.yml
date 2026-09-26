@@ -1,17 +1,21 @@
 ---
 # Warren VPN - Linux flavours smoke
 #
-# Runs the sysvinit repack and the NixOS flake build against the .deb that is
-# ALREADY published on the beta update host, so the two release jobs can be
-# exercised in the real Actions environment without cutting a release.
+# Runs release.yml's sysvinit repack and NixOS flake jobs on demand, against a
+# .deb built from THIS commit, so both can be exercised in the real Actions
+# environment without cutting a release. The .deb comes from the same build as
+# release.yml's `build-linux` (the Debian 11 job image, glibc 2.31 floor).
 #
-# What it proves that a local run cannot: that the `macstudio-docker` label
-# selects a runner, that a checkout lands there, and that both script chains run
-# under the Actions shell. What it deliberately does NOT cover, because there is
-# no release to talk to: `gh release download` from a draft and the upload of
-# the finished artifacts. Those two only run on a real tag.
+# It must be this commit's .deb: the repack pairs the payload with the
+# maintainer scripts of the checkout, and a published .deb from an older
+# release lacks whatever the scripts gained since (warren-include, added after
+# 1.1.35, made the smoke fail on a binary the old payload never had).
 #
-# Publishes nothing, uploads nothing, touches no release.
+# What it deliberately does NOT cover, because there is no release to talk to:
+# `gh release download` from a draft and the upload of the finished artifacts.
+# Those two only run on a real tag.
+#
+# Publishes nothing, touches no release.
 
 name: Linux flavours - smoke
 
@@ -19,64 +23,98 @@ on:
   workflow_dispatch:
     inputs:
       channel:
-        description: "Update channel to take the published .deb from"
+        description: "Product environment to build the .deb for"
         type: choice
         default: beta
         options: [beta, prod]
 
-# The repository is private, so the job token needs read access or the checkout
-# 404s ("Repository not found") on a token that is simply not allowed to see it.
 permissions:
   contents: read
 
 jobs:
-  smoke:
-    name: Repack and build against the published .deb
+  deb:
+    name: Build this commit's .deb
+    # Same image and build as release.yml's build-linux; the repack and the
+    # install test need a Docker daemon, so they run in the next job.
     runs-on: ubuntu-24.04
+    container:
+      image: ghcr.io/warrenbrowse/warren-ci-linux:bullseye-e03e4fc686d82f6b1cbea663ec9032c76960b5ee
+      options: --user root
+    # A container job's steps default to sh, which has no pipefail.
+    defaults:
+      run:
+        shell: bash
     timeout-minutes: 90
+    env:
+      CC: clang
+      CXX: clang++
+      WARREN_PRODUCT_ENV: ${{ inputs.channel }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      - name: Resolve the published .deb of this channel
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+
+      - name: Bake Warren exit list bootstrap
+        uses: ./.github/actions/fetch-warren-relays
+        with:
+          warren-api-url: ${{ inputs.channel == 'beta' && 'https://api.beta.warrenbrowse.com' || 'https://api.warrenbrowse.com' }}
+
+      - name: Build
+        run: bash ci/run-with-runner-retry.sh timeout -k 60s 55m ./build.sh --optimize
+
+      - name: Stage it under its release name
+        run: |
+          set -euo pipefail
+          version="$(tr -d '[:space:]' < dist-assets/desktop-product-version.txt)"
+          if [ "$WARREN_PRODUCT_ENV" = beta ]; then
+            bash ci/stage-release-assets.sh linux "$version" beta
+          else
+            bash ci/stage-release-assets.sh linux "$version"
+          fi
+          ls -lh release-assets
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: smoke-deb
+          path: release-assets/*-linux-amd64.deb
+          if-no-files-found: error
+          retention-days: 1
+
+  flavours:
+    name: Repack and build against this commit's .deb
+    needs: [deb]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: smoke-deb
+          path: downloads
+
+      - name: Resolve the artifact names of this channel
         env:
           CHANNEL: ${{ inputs.channel }}
         run: |
           set -euo pipefail
+          deb="$(cd downloads && ls -- *-linux-amd64.deb)"
+          version="$(tr -d '[:space:]' < dist-assets/desktop-product-version.txt)"
           if [ "$CHANNEL" = beta ]; then
             base=https://api.beta.warrenbrowse.com/updates/desktop
           else
             base=https://api.warrenbrowse.com/updates/desktop
           fi
-          manifest="$(curl -fsSL "$base/downloads.json")"
-          # The plain x64 .deb, named exactly: the channel also publishes an
-          # arm64 .deb (this runner cannot install it) and the sysvinit repack of
-          # the x64 one (repacking it again proves nothing). Both would win a
-          # bare `select(.format == "deb") | head -1`, and the sysvinit repack
-          # already did, because "amd64-sysvinit.deb" sorts before "amd64.deb".
-          select='.platforms.linux.assets[]
-                  | select(.format == "deb" and .architecture == "x64" and (has("flavor") | not))'
-          url="$(printf '%s' "$manifest" | jq -r "$select | .url" | head -1)"
-          sha="$(printf '%s' "$manifest" | jq -r "$select | .sha256" | head -1)"
-          version="$(printf '%s' "$manifest" | jq -r '.platforms.linux.version')"
-          [ -n "$url" ] && [ "$url" != null ] || { echo "::error::no .deb in $base/downloads.json"; exit 1; }
           {
-            echo "WARREN_DEB_URL=$url"
-            echo "WARREN_DEB_SHA=$sha"
-            echo "WARREN_DEB=$(basename "$url")"
+            echo "WARREN_DEB=$deb"
             echo "WARREN_VERSION=$version"
             echo "WARREN_ASSET_BASE=$base"
           } >> "$GITHUB_ENV"
-          echo "resolved $(basename "$url") ($version)"
-
-      - name: Download it
-        run: |
-          set -euo pipefail
-          mkdir -p downloads
-          curl -fsSL -o "downloads/$WARREN_DEB" "$WARREN_DEB_URL"
-          # The manifest states the checksum; a silent mismatch would make every
-          # step below test the wrong bytes.
-          echo "$WARREN_DEB_SHA  downloads/$WARREN_DEB" | sha256sum -c -
+          echo "resolved $deb ($version)"
 
       - name: Repack it for sysvinit
         run: |
@@ -90,7 +128,7 @@ jobs:
             "out/${WARREN_DEB%.deb}-sysvinit.deb" \
             "downloads/$WARREN_DEB"
 
-      - name: Pin this release in the NixOS flake
+      - name: Pin this build in the NixOS flake
         run: |
           bash ci/stage-nixos-flake.sh \
             "downloads/$WARREN_DEB" nixos-stage "$WARREN_VERSION" "$WARREN_ASSET_BASE"
