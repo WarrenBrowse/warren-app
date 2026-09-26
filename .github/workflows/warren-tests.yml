@@ -270,6 +270,25 @@ jobs:
       - name: ESLint (zero warnings)
         run: npm run lint
 
+      # phase-reduction-contract.spec.ts replays warren-contract's fixture
+      # from the sibling checkout. This job has no build env to clone it, and
+      # it only passed on the old persistent runners because another job had
+      # left a ../warren-contract behind; a fresh runner has none.
+      - name: Checkout warren-contract (sibling, read by the unit suite)
+        working-directory: .
+        shell: bash
+        env:
+          ENGINE_TOKEN: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+        run: |
+          set -euo pipefail
+          dest="$(cd "$GITHUB_WORKSPACE/.." && pwd)/warren-contract"
+          rm -rf "$dest"
+          auth="$(printf 'x-access-token:%s' "$ENGINE_TOKEN" | base64 | tr -d '\n')"
+          git -c "http.extraheader=AUTHORIZATION: basic ${auth}" clone --filter=blob:none \
+            "https://github.com/WarrenBrowse/warren-contract.git" "$dest"
+          git -C "$dest" checkout --detach "$(tr -d '[:space:]' < .warren-contract-version)"
+          test -f "$dest/tests/fixtures/phase-reduction.json"
+
       # The desktop unit suite existed but nothing ran it: `frontend.yml` is
       # dispatch-only in this fork, so the only gate on the renderer and main
       # process logic was type-check + lint, neither of which observes
