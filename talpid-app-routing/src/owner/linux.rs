@@ -406,7 +406,7 @@ impl SystemResolver {
             return;
         }
         self.process_events = match open_process_events() {
-            Ok(socket) => ProcessEvents::Open(EventSocket(socket)),
+            Ok(socket) => ProcessEvents::Open(socket),
             Err(_) => ProcessEvents::Unavailable {
                 ask_again: Instant::now() + REOPEN_AFTER,
             },
@@ -461,7 +461,7 @@ fn processes() -> impl Iterator<Item = u32> {
 
 /// A socket subscribed to the proc connector's events. Fails when the kernel
 /// has no proc connector or refuses this process its events.
-fn open_process_events() -> io::Result<OwnedFd> {
+fn open_process_events() -> io::Result<EventSocket> {
     let socket = open_netlink(libc::NETLINK_CONNECTOR)?;
     let fd = socket.as_raw_fd();
     // SAFETY: a zeroed sockaddr_nl with a family and a group is valid, and
@@ -497,12 +497,31 @@ fn open_process_events() -> io::Result<OwnedFd> {
             break;
         }
     }
+    // The kernel answers at once or not at all; a short wait per read
+    // bounds how long the packet path waits.
+    let timeout = libc::timeval {
+        tv_sec: 0,
+        tv_usec: 50_000,
+    };
+    // SAFETY: `timeout` is a valid timeval of the length passed.
+    unsafe {
+        libc::setsockopt(
+            fd,
+            libc::SOL_SOCKET,
+            libc::SO_RCVTIMEO,
+            std::ptr::from_ref(&timeout).cast::<c_void>(),
+            size_of::<libc::timeval>() as libc::socklen_t,
+        );
+    }
     // Several programs may listen: the ack tells this request's answer from
     // theirs.
     let ack = std::process::id().rotate_left(16) ^ fd as u32;
     if send(fd, &proc_events::listen_request(1, ack)) < 0 {
         return Err(io::Error::last_os_error());
     }
+    // From here the kernel may count this socket as a listener, whatever
+    // the wait below ends on, so dropping it unsubscribes.
+    let socket = EventSocket(socket);
     let mut reply = vec![0; 8192];
     let mut messages = Vec::new();
     // Events other processes cause may come first; the whole wait is
@@ -537,28 +556,41 @@ fn open_process_events() -> io::Result<OwnedFd> {
 ///
 /// `ENOBUFS` when events were dropped: the kernel reported its queue full,
 /// or more than [`DRAIN_CAP`] datagrams were waiting. After a reported
-/// overflow the queue is emptied, since the kernel reports the next one only
-/// once a read has found it empty. Any other error is the socket's.
+/// overflow the queue is emptied up to the cap, since the kernel reports the
+/// next one only once a read has found it empty. Any other error is the
+/// socket's.
 fn drain_process_events(
     fd: i32,
     reply: &mut [u8],
     messages: &mut Vec<proc_events::Message>,
 ) -> io::Result<()> {
+    drain_up_to(fd, reply, messages, DRAIN_CAP)
+}
+
+fn drain_up_to(
+    fd: i32,
+    reply: &mut [u8],
+    messages: &mut Vec<proc_events::Message>,
+    cap: usize,
+) -> io::Result<()> {
     let mut overflowed = false;
     let mut read = 0;
     loop {
+        // Every datagram counts, overflow or not, so a queue that never
+        // empties cannot hold the packet path; what is left is a gap the
+        // next drain sees in the numbers.
+        if read >= cap {
+            return Err(io::Error::from_raw_os_error(libc::ENOBUFS));
+        }
         match receive_from_kernel(fd, reply, libc::MSG_DONTWAIT) {
             Ok(Some(received)) => {
                 read += 1;
                 if !overflowed {
                     proc_events::parse(&reply[..received], messages);
                 }
-                if read >= DRAIN_CAP && !overflowed {
-                    return Err(io::Error::from_raw_os_error(libc::ENOBUFS));
-                }
             }
             // A datagram some other sender slipped in.
-            Ok(None) => {}
+            Ok(None) => read += 1,
             Err(error) if error.kind() == io::ErrorKind::WouldBlock => {
                 return if overflowed {
                     Err(io::Error::from_raw_os_error(libc::ENOBUFS))
@@ -1017,6 +1049,37 @@ mod tests {
         std::fs::canonicalize(program).unwrap()
     }
 
+    /// `sleep` under a name of this test's own. Another test's child runs
+    /// the program it execs while it still holds this process's sockets, so
+    /// a program other tests start could be found holding them. A hard link
+    /// keeps the name the process is known by, and holds no file open.
+    struct PrivateSleep {
+        path: PathBuf,
+    }
+
+    impl PrivateSleep {
+        fn new() -> Self {
+            static NEXT: std::sync::atomic::AtomicU32 = std::sync::atomic::AtomicU32::new(0);
+            let unique = NEXT.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+            let path = std::env::current_exe()
+                .unwrap()
+                .with_file_name(format!("app-routing-sleep-{}-{unique}", std::process::id()));
+            let _ = std::fs::remove_file(&path);
+            std::fs::hard_link(resolved("/bin/sleep"), &path)
+                .or_else(|_| std::fs::copy(resolved("/bin/sleep"), &path).map(drop))
+                .unwrap();
+            Self {
+                path: std::fs::canonicalize(&path).unwrap(),
+            }
+        }
+    }
+
+    impl Drop for PrivateSleep {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_file(&self.path);
+        }
+    }
+
     #[test]
     fn a_socket_no_watched_program_holds_is_unwatched() {
         let (_listener, client) = connection();
@@ -1162,8 +1225,27 @@ mod tests {
     }
 
     #[test]
+    fn a_drain_stops_at_its_cap_and_counts_what_is_left_as_lost() {
+        let queue = UdpSocket::bind("127.0.0.1:0").unwrap();
+        let sender = UdpSocket::bind("127.0.0.1:0").unwrap();
+        for _ in 0..5 {
+            sender.send_to(b"x", queue.local_addr().unwrap()).unwrap();
+        }
+        std::thread::sleep(std::time::Duration::from_millis(20));
+        let mut reply = vec![0; 8192];
+        let mut messages = Vec::new();
+
+        let capped = drain_up_to(queue.as_raw_fd(), &mut reply, &mut messages, 3);
+        let rest = drain_up_to(queue.as_raw_fd(), &mut reply, &mut messages, 3);
+
+        assert_eq!(drained(&capped), Drained::Lost);
+        assert_eq!(drained(&rest), Drained::All);
+    }
+
+    #[test]
     fn a_gap_in_the_event_numbers_reads_every_process_again() {
-        let sleep = resolved("/bin/sleep");
+        let private = PrivateSleep::new();
+        let sleep = private.path.clone();
         let mut resolver = SystemResolver::new();
         resolver.watch_programs(&programs(&[&sleep]));
         resolver.process_events = silent_event_socket();
@@ -1184,7 +1266,8 @@ mod tests {
 
     #[test]
     fn a_process_no_event_announced_is_found_by_the_periodic_full_read() {
-        let sleep = resolved("/bin/sleep");
+        let private = PrivateSleep::new();
+        let sleep = private.path.clone();
         let (_listener, client) = connection();
         let flow = tcp_flow_of(&client);
         let mut resolver = SystemResolver::new();
@@ -1245,7 +1328,8 @@ mod tests {
 
     #[test]
     fn a_broken_event_socket_is_reopened_and_its_missed_processes_found() {
-        let sleep = resolved("/bin/sleep");
+        let private = PrivateSleep::new();
+        let sleep = private.path.clone();
         let (_listener, client) = connection();
         let flow = tcp_flow_of(&client);
         let mut resolver = SystemResolver::new();
@@ -1297,7 +1381,8 @@ mod tests {
         mut resolver: SystemResolver,
         through_events: bool,
     ) {
-        let sleep = resolved("/bin/sleep");
+        let private = PrivateSleep::new();
+        let sleep = private.path.clone();
         let (_listener, client) = connection();
         let flow = tcp_flow_of(&client);
         resolver.watch_programs(&programs(&[&sleep]));
@@ -1307,7 +1392,7 @@ mod tests {
         }
         // The shell holds the socket as its stdout, then becomes `sleep`.
         let mut child = std::process::Command::new("/bin/sh")
-            .args(["-c", "read line; exec sleep 5"])
+            .args(["-c", &format!("read line; exec {} 5", sleep.display())])
             .stdin(std::process::Stdio::piped())
             .stdout(std::process::Stdio::from(OwnedFd::from(client)))
             .spawn()
@@ -1341,7 +1426,8 @@ mod tests {
         mut resolver: SystemResolver,
         through_events: bool,
     ) {
-        let sleep = resolved("/bin/sleep");
+        let private = PrivateSleep::new();
+        let sleep = private.path.clone();
         let (_listener, client) = connection();
         let flow = tcp_flow_of(&client);
         resolver.watch_programs(&programs(&[&sleep]));
@@ -1367,7 +1453,8 @@ mod tests {
 
     #[test]
     fn a_watched_process_that_exits_stops_being_searched() {
-        let sleep = resolved("/bin/sleep");
+        let private = PrivateSleep::new();
+        let sleep = private.path.clone();
         let (_listener, client) = connection();
         let flow = tcp_flow_of(&client);
         let mut resolver = SystemResolver::new();
@@ -1395,7 +1482,7 @@ mod tests {
         let mut reply = vec![0; 8192];
         let mut messages = Vec::new();
 
-        let heard = drain_process_events(socket.as_raw_fd(), &mut reply, &mut messages);
+        let heard = drain_process_events(socket.0.as_raw_fd(), &mut reply, &mut messages);
 
         assert!(heard.is_ok());
         assert!(
