@@ -142,7 +142,15 @@ pub struct WarrenRemoteAccountBackend {
     /// crash inside that window still loses the secret (accepted
     /// residual, doc 35 section 7).
     pulled_unregistered: Arc<std::sync::Mutex<std::collections::HashMap<String, String>>>,
+    /// Where a ban a redemption refusal carries goes: the daemon's standing
+    /// monitor, so the app shows why the voucher was not credited.
+    ban_sink: Option<BanSink>,
 }
+
+/// Receives the ban an API refusal of `wallet` carries (warren-core doc 105
+/// §5.3). The wallet is its SS58 address, compared by the receiver and never
+/// logged.
+pub(crate) type BanSink = Arc<dyn Fn(String, warren_standing::Ban) + Send + Sync>;
 
 impl WarrenRemoteAccountBackend {
     /// Builds a backend from a [`SharedWarrenApiClient`] configured at
@@ -153,8 +161,27 @@ impl WarrenRemoteAccountBackend {
         Self {
             client: Arc::new(client),
             pulled_unregistered: Arc::new(std::sync::Mutex::new(std::collections::HashMap::new())),
+            ban_sink: None,
         }
     }
+
+    /// Reports every ban a redemption refusal carries to `sink`.
+    #[must_use]
+    pub fn with_ban_sink(mut self, sink: BanSink) -> Self {
+        self.ban_sink = Some(sink);
+        self
+    }
+}
+
+/// Whether a mapped register refusal is a verdict on the voucher itself
+/// (unknown, spent, cancelled, expired), the only refusals after which a
+/// pulled secret is worth nothing. Any other refusal (a ban, a throttle, a
+/// server disagreement) leaves the voucher unredeemed and the user's.
+fn voucher_is_dead(mapped: &rest::Error) -> bool {
+    matches!(mapped, rest::Error::ApiError(_, code)
+        if code == mullvad_api::INVALID_VOUCHER
+            || code == mullvad_api::VOUCHER_USED
+            || code == mullvad_api::VOUCHER_EXPIRED)
 }
 
 /// Refuses to act when the account the daemon designates differs from the
@@ -211,6 +238,7 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
         let client = self.client.clone();
         let pubkey_ss58 = client.address();
         let pulled_unregistered = self.pulled_unregistered.clone();
+        let ban_sink = self.ban_sink.clone();
         Box::pin(async move {
             // Checked BEFORE the wpid pull below: the pull consumes the
             // single-use server-side mapping, so running it under a
@@ -291,7 +319,8 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
             // voucher. Retry transport failures and 5xx a few times
             // (4xx are final); on a pulled wpid the cache above lets
             // the NEXT GUI poll keep retrying the register even after
-            // these retries fail.
+            // these retries fail. Only a verdict on the voucher itself
+            // drops the cached secret.
             let mut resp = None;
             let mut last_err = None;
             let mut retried_after_failure = false;
@@ -305,16 +334,36 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
                         resp = Some(r);
                         break;
                     }
+                    Err(e @ warren_api::ClientError::Banned { .. }) => {
+                        // Refused before anything was consumed: the voucher
+                        // stays unredeemed and the cached secret is kept for
+                        // the redemption after the ban. Retrying cannot help.
+                        log::warn!(
+                            "Warren voucher redemption refused: the account is banned; \
+                             the voucher is kept"
+                        );
+                        if let (Some(sink), Some(ban)) =
+                            (&ban_sink, warren_standing::Ban::from_client_error(&e))
+                        {
+                            sink(pubkey_ss58.clone(), ban);
+                        }
+                        return Err(rest::Error::ApiError(
+                            rest::StatusCode::FORBIDDEN,
+                            mullvad_api::ACCOUNT_BANNED.to_owned(),
+                        ));
+                    }
                     Err(e @ warren_api::ClientError::ServerStatus { status, .. })
                         if status < 500 =>
                     {
-                        if let Some(wpid) = &wpid {
+                        let mapped = map_voucher_register_error(e);
+                        if voucher_is_dead(&mapped)
+                            && let Some(wpid) = &wpid
+                        {
                             pulled_unregistered
                                 .lock()
                                 .expect("not poisoned")
                                 .remove(wpid);
                         }
-                        let mapped = map_voucher_register_error(e);
                         // An earlier attempt may have landed with its
                         // response lost: a replay then 409s although the
                         // account WAS credited. Verify against the
@@ -847,6 +896,127 @@ mod tests {
             rest::Error::ApiError(code, _) => assert_eq!(code.as_u16(), 404),
             other => panic!("expected ApiError(404, _), got {other:?}"),
         }
+    }
+
+    /// The bans the backend reported, with the wallet each was about.
+    type Reported = TestArc<std::sync::Mutex<Vec<(String, warren_standing::Ban)>>>;
+
+    fn reporting_backend(
+        api_url: String,
+        seed: [u8; 32],
+    ) -> (WarrenRemoteAccountBackend, Reported) {
+        let reported = Reported::default();
+        let sink = reported.clone();
+        let backend = WarrenRemoteAccountBackend::new(client_with_seed(api_url, seed))
+            .with_ban_sink(TestArc::new(move |wallet, ban| {
+                sink.lock().unwrap().push((wallet, ban));
+            }));
+        (backend, reported)
+    }
+
+    fn cached_secrets(backend: &WarrenRemoteAccountBackend) -> Vec<String> {
+        backend
+            .pulled_unregistered
+            .lock()
+            .expect("not poisoned")
+            .values()
+            .cloned()
+            .collect()
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn a_banned_wallet_keeps_its_paid_voucher_and_the_ban_reaches_the_standing() {
+        // warren-core doc 105 §5.3: the refusal consumed nothing, so the
+        // pulled secret is the only copy of a voucher the user paid for and
+        // still owns. It is kept for the redemption after the ban, the
+        // register is not retried (the answer will not change in seconds),
+        // and the ban is reported so the app shows the suspension.
+        let mut server = mockito::Server::new_async().await;
+        let wpid = "0000111122223333aaaabbbbccccdddd";
+        let pull = server
+            .mock("POST", format!("/v1/checkout/{wpid}/voucher").as_str())
+            .match_body(pull_body())
+            .with_status(200)
+            .with_body(r#"{"voucher_secret":"XXXX-YYYY-ZZZZ-WWWW"}"#)
+            .expect(1)
+            .create_async()
+            .await;
+        let register = server
+            .mock("POST", "/v1/register")
+            .with_status(403)
+            .with_body(r#"{"error":"banned","reason_code":"port_forwarding_abuse"}"#)
+            .expect(2)
+            .create_async()
+            .await;
+        let seed = [68u8; 32];
+        let pubkey_ss58 = address_for_seed(seed);
+        let (backend, reported) = reporting_backend(server.url(), seed);
+
+        let err = backend
+            .submit_voucher(pubkey_ss58.clone(), claim_code(wpid))
+            .await
+            .expect_err("a banned wallet redeems nothing");
+
+        match err {
+            rest::Error::ApiError(code, msg) => {
+                assert_eq!(code.as_u16(), 403);
+                assert_eq!(msg, mullvad_api::ACCOUNT_BANNED);
+            }
+            other => panic!("expected ApiError(403, ACCOUNT_BANNED), got {other:?}"),
+        }
+        assert_eq!(cached_secrets(&backend), vec!["XXXX-YYYY-ZZZZ-WWWW"]);
+        assert_eq!(
+            *reported.lock().unwrap(),
+            vec![(
+                pubkey_ss58.clone(),
+                warren_standing::Ban {
+                    reason: warren_standing::BanReasonCode::PortForwardingAbuse,
+                    banned_at_unix_secs: None,
+                    lapses_at_unix_secs: None,
+                }
+            )]
+        );
+
+        // The next poll redeems the kept secret again, without a pull.
+        let _ = backend
+            .submit_voucher(pubkey_ss58, claim_code(wpid))
+            .await
+            .expect_err("still banned");
+        pull.assert_async().await;
+        register.assert_async().await;
+    }
+
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn a_refusal_that_does_not_spend_the_voucher_keeps_the_pulled_secret() {
+        // Only a verdict on the voucher itself (unknown, spent, cancelled,
+        // expired) ends the claim. A throttle says nothing about the voucher,
+        // and dropping the cache on it would burn a paid secret.
+        let mut server = mockito::Server::new_async().await;
+        let wpid = "4444555566667777888899990000aaaa";
+        let _pull = server
+            .mock("POST", format!("/v1/checkout/{wpid}/voucher").as_str())
+            .match_body(pull_body())
+            .with_status(200)
+            .with_body(r#"{"voucher_secret":"XXXX-YYYY-ZZZZ-WWWW"}"#)
+            .expect(1)
+            .create_async()
+            .await;
+        let _register = server
+            .mock("POST", "/v1/register")
+            .with_status(429)
+            .create_async()
+            .await;
+        let seed = [69u8; 32];
+        let pubkey_ss58 = address_for_seed(seed);
+        let (backend, reported) = reporting_backend(server.url(), seed);
+
+        let _ = backend
+            .submit_voucher(pubkey_ss58, claim_code(wpid))
+            .await
+            .expect_err("a throttled register fails");
+
+        assert_eq!(cached_secrets(&backend), vec!["XXXX-YYYY-ZZZZ-WWWW"]);
+        assert!(reported.lock().unwrap().is_empty());
     }
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]

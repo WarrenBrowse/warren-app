@@ -92,6 +92,25 @@ impl StandingStore {
         true
     }
 
+    /// A call that credits time (a voucher redemption, a store payment call)
+    /// of `wallet_pubkey` failed with `error`. Records the ban it carries, if
+    /// it is the ban refusal, and answers the ban in force then: the one the
+    /// standing already knew when it holds, since the refusal of the unsigned
+    /// `/v1/register` may not say when it lapses.
+    pub fn on_ban_refusal(
+        &self,
+        wallet_pubkey: &[u8; 32],
+        error: &ClientError,
+        now_unix_secs: u64,
+    ) -> Option<Ban> {
+        let ban = Ban::from_client_error(error)?;
+        self.record_ban(wallet_pubkey, ban, now_unix_secs);
+        Some(
+            self.ban_in_force(wallet_pubkey, now_unix_secs)
+                .unwrap_or(ban),
+        )
+    }
+
     /// An exit refused `wallet_pubkey` as banned with the opaque reason
     /// `code`. Answers the ban the session ends on: the one the standing or an
     /// issuer reported when it still holds, since that one knows its lapse.
@@ -466,6 +485,48 @@ mod tests {
             Some(Some(NOW + 100))
         );
         assert_eq!(json["standing"]["ban"]["in_force"], true);
+    }
+
+    fn credit_refusal(lapses_at_unix_secs: Option<u64>) -> ClientError {
+        ClientError::Banned {
+            reason_code: BanReasonCode::PortForwardingAbuse,
+            lapses_at_unix_secs,
+        }
+    }
+
+    #[test]
+    fn a_credit_refusal_blocks_and_answers_the_ban() {
+        let store = StandingStore::new(None);
+
+        let ban = store.on_ban_refusal(&WALLET, &credit_refusal(None), NOW);
+
+        assert_eq!(
+            ban.map(|b| b.reason),
+            Some(BanReasonCode::PortForwardingAbuse)
+        );
+        assert!(store.ban_in_force(&WALLET, NOW).is_some());
+    }
+
+    #[test]
+    fn a_credit_refusal_without_a_lapse_answers_the_lapse_the_standing_knows() {
+        let store = StandingStore::new(None);
+        store.on_poll(&WALLET, Ok(answer(&[], Some(account_ban(NOW + 60)))), NOW);
+
+        let ban = store.on_ban_refusal(&WALLET, &credit_refusal(None), NOW);
+
+        assert_eq!(ban.and_then(|b| b.lapses_at_unix_secs), Some(NOW + 60));
+    }
+
+    #[test]
+    fn a_credit_failure_that_is_not_a_ban_records_nothing() {
+        let store = StandingStore::new(None);
+        let spent = ClientError::ServerStatus {
+            status: 409,
+            body: "voucher already redeemed".to_owned(),
+        };
+
+        assert_eq!(store.on_ban_refusal(&WALLET, &spent, NOW), None);
+        assert_eq!(store.ban_in_force(&WALLET, NOW), None);
     }
 
     #[test]

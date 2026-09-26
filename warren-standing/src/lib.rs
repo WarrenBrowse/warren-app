@@ -126,10 +126,22 @@ impl Ban {
     #[must_use]
     pub fn from_refresh_error(error: &TokenClientError) -> Option<Self> {
         match error {
-            TokenClientError::Api(ClientError::Banned {
+            TokenClientError::Api(error) => Self::from_client_error(error),
+            _ => None,
+        }
+    }
+
+    /// The ban an API refusal carries, `None` for any other failure. Issuance
+    /// and every call that credits time (a voucher redemption, the store
+    /// payment calls) refuse a wallet on the CRL this way, before consuming
+    /// anything (warren-core doc 105 §5.3).
+    #[must_use]
+    pub fn from_client_error(error: &ClientError) -> Option<Self> {
+        match error {
+            ClientError::Banned {
                 reason_code,
                 lapses_at_unix_secs,
-            }) => Some(Self {
+            } => Some(Self {
                 reason: *reason_code,
                 banned_at_unix_secs: None,
                 lapses_at_unix_secs: *lapses_at_unix_secs,
@@ -179,6 +191,23 @@ impl Ban {
             ),
         }
     }
+}
+
+/// The mobile FFI envelope of a call the API refused because the wallet is
+/// banned: `{"ok":false,"error":"banned","ban":{"reason":..,"lapses_at_unix_secs":N|null}}`.
+/// Android and iOS answer a voucher redemption and a store payment call with
+/// it, so the two apps read one shape. The refused voucher or store
+/// transaction is still the user's to present once the ban ends.
+#[must_use]
+pub fn ban_refusal_envelope(ban: &Ban) -> serde_json::Value {
+    serde_json::json!({
+        "ok": false,
+        "error": "banned",
+        "ban": {
+            "reason": ban.reason,
+            "lapses_at_unix_secs": ban.lapses_at_unix_secs,
+        },
+    })
 }
 
 #[cfg(test)]
@@ -253,6 +282,57 @@ mod tests {
         assert_eq!(
             Ban::from_refresh_error(&refusal),
             Some(ban(BanReasonCode::PortForwardingAbuse, Some(1_821_536_000)))
+        );
+    }
+
+    #[test]
+    fn a_credit_refusal_without_a_lapse_is_a_ban_with_no_known_end() {
+        let refusal = ClientError::Banned {
+            reason_code: BanReasonCode::PortForwardingAbuse,
+            lapses_at_unix_secs: None,
+        };
+
+        assert_eq!(
+            Ban::from_client_error(&refusal),
+            Some(ban(BanReasonCode::PortForwardingAbuse, None))
+        );
+    }
+
+    #[test]
+    fn a_403_with_another_body_is_not_a_ban() {
+        let forbidden = ClientError::ServerStatus {
+            status: 403,
+            body: "identity mismatch".to_owned(),
+        };
+
+        assert_eq!(Ban::from_client_error(&forbidden), None);
+    }
+
+    #[test]
+    fn the_refusal_envelope_names_the_reason_and_the_lapse() {
+        let envelope = ban_refusal_envelope(&ban(
+            BanReasonCode::PortForwardingAbuse,
+            Some(1_821_536_000),
+        ));
+
+        assert_eq!(
+            envelope,
+            serde_json::json!({
+                "ok": false,
+                "error": "banned",
+                "ban": {"reason": "port_forwarding_abuse", "lapses_at_unix_secs": 1_821_536_000u64},
+            })
+        );
+    }
+
+    #[test]
+    fn the_refusal_envelope_of_a_ban_with_no_known_end_carries_a_null_lapse() {
+        let envelope = ban_refusal_envelope(&ban(BanReasonCode::Other, None));
+
+        assert_eq!(envelope["ban"]["reason"], "other");
+        assert_eq!(
+            envelope["ban"]["lapses_at_unix_secs"],
+            serde_json::Value::Null
         );
     }
 

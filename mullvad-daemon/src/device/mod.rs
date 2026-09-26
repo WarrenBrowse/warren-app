@@ -43,7 +43,7 @@ mod account_backend;
 mod api;
 mod service;
 pub(crate) use account_backend::{
-    RemoteAccountBackend, WarrenAccountBackend, WarrenRemoteAccountBackend,
+    BanSink, RemoteAccountBackend, WarrenAccountBackend, WarrenRemoteAccountBackend,
 };
 pub(crate) use service::WarrenIdentityService;
 
@@ -88,6 +88,8 @@ pub enum Error {
     VoucherExpired,
     #[error("The purchase has no voucher queued yet")]
     VoucherNotReady,
+    #[error("The account is banned, so the voucher was not redeemed")]
+    AccountBanned,
     #[error("Failed to read or write account cache")]
     DeviceIoError(#[from] Arc<io::Error>),
     #[error("Failed parse account cache")]
@@ -337,6 +339,7 @@ impl AccountManager {
         settings_dir: &Path,
         listener_tx: impl Sender<AccountEvent> + Send + 'static,
         warren_api_config: Option<WarrenApiConfig>,
+        warren_ban_sink: Option<account_backend::BanSink>,
     ) -> Result<(AccountManagerHandle, PrivateDeviceState), Error> {
         let (cacher, data) = DeviceCacher::new(settings_dir).await?;
         let number = data.pubkey().map(|pubkey| pubkey.as_str().to_owned());
@@ -352,7 +355,11 @@ impl AccountManager {
             warren_api_config
         {
             let client = crate::warren_sdk_client::SharedWarrenApiClient::new(cfg.url, cfg.seed);
-            std::sync::Arc::new(WarrenRemoteAccountBackend::new(client))
+            let backend = WarrenRemoteAccountBackend::new(client);
+            std::sync::Arc::new(match warren_ban_sink {
+                Some(sink) => backend.with_ban_sink(sink),
+                None => backend,
+            })
         } else {
             std::sync::Arc::new(RemoteAccountBackend::new(mullvad_api::AccountsProxy::new(
                 rest_handle.clone(),

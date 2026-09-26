@@ -51,6 +51,11 @@ pub const VOUCHER_EXPIRED: &str = "VOUCHER_EXPIRED";
 /// the GUI keeps polling.
 pub const VOUCHER_NOT_READY: &str = "VOUCHER_NOT_READY";
 
+/// Warren: the wallet is banned (warren-core doc 105 §5.3), so the API
+/// refused to credit it before consuming anything. The voucher stays
+/// unredeemed and the GUI keeps the purchase for after the ban.
+pub const ACCOUNT_BANNED: &str = "WARREN_ACCOUNT_BANNED";
+
 /// Warren: the account the daemon designated does not match the identity
 /// the SDK client signs with. Refusing is what keeps an identity desync
 /// from crediting a purchase to (or serving the balance of) a wallet the

@@ -471,6 +471,8 @@ const INVALID_VOUCHER_MESSAGE: &str = "This voucher code is invalid";
 const USED_VOUCHER_MESSAGE: &str = "This voucher code has already been used";
 const EXPIRED_VOUCHER_MESSAGE: &str = "This voucher code has expired";
 const NOT_READY_VOUCHER_MESSAGE: &str = "The purchase has no voucher queued yet";
+const BANNED_VOUCHER_MESSAGE: &str =
+    "The account is banned: the voucher was not redeemed and stays valid for after the ban";
 
 #[mullvad_management_interface::async_trait]
 impl ManagementService for ManagementServiceImpl {
@@ -3034,6 +3036,7 @@ fn map_device_error(error: &device::Error) -> Status {
             Status::new(Code::FailedPrecondition, EXPIRED_VOUCHER_MESSAGE)
         }
         device::Error::VoucherNotReady => Status::new(Code::Unavailable, NOT_READY_VOUCHER_MESSAGE),
+        device::Error::AccountBanned => Status::new(Code::PermissionDenied, BANNED_VOUCHER_MESSAGE),
         device::Error::DeviceIoError(_error) => Status::new(Code::Unavailable, error.to_string()),
         device::Error::OtherRestError(error) => map_rest_error(error),
         _ => Status::new(Code::Unknown, error.to_string()),
@@ -3077,6 +3080,16 @@ mod tests {
         daemon_event, types, withhold_account_secrets, withhold_event_identity,
         withhold_settings_secrets,
     };
+
+    /// The GUI keys "banned" on this code, apart from the four codes a
+    /// voucher refusal already uses: it keeps the purchase instead of
+    /// dropping it.
+    #[test]
+    fn a_banned_voucher_redemption_is_permission_denied() {
+        let status = super::map_device_error(&crate::device::Error::AccountBanned);
+
+        assert_eq!(status.code(), super::Code::PermissionDenied);
+    }
 
     fn status_with_a_code() -> types::WarrenStatus {
         types::WarrenStatus {

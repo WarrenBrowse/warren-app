@@ -1364,11 +1364,29 @@ impl Daemon {
             ),
         }
 
+        // The standing monitor starts further down, once the event loop's
+        // plumbing exists; the account backend reports the ban a voucher
+        // refusal carries into this slot, filled when it does.
+        let warren_standing_slot: std::sync::Arc<
+            std::sync::OnceLock<warren_account_standing::StandingMonitor>,
+        > = std::sync::Arc::default();
+        let warren_ban_sink: device::BanSink = {
+            let slot = warren_standing_slot.clone();
+            std::sync::Arc::new(move |wallet, ban| {
+                if let Some(monitor) = slot.get() {
+                    monitor.report_issuance_ban(wallet, ban);
+                    // The unsigned refusal may omit the lapse; the signed
+                    // standing answers it.
+                    monitor.poke();
+                }
+            })
+        };
         let (account_manager, data) = device::AccountManager::spawn(
             api_handle.clone(),
             &config.settings_dir,
             internal_event_tx.to_specialized_sender(),
             warren_api_config,
+            Some(warren_ban_sink),
         )
         .await
         .map_err(Error::LoadAccountManager)?;
@@ -2064,6 +2082,7 @@ impl Daemon {
             )
         });
         if let Some(monitor) = &warren_standing_monitor {
+            let _ = warren_standing_slot.set(monitor.clone());
             parameters_generator
                 .set_warren_standing_monitor(monitor.clone())
                 .await;

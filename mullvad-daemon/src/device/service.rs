@@ -270,6 +270,7 @@ fn map_rest_error(error: rest::Error) -> Error {
             mullvad_api::VOUCHER_USED => Error::UsedVoucher,
             mullvad_api::VOUCHER_EXPIRED => Error::VoucherExpired,
             mullvad_api::VOUCHER_NOT_READY => Error::VoucherNotReady,
+            mullvad_api::ACCOUNT_BANNED => Error::AccountBanned,
             _ => Error::OtherRestError(error),
         },
         error => Error::OtherRestError(error),
@@ -286,6 +287,16 @@ mod tests {
     /// requires a tokio runtime, so all tests here use `#[tokio::test]`.
     fn online_availability() -> ApiAvailability {
         ApiAvailability::new(State::default())
+    }
+
+    #[test]
+    fn a_ban_refusal_of_a_voucher_is_its_own_error() {
+        let error = map_rest_error(rest::Error::ApiError(
+            rest::StatusCode::FORBIDDEN,
+            mullvad_api::ACCOUNT_BANNED.to_owned(),
+        ));
+
+        assert!(matches!(error, Error::AccountBanned), "{error:?}");
     }
 
     // ------------------------------------------------------------------
