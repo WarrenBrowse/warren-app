@@ -77,8 +77,8 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     /// mismatch. Nil in tests (pinning off).
     public var pinStorePath: String?
 
-    /// 32-byte Ed25519 signing seed derived from the user wallet,
-    /// loaded via the cross-process Keychain bridge by the owning
+    /// 32-byte wallet seed (`WarrenWallet.seed`, the Rust tunnel derives
+    /// the signing key from it), loaded via the cross-process Keychain bridge by the owning
     /// `WarrenQuinnTunnelImplementation` and pushed in via
     /// [`bindWalletSigningSeed(_:)`]. `nil` until the bridge fires ;
     /// `start(options:)` falls back to a logged no-op until then.

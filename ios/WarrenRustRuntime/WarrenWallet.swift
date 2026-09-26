@@ -39,7 +39,9 @@ public final class WarrenWallet {
     /// which is how every signing flow loads one: a `String` cannot be wiped,
     /// so a wallet used only to sign must not carry one.
     private(set) public var mnemonic: String?
-    /// 32-byte HKDF-derived Ed25519 seed.
+    /// 32-byte wallet seed (the first 32 bytes of the BIP39 seed). Not an
+    /// Ed25519 secret: every Rust consumer derives the node key from it
+    /// (`derive_node_key`), which is what `publicKey` is the public half of.
     private(set) public var seed: Data
     /// 32-byte Ed25519 public key.
     public let publicKey: Data

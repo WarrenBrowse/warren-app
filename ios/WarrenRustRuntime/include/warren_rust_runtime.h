@@ -182,8 +182,11 @@ typedef struct WarrenTunnelParametersC {
    */
   const char *exit_endpoint;
   /**
-   * 32-byte Ed25519 signing seed derived from the user wallet
-   * (see `warren_wallet_seed_from_mnemonic` + `derive_node_key`).
+   * 32-byte wallet seed, as `warren_wallet_seed_from_mnemonic` returns it
+   * (the first 32 bytes of the BIP39 seed). Not an Ed25519 secret: the
+   * tunnel derives the signing key from it with `derive_node_key`, and the
+   * session-token blinding key with `BlindingKey::session`, as desktop and
+   * Android do.
    */
   uint8_t wallet_signing_seed[32];
   /**

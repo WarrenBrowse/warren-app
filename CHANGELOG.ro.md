@@ -34,6 +34,8 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 ### Reparat
 - [iOS] Prezintă un drept de port cu fiecare cerere de port redirecționat, ca pe celelalte
   platforme, astfel încât serverele care îl cer acordă portul în loc să-l refuze.
+- [iOS] Semnează conexiunea cu portofelul afișat în aplicație. Folosea o cheie derivată din aceeași
+  frază de recuperare, dar diferită de adresa afișată, așa că serverele nu vedeau abonamentul pe ea.
 
 ## [1.1.35] - 2026-09-25
 ### Adăugat

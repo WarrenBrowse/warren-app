@@ -38,6 +38,9 @@ par l'application, gardez-le tel quel.
 ### Corrigé
 - [iOS] Présenter un droit de port avec chaque demande de port redirigé, comme les autres
   plateformes, pour que les serveurs qui l'exigent accordent le port au lieu de le refuser.
+- [iOS] Signer la connexion avec le portefeuille affiché dans l'application. Elle utilisait une clé
+  issue de la même phrase de récupération mais différente de l'adresse affichée, si bien que les
+  serveurs n'y voyaient pas l'abonnement.
 
 ## [1.1.35] - 2026-09-25
 ### Ajouté

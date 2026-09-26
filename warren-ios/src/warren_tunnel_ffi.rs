@@ -45,8 +45,11 @@ pub struct WarrenTunnelParametersC {
     pub exit_pubkey: [u8; 32],
     /// Null-terminated UTF-8 "IP:port" of the exit relay.
     pub exit_endpoint: *const c_char,
-    /// 32-byte Ed25519 signing seed derived from the user wallet
-    /// (see `warren_wallet_seed_from_mnemonic` + `derive_node_key`).
+    /// 32-byte wallet seed, as `warren_wallet_seed_from_mnemonic` returns it
+    /// (the first 32 bytes of the BIP39 seed). Not an Ed25519 secret: the
+    /// tunnel derives the signing key from it with `derive_node_key`, and the
+    /// session-token blinding key with `BlindingKey::session`, as desktop and
+    /// Android do.
     pub wallet_signing_seed: [u8; 32],
     /// Optional multi-hop entry relay. Superseded by directory-driven
     /// selection (the entry relay is chosen from `multihop_directory_json`),
@@ -1202,6 +1205,15 @@ fn exit_to_leave<N: Copy + PartialEq>(
     Some(sealed_by)
 }
 
+/// The key the tunnel signs as: the wallet's node key, derived from the seed
+/// Swift passes exactly as the address the app shows and subscribes is
+/// (`warren_wallet_derive_pubkey`). Using the seed bytes directly as the
+/// Ed25519 secret signs as a different wallet, which holds no subscription.
+#[cfg(any(all(target_os = "ios", feature = "tunnel"), test))]
+fn tunnel_signing_key(wallet_seed: &[u8; 32]) -> ed25519_dalek::SigningKey {
+    warren_identity::derive_node_key(wallet_seed)
+}
+
 /// Drives a multi-hop circuit on the handle's runtime: verify + select a
 /// circuit from the signed directory, bring up a `MultiHopSupervisor`,
 /// and pump `IosTun` against the live session. Surfaces Connecting /
@@ -2220,10 +2232,10 @@ pub unsafe extern "C" fn warren_tunnel_start(
             return std::ptr::null_mut();
         };
 
-        // Wallet signing key from the Ed25519 seed bytes. Zeroize on
-        // drop is provided by `ed25519-dalek` via the `zeroize` feature
-        // already enabled in `warren-ios/Cargo.toml`.
-        let signing_key = ed25519_dalek::SigningKey::from_bytes(&params.wallet_signing_seed);
+        // Wallet signing key, the node key derived from the wallet seed.
+        // Zeroize on drop is provided by `ed25519-dalek` via the `zeroize`
+        // feature already enabled in `warren-ios/Cargo.toml`.
+        let signing_key = tunnel_signing_key(&params.wallet_signing_seed);
         // The session-token batch is blinded from the wallet seed, as every
         // other client of the wallet blinds it, so the issuer serves each of
         // them the same batch (warren-core doc 103 section 11).
@@ -2904,6 +2916,39 @@ fn now_secs() -> u64 {
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
+
+    // ---- Wallet identity: the tunnel signs as the address the app shows ----
+
+    #[test]
+    fn the_tunnel_signs_as_the_wallet_address_the_app_shows() {
+        let mnemonic = std::ffi::CString::new(
+            "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+        )
+        .unwrap();
+        let mut seed = [0u8; 32];
+        // SAFETY: a valid C string and a 32-byte output buffer.
+        let rc = unsafe {
+            crate::warren_wallet_ffi::warren_wallet_seed_from_mnemonic(
+                mnemonic.as_ptr(),
+                seed.as_mut_ptr(),
+            )
+        };
+        assert_eq!(rc, 0);
+        let mut shown = [0u8; 32];
+        // SAFETY: two 32-byte buffers.
+        let rc = unsafe {
+            crate::warren_wallet_ffi::warren_wallet_derive_pubkey(seed.as_ptr(), shown.as_mut_ptr())
+        };
+        assert_eq!(rc, 0);
+
+        let signing = super::tunnel_signing_key(&seed);
+
+        assert_eq!(
+            signing.verifying_key().to_bytes(),
+            shown,
+            "the tunnel must sign, mint and poll standing as the subscribed wallet"
+        );
+    }
 
     // ---- Drain notices: which exit a drain moves the session off ----
 

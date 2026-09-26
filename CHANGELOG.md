@@ -44,6 +44,9 @@ Line wrap the file at 100 chars.                                              Th
 ### Fixed
 - [iOS] Present a port entitlement with each forwarded port request, as the other platforms do, so
   the servers that require one grant the port instead of refusing it.
+- [iOS] Sign the connection with the wallet shown in the app. It used a key derived from the same
+  recovery phrase but different from the displayed address, so the servers did not see the
+  subscription on it.
 
 ## [1.1.35] - 2026-09-25
 ### Added
