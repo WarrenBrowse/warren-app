@@ -1,0 +1,62 @@
+{
+  "version": 1,
+  "environment": "beta",
+  "generated_at": 1790000000,
+  "window_secs": 60,
+  "exit_users_rounding": 5,
+  "exit_live_threshold": 20,
+  "users": {
+    "accounts_total": 1234,
+    "subscribers_active": 987,
+    "connected": 57
+  },
+  "fleet": {
+    "exits_online": 2,
+    "exits_total": 3,
+    "download_bps": 400000000,
+    "upload_bps": 50000000,
+    "capacity_bps": 2000000000,
+    "load_percent": 23,
+    "load_level": "low",
+    "transferred_24h_bytes": 9000000000000,
+    "peak_connected_24h": 80,
+    "peak_throughput_24h_bps": 900000000
+  },
+  "exits": [
+    {
+      "exit_id": "abababababababababababababababab",
+      "name": "fr-par-h1b",
+      "country": "FR",
+      "city": "Paris",
+      "online": true,
+      "live": true,
+      "connected": 40,
+      "download_bps": 300000000,
+      "upload_bps": 30000000,
+      "capacity_bps": 1000000000,
+      "load_percent": 37,
+      "load_level": "low",
+      "load_driver": "bandwidth",
+      "cpu_percent": 21,
+      "uptime_secs": 172800,
+      "history": [
+        { "t": 1789999940, "connected": 40, "throughput_bps": 310000000, "load_percent": 35 }
+      ]
+    },
+    {
+      "exit_id": "cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+      "country": "RO",
+      "city": "Bucharest",
+      "online": true,
+      "live": false,
+      "connected": 0,
+      "download_bps": 0,
+      "upload_bps": 0,
+      "load_level": "moderate",
+      "history": []
+    }
+  ],
+  "history": [
+    { "t": 1789999100, "connected": 55, "throughput_bps": 420000000 }
+  ]
+}
