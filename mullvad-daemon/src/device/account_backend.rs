@@ -150,23 +150,21 @@ impl WarrenAccountBackend for RemoteAccountBackend {
 #[derive(Clone)]
 pub struct WarrenRemoteAccountBackend {
     client: Arc<SharedWarrenApiClient>,
-    /// Secrets pulled from `POST /v1/checkout/{wpid}/voucher` whose
-    /// `POST /v1/register` has not succeeded yet, keyed by wpid. The
-    /// pull consumes the server-side single-use mapping, so a register
-    /// failure (API briefly down) would otherwise burn a PAID voucher:
-    /// the GUI keeps polling the same wpid, and this cache lets every
-    /// subsequent poll retry the register with the already-pulled
-    /// secret instead of 404-ing forever. In-memory only: a daemon
-    /// crash inside that window still loses the secret (accepted
-    /// residual, doc 35 section 7).
+    /// Secrets pulled from `POST /v1/checkout/{wpid}/voucher` and not
+    /// redeemed yet. The pull consumes the server-side single-use mapping,
+    /// so this is what a repeated pull or claim finds again for the life
+    /// of the process: after a register that failed, or a GUI that died
+    /// before sealing the voucher it was handed. The lasting copy is the
+    /// one the GUI seals in its pending purchase store.
     pulled_unregistered: PulledVouchers,
     /// Where a ban a redemption refusal carries goes: the daemon's standing
     /// monitor, so the app shows why the voucher was not credited.
     ban_sink: Option<BanSink>,
 }
 
-/// Pulled voucher secrets not redeemed yet, keyed by wpid.
-type PulledVouchers = Arc<std::sync::Mutex<std::collections::HashMap<String, String>>>;
+/// Pulled voucher secrets not redeemed yet, keyed by wpid. Each is a paid
+/// bearer secret, wiped when it leaves.
+type PulledVouchers = Arc<std::sync::Mutex<std::collections::HashMap<String, Zeroizing<String>>>>;
 
 /// Receives the ban an API refusal of `wallet` carries (warren-core doc 105
 /// §5.3). The wallet is its SS58 address, compared by the receiver and never
@@ -274,7 +272,8 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
             let claim = as_purchase_claim(&voucher);
             let voucher = match &claim {
                 Some(claim) => match collect_pulled(&client, &pulled_unregistered, claim).await? {
-                    Some(secret) => secret,
+                    // The request DTO owns a plain String; this copy leaves with it.
+                    Some(secret) => (*secret).clone(),
                     // Webhook not landed yet (or id expired): the GUI
                     // keeps polling on this signal.
                     None => {
@@ -421,9 +420,7 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
                     mullvad_api::INVALID_VOUCHER.to_owned(),
                 ));
             };
-            Ok(collect_pulled(&client, &pulled_unregistered, &claim)
-                .await?
-                .map(Zeroizing::new))
+            collect_pulled(&client, &pulled_unregistered, &claim).await
         })
     }
 }
@@ -437,7 +434,7 @@ async fn collect_pulled(
     client: &SharedWarrenApiClient,
     pulled_unregistered: &PulledVouchers,
     claim: &PurchaseClaim,
-) -> Result<Option<String>, rest::Error> {
+) -> Result<Option<Zeroizing<String>>, rest::Error> {
     let cached = pulled_unregistered
         .lock()
         .expect("not poisoned")
@@ -449,7 +446,8 @@ async fn collect_pulled(
     let pulled = client
         .pull_pending_voucher(&claim.wpid, &claim.pull_secret)
         .await
-        .map_err(map_client_error)?;
+        .map_err(map_client_error)?
+        .map(Zeroizing::new);
     if let Some(secret) = &pulled {
         pulled_unregistered
             .lock()
@@ -465,7 +463,7 @@ fn forget_pulled(pulled_unregistered: &PulledVouchers, voucher: &str) {
     pulled_unregistered
         .lock()
         .expect("not poisoned")
-        .retain(|_, secret| secret != voucher);
+        .retain(|_, secret| secret.as_str() != voucher);
 }
 
 /// An app-initiated purchase the GUI asks the daemon to collect: the
@@ -962,7 +960,7 @@ mod tests {
             .lock()
             .expect("not poisoned")
             .values()
-            .cloned()
+            .map(|secret| secret.as_str().to_owned())
             .collect()
     }
 
