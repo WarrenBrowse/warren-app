@@ -50,29 +50,63 @@ fun TunnelState.connectionPhase(hostOffline: Boolean = false): ConnectionPhase =
 fun ConnectionPhase.isEyeOpen(): Boolean =
     this == ConnectionPhase.Exposed || this == ConnectionPhase.Connecting
 
-@Composable
-fun ConnectionPhase.accentColor(): Color =
+// BEGIN GENERATED phase colour table: scripts/gen-scenery-tables.mjs from scenery.json, do not edit.
+
+/** The colour tokens scenery.json paints a phase with; the theme maps each one once. */
+internal enum class SceneryTone {
+    Green,
+    GreenText,
+    Orange,
+    OrangeText,
+    Red,
+    RedText,
+    White,
+}
+
+/** The saturated accent a phase fills its eye well, rail and buttons with. */
+internal fun ConnectionPhase.accentTone(): SceneryTone =
     when (this) {
-        ConnectionPhase.Protected -> MaterialTheme.colorScheme.positive
-        ConnectionPhase.Connecting,
-        ConnectionPhase.Interrupted -> MaterialTheme.colorScheme.pending
-        ConnectionPhase.Exposed -> MaterialTheme.colorScheme.error
-        ConnectionPhase.Blocked -> MaterialTheme.colorScheme.onSurface
+        ConnectionPhase.Exposed -> SceneryTone.Red
+        ConnectionPhase.Connecting -> SceneryTone.Orange
+        ConnectionPhase.Protected -> SceneryTone.Green
+        ConnectionPhase.Interrupted -> SceneryTone.Orange
+        ConnectionPhase.Blocked -> SceneryTone.White
     }
+
+/** The lifted tint a phase writes its title with. */
+internal fun ConnectionPhase.titleTone(): SceneryTone =
+    when (this) {
+        ConnectionPhase.Exposed -> SceneryTone.RedText
+        ConnectionPhase.Connecting -> SceneryTone.OrangeText
+        ConnectionPhase.Protected -> SceneryTone.GreenText
+        ConnectionPhase.Interrupted -> SceneryTone.OrangeText
+        ConnectionPhase.Blocked -> SceneryTone.White
+    }
+
+// END GENERATED phase colour table
+
+/** The saturated accent of a phase, for fills where 3:1 is enough. */
+@Composable fun ConnectionPhase.accentColor(): Color = accentTone().color()
 
 /**
  * The colour of the status TITLE, as opposed to the fills: the lifted tints
  * built for 4.5:1 on the card at title size (desktop
  * `getPhaseTitleColorName`), white for the neutral blocked phase.
  */
+@Composable fun ConnectionPhase.titleColor(): Color = titleTone().color()
+
+// The one place a scenery.json tone meets the Material theme. Exhaustive, so a
+// tone added to the table does not compile until it has its colour here.
 @Composable
-fun ConnectionPhase.titleColor(): Color =
+private fun SceneryTone.color(): Color =
     when (this) {
-        ConnectionPhase.Protected -> MaterialTheme.colorScheme.positiveText
-        ConnectionPhase.Connecting,
-        ConnectionPhase.Interrupted -> MaterialTheme.colorScheme.pendingText
-        ConnectionPhase.Exposed -> MaterialTheme.colorScheme.errorText
-        ConnectionPhase.Blocked -> MaterialTheme.colorScheme.onSurface
+        SceneryTone.Green -> MaterialTheme.colorScheme.positive
+        SceneryTone.GreenText -> MaterialTheme.colorScheme.positiveText
+        SceneryTone.Orange -> MaterialTheme.colorScheme.pending
+        SceneryTone.OrangeText -> MaterialTheme.colorScheme.pendingText
+        SceneryTone.Red -> MaterialTheme.colorScheme.error
+        SceneryTone.RedText -> MaterialTheme.colorScheme.errorText
+        SceneryTone.White -> MaterialTheme.colorScheme.onSurface
     }
 
 /** Which layers the scenery backdrop shows for a phase (desktop `resolveScenery`). */

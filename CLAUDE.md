@@ -108,8 +108,9 @@ same canvas. When new master art arrives, drop it in `new-da/calques/`
 Android and iOS in one pass from the layers listed in
 `assets/images/scenery/scenery.json`. That table (layers, countries, phase rows)
 is also what the renderer and the browser extension read, and what generates the
-`GENERATED scenery table` blocks of the Android and iOS resolvers
-(`gen-scenery-tables.mjs`, run by the script; never edit those blocks by hand).
+`GENERATED scenery table` and `GENERATED phase colour table` blocks of the
+Android and iOS code (`gen-scenery-tables.mjs`, run by the script; never edit
+those blocks by hand).
 A new country is one entry there; the extension then takes it with
 `pnpm design:sync`. Converting a layer by hand, or regenerating one
 platform alone, is what left Singapore photoreal on desktop for a whole release.

@@ -58,4 +58,18 @@ final class ConnectionPhaseColorTests: XCTestCase {
             )
         }
     }
+
+    /// Which token each phase takes comes from scenery.json, the table desktop
+    /// and the browser extension read too; `SceneryTone.color` is the one place
+    /// a token meets this palette.
+    func testEachPhaseTakesTheTonesOfTheSharedTable() {
+        XCTAssertEqual(ConnectionPhase.exposed.accentTone, .red)
+        XCTAssertEqual(ConnectionPhase.connecting.accentTone, .orange)
+        XCTAssertEqual(ConnectionPhase.protected.accentTone, .green)
+        XCTAssertEqual(ConnectionPhase.interrupted.accentTone, .orange)
+        XCTAssertEqual(ConnectionPhase.blocked.accentTone, .white)
+        XCTAssertEqual(ConnectionPhase.exposed.titleTone, .redText)
+        XCTAssertEqual(ConnectionPhase.protected.titleTone, .greenText)
+        XCTAssertEqual(ConnectionPhase.blocked.titleTone, .white)
+    }
 }

@@ -45,25 +45,11 @@ enum ConnectionPhase {
         }
     }
 
-    var accentColor: UIColor {
-        switch self {
-        case .protected: .successColor
-        case .connecting, .interrupted: .pendingColor
-        case .exposed: .dangerColor
-        case .blocked: .white
-        }
-    }
+    var accentColor: UIColor { accentTone.color }
 
     /// The same accent as it must be written rather than filled. See the
     /// lifted tints in `UIColor+Palette`; desktop's `getPhaseTitleColorName`.
-    var titleColor: UIColor {
-        switch self {
-        case .protected: .successTextColor
-        case .connecting, .interrupted: .pendingTextColor
-        case .exposed: .dangerTextColor
-        case .blocked: .white
-        }
-    }
+    var titleColor: UIColor { titleTone.color }
 
     // A crossed-out eye reads as protected/hidden in the burrow (secured, blocked,
     // or the no-network hold where nothing can flow); an open eye reads as
@@ -72,6 +58,59 @@ enum ConnectionPhase {
         switch self {
         case .protected, .blocked, .interrupted: true
         case .exposed, .connecting: false
+        }
+    }
+}
+
+// BEGIN GENERATED phase colour table: scripts/gen-scenery-tables.mjs from scenery.json, do not edit.
+/// The colour tokens scenery.json paints a phase with; `SceneryTone.color` maps each one once.
+enum SceneryTone {
+    case green
+    case greenText
+    case orange
+    case orangeText
+    case red
+    case redText
+    case white
+}
+
+extension ConnectionPhase {
+    /// The saturated accent a phase fills its eye, rails and buttons with.
+    var accentTone: SceneryTone {
+        switch self {
+        case .exposed: .red
+        case .connecting: .orange
+        case .protected: .green
+        case .interrupted: .orange
+        case .blocked: .white
+        }
+    }
+
+    /// The lifted tint a phase writes its title with.
+    var titleTone: SceneryTone {
+        switch self {
+        case .exposed: .redText
+        case .connecting: .orangeText
+        case .protected: .greenText
+        case .interrupted: .orangeText
+        case .blocked: .white
+        }
+    }
+}
+// END GENERATED phase colour table
+
+extension SceneryTone {
+    // The one place a scenery.json tone meets this palette. Exhaustive, so a
+    // tone added to the table does not compile until it has its colour here.
+    var color: UIColor {
+        switch self {
+        case .green: .successColor
+        case .greenText: .successTextColor
+        case .orange: .pendingColor
+        case .orangeText: .pendingTextColor
+        case .red: .dangerColor
+        case .redText: .dangerTextColor
+        case .white: .white
         }
     }
 }

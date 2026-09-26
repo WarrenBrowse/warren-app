@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Writes the Android and iOS scenery tables from scenery.json, the one table of
-// layers, countries and phase rows. Each platform keeps its resolver in its own
+// Writes the Android and iOS scenery tables and phase colour tokens from
+// scenery.json, the one table of layers, countries and phase rows. Each platform keeps its resolver in its own
 // language; only the data block between the GENERATED markers comes from here,
 // so a country or a phase row can never exist on one platform only. The desktop
 // renderer and the browser extension read scenery.json directly.
@@ -20,9 +20,13 @@ const MANIFEST = `${PACKAGE}/assets/images/scenery/scenery.json`;
 const KOTLIN =
   'android/lib/feature/home/impl/src/main/kotlin/com/warrenbrowse/vpn/feature/home/impl/connect/ConnectionPhase.kt';
 const SWIFT = 'ios/WarrenVPN/View controllers/Tunnel/MapViewController.swift';
+const SWIFT_PHASE =
+  'ios/WarrenVPN/View controllers/Tunnel/ConnectionView/ConnectionViewViewModel.swift';
 
-const BEGIN = 'BEGIN GENERATED scenery table';
-const END = 'END GENERATED scenery table';
+const SCENERY_TABLE = 'scenery table';
+const PHASE_COLOURS = 'phase colour table';
+const begin = (name) => `BEGIN GENERATED ${name}`;
+const end = (name) => `END GENERATED ${name}`;
 const PHASES = ['exposed', 'connecting', 'protected', 'interrupted', 'blocked'];
 
 function layerOf(manifest, role) {
@@ -53,7 +57,7 @@ const capitalize = (s) => s[0].toUpperCase() + s.slice(1);
 export function renderKotlin(manifest) {
   const drawable = (layer) => `R.drawable.scenery_${layer.slug}`;
   const lines = [
-    `// ${BEGIN}: scripts/gen-scenery-tables.mjs from scenery.json, do not edit.`,
+    `// ${begin(SCENERY_TABLE)}: scripts/gen-scenery-tables.mjs from scenery.json, do not edit.`,
     '',
     '/** Which landscape a phase shows (the exit country, or the plain), and the other two layers. */',
     'internal data class SceneryRow(',
@@ -85,14 +89,14 @@ export function renderKotlin(manifest) {
     '        }',
     '}',
     '',
-    `// ${END}`,
+    `// ${end(SCENERY_TABLE)}`,
   ];
   return lines.join('\n');
 }
 
 export function renderSwift(manifest) {
   const lines = [
-    `    // ${BEGIN}: scripts/gen-scenery-tables.mjs from scenery.json, do not edit.`,
+    `    // ${begin(SCENERY_TABLE)}: scripts/gen-scenery-tables.mjs from scenery.json, do not edit.`,
     '    // Keyed by the lower-case ISO code and the lower-case English relay-list name.',
     '    private static let countryImages: [String: String] = [',
     ...countryKeys(manifest).map(([key, layer]) => `        "${key}": "${layer.iosImageset}",`),
@@ -115,30 +119,112 @@ export function renderSwift(manifest) {
     }),
     '        }',
     '    }',
-    `    // ${END}`,
+    `    // ${end(SCENERY_TABLE)}`,
   ];
   return lines.join('\n');
 }
 
-/** Replaces the marked block of `source`, markers included, with `block`. */
-export function spliceGenerated(source, block, file) {
-  const begin = source.indexOf(BEGIN);
-  const end = source.indexOf(END);
-  if (begin < 0 || end < begin) throw new Error(`${file} has no ${BEGIN} ... ${END} block`);
-  const lineStart = source.lastIndexOf('\n', begin) + 1;
-  const lineEnd = source.indexOf('\n', end);
+/** Every colour token the phase rows use, in a stable order. */
+function tones(manifest) {
+  const all = PHASES.flatMap((phase) => [
+    phaseRow(manifest, phase).accent,
+    phaseRow(manifest, phase).title,
+  ]);
+  return [...new Set(all)].sort();
+}
+
+export function renderKotlinPhaseColours(manifest) {
+  const tone = (name) => `SceneryTone.${capitalize(name)}`;
+  const byPhase = (field) =>
+    PHASES.map(
+      (phase) =>
+        `        ConnectionPhase.${capitalize(phase)} -> ${tone(phaseRow(manifest, phase)[field])}`,
+    );
+  return [
+    `// ${begin(PHASE_COLOURS)}: scripts/gen-scenery-tables.mjs from scenery.json, do not edit.`,
+    '',
+    '/** The colour tokens scenery.json paints a phase with; the theme maps each one once. */',
+    'internal enum class SceneryTone {',
+    ...tones(manifest).map((name) => `    ${capitalize(name)},`),
+    '}',
+    '',
+    '/** The saturated accent a phase fills its eye well, rail and buttons with. */',
+    'internal fun ConnectionPhase.accentTone(): SceneryTone =',
+    '    when (this) {',
+    ...byPhase('accent'),
+    '    }',
+    '',
+    '/** The lifted tint a phase writes its title with. */',
+    'internal fun ConnectionPhase.titleTone(): SceneryTone =',
+    '    when (this) {',
+    ...byPhase('title'),
+    '    }',
+    '',
+    `// ${end(PHASE_COLOURS)}`,
+  ].join('\n');
+}
+
+export function renderSwiftPhaseColours(manifest) {
+  const byPhase = (field) =>
+    PHASES.map((phase) => `        case .${phase}: .${phaseRow(manifest, phase)[field]}`);
+  return [
+    `// ${begin(PHASE_COLOURS)}: scripts/gen-scenery-tables.mjs from scenery.json, do not edit.`,
+    '/// The colour tokens scenery.json paints a phase with; `SceneryTone.color` maps each one once.',
+    'enum SceneryTone {',
+    ...tones(manifest).map((name) => `    case ${name}`),
+    '}',
+    '',
+    'extension ConnectionPhase {',
+    '    /// The saturated accent a phase fills its eye, rails and buttons with.',
+    '    var accentTone: SceneryTone {',
+    '        switch self {',
+    ...byPhase('accent'),
+    '        }',
+    '    }',
+    '',
+    '    /// The lifted tint a phase writes its title with.',
+    '    var titleTone: SceneryTone {',
+    '        switch self {',
+    ...byPhase('title'),
+    '        }',
+    '    }',
+    '}',
+    `// ${end(PHASE_COLOURS)}`,
+  ].join('\n');
+}
+
+/** Replaces the block `name` of `source`, markers included, with `block`. */
+export function spliceGenerated(source, block, file, name) {
+  const from = source.indexOf(begin(name));
+  const to = source.indexOf(end(name));
+  if (from < 0 || to < from)
+    throw new Error(`${file} has no ${begin(name)} ... ${end(name)} block`);
+  const lineStart = source.lastIndexOf('\n', from) + 1;
+  const lineEnd = source.indexOf('\n', to);
   return source.slice(0, lineStart) + block + source.slice(lineEnd < 0 ? source.length : lineEnd);
 }
 
 /** What each generated file must hold, for the spec and for --check. */
 export function generatedTables(repo) {
   const manifest = JSON.parse(readFileSync(path.join(repo, MANIFEST), 'utf8'));
-  return [
-    [KOTLIN, renderKotlin(manifest)],
-    [SWIFT, renderSwift(manifest)],
-  ].map(([relative, block]) => {
+  const files = [
+    [
+      KOTLIN,
+      [
+        [SCENERY_TABLE, renderKotlin(manifest)],
+        [PHASE_COLOURS, renderKotlinPhaseColours(manifest)],
+      ],
+    ],
+    [SWIFT, [[SCENERY_TABLE, renderSwift(manifest)]]],
+    [SWIFT_PHASE, [[PHASE_COLOURS, renderSwiftPhaseColours(manifest)]]],
+  ];
+  return files.map(([relative, blocks]) => {
     const file = path.join(repo, relative);
-    return { file, expected: spliceGenerated(readFileSync(file, 'utf8'), block, relative) };
+    const expected = blocks.reduce(
+      (source, [name, block]) => spliceGenerated(source, block, relative, name),
+      readFileSync(file, 'utf8'),
+    );
+    return { file, expected };
   });
 }
 

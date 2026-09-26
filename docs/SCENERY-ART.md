@@ -20,13 +20,15 @@ designer as a numbered version (V14, V15, ...) of full-canvas masters.
 3. `process-scenery.sh` ends by running `scripts/gen-scenery-tables.mjs`, which
    rewrites the `GENERATED scenery table` blocks of the Android and iOS
    resolvers (`ConnectionPhase.kt`, `MapViewController.swift`: countries by ISO
-   code and English name, the three layers, one exhaustive row per phase). The
+   code and English name, the three layers, one exhaustive row per phase) and
+   the `GENERATED phase colour table` blocks (`ConnectionPhase.kt`,
+   `ConnectionViewViewModel.swift`). The
    desktop renderer and the browser extension read `scenery.json` directly.
    After editing only the phase rows, run `node scripts/gen-scenery-tables.mjs`
    on its own. Never edit a generated block by hand.
 4. Commit the regenerated assets, the table and the two generated blocks.
    `test/unit/scenery-assets.spec.ts` is the gate: the table must name every
-   shipped layer and nothing else, and both generated blocks must match it. It
+   shipped layer and nothing else, and every generated block must match it. It
    runs in `warren-checks`.
 5. Run `pnpm design:sync` in warren-extension and commit there: the browser
    extension ships the same layers, the same table and the same tokens, pinned
@@ -34,9 +36,12 @@ designer as a numbered version (V14, V15, ...) of full-canvas masters.
 
 The same table carries the phase rows (which landscape, whether Bula shows,
 blur, accent and title colour tokens): the desktop renderer and the extension
-read them, Android and iOS get them generated. The accent and title colours are
-read from it on desktop and in the extension only; the mobile themes map a
-phase to their own Material and UIKit colours.
+read them, Android and iOS get them generated, the colour tokens as a second
+`GENERATED phase colour table` block (`SceneryTone`, `accentTone`, `titleTone`
+in `ConnectionPhase.kt` and `ConnectionViewViewModel.swift`). Each mobile theme
+maps a tone to its own colour in exactly one exhaustive `when`/`switch`
+(`SceneryTone.color`), so a tone added to the table does not compile there
+until it has one.
 
 **Never convert a layer by hand, and never regenerate one platform alone.** That
 is not a style preference: the layers are pre-registered full-frame images that
