@@ -914,11 +914,21 @@ function macSignOptionsForFile(filePath, fileOptions) {
   return { ...fileOptions, entitlements: MAC_DAEMON_ENTITLEMENTS };
 }
 
+// A local build has no Developer ID, yet electron-builder still calls a custom signer, with
+// an empty identity that osx-sign would reject. Such a build is signed ad hoc, which Apple
+// silicon requires of every binary anyway.
+function macSignIdentityOptions(options) {
+  if (options.identity) {
+    return options;
+  }
+  return { ...options, identity: '-', identityValidation: false };
+}
+
 async function signMacApp(options) {
   const { signAsync } = require('@electron/osx-sign');
   const optionsForFile = options.optionsForFile;
   await signAsync({
-    ...options,
+    ...macSignIdentityOptions(options),
     optionsForFile: (filePath) =>
       macSignOptionsForFile(filePath, optionsForFile ? optionsForFile(filePath) : {}),
   });
@@ -1019,4 +1029,5 @@ exports.packMac = packMac;
 exports.packLinux = packLinux;
 exports.linuxAfterPack = linuxAfterPack;
 exports.macSignOptionsForFile = macSignOptionsForFile;
+exports.macSignIdentityOptions = macSignIdentityOptions;
 exports.MAC_DAEMON_ENTITLEMENTS = MAC_DAEMON_ENTITLEMENTS;

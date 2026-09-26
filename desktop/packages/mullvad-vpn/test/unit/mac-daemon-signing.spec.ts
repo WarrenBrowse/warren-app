@@ -97,4 +97,31 @@ describe('macOS signing of the daemon', () => {
     },
     timeoutMs,
   );
+
+  // A local build has no Developer ID, and electron-builder still hands the
+  // custom signer an empty identity: it must sign ad hoc rather than fail.
+  it(
+    'signs ad hoc when no identity was found',
+    async () => {
+      const { macSignIdentityOptions } = await distribution();
+
+      expect(macSignIdentityOptions({ app: APP })).toEqual({
+        app: APP,
+        identity: '-',
+        identityValidation: false,
+      });
+    },
+    timeoutMs,
+  );
+
+  it(
+    'keeps the identity electron-builder found',
+    async () => {
+      const { macSignIdentityOptions } = await distribution();
+      const options = { app: APP, identity: 'Developer ID Application: Warren' };
+
+      expect(macSignIdentityOptions(options)).toBe(options);
+    },
+    timeoutMs,
+  );
 });
