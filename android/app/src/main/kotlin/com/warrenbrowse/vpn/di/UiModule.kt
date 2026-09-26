@@ -246,6 +246,7 @@ val uiModule = module {
             splitTunneling = get(),
             exitSwitchedNotificationUseCase = get(),
             envStandDownUseCase = get(),
+            networkStatsProvider = get(),
         )
     }
     viewModel { DeviceRevokedViewModel(get(), get()) }

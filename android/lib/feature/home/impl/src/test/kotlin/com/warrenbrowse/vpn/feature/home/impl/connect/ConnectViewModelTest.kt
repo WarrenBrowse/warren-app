@@ -35,6 +35,10 @@ import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenAutoRecoveryProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenHostOfflineProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
+import com.warrenbrowse.vpn.lib.repository.NetworkStatsAvailability
+import com.warrenbrowse.vpn.lib.repository.WarrenNetworkStatsProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenNetworkStatsState
+import com.warrenbrowse.vpn.lib.repository.WarrenRelaySummary
 import com.warrenbrowse.vpn.lib.repository.WarrenPathHealthProvider
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
@@ -75,6 +79,9 @@ class ConnectViewModelTest {
 
     // Warren relay catalogue + local settings (map-marker location source)
     private val mockRelayProvider: WarrenRelayProvider = mockk(relaxed = true)
+    private val catalogueFlow = MutableStateFlow<List<WarrenRelaySummary>>(emptyList())
+    private val networkStatsState = MutableStateFlow(WarrenNetworkStatsState.INITIAL)
+    private val mockNetworkStatsProvider: WarrenNetworkStatsProvider = mockk()
     private val pathWedgedFlow = MutableStateFlow(false)
     private val mockPathHealthProvider: WarrenPathHealthProvider = mockk()
     private val mockWarrenLocalSettings: WarrenLocalSettingsRepository = mockk()
@@ -111,7 +118,8 @@ class ConnectViewModelTest {
         every { mockAutoRecoveryProvider.autoRecoveryCount } returns autoRecoveryCountFlow
         every { mockSplitTunneling.vpnOnlyForCount } returns vpnOnlyForCountFlow
         every { mockRelayProvider.list() } returns emptyList()
-        every { mockRelayProvider.catalogue } returns MutableStateFlow(emptyList())
+        every { mockRelayProvider.catalogue } returns catalogueFlow
+        every { mockNetworkStatsProvider.state } returns networkStatsState
         every { mockPathHealthProvider.pathWedged } returns pathWedgedFlow
 
         every { mockLocation.country } returns "dummy country"
@@ -140,6 +148,7 @@ class ConnectViewModelTest {
                 splitTunneling = mockSplitTunneling,
                 exitSwitchedNotificationUseCase = mockk(relaxed = true),
                 envStandDownUseCase = mockk(relaxed = true),
+                networkStatsProvider = mockNetworkStatsProvider,
             )
     }
 
@@ -327,6 +336,52 @@ class ConnectViewModelTest {
 
             pathWedgedFlow.emit(false)
             assertEquals(false, awaitItem().hostOffline)
+        }
+    }
+    private fun connectedTo(host: String) =
+        TunnelState.Connected(
+            TunnelEndpoint(
+                entryEndpoint = null,
+                endpoint = NetworkStatsFixtures.endpoint(host),
+                quantumResistant = false,
+                obfuscation = null,
+                daita = false,
+            ),
+            null,
+            emptyList(),
+        )
+
+    @Test
+    fun `the network stats are watched only while a tunnel is connected`() = runTest {
+        viewModel.connectedExitLoad.test {
+            assertNull(awaitItem())
+            assertEquals(0, networkStatsState.subscriptionCount.value, "polled while disconnected")
+
+            tunnelState.emit(connectedTo("192.0.2.7"))
+            assertEquals(1, networkStatsState.subscriptionCount.value)
+
+            tunnelState.emit(TunnelState.Disconnected())
+            assertEquals(0, networkStatsState.subscriptionCount.value, "polled after disconnect")
+        }
+    }
+
+    @Test
+    fun `a connected tunnel shows the load of the exit it runs on`() = runTest {
+        catalogueFlow.value = listOf(NetworkStatsFixtures.relay)
+        networkStatsState.value =
+            WarrenNetworkStatsState(
+                NetworkStatsFixtures.stats,
+                NetworkStatsAvailability.AVAILABLE,
+            )
+
+        viewModel.connectedExitLoad.test {
+            assertNull(awaitItem())
+            tunnelState.emit(connectedTo("192.0.2.7"))
+
+            assertEquals(
+                ConnectedExitLoad(NetworkStatsFixtures.exit, NetworkStatsFixtures.stats),
+                awaitItem(),
+            )
         }
     }
 }

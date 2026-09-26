@@ -6,10 +6,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
@@ -35,6 +39,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenAutoRecoveryProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenHostOfflineProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenNetworkStatsProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenPathHealthProvider
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
@@ -63,6 +68,7 @@ class ConnectViewModel(
     splitTunneling: SplitTunnelingRepository,
     private val exitSwitchedNotificationUseCase: ExitSwitchedNotificationUseCase,
     private val envStandDownUseCase: EnvStandDownUseCase,
+    private val networkStatsProvider: WarrenNetworkStatsProvider,
 ) : ViewModel() {
     private val _uiSideEffect = Channel<UiSideEffect>()
 
@@ -171,6 +177,27 @@ class ConnectViewModel(
                 SharingStarted.WhileSubscribed(VIEW_MODEL_STOP_TIMEOUT),
                 ConnectUiState.INITIAL,
             )
+
+    /**
+     * The load of the exit carrying the tunnel. The stats feed is collected only while a tunnel is
+     * connected, so the card never makes the app poll the network stats while it has nothing to
+     * show them on.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val connectedExitLoad: StateFlow<ConnectedExitLoad?> =
+        connectionProxy.tunnelState
+            .map { (it as? TunnelState.Connected)?.endpoint?.endpoint }
+            .distinctUntilChanged()
+            .flatMapLatest { endpoint ->
+                if (endpoint == null) {
+                    flowOf(null)
+                } else {
+                    combine(networkStatsProvider.state, relayProvider.catalogue) { stats, relays ->
+                        connectedExitLoad(endpoint, relays, stats.snapshot)
+                    }
+                }
+            }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(VIEW_MODEL_STOP_TIMEOUT), null)
 
     init {
         viewModelScope.launch { deviceRepository.updateDevice() }

@@ -121,6 +121,11 @@ import com.warrenbrowse.vpn.feature.settings.api.ConnectAfterLocationPick
 import com.warrenbrowse.vpn.feature.settings.api.WarrenLocationPickerNavKey
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenDaitaSettingsNavKey
+import androidx.compose.ui.semantics.Role
+import com.warrenbrowse.vpn.lib.ui.designsystem.networkstats.LoadRingSize
+import com.warrenbrowse.vpn.lib.ui.component.networkstats.rememberSnapshotStale
+import com.warrenbrowse.vpn.lib.ui.component.networkstats.ExitLoadSummary
+import com.warrenbrowse.vpn.feature.settings.api.WarrenNetworkNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenMultihopSettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenPortForwardingSettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenTunnelSettingsNavKey
@@ -183,7 +188,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
-import androidx.compose.ui.semantics.Role
 import com.warrenbrowse.vpn.lib.ui.theme.color.warning
 
 private const val CONNECT_BUTTON_THROTTLE_MILLIS = 1000
@@ -260,6 +264,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
     val forumUrl = stringResource(R.string.community_forum_url)
 
     val state by connectViewModel.uiState.collectAsStateWithLifecycle()
+    val connectedExitLoad by connectViewModel.connectedExitLoad.collectAsStateWithLifecycle()
     // Time-to-fully-drawn ends at this screen's first frame: `am start -W`
     // stops at the splash, and every input of that first frame (tunnel state,
     // wallet, pin, cached labels) is a synchronous local read, so no later
@@ -547,6 +552,8 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
             ConnectScreen(
                 state = uiState,
                 snackbarHostState = snackbarHostState,
+                connectedExitLoad = connectedExitLoad,
+                onNetworkClick = dropUnlessResumed { navigator.navigate(WarrenNetworkNavKey) },
                 showBetaBadge = productFlags.isBeta,
                 betaCapBps = betaCapBps,
                 betaCapResolved = betaCapResolved,
@@ -762,6 +769,9 @@ fun ConnectScreen(
     // for a wallet with no forum account, nothing when the setting is off.
     forumSlot: ForumHeaderSlot? = null,
     onForumClick: () -> Unit = {},
+    // The load of the exit carrying the tunnel, null while there is none to show.
+    connectedExitLoad: ConnectedExitLoad? = null,
+    onNetworkClick: () -> Unit = {},
 ) {
     // The header paints its own glyphs black over the pale scenery sky; the
     // OS status bar right above it must follow (desktop header tone "dark"),
@@ -806,6 +816,8 @@ fun ConnectScreen(
                 onClickDismissNotice,
                 onClickDismissAnnouncement,
                 onClickReEnableAfterStandDown,
+                connectedExitLoad,
+                onNetworkClick,
             )
         }
 
@@ -881,6 +893,8 @@ private fun Content(
     onClickDismissNotice: () -> Unit,
     onClickDismissAnnouncement: () -> Unit,
     onClickReEnableAfterStandDown: () -> Unit,
+    connectedExitLoad: ConnectedExitLoad?,
+    onNetworkClick: () -> Unit,
 ) {
     // The card's top edge in root coordinates, fed to the backdrop at draw
     // time so the burrow foreground clears the card in every state, tracking
@@ -977,6 +991,8 @@ private fun Content(
                     ) {
                         ConnectionCard(
                             state = state,
+                            connectedExitLoad = connectedExitLoad,
+                            onNetworkClick = onNetworkClick,
                             focusRequester = focusRequester,
                             onSwitchLocationClick = onSwitchLocationClick,
                             onDisconnectClick = onDisconnectClick,
@@ -1151,6 +1167,8 @@ internal fun Modifier.marqueeLine(): Modifier =
 @Composable
 private fun ConnectionCard(
     state: ConnectUiState,
+    connectedExitLoad: ConnectedExitLoad?,
+    onNetworkClick: () -> Unit,
     modifier: Modifier = Modifier,
     focusRequester: FocusRequester,
     onSwitchLocationClick: () -> Unit,
@@ -1199,6 +1217,8 @@ private fun ConnectionCard(
                 state.location,
                 expanded,
                 onIncludeOnlyLabelClick = onIncludeOnlyLabelClick,
+                connectedExitLoad = connectedExitLoad,
+                onNetworkClick = onNetworkClick,
             ) {
                 expanded = !expanded
             }
@@ -1309,6 +1329,8 @@ private fun ConnectionCardHeader(
     location: GeoIpLocation?,
     expanded: Boolean,
     onIncludeOnlyLabelClick: () -> Unit,
+    connectedExitLoad: ConnectedExitLoad?,
+    onNetworkClick: () -> Unit,
     onToggleExpand: () -> Unit,
 ) {
     Column(
@@ -1342,19 +1364,28 @@ private fun ConnectionCardHeader(
                     fadeOut(tween(CARD_TRANSITION_MILLIS)),
         ) {
             Column {
-                Text(
-                    modifier =
-                        Modifier.fillMaxWidth().padding(top = Dimens.tinyPadding).marqueeLine(),
-                    text = location.asString(),
-                    // Desktop Location: 18/24 semibold.
-                    style =
-                        MaterialTheme.typography.titleMedium.copy(
-                            fontSize = 18.sp,
-                            lineHeight = 24.sp,
-                        ),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                )
+                // The exit's load closes the location line instead of adding one: the card is
+                // bottom-anchored, so a new row would lift its top edge over the scenery.
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = Dimens.tinyPadding),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        modifier = Modifier.weight(1f).marqueeLine(),
+                        text = location.asString(),
+                        // Desktop Location: 18/24 semibold.
+                        style =
+                            MaterialTheme.typography.titleMedium.copy(
+                                fontSize = 18.sp,
+                                lineHeight = 24.sp,
+                            ),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                    )
+                    if (connectedExitLoad != null) {
+                        CompactExitLoad(connectedExitLoad, onNetworkClick)
+                    }
+                }
                 val hostnameText = location.hostnameText()
                 AnimatedContent(hostnameText, label = "hostname") {
                     if (it != null) {
@@ -1407,9 +1438,37 @@ private fun IncludeOnlyLabel(count: Int, onClick: () -> Unit) {
     }
 }
 
+/**
+ * The exit's load on the location line: tiny ring, the percentage or the band, the people. It
+ * opens the Warren network page.
+ */
+@Composable
+private fun CompactExitLoad(load: ConnectedExitLoad, onClick: () -> Unit) {
+    Box(
+        modifier =
+            Modifier.padding(start = Dimens.smallPadding)
+                .clip(RoundedCornerShape(4.dp))
+                .clickable(
+                    onClickLabel = stringResource(R.string.network_stats_open),
+                    role = Role.Button,
+                    onClick = onClick,
+                )
+                .testTag(CONNECT_CARD_EXIT_LOAD_TEST_TAG)
+    ) {
+        ExitLoadSummary(
+            exit = load.exit,
+            stats = load.stats,
+            ringSize = LoadRingSize.TINY,
+            stale = rememberSnapshotStale(load.stats),
+        )
+    }
+}
+
 private val INCLUDE_ONLY_LABEL_RADIUS = 6.dp
 private const val INCLUDE_ONLY_LABEL_FILL = 0.12f
 private const val INCLUDE_ONLY_LABEL_BORDER = 0.45f
+
+internal const val CONNECT_CARD_EXIT_LOAD_TEST_TAG = "connect_card_exit_load"
 
 @Composable
 private fun GeoIpLocation?.asString(): String {
