@@ -86,18 +86,18 @@
     <string name="app_routing_description">各アプリの接続方法を選択します。</string>
     <string name="split_mode_bypass">VPNをバイパス</string>
     <string name="split_mode_bypass_description">選択したアプリは、VPNがオフのときと同じように接続します。</string>
-    <string name="split_mode_include_only">指定アプリのみVPN</string>
+    <string name="split_mode_include_only">アプリ限定VPN</string>
     <string name="split_mode_include_only_description">選択したアプリだけがVPNを使用します。</string>
     <string name="include_only_lockdown_warning">注意: [VPNを使用していない接続をブロックする] が有効な場合、選択していないアプリはインターネットを使用できません。</string>
-    <string name="include_only_banner">保護されているのはこれらのアプリだけです。このデバイスのそれ以外はすべて通常の接続を使用します。</string>
+    <string name="include_only_banner">保護されるのはこれらのアプリだけです。このデバイス上のその他の通信はすべて通常の接続を使用します。</string>
     <string name="include_only_no_app">選択したアプリはどれもこのデバイスにないため、アプリを選択するまですべてのアプリがVPNを使用します。</string>
-    <string name="include_only_confirm">選択したアプリだけがVPNを使用します。このデバイスのそれ以外は保護されません。</string>
-    <string name="split_mode_replaces_bypass">これは「VPNをバイパス」に置き換わります。そちらのアプリのリストは保持されます。</string>
-    <string name="split_mode_replaces_include_only">これは「指定アプリのみVPN」に置き換わり、バイパスするアプリを除くすべてのアプリが再びVPNを使用します。そちらのアプリのリストは保持されます。</string>
+    <string name="include_only_confirm">選択したアプリだけがVPNを使用します。このデバイス上のその他の通信は保護されません。</string>
+    <string name="split_mode_replaces_bypass">「VPNをバイパス」はこの設定に置き換えられます。そちらのアプリのリストは保持されます。</string>
+    <string name="split_mode_replaces_include_only">「アプリ限定VPN」はこの設定に置き換えられ、バイパスするアプリを除くすべてのアプリが再びVPNを使用します。そちらのアプリのリストは保持されます。</string>
     <string name="split_mode_turn_on">オンにする</string>
     <string name="apps_using_the_vpn">VPNを使用中</string>
     <plurals name="vpn_only_for_apps">
-        <item quantity="other">%1$d 個のアプリのみVPN</item>
+        <item quantity="other">%1$d 個のアプリのみVPNを使用</item>
     </plurals>
     <string name="split_tunneling_description_warning">注意: [VPNを使用していない接続をブロックする] が有効な場合、スプリット対象のアプリはインターネットを使用できません。スプリットトンネリングにはプライバシーのリスクがあることに常に注意してください。</string>
     <string name="enable">有効にする</string>

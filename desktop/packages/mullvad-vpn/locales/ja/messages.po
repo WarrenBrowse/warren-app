@@ -1176,6 +1176,11 @@ msgid "%(DAITA)s: Multihop"
 msgstr "%(DAITA)s: マルチホップ"
 
 msgctxt "connect-view"
+msgid "%(count)d app in another country"
+msgid_plural "%(count)d apps in other countries"
+msgstr[0] "%(count)d 個のアプリが別の国を使用"
+
+msgctxt "connect-view"
 msgid "Active features"
 msgstr "有効な機能"
 
@@ -1246,6 +1251,15 @@ msgstr "プライバシー忍者であり続けるため、当社ウェブサイ
 msgctxt "connect-view"
 msgid "To start using the app, you first need to add time to your account."
 msgstr "アプリを使い始めるには、まずはアカウントに時間を追加する必要があります。"
+
+msgctxt "connect-view"
+msgid "VPN only for %(count)d app"
+msgid_plural "VPN only for %(count)d apps"
+msgstr[0] "%(count)d 個のアプリのみVPNを使用"
+
+msgctxt "connect-view"
+msgid "VPN only for chosen apps"
+msgstr "選択したアプリのみVPNを使用"
 
 msgctxt "connect-view"
 msgid "Voucher was successfully redeemed"
@@ -2839,6 +2853,10 @@ msgctxt "split-tunneling-view"
 msgid "%(applicationName)s is problematic and can’t be excluded from the VPN tunnel."
 msgstr "%(applicationName)sには問題があるため、VPNトンネルから除外できません。"
 
+msgctxt "split-tunneling-view"
+msgid "%(applicationName)s is problematic and can’t be launched through the VPN alone."
+msgstr "%(applicationName)sには問題があるため、このアプリだけをVPN経由で起動することはできません。"
+
 #. Information about split tunneling not being supported on the system.
 #. Available placeholders:
 #. %(splitTunneling)s - will be replaced with Split tunneling
@@ -2855,8 +2873,48 @@ msgid "All apps"
 msgstr "すべてのアプリ"
 
 msgctxt "split-tunneling-view"
+msgid "App routing"
+msgstr "アプリのルーティング"
+
+msgctxt "split-tunneling-view"
+msgid "Apps can use %(limit)d countries at a time. Pick one already in use, or remove one first."
+msgstr "アプリが同時に使用できる国は %(limit)d か国までです。使用中の国を選択するか、先にいずれかを削除してください。"
+
+msgctxt "split-tunneling-view"
+msgid "Bypass VPN"
+msgstr "VPNをバイパス"
+
+msgctxt "split-tunneling-view"
+msgid "Bypasses the VPN"
+msgstr "VPNをバイパス中"
+
+msgctxt "split-tunneling-view"
+msgid "Change the country of %(application)s, now %(country)s"
+msgstr "%(application)sの国を変更 (現在: %(country)s)"
+
+msgctxt "split-tunneling-view"
+msgid "Choose"
+msgstr "選択"
+
+msgctxt "split-tunneling-view"
+msgid "Choose a country for %(application)s"
+msgstr "%(application)sの国を選択"
+
+msgctxt "split-tunneling-view"
+msgid "Choose how each app connects."
+msgstr "各アプリの接続方法を選択します。"
+
+msgctxt "split-tunneling-view"
 msgid "Choose the apps you want to exclude from the VPN tunnel."
 msgstr "VPNトンネルから除外するアプリを選択してください。"
+
+msgctxt "split-tunneling-view"
+msgid "Choose the country an app appears from. Other apps keep your main connection. Up to %(limit)d countries at a time."
+msgstr "アプリの接続元として表示される国を選択します。その他のアプリはメインの接続を使用し続けます。同時に使用できるのは %(limit)d か国までです。"
+
+msgctxt "split-tunneling-view"
+msgid "Cities in %(country)s"
+msgstr "%(country)sの都市"
 
 #. Link for learning more
 msgctxt "split-tunneling-view"
@@ -2864,8 +2922,44 @@ msgid "Click here to learn more"
 msgstr "ここをクリックすると詳細が表示されます"
 
 msgctxt "split-tunneling-view"
+msgid "Click on an app to launch it. It uses the VPN until you close it, and nothing else does."
+msgstr "アプリをクリックして起動します。閉じるまでそのアプリだけがVPNを使用します。"
+
+msgctxt "split-tunneling-view"
 msgid "Click on an app to launch it. Its traffic will bypass the VPN tunnel until you close it."
 msgstr "アプリをクリックして起動します。そのトラフィックは、アプリを閉じるまでVPNトンネルをバイパスします。"
+
+msgctxt "split-tunneling-view"
+msgid "Connected"
+msgstr "接続済み"
+
+msgctxt "split-tunneling-view"
+msgid "Connected, IP %(ip)s"
+msgstr "接続済み、IP %(ip)s"
+
+msgctxt "split-tunneling-view"
+msgid "Connecting..."
+msgstr "接続中..."
+
+msgctxt "split-tunneling-view"
+msgid "Countries"
+msgstr "国"
+
+msgctxt "split-tunneling-view"
+msgid "Country"
+msgstr "国"
+
+msgctxt "split-tunneling-view"
+msgid "Country for %(application)s"
+msgstr "%(application)sの国"
+
+msgctxt "split-tunneling-view"
+msgid "Country limit reached"
+msgstr "国の上限に到達"
+
+msgctxt "split-tunneling-view"
+msgid "Country per app"
+msgstr "アプリごとの国"
 
 msgctxt "split-tunneling-view"
 msgid "Enabled \"Full disk access\" and still having issues?"
@@ -2881,8 +2975,20 @@ msgid "Find another app"
 msgstr "その他のアプリを探す"
 
 msgctxt "split-tunneling-view"
+msgid "Flatpak apps cannot use a country yet"
+msgstr "Flatpakアプリではまだ国を使用できません"
+
+msgctxt "split-tunneling-view"
 msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not be excluded from the VPN tunnel."
 msgstr "すでに実行中の場合は、ここから起動する前に %(applicationName)sを閉じてください。そうしないと、VPNトンネルから除外されない可能性があります。"
+
+msgctxt "split-tunneling-view"
+msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not use the VPN."
+msgstr "すでに実行中の場合は、ここから起動する前に %(applicationName)sを閉じてください。そうしないと、VPNを使用しない可能性があります。"
+
+msgctxt "split-tunneling-view"
+msgid "In use"
+msgstr "使用中"
 
 #. Button label for launching an application with split tunneling.
 msgctxt "split-tunneling-view"
@@ -2890,8 +2996,40 @@ msgid "Launch"
 msgstr "起動する"
 
 msgctxt "split-tunneling-view"
+msgid "Limit reached"
+msgstr "上限に到達"
+
+msgctxt "split-tunneling-view"
+msgid "No server there"
+msgstr "その場所にサーバーなし"
+
+msgctxt "split-tunneling-view"
+msgid "No session token left"
+msgstr "セッショントークン切れ"
+
+msgctxt "split-tunneling-view"
+msgid "Off, uses the main connection"
+msgstr "オフ、メインの接続を使用"
+
+msgctxt "split-tunneling-view"
+msgid "Only the apps you choose use the VPN."
+msgstr "選択したアプリだけがVPNを使用します。"
+
+msgctxt "split-tunneling-view"
+msgid "Only the apps you choose will use the VPN. The rest of this device will not be protected."
+msgstr "選択したアプリだけがVPNを使用します。このデバイス上のその他の通信は保護されません。"
+
+msgctxt "split-tunneling-view"
+msgid "Only these apps are protected. Everything else on this device uses your normal connection."
+msgstr "保護されるのはこれらのアプリだけです。このデバイス上のその他の通信はすべて通常の接続を使用します。"
+
+msgctxt "split-tunneling-view"
 msgid "Open System Settings"
 msgstr "システム設定を開く"
+
+msgctxt "split-tunneling-view"
+msgid "Opens through a script: pick its program with Find another app"
+msgstr "スクリプト経由で起動します: 「その他のアプリを探す」でプログラムを選択してください"
 
 #. This error message is shown if the user tries to launch a Linux desktop
 #. entry file that doesn't contain the required 'Exec' value.
@@ -2907,8 +3045,40 @@ msgid "Please try again or send a problem report."
 msgstr "再試行するか、問題の報告を送信してください。"
 
 msgctxt "split-tunneling-view"
+msgid "Remove country"
+msgstr "国を削除"
+
+msgctxt "split-tunneling-view"
+msgid "Remove the country of %(application)s"
+msgstr "%(application)sの国を削除"
+
+msgctxt "split-tunneling-view"
 msgid "Restart Warren Service"
 msgstr "Warrenサービスを再起動"
+
+msgctxt "split-tunneling-view"
+msgid "Snap apps cannot use a country yet"
+msgstr "Snapアプリではまだ国を使用できません"
+
+msgctxt "split-tunneling-view"
+msgid "The apps you choose connect as if the VPN were off."
+msgstr "選択したアプリは、VPNがオフのときと同じように接続します。"
+
+msgctxt "split-tunneling-view"
+msgid "This build of Warren VPN cannot do this. It needs a signed build."
+msgstr "このビルドのWarren VPNではこの機能を使用できません。署名済みのビルドが必要です。"
+
+msgctxt "split-tunneling-view"
+msgid "This needs macOS 13 or newer."
+msgstr "macOS 13以降が必要です。"
+
+msgctxt "split-tunneling-view"
+msgid "This replaces Bypass VPN. Your list of apps there is kept."
+msgstr "「VPNをバイパス」はこの設定に置き換えられます。そちらのアプリのリストは保持されます。"
+
+msgctxt "split-tunneling-view"
+msgid "This replaces VPN only for, so every app uses the VPN again except the ones you bypass. Your list of apps there is kept."
+msgstr "「アプリ限定VPN」はこの設定に置き換えられ、バイパスするアプリを除くすべてのアプリが再びVPNを使用します。そちらのアプリのリストは保持されます。"
 
 #. Information about split tunneling being unavailable due to
 #. missing support in the user's operating system.
@@ -2922,10 +3092,54 @@ msgctxt "split-tunneling-view"
 msgid "To use split tunneling please enable “Full disk access” for “Warren VPN” in the macOS system settings."
 msgstr "スプリットトンネリングを使用するには、macOSのシステム設定で「Warren VPN」の「フルディスクアクセス」を有効にしてください。"
 
+msgctxt "split-tunneling-view"
+msgid "To use this, enable “Full disk access” for “Warren VPN” in the macOS system settings."
+msgstr "この機能を使用するには、macOSのシステム設定で「Warren VPN」の「フルディスクアクセス」を有効にしてください。"
+
+msgctxt "split-tunneling-view"
+msgid "Turn on"
+msgstr "オンにする"
+
 #. Error message showed in a dialog when an application fails to launch.
 msgctxt "split-tunneling-view"
 msgid "Unable to launch selection. %(detailedErrorMessage)s"
 msgstr "選択を開始できません。%(detailedErrorMessage)s"
+
+msgctxt "split-tunneling-view"
+msgid "Unavailable"
+msgstr "使用不可"
+
+msgctxt "split-tunneling-view"
+msgid "Uses the VPN through its country"
+msgstr "指定した国経由でVPNを使用"
+
+msgctxt "split-tunneling-view"
+msgid "Using the VPN"
+msgstr "VPNを使用中"
+
+msgctxt "split-tunneling-view"
+msgid "VPN only for"
+msgstr "アプリ限定VPN"
+
+msgctxt "split-tunneling-view"
+msgid "VPN only for is on: an app uses its country when you open it from VPN only for."
+msgstr "「アプリ限定VPN」がオンです: アプリは「アプリ限定VPN」から開いたときに、その国を使用します。"
+
+msgctxt "split-tunneling-view"
+msgid "VPN only for is on: every app you did not choose there already bypasses the VPN."
+msgstr "「アプリ限定VPN」がオンです: そこで選択していないアプリは、すでにVPNをバイパスしています。"
+
+msgctxt "split-tunneling-view"
+msgid "Waiting for the VPN"
+msgstr "VPNを待機中"
+
+msgctxt "split-tunneling-view"
+msgid "With a country"
+msgstr "国を設定したアプリ"
+
+msgctxt "split-tunneling-view"
+msgid "Your system does not support this."
+msgstr "お使いのシステムはこの機能に対応していません。"
 
 #. Button label for continuing problem report submission with an outdated app version.
 msgctxt "support-view"
@@ -3129,6 +3343,10 @@ msgstr "これらの手順で解決しない場合は、コミュニティフォ
 msgctxt "tunnel-control"
 msgid "Connect"
 msgstr "接続"
+
+msgctxt "tunnel-control"
+msgid "Only selected apps are protected"
+msgstr "選択したアプリのみ保護されています"
 
 msgctxt "tunnel-control"
 msgid "Switch location"

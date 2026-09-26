@@ -89,9 +89,9 @@
     <string name="split_mode_include_only">선택한 앱만 VPN</string>
     <string name="split_mode_include_only_description">선택한 앱만 VPN을 사용합니다.</string>
     <string name="include_only_lockdown_warning">주의: \"VPN 없이 연결 차단\"이 활성화되면, 선택하지 않은 앱에 인터넷이 연결되지 않습니다.</string>
-    <string name="include_only_banner">이 앱들만 보호됩니다. 이 기기의 나머지는 모두 일반 연결을 사용합니다.</string>
+    <string name="include_only_banner">이 앱들만 보호됩니다. 이 기기의 나머지 트래픽은 모두 일반 연결을 사용합니다.</string>
     <string name="include_only_no_app">선택한 앱이 이 기기에 하나도 없으므로, 앱을 선택할 때까지 모든 앱이 VPN을 사용합니다.</string>
-    <string name="include_only_confirm">선택한 앱만 VPN을 사용하게 됩니다. 이 기기의 나머지는 보호되지 않습니다.</string>
+    <string name="include_only_confirm">선택한 앱만 VPN을 사용하게 됩니다. 이 기기의 나머지 트래픽은 보호되지 않습니다.</string>
     <string name="split_mode_replaces_bypass">이 설정은 \"VPN 우회\"를 대체합니다. 해당 앱 목록은 유지됩니다.</string>
     <string name="split_mode_replaces_include_only">이 설정은 \"선택한 앱만 VPN\"을 대체하므로, 우회하는 앱을 제외한 모든 앱이 다시 VPN을 사용합니다. 해당 앱 목록은 유지됩니다.</string>
     <string name="split_mode_turn_on">켜기</string>
