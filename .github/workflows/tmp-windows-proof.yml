@@ -15,14 +15,12 @@ jobs:
         include:
           - script: ci/codemagic/windows-release.sh
             phases: prepare sources build stage
-          - script: ci/codemagic/windows-headless.sh
-            phases: prepare sources build bundle
     runs-on: windows-2025
     timeout-minutes: 150
     env:
       WARREN_SHA: ${{ github.sha }}
       WARREN_CHANNEL: beta
-      WARREN_VERSION: ""
+      WARREN_VERSION: "1.1.35"
       WARREN_API_URL: https://api.beta.warrenbrowse.com
     steps:
       - name: Allow long paths
