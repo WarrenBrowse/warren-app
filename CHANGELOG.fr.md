@@ -76,6 +76,10 @@ par l'application, gardez-le tel quel.
 ### Corrigé
 - [Windows] Corriger Hors VPN dans l'app beta, qui refusait de s'activer avec « The sublayer does
   not exist ».
+- Garder les ports redirigés actifs après un redémarrage de l'app, une mise à jour ou un
+  redémarrage de l'ordinateur. Chaque appareil dérive ses droits de port du portefeuille : un
+  redémarrage récupère les mêmes droits au lieu de n'en avoir aucun pendant jusqu'à deux jours, et
+  une règle refusée par le serveur passe sur un droit libre.
 - Partager les tokens de session anonymes entre les appareils d'un même portefeuille. Chaque
   appareil dérive les mêmes tokens du portefeuille, si bien qu'un deuxième appareil se connecte
   avec eux au lieu de se rabattre sur une connexion qui identifie le portefeuille auprès de l'exit,

@@ -77,6 +77,10 @@ Line wrap the file at 100 chars.                                              Th
 ### Fixed
 - [Windows] Fix Bypass VPN in the beta app, which refused to turn on with "The sublayer does not
   exist".
+- Keep forwarded ports working after the app restarts, updates or the computer reboots. Every
+  device derives its port entitlements from the wallet, so a restart gets the same entitlements
+  back instead of none for up to two days, and a rule the server refuses moves to a free
+  entitlement.
 - Share the anonymous session tokens between the devices of one wallet. Every device derives the
   same tokens from the wallet, so a second device connects on them instead of falling back to a
   login that identifies the wallet to the exit, and a reconnect no longer uses up a token.

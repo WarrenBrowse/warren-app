@@ -68,6 +68,10 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [Android] Ecranul de split tunneling se numește Rutare aplicații în toate limbile, ca pe desktop.
 
 ### Reparat
+- Porturile redirecționate rămân active după repornirea aplicației, o actualizare sau repornirea
+  calculatorului. Fiecare dispozitiv derivă drepturile de port din portofel, așa că o repornire
+  primește înapoi aceleași drepturi în loc să rămână fără ele până la două zile, iar o regulă
+  refuzată de server trece pe un drept liber.
 - [Windows] Repară „Fără VPN” în aplicația beta, care refuza să pornească cu „The sublayer does not
   exist”.
 - Tokenurile de sesiune anonime sunt împărțite între dispozitivele aceluiași portofel. Fiecare
