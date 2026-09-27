@@ -32,6 +32,13 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Say when the server refuses a forwarded port for want of an entitlement, and ask again
   automatically instead of stopping on the first refusal.
 
+### Changed
+- [Android] Give every row of the location picker the same shape, recents and custom lists included:
+  the round flag, the name over its country, the load of a single exit, and a quiet menu button,
+  also opened by a long press, that adds the location to a list or removes it at once, or starts a
+  new list holding it. The selected location shows as a green name and a green ring around its flag.
+  A list with nothing in it no longer shows in the picker.
+
 ### Fixed
 - [iOS] Present a port entitlement with each forwarded port request, as the other platforms do, so
   the servers that require one grant the port instead of refusing it.

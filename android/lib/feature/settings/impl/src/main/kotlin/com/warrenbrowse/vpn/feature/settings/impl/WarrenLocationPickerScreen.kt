@@ -8,25 +8,18 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyItemScope
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.material.icons.rounded.Public
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -35,9 +28,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
@@ -55,59 +45,36 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.warrenbrowse.vpn.common.compose.unlessIsDetail
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.settings.api.ConnectAfterLocationPick
-import com.warrenbrowse.vpn.lib.model.WarrenNetworkStats
-import com.warrenbrowse.vpn.lib.model.loadBadgeOf
 import com.warrenbrowse.vpn.lib.repository.ExitPin
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenNetworkStatsProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
-import com.warrenbrowse.vpn.lib.ui.component.CountryFlag
-import com.warrenbrowse.vpn.lib.ui.component.ExpandChevron
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
 import com.warrenbrowse.vpn.lib.ui.component.dialog.NegativeConfirmationDialog
-import com.warrenbrowse.vpn.lib.ui.component.networkstats.ExitLoadBadge
 import com.warrenbrowse.vpn.lib.ui.component.networkstats.rememberSnapshotStale
-import com.warrenbrowse.vpn.lib.ui.component.relaylist.InactiveRelayIndicator
-import com.warrenbrowse.vpn.lib.ui.designsystem.Hierarchy
-import com.warrenbrowse.vpn.lib.ui.designsystem.ListHeader
-import com.warrenbrowse.vpn.lib.ui.designsystem.ListItemClickArea
-import com.warrenbrowse.vpn.lib.ui.designsystem.ListItemDefaults
-import com.warrenbrowse.vpn.lib.ui.designsystem.Position
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenAlertDialog
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenCircularProgressIndicatorLarge
-import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenListItem
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenTextButton
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
-import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha60
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
-
-/** Fade between the loading, empty and populated catalogue, and between rows. */
-private const val PICKER_FADE_MS = 250
-
-/** Depth of a row in the accordion, expressed as the design-system hierarchy. */
-private fun hierarchyOf(depth: Int): Hierarchy = when (depth) {
-    0 -> Hierarchy.Parent
-    1 -> Hierarchy.Child1
-    else -> Hierarchy.Child2
-}
 
 /** What the catalogue is doing, so a fetch in flight never reads as "nothing here". */
 private enum class CatalogueState {
@@ -140,8 +107,13 @@ private val ExpandedKeySaver: Saver<Set<String>, Any> =
  * several exits in one city are told apart by an ordinal derived from the
  * sorted exit id; the endpoint address is never rendered and never searched.
  *
- * Warren-specific extras are kept: recents (behind the top-bar overflow menu),
- * and custom lists, reachable from each row's own menu.
+ * Every location row has one anatomy wherever it appears (recents, custom
+ * lists, the tree): its round flag (ringed in green while it holds the
+ * selection), its name over an optional muted subtitle, the load badge when it
+ * stands for one exit, then a quiet "more" button, also reached by a long
+ * press, opening the lists menu: every list, checked when it holds the
+ * location, a tap toggling membership, and "New list…" to start a list around
+ * it. Recents can be disabled from the top-bar overflow menu.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -171,8 +143,8 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
     val entryCountry by settings.entryCountry.collectAsStateWithLifecycle()
 
     // Dialog and menu holders keep only saveable identifiers, so a rotation
-    // mid-decision reopens on the same list or exit instead of dropping it.
-    var addToListForExitId by rememberSaveable { mutableStateOf<String?>(null) }
+    // mid-decision reopens on the same list or location instead of dropping it.
+    var newListFor by rememberSaveable(stateSaver = LocationSaver) { mutableStateOf<ExitPin?>(null) }
     var renameListFor by rememberSaveable { mutableStateOf<String?>(null) }
     var deleteListFor by rememberSaveable { mutableStateOf<String?>(null) }
     var confirmClearRecents by rememberSaveable { mutableStateOf(false) }
@@ -183,7 +155,7 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val keyboard = LocalSoftwareKeyboardController.current
-    val removedMessage = stringResource(R.string.location_removed_from_list)
+    val context = LocalContext.current
     val undoLabel = stringResource(R.string.undo)
 
     // Which hop the list is picking. Only reachable while multi-hop is on, so
@@ -194,6 +166,8 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
     var expandedCountries by
         rememberSaveable(stateSaver = ExpandedKeySaver) { mutableStateOf(emptySet<String>()) }
     var expandedCities by
+        rememberSaveable(stateSaver = ExpandedKeySaver) { mutableStateOf(emptySet<String>()) }
+    var expandedLists by
         rememberSaveable(stateSaver = ExpandedKeySaver) { mutableStateOf(emptySet<String>()) }
     var query by rememberSaveable { mutableStateOf("") }
     var seeded by rememberSaveable { mutableStateOf(false) }
@@ -263,7 +237,7 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
             recentPins = recentPins,
             customLists = customLists,
             exitPin = exitPin,
-            expanded = ExpandedKeys(expandedCountries, expandedCities),
+            expanded = ExpandedKeys(expandedCountries, expandedCities, expandedLists),
         )
     val rows = remember(pickerInputs) { pickerRows(pickerInputs) }
 
@@ -309,6 +283,72 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
         }
         revealCountry = null
     }
+
+    // Membership changes answer with a short snackbar naming the list, and a
+    // removal offers its undo, so a toggle made from a folded list is never silent.
+    val toggleList: (String, ExitPin) -> Unit = { listName, location ->
+        val outcome = toggleListMembership(
+            name = listName,
+            location = location,
+            customLists = customLists,
+            add = settings::addLocationToCustomList,
+            remove = settings::removeLocationFromCustomList,
+        )
+        scope.launch {
+            snackbarHostState.currentSnackbarData?.dismiss()
+            if (outcome == ListToggle.Added) {
+                snackbarHostState.showSnackbar(
+                    message = context.getString(R.string.location_added_to_list, listName),
+                    duration = SnackbarDuration.Short,
+                )
+            } else {
+                showRemovalUndo(
+                    snackbarHostState = snackbarHostState,
+                    message = context.getString(R.string.location_removed_from_named_list, listName),
+                    undoLabel = undoLabel,
+                    onUndo = { settings.addLocationToCustomList(listName, location) },
+                )
+            }
+        }
+    }
+    val actions = PickerActions(
+        onApplyPin = applyPin,
+        onEntryPick = { country ->
+            pickerScope = applyEntryPick(country, settings::setEntryCountry)
+        },
+        onClearRecents = { confirmClearRecents = true },
+        onRowMenu = { rowMenuFor = it },
+        expand = ExpandActions(
+            onToggleCountry = { country ->
+                val open = country in expandedCountries
+                expandedCountries = if (open) {
+                    expandedCountries - country
+                } else {
+                    revealCountry = country
+                    expandedCountries + country
+                }
+            },
+            onToggleCity = { key ->
+                expandedCities = if (key in expandedCities) expandedCities - key else expandedCities + key
+            },
+            onToggleList = { name ->
+                expandedLists = if (name in expandedLists) expandedLists - name else expandedLists + name
+            },
+        ),
+        lists = ListActions(
+            memberships = { location -> listMemberships(location, customLists) },
+            onToggleMembership = { listName, location ->
+                rowMenuFor = null
+                toggleList(listName, location)
+            },
+            onNewList = { location ->
+                rowMenuFor = null
+                newListFor = location
+            },
+            onRenameList = { renameListFor = it },
+            onDeleteList = { deleteListFor = it },
+        ),
+    )
 
     val catalogueState = when {
         relays.isNotEmpty() -> CatalogueState.Content
@@ -414,54 +454,8 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
                                             inFlight = inFlight,
                                             networkStats = statsSnapshot,
                                             networkStatsStale = statsStale,
-                                            onApplyPin = applyPin,
-                                            onEntryPick = { country ->
-                                                pickerScope = applyEntryPick(
-                                                    country,
-                                                    settings::setEntryCountry,
-                                                )
-                                            },
-                                            onToggleCountry = { country ->
-                                                val open = country in expandedCountries
-                                                expandedCountries = if (open) {
-                                                    expandedCountries - country
-                                                } else {
-                                                    revealCountry = country
-                                                    expandedCountries + country
-                                                }
-                                            },
-                                            onToggleCity = { key ->
-                                                expandedCities = if (key in expandedCities) {
-                                                    expandedCities - key
-                                                } else {
-                                                    expandedCities + key
-                                                }
-                                            },
-                                            onClearRecents = { confirmClearRecents = true },
-                                            onRenameList = { renameListFor = it },
-                                            onDeleteList = { deleteListFor = it },
-                                            rowMenuFor = rowMenuFor,
-                                            onRowMenu = { rowMenuFor = it },
-                                            onAddToList = { addToListForExitId = it },
-                                            onRemoveFromList = { listName, exitId ->
-                                                settings.removeExitFromCustomList(
-                                                    listName,
-                                                    exitId,
-                                                )
-                                                scope.launch {
-                                                    showRemovalUndo(
-                                                        snackbarHostState = snackbarHostState,
-                                                        message = removedMessage,
-                                                        undoLabel = undoLabel,
-                                                        onUndo = {
-                                                            settings.addExitToCustomList(
-                                                                listName,
-                                                                exitId,
-                                                            )
-                                                        },
-                                                    )
-                                                }
-                                            },
+                                            menuOpen = rowMenuFor == row.key,
+                                            actions = actions,
                                         )
                                     }
                                 }
@@ -472,20 +466,15 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
         }
     }
 
-    addToListForExitId?.let { exitId ->
-        val relay = relays.firstOrNull { it.exitId == exitId }
-        if (relay == null) {
-            addToListForExitId = null
-        } else {
-            AddToListDialog(
-                listNames = customLists.keys.toList(),
-                onDismiss = { addToListForExitId = null },
-                onPick = { listName ->
-                    settings.addExitToCustomList(listName, relay.exitId)
-                    addToListForExitId = null
-                },
-            )
-        }
+    newListFor?.let { location ->
+        NewListDialog(
+            takenNames = customLists.keys,
+            onDismiss = { newListFor = null },
+            onCreate = { listName ->
+                newListFor = null
+                toggleList(listName, location)
+            },
+        )
     }
 
     renameListFor?.let { oldName ->
@@ -494,6 +483,7 @@ fun WarrenLocationPicker(navigator: Navigator, connectOnPick: Boolean = false) {
             onDismiss = { renameListFor = null },
             onRename = { newName ->
                 settings.renameCustomList(oldName, newName)
+                if (oldName in expandedLists) expandedLists = expandedLists - oldName + newName
                 renameListFor = null
             },
         )
@@ -620,479 +610,35 @@ private fun SearchField(query: String, onQueryChange: (String) -> Unit, onSearch
     )
 }
 
-@Composable
-@Suppress("LongParameterList", "LongMethod")
-private fun LazyItemScope.PickerRowContent(
-    row: PickerRow,
-    inFlight: Boolean,
-    networkStats: WarrenNetworkStats?,
-    networkStatsStale: Boolean,
-    onApplyPin: (ExitPin) -> Unit,
-    onEntryPick: (String?) -> Unit,
-    onToggleCountry: (String) -> Unit,
-    onToggleCity: (String) -> Unit,
-    onClearRecents: () -> Unit,
-    onRenameList: (String) -> Unit,
-    onDeleteList: (String) -> Unit,
-    rowMenuFor: String?,
-    onRowMenu: (String?) -> Unit,
-    onAddToList: (String) -> Unit,
-    onRemoveFromList: (String, String) -> Unit,
-) {
-    // Rows enter, leave and slide on one clock, so expanding a country unfolds
-    // its children instead of snapping them in.
-    val itemModifier = Modifier.animateItem(
-        fadeInSpec = tween(PICKER_FADE_MS),
-        placementSpec = tween(PICKER_FADE_MS),
-        fadeOutSpec = tween(PICKER_FADE_MS),
-    )
-    when (row) {
-        is PickerRow.Gap -> Spacer(modifier = itemModifier.height(Dimens.mediumPadding))
-
-        is PickerRow.RecentsHeader,
-        is PickerRow.CustomListsHeader,
-        is PickerRow.AllLocationsHeader,
-        is PickerRow.CustomListHeader ->
-            PickerSectionHeader(
-                row = row,
-                modifier = itemModifier,
-                onClearRecents = onClearRecents,
-                onRenameList = onRenameList,
-                onDeleteList = onDeleteList,
-            )
-
-        is PickerRow.ExitAutomaticRow ->
-            PickerCell(
-                modifier = itemModifier,
-                title = stringResource(R.string.automatic),
-                subtitle = stringResource(R.string.location_automatic_description),
-                leading = { AutomaticGlyph() },
-                position = row.position,
-                selected = row.isPinned,
-                isEnabled = !inFlight,
-                onClick = dropUnlessResumed { onApplyPin(ExitPin.Automatic) },
-            )
-
-        is PickerRow.EntryAutomaticRow ->
-            PickerCell(
-                modifier = itemModifier,
-                title = stringResource(R.string.automatic),
-                subtitle = stringResource(R.string.location_entry_automatic_description),
-                leading = { AutomaticGlyph() },
-                position = row.position,
-                selected = row.isPinned,
-                isEnabled = !inFlight,
-                onClick = { onEntryPick(null) },
-            )
-
-        is PickerRow.EntryCountryRow ->
-            PickerCell(
-                modifier = itemModifier,
-                title = row.display,
-                leading = { RowFlag(row.country) },
-                selected = row.isPinned,
-                isEnabled = !inFlight,
-                position = row.position,
-                onClick = { onEntryPick(row.country) },
-            )
-
-        is PickerRow.CountryHeader ->
-            PickerCell(
-                modifier = itemModifier,
-                title = row.display.ifBlank { stringResource(R.string.location_unknown_country) },
-                leading = { RowFlag(row.country) },
-                selected = row.isPinned,
-                isEnabled = row.hasActive && !inFlight,
-                position = row.position,
-                onClick = dropUnlessResumed { onApplyPin(ExitPin.Country(row.country)) },
-                trailing = { ExpandButton(row.expanded) { onToggleCountry(row.country) } },
-            )
-
-        is PickerRow.CityHeader ->
-            PickerCell(
-                modifier = itemModifier,
-                title = row.city,
-                selected = row.isPinned,
-                isEnabled = row.hasActive && !inFlight,
-                position = row.position,
-                hierarchy = hierarchyOf(row.depth),
-                onClick = dropUnlessResumed { onApplyPin(ExitPin.City(row.country, row.city)) },
-                trailing = {
-                    ExpandButton(row.expanded) { onToggleCity(cityKey(row.country, row.city)) }
-                },
-            )
-
-        is PickerRow.RecentScopeRow ->
-            PickerCell(
-                modifier = itemModifier,
-                title = row.title,
-                leading = { RowFlag(row.pin.countryCode()) },
-                selected = row.isPinned,
-                inactive = !row.hasActive,
-                isEnabled = row.hasActive && !inFlight,
-                position = row.position,
-                onClick = dropUnlessResumed { onApplyPin(row.pin) },
-            )
-
-        is PickerRow.ExitRow ->
-            ExitRowCell(
-                row = row,
-                modifier = itemModifier,
-                inFlight = inFlight,
-                networkStats = networkStats,
-                networkStatsStale = networkStatsStale,
-                onApplyPin = onApplyPin,
-                menuOpen = rowMenuFor == row.key,
-                onRowMenu = onRowMenu,
-                onAddToList = onAddToList,
-                onRemoveFromList = onRemoveFromList,
-            )
-    }
-}
-
-/** The country a recents scope stands for, which its flag shows. */
-private fun ExitPin.countryCode(): String? = when (this) {
-    is ExitPin.Country -> country
-    is ExitPin.City -> country
-    else -> null
-}
-
-@Composable
-private fun PickerSectionHeader(
-    row: PickerRow,
-    modifier: Modifier,
-    onClearRecents: () -> Unit,
-    onRenameList: (String) -> Unit,
-    onDeleteList: (String) -> Unit,
-) {
-    // [ListHeader] sizes itself from its own intrinsics, so the item animation
-    // is carried by this box instead of being appended to that chain.
-    Box(modifier = modifier.fillMaxWidth()) {
-        when (row) {
-            is PickerRow.RecentsHeader ->
-                ListHeader(
-                    content = { Text(stringResource(R.string.location_recents)) },
-                    actions = {
-                        WarrenTextButton(onClick = onClearRecents) {
-                            Text(stringResource(R.string.location_clear))
-                        }
-                    },
-                )
-            is PickerRow.CustomListsHeader ->
-                ListHeader(content = { Text(stringResource(R.string.location_custom_lists)) })
-            is PickerRow.CustomListHeader ->
-                ListHeader(
-                    content = { Text(row.name) },
-                    actions = {
-                        WarrenTextButton(onClick = { onRenameList(row.name) }) {
-                            Text(stringResource(R.string.location_rename_list))
-                        }
-                        WarrenTextButton(onClick = { onDeleteList(row.name) }) {
-                            Text(stringResource(R.string.location_delete_list))
-                        }
-                    },
-                )
-            else ->
-                ListHeader(content = { Text(stringResource(R.string.location_all_locations)) })
-        }
-    }
-}
-
 /**
- * One exit: its label, its load badge at the trailing edge and the custom-list
- * menu. A long press carries the same list action as the menu.
+ * Name a new list, which is created holding the location its menu was opened
+ * on: a list exists to hold locations, so it is never created empty. A name
+ * already in use is refused rather than merged.
  */
 @Composable
-@Suppress("LongParameterList")
-private fun ExitRowCell(
-    row: PickerRow.ExitRow,
-    modifier: Modifier,
-    inFlight: Boolean,
-    networkStats: WarrenNetworkStats?,
-    networkStatsStale: Boolean,
-    onApplyPin: (ExitPin) -> Unit,
-    menuOpen: Boolean,
-    onRowMenu: (String?) -> Unit,
-    onAddToList: (String) -> Unit,
-    onRemoveFromList: (String, String) -> Unit,
-) {
-    val label = if (row.ordinal == null) {
-        row.title
-    } else {
-        stringResource(R.string.location_exit_ordinal, row.title, row.ordinal)
-    }
-    val section = row.section
-    val exitId = row.relay.exitId
-    val exitStats = networkStats?.exit(exitId)
-    PickerCell(
-        modifier = modifier,
-        title = label,
-        subtitle = row.subtitle,
-        leading = row.flagCountry?.let { country -> { RowFlag(country) } },
-        badge =
-            if (networkStats != null && exitStats != null) {
-                {
-                    ExitLoadBadge(
-                        badge = networkStats.loadBadgeOf(exitStats),
-                        stale = networkStatsStale,
-                    )
-                }
-            } else {
-                null
-            },
-        selected = row.isPinned,
-        inactive = !row.relay.active,
-        isEnabled = row.relay.active && !inFlight,
-        position = row.position,
-        hierarchy = hierarchyOf(row.depth),
-        onClick = dropUnlessResumed { onApplyPin(ExitPin.Exit(exitId)) },
-        onLongClick = {
-            if (section is ExitSection.Custom) {
-                onRemoveFromList(section.name, exitId)
-            } else {
-                onAddToList(exitId)
-            }
-        },
-        trailing = {
-            RowMenu(
-                expanded = menuOpen,
-                inList = section as? ExitSection.Custom,
-                onOpen = { onRowMenu(row.key) },
-                onDismiss = { onRowMenu(null) },
-                onAddToList = {
-                    onRowMenu(null)
-                    onAddToList(exitId)
-                },
-                onRemoveFromList = { listName ->
-                    onRowMenu(null)
-                    onRemoveFromList(listName, exitId)
-                },
-            )
-        },
-    )
-}
-
-/**
- * Per-row custom-list menu. The visible affordance the picker used to lack:
- * the same actions long-press already carried, discoverable without knowing
- * they exist. Muted, so a column of them does not outweigh the labels.
- */
-@Composable
-@Suppress("LongParameterList")
-private fun RowMenu(
-    expanded: Boolean,
-    inList: ExitSection.Custom?,
-    onOpen: () -> Unit,
+private fun NewListDialog(
+    takenNames: Set<String>,
     onDismiss: () -> Unit,
-    onAddToList: () -> Unit,
-    onRemoveFromList: (String) -> Unit,
+    onCreate: (String) -> Unit,
 ) {
-    Box {
-        IconButton(onClick = onOpen) {
-            Icon(
-                imageVector = Icons.Rounded.MoreVert,
-                contentDescription = stringResource(R.string.location_row_options),
-                tint = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha60),
-            )
-        }
-        DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.location_add_to_list)) },
-                onClick = onAddToList,
-            )
-            if (inList != null) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(R.string.location_remove_from_list)) },
-                    onClick = { onRemoveFromList(inList.name) },
-                )
-            }
-        }
-    }
-}
-
-/** Entry / Exit hop selector, mirroring the desktop scope bar. */
-@Composable
-private fun HopScopeBar(scope: PickerScope, onScopeChange: (PickerScope) -> Unit) {
-    SingleChoiceSegmentedButtonRow(
-        modifier = Modifier.fillMaxWidth().padding(top = Dimens.smallPadding),
-    ) {
-        SegmentedButton(
-            selected = scope == PickerScope.Entry,
-            onClick = { onScopeChange(PickerScope.Entry) },
-            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-        ) { Text(stringResource(R.string.location_scope_entry)) }
-        SegmentedButton(
-            selected = scope == PickerScope.Exit,
-            onClick = { onScopeChange(PickerScope.Exit) },
-            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-        ) { Text(stringResource(R.string.location_scope_exit)) }
-    }
-}
-
-/** The round country flag leading a top-level row. */
-@Composable
-private fun RowFlag(countryCode: String?) {
-    CountryFlag(countryCode = countryCode, size = Dimens.countryFlagSize)
-}
-
-/** The Automatic row's glyph, in the flag slot so every top-level label lines up. */
-@Composable
-private fun AutomaticGlyph() {
-    Icon(
-        imageVector = Icons.Rounded.Public,
-        contentDescription = null,
-        tint = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha60),
-        modifier = Modifier.size(Dimens.countryFlagSize),
-    )
-}
-
-/** The only expand target of a country or city row: the label area selects. */
-@Composable
-private fun ExpandButton(expanded: Boolean, onToggle: () -> Unit) {
-    IconButton(onClick = onToggle) { ExpandChevron(isExpanded = expanded) }
-}
-
-/**
- * Every picker row: an optional flag, the label (green with a check while it
- * holds the selection) over an optional muted subtitle, then the load badge,
- * then the row's own [trailing] control (expand chevron or list menu). With a
- * trailing control the label area alone selects, so the control never doubles
- * as a hidden selection. Depth comes from the design-system [Hierarchy], so
- * every row keeps the same edges whatever its level.
- *
- * An [inactive] row keeps a red dot that explains why it takes no tap, so a
- * node that is down cannot become the selection.
- */
-@Composable
-@Suppress("LongParameterList", "LongMethod")
-private fun PickerCell(
-    title: String,
-    selected: Boolean,
-    isEnabled: Boolean,
-    position: Position?,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    hierarchy: Hierarchy = Hierarchy.Parent,
-    subtitle: String? = null,
-    leading: (@Composable () -> Unit)? = null,
-    badge: (@Composable () -> Unit)? = null,
-    inactive: Boolean = false,
-    onLongClick: (() -> Unit)? = null,
-    trailing: (@Composable () -> Unit)? = null,
-) {
-    val colors = ListItemDefaults.colors()
-    val labelColor = colors.headlineColor(enabled = isEnabled, selected = selected)
-    WarrenListItem(
-        modifier = modifier,
-        position = position ?: Position.Single,
-        hierarchy = hierarchy,
-        isSelected = selected,
-        isEnabled = isEnabled,
-        mainClickArea = if (trailing == null) {
-            ListItemClickArea.All
-        } else {
-            ListItemClickArea.LeadingAndMain
-        },
-        onClick = if (isEnabled) onClick else null,
-        onLongClick = if (isEnabled) onLongClick else null,
-        colors = colors,
-        content = {
-            Row(
-                modifier = Modifier
-                    .align(Alignment.CenterStart)
-                    .fillMaxWidth()
-                    .padding(vertical = Dimens.smallPadding),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (leading != null) {
-                    leading()
-                    Spacer(Modifier.width(Dimens.mediumPadding))
-                }
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = title,
-                            style = MaterialTheme.typography.titleSmall,
-                            color = labelColor,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f, fill = false),
-                        )
-                        if (selected) {
-                            Icon(
-                                imageVector = Icons.Rounded.Check,
-                                contentDescription = null,
-                                tint = if (inactive) MaterialTheme.colorScheme.error else labelColor,
-                                modifier = Modifier
-                                    .padding(start = Dimens.tinyPadding)
-                                    .size(Dimens.smallIconSize),
-                            )
-                        }
-                    }
-                    if (subtitle != null) {
-                        Text(
-                            text = subtitle,
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha60),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    }
-                }
-                if (inactive && !selected) {
-                    InactiveRelayIndicator(
-                        modifier = Modifier.padding(start = Dimens.smallPadding),
-                        tint = MaterialTheme.colorScheme.error,
-                    )
-                }
-                if (badge != null) {
-                    Spacer(Modifier.width(Dimens.smallPadding))
-                    badge()
-                }
-                if (trailing == null) Spacer(Modifier.width(Dimens.mediumPadding))
-            }
-        },
-        trailingContent = trailing?.let { control ->
-            { Box(modifier = Modifier.align(Alignment.Center)) { control() } }
-        },
-    )
-}
-
-/**
- * Dialog to add an exit to a custom list: pick an existing list or type a new
- * name. Creating a list with an exit in one step mirrors the desktop flow.
- */
-@Composable
-private fun AddToListDialog(
-    listNames: List<String>,
-    onDismiss: () -> Unit,
-    onPick: (String) -> Unit,
-) {
-    var newName by rememberSaveable { mutableStateOf("") }
+    var name by rememberSaveable { mutableStateOf("") }
+    val trimmed = name.trim()
     WarrenAlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(stringResource(R.string.location_add_to_list)) },
+        title = { Text(stringResource(R.string.location_new_list_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(Dimens.smallPadding)) {
-                listNames.forEach { name ->
-                    WarrenTextButton(
-                        onClick = { onPick(name) },
-                        modifier = Modifier.fillMaxWidth(),
-                    ) { Text(name) }
-                }
-                OutlinedTextField(
-                    value = newName,
-                    onValueChange = { newName = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    label = { Text(stringResource(R.string.location_new_list_name)) },
-                    singleLine = true,
-                )
-            }
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text(stringResource(R.string.location_new_list_name)) },
+                singleLine = true,
+            )
         },
         confirmButton = {
             WarrenTextButton(
-                enabled = newName.isNotBlank(),
-                onClick = { onPick(newName.trim()) },
+                enabled = trimmed.isNotEmpty() && trimmed !in takenNames,
+                onClick = { onCreate(trimmed) },
             ) { Text(stringResource(R.string.location_create_and_add)) }
         },
         dismissButton = {

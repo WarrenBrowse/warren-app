@@ -251,7 +251,7 @@ class WarrenLocalSettingsRepository(context: Context) : WarrenEnvStandDownStore 
      * needed in this module.
      */
     private val _customLists = MutableStateFlow(readCustomLists())
-    val customLists: StateFlow<Map<String, List<String>>> = _customLists.asStateFlow()
+    val customLists: StateFlow<Map<String, List<ExitPin>>> = _customLists.asStateFlow()
 
     fun setDaitaEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_DAITA_ENABLED, enabled).apply()
@@ -532,16 +532,6 @@ class WarrenLocalSettingsRepository(context: Context) : WarrenEnvStandDownStore 
 
     private fun pinKey(exitId: String): String = KEY_EXIT_PIN_PREFIX + exitId
 
-    /** Create an empty custom list. No-op if blank or already present. */
-    fun createCustomList(name: String) {
-        val trimmed = name.trim()
-        if (trimmed.isEmpty()) return
-        val names = customListNames()
-        if (!names.add(trimmed)) return
-        prefs.edit().putStringSet(KEY_CUSTOM_LIST_NAMES, names).apply()
-        _customLists.value = readCustomLists()
-    }
-
     /**
      * Rename a custom list, carrying its members. No-op if [oldName] is unknown,
      * if the new name is blank or unchanged, or if a list already uses the new
@@ -576,34 +566,40 @@ class WarrenLocalSettingsRepository(context: Context) : WarrenEnvStandDownStore 
     }
 
     /**
-     * Add an exit to a custom list (creating the list if needed), keeping
-     * insertion order and de-duplicating.
+     * Add a location (a country, a city or one exit) to a custom list, creating
+     * the list if needed, keeping insertion order and de-duplicating. A list is
+     * only ever created this way, so it is born holding a location.
+     * [ExitPin.Automatic] is not a location and is ignored.
      */
-    fun addExitToCustomList(name: String, exitId: String) {
+    fun addLocationToCustomList(name: String, location: ExitPin) {
         val trimmed = name.trim()
-        if (trimmed.isEmpty() || exitId.isEmpty()) return
+        if (trimmed.isEmpty() || location == ExitPin.Automatic) return
         val names = customListNames()
         names.add(trimmed)
         val current = _customLists.value[trimmed].orEmpty()
-        if (exitId in current) return
-        val updated = current + exitId
+        if (location in current) return
         prefs.edit()
             .putStringSet(KEY_CUSTOM_LIST_NAMES, names)
-            .putString(customListKey(trimmed), updated.joinToString(RECENT_DELIMITER))
+            .putString(customListKey(trimmed), encodeCustomList(current + location))
             .apply()
         _customLists.value = readCustomLists()
     }
 
-    /** Remove an exit from a custom list. No-op if absent. */
-    fun removeExitFromCustomList(name: String, exitId: String) {
+    /**
+     * Remove a location from a custom list. No-op if absent. The list itself
+     * stays, empty, so a row menu can fill it again.
+     */
+    fun removeLocationFromCustomList(name: String, location: ExitPin) {
         val current = _customLists.value[name] ?: return
-        if (exitId !in current) return
-        val updated = current.filter { it != exitId }
+        if (location !in current) return
         prefs.edit()
-            .putString(customListKey(name), updated.joinToString(RECENT_DELIMITER))
+            .putString(customListKey(name), encodeCustomList(current - location))
             .apply()
         _customLists.value = readCustomLists()
     }
+
+    private fun encodeCustomList(members: List<ExitPin>): String =
+        members.joinToString(RECENT_DELIMITER) { encodeRecentPin(it) }
 
     // Defensive copy: the set returned by getStringSet must not be mutated.
     private fun customListNames(): MutableSet<String> =
@@ -611,12 +607,19 @@ class WarrenLocalSettingsRepository(context: Context) : WarrenEnvStandDownStore 
 
     private fun customListKey(name: String): String = KEY_CUSTOM_LIST_PREFIX + name
 
-    private fun readCustomLists(): Map<String, List<String>> =
+    /**
+     * Members are stored with the recents encoding, so a list holds a country,
+     * a city or one exit. An entry without a prefix is a bare exit id, the only
+     * member an older build could write.
+     */
+    private fun readCustomLists(): Map<String, List<ExitPin>> =
         customListNames().sorted().associateWith { name ->
             prefs.getString(customListKey(name), null)
                 ?.split(RECENT_DELIMITER)
                 ?.map { it.trim() }
                 ?.filter { it.isNotEmpty() }
+                ?.map { entry -> decodeRecentPin(entry) ?: ExitPin.Exit(entry) }
+                ?.distinct()
                 ?: emptyList()
         }
 

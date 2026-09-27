@@ -1,3 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <plurals name="location_list_count">
+        <item quantity="one">%d местоположение</item>
+        <item quantity="few">%d местоположения</item>
+        <item quantity="many">%d местоположений</item>
+        <item quantity="other">%d местоположения</item>
+    </plurals>
 </resources>

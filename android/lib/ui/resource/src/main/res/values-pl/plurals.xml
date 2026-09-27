@@ -1,3 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <plurals name="location_list_count">
+        <item quantity="one">%d lokalizacja</item>
+        <item quantity="few">%d lokalizacje</item>
+        <item quantity="many">%d lokalizacji</item>
+        <item quantity="other">%d lokalizacji</item>
+    </plurals>
 </resources>

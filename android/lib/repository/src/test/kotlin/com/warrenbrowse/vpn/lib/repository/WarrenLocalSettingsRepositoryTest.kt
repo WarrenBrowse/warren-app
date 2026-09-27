@@ -497,35 +497,55 @@ class WarrenLocalSettingsRepositoryTest {
         }
 
         val repo = WarrenLocalSettingsRepository(mockContext)
-        assertEquals(emptyMap<String, List<String>>(), repo.customLists.value)
+        assertEquals(emptyMap<String, List<ExitPin>>(), repo.customLists.value)
 
-        repo.createCustomList("Streaming")
-        assertEquals(mapOf("Streaming" to emptyList<String>()), repo.customLists.value)
+        val exitA = ExitPin.Exit("exit-a")
+        val france = ExitPin.Country("FR")
+        val paris = ExitPin.City("FR", "Paris")
+        // Adding to an unknown list creates it: a list is born holding a location.
+        repo.addLocationToCustomList("Streaming", exitA)
+        repo.addLocationToCustomList("Streaming", france)
+        repo.addLocationToCustomList("Streaming", paris)
+        repo.addLocationToCustomList("Streaming", exitA) // duplicate ignored
+        repo.addLocationToCustomList("Streaming", ExitPin.Automatic) // not a location
+        assertEquals(listOf(exitA, france, paris), repo.customLists.value["Streaming"])
 
-        repo.addExitToCustomList("Streaming", "exit-a")
-        repo.addExitToCustomList("Streaming", "exit-b")
-        repo.addExitToCustomList("Streaming", "exit-a") // duplicate ignored
-        assertEquals(listOf("exit-a", "exit-b"), repo.customLists.value["Streaming"])
+        repo.addLocationToCustomList("Work", ExitPin.Exit("exit-c"))
+        assertEquals(listOf(ExitPin.Exit("exit-c")), repo.customLists.value["Work"])
 
-        // Adding to an unknown list creates it.
-        repo.addExitToCustomList("Work", "exit-c")
-        assertEquals(listOf("exit-c"), repo.customLists.value["Work"])
+        repo.removeLocationFromCustomList("Streaming", france)
+        assertEquals(listOf(exitA, paris), repo.customLists.value["Streaming"])
 
-        repo.removeExitFromCustomList("Streaming", "exit-a")
-        assertEquals(listOf("exit-b"), repo.customLists.value["Streaming"])
+        // Emptying a list keeps it, so it can be filled again from a row menu.
+        repo.removeLocationFromCustomList("Work", ExitPin.Exit("exit-c"))
+        assertEquals(emptyList<ExitPin>(), repo.customLists.value["Work"])
 
         // Rename carries the members and replaces the old key.
         repo.renameCustomList("Streaming", "Media")
         assertEquals(setOf("Work", "Media"), repo.customLists.value.keys)
-        assertEquals(listOf("exit-b"), repo.customLists.value["Media"])
+        assertEquals(listOf(exitA, paris), repo.customLists.value["Media"])
 
         // Renaming onto an existing name is refused (no merge, no data loss).
         repo.renameCustomList("Media", "Work")
         assertEquals(setOf("Work", "Media"), repo.customLists.value.keys)
-        assertEquals(listOf("exit-b"), repo.customLists.value["Media"])
+        assertEquals(listOf(exitA, paris), repo.customLists.value["Media"])
 
         repo.deleteCustomList("Media")
         assertEquals(setOf("Work"), repo.customLists.value.keys)
+    }
+
+    @Test
+    fun `a custom list written as bare exit ids by an older build reads as exits`() {
+        every { mockPrefs.getBoolean(any(), any()) } returns false
+        every { mockPrefs.getStringSet("custom_list_names", any()) } returns setOf("Old")
+        every { mockPrefs.getString("custom_list_exits_Old", any()) } returns "exit-a,exit-b"
+
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        assertEquals(
+            listOf(ExitPin.Exit("exit-a"), ExitPin.Exit("exit-b")),
+            repo.customLists.value["Old"],
+        )
     }
 
     @Test

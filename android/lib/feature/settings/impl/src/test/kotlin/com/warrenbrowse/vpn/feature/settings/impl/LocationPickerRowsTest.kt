@@ -41,19 +41,22 @@ class LocationPickerRowsTest {
         query: String = "",
         recents: List<WarrenRelaySummary> = emptyList(),
         recentScopes: List<ExitPin> = emptyList(),
-        customLists: List<CustomListSection> = emptyList(),
+        customLists: Map<String, List<ExitPin>> = emptyMap(),
         exitPin: ExitPin = ExitPin.Automatic,
         expandedCountries: Set<String> = emptySet(),
         expandedCities: Set<String> = emptySet(),
+        expandedLists: Set<String> = emptySet(),
     ) = buildPickerRows(
         query = query,
-        recents = recentEntries(recents.map { ExitPin.Exit(it.exitId) } + recentScopes, relays),
-        customLists = customLists,
+        recents = recentPlaces(recents.map { ExitPin.Exit(it.exitId) } + recentScopes, relays),
+        customLists = visibleCustomLists(customLists, relays, query),
         byCountry = byCountry(relays),
         exitPin = exitPin,
-        expandedCountries = expandedCountries,
-        expandedCities = expandedCities,
+        expanded = ExpandedKeys(expandedCountries, expandedCities, expandedLists),
     )
+
+    private fun List<PickerRow>.saved(section: ExitSection) =
+        filterIsInstance<PickerRow.SavedRow>().filter { it.section == section }
 
     private val catalogue = listOf(
         relay("de1", "DE", "Frankfurt"),
@@ -174,7 +177,7 @@ class LocationPickerRowsTest {
 
     @Test
     fun `the country tree is introduced by an all locations header under custom lists`() {
-        val built = rows(catalogue, customLists = listOf(CustomListSection("Work", catalogue)))
+        val built = rows(catalogue, customLists = mapOf("Work" to listOf(ExitPin.Exit("fr1"))))
 
         assertTrue(built.any { it is PickerRow.AllLocationsHeader })
     }
@@ -200,7 +203,7 @@ class LocationPickerRowsTest {
         assertEquals("Paris", france.subtitle)
         assertEquals(0, france.depth)
         assertEquals("FR", france.flagCountry)
-        assertEquals(ExitSection.Country, france.section)
+        assertEquals(ExitPin.Exit("fr1"), france.location)
     }
 
     @Test
@@ -239,17 +242,18 @@ class LocationPickerRowsTest {
     }
 
     @Test
-    fun `only exits at the top of a section lead with a flag`() {
+    fun `only tree rows at the top level lead with a flag`() {
         val built = rows(
             catalogue,
-            recents = listOf(catalogue[2]),
             expandedCountries = setOf("DE"),
             expandedCities = setOf(cityKey("DE", "Frankfurt")),
         )
-        val exits = built.filterIsInstance<PickerRow.ExitRow>()
 
-        assertEquals("FR", exits.first { it.section == ExitSection.Recents }.flagCountry)
-        assertTrue(exits.filter { it.relay.country == "DE" }.all { it.flagCountry == null })
+        assertEquals("FR", built.filterIsInstance<PickerRow.ExitRow>().single { it.relay.exitId == "fr1" }.flagCountry)
+        assertTrue(
+            built.filterIsInstance<PickerRow.ExitRow>().filter { it.relay.country == "DE" }
+                .all { it.flagCountry == null }
+        )
     }
 
     @Test
@@ -289,23 +293,18 @@ class LocationPickerRowsTest {
     @Test
     fun `recent rows are introduced by a recents header`() {
         val built = rows(catalogue, recents = listOf(catalogue[0], catalogue[2]))
-        val header = built.indexOfFirst { it is PickerRow.RecentsHeader }
-        val firstRecent = built.indexOfFirst {
-            it is PickerRow.ExitRow && it.section == ExitSection.Recents
-        }
 
-        assertEquals(0, header)
-        assertEquals(1, firstRecent)
+        assertEquals(0, built.indexOfFirst { it is PickerRow.RecentsHeader })
+        assertTrue(built[1] is PickerRow.SavedRow)
+        assertEquals(2, built.saved(ExitSection.Recents).size)
     }
 
     @Test
     fun `the pinned exit stays listed in recents`() {
         val built = rows(catalogue, recents = catalogue, exitPin = ExitPin.Exit("de1"))
-        val recents = built
-            .filterIsInstance<PickerRow.ExitRow>()
-            .filter { it.section == ExitSection.Recents }
+        val recents = built.saved(ExitSection.Recents)
 
-        assertEquals(catalogue.map { it.exitId }, recents.map { it.relay.exitId })
+        assertEquals(catalogue.map { ExitPin.Exit(it.exitId) }, recents.map { it.place.location })
         assertEquals(listOf(true, false, false, false), recents.map { it.isPinned })
     }
 
@@ -342,74 +341,137 @@ class LocationPickerRowsTest {
     fun `a recent country or city is listed at its own depth in recents`() {
         // Desktop recents are locations at the depth they were picked
         // (`RecentGeographicalLocation`), so a country or city pin is a recent
-        // row of its own, labelled with its parents like the desktop row.
+        // row of its own, its parent country under the name like the desktop row.
         val built = rows(
             catalogue,
-            recentScopes = listOf(ExitPin.City("DE", "Frankfurt"), ExitPin.Country("FR")),
-            exitPin = ExitPin.Country("FR"),
+            recentScopes = listOf(ExitPin.City("DE", "Frankfurt"), ExitPin.Country("DE")),
+            exitPin = ExitPin.Country("DE"),
         )
-        val scopes = built.filterIsInstance<PickerRow.RecentScopeRow>()
+        val recents = built.saved(ExitSection.Recents)
 
         assertEquals(
-            listOf(ExitPin.City("DE", "Frankfurt"), ExitPin.Country("FR")),
-            scopes.map { it.pin },
+            listOf(ExitPin.City("DE", "Frankfurt"), ExitPin.Country("DE")),
+            recents.map { it.place.location },
         )
-        assertEquals(listOf(false, true), scopes.map { it.isPinned })
+        assertEquals(listOf(false, true), recents.map { it.isPinned })
         // Country names follow the device locale, so the expectation does too.
-        assertEquals("Frankfurt, " + countryDisplayName("DE"), scopes[0].title)
-        assertEquals(countryDisplayName("FR"), scopes[1].title)
+        assertEquals("Frankfurt", recents[0].place.title)
+        assertEquals(countryDisplayName("DE"), recents[0].place.subtitle)
+        assertEquals(countryDisplayName("DE"), recents[1].place.title)
+        assertEquals(null, recents[1].place.subtitle)
         assertEquals(0, built.indexOfFirst { it is PickerRow.RecentsHeader })
     }
 
     @Test
     fun `recents keep the order they were used in across depths`() {
-        val entries = recentEntries(
+        val places = recentPlaces(
             listOf(ExitPin.Country("SE"), ExitPin.Exit("de1"), ExitPin.City("FR", "Paris")),
             catalogue,
         )
-        val built = rows(catalogue).let {
-            buildPickerRows(
-                query = "",
-                recents = entries,
-                customLists = emptyList(),
-                byCountry = byCountry(catalogue),
-                exitPin = ExitPin.Automatic,
-                expandedCountries = emptySet(),
-                expandedCities = emptySet(),
-            )
-        }
-        val header = built.indexOfFirst { it is PickerRow.RecentsHeader }
-        assertTrue(built[header + 1] is PickerRow.RecentScopeRow)
-        assertTrue(built[header + 2] is PickerRow.ExitRow)
-        assertTrue(built[header + 3] is PickerRow.RecentScopeRow)
+
+        assertEquals(
+            listOf(ExitPin.Country("SE"), ExitPin.Exit("de1"), ExitPin.City("FR", "Paris")),
+            places.map { it.location },
+        )
     }
 
     @Test
-    fun `a recent scope the catalogue no longer serves is dropped`() {
-        val entries = recentEntries(
+    fun `a recent the catalogue no longer serves is dropped`() {
+        val places = recentPlaces(
             listOf(ExitPin.Country("ZZ"), ExitPin.City("DE", "Munich"), ExitPin.Exit("gone")),
             catalogue,
         )
-        assertTrue(entries.isEmpty())
+        assertTrue(places.isEmpty())
     }
 
     @Test
-    fun `a recent scope with every exit down stays listed but disabled`() {
+    fun `a recent scope with every exit down stays listed but inactive`() {
         val down = catalogue.map { if (it.country == "SE") it.copy(active = false) else it }
-        val scope = recentEntries(listOf(ExitPin.Country("SE")), down).single() as RecentEntry.Scope
-        assertFalse(scope.hasActive)
+        val place = recentPlaces(listOf(ExitPin.Country("SE")), down).single()
+        assertFalse(place.hasActive)
+    }
+
+    // Row anatomy: one shape for every saved location
+
+    @Test
+    fun `a saved exit leads with its country flag, names its country and shows its load`() {
+        val place = resolvePlace(ExitPin.Exit("de2"), catalogue)!!
+
+        assertEquals("DE", place.flagCountry)
+        assertEquals("Frankfurt", place.title)
+        assertEquals(2, place.ordinal)
+        assertEquals(countryDisplayName("DE"), place.subtitle)
+        assertEquals("de2", place.loadExitId)
+    }
+
+    @Test
+    fun `a saved exit alone in its country reads like its tree row`() {
+        val place = resolvePlace(ExitPin.Exit("fr1"), catalogue)!!
+
+        assertEquals(countryDisplayName("FR"), place.title)
+        assertEquals("Paris", place.subtitle)
+        assertEquals(null, place.ordinal)
+        assertEquals("fr1", place.loadExitId)
+    }
+
+    @Test
+    fun `a saved city shows a load only when it holds exactly one exit`() {
+        val frankfurt = resolvePlace(ExitPin.City("DE", "Frankfurt"), catalogue)!!
+        val paris = resolvePlace(ExitPin.City("FR", "Paris"), catalogue)!!
+
+        assertEquals("DE", frankfurt.flagCountry)
+        assertEquals(null, frankfurt.loadExitId)
+        assertEquals("fr1", paris.loadExitId)
+        assertEquals(countryDisplayName("FR"), paris.subtitle)
+    }
+
+    @Test
+    fun `a saved country shows a load only when it holds exactly one exit`() {
+        assertEquals(null, resolvePlace(ExitPin.Country("DE"), catalogue)!!.loadExitId)
+        assertEquals("se1", resolvePlace(ExitPin.Country("SE"), catalogue)!!.loadExitId)
+    }
+
+    @Test
+    fun `automatic is not a place`() {
+        assertEquals(null, resolvePlace(ExitPin.Automatic, catalogue))
+    }
+
+    @Test
+    fun `every tree row names the location its menu acts on`() {
+        val built = rows(
+            catalogue,
+            expandedCountries = setOf("DE"),
+            expandedCities = setOf(cityKey("DE", "Frankfurt")),
+        )
+
+        assertEquals(
+            ExitPin.Country("DE"),
+            built.filterIsInstance<PickerRow.CountryHeader>().single().location,
+        )
+        assertEquals(
+            ExitPin.City("DE", "Frankfurt"),
+            built.filterIsInstance<PickerRow.CityHeader>().single().location,
+        )
+        assertEquals(
+            ExitPin.Exit("de2"),
+            built.filterIsInstance<PickerRow.ExitRow>().single { it.relay.exitId == "de2" }.location,
+        )
     }
 
     // Selection
 
     @Test
-    fun `a recent row carrying the pinned exit renders as selected`() {
-        val built = rows(catalogue, recents = listOf(catalogue[0]), exitPin = ExitPin.Exit("de1"))
-        val recent = built
-            .filterIsInstance<PickerRow.ExitRow>()
-            .single { it.section == ExitSection.Recents }
+    fun `a saved row carrying the pinned location renders as selected`() {
+        val built = rows(
+            catalogue,
+            recents = listOf(catalogue[0]),
+            customLists = mapOf("Work" to listOf(ExitPin.City("DE", "Frankfurt"))),
+            exitPin = ExitPin.City("de", "frankfurt"),
+            expandedLists = setOf("Work"),
+        )
 
-        assertTrue(recent.isPinned)
+        assertFalse(built.saved(ExitSection.Recents).single().isPinned)
+        assertTrue(built.saved(ExitSection.Custom("Work")).single().isPinned)
     }
 
     @Test
@@ -464,33 +526,137 @@ class LocationPickerRowsTest {
     }
 
     @Test
+    fun `the custom lists section is hidden while every list is empty`() {
+        val built = rows(
+            catalogue,
+            customLists = mapOf("Empty" to emptyList(), "Gone" to listOf(ExitPin.Exit("gone"))),
+        )
+
+        assertTrue(built.none { it is PickerRow.CustomListsHeader })
+        assertTrue(built.none { it is PickerRow.CustomListRow })
+        assertTrue(built.none { it is PickerRow.AllLocationsHeader })
+    }
+
+    @Test
+    fun `an empty list is left out of a section other lists keep open`() {
+        val built = rows(
+            catalogue,
+            customLists = mapOf("Empty" to emptyList(), "Work" to listOf(ExitPin.Country("SE"))),
+        )
+
+        assertEquals(listOf("Work"), built.filterIsInstance<PickerRow.CustomListRow>().map { it.name })
+    }
+
+    @Test
+    fun `a list row counts its locations and folds its members until expanded`() {
+        val lists = mapOf("Work" to listOf(ExitPin.Country("SE"), ExitPin.Exit("de1")))
+        val collapsed = rows(catalogue, customLists = lists)
+        val expanded = rows(catalogue, customLists = lists, expandedLists = setOf("Work"))
+
+        val row = collapsed.filterIsInstance<PickerRow.CustomListRow>().single()
+        assertEquals(2, row.count)
+        assertFalse(row.expanded)
+        assertTrue(collapsed.saved(ExitSection.Custom("Work")).isEmpty())
+
+        val members = expanded.saved(ExitSection.Custom("Work"))
+        assertTrue(expanded.filterIsInstance<PickerRow.CustomListRow>().single().expanded)
+        assertEquals(listOf(ExitPin.Country("SE"), ExitPin.Exit("de1")), members.map { it.place.location })
+        assertTrue(members.all { it.depth == 1 })
+    }
+
+    @Test
+    fun `a search opens every list it keeps`() {
+        val built = rows(
+            catalogue,
+            query = "paris",
+            customLists = mapOf("Work" to listOf(ExitPin.Exit("fr1"), ExitPin.Country("SE"))),
+        )
+
+        assertTrue(built.filterIsInstance<PickerRow.CustomListRow>().single().expanded)
+        assertEquals(
+            listOf(ExitPin.Exit("fr1")),
+            built.saved(ExitSection.Custom("Work")).map { it.place.location },
+        )
+    }
+
+    @Test
     fun `a custom list survives a search matching its name`() {
-        val lists = visibleCustomLists(mapOf("Nordics" to listOf("se1")), catalogue, "nor")
+        val lists = visibleCustomLists(mapOf("Nordics" to listOf(ExitPin.Exit("se1"))), catalogue, "nor")
 
         assertEquals(listOf("Nordics"), lists.map { it.name })
-        assertEquals(listOf("se1"), lists.single().relays.map { it.exitId })
+        assertEquals(listOf(ExitPin.Exit("se1")), lists.single().places.map { it.location })
     }
 
     @Test
     fun `a custom list survives a search matching one of its members`() {
-        val lists =
-            visibleCustomLists(mapOf("Work" to listOf("se1", "fr1")), catalogue, "paris")
+        val lists = visibleCustomLists(
+            mapOf("Work" to listOf(ExitPin.Exit("se1"), ExitPin.City("FR", "Paris"))),
+            catalogue,
+            "paris",
+        )
 
-        assertEquals(listOf("fr1"), lists.single().relays.map { it.exitId })
+        assertEquals(listOf(ExitPin.City("FR", "Paris")), lists.single().places.map { it.location })
     }
 
     @Test
     fun `a custom list matching nothing is dropped from a search`() {
-        val lists = visibleCustomLists(mapOf("Work" to listOf("se1")), catalogue, "paris")
+        val lists = visibleCustomLists(mapOf("Work" to listOf(ExitPin.Exit("se1"))), catalogue, "paris")
 
         assertTrue(lists.isEmpty())
     }
 
-    @Test
-    fun `the custom lists section disappears when a search matches no list`() {
-        val built = rows(catalogue, query = "paris", customLists = emptyList())
+    // The lists menu
 
-        assertFalse(built.any { it is PickerRow.CustomListsHeader })
+    @Test
+    fun `the lists menu offers every list, empty ones included, checking those holding the location`() {
+        val lists = mapOf(
+            "Empty" to emptyList(),
+            "Work" to listOf(ExitPin.City("DE", "Frankfurt")),
+            "Travel" to listOf(ExitPin.Country("FR")),
+        )
+
+        val menu = listMemberships(ExitPin.City("de", "frankfurt"), lists)
+
+        assertEquals(
+            listOf(
+                ListMembership("Empty", contains = false),
+                ListMembership("Travel", contains = false),
+                ListMembership("Work", contains = true),
+            ),
+            menu,
+        )
+    }
+
+    @Test
+    fun `toggling a list the location is not in adds it`() {
+        val added = mutableListOf<Pair<String, ExitPin>>()
+
+        val outcome = toggleListMembership(
+            name = "Work",
+            location = ExitPin.Country("SE"),
+            customLists = mapOf("Work" to listOf(ExitPin.Exit("de1"))),
+            add = { name, pin -> added += name to pin },
+            remove = { _, _ -> error("nothing to remove") },
+        )
+
+        assertEquals(ListToggle.Added, outcome)
+        assertEquals(listOf<Pair<String, ExitPin>>("Work" to ExitPin.Country("SE")), added)
+    }
+
+    @Test
+    fun `toggling a list the location is in removes the stored entry`() {
+        val removed = mutableListOf<Pair<String, ExitPin>>()
+
+        val outcome = toggleListMembership(
+            name = "Work",
+            location = ExitPin.City("de", "frankfurt"),
+            customLists = mapOf("Work" to listOf(ExitPin.City("DE", "Frankfurt"))),
+            add = { _, _ -> error("nothing to add") },
+            remove = { name, pin -> removed += name to pin },
+        )
+
+        assertEquals(ListToggle.Removed, outcome)
+        assertEquals(listOf<Pair<String, ExitPin>>("Work" to ExitPin.City("DE", "Frankfurt")), removed)
     }
 
     // Filtering

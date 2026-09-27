@@ -61,8 +61,12 @@ internal fun applyEntryPick(country: String?, setEntryCountry: (String?) -> Unit
     return PickerScope.Exit
 }
 
-/** The accordion branches to open so the pinned row is on screen and reachable. */
-internal data class ExpandedKeys(val countries: Set<String>, val cities: Set<String>)
+/** The accordion branches that are open: countries, cities and custom lists. */
+internal data class ExpandedKeys(
+    val countries: Set<String>,
+    val cities: Set<String>,
+    val lists: Set<String> = emptySet(),
+)
 
 /**
  * Which branches to expand when the picker opens on [pin]. A pin deeper than a
@@ -104,30 +108,44 @@ internal fun relayMatches(relay: WarrenRelaySummary, query: String): Boolean =
         relay.city.contains(query, ignoreCase = true)
 
 /** A custom list resolved against the catalogue, ready to render. */
-internal data class CustomListSection(val name: String, val relays: List<WarrenRelaySummary>)
+internal data class CustomListSection(val name: String, val places: List<Place>)
+
+/** The catalogue exits a location stands for. */
+internal fun relaysIn(location: ExitPin, relays: List<WarrenRelaySummary>): List<WarrenRelaySummary> =
+    when (location) {
+        ExitPin.Automatic -> emptyList()
+        is ExitPin.Country -> relays.filter { it.country.equals(location.country, ignoreCase = true) }
+        is ExitPin.City ->
+            relays.filter {
+                it.country.equals(location.country, ignoreCase = true) &&
+                    it.city.equals(location.city, ignoreCase = true)
+            }
+        is ExitPin.Exit -> relays.filter { it.exitId == location.exitId }
+    }
 
 /**
- * Custom lists that survive [query]. A list whose name matches keeps all its
- * members; otherwise only the matching members are kept and a list left with
- * nothing drops out, so the user's own grouping stays usable exactly when they
- * are searching for something inside it.
+ * Custom lists worth a row. A list exists to hold locations, so one holding
+ * none the catalogue still serves is left out (it stays reachable from every
+ * row's lists menu, to be filled again). Under a [query], a list whose name
+ * matches keeps all its members; otherwise only the matching members are kept
+ * and a list left with nothing drops out, so the user's own grouping stays
+ * usable exactly when they are searching for something inside it.
  */
 internal fun visibleCustomLists(
-    customLists: Map<String, List<String>>,
+    customLists: Map<String, List<ExitPin>>,
     relays: List<WarrenRelaySummary>,
     query: String,
-): List<CustomListSection> = customLists.mapNotNull { (name, exitIds) ->
-    val members = exitIds.mapNotNull { id -> relays.firstOrNull { it.exitId == id } }
-    when {
-        query.isEmpty() -> CustomListSection(name, members)
-        name.contains(query, ignoreCase = true) -> CustomListSection(name, members)
-        else -> members.filter { relayMatches(it, query) }
-            .takeIf { it.isNotEmpty() }
-            ?.let { CustomListSection(name, it) }
+): List<CustomListSection> = customLists.mapNotNull { (name, members) ->
+    val places = members.mapNotNull { resolvePlace(it, relays) }
+    val kept = when {
+        query.isEmpty() -> places
+        name.contains(query, ignoreCase = true) -> places
+        else -> places.filter { place -> relaysIn(place.location, relays).any { relayMatches(it, query) } }
     }
+    kept.takeIf { it.isNotEmpty() }?.let { CustomListSection(name, it) }
 }
 
-/** Which section an exit row belongs to, driving its row menu and its scroll weight. */
+/** Which section a saved location row belongs to, keeping its key unique across sections. */
 internal sealed interface ExitSection {
     val keyPrefix: String
 
@@ -135,14 +153,38 @@ internal sealed interface ExitSection {
         override val keyPrefix = "recent"
     }
 
-    data object Country : ExitSection {
-        override val keyPrefix = "exit"
-    }
-
     data class Custom(val name: String) : ExitSection {
         override val keyPrefix = "custom-$name"
     }
 }
+
+/**
+ * A location resolved against the catalogue into what its row shows. Every
+ * row standing for a place outside the tree (recents, list members) is drawn
+ * from one of these, so they all share the tree's anatomy: the country flag,
+ * the name, the parent country (or, for a country served by one exit, its
+ * city) as a muted subtitle, and the load badge when the place is one exit.
+ */
+internal data class Place(
+    val location: ExitPin,
+    val title: String,
+    /** Rank of the exit among the exits sharing its city, `null` when alone or not an exit. */
+    val ordinal: Int?,
+    val subtitle: String?,
+    val flagCountry: String?,
+    /** The exit whose load the row shows, set only when the place holds exactly one exit. */
+    val loadExitId: String?,
+    val hasActive: Boolean,
+)
+
+/** Stable key of a location, shared by row keys in every section. */
+internal fun locationKey(location: ExitPin): String =
+    when (location) {
+        ExitPin.Automatic -> "automatic"
+        is ExitPin.Country -> "country-" + location.country.lowercase()
+        is ExitPin.City -> "city-" + cityKey(location.country.lowercase(), location.city.lowercase())
+        is ExitPin.Exit -> "exit-" + location.exitId
+    }
 
 /**
  * Flat rows the picker renders, so the pinned row has a stable scroll index.
@@ -182,8 +224,21 @@ internal sealed interface PickerRow {
         override val key = "hdr-all-locations"
     }
 
-    data class CustomListHeader(val name: String) : PickerRow {
-        override val key = "hdr-custom-$name"
+    /**
+     * A custom list: a list glyph in the flag slot, its name over its location
+     * count, and a chevron folding its members. It never holds the selection.
+     */
+    data class CustomListRow(
+        val name: String,
+        val count: Int,
+        val expanded: Boolean,
+        override val position: Position = Position.Single,
+    ) : PickerRow {
+        override val key = "list-$name"
+
+        override val expandable = true
+
+        override fun withPosition(position: Position) = copy(position = position)
     }
 
     data class ExitAutomaticRow(
@@ -227,6 +282,10 @@ internal sealed interface PickerRow {
 
         override val expandable = true
 
+        /** What this row's lists menu adds or removes. */
+        val location: ExitPin
+            get() = ExitPin.Country(country)
+
         override fun withPosition(position: Position) = copy(position = position)
     }
 
@@ -245,47 +304,55 @@ internal sealed interface PickerRow {
         /** Nesting depth, rendered as a design-system hierarchy rather than a card inset. */
         val depth: Int = 1
 
+        /** What this row's lists menu adds or removes. */
+        val location: ExitPin
+            get() = ExitPin.City(country, city)
+
         override fun withPosition(position: Position) = copy(position = position)
     }
 
     /**
-     * A recently used country or city, listed at its own depth in the recents
-     * section (desktop `RecentGeographicalLocation`, which shows a city with
-     * its parent country). Tapping it applies [pin] again.
+     * A location of the country tree standing for exactly one exit: a lone
+     * exit in its city, one of several numbered by [ordinal], or a whole
+     * country served by a single exit (then at depth 0, with its flag and its
+     * city as [subtitle]).
      */
-    data class RecentScopeRow(
-        val pin: ExitPin,
-        val title: String,
-        val hasActive: Boolean,
-        override val isPinned: Boolean,
-        override val position: Position = Position.Single,
-    ) : PickerRow {
-        override val key = "recent-scope-" + when (pin) {
-            is ExitPin.Country -> pin.country
-            is ExitPin.City -> cityKey(pin.country, pin.city)
-            else -> "none"
-        }
-
-        override fun withPosition(position: Position) = copy(position = position)
-    }
-
     data class ExitRow(
         val relay: WarrenRelaySummary,
         val title: String,
         /** Rank of this exit among the exits sharing its city, `null` when alone. */
         val ordinal: Int?,
         val depth: Int,
-        val section: ExitSection,
         override val isPinned: Boolean,
         override val position: Position = Position.Single,
         /** The city under the country name, on a row standing for a country with one exit. */
         val subtitle: String? = null,
     ) : PickerRow {
-        override val key = "${section.keyPrefix}-${relay.exitId}"
+        override val key = "exit-${relay.exitId}"
 
-        /** A row at the top of its section leads with its country's flag; a nested one does not. */
+        /** A row at the top of the tree leads with its country's flag; a nested one does not. */
         val flagCountry: String?
             get() = relay.country.takeIf { depth == 0 }
+
+        /** What this row's lists menu adds or removes. */
+        val location: ExitPin
+            get() = ExitPin.Exit(relay.exitId)
+
+        override fun withPosition(position: Position) = copy(position = position)
+    }
+
+    /**
+     * A location saved outside the tree: a recent (depth 0) or a custom list
+     * member (depth 1, under its list). Tapping it applies [Place.location].
+     */
+    data class SavedRow(
+        val place: Place,
+        val section: ExitSection,
+        val depth: Int,
+        override val isPinned: Boolean,
+        override val position: Position = Position.Single,
+    ) : PickerRow {
+        override val key = "${section.keyPrefix}-${locationKey(place.location)}"
 
         override fun withPosition(position: Position) = copy(position = position)
     }
@@ -335,7 +402,7 @@ internal data class PickerInputs(
     val entryCountry: String?,
     val recentsEnabled: Boolean,
     val recentPins: List<ExitPin>,
-    val customLists: Map<String, List<String>>,
+    val customLists: Map<String, List<ExitPin>>,
     val exitPin: ExitPin,
     val expanded: ExpandedKeys,
 )
@@ -355,7 +422,7 @@ internal fun pickerRows(inputs: PickerInputs): List<PickerRow> =
         } else {
             val filtered = relays.filter { relayMatches(it, query) }
             val recents =
-                if (!searching && recentsEnabled) recentEntries(recentPins, relays) else emptyList()
+                if (!searching && recentsEnabled) recentPlaces(recentPins, relays) else emptyList()
             // country -> (city -> relays), both ordered by localized name.
             val byCountry: Map<String, Map<String, List<WarrenRelaySummary>>> =
                 filtered
@@ -369,8 +436,7 @@ internal fun pickerRows(inputs: PickerInputs): List<PickerRow> =
                     customLists = visibleCustomLists(customLists, relays, query),
                     byCountry = byCountry,
                     exitPin = exitPin,
-                    expandedCountries = expanded.countries,
-                    expandedCities = expanded.cities,
+                    expanded = expanded,
                 )
             )
         }
@@ -413,118 +479,101 @@ internal fun buildEntryRows(
 internal fun exitTitle(relay: WarrenRelaySummary): String =
     relay.city.ifBlank { countryDisplayName(relay.country) }
 
-/** A recents entry resolved against the catalogue: one exit, or a scope. */
-internal sealed interface RecentEntry {
-    data class Exit(val relay: WarrenRelaySummary) : RecentEntry
+/**
+ * [location] as its row shows it, or `null` when the catalogue no longer
+ * serves it. A place whose exits are all down stays (inactive), as its tree
+ * row does.
+ */
+internal fun resolvePlace(location: ExitPin, relays: List<WarrenRelaySummary>): Place? {
+    val inScope = relaysIn(location, relays)
+    val first = inScope.firstOrNull() ?: return null
+    val country = first.country
+    val countryName = countryDisplayName(country)
+    val loadExitId = inScope.singleOrNull()?.exitId
+    val hasActive = inScope.any { it.active }
+    return when (location) {
+        ExitPin.Automatic -> null
+        is ExitPin.Country ->
+            Place(
+                location = location,
+                title = countryName,
+                ordinal = null,
+                // A country served by one exit names its city, as its tree row does.
+                subtitle = if (loadExitId != null) first.city.ifBlank { null } else null,
+                flagCountry = country,
+                loadExitId = loadExitId,
+                hasActive = hasActive,
+            )
+        is ExitPin.City ->
+            Place(
+                location = location,
+                title = first.city.ifBlank { countryName },
+                ordinal = null,
+                subtitle = countryName.takeIf { first.city.isNotBlank() },
+                flagCountry = country,
+                loadExitId = loadExitId,
+                hasActive = hasActive,
+            )
+        is ExitPin.Exit -> exitPlace(location, first, relays)
+    }
+}
 
-    data class Scope(val pin: ExitPin, val title: String, val hasActive: Boolean) : RecentEntry
+/** An exit named as the tree names it: its country when alone there, else its city and rank. */
+private fun exitPlace(location: ExitPin.Exit, relay: WarrenRelaySummary, relays: List<WarrenRelaySummary>): Place {
+    val countryName = countryDisplayName(relay.country)
+    val aloneInCountry = relays.count { it.country.equals(relay.country, ignoreCase = true) } == 1
+    val cityMates =
+        relaysIn(ExitPin.City(relay.country, relay.city), relays).sortedBy { it.exitId }
+    return Place(
+        location = location,
+        title = if (aloneInCountry) countryName else exitTitle(relay),
+        ordinal = if (!aloneInCountry && cityMates.size > 1) cityMates.indexOf(relay) + 1 else null,
+        subtitle = when {
+            aloneInCountry -> relay.city.ifBlank { null }
+            relay.city.isBlank() -> null
+            else -> countryName
+        },
+        flagCountry = relay.country,
+        loadExitId = relay.exitId,
+        hasActive = relay.active,
+    )
 }
 
 /**
- * The recents worth a row, in the order they were used. An exit the catalogue
- * dropped, or a scope it no longer serves at all, is skipped; a scope whose
- * exits are all down stays listed (disabled), as its country row does.
+ * The recents worth a row, in the order they were used. A location the
+ * catalogue dropped is skipped.
  */
-internal fun recentEntries(pins: List<ExitPin>, relays: List<WarrenRelaySummary>): List<RecentEntry> =
-    pins.mapNotNull { pin ->
-        when (pin) {
-            ExitPin.Automatic -> null
-            is ExitPin.Exit -> relays.firstOrNull { it.exitId == pin.exitId }?.let { RecentEntry.Exit(it) }
-            is ExitPin.Country -> {
-                val inScope = relays.filter { it.country.equals(pin.country, ignoreCase = true) }
-                if (inScope.isEmpty()) {
-                    null
-                } else {
-                    RecentEntry.Scope(
-                        pin = pin,
-                        title = countryDisplayName(pin.country),
-                        hasActive = inScope.any { it.active },
-                    )
-                }
-            }
-            is ExitPin.City -> {
-                val inScope =
-                    relays.filter {
-                        it.country.equals(pin.country, ignoreCase = true) &&
-                            it.city.equals(pin.city, ignoreCase = true)
-                    }
-                if (inScope.isEmpty()) {
-                    null
-                } else {
-                    RecentEntry.Scope(
-                        pin = pin,
-                        // The parent country travels with the city, as on desktop.
-                        title = inScope.first().city + ", " + countryDisplayName(pin.country),
-                        hasActive = inScope.any { it.active },
-                    )
-                }
-            }
-        }
-    }
-
-/** One recents entry as its row, at its own depth. */
-private fun recentRow(entry: RecentEntry, exitPin: ExitPin): PickerRow =
-    when (entry) {
-        is RecentEntry.Exit ->
-            PickerRow.ExitRow(
-                relay = entry.relay,
-                title = exitTitle(entry.relay),
-                ordinal = null,
-                depth = 0,
-                section = ExitSection.Recents,
-                isPinned = exitPin == ExitPin.Exit(entry.relay.exitId),
-            )
-        is RecentEntry.Scope ->
-            PickerRow.RecentScopeRow(
-                pin = entry.pin,
-                title = entry.title,
-                hasActive = entry.hasActive,
-                isPinned = exitPin == entry.pin,
-            )
-    }
+internal fun recentPlaces(pins: List<ExitPin>, relays: List<WarrenRelaySummary>): List<Place> =
+    pins.mapNotNull { resolvePlace(it, relays) }
 
 /**
  * The whole exit-hop list, in render order. [byCountry] is the already filtered
  * and sorted catalogue; a non-empty [query] force-expands every branch so a
  * match is never hidden behind a collapsed parent.
  */
-@Suppress("LongParameterList")
 internal fun buildPickerRows(
     query: String,
-    recents: List<RecentEntry>,
+    recents: List<Place>,
     customLists: List<CustomListSection>,
     byCountry: Map<String, Map<String, List<WarrenRelaySummary>>>,
     exitPin: ExitPin,
-    expandedCountries: Set<String>,
-    expandedCities: Set<String>,
+    expanded: ExpandedKeys,
 ): List<PickerRow> = buildList {
     val searching = query.isNotEmpty()
+    val expandedCountries = expanded.countries
+    val expandedCities = expanded.cities
 
     if (recents.isNotEmpty()) {
         add(PickerRow.RecentsHeader)
-        recents.forEach { entry -> add(recentRow(entry, exitPin)) }
+        recents.forEach { place -> add(savedRow(place, ExitSection.Recents, depth = 0, exitPin)) }
         add(PickerRow.Gap("gap-recents"))
     }
 
-    // A list is created from any exit's row menu, so the section appears only
-    // once there is a list to show.
+    // A list is created from a location's lists menu, and one left empty is
+    // not listed, so the section appears only while a list holds something.
     if (customLists.isNotEmpty()) {
         add(PickerRow.CustomListsHeader)
-        customLists.forEach { section ->
-                add(PickerRow.CustomListHeader(section.name))
-                section.relays.forEach { relay ->
-                add(
-                    PickerRow.ExitRow(
-                        relay = relay,
-                        title = exitTitle(relay),
-                        ordinal = null,
-                        depth = 0,
-                        section = ExitSection.Custom(section.name),
-                        isPinned = exitPin == ExitPin.Exit(relay.exitId),
-                    )
-                )
-            }
-        }
+        customLists.forEach { section -> addCustomListRows(section, searching, expanded.lists, exitPin) }
         add(PickerRow.Gap("gap-custom-lists"))
     }
 
@@ -564,6 +613,29 @@ internal fun buildPickerRows(
     }
 }
 
+private fun savedRow(place: Place, section: ExitSection, depth: Int, exitPin: ExitPin) =
+    PickerRow.SavedRow(
+        place = place,
+        section = section,
+        depth = depth,
+        isPinned = place.location.sameLocationAs(exitPin),
+    )
+
+private fun MutableList<PickerRow>.addCustomListRows(
+    section: CustomListSection,
+    searching: Boolean,
+    expandedLists: Set<String>,
+    exitPin: ExitPin,
+) {
+    // A search opens every list it keeps, as it opens every country.
+    val open = searching || section.name in expandedLists
+    add(PickerRow.CustomListRow(name = section.name, count = section.places.size, expanded = open))
+    if (!open) return
+    val custom = ExitSection.Custom(section.name)
+    section.places.forEach { place -> add(savedRow(place, custom, depth = 1, exitPin)) }
+    add(PickerRow.Gap("gap-list-${section.name}"))
+}
+
 private fun singleExitCountryRow(
     country: String,
     relay: WarrenRelaySummary,
@@ -574,7 +646,6 @@ private fun singleExitCountryRow(
         title = countryDisplayName(country),
         ordinal = null,
         depth = 0,
-        section = ExitSection.Country,
         isPinned = exitPin == ExitPin.Exit(relay.exitId) ||
             exitPin.pinsCountry(country) ||
             exitPin.pinsCity(country, relay.city),
@@ -598,7 +669,6 @@ private fun MutableList<PickerRow>.addCityRows(
                 title = label,
                 ordinal = null,
                 depth = 1,
-                section = ExitSection.Country,
                 isPinned = exitPin == ExitPin.Exit(relay.exitId) ||
                     exitPin.pinsCity(country, city),
             )
@@ -627,7 +697,6 @@ private fun MutableList<PickerRow>.addCityRows(
                 title = label,
                 ordinal = i + 1,
                 depth = 2,
-                section = ExitSection.Country,
                 isPinned = exitPin == ExitPin.Exit(relay.exitId),
             )
         )
@@ -640,7 +709,7 @@ private fun MutableList<PickerRow>.addCityRows(
  * itself so the selection lands with its parent context visible rather than
  * flush against the top edge.
  *
- * Recents and custom lists are deliberately never a target: they duplicate the
+ * Recents and custom lists ([PickerRow.SavedRow]) are never a target: they duplicate the
  * pinned exit above the tree, and landing on the duplicate would burn the
  * one-shot scroll before the tree branch has even been expanded.
  */
@@ -649,7 +718,7 @@ internal fun scrollTargetIndex(rows: List<PickerRow>): Int {
         when (row) {
             is PickerRow.CountryHeader -> row.isPinned
             is PickerRow.CityHeader -> row.isPinned
-            is PickerRow.ExitRow -> row.isPinned && row.section == ExitSection.Country
+            is PickerRow.ExitRow -> row.isPinned
             else -> false
         }
     }

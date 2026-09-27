@@ -25,6 +25,14 @@ par l'application, gardez-le tel quel.
 - [iOS] Dire quand le serveur refuse un port redirigé faute de droit de port, et redemander
   automatiquement au lieu de s'arrêter au premier refus.
 
+### Modifié
+- [Android] Donner la même forme à toutes les lignes du sélecteur de localisation, récents et listes
+  personnalisées compris : le drapeau rond, le nom au-dessus de son pays, la charge d'une sortie
+  unique, et un bouton de menu discret, aussi ouvert par un appui long, qui ajoute la localisation à
+  une liste ou l'en retire aussitôt, ou crée une nouvelle liste qui la contient. La localisation
+  choisie se reconnaît à son nom en vert et à l'anneau vert autour de son drapeau. Une liste vide
+  n'apparaît plus dans le sélecteur.
+
 ### Corrigé
 - [iOS] Présenter un droit de port avec chaque demande de port redirigé, comme les autres
   plateformes, pour que les serveurs qui l'exigent accordent le port au lieu de le refuser.

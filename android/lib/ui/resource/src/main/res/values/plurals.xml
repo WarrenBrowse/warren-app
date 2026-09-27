@@ -1,2 +1,6 @@
 <resources>
+    <plurals name="location_list_count">
+        <item quantity="one">%d location</item>
+        <item quantity="other">%d locations</item>
+    </plurals>
 </resources>

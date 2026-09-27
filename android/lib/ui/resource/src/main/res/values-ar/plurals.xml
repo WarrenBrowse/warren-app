@@ -1,3 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <plurals name="location_list_count">
+        <item quantity="zero">%d موقع</item>
+        <item quantity="one">موقع واحد</item>
+        <item quantity="two">موقعان</item>
+        <item quantity="few">%d مواقع</item>
+        <item quantity="many">%d موقعًا</item>
+        <item quantity="other">%d موقع</item>
+    </plurals>
 </resources>
