@@ -49,6 +49,10 @@ par l'application, gardez-le tel quel.
 - [Windows, macOS, Linux, Android] Indiquer que le compte utilise déjà son nombre maximal
   d'appareils simultanés quand le serveur en refuse un de plus, au lieu d'annoncer un abonnement
   expiré.
+- [Windows, macOS, Linux, Android] Réinitialiser les connexions ouvertes d'une app dont le pays
+  change pendant la connexion, ou dont le pays est ajouté ou retiré, pour qu'elle se reconnecte
+  aussitôt par sa nouvelle route. Ses connexions restaient bloquées : un navigateur attendait,
+  résolution de noms comprise, jusqu'à ce qu'on le redémarre.
 
 ## [1.1.37] - 2026-09-27
 ### Ajouté

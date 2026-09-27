@@ -297,6 +297,17 @@ fn advance(lifecycle: Lifecycle, direction: Direction, tcp_flags: u8) -> Lifecyc
     }
 }
 
+/// What becomes of a flow [`FlowTable::revise`] goes over.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Revision {
+    Keep,
+    /// Kept only as long as a closed connection lingers, so its last segments
+    /// still find it.
+    Close,
+    /// Dropped: its next packet is a flow never seen.
+    Forget,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum Lifecycle {
     Open,
@@ -341,14 +352,42 @@ impl<V: Copy> FlowTable<V> {
         tcp_flags: u8,
         now: Instant,
     ) -> Option<V> {
-        let entry = self.entries.get_mut(key)?;
-        if is_expired(key.transport, entry, now) {
-            self.entries.remove(key);
-            return None;
-        }
+        self.lookup_mut(key, direction, tcp_flags, now)
+            .map(|value| *value)
+    }
+
+    /// As [`Self::lookup`], for a caller that updates what it recorded.
+    pub fn lookup_mut(
+        &mut self,
+        key: &FlowKey,
+        direction: Direction,
+        tcp_flags: u8,
+        now: Instant,
+    ) -> Option<&mut V> {
+        // An expired entry is left to the next sweep, or to the insert that
+        // replaces it: one hash lookup per known packet.
+        let entry = self
+            .entries
+            .get_mut(key)
+            .filter(|entry| !is_expired(key.transport, entry, now))?;
         entry.last_seen = now;
         entry.lifecycle = advance(entry.lifecycle, direction, tcp_flags);
-        Some(entry.value)
+        Some(&mut entry.value)
+    }
+
+    /// Goes over every flow, letting `revise` update its value and say what
+    /// becomes of it.
+    pub fn revise(&mut self, now: Instant, mut revise: impl FnMut(&FlowKey, &mut V) -> Revision) {
+        self.entries
+            .retain(|key, entry| match revise(key, &mut entry.value) {
+                Revision::Keep => true,
+                Revision::Close => {
+                    entry.lifecycle = Lifecycle::Closing;
+                    entry.last_seen = now;
+                    true
+                }
+                Revision::Forget => false,
+            });
     }
 
     /// Records a new flow, evicting expired flows first and then the least
@@ -420,6 +459,11 @@ impl<V: Copy> FlowTable<V> {
             .get(key)
             .filter(|entry| !is_expired(key.transport, entry, now))
             .map(|entry| entry.value)
+    }
+
+    /// The value of every flow, expired ones included until swept.
+    pub fn values(&self) -> impl Iterator<Item = &V> {
+        self.entries.values().map(|entry| &entry.value)
     }
 
     pub fn len(&self) -> usize {
@@ -740,6 +784,45 @@ mod tests {
 
         assert_eq!(during, Some('t'));
         assert_eq!(after, None);
+    }
+
+    #[test]
+    fn an_update_through_lookup_mut_is_what_the_next_lookup_finds() {
+        let mut table = FlowTable::new(8);
+        let now = t0();
+        let flow = key(Transport::Udp, 1, 443);
+        table.insert(flow, 1u32, Direction::Uplink, 0, now);
+
+        *table.lookup_mut(&flow, Direction::Uplink, 0, now).unwrap() = 2;
+
+        assert_eq!(table.peek(&flow, now), Some(2));
+    }
+
+    #[test]
+    fn a_revision_keeps_closes_or_forgets_each_flow() {
+        let mut table = FlowTable::new(8);
+        let now = t0();
+        let kept = key(Transport::Tcp, 1, 443);
+        let closed = key(Transport::Tcp, 2, 443);
+        let forgotten = key(Transport::Udp, 3, 443);
+        for flow in [kept, closed, forgotten] {
+            table.insert(flow, 0u8, Direction::Uplink, TCP_SYN, now);
+        }
+
+        table.revise(now, |flow, value| {
+            *value = 7;
+            match flow.local.port() {
+                1 => Revision::Keep,
+                2 => Revision::Close,
+                _ => Revision::Forget,
+            }
+        });
+        let later = now + CLOSING_LINGER * 2;
+
+        assert_eq!(table.peek(&kept, later), Some(7));
+        assert_eq!(table.peek(&closed, now + CLOSING_LINGER / 2), Some(7));
+        assert_eq!(table.peek(&closed, later), None);
+        assert_eq!(table.peek(&forgotten, now), None);
     }
 
     #[test]

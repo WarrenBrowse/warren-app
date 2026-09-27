@@ -80,12 +80,26 @@ fn pseudo_v6(src: [u8; 16], dst: [u8; 16], next_header: u8, len: usize) -> Vec<u
     pseudo
 }
 
+/// The sequence number of the segments built without one.
+pub const DEFAULT_SEQ: u32 = 0x0102_0304;
+
 fn tcp_segment(sport: u16, dport: u16, flags: u8, payload: &[u8]) -> Vec<u8> {
+    tcp_segment_numbered(sport, dport, flags, DEFAULT_SEQ, 0, payload)
+}
+
+fn tcp_segment_numbered(
+    sport: u16,
+    dport: u16,
+    flags: u8,
+    seq: u32,
+    ack: u32,
+    payload: &[u8],
+) -> Vec<u8> {
     let mut segment = Vec::with_capacity(20 + payload.len());
     segment.extend_from_slice(&sport.to_be_bytes());
     segment.extend_from_slice(&dport.to_be_bytes());
-    segment.extend_from_slice(&0x0102_0304u32.to_be_bytes());
-    segment.extend_from_slice(&0u32.to_be_bytes());
+    segment.extend_from_slice(&seq.to_be_bytes());
+    segment.extend_from_slice(&ack.to_be_bytes());
     segment.push(0x50);
     segment.push(flags);
     segment.extend_from_slice(&0xffffu16.to_be_bytes());
@@ -172,6 +186,31 @@ pub fn tcp_v4(
     )
 }
 
+/// A TCP over IPv4 segment with the given sequence and acknowledgment
+/// numbers.
+#[expect(
+    clippy::too_many_arguments,
+    reason = "a segment is named by all of its fields"
+)]
+pub fn tcp_v4_numbered(
+    src: [u8; 4],
+    dst: [u8; 4],
+    sport: u16,
+    dport: u16,
+    flags: u8,
+    seq: u32,
+    ack: u32,
+    payload: &[u8],
+) -> Vec<u8> {
+    finish_v4(
+        src,
+        dst,
+        6,
+        tcp_segment_numbered(sport, dport, flags, seq, ack, payload),
+        Some(16),
+    )
+}
+
 pub fn udp_v4(src: [u8; 4], dst: [u8; 4], sport: u16, dport: u16, payload: &[u8]) -> Vec<u8> {
     finish_v4(src, dst, 17, udp_datagram(sport, dport, payload), Some(6))
 }
@@ -208,6 +247,31 @@ pub fn tcp_v6(
     payload: &[u8],
 ) -> Vec<u8> {
     finish_v6(src, dst, 6, tcp_segment(sport, dport, flags, payload), 16)
+}
+
+/// A TCP over IPv6 segment with the given sequence and acknowledgment
+/// numbers.
+#[expect(
+    clippy::too_many_arguments,
+    reason = "a segment is named by all of its fields"
+)]
+pub fn tcp_v6_numbered(
+    src: [u8; 16],
+    dst: [u8; 16],
+    sport: u16,
+    dport: u16,
+    flags: u8,
+    seq: u32,
+    ack: u32,
+    payload: &[u8],
+) -> Vec<u8> {
+    finish_v6(
+        src,
+        dst,
+        6,
+        tcp_segment_numbered(sport, dport, flags, seq, ack, payload),
+        16,
+    )
 }
 
 pub fn udp_v6(src: [u8; 16], dst: [u8; 16], sport: u16, dport: u16, payload: &[u8]) -> Vec<u8> {

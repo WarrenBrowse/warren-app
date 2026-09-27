@@ -44,6 +44,10 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   fie creditată după încheierea revocării.
 - [Windows, macOS, Linux, Android] Aplicația spune că acest cont folosește deja numărul maxim de
   dispozitive simultane când serverul refuză încă unul, în loc să anunțe că abonamentul a expirat.
+- [Windows, macOS, Linux, Android] Conexiunile deschise ale unei aplicații a cărei țară se schimbă
+  în timpul conexiunii, sau care primește ori pierde o țară, sunt resetate, ca aplicația să se
+  reconecteze imediat prin noua rută. Înainte, conexiunile ei rămâneau blocate: un browser aștepta,
+  inclusiv rezolvarea numelor, până era repornit.
 
 ## [1.1.37] - 2026-09-27
 ### Adăugat

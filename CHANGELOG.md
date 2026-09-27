@@ -54,6 +54,10 @@ Line wrap the file at 100 chars.                                              Th
 - [Windows, macOS, Linux, Android] Say that the account already uses its maximum number of
   simultaneous devices when the server refuses another one, instead of calling the subscription
   expired.
+- [Windows, macOS, Linux, Android] Reset the open connections of an app whose country changes
+  while connected, or whose country is set or removed, so it reconnects through its new route at
+  once. Its connections used to hang: a browser kept waiting, name resolution included, until it
+  was restarted.
 
 ## [1.1.37] - 2026-09-27
 ### Added

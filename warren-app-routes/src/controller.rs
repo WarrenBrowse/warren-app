@@ -9,6 +9,9 @@
 //!
 //! Sessions are kept in fixed slots, one [`RouteId`] each, and one more route
 //! past the slots carries the blocked apps: a route that is never connected.
+//! A slot names its session to the router ([`SessionId`], the slot's
+//! generation), so an app whose route ended and whose new route took the same
+//! slot still has its connections reset toward it.
 //! How many slots may hold a session follows the main session's anchor
 //! ([`super::route_capacity`]): the routes of the plan past that number wait,
 //! their apps blocked, until a larger answer or a shorter plan frees a slot.
@@ -18,7 +21,7 @@ use std::sync::Arc;
 use futures::future::BoxFuture;
 use talpid_app_routing::{
     owner::OwnerResolver,
-    router::{Policy, RouteId, RouteState, SessionAddresses},
+    router::{Policy, RouteId, RouteState, SessionAddresses, SessionId},
 };
 use tokio::sync::{mpsc, watch};
 use warrenguard_multihop::RelayDescriptorSigned;
@@ -36,6 +39,15 @@ use crate::MultiHopConfig;
 /// The route past the session slots, never connected, that blocks the apps
 /// whose exit cannot be served.
 const BLOCKED: RouteId = RouteId(MAX_ROUTE_SESSIONS as u8);
+
+/// The session of [`BLOCKED`], and of every empty slot: never a slot's
+/// generation, which counts up from zero.
+const BLOCKED_SESSION: SessionId = SessionId(u64::MAX);
+const NO_SESSION: SessionId = SessionId(u64::MAX - 1);
+
+/// What a policy handed to the table is made of: which app takes which
+/// route, and which session each route holds.
+type PolicyKey = (Vec<(String, RouteId)>, Vec<SessionId>);
 
 /// Names to the firewall every relay the route sessions may reach outside the
 /// tunnel, and resolves once it applied them.
@@ -148,8 +160,9 @@ where
     reported: Option<Vec<RouteReport>>,
     /// The relays last named to the firewall.
     named: Vec<RelayDescriptorSigned>,
-    /// The app-to-route mapping of the policy the table holds.
-    mapping: Option<Vec<(String, RouteId)>>,
+    /// The app-to-route mapping of the policy the table holds, and the
+    /// session of each route.
+    mapping: Option<PolicyKey>,
 }
 
 impl<D, R, S> RouteController<D, R, S>
@@ -262,6 +275,7 @@ where
                     }
                     self.main_exit = *main_exit.borrow_and_update();
                     self.set_policy();
+                    self.write_resets().await;
                 }
                 Some(tagged) = self.events_rx.recv() => self.handle_event(tagged),
             }
@@ -307,6 +321,7 @@ where
         // while its session is not up: the policy goes in before any wait.
         self.reserve(plan);
         self.set_policy();
+        self.write_resets().await;
 
         // The firewall lets a route's relay through before its session
         // dials, so the first handshake is not dropped.
@@ -402,6 +417,14 @@ where
         self.main_apps.clone_from(&plan.main_apps);
     }
 
+    /// Writes to the TUN the resets of the connections the last policy moved
+    /// off their session, so their apps open new ones at once.
+    async fn write_resets(&self) {
+        for reset in self.table.take_resets() {
+            let _ = self.device.send(&reset).await;
+        }
+    }
+
     fn start(&mut self, index: usize) {
         let id = route_id(index);
         let queue = self.table.open_route(id);
@@ -450,6 +473,15 @@ where
             })
             .collect();
         routes.push(RouteState::Unavailable);
+        let sessions: Vec<SessionId> = self
+            .slots
+            .iter()
+            .map(|slot| {
+                slot.as_ref()
+                    .map_or(NO_SESSION, |slot| SessionId(slot.generation))
+            })
+            .chain(std::iter::once(BLOCKED_SESSION))
+            .collect();
         let main_exit = self.main_exit;
         let mapping: Vec<(String, RouteId)> = self
             .slots
@@ -469,23 +501,28 @@ where
                     .flat_map(|main| main.apps.iter().map(|app| (app.clone(), BLOCKED))),
             )
             .collect();
-        if self.mapping.as_ref() == Some(&mapping) {
-            // Same apps on the same routes: keep the flows the router knows,
-            // so the answers of a route's live flows still get through.
+        if self
+            .mapping
+            .as_ref()
+            .is_some_and(|(apps, held)| *apps == mapping && *held == sessions)
+        {
+            // Same apps on the same sessions: nothing for the router to
+            // revise, only the states of the routes.
             for (index, state) in routes.into_iter().enumerate() {
                 self.table.set_route_state(route_id(index), state);
             }
             return;
         }
-        let active = !mapping.is_empty();
         match Policy::new(
             self.main,
             mapping.iter().map(|(app, route)| (app, *route)),
             routes,
-        ) {
+        )
+        .and_then(|policy| policy.with_sessions(sessions.clone()))
+        {
             Ok(policy) => {
-                self.table.set_policy(policy, active);
-                self.mapping = Some(mapping);
+                self.table.set_policy(policy);
+                self.mapping = Some((mapping, sessions));
             }
             // Unreachable: every route id above indexes `routes`. The table
             // keeps the policy it has rather than let an app fall to main.
@@ -854,6 +891,96 @@ mod tests {
         assert!(rig.world.alive(1));
         assert_eq!(rig.world.log().last().unwrap(), "name [192.0.2.2:443]");
         assert_eq!(rig.opening_goes(BROWSER_PORT).await, Where::Main);
+    }
+
+    /// The resets written toward the apps, by local port.
+    fn resets_toward(tun: &FakeTun) -> Vec<u16> {
+        tun.take_outbound()
+            .iter()
+            .filter(|packet| packet[9] == 6 && packet[20 + 13] & 0x04 != 0)
+            .map(|packet| {
+                assert_eq!((source(packet), destination(packet)), (REMOTE, MAIN));
+                u16::from_be_bytes([packet[22], packet[23]])
+            })
+            .collect()
+    }
+
+    #[tokio::test]
+    async fn an_app_moved_to_another_country_has_its_connections_reset_in_the_tun() {
+        let mut rig = Rig::new();
+        rig.controller
+            .apply(&plan(vec![route(1, &[BROWSER])]))
+            .await;
+        rig.world.send(0, connected(ROUTE));
+        rig.deliver_events();
+        assert_eq!(rig.opening_goes(BROWSER_PORT).await, Where::Route(0, ROUTE));
+        assert_eq!(rig.opening_goes(EDITOR_PORT).await, Where::Main);
+
+        // The first route ends, and the new one takes its slot.
+        rig.controller
+            .apply(&plan(vec![route(2, &[BROWSER])]))
+            .await;
+
+        assert_eq!(resets_toward(&rig.tun), vec![BROWSER_PORT]);
+    }
+
+    #[tokio::test]
+    async fn a_moved_apps_connection_reaches_neither_session_until_it_opens_again() {
+        let mut rig = Rig::new();
+        rig.controller
+            .apply(&plan(vec![route(1, &[BROWSER])]))
+            .await;
+        rig.world.send(0, connected(ROUTE));
+        rig.deliver_events();
+        assert_eq!(rig.opening_goes(BROWSER_PORT).await, Where::Route(0, ROUTE));
+        rig.controller
+            .apply(&plan(vec![route(2, &[BROWSER])]))
+            .await;
+        rig.world.send(1, connected(ROUTE));
+        rig.deliver_events();
+        let _eager_resets = rig.tun.take_outbound();
+
+        let routed = RoutedTun::new(rig.tun.clone(), Arc::clone(&rig.table));
+        rig.tun
+            .inject_inbound(tcp(MAIN, REMOTE, BROWSER_PORT, 443, 0x10));
+        let main = tokio::time::timeout(Duration::from_millis(50), routed.recv()).await;
+
+        assert!(main.is_err(), "not through main");
+        assert!(rig.world.device(1).try_recv().unwrap().is_none());
+        assert_eq!(resets_toward(&rig.tun), vec![BROWSER_PORT], "answered");
+        assert_eq!(rig.opening_goes(BROWSER_PORT).await, Where::Route(1, ROUTE));
+    }
+
+    #[tokio::test]
+    async fn an_app_whose_country_is_removed_has_its_connections_reset() {
+        let mut rig = Rig::new();
+        rig.controller
+            .apply(&plan(vec![route(1, &[BROWSER])]))
+            .await;
+        rig.world.send(0, connected(ROUTE));
+        rig.deliver_events();
+        assert_eq!(rig.opening_goes(BROWSER_PORT).await, Where::Route(0, ROUTE));
+
+        rig.controller.apply(&AppRoutesPlan::default()).await;
+
+        assert_eq!(resets_toward(&rig.tun), vec![BROWSER_PORT]);
+    }
+
+    #[tokio::test]
+    async fn a_plan_that_keeps_an_apps_session_leaves_its_connections_alone() {
+        let mut rig = Rig::new();
+        rig.controller
+            .apply(&plan(vec![route(1, &[BROWSER])]))
+            .await;
+        rig.world.send(0, connected(ROUTE));
+        rig.deliver_events();
+        assert_eq!(rig.opening_goes(BROWSER_PORT).await, Where::Route(0, ROUTE));
+
+        rig.controller
+            .apply(&plan(vec![route(1, &[BROWSER]), route(2, &[EDITOR])]))
+            .await;
+
+        assert!(resets_toward(&rig.tun).is_empty());
     }
 
     fn three_routes() -> AppRoutesPlan {

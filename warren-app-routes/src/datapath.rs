@@ -12,6 +12,12 @@
 //!
 //! While no app has a route, the main path pays one relaxed atomic load per
 //! packet and nothing else: no lock, no clock read, no parse.
+//!
+//! When an app changes session, the router resets its TCP connections toward
+//! it (`talpid_app_routing::router`). Those resets are written to the TUN by
+//! whoever changed the policy (the controller), and the ones answering a
+//! segment of such a connection by the main session's device, on its next
+//! read.
 
 use std::{
     io,
@@ -37,9 +43,11 @@ const ROUTE_QUEUE_PACKETS: usize = 1024;
 /// The router between the TUN device and the sessions, shared by the main
 /// uplink pump, the route sessions' downlink pumps and the controller.
 pub struct RoutingTable<R> {
-    /// Whether any app has a route. Read on every main packet, so it is kept
-    /// outside the lock.
+    /// Whether any packet may need the router. Read on every main packet, so
+    /// it is kept outside the lock.
     active: AtomicBool,
+    /// Whether resets wait to be written toward the apps.
+    resets_pending: AtomicBool,
     inner: Mutex<Inner<R>>,
 }
 
@@ -64,6 +72,7 @@ impl<R: OwnerResolver + Send + 'static> RoutingTable<R> {
     pub fn new(resolver: R) -> Arc<Self> {
         Arc::new(Self {
             active: AtomicBool::new(false),
+            resets_pending: AtomicBool::new(false),
             inner: Mutex::new(Inner {
                 router: Router::new(resolver),
                 queues: Vec::new(),
@@ -71,12 +80,37 @@ impl<R: OwnerResolver + Send + 'static> RoutingTable<R> {
         })
     }
 
-    /// Replaces the policy. `active` says whether it routes any app, which
-    /// the router does not expose.
-    pub fn set_policy(&self, policy: Policy, active: bool) {
+    /// Replaces the policy. The connections it resets toward their apps wait
+    /// in [`Self::take_resets`].
+    pub fn set_policy(&self, policy: Policy) {
         let mut inner = self.inner.lock();
         inner.router.set_policy(policy);
-        self.active.store(active, Ordering::Release);
+        self.active
+            .store(inner.router.is_active(), Ordering::Release);
+        self.note_resets(&inner);
+    }
+
+    /// The resets waiting to be written to the TUN, toward the apps.
+    pub fn take_resets(&self) -> Vec<Vec<u8>> {
+        self.resets_pending.store(false, Ordering::Release);
+        self.inner.lock().router.take_resets()
+    }
+
+    fn note_resets(&self, inner: &Inner<R>) {
+        if inner.router.has_resets() {
+            self.resets_pending.store(true, Ordering::Release);
+        }
+    }
+
+    /// Writes the waiting resets to `device`. A reset that cannot be written
+    /// leaves its connection to the app's own timeouts, as before resets.
+    async fn write_resets<D: PacketDevice>(&self, device: &D) {
+        if !self.resets_pending.load(Ordering::Acquire) {
+            return;
+        }
+        for reset in self.take_resets() {
+            let _ = device.send(&reset).await;
+        }
     }
 
     pub fn set_route_state(&self, route: RouteId, state: RouteState) {
@@ -116,7 +150,13 @@ impl<R: OwnerResolver + Send + 'static> RoutingTable<R> {
         }
         let arrived = Instant::now();
         let mut inner = self.inner.lock();
-        match inner.router.uplink(packet, arrived) {
+        let verdict = inner.router.uplink(packet, arrived);
+        if !inner.router.is_active() {
+            // The last reset connections are gone and no app is routed.
+            self.active.store(false, Ordering::Release);
+        }
+        self.note_resets(&inner);
+        match verdict {
             Verdict::Main => Uplink::Main,
             Verdict::Drop => Uplink::Taken,
             Verdict::Route(route) => {
@@ -159,15 +199,27 @@ impl<D, R> RoutedTun<D, R> {
     }
 }
 
+impl<D: PacketDevice, R: OwnerResolver + Send + 'static> RoutedTun<D, R> {
+    /// Takes an uplink packet out of the main path when the router says so,
+    /// and writes the resets that answer it.
+    async fn for_main(&self, packet: &mut Vec<u8>) -> bool {
+        let main = self.table.uplink(packet) == Uplink::Main;
+        self.table.write_resets(&self.device).await;
+        main
+    }
+}
+
 impl<D, R> PacketDevice for RoutedTun<D, R>
 where
     D: PacketDevice,
     R: OwnerResolver + Send + 'static,
 {
     async fn recv(&self) -> io::Result<Vec<u8>> {
+        // Resets answering what `try_recv` took out wait for this read.
+        self.table.write_resets(&self.device).await;
         loop {
             let mut packet = self.device.recv().await?;
-            if self.table.uplink(&mut packet) == Uplink::Main {
+            if self.for_main(&mut packet).await {
                 return Ok(packet);
             }
         }
@@ -288,6 +340,11 @@ mod tests {
         }
     }
 
+    /// The browser's connection, past its opening.
+    fn browser_data() -> Vec<u8> {
+        tcp(MAIN, REMOTE, BROWSER_PORT, 443, 0x10)
+    }
+
     fn browser_on_route(state: RouteState) -> Policy {
         Policy::new(addresses(MAIN), [(BROWSER, ROUTE_0)], vec![state]).unwrap()
     }
@@ -325,10 +382,7 @@ mod tests {
     #[tokio::test]
     async fn a_routed_apps_packet_leaves_main_for_its_route_queue_translated() {
         let (table, _os) = table();
-        table.set_policy(
-            browser_on_route(RouteState::Connected(addresses(ROUTE))),
-            true,
-        );
+        table.set_policy(browser_on_route(RouteState::Connected(addresses(ROUTE))));
         let queue = table.open_route(ROUTE_0);
         let tun = FakeTun::new();
         let routed = RoutedTun::new(tun.clone(), Arc::clone(&table));
@@ -347,10 +401,7 @@ mod tests {
     #[tokio::test]
     async fn an_unrouted_apps_packet_stays_on_main_untouched() {
         let (table, _os) = table();
-        table.set_policy(
-            browser_on_route(RouteState::Connected(addresses(ROUTE))),
-            true,
-        );
+        table.set_policy(browser_on_route(RouteState::Connected(addresses(ROUTE))));
         let tun = FakeTun::new();
         let routed = RoutedTun::new(tun.clone(), table);
         let packet = syn(EDITOR_PORT);
@@ -363,7 +414,7 @@ mod tests {
     #[tokio::test]
     async fn a_routed_apps_packet_is_dropped_while_its_route_is_connecting() {
         let (table, _os) = table();
-        table.set_policy(browser_on_route(RouteState::Connecting), true);
+        table.set_policy(browser_on_route(RouteState::Connecting));
         let queue = table.open_route(ROUTE_0);
         let tun = FakeTun::new();
         let routed = RoutedTun::new(tun.clone(), Arc::clone(&table));
@@ -379,10 +430,7 @@ mod tests {
     #[tokio::test]
     async fn a_closed_route_drops_its_apps_packets_instead_of_handing_them_to_main() {
         let (table, _os) = table();
-        table.set_policy(
-            browser_on_route(RouteState::Connected(addresses(ROUTE))),
-            true,
-        );
+        table.set_policy(browser_on_route(RouteState::Connected(addresses(ROUTE))));
         let _queue = table.open_route(ROUTE_0);
         let tun = FakeTun::new();
         let routed = RoutedTun::new(tun.clone(), Arc::clone(&table));
@@ -397,10 +445,7 @@ mod tests {
     #[tokio::test]
     async fn a_route_answer_is_translated_back_and_written_to_the_tun() {
         let (table, _os) = table();
-        table.set_policy(
-            browser_on_route(RouteState::Connected(addresses(ROUTE))),
-            true,
-        );
+        table.set_policy(browser_on_route(RouteState::Connected(addresses(ROUTE))));
         let queue = table.open_route(ROUTE_0);
         let tun = FakeTun::new();
         let routed = RoutedTun::new(tun.clone(), Arc::clone(&table));
@@ -418,10 +463,7 @@ mod tests {
     #[tokio::test]
     async fn a_route_cannot_write_to_the_tun_what_is_not_one_of_its_flows() {
         let (table, _os) = table();
-        table.set_policy(
-            browser_on_route(RouteState::Connected(addresses(ROUTE))),
-            true,
-        );
+        table.set_policy(browser_on_route(RouteState::Connected(addresses(ROUTE))));
         let queue = table.open_route(ROUTE_0);
         let tun = FakeTun::new();
         let route = RouteTun::new(tun.clone(), table, ROUTE_0, queue);
@@ -432,12 +474,35 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn a_connection_reset_by_a_new_policy_is_answered_in_the_tun_and_never_reaches_main() {
+        let (table, _os) = table();
+        table.set_policy(browser_on_route(RouteState::Connected(addresses(ROUTE))));
+        let _queue = table.open_route(ROUTE_0);
+        let tun = FakeTun::new();
+        let routed = RoutedTun::new(tun.clone(), Arc::clone(&table));
+        tun.inject_inbound(syn(BROWSER_PORT));
+        assert!(nothing_within_a_moment(&routed).await);
+
+        table.set_policy(Policy::inactive());
+        let resets = table.take_resets();
+        tun.inject_inbound(browser_data());
+
+        assert_eq!(resets.len(), 1);
+        assert_eq!(destination(&resets[0]), MAIN);
+        assert!(nothing_within_a_moment(&routed).await);
+        let answers = tun.take_outbound();
+        assert_eq!(answers.len(), 1);
+        assert_eq!(
+            (source(&answers[0]), destination(&answers[0])),
+            (REMOTE, MAIN)
+        );
+        assert_eq!(answers[0][20 + 13] & 0x04, 0x04, "a reset");
+    }
+
+    #[tokio::test]
     async fn the_main_downlink_is_written_to_the_tun_untouched() {
         let (table, _os) = table();
-        table.set_policy(
-            browser_on_route(RouteState::Connected(addresses(ROUTE))),
-            true,
-        );
+        table.set_policy(browser_on_route(RouteState::Connected(addresses(ROUTE))));
         let tun = FakeTun::new();
         let routed = RoutedTun::new(tun.clone(), table);
         let answer = syn_ack_to(MAIN, EDITOR_PORT);

@@ -124,11 +124,25 @@ fn checksum(parts: &[&[u8]]) -> u16 {
     !(sum as u16)
 }
 
+const SYN: u8 = 0x02;
+const ACK: u8 = 0x10;
+
 fn tcp(src: Ipv4Addr, dst: Ipv4Addr, sport: u16, dport: u16, payload: &[u8]) -> Vec<u8> {
+    tcp_flags(src, dst, sport, dport, ACK, payload)
+}
+
+fn tcp_flags(
+    src: Ipv4Addr,
+    dst: Ipv4Addr,
+    sport: u16,
+    dport: u16,
+    flags: u8,
+    payload: &[u8],
+) -> Vec<u8> {
     let mut segment = Vec::new();
     segment.extend_from_slice(&sport.to_be_bytes());
     segment.extend_from_slice(&dport.to_be_bytes());
-    segment.extend_from_slice(&[0, 0, 0, 1, 0, 0, 0, 1, 0x50, 0x10, 0xff, 0xff, 0, 0, 0, 0]);
+    segment.extend_from_slice(&[0, 0, 0, 1, 0, 0, 0, 1, 0x50, flags, 0xff, 0xff, 0, 0, 0, 0]);
     segment.extend_from_slice(payload);
     let mut pseudo = src.octets().to_vec();
     pseudo.extend_from_slice(&dst.octets());
@@ -175,7 +189,11 @@ fn a_known_routed_flow_costs_no_allocation_and_no_os_call() {
     let mut up = uplink.clone();
     let mut down = downlink.clone();
     let start = Instant::now();
-    assert_eq!(router.uplink(&mut up, start), Verdict::Route(RouteId(0)));
+    let mut opening = tcp_flags(MAIN, REMOTE, 50000, 443, SYN, b"");
+    assert_eq!(
+        router.uplink(&mut opening, start),
+        Verdict::Route(RouteId(0))
+    );
     let calls_after_first_packet = calls.get();
 
     let allocations = allocations_during(|| {

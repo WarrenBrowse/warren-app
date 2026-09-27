@@ -364,6 +364,30 @@ sessions together at that exit.
   routed app's packets out of the main path, and each route session's pumps
   read and write a `RouteTun`. While no app has an exit, the main path costs
   one relaxed atomic load per packet.
+- An app that changes session while connected (another country or city, its
+  country removed, a country given to an app that had none, a route that
+  ended for good and whose slot another session took) has its TCP
+  connections reset toward it at once (`talpid-app-routing/src/reset.rs`). A
+  connection lives at the exit it was opened through, which no longer sees
+  it, and any other session would carry it to an exit that drops it as
+  unknown: the app would wait on it until its own timeouts. The router keeps,
+  per flow, the process found holding it and the last acknowledgment the app
+  sent; a new policy asks it about each of those processes again, and for
+  each TCP connection whose session changed it writes to the TUN a reset from
+  the remote end carrying exactly the sequence number the app expects (the
+  only one RFC 5961 accepts), then drops every later segment of that
+  connection and answers each with the reset a closed port sends. The
+  controller writes the resets right after the new policy, the main
+  session's device the answers. A UDP flow of such an app is forgotten, so
+  its next datagram is attributed again and takes the new session. A flow
+  whose app keeps its session keeps it, whatever its route id becomes: the
+  controller names each route's session (its slot's generation) to the
+  router. A connection under way that the router never tracked (opened while
+  no app had a country, or through main before its app got one) and that
+  belongs to a routed app is reset at its first segment rather than carried
+  to the route. While connections reset by a policy that routes nothing are
+  closing (10 s after their last segment), the router stays in the path, so
+  none of their segments reaches the main session.
 
 ### 2.5 DNS
 
@@ -803,13 +827,11 @@ second browser (FOSS Browser, from F-Droid) as the two apps, IP echo through
 | Chrome moved from DE to FR while connected | the tab showed FR (135.136.60.142) at once; a URL by address (`1.1.1.1/cdn-cgi/trace`) answered `ip=135.136.60.142 loc=FR`; names did not resolve in Chrome until it was restarted (below) |
 | Arabic | the tab mirrored, the address of "Connected, IP" kept left to right |
 
-Known limit, shared with desktop: when an app changes route while connected,
-the router forgets the flows it knew and attributes each packet again, so the
-app's connections under way move to the new route, whose exit drops them as
-unknown. An app that retries opens new connections and recovers; Chrome kept
-waiting on connections it had open (its name resolution included) until it
-was restarted. The same happens on desktop; resetting those connections
-toward the app is left to a later change of the shared router.
+The Chrome row predates the reset of section 2.4: the router then forgot the
+flows it knew on a new policy, so the app's connections under way moved to
+the new route, whose exit dropped them, and Chrome waited on them (its name
+resolution included) until it was restarted. The shared router now resets
+those connections toward the app, on Android as on desktop.
 
 ## 4. Platform availability
 
@@ -856,7 +878,7 @@ toward the app is left to a later change of the shared router.
   (runs on macOS without touching the host network):
   `WARREN_MNEMONIC="$(cat ~/.warren/app-routing-test-wallet.mnemonic)" cargo
   test -p mullvad-daemon --lib real_exit -- --ignored --nocapture`
-  (`mullvad-daemon/src/warren_app_routes/real_exit.rs`). It mints the current
+  (`mullvad-daemon/src/warren_app_routes/real_exit.rs`, both tests). It mints the current
   epoch's batch with the daemon's manager and hands it out through the
   daemon's token source. The main session is admitted on a token, under its
   default admission but with a random key in place of the wallet's, so an
@@ -906,6 +928,18 @@ toward the app is left to a later change of the shared router.
   while a serial was free (FR admitted it seconds later): a matter for those
   exits, not looked into from the client. The daemon in the Windows ARM64 VM
   (include-only with the swapped driver, per-app country): section 3.2.
+- A country change under an open connection (section 2.4), same harness:
+  `an_app_moved_to_another_country_has_its_open_connection_reset_and_reconnects_there`
+  runs one route at a time, so the second route takes the first one's slot.
+  Measured 2026-09-27 on beta, main on RO (135.136.59.234), both routes on
+  tokens: the app held a kept-alive HTTP connection through DE
+  (167.233.127.54) and was moved to SG; the reset reached it 1.9 ms after the
+  new plan, at the sequence number it expected, without it sending anything;
+  a request on the old connection was answered with a reset, and none of its
+  packets was routed or reached the main session; the app's next connection
+  came from SG (5.223.49.152). The same run with the router forgetting its
+  flows on a new policy, as before the fix: no reset within 10 s, the
+  connection left hanging.
 
 ## 7. Desktop GUI
 

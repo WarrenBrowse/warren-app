@@ -15,20 +15,27 @@
 //! - a flow of a routed app is dropped while its route is not connected, and
 //!   never falls back to the main session;
 //! - a later fragment whose first fragment was not seen is dropped, since its
-//!   datagram may be a routed app's.
+//!   datagram may be a routed app's;
+//! - a TCP connection whose app changed session under it (another country,
+//!   none, or a route ended for good) is reset toward the app, and its
+//!   segments are dropped: the exit it lives at no longer sees them, and any
+//!   other session would carry them to an exit that drops them, so the app
+//!   would wait on it until its own timeouts. A UDP flow is forgotten and
+//!   attributed again, so its next datagram takes the new session.
 
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     ffi::OsStr,
     net::{IpAddr, Ipv4Addr, Ipv6Addr},
     time::{Duration, Instant},
 };
 
 use crate::{
-    app::{AppMatcher, DecisionCache, PathFlavor},
-    flow::{self, Classified, Direction, FlowKey, FlowTable, FragmentKey, Transport},
+    app::{AppMatcher, DecisionCache, PathFlavor, ProcessKey},
+    flow::{self, Classified, Direction, FlowKey, FlowTable, FragmentKey, Revision, Transport},
     ip, nat,
     owner::{OwnerResolver, SocketOwner},
+    reset::{self, AppSide, Segment},
 };
 
 /// Flows tracked at most, once routing is active.
@@ -41,6 +48,12 @@ const SWEEP_INTERVAL: Duration = Duration::from_secs(5);
 /// A route session, by its index in the policy.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RouteId(pub u8);
+
+/// Which session a route stands for. A route id is a slot that another
+/// session may take once the one before it ended, so a connection keeps its
+/// route only while the route holds the session it was opened through.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub struct SessionId(pub u64);
 
 /// The inner addresses a session sends from.
 #[derive(Clone, Copy, PartialEq, Eq, Default)]
@@ -83,6 +96,8 @@ impl std::fmt::Debug for SessionAddresses {
 pub enum PolicyError {
     #[error("an app is assigned a route the policy does not have")]
     UnknownRoute,
+    #[error("the sessions do not name every route of the policy")]
+    SessionCount,
 }
 
 /// Which app goes through which route, and the state of each route.
@@ -90,6 +105,7 @@ pub struct Policy {
     main: SessionAddresses,
     apps: AppMatcher<RouteId>,
     routes: Vec<RouteState>,
+    sessions: Vec<SessionId>,
 }
 
 impl Policy {
@@ -114,8 +130,24 @@ impl Policy {
         Ok(Self {
             main,
             apps: AppMatcher::new(PathFlavor::HOST, apps),
+            sessions: (0..routes.len() as u64).map(SessionId).collect(),
             routes,
         })
+    }
+
+    /// Names the session each route holds, one per route in order. Without
+    /// it, route `n` holds session `n`.
+    ///
+    /// # Errors
+    ///
+    /// [`PolicyError::SessionCount`] when `sessions` does not name exactly
+    /// one session per route.
+    pub fn with_sessions(mut self, sessions: Vec<SessionId>) -> Result<Self, PolicyError> {
+        if sessions.len() != self.routes.len() {
+            return Err(PolicyError::SessionCount);
+        }
+        self.sessions = sessions;
+        Ok(self)
     }
 
     /// No app routed: every packet goes through the main session.
@@ -124,11 +156,22 @@ impl Policy {
             main: SessionAddresses::default(),
             apps: AppMatcher::new(PathFlavor::HOST, Vec::<(&str, RouteId)>::new()),
             routes: Vec::new(),
+            sessions: Vec::new(),
         }
     }
 
     fn is_active(&self) -> bool {
         !self.apps.is_empty()
+    }
+
+    fn session(&self, route: RouteId) -> Option<SessionId> {
+        self.sessions.get(usize::from(route.0)).copied()
+    }
+
+    /// The route holding `session`, if one does.
+    fn route_of(&self, session: SessionId) -> Option<RouteId> {
+        let index = self.sessions.iter().position(|held| *held == session)?;
+        Some(RouteId(u8::try_from(index).ok()?))
     }
 }
 
@@ -159,6 +202,8 @@ pub struct Counters {
     pub refresh_errors: u64,
     pub routed_packets: u64,
     pub dropped_packets: u64,
+    /// TCP connections reset toward their app because it changed session.
+    pub reset_flows: u64,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -167,6 +212,28 @@ enum Binding {
     Route(RouteId),
     /// Neither main nor a route may carry it.
     Blocked,
+    /// A TCP connection reset toward its app because the app changed
+    /// session: its segments are dropped and each is answered with a reset.
+    Reset,
+}
+
+/// What the router keeps about a live flow.
+#[derive(Debug, Clone, Copy)]
+struct Tracked {
+    binding: Binding,
+    /// The process found holding the flow's socket, which a new policy is
+    /// asked about.
+    process: Option<ProcessKey>,
+    /// Where the app's side of a TCP connection stands, which a reset toward
+    /// it has to match.
+    app_side: AppSide,
+}
+
+/// Where a flow's packets go under one policy, in terms that outlive it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Target {
+    Main,
+    Session(Option<SessionId>),
 }
 
 const FLAG_SYN: u8 = 0x02;
@@ -225,7 +292,7 @@ impl FragmentMap {
 pub struct Router<R> {
     resolver: R,
     policy: Policy,
-    flows: Option<FlowTable<Binding>>,
+    flows: Option<FlowTable<Tracked>>,
     flow_capacity: usize,
     uplink_fragments: FragmentMap,
     downlink_fragments: FragmentMap,
@@ -234,6 +301,8 @@ pub struct Router<R> {
     snapshot_taken: Option<Instant>,
     last_sweep: Option<Instant>,
     counters: Counters,
+    /// Resets waiting to be written toward the apps.
+    resets: Vec<Vec<u8>>,
 }
 
 impl<R: OwnerResolver> Router<R> {
@@ -255,11 +324,14 @@ impl<R: OwnerResolver> Router<R> {
             snapshot_taken: None,
             last_sweep: None,
             counters: Counters::default(),
+            resets: Vec::new(),
         }
     }
 
-    /// Replaces the policy. Every flow is attributed again, since an app may
-    /// have changed route.
+    /// Replaces the policy. A flow whose app keeps its session keeps it; a
+    /// TCP connection whose app changed session is reset toward the app (the
+    /// resets wait in [`Self::take_resets`]) and dropped from then on; any
+    /// other flow is attributed again at its next packet.
     pub fn set_policy(&mut self, policy: Policy) {
         if policy.is_active() && self.flows.is_none() {
             // Allocated on first use: a router that never routes costs no
@@ -268,16 +340,125 @@ impl<R: OwnerResolver> Router<R> {
             self.uplink_fragments.entries.reserve(FRAGMENT_CAPACITY);
             self.downlink_fragments.entries.reserve(FRAGMENT_CAPACITY);
         }
-        if let Some(flows) = &mut self.flows {
-            flows.clear();
-        }
         self.uplink_fragments.clear();
         self.downlink_fragments.clear();
         self.decisions.clear();
         self.resolver.watch_programs(&policy.apps);
         // The resolver's view was taken for the old programs.
         self.snapshot_taken = None;
+        let decisions = self.decide_again(&policy);
+        for (process, route) in &decisions {
+            self.decisions.insert(*process, *route);
+        }
+        self.revise_flows(&policy, &decisions);
         self.policy = policy;
+    }
+
+    /// Whether any packet may need the router: an app is routed, or
+    /// connections reset by the last policy are still closing.
+    pub fn is_active(&self) -> bool {
+        self.policy.is_active() || self.flows.as_ref().is_some_and(|flows| !flows.is_empty())
+    }
+
+    /// The resets waiting to be written toward the apps, each a whole IP
+    /// packet from the remote end of its connection.
+    pub fn take_resets(&mut self) -> Vec<Vec<u8>> {
+        std::mem::take(&mut self.resets)
+    }
+
+    /// Whether resets wait in [`Self::take_resets`].
+    pub fn has_resets(&self) -> bool {
+        !self.resets.is_empty()
+    }
+
+    /// What `policy` decides for each process holding a tracked flow, for the
+    /// processes that still run the program they ran.
+    fn decide_again(&mut self, policy: &Policy) -> HashMap<ProcessKey, Option<RouteId>> {
+        let Some(flows) = &self.flows else {
+            return HashMap::new();
+        };
+        let processes: HashSet<ProcessKey> = flows
+            .values()
+            .filter_map(|tracked| tracked.process)
+            .collect();
+        if !policy.is_active() {
+            return processes
+                .into_iter()
+                .map(|process| (process, None))
+                .collect();
+        }
+        let resolver = &mut self.resolver;
+        processes
+            .into_iter()
+            .filter_map(|process| {
+                if resolver.process_key(process.pid) != Some(process) {
+                    return None;
+                }
+                let program = resolver.executable(process.pid)?;
+                Some((process, policy.apps.lookup(program.as_os_str())))
+            })
+            .collect()
+    }
+
+    /// Brings every tracked flow in line with `policy`, which replaces the
+    /// policy in force.
+    fn revise_flows(&mut self, policy: &Policy, decisions: &HashMap<ProcessKey, Option<RouteId>>) {
+        let Some(flows) = &mut self.flows else {
+            return;
+        };
+        let old = &self.policy;
+        let resets = &mut self.resets;
+        let counters = &mut self.counters;
+        let active = policy.is_active();
+        flows.revise(Instant::now(), |key, tracked| {
+            let before = match tracked.binding {
+                Binding::Main => Target::Main,
+                Binding::Route(route) => Target::Session(old.session(route)),
+                // Already closing or blocked: only a policy routing nothing
+                // lets them go, once they have lingered.
+                Binding::Blocked | Binding::Reset => {
+                    return if active {
+                        Revision::Keep
+                    } else {
+                        Revision::Close
+                    };
+                }
+            };
+            let after = match tracked.process.and_then(|process| decisions.get(&process)) {
+                Some(None) => Some(Binding::Main),
+                Some(Some(route)) => Some(Binding::Route(*route)),
+                // The app cannot be asked again. A route keeps its flows
+                // while its session is in the new policy; a flow on main is
+                // attributed again at its next packet, and a connection under
+                // way that this sends to a route is reset then.
+                None => match before {
+                    Target::Session(Some(session)) => policy.route_of(session).map(Binding::Route),
+                    Target::Session(None) => None,
+                    Target::Main => return Revision::Forget,
+                },
+            };
+            let target = |binding| match binding {
+                Binding::Route(route) => Target::Session(policy.session(route)),
+                _ => Target::Main,
+            };
+            match after {
+                Some(binding) if target(binding) == before => {
+                    tracked.binding = binding;
+                    if active {
+                        Revision::Keep
+                    } else {
+                        Revision::Forget
+                    }
+                }
+                _ if key.transport == Transport::Tcp => {
+                    resets.extend(reset::toward_app(key, tracked.app_side));
+                    counters.reset_flows += 1;
+                    tracked.binding = Binding::Reset;
+                    Revision::Close
+                }
+                _ => Revision::Forget,
+            }
+        });
     }
 
     /// Updates one route's state, keeping the flows it carries.
@@ -292,7 +473,7 @@ impl<R: OwnerResolver> Router<R> {
     /// TUN device: a new flow is only attributed from a view of the OS taken
     /// after that.
     pub fn uplink(&mut self, packet: &mut [u8], arrived: Instant) -> Verdict {
-        if !self.policy.is_active() {
+        if !self.is_active() {
             return Verdict::Main;
         }
         self.sweep(arrived);
@@ -305,9 +486,19 @@ impl<R: OwnerResolver> Router<R> {
                 tcp_flags,
                 fragment,
             } => {
-                let binding = self.flow_binding(key, tcp_flags, arrived);
+                let segment = if key.transport == Transport::Tcp {
+                    reset::segment(packet)
+                } else {
+                    None
+                };
+                let binding = self.flow_binding(key, tcp_flags, segment.as_ref(), arrived);
                 if let Some(fragment) = fragment {
                     self.uplink_fragments.remember(fragment, binding, arrived);
+                }
+                if binding == Binding::Reset
+                    && let Some(answer) = segment.and_then(|segment| reset::answer(&key, &segment))
+                {
+                    self.resets.push(answer);
                 }
                 binding
             }
@@ -323,8 +514,9 @@ impl<R: OwnerResolver> Router<R> {
                     .flows
                     .as_ref()
                     .and_then(|flows| flows.peek(&key, arrived))
+                    .map(|tracked| tracked.binding)
                 {
-                    Some(Binding::Route(_) | Binding::Blocked) => self.dropped(),
+                    Some(Binding::Route(_) | Binding::Blocked | Binding::Reset) => self.dropped(),
                     _ => Verdict::Main,
                 };
             }
@@ -415,17 +607,44 @@ impl<R: OwnerResolver> Router<R> {
         Some((original, main))
     }
 
-    fn flow_binding(&mut self, key: FlowKey, tcp_flags: u8, arrived: Instant) -> Binding {
+    fn flow_binding(
+        &mut self,
+        key: FlowKey,
+        tcp_flags: u8,
+        segment: Option<&Segment>,
+        arrived: Instant,
+    ) -> Binding {
         // A connection opening on a 5-tuple that is still known is a new
         // connection, possibly from another program: attribute it again.
         let opening = is_opening(key, tcp_flags);
-        if !opening && let Some(binding) = self.lookup(&key, Direction::Uplink, tcp_flags, arrived)
+        if !opening
+            && let Some(tracked) = self
+                .flows
+                .as_mut()
+                .and_then(|flows| flows.lookup_mut(&key, Direction::Uplink, tcp_flags, arrived))
         {
-            return binding;
+            if let Some(segment) = segment {
+                tracked.app_side.follow(segment);
+            }
+            return tracked.binding;
         }
-        let binding = self.attribute(&key, opening, arrived);
+        // Only connections reset by the last policy are still tracked: a
+        // flow never seen is no app's route.
+        if !self.policy.is_active() {
+            return Binding::Main;
+        }
+        let (binding, process) = self.attribute(&key, opening, arrived);
         if let Some(flows) = &mut self.flows {
-            flows.insert(key, binding, Direction::Uplink, tcp_flags, arrived);
+            let mut app_side = AppSide::default();
+            if let Some(segment) = segment {
+                app_side.follow(segment);
+            }
+            let tracked = Tracked {
+                binding,
+                process,
+                app_side,
+            };
+            flows.insert(key, tracked, Direction::Uplink, tcp_flags, arrived);
         }
         binding
     }
@@ -437,22 +656,33 @@ impl<R: OwnerResolver> Router<R> {
         tcp_flags: u8,
         now: Instant,
     ) -> Option<Binding> {
-        self.flows.as_mut()?.lookup(key, direction, tcp_flags, now)
+        Some(
+            self.flows
+                .as_mut()?
+                .lookup(key, direction, tcp_flags, now)?
+                .binding,
+        )
     }
 
     fn peek(&self, key: &FlowKey, now: Instant) -> Option<Binding> {
-        self.flows.as_ref()?.peek(key, now)
+        Some(self.flows.as_ref()?.peek(key, now)?.binding)
     }
 
     /// Finds the app behind a new flow: its socket's owner in a view of the
     /// OS taken after the packet arrived, then that process's decision,
-    /// looked up once per process.
-    fn attribute(&mut self, key: &FlowKey, opening: bool, arrived: Instant) -> Binding {
+    /// looked up once per process. Also names the process, when one was
+    /// found.
+    fn attribute(
+        &mut self,
+        key: &FlowKey,
+        opening: bool,
+        arrived: Instant,
+    ) -> (Binding, Option<ProcessKey>) {
         self.counters.new_flows += 1;
         // No OS table lists ICMP sockets: an echo is documented to go through
         // main, and asking would only cost a snapshot.
         if key.transport == Transport::IcmpEcho {
-            return Binding::Main;
+            return (Binding::Main, None);
         }
         self.ensure_fresh_view(arrived);
         // A connection under way may already be routed, and seeing its
@@ -471,7 +701,7 @@ impl<R: OwnerResolver> Router<R> {
         let pid = match owner {
             SocketOwner::Process(pid) => Some(pid),
             // A live socket that no process of a routed program holds.
-            SocketOwner::Unwatched => return Binding::Main,
+            SocketOwner::Unwatched => return (Binding::Main, None),
             SocketOwner::Unknown => None,
         };
         let Some((pid, process)) = pid.and_then(|pid| Some((pid, self.resolver.process_key(pid)?)))
@@ -481,11 +711,12 @@ impl<R: OwnerResolver> Router<R> {
             // under way, and an ownerless socket is one closing: its
             // connection may have been routed, so its last segments are
             // better lost than seen on main.
-            return if key.transport == Transport::Tcp && !opening {
+            let binding = if key.transport == Transport::Tcp && !opening {
                 Binding::Blocked
             } else {
                 Binding::Main
             };
+            return (binding, None);
         };
         let route = match self.decisions.get(process) {
             Some(route) => route,
@@ -497,11 +728,23 @@ impl<R: OwnerResolver> Router<R> {
                 }
                 // The process is gone, or going: not a program known to take
                 // no route, so nothing is remembered about it.
-                None if under_way => return Binding::Blocked,
+                None if under_way => return (Binding::Blocked, None),
                 None => None,
             },
         };
-        route.map_or(Binding::Main, Binding::Route)
+        let binding = match route {
+            None => Binding::Main,
+            // A connection under way that nothing tracked was opened through
+            // main, or through a session since replaced (an evicted or long
+            // idle flow too): it lives at another exit than this route's,
+            // which would drop it, so it is reset rather than carried there.
+            Some(_) if under_way => {
+                self.counters.reset_flows += 1;
+                Binding::Reset
+            }
+            Some(route) => Binding::Route(route),
+        };
+        (binding, Some(process))
     }
 
     /// Reads the OS again unless the current view was taken after `arrived`.
@@ -522,7 +765,7 @@ impl<R: OwnerResolver> Router<R> {
     fn apply_uplink(&mut self, binding: Binding, packet: &mut [u8]) -> Verdict {
         let route = match binding {
             Binding::Main => return Verdict::Main,
-            Binding::Blocked => return self.dropped(),
+            Binding::Blocked | Binding::Reset => return self.dropped(),
             Binding::Route(route) => route,
         };
         let Some(RouteState::Connected(addresses)) =
@@ -913,7 +1156,11 @@ mod tests {
             now(),
         );
 
-        assert_eq!(verdict, Verdict::Route(RouteId(0)));
+        // Found holding a routed program's socket, so neither main nor the
+        // route carries it (see
+        // `a_connection_under_way_seen_first_on_a_route_is_reset`).
+        assert_eq!(verdict, Verdict::Drop);
+        assert_eq!(router.counters().reset_flows, 1);
     }
 
     #[test]
@@ -1555,6 +1802,277 @@ mod tests {
 
         assert_eq!(router.counters().routed_packets, 2);
         assert_eq!(router.counters().new_flows, 1);
+    }
+
+    /// An established connection of the app holding `port`: its SYN, then a
+    /// segment acknowledging `expects`.
+    fn established(router: &mut Router<FakeOs>, port: u16, at: Instant, expects: u32) {
+        router.uplink(&mut syn(port), at);
+        router.uplink(
+            &mut tcp_v4_numbered(MAIN, REMOTE, port, 443, TCP_ACK, 1001, expects, b""),
+            at,
+        );
+    }
+
+    /// The resets the router has for the apps, as (local port, sequence
+    /// number, flags).
+    fn resets(router: &mut Router<FakeOs>) -> Vec<(u16, u32, u8)> {
+        router
+            .take_resets()
+            .iter()
+            .map(|packet| {
+                assert!(transport_ok(packet), "a reset with a valid checksum");
+                assert_eq!(&packet[12..16], &REMOTE, "from the remote end");
+                assert_eq!(&packet[16..20], &MAIN, "to the app's address");
+                let tcp = &packet[20..];
+                (
+                    u16::from_be_bytes([tcp[2], tcp[3]]),
+                    u32::from_be_bytes([tcp[4], tcp[5], tcp[6], tcp[7]]),
+                    tcp[13],
+                )
+            })
+            .collect()
+    }
+
+    fn data(port: u16) -> Vec<u8> {
+        tcp_v4_numbered(MAIN, REMOTE, port, 443, TCP_ACK, 1001, 5000, b"more")
+    }
+
+    fn browser_on(route: RouteId) -> Policy {
+        Policy::new(
+            main_addresses(),
+            [(BROWSER, route), (MAILER, RouteId(1))],
+            vec![connected(ROUTE0), connected(ROUTE1)],
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn an_app_moved_to_another_route_has_its_connections_reset_toward_it() {
+        let mut os = os();
+        os.socket(tcp_flow(50000), 10);
+        let mut router = router(os);
+        let start = now();
+        established(&mut router, 50000, start, 5000);
+
+        router.set_policy(browser_on(RouteId(1)));
+
+        assert_eq!(resets(&mut router), vec![(50000, 5000, TCP_RST | TCP_ACK)]);
+        assert_eq!(router.counters().reset_flows, 1);
+    }
+
+    #[test]
+    fn a_reset_connection_never_reaches_the_new_route_and_each_segment_is_answered() {
+        let mut os = os();
+        os.socket(tcp_flow(50000), 10);
+        let mut router = router(os);
+        let start = now();
+        established(&mut router, 50000, start, 5000);
+        router.set_policy(browser_on(RouteId(1)));
+        router.take_resets();
+
+        let verdict = router.uplink(
+            &mut tcp_v4_numbered(MAIN, REMOTE, 50000, 443, TCP_ACK, 1001, 5555, b"more"),
+            start,
+        );
+
+        assert_eq!(verdict, Verdict::Drop);
+        assert_eq!(resets(&mut router), vec![(50000, 5555, TCP_RST)]);
+    }
+
+    #[test]
+    fn a_new_connection_on_the_ports_of_a_reset_one_takes_the_new_route() {
+        let mut os = os();
+        os.socket(tcp_flow(50000), 10);
+        let mut router = router(os);
+        let start = now();
+        established(&mut router, 50000, start, 5000);
+        router.set_policy(browser_on(RouteId(1)));
+
+        let verdict = router.uplink(&mut syn(50000), start + Duration::from_secs(1));
+
+        assert_eq!(verdict, Verdict::Route(RouteId(1)));
+    }
+
+    #[test]
+    fn a_route_whose_slot_another_session_took_has_its_connections_reset() {
+        let mut os = os();
+        os.socket(tcp_flow(50000), 10);
+        let mut router = router(os);
+        let start = now();
+        established(&mut router, 50000, start, 5000);
+
+        router.set_policy(
+            policy(connected(ROUTE0), connected(ROUTE1))
+                .with_sessions(vec![SessionId(7), SessionId(1)])
+                .unwrap(),
+        );
+
+        assert_eq!(resets(&mut router), vec![(50000, 5000, TCP_RST | TCP_ACK)]);
+        assert_eq!(
+            router.uplink(&mut data(50000), start),
+            Verdict::Drop,
+            "never through the session that took the slot"
+        );
+    }
+
+    #[test]
+    fn a_connection_whose_app_keeps_its_session_is_left_alone() {
+        let mut os = os();
+        os.socket(tcp_flow(50000), 10);
+        let mut router = router(os);
+        let start = now();
+        established(&mut router, 50000, start, 5000);
+
+        // The mailer changes; the browser keeps its session, under another
+        // route id.
+        router.set_policy(
+            Policy::new(
+                main_addresses(),
+                [(MAILER, RouteId(0)), (BROWSER, RouteId(1))],
+                vec![connected(ROUTE1), connected(ROUTE0)],
+            )
+            .unwrap()
+            .with_sessions(vec![SessionId(9), SessionId(0)])
+            .unwrap(),
+        );
+        let answer = router.downlink(
+            RouteId(1),
+            &mut tcp_v4(REMOTE, ROUTE0, 443, 50000, TCP_ACK, b"late"),
+            start,
+        );
+
+        assert!(resets(&mut router).is_empty());
+        assert_eq!(
+            router.uplink(&mut data(50000), start),
+            Verdict::Route(RouteId(1))
+        );
+        assert_eq!(answer, Delivery::Deliver);
+    }
+
+    #[test]
+    fn an_app_whose_country_is_removed_is_reset_and_never_reaches_main() {
+        let mut os = os();
+        os.socket(tcp_flow(50000), 10);
+        let mut router = router(os);
+        let start = now();
+        established(&mut router, 50000, start, 5000);
+
+        router.set_policy(Policy::inactive());
+
+        assert_eq!(resets(&mut router), vec![(50000, 5000, TCP_RST | TCP_ACK)]);
+        assert_eq!(router.uplink(&mut data(50000), start), Verdict::Drop);
+    }
+
+    #[test]
+    fn once_the_reset_connections_are_gone_an_inactive_router_is_inactive_again() {
+        let mut os = os();
+        os.socket(tcp_flow(50000), 10);
+        let mut router = router(os);
+        let start = now();
+        established(&mut router, 50000, start, 5000);
+        router.set_policy(Policy::inactive());
+        assert!(router.is_active());
+        let later = start + crate::flow::CLOSING_LINGER * 3;
+
+        let verdict = router.uplink(&mut data(50001), later);
+
+        assert_eq!(verdict, Verdict::Main);
+        assert!(!router.is_active());
+    }
+
+    #[test]
+    fn an_app_given_a_country_has_its_main_connections_reset() {
+        let mut os = os();
+        os.socket(tcp_flow(50000), 30);
+        let mut router = router(os);
+        let start = now();
+        established(&mut router, 50000, start, 5000);
+
+        router.set_policy(
+            Policy::new(
+                main_addresses(),
+                [(OTHER, RouteId(0))],
+                vec![connected(ROUTE0)],
+            )
+            .unwrap(),
+        );
+
+        assert_eq!(resets(&mut router), vec![(50000, 5000, TCP_RST | TCP_ACK)]);
+        assert_eq!(router.uplink(&mut data(50000), start), Verdict::Drop);
+    }
+
+    #[test]
+    fn a_connection_under_way_seen_first_on_a_route_is_reset() {
+        // Opened while the router routed nothing, so it went through main.
+        let mut os = os();
+        os.socket(tcp_flow(50000), 10);
+        let mut router = router(os);
+
+        let verdict = router.uplink(&mut data(50000), now());
+
+        assert_eq!(verdict, Verdict::Drop);
+        assert_eq!(resets(&mut router), vec![(50000, 5000, TCP_RST)]);
+    }
+
+    #[test]
+    fn a_datagram_flow_of_a_moved_app_takes_its_new_route_without_a_reset() {
+        let mut os = os();
+        os.socket(udp_flow(50000), 10);
+        let mut router = router(os);
+        let start = now();
+        router.uplink(&mut udp_v4(MAIN, REMOTE, 50000, 443, b"q"), start);
+
+        router.set_policy(browser_on(RouteId(1)));
+        let mut next = udp_v4(MAIN, REMOTE, 50000, 443, b"q");
+        let verdict = router.uplink(&mut next, start + Duration::from_secs(1));
+
+        assert!(resets(&mut router).is_empty());
+        assert_eq!(verdict, Verdict::Route(RouteId(1)));
+        assert_eq!(&next[12..16], &ROUTE1);
+    }
+
+    #[test]
+    fn an_old_route_cannot_deliver_to_a_reset_connection() {
+        let mut os = os();
+        os.socket(tcp_flow(50000), 10);
+        let mut router = router(os);
+        let start = now();
+        established(&mut router, 50000, start, 5000);
+
+        router.set_policy(browser_on(RouteId(1)));
+        let delivery = router.downlink(
+            RouteId(0),
+            &mut tcp_v4(REMOTE, ROUTE0, 443, 50000, TCP_ACK, b"late"),
+            start,
+        );
+
+        assert_eq!(delivery, Delivery::Drop);
+    }
+
+    #[test]
+    fn a_connection_still_opening_is_reset_by_acknowledging_its_syn() {
+        let mut os = os();
+        os.socket(tcp_flow(50000), 10);
+        let mut router = router(os);
+        router.uplink(
+            &mut tcp_v4_numbered(MAIN, REMOTE, 50000, 443, TCP_SYN, 4242, 0, b""),
+            now(),
+        );
+
+        router.set_policy(browser_on(RouteId(1)));
+
+        let reset = router.take_resets();
+        assert_eq!(reset.len(), 1);
+        assert_eq!(&reset[0][20 + 8..20 + 12], &4243u32.to_be_bytes());
+        assert_eq!(reset[0][20 + 13], TCP_RST | TCP_ACK);
+    }
+
+    #[test]
+    fn refuses_sessions_that_do_not_name_every_route() {
+        let result = policy(connected(ROUTE0), connected(ROUTE1)).with_sessions(vec![SessionId(1)]);
+
+        assert_eq!(result.err(), Some(PolicyError::SessionCount));
     }
 
     #[test]

@@ -58,6 +58,7 @@ use talpid_warren_tunnel::{
 };
 use tokio::sync::{mpsc, watch};
 use warren_api::{BlindingKey, TokenManager, WarrenApiClient};
+use warren_discovery_core::VerifiedMultiHopDirectory;
 use warren_identity::WarrenIdentity;
 use warrenguard_backoff::Backoff;
 use warrenguard_transport::{
@@ -309,7 +310,8 @@ impl Apps {
         }
     }
 
-    /// `GET /` on `server` from `local:port`, over TCP written by hand.
+    /// `GET /` on `server` from `local:port`, over TCP written by hand, on a
+    /// connection closed once answered.
     async fn http_get(
         &mut self,
         local: Ipv4Addr,
@@ -318,14 +320,28 @@ impl Apps {
         budget: Duration,
     ) -> Result<String, String> {
         let deadline = Instant::now() + budget;
-        let isn: u32 = rand::random();
-        let send = |seq: u32, ack: u32, flags: u8, payload: &[u8]| {
-            tcp_packet(local, server, port, 80, seq, ack, flags, payload)
-        };
+        let mut connection = self.connect(local, port, server, deadline).await?;
+        let answer = self.exchange(&mut connection, false, deadline).await;
+        let _ = self
+            .to_tunnel
+            .send(connection.segment(RST | ACK, &[]))
+            .await;
+        answer
+    }
 
+    /// Opens a TCP connection from `local:port` to port 80 of `server`.
+    async fn connect(
+        &mut self,
+        local: Ipv4Addr,
+        port: u16,
+        server: Ipv4Addr,
+        deadline: Instant,
+    ) -> Result<Connection, String> {
+        let isn: u32 = rand::random();
+        let opening = tcp_packet(local, server, port, 80, isn, 0, SYN, &[]);
         let mut rcv_nxt = None;
         while rcv_nxt.is_none() && Instant::now() < deadline {
-            let _ = self.to_tunnel.send(send(isn, 0, SYN, &[])).await;
+            let _ = self.to_tunnel.send(opening.clone()).await;
             let wait = (Instant::now() + Duration::from_millis(1500)).min(deadline);
             while let Some(packet) = self.next_for(local, port, wait).await {
                 let segment = Segment::parse(&packet).expect("filtered");
@@ -338,59 +354,83 @@ impl Apps {
                 }
             }
         }
-        let mut rcv_nxt = rcv_nxt.ok_or("no answer to the connection opening")?;
+        Ok(Connection {
+            local,
+            port,
+            server,
+            snd: isn.wrapping_add(1),
+            rcv_nxt: rcv_nxt.ok_or("no answer to the connection opening")?,
+            reset_at: None,
+        })
+    }
 
+    /// `GET /` on an open connection, left open after the answer when
+    /// `keep_alive`. A reset ends it, recording its sequence number.
+    async fn exchange(
+        &mut self,
+        connection: &mut Connection,
+        keep_alive: bool,
+        deadline: Instant,
+    ) -> Result<String, String> {
         let request = format!(
-            "GET / HTTP/1.1\r\nHost: {ECHO_HOST}\r\nUser-Agent: curl/8.7\r\nConnection: close\r\n\r\n"
+            "GET / HTTP/1.1\r\nHost: {ECHO_HOST}\r\nUser-Agent: curl/8.7\r\nConnection: {}\r\n\r\n",
+            if keep_alive { "keep-alive" } else { "close" }
         );
-        let snd = isn.wrapping_add(1);
-        let request_end = snd.wrapping_add(request.len() as u32);
+        let request_end = connection.snd.wrapping_add(request.len() as u32);
         let mut acked = false;
         let mut response = Vec::new();
         let _ = self
             .to_tunnel
-            .send(send(snd, rcv_nxt, PSH | ACK, request.as_bytes()))
+            .send(connection.segment(PSH | ACK, request.as_bytes()))
             .await;
         loop {
             if Instant::now() >= deadline {
                 return Err("the response did not complete".to_owned());
             }
             let wait = (Instant::now() + Duration::from_secs(1)).min(deadline);
-            let Some(packet) = self.next_for(local, port, wait).await else {
+            let Some(packet) = self.next_for(connection.local, connection.port, wait).await else {
                 if !acked {
                     let _ = self
                         .to_tunnel
-                        .send(send(snd, rcv_nxt, PSH | ACK, request.as_bytes()))
+                        .send(connection.segment(PSH | ACK, request.as_bytes()))
                         .await;
                 }
                 continue;
             };
             let segment = Segment::parse(&packet).expect("filtered");
             if segment.flags & RST != 0 {
+                connection.reset_at = Some(segment.seq);
                 return Err("connection reset".to_owned());
             }
             if segment.flags & ACK != 0 && after(segment.ack, request_end) {
                 acked = true;
             }
             let fin = segment.flags & FIN != 0;
-            if segment.seq == rcv_nxt && (!segment.payload.is_empty() || fin) {
+            if segment.seq == connection.rcv_nxt && (!segment.payload.is_empty() || fin) {
                 response.extend_from_slice(segment.payload);
-                rcv_nxt = rcv_nxt
+                connection.rcv_nxt = connection
+                    .rcv_nxt
                     .wrapping_add(segment.payload.len() as u32)
                     .wrapping_add(u32::from(fin));
             }
             let _ = self
                 .to_tunnel
-                .send(send(request_end, rcv_nxt, ACK, &[]))
+                .send(tcp_packet(
+                    connection.local,
+                    connection.server,
+                    connection.port,
+                    80,
+                    request_end,
+                    connection.rcv_nxt,
+                    ACK,
+                    &[],
+                ))
                 .await;
             if fin || complete(&response) {
                 break;
             }
         }
-        let _ = self
-            .to_tunnel
-            .send(send(request_end, rcv_nxt, RST | ACK, &[]))
-            .await;
+        connection.snd = request_end;
         let text = String::from_utf8_lossy(&response).into_owned();
         let (head, body) = text.split_once("\r\n\r\n").ok_or("no HTTP header")?;
         if !head.starts_with("HTTP/1.1 200") {
@@ -400,6 +440,50 @@ impl Apps {
             ));
         }
         Ok(body.trim().to_owned())
+    }
+
+    /// Waits, sending nothing, for a reset of `connection`, and returns its
+    /// sequence number.
+    async fn reset_of(&mut self, connection: &Connection, budget: Duration) -> Option<u32> {
+        let until = Instant::now() + budget;
+        while let Some(packet) = self
+            .next_for(connection.local, connection.port, until)
+            .await
+        {
+            let segment = Segment::parse(&packet).expect("filtered");
+            if segment.flags & RST != 0 {
+                return Some(segment.seq);
+            }
+        }
+        None
+    }
+}
+
+/// A TCP connection an app holds, as far as its own segments go.
+struct Connection {
+    local: Ipv4Addr,
+    port: u16,
+    server: Ipv4Addr,
+    /// The next sequence number the app sends.
+    snd: u32,
+    /// The next sequence number the app expects.
+    rcv_nxt: u32,
+    /// The sequence number of the reset that ended it.
+    reset_at: Option<u32>,
+}
+
+impl Connection {
+    fn segment(&self, flags: u8, payload: &[u8]) -> Vec<u8> {
+        tcp_packet(
+            self.local,
+            self.server,
+            self.port,
+            80,
+            self.snd,
+            self.rcv_nxt,
+            flags,
+            payload,
+        )
     }
 }
 
@@ -531,40 +615,323 @@ async fn wait_for_connected(
     rx.borrow().clone()
 }
 
+/// What both tests stand on: the verified beta directory, the wallet's
+/// tokens for this epoch, and a main session admitted on one of them (with
+/// its anchor when route admission is offered), before any router exists.
+struct Harness {
+    dir: VerifiedMultiHopDirectory,
+    now: u64,
+    main_country: String,
+    main_circuit: MultiHopConfig,
+    main_exit: [u8; 16],
+    main_ip: Ipv4Addr,
+    manager: Arc<TokenManager<crate::warren_api_transport::WarrenApiTransport>>,
+    admission: Option<warren_api::RouteAdmission>,
+    anchor: Option<RouteAnchorHandle>,
+    anchor_state: Option<AnchorState>,
+    main_handed: Arc<Handed>,
+    route_source: SessionTokenSource,
+    route_handed: Arc<Handed>,
+    main_rx: warrenguard_transport::supervisor::ClientWatch,
+    main_task: tokio::task::AbortHandle,
+    tun: ChannelTun,
+    apps: Apps,
+    listed: HashMap<String, Ipv4Addr>,
+    echo: Ipv4Addr,
+}
+
+impl Harness {
+    /// `None` when `WARREN_MNEMONIC` is not set.
+    async fn start() -> Option<Self> {
+        let Ok(mnemonic) = std::env::var("WARREN_MNEMONIC") else {
+            eprintln!("WARREN_MNEMONIC is not set: skipped");
+            return None;
+        };
+        let mut identity =
+            WarrenIdentity::from_mnemonic(mnemonic.trim()).expect("a valid mnemonic");
+        drop(mnemonic);
+        let http = reqwest::Client::builder()
+            .timeout(Duration::from_secs(20))
+            .build()
+            .unwrap();
+
+        // The signed directory, verified the way the daemon does.
+        let RootPinMode::Pinned(root_pins) = root_pin_mode() else {
+            panic!("no pinned multi-hop root");
+        };
+        let now = crate::warren_artifact_refresh::now_unix();
+        let dir = fetch_and_verify(
+            &http,
+            API,
+            &[crate::warren_product_config::WARREN_SERVER_PUBKEY_HEX.to_owned()],
+            &root_pins,
+            now,
+        )
+        .await
+        .expect("verified beta directory");
+        let main_country = std::env::var("WARREN_MAIN_COUNTRY")
+            .unwrap_or_else(|_| dir.nodes[0].country.clone())
+            .to_lowercase();
+        let main_circuit: MultiHopConfig =
+            select_one_hop_circuit(&dir, &main_country, true, true, &[]).expect("a main exit");
+        let main_exit = *main_circuit.exit.exit_id.as_bytes();
+        let listed = relay_list_addresses(&http).await;
+        println!(
+            "main exit: {main_country} ({}) listed on {:?}",
+            main_circuit.exit_city,
+            listed.get(&hex::encode(main_exit))
+        );
+
+        // The wallet's batch for this epoch alone, minted by the daemon's
+        // own manager (blinded from the wallet seed), which also reads the
+        // token directory's route admission block.
+        let seed = identity
+            .take_seed()
+            .expect("a mnemonic identity keeps its seed");
+        let manager = Arc::new(
+            TokenManager::new(
+                Arc::new(WarrenApiClient::new(
+                    API.to_owned(),
+                    identity,
+                    crate::warren_api_transport::WarrenApiTransport::new(),
+                )),
+                BlindingKey::session(&seed),
+            )
+            .with_mint_horizon(0)
+            .with_server_pubkey_pins([crate::warren_product_config::WARREN_SERVER_PUBKEY_HEX]),
+        );
+        drop(seed);
+        if let Err(error) = manager.refresh(now).await {
+            panic!("minting this epoch's tokens: {error}");
+        }
+        let held = manager
+            .epoch_at(now)
+            .map_or(0, |epoch| manager.available(epoch));
+        println!("tokens held for this epoch: {held}");
+        assert!(held >= 1, "the main session needs a serial");
+        let admission = manager.route_admission();
+        let source = crate::warren_token_provider::session_source(
+            Arc::clone(&manager),
+            Arc::new(crate::warren_artifact_refresh::now_unix),
+        );
+        let (main_source, main_handed) = counting(Arc::clone(&source));
+        let (route_source, route_handed) = counting(source);
+
+        // The userspace TUN.
+        let (to_tunnel, from_apps) = mpsc::channel(1024);
+        let (to_apps, from_tunnel) = mpsc::unbounded_channel();
+        let tun = ChannelTun {
+            from_apps: Arc::new(tokio::sync::Mutex::new(from_apps)),
+            to_apps,
+        };
+        let apps = Apps {
+            to_tunnel,
+            from_tunnel,
+        };
+
+        // The main session, under the main session's default admission
+        // (tokens, else the wallet) but with a key that is no wallet: an exit
+        // that admits it can only have admitted a token. It anchors when
+        // route admission is offered, as the tunnel's does.
+        let anchor = admission.as_ref().map(|admission| {
+            RouteAnchorHandle::new(RouteAnchorConfig {
+                kem: admission.kem().clone(),
+            })
+        });
+        let ip_assign = IpAssignChannel::new();
+        let (main, mut main_rx) = MultiHopSupervisor::new(main_supervisor_config(
+            &main_circuit,
+            main_source(),
+            ip_assign.clone(),
+        ));
+        let main = match &anchor {
+            Some(anchor) => main.with_route_anchor(anchor.clone()),
+            None => main,
+        };
+        let main_task = tokio::spawn(main.run()).abort_handle();
+        tokio::time::timeout(Duration::from_secs(60), async {
+            while main_rx.borrow_and_update().is_none() {
+                main_rx.changed().await.expect("main supervisor alive");
+            }
+        })
+        .await
+        .expect("the main session came up");
+        let main_stacks = main_handed.stacks.load(Ordering::SeqCst);
+        println!("main session: admitted on a token ({main_stacks} stack handed, no wallet key)");
+        assert!(
+            main_stacks >= 1,
+            "the main session was handed a token stack"
+        );
+        let main_ip = ip_assign
+            .subscribe()
+            .borrow()
+            .expect("the main exit assigned an address")
+            .assigned;
+        let anchor_state = match &anchor {
+            Some(anchor) => {
+                let mut state = anchor.state();
+                let _ = tokio::time::timeout(Duration::from_secs(45), async {
+                    while *state.borrow_and_update() == AnchorState::Unanchored {
+                        if state.changed().await.is_err() {
+                            return;
+                        }
+                    }
+                })
+                .await;
+                let verdict = anchor.current_state();
+                println!("main session anchor: {verdict:?}");
+                Some(verdict)
+            }
+            None => None,
+        };
+
+        let echo = tokio::net::lookup_host((ECHO_HOST, 80))
+            .await
+            .expect("echo host resolves")
+            .find_map(|addr| match addr.ip() {
+                IpAddr::V4(v4) => Some(v4),
+                IpAddr::V6(_) => None,
+            })
+            .expect("an IPv4 echo host");
+
+        Some(Self {
+            dir,
+            now,
+            main_country,
+            main_circuit,
+            main_exit,
+            main_ip,
+            manager,
+            admission,
+            anchor,
+            anchor_state,
+            main_handed,
+            route_source,
+            route_handed,
+            main_rx,
+            main_task,
+            tun,
+            apps,
+            listed,
+            echo,
+        })
+    }
+
+    fn capacity(&self) -> usize {
+        talpid_warren_tunnel::app_routes::route_capacity(self.anchor_state)
+    }
+
+    fn anchored(&self) -> bool {
+        matches!(self.anchor_state, Some(AnchorState::Anchored { .. }))
+    }
+
+    fn listed_ip(&self, exit: &[u8; 16]) -> Option<Ipv4Addr> {
+        self.listed.get(&hex::encode(exit)).copied()
+    }
+
+    /// Plans `settings` against the main connection, as the daemon does.
+    fn plan(&self, settings: &AppRoutingSettings) -> super::Planned {
+        plan(
+            settings,
+            Some(&RouteInputs {
+                directory: &self.dir,
+                two_hop: false,
+                entry_country: "",
+                main_circuit: Some(&self.main_circuit),
+                drained: &[],
+                locality: ClientLocality {
+                    continent: None,
+                    country: None,
+                },
+                now_unix: self.now,
+            }),
+            &BTreeMap::new(),
+        )
+    }
+
+    /// The production route sessions: by anchor where offered, on tokens
+    /// else.
+    fn route_sessions(&self) -> SupervisorRouteSessions {
+        let mut config = RouteSessionConfig::new(Some(Arc::clone(&self.route_source)));
+        config.anchor = self.anchor.clone();
+        config.route_admission = Some(Arc::new(
+            crate::warren_token_provider::DirectoryRouteAdmission::of(Arc::clone(&self.manager)),
+        ));
+        config.retry_unavailable_after = Duration::from_secs(5);
+        SupervisorRouteSessions::new(tokio::runtime::Handle::current(), config)
+    }
+
+    /// A controller of route sessions over `table`, reporting into
+    /// `reports`.
+    fn controller(
+        &self,
+        table: &Arc<RoutingTable<StubOwners>>,
+        reports: watch::Sender<Vec<RouteReport>>,
+    ) -> RouteController<ChannelTun, StubOwners, SupervisorRouteSessions> {
+        RouteController::new(
+            Arc::clone(table),
+            self.tun.clone(),
+            self.route_sessions(),
+            SessionAddresses {
+                v4: Some(self.main_ip),
+                v6: None,
+            },
+            no_firewall(),
+            Some(reports_into(reports)),
+        )
+    }
+
+    /// Starts the main session's pumps over `table`, recording the local
+    /// port of every TCP packet the router leaves on the main path.
+    fn main_pumps(&self, table: &Arc<RoutingTable<StubOwners>>) -> MainPumps {
+        let ports = Arc::new(Mutex::new(BTreeSet::new()));
+        let tap = MainTap {
+            inner: RoutedTun::new(self.tun.clone(), Arc::clone(table)),
+            ports: Arc::clone(&ports),
+        };
+        MainPumps {
+            ports,
+            uplink: tokio::spawn(run_uplink(self.main_rx.clone(), tap.clone())).abort_handle(),
+            downlink: tokio::spawn(run_downlink(self.main_rx.clone(), tap, None)).abort_handle(),
+        }
+    }
+}
+
+impl Drop for Harness {
+    fn drop(&mut self) {
+        self.main_task.abort();
+    }
+}
+
+/// The main session's pumps, and the ports of what they carried.
+struct MainPumps {
+    ports: Arc<Mutex<BTreeSet<u16>>>,
+    uplink: tokio::task::AbortHandle,
+    downlink: tokio::task::AbortHandle,
+}
+
+impl MainPumps {
+    fn carried(&self, port: u16) -> bool {
+        self.ports.lock().unwrap().contains(&port)
+    }
+}
+
+impl Drop for MainPumps {
+    fn drop(&mut self) {
+        self.uplink.abort();
+        self.downlink.abort();
+    }
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 #[ignore = "dials real beta exits; needs WARREN_MNEMONIC"]
 async fn every_routed_app_leaves_from_its_own_exit_and_never_through_main() {
-    let Ok(mnemonic) = std::env::var("WARREN_MNEMONIC") else {
-        eprintln!("WARREN_MNEMONIC is not set: skipped");
+    let Some(mut harness) = Harness::start().await else {
         return;
     };
-    let mut identity = WarrenIdentity::from_mnemonic(mnemonic.trim()).expect("a valid mnemonic");
-    drop(mnemonic);
-    let http = reqwest::Client::builder()
-        .timeout(Duration::from_secs(20))
-        .build()
-        .unwrap();
-
-    // The signed directory, verified the way the daemon does.
-    let RootPinMode::Pinned(root_pins) = root_pin_mode() else {
-        panic!("no pinned multi-hop root");
-    };
-    let now = crate::warren_artifact_refresh::now_unix();
-    let dir = fetch_and_verify(
-        &http,
-        API,
-        &[crate::warren_product_config::WARREN_SERVER_PUBKEY_HEX.to_owned()],
-        &root_pins,
-        now,
-    )
-    .await
-    .expect("verified beta directory");
-    let main_country = std::env::var("WARREN_MAIN_COUNTRY")
-        .unwrap_or_else(|_| dir.nodes[0].country.clone())
-        .to_lowercase();
-    let main_circuit: MultiHopConfig =
-        select_one_hop_circuit(&dir, &main_country, true, true, &[]).expect("a main exit");
-    let main_exit = *main_circuit.exit.exit_id.as_bytes();
+    let main_exit = harness.main_exit;
+    let main_ip = harness.main_ip;
+    let echo = harness.echo;
 
     // One app per other exit: its country and city pick that exit.
     let max_routes = std::env::var("WARREN_MAX_ROUTES")
@@ -572,7 +939,7 @@ async fn every_routed_app_leaves_from_its_own_exit_and_never_through_main() {
         .and_then(|n| n.parse::<usize>().ok())
         .unwrap_or(usize::from(MAX_ROUTED_APPS));
     let mut choices: Vec<ExitChoice> = Vec::new();
-    for node in &dir.nodes {
+    for node in &harness.dir.nodes {
         if node.exit.exit_id.as_bytes() == &main_exit || choices.len() >= max_routes {
             continue;
         }
@@ -590,22 +957,7 @@ async fn every_routed_app_leaves_from_its_own_exit_and_never_through_main() {
     for (nth, choice) in (0u16..).zip(&choices) {
         settings.set_app_exit(AppId::parse(&routed_app(nth)).unwrap(), choice.clone());
     }
-    let planned = plan(
-        &settings,
-        Some(&RouteInputs {
-            directory: &dir,
-            two_hop: false,
-            entry_country: "",
-            main_circuit: Some(&main_circuit),
-            drained: &[],
-            locality: ClientLocality {
-                continent: None,
-                country: None,
-            },
-            now_unix: now,
-        }),
-        &BTreeMap::new(),
-    );
+    let planned = harness.plan(&settings);
     let routes = planned.tunnel.routes.clone();
     assert!(!routes.is_empty(), "at least one other exit");
     assert!(
@@ -622,54 +974,19 @@ async fn every_routed_app_leaves_from_its_own_exit_and_never_through_main() {
                 .expect("each route carries one of the apps")
         })
         .collect();
-
-    let listed = relay_list_addresses(&http).await;
-    let listed_ip = |exit: &[u8; 16]| listed.get(&hex::encode(exit)).copied();
     let exit_of = |route: &PlannedRoute| *route.circuit.exit.exit_id.as_bytes();
-    println!(
-        "main exit: {main_country} ({}) listed on {:?}",
-        main_circuit.exit_city,
-        listed_ip(&main_exit)
-    );
     println!("{} routes planned, one to every other exit", routes.len());
 
-    // The wallet's batch for this epoch alone, minted by the daemon's own
-    // manager (blinded from the wallet seed), which also reads the token
-    // directory's route admission block.
-    let seed = identity
-        .take_seed()
-        .expect("a mnemonic identity keeps its seed");
-    let manager = Arc::new(
-        TokenManager::new(
-            Arc::new(WarrenApiClient::new(
-                API.to_owned(),
-                identity,
-                crate::warren_api_transport::WarrenApiTransport::new(),
-            )),
-            BlindingKey::session(&seed),
-        )
-        .with_mint_horizon(0)
-        .with_server_pubkey_pins([crate::warren_product_config::WARREN_SERVER_PUBKEY_HEX]),
-    );
-    drop(seed);
-    if let Err(error) = manager.refresh(now).await {
-        panic!("minting this epoch's tokens: {error}");
-    }
-    let held = manager
-        .epoch_at(now)
-        .map_or(0, |epoch| manager.available(epoch));
-    println!("tokens held for this epoch: {held}");
-    assert!(held >= 1, "the main session needs a serial");
-    let admission = manager.route_admission();
     let offered: Vec<bool> = routes
         .iter()
         .map(|route| {
-            admission
+            harness
+                .admission
                 .as_ref()
                 .is_some_and(|admission| admission.offers_routes(&exit_of(route)))
         })
         .collect();
-    match &admission {
+    match &harness.admission {
         Some(admission) => println!(
             "route admission offered: up to {} routes per anchor, {} of the {} route exits listed",
             admission.max_routes_per_anchor(),
@@ -680,122 +997,24 @@ async fn every_routed_app_leaves_from_its_own_exit_and_never_through_main() {
             "route admission not offered by the token directory: every route runs on a token"
         ),
     }
-    let source = crate::warren_token_provider::session_source(
-        Arc::clone(&manager),
-        Arc::new(crate::warren_artifact_refresh::now_unix),
-    );
-    let (main_source, main_handed) = counting(Arc::clone(&source));
-    let (route_source, route_handed) = counting(source);
-
-    // The userspace TUN.
-    let (to_tunnel, from_apps) = mpsc::channel(1024);
-    let (to_apps, from_tunnel) = mpsc::unbounded_channel();
-    let tun = ChannelTun {
-        from_apps: Arc::new(tokio::sync::Mutex::new(from_apps)),
-        to_apps,
-    };
-    let mut apps = Apps {
-        to_tunnel,
-        from_tunnel,
-    };
-
-    // The main session, under the main session's default admission (tokens,
-    // else the wallet) but with a key that is no wallet: an exit that admits
-    // it can only have admitted a token. It anchors when route admission is
-    // offered, as the tunnel's does.
-    let anchor = admission.as_ref().map(|admission| {
-        RouteAnchorHandle::new(RouteAnchorConfig {
-            kem: admission.kem().clone(),
-        })
-    });
-    let ip_assign = IpAssignChannel::new();
-    let (main, mut main_rx) = MultiHopSupervisor::new(main_supervisor_config(
-        &main_circuit,
-        main_source(),
-        ip_assign.clone(),
-    ));
-    let main = match &anchor {
-        Some(anchor) => main.with_route_anchor(anchor.clone()),
-        None => main,
-    };
-    let main_task = tokio::spawn(main.run());
-    tokio::time::timeout(Duration::from_secs(60), async {
-        while main_rx.borrow_and_update().is_none() {
-            main_rx.changed().await.expect("main supervisor alive");
-        }
-    })
-    .await
-    .expect("the main session came up");
-    let main_stacks = main_handed.stacks.load(Ordering::SeqCst);
-    println!("main session: admitted on a token ({main_stacks} stack handed, no wallet key)");
-    assert!(
-        main_stacks >= 1,
-        "the main session was handed a token stack"
-    );
-    let main_ip = ip_assign
-        .subscribe()
-        .borrow()
-        .expect("the main exit assigned an address")
-        .assigned;
-    let anchor_state = match &anchor {
-        Some(anchor) => {
-            let mut state = anchor.state();
-            let _ = tokio::time::timeout(Duration::from_secs(45), async {
-                while *state.borrow_and_update() == AnchorState::Unanchored {
-                    if state.changed().await.is_err() {
-                        return;
-                    }
-                }
-            })
-            .await;
-            let verdict = anchor.current_state();
-            println!("main session anchor: {verdict:?}");
-            Some(verdict)
-        }
-        None => None,
-    };
-    let capacity = talpid_warren_tunnel::app_routes::route_capacity(anchor_state);
-    let anchored = matches!(anchor_state, Some(AnchorState::Anchored { .. }));
+    let capacity = harness.capacity();
+    let anchored = harness.anchored();
 
     let table = RoutingTable::new(StubOwners);
-    let main_ports = Arc::new(Mutex::new(BTreeSet::new()));
-    let main_tap = MainTap {
-        inner: RoutedTun::new(tun.clone(), Arc::clone(&table)),
-        ports: Arc::clone(&main_ports),
-    };
-
     // The route sessions, driven by the production controller, on the
-    // production route sessions: by anchor where offered, on tokens else.
-    let mut config = RouteSessionConfig::new(Some(route_source));
-    config.anchor = anchor.clone();
-    config.route_admission = Some(Arc::new(
-        crate::warren_token_provider::DirectoryRouteAdmission::of(Arc::clone(&manager)),
-    ));
-    config.retry_unavailable_after = Duration::from_secs(5);
-    let sessions = SupervisorRouteSessions::new(tokio::runtime::Handle::current(), config);
+    // production route sessions.
     let (reports_tx, mut reports_rx) = watch::channel(Vec::new());
-    let mut controller = RouteController::new(
-        Arc::clone(&table),
-        tun.clone(),
-        sessions,
-        SessionAddresses {
-            v4: Some(main_ip),
-            v6: None,
-        },
-        no_firewall(),
-        Some(reports_into(reports_tx)),
-    );
+    let mut controller = harness.controller(&table, reports_tx);
     // As in the tunnel: the plan's policy is in before the main pumps run.
     controller.seed(&planned.tunnel, Some(main_exit));
-    let main_uplink = tokio::spawn(run_uplink(main_rx.clone(), main_tap.clone()));
-    let main_downlink = tokio::spawn(run_downlink(main_rx.clone(), main_tap, None));
+    let main = harness.main_pumps(&table);
     let (_plan_tx, plan_rx) = watch::channel::<AppRoutesPlan>(planned.tunnel.clone());
     let (_main_exit_tx, main_exit_rx) = watch::channel(Some(main_exit));
     let (stop_tx, stop_rx) = tokio::sync::oneshot::channel::<()>();
     let routes_task = tokio::spawn(controller.run(
         plan_rx,
         main_exit_rx,
-        anchor.as_ref().map(RouteAnchorHandle::state),
+        harness.anchor.as_ref().map(RouteAnchorHandle::state),
         async move {
             let _ = stop_rx.await;
         },
@@ -822,7 +1041,7 @@ async fn every_routed_app_leaves_from_its_own_exit_and_never_through_main() {
             state_of(&exit_of(route))
         );
     }
-    let route_stacks = route_handed.stacks.load(Ordering::SeqCst);
+    let route_stacks = harness.route_handed.stacks.load(Ordering::SeqCst);
     println!("token stacks handed to route sessions: {route_stacks}");
     let connected = reports
         .iter()
@@ -862,9 +1081,10 @@ async fn every_routed_app_leaves_from_its_own_exit_and_never_through_main() {
     } else {
         assert!(connected <= TOKEN_ROUTE_SESSIONS);
     }
-    let main_leads = main_handed.leads.lock().unwrap().clone();
+    let main_leads = harness.main_handed.leads.lock().unwrap().clone();
     assert!(
-        route_handed
+        harness
+            .route_handed
             .leads
             .lock()
             .unwrap()
@@ -873,15 +1093,8 @@ async fn every_routed_app_leaves_from_its_own_exit_and_never_through_main() {
         "no route session led with the main session's serial"
     );
 
-    let echo = tokio::net::lookup_host((ECHO_HOST, 80))
-        .await
-        .expect("echo host resolves")
-        .find_map(|addr| match addr.ip() {
-            IpAddr::V4(v4) => Some(v4),
-            IpAddr::V6(_) => None,
-        })
-        .expect("an IPv4 echo host");
-    let unrouted = apps
+    let unrouted = harness
+        .apps
         .http_get(main_ip, UNROUTED_PORT, echo, Duration::from_secs(20))
         .await;
     println!("unrouted app appears from: {unrouted:?}");
@@ -891,7 +1104,7 @@ async fn every_routed_app_leaves_from_its_own_exit_and_never_through_main() {
         .expect("an address");
     assert_eq!(
         Some(unrouted),
-        listed_ip(&main_exit),
+        harness.listed_ip(&main_exit),
         "the main exit's listed address"
     );
     let mut seen_from = BTreeSet::new();
@@ -900,7 +1113,8 @@ async fn every_routed_app_leaves_from_its_own_exit_and_never_through_main() {
         let port = routed_port(*nth, 1);
         match state_of(&exit) {
             Some(RouteSessionState::Connected) => {
-                let got = apps
+                let got = harness
+                    .apps
                     .http_get(main_ip, port, echo, Duration::from_secs(20))
                     .await;
                 println!(
@@ -910,14 +1124,15 @@ async fn every_routed_app_leaves_from_its_own_exit_and_never_through_main() {
                 let got: Ipv4Addr = got.expect("routed fetch").parse().expect("an address");
                 assert_eq!(
                     Some(got),
-                    listed_ip(&exit),
+                    harness.listed_ip(&exit),
                     "the route exit's listed address"
                 );
                 assert_ne!(got, unrouted);
                 seen_from.insert(got);
             }
             state => {
-                let blocked = apps
+                let blocked = harness
+                    .apps
                     .http_get(main_ip, port, echo, Duration::from_secs(6))
                     .await;
                 println!(
@@ -928,7 +1143,7 @@ async fn every_routed_app_leaves_from_its_own_exit_and_never_through_main() {
             }
         }
         assert!(
-            !main_ports.lock().unwrap().contains(&port),
+            !main.carried(port),
             "no packet of a routed app went through main"
         );
     }
@@ -942,7 +1157,8 @@ async fn every_routed_app_leaves_from_its_own_exit_and_never_through_main() {
     // main.
     stop_tx.send(()).unwrap();
     routes_task.await.unwrap();
-    let blocked = apps
+    let blocked = harness
+        .apps
         .http_get(
             main_ip,
             routed_port(app_of[0], 2),
@@ -950,7 +1166,8 @@ async fn every_routed_app_leaves_from_its_own_exit_and_never_through_main() {
             Duration::from_secs(8),
         )
         .await;
-    let still_main = apps
+    let still_main = harness
+        .apps
         .http_get(main_ip, UNROUTED_PORT + 1, echo, Duration::from_secs(20))
         .await;
     println!("routed app with its route stopped: {blocked:?}");
@@ -958,10 +1175,7 @@ async fn every_routed_app_leaves_from_its_own_exit_and_never_through_main() {
     assert!(blocked.is_err(), "a routed app fails closed");
     assert_eq!(still_main.as_deref(), Ok(unrouted.to_string().as_str()));
     assert!(
-        !main_ports
-            .lock()
-            .unwrap()
-            .contains(&routed_port(app_of[0], 2)),
+        !main.carried(routed_port(app_of[0], 2)),
         "the blocked app's packets never reached main"
     );
 
@@ -973,7 +1187,7 @@ async fn every_routed_app_leaves_from_its_own_exit_and_never_through_main() {
     empty.retry_unavailable_after = Duration::from_secs(60);
     let tokenless = RouteController::new(
         RoutingTable::new(StubOwners),
-        tun.clone(),
+        harness.tun.clone(),
         SupervisorRouteSessions::new(tokio::runtime::Handle::current(), empty),
         SessionAddresses {
             v4: Some(main_ip),
@@ -1003,10 +1217,154 @@ async fn every_routed_app_leaves_from_its_own_exit_and_never_through_main() {
     tokenless_task.abort();
     assert!(seen.contains(&RouteSessionState::Unavailable(RouteUnavailable::NoToken)));
     assert!(!seen.contains(&RouteSessionState::Connected));
+}
 
-    main_uplink.abort();
-    main_downlink.abort();
-    main_task.abort();
+/// An app moved to another country while it holds a connection open: the
+/// connection is reset toward the app as soon as the plan changes, a request
+/// on it is answered with a reset and carried by no session, and the app's
+/// next connection leaves from the new country (`docs/app-routing.md`
+/// section 2.4). Two countries other than the main one's are used, one route
+/// at a time, so the second route takes the first one's slot.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+#[ignore = "dials real beta exits; needs WARREN_MNEMONIC"]
+async fn an_app_moved_to_another_country_has_its_open_connection_reset_and_reconnects_there() {
+    let Some(mut harness) = Harness::start().await else {
+        return;
+    };
+    let main_exit = harness.main_exit;
+    let main_ip = harness.main_ip;
+    let echo = harness.echo;
+
+    let mut countries: Vec<String> = Vec::new();
+    for node in &harness.dir.nodes {
+        let country = node.country.to_lowercase();
+        if country != harness.main_country && !countries.contains(&country) {
+            countries.push(country);
+        }
+    }
+    assert!(countries.len() >= 2, "two countries besides the main one");
+    let app = AppId::parse(&routed_app(0)).unwrap();
+    let plan_in = |country: &str| {
+        let mut settings = AppRoutingSettings {
+            app_exits_enabled: true,
+            ..Default::default()
+        };
+        settings.set_app_exit(app.clone(), ExitChoice::new(country, None).unwrap());
+        let planned = harness.plan(&settings).tunnel;
+        assert_eq!(planned.routes.len(), 1, "one route for {country}");
+        planned
+    };
+    let (first, second) = (plan_in(&countries[0]), plan_in(&countries[1]));
+    let first_exit = *first.routes[0].circuit.exit.exit_id.as_bytes();
+    let second_exit = *second.routes[0].circuit.exit.exit_id.as_bytes();
+    println!(
+        "the app starts in {} and moves to {}",
+        countries[0], countries[1]
+    );
+
+    let table = RoutingTable::new(StubOwners);
+    let (reports_tx, mut reports_rx) = watch::channel(Vec::new());
+    let mut controller = harness.controller(&table, reports_tx);
+    controller.seed(&first, Some(main_exit));
+    let main = harness.main_pumps(&table);
+    let (plan_tx, plan_rx) = watch::channel::<AppRoutesPlan>(first.clone());
+    let (_main_exit_tx, main_exit_rx) = watch::channel(Some(main_exit));
+    let (stop_tx, stop_rx) = tokio::sync::oneshot::channel::<()>();
+    let routes_task = tokio::spawn(controller.run(
+        plan_rx,
+        main_exit_rx,
+        harness.anchor.as_ref().map(RouteAnchorHandle::state),
+        async move {
+            let _ = stop_rx.await;
+        },
+    ));
+    let reports = wait_for_connected(&mut reports_rx, 1, Duration::from_secs(150)).await;
+    assert!(
+        reports
+            .iter()
+            .any(|report| report.exit_id == first_exit
+                && report.state == RouteSessionState::Connected),
+        "the first route came up: {reports:?}"
+    );
+
+    // A connection the app keeps open, as a browser keeps its connections.
+    let port = routed_port(0, 1);
+    let deadline = Instant::now() + Duration::from_secs(30);
+    let mut connection = harness
+        .apps
+        .connect(main_ip, port, echo, deadline)
+        .await
+        .expect("a connection through the first route");
+    let before = harness.apps.exchange(&mut connection, true, deadline).await;
+    println!("kept-alive connection, first answer: {before:?}");
+    let before: Ipv4Addr = before.expect("an answer").parse().expect("an address");
+    assert_eq!(Some(before), harness.listed_ip(&first_exit));
+
+    // The app's country changes while the connection is open.
+    let moved = Instant::now();
+    plan_tx.send_replace(second.clone());
+    let reset = harness
+        .apps
+        .reset_of(&connection, Duration::from_secs(10))
+        .await;
+    println!(
+        "reset toward the app {:?} after the move, at {reset:?} (the app expects {})",
+        moved.elapsed(),
+        connection.rcv_nxt
+    );
+    assert_eq!(
+        reset,
+        Some(connection.rcv_nxt),
+        "reset without waiting for the app, at the number it accepts"
+    );
+
+    // A request on the old connection is answered with a reset, and no
+    // session carries it.
+    let counted = table.counters();
+    let again = harness
+        .apps
+        .exchange(
+            &mut connection,
+            true,
+            Instant::now() + Duration::from_secs(10),
+        )
+        .await;
+    let after_request = table.counters();
+    println!(
+        "request on the old connection: {again:?}, reset at {:?}",
+        connection.reset_at
+    );
+    assert_eq!(again, Err("connection reset".to_owned()));
+    assert_eq!(connection.reset_at, Some(connection.rcv_nxt));
+    assert_eq!(
+        after_request.routed_packets, counted.routed_packets,
+        "no packet of the old connection went through a route"
+    );
+    assert!(after_request.dropped_packets > counted.dropped_packets);
+    assert!(!main.carried(port), "nor through main");
+
+    // The app's next connection leaves from the new country.
+    let reports = wait_for_connected(&mut reports_rx, 1, Duration::from_secs(150)).await;
+    assert!(
+        reports
+            .iter()
+            .any(|report| report.exit_id == second_exit
+                && report.state == RouteSessionState::Connected),
+        "the second route came up: {reports:?}"
+    );
+    let after = harness
+        .apps
+        .http_get(main_ip, routed_port(0, 2), echo, Duration::from_secs(30))
+        .await;
+    println!("new connection after the move: {after:?}");
+    let after: Ipv4Addr = after.expect("an answer").parse().expect("an address");
+    assert_eq!(Some(after), harness.listed_ip(&second_exit));
+    assert!(!main.carried(routed_port(0, 2)));
+    println!("router counters: {:?}", table.counters());
+    assert!(table.counters().reset_flows >= 1);
+
+    stop_tx.send(()).unwrap();
+    routes_task.await.unwrap();
 }
 
 /// The harness's main session: the tunnel's main supervisor reduced to one
