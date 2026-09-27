@@ -267,7 +267,19 @@ val uiModule = module {
     }
     viewModel { AutoConnectAndLockdownModeViewModel(isPlayBuild = IS_PLAY_BUILD) }
     viewModel { params ->
-        SplitTunnelingViewModel(isModal = params.get(), get(), get(), get(), Dispatchers.IO)
+        SplitTunnelingViewModel(
+            isModal = params[0],
+            initialTab = params.getOrNull(),
+            splitTunnelingRepository = get(),
+            userPreferencesRepository = get(),
+            splitTunnelingUseCase = get(),
+            appRoutesStatusProvider = get(),
+            relayProvider = get(),
+            // ConnectivityManager.getConnectionOwnerUid, which names the app
+            // behind a flow, exists from Android 10.
+            countryPerAppSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q,
+            dispatcher = Dispatchers.IO,
+        )
     }
 
     viewModel { params ->

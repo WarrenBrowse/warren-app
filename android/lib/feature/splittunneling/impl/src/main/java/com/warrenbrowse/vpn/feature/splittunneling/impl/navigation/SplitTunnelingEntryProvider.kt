@@ -22,6 +22,7 @@ fun EntryProviderScope<NavKey2>.splitTunnelingEntry(navigator: Navigator) {
     ) { navArgs ->
         LocalSharedTransitionScope.current?.SplitTunneling(
             isModal = navArgs.isModal,
+            countryPerApp = navArgs.countryPerApp,
             navigator = navigator,
             animatedVisibilityScope = LocalNavAnimatedContentScope.current,
         )

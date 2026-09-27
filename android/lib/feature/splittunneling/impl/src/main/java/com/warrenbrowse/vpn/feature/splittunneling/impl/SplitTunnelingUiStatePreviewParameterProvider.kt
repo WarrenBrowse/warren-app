@@ -2,8 +2,13 @@ package com.warrenbrowse.vpn.feature.splittunneling.impl
 
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.AppData
+import com.warrenbrowse.vpn.feature.splittunneling.impl.countries.AppCountryItem
+import com.warrenbrowse.vpn.feature.splittunneling.impl.countries.CountryPerAppUiState
 import com.warrenbrowse.vpn.lib.common.Lc
 import com.warrenbrowse.vpn.lib.common.toLc
+import com.warrenbrowse.vpn.lib.model.AppExit
+import com.warrenbrowse.vpn.lib.model.AppRouteLine
+import com.warrenbrowse.vpn.lib.model.AppRouteUnavailableReason
 import com.warrenbrowse.vpn.lib.model.PackageName
 import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
 import com.warrenbrowse.vpn.lib.ui.resource.R
@@ -25,6 +30,30 @@ class SplitTunnelingUiStatePreviewParameterProvider :
                     selectedApps = excludedApps,
                     otherApps = includedApps.filter { !it.isSystemApp },
                     showSystemApps = false,
+                )
+                .toLc(),
+            SplitTunnelingUiState(
+                    tab = SplitTunnelingTab.CountryPerApp,
+                    countryPerApp =
+                        CountryPerAppUiState(
+                            enabled = true,
+                            withCountry =
+                                listOf(
+                                    AppCountryItem(
+                                        excludedApps[0],
+                                        AppExit("se"),
+                                        AppRouteLine.Connected("198.51.100.7"),
+                                    ),
+                                    AppCountryItem(
+                                        excludedApps[1],
+                                        AppExit("de", "Berlin"),
+                                        AppRouteLine.Unavailable(
+                                            AppRouteUnavailableReason.WaitingForRoute
+                                        ),
+                                    ),
+                                ),
+                            otherApps = includedApps,
+                        ),
                 )
                 .toLc(),
             Lc.Loading(Loading()),

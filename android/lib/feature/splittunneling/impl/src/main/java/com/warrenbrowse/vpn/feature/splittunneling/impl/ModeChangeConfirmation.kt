@@ -2,9 +2,14 @@ package com.warrenbrowse.vpn.feature.splittunneling.impl
 
 import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
 
-/** The two tabs of the screen, each the switch and the list of one split mode. */
-enum class SplitTunnelingTab(val mode: SplitTunnelMode) {
+/**
+ * The tabs of the screen, in the desktop's order. Bypass and IncludeOnly are each the switch and
+ * the list of one split mode; CountryPerApp composes with both and has no [mode], its switch being
+ * the one of the per-app countries.
+ */
+enum class SplitTunnelingTab(val mode: SplitTunnelMode?) {
     Bypass(SplitTunnelMode.Exclude),
+    CountryPerApp(null),
     IncludeOnly(SplitTunnelMode.IncludeOnly),
 }
 

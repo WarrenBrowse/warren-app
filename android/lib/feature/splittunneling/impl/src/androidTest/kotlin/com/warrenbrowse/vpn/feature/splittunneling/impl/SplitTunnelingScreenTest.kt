@@ -16,6 +16,7 @@ import com.warrenbrowse.vpn.lib.model.PackageName
 import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
 import com.warrenbrowse.vpn.screen.test.createEdgeToEdgeComposeExtension
 import com.warrenbrowse.vpn.screen.test.setContentWithTheme
+import com.warrenbrowse.vpn.feature.splittunneling.impl.countries.NoCountryPerAppActions
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -54,6 +55,7 @@ class SplitTunnelingScreenTest {
                 onShowSystemAppsClick = onShowSystemAppsClick,
                 onAddAppClick = onAddAppClick,
                 onRemoveAppClick = onRemoveAppClick,
+                countryActions = NoCountryPerAppActions,
                 onBackClick = onBackClick,
                 onResolveIcon = onResolveIcon,
                 navigateToSearch = navigateToSearch,

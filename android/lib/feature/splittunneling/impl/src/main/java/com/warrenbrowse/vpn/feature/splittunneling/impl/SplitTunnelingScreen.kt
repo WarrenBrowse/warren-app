@@ -46,6 +46,8 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -56,6 +58,11 @@ import com.warrenbrowse.vpn.common.compose.unlessIsDetail
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.splittunneling.api.SearchSplitTunnelingNavKey
 import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.AppData
+import com.warrenbrowse.vpn.feature.splittunneling.impl.countries.CountryPerAppActions
+import com.warrenbrowse.vpn.feature.splittunneling.impl.countries.CountryPickerActions
+import com.warrenbrowse.vpn.feature.splittunneling.impl.countries.CountryPickerDialog
+import com.warrenbrowse.vpn.feature.splittunneling.impl.countries.NoCountryPerAppActions
+import com.warrenbrowse.vpn.feature.splittunneling.impl.countries.countryPerAppContent
 import com.warrenbrowse.vpn.feature.splittunneling.impl.extensions.hasValidSize
 import com.warrenbrowse.vpn.feature.splittunneling.impl.extensions.isBelowMaxByteSize
 import com.warrenbrowse.vpn.lib.common.Lc
@@ -102,6 +109,7 @@ private fun PreviewSplitTunnelingScreen(
             onShowSystemAppsClick = {},
             onAddAppClick = {},
             onRemoveAppClick = {},
+            countryActions = NoCountryPerAppActions,
             onBackClick = {},
             navigateToSearch = {},
             onResolveIcon = { null },
@@ -112,13 +120,34 @@ private fun PreviewSplitTunnelingScreen(
 @Composable
 fun SharedTransitionScope.SplitTunneling(
     isModal: Boolean,
+    countryPerApp: Boolean,
     navigator: Navigator,
     animatedVisibilityScope: AnimatedVisibilityScope,
 ) {
-    val viewModel = koinViewModel<SplitTunnelingViewModel> { parametersOf(isModal) }
+    val viewModel =
+        koinViewModel<SplitTunnelingViewModel> {
+            parametersOf(isModal, SplitTunnelingTab.CountryPerApp.takeIf { countryPerApp })
+        }
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val packageManager = remember(context) { context.packageManager }
+    val countryActions =
+        remember(viewModel) {
+            CountryPerAppActions(
+                onSwitch = viewModel::onAppExitsSwitch,
+                onSearchChange = viewModel::onCountrySearchChange,
+                onPick = viewModel::onPickCountry,
+                onClear = viewModel::onClearAppCountry,
+                picker =
+                    CountryPickerActions(
+                        onSearchChange = viewModel::onPickerSearchChange,
+                        onToggleCountry = viewModel::onPickerToggleCountry,
+                        onChoose = viewModel::onChooseExit,
+                        onRemove = viewModel::onRemovePickedCountry,
+                        onDismiss = viewModel::onDismissPicker,
+                    ),
+            )
+        }
 
     SplitTunnelingScreen(
         state = state,
@@ -134,6 +163,7 @@ fun SharedTransitionScope.SplitTunneling(
         onShowSystemAppsClick = viewModel::onShowSystemAppsClick,
         onAddAppClick = viewModel::onAddAppClick,
         onRemoveAppClick = viewModel::onRemoveAppClick,
+        countryActions = countryActions,
         onBackClick = dropUnlessResumed { navigator.goBack() },
         navigateToSearch =
             dropUnlessResumed {
@@ -156,6 +186,7 @@ fun SplitTunnelingScreen(
     onShowSystemAppsClick: (show: Boolean) -> Unit,
     onAddAppClick: (packageName: PackageName) -> Unit,
     onRemoveAppClick: (packageName: PackageName) -> Unit,
+    countryActions: CountryPerAppActions,
     onBackClick: () -> Unit,
     onResolveIcon: (PackageName) -> Drawable?,
     navigateToSearch: () -> Unit,
@@ -173,7 +204,12 @@ fun SplitTunnelingScreen(
                 unlessIsDetail { NavigateBackIconButton(onNavigateBack = onBackClick) }
             }
         },
-        actions = { SearchButton(onClick = navigateToSearch, enabled = state is Lc.Content) },
+        actions = {
+            // The "Country per app" tab searches in place, as on desktop.
+            if (state.contentOrNull()?.tab != SplitTunnelingTab.CountryPerApp) {
+                SearchButton(onClick = navigateToSearch, enabled = state is Lc.Content)
+            }
+        },
     ) { modifier ->
         val lazyListState = rememberLazyListState()
         LazyColumn(
@@ -196,26 +232,38 @@ fun SplitTunnelingScreen(
                 }
                 is Lc.Content -> {
                     tabBar(tab = state.value.tab, onSelectTab = onSelectTab)
-                    modeSwitch(state = state.value, onSplitModeSwitch = onSplitModeSwitch)
-                    tabDescription(tab = state.value.tab)
-                    if (state.value.tab == SplitTunnelingTab.IncludeOnly && state.value.tabModeOn) {
-                        includeOnlyBanner(noApp = state.value.includeOnlyWithoutApps)
+                    val countries = state.value.countryPerApp
+                    if (countries != null) {
+                        countryPerAppContent(
+                            state = countries,
+                            actions = countryActions,
+                            onResolveIcon = onResolveIcon,
+                            systemAppsToggle = {
+                                systemAppsToggle(
+                                    showSystemApps = state.value.showSystemApps,
+                                    onShowSystemAppsClick = onShowSystemAppsClick,
+                                    enabled = true,
+                                )
+                            },
+                        )
+                    } else {
+                        splitModeTab(
+                            state = state.value,
+                            focusManager = focusManager,
+                            onSplitModeSwitch = onSplitModeSwitch,
+                            onShowSystemAppsClick = onShowSystemAppsClick,
+                            onAddAppClick = onAddAppClick,
+                            onRemoveAppClick = onRemoveAppClick,
+                            onResolveIcon = onResolveIcon,
+                        )
                     }
-                    systemAppsToggle(
-                        showSystemApps = state.value.showSystemApps,
-                        onShowSystemAppsClick = onShowSystemAppsClick,
-                        enabled = true,
-                    )
-                    appList(
-                        state = state.value,
-                        focusManager = focusManager,
-                        onAddAppClick = onAddAppClick,
-                        onRemoveAppClick = onRemoveAppClick,
-                        onResolveIcon = onResolveIcon,
-                    )
                 }
             }
         }
+    }
+
+    state.contentOrNull()?.countryPerApp?.picker?.let { picker ->
+        CountryPickerDialog(state = picker, actions = countryActions.picker)
     }
 
     (state as? Lc.Content)?.value?.confirmation?.let { confirmation ->
@@ -227,6 +275,35 @@ fun SplitTunnelingScreen(
     }
 }
 
+/** The switch, description and app lists of a split mode's tab. */
+private fun LazyListScope.splitModeTab(
+    state: SplitTunnelingUiState,
+    focusManager: FocusManager,
+    onSplitModeSwitch: (Boolean) -> Unit,
+    onShowSystemAppsClick: (show: Boolean) -> Unit,
+    onAddAppClick: (packageName: PackageName) -> Unit,
+    onRemoveAppClick: (packageName: PackageName) -> Unit,
+    onResolveIcon: (PackageName) -> Drawable?,
+) {
+    modeSwitch(state = state, onSplitModeSwitch = onSplitModeSwitch)
+    tabDescription(tab = state.tab)
+    if (state.tab == SplitTunnelingTab.IncludeOnly && state.tabModeOn) {
+        includeOnlyBanner(noApp = state.includeOnlyWithoutApps)
+    }
+    systemAppsToggle(
+        showSystemApps = state.showSystemApps,
+        onShowSystemAppsClick = onShowSystemAppsClick,
+        enabled = true,
+    )
+    appList(
+        state = state,
+        focusManager = focusManager,
+        onAddAppClick = onAddAppClick,
+        onRemoveAppClick = onRemoveAppClick,
+        onResolveIcon = onResolveIcon,
+    )
+}
+
 private fun LazyListScope.description() {
     item(key = CommonContentKey.DESCRIPTION, contentType = ContentType.DESCRIPTION) {
         ScreenDescription(
@@ -236,7 +313,7 @@ private fun LazyListScope.description() {
     }
 }
 
-/** "Bypass VPN" and "VPN only for", in the desktop's order. */
+/** "Bypass VPN", "Country per app" and "VPN only for", in the desktop's order. */
 private fun LazyListScope.tabBar(
     tab: SplitTunnelingTab,
     onSelectTab: (SplitTunnelingTab) -> Unit,
@@ -246,6 +323,8 @@ private fun LazyListScope.tabBar(
             modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.mediumPadding)
         ) {
             SplitTunnelingTab.entries.forEachIndexed { index, entry ->
+                // No check icon: three labels share the row, and the fill
+                // already marks the selected tab.
                 SegmentedButton(
                     selected = tab == entry,
                     onClick = { onSelectTab(entry) },
@@ -254,8 +333,14 @@ private fun LazyListScope.tabBar(
                             index = index,
                             count = SplitTunnelingTab.entries.size,
                         ),
+                    icon = {},
                 ) {
-                    Text(stringResource(entry.label()))
+                    Text(
+                        text = stringResource(entry.label()),
+                        textAlign = TextAlign.Center,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
                 }
             }
         }
@@ -290,6 +375,8 @@ private fun LazyListScope.tabDescription(tab: SplitTunnelingTab) {
                         stringResource(R.string.split_mode_include_only_description) +
                             "\n" +
                             stringResource(R.string.include_only_lockdown_warning)
+                    SplitTunnelingTab.CountryPerApp ->
+                        stringResource(R.string.country_per_app_description)
                 },
             modifier =
                 Modifier.animateItem()
@@ -380,6 +467,7 @@ private fun DialogText(text: String) {
 private fun SplitTunnelingTab.label(): Int =
     when (this) {
         SplitTunnelingTab.Bypass -> R.string.split_mode_bypass
+        SplitTunnelingTab.CountryPerApp -> R.string.country_per_app
         SplitTunnelingTab.IncludeOnly -> R.string.split_mode_include_only
     }
 
@@ -387,6 +475,7 @@ private fun SplitTunnelingTab.label(): Int =
 internal fun SplitTunnelingTab.selectedAppsHeader(): Int =
     when (this) {
         SplitTunnelingTab.Bypass -> R.string.exclude_applications
+        SplitTunnelingTab.CountryPerApp -> R.string.apps_with_a_country
         SplitTunnelingTab.IncludeOnly -> R.string.apps_using_the_vpn
     }
 

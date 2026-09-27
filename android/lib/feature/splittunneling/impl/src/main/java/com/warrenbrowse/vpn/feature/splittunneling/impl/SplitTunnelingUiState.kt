@@ -1,6 +1,7 @@
 package com.warrenbrowse.vpn.feature.splittunneling.impl
 
 import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.AppData
+import com.warrenbrowse.vpn.feature.splittunneling.impl.countries.CountryPerAppUiState
 import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
 
 data class Loading(val isModal: Boolean = false)
@@ -15,6 +16,8 @@ data class SplitTunnelingUiState(
     val isModal: Boolean = false,
     /** A mode change waiting for the user's answer. */
     val confirmation: ModeChangeConfirmation? = null,
+    /** Set while the "Country per app" tab is shown. */
+    val countryPerApp: CountryPerAppUiState? = null,
 ) {
     /** Whether the mode of the shown tab is the one in force. */
     val tabModeOn: Boolean

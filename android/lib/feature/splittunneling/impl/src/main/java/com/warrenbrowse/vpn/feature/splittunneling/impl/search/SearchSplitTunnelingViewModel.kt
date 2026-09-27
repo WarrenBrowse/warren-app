@@ -58,6 +58,8 @@ class SearchSplitTunnelingViewModel(
             when (tab) {
                 SplitTunnelingTab.Bypass -> splitTunnelingRepository.addExcludedApp(packageName)
                 SplitTunnelingTab.IncludeOnly -> splitTunnelingRepository.addIncludedApp(packageName)
+                // The countries are chosen on their own tab, which searches in place.
+                SplitTunnelingTab.CountryPerApp -> Unit
             }
         }
     }
@@ -68,6 +70,7 @@ class SearchSplitTunnelingViewModel(
                 SplitTunnelingTab.Bypass -> splitTunnelingRepository.removeExcludedApp(packageName)
                 SplitTunnelingTab.IncludeOnly ->
                     splitTunnelingRepository.removeIncludedApp(packageName)
+                SplitTunnelingTab.CountryPerApp -> Unit
             }
         }
     }
