@@ -17,7 +17,18 @@ retries = 1
 # group so nextest serializes them the way the in-process lock intended.
 [test-groups]
 talpid-resolver-serial = { max-threads = 1 }
+# The winfw tests (Windows CI only, elevated) change the machine's filtering
+# engine: the WFP objects they add are machine-wide, so two of them in parallel
+# processes see each other's filters. One at a time, as their in-process Mutex
+# does under a single test binary.
+winfw-machine-serial = { max-threads = 1 }
 
 [[profile.warren-ci.overrides]]
 filter = 'package(talpid-core) & test(resolver::)'
 test-group = 'talpid-resolver-serial'
+
+[[profile.warren-ci.overrides]]
+filter = 'package(talpid-core) & test(/winfw_tests::/)'
+test-group = 'winfw-machine-serial'
+# A retry would hide a filter left behind by the first attempt.
+retries = 0

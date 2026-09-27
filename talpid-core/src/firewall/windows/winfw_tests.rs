@@ -7,6 +7,9 @@
 //! `cargo test -p talpid-core --lib winfw_tests -- --ignored --test-threads=1`,
 //! against a winfw built for a non-production environment: in production
 //! the private and shared sublayer keys only differ by the private flip.
+//! CI runs them on every change to the Windows code: warren-tests.yml's
+//! `windows-daemon` job selects them with nextest's `--run-ignored only` on an
+//! elevated GitHub runner, against a beta winfw.
 
 use std::{
     ffi::OsString,

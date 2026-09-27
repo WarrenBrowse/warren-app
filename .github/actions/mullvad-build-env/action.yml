@@ -20,6 +20,14 @@ inputs:
       will be cached as well.
     default: "false"
     required: false
+  rust-cache-save:
+    description: >-
+      Whether this job writes its Rust cache back ("true" or "false"). A job
+      whose cache is large sets it to save from main only, so pull requests
+      restore it without adding entries to the repository's 10 GB cache
+      budget, where every new entry evicts an older one.
+    default: "true"
+    required: false
   product-env:
     description: >-
       Product environment (prod|beta|staging) the job builds for. Part of the
@@ -332,6 +340,7 @@ runs:
         cache-directories: >-
           ${{ inputs.rust-cache-targets == 'true' && env.CARGO_TARGET_DIR || '' }}
         cache-targets: ${{ inputs.rust-cache-targets }}
+        save-if: ${{ inputs.rust-cache-save }}
         # `cache-bin` causes `~/.cargo/bin/rustup` to be deleted for self-hosted runners
         # See https://github.com/Swatinem/rust-cache/issues/16
         cache-bin: false
