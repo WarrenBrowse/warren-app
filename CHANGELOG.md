@@ -33,6 +33,11 @@ Line wrap the file at 100 chars.                                              Th
   automatically instead of stopping on the first refusal.
 
 ### Changed
+- [Windows, macOS, Linux] Give every row of the location list the same layout, Recents and custom
+  lists included: the round flag, the name, the load of a single exit, and a quiet button at the
+  end, also opened by a right click, that adds the place to a list or takes it out, or starts a new
+  list already holding it. The selected place shows as a coloured name and a ring around its flag,
+  with no check mark pushing the name aside. A list with nothing in it is no longer shown.
 - [Android] Give every row of the location picker the same shape, recents and custom lists included:
   the round flag, the name over its country, the load of a single exit, and a quiet menu button,
   also opened by a long press, that adds the location to a list or removes it at once, or starts a
@@ -94,10 +99,7 @@ Line wrap the file at 100 chars.                                              Th
 - [Windows, macOS, Linux] Show each exit's load in one line of small text: a ring, the percentage
   once the exit is busy enough to show it, the number of people on it and, in the location list,
   its download rate. The location list shows each country's flag, opens a country only when it
-  holds several exits, and hides its empty sections. Every row, Recents included, has the same
-  layout, and the selected one is marked by its colour and a ring around its flag. A quiet button
-  at the end of a row, or a right click, adds the place to a list or takes it out, and creates a
-  new list already holding it; a list that holds nothing is not shown. The
+  holds several exits, and hides its empty sections; custom lists are created from its menu. The
   Warren network view and the live panel of the connection details are gone, and the expanded
   connection card now scrolls instead of growing past the top of the window.
 - Call the ban of an account a revocation, and each abuse report recorded against a forwarded
