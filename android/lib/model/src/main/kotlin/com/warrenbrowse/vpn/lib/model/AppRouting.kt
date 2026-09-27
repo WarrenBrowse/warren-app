@@ -33,11 +33,16 @@ sealed interface AppRouting {
  * which would silently turn "VPN only for" into a full tunnel the user never
  * sees named. The guard makes that fallback explicit instead, and the fallback
  * is the full tunnel because it is the side that protects the included apps.
+ *
+ * [appsWithCountry] are the apps whose country is in force ([effectiveAppExits]): in include-only
+ * they are tunneled as well, since choosing a country for an app is enough to put it in the VPN
+ * (docs/app-routing.md section 1, rule 2).
  */
 fun resolveAppRouting(
     mode: SplitTunnelMode,
     excludedApps: Set<String>,
     includedApps: Set<String>,
+    appsWithCountry: Set<String> = emptySet(),
     isInstalled: (String) -> Boolean,
 ): AppRouting =
     when (mode) {
@@ -45,7 +50,7 @@ fun resolveAppRouting(
         SplitTunnelMode.Exclude ->
             if (excludedApps.isEmpty()) AppRouting.AllApps else AppRouting.Bypass(excludedApps)
         SplitTunnelMode.IncludeOnly -> {
-            val present = includedApps.filterTo(LinkedHashSet(), isInstalled)
+            val present = (includedApps + appsWithCountry).filterTo(LinkedHashSet(), isInstalled)
             if (present.isEmpty()) AppRouting.AllApps else AppRouting.OnlyFor(present)
         }
     }

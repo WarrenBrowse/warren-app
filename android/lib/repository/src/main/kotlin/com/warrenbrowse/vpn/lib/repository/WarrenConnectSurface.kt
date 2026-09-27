@@ -182,6 +182,16 @@ interface WarrenNatPmpStatusProvider {
 }
 
 /**
+ * Lib-side surface for the "Country per app" route statuses (docs/app-routing.md section 2.6). The
+ * concrete impl is `app/service/WarrenQuinnStateProxy`, fed by the adapter, which reads
+ * `WarrenJni.getAppRoutesStatus()` on every status wake. Empty while no tunnel runs, which the UI
+ * shows as "Waiting for the VPN".
+ */
+interface WarrenAppRoutesStatusProvider {
+    val appRoutes: StateFlow<List<com.warrenbrowse.vpn.lib.model.AppRouteStatus>>
+}
+
+/**
  * Lib-side surface for the host-offline verdict: true while the device has no usable network path.
  * Independent of the tunnel state on purpose: the native session holds Connected through its
  * transparent redial window, so without this flag the user would see a green "Connected" with no

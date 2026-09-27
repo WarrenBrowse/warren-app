@@ -73,6 +73,7 @@ import com.warrenbrowse.vpn.lib.repository.UserPreferencesMigration
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesSerializer
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenAppRoutesStatusProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenAutoRecoveryProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenFailoverProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenHostOfflineProvider
@@ -150,6 +151,7 @@ val appModule = module {
             WarrenPathHealthProvider::class,
             WarrenFailoverProvider::class,
             WarrenPathMetricsProvider::class,
+            WarrenAppRoutesStatusProvider::class,
         )
 
     // Process-wide truthful connectivity source: feeds the adapter's

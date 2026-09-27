@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import com.warrenbrowse.vpn.lib.model.AppExit
 import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
 
 /** Trust-on-first-use verdict for an exit's pinned public key. */
@@ -109,6 +110,14 @@ class WarrenLocalSettingsRepository(context: Context) : WarrenEnvStandDownStore 
     private val _includedApps =
         MutableStateFlow(prefs.getStringSet(KEY_INCLUDED_APPS, emptySet())?.toSet() ?: emptySet())
     val includedApps: StateFlow<Set<String>> = _includedApps.asStateFlow()
+
+    /** The switch of the "Country per app" tab; the countries are kept while it is off. */
+    private val _appExitsEnabled = MutableStateFlow(prefs.getBoolean(KEY_APP_EXITS_ENABLED, false))
+    val appExitsEnabled: StateFlow<Boolean> = _appExitsEnabled.asStateFlow()
+
+    /** The country each app leaves from, by package name (docs/app-routing.md section 2). */
+    private val _appExits = MutableStateFlow(readAppExits())
+    val appExits: StateFlow<Map<String, AppExit>> = _appExits.asStateFlow()
 
     /**
      * Whether the first-launch onboarding wizard has been completed. Gates
@@ -330,6 +339,34 @@ class WarrenLocalSettingsRepository(context: Context) : WarrenEnvStandDownStore 
 
     fun removeIncludedApp(packageName: String) =
         updateAppSet(KEY_INCLUDED_APPS, _includedApps) { it - packageName }
+
+    fun setAppExitsEnabled(enabled: Boolean) {
+        prefs.edit().putBoolean(KEY_APP_EXITS_ENABLED, enabled).apply()
+        _appExitsEnabled.value = enabled
+    }
+
+    /** Chooses [exit] for [packageName], replacing any earlier choice. */
+    fun setAppExit(packageName: String, exit: AppExit) = writeAppExits(_appExits.value + (packageName to exit))
+
+    fun clearAppExit(packageName: String) = writeAppExits(_appExits.value - packageName)
+
+    private fun writeAppExits(exits: Map<String, AppExit>) {
+        val encoded =
+            exits.mapTo(HashSet()) { (app, exit) ->
+                listOf(app, exit.country, exit.city.orEmpty()).joinToString(APP_EXIT_DELIMITER)
+            }
+        prefs.edit().putStringSet(KEY_APP_EXITS, encoded).apply()
+        _appExits.value = exits
+    }
+
+    // One entry per app: package, country and city (empty for any city),
+    // tab-separated, since neither a package name nor a city name holds a tab.
+    private fun readAppExits(): Map<String, AppExit> =
+        prefs.getStringSet(KEY_APP_EXITS, emptySet()).orEmpty().mapNotNull { entry ->
+            val parts = entry.split(APP_EXIT_DELIMITER)
+            if (parts.size != APP_EXIT_FIELDS || parts[0].isBlank()) return@mapNotNull null
+            AppExit.of(parts[1], parts[2])?.let { parts[0] to it }
+        }.toMap()
 
     private fun updateAppSet(
         key: String,
@@ -815,6 +852,10 @@ class WarrenLocalSettingsRepository(context: Context) : WarrenEnvStandDownStore 
     private const val KEY_EXCLUDED_APPS = "split_tunneling_excluded_apps"
     private const val KEY_INCLUDED_APPS = "split_tunneling_included_apps"
     private const val KEY_SPLIT_MODE = "split_tunneling_mode"
+    private const val KEY_APP_EXITS = "app_exits"
+    private const val KEY_APP_EXITS_ENABLED = "app_exits_enabled"
+    private const val APP_EXIT_DELIMITER = "\t"
+    private const val APP_EXIT_FIELDS = 3
     private const val SPLIT_MODE_OFF = "off"
     private const val SPLIT_MODE_EXCLUDE = "exclude"
     private const val SPLIT_MODE_INCLUDE_ONLY = "include_only"

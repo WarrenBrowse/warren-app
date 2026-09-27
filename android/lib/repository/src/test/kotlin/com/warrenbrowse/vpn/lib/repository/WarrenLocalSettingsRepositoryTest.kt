@@ -2,6 +2,7 @@ package com.warrenbrowse.vpn.lib.repository
 
 import android.content.Context
 import android.content.SharedPreferences
+import com.warrenbrowse.vpn.lib.model.AppExit
 import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
 import io.mockk.every
 import io.mockk.mockk
@@ -723,5 +724,36 @@ class WarrenLocalSettingsRepositoryTest {
         verify { mockEditor.putBoolean(capture(capturedKey), capture(capturedValue)) }
         assertEquals("daita_enabled", capturedKey.captured)
         assertTrue(capturedValue.captured)
+    }
+
+    @Test
+    fun `app countries seed from disk and skip an unreadable entry`() {
+        every { mockPrefs.getBoolean("app_exits_enabled", false) } returns true
+        every { mockPrefs.getStringSet("app_exits", any()) } returns
+            mutableSetOf("org.browser\tse\t", "org.chat\tde\tBerlin", "org.bad\tswe\t", "junk")
+
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        assertTrue(repo.appExitsEnabled.value)
+        assertEquals(
+            mapOf("org.browser" to AppExit("se"), "org.chat" to AppExit("de", "Berlin")),
+            repo.appExits.value,
+        )
+    }
+
+    @Test
+    fun `choosing and removing an app country persists the whole map`() {
+        every { mockEditor.putStringSet(any(), any()) } returns mockEditor
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        repo.setAppExit("org.browser", AppExit("fi", "Helsinki"))
+        repo.setAppExit("org.chat", AppExit("se"))
+        repo.clearAppExit("org.browser")
+        repo.setAppExitsEnabled(true)
+
+        assertEquals(mapOf("org.chat" to AppExit("se")), repo.appExits.value)
+        assertTrue(repo.appExitsEnabled.value)
+        verify { mockEditor.putStringSet("app_exits", setOf("org.chat\tse\t")) }
+        verify { mockEditor.putBoolean("app_exits_enabled", true) }
     }
 }

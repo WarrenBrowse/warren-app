@@ -1,5 +1,7 @@
 package com.warrenbrowse.vpn.app.service
 
+import com.warrenbrowse.vpn.lib.model.AppRouteStatus
+import com.warrenbrowse.vpn.lib.repository.WarrenAppRoutesStatusProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenAutoRecoveryProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenConnectedInfo
 import com.warrenbrowse.vpn.lib.repository.WarrenFailoverProvider
@@ -36,7 +38,8 @@ class WarrenQuinnStateProxy :
     WarrenAutoRecoveryProvider,
     WarrenPathHealthProvider,
     WarrenFailoverProvider,
-    WarrenPathMetricsProvider {
+    WarrenPathMetricsProvider,
+    WarrenAppRoutesStatusProvider {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private val _state = MutableStateFlow<WarrenTunnelState>(WarrenTunnelState.Disconnected)
@@ -81,6 +84,14 @@ class WarrenQuinnStateProxy :
 
     private val _failoverCount = MutableStateFlow(0)
     override val failoverCount: StateFlow<Int> = _failoverCount.asStateFlow()
+
+    private val _appRoutes = MutableStateFlow<List<AppRouteStatus>>(emptyList())
+    override val appRoutes: StateFlow<List<AppRouteStatus>> = _appRoutes.asStateFlow()
+
+    /** Called by [WarrenVpnService] on every change of a "Country per app" route. */
+    fun updateAppRoutes(routes: List<AppRouteStatus>) {
+        _appRoutes.value = routes
+    }
 
     /** Called by [WarrenVpnService] on every adapter-side transition. */
     fun update(next: WarrenTunnelState) {

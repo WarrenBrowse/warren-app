@@ -11,7 +11,9 @@ import com.warrenbrowse.talpid.model.Connectivity
 import com.warrenbrowse.vpn.app.connectivity.RelayFamilies
 import com.warrenbrowse.vpn.app.connectivity.canDialRelay
 import com.warrenbrowse.vpn.app.connectivity.isOnlineWithNoDialableFamily
+import com.warrenbrowse.vpn.lib.model.AppExit
 import com.warrenbrowse.vpn.lib.model.AppRouting
+import com.warrenbrowse.vpn.lib.model.effectiveAppExits
 import com.warrenbrowse.vpn.lib.model.resolveAppRouting
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
@@ -214,16 +216,30 @@ class WarrenQuinnAdapter(
         }
     }
 
-    /** The apps the TUN captures, from the split settings and the installed apps. */
+    /**
+     * The apps the TUN captures, from the split settings, the countries in
+     * force (an app with one is tunneled in include-only) and the installed
+     * apps.
+     */
     private fun currentAppRouting(): AppRouting =
         tunAppRouting(
             resolveAppRouting(
                 settings.splitMode.value,
                 settings.excludedApps.value,
                 settings.includedApps.value,
+                currentAppExits().keys,
                 platform::isAppInstalled,
             ),
             platform.selfPackage,
+        )
+
+    /** The countries in force, by package name (docs/app-routing.md section 1). */
+    private fun currentAppExits(): Map<String, AppExit> =
+        effectiveAppExits(
+            settings.splitMode.value,
+            settings.excludedApps.value,
+            settings.appExits.value,
+            settings.appExitsEnabled.value,
         )
 
     /**
