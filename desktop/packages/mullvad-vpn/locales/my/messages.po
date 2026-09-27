@@ -2154,84 +2154,16 @@ msgid "API access"
 msgstr "API ရယူသုံးစွဲခွင့်"
 
 msgctxt "network-stats"
-msgid "%(capacity)s link"
-msgstr "%(capacity)s လိုင်း"
-
-msgctxt "network-stats"
-msgid "%(online)d of %(total)d"
-msgstr "%(total)d ခုအနက် %(online)d ခု"
-
-msgctxt "network-stats"
-msgid "Accounts"
-msgstr "အကောင့်များ"
-
-msgctxt "network-stats"
-msgid "Active subscribers"
-msgstr "အသက်ဝင်သော စာရင်းသွင်းသူများ"
-
-msgctxt "network-stats"
-msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one’s traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour."
-msgstr "ထွက်ပေါက်ဆာဗာသည် အနည်းဆုံး %(threshold)d ဦး အသုံးပြုနေချိန်တွင်သာ တိုက်ရိုက်ကိန်းဂဏန်းများကို ပြသည်။ မည်သူ၏ traffic ကိုမျှ ခွဲခြားမသိနိုင်စေရန် ဖြစ်သည်။ ထို့ထက်နည်းပါက နောက်ဆုံးတစ်နာရီ၏ ဝန်အဆင့်ကိုသာ ပြပြီး အခြားဆာဗာများ တိုက်ရိုက်ဖြစ်နေစဉ် ကွန်ရက်စုစုပေါင်းတွင် နာရီအလိုက် ထည့်တွက်သည်။"
-
-msgctxt "network-stats"
-msgid "CPU %(percent)s"
-msgstr "CPU %(percent)s"
-
-msgctxt "network-stats"
-msgid "Data carried, 24 h"
-msgstr "သယ်ဆောင်ခဲ့သော ဒေတာ၊ ၂၄ နာရီ"
-
-msgctxt "network-stats"
-msgid "Download"
-msgstr "ဒေါင်းလုဒ်"
-
-msgctxt "network-stats"
-msgid "Exits"
-msgstr "ထွက်ပေါက်ဆာဗာများ"
-
-msgctxt "network-stats"
-msgid "Exits online"
-msgstr "အွန်လိုင်းရှိ ထွက်ပေါက်ဆာဗာများ"
-
-msgctxt "network-stats"
 msgid "High load"
 msgstr "ဝန်များ"
-
-msgctxt "network-stats"
-msgid "How these numbers are computed"
-msgstr "ဤကိန်းဂဏန်းများကို တွက်ချက်ပုံ"
-
-msgctxt "network-stats"
-msgid "Limited by bandwidth"
-msgstr "bandwidth ဖြင့် ကန့်သတ်ထားသည်"
-
-msgctxt "network-stats"
-msgid "Limited by CPU"
-msgstr "CPU ဖြင့် ကန့်သတ်ထားသည်"
 
 msgctxt "network-stats"
 msgid "Live figures appear once %(threshold)d people share an exit, so no one’s traffic can be singled out."
 msgstr "ထွက်ပေါက်ဆာဗာတစ်ခုကို %(threshold)d ဦး မျှသုံးသည်နှင့် တိုက်ရိုက်ကိန်းဂဏန်းများ ပေါ်လာသည်။ မည်သူ၏ traffic ကိုမျှ ခွဲခြားမသိနိုင်စေရန် ဖြစ်သည်။"
 
 msgctxt "network-stats"
-msgid "Live figures cover one closed window of %(seconds)d seconds and change only when the next one closes. The 24-hour figures are counted by clock hour."
-msgstr "တိုက်ရိုက်ကိန်းဂဏန်းများသည် ပိတ်ပြီးသော %(seconds)d စက္ကန့် အချိန်ကွက်တစ်ခုကို ဖော်ပြပြီး နောက်တစ်ခု ပိတ်မှသာ ပြောင်းလဲသည်။ ၂၄ နာရီ ကိန်းဂဏန်းများကို နာရီပြည့်အလိုက် တွက်သည်။"
-
-msgctxt "network-stats"
-msgid "load"
-msgstr "ဝန်"
-
-msgctxt "network-stats"
 msgid "Load %(load)s, %(people)s people"
 msgstr "ဝန် %(load)s၊ လူ %(people)s ဦး"
-
-msgctxt "network-stats"
-msgid "Load is the busier direction of the link against its capacity, or the processor use, whichever is closer to saturation."
-msgstr "ဝန်ဆိုသည်မှာ လိုင်း၏ ပိုမိုအလုပ်များသော ဦးတည်ချက်ကို ၎င်း၏စွမ်းရည်နှင့် နှိုင်းယှဉ်ချက် သို့မဟုတ် ပရိုဆက်ဆာ အသုံးပြုမှု ဖြစ်ပြီး ပြည့်နှက်မှုနှင့် ပိုနီးသည့်တန်ဖိုးကို ယူသည်။"
-
-msgctxt "network-stats"
-msgid "Load over the last hour"
-msgstr "နောက်ဆုံးတစ်နာရီအတွင်း ဝန်"
 
 msgctxt "network-stats"
 msgid "Load unknown"
@@ -2246,81 +2178,16 @@ msgid "Moderate load"
 msgstr "ဝန်အလယ်အလတ်"
 
 msgctxt "network-stats"
-msgid "network load"
-msgstr "ကွန်ရက်ဝန်"
-
-msgctxt "network-stats"
-msgid "Network load %(load)s"
-msgstr "ကွန်ရက်ဝန် %(load)s"
-
-msgctxt "network-stats"
 msgid "Offline"
 msgstr "အော့ဖ်လိုင်း"
-
-msgctxt "network-stats"
-msgid "People connected now"
-msgstr "ယခု ချိတ်ဆက်ထားသူများ"
-
-msgctxt "network-stats"
-msgid "People per exit are rounded down to steps of %(step)d. The network total is exact while no exit shows live figures, and rounded down the same way while one does."
-msgstr "ထွက်ပေါက်ဆာဗာတစ်ခုစီရှိ လူဦးရေကို %(step)d ဦးအဆင့်ဖြင့် အောက်သို့ ပိုင်းဖြတ်သည်။ ထွက်ပေါက်ဆာဗာတစ်ခုမျှ တိုက်ရိုက်ကိန်းဂဏန်းများ မပြသသရွေ့ ကွန်ရက်စုစုပေါင်းမှာ တိကျပြီး တစ်ခုခု ပြသသောအခါ ထိုနည်းအတိုင်း အောက်သို့ ပိုင်းဖြတ်သည်။"
-
-msgctxt "network-stats"
-msgid "People, 24 h"
-msgstr "လူဦးရေ၊ ၂၄ နာရီ"
 
 msgctxt "network-stats"
 msgid "Saturated"
 msgstr "ပြည့်နှက်"
 
 msgctxt "network-stats"
-msgid "Show the Warren network"
-msgstr "Warren ကွန်ရက်ကို ပြပါ"
-
-msgctxt "network-stats"
-msgid "The network figures are not available right now."
-msgstr "ကွန်ရက် ကိန်းဂဏန်းများကို ယခု မရရှိနိုင်ပါ။"
-
-msgctxt "network-stats"
-msgid "Throughput"
-msgstr "ဖြတ်သန်းနှုန်း"
-
-msgctxt "network-stats"
-msgid "Throughput, 24 h"
-msgstr "ဖြတ်သန်းနှုန်း၊ ၂၄ နာရီ"
-
-msgctxt "network-stats"
-msgid "Up %(days)d day"
-msgid_plural "Up %(days)d days"
-msgstr[0] "%(days)d ရက် လည်ပတ်နေသည်"
-
-msgctxt "network-stats"
-msgid "Up less than a day"
-msgstr "တစ်ရက်အောက် လည်ပတ်နေသည်"
-
-msgctxt "network-stats"
-msgid "Updated %(hours)d h ago"
-msgstr "%(hours)d နာရီ အကြာက အပ်ဒိတ်လုပ်ခဲ့သည်"
-
-msgctxt "network-stats"
-msgid "Updated %(minutes)d min ago"
-msgstr "%(minutes)d မိနစ် အကြာက အပ်ဒိတ်လုပ်ခဲ့သည်"
-
-msgctxt "network-stats"
-msgid "Updated %(seconds)d s ago"
-msgstr "%(seconds)d စက္ကန့် အကြာက အပ်ဒိတ်လုပ်ခဲ့သည်"
-
-msgctxt "network-stats"
-msgid "Upload"
-msgstr "အပ်လုဒ်"
-
-msgctxt "network-stats"
-msgid "Warren network"
-msgstr "Warren ကွန်ရက်"
-
-msgctxt "network-stats"
-msgid "Your exit, live"
-msgstr "သင့် ထွက်ပေါက်ဆာဗာ၊ တိုက်ရိုက်"
+msgid "%(band)s, %(people)s people"
+msgstr "%(band)s၊ လူ %(people)s ဦး"
 
 #. The system notification displayed to the user when the account credit is close to expiry.
 #. Available placeholder:
@@ -2653,12 +2520,6 @@ msgctxt "select-location-nav"
 msgid "Select location"
 msgstr "တည်နေရာ ရွေးရန်"
 
-#. Message shown when the user has no custom lists.
-#. Instructs the user how to create a custom list.
-msgctxt "select-location-view"
-msgid "Add a custom list by clicking the “+” icon"
-msgstr "“+” အိုင်ကွန်ကို နှိပ်ပြီး စိတ်ကြိုက်စာရင်းတစ်ခု ထည့်သွင်းပါ"
-
 msgctxt "select-location-view"
 msgid "All locations"
 msgstr "တည်နေရာအာလုံး"
@@ -2698,11 +2559,6 @@ msgctxt "select-location-view"
 msgid "Filtered:"
 msgstr "စစ်ထုတ်ထားသော-"
 
-#. Message shown when the user has no recent locations.
-msgctxt "select-location-view"
-msgid "No recent selection history"
-msgstr "လတ်တလောရွေးချယ်မှု မှတ်တမ်း မရှိပါ"
-
 #. Label for indicator that shows that obfuscation is being used as a filter.
 #. Available placeholders:
 #. %(obfuscation)s - type of obfuscation in use
@@ -2738,6 +2594,10 @@ msgstr "%(totalRelays)s ခုအနက် %(visibleRelays)s ခုကို ပ
 msgctxt "select-location-view"
 msgid "The entry server for %(multihop)s is currently overridden by %(daita)s. To select an entry server, please first enable “%(directOnly)s” or disable \"%(daita)s\" in the settings."
 msgstr "%(multihop)s အတွက် အဝင်ဆာဗာအား လက်ရှိအချိန်၌ %(daita)s ဖြင့် ထပ်မံထည့်သွင်း ရေးမှတ်ထားသည်။ အဝင်ဆာဗာကို ရွေးချယ်ရန်အတွက် “%(directOnly)s” ကို ဦးစွာ ဖွင့်ပါ သို့မဟုတ် ဆက်တင်များထဲရှိ \"%(daita)s\" ကို ပိတ်ပါ။"
+
+msgctxt "select-location-view"
+msgid "New custom list"
+msgstr "စိတ်ကြိုက်စာရင်းအသစ်"
 
 msgctxt "settings-import"
 msgid "Clear all overrides"

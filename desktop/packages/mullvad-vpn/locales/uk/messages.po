@@ -2178,84 +2178,16 @@ msgid "API access"
 msgstr "Доступ до API"
 
 msgctxt "network-stats"
-msgid "%(capacity)s link"
-msgstr "Канал %(capacity)s"
-
-msgctxt "network-stats"
-msgid "%(online)d of %(total)d"
-msgstr "%(online)d з %(total)d"
-
-msgctxt "network-stats"
-msgid "Accounts"
-msgstr "Облікові записи"
-
-msgctxt "network-stats"
-msgid "Active subscribers"
-msgstr "Активні передплатники"
-
-msgctxt "network-stats"
-msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one’s traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour."
-msgstr "Вихідний сервер показує дані в реальному часі, лише поки ним користуються щонайменше %(threshold)d осіб, щоб нічий трафік не можна було виокремити. Нижче цього порогу він показує лише рівень навантаження за останню годину, а поки інші сервери показують дані в реальному часі, входить до підсумків мережі погодинно."
-
-msgctxt "network-stats"
-msgid "CPU %(percent)s"
-msgstr "ЦП %(percent)s"
-
-msgctxt "network-stats"
-msgid "Data carried, 24 h"
-msgstr "Передано даних, 24 год"
-
-msgctxt "network-stats"
-msgid "Download"
-msgstr "Завантаження"
-
-msgctxt "network-stats"
-msgid "Exits"
-msgstr "Вихідні сервери"
-
-msgctxt "network-stats"
-msgid "Exits online"
-msgstr "Вихідні сервери в мережі"
-
-msgctxt "network-stats"
 msgid "High load"
 msgstr "Високе навантаження"
-
-msgctxt "network-stats"
-msgid "How these numbers are computed"
-msgstr "Як рахуються ці цифри"
-
-msgctxt "network-stats"
-msgid "Limited by bandwidth"
-msgstr "Обмежено пропускною здатністю"
-
-msgctxt "network-stats"
-msgid "Limited by CPU"
-msgstr "Обмежено процесором"
 
 msgctxt "network-stats"
 msgid "Live figures appear once %(threshold)d people share an exit, so no one’s traffic can be singled out."
 msgstr "Дані в реальному часі з’являються, коли вихідним сервером користуються %(threshold)d осіб, щоб нічий трафік не можна було виокремити."
 
 msgctxt "network-stats"
-msgid "Live figures cover one closed window of %(seconds)d seconds and change only when the next one closes. The 24-hour figures are counted by clock hour."
-msgstr "Дані в реальному часі охоплюють одне завершене вікно в %(seconds)d секунд і змінюються лише після закриття наступного. Дані за 24 години рахуються за повними годинами."
-
-msgctxt "network-stats"
-msgid "load"
-msgstr "навантаження"
-
-msgctxt "network-stats"
 msgid "Load %(load)s, %(people)s people"
 msgstr "Навантаження %(load)s, людей: %(people)s"
-
-msgctxt "network-stats"
-msgid "Load is the busier direction of the link against its capacity, or the processor use, whichever is closer to saturation."
-msgstr "Навантаження це більш зайнятий напрямок каналу відносно його пропускної здатності або використання процесора, залежно від того, що ближче до насичення."
-
-msgctxt "network-stats"
-msgid "Load over the last hour"
-msgstr "Навантаження за останню годину"
 
 msgctxt "network-stats"
 msgid "Load unknown"
@@ -2270,84 +2202,16 @@ msgid "Moderate load"
 msgstr "Помірне навантаження"
 
 msgctxt "network-stats"
-msgid "network load"
-msgstr "навантаження мережі"
-
-msgctxt "network-stats"
-msgid "Network load %(load)s"
-msgstr "Навантаження мережі %(load)s"
-
-msgctxt "network-stats"
 msgid "Offline"
 msgstr "Не в мережі"
-
-msgctxt "network-stats"
-msgid "People connected now"
-msgstr "Підключено зараз"
-
-msgctxt "network-stats"
-msgid "People per exit are rounded down to steps of %(step)d. The network total is exact while no exit shows live figures, and rounded down the same way while one does."
-msgstr "Кількість людей на вихідному сервері округлюється вниз із кроком %(step)d. Підсумок для мережі точний, доки жоден вихідний сервер не показує дані наживо, і округлюється вниз так само, коли якийсь їх показує."
-
-msgctxt "network-stats"
-msgid "People, 24 h"
-msgstr "Люди, 24 год"
 
 msgctxt "network-stats"
 msgid "Saturated"
 msgstr "Перевантажений"
 
 msgctxt "network-stats"
-msgid "Show the Warren network"
-msgstr "Показати мережу Warren"
-
-msgctxt "network-stats"
-msgid "The network figures are not available right now."
-msgstr "Дані мережі зараз недоступні."
-
-msgctxt "network-stats"
-msgid "Throughput"
-msgstr "Пропускна здатність"
-
-msgctxt "network-stats"
-msgid "Throughput, 24 h"
-msgstr "Пропускна здатність, 24 год"
-
-msgctxt "network-stats"
-msgid "Up %(days)d day"
-msgid_plural "Up %(days)d days"
-msgstr[0] "Працює %(days)d день"
-msgstr[1] "Працює %(days)d дні"
-msgstr[2] "Працює %(days)d днів"
-msgstr[3] "Працює %(days)d дня"
-
-msgctxt "network-stats"
-msgid "Up less than a day"
-msgstr "Працює менше доби"
-
-msgctxt "network-stats"
-msgid "Updated %(hours)d h ago"
-msgstr "Оновлено %(hours)d год тому"
-
-msgctxt "network-stats"
-msgid "Updated %(minutes)d min ago"
-msgstr "Оновлено %(minutes)d хв тому"
-
-msgctxt "network-stats"
-msgid "Updated %(seconds)d s ago"
-msgstr "Оновлено %(seconds)d с тому"
-
-msgctxt "network-stats"
-msgid "Upload"
-msgstr "Надсилання"
-
-msgctxt "network-stats"
-msgid "Warren network"
-msgstr "Мережа Warren"
-
-msgctxt "network-stats"
-msgid "Your exit, live"
-msgstr "Ваш вихідний сервер у реальному часі"
+msgid "%(band)s, %(people)s people"
+msgstr "%(band)s, людей: %(people)s"
 
 #. The system notification displayed to the user when the account credit is close to expiry.
 #. Available placeholder:
@@ -2680,12 +2544,6 @@ msgctxt "select-location-nav"
 msgid "Select location"
 msgstr "Вибір розташування"
 
-#. Message shown when the user has no custom lists.
-#. Instructs the user how to create a custom list.
-msgctxt "select-location-view"
-msgid "Add a custom list by clicking the “+” icon"
-msgstr "Додайте користувацький список, натиснувши «+»"
-
 msgctxt "select-location-view"
 msgid "All locations"
 msgstr "Усі розташування"
@@ -2725,11 +2583,6 @@ msgctxt "select-location-view"
 msgid "Filtered:"
 msgstr "Відфільтровано:"
 
-#. Message shown when the user has no recent locations.
-msgctxt "select-location-view"
-msgid "No recent selection history"
-msgstr "Немає нещодавньої історії вибору"
-
 #. Label for indicator that shows that obfuscation is being used as a filter.
 #. Available placeholders:
 #. %(obfuscation)s - type of obfuscation in use
@@ -2765,6 +2618,10 @@ msgstr "Показано %(visibleRelays)s з %(totalRelays)s"
 msgctxt "select-location-view"
 msgid "The entry server for %(multihop)s is currently overridden by %(daita)s. To select an entry server, please first enable “%(directOnly)s” or disable \"%(daita)s\" in the settings."
 msgstr "Сервер входу для функції «%(multihop)s» зараз перевизначено функцією %(daita)s. Щоб вибрати сервер входу, спочатку ввімкніть «%(directOnly)s» або вимкніть «%(daita)s» у налаштуваннях."
+
+msgctxt "select-location-view"
+msgid "New custom list"
+msgstr "Новий користувацький список"
 
 msgctxt "settings-import"
 msgid "Clear all overrides"

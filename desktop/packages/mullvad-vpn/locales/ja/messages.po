@@ -2154,84 +2154,16 @@ msgid "API access"
 msgstr "APIアクセス"
 
 msgctxt "network-stats"
-msgid "%(capacity)s link"
-msgstr "%(capacity)s回線"
-
-msgctxt "network-stats"
-msgid "%(online)d of %(total)d"
-msgstr "%(online)d / %(total)d"
-
-msgctxt "network-stats"
-msgid "Accounts"
-msgstr "アカウント"
-
-msgctxt "network-stats"
-msgid "Active subscribers"
-msgstr "有効な購読者"
-
-msgctxt "network-stats"
-msgid "An exit shows live figures only while at least %(threshold)d people use it, so no one’s traffic can be singled out. Below that, it shows only its load band over the last hour, and while other exits are live it enters the network totals by the hour."
-msgstr "出口サーバーのライブ値は、少なくとも%(threshold)d人が利用している間だけ表示されます。誰のトラフィックも特定されないようにするためです。それ未満では直近1時間の負荷レベルのみを表示し、ほかの出口サーバーがライブの間は1時間単位でネットワーク全体の合計に含まれます。"
-
-msgctxt "network-stats"
-msgid "CPU %(percent)s"
-msgstr "CPU %(percent)s"
-
-msgctxt "network-stats"
-msgid "Data carried, 24 h"
-msgstr "転送データ量（24時間）"
-
-msgctxt "network-stats"
-msgid "Download"
-msgstr "ダウンロード"
-
-msgctxt "network-stats"
-msgid "Exits"
-msgstr "出口サーバー"
-
-msgctxt "network-stats"
-msgid "Exits online"
-msgstr "オンラインの出口サーバー"
-
-msgctxt "network-stats"
 msgid "High load"
 msgstr "高負荷"
-
-msgctxt "network-stats"
-msgid "How these numbers are computed"
-msgstr "これらの数値の算出方法"
-
-msgctxt "network-stats"
-msgid "Limited by bandwidth"
-msgstr "帯域幅による制限"
-
-msgctxt "network-stats"
-msgid "Limited by CPU"
-msgstr "CPUによる制限"
 
 msgctxt "network-stats"
 msgid "Live figures appear once %(threshold)d people share an exit, so no one’s traffic can be singled out."
 msgstr "1つの出口サーバーを%(threshold)d人が共有するとライブ値が表示されます。誰のトラフィックも特定されないようにするためです。"
 
 msgctxt "network-stats"
-msgid "Live figures cover one closed window of %(seconds)d seconds and change only when the next one closes. The 24-hour figures are counted by clock hour."
-msgstr "ライブ値は%(seconds)d秒間の確定した1つの期間を表し、次の期間が確定したときにのみ変わります。24時間の値は正時ごとに集計されます。"
-
-msgctxt "network-stats"
-msgid "load"
-msgstr "負荷"
-
-msgctxt "network-stats"
 msgid "Load %(load)s, %(people)s people"
 msgstr "負荷 %(load)s、%(people)s人"
-
-msgctxt "network-stats"
-msgid "Load is the busier direction of the link against its capacity, or the processor use, whichever is closer to saturation."
-msgstr "負荷は、回線の混んでいる方向の容量に対する割合、またはプロセッサー使用率のうち、飽和に近い方です。"
-
-msgctxt "network-stats"
-msgid "Load over the last hour"
-msgstr "直近1時間の負荷"
 
 msgctxt "network-stats"
 msgid "Load unknown"
@@ -2246,81 +2178,16 @@ msgid "Moderate load"
 msgstr "中程度の負荷"
 
 msgctxt "network-stats"
-msgid "network load"
-msgstr "ネットワーク負荷"
-
-msgctxt "network-stats"
-msgid "Network load %(load)s"
-msgstr "ネットワーク負荷 %(load)s"
-
-msgctxt "network-stats"
 msgid "Offline"
 msgstr "オフライン"
-
-msgctxt "network-stats"
-msgid "People connected now"
-msgstr "現在の接続人数"
-
-msgctxt "network-stats"
-msgid "People per exit are rounded down to steps of %(step)d. The network total is exact while no exit shows live figures, and rounded down the same way while one does."
-msgstr "出口サーバーごとの人数は%(step)d単位で切り捨てられます。ネットワークの合計は、ライブ値を表示する出口サーバーがない間は正確で、1台でも表示すると同じ方法で切り捨てられます。"
-
-msgctxt "network-stats"
-msgid "People, 24 h"
-msgstr "人数（24時間）"
 
 msgctxt "network-stats"
 msgid "Saturated"
 msgstr "飽和"
 
 msgctxt "network-stats"
-msgid "Show the Warren network"
-msgstr "Warrenネットワークを表示"
-
-msgctxt "network-stats"
-msgid "The network figures are not available right now."
-msgstr "現在ネットワークの数値を取得できません。"
-
-msgctxt "network-stats"
-msgid "Throughput"
-msgstr "スループット"
-
-msgctxt "network-stats"
-msgid "Throughput, 24 h"
-msgstr "スループット（24時間）"
-
-msgctxt "network-stats"
-msgid "Up %(days)d day"
-msgid_plural "Up %(days)d days"
-msgstr[0] "稼働%(days)d日"
-
-msgctxt "network-stats"
-msgid "Up less than a day"
-msgstr "稼働1日未満"
-
-msgctxt "network-stats"
-msgid "Updated %(hours)d h ago"
-msgstr "%(hours)d時間前に更新"
-
-msgctxt "network-stats"
-msgid "Updated %(minutes)d min ago"
-msgstr "%(minutes)d分前に更新"
-
-msgctxt "network-stats"
-msgid "Updated %(seconds)d s ago"
-msgstr "%(seconds)d秒前に更新"
-
-msgctxt "network-stats"
-msgid "Upload"
-msgstr "アップロード"
-
-msgctxt "network-stats"
-msgid "Warren network"
-msgstr "Warrenネットワーク"
-
-msgctxt "network-stats"
-msgid "Your exit, live"
-msgstr "あなたの出口サーバー（ライブ）"
+msgid "%(band)s, %(people)s people"
+msgstr "%(band)s、%(people)s人"
 
 #. The system notification displayed to the user when the account credit is close to expiry.
 #. Available placeholder:
@@ -2653,12 +2520,6 @@ msgctxt "select-location-nav"
 msgid "Select location"
 msgstr "場所を選択する"
 
-#. Message shown when the user has no custom lists.
-#. Instructs the user how to create a custom list.
-msgctxt "select-location-view"
-msgid "Add a custom list by clicking the “+” icon"
-msgstr "「+」アイコンをクリックして、カスタムリストを追加してください"
-
 msgctxt "select-location-view"
 msgid "All locations"
 msgstr "すべての場所"
@@ -2698,11 +2559,6 @@ msgctxt "select-location-view"
 msgid "Filtered:"
 msgstr "絞り込み結果:"
 
-#. Message shown when the user has no recent locations.
-msgctxt "select-location-view"
-msgid "No recent selection history"
-msgstr "最近の選択履歴はありません"
-
 #. Label for indicator that shows that obfuscation is being used as a filter.
 #. Available placeholders:
 #. %(obfuscation)s - type of obfuscation in use
@@ -2738,6 +2594,10 @@ msgstr "%(totalRelays)s件中%(visibleRelays)s件を表示中"
 msgctxt "select-location-view"
 msgid "The entry server for %(multihop)s is currently overridden by %(daita)s. To select an entry server, please first enable “%(directOnly)s” or disable \"%(daita)s\" in the settings."
 msgstr "%(multihop)sの入口サーバーは現在、%(daita)sによってオーバーライドされています。入口サーバーを選択するには、設定で [%(directOnly)s] を有効にするか、[%(daita)s] を無効にしてください。"
+
+msgctxt "select-location-view"
+msgid "New custom list"
+msgstr "新しいカスタムリスト"
 
 msgctxt "settings-import"
 msgid "Clear all overrides"
