@@ -132,10 +132,11 @@ pub struct Refusal<'a> {
     /// not active.
     pub reason: &'a str,
     /// What to surface instead when the account API says the subscription
-    /// is active, for a refusal an active subscription does not clear (the
-    /// exit refused every session token of the wallet, which its other
-    /// devices hold). `None` when an active subscription means the exit will
-    /// admit the session once it syncs.
+    /// is active, for a refusal an active subscription does not clear on its
+    /// own (the exit refused every session token without saying why, which an
+    /// active subscription most likely owes to its other devices holding
+    /// them). `None` when an active subscription means the exit will admit
+    /// the session once it syncs.
     pub if_active: Option<&'a str>,
 }
 
@@ -412,7 +413,7 @@ mod tests {
                 reason, DEVICE_LIMIT,
                 "an active subscription whose every token is refused is at its device limit"
             ),
-            other => panic!("the device limit must surface at once, got {other:?}"),
+            other => panic!("the device limit must surface after the patience, got {other:?}"),
         }
         assert!(refusals.run.is_none(), "a surfaced refusal ends the run");
     }
