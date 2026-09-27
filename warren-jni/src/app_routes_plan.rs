@@ -41,10 +41,11 @@ pub(crate) struct AppExitSpec {
 /// The exits in force, from the JSON array Kotlin sends. An entry whose
 /// package name or country cannot be one is dropped: it could never match a
 /// flow, and a malformed list must not stop the others.
-pub(crate) fn parse_app_exits(json: &str) -> Vec<AppExitSpec> {
+/// `None` when `json` is not such an array at all.
+pub(crate) fn parse_app_exits(json: &str) -> Option<Vec<AppExitSpec>> {
     serde_json::from_str::<Vec<AppExitSpec>>(json)
+        .ok()
         .map(valid_app_exits)
-        .unwrap_or_default()
 }
 
 /// The entries of `entries` that can name an app and a country.
@@ -699,13 +700,15 @@ mod tests {
         );
 
         assert_eq!(
-            parsed,
-            [
-                exit("org.browser", "de", None),
-                exit("org.chat", "se", Some("Stockholm"))
-            ]
+            parsed.as_deref(),
+            Some(
+                &[
+                    exit("org.browser", "de", None),
+                    exit("org.chat", "se", Some("Stockholm"))
+                ][..]
+            )
         );
-        assert!(parse_app_exits("not json").is_empty());
+        assert!(parse_app_exits("not json").is_none());
     }
 
     fn statuses(

@@ -31,7 +31,12 @@ fn exits_channel() -> &'static watch::Sender<Vec<AppExitSpec>> {
 
 /// Replaces the exits in force with the JSON array Kotlin sends.
 pub(crate) fn set_app_exits_json(json: &str) {
-    set_app_exits(parse_app_exits(json));
+    // A document that is not a list at all keeps the exits in force: an app
+    // with a country must not fall to the main session on a bad call.
+    match parse_app_exits(json) {
+        Some(exits) => set_app_exits(exits),
+        None => log::warn!("App routing: an unreadable list of countries was ignored"),
+    }
 }
 
 pub(crate) fn set_app_exits(exits: Vec<AppExitSpec>) {
@@ -360,6 +365,11 @@ mod tests {
 
         assert!(exits.has_changed().unwrap());
         assert_eq!(*exits.borrow_and_update(), [spec("org.browser", "se")]);
+        set_app_exits_json("not a list");
+        assert!(
+            !exits.has_changed().unwrap(),
+            "an unreadable call keeps the countries"
+        );
         set_app_exits(Vec::new());
     }
 }

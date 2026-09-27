@@ -703,7 +703,11 @@ Android's own:
   (source `10.64.0.1` or `fd00::1`), asked through the Kotlin
   `FlowOwnerResolver` (`android_app_routes.rs`, kept by `proguard-rules.pro`),
   and its "program" is its package. The lookup is live, so there is no
-  snapshot. A uid below 10000 (the system's own, among them the DNS resolver
+  snapshot, and a call that fails (a Binder error, a Java exception) counts as
+  an owner not found: the flow goes through the main connection under the rule
+  of section 2.1, which on Android covers more failure modes than a table
+  read does on desktop. An app id below 10000 in any user or profile (the
+  system's own, among them the DNS resolver
   working for apps) has no owner and goes through the main session, as the
   system DNS does on desktop (section 2.5). A uid carrying several packages
   (a shared user id) is named after one of its packages with a country, the

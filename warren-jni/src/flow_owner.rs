@@ -38,9 +38,14 @@ use talpid_app_routing::{
 pub(crate) const IPPROTO_TCP: i32 = 6;
 pub(crate) const IPPROTO_UDP: i32 = 17;
 
-/// The first uid of an app (`Process.FIRST_APPLICATION_UID`): below it are
+/// The first app id of an app (`Process.FIRST_APPLICATION_UID`), in every
+/// user and profile: below it are
 /// the system's own uids, which never run an app the user picks.
 const FIRST_APPLICATION_UID: u32 = 10_000;
+
+/// The uids of one Android user or profile (`UserHandle.PER_USER_RANGE`): a
+/// uid is the user id times this, plus the app id.
+const PER_USER_RANGE: u32 = 100_000;
 
 /// Advanced whenever the installed packages change, so a uid that now names
 /// another package does not keep the decision taken for the one before.
@@ -110,7 +115,7 @@ impl<L: OwnerLookup> OwnerResolver for AndroidOwnerResolver<L> {
         let uid = self.lookup.owner_uid(protocol, flow.local, flow.remote);
         u32::try_from(uid)
             .ok()
-            .filter(|uid| *uid >= FIRST_APPLICATION_UID)
+            .filter(|uid| uid % PER_USER_RANGE >= FIRST_APPLICATION_UID)
     }
 
     fn watch_programs<V: Copy>(&mut self, programs: &AppMatcher<V>) {
@@ -251,14 +256,20 @@ mod tests {
     fn an_unknown_owner_a_system_uid_and_an_echo_have_no_owner() {
         let platform = FakePlatform::default();
         platform.owns(IPPROTO_TCP, 40_003, 1_000);
+        platform.owns(IPPROTO_TCP, 40_004, 1_001_000);
         let mut resolver = AndroidOwnerResolver::new(platform.clone());
 
         assert_eq!(resolver.socket_owner(&flow(Transport::Tcp, 40_009)), None);
         assert_eq!(resolver.socket_owner(&flow(Transport::Tcp, 40_003)), None);
+        assert_eq!(
+            resolver.socket_owner(&flow(Transport::Tcp, 40_004)),
+            None,
+            "the system uid of a work profile"
+        );
         assert_eq!(resolver.socket_owner(&flow(Transport::IcmpEcho, 7)), None);
         assert_eq!(
             platform.owner_calls.lock().unwrap().len(),
-            2,
+            3,
             "an echo never reaches the platform"
         );
     }
