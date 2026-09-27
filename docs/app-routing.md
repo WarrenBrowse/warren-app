@@ -708,7 +708,12 @@ Android's own:
   system DNS does on desktop (section 2.5). A uid carrying several packages
   (a shared user id) is named after one of its packages with a country, the
   first by name: its packets cannot be told apart, and routing them keeps a
-  routed app's packets off the main session. An install or an uninstall
+  routed app's packets off the main session. Traffic a system service sends
+  for an app (a download through `DownloadManager`, a push delivery) belongs
+  to that service's uid and goes through the main session. Without a
+  registered lookup no route is dialed and every app with a country is shown
+  unavailable, since its flows could not be told from the others. An install
+  or an uninstall
   (`ACTION_PACKAGE_ADDED` or `_REMOVED`, `notifyPackagesChanged`) makes every
   uid be named again. Below Android 10 no lookup is registered and the tab
   says the feature needs Android 10.

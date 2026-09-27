@@ -17,7 +17,8 @@ use warren_app_routes::{AppRoutesPlan, MultiHopConfig, RouteReport};
 use warren_discovery_core::VerifiedMultiHopDirectory;
 
 use crate::app_routes_plan::{
-    AppExitSpec, ExitChoice, PlanInputs, Resolution, parse_app_exits, plan, statuses_json,
+    AppExitSpec, ExitChoice, PlanInputs, Resolution, Unavailable, parse_app_exits, plan,
+    plan_blocked, statuses_json,
 };
 
 /// The exits in force, as Kotlin last set them: seeded by each connect's
@@ -76,6 +77,9 @@ pub(crate) struct Planner {
     resolutions: BTreeMap<ExitChoice, Resolution>,
     reports: Vec<RouteReport>,
     connected: bool,
+    /// Whether the platform can name a flow's app: without it no route could
+    /// carry one, so none is dialed.
+    attributable: bool,
     plan_tx: watch::Sender<AppRoutesPlan>,
 }
 
@@ -86,6 +90,24 @@ impl Planner {
         main: MainCircuit,
         exits: Vec<AppExitSpec>,
     ) -> (Self, watch::Receiver<AppRoutesPlan>) {
+        Self::with_attribution(main, exits, true)
+    }
+
+    /// A planner for a platform that cannot name a flow's app: every exit is
+    /// shown unavailable and no route is dialed, rather than a route shown
+    /// connected while its apps' flows, unattributed, use the main session.
+    pub(crate) fn without_attribution(
+        main: MainCircuit,
+        exits: Vec<AppExitSpec>,
+    ) -> (Self, watch::Receiver<AppRoutesPlan>) {
+        Self::with_attribution(main, exits, false)
+    }
+
+    fn with_attribution(
+        main: MainCircuit,
+        exits: Vec<AppExitSpec>,
+        attributable: bool,
+    ) -> (Self, watch::Receiver<AppRoutesPlan>) {
         let (plan_tx, plan_rx) = watch::channel(AppRoutesPlan::default());
         let mut planner = Self {
             main,
@@ -95,6 +117,7 @@ impl Planner {
             resolutions: BTreeMap::new(),
             reports: Vec::new(),
             connected: false,
+            attributable,
             plan_tx,
         };
         planner.replan();
@@ -141,7 +164,11 @@ impl Planner {
             main_exit: self.main.main_exit,
             drained: &self.drained,
         };
-        let planned = plan(&self.exits, Some(&inputs), &self.circuits);
+        let planned = if self.attributable {
+            plan(&self.exits, Some(&inputs), &self.circuits)
+        } else {
+            plan_blocked(&self.exits, Unavailable::Unsupported)
+        };
         self.circuits = planned.circuits;
         self.resolutions = planned.resolutions;
         let tunnel = planned.tunnel;
@@ -241,6 +268,19 @@ mod tests {
 
         assert!(!unchanged, "the same exits republish nothing");
         assert_eq!(route_exits(&plan.borrow_and_update()), [2, 4]);
+    }
+
+    #[test]
+    fn without_an_owner_lookup_no_route_is_dialed_and_every_exit_says_so() {
+        let (mut planner, plan) =
+            Planner::without_attribution(main_on(1), vec![spec("org.browser", "de")]);
+        planner.handle(PlannerEvent::Connected(true));
+
+        let status: serde_json::Value = serde_json::from_str(&planner.status_json()).unwrap();
+
+        assert!(plan.borrow().routes.is_empty());
+        assert_eq!(status["routes"][0]["state"], "unavailable");
+        assert_eq!(status["routes"][0]["reason"], "unsupported");
     }
 
     #[test]

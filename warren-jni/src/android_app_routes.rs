@@ -198,7 +198,11 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getAppRoutesStatu
             status.clone()
         }
     };
-    match env.new_string(status) {
+    // Kotlin declares the answer non-null: fall back to no route.
+    match env
+        .new_string(status)
+        .or_else(|_| env.new_string(NO_ROUTES))
+    {
         Ok(s) => s.into_inner(),
         Err(_) => std::ptr::null_mut(),
     }
@@ -255,11 +259,19 @@ impl AppRoutes {
         use crate::app_routes_session::{Planner, PlannerEvent, app_exits, run_planner};
 
         let main_exit = setup.main.main_exit;
-        let (planner, plan) = Planner::new(setup.main, app_exits().borrow().clone());
+        // Read and followed through one receiver, so a change landing
+        // between the first plan and the planner's start is not missed.
+        let mut exits = app_exits();
+        let initial = exits.borrow_and_update().clone();
+        let (planner, plan) = if lookup_available() {
+            Planner::new(setup.main, initial)
+        } else {
+            Planner::without_attribution(setup.main, initial)
+        };
         let (events_tx, events_rx) = tokio::sync::mpsc::unbounded_channel();
         let planner = crate::supervised_session::AbortOnDrop::spawn(run_planner(
             planner,
-            app_exits(),
+            exits,
             events_rx,
             publish_status,
         ));

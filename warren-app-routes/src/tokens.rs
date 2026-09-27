@@ -35,6 +35,7 @@ pub type SessionTokenSource = Arc<dyn Fn() -> SessionTokenProvider + Send + Sync
 /// The stack is cut to the first [`warrenguard_wire::MAX_SESSION_TOKENS`]: the
 /// default admission sends the whole stack in one setup request, and an exit
 /// refuses to decode a setup request that carries more.
+#[must_use]
 pub fn make_session_token_provider(
     take_stack: Arc<dyn Fn() -> Vec<[u8; SESSION_TOKEN_LEN]> + Send + Sync>,
 ) -> SessionTokenProvider {

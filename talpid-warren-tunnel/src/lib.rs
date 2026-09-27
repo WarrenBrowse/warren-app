@@ -268,8 +268,7 @@ pub type PortEntitlementProvider = warren_standing::entitlements::SlotSource;
 
 mod adapter;
 /// Per-app exits: route sessions next to the main one, and the router
-/// between the TUN device and the sessions.
-/// Per-app exits, shared with the Android engine (`warren-jni`).
+/// between the TUN device and the sessions, shared with the Android engine.
 pub use warren_app_routes as app_routes;
 use warren_app_routes::multi_hop_bind_addr;
 mod rate_limiter;

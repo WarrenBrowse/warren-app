@@ -130,6 +130,9 @@ pub(crate) enum Unavailable {
     LimitReached,
     NoRelay,
     WaitingForRoute,
+    /// The platform cannot name a flow's app (no owner lookup), so no route
+    /// could carry one: none is dialed.
+    Unsupported,
 }
 
 impl Unavailable {
@@ -140,6 +143,7 @@ impl Unavailable {
             Self::LimitReached => "limit_reached",
             Self::NoRelay => "no_relay",
             Self::WaitingForRoute => "waiting_for_route",
+            Self::Unsupported => "unsupported",
         }
     }
 }
@@ -198,6 +202,15 @@ fn by_choice(exits: &[AppExitSpec]) -> BTreeMap<ExitChoice, Vec<String>> {
         }
     }
     by_choice
+}
+
+/// Every exit in force blocked for `reason`, with no route session.
+pub(crate) fn plan_blocked(exits: &[AppExitSpec], reason: Unavailable) -> Planned {
+    let mut planned = Planned::default();
+    for (choice, apps) in by_choice(exits) {
+        planned.block(choice, apps, reason);
+    }
+    planned
 }
 
 /// Resolves every exit in force. `previous` holds the circuits of the last
