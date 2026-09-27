@@ -268,9 +268,6 @@ msgstr "重新連線"
 msgid "Remove"
 msgstr "移除"
 
-msgid "Remove from list"
-msgstr "從清單中移除"
-
 msgid "Required"
 msgstr "必填"
 
@@ -345,17 +342,6 @@ msgstr "%(wireguard)s 連接埠設定"
 msgctxt "accessibility"
 msgid "Add %(location)s to %(listName)s"
 msgstr "將 %(location)s 新增至 %(listName)s"
-
-#. Accessibility label for button to add a location to a custom list.
-#. The placeholder is replaced with the name of the location.
-msgctxt "accessibility"
-msgid "Add %(locationName)s to custom list"
-msgstr "將 %(locationName)s 新增至自訂清單"
-
-#. This is an accessibility label for a button that opens a dialog to create a new custom list.
-msgctxt "accessibility"
-msgid "Add a new custom list"
-msgstr "新增自訂清單"
 
 #. Accessibility description for button clearing the ownership filter.
 msgctxt "accessibility"
@@ -1338,13 +1324,6 @@ msgstr "入境"
 msgctxt "connection-info"
 msgid "Out"
 msgstr "出境"
-
-#. Label for disabled menu option when a location has already been added to a custom list.
-#. Available placeholders:
-#. %(customList)s - The name of the custom list the location has been added to.
-msgctxt "custom-list-feature"
-msgid "%(customList)s (Added)"
-msgstr "%(customList)s (已新增)"
 
 #. This is a label shown above a list of options.
 #. Available placeholder:
@@ -2524,12 +2503,6 @@ msgctxt "select-location-view"
 msgid "All locations"
 msgstr "所有位置"
 
-#. Message shown in the custom list section when the user has at least one custom list.
-#. Instructs the user how to add locations to the custom list.
-msgctxt "select-location-view"
-msgid "Click “+“ on a location to add it to a list"
-msgstr "按一下位置旁的「+」將其新增至清單"
-
 msgctxt "select-location-view"
 msgid "Custom lists"
 msgstr "自訂清單"
@@ -2537,11 +2510,6 @@ msgstr "自訂清單"
 msgctxt "select-location-view"
 msgid "Disable recents"
 msgstr "停用最近使用"
-
-#. Label for custom lists that don't have any locations added to them yet.
-msgctxt "select-location-view"
-msgid "Empty"
-msgstr "空"
 
 msgctxt "select-location-view"
 msgid "Enable recents"
@@ -2596,8 +2564,9 @@ msgid "The entry server for %(multihop)s is currently overridden by %(daita)s. T
 msgstr "%(multihop)s 的入口伺服器目前已由 %(daita)s 覆寫。若要選擇入口伺服器，請先在設定中啟用「%(directOnly)s」或停用「%(daita)s」。"
 
 msgctxt "select-location-view"
-msgid "New custom list"
-msgstr "新自訂清單"
+msgid "%(count)d location"
+msgid_plural "%(count)d locations"
+msgstr[0] "%(count)d 個位置"
 
 msgctxt "settings-import"
 msgid "Clear all overrides"
@@ -5966,6 +5935,10 @@ msgstr "社群論壇"
 msgctxt "accessibility"
 msgid "How to contest a warning"
 msgstr "如何對警告提出申訴"
+
+msgctxt "accessibility"
+msgid "Remove %(location)s from %(listName)s"
+msgstr "從 %(listName)s 中移除 %(location)s"
 
 msgctxt "account-view"
 msgid "Paused while access is revoked: nothing is charged."

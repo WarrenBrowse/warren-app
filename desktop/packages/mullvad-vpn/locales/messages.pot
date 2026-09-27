@@ -237,9 +237,6 @@ msgstr ""
 msgid "Reconnect"
 msgstr ""
 
-msgid "Remove from list"
-msgstr ""
-
 msgid "Required"
 msgstr ""
 
@@ -306,17 +303,6 @@ msgstr ""
 #. %(listName)s - The name of the custom list the location will be added to.
 msgctxt "accessibility"
 msgid "Add %(location)s to %(listName)s"
-msgstr ""
-
-#. Accessibility label for button to add a location to a custom list.
-#. The placeholder is replaced with the name of the location.
-msgctxt "accessibility"
-msgid "Add %(locationName)s to custom list"
-msgstr ""
-
-#. This is an accessibility label for a button that opens a dialog to create a new custom list.
-msgctxt "accessibility"
-msgid "Add a new custom list"
 msgstr ""
 
 #. Accessibility description for button clearing the ownership filter.
@@ -450,8 +436,6 @@ msgctxt "accessibility"
 msgid "Open menu for %(listName)s"
 msgstr ""
 
-#. Accessibility label for button to open a location menu.
-#. The placeholder is replaced with the name of the location.
 #. Accessibility label for button to edit a geographical location.
 #. The placeholder is replaced with the name of the geographical location.
 msgctxt "accessibility"
@@ -478,6 +462,13 @@ msgstr ""
 #. The second placeholder is replaced with the name of the custom list.
 msgctxt "accessibility"
 msgid "Remove %(location)s from %(customList)s"
+msgstr ""
+
+#. Available placeholders:
+#. %(location)s - The name of the location being removed from the list.
+#. %(listName)s - The name of the custom list.
+msgctxt "accessibility"
+msgid "Remove %(location)s from %(listName)s"
 msgstr ""
 
 msgctxt "accessibility"
@@ -1357,13 +1348,6 @@ msgstr ""
 
 msgctxt "connection-info"
 msgid "Out"
-msgstr ""
-
-#. Label for disabled menu option when a location has already been added to a custom list.
-#. Available placeholders:
-#. %(customList)s - The name of the custom list the location has been added to.
-msgctxt "custom-list-feature"
-msgid "%(customList)s (Added)"
 msgstr ""
 
 #. This is a label shown above a list of options.
@@ -3367,14 +3351,17 @@ msgctxt "select-location-nav"
 msgid "Select location"
 msgstr ""
 
+#. How many locations a custom list holds, under its name.
+#. Available placeholders:
+#. %(count)d - the number of locations in the list
+msgctxt "select-location-view"
+msgid "%(count)d location"
+msgid_plural "%(count)d locations"
+msgstr[0] ""
+msgstr[1] ""
+
 msgctxt "select-location-view"
 msgid "All locations"
-msgstr ""
-
-#. Message shown in the custom list section when the user has at least one custom list.
-#. Instructs the user how to add locations to the custom list.
-msgctxt "select-location-view"
-msgid "Click “+“ on a location to add it to a list"
 msgstr ""
 
 msgctxt "select-location-view"
@@ -3383,11 +3370,6 @@ msgstr ""
 
 msgctxt "select-location-view"
 msgid "Disable recents"
-msgstr ""
-
-#. Label for custom lists that don't have any locations added to them yet.
-msgctxt "select-location-view"
-msgid "Empty"
 msgstr ""
 
 msgctxt "select-location-view"
@@ -3404,11 +3386,6 @@ msgstr ""
 
 msgctxt "select-location-view"
 msgid "Filtered:"
-msgstr ""
-
-#. Menu option that opens a dialog to create a new custom list of locations.
-msgctxt "select-location-view"
-msgid "New custom list"
 msgstr ""
 
 #. Label for indicator that shows that obfuscation is being used as a filter.

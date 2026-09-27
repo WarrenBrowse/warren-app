@@ -298,9 +298,6 @@ msgstr "إعادة الاتصال"
 msgid "Remove"
 msgstr "إزالة"
 
-msgid "Remove from list"
-msgstr "إزالة من القائمة"
-
 msgid "Required"
 msgstr "مطلوب"
 
@@ -375,17 +372,6 @@ msgstr "إعدادات منفذ %(wireguard)s"
 msgctxt "accessibility"
 msgid "Add %(location)s to %(listName)s"
 msgstr "إضافة %(location)s إلى %(listName)s"
-
-#. Accessibility label for button to add a location to a custom list.
-#. The placeholder is replaced with the name of the location.
-msgctxt "accessibility"
-msgid "Add %(locationName)s to custom list"
-msgstr "إضافة %(locationName)s إلى قائمة مخصصة"
-
-#. This is an accessibility label for a button that opens a dialog to create a new custom list.
-msgctxt "accessibility"
-msgid "Add a new custom list"
-msgstr "إضافة قائمة مخصصة جديدة"
 
 #. Accessibility description for button clearing the ownership filter.
 msgctxt "accessibility"
@@ -1378,13 +1364,6 @@ msgstr "داخل"
 msgctxt "connection-info"
 msgid "Out"
 msgstr "خارج"
-
-#. Label for disabled menu option when a location has already been added to a custom list.
-#. Available placeholders:
-#. %(customList)s - The name of the custom list the location has been added to.
-msgctxt "custom-list-feature"
-msgid "%(customList)s (Added)"
-msgstr "%(customList)s (تمت إضافته)"
 
 #. This is a label shown above a list of options.
 #. Available placeholder:
@@ -2564,12 +2543,6 @@ msgctxt "select-location-view"
 msgid "All locations"
 msgstr "جميع المواقع"
 
-#. Message shown in the custom list section when the user has at least one custom list.
-#. Instructs the user how to add locations to the custom list.
-msgctxt "select-location-view"
-msgid "Click “+“ on a location to add it to a list"
-msgstr "انقر فوق \"+\" في الموقع لإضافته إلى قائمة"
-
 msgctxt "select-location-view"
 msgid "Custom lists"
 msgstr "قوائم مُخصَّصة"
@@ -2577,11 +2550,6 @@ msgstr "قوائم مُخصَّصة"
 msgctxt "select-location-view"
 msgid "Disable recents"
 msgstr "إيقاف المواقع الحديثة"
-
-#. Label for custom lists that don't have any locations added to them yet.
-msgctxt "select-location-view"
-msgid "Empty"
-msgstr "فارغ"
 
 msgctxt "select-location-view"
 msgid "Enable recents"
@@ -2636,8 +2604,14 @@ msgid "The entry server for %(multihop)s is currently overridden by %(daita)s. T
 msgstr "خادم الدخول لـ %(multihop)s تم تجاوزه حاليًا من قِبل ميزة %(daita)s. لاختيار خادم دخول، يُرجى أولًا تفعيل \"%(directOnly)s\" أو إيقاف \"ميزة %(daita)s\" في الإعدادات."
 
 msgctxt "select-location-view"
-msgid "New custom list"
-msgstr "قائمة مخصصة جديدة"
+msgid "%(count)d location"
+msgid_plural "%(count)d locations"
+msgstr[0] "%(count)d موقع"
+msgstr[1] "%(count)d موقع"
+msgstr[2] "%(count)d موقعان"
+msgstr[3] "%(count)d مواقع"
+msgstr[4] "%(count)d موقعًا"
+msgstr[5] "%(count)d موقع"
 
 msgctxt "settings-import"
 msgid "Clear all overrides"
@@ -6051,6 +6025,10 @@ msgstr "منتدى المجتمع"
 msgctxt "accessibility"
 msgid "How to contest a warning"
 msgstr "كيفية الاعتراض على تحذير"
+
+msgctxt "accessibility"
+msgid "Remove %(location)s from %(listName)s"
+msgstr "إزالة %(location)s من %(listName)s"
 
 msgctxt "account-view"
 msgid "Paused while access is revoked: nothing is charged."

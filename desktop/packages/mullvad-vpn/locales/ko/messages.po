@@ -268,9 +268,6 @@ msgstr "다시 연결"
 msgid "Remove"
 msgstr "제거"
 
-msgid "Remove from list"
-msgstr "목록에서 제거"
-
 msgid "Required"
 msgstr "필수"
 
@@ -345,17 +342,6 @@ msgstr "%(wireguard)s 포트 설정"
 msgctxt "accessibility"
 msgid "Add %(location)s to %(listName)s"
 msgstr "%(location)s 위치를 %(listName)s에 추가"
-
-#. Accessibility label for button to add a location to a custom list.
-#. The placeholder is replaced with the name of the location.
-msgctxt "accessibility"
-msgid "Add %(locationName)s to custom list"
-msgstr "%(locationName)s 위치를 사용자 지정 목록에 추가"
-
-#. This is an accessibility label for a button that opens a dialog to create a new custom list.
-msgctxt "accessibility"
-msgid "Add a new custom list"
-msgstr "새 사용자 지정 목록 추가"
 
 #. Accessibility description for button clearing the ownership filter.
 msgctxt "accessibility"
@@ -1338,13 +1324,6 @@ msgstr "인"
 msgctxt "connection-info"
 msgid "Out"
 msgstr "아웃"
-
-#. Label for disabled menu option when a location has already been added to a custom list.
-#. Available placeholders:
-#. %(customList)s - The name of the custom list the location has been added to.
-msgctxt "custom-list-feature"
-msgid "%(customList)s (Added)"
-msgstr "%(customList)s(추가됨)"
 
 #. This is a label shown above a list of options.
 #. Available placeholder:
@@ -2524,12 +2503,6 @@ msgctxt "select-location-view"
 msgid "All locations"
 msgstr "모든 위치"
 
-#. Message shown in the custom list section when the user has at least one custom list.
-#. Instructs the user how to add locations to the custom list.
-msgctxt "select-location-view"
-msgid "Click “+“ on a location to add it to a list"
-msgstr "위치에 있는 \"+\"를 클릭하면 목록에 추가할 수 있습니다"
-
 msgctxt "select-location-view"
 msgid "Custom lists"
 msgstr "사용자 지정 목록"
@@ -2537,11 +2510,6 @@ msgstr "사용자 지정 목록"
 msgctxt "select-location-view"
 msgid "Disable recents"
 msgstr "최근 항목 비활성화"
-
-#. Label for custom lists that don't have any locations added to them yet.
-msgctxt "select-location-view"
-msgid "Empty"
-msgstr "비어 있음"
 
 msgctxt "select-location-view"
 msgid "Enable recents"
@@ -2596,8 +2564,9 @@ msgid "The entry server for %(multihop)s is currently overridden by %(daita)s. T
 msgstr "%(multihop)s 진입 서버가 현재 %(daita)s에 의해 재정의되었습니다. 진입 서버를 선택하려면 먼저 설정에서 \"%(directOnly)s\"을 활성화하거나 \"%(daita)s\"를 비활성화하세요."
 
 msgctxt "select-location-view"
-msgid "New custom list"
-msgstr "새 사용자 지정 목록"
+msgid "%(count)d location"
+msgid_plural "%(count)d locations"
+msgstr[0] "위치 %(count)d개"
 
 msgctxt "settings-import"
 msgid "Clear all overrides"
@@ -5966,6 +5935,10 @@ msgstr "커뮤니티 포럼"
 msgctxt "accessibility"
 msgid "How to contest a warning"
 msgstr "경고에 이의를 제기하는 방법"
+
+msgctxt "accessibility"
+msgid "Remove %(location)s from %(listName)s"
+msgstr "%(listName)s에서 %(location)s 제거"
 
 msgctxt "account-view"
 msgid "Paused while access is revoked: nothing is charged."

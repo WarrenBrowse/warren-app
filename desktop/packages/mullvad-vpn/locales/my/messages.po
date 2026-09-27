@@ -268,9 +268,6 @@ msgstr "ပြန်ချိတ်ဆက်ရန်"
 msgid "Remove"
 msgstr "ဖယ်ရှားရန်"
 
-msgid "Remove from list"
-msgstr "စာရင်းမှ ဖယ်ရှားရန်"
-
 msgid "Required"
 msgstr "ဖြည့်ရန် လိုအပ်သည်"
 
@@ -345,17 +342,6 @@ msgstr "%(wireguard)s ပေါ့တ် ဆက်တင်များ"
 msgctxt "accessibility"
 msgid "Add %(location)s to %(listName)s"
 msgstr "%(location)s ကို %(listName)s ထဲသို့ ထည့်ရန်"
-
-#. Accessibility label for button to add a location to a custom list.
-#. The placeholder is replaced with the name of the location.
-msgctxt "accessibility"
-msgid "Add %(locationName)s to custom list"
-msgstr "%(locationName)s ကို စိတ်ကြိုက်စာရင်းထဲသို့ ထည့်ရန်"
-
-#. This is an accessibility label for a button that opens a dialog to create a new custom list.
-msgctxt "accessibility"
-msgid "Add a new custom list"
-msgstr "စိတ်ကြိုက်စာရင်းအသစ်တစ်ခု ထည့်ရန်"
 
 #. Accessibility description for button clearing the ownership filter.
 msgctxt "accessibility"
@@ -1338,13 +1324,6 @@ msgstr "အဝင်"
 msgctxt "connection-info"
 msgid "Out"
 msgstr "အထွက်"
-
-#. Label for disabled menu option when a location has already been added to a custom list.
-#. Available placeholders:
-#. %(customList)s - The name of the custom list the location has been added to.
-msgctxt "custom-list-feature"
-msgid "%(customList)s (Added)"
-msgstr "%(customList)s (ထည့်ပြီး)"
 
 #. This is a label shown above a list of options.
 #. Available placeholder:
@@ -2524,12 +2503,6 @@ msgctxt "select-location-view"
 msgid "All locations"
 msgstr "တည်နေရာအာလုံး"
 
-#. Message shown in the custom list section when the user has at least one custom list.
-#. Instructs the user how to add locations to the custom list.
-msgctxt "select-location-view"
-msgid "Click “+“ on a location to add it to a list"
-msgstr "တည်နေရာတစ်ခုကို စာရင်းတွင် ထည့်ရန် ၎င်းအပေါ်တွင်ရှိသော “+“ ကို နှိပ်ပါ"
-
 msgctxt "select-location-view"
 msgid "Custom lists"
 msgstr "စိတ်ကြိုက်စာရင်းများ"
@@ -2537,11 +2510,6 @@ msgstr "စိတ်ကြိုက်စာရင်းများ"
 msgctxt "select-location-view"
 msgid "Disable recents"
 msgstr "လတ်တလောအရာများကို ပိတ်ပါ"
-
-#. Label for custom lists that don't have any locations added to them yet.
-msgctxt "select-location-view"
-msgid "Empty"
-msgstr "အလွတ်"
 
 msgctxt "select-location-view"
 msgid "Enable recents"
@@ -2596,8 +2564,9 @@ msgid "The entry server for %(multihop)s is currently overridden by %(daita)s. T
 msgstr "%(multihop)s အတွက် အဝင်ဆာဗာအား လက်ရှိအချိန်၌ %(daita)s ဖြင့် ထပ်မံထည့်သွင်း ရေးမှတ်ထားသည်။ အဝင်ဆာဗာကို ရွေးချယ်ရန်အတွက် “%(directOnly)s” ကို ဦးစွာ ဖွင့်ပါ သို့မဟုတ် ဆက်တင်များထဲရှိ \"%(daita)s\" ကို ပိတ်ပါ။"
 
 msgctxt "select-location-view"
-msgid "New custom list"
-msgstr "စိတ်ကြိုက်စာရင်းအသစ်"
+msgid "%(count)d location"
+msgid_plural "%(count)d locations"
+msgstr[0] "တည်နေရာ %(count)d ခု"
 
 msgctxt "settings-import"
 msgid "Clear all overrides"
@@ -5969,6 +5938,10 @@ msgstr "အသိုက်အဝန်း ဖိုရမ်"
 msgctxt "accessibility"
 msgid "How to contest a warning"
 msgstr "သတိပေးအမှတ်ကို အယူခံဝင်နည်း"
+
+msgctxt "accessibility"
+msgid "Remove %(location)s from %(listName)s"
+msgstr "%(listName)s မှ %(location)s ကို ဖယ်ရှားရန်"
 
 msgctxt "account-view"
 msgid "Paused while access is revoked: nothing is charged."

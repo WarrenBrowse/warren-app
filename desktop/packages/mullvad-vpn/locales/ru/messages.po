@@ -286,9 +286,6 @@ msgstr "Переподключить"
 msgid "Remove"
 msgstr "Удалить"
 
-msgid "Remove from list"
-msgstr "Удалить из списка"
-
 msgid "Required"
 msgstr "Обязательно"
 
@@ -363,17 +360,6 @@ msgstr "Настройки порта %(wireguard)s"
 msgctxt "accessibility"
 msgid "Add %(location)s to %(listName)s"
 msgstr "Добавить местоположение %(location)s в список %(listName)s"
-
-#. Accessibility label for button to add a location to a custom list.
-#. The placeholder is replaced with the name of the location.
-msgctxt "accessibility"
-msgid "Add %(locationName)s to custom list"
-msgstr "Добавить местоположение %(locationName)s в свой список"
-
-#. This is an accessibility label for a button that opens a dialog to create a new custom list.
-msgctxt "accessibility"
-msgid "Add a new custom list"
-msgstr "Добавить свой новый список"
 
 #. Accessibility description for button clearing the ownership filter.
 msgctxt "accessibility"
@@ -1362,13 +1348,6 @@ msgstr "Вход"
 msgctxt "connection-info"
 msgid "Out"
 msgstr "Выход"
-
-#. Label for disabled menu option when a location has already been added to a custom list.
-#. Available placeholders:
-#. %(customList)s - The name of the custom list the location has been added to.
-msgctxt "custom-list-feature"
-msgid "%(customList)s (Added)"
-msgstr "%(customList)s (добавлено)"
 
 #. This is a label shown above a list of options.
 #. Available placeholder:
@@ -2548,12 +2527,6 @@ msgctxt "select-location-view"
 msgid "All locations"
 msgstr "Все местоположения"
 
-#. Message shown in the custom list section when the user has at least one custom list.
-#. Instructs the user how to add locations to the custom list.
-msgctxt "select-location-view"
-msgid "Click “+“ on a location to add it to a list"
-msgstr "Нажмите «+» рядом с местоположением, чтобы добавить его в список"
-
 msgctxt "select-location-view"
 msgid "Custom lists"
 msgstr "Свои списки"
@@ -2561,11 +2534,6 @@ msgstr "Свои списки"
 msgctxt "select-location-view"
 msgid "Disable recents"
 msgstr "Отключить недавние"
-
-#. Label for custom lists that don't have any locations added to them yet.
-msgctxt "select-location-view"
-msgid "Empty"
-msgstr "Пусто"
 
 msgctxt "select-location-view"
 msgid "Enable recents"
@@ -2620,8 +2588,12 @@ msgid "The entry server for %(multihop)s is currently overridden by %(daita)s. T
 msgstr "Сервер входа для функции «%(multihop)s» в настоящее время переопределен функцией %(daita)s. Чтобы выбрать сервер входа вручную, сначала включите пункт «%(directOnly)s» или отключите %(daita)s в настройках."
 
 msgctxt "select-location-view"
-msgid "New custom list"
-msgstr "Новый свой список"
+msgid "%(count)d location"
+msgid_plural "%(count)d locations"
+msgstr[0] "%(count)d место"
+msgstr[1] "%(count)d места"
+msgstr[2] "%(count)d мест"
+msgstr[3] "%(count)d места"
 
 msgctxt "settings-import"
 msgid "Clear all overrides"
@@ -6030,6 +6002,10 @@ msgstr "Форум сообщества"
 msgctxt "accessibility"
 msgid "How to contest a warning"
 msgstr "Как оспорить предупреждение"
+
+msgctxt "accessibility"
+msgid "Remove %(location)s from %(listName)s"
+msgstr "Удалить %(location)s из списка %(listName)s"
 
 msgctxt "account-view"
 msgid "Paused while access is revoked: nothing is charged."

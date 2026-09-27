@@ -274,9 +274,6 @@ msgstr "Återanslut"
 msgid "Remove"
 msgstr "Ta bort"
 
-msgid "Remove from list"
-msgstr "Ta bort från listan"
-
 msgid "Required"
 msgstr "Obligatoriskt"
 
@@ -351,17 +348,6 @@ msgstr "%(wireguard)s-portinställningar"
 msgctxt "accessibility"
 msgid "Add %(location)s to %(listName)s"
 msgstr "Lägg till %(location)s i %(listName)s"
-
-#. Accessibility label for button to add a location to a custom list.
-#. The placeholder is replaced with the name of the location.
-msgctxt "accessibility"
-msgid "Add %(locationName)s to custom list"
-msgstr "Lägg till %(locationName)s i anpassad lista"
-
-#. This is an accessibility label for a button that opens a dialog to create a new custom list.
-msgctxt "accessibility"
-msgid "Add a new custom list"
-msgstr "Lägg till en ny anpassad lista"
 
 #. Accessibility description for button clearing the ownership filter.
 msgctxt "accessibility"
@@ -1346,13 +1332,6 @@ msgstr "In"
 msgctxt "connection-info"
 msgid "Out"
 msgstr "Ut"
-
-#. Label for disabled menu option when a location has already been added to a custom list.
-#. Available placeholders:
-#. %(customList)s - The name of the custom list the location has been added to.
-msgctxt "custom-list-feature"
-msgid "%(customList)s (Added)"
-msgstr "%(customList)s (tillagd)"
 
 #. This is a label shown above a list of options.
 #. Available placeholder:
@@ -2532,12 +2511,6 @@ msgctxt "select-location-view"
 msgid "All locations"
 msgstr "Alla platser"
 
-#. Message shown in the custom list section when the user has at least one custom list.
-#. Instructs the user how to add locations to the custom list.
-msgctxt "select-location-view"
-msgid "Click “+“ on a location to add it to a list"
-msgstr "Klicka på \"+\" på en plats för att lägga till den i en lista"
-
 msgctxt "select-location-view"
 msgid "Custom lists"
 msgstr "Anpassade listor"
@@ -2545,11 +2518,6 @@ msgstr "Anpassade listor"
 msgctxt "select-location-view"
 msgid "Disable recents"
 msgstr "Inaktivera senaste"
-
-#. Label for custom lists that don't have any locations added to them yet.
-msgctxt "select-location-view"
-msgid "Empty"
-msgstr "Tom"
 
 msgctxt "select-location-view"
 msgid "Enable recents"
@@ -2604,8 +2572,10 @@ msgid "The entry server for %(multihop)s is currently overridden by %(daita)s. T
 msgstr "Startservern för %(multihop)s åsidosätts för tillfället av %(daita)s. Om du vill välja en startserver ska du först aktivera \"%(directOnly)s\" eller inaktivera \"%(daita)s\" i inställningarna."
 
 msgctxt "select-location-view"
-msgid "New custom list"
-msgstr "Ny anpassad lista"
+msgid "%(count)d location"
+msgid_plural "%(count)d locations"
+msgstr[0] "%(count)d plats"
+msgstr[1] "%(count)d platser"
 
 msgctxt "settings-import"
 msgid "Clear all overrides"
@@ -5996,6 +5966,10 @@ msgstr "Gemenskapsforum"
 msgctxt "accessibility"
 msgid "How to contest a warning"
 msgstr "Så här bestrider du en varning"
+
+msgctxt "accessibility"
+msgid "Remove %(location)s from %(listName)s"
+msgstr "Ta bort %(location)s från %(listName)s"
 
 msgctxt "account-view"
 msgid "Paused while access is revoked: nothing is charged."

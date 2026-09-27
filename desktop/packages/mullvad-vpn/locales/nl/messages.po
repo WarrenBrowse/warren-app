@@ -274,9 +274,6 @@ msgstr "Opnieuw verbinden"
 msgid "Remove"
 msgstr "Verwijderen"
 
-msgid "Remove from list"
-msgstr "Verwijderen uit lijst"
-
 msgid "Required"
 msgstr "Verplicht"
 
@@ -351,17 +348,6 @@ msgstr "Instellingen %(wireguard)s-poort"
 msgctxt "accessibility"
 msgid "Add %(location)s to %(listName)s"
 msgstr "%(location)s toevoegen aan %(listName)s"
-
-#. Accessibility label for button to add a location to a custom list.
-#. The placeholder is replaced with the name of the location.
-msgctxt "accessibility"
-msgid "Add %(locationName)s to custom list"
-msgstr "%(locationName)s toevoegen aan aangepaste lijst"
-
-#. This is an accessibility label for a button that opens a dialog to create a new custom list.
-msgctxt "accessibility"
-msgid "Add a new custom list"
-msgstr "Nieuwe aangepaste lijst toevoegen"
 
 #. Accessibility description for button clearing the ownership filter.
 msgctxt "accessibility"
@@ -1346,13 +1332,6 @@ msgstr "In"
 msgctxt "connection-info"
 msgid "Out"
 msgstr "Uit"
-
-#. Label for disabled menu option when a location has already been added to a custom list.
-#. Available placeholders:
-#. %(customList)s - The name of the custom list the location has been added to.
-msgctxt "custom-list-feature"
-msgid "%(customList)s (Added)"
-msgstr "%(customList)s (Toegevoegd)"
 
 #. This is a label shown above a list of options.
 #. Available placeholder:
@@ -2532,12 +2511,6 @@ msgctxt "select-location-view"
 msgid "All locations"
 msgstr "Alle locaties"
 
-#. Message shown in the custom list section when the user has at least one custom list.
-#. Instructs the user how to add locations to the custom list.
-msgctxt "select-location-view"
-msgid "Click “+“ on a location to add it to a list"
-msgstr "Klik op '+' bij een locatie om deze aan de lijst toe te voegen"
-
 msgctxt "select-location-view"
 msgid "Custom lists"
 msgstr "Aangepaste lijsten"
@@ -2545,11 +2518,6 @@ msgstr "Aangepaste lijsten"
 msgctxt "select-location-view"
 msgid "Disable recents"
 msgstr "Recente uitschakelen"
-
-#. Label for custom lists that don't have any locations added to them yet.
-msgctxt "select-location-view"
-msgid "Empty"
-msgstr "Leeg"
 
 msgctxt "select-location-view"
 msgid "Enable recents"
@@ -2604,8 +2572,10 @@ msgid "The entry server for %(multihop)s is currently overridden by %(daita)s. T
 msgstr "De ingangsserver voor %(multihop)s is momenteel overschreven door %(daita)s. Om een ingangsserver te selecteren, moet u eerst \"%(directOnly)s\" inschakelen of \"%(daita)s\" uitschakelen in de instellingen."
 
 msgctxt "select-location-view"
-msgid "New custom list"
-msgstr "Nieuwe aangepaste lijst"
+msgid "%(count)d location"
+msgid_plural "%(count)d locations"
+msgstr[0] "%(count)d locatie"
+msgstr[1] "%(count)d locaties"
 
 msgctxt "settings-import"
 msgid "Clear all overrides"
@@ -5996,6 +5966,10 @@ msgstr "Community-forum"
 msgctxt "accessibility"
 msgid "How to contest a warning"
 msgstr "Hoe je bezwaar maakt tegen een waarschuwing"
+
+msgctxt "accessibility"
+msgid "Remove %(location)s from %(listName)s"
+msgstr "%(location)s verwijderen uit %(listName)s"
 
 msgctxt "account-view"
 msgid "Paused while access is revoked: nothing is charged."

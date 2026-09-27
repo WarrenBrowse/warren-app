@@ -286,9 +286,6 @@ msgstr "Połącz ponownie"
 msgid "Remove"
 msgstr "Usuń"
 
-msgid "Remove from list"
-msgstr "Usuń z listy"
-
 msgid "Required"
 msgstr "Wymagane"
 
@@ -363,17 +360,6 @@ msgstr "Ustawienia portu %(wireguard)s"
 msgctxt "accessibility"
 msgid "Add %(location)s to %(listName)s"
 msgstr "Dodaj %(location)s do %(listName)s"
-
-#. Accessibility label for button to add a location to a custom list.
-#. The placeholder is replaced with the name of the location.
-msgctxt "accessibility"
-msgid "Add %(locationName)s to custom list"
-msgstr "Dodaj %(locationName)s do listy niestandardowej"
-
-#. This is an accessibility label for a button that opens a dialog to create a new custom list.
-msgctxt "accessibility"
-msgid "Add a new custom list"
-msgstr "Dodaj nową listę niestandardową"
 
 #. Accessibility description for button clearing the ownership filter.
 msgctxt "accessibility"
@@ -1362,13 +1348,6 @@ msgstr "Wejście"
 msgctxt "connection-info"
 msgid "Out"
 msgstr "Wyjście"
-
-#. Label for disabled menu option when a location has already been added to a custom list.
-#. Available placeholders:
-#. %(customList)s - The name of the custom list the location has been added to.
-msgctxt "custom-list-feature"
-msgid "%(customList)s (Added)"
-msgstr "%(customList)s (Dodano)"
 
 #. This is a label shown above a list of options.
 #. Available placeholder:
@@ -2548,12 +2527,6 @@ msgctxt "select-location-view"
 msgid "All locations"
 msgstr "Wszystkie lokalizacje"
 
-#. Message shown in the custom list section when the user has at least one custom list.
-#. Instructs the user how to add locations to the custom list.
-msgctxt "select-location-view"
-msgid "Click “+“ on a location to add it to a list"
-msgstr "Kliknij ikonę „+“ przy lokalizacji, aby dodać ją do listy"
-
 msgctxt "select-location-view"
 msgid "Custom lists"
 msgstr "Listy niestandardowe"
@@ -2561,11 +2534,6 @@ msgstr "Listy niestandardowe"
 msgctxt "select-location-view"
 msgid "Disable recents"
 msgstr "Wyłącz ostatnie"
-
-#. Label for custom lists that don't have any locations added to them yet.
-msgctxt "select-location-view"
-msgid "Empty"
-msgstr "Puste"
 
 msgctxt "select-location-view"
 msgid "Enable recents"
@@ -2620,8 +2588,12 @@ msgid "The entry server for %(multihop)s is currently overridden by %(daita)s. T
 msgstr "Serwer wejściowy dla %(multihop)s jest obecnie zastępowany przez %(daita)s. Aby wybrać serwer wejściowy, należy najpierw włączyć opcję „%(directOnly)s” lub wyłączyć opcję „%(daita)s” w ustawieniach."
 
 msgctxt "select-location-view"
-msgid "New custom list"
-msgstr "Nowa lista niestandardowa"
+msgid "%(count)d location"
+msgid_plural "%(count)d locations"
+msgstr[0] "%(count)d lokalizacja"
+msgstr[1] "%(count)d lokalizacje"
+msgstr[2] "%(count)d lokalizacji"
+msgstr[3] "%(count)d lokalizacji"
 
 msgctxt "settings-import"
 msgid "Clear all overrides"
@@ -6030,6 +6002,10 @@ msgstr "Forum społeczności"
 msgctxt "accessibility"
 msgid "How to contest a warning"
 msgstr "Jak zakwestionować ostrzeżenie"
+
+msgctxt "accessibility"
+msgid "Remove %(location)s from %(listName)s"
+msgstr "Usuń %(location)s z listy %(listName)s"
 
 msgctxt "account-view"
 msgid "Paused while access is revoked: nothing is charged."

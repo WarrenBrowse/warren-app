@@ -268,9 +268,6 @@ msgstr "再接続"
 msgid "Remove"
 msgstr "削除"
 
-msgid "Remove from list"
-msgstr "リストから削除"
-
 msgid "Required"
 msgstr "必須"
 
@@ -345,17 +342,6 @@ msgstr "%(wireguard)sポートの設定"
 msgctxt "accessibility"
 msgid "Add %(location)s to %(listName)s"
 msgstr "%(location)sを%(listName)sに追加する"
-
-#. Accessibility label for button to add a location to a custom list.
-#. The placeholder is replaced with the name of the location.
-msgctxt "accessibility"
-msgid "Add %(locationName)s to custom list"
-msgstr "%(locationName)sをカスタムリストに追加する"
-
-#. This is an accessibility label for a button that opens a dialog to create a new custom list.
-msgctxt "accessibility"
-msgid "Add a new custom list"
-msgstr "新しいカスタムリストを追加する"
 
 #. Accessibility description for button clearing the ownership filter.
 msgctxt "accessibility"
@@ -1338,13 +1324,6 @@ msgstr "内側"
 msgctxt "connection-info"
 msgid "Out"
 msgstr "外側"
-
-#. Label for disabled menu option when a location has already been added to a custom list.
-#. Available placeholders:
-#. %(customList)s - The name of the custom list the location has been added to.
-msgctxt "custom-list-feature"
-msgid "%(customList)s (Added)"
-msgstr "%(customList)s (追加済み)"
 
 #. This is a label shown above a list of options.
 #. Available placeholder:
@@ -2524,12 +2503,6 @@ msgctxt "select-location-view"
 msgid "All locations"
 msgstr "すべての場所"
 
-#. Message shown in the custom list section when the user has at least one custom list.
-#. Instructs the user how to add locations to the custom list.
-msgctxt "select-location-view"
-msgid "Click “+“ on a location to add it to a list"
-msgstr "場所の「+」をクリックして、リストに追加してください"
-
 msgctxt "select-location-view"
 msgid "Custom lists"
 msgstr "カスタムリスト"
@@ -2537,11 +2510,6 @@ msgstr "カスタムリスト"
 msgctxt "select-location-view"
 msgid "Disable recents"
 msgstr "最近の項目を無効化"
-
-#. Label for custom lists that don't have any locations added to them yet.
-msgctxt "select-location-view"
-msgid "Empty"
-msgstr "空"
 
 msgctxt "select-location-view"
 msgid "Enable recents"
@@ -2596,8 +2564,9 @@ msgid "The entry server for %(multihop)s is currently overridden by %(daita)s. T
 msgstr "%(multihop)sの入口サーバーは現在、%(daita)sによってオーバーライドされています。入口サーバーを選択するには、設定で [%(directOnly)s] を有効にするか、[%(daita)s] を無効にしてください。"
 
 msgctxt "select-location-view"
-msgid "New custom list"
-msgstr "新しいカスタムリスト"
+msgid "%(count)d location"
+msgid_plural "%(count)d locations"
+msgstr[0] "%(count)d か所"
 
 msgctxt "settings-import"
 msgid "Clear all overrides"
@@ -5966,6 +5935,10 @@ msgstr "コミュニティフォーラム"
 msgctxt "accessibility"
 msgid "How to contest a warning"
 msgstr "警告に異議を申し立てる方法"
+
+msgctxt "accessibility"
+msgid "Remove %(location)s from %(listName)s"
+msgstr "%(listName)s から %(location)s を削除"
 
 msgctxt "account-view"
 msgid "Paused while access is revoked: nothing is charged."
