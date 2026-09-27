@@ -26,6 +26,7 @@ use std::{
     net::SocketAddr,
     path::PathBuf,
     sync::atomic::{AtomicU64, Ordering},
+    time::{Duration, Instant},
 };
 
 use talpid_app_routing::{
@@ -56,6 +57,68 @@ pub(crate) fn packages_changed() {
     PACKAGE_GENERATION.fetch_add(1, Ordering::Relaxed);
 }
 
+/// How many owner lookups a resolver makes between two logs of their times.
+const LOG_LOOKUP_TIMES_EVERY: u64 = 500;
+
+/// How long the platform took to name the owners of new flows, in numbers
+/// only: the cost `docs/app-routing.md` section 2.1 records for Android, which
+/// the router pays on the packet path for every new flow.
+#[derive(Default)]
+pub(crate) struct LookupTimes {
+    /// Lookups by power of two of microseconds: slot `i` counts the ones that
+    /// took less than `2^i` µs and at least half of that, slot 0 the ones
+    /// under 1 µs.
+    slots: [u64; 32],
+    count: u64,
+    total: Duration,
+    longest: Duration,
+}
+
+impl LookupTimes {
+    pub(crate) fn record(&mut self, took: Duration) {
+        let micros = u64::try_from(took.as_micros()).unwrap_or(u64::MAX);
+        let slot = (u64::BITS - micros.leading_zeros()) as usize;
+        self.slots[slot.min(self.slots.len() - 1)] += 1;
+        self.count += 1;
+        self.total += took;
+        self.longest = self.longest.max(took);
+    }
+
+    pub(crate) fn count(&self) -> u64 {
+        self.count
+    }
+
+    /// A bound no shorter than the `quantile` of the recorded times: the top
+    /// of the power-of-two slot that holds it.
+    pub(crate) fn at_most(&self, quantile: f64) -> Duration {
+        let rank = (quantile * self.count as f64).ceil().max(1.0) as u64;
+        let mut seen = 0;
+        for (slot, count) in self.slots.iter().enumerate() {
+            seen += count;
+            if seen >= rank {
+                return Duration::from_micros(1u64 << slot)
+                    .min(self.longest.max(Duration::from_micros(1)));
+            }
+        }
+        self.longest
+    }
+
+    /// One line of numbers, for the log.
+    pub(crate) fn summary(&self) -> String {
+        let mean = self
+            .total
+            .checked_div(u32::try_from(self.count).unwrap_or(u32::MAX));
+        format!(
+            "{} owner lookups: mean {} us, p50 <= {} us, p99 <= {} us, longest {} us",
+            self.count,
+            mean.unwrap_or_default().as_micros(),
+            self.at_most(0.5).as_micros(),
+            self.at_most(0.99).as_micros(),
+            self.longest.as_micros()
+        )
+    }
+}
+
 /// The platform calls behind a lookup: the system boundary, faked in tests.
 pub(crate) trait OwnerLookup: Send + 'static {
     /// The uid owning the socket of this flow, as the platform answers it:
@@ -78,6 +141,7 @@ pub(crate) struct AndroidOwnerResolver<L> {
     /// The packages the policy names, which decide the package a shared uid
     /// is named after.
     watched: AppMatcher<()>,
+    times: LookupTimes,
 }
 
 impl<L: OwnerLookup> AndroidOwnerResolver<L> {
@@ -90,6 +154,7 @@ impl<L: OwnerLookup> AndroidOwnerResolver<L> {
                 talpid_app_routing::app::PathFlavor::Linux,
                 Vec::<(&str, ())>::new(),
             ),
+            times: LookupTimes::default(),
         }
     }
 
@@ -112,7 +177,12 @@ impl<L: OwnerLookup> OwnerResolver for AndroidOwnerResolver<L> {
             // the main session, as on desktop.
             Transport::IcmpEcho => return None,
         };
+        let started = Instant::now();
         let uid = self.lookup.owner_uid(protocol, flow.local, flow.remote);
+        self.times.record(started.elapsed());
+        if self.times.count().is_multiple_of(LOG_LOOKUP_TIMES_EVERY) {
+            log::debug!("App routing: {}", self.times.summary());
+        }
         u32::try_from(uid)
             .ok()
             .filter(|uid| uid % PER_USER_RANGE >= FIRST_APPLICATION_UID)
@@ -325,6 +395,41 @@ mod tests {
         assert_eq!(*platform.package_calls.lock().unwrap(), 2);
         assert_eq!(renamed, Some(PathBuf::from("org.new")));
         assert_ne!(before, after, "a decision for the old package is not kept");
+    }
+
+    #[test]
+    fn lookup_times_bound_their_quantiles_by_power_of_two_slots() {
+        let mut times = LookupTimes::default();
+        for micros in [100, 120, 130, 900, 5_000] {
+            times.record(Duration::from_micros(micros));
+        }
+
+        assert_eq!(times.count(), 5);
+        assert_eq!(
+            times.at_most(0.5),
+            Duration::from_micros(256),
+            "the median, 130 us"
+        );
+        assert_eq!(times.at_most(0.99), Duration::from_micros(5_000));
+        assert_eq!(
+            times.summary(),
+            "5 owner lookups: mean 1250 us, p50 <= 256 us, p99 <= 5000 us, longest 5000 us"
+        );
+    }
+
+    #[test]
+    fn every_owner_lookup_is_timed() {
+        let mut resolver = AndroidOwnerResolver::new(FakePlatform::default());
+
+        resolver.socket_owner(&flow(Transport::Tcp, 40_010));
+        resolver.socket_owner(&flow(Transport::Udp, 40_011));
+        resolver.socket_owner(&flow(Transport::IcmpEcho, 7));
+
+        assert_eq!(
+            resolver.times.count(),
+            2,
+            "an echo asks the platform nothing"
+        );
     }
 
     #[test]
