@@ -14,6 +14,14 @@ par l'application, gardez-le tel quel.
 
 ## [Unreleased]
 ### Ajouté
+- [Android] Ajouter Pays par app au routage des apps, comme sur ordinateur : chaque app choisie
+  sort sur Internet par une exit dans son propre pays ou sa propre ville, pendant que toutes les
+  autres apps gardent la connexion principale. Le pays se choisit depuis la pastille de la ligne de
+  l'app, et la ligne indique si sa connexion est établie et l'adresse sous laquelle l'app apparaît.
+  Changer un pays ne reconnecte pas le VPN. Il en tourne à la fois autant que le serveur en admet,
+  un pays au-delà attend qu'une route se libère, et une app dont le pays est injoignable est bloquée
+  plutôt qu'envoyée ailleurs. L'écran de connexion indique combien d'apps sont dans d'autres pays.
+  Nécessite Android 10 ou plus récent.
 - [iOS] Afficher les avertissements enregistrés sur votre compte quand un port redirigé est fermé
   après un signalement d'abus : une notification par avertissement, une bannière avec sa référence
   de dossier qui ouvre la page expliquant comment le contester, et la liste complète dans l'écran

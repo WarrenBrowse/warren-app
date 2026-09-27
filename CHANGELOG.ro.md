@@ -13,6 +13,14 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 
 ## [Unreleased]
 ### Adăugat
+- [Android] Adaugă „Țară per aplicație” în Rutare aplicații, ca pe desktop: fiecare aplicație aleasă
+  iese spre Internet printr-un exit din propria țară sau propriul oraș, în timp ce toate celelalte
+  aplicații păstrează conexiunea principală. Țara se alege din eticheta de pe rândul aplicației, iar
+  rândul arată dacă legătura ei e activă și adresa sub care apare aplicația. Schimbarea unei țări nu
+  reconectează VPN-ul. Rulează în același timp câte admite serverul, o țară peste acest număr
+  așteaptă să se elibereze o rută, iar o aplicație a cărei țară nu poate fi atinsă e blocată în loc
+  să fie trimisă pe altă cale. Ecranul de conectare arată câte aplicații sunt în alte țări. Necesită
+  Android 10 sau mai nou.
 - [iOS] Vezi avertismentele înregistrate pe contul tău când un port redirecționat e închis după o
   raportare de abuz: o notificare pentru fiecare avertisment, un banner cu referința dosarului care
   deschide pagina despre contestare, și lista completă în ecranul port forwarding cu adresa la care

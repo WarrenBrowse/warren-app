@@ -1,15 +1,14 @@
 # App routing: exclude, per-app country, VPN-only-for
 
-Status on `main` (2026-09-26), which carries the four lots integrated:
-per-app country runs in the datapath on desktop (sections 2.2 to 2.6, real
-exits measured from macOS and Windows); include-only runs on macOS, Linux and
-Windows (section 3, the Windows run in section 3.2); the desktop GUI covers all
-three tabs (section 7); section 3.3 is how the modes and the countries combine.
-On Android, exclude and include-only run (section 3.4); per-app country is the
-next Android step (section 3.5). Route sessions are admitted by the main
-session's anchor where the server offers it, with no token each and no
-artificial limit on the number of countries (section 2.2, warren-core doc 107);
-the live proof of the anchor path waits for the server side to be turned on.
+Status on `main` (2026-09-27): per-app country runs in the datapath on
+desktop (sections 2.2 to 2.6, real exits measured from macOS and Windows) and
+on Android (section 3.5, beta exits measured from an emulator, routes admitted
+by anchor); include-only runs on macOS, Linux, Windows and Android (section 3,
+the Windows run in section 3.2, Android in 3.4); the desktop GUI covers all
+three tabs (section 7) and the Android screen too (section 3.5); section 3.3 is
+how the modes and the countries combine. Route sessions are admitted by the
+main session's anchor where the server offers it, with no token each and no
+artificial limit on the number of countries (section 2.2, warren-core doc 107).
 This document is the contract the implementation lots follow. When the code and
 this file disagree, fix one of them in the same commit.
 
@@ -83,7 +82,7 @@ the local socket:
 | macOS | `sysctl net.inet.{tcp,udp}.pcblist_n` (`xinpcb_n`, `xsocket_n.so_last_pid`, `so_e_pid` when non-zero), then `proc_pidpath` | 0.8 ms TCP dump, 0.1 ms UDP, unprivileged (2026-09-25 probe); 0.42 ms for both tables of 366 sockets through `talpid-app-routing` in a release build |
 | Windows | `GetExtendedTcpTable(TCP_TABLE_OWNER_PID_ALL)`, `GetExtendedUdpTable(UDP_TABLE_OWNER_PID)`, then `QueryFullProcessImageNameW` | 0.19 ms for the four tables of 113 sockets (x64 debug build under emulation on Windows 11 ARM64, 2026-09-26) |
 | Linux | `NETLINK_SOCK_DIAG` exact lookup (inode; UDP takes the pair as a packet reaching the socket carries it, TCP the socket's own, measured on 6.8), inode to pid through an index of the `/proc/<pid>/fd` of the processes running a routed program, checked against that process's descriptors, then `/proc/<pid>/exe`. Those processes are followed through the proc connector (fork, exec and exit events) | per new flow, release build, Debian 13 VM with 433 processes and 1,500 to 3,000 TCP sockets (2026-09-26): 3 µs while no routed program runs; 0.5 to 0.7 ms (p99 1.1 ms) while a routed program holding 600 to 800 sockets runs, since its descriptors are read again for each new flow; 4.5 to 5.2 ms (p99 5.7 to 6.4 ms) when every process is searched, as before the search was narrowed and still for a TCP segment under way |
-| Android | `ConnectivityManager.getConnectionOwnerUid` (API 29+) | later lot |
+| Android | `ConnectivityManager.getConnectionOwnerUid` (API 29+, a Binder call per new flow through JNI), then `PackageManager.getPackagesForUid` once per uid | not measured separately; the flows of the emulator run of section 3.5 were attributed with no visible delay |
 
 Rules:
 - The structs of `pcblist_n` are XNU-private: declare them with the packed
@@ -625,8 +624,15 @@ cannot disagree about an app.
 - **Include-only and a country, Windows.** The swapped driver binds an included
   socket to the tunnel address, which is what the owner lookup matches; an app
   with a country is included (measured in section 3.2).
-- **Android.** No per-app country yet (section 3.5), so the split mode alone
-  decides.
+- **Android.** Exclusion is `addDisallowedApplication`, so an excluded app's
+  packets never reach the TUN, and `effectiveAppExits` (`lib/model`) drops its
+  country, as the daemon does. In include-only an app with a country in force
+  joins the allow list (`resolveAppRouting` takes the apps with a country), so
+  choosing a country is enough to put it in the VPN; its flows then reach the
+  TUN with the TUN address, which is what the owner lookup is asked about.
+  A change of the countries in force reaches the engine live and never
+  reconnects the main session; a change that alters the include-only allow
+  list re-establishes the TUN, as any list change does (section 3.4).
 - **Mode switches while route sessions run.** On Linux a change to or from
   include-only, and on Windows a mode change, while connecting or connected
   reconnects the tunnel: the route
@@ -681,27 +687,89 @@ builder calls).
   app outside the list uses the physical network's resolver, as an excluded
   app does (`split-tunneling.md`).
 
-### 3.5 Android per-app country: the next step
+### 3.5 Android per-app country
 
-The datapath is not implemented yet. The route sessions and
-the router are the desktop ones (sections 2.2 to 2.4) ported into
-`warren-jni`; what Android lacks is the flow owner. Every packet of a tunneled
-app already reaches the engine through the TUN, and
-`ConnectivityManager.getConnectionOwnerUid` (API 29+, callable by the active
-VPN app) answers the uid owning a TCP or UDP 5-tuple seen there, which
-`PackageManager.getPackagesForUid` names. The lookup is a Binder call, so it
-follows the desktop rules: once per new flow, never per packet, and an
-unresolved owner goes through the main connection.
+The route sessions, their controller, their admission (anchor, then tokens)
+and the router devices are the desktop code: they moved from
+`talpid-warren-tunnel/src/app_routes/` into the `warren-app-routes` crate,
+which the desktop tunnel re-exports as `app_routes` unchanged and `warren-jni`
+runs too, with the session token leads (`tokens::session_source`, one provider
+per session, each holding the serial it leads with) and the route admission
+source (`admission::DirectoryRouteAdmission`, the kept signed block). What is
+Android's own:
 
-The screen is in place: App routing shows the three tabs in the desktop's
-order, and "Country per app" follows section 7 (switch, search, "With a
-country" and "All apps" sections, a country chip opening a picker of the
-countries and cities with an active server in the relay catalogue, a status
-line per app from `WarrenAppRoutesStatusProvider`). Below Android 10 the tab
-stays visible with its switch disabled and says why. The connect screen
-carries the "N apps in other countries" badge, which opens that tab. Code:
+- **The flow owner** (`warren-jni/src/flow_owner.rs`). The router's "pid" is
+  the uid `getConnectionOwnerUid` answers for the 5-tuple seen on the TUN
+  (source `10.64.0.1` or `fd00::1`), asked through the Kotlin
+  `FlowOwnerResolver` (`android_app_routes.rs`, kept by `proguard-rules.pro`),
+  and its "program" is its package. The lookup is live, so there is no
+  snapshot. A uid below 10000 (the system's own, among them the DNS resolver
+  working for apps) has no owner and goes through the main session, as the
+  system DNS does on desktop (section 2.5). A uid carrying several packages
+  (a shared user id) is named after one of its packages with a country, the
+  first by name: its packets cannot be told apart, and routing them keeps a
+  routed app's packets off the main session. An install or an uninstall
+  (`ACTION_PACKAGE_ADDED` or `_REMOVED`, `notifyPackagesChanged`) makes every
+  uid be named again. Below Android 10 no lookup is registered and the tab
+  says the feature needs Android 10.
+- **The plan** (`warren-jni/src/app_routes_plan.rs`, `app_routes_session.rs`):
+  the rules of the daemon's `warren_app_routes::plan` and `statuses` (a
+  choice the main exit matches rides the main session, apps of one exit share
+  one route, a choice nothing serves blocks its apps, a valid circuit is kept,
+  a draining exit is planned away), with the exit picked inside a country the
+  way the Android main connection picks (`pick_exit`, then `circuit_select`
+  with the main connection's hops and entry country). A city matches the relay
+  list's name or its code. One task per tunnel follows the countries Kotlin
+  sets (`setAppRoutes`, live) and the route reports, and publishes the
+  statuses Kotlin reads on every status wake (`getAppRoutesStatus`).
+- **The datapath** (`AppRoutes` in `android_app_routes.rs`): `RoutedTun` over
+  the VpnService TUN under the main session's `RemapTun`, whose local address
+  is the router's main address, so the router's own address translation
+  replaces the remap for a routed flow. The plan's policy is installed before
+  the main pumps run; route sessions start once the main session is up and are
+  stopped and awaited with each attempt. `VpnService.protect` is process wide,
+  so a route's carrier needs no escape and no relay is named to a firewall.
+  The main session anchors whenever the token directory offers a signed KEM
+  key and the lookup is registered, a country set or not. The token manager
+  of the wallet trusts the pinned server keys for that signature, keeps the
+  last signed block in the app's files directory, and says when it has read
+  the directory in this process (a restored token bundle knows its epoch
+  before any directory read, which is what the daemon's test relies on).
+
+The screen follows section 7: App routing shows the three tabs in the
+desktop's order, and "Country per app" has its switch, a search, the "With a
+country" and "All apps" sections, a country chip per app opening a picker of
+the countries and cities with an active server in the relay catalogue (it
+never moves the main connection, and choosing turns the switch on), and a
+status line per app. The connect screen carries the "N apps in other
+countries" badge, red when a route cannot run for a reason other than the
+tunnel being down, which opens that tab. Code:
 `lib/feature/splittunneling/impl/.../countries/`,
-`lib/feature/home/impl/.../connectioninfo/AppCountriesSummary.kt`.
+`lib/feature/home/impl/.../connectioninfo/AppCountriesSummary.kt`; the
+settings live in `WarrenLocalSettingsRepository` (`app_exits`,
+`app_exits_enabled`).
+
+Validation, 2026-09-27, beta build of this branch on the `warren-test`
+emulator (API 35, arm64), subscribed wallet already in the app, Chrome and a
+second browser (FOSS Browser, from F-Droid) as the two apps, IP echo through
+`api.ipify.org`:
+
+| check | observed |
+|---|---|
+| two-hop main on NL (50.7.46.90), Chrome DE, the other browser FI | Chrome 167.233.127.54, the other 37.27.217.153; the tab showed each "Connected, IP" with that address; the connect screen "2 apps in other countries". First connect of the process: no kept block yet, so no anchor; the routes ran on tokens and waited 60 s for the first mint of the process |
+| country removed while connected | the browser appeared from 50.7.46.90 at once |
+| one-hop main on NL, second connect | main v7, `route anchor bound max_routes=32`, both routes up 0.2 s later with no token fallback; Chrome DE, the browser FI |
+| FI relay dropped by `iptables` inside the emulator | the browser loaded nothing (no fallback to NL), its row read "Connecting...", Chrome stayed on 167.233.127.54; 25 s after the rule was removed the route was back and the browser appeared from 37.27.217.153; the main session never reconnected |
+| Chrome moved from DE to FR while connected | the tab showed FR (135.136.60.142) at once; a URL by address (`1.1.1.1/cdn-cgi/trace`) answered `ip=135.136.60.142 loc=FR`; names did not resolve in Chrome until it was restarted (below) |
+| Arabic | the tab mirrored, the address of "Connected, IP" kept left to right |
+
+Known limit, shared with desktop: when an app changes route while connected,
+the router forgets the flows it knew and attributes each packet again, so the
+app's connections under way move to the new route, whose exit drops them as
+unknown. An app that retries opens new connections and recovers; Chrome kept
+waiting on connections it had open (its name resolution included) until it
+was restarted. The same happens on desktop; resetting those connections
+toward the app is left to a later change of the shared router.
 
 ## 4. Platform availability
 

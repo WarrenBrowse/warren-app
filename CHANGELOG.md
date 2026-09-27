@@ -23,6 +23,13 @@ Line wrap the file at 100 chars.                                              Th
 
 ## [Unreleased]
 ### Added
+- [Android] Add Country per app to App routing, as on desktop: each app you choose goes to the
+  Internet through an exit in its own country or city, while every other app keeps the main
+  connection. Choose a country from the chip on an app's row; the row shows whether its connection
+  is up and the address the app appears from. Countries change without reconnecting the VPN. As
+  many run at once as the server admits, a country past that waits for a free route, and an app
+  whose country cannot be reached is blocked rather than sent another way. The connect screen
+  shows how many apps are in other countries. Needs Android 10 or newer.
 - [iOS] Show the warnings recorded against your account when a forwarded port is closed after an
   abuse report: a notification for each warning, a banner with its case reference that opens the
   page on contesting it, and the full list in the port forwarding screen with the address to write
