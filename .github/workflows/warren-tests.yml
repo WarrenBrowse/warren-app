@@ -446,6 +446,18 @@ jobs:
       # private and shared sublayer keys differ only by the private flip).
       # Beta is the environment the released Windows builds carry.
       WARREN_PRODUCT_ENV: beta
+      # The crates that carry Windows code, plus the Warren scope that compiles
+      # on Windows. One list for clippy and both test steps: a different
+      # package set unifies features differently and rebuilds.
+      WINDOWS_CRATES: >-
+        -p mullvad-daemon -p mullvad-api -p mullvad-types
+        -p mullvad-management-interface -p mullvad-cli -p mullvad-paths
+        -p mullvad-setup -p mullvad-problem-report -p mullvad-update
+        -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p talpid-app-routing
+        -p talpid-types -p talpid-windows -p talpid-routing -p talpid-tunnel
+        -p talpid-platform-metadata
+        -p warren-forum -p warren-product-env -p warren-standing
+        --features mullvad-update/sign,mullvad-update/client
     defaults:
       run:
         shell: bash
@@ -500,29 +512,16 @@ jobs:
       - name: cargo clippy (Windows)
         timeout-minutes: 30
         run: |
+          # shellcheck disable=SC2086
           bash ci/codemagic/watchdog.sh cargo clippy --locked --no-deps --all-targets \
-            -p mullvad-daemon -p mullvad-api -p mullvad-types \
-            -p mullvad-management-interface -p mullvad-cli -p mullvad-paths \
-            -p mullvad-setup -p mullvad-problem-report -p mullvad-update \
-            -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p talpid-app-routing \
-            -p talpid-types -p talpid-windows -p talpid-routing -p talpid-tunnel \
-            -p talpid-platform-metadata \
-            -p warren-forum -p warren-product-env -p warren-standing \
-            --features mullvad-update/sign,mullvad-update/client \
-            -- -D warnings
+            $WINDOWS_CRATES -- -D warnings
 
       - name: cargo nextest (Windows)
         timeout-minutes: 40
         run: |
-          bash ci/codemagic/watchdog.sh cargo nextest run --locked --profile warren-ci --no-fail-fast \
-            -p mullvad-daemon -p mullvad-api -p mullvad-types \
-            -p mullvad-management-interface -p mullvad-cli -p mullvad-paths \
-            -p mullvad-setup -p mullvad-problem-report -p mullvad-update \
-            -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p talpid-app-routing \
-            -p talpid-types -p talpid-windows -p talpid-routing -p talpid-tunnel \
-            -p talpid-platform-metadata \
-            -p warren-forum -p warren-product-env -p warren-standing \
-            --features mullvad-update/sign,mullvad-update/client
+          # shellcheck disable=SC2086
+          bash ci/codemagic/watchdog.sh cargo nextest run --locked --profile warren-ci \
+            --no-fail-fast $WINDOWS_CRATES
 
       # The winfw tests stay #[ignore] for a local run: they need an elevated
       # process and change the machine's firewall. GitHub's Windows runners
@@ -539,8 +538,13 @@ jobs:
           }
           Write-Output "elevated: $([Security.Principal.WindowsIdentity]::GetCurrent().Name)"
 
+      # The same package set as above, so the test binaries are the ones
+      # already built: `-p talpid-core` alone unifies other features and
+      # recompiles it (2 minutes on the first run).
       - name: winfw against the real filtering engine (elevated)
         timeout-minutes: 15
         run: |
+          # shellcheck disable=SC2086
           bash ci/codemagic/watchdog.sh cargo nextest run --locked --profile warren-ci \
-            --no-fail-fast -p talpid-core --lib --run-ignored only -E 'test(/winfw_tests::/)'
+            --no-fail-fast $WINDOWS_CRATES --run-ignored only \
+            -E 'package(talpid-core) & test(/winfw_tests::/)'
