@@ -25,4 +25,8 @@ enum class FeatureIndicator {
     CUSTOM_DNS,
     SERVER_IP_OVERRIDE,
     CUSTOM_MTU,
+    // Some apps leave from a country of their own ("Country per app"), read
+    // from the app routing settings rather than the engine's feature list.
+    // Last, as the desktop places its AppCountriesIndicator after every badge.
+    APP_COUNTRIES,
 }

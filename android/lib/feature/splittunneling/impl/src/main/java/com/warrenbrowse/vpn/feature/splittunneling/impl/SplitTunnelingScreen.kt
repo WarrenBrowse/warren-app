@@ -153,7 +153,14 @@ fun SharedTransitionScope.SplitTunneling(
         state = state,
         modifier =
             Modifier.sharedBounds(
-                rememberSharedContentState(key = FeatureIndicator.SPLIT_TUNNELING),
+                rememberSharedContentState(
+                    key =
+                        if (countryPerApp) {
+                            FeatureIndicator.APP_COUNTRIES
+                        } else {
+                            FeatureIndicator.SPLIT_TUNNELING
+                        }
+                ),
                 animatedVisibilityScope = animatedVisibilityScope,
             ),
         onSelectTab = viewModel::onSelectTab,

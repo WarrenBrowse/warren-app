@@ -1650,6 +1650,8 @@ private fun FeatureIndicator.navKey(): NavKey2 =
         FeatureIndicator.MULTIHOP,
         FeatureIndicator.MULTIHOP_CIRCUIT -> WarrenMultihopSettingsNavKey
         FeatureIndicator.SPLIT_TUNNELING -> SplitTunnelingNavKey(isModal = true)
+        FeatureIndicator.APP_COUNTRIES ->
+            SplitTunnelingNavKey(isModal = true, countryPerApp = true)
         FeatureIndicator.PORT_FORWARDING -> WarrenPortForwardingSettingsNavKey
 
         FeatureIndicator.SERVER_IP_OVERRIDE -> WarrenTunnelSettingsNavKey

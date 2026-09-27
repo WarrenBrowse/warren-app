@@ -17,11 +17,14 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.warrenbrowse.vpn.common.compose.LocalNavAnimatedVisibilityScope
 import com.warrenbrowse.vpn.common.compose.LocalSharedTransitionScope
 import com.warrenbrowse.vpn.lib.model.FeatureIndicator
+import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenAppRoutesStatusProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenPathMetricsProvider
@@ -48,12 +51,16 @@ fun AlwaysExpandedFeatureIndicators(
     val settings = koinInject<WarrenLocalSettingsRepository>()
     val natPmpProvider = koinInject<WarrenNatPmpStatusProvider>()
     val pathMetrics = koinInject<WarrenPathMetricsProvider>()
+    val splitTunneling = koinInject<SplitTunnelingRepository>()
+    val appRoutesProvider = koinInject<WarrenAppRoutesStatusProvider>()
 
     val mtu by settings.tunnelMtu.collectAsStateWithLifecycle()
     val effectiveMtu by pathMetrics.effectiveMtu.collectAsStateWithLifecycle()
     val daitaWanted by settings.daitaEnabled.collectAsStateWithLifecycle()
     val natPmpEnabled by settings.natPmpEnabled.collectAsStateWithLifecycle()
     val natPmpStatus by natPmpProvider.natPmpStatus.collectAsStateWithLifecycle()
+    val appExits by splitTunneling.effectiveAppExits.collectAsStateWithLifecycle()
+    val appRoutes by appRoutesProvider.appRoutes.collectAsStateWithLifecycle()
 
     val chips =
         featureChips(
@@ -64,6 +71,7 @@ fun AlwaysExpandedFeatureIndicators(
             daitaWanted = daitaWanted,
             natPmpEnabled = natPmpEnabled,
             natPmpStatus = natPmpStatus,
+            appCountries = appCountriesSummary(appExits, appRoutes),
         )
 
     // Desktop stacks the badges in a left-aligned column 5 px apart. The
@@ -128,8 +136,8 @@ private data class FeatureChip(
 /**
  * The engine's indicators plus the ones read here rather than threaded through the connect state:
  * the path's "Reduced MTU" verdict, the user-set MTU (a client-side setting, the plain "MTU" chip
- * as on desktop) and DAITA asked for but not granted by this exit, which is exactly the case a user
- * needs to be told about.
+ * as on desktop), DAITA asked for but not granted by this exit, which is exactly the case a user
+ * needs to be told about, and the apps leaving from a country of their own.
  */
 @Composable
 private fun featureChips(
@@ -140,6 +148,7 @@ private fun featureChips(
     daitaWanted: Boolean,
     natPmpEnabled: Boolean,
     natPmpStatus: String,
+    appCountries: AppCountriesSummary?,
 ): List<FeatureChip> {
     val chips = mutableListOf<FeatureChip>()
 
@@ -199,6 +208,22 @@ private fun featureChips(
         }
     }
 
+    // Red when one of those routes cannot run for a reason other than the
+    // tunnel being down. It opens App routing on the "Country per app" tab.
+    if (appCountries != null) {
+        chips.add(
+            FeatureChip(
+                FeatureIndicator.APP_COUNTRIES,
+                pluralStringResource(
+                    R.plurals.apps_in_other_countries,
+                    appCountries.count,
+                    appCountries.count,
+                ),
+                isError = appCountries.anyRouteUnavailable,
+            )
+        )
+    }
+
     return chips.sortedBy { it.indicator.ordinal }
 }
 
@@ -225,6 +250,7 @@ private fun FeatureIndicator.label(natPmpStatus: String): String {
                 return stringResource(R.string.daita_multihop, stringResource(R.string.daita))
             FeatureIndicator.MULTIHOP -> R.string.multihop
             FeatureIndicator.MULTIHOP_CIRCUIT -> R.string.connection_details_multihop
+            FeatureIndicator.APP_COUNTRIES -> R.string.country_per_app
         }
     return stringResource(resource)
 }
