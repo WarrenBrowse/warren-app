@@ -233,6 +233,9 @@ tempfile = "3"
 # and a main session of its own over a userspace packet channel, against real
 # beta exits, without a TUN device.
 talpid-app-routing = { path = "../talpid-app-routing" }
+# The signed pretend fleet and the plan parity cases
+# (`fixtures/app-routes-plan/`) the planner's tests replay.
+warren-app-routes = { path = "../warren-app-routes", features = ["test-helpers"] }
 warrenguard-backoff = { path = "../../warrenguard/crates/warrenguard-backoff" }
 warrenguard-transport = { path = "../../warrenguard/crates/warrenguard-transport" }
 warrenguard-transport-core = { path = "../../warrenguard/crates/warrenguard-transport-core" }

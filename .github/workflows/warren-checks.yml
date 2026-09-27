@@ -78,6 +78,9 @@ on:
       # scope; the golden-vector submodule pin and its declaration decide what
       # the forum wire replay reads.
       - "fixtures/client-rules/**"
+      # The per-app route plan cases, replayed by the daemon's and the Android
+      # engine's planner tests.
+      - "fixtures/app-routes-plan/**"
       - "vectors"
       - ".gitmodules"
       # The warren-product-env lockstep test reads the Android flavor table

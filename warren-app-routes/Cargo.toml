@@ -23,6 +23,8 @@ tokio = { workspace = true, features = ["rt", "sync", "time", "macros"] }
 # the token directory.
 warren-api = { path = "../../warren-sdk-rs/crates/warren-api" }
 warren-contract = { path = "../../warren-contract" }
+# The verified multi-hop directory the plan resolves every exit against.
+warren-discovery-core = { path = "../../warren-contract/warren-discovery" }
 warrenguard-backoff = { path = "../../warrenguard/crates/warrenguard-backoff" }
 warrenguard-daita = { path = "../../warrenguard/crates/warrenguard-daita" }
 warrenguard-multihop = { path = "../../warrenguard/crates/warrenguard-multihop" }
@@ -32,6 +34,11 @@ warrenguard-transport = { path = "../../warrenguard/crates/warrenguard-transport
 warrenguard-transport-core = { path = "../../warrenguard/crates/warrenguard-transport-core" }
 warrenguard-tun-core = { path = "../../warrenguard/crates/warrenguard-tun-core" }
 warrenguard-wire = { path = "../../warrenguard/crates/warrenguard-wire" }
+
+[features]
+# The signed pretend fleet and the plan parity fixture reader
+# (`plan::fixture`), for the tests of the clients that plan with this crate.
+test-helpers = []
 
 [dev-dependencies]
 base64 = "0.22.0"

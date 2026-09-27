@@ -165,8 +165,17 @@ Rules:
   byte, which bounds a tunnel at 255 route sessions whatever the server says.
 
 Implementation (`mullvad-daemon/src/warren_app_routes.rs`,
-`talpid-warren-tunnel/src/app_routes/`):
+`warren-app-routes/src/`, which the desktop tunnel re-exports as
+`app_routes`):
 
+- The rules of the plan and of what the user sees are written once, in
+  `warren_app_routes::plan` (`warren-app-routes/src/plan.rs`: `plan`,
+  `route_view`), and the desktop daemon and the Android engine each apply
+  them through an adapter (`PlanRules`) that keeps only what the client does
+  its own way: where the exits in force come from, how a city is spelled,
+  how an exit is picked inside a choice, how the main exit is known, and the
+  format of the statuses. `fixtures/app-routes-plan/` holds cases both adapters replay and
+  must plan alike (schema, readers and skips in its README).
 - The daemon's parameters generator resolves the exits in force every time
   one of its inputs changes (app routing settings, verified directory, main
   circuit, draining exits) and publishes an `AppRoutesPlan` on a watch
@@ -176,7 +185,11 @@ Implementation (`mullvad-daemon/src/warren_app_routes.rs`,
   valid, so a directory refresh does not move a route.
 - A city choice matches the directory node whose city slug is the relay-list
   city code. A route has as many hops as the main connection, and a two-hop
-  route keeps the main connection's entry constraint.
+  route keeps the main connection's entry constraint. Known limit: on two
+  hops the desktop selector also refuses every entry outside the chosen city,
+  so a city choice is blocked there unless an entry sits in that very city;
+  Android constrains the exit only (the fixture case
+  `a_two_hop_city_route_enters_outside_that_city`, skipped on desktop).
 - A route session runs the engine's supervisor and pumps with a random
   signing key (the wallet never enters it), one connection, and none of the
   hooks that feed process-wide state (dial-refusal cooldown, session
@@ -727,15 +740,19 @@ Android's own:
   uid be named again. Below Android 10 no lookup is registered and the tab
   says the feature needs Android 10.
 - **The plan** (`warren-jni/src/app_routes_plan.rs`, `app_routes_session.rs`):
-  the rules of the daemon's `warren_app_routes::plan` and `statuses` (a
-  choice the main exit matches rides the main session, apps of one exit share
-  one route, a choice nothing serves blocks its apps, a valid circuit is kept,
-  a draining exit is planned away), with the exit picked inside a country the
-  way the Android main connection picks (`pick_exit`, then `circuit_select`
-  with the main connection's hops and entry country). A city matches the relay
-  list's name or its code. One task per tunnel follows the countries Kotlin
-  sets (`setAppRoutes`, live) and the route reports, and publishes the
-  statuses Kotlin reads on every status wake (`getAppRoutesStatus`).
+  the shared rules of `warren_app_routes::plan` that the desktop daemon
+  applies too (a choice the main exit matches rides the main session, apps of
+  one exit share one route, a choice nothing serves blocks its apps, a valid
+  circuit is kept, a draining exit is planned away, and `route_view` for what
+  the user sees), through Android's own adapter: the exit is picked inside a
+  country the way the Android main connection picks (`pick_exit`, then
+  `circuit_select` with the main connection's hops and entry country), a city
+  matches the relay list's name or its code, the main exit is the one the main
+  session is on, and the statuses are the JSON Kotlin parses. Both adapters
+  replay `fixtures/app-routes-plan/`. One task per tunnel follows the
+  countries Kotlin sets (`setAppRoutes`, live) and the route reports, and
+  publishes the statuses Kotlin reads on every status wake
+  (`getAppRoutesStatus`).
 - **The datapath** (`AppRoutes` in `android_app_routes.rs`): `RoutedTun` over
   the VpnService TUN under the main session's `RemapTun`, whose local address
   is the router's main address, so the router's own address translation
@@ -832,6 +849,8 @@ toward the app is left to a later change of the shared router.
   sockets on the host OS.
 - Integration: the router between a fake TUN and two fake sessions (routing,
   fail closed per app, downlink translation).
+- Parity: the plan cases of `fixtures/app-routes-plan/`, replayed through the
+  desktop and the Android planners, which must plan and show them alike.
 - Real exits: a harness that runs the router with a main session and a route
   session to every other beta exit, and fetches the public IP through each
   (runs on macOS without touching the host network):

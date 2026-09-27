@@ -1,28 +1,32 @@
-//! Which session each app's exit goes through (`docs/app-routing.md`,
-//! sections 2.2 and 2.6).
+//! Which session each app's exit goes through on desktop
+//! (`docs/app-routing.md`, sections 2.2 and 2.6).
 //!
-//! [`plan`] resolves every exit in force through the multi-hop directory with
-//! the main connection's own constraints, only the exit location replaced, and
-//! turns the result into the plan the tunnel's route sessions follow.
-//! [`statuses`] combines that resolution with what the tunnel reports about
-//! its route sessions into what the user sees.
+//! The rules are the shared ones of `warren_app_routes::plan`, which the
+//! Android engine applies too. What is the daemon's own: the exits in force
+//! come from its settings, a city is the relay list's city code, an exit is
+//! picked inside a choice the way the desktop main connection picks
+//! (`select_circuit` with the client's locality on two hops,
+//! `select_one_hop_circuit` on one), the main circuit is the directory's own
+//! (none while a custom exit is on), and [`statuses`] speaks the daemon's
+//! `AppRouteStatus`.
 
-use std::{collections::BTreeMap, net::IpAddr, sync::Arc};
+use std::{collections::BTreeMap, sync::Arc};
 
 use mullvad_types::{
     app_routing::{
-        AppId, AppRouteState, AppRouteStatus, AppRoutingSettings, ExitChoice, UnavailableReason,
+        AppRouteState, AppRouteStatus, AppRoutingSettings, ExitChoice, UnavailableReason,
     },
     settings::WarrenMultiHopSettings,
 };
 use talpid_warren_tunnel::{
     MultiHopConfig,
     app_routes::{
-        AppRoutesPlan, MainRoute, PlannedRoute, RouteReport, RouteSessionState, RouteUnavailable,
+        AppRoutesPlan, RouteReport,
+        plan::{self as shared, PlanInputs, PlanRules, RouteView, Unavailable},
     },
 };
 use tokio::sync::watch;
-use warren_discovery_core::VerifiedMultiHopDirectory;
+use warren_discovery_core::{NodeEntry, VerifiedMultiHopDirectory};
 
 use crate::warren_multi_hop_directory::{
     ClientLocality, detect_client_locality, select_circuit, select_one_hop_circuit,
@@ -31,8 +35,14 @@ use crate::warren_multi_hop_directory::{
 #[cfg(test)]
 mod real_exit;
 
+/// Which session an exit choice goes through.
+pub(crate) type Resolution = shared::Resolution<Unavailable>;
+
 /// How each exit in force is served, by exit.
 pub(crate) type Resolutions = BTreeMap<ExitChoice, Resolution>;
+
+/// The outcome of [`plan`].
+pub(crate) type Planned = shared::Planned<ExitChoice, Unavailable>;
 
 /// Keeps the route plan in line with its inputs, and publishes it: to every
 /// tunnel, whose route sessions follow it without a reconnect of the main
@@ -156,7 +166,8 @@ pub(crate) struct RouteInputs<'a> {
     pub directory: &'a VerifiedMultiHopDirectory,
     /// Whether the main connection is multi-hop: a route has as many hops.
     pub two_hop: bool,
-    /// The main connection's entry constraint, for a two-hop route.
+    /// The main connection's entry constraint, for a two-hop route. Empty
+    /// for any.
     pub entry_country: &'a str,
     pub main_circuit: Option<&'a MultiHopConfig>,
     /// Exits that announced a maintenance drain.
@@ -165,245 +176,104 @@ pub(crate) struct RouteInputs<'a> {
     pub now_unix: u64,
 }
 
-/// Which session an exit choice goes through.
-#[derive(Clone, PartialEq, Eq)]
-pub(crate) enum Resolution {
-    /// The main connection's exit already matches: its session carries the
-    /// apps.
-    Main { public_ip: Option<IpAddr> },
-    /// The route session to this exit carries them.
-    Route {
-        exit_id: [u8; 16],
-        public_ip: Option<IpAddr>,
-    },
-    /// No session can; the apps are blocked.
-    Unavailable(UnavailableReason),
+/// How the desktop names an exit and picks one inside a choice.
+struct DesktopRules {
+    locality: ClientLocality,
+    now_unix: u64,
 }
 
-// An exit id and its address are exit identity.
-impl std::fmt::Debug for Resolution {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Main { .. } => f.write_str("Main"),
-            Self::Route { .. } => f.write_str("Route(..)"),
-            Self::Unavailable(reason) => f.debug_tuple("Unavailable").field(reason).finish(),
+impl PlanRules for DesktopRules {
+    type Choice = ExitChoice;
+
+    fn admits(&self, choice: &ExitChoice, node: &NodeEntry) -> bool {
+        node.country.eq_ignore_ascii_case(choice.country()) && city_matches(choice, &node.city)
+    }
+
+    /// A circuit for `choice`, selected the way the main connection's is.
+    fn select(&self, inputs: &PlanInputs<'_>, choice: &ExitChoice) -> Option<MultiHopConfig> {
+        let excluded: Vec<[u8; 16]> = inputs
+            .directory
+            .nodes
+            .iter()
+            .filter(|node| !city_matches(choice, &node.city))
+            .map(|node| *node.exit.exit_id.as_bytes())
+            .chain(inputs.drained.iter().copied())
+            .collect();
+        if inputs.two_hop {
+            select_circuit(
+                inputs.directory,
+                inputs.entry_country.unwrap_or(""),
+                choice.country(),
+                true,
+                true,
+                &excluded,
+                self.locality,
+                None,
+                self.now_unix,
+            )
+        } else {
+            select_one_hop_circuit(inputs.directory, choice.country(), true, true, &excluded)
         }
     }
 }
 
-/// The outcome of [`plan`].
-#[derive(Default)]
-pub(crate) struct Planned {
-    /// What the tunnel runs.
-    pub tunnel: AppRoutesPlan,
-    /// How each exit in force is served.
-    pub resolutions: BTreeMap<ExitChoice, Resolution>,
-    /// The circuit each routed choice resolved to, kept by the next plan
-    /// while it stays valid, so a directory refresh does not move a route.
-    pub circuits: BTreeMap<ExitChoice, MultiHopConfig>,
-}
-
-/// Resolves every exit in force. `previous` holds the circuits of the last
-/// plan. Without `inputs` (no verified directory yet) no exit can be served.
+/// Resolves every exit in force (`warren_app_routes::plan`). `previous`
+/// holds the circuits of the last plan. Without `inputs` (no verified
+/// directory yet) no exit can be served.
 pub(crate) fn plan(
     settings: &AppRoutingSettings,
     inputs: Option<&RouteInputs<'_>>,
     previous: &BTreeMap<ExitChoice, MultiHopConfig>,
 ) -> Planned {
-    let mut by_choice: BTreeMap<&ExitChoice, Vec<&AppId>> = BTreeMap::new();
-    for (app, choice) in settings.effective_app_exits() {
-        by_choice.entry(choice).or_default().push(app);
-    }
-
-    let mut planned = Planned::default();
-    for (choice, apps) in by_choice {
-        let apps = apps.iter().map(|app| app.as_str().to_owned());
-        let Some(inputs) = inputs else {
-            planned.block(choice, apps, UnavailableReason::NoRelay);
-            continue;
-        };
-        if let Some(main) = inputs
+    let groups = shared::group_by_choice(
+        settings
+            .effective_app_exits()
+            .into_iter()
+            .map(|(app, choice)| (choice.clone(), app.as_str().to_owned())),
+    );
+    let rules = DesktopRules {
+        locality: inputs.map(|inputs| inputs.locality).unwrap_or_default(),
+        now_unix: inputs.map_or(0, |inputs| inputs.now_unix),
+    };
+    let shared_inputs = inputs.map(|inputs| PlanInputs {
+        directory: inputs.directory,
+        two_hop: inputs.two_hop,
+        entry_country: Some(inputs.entry_country).filter(|country| !country.is_empty()),
+        main_exit: inputs
             .main_circuit
-            .filter(|main| exit_matches(inputs.directory, &main.exit, choice))
-        {
-            let exit_id = *main.exit.exit_id.as_bytes();
-            let public_ip = exit_public_ip(inputs.directory, &exit_id);
-            let main_apps = &mut planned.tunnel.main_apps;
-            match main_apps.iter_mut().find(|route| route.exit_id == exit_id) {
-                Some(route) => route.apps.extend(apps),
-                None => main_apps.push(MainRoute {
-                    exit_id,
-                    apps: apps.collect(),
-                }),
-            }
-            planned
-                .resolutions
-                .insert(choice.clone(), Resolution::Main { public_ip });
-            continue;
-        }
-        let Some(circuit) = previous
-            .get(choice)
-            .filter(|circuit| still_valid(inputs, circuit, choice))
-            .cloned()
-            .or_else(|| select(inputs, choice))
-        else {
-            planned.block(choice, apps, UnavailableReason::NoRelay);
-            continue;
-        };
-        let exit_id = *circuit.exit.exit_id.as_bytes();
-        let routes = &mut planned.tunnel.routes;
-        match routes
-            .iter()
-            .position(|route| route.circuit.exit.exit_id.as_bytes() == &exit_id)
-        {
-            Some(shared) => routes[shared].apps.extend(apps),
-            // No cap here: the tunnel runs as many as the server admits and
-            // reports the others waiting.
-            None => routes.push(PlannedRoute {
-                circuit: circuit.clone(),
-                apps: apps.collect(),
-            }),
-        }
-        let public_ip = exit_public_ip(inputs.directory, &exit_id);
-        planned
-            .resolutions
-            .insert(choice.clone(), Resolution::Route { exit_id, public_ip });
-        planned.circuits.insert(choice.clone(), circuit);
-    }
-    planned
-}
-
-impl Planned {
-    fn block(
-        &mut self,
-        choice: &ExitChoice,
-        apps: impl Iterator<Item = String>,
-        reason: UnavailableReason,
-    ) {
-        self.tunnel.blocked_apps.extend(apps);
-        self.resolutions
-            .insert(choice.clone(), Resolution::Unavailable(reason));
-    }
+            .map(|main| *main.exit.exit_id.as_bytes()),
+        drained: inputs.drained,
+    });
+    shared::plan(&rules, groups, shared_inputs.as_ref(), previous)
 }
 
 /// What the user sees for each exit in force.
 pub(crate) fn statuses(
     settings: &AppRoutingSettings,
     tunnel_connected: bool,
-    resolutions: &BTreeMap<ExitChoice, Resolution>,
+    resolutions: &Resolutions,
     reports: &[RouteReport],
 ) -> Vec<AppRouteStatus> {
     settings.route_statuses(|choice| {
-        if !tunnel_connected {
-            return (
-                AppRouteState::Unavailable(UnavailableReason::TunnelDown),
-                None,
-            );
-        }
-        match resolutions.get(choice) {
-            Some(Resolution::Main { public_ip }) => (AppRouteState::Connected, *public_ip),
-            Some(Resolution::Unavailable(reason)) => (AppRouteState::Unavailable(*reason), None),
-            Some(Resolution::Route { exit_id, public_ip }) => {
-                match reports.iter().find(|report| report.exit_id == *exit_id) {
-                    Some(report) => route_state(report.state, *public_ip),
-                    None => (AppRouteState::Connecting, None),
-                }
-            }
-            // Planned on the next pass.
-            None => (AppRouteState::Connecting, None),
-        }
+        let (view, public_ip) =
+            shared::route_view(tunnel_connected, resolutions.get(choice), reports);
+        let state = match view {
+            RouteView::Connecting => AppRouteState::Connecting,
+            RouteView::Connected => AppRouteState::Connected,
+            RouteView::Unavailable(reason) => AppRouteState::Unavailable(unavailable(reason)),
+        };
+        (state, public_ip)
     })
 }
 
-fn route_state(
-    state: RouteSessionState,
-    public_ip: Option<IpAddr>,
-) -> (AppRouteState, Option<IpAddr>) {
-    let reason = match state {
-        RouteSessionState::Connecting => return (AppRouteState::Connecting, None),
-        RouteSessionState::Connected => return (AppRouteState::Connected, public_ip),
-        RouteSessionState::Waiting => {
-            return (
-                AppRouteState::Unavailable(UnavailableReason::WaitingForRoute),
-                None,
-            );
-        }
-        RouteSessionState::Unavailable(reason) => reason,
-    };
-    let reason = match reason {
-        RouteUnavailable::NoToken => UnavailableReason::NoToken,
-        RouteUnavailable::Refused => UnavailableReason::LimitReached,
-        RouteUnavailable::Failed => UnavailableReason::NoRelay,
-    };
-    (AppRouteState::Unavailable(reason), None)
-}
-
-/// A circuit for `choice`, selected the way the main connection's is.
-fn select(inputs: &RouteInputs<'_>, choice: &ExitChoice) -> Option<MultiHopConfig> {
-    let excluded: Vec<[u8; 16]> = inputs
-        .directory
-        .nodes
-        .iter()
-        .filter(|node| !city_matches(choice, &node.city))
-        .map(|node| *node.exit.exit_id.as_bytes())
-        .chain(inputs.drained.iter().copied())
-        .collect();
-    if inputs.two_hop {
-        select_circuit(
-            inputs.directory,
-            inputs.entry_country,
-            choice.country(),
-            true,
-            true,
-            &excluded,
-            inputs.locality,
-            None,
-            inputs.now_unix,
-        )
-    } else {
-        select_one_hop_circuit(inputs.directory, choice.country(), true, true, &excluded)
+fn unavailable(reason: Unavailable) -> UnavailableReason {
+    match reason {
+        Unavailable::TunnelDown => UnavailableReason::TunnelDown,
+        Unavailable::NoToken => UnavailableReason::NoToken,
+        Unavailable::LimitReached => UnavailableReason::LimitReached,
+        Unavailable::NoRelay => UnavailableReason::NoRelay,
+        Unavailable::WaitingForRoute => UnavailableReason::WaitingForRoute,
     }
-}
-
-/// Whether the circuit of the last plan still serves `choice`: both of its
-/// nodes are still listed, none is draining, and it has the main
-/// connection's shape.
-fn still_valid(inputs: &RouteInputs<'_>, circuit: &MultiHopConfig, choice: &ExitChoice) -> bool {
-    let dir = inputs.directory;
-    let entry = dir
-        .nodes
-        .iter()
-        .find(|node| node.relay.relay_id == circuit.relay.relay_id);
-    let exit = dir
-        .nodes
-        .iter()
-        .find(|node| node.exit.exit_id == circuit.exit.exit_id);
-    let (Some(entry), Some(exit)) = (entry, exit) else {
-        return false;
-    };
-    let drained = |id: &[u8; 16]| inputs.drained.contains(id);
-    circuit.single_node != inputs.two_hop
-        && !drained(entry.exit.exit_id.as_bytes())
-        && !drained(exit.exit.exit_id.as_bytes())
-        && (inputs.entry_country.is_empty()
-            || !inputs.two_hop
-            || entry.country.eq_ignore_ascii_case(inputs.entry_country))
-        && exit_matches(dir, &exit.exit, choice)
-}
-
-/// Whether the exit of `descriptor` is in the country, and the city when one
-/// is chosen, of `choice`.
-fn exit_matches(
-    dir: &VerifiedMultiHopDirectory,
-    descriptor: &talpid_warren_tunnel::MultiHopExitDescriptor,
-    choice: &ExitChoice,
-) -> bool {
-    dir.nodes
-        .iter()
-        .find(|node| node.exit.exit_id == descriptor.exit_id)
-        .is_some_and(|node| {
-            node.country.eq_ignore_ascii_case(choice.country()) && city_matches(choice, &node.city)
-        })
 }
 
 /// A chosen city is a relay-list city code, which is the slug of the city's
@@ -414,92 +284,27 @@ fn city_matches(choice: &ExitChoice, city: &str) -> bool {
         .is_none_or(|code| crate::warren_relay_list_view::slugify(city) == code)
 }
 
-/// The address the apps of an exit appear from. Each exit of the fleet
-/// egresses from the one address it is dialed on.
-fn exit_public_ip(dir: &VerifiedMultiHopDirectory, exit_id: &[u8; 16]) -> Option<IpAddr> {
-    dir.nodes
-        .iter()
-        .find(|node| node.exit.exit_id.as_bytes() == exit_id)
-        .map(|node| node.exit.endpoint.unwrap_or(node.relay.endpoint).ip())
-}
-
 #[cfg(test)]
 mod tests {
-    use std::net::SocketAddr;
-
-    use ed25519_dalek::{Signer, SigningKey};
-    use warren_discovery_core::NodeEntry;
-    use warrenguard_multihop::{
-        ExitDescriptorSigned, ExitId, RelayDescriptorSigned, exit_descriptor_signing_payload,
-        relay_descriptor_signing_payload, sign_node_attestation,
+    use mullvad_types::app_routing::AppId;
+    use talpid_warren_tunnel::app_routes::{
+        PlannedRoute, RouteSessionState,
+        plan::fixture::{
+            self, ExitKey, Outcome, PlanCase, ResolutionOutcome, StatusOutcome, test_node,
+        },
     };
 
     use super::*;
 
-    fn op_key() -> SigningKey {
-        SigningKey::from_bytes(&[0x42; 32])
-    }
-
-    fn node(tag: u8, country: &str, city: &str, weight: u64) -> NodeEntry {
-        let op = op_key();
-        let endpoint: SocketAddr = format!("198.51.100.{tag}:443").parse().unwrap();
-        let relay_id = [tag; 16];
-        let relay_ed = [tag.wrapping_add(1); 32];
-        let relay_sig = op
-            .sign(&relay_descriptor_signing_payload(&relay_id, &relay_ed))
-            .to_bytes();
-        let exit_id = ExitId::from_bytes([tag; 16]);
-        let exit_x = [tag.wrapping_add(2); 32];
-        let exit_sig = op
-            .sign(&exit_descriptor_signing_payload(exit_id, &exit_x))
-            .to_bytes();
-        let asn = u32::from(tag);
-        NodeEntry {
-            relay: RelayDescriptorSigned {
-                relay_id,
-                relay_ed25519_pubkey: relay_ed,
-                endpoint,
-                endpoint_v6: None,
-                signature: relay_sig,
-                cover_domain: None,
-                tcp_fallback: false,
-            },
-            exit: ExitDescriptorSigned {
-                exit_id,
-                exit_ed25519_pubkey: relay_ed,
-                exit_x25519_multihop_pubkey: exit_x,
-                exit_mlkem768_pubkey: None,
-                endpoint: Some(endpoint),
-                signature: exit_sig,
-                dns_disabled: false,
-                cover_domain: None,
-            },
-            country: country.to_owned(),
-            city: city.to_owned(),
-            asn,
-            weight,
-            attestation_hex: hex::encode(sign_node_attestation(
-                &op, &relay_id, &relay_ed, asn, country,
-            )),
-            edge_cert_sha256: None,
-        }
-    }
-
-    /// Sweden (Stockholm), Germany (Berlin, and a lighter Frankfurt), Finland.
+    /// Sweden (Stockholm), Germany (Berlin, and a lighter Bad Homburg),
+    /// Finland.
     fn fleet() -> VerifiedMultiHopDirectory {
-        VerifiedMultiHopDirectory {
-            operational_pubkey: op_key().verifying_key(),
-            nodes: vec![
-                node(1, "se", "Stockholm", 10),
-                node(2, "de", "Berlin", 10),
-                node(3, "de", "Frankfurt", 5),
-                node(4, "fi", "Helsinki", 10),
-            ],
-            generation: 1,
-            signed_at: 0,
-            expires_at: u64::MAX,
-            dropped: 0,
-        }
+        fixture::directory(vec![
+            test_node(1, "se", "Stockholm", 10),
+            test_node(2, "de", "Berlin", 10),
+            test_node(3, "de", "Bad Homburg", 5),
+            test_node(4, "fi", "Helsinki", 10),
+        ])
     }
 
     fn main_in(dir: &VerifiedMultiHopDirectory, country: &str) -> MultiHopConfig {
@@ -516,10 +321,7 @@ mod tests {
             entry_country: "",
             main_circuit: main,
             drained: &[],
-            locality: ClientLocality {
-                continent: None,
-                country: None,
-            },
+            locality: ClientLocality::default(),
             now_unix: 0,
         }
     }
@@ -551,141 +353,23 @@ mod tests {
         route.circuit.exit.exit_id.as_bytes()[0]
     }
 
-    #[test]
-    fn an_app_choosing_another_country_gets_a_route_session_there() {
-        let dir = fleet();
-        let main = main_in(&dir, "se");
-
-        let planned = plan(
-            &routing(&[("browser", choice("fi", None))]),
-            Some(&inputs(&dir, Some(&main))),
-            &BTreeMap::new(),
-        );
-
+    fn only_route(settings: &AppRoutingSettings, inputs: &RouteInputs<'_>) -> u8 {
+        let planned = plan(settings, Some(inputs), &BTreeMap::new());
         assert_eq!(planned.tunnel.routes.len(), 1);
-        assert_eq!(exit_of(&planned.tunnel.routes[0]), 4);
-        assert_eq!(planned.tunnel.routes[0].apps, vec![app("browser").as_str()]);
+        exit_of(&planned.tunnel.routes[0])
     }
 
     #[test]
-    fn apps_choosing_one_exit_share_its_route_session() {
+    fn a_city_choice_leaves_through_an_exit_whose_city_code_it_names() {
         let dir = fleet();
         let main = main_in(&dir, "se");
 
-        let planned = plan(
-            &routing(&[
-                ("browser", choice("fi", None)),
-                ("editor", choice("fi", None)),
-            ]),
-            Some(&inputs(&dir, Some(&main))),
-            &BTreeMap::new(),
+        let exit = only_route(
+            &routing(&[("browser", choice("de", Some("bad-homburg")))]),
+            &inputs(&dir, Some(&main)),
         );
 
-        assert_eq!(planned.tunnel.routes.len(), 1);
-        assert_eq!(planned.tunnel.routes[0].apps.len(), 2);
-    }
-
-    #[test]
-    fn two_choices_resolving_to_one_exit_share_its_route_session() {
-        let dir = fleet();
-        let main = main_in(&dir, "se");
-
-        let planned = plan(
-            &routing(&[
-                ("browser", choice("de", None)),
-                ("editor", choice("de", Some("berlin"))),
-            ]),
-            Some(&inputs(&dir, Some(&main))),
-            &BTreeMap::new(),
-        );
-
-        assert_eq!(planned.tunnel.routes.len(), 1);
-        assert_eq!(exit_of(&planned.tunnel.routes[0]), 2);
-        assert_eq!(planned.tunnel.routes[0].apps.len(), 2);
-    }
-
-    #[test]
-    fn a_choice_the_main_exit_matches_goes_through_the_main_session() {
-        let dir = fleet();
-        let main = main_in(&dir, "se");
-
-        let planned = plan(
-            &routing(&[("browser", choice("se", None))]),
-            Some(&inputs(&dir, Some(&main))),
-            &BTreeMap::new(),
-        );
-
-        assert!(planned.tunnel.routes.is_empty());
-        assert!(planned.tunnel.blocked_apps.is_empty());
-        assert!(
-            planned.tunnel.main_apps
-                == vec![MainRoute {
-                    exit_id: [1; 16],
-                    apps: vec![app("browser").as_str().to_owned()],
-                }]
-        );
-        assert_eq!(
-            planned.resolutions[&choice("se", None)],
-            Resolution::Main {
-                public_ip: Some("198.51.100.1".parse().unwrap())
-            }
-        );
-    }
-
-    #[test]
-    fn a_choice_no_exit_serves_blocks_its_apps() {
-        let dir = fleet();
-        let main = main_in(&dir, "se");
-
-        let planned = plan(
-            &routing(&[("browser", choice("jp", None))]),
-            Some(&inputs(&dir, Some(&main))),
-            &BTreeMap::new(),
-        );
-
-        assert!(planned.tunnel.routes.is_empty());
-        assert_eq!(planned.tunnel.blocked_apps, vec![app("browser").as_str()]);
-        assert_eq!(
-            planned.resolutions[&choice("jp", None)],
-            Resolution::Unavailable(UnavailableReason::NoRelay)
-        );
-    }
-
-    #[test]
-    fn every_distinct_exit_is_planned_whatever_their_number() {
-        let dir = fleet();
-        let main = main_in(&dir, "se");
-
-        let planned = plan(
-            &routing(&[
-                ("a", choice("de", Some("berlin"))),
-                ("b", choice("de", Some("frankfurt"))),
-                ("c", choice("fi", None)),
-            ]),
-            Some(&inputs(&dir, Some(&main))),
-            &BTreeMap::new(),
-        );
-
-        assert_eq!(planned.tunnel.routes.len(), 3);
-        assert!(planned.tunnel.blocked_apps.is_empty());
-        assert!(matches!(
-            planned.resolutions[&choice("fi", None)],
-            Resolution::Route { .. }
-        ));
-    }
-
-    #[test]
-    fn a_city_choice_leaves_through_an_exit_in_that_city() {
-        let dir = fleet();
-        let main = main_in(&dir, "se");
-
-        let planned = plan(
-            &routing(&[("browser", choice("de", Some("frankfurt")))]),
-            Some(&inputs(&dir, Some(&main))),
-            &BTreeMap::new(),
-        );
-
-        assert_eq!(exit_of(&planned.tunnel.routes[0]), 3);
+        assert_eq!(exit, 3, "the lighter exit, since the city names it");
     }
 
     #[test]
@@ -698,29 +382,9 @@ mod tests {
             ..inputs(&dir, Some(&main))
         };
 
-        let planned = plan(
-            &routing(&[("browser", choice("de", None))]),
-            Some(&inputs),
-            &BTreeMap::new(),
-        );
+        let exit = only_route(&routing(&[("browser", choice("de", None))]), &inputs);
 
-        assert_eq!(exit_of(&planned.tunnel.routes[0]), 3);
-    }
-
-    #[test]
-    fn the_last_plans_circuit_is_kept_while_it_stays_valid() {
-        let dir = fleet();
-        let main = main_in(&dir, "se");
-        let frankfurt = select_one_hop_circuit(&dir, "de", true, true, &[[2; 16]]).unwrap();
-        let previous = BTreeMap::from([(choice("de", None), frankfurt)]);
-
-        let planned = plan(
-            &routing(&[("browser", choice("de", None))]),
-            Some(&inputs(&dir, Some(&main))),
-            &previous,
-        );
-
-        assert_eq!(exit_of(&planned.tunnel.routes[0]), 3);
+        assert_eq!(exit, 3);
     }
 
     #[test]
@@ -744,26 +408,6 @@ mod tests {
     }
 
     #[test]
-    fn a_routed_choice_appears_from_its_exits_address() {
-        let dir = fleet();
-        let main = main_in(&dir, "se");
-
-        let planned = plan(
-            &routing(&[("browser", choice("fi", None))]),
-            Some(&inputs(&dir, Some(&main))),
-            &BTreeMap::new(),
-        );
-
-        assert_eq!(
-            planned.resolutions[&choice("fi", None)],
-            Resolution::Route {
-                exit_id: [4; 16],
-                public_ip: Some("198.51.100.4".parse().unwrap()),
-            }
-        );
-    }
-
-    #[test]
     fn nothing_is_planned_while_the_exits_are_switched_off() {
         let dir = fleet();
         let main = main_in(&dir, "se");
@@ -778,6 +422,7 @@ mod tests {
 
         assert!(planned.tunnel.routes.is_empty());
         assert!(planned.tunnel.blocked_apps.is_empty());
+        assert!(planned.resolutions.is_empty());
     }
 
     #[test]
@@ -817,25 +462,6 @@ mod tests {
         assert_eq!(*heard.lock().unwrap(), vec![2, 1]);
     }
 
-    fn one_route() -> (AppRoutingSettings, BTreeMap<ExitChoice, Resolution>) {
-        let settings = routing(&[("browser", choice("fi", None))]);
-        let resolutions = BTreeMap::from([(
-            choice("fi", None),
-            Resolution::Route {
-                exit_id: [4; 16],
-                public_ip: Some("198.51.100.4".parse().unwrap()),
-            },
-        )]);
-        (settings, resolutions)
-    }
-
-    fn report(state: RouteSessionState) -> Vec<RouteReport> {
-        vec![RouteReport {
-            exit_id: [4; 16],
-            state,
-        }]
-    }
-
     #[test]
     fn a_new_plan_reaches_the_tunnel_and_the_daemon() {
         let dir = fleet();
@@ -871,111 +497,161 @@ mod tests {
     }
 
     #[test]
-    fn a_route_is_unavailable_while_the_main_connection_is_down() {
-        let (settings, resolutions) = one_route();
-
-        let shown = statuses(
-            &settings,
-            false,
-            &resolutions,
-            &report(RouteSessionState::Connected),
-        );
-
-        assert_eq!(
-            shown[0].state,
-            AppRouteState::Unavailable(UnavailableReason::TunnelDown)
-        );
-    }
-
-    #[test]
-    fn a_connected_route_shows_the_address_its_apps_appear_from() {
-        let (settings, resolutions) = one_route();
-
-        let shown = statuses(
-            &settings,
-            true,
-            &resolutions,
-            &report(RouteSessionState::Connected),
-        );
-
-        assert_eq!(shown[0].state, AppRouteState::Connected);
-        assert_eq!(shown[0].public_ip, Some("198.51.100.4".parse().unwrap()));
-    }
-
-    #[test]
-    fn a_route_the_tunnel_has_not_reported_yet_is_connecting() {
-        let (settings, resolutions) = one_route();
-
-        let shown = statuses(&settings, true, &resolutions, &[]);
-
-        assert_eq!(shown[0].state, AppRouteState::Connecting);
-        assert_eq!(shown[0].public_ip, None);
-    }
-
-    #[test]
-    fn a_route_without_a_token_says_so() {
-        let (settings, resolutions) = one_route();
-
-        let shown = statuses(
-            &settings,
-            true,
-            &resolutions,
-            &report(RouteSessionState::Unavailable(RouteUnavailable::NoToken)),
-        );
-
-        assert_eq!(
-            shown[0].state,
-            AppRouteState::Unavailable(UnavailableReason::NoToken)
-        );
-    }
-
-    #[test]
-    fn a_route_the_exit_refused_shows_the_limit() {
-        let (settings, resolutions) = one_route();
-
-        let shown = statuses(
-            &settings,
-            true,
-            &resolutions,
-            &report(RouteSessionState::Unavailable(RouteUnavailable::Refused)),
-        );
-
-        assert_eq!(
-            shown[0].state,
-            AppRouteState::Unavailable(UnavailableReason::LimitReached)
-        );
-    }
-
-    #[test]
-    fn a_route_past_what_the_server_admits_waits_for_a_free_one() {
-        let (settings, resolutions) = one_route();
-
-        let shown = statuses(
-            &settings,
-            true,
-            &resolutions,
-            &report(RouteSessionState::Waiting),
-        );
-
-        assert_eq!(
-            shown[0].state,
-            AppRouteState::Unavailable(UnavailableReason::WaitingForRoute)
-        );
-    }
-
-    #[test]
-    fn an_exit_the_main_session_serves_is_connected_with_the_main_address() {
-        let settings = routing(&[("browser", choice("se", None))]);
-        let resolutions = BTreeMap::from([(
-            choice("se", None),
-            Resolution::Main {
-                public_ip: Some("198.51.100.1".parse().unwrap()),
+    fn a_status_carries_its_exit_its_apps_and_where_its_session_stands() {
+        let settings = routing(&[
+            ("browser", choice("fi", None)),
+            ("editor", choice("fi", None)),
+        ]);
+        let resolutions = Resolutions::from([(
+            choice("fi", None),
+            Resolution::Route {
+                exit_id: [4; 16],
+                public_ip: Some("198.51.100.4".parse().unwrap()),
             },
         )]);
+        let reports = [RouteReport {
+            exit_id: [4; 16],
+            state: RouteSessionState::Connected,
+        }];
 
-        let shown = statuses(&settings, true, &resolutions, &[]);
+        let shown = statuses(&settings, true, &resolutions, &reports);
 
-        assert_eq!(shown[0].state, AppRouteState::Connected);
-        assert_eq!(shown[0].public_ip, Some("198.51.100.1".parse().unwrap()));
+        assert!(
+            shown
+                == [AppRouteStatus {
+                    exit: choice("fi", None),
+                    state: AppRouteState::Connected,
+                    public_ip: Some("198.51.100.4".parse().unwrap()),
+                    apps: vec![app("browser"), app("editor")],
+                }]
+        );
+    }
+
+    #[test]
+    fn every_shared_reason_has_the_daemons_name() {
+        let named = [
+            Unavailable::TunnelDown,
+            Unavailable::NoToken,
+            Unavailable::LimitReached,
+            Unavailable::NoRelay,
+            Unavailable::WaitingForRoute,
+        ]
+        .map(unavailable);
+
+        assert_eq!(
+            named,
+            [
+                UnavailableReason::TunnelDown,
+                UnavailableReason::NoToken,
+                UnavailableReason::LimitReached,
+                UnavailableReason::NoRelay,
+                UnavailableReason::WaitingForRoute,
+            ]
+        );
+    }
+
+    fn snake_case(value: impl serde::Serialize) -> String {
+        match serde_json::to_value(value).unwrap() {
+            serde_json::Value::String(name) => name,
+            other => panic!("not a name: {other}"),
+        }
+    }
+
+    fn exit_key(choice: &ExitChoice) -> ExitKey {
+        ExitKey {
+            country: choice.country().to_owned(),
+            city: choice.city().map(str::to_owned),
+        }
+    }
+
+    /// Plans `case` through the daemon's own planner and statuses, and puts
+    /// what it planned and shows in the fixture's terms.
+    fn replay(case: &PlanCase) -> Outcome {
+        let apps: Vec<(AppId, &str)> = case
+            .exits
+            .iter()
+            .map(|exit| (app(&exit.app), exit.app.as_str()))
+            .collect();
+        let to_choice = |key: &ExitKey| choice(&key.country, key.city.as_deref());
+        let mut settings = routing(&[]);
+        for (exit, (app, _)) in case.exits.iter().zip(&apps) {
+            settings
+                .app_exits
+                .insert(app.clone(), to_choice(&exit.exit));
+        }
+        let main = case.main_exit.map(|exit_id| {
+            let node = case
+                .directory
+                .nodes
+                .iter()
+                .find(|node| node.exit.exit_id.as_bytes() == &exit_id)
+                .unwrap();
+            fixture::circuit(&case.directory, node, node, false)
+        });
+        let inputs = RouteInputs {
+            directory: &case.directory,
+            two_hop: case.two_hop,
+            entry_country: case.entry_country.as_deref().unwrap_or(""),
+            main_circuit: main.as_ref(),
+            drained: &case.drained,
+            locality: ClientLocality::default(),
+            now_unix: 0,
+        };
+        let previous = case
+            .previous
+            .iter()
+            .map(|(key, circuit)| (to_choice(key), circuit.clone()))
+            .collect();
+
+        let planned = plan(&settings, Some(&inputs), &previous);
+        let shown = statuses(
+            &settings,
+            case.connected,
+            &planned.resolutions,
+            &case.reports,
+        );
+
+        let name = |id: &str| {
+            let (_, name) = apps.iter().find(|(app, _)| app.as_str() == id).unwrap();
+            (*name).to_owned()
+        };
+        Outcome::new(
+            &planned.tunnel,
+            planned
+                .resolutions
+                .iter()
+                .map(|(choice, resolution)| {
+                    let reason = |why: &Unavailable| snake_case(unavailable(*why));
+                    (exit_key(choice), ResolutionOutcome::of(resolution, reason))
+                })
+                .collect(),
+            shown
+                .iter()
+                .map(|status| {
+                    let (state, reason) = match status.state {
+                        AppRouteState::Connecting => ("connecting", None),
+                        AppRouteState::Connected => ("connected", None),
+                        AppRouteState::Unavailable(why) => ("unavailable", Some(snake_case(why))),
+                    };
+                    StatusOutcome {
+                        exit: exit_key(&status.exit),
+                        state: state.to_owned(),
+                        reason,
+                        public_ip: status.public_ip,
+                        apps: status.apps.iter().map(|app| name(app.as_str())).collect(),
+                    }
+                })
+                .collect(),
+            name,
+        )
+    }
+
+    #[test]
+    fn the_plan_parity_cases_replay_through_the_daemon() {
+        let cases = fixture::load();
+
+        for case in cases.iter().filter(|case| case.runs_on("desktop")) {
+            assert_eq!(replay(case), case.expect, "{}", case.name);
+        }
     }
 }

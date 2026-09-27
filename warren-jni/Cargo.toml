@@ -93,6 +93,9 @@ talpid-app-routing = { path = "../talpid-app-routing" }
 warren-app-routes = { path = "../warren-app-routes" }
 
 [dev-dependencies]
+# The signed pretend fleet and the plan parity cases
+# (`fixtures/app-routes-plan/`) the planner's tests replay.
+warren-app-routes = { path = "../warren-app-routes", features = ["test-helpers"] }
 # Canonical product anchors for the `product` module's drift gate.
 warren-contract = { path = "../../warren-contract" }
 # The signed-directory minting helpers, so `entry_families` is exercised

@@ -1,0 +1,196 @@
+{
+  "_comment": "Per-app route plans every client must produce from the same inputs (docs/app-routing.md sections 2.2 and 2.6). Schema and readers: README.md next to this file.",
+  "version": 1,
+  "nodes": [
+    { "tag": 1, "country": "se", "city": "Stockholm", "weight": 10 },
+    { "tag": 2, "country": "de", "city": "Berlin", "weight": 10 },
+    { "tag": 3, "country": "de", "city": "Frankfurt", "weight": 5 },
+    { "tag": 4, "country": "fi", "city": "Helsinki", "weight": 10 },
+    { "tag": 5, "country": "nl", "city": "Amsterdam", "weight": 10 }
+  ],
+  "cases": [
+    {
+      "name": "routes_by_exit_main_and_blocked",
+      "_comment": "One route per exit, shared by the apps of one exit; the main exit's country and city ride the main session; a country nothing serves blocks its app.",
+      "two_hop": false,
+      "entry_country": null,
+      "main_exit": 1,
+      "exits": [
+        { "app": "bank", "country": "se", "city": null },
+        { "app": "browser", "country": "de", "city": "berlin" },
+        { "app": "chat", "country": "fi", "city": null },
+        { "app": "editor", "country": "de", "city": "berlin" },
+        { "app": "game", "country": "jp", "city": null },
+        { "app": "mail", "country": "se", "city": "stockholm" }
+      ],
+      "connected": true,
+      "reports": [
+        { "exit": 2, "state": "connected" },
+        { "exit": 4, "state": "waiting" }
+      ],
+      "expect": {
+        "routes": [
+          { "entry": 2, "exit": 2, "apps": ["browser", "editor"] },
+          { "entry": 4, "exit": 4, "apps": ["chat"] }
+        ],
+        "main": [{ "exit": 1, "apps": ["bank", "mail"] }],
+        "blocked": ["game"],
+        "resolutions": [
+          { "country": "de", "city": "berlin", "kind": "route", "exit": 2, "public_ip": "198.51.100.2" },
+          { "country": "fi", "city": null, "kind": "route", "exit": 4, "public_ip": "198.51.100.4" },
+          { "country": "jp", "city": null, "kind": "unavailable", "reason": "no_relay" },
+          { "country": "se", "city": null, "kind": "main", "public_ip": "198.51.100.1" },
+          { "country": "se", "city": "stockholm", "kind": "main", "public_ip": "198.51.100.1" }
+        ],
+        "statuses": [
+          { "country": "de", "city": "berlin", "state": "connected", "reason": null, "public_ip": "198.51.100.2", "apps": ["browser", "editor"] },
+          { "country": "fi", "city": null, "state": "unavailable", "reason": "waiting_for_route", "public_ip": null, "apps": ["chat"] },
+          { "country": "jp", "city": null, "state": "unavailable", "reason": "no_relay", "public_ip": null, "apps": ["game"] },
+          { "country": "se", "city": null, "state": "connected", "reason": null, "public_ip": "198.51.100.1", "apps": ["bank"] },
+          { "country": "se", "city": "stockholm", "state": "connected", "reason": null, "public_ip": "198.51.100.1", "apps": ["mail"] }
+        ]
+      }
+    },
+    {
+      "name": "a_draining_exit_is_planned_away_and_two_choices_share_the_exit_left",
+      "_comment": "Berlin drains, so the country and the Frankfurt city resolve to the one exit left and share its route.",
+      "two_hop": false,
+      "entry_country": null,
+      "main_exit": 1,
+      "drained": [2],
+      "exits": [
+        { "app": "browser", "country": "de", "city": null },
+        { "app": "chat", "country": "de", "city": "frankfurt" }
+      ],
+      "connected": true,
+      "reports": [{ "exit": 3, "state": "refused" }],
+      "expect": {
+        "routes": [{ "entry": 3, "exit": 3, "apps": ["browser", "chat"] }],
+        "main": [],
+        "blocked": [],
+        "resolutions": [
+          { "country": "de", "city": null, "kind": "route", "exit": 3, "public_ip": "198.51.100.3" },
+          { "country": "de", "city": "frankfurt", "kind": "route", "exit": 3, "public_ip": "198.51.100.3" }
+        ],
+        "statuses": [
+          { "country": "de", "city": null, "state": "unavailable", "reason": "limit_reached", "public_ip": null, "apps": ["browser"] },
+          { "country": "de", "city": "frankfurt", "state": "unavailable", "reason": "limit_reached", "public_ip": null, "apps": ["chat"] }
+        ]
+      }
+    },
+    {
+      "name": "a_two_hop_route_enters_in_the_main_entry_country",
+      "_comment": "A route has the main connection's hops and entry country. The tunnel is down, so every exit says so.",
+      "two_hop": true,
+      "entry_country": "nl",
+      "main_exit": 1,
+      "exits": [
+        { "app": "bank", "country": "se", "city": null },
+        { "app": "browser", "country": "fi", "city": null }
+      ],
+      "connected": false,
+      "reports": [{ "exit": 4, "state": "connected" }],
+      "expect": {
+        "routes": [{ "entry": 5, "exit": 4, "apps": ["browser"] }],
+        "main": [{ "exit": 1, "apps": ["bank"] }],
+        "blocked": [],
+        "resolutions": [
+          { "country": "fi", "city": null, "kind": "route", "exit": 4, "public_ip": "198.51.100.4" },
+          { "country": "se", "city": null, "kind": "main", "public_ip": "198.51.100.1" }
+        ],
+        "statuses": [
+          { "country": "fi", "city": null, "state": "unavailable", "reason": "tunnel_down", "public_ip": null, "apps": ["browser"] },
+          { "country": "se", "city": null, "state": "unavailable", "reason": "tunnel_down", "public_ip": null, "apps": ["bank"] }
+        ]
+      }
+    },
+    {
+      "name": "the_last_plans_circuit_is_kept_while_it_stays_valid",
+      "_comment": "Frankfurt is lighter than Berlin, and still kept: a new plan does not move a live route for nothing. Not reported yet, so connecting.",
+      "two_hop": false,
+      "entry_country": null,
+      "main_exit": 1,
+      "previous": [{ "country": "de", "city": null, "entry": 3, "exit": 3 }],
+      "exits": [{ "app": "browser", "country": "de", "city": null }],
+      "connected": true,
+      "reports": [],
+      "expect": {
+        "routes": [{ "entry": 3, "exit": 3, "apps": ["browser"] }],
+        "main": [],
+        "blocked": [],
+        "resolutions": [
+          { "country": "de", "city": null, "kind": "route", "exit": 3, "public_ip": "198.51.100.3" }
+        ],
+        "statuses": [
+          { "country": "de", "city": null, "state": "connecting", "reason": null, "public_ip": null, "apps": ["browser"] }
+        ]
+      }
+    },
+    {
+      "name": "a_kept_circuit_entering_outside_the_main_entry_country_is_replaced",
+      "_comment": "The last plan entered in Sweden; the main connection now enters in the Netherlands.",
+      "two_hop": true,
+      "entry_country": "nl",
+      "main_exit": 1,
+      "previous": [{ "country": "fi", "city": null, "entry": 1, "exit": 4 }],
+      "exits": [{ "app": "browser", "country": "fi", "city": null }],
+      "connected": true,
+      "reports": [{ "exit": 4, "state": "failed" }],
+      "expect": {
+        "routes": [{ "entry": 5, "exit": 4, "apps": ["browser"] }],
+        "main": [],
+        "blocked": [],
+        "resolutions": [
+          { "country": "fi", "city": null, "kind": "route", "exit": 4, "public_ip": "198.51.100.4" }
+        ],
+        "statuses": [
+          { "country": "fi", "city": null, "state": "unavailable", "reason": "no_relay", "public_ip": null, "apps": ["browser"] }
+        ]
+      }
+    },
+    {
+      "name": "without_a_main_exit_its_country_gets_a_route",
+      "_comment": "A custom exit is on: no exit is left to the main session. Android has no custom exit, so its main session is always on one.",
+      "skip": ["android"],
+      "two_hop": false,
+      "entry_country": null,
+      "main_exit": null,
+      "exits": [{ "app": "bank", "country": "se", "city": null }],
+      "connected": true,
+      "reports": [{ "exit": 1, "state": "no_token" }],
+      "expect": {
+        "routes": [{ "entry": 1, "exit": 1, "apps": ["bank"] }],
+        "main": [],
+        "blocked": [],
+        "resolutions": [
+          { "country": "se", "city": null, "kind": "route", "exit": 1, "public_ip": "198.51.100.1" }
+        ],
+        "statuses": [
+          { "country": "se", "city": null, "state": "unavailable", "reason": "no_token", "public_ip": null, "apps": ["bank"] }
+        ]
+      }
+    },
+    {
+      "name": "a_two_hop_city_route_enters_outside_that_city",
+      "_comment": "The city constrains the exit only. The desktop selector also refuses every entry outside the city, so it blocks the app: see the skip list in README.md.",
+      "skip": ["desktop"],
+      "two_hop": true,
+      "entry_country": "nl",
+      "main_exit": 1,
+      "exits": [{ "app": "browser", "country": "de", "city": "frankfurt" }],
+      "connected": true,
+      "reports": [{ "exit": 3, "state": "connecting" }],
+      "expect": {
+        "routes": [{ "entry": 5, "exit": 3, "apps": ["browser"] }],
+        "main": [],
+        "blocked": [],
+        "resolutions": [
+          { "country": "de", "city": "frankfurt", "kind": "route", "exit": 3, "public_ip": "198.51.100.3" }
+        ],
+        "statuses": [
+          { "country": "de", "city": "frankfurt", "state": "connecting", "reason": null, "public_ip": null, "apps": ["browser"] }
+        ]
+      }
+    }
+  ]
+}

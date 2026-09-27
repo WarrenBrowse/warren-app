@@ -23,6 +23,7 @@ pub mod admission;
 mod circuit;
 pub mod controller;
 pub mod datapath;
+pub mod plan;
 pub mod session;
 pub mod tokens;
 
