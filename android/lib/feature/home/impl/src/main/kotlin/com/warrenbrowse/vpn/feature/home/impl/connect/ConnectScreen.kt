@@ -1349,39 +1349,42 @@ private fun ConnectionCardHeader(
                     fadeOut(tween(CARD_TRANSITION_MILLIS)),
         ) {
             Column {
-                Text(
-                    modifier =
-                        Modifier.fillMaxWidth().padding(top = Dimens.tinyPadding).marqueeLine(),
-                    text = location.asString(),
-                    // Desktop Location: 18/24 semibold.
-                    style =
-                        MaterialTheme.typography.titleMedium.copy(
-                            fontSize = 18.sp,
-                            lineHeight = 24.sp,
-                        ),
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                )
-                // The exit's load closes the hostname line instead of adding one: the card is
-                // bottom-anchored, so a new row would lift its top edge over the scenery.
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    AnimatedContent(
-                        location.hostnameText(),
-                        modifier = Modifier.weight(1f),
-                        label = "hostname",
-                    ) {
-                        if (it != null) {
+                // The exit's load closes the hostname line, or the location line while there is
+                // no hostname, instead of adding a row: the card is bottom-anchored, so a new row
+                // would lift its top edge over the scenery.
+                val hostnameText = location.hostnameText()
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = Dimens.tinyPadding),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        modifier = Modifier.weight(1f).marqueeLine(),
+                        text = location.asString(),
+                        // Desktop Location: 18/24 semibold.
+                        style =
+                            MaterialTheme.typography.titleMedium.copy(
+                                fontSize = 18.sp,
+                                lineHeight = 24.sp,
+                            ),
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                    )
+                    if (hostnameText == null) exitLoad?.invoke()
+                }
+                AnimatedContent(hostnameText, label = "hostname") {
+                    if (it != null) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
-                                modifier = Modifier.fillMaxWidth().marqueeLine(),
+                                modifier = Modifier.weight(1f).marqueeLine(),
                                 text = it,
                                 // Desktop Hostname: 14/20 at 60 % white.
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha60),
                                 maxLines = 1,
                             )
+                            exitLoad?.invoke()
                         }
                     }
-                    exitLoad?.invoke()
                 }
             }
         }
