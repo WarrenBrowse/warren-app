@@ -138,6 +138,11 @@ What the build does for the signature:
   hardened runtime with no exception. Every other binary keeps the inherited
   Electron entitlements (JIT and unsigned executable memory), which the
   Chromium helpers need and the daemon does not.
+- With no Developer ID available (the beta release job has none), `signMacApp`
+  signs ad hoc (`identity: '-'`), the fallback electron-builder applies on its
+  own only when no custom `sign` is configured. Without it osx-sign stops the
+  build on "No identity found for signing" (`beta-v1.1.36`, first attempt).
+  Such a build reports split tunneling unavailable, as described above.
 
 That the hardened runtime lets the daemon spawn eslogger and open utun,
 `/dev/bpf` and `/dev/pf` with no entitlement is an assumption from Apple's list

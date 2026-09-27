@@ -914,14 +914,30 @@ function macSignOptionsForFile(filePath, fileOptions) {
   return { ...fileOptions, entitlements: MAC_DAEMON_ENTITLEMENTS };
 }
 
-async function signMacApp(options) {
-  const { signAsync } = require('@electron/osx-sign');
+// A custom `sign` turns off electron-builder's fallback to an ad-hoc signature
+// when no Developer ID is found, so it is redone here: without it an unsigned
+// build (the beta release) reaches osx-sign with no identity and fails, and an
+// arm64 or universal app that is not signed at all does not launch.
+function macSignAsyncOptions(options, forceCodeSigning) {
+  let identity = options.identity;
+  if (!identity) {
+    if (forceCodeSigning) {
+      throw new Error('No macOS signing identity found, and forceCodeSigning is set');
+    }
+    identity = '-';
+  }
   const optionsForFile = options.optionsForFile;
-  await signAsync({
+  return {
     ...options,
+    identity,
     optionsForFile: (filePath) =>
       macSignOptionsForFile(filePath, optionsForFile ? optionsForFile(filePath) : {}),
-  });
+  };
+}
+
+async function signMacApp(options, packager) {
+  const { signAsync } = require('@electron/osx-sign');
+  await signAsync(macSignAsyncOptions(options, packager?.forceCodeSigning === true));
 }
 
 function distAssets(relativePath) {
@@ -1019,4 +1035,5 @@ exports.packMac = packMac;
 exports.packLinux = packLinux;
 exports.linuxAfterPack = linuxAfterPack;
 exports.macSignOptionsForFile = macSignOptionsForFile;
+exports.macSignAsyncOptions = macSignAsyncOptions;
 exports.MAC_DAEMON_ENTITLEMENTS = MAC_DAEMON_ENTITLEMENTS;

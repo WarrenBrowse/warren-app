@@ -28,3 +28,12 @@ export declare function macSignOptionsForFile<T extends object>(
   filePath: string,
   fileOptions: T,
 ): T | (T & { entitlements: string });
+export declare function macSignAsyncOptions<
+  T extends { identity?: string; optionsForFile?: (filePath: string) => object },
+>(
+  options: T,
+  forceCodeSigning: boolean,
+): Omit<T, 'identity' | 'optionsForFile'> & {
+  identity: string;
+  optionsForFile: (filePath: string) => object;
+};

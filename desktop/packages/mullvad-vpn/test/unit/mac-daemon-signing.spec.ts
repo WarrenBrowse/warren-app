@@ -86,6 +86,63 @@ describe('macOS signing of the daemon', () => {
     timeoutMs,
   );
 
+  // A custom `sign` turns off electron-builder's own ad-hoc fallback, so an
+  // unsigned build (the beta release runs without a Developer ID) reaches the
+  // signer with no identity, and osx-sign then fails on "No identity found".
+  it(
+    'signs ad hoc when no signing identity was found',
+    async () => {
+      const { macSignAsyncOptions } = await distribution();
+
+      const options = macSignAsyncOptions({ app: APP, identity: undefined }, false);
+
+      expect(options.identity).toBe('-');
+    },
+    timeoutMs,
+  );
+
+  it(
+    'keeps the identity electron-builder found',
+    async () => {
+      const { macSignAsyncOptions } = await distribution();
+
+      const options = macSignAsyncOptions({ app: APP, identity: 'ABCDEF0123456789' }, false);
+
+      expect(options.identity).toBe('ABCDEF0123456789');
+    },
+    timeoutMs,
+  );
+
+  it(
+    'refuses an ad-hoc signature when code signing is forced',
+    async () => {
+      const { macSignAsyncOptions } = await distribution();
+
+      expect(() => macSignAsyncOptions({ app: APP, identity: undefined }, true)).toThrow(
+        /identity/,
+      );
+    },
+    timeoutMs,
+  );
+
+  it(
+    'gives the daemon its entitlements in an ad-hoc signature too',
+    async () => {
+      const { macSignAsyncOptions, MAC_DAEMON_ENTITLEMENTS } = await distribution();
+
+      const options = macSignAsyncOptions(
+        { app: APP, identity: undefined, optionsForFile: () => DEFAULTS },
+        false,
+      );
+
+      expect(options.optionsForFile(`${APP}/Contents/Resources/warren-daemon`)).toEqual({
+        ...DEFAULTS,
+        entitlements: MAC_DAEMON_ENTITLEMENTS,
+      });
+    },
+    timeoutMs,
+  );
+
   it(
     'routes the app signature through the daemon-aware signer',
     async () => {
