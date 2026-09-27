@@ -3395,10 +3395,22 @@ msgctxt "vpn-settings-view"
 msgid "This might cause issues on certain websites, services, and apps."
 msgstr "這可能會導致某些網站、服務和應用程式出現問題。"
 
+msgctxt "vpn-settings-view"
+msgid "This network cannot be shared."
+msgstr "無法分享此網路。"
+
+msgctxt "vpn-settings-view"
+msgid "This network is too broad to be shared outside the tunnel."
+msgstr "此網路範圍過大，無法在通道外分享。"
+
 #. Label for settings that enables tracker blocking.
 msgctxt "vpn-settings-view"
 msgid "Trackers"
 msgstr "追蹤程式"
+
+msgctxt "vpn-settings-view"
+msgid "Traffic to these networks goes outside the VPN tunnel."
+msgstr "傳往這些網路的流量會在 VPN 通道外傳輸。"
 
 msgctxt "vpn-settings-view"
 msgid "Use custom DNS server"
@@ -3440,6 +3452,10 @@ msgctxt "vpn-settings-view"
 msgid "%(mbps)d Mbps"
 msgstr "%(mbps)d Mbps"
 
+msgctxt "vpn-settings-view"
+msgid "Add a network"
+msgstr "新增網路"
+
 #. Feature indicator shown when the advanced "Allow external DNS resolvers"
 #. setting is on, i.e. DNS leak protection is relaxed.
 msgctxt "vpn-settings-view"
@@ -3472,6 +3488,16 @@ msgstr "自訂出口伺服器（進階）"
 msgctxt "vpn-settings-view"
 msgid "Endpoint"
 msgstr "端點"
+
+msgctxt "vpn-settings-view"
+msgid "Enter a network in CIDR notation, such as 192.168.1.0/24 or fd00::/8."
+msgstr "請以 CIDR 格式輸入網路，例如 192.168.1.0/24 或 fd00::/8。"
+
+#. Placeholder of the field where the user types a network to share
+#. outside the tunnel, in CIDR notation.
+msgctxt "vpn-settings-view"
+msgid "Enter a network, e.g. 192.168.1.0/24"
+msgstr "輸入網路，例如 192.168.1.0/24"
 
 msgctxt "vpn-settings-view"
 msgid "Exit address as host:port. Bracket IPv6, for example [2001:db8::1]:443."
@@ -5191,6 +5217,12 @@ msgstr "重設釘選的出口金鑰"
 msgctxt "vpn-settings-view"
 msgid "Reset pinned exit keys?"
 msgstr "要重設釘選的出口金鑰嗎？"
+
+#. Restores the list of networks shared outside the tunnel
+#. to the built-in private IP ranges.
+msgctxt "vpn-settings-view"
+msgid "Reset to default"
+msgstr "重設為預設值"
 
 msgctxt "vpn-settings-view"
 msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."

@@ -3404,10 +3404,22 @@ msgctxt "vpn-settings-view"
 msgid "This might cause issues on certain websites, services, and apps."
 msgstr "Detta kan orsaka problem på vissa webbplatser, tjänster och appar."
 
+msgctxt "vpn-settings-view"
+msgid "This network cannot be shared."
+msgstr "Det här nätverket kan inte delas."
+
+msgctxt "vpn-settings-view"
+msgid "This network is too broad to be shared outside the tunnel."
+msgstr "Det här nätverket är för stort för att delas utanför tunneln."
+
 #. Label for settings that enables tracker blocking.
 msgctxt "vpn-settings-view"
 msgid "Trackers"
 msgstr "Spårare"
+
+msgctxt "vpn-settings-view"
+msgid "Traffic to these networks goes outside the VPN tunnel."
+msgstr "Trafik till de här nätverken går utanför VPN-tunneln."
 
 msgctxt "vpn-settings-view"
 msgid "Use custom DNS server"
@@ -3441,6 +3453,10 @@ msgctxt "vpn-settings-view"
 msgid "%(mbps)d Mbps"
 msgstr "%(mbps)d Mbps"
 
+msgctxt "vpn-settings-view"
+msgid "Add a network"
+msgstr "Lägg till ett nätverk"
+
 #. Feature indicator shown when the advanced "Allow external DNS resolvers"
 #. setting is on, i.e. DNS leak protection is relaxed.
 msgctxt "vpn-settings-view"
@@ -3473,6 +3489,16 @@ msgstr "Anpassad utgångsserver (avancerat)"
 msgctxt "vpn-settings-view"
 msgid "Endpoint"
 msgstr "Slutpunkt"
+
+msgctxt "vpn-settings-view"
+msgid "Enter a network in CIDR notation, such as 192.168.1.0/24 or fd00::/8."
+msgstr "Ange ett nätverk i CIDR-notation, till exempel 192.168.1.0/24 eller fd00::/8."
+
+#. Placeholder of the field where the user types a network to share
+#. outside the tunnel, in CIDR notation.
+msgctxt "vpn-settings-view"
+msgid "Enter a network, e.g. 192.168.1.0/24"
+msgstr "Ange ett nätverk, t.ex. 192.168.1.0/24"
 
 msgctxt "vpn-settings-view"
 msgid "Exit address as host:port. Bracket IPv6, for example [2001:db8::1]:443."
@@ -5333,6 +5359,12 @@ msgstr "Återställ fästa exitnycklar"
 msgctxt "vpn-settings-view"
 msgid "Reset pinned exit keys?"
 msgstr "Återställa fästa exitnycklar?"
+
+#. Restores the list of networks shared outside the tunnel
+#. to the built-in private IP ranges.
+msgctxt "vpn-settings-view"
+msgid "Reset to default"
+msgstr "Återställ till standard"
 
 msgctxt "vpn-settings-view"
 msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."

@@ -3395,10 +3395,22 @@ msgctxt "vpn-settings-view"
 msgid "This might cause issues on certain websites, services, and apps."
 msgstr "이 기능을 사용하면 특정 웹 사이트, 서비스 및 앱에서 문제가 발생할 수 있습니다."
 
+msgctxt "vpn-settings-view"
+msgid "This network cannot be shared."
+msgstr "이 네트워크는 공유할 수 없습니다."
+
+msgctxt "vpn-settings-view"
+msgid "This network is too broad to be shared outside the tunnel."
+msgstr "이 네트워크는 범위가 너무 넓어 터널 외부에서 공유할 수 없습니다."
+
 #. Label for settings that enables tracker blocking.
 msgctxt "vpn-settings-view"
 msgid "Trackers"
 msgstr "트래커"
+
+msgctxt "vpn-settings-view"
+msgid "Traffic to these networks goes outside the VPN tunnel."
+msgstr "이 네트워크로 가는 트래픽은 VPN 터널 외부로 전송됩니다."
 
 msgctxt "vpn-settings-view"
 msgid "Use custom DNS server"
@@ -3440,6 +3452,10 @@ msgctxt "vpn-settings-view"
 msgid "%(mbps)d Mbps"
 msgstr "%(mbps)d Mbps"
 
+msgctxt "vpn-settings-view"
+msgid "Add a network"
+msgstr "네트워크 추가"
+
 #. Feature indicator shown when the advanced "Allow external DNS resolvers"
 #. setting is on, i.e. DNS leak protection is relaxed.
 msgctxt "vpn-settings-view"
@@ -3472,6 +3488,16 @@ msgstr "사용자 지정 출구 서버(고급)"
 msgctxt "vpn-settings-view"
 msgid "Endpoint"
 msgstr "엔드포인트"
+
+msgctxt "vpn-settings-view"
+msgid "Enter a network in CIDR notation, such as 192.168.1.0/24 or fd00::/8."
+msgstr "CIDR 표기법으로 네트워크를 입력하세요(예: 192.168.1.0/24 또는 fd00::/8)."
+
+#. Placeholder of the field where the user types a network to share
+#. outside the tunnel, in CIDR notation.
+msgctxt "vpn-settings-view"
+msgid "Enter a network, e.g. 192.168.1.0/24"
+msgstr "네트워크 입력(예: 192.168.1.0/24)"
 
 msgctxt "vpn-settings-view"
 msgid "Exit address as host:port. Bracket IPv6, for example [2001:db8::1]:443."
@@ -5191,6 +5217,12 @@ msgstr "고정된 출구 키 초기화"
 msgctxt "vpn-settings-view"
 msgid "Reset pinned exit keys?"
 msgstr "고정된 출구 키를 초기화할까요?"
+
+#. Restores the list of networks shared outside the tunnel
+#. to the built-in private IP ranges.
+msgctxt "vpn-settings-view"
+msgid "Reset to default"
+msgstr "기본값으로 재설정"
 
 msgctxt "vpn-settings-view"
 msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."

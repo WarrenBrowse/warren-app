@@ -3422,10 +3422,22 @@ msgctxt "vpn-settings-view"
 msgid "This might cause issues on certain websites, services, and apps."
 msgstr "Це може викликати проблеми під час використання певних вебсайтів, сервісів або застосунків."
 
+msgctxt "vpn-settings-view"
+msgid "This network cannot be shared."
+msgstr "Обмін даними з цією мережею неможливий."
+
+msgctxt "vpn-settings-view"
+msgid "This network is too broad to be shared outside the tunnel."
+msgstr "Ця мережа надто широка для обміну даними поза тунелем."
+
 #. Label for settings that enables tracker blocking.
 msgctxt "vpn-settings-view"
 msgid "Trackers"
 msgstr "Трекери"
+
+msgctxt "vpn-settings-view"
+msgid "Traffic to these networks goes outside the VPN tunnel."
+msgstr "Трафік до цих мереж іде поза VPN-тунелем."
 
 msgctxt "vpn-settings-view"
 msgid "Use custom DNS server"
@@ -3459,6 +3471,10 @@ msgctxt "vpn-settings-view"
 msgid "%(mbps)d Mbps"
 msgstr "%(mbps)d Мбіт/с"
 
+msgctxt "vpn-settings-view"
+msgid "Add a network"
+msgstr "Додати мережу"
+
 #. Feature indicator shown when the advanced "Allow external DNS resolvers"
 #. setting is on, i.e. DNS leak protection is relaxed.
 msgctxt "vpn-settings-view"
@@ -3491,6 +3507,16 @@ msgstr "Користувацький вихідний сервер (для до�
 msgctxt "vpn-settings-view"
 msgid "Endpoint"
 msgstr "Кінцева точка"
+
+msgctxt "vpn-settings-view"
+msgid "Enter a network in CIDR notation, such as 192.168.1.0/24 or fd00::/8."
+msgstr "Введіть мережу в нотації CIDR, наприклад 192.168.1.0/24 або fd00::/8."
+
+#. Placeholder of the field where the user types a network to share
+#. outside the tunnel, in CIDR notation.
+msgctxt "vpn-settings-view"
+msgid "Enter a network, e.g. 192.168.1.0/24"
+msgstr "Введіть мережу, наприклад 192.168.1.0/24"
 
 msgctxt "vpn-settings-view"
 msgid "Exit address as host:port. Bracket IPv6, for example [2001:db8::1]:443."
@@ -5367,6 +5393,12 @@ msgstr "Скинути закріплені ключі вихідних серв
 msgctxt "vpn-settings-view"
 msgid "Reset pinned exit keys?"
 msgstr "Скинути закріплені ключі вихідних серверів?"
+
+#. Restores the list of networks shared outside the tunnel
+#. to the built-in private IP ranges.
+msgctxt "vpn-settings-view"
+msgid "Reset to default"
+msgstr "Скинути до значень за замовчуванням"
 
 msgctxt "vpn-settings-view"
 msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."

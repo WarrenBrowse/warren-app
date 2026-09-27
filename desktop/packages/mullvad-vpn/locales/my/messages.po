@@ -3395,10 +3395,22 @@ msgctxt "vpn-settings-view"
 msgid "This might cause issues on certain websites, services, and apps."
 msgstr "၎င်းသည် အချို့သော ဝဘ်ဆိုက်များ၊ ဝန်ဆောင်မှုများနှင့် အက်ပ်များတွင် ပြဿနာများကို ဖြစ်စေနိုင်သည်။"
 
+msgctxt "vpn-settings-view"
+msgid "This network cannot be shared."
+msgstr "ဤကွန်ရက်ကို မျှဝေ၍ မရပါ။"
+
+msgctxt "vpn-settings-view"
+msgid "This network is too broad to be shared outside the tunnel."
+msgstr "ဤကွန်ရက်သည် ကျယ်ပြန့်လွန်းသဖြင့် Tunnel ပြင်ပတွင် မျှဝေ၍ မရပါ။"
+
 #. Label for settings that enables tracker blocking.
 msgctxt "vpn-settings-view"
 msgid "Trackers"
 msgstr "ခြေရာခံများ"
+
+msgctxt "vpn-settings-view"
+msgid "Traffic to these networks goes outside the VPN tunnel."
+msgstr "ဤကွန်ရက်များသို့ သွားသော ကူးလူးမှုသည် VPN Tunnel ပြင်ပမှ သွားပါသည်။"
 
 msgctxt "vpn-settings-view"
 msgid "Use custom DNS server"
@@ -3440,6 +3452,10 @@ msgctxt "vpn-settings-view"
 msgid "%(mbps)d Mbps"
 msgstr "%(mbps)d Mbps"
 
+msgctxt "vpn-settings-view"
+msgid "Add a network"
+msgstr "ကွန်ရက် ပေါင်းထည့်ရန်"
+
 #. Feature indicator shown when the advanced "Allow external DNS resolvers"
 #. setting is on, i.e. DNS leak protection is relaxed.
 msgctxt "vpn-settings-view"
@@ -3472,6 +3488,16 @@ msgstr "စိတ်ကြိုက် ထွက်ပေါက်ဆာဗာ (
 msgctxt "vpn-settings-view"
 msgid "Endpoint"
 msgstr "အဆုံးမှတ်"
+
+msgctxt "vpn-settings-view"
+msgid "Enter a network in CIDR notation, such as 192.168.1.0/24 or fd00::/8."
+msgstr "ကွန်ရက်ကို CIDR ပုံစံဖြင့် ဖြည့်ပါ၊ ဥပမာ 192.168.1.0/24 သို့မဟုတ် fd00::/8။"
+
+#. Placeholder of the field where the user types a network to share
+#. outside the tunnel, in CIDR notation.
+msgctxt "vpn-settings-view"
+msgid "Enter a network, e.g. 192.168.1.0/24"
+msgstr "ကွန်ရက်တစ်ခု ဖြည့်ပါ၊ ဥပမာ 192.168.1.0/24"
 
 msgctxt "vpn-settings-view"
 msgid "Exit address as host:port. Bracket IPv6, for example [2001:db8::1]:443."
@@ -5194,6 +5220,12 @@ msgstr "ပင်ထိုးထားသော exit သော့များက
 msgctxt "vpn-settings-view"
 msgid "Reset pinned exit keys?"
 msgstr "ပင်ထိုးထားသော exit သော့များကို ပြန်လည်သတ်မှတ်မလား။"
+
+#. Restores the list of networks shared outside the tunnel
+#. to the built-in private IP ranges.
+msgctxt "vpn-settings-view"
+msgid "Reset to default"
+msgstr "ပုံသေသို့ ပြန်လည်သတ်မှတ်ရန်"
 
 msgctxt "vpn-settings-view"
 msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."

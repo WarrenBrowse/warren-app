@@ -3395,10 +3395,22 @@ msgctxt "vpn-settings-view"
 msgid "This might cause issues on certain websites, services, and apps."
 msgstr "นี่อาจก่อให้เกิดปัญหากับบางเว็บไซต์ บริการ และแอปได้"
 
+msgctxt "vpn-settings-view"
+msgid "This network cannot be shared."
+msgstr "ไม่สามารถแชร์เครือข่ายนี้ได้"
+
+msgctxt "vpn-settings-view"
+msgid "This network is too broad to be shared outside the tunnel."
+msgstr "เครือข่ายนี้กว้างเกินกว่าจะแชร์นอกอุโมงค์ได้"
+
 #. Label for settings that enables tracker blocking.
 msgctxt "vpn-settings-view"
 msgid "Trackers"
 msgstr "ตัวติดตาม"
+
+msgctxt "vpn-settings-view"
+msgid "Traffic to these networks goes outside the VPN tunnel."
+msgstr "การรับส่งข้อมูลไปยังเครือข่ายเหล่านี้จะออกไปนอกอุโมงค์ VPN"
 
 msgctxt "vpn-settings-view"
 msgid "Use custom DNS server"
@@ -3440,6 +3452,10 @@ msgctxt "vpn-settings-view"
 msgid "%(mbps)d Mbps"
 msgstr "%(mbps)d Mbps"
 
+msgctxt "vpn-settings-view"
+msgid "Add a network"
+msgstr "เพิ่มเครือข่าย"
+
 #. Feature indicator shown when the advanced "Allow external DNS resolvers"
 #. setting is on, i.e. DNS leak protection is relaxed.
 msgctxt "vpn-settings-view"
@@ -3472,6 +3488,16 @@ msgstr "เซิร์ฟเวอร์ทางออกที่กำหน
 msgctxt "vpn-settings-view"
 msgid "Endpoint"
 msgstr "ปลายทาง"
+
+msgctxt "vpn-settings-view"
+msgid "Enter a network in CIDR notation, such as 192.168.1.0/24 or fd00::/8."
+msgstr "ป้อนเครือข่ายในรูปแบบ CIDR เช่น 192.168.1.0/24 หรือ fd00::/8"
+
+#. Placeholder of the field where the user types a network to share
+#. outside the tunnel, in CIDR notation.
+msgctxt "vpn-settings-view"
+msgid "Enter a network, e.g. 192.168.1.0/24"
+msgstr "ป้อนเครือข่าย เช่น 192.168.1.0/24"
 
 msgctxt "vpn-settings-view"
 msgid "Exit address as host:port. Bracket IPv6, for example [2001:db8::1]:443."
@@ -5191,6 +5217,12 @@ msgstr "รีเซ็ตกุญแจทางออกที่ปักห
 msgctxt "vpn-settings-view"
 msgid "Reset pinned exit keys?"
 msgstr "รีเซ็ตกุญแจทางออกที่ปักหมุดไว้หรือไม่?"
+
+#. Restores the list of networks shared outside the tunnel
+#. to the built-in private IP ranges.
+msgctxt "vpn-settings-view"
+msgid "Reset to default"
+msgstr "รีเซ็ตเป็นค่าเริ่มต้น"
 
 msgctxt "vpn-settings-view"
 msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."

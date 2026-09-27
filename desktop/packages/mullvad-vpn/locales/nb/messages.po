@@ -3404,10 +3404,22 @@ msgctxt "vpn-settings-view"
 msgid "This might cause issues on certain websites, services, and apps."
 msgstr "Dette kan føre til problemer på enkelte nettsteder, tjenester og apper."
 
+msgctxt "vpn-settings-view"
+msgid "This network cannot be shared."
+msgstr "Dette nettverket kan ikke deles."
+
+msgctxt "vpn-settings-view"
+msgid "This network is too broad to be shared outside the tunnel."
+msgstr "Dette nettverket er for stort til å deles utenfor tunnelen."
+
 #. Label for settings that enables tracker blocking.
 msgctxt "vpn-settings-view"
 msgid "Trackers"
 msgstr "Sporing"
+
+msgctxt "vpn-settings-view"
+msgid "Traffic to these networks goes outside the VPN tunnel."
+msgstr "Trafikk til disse nettverkene går utenfor VPN-tunnelen."
 
 msgctxt "vpn-settings-view"
 msgid "Use custom DNS server"
@@ -3441,6 +3453,10 @@ msgctxt "vpn-settings-view"
 msgid "%(mbps)d Mbps"
 msgstr "%(mbps)d Mbps"
 
+msgctxt "vpn-settings-view"
+msgid "Add a network"
+msgstr "Legg til et nettverk"
+
 #. Feature indicator shown when the advanced "Allow external DNS resolvers"
 #. setting is on, i.e. DNS leak protection is relaxed.
 msgctxt "vpn-settings-view"
@@ -3473,6 +3489,16 @@ msgstr "Tilpasset utgangsserver (avansert)"
 msgctxt "vpn-settings-view"
 msgid "Endpoint"
 msgstr "Endepunkt"
+
+msgctxt "vpn-settings-view"
+msgid "Enter a network in CIDR notation, such as 192.168.1.0/24 or fd00::/8."
+msgstr "Angi et nettverk i CIDR-notasjon, for eksempel 192.168.1.0/24 eller fd00::/8."
+
+#. Placeholder of the field where the user types a network to share
+#. outside the tunnel, in CIDR notation.
+msgctxt "vpn-settings-view"
+msgid "Enter a network, e.g. 192.168.1.0/24"
+msgstr "Angi et nettverk, f.eks. 192.168.1.0/24"
 
 msgctxt "vpn-settings-view"
 msgid "Exit address as host:port. Bracket IPv6, for example [2001:db8::1]:443."
@@ -5333,6 +5359,12 @@ msgstr "Tilbakestill festede utgangsnøkler"
 msgctxt "vpn-settings-view"
 msgid "Reset pinned exit keys?"
 msgstr "Tilbakestille festede utgangsnøkler?"
+
+#. Restores the list of networks shared outside the tunnel
+#. to the built-in private IP ranges.
+msgctxt "vpn-settings-view"
+msgid "Reset to default"
+msgstr "Tilbakestill til standard"
 
 msgctxt "vpn-settings-view"
 msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."

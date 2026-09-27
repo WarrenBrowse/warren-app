@@ -3440,10 +3440,22 @@ msgctxt "vpn-settings-view"
 msgid "This might cause issues on certain websites, services, and apps."
 msgstr "قد يؤدي ذلك إلى حدوث مشكلات في بعض المواقع الإلكترونية والخدمات والتطبيقات."
 
+msgctxt "vpn-settings-view"
+msgid "This network cannot be shared."
+msgstr "لا يمكن مشاركة هذه الشبكة."
+
+msgctxt "vpn-settings-view"
+msgid "This network is too broad to be shared outside the tunnel."
+msgstr "هذه الشبكة واسعة جدًا بحيث لا يمكن مشاركتها خارج النفق."
+
 #. Label for settings that enables tracker blocking.
 msgctxt "vpn-settings-view"
 msgid "Trackers"
 msgstr "أدوات التتبُّع"
+
+msgctxt "vpn-settings-view"
+msgid "Traffic to these networks goes outside the VPN tunnel."
+msgstr "تمر حركة البيانات المتجهة إلى هذه الشبكات خارج نفق شبكة VPN."
 
 msgctxt "vpn-settings-view"
 msgid "Use custom DNS server"
@@ -3485,6 +3497,10 @@ msgctxt "vpn-settings-view"
 msgid "%(mbps)d Mbps"
 msgstr "%(mbps)d Mbps"
 
+msgctxt "vpn-settings-view"
+msgid "Add a network"
+msgstr "إضافة شبكة"
+
 #. Feature indicator shown when the advanced "Allow external DNS resolvers"
 #. setting is on, i.e. DNS leak protection is relaxed.
 msgctxt "vpn-settings-view"
@@ -3517,6 +3533,16 @@ msgstr "خادم خروج مخصَّص (متقدم)"
 msgctxt "vpn-settings-view"
 msgid "Endpoint"
 msgstr "نقطة النهاية"
+
+msgctxt "vpn-settings-view"
+msgid "Enter a network in CIDR notation, such as 192.168.1.0/24 or fd00::/8."
+msgstr "أدخل شبكة بصيغة CIDR، مثل 192.168.1.0/24 أو fd00::/8."
+
+#. Placeholder of the field where the user types a network to share
+#. outside the tunnel, in CIDR notation.
+msgctxt "vpn-settings-view"
+msgid "Enter a network, e.g. 192.168.1.0/24"
+msgstr "أدخل شبكة، مثل 192.168.1.0/24"
 
 msgctxt "vpn-settings-view"
 msgid "Exit address as host:port. Bracket IPv6, for example [2001:db8::1]:443."
@@ -5276,6 +5302,12 @@ msgstr "إعادة تعيين مفاتيح الخروج المثبَّتة"
 msgctxt "vpn-settings-view"
 msgid "Reset pinned exit keys?"
 msgstr "إعادة تعيين مفاتيح الخروج المثبَّتة؟"
+
+#. Restores the list of networks shared outside the tunnel
+#. to the built-in private IP ranges.
+msgctxt "vpn-settings-view"
+msgid "Reset to default"
+msgstr "إعادة التعيين إلى الإعدادات الافتراضية"
 
 msgctxt "vpn-settings-view"
 msgid "Until the new pins are established the substitution-detection guard is briefly down: an attacker who replaced an exit between resets would not be flagged on the first reconnect."
