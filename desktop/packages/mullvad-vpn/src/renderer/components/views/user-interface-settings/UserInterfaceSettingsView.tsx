@@ -6,6 +6,7 @@ import {
   StartMinimizedSetting,
   UnpinnedWindowSetting,
 } from '../../../features/client/components';
+import { showUnpinnedWindowSetting } from '../../../features/client/utils';
 import { View } from '../../../lib/components/view';
 import { useHistory } from '../../../lib/history';
 import { useSelector } from '../../../redux/store';
@@ -43,10 +44,11 @@ export function UserInterfaceSettingsView() {
                 <MonochromaticTrayIconSetting position="solo" />
                 <LanguageListItem position="solo" />
 
-                {(window.env.platform === 'win32' ||
-                  (window.env.platform === 'darwin' && window.env.development)) && (
-                  <UnpinnedWindowSetting position="solo" />
-                )}
+                {showUnpinnedWindowSetting(
+                  window.env.platform,
+                  window.env.development,
+                  unpinnedWindow,
+                ) && <UnpinnedWindowSetting position="solo" />}
 
                 {unpinnedWindow && <StartMinimizedSetting position="solo" />}
               </View.Container>
