@@ -194,11 +194,11 @@ impl SecretStorage for WindowsDpapiStorage {
 fn dpapi_protect(plaintext: &[u8]) -> io::Result<Vec<u8>> {
     let input = CRYPT_INTEGER_BLOB {
         cbData: plaintext.len() as u32,
-        pbData: plaintext.as_ptr() as *mut u8,
+        pbData: plaintext.as_ptr().cast_mut(),
     };
     let entropy = CRYPT_INTEGER_BLOB {
         cbData: ENTROPY.len() as u32,
-        pbData: ENTROPY.as_ptr() as *mut u8,
+        pbData: ENTROPY.as_ptr().cast_mut(),
     };
     let mut output = CRYPT_INTEGER_BLOB::default();
 
@@ -210,13 +210,13 @@ fn dpapi_protect(plaintext: &[u8]) -> io::Result<Vec<u8>> {
     // buffer before returning.
     unsafe {
         CryptProtectData(
-            &input,
+            &raw const input,
             None,
-            Some(&entropy),
+            Some(&raw const entropy),
             None,
             None,
             CRYPTPROTECT_LOCAL_MACHINE,
-            &mut output,
+            &raw mut output,
         )
     }
     .map_err(|e| io::Error::other(format!("CryptProtectData failed: {e}")))?;
@@ -226,6 +226,8 @@ fn dpapi_protect(plaintext: &[u8]) -> io::Result<Vec<u8>> {
     // with `LocalFree`.
     let bytes =
         unsafe { std::slice::from_raw_parts(output.pbData, output.cbData as usize).to_vec() };
+    // SAFETY: `output.pbData` was allocated by `CryptProtectData` with
+    // `LocalAlloc`, is freed once here and never read again.
     unsafe {
         let _ = LocalFree(Some(HLOCAL(output.pbData as *mut _)));
     }
@@ -238,33 +240,37 @@ fn dpapi_protect(plaintext: &[u8]) -> io::Result<Vec<u8>> {
 fn dpapi_unprotect(ciphertext: &[u8]) -> io::Result<Zeroizing<Vec<u8>>> {
     let input = CRYPT_INTEGER_BLOB {
         cbData: ciphertext.len() as u32,
-        pbData: ciphertext.as_ptr() as *mut u8,
+        pbData: ciphertext.as_ptr().cast_mut(),
     };
     let entropy = CRYPT_INTEGER_BLOB {
         cbData: ENTROPY.len() as u32,
-        pbData: ENTROPY.as_ptr() as *mut u8,
+        pbData: ENTROPY.as_ptr().cast_mut(),
     };
     let mut output = CRYPT_INTEGER_BLOB::default();
 
     // SAFETY: same contract as `dpapi_protect`.
     unsafe {
         CryptUnprotectData(
-            &input,
+            &raw const input,
             None,
-            Some(&entropy),
+            Some(&raw const entropy),
             None,
             None,
             CRYPTPROTECT_LOCAL_MACHINE,
-            &mut output,
+            &raw mut output,
         )
     }
     .map_err(|e| io::Error::other(format!("CryptUnprotectData failed: {e}")))?;
 
+    // SAFETY: on Ok, `output.pbData` points to a `LocalAlloc`'d
+    // buffer of `output.cbData` bytes.
     let bytes =
         unsafe { std::slice::from_raw_parts(output.pbData, output.cbData as usize).to_vec() };
     // Wipe the LocalAlloc buffer ourselves before freeing, since
     // it transiently held the plaintext secret. `LocalFree` itself
     // does not zeroize.
+    // SAFETY: `output.pbData` is writable for `output.cbData` bytes,
+    // was allocated with `LocalAlloc` and is freed once here.
     unsafe {
         std::ptr::write_bytes(output.pbData, 0u8, output.cbData as usize);
         let _ = LocalFree(Some(HLOCAL(output.pbData as *mut _)));
@@ -347,22 +353,23 @@ mod tests {
         let wrong_entropy = b"not-warren-entropy";
         let input = CRYPT_INTEGER_BLOB {
             cbData: ciphertext.len() as u32,
-            pbData: ciphertext.as_ptr() as *mut u8,
+            pbData: ciphertext.as_ptr().cast_mut(),
         };
         let entropy = CRYPT_INTEGER_BLOB {
             cbData: wrong_entropy.len() as u32,
-            pbData: wrong_entropy.as_ptr() as *mut u8,
+            pbData: wrong_entropy.as_ptr().cast_mut(),
         };
         let mut output = CRYPT_INTEGER_BLOB::default();
+        // SAFETY: every pointer is valid for the duration of the call.
         let result = unsafe {
             CryptUnprotectData(
-                &input,
+                &raw const input,
                 None,
-                Some(&entropy),
+                Some(&raw const entropy),
                 None,
                 None,
                 CRYPTPROTECT_LOCAL_MACHINE,
-                &mut output,
+                &raw mut output,
             )
         };
         assert!(

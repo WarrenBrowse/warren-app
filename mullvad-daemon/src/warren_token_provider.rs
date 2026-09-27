@@ -470,7 +470,7 @@ mod tests {
     async fn refresh_rounds(outcomes: &[bool]) -> Vec<u64> {
         let start = tokio::time::Instant::now();
         let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
-        let mut outcomes = outcomes.to_vec().into_iter();
+        let mut outcomes = Vec::from(outcomes).into_iter();
         let task = tokio::spawn(super::refresh_forever(move || {
             let _ = tx.send(start.elapsed().as_secs());
             let outcome = outcomes.next().unwrap_or(true);

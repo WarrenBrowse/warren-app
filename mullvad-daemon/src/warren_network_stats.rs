@@ -645,7 +645,7 @@ mod tests {
         assert!(matches!(result, Err(StatsError::NotConfigured)));
     }
 
-    async fn stats_from(server: &mockito::ServerGuard) -> WarrenNetworkStats {
+    fn stats_from(server: &mockito::ServerGuard) -> WarrenNetworkStats {
         let stats = WarrenNetworkStats::new();
         stats.set_api_base(server.url());
         stats
@@ -661,7 +661,7 @@ mod tests {
             .create_async()
             .await;
 
-        let outcome = stats_from(&server).await.get().await.expect("served");
+        let outcome = stats_from(&server).get().await.expect("served");
 
         let StatsOutcome::Snapshot(snapshot) = outcome else {
             panic!("a 200 must yield a snapshot");
@@ -679,11 +679,7 @@ mod tests {
             .create_async()
             .await;
 
-        let outcome = stats_from(&server)
-            .await
-            .get()
-            .await
-            .expect("stable answer");
+        let outcome = stats_from(&server).get().await.expect("stable answer");
 
         assert_eq!(outcome, StatsOutcome::Unsupported);
     }
@@ -740,7 +736,7 @@ mod tests {
             .create_async()
             .await;
 
-        let result = stats_from(&server).await.get().await;
+        let result = stats_from(&server).get().await;
 
         assert!(matches!(
             result,
