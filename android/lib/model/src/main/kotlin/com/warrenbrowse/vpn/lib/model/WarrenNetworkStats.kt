@@ -30,10 +30,6 @@ data class WarrenNetworkStats(
 ) {
     /** The exit keyed by [exitId] (32 hex chars, any case). */
     fun exit(exitId: String): ExitStats? = exits.firstOrNull { it.exitId == exitId.lowercase() }
-
-    /** Whether any exit publishes live figures, which floors the fleet people count. */
-    val anyExitLive: Boolean
-        get() = exits.any { it.live }
 }
 
 data class NetworkUsers(val accountsTotal: Long, val subscribersActive: Long, val connected: Int)
@@ -137,10 +133,8 @@ enum class ExitDisplayMode {
     LIVE,
 }
 
-/** A people count as it may be displayed. Only the fleet total is ever [Exact]. */
+/** A people count as it may be displayed: never exact. */
 sealed interface PeopleCount {
-    data class Exact(val count: Int) : PeopleCount
-
     /** A floor: renders `40+`. */
     data class AtLeast(val count: Int) : PeopleCount
 
@@ -157,13 +151,6 @@ fun WarrenNetworkStats.peopleOn(exit: ExitStats): PeopleCount =
         !exit.live -> PeopleCount.Below(exitLiveThreshold)
         else -> flooredCount(exit.connected)
     }
-
-/**
- * The fleet people count: exact while no exit is live, and floored to the rounding step while one
- * is (the server floors it then, so rendering it plainly would claim a precision it lacks).
- */
-fun WarrenNetworkStats.fleetPeople(): PeopleCount =
-    if (anyExitLive) flooredCount(users.connected) else PeopleCount.Exact(users.connected)
 
 private fun WarrenNetworkStats.flooredCount(count: Int): PeopleCount =
     if (count < exitUsersRounding) {

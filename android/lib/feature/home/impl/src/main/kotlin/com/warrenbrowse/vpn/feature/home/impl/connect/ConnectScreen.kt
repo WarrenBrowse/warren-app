@@ -125,7 +125,6 @@ import androidx.compose.ui.semantics.Role
 import com.warrenbrowse.vpn.lib.ui.designsystem.networkstats.LoadRingSize
 import com.warrenbrowse.vpn.lib.ui.component.networkstats.rememberSnapshotStale
 import com.warrenbrowse.vpn.lib.ui.component.networkstats.ExitLoadSummary
-import com.warrenbrowse.vpn.feature.settings.api.WarrenNetworkNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenMultihopSettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenPortForwardingSettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenTunnelSettingsNavKey
@@ -265,7 +264,6 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
 
     val state by connectViewModel.uiState.collectAsStateWithLifecycle()
     val connectedExitLoad by connectViewModel.connectedExitLoad.collectAsStateWithLifecycle()
-    val onOpenNetwork = dropUnlessResumed { navigator.navigate(WarrenNetworkNavKey) }
     // Time-to-fully-drawn ends at this screen's first frame: `am start -W`
     // stops at the splash, and every input of that first frame (tunnel state,
     // wallet, pin, cached labels) is a synchronous local read, so no later
@@ -555,7 +553,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                 snackbarHostState = snackbarHostState,
                 exitLoad =
                     connectedExitLoad?.let { load ->
-                        { CompactExitLoad(load, onOpenNetwork) }
+                        { CompactExitLoad(load) }
                     },
                 showBetaBadge = productFlags.isBeta,
                 betaCapBps = betaCapBps,
@@ -1439,22 +1437,12 @@ private fun DarkStatusBarGlyphs() {
     }
 }
 
-/**
- * The exit's load on the location line: tiny ring, the percentage or the band, the people. It
- * opens the Warren network page.
- */
+/** The exit's load on the location line: tiny ring, the percentage or the band, the people. */
 @Composable
-private fun CompactExitLoad(load: ConnectedExitLoad, onClick: () -> Unit) {
+private fun CompactExitLoad(load: ConnectedExitLoad) {
     Box(
         modifier =
-            Modifier.padding(start = Dimens.smallPadding)
-                .clip(RoundedCornerShape(4.dp))
-                .clickable(
-                    onClickLabel = stringResource(R.string.network_stats_open),
-                    role = Role.Button,
-                    onClick = onClick,
-                )
-                .testTag(CONNECT_CARD_EXIT_LOAD_TEST_TAG)
+            Modifier.padding(start = Dimens.smallPadding).testTag(CONNECT_CARD_EXIT_LOAD_TEST_TAG)
     ) {
         ExitLoadSummary(
             exit = load.exit,

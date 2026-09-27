@@ -1,28 +1,19 @@
 package com.warrenbrowse.vpn.lib.ui.designsystem.networkstats
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxScope
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ArrowDownward
-import androidx.compose.material.icons.rounded.ArrowUpward
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -34,9 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -46,7 +35,6 @@ import androidx.compose.ui.unit.sp
 import com.warrenbrowse.vpn.lib.model.LoadLevel
 import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha20
 import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha40
-import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha60
 import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha80
 import com.warrenbrowse.vpn.lib.ui.theme.color.pending
 import com.warrenbrowse.vpn.lib.ui.theme.color.positive
@@ -96,7 +84,6 @@ fun LoadRing(
     modifier: Modifier = Modifier,
     muted: Boolean = false,
     contentDescription: String? = null,
-    center: (@Composable BoxScope.() -> Unit)? = null,
 ) {
     val color by
         animateColorAsState(
@@ -157,15 +144,6 @@ fun LoadRing(
                 }
             }
         }
-        if (center != null) {
-            Column(
-                modifier = Modifier.padding(size.stroke * 2),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center,
-            ) {
-                Box(contentAlignment = Alignment.Center) { center() }
-            }
-        }
     }
 }
 
@@ -199,129 +177,6 @@ fun PeoplePill(text: String, modifier: Modifier = Modifier) {
     }
 }
 
-/** Download and upload rates, each behind its arrow. */
-@Composable
-fun ThroughputPair(
-    download: String,
-    upload: String,
-    downloadDescription: String,
-    uploadDescription: String,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier,
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        Direction(Icons.Rounded.ArrowDownward, download, downloadDescription)
-        Direction(Icons.Rounded.ArrowUpward, upload, uploadDescription)
-    }
-}
-
-@Composable
-private fun Direction(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    value: String,
-    description: String,
-) {
-    Row(
-        modifier =
-            Modifier.semantics(mergeDescendants = true) {
-                contentDescription = "$description $value"
-            },
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
-    ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha60),
-            modifier = Modifier.size(12.dp),
-        )
-        Text(
-            text = value,
-            style = figureStyle(),
-            color = MaterialTheme.colorScheme.onSurface,
-            maxLines = 1,
-        )
-    }
-}
-
-/**
- * A figure over time: area and line, no axes, no grid, scaled from zero to its largest value, the
- * last point emphasised with a dot. Decorative: the figures it charts are printed beside it.
- */
-@Composable
-fun Sparkline(
-    values: List<Long>,
-    modifier: Modifier = Modifier,
-    color: Color = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha80),
-) {
-    Canvas(modifier = modifier) {
-        val dot = 2.5.dp.toPx()
-        val points = sparklinePoints(values, size.width, size.height, inset = dot)
-        if (points.isEmpty()) return@Canvas
-        val line =
-            Path().apply {
-                moveTo(points.first().x, points.first().y)
-                points.drop(1).forEach { lineTo(it.x, it.y) }
-            }
-        val area =
-            Path().apply {
-                addPath(line)
-                lineTo(points.last().x, size.height)
-                lineTo(points.first().x, size.height)
-                close()
-            }
-        drawPath(area, color = color.copy(alpha = AREA_ALPHA))
-        drawPath(
-            line,
-            color = color,
-            style = Stroke(width = 1.5.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round),
-        )
-        drawCircle(color = color, radius = dot, center = points.last())
-    }
-}
-
-/**
- * The small dot beside "updated N s ago": green and softly pulsing while the snapshot is fresh,
- * grey and still once it is stale.
- */
-@Composable
-fun LiveDot(fresh: Boolean, modifier: Modifier = Modifier) {
-    val base =
-        if (fresh) MaterialTheme.colorScheme.positive
-        else MaterialTheme.colorScheme.onSurface.copy(Alpha40)
-    val pulse =
-        if (fresh) {
-            val transition = rememberInfiniteTransition(label = "live_dot")
-            val value by
-                transition.animateFloat(
-                    initialValue = 0f,
-                    targetValue = 1f,
-                    animationSpec =
-                        infiniteRepeatable(
-                            tween(PULSE_MILLIS, easing = FastOutSlowInEasing),
-                            RepeatMode.Restart,
-                        ),
-                    label = "live_dot_pulse",
-                )
-            value
-        } else {
-            0f
-        }
-    Canvas(modifier = modifier.size(DOT_BOX)) {
-        val radius = DOT_RADIUS.toPx()
-        if (pulse > 0f) {
-            drawCircle(
-                color = base.copy(alpha = (1f - pulse) * PULSE_ALPHA),
-                radius = radius + (DOT_BOX.toPx() / 2 - radius) * pulse,
-            )
-        }
-        drawCircle(color = base, radius = radius)
-    }
-}
-
 @Composable
 private fun figureStyle() =
     MaterialTheme.typography.labelMedium.copy(
@@ -332,8 +187,3 @@ private fun figureStyle() =
     )
 
 private val PILL_HEIGHT = 18.dp
-private val DOT_BOX = 12.dp
-private val DOT_RADIUS = 3.dp
-private const val PULSE_MILLIS = 2000
-private const val PULSE_ALPHA = 0.4f
-private const val AREA_ALPHA = 0.12f

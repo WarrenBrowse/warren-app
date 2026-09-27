@@ -30,25 +30,6 @@ class WarrenNetworkStatsTest {
     }
 
     @Test
-    fun `the fleet count is a floor while an exit is live`() {
-        assertEquals(PeopleCount.AtLeast(57), stats.fleetPeople())
-    }
-
-    @Test
-    fun `the fleet count is exact while no exit is live`() {
-        val allQuiet = stats.copy(exits = listOf(quiet))
-
-        assertEquals(PeopleCount.Exact(57), allQuiet.fleetPeople())
-    }
-
-    @Test
-    fun `a floored fleet count under one step says fewer than the step`() {
-        val few = stats.copy(users = stats.users.copy(connected = 0))
-
-        assertEquals(PeopleCount.Below(5), few.fleetPeople())
-    }
-
-    @Test
     fun `an exit is looked up by id in any case`() {
         assertEquals(live, stats.exit("ABABABABABABABABABABABABABABABAB"))
         assertNull(stats.exit("ffffffffffffffffffffffffffffffff"))

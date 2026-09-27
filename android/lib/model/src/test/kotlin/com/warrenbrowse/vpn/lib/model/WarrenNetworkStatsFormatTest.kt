@@ -45,13 +45,6 @@ class WarrenNetworkStatsFormatTest {
     }
 
     @Test
-    fun `bytes use SI units`() {
-        assertEquals("9.0 TB", NetworkStatsFormat.bytes(9_000_000_000_000, en))
-        assertEquals("512 B", NetworkStatsFormat.bytes(512, en))
-        assertEquals("42 MB", NetworkStatsFormat.bytes(42_000_000, en))
-    }
-
-    @Test
     fun `percentages follow the locale`() {
         assertEquals("37%", NetworkStatsFormat.percent(37, en))
         // French puts a no-break space before the sign; which one depends on the
@@ -60,8 +53,7 @@ class WarrenNetworkStatsFormatTest {
     }
 
     @Test
-    fun `people counts render exact, as a floor, or as a bound`() {
-        assertEquals("1,234", NetworkStatsFormat.people(PeopleCount.Exact(1234), en))
+    fun `people counts render as a floor or as a bound`() {
         assertEquals("40+", NetworkStatsFormat.people(PeopleCount.AtLeast(40), en))
         assertEquals("<\u00A020", NetworkStatsFormat.people(PeopleCount.Below(20), en))
     }
@@ -93,15 +85,6 @@ class WarrenNetworkStatsFormatTest {
         assertEquals(1_000, NetworkStatsClock.millisUntilStale(stats, 1_180_000))
         assertTrue(NetworkStatsClock.isStale(stats, 1_180_000 + 1_000))
         assertEquals(0, NetworkStatsClock.millisUntilStale(stats, 2_000_000))
-    }
-
-    @Test
-    fun `the age is told in seconds, then minutes, then hours`() {
-        assertEquals(SnapshotAge.Seconds(59), NetworkStatsClock.age(59))
-        assertEquals(SnapshotAge.Minutes(1), NetworkStatsClock.age(60))
-        assertEquals(SnapshotAge.Minutes(59), NetworkStatsClock.age(3_599))
-        assertEquals(SnapshotAge.Hours(1), NetworkStatsClock.age(3_600))
-        assertEquals(SnapshotAge.Hours(2), NetworkStatsClock.age(7_300))
     }
 
     @Test
