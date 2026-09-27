@@ -1002,7 +1002,7 @@ pub enum Error {
     /// when it is surfaced, the app shows its existing localized copy instead
     /// of a generic failure.
     #[error("Warren exit refused the session (recoverable): {0}")]
-    SessionRejected(String),
+    SessionRejected(Refusal),
 
     /// Fatal backend error that the state machine must NOT retry
     /// automatically: configuration mismatch, authentication failure, or
@@ -1059,11 +1059,31 @@ impl Error {
     /// without sniffing error strings, and reuse the same text once it decides
     /// the refusal has outlived the exit's sync window.
     #[must_use]
-    pub fn session_rejection(&self) -> Option<&str> {
+    pub fn session_rejection(&self) -> Option<&Refusal> {
         match self {
-            Error::SessionRejected(reason) => Some(reason),
+            Error::SessionRejected(refusal) => Some(refusal),
             _ => None,
         }
+    }
+}
+
+/// A self-healing exit refusal, as the state machine judges it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct Refusal {
+    /// The reason surfaced when the subscription is not active, opening on
+    /// the `[EXPIRED_ACCOUNT]` auth-failed token the app localizes.
+    pub reason: String,
+    /// The reason surfaced instead when the account API says the
+    /// subscription is active, for a refusal an active subscription does not
+    /// clear on its own: the exit refused every session token without saying
+    /// why, as an exit too old to name the device limit does. `None` when an
+    /// active subscription means the refusal clears once the exit syncs it.
+    pub if_active: Option<String>,
+}
+
+impl std::fmt::Display for Refusal {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.reason)
     }
 }
 
@@ -1099,12 +1119,20 @@ impl Error {
 /// the generic `[BANNED]` suspension.
 ///
 /// A [`RejectionReason::DeviceLimit`] is fatal for the same reason: the
-/// account already holds its maximum of simultaneous wallet-signed sessions,
-/// so a redial meets the same count until another device disconnects. It
-/// carries `[TOO_MANY_CONNECTIONS]`, which the app renders as "too many
-/// simultaneous connections" instead of an expired subscription. The match
-/// stays exhaustive so a new engine reason is a compile error here, never a
-/// silent expiry.
+/// account already holds its maximum of simultaneous sessions (wallet-signed,
+/// or every session token of the wallet in use elsewhere), so a redial meets
+/// the same count until another device disconnects. It carries
+/// `[TOO_MANY_CONNECTIONS]`, which the app renders as "too many simultaneous
+/// connections" instead of an expired subscription. The match stays
+/// exhaustive so a new engine reason is a compile error here, never a silent
+/// expiry.
+///
+/// A [`RejectionReason::TokensRefusedWithoutReason`] is the engine's verdict on
+/// a token walk no refusal of which said why, which is what an exit that
+/// predates the typed token refusal answers for a token another device holds
+/// as for one that does not verify. It stays the self-healing refusal, and
+/// carries the device limit as what to surface once the account API reports
+/// the subscription active.
 fn reject_error(reason: RejectionReason) -> Error {
     match reason {
         RejectionReason::Banned(BAN_REASON_PORT_FORWARDING) => Error::BackendFatal(format!(
@@ -1117,17 +1145,36 @@ fn reject_error(reason: RejectionReason) -> Error {
         RejectionReason::IpExhausted => Error::BackendTransient(format!(
             "exit rejected the session ({reason}); its address pool is exhausted"
         )),
-        RejectionReason::DeviceLimit => Error::BackendFatal(format!(
-            "[TOO_MANY_CONNECTIONS] exit refused the session ({reason}); the account already \
+        // The engine ends a walk with `DeviceLimit` once every token was
+        // refused as in use; a lone `SerialInUse` never reaches here, and
+        // means the same thing if it does.
+        RejectionReason::DeviceLimit | RejectionReason::SerialInUse => {
+            Error::BackendFatal(format!(
+                "[TOO_MANY_CONNECTIONS] exit refused the session ({reason}); the account already \
              uses its maximum number of simultaneous devices"
-        )),
-        RejectionReason::NotAllowlisted | RejectionReason::PolicyRefused => {
-            Error::SessionRejected(format!(
-                "[EXPIRED_ACCOUNT] exit rejected the session ({reason}); no active subscription, \
-                 or the exit has not yet synced a freshly-redeemed one"
             ))
         }
+        RejectionReason::NotAllowlisted | RejectionReason::PolicyRefused => {
+            Error::SessionRejected(Refusal {
+                reason: expired_reason(reason),
+                if_active: None,
+            })
+        }
+        RejectionReason::TokensRefusedWithoutReason => Error::SessionRejected(Refusal {
+            reason: expired_reason(reason),
+            if_active: Some(format!(
+                "[TOO_MANY_CONNECTIONS] exit refused every session token without a reason \
+                 ({reason}) while the subscription is active"
+            )),
+        }),
     }
+}
+
+fn expired_reason(reason: RejectionReason) -> String {
+    format!(
+        "[EXPIRED_ACCOUNT] exit rejected the session ({reason}); no active subscription, or \
+         the exit has not yet synced a freshly-redeemed one"
+    )
 }
 
 /// The exit's opaque ban-reason code (sealed on `RejectedBanned`) that means
@@ -4254,8 +4301,12 @@ mod tests {
                 .session_rejection()
                 .unwrap_or_else(|| panic!("{reason:?} must be a session rejection, got {err:?}"));
             assert!(
-                carried.starts_with("[EXPIRED_ACCOUNT]"),
+                carried.reason.starts_with("[EXPIRED_ACCOUNT]"),
                 "the refusal must carry the token the app parses, got {carried:?}"
+            );
+            assert_eq!(
+                carried.if_active, None,
+                "a wallet refusal against an active subscription is the exit not synced yet"
             );
         }
 
@@ -4324,6 +4375,40 @@ mod tests {
         assert!(
             err.session_rejection().is_none(),
             "a device limit is not the self-healing expired-subscription refusal"
+        );
+    }
+
+    #[test]
+    fn a_token_walk_no_refusal_explained_names_the_device_limit_for_an_active_subscription() {
+        // An exit that predates the typed token refusal says nothing more than
+        // Rejected for a token another device holds. The refusal still reads
+        // as an expired subscription when the account API says so, and as the
+        // device limit when it says the subscription is active.
+        let err = reject_error(RejectionReason::TokensRefusedWithoutReason);
+        let refusal = err
+            .session_rejection()
+            .unwrap_or_else(|| panic!("it must stay a session rejection, got {err:?}"));
+        assert!(refusal.reason.starts_with("[EXPIRED_ACCOUNT]"));
+        let if_active = refusal
+            .if_active
+            .as_deref()
+            .expect("an active subscription explains a refused stack by the device limit");
+        assert!(
+            if_active.starts_with("[TOO_MANY_CONNECTIONS]"),
+            "the app parses the device limit from this token, got {if_active:?}"
+        );
+        assert!(
+            err.is_recoverable(),
+            "the account API decides, not this lap"
+        );
+    }
+
+    #[test]
+    fn a_lone_serial_in_use_reads_as_the_device_limit() {
+        let err = reject_error(RejectionReason::SerialInUse);
+        assert!(
+            matches!(&err, Error::BackendFatal(msg) if msg.starts_with("[TOO_MANY_CONNECTIONS]")),
+            "got {err:?}"
         );
     }
 

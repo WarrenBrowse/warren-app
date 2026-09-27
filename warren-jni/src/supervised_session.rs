@@ -14,7 +14,8 @@
 //! `Reconnecting` while the watch publishes `None`, `Disconnected` once the
 //! supervisor stops (or a redial stops being a blip, see [`SESSION_GRACE`]),
 //! `Unauthorized` on a policy rejection, `DeviceLimit` when the account already
-//! holds its maximum of simultaneous wallet-signed sessions.
+//! holds its maximum of simultaneous sessions (wallet-signed, or every session
+//! token of the wallet in use on its other devices).
 //!
 //! Everything here is portable, so the real control loop (real supervisor,
 //! real pumps, real QUIC) is exercised on the host against a loopback exit;
@@ -116,8 +117,12 @@ pub(crate) fn reconnect_observer(counter: &'static AtomicI32) -> ReconnectObserv
 /// standing store before it stores [`SessionStatus::Banned`].
 pub(crate) fn account_refusal_status(reason: RejectionReason) -> Option<SessionStatus> {
     match reason {
-        RejectionReason::NotAllowlisted => Some(SessionStatus::Unauthorized),
-        RejectionReason::DeviceLimit => Some(SessionStatus::DeviceLimit),
+        RejectionReason::NotAllowlisted | RejectionReason::TokensRefusedWithoutReason => {
+            Some(SessionStatus::Unauthorized)
+        }
+        RejectionReason::DeviceLimit | RejectionReason::SerialInUse => {
+            Some(SessionStatus::DeviceLimit)
+        }
         RejectionReason::Banned(_)
         | RejectionReason::IpExhausted
         | RejectionReason::PolicyRefused => None,
@@ -804,10 +809,15 @@ mod tests {
     /// expired-subscription one nor on a teardown Kotlin would retry.
     #[test]
     fn a_device_limit_is_its_own_terminal_status() {
-        assert_eq!(
-            account_refusal_status(RejectionReason::DeviceLimit),
-            Some(SessionStatus::DeviceLimit)
-        );
+        // The engine ends a token walk with `DeviceLimit` once every token was
+        // refused as in use; a lone `SerialInUse` means the same thing.
+        for reason in [RejectionReason::DeviceLimit, RejectionReason::SerialInUse] {
+            assert_eq!(
+                account_refusal_status(reason),
+                Some(SessionStatus::DeviceLimit),
+                "{reason:?}"
+            );
+        }
         assert_eq!(
             SessionStatus::DeviceLimit as i32,
             7,
@@ -820,10 +830,16 @@ mod tests {
     /// teardown the fail-closed policy retries.
     #[test]
     fn only_an_account_verdict_is_a_terminal_refusal() {
-        assert_eq!(
-            account_refusal_status(RejectionReason::NotAllowlisted),
-            Some(SessionStatus::Unauthorized)
-        );
+        for reason in [
+            RejectionReason::NotAllowlisted,
+            RejectionReason::TokensRefusedWithoutReason,
+        ] {
+            assert_eq!(
+                account_refusal_status(reason),
+                Some(SessionStatus::Unauthorized),
+                "{reason:?}"
+            );
+        }
         for reason in [RejectionReason::IpExhausted, RejectionReason::PolicyRefused] {
             assert_eq!(account_refusal_status(reason), None, "{reason:?}");
         }

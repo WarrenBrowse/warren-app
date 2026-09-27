@@ -825,10 +825,11 @@ async fn run_multi_hop_session(
             // A rejected v7 token (spent serial, clock-skewed epoch) is a
             // verdict on the TOKEN, not the subscription, and Unauthorized is
             // terminal for Kotlin. Re-verify on the wallet-signed path before
-            // surfacing anything.
-            AttemptEnd::Session(SessionEnd::Rejected(RejectionReason::NotAllowlisted))
-                if token_provider.is_some() && presented.load(Ordering::Relaxed) =>
-            {
+            // surfacing anything. A walk no refusal of which said why comes
+            // from an exit that predates the typed refusal: the same.
+            AttemptEnd::Session(SessionEnd::Rejected(
+                RejectionReason::NotAllowlisted | RejectionReason::TokensRefusedWithoutReason,
+            )) if token_provider.is_some() && presented.load(Ordering::Relaxed) => {
                 log::warn!("multi-hop: exit rejected the v7 token; retrying wallet-signed");
                 token_provider = None;
             }

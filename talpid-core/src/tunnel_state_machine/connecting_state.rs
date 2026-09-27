@@ -886,7 +886,10 @@ mod retry_policy_tests {
 
     fn refusal() -> tunnel_monitor::Error {
         tunnel_monitor::Error::WarrenTunnelMonitoring(talpid_warren_tunnel::Error::SessionRejected(
-            "[EXPIRED_ACCOUNT] exit rejected the session".to_owned(),
+            talpid_warren_tunnel::Refusal {
+                reason: "[EXPIRED_ACCOUNT] exit rejected the session".to_owned(),
+                if_active: None,
+            },
         ))
     }
 
@@ -1005,7 +1008,10 @@ mod retry_policy_tests {
         // network glitch would be judged as an account verdict.
         assert_eq!(
             refusal().warren_session_rejection(),
-            Some("[EXPIRED_ACCOUNT] exit rejected the session")
+            Some(super::exit_refusal::Refusal {
+                reason: "[EXPIRED_ACCOUNT] exit rejected the session",
+                if_active: None,
+            })
         );
         assert_eq!(network_glitch().warren_session_rejection(), None);
     }

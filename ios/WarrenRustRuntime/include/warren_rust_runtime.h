@@ -80,6 +80,15 @@ typedef enum WarrenTunnelEventTagC {
    * `entitlement_refused`.
    */
   EventNatPmpRefused = 11,
+  /**
+   * Terminal counterpart of `DeviceLimit`: fired instead of
+   * `EventDisconnected` when the session ended on the device limit.
+   */
+  EventDeviceLimit = 12,
+  /**
+   * Terminal counterpart of `TokensRefused`.
+   */
+  EventTokensRefused = 13,
 } WarrenTunnelEventTagC;
 
 /**
@@ -111,6 +120,21 @@ typedef enum WarrenTunnelStateC {
    * Terminal like `Unauthorized`, and the event says why and until when.
    */
   Banned = 6,
+  /**
+   * The account already uses its maximum number of simultaneous devices:
+   * the exit refused every session token of the wallet as held by its
+   * other devices, or refused another wallet-signed session past the cap.
+   * Terminal until one of them disconnects.
+   */
+  DeviceLimit = 7,
+  /**
+   * The exit refused every session token without saying why, as an exit
+   * that predates the typed token refusal does for a token another device
+   * holds and for one that does not verify alike. Terminal like
+   * `Unauthorized`: the app reads it as the device limit when it knows the
+   * subscription is active, and as an expiry otherwise.
+   */
+  TokensRefused = 8,
 } WarrenTunnelStateC;
 
 typedef struct ApiContext ApiContext;

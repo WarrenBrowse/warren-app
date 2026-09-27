@@ -125,6 +125,20 @@ impl LapPacing {
     }
 }
 
+/// One exit refusal, as a failed connect lap reports it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct Refusal<'a> {
+    /// The exit's own rejection message, surfaced when the subscription is
+    /// not active.
+    pub reason: &'a str,
+    /// What to surface instead when the account API says the subscription
+    /// is active, for a refusal an active subscription does not clear (the
+    /// exit refused every session token of the wallet, which its other
+    /// devices hold). `None` when an active subscription means the exit will
+    /// admit the session once it syncs.
+    pub if_active: Option<&'a str>,
+}
+
 /// A run of consecutive exit refusals, and what the API said about it.
 #[derive(Debug)]
 struct Run {
@@ -135,6 +149,8 @@ struct Run {
     /// the auth-failed token the app already localizes. No identity material:
     /// the exit's reason text is a product code, never an address or a key.
     reason: String,
+    /// See [`Refusal::if_active`], from the latest refusal of the run.
+    if_active: Option<String>,
     /// Last answer and when it was obtained, so the API is asked at most once
     /// per [`STATUS_TTL`] for the whole run.
     answer: Option<(SubscriptionStatus, Instant)>,
@@ -153,15 +169,19 @@ impl Refusals {
     /// Record how one connect attempt ended: `Some(reason)` for an exit
     /// refusal, `None` for anything else. Any other failure ends the run, so
     /// patience is only ever spent on consecutive refusals.
-    fn note_attempt(&mut self, rejection: Option<&str>, now: Instant) {
+    fn note_attempt(&mut self, rejection: Option<Refusal<'_>>, now: Instant) {
         match rejection {
-            Some(reason) => {
+            Some(refusal) => {
+                let reason = refusal.reason.to_owned();
+                let if_active = refusal.if_active.map(str::to_owned);
                 if let Some(run) = self.run.as_mut() {
-                    run.reason = reason.to_owned();
+                    run.reason = reason;
+                    run.if_active = if_active;
                 } else {
                     self.run = Some(Run {
                         started: now,
-                        reason: reason.to_owned(),
+                        reason,
+                        if_active,
                         answer: None,
                     });
                 }
@@ -195,11 +215,18 @@ impl Refusals {
     /// a later attempt starts from a full budget and asks the API again.
     fn decide(&mut self, status: SubscriptionStatus, now: Instant) -> Option<ErrorStateCause> {
         let run = self.run.as_mut()?;
-        match verdict(status, now.saturating_duration_since(run.started)) {
+        let refusing_for = now.saturating_duration_since(run.started);
+        match verdict(status, refusing_for, run.if_active.is_some()) {
             Verdict::Retry => None,
             Verdict::Surface => {
                 let run = self.run.take().expect("the run was borrowed just above");
                 Some(ErrorStateCause::AuthFailed(Some(run.reason)))
+            }
+            Verdict::SurfaceWhileActive => {
+                let run = self.run.take().expect("the run was borrowed just above");
+                Some(ErrorStateCause::AuthFailed(
+                    run.if_active.or(Some(run.reason)),
+                ))
             }
         }
     }
@@ -238,17 +265,34 @@ enum Verdict {
     Retry,
     /// Stop dialing in silence and park on a readable, cancelable state.
     Surface,
+    /// The same, with what the refusal means under an active subscription
+    /// ([`Refusal::if_active`]).
+    SurfaceWhileActive,
 }
 
 /// The whole policy, in one pure function.
 ///
 /// An active subscription puts no deadline on the wait: the refusal WILL clear
 /// once the exit polls, the retry interval already keeps the cost down, and a
-/// paying user must never be told their account has run out. Nothing to sync
-/// is surfaced at the first refusal, because that is what is true. An
-/// unanswered query is the only case still judged on time.
-fn verdict(status: SubscriptionStatus, refusing_for: Duration) -> Verdict {
+/// paying user must never be told their account has run out. The exception is
+/// a refusal an active subscription does not clear on its own
+/// (`explained_while_active`: every session token refused without a reason),
+/// surfaced as what it means then, once it has lasted the same patience as an
+/// unanswered query, so an exit that is still loading its keys after a restart
+/// is waited out rather than called the device limit. Nothing to sync is
+/// surfaced at the first refusal, because that is what is true. An unanswered
+/// query is judged on time.
+fn verdict(
+    status: SubscriptionStatus,
+    refusing_for: Duration,
+    explained_while_active: bool,
+) -> Verdict {
     match status {
+        SubscriptionStatus::Active
+            if explained_while_active && refusing_for >= UNVERIFIED_PATIENCE =>
+        {
+            Verdict::SurfaceWhileActive
+        }
         SubscriptionStatus::Active => Verdict::Retry,
         SubscriptionStatus::Inactive => Verdict::Surface,
         SubscriptionStatus::Unknown if refusing_for >= UNVERIFIED_PATIENCE => Verdict::Surface,
@@ -265,7 +309,7 @@ fn refusals() -> std::sync::MutexGuard<'static, Refusals> {
 }
 
 /// Record how one connect attempt ended. See [`Refusals::note_attempt`].
-pub(super) fn note_attempt(rejection: Option<&str>, now: Instant) {
+pub(super) fn note_attempt(rejection: Option<Refusal<'_>>, now: Instant) {
     refusals().note_attempt(rejection, now);
 }
 
@@ -325,8 +369,101 @@ mod tests {
 
     const REASON: &str = "[EXPIRED_ACCOUNT] exit rejected the session";
 
+    const DEVICE_LIMIT: &str = "[TOO_MANY_CONNECTIONS] exit refused every session token";
+
     fn refused(refusals: &mut Refusals, at: Instant) {
-        refusals.note_attempt(Some(REASON), at);
+        refusals.note_attempt(
+            Some(Refusal {
+                reason: REASON,
+                if_active: None,
+            }),
+            at,
+        );
+    }
+
+    /// The whole token stack refused by an exit that cannot say why.
+    fn every_token_refused(refusals: &mut Refusals, at: Instant) {
+        refusals.note_attempt(
+            Some(Refusal {
+                reason: REASON,
+                if_active: Some(DEVICE_LIMIT),
+            }),
+            at,
+        );
+    }
+
+    #[test]
+    fn a_refused_token_stack_is_the_device_limit_for_an_active_subscription() {
+        let mut refusals = Refusals::default();
+        let started = Instant::now();
+        every_token_refused(&mut refusals, started);
+
+        assert!(
+            refusals
+                .decide(
+                    SubscriptionStatus::Active,
+                    started + UNVERIFIED_PATIENCE - Duration::from_millis(1)
+                )
+                .is_none(),
+            "an exit still loading its keys after a restart refuses every token too: wait first"
+        );
+        match refusals.decide(SubscriptionStatus::Active, started + UNVERIFIED_PATIENCE) {
+            Some(ErrorStateCause::AuthFailed(Some(reason))) => assert_eq!(
+                reason, DEVICE_LIMIT,
+                "an active subscription whose every token is refused is at its device limit"
+            ),
+            other => panic!("the device limit must surface at once, got {other:?}"),
+        }
+        assert!(refusals.run.is_none(), "a surfaced refusal ends the run");
+    }
+
+    #[test]
+    fn a_refused_token_stack_of_an_expired_subscription_still_reads_expired() {
+        let started = Instant::now();
+        let mut inactive = Refusals::default();
+        every_token_refused(&mut inactive, started);
+
+        match inactive.decide(SubscriptionStatus::Inactive, started) {
+            Some(ErrorStateCause::AuthFailed(Some(reason))) => assert_eq!(reason, REASON),
+            other => panic!("an expired subscription must surface as expired, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn a_refused_token_stack_with_no_answer_reads_expired_after_the_patience() {
+        let started = Instant::now();
+        let mut unknown = Refusals::default();
+        every_token_refused(&mut unknown, started);
+        assert!(
+            unknown
+                .decide(SubscriptionStatus::Unknown, started)
+                .is_none(),
+            "an unanswered query keeps its patience"
+        );
+        match unknown.decide(SubscriptionStatus::Unknown, started + UNVERIFIED_PATIENCE) {
+            Some(ErrorStateCause::AuthFailed(Some(reason))) => assert_eq!(
+                reason, REASON,
+                "the device limit is said only of a subscription known to be active"
+            ),
+            other => panic!("expected the expiry after the patience, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn the_device_limit_reading_follows_the_latest_refusal() {
+        // A later lap refused for another reason (a wallet refusal) says
+        // nothing about the device limit: the run is judged on it.
+        let mut refusals = Refusals::default();
+        let started = Instant::now();
+        every_token_refused(&mut refusals, started);
+        refused(&mut refusals, started + Duration::from_secs(1));
+
+        assert!(
+            refusals
+                .decide(SubscriptionStatus::Active, started + UNVERIFIED_PATIENCE)
+                .is_none(),
+            "an active subscription waits out a refusal the exit will clear"
+        );
     }
 
     #[test]
@@ -593,7 +730,13 @@ mod tests {
         let mut refusals = Refusals::default();
         let started = Instant::now();
         refused(&mut refusals, started);
-        refusals.note_attempt(Some("[EXPIRED_ACCOUNT] later reason"), started);
+        refusals.note_attempt(
+            Some(Refusal {
+                reason: "[EXPIRED_ACCOUNT] later reason",
+                if_active: None,
+            }),
+            started,
+        );
 
         match refusals.decide(SubscriptionStatus::Inactive, started) {
             Some(ErrorStateCause::AuthFailed(Some(reason))) => {

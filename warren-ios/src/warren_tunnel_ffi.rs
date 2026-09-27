@@ -163,6 +163,17 @@ pub enum WarrenTunnelStateC {
     /// issuer's refusal before any dial, or from the exit's CRL rejection.
     /// Terminal like `Unauthorized`, and the event says why and until when.
     Banned = 6,
+    /// The account already uses its maximum number of simultaneous devices:
+    /// the exit refused every session token of the wallet as held by its
+    /// other devices, or refused another wallet-signed session past the cap.
+    /// Terminal until one of them disconnects.
+    DeviceLimit = 7,
+    /// The exit refused every session token without saying why, as an exit
+    /// that predates the typed token refusal does for a token another device
+    /// holds and for one that does not verify alike. Terminal like
+    /// `Unauthorized`: the app reads it as the device limit when it knows the
+    /// subscription is active, and as an expiry otherwise.
+    TokensRefused = 8,
 }
 
 /// Tunnel status snapshot.
@@ -224,6 +235,11 @@ pub enum WarrenTunnelEventTagC {
     /// `data_nat_pmp_failure_reason` is `no_entitlement` or
     /// `entitlement_refused`.
     EventNatPmpRefused = 11,
+    /// Terminal counterpart of `DeviceLimit`: fired instead of
+    /// `EventDisconnected` when the session ended on the device limit.
+    EventDeviceLimit = 12,
+    /// Terminal counterpart of `TokensRefused`.
+    EventTokensRefused = 13,
 }
 
 /// Tagged-union event payload.
@@ -415,6 +431,10 @@ enum TerminalVerdict {
     /// The wallet is banned: learned from an issuer, the standing, or the
     /// exit's CRL rejection.
     Banned,
+    /// The account already uses its maximum number of devices.
+    DeviceLimit,
+    /// Every session token was refused without a reason.
+    TokensRefused,
     /// Everything else: the user disconnected, the tunnel was torn down, or
     /// the refusal was one iOS has nowhere to explain yet.
     Ordinary,
@@ -435,10 +455,14 @@ impl From<Option<warrenguard_multihop::RejectionReason>> for TerminalVerdict {
             // is the wrong thing to say about it, so it stays ordinary until
             // iOS has somewhere to say it.
             Some(RejectionReason::IpExhausted) | None => Self::Ordinary,
-            // The account already uses its maximum number of devices: the
-            // expiry prompt would misname it and iOS has no too-many-devices
-            // surface yet, so it ends plainly.
-            Some(RejectionReason::DeviceLimit) => Self::Ordinary,
+            // The account already uses its maximum number of devices, which
+            // the expiry prompt would misname. The engine ends a token walk
+            // with `DeviceLimit` once every token was refused as in use; a
+            // lone `SerialInUse` means the same thing.
+            Some(RejectionReason::DeviceLimit | RejectionReason::SerialInUse) => Self::DeviceLimit,
+            // No exit said why: the app decides from what it knows of the
+            // subscription.
+            Some(RejectionReason::TokensRefusedWithoutReason) => Self::TokensRefused,
         }
     }
 }
@@ -458,6 +482,14 @@ fn terminal_for(verdict: TerminalVerdict) -> (WarrenTunnelStateC, WarrenTunnelEv
         TerminalVerdict::Banned => (
             WarrenTunnelStateC::Banned,
             WarrenTunnelEventTagC::EventBanned,
+        ),
+        TerminalVerdict::DeviceLimit => (
+            WarrenTunnelStateC::DeviceLimit,
+            WarrenTunnelEventTagC::EventDeviceLimit,
+        ),
+        TerminalVerdict::TokensRefused => (
+            WarrenTunnelStateC::TokensRefused,
+            WarrenTunnelEventTagC::EventTokensRefused,
         ),
         TerminalVerdict::Ordinary => (
             WarrenTunnelStateC::Disconnected,
@@ -3077,15 +3109,53 @@ mod tests {
     }
 
     /// A device limit is not an expiry: the expiry prompt would send a paying
-    /// user to renew for nothing, so it ends plainly until iOS can name it.
+    /// user to renew for nothing, so it ends on the device limit verdict.
     #[cfg(feature = "tunnel")]
     #[test]
     fn a_device_limit_is_not_called_an_expiry() {
         use warrenguard_multihop::RejectionReason;
 
+        for reason in [RejectionReason::DeviceLimit, RejectionReason::SerialInUse] {
+            assert_eq!(
+                super::TerminalVerdict::from(Some(reason)),
+                super::TerminalVerdict::DeviceLimit,
+                "{reason:?}"
+            );
+        }
+    }
+
+    /// A walk no refusal of which said why ends on a state of its own, so the
+    /// app can read it against the subscription it knows.
+    #[cfg(feature = "tunnel")]
+    #[test]
+    fn a_token_walk_no_refusal_explained_ends_on_its_own_verdict() {
+        use warrenguard_multihop::RejectionReason;
+
         assert_eq!(
-            super::TerminalVerdict::from(Some(RejectionReason::DeviceLimit)),
-            super::TerminalVerdict::Ordinary
+            super::TerminalVerdict::from(Some(RejectionReason::TokensRefusedWithoutReason)),
+            super::TerminalVerdict::TokensRefused
+        );
+        let (state, event) = super::terminal_for(super::TerminalVerdict::TokensRefused);
+        assert_eq!(state, super::WarrenTunnelStateC::TokensRefused);
+        assert_eq!(event, super::WarrenTunnelEventTagC::EventTokensRefused);
+        assert_eq!(
+            (state as i32, event as i32),
+            (8, 13),
+            "WarrenQuinnAdapter reads these values from the generated header"
+        );
+    }
+
+    /// The device limit ends on a state and an event of its own, which the app
+    /// shows as too many devices rather than a plain disconnect.
+    #[test]
+    fn a_session_at_the_device_limit_ends_on_the_device_limit() {
+        let (state, event) = super::terminal_for(super::TerminalVerdict::DeviceLimit);
+        assert_eq!(state, super::WarrenTunnelStateC::DeviceLimit);
+        assert_eq!(event, super::WarrenTunnelEventTagC::EventDeviceLimit);
+        assert_eq!(
+            (state as i32, event as i32),
+            (7, 12),
+            "WarrenQuinnAdapter reads these values from the generated header"
         );
     }
 

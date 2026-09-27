@@ -82,9 +82,16 @@ impl Error {
     /// conversion never sees one, and the refusal policy builds the
     /// `AuthFailed` itself, on the account API's answer rather than on
     /// elapsed time (`tunnel_state_machine::exit_refusal`).
-    pub fn warren_session_rejection(&self) -> Option<&str> {
+    pub fn warren_session_rejection(&self) -> Option<super::exit_refusal::Refusal<'_>> {
         match self {
-            Error::WarrenTunnelMonitoring(error) => error.session_rejection(),
+            Error::WarrenTunnelMonitoring(error) => {
+                error
+                    .session_rejection()
+                    .map(|refusal| super::exit_refusal::Refusal {
+                        reason: &refusal.reason,
+                        if_active: refusal.if_active.as_deref(),
+                    })
+            }
             _ => None,
         }
     }
