@@ -101,6 +101,34 @@
         <item quantity="one">VPN فقط برای %1$d اپلیکیشن</item>
         <item quantity="other">VPN فقط برای %1$d اپلیکیشن</item>
     </plurals>
+    <string name="country_per_app">کشور هر اپلیکیشن</string>
+    <string name="country_per_app_description">کشوری را انتخاب کنید که اپلیکیشن از آن دیده شود. بقیهٔ اپلیکیشن‌ها از اتصال اصلی شما استفاده می‌کنند.</string>
+    <string name="country_per_app_needs_android_10">این قابلیت به Android 10 یا جدیدتر نیاز دارد.</string>
+    <string name="apps_with_a_country">دارای کشور</string>
+    <string name="all_apps">همهٔ اپلیکیشن‌ها</string>
+    <string name="app_route_paused">خاموش، اتصال اصلی</string>
+    <string name="app_route_bypassed">خارج از VPN</string>
+    <string name="app_route_waiting">در انتظار VPN</string>
+    <string name="app_route_connecting">در حال اتصال...</string>
+    <string name="app_route_connected">متصل</string>
+    <string name="app_route_connected_ip">متصل، IP %1$s</string>
+    <string name="app_route_no_token">توکن نشستی باقی نمانده</string>
+    <string name="app_route_limit_reached">سقف نشست‌ها پر شد</string>
+    <string name="app_route_waiting_for_route">در انتظار مسیر آزاد</string>
+    <string name="app_route_no_relay">آنجا سروری نیست</string>
+    <string name="app_route_unavailable">ناموجود</string>
+    <string name="app_country_chip">کشور</string>
+    <string name="app_country_choose">انتخاب کشور برای %1$s</string>
+    <string name="app_country_change">تغییر کشور %1$s، کشور فعلی: %2$s</string>
+    <string name="app_country_remove">حذف کشور %1$s</string>
+    <string name="country_picker_title">کشور %1$s</string>
+    <string name="country_picker_remove">حذف کشور</string>
+    <string name="country_picker_cities_in">شهرهای %1$s</string>
+    <string name="country_picker_in_use">در حال استفاده</string>
+    <plurals name="apps_in_other_countries">
+        <item quantity="one">%1$d اپلیکیشن در کشورهای دیگر</item>
+        <item quantity="other">%1$d اپلیکیشن در کشورهای دیگر</item>
+    </plurals>
     <string name="split_tunneling_description_warning">توجه: اگر «مسدود کردن اتصال‌ها بدون VPN» فعال باشد، اپلیکیشن‌های تفکیک‌شده به اینترنت دسترسی نخواهند داشت. همیشه در نظر داشته باشید که تونل‌گذاری تفکیک‌شده یک خطر برای حریم خصوصی است.</string>
     <string name="enable">فعال کردن</string>
     <string name="confirm_local_dns">سرور DNS محلی تنها زمانی کار می‌کند که «اشتراک‌گذاری شبکهٔ محلی» را در تنظیمات VPN فعال کنید.</string>

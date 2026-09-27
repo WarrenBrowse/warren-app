@@ -101,6 +101,34 @@
         <item quantity="one">VPN kun for %1$d app</item>
         <item quantity="other">VPN kun for %1$d apps</item>
     </plurals>
+    <string name="country_per_app">Land pr. app</string>
+    <string name="country_per_app_description">Vælg, hvilket land en app skal se ud til at komme fra. Andre apps beholder din hovedforbindelse.</string>
+    <string name="country_per_app_needs_android_10">Dette kræver Android 10 eller nyere.</string>
+    <string name="apps_with_a_country">Med et land</string>
+    <string name="all_apps">Alle apps</string>
+    <string name="app_route_paused">Fra, bruger hovedforbindelsen</string>
+    <string name="app_route_bypassed">Går uden om VPN</string>
+    <string name="app_route_waiting">Venter på VPN</string>
+    <string name="app_route_connecting">Opretter forbindelse...</string>
+    <string name="app_route_connected">Tilsluttet</string>
+    <string name="app_route_connected_ip">Tilsluttet, IP %1$s</string>
+    <string name="app_route_no_token">Ikke flere sessionstokens</string>
+    <string name="app_route_limit_reached">Maks. antal sessioner nået</string>
+    <string name="app_route_waiting_for_route">Venter på en ledig rute</string>
+    <string name="app_route_no_relay">Ingen server på placeringen</string>
+    <string name="app_route_unavailable">Ikke tilgængelig</string>
+    <string name="app_country_chip">Land</string>
+    <string name="app_country_choose">Vælg et land for %1$s</string>
+    <string name="app_country_change">Skift land for %1$s, nu %2$s</string>
+    <string name="app_country_remove">Fjern landet for %1$s</string>
+    <string name="country_picker_title">Land for %1$s</string>
+    <string name="country_picker_remove">Fjern land</string>
+    <string name="country_picker_cities_in">%1$s: byer</string>
+    <string name="country_picker_in_use">I brug</string>
+    <plurals name="apps_in_other_countries">
+        <item quantity="one">%1$d app i et andet land</item>
+        <item quantity="other">%1$d apps i andre lande</item>
+    </plurals>
     <string name="split_tunneling_description_warning">Bemærk: Hvis \"Bloker forbindelser uden VPN\" er aktiveret, vil delte apps ikke have internet. Husk altid, at delt tunnelføring er en risiko for privatlivets fred.</string>
     <string name="enable">Aktiver</string>
     <string name="confirm_local_dns">Den lokale DNS-server fungerer ikke, medmindre du aktiverer \"Lokal netværksdeling\" under VPN-indstillinger.</string>

@@ -104,6 +104,35 @@
         <item quantity="few">VPN doar pentru %1$d aplicații</item>
         <item quantity="other">VPN doar pentru %1$d de aplicații</item>
     </plurals>
+    <string name="country_per_app">Țară per aplicație</string>
+    <string name="country_per_app_description">Alegeți țara din care se conectează o aplicație. Celelalte aplicații păstrează conexiunea principală.</string>
+    <string name="country_per_app_needs_android_10">Necesită Android 10 sau o versiune mai nouă.</string>
+    <string name="apps_with_a_country">Cu țară proprie</string>
+    <string name="all_apps">Toate aplicațiile</string>
+    <string name="app_route_paused">Dezactivat, conexiune principală</string>
+    <string name="app_route_bypassed">Ocolește VPN-ul</string>
+    <string name="app_route_waiting">Se așteaptă VPN-ul</string>
+    <string name="app_route_connecting">Se conectează...</string>
+    <string name="app_route_connected">Conectat</string>
+    <string name="app_route_connected_ip">Conectat, IP %1$s</string>
+    <string name="app_route_no_token">Tokenuri de sesiune epuizate</string>
+    <string name="app_route_limit_reached">Limită de sesiuni atinsă</string>
+    <string name="app_route_waiting_for_route">Se așteaptă o rută liberă</string>
+    <string name="app_route_no_relay">Niciun server acolo</string>
+    <string name="app_route_unavailable">Indisponibil</string>
+    <string name="app_country_chip">Țară</string>
+    <string name="app_country_choose">Alegeți o țară pentru %1$s</string>
+    <string name="app_country_change">Schimbați țara pentru %1$s, în prezent %2$s</string>
+    <string name="app_country_remove">Eliminați țara pentru %1$s</string>
+    <string name="country_picker_title">Țara pentru %1$s</string>
+    <string name="country_picker_remove">Eliminați țara</string>
+    <string name="country_picker_cities_in">%1$s: orașe</string>
+    <string name="country_picker_in_use">Folosită</string>
+    <plurals name="apps_in_other_countries">
+        <item quantity="one">%1$d aplicație în altă țară</item>
+        <item quantity="few">%1$d aplicații în alte țări</item>
+        <item quantity="other">%1$d de aplicații în alte țări</item>
+    </plurals>
     <string name="split_tunneling_description_warning">Atenție: Dacă \"Blocați conexiunile fără VPN\" este activat, aplicațiile excluse nu vor avea internet. Rețineți întotdeauna că tunelarea divizată reprezintă un risc de confidențialitate.</string>
     <string name="enable">Activează</string>
     <string name="confirm_local_dns">Serverul DNS local nu va funcționa decât dacă activați \"Partajare în rețeaua locală\" din setările VPN.</string>

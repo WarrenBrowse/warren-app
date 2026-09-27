@@ -101,6 +101,35 @@
         <item quantity="one">VPN ciblé pour %1$d app</item>
         <item quantity="other">VPN ciblé pour %1$d apps</item>
     </plurals>
+    <string name="country_per_app">Pays par app</string>
+    <string name="country_per_app_description">Choisissez de quel pays une app se connecte. Les autres apps gardent votre connexion principale.</string>
+    <string name="country_per_app_needs_android_10">Nécessite Android 10 ou une version plus récente.</string>
+    <string name="apps_with_a_country">Avec un pays</string>
+    <string name="all_apps">Toutes les applications</string>
+    <string name="app_route_paused">Désactivé, connexion principale</string>
+    <string name="app_route_bypassed">Passe hors du VPN</string>
+    <string name="app_route_waiting">En attente du VPN</string>
+    <string name="app_route_connecting">Connexion...</string>
+    <string name="app_route_connected">Connecté</string>
+    <string name="app_route_connected_ip">Connecté, IP %1$s</string>
+    <string name="app_route_no_token">Plus de token de session</string>
+    <string name="app_route_limit_reached">Limite de sessions atteinte</string>
+    <string name="app_route_waiting_for_route">En attente d\'une route libre</string>
+    <string name="app_route_no_relay">Aucun serveur à cet endroit</string>
+    <string name="app_route_unavailable">Indisponible</string>
+    <string name="app_country_chip">Pays</string>
+    <string name="app_country_choose">Choisir un pays pour %1$s</string>
+    <string name="app_country_change">Changer le pays de %1$s, actuellement %2$s</string>
+    <string name="app_country_remove">Retirer le pays de %1$s</string>
+    <string name="country_picker_title">Pays de %1$s</string>
+    <string name="country_picker_remove">Retirer le pays</string>
+    <string name="country_picker_cities_in">%1$s : villes</string>
+    <string name="country_picker_in_use">Utilisé</string>
+    <plurals name="apps_in_other_countries">
+        <item quantity="one">%1$d app dans un autre pays</item>
+        <item quantity="many">%1$d apps dans d\'autres pays</item>
+        <item quantity="other">%1$d apps dans d\'autres pays</item>
+    </plurals>
     <string name="split_tunneling_description_warning">Attention : si l\'option « Bloquer les connexions sans VPN » est activée, les applications partagées n\'auront pas accès à Internet. Gardez toujours à l\'esprit que le split tunneling présente un risque pour la vie privée.</string>
     <string name="enable">Activer</string>
     <string name="confirm_local_dns">Le serveur DNS local ne fonctionnera pas si vous n\'activez pas le « Partage du réseau local » dans les paramètres VPN.</string>

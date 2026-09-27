@@ -103,6 +103,36 @@
         <item quantity="many">VPN только для %1$d приложений</item>
         <item quantity="other">VPN только для %1$d приложения</item>
     </plurals>
+    <string name="country_per_app">Страна для приложения</string>
+    <string name="country_per_app_description">Выберите страну, из которой приложение будет выходить в интернет. Остальные приложения используют основное подключение.</string>
+    <string name="country_per_app_needs_android_10">Требуется Android 10 или новее.</string>
+    <string name="apps_with_a_country">Со своей страной</string>
+    <string name="all_apps">Все приложения</string>
+    <string name="app_route_paused">Выкл., основное подключение</string>
+    <string name="app_route_bypassed">Обходит VPN</string>
+    <string name="app_route_waiting">Ожидание VPN</string>
+    <string name="app_route_connecting">Подключение...</string>
+    <string name="app_route_connected">Подключено</string>
+    <string name="app_route_connected_ip">Подключено, IP %1$s</string>
+    <string name="app_route_no_token">Не осталось токенов сеанса</string>
+    <string name="app_route_limit_reached">Достигнут лимит сеансов</string>
+    <string name="app_route_waiting_for_route">Ждёт свободный маршрут</string>
+    <string name="app_route_no_relay">Нет серверов в этом месте</string>
+    <string name="app_route_unavailable">Недоступно</string>
+    <string name="app_country_chip">Страна</string>
+    <string name="app_country_choose">Выбрать страну для %1$s</string>
+    <string name="app_country_change">Сменить страну для %1$s, сейчас: %2$s</string>
+    <string name="app_country_remove">Удалить страну для %1$s</string>
+    <string name="country_picker_title">Страна для %1$s</string>
+    <string name="country_picker_remove">Удалить страну</string>
+    <string name="country_picker_cities_in">%1$s: города</string>
+    <string name="country_picker_in_use">Используется</string>
+    <plurals name="apps_in_other_countries">
+        <item quantity="one">%1$d приложение в другой стране</item>
+        <item quantity="few">%1$d приложения в других странах</item>
+        <item quantity="many">%1$d приложений в других странах</item>
+        <item quantity="other">%1$d приложения в других странах</item>
+    </plurals>
     <string name="split_tunneling_description_warning">Внимание! Если включена функция «Блокировать соединения без VPN», у приложений из списка раздельного туннелирования не будет доступа в Интернет. Не забывайте, что раздельное туннелирование представляет собой риск для конфиденциальности.</string>
     <string name="enable">Включить</string>
     <string name="confirm_local_dns">Локальный DNS-сервер не будет работать, если не включить «Обмен данными в локальной сети» в разделе «Настройки VPN».</string>

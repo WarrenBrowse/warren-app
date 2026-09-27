@@ -100,6 +100,33 @@
     <plurals name="vpn_only_for_apps">
         <item quantity="other">VPN เฉพาะ %1$d แอป</item>
     </plurals>
+    <string name="country_per_app">ประเทศแยกตามแอป</string>
+    <string name="country_per_app_description">เลือกประเทศที่แอปจะใช้เชื่อมต่อ แอปอื่นๆ ยังคงใช้การเชื่อมต่อหลักของคุณ</string>
+    <string name="country_per_app_needs_android_10">ต้องใช้ Android 10 ขึ้นไป</string>
+    <string name="apps_with_a_country">แอปที่กำหนดประเทศ</string>
+    <string name="all_apps">แอปทั้งหมด</string>
+    <string name="app_route_paused">ปิดอยู่ ใช้การเชื่อมต่อหลัก</string>
+    <string name="app_route_bypassed">ข้าม VPN อยู่</string>
+    <string name="app_route_waiting">กำลังรอ VPN</string>
+    <string name="app_route_connecting">กำลังเชื่อมต่อ...</string>
+    <string name="app_route_connected">เชื่อมต่อแล้ว</string>
+    <string name="app_route_connected_ip">เชื่อมต่อแล้ว IP %1$s</string>
+    <string name="app_route_no_token">โทเค็นเซสชันหมดแล้ว</string>
+    <string name="app_route_limit_reached">ครบจำนวนเซสชันแล้ว</string>
+    <string name="app_route_waiting_for_route">กำลังรอเส้นทางที่ว่าง</string>
+    <string name="app_route_no_relay">ไม่มีเซิร์ฟเวอร์ที่นั่น</string>
+    <string name="app_route_unavailable">ไม่พร้อมใช้งาน</string>
+    <string name="app_country_chip">ประเทศ</string>
+    <string name="app_country_choose">เลือกประเทศสำหรับ %1$s</string>
+    <string name="app_country_change">เปลี่ยนประเทศของ %1$s ปัจจุบันคือ %2$s</string>
+    <string name="app_country_remove">นำประเทศของ %1$s ออก</string>
+    <string name="country_picker_title">ประเทศของ %1$s</string>
+    <string name="country_picker_remove">นำประเทศออก</string>
+    <string name="country_picker_cities_in">เมืองใน %1$s</string>
+    <string name="country_picker_in_use">ใช้อยู่</string>
+    <plurals name="apps_in_other_countries">
+        <item quantity="other">%1$d แอปในประเทศอื่น</item>
+    </plurals>
     <string name="split_tunneling_description_warning">โปรดทราบ: แอปแยกจะไม่มีอินเทอร์เน็ต ในกรณีที่เปิดใช้งาน \"ปิดกั้นการเชื่อมต่อโดยไม่ใช้ VPN\" โปรดทราบว่า การแยกอุโมงค์จะก่อให้เกิดความเสี่ยงต่อความเป็นส่วนตัว</string>
     <string name="enable">เปิดใช้งาน</string>
     <string name="confirm_local_dns">เซิร์ฟเวอร์ DNS ท้องถิ่นจะไม่ทำงาน เว้นแต่คุณจะเปิดใช้งาน \"การแชร์ในเครือข่ายท้องถิ่น\" ซึ่งอยู่ในส่วนการตั้งค่า VPN</string>

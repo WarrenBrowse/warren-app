@@ -100,6 +100,33 @@
     <plurals name="vpn_only_for_apps">
         <item quantity="other">仅 %1$d 个应用使用 VPN</item>
     </plurals>
+    <string name="country_per_app">按应用指定国家</string>
+    <string name="country_per_app_description">选择应用对外显示的国家。其他应用继续使用您的主连接。</string>
+    <string name="country_per_app_needs_android_10">需要 Android 10 或更高版本。</string>
+    <string name="apps_with_a_country">已指定国家</string>
+    <string name="all_apps">所有应用</string>
+    <string name="app_route_paused">已关闭，使用主连接</string>
+    <string name="app_route_bypassed">已绕过 VPN</string>
+    <string name="app_route_waiting">正在等待 VPN</string>
+    <string name="app_route_connecting">正在连接…</string>
+    <string name="app_route_connected">已连接</string>
+    <string name="app_route_connected_ip">已连接，IP %1$s</string>
+    <string name="app_route_no_token">会话令牌已用完</string>
+    <string name="app_route_limit_reached">已达会话上限</string>
+    <string name="app_route_waiting_for_route">正在等待空闲路由</string>
+    <string name="app_route_no_relay">该位置无服务器</string>
+    <string name="app_route_unavailable">不可用</string>
+    <string name="app_country_chip">国家</string>
+    <string name="app_country_choose">为 %1$s 选择国家</string>
+    <string name="app_country_change">更改 %1$s 的国家（当前：%2$s）</string>
+    <string name="app_country_remove">移除 %1$s 的国家</string>
+    <string name="country_picker_title">%1$s 的国家</string>
+    <string name="country_picker_remove">移除国家</string>
+    <string name="country_picker_cities_in">%1$s 的城市</string>
+    <string name="country_picker_in_use">使用中</string>
+    <plurals name="apps_in_other_countries">
+        <item quantity="other">%1$d 个应用使用其他国家</item>
+    </plurals>
     <string name="split_tunneling_description_warning">注意：如果启用了“屏蔽未使用 VPN 的所有连接”，分割应用将无法连接互联网。请牢记，分割隧道存在隐私风险。</string>
     <string name="enable">启用</string>
     <string name="confirm_local_dns">除非您在 VPN 设置下启用“本地网络共享”，否则本地 DNS 服务器将不会运行。</string>

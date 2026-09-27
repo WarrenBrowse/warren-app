@@ -103,6 +103,36 @@
         <item quantity="many">VPN лише для %1$d застосунків</item>
         <item quantity="other">VPN лише для %1$d застосунку</item>
     </plurals>
+    <string name="country_per_app">Країна для застосунку</string>
+    <string name="country_per_app_description">Виберіть країну, з якої застосунок виходитиме в інтернет. Інші застосунки використовують основне підключення.</string>
+    <string name="country_per_app_needs_android_10">Потрібен Android 10 або новіший.</string>
+    <string name="apps_with_a_country">Зі своєю країною</string>
+    <string name="all_apps">Усі застосунки</string>
+    <string name="app_route_paused">Вимкн., основне підключення</string>
+    <string name="app_route_bypassed">Обходить VPN</string>
+    <string name="app_route_waiting">Очікування VPN</string>
+    <string name="app_route_connecting">Підключення...</string>
+    <string name="app_route_connected">Підключено</string>
+    <string name="app_route_connected_ip">Підключено, IP %1$s</string>
+    <string name="app_route_no_token">Не залишилося токенів сеансу</string>
+    <string name="app_route_limit_reached">Досягнуто ліміту сеансів</string>
+    <string name="app_route_waiting_for_route">Чекає на вільний маршрут</string>
+    <string name="app_route_no_relay">Немає серверів у цьому місці</string>
+    <string name="app_route_unavailable">Недоступно</string>
+    <string name="app_country_chip">Країна</string>
+    <string name="app_country_choose">Вибрати країну для %1$s</string>
+    <string name="app_country_change">Змінити країну для %1$s, зараз: %2$s</string>
+    <string name="app_country_remove">Вилучити країну для %1$s</string>
+    <string name="country_picker_title">Країна для %1$s</string>
+    <string name="country_picker_remove">Вилучити країну</string>
+    <string name="country_picker_cities_in">%1$s: міста</string>
+    <string name="country_picker_in_use">Використовується</string>
+    <plurals name="apps_in_other_countries">
+        <item quantity="one">%1$d застосунок в іншій країні</item>
+        <item quantity="few">%1$d застосунки в інших країнах</item>
+        <item quantity="many">%1$d застосунків в інших країнах</item>
+        <item quantity="other">%1$d застосунку в інших країнах</item>
+    </plurals>
     <string name="split_tunneling_description_warning">Увага: якщо ввімкнено функцію «Блокувати з’єднання без VPN», застосунки, до яких застосовано роздільне тунелювання, не працюватимуть. Пам’ятайте, що роздільне тунелювання несе ризик для конфіденційності.</string>
     <string name="enable">Увімкнути</string>
     <string name="confirm_local_dns">Локальний DNS-сервер не працюватиме, якщо в налаштуваннях VPN не ввімкнено «Обмін даними в локальній мережі».</string>

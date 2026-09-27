@@ -101,6 +101,34 @@
         <item quantity="one">VPN alleen voor %1$d app</item>
         <item quantity="other">VPN alleen voor %1$d apps</item>
     </plurals>
+    <string name="country_per_app">Land per app</string>
+    <string name="country_per_app_description">Kies uit welk land een app online verschijnt. Andere apps houden uw hoofdverbinding.</string>
+    <string name="country_per_app_needs_android_10">Hiervoor is Android 10 of nieuwer nodig.</string>
+    <string name="apps_with_a_country">Met een land</string>
+    <string name="all_apps">Alle apps</string>
+    <string name="app_route_paused">Uit, gebruikt hoofdverbinding</string>
+    <string name="app_route_bypassed">Gaat buiten de VPN om</string>
+    <string name="app_route_waiting">Wacht op de VPN</string>
+    <string name="app_route_connecting">Verbinden...</string>
+    <string name="app_route_connected">Verbonden</string>
+    <string name="app_route_connected_ip">Verbonden, IP %1$s</string>
+    <string name="app_route_no_token">Geen sessietokens meer</string>
+    <string name="app_route_limit_reached">Sessielimiet bereikt</string>
+    <string name="app_route_waiting_for_route">Wacht op een vrije route</string>
+    <string name="app_route_no_relay">Geen server op deze locatie</string>
+    <string name="app_route_unavailable">Niet beschikbaar</string>
+    <string name="app_country_chip">Land</string>
+    <string name="app_country_choose">Kies een land voor %1$s</string>
+    <string name="app_country_change">Land van %1$s wijzigen, nu %2$s</string>
+    <string name="app_country_remove">Land van %1$s verwijderen</string>
+    <string name="country_picker_title">Land voor %1$s</string>
+    <string name="country_picker_remove">Land verwijderen</string>
+    <string name="country_picker_cities_in">%1$s: steden</string>
+    <string name="country_picker_in_use">In gebruik</string>
+    <plurals name="apps_in_other_countries">
+        <item quantity="one">%1$d app in een ander land</item>
+        <item quantity="other">%1$d apps in andere landen</item>
+    </plurals>
     <string name="split_tunneling_description_warning">Let op: Als \"Verbindingen zonder VPN blokkeren\" is ingeschakeld, hebben gesplitste apps geen internet. Houd er altijd rekening mee dat split tunneling een privacyrisico vormt.</string>
     <string name="enable">Inschakelen</string>
     <string name="confirm_local_dns">De lokale DNS-server werkt niet, tenzij u \"Delen via lokaal netwerk\" inschakelt bij de VPN-instellingen.</string>

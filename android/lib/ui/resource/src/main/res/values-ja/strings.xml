@@ -100,6 +100,33 @@
     <plurals name="vpn_only_for_apps">
         <item quantity="other">%1$d 個のアプリのみVPNを使用</item>
     </plurals>
+    <string name="country_per_app">アプリごとの国</string>
+    <string name="country_per_app_description">アプリの接続元として表示される国を選択します。その他のアプリはメインの接続を使用し続けます。</string>
+    <string name="country_per_app_needs_android_10">Android 10以降が必要です。</string>
+    <string name="apps_with_a_country">国を設定したアプリ</string>
+    <string name="all_apps">すべてのアプリ</string>
+    <string name="app_route_paused">オフ、メインの接続を使用</string>
+    <string name="app_route_bypassed">VPNをバイパス中</string>
+    <string name="app_route_waiting">VPNを待機中</string>
+    <string name="app_route_connecting">接続中...</string>
+    <string name="app_route_connected">接続済み</string>
+    <string name="app_route_connected_ip">接続済み、IP %1$s</string>
+    <string name="app_route_no_token">セッショントークン切れ</string>
+    <string name="app_route_limit_reached">セッションの上限に到達</string>
+    <string name="app_route_waiting_for_route">空きルートを待機中</string>
+    <string name="app_route_no_relay">その場所にサーバーなし</string>
+    <string name="app_route_unavailable">使用不可</string>
+    <string name="app_country_chip">国</string>
+    <string name="app_country_choose">%1$sの国を選択</string>
+    <string name="app_country_change">%1$sの国を変更 (現在: %2$s)</string>
+    <string name="app_country_remove">%1$sの国を削除</string>
+    <string name="country_picker_title">%1$sの国</string>
+    <string name="country_picker_remove">国を削除</string>
+    <string name="country_picker_cities_in">%1$sの都市</string>
+    <string name="country_picker_in_use">使用中</string>
+    <plurals name="apps_in_other_countries">
+        <item quantity="other">%1$d 個のアプリが別の国を使用</item>
+    </plurals>
     <string name="split_tunneling_description_warning">注意: [VPNを使用していない接続をブロックする] が有効な場合、スプリット対象のアプリはインターネットを使用できません。スプリットトンネリングにはプライバシーのリスクがあることに常に注意してください。</string>
     <string name="enable">有効にする</string>
     <string name="confirm_local_dns">VPN設定で [ローカルネットワーク共有] を有効にしない限り、ローカルDNSサーバーは機能しません。</string>

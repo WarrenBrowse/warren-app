@@ -101,6 +101,34 @@
         <item quantity="one">VPN endast för %1$d app</item>
         <item quantity="other">VPN endast för %1$d appar</item>
     </plurals>
+    <string name="country_per_app">Land per app</string>
+    <string name="country_per_app_description">Välj vilket land en app ska synas från. Andra appar behåller din huvudanslutning.</string>
+    <string name="country_per_app_needs_android_10">Detta kräver Android 10 eller senare.</string>
+    <string name="apps_with_a_country">Med ett land</string>
+    <string name="all_apps">Alla appar</string>
+    <string name="app_route_paused">Av, använder huvudanslutningen</string>
+    <string name="app_route_bypassed">Går förbi VPN</string>
+    <string name="app_route_waiting">Väntar på VPN</string>
+    <string name="app_route_connecting">Ansluter …</string>
+    <string name="app_route_connected">Ansluten</string>
+    <string name="app_route_connected_ip">Ansluten, IP %1$s</string>
+    <string name="app_route_no_token">Inga sessionstokens kvar</string>
+    <string name="app_route_limit_reached">Max antal sessioner nått</string>
+    <string name="app_route_waiting_for_route">Väntar på en ledig rutt</string>
+    <string name="app_route_no_relay">Ingen server där</string>
+    <string name="app_route_unavailable">Inte tillgänglig</string>
+    <string name="app_country_chip">Land</string>
+    <string name="app_country_choose">Välj ett land för %1$s</string>
+    <string name="app_country_change">Ändra land för %1$s, nu %2$s</string>
+    <string name="app_country_remove">Ta bort landet för %1$s</string>
+    <string name="country_picker_title">Land för %1$s</string>
+    <string name="country_picker_remove">Ta bort land</string>
+    <string name="country_picker_cities_in">%1$s: städer</string>
+    <string name="country_picker_in_use">Används</string>
+    <plurals name="apps_in_other_countries">
+        <item quantity="one">%1$d app i ett annat land</item>
+        <item quantity="other">%1$d appar i andra länder</item>
+    </plurals>
     <string name="split_tunneling_description_warning">Obs! Om \"Blockera anslutningar utan VPN\" är aktiverat kommer inte delade appar att ha internet. Kom ihåg att det alltid finns en säkerhetsrisk med delade tunnlar.</string>
     <string name="enable">Aktivera</string>
     <string name="confirm_local_dns">Den lokala DNS-servern fungerar inte om du inte aktiverar \"Lokal nätverksdelning\" under VPN-inställningar.</string>
