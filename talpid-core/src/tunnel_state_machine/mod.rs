@@ -5,6 +5,7 @@ mod disconnected_state;
 mod disconnecting_state;
 mod error_state;
 mod exit_refusal;
+mod lan_routes;
 mod tunnel_monitor;
 
 pub use exit_refusal::{SubscriptionStatus, SubscriptionStatusProvider};
@@ -612,6 +613,10 @@ impl TunnelStateMachine {
             dns_monitor,
             route_manager: args.route_manager,
             _offline_monitor: offline_monitor,
+            lan_routes: lan_routes::LanRoutes::new(
+                args.settings.allow_lan,
+                &args.settings.lan_networks,
+            ),
             allow_lan: args.settings.allow_lan,
             lan_networks: args.settings.lan_networks,
             #[cfg(not(target_os = "android"))]
@@ -844,6 +849,9 @@ struct SharedTunnelStateValues {
     allow_lan: bool,
     /// The unicast networks reachable outside the tunnel when `allow_lan` is set.
     lan_networks: Vec<IpNetwork>,
+    /// The networks the tunnel routes outside itself, following `allow_lan`
+    /// and `lan_networks`.
+    lan_routes: lan_routes::LanRoutes,
     /// Should network access be allowed when in the disconnected state.
     #[cfg(not(target_os = "android"))]
     lockdown_mode: LockdownMode,
@@ -955,6 +963,7 @@ impl SharedTunnelStateValues {
     /// Returns whether either value changed, so the caller knows to reapply the firewall.
     pub fn set_allow_lan(&mut self, allow_lan: bool, lan_networks: Vec<IpNetwork>) -> bool {
         if self.allow_lan != allow_lan || self.lan_networks != lan_networks {
+            self.lan_routes.update(allow_lan, &lan_networks);
             self.allow_lan = allow_lan;
             self.lan_networks = lan_networks;
             true

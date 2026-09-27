@@ -41,11 +41,6 @@ pub use warrenguard_multihop::{
 // TCP, or `Both` at once on the same external port (an atomic pair
 // driven by one dual-proto refresh loop engine-side).
 pub use warrenguard_natpmp_client::ForwardProtos as NatPmpProto;
-// IPv4 CIDR descriptor used by the daemon-side `--bypass-cidr`
-// settings plumbing. Re-exported so callers (mullvad-daemon, gRPC
-// conversions, settings persistence) consume one canonical type
-// instead of duplicating it across crates.
-pub use warrenguard_route_split::bypass_cidr::BypassCidr;
 // The firewall must permit DNS to the in-tunnel resolver this crate's egress
 // probe queries, otherwise a user with DNS content blocking has the probe
 // denied by our own leak protection. Re-exported so talpid-core reads the
@@ -320,6 +315,7 @@ pub mod natpmp_preflight;
 /// Split-default policy routing helper that routes Internet traffic via
 /// the tunnel without overriding the kernel main routing table.
 pub mod default_route_split;
+pub mod lan_routes;
 pub use default_route_split::force_route_cleanup;
 
 // Trace prefix used by the start-sequence and pump-metrics debug logs.
@@ -582,20 +578,11 @@ pub struct WarrenTunnelParameters {
     /// did not wire the channel (tests): the tunnel runs uncapped.
     pub max_rate_control_rx: Option<tokio::sync::watch::Receiver<Option<u64>>>,
 
-    /// IPv4 CIDRs that should bypass the tunnel and remain reachable
-    /// via the host's main routing table (LAN, private ranges, inbound
-    /// SSH on a management interface, ...). Each entry becomes an
-    /// `ip rule add to <cidr> lookup main pref 49` installed alongside
-    /// the standard `0.0.0.0/1` + `128.0.0.0/1` split-default routes.
-    /// Empty (default) preserves the prior behaviour: the tunnel
-    /// captures all traffic except the exit IP itself.
-    ///
-    /// Linux-only at this layer: macOS and Windows daemon routing is
-    /// handled by talpid-core's platform splitters, which do not yet
-    /// consume this list. UI exposure is deferred to a future phase;
-    /// the field is plumbed end-to-end so future UI work only needs
-    /// the gRPC + Redux glue, not a fresh daemon traversal.
-    pub bypass_cidrs: Vec<BypassCidr>,
+    /// The networks "Local network sharing" keeps outside the tunnel, as the
+    /// tunnel state machine enforces them in the firewall, followed live.
+    /// Routed to the main table ahead of the split-default on Linux (see
+    /// [`lan_routes`]); `None` (tests, other platforms) adds no exception.
+    pub lan_networks: Option<lan_routes::LanNetworks>,
 
     /// "VPN only for these apps": the routes carry only the included apps'
     /// traffic into the tunnel and leave the host's default route alone. Set
@@ -690,7 +677,10 @@ impl std::fmt::Debug for WarrenTunnelParameters {
                 "nat_pmp_control_rx",
                 &self.nat_pmp_control_rx.as_ref().map(|_| "<watch-rx>"),
             )
-            .field("bypass_cidrs", &self.bypass_cidrs)
+            .field(
+                "lan_networks",
+                &self.lan_networks.as_ref().map(|_| "<watch-rx>"),
+            )
             .field("include_only", &self.include_only)
             .field("tunnel_resolvers", &self.tunnel_resolvers.len())
             .field("enable_daita", &self.enable_daita)
@@ -1170,6 +1160,11 @@ pub struct WarrenTunnelMonitor {
     /// firewall blocks native v6 regardless so a failed install never
     /// leaks.
     v6_route_guard: Option<default_route_split::DefaultRouteSplitV6Guard>,
+    /// The shared local networks' routes outside the tunnel, removed in
+    /// `wait()` after the split-default. `None` when the state machine
+    /// wired no list.
+    #[cfg(target_os = "linux")]
+    lan_routes: Option<lan_routes::LanRoutes>,
     /// Mutually exclusive with [`Self::v6_route_guard`]: held while the tunnel
     /// carries no IPv6, to make global v6 unroutable rather than merely
     /// blocked. `None` when the exit allocated a tunnel v6, or when the
@@ -1934,6 +1929,13 @@ impl WarrenTunnelMonitor {
         // which peer the supervisor currently dials; on multi-hop that peer
         // is the *relay* (first hop), not the exit, since it is the only UDP
         // peer the client speaks to directly.
+        // The shared local networks go outside the tunnel before the split
+        // takes the default route, so none of them is ever routed into it.
+        #[cfg(target_os = "linux")]
+        let lan_routes = params
+            .lan_networks
+            .clone()
+            .map(|lan| runtime.block_on(lan_routes::LanRoutes::start(lan)));
         let include_only = params.include_only;
         let tunnel_resolvers = params.tunnel_resolvers.clone();
         let tunnel_resolvers_v6 = params.tunnel_resolvers.clone();
@@ -2633,6 +2635,8 @@ impl WarrenTunnelMonitor {
             // Multi-hop `/v2` dual-stack: holds the `::/1`+`8000::/1` split
             // route when the exit allocated a v6; `None` keeps it v4-only.
             v6_route_guard,
+            #[cfg(target_os = "linux")]
+            lan_routes,
             v6_unreachable_guard,
             nat_pmp_managers,
             nat_pmp_controller,
@@ -2663,6 +2667,8 @@ impl WarrenTunnelMonitor {
             close_rx,
             default_route_guard,
             v6_route_guard,
+            #[cfg(target_os = "linux")]
+            lan_routes,
             v6_unreachable_guard,
             nat_pmp_managers,
             nat_pmp_controller,
@@ -2894,6 +2900,12 @@ impl WarrenTunnelMonitor {
             });
             let _ = tokio::join!(v4, v6);
         });
+        // Only once the split is gone, so no shared network falls back into
+        // the tunnel meanwhile.
+        #[cfg(target_os = "linux")]
+        if let Some(lan_routes) = lan_routes {
+            runtime.block_on(lan_routes.stop());
+        }
         let routes_ms = routes_t.elapsed().as_millis();
 
         // Abort backend tasks to release the TUN device and the QUIC
@@ -4274,7 +4286,7 @@ mod tests {
             nat_pmp_observer: None,
             nat_pmp_control_rx: None,
             max_rate_control_rx: None,
-            bypass_cidrs: Vec::new(),
+            lan_networks: None,
             include_only: false,
             tunnel_resolvers: Vec::new(),
             enable_daita: false,
@@ -4374,7 +4386,7 @@ mod tests {
             nat_pmp_observer: None,
             nat_pmp_control_rx: None,
             max_rate_control_rx: None,
-            bypass_cidrs: Vec::new(),
+            lan_networks: None,
             include_only: false,
             tunnel_resolvers: Vec::new(),
             enable_daita: false,
@@ -4441,7 +4453,7 @@ mod tests {
             nat_pmp_observer: None,
             nat_pmp_control_rx: None,
             max_rate_control_rx: None,
-            bypass_cidrs: Vec::new(),
+            lan_networks: None,
             include_only: false,
             tunnel_resolvers: Vec::new(),
             enable_daita: false,
@@ -5850,7 +5862,7 @@ mod route_anchor_tests {
             nat_pmp_observer: None,
             nat_pmp_control_rx: None,
             max_rate_control_rx: None,
-            bypass_cidrs: Vec::new(),
+            lan_networks: None,
             include_only: false,
             tunnel_resolvers: Vec::new(),
             enable_daita: false,

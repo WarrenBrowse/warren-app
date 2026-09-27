@@ -162,13 +162,6 @@ struct InnerParametersGenerator {
     /// differs from the previously applied per-rule config and beats the
     /// controller's duplicate debounce.
     warren_nat_pmp_remap_epoch: u64,
-    /// User-supplied IPv4 CIDRs that should bypass the tunnel and
-    /// reach the host's main routing table (LAN, SSH inbound). Plumbed
-    /// down to [`talpid_warren_tunnel::WarrenTunnelParameters::bypass_cidrs`].
-    /// Default empty; mutated at runtime via
-    /// [`ParametersGenerator::set_warren_bypass_cidrs`] once a UI or
-    /// settings file lands the values.
-    warren_bypass_cidrs: Vec<talpid_warren_tunnel::BypassCidr>,
     /// DAITA v2 toggle, mirroring Mullvad upstream
     /// `wireguard.daita.enabled`. Forwarded verbatim onto
     /// [`talpid_warren_tunnel::WarrenTunnelParameters::enable_daita`].
@@ -452,7 +445,6 @@ impl ParametersGenerator {
                 std::sync::Mutex::new(std::collections::HashMap::new()),
             ),
             warren_nat_pmp_remap_epoch: 0,
-            warren_bypass_cidrs: Vec::new(),
             warren_enable_daita: false,
             warren_n_connections: None,
             warren_custom_exit: mullvad_types::settings::WarrenCustomExitSettings::default(),
@@ -596,32 +588,6 @@ impl ParametersGenerator {
             let _ = tx.send(WarrenPinUpdate::ResetAll);
         }
         count
-    }
-
-    /// Replaces the user-supplied bypass CIDR list. The next call to
-    /// [`Self::produce_warren_tunnel_params`] picks up the new value;
-    /// in-flight tunnels keep their current routing until reconnect.
-    #[expect(
-        dead_code,
-        reason = "This ships the daemon-side plumbing only; the gRPC + UI \
-                  call site lands in a follow-up phase. Keep the setter public \
-                  so that follow-up does not have to re-traverse this file."
-    )]
-    pub async fn set_warren_bypass_cidrs(&self, cidrs: Vec<talpid_warren_tunnel::BypassCidr>) {
-        self.0.lock().await.warren_bypass_cidrs = cidrs;
-    }
-
-    /// Reads back the currently-persisted bypass CIDR list. Used by
-    /// the gRPC `GetSettings` handler so the UI reflects the persisted
-    /// state even when no tunnel has been generated yet.
-    #[expect(
-        dead_code,
-        reason = "This ships the daemon-side plumbing only; the gRPC + UI \
-                  call site lands in a follow-up phase. Keep the getter public \
-                  so that follow-up does not have to re-traverse this file."
-    )]
-    pub async fn warren_bypass_cidrs(&self) -> Vec<talpid_warren_tunnel::BypassCidr> {
-        self.0.lock().await.warren_bypass_cidrs.clone()
     }
 
     /// Sets the user's NAT-PMP preference.
@@ -1028,7 +994,6 @@ impl ParametersGenerator {
                     .expect("warren nat-pmp sticky mutex poisoned"),
             )
         });
-        let bypass_cidrs = inner.warren_bypass_cidrs.clone();
         let enable_daita = inner.warren_enable_daita;
         let n_connections_setting = inner.warren_n_connections;
         // IPv6 dual-stack opt-in (Mullvad `tunnel_options.generic.enable_ipv6`,
@@ -1055,12 +1020,7 @@ impl ParametersGenerator {
         let last_pubkey = inner.warren_last_exit_pubkey;
         // Cloned before the assemble consumes them, so the last-known-good
         // fallback below can rebuild parameters without re-running selection.
-        let fallback_inputs = (
-            signing_key.clone(),
-            multi_hop.clone(),
-            nat_pmp.clone(),
-            bypass_cidrs.clone(),
-        );
+        let fallback_inputs = (signing_key.clone(), multi_hop.clone(), nat_pmp.clone());
         let last_good_slot = Arc::clone(&inner.warren_last_good_exit);
         let drained_now = inner
             .warren_drained_exits
@@ -1075,7 +1035,7 @@ impl ParametersGenerator {
                 "Warren: custom-exit override active ({}); bypassing roster selection",
                 custom_exit.endpoint
             );
-            warren_tunnel_params::assemble_custom(&custom_exit, signing_key, nat_pmp, bypass_cidrs)
+            warren_tunnel_params::assemble_custom(&custom_exit, signing_key, nat_pmp)
         } else if let Some(excluded) = last_pubkey.filter(|_| is_failover) {
             warren_tunnel_params::assemble_failover_for_attempt(
                 &selector,
@@ -1085,7 +1045,6 @@ impl ParametersGenerator {
                 excluded,
                 multi_hop,
                 nat_pmp,
-                bypass_cidrs,
             )
         } else {
             warren_tunnel_params::assemble_for_attempt(
@@ -1095,7 +1054,6 @@ impl ParametersGenerator {
                 retry_attempt,
                 multi_hop,
                 nat_pmp,
-                bypass_cidrs,
             )
         };
         // Ground truth outranks the roster when the roster has nothing left.
@@ -1132,7 +1090,7 @@ impl ParametersGenerator {
                 let Some(last_good) = usable else {
                     return Err(e.into());
                 };
-                let (key, multi_hop, nat_pmp, bypass_cidrs) = fallback_inputs;
+                let (key, multi_hop, nat_pmp) = fallback_inputs;
                 log::warn!(
                     "Warren: no exit matched the current roster, but this client proved {}/{} \
                      alive {}s ago; redialing it rather than failing closed (a roster that lost \
@@ -1141,13 +1099,7 @@ impl ParametersGenerator {
                     last_good.city,
                     warren_now_unix_secs().saturating_sub(last_good.proven_at_unix),
                 );
-                warren_tunnel_params::assemble_from_last_good(
-                    &last_good,
-                    key,
-                    multi_hop,
-                    nat_pmp,
-                    bypass_cidrs,
-                )
+                warren_tunnel_params::assemble_from_last_good(&last_good, key, multi_hop, nat_pmp)
             }
         };
         // v7 anonymous admission (default, warren-core doc 64): when the daemon has an API

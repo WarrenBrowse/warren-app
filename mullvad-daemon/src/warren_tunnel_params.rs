@@ -13,7 +13,7 @@ use std::net::SocketAddr;
 
 use ed25519_dalek::{Signer, SigningKey, VerifyingKey};
 use mullvad_types::settings::WarrenCustomExitSettings;
-use talpid_warren_tunnel::{BypassCidr, MultiHopConfig, NatPmpConfig, WarrenTunnelParameters};
+use talpid_warren_tunnel::{MultiHopConfig, NatPmpConfig, WarrenTunnelParameters};
 use warren_discovery_core::warren_types::{ExitId, WarrenExitAddr, WarrenPubkey};
 use warren_discovery_core::{SelectorError, WarrenRelayQuery};
 use warrenguard_multihop::{
@@ -131,7 +131,6 @@ pub fn assemble_from_last_good(
     signing_key: SigningKey,
     multi_hop: Option<MultiHopConfig>,
     nat_pmp: Option<NatPmpConfig>,
-    bypass_cidrs: Vec<BypassCidr>,
 ) -> WarrenTunnelParameters {
     WarrenTunnelParameters {
         exit_addr: last_good.exit_addr.clone(),
@@ -156,7 +155,7 @@ pub fn assemble_from_last_good(
         nat_pmp_observer: None,
         nat_pmp_control_rx: None,
         max_rate_control_rx: None,
-        bypass_cidrs,
+        lan_networks: None,
         include_only: false,
         tunnel_resolvers: Vec::new(),
         enable_daita: false,
@@ -284,7 +283,6 @@ pub fn assemble_for_attempt(
     retry_attempt: u32,
     multi_hop: Option<MultiHopConfig>,
     nat_pmp: Option<NatPmpConfig>,
-    bypass_cidrs: Vec<BypassCidr>,
 ) -> Result<WarrenTunnelParameters, AssembleError> {
     let selection = selector.select_for_attempt(query, retry_attempt)?;
     let alpn_protocols = selection
@@ -340,12 +338,7 @@ pub fn assemble_for_attempt(
         // into live reconfig (tests, future non-daemon embedders).
         nat_pmp_control_rx: None,
         max_rate_control_rx: None,
-        // User-supplied bypass CIDRs (--bypass-cidr). The
-        // daemon-side runtime in `talpid-warren-tunnel` consumes this
-        // list to install extra `ip rule add to <cidr> lookup main`
-        // rules alongside the standard split-default routes. Empty
-        // (default) preserves the prior behaviour.
-        bypass_cidrs,
+        lan_networks: None,
         include_only: false,
         tunnel_resolvers: Vec::new(),
         // DAITA v2 opt-in. assemble() always starts at `false`;
@@ -394,10 +387,6 @@ pub fn assemble_for_attempt(
 /// Returns [`AssembleError::Selector`] only when the ordinary
 /// selection has nothing to offer either (empty roster, or a query no
 /// relay satisfies).
-#[expect(
-    clippy::too_many_arguments,
-    reason = "Mirror of assemble_for_attempt with one extra discriminator (excluded_pubkey); splitting into a struct would obscure the call site in tunnel.rs and decouple it visually from the sibling function."
-)]
 pub fn assemble_failover_for_attempt(
     selector: &DaemonWarrenRelaySelector,
     signing_key: SigningKey,
@@ -406,7 +395,6 @@ pub fn assemble_failover_for_attempt(
     excluded_pubkey: WarrenPubkey,
     multi_hop: Option<MultiHopConfig>,
     nat_pmp: Option<NatPmpConfig>,
-    bypass_cidrs: Vec<BypassCidr>,
 ) -> Result<WarrenTunnelParameters, AssembleError> {
     let alternative = selector
         .relay_by_pubkey(&excluded_pubkey)
@@ -429,7 +417,6 @@ pub fn assemble_failover_for_attempt(
             retry_attempt,
             multi_hop,
             nat_pmp,
-            bypass_cidrs,
         );
     };
     let alpn_protocols = alternative
@@ -468,7 +455,7 @@ pub fn assemble_failover_for_attempt(
         nat_pmp_observer: None,
         nat_pmp_control_rx: None,
         max_rate_control_rx: None,
-        bypass_cidrs,
+        lan_networks: None,
         include_only: false,
         tunnel_resolvers: Vec::new(),
         enable_daita: false,
@@ -519,7 +506,6 @@ pub fn assemble_custom(
     custom: &WarrenCustomExitSettings,
     signing_key: SigningKey,
     nat_pmp: Option<NatPmpConfig>,
-    bypass_cidrs: Vec<BypassCidr>,
 ) -> Result<WarrenTunnelParameters, AssembleError> {
     let endpoint: SocketAddr = custom.endpoint.trim().parse().map_err(|_| {
         AssembleError::CustomExit(format!(
@@ -657,7 +643,7 @@ pub fn assemble_custom(
         nat_pmp_observer: None,
         nat_pmp_control_rx: None,
         max_rate_control_rx: None,
-        bypass_cidrs,
+        lan_networks: None,
         include_only: false,
         tunnel_resolvers: Vec::new(),
         enable_daita: false,
@@ -796,16 +782,8 @@ mod tests {
         let key = fixture_signing_key();
         let expected_pubkey = key.verifying_key().to_bytes();
 
-        let params = assemble_for_attempt(
-            &selector,
-            key,
-            &WarrenRelayQuery::any(),
-            0,
-            None,
-            None,
-            Vec::new(),
-        )
-        .expect("must assemble valid params");
+        let params = assemble_for_attempt(&selector, key, &WarrenRelayQuery::any(), 0, None, None)
+            .expect("must assemble valid params");
 
         let expected_id = WarrenPubkey::from_bytes([1u8; 32]);
         assert_eq!(params.exit_addr.id, expected_id);
@@ -849,16 +827,8 @@ mod tests {
         let selector = DaemonWarrenRelaySelector::new(list);
         let query = WarrenRelayQuery::any().with_location(LocationConstraint::Country("zz".into()));
 
-        let err = assemble_for_attempt(
-            &selector,
-            fixture_signing_key(),
-            &query,
-            0,
-            None,
-            None,
-            Vec::new(),
-        )
-        .expect_err("must fail");
+        let err = assemble_for_attempt(&selector, fixture_signing_key(), &query, 0, None, None)
+            .expect_err("must fail");
         assert!(matches!(
             err,
             AssembleError::Selector(SelectorError::NoRelayMatch)
@@ -889,7 +859,6 @@ mod tests {
             WarrenPubkey::from_bytes([1u8; 32]),
             None,
             None,
-            Vec::new(),
         )
         .expect("a sole candidate must be retried, never turned into a blocking error");
 
@@ -917,7 +886,6 @@ mod tests {
             WarrenPubkey::from_bytes([9u8; 32]),
             None,
             None,
-            Vec::new(),
         )
         .expect("an unknown excluded pubkey must degrade to ordinary selection");
 
@@ -944,7 +912,6 @@ mod tests {
             WarrenPubkey::from_bytes([1u8; 32]),
             None,
             None,
-            Vec::new(),
         )
         .expect("must assemble a failover");
 
@@ -969,7 +936,6 @@ mod tests {
             WarrenPubkey::from_bytes([1u8; 32]),
             None,
             None,
-            Vec::new(),
         )
         .expect_err("an empty roster has nothing to retry");
 
@@ -998,7 +964,6 @@ mod tests {
             42,
             None,
             None,
-            Vec::new(),
         )
         .unwrap();
         let params_b = assemble_for_attempt(
@@ -1008,7 +973,6 @@ mod tests {
             42,
             None,
             None,
-            Vec::new(),
         )
         .unwrap();
 
@@ -1068,7 +1032,6 @@ mod tests {
             0,
             Some(mh.clone()),
             None,
-            Vec::new(),
         )
         .expect("must assemble multi-hop params");
 
@@ -1123,7 +1086,6 @@ mod tests {
             0,
             None,
             Some(cfg.clone()),
-            Vec::new(),
         )
         .expect("must assemble nat-pmp params");
 
@@ -1131,76 +1093,6 @@ mod tests {
             .nat_pmp
             .expect("nat_pmp must be forwarded onto params");
         assert_eq!(wired, cfg, "NatPmpConfig must round-trip verbatim");
-    }
-
-    #[test]
-    fn assemble_propagates_bypass_cidrs_into_params() {
-        // The daemon-side settings store carries a Vec<BypassCidr>
-        // populated by either a future UI flow or the CLI. assemble()
-        // must forward that list verbatim onto
-        // `params.bypass_cidrs` so the talpid-warren-tunnel routing
-        // installer sees the user's intent on the next tunnel start.
-        // A regression that drops the field would silently route LAN
-        // traffic through the tunnel and break inbound SSH on
-        // dual-NIC hosts.
-        use std::net::Ipv4Addr;
-        use talpid_warren_tunnel::BypassCidr;
-
-        let list = WarrenRelayList::new(vec![fixture_relay(1, "se")]);
-        let selector = DaemonWarrenRelaySelector::new(list);
-        let cidrs = vec![
-            BypassCidr {
-                network: Ipv4Addr::new(192, 168, 0, 0),
-                prefix: 16,
-            },
-            BypassCidr {
-                network: Ipv4Addr::new(10, 0, 0, 0),
-                prefix: 8,
-            },
-        ];
-
-        let params = assemble_for_attempt(
-            &selector,
-            fixture_signing_key(),
-            &WarrenRelayQuery::any(),
-            0,
-            None,
-            None,
-            cidrs.clone(),
-        )
-        .expect("must assemble bypass-cidr params");
-
-        assert_eq!(
-            params.bypass_cidrs, cidrs,
-            "bypass_cidrs must round-trip verbatim from assemble() into params",
-        );
-    }
-
-    #[test]
-    fn assemble_default_empty_bypass_cidrs_yields_empty_params_field() {
-        // Caller passes an empty Vec (the daemon default before any
-        // user supplies a bypass): params.bypass_cidrs must also be
-        // empty. This is the anti-regression: zero-bypass
-        // callers must produce the historic "no extra rules" routing.
-        let list = WarrenRelayList::new(vec![fixture_relay(1, "se")]);
-        let selector = DaemonWarrenRelaySelector::new(list);
-
-        let params = assemble_for_attempt(
-            &selector,
-            fixture_signing_key(),
-            &WarrenRelayQuery::any(),
-            0,
-            None,
-            None,
-            Vec::new(),
-        )
-        .expect("must assemble params");
-
-        assert!(
-            params.bypass_cidrs.is_empty(),
-            "an empty bypass list must produce empty params.bypass_cidrs, got {:?}",
-            params.bypass_cidrs,
-        );
     }
 
     #[test]
@@ -1263,8 +1155,7 @@ mod tests {
         // ALPN_H3 default a plain `warrenguard serve` exit understands).
         let pubkey_hex = fixture_pubkey_hex();
         let custom = fixture_custom("198.51.100.7:443", &pubkey_hex);
-        let params =
-            assemble_custom(&custom, fixture_signing_key(), None, Vec::new()).expect("valid");
+        let params = assemble_custom(&custom, fixture_signing_key(), None).expect("valid");
 
         assert_eq!(
             params.exit_addr.id,
@@ -1325,8 +1216,7 @@ mod tests {
             cover_domain: Some("cdn.example.com".to_owned()),
             ..fixture_custom("198.51.100.7:443", &fixture_pubkey_hex())
         };
-        let params =
-            assemble_custom(&custom, fixture_signing_key(), None, Vec::new()).expect("valid");
+        let params = assemble_custom(&custom, fixture_signing_key(), None).expect("valid");
         assert_eq!(
             params.exit_addr.cover_domain.as_deref(),
             Some("cdn.example.com")
@@ -1349,8 +1239,7 @@ mod tests {
             cover_domain: Some("cdn.example.com".to_owned()),
             ..fixture_custom("198.51.100.7:443", &fixture_pubkey_hex())
         };
-        let params =
-            assemble_custom(&custom, fixture_signing_key(), None, Vec::new()).expect("valid");
+        let params = assemble_custom(&custom, fixture_signing_key(), None).expect("valid");
         assert!(
             params.exit_addr.tcp_fallback,
             "a cover-domain custom exit must arm the TLS-over-TCP carrier"
@@ -1372,7 +1261,7 @@ mod tests {
         // the roster (which would connect the user somewhere they did not
         // choose).
         let custom = fixture_custom("not-a-socket-addr", &"ab".repeat(32));
-        let err = assemble_custom(&custom, fixture_signing_key(), None, Vec::new()).unwrap_err();
+        let err = assemble_custom(&custom, fixture_signing_key(), None).unwrap_err();
         assert!(matches!(err, AssembleError::CustomExit(_)), "got {err:?}");
     }
 
@@ -1380,7 +1269,7 @@ mod tests {
     fn assemble_custom_rejects_malformed_pubkey() {
         // Wrong-length / non-hex pubkey is a hard error.
         let custom = fixture_custom("198.51.100.7:443", "deadbeef");
-        let err = assemble_custom(&custom, fixture_signing_key(), None, Vec::new()).unwrap_err();
+        let err = assemble_custom(&custom, fixture_signing_key(), None).unwrap_err();
         assert!(matches!(err, AssembleError::CustomExit(_)), "got {err:?}");
     }
 
@@ -1393,7 +1282,7 @@ mod tests {
             x25519_multihop_pubkey_hex: "beef".to_owned(),
             ..fixture_custom("198.51.100.7:443", &fixture_pubkey_hex())
         };
-        let err = assemble_custom(&custom, fixture_signing_key(), None, Vec::new()).unwrap_err();
+        let err = assemble_custom(&custom, fixture_signing_key(), None).unwrap_err();
         assert!(matches!(err, AssembleError::CustomExit(_)), "got {err:?}");
     }
 
@@ -1405,7 +1294,7 @@ mod tests {
             exit_id_hex: "abcd".to_owned(),
             ..fixture_custom("198.51.100.7:443", &fixture_pubkey_hex())
         };
-        let err = assemble_custom(&custom, fixture_signing_key(), None, Vec::new()).unwrap_err();
+        let err = assemble_custom(&custom, fixture_signing_key(), None).unwrap_err();
         assert!(matches!(err, AssembleError::CustomExit(_)), "got {err:?}");
     }
 

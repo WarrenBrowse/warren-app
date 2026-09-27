@@ -237,6 +237,10 @@ impl ConnectingState {
         {
             warren_params.include_only = shared_values.include_only();
         }
+        #[cfg(target_os = "linux")]
+        {
+            warren_params.lan_networks = Some(shared_values.lan_routes.subscribe());
+        }
         #[cfg(target_os = "windows")]
         if warren_params.include_only {
             warren_params.tunnel_resolvers = crate::firewall::allowed_tunnel_dns(

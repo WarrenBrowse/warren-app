@@ -136,6 +136,26 @@ The following network traffic is allowed or blocked independent of state:
      * Incoming UDP from `*:68` to `255.255.255.255:67`
      * Outgoing UDP from `*:67` to `*:68`
 
+   The unicast ranges above are the default list. On macOS and Linux the user can replace them with
+   networks of their own (Settings, VPN settings, Local network sharing, or `warren lan networks`),
+   and the firewall then permits exactly that list.
+
+   The firewall only permits this traffic; the routes decide where it goes. On Linux the tunnel's
+   split-default sends every destination to its own table ahead of `main`, so each shared network
+   is also looked up in `main`, ahead of the tunnel, in both address families
+   (`ip [-6] rule add to <network> lookup main suppress_prefixlength 0 pref 49`,
+   `talpid-warren-tunnel/src/lan_routes.rs`). `suppress_prefixlength 0` lets only a route more
+   specific than the default one take it (the link itself, or a static route): a shared network
+   reached through the default gateway stays in the tunnel, as on macOS and Windows, where the
+   split-default is two `/1` routes in the one global table and a directly connected network, whose
+   route is more specific, stays on its interface. The tunnel's own address pools (`10.66.0.0/16`,
+   `fdcc:f:1::/64`, which hold its addresses, its gateway and its resolver) are kept in the tunnel
+   table ahead of every shared network (`pref 48`), so sharing `10.0.0.0/8` never hands them to
+   `main`, where a route pushed by a hostile DHCP server (option 121) would take them off the
+   tunnel. These rules follow the setting while connected (sharing turned off, a network added or
+   removed), are removed with the tunnel, and a crashed daemon's are reclaimed on the next reset,
+   recognised by their selector.
+
 #### Packet forwarding
 
 On Linux, any situation that permits incoming or outgoing traffic also allows that traffic to be
