@@ -6,9 +6,12 @@ import { type GeographicalLocation } from '../../../../../features/locations/typ
 import { getLocationChildren } from '../../../../../features/locations/utils';
 import { AnimatedList } from '../../../../../lib/components/animated-list';
 import { ListItemProps } from '../../../../../lib/components/list-item';
+import { holdsSeveralExits } from '../../../../../lib/network-stats';
 import { getLocationListItemMapProps } from '../../utils';
+import { LocationExitLoad } from '../geographical-location/components';
 import { Location } from '../location-list-item';
-import { CustomListGeographicalLocationTrailingActions } from './custom-list-geographical-location-trailing-actions';
+import { LocationRowActions, LocationRowLead, useListsMenu } from '../location-row';
+import { useLocationBreadcrumbs } from '../recent-geographical-location/hooks';
 import {
   CustomListGeographicalLocationProvider,
   useCustomListGeographicalLocationContext,
@@ -27,7 +30,13 @@ function CustomListGeographicalLocationImpl({
   const [expanded, setExpanded] = useState(location.expanded);
 
   const locationChildren = getLocationChildren(location);
-  const showChildren = locationChildren.length > 0 && expanded;
+  const expandable = holdsSeveralExits(location);
+  const showChildren = expandable && expanded;
+  // A place the list holds leads with its flag and names where it is; the
+  // exits it opens onto sit under it without.
+  const listed = level === 1;
+  const menu = useListsMenu();
+  const breadcrumbs = useLocationBreadcrumbs(location).join(', ');
   const disabled = disabledProp || location.disabled || loading;
 
   useEffect(() => {
@@ -58,7 +67,9 @@ function CustomListGeographicalLocationImpl({
       <Location.Accordion expanded={expanded} onExpandedChange={setExpanded} disabled={disabled}>
         <Location.Accordion.Header level={level} position={position}>
           <Location.Accordion.Header.ItemTrigger
+            style={{ minWidth: 0 }}
             onClick={handleClick}
+            onContextMenu={listed ? menu.onContextMenu : undefined}
             aria-label={sprintf(
               // TRANSLATORS: Accessibility label for a button that connects to a location.
               // TRANSLATORS: Available placeholders:
@@ -68,14 +79,23 @@ function CustomListGeographicalLocationImpl({
                 location: location.label,
               },
             )}>
-            <Location.Accordion.Header.Item>
-              <Location.Accordion.Header.Item.Title>
-                {location.label}
-              </Location.Accordion.Header.Item.Title>
+            <Location.Accordion.Header.Item style={{ minWidth: 0 }}>
+              <LocationRowLead
+                label={location.label}
+                subtitle={listed && breadcrumbs !== '' ? breadcrumbs : undefined}
+                country={listed ? location.details.country : undefined}
+              />
+              {(location.type === 'relay' || !showChildren) && (
+                <LocationExitLoad location={location} />
+              )}
             </Location.Accordion.Header.Item>
           </Location.Accordion.Header.ItemTrigger>
 
-          <CustomListGeographicalLocationTrailingActions />
+          <LocationRowActions
+            location={location}
+            menu={listed ? menu : undefined}
+            expandable={expandable}
+          />
         </Location.Accordion.Header>
         <Location.Accordion.Content>
           <AnimatedList>{showChildren ? children : null}</AnimatedList>

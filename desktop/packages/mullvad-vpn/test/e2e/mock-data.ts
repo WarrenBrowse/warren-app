@@ -83,11 +83,14 @@ const relayList: IRelayList = {
   ],
 };
 
+// The list holds a place: an empty list is not shown, in its section or in recents.
 const customLists: CustomLists = [
   {
     id: 'custom-list-1',
     name: 'Custom List 1',
-    locations: [],
+    locations: [
+      { country: relayList.countries[0].code, city: relayList.countries[0].cities[0].code },
+    ],
   },
 ];
 

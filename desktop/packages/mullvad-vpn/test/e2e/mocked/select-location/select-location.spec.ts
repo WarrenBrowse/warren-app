@@ -186,14 +186,11 @@ test.describe('Select location', () => {
       initialSettings = await helpers.mockCustomLists(customLists, settings);
     });
 
-    test('Should show empty recent section when enabled and no recents', async () => {
+    test('Should hide the recent section while there are no recents', async () => {
       await helpers.mockRecents([]);
 
       const recentSection = routes.selectLocation.getRecentsSection();
-      await expect(recentSection).toBeVisible();
-
-      const recentLocations = routes.selectLocation.getLocationsInLocator(recentSection);
-      await expect(recentLocations).toHaveCount(0);
+      await expect(recentSection).toBeHidden();
     });
 
     test('Should not show recents section when recents is disabled', async () => {
@@ -457,12 +454,15 @@ test.describe('Select location', () => {
         const relays = relaySelectionPaths.map((locatedRelay) => locatedRelay.relay);
         const relayNames = relays.map((relay) => relay.hostname);
 
-        await helpers.expandLocatedRelays(relaySelectionPaths);
-
-        const buttons = routes.selectLocation.getRelaysMatching(relayNames);
-
-        // Expect all filtered relays to have a button
-        await expect(buttons).toHaveCount(relays.length);
+        // The filter leaves one exit, and a place with one exit is that exit:
+        // its country row stands for the relay and does not open.
+        expect(relayNames).toHaveLength(1);
+        const [country] = relaySelectionPaths.map((path) => path.country.name);
+        await expect(routes.selectLocation.getRelaysMatching([country])).toHaveCount(1);
+        await expect(page.getByLabel(`Expand ${country}`)).toHaveCount(0);
+        await expect(
+          page.getByText(`Showing 1 of ${helpers.toSelectionPaths(relayList).length}`),
+        ).toBeVisible();
       });
 
       test('Should apply filter when LWO obfuscation is selected', async () => {
@@ -478,11 +478,15 @@ test.describe('Select location', () => {
         const relays = relaySelectionPaths.map((locatedRelay) => locatedRelay.relay);
         const relayNames = relays.map((relay) => relay.hostname);
 
-        await helpers.expandLocatedRelays(relaySelectionPaths);
-        const buttons = routes.selectLocation.getRelaysMatching(relayNames);
-
-        // Expect all filtered relays to have a button
-        await expect(buttons).toHaveCount(relays.length);
+        // The filter leaves one exit, and a place with one exit is that exit:
+        // its country row stands for the relay and does not open.
+        expect(relayNames).toHaveLength(1);
+        const [country] = relaySelectionPaths.map((path) => path.country.name);
+        await expect(routes.selectLocation.getRelaysMatching([country])).toHaveCount(1);
+        await expect(page.getByLabel(`Expand ${country}`)).toHaveCount(0);
+        await expect(
+          page.getByText(`Showing 1 of ${helpers.toSelectionPaths(relayList).length}`),
+        ).toBeVisible();
       });
     });
   });

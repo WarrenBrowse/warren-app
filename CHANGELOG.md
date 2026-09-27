@@ -94,7 +94,10 @@ Line wrap the file at 100 chars.                                              Th
 - [Windows, macOS, Linux] Show each exit's load in one line of small text: a ring, the percentage
   once the exit is busy enough to show it, the number of people on it and, in the location list,
   its download rate. The location list shows each country's flag, opens a country only when it
-  holds several exits, and hides its empty sections; custom lists are created from its menu. The
+  holds several exits, and hides its empty sections. Every row, Recents included, has the same
+  layout, and the selected one is marked by its colour and a ring around its flag. A quiet button
+  at the end of a row, or a right click, adds the place to a list or takes it out, and creates a
+  new list already holding it; a list that holds nothing is not shown. The
   Warren network view and the live panel of the connection details are gone, and the expanded
   connection card now scrolls instead of growing past the top of the window.
 - Call the ban of an account a revocation, and each abuse report recorded against a forwarded

@@ -5,6 +5,7 @@ import { FlexColumn } from '../../../../../lib/components/flex-column';
 import { useHasCustomLists } from '../../hooks';
 import { CountryLocations } from '../country-locations';
 import { CustomListLocations } from '../custom-list-locations';
+import { LocationRevealScope } from '../location-row';
 import { NoSearchResult } from '../no-search-result';
 import { RecentLocations } from '../recent-locations';
 import { useRecentLocations } from '../recent-locations/components/recent-location-list/hooks';
@@ -32,18 +33,20 @@ export function LocationLists(props: LocationsListsProps) {
 
   return (
     <LocationListsProvider {...props}>
-      <Expandable expanded={showRecentLocations}>
-        <Expandable.Content>
-          <RecentLocations />
-        </Expandable.Content>
-      </Expandable>
-      <FlexColumn gap="large">
-        {showCustomListLocationLists && <CustomListLocations />}
-        {showCountryLocations && (
-          <CountryLocations showTitle={showRecentLocations || showCustomListLocationLists} />
-        )}
-        {showNoSearchResult && <NoSearchResult />}
-      </FlexColumn>
+      <LocationRevealScope>
+        <Expandable expanded={showRecentLocations}>
+          <Expandable.Content>
+            <RecentLocations />
+          </Expandable.Content>
+        </Expandable>
+        <FlexColumn gap="large">
+          {showCustomListLocationLists && <CustomListLocations />}
+          {showCountryLocations && (
+            <CountryLocations showTitle={showRecentLocations || showCustomListLocationLists} />
+          )}
+          {showNoSearchResult && <NoSearchResult />}
+        </FlexColumn>
+      </LocationRevealScope>
     </LocationListsProvider>
   );
 }

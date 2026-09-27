@@ -4,13 +4,12 @@ import styled from 'styled-components';
 
 import { messages } from '../../../../../../shared/gettext';
 import type { GeographicalLocation } from '../../../../../features/locations/types';
-import { FootnoteMiniSemiBold } from '../../../../../lib/components';
-import { FlexColumn } from '../../../../../lib/components/flex-column';
 import { spacings } from '../../../../../lib/foundations';
 import { joinList } from '../../../../../lib/list-format';
+import { LocationExitLoad } from '../geographical-location/components';
 import { Location } from '../location-list-item';
 import { useLocationListsContext } from '../location-lists/LocationListsContext';
-import { RecentGeographicalLocationTrailingActions } from './components';
+import { LocationRowActions, LocationRowLead, useListsMenu } from '../location-row';
 import { useLocationBreadcrumbs } from './hooks';
 import { RecentGeographicalLocationProvider } from './RecentGeographicalLocationContext';
 
@@ -35,6 +34,7 @@ function RecentGeographicalLocationImpl({
   const disabled = location.disabled || disabledProp;
 
   const showParents = location.type !== 'country';
+  const menu = useListsMenu();
 
   const handleClick = useCallback(() => {
     void handleSelect(location);
@@ -46,7 +46,9 @@ function RecentGeographicalLocationImpl({
         <Location.Accordion expanded disabled={disabled}>
           <Location.Accordion.Header level={0}>
             <Location.Accordion.Header.ItemTrigger
+              style={{ minWidth: 0 }}
               onClick={handleClick}
+              onContextMenu={menu.onContextMenu}
               aria-label={sprintf(
                 // TRANSLATORS: Accessibility label for a button that connects to a location.
                 // TRANSLATORS: Available placeholders:
@@ -56,20 +58,16 @@ function RecentGeographicalLocationImpl({
                   location: location.label,
                 },
               )}>
-              <Location.Accordion.Header.Item>
-                <FlexColumn>
-                  <Location.Accordion.Header.Item.Title>
-                    {location.label}
-                  </Location.Accordion.Header.Item.Title>
-                  {showParents && (
-                    <FootnoteMiniSemiBold color="whiteAlpha60">
-                      {breadcrumbsSubLabel}
-                    </FootnoteMiniSemiBold>
-                  )}
-                </FlexColumn>
+              <Location.Accordion.Header.Item style={{ minWidth: 0 }}>
+                <LocationRowLead
+                  label={location.label}
+                  subtitle={showParents ? breadcrumbsSubLabel : undefined}
+                  country={location.details.country}
+                />
+                <LocationExitLoad location={location} />
               </Location.Accordion.Header.Item>
             </Location.Accordion.Header.ItemTrigger>
-            <RecentGeographicalLocationTrailingActions location={location} />
+            <LocationRowActions location={location} menu={menu} expandable={false} />
           </Location.Accordion.Header>
         </Location.Accordion>
       </Location>

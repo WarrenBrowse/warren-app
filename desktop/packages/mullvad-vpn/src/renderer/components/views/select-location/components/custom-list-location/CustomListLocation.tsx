@@ -4,14 +4,13 @@ import styled from 'styled-components';
 
 import { messages } from '../../../../../../shared/gettext';
 import { type CustomListLocation } from '../../../../../features/locations/types';
-import { FootnoteMiniSemiBold } from '../../../../../lib/components';
 import { AnimatedList } from '../../../../../lib/components/animated-list';
-import { FlexColumn } from '../../../../../lib/components/flex-column';
 import { spacings } from '../../../../../lib/foundations';
 import { getLocationListItemMapProps } from '../../utils';
 import { CustomListGeographicalLocation } from '../custom-list-geographical-location';
 import { Location } from '../location-list-item';
 import { useLocationListsContext } from '../location-lists/LocationListsContext';
+import { listSizeLabel, LocationRowLead } from '../location-row';
 import { CustomListTrailingActions } from './components';
 import {
   CustomListLocationProvider,
@@ -32,7 +31,6 @@ function CustomListLocationImpl({ customList, disabled: disabledProp }: CustomLi
   const { handleSelect } = useLocationListsContext();
   const { loading } = useCustomListLocationContext();
 
-  const showEmptySubtitle = customList.locations.length === 0;
   const disabled = customList.disabled || disabledProp || loading;
 
   // Collapse accordion when all its children are removed
@@ -85,20 +83,12 @@ function CustomListLocationImpl({ customList, disabled: disabledProp }: CustomLi
                   location: customList.label,
                 },
               )}>
-              <Location.Accordion.Header.Item>
-                <FlexColumn>
-                  <Location.Accordion.Header.Item.Title>
-                    {customList.label}
-                  </Location.Accordion.Header.Item.Title>
-                  {showEmptySubtitle && (
-                    <FootnoteMiniSemiBold color="whiteAlpha60">
-                      {
-                        // TRANSLATORS: Label for custom lists that don't have any locations added to them yet.
-                        messages.pgettext('select-location-view', 'Empty')
-                      }
-                    </FootnoteMiniSemiBold>
-                  )}
-                </FlexColumn>
+              <Location.Accordion.Header.Item style={{ minWidth: 0 }}>
+                <LocationRowLead
+                  label={customList.label}
+                  subtitle={listSizeLabel(customList.locations.length)}
+                  list
+                />
               </Location.Accordion.Header.Item>
             </Location.Accordion.Header.ItemTrigger>
             <CustomListTrailingActions customList={customList} />

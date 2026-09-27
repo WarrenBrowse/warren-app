@@ -87,8 +87,11 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [Windows, macOS, Linux] Afișează încărcarea fiecărui exit pe un singur rând de text mic: un
   inel, procentul de îndată ce exit-ul e destul de aglomerat ca să-l arate, numărul de persoane și,
   în lista de locații, viteza de descărcare. Lista de locații arată steagul fiecărei țări, deschide
-  o țară doar când are mai multe exit-uri și ascunde secțiunile goale; listele personalizate se
-  creează din meniul ei. Vizualizarea Rețeaua Warren și panoul live din detaliile conexiunii au
+  o țară doar când are mai multe exit-uri și ascunde secțiunile goale. Toate rândurile, inclusiv
+  cele Recente, arată la fel, iar cel selectat se recunoaște după culoare și un inel în jurul
+  steagului. Un buton discret la capătul fiecărui rând, sau un clic dreapta, adaugă locul într-o
+  listă sau îl scoate de acolo și creează o listă nouă care îl conține deja; o listă goală nu este
+  afișată. Vizualizarea Rețeaua Warren și panoul live din detaliile conexiunii au
   dispărut, iar cardul de conexiune extins derulează în loc să depășească marginea de sus a
   ferestrei.
 - Numește revocare blocarea unui cont și avertisment fiecare raportare de abuz înregistrată

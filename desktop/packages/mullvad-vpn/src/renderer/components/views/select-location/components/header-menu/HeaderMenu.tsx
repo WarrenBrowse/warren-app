@@ -1,7 +1,6 @@
 import React from 'react';
 
 import { messages } from '../../../../../../shared/gettext';
-import { CreateCustomListDialog } from '../../../../../features/custom-lists/components';
 import { DisableRecentsDialog } from '../../../../../features/locations/components';
 import { useRecents } from '../../../../../features/locations/hooks';
 import { Menu, type MenuProps } from '../../../../../lib/components/menu';
@@ -12,12 +11,6 @@ export function HeaderMenu({ onOpenChange, ...props }: HeaderMenuProps) {
   const { hasRecents, setEnabledRecents } = useRecents();
 
   const [disableRecentsDialogOpen, setDisableRecentsDialogOpen] = React.useState(false);
-  const [createCustomListDialogOpen, setCreateCustomListDialogOpen] = React.useState(false);
-
-  const openCreateCustomListDialog = React.useCallback(() => {
-    setCreateCustomListDialogOpen(true);
-    onOpenChange?.(false);
-  }, [onOpenChange]);
 
   const openDisableRecentsDialog = React.useCallback(() => {
     setDisableRecentsDialogOpen(true);
@@ -37,19 +30,6 @@ export function HeaderMenu({ onOpenChange, ...props }: HeaderMenuProps) {
       <Menu onOpenChange={onOpenChange} {...props}>
         <Menu.Popup>
           <Menu.Option>
-            <Menu.Option.Trigger onClick={openCreateCustomListDialog}>
-              <Menu.Option.Item>
-                <Menu.Option.Item.Icon icon="add" />
-                <Menu.Option.Item.Label>
-                  {
-                    // TRANSLATORS: Menu option that opens a dialog to create a new custom list of locations.
-                    messages.pgettext('select-location-view', 'New custom list')
-                  }
-                </Menu.Option.Item.Label>
-              </Menu.Option.Item>
-            </Menu.Option.Trigger>
-          </Menu.Option>
-          <Menu.Option>
             <Menu.Option.Trigger onClick={hasRecents ? openDisableRecentsDialog : enableRecents}>
               <Menu.Option.Item>
                 <Menu.Option.Item.Icon icon="history-remove" />
@@ -65,10 +45,6 @@ export function HeaderMenu({ onOpenChange, ...props }: HeaderMenuProps) {
           </Menu.Option>
         </Menu.Popup>
       </Menu>
-      <CreateCustomListDialog
-        open={createCustomListDialogOpen}
-        onOpenChange={setCreateCustomListDialogOpen}
-      />
       <DisableRecentsDialog
         open={disableRecentsDialogOpen}
         onOpenChange={setDisableRecentsDialogOpen}

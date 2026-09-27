@@ -4,11 +4,10 @@ import styled from 'styled-components';
 
 import { messages } from '../../../../../../shared/gettext';
 import type { CustomListLocation } from '../../../../../features/locations/types';
-import { FootnoteMiniSemiBold } from '../../../../../lib/components';
-import { FlexColumn } from '../../../../../lib/components/flex-column';
 import { spacings } from '../../../../../lib/foundations';
 import { Location } from '../location-list-item';
 import { useLocationListsContext } from '../location-lists/LocationListsContext';
+import { listSizeLabel, LocationRowLead } from '../location-row';
 import { RecentCustomListTrailingActions } from './components';
 import { RecentCustomListProvider } from './RecentCustomListLocationContext';
 
@@ -27,7 +26,6 @@ function RecentCustomListLocationImpl({
 }: RecentCustomListLocationProps) {
   const { handleSelect } = useLocationListsContext();
 
-  const showEmptySubtitle = customList.locations.length === 0;
   const disabled = customList.disabled || disabledProp;
 
   const handleClick = useCallback(() => {
@@ -49,18 +47,12 @@ function RecentCustomListLocationImpl({
                 location: customList.label,
               },
             )}>
-            <Location.ListItem.Item>
-              <FlexColumn>
-                <Location.ListItem.Item.Label>{customList.label}</Location.ListItem.Item.Label>
-                {showEmptySubtitle && (
-                  <FootnoteMiniSemiBold color="whiteAlpha60">
-                    {
-                      // TRANSLATORS: Label for custom lists that don't have any locations added to them yet.
-                      messages.pgettext('select-location-view', 'Empty')
-                    }
-                  </FootnoteMiniSemiBold>
-                )}
-              </FlexColumn>
+            <Location.ListItem.Item style={{ minWidth: 0 }}>
+              <LocationRowLead
+                label={customList.label}
+                subtitle={listSizeLabel(customList.locations.length)}
+                list
+              />
             </Location.ListItem.Item>
           </Location.ListItem.Trigger>
           <RecentCustomListTrailingActions customList={customList} />

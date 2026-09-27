@@ -25,6 +25,11 @@ export function CountryLocations({ showTitle }: CountryLocationsProps) {
     <FlexColumn
       as="section"
       aria-labelledby={showTitle || showFilterText ? titleId : undefined}
+      aria-label={
+        showTitle || showFilterText
+          ? undefined
+          : messages.pgettext('select-location-view', 'All locations')
+      }
       gap="tiny">
       {(showTitle || showFilterText) && (
         <SectionTitle>

@@ -32,6 +32,8 @@ export function CustomListTrailingActions({ customList }: CustomListTrailingActi
           ref={customListMenuButtonRef}
           customList={customList}
           onClick={toggleCustomListMenu}
+          data-reveal
+          data-open={customListMenuOpen}
         />
         <CustomListMenu
           triggerRef={customListMenuButtonRef}
