@@ -514,7 +514,7 @@ jobs:
       - name: cargo nextest (Windows)
         timeout-minutes: 40
         run: |
-          bash ci/codemagic/watchdog.sh cargo nextest run --locked --profile warren-ci \
+          bash ci/codemagic/watchdog.sh cargo nextest run --locked --profile warren-ci --no-fail-fast \
             -p mullvad-daemon -p mullvad-api -p mullvad-types \
             -p mullvad-management-interface -p mullvad-cli -p mullvad-paths \
             -p mullvad-setup -p mullvad-problem-report -p mullvad-update \
@@ -543,4 +543,4 @@ jobs:
         timeout-minutes: 15
         run: |
           bash ci/codemagic/watchdog.sh cargo nextest run --locked --profile warren-ci \
-            -p talpid-core --lib --run-ignored only -E 'test(/winfw_tests::/)'
+            --no-fail-fast -p talpid-core --lib --run-ignored only -E 'test(/winfw_tests::/)'
