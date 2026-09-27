@@ -57,9 +57,10 @@ Line wrap the file at 100 chars.                                              Th
 - [Linux] Offer VPN only for, for apps opened through `warren-include`, on systems with cgroup v2
   and nftables. A country per app works for apps whose program can be named, and the app list says
   why when one cannot take a country (a Flatpak or Snap app, or a script).
-- [macOS] Offer Bypass VPN and VPN only for in the signed app on macOS 13 or later, once Full Disk
-  Access is granted. Released builds had split tunneling turned off. The App routing view says
-  which of the two is missing. Country per app needs no Full Disk Access.
+- [macOS] Make Bypass VPN and VPN only for available to an app signed with a Developer ID, on
+  macOS 13 or later, once Full Disk Access is granted. The beta app is not signed that way, so both
+  stay unavailable in it, and the App routing view says so. Country per app needs neither the
+  signature nor Full Disk Access.
 - [Android] Add VPN only for next to Bypass VPN: only the apps you choose use the VPN, and they stay
   blocked while the VPN is down. When none of the apps you chose is installed, every app uses the
   VPN until you choose one.

@@ -15,10 +15,10 @@
   cgroup v2 et nftables. Un pays par app fonctionne pour les apps dont le programme peut être
   identifié, et la liste des apps dit pourquoi quand l'une d'elles ne peut pas en prendre un (une
   app Flatpak ou Snap, ou un script).
-- [macOS] Proposer Hors VPN et VPN ciblé dans l'app signée, sur macOS 13 ou plus récent, une fois
-  « Accès complet au disque » accordé. Les versions publiées avaient le split tunneling désactivé.
-  La vue Routage des apps indique lequel des deux manque. Pays par app n'a pas besoin de l'« Accès
-  complet au disque ».
+- [macOS] Rendre Hors VPN et VPN ciblé disponibles dans une app signée avec un Developer ID, sur
+  macOS 13 ou plus récent, une fois « Accès complet au disque » accordé. L'app beta n'est pas
+  signée ainsi : les deux y restent indisponibles, et la vue Routage des apps l'indique. Pays par
+  app n'a besoin ni de cette signature ni de l'« Accès complet au disque ».
 - [Android] Ajouter VPN ciblé à côté de Hors VPN : seules les apps choisies utilisent le VPN, et
   elles restent bloquées tant que le VPN est coupé. Quand aucune des apps choisies n'est installée,
   toutes les apps utilisent le VPN jusqu'à ce que vous en choisissiez une.

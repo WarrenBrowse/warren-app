@@ -14,10 +14,11 @@
   cgroup v2 și nftables. O țară per aplicație funcționează pentru aplicațiile al căror program poate
   fi identificat, iar lista de aplicații spune de ce una nu poate primi o țară (o aplicație Flatpak
   sau Snap, sau un script).
-- [macOS] Oferă „Fără VPN” și „VPN selectiv” în aplicația semnată, pe macOS 13 sau mai nou, după
-  acordarea opțiunii „Acces complet la disc”. Versiunile publicate aveau split tunneling dezactivat.
-  Vederea Rutare aplicații spune care dintre cele două lipsește. „Țară per aplicație” nu are nevoie
-  de „Acces complet la disc”.
+- [macOS] Face „Fără VPN” și „VPN selectiv” disponibile într-o aplicație semnată cu un Developer ID,
+  pe macOS 13 sau mai nou, după acordarea opțiunii „Acces complet la disc”. Aplicația beta nu este
+  semnată astfel: cele două rămân indisponibile în ea, iar vederea Rutare aplicații spune acest
+  lucru. „Țară per aplicație” nu are nevoie nici de această semnătură, nici de „Acces complet la
+  disc”.
 - [Android] Adaugă „VPN selectiv” lângă „Fără VPN”: doar aplicațiile alese folosesc VPN-ul și rămân
   blocate cât timp VPN-ul e oprit. Când niciuna dintre aplicațiile alese nu e instalată, toate
   aplicațiile folosesc VPN-ul până când alegi una.
