@@ -596,6 +596,14 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
                     return -1;
                 }
             };
+        let entitlement_blinding =
+            match crate::wallet::entitlement_blinding_from_mnemonic(&mnemonic_zeroing) {
+                Ok(k) => k,
+                Err(e) => {
+                    let _ = jnix_env.throw(format!("wallet key derive failed: {e}"));
+                    return -1;
+                }
+            };
         // mnemonic_zeroing is dropped (and zeroized) here.
         drop(mnemonic_zeroing);
 
@@ -621,6 +629,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_connectTunnel<'lo
             tun,
             signing_key,
             session_blinding,
+            entitlement_blinding,
             config,
             &SESSION_STATUS,
             cancel_rx,

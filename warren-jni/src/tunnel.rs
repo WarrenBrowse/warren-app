@@ -208,6 +208,7 @@ pub async fn run_session(
     tun: AndroidTun,
     signing_key: SigningKey,
     session_blinding: warren_api::BlindingKey,
+    entitlement_blinding: warren_api::BlindingKey,
     config: WarrenTunnelConfig,
     status: &'static crate::status_watch::StatusCell,
     cancel_rx: oneshot::Receiver<()>,
@@ -229,7 +230,10 @@ pub async fn run_session(
     // quota and a subscriber's forwarded ports multiply by the number of
     // sessions it holds. Built even when port forwarding is off, so issuance
     // timing never mirrors the moment the user turns it on.
-    let port_entitlements = crate::port_entitlements::provider_for(signing_key.clone());
+    let port_entitlements = std::sync::Arc::new(crate::port_entitlements::provider_for(
+        signing_key.clone(),
+        entitlement_blinding,
+    ));
 
     // A wallet known to be banned is refused before it dials (warren-core doc
     // 105 §5.3): the issuers' refusal or the standing poll said so, and an
@@ -318,7 +322,7 @@ async fn run_multi_hop_session(
     tun: AndroidTun,
     signing: SigningKey,
     session_tokens: SessionTokenProvider,
-    port_entitlements: crate::port_entitlements::CredentialSource,
+    port_entitlements: std::sync::Arc<crate::port_entitlements::RuleCredential>,
     config: WarrenTunnelConfig,
     status: &'static crate::status_watch::StatusCell,
     mut cancel_rx: oneshot::Receiver<()>,
@@ -1018,7 +1022,7 @@ static LAST_GRANTED_NATPMP_IS_TCP: AtomicBool = AtomicBool::new(false);
 fn maybe_spawn_nat_pmp(
     config: &WarrenTunnelConfig,
     bind_ipv4: std::net::Ipv4Addr,
-    entitlements: crate::port_entitlements::CredentialSource,
+    rule: std::sync::Arc<crate::port_entitlements::RuleCredential>,
 ) -> Option<NatPmpGuard> {
     if !config.nat_pmp_enabled.unwrap_or(false) {
         return None;
@@ -1071,11 +1075,9 @@ fn maybe_spawn_nat_pmp(
         warren_standing::NatPmpSlot::Pending,
     ));
     let refresh_slot = refresh.clone();
-    // Whether the last request carried an entitlement: an exit's refusal
-    // means something else with and without one.
-    let presented = std::sync::Arc::new(AtomicBool::new(false));
-    let entitlements =
-        warren_standing::entitlements::recording_presence(entitlements, presented.clone());
+    // It also tells whether the last request carried an entitlement: an
+    // exit's refusal means something else with and without one.
+    let entitlements = rule.provider();
     // The entitlement is consulted once per refresh cycle rather than captured
     // once: a credential is valid for its own epoch only, so a mapping that
     // outlives an epoch presents the next batch at its next renewal, without
@@ -1151,8 +1153,9 @@ fn maybe_spawn_nat_pmp(
                 // So the rule asks again on the shared schedule, the way the
                 // desktop controller restarts a refused rule.
                 crate::natpmp_refusal::MapOutcome::Refused => {
-                    let (refusal, retry_in_secs) =
-                        refusals.on_refused(presented.load(Ordering::Relaxed));
+                    // A refused entitlement also moves the rule to another
+                    // one of the batch, which the wallet's other devices hold.
+                    let (refusal, retry_in_secs) = refusals.on_refused(rule.on_refused());
                     log::info!(
                         "NAT-PMP request refused ({refusal:?}), asking again in {retry_in_secs}s"
                     );

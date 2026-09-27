@@ -16,10 +16,9 @@
 //! second entitlement of the batch on the same port.
 
 use std::sync::Arc;
-use std::sync::atomic::AtomicBool;
 
 use warren_standing::entitlements::{
-    CredentialSource, RuleSlots, SlotLease, SlotSource, bind_slot, recording_presence,
+    CredentialSource, RuleCredential, RuleSlots, SlotLease, SlotSource,
 };
 
 /// What one live rule presents, and the slot it holds while it lives.
@@ -28,20 +27,20 @@ pub(crate) struct RuleEntitlement {
     pub(crate) lease: SlotLease,
     /// Read by the engine once per refresh cycle, for both legs of a pair.
     pub(crate) source: CredentialSource,
-    /// Whether the last request carried an envelope: an exit's refusal means
-    /// something else with and without one.
-    pub(crate) presented: Arc<AtomicBool>,
+    /// Whether the last request carried an envelope (an exit's refusal means
+    /// something else with and without one), the report of a refusal, and
+    /// the release of the slot's envelope once the rule is gone.
+    pub(crate) credential: Arc<RuleCredential>,
 }
 
 /// The entitlement of a new rule, on the lowest slot `slots` has free.
 pub(crate) fn rule_entitlement(slots: &RuleSlots, entitlements: SlotSource) -> RuleEntitlement {
     let lease = slots.acquire();
-    let presented = Arc::new(AtomicBool::new(false));
-    let source = recording_presence(bind_slot(entitlements, lease.slot()), presented.clone());
+    let credential = Arc::new(RuleCredential::new(entitlements, lease.slot()));
     RuleEntitlement {
         lease,
-        source,
-        presented,
+        source: credential.provider(),
+        credential,
     }
 }
 
@@ -53,8 +52,8 @@ mod ios {
     use std::sync::{Arc, OnceLock};
 
     use ed25519_dalek::SigningKey;
-    use warren_api::WarrenApiClient;
     use warren_api::reqwest_transport::ReqwestTransport;
+    use warren_api::{BlindingKey, WarrenApiClient};
     use warren_identity::WarrenIdentity;
     use warren_standing::entitlements::{EntitlementMint, SlotSource};
 
@@ -68,11 +67,13 @@ mod ios {
     }
 
     /// The entitlement slots of `signing_key`'s wallet, minted by the same
-    /// identity as the session tokens. The refresh runs on the process
-    /// runtime: a tunnel's own runtime is shut down by `warren_tunnel_stop`,
-    /// and the manager outlives it. A ban the issuer answers goes to the
-    /// extension's standing, which blocks the tunnel.
-    pub(crate) fn provider_for(signing_key: SigningKey) -> SlotSource {
+    /// identity as the session tokens from the batches `blinding` (the
+    /// wallet's [`BlindingKey::port_entitlement`] key) derives, so a restarted
+    /// extension is served the batch the account holds. The refresh runs on
+    /// the process runtime: a tunnel's own runtime is shut down by
+    /// `warren_tunnel_stop`, and the manager outlives it. A ban the issuer
+    /// answers goes to the extension's standing, which blocks the tunnel.
+    pub(crate) fn provider_for(signing_key: SigningKey, blinding: BlindingKey) -> SlotSource {
         let mint = MINT.get_or_init(|| {
             let mint = EntitlementMint::new(Arc::new(now_unix_secs)).with_ban_sink(Arc::new(
                 |wallet, error| {
@@ -89,7 +90,7 @@ mod ios {
             }
         });
         let wallet_pubkey = signing_key.verifying_key().to_bytes();
-        mint.slot_source(wallet_pubkey, move || {
+        mint.slot_source(wallet_pubkey, blinding, move || {
             WarrenApiClient::new(
                 warren_product_env::API_URL.to_owned(),
                 WarrenIdentity::from_signing_key(signing_key),
@@ -102,7 +103,6 @@ mod ios {
 #[cfg(test)]
 mod tests {
     use std::sync::Arc;
-    use std::sync::atomic::Ordering;
 
     use warren_standing::entitlements::{RuleSlots, SlotSource};
 
@@ -151,11 +151,11 @@ mod tests {
         let third = rule_entitlement(&slots, batch_of_two());
 
         assert_eq!((third.source)(), None, "slot 2 is past the batch");
-        assert!(!third.presented.load(Ordering::Relaxed));
+        assert!(!third.credential.presented());
 
         let slots = RuleSlots::new();
         let carried = rule_entitlement(&slots, batch_of_two());
         assert!((carried.source)().is_some());
-        assert!(carried.presented.load(Ordering::Relaxed));
+        assert!(carried.credential.presented());
     }
 }

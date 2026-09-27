@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::net::{Ipv4Addr, SocketAddr};
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use data_encoding::BASE64URL_NOPAD;
@@ -10,8 +10,8 @@ use rand010::SeedableRng;
 use rand010::rngs::StdRng;
 use warren_api::transport::{HttpRequest, HttpResponse, HttpTransport, TransportError};
 use warren_api::{
-    AttributionTag, EntitlementEnvelope, PubkeyHex, TokenEpochResponse, TokenIssueRequest,
-    TokenIssueResponse, TokenIssuerDirectory, TokenIssuerKey, WarrenApiClient,
+    AttributionTag, BlindingKey, EntitlementEnvelope, PubkeyHex, TokenEpochResponse,
+    TokenIssueRequest, TokenIssueResponse, TokenIssuerDirectory, TokenIssuerKey, WarrenApiClient,
 };
 use warren_contract::pf_attribution::{CIPHERTEXT_LEN, NONCE_LEN, TAG_VERSION, signing_preimage};
 use warren_identity::WarrenIdentity;
@@ -19,8 +19,8 @@ use warrenguard_natpmp_protocol::{MapProto, Request, Response, ResultCode};
 use warrenguard_token::IssuerSecretKey;
 
 use super::{
-    CredentialSource, EntitlementMint, NowFn, RuleSlots, await_first_credential, bind_slot,
-    recording_presence,
+    CredentialSource, EntitlementMint, NowFn, RuleCredential, RuleSlots, SlotBatch, SlotSource,
+    await_first_credential,
 };
 
 const EPOCH_SECS: u64 = 3600;
@@ -42,6 +42,10 @@ struct IssuerState {
     ban_wallet: AtomicBool,
     fail_transport: AtomicBool,
     issue_calls: AtomicUsize,
+    /// warren-api's issuance ledger: the batch that took each epoch. The SAME
+    /// batch is served again with freshly minted tags, any other one is
+    /// refused `already_issued`.
+    ledger: Mutex<HashMap<u64, Vec<String>>>,
 }
 
 #[derive(Clone)]
@@ -60,6 +64,7 @@ impl FakeIssuer {
             ban_wallet: AtomicBool::new(false),
             fail_transport: AtomicBool::new(false),
             issue_calls: AtomicUsize::new(0),
+            ledger: Mutex::new(HashMap::new()),
         }))
     }
 
@@ -134,7 +139,7 @@ impl HttpTransport for FakeIssuer {
             "the entitlement mint must never reach {}",
             request.url
         );
-        self.0.issue_calls.fetch_add(1, Ordering::SeqCst);
+        let call = self.0.issue_calls.fetch_add(1, Ordering::SeqCst);
         if self.0.ban_wallet.load(Ordering::SeqCst) {
             return Ok(HttpResponse {
                 status: 403,
@@ -155,6 +160,25 @@ impl HttpTransport for FakeIssuer {
                 });
                 continue;
             }
+            let taken_by_another_batch = self
+                .0
+                .ledger
+                .lock()
+                .unwrap()
+                .entry(e.epoch)
+                .or_insert_with(|| e.blinded.clone())
+                != &e.blinded;
+            if taken_by_another_batch {
+                epochs.push(TokenEpochResponse {
+                    epoch: e.epoch,
+                    issued: false,
+                    blind_signatures: Vec::new(),
+                    token_key_id: None,
+                    reject_reason: Some("already_issued".to_owned()),
+                    attribution_tags: Vec::new(),
+                });
+                continue;
+            }
             let sk = self.0.keys.get(&e.epoch).expect("key for requested epoch");
             epochs.push(TokenEpochResponse {
                 epoch: e.epoch,
@@ -170,7 +194,7 @@ impl HttpTransport for FakeIssuer {
                 token_key_id: Some(sk.public_key().key_id().to_hex()),
                 reject_reason: None,
                 attribution_tags: (0..e.blinded.len())
-                    .map(|i| self.tag(e.epoch, u8::try_from(i).unwrap()))
+                    .map(|i| self.tag(e.epoch, u8::try_from((call * 16 + i) % 256).unwrap()))
                     .collect(),
             });
         }
@@ -178,12 +202,27 @@ impl HttpTransport for FakeIssuer {
     }
 }
 
+/// The wallet every client here signs as.
+const WALLET_SEED: [u8; 32] = [0x51; 32];
+
 fn client(issuer: &FakeIssuer) -> WarrenApiClient<FakeIssuer> {
     WarrenApiClient::new(
         "https://api.example.test",
-        WarrenIdentity::from_seed(&[0x51; 32]),
+        WarrenIdentity::from_seed(&WALLET_SEED),
         issuer.clone(),
     )
+}
+
+fn key() -> BlindingKey {
+    BlindingKey::port_entitlement(&WALLET_SEED)
+}
+
+/// The entitlement token inside an envelope, without its tag.
+fn token_of(envelope: &[u8]) -> Vec<u8> {
+    EntitlementEnvelope::parse(envelope)
+        .expect("an envelope")
+        .token()
+        .to_vec()
 }
 
 /// A movable epoch clock: the handle steps time, the `NowFn` reads it.
@@ -277,7 +316,8 @@ async fn the_batch_is_topped_up_on_the_ten_minute_cadence_and_not_before() {
     issuer.0.fail_transport.store(true, Ordering::SeqCst);
     let (_t, now) = clock(NOW);
     let mint = EntitlementMint::new(now);
-    let source = mint.credential_source([1; 32], 0, || client(&issuer));
+    let rule = mint.rule_credential([1; 32], 0, key(), || client(&issuer));
+    let source = rule.provider();
     tokio::task::yield_now().await;
     assert!(source().is_none(), "nothing minted yet");
 
@@ -307,7 +347,7 @@ async fn the_issuers_ban_refusal_reaches_the_standing_of_the_wallet_it_refused()
     let mint = EntitlementMint::new(now).with_ban_sink(Arc::new(move |wallet, error| {
         sink.on_refresh_error(wallet, error, NOW)
     }));
-    let _source = mint.slot_source([1; 32], || client(&issuer));
+    let _source = mint.slot_source([1; 32], key(), || client(&issuer));
 
     wait_for(|| standing.ban_in_force(&[1; 32], NOW).is_some()).await;
 
@@ -327,28 +367,30 @@ async fn a_slot_keeps_one_envelope_for_the_whole_epoch_across_reconnects() {
     let issuer = FakeIssuer::new(&[100]);
     let (_t, now) = clock(NOW);
     let mint = EntitlementMint::new(now);
-    let source = mint.slot_source([1; 32], || client(&issuer));
+    let source = mint.slot_source([1; 32], key(), || client(&issuer));
     wait_for(|| issuer.issue_calls() >= 1).await;
 
-    let first = source(0).expect("a stocked batch vends the slot");
+    let first = source
+        .credential(0)
+        .expect("a stocked batch vends the slot");
     assert_eq!(
         first.len(),
         warren_contract::pf_attribution::ENVELOPE_LEN,
         "a slot presents the whole envelope, token and tag"
     );
     assert_eq!(
-        source(0),
+        source.credential(0),
         Some(first.clone()),
         "a renewal must re-present the envelope the exit already spent"
     );
 
     // A reconnect of the same wallet must not build a second manager, and the
     // same slot keeps the same envelope.
-    let redial = mint.slot_source([1; 32], || unreachable!("manager must be reused"));
-    assert_eq!(redial(0), Some(first.clone()));
+    let redial = mint.slot_source([1; 32], key(), || unreachable!("manager must be reused"));
+    assert_eq!(redial.credential(0), Some(first.clone()));
 
     // A second slot draws its own: two live rules never read as one port.
-    assert_ne!(redial(1).expect("slot 1 draws its own"), first);
+    assert_ne!(redial.credential(1).expect("slot 1 draws its own"), first);
 }
 
 #[tokio::test(start_paused = true)]
@@ -356,12 +398,14 @@ async fn a_slot_presents_the_next_epochs_envelope_once_the_epoch_rolls_over() {
     let issuer = FakeIssuer::new(&[100, 101]);
     let (t, now) = clock(NOW);
     let mint = EntitlementMint::new(now);
-    let source = mint.slot_source([1; 32], || client(&issuer));
+    let source = mint.slot_source([1; 32], key(), || client(&issuer));
     wait_for(|| issuer.issue_calls() >= 1).await;
-    let during = source(0).expect("epoch 100 is stocked");
+    let during = source.credential(0).expect("epoch 100 is stocked");
 
     t.store(101 * EPOCH_SECS + 5, Ordering::SeqCst);
-    let after = source(0).expect("the prefetched epoch 101 is stocked");
+    let after = source
+        .credential(0)
+        .expect("the prefetched epoch 101 is stocked");
 
     assert_eq!(envelope_epoch(&during), 100);
     assert_eq!(
@@ -376,7 +420,8 @@ async fn the_first_request_waits_for_a_mint_that_is_still_landing() {
     let issuer = FakeIssuer::new(&[100]);
     let (_t, now) = clock(NOW);
     let mint = EntitlementMint::new(now);
-    let source = mint.credential_source([1; 32], 0, || client(&issuer));
+    let rule = mint.rule_credential([1; 32], 0, key(), || client(&issuer));
+    let source = rule.provider();
 
     // The mint is cold at the instant the loop would fire its first cycle; the
     // wait is what keeps that request from going out bare.
@@ -393,7 +438,8 @@ async fn a_mint_that_never_lands_lets_the_request_go_bare() {
     issuer.0.fail_transport.store(true, Ordering::SeqCst);
     let (_t, now) = clock(NOW);
     let mint = EntitlementMint::new(now);
-    let source = mint.credential_source([1; 32], 0, || client(&issuer));
+    let rule = mint.rule_credential([1; 32], 0, key(), || client(&issuer));
+    let source = rule.provider();
 
     let started = tokio::time::Instant::now();
     let credential =
@@ -425,11 +471,11 @@ fn the_refresh_runs_on_the_mints_runtime_not_the_callers() {
         .enable_all()
         .build()
         .unwrap();
-    let source = tunnel.block_on(async { mint.slot_source([1; 32], || client(&issuer)) });
+    let source = tunnel.block_on(async { mint.slot_source([1; 32], key(), || client(&issuer)) });
     drop(tunnel);
 
     for _ in 0..500 {
-        if source(0).is_some() {
+        if source.credential(0).is_some() {
             return;
         }
         std::thread::sleep(Duration::from_millis(10));
@@ -443,7 +489,8 @@ async fn the_map_request_carries_the_slots_envelope_in_its_trailer() {
     // the engine's real refresh loop, so they cannot pause time.
     let issuer = FakeIssuer::new(&[wall_clock_secs() / EPOCH_SECS]);
     let mint = EntitlementMint::new(Arc::new(wall_clock_secs));
-    let source = mint.credential_source([1; 32], 0, || client(&issuer));
+    let rule = mint.rule_credential([1; 32], 0, key(), || client(&issuer));
+    let source = rule.provider();
     wait_for(|| issuer.issue_calls() >= 1).await;
     let expected = source().expect("a stocked batch vends the slot");
 
@@ -462,7 +509,8 @@ async fn the_map_request_carries_the_slots_envelope_in_its_trailer() {
 async fn both_legs_of_a_pair_present_the_same_envelope() {
     let issuer = FakeIssuer::new(&[wall_clock_secs() / EPOCH_SECS]);
     let mint = EntitlementMint::new(Arc::new(wall_clock_secs));
-    let source = mint.credential_source([1; 32], 0, || client(&issuer));
+    let rule = mint.rule_credential([1; 32], 0, key(), || client(&issuer));
+    let source = rule.provider();
     wait_for(|| issuer.issue_calls() >= 1).await;
     let expected = source().expect("a stocked batch vends the slot");
 
@@ -523,7 +571,8 @@ async fn an_issuer_with_no_entitlement_leaves_the_request_bare() {
     let issuer = FakeIssuer::new(&[wall_clock_secs() / EPOCH_SECS]);
     issuer.0.refuse_issuance.store(true, Ordering::SeqCst);
     let mint = EntitlementMint::new(Arc::new(wall_clock_secs));
-    let source = mint.credential_source([1; 32], 0, || client(&issuer));
+    let rule = mint.rule_credential([1; 32], 0, key(), || client(&issuer));
+    let source = rule.provider();
     wait_for(|| issuer.issue_calls() >= 1).await;
     assert!(
         source().is_none(),
@@ -568,32 +617,170 @@ fn a_freed_slot_goes_to_the_next_rule() {
 /// Read on every cycle, never captured: the slot's envelope changes when the
 /// epoch rolls over, and the next renewal must carry the new one.
 #[test]
-fn a_bound_slot_reads_its_own_slot_on_every_cycle() {
+fn a_rule_credential_reads_its_own_slot_on_every_cycle() {
     let generation = Arc::new(AtomicU64::new(1));
     let current = generation.clone();
-    let source = bind_slot(
-        Arc::new(move |slot| {
-            let slot = u8::try_from(slot).ok()?;
-            let generation = u8::try_from(current.load(Ordering::SeqCst)).ok()?;
-            Some(vec![slot, generation])
-        }),
-        3,
-    );
+    let source: SlotSource = Arc::new(move |slot| {
+        let slot = u8::try_from(slot).ok()?;
+        let generation = u8::try_from(current.load(Ordering::SeqCst)).ok()?;
+        Some(vec![slot, generation])
+    });
+    let rule = RuleCredential::new(source, 3);
+    let provider = rule.provider();
 
-    assert_eq!(source(), Some(vec![3, 1]));
+    assert_eq!(provider(), Some(vec![3, 1]));
     generation.store(2, Ordering::SeqCst);
-    assert_eq!(source(), Some(vec![3, 2]));
+    assert_eq!(provider(), Some(vec![3, 2]));
 }
 
 #[test]
-fn the_presence_of_the_last_credential_is_recorded() {
-    let presented = Arc::new(AtomicBool::new(true));
-    let bare = recording_presence(Arc::new(|| None), presented.clone());
+fn a_rule_credential_records_whether_its_last_request_carried_one() {
+    let carrying = Arc::new(AtomicBool::new(false));
+    let answer = carrying.clone();
+    let source: SlotSource = Arc::new(move |_| answer.load(Ordering::SeqCst).then(|| vec![1, 2]));
+    let rule = RuleCredential::new(source, 0);
+    let provider = rule.provider();
 
-    assert_eq!(bare(), None);
-    assert!(!presented.load(Ordering::Relaxed));
+    assert_eq!(provider(), None);
+    assert!(!rule.presented());
+    carrying.store(true, Ordering::SeqCst);
+    assert_eq!(provider(), Some(vec![1, 2]));
+    assert!(rule.presented());
+}
 
-    let carried = recording_presence(Arc::new(|| Some(vec![1, 2])), presented.clone());
-    assert_eq!(carried(), Some(vec![1, 2]));
-    assert!(presented.load(Ordering::Relaxed));
+/// A batch answering `answer` for every slot, counting what the rules report.
+#[derive(Default)]
+struct CountingBatch {
+    answer: Option<Vec<u8>>,
+    refused: AtomicUsize,
+    released: AtomicUsize,
+}
+
+impl SlotBatch for CountingBatch {
+    fn credential(&self, _slot: usize) -> Option<Vec<u8>> {
+        self.answer.clone()
+    }
+
+    fn refused(&self, _slot: usize, _presented: &[u8]) {
+        self.refused.fetch_add(1, Ordering::SeqCst);
+    }
+
+    fn hold(&self, _slot: usize) -> u64 {
+        0
+    }
+
+    fn release(&self, _slot: usize, _claim: u64) {
+        self.released.fetch_add(1, Ordering::SeqCst);
+    }
+}
+
+/// A bare request refused says nothing about any entitlement: the slot stays
+/// where it is, and the next mint or epoch brings it one.
+#[test]
+fn a_refused_bare_request_moves_no_slot() {
+    let batch = Arc::new(CountingBatch::default());
+    let rule = RuleCredential::new(batch.clone(), 0);
+    let _ = rule.provider()();
+
+    assert!(!rule.on_refused(), "nothing was presented");
+    assert_eq!(batch.refused.load(Ordering::SeqCst), 0);
+}
+
+/// Held by a rule that is gone, the entitlement would leave a refused rule
+/// only the ones further up the batch, or none once the others are held. A
+/// refresh loop still winding down must not take the slot back.
+#[test]
+fn a_rule_gone_releases_its_slot_and_its_provider_answers_nothing() {
+    let batch = Arc::new(CountingBatch {
+        answer: Some(vec![1, 2]),
+        ..CountingBatch::default()
+    });
+    let rule = RuleCredential::new(batch.clone(), 2);
+    let provider = rule.provider();
+    assert_eq!(provider(), Some(vec![1, 2]));
+
+    drop(rule);
+
+    assert_eq!(batch.released.load(Ordering::SeqCst), 1);
+    assert_eq!(provider(), None);
+}
+
+/// A rule rebuilt on its slot (an iOS re-bind, a new Android session) can be
+/// taken before the last reference to its predecessor is gone: a refresh
+/// loop's task is dropped late, on a worker thread. That late release must
+/// not take the new rule's entitlement away, or a rule that had moved off
+/// another device's serial goes back to it at the next epoch and is refused.
+#[tokio::test(start_paused = true)]
+async fn a_rule_gone_after_its_successor_took_the_slot_leaves_the_successor_its_place() {
+    let issuer = FakeIssuer::new(&[100, 101]);
+    let (t, now) = clock(NOW);
+    let mint = EntitlementMint::new(now.clone());
+    let before = mint.rule_credential([1; 32], 0, key(), || client(&issuer));
+    wait_for(|| issuer.issue_calls() >= 1).await;
+    let _ = before.provider()().expect("slot 0 stocked");
+    assert!(before.on_refused(), "moved off place 0");
+    let after = mint.rule_credential([1; 32], 0, key(), || unreachable!("one manager"));
+    let moved = token_of(&after.provider()().expect("the successor's place"));
+
+    drop(before);
+
+    let elsewhere = EntitlementMint::new(now);
+    let place_zero = elsewhere.rule_credential([1; 32], 0, key(), || client(&issuer));
+    t.store(101 * EPOCH_SECS + 5, Ordering::SeqCst);
+    let next = token_of(&after.provider()().expect("epoch 101 stocked"));
+    wait_for(|| place_zero.provider()().is_some()).await;
+    assert_ne!(
+        next,
+        token_of(&place_zero.provider()().expect("stocked")),
+        "the successor was sent back to place 0"
+    );
+    assert_ne!(
+        moved, next,
+        "an entitlement verifies against its epoch only"
+    );
+}
+
+/// Another device of the wallet holds the same batch, and its first rule
+/// presents what this one's first rule presents: the exit leases that serial
+/// to one port fleet-wide. Asked again on the same serial, this rule would be
+/// refused for as long as the other device's port lives.
+#[tokio::test(start_paused = true)]
+async fn a_refused_rule_moves_to_an_entitlement_no_other_rule_holds() {
+    let issuer = FakeIssuer::new(&[100]);
+    let (_t, now) = clock(NOW);
+    let mint = EntitlementMint::new(now);
+    let first = mint.rule_credential([1; 32], 0, key(), || client(&issuer));
+    let second = mint.rule_credential([1; 32], 1, key(), || unreachable!("one manager"));
+    wait_for(|| issuer.issue_calls() >= 1).await;
+    let refused = token_of(&first.provider()().expect("slot 0 stocked"));
+    let other = token_of(&second.provider()().expect("slot 1 stocked"));
+
+    assert!(first.on_refused(), "an entitlement was presented");
+
+    let moved = token_of(&first.provider()().expect("another entitlement"));
+    assert_ne!(moved, refused, "the refused serial is presented again");
+    assert_ne!(moved, other, "two rules now present one serial");
+}
+
+/// A daemon restart, an app update or a reboot builds a new mint for the
+/// wallet. The batch is derived from the wallet, so the issuer serves it
+/// again instead of `already_issued` for the rest of the 48 h horizon, and
+/// the rule re-presents what the exit already spent for its port.
+#[tokio::test(start_paused = true)]
+async fn a_restarted_process_presents_the_entitlement_its_rule_held() {
+    let issuer = FakeIssuer::new(&[100]);
+    let (_t, now) = clock(NOW);
+    let before = EntitlementMint::new(now.clone());
+    let rule = before.rule_credential([1; 32], 0, key(), || client(&issuer));
+    wait_for(|| issuer.issue_calls() >= 1).await;
+    let held = token_of(&rule.provider()().expect("stocked"));
+    drop((rule, before));
+
+    let restarted = EntitlementMint::new(now);
+    let rule = restarted.rule_credential([1; 32], 0, key(), || client(&issuer));
+    let provider = rule.provider();
+    wait_for(|| issuer.issue_calls() >= 2).await;
+
+    wait_for(|| provider().is_some()).await;
+    assert_eq!(token_of(&provider().expect("served")), held);
 }

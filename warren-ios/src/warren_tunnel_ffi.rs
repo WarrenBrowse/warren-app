@@ -48,8 +48,9 @@ pub struct WarrenTunnelParametersC {
     /// 32-byte wallet seed, as `warren_wallet_seed_from_mnemonic` returns it
     /// (the first 32 bytes of the BIP39 seed). Not an Ed25519 secret: the
     /// tunnel derives the signing key from it with `derive_node_key`, and the
-    /// session-token blinding key with `BlindingKey::session`, as desktop and
-    /// Android do.
+    /// session-token and port-entitlement blinding keys with
+    /// `BlindingKey::session` and `BlindingKey::port_entitlement`, as desktop
+    /// and Android do.
     pub wallet_signing_seed: [u8; 32],
     /// Optional multi-hop entry relay. Superseded by directory-driven
     /// selection (the entry relay is chosen from `multihop_directory_json`),
@@ -1249,6 +1250,7 @@ fn spawn_multi_hop(
     nat_pmp: NatPmpConfig,
     signing_key: ed25519_dalek::SigningKey,
     session_blinding: warren_api::BlindingKey,
+    entitlement_blinding: warren_api::BlindingKey,
 ) {
     use std::sync::atomic::Ordering;
 
@@ -1412,8 +1414,10 @@ fn spawn_multi_hop(
         // Port entitlements ride the same wallet and the same coarse refresh
         // (warren-core doc 99). Built even when port forwarding is off, so
         // issuance timing never mirrors the moment the user turns it on.
-        let port_entitlements =
-            crate::warren_port_entitlements::provider_for(signing_key.clone());
+        let port_entitlements = crate::warren_port_entitlements::provider_for(
+            signing_key.clone(),
+            entitlement_blinding,
+        );
         // ADR-0006 idle cover: resolved from the same `WARREN_IDLE_COVER` knob the
         // desktop daemon reads, coupled to DAITA (off on this path) so the two
         // covers never both run. This single bool drives BOTH the dial config
@@ -1956,6 +1960,9 @@ struct NatPmpGuard {
     /// The rule's entitlement slot, freed with the rule. Dropped after the
     /// loop is cancelled, so a rule rebuilt next draws the same slot.
     _entitlement_slot: warren_standing::entitlements::SlotLease,
+    /// The rule's entitlement, whose last holder releases the slot's envelope
+    /// in the batch.
+    _entitlement: std::sync::Arc<warren_standing::entitlements::RuleCredential>,
 }
 
 #[cfg(all(target_os = "ios", feature = "tunnel"))]
@@ -2043,7 +2050,7 @@ fn maybe_spawn_nat_pmp(
         config.lifetime_secs
     };
     let credential = entitlement.source.clone();
-    let presented = entitlement.presented.clone();
+    let rule = std::sync::Arc::clone(&entitlement.credential);
     let (tx, mut rx) =
         tokio::sync::mpsc::unbounded_channel::<warrenguard_natpmp_client::NatPmpEvent>();
     let spawn_loop = move |tx| {
@@ -2107,8 +2114,7 @@ fn maybe_spawn_nat_pmp(
                     reason: warrenguard_natpmp_client::NatPmpFailureReason::NotAuthorized,
                     ..
                 } => {
-                    let (refusal, retry_in_secs) =
-                        refusals.on_refused(presented.load(Ordering::Relaxed));
+                    let (refusal, retry_in_secs) = refusals.on_refused(rule.on_refused());
                     tracing::info!(
                         retry_in_secs,
                         "NAT-PMP request refused as not authorized, asking again"
@@ -2159,6 +2165,7 @@ fn maybe_spawn_nat_pmp(
         refresh,
         drain,
         _entitlement_slot: entitlement.lease,
+        _entitlement: entitlement.credential,
     })
 }
 
@@ -2240,6 +2247,10 @@ pub unsafe extern "C" fn warren_tunnel_start(
         // other client of the wallet blinds it, so the issuer serves each of
         // them the same batch (warren-core doc 103 section 11).
         let session_blinding = warren_api::BlindingKey::session(&params.wallet_signing_seed);
+        // The port-entitlement batch likewise, so a restarted extension is
+        // served the entitlements the account holds (warren-core doc 99).
+        let entitlement_blinding =
+            warren_api::BlindingKey::port_entitlement(&params.wallet_signing_seed);
 
         // Client opt-in for NAT-PMP port forwarding. The multi-hop reassign
         // task binds the refresh loop to the exit-assigned inner IPv4 once it
@@ -2289,6 +2300,7 @@ pub unsafe extern "C" fn warren_tunnel_start(
             nat_pmp,
             signing_key,
             session_blinding,
+            entitlement_blinding,
         );
         // Box the Arc so the FFI sees a single owner ; clones live
         // inside spawned tasks via the Arc.

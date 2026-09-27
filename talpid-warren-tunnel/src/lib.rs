@@ -288,8 +288,10 @@ pub fn make_session_token_provider(
 /// must never draw the same one. `None` for a slot means the subscriber has no
 /// entitlement left: the Map request then goes out without an envelope, the
 /// exit refuses it (warren-core doc 105), and the controller reports the rule
-/// as having no entitlement and asks again later.
-pub type PortEntitlementProvider = std::sync::Arc<dyn Fn(usize) -> Option<Vec<u8>> + Send + Sync>;
+/// as having no entitlement and asks again later. A refused entitlement is
+/// reported to the batch, which moves the slot to another one: the wallet's
+/// other devices hold the same batch.
+pub type PortEntitlementProvider = warren_standing::entitlements::SlotSource;
 
 mod adapter;
 /// Per-app exits: route sessions next to the main one, and the router
@@ -3271,9 +3273,10 @@ async fn run_nat_pmp_controller(
         /// never draw the same entitlement and a rule that outlives an epoch
         /// picks up the next batch at the same slot.
         slot: usize,
-        /// Whether the last request carried an entitlement, which is what
-        /// tells a refused entitlement from a missing one.
-        presented: std::sync::Arc<std::sync::atomic::AtomicBool>,
+        /// The rule's entitlement, `None` when the controller hands out none.
+        /// It tells a refused entitlement from a missing one, reports the
+        /// refusal, and frees the slot's entitlement when the rule goes.
+        credential: Option<warren_standing::entitlements::RuleCredential>,
         /// Refusals in a row since the last grant.
         refusals: u32,
         /// When the controller asks again after a refusal.
@@ -3392,17 +3395,12 @@ async fn run_nat_pmp_controller(
                         generation.clone(),
                     );
                     let slot = lowest_free_slot(managers);
-                    let presented = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-                    let credential = entitlements.as_ref().map(|provider| {
-                        let provider = provider.clone();
-                        let presented = presented.clone();
-                        std::sync::Arc::new(move || {
-                            let credential = provider(slot);
-                            presented
-                                .store(credential.is_some(), std::sync::atomic::Ordering::Relaxed);
-                            credential
-                        }) as warrenguard_natpmp_client::CredentialProvider
+                    let rule_credential = entitlements.as_ref().map(|provider| {
+                        warren_standing::entitlements::RuleCredential::new(provider.clone(), slot)
                     });
+                    let credential = rule_credential
+                        .as_ref()
+                        .map(warren_standing::entitlements::RuleCredential::provider);
                     let manager = NatPmpManager::start_with_credential(
                         runtime,
                         server,
@@ -3418,7 +3416,7 @@ async fn run_nat_pmp_controller(
                             applied_cfg: per_rule_cfg,
                             applied_at: std::time::Instant::now(),
                             slot,
-                            presented,
+                            credential: rule_credential,
                             refusals: 0,
                             retry_at: None,
                             generation,
@@ -3462,7 +3460,9 @@ async fn run_nat_pmp_controller(
                 };
                 st.refusals = st.refusals.saturating_add(1);
                 let refusal = NatPmpRefusal::of_request(
-                    st.presented.load(std::sync::atomic::Ordering::Relaxed),
+                    st.credential
+                        .as_ref()
+                        .is_some_and(warren_standing::entitlements::RuleCredential::on_refused),
                 );
                 let retry_in_secs = refusal.retry_after_secs(st.refusals);
                 st.retry_at = Some(
@@ -5387,6 +5387,79 @@ mod tests {
             "a refusal the controller retries is not a failure of the rule"
         );
         assert!(mapped(&log), "the retry must reach the grant");
+    }
+
+    /// Answers `[7; 8]` for every slot and records the refusals and releases
+    /// the controller reports.
+    #[derive(Default)]
+    struct RecordingBatch {
+        refused: std::sync::Mutex<Vec<(usize, Vec<u8>)>>,
+        released: std::sync::Mutex<Vec<usize>>,
+    }
+
+    impl warren_standing::entitlements::SlotBatch for RecordingBatch {
+        fn credential(&self, _slot: usize) -> Option<Vec<u8>> {
+            Some(vec![7; 8])
+        }
+
+        fn refused(&self, slot: usize, presented: &[u8]) {
+            self.refused
+                .lock()
+                .unwrap()
+                .push((slot, presented.to_vec()));
+        }
+
+        fn hold(&self, _slot: usize) -> u64 {
+            0
+        }
+
+        fn release(&self, slot: usize, _claim: u64) {
+            self.released.lock().unwrap().push(slot);
+        }
+    }
+
+    #[tokio::test]
+    async fn a_refused_entitlement_moves_the_rule_to_another_one() {
+        // Another device of the wallet holds the same batch, and its first
+        // rule presents what this one's first rule presents: the exit leases
+        // that serial to one port. Asked again on the same serial, the rule
+        // would be refused for as long as the other device's port lives.
+        let server = spawn_refusing_stub(1).await;
+        let (observer, log, _refusals) = collector_observer_with_refusals();
+        let cfg = natpmp_cfg(60);
+        let (_tx, rx) = tokio::sync::watch::channel(Some(cfg.clone()));
+        let batch = Arc::new(RecordingBatch::default());
+
+        let runtime = tokio::runtime::Handle::current();
+        let handle = runtime.spawn(run_nat_pmp_controller(
+            runtime.clone(),
+            server,
+            None,
+            observer,
+            Some(cfg),
+            rx,
+            Some(batch.clone() as PortEntitlementProvider),
+        ));
+        for _ in 0..250 {
+            if log
+                .lock()
+                .unwrap()
+                .iter()
+                .any(|(_, e)| matches!(e, NatPmpEvent::Mapped { .. }))
+            {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+        handle.abort();
+        let _ = handle.await;
+
+        assert_eq!(*batch.refused.lock().unwrap(), vec![(0, vec![7; 8])]);
+        assert_eq!(
+            *batch.released.lock().unwrap(),
+            vec![0],
+            "the controller gone, its rule's slot is free"
+        );
     }
 
     #[tokio::test]

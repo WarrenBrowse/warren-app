@@ -5,7 +5,7 @@
 //!
 //! Android runs the single preferred-port model, so its one rule draws slot 0.
 
-pub(crate) use warren_standing::entitlements::{CredentialSource, await_first_credential};
+pub(crate) use warren_standing::entitlements::{RuleCredential, await_first_credential};
 
 #[cfg(all(target_os = "android", feature = "tunnel"))]
 pub(crate) use android::provider_for;
@@ -15,11 +15,11 @@ mod android {
     use std::sync::{Arc, OnceLock};
 
     use ed25519_dalek::SigningKey;
-    use warren_api::WarrenApiClient;
+    use warren_api::{BlindingKey, WarrenApiClient};
     use warren_identity::WarrenIdentity;
     use warren_standing::entitlements::EntitlementMint;
 
-    use super::CredentialSource;
+    use super::RuleCredential;
     use crate::protected_transport::ProtectedTransport;
 
     /// Android runs the single preferred-port model (one rule, one forwarded
@@ -41,11 +41,12 @@ mod android {
             .unwrap_or(0)
     }
 
-    /// The entitlement source for `signing_key`'s wallet against the compiled
-    /// product API. The minting identity is built from the SAME Ed25519 key
-    /// the tunnel handshake signs with, so the minting wallet is bit-for-bit
-    /// the subscribed wallet.
-    pub(crate) fn provider_for(signing_key: SigningKey) -> CredentialSource {
+    /// The entitlement of the Android rule for `signing_key`'s wallet against
+    /// the compiled product API, minting the batches `blinding` (the wallet's
+    /// [`BlindingKey::port_entitlement`] key) derives. The minting identity is
+    /// built from the SAME Ed25519 key the tunnel handshake signs with, so the
+    /// minting wallet is bit-for-bit the subscribed wallet.
+    pub(crate) fn provider_for(signing_key: SigningKey, blinding: BlindingKey) -> RuleCredential {
         let mint = MINT.get_or_init(|| {
             EntitlementMint::new(Arc::new(now_unix_secs)).with_ban_sink(Arc::new(
                 |wallet, error| {
@@ -54,7 +55,7 @@ mod android {
             ))
         });
         let wallet_pubkey = signing_key.verifying_key().to_bytes();
-        mint.credential_source(wallet_pubkey, ANDROID_RULE_SLOT, move || {
+        mint.rule_credential(wallet_pubkey, ANDROID_RULE_SLOT, blinding, move || {
             WarrenApiClient::new(
                 crate::product::PRODUCT_API_URL.to_owned(),
                 WarrenIdentity::from_signing_key(signing_key),

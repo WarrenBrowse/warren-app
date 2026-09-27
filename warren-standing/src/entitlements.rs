@@ -14,17 +14,28 @@
 //! right now". Both legs of a TCP+UDP pair are one port, and the engine asks
 //! the source once per refresh cycle for the pair.
 //!
+//! The batch is derived from the wallet ([`BlindingKey::port_entitlement`]),
+//! so a restarted process (a daemon restart, an app update, a reboot) and
+//! another device of the wallet are served the batch the account holds
+//! instead of `already_issued` for the rest of the 48 h prefetch window. They
+//! hold the SAME entitlements, and an exit leases one serial to one port
+//! fleet-wide, so a rule whose presented entitlement is refused reports it
+//! ([`RuleCredential::on_refused`]) and moves to one no other rule of this
+//! process holds. The cap is the batch: five ports per subscriber, shared
+//! across its devices.
+//!
 //! An exhausted batch, an unreachable API and a wallet the issuer refuses all
 //! answer `None`. The Map request then goes out without an envelope, and the
 //! exit refuses it: the attribution tag inside the envelope is mandatory for a
 //! forwarded port (doc 105). A ban the issuer answers goes to the ban sink.
 
 use std::collections::{BTreeSet, HashMap};
-use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex, PoisonError};
 use std::time::Duration;
 
-use warren_api::{HttpTransport, PortEntitlementManager, TokenClientError, WarrenApiClient};
+use warren_api::{
+    BlindingKey, HttpTransport, PortEntitlementManager, TokenClientError, WarrenApiClient,
+};
 
 /// Unix-seconds clock seam. The clock is a system boundary: tests drive epochs
 /// deterministically, production wires the system clock.
@@ -39,8 +50,79 @@ pub type BanSink = Arc<dyn Fn(&[u8; 32], &TokenClientError) -> bool + Send + Syn
 /// spelled out here so this crate stays free of the engine.
 pub type CredentialSource = Arc<dyn Fn() -> Option<Vec<u8>> + Send + Sync>;
 
-/// What slot `n` of a wallet's batch presents right now.
-pub type SlotSource = Arc<dyn Fn(usize) -> Option<Vec<u8>> + Send + Sync>;
+/// A wallet's batch as the rules of one process see it, by slot.
+pub trait SlotBatch: Send + Sync {
+    /// What slot `slot` presents right now, or `None` for a bare request.
+    fn credential(&self, slot: usize) -> Option<Vec<u8>>;
+    /// An exit refused `presented`, what `slot` sent: the slot moves to an
+    /// entitlement no other slot holds.
+    fn refused(&self, slot: usize, presented: &[u8]);
+    /// A rule takes `slot`. Answers the claim its release names.
+    fn hold(&self, slot: usize) -> u64;
+    /// The rule that took `slot` with `claim` is gone: the slot's entitlement
+    /// is free for a refused rule to move to. Ignored when another rule took
+    /// the slot since, whose entitlement it would take away.
+    fn release(&self, slot: usize, claim: u64);
+}
+
+/// A batch that answers from a function and cannot move a slot: fixed
+/// answers, as a test stands in for the mint.
+impl<F: Fn(usize) -> Option<Vec<u8>> + Send + Sync> SlotBatch for F {
+    fn credential(&self, slot: usize) -> Option<Vec<u8>> {
+        self(slot)
+    }
+
+    fn refused(&self, _slot: usize, _presented: &[u8]) {}
+
+    fn hold(&self, _slot: usize) -> u64 {
+        0
+    }
+
+    fn release(&self, _slot: usize, _claim: u64) {}
+}
+
+/// What each slot of a wallet's batch presents, shared by the rules.
+pub type SlotSource = Arc<dyn SlotBatch>;
+
+/// The mint's own batch: one manager per wallet, read at the mint's clock,
+/// and which rule last took each slot.
+struct MintedSlots<T> {
+    manager: Arc<PortEntitlementManager<T>>,
+    now: NowFn,
+    holders: Mutex<Holders>,
+}
+
+#[derive(Default)]
+struct Holders {
+    next: u64,
+    by_slot: HashMap<usize, u64>,
+}
+
+impl<T: HttpTransport + 'static> SlotBatch for MintedSlots<T> {
+    fn credential(&self, slot: usize) -> Option<Vec<u8>> {
+        self.manager.credential_for_slot(slot, (self.now)())
+    }
+
+    fn refused(&self, slot: usize, presented: &[u8]) {
+        self.manager.mark_refused(slot, presented, (self.now)());
+    }
+
+    fn hold(&self, slot: usize) -> u64 {
+        let mut holders = self.holders.lock().unwrap_or_else(PoisonError::into_inner);
+        holders.next = holders.next.wrapping_add(1);
+        let claim = holders.next;
+        holders.by_slot.insert(slot, claim);
+        claim
+    }
+
+    fn release(&self, slot: usize, claim: u64) {
+        let mut holders = self.holders.lock().unwrap_or_else(PoisonError::into_inner);
+        if holders.by_slot.get(&slot) == Some(&claim) {
+            holders.by_slot.remove(&slot);
+            self.manager.release(slot);
+        }
+    }
+}
 
 /// How often the batch is topped up, the session-token mint's cadence.
 pub const REFRESH_INTERVAL: Duration = Duration::from_secs(600);
@@ -63,7 +145,7 @@ const PROBE_SLOT: usize = 0;
 /// Process-lived registry of one [`PortEntitlementManager`] per wallet.
 pub struct EntitlementMint<T> {
     now: NowFn,
-    managers: Mutex<HashMap<[u8; 32], Arc<PortEntitlementManager<T>>>>,
+    managers: Mutex<HashMap<[u8; 32], Arc<MintedSlots<T>>>>,
     ban_sink: Option<BanSink>,
     runtime: Option<tokio::runtime::Handle>,
 }
@@ -97,39 +179,49 @@ impl<T: HttpTransport + 'static> EntitlementMint<T> {
     }
 
     /// The slot source of `wallet_pubkey`. First sight of a wallet builds its
-    /// manager (via `make_client`, which owns the wallet identity) and starts
-    /// its background refresh; later calls reuse both, so the factory runs at
-    /// most once per wallet and process.
+    /// manager (via `make_client`, which owns the wallet identity, minting
+    /// the batches `blinding` derives) and starts its background refresh;
+    /// later calls reuse both, so the factory runs at most once per wallet
+    /// and process.
+    ///
+    /// `blinding` is the wallet's [`BlindingKey::port_entitlement`] key, from
+    /// the same seed as the client's identity: the issuer serves an account
+    /// only the batch it first signed for it.
     pub fn slot_source(
         &self,
         wallet_pubkey: [u8; 32],
+        blinding: BlindingKey,
         make_client: impl FnOnce() -> WarrenApiClient<T>,
     ) -> SlotSource {
-        let manager = self.manager(wallet_pubkey, make_client);
-        let now = self.now.clone();
-        Arc::new(move |slot| manager.credential_for_slot(slot, now()))
+        self.slots(wallet_pubkey, blinding, make_client)
     }
 
-    /// What rule `slot` of `wallet_pubkey` presents, per [`Self::slot_source`].
-    pub fn credential_source(
+    /// The entitlement of rule `slot` of `wallet_pubkey`, per
+    /// [`Self::slot_source`].
+    pub fn rule_credential(
         &self,
         wallet_pubkey: [u8; 32],
         slot: usize,
+        blinding: BlindingKey,
         make_client: impl FnOnce() -> WarrenApiClient<T>,
-    ) -> CredentialSource {
-        bind_slot(self.slot_source(wallet_pubkey, make_client), slot)
+    ) -> RuleCredential {
+        RuleCredential::new(self.slot_source(wallet_pubkey, blinding, make_client), slot)
     }
 
-    fn manager(
+    fn slots(
         &self,
         wallet_pubkey: [u8; 32],
+        blinding: BlindingKey,
         make_client: impl FnOnce() -> WarrenApiClient<T>,
-    ) -> Arc<PortEntitlementManager<T>> {
+    ) -> Arc<MintedSlots<T>> {
         let mut managers = self.managers.lock().unwrap_or_else(PoisonError::into_inner);
         managers
             .entry(wallet_pubkey)
             .or_insert_with(|| {
-                let manager = Arc::new(PortEntitlementManager::new(Arc::new(make_client())));
+                let manager = Arc::new(PortEntitlementManager::new(
+                    Arc::new(make_client()),
+                    blinding,
+                ));
                 let refresh = refresh_forever(
                     manager.clone(),
                     self.now.clone(),
@@ -144,15 +236,14 @@ impl<T: HttpTransport + 'static> EntitlementMint<T> {
                         tokio::spawn(refresh);
                     }
                 }
-                manager
+                Arc::new(MintedSlots {
+                    manager,
+                    now: self.now.clone(),
+                    holders: Mutex::new(Holders::default()),
+                })
             })
             .clone()
     }
-}
-
-/// What rule `slot` presents, read from `source` on every cycle.
-pub fn bind_slot(source: SlotSource, slot: usize) -> CredentialSource {
-    Arc::new(move || source(slot))
 }
 
 /// The first tick fires immediately (stock as soon as a wallet is seen), then
@@ -221,18 +312,105 @@ pub async fn await_first_credential(
     }
 }
 
-/// Wraps `source` so `presented` records whether the last request carried an
-/// entitlement, which is what tells a refused entitlement from a missing one
-/// ([`crate::PortRefusal::of_request`]).
-pub fn recording_presence(
-    source: CredentialSource,
-    presented: Arc<AtomicBool>,
-) -> CredentialSource {
-    Arc::new(move || {
-        let credential = source();
-        presented.store(credential.is_some(), Ordering::Relaxed);
-        credential
-    })
+/// One live rule's entitlement: what the rule presents on each cycle, whether
+/// its last request carried one, and the report of an exit's refusal.
+///
+/// Dropping it releases the rule's slot in the batch, so a refused rule can
+/// move to the entitlement it held, unless another rule took the slot since:
+/// the last reference to a rule can go after its successor was built on the
+/// same slot (a refresh loop's task is dropped late), and that release would
+/// take the successor's entitlement away. Its [`Self::provider`] answers
+/// nothing from then on: a refresh loop still winding down must not take the
+/// slot back.
+pub struct RuleCredential {
+    rule: Arc<Rule>,
+}
+
+struct Rule {
+    source: SlotSource,
+    slot: usize,
+    /// What the release names, so a rule that took the slot since keeps it.
+    claim: u64,
+    /// The last credential presented, `None` for a bare request, and whether
+    /// the rule is gone. One lock, so a cycle in flight and the release never
+    /// interleave.
+    state: Mutex<RuleState>,
+}
+
+#[derive(Default)]
+struct RuleState {
+    presented: Option<Vec<u8>>,
+    released: bool,
+}
+
+impl Rule {
+    fn state(&self) -> std::sync::MutexGuard<'_, RuleState> {
+        self.state.lock().unwrap_or_else(PoisonError::into_inner)
+    }
+}
+
+impl RuleCredential {
+    /// The entitlement a rule holding `slot` presents from `source`.
+    #[must_use]
+    pub fn new(source: SlotSource, slot: usize) -> Self {
+        let claim = source.hold(slot);
+        Self {
+            rule: Arc::new(Rule {
+                source,
+                slot,
+                claim,
+                state: Mutex::new(RuleState::default()),
+            }),
+        }
+    }
+
+    /// What the engine asks once per refresh cycle: the slot's entitlement at
+    /// the moment of asking, so an epoch rollover reaches the next renewal.
+    #[must_use]
+    pub fn provider(&self) -> CredentialSource {
+        let rule = Arc::clone(&self.rule);
+        Arc::new(move || {
+            let mut state = rule.state();
+            if state.released {
+                return None;
+            }
+            let credential = rule.source.credential(rule.slot);
+            state.presented.clone_from(&credential);
+            credential
+        })
+    }
+
+    /// Whether the last request carried an entitlement, which is what tells
+    /// a refused entitlement from a missing one
+    /// ([`crate::PortRefusal::of_request`]).
+    #[must_use]
+    pub fn presented(&self) -> bool {
+        self.rule.state().presented.is_some()
+    }
+
+    /// The exit refused the rule's last request (NAT-PMP `NotAuthorized`).
+    /// When it carried an entitlement, the slot moves to one no other rule
+    /// holds, so the next request does not meet the same verdict. Answers
+    /// whether it carried one.
+    pub fn on_refused(&self) -> bool {
+        let presented = self.rule.state().presented.clone();
+        match presented {
+            Some(credential) => {
+                self.rule.source.refused(self.rule.slot, &credential);
+                true
+            }
+            None => false,
+        }
+    }
+}
+
+impl Drop for RuleCredential {
+    fn drop(&mut self) {
+        let mut state = self.rule.state();
+        state.released = true;
+        state.presented = None;
+        self.rule.source.release(self.rule.slot, self.rule.claim);
+    }
 }
 
 /// Which slot each live rule holds: the lowest free one, freed with the rule.
@@ -241,7 +419,9 @@ pub fn recording_presence(
 /// port. Reusing a freed slot rather than growing matters because the batch
 /// is bounded: slots that only grew would run past it after a few rule
 /// changes. A rule rebuilt on the same epoch (a re-bind, a reconnect) gets its
-/// old slot back and presents the entitlement the exit already spent for it.
+/// old slot back and presents the entitlement of that slot's place, which is
+/// the one the exit already spent for it unless the old rule had moved off
+/// another device's serial.
 #[derive(Clone, Default)]
 pub struct RuleSlots {
     taken: Arc<Mutex<BTreeSet<usize>>>,

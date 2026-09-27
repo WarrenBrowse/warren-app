@@ -96,6 +96,17 @@ pub fn session_blinding_from_mnemonic(
     Ok(warren_api::BlindingKey::session(&seed))
 }
 
+/// The key the wallet's port-entitlement batches are blinded with, from the
+/// same BIP39 seed, for the same reason as [`session_blinding_from_mnemonic`]:
+/// a restarted tunnel process, or another device of the wallet, is served
+/// the batch the account already holds instead of `already_issued`.
+pub fn entitlement_blinding_from_mnemonic(
+    mnemonic: &str,
+) -> Result<warren_api::BlindingKey, WalletError> {
+    let seed = seed_from_mnemonic(mnemonic)?;
+    Ok(warren_api::BlindingKey::port_entitlement(&seed))
+}
+
 /// Sign `message` with the Ed25519 signing key derived from `mnemonic`.
 ///
 /// Returns the raw 64-byte signature. The signing key never escapes this
@@ -149,6 +160,108 @@ mod tests {
             phrase.split_whitespace().count(),
             12,
             "BIP39 12-word phrase expected, got {phrase:?}"
+        );
+    }
+
+    /// Answers the port-entitlement directory, records the blinded batch of
+    /// the issue request and refuses it, so a test sees what a key sends.
+    struct BatchRecorder {
+        key: warrenguard_token::IssuerSecretKey,
+        blinded: parking_lot::Mutex<Vec<String>>,
+    }
+
+    impl BatchRecorder {
+        fn new() -> Self {
+            use rand010::SeedableRng;
+            let mut rng = rand010::rngs::StdRng::seed_from_u64(7);
+            Self {
+                key: warrenguard_token::IssuerSecretKey::generate(&mut rng).unwrap(),
+                blinded: parking_lot::Mutex::new(Vec::new()),
+            }
+        }
+
+        fn directory(&self) -> warren_api::TokenIssuerDirectory {
+            let pk = self.key.public_key();
+            let attribution = ed25519_dalek::SigningKey::from_bytes(&[0x42; 32]);
+            warren_api::TokenIssuerDirectory {
+                issuer_name: "api.warrenbrowse.com".to_owned(),
+                token_type: 2,
+                epoch_secs: 3600,
+                context_label: "warren/session-token/v1".to_owned(),
+                quota_per_epoch: 5,
+                prefetch_epochs: 48,
+                keys: vec![warren_api::TokenIssuerKey {
+                    epoch: 100,
+                    token_key_id: pk.key_id().to_hex(),
+                    spki_b64: data_encoding::BASE64URL_NOPAD.encode(&pk.to_spki()),
+                    not_before: 100 * 3600,
+                    not_after: 101 * 3600,
+                }],
+                attribution_verifying_key_hex: Some(
+                    warren_api::PubkeyHex::try_from(
+                        hex::encode(attribution.verifying_key().as_bytes()).as_str(),
+                    )
+                    .unwrap(),
+                ),
+                route_admission: None,
+            }
+        }
+    }
+
+    impl warren_api::HttpTransport for &BatchRecorder {
+        async fn execute(
+            &self,
+            request: warren_api::HttpRequest,
+        ) -> Result<warren_api::HttpResponse, warren_api::TransportError> {
+            let issue: warren_api::TokenIssueRequest =
+                serde_json::from_slice(&request.body).unwrap();
+            *self.blinded.lock() = issue.epochs[0].blinded.clone();
+            Ok(warren_api::HttpResponse {
+                status: 503,
+                body: Vec::new(),
+            })
+        }
+    }
+
+    /// The batch `key` sends for epoch 100.
+    fn batch_of(key: &warren_api::BlindingKey) -> Vec<String> {
+        let recorder = BatchRecorder::new();
+        let client = warren_api::WarrenApiClient::new(
+            "https://api.example.test",
+            warren_identity::WarrenIdentity::from_seed(&[1; 32]),
+            &recorder,
+        );
+        let _ = tokio::runtime::Builder::new_current_thread()
+            .build()
+            .unwrap()
+            .block_on(warren_api::mint_tokens(
+                &client,
+                &recorder.directory(),
+                &[100],
+                key,
+            ));
+        recorder.blinded.lock().clone()
+    }
+
+    #[test]
+    fn the_entitlement_key_is_derived_from_the_seed_every_client_derives_from() {
+        // Every client of the wallet must send this batch, or it is refused
+        // `already_issued` for 48 h. The node key differs from the seed.
+        const MNEMONIC: &str = "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about";
+        let seed = seed_from_mnemonic(MNEMONIC).unwrap();
+
+        let sent = batch_of(&entitlement_blinding_from_mnemonic(MNEMONIC).unwrap());
+
+        assert_eq!(sent.len(), 5, "the whole batch was sent");
+        assert_eq!(
+            sent,
+            batch_of(&warren_api::BlindingKey::port_entitlement(&seed))
+        );
+        assert_ne!(
+            sent,
+            batch_of(&warren_api::BlindingKey::port_entitlement(
+                &derive_node_key(&seed).to_bytes()
+            ))
         );
     }
 

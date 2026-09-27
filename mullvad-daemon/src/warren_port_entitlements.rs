@@ -6,12 +6,13 @@
 //! hands the tunnel a SLOT source: the tunnel's controller owns which rule
 //! holds which slot. An exhausted batch answers `None`, the exit refuses the
 //! rule's bare Map request, and the controller says so on the rule and asks
-//! again later.
+//! again later. A refused entitlement moves the rule's slot to another one of
+//! the batch, which the wallet's other devices also hold.
 
 use std::sync::{Arc, OnceLock};
 
 use talpid_warren_tunnel::PortEntitlementProvider;
-use warren_api::WarrenApiClient;
+use warren_api::{BlindingKey, WarrenApiClient};
 use warren_identity::WarrenIdentity;
 use warren_standing::entitlements::EntitlementMint;
 
@@ -39,6 +40,9 @@ pub(crate) fn provider_for(
 ) -> PortEntitlementProvider {
     let seed_bytes: [u8; 32] = **seed.read().expect("warren seed RwLock poisoned");
     let wallet_pubkey = WarrenIdentity::from_seed(&seed_bytes).public_key();
+    // Derived from the wallet, so a daemon restart is served the batch the
+    // account already holds (warren-core doc 99 section 4 bis).
+    let blinding = BlindingKey::port_entitlement(&seed_bytes);
 
     let mint = MINT.get_or_init(|| {
         let standing = standing.cloned();
@@ -53,7 +57,7 @@ pub(crate) fn provider_for(
         ))
     });
     let api_url = api_url.to_owned();
-    mint.slot_source(wallet_pubkey, move || {
+    mint.slot_source(wallet_pubkey, blinding, move || {
         WarrenApiClient::new(
             api_url,
             WarrenIdentity::from_seed(&seed_bytes),
