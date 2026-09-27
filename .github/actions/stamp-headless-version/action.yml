@@ -33,5 +33,10 @@ runs:
           exit 0
         fi
         printf '%s\n' "$ver" > dist-assets/desktop-product-version.txt
+        # The Linux jobs run as root inside the Debian 11 job image over a
+        # checkout the runner user owns, and git refuses such a repository
+        # ("detected dubious ownership"), which failed beta-v1.1.36 here. The
+        # global entry also lets mullvad-version's build.rs see the tag below.
+        git config --global --add safe.directory "$(pwd)"
         git tag -f "v$ver"
         echo "stamped clean version $ver"
