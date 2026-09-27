@@ -83,16 +83,7 @@ class WarrenVpnService : LifecycleVpnService() {
         super.onCreate()
         Logger.i("WarrenVpnService: onCreate")
 
-        ContextCompat.registerReceiver(
-            this,
-            packagesChanged,
-            IntentFilter().apply {
-                addAction(Intent.ACTION_PACKAGE_ADDED)
-                addAction(Intent.ACTION_PACKAGE_REMOVED)
-                addDataScheme("package")
-            },
-            ContextCompat.RECEIVER_NOT_EXPORTED,
-        )
+        registerPackagesChanged()
 
         loadKoinModules(listOf(vpnServiceModule))
         with(getKoin()) {
@@ -420,6 +411,19 @@ class WarrenVpnService : LifecycleVpnService() {
         quinnAdapter.disconnectInBackground()
 
         Logger.i("Shutdown complete")
+    }
+
+    private fun registerPackagesChanged() {
+        ContextCompat.registerReceiver(
+            this,
+            packagesChanged,
+            IntentFilter().apply {
+                addAction(Intent.ACTION_PACKAGE_ADDED)
+                addAction(Intent.ACTION_PACKAGE_REMOVED)
+                addDataScheme("package")
+            },
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
     }
 
     // If an intent is from the system it is because of the OS starting/stopping the VPN.

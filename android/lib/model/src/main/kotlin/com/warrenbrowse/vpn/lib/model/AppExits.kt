@@ -33,11 +33,12 @@ fun effectiveAppExits(
     excludedApps: Set<String>,
     appExits: Map<String, AppExit>,
     enabled: Boolean,
-): Map<String, AppExit> {
-    if (!enabled) return emptyMap()
-    if (mode != SplitTunnelMode.Exclude) return appExits
-    return appExits.filterKeys { it !in excludedApps }
-}
+): Map<String, AppExit> =
+    when {
+        !enabled -> emptyMap()
+        mode != SplitTunnelMode.Exclude -> appExits
+        else -> appExits.filterKeys { it !in excludedApps }
+    }
 
 /** Where the session of one exit stands, as the native engine reports it. */
 sealed interface AppRouteState {
@@ -97,13 +98,20 @@ fun appRouteLine(
     statuses: List<AppRouteStatus>,
     app: String,
 ): AppRouteLine? {
-    if (app !in appExits) return null
-    if (mode == SplitTunnelMode.Exclude && app in excludedApps) return AppRouteLine.Bypassed
-    if (!enabled) return AppRouteLine.Paused
-    val status = statuses.firstOrNull { app in it.apps } ?: return AppRouteLine.Waiting
-    return when (val state = status.state) {
+    val status = statuses.firstOrNull { app in it.apps }
+    return when {
+        app !in appExits -> null
+        mode == SplitTunnelMode.Exclude && app in excludedApps -> AppRouteLine.Bypassed
+        !enabled -> AppRouteLine.Paused
+        status == null -> AppRouteLine.Waiting
+        else -> status.line()
+    }
+}
+
+private fun AppRouteStatus.line(): AppRouteLine =
+    when (val state = state) {
         AppRouteState.Connecting -> AppRouteLine.Connecting
-        AppRouteState.Connected -> AppRouteLine.Connected(status.publicIp)
+        AppRouteState.Connected -> AppRouteLine.Connected(publicIp)
         is AppRouteState.Unavailable ->
             if (state.reason == AppRouteUnavailableReason.TunnelDown) {
                 AppRouteLine.Waiting
@@ -111,7 +119,6 @@ fun appRouteLine(
                 AppRouteLine.Unavailable(state.reason)
             }
     }
-}
 
 /**
  * Tolerant reader of `WarrenJni.getAppRoutesStatus()`: `{"routes":[{"country":..,"city":..,
@@ -135,25 +142,31 @@ object AppRouteStatusParser {
     }
 
     private fun route(obj: JsonObject): AppRouteStatus? {
-        val exit = AppExit.of(obj.string("country") ?: return null, obj.string("city")) ?: return null
-        val state =
-            when (obj.string("state")) {
-                "connecting" -> AppRouteState.Connecting
-                "connected" -> AppRouteState.Connected
-                "unavailable" ->
-                    AppRouteState.Unavailable(
-                        AppRouteUnavailableReason.entries.firstOrNull {
-                            it.wire == obj.string("reason")
-                        }
-                    )
-                else -> return null
-            }
+        val exit = obj.string("country")?.let { AppExit.of(it, obj.string("city")) }
+        val state = state(obj)
         val apps =
             (obj["apps"] as? JsonArray)?.mapNotNull {
                 (it as? JsonPrimitive)?.takeIf { p -> p.isString }?.content
             } ?: emptyList()
-        return AppRouteStatus(exit, state, obj.string("public_ip"), apps)
+        return if (exit != null && state != null) {
+            AppRouteStatus(exit, state, obj.string("public_ip"), apps)
+        } else {
+            null
+        }
     }
+
+    private fun state(obj: JsonObject): AppRouteState? =
+        when (obj.string("state")) {
+            "connecting" -> AppRouteState.Connecting
+            "connected" -> AppRouteState.Connected
+            "unavailable" ->
+                AppRouteState.Unavailable(
+                    AppRouteUnavailableReason.entries.firstOrNull {
+                        it.wire == obj.string("reason")
+                    }
+                )
+            else -> null
+        }
 
     private fun JsonObject.string(key: String): String? =
         (this[key] as? JsonPrimitive)?.takeIf { it.isString }?.contentOrNull
