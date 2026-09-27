@@ -156,7 +156,7 @@
     <string name="agree_and_continue">Concordar e continuar</string>
     <string name="privacy_disclaimer_title">Privacidade</string>
     <string name="privacy_disclaimer_body_first_paragraph">Para confirmar que está a executar uma versão suportada, a app transfere da Warren um manifesto de versões assinado e compara-o com a versão instalada aqui. A comparação ocorre neste dispositivo: a app não envia à Warren qualquer identificador, versão da app ou versão do sistema.</string>
-    <string name="privacy_disclaimer_body_second_paragraph">Se for utilizada a funcionalidade de divisão do túnel, a app consulta o seu sistema para obter uma lista de todas as aplicações instaladas. Esta lista só é recuperada na vista de divisão do túnel. A lista de aplicações instaladas nunca é enviada pelo dispositivo.</string>
+    <string name="privacy_disclaimer_body_second_paragraph">Se for utilizado o encaminhamento de aplicações, a app consulta o seu sistema para obter uma lista de todas as aplicações instaladas. Esta lista só é recuperada na vista de encaminhamento de aplicações. A lista de aplicações instaladas nunca é enviada pelo dispositivo.</string>
     <string name="submit_button">Enviar</string>
     <string name="remove_button">Remover</string>
     <string name="reset_to_default_button">Repor para as predefinições</string>

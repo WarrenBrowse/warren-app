@@ -156,7 +156,7 @@
     <string name="agree_and_continue">Aceptar y continuar</string>
     <string name="privacy_disclaimer_title">Privacidad</string>
     <string name="privacy_disclaimer_body_first_paragraph">Para comprobar que ejecutas una versión admitida, la aplicación descarga de Warren un manifiesto de versiones firmado y lo compara con la versión instalada aquí. La comparación se hace en este dispositivo: la aplicación no envía a Warren ningún identificador, ni la versión de la aplicación, ni la del sistema.</string>
-    <string name="privacy_disclaimer_body_second_paragraph">Si se utiliza la característica de túnel dividido, la aplicación consultará a su sistema la lista de todas las aplicaciones instaladas. Esta lista solo se recupera en la vista de túnel dividido. La lista de aplicaciones instaladas nunca se envía desde el dispositivo.</string>
+    <string name="privacy_disclaimer_body_second_paragraph">Si se utiliza el enrutamiento de aplicaciones, la aplicación consultará a su sistema la lista de todas las aplicaciones instaladas. Esta lista solo se recupera en la vista de enrutamiento de aplicaciones. La lista de aplicaciones instaladas nunca se envía desde el dispositivo.</string>
     <string name="submit_button">Enviar</string>
     <string name="remove_button">Quitar</string>
     <string name="reset_to_default_button">Restablecer a valores predeterminados</string>

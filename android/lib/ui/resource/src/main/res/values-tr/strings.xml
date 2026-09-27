@@ -155,7 +155,7 @@
     <string name="agree_and_continue">Kabul et ve devam et</string>
     <string name="privacy_disclaimer_title">Gizlilik</string>
     <string name="privacy_disclaimer_body_first_paragraph">Desteklenen bir sürümü çalıştırdığınızdan emin olmak için uygulama, Warren\'dan imzalı bir sürüm bildirimi indirir ve burada kurulu sürümle karşılaştırır. Karşılaştırma bu cihazda yapılır: uygulama Warren\'a hiçbir tanımlayıcı, uygulama sürümü veya sistem sürümü göndermez.</string>
-    <string name="privacy_disclaimer_body_second_paragraph">Bölünmüş tünelleme özelliği kullanılıyorsa uygulama, yüklü tüm uygulamaların bir listesi için sisteminizi sorgular. Bu liste yalnızca bölünmüş tünelleme görünümünde alınır. Yüklü uygulamaların listesi hiçbir zaman cihazdan gönderilmez.</string>
+    <string name="privacy_disclaimer_body_second_paragraph">Uygulama yönlendirme kullanılıyorsa uygulama, yüklü tüm uygulamaların bir listesi için sisteminizi sorgular. Bu liste yalnızca uygulama yönlendirme görünümünde alınır. Yüklü uygulamaların listesi hiçbir zaman cihazdan gönderilmez.</string>
     <string name="submit_button">Gönder</string>
     <string name="remove_button">Kaldır</string>
     <string name="reset_to_default_button">Varsayılana sıfırla</string>

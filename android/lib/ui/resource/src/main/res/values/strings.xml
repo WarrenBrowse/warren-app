@@ -161,7 +161,7 @@
     <string name="agree_and_continue">Agree and continue</string>
     <string name="privacy_disclaimer_title">Privacy</string>
     <string name="privacy_disclaimer_body_first_paragraph">To make sure you are running a supported version, the app downloads a signed version manifest from Warren and compares it with the version installed here. The comparison happens on this device: the app sends no identifier, no app version and no system version to Warren.</string>
-    <string name="privacy_disclaimer_body_second_paragraph">If the split tunneling feature is used, then the app queries your system for a list of all installed applications. This list is only retrieved in the split tunneling view. The list of installed applications is never sent from the device.</string>
+    <string name="privacy_disclaimer_body_second_paragraph">If App routing is used, the app queries your system for a list of all installed applications. This list is only retrieved in the App routing view. The list of installed applications is never sent from the device.</string>
     <string name="submit_button">Submit</string>
     <string name="remove_button">Remove</string>
     <string name="reset_to_default_button">Reset to default</string>

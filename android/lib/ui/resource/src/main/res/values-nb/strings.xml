@@ -155,7 +155,7 @@
     <string name="agree_and_continue">Godta og fortsett</string>
     <string name="privacy_disclaimer_title">Personvern</string>
     <string name="privacy_disclaimer_body_first_paragraph">For å sikre at du kjører en støttet versjon, laster appen ned et signert versjonsmanifest fra Warren og sammenligner det med versjonen som er installert her. Sammenligningen skjer på denne enheten: appen sender verken identifikator, appversjon eller systemversjon til Warren.</string>
-    <string name="privacy_disclaimer_body_second_paragraph">Hvis funksjonen delt tunnelering brukes, vil appen be systemet ditt om en liste over alle installerte applikasjoner. Denne listen hentes bare i delt tunnelering-visningen. Listen over installerte apper sendes aldri ut fra enheten.</string>
+    <string name="privacy_disclaimer_body_second_paragraph">Hvis appruting brukes, vil appen be systemet ditt om en liste over alle installerte applikasjoner. Denne listen hentes bare i appruting-visningen. Listen over installerte apper sendes aldri ut fra enheten.</string>
     <string name="submit_button">Send inn</string>
     <string name="remove_button">Fjern</string>
     <string name="reset_to_default_button">Tilbakestill til standard</string>

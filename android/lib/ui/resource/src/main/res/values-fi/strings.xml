@@ -155,7 +155,7 @@
     <string name="agree_and_continue">Hyväksy ja jatka</string>
     <string name="privacy_disclaimer_title">Tietosuoja</string>
     <string name="privacy_disclaimer_body_first_paragraph">Varmistaakseen, että käytät tuettua versiota, sovellus lataa Warrenilta allekirjoitetun versiomanifestin ja vertaa sitä tähän asennettuun versioon. Vertailu tapahtuu tällä laitteella: sovellus ei lähetä Warrenille tunnistetta, sovellusversiota eikä järjestelmäversiota.</string>
-    <string name="privacy_disclaimer_body_second_paragraph">Jos käytetään sovelluskohtaista yhdistämistä, sovellus pyytää järjestelmältäsi luettelon kaikista siihen asennetuista sovelluksista. Luettelo noudetaan vain sovelluskohtaisen yhdistämisen näkymässä. Asennettujen sovellusten luetteloa ei koskaan lähetetä laitteelta.</string>
+    <string name="privacy_disclaimer_body_second_paragraph">Jos sovellusreititystä käytetään, sovellus pyytää järjestelmältäsi luettelon kaikista siihen asennetuista sovelluksista. Luettelo noudetaan vain sovellusreitityksen näkymässä. Asennettujen sovellusten luetteloa ei koskaan lähetetä laitteelta.</string>
     <string name="submit_button">Lähetä</string>
     <string name="remove_button">Poista</string>
     <string name="reset_to_default_button">Palauta oletusarvo</string>

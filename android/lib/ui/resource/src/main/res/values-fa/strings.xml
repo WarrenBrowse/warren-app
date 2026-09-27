@@ -155,7 +155,7 @@
     <string name="agree_and_continue">موافقت و ادامه</string>
     <string name="privacy_disclaimer_title">حریم خصوصی</string>
     <string name="privacy_disclaimer_body_first_paragraph">برای اطمینان از اینکه نسخه‌ای پشتیبانی‌شده را اجرا می‌کنید، اپلیکیشن یک مانیفست نسخهٔ امضاشده از Warren دانلود می‌کند و آن را با نسخهٔ نصب‌شده در اینجا مقایسه می‌کند. این مقایسه روی همین دستگاه انجام می‌شود: اپلیکیشن هیچ شناسه، نسخهٔ اپلیکیشن یا نسخهٔ سیستمی به Warren نمی‌فرستد.</string>
-    <string name="privacy_disclaimer_body_second_paragraph">اگر ویژگی تونل‌گذاری تفکیک‌شده فعال باشد، اپلیکیشن از سیستم شما برای دریافت فهرستی از همهٔ اپلیکیشن‌های نصب‌شده پرس‌وجو می‌کند. این فهرست تنها در نمای تونل‌گذاری تفکیک‌شده دریافت می‌شود و هرگز از دستگاه ارسال نمی‌گردد.</string>
+    <string name="privacy_disclaimer_body_second_paragraph">اگر مسیریابی اپلیکیشن‌ها فعال باشد، اپلیکیشن از سیستم شما برای دریافت فهرستی از همهٔ اپلیکیشن‌های نصب‌شده پرس‌وجو می‌کند. این فهرست تنها در نمای مسیریابی اپلیکیشن‌ها دریافت می‌شود و هرگز از دستگاه ارسال نمی‌گردد.</string>
     <string name="submit_button">ارسال کردن</string>
     <string name="remove_button">حذف</string>
     <string name="reset_to_default_button">بازنشانی به حالت پیش‌فرض</string>

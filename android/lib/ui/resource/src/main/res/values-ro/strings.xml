@@ -161,7 +161,7 @@
     <string name="agree_and_continue">Acceptă și continuă</string>
     <string name="privacy_disclaimer_title">Confidențialitate</string>
     <string name="privacy_disclaimer_body_first_paragraph">Pentru a verifica dacă rulați o versiune acceptată, aplicația descarcă de la Warren un manifest de versiuni semnat și îl compară cu versiunea instalată aici. Comparația are loc pe acest dispozitiv: aplicația nu trimite către Warren niciun identificator, nicio versiune de aplicație și nicio versiune de sistem.</string>
-    <string name="privacy_disclaimer_body_second_paragraph">Dacă se utilizează funcția de tunelare divizată, atunci aplicația interoghează sistemul dvs. pentru a obține o listă cu toate aplicațiile instalate. Această listă este preluată doar în vizualizarea tunelării divizate. Lista aplicațiilor instalate nu este niciodată trimisă de pe dispozitiv.</string>
+    <string name="privacy_disclaimer_body_second_paragraph">Dacă se utilizează rutarea aplicațiilor, aplicația interoghează sistemul dvs. pentru a obține o listă cu toate aplicațiile instalate. Această listă este preluată doar în vizualizarea Rutare aplicații. Lista aplicațiilor instalate nu este niciodată trimisă de pe dispozitiv.</string>
     <string name="submit_button">Trimite</string>
     <string name="remove_button">Elimină</string>
     <string name="reset_to_default_button">Resetează la valorile implicite</string>

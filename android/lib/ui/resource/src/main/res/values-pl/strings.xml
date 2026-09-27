@@ -159,7 +159,7 @@
     <string name="agree_and_continue">Zaakceptuj i kontynuuj</string>
     <string name="privacy_disclaimer_title">Prywatność</string>
     <string name="privacy_disclaimer_body_first_paragraph">Aby sprawdzić, czy używasz obsługiwanej wersji, aplikacja pobiera z Warren podpisany manifest wersji i porównuje go z wersją zainstalowaną tutaj. Porównanie odbywa się na tym urządzeniu: aplikacja nie wysyła do Warren żadnego identyfikatora, wersji aplikacji ani wersji systemu.</string>
-    <string name="privacy_disclaimer_body_second_paragraph">Jeśli używana jest funkcja dzielonego tunelowania, aplikacja wysyła do systemu zapytanie o listę wszystkich zainstalowanych aplikacji. Lista ta jest pobierana wyłącznie w widoku dzielonego tunelowania. Lista zainstalowanych aplikacji nigdy nie jest wysyłana z urządzenia.</string>
+    <string name="privacy_disclaimer_body_second_paragraph">Jeśli używany jest routing aplikacji, aplikacja wysyła do systemu zapytanie o listę wszystkich zainstalowanych aplikacji. Lista ta jest pobierana wyłącznie w widoku routingu aplikacji. Lista zainstalowanych aplikacji nigdy nie jest wysyłana z urządzenia.</string>
     <string name="submit_button">Prześlij</string>
     <string name="remove_button">Usuń</string>
     <string name="reset_to_default_button">Przywróć domyślne</string>

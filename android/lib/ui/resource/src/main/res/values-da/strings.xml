@@ -155,7 +155,7 @@
     <string name="agree_and_continue">Accepter og fortsæt</string>
     <string name="privacy_disclaimer_title">Privatliv</string>
     <string name="privacy_disclaimer_body_first_paragraph">For at sikre at du kører en understøttet version, henter appen et signeret versionsmanifest fra Warren og sammenligner det med den version, der er installeret her. Sammenligningen sker på denne enhed: appen sender hverken identifikator, appversion eller systemversion til Warren.</string>
-    <string name="privacy_disclaimer_body_second_paragraph">Hvis funktionen split tunneling bruges, beder appen dit system om en liste over alle installerede programmer. Denne liste hentes kun i split tunnel-visningen. Listen over installerede programmer sendes aldrig fra enheden.</string>
+    <string name="privacy_disclaimer_body_second_paragraph">Hvis App-routing bruges, beder appen dit system om en liste over alle installerede programmer. Denne liste hentes kun i App-routing-visningen. Listen over installerede programmer sendes aldrig fra enheden.</string>
     <string name="submit_button">Indsend</string>
     <string name="remove_button">Fjern</string>
     <string name="reset_to_default_button">Nulstil til standard</string>

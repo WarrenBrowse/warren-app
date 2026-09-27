@@ -153,7 +153,7 @@
     <string name="agree_and_continue">同意並繼續</string>
     <string name="privacy_disclaimer_title">隱私權</string>
     <string name="privacy_disclaimer_body_first_paragraph">為確認您執行的是受支援的版本，應用程式會從 Warren 下載一份已簽署的版本清單，並與此處安裝的版本比對。比對在本裝置上完成：應用程式不會向 Warren 傳送任何識別碼、應用程式版本或系統版本。</string>
-    <string name="privacy_disclaimer_body_second_paragraph">如果使用了分割通道功能，該應用程式會查詢您的系統，以取得所有已安裝應用程式的清單。我們只會在分割通道視圖中擷取這份清單，絕不會傳送至他處。</string>
+    <string name="privacy_disclaimer_body_second_paragraph">如果使用了應用程式路由功能，該應用程式會查詢您的系統，以取得所有已安裝應用程式的清單。我們只會在應用程式路由視圖中擷取這份清單，絕不會傳送至他處。</string>
     <string name="submit_button">提交</string>
     <string name="remove_button">移除</string>
     <string name="reset_to_default_button">重設為預設值</string>

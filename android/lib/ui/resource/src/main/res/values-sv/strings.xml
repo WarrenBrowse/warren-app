@@ -155,7 +155,7 @@
     <string name="agree_and_continue">Godkänn och fortsätt</string>
     <string name="privacy_disclaimer_title">Sekretess</string>
     <string name="privacy_disclaimer_body_first_paragraph">För att säkerställa att du kör en version som stöds hämtar appen ett signerat versionsmanifest från Warren och jämför det med versionen som är installerad här. Jämförelsen sker på den här enheten: appen skickar varken identifierare, appversion eller systemversion till Warren.</string>
-    <string name="privacy_disclaimer_body_second_paragraph">Om delade tunnlar används, frågar appen ditt system om en lista med alla installerade applikationer. Listan hämtas bara i vyn för delade tunnlar. Listan med installerade applikationer skickas aldrig från enheten.</string>
+    <string name="privacy_disclaimer_body_second_paragraph">Om approutning används frågar appen ditt system om en lista med alla installerade applikationer. Listan hämtas bara i vyn för approutning. Listan med installerade applikationer skickas aldrig från enheten.</string>
     <string name="submit_button">Skicka</string>
     <string name="remove_button">Ta bort</string>
     <string name="reset_to_default_button">Återställ till standard</string>

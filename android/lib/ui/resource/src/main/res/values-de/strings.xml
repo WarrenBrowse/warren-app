@@ -155,7 +155,7 @@
     <string name="agree_and_continue">Akzeptieren und weiter</string>
     <string name="privacy_disclaimer_title">Datenschutz</string>
     <string name="privacy_disclaimer_body_first_paragraph">Um sicherzustellen, dass du eine unterstützte Version verwendest, lädt die App ein signiertes Versionsmanifest von Warren herunter und vergleicht es mit der hier installierten Version. Der Vergleich findet auf diesem Gerät statt: Die App sendet weder eine Kennung noch die App- oder Systemversion an Warren.</string>
-    <string name="privacy_disclaimer_body_second_paragraph">Wenn Split Tunneling verwendet wird, fragt die App Ihr System nach einer Liste aller installierten Anwendungen ab. Diese Liste wird nur in der Split-Tunneling-Ansicht abgerufen. Die Liste der installierten Anwendungen wird nie vom Gerät gesendet.</string>
+    <string name="privacy_disclaimer_body_second_paragraph">Wenn App-Routing verwendet wird, fragt die App Ihr System nach einer Liste aller installierten Anwendungen ab. Diese Liste wird nur in der App-Routing-Ansicht abgerufen. Die Liste der installierten Anwendungen wird nie vom Gerät gesendet.</string>
     <string name="submit_button">Absenden</string>
     <string name="remove_button">Entfernen</string>
     <string name="reset_to_default_button">Auf Standard zurücksetzen</string>

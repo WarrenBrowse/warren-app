@@ -153,7 +153,7 @@
     <string name="agree_and_continue">同意して続行</string>
     <string name="privacy_disclaimer_title">プライバシー</string>
     <string name="privacy_disclaimer_body_first_paragraph">サポート対象のバージョンを使用しているか確認するため、アプリは Warren から署名済みのバージョンマニフェストをダウンロードし、ここにインストールされているバージョンと比較します。比較はこの端末上で行われ、アプリは識別子もアプリのバージョンもシステムのバージョンも Warren に送信しません。</string>
-    <string name="privacy_disclaimer_body_second_paragraph">スプリットトンネリング機能が使用されている場合、アプリはシステムにインストール済みの全アプリケーションのリストを照会します。このリストはスプリットトンネリングビューでのみ取得されます。インストール済みアプリケーションのリストがデバイスから送信されることはありません。</string>
+    <string name="privacy_disclaimer_body_second_paragraph">アプリのルーティングを使用している場合、アプリはシステムにインストール済みの全アプリケーションのリストを照会します。このリストはアプリのルーティングの画面でのみ取得されます。インストール済みアプリケーションのリストがデバイスから送信されることはありません。</string>
     <string name="submit_button">送信</string>
     <string name="remove_button">削除</string>
     <string name="reset_to_default_button">デフォルトにリセット</string>

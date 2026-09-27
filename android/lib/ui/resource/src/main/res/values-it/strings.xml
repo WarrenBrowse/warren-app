@@ -156,7 +156,7 @@
     <string name="agree_and_continue">Accetta e continua</string>
     <string name="privacy_disclaimer_title">Privacy</string>
     <string name="privacy_disclaimer_body_first_paragraph">Per verificare che tu stia usando una versione supportata, l’app scarica da Warren un manifesto delle versioni firmato e lo confronta con la versione installata qui. Il confronto avviene su questo dispositivo: l’app non invia a Warren alcun identificativo, né la versione dell’app, né quella del sistema.</string>
-    <string name="privacy_disclaimer_body_second_paragraph">Se viene utilizzata la funzionalità di split tunneling, l\'app richiede al tuo sistema un elenco di tutte le applicazioni installate. Questo elenco viene recuperato solo nella vista split tunneling. L\'elenco delle applicazioni installate non viene mai inviato dal dispositivo.</string>
+    <string name="privacy_disclaimer_body_second_paragraph">Se viene utilizzato l\'instradamento app, l\'app richiede al tuo sistema un elenco di tutte le applicazioni installate. Questo elenco viene recuperato solo nella vista Instradamento app. L\'elenco delle applicazioni installate non viene mai inviato dal dispositivo.</string>
     <string name="submit_button">Invia</string>
     <string name="remove_button">Rimuovi</string>
     <string name="reset_to_default_button">Ripristina predefiniti</string>

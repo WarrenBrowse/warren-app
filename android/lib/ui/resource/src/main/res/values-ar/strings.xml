@@ -163,7 +163,7 @@
     <string name="agree_and_continue">الموافقة والمتابعة</string>
     <string name="privacy_disclaimer_title">الخصوصية</string>
     <string name="privacy_disclaimer_body_first_paragraph">للتأكد من أنك تستخدم إصداراً مدعوماً، ينزّل التطبيق بيان إصدارات موقّعاً من Warren ويقارنه بالإصدار المثبّت هنا. تتم المقارنة على هذا الجهاز: لا يرسل التطبيق أي معرّف ولا إصدار التطبيق ولا إصدار النظام إلى Warren.</string>
-    <string name="privacy_disclaimer_body_second_paragraph">في حال استخدام ميزة الانقسام النفقي، يستعلم التطبيق من نظامك للحصول على قائمة بجميع التطبيقات المُثبَّتة. يتم استدعاء هذه القائمة في شاشة الانقسام النفقي فقط. ولا يتم إرسال قائمة التطبيقات المُثبَّتة من الجهاز أبدًا.</string>
+    <string name="privacy_disclaimer_body_second_paragraph">في حال استخدام توجيه التطبيقات، يستعلم التطبيق من نظامك للحصول على قائمة بجميع التطبيقات المُثبَّتة. يتم استدعاء هذه القائمة في شاشة توجيه التطبيقات فقط. ولا يتم إرسال قائمة التطبيقات المُثبَّتة من الجهاز أبدًا.</string>
     <string name="submit_button">إرسال</string>
     <string name="remove_button">إزالة</string>
     <string name="reset_to_default_button">إعادة التعيين إلى الإعدادات الافتراضية</string>

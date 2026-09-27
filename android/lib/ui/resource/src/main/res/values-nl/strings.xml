@@ -155,7 +155,7 @@
     <string name="agree_and_continue">Akkoord en doorgaan</string>
     <string name="privacy_disclaimer_title">Privacy</string>
     <string name="privacy_disclaimer_body_first_paragraph">Om te controleren of je een ondersteunde versie gebruikt, downloadt de app een ondertekend versiemanifest van Warren en vergelijkt dit met de hier geïnstalleerde versie. De vergelijking gebeurt op dit apparaat: de app stuurt geen identificatie, geen appversie en geen systeemversie naar Warren.</string>
-    <string name="privacy_disclaimer_body_second_paragraph">Als de split-tunnelingfunctie wordt gebruikt, vraagt de app het systeem om een lijst van alle geïnstalleerde toepassingen. Deze lijst wordt alleen opgehaald in de split-tunnelingweergave. De lijst van geïnstalleerde toepassingen wordt nooit verzonden vanaf het apparaat.</string>
+    <string name="privacy_disclaimer_body_second_paragraph">Als app-routing wordt gebruikt, vraagt de app het systeem om een lijst van alle geïnstalleerde toepassingen. Deze lijst wordt alleen opgehaald in de app-routingweergave. De lijst van geïnstalleerde toepassingen wordt nooit verzonden vanaf het apparaat.</string>
     <string name="submit_button">Verzenden</string>
     <string name="remove_button">Verwijderen</string>
     <string name="reset_to_default_button">Standaardwaarde herstellen</string>

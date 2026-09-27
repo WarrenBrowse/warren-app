@@ -156,7 +156,7 @@
     <string name="agree_and_continue">Accepter et continuer</string>
     <string name="privacy_disclaimer_title">Confidentialité</string>
     <string name="privacy_disclaimer_body_first_paragraph">Pour vérifier que vous utilisez une version prise en charge, l\'application télécharge auprès de Warren un manifeste de versions signé et le compare à la version installée ici. La comparaison a lieu sur cet appareil : l\'application n\'envoie à Warren ni identifiant, ni version de l\'application, ni version du système.</string>
-    <string name="privacy_disclaimer_body_second_paragraph">Si la fonctionnalité de split tunneling est utilisée, l\'application demande à votre système la liste de toutes les applications installées. Cette liste n\'est récupérée que dans la vue de split tunneling. La liste des applications installées n\'est jamais envoyée par l\'appareil.</string>
+    <string name="privacy_disclaimer_body_second_paragraph">Si le routage des apps est utilisé, l\'application demande à votre système la liste de toutes les applications installées. Cette liste n\'est récupérée que dans la vue Routage des apps. La liste des applications installées n\'est jamais envoyée par l\'appareil.</string>
     <string name="submit_button">Envoyer</string>
     <string name="remove_button">Supprimer</string>
     <string name="reset_to_default_button">Réinitialiser à la valeur par défaut</string>
