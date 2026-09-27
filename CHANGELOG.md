@@ -80,6 +80,12 @@ Line wrap the file at 100 chars.                                              Th
 - [Android] Ask before turning on Country per app makes the apps with a country the only ones in
   the VPN. While VPN only for is on and none of its apps is on the device, every app uses the VPN,
   and turning on Country per app over saved countries narrowed it to those apps without a word.
+- [Android] Give the apps sent to another country their route within a second or two of the first
+  connection. The first token refresh could not reach the server while the VPN was connecting, so
+  those apps waited up to a minute, and past two of them, until the next reconnect.
+- [Android] Keep the VPN connected when the server moves the connection to another address inside
+  the tunnel. The app dropped the connection and reconnected; a forwarded port is now asked for
+  again on the new address.
 
 ## [1.1.37] - 2026-09-27
 ### Added

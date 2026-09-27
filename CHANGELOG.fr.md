@@ -79,6 +79,13 @@ par l'application, gardez-le tel quel.
   seules à passer par le VPN. Tant que VPN ciblé est activé sans qu'aucune de ses apps soit
   installée sur l'appareil, toutes les apps passent par le VPN, et activer Pays par app avec des
   pays déjà enregistrés le réduisait à ces apps sans prévenir.
+- [Android] Donner leur route aux apps envoyées vers un autre pays une à deux secondes après la
+  première connexion. Le premier renouvellement des tokens ne pouvait pas joindre le serveur
+  pendant que le VPN se connectait : ces apps attendaient jusqu'à une minute, et au-delà de deux,
+  jusqu'à la reconnexion suivante.
+- [Android] Garder le VPN connecté quand le serveur déplace la connexion vers une autre adresse dans
+  le tunnel. L'app coupait la connexion puis se reconnectait ; un port redirigé est maintenant
+  redemandé sur la nouvelle adresse.
 
 ## [1.1.37] - 2026-09-27
 ### Ajouté

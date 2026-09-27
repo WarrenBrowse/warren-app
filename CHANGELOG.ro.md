@@ -76,6 +76,13 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   niciuna dintre aplicațiile lui nu e pe dispozitiv, toate aplicațiile folosesc VPN-ul, iar
   activarea „Țară per aplicație” cu țări deja salvate îl restrângea la acele aplicații fără niciun
   avertisment.
+- [Android] Aplicațiile trimise în altă țară își primesc ruta la o secundă sau două după prima
+  conectare. Prima reîmprospătare a tokenurilor nu putea ajunge la server cât timp VPN-ul se
+  conecta, așa că aceste aplicații așteptau până la un minut, iar dincolo de două, până la
+  reconectarea următoare.
+- [Android] VPN-ul rămâne conectat când serverul mută conexiunea pe o altă adresă din tunel.
+  Aplicația întrerupea conexiunea și se reconecta; un port redirecționat e acum cerut din nou pe
+  noua adresă.
 
 ## [1.1.37] - 2026-09-27
 ### Adăugat

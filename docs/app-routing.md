@@ -314,13 +314,17 @@ Route admission by anchor (warren-core doc 107 sections 10 and 11;
   60 s before a move, so a route cannot flap between the two.
 
 A tunnel started before its credentials
-(`talpid-warren-tunnel/src/app_routes/main_anchor.rs`):
+(`warren-app-routes/src/main_anchor.rs`, shared by the desktop tunnel and
+the Android engine):
 
 - A fresh daemon has neither tokens nor the route admission key when its
   first tunnel starts: both come from the wallet's first refresh, which the
   first tunnel's parameters start. The daemon announces every finished
   refresh round on a watch channel (`Credentials`: rounds, and whether the
-  wallet holds tokens this epoch), and the tunnel follows it.
+  wallet holds tokens this epoch), and the tunnel follows it. The Android
+  engine does the same per process (`warren-jni/src/token_provider.rs`),
+  and counts the current epoch's tokens of a restored bundle as already
+  there, so the first tunnel of a process that restored them does not wait.
 - The first tunnel of a daemon run holds its main session until the wallet
   holds tokens for the current epoch or the first round ends, 4 s at most
   (`FIRST_REFRESH_WAIT`; the firewall lets the daemon reach the API while
@@ -343,14 +347,74 @@ A tunnel started before its credentials
   make-before-break setup of the main session
   (`MigrateHandle::overlap_reconnect`), which is admitted on a token and
   anchors. The exit places that session on another inner address than the
-  wallet session's, and the tunnel adopts a new address by rebuilding itself
-  (about 250 ms blocked, the connections of the moment reset), which is why
-  the first tunnel waits for the first round instead. The wallet session and
-  the token session then reach the same exit from the same address a moment
-  apart, so that exit can tie the token's serial, and the routes anchored on
-  it, to the wallet; the source address alone would allow the same.
+  wallet session's. The desktop tunnel adopts a new address by rebuilding
+  itself (about 250 ms blocked, the connections of the moment reset), which
+  is why the first tunnel waits for the first round instead. The Android
+  engine follows it in place: its VpnService address is fixed and the main
+  session's 1:1 remap reads the assigned addresses from a shared cell
+  (`RemapAddresses`, `warren-jni/src/remap_tun.rs`), so the session goes on
+  (before, any move of the inner address ended the session and handed it
+  to Kotlin's drop policy); the connections of the moment reset as on
+  desktop, and a forwarded port is asked for again, since the exit keys it
+  on the inner address.
+- Residual, evaluated 2026-09-27: the wallet session and the token session
+  reach the same exit from the same address a moment apart (the wallet
+  session closes as the token session takes over), so that exit can tie the
+  token's serial, and the routes anchored on it, to the wallet; the source
+  address alone would allow the same. Setting the token session up on
+  another exit of the same country (`MigrateHandle::migrate_to`) was
+  weighed and left out:
+  - it removes the link from one exit's view only. The second exit sees the
+    same client address on a one-hop circuit (the same entry relay on a
+    two-hop one), and the wallet session's close at the first exit lines up
+    in time with the token session's setup at the second, so whoever sees
+    both exits, the fleet's operator included, still ties them;
+  - it costs the user: the public address of every app on the main
+    connection changes a few seconds after the connect (the setup on the
+    same exit keeps that exit's address, only the inner one changes), a
+    forwarded port does not follow to another exit, the location shown
+    changes under the user, and a user who picked one server, or a country
+    or city with a single exit, cannot be moved at all;
+  - the beta fleet has one exit per country (six active exits, DE, FI, FR,
+    NL, RO, SG, `GET /v1/exits` on 2026-09-27), so no such exit exists
+    today.
+
+  What narrows the residual is making the setup again rare: the first tunnel
+  waits for the round's tokens, and on Android resolves the API host before
+  its TUN so the round can finish during that wait (below), so the main
+  session is admitted on a token from its first setup and the wallet never
+  signs in; the setup again happens only when no token came within the 4 s.
 - A route that ended for want of a token, or a waiting one, dials again as
   soon as a round brings tokens or the anchor is bound, not 60 s later.
+- Android: the system resolver answers the app through its own VPN, so from
+  the moment the TUN is established until the tunnel carries traffic a name
+  lookup waits for the tunnel. The round's sockets are protected
+  (`VpnService.protect`), its lookups were not: on the `warren-test`
+  emulator the token directory request resolved in 2 to 20 ms, and the next
+  request of the round (the current epoch's mint) waited 4.3 s for its
+  lookup, answered 0.1 s after the tunnel came up, so the first tunnel's wait
+  always ran out and its main session signed in with the wallet. The mint
+  transports now keep a host's resolution for 5 minutes
+  (`ResolveCache`, `warren-jni/src/protected_transport.rs`), primed before
+  the TUN while Kotlin fetches the multi-hop directory, and dropped when none
+  of its addresses connects.
+- Measured 2026-09-27 on the `warren-test` emulator (API 35, arm64, a
+  `betaRelease` build installed next to the existing app under another
+  application id, fresh data, the routing test wallet 2), main on NL over two
+  hops, Chrome given DE and FOSS Browser given FI, first connect of the
+  process. Before the resolution fix (two runs): the wait ran out after 4 s,
+  the main session signed in with the wallet, the round's tokens came 0.3
+  to 0.4 s after the tunnel, the main session was set up again on a token
+  and its new inner address followed in place, the anchor was bound 5.5 to
+  5.9 s after the connect, and the two routes, started on tokens, moved to
+  it. With it: the wait ended after 1.0 s on the current epoch's tokens,
+  the main session was admitted on a token, the anchor was bound 1.4 s
+  after the connect (its key comes with the end of the round, since the
+  Android manager says it has read the directory only then), and both
+  routes moved from their token onto the anchor within 1.8 s of the
+  connect, with no setup again ("Reconnects 0"). Chrome read
+  167.233.127.54 (DE), FOSS Browser 37.27.217.153 (FI), and a request from
+  `adb shell`, which has no country, 50.7.46.90 (NL).
 - Measured 2026-09-27 in a Debian 13 VM (Lima, aarch64, daemon-only package
   built with `./build.sh --daemon-only --optimize`, beta env), main on NL and
   five route countries (DE, FI, FR, RO, SG). Fresh install, first connect:
@@ -395,7 +459,8 @@ Tokens (`mullvad-daemon/src/warren_token_provider.rs`):
   wallet is held elsewhere, which is the wallet's device limit).
 - The wallet's batches are minted in the background, when the first tunnel
   starts and every 10 minutes after; a failed round is retried after 15 s,
-  then 30 s, doubling up to the 10 minutes.
+  then 30 s, doubling up to the 10 minutes (`tokens::refresh_forever`, the
+  same loop on Android, which used to wait the whole 10 minutes).
 - Why the first round used to fail (`all API hosts are unreachable`,
   reproduced 2026-09-27 in the Debian 13 VM on a daemon started with
   auto-connect): it opens its connection when the first tunnel's parameters
@@ -885,8 +950,10 @@ Android's own:
   the main pumps run; route sessions start once the main session is up and are
   stopped and awaited with each attempt. `VpnService.protect` is process wide,
   so a route's carrier needs no escape and no relay is named to a firewall.
-  The main session anchors whenever the token directory offers a signed KEM
-  key and the lookup is registered, a country set or not. The token manager
+  The main session anchors whenever the lookup is registered, a country set
+  or not, and waits for the key when the token directory has offered none
+  yet (a first connect; section 2.2, A tunnel started before its
+  credentials, for the first connect of a process). The token manager
   of the wallet trusts the pinned server keys for that signature, keeps the
   last signed block in the app's files directory, and says when it has read
   the directory in this process (a restored token bundle knows its epoch
