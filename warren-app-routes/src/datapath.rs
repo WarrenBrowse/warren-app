@@ -18,8 +18,16 @@
 //! whoever changed the policy (the controller), and the ones answering a
 //! segment of such a connection by the main session's device, on its next
 //! read.
+//!
+//! Where the owner of a flow costs a platform call (Android), the table runs
+//! the lookups on threads of its own ([`RoutingTable::with_owner_workers`]):
+//! a new flow's packets are held, never sent anywhere, until its owner is
+//! known, and every other flow keeps moving meanwhile. The held packets then
+//! go where the router says; the main session's device returns the ones for
+//! main before it reads the TUN again.
 
 use std::{
+    collections::{HashMap, VecDeque},
     io,
     sync::{
         Arc,
@@ -30,15 +38,22 @@ use std::{
 
 use parking_lot::Mutex;
 use talpid_app_routing::{
-    owner::OwnerResolver,
-    router::{Counters, Delivery, Policy, RouteId, RouteState, Router, Verdict},
+    flow::FlowKey,
+    owner::{OwnerResolver, SocketOwner},
+    router::{Counters, Delivery, OwnerQuery, Policy, RouteId, RouteState, Router, Verdict},
 };
-use tokio::sync::mpsc;
+use tokio::sync::{Notify, mpsc};
 use warrenguard_transport_core::PacketDevice;
 
 /// Uplink packets waiting for one route session. A route session that falls
 /// behind loses its newest packets, the way a full TUN queue would.
 const ROUTE_QUEUE_PACKETS: usize = 1024;
+
+/// New flows whose packets wait for their owner at most, and packets each
+/// one keeps: past either, a packet is dropped, as a full TUN queue would
+/// drop it.
+const HELD_FLOWS: usize = 1024;
+const HELD_PACKETS_PER_FLOW: usize = 64;
 
 /// The router between the TUN device and the sessions, shared by the main
 /// uplink pump, the route sessions' downlink pumps and the controller.
@@ -48,6 +63,12 @@ pub struct RoutingTable<R> {
     active: AtomicBool,
     /// Whether resets wait to be written toward the apps.
     resets_pending: AtomicBool,
+    /// Whether owners are looked up by the table's own thread.
+    deferred: bool,
+    /// Whether held packets for main wait in [`Inner::released`].
+    released_pending: AtomicBool,
+    /// Wakes the main device when held packets for main, or resets, wait.
+    wake: Notify,
     inner: Mutex<Inner<R>>,
 }
 
@@ -55,6 +76,12 @@ struct Inner<R> {
     router: Router<R>,
     /// The queue of each route session, by route.
     queues: Vec<Option<mpsc::Sender<Vec<u8>>>>,
+    /// The packets of each new flow whose owner is being looked up.
+    held: HashMap<FlowKey, Vec<Vec<u8>>>,
+    /// Held packets the router sent to main, oldest first.
+    released: VecDeque<Vec<u8>>,
+    /// The owner lookups for the table's own thread.
+    lookups: Option<std::sync::mpsc::Sender<OwnerQuery>>,
 }
 
 /// Where an uplink packet went.
@@ -70,14 +97,143 @@ impl<R: OwnerResolver + Send + 'static> RoutingTable<R> {
     /// An inactive table over `resolver`: every packet stays on the main
     /// path until [`Self::set_policy`] routes an app.
     pub fn new(resolver: R) -> Arc<Self> {
-        Arc::new(Self {
+        Arc::new(Self::build(Router::new(resolver), None))
+    }
+
+    /// As [`Self::new`], looking the owner of each new flow up on `workers`
+    /// threads of its own rather than on the packet path, each with a lookup
+    /// from `make_lookup`, so one slow answer holds only its own flow. A
+    /// lookup gets the flow and whether it is a TCP connection under way
+    /// (see [`OwnerQuery`]). `resolver` still names the program of each
+    /// owner, once per process.
+    pub fn with_owner_workers<L>(
+        resolver: R,
+        workers: usize,
+        make_lookup: impl Fn() -> L,
+    ) -> Arc<Self>
+    where
+        L: FnMut(&FlowKey, bool) -> SocketOwner + Send + 'static,
+    {
+        let (queries, answered) = std::sync::mpsc::channel::<OwnerQuery>();
+        let answered = Arc::new(parking_lot::Mutex::new(answered));
+        let mut router = Router::new(resolver);
+        router.defer_owner_lookups();
+        let table = Arc::new(Self::build(router, Some(queries)));
+        for worker in 0..workers.max(1) {
+            // The threads hold the table weakly and end with it: dropping the
+            // table drops the sender they read.
+            let weak = Arc::downgrade(&table);
+            let answered = Arc::clone(&answered);
+            let mut lookup = make_lookup();
+            let spawned = std::thread::Builder::new()
+                .name(format!("app-routes-owner-{worker}"))
+                .spawn(move || {
+                    loop {
+                        let Ok(query) = answered.lock().recv() else {
+                            break;
+                        };
+                        let owner = lookup(&query.flow, query.under_way);
+                        let Some(table) = weak.upgrade() else {
+                            break;
+                        };
+                        table.complete(query, owner);
+                    }
+                });
+            if let Err(error) = spawned {
+                // With no thread at all, new flows wait for good: blocked,
+                // never sent elsewhere.
+                log::error!("App routing: an owner lookup thread did not start: {error}");
+            }
+        }
+        table
+    }
+
+    fn build(router: Router<R>, lookups: Option<std::sync::mpsc::Sender<OwnerQuery>>) -> Self {
+        Self {
             active: AtomicBool::new(false),
             resets_pending: AtomicBool::new(false),
+            deferred: lookups.is_some(),
+            released_pending: AtomicBool::new(false),
+            wake: Notify::new(),
             inner: Mutex::new(Inner {
-                router: Router::new(resolver),
+                router,
                 queues: Vec::new(),
+                held: HashMap::new(),
+                released: VecDeque::new(),
+                lookups,
             }),
-        })
+        }
+    }
+
+    /// Decides for the flow of `query`, whose owner is `owner`, and sends its
+    /// held packets where the router says.
+    fn complete(&self, query: OwnerQuery, owner: SocketOwner) {
+        let now = Instant::now();
+        let mut inner = self.inner.lock();
+        inner.router.complete(query, owner, now);
+        for mut packet in inner.held.remove(&query.flow).unwrap_or_default() {
+            let verdict = inner.router.uplink(&mut packet, now);
+            if let Some(main) = Self::dispatch(&mut inner, verdict, packet) {
+                inner.released.push_back(main);
+            }
+        }
+        Self::send_queries(&mut inner);
+        self.note_resets(&inner);
+        let released = !inner.released.is_empty();
+        if released {
+            self.released_pending.store(true, Ordering::Release);
+        }
+        drop(inner);
+        if released || self.resets_pending.load(Ordering::Acquire) {
+            self.wake.notify_one();
+        }
+    }
+
+    /// The oldest held packet the router sent to main.
+    fn take_released(&self) -> Option<Vec<u8>> {
+        if !self.released_pending.load(Ordering::Acquire) {
+            return None;
+        }
+        let mut inner = self.inner.lock();
+        let packet = inner.released.pop_front();
+        if inner.released.is_empty() {
+            self.released_pending.store(false, Ordering::Release);
+        }
+        packet
+    }
+
+    /// Sends a packet where `verdict` says, and returns it when it is for
+    /// main.
+    fn dispatch(inner: &mut Inner<R>, verdict: Verdict, packet: Vec<u8>) -> Option<Vec<u8>> {
+        match verdict {
+            Verdict::Main => return Some(packet),
+            Verdict::Drop => {}
+            Verdict::Route(route) => {
+                if let Some(Some(queue)) = inner.queues.get(usize::from(route.0)) {
+                    // A full queue drops the packet: the route session is
+                    // behind, and main must never carry it instead.
+                    let _ = queue.try_send(packet);
+                }
+            }
+            Verdict::Hold(flow) => {
+                if inner.held.len() < HELD_FLOWS || inner.held.contains_key(&flow) {
+                    let held = inner.held.entry(flow).or_default();
+                    if held.len() < HELD_PACKETS_PER_FLOW {
+                        held.push(packet);
+                    }
+                }
+            }
+        }
+        None
+    }
+
+    fn send_queries(inner: &mut Inner<R>) {
+        let queries = inner.router.take_owner_queries();
+        if let Some(lookups) = &inner.lookups {
+            for query in queries {
+                let _ = lookups.send(query);
+            }
+        }
     }
 
     /// Replaces the policy. The connections it resets toward their apps wait
@@ -156,18 +312,12 @@ impl<R: OwnerResolver + Send + 'static> RoutingTable<R> {
             self.active.store(false, Ordering::Release);
         }
         self.note_resets(&inner);
-        match verdict {
-            Verdict::Main => Uplink::Main,
-            Verdict::Drop => Uplink::Taken,
-            Verdict::Route(route) => {
-                if let Some(Some(queue)) = inner.queues.get(usize::from(route.0)) {
-                    // A full queue drops the packet: the route session is
-                    // behind, and main must never carry it instead.
-                    let _ = queue.try_send(std::mem::take(packet));
-                }
-                Uplink::Taken
-            }
+        if verdict == Verdict::Main {
+            return Uplink::Main;
         }
+        let _ = Self::dispatch(&mut inner, verdict, std::mem::take(packet));
+        Self::send_queries(&mut inner);
+        Uplink::Taken
     }
 
     fn downlink(&self, route: RouteId, packet: &mut [u8]) -> Delivery {
@@ -215,10 +365,24 @@ where
     R: OwnerResolver + Send + 'static,
 {
     async fn recv(&self) -> io::Result<Vec<u8>> {
-        // Resets answering what `try_recv` took out wait for this read.
-        self.table.write_resets(&self.device).await;
         loop {
-            let mut packet = self.device.recv().await?;
+            // Resets answering what `try_recv` took out, or what the owner
+            // lookups decided, wait for this read.
+            self.table.write_resets(&self.device).await;
+            if let Some(packet) = self.table.take_released() {
+                return Ok(packet);
+            }
+            let mut packet = if self.table.deferred {
+                // The TUN's read is cancel-safe: a packet is taken off it
+                // only once it is ready, never across an await.
+                tokio::select! {
+                    biased;
+                    () = self.table.wake.notified() => continue,
+                    packet = self.device.recv() => packet?,
+                }
+            } else {
+                self.device.recv().await?
+            };
             if self.for_main(&mut packet).await {
                 return Ok(packet);
             }
@@ -230,6 +394,9 @@ where
     }
 
     fn try_recv(&self) -> io::Result<Option<Vec<u8>>> {
+        if let Some(packet) = self.table.take_released() {
+            return Ok(Some(packet));
+        }
         while let Some(mut packet) = self.device.try_recv()? {
             if self.table.uplink(&mut packet) == Uplink::Main {
                 return Ok(Some(packet));
@@ -325,7 +492,7 @@ where
 mod tests {
     use std::{sync::atomic::Ordering, time::Duration};
 
-    use talpid_app_routing::router::SessionAddresses;
+    use talpid_app_routing::{owner::OwnerResolver, router::SessionAddresses};
     use warrenguard_transport_core::FakeTun;
 
     use super::*;
@@ -497,6 +664,63 @@ mod tests {
             (REMOTE, MAIN)
         );
         assert_eq!(answers[0][20 + 13] & 0x04, 0x04, "a reset");
+    }
+
+    /// A table whose owner lookups run on its own thread, answering from
+    /// [`TwoApps`], the browser's only once `gate` lets it.
+    fn deferred_table() -> (Arc<RoutingTable<TwoApps>>, std::sync::mpsc::Sender<()>) {
+        let (gate, opened) = std::sync::mpsc::channel::<()>();
+        let opened = Arc::new(parking_lot::Mutex::new(opened));
+        let table = RoutingTable::with_owner_workers(TwoApps::default(), 2, || {
+            let opened = Arc::clone(&opened);
+            let mut answers = TwoApps::default();
+            move |flow: &FlowKey, _| {
+                if flow.local.port() == BROWSER_PORT {
+                    let _ = opened.lock().recv();
+                }
+                answers
+                    .socket_owner(flow)
+                    .map_or(SocketOwner::Unknown, SocketOwner::Process)
+            }
+        });
+        table.set_policy(browser_on_route(RouteState::Connected(addresses(ROUTE))));
+        (table, gate)
+    }
+
+    #[tokio::test]
+    async fn a_new_flow_for_main_comes_out_of_the_main_device_once_its_owner_is_known() {
+        let (table, _gate) = deferred_table();
+        let tun = FakeTun::new();
+        let routed = RoutedTun::new(tun.clone(), Arc::clone(&table));
+        let packet = syn(EDITOR_PORT);
+
+        tun.inject_inbound(packet.clone());
+
+        assert_eq!(within_a_second(routed.recv()).await.unwrap(), packet);
+    }
+
+    #[tokio::test]
+    async fn a_slow_owner_lookup_holds_its_flow_and_no_other() {
+        let (table, gate) = deferred_table();
+        let queue = table.open_route(ROUTE_0);
+        let tun = FakeTun::new();
+        let routed = RoutedTun::new(tun.clone(), Arc::clone(&table));
+        let route = RouteTun::new(tun.clone(), Arc::clone(&table), ROUTE_0, queue);
+        let editor = syn(EDITOR_PORT);
+
+        tun.inject_inbound(syn(BROWSER_PORT));
+        tun.inject_inbound(editor.clone());
+        let meanwhile = within_a_second(routed.recv()).await.unwrap();
+        let held = route.try_recv().unwrap();
+        gate.send(()).unwrap();
+        let released = within_a_second(route.recv()).await.unwrap();
+
+        assert_eq!(meanwhile, editor, "the other flow was not held");
+        assert!(
+            held.is_none(),
+            "nothing of the browser went anywhere before its owner was known"
+        );
+        assert_eq!(source(&released), ROUTE);
     }
 
     #[tokio::test]

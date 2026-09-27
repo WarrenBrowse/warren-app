@@ -48,6 +48,10 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   în timpul conexiunii, sau care primește ori pierde o țară, sunt resetate, ca aplicația să se
   reconecteze imediat prin noua rută. Înainte, conexiunile ei rămâneau blocate: un browser aștepta,
   inclusiv rezolvarea numelor, până era repornit.
+- [Android] Traficul tuturor aplicațiilor continuă cât timp „Țară per aplicație” află ce
+  aplicație a deschis o conexiune nouă. Căutarea întreabă sistemul o dată pe conexiune și bloca
+  până acum tot tunelul între timp, iar o rafală de conexiuni noi ducea la pauze de până la o
+  secundă.
 
 ## [1.1.37] - 2026-09-27
 ### Adăugat

@@ -218,6 +218,10 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_notifyPackagesCha
     crate::flow_owner::packages_changed();
 }
 
+/// Threads looking up the owners of new flows, so a burst of new flows is
+/// answered in parallel rather than one Binder call after the other.
+const OWNER_LOOKUP_THREADS: usize = 4;
+
 /// Types of one tunnel's route side on Android.
 type Resolver = crate::flow_owner::AndroidOwnerResolver<JniOwnerLookup>;
 type Table = warren_app_routes::RoutingTable<Resolver>;
@@ -276,8 +280,25 @@ impl AppRoutes {
             publish_status,
         ));
 
-        let table = warren_app_routes::RoutingTable::new(
+        // `getConnectionOwnerUid` is a Binder call: it runs on the table's
+        // own threads, so a new flow waits for its owner without holding
+        // every other packet of the tunnel (docs/app-routing.md 2.1).
+        let table = warren_app_routes::RoutingTable::with_owner_workers(
             crate::flow_owner::AndroidOwnerResolver::new(JniOwnerLookup),
+            OWNER_LOOKUP_THREADS,
+            || {
+                let mut resolver = crate::flow_owner::AndroidOwnerResolver::new(JniOwnerLookup);
+                move |flow: &talpid_app_routing::flow::FlowKey, under_way: bool| {
+                    use talpid_app_routing::owner::{OwnerResolver, SocketOwner};
+                    if under_way {
+                        resolver
+                            .socket_owner(flow)
+                            .map_or(SocketOwner::Unknown, SocketOwner::Process)
+                    } else {
+                        resolver.owner(flow)
+                    }
+                }
+            },
         );
         let mut config = RouteSessionConfig::new(Some(Arc::clone(&setup.tokens.source)));
         config.anchor = setup.anchor.clone();

@@ -58,6 +58,16 @@ impl AppSide {
     }
 }
 
+impl AppSide {
+    /// Whether `segment` is the SYN that opened this connection, sent again:
+    /// nothing acknowledged yet, and the same sequence number.
+    pub(crate) fn opened_by(&self, segment: &Segment) -> bool {
+        self.expects.is_none()
+            && segment.flags & FLAG_SYN != 0
+            && self.next == Some(segment.seq.wrapping_add(segment.len))
+    }
+}
+
 /// The later of `current` and `candidate` in sequence space.
 fn furthest(current: Option<u32>, candidate: u32) -> u32 {
     match current {

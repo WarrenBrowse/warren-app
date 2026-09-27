@@ -461,6 +461,12 @@ impl<V: Copy> FlowTable<V> {
             .map(|entry| entry.value)
     }
 
+    /// The value recorded for `key`, to update, without counting anything
+    /// as activity.
+    pub fn get_mut(&mut self, key: &FlowKey) -> Option<&mut V> {
+        self.entries.get_mut(key).map(|entry| &mut entry.value)
+    }
+
     /// Forgets `key`.
     pub fn remove(&mut self, key: &FlowKey) {
         self.entries.remove(key);

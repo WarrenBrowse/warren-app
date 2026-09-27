@@ -49,9 +49,13 @@ for burst in $(seq 1 "$BURSTS"); do
     sleep 2
     started="$(now_ms)"
     # One UDP socket per process, so one new flow each; all started at once.
-    dsh "i=0; while [ \$i -lt $FLOWS ]; do (echo x | nc -u -n -w 1 $SINK 9 >/dev/null 2>&1 &); i=\$((i+1)); done"
+    # toybox nc keeps a UDP socket open after its input ends: -q 1 makes
+    # each one exit a second later, since thousands left running exhaust the device's
+    # memory and the low memory killer takes the VPN app with them.
+    dsh "i=0; while [ \$i -lt $FLOWS ]; do (echo x | nc -u -n -q 1 $SINK 9 >/dev/null 2>&1 &); i=\$((i+1)); done"
     spawned="$(now_ms)"
     wait "$pinger"
+    dsh "pkill -x nc" || true
     echo "burst $burst: $FLOWS flows spawned in $((spawned - started)) ms;" \
         "ping $(rtts < "$OUT_DIR/owner-lookup-ping-$burst.txt" | summary)"
 done

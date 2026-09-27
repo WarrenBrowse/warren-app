@@ -16,6 +16,10 @@
 //!   never falls back to the main session;
 //! - a later fragment whose first fragment was not seen is dropped, since its
 //!   datagram may be a routed app's;
+//! - where asking the OS costs a platform call per new flow (Android), the
+//!   router may leave that call to its caller ([`Router::defer_owner_lookups`]):
+//!   a new flow's packets are then held, never sent anywhere, until
+//!   [`Router::complete`] names its owner;
 //! - a TCP connection whose app changed session under it (another country,
 //!   none, or a route ended for good) is reset toward the app, and its
 //!   segments are dropped: the exit it lives at no longer sees them, and any
@@ -187,6 +191,21 @@ pub enum Verdict {
     /// Through this route session; its source has been rewritten.
     Route(RouteId),
     Drop,
+    /// Held, untouched, until [`Router::complete`] names the owner of this
+    /// flow: then handed to [`Router::uplink`] again.
+    Hold(FlowKey),
+}
+
+/// A new flow whose owner the caller looks up away from the packet path
+/// ([`Router::defer_owner_lookups`]), and answers through
+/// [`Router::complete`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OwnerQuery {
+    pub flow: FlowKey,
+    /// A TCP segment of a connection under way: its owner is searched for
+    /// among every process ([`OwnerResolver::socket_owner`]), a new flow's
+    /// among the watched programs' ([`OwnerResolver::owner`]).
+    pub under_way: bool,
 }
 
 /// What to do with a packet a route session delivered.
@@ -222,6 +241,9 @@ enum Binding {
     /// A TCP connection reset toward its app because the app changed
     /// session: its segments are dropped and each is answered with a reset.
     Reset,
+    /// Its owner is being looked up away from the packet path: its packets
+    /// are held.
+    Pending,
 }
 
 /// What the router keeps about a live flow.
@@ -310,6 +332,9 @@ pub struct Router<R> {
     counters: Counters,
     /// Resets waiting to be written toward the apps.
     resets: Vec<Vec<u8>>,
+    /// Whether owner lookups are left to the caller.
+    deferred: bool,
+    queries: Vec<OwnerQuery>,
 }
 
 impl<R: OwnerResolver> Router<R> {
@@ -332,6 +357,47 @@ impl<R: OwnerResolver> Router<R> {
             last_sweep: None,
             counters: Counters::default(),
             resets: Vec::new(),
+            deferred: false,
+            queries: Vec::new(),
+        }
+    }
+
+    /// Leaves the owner lookup of every new flow to the caller: its packets
+    /// get [`Verdict::Hold`], its lookup waits in [`Self::take_owner_queries`],
+    /// and [`Self::complete`] decides once the caller has the answer. For a
+    /// resolver whose lookup is live and slow enough to stall the packet path
+    /// (a platform call per flow); a snapshot resolver keeps the lookup here,
+    /// where the snapshot's age is checked against the packet's.
+    pub fn defer_owner_lookups(&mut self) {
+        self.deferred = true;
+    }
+
+    /// The owner lookups waiting for the caller.
+    pub fn take_owner_queries(&mut self) -> Vec<OwnerQuery> {
+        std::mem::take(&mut self.queries)
+    }
+
+    /// Decides for the flow of `query`, whose socket `owner` holds, under the
+    /// policy in force now. A flow no longer waiting (a new policy forgot it,
+    /// or a new connection on its ports was attributed again) is left alone:
+    /// its held packets, handed to [`Self::uplink`] again, find it as it is.
+    pub fn complete(&mut self, query: OwnerQuery, owner: SocketOwner, now: Instant) {
+        let waiting = self
+            .flows
+            .as_ref()
+            .and_then(|flows| flows.peek(&query.flow, now))
+            .is_some_and(|tracked| tracked.binding == Binding::Pending);
+        if !waiting {
+            return;
+        }
+        let (binding, process) = self.decide(query.under_way, owner);
+        if let Some(tracked) = self
+            .flows
+            .as_mut()
+            .and_then(|flows| flows.get_mut(&query.flow))
+        {
+            tracked.binding = binding;
+            tracked.process = process;
         }
     }
 
@@ -423,6 +489,14 @@ impl<R: OwnerResolver> Router<R> {
             let before = match tracked.binding {
                 Binding::Main => Target::Main,
                 Binding::Route(route) => Target::Session(old.session(route)),
+                // Its owner is not known yet: decided under the new policy.
+                Binding::Pending => {
+                    return if active {
+                        Revision::Keep
+                    } else {
+                        Revision::Forget
+                    };
+                }
                 // Already closing or blocked: only a policy routing nothing
                 // lets them go, once they have lingered.
                 Binding::Blocked | Binding::Reset => {
@@ -517,6 +591,9 @@ impl<R: OwnerResolver> Router<R> {
                 if let Some(fragment) = fragment {
                     self.uplink_fragments.remember(fragment, binding, arrived);
                 }
+                if binding == Binding::Pending {
+                    return Verdict::Hold(key);
+                }
                 if binding == Binding::Reset
                     && self.resets.len() < MAX_QUEUED_RESETS
                     && let Some(answer) = segment.and_then(|segment| reset::answer(&key, &segment))
@@ -539,7 +616,9 @@ impl<R: OwnerResolver> Router<R> {
                     .and_then(|flows| flows.peek(&key, arrived))
                     .map(|tracked| tracked.binding)
                 {
-                    Some(Binding::Route(_) | Binding::Blocked | Binding::Reset) => self.dropped(),
+                    Some(
+                        Binding::Route(_) | Binding::Blocked | Binding::Reset | Binding::Pending,
+                    ) => self.dropped(),
                     _ => Verdict::Main,
                 };
             }
@@ -638,13 +717,20 @@ impl<R: OwnerResolver> Router<R> {
         arrived: Instant,
     ) -> Binding {
         // A connection opening on a 5-tuple that is still known is a new
-        // connection, possibly from another program: attribute it again.
+        // connection, possibly from another program: attribute it again. A
+        // SYN the connection sent already (a retransmission, or a held one
+        // handed back) is not, unless the connection was reset: nothing of it
+        // lives at an exit yet, so it may open through its new session.
         let opening = is_opening(key, tcp_flags);
-        if !opening
-            && let Some(tracked) = self
-                .flows
-                .as_mut()
-                .and_then(|flows| flows.lookup_mut(&key, Direction::Uplink, tcp_flags, arrived))
+        if let Some(tracked) = self
+            .flows
+            .as_mut()
+            .and_then(|flows| flows.lookup_mut(&key, Direction::Uplink, tcp_flags, arrived))
+            .filter(|tracked| {
+                !opening
+                    || (tracked.binding != Binding::Reset
+                        && segment.is_some_and(|segment| tracked.app_side.opened_by(segment)))
+            })
         {
             if let Some(segment) = segment {
                 tracked.app_side.follow(segment);
@@ -711,13 +797,20 @@ impl<R: OwnerResolver> Router<R> {
         if key.transport == Transport::IcmpEcho {
             return (Binding::Main, None);
         }
-        self.ensure_fresh_view(arrived);
         // A connection under way may already be routed, and seeing its
         // remaining segments through main would tie its two exits together:
         // only a holder found among every process lets it through main. A
         // new flow may be sent there on the narrower search, as an owner
         // never found would be.
         let under_way = key.transport == Transport::Tcp && !opening;
+        if self.deferred {
+            self.queries.push(OwnerQuery {
+                flow: *key,
+                under_way,
+            });
+            return (Binding::Pending, None);
+        }
+        self.ensure_fresh_view(arrived);
         let owner = if under_way {
             self.resolver
                 .socket_owner(key)
@@ -725,6 +818,12 @@ impl<R: OwnerResolver> Router<R> {
         } else {
             self.resolver.owner(key)
         };
+        self.decide(under_way, owner)
+    }
+
+    /// What a flow whose socket `owner` holds takes under the policy in
+    /// force: the process's decision, looked up once per process.
+    fn decide(&mut self, under_way: bool, owner: SocketOwner) -> (Binding, Option<ProcessKey>) {
         let pid = match owner {
             SocketOwner::Process(pid) => Some(pid),
             // A live socket that no process of a routed program holds.
@@ -738,7 +837,7 @@ impl<R: OwnerResolver> Router<R> {
             // under way, and an ownerless socket is one closing: its
             // connection may have been routed, so its last segments are
             // better lost than seen on main.
-            let binding = if key.transport == Transport::Tcp && !opening {
+            let binding = if under_way {
                 Binding::Blocked
             } else {
                 Binding::Main
@@ -792,7 +891,9 @@ impl<R: OwnerResolver> Router<R> {
     fn apply_uplink(&mut self, binding: Binding, packet: &mut [u8]) -> Verdict {
         let route = match binding {
             Binding::Main => return Verdict::Main,
-            Binding::Blocked | Binding::Reset => return self.dropped(),
+            // A later fragment of a datagram whose owner is still being
+            // looked up is lost with its datagram, which is rare enough.
+            Binding::Blocked | Binding::Reset | Binding::Pending => return self.dropped(),
             Binding::Route(route) => route,
         };
         let Some(RouteState::Connected(addresses)) =
@@ -1730,6 +1831,21 @@ mod tests {
     }
 
     #[test]
+    fn a_retransmitted_syn_keeps_its_connections_decision() {
+        let mut os = os();
+        os.socket(tcp_flow(50000), 10);
+        let mut router = router(os);
+        let start = now();
+        router.uplink(&mut syn(50000), start);
+        let calls = router.resolver.calls;
+
+        let verdict = router.uplink(&mut syn(50000), start + Duration::from_secs(1));
+
+        assert_eq!(verdict, Verdict::Route(RouteId(0)));
+        assert_eq!(router.resolver.calls, calls, "not attributed again");
+    }
+
+    #[test]
     fn a_connection_opening_on_a_known_tuple_is_attributed_again() {
         let mut os = os();
         os.socket(tcp_flow(50000), 10);
@@ -1738,7 +1854,10 @@ mod tests {
         router.uplink(&mut syn(50000), start);
         router.resolver.socket(tcp_flow(50000), 30);
 
-        let verdict = router.uplink(&mut syn(50000), start + Duration::from_secs(1));
+        let verdict = router.uplink(
+            &mut tcp_v4_numbered(MAIN, REMOTE, 50000, 443, TCP_SYN, 777, 0, b""),
+            start + Duration::from_secs(1),
+        );
 
         assert_eq!(verdict, Verdict::Main);
     }
@@ -2208,6 +2327,92 @@ mod tests {
             }
         );
         assert_eq!(router.counters().refused_flows, 1);
+    }
+
+    fn deferred_router(os: FakeOs) -> Router<FakeOs> {
+        let mut router = router(os);
+        router.defer_owner_lookups();
+        router
+    }
+
+    #[test]
+    fn a_deferred_router_holds_a_new_flow_and_leaves_its_lookup_to_the_caller() {
+        let mut os = os();
+        os.socket(tcp_flow(50000), 10);
+        let mut router = deferred_router(os);
+        let mut packet = syn(50000);
+        let original = packet.clone();
+
+        let verdict = router.uplink(&mut packet, now());
+
+        assert_eq!(verdict, Verdict::Hold(tcp_flow(50000)));
+        assert_eq!(packet, original, "held untouched");
+        assert_eq!(
+            router.resolver.calls.socket_owner, 0,
+            "not asked on the packet path"
+        );
+        assert_eq!(
+            router.take_owner_queries(),
+            vec![OwnerQuery {
+                flow: tcp_flow(50000),
+                under_way: false
+            }]
+        );
+    }
+
+    #[test]
+    fn the_later_packets_of_a_held_flow_are_held_without_a_second_lookup() {
+        let mut router = deferred_router(os());
+        let start = now();
+        router.uplink(&mut syn(50000), start);
+        router.take_owner_queries();
+
+        let verdict = router.uplink(&mut data(50000), start);
+
+        assert_eq!(verdict, Verdict::Hold(tcp_flow(50000)));
+        assert!(router.take_owner_queries().is_empty());
+    }
+
+    #[test]
+    fn a_held_flow_takes_its_route_once_its_owner_is_named() {
+        let mut router = deferred_router(os());
+        let start = now();
+        let mut packet = syn(50000);
+        router.uplink(&mut packet, start);
+        let query = router.take_owner_queries()[0];
+
+        router.complete(query, SocketOwner::Process(10), start);
+        let verdict = router.uplink(&mut packet, start);
+
+        assert_eq!(verdict, Verdict::Route(RouteId(0)));
+        assert_eq!(packet, tcp_v4(ROUTE0, REMOTE, 50000, 443, TCP_SYN, b""));
+    }
+
+    #[test]
+    fn a_held_connection_under_way_without_an_owner_is_dropped_once_answered() {
+        let mut router = deferred_router(os());
+        let start = now();
+        router.uplink(&mut data(50000), start);
+        let query = router.take_owner_queries()[0];
+
+        router.complete(query, SocketOwner::Unknown, start);
+
+        assert!(query.under_way);
+        assert_eq!(router.uplink(&mut data(50000), start), Verdict::Drop);
+    }
+
+    #[test]
+    fn an_answer_for_a_flow_a_new_policy_forgot_is_ignored() {
+        let mut router = deferred_router(os());
+        let start = now();
+        let mut packet = udp_v4(MAIN, REMOTE, 50000, 443, b"q");
+        router.uplink(&mut packet, start);
+        let query = router.take_owner_queries()[0];
+        router.set_policy(Policy::inactive());
+
+        router.complete(query, SocketOwner::Process(10), start);
+
+        assert_eq!(router.uplink(&mut packet, start), Verdict::Main);
     }
 
     #[test]

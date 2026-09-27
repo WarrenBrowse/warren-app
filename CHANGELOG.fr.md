@@ -53,6 +53,10 @@ par l'application, gardez-le tel quel.
   change pendant la connexion, ou dont le pays est ajouté ou retiré, pour qu'elle se reconnecte
   aussitôt par sa nouvelle route. Ses connexions restaient bloquées : un navigateur attendait,
   résolution de noms comprise, jusqu'à ce qu'on le redémarre.
+- [Android] Garder le trafic de toutes les apps en mouvement pendant que Pays par app cherche
+  quelle app a ouvert une nouvelle connexion. Cette recherche interroge le système une fois par
+  connexion et bloquait jusqu'ici tout le tunnel pendant ce temps, ce qu'une rafale de nouvelles
+  connexions transformait en pauses allant jusqu'à une seconde.
 
 ## [1.1.37] - 2026-09-27
 ### Ajouté

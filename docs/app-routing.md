@@ -82,7 +82,7 @@ the local socket:
 | macOS | `sysctl net.inet.{tcp,udp}.pcblist_n` (`xinpcb_n`, `xsocket_n.so_last_pid`, `so_e_pid` when non-zero), then `proc_pidpath` | 0.8 ms TCP dump, 0.1 ms UDP, unprivileged (2026-09-25 probe); 0.42 ms for both tables of 366 sockets through `talpid-app-routing` in a release build |
 | Windows | `GetExtendedTcpTable(TCP_TABLE_OWNER_PID_ALL)`, `GetExtendedUdpTable(UDP_TABLE_OWNER_PID)`, then `QueryFullProcessImageNameW` | 0.19 ms for the four tables of 113 sockets (x64 debug build under emulation on Windows 11 ARM64, 2026-09-26) |
 | Linux | `NETLINK_SOCK_DIAG` exact lookup (inode; UDP takes the pair as a packet reaching the socket carries it, TCP the socket's own, measured on 6.8), inode to pid through an index of the `/proc/<pid>/fd` of the processes running a routed program, checked against that process's descriptors, then `/proc/<pid>/exe`. Those processes are followed through the proc connector (fork, exec and exit events) | per new flow, release build, Debian 13 VM with 433 processes and 1,500 to 3,000 TCP sockets (2026-09-26): 3 µs while no routed program runs; 0.5 to 0.7 ms (p99 1.1 ms) while a routed program holding 600 to 800 sockets runs, since its descriptors are read again for each new flow; 4.5 to 5.2 ms (p99 5.7 to 6.4 ms) when every process is searched, as before the search was narrowed and still for a TCP segment under way |
-| Android | `ConnectivityManager.getConnectionOwnerUid` (API 29+, a Binder call per new flow through JNI), then `PackageManager.getPackagesForUid` once per uid | not measured separately; the flows of the emulator run of section 3.5 were attributed with no visible delay |
+| Android | `ConnectivityManager.getConnectionOwnerUid` (API 29+, a Binder call per new flow through JNI), then `PackageManager.getPackagesForUid` once per uid | per new flow, `betaBenchmarkRelease` on the `warren-test` emulator (API 35, 4 vCPU, 2 GB), bursts of 500 new UDP flows from `adb shell` (2026-09-27): p50 at most 1 to 2 ms, mean 1.5 ms on the first 1,000 lookups and 3.6 to 5.5 ms once the device was loaded, p99 16 to 131 ms, longest 212 to 288 ms. Made on the packet path, under the router's lock, it held every uplink packet of the tunnel that long; it now runs on four threads of the routing table (below) |
 
 Rules:
 - The structs of `pcblist_n` are XNU-private: declare them with the packed
@@ -96,6 +96,27 @@ Rules:
   snapshot is never trusted, since the port may have changed hands since. On
   Linux the socket lookup is live, and the inode index is rebuilt at most once
   per refresh. The hot path never calls the OS for a packet of a known flow.
+- On Android the owner lookup is not made on the packet path
+  (`RoutingTable::with_owner_workers`, `Router::defer_owner_lookups`): a new
+  flow's packets are held, sent nowhere, while one of four threads asks the
+  platform, and every other flow keeps moving; once the owner is known the
+  router decides with the same rules and the held packets go where it says
+  (at most 64 packets per flow and 1,024 flows wait; past that a packet is
+  dropped, as a full TUN queue drops it). The package of a uid is still read
+  under the lock, once per uid. Measured with
+  `android/scripts/perf/owner-lookup.sh` (bursts of 500 new UDP flows while an
+  ICMP echo every 200 ms crosses the same uplink pump; echoes are never looked
+  up), ping round trip through the NL exit, per burst:
+
+  | build | p90 per burst | max per burst |
+  |---|---|---|
+  | no app with a country (no lookup) | 116 to 126 ms | 131 to 278 ms |
+  | lookup on the packet path | 118, 143, 216, 464 ms | 155, 371, 433, 956 ms |
+  | lookup on its threads | 101, 101, 108, 121, 183, 258 ms | 169 to 387 ms |
+
+  Idle, the round trip was 85 to 111 ms. The emulator is loaded by the
+  burst itself (500 processes spawned in 2 to 12 s), which the control row
+  carries too; the lookups still cost CPU on the device, off the pump.
 - On Linux a new flow is searched for only among the processes running a
   routed program: reading every process's descriptors costs milliseconds per
   new flow on a busy host, under the lock the main pump takes for every
@@ -839,8 +860,12 @@ second browser (FOSS Browser, from F-Droid) as the two apps, IP echo through
 The Chrome row predates the reset of section 2.4: the router then forgot the
 flows it knew on a new policy, so the app's connections under way moved to
 the new route, whose exit dropped them, and Chrome waited on them (its name
-resolution included) until it was restarted. The shared router now resets
-those connections toward the app, on Android as on desktop.
+resolution included) until it was restarted. With the reset, on the same
+emulator (`betaBenchmarkRelease`, main on NL, 2026-09-27): Chrome showed
+`api.ipify.org` from DE (167.233.127.54); moved to FR, the same page loaded
+again from FR (135.136.60.142) and a name it had not resolved yet
+(`icanhazip.com`) loaded from FR as well, each within 6 s of the move, with
+no restart.
 
 ## 4. Platform availability
 

@@ -58,6 +58,9 @@ Line wrap the file at 100 chars.                                              Th
   while connected, or whose country is set or removed, so it reconnects through its new route at
   once. Its connections used to hang: a browser kept waiting, name resolution included, until it
   was restarted.
+- [Android] Keep every app's traffic moving while Country per app finds out which app opened a
+  new connection. That lookup asks the system once per connection and used to hold the whole
+  tunnel meanwhile, which a burst of new connections turned into pauses of up to a second.
 
 ## [1.1.37] - 2026-09-27
 ### Added

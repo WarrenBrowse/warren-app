@@ -6,9 +6,10 @@
 //! `ConnectivityManager.getConnectionOwnerUid` (API 29+, callable by the
 //! active VPN app) answers the uid owning the socket of a TCP or UDP 5-tuple
 //! seen on the TUN, and `PackageManager.getPackagesForUid` names the packages
-//! of that uid. Both are Binder calls, so the router's own rules keep them off
-//! the hot path: one owner lookup per new flow, one package lookup per uid
-//! (the router caches a decision per [`ProcessKey`]), never one per packet.
+//! of that uid. Both are Binder calls: one owner lookup per new flow, made on
+//! the routing table's own threads while the flow's packets wait
+//! (`RoutingTable::with_owner_workers`), and one package lookup per uid (the
+//! router caches a decision per [`ProcessKey`]), never one per packet.
 //!
 //! The lookup is live, so there is no snapshot to take and no older view a
 //! reused port could fool: [`OwnerResolver::refresh`] does nothing. A flow
