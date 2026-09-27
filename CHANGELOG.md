@@ -74,6 +74,9 @@ Line wrap the file at 100 chars.                                              Th
 - [Windows, macOS, Linux] Give the apps sent to another country their route from the first
   connection after a fresh install. The first token refresh failed while the VPN was connecting,
   so those apps stayed blocked until the next reconnect.
+- [Windows, macOS, Linux] Route an app given a city while the connection uses two hops, as
+  Android does. The city picks the exit only, and the connection may enter anywhere the main one
+  can; the app used to stay blocked unless an entry server sat in that same city.
 
 ## [1.1.37] - 2026-09-27
 ### Added

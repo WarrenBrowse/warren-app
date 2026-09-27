@@ -67,6 +67,10 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [Windows, macOS, Linux] Aplicațiile trimise în altă țară își primesc ruta de la prima conectare
   după o instalare nouă. Prima reîmprospătare a tokenurilor eșua cât timp VPN-ul se conecta, iar
   aceste aplicații rămâneau blocate până la reconectarea următoare.
+- [Windows, macOS, Linux] O aplicație căreia i s-a ales un oraș e rutată și când conexiunea
+  folosește două salturi, ca pe Android. Orașul alege doar exit-ul, iar conexiunea poate intra
+  oriunde poate intra conexiunea principală; înainte aplicația rămânea blocată dacă niciun server
+  de intrare nu se afla chiar în acel oraș.
 
 ## [1.1.37] - 2026-09-27
 ### Adăugat

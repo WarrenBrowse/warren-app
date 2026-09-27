@@ -71,6 +71,10 @@ par l'application, gardez-le tel quel.
 - [Windows, macOS, Linux] Donner leur route aux apps envoyées vers un autre pays dès la première
   connexion après une installation neuve. Le premier renouvellement des tokens échouait pendant
   que le VPN se connectait, et ces apps restaient bloquées jusqu'à la reconnexion suivante.
+- [Windows, macOS, Linux] Router une app à laquelle une ville est attribuée quand la connexion
+  passe par deux sauts, comme sur Android. La ville choisit seulement l'exit, et la connexion peut
+  entrer partout où la connexion principale le peut ; l'app restait bloquée sauf si un serveur
+  d'entrée se trouvait dans cette même ville.
 
 ## [1.1.37] - 2026-09-27
 ### Ajouté

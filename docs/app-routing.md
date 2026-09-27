@@ -206,11 +206,10 @@ Implementation (`mullvad-daemon/src/warren_app_routes.rs`,
   valid, so a directory refresh does not move a route.
 - A city choice matches the directory node whose city slug is the relay-list
   city code. A route has as many hops as the main connection, and a two-hop
-  route keeps the main connection's entry constraint. Known limit: on two
-  hops the desktop selector also refuses every entry outside the chosen city,
-  so a city choice is blocked there unless an entry sits in that very city;
-  Android constrains the exit only (the fixture case
-  `a_two_hop_city_route_enters_outside_that_city`, skipped on desktop).
+  route keeps the main connection's entry constraint. A country or city
+  chosen for an app constrains the exit only, so a two-hop route may enter
+  outside that city, on both platforms (the fixture case
+  `a_two_hop_city_route_enters_outside_that_city`).
 - A route session runs the engine's supervisor and pumps with a random
   signing key (the wallet never enters it), one connection, and none of the
   hooks that feed process-wide state (dial-refusal cooldown, session

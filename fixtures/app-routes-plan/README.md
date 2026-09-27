@@ -40,7 +40,6 @@ divergence removes its entry in the same commit.
 | case | skipped | why |
 |---|---|---|
 | `without_a_main_exit_its_country_gets_a_route` | android | Android has no custom exit: its main session is always on an exit |
-| `a_two_hop_city_route_enters_outside_that_city` | desktop | the desktop selector excludes every node outside the chosen city from the circuit, the entry included, so with two hops a city choice is blocked unless an entry sits in that very city; Android constrains the exit only |
 
 ## Schema
 

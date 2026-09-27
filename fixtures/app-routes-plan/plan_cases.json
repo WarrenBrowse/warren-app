@@ -172,8 +172,7 @@
     },
     {
       "name": "a_two_hop_city_route_enters_outside_that_city",
-      "_comment": "The city constrains the exit only. The desktop selector also refuses every entry outside the city, so it blocks the app: see the skip list in README.md.",
-      "skip": ["desktop"],
+      "_comment": "A per-app city constrains the exit only: the entry keeps the main connection's constraint, so it may sit outside that city.",
       "two_hop": true,
       "entry_country": "nl",
       "main_exit": 1,

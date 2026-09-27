@@ -5,7 +5,8 @@
 //! Android engine applies too. What is the daemon's own: the exits in force
 //! come from its settings, a city is the relay list's city code, an exit is
 //! picked inside a choice the way the desktop main connection picks
-//! (`select_circuit` with the client's locality on two hops,
+//! (`select_circuit_exiting_through` with the client's locality on two
+//! hops, the city narrowing the exit only,
 //! `select_one_hop_circuit` on one), the main circuit is the directory's own
 //! (none while a custom exit is on), and [`statuses`] speaks the daemon's
 //! `AppRouteStatus`.
@@ -29,7 +30,7 @@ use tokio::sync::watch;
 use warren_discovery_core::{NodeEntry, VerifiedMultiHopDirectory};
 
 use crate::warren_multi_hop_directory::{
-    ClientLocality, detect_client_locality, select_circuit, select_one_hop_circuit,
+    ClientLocality, detect_client_locality, select_circuit_exiting_through, select_one_hop_circuit,
 };
 
 #[cfg(test)]
@@ -189,29 +190,32 @@ impl PlanRules for DesktopRules {
         node.country.eq_ignore_ascii_case(choice.country()) && city_matches(choice, &node.city)
     }
 
-    /// A circuit for `choice`, selected the way the main connection's is.
+    /// A circuit for `choice`, selected the way the main connection's is. The
+    /// choice's city narrows the exit only: on two hops the entry keeps the
+    /// main connection's constraint.
     fn select(&self, inputs: &PlanInputs<'_>, choice: &ExitChoice) -> Option<MultiHopConfig> {
-        let excluded: Vec<[u8; 16]> = inputs
-            .directory
-            .nodes
-            .iter()
-            .filter(|node| !city_matches(choice, &node.city))
-            .map(|node| *node.exit.exit_id.as_bytes())
-            .chain(inputs.drained.iter().copied())
-            .collect();
         if inputs.two_hop {
-            select_circuit(
+            select_circuit_exiting_through(
                 inputs.directory,
                 inputs.entry_country.unwrap_or(""),
                 choice.country(),
                 true,
                 true,
-                &excluded,
+                inputs.drained,
+                |exit| city_matches(choice, &exit.city),
                 self.locality,
                 None,
                 self.now_unix,
             )
         } else {
+            let excluded: Vec<[u8; 16]> = inputs
+                .directory
+                .nodes
+                .iter()
+                .filter(|node| !city_matches(choice, &node.city))
+                .map(|node| *node.exit.exit_id.as_bytes())
+                .chain(inputs.drained.iter().copied())
+                .collect();
             select_one_hop_circuit(inputs.directory, choice.country(), true, true, &excluded)
         }
     }

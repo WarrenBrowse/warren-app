@@ -28,9 +28,9 @@ use futures::FutureExt;
 use talpid_warren_tunnel::{MultiHopConfig, WarrenDrainPass};
 use warren_discovery_core::{
     Continent, DEFAULT_RTT_TTL_SECS, DirectoryError, ExitCandidate, MULTIHOP_DIRECTORY_PATH_V1,
-    MULTIHOP_DIRECTORY_PATH_V2, PATH_QUALITY_VERSION, PathAwareParams, PathQualityAdvisory,
-    RttCache, VerifiedMultiHopDirectory, continent_of_country, node_rtt_from, pick_exit,
-    prefer_client_continent, select_circuit_path_aware, valid_circuits,
+    MULTIHOP_DIRECTORY_PATH_V2, NodeEntry, PATH_QUALITY_VERSION, PathAwareParams,
+    PathQualityAdvisory, RttCache, VerifiedMultiHopDirectory, continent_of_country, node_rtt_from,
+    pick_exit, prefer_client_continent, select_circuit_path_aware, valid_circuits,
     verify_multihop_directory_any,
 };
 
@@ -413,7 +413,43 @@ pub fn select_circuit(
     advisory: Option<&PathQualityAdvisory>,
     now_unix: u64,
 ) -> Option<MultiHopConfig> {
-    let pairs = valid_circuits(dir, entry_country, exit_country, exclude_exit_ids);
+    select_circuit_exiting_through(
+        dir,
+        entry_country,
+        exit_country,
+        enable_gso,
+        use_warren_obfuscation,
+        exclude_exit_ids,
+        |_| true,
+        locality,
+        advisory,
+        now_unix,
+    )
+}
+
+/// [`select_circuit`] restricted to the exits `exit_admits` accepts. The
+/// filter narrows the exit leg only: the entry keeps the country hint and
+/// the home-country rule, so a per-app city choice (which names an exit)
+/// can enter anywhere the main connection could.
+#[must_use]
+#[expect(clippy::too_many_arguments)]
+pub fn select_circuit_exiting_through(
+    dir: &VerifiedMultiHopDirectory,
+    entry_country: &str,
+    exit_country: &str,
+    enable_gso: bool,
+    use_warren_obfuscation: bool,
+    exclude_exit_ids: &[[u8; 16]],
+    exit_admits: impl Fn(&NodeEntry) -> bool,
+    locality: ClientLocality,
+    advisory: Option<&PathQualityAdvisory>,
+    now_unix: u64,
+) -> Option<MultiHopConfig> {
+    let pairs: Vec<(usize, usize)> =
+        valid_circuits(dir, entry_country, exit_country, exclude_exit_ids)
+            .into_iter()
+            .filter(|&(_, exit)| exit_admits(&dir.nodes[exit]))
+            .collect();
     if pairs.is_empty() {
         return None;
     }
@@ -1994,6 +2030,33 @@ mod tests {
             cfg.relay.relay_id, [2; 16],
             "same-continent entry must win over a heavier cross-continent one"
         );
+    }
+
+    #[test]
+    fn an_exit_filter_narrows_the_exit_and_leaves_the_entry_free() {
+        let op = op_key();
+        // The filter admits the light DE exit only. The entry it cannot admit
+        // is still the one the circuit enters through.
+        let d = dir(vec![
+            node(&op, 1, "nl", 0, 10),
+            node(&op, 2, "de", 0, 100),
+            node(&op, 3, "de", 0, 1),
+        ]);
+        let cfg = select_circuit_exiting_through(
+            &d,
+            "",
+            "de",
+            true,
+            false,
+            &[],
+            |exit| exit.relay.relay_id == [3; 16],
+            ClientLocality::default(),
+            None,
+            0,
+        )
+        .expect("circuit");
+        assert_eq!(cfg.exit.exit_id.as_bytes()[0], 3);
+        assert_eq!(cfg.relay.relay_id, [1; 16]);
     }
 
     #[test]
