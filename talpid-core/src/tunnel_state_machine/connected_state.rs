@@ -234,6 +234,7 @@ impl ConnectedState {
             exit_endpoint_ip,
             tunnel: self.metadata.clone(),
             allow_lan: shared_values.allow_lan,
+            lan_networks: shared_values.lan_networks.clone(),
             #[cfg(not(target_os = "android"))]
             dns_config: Self::resolve_dns(&self.metadata, shared_values),
             #[cfg(target_os = "macos")]
@@ -358,8 +359,8 @@ impl ConnectedState {
         use self::EventConsequence::*;
 
         match command {
-            Some(TunnelCommand::AllowLan(allow_lan, complete_tx)) => {
-                let consequence = if shared_values.set_allow_lan(allow_lan) {
+            Some(TunnelCommand::AllowLan(allow_lan, lan_networks, complete_tx)) => {
+                let consequence = if shared_values.set_allow_lan(allow_lan, lan_networks) {
                     #[cfg(target_os = "android")]
                     {
                         self.disconnect(shared_values, AfterDisconnect::Reconnect(0))

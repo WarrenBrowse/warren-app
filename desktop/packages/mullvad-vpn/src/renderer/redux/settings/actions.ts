@@ -7,6 +7,7 @@ import {
   CustomLists,
   IDaitaSettings,
   IDnsOptions,
+  ILanNetworks,
   IWireguardEndpointData,
   NatPmpSettings,
   NatPmpStatus,
@@ -44,6 +45,11 @@ export interface IUpdateWireguardEndpointData {
 export interface IUpdateAllowLanAction {
   type: 'UPDATE_ALLOW_LAN';
   allowLan: boolean;
+}
+
+export interface IUpdateLanNetworksAction {
+  type: 'UPDATE_LAN_NETWORKS';
+  lanNetworks: ILanNetworks;
 }
 
 // Update action for the warren-api URL.
@@ -217,6 +223,7 @@ export type SettingsAction =
   | IUpdateRelayLocationsAction
   | IUpdateWireguardEndpointData
   | IUpdateAllowLanAction
+  | IUpdateLanNetworksAction
   | IUpdateWarrenApiUrlAction
   | IUpdateWarrenMaxRateBpsAction
   | IUpdateWarrenMultiHopAction
@@ -283,6 +290,13 @@ function updateAllowLan(allowLan: boolean): IUpdateAllowLanAction {
   return {
     type: 'UPDATE_ALLOW_LAN',
     allowLan,
+  };
+}
+
+function updateLanNetworks(lanNetworks: ILanNetworks): IUpdateLanNetworksAction {
+  return {
+    type: 'UPDATE_LAN_NETWORKS',
+    lanNetworks,
   };
 }
 
@@ -508,6 +522,7 @@ export default {
   updateRelayLocations,
   updateWireguardEndpointData,
   updateAllowLan,
+  updateLanNetworks,
   updateWarrenApiUrl,
   updateWarrenMaxRateBps,
   updateWarrenMultiHop,

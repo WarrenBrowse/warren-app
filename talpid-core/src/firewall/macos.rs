@@ -9,8 +9,7 @@ use libc::{c_int, c_void, sysctlbyname};
 use pfctl::{DropAction, FilterRuleAction, Ip, Uid};
 use talpid_tunnel::TunnelMetadata;
 use talpid_types::net::{
-    ALLOWED_LAN_MULTICAST_NETS, ALLOWED_LAN_NETS, AllowedEndpoint, AllowedTunnelTraffic,
-    TransportProtocol,
+    ALLOWED_LAN_MULTICAST_NETS, AllowedEndpoint, AllowedTunnelTraffic, TransportProtocol,
 };
 
 use super::{FirewallArguments, FirewallPolicy};
@@ -159,7 +158,8 @@ impl Firewall {
         }
 
         if policy.allow_lan() {
-            let net_is_lan = ALLOWED_LAN_NETS
+            let net_is_lan = policy
+                .lan_networks()
                 .iter()
                 .chain(ALLOWED_LAN_MULTICAST_NETS.iter())
                 .any(|net| net.contains(remote_address.ip()));
@@ -316,7 +316,8 @@ impl Firewall {
         rules.push(no_nat_localhost);
 
         // no nat to LAN nets
-        for net in ALLOWED_LAN_NETS
+        for net in policy
+            .lan_networks()
             .iter()
             .chain(ALLOWED_LAN_MULTICAST_NETS.iter())
         {
@@ -373,6 +374,7 @@ impl Firewall {
                 allowed_endpoint,
                 allowed_tunnel_traffic,
                 redirect_interface,
+                ..
             } => {
                 let mut rules = vec![];
                 for peer in peer_endpoints {
@@ -411,7 +413,7 @@ impl Firewall {
                 }
 
                 if *allow_lan {
-                    rules.append(&mut self.get_allow_lan_rules()?);
+                    rules.append(&mut self.get_allow_lan_rules(policy.lan_networks())?);
                 }
 
                 Ok(rules)
@@ -422,6 +424,7 @@ impl Firewall {
                 allow_lan,
                 dns_config,
                 redirect_interface,
+                ..
             } => {
                 let mut rules = vec![];
 
@@ -457,7 +460,7 @@ impl Firewall {
                 rules.append(&mut self.get_block_dns_rules()?);
 
                 if *allow_lan {
-                    rules.append(&mut self.get_allow_lan_rules()?);
+                    rules.append(&mut self.get_allow_lan_rules(policy.lan_networks())?);
                 }
 
                 if let Some(redirect_interface) = redirect_interface {
@@ -491,7 +494,7 @@ impl Firewall {
                 if *allow_lan {
                     // Important to block DNS before allow LAN (so DNS does not leak to the LAN)
                     rules.append(&mut self.get_block_dns_rules()?);
-                    rules.append(&mut self.get_allow_lan_rules()?);
+                    rules.append(&mut self.get_allow_lan_rules(policy.lan_networks())?);
                 }
 
                 Ok(rules)
@@ -748,59 +751,8 @@ impl Firewall {
         Ok(vec![lo0_rule])
     }
 
-    fn get_allow_lan_rules(&self) -> Result<Vec<pfctl::FilterRule>> {
-        let mut rules = vec![];
-        for net in ALLOWED_LAN_NETS {
-            let mut rule_builder = self.create_rule_builder(FilterRuleAction::Pass);
-            rule_builder.quick(true);
-            let allow_out = rule_builder
-                .direction(pfctl::Direction::Out)
-                .from(pfctl::Ip::Any)
-                .keep_state(pfctl::StatePolicy::Keep)
-                .to(pfctl::Ip::from(net))
-                .build()?;
-            let allow_in = rule_builder
-                .direction(pfctl::Direction::In)
-                .from(pfctl::Ip::from(net))
-                .to(pfctl::Ip::Any)
-                .build()?;
-            rules.push(allow_out);
-            rules.push(allow_in);
-        }
-        for multicast_net in ALLOWED_LAN_MULTICAST_NETS {
-            let allow_multicast_out = self
-                .create_rule_builder(FilterRuleAction::Pass)
-                .quick(true)
-                .direction(pfctl::Direction::Out)
-                .to(pfctl::Ip::from(multicast_net))
-                .build()?;
-            rules.push(allow_multicast_out);
-        }
-
-        let dhcpv4_out = self
-            .create_rule_builder(FilterRuleAction::Pass)
-            .quick(true)
-            .direction(pfctl::Direction::Out)
-            .af(pfctl::AddrFamily::Ipv4)
-            .proto(pfctl::Proto::Udp)
-            .from(pfctl::Port::from(super::DHCPV4_SERVER_PORT))
-            .to(pfctl::Port::from(super::DHCPV4_CLIENT_PORT))
-            .build()?;
-        let dhcpv4_in = self
-            .create_rule_builder(FilterRuleAction::Pass)
-            .quick(true)
-            .direction(pfctl::Direction::In)
-            .proto(pfctl::Proto::Udp)
-            .from(pfctl::Port::from(super::DHCPV4_CLIENT_PORT))
-            .to(pfctl::Endpoint::new(
-                Ipv4Addr::BROADCAST,
-                pfctl::Port::from(super::DHCPV4_SERVER_PORT),
-            ))
-            .build()?;
-        rules.push(dhcpv4_out);
-        rules.push(dhcpv4_in);
-
-        Ok(rules)
+    fn get_allow_lan_rules(&self, lan_networks: &[IpNetwork]) -> Result<Vec<pfctl::FilterRule>> {
+        allow_lan_rules(self.rule_logging, lan_networks)
     }
 
     fn get_split_tunnel_rules(
@@ -950,21 +902,7 @@ impl Firewall {
     }
 
     fn create_rule_builder(&self, action: FilterRuleAction) -> pfctl::FilterRuleBuilder {
-        let mut builder = pfctl::FilterRuleBuilder::default();
-        builder.action(action);
-        let rule_log = pfctl::RuleLog::IncludeMatchingState;
-        let do_log = match action {
-            FilterRuleAction::Pass => {
-                matches!(self.rule_logging, RuleLogging::All | RuleLogging::Pass)
-            }
-            FilterRuleAction::Drop(..) => {
-                matches!(self.rule_logging, RuleLogging::All | RuleLogging::Drop)
-            }
-        };
-        if do_log {
-            builder.log(rule_log);
-        }
-        builder
+        rule_builder(self.rule_logging, action)
     }
 
     fn get_tcp_flags() -> pfctl::TcpFlags {
@@ -1082,6 +1020,81 @@ fn as_pfctl_proto(protocol: TransportProtocol) -> pfctl::Proto {
     }
 }
 
+fn rule_builder(rule_logging: RuleLogging, action: FilterRuleAction) -> pfctl::FilterRuleBuilder {
+    let mut builder = pfctl::FilterRuleBuilder::default();
+    builder.action(action);
+    let rule_log = pfctl::RuleLog::IncludeMatchingState;
+    let do_log = match action {
+        FilterRuleAction::Pass => {
+            matches!(rule_logging, RuleLogging::All | RuleLogging::Pass)
+        }
+        FilterRuleAction::Drop(..) => {
+            matches!(rule_logging, RuleLogging::All | RuleLogging::Drop)
+        }
+    };
+    if do_log {
+        builder.log(rule_log);
+    }
+    builder
+}
+
+/// The rules that let "Local network sharing" traffic bypass the tunnel: to and from each of
+/// `lan_networks`, out to the fixed multicast ranges, and DHCP.
+fn allow_lan_rules(
+    rule_logging: RuleLogging,
+    lan_networks: &[IpNetwork],
+) -> Result<Vec<pfctl::FilterRule>> {
+    let mut rules = vec![];
+    for &net in lan_networks {
+        let mut builder = rule_builder(rule_logging, FilterRuleAction::Pass);
+        builder.quick(true);
+        let allow_out = builder
+            .direction(pfctl::Direction::Out)
+            .from(pfctl::Ip::Any)
+            .keep_state(pfctl::StatePolicy::Keep)
+            .to(pfctl::Ip::from(net))
+            .build()?;
+        let allow_in = builder
+            .direction(pfctl::Direction::In)
+            .from(pfctl::Ip::from(net))
+            .to(pfctl::Ip::Any)
+            .build()?;
+        rules.push(allow_out);
+        rules.push(allow_in);
+    }
+    for multicast_net in ALLOWED_LAN_MULTICAST_NETS {
+        let allow_multicast_out = rule_builder(rule_logging, FilterRuleAction::Pass)
+            .quick(true)
+            .direction(pfctl::Direction::Out)
+            .to(pfctl::Ip::from(multicast_net))
+            .build()?;
+        rules.push(allow_multicast_out);
+    }
+
+    let dhcpv4_out = rule_builder(rule_logging, FilterRuleAction::Pass)
+        .quick(true)
+        .direction(pfctl::Direction::Out)
+        .af(pfctl::AddrFamily::Ipv4)
+        .proto(pfctl::Proto::Udp)
+        .from(pfctl::Port::from(super::DHCPV4_SERVER_PORT))
+        .to(pfctl::Port::from(super::DHCPV4_CLIENT_PORT))
+        .build()?;
+    let dhcpv4_in = rule_builder(rule_logging, FilterRuleAction::Pass)
+        .quick(true)
+        .direction(pfctl::Direction::In)
+        .proto(pfctl::Proto::Udp)
+        .from(pfctl::Port::from(super::DHCPV4_CLIENT_PORT))
+        .to(pfctl::Endpoint::new(
+            Ipv4Addr::BROADCAST,
+            pfctl::Port::from(super::DHCPV4_SERVER_PORT),
+        ))
+        .build()?;
+    rules.push(dhcpv4_out);
+    rules.push(dhcpv4_in);
+
+    Ok(rules)
+}
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 enum RuleLogging {
     None,
@@ -1128,4 +1141,42 @@ fn enable_forwarding_for_family(ipv4: bool) -> io::Result<()> {
         return Err(io::Error::from_raw_os_error(result));
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn net(s: &str) -> IpNetwork {
+        s.parse().expect("valid network literal")
+    }
+
+    fn pass_out_to(network: IpNetwork) -> pfctl::FilterRule {
+        let mut builder = rule_builder(RuleLogging::None, FilterRuleAction::Pass);
+        builder
+            .quick(true)
+            .direction(pfctl::Direction::Out)
+            .from(pfctl::Ip::Any)
+            .keep_state(pfctl::StatePolicy::Keep)
+            .to(pfctl::Ip::from(network))
+            .build()
+            .expect("valid rule")
+    }
+
+    /// A network the user added (the Mycelium overlay here) is reachable
+    /// outside the tunnel, which is the whole point of customising the list.
+    #[test]
+    fn lan_rules_pass_a_user_added_network() {
+        let rules = allow_lan_rules(RuleLogging::None, &[net("400::/7")]).expect("rules build");
+        assert!(rules.contains(&pass_out_to(net("400::/7"))));
+    }
+
+    /// A built-in range the user removed stays behind the kill switch.
+    #[test]
+    fn lan_rules_do_not_pass_a_removed_default_network() {
+        let rules =
+            allow_lan_rules(RuleLogging::None, &[net("192.168.0.0/16")]).expect("rules build");
+        assert!(rules.contains(&pass_out_to(net("192.168.0.0/16"))));
+        assert!(!rules.contains(&pass_out_to(net("10.0.0.0/8"))));
+    }
 }

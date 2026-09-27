@@ -1,3 +1,4 @@
+use ipnetwork::IpNetwork;
 use mullvad_daemon::settings::{self, SettingsPersister};
 use talpid_core::firewall::{self, Firewall, FirewallPolicy};
 
@@ -15,15 +16,16 @@ pub enum Error {
 
 pub async fn initialize_firewall() -> Result<(), Error> {
     let mut firewall = Firewall::new(mullvad_types::TUNNEL_FWMARK, None, None)?;
-    let allow_lan = get_allow_lan().await.unwrap_or_else(|err| {
+    let (allow_lan, lan_networks) = get_lan_sharing().await.unwrap_or_else(|err| {
         log::info!(
             "Not allowing LAN traffic due to failing to read settings: {}",
             err
         );
-        false
+        (false, vec![])
     });
     let policy = FirewallPolicy::Blocked {
         allow_lan,
+        lan_networks,
         allowed_endpoint: None,
     };
     log::info!("Applying firewall policy {policy}");
@@ -31,11 +33,11 @@ pub async fn initialize_firewall() -> Result<(), Error> {
     Ok(())
 }
 
-async fn get_allow_lan() -> Result<bool, Error> {
+async fn get_lan_sharing() -> Result<(bool, Vec<IpNetwork>), Error> {
     let path = mullvad_paths::settings_dir()?;
     // NOTE: This may fail if the daemon has not been restarted after an upgrade.
     //       This will cause `allow_lan` to be disabled during early boot. This
     //       is probably acceptable.
     let settings = SettingsPersister::read_only(&path).await;
-    Ok(settings.allow_lan)
+    Ok((settings.allow_lan, settings.lan_networks()))
 }

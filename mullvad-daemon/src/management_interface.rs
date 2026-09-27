@@ -741,6 +741,30 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
+    async fn set_lan_networks(&self, request: Request<types::LanNetworks>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
+        let networks =
+            types::custom_lan_networks(request.into_inner()).map_err(map_protobuf_type_err)?;
+        // Windows compiles its LAN filters into winfw and Android routes the built-in ranges
+        // around the VPN, so a list accepted here would be reported as shared and not enforced.
+        if networks.is_some() && cfg!(any(windows, target_os = "android")) {
+            return Err(Status::unimplemented(
+                "custom local networks are not supported on this platform",
+            ));
+        }
+        // The count only: a custom network can be the user's own public range.
+        log::debug!(
+            "set_lan_networks({})",
+            networks
+                .as_ref()
+                .map_or("default".to_owned(), |n| format!("{} custom", n.len()))
+        );
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(&call, DaemonCommand::SetLanNetworks(tx, networks))?;
+        self.wait_for_result(rx).await??;
+        Ok(Response::new(()))
+    }
+
     async fn set_warren_api_url(&self, request: Request<String>) -> ServiceResult<()> {
         let call = Self::call_of(&request);
         let warren_api_url = request.into_inner();

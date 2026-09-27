@@ -10,6 +10,7 @@ license.workspace = true
 chrono = { workspace = true }
 futures = { workspace = true }
 hyper-util = { workspace = true }
+ipnetwork = { workspace = true }
 log = { workspace = true }
 mullvad-paths = { path = "../mullvad-paths" }
 mullvad-types = { path = "../mullvad-types" }
