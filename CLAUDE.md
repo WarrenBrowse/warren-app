@@ -251,4 +251,8 @@ phase under `ci/codemagic/watchdog.sh`, which kills a step that goes silent
 on an idle machine. The watchdog is canonical here; warren-sdk-rs,
 warren-sdk-ts and wclaude carry copies, so a change lands here and is copied
 to the three others in the same campaign. Its native Windows cases run in
-warren-tests.yml's `windows-watchdog` job. Traps: the `warren-windows-ci` skill.
+warren-tests.yml's `windows-watchdog` job. Every change to the Windows code
+runs warren-tests.yml's `windows-daemon` job (winfw built, clippy and the tests
+of the Windows crates, the `#[ignore]` winfw tests elevated): a crate you add
+or split out that compiles on Windows joins its `WINDOWS_CRATES` and
+warren-checks.yml's path filter. Traps: the `warren-windows-ci` skill.
