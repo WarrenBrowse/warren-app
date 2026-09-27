@@ -13,6 +13,26 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 
 ## [Unreleased]
 ### Adăugat
+- [iOS] Vezi avertismentele înregistrate pe contul tău când un port redirecționat e închis după o
+  raportare de abuz: o notificare pentru fiecare avertisment, un banner cu referința dosarului care
+  deschide pagina despre contestare, și lista completă în ecranul port forwarding cu adresa la care
+  să scrii. Avertismentele apar imediat ce actualizarea de server corespunzătoare e activă.
+- [iOS] Vezi revocarea contului, cu ziua în care se încheie când există una, în loc de o simplă
+  deconectare, iar conexiunea se oprește când revocarea e aflată în timpul unei sesiuni.
+- [iOS] Află când serverul refuză un port redirecționat din lipsă de drept de port, iar aplicația
+  cere din nou automat în loc să se oprească la primul refuz.
+
+### Reparat
+- [iOS] Prezintă un drept de port cu fiecare cerere de port redirecționat, ca pe celelalte
+  platforme, astfel încât serverele care îl cer acordă portul în loc să-l refuze.
+- [iOS] Semnează conexiunea cu portofelul afișat în aplicație. Folosea o cheie derivată din aceeași
+  frază de recuperare, dar diferită de adresa afișată, așa că serverele nu vedeau abonamentul pe ea.
+- [iOS] Vezi revocarea când un voucher sau o achiziție App Store e refuzată pentru un cont
+  revocat. Nicio achiziție nu pornește, iar o achiziție deja plătită rămâne în așteptare, ca să
+  fie creditată după încheierea revocării.
+
+## [1.1.36] - 2026-09-27
+### Adăugat
 - [Windows, macOS, Linux] Split tunneling devine Rutare aplicații, cu trei file. „Fără VPN” ține
   aplicațiile alese în afara VPN-ului, ca înainte. „Țară per aplicație” trimite fiecare aplicație
   aleasă spre Internet printr-un exit din propria țară sau propriul oraș, în timp ce toate celelalte
@@ -44,19 +64,16 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   reîncearcă până la sfârșitul revocării.
 - [Android] Află de ce serverul a refuzat un port redirecționat, niciun drept de port disponibil
   sau refuzat, iar aplicația cere din nou automat, în loc să se oprească pe un eșec generic.
-- [iOS] Vezi avertismentele înregistrate pe contul tău când un port redirecționat e închis după o
-  raportare de abuz: o notificare pentru fiecare avertisment, un banner cu referința dosarului care
-  deschide pagina despre contestare, și lista completă în ecranul port forwarding cu adresa la care
-  să scrii. Avertismentele apar imediat ce actualizarea de server corespunzătoare e activă.
-- [iOS] Vezi revocarea contului, cu ziua în care se încheie când există una, în loc de o simplă
-  deconectare, iar conexiunea se oprește când revocarea e aflată în timpul unei sesiuni.
-- [iOS] Află când serverul refuză un port redirecționat din lipsă de drept de port, iar aplicația
-  cere din nou automat în loc să se oprească la primul refuz.
 - [Windows, macOS, Linux] Aplicația se afișează de la dreapta la stânga în arabă și persană:
   textele, listele, comutatoarele, dialogurile și navigarea se citesc de la dreapta, iar adresele
   își păstrează ordinea de la stânga la dreapta.
 - [Windows, macOS, Linux] Araba, persana și ucraineana apar în lista de limbi. Până acum se puteau
   alege doar prin limba sistemului.
+- [Android] Afișează încărcarea fiecărui exit pe un singur rând de text mic, pe cardul de conexiune
+  și în lista de locații: un inel, procentul de îndată ce exit-ul e destul de aglomerat ca să-l
+  arate, numărul de persoane și, în lista de locații, viteza de descărcare. Lista de locații începe
+  fiecare locație cu steagul țării, iar o țară cu un singur exit e un singur rând care se selectează
+  direct.
 
 ### Modificat
 - [Windows, macOS, Linux] Afișează încărcarea fiecărui exit pe un singur rând de text mic: un
@@ -85,10 +102,6 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   dispozitiv derivă aceleași tokenuri din portofel, așa că un al doilea dispozitiv se conectează cu
   ele în loc să revină la o autentificare care identifică portofelul față de exit, iar o reconectare
   nu mai consumă un token.
-- [iOS] Prezintă un drept de port cu fiecare cerere de port redirecționat, ca pe celelalte
-  platforme, astfel încât serverele care îl cer acordă portul în loc să-l refuze.
-- [iOS] Semnează conexiunea cu portofelul afișat în aplicație. Folosea o cheie derivată din aceeași
-  frază de recuperare, dar diferită de adresa afișată, așa că serverele nu vedeau abonamentul pe ea.
 - [Windows, macOS, Linux] Păstrează un voucher cumpărat pe care un cont revocat nu l-a putut
   folosi, spune de ce și nu mai întreabă serverul iar și iar. Voucherul rămâne valabil după
   revocare. Nici celelalte refuzuri care nu spun nimic despre voucher (prea multe încercări) nu
@@ -98,9 +111,6 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [Android] Păstrează un voucher cumpărat pe care un cont revocat nu l-a putut folosi, arată
   revocarea cu ziua în care se încheie când e cunoscută și nu mai întreabă serverul. O eroare a
   serverului nu mai șterge un voucher cumpărat.
-- [iOS] Vezi revocarea când un voucher sau o achiziție App Store e refuzată pentru un cont
-  revocat. Nicio achiziție nu pornește, iar o achiziție deja plătită rămâne în așteptare, ca să
-  fie creditată după încheierea revocării.
 - [Windows, macOS, Linux] Păstrează un voucher cumpărat pe care revocarea l-a refuzat și după o
   repornire a aplicației sau a serviciului, sigilat de keychain-ul sistemului, și îl folosește
   singur la sfârșitul revocării, inclusiv când aceasta pur și simplu expiră. E șters doar după

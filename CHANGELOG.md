@@ -23,6 +23,27 @@ Line wrap the file at 100 chars.                                              Th
 
 ## [Unreleased]
 ### Added
+- [iOS] Show the warnings recorded against your account when a forwarded port is closed after an
+  abuse report: a notification for each warning, a banner with its case reference that opens the
+  page on contesting it, and the full list in the port forwarding screen with the address to write
+  to. The warnings show up as soon as the matching server update is live.
+- [iOS] Show an account's revocation, with the day it ends when there is one, instead of
+  a plain disconnection, and stop the connection when the revocation is learned during a session.
+- [iOS] Say when the server refuses a forwarded port for want of an entitlement, and ask again
+  automatically instead of stopping on the first refusal.
+
+### Fixed
+- [iOS] Present a port entitlement with each forwarded port request, as the other platforms do, so
+  the servers that require one grant the port instead of refusing it.
+- [iOS] Sign the connection with the wallet shown in the app. It used a key derived from the same
+  recovery phrase but different from the displayed address, so the servers did not see the
+  subscription on it.
+- [iOS] Show the revocation when a voucher or an App Store purchase is refused for a revoked
+  account. No purchase starts, and a purchase already paid stays pending, to be credited once the
+  revocation ends.
+
+## [1.1.36] - 2026-09-27
+### Added
 - [Windows, macOS, Linux] Replace Split tunneling with App routing, in three tabs. Bypass VPN keeps
   the apps you choose outside the VPN, as before. Country per app sends each app you choose to the
   Internet through an exit in its own country or city, while every other app keeps the main
@@ -51,19 +72,15 @@ Line wrap the file at 100 chars.                                              Th
   retry until the revocation ends.
 - [Android] Say why the server refused a forwarded port, no entitlement left or refused, and ask
   again automatically, instead of stopping on a generic failure.
-- [iOS] Show the warnings recorded against your account when a forwarded port is closed after an
-  abuse report: a notification for each warning, a banner with its case reference that opens the
-  page on contesting it, and the full list in the port forwarding screen with the address to write
-  to. The warnings show up as soon as the matching server update is live.
-- [iOS] Show an account's revocation, with the day it ends when there is one, instead of
-  a plain disconnection, and stop the connection when the revocation is learned during a session.
-- [iOS] Say when the server refuses a forwarded port for want of an entitlement, and ask again
-  automatically instead of stopping on the first refusal.
 - [Windows, macOS, Linux] Lay the app out right to left in Arabic and Persian: text, lists,
   switches, dialogs and navigation read from the right, and addresses keep their left-to-right
   order.
 - [Windows, macOS, Linux] Offer Arabic, Persian and Ukrainian in the language list. They were only
   reachable through the system language.
+- [Android] Show each exit's load in one line of small text on the connection card and in the
+  location list: a ring, the percentage once the exit is busy enough to show it, the number of
+  people on it and, in the location list, its download rate. The location list leads each location
+  with its country's flag, and a country with a single exit is one row you select directly.
 
 ### Changed
 - [Windows, macOS, Linux] Show each exit's load in one line of small text: a ring, the percentage
@@ -90,11 +107,6 @@ Line wrap the file at 100 chars.                                              Th
 - Share the anonymous session tokens between the devices of one wallet. Every device derives the
   same tokens from the wallet, so a second device connects on them instead of falling back to a
   login that identifies the wallet to the exit, and a reconnect no longer uses up a token.
-- [iOS] Present a port entitlement with each forwarded port request, as the other platforms do, so
-  the servers that require one grant the port instead of refusing it.
-- [iOS] Sign the connection with the wallet shown in the app. It used a key derived from the same
-  recovery phrase but different from the displayed address, so the servers did not see the
-  subscription on it.
 - [Windows, macOS, Linux] Keep a purchased voucher that a revoked account could not redeem, say
   why, and do not ask the server again and again. The voucher stays valid for after the
   revocation. Other refusals that say nothing about the voucher (too many attempts) no longer
@@ -104,9 +116,6 @@ Line wrap the file at 100 chars.                                              Th
 - [Android] Keep a purchased voucher that a revoked account could not redeem, show the
   revocation with the day it ends when known, and stop asking the server again. A server error no
   longer discards a purchased voucher.
-- [iOS] Show the revocation when a voucher or an App Store purchase is refused for a revoked
-  account. No purchase starts, and a purchase already paid stays pending, to be credited once the
-  revocation ends.
 - [Windows, macOS, Linux] Keep a purchased voucher that a revocation refused across restarts of
   the app and of the service, sealed by the system keychain, and redeem it by itself once the
   revocation ends, including when it simply runs out. It is erased only once redeemed or refused

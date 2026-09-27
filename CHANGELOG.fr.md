@@ -14,6 +14,29 @@ par l'application, gardez-le tel quel.
 
 ## [Unreleased]
 ### Ajouté
+- [iOS] Afficher les avertissements enregistrés sur votre compte quand un port redirigé est fermé
+  après un signalement d'abus : une notification par avertissement, une bannière avec sa référence
+  de dossier qui ouvre la page expliquant comment le contester, et la liste complète dans l'écran
+  port forwarding avec l'adresse à laquelle écrire. Les avertissements s'affichent dès que la mise
+  à jour serveur correspondante est en ligne.
+- [iOS] Afficher la révocation d'un compte, avec le jour où elle prend fin quand il y en a un, au
+  lieu d'une simple déconnexion, et arrêter la connexion quand la révocation est apprise en cours
+  de session.
+- [iOS] Dire quand le serveur refuse un port redirigé faute de droit de port, et redemander
+  automatiquement au lieu de s'arrêter au premier refus.
+
+### Corrigé
+- [iOS] Présenter un droit de port avec chaque demande de port redirigé, comme les autres
+  plateformes, pour que les serveurs qui l'exigent accordent le port au lieu de le refuser.
+- [iOS] Signer la connexion avec le portefeuille affiché dans l'application. Elle utilisait une clé
+  issue de la même phrase de récupération mais différente de l'adresse affichée, si bien que les
+  serveurs n'y voyaient pas l'abonnement.
+- [iOS] Afficher la révocation quand un bon ou un achat App Store est refusé pour un compte
+  révoqué. Aucun achat ne démarre, et un achat déjà payé reste en attente, pour être crédité une
+  fois la révocation terminée.
+
+## [1.1.36] - 2026-09-27
+### Ajouté
 - [Windows, macOS, Linux] Remplacer le split tunneling par le routage des apps, en trois onglets.
   Hors VPN garde les apps choisies en dehors du VPN, comme avant. Pays par app fait sortir chaque
   app choisie sur Internet par une exit dans son propre pays ou sa propre ville, pendant que toutes
@@ -47,21 +70,16 @@ par l'application, gardez-le tel quel.
   et ne réessaie pas avant la fin de la révocation.
 - [Android] Dire pourquoi le serveur a refusé un port redirigé, plus de droit de port disponible
   ou refusé, et redemander automatiquement, au lieu de s'arrêter sur un échec générique.
-- [iOS] Afficher les avertissements enregistrés sur votre compte quand un port redirigé est fermé
-  après un signalement d'abus : une notification par avertissement, une bannière avec sa référence
-  de dossier qui ouvre la page expliquant comment le contester, et la liste complète dans l'écran
-  port forwarding avec l'adresse à laquelle écrire. Les avertissements s'affichent dès que la mise
-  à jour serveur correspondante est en ligne.
-- [iOS] Afficher la révocation d'un compte, avec le jour où elle prend fin quand il y en a un, au
-  lieu d'une simple déconnexion, et arrêter la connexion quand la révocation est apprise en cours
-  de session.
-- [iOS] Dire quand le serveur refuse un port redirigé faute de droit de port, et redemander
-  automatiquement au lieu de s'arrêter au premier refus.
 - [Windows, macOS, Linux] Afficher l'application de droite à gauche en arabe et en persan : textes,
   listes, interrupteurs, fenêtres de dialogue et navigation se lisent depuis la droite, et les
   adresses gardent leur ordre de gauche à droite.
 - [Windows, macOS, Linux] Proposer l'arabe, le persan et l'ukrainien dans la liste des langues. On
   ne pouvait les obtenir que par la langue du système.
+- [Android] Afficher la charge de chaque exit sur une seule ligne de petit texte, sur la carte de
+  connexion et dans la liste des lieux : un anneau, le pourcentage dès que l'exit est assez
+  fréquenté pour le montrer, le nombre de personnes et, dans la liste des lieux, son débit
+  descendant. La liste des lieux précède chaque lieu du drapeau de son pays, et un pays qui ne
+  compte qu'une exit tient en une seule ligne que l'on sélectionne directement.
 
 ### Modifié
 - [Windows, macOS, Linux] Afficher la charge de chaque exit sur une seule ligne de petit texte : un
@@ -91,11 +109,6 @@ par l'application, gardez-le tel quel.
   appareil dérive les mêmes tokens du portefeuille, si bien qu'un deuxième appareil se connecte
   avec eux au lieu de se rabattre sur une connexion qui identifie le portefeuille auprès de l'exit,
   et une reconnexion ne consomme plus de token.
-- [iOS] Présenter un droit de port avec chaque demande de port redirigé, comme les autres
-  plateformes, pour que les serveurs qui l'exigent accordent le port au lieu de le refuser.
-- [iOS] Signer la connexion avec le portefeuille affiché dans l'application. Elle utilisait une clé
-  issue de la même phrase de récupération mais différente de l'adresse affichée, si bien que les
-  serveurs n'y voyaient pas l'abonnement.
 - [Windows, macOS, Linux] Garder un bon acheté qu'un compte révoqué n'a pas pu utiliser, dire
   pourquoi, et ne plus redemander sans cesse au serveur. Le bon reste valable après la révocation.
   Les autres refus qui ne disent rien du bon (trop de tentatives) ne l'effacent plus non plus.
@@ -104,9 +117,6 @@ par l'application, gardez-le tel quel.
 - [Android] Garder un bon acheté qu'un compte révoqué n'a pas pu utiliser, afficher la
   révocation avec le jour où elle prend fin quand il est connu, et ne plus redemander au serveur.
   Une erreur du serveur n'efface plus un bon acheté.
-- [iOS] Afficher la révocation quand un bon ou un achat App Store est refusé pour un compte
-  révoqué. Aucun achat ne démarre, et un achat déjà payé reste en attente, pour être crédité une
-  fois la révocation terminée.
 - [Windows, macOS, Linux] Garder un bon acheté que la révocation a refusé même après un
   redémarrage de l'application ou du service, scellé par le trousseau du système, et l'utiliser
   de lui-même à la fin de la révocation, y compris quand elle arrive simplement à son terme. Il
