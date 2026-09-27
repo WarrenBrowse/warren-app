@@ -13,8 +13,12 @@
 //! error mapping (the `reqwest` `Display` carries the URL and the resolved IP,
 //! so it is never propagated).
 
-use std::sync::Arc;
+use std::sync::{Arc, Mutex, PoisonError};
 use std::time::Duration;
+
+use mullvad_types::states::TunnelState;
+use talpid_types::tunnel::TunnelStateTransition;
+use tokio::sync::watch;
 
 use warren_api::transport::{HttpRequest, HttpResponse, HttpTransport, Method, TransportError};
 
@@ -28,11 +32,51 @@ struct Clients {
     without_sni: reqwest::Client,
 }
 
+/// Counts the times the tunnel's routes appeared or went away.
+#[derive(Clone)]
+pub(crate) struct RouteChanges(Arc<watch::Sender<u64>>);
+
+impl RouteChanges {
+    pub(crate) fn new() -> Self {
+        Self(Arc::new(watch::Sender::new(0)))
+    }
+
+    /// Records that the routes changed.
+    pub(crate) fn changed(&self) {
+        self.0.send_modify(|count| *count = count.wrapping_add(1));
+    }
+
+    fn current(&self) -> u64 {
+        *self.0.borrow()
+    }
+}
+
+/// Whether going from `previous` to `next` may move the host's routes: the
+/// tunnel takes the default route while it connects and gives it back when a
+/// disconnect ends or a connection attempt fails. Only a connected tunnel
+/// reporting a new MTU or leg count, and the start of a disconnect (the
+/// routes stay until it ends), move nothing.
+pub(crate) fn routes_move(previous: &TunnelState, next: &TunnelStateTransition) -> bool {
+    match next {
+        TunnelStateTransition::Connected(_) => !previous.is_connected(),
+        TunnelStateTransition::Disconnecting(_) => false,
+        _ => true,
+    }
+}
+
+/// The daemon's route changes, recorded by its tunnel state handling.
+pub(crate) fn route_changes() -> &'static RouteChanges {
+    static ROUTES: std::sync::OnceLock<RouteChanges> = std::sync::OnceLock::new();
+    ROUTES.get_or_init(RouteChanges::new)
+}
+
 /// Shared, cheap to clone: every clone reuses the same connection pool, so a
 /// per-call `WarrenApiClient` rebuild costs no extra TLS handshake.
 #[derive(Clone)]
 pub(crate) struct WarrenApiTransport {
-    clients: Arc<Clients>,
+    resolver: Option<Arc<dyn reqwest::dns::Resolve>>,
+    routes: RouteChanges,
+    clients: Arc<Mutex<(u64, Arc<Clients>)>>,
 }
 
 impl WarrenApiTransport {
@@ -40,38 +84,109 @@ impl WarrenApiTransport {
     /// resolver when a daemon installed one.
     #[must_use]
     pub(crate) fn new() -> Self {
-        Self::with_resolver(crate::warren_api_dns::resolver())
+        Self::with_routes(crate::warren_api_dns::resolver(), route_changes().clone())
     }
 
+    #[cfg(test)]
     fn with_resolver(resolver: Option<Arc<dyn reqwest::dns::Resolve>>) -> Self {
+        Self::with_routes(resolver, RouteChanges::new())
+    }
+
+    fn with_routes(resolver: Option<Arc<dyn reqwest::dns::Resolve>>, routes: RouteChanges) -> Self {
+        let epoch = routes.current();
+        let clients = Arc::new(Mutex::new((
+            epoch,
+            Arc::new(build_clients(resolver.as_ref())),
+        )));
+        Self {
+            resolver,
+            routes,
+            clients,
+        }
+    }
+
+    /// The connection pool of the current routes: a connection kept alive
+    /// from before a route change sits on a path that no longer exists.
+    fn clients(&self) -> Arc<Clients> {
+        let epoch = self.routes.current();
+        let mut guard = self.clients.lock().unwrap_or_else(PoisonError::into_inner);
+        if guard.0 != epoch {
+            *guard = (epoch, Arc::new(build_clients(self.resolver.as_ref())));
+        }
+        Arc::clone(&guard.1)
+    }
+}
+
+/// How many times a request is sent again because the routes moved while it
+/// failed to connect: once for the tunnel taking the route, once more for a
+/// reconnect landing right after.
+const RESENDS_ON_ROUTE_CHANGE: usize = 2;
+
+/// Runs `send` and, when an attempt failed to connect while the routes moved,
+/// runs it again on the routes of now. Only a failure to connect is sent
+/// again: the request then never reached the API, so its signature (the SDK
+/// signs before the transport sees the request) is not replayed, which the
+/// API would refuse. The SDK's own host fallback re-sends the same signed
+/// request on connect failures for the same reason.
+async fn send_following_routes<F, Fut>(
+    routes: &RouteChanges,
+    mut send: F,
+) -> Result<HttpResponse, TransportError>
+where
+    F: FnMut() -> Fut,
+    Fut: std::future::Future<Output = Result<HttpResponse, TransportError>>,
+{
+    let mut resends = 0;
+    loop {
+        let before = routes.current();
+        let result = send().await;
+        match result {
+            Err(error)
+                if error.is_connect()
+                    && routes.current() != before
+                    && resends < RESENDS_ON_ROUTE_CHANGE =>
+            {
+                resends += 1;
+                log::debug!(
+                    "Warren API: a request could not connect while the routes moved; \
+                     sending it again"
+                );
+            }
+            other => return other,
+        }
+    }
+}
+
+fn build_clients(resolver: Option<&Arc<dyn reqwest::dns::Resolve>>) -> Clients {
+    {
         let build = |sni: bool| {
             let mut builder = reqwest::Client::builder()
                 .connect_timeout(CONNECT_TIMEOUT)
                 .timeout(TOTAL_TIMEOUT)
                 .tls_sni(sni);
-            if let Some(resolver) = resolver.clone() {
+            if let Some(resolver) = resolver.cloned() {
                 builder = builder.dns_resolver2(resolver);
             }
             builder
                 .build()
                 .expect("reqwest client build failed: invalid TLS backend configuration")
         };
-        Self {
-            clients: Arc::new(Clients {
-                with_sni: build(true),
-                without_sni: build(false),
-            }),
+        Clients {
+            with_sni: build(true),
+            without_sni: build(false),
         }
     }
+}
 
+impl Clients {
     /// The client honouring `use_sni`. The SDK's fallback sequence retries its
     /// last attempt with SNI off to defeat SNI-based blocking, so the two
     /// clients must stay distinct.
     fn client_for(&self, use_sni: bool) -> &reqwest::Client {
         if use_sni {
-            &self.clients.with_sni
+            &self.with_sni
         } else {
-            &self.clients.without_sni
+            &self.without_sni
         }
     }
 }
@@ -99,8 +214,26 @@ fn to_transport_error(e: &reqwest::Error) -> TransportError {
 }
 
 impl HttpTransport for WarrenApiTransport {
+    /// A request whose connection could not be established while the tunnel
+    /// took or gave back the route is sent again on the routes of now
+    /// ([`send_following_routes`]). Its packets kept the source address of the
+    /// path they started on and went unanswered: the first token refresh of a
+    /// fresh daemon, issued as its first tunnel was connecting, died that way
+    /// (`all API hosts are unreachable`), since the SDK's only fallback, the
+    /// same host without SNI, is refused by the API.
     async fn execute(&self, request: HttpRequest) -> Result<HttpResponse, TransportError> {
-        let mut builder = self
+        send_following_routes(&self.routes, || {
+            let clients = self.clients();
+            let request = request.clone();
+            async move { send(&clients, request).await }
+        })
+        .await
+    }
+}
+
+async fn send(clients: &Clients, request: HttpRequest) -> Result<HttpResponse, TransportError> {
+    {
+        let mut builder = clients
             .client_for(request.use_sni)
             .request(to_reqwest_method(request.method), &request.url);
         for (name, value) in &request.headers {
@@ -178,8 +311,159 @@ mod tests {
     fn the_sni_toggle_selects_a_distinct_client() {
         let transport = WarrenApiTransport::with_resolver(None);
         assert!(!std::ptr::eq(
-            transport.client_for(true),
-            transport.client_for(false)
+            transport.clients().client_for(true),
+            transport.clients().client_for(false)
+        ));
+    }
+
+    fn answered() -> Result<HttpResponse, TransportError> {
+        Ok(HttpResponse {
+            status: 200,
+            body: b"ok".to_vec(),
+        })
+    }
+
+    /// Runs `send_following_routes` over attempts that end with `outcomes`,
+    /// moving the routes during the first attempt when `routes_move`, and
+    /// says how many attempts it made and what it returned.
+    async fn attempts(
+        outcomes: Vec<Result<HttpResponse, TransportError>>,
+        routes_move: bool,
+    ) -> (usize, Result<HttpResponse, TransportError>) {
+        let routes = RouteChanges::new();
+        let made = std::sync::atomic::AtomicUsize::new(0);
+        let outcomes = Mutex::new(outcomes.into_iter());
+        let result = send_following_routes(&routes, || {
+            if made.fetch_add(1, std::sync::atomic::Ordering::SeqCst) == 0 && routes_move {
+                routes.changed();
+            }
+            let outcome = outcomes
+                .lock()
+                .unwrap()
+                .next()
+                .expect("an outcome for every attempt");
+            async move { outcome }
+        })
+        .await;
+        (made.load(std::sync::atomic::Ordering::SeqCst), result)
+    }
+
+    fn connect_failed() -> Result<HttpResponse, TransportError> {
+        Err(TransportError::Connect("connection failed".to_owned()))
+    }
+
+    /// The case of the first token refresh of a fresh daemon: its connection,
+    /// opened on the physical interface as the tunnel connected, never got
+    /// through once the tunnel took the route. It never reached the API, so
+    /// sending it again, same signature included, replays nothing.
+    #[tokio::test]
+    async fn a_request_that_could_not_connect_while_the_routes_moved_is_sent_again() {
+        let (made, result) = attempts(vec![connect_failed(), answered()], true).await;
+
+        assert_eq!(made, 2);
+        assert_eq!(result.expect("answered").body, b"ok");
+    }
+
+    #[tokio::test]
+    async fn a_request_that_could_not_connect_on_steady_routes_is_left_to_the_sdk() {
+        let (made, result) = attempts(vec![connect_failed()], false).await;
+
+        assert_eq!(made, 1);
+        assert!(result.expect_err("no second attempt").is_connect());
+    }
+
+    /// A request that connected may have reached the API, which refuses a
+    /// signature it has already seen: sending it again would turn a success
+    /// into a replay refusal.
+    #[tokio::test]
+    async fn a_request_that_connected_is_never_sent_again() {
+        let lost = Err(TransportError::Io("request timed out".to_owned()));
+
+        let (made, result) = attempts(vec![lost], true).await;
+
+        assert_eq!(made, 1);
+        assert!(!result.expect_err("the first outcome").is_connect());
+    }
+
+    /// Connections kept alive from before a route change are not reused
+    /// after it.
+    #[tokio::test]
+    async fn a_route_change_retires_the_pooled_connections() {
+        let routes = RouteChanges::new();
+        let transport = WarrenApiTransport::with_routes(None, routes.clone());
+        let pool_before = transport.clients();
+
+        routes.changed();
+
+        assert!(!Arc::ptr_eq(&pool_before, &transport.clients()));
+    }
+
+    fn endpoint() -> talpid_types::net::TunnelEndpoint {
+        talpid_types::net::TunnelEndpoint {
+            endpoint: talpid_types::net::Endpoint::new(
+                std::net::Ipv4Addr::LOCALHOST,
+                443,
+                talpid_types::net::TransportProtocol::Udp,
+            ),
+            quantum_resistant: false,
+            obfuscation: None,
+            entry_endpoint: None,
+            tunnel_interface: None,
+            #[cfg(daita)]
+            daita: false,
+            effective_mtu: None,
+            legs_bonded: 0,
+            legs_not_delivering: 0,
+            tunnel_type: talpid_types::net::TunnelType::Warren,
+        }
+    }
+
+    fn connected() -> TunnelState {
+        TunnelState::Connected {
+            endpoint: endpoint(),
+            location: None,
+            feature_indicators: Default::default(),
+        }
+    }
+
+    fn connecting() -> TunnelState {
+        TunnelState::Connecting {
+            endpoint: endpoint(),
+            location: None,
+            feature_indicators: Default::default(),
+        }
+    }
+
+    #[test]
+    fn the_routes_move_on_every_transition_but_a_refreshed_connection_and_a_disconnect_start() {
+        use talpid_types::tunnel::ActionAfterDisconnect;
+        let disconnecting = TunnelState::Disconnecting(ActionAfterDisconnect::Reconnect);
+
+        assert!(routes_move(
+            &connecting(),
+            &TunnelStateTransition::Connected(endpoint())
+        ));
+        assert!(routes_move(
+            &disconnecting,
+            &TunnelStateTransition::Connecting(endpoint())
+        ));
+        assert!(
+            routes_move(
+                &connecting(),
+                &TunnelStateTransition::Error(talpid_types::tunnel::ErrorState::new(
+                    talpid_types::tunnel::ErrorStateCause::IsOffline,
+                    None,
+                ))
+            ),
+            "a tunnel that failed while connecting may have taken the route already"
+        );
+        assert!(!routes_move(
+            &connected(),
+            &TunnelStateTransition::Connected(endpoint())
+        ));
+        assert!(!routes_move(
+            &connected(),
+            &TunnelStateTransition::Disconnecting(ActionAfterDisconnect::Nothing)
         ));
     }
 

@@ -3241,6 +3241,11 @@ impl Daemon {
             }
             _ => (),
         };
+        // The Warren fetchers have their own connections, which the reset
+        // above does not reach.
+        if warren_api_transport::routes_move(&self.tunnel_state, tunnel_state_transition) {
+            warren_api_transport::route_changes().changed();
+        }
     }
 
     fn schedule_reconnect(&mut self, delay: Duration) {
