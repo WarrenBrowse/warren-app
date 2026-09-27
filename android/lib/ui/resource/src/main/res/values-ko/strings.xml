@@ -123,6 +123,7 @@
     <string name="app_country_only_app_title">%1$s만 VPN을 사용하게 됩니다</string>
     <string name="app_country_only_app">\"선택한 앱만 VPN\"이 켜져 있지만 선택한 앱이 이 기기에 하나도 없으므로, 지금은 모든 앱이 VPN을 사용합니다. 이 앱에 국가를 지정하면 이 앱만 VPN을 사용하게 되고, 다른 모든 앱은 일반 연결을 사용합니다.</string>
     <string name="app_country_only_app_confirm">국가 지정</string>
+    <string name="country_per_app_only_apps">\"선택한 앱만 VPN\"이 켜져 있지만 선택한 앱이 이 기기에 하나도 없으므로, 지금은 모든 앱이 VPN을 사용합니다. \"앱별 국가\"를 켜면 국가를 지정한 앱만 VPN을 사용하게 되고, 다른 모든 앱은 일반 연결을 사용합니다.</string>
     <string name="country_picker_title">%1$s의 국가</string>
     <string name="country_picker_remove">국가 제거</string>
     <string name="country_picker_cities_in">%1$s의 도시</string>

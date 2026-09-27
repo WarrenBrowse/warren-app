@@ -278,7 +278,7 @@ fun SplitTunnelingScreen(
     }
 }
 
-/** The dialogs the screen may be waiting on: the country picker and the two confirmations. */
+/** The dialogs the screen may be waiting on: the country picker and the three confirmations. */
 @Composable
 private fun SplitTunnelingDialogs(
     state: SplitTunnelingUiState,
@@ -293,6 +293,13 @@ private fun SplitTunnelingDialogs(
     state.countryPerApp?.onlyAppConfirmation?.let { app ->
         OnlyAppDialog(
             appName = app.name,
+            onConfirm = countryActions.onConfirmOnlyApp,
+            onCancel = countryActions.onCancelOnlyApp,
+        )
+    }
+
+    if (state.countryPerApp?.appExitsOnConfirmation == true) {
+        OnlyAppsSwitchDialog(
             onConfirm = countryActions.onConfirmOnlyApp,
             onCancel = countryActions.onCancelOnlyApp,
         )
@@ -509,6 +516,23 @@ private fun OnlyAppDialog(appName: String, onConfirm: () -> Unit, onCancel: () -
         cancelButtonTitle = stringResource(R.string.cancel),
     ) {
         DialogText(stringResource(R.string.app_country_only_app))
+    }
+}
+
+/**
+ * Asked before the "Country per app" switch makes the apps with a saved country the only ones in
+ * the VPN, where include-only runs as a full tunnel because none of its apps is on the device
+ * (docs/app-routing.md section 3.4).
+ */
+@Composable
+private fun OnlyAppsSwitchDialog(onConfirm: () -> Unit, onCancel: () -> Unit) {
+    InfoConfirmationDialog(
+        onResult = { confirmed -> if (confirmed != null) onConfirm() else onCancel() },
+        titleType = InfoConfirmationDialogTitleType.IconOnly,
+        confirmButtonTitle = stringResource(R.string.split_mode_turn_on),
+        cancelButtonTitle = stringResource(R.string.cancel),
+    ) {
+        DialogText(stringResource(R.string.country_per_app_only_apps))
     }
 }
 

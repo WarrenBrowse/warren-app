@@ -84,3 +84,29 @@ fun countryChoiceNarrowsFullTunnel(
     return routing(appExits, appExitsEnabled) == AppRouting.AllApps &&
         routing(appExits + (app to exit), enabled = true) is AppRouting.OnlyFor
 }
+
+/**
+ * Whether turning the "Country per app" switch on turns the full-tunnel fallback of include-only
+ * into a list, so that every other app leaves the VPN: the list holds no app on the device, and the
+ * saved countries of apps on the device come into force. The same question as
+ * [countryChoiceNarrowsFullTunnel], asked with no new country.
+ */
+fun appExitsSwitchNarrowsFullTunnel(
+    mode: SplitTunnelMode,
+    excludedApps: Set<String>,
+    includedApps: Set<String>,
+    appExits: Map<String, AppExit>,
+    appExitsEnabled: Boolean,
+    isInstalled: (String) -> Boolean,
+): Boolean {
+    fun routing(enabled: Boolean) =
+        resolveAppRouting(
+            mode,
+            excludedApps,
+            includedApps,
+            effectiveAppExits(mode, excludedApps, appExits, enabled).keys,
+            isInstalled,
+        )
+    return routing(appExitsEnabled) == AppRouting.AllApps &&
+        routing(enabled = true) is AppRouting.OnlyFor
+}

@@ -124,6 +124,7 @@
     <string name="app_country_only_app_title">Solo %1$s usará la VPN</string>
     <string name="app_country_only_app">«VPN selectiva» está activada y ninguna de las aplicaciones elegidas está en este dispositivo, así que ahora todas las aplicaciones usan la VPN. Si le asigna un país a esta aplicación, será la única que use la VPN: todas las demás aplicaciones usarán su conexión normal.</string>
     <string name="app_country_only_app_confirm">Asignar el país</string>
+    <string name="country_per_app_only_apps">«VPN selectiva» está activada y ninguna de las aplicaciones elegidas está en este dispositivo, así que ahora todas las aplicaciones usan la VPN. Si activa «País por aplicación», las aplicaciones con un país serán las únicas que usen la VPN: todas las demás aplicaciones usarán su conexión normal.</string>
     <string name="country_picker_title">País de %1$s</string>
     <string name="country_picker_remove">Quitar país</string>
     <string name="country_picker_cities_in">%1$s: ciudades</string>

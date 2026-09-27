@@ -75,6 +75,10 @@ par l'application, gardez-le tel quel.
   passe par deux sauts, comme sur Android. La ville choisit seulement l'exit, et la connexion peut
   entrer partout où la connexion principale le peut ; l'app restait bloquée sauf si un serveur
   d'entrée se trouvait dans cette même ville.
+- [Android] Demander confirmation avant qu'activer Pays par app fasse des apps qui ont un pays les
+  seules à passer par le VPN. Tant que VPN ciblé est activé sans qu'aucune de ses apps soit
+  installée sur l'appareil, toutes les apps passent par le VPN, et activer Pays par app avec des
+  pays déjà enregistrés le réduisait à ces apps sans prévenir.
 
 ## [1.1.37] - 2026-09-27
 ### Ajouté

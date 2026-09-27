@@ -77,6 +77,9 @@ Line wrap the file at 100 chars.                                              Th
 - [Windows, macOS, Linux] Route an app given a city while the connection uses two hops, as
   Android does. The city picks the exit only, and the connection may enter anywhere the main one
   can; the app used to stay blocked unless an entry server sat in that same city.
+- [Android] Ask before turning on Country per app makes the apps with a country the only ones in
+  the VPN. While VPN only for is on and none of its apps is on the device, every app uses the VPN,
+  and turning on Country per app over saved countries narrowed it to those apps without a word.
 
 ## [1.1.37] - 2026-09-27
 ### Added

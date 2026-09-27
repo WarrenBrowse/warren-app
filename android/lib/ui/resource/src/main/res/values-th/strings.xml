@@ -123,6 +123,7 @@
     <string name="app_country_only_app_title">จะมีเพียง %1$s ที่ใช้ VPN</string>
     <string name="app_country_only_app">\"VPN เฉพาะแอป\" เปิดอยู่ แต่ไม่มีแอปที่เลือกไว้อยู่ในอุปกรณ์นี้ ขณะนี้ทุกแอปจึงใช้ VPN หากคุณกำหนดประเทศให้แอปนี้ แอปนี้จะเป็นแอปเดียวที่ใช้ VPN ส่วนแอปอื่นๆ ทั้งหมดจะใช้การเชื่อมต่อปกติของคุณ</string>
     <string name="app_country_only_app_confirm">กำหนดประเทศ</string>
+    <string name="country_per_app_only_apps">\"VPN เฉพาะแอป\" เปิดอยู่ แต่ไม่มีแอปที่เลือกไว้อยู่ในอุปกรณ์นี้ ขณะนี้ทุกแอปจึงใช้ VPN หากคุณเปิด \"ประเทศแยกตามแอป\" จะมีเพียงแอปที่กำหนดประเทศไว้ที่ใช้ VPN ส่วนแอปอื่นๆ ทั้งหมดจะใช้การเชื่อมต่อปกติของคุณ</string>
     <string name="country_picker_title">ประเทศของ %1$s</string>
     <string name="country_picker_remove">นำประเทศออก</string>
     <string name="country_picker_cities_in">เมืองใน %1$s</string>

@@ -124,6 +124,7 @@
     <string name="app_country_only_app_title">Alleen %1$s zal de VPN gebruiken</string>
     <string name="app_country_only_app">\"VPN alleen voor\" staat aan en geen van de gekozen apps staat op dit apparaat, dus alle apps gebruiken nu de VPN. Als u deze app een land geeft, wordt het de enige app die de VPN gebruikt: alle andere apps gebruiken dan uw normale verbinding.</string>
     <string name="app_country_only_app_confirm">Land instellen</string>
+    <string name="country_per_app_only_apps">\"VPN alleen voor\" staat aan en geen van de gekozen apps staat op dit apparaat, dus alle apps gebruiken nu de VPN. Als u \"Land per app\" inschakelt, zijn de apps met een land de enige die de VPN gebruiken: alle andere apps gebruiken dan uw normale verbinding.</string>
     <string name="country_picker_title">Land voor %1$s</string>
     <string name="country_picker_remove">Land verwijderen</string>
     <string name="country_picker_cities_in">%1$s: steden</string>

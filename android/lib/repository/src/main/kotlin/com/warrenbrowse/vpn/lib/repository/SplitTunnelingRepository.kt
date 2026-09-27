@@ -12,6 +12,7 @@ import com.warrenbrowse.vpn.lib.model.AppExit
 import com.warrenbrowse.vpn.lib.model.AppRouting
 import com.warrenbrowse.vpn.lib.model.PackageName
 import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
+import com.warrenbrowse.vpn.lib.model.appExitsSwitchNarrowsFullTunnel
 import com.warrenbrowse.vpn.lib.model.countryChoiceNarrowsFullTunnel
 import com.warrenbrowse.vpn.lib.model.effectiveAppExits
 import com.warrenbrowse.vpn.lib.model.resolveAppRouting
@@ -126,6 +127,21 @@ class SplitTunnelingRepository(
             settings.appExitsEnabled.value,
             app.value,
             exit,
+            isAppInstalled,
+        )
+
+    /**
+     * Whether turning the "Country per app" switch on would turn the include-only full-tunnel
+     * fallback into a list holding only the apps with a country, so the screen asks first. It asks
+     * the package manager, so only ever off the main thread.
+     */
+    fun appExitsSwitchNarrowsFullTunnel(): Boolean =
+        appExitsSwitchNarrowsFullTunnel(
+            settings.splitMode.value,
+            settings.excludedApps.value,
+            settings.includedApps.value,
+            settings.appExits.value,
+            settings.appExitsEnabled.value,
             isAppInstalled,
         )
 

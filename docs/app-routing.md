@@ -768,7 +768,8 @@ cannot disagree about an app.
   TUN with the TUN address, which is what the owner lookup is asked about.
   While the list holds no app on the device, the tunnel is the full tunnel of
   section 3.4, so a first country would take every other app out of the VPN;
-  the screen asks before that choice (section 3.5).
+  the screen asks before that choice, and before its switch is turned on over
+  saved countries (section 3.5).
   A change of the countries in force reaches the engine live and never
   reconnects the main session; a change that alters the include-only allow
   list re-establishes the TUN, as any list change does (section 3.4).
@@ -809,8 +810,9 @@ builder calls).
   you chose is on this device, so every app uses the VPN until you choose
   one."). The connect screen label counts only installed apps, and is absent
   in that case. Since an app with a country joins the list (section 3.3), a
-  first country chosen in that state would turn the full tunnel into a
-  one-app list, so the "Country per app" tab asks first (section 3.5).
+  first country chosen in that state, or the "Country per app" switch turned
+  on over saved countries, would turn the full tunnel into a list of the apps
+  with a country, so the tab asks first (section 3.5).
 - Every blackhole plan carries the same allow list: the included apps stay
   captured while the tunnel is down, and every other app stays online. In
   exclude mode the blackhole still captures every app, excluded ones
@@ -904,7 +906,10 @@ cancelling leaves the settings as they were. The question is
 resolves its apps with, before the choice and after it (the switch on), and
 asks exactly when the first answer is every app and the second a list.
 Turning the tab's switch on while countries are saved narrows the tunnel the
-same way and does not ask. The connect screen carries the "N apps in other
+same way, so it asks the same question (`appExitsSwitchNarrowsFullTunnel`,
+the saved countries before and after the switch) and shows a confirmation
+that says the apps with a country become the only ones in the VPN; cancelling
+leaves the switch off. The connect screen carries the "N apps in other
 countries" badge, red when a route cannot run for a reason other than the
 tunnel being down, which opens that tab. Code:
 `lib/feature/splittunneling/impl/.../countries/`,

@@ -233,6 +233,45 @@ class AppExitsTest {
         assertFalse(narrows(mode = SplitTunnelMode.Exclude))
     }
 
+    private fun switchNarrows(
+        mode: SplitTunnelMode = SplitTunnelMode.IncludeOnly,
+        included: Set<String> = emptySet(),
+        appExits: Map<String, AppExit> = exits("org.chat" to deBerlin),
+        enabled: Boolean = false,
+    ) =
+        appExitsSwitchNarrowsFullTunnel(
+            mode,
+            excludedApps = emptySet(),
+            includedApps = included,
+            appExits = appExits,
+            appExitsEnabled = enabled,
+            isInstalled = { it in installed },
+        )
+
+    @Test
+    fun `turning the switch on over saved countries turns the include-only full tunnel into a list`() {
+        assertTrue(switchNarrows())
+        assertTrue(switchNarrows(included = setOf("org.gone")))
+    }
+
+    @Test
+    fun `the switch narrows nothing when it is on already or when a list holds already`() {
+        assertFalse(switchNarrows(enabled = true))
+        assertFalse(switchNarrows(included = setOf("org.bank")))
+    }
+
+    @Test
+    fun `the switch narrows nothing when no saved country is for an app on the device`() {
+        assertFalse(switchNarrows(appExits = emptyMap()))
+        assertFalse(switchNarrows(appExits = exits("org.uninstalled" to se)))
+    }
+
+    @Test
+    fun `the switch narrows nothing outside include-only`() {
+        assertFalse(switchNarrows(mode = SplitTunnelMode.Off))
+        assertFalse(switchNarrows(mode = SplitTunnelMode.Exclude))
+    }
+
     @Test
     fun `an app counted with a country is one whose country is in force`() {
         val appExits = exits("org.browser" to se, "org.chat" to deBerlin)

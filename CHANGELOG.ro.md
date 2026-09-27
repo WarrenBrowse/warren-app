@@ -71,6 +71,11 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   folosește două salturi, ca pe Android. Orașul alege doar exit-ul, iar conexiunea poate intra
   oriunde poate intra conexiunea principală; înainte aplicația rămânea blocată dacă niciun server
   de intrare nu se afla chiar în acel oraș.
+- [Android] Aplicația cere confirmare înainte ca activarea „Țară per aplicație” să facă din
+  aplicațiile cu o țară singurele care folosesc VPN-ul. Cât timp „VPN selectiv” e activat, dar
+  niciuna dintre aplicațiile lui nu e pe dispozitiv, toate aplicațiile folosesc VPN-ul, iar
+  activarea „Țară per aplicație” cu țări deja salvate îl restrângea la acele aplicații fără niciun
+  avertisment.
 
 ## [1.1.37] - 2026-09-27
 ### Adăugat

@@ -62,7 +62,7 @@ class SplitTunnelingViewModel(
     private val picking = MutableStateFlow<AppData?>(null)
     private val pickerSearch = MutableStateFlow("")
     private val pickerExpanded = MutableStateFlow<Set<String>>(emptySet())
-    private val pendingExit = MutableStateFlow<Pair<AppData, AppExit>?>(null)
+    private val pendingOnlyApps = MutableStateFlow<OnlyAppsChange?>(null)
 
     private val routing: Flow<AppRoutingInputs> =
         combine(
@@ -86,8 +86,8 @@ class SplitTunnelingViewModel(
             app?.let { countryPicker(it, exits, relays, search, expanded, countryName) }
         }
 
-    private val countrySearchAndPending: Flow<Pair<String, AppData?>> =
-        combine(countrySearch, pendingExit) { search, pending -> search to pending?.first }
+    private val countrySearchAndPending: Flow<Pair<String, OnlyAppsChange?>> =
+        combine(countrySearch, pendingOnlyApps) { search, pending -> search to pending }
 
     private val baseState: Flow<SplitTunnelingUiState> =
         combine(
@@ -112,12 +112,15 @@ class SplitTunnelingViewModel(
         combine(baseState, routing, countrySearchAndPending, picker) {
                 base,
                 routing,
-                (search, onlyApp),
+                (search, pending),
                 picker ->
                 val countryPerApp =
                     if (base.tab == SplitTunnelingTab.CountryPerApp) {
                         countryPerAppState(base, routing, search, picker)
-                            .copy(onlyAppConfirmation = onlyApp)
+                            .copy(
+                                onlyAppConfirmation = (pending as? OnlyAppsChange.Exit)?.app,
+                                appExitsOnConfirmation = pending == OnlyAppsChange.SwitchOn,
+                            )
                     } else {
                         null
                     }
@@ -206,12 +209,19 @@ class SplitTunnelingViewModel(
     }
 
     /**
-     * The switch of the "Country per app" tab. It is not a split mode, so it never asks for a
-     * confirmation, and below Android 10 it cannot be turned on.
+     * The switch of the "Country per app" tab. It is not a split mode and leaves it alone, and
+     * below Android 10 it cannot be turned on. Turning it on where the saved countries would become
+     * the only apps in the VPN, where every app uses it now, waits for the user's answer.
      */
     fun onAppExitsSwitch(on: Boolean) {
         if (on && !countryPerAppSupported) return
-        viewModelScope.launch(dispatcher) { splitTunnelingRepository.setAppExitsEnabled(on) }
+        viewModelScope.launch(dispatcher) {
+            if (on && splitTunnelingRepository.appExitsSwitchNarrowsFullTunnel()) {
+                pendingOnlyApps.value = OnlyAppsChange.SwitchOn
+            } else {
+                splitTunnelingRepository.setAppExitsEnabled(on)
+            }
+        }
     }
 
     fun onCountrySearchChange(term: String) {
@@ -248,22 +258,28 @@ class SplitTunnelingViewModel(
         picking.value = null
         viewModelScope.launch(dispatcher) {
             if (splitTunnelingRepository.countryChoiceNarrowsFullTunnel(app.packageName, exit)) {
-                pendingExit.value = app to exit
+                pendingOnlyApps.value = OnlyAppsChange.Exit(app, exit)
             } else {
                 splitTunnelingRepository.setAppExit(app.packageName, exit)
             }
         }
     }
 
-    /** Applies the country held by the "only this app" confirmation. */
+    /** Applies the change held by the "only these apps" confirmation: a country, or the switch. */
     fun onConfirmOnlyApp() {
-        val (app, exit) = pendingExit.value ?: return
-        pendingExit.value = null
-        viewModelScope.launch(dispatcher) { splitTunnelingRepository.setAppExit(app.packageName, exit) }
+        val change = pendingOnlyApps.value ?: return
+        pendingOnlyApps.value = null
+        viewModelScope.launch(dispatcher) {
+            when (change) {
+                is OnlyAppsChange.Exit ->
+                    splitTunnelingRepository.setAppExit(change.app.packageName, change.exit)
+                OnlyAppsChange.SwitchOn -> splitTunnelingRepository.setAppExitsEnabled(true)
+            }
+        }
     }
 
     fun onCancelOnlyApp() {
-        pendingExit.value = null
+        pendingOnlyApps.value = null
     }
 
     fun onRemovePickedCountry() {
@@ -279,4 +295,16 @@ class SplitTunnelingViewModel(
     fun onClearAppCountry(packageName: PackageName) {
         viewModelScope.launch(dispatcher) { splitTunnelingRepository.clearAppExit(packageName) }
     }
+}
+
+/**
+ * A change that waits for the user's answer because it would make the apps with a country the only
+ * ones in the VPN, where include-only runs as a full tunnel (docs/app-routing.md section 3.4).
+ */
+private sealed interface OnlyAppsChange {
+    /** A first country for [app]. */
+    data class Exit(val app: AppData, val exit: AppExit) : OnlyAppsChange
+
+    /** The "Country per app" switch turned on over saved countries. */
+    data object SwitchOn : OnlyAppsChange
 }

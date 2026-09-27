@@ -357,7 +357,7 @@ class SplitTunnelingViewModelTest {
     }
 
     @Test
-    fun `the country switch never asks for a confirmation and leaves the split mode alone`() =
+    fun `a country switch that narrows nothing turns on at once and leaves the split mode alone`() =
         runTest {
             splitMode.value = SplitTunnelMode.IncludeOnly
             initTestSubject(listOf(bank), initialTab = SplitTunnelingTab.CountryPerApp)
@@ -372,6 +372,45 @@ class SplitTunnelingViewModelTest {
             verify { mockedSplitTunnelingRepository.setAppExitsEnabled(true) }
             verify(exactly = 0) { mockedSplitTunnelingRepository.setSplitMode(any()) }
         }
+
+    @Test
+    fun `turning the country switch on where it would narrow the full tunnel waits for the confirmation`() =
+        runTest {
+            splitMode.value = SplitTunnelMode.IncludeOnly
+            appExits.value = mapOf(chat.packageName.value to AppExit("de"))
+            every { mockedSplitTunnelingRepository.appExitsSwitchNarrowsFullTunnel() } returns true
+            initTestSubject(listOf(bank, chat), initialTab = SplitTunnelingTab.CountryPerApp)
+
+            testSubject.uiState.test {
+                assertFalse(awaitCountries().appExitsOnConfirmation)
+                testSubject.onAppExitsSwitch(true)
+                assertTrue(expectMostRecentContent().countryPerApp!!.appExitsOnConfirmation)
+                verify(exactly = 0) { mockedSplitTunnelingRepository.setAppExitsEnabled(any()) }
+
+                testSubject.onConfirmOnlyApp()
+                assertFalse(expectMostRecentContent().countryPerApp!!.appExitsOnConfirmation)
+            }
+            verify { mockedSplitTunnelingRepository.setAppExitsEnabled(true) }
+            verify(exactly = 0) { mockedSplitTunnelingRepository.setSplitMode(any()) }
+        }
+
+    @Test
+    fun `a cancelled country switch stays off`() = runTest {
+        splitMode.value = SplitTunnelMode.IncludeOnly
+        appExits.value = mapOf(chat.packageName.value to AppExit("de"))
+        every { mockedSplitTunnelingRepository.appExitsSwitchNarrowsFullTunnel() } returns true
+        initTestSubject(listOf(chat), initialTab = SplitTunnelingTab.CountryPerApp)
+
+        testSubject.uiState.test {
+            awaitCountries()
+            testSubject.onAppExitsSwitch(true)
+            assertTrue(expectMostRecentContent().countryPerApp!!.appExitsOnConfirmation)
+
+            testSubject.onCancelOnlyApp()
+            assertFalse(expectMostRecentContent().countryPerApp!!.appExitsOnConfirmation)
+        }
+        verify(exactly = 0) { mockedSplitTunnelingRepository.setAppExitsEnabled(any()) }
+    }
 
     @Test
     fun `below Android 10 the country tab cannot be turned on nor a country chosen`() = runTest {

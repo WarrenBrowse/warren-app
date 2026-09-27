@@ -127,6 +127,7 @@
     <string name="app_country_only_app_title">Doar %1$s va folosi VPN-ul</string>
     <string name="app_country_only_app">\"VPN selectiv\" este activat și niciuna dintre aplicațiile alese nu este pe acest dispozitiv, așa că acum toate aplicațiile folosesc VPN-ul. Dacă alegeți o țară pentru această aplicație, ea devine singura care folosește VPN-ul: toate celelalte aplicații vor folosi conexiunea obișnuită.</string>
     <string name="app_country_only_app_confirm">Setează țara</string>
+    <string name="country_per_app_only_apps">\"VPN selectiv\" este activat și niciuna dintre aplicațiile alese nu este pe acest dispozitiv, așa că acum toate aplicațiile folosesc VPN-ul. Dacă activați \"Țară per aplicație\", aplicațiile cu o țară devin singurele care folosesc VPN-ul: toate celelalte aplicații vor folosi conexiunea obișnuită.</string>
     <string name="country_picker_title">Țara pentru %1$s</string>
     <string name="country_picker_remove">Eliminați țara</string>
     <string name="country_picker_cities_in">%1$s: orașe</string>

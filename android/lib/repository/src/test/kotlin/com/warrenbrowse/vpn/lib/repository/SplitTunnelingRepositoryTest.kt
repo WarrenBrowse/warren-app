@@ -107,6 +107,21 @@ class SplitTunnelingRepositoryTest {
         assertFalse(fromList)
     }
 
+    @Test
+    fun `turning the country switch on asks before it narrows the full tunnel, and only then`() {
+        val repository = repository()
+        appExits.value = mapOf("org.mail" to AppExit("de"))
+        appExitsEnabled.value = false
+
+        included.value = setOf("org.gone")
+        val fromFullTunnel = repository.appExitsSwitchNarrowsFullTunnel()
+        included.value = setOf("org.bank")
+        val fromList = repository.appExitsSwitchNarrowsFullTunnel()
+
+        assertTrue(fromFullTunnel)
+        assertFalse(fromList)
+    }
+
     private companion object {
         const val TIMEOUT_MS = 5_000L
     }

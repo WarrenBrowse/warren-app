@@ -124,6 +124,7 @@
     <string name="app_country_only_app_title">Nur %1$s wird das VPN nutzen</string>
     <string name="app_country_only_app">„VPN nur für“ ist aktiviert und keine der ausgewählten Apps ist auf diesem Gerät installiert, daher nutzen jetzt alle Apps das VPN. Wenn Sie dieser App ein Land zuweisen, ist sie die einzige App, die das VPN nutzt: Alle anderen Apps nutzen dann Ihre normale Verbindung.</string>
     <string name="app_country_only_app_confirm">Land festlegen</string>
+    <string name="country_per_app_only_apps">„VPN nur für“ ist aktiviert und keine der ausgewählten Apps ist auf diesem Gerät installiert, daher nutzen jetzt alle Apps das VPN. Wenn Sie „Land pro App“ einschalten, nutzen nur noch die Apps mit einem Land das VPN: Alle anderen Apps nutzen dann Ihre normale Verbindung.</string>
     <string name="country_picker_title">Land für %1$s</string>
     <string name="country_picker_remove">Land entfernen</string>
     <string name="country_picker_cities_in">%1$s: Städte</string>

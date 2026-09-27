@@ -27,6 +27,12 @@ data class CountryPerAppUiState(
      * the VPN (include-only running as a full tunnel, docs/app-routing.md section 3.4).
      */
     val onlyAppConfirmation: AppData? = null,
+    /**
+     * Whether turning the tab's switch on waits for the user's answer, because the saved countries
+     * would become the only apps in the VPN (include-only running as a full tunnel,
+     * docs/app-routing.md section 3.4).
+     */
+    val appExitsOnConfirmation: Boolean = false,
 ) {
     val noSearchResult: Boolean
         get() = searchTerm.isNotBlank() && withCountry.isEmpty() && otherApps.isEmpty()
