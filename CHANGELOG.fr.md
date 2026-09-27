@@ -25,6 +25,23 @@ par l'application, gardez-le tel quel.
 - [iOS] Dire quand le serveur refuse un port redirigé faute de droit de port, et redemander
   automatiquement au lieu de s'arrêter au premier refus.
 
+### Corrigé
+- [iOS] Présenter un droit de port avec chaque demande de port redirigé, comme les autres
+  plateformes, pour que les serveurs qui l'exigent accordent le port au lieu de le refuser.
+- [iOS] Signer la connexion avec le portefeuille affiché dans l'application. Elle utilisait une clé
+  issue de la même phrase de récupération mais différente de l'adresse affichée, si bien que les
+  serveurs n'y voyaient pas l'abonnement.
+- [iOS] Afficher la révocation quand un bon ou un achat App Store est refusé pour un compte
+  révoqué. Aucun achat ne démarre, et un achat déjà payé reste en attente, pour être crédité une
+  fois la révocation terminée.
+
+## [1.1.37] - 2026-09-27
+### Ajouté
+- [macOS, Linux] Choisir les réseaux que le partage réseau local laisse passer, dans sa ligne des
+  réglages comme pour les serveurs DNS personnalisés, ou avec `warren lan networks add`, `remove` et
+  `reset`. La liste part des plages privées habituelles. Un réseau plus large qu'un /8 en IPv4 ou
+  qu'un /7 en IPv6, ou qui atteindrait l'IPv4 en contournant le VPN, est refusé.
+
 ### Modifié
 - [Windows, macOS, Linux] Donner la même présentation à toutes les lignes de la liste des lieux,
   Récents et listes personnalisées compris : le drapeau rond, le nom, la charge d'un exit unique et
@@ -40,14 +57,12 @@ par l'application, gardez-le tel quel.
   n'apparaît plus dans le sélecteur.
 
 ### Corrigé
-- [iOS] Présenter un droit de port avec chaque demande de port redirigé, comme les autres
-  plateformes, pour que les serveurs qui l'exigent accordent le port au lieu de le refuser.
-- [iOS] Signer la connexion avec le portefeuille affiché dans l'application. Elle utilisait une clé
-  issue de la même phrase de récupération mais différente de l'adresse affichée, si bien que les
-  serveurs n'y voyaient pas l'abonnement.
-- [iOS] Afficher la révocation quand un bon ou un achat App Store est refusé pour un compte
-  révoqué. Aucun achat ne démarre, et un achat déjà payé reste en attente, pour être crédité une
-  fois la révocation terminée.
+- [macOS] Garder l'interrupteur « Détacher l'application de la barre des tâches » dans les réglages
+  de l'interface tant qu'il est activé, pour qu'une application détachée par une version de
+  développement puisse être rattachée.
+- [Windows, macOS, Linux, Android] Garder un gros envoi fluide quand la connexion est saturée et
+  qu'un trafic plus léger passe à côté. L'application envoyait certains de ses paquets si loin
+  derrière les autres que le serveur les jetait comme des rejeux.
 
 ## [1.1.36] - 2026-09-27
 ### Ajouté

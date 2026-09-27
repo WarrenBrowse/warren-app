@@ -1,94 +1,27 @@
 ### Ajouté
-- [Windows, macOS, Linux] Remplacer le split tunneling par le routage des apps, en trois onglets.
-  Hors VPN garde les apps choisies en dehors du VPN, comme avant. Pays par app fait sortir chaque
-  app choisie sur Internet par une exit dans son propre pays ou sa propre ville, pendant que toutes
-  les autres apps gardent la connexion principale. Le nombre de pays ou de villes n'est pas fixé :
-  il en tourne à la fois autant que le serveur en admet (une route ne consomme plus de jeton de
-  session là où le serveur le propose, et deux tournent à la fois là où il ne le propose pas), un
-  pays au-delà attend qu'une route se libère, et une app dont le pays est injoignable est bloquée
-  plutôt qu'envoyée par un autre chemin. VPN ciblé ne met dans le VPN que les apps choisies et
-  laisse le reste du système sur votre connexion habituelle. Hors VPN et VPN ciblé se remplacent
-  l'un l'autre ; Pays par app fonctionne avec les deux. `warren app-routing` fait de même depuis un
-  terminal.
-- [Windows] Proposer VPN ciblé.
-- [Linux] Proposer VPN ciblé pour les apps ouvertes avec `warren-include`, sur les systèmes avec
-  cgroup v2 et nftables. Un pays par app fonctionne pour les apps dont le programme peut être
-  identifié, et la liste des apps dit pourquoi quand l'une d'elles ne peut pas en prendre un (une
-  app Flatpak ou Snap, ou un script).
-- [macOS] Rendre Hors VPN et VPN ciblé disponibles dans une app signée avec un Developer ID, sur
-  macOS 13 ou plus récent, une fois « Accès complet au disque » accordé. L'app beta n'est pas
-  signée ainsi : les deux y restent indisponibles, et la vue Routage des apps l'indique. Pays par
-  app n'a besoin ni de cette signature ni de l'« Accès complet au disque ».
-- [Android] Ajouter VPN ciblé à côté de Hors VPN : seules les apps choisies utilisent le VPN, et
-  elles restent bloquées tant que le VPN est coupé. Quand aucune des apps choisies n'est installée,
-  toutes les apps utilisent le VPN jusqu'à ce que vous en choisissiez une.
-- [Android] Afficher les avertissements enregistrés sur votre compte quand un port redirigé est
-  fermé après un signalement d'abus : une notification par avertissement, une bannière avec sa
-  référence de dossier qui ouvre la page expliquant comment le contester, et la liste complète dans
-  l'écran port forwarding avec l'adresse à laquelle écrire. Les avertissements s'affichent dès que
-  la mise à jour serveur correspondante est en ligne.
-- [Android] Afficher la révocation d'un compte, avec le jour où elle prend fin quand il y en a un,
-  dès que l'application l'apprend, au lieu d'essayer une exit après l'autre. La connexion s'arrête
-  et ne réessaie pas avant la fin de la révocation.
-- [Android] Dire pourquoi le serveur a refusé un port redirigé, plus de droit de port disponible
-  ou refusé, et redemander automatiquement, au lieu de s'arrêter sur un échec générique.
-- [Windows, macOS, Linux] Afficher l'application de droite à gauche en arabe et en persan : textes,
-  listes, interrupteurs, fenêtres de dialogue et navigation se lisent depuis la droite, et les
-  adresses gardent leur ordre de gauche à droite.
-- [Windows, macOS, Linux] Proposer l'arabe, le persan et l'ukrainien dans la liste des langues. On
-  ne pouvait les obtenir que par la langue du système.
-- [Android] Afficher la charge de chaque exit sur une seule ligne de petit texte, sur la carte de
-  connexion et dans la liste des lieux : un anneau, le pourcentage dès que l'exit est assez
-  fréquenté pour le montrer, le nombre de personnes et, dans la liste des lieux, son débit
-  descendant. La liste des lieux précède chaque lieu du drapeau de son pays, et un pays qui ne
-  compte qu'une exit tient en une seule ligne que l'on sélectionne directement.
+- [macOS, Linux] Choisir les réseaux que le partage réseau local laisse passer, dans sa ligne des
+  réglages comme pour les serveurs DNS personnalisés, ou avec `warren lan networks add`, `remove` et
+  `reset`. La liste part des plages privées habituelles. Un réseau plus large qu'un /8 en IPv4 ou
+  qu'un /7 en IPv6, ou qui atteindrait l'IPv4 en contournant le VPN, est refusé.
 
 ### Modifié
-- [Windows, macOS, Linux] Afficher la charge de chaque exit sur une seule ligne de petit texte : un
-  anneau, le pourcentage dès que l'exit est assez fréquenté pour le montrer, le nombre de personnes
-  et, dans la liste des lieux, son débit descendant. La liste des lieux affiche le drapeau de
-  chaque pays, n'ouvre un pays que s'il compte plusieurs exits et masque ses sections vides ; les
-  listes personnalisées se créent depuis son menu. La vue Réseau Warren et le panneau en direct des
-  détails de connexion disparaissent, et la carte de connexion dépliée défile au lieu de dépasser
-  le haut de la fenêtre.
-- Appeler révocation le blocage d'un compte, et avertissement chaque signalement d'abus inscrit
-  pour un port redirigé : ce sont les mots des conditions publiées.
-- [Windows, macOS, Linux] Enregistrer les réglages au format version 17, qui contient le routage
-  des apps. Les apps que vous aviez exclues du VPN passent dans Hors VPN.
-- [Windows, macOS, Linux] Traduire toutes les phrases de l'application qui restaient en anglais,
-  dans les 23 langues.
-- [Android] Nommer l'écran de split tunneling Routage des apps dans toutes les langues, comme sur
-  ordinateur.
+- [Windows, macOS, Linux] Donner la même présentation à toutes les lignes de la liste des lieux,
+  Récents et listes personnalisées compris : le drapeau rond, le nom, la charge d'un exit unique et
+  un bouton discret au bout de la ligne, aussi ouvert par un clic droit, qui ajoute le lieu à une
+  liste ou l'en retire, ou crée une liste qui le contient déjà. Le lieu sélectionné se distingue
+  par la couleur de son nom et un anneau autour de son drapeau, sans coche qui décale le nom. Une
+  liste vide n'est plus affichée.
+- [Android] Donner la même forme à toutes les lignes du sélecteur de localisation, récents et listes
+  personnalisées compris : le drapeau rond, le nom au-dessus de son pays, la charge d'une sortie
+  unique, et un bouton de menu discret, aussi ouvert par un appui long, qui ajoute la localisation à
+  une liste ou l'en retire aussitôt, ou crée une nouvelle liste qui la contient. La localisation
+  choisie se reconnaît à son nom en vert et à l'anneau vert autour de son drapeau. Une liste vide
+  n'apparaît plus dans le sélecteur.
 
 ### Corrigé
-- [Windows] Corriger Hors VPN dans l'app beta, qui refusait de s'activer avec « The sublayer does
-  not exist ».
-- Garder les ports redirigés actifs après un redémarrage de l'app, une mise à jour ou un
-  redémarrage de l'ordinateur. Chaque appareil dérive ses droits de port du portefeuille : un
-  redémarrage récupère les mêmes droits au lieu de n'en avoir aucun pendant jusqu'à deux jours, et
-  une règle refusée par le serveur passe sur un droit libre.
-- Partager les tokens de session anonymes entre les appareils d'un même portefeuille. Chaque
-  appareil dérive les mêmes tokens du portefeuille, si bien qu'un deuxième appareil se connecte
-  avec eux au lieu de se rabattre sur une connexion qui identifie le portefeuille auprès de l'exit,
-  et une reconnexion ne consomme plus de token.
-- [Windows, macOS, Linux] Garder un bon acheté qu'un compte révoqué n'a pas pu utiliser, dire
-  pourquoi, et ne plus redemander sans cesse au serveur. Le bon reste valable après la révocation.
-  Les autres refus qui ne disent rien du bon (trop de tentatives) ne l'effacent plus non plus.
-- [Windows, macOS, Linux] Ne prélever aucun renouvellement automatique pendant la révocation du
-  compte, et l'indiquer sur la vue du compte.
-- [Android] Garder un bon acheté qu'un compte révoqué n'a pas pu utiliser, afficher la
-  révocation avec le jour où elle prend fin quand il est connu, et ne plus redemander au serveur.
-  Une erreur du serveur n'efface plus un bon acheté.
-- [Windows, macOS, Linux] Garder un bon acheté que la révocation a refusé même après un
-  redémarrage de l'application ou du service, scellé par le trousseau du système, et l'utiliser
-  de lui-même à la fin de la révocation, y compris quand elle arrive simplement à son terme. Il
-  n'est effacé qu'une fois utilisé ou refusé définitivement (inconnu, déjà utilisé ou expiré). Sans
-  trousseau (Linux sans keyring), il est gardé pour la session seulement, jamais écrit en clair.
-- [Windows, macOS, Linux] Ne plus reprendre le texte d'un refus du serveur dans les messages
-  d'erreur et les journaux du service.
-- [Android] Garder un bon acheté que la révocation a refusé même après un redémarrage de
-  l'application, scellé par une clé de l'Android Keystore, et l'utiliser de lui-même à la fin de la
-  révocation ou au redémarrage de l'application. Il n'est effacé qu'une fois utilisé ou refusé
-  définitivement.
-- [Windows, macOS, Linux] Afficher le vrai nombre de jours, de mois et d'apps en persan : chaque
-  durée s'affichait « 1 jour ».
+- [macOS] Garder l'interrupteur « Détacher l'application de la barre des tâches » dans les réglages
+  de l'interface tant qu'il est activé, pour qu'une application détachée par une version de
+  développement puisse être rattachée.
+- [Windows, macOS, Linux, Android] Garder un gros envoi fluide quand la connexion est saturée et
+  qu'un trafic plus léger passe à côté. L'application envoyait certains de ses paquets si loin
+  derrière les autres que le serveur les jetait comme des rejeux.

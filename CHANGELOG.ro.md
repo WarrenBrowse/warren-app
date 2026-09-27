@@ -22,6 +22,22 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Află când serverul refuză un port redirecționat din lipsă de drept de port, iar aplicația
   cere din nou automat în loc să se oprească la primul refuz.
 
+### Reparat
+- [iOS] Prezintă un drept de port cu fiecare cerere de port redirecționat, ca pe celelalte
+  platforme, astfel încât serverele care îl cer acordă portul în loc să-l refuze.
+- [iOS] Semnează conexiunea cu portofelul afișat în aplicație. Folosea o cheie derivată din aceeași
+  frază de recuperare, dar diferită de adresa afișată, așa că serverele nu vedeau abonamentul pe ea.
+- [iOS] Vezi revocarea când un voucher sau o achiziție App Store e refuzată pentru un cont
+  revocat. Nicio achiziție nu pornește, iar o achiziție deja plătită rămâne în așteptare, ca să
+  fie creditată după încheierea revocării.
+
+## [1.1.37] - 2026-09-27
+### Adăugat
+- [macOS, Linux] Alege rețelele pe care Partajarea rețelei locale le lasă să treacă, în rândul ei
+  din setări, ca pentru serverele DNS personalizate, sau cu `warren lan networks add`, `remove` și
+  `reset`. Lista pornește de la intervalele private obișnuite. O rețea mai largă decât un /8 în IPv4
+  sau un /7 în IPv6, ori una care ar ajunge la IPv4 ocolind VPN-ul, este refuzată.
+
 ### Modificat
 - [Windows, macOS, Linux] Oferă tuturor rândurilor din lista de locații același aspect, inclusiv
   celor Recente și listelor personalizate: steagul rotund, numele, încărcarea unui singur exit și un
@@ -36,13 +52,12 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   numele verde și inelul verde din jurul steagului. O listă goală nu mai apare în selector.
 
 ### Reparat
-- [iOS] Prezintă un drept de port cu fiecare cerere de port redirecționat, ca pe celelalte
-  platforme, astfel încât serverele care îl cer acordă portul în loc să-l refuze.
-- [iOS] Semnează conexiunea cu portofelul afișat în aplicație. Folosea o cheie derivată din aceeași
-  frază de recuperare, dar diferită de adresa afișată, așa că serverele nu vedeau abonamentul pe ea.
-- [iOS] Vezi revocarea când un voucher sau o achiziție App Store e refuzată pentru un cont
-  revocat. Nicio achiziție nu pornește, iar o achiziție deja plătită rămâne în așteptare, ca să
-  fie creditată după încheierea revocării.
+- [macOS] Comutatorul „Deschide aplicația din bara de activități” rămâne în setările interfeței cât
+  timp e activat, astfel încât o aplicație desprinsă de o versiune de dezvoltare poate fi fixată la
+  loc.
+- [Windows, macOS, Linux, Android] O încărcare mare continuă să curgă când conexiunea e saturată și
+  un trafic mai ușor trece pe lângă ea. Aplicația trimitea unele pachete atât de în urma celorlalte
+  încât serverul le arunca drept reluări.
 
 ## [1.1.36] - 2026-09-27
 ### Adăugat

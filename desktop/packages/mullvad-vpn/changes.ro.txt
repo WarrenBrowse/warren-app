@@ -1,92 +1,26 @@
 ### Adăugat
-- [Windows, macOS, Linux] Split tunneling devine Rutare aplicații, cu trei file. „Fără VPN” ține
-  aplicațiile alese în afara VPN-ului, ca înainte. „Țară per aplicație” trimite fiecare aplicație
-  aleasă spre Internet printr-un exit din propria țară sau propriul oraș, în timp ce toate celelalte
-  aplicații păstrează conexiunea principală. Numărul de țări sau orașe nu e fix: rulează în același
-  timp câte admite serverul (o rută nu mai consumă un token de sesiune acolo unde serverul oferă
-  asta, iar unde nu, rulează două deodată), o țară peste acest număr așteaptă să se elibereze o
-  rută, iar o aplicație a cărei țară nu poate fi atinsă e blocată în loc să fie trimisă pe altă
-  cale. „VPN selectiv” pune în VPN doar aplicațiile alese și lasă restul sistemului pe conexiunea
-  obișnuită. „Fără VPN” și „VPN selectiv” se înlocuiesc reciproc; „Țară per aplicație” funcționează
-  cu oricare. `warren app-routing` face același lucru dintr-un terminal.
-- [Windows] Oferă „VPN selectiv”.
-- [Linux] Oferă „VPN selectiv” pentru aplicațiile deschise prin `warren-include`, pe sistemele cu
-  cgroup v2 și nftables. O țară per aplicație funcționează pentru aplicațiile al căror program poate
-  fi identificat, iar lista de aplicații spune de ce una nu poate primi o țară (o aplicație Flatpak
-  sau Snap, sau un script).
-- [macOS] Face „Fără VPN” și „VPN selectiv” disponibile într-o aplicație semnată cu un Developer ID,
-  pe macOS 13 sau mai nou, după acordarea opțiunii „Acces complet la disc”. Aplicația beta nu este
-  semnată astfel: cele două rămân indisponibile în ea, iar vederea Rutare aplicații spune acest
-  lucru. „Țară per aplicație” nu are nevoie nici de această semnătură, nici de „Acces complet la
-  disc”.
-- [Android] Adaugă „VPN selectiv” lângă „Fără VPN”: doar aplicațiile alese folosesc VPN-ul și rămân
-  blocate cât timp VPN-ul e oprit. Când niciuna dintre aplicațiile alese nu e instalată, toate
-  aplicațiile folosesc VPN-ul până când alegi una.
-- [Android] Vezi avertismentele înregistrate pe contul tău când un port redirecționat e închis după
-  o raportare de abuz: o notificare pentru fiecare avertisment, un banner cu referința dosarului
-  care deschide pagina despre contestare, și lista completă în ecranul port forwarding cu adresa la
-  care să scrii. Avertismentele apar imediat ce actualizarea de server corespunzătoare e activă.
-- [Android] Vezi revocarea contului, cu ziua în care se încheie când există una, imediat ce
-  aplicația află de ea, în loc să încerce un exit după altul. Conexiunea se oprește și nu mai
-  reîncearcă până la sfârșitul revocării.
-- [Android] Află de ce serverul a refuzat un port redirecționat, niciun drept de port disponibil
-  sau refuzat, iar aplicația cere din nou automat, în loc să se oprească pe un eșec generic.
-- [Windows, macOS, Linux] Aplicația se afișează de la dreapta la stânga în arabă și persană:
-  textele, listele, comutatoarele, dialogurile și navigarea se citesc de la dreapta, iar adresele
-  își păstrează ordinea de la stânga la dreapta.
-- [Windows, macOS, Linux] Araba, persana și ucraineana apar în lista de limbi. Până acum se puteau
-  alege doar prin limba sistemului.
-- [Android] Afișează încărcarea fiecărui exit pe un singur rând de text mic, pe cardul de conexiune
-  și în lista de locații: un inel, procentul de îndată ce exit-ul e destul de aglomerat ca să-l
-  arate, numărul de persoane și, în lista de locații, viteza de descărcare. Lista de locații începe
-  fiecare locație cu steagul țării, iar o țară cu un singur exit e un singur rând care se selectează
-  direct.
+- [macOS, Linux] Alege rețelele pe care Partajarea rețelei locale le lasă să treacă, în rândul ei
+  din setări, ca pentru serverele DNS personalizate, sau cu `warren lan networks add`, `remove` și
+  `reset`. Lista pornește de la intervalele private obișnuite. O rețea mai largă decât un /8 în IPv4
+  sau un /7 în IPv6, ori una care ar ajunge la IPv4 ocolind VPN-ul, este refuzată.
 
 ### Modificat
-- [Windows, macOS, Linux] Afișează încărcarea fiecărui exit pe un singur rând de text mic: un
-  inel, procentul de îndată ce exit-ul e destul de aglomerat ca să-l arate, numărul de persoane și,
-  în lista de locații, viteza de descărcare. Lista de locații arată steagul fiecărei țări, deschide
-  o țară doar când are mai multe exit-uri și ascunde secțiunile goale; listele personalizate se
-  creează din meniul ei. Vizualizarea Rețeaua Warren și panoul live din detaliile conexiunii au
-  dispărut, iar cardul de conexiune extins derulează în loc să depășească marginea de sus a
-  ferestrei.
-- Numește revocare blocarea unui cont și avertisment fiecare raportare de abuz înregistrată
-  pentru un port redirecționat, cuvintele folosite de condițiile publicate.
-- [Windows, macOS, Linux] Setările se salvează în formatul versiunea 17, care conține Rutare
-  aplicații. Aplicațiile excluse din VPN trec în „Fără VPN”.
-- [Windows, macOS, Linux] Toate textele aplicației care rămăseseră în engleză sunt traduse, în toate
-  cele 23 de limbi.
-- [Android] Ecranul de split tunneling se numește Rutare aplicații în toate limbile, ca pe desktop.
+- [Windows, macOS, Linux] Oferă tuturor rândurilor din lista de locații același aspect, inclusiv
+  celor Recente și listelor personalizate: steagul rotund, numele, încărcarea unui singur exit și un
+  buton discret la capătul rândului, deschis și printr-un clic dreapta, care adaugă locul într-o
+  listă sau îl scoate de acolo ori creează o listă nouă care îl conține deja. Locul selectat se
+  recunoaște după culoarea numelui și un inel în jurul steagului, fără o bifă care să împingă
+  numele. O listă goală nu mai este afișată.
+- [Android] Toate rândurile selectorului de locație au aceeași formă, inclusiv cele recente și
+  listele personalizate: steagul rotund, numele deasupra țării, încărcarea unui singur exit și un
+  buton de meniu discret, deschis și printr-o apăsare lungă, care adaugă locația într-o listă sau o
+  scoate imediat, ori creează o listă nouă care o conține. Locația selectată se recunoaște după
+  numele verde și inelul verde din jurul steagului. O listă goală nu mai apare în selector.
 
 ### Reparat
-- Porturile redirecționate rămân active după repornirea aplicației, o actualizare sau repornirea
-  calculatorului. Fiecare dispozitiv derivă drepturile de port din portofel, așa că o repornire
-  primește înapoi aceleași drepturi în loc să rămână fără ele până la două zile, iar o regulă
-  refuzată de server trece pe un drept liber.
-- [Windows] Repară „Fără VPN” în aplicația beta, care refuza să pornească cu „The sublayer does not
-  exist”.
-- Tokenurile de sesiune anonime sunt împărțite între dispozitivele aceluiași portofel. Fiecare
-  dispozitiv derivă aceleași tokenuri din portofel, așa că un al doilea dispozitiv se conectează cu
-  ele în loc să revină la o autentificare care identifică portofelul față de exit, iar o reconectare
-  nu mai consumă un token.
-- [Windows, macOS, Linux] Păstrează un voucher cumpărat pe care un cont revocat nu l-a putut
-  folosi, spune de ce și nu mai întreabă serverul iar și iar. Voucherul rămâne valabil după
-  revocare. Nici celelalte refuzuri care nu spun nimic despre voucher (prea multe încercări) nu
-  îl mai șterg.
-- [Windows, macOS, Linux] Nicio reînnoire automată nu se încasează cât timp contul e revocat,
-  iar vederea contului o spune.
-- [Android] Păstrează un voucher cumpărat pe care un cont revocat nu l-a putut folosi, arată
-  revocarea cu ziua în care se încheie când e cunoscută și nu mai întreabă serverul. O eroare a
-  serverului nu mai șterge un voucher cumpărat.
-- [Windows, macOS, Linux] Păstrează un voucher cumpărat pe care revocarea l-a refuzat și după o
-  repornire a aplicației sau a serviciului, sigilat de keychain-ul sistemului, și îl folosește
-  singur la sfârșitul revocării, inclusiv când aceasta pur și simplu expiră. E șters doar după
-  ce e folosit sau refuzat definitiv (necunoscut, deja folosit sau expirat). Fără keychain (Linux
-  fără keyring), e păstrat doar pe durata sesiunii, niciodată scris în clar.
-- [Windows, macOS, Linux] Textul unui refuz al serverului nu mai apare în mesajele de eroare și
-  în jurnalele serviciului.
-- [Android] Păstrează un voucher cumpărat pe care revocarea l-a refuzat și după o repornire a
-  aplicației, sigilat de o cheie din Android Keystore, și îl folosește singur la sfârșitul
-  revocării sau la repornirea aplicației. E șters doar după ce e folosit sau refuzat definitiv.
-- [Windows, macOS, Linux] În persană apare numărul real de zile, luni și aplicații: fiecare durată
-  apărea ca „1 zi”.
+- [macOS] Comutatorul „Deschide aplicația din bara de activități” rămâne în setările interfeței cât
+  timp e activat, astfel încât o aplicație desprinsă de o versiune de dezvoltare poate fi fixată la
+  loc.
+- [Windows, macOS, Linux, Android] O încărcare mare continuă să curgă când conexiunea e saturată și
+  un trafic mai ușor trece pe lângă ea. Aplicația trimitea unele pachete atât de în urma celorlalte
+  încât serverul le arunca drept reluări.

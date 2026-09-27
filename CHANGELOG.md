@@ -32,6 +32,23 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Say when the server refuses a forwarded port for want of an entitlement, and ask again
   automatically instead of stopping on the first refusal.
 
+### Fixed
+- [iOS] Present a port entitlement with each forwarded port request, as the other platforms do, so
+  the servers that require one grant the port instead of refusing it.
+- [iOS] Sign the connection with the wallet shown in the app. It used a key derived from the same
+  recovery phrase but different from the displayed address, so the servers did not see the
+  subscription on it.
+- [iOS] Show the revocation when a voucher or an App Store purchase is refused for a revoked
+  account. No purchase starts, and a purchase already paid stays pending, to be credited once the
+  revocation ends.
+
+## [1.1.37] - 2026-09-27
+### Added
+- [macOS, Linux] Choose the networks Local network sharing lets through, in its settings row as for
+  custom DNS servers, or with `warren lan networks add`, `remove` and `reset`. The list starts with
+  the usual private ranges. A network wider than a /8 in IPv4 or a /7 in IPv6, or one that would
+  reach IPv4 around the VPN, is refused.
+
 ### Changed
 - [Windows, macOS, Linux] Give every row of the location list the same layout, Recents and custom
   lists included: the round flag, the name, the load of a single exit, and a quiet button at the
@@ -45,14 +62,11 @@ Line wrap the file at 100 chars.                                              Th
   A list with nothing in it no longer shows in the picker.
 
 ### Fixed
-- [iOS] Present a port entitlement with each forwarded port request, as the other platforms do, so
-  the servers that require one grant the port instead of refusing it.
-- [iOS] Sign the connection with the wallet shown in the app. It used a key derived from the same
-  recovery phrase but different from the displayed address, so the servers did not see the
-  subscription on it.
-- [iOS] Show the revocation when a voucher or an App Store purchase is refused for a revoked
-  account. No purchase starts, and a purchase already paid stays pending, to be credited once the
-  revocation ends.
+- [macOS] Keep the Unpin app from taskbar switch in the interface settings while it is on, so an
+  app unpinned by a development build can be pinned back.
+- [Windows, macOS, Linux, Android] Keep a large upload flowing when the connection is saturated and
+  lighter traffic runs beside it. The app sent some of its packets so far behind the others that
+  the server discarded them as replays.
 
 ## [1.1.36] - 2026-09-27
 ### Added
