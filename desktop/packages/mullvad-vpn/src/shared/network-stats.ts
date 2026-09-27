@@ -311,21 +311,6 @@ export function exitUsersLabel(
   return `${exit.connected}+`;
 }
 
-/**
- * The fleet people count, `shown` being the (possibly tweened) value. Exact
- * while no exit is live; while one is, the server floors the total to the
- * rounding step so the quiet part cannot be subtracted back out, and the label
- * says so.
- */
-export function fleetConnectedLabel(
-  stats: Pick<NetworkStats, 'exits'>,
-  shown: number,
-  locale: string,
-): string {
-  const count = new Intl.NumberFormat(locale).format(shown);
-  return stats.exits.some((exit) => exit.live) ? `${count}+` : count;
-}
-
 /** Every exit of the snapshot the relay list knows, keyed by relay hostname. */
 export function joinExitsByHostname(
   stats: NetworkStats,
@@ -370,25 +355,15 @@ function formatSi(value: number, units: readonly string[], locale: string): stri
 }
 
 const BIT_RATE_UNITS = ['bit/s', 'kbit/s', 'Mbit/s', 'Gbit/s', 'Tbit/s'] as const;
-const BYTE_UNITS = ['B', 'kB', 'MB', 'GB', 'TB', 'PB'] as const;
 
 export function formatBitsPerSecond(bps: number, locale: string): string {
   return formatSi(bps, BIT_RATE_UNITS, locale);
-}
-
-export function formatBytes(bytes: number, locale: string): string {
-  return formatSi(bytes, BYTE_UNITS, locale);
 }
 
 export function formatPercent(percent: number, locale: string): string {
   return new Intl.NumberFormat(locale, { style: 'percent', maximumFractionDigits: 0 }).format(
     percent / 100,
   );
-}
-
-/** Uptime is published floored to whole days; so is what the UI says. */
-export function uptimeDays(uptimeSecs: number): number {
-  return Math.floor(uptimeSecs / 86_400);
 }
 
 type Window = Pick<NetworkStats, 'generatedAt' | 'windowSecs'>;

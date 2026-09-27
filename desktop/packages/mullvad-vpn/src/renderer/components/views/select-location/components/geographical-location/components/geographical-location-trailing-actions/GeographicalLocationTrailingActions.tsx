@@ -2,13 +2,14 @@ import React from 'react';
 import { sprintf } from 'sprintf-js';
 
 import { messages } from '../../../../../../../../shared/gettext';
+import { useCustomLists } from '../../../../../../../features/custom-lists/hooks';
 import {
   GeographicalLocationMenu,
   GeographicalLocationMenuButton,
 } from '../../../../../../../features/locations/components';
 import { type GeographicalLocation } from '../../../../../../../features/locations/types';
-import { getLocationChildren } from '../../../../../../../features/locations/utils';
 import { useAccordionContext } from '../../../../../../../lib/components/accordion/AccordionContext';
+import { holdsSeveralExits } from '../../../../../../../lib/network-stats';
 import { Location } from '../../../location-list-item';
 
 export type GeographicalLocationTrailingActionsProps = React.PropsWithChildren<{
@@ -26,25 +27,32 @@ export function GeographicalLocationTrailingActions({
     setGeographicalLocationMenuOpen((prev) => !prev);
   }, []);
 
-  const childLocations = getLocationChildren(location);
+  const showAccordionTrigger = holdsSeveralExits(location);
+  // The menu only adds the row to a custom list; the header menu creates the first one.
+  const { customLists } = useCustomLists();
+  const showMenu = customLists.length > 0;
 
-  const showAccordionTrigger = childLocations.length > 0;
+  if (!showMenu && !showAccordionTrigger) {
+    return null;
+  }
 
   return (
     <Location.Accordion.Header.TrailingActions>
-      <Location.Accordion.Header.TrailingActions.Action>
-        <GeographicalLocationMenuButton
-          ref={geographicalLocationButtonRef}
-          location={location}
-          onClick={toggleGeographicalLocationMenu}
-        />
-        <GeographicalLocationMenu
-          triggerRef={geographicalLocationButtonRef}
-          open={geographicalLocationMenuOpen}
-          onOpenChange={setGeographicalLocationMenuOpen}
-          location={location}
-        />
-      </Location.Accordion.Header.TrailingActions.Action>
+      {showMenu && (
+        <Location.Accordion.Header.TrailingActions.Action>
+          <GeographicalLocationMenuButton
+            ref={geographicalLocationButtonRef}
+            location={location}
+            onClick={toggleGeographicalLocationMenu}
+          />
+          <GeographicalLocationMenu
+            triggerRef={geographicalLocationButtonRef}
+            open={geographicalLocationMenuOpen}
+            onOpenChange={setGeographicalLocationMenuOpen}
+            location={location}
+          />
+        </Location.Accordion.Header.TrailingActions.Action>
+      )}
       {showAccordionTrigger && (
         <Location.Accordion.Header.AccordionTrigger
           aria-label={sprintf(

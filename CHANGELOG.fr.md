@@ -64,6 +64,13 @@ par l'application, gardez-le tel quel.
   ne pouvait les obtenir que par la langue du système.
 
 ### Modifié
+- [Windows, macOS, Linux] Afficher la charge de chaque exit sur une seule ligne de petit texte : un
+  anneau, le pourcentage dès que l'exit est assez fréquenté pour le montrer, le nombre de personnes
+  et, dans la liste des lieux, son débit descendant. La liste des lieux affiche le drapeau de
+  chaque pays, n'ouvre un pays que s'il compte plusieurs exits et masque ses sections vides ; les
+  listes personnalisées se créent depuis son menu. La vue Réseau Warren et le panneau en direct des
+  détails de connexion disparaissent, et la carte de connexion dépliée défile au lieu de dépasser
+  le haut de la fenêtre.
 - Appeler révocation le blocage d'un compte, et avertissement chaque signalement d'abus inscrit
   pour un port redirigé : ce sont les mots des conditions publiées.
 - [Windows, macOS, Linux] Enregistrer les réglages au format version 17, qui contient le routage

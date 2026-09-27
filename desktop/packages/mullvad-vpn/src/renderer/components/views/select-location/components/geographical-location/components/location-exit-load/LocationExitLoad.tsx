@@ -4,10 +4,12 @@ import { type GeographicalLocation } from '../../../../../../../features/locatio
 import { spacings } from '../../../../../../../lib/foundations';
 import { singleExitHostname, useWarrenNetworkStats } from '../../../../../../../lib/network-stats';
 import { useSelector } from '../../../../../../../redux/store';
-import { ExitLoadSummary } from '../../../../../../network-stats';
+import { ExitLoadBadge } from '../../../../../../network-stats';
 
 const StyledTrailing = styled.span({
   display: 'flex',
+  marginInlineStart: 'auto',
+  paddingInlineStart: spacings.small,
   marginInlineEnd: spacings.small,
 });
 
@@ -17,8 +19,8 @@ export type LocationExitLoadProps = {
 
 /**
  * The load of the exit a row stands for. A country or a city shows it only
- * when it holds exactly one exit, and only while collapsed, so an expanded
- * branch does not repeat the same figures on every level.
+ * when it holds exactly one exit, so an expanded branch does not repeat the
+ * same figures on every level.
  */
 export function LocationExitLoad({ location }: LocationExitLoadProps) {
   const { stats, exitsByHostname, stale } = useWarrenNetworkStats();
@@ -32,7 +34,7 @@ export function LocationExitLoad({ location }: LocationExitLoadProps) {
 
   return (
     <StyledTrailing>
-      <ExitLoadSummary exit={exit} stats={stats} ringSize="small" locale={locale} stale={stale} />
+      <ExitLoadBadge exit={exit} stats={stats} locale={locale} stale={stale} throughput />
     </StyledTrailing>
   );
 }

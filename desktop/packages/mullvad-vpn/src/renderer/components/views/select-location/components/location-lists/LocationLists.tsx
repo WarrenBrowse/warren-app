@@ -7,6 +7,7 @@ import { CountryLocations } from '../country-locations';
 import { CustomListLocations } from '../custom-list-locations';
 import { NoSearchResult } from '../no-search-result';
 import { RecentLocations } from '../recent-locations';
+import { useRecentLocations } from '../recent-locations/components/recent-location-list/hooks';
 import { useHasSearched, useHasSearchedLocations } from './hooks';
 import { LocationListsProvider } from './LocationListsContext';
 
@@ -16,12 +17,15 @@ export type LocationsListsProps = React.PropsWithChildren & {
 
 export function LocationLists(props: LocationsListsProps) {
   const { hasRecents } = useRecents();
+  const recentLocations = useRecentLocations();
   const hasSearched = useHasSearched();
   const hasVisibleCustomLists = useHasCustomLists();
   const hasSearchedLocations = useHasSearchedLocations();
 
-  const showRecentLocations = !hasSearched && hasRecents;
-  const showCustomListLocationLists = !hasSearched || hasVisibleCustomLists;
+  // A section with nothing in it is not shown: the header menu creates the
+  // first custom list, and recents appear once there is one.
+  const showRecentLocations = !hasSearched && hasRecents && recentLocations.length > 0;
+  const showCustomListLocationLists = hasVisibleCustomLists;
   const showCountryLocations = !hasSearched || hasSearchedLocations;
   const showNoSearchResult =
     hasSearched && !showCustomListLocationLists && !showCountryLocations && !showRecentLocations;
@@ -35,7 +39,9 @@ export function LocationLists(props: LocationsListsProps) {
       </Expandable>
       <FlexColumn gap="large">
         {showCustomListLocationLists && <CustomListLocations />}
-        {showCountryLocations && <CountryLocations />}
+        {showCountryLocations && (
+          <CountryLocations showTitle={showRecentLocations || showCustomListLocationLists} />
+        )}
         {showNoSearchResult && <NoSearchResult />}
       </FlexColumn>
     </LocationListsProvider>

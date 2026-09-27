@@ -11,4 +11,3 @@ export * from './support-list-item';
 export * from './user-interface-settings-list-item';
 export * from './vpn-settings-list-item';
 export * from './replay-onboarding-list-item';
-export * from './network-list-item';

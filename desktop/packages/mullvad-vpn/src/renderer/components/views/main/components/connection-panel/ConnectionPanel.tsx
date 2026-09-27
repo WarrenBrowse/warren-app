@@ -66,7 +66,9 @@ const StyledCard = styled.div<{ $accent: string }>((props) => ({
   position: 'relative',
   display: 'flex',
   flexDirection: 'column',
-  flexShrink: 0,
+  // Shrinks in a short window so the details scroll inside it: a card that
+  // cannot shrink grows over the top edge and takes its chevron with it.
+  flexShrink: 1,
   minHeight: 0,
   padding: '14px 16px',
   borderRadius: '16px',
@@ -93,6 +95,7 @@ const StyledCard = styled.div<{ $accent: string }>((props) => ({
 
 const StyledConnectionButtonContainer = styled.div({
   transition: 'margin-top 300ms ease-out',
+  flexShrink: 0,
   display: 'flex',
   flexDirection: 'column',
   gap: '12px',
@@ -113,6 +116,7 @@ const StyledConnectionPanelChevron = styled(IconButton)({
 });
 
 const StyledConnectionStatusContainer = styled.div<{ $expanded: boolean }>((props) => ({
+  flexShrink: 0,
   paddingBottom: props.$expanded ? '16px' : 0,
   borderBottom: props.$expanded ? `1px ${colors.whiteAlpha20} solid` : 'none',
   transitionProperty: 'padding-bottom',

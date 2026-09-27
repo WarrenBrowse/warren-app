@@ -59,6 +59,13 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   alege doar prin limba sistemului.
 
 ### Modificat
+- [Windows, macOS, Linux] Afișează încărcarea fiecărui exit pe un singur rând de text mic: un
+  inel, procentul de îndată ce exit-ul e destul de aglomerat ca să-l arate, numărul de persoane și,
+  în lista de locații, viteza de descărcare. Lista de locații arată steagul fiecărei țări, deschide
+  o țară doar când are mai multe exit-uri și ascunde secțiunile goale; listele personalizate se
+  creează din meniul ei. Vizualizarea Rețeaua Warren și panoul live din detaliile conexiunii au
+  dispărut, iar cardul de conexiune extins derulează în loc să depășească marginea de sus a
+  ferestrei.
 - Numește revocare blocarea unui cont și avertisment fiecare raportare de abuz înregistrată
   pentru un port redirecționat, cuvintele folosite de condițiile publicate.
 - [Windows, macOS, Linux] Setările se salvează în formatul versiunea 17, care conține Rutare

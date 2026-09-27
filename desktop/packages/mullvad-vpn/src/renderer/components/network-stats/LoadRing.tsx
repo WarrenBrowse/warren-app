@@ -1,34 +1,16 @@
-import React from 'react';
 import styled from 'styled-components';
 
 import { LoadLevel } from '../../../shared/network-stats';
 import { colors, loadLevelColors, loadRingTrackColor } from '../../lib/foundations';
 import { arcDashOffset, ringGeometry } from '../../lib/network-stats';
 
-const SIZES = {
-  // The hostname line of the connection card: must fit its text line.
-  tiny: { diameter: 14, stroke: 2.5, bandStroke: 1.5 },
-  // Location list rows.
-  small: { diameter: 22, stroke: 3, bandStroke: 2 },
-  // Exit cards and the fleet header.
-  large: { diameter: 104, stroke: 8, bandStroke: 3 },
-} as const;
-
-export type LoadRingSize = keyof typeof SIZES;
-
-// Tint of the disc a band-only ring encloses: a hint of the band's colour, so
-// the closed ring reads as a state rather than as a full gauge.
-const BAND_FILL_OPACITY = 0.07;
-
-const StyledRing = styled.div<{ $diameter: number }>(({ $diameter }) => ({
-  position: 'relative',
-  flexShrink: 0,
-  width: `${$diameter}px`,
-  height: `${$diameter}px`,
-}));
+// Sized to sit inside a line of small text.
+const DIAMETER = 12;
+const STROKE = 2;
 
 const StyledSvg = styled.svg({
   display: 'block',
+  flexShrink: 0,
 });
 
 const StyledArc = styled.circle({
@@ -38,75 +20,49 @@ const StyledArc = styled.circle({
   },
 });
 
-const StyledCenter = styled.div({
-  position: 'absolute',
-  inset: 0,
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  textAlign: 'center',
-  padding: '12px',
-});
-
 export type LoadRingProps = {
-  size: LoadRingSize;
   level: LoadLevel;
-  // Absent when the exit is below the live threshold: the ring then shows the
-  // band alone, a full thin circle with no arc.
-  percent?: number;
+  // Share of the ring drawn, 0 to 100: the load of a live exit, or the arc
+  // standing for the band of a quiet one.
+  percent: number;
   // Offline or stale: drawn in the neutral grey whatever the band.
   muted?: boolean;
-  children?: React.ReactNode;
-} & Pick<React.AriaAttributes, 'aria-label' | 'aria-hidden'>;
+};
 
-export function LoadRing({ size, level, percent, muted, children, ...aria }: LoadRingProps) {
-  const { diameter, stroke, bandStroke } = SIZES[size];
+export function LoadRing({ level, percent, muted }: LoadRingProps) {
   const color = colors[muted ? 'whiteOnDarkBlue40' : loadLevelColors[level]];
-  const bandOnly = percent === undefined;
-  const { center, radius, circumference } = ringGeometry(diameter, bandOnly ? bandStroke : stroke);
+  const { center, radius, circumference } = ringGeometry(DIAMETER, STROKE);
 
   return (
-    <StyledRing $diameter={diameter} role={aria['aria-label'] ? 'img' : undefined} {...aria}>
-      <StyledSvg width={diameter} height={diameter} viewBox={`0 0 ${diameter} ${diameter}`}>
-        {bandOnly ? (
-          <circle
-            data-testid="load-ring-band"
-            cx={center}
-            cy={center}
-            r={radius}
-            strokeWidth={bandStroke}
-            style={{ stroke: color, fill: color, fillOpacity: BAND_FILL_OPACITY }}
-          />
-        ) : (
-          <>
-            <circle
-              cx={center}
-              cy={center}
-              r={radius}
-              fill="none"
-              strokeWidth={stroke}
-              style={{ stroke: colors[loadRingTrackColor] }}
-            />
-            {percent > 0 && (
-              <StyledArc
-                data-testid="load-ring-arc"
-                cx={center}
-                cy={center}
-                r={radius}
-                fill="none"
-                strokeWidth={stroke}
-                strokeLinecap="round"
-                strokeDasharray={circumference}
-                strokeDashoffset={arcDashOffset(percent, circumference)}
-                transform={`rotate(-90 ${center} ${center})`}
-                style={{ stroke: color }}
-              />
-            )}
-          </>
-        )}
-      </StyledSvg>
-      {children !== undefined && <StyledCenter>{children}</StyledCenter>}
-    </StyledRing>
+    <StyledSvg
+      width={DIAMETER}
+      height={DIAMETER}
+      viewBox={`0 0 ${DIAMETER} ${DIAMETER}`}
+      aria-hidden>
+      <circle
+        data-testid="load-ring-track"
+        cx={center}
+        cy={center}
+        r={radius}
+        fill="none"
+        strokeWidth={STROKE}
+        style={{ stroke: colors[loadRingTrackColor] }}
+      />
+      {percent > 0 && (
+        <StyledArc
+          data-testid="load-ring-arc"
+          cx={center}
+          cy={center}
+          r={radius}
+          fill="none"
+          strokeWidth={STROKE}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={arcDashOffset(percent, circumference)}
+          transform={`rotate(-90 ${center} ${center})`}
+          style={{ stroke: color }}
+        />
+      )}
+    </StyledSvg>
   );
 }

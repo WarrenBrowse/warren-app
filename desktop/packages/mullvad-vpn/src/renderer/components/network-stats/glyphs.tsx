@@ -27,13 +27,3 @@ export function ArrowGlyph({ direction, size = 10 }: { direction: 'down' | 'up';
     </svg>
   );
 }
-
-export function InfoGlyph({ size = 12 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 12 12" aria-hidden fill="none">
-      <circle cx="6" cy="6" r="5.25" stroke="currentColor" strokeWidth="1.2" />
-      <path d="M6 5.3v3.2" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" />
-      <circle cx="6" cy="3.5" r="0.8" fill="currentColor" />
-    </svg>
-  );
-}

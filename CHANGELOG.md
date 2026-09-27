@@ -66,6 +66,12 @@ Line wrap the file at 100 chars.                                              Th
   reachable through the system language.
 
 ### Changed
+- [Windows, macOS, Linux] Show each exit's load in one line of small text: a ring, the percentage
+  once the exit is busy enough to show it, the number of people on it and, in the location list,
+  its download rate. The location list shows each country's flag, opens a country only when it
+  holds several exits, and hides its empty sections; custom lists are created from its menu. The
+  Warren network view and the live panel of the connection details are gone, and the expanded
+  connection card now scrolls instead of growing past the top of the window.
 - Call the ban of an account a revocation, and each abuse report recorded against a forwarded
   port a warning, the words the published terms use.
 - [Windows, macOS, Linux] Save the settings in format version 17, which holds app routing. The apps

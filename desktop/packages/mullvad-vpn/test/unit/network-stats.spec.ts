@@ -5,9 +5,7 @@ import { describe, expect, it } from 'vitest';
 import {
   exitDisplayMode,
   exitUsersLabel,
-  fleetConnectedLabel,
   formatBitsPerSecond,
-  formatBytes,
   formatPercent,
   joinExitsByHostname,
   NetworkStats,
@@ -15,7 +13,6 @@ import {
   pollIntervalMs,
   snapshotAgeSecs,
   snapshotIsStale,
-  uptimeDays,
 } from '../../src/shared/network-stats';
 
 // A verbatim copy of warren-contract's frozen `network-stats-v1.json`, the
@@ -229,27 +226,12 @@ describe('formatBitsPerSecond', () => {
   });
 });
 
-describe('formatBytes', () => {
-  it('uses SI units', () => {
-    expect(formatBytes(9_000_000_000_000, 'en')).toBe('9.0 TB');
-    expect(formatBytes(512, 'en')).toBe('512 B');
-    expect(formatBytes(42_000_000, 'en')).toBe('42 MB');
-  });
-});
-
 describe('formatPercent', () => {
   it('follows the locale', () => {
     expect(formatPercent(37, 'en')).toBe('37%');
     // French sets a no-break space before the sign; which one depends on the
     // ICU version, so Node and Chromium may differ.
     expect(formatPercent(37, 'fr')).toMatch(/^37\s%$/);
-  });
-});
-
-describe('uptimeDays', () => {
-  it('counts whole days', () => {
-    expect(uptimeDays(172_800)).toBe(2);
-    expect(uptimeDays(86_399)).toBe(0);
   });
 });
 
@@ -278,25 +260,5 @@ describe('pollIntervalMs', () => {
   it('keeps the window inside the range the server accepts', () => {
     expect(pollIntervalMs(1)).toBe(30_000);
     expect(pollIntervalMs(100_000)).toBe(3_600_000);
-  });
-});
-
-describe('fleetConnectedLabel', () => {
-  it('shows the fleet count as a floor while an exit is live', () => {
-    expect(fleetConnectedLabel(fixture(), 57, 'en')).toBe('57+');
-  });
-
-  it('shows the fleet count exactly while no exit is live', () => {
-    const stats = fixture();
-    const quiet = { ...stats, exits: stats.exits.map((exit) => ({ ...exit, live: false })) };
-
-    expect(fleetConnectedLabel(quiet, 57, 'en')).toBe('57');
-  });
-
-  it('groups digits by the locale', () => {
-    const stats = fixture();
-    const quiet = { ...stats, exits: [] };
-
-    expect(fleetConnectedLabel(quiet, 1234, 'en')).toBe('1,234');
   });
 });

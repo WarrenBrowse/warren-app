@@ -17,8 +17,7 @@ vi.mock('../../src/renderer/redux/store', () => ({
   useSelector: (select: (state: unknown) => unknown) => select({ userInterface: { locale: 'en' } }),
 }));
 
-import { ExitLoadSummary, LoadRing, Sparkline } from '../../src/renderer/components/network-stats';
-import { ExitCard, FleetCard } from '../../src/renderer/components/views/network/components';
+import { ExitLoadBadge, LoadRing } from '../../src/renderer/components/network-stats';
 import { NetworkStats, parseNetworkStats } from '../../src/shared/network-stats';
 
 const STATS = parseNetworkStats(
@@ -26,131 +25,81 @@ const STATS = parseNetworkStats(
 ) as NetworkStats;
 const [LIVE_EXIT, QUIET_EXIT] = STATS.exits;
 
-// What the people pill itself says, apart from the accessibility label.
-function pillText(html: string): string | undefined {
-  return /data-testid="users-pill"[^>]*>(?:<svg.*?<\/svg>)?(.*?)<\/span>/.exec(html)?.[1];
+// The text a sighted reader sees, without markup or accessibility labels.
+function visibleText(html: string): string {
+  return html
+    .replace(/<svg.*?<\/svg>/g, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/\s+/g, ' ')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .trim();
 }
 
 describe('LoadRing', () => {
-  it('draws a band-only ring as one full circle with no arc', () => {
-    const html = renderToStaticMarkup(<LoadRing size="small" level="moderate" />);
-
-    expect(html).toContain('data-testid="load-ring-band"');
-    expect(html).not.toContain('load-ring-arc');
-  });
-
-  it('draws a live ring as an arc over a track', () => {
-    const html = renderToStaticMarkup(<LoadRing size="small" level="low" percent={37} />);
+  it('draws the arc over a track', () => {
+    const html = renderToStaticMarkup(<LoadRing level="low" percent={37} />);
 
     expect(html).toContain('data-testid="load-ring-arc"');
-    expect(html).not.toContain('load-ring-band');
+    expect(html).toContain('data-testid="load-ring-track"');
   });
 
-  it('draws no arc at zero load', () => {
-    const html = renderToStaticMarkup(<LoadRing size="small" level="low" percent={0} />);
-
-    expect(html).not.toContain('load-ring-arc');
+  it('draws no arc at zero', () => {
+    expect(renderToStaticMarkup(<LoadRing level="low" percent={0} />)).not.toContain(
+      'load-ring-arc',
+    );
   });
 
-  it('colours the ring from the band', () => {
-    expect(
-      renderToStaticMarkup(<LoadRing size="small" level="saturated" percent={95} />),
-    ).toContain('var(--color-red)');
+  it('colours the arc from the band, and grey when muted', () => {
+    expect(renderToStaticMarkup(<LoadRing level="saturated" percent={95} />)).toContain(
+      'var(--color-red)',
+    );
+    expect(renderToStaticMarkup(<LoadRing level="saturated" percent={95} muted />)).not.toContain(
+      'var(--color-red)',
+    );
   });
 });
 
-describe('ExitLoadSummary', () => {
-  it('shows a quiet exit as its band name and the live threshold, without a percentage', () => {
+describe('ExitLoadBadge', () => {
+  it('shows a quiet exit as a band-filled ring and the live threshold, with no word or percentage', () => {
     const html = renderToStaticMarkup(
-      <ExitLoadSummary exit={QUIET_EXIT} stats={STATS} ringSize="small" locale="en" />,
+      <ExitLoadBadge exit={QUIET_EXIT} stats={STATS} locale="en" />,
     );
 
-    expect(html).toContain('Moderate load');
-    expect(pillText(html)).toBe('&lt; 20');
-    expect(html).not.toContain('%');
+    expect(visibleText(html)).toBe('< 20');
+    expect(html).toContain('load-ring-arc');
+    expect(html).toContain('aria-label="Moderate load, &lt; 20 people"');
   });
 
   it('shows a live exit as its percentage and its floored people count', () => {
+    const html = renderToStaticMarkup(<ExitLoadBadge exit={LIVE_EXIT} stats={STATS} locale="en" />);
+
+    expect(visibleText(html)).toBe('37% 40+');
+    expect(html).toContain('aria-label="Load 37%, 40+ people"');
+  });
+
+  it('adds the download rate of a live exit when asked', () => {
     const html = renderToStaticMarkup(
-      <ExitLoadSummary exit={LIVE_EXIT} stats={STATS} ringSize="small" locale="en" />,
+      <ExitLoadBadge exit={LIVE_EXIT} stats={STATS} locale="en" throughput />,
     );
 
-    expect(html).toContain('37%');
-    expect(pillText(html)).toBe('40+');
-    expect(html).toContain('load-ring-arc');
+    expect(visibleText(html)).toBe('37% 40+ 300 Mbit/s');
+  });
+
+  it('never shows a rate for a quiet exit', () => {
+    const html = renderToStaticMarkup(
+      <ExitLoadBadge exit={QUIET_EXIT} stats={STATS} locale="en" throughput />,
+    );
+
+    expect(visibleText(html)).toBe('< 20');
   });
 
   it('shows an offline exit as offline, without a people count', () => {
     const html = renderToStaticMarkup(
-      <ExitLoadSummary
-        exit={{ ...LIVE_EXIT, online: false }}
-        stats={STATS}
-        ringSize="small"
-        locale="en"
-      />,
+      <ExitLoadBadge exit={{ ...LIVE_EXIT, online: false }} stats={STATS} locale="en" />,
     );
 
-    expect(html).toContain('Offline');
-    expect(html).not.toContain('users-pill');
-  });
-});
-
-describe('Sparkline', () => {
-  it('renders nothing without history', () => {
-    expect(renderToStaticMarkup(<Sparkline values={[]} width={100} height={20} />)).toBe('');
-  });
-
-  it('emphasises the newest point', () => {
-    const html = renderToStaticMarkup(<Sparkline values={[1, 3, 2]} width={100} height={20} />);
-
-    expect(html).toContain('<circle');
-  });
-});
-
-function withStore(element: React.ReactElement): string {
-  return renderToStaticMarkup(element);
-}
-
-describe('FleetCard', () => {
-  it('marks the people count as a floor while an exit is live', () => {
-    const html = withStore(<FleetCard stats={STATS} stale={false} />);
-
-    expect(html).toMatch(/data-testid="network-connected"[^>]*>57\+</);
-  });
-
-  it('colours the fleet ring by the fleet load band', () => {
-    const html = withStore(<FleetCard stats={STATS} stale={false} />);
-
-    expect(html).toContain('stroke:var(--color-green)');
-  });
-
-  it('draws the fleet ring neutral when the server sends no band', () => {
-    const stats = { ...STATS, fleet: { ...STATS.fleet, loadLevel: 'unknown' as const } };
-
-    const html = withStore(<FleetCard stats={stats} stale={false} />);
-
-    expect(html).toContain('stroke:var(--color-white-on-dark-blue40)');
-  });
-});
-
-describe('ExitCard', () => {
-  it('dates the band of a quiet exit to the last hour', () => {
-    const html = withStore(<ExitCard exit={QUIET_EXIT} stats={STATS} stale={false} />);
-
-    expect(html).toContain('Load over the last hour');
-  });
-
-  it('says nothing about uptime when the server withholds it', () => {
-    const exit = { ...LIVE_EXIT, uptimeSecs: undefined };
-
-    const html = withStore(<ExitCard exit={exit} stats={STATS} stale={false} />);
-
-    expect(html).not.toMatch(/Up (\d|less)/);
-  });
-
-  it('shows the uptime in whole days when a server publishes it', () => {
-    const html = withStore(<ExitCard exit={LIVE_EXIT} stats={STATS} stale={false} />);
-
-    expect(html).toContain('Up 2 days');
+    expect(visibleText(html)).toBe('Offline');
+    expect(html).not.toContain('load-ring-arc');
   });
 });

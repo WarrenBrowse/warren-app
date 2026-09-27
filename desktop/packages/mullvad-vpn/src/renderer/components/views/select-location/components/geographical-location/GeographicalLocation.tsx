@@ -1,11 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
 import { sprintf } from 'sprintf-js';
+import styled from 'styled-components';
 
 import { messages } from '../../../../../../shared/gettext';
+import { CountryFlag } from '../../../../../features/app-routing/components';
 import { useRecents } from '../../../../../features/locations/hooks';
 import { type GeographicalLocation } from '../../../../../features/locations/types';
 import { getLocationChildren } from '../../../../../features/locations/utils';
 import { type ListItemProps } from '../../../../../lib/components/list-item';
+import { holdsSeveralExits, showsAsSelected } from '../../../../../lib/network-stats';
 import { useScrollPositionContext } from '../../ScrollPositionContext';
 import { getLocationListItemMapProps } from '../../utils';
 import { Location } from '../location-list-item';
@@ -14,6 +17,20 @@ import {
   GeographicalLocationProvider,
   useGeographicalLocationContext,
 } from './GeographicalLocationContext';
+
+const StyledLead = styled.span({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '12px',
+  minWidth: 0,
+  // The load shares the row: a long relay name is cut rather than wrapped.
+  '& > :last-child': {
+    minWidth: 0,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  },
+});
 
 export type GeographicalLocationProps = Pick<ListItemProps, 'level' | 'position'> & {
   location: GeographicalLocation;
@@ -43,7 +60,8 @@ function GeographicalLocationImpl({
   }, [location.expanded]);
 
   const disabled = disabledProp || location.disabled || loading;
-  const showChildren = locationChildren.length > 0 && expanded;
+  // A place with a single exit is that exit: it never opens.
+  const showChildren = holdsSeveralExits(location) && expanded;
 
   const handleClick = useCallback(() => {
     onSelect(location);
@@ -77,10 +95,11 @@ function GeographicalLocationImpl({
   const refToScrollTo = shouldScrollToLocation ? selectedLocationRef : null;
 
   return (
-    <Location selected={location.selected} root={root}>
+    <Location selected={showsAsSelected(location)} root={root}>
       <Location.Accordion expanded={expanded} onExpandedChange={setExpanded} disabled={disabled}>
         <Location.Accordion.Header ref={refToScrollTo} level={level} position={position}>
           <Location.Accordion.Header.ItemTrigger
+            style={{ minWidth: 0 }}
             onClick={handleClick}
             aria-label={sprintf(
               // TRANSLATORS: Accessibility label for a button that connects to a location.
@@ -91,10 +110,15 @@ function GeographicalLocationImpl({
                 location: location.label,
               },
             )}>
-            <Location.Accordion.Header.Item>
-              <Location.Accordion.Header.Item.Title>
-                {location.label}
-              </Location.Accordion.Header.Item.Title>
+            <Location.Accordion.Header.Item style={{ minWidth: 0 }}>
+              <StyledLead>
+                {location.type === 'country' && (
+                  <CountryFlag country={location.details.country} size={20} />
+                )}
+                <Location.Accordion.Header.Item.Title>
+                  {location.label}
+                </Location.Accordion.Header.Item.Title>
+              </StyledLead>
               {(location.type === 'relay' || !showChildren) && (
                 <LocationExitLoad location={location} />
               )}

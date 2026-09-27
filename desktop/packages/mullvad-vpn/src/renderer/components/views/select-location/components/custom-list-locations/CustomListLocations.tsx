@@ -10,10 +10,7 @@ import { useSelectLocationViewContext } from '../../SelectLocationViewContext';
 import { getLocationListItemMapProps } from '../../utils';
 import { CustomListLocation } from '../custom-list-location';
 import { CustomListsSectionTitle } from './components';
-import {
-  CustomListLocationsProvider,
-  useCustomListLocationsContext,
-} from './CustomListLocationsContext';
+import { CustomListLocationsProvider } from './CustomListLocationsContext';
 
 const StyledAnimatedList = styled(AnimatedList)`
   display: flex;
@@ -21,12 +18,10 @@ const StyledAnimatedList = styled(AnimatedList)`
 `;
 
 function CustomListLocationsImpl() {
-  const { addingCustomList } = useCustomListLocationsContext();
   const { customListLocations } = useSelectLocationViewContext();
   const titleId = React.useId();
 
   const hasCustomLists = useHasCustomLists();
-  const showAddCustomListText = !hasCustomLists && !addingCustomList;
   const showAddLocationToCustomListText = hasCustomLists;
 
   return (
@@ -44,18 +39,6 @@ function CustomListLocationsImpl() {
           })}
         </StyledAnimatedList>
 
-        {showAddCustomListText && (
-          <Text variant="labelTiny" color="whiteAlpha60">
-            {
-              // TRANSLATORS: Message shown when the user has no custom lists.
-              // TRANSLATORS: Instructs the user how to create a custom list.
-              messages.pgettext(
-                'select-location-view',
-                'Add a custom list by clicking the “+” icon',
-              )
-            }
-          </Text>
-        )}
         {showAddLocationToCustomListText && (
           <Container horizontalMargin="medium">
             <Text variant="labelTiny" color="whiteAlpha60">

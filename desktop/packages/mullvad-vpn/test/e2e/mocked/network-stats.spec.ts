@@ -131,18 +131,66 @@ test.describe('Network stats', () => {
     await util?.closePage();
   });
 
-  test('location rows show the load of their exit', async () => {
+  test('location rows show a flag and the load of their exit', async () => {
     await routes.main.gotoSelectLocation();
 
-    const summaries = page.getByTestId('exit-load-summary');
-    await expect(summaries).toHaveCount(3);
-    await expect(page.getByText('Moderate load')).toBeVisible();
-    await expect(page.getByTestId('users-pill').filter({ hasText: '< 20' })).toBeVisible();
-    await expect(page.getByText('37%')).toBeVisible();
-    await expect(page.getByTestId('users-pill').filter({ hasText: '40+' })).toBeVisible();
-    await expect(page.getByText('Offline')).toBeVisible();
+    const badges = page.getByTestId('exit-load-badge');
+    await expect(badges).toHaveCount(3);
+    await expect(badges.filter({ hasText: '37%' })).toHaveText(/37%.*40\+.*300 Mbit\/s/);
+    await expect(badges.filter({ hasText: '< 20' })).toHaveAttribute(
+      'aria-label',
+      'Moderate load, < 20 people',
+    );
+    await expect(badges.filter({ hasText: 'Offline' })).toHaveCount(1);
+    // One exit per country: every row selects its exit, none opens.
+    await expect(page.locator('img[src$="flags/fr.svg"]')).toHaveCount(1);
+    await expect(page.getByRole('button', { name: /^Expand / })).toHaveCount(0);
+    // Nothing to fill in yet: no empty sections, no headings over a single
+    // list, no custom-list menu before a custom list exists.
+    await expect(page.getByText('No recent selection history')).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'Custom lists' })).toHaveCount(0);
+    await expect(page.getByRole('heading', { name: 'All locations' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: /^Open menu for / })).toHaveCount(0);
 
     await page.screenshot({ path: `${SHOTS}/location-list.png` });
+
+    // A custom list is created from the header menu.
+    await page.getByRole('button', { name: 'Open select location menu' }).click();
+    await expect(page.getByRole('menu').getByText('New custom list')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await new NavigationObjectModel(page, util).goBackToRoute(RoutePath.main);
+  });
+
+  test('a country with several exits opens onto one row per exit', async () => {
+    const second = 'warren-abababababababac';
+    const withTwoInFrance: IRelayList = {
+      countries: relayList.countries.map((country) =>
+        country.code !== 'fr'
+          ? country
+          : {
+              ...country,
+              cities: [{ ...country.cities[0], relays: [relay(LIVE_HOST), relay(second)] }],
+            },
+      ),
+    };
+    await util.ipc.relays[''].notify({
+      relayList: withTwoInFrance,
+      wireguardEndpointData: mockData.wireguardEndpointData,
+    });
+    await routes.main.gotoSelectLocation();
+
+    await page.getByRole('button', { name: 'Expand France' }).click();
+    await page.getByRole('button', { name: 'Expand Paris' }).click();
+    await expect(page.getByText(LIVE_HOST)).toBeVisible();
+    await expect(page.getByText(second)).toBeVisible();
+    await expect(page.getByTestId('exit-load-badge').filter({ hasText: '37%' })).toHaveCount(1);
+    await page.waitForTimeout(400);
+    await page.screenshot({ path: `${SHOTS}/location-list-expanded.png` });
+
+    await util.ipc.relays[''].notify({
+      relayList,
+      wireguardEndpointData: mockData.wireguardEndpointData,
+    });
     await new NavigationObjectModel(page, util).goBackToRoute(RoutePath.main);
   });
 
@@ -152,48 +200,54 @@ test.describe('Network stats', () => {
   ] as const) {
     test(`the connection card shows the ${name} exit without growing`, async () => {
       // Same card, connected to an exit the snapshot does not know, is the
-      // baseline: the load must share the hostname line, not add one.
+      // baseline: the load shares the hostname line and adds nothing to the
+      // expanded details.
       await connectTo('warren-0000000000000000', country, city);
       await expect(page.getByTestId('connected-exit-load')).toHaveCount(0);
-      const withoutLoad = await cardTop();
+      const collapsed = await cardTop();
+      await routes.main.expandConnectionPanel();
+      await page.waitForTimeout(600);
+      const expanded = await cardTop();
+      await routes.main.expandConnectionPanel();
+      await page.waitForTimeout(600);
 
       await connectTo(hostname, country, city);
       await expect(page.getByTestId('connected-exit-load')).toBeVisible();
       await page.waitForTimeout(600);
 
-      expect(await cardTop()).toBe(withoutLoad);
+      expect(await cardTop()).toBe(collapsed);
       await page.screenshot({ path: `${SHOTS}/connect-${name}.png` });
 
       await routes.main.expandConnectionPanel();
-      await expect(page.getByTestId('connected-exit-live')).toBeVisible();
       await page.waitForTimeout(600);
+      expect(await cardTop()).toBe(expanded);
       await page.screenshot({ path: `${SHOTS}/connect-${name}-details.png` });
       await routes.main.expandConnectionPanel();
       await page.waitForTimeout(600);
     });
   }
 
-  test('the live row opens the network view', async () => {
+  test('the expanded card keeps its chevron on screen in a short window', async () => {
+    // The Electron window cannot be resized from here; the page can.
+    const short = await page.addStyleTag({
+      content: 'html, body, #app { height: 480px !important; overflow: hidden; }',
+    });
+    await routes.main.expandConnectionPanel();
+    await page.waitForTimeout(600);
+
+    const chevron = await page.getByTestId('connection-panel-chevron').boundingBox();
+    expect(chevron!.y).toBeGreaterThanOrEqual(0);
+    await expect(page.getByRole('button', { name: 'Disconnect' })).toBeInViewport({ ratio: 1 });
+
+    await page.screenshot({ path: `${SHOTS}/connect-short-window.png` });
+    await routes.main.expandConnectionPanel();
+    await short.evaluate((style) => (style as HTMLStyleElement).remove());
+    await page.waitForTimeout(600);
+  });
+
+  test('the load on the connection card opens nothing', async () => {
     await page.getByTestId('connected-exit-load').click();
-    await util.expectRoute(RoutePath.warrenNetwork);
-
-    await expect(page.getByTestId('network-connected')).toHaveText('57+');
-    await expect(page.getByTestId('network-exit-card')).toHaveCount(3);
-    await expect(page.getByTestId('network-methodology')).toBeVisible();
-    await expect(page.getByText('Load over the last hour')).toBeVisible();
-    await expect(page.getByText(/^Up (\d|less)/)).toHaveCount(0);
-    await page.waitForTimeout(1000);
-    await page.screenshot({ path: `${SHOTS}/network-view.png` });
-
-    const scroll = page.getByTestId('network-methodology');
-    await scroll.scrollIntoViewIfNeeded();
-    await page.screenshot({ path: `${SHOTS}/network-view-end.png` });
-
-    await page.getByTestId('network-exit-card').nth(0).scrollIntoViewIfNeeded();
-    await page.screenshot({ path: `${SHOTS}/network-view-live-exit.png` });
-
-    await page.getByTestId('network-exit-card').nth(1).scrollIntoViewIfNeeded();
-    await page.screenshot({ path: `${SHOTS}/network-view-exits.png` });
+    await util.expectRoute(RoutePath.main);
   });
 });
 

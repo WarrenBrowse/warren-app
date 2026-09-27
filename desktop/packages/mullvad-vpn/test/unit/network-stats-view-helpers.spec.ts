@@ -8,14 +8,13 @@ import type {
 import { loadLevelColors } from '../../src/renderer/lib/foundations/variables/load-color-variables';
 import {
   arcDashOffset,
-  formatSnapshotAge,
+  bandArcPercent,
+  holdsSeveralExits,
   liveThresholdNote,
   loadLevelLabel,
-  relayPlacesByHostname,
   ringGeometry,
+  showsAsSelected,
   singleExitHostname,
-  sparklinePaths,
-  tweenAt,
 } from '../../src/renderer/lib/network-stats/helpers';
 
 describe('ring geometry', () => {
@@ -36,49 +35,6 @@ describe('ring geometry', () => {
   it('never draws past a full turn or backwards', () => {
     expect(arcDashOffset(250, 100)).toBe(0);
     expect(arcDashOffset(-5, 100)).toBe(100);
-  });
-});
-
-describe('sparklinePaths', () => {
-  it('draws nothing without a point', () => {
-    expect(sparklinePaths([], 100, 20)).toBeUndefined();
-  });
-
-  it('marks a single point at the right edge without inventing a line', () => {
-    const paths = sparklinePaths([5], 100, 20);
-
-    expect(paths?.line).toBe('');
-    expect(paths?.last.x).toBe(100 - paths!.inset);
-  });
-
-  it('spans the width and puts the highest value at the top', () => {
-    const paths = sparklinePaths([0, 10, 5], 100, 20)!;
-    const inset = paths.inset;
-
-    expect(paths.line).toBe(
-      `M${inset},${20 - inset} L50,${inset} L${100 - inset},${10}`.replace(/\s+/g, ' '),
-    );
-    expect(paths.last).toEqual({ x: 100 - inset, y: 10 });
-    expect(paths.area.startsWith(paths.line)).toBe(true);
-  });
-
-  it('draws a flat series along the middle instead of dividing by zero', () => {
-    const paths = sparklinePaths([7, 7], 100, 20)!;
-
-    expect(paths.last.y).toBe(10);
-  });
-});
-
-describe('tweenAt', () => {
-  it('starts at the previous value and lands on the new one', () => {
-    expect(tweenAt(10, 50, 0, 800)).toBe(10);
-    expect(tweenAt(10, 50, 800, 800)).toBe(50);
-    expect(tweenAt(10, 50, 5_000, 800)).toBe(50);
-  });
-
-  it('eases out: past halfway by the middle of the duration', () => {
-    expect(tweenAt(0, 100, 400, 800)).toBeGreaterThan(50);
-    expect(tweenAt(0, 100, 400, 800)).toBeLessThan(100);
   });
 });
 
@@ -135,25 +91,54 @@ describe('singleExitHostname', () => {
   });
 });
 
-describe('relayPlacesByHostname', () => {
-  it('reads each exit place from the signed relay list', () => {
-    const places = relayPlacesByHostname([
-      {
-        name: 'France',
-        code: 'fr',
-        cities: [
-          {
-            name: 'Paris',
-            code: 'par',
-            latitude: 0,
-            longitude: 0,
-            relays: [{ hostname: 'warren-a' } as never],
-          },
-        ],
-      },
-    ]);
+describe('holdsSeveralExits', () => {
+  it('is false for a relay, and for a city or a country holding one exit', () => {
+    expect(holdsSeveralExits(relay('warren-a'))).toBe(false);
+    expect(holdsSeveralExits(city([relay('warren-a')]))).toBe(false);
+    expect(holdsSeveralExits(country([city([relay('warren-a')])]))).toBe(false);
+  });
 
-    expect(places.get('warren-a')).toEqual({ country: 'France', city: 'Paris' });
+  it('is true for a place holding several exits, in one city or across cities', () => {
+    expect(holdsSeveralExits(city([relay('warren-a'), relay('warren-b')]))).toBe(true);
+    expect(holdsSeveralExits(country([city([relay('warren-a')]), city([relay('warren-b')])]))).toBe(
+      true,
+    );
+  });
+});
+
+describe('showsAsSelected', () => {
+  it('marks a row selected by itself', () => {
+    expect(showsAsSelected({ ...relay('warren-a'), selected: true })).toBe(true);
+  });
+
+  it('marks a single-exit place selected when its hidden exit is the selection', () => {
+    const chosen = { ...relay('warren-a'), selected: true };
+
+    expect(showsAsSelected(country([city([chosen])]))).toBe(true);
+    expect(showsAsSelected(city([chosen]))).toBe(true);
+  });
+
+  it('leaves a place with several exits unmarked when only one of them is selected', () => {
+    const chosen = { ...relay('warren-a'), selected: true };
+
+    expect(showsAsSelected(city([chosen, relay('warren-b')]))).toBe(false);
+  });
+
+  it('leaves an unselected single-exit place unmarked', () => {
+    expect(showsAsSelected(country([city([relay('warren-a')])]))).toBe(false);
+  });
+});
+
+describe('bandArcPercent', () => {
+  it('fills the ring of a quiet exit by band, so the shape carries the level too', () => {
+    expect(bandArcPercent('low')).toBe(25);
+    expect(bandArcPercent('moderate')).toBe(60);
+    expect(bandArcPercent('high')).toBe(85);
+    expect(bandArcPercent('saturated')).toBe(100);
+  });
+
+  it('draws no arc for an unknown band', () => {
+    expect(bandArcPercent('unknown')).toBe(0);
   });
 });
 
@@ -172,12 +157,6 @@ describe('labels', () => {
     expect(loadLevelLabel('low')).toBe('Low load');
     expect(loadLevelLabel('saturated')).toBe('Saturated');
     expect(loadLevelLabel('unknown')).toBe('Load unknown');
-  });
-
-  it('says how old the snapshot is in the largest whole unit', () => {
-    expect(formatSnapshotAge(42)).toBe('Updated 42 s ago');
-    expect(formatSnapshotAge(150)).toBe('Updated 2 min ago');
-    expect(formatSnapshotAge(7_300)).toBe('Updated 2 h ago');
   });
 
   it('explains the live threshold with the value the snapshot carries', () => {
