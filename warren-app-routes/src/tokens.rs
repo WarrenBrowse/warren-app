@@ -16,8 +16,9 @@
 //! serial the exit admitted this session on, the only one it would renew.
 
 use std::sync::{Arc, Mutex, PoisonError};
+use std::time::Duration;
 
-use warren_api::{HttpTransport, SerialLease, TokenManager};
+use warren_api::{HttpTransport, SerialLease, TokenClientError, TokenManager};
 use warrenguard_transport::supervisor::SessionTokenProvider;
 use warrenguard_wire::SESSION_TOKEN_LEN;
 
@@ -145,6 +146,66 @@ pub fn announce_minted<T: HttpTransport>(
     true
 }
 
+/// The coarse refresh period of a wallet's credentials, and the first wait
+/// after a failed round. A failure doubles the wait, up to the period: the
+/// first round runs as the first tunnel connects, and a round lost then left
+/// route sessions without a token for the whole period.
+pub const REFRESH_PERIOD: Duration = Duration::from_secs(600);
+/// See [`REFRESH_PERIOD`].
+pub const FIRST_RETRY: Duration = Duration::from_secs(15);
+/// How often a running round is looked at for the current epoch's tokens,
+/// which a waiting first tunnel can take before the round ends.
+pub const MINTED_POLL: Duration = Duration::from_millis(100);
+
+/// Runs `refresh` now and after each wait: [`REFRESH_PERIOD`] once a round
+/// succeeds, from [`FIRST_RETRY`] doubling up to the period after a failure.
+pub async fn refresh_forever<F, R>(mut refresh: F)
+where
+    F: FnMut() -> R,
+    R: std::future::Future<Output = bool>,
+{
+    let mut retry = FIRST_RETRY;
+    loop {
+        let wait = if refresh().await {
+            retry = FIRST_RETRY;
+            REFRESH_PERIOD
+        } else {
+            let wait = retry;
+            retry = (retry * 2).min(REFRESH_PERIOD);
+            wait
+        };
+        tokio::time::sleep(wait).await;
+    }
+}
+
+/// Runs one refresh round of `manager` and announces the current epoch's
+/// tokens as soon as the round has minted them ([`announce_minted`]), every
+/// [`MINTED_POLL`], without waiting for the later epochs of its horizon. The
+/// round's end is the caller's to announce ([`announce_refresh`]), once what
+/// it keeps of the round (the route admission block, a persisted bundle) is
+/// in force.
+///
+/// # Errors
+///
+/// The round's own failure, [`TokenManager::refresh`]'s.
+pub async fn refresh_announcing_mints<T: HttpTransport>(
+    manager: &TokenManager<T>,
+    credentials: &tokio::sync::watch::Sender<crate::Credentials>,
+    now: &(dyn Fn() -> u64 + Sync),
+) -> Result<(), TokenClientError> {
+    let refresh = manager.refresh(now());
+    tokio::pin!(refresh);
+    let mut minted = false;
+    loop {
+        tokio::select! {
+            refreshed = &mut refresh => return refreshed,
+            () = tokio::time::sleep(MINTED_POLL), if !minted => {
+                minted = announce_minted(credentials, manager, now());
+            }
+        }
+    }
+}
+
 /// Every token of the epoch `now` falls in, held or not, read from a copy of
 /// the store: nothing is consumed.
 fn epoch_batch<T: HttpTransport>(
@@ -210,12 +271,21 @@ mod tests {
 
     /// A manager holding the wallet's batches for `epochs`.
     fn restored_manager(epochs: &[(u64, &[u8])]) -> TokenManager<NoNetwork> {
+        restored_manager_over(NoNetwork, epochs)
+    }
+
+    /// A manager holding the wallet's batches for `epochs`, whose refresh
+    /// rounds go to `issuer`.
+    fn restored_manager_over<T: warren_api::HttpTransport>(
+        issuer: T,
+        epochs: &[(u64, &[u8])],
+    ) -> TokenManager<T> {
         let seed = [0x42; 32];
         let manager = TokenManager::new(
             Arc::new(WarrenApiClient::new(
                 "https://api.example.test",
                 WarrenIdentity::from_seed(&seed),
-                NoNetwork,
+                issuer,
             )),
             BlindingKey::session(&seed),
         );
@@ -285,6 +355,69 @@ mod tests {
                 has_tokens: true
             }
         );
+    }
+
+    /// An issuer that never answers, so a round over it keeps running.
+    struct Unanswered;
+
+    impl warren_api::HttpTransport for Unanswered {
+        async fn execute(
+            &self,
+            _request: warren_api::HttpRequest,
+        ) -> Result<warren_api::HttpResponse, warren_api::TransportError> {
+            std::future::pending().await
+        }
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_running_round_announces_the_current_epochs_tokens_before_it_ends() {
+        let (credentials, followed) = tokio::sync::watch::channel(crate::Credentials::default());
+        let manager = restored_manager_over(Unanswered, &[(EPOCH, &[1])]);
+
+        let round = super::refresh_announcing_mints(&manager, &credentials, &|| NOW);
+        let ended = tokio::time::timeout(std::time::Duration::from_secs(1), round).await;
+
+        assert!(ended.is_err(), "the round is still running");
+        assert_eq!(
+            *followed.borrow(),
+            crate::Credentials {
+                rounds: 0,
+                has_tokens: true
+            }
+        );
+    }
+
+    /// When each round of a refresh task runs, in seconds from its start,
+    /// given whether each round succeeds.
+    async fn refresh_rounds(outcomes: &[bool]) -> Vec<u64> {
+        let start = tokio::time::Instant::now();
+        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+        let mut outcomes = Vec::from(outcomes).into_iter();
+        let task = tokio::spawn(super::refresh_forever(move || {
+            let _ = tx.send(start.elapsed().as_secs());
+            let outcome = outcomes.next().unwrap_or(true);
+            async move { outcome }
+        }));
+        let mut rounds = Vec::new();
+        while rounds.len() < 5 {
+            rounds.push(rx.recv().await.expect("the task runs"));
+        }
+        task.abort();
+        rounds
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_failed_refresh_is_retried_soon_and_sooner_than_the_period() {
+        let rounds = refresh_rounds(&[false, false, true, true, true]).await;
+
+        assert_eq!(rounds, [0, 15, 45, 645, 1245]);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn retries_back_off_up_to_the_period() {
+        let rounds = refresh_rounds(&[false; 5]).await;
+
+        assert_eq!(rounds, [0, 15, 45, 105, 225]);
     }
 
     fn batch_of_three() -> SessionTokenSource {

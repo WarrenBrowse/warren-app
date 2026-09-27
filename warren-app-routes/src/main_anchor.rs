@@ -21,7 +21,7 @@
 use std::sync::Arc;
 
 use tokio::sync::watch;
-use warrenguard_transport::route_anchor::RouteAnchorHandle;
+use warrenguard_transport::route_anchor::{RouteAnchorConfig, RouteAnchorHandle};
 
 use crate::{Credentials, RouteAdmissionSource};
 
@@ -34,6 +34,17 @@ use crate::{Credentials, RouteAdmissionSource};
 /// tunnel. A refresh that does not come (the API blocked on this network)
 /// costs the connection this much, once.
 pub const FIRST_REFRESH_WAIT: std::time::Duration = std::time::Duration::from_secs(4);
+
+/// The anchor of a main session whose tunnel runs per-app routes: with the
+/// key the token directory offers, or waiting for one when it has offered
+/// none yet (a first run), which [`follow_credentials`] hands over later.
+#[must_use]
+pub fn anchor_for(admission: &dyn RouteAdmissionSource) -> RouteAnchorHandle {
+    match admission.kem() {
+        Some(kem) => RouteAnchorHandle::new(RouteAnchorConfig { kem }),
+        None => RouteAnchorHandle::awaiting_key(),
+    }
+}
 
 /// Resolves once the wallet holds tokens for the current epoch or the
 /// daemon finished its first credentials refresh round, at once when either
@@ -184,6 +195,16 @@ mod tests {
             .public_key()
             .clone();
         Arc::new(Directory(std::sync::Mutex::new(offering.then_some(kem))))
+    }
+
+    #[test]
+    fn a_main_anchor_takes_the_offered_key_or_waits_for_one() {
+        assert!(anchor_for(directory(true).as_ref()).has_key());
+
+        let waiting = anchor_for(directory(false).as_ref());
+
+        assert!(!waiting.has_key());
+        assert_eq!(waiting.current_state(), AnchorState::Unavailable);
     }
 
     #[test]

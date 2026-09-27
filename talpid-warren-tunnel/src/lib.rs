@@ -27,7 +27,7 @@ use talpid_tunnel::{
 };
 use talpid_types::net::AllowedTunnelTraffic;
 use warrenguard_multihop::RejectionReason;
-use warrenguard_transport::route_anchor::{RouteAnchorConfig, RouteAnchorHandle};
+use warrenguard_transport::route_anchor::RouteAnchorHandle;
 // Re-exported below so downstream crates (talpid-core, mullvad-daemon)
 // can construct `MultiHopConfig` without depending on warrenguard-multihop
 // directly. Same pattern as `warren-relay-selector::warren_types`.
@@ -712,10 +712,9 @@ impl std::fmt::Debug for WarrenTunnelParameters {
 /// tunnel that cannot run per-app routes (no plan wired) does not anchor.
 fn route_anchor_for(params: &WarrenTunnelParameters) -> Option<RouteAnchorHandle> {
     params.app_routes_rx.as_ref()?;
-    Some(match params.route_admission.as_ref()?.kem() {
-        Some(kem) => RouteAnchorHandle::new(RouteAnchorConfig { kem }),
-        None => RouteAnchorHandle::awaiting_key(),
-    })
+    Some(app_routes::main_anchor::anchor_for(
+        params.route_admission.as_ref()?.as_ref(),
+    ))
 }
 
 /// Stable identity of a NAT-PMP port-forward rule, matching how the

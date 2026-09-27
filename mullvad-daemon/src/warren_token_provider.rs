@@ -50,14 +50,15 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex, OnceLock, PoisonError};
-use std::time::Duration;
 
 use talpid_warren_tunnel::app_routes::admission::remember_route_admission;
 pub(crate) use talpid_warren_tunnel::app_routes::admission::{
     DirectoryRouteAdmission, REMEMBERED_ROUTE_ADMISSION, RouteKemTrust,
 };
 pub(crate) use talpid_warren_tunnel::app_routes::tokens::session_source;
-use talpid_warren_tunnel::app_routes::tokens::{announce_minted, announce_refresh};
+use talpid_warren_tunnel::app_routes::tokens::{
+    announce_refresh, refresh_announcing_mints, refresh_forever,
+};
 use talpid_warren_tunnel::{
     SessionTokenSource,
     app_routes::{Credentials, RouteAdmissionSource},
@@ -90,38 +91,6 @@ fn now_unix_secs() -> u64 {
         .unwrap_or(0)
 }
 
-/// The coarse refresh period, and the first wait after a failed round. A
-/// failure doubles the wait, up to the period: the first round runs when the
-/// first tunnel starts, and while its firewall is still connecting the API
-/// cannot be reached, which left route sessions without a token for the
-/// whole period.
-const REFRESH_PERIOD: Duration = Duration::from_secs(600);
-/// How often a running round is looked at for the current epoch's tokens,
-/// which a waiting first tunnel can take before the round ends.
-const MINTED_POLL: Duration = Duration::from_millis(100);
-const FIRST_RETRY: Duration = Duration::from_secs(15);
-
-/// Runs `refresh` now and after each wait: the period once a round succeeds,
-/// a shorter one after a failure.
-async fn refresh_forever<F, R>(mut refresh: F)
-where
-    F: FnMut() -> R,
-    R: std::future::Future<Output = bool>,
-{
-    let mut retry = FIRST_RETRY;
-    loop {
-        let wait = if refresh().await {
-            retry = FIRST_RETRY;
-            REFRESH_PERIOD
-        } else {
-            let wait = retry;
-            retry = (retry * 2).min(REFRESH_PERIOD);
-            wait
-        };
-        tokio::time::sleep(wait).await;
-    }
-}
-
 fn spawn_refresh(
     manager: Arc<Manager>,
     credentials: watch::Sender<Credentials>,
@@ -137,19 +106,7 @@ fn spawn_refresh(
         let standing = standing.clone();
         let remembered_at = remembered_at.clone();
         async move {
-            let refreshed = {
-                let refresh = manager.refresh(now_unix_secs());
-                tokio::pin!(refresh);
-                let mut minted = false;
-                loop {
-                    tokio::select! {
-                        refreshed = &mut refresh => break refreshed,
-                        () = tokio::time::sleep(MINTED_POLL), if !minted => {
-                            minted = announce_minted(&credentials, &manager, now_unix_secs());
-                        }
-                    }
-                }
-            };
+            let refreshed = refresh_announcing_mints(&manager, &credentials, &now_unix_secs).await;
             if let Some(path) = remembered_at.as_deref()
                 && manager.epoch_at(now_unix_secs()).is_some()
             {
@@ -256,40 +213,4 @@ fn wallet_for(
             }
         })
         .clone()
-}
-
-#[cfg(test)]
-mod tests {
-    /// When each round of a refresh task runs, in seconds from its start,
-    /// given whether each round succeeds.
-    async fn refresh_rounds(outcomes: &[bool]) -> Vec<u64> {
-        let start = tokio::time::Instant::now();
-        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
-        let mut outcomes = Vec::from(outcomes).into_iter();
-        let task = tokio::spawn(super::refresh_forever(move || {
-            let _ = tx.send(start.elapsed().as_secs());
-            let outcome = outcomes.next().unwrap_or(true);
-            async move { outcome }
-        }));
-        let mut rounds = Vec::new();
-        while rounds.len() < 5 {
-            rounds.push(rx.recv().await.expect("the task runs"));
-        }
-        task.abort();
-        rounds
-    }
-
-    #[tokio::test(start_paused = true)]
-    async fn a_failed_refresh_is_retried_soon_and_sooner_than_the_period() {
-        let rounds = refresh_rounds(&[false, false, true, true, true]).await;
-
-        assert_eq!(rounds, [0, 15, 45, 645, 1245]);
-    }
-
-    #[tokio::test(start_paused = true)]
-    async fn retries_back_off_up_to_the_period() {
-        let rounds = refresh_rounds(&[false; 5]).await;
-
-        assert_eq!(rounds, [0, 15, 45, 105, 225]);
-    }
 }
