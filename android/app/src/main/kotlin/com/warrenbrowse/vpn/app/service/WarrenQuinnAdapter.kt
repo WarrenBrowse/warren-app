@@ -96,6 +96,12 @@ class WarrenQuinnAdapter(
     private val _natPmpStatus = MutableStateFlow(NATPMP_IDLE)
     val natPmpStatus: StateFlow<String> = _natPmpStatus.asStateFlow()
 
+    // "Country per app": the route statuses (raw JSON from the Rust side,
+    // parsed UI-side), read on every status wake. No route while no tunnel
+    // runs, which the screen shows as waiting for the VPN.
+    private val _appRoutesStatus = MutableStateFlow(APP_ROUTES_NONE)
+    val appRoutesStatus: StateFlow<String> = _appRoutesStatus.asStateFlow()
+
     // Total automatic recoveries since process start: the Rust redial
     // engine's in-session redials (autoRecoveryCount) plus the
     // adapter's own retry-loop successes (AutoRecoveryTracker). Mirrors the
@@ -193,6 +199,22 @@ class WarrenQuinnAdapter(
     private val flapDetector = FlapDetector()
 
     init {
+        // "Country per app": the countries in force reach the engine at once,
+        // and a running tunnel follows them without a reconnect of its main
+        // session (docs/app-routing.md section 2.2). The include-only list a
+        // country joins still re-establishes the TUN below, as any list does.
+        scope.launch {
+            combine(
+                    settings.splitMode,
+                    settings.excludedApps,
+                    settings.appExits,
+                    settings.appExitsEnabled,
+                ) { _, _, _, _ ->
+                    currentAppExits()
+                }
+                .distinctUntilChanged()
+                .collect { exits -> platform.setAppRoutes(appExitsWireJson(exits)) }
+        }
         // Re-establish the TUN when the split-tunnelling selection changes while
         // connected, so newly excluded/included apps take effect without a
         // manual reconnect. The current-value emission is skipped (drop(1)); a
@@ -200,9 +222,15 @@ class WarrenQuinnAdapter(
         // at that moment is replaced instead: an app just added to an
         // include-only list is not held by the one already up.
         scope.launch {
-            combine(settings.splitMode, settings.excludedApps, settings.includedApps) { _, _, _ ->
-                currentAppRouting()
-            }
+            combine(
+                    settings.splitMode,
+                    settings.excludedApps,
+                    settings.includedApps,
+                    settings.appExits,
+                    settings.appExitsEnabled,
+                ) { _, _, _, _, _ ->
+                    currentAppRouting()
+                }
                 .drop(1)
                 .distinctUntilChanged()
                 .collect {
@@ -325,7 +353,8 @@ class WarrenQuinnAdapter(
         activeFd?.close()
         activeFd = liveDup
 
-        val wire = withDrainFailover(config).toWireJson()
+        val wire =
+            withDrainFailover(config).copy(appExits = appExitsWire(currentAppExits())).toWireJson()
         val rc = try {
             mnemonic.useAsString { phrase -> platform.connectTunnel(fd.detachFd(), phrase, wire) }
         } catch (e: IllegalStateException) {
@@ -522,6 +551,8 @@ class WarrenQuinnAdapter(
                 // same wake.
                 val np = platform.natPmpStatus()
                 if (np != _natPmpStatus.value) _natPmpStatus.value = np
+                val routes = platform.appRoutesStatus()
+                if (routes != _appRoutesStatus.value) _appRoutesStatus.value = routes
                 // Sum the native in-session redials with the adapter's own
                 // retry-loop recoveries; a redial that lands wakes this loop
                 // even though it has no status edge of its own.
@@ -684,6 +715,7 @@ class WarrenQuinnAdapter(
         datapathNetwork = null
         datapathNetworkSeen = false
         _natPmpStatus.value = NATPMP_IDLE
+        _appRoutesStatus.value = APP_ROUTES_NONE
         _effectiveMtu.value = null
         _state.value = WarrenTunnelState.Disconnected
     }
@@ -707,6 +739,7 @@ class WarrenQuinnAdapter(
         // user explicitly released traffic (RELEASE below). An active TUN whose
         // pump has died still drops everything, so keeping it is leak-safe.
         _natPmpStatus.value = NATPMP_IDLE
+        _appRoutesStatus.value = APP_ROUTES_NONE
         _effectiveMtu.value = null
         // Only an unexpected drop counts as a flap; a user teardown must not
         // record one. The blackhole-up-FIRST behaviour (block, then retry) is
@@ -805,6 +838,7 @@ class WarrenQuinnAdapter(
      */
     private fun onSessionExpired(config: WarrenTunnelConfig) {
         _natPmpStatus.value = NATPMP_IDLE
+        _appRoutesStatus.value = APP_ROUTES_NONE
         _effectiveMtu.value = null
         flapDetector.reset()
         if (failsClosed(config)) {
@@ -847,6 +881,7 @@ class WarrenQuinnAdapter(
      */
     private fun onSessionBanned(config: WarrenTunnelConfig, verdict: BanVerdict) {
         _natPmpStatus.value = NATPMP_IDLE
+        _appRoutesStatus.value = APP_ROUTES_NONE
         _effectiveMtu.value = null
         flapDetector.reset()
         if (config.lockdownMode) {
@@ -1302,6 +1337,7 @@ class WarrenQuinnAdapter(
          */
         const val PEER_CLOSE_SETTLE_MS = 400L
         const val NATPMP_IDLE = "{\"state\":\"idle\"}"
+        const val APP_ROUTES_NONE = "{\"routes\":[]}"
 
         /**
          * Reason carried by the blocked state the handover park raises when

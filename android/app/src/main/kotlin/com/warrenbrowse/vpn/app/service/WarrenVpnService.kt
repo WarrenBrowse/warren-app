@@ -1,10 +1,14 @@
 package com.warrenbrowse.vpn.app.service
 
+import android.content.BroadcastReceiver
+import android.content.Context
 import android.content.Intent
+import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.os.Binder
 import android.os.Build
 import android.os.IBinder
+import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
 import androidx.lifecycle.lifecycleScope
 import arrow.atomic.AtomicInt
@@ -17,12 +21,14 @@ import com.warrenbrowse.vpn.app.standing.WarrenAccountStandingPoller
 import com.warrenbrowse.vpn.app.connect.HeldVoucherRedeemer
 import com.warrenbrowse.vpn.app.service.notifications.ForegroundNotificationManager
 import com.warrenbrowse.vpn.di.vpnServiceModule
+import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.lib.common.constant.KEY_CONNECT_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_DISCONNECT_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_RECONNECT_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_CONNECT_QUINN_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_TUNNEL_CONFIG_JSON
 import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
+import com.warrenbrowse.vpn.lib.model.AppRouteStatusParser
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationChannelFactory
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationManager
 import com.warrenbrowse.vpn.lib.repository.MnemonicCache
@@ -64,9 +70,29 @@ class WarrenVpnService : LifecycleVpnService() {
     // bind from the system, should always be present.
     private val bindCount = AtomicInt()
 
+    // "Country per app" names a flow's app after its uid's package: an install
+    // or an uninstall may hand a uid to another package, which the engine must
+    // attribute again rather than keep the route of the one before.
+    private val packagesChanged =
+        object : BroadcastReceiver() {
+            override fun onReceive(context: Context, intent: Intent) =
+                WarrenJni.notifyPackagesChanged()
+        }
+
     override fun onCreate() {
         super.onCreate()
         Logger.i("WarrenVpnService: onCreate")
+
+        ContextCompat.registerReceiver(
+            this,
+            packagesChanged,
+            IntentFilter().apply {
+                addAction(Intent.ACTION_PACKAGE_ADDED)
+                addAction(Intent.ACTION_PACKAGE_REMOVED)
+                addDataScheme("package")
+            },
+            ContextCompat.RECEIVER_NOT_EXPORTED,
+        )
 
         loadKoinModules(listOf(vpnServiceModule))
         with(getKoin()) {
@@ -112,6 +138,11 @@ class WarrenVpnService : LifecycleVpnService() {
         lifecycleScope.launch {
             quinnAdapter.natPmpStatus.collect { status ->
                 quinnStateProxy.updateNatPmpStatus(status)
+            }
+        }
+        lifecycleScope.launch {
+            quinnAdapter.appRoutesStatus.collect { status ->
+                quinnStateProxy.updateAppRoutes(AppRouteStatusParser.parse(status))
             }
         }
         lifecycleScope.launch {
@@ -380,6 +411,7 @@ class WarrenVpnService : LifecycleVpnService() {
         Logger.i("WarrenVpnService: onDestroy")
 
         connectivityMonitor.clearSocketProtector()
+        unregisterReceiver(packagesChanged)
 
         // `disconnect()` is idempotent (state-machine guards a no-op if
         // already disconnected), so it is safe even if no session was

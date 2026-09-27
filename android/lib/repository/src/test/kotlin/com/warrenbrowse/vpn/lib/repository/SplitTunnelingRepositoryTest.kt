@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import com.warrenbrowse.vpn.lib.model.AppExit
 import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
 import org.junit.jupiter.api.Test
 
@@ -20,11 +21,15 @@ class SplitTunnelingRepositoryTest {
 
     private val splitMode = MutableStateFlow(SplitTunnelMode.IncludeOnly)
     private val included = MutableStateFlow(setOf("org.bank", "org.mail", "org.gone"))
+    private val appExits = MutableStateFlow<Map<String, AppExit>>(emptyMap())
+    private val appExitsEnabled = MutableStateFlow(true)
     private val settings =
         mockk<WarrenLocalSettingsRepository> {
             every { splitMode } returns this@SplitTunnelingRepositoryTest.splitMode
             every { includedApps } returns included
             every { excludedApps } returns MutableStateFlow(setOf("org.chat"))
+            every { appExits } returns this@SplitTunnelingRepositoryTest.appExits
+            every { appExitsEnabled } returns this@SplitTunnelingRepositoryTest.appExitsEnabled
         }
     private val installed = setOf("org.bank", "org.mail", "org.chat")
 
@@ -66,6 +71,24 @@ class SplitTunnelingRepositoryTest {
         splitMode.value = SplitTunnelMode.Exclude
 
         assertEquals(null, repository.awaitCount { it == null })
+    }
+
+    @Test
+    fun `an app with a country counts among the apps vpn only for carries`() {
+        val repository = repository()
+        repository.awaitCount { it == 2 }
+
+        appExits.value = mapOf("org.chat" to AppExit("de"))
+
+        assertEquals(3, repository.awaitCount { it != 2 })
+    }
+
+    @Test
+    fun `a country switched off counts nothing`() {
+        appExits.value = mapOf("org.chat" to AppExit("de"))
+        appExitsEnabled.value = false
+
+        assertEquals(2, repository().awaitCount { it != null })
     }
 
     private companion object {

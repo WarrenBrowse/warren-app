@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import com.warrenbrowse.vpn.lib.model.AppExit
 
 // JSON payload handed to `WarrenJni.connectTunnel`. Lives in this module
 // rather than `lib/model` because the Rust side reads it via `serde_json`
@@ -90,6 +91,11 @@ data class WarrenTunnelConfig(
     // ending it would only redial the exit that refuses it. Set by the adapter
     // on every dial from its failover choice.
     @SerialName("drain_failover") val drainFailover: Boolean = true,
+    // "Country per app" (docs/app-routing.md section 2): the countries in
+    // force when the tunnel starts, after the precedence rules. A change while
+    // connected reaches the engine live through `WarrenJni.setAppRoutes`, so
+    // this only seeds the first plan. Set by the adapter on every dial.
+    @SerialName("app_exits") val appExits: List<AppExitWire>? = null,
     // The selected exit's stable id, used ONLY in-process for the trust-on-
     // first-use key check (WarrenConnectUseCase) before the config is encoded.
     // @Transient on purpose: the Rust side has no use for it. The check runs
@@ -157,4 +163,21 @@ fun WarrenTunnelConfig.toWireJson(): String = Json.encodeToString(this)
 /** Inverse of [toWireJson]; parses the wire form back into a config. */
 fun warrenTunnelConfigFromWireJson(json: String): WarrenTunnelConfig =
     Json.decodeFromString(json)
+
+/** One app's country as the engine reads it (`AppExitSpec` in warren-jni). */
+@Serializable
+data class AppExitWire(
+    @SerialName("app") val app: String,
+    @SerialName("country") val country: String,
+    @SerialName("city") val city: String? = null,
+)
+
+/** The countries in force, in the wire form of [WarrenTunnelConfig.appExits], by package name. */
+fun appExitsWire(exits: Map<String, AppExit>): List<AppExitWire> =
+    exits.entries
+        .sortedBy { it.key }
+        .map { (app, exit) -> AppExitWire(app, exit.country, exit.city) }
+
+/** The JSON array `WarrenJni.setAppRoutes` takes. */
+fun appExitsWireJson(exits: Map<String, AppExit>): String = Json.encodeToString(appExitsWire(exits))
 

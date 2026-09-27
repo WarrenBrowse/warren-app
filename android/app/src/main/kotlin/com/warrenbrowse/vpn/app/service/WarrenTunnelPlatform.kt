@@ -5,6 +5,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.net.VpnService
+import android.os.Build
 import android.os.ParcelFileDescriptor
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.app.connectivity.RelayFamilies
@@ -61,6 +62,15 @@ interface WarrenTunnelPlatform {
 
     fun natPmpStatus(): String
 
+    /**
+     * Hands the engine the countries in force ("Country per app"), as the JSON array of
+     * [appExitsWireJson]; a running tunnel follows it without a reconnect.
+     */
+    fun setAppRoutes(json: String)
+
+    /** The route statuses of "Country per app" (`{"routes":[..]}`), read on every wake. */
+    fun appRoutesStatus(): String
+
     /** What the last session was blocked for, read on a `Banned` edge. */
     fun banVerdict(): String
 
@@ -115,6 +125,17 @@ class AndroidTunnelPlatform(
     private val vpnService: VpnService,
     private val connectivityManager: ConnectivityManager,
 ) : WarrenTunnelPlatform {
+
+    init {
+        // "Country per app" names a flow's app through the platform, which
+        // answers only the active VPN app and only from Android 10 on. Below
+        // that nothing is registered, and the engine routes no app.
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            WarrenJni.setFlowOwnerResolver(
+                FlowOwnerResolver(connectivityManager, vpnService.packageManager)
+            )
+        }
+    }
 
     override fun establish(plan: WarrenTunInterfacePlan): ParcelFileDescriptor? {
         val builder = vpnService.Builder().setSession(plan.session).setMtu(plan.mtu)
@@ -201,6 +222,10 @@ class AndroidTunnelPlatform(
     override fun tunnelStatus(): Int = WarrenJni.getTunnelStatus()
 
     override fun natPmpStatus(): String = WarrenJni.getNatPmpStatus()
+
+    override fun setAppRoutes(json: String) = WarrenJni.setAppRoutes(json)
+
+    override fun appRoutesStatus(): String = WarrenJni.getAppRoutesStatus()
 
     override fun banVerdict(): String = WarrenJni.getBanVerdict()
 

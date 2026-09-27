@@ -8,6 +8,7 @@ import android.os.SystemClock
 import com.warrenbrowse.talpid.model.Connectivity
 import com.warrenbrowse.talpid.model.IpAvailability
 import com.warrenbrowse.vpn.app.connectivity.RelayFamilies
+import com.warrenbrowse.vpn.lib.model.AppExit
 import com.warrenbrowse.vpn.lib.model.AppRouting
 import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
@@ -210,6 +211,23 @@ class WarrenQuinnAdapterTest {
 
         override fun natPmpStatus(): String = "{\"state\":\"idle\"}"
 
+        /** Every exit list the adapter handed the engine, in order. */
+        val appRoutes = java.util.Collections.synchronizedList(mutableListOf<String>())
+
+        override fun setAppRoutes(json: String) {
+            appRoutes += json
+        }
+
+        /** What `getAppRoutesStatus` answers. */
+        @Volatile
+        var appRoutesStatus: String = "{\"routes\":[]}"
+            set(value) {
+                field = value
+                publish()
+            }
+
+        override fun appRoutesStatus(): String = appRoutesStatus
+
         override fun autoRecoveryCount(): Int = 0
 
         @Volatile
@@ -277,11 +295,14 @@ class WarrenQuinnAdapterTest {
         connectivity: MutableStateFlow<Connectivity> = MutableStateFlow(Connectivity.PresumeOnline),
         splitMode: MutableStateFlow<SplitTunnelMode> = MutableStateFlow(SplitTunnelMode.Off),
         includedApps: MutableStateFlow<Set<String>> = MutableStateFlow(emptySet()),
+        appExits: MutableStateFlow<Map<String, AppExit>> = MutableStateFlow(emptyMap()),
     ): WarrenQuinnAdapter {
         val settings = mockk<WarrenLocalSettingsRepository>(relaxed = true)
         every { settings.splitMode } returns splitMode
         every { settings.excludedApps } returns MutableStateFlow(emptySet())
         every { settings.includedApps } returns includedApps
+        every { settings.appExits } returns appExits
+        every { settings.appExitsEnabled } returns MutableStateFlow(true)
         return WarrenQuinnAdapter(
             vpnService = mockk<VpnService>(relaxed = true),
             connectivityManager = mockk<ConnectivityManager>(relaxed = true),
@@ -1557,4 +1578,76 @@ class WarrenQuinnAdapterTest {
             unmockkStatic(SystemClock::class)
         }
     }
+
+    /**
+     * "Country per app": the dial carries the countries in force, and a
+     * change while connected reaches the engine live, without a reconnect of
+     * the main session (docs/app-routing.md section 2.2).
+     */
+    @Test
+    fun `ensure the countries in force ride the dial and follow a change without a reconnect`() =
+        runTest {
+            val platform = RecordingPlatform()
+            val exits = MutableStateFlow(mapOf("org.browser" to AppExit("de")))
+            val adapter = adapterWith(platform, appExits = exits)
+            adapter.connect(config(), Mnemonic(PHRASE))
+            awaitReal("the session must reach Connected") {
+                adapter.state.value is WarrenTunnelState.Connected
+            }
+
+            exits.value = mapOf("org.browser" to AppExit("de"), "org.chat" to AppExit("fi", "Helsinki"))
+            awaitReal("the new list must reach the engine") {
+                platform.appRoutes.toList().lastOrNull()?.contains("org.chat") == true
+            }
+
+            val dial = warrenTunnelConfigFromWireJson(platform.configs.single())
+            assertEquals(listOf(AppExitWire("org.browser", "de")), dial.appExits)
+            assertEquals(
+                """[{"app":"org.browser","country":"de"},{"app":"org.chat","country":"fi","city":"Helsinki"}]""",
+                platform.appRoutes.toList().last(),
+            )
+            assertEquals(1, platform.calls.count { it == CONNECT_TUNNEL }, "no reconnect")
+            adapter.disconnect()
+        }
+
+    /** Choosing a country for an app in include-only is enough to tunnel it. */
+    @Test
+    fun `ensure an app with a country is tunneled in include-only`() = runTest {
+        val platform = RecordingPlatform()
+        platform.installed = setOf("org.bank", "org.browser")
+        val adapter =
+            adapterWith(
+                platform,
+                splitMode = MutableStateFlow(SplitTunnelMode.IncludeOnly),
+                includedApps = MutableStateFlow(setOf("org.bank")),
+                appExits = MutableStateFlow(mapOf("org.browser" to AppExit("se"))),
+            )
+
+        adapter.connect(config(), Mnemonic(PHRASE))
+
+        assertEquals(
+            AppRouting.OnlyFor(setOf("org.bank", "org.browser", SELF_PACKAGE)),
+            platform.plans.toList().first { !it.blocking }.appRouting,
+        )
+        adapter.disconnect()
+    }
+
+    /** The route statuses follow the engine on every wake, and clear with the tunnel. */
+    @Test
+    fun `ensure the route statuses mirror the engine and clear on teardown`() = runTest {
+        val platform = RecordingPlatform()
+        val adapter = adapterWith(platform)
+        adapter.connect(config(), Mnemonic(PHRASE))
+        awaitReal("the session must reach Connected") {
+            adapter.state.value is WarrenTunnelState.Connected
+        }
+        val reported = """{"routes":[{"country":"de","state":"connected","apps":["org.browser"]}]}"""
+
+        platform.appRoutesStatus = reported
+        awaitReal("the status must be mirrored") { adapter.appRoutesStatus.value == reported }
+        adapter.disconnect()
+
+        assertEquals("""{"routes":[]}""", adapter.appRoutesStatus.value)
+    }
 }
+

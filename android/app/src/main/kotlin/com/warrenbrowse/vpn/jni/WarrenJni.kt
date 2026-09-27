@@ -384,6 +384,30 @@ object WarrenJni {
      */
     external fun getNatPmpStatus(): String
 
+    // -- Country per app (docs/app-routing.md section 3.5) --------------------
+
+    /**
+     * Registers the platform lookup the engine attributes a flow to its app with, or clears it
+     * when null. Needs Android 10 (API 29); below that nothing is registered and no app is routed.
+     */
+    external fun setFlowOwnerResolver(resolver: Any?)
+
+    /**
+     * Hands the engine the countries in force, the JSON array
+     * `[{"app":..,"country":..,"city":..}]`. A running tunnel follows it without a reconnect of
+     * its main session.
+     */
+    external fun setAppRoutes(json: String)
+
+    /**
+     * The route statuses, `{"routes":[{"country":..,"city":..,"state":..,"reason":..,
+     * "public_ip":..,"apps":[..]}]}`, read on every status wake. Empty routes while no tunnel runs.
+     */
+    external fun getAppRoutesStatus(): String
+
+    /** Tells the engine the installed packages changed, so a reused uid is attributed again. */
+    external fun notifyPackagesChanged()
+
     /**
      * What the last session ended on with status `Banned` (6) was blocked for:
      * `{"reason":"[BANNED_PORT_FORWARDING] ...","lapses_at_unix_secs":N|null}`, or `{}`.
