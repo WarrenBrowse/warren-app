@@ -214,6 +214,12 @@ pub(crate) fn reset_egress_dead() {
 /// `parking_lot::Mutex::new` is const, so no lazy init is needed.
 static NATPMP_STATUS: Mutex<String> = Mutex::new(String::new());
 
+/// Wake the Kotlin status waiter for a fact that rides the status wake
+/// without being the status (the route statuses of "Country per app").
+pub(crate) fn bump_status() {
+    SESSION_STATUS.bump();
+}
+
 /// Store the latest NAT-PMP status JSON. Called from the session refresh
 /// loop. `pub(crate)` so [`crate::tunnel`] can reach it.
 #[cfg_attr(not(all(target_os = "android", feature = "tunnel")), allow(dead_code))]

@@ -85,6 +85,12 @@ chrono = { workspace = true, features = ["clock"] }
 # digest). Host-side so the digest state (`forum_digest`) is tested against
 # real signatures rather than a stub.
 warren-discovery-core = { path = "../../warren-contract/warren-discovery" }
+# Country per app: the route sessions, their controller and the router devices
+# the desktop tunnel runs (`warren-app-routes`), and the flow attribution and
+# address translation under them (`talpid-app-routing`). Host-side so the
+# planner and the owner lookup are tested off-device.
+talpid-app-routing = { path = "../talpid-app-routing" }
+warren-app-routes = { path = "../warren-app-routes" }
 
 [dev-dependencies]
 # Canonical product anchors for the `product` module's drift gate.

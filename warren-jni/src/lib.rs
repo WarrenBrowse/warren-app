@@ -80,6 +80,19 @@ mod natpmp_refusal;
 #[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 mod circuit_select;
 
+// Country per app (`docs/app-routing.md` sections 2 and 3.5): which app owns a
+// flow the TUN carries, and which session each app's country goes through.
+// Host-tested; the route sessions and the router are the desktop ones, shared
+// through `warren-app-routes`.
+#[cfg(all(target_os = "android", feature = "tunnel"))]
+mod android_app_routes;
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
+mod app_routes_plan;
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
+mod app_routes_session;
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
+mod flow_owner;
+
 // The purchase claim `redeemVoucher` recognizes (host-tested); the redeem that
 // consumes it is Android-gated in `android_jni`.
 #[cfg(any(test, target_os = "android"))]

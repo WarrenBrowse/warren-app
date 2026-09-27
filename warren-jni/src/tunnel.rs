@@ -26,8 +26,8 @@ use std::time::Instant;
 /// with. Mirror `WarrenTunDefaults.IPV4_ADDRESS` / `IPV6_ADDRESS` in
 /// `app/.../service/WarrenTunInterfacePlan.kt`; the multi-hop data plane NATs
 /// these to the exit-assigned addresses (see [`run_multi_hop_session`]).
-const LOCAL_TUN_IPV4: Ipv4Addr = Ipv4Addr::new(10, 64, 0, 1);
-const LOCAL_TUN_IPV6: Ipv6Addr = Ipv6Addr::new(0xfd00, 0, 0, 0, 0, 0, 0, 1);
+pub(crate) const LOCAL_TUN_IPV4: Ipv4Addr = Ipv4Addr::new(10, 64, 0, 1);
+pub(crate) const LOCAL_TUN_IPV6: Ipv6Addr = Ipv6Addr::new(0xfd00, 0, 0, 0, 0, 0, 0, 1);
 
 use ed25519_dalek::SigningKey;
 use rand_v9::SeedableRng;
@@ -35,6 +35,7 @@ use serde::Deserialize;
 use tokio::sync::oneshot;
 use warrenguard_daita::{DaitaPool, DaitaState};
 use warrenguard_transport::AndroidTun;
+use warrenguard_transport::route_anchor::{RouteAnchorConfig, RouteAnchorHandle};
 use warrenguard_transport::supervisor::SessionTokenProvider;
 use warrenguard_wire::WarrenPubkey;
 
@@ -159,6 +160,12 @@ pub struct WarrenTunnelConfig {
     /// the exit that refuses it. Absent on older payloads, which leave.
     #[serde(default)]
     pub drain_failover: Option<bool>,
+    /// "Country per app" (`docs/app-routing.md` section 2): the exits in
+    /// force when the tunnel starts, after the precedence rules Kotlin
+    /// applies. Replaced live by `setAppRoutes`, so a change never reconnects
+    /// the main session. Absent on older payloads: no app has a country.
+    #[serde(default)]
+    pub app_exits: Option<Vec<crate::app_routes_plan::AppExitSpec>>,
 }
 
 pub use crate::redial::SessionStatus;
@@ -223,7 +230,12 @@ pub async fn run_session(
     // Pass tokens are presented at setup so the exit admits the session
     // without learning the wallet; an empty stack (nothing minted yet, epoch
     // drained, no issuance) keeps the v6 wallet-signed path.
-    let session_tokens = crate::token_provider::provider_for(signing_key.clone(), session_blinding);
+    //
+    // Every session of the tunnel (the main one and each route session of
+    // "Country per app") opens a provider of its own, holding the serial it
+    // leads with, so two sessions of this device never lead with the same one.
+    let tokens = crate::token_provider::tokens_for(signing_key.clone(), session_blinding);
+    let session_tokens = (tokens.source)();
 
     // Port entitlements ride the same wallet and the same coarse refresh
     // (warren-core doc 99): without one, the exit falls back to its per-client
@@ -261,12 +273,14 @@ pub async fn run_session(
         tun,
         signing_key,
         session_tokens,
+        tokens,
         port_entitlements,
         config,
         status,
         cancel_rx,
     )
     .await;
+    crate::android_app_routes::reset_status();
 }
 
 /// Warren multi-hop directory root signing key (baked pin). Mirrors
@@ -318,10 +332,15 @@ pub(crate) fn ban_verdict_json() -> String {
 /// (none of which the `/v1/exits` list carries).
 ///
 /// [`MultiHopSupervisor`]: warrenguard_transport::supervisor::MultiHopSupervisor
+#[expect(
+    clippy::too_many_arguments,
+    reason = "one session's whole context, passed once"
+)]
 async fn run_multi_hop_session(
     tun: AndroidTun,
     signing: SigningKey,
     session_tokens: SessionTokenProvider,
+    tokens: crate::token_provider::SessionTokens,
     port_entitlements: std::sync::Arc<crate::port_entitlements::RuleCredential>,
     config: WarrenTunnelConfig,
     status: &'static crate::status_watch::StatusCell,
@@ -481,6 +500,15 @@ async fn run_multi_hop_session(
         log::info!("multi-hop: client-side bandwidth cap active ({bps} bps per direction)");
     }
 
+    // "Country per app": the exits this connect was asked for, followed live
+    // from here on (`setAppRoutes`).
+    if let Some(app_exits) = config.app_exits.clone() {
+        crate::app_routes_session::set_app_exits(crate::app_routes_plan::valid_app_exits(
+            app_exits,
+        ));
+    }
+    let main_exit = *exit_node.exit.exit_id.as_bytes();
+
     // At most two attempts: the second drops the anonymous tokens after a
     // rejection that was a verdict on the token, not on the account.
     let mut token_provider = Some(counting_tokens);
@@ -538,6 +566,19 @@ async fn run_multi_hop_session(
         };
 
         let (supervisor, sessions) = MultiHopSupervisor::new(supervisor_config);
+        // The main session anchors whenever the token directory offers route
+        // admission and apps can be attributed, a country set or not, so a
+        // country chosen while connected gets its route by anchor without a
+        // reconnect (warren-core doc 107; the desktop tunnel does the same).
+        // The anchor never leaves the engine.
+        let route_anchor = crate::android_app_routes::lookup_available()
+            .then(|| tokens.route_admission.kem())
+            .flatten()
+            .map(|kem| RouteAnchorHandle::new(RouteAnchorConfig { kem }));
+        let supervisor = match &route_anchor {
+            Some(anchor) => supervisor.with_route_anchor(anchor.clone()),
+            None => supervisor,
+        };
         let _ = migrate_slot.set(supervisor.migrate_handle());
         // The exit's own maintenance drain arrives in band on the downlink;
         // the session leaves before the exit's deadline close, spread across
@@ -604,6 +645,7 @@ async fn run_multi_hop_session(
         // circuit instead of leaving the user on a dead exit.
         let (egress_dead_tx, egress_dead) = tokio::sync::watch::channel(false);
         let _egress_probe = spawn_egress_probe(sessions.clone(), egress_dead_tx);
+        let sessions_for_routes = sessions.clone();
         let inputs = SupervisedInputs {
             sessions,
             fatal: supervisor.fatal_rx(),
@@ -641,6 +683,27 @@ async fn run_multi_hop_session(
         // address on downlink. Built from the exit's first assignment; the v6
         // remap is active only when the exit granted v6 (else v6 stays
         // blackholed). Android equivalent of the desktop RealTun::reassign_*.
+        // "Country per app": the router sits between the TUN and every
+        // session. Its policy is installed before the main pumps carry their
+        // first packet, so a routed app's packets are dropped until its route
+        // is connected and never go through the main session meanwhile.
+        let app_routes = crate::android_app_routes::AppRoutes::start(
+            crate::android_app_routes::AppRoutesSetup {
+                tun: tun.clone(),
+                main: crate::app_routes_session::MainCircuit {
+                    directory: Arc::clone(&dir),
+                    two_hop,
+                    entry_country: config.entry_country.clone(),
+                    main_exit,
+                },
+                wants_ipv6: config.enable_ipv6.unwrap_or(false),
+                enable_daita: config.daita.is_some(),
+                tokens: &tokens,
+                anchor: route_anchor.clone(),
+                sessions: sessions_for_routes,
+            },
+        );
+        let routed_tun = app_routes.main_device();
         let remap = |spec: warrenguard_transport::IpAssignSpec| {
             // No-logs: the exit-assigned inner IPs are user-linkable; report the
             // admission mode only.
@@ -649,7 +712,12 @@ async fn run_multi_hop_session(
                 presented.load(Ordering::Relaxed)
             );
             let v6_pair = spec.assigned_v6.map(|a| (LOCAL_TUN_IPV6, a));
-            crate::remap_tun::RemapTun::new(tun.clone(), LOCAL_TUN_IPV4, spec.assigned, v6_pair)
+            crate::remap_tun::RemapTun::new(
+                routed_tun.clone(),
+                LOCAL_TUN_IPV4,
+                spec.assigned,
+                v6_pair,
+            )
         };
         let daita = daita.clone();
         let outcome = match max_rate_bps {
@@ -678,6 +746,10 @@ async fn run_multi_hop_session(
                 ) => AttemptEnd::Session(end),
             },
         };
+
+        // The route sessions end with the attempt, and are awaited so none
+        // outlives the TUN it writes to.
+        app_routes.stop().await;
 
         match outcome {
             AttemptEnd::Cancelled => {

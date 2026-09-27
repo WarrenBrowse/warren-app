@@ -41,7 +41,7 @@ use std::time::Duration;
 use warren_api::{
     BlindingKey, HttpTransport, PersistedTokens, TokenClientError, TokenManager, WarrenApiClient,
 };
-use warrenguard_token::TOKEN_LEN;
+use warren_app_routes::admission::{RouteKemTrust, remember_route_admission};
 
 /// The most tokens one setup request may carry: the default admission sends
 /// the whole stack at once, and the wire refuses to decode a request with
@@ -69,7 +69,9 @@ type NowFn = Arc<dyn Fn() -> u64 + Send + Sync>;
 /// consumed. An empty stack means "no token this epoch" and keeps the v6
 /// wallet-signed path (availability over a temporary anonymity downgrade,
 /// matching desktop and iOS).
-pub(crate) type StackSource = Arc<dyn Fn() -> Vec<[u8; TOKEN_LEN]> + Send + Sync>;
+#[cfg(test)]
+pub(crate) type StackSource =
+    Arc<dyn Fn() -> Vec<[u8; warrenguard_token::TOKEN_LEN]> + Send + Sync>;
 
 /// Where a refresh failure of a wallet goes, to learn whether it is the
 /// issuer's ban refusal (warren-core doc 105 §5.3). Answers whether it was one.
@@ -127,12 +129,33 @@ impl PersistFile {
 /// Process-lived registry of one [`TokenManager`] per wallet.
 pub(crate) struct TokenMint<T> {
     now: NowFn,
-    managers: parking_lot::Mutex<HashMap<[u8; 32], Arc<TokenManager<T>>>>,
+    managers: parking_lot::Mutex<HashMap<[u8; 32], WalletTokens<T>>>,
     persist: Option<Arc<PersistFile>>,
     /// The bundle is restored into the first manager built this process; a
     /// second wallet must not re-load tokens the first already vends.
     restored: AtomicBool,
     ban_sink: Option<BanSink>,
+    /// The API server keys trusted to sign the route KEM key of the token
+    /// directory (warren-core doc 107 section 6.5), and the file the last
+    /// signed route admission block is kept in across a process death.
+    route_kem_trust: RouteKemTrust,
+}
+
+/// One wallet's token manager, and whether it has read the token directory
+/// in this process: a restored bundle teaches it the epoch length before
+/// any directory read, so the manager alone cannot tell.
+pub(crate) struct WalletTokens<T> {
+    pub manager: Arc<TokenManager<T>>,
+    pub directory_read: Arc<AtomicBool>,
+}
+
+impl<T> Clone for WalletTokens<T> {
+    fn clone(&self) -> Self {
+        Self {
+            manager: Arc::clone(&self.manager),
+            directory_read: Arc::clone(&self.directory_read),
+        }
+    }
 }
 
 impl<T: HttpTransport + 'static> TokenMint<T> {
@@ -143,7 +166,15 @@ impl<T: HttpTransport + 'static> TokenMint<T> {
             persist: persist.map(Arc::new),
             restored: AtomicBool::new(false),
             ban_sink: None,
+            route_kem_trust: RouteKemTrust::default(),
         }
+    }
+
+    /// Trusts the pins of `trust` to sign the route KEM key, and keeps the
+    /// last signed block where it says.
+    pub(crate) fn with_route_kem_trust(mut self, trust: RouteKemTrust) -> Self {
+        self.route_kem_trust = trust;
+        self
     }
 
     /// Reports every refresh failure to `sink`, which is how an issuer's ban
@@ -153,45 +184,63 @@ impl<T: HttpTransport + 'static> TokenMint<T> {
         self
     }
 
-    /// The stack source for `wallet_pubkey`. First sight of a wallet builds
-    /// its manager (via `make_client`, which owns the wallet identity, and
-    /// `key`, the wallet's session blinding key), restores the persisted
-    /// bundle into it, and starts its background refresh; later calls reuse
-    /// both, so the factory runs at most once per wallet and process and a
-    /// later `key` is dropped unused.
+    /// The token manager of `wallet_pubkey`. First sight of a wallet builds
+    /// it (via `make_client`, which owns the wallet identity, and `key`, the
+    /// wallet's session blinding key), restores the persisted bundle into it,
+    /// and starts its background refresh; later calls reuse both, so the
+    /// factory runs at most once per wallet and process and a later `key` is
+    /// dropped unused.
+    pub(crate) fn wallet(
+        &self,
+        wallet_pubkey: [u8; 32],
+        key: BlindingKey,
+        make_client: impl FnOnce() -> WarrenApiClient<T>,
+    ) -> WalletTokens<T> {
+        let mut managers = self.managers.lock();
+        managers
+            .entry(wallet_pubkey)
+            .or_insert_with(|| {
+                let manager = Arc::new(
+                    TokenManager::new(Arc::new(make_client()), key)
+                        .with_mint_horizon(MINT_HORIZON_EPOCHS)
+                        .with_server_pubkey_pins(self.route_kem_trust.server_pins.iter().cloned()),
+                );
+                if let Some(persist) = &self.persist
+                    && !self.restored.swap(true, Ordering::SeqCst)
+                    && let Some(bundle) = persist.load()
+                {
+                    let restored = manager.restore_persisted(&bundle);
+                    log::info!("restored {restored} persisted v7 tokens");
+                }
+                let wallet = WalletTokens {
+                    manager,
+                    directory_read: Arc::new(AtomicBool::new(false)),
+                };
+                spawn_refresh(
+                    wallet.clone(),
+                    self.now.clone(),
+                    self.persist.clone(),
+                    self.route_kem_trust.remembered_at.clone(),
+                    wallet_pubkey,
+                    self.ban_sink.clone(),
+                );
+                wallet
+            })
+            .clone()
+    }
+
+    /// The stack source for `wallet_pubkey`: its manager's current batch,
+    /// never consumed, the view the mint tests read the batch through (the
+    /// tunnel opens a holding provider per session instead). See
+    /// [`Self::wallet`].
+    #[cfg(test)]
     pub(crate) fn stack_source(
         &self,
         wallet_pubkey: [u8; 32],
         key: BlindingKey,
         make_client: impl FnOnce() -> WarrenApiClient<T>,
     ) -> StackSource {
-        let manager = {
-            let mut managers = self.managers.lock();
-            managers
-                .entry(wallet_pubkey)
-                .or_insert_with(|| {
-                    let manager = Arc::new(
-                        TokenManager::new(Arc::new(make_client()), key)
-                            .with_mint_horizon(MINT_HORIZON_EPOCHS),
-                    );
-                    if let Some(persist) = &self.persist
-                        && !self.restored.swap(true, Ordering::SeqCst)
-                        && let Some(bundle) = persist.load()
-                    {
-                        let restored = manager.restore_persisted(&bundle);
-                        log::info!("restored {restored} persisted v7 tokens");
-                    }
-                    spawn_refresh(
-                        manager.clone(),
-                        self.now.clone(),
-                        self.persist.clone(),
-                        wallet_pubkey,
-                        self.ban_sink.clone(),
-                    );
-                    manager
-                })
-                .clone()
-        };
+        let manager = self.wallet(wallet_pubkey, key, make_client).manager;
         let now = self.now.clone();
         Arc::new(move || {
             let mut stack = manager.session_stack(now());
@@ -206,12 +255,17 @@ impl<T: HttpTransport + 'static> TokenMint<T> {
 /// twins. The manager only mints epochs it has not attempted yet, so in steady
 /// state a tick costs one unsigned directory fetch.
 fn spawn_refresh<T: HttpTransport + 'static>(
-    manager: Arc<TokenManager<T>>,
+    wallet: WalletTokens<T>,
     now: NowFn,
     persist: Option<Arc<PersistFile>>,
+    route_admission_file: Option<PathBuf>,
     wallet_pubkey: [u8; 32],
     ban_sink: Option<BanSink>,
 ) {
+    let WalletTokens {
+        manager,
+        directory_read,
+    } = wallet;
     tokio::spawn(async move {
         let mut tick = tokio::time::interval(Duration::from_secs(600));
         loop {
@@ -226,6 +280,12 @@ fn spawn_refresh<T: HttpTransport + 'static>(
                     if let Some(persist) = &persist {
                         persist.save(&manager);
                     }
+                    // The route admission block this directory carries, or
+                    // none: kept for the next process, and in force from now.
+                    if let Some(path) = &route_admission_file {
+                        remember_route_admission(path, manager.route_admission().as_ref());
+                    }
+                    directory_read.store(true, Ordering::Release);
                     log::info!(
                         "Warren v7 token refresh ok (current-epoch tokens={})",
                         manager
@@ -254,7 +314,7 @@ fn spawn_refresh<T: HttpTransport + 'static>(
 }
 
 #[cfg(all(target_os = "android", feature = "tunnel"))]
-pub(crate) use android::{provider_for, set_app_files_dir};
+pub(crate) use android::{SessionTokens, set_app_files_dir, tokens_for};
 
 #[cfg(all(target_os = "android", feature = "tunnel"))]
 mod android {
@@ -262,9 +322,12 @@ mod android {
 
     use ed25519_dalek::SigningKey;
     use warren_api::{BlindingKey, WarrenApiClient};
+    use warren_app_routes::{
+        RouteAdmissionSource, SessionTokenSource,
+        admission::{DirectoryRouteAdmission, REMEMBERED_ROUTE_ADMISSION, RouteKemTrust},
+        tokens::session_source,
+    };
     use warren_identity::WarrenIdentity;
-    use warrenguard_transport::supervisor::SessionTokenProvider;
-    use warrenguard_wire::SessionToken;
 
     use super::TokenMint;
     use crate::protected_transport::ProtectedTransport;
@@ -302,34 +365,68 @@ mod android {
             .unwrap_or(0)
     }
 
-    /// The v7 token provider for `signing_key`'s wallet against the production
-    /// API. The minting identity is built from the SAME Ed25519 key the tunnel
-    /// handshake signs with ([`WarrenIdentity::from_signing_key`], no
-    /// re-derivation), so the minting wallet is bit-for-bit the subscribed
-    /// wallet, and `blinding` is that wallet's session blinding key, so every
-    /// client of the wallet asks for the same batch and the issuer serves each
-    /// of them. The returned closure hands each dial the current batch and
-    /// never mints.
-    pub(crate) fn provider_for(
-        signing_key: SigningKey,
-        blinding: BlindingKey,
-    ) -> SessionTokenProvider {
+    /// The v7 tokens of `signing_key`'s wallet against the product API, for
+    /// every session of a tunnel. The minting identity is built from the SAME
+    /// Ed25519 key the tunnel handshake signs with
+    /// ([`WarrenIdentity::from_signing_key`], no re-derivation), so the
+    /// minting wallet is bit-for-bit the subscribed wallet, and `blinding` is
+    /// that wallet's session blinding key, so every client of the wallet asks
+    /// for the same batch and the issuer serves each of them.
+    ///
+    /// `source` opens one provider per session (the main one and each route
+    /// session), each holding the serial it leads with, so no two sessions of
+    /// this device lead with the same serial; a provider hands each dial the
+    /// current batch and never mints. `route_admission` is route admission by
+    /// anchor as the wallet's token directory announces it (warren-core doc
+    /// 107), its key trusted only under a pinned server key's signature, and
+    /// the block kept across a process death so a tunnel dialed before the
+    /// first directory read still anchors.
+    pub(crate) fn tokens_for(signing_key: SigningKey, blinding: BlindingKey) -> SessionTokens {
         let mint = MINT.get_or_init(|| {
-            TokenMint::new(Arc::new(now_unix_secs), persist_file()).with_ban_sink(Arc::new(
-                |wallet, error| {
+            TokenMint::new(Arc::new(now_unix_secs), persist_file())
+                .with_ban_sink(Arc::new(|wallet, error| {
                     crate::standing::store().on_refresh_error(wallet, error, now_unix_secs())
-                },
-            ))
+                }))
+                .with_route_kem_trust(route_kem_trust())
         });
         let wallet_pubkey = signing_key.verifying_key().to_bytes();
-        let source = mint.stack_source(wallet_pubkey, blinding, move || {
+        let wallet = mint.wallet(wallet_pubkey, blinding, move || {
             WarrenApiClient::new(
                 crate::product::PRODUCT_API_URL.to_owned(),
                 WarrenIdentity::from_signing_key(signing_key),
                 ProtectedTransport::new(),
             )
         });
-        Arc::new(move || source().into_iter().map(SessionToken).collect())
+        let route_admission = DirectoryRouteAdmission::new(
+            Arc::clone(&wallet.manager),
+            route_kem_trust(),
+            Arc::new(now_unix_secs),
+        )
+        .with_directory_read(Arc::clone(&wallet.directory_read));
+        SessionTokens {
+            source: session_source(wallet.manager, Arc::new(now_unix_secs)),
+            route_admission: Arc::new(route_admission),
+        }
+    }
+
+    /// The pins the relay list and the multi-hop directory are verified
+    /// against, and the file the last route admission block is kept in.
+    fn route_kem_trust() -> RouteKemTrust {
+        RouteKemTrust {
+            server_pins: crate::product::SERVER_PUBKEY_HEX
+                .into_iter()
+                .map(str::to_owned)
+                .collect(),
+            remembered_at: APP_FILES_DIR
+                .get()
+                .map(|dir| dir.join(REMEMBERED_ROUTE_ADMISSION)),
+        }
+    }
+
+    /// Every session's tokens, and the route admission the directory offers.
+    pub(crate) struct SessionTokens {
+        pub source: SessionTokenSource,
+        pub route_admission: Arc<dyn RouteAdmissionSource>,
     }
 }
 
@@ -351,7 +448,7 @@ mod tests {
     use warren_identity::WarrenIdentity;
     use warrenguard_token::IssuerSecretKey;
 
-    use super::{MAX_PRESENTED_TOKENS, NowFn, PersistFile, StackSource, TokenMint};
+    use super::{MAX_PRESENTED_TOKENS, NowFn, PersistFile, RouteKemTrust, StackSource, TokenMint};
 
     const EPOCH_SECS: u64 = 3600;
     const QUOTA: u32 = 3;
@@ -698,6 +795,32 @@ mod tests {
                 .ban_in_force(&[1; 32], NOW)
                 .and_then(|ban| ban.lapses_at_unix_secs),
             Some(2_000_000_000)
+        );
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_refresh_marks_the_directory_read_and_keeps_what_it_says_of_route_admission() {
+        let issuer = FakeIssuer::new(&[100]);
+        let (_t, now) = clock(NOW);
+        let dir = tempfile::tempdir().unwrap();
+        let kept = dir.path().join("route-admission.json");
+        // A block an earlier process kept, which this directory withdrew.
+        std::fs::write(&kept, b"{}").unwrap();
+        let mint = TokenMint::new(now, None).with_route_kem_trust(RouteKemTrust {
+            server_pins: vec!["00".repeat(32)],
+            remembered_at: Some(kept.clone()),
+        });
+        let wallet = mint.wallet([1; 32], BlindingKey::session(&WALLET_A), || {
+            client(&issuer, WALLET_A)
+        });
+        let before = wallet.directory_read.load(Ordering::Acquire);
+
+        wait_for(|| wallet.directory_read.load(Ordering::Acquire)).await;
+
+        assert!(!before, "a manager that has not read the directory says so");
+        assert!(
+            !kept.exists(),
+            "the next process does not anchor with a withdrawn key"
         );
     }
 

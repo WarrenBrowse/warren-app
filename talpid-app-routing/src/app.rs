@@ -100,9 +100,9 @@ impl<V: Copy> AppMatcher<V> {
         self.apps.is_empty()
     }
 
-    /// The same apps, without their values.
-    #[cfg(any(target_os = "linux", test))]
-    pub(crate) fn apps_only(&self) -> AppMatcher<()> {
+    /// The same apps, without their values: what a resolver narrowing its
+    /// search to the watched programs keeps of a policy.
+    pub fn apps_only(&self) -> AppMatcher<()> {
         AppMatcher {
             flavor: self.flavor,
             apps: self.apps.keys().map(|app| (app.clone(), ())).collect(),
