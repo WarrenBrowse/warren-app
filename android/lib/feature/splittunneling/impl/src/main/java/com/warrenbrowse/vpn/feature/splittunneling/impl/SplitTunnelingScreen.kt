@@ -8,7 +8,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -326,13 +328,20 @@ private fun LazyListScope.tabBar(
     onSelectTab: (SplitTunnelingTab) -> Unit,
 ) {
     item(key = SplitTunnelingContentKey.TABS, contentType = ContentType.OTHER_ITEM) {
+        // One height for the three segments: a label that wraps in a
+        // language (or at a large font size) would otherwise leave its
+        // segment taller than the others.
         SingleChoiceSegmentedButtonRow(
-            modifier = Modifier.fillMaxWidth().padding(bottom = Dimens.mediumPadding)
+            modifier =
+                Modifier.fillMaxWidth()
+                    .height(IntrinsicSize.Min)
+                    .padding(bottom = Dimens.mediumPadding)
         ) {
             SplitTunnelingTab.entries.forEachIndexed { index, entry ->
                 // No check icon: three labels share the row, and the fill
                 // already marks the selected tab.
                 SegmentedButton(
+                    modifier = Modifier.fillMaxHeight(),
                     selected = tab == entry,
                     onClick = { onSelectTab(entry) },
                     shape =
