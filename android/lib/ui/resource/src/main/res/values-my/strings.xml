@@ -691,5 +691,6 @@
     <string name="network_stats_load_unknown">ဝန် မသိရ</string>
     <string name="network_stats_offline">အော့ဖ်လိုင်း</string>
     <string name="network_stats_load_people">ဝန် %1$s၊ လူ %2$s ဦး</string>
+    <string name="network_stats_band_people">%1$s၊ လူ %2$s ဦး</string>
     <string name="network_stats_download">ဒေါင်းလုဒ်</string>
 </resources>

@@ -696,5 +696,6 @@
     <string name="network_stats_load_unknown">Carga desconhecida</string>
     <string name="network_stats_offline">Offline</string>
     <string name="network_stats_load_people">Carga %1$s, %2$s pessoas</string>
+    <string name="network_stats_band_people">%1$s, %2$s pessoas</string>
     <string name="network_stats_download">Transferência</string>
 </resources>

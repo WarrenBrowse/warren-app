@@ -691,5 +691,6 @@
     <string name="network_stats_load_unknown">ไม่ทราบโหลด</string>
     <string name="network_stats_offline">ออฟไลน์</string>
     <string name="network_stats_load_people">โหลด %1$s, %2$s คน</string>
+    <string name="network_stats_band_people">%1$s, %2$s คน</string>
     <string name="network_stats_download">ดาวน์โหลด</string>
 </resources>

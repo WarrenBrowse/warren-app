@@ -734,5 +734,6 @@
     <string name="network_stats_load_unknown">Load unknown</string>
     <string name="network_stats_offline">Offline</string>
     <string name="network_stats_load_people">Load %1$s, %2$s people</string>
+    <string name="network_stats_band_people">%1$s, %2$s people</string>
     <string name="network_stats_download">Download</string>
 </resources>

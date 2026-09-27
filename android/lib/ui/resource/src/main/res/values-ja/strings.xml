@@ -691,5 +691,6 @@
     <string name="network_stats_load_unknown">負荷不明</string>
     <string name="network_stats_offline">オフライン</string>
     <string name="network_stats_load_people">負荷 %1$s、%2$s人</string>
+    <string name="network_stats_band_people">%1$s、%2$s人</string>
     <string name="network_stats_download">ダウンロード</string>
 </resources>

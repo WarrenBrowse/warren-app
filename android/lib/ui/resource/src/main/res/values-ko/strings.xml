@@ -691,5 +691,6 @@
     <string name="network_stats_load_unknown">부하 알 수 없음</string>
     <string name="network_stats_offline">오프라인</string>
     <string name="network_stats_load_people">부하 %1$s, %2$s명</string>
+    <string name="network_stats_band_people">%1$s, %2$s명</string>
     <string name="network_stats_download">다운로드</string>
 </resources>

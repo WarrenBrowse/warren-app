@@ -122,9 +122,9 @@ import com.warrenbrowse.vpn.feature.settings.api.WarrenLocationPickerNavKey
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenDaitaSettingsNavKey
 import androidx.compose.ui.semantics.Role
-import com.warrenbrowse.vpn.lib.ui.designsystem.networkstats.LoadRingSize
+import com.warrenbrowse.vpn.lib.model.loadBadgeOf
 import com.warrenbrowse.vpn.lib.ui.component.networkstats.rememberSnapshotStale
-import com.warrenbrowse.vpn.lib.ui.component.networkstats.ExitLoadSummary
+import com.warrenbrowse.vpn.lib.ui.component.networkstats.ExitLoadBadge
 import com.warrenbrowse.vpn.feature.settings.api.WarrenMultihopSettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenPortForwardingSettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenTunnelSettingsNavKey
@@ -1349,38 +1349,39 @@ private fun ConnectionCardHeader(
                     fadeOut(tween(CARD_TRANSITION_MILLIS)),
         ) {
             Column {
-                // The exit's load closes the location line instead of adding one: the card is
+                Text(
+                    modifier =
+                        Modifier.fillMaxWidth().padding(top = Dimens.tinyPadding).marqueeLine(),
+                    text = location.asString(),
+                    // Desktop Location: 18/24 semibold.
+                    style =
+                        MaterialTheme.typography.titleMedium.copy(
+                            fontSize = 18.sp,
+                            lineHeight = 24.sp,
+                        ),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                )
+                // The exit's load closes the hostname line instead of adding one: the card is
                 // bottom-anchored, so a new row would lift its top edge over the scenery.
-                Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = Dimens.tinyPadding),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        modifier = Modifier.weight(1f).marqueeLine(),
-                        text = location.asString(),
-                        // Desktop Location: 18/24 semibold.
-                        style =
-                            MaterialTheme.typography.titleMedium.copy(
-                                fontSize = 18.sp,
-                                lineHeight = 24.sp,
-                            ),
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                    )
-                    exitLoad?.invoke()
-                }
-                val hostnameText = location.hostnameText()
-                AnimatedContent(hostnameText, label = "hostname") {
-                    if (it != null) {
-                        Text(
-                            modifier = Modifier.fillMaxWidth().marqueeLine(),
-                            text = it,
-                            // Desktop Hostname: 14/20 at 60 % white.
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha60),
-                            maxLines = 1,
-                        )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    AnimatedContent(
+                        location.hostnameText(),
+                        modifier = Modifier.weight(1f),
+                        label = "hostname",
+                    ) {
+                        if (it != null) {
+                            Text(
+                                modifier = Modifier.fillMaxWidth().marqueeLine(),
+                                text = it,
+                                // Desktop Hostname: 14/20 at 60 % white.
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha60),
+                                maxLines = 1,
+                            )
+                        }
                     }
+                    exitLoad?.invoke()
                 }
             }
         }
@@ -1437,27 +1438,20 @@ private fun DarkStatusBarGlyphs() {
     }
 }
 
-/** The exit's load on the location line: tiny ring, the percentage or the band, the people. */
+/** The exit's load on the hostname line: the ring, the percentage while live, the people. */
 @Composable
 private fun CompactExitLoad(load: ConnectedExitLoad) {
-    Box(
-        modifier =
-            Modifier.padding(start = Dimens.smallPadding).testTag(CONNECT_CARD_EXIT_LOAD_TEST_TAG)
-    ) {
-        ExitLoadSummary(
-            exit = load.exit,
-            stats = load.stats,
-            ringSize = LoadRingSize.TINY,
-            stale = rememberSnapshotStale(load.stats),
-        )
-    }
+    ExitLoadBadge(
+        badge = load.stats.loadBadgeOf(load.exit),
+        modifier = Modifier.padding(start = Dimens.smallPadding),
+        showThroughput = false,
+        stale = rememberSnapshotStale(load.stats),
+    )
 }
 
 private val INCLUDE_ONLY_LABEL_RADIUS = 6.dp
 private const val INCLUDE_ONLY_LABEL_FILL = 0.12f
 private const val INCLUDE_ONLY_LABEL_BORDER = 0.45f
-
-internal const val CONNECT_CARD_EXIT_LOAD_TEST_TAG = "connect_card_exit_load"
 
 @Composable
 private fun GeoIpLocation?.asString(): String {

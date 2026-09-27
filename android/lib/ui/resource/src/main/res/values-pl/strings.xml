@@ -706,5 +706,6 @@
     <string name="network_stats_load_unknown">Obciążenie nieznane</string>
     <string name="network_stats_offline">Offline</string>
     <string name="network_stats_load_people">Obciążenie %1$s, osoby: %2$s</string>
+    <string name="network_stats_band_people">%1$s, osoby: %2$s</string>
     <string name="network_stats_download">Pobieranie</string>
 </resources>

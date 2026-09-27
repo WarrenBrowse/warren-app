@@ -696,5 +696,6 @@
     <string name="network_stats_load_unknown">Ukjent belastning</string>
     <string name="network_stats_offline">Frakoblet</string>
     <string name="network_stats_load_people">Belastning %1$s, %2$s personer</string>
+    <string name="network_stats_band_people">%1$s, %2$s personer</string>
     <string name="network_stats_download">Nedlasting</string>
 </resources>

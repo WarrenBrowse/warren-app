@@ -716,5 +716,6 @@
     <string name="network_stats_load_unknown">الحمل غير معروف</string>
     <string name="network_stats_offline">غير متصل</string>
     <string name="network_stats_load_people">الحمل %1$s، الأشخاص %2$s</string>
+    <string name="network_stats_band_people">%1$s، الأشخاص %2$s</string>
     <string name="network_stats_download">التنزيل</string>
 </resources>

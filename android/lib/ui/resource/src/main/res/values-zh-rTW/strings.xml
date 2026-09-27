@@ -691,5 +691,6 @@
     <string name="network_stats_load_unknown">負載未知</string>
     <string name="network_stats_offline">離線</string>
     <string name="network_stats_load_people">負載 %1$s，%2$s 人</string>
+    <string name="network_stats_band_people">%1$s，%2$s 人</string>
     <string name="network_stats_download">下載</string>
 </resources>

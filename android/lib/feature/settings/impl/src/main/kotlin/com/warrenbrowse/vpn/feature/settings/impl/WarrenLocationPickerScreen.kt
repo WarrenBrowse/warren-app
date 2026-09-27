@@ -91,9 +91,9 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import com.warrenbrowse.vpn.lib.model.WarrenNetworkStats
 import com.warrenbrowse.vpn.lib.repository.WarrenNetworkStatsProvider
-import com.warrenbrowse.vpn.lib.ui.component.networkstats.ExitLoadSummary
+import com.warrenbrowse.vpn.lib.model.loadBadgeOf
+import com.warrenbrowse.vpn.lib.ui.component.networkstats.ExitLoadBadge
 import com.warrenbrowse.vpn.lib.ui.component.networkstats.rememberSnapshotStale
-import com.warrenbrowse.vpn.lib.ui.designsystem.networkstats.LoadRingSize
 import androidx.compose.foundation.layout.Row
 import org.koin.compose.koinInject
 
@@ -773,10 +773,8 @@ private fun LazyItemScope.PickerRowContent(
                 load =
                     if (networkStats != null && exitStats != null) {
                         {
-                            ExitLoadSummary(
-                                exit = exitStats,
-                                stats = networkStats,
-                                ringSize = LoadRingSize.SMALL,
+                            ExitLoadBadge(
+                                badge = networkStats.loadBadgeOf(exitStats),
                                 stale = networkStatsStale,
                             )
                         }

@@ -706,5 +706,6 @@
     <string name="network_stats_load_unknown">Нагрузка неизвестна</string>
     <string name="network_stats_offline">Не в сети</string>
     <string name="network_stats_load_people">Нагрузка %1$s, людей: %2$s</string>
+    <string name="network_stats_band_people">%1$s, людей: %2$s</string>
     <string name="network_stats_download">Загрузка</string>
 </resources>

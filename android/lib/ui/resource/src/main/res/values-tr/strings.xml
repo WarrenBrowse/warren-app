@@ -696,5 +696,6 @@
     <string name="network_stats_load_unknown">Yük bilinmiyor</string>
     <string name="network_stats_offline">Çevrimdışı</string>
     <string name="network_stats_load_people">Yük %1$s, %2$s kişi</string>
+    <string name="network_stats_band_people">%1$s, %2$s kişi</string>
     <string name="network_stats_download">İndirme</string>
 </resources>

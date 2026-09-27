@@ -696,5 +696,6 @@
     <string name="network_stats_load_unknown">Carico sconosciuto</string>
     <string name="network_stats_offline">Offline</string>
     <string name="network_stats_load_people">Carico %1$s, %2$s persone</string>
+    <string name="network_stats_band_people">%1$s, %2$s persone</string>
     <string name="network_stats_download">Download</string>
 </resources>

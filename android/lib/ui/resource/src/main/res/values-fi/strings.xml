@@ -696,5 +696,6 @@
     <string name="network_stats_load_unknown">Kuorma tuntematon</string>
     <string name="network_stats_offline">Offline</string>
     <string name="network_stats_load_people">Kuorma %1$s, %2$s henkilöä</string>
+    <string name="network_stats_band_people">%1$s, %2$s henkilöä</string>
     <string name="network_stats_download">Lataus</string>
 </resources>

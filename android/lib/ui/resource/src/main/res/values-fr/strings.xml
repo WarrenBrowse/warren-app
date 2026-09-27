@@ -696,5 +696,6 @@
     <string name="network_stats_load_unknown">Charge inconnue</string>
     <string name="network_stats_offline">Hors ligne</string>
     <string name="network_stats_load_people">Charge %1$s, %2$s personnes</string>
+    <string name="network_stats_band_people">%1$s, %2$s personnes</string>
     <string name="network_stats_download">Téléchargement</string>
 </resources>
