@@ -148,6 +148,8 @@ fun SharedTransitionScope.SplitTunneling(
                         onRemove = viewModel::onRemovePickedCountry,
                         onDismiss = viewModel::onDismissPicker,
                     ),
+                onConfirmOnlyApp = viewModel::onConfirmOnlyApp,
+                onCancelOnlyApp = viewModel::onCancelOnlyApp,
             )
         }
 
@@ -271,11 +273,32 @@ fun SplitTunnelingScreen(
         }
     }
 
-    state.contentOrNull()?.countryPerApp?.picker?.let { picker ->
+    state.contentOrNull()?.let { content ->
+        SplitTunnelingDialogs(content, countryActions, onConfirmModeChange, onCancelModeChange)
+    }
+}
+
+/** The dialogs the screen may be waiting on: the country picker and the two confirmations. */
+@Composable
+private fun SplitTunnelingDialogs(
+    state: SplitTunnelingUiState,
+    countryActions: CountryPerAppActions,
+    onConfirmModeChange: () -> Unit,
+    onCancelModeChange: () -> Unit,
+) {
+    state.countryPerApp?.picker?.let { picker ->
         CountryPickerDialog(state = picker, actions = countryActions.picker)
     }
 
-    (state as? Lc.Content)?.value?.confirmation?.let { confirmation ->
+    state.countryPerApp?.onlyAppConfirmation?.let { app ->
+        OnlyAppDialog(
+            appName = app.name,
+            onConfirm = countryActions.onConfirmOnlyApp,
+            onCancel = countryActions.onCancelOnlyApp,
+        )
+    }
+
+    state.confirmation?.let { confirmation ->
         ModeChangeDialog(
             confirmation = confirmation,
             onConfirm = onConfirmModeChange,
@@ -467,6 +490,25 @@ private fun ModeChangeDialog(
                 null -> Unit
             }
         }
+    }
+}
+
+/**
+ * Asked before a country makes its app the only one in the VPN, where include-only runs as a full
+ * tunnel because none of its apps is on the device (docs/app-routing.md section 3.4).
+ */
+@Composable
+private fun OnlyAppDialog(appName: String, onConfirm: () -> Unit, onCancel: () -> Unit) {
+    InfoConfirmationDialog(
+        onResult = { confirmed -> if (confirmed != null) onConfirm() else onCancel() },
+        titleType =
+            InfoConfirmationDialogTitleType.IconAndTitle(
+                stringResource(R.string.app_country_only_app_title, appName)
+            ),
+        confirmButtonTitle = stringResource(R.string.app_country_only_app_confirm),
+        cancelButtonTitle = stringResource(R.string.cancel),
+    ) {
+        DialogText(stringResource(R.string.app_country_only_app))
     }
 }
 

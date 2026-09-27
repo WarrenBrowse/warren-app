@@ -62,6 +62,7 @@ class SplitTunnelingViewModel(
     private val picking = MutableStateFlow<AppData?>(null)
     private val pickerSearch = MutableStateFlow("")
     private val pickerExpanded = MutableStateFlow<Set<String>>(emptySet())
+    private val pendingExit = MutableStateFlow<Pair<AppData, AppExit>?>(null)
 
     private val routing: Flow<AppRoutingInputs> =
         combine(
@@ -85,6 +86,9 @@ class SplitTunnelingViewModel(
             app?.let { countryPicker(it, exits, relays, search, expanded, countryName) }
         }
 
+    private val countrySearchAndPending: Flow<Pair<String, AppData?>> =
+        combine(countrySearch, pendingExit) { search, pending -> search to pending?.first }
+
     private val baseState: Flow<SplitTunnelingUiState> =
         combine(
             splitTunnelingUseCase(tab),
@@ -105,10 +109,15 @@ class SplitTunnelingViewModel(
         }
 
     val uiState: StateFlow<Lc<Loading, SplitTunnelingUiState>> =
-        combine(baseState, routing, countrySearch, picker) { base, routing, search, picker ->
+        combine(baseState, routing, countrySearchAndPending, picker) {
+                base,
+                routing,
+                (search, onlyApp),
+                picker ->
                 val countryPerApp =
                     if (base.tab == SplitTunnelingTab.CountryPerApp) {
                         countryPerAppState(base, routing, search, picker)
+                            .copy(onlyAppConfirmation = onlyApp)
                     } else {
                         null
                     }
@@ -231,14 +240,30 @@ class SplitTunnelingViewModel(
     /**
      * Saves [exit] for the app the picker is open on and closes it. It only records the choice:
      * the main connection neither moves nor reconnects, and a switched off tab is turned on by
-     * the repository.
+     * the repository. A choice that would make the app the only one in the VPN, where every app
+     * uses it now, waits for the user's answer instead.
      */
     fun onChooseExit(exit: AppExit) {
         val app = picking.value ?: return
         picking.value = null
         viewModelScope.launch(dispatcher) {
-            splitTunnelingRepository.setAppExit(app.packageName, exit)
+            if (splitTunnelingRepository.countryChoiceNarrowsFullTunnel(app.packageName, exit)) {
+                pendingExit.value = app to exit
+            } else {
+                splitTunnelingRepository.setAppExit(app.packageName, exit)
+            }
         }
+    }
+
+    /** Applies the country held by the "only this app" confirmation. */
+    fun onConfirmOnlyApp() {
+        val (app, exit) = pendingExit.value ?: return
+        pendingExit.value = null
+        viewModelScope.launch(dispatcher) { splitTunnelingRepository.setAppExit(app.packageName, exit) }
+    }
+
+    fun onCancelOnlyApp() {
+        pendingExit.value = null
     }
 
     fun onRemovePickedCountry() {

@@ -298,6 +298,52 @@ class SplitTunnelingViewModelTest {
         }
 
     @Test
+    fun `a first country that would narrow the full tunnel waits for the confirmation`() =
+        runTest {
+            splitMode.value = SplitTunnelMode.IncludeOnly
+            every {
+                mockedSplitTunnelingRepository.countryChoiceNarrowsFullTunnel(chat.packageName, any())
+            } returns true
+            initTestSubject(listOf(bank, chat), initialTab = SplitTunnelingTab.CountryPerApp)
+
+            testSubject.uiState.test {
+                awaitCountries()
+                testSubject.onPickCountry(chat)
+                awaitCountries()
+                testSubject.onChooseExit(AppExit("se"))
+                val asking = expectMostRecentContent().countryPerApp!!
+                assertNull(asking.picker)
+                assertEquals(chat, asking.onlyAppConfirmation)
+                verify(exactly = 0) { mockedSplitTunnelingRepository.setAppExit(any(), any()) }
+
+                testSubject.onConfirmOnlyApp()
+                assertNull(expectMostRecentContent().countryPerApp!!.onlyAppConfirmation)
+            }
+            verify { mockedSplitTunnelingRepository.setAppExit(chat.packageName, AppExit("se")) }
+        }
+
+    @Test
+    fun `a cancelled first country leaves the settings untouched`() = runTest {
+        splitMode.value = SplitTunnelMode.IncludeOnly
+        every {
+            mockedSplitTunnelingRepository.countryChoiceNarrowsFullTunnel(any(), any())
+        } returns true
+        initTestSubject(listOf(chat), initialTab = SplitTunnelingTab.CountryPerApp)
+
+        testSubject.uiState.test {
+            awaitCountries()
+            testSubject.onPickCountry(chat)
+            testSubject.onChooseExit(AppExit("se"))
+            assertEquals(chat, expectMostRecentContent().countryPerApp!!.onlyAppConfirmation)
+
+            testSubject.onCancelOnlyApp()
+            assertNull(expectMostRecentContent().countryPerApp!!.onlyAppConfirmation)
+        }
+        verify(exactly = 0) { mockedSplitTunnelingRepository.setAppExit(any(), any()) }
+        verify(exactly = 0) { mockedSplitTunnelingRepository.setAppExitsEnabled(any()) }
+    }
+
+    @Test
     fun `removing a country from the row or the picker clears it`() = runTest {
         appExits.value = mapOf(chat.packageName.value to AppExit("de"), bank.packageName.value to AppExit("se"))
         initTestSubject(listOf(bank, chat), initialTab = SplitTunnelingTab.CountryPerApp)

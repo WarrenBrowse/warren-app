@@ -3,11 +3,14 @@ package com.warrenbrowse.vpn.lib.repository
 import io.mockk.every
 import io.mockk.mockk
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import com.warrenbrowse.vpn.lib.model.AppExit
+import com.warrenbrowse.vpn.lib.model.PackageName
 import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
 import org.junit.jupiter.api.Test
 
@@ -89,6 +92,19 @@ class SplitTunnelingRepositoryTest {
         appExitsEnabled.value = false
 
         assertEquals(2, repository().awaitCount { it != null })
+    }
+
+    @Test
+    fun `a first country asks before it narrows the full tunnel, and only then`() {
+        val repository = repository()
+
+        included.value = setOf("org.gone")
+        val fromFullTunnel = repository.countryChoiceNarrowsFullTunnel(PackageName("org.mail"), AppExit("de"))
+        included.value = setOf("org.bank")
+        val fromList = repository.countryChoiceNarrowsFullTunnel(PackageName("org.mail"), AppExit("de"))
+
+        assertTrue(fromFullTunnel)
+        assertFalse(fromList)
     }
 
     private companion object {

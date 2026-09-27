@@ -125,6 +125,9 @@
     <string name="app_country_choose">اختيار دولة لـ %1$s</string>
     <string name="app_country_change">تغيير دولة %1$s، الدولة الحالية: %2$s</string>
     <string name="app_country_remove">إزالة دولة %1$s</string>
+    <string name="app_country_only_app_title">لن يستخدم VPN إلا %1$s</string>
+    <string name="app_country_only_app">\"VPN انتقائي\" مفعّل ولا يوجد على هذا الجهاز أي من التطبيقات المختارة له، لذا تستخدم جميع التطبيقات VPN الآن. إذا اخترت دولة لهذا التطبيق، فسيصبح التطبيق الوحيد الذي يستخدم VPN، وستستخدم جميع التطبيقات الأخرى اتصالك المعتاد.</string>
+    <string name="app_country_only_app_confirm">تعيين الدولة</string>
     <string name="country_picker_title">دولة %1$s</string>
     <string name="country_picker_remove">إزالة الدولة</string>
     <string name="country_picker_cities_in">مدن %1$s</string>

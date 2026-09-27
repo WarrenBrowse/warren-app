@@ -121,6 +121,9 @@
     <string name="app_country_choose">Velg et land for %1$s</string>
     <string name="app_country_change">Endre landet for %1$s, nå %2$s</string>
     <string name="app_country_remove">Fjern landet for %1$s</string>
+    <string name="app_country_only_app_title">Bare %1$s vil bruke VPN</string>
+    <string name="app_country_only_app">«VPN bare for» er på, og ingen av de valgte appene er på denne enheten, så alle apper bruker VPN nå. Gir du denne appen et land, blir den den eneste appen som bruker VPN: alle andre apper vil bruke den vanlige tilkoblingen din.</string>
+    <string name="app_country_only_app_confirm">Angi landet</string>
     <string name="country_picker_title">Land for %1$s</string>
     <string name="country_picker_remove">Fjern land</string>
     <string name="country_picker_cities_in">%1$s: byer</string>

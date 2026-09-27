@@ -120,6 +120,9 @@
     <string name="app_country_choose">為 %1$s 選擇國家</string>
     <string name="app_country_change">變更 %1$s 的國家（目前：%2$s）</string>
     <string name="app_country_remove">移除 %1$s 的國家</string>
+    <string name="app_country_only_app_title">只有 %1$s 會使用 VPN</string>
+    <string name="app_country_only_app">「僅指定應用程式」已開啟，但您選擇的應用程式都不在此裝置上，因此現在所有應用程式都在使用 VPN。為此應用程式指定國家後，它將成為唯一使用 VPN 的應用程式：其他所有應用程式都將使用您的一般連線。</string>
+    <string name="app_country_only_app_confirm">指定國家</string>
     <string name="country_picker_title">%1$s 的國家</string>
     <string name="country_picker_remove">移除國家</string>
     <string name="country_picker_cities_in">%1$s 的城市</string>

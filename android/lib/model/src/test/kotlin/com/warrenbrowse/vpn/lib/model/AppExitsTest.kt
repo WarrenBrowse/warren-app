@@ -1,7 +1,9 @@
 package com.warrenbrowse.vpn.lib.model
 
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 
 /**
@@ -183,6 +185,52 @@ class AppExitsTest {
             parsed,
         )
         assertEquals(emptyList(), AppRouteStatusParser.parse("not json"))
+    }
+
+    private fun narrows(
+        mode: SplitTunnelMode = SplitTunnelMode.IncludeOnly,
+        included: Set<String> = emptySet(),
+        appExits: Map<String, AppExit> = emptyMap(),
+        enabled: Boolean = true,
+        app: String = "org.browser",
+    ) =
+        countryChoiceNarrowsFullTunnel(
+            mode,
+            excludedApps = emptySet(),
+            includedApps = included,
+            appExits = appExits,
+            appExitsEnabled = enabled,
+            app = app,
+            exit = se,
+            isInstalled = { it in installed },
+        )
+
+    @Test
+    fun `a country for the first app turns the include-only full tunnel into a list`() {
+        assertTrue(narrows())
+        assertTrue(narrows(included = setOf("org.gone")))
+    }
+
+    @Test
+    fun `saved countries count once the choice turns the switch on`() {
+        assertTrue(narrows(appExits = exits("org.chat" to deBerlin), enabled = false))
+        assertFalse(narrows(appExits = exits("org.chat" to deBerlin), enabled = true))
+    }
+
+    @Test
+    fun `a country narrows nothing when include-only already holds a list`() {
+        assertFalse(narrows(included = setOf("org.bank")))
+    }
+
+    @Test
+    fun `a country for an app missing from the device keeps the full tunnel`() {
+        assertFalse(narrows(app = "org.uninstalled"))
+    }
+
+    @Test
+    fun `a country narrows nothing outside include-only`() {
+        assertFalse(narrows(mode = SplitTunnelMode.Off))
+        assertFalse(narrows(mode = SplitTunnelMode.Exclude))
     }
 
     @Test

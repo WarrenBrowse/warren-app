@@ -121,6 +121,9 @@
     <string name="app_country_choose">%1$s uygulaması için ülke seç</string>
     <string name="app_country_change">%1$s uygulamasının ülkesini değiştir, şu an: %2$s</string>
     <string name="app_country_remove">%1$s uygulamasının ülkesini kaldır</string>
+    <string name="app_country_only_app_title">VPN\'i yalnızca %1$s kullanacak</string>
+    <string name="app_country_only_app">\"Yalnızca seçilenlere VPN\" açık ve seçilen uygulamaların hiçbiri bu cihazda yok, bu nedenle şu anda tüm uygulamalar VPN\'i kullanıyor. Bu uygulamaya bir ülke atarsanız VPN\'i kullanan tek uygulama o olur: diğer tüm uygulamalar normal bağlantınızı kullanır.</string>
+    <string name="app_country_only_app_confirm">Ülkeyi ata</string>
     <string name="country_picker_title">%1$s uygulamasının ülkesi</string>
     <string name="country_picker_remove">Ülkeyi kaldır</string>
     <string name="country_picker_cities_in">%1$s: şehirler</string>

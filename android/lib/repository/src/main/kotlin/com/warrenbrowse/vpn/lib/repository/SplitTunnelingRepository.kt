@@ -12,6 +12,7 @@ import com.warrenbrowse.vpn.lib.model.AppExit
 import com.warrenbrowse.vpn.lib.model.AppRouting
 import com.warrenbrowse.vpn.lib.model.PackageName
 import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
+import com.warrenbrowse.vpn.lib.model.countryChoiceNarrowsFullTunnel
 import com.warrenbrowse.vpn.lib.model.effectiveAppExits
 import com.warrenbrowse.vpn.lib.model.resolveAppRouting
 
@@ -110,6 +111,23 @@ class SplitTunnelingRepository(
     }
 
     fun clearAppExit(app: PackageName) = settings.clearAppExit(app.value)
+
+    /**
+     * Whether choosing [exit] for [app] would turn the include-only full-tunnel fallback into a
+     * list holding only the apps with a country, so the screen asks first. It asks the package
+     * manager, so only ever off the main thread.
+     */
+    fun countryChoiceNarrowsFullTunnel(app: PackageName, exit: AppExit): Boolean =
+        countryChoiceNarrowsFullTunnel(
+            settings.splitMode.value,
+            settings.excludedApps.value,
+            settings.includedApps.value,
+            settings.appExits.value,
+            settings.appExitsEnabled.value,
+            app.value,
+            exit,
+            isAppInstalled,
+        )
 
     private fun StateFlow<Set<String>>.asPackageNames(): StateFlow<Set<PackageName>> =
         map { set -> set.mapTo(LinkedHashSet(), ::PackageName) }

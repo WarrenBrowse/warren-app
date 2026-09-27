@@ -85,6 +85,8 @@ class CountryPerAppActions(
     val onPick: (AppData) -> Unit,
     val onClear: (PackageName) -> Unit,
     val picker: CountryPickerActions,
+    val onConfirmOnlyApp: () -> Unit,
+    val onCancelOnlyApp: () -> Unit,
 )
 
 /** What a row of the picker, or its buttons, can do. */
@@ -111,6 +113,8 @@ internal val NoCountryPerAppActions =
                 onRemove = {},
                 onDismiss = {},
             ),
+        onConfirmOnlyApp = {},
+        onCancelOnlyApp = {},
     )
 
 /**

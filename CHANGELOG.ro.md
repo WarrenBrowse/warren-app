@@ -21,6 +21,10 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   așteaptă să se elibereze o rută, iar o aplicație a cărei țară nu poate fi atinsă e blocată în loc
   să fie trimisă pe altă cale. Ecranul de conectare arată câte aplicații sunt în alte țări. Necesită
   Android 10 sau mai nou.
+- [Android] Aplicația cere confirmare înainte ca o țară să facă din aplicația ei singura care
+  folosește VPN-ul. Cât timp „VPN selectiv” e activat, dar niciuna dintre aplicațiile lui nu e pe
+  dispozitiv, toate aplicațiile folosesc VPN-ul, iar o țară aleasă pentru o aplicație le-ar scoate
+  pe toate celelalte din el: Rutare aplicații spune acum acest lucru și așteaptă răspunsul tău.
 - [iOS] Vezi avertismentele înregistrate pe contul tău când un port redirecționat e închis după o
   raportare de abuz: o notificare pentru fiecare avertisment, un banner cu referința dosarului care
   deschide pagina despre contestare, și lista completă în ecranul port forwarding cu adresa la care

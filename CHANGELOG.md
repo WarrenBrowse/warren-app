@@ -30,6 +30,9 @@ Line wrap the file at 100 chars.                                              Th
   many run at once as the server admits, a country past that waits for a free route, and an app
   whose country cannot be reached is blocked rather than sent another way. The connect screen
   shows how many apps are in other countries. Needs Android 10 or newer.
+- [Android] Ask before a country makes its app the only one in the VPN. While VPN only for is on
+  and none of its apps is on the device, every app uses the VPN, and giving one app a country would
+  take every other app out of it: App routing now says so and waits for your answer.
 - [iOS] Show the warnings recorded against your account when a forwarded port is closed after an
   abuse report: a notification for each warning, a banner with its case reference that opens the
   page on contesting it, and the full list in the port forwarding screen with the address to write

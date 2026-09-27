@@ -54,3 +54,33 @@ fun resolveAppRouting(
             if (present.isEmpty()) AppRouting.AllApps else AppRouting.OnlyFor(present)
         }
     }
+
+/**
+ * Whether choosing [exit] for [app] turns the full-tunnel fallback of include-only into a list, so
+ * that every other app leaves the VPN: the list holds no app on the device, and the chosen app
+ * would be the first. Choosing a country turns the tab's switch on, so every saved country counts
+ * after the choice. Computed with [effectiveAppExits] and [resolveAppRouting], the functions the
+ * tunnel itself resolves its apps with, so the question cannot drift from the answer.
+ */
+@Suppress("LongParameterList")
+fun countryChoiceNarrowsFullTunnel(
+    mode: SplitTunnelMode,
+    excludedApps: Set<String>,
+    includedApps: Set<String>,
+    appExits: Map<String, AppExit>,
+    appExitsEnabled: Boolean,
+    app: String,
+    exit: AppExit,
+    isInstalled: (String) -> Boolean,
+): Boolean {
+    fun routing(exits: Map<String, AppExit>, enabled: Boolean) =
+        resolveAppRouting(
+            mode,
+            excludedApps,
+            includedApps,
+            effectiveAppExits(mode, excludedApps, exits, enabled).keys,
+            isInstalled,
+        )
+    return routing(appExits, appExitsEnabled) == AppRouting.AllApps &&
+        routing(appExits + (app to exit), enabled = true) is AppRouting.OnlyFor
+}

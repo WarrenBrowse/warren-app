@@ -121,6 +121,9 @@
     <string name="app_country_choose">Choisir un pays pour %1$s</string>
     <string name="app_country_change">Changer le pays de %1$s, actuellement %2$s</string>
     <string name="app_country_remove">Retirer le pays de %1$s</string>
+    <string name="app_country_only_app_title">Seule l\'app %1$s utilisera le VPN</string>
+    <string name="app_country_only_app">« VPN ciblé » est activé et aucune des apps choisies n\'est installée sur cet appareil : toutes les apps passent donc par le VPN pour l\'instant. Donner un pays à cette app en fait la seule à utiliser le VPN : toutes les autres apps utiliseront votre connexion normale.</string>
+    <string name="app_country_only_app_confirm">Appliquer le pays</string>
     <string name="country_picker_title">Pays de %1$s</string>
     <string name="country_picker_remove">Retirer le pays</string>
     <string name="country_picker_cities_in">%1$s : villes</string>

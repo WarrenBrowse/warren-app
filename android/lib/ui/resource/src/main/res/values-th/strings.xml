@@ -120,6 +120,9 @@
     <string name="app_country_choose">เลือกประเทศสำหรับ %1$s</string>
     <string name="app_country_change">เปลี่ยนประเทศของ %1$s ปัจจุบันคือ %2$s</string>
     <string name="app_country_remove">นำประเทศของ %1$s ออก</string>
+    <string name="app_country_only_app_title">จะมีเพียง %1$s ที่ใช้ VPN</string>
+    <string name="app_country_only_app">\"VPN เฉพาะแอป\" เปิดอยู่ แต่ไม่มีแอปที่เลือกไว้อยู่ในอุปกรณ์นี้ ขณะนี้ทุกแอปจึงใช้ VPN หากคุณกำหนดประเทศให้แอปนี้ แอปนี้จะเป็นแอปเดียวที่ใช้ VPN ส่วนแอปอื่นๆ ทั้งหมดจะใช้การเชื่อมต่อปกติของคุณ</string>
+    <string name="app_country_only_app_confirm">กำหนดประเทศ</string>
     <string name="country_picker_title">ประเทศของ %1$s</string>
     <string name="country_picker_remove">นำประเทศออก</string>
     <string name="country_picker_cities_in">เมืองใน %1$s</string>

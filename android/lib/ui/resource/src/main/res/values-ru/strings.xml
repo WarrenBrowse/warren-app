@@ -123,6 +123,9 @@
     <string name="app_country_choose">Выбрать страну для %1$s</string>
     <string name="app_country_change">Сменить страну для %1$s, сейчас: %2$s</string>
     <string name="app_country_remove">Удалить страну для %1$s</string>
+    <string name="app_country_only_app_title">VPN будет использовать только %1$s</string>
+    <string name="app_country_only_app">Режим «VPN для выбранных» включён, но ни одного из выбранных приложений нет на этом устройстве, поэтому сейчас VPN используют все приложения. Если выбрать страну для этого приложения, оно станет единственным, которое использует VPN: все остальные приложения будут использовать обычное подключение.</string>
+    <string name="app_country_only_app_confirm">Задать страну</string>
     <string name="country_picker_title">Страна для %1$s</string>
     <string name="country_picker_remove">Удалить страну</string>
     <string name="country_picker_cities_in">%1$s: города</string>

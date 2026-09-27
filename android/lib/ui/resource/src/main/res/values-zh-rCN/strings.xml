@@ -120,6 +120,9 @@
     <string name="app_country_choose">为 %1$s 选择国家</string>
     <string name="app_country_change">更改 %1$s 的国家（当前：%2$s）</string>
     <string name="app_country_remove">移除 %1$s 的国家</string>
+    <string name="app_country_only_app_title">只有 %1$s 会使用 VPN</string>
+    <string name="app_country_only_app">“仅限指定应用”已开启，但您选择的应用都不在此设备上，因此现在所有应用都在使用 VPN。为此应用指定国家后，它将成为唯一使用 VPN 的应用：其他所有应用都将使用您的常规连接。</string>
+    <string name="app_country_only_app_confirm">指定国家</string>
     <string name="country_picker_title">%1$s 的国家</string>
     <string name="country_picker_remove">移除国家</string>
     <string name="country_picker_cities_in">%1$s 的城市</string>

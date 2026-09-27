@@ -22,6 +22,10 @@ par l'application, gardez-le tel quel.
   un pays au-delà attend qu'une route se libère, et une app dont le pays est injoignable est bloquée
   plutôt qu'envoyée ailleurs. L'écran de connexion indique combien d'apps sont dans d'autres pays.
   Nécessite Android 10 ou plus récent.
+- [Android] Demander confirmation avant qu'un pays fasse de son app la seule à passer par le VPN.
+  Tant que VPN ciblé est activé sans qu'aucune de ses apps soit installée sur l'appareil, toutes
+  les apps passent par le VPN, et donner un pays à une app en sortirait toutes les autres : le
+  routage des apps le signale désormais et attend votre réponse.
 - [iOS] Afficher les avertissements enregistrés sur votre compte quand un port redirigé est fermé
   après un signalement d'abus : une notification par avertissement, une bannière avec sa référence
   de dossier qui ouvre la page expliquant comment le contester, et la liste complète dans l'écran

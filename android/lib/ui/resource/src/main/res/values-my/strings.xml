@@ -120,6 +120,9 @@
     <string name="app_country_choose">%1$s အတွက် နိုင်ငံ ရွေးရန်</string>
     <string name="app_country_change">%1$s ၏ နိုင်ငံကို ပြောင်းရန်၊ လက်ရှိ %2$s</string>
     <string name="app_country_remove">%1$s ၏ နိုင်ငံကို ဖယ်ရှားရန်</string>
+    <string name="app_country_only_app_title">%1$s သာ VPN ကို သုံးပါမည်</string>
+    <string name="app_country_only_app">\"VPN သုံးမည့်အက်ပ်များ\" ဖွင့်ထားသော်လည်း ရွေးထားသော အက်ပ်များထဲမှ တစ်ခုမျှ ဤစက်ပေါ်တွင် မရှိသဖြင့် ယခု အက်ပ်အားလုံး VPN ကို သုံးနေပါသည်။ ဤအက်ပ်အတွက် နိုင်ငံရွေးပါက ၎င်းသည် VPN ကို သုံးသော တစ်ခုတည်းသော အက်ပ် ဖြစ်လာပြီး အခြားအက်ပ်အားလုံးသည် သင်၏ ပုံမှန်ချိတ်ဆက်မှုကို သုံးပါမည်။</string>
+    <string name="app_country_only_app_confirm">နိုင်ငံ သတ်မှတ်ရန်</string>
     <string name="country_picker_title">%1$s အတွက် နိုင်ငံ</string>
     <string name="country_picker_remove">နိုင်ငံ ဖယ်ရှားရန်</string>
     <string name="country_picker_cities_in">%1$s ရှိ မြို့များ</string>

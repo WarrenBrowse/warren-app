@@ -22,6 +22,11 @@ data class CountryPerAppUiState(
     val withCountry: List<AppCountryItem> = emptyList(),
     val otherApps: List<AppData> = emptyList(),
     val picker: CountryPickerUiState? = null,
+    /**
+     * The app whose country waits for the user's answer, because it would become the only app in
+     * the VPN (include-only running as a full tunnel, docs/app-routing.md section 3.4).
+     */
+    val onlyAppConfirmation: AppData? = null,
 ) {
     val noSearchResult: Boolean
         get() = searchTerm.isNotBlank() && withCountry.isEmpty() && otherApps.isEmpty()

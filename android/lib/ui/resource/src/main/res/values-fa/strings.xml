@@ -121,6 +121,9 @@
     <string name="app_country_choose">انتخاب کشور برای %1$s</string>
     <string name="app_country_change">تغییر کشور %1$s، کشور فعلی: %2$s</string>
     <string name="app_country_remove">حذف کشور %1$s</string>
+    <string name="app_country_only_app_title">فقط %1$s از VPN استفاده خواهد کرد</string>
+    <string name="app_country_only_app">«VPN انتخابی» روشن است و هیچ‌یک از اپلیکیشن‌های انتخاب‌شده روی این دستگاه نیست، بنابراین اکنون همهٔ اپلیکیشن‌ها از VPN استفاده می‌کنند. اگر برای این اپلیکیشن کشوری انتخاب کنید، تنها اپلیکیشنی خواهد بود که از VPN استفاده می‌کند و همهٔ اپلیکیشن‌های دیگر از اتصال عادی شما استفاده خواهند کرد.</string>
+    <string name="app_country_only_app_confirm">تعیین کشور</string>
     <string name="country_picker_title">کشور %1$s</string>
     <string name="country_picker_remove">حذف کشور</string>
     <string name="country_picker_cities_in">شهرهای %1$s</string>

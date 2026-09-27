@@ -120,6 +120,9 @@
     <string name="app_country_choose">%1$sの国を選択</string>
     <string name="app_country_change">%1$sの国を変更 (現在: %2$s)</string>
     <string name="app_country_remove">%1$sの国を削除</string>
+    <string name="app_country_only_app_title">VPNを使用するのは%1$sだけになります</string>
+    <string name="app_country_only_app">「アプリ限定VPN」がオンですが、選択したアプリはどれもこのデバイスにないため、現在はすべてのアプリがVPNを使用しています。このアプリに国を設定すると、VPNを使用するのはこのアプリだけになり、その他のアプリはすべて通常の接続を使用します。</string>
+    <string name="app_country_only_app_confirm">国を設定</string>
     <string name="country_picker_title">%1$sの国</string>
     <string name="country_picker_remove">国を削除</string>
     <string name="country_picker_cities_in">%1$sの都市</string>

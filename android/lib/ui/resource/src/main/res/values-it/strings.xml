@@ -121,6 +121,9 @@
     <string name="app_country_choose">Scegli un Paese per %1$s</string>
     <string name="app_country_change">Cambia il Paese di %1$s, attualmente %2$s</string>
     <string name="app_country_remove">Rimuovi il Paese di %1$s</string>
+    <string name="app_country_only_app_title">Solo %1$s userà la VPN</string>
+    <string name="app_country_only_app">\"VPN selettiva\" è attiva e nessuna delle app scelte è su questo dispositivo, quindi ora tutte le app usano la VPN. Se assegni un Paese a questa app, sarà l\'unica a usare la VPN: tutte le altre app useranno la tua connessione normale.</string>
+    <string name="app_country_only_app_confirm">Imposta il Paese</string>
     <string name="country_picker_title">Paese di %1$s</string>
     <string name="country_picker_remove">Rimuovi Paese</string>
     <string name="country_picker_cities_in">%1$s: città</string>
