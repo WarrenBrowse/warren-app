@@ -260,9 +260,12 @@ Route admission by anchor (warren-core doc 107 sections 10 and 11;
   key and hands it to its main supervisor (`with_route_anchor`) and to every
   route session. The daemon wires a plan into every desktop tunnel, so every
   desktop main session anchors while the directory offers a key, a country
-  set or not: the engine takes the anchor only before the supervisor runs,
-  and a country chosen while connected then gets its route without a
-  reconnect of the main session. The cost for a user with no country is one
+  set or not, and a country chosen while connected then gets its route
+  without a reconnect of the main session. A tunnel whose directory has
+  offered no key yet builds the anchor without one
+  (`RouteAnchorHandle::awaiting_key`, which reads `Unavailable`, so its
+  routes run on tokens meanwhile) and hands it the key later (see A tunnel
+  started before its credentials, below). The cost for a user with no country is one
   small control datagram after each main setup, and an anchor record in the
   API's RAM tied to a serial it already leases. The anchor secret stays
   inside the engine: it never crosses the daemon's gRPC or any FFI, and
@@ -310,12 +313,62 @@ Route admission by anchor (warren-core doc 107 sections 10 and 11;
   routes by anchor for good (`not offered`, or one predating route admission)
   is not asked again; a route whose by-anchor session was just refused waits
   60 s before a move, so a route cannot flap between the two.
-- Known limit: the engine takes a main session's anchor only when its
-  supervisor is built, and the anchor carries the key. A tunnel started with
-  no key at all (the first run on a machine, or a kept block whose signature
-  expired) does not anchor, and its routes run on tokens until the next
-  tunnel the daemon builds (its next reconnect); from then on they move to the
-  anchor as above.
+
+A tunnel started before its credentials
+(`talpid-warren-tunnel/src/app_routes/main_anchor.rs`):
+
+- A fresh daemon has neither tokens nor the route admission key when its
+  first tunnel starts: both come from the wallet's first refresh, which the
+  first tunnel's parameters start. The daemon announces every finished
+  refresh round on a watch channel (`Credentials`: rounds, and whether the
+  wallet holds tokens this epoch), and the tunnel follows it.
+- The first tunnel of a daemon run holds its main session until the wallet
+  holds tokens for the current epoch or the first round ends, 4 s at most
+  (`FIRST_REFRESH_WAIT`; the firewall lets the daemon reach the API while
+  connecting; a disconnect ends the wait). A round reads the token
+  directory first, which carries the route admission key, then mints the
+  current epoch and the later ones up to its horizon, one request each
+  (warren-sdk-rs `TokenManager::refresh`), so the daemon looks at a running
+  round every 100 ms and announces the current epoch's tokens as soon as
+  they are there. A main session set up then is admitted on a
+  token and anchors at once. A round that does not come (the API blocked on
+  this network) costs the first connection those 4 s, once; later tunnels
+  of the run never wait.
+- When the key arrives after the main session was set up, the tunnel hands it
+  to the anchor (`provide_key`), and the engine registers the anchor on the
+  live session at once when that session was admitted on a token: no new
+  setup, nothing reconnects.
+- When the main session had to log in with the wallet (the engine says so:
+  `MultiHopSupervisor::token_admission_rx`) and a round brings tokens while
+  the anchor has its key, the tunnel asks the engine, once per tunnel, for a
+  make-before-break setup of the main session
+  (`MigrateHandle::overlap_reconnect`), which is admitted on a token and
+  anchors. The exit places that session on another inner address than the
+  wallet session's, and the tunnel adopts a new address by rebuilding itself
+  (about 250 ms blocked, the connections of the moment reset), which is why
+  the first tunnel waits for the first round instead. The wallet session and
+  the token session then reach the same exit from the same address a moment
+  apart, so that exit can tie the token's serial, and the routes anchored on
+  it, to the wallet; the source address alone would allow the same.
+- A route that ended for want of a token, or a waiting one, dials again as
+  soon as a round brings tokens or the anchor is bound, not 60 s later.
+- Measured 2026-09-27 in a Debian 13 VM (Lima, aarch64, daemon-only package
+  built with `./build.sh --daemon-only --optimize`, beta env), main on NL and
+  five route countries (DE, FI, FR, RO, SG). Fresh install, first connect:
+  the wait ended after 1.4 s on the current epoch's tokens, the tunnel was up
+  1.7 s after the connect, the anchor was bound with it (`max_routes=32`),
+  and each routed app egressed from its own exit's listed address, every
+  route by anchor. Six daemon starts with auto-connect and no kept block:
+  five the same way (tokens within 1.4 s, anchor bound, no refresh failure,
+  no rebuild); in one, no token came within the 4 s, the first round ended
+  with `request timed out` (a connection it had opened on the physical
+  interface was stranded when the tunnel took the route, and is not sent
+  again since it had connected), the round 15 s later brought the tokens,
+  the wallet session was set up again on a token, the tunnel rebuilt itself
+  once, and the anchor was bound 27 s after the start. Why that round was
+  slow before the tunnel came up is not established. The released 1.1.37
+  build, in the same VM, left the first route without a token or an anchor
+  after such a start (`all API hosts are unreachable`).
 
 Tokens (`mullvad-daemon/src/warren_token_provider.rs`):
 
@@ -343,11 +396,28 @@ Tokens (`mullvad-daemon/src/warren_token_provider.rs`):
   wallet is held elsewhere, which is the wallet's device limit).
 - The wallet's batches are minted in the background, when the first tunnel
   starts and every 10 minutes after; a failed round is retried after 15 s,
-  then 30 s, doubling up to the 10 minutes. The first round fails at times
-  (seen twice in the Linux VM right after the daemon started and connected,
-  `all API hosts are unreachable`, cause not established), and with the
-  fixed period route sessions then went 10 minutes without a token; with the
-  retry they connected 60 s after the connect, at their own next attempt.
+  then 30 s, doubling up to the 10 minutes.
+- Why the first round used to fail (`all API hosts are unreachable`,
+  reproduced 2026-09-27 in the Debian 13 VM on a daemon started with
+  auto-connect): it opens its connection when the first tunnel's parameters
+  are generated, on the physical interface, with the physical source address
+  (tcpdump: the SYNs leave `eth0`). A tenth of a second later the tunnel
+  takes the default route, and every retransmission of those SYNs then goes
+  into the tunnel still carrying the physical source (tcpdump: `tun0 Out IP
+  192.168.5.15.* > <API>.443 [S]` once a second), which the exit never
+  answers. After the SDK's 5 s connect budget its only fallback, the same
+  host without SNI, gets a TLS `internal_error` alert from the API (checked
+  with `openssl s_client -noservername`), so the round ends with every host
+  reported unreachable, the account standing poll with it. Mullvad's own API
+  client resets its sockets on the same tunnel transitions; the Warren
+  fetchers had nothing equivalent. Now the daemon's Warren transport
+  (`mullvad-daemon/src/warren_api_transport.rs`) builds a fresh connection
+  pool whenever the routes move (the tunnel comes up, a disconnect ends, an
+  attempt fails), and sends a request again, twice at most, when it failed to
+  connect while the routes moved. Only a failure to connect is sent again:
+  the request then never reached the API, so its signature is not replayed,
+  which the API would refuse (the SDK's own host fallback re-sends a signed
+  request on the same condition).
 
 ### 2.3 Address translation
 

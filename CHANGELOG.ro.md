@@ -34,6 +34,12 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Află când serverul refuză un port redirecționat din lipsă de drept de port, iar aplicația
   cere din nou automat în loc să se oprească la primul refuz.
 
+### Modificat
+- [Windows, macOS, Linux] Lista de rețele a Partajării rețelei locale e tradusă în toate cele 23 de
+  limbi.
+- [Android] Nota de confidențialitate numește Rutarea aplicațiilor în toate limbile, acolo unde
+  încă vorbea de split tunneling.
+
 ### Reparat
 - [iOS] Prezintă un drept de port cu fiecare cerere de port redirecționat, ca pe celelalte
   platforme, astfel încât serverele care îl cer acordă portul în loc să-l refuze.
@@ -52,6 +58,15 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   aplicație a deschis o conexiune nouă. Căutarea întreabă sistemul o dată pe conexiune și bloca
   până acum tot tunelul între timp, iar o rafală de conexiuni noi ducea la pauze de până la o
   secundă.
+- [Linux] Ajungi la rețeaua locală cât timp ești conectat, cu Partajarea rețelei locale pornită:
+  routerul, imprimantele și celelalte dispozitive, precum și rețelele adăugate în listă pe care
+  computerul le atinge direct sau printr-o rută statică, prin IPv4 și IPv6. Firewallul lăsa
+  traficul să treacă, dar rutele îl trimiteau în VPN, unde nu răspundea nimic. Oprirea partajării
+  sau modificarea listei se aplică fără reconectare, iar adresele VPN-ului rămân în VPN orice ai
+  partaja.
+- [Windows, macOS, Linux] Aplicațiile trimise în altă țară își primesc ruta de la prima conectare
+  după o instalare nouă. Prima reîmprospătare a tokenurilor eșua cât timp VPN-ul se conecta, iar
+  aceste aplicații rămâneau blocate până la reconectarea următoare.
 
 ## [1.1.37] - 2026-09-27
 ### Adăugat

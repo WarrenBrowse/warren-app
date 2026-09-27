@@ -42,6 +42,11 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Say when the server refuses a forwarded port for want of an entitlement, and ask again
   automatically instead of stopping on the first refusal.
 
+### Changed
+- [Windows, macOS, Linux] Translate the network list of Local network sharing in all 23 languages.
+- [Android] Name App routing in the privacy notice, in every language, where it still spoke of
+  split tunneling.
+
 ### Fixed
 - [iOS] Present a port entitlement with each forwarded port request, as the other platforms do, so
   the servers that require one grant the port instead of refusing it.
@@ -61,6 +66,14 @@ Line wrap the file at 100 chars.                                              Th
 - [Android] Keep every app's traffic moving while Country per app finds out which app opened a
   new connection. That lookup asks the system once per connection and used to hold the whole
   tunnel meanwhile, which a burst of new connections turned into pauses of up to a second.
+- [Linux] Reach the local network while connected with Local network sharing on: the router,
+  printers and other devices, and the networks added to its list that the computer reaches
+  directly or by a static route, over IPv4 and IPv6. The firewall let that traffic through, but the
+  routes sent it into the VPN, where nothing answered. Turning sharing off or editing the list
+  applies without reconnecting, and the VPN's own addresses stay in the VPN whatever is shared.
+- [Windows, macOS, Linux] Give the apps sent to another country their route from the first
+  connection after a fresh install. The first token refresh failed while the VPN was connecting,
+  so those apps stayed blocked until the next reconnect.
 
 ## [1.1.37] - 2026-09-27
 ### Added

@@ -37,6 +37,11 @@ par l'application, gardez-le tel quel.
 - [iOS] Dire quand le serveur refuse un port redirigé faute de droit de port, et redemander
   automatiquement au lieu de s'arrêter au premier refus.
 
+### Modifié
+- [Windows, macOS, Linux] Traduire la liste des réseaux du partage réseau local dans les 23 langues.
+- [Android] Nommer le routage des apps dans l'avis de confidentialité, dans toutes les langues, là
+  où il parlait encore de split tunneling.
+
 ### Corrigé
 - [iOS] Présenter un droit de port avec chaque demande de port redirigé, comme les autres
   plateformes, pour que les serveurs qui l'exigent accordent le port au lieu de le refuser.
@@ -57,6 +62,15 @@ par l'application, gardez-le tel quel.
   quelle app a ouvert une nouvelle connexion. Cette recherche interroge le système une fois par
   connexion et bloquait jusqu'ici tout le tunnel pendant ce temps, ce qu'une rafale de nouvelles
   connexions transformait en pauses allant jusqu'à une seconde.
+- [Linux] Atteindre le réseau local pendant la connexion quand le partage réseau local est activé :
+  le routeur, les imprimantes et les autres appareils, ainsi que les réseaux ajoutés à sa liste que
+  l'ordinateur atteint directement ou par une route statique, en IPv4 comme en IPv6. Le pare-feu
+  laissait passer ce trafic, mais les routes l'envoyaient dans le VPN, où rien ne répondait.
+  Désactiver le partage ou modifier la liste s'applique sans reconnexion, et les adresses du VPN
+  lui-même restent dans le VPN quoi qu'on partage.
+- [Windows, macOS, Linux] Donner leur route aux apps envoyées vers un autre pays dès la première
+  connexion après une installation neuve. Le premier renouvellement des tokens échouait pendant
+  que le VPN se connectait, et ces apps restaient bloquées jusqu'à la reconnexion suivante.
 
 ## [1.1.37] - 2026-09-27
 ### Ajouté
