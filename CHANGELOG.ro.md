@@ -30,6 +30,8 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Vezi revocarea când un voucher sau o achiziție App Store e refuzată pentru un cont
   revocat. Nicio achiziție nu pornește, iar o achiziție deja plătită rămâne în așteptare, ca să
   fie creditată după încheierea revocării.
+- [Windows, macOS, Linux, Android] Aplicația spune că acest cont folosește deja numărul maxim de
+  dispozitive simultane când serverul refuză încă unul, în loc să anunțe că abonamentul a expirat.
 
 ## [1.1.37] - 2026-09-27
 ### Adăugat

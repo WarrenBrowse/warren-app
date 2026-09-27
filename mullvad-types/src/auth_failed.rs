@@ -125,4 +125,17 @@ mod tests {
             assert_eq!(*expected_output, parse_string(input));
         }
     }
+
+    #[test]
+    fn an_exit_device_limit_refusal_reads_as_too_many_connections() {
+        // The message `talpid-warren-tunnel`'s `reject_error` carries for a
+        // sealed device-limit refusal. It must reach the "too many
+        // simultaneous connections" copy, never the expired-account one.
+        let reason = "[TOO_MANY_CONNECTIONS] exit refused the session (device-limit); the account \
+                      already uses its maximum number of simultaneous devices";
+        assert!(
+            matches!(AuthFailed::from(reason), AuthFailed::TooManyConnections),
+            "a device limit must parse as TooManyConnections"
+        );
+    }
 }

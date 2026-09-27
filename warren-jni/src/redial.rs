@@ -22,6 +22,11 @@
 //! - `Banned` (6) is terminal too: the wallet is suspended (warren-core doc
 //!   105), learned from an issuer, the standing poll or the exit's CRL, and
 //!   `getBanVerdict` says for what and until when.
+//! - `DeviceLimit` (7) is terminal as well: the exit refused another
+//!   wallet-signed session because the account already uses its maximum
+//!   number of simultaneous devices, and a redial meets the same count until
+//!   one of them disconnects. Kotlin shows "too many connections", never the
+//!   expired-subscription message.
 
 /// Tunnel session status reported back to Kotlin via
 /// `WarrenJni.getTunnelStatus()`. Encoded as an `i32` rather than an enum
@@ -45,4 +50,7 @@ pub enum SessionStatus {
     ExitLeaving = 5,
     /// The wallet is banned: see the module doc.
     Banned = 6,
+    /// The account already holds its maximum of simultaneous wallet-signed
+    /// sessions: see the module doc.
+    DeviceLimit = 7,
 }

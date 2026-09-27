@@ -13,7 +13,8 @@
 //! The `i32` contract is unchanged: `Connected` while a session is published,
 //! `Reconnecting` while the watch publishes `None`, `Disconnected` once the
 //! supervisor stops (or a redial stops being a blip, see [`SESSION_GRACE`]),
-//! `Unauthorized` on a policy rejection. Nothing on the Kotlin side moves.
+//! `Unauthorized` on a policy rejection, `DeviceLimit` when the account already
+//! holds its maximum of simultaneous wallet-signed sessions.
 //!
 //! Everything here is portable, so the real control loop (real supervisor,
 //! real pumps, real QUIC) is exercised on the host against a loopback exit;
@@ -110,6 +111,22 @@ pub(crate) fn reconnect_observer(counter: &'static AtomicI32) -> ReconnectObserv
     Arc::new(move || {
         counter.fetch_add(1, Ordering::Relaxed);
     })
+}
+
+/// The terminal status an account refusal leaves for Kotlin, `None` for a
+/// refusal that is not a standing verdict on the account and so ends as a
+/// plain teardown.
+///
+/// A ban is `None` here on purpose: its path records the verdict in the
+/// standing store before it stores [`SessionStatus::Banned`].
+pub(crate) fn account_refusal_status(reason: RejectionReason) -> Option<SessionStatus> {
+    match reason {
+        RejectionReason::NotAllowlisted => Some(SessionStatus::Unauthorized),
+        RejectionReason::DeviceLimit => Some(SessionStatus::DeviceLimit),
+        RejectionReason::Banned(_)
+        | RejectionReason::IpExhausted
+        | RejectionReason::PolicyRefused => None,
+    }
 }
 
 /// The supervisor-side channels this driver consumes.
@@ -764,6 +781,37 @@ mod tests {
         )
         .await;
         assert_eq!(end, SessionEnd::Rejected(RejectionReason::NotAllowlisted));
+    }
+
+    /// A device limit holds until another of the account's devices
+    /// disconnects, so it must end on its own terminal status (Kotlin maps
+    /// code 7 to "too many connections" and stops redialling), never on the
+    /// expired-subscription one nor on a teardown Kotlin would retry.
+    #[test]
+    fn a_device_limit_is_its_own_terminal_status() {
+        assert_eq!(
+            account_refusal_status(RejectionReason::DeviceLimit),
+            Some(SessionStatus::DeviceLimit)
+        );
+        assert_eq!(
+            SessionStatus::DeviceLimit as i32,
+            7,
+            "WarrenQuinnAdapter.STATUS_DEVICE_LIMIT mirrors this code"
+        );
+    }
+
+    /// A lapsed subscription stays `Unauthorized`, and a refusal that says
+    /// nothing about the account (a full address pool, a cut detail) stays a
+    /// teardown the fail-closed policy retries.
+    #[test]
+    fn only_an_account_verdict_is_a_terminal_refusal() {
+        assert_eq!(
+            account_refusal_status(RejectionReason::NotAllowlisted),
+            Some(SessionStatus::Unauthorized)
+        );
+        for reason in [RejectionReason::IpExhausted, RejectionReason::PolicyRefused] {
+            assert_eq!(account_refusal_status(reason), None, "{reason:?}");
+        }
     }
 
     /// The NAT remap is fixed for the session's life, so an exit that moves the

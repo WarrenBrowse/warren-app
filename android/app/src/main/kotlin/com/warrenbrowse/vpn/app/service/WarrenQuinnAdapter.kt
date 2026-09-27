@@ -440,6 +440,19 @@ class WarrenQuinnAdapter(
                         }
                         break
                     }
+                    if (code == STATUS_DEVICE_LIMIT) {
+                        // Terminal like an expiry: the account already uses
+                        // its maximum number of devices, and a redial meets
+                        // the same count until one of them disconnects.
+                        lock.withLock {
+                            if (userInitiatedDisconnect) {
+                                _state.value = WarrenTunnelState.Disconnected
+                            } else {
+                                onSessionDeviceLimited(sessionConfig)
+                            }
+                        }
+                        break
+                    }
                     if (code == STATUS_UNAUTHORIZED) {
                         // Terminal: the exit refused the account (lapsed /
                         // revoked subscription). Retrying cannot recover it,
@@ -785,6 +798,27 @@ class WarrenQuinnAdapter(
             Logger.w("WarrenQuinnAdapter: account unauthorized; releasing (subscription expired)")
             releaseTraffic()
             _state.value = WarrenTunnelState.Failed("subscription expired", expired = true)
+        }
+    }
+
+    /**
+     * Handle the exit refusing another device past the account's limit, the
+     * way [onSessionExpired] handles a lapsed subscription: never a reconnect,
+     * the kill switch kept when the session fails closed, traffic released
+     * otherwise. The state carries the `[TOO_MANY_CONNECTIONS]` reason the card
+     * reads "too many connections" from. Must be called holding [lock].
+     */
+    private fun onSessionDeviceLimited(config: WarrenTunnelConfig) {
+        _natPmpStatus.value = NATPMP_IDLE
+        _effectiveMtu.value = null
+        flapDetector.reset()
+        if (failsClosed(config)) {
+            Logger.w("WarrenQuinnAdapter: device limit reached; blocking")
+            enterBlockingMode(config, DEVICE_LIMIT_REASON)
+        } else {
+            Logger.w("WarrenQuinnAdapter: device limit reached; releasing")
+            releaseTraffic()
+            _state.value = WarrenTunnelState.Failed(DEVICE_LIMIT_REASON)
         }
     }
 
@@ -1196,6 +1230,7 @@ class WarrenQuinnAdapter(
             STATUS_RECONNECTING -> reconnectingFrom(config)
             STATUS_UNAUTHORIZED -> WarrenTunnelState.Failed("subscription expired", expired = true)
             STATUS_BANNED -> WarrenTunnelState.Failed(BanVerdict.UNKNOWN.reason)
+            STATUS_DEVICE_LIMIT -> WarrenTunnelState.Failed(DEVICE_LIMIT_REASON)
             else -> WarrenTunnelState.Failed("native status code $code")
         }
 
@@ -1216,6 +1251,16 @@ class WarrenQuinnAdapter(
         // The wallet is banned; `getBanVerdict` says why and until when.
         // Mirrors `warren_jni::redial::SessionStatus::Banned`.
         const val STATUS_BANNED = 6
+
+        // The account already uses its maximum number of simultaneous
+        // devices. Mirrors `warren_jni::redial::SessionStatus::DeviceLimit`.
+        const val STATUS_DEVICE_LIMIT = 7
+
+        // The auth-failed token opening it is what ConnectionProxy maps to
+        // `AuthFailedError.TooManyConnections`, as the desktop daemon does.
+        const val DEVICE_LIMIT_REASON =
+            "[TOO_MANY_CONNECTIONS] the account already uses its maximum number of " +
+                "simultaneous devices"
 
         /**
          * Ceiling on one wait for a native status wake. The engine wakes the

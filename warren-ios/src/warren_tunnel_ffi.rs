@@ -435,6 +435,10 @@ impl From<Option<warrenguard_multihop::RejectionReason>> for TerminalVerdict {
             // is the wrong thing to say about it, so it stays ordinary until
             // iOS has somewhere to say it.
             Some(RejectionReason::IpExhausted) | None => Self::Ordinary,
+            // The account already uses its maximum number of devices: the
+            // expiry prompt would misname it and iOS has no too-many-devices
+            // surface yet, so it ends plainly.
+            Some(RejectionReason::DeviceLimit) => Self::Ordinary,
         }
     }
 }
@@ -3070,6 +3074,19 @@ mod tests {
                 super::TerminalVerdict::Banned
             );
         }
+    }
+
+    /// A device limit is not an expiry: the expiry prompt would send a paying
+    /// user to renew for nothing, so it ends plainly until iOS can name it.
+    #[cfg(feature = "tunnel")]
+    #[test]
+    fn a_device_limit_is_not_called_an_expiry() {
+        use warrenguard_multihop::RejectionReason;
+
+        assert_eq!(
+            super::TerminalVerdict::from(Some(RejectionReason::DeviceLimit)),
+            super::TerminalVerdict::Ordinary
+        );
     }
 
     /// Everything that is not a refusal of this account: the user

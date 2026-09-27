@@ -310,6 +310,37 @@ class ConnectionProxyTest {
     }
 
     @Test
+    fun `a blocked device limit carries the too-many-connections cause, not an expiry`() =
+        runTest {
+            val state =
+                mapped(
+                    WarrenConnectedInfo.Blocking(
+                        "[TOO_MANY_CONNECTIONS] the account already uses its maximum number " +
+                            "of simultaneous devices"
+                    )
+                ) as TunnelState.Error
+
+            assertTrue(state.errorState.isBlocking)
+            assertEquals(
+                AuthFailedError.TooManyConnections,
+                (state.errorState.cause as ErrorStateCause.AuthFailed).error,
+            )
+        }
+
+    @Test
+    fun `a released device limit is a non-blocking too-many-connections error`() = runTest {
+        val state =
+            mapped(WarrenConnectedInfo.Failed("[TOO_MANY_CONNECTIONS] too many devices"))
+                as TunnelState.Error
+
+        assertFalse(state.errorState.isBlocking)
+        assertEquals(
+            AuthFailedError.TooManyConnections,
+            (state.errorState.cause as ErrorStateCause.AuthFailed).error,
+        )
+    }
+
+    @Test
     fun `a Failed after flapping is a non-blocking traffic-released error`() = runTest {
         val state =
             mapped(WarrenConnectedInfo.Failed("dropped", flapping = true)) as TunnelState.Error

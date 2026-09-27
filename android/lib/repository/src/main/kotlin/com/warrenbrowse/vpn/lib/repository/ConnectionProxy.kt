@@ -270,21 +270,21 @@ class ConnectionProxy(private val tunnelStateProvider: WarrenTunnelStateProvider
     // not a generic tunnel start error. A release after flapping is the policy
     // with lockdown mode off, and names itself.
     private fun failedCause(info: WarrenConnectedInfo.Failed): ErrorStateCause {
-        val ban = banOf(info.reason, info.banLapsesAtUnixSecs)
+        val verdict = accountVerdictOf(info.reason, info.banLapsesAtUnixSecs)
         return when {
-            ban != null -> ErrorStateCause.AuthFailed(ban)
+            verdict != null -> ErrorStateCause.AuthFailed(verdict)
             info.expired -> ErrorStateCause.AuthFailed(AuthFailedError.ExpiredAccount)
             info.flapping -> ErrorStateCause.WarrenTrafficReleased
             else -> ErrorStateCause.StartTunnelError
         }
     }
 
-    // A suspension outranks every other cause: no network, exit or retry
-    // changes it before it lapses.
+    // A suspension or a full device count outranks every other cause: no
+    // network, exit or retry changes it.
     private fun blockingCause(info: WarrenConnectedInfo.Blocking): ErrorStateCause {
-        val ban = banOf(info.reason, info.banLapsesAtUnixSecs)
+        val verdict = accountVerdictOf(info.reason, info.banLapsesAtUnixSecs)
         return when {
-            ban != null -> ErrorStateCause.AuthFailed(ban)
+            verdict != null -> ErrorStateCause.AuthFailed(verdict)
             info.expired -> ErrorStateCause.AuthFailed(AuthFailedError.ExpiredAccount)
             info.noDialableNetwork -> ErrorStateCause.WarrenNoDialableNetwork
             info.flapping -> ErrorStateCause.WarrenTunnelFlapping
@@ -292,8 +292,8 @@ class ConnectionProxy(private val tunnelStateProvider: WarrenTunnelStateProvider
         }
     }
 
-    private fun banOf(reason: String, lapsesAtUnixSecs: Long?): AuthFailedError? =
-        AuthFailedError.banOf(reason, lapsesAtUnixSecs)
+    private fun accountVerdictOf(reason: String, lapsesAtUnixSecs: Long?): AuthFailedError? =
+        AuthFailedError.fromReason(reason, lapsesAtUnixSecs)
 
     private fun buildTunnelEndpoint(info: WarrenConnectedInfo.Connected): TunnelEndpoint =
         TunnelEndpoint(

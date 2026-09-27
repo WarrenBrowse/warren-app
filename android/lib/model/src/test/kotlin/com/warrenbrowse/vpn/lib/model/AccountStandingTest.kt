@@ -37,6 +37,13 @@ class AccountStandingTest {
     }
 
     @Test
+    fun `the too-many-connections token is an auth failure without being a ban`() {
+        val reason = "[TOO_MANY_CONNECTIONS] the account already uses its maximum number of devices"
+        assertEquals(AuthFailedError.TooManyConnections, AuthFailedError.fromReason(reason, null))
+        assertNull(AuthFailedError.banOf(reason, null))
+    }
+
+    @Test
     fun `a reason without a ban token is not a ban`() {
         assertNull(AuthFailedError.banOf("subscription expired", null))
         assertNull(AuthFailedError.banOf("[EXPIRED_ACCOUNT] no subscription", null))

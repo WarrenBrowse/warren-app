@@ -34,6 +34,9 @@ par l'application, gardez-le tel quel.
 - [iOS] Afficher la révocation quand un bon ou un achat App Store est refusé pour un compte
   révoqué. Aucun achat ne démarre, et un achat déjà payé reste en attente, pour être crédité une
   fois la révocation terminée.
+- [Windows, macOS, Linux, Android] Indiquer que le compte utilise déjà son nombre maximal
+  d'appareils simultanés quand le serveur en refuse un de plus, au lieu d'annoncer un abonnement
+  expiré.
 
 ## [1.1.37] - 2026-09-27
 ### Ajouté

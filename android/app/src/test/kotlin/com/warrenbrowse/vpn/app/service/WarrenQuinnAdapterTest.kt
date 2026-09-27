@@ -67,6 +67,7 @@ class WarrenQuinnAdapterTest {
         const val STATUS_EXIT_LEAVING = 5
         const val STATUS_UNAUTHORIZED = 4
         const val STATUS_BANNED = 6
+        const val STATUS_DEVICE_LIMIT = 7
 
         const val SELF_PACKAGE = "com.warrenbrowse.vpn.test"
 
@@ -654,6 +655,35 @@ class WarrenQuinnAdapterTest {
         assertFalse(CONNECT_TUNNEL in platform.calls, "a banned wallet must not be redialed")
         adapter.disconnect()
     }
+
+    @Test
+    fun `ensure a device limit blocks with the too-many-connections token and is never redialed`() =
+        runTest {
+            // The exit refused another wallet-signed session because the
+            // account already uses its maximum number of devices. A redial
+            // meets the same count, and the expiry message would send a paying
+            // user to renew for nothing: the block carries the token the card
+            // reads "too many connections" from.
+            val platform = RecordingPlatform()
+            val adapter = adapterWith(platform, dropRetryGraceMs = 50L)
+            adapter.connect(config(), Mnemonic(PHRASE))
+            awaitReal("the session must reach Connected") {
+                adapter.state.value is WarrenTunnelState.Connected
+            }
+            platform.calls.clear()
+
+            platform.status = STATUS_DEVICE_LIMIT
+            awaitReal("the device limit must block", { adapter.state.value.toString() }) {
+                adapter.state.value is WarrenTunnelState.Blocking
+            }
+
+            val blocked = adapter.state.value as WarrenTunnelState.Blocking
+            assertTrue(blocked.reason.startsWith("[TOO_MANY_CONNECTIONS] "), blocked.reason)
+            assertFalse(blocked.expired, "a device limit is not an expiry")
+            withContext(Dispatchers.Default) { delay(500) }
+            assertFalse(CONNECT_TUNNEL in platform.calls, "a device limit must not be redialed")
+            adapter.disconnect()
+        }
 
     @Test
     fun `ensure a dead egress reads as wedged`() = runTest {

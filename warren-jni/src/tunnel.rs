@@ -702,11 +702,6 @@ async fn run_multi_hop_session(
                 log::warn!("multi-hop: exit rejected the v7 token; retrying wallet-signed");
                 token_provider = None;
             }
-            // The exit policy-rejected the wallet-signed setup (not
-            // authorized): surface a distinct Unauthorized status so Kotlin
-            // shows "subscription expired" and stops retrying, instead of a
-            // generic disconnect + reconnect storm that keeps hitting the
-            // same rejection.
             // The exit found the wallet on its CRL: a suspension, which no
             // other exit lifts, and which the expiry message would misname.
             AttemptEnd::Session(SessionEnd::Rejected(RejectionReason::Banned(code))) => {
@@ -716,9 +711,16 @@ async fn run_multi_hop_session(
                 block_for_ban(status, ban);
                 return;
             }
-            AttemptEnd::Session(SessionEnd::Rejected(RejectionReason::NotAllowlisted)) => {
-                log::warn!("multi-hop: exit rejected setup (not authorized / subscription lapsed)");
-                status.store(SessionStatus::Unauthorized as i32);
+            // A lapsed subscription or a full device count: a distinct
+            // terminal status, so Kotlin names the cause and stops retrying
+            // instead of a reconnect storm into the same refusal. After the
+            // v7 arm above, so a refused token still retries wallet-signed.
+            AttemptEnd::Session(SessionEnd::Rejected(reason))
+                if let Some(terminal) =
+                    crate::supervised_session::account_refusal_status(reason) =>
+            {
+                log::warn!("multi-hop: exit refused the account ({reason})");
+                status.store(terminal as i32);
                 return;
             }
             AttemptEnd::Session(SessionEnd::ExitLeaving) => {

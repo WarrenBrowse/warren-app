@@ -1193,6 +1193,14 @@ impl Error {
 /// ([`BAN_REASON_PORT_FORWARDING`] -> `[BANNED_PORT_FORWARDING]`) so the app can
 /// show a forwarded-port-specific message; any other/unknown code falls back to
 /// the generic `[BANNED]` suspension.
+///
+/// A [`RejectionReason::DeviceLimit`] is fatal for the same reason: the
+/// account already holds its maximum of simultaneous wallet-signed sessions,
+/// so a redial meets the same count until another device disconnects. It
+/// carries `[TOO_MANY_CONNECTIONS]`, which the app renders as "too many
+/// simultaneous connections" instead of an expired subscription. The match
+/// stays exhaustive so a new engine reason is a compile error here, never a
+/// silent expiry.
 fn reject_error(reason: RejectionReason) -> Error {
     match reason {
         RejectionReason::Banned(BAN_REASON_PORT_FORWARDING) => Error::BackendFatal(format!(
@@ -1205,10 +1213,16 @@ fn reject_error(reason: RejectionReason) -> Error {
         RejectionReason::IpExhausted => Error::BackendTransient(format!(
             "exit rejected the session ({reason}); its address pool is exhausted"
         )),
-        _ => Error::SessionRejected(format!(
-            "[EXPIRED_ACCOUNT] exit rejected the session ({reason}); no active subscription, or \
-             the exit has not yet synced a freshly-redeemed one"
+        RejectionReason::DeviceLimit => Error::BackendFatal(format!(
+            "[TOO_MANY_CONNECTIONS] exit refused the session ({reason}); the account already \
+             uses its maximum number of simultaneous devices"
         )),
+        RejectionReason::NotAllowlisted | RejectionReason::PolicyRefused => {
+            Error::SessionRejected(format!(
+                "[EXPIRED_ACCOUNT] exit rejected the session ({reason}); no active subscription, \
+                 or the exit has not yet synced a freshly-redeemed one"
+            ))
+        }
     }
 }
 
@@ -4321,6 +4335,32 @@ mod tests {
                 "a ban must NOT be recoverable (no endless reconnect)"
             );
         }
+    }
+
+    #[test]
+    fn reject_error_device_limit_is_fatal_and_carries_the_too_many_connections_token() {
+        // The exit caps the wallet-signed sessions of one account. Past the
+        // cap the refusal holds until another device disconnects, so it must
+        // be FATAL (no endless "Reconnecting") and carry the
+        // [TOO_MANY_CONNECTIONS] token the app already localizes. Calling it
+        // an expired subscription, as the catch-all arm did, sends a paying
+        // user to the checkout for nothing.
+        let err = reject_error(RejectionReason::DeviceLimit);
+        match &err {
+            Error::BackendFatal(msg) => assert!(
+                msg.starts_with("[TOO_MANY_CONNECTIONS]"),
+                "a device limit must carry [TOO_MANY_CONNECTIONS] so the funnel parses it, got {msg:?}"
+            ),
+            other => panic!("a device limit must map to BackendFatal, got {other:?}"),
+        }
+        assert!(
+            !err.is_recoverable(),
+            "a device limit must NOT be recoverable (no endless reconnect)"
+        );
+        assert!(
+            err.session_rejection().is_none(),
+            "a device limit is not the self-healing expired-subscription refusal"
+        );
     }
 
     #[test]

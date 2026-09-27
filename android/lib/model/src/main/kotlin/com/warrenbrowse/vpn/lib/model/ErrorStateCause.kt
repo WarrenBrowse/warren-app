@@ -113,5 +113,18 @@ sealed interface AuthFailedError {
                 "BANNED" -> Banned(lapsesAtUnixSecs)
                 else -> null
             }
+
+        /**
+         * The account verdict an auth-failed reason names by its leading
+         * `[TOKEN]`: a ban (see [banOf]), or `[TOO_MANY_CONNECTIONS]` when the
+         * exit refused another device past the account's limit. `null` for a
+         * reason that carries neither.
+         */
+        fun fromReason(reason: String, lapsesAtUnixSecs: Long?): AuthFailedError? =
+            banOf(reason, lapsesAtUnixSecs)
+                ?: when (TOKEN.find(reason)?.groupValues?.get(1)) {
+                    "TOO_MANY_CONNECTIONS" -> TooManyConnections
+                    else -> null
+                }
     }
 }

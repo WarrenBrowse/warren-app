@@ -41,6 +41,9 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Show the revocation when a voucher or an App Store purchase is refused for a revoked
   account. No purchase starts, and a purchase already paid stays pending, to be credited once the
   revocation ends.
+- [Windows, macOS, Linux, Android] Say that the account already uses its maximum number of
+  simultaneous devices when the server refuses another one, instead of calling the subscription
+  expired.
 
 ## [1.1.37] - 2026-09-27
 ### Added
