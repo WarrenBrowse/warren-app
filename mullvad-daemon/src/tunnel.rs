@@ -1128,6 +1128,12 @@ impl ParametersGenerator {
                 inner.warren_standing.as_ref(),
                 route_kem_trust,
             ));
+            params.credentials = Some(crate::warren_token_provider::credentials_for(
+                api_url,
+                seed,
+                inner.warren_standing.as_ref(),
+                route_kem_trust,
+            ));
             // Port entitlements ride the same wallet and the same coarse
             // refresh. The exit refuses a Map request without one (warren-core
             // doc 105), so a wallet without this provider forwards no port.

@@ -42,9 +42,10 @@
 //! only under the signature of a server key the daemon pins (doc 107 section
 //! 6.5, [`RouteKemTrust`]). The last signed block is kept in the daemon's
 //! cache directory, so a tunnel started before this run's first directory
-//! read (right after a daemon start) anchors with it rather than not at all:
-//! the engine takes a main session's anchor only when its supervisor is
-//! built, so a key that arrives later reaches the next tunnel only.
+//! read (right after a daemon start) anchors with it rather than not at all.
+//! Every refresh round is announced ([`credentials_for`]), so a tunnel that
+//! started without the key or without tokens takes them up when they arrive
+//! (`talpid_warren_tunnel::app_routes::main_anchor`).
 
 use std::collections::HashMap;
 use std::path::PathBuf;
@@ -56,7 +57,12 @@ pub(crate) use talpid_warren_tunnel::app_routes::admission::{
     DirectoryRouteAdmission, REMEMBERED_ROUTE_ADMISSION, RouteKemTrust,
 };
 pub(crate) use talpid_warren_tunnel::app_routes::tokens::session_source;
-use talpid_warren_tunnel::{SessionTokenSource, app_routes::RouteAdmissionSource};
+use talpid_warren_tunnel::app_routes::tokens::{announce_minted, announce_refresh};
+use talpid_warren_tunnel::{
+    SessionTokenSource,
+    app_routes::{Credentials, RouteAdmissionSource},
+};
+use tokio::sync::watch;
 use warren_api::{BlindingKey, TokenManager, WarrenApiClient};
 use warren_identity::WarrenIdentity;
 
@@ -68,8 +74,14 @@ type Manager = TokenManager<WarrenApiTransport>;
 
 /// One manager per wallet, reused across reconnects so its RAM token store,
 /// its once-per-epoch issuance bookkeeping and its held serials survive
-/// between sessions.
-static MANAGERS: OnceLock<Mutex<HashMap<String, Arc<Manager>>>> = OnceLock::new();
+/// between sessions, with the announcement of each of its refresh rounds.
+static MANAGERS: OnceLock<Mutex<HashMap<String, Wallet>>> = OnceLock::new();
+
+#[derive(Clone)]
+struct Wallet {
+    manager: Arc<Manager>,
+    credentials: watch::Sender<Credentials>,
+}
 
 fn now_unix_secs() -> u64 {
     std::time::SystemTime::now()
@@ -84,6 +96,9 @@ fn now_unix_secs() -> u64 {
 /// cannot be reached, which left route sessions without a token for the
 /// whole period.
 const REFRESH_PERIOD: Duration = Duration::from_secs(600);
+/// How often a running round is looked at for the current epoch's tokens,
+/// which a waiting first tunnel can take before the round ends.
+const MINTED_POLL: Duration = Duration::from_millis(100);
 const FIRST_RETRY: Duration = Duration::from_secs(15);
 
 /// Runs `refresh` now and after each wait: the period once a round succeeds,
@@ -109,6 +124,7 @@ where
 
 fn spawn_refresh(
     manager: Arc<Manager>,
+    credentials: watch::Sender<Credentials>,
     wallet: String,
     standing: Option<StandingMonitor>,
     remembered_at: Option<PathBuf>,
@@ -116,18 +132,35 @@ fn spawn_refresh(
     // The manager mints only epochs it has not minted yet.
     tokio::spawn(refresh_forever(move || {
         let manager = Arc::clone(&manager);
+        let credentials = credentials.clone();
         let wallet = wallet.clone();
         let standing = standing.clone();
         let remembered_at = remembered_at.clone();
         async move {
-            let refreshed = manager.refresh(now_unix_secs()).await;
+            let refreshed = {
+                let refresh = manager.refresh(now_unix_secs());
+                tokio::pin!(refresh);
+                let mut minted = false;
+                loop {
+                    tokio::select! {
+                        refreshed = &mut refresh => break refreshed,
+                        () = tokio::time::sleep(MINTED_POLL), if !minted => {
+                            minted = announce_minted(&credentials, &manager, now_unix_secs());
+                        }
+                    }
+                }
+            };
             if let Some(path) = remembered_at.as_deref()
                 && manager.epoch_at(now_unix_secs()).is_some()
             {
                 remember_route_admission(path, manager.route_admission().as_ref());
             }
+            announce_refresh(&credentials, &manager, now_unix_secs());
             match refreshed {
-                Ok(_) => true,
+                Ok(_) => {
+                    log::debug!("Warren v7 token refresh round succeeded");
+                    true
+                }
                 Err(e) => {
                     log::warn!("Warren v7 token refresh failed (keeping existing tokens): {e}");
                     crate::warren_account_standing::report_if_banned(
@@ -153,9 +186,22 @@ pub(crate) fn source_for(
     trust: &RouteKemTrust,
 ) -> SessionTokenSource {
     session_source(
-        manager_for(api_url, seed, standing, trust),
+        wallet_for(api_url, seed, standing, trust).manager,
         Arc::new(now_unix_secs),
     )
+}
+
+/// The announcement of each refresh round of `seed`'s wallet, from the same
+/// manager as [`source_for`]'s.
+pub(crate) fn credentials_for(
+    api_url: &str,
+    seed: &SharedWarrenSeed,
+    standing: Option<&StandingMonitor>,
+    trust: &RouteKemTrust,
+) -> watch::Receiver<Credentials> {
+    wallet_for(api_url, seed, standing, trust)
+        .credentials
+        .subscribe()
 }
 
 /// Route admission by anchor for `seed`'s wallet against `api_url`, as the
@@ -168,19 +214,19 @@ pub(crate) fn route_admission_for(
     trust: &RouteKemTrust,
 ) -> Arc<dyn RouteAdmissionSource> {
     Arc::new(DirectoryRouteAdmission::new(
-        manager_for(api_url, seed, standing, trust),
+        wallet_for(api_url, seed, standing, trust).manager,
         trust.clone(),
         Arc::new(now_unix_secs),
     ))
 }
 
 /// The wallet's manager, built and refreshed from its first use.
-fn manager_for(
+fn wallet_for(
     api_url: &str,
     seed: &SharedWarrenSeed,
     standing: Option<&StandingMonitor>,
     trust: &RouteKemTrust,
-) -> Arc<Manager> {
+) -> Wallet {
     let seed_bytes = seed.read().unwrap_or_else(PoisonError::into_inner);
     let identity = WarrenIdentity::from_seed(&seed_bytes);
     let key = identity.address();
@@ -196,13 +242,18 @@ fn manager_for(
                 TokenManager::new(Arc::new(client), BlindingKey::session(&seed_bytes))
                     .with_server_pubkey_pins(trust.server_pins.iter().cloned()),
             );
+            let credentials = watch::Sender::new(Credentials::default());
             spawn_refresh(
                 manager.clone(),
+                credentials.clone(),
                 key,
                 standing.cloned(),
                 trust.remembered_at.clone(),
             );
-            manager
+            Wallet {
+                manager,
+                credentials,
+            }
         })
         .clone()
 }

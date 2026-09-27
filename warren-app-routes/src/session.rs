@@ -54,7 +54,7 @@ use warrenguard_transport::{
 use warrenguard_transport_core::PacketDevice;
 
 use super::{
-    RouteAdmissionSource, RouteUnavailable, SessionEvent, TOKEN_ROUTE_SESSIONS,
+    Credentials, RouteAdmissionSource, RouteUnavailable, SessionEvent, TOKEN_ROUTE_SESSIONS,
     controller::RouteSessions, datapath::RouteTun,
 };
 use crate::{MultiHopConfig, SessionTokenSource, daita_shared, multi_hop_bind_addr};
@@ -101,6 +101,9 @@ pub struct RouteSessionConfig {
     /// so the daemon plans that route onto another exit.
     pub on_exit_draining: Option<Arc<dyn Fn([u8; 16]) + Send + Sync>>,
     pub retry_unavailable_after: Duration,
+    /// The daemon's credentials refreshes: a route that could not run for
+    /// want of a token dials again as soon as one brings tokens.
+    pub credentials: Option<watch::Receiver<Credentials>>,
 }
 
 impl RouteSessionConfig {
@@ -118,6 +121,7 @@ impl RouteSessionConfig {
             relay_escape: None,
             on_exit_draining: None,
             retry_unavailable_after: RETRY_UNAVAILABLE_AFTER,
+            credentials: None,
         }
     }
 
@@ -462,7 +466,50 @@ async fn route_loop<U, D, DF, P, PF, C, CF>(
         };
         log::info!("App routing: a route session ended ({reason:?}); retrying later");
         report(SessionEvent::Unavailable(reason));
-        tokio::time::sleep(config.retry_unavailable_after).await;
+        retry_wait(config, anchor_states.clone()).await;
+    }
+}
+
+/// The wait before a route that could not run dials again:
+/// [`RouteSessionConfig::retry_unavailable_after`], cut short by a refresh
+/// that brings tokens or by the main session's anchor being bound, since
+/// either may be what the route lacked.
+async fn retry_wait(
+    config: &RouteSessionConfig,
+    anchor_states: Option<watch::Receiver<AnchorState>>,
+) {
+    let tokens = async {
+        let Some(mut credentials) = config.credentials.clone() else {
+            return std::future::pending().await;
+        };
+        credentials.mark_unchanged();
+        loop {
+            if credentials.changed().await.is_err() {
+                return std::future::pending().await;
+            }
+            if credentials.borrow_and_update().has_tokens {
+                return;
+            }
+        }
+    };
+    let bound = async {
+        let Some(mut states) = anchor_states else {
+            return std::future::pending().await;
+        };
+        states.mark_unchanged();
+        loop {
+            if states.changed().await.is_err() {
+                return std::future::pending().await;
+            }
+            if matches!(*states.borrow_and_update(), AnchorState::Anchored { .. }) {
+                return;
+            }
+        }
+    };
+    tokio::select! {
+        () = tokio::time::sleep(config.retry_unavailable_after) => {}
+        () = tokens => log::info!("App routing: tokens arrived; a waiting route dials again"),
+        () = bound => log::info!("App routing: the anchor is bound; a waiting route dials again"),
     }
 }
 
@@ -1494,6 +1541,70 @@ mod tests {
         let result = until_connected(dialed, PROBE_TIMEOUT).await;
 
         assert!(matches!(result, Err(SessionEnd::Refused(r)) if r == refusal));
+    }
+
+    fn refreshed(has_tokens: bool) -> Credentials {
+        Credentials {
+            rounds: 1,
+            has_tokens,
+        }
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_route_without_a_token_dials_again_as_soon_as_a_refresh_brings_tokens() {
+        let (credentials, followed) = watch::channel(Credentials::default());
+        let mut config = anchored(&[]);
+        config.credentials = Some(followed);
+        let refresh = async {
+            tokio::time::sleep(Duration::from_secs(5)).await;
+            credentials.send_replace(refreshed(true));
+            std::future::pending::<()>().await;
+        };
+
+        let dials = tokio::select! {
+            dials = run_loop(&config, NO_TOKEN, NO_TOKEN, 2) => dials,
+            () = refresh => unreachable!(),
+        };
+
+        assert_eq!(dials.gaps()[0], Duration::from_secs(5));
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_refresh_that_brings_no_token_leaves_the_route_to_its_wait() {
+        let (credentials, followed) = watch::channel(Credentials::default());
+        let mut config = anchored(&[]);
+        config.credentials = Some(followed);
+        let refresh = async {
+            tokio::time::sleep(Duration::from_secs(5)).await;
+            credentials.send_replace(refreshed(false));
+            std::future::pending::<()>().await;
+        };
+
+        let dials = tokio::select! {
+            dials = run_loop(&config, NO_TOKEN, NO_TOKEN, 2) => dials,
+            () = refresh => unreachable!(),
+        };
+
+        assert_eq!(dials.gaps()[0], config.retry_unavailable_after);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn the_wait_before_a_retry_ends_as_soon_as_the_anchor_is_bound() {
+        let config = anchored(&[EXIT]);
+        let (anchor, states) = watch::channel(AnchorState::Unavailable);
+        let bind = async {
+            tokio::time::sleep(Duration::from_secs(3)).await;
+            anchor.send_replace(AnchorState::Anchored { max_routes: 32 });
+            std::future::pending::<()>().await;
+        };
+        let started = tokio::time::Instant::now();
+
+        tokio::select! {
+            () = retry_wait(&config, Some(states)) => {}
+            () = bind => unreachable!(),
+        }
+
+        assert_eq!(started.elapsed(), Duration::from_secs(3));
     }
 
     #[tokio::test(start_paused = true)]

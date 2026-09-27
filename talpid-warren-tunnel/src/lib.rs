@@ -640,6 +640,12 @@ pub struct WarrenTunnelParameters {
     /// every route on tokens.
     pub route_admission: Option<std::sync::Arc<dyn app_routes::RouteAdmissionSource>>,
 
+    /// The daemon's credentials refreshes. A main session that started
+    /// before the route admission key or the tokens were at hand takes them
+    /// up from here (see [`app_routes::main_anchor`]), and a route waiting for
+    /// a token dials again at once. `None` leaves both to the next tunnel.
+    pub credentials: Option<tokio::sync::watch::Receiver<app_routes::Credentials>>,
+
     /// Daemon cache directory, for the state a tunnel wants to survive a
     /// daemon restart without belonging in settings: the macOS carrier
     /// egress guard's per-network verdicts (`carrier_verdict_cache`) and the
@@ -689,20 +695,27 @@ impl std::fmt::Debug for WarrenTunnelParameters {
                 &self.app_routes_rx.as_ref().map(|_| "<watch-rx>"),
             )
             .field("route_admission", &self.route_admission.is_some())
+            .field(
+                "credentials",
+                &self.credentials.as_ref().map(|_| "<watch-rx>"),
+            )
             .finish()
     }
 }
 
-/// The anchor of this tunnel's main session: one when the tunnel can run
+/// The anchor of this tunnel's main session: one whenever the tunnel can run
 /// per-app routes (the daemon wires a plan into every desktop tunnel, with a
-/// country set or not) and the token directory offers route admission, so a
-/// country chosen while connected gets its route without a reconnect of the
-/// main session. A tunnel that cannot run per-app routes (no plan wired) does
-/// not anchor.
+/// country set or not) and reads a token directory, so a country chosen
+/// while connected gets its route without a reconnect of the main session.
+/// Before the directory offered a key (a fresh daemon's first tunnel) the
+/// anchor waits for it, and [`app_routes::main_anchor`] hands it over. A
+/// tunnel that cannot run per-app routes (no plan wired) does not anchor.
 fn route_anchor_for(params: &WarrenTunnelParameters) -> Option<RouteAnchorHandle> {
     params.app_routes_rx.as_ref()?;
-    let kem = params.route_admission.as_ref()?.kem()?;
-    Some(RouteAnchorHandle::new(RouteAnchorConfig { kem }))
+    Some(match params.route_admission.as_ref()?.kem() {
+        Some(kem) => RouteAnchorHandle::new(RouteAnchorConfig { kem }),
+        None => RouteAnchorHandle::awaiting_key(),
+    })
 }
 
 /// Stable identity of a NAT-PMP port-forward rule, matching how the
@@ -1203,6 +1216,17 @@ pub struct WarrenTunnelMonitor {
 struct AppRoutesTask {
     stop_tx: tokio::sync::oneshot::Sender<()>,
     task: tokio::task::JoinHandle<()>,
+    /// Hands the main session's anchor what later credentials bring.
+    _credentials: Option<AbortOnDrop>,
+}
+
+/// A task that lives exactly as long as its owner.
+struct AbortOnDrop(tokio::task::JoinHandle<()>);
+
+impl Drop for AbortOnDrop {
+    fn drop(&mut self) {
+        self.0.abort();
+    }
 }
 
 /// How long the route sessions get to release the TUN device at teardown.
@@ -1477,6 +1501,29 @@ impl WarrenTunnelMonitor {
                 }),
             ))
         };
+        // The first tunnel of a daemon run holds its main session until the
+        // wallet's first refresh, so the session is admitted on a token and
+        // anchors (see `FIRST_REFRESH_WAIT`). The firewall already lets the
+        // daemon reach the API while connecting.
+        if let Some(credentials) = params.credentials.clone()
+            && params.session_tokens.is_some()
+        {
+            let waited = runtime.block_on(async {
+                tokio::select! {
+                    biased;
+                    _ = &mut close_rx => false,
+                    () = app_routes::main_anchor::first_refresh(
+                        credentials,
+                        app_routes::main_anchor::FIRST_REFRESH_WAIT,
+                    ) => true,
+                }
+            });
+            if !waited {
+                return Err(Error::Handshake(
+                    "multi-hop start aborted by the daemon close signal".to_owned(),
+                ));
+            }
+        }
         let supervisor_config = SupervisorConfig {
             relay: Arc::new(cfg.relay.clone()),
             exit_id: cfg.exit.exit_id,
@@ -1618,6 +1665,10 @@ impl WarrenTunnelMonitor {
         // Control handle for the migration watchdog's forced-reconnect
         // fallback; must be taken before `run()` consumes the supervisor.
         let supervisor_control = supervisor.handle();
+        // Receiver-free, so the credentials follower never keeps the
+        // supervisor alive past teardown.
+        let main_resetup = supervisor.migrate_handle();
+        let main_token_admission = supervisor.token_admission_rx();
         // ADR 36 (Option A): hand the daemon a migrate-only handle so a
         // drain-driven directory re-selection can swap this supervisor onto a
         // non-drained exit gap-free. Taken before `run()` consumes the
@@ -2241,6 +2292,7 @@ impl WarrenTunnelMonitor {
             config.idle_cover = mh_idle_cover;
             config.socket_bypass = socket_bypass;
             config.on_exit_draining = params.on_exit_draining.clone();
+            config.credentials = params.credentials.clone();
             #[cfg(target_os = "macos")]
             {
                 config.relay_escape = Some(macos_relay_escape(
@@ -2576,6 +2628,22 @@ impl WarrenTunnelMonitor {
         // is the one that names their relays to the firewall. The controller
         // follows the exit the main session is on, for the apps the plan
         // leaves on it.
+        let credentials_follower = match (
+            params.credentials.clone(),
+            route_anchor.clone(),
+            params.route_admission.clone(),
+        ) {
+            (Some(credentials), Some(anchor), Some(admission)) => Some(AbortOnDrop(runtime.spawn(
+                app_routes::main_anchor::follow_credentials(
+                    credentials,
+                    main_token_admission,
+                    anchor,
+                    admission,
+                    move || main_resetup.overlap_reconnect(),
+                ),
+            ))),
+            _ => None,
+        };
         let app_routes =
             app_routes_controller.map(|(controller, plan_rx, mut sessions, anchor_rx)| {
                 let (stop_tx, stop_rx) = tokio::sync::oneshot::channel::<()>();
@@ -2608,7 +2676,11 @@ impl WarrenTunnelMonitor {
                         () = follow => {}
                     }
                 });
-                AppRoutesTask { stop_tx, task }
+                AppRoutesTask {
+                    stop_tx,
+                    task,
+                    _credentials: credentials_follower,
+                }
             });
 
         Ok(Self {
@@ -4295,6 +4367,7 @@ mod tests {
             app_routes_rx: None,
             on_app_routes: None,
             route_admission: None,
+            credentials: None,
             cache_dir: None,
         };
         let s = format!("{params:?}");
@@ -4395,6 +4468,7 @@ mod tests {
             app_routes_rx: None,
             on_app_routes: None,
             route_admission: None,
+            credentials: None,
             cache_dir: None,
         };
         let s = format!("{params:?}");
@@ -4462,6 +4536,7 @@ mod tests {
             app_routes_rx: None,
             on_app_routes: None,
             route_admission: None,
+            credentials: None,
             cache_dir: None,
         };
         let s = format!("{params:?}");
@@ -5873,6 +5948,7 @@ mod route_anchor_tests {
             on_app_routes: None,
             route_admission: directory
                 .map(|d| Arc::new(d) as Arc<dyn app_routes::RouteAdmissionSource>),
+            credentials: None,
             cache_dir: None,
         }
     }
@@ -5888,8 +5964,19 @@ mod route_anchor_tests {
     }
 
     #[test]
-    fn a_tunnel_without_route_admission_on_offer_does_not_anchor() {
+    fn a_tunnel_with_no_route_admission_source_does_not_anchor() {
         assert!(route_anchor_for(&params(true, None)).is_none());
-        assert!(route_anchor_for(&params(true, Some(Directory(None)))).is_none());
+    }
+
+    #[test]
+    fn a_tunnel_started_before_the_directory_offered_a_key_anchors_once_it_does() {
+        let anchor = route_anchor_for(&params(true, Some(Directory(None))))
+            .expect("an anchor waiting for its key");
+
+        assert!(!anchor.has_key());
+        assert_eq!(
+            anchor.current_state(),
+            warrenguard_transport::route_anchor::AnchorState::Unavailable
+        );
     }
 }

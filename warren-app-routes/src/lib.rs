@@ -23,6 +23,7 @@ pub mod admission;
 mod circuit;
 pub mod controller;
 pub mod datapath;
+pub mod main_anchor;
 pub mod plan;
 pub mod session;
 pub mod tokens;
@@ -94,6 +95,18 @@ pub fn route_capacity(anchor: Option<AnchorState>) -> usize {
         }
         Some(AnchorState::Unanchored | AnchorState::Unavailable) | None => TOKEN_ROUTE_SESSIONS,
     }
+}
+
+/// What the daemon's refreshes of the wallet's credentials (its session
+/// tokens and its token directory) left, announced after every refresh round.
+/// A tunnel started before the tokens or the route admission key were at hand
+/// takes them up from here instead of at its next reconnect.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct Credentials {
+    /// Refresh rounds finished so far, whether they succeeded or not.
+    pub rounds: u64,
+    /// Whether the wallet holds session tokens for the current epoch.
+    pub has_tokens: bool,
 }
 
 /// Route admission by anchor as the control plane announces it in its token

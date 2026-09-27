@@ -106,6 +106,45 @@ impl<T: HttpTransport> SessionLead<T> {
     }
 }
 
+/// Announces a finished refresh round of `manager`'s credentials at `now`,
+/// and whether the wallet then holds tokens for the epoch: a tunnel started
+/// before either the tokens or the route admission key were at hand takes
+/// them up from this instead of waiting for its next reconnect, and the first
+/// tunnel of a daemon run waits for the first round to finish
+/// ([`crate::main_anchor`]).
+pub fn announce_refresh<T: HttpTransport>(
+    credentials: &tokio::sync::watch::Sender<crate::Credentials>,
+    manager: &TokenManager<T>,
+    now: u64,
+) {
+    let has_tokens = !epoch_batch(manager, now).is_empty();
+    credentials.send_modify(|announced| {
+        announced.rounds = announced.rounds.wrapping_add(1);
+        announced.has_tokens = has_tokens;
+    });
+}
+
+/// Announces, while a refresh round is still running, that the wallet now
+/// holds tokens for the epoch of `now`, and says whether it does: a round
+/// also mints the later epochs of its horizon, one request each, and the
+/// first tunnel of a daemon run needs the current epoch only. Rounds are not
+/// counted here.
+pub fn announce_minted<T: HttpTransport>(
+    credentials: &tokio::sync::watch::Sender<crate::Credentials>,
+    manager: &TokenManager<T>,
+    now: u64,
+) -> bool {
+    if epoch_batch(manager, now).is_empty() {
+        return false;
+    }
+    credentials.send_if_modified(|announced| {
+        let newly = !announced.has_tokens;
+        announced.has_tokens = true;
+        newly
+    });
+    true
+}
+
 /// Every token of the epoch `now` falls in, held or not, read from a copy of
 /// the store: nothing is consumed.
 fn epoch_batch<T: HttpTransport>(
@@ -159,6 +198,18 @@ mod tests {
     /// The wallet's batches, as a restored bundle (nothing reaches the
     /// issuer), behind a clock the test moves.
     fn source_over(epochs: &[(u64, &[u8])]) -> (SessionTokenSource, Arc<AtomicU64>) {
+        let manager = restored_manager(epochs);
+        let clock = Arc::new(AtomicU64::new(NOW));
+        let read = Arc::clone(&clock);
+        let source = session_source(
+            Arc::new(manager),
+            Arc::new(move || read.load(Ordering::SeqCst)),
+        );
+        (source, clock)
+    }
+
+    /// A manager holding the wallet's batches for `epochs`.
+    fn restored_manager(epochs: &[(u64, &[u8])]) -> TokenManager<NoNetwork> {
         let seed = [0x42; 32];
         let manager = TokenManager::new(
             Arc::new(WarrenApiClient::new(
@@ -183,13 +234,57 @@ mod tests {
         });
         let _ = manager
             .restore_persisted(&PersistedTokens::from_json(&bundle.to_string()).expect("a bundle"));
-        let clock = Arc::new(AtomicU64::new(NOW));
-        let read = Arc::clone(&clock);
-        let source = session_source(
-            Arc::new(manager),
-            Arc::new(move || read.load(Ordering::SeqCst)),
+        manager
+    }
+
+    #[test]
+    fn the_first_tokens_of_a_round_are_announced_before_it_ends() {
+        let (credentials, followed) = tokio::sync::watch::channel(crate::Credentials::default());
+
+        assert!(!super::announce_minted(
+            &credentials,
+            &restored_manager(&[(EPOCH - 1, &[1])]),
+            NOW
+        ));
+        assert_eq!(*followed.borrow(), crate::Credentials::default());
+
+        assert!(super::announce_minted(
+            &credentials,
+            &restored_manager(&[(EPOCH, &[1])]),
+            NOW
+        ));
+        assert_eq!(
+            *followed.borrow(),
+            crate::Credentials {
+                rounds: 0,
+                has_tokens: true
+            },
+            "a round in progress is not counted as finished"
         );
-        (source, clock)
+    }
+
+    #[test]
+    fn each_refresh_round_is_announced_with_whether_the_wallet_holds_tokens() {
+        let (credentials, followed) = tokio::sync::watch::channel(crate::Credentials::default());
+
+        super::announce_refresh(&credentials, &restored_manager(&[(EPOCH - 1, &[1])]), NOW);
+        assert_eq!(
+            *followed.borrow(),
+            crate::Credentials {
+                rounds: 1,
+                has_tokens: false
+            },
+            "only an earlier epoch's batch"
+        );
+
+        super::announce_refresh(&credentials, &restored_manager(&[(EPOCH, &[1, 2])]), NOW);
+        assert_eq!(
+            *followed.borrow(),
+            crate::Credentials {
+                rounds: 2,
+                has_tokens: true
+            }
+        );
     }
 
     fn batch_of_three() -> SessionTokenSource {
