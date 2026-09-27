@@ -47,6 +47,20 @@ on:
       - "talpid-cgroup/**"
       - "talpid-macos/**"
       - "mullvad-exclude/**"
+      # The Windows leg (warren-tests.yml `windows-daemon`) builds winfw from
+      # windows/ and links every Windows test binary against it, then lints
+      # and tests these Windows-bearing crates. None of them was in this
+      # filter, so a winfw-only change ran no CI at all.
+      - "windows/**"
+      - "build-windows-modules.sh"
+      - "dist-assets/binaries"
+      - "talpid-windows/**"
+      - "talpid-routing/**"
+      - "talpid-tunnel/**"
+      - "talpid-platform-metadata/**"
+      - "mullvad-paths/**"
+      - "mullvad-setup/**"
+      - "mullvad-problem-report/**"
       - "warren-jni/**"
       - "warren-ios/**"
       # Both are tested and linted in the Warren test scope (the forum request

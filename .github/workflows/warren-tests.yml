@@ -425,3 +425,122 @@ jobs:
         run: bash ci/codemagic/selftest.sh powershell
       - name: build.sh prologue
         run: bash ci/codemagic/selftest.sh prologue
+
+  windows-daemon:
+    name: Windows daemon crates (winfw, clippy, tests)
+    # The Linux and macOS legs compile none of the `cfg(windows)` code: the
+    # firewall (winfw) and the split tunnel of talpid-core, the Windows owner
+    # lookup of talpid-app-routing, the daemon's DPAPI secret storage and its
+    # Windows paths. Before this job only a release tag built them, and nothing
+    # ran their tests or linted them.
+    #
+    # GitHub-hosted, free for this public repo. The Rust cache is saved from
+    # main only: a Windows target directory is one of the largest entries of
+    # the repository's 10 GB cache budget, so pull requests restore it and
+    # leave it alone.
+    runs-on: windows-2025
+    timeout-minutes: 90
+    env:
+      # winfw salts its WFP object keys per product environment, and the winfw
+      # tests below must not run against production keys (in production the
+      # private and shared sublayer keys differ only by the private flip).
+      # Beta is the environment the released Windows builds carry.
+      WARREN_PRODUCT_ENV: beta
+    defaults:
+      run:
+        shell: bash
+    steps:
+      # The desktop tree has paths past Windows' 260-character limit.
+      - name: Allow long paths
+        run: git config --system core.longpaths true
+
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Checkout the golden vectors submodule
+        # The daemon and warren-forum suites replay the forum login vectors,
+        # as in the Linux job.
+        env:
+          ENGINE_TOKEN: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -n "$ENGINE_TOKEN" ]; then
+            auth="$(printf 'x-access-token:%s' "$ENGINE_TOKEN" | base64 | tr -d '\n')"
+            git -c "http.extraheader=AUTHORIZATION: basic ${auth}" \
+              submodule update --init vectors
+          else
+            git submodule update --init vectors
+          fi
+          test -f vectors/forum_login_v2.json
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+          rust-cache-targets: "true"
+          rust-cache-save: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          product-env: beta
+
+      - name: install cargo-nextest
+        uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-nextest
+
+      # talpid-core links winfw.dll's import library, so nothing below links
+      # without it. Debug x64 is what a debug cargo build looks for, and the
+      # script checks that the dll carries this environment's salted keys.
+      - name: Build winfw
+        timeout-minutes: 30
+        run: |
+          bash ci/codemagic/watchdog.sh ./build-windows-modules.sh build winfw
+          winfw_dir="$PWD/windows/winfw/bin/x64-Debug"
+          test -f "$winfw_dir/winfw.dll"
+          # The test binaries load winfw.dll from the DLL search path.
+          cygpath -w "$winfw_dir" >> "$GITHUB_PATH"
+
+      - name: cargo clippy (Windows)
+        timeout-minutes: 30
+        run: |
+          bash ci/codemagic/watchdog.sh cargo clippy --locked --no-deps --all-targets \
+            -p mullvad-daemon -p mullvad-api -p mullvad-types \
+            -p mullvad-management-interface -p mullvad-cli -p mullvad-paths \
+            -p mullvad-setup -p mullvad-problem-report -p mullvad-update \
+            -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p talpid-app-routing \
+            -p talpid-types -p talpid-windows -p talpid-routing -p talpid-tunnel \
+            -p talpid-platform-metadata \
+            -p warren-forum -p warren-product-env -p warren-standing \
+            --features mullvad-update/sign,mullvad-update/client \
+            -- -D warnings
+
+      - name: cargo nextest (Windows)
+        timeout-minutes: 40
+        run: |
+          bash ci/codemagic/watchdog.sh cargo nextest run --locked --profile warren-ci \
+            -p mullvad-daemon -p mullvad-api -p mullvad-types \
+            -p mullvad-management-interface -p mullvad-cli -p mullvad-paths \
+            -p mullvad-setup -p mullvad-problem-report -p mullvad-update \
+            -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p talpid-app-routing \
+            -p talpid-types -p talpid-windows -p talpid-routing -p talpid-tunnel \
+            -p talpid-platform-metadata \
+            -p warren-forum -p warren-product-env -p warren-standing \
+            --features mullvad-update/sign,mullvad-update/client
+
+      # The winfw tests stay #[ignore] for a local run: they need an elevated
+      # process and change the machine's firewall. GitHub's Windows runners
+      # run jobs as an administrator with UAC off, so here they run, selected
+      # explicitly. Checking first makes a runner image that stops being
+      # elevated fail by name instead of as a WFP access error.
+      - name: The runner is elevated
+        shell: pwsh
+        run: |
+          $principal = [Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()
+          if (-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)) {
+            Write-Output "::error title=winfw tests::this runner is not elevated, the winfw tests cannot run"
+            exit 1
+          }
+          Write-Output "elevated: $([Security.Principal.WindowsIdentity]::GetCurrent().Name)"
+
+      - name: winfw against the real filtering engine (elevated)
+        timeout-minutes: 15
+        run: |
+          bash ci/codemagic/watchdog.sh cargo nextest run --locked --profile warren-ci \
+            -p talpid-core --lib --run-ignored only -E 'test(/winfw_tests::/)'
