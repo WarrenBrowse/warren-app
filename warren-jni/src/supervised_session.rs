@@ -90,11 +90,6 @@ pub(crate) enum SessionEnd {
     Down,
     /// The exit refused the setup with a policy rejection.
     Rejected(RejectionReason),
-    /// The exit moved the session to a different inner address. The NAT remap
-    /// is fixed at session start (the Android TUN address is immutable after
-    /// `establish()`), so the session ends rather than pump packets the exit's
-    /// anti-spoof gate would drop.
-    AddressChanged,
     /// The exit announced a maintenance drain. Changing the exit is Kotlin's
     /// call, so the session ends for it to fail over at once.
     ExitLeaving,
@@ -192,13 +187,19 @@ impl Drop for AbortOnDrop {
 /// `wrap_tun` receives the first [`IpAssignSpec`] and returns the packet device
 /// the pumps drive (on Android, the 1:1 NAT remap onto the exit-assigned
 /// source). It is called at most once: no assignment means no datapath, which
-/// fails closed rather than pumping packets the exit would drop.
+/// fails closed rather than pumping packets the exit would drop. `readdress`
+/// receives every later assignment that moves the session to another inner
+/// address (a setup made again make before break lands on a new one), for the
+/// device to present that address from then on: the session goes on, where
+/// the exit's anti-spoof gate would drop every packet still carrying the old
+/// one.
 ///
 /// `drain` receives the exit's in-band maintenance-drain advisory from the
 /// downlink, for the reactor that ends the session before the exit's deadline.
-pub(crate) async fn run_supervised<T, F>(
+pub(crate) async fn run_supervised<T, F, R>(
     mut inputs: SupervisedInputs,
     wrap_tun: F,
+    readdress: R,
     daita: DaitaShared,
     drain: Option<ExitDrainingChannel>,
     status: &StatusCell,
@@ -207,6 +208,7 @@ pub(crate) async fn run_supervised<T, F>(
 where
     T: PacketDevice + Clone,
     F: FnOnce(IpAssignSpec) -> T,
+    R: Fn(IpAssignSpec),
 {
     let pinned = match await_first_assign(&mut inputs, grace).await {
         Ok(spec) => spec,
@@ -238,7 +240,7 @@ where
         }
     });
 
-    drive_status(inputs, pinned, status, grace).await
+    drive_status(inputs, pinned, readdress, status, grace).await
 }
 
 /// Wait for the exit's first `IpAssign`. Bounded: without it the data plane
@@ -279,7 +281,8 @@ async fn await_first_assign(
 /// session ends.
 async fn drive_status(
     mut inputs: SupervisedInputs,
-    pinned: IpAssignSpec,
+    mut pinned: IpAssignSpec,
+    readdress: impl Fn(IpAssignSpec),
     status: &StatusCell,
     grace: Duration,
 ) -> SessionEnd {
@@ -319,7 +322,10 @@ async fn drive_status(
         if let Some(spec) = *inputs.assigns.borrow_and_update()
             && remap_moved(spec, pinned)
         {
-            return SessionEnd::AddressChanged;
+            // No-logs: the inner addresses are user-linkable.
+            log::info!("multi-hop: the exit moved the session to another inner address");
+            readdress(spec);
+            pinned = spec;
         }
         let live = inputs.sessions.borrow_and_update().is_some();
         match session_edge(live, was_connected) {
@@ -369,7 +375,7 @@ async fn drive_status(
     }
 }
 
-/// Whether a fresh assignment invalidates the NAT remap. Only the two
+/// Whether a fresh assignment moves the NAT remap. Only the two
 /// addresses the remap rewrites matter; a change in prefix or gateway is
 /// nothing the Android datapath carries (the interface's own addressing is
 /// fixed by `VpnService.Builder`).
@@ -468,6 +474,7 @@ mod tests {
                     );
                     FakeTun::new()
                 },
+                |_| {},
                 daita,
                 None,
                 &STATUS,
@@ -587,6 +594,7 @@ mod tests {
             drive_status(
                 scripted.inputs,
                 spec([10, 77, 0, 2]),
+                |_| {},
                 &status,
                 Duration::from_secs(600),
             ),
@@ -615,6 +623,7 @@ mod tests {
             drive_status(
                 scripted.inputs,
                 spec([10, 77, 0, 2]),
+                |_| {},
                 &status,
                 Duration::from_secs(600),
             ),
@@ -637,6 +646,7 @@ mod tests {
             drive_status(
                 scripted.inputs,
                 spec([10, 77, 0, 2]),
+                |_| {},
                 &status,
                 Duration::from_secs(600),
             ),
@@ -677,6 +687,7 @@ mod tests {
             drive_status(
                 scripted.inputs,
                 spec([10, 77, 0, 2]),
+                |_| {},
                 &status,
                 Duration::from_secs(600),
             ),
@@ -704,6 +715,7 @@ mod tests {
             drive_status(
                 scripted.inputs,
                 spec([10, 77, 0, 2]),
+                |_| {},
                 &status,
                 Duration::from_secs(600),
             ),
@@ -731,6 +743,7 @@ mod tests {
             drive_status(
                 scripted.inputs,
                 spec([10, 77, 0, 2]),
+                |_| {},
                 &status,
                 Duration::from_secs(600),
             ),
@@ -750,6 +763,7 @@ mod tests {
         let end = drive_status(
             scripted.inputs,
             spec([10, 77, 0, 2]),
+            |_| {},
             &status,
             Duration::from_millis(50),
         )
@@ -776,6 +790,7 @@ mod tests {
         let end = drive_status(
             scripted.inputs,
             spec([10, 77, 0, 2]),
+            |_| {},
             &status,
             Duration::from_millis(50),
         )
@@ -814,25 +829,44 @@ mod tests {
         }
     }
 
-    /// The NAT remap is fixed for the session's life, so an exit that moves the
-    /// inner address must end the session rather than let the pumps emit a
-    /// source the exit's anti-spoof gate drops.
+    /// A setup made again make before break (a wallet session set up again on
+    /// a token) lands on another inner address: the remap follows it and the
+    /// session goes on, where ending it would hand a planned setup to Kotlin's
+    /// drop policy.
     #[tokio::test]
-    async fn a_moved_inner_address_ends_the_session() {
+    async fn a_moved_inner_address_is_followed_and_the_session_goes_on() {
         let scripted = scripted();
         scripted
             .assigns
             .send(Some(spec([10, 77, 0, 9])))
             .expect("receiver alive");
         let status = StatusCell::new(SessionStatus::Connecting as i32);
-        let end = drive_status(
-            scripted.inputs,
-            spec([10, 77, 0, 2]),
-            &status,
-            Duration::from_millis(50),
-        )
-        .await;
-        assert_eq!(end, SessionEnd::AddressChanged);
+        let followed = parking_lot::Mutex::new(Vec::new());
+        let refused = async {
+            tokio::time::sleep(Duration::from_millis(50)).await;
+            scripted
+                .fatal
+                .send(Some(RejectionReason::PolicyRefused))
+                .expect("receiver alive");
+        };
+
+        let (end, ()) = tokio::join!(
+            drive_status(
+                scripted.inputs,
+                spec([10, 77, 0, 2]),
+                |spec| followed.lock().push(spec.assigned),
+                &status,
+                Duration::from_secs(10),
+            ),
+            refused,
+        );
+
+        assert_eq!(*followed.lock(), [Ipv4Addr::new(10, 77, 0, 9)]);
+        assert_eq!(
+            end,
+            SessionEnd::Rejected(RejectionReason::PolicyRefused),
+            "only what came after the move ended the session"
+        );
     }
 
     #[test]

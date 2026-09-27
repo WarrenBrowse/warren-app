@@ -36,12 +36,16 @@ use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::Duration;
 
+use tokio::sync::watch;
 use warren_api::{
     BlindingKey, HttpTransport, PersistedTokens, TokenClientError, TokenManager, WarrenApiClient,
 };
+use warren_app_routes::Credentials;
 use warren_app_routes::admission::{RouteKemTrust, remember_route_admission};
+use warren_app_routes::tokens::{
+    announce_minted, announce_refresh, refresh_announcing_mints, refresh_forever,
+};
 
 /// The most tokens one setup request may carry: the default admission sends
 /// the whole stack at once, and the wire refuses to decode a request with
@@ -147,6 +151,11 @@ pub(crate) struct TokenMint<T> {
 pub(crate) struct WalletTokens<T> {
     pub manager: Arc<TokenManager<T>>,
     pub directory_read: Arc<AtomicBool>,
+    /// Each finished refresh round, and whether the wallet holds tokens for
+    /// the current epoch: a tunnel started before the tokens or the route
+    /// admission key were at hand takes them up from here
+    /// (`warren_app_routes::main_anchor`).
+    pub credentials: watch::Sender<Credentials>,
 }
 
 impl<T> Clone for WalletTokens<T> {
@@ -154,6 +163,7 @@ impl<T> Clone for WalletTokens<T> {
         Self {
             manager: Arc::clone(&self.manager),
             directory_read: Arc::clone(&self.directory_read),
+            credentials: self.credentials.clone(),
         }
     }
 }
@@ -212,9 +222,14 @@ impl<T: HttpTransport + 'static> TokenMint<T> {
                     let restored = manager.restore_persisted(&bundle);
                     log::info!("restored {restored} persisted v7 tokens");
                 }
+                let credentials = watch::Sender::new(Credentials::default());
+                // Restored tokens of the current epoch are as good as a first
+                // round's: the first tunnel of this process does not wait.
+                announce_minted(&credentials, &manager, (self.now)());
                 let wallet = WalletTokens {
                     manager,
                     directory_read: Arc::new(AtomicBool::new(false)),
+                    credentials,
                 };
                 spawn_refresh(
                     wallet.clone(),
@@ -250,10 +265,12 @@ impl<T: HttpTransport + 'static> TokenMint<T> {
     }
 }
 
-/// Background refresh: the first tick fires immediately (top up as soon as a
-/// wallet is seen), then every 10 minutes, exactly like the desktop and iOS
-/// twins. The manager only mints epochs it has not attempted yet, so in steady
-/// state a tick costs one unsigned directory fetch.
+/// Background refresh: the first round runs at once (top up as soon as a
+/// wallet is seen), then every 10 minutes, a failed round sooner
+/// ([`refresh_forever`]), exactly like the desktop and iOS twins. The manager
+/// only mints epochs it has not attempted yet, so in steady state a round
+/// costs one unsigned directory fetch. Every round is announced on the
+/// wallet's credentials once what it read is in force.
 fn spawn_refresh<T: HttpTransport + 'static>(
     wallet: WalletTokens<T>,
     now: NowFn,
@@ -265,17 +282,23 @@ fn spawn_refresh<T: HttpTransport + 'static>(
     let WalletTokens {
         manager,
         directory_read,
+        credentials,
     } = wallet;
-    tokio::spawn(async move {
-        let mut tick = tokio::time::interval(Duration::from_secs(600));
-        loop {
-            tick.tick().await;
-            let n = now();
-            match manager.refresh(n).await {
-                // Log the current-epoch stock so a successful-but-empty refresh
-                // (the issuer refused this account's epoch) is distinguishable
-                // from a mint that actually stocked tokens. No secret material
-                // logged.
+    tokio::spawn(refresh_forever(move || {
+        let manager = Arc::clone(&manager);
+        let directory_read = Arc::clone(&directory_read);
+        let credentials = credentials.clone();
+        let now = Arc::clone(&now);
+        let persist = persist.clone();
+        let route_admission_file = route_admission_file.clone();
+        let ban_sink = ban_sink.clone();
+        async move {
+            let refreshed = refresh_announcing_mints(&manager, &credentials, &*now).await;
+            let succeeded = match refreshed {
+                // Log the current-epoch stock so a successful-but-empty
+                // refresh (the issuer refused this account's epoch) is
+                // distinguishable from a mint that actually stocked tokens.
+                // No secret material logged.
                 Ok(()) => {
                     if let Some(persist) = &persist {
                         persist.save(&manager);
@@ -289,15 +312,16 @@ fn spawn_refresh<T: HttpTransport + 'static>(
                     log::info!(
                         "Warren v7 token refresh ok (current-epoch tokens={})",
                         manager
-                            .epoch_at(n)
+                            .epoch_at(now())
                             .map_or(0, |epoch| manager.available(epoch))
                     );
+                    true
                 }
-                // A ban refusal is not transient: it goes to the standing, which
-                // blocks the tunnel. Anything else is, and the store keeps
-                // vending what it already holds until the next tick retries.
-                // Same message as the desktop twin; the error chain carries no
-                // token or seed material.
+                // A ban refusal is not transient: it goes to the standing,
+                // which blocks the tunnel. Anything else is, and the store
+                // keeps vending what it already holds until the next round
+                // retries. Same message as the desktop twin; the error chain
+                // carries no token or seed material.
                 Err(e) => {
                     if ban_sink
                         .as_ref()
@@ -307,10 +331,13 @@ fn spawn_refresh<T: HttpTransport + 'static>(
                     } else {
                         log::warn!("Warren v7 token refresh failed (keeping existing tokens): {e}");
                     }
+                    false
                 }
-            }
+            };
+            announce_refresh(&credentials, &manager, now());
+            succeeded
         }
-    });
+    }));
 }
 
 #[cfg(all(target_os = "android", feature = "tunnel"))]
@@ -406,6 +433,7 @@ mod android {
         SessionTokens {
             source: session_source(wallet.manager, Arc::new(now_unix_secs)),
             route_admission: Arc::new(route_admission),
+            credentials: wallet.credentials.subscribe(),
         }
     }
 
@@ -423,10 +451,12 @@ mod android {
         }
     }
 
-    /// Every session's tokens, and the route admission the directory offers.
+    /// Every session's tokens, the route admission the directory offers, and
+    /// the announcement of each refresh round of the wallet's credentials.
     pub(crate) struct SessionTokens {
         pub source: SessionTokenSource,
         pub route_admission: Arc<dyn RouteAdmissionSource>,
+        pub credentials: tokio::sync::watch::Receiver<warren_app_routes::Credentials>,
     }
 }
 
@@ -448,7 +478,12 @@ mod tests {
     use warren_identity::WarrenIdentity;
     use warrenguard_token::IssuerSecretKey;
 
-    use super::{MAX_PRESENTED_TOKENS, NowFn, PersistFile, RouteKemTrust, StackSource, TokenMint};
+    use warren_app_routes::Credentials;
+
+    use super::{
+        MAX_PRESENTED_TOKENS, NowFn, PersistFile, RouteKemTrust, StackSource, TokenMint,
+        WalletTokens,
+    };
 
     const EPOCH_SECS: u64 = 3600;
     const QUOTA: u32 = 3;
@@ -821,6 +856,81 @@ mod tests {
         assert!(
             !kept.exists(),
             "the next process does not anchor with a withdrawn key"
+        );
+    }
+
+    fn wallet_a(mint: &TokenMint<FakeIssuer>, issuer: &FakeIssuer) -> WalletTokens<FakeIssuer> {
+        mint.wallet([1; 32], BlindingKey::session(&WALLET_A), || {
+            client(issuer, WALLET_A)
+        })
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn each_refresh_round_is_announced_once_the_directory_it_read_is_in_force() {
+        let issuer = FakeIssuer::new(&[100]);
+        let mint = TokenMint::new(now_fixed(), None);
+        let wallet = wallet_a(&mint, &issuer);
+        let followed = wallet.credentials.subscribe();
+
+        wait_for(|| followed.borrow().rounds >= 1).await;
+
+        assert_eq!(
+            *followed.borrow(),
+            Credentials {
+                rounds: 1,
+                has_tokens: true
+            }
+        );
+        assert!(wallet.directory_read.load(Ordering::Acquire));
+    }
+
+    /// The first round runs as the first tunnel connects, and a round lost
+    /// then left the route sessions without a token for the whole period.
+    #[tokio::test(start_paused = true)]
+    async fn a_failed_round_is_announced_and_retried_well_before_the_period() {
+        let issuer = FakeIssuer::new(&[100]);
+        issuer.0.fail_transport.store(true, Ordering::SeqCst);
+        let mint = TokenMint::new(now_fixed(), None);
+        let wallet = wallet_a(&mint, &issuer);
+        let followed = wallet.credentials.subscribe();
+        wait_for(|| followed.borrow().rounds >= 1).await;
+        assert!(!followed.borrow().has_tokens);
+
+        issuer.0.fail_transport.store(false, Ordering::SeqCst);
+        tokio::time::sleep(Duration::from_secs(16)).await;
+
+        assert_eq!(
+            *followed.borrow(),
+            Credentials {
+                rounds: 2,
+                has_tokens: true
+            }
+        );
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_restored_bundle_is_announced_before_any_round_ends() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("v7-tokens.json");
+        {
+            let issuer = FakeIssuer::new(&[100]);
+            let mint = TokenMint::new(now_fixed(), Some(PersistFile::new(path.clone())));
+            let _source = source_a(&mint, &issuer);
+            wait_for(|| path.exists()).await;
+        }
+        let offline = FakeIssuer::new(&[100]);
+        offline.0.fail_transport.store(true, Ordering::SeqCst);
+        let mint = TokenMint::new(now_fixed(), Some(PersistFile::new(path)));
+
+        let wallet = wallet_a(&mint, &offline);
+
+        assert_eq!(
+            *wallet.credentials.borrow(),
+            Credentials {
+                rounds: 0,
+                has_tokens: true
+            },
+            "a first tunnel of this process has nothing to wait for"
         );
     }
 

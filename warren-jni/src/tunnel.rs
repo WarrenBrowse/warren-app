@@ -35,7 +35,6 @@ use serde::Deserialize;
 use tokio::sync::oneshot;
 use warrenguard_daita::{DaitaPool, DaitaState};
 use warrenguard_transport::AndroidTun;
-use warrenguard_transport::route_anchor::{RouteAnchorConfig, RouteAnchorHandle};
 use warrenguard_transport::supervisor::SessionTokenProvider;
 use warrenguard_wire::WarrenPubkey;
 
@@ -509,6 +508,25 @@ async fn run_multi_hop_session(
     }
     let main_exit = *exit_node.exit.exit_id.as_bytes();
 
+    // The first tunnel of a process holds its main session until the
+    // wallet's first refresh round, so the session is admitted on a token and
+    // anchors at once (`FIRST_REFRESH_WAIT`, the desktop tunnel does the
+    // same); a later tunnel, or a process that restored this epoch's tokens,
+    // does not wait. The mint leaves on a protected socket while the TUN is
+    // up.
+    tokio::select! {
+        biased;
+        _ = &mut cancel_rx => {
+            log::info!("multi-hop tunnel cancelled by Kotlin");
+            status.store(SessionStatus::Disconnected as i32);
+            return;
+        }
+        () = warren_app_routes::main_anchor::first_refresh(
+            tokens.credentials.clone(),
+            warren_app_routes::main_anchor::FIRST_REFRESH_WAIT,
+        ) => {}
+    }
+
     // At most two attempts: the second drops the anonymous tokens after a
     // rejection that was a verdict on the token, not on the account.
     let mut token_provider = Some(counting_tokens);
@@ -566,20 +584,39 @@ async fn run_multi_hop_session(
         };
 
         let (supervisor, sessions) = MultiHopSupervisor::new(supervisor_config);
-        // The main session anchors whenever the token directory offers route
-        // admission and apps can be attributed, a country set or not, so a
-        // country chosen while connected gets its route by anchor without a
-        // reconnect (warren-core doc 107; the desktop tunnel does the same).
-        // The anchor never leaves the engine.
+        // The main session anchors whenever apps can be attributed, a
+        // country set or not, so a country chosen while connected gets its
+        // route by anchor without a reconnect (warren-core doc 107; the
+        // desktop tunnel does the same). Before the token directory offered a
+        // key (a first run) the anchor waits for it. The anchor never leaves
+        // the engine.
         let route_anchor = crate::android_app_routes::lookup_available()
-            .then(|| tokens.route_admission.kem())
-            .flatten()
-            .map(|kem| RouteAnchorHandle::new(RouteAnchorConfig { kem }));
+            .then(|| warren_app_routes::main_anchor::anchor_for(tokens.route_admission.as_ref()));
         let supervisor = match &route_anchor {
             Some(anchor) => supervisor.with_route_anchor(anchor.clone()),
             None => supervisor,
         };
         let _ = migrate_slot.set(supervisor.migrate_handle());
+        // Hands the anchor the key a later refresh brings, and sets a main
+        // session the wallet had to sign in up again on a token once there
+        // are tokens, make before break, so it anchors without a reconnect.
+        // Receiver-free on the supervisor's session, so it never keeps it
+        // alive past teardown.
+        let _credentials_follower = match (&route_anchor, token_provider.is_some()) {
+            (Some(anchor), true) => {
+                let resetup = supervisor.migrate_handle();
+                Some(AbortOnDrop::spawn(
+                    warren_app_routes::main_anchor::follow_credentials(
+                        tokens.credentials.clone(),
+                        supervisor.token_admission_rx(),
+                        anchor.clone(),
+                        Arc::clone(&tokens.route_admission),
+                        move || resetup.overlap_reconnect(),
+                    ),
+                ))
+            }
+            _ => None,
+        };
         // The exit's own maintenance drain arrives in band on the downlink;
         // the session leaves before the exit's deadline close, spread across
         // the anti-stampede window with every other client of that exit.
@@ -704,6 +741,12 @@ async fn run_multi_hop_session(
             },
         );
         let routed_tun = app_routes.main_device();
+        // Followed in place when the exit moves the session to another inner
+        // address (a setup made again make before break).
+        let remap_addresses = crate::remap_tun::RemapAddresses::new(Ipv4Addr::UNSPECIFIED, None);
+        let readdress = |spec: warrenguard_transport::IpAssignSpec| {
+            remap_addresses.set(spec.assigned, spec.assigned_v6);
+        };
         let remap = |spec: warrenguard_transport::IpAssignSpec| {
             // No-logs: the exit-assigned inner IPs are user-linkable; report the
             // admission mode only.
@@ -711,12 +754,12 @@ async fn run_multi_hop_session(
                 "multi-hop tunnel up (v7={})",
                 presented.load(Ordering::Relaxed)
             );
-            let v6_pair = spec.assigned_v6.map(|a| (LOCAL_TUN_IPV6, a));
+            readdress(spec);
             crate::remap_tun::RemapTun::new(
                 routed_tun.clone(),
                 LOCAL_TUN_IPV4,
-                spec.assigned,
-                v6_pair,
+                LOCAL_TUN_IPV6,
+                remap_addresses.clone(),
             )
         };
         let daita = daita.clone();
@@ -727,6 +770,7 @@ async fn run_multi_hop_session(
                 end = crate::supervised_session::run_supervised(
                     inputs,
                     |spec| crate::rate_limited_tun::RateLimitedTun::new(remap(spec), bps),
+                    readdress,
                     daita,
                     Some(exit_draining_channel.clone()),
                     status,
@@ -739,6 +783,7 @@ async fn run_multi_hop_session(
                 end = crate::supervised_session::run_supervised(
                     inputs,
                     remap,
+                    readdress,
                     daita,
                     Some(exit_draining_channel.clone()),
                     status,

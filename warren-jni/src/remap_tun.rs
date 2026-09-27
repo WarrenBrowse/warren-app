@@ -18,52 +18,86 @@
 // reports CONNECTED but carries no traffic (every uplink packet is dropped at
 // the exit).
 
-#[cfg(all(target_os = "android", feature = "tunnel"))]
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 use std::net::{Ipv4Addr, Ipv6Addr};
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
+use std::sync::Arc;
 
-#[cfg(all(target_os = "android", feature = "tunnel"))]
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 use warrenguard_transport_core::PacketDevice;
+
+/// The exit-assigned inner addresses a [`RemapTun`] presents, shared with the
+/// session driver: a setup made again make before break (a wallet session
+/// set up again on a token, a gap-free migration) lands on another address,
+/// and the remap follows it in place instead of the tunnel being built again.
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
+#[derive(Clone)]
+pub struct RemapAddresses(Arc<parking_lot::RwLock<Assigned>>);
+
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
+#[derive(Clone, Copy)]
+struct Assigned {
+    v4: [u8; 4],
+    v6: Option<[u8; 16]>,
+}
+
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
+impl RemapAddresses {
+    /// `v6` is `Some` only when the exit granted an IPv6 address; without one
+    /// IPv6 packets pass through untouched and the exit drops them.
+    pub fn new(v4: Ipv4Addr, v6: Option<Ipv6Addr>) -> Self {
+        Self(Arc::new(parking_lot::RwLock::new(Assigned {
+            v4: v4.octets(),
+            v6: v6.map(|a| a.octets()),
+        })))
+    }
+
+    /// Presents `v4` (and `v6`) from the next packet on.
+    pub fn set(&self, v4: Ipv4Addr, v6: Option<Ipv6Addr>) {
+        *self.0.write() = Assigned {
+            v4: v4.octets(),
+            v6: v6.map(|a| a.octets()),
+        };
+    }
+
+    fn get(&self) -> Assigned {
+        *self.0.read()
+    }
+}
 
 /// Wraps a [`PacketDevice`] and rewrites the tunnel-inner client addresses so
 /// the kernel-fixed Android TUN addresses are presented to the exit as the
-/// exit-assigned addresses. IPv6 remap is active only when `v6` is `Some`
-/// (the exit granted a dual-stack address); otherwise v6 packets pass through
-/// untouched and are blackholed at the exit, exactly as before.
-#[cfg(all(target_os = "android", feature = "tunnel"))]
+/// exit-assigned addresses, as [`RemapAddresses`] holds them at each packet.
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 #[derive(Clone)]
 pub struct RemapTun<T> {
     inner: T,
     local_v4: [u8; 4],
-    assigned_v4: [u8; 4],
-    v6: Option<([u8; 16], [u8; 16])>, // (local_v6, assigned_v6)
+    local_v6: [u8; 16],
+    assigned: RemapAddresses,
 }
 
-#[cfg(all(target_os = "android", feature = "tunnel"))]
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 impl<T> RemapTun<T> {
     /// Build a remapping TUN. `local_*` are the addresses the Android interface
-    /// is configured with; `assigned_*` are the exit-allocated inner addresses.
-    /// `v6` is `Some((local, assigned))` only when the exit granted IPv6.
-    pub fn new(
-        inner: T,
-        local_v4: Ipv4Addr,
-        assigned_v4: Ipv4Addr,
-        v6: Option<(Ipv6Addr, Ipv6Addr)>,
-    ) -> Self {
+    /// is configured with; `assigned` the exit-allocated inner addresses.
+    pub fn new(inner: T, local_v4: Ipv4Addr, local_v6: Ipv6Addr, assigned: RemapAddresses) -> Self {
         Self {
             inner,
             local_v4: local_v4.octets(),
-            assigned_v4: assigned_v4.octets(),
-            v6: v6.map(|(l, a)| (l.octets(), a.octets())),
+            local_v6: local_v6.octets(),
+            assigned,
         }
     }
 
     /// Rewrite uplink (TUN -> network): client source -> exit-assigned.
     fn remap_uplink(&self, pkt: &mut [u8]) {
+        let assigned = self.assigned.get();
         match ip_version(pkt) {
-            Some(4) => rewrite_v4(pkt, Field::Source, &self.local_v4, &self.assigned_v4),
+            Some(4) => rewrite_v4(pkt, Field::Source, &self.local_v4, &assigned.v4),
             Some(6) => {
-                if let Some((local, assigned)) = &self.v6 {
-                    rewrite_v6(pkt, Field::Source, local, assigned);
+                if let Some(v6) = &assigned.v6 {
+                    rewrite_v6(pkt, Field::Source, &self.local_v6, v6);
                 }
             }
             _ => {}
@@ -71,7 +105,7 @@ impl<T> RemapTun<T> {
     }
 }
 
-#[cfg(all(target_os = "android", feature = "tunnel"))]
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 impl<T: PacketDevice + Clone> PacketDevice for RemapTun<T> {
     async fn recv(&self) -> std::io::Result<Vec<u8>> {
         let mut pkt = self.inner.recv().await?;
@@ -82,21 +116,17 @@ impl<T: PacketDevice + Clone> PacketDevice for RemapTun<T> {
     async fn send(&self, packet: &[u8]) -> std::io::Result<()> {
         // Downlink: exit-assigned destination -> client address. Only allocate
         // a rewritten copy when the destination actually matches.
+        let assigned = self.assigned.get();
         match ip_version(packet) {
-            Some(4) if packet.get(16..20) == Some(&self.assigned_v4[..]) => {
+            Some(4) if packet.get(16..20) == Some(&assigned.v4[..]) => {
                 let mut pkt = packet.to_vec();
-                rewrite_v4(
-                    &mut pkt,
-                    Field::Destination,
-                    &self.assigned_v4,
-                    &self.local_v4,
-                );
+                rewrite_v4(&mut pkt, Field::Destination, &assigned.v4, &self.local_v4);
                 self.inner.send(&pkt).await
             }
-            Some(6) => match &self.v6 {
-                Some((local, assigned)) if packet.get(24..40) == Some(&assigned[..]) => {
+            Some(6) => match &assigned.v6 {
+                Some(v6) if packet.get(24..40) == Some(&v6[..]) => {
                     let mut pkt = packet.to_vec();
-                    rewrite_v6(&mut pkt, Field::Destination, assigned, local);
+                    rewrite_v6(&mut pkt, Field::Destination, v6, &self.local_v6);
                     self.inner.send(&pkt).await
                 }
                 _ => self.inner.send(packet).await,
@@ -124,9 +154,7 @@ enum Field {
 }
 
 /// IP version nibble (4 or 6), or `None` if the packet is too short.
-// Only the Android-gated `PacketDevice` impl calls this; gating it to `test`
-// as well would leave it unused (dead) on the host test build.
-#[cfg(all(target_os = "android", feature = "tunnel"))]
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 fn ip_version(packet: &[u8]) -> Option<u8> {
     packet.first().map(|b| b >> 4)
 }
@@ -419,6 +447,44 @@ mod tests {
         assert_eq!(&p[24..40], &local);
         assert_eq!(u16::from_be_bytes([p[46], p[47]]), udp6_csum(&p));
     }
+
+    /// The exit moved the session to another inner address (a setup made
+    /// again, make before break): the remap presents the new one from then
+    /// on, and maps it back, without the tunnel being built again.
+    #[tokio::test]
+    async fn a_readdressed_remap_follows_the_new_inner_address_both_ways() {
+        use warrenguard_transport_core::{FakeTun, PacketDevice};
+
+        let local = std::net::Ipv4Addr::new(10, 64, 0, 1);
+        let first = std::net::Ipv4Addr::new(10, 66, 0, 4);
+        let moved = std::net::Ipv4Addr::new(10, 66, 0, 9);
+        let tun = FakeTun::new();
+        let addresses = RemapAddresses::new(first, None);
+        let remap = RemapTun::new(tun.clone(), local, LOCAL_V6, addresses.clone());
+
+        addresses.set(moved, None);
+
+        tun.inject_inbound(udp4_packet(local.octets(), [1, 1, 1, 1]));
+        let uplink = remap.recv().await.expect("a packet");
+        assert_eq!(&uplink[12..16], &moved.octets());
+        remap
+            .send(&udp4_packet([1, 1, 1, 1], moved.octets()))
+            .await
+            .expect("sent");
+        remap
+            .send(&udp4_packet([1, 1, 1, 1], first.octets()))
+            .await
+            .expect("sent");
+        let downlink = tun.take_outbound();
+        assert_eq!(&downlink[0][16..20], &local.octets());
+        assert_eq!(
+            &downlink[1][16..20],
+            &first.octets(),
+            "the address the exit took back is no longer the client's"
+        );
+    }
+
+    const LOCAL_V6: std::net::Ipv6Addr = std::net::Ipv6Addr::new(0xfd00, 0, 0, 0, 0, 0, 0, 1);
 
     #[test]
     fn ignores_short_packets() {

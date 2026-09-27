@@ -303,6 +303,9 @@ impl AppRoutes {
         let mut config = RouteSessionConfig::new(Some(Arc::clone(&setup.tokens.source)));
         config.anchor = setup.anchor.clone();
         config.route_admission = Some(Arc::clone(&setup.tokens.route_admission));
+        // A route waiting for a token dials again as soon as a refresh
+        // brings tokens.
+        config.credentials = Some(setup.tokens.credentials.clone());
         config.wants_ipv6 = setup.wants_ipv6;
         config.enable_daita = setup.enable_daita;
         let draining = events_tx.clone();
