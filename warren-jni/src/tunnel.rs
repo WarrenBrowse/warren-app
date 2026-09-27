@@ -600,8 +600,9 @@ async fn run_multi_hop_session(
         // Hands the anchor the key a later refresh brings, and sets a main
         // session the wallet had to sign in up again on a token once there
         // are tokens, make before break, so it anchors without a reconnect.
-        // Receiver-free on the supervisor's session, so it never keeps it
-        // alive past teardown.
+        // A migrate handle holds no receiver of the supervisor's session
+        // watch, so the follower never keeps the supervisor alive past
+        // teardown.
         let _credentials_follower = match (&route_anchor, token_provider.is_some()) {
             (Some(anchor), true) => {
                 let resetup = supervisor.migrate_handle();
@@ -710,16 +711,21 @@ async fn run_multi_hop_session(
 
         // NAT-PMP over multi-hop: bind the refresh socket to LOCAL_TUN_IPV4 so
         // the request routes through the tunnel (RemapTun rewrites it to the
-        // assigned source) to the exit gateway. Guard lives for this attempt.
-        let _nat_pmp_guard =
-            maybe_spawn_nat_pmp(&config, LOCAL_TUN_IPV4, port_entitlements.clone());
+        // assigned source) to the exit gateway. Guard lives for this attempt,
+        // and is replaced when the session moves to another inner address.
+        let nat_pmp = parking_lot::Mutex::new(maybe_spawn_nat_pmp(
+            &config,
+            LOCAL_TUN_IPV4,
+            port_entitlements.clone(),
+        ));
 
         // The Android VpnService TUN is fixed on LOCAL_TUN_IPV4/IPV6 (set in
         // Kotlin and immutable after establish()), so wrap it in a 1:1 NAT that
         // presents the exit-assigned source on uplink and restores the local
-        // address on downlink. Built from the exit's first assignment; the v6
-        // remap is active only when the exit granted v6 (else v6 stays
-        // blackholed). Android equivalent of the desktop RealTun::reassign_*.
+        // address on downlink. Built from the exit's first assignment and
+        // following every later one; the v6 remap is active only while the
+        // exit grants v6 (else v6 stays blackholed). Android equivalent of the
+        // desktop RealTun::reassign_*.
         // "Country per app": the router sits between the TUN and every
         // session. Its policy is installed before the main pumps carry their
         // first packet, so a routed app's packets are dropped until its route
@@ -742,11 +748,18 @@ async fn run_multi_hop_session(
         );
         let routed_tun = app_routes.main_device();
         // Followed in place when the exit moves the session to another inner
-        // address (a setup made again make before break).
+        // address (a setup made again make before break). The exit keys a
+        // forwarded port on that address, so the port is asked for again.
         let remap_addresses = crate::remap_tun::RemapAddresses::new(Ipv4Addr::UNSPECIFIED, None);
-        let readdress = |spec: warrenguard_transport::IpAssignSpec| {
-            remap_addresses.set(spec.assigned, spec.assigned_v6);
-        };
+        let readdress = crate::remap_tun::follow_moves(&remap_addresses, || {
+            let mut guard = nat_pmp.lock();
+            if guard.is_some() {
+                // The old loop is torn down (and its status cleared) before
+                // the new one publishes its own.
+                *guard = None;
+                *guard = maybe_spawn_nat_pmp(&config, LOCAL_TUN_IPV4, port_entitlements.clone());
+            }
+        });
         let remap = |spec: warrenguard_transport::IpAssignSpec| {
             // No-logs: the exit-assigned inner IPs are user-linkable; report the
             // admission mode only.
@@ -754,7 +767,7 @@ async fn run_multi_hop_session(
                 "multi-hop tunnel up (v7={})",
                 presented.load(Ordering::Relaxed)
             );
-            readdress(spec);
+            remap_addresses.set(spec.assigned, spec.assigned_v6);
             crate::remap_tun::RemapTun::new(
                 routed_tun.clone(),
                 LOCAL_TUN_IPV4,

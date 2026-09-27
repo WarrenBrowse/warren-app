@@ -65,6 +65,20 @@ impl RemapAddresses {
     }
 }
 
+/// What the session driver runs when the exit moves the session to another
+/// inner address: the remap presents the new address, then `after` runs for
+/// what the exit keys on the inner address (a forwarded port above all).
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
+pub fn follow_moves<'a>(
+    addresses: &'a RemapAddresses,
+    after: impl Fn() + 'a,
+) -> impl Fn(warrenguard_transport::IpAssignSpec) + 'a {
+    move |spec| {
+        addresses.set(spec.assigned, spec.assigned_v6);
+        after();
+    }
+}
+
 /// Wraps a [`PacketDevice`] and rewrites the tunnel-inner client addresses so
 /// the kernel-fixed Android TUN addresses are presented to the exit as the
 /// exit-assigned addresses, as [`RemapAddresses`] holds them at each packet.
@@ -485,6 +499,61 @@ mod tests {
     }
 
     const LOCAL_V6: std::net::Ipv6Addr = std::net::Ipv6Addr::new(0xfd00, 0, 0, 0, 0, 0, 0, 1);
+
+    #[tokio::test]
+    async fn a_readdressed_remap_presents_ipv6_only_while_the_exit_grants_it() {
+        use warrenguard_transport_core::{FakeTun, PacketDevice};
+
+        let v4 = std::net::Ipv4Addr::new(10, 66, 0, 4);
+        let granted = std::net::Ipv6Addr::new(0xfdcc, 0xf, 1, 0, 0, 0, 0, 2);
+        let tun = FakeTun::new();
+        let addresses = RemapAddresses::new(v4, None);
+        let remap = RemapTun::new(
+            tun.clone(),
+            std::net::Ipv4Addr::new(10, 64, 0, 1),
+            LOCAL_V6,
+            addresses.clone(),
+        );
+        let destination = [
+            0x20, 1, 0x48, 0x60, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x88, 0x88,
+        ];
+
+        addresses.set(v4, Some(granted));
+        tun.inject_inbound(udp6_packet(LOCAL_V6.octets(), destination));
+        let granted_uplink = remap.recv().await.expect("a packet");
+        addresses.set(v4, None);
+        tun.inject_inbound(udp6_packet(LOCAL_V6.octets(), destination));
+        let withdrawn_uplink = remap.recv().await.expect("a packet");
+
+        assert_eq!(&granted_uplink[8..24], &granted.octets());
+        assert_eq!(
+            &withdrawn_uplink[8..24],
+            &LOCAL_V6.octets(),
+            "left as it is, for the exit to drop"
+        );
+    }
+
+    /// The exit keys a forwarded port on the inner address, so a move asks
+    /// for the port again once the remap presents the new address.
+    #[test]
+    fn a_move_readdresses_the_remap_then_runs_what_follows_it() {
+        let addresses = RemapAddresses::new(std::net::Ipv4Addr::new(10, 66, 0, 4), None);
+        let followed = std::cell::RefCell::new(Vec::new());
+        let follow = follow_moves(&addresses, || {
+            followed.borrow_mut().push(addresses.get().v4)
+        });
+
+        follow(warrenguard_transport::IpAssignSpec {
+            assigned: std::net::Ipv4Addr::new(10, 66, 0, 9),
+            prefix_len: 24,
+            gateway: std::net::Ipv4Addr::new(10, 66, 0, 1),
+            assigned_v6: None,
+            prefix_len_v6: 0,
+            gateway_v6: None,
+        });
+
+        assert_eq!(*followed.borrow(), [[10, 66, 0, 9]]);
+    }
 
     #[test]
     fn ignores_short_packets() {

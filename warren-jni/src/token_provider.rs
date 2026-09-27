@@ -267,7 +267,7 @@ impl<T: HttpTransport + 'static> TokenMint<T> {
 
 /// Background refresh: the first round runs at once (top up as soon as a
 /// wallet is seen), then every 10 minutes, a failed round sooner
-/// ([`refresh_forever`]), exactly like the desktop and iOS twins. The manager
+/// ([`refresh_forever`]), exactly like the desktop twin. The manager
 /// only mints epochs it has not attempted yet, so in steady state a round
 /// costs one unsigned directory fetch. Every round is announced on the
 /// wallet's credentials once what it read is in force.
@@ -866,7 +866,7 @@ mod tests {
     }
 
     #[tokio::test(start_paused = true)]
-    async fn each_refresh_round_is_announced_once_the_directory_it_read_is_in_force() {
+    async fn each_refresh_round_is_announced_with_the_directory_it_read() {
         let issuer = FakeIssuer::new(&[100]);
         let mint = TokenMint::new(now_fixed(), None);
         let wallet = wallet_a(&mint, &issuer);

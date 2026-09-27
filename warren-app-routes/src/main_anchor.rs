@@ -14,9 +14,10 @@
 //!   refresh brought tokens, make before break (the engine's overlap
 //!   reconnect), so the new session is admitted on a token and anchors. The
 //!   exit places that session on another inner address than the wallet
-//!   session's, which the tunnel adopts by rebuilding itself; the first tunnel
-//!   of a daemon run therefore waits a moment for the first tokens
-//!   ([`first_refresh`]), so this is the exception.
+//!   session's, which the desktop tunnel adopts by rebuilding itself and the
+//!   Android one follows in place; the first tunnel of a run therefore waits a
+//!   moment for the first tokens ([`first_refresh`]), so this is the
+//!   exception.
 
 use std::sync::Arc;
 
