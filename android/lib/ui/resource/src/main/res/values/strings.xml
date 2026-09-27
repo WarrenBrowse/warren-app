@@ -374,7 +374,6 @@
     <string name="location_recents">Recents</string>
     <string name="location_all_locations">All locations</string>
     <string name="location_custom_lists">Custom lists</string>
-    <string name="location_custom_lists_empty_hint">Open the menu on a location to add it to a list. Your first list is created there.</string>
     <string name="location_more_options">More options</string>
     <string name="location_row_options">Location options</string>
     <string name="location_enable_recents">Enable recents</string>

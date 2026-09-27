@@ -368,7 +368,6 @@
     <string name="location_recents">Недавние</string>
     <string name="location_all_locations">Все местоположения</string>
     <string name="location_custom_lists">Свои списки</string>
-    <string name="location_custom_lists_empty_hint">Откройте меню локации, чтобы добавить её в список. Первый список создаётся там же.</string>
     <string name="location_more_options">Больше параметров</string>
     <string name="location_row_options">Параметры локации</string>
     <string name="location_enable_recents">Включить недавние</string>

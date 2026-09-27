@@ -149,23 +149,107 @@ class LocationPickerRowsTest {
 
     @Test
     fun `a lone exit in a city keeps the city name and no ordinal`() {
-        val built = rows(catalogue, expandedCountries = setOf("FR"))
-        val paris = built.filterIsInstance<PickerRow.ExitRow>().single { it.relay.exitId == "fr1" }
+        val built = rows(
+            catalogue + relay("de3", "DE", "Berlin"),
+            expandedCountries = setOf("DE"),
+        )
+        val berlin = built.filterIsInstance<PickerRow.ExitRow>().single { it.relay.exitId == "de3" }
 
-        assertEquals("Paris", paris.title)
-        assertEquals(null, paris.ordinal)
+        assertEquals("Berlin", berlin.title)
+        assertEquals(null, berlin.ordinal)
+        assertEquals(1, berlin.depth)
     }
 
     // Structure
 
     @Test
-    fun `the country tree is introduced by an all locations header`() {
-        val built = rows(catalogue)
+    fun `the country tree is introduced by an all locations header under recents`() {
+        val built = rows(catalogue, recents = listOf(catalogue[0]))
         val header = built.indexOfFirst { it is PickerRow.AllLocationsHeader }
         val firstCountry = built.indexOfFirst { it is PickerRow.CountryHeader }
 
         assertTrue(header >= 0)
         assertTrue(header < firstCountry)
+    }
+
+    @Test
+    fun `the country tree is introduced by an all locations header under custom lists`() {
+        val built = rows(catalogue, customLists = listOf(CustomListSection("Work", catalogue)))
+
+        assertTrue(built.any { it is PickerRow.AllLocationsHeader })
+    }
+
+    @Test
+    fun `the country tree alone needs no header`() {
+        val built = rows(catalogue)
+
+        assertTrue(built.none { it is PickerRow.AllLocationsHeader })
+        assertTrue(built.first() is PickerRow.ExitAutomaticRow)
+    }
+
+    @Test
+    fun `a country holding a single exit is one row that selects it, with no expand toggle`() {
+        val built = rows(catalogue)
+        val france = built.filterIsInstance<PickerRow.ExitRow>().single { it.relay.exitId == "fr1" }
+        val germany = built.filterIsInstance<PickerRow.CountryHeader>().single()
+
+        assertEquals("DE", germany.country)
+        assertTrue(germany.expandable)
+        assertFalse(france.expandable)
+        assertEquals(countryDisplayName("FR"), france.title)
+        assertEquals("Paris", france.subtitle)
+        assertEquals(0, france.depth)
+        assertEquals("FR", france.flagCountry)
+        assertEquals(ExitSection.Country, france.section)
+    }
+
+    @Test
+    fun `a single-exit country stays one row when marked expanded or searched`() {
+        val expanded = rows(catalogue, expandedCountries = setOf("FR"))
+        val searched = rows(catalogue, query = "paris")
+
+        for (built in listOf(expanded, searched)) {
+            assertEquals(1, built.count { it is PickerRow.ExitRow && it.relay.exitId == "fr1" })
+            assertTrue(built.none { it is PickerRow.CountryHeader && it.country == "FR" })
+            assertTrue(built.none { it.key == "gap-country-FR" })
+        }
+    }
+
+    @Test
+    fun `a single-exit country row carries a country, city or exit pin`() {
+        fun pinned(pin: ExitPin) =
+            rows(catalogue, exitPin = pin)
+                .filterIsInstance<PickerRow.ExitRow>()
+                .single { it.relay.exitId == "fr1" }
+                .isPinned
+
+        assertTrue(pinned(ExitPin.Exit("fr1")))
+        assertTrue(pinned(ExitPin.Country("FR")))
+        assertTrue(pinned(ExitPin.City("FR", "Paris")))
+        assertFalse(pinned(ExitPin.Country("DE")))
+    }
+
+    @Test
+    fun `scroll targets a pinned single-exit country row itself`() {
+        val built = assignPositions(rows(catalogue, exitPin = ExitPin.Country("SE")))
+
+        val target = built[scrollTargetIndex(built)]
+
+        assertTrue(target is PickerRow.ExitRow && target.relay.exitId == "se1")
+    }
+
+    @Test
+    fun `only exits at the top of a section lead with a flag`() {
+        val built = rows(
+            catalogue,
+            recents = listOf(catalogue[2]),
+            expandedCountries = setOf("DE"),
+            expandedCities = setOf(cityKey("DE", "Frankfurt")),
+        )
+        val exits = built.filterIsInstance<PickerRow.ExitRow>()
+
+        assertEquals("FR", exits.first { it.section == ExitSection.Recents }.flagCountry)
+        assertTrue(exits.filter { it.relay.country == "DE" }.all { it.flagCountry == null })
     }
 
     @Test
@@ -184,7 +268,7 @@ class LocationPickerRowsTest {
 
     @Test
     fun `automatic heads the all locations section`() {
-        val built = rows(catalogue)
+        val built = rows(catalogue, recents = listOf(catalogue[0]))
         val header = built.indexOfFirst { it is PickerRow.AllLocationsHeader }
 
         assertTrue(built[header + 1] is PickerRow.ExitAutomaticRow)
@@ -194,14 +278,11 @@ class LocationPickerRowsTest {
     @Test
     fun `automatic rounds into the same block as the collapsed countries`() {
         val built = assignPositions(rows(catalogue))
-        val block = built.filter {
-            it is PickerRow.ExitAutomaticRow || it is PickerRow.CountryHeader
-        }
 
-        assertEquals(4, block.size)
+        assertEquals(4, built.size)
         assertEquals(
             listOf(Position.Top, Position.Middle, Position.Middle, Position.Bottom),
-            block.map { it.position },
+            built.map { it.position },
         )
     }
 
@@ -375,11 +456,11 @@ class LocationPickerRowsTest {
     // Custom lists
 
     @Test
-    fun `the custom lists section is always announced with a hint when empty`() {
+    fun `the custom lists section is hidden while there is no list`() {
         val built = rows(catalogue)
 
-        assertTrue(built.any { it is PickerRow.CustomListsHeader })
-        assertTrue(built.any { it is PickerRow.CustomListsEmptyHint })
+        assertTrue(built.none { it is PickerRow.CustomListsHeader })
+        assertTrue(built.none { it.key == "gap-custom-lists" })
     }
 
     @Test

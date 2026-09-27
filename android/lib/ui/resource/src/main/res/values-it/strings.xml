@@ -366,7 +366,6 @@
     <string name="location_recents">Recenti</string>
     <string name="location_all_locations">Tutti i luoghi</string>
     <string name="location_custom_lists">Elenchi personalizzati</string>
-    <string name="location_custom_lists_empty_hint">Apri il menu di una posizione per aggiungerla a un elenco. Il tuo primo elenco si crea da lì.</string>
     <string name="location_more_options">Altre opzioni</string>
     <string name="location_row_options">Opzioni della posizione</string>
     <string name="location_enable_recents">Abilita recenti</string>

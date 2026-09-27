@@ -366,7 +366,6 @@
     <string name="location_recents">Viimeisimmät</string>
     <string name="location_all_locations">Kaikki sijainnit</string>
     <string name="location_custom_lists">Mukautetut luettelot</string>
-    <string name="location_custom_lists_empty_hint">Avaa sijainnin valikko lisätäksesi sen listalle. Ensimmäinen listasi luodaan siellä.</string>
     <string name="location_more_options">Lisää vaihtoehtoja</string>
     <string name="location_row_options">Sijainnin asetukset</string>
     <string name="location_enable_recents">Ota viimeisimmät käyttöön</string>

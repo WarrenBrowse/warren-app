@@ -365,7 +365,6 @@
     <string name="location_recents">최근 항목</string>
     <string name="location_all_locations">모든 위치</string>
     <string name="location_custom_lists">사용자 지정 목록</string>
-    <string name="location_custom_lists_empty_hint">위치의 메뉴를 열어 목록에 추가하세요. 첫 목록은 거기서 만들어집니다.</string>
     <string name="location_more_options">추가 옵션</string>
     <string name="location_row_options">위치 옵션</string>
     <string name="location_enable_recents">최근 항목 활성화</string>

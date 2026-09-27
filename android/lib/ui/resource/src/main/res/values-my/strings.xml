@@ -365,7 +365,6 @@
     <string name="location_recents">မကြာသေးမီက</string>
     <string name="location_all_locations">တည်နေရာအာလုံး</string>
     <string name="location_custom_lists">စိတ်ကြိုက်စာရင်းများ</string>
-    <string name="location_custom_lists_empty_hint">တည်နေရာတစ်ခု၏ မီနူးကို ဖွင့်၍ စာရင်းသို့ ထည့်ပါ။ သင့်ပထမဆုံး စာရင်းကို ထိုနေရာတွင် ဖန်တီးပါသည်။</string>
     <string name="location_more_options">နောက်ထပ် ရွေးချယ်စရာများ</string>
     <string name="location_row_options">တည်နေရာ ရွေးချယ်စရာများ</string>
     <string name="location_enable_recents">လတ်တလောအရာများကို ဖွင့်ရန်</string>

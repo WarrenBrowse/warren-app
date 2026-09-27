@@ -371,7 +371,6 @@
     <string name="location_recents">Recente</string>
     <string name="location_all_locations">Toate locațiile</string>
     <string name="location_custom_lists">Liste personalizate</string>
-    <string name="location_custom_lists_empty_hint">Deschideți meniul unei locații pentru a o adăuga într-o listă. Prima dvs. listă se creează acolo.</string>
     <string name="location_more_options">Mai multe opțiuni</string>
     <string name="location_row_options">Opțiuni pentru locație</string>
     <string name="location_enable_recents">Activați istoricul</string>

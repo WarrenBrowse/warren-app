@@ -365,7 +365,6 @@
     <string name="location_recents">最近使用した項目</string>
     <string name="location_all_locations">すべての場所</string>
     <string name="location_custom_lists">カスタムリスト</string>
-    <string name="location_custom_lists_empty_hint">ロケーションのメニューを開いてリストに追加します。最初のリストはそこで作成されます。</string>
     <string name="location_more_options">その他のオプション</string>
     <string name="location_row_options">ロケーションのオプション</string>
     <string name="location_enable_recents">最近の項目を有効化</string>

@@ -365,7 +365,6 @@
     <string name="location_recents">ล่าสุด</string>
     <string name="location_all_locations">ตำแหน่งที่ตั้งทั้งหมด</string>
     <string name="location_custom_lists">รายการกำหนดเอง</string>
-    <string name="location_custom_lists_empty_hint">เปิดเมนูของตำแหน่งเพื่อเพิ่มลงในรายการ รายการแรกของคุณถูกสร้างที่นั่น</string>
     <string name="location_more_options">ตัวเลือกเพิ่มเติม</string>
     <string name="location_row_options">ตัวเลือกตำแหน่ง</string>
     <string name="location_enable_recents">เปิดใช้งานล่าสุด</string>

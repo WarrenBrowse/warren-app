@@ -366,7 +366,6 @@
     <string name="location_recents">Sonkullanılanlar</string>
     <string name="location_all_locations">Tüm konumlar</string>
     <string name="location_custom_lists">Özel listeler</string>
-    <string name="location_custom_lists_empty_hint">Bir konumun menüsünü açarak listeye ekleyin. İlk listeniz orada oluşturulur.</string>
     <string name="location_more_options">Diğer seçenekler</string>
     <string name="location_row_options">Konum seçenekleri</string>
     <string name="location_enable_recents">Son filtreleri etkinleştir</string>

@@ -365,7 +365,6 @@
     <string name="location_recents">最近使用</string>
     <string name="location_all_locations">所有位置</string>
     <string name="location_custom_lists">自訂清單</string>
-    <string name="location_custom_lists_empty_hint">開啟某個位置的選單即可將其加入清單。您的第一個清單就在那裡建立。</string>
     <string name="location_more_options">更多選項</string>
     <string name="location_row_options">位置選項</string>
     <string name="location_enable_recents">啟用最近使用</string>

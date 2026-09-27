@@ -366,7 +366,6 @@
     <string name="location_recents">Senaste</string>
     <string name="location_all_locations">Alla platser</string>
     <string name="location_custom_lists">Anpassade listor</string>
-    <string name="location_custom_lists_empty_hint">Öppna menyn på en plats för att lägga till den i en lista. Din första lista skapas där.</string>
     <string name="location_more_options">Fler alternativ</string>
     <string name="location_row_options">Alternativ för plats</string>
     <string name="location_enable_recents">Aktivera senaste</string>

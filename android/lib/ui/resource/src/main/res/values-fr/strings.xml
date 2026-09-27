@@ -366,7 +366,6 @@
     <string name="location_recents">Récents</string>
     <string name="location_all_locations">Toutes les localisations</string>
     <string name="location_custom_lists">Listes personnalisées</string>
-    <string name="location_custom_lists_empty_hint">Ouvrez le menu d\'une localisation pour l\'ajouter à une liste. Votre première liste s\'y crée.</string>
     <string name="location_more_options">Plus d\'options</string>
     <string name="location_row_options">Options de la localisation</string>
     <string name="location_enable_recents">Activer les récents</string>

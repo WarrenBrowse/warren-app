@@ -162,6 +162,10 @@ internal sealed interface PickerRow {
     val position: Position?
         get() = null
 
+    /** True on the rows that open onto children, the only ones drawn with an expand chevron. */
+    val expandable: Boolean
+        get() = false
+
     fun withPosition(position: Position): PickerRow = this
 
     data class Gap(override val key: String) : PickerRow
@@ -172,10 +176,6 @@ internal sealed interface PickerRow {
 
     data object CustomListsHeader : PickerRow {
         override val key = "hdr-custom-lists"
-    }
-
-    data object CustomListsEmptyHint : PickerRow {
-        override val key = "hint-custom-lists"
     }
 
     data object AllLocationsHeader : PickerRow {
@@ -225,6 +225,8 @@ internal sealed interface PickerRow {
     ) : PickerRow {
         override val key = "country-$country"
 
+        override val expandable = true
+
         override fun withPosition(position: Position) = copy(position = position)
     }
 
@@ -237,6 +239,8 @@ internal sealed interface PickerRow {
         override val position: Position = Position.Single,
     ) : PickerRow {
         override val key = "cityhdr-$country-$city"
+
+        override val expandable = true
 
         /** Nesting depth, rendered as a design-system hierarchy rather than a card inset. */
         val depth: Int = 1
@@ -274,8 +278,14 @@ internal sealed interface PickerRow {
         val section: ExitSection,
         override val isPinned: Boolean,
         override val position: Position = Position.Single,
+        /** The city under the country name, on a row standing for a country with one exit. */
+        val subtitle: String? = null,
     ) : PickerRow {
         override val key = "${section.keyPrefix}-${relay.exitId}"
+
+        /** A row at the top of its section leads with its country's flag; a nested one does not. */
+        val flagCountry: String?
+            get() = relay.country.takeIf { depth == 0 }
 
         override fun withPosition(position: Position) = copy(position = position)
     }
@@ -496,34 +506,30 @@ internal fun buildPickerRows(
         add(PickerRow.Gap("gap-recents"))
     }
 
-    // The section is announced even with no list, because its row menu is the
-    // only way to create one; a search that matches no list hides it instead,
-    // so the results are not pushed down by an empty section.
-    if (!searching || customLists.isNotEmpty()) {
+    // A list is created from any exit's row menu, so the section appears only
+    // once there is a list to show.
+    if (customLists.isNotEmpty()) {
         add(PickerRow.CustomListsHeader)
-        if (customLists.isEmpty()) {
-            add(PickerRow.CustomListsEmptyHint)
-        } else {
-            customLists.forEach { section ->
+        customLists.forEach { section ->
                 add(PickerRow.CustomListHeader(section.name))
                 section.relays.forEach { relay ->
-                    add(
-                        PickerRow.ExitRow(
-                            relay = relay,
-                            title = exitTitle(relay),
-                            ordinal = null,
-                            depth = 0,
-                            section = ExitSection.Custom(section.name),
-                            isPinned = exitPin == ExitPin.Exit(relay.exitId),
-                        )
+                add(
+                    PickerRow.ExitRow(
+                        relay = relay,
+                        title = exitTitle(relay),
+                        ordinal = null,
+                        depth = 0,
+                        section = ExitSection.Custom(section.name),
+                        isPinned = exitPin == ExitPin.Exit(relay.exitId),
                     )
-                }
+                )
             }
         }
         add(PickerRow.Gap("gap-custom-lists"))
     }
 
-    add(PickerRow.AllLocationsHeader)
+    // The tree needs a title only to set it apart from a section above it.
+    if (isNotEmpty()) add(PickerRow.AllLocationsHeader)
     // Automatic heads the catalogue rather than floating between sections: it
     // is the widest scope of "all locations", so it rounds into the same block
     // as the countries below it.
@@ -531,6 +537,12 @@ internal fun buildPickerRows(
         add(PickerRow.ExitAutomaticRow(isPinned = exitPin == ExitPin.Automatic))
     }
     byCountry.forEach { (country, cityMap) ->
+        // A country with a single exit has nothing to expand: its row selects that exit.
+        val onlyExit = cityMap.values.singleOrNull()?.singleOrNull()
+        if (onlyExit != null) {
+            add(singleExitCountryRow(country, onlyExit, exitPin))
+            return@forEach
+        }
         val countryExpanded = searching || country in expandedCountries
         add(
             PickerRow.CountryHeader(
@@ -551,6 +563,23 @@ internal fun buildPickerRows(
         }
     }
 }
+
+private fun singleExitCountryRow(
+    country: String,
+    relay: WarrenRelaySummary,
+    exitPin: ExitPin,
+): PickerRow.ExitRow =
+    PickerRow.ExitRow(
+        relay = relay,
+        title = countryDisplayName(country),
+        ordinal = null,
+        depth = 0,
+        section = ExitSection.Country,
+        isPinned = exitPin == ExitPin.Exit(relay.exitId) ||
+            exitPin.pinsCountry(country) ||
+            exitPin.pinsCity(country, relay.city),
+        subtitle = relay.city.ifBlank { null },
+    )
 
 private fun MutableList<PickerRow>.addCityRows(
     country: String,
@@ -634,8 +663,10 @@ internal fun scrollTargetIndex(rows: List<PickerRow>): Int {
                     )
         }
     }
-    for (k in pinned downTo 0) if (rows[k] is PickerRow.CountryHeader) return k
-    return pinned
+    // A country holding a single exit is its own row, with no header above it.
+    val standsForCountry = (rows[pinned] as? PickerRow.ExitRow)?.depth == 0
+    val header = (pinned downTo 0).firstOrNull { rows[it] is PickerRow.CountryHeader }
+    return if (standsForCountry || header == null) pinned else header
 }
 
 /**

@@ -368,7 +368,6 @@
     <string name="location_recents">Нещодавні</string>
     <string name="location_all_locations">Усі розташування</string>
     <string name="location_custom_lists">Користувацькі списки</string>
-    <string name="location_custom_lists_empty_hint">Відкрийте меню розташування, щоб додати його до списку. Перший список створюється саме там.</string>
     <string name="location_more_options">Більше параметрів</string>
     <string name="location_row_options">Параметри розташування</string>
     <string name="location_enable_recents">Увімкнути нещодавні</string>

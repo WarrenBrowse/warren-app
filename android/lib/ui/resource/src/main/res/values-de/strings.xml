@@ -366,7 +366,6 @@
     <string name="location_recents">Zuletzt verwendet</string>
     <string name="location_all_locations">Alle Standorte</string>
     <string name="location_custom_lists">Eigene Listen</string>
-    <string name="location_custom_lists_empty_hint">Öffne das Menü an einem Standort, um ihn zu einer Liste hinzuzufügen. Deine erste Liste entsteht dort.</string>
     <string name="location_more_options">Weitere Optionen</string>
     <string name="location_row_options">Standortoptionen</string>
     <string name="location_enable_recents">Letzte aktivieren</string>

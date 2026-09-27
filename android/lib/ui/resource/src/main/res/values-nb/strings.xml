@@ -366,7 +366,6 @@
     <string name="location_recents">Nylige</string>
     <string name="location_all_locations">Alle steder</string>
     <string name="location_custom_lists">Tilpassede lister</string>
-    <string name="location_custom_lists_empty_hint">Åpne menyen på et sted for å legge det til i en liste. Den første listen din opprettes der.</string>
     <string name="location_more_options">Flere alternativer</string>
     <string name="location_row_options">Alternativer for sted</string>
     <string name="location_enable_recents">Aktiver nylige</string>

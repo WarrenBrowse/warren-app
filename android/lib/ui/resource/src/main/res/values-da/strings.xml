@@ -366,7 +366,6 @@
     <string name="location_recents">Seneste</string>
     <string name="location_all_locations">Alle placeringer</string>
     <string name="location_custom_lists">Brugerdefinerede lister</string>
-    <string name="location_custom_lists_empty_hint">Åbn menuen på en placering for at føje den til en liste. Din første liste oprettes der.</string>
     <string name="location_more_options">Flere valgmuligheder</string>
     <string name="location_row_options">Indstillinger for placering</string>
     <string name="location_enable_recents">Aktivér nylige</string>

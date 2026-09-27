@@ -366,7 +366,6 @@
     <string name="location_recents">Recent</string>
     <string name="location_all_locations">Alle locaties</string>
     <string name="location_custom_lists">Aangepaste lijsten</string>
-    <string name="location_custom_lists_empty_hint">Open het menu bij een locatie om die aan een lijst toe te voegen. Je eerste lijst maak je daar.</string>
     <string name="location_more_options">Meer opties</string>
     <string name="location_row_options">Locatieopties</string>
     <string name="location_enable_recents">Recente inschakelen</string>

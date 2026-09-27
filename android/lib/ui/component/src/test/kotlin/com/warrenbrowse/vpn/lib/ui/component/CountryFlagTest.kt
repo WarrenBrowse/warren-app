@@ -1,12 +1,12 @@
-package com.warrenbrowse.vpn.feature.home.impl.connect
+package com.warrenbrowse.vpn.lib.ui.component
 
 import com.warrenbrowse.vpn.lib.ui.resource.R
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Test
 
 /**
- * What the connection card's flag slot draws for a country code: the desktop
+ * What a flag slot draws for a country code: the desktop
  * flag artwork when the shared set has it, the emoji glyph when it does not,
  * nothing when the code is not a code (desktop CurrentCountryFlag).
  */

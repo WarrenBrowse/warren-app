@@ -368,7 +368,6 @@
     <string name="location_recents">Ostatnie</string>
     <string name="location_all_locations">Wszystkie lokalizacje</string>
     <string name="location_custom_lists">Listy niestandardowe</string>
-    <string name="location_custom_lists_empty_hint">Otwórz menu lokalizacji, aby dodać ją do listy. Twoja pierwsza lista powstaje właśnie tam.</string>
     <string name="location_more_options">Więcej opcji</string>
     <string name="location_row_options">Opcje lokalizacji</string>
     <string name="location_enable_recents">Włącz ostatnie</string>

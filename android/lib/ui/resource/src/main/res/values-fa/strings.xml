@@ -366,7 +366,6 @@
     <string name="location_recents">اخیر</string>
     <string name="location_all_locations">تمام مکان‌ها</string>
     <string name="location_custom_lists">فهرست‌های سفارشی</string>
-    <string name="location_custom_lists_empty_hint">برای افزودن یک مکان به فهرست، منوی آن را باز کنید. نخستین فهرست شما همان‌جا ساخته می‌شود.</string>
     <string name="location_more_options">گزینه‌های بیشتر</string>
     <string name="location_row_options">گزینه‌های مکان</string>
     <string name="location_enable_recents">فعال کردن موارد اخیر</string>

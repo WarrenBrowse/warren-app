@@ -370,7 +370,6 @@
     <string name="location_recents">الأخيرة</string>
     <string name="location_all_locations">جميع المواقع</string>
     <string name="location_custom_lists">قوائم مُخصَّصة</string>
-    <string name="location_custom_lists_empty_hint">افتح القائمة على أي موقع لإضافته إلى قائمة. تُنشأ قائمتك الأولى من هناك.</string>
     <string name="location_more_options">خيارات إضافية</string>
     <string name="location_row_options">خيارات الموقع</string>
     <string name="location_enable_recents">تفعيل المواقع الحديثة</string>
