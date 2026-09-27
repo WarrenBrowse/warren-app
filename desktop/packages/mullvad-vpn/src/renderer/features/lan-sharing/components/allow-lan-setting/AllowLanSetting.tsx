@@ -129,7 +129,9 @@ export function AllowLanSetting({ position, ...props }: AllowLanSettingProps) {
                     )}
                     <LanIpRanges>
                       {lanNetworks.networks.map((network) => (
-                        <li key={network}>{network}</li>
+                        <li key={network}>
+                          <bdi dir="ltr">{network}</bdi>
+                        </li>
                       ))}
                     </LanIpRanges>
                   </ModalMessage>
@@ -243,7 +245,10 @@ function NetworkItem({ network, onRemove }: NetworkItemProps) {
 
   return (
     <StyledNetworkContainer>
-      <StyledLabel>{network}</StyledLabel>
+      {/* An address reads left to right in every language. */}
+      <StyledLabel>
+        <bdi dir="ltr">{network}</bdi>
+      </StyledLabel>
       <IconButton
         variant="secondary"
         onClick={remove}

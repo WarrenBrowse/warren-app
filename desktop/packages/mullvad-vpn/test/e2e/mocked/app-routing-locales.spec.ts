@@ -296,5 +296,53 @@ for (const locale of LOCALES) {
       await page.keyboard.press('Escape');
       await expect(dialog).not.toBeVisible();
     });
+
+    test('fits the shared networks of Local network sharing', async () => {
+      const networks = ['10.0.0.0/8', '192.168.0.0/16', 'fc00::/7', '400::/7'];
+      await util.ipc.settings[''].notify({
+        ...getDefaultSettings(),
+        appRouting,
+        allowLan: true,
+        lanNetworks: { networks, custom: true },
+      });
+      await page.getByRole('button', { name: t('', 'Close'), exact: true }).click();
+      await util.expectRoute(RoutePath.main);
+      await page.getByRole('button', { name: t('', 'Settings'), exact: true }).click();
+      await util.expectRoute(RoutePath.settings);
+      await page.getByRole('button', { name: t('settings-view', 'VPN settings') }).click();
+      await util.expectRoute(RoutePath.vpnSettings);
+
+      const view = page;
+      await expect(
+        view.getByText(
+          t('vpn-settings-view', 'Traffic to these networks goes outside the VPN tunnel.'),
+        ),
+      ).toBeVisible();
+      // Addresses read left to right in every catalog, right-to-left ones included.
+      await expect(view.getByText('192.168.0.0/16', { exact: true })).toHaveCSS('direction', 'ltr');
+      const reset = view.getByText(t('vpn-settings-view', 'Reset to default'), { exact: true });
+      await expect(reset).toBeVisible();
+      const add = view.getByText(t('vpn-settings-view', 'Add a network'), { exact: true });
+      await add.click();
+      const field = view.getByPlaceholder(
+        t('vpn-settings-view', 'Enter a network, e.g. 192.168.1.0/24'),
+      );
+      await field.fill('0.0.0.0/0');
+      await page.keyboard.press('Enter');
+      await expect(
+        view.getByText(
+          t('vpn-settings-view', 'This network is too broad to be shared outside the tunnel.'),
+        ),
+      ).toBeVisible();
+      expect(await clipped(reset)).toEqual([]);
+      expect(await clipped(add)).toEqual([]);
+      await shot('09-shared-networks');
+
+      await field.blur();
+      await page.getByRole('button', { name: t('', 'Back'), exact: true }).click();
+      await util.expectRoute(RoutePath.settings);
+      await page.getByRole('button', { name: t('', 'Close'), exact: true }).click();
+      await util.expectRoute(RoutePath.main);
+    });
   });
 }

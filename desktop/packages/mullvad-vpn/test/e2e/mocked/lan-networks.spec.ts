@@ -75,7 +75,11 @@ test.describe('Local network sharing networks', () => {
 
     const [removed] = await Promise.all([
       util.ipc.settings.setLanNetworks.expect(),
-      page.getByText('10.0.0.0/8').locator('..').getByRole('button').click(),
+      page
+        .getByText('10.0.0.0/8', { exact: true })
+        .locator('xpath=ancestor::*[.//button][1]')
+        .getByRole('button')
+        .click(),
     ]);
     expect(removed).toEqual(custom.filter((network) => network !== '10.0.0.0/8'));
 
