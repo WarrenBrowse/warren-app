@@ -874,13 +874,21 @@ mod tests {
         // The real failure: only ~/.config/<display name>/logs was ever tried,
         // so a machine whose Electron used another base reported an error block
         // instead of the frontend logs.
-        let out = joined(&every_base(), TargetOs::Linux);
+        let dirs = every_base();
+        let candidates = dirs.candidates_for(TargetOs::Linux);
+        let out = joined(&dirs, TargetOs::Linux);
+        // Compared by components: on a Windows host the joins below the base
+        // use `\`, and the Linux branch is exercised on every host.
         assert!(
-            out.contains("/home/tester/.myconfig/"),
+            candidates
+                .iter()
+                .any(|p| p.starts_with("/home/tester/.myconfig")),
             "XDG_CONFIG_HOME is what Electron honours: {out}"
         );
         assert!(
-            out.contains("/home/tester/.config/"),
+            candidates
+                .iter()
+                .any(|p| p.starts_with("/home/tester/.config")),
             "the XDG default stays a candidate: {out}"
         );
         assert!(
