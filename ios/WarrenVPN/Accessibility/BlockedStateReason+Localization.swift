@@ -57,6 +57,11 @@ extension BlockedStateReason {
             Self.banMessage(portForwarding: true)
         case .accountBanned:
             Self.banMessage(portForwarding: false)
+        case .tooManyDevices:
+            NSLocalizedString(
+                "Too many simultaneous connections on this account. Disconnect another device or try connecting again shortly.",
+                comment: ""
+            )
         default:
             NSLocalizedString(
                 "Unable to start tunnel connection. Please report the problem on our community forum.",

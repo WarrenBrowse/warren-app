@@ -138,7 +138,7 @@ enum TunnelState: Equatable, CustomStringConvertible, Sendable {
     var isSecured: Bool {
         switch self {
         case .reconnecting, .connecting, .connected, .waitingForConnectivity(.noConnection), .error(.accountExpired),
-            .error(.deviceRevoked), .error(.offline), .negotiatingEphemeralPeer:
+            .error(.tooManyDevices), .error(.deviceRevoked), .error(.offline), .negotiatingEphemeralPeer:
             true
         case .pendingReconnect, .disconnecting, .disconnected, .waitingForConnectivity(.noNetwork), .error:
             false

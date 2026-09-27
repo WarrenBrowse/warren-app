@@ -492,7 +492,7 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
                 defaults.removeObject(forKey: WarrenAppGroupKey.accountBanLapsesAt.rawValue)
             }
             Self.clearNatPmpKeys(in: defaults)
-        case .disconnected, .unauthorized:
+        case .disconnected, .unauthorized, .deviceLimit, .tokensRefused:
             // The mapping dies with the session (the exit frees the lease
             // and the refresh loop is torn down), so a stale "open" must
             // not survive into the next session or app launch. A refusal ends

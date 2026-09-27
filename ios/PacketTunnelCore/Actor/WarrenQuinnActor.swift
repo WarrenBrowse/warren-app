@@ -135,8 +135,31 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
         }
     }
 
-    public init() {
+    /// Whether the subscription is known to be active right now, asked when
+    /// the exit refuses the session. See [`applyEvent(_:)`].
+    private let subscriptionIsActive: @Sendable () -> Bool
+
+    public init(
+        subscriptionIsActive: @escaping @Sendable () -> Bool = { WarrenQuinnActor.storedSubscriptionIsActive() }
+    ) {
+        self.subscriptionIsActive = subscriptionIsActive
         logger.info("WarrenQuinnActor initialized")
+    }
+
+    /// Whether the subscription expiry the app stored says the subscription
+    /// is active now. `false` when it has run out, and when the app never
+    /// fetched one: a wallet-backed login stores the open-ended placeholder
+    /// `.distantFuture` until the account API answers.
+    public static func storedSubscriptionIsActive() -> Bool {
+        hasActiveSubscription(in: try? SettingsManager.readDeviceState(), at: Date())
+    }
+
+    /// See [`storedSubscriptionIsActive()`].
+    static func hasActiveSubscription(in deviceState: DeviceState?, at now: Date) -> Bool {
+        guard case let .loggedIn(account, _) = deviceState, account.expiry != .distantFuture else {
+            return false
+        }
+        return account.expiry > now
     }
 
     // MARK: - Binding + event dispatch
@@ -182,6 +205,12 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
             break
         }
 
+        // Read before the lock: it reaches the settings store.
+        var activeSubscription = false
+        if case .tokensRefused = event {
+            activeSubscription = subscriptionIsActive()
+        }
+
         var disconnectContinuation: CheckedContinuation<Void, Never>? = nil
         stateLock.lock()
         // `connected`/`reconnecting`/`failover` carry no payload, so we rebuild
@@ -198,7 +227,14 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
                 .map { .reconnecting(observedConnectionState(from: $0)) } ?? .initial
         case .disconnected:
             nextState = .disconnected
-        case .unauthorized:
+        case .tokensRefused where activeSubscription:
+            // The exit refused every session token without saying why,
+            // although the subscription is active: an exit too old to name the
+            // device limit refuses a token another device of the wallet holds
+            // as it refuses one that does not verify. The out-of-time screen
+            // would send a paying user to renew for nothing.
+            nextState = .error(ObservedBlockedState(reason: .tooManyDevices))
+        case .unauthorized, .tokensRefused:
             // The exit refused this account, which is the same thing the app
             // already knows how to present: `ApplicationCoordinator` routes an
             // `.accountExpired` blocked state to the out-of-time screen, and
@@ -206,6 +242,8 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
             // a plain disconnect, none of that ran and the user was told
             // nothing at all.
             nextState = .error(ObservedBlockedState(reason: .accountExpired))
+        case .deviceLimit:
+            nextState = .error(ObservedBlockedState(reason: .tooManyDevices))
         case .banned(let reason, _):
             // A suspension, which neither the out-of-time screen nor a plain
             // disconnect describes. Its `[BANNED*]` token says whether it is

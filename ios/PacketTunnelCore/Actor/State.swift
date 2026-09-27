@@ -235,6 +235,10 @@ public enum BlockedStateReason: String, Codable, Equatable, Sendable {
     /// The wallet is banned for port-forwarding abuse.
     case accountBannedPortForwarding
 
+    /// The account already uses its maximum number of simultaneous devices.
+    /// Not an expiry: it clears once another device disconnects.
+    case tooManyDevices
+
     /// Device revoked.
     case deviceRevoked
 
@@ -263,7 +267,7 @@ public enum BlockedStateReason: String, Codable, Equatable, Sendable {
             .invalidRelayPublicKey, .noRelaysSatisfyingObfuscationPortConstraints, .offline:
             return true
         case .deviceRevoked, .deviceLoggedOut, .tunnelAdapter, .accountExpired, .invalidAccount, .unknown,
-            .accountBanned, .accountBannedPortForwarding:
+            .accountBanned, .accountBannedPortForwarding, .tooManyDevices:
             return false
         }
     }

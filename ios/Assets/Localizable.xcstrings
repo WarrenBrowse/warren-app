@@ -87454,6 +87454,148 @@
         }
       }
     },
+    "Too many simultaneous connections on this account. Disconnect another device or try connecting again shortly.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هناك الكثير من الاتصالات المتزامنة على هذا الحساب. يُرجى قطع اتصال جهاز آخر أو محاولة الاتصال مجددًا بعد قليل."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For mange samtidige forbindelser på denne konto. Afbryd en anden enhed, eller prøv at oprette forbindelse igen snart."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zu viele gleichzeitige Verbindungen mit diesem Konto. Trennen Sie ein anderes Gerät oder versuchen Sie sich gleich erneut zu verbinden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hay demasiadas conexiones simultáneas en la cuenta. Desconecte otro dispositivo o intente volver a conectarse más tarde."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتصالات هم‌زمان این حساب بیش از حد مجاز است. یکی از دستگاه‌ها را قطع نمایید یا کمی بعد دوباره تلاش کنید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tällä tilillä on liian monta samanaikaista yhteyttä. Katkaise toisen laitteen yhteys tai yritä hetken kuluttua uudelleen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trop de connexions simultanées sur ce compte. Déconnectez un autre appareil ou réessayez de vous connecter dans un instant."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Troppe connessioni simultanee per questo account. Disconnetti l'altro dispositivo o prova a riconnetterti a breve."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このアカウントの同時接続が多すぎます。他のデバイスを切断するか、少し待ってから再接続してみてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 계정에 동시 연결이 너무 많습니다. 다른 장치의 연결을 끊거나 잠시 후 다시 연결해 보세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဤအကောင့်တွင် တစ်ပြိုင်နက် ချိတ်ဆက်မှုများ များလွန်းနေပါသည်။ အခြားစက်တွင် ချိတ်ဆက်မှု ဖြုတ်ပေးပါ သို့မဟုတ် ခဏကြာပြီးနောက် ထပ်မံချိတ်ဆက်ကြည့်ပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "For mange simultantilkoblinger på denne kontoen. Koble fra en annen enhet eller prøv å koble til igjen snart."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te veel gelijktijdige verbindingen op dit account. Verbreek de verbinding van een ander apparaat of probeer later opnieuw te verbinden."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zbyt wiele jednoczesnych połączeń na koncie. Odłącz jedno z połączonych urządzeń lub spróbuj połączyć się ponownie za chwilę."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Conta com demasiadas ligações simultâneas. Desligue outro dispositivo ou tente ligar-se novamente em breve."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Există prea multe conexiuni simultane pe acest cont. Deconectați un alt dispozitiv sau încercați să vă reconectați în scurt timp."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Слишком много одновременных подключений с этой учетной записи. Отключите другое устройство или попробуйте подключиться еще раз через некоторое время."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Det här kontot har för många samtidiga anslutningar. Koppla från en annan enhet eller försök att ansluta igen inom kort."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "มีการเชื่อมต่อพร้อมกันมากเกินไปบนบัญชีนี้ โปรดตัดการเชื่อมต่อจากอุปกรณ์อีกเครื่อง หรือลองเชื่อมต่อใหม่อีกครั้งในอีกสักครู่"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu hesabın çok fazla eş zamanlı bağlantısı var. Diğer cihazlardan bir tanesinin bağlantısını kesin veya kısa süre sonra tekrar bağlanmayı deneyin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Забагато одночасних підключень для облікового запису. Від’єднайте інший пристрій або спробуйте ще раз пізніше."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此帐户的同步连接数过多。请断开另一个设备或者稍后再次尝试连接。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此帳戶的同步連線數過多。請中斷另一台裝置的連線，或者稍後再次嘗試連線。"
+          }
+        }
+      }
+    },
     "Toronto": {
       "localizations": {
         "ar": {

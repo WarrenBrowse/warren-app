@@ -207,6 +207,15 @@ public enum WarrenTunnelEvent: Sendable {
     /// opening on its `[BANNED*]` token, and when the ban lapses, `nil` when
     /// the source did not say. Terminal like `unauthorized`.
     case banned(reason: String, lapsesAt: Date?)
+    /// The account already uses its maximum number of simultaneous devices:
+    /// every session token of the wallet is held by its other devices, or the
+    /// exit refused another wallet-signed session past the cap. Terminal like
+    /// `unauthorized`, until one of them disconnects.
+    case deviceLimit
+    /// The exit refused every session token without saying why. Terminal like
+    /// `unauthorized`: the device limit when the subscription is known to be
+    /// active, an expiry otherwise.
+    case tokensRefused
     case reconnecting
     case failover(toExit: String)
     case natPmpMapped(internalPort: UInt16, externalPort: UInt16, lifetime: UInt32)
@@ -528,6 +537,8 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
         // turned a policy refusal into a plain disconnect.
         case Unauthorized: mappedState = .failed("subscription expired")
         case Banned: mappedState = .failed("account banned")
+        case DeviceLimit: mappedState = .failed("device limit")
+        case TokensRefused: mappedState = .failed("session tokens refused")
         default: mappedState = .disconnected
         }
         let connectedDuration: UInt64? =
@@ -914,6 +925,8 @@ private let eventCallbackBridge:
         case EventConnected: mapped = .connected
         case EventDisconnected: mapped = .disconnected
         case EventUnauthorized: mapped = .unauthorized
+        case EventDeviceLimit: mapped = .deviceLimit
+        case EventTokensRefused: mapped = .tokensRefused
         case EventBanned:
             let reason = event.data_ban_reason.flatMap { String(cString: $0) } ?? ""
             let lapses = event.data_ban_lapses_at_unix_secs

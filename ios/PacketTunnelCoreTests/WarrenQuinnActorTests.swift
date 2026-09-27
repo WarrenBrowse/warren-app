@@ -117,6 +117,88 @@ final class WarrenQuinnActorTests: XCTestCase {
         XCTAssertEqual(blocked.reason, .accountExpired)
     }
 
+    /// The exit refused every session token as held by the wallet's other
+    /// devices, or another wallet-signed session past the cap: the device
+    /// limit, which the out-of-time screen would misname.
+    func test_applyEvent_deviceLimit_surfacesTooManyDevices() async {
+        let actor = makeStartedActor()
+        actor.applyEvent(.connected)
+        actor.applyEvent(.deviceLimit)
+        let state = await actor.observedState
+        guard case let .error(blocked) = state else {
+            return XCTFail("Expected .error, got \(state)")
+        }
+        XCTAssertEqual(blocked.reason, .tooManyDevices)
+    }
+
+    /// An exit too old to say why refuses a token another device holds as it
+    /// refuses an invalid one. When the stored subscription is active, every
+    /// token refused without a reason is the device limit, never an expiry.
+    func test_applyEvent_tokensRefused_withAnActiveSubscription_surfacesTooManyDevices() async {
+        let actor = makeStartedActor(subscriptionIsActive: { true })
+        actor.applyEvent(.connected)
+        actor.applyEvent(.tokensRefused)
+        let state = await actor.observedState
+        guard case let .error(blocked) = state else {
+            return XCTFail("Expected .error, got \(state)")
+        }
+        XCTAssertEqual(blocked.reason, .tooManyDevices)
+    }
+
+    /// Without an active subscription it is what it always was: an expiry.
+    func test_applyEvent_tokensRefused_withoutAnActiveSubscription_surfacesTheExpiredAccount() async {
+        let actor = makeStartedActor(subscriptionIsActive: { false })
+        actor.applyEvent(.connected)
+        actor.applyEvent(.tokensRefused)
+        let state = await actor.observedState
+        guard case let .error(blocked) = state else {
+            return XCTFail("Expected .error, got \(state)")
+        }
+        XCTAssertEqual(blocked.reason, .accountExpired)
+    }
+
+    /// A refusal of the wallet-signed login is the exit's word on the
+    /// account, whatever the stored expiry says.
+    func test_applyEvent_unauthorized_withAnActiveSubscription_staysAnExpiry() async {
+        let actor = makeStartedActor(subscriptionIsActive: { true })
+        actor.applyEvent(.connected)
+        actor.applyEvent(.unauthorized)
+        let state = await actor.observedState
+        guard case let .error(blocked) = state else {
+            return XCTFail("Expected .error, got \(state)")
+        }
+        XCTAssertEqual(blocked.reason, .accountExpired)
+    }
+
+    func test_hasActiveSubscription_onlyForAFetchedExpiryStillAhead() {
+        let now = Date()
+        func loggedIn(expiry: Date) -> DeviceState {
+            guard case let .loggedIn(account, device) = DeviceState.walletBacked(
+                ss58Address: "wb-test",
+                publicKeyHex: String(repeating: "ab", count: 32)
+            ) else {
+                preconditionFailure("walletBacked is a logged-in state")
+            }
+            var stored = account
+            stored.expiry = expiry
+            return .loggedIn(stored, device)
+        }
+
+        XCTAssertTrue(
+            WarrenQuinnActor.hasActiveSubscription(in: loggedIn(expiry: now.addingTimeInterval(3600)), at: now)
+        )
+        XCTAssertFalse(
+            WarrenQuinnActor.hasActiveSubscription(in: loggedIn(expiry: now.addingTimeInterval(-1)), at: now),
+            "an expiry in the past is an expired subscription"
+        )
+        XCTAssertFalse(
+            WarrenQuinnActor.hasActiveSubscription(in: loggedIn(expiry: .distantFuture), at: now),
+            "the wallet-backed placeholder says nothing about the subscription"
+        )
+        XCTAssertFalse(WarrenQuinnActor.hasActiveSubscription(in: .loggedOut, at: now))
+        XCTAssertFalse(WarrenQuinnActor.hasActiveSubscription(in: nil, at: now))
+    }
+
     /// The ordinary teardown must NOT be dressed up as an expiry.
     func test_applyEvent_disconnected_staysAPlainDisconnect() async {
         let actor = makeStartedActor()
@@ -343,9 +425,10 @@ final class WarrenQuinnActorTests: XCTestCase {
     /// stub relays, so it has captured a connection context and `.connected`
     /// events surface a real `ObservedConnectionState`.
     private func makeStartedActor(
-        adapter: WarrenQuinnAdapting = MockWarrenQuinnAdapter()
+        adapter: WarrenQuinnAdapting = MockWarrenQuinnAdapter(),
+        subscriptionIsActive: @escaping @Sendable () -> Bool = { false }
     ) -> WarrenQuinnActor {
-        let actor = WarrenQuinnActor()
+        let actor = WarrenQuinnActor(subscriptionIsActive: subscriptionIsActive)
         actor.bindAdapter(adapter)
         actor.bindWalletSigningSeed(Data(repeating: 0xAB, count: 32))
         actor.start(options: StartOptions(
