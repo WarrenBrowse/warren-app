@@ -454,7 +454,7 @@ jobs:
         -p mullvad-management-interface -p mullvad-cli -p mullvad-paths
         -p mullvad-setup -p mullvad-problem-report -p mullvad-update
         -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p talpid-app-routing
-        -p talpid-types -p talpid-windows -p talpid-routing -p talpid-tunnel
+        -p warren-app-routes -p talpid-types -p talpid-windows -p talpid-routing -p talpid-tunnel
         -p talpid-platform-metadata
         -p warren-forum -p warren-product-env -p warren-standing
         --features mullvad-update/sign,mullvad-update/client
