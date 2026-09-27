@@ -81,7 +81,7 @@ fn pseudo_v6(src: [u8; 16], dst: [u8; 16], next_header: u8, len: usize) -> Vec<u
 }
 
 /// The sequence number of the segments built without one.
-pub const DEFAULT_SEQ: u32 = 0x0102_0304;
+const DEFAULT_SEQ: u32 = 0x0102_0304;
 
 fn tcp_segment(sport: u16, dport: u16, flags: u8, payload: &[u8]) -> Vec<u8> {
     tcp_segment_numbered(sport, dport, flags, DEFAULT_SEQ, 0, payload)

@@ -4,10 +4,11 @@
 //! A connection lives at the exit it was opened through. Once its app leaves
 //! through another session, the old exit no longer sees its packets and the
 //! new one drops them as unknown, so the app would wait on the connection
-//! until its own timeouts (a browser kept waiting on its name resolution until
-//! it was restarted). The router answers for the remote end instead, with a
-//! reset the app's stack accepts: one whose sequence number is exactly the
-//! next the app expects (RFC 9293 section 3.10.7.4, RFC 5961 section 3).
+//! until its own timeouts. The router answers for the remote end instead,
+//! with a reset the app's stack accepts: one whose sequence number is exactly
+//! the next the app expects (RFC 9293 section 3.10.7.4, RFC 5961 section 3).
+//! A UDP flow is told its port is unreachable (RFC 1122 section 4.1.3.3),
+//! which a connected socket reports to its app as a refused connection.
 
 use std::net::IpAddr;
 
@@ -77,6 +78,9 @@ pub(crate) fn segment(packet: &[u8]) -> Option<Segment> {
     let tcp = packet.get(layout.l4_offset..layout.end)?;
     let header = tcp.get(..TCP_HEADER)?;
     let data_offset = usize::from(header[12] >> 4) * 4;
+    if data_offset < TCP_HEADER {
+        return None;
+    }
     let payload = tcp.len().checked_sub(data_offset)?;
     let flags = header[13];
     let control = u32::from(flags & FLAG_SYN != 0) + u32::from(flags & FLAG_FIN != 0);
@@ -117,6 +121,83 @@ pub(crate) fn answer(flow: &FlowKey, segment: &Segment) -> Option<Vec<u8>> {
     })
 }
 
+/// An ICMP port unreachable from the remote end of the UDP `flow` to its
+/// local end, quoting a datagram of the flow so the local stack finds the
+/// socket.
+pub(crate) fn unreachable_toward_app(flow: &FlowKey) -> Option<Vec<u8>> {
+    if flow.transport != Transport::Udp {
+        return None;
+    }
+    let mut udp = [0u8; 8];
+    udp[0..2].copy_from_slice(&flow.local.port().to_be_bytes());
+    udp[2..4].copy_from_slice(&flow.remote.port().to_be_bytes());
+    udp[4..6].copy_from_slice(&8u16.to_be_bytes());
+    let (local, remote) = (flow.local.ip(), flow.remote.ip());
+    Some(match (local, remote) {
+        (IpAddr::V4(local), IpAddr::V4(remote)) => {
+            let quoted = [
+                ipv4_header(local.octets(), remote.octets(), ip::PROTO_UDP, udp.len()).as_slice(),
+                &udp,
+            ]
+            .concat();
+            let mut icmp = vec![3, 3, 0, 0, 0, 0, 0, 0];
+            icmp.extend_from_slice(&quoted);
+            let sum = checksum(&[&icmp]);
+            icmp[2..4].copy_from_slice(&sum.to_be_bytes());
+            let mut packet =
+                ipv4_header(remote.octets(), local.octets(), ip::PROTO_ICMP, icmp.len()).to_vec();
+            packet.extend_from_slice(&icmp);
+            packet
+        }
+        _ => {
+            let (local, remote) = (v6(local), v6(remote));
+            let quoted = [
+                ipv6_header(local, remote, ip::PROTO_UDP, udp.len()).as_slice(),
+                &udp,
+            ]
+            .concat();
+            let mut icmp = vec![1, 4, 0, 0, 0, 0, 0, 0];
+            icmp.extend_from_slice(&quoted);
+            let sum = checksum(&[
+                &remote,
+                &local,
+                &(icmp.len() as u32).to_be_bytes(),
+                &[0, 0, 0, ip::PROTO_ICMPV6],
+                &icmp,
+            ]);
+            icmp[2..4].copy_from_slice(&sum.to_be_bytes());
+            let mut packet = ipv6_header(remote, local, ip::PROTO_ICMPV6, icmp.len()).to_vec();
+            packet.extend_from_slice(&icmp);
+            packet
+        }
+    })
+}
+
+fn ipv4_header(src: [u8; 4], dst: [u8; 4], protocol: u8, payload: usize) -> [u8; 20] {
+    let mut header = [0u8; 20];
+    header[0] = 0x45;
+    header[2..4].copy_from_slice(&((20 + payload) as u16).to_be_bytes());
+    header[6] = 0x40;
+    header[8] = 64;
+    header[9] = protocol;
+    header[12..16].copy_from_slice(&src);
+    header[16..20].copy_from_slice(&dst);
+    let sum = checksum(&[&header]);
+    header[10..12].copy_from_slice(&sum.to_be_bytes());
+    header
+}
+
+fn ipv6_header(src: [u8; 16], dst: [u8; 16], next_header: u8, payload: usize) -> [u8; 40] {
+    let mut header = [0u8; 40];
+    header[0] = 0x60;
+    header[4..6].copy_from_slice(&(payload as u16).to_be_bytes());
+    header[6] = next_header;
+    header[7] = 64;
+    header[8..24].copy_from_slice(&src);
+    header[24..40].copy_from_slice(&dst);
+    header
+}
+
 /// A bare reset from the remote end of `flow` to its local end, acknowledging
 /// `ack` when there is one.
 fn build(flow: &FlowKey, seq: u32, ack: Option<u32>) -> Vec<u8> {
@@ -130,16 +211,6 @@ fn build(flow: &FlowKey, seq: u32, ack: Option<u32>) -> Vec<u8> {
     let (src, dst) = (flow.remote.ip(), flow.local.ip());
     let mut packet = match (src, dst) {
         (IpAddr::V4(src), IpAddr::V4(dst)) => {
-            let mut header = [0u8; 20];
-            header[0] = 0x45;
-            header[2..4].copy_from_slice(&((20 + TCP_HEADER) as u16).to_be_bytes());
-            header[6] = 0x40;
-            header[8] = 64;
-            header[9] = ip::PROTO_TCP;
-            header[12..16].copy_from_slice(&src.octets());
-            header[16..20].copy_from_slice(&dst.octets());
-            let sum = checksum(&[&header]);
-            header[10..12].copy_from_slice(&sum.to_be_bytes());
             let sum = checksum(&[
                 &src.octets(),
                 &dst.octets(),
@@ -148,17 +219,10 @@ fn build(flow: &FlowKey, seq: u32, ack: Option<u32>) -> Vec<u8> {
                 &tcp,
             ]);
             tcp[16..18].copy_from_slice(&sum.to_be_bytes());
-            header.to_vec()
+            ipv4_header(src.octets(), dst.octets(), ip::PROTO_TCP, TCP_HEADER).to_vec()
         }
         _ => {
             let (src, dst) = (v6(src), v6(dst));
-            let mut header = [0u8; 40];
-            header[0] = 0x60;
-            header[4..6].copy_from_slice(&(TCP_HEADER as u16).to_be_bytes());
-            header[6] = ip::PROTO_TCP;
-            header[7] = 64;
-            header[8..24].copy_from_slice(&src);
-            header[24..40].copy_from_slice(&dst);
             let sum = checksum(&[
                 &src,
                 &dst,
@@ -167,7 +231,7 @@ fn build(flow: &FlowKey, seq: u32, ack: Option<u32>) -> Vec<u8> {
                 &tcp,
             ]);
             tcp[16..18].copy_from_slice(&sum.to_be_bytes());
-            header.to_vec()
+            ipv6_header(src, dst, ip::PROTO_TCP, TCP_HEADER).to_vec()
         }
     };
     packet.extend_from_slice(&tcp);
@@ -341,6 +405,37 @@ mod tests {
     #[test]
     fn a_reset_is_never_answered() {
         assert_eq!(answer(&flow(), &sent(TCP_RST | TCP_ACK, 1, 2, b"")), None);
+    }
+
+    #[test]
+    fn a_segment_claiming_a_header_shorter_than_twenty_bytes_has_no_numbers() {
+        let mut packet = tcp_v4(LOCAL, REMOTE, 50000, 443, TCP_ACK, b"");
+        packet[20 + 12] = 0x40;
+
+        assert_eq!(segment(&packet), None);
+    }
+
+    #[test]
+    fn an_ipv6_datagram_flow_is_told_its_port_is_unreachable_in_icmpv6() {
+        let flow = FlowKey {
+            transport: Transport::Udp,
+            local: SocketAddr::new(IpAddr::from(LOCAL6), 50000),
+            remote: SocketAddr::new(IpAddr::from(REMOTE6), 443),
+        };
+
+        let error = unreachable_toward_app(&flow).unwrap();
+
+        assert_eq!((error[6], error[40], error[41]), (58, 1, 4));
+        assert!(transport_ok(&error));
+        assert_eq!(
+            crate::flow::classify(&error, crate::flow::Direction::Downlink).unwrap(),
+            crate::flow::Classified::IcmpError { key: flow }
+        );
+    }
+
+    #[test]
+    fn only_a_datagram_flow_is_told_its_port_is_unreachable() {
+        assert_eq!(unreachable_toward_app(&flow()), None);
     }
 
     #[test]

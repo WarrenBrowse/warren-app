@@ -44,6 +44,10 @@ const PROCESS_CAPACITY: usize = 4096;
 const FRAGMENT_CAPACITY: usize = 256;
 const FRAGMENT_TIMEOUT: Duration = Duration::from_secs(10);
 const SWEEP_INTERVAL: Duration = Duration::from_secs(5);
+/// Resets waiting to be written at most: the main device drains them at every
+/// read, so only a stalled writer reaches this, and a connection whose reset
+/// is not queued is left to its app's timeouts.
+const MAX_QUEUED_RESETS: usize = 4096;
 
 /// A route session, by its index in the policy.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -204,6 +208,9 @@ pub struct Counters {
     pub dropped_packets: u64,
     /// TCP connections reset toward their app because it changed session.
     pub reset_flows: u64,
+    /// UDP flows told their port is unreachable because their app changed
+    /// session.
+    pub refused_flows: u64,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -372,7 +379,9 @@ impl<R: OwnerResolver> Router<R> {
     }
 
     /// What `policy` decides for each process holding a tracked flow, for the
-    /// processes that still run the program they ran.
+    /// processes that still run the program they ran. The OS is asked once
+    /// per process, under the table's lock: a policy change holds the packet
+    /// path that long, as the first flow of a process does.
     fn decide_again(&mut self, policy: &Policy) -> HashMap<ProcessKey, Option<RouteId>> {
         let Some(flows) = &self.flows else {
             return HashMap::new();
@@ -451,12 +460,25 @@ impl<R: OwnerResolver> Router<R> {
                     }
                 }
                 _ if key.transport == Transport::Tcp => {
-                    resets.extend(reset::toward_app(key, tracked.app_side));
+                    if resets.len() < MAX_QUEUED_RESETS {
+                        resets.extend(reset::toward_app(key, tracked.app_side));
+                    }
                     counters.reset_flows += 1;
                     tracked.binding = Binding::Reset;
                     Revision::Close
                 }
-                _ => Revision::Forget,
+                // A connected socket (QUIC) is told its port is unreachable,
+                // so its app drops it and connects again rather than migrate
+                // the connection, which would show the server one connection
+                // arriving from both exits. The next datagram of a socket
+                // that carries on is attributed again.
+                _ => {
+                    if resets.len() < MAX_QUEUED_RESETS {
+                        resets.extend(reset::unreachable_toward_app(key));
+                    }
+                    counters.refused_flows += 1;
+                    Revision::Forget
+                }
             }
         });
     }
@@ -496,6 +518,7 @@ impl<R: OwnerResolver> Router<R> {
                     self.uplink_fragments.remember(fragment, binding, arrived);
                 }
                 if binding == Binding::Reset
+                    && self.resets.len() < MAX_QUEUED_RESETS
                     && let Some(answer) = segment.and_then(|segment| reset::answer(&key, &segment))
                 {
                     self.resets.push(answer);
@@ -629,8 +652,12 @@ impl<R: OwnerResolver> Router<R> {
             return tracked.binding;
         }
         // Only connections reset by the last policy are still tracked: a
-        // flow never seen is no app's route.
+        // flow never seen is no app's route, and a connection opening on the
+        // ports of a closing one is a new one.
         if !self.policy.is_active() {
+            if opening && let Some(flows) = &mut self.flows {
+                flows.remove(&key);
+            }
             return Binding::Main;
         }
         let (binding, process) = self.attribute(&key, opening, arrived);
@@ -1807,7 +1834,10 @@ mod tests {
     /// An established connection of the app holding `port`: its SYN, then a
     /// segment acknowledging `expects`.
     fn established(router: &mut Router<FakeOs>, port: u16, at: Instant, expects: u32) {
-        router.uplink(&mut syn(port), at);
+        router.uplink(
+            &mut tcp_v4_numbered(MAIN, REMOTE, port, 443, TCP_SYN, 1000, 0, b""),
+            at,
+        );
         router.uplink(
             &mut tcp_v4_numbered(MAIN, REMOTE, port, 443, TCP_ACK, 1001, expects, b""),
             at,
@@ -2016,7 +2046,7 @@ mod tests {
     }
 
     #[test]
-    fn a_datagram_flow_of_a_moved_app_takes_its_new_route_without_a_reset() {
+    fn a_datagram_flow_of_a_moved_app_takes_its_new_route_at_its_next_datagram() {
         let mut os = os();
         os.socket(udp_flow(50000), 10);
         let mut router = router(os);
@@ -2024,10 +2054,10 @@ mod tests {
         router.uplink(&mut udp_v4(MAIN, REMOTE, 50000, 443, b"q"), start);
 
         router.set_policy(browser_on(RouteId(1)));
+        router.take_resets();
         let mut next = udp_v4(MAIN, REMOTE, 50000, 443, b"q");
         let verdict = router.uplink(&mut next, start + Duration::from_secs(1));
 
-        assert!(resets(&mut router).is_empty());
         assert_eq!(verdict, Verdict::Route(RouteId(1)));
         assert_eq!(&next[12..16], &ROUTE1);
     }
@@ -2066,6 +2096,118 @@ mod tests {
         assert_eq!(reset.len(), 1);
         assert_eq!(&reset[0][20 + 8..20 + 12], &4243u32.to_be_bytes());
         assert_eq!(reset[0][20 + 13], TCP_RST | TCP_ACK);
+    }
+
+    #[test]
+    fn a_connection_whose_process_is_gone_keeps_its_session_under_its_new_route_id() {
+        let mut os = os();
+        os.socket(tcp_flow(50000), 10);
+        let mut router = router(os);
+        let start = now();
+        established(&mut router, 50000, start, 5000);
+        // The process cannot be asked again: it exited, or runs another
+        // program now.
+        router.resolver.process(10, 7777, BROWSER);
+
+        router.set_policy(
+            Policy::new(
+                main_addresses(),
+                [(MAILER, RouteId(0)), (BROWSER, RouteId(1))],
+                vec![connected(ROUTE1), connected(ROUTE0)],
+            )
+            .unwrap()
+            .with_sessions(vec![SessionId(9), SessionId(0)])
+            .unwrap(),
+        );
+
+        assert!(!router.has_resets());
+        assert_eq!(
+            router.uplink(&mut data(50000), start),
+            Verdict::Route(RouteId(1))
+        );
+    }
+
+    #[test]
+    fn a_connection_whose_process_is_gone_is_reset_when_its_session_ends() {
+        let mut os = os();
+        os.socket(tcp_flow(50000), 10);
+        let mut router = router(os);
+        let start = now();
+        established(&mut router, 50000, start, 5000);
+        router.resolver.processes.remove(&10);
+
+        router.set_policy(
+            policy(connected(ROUTE0), connected(ROUTE1))
+                .with_sessions(vec![SessionId(7), SessionId(1)])
+                .unwrap(),
+        );
+
+        assert_eq!(resets(&mut router), vec![(50000, 5000, TCP_RST | TCP_ACK)]);
+    }
+
+    #[test]
+    fn a_main_connection_whose_process_is_gone_is_attributed_again_at_its_next_segment() {
+        let mut os = os();
+        os.socket(tcp_flow(50000), 30);
+        let mut router = router(os);
+        let start = now();
+        established(&mut router, 50000, start, 5000);
+        router.resolver.processes.remove(&30);
+
+        router.set_policy(browser_on(RouteId(1)));
+        let before = router.counters().new_flows;
+        let verdict = router.uplink(&mut data(50000), start);
+
+        assert!(!router.has_resets());
+        assert_eq!(router.counters().new_flows, before + 1, "attributed again");
+        assert_eq!(verdict, Verdict::Drop, "an ownerless connection under way");
+    }
+
+    #[test]
+    fn a_new_connection_on_the_ports_of_a_closing_one_goes_to_main_once_nothing_is_routed() {
+        let mut os = os();
+        os.socket(tcp_flow(50000), 10);
+        let mut router = router(os);
+        let start = now();
+        established(&mut router, 50000, start, 5000);
+        router.set_policy(Policy::inactive());
+        router.take_resets();
+
+        let opening = router.uplink(&mut syn(50000), start);
+        let handshake = router.uplink(&mut data(50000), start);
+
+        assert_eq!((opening, handshake), (Verdict::Main, Verdict::Main));
+        assert!(!router.has_resets());
+    }
+
+    #[test]
+    fn a_datagram_flow_of_a_moved_app_is_told_its_port_is_unreachable() {
+        let mut os = os();
+        os.socket(udp_flow(50000), 10);
+        let mut router = router(os);
+        let start = now();
+        router.uplink(&mut udp_v4(MAIN, REMOTE, 50000, 443, b"q"), start);
+
+        router.set_policy(browser_on(RouteId(1)));
+
+        let sent = router.take_resets();
+        assert_eq!(sent.len(), 1);
+        let error = &sent[0];
+        assert_eq!((&error[12..16], &error[16..20]), (&REMOTE[..], &MAIN[..]));
+        assert_eq!(
+            (error[9], error[20], error[21]),
+            (1, 3, 3),
+            "ICMP port unreachable"
+        );
+        assert!(transport_ok(error) && ipv4_header_ok(error));
+        let quoted = crate::flow::classify(error, crate::flow::Direction::Downlink).unwrap();
+        assert_eq!(
+            quoted,
+            crate::flow::Classified::IcmpError {
+                key: udp_flow(50000)
+            }
+        );
+        assert_eq!(router.counters().refused_flows, 1);
     }
 
     #[test]

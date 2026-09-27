@@ -461,6 +461,11 @@ impl<V: Copy> FlowTable<V> {
             .map(|entry| entry.value)
     }
 
+    /// Forgets `key`.
+    pub fn remove(&mut self, key: &FlowKey) {
+        self.entries.remove(key);
+    }
+
     /// The value of every flow, expired ones included until swept.
     pub fn values(&self) -> impl Iterator<Item = &V> {
         self.entries.values().map(|entry| &entry.value)
@@ -796,6 +801,19 @@ mod tests {
         *table.lookup_mut(&flow, Direction::Uplink, 0, now).unwrap() = 2;
 
         assert_eq!(table.peek(&flow, now), Some(2));
+    }
+
+    #[test]
+    fn a_removed_flow_is_no_longer_found() {
+        let mut table = FlowTable::new(8);
+        let now = t0();
+        let flow = key(Transport::Tcp, 1, 443);
+        table.insert(flow, 1u8, Direction::Uplink, TCP_SYN, now);
+
+        table.remove(&flow);
+
+        assert_eq!(table.peek(&flow, now), None);
+        assert_eq!(table.values().count(), 0);
     }
 
     #[test]

@@ -378,8 +378,12 @@ sessions together at that exit.
   only one RFC 5961 accepts), then drops every later segment of that
   connection and answers each with the reset a closed port sends. The
   controller writes the resets right after the new policy, the main
-  session's device the answers. A UDP flow of such an app is forgotten, so
-  its next datagram is attributed again and takes the new session. A flow
+  session's device the answers. A UDP flow of such an app is told its port
+  is unreachable (an ICMP error from the remote end, which a connected
+  socket reports as a refused connection) and forgotten: a QUIC connection is
+  then dropped and opened again rather than migrated, which would show the
+  server one connection arriving from both exits, and the next datagram of a
+  socket that carries on is attributed again and takes the new session. A flow
   whose app keeps its session keeps it, whatever its route id becomes: the
   controller names each route's session (its slot's generation) to the
   router. A connection under way that the router never tracked (opened while
@@ -387,7 +391,12 @@ sessions together at that exit.
   belongs to a routed app is reset at its first segment rather than carried
   to the route. While connections reset by a policy that routes nothing are
   closing (10 s after their last segment), the router stays in the path, so
-  none of their segments reaches the main session.
+  none of their segments reaches the main session; a connection it was
+  already dropping (under way, with no owner found) is kept dropped for as
+  long, and a new connection on the ports of a closing one goes through main.
+  Residual: a reset is written once; an app that never receives it (a TUN
+  write that fails) and then stays silent past the 10 s finds its connection
+  attributed again.
 
 ### 2.5 DNS
 
