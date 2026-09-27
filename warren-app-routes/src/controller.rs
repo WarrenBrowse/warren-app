@@ -552,7 +552,7 @@ mod tests {
     use warrenguard_transport_core::FakeTun;
 
     use super::*;
-    use crate::app_routes::{PlannedRoute, RouteUnavailable, datapath::RoutedTun, test_support::*};
+    use crate::{PlannedRoute, RouteUnavailable, datapath::RoutedTun, test_support::*};
 
     type Device = RouteTun<FakeTun, TwoApps>;
 

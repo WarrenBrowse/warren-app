@@ -14,6 +14,9 @@ ipnetwork = { workspace = true }
 talpid-routing = { path = "../talpid-routing" }
 # Per-app exits: flow attribution, address translation and route decisions.
 talpid-app-routing = { path = "../talpid-app-routing" }
+# The route sessions, their controller and the router devices, shared with
+# the Android engine and re-exported as `app_routes`.
+warren-app-routes = { path = "../warren-app-routes" }
 talpid-tunnel = { path = "../talpid-tunnel" }
 talpid-types = { path = "../talpid-types" }
 thiserror = { workspace = true }

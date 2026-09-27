@@ -277,7 +277,7 @@ mod tests {
     use warrenguard_transport_core::FakeTun;
 
     use super::*;
-    use crate::app_routes::test_support::*;
+    use crate::test_support::*;
 
     const ROUTE_0: RouteId = RouteId(0);
 

@@ -1,0 +1,44 @@
+[package]
+name = "warren-app-routes"
+edition.workspace = true
+rust-version.workspace = true
+description = "Per-app exits: route sessions, their admission by anchor or token, and the router between the TUN device and the sessions, shared by the desktop tunnel and the Android engine"
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+# `PacketDevice::send_batch_bytes`, which the app-routing device forwards.
+bytes = { workspace = true }
+ed25519-dalek = { version = "=2.2.0", default-features = false, features = ["std"] }
+futures = { workspace = true }
+log = { workspace = true }
+# The engine's `DaitaShared` pump-state alias is `Arc<parking_lot::Mutex<..>>`.
+parking_lot = "0.12"
+rand = { workspace = true }
+serde_json = { workspace = true }
+# Flow attribution, address translation and route decisions.
+talpid-app-routing = { path = "../talpid-app-routing" }
+tokio = { workspace = true, features = ["rt", "sync", "time", "macros"] }
+# The token batch every session leads with, and the route admission block of
+# the token directory.
+warren-api = { path = "../../warren-sdk-rs/crates/warren-api" }
+warren-contract = { path = "../../warren-contract" }
+warrenguard-backoff = { path = "../../warrenguard/crates/warrenguard-backoff" }
+warrenguard-daita = { path = "../../warrenguard/crates/warrenguard-daita" }
+warrenguard-multihop = { path = "../../warrenguard/crates/warrenguard-multihop" }
+# The supervisor and pumps every route session runs, the same as the main
+# session's (`system-vpn` selects the supervised pump driver).
+warrenguard-transport = { path = "../../warrenguard/crates/warrenguard-transport", features = ["system-vpn"] }
+warrenguard-transport-core = { path = "../../warrenguard/crates/warrenguard-transport-core" }
+warrenguard-tun-core = { path = "../../warrenguard/crates/warrenguard-tun-core" }
+warrenguard-wire = { path = "../../warrenguard/crates/warrenguard-wire" }
+
+[dev-dependencies]
+base64 = "0.22.0"
+hex = "0.4"
+tempfile = "3"
+tokio = { workspace = true, features = ["test-util", "macros", "time", "rt-multi-thread"] }
+warren-identity = { path = "../../warren-sdk-rs/crates/warren-identity" }
+
+[lints]
+workspace = true

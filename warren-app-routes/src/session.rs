@@ -57,7 +57,7 @@ use super::{
     RouteAdmissionSource, RouteUnavailable, SessionEvent, TOKEN_ROUTE_SESSIONS,
     controller::RouteSessions, datapath::RouteTun,
 };
-use crate::{MultiHopConfig, SessionTokenSource, multi_hop_bind_addr, multi_hop_daita_shared};
+use crate::{MultiHopConfig, SessionTokenSource, daita_shared, multi_hop_bind_addr};
 
 /// How long a route session waits after it could not run before it tries
 /// again. Tokens are minted on a coarse timer and a serial is released when
@@ -649,13 +649,16 @@ async fn carry<T: PacketDevice + Clone>(
             };
             if !started {
                 started = true;
-                let daita = match multi_hop_daita_shared(
-                    config.enable_daita,
-                    bundle.primary().daita_spec(),
-                ) {
+                let daita = match daita_shared(bundle.primary().daita_spec()) {
                     Ok(daita) => daita,
                     Err(_) => return SessionEnd::Unavailable(RouteUnavailable::Failed),
                 };
+                if daita.is_none() && config.enable_daita {
+                    log::warn!(
+                        "App routing: DAITA was requested but this route's exit did not grant \
+                         it; its pumps run undefended"
+                    );
+                }
                 pumps.extend(pump_futures(
                     &client_rx,
                     device,
@@ -788,7 +791,7 @@ mod tests {
     const EXIT: [u8; 16] = [9; 16];
 
     fn circuit() -> MultiHopConfig {
-        crate::app_routes::test_support::circuit(7, 9)
+        crate::test_support::circuit(7, 9)
     }
 
     fn tokens_only() -> SessionAdmission {

@@ -39,6 +39,7 @@ members = [
   "talpid-tunnel",
   "talpid-warren-tunnel",
   "talpid-windows",
+  "warren-app-routes",
   "warren-jni",
   "warren-forum",
   "warren-incidents",

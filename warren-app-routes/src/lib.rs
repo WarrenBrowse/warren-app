@@ -1,7 +1,9 @@
 //! Per-app exits inside the Warren tunnel (`docs/app-routing.md`, sections 2.2
-//! to 2.6).
+//! to 2.6), shared by the desktop tunnel (`talpid-warren-tunnel`, which
+//! re-exports this crate as `app_routes`) and the Android engine
+//! (`warren-jni`).
 //!
-//! The daemon resolves each app's country to a circuit and hands the tunnel an
+//! The client resolves each app's country to a circuit and hands the tunnel an
 //! [`AppRoutesPlan`] on a watch channel. The tunnel runs one route session per
 //! planned circuit next to the main session ([`controller`]), and puts the
 //! router of `talpid-app-routing` between the TUN device and the sessions
@@ -11,17 +13,21 @@
 //! connected drops its apps' packets: they never go through the main session,
 //! and never outside the tunnel.
 
-use std::sync::Arc;
+use std::{sync::Arc, time::Instant};
 
 use talpid_app_routing::router::SessionAddresses;
 use warrenguard_multihop::RouteKemPublicKey;
-use warrenguard_transport::route_anchor::AnchorState;
+use warrenguard_transport::{route_anchor::AnchorState, supervised_pump::DaitaShared};
 
-use crate::MultiHopConfig;
-
+pub mod admission;
+mod circuit;
 pub mod controller;
 pub mod datapath;
 pub mod session;
+pub mod tokens;
+
+pub use circuit::{MultiHopConfig, multi_hop_bind_addr};
+pub use tokens::{SessionTokenSource, make_session_token_provider};
 
 #[cfg(test)]
 mod test_support;
@@ -209,6 +215,25 @@ pub enum SessionEvent {
     Unavailable(RouteUnavailable),
     /// Waiting for one of the routes the tokens admit at once to be free.
     Waiting,
+}
+
+/// The DAITA state a session's pumps shape with: one built from the spec the
+/// exit granted, or `None` when it granted none (the session then runs
+/// undefended pumps, which the caller reports when it asked for DAITA).
+///
+/// # Errors
+///
+/// The granted spec cannot drive the machines.
+pub fn daita_shared(
+    negotiated: Option<warrenguard_wire::DaitaConfig>,
+) -> Result<Option<DaitaShared>, warrenguard_daita::DaitaError> {
+    match negotiated {
+        Some(spec) if spec.is_enabled() => {
+            let state = warrenguard_daita::DaitaState::from_config(&spec, Instant::now())?;
+            Ok(Some(Arc::new(parking_lot::Mutex::new(state))))
+        }
+        Some(_) | None => Ok(None),
+    }
 }
 
 #[cfg(test)]

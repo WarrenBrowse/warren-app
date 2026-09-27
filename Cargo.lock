@@ -5884,6 +5884,7 @@ dependencies = [
  "thiserror 2.0.18",
  "tokio",
  "tun 0.8.7",
+ "warren-app-routes",
  "warren-standing",
  "warrenguard-backoff",
  "warrenguard-config",
@@ -6745,6 +6746,34 @@ dependencies = [
  "warrenguard-multihop",
  "warrenguard-token",
  "zeroize",
+]
+
+[[package]]
+name = "warren-app-routes"
+version = "0.0.0"
+dependencies = [
+ "base64",
+ "bytes",
+ "ed25519-dalek",
+ "futures",
+ "hex",
+ "log",
+ "parking_lot",
+ "rand 0.9.4",
+ "serde_json",
+ "talpid-app-routing",
+ "tempfile",
+ "tokio",
+ "warren-api",
+ "warren-contract",
+ "warren-identity",
+ "warrenguard-backoff",
+ "warrenguard-daita",
+ "warrenguard-multihop",
+ "warrenguard-transport",
+ "warrenguard-transport-core",
+ "warrenguard-tun-core",
+ "warrenguard-wire",
 ]
 
 [[package]]

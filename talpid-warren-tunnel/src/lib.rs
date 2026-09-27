@@ -15,7 +15,7 @@
 
 use std::{net::IpAddr, path::Path, time::Instant};
 
-use ed25519_dalek::{SigningKey, VerifyingKey};
+use ed25519_dalek::SigningKey;
 #[cfg(target_os = "macos")]
 use ipnetwork::IpNetwork;
 #[cfg(target_os = "macos")]
@@ -26,7 +26,7 @@ use talpid_tunnel::{
     tun_provider::{Tun, TunConfig},
 };
 use talpid_types::net::AllowedTunnelTraffic;
-use warrenguard_multihop::{ExitDescriptorSigned, RejectionReason, RelayDescriptorSigned};
+use warrenguard_multihop::RejectionReason;
 use warrenguard_transport::route_anchor::{RouteAnchorConfig, RouteAnchorHandle};
 // Re-exported below so downstream crates (talpid-core, mullvad-daemon)
 // can construct `MultiHopConfig` without depending on warrenguard-multihop
@@ -251,35 +251,8 @@ pub use warrenguard_transport::supervisor::SessionTokenProvider;
 /// token bytes to [`make_session_token_provider`].
 pub use warrenguard_wire::SESSION_TOKEN_LEN;
 
-/// Opens the token provider of ONE session. The tunnel opens one for its main
-/// session and one for each route session it starts, so the daemon can keep
-/// the sessions of one wallet from leading with the same serial: the exit
-/// leases a serial to a single live session in the whole fleet.
-pub type SessionTokenSource = std::sync::Arc<dyn Fn() -> SessionTokenProvider + Send + Sync>;
-
-/// Wraps a source of serialized token bytes (one 354-byte Privacy Pass token
-/// each, e.g. `warren_api::TokenManager::session_stack`) into a
-/// [`SessionTokenProvider`] the multi-hop supervisor consumes. Lets the daemon
-/// supply v7 tokens without depending on `warrenguard-wire` directly. An empty
-/// stack keeps the v6 wallet-signed path.
-///
-/// The stack is cut to the first [`warrenguard_wire::MAX_SESSION_TOKENS`]: the
-/// default admission sends the whole stack in one setup request, and an exit
-/// refuses to decode a setup request that carries more.
-#[must_use]
-pub fn make_session_token_provider(
-    take_stack: std::sync::Arc<
-        dyn Fn() -> Vec<[u8; warrenguard_wire::SESSION_TOKEN_LEN]> + Send + Sync,
-    >,
-) -> SessionTokenProvider {
-    std::sync::Arc::new(move || {
-        take_stack()
-            .into_iter()
-            .take(warrenguard_wire::MAX_SESSION_TOKENS)
-            .map(warrenguard_wire::SessionToken)
-            .collect()
-    })
-}
+/// Opens the token provider of ONE session (shared with the Android engine).
+pub use warren_app_routes::{SessionTokenSource, make_session_token_provider};
 
 /// Hands a port-forwarding rule the entitlement it presents, by SLOT.
 ///
@@ -296,7 +269,9 @@ pub type PortEntitlementProvider = warren_standing::entitlements::SlotSource;
 mod adapter;
 /// Per-app exits: route sessions next to the main one, and the router
 /// between the TUN device and the sessions.
-pub mod app_routes;
+/// Per-app exits, shared with the Android engine (`warren-jni`).
+pub use warren_app_routes as app_routes;
+use warren_app_routes::multi_hop_bind_addr;
 mod rate_limiter;
 // macOS-only: the carrier bind (`IP_BOUND_IF`) and its self-healing egress
 // guard are a macOS-specific policy (Linux escapes by fwmark, Windows by
@@ -984,79 +959,7 @@ impl NatPmpConfig {
     }
 }
 
-/// Inputs required to bring up a multi-hop session, populated by the
-/// daemon-side relay selector and consumed by the dispatcher in
-/// [`WarrenTunnelMonitor::start`].
-///
-/// Both descriptors are verified against [`Self::operational_pubkey`]
-/// before any UDP traffic is emitted. The exit `WarrenExitAddr` carried
-/// at the [`WarrenTunnelParameters`] root is ignored on the multi-hop
-/// path: the dispatcher derives the routing tag, the X25519 HPKE
-/// pubkey, and the Ed25519 RPK identity from [`Self::exit`].
-#[derive(Clone)]
-pub struct MultiHopConfig {
-    /// Signed first-hop descriptor. The client dials
-    /// [`RelayDescriptorSigned::endpoint`] over QUIC; the relay's
-    /// Ed25519 identity is pinned via the TLS RPK at handshake time.
-    pub relay: RelayDescriptorSigned,
-    /// Signed exit descriptor. The relay never holds the HPKE key, so
-    /// the exit's long-lived X25519 pubkey advertised here is the only
-    /// trust anchor for the payload encryption.
-    pub exit: ExitDescriptorSigned,
-    /// Ed25519 operational pubkey shared across the relay + exit
-    /// descriptor signatures. Out-of-band trust anchor for the
-    /// multi-hop pool.
-    pub operational_pubkey: VerifyingKey,
-    /// ISO 3166-1 alpha-2 country code of the EXIT hop, taken from the
-    /// signed+attested directory `NodeEntry`. Authoritative for the GUI
-    /// location label: the exit egress IP is redacted from the client
-    /// directory, and an exit-only node is absent from the
-    /// relay list, so the daemon cannot recover the exit geo from
-    /// the IP or the relay list. Empty for the manual-config path (the
-    /// caller then falls back to the relay-list lookup).
-    pub exit_country: String,
-    /// City of the EXIT hop (free form), from the directory `NodeEntry`.
-    /// Empty for the manual-config path.
-    pub exit_city: String,
-    /// Enable UDP segmentation offload (GSO) on the multi-hop QUIC
-    /// transport. Recommended on physical NICs, disable on virtio
-    /// (Hetzner Cloud / KVM guests) and on macOS where GSO is not
-    /// supported.
-    pub enable_gso: bool,
-    /// Opt into the full wire-mimicry profile (Initial padding +
-    /// split ClientHello). `true` is the production default against a
-    /// real warrenguard-relay; `false` is used for loopback benches where
-    /// the relay-inbound transport config does not mirror these knobs
-    /// (see `warren-client::multi_hop`).
-    pub use_warren_obfuscation: bool,
-    /// `true` when the circuit's entry relay and exit resolve to the SAME
-    /// physical node: a 1-hop circuit (the multihop toggle is OFF). The
-    /// whole fleet speaks the multi-hop wire protocol, so toggle-OFF still
-    /// rides it but collapses the circuit onto one trusted node (classic
-    /// single-hop privacy). The GUI MUST then present a single hop (no
-    /// entry endpoint, no multihop badge): a 1-hop circuit has no distinct
-    /// first hop to disclose. `false` for a genuine 2-hop circuit (toggle
-    /// ON) and for the manual-config path (treated as 2-hop).
-    pub single_node: bool,
-}
-
-impl std::fmt::Debug for MultiHopConfig {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        // No-log Warren: relay/exit pubkeys and endpoints are
-        // long-term identifiers correlatable across sessions; the
-        // operational pubkey identifies the deployment. All redacted.
-        f.debug_struct("MultiHopConfig")
-            .field("relay", &"<redacted>")
-            .field("exit", &"<redacted>")
-            .field("operational_pubkey", &"<redacted>")
-            .field("exit_country", &self.exit_country)
-            .field("exit_city", &self.exit_city)
-            .field("enable_gso", &self.enable_gso)
-            .field("use_warren_obfuscation", &self.use_warren_obfuscation)
-            .field("single_node", &self.single_node)
-            .finish()
-    }
-}
+pub use warren_app_routes::MultiHopConfig;
 
 /// Errors specific to the Warren tunnel backend.
 #[derive(thiserror::Error, Debug)]
@@ -4014,28 +3917,6 @@ fn macos_relay_escape(
     })
 }
 
-/// Local QUIC bind address for the multi-hop client: always wildcard,
-/// NEVER the detected physical source IP. An unconnected UDP socket
-/// picks its source address per packet from the live routing table,
-/// so after a WiFi<->ethernet switch the next QUIC packet leaves
-/// through the new interface and the relay (migration enabled)
-/// revalidates the path in ~1 RTT with no re-handshake. A pinned
-/// source IP dies with its interface and forces a full redial
-/// instead. Loop prevention does not depend on the bind: the relay/32
-/// bypass route (and on Linux the pref-50 ip rule) keeps relay-bound
-/// packets off the TUN.
-#[must_use]
-fn multi_hop_bind_addr(relay_endpoint: std::net::SocketAddr) -> std::net::SocketAddr {
-    match relay_endpoint {
-        std::net::SocketAddr::V4(_) => {
-            std::net::SocketAddr::from((std::net::Ipv4Addr::UNSPECIFIED, 0))
-        }
-        std::net::SocketAddr::V6(_) => {
-            std::net::SocketAddr::from((std::net::Ipv6Addr::UNSPECIFIED, 0))
-        }
-    }
-}
-
 /// Detects the name of the interface carrying the IPv4 default
 /// route. Used when posting bypass routes for the exit IPs.
 ///
@@ -4115,6 +3996,7 @@ mod tun_address_log_tests {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use warrenguard_multihop::{ExitDescriptorSigned, RelayDescriptorSigned};
     use warrenguard_wire::WarrenPubkey;
 
     #[test]
