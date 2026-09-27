@@ -421,7 +421,7 @@ mod android {
             WarrenApiClient::new(
                 crate::product::PRODUCT_API_URL.to_owned(),
                 WarrenIdentity::from_signing_key(signing_key),
-                ProtectedTransport::new(),
+                ProtectedTransport::for_mint(),
             )
         });
         let route_admission = DirectoryRouteAdmission::new(

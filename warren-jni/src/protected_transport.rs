@@ -21,6 +21,7 @@
 //! cannot cover; a resolver black-holed during bring-up surfaces as a
 //! connect-class failure and the next refresh tick retries.
 
+use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::os::raw::c_int;
 use std::sync::{Arc, OnceLock};
@@ -46,6 +47,91 @@ pub(crate) struct ProtectedTransport {
     tls: Arc<rustls::ClientConfig>,
     tls_no_sni: Arc<rustls::ClientConfig>,
     protect: ProtectFn,
+    /// Where the host resolutions this transport reuses are kept, if any.
+    resolutions: Option<Arc<ResolveCache>>,
+}
+
+/// How long a mint transport reuses a host's resolution
+/// ([`ProtectedTransport::for_mint`]).
+pub(crate) const RESOLVED_FOR: Duration = Duration::from_secs(300);
+
+/// Host resolutions kept for [`RESOLVED_FOR`]. The system resolver answers
+/// this app through its own VPN, so from the moment the TUN is established
+/// until the tunnel carries traffic a lookup waits for the tunnel. A mint
+/// round started as the tunnel connects makes several requests (the token
+/// directory, then one per epoch), and every one after the first waited
+/// through the whole connect: the first tunnel's wait for the round's
+/// tokens (`FIRST_REFRESH_WAIT`) always ran out. Resolved once before the
+/// TUN ([`Self::prime`]) or by the first request, the host is not looked up
+/// again during the connect. The sockets stay protected either way; only the
+/// name lookup is kept.
+#[derive(Default)]
+pub(crate) struct ResolveCache {
+    entries: parking_lot::Mutex<HashMap<(String, u16), Resolved>>,
+}
+
+/// When a host was resolved, and to what.
+type Resolved = (tokio::time::Instant, Vec<SocketAddr>);
+
+impl ResolveCache {
+    /// The addresses of `host`: those resolved less than [`RESOLVED_FOR`]
+    /// ago, else `lookup`'s, kept when it names any.
+    ///
+    /// # Errors
+    ///
+    /// `lookup`'s failure, which is not kept.
+    pub(crate) async fn resolve<F, Fut>(
+        &self,
+        host: &str,
+        port: u16,
+        lookup: F,
+    ) -> std::io::Result<Vec<SocketAddr>>
+    where
+        F: FnOnce() -> Fut,
+        Fut: Future<Output = std::io::Result<Vec<SocketAddr>>>,
+    {
+        let key = (host.to_owned(), port);
+        if let Some((at, addrs)) = self.entries.lock().get(&key)
+            && at.elapsed() < RESOLVED_FOR
+        {
+            return Ok(addrs.clone());
+        }
+        let addrs = lookup().await?;
+        if !addrs.is_empty() {
+            self.entries
+                .lock()
+                .insert(key, (tokio::time::Instant::now(), addrs.clone()));
+        }
+        Ok(addrs)
+    }
+
+    /// Drops what `host` resolved to once none of its addresses connected,
+    /// so the next request asks the resolver again.
+    pub(crate) fn forget(&self, host: &str, port: u16) {
+        self.entries.lock().remove(&(host.to_owned(), port));
+    }
+
+    /// Resolves the host of `url` for the requests that follow, a failure
+    /// included (they will ask again).
+    pub(crate) async fn prime(&self, url: &str) {
+        let Some(url) = parse_url(url) else {
+            return;
+        };
+        let _ = self
+            .resolve(&url.host, url.port, || system_lookup(&url.host, url.port))
+            .await;
+    }
+}
+
+/// The resolutions every mint transport of the process shares, primed before
+/// each tunnel's TUN is established.
+pub(crate) fn mint_resolutions() -> Arc<ResolveCache> {
+    static RESOLUTIONS: OnceLock<Arc<ResolveCache>> = OnceLock::new();
+    Arc::clone(RESOLUTIONS.get_or_init(Arc::default))
+}
+
+async fn system_lookup(host: &str, port: u16) -> std::io::Result<Vec<SocketAddr>> {
+    Ok(tokio::net::lookup_host((host, port)).await?.collect())
 }
 
 impl ProtectedTransport {
@@ -53,14 +139,10 @@ impl ProtectedTransport {
     /// Android (a no-op until the JNI bridge registers it), a pass-through
     /// elsewhere.
     ///
-    /// Its only caller is the Android tunnel build, so every other target sees
-    /// it as dead. It stays compiled there rather than being gated away: the
-    /// pass-through arm is what keeps the host tests exercising the same
-    /// constructor the device runs.
-    #[cfg_attr(
-        not(all(target_os = "android", feature = "tunnel")),
-        expect(dead_code, reason = "only the Android tunnel build constructs it")
-    )]
+    /// Built through [`Self::for_mint`], whose only callers are in the
+    /// Android tunnel build. It stays compiled elsewhere rather than being
+    /// gated away: the pass-through arm is what keeps the host tests
+    /// exercising the same constructor the device runs.
     pub(crate) fn new() -> Self {
         #[cfg(all(target_os = "android", feature = "tunnel"))]
         let protect: ProtectFn = Arc::new(warrenguard_transport::socket_protect::protect);
@@ -75,7 +157,25 @@ impl ProtectedTransport {
             tls,
             tls_no_sni,
             protect,
+            resolutions: None,
         }
+    }
+
+    /// The transport of the token and entitlement mints: [`Self::new`], with
+    /// the process's kept resolutions ([`mint_resolutions`]), since a round
+    /// runs while the tunnel connects.
+    #[cfg_attr(
+        not(all(target_os = "android", feature = "tunnel")),
+        expect(dead_code, reason = "only the Android mints construct it")
+    )]
+    pub(crate) fn for_mint() -> Self {
+        Self::new().with_resolve_cache(mint_resolutions())
+    }
+
+    /// Reuses and keeps host resolutions in `cache`.
+    pub(crate) fn with_resolve_cache(mut self, cache: Arc<ResolveCache>) -> Self {
+        self.resolutions = Some(cache);
+        self
     }
 
     async fn execute_inner(
@@ -87,10 +187,12 @@ impl ProtectedTransport {
 
         // A resolver failure is connect-class: it is exactly what censorship
         // of the primary host looks like, so it must drive the host fallback.
-        let addrs: Vec<SocketAddr> = tokio::net::lookup_host((url.host.as_str(), url.port))
-            .await
-            .map_err(|_| TransportError::Connect("resolve failed".to_owned()))?
-            .collect();
+        let lookup = || system_lookup(&url.host, url.port);
+        let resolved = match &self.resolutions {
+            Some(cache) => cache.resolve(&url.host, url.port, lookup).await,
+            None => lookup().await,
+        };
+        let addrs = resolved.map_err(|_| TransportError::Connect("resolve failed".to_owned()))?;
 
         // The failure kept is the most specific one across the candidate
         // addresses, named by class only (the report probes read it; no
@@ -110,6 +212,9 @@ impl ProtectedTransport {
             failure = more_specific(failure, attempt);
         }
         let Some(stream) = stream else {
+            if let Some(cache) = &self.resolutions {
+                cache.forget(&url.host, url.port);
+            }
             return Err(failure);
         };
 
@@ -497,7 +602,7 @@ mod tests {
     use warren_api::transport::{HttpRequest, HttpTransport, Method, TransportError};
 
     use super::loopback::serve_one;
-    use super::{ProtectFn, ProtectedTransport};
+    use super::{ProtectFn, ProtectedTransport, RESOLVED_FOR, ResolveCache};
 
     #[test]
     fn the_tls_configs_are_built_once_per_process() {
@@ -562,6 +667,121 @@ mod tests {
             head.starts_with("GET /v1/tokens/keys HTTP/1.1\r\n"),
             "{head}"
         );
+    }
+
+    fn loopback_on(port: u16) -> Vec<std::net::SocketAddr> {
+        vec![std::net::SocketAddr::from(([127, 0, 0, 1], port))]
+    }
+
+    /// Counts the lookups `resolve` makes, each answering `answer`.
+    async fn resolve_counted(
+        cache: &ResolveCache,
+        lookups: &AtomicUsize,
+        answer: std::io::Result<Vec<std::net::SocketAddr>>,
+    ) -> std::io::Result<Vec<std::net::SocketAddr>> {
+        cache
+            .resolve("api.example.test", 443, || async {
+                lookups.fetch_add(1, Ordering::SeqCst);
+                answer
+            })
+            .await
+    }
+
+    /// A mint round makes several requests while the tunnel comes up, and
+    /// the system resolver answers through that tunnel: only the first
+    /// request of the round, made before, resolves at once.
+    #[tokio::test(start_paused = true)]
+    async fn a_host_resolved_moments_ago_is_not_resolved_again() {
+        let cache = ResolveCache::default();
+        let lookups = AtomicUsize::new(0);
+
+        let first = resolve_counted(&cache, &lookups, Ok(loopback_on(1))).await;
+        tokio::time::advance(RESOLVED_FOR - std::time::Duration::from_secs(1)).await;
+        let again = resolve_counted(&cache, &lookups, Ok(loopback_on(2))).await;
+
+        assert_eq!(lookups.load(Ordering::SeqCst), 1);
+        assert_eq!(again.expect("kept"), first.expect("resolved"));
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_resolution_past_its_lifetime_is_made_again() {
+        let cache = ResolveCache::default();
+        let lookups = AtomicUsize::new(0);
+        let _ = resolve_counted(&cache, &lookups, Ok(loopback_on(1))).await;
+
+        tokio::time::advance(RESOLVED_FOR).await;
+        let again = resolve_counted(&cache, &lookups, Ok(loopback_on(2))).await;
+
+        assert_eq!(lookups.load(Ordering::SeqCst), 2);
+        assert_eq!(again.expect("resolved"), loopback_on(2));
+    }
+
+    #[tokio::test]
+    async fn a_failed_lookup_is_not_kept() {
+        let cache = ResolveCache::default();
+        let lookups = AtomicUsize::new(0);
+        let failed = std::io::Error::other("no answer");
+
+        assert!(
+            resolve_counted(&cache, &lookups, Err(failed))
+                .await
+                .is_err()
+        );
+        let again = resolve_counted(&cache, &lookups, Ok(loopback_on(2))).await;
+
+        assert_eq!(lookups.load(Ordering::SeqCst), 2);
+        assert_eq!(again.expect("resolved"), loopback_on(2));
+    }
+
+    #[tokio::test]
+    async fn a_host_none_of_whose_addresses_connected_is_resolved_again() {
+        let cache = ResolveCache::default();
+        let lookups = AtomicUsize::new(0);
+        let _ = resolve_counted(&cache, &lookups, Ok(loopback_on(1))).await;
+
+        cache.forget("api.example.test", 443);
+        let _ = resolve_counted(&cache, &lookups, Ok(loopback_on(2))).await;
+
+        assert_eq!(lookups.load(Ordering::SeqCst), 2);
+    }
+
+    #[tokio::test]
+    async fn priming_resolves_the_host_of_a_url_for_the_requests_that_follow() {
+        let cache = ResolveCache::default();
+
+        cache.prime("http://localhost:4443/v1/tokens/keys").await;
+        let kept = cache
+            .resolve("localhost", 4443, || async {
+                panic!("a primed host is not looked up again")
+            })
+            .await;
+
+        assert!(!kept.expect("primed").is_empty());
+    }
+
+    /// The mint's requests read the cache: a host only the cache can name
+    /// is reached.
+    #[tokio::test]
+    async fn a_request_goes_to_the_address_the_cache_holds_for_its_host() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.expect("bind");
+        let port = listener.local_addr().expect("addr").port();
+        let server = tokio::spawn(serve_one(listener, CANNED_OK.to_owned()));
+        let cache = Arc::new(ResolveCache::default());
+        let _ = cache
+            .resolve("api.example.test", port, || async { Ok(loopback_on(port)) })
+            .await;
+        let transport =
+            ProtectedTransport::with_protect(Arc::new(|_| true)).with_resolve_cache(cache);
+
+        let response = transport
+            .execute(get(format!(
+                "http://api.example.test:{port}/v1/tokens/keys"
+            )))
+            .await
+            .expect("reached through the kept address");
+
+        assert_eq!(response.status, 200);
+        server.await.expect("server");
     }
 
     #[tokio::test]

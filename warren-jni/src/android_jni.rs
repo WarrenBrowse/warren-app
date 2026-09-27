@@ -1122,6 +1122,12 @@ fn fetch_multihop_directory_raw() -> String {
         return String::new();
     };
     let client = unsigned_warren_client();
+    // Still before the TUN: the API host is resolved here for the mints the
+    // tunnel starts, whose lookups would otherwise wait for the tunnel
+    // (`crate::protected_transport::ResolveCache`). Spawned, so a slow
+    // resolver never holds the connect.
+    let resolutions = crate::protected_transport::mint_resolutions();
+    runtime.spawn(async move { resolutions.prime(PRODUCT_API_URL).await });
     runtime
         .block_on(DIRECTORY_CACHE.fetch_or_cached(client, now_unix_secs(), verify_directory))
         .unwrap_or_default()
