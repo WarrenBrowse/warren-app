@@ -683,7 +683,7 @@ builder calls).
 
 ### 3.5 Android per-app country: the next step
 
-Not implemented, and the tab is not shown on Android. The route sessions and
+The datapath is not implemented yet. The route sessions and
 the router are the desktop ones (sections 2.2 to 2.4) ported into
 `warren-jni`; what Android lacks is the flow owner. Every packet of a tunneled
 app already reaches the engine through the TUN, and
@@ -692,6 +692,16 @@ VPN app) answers the uid owning a TCP or UDP 5-tuple seen there, which
 `PackageManager.getPackagesForUid` names. The lookup is a Binder call, so it
 follows the desktop rules: once per new flow, never per packet, and an
 unresolved owner goes through the main connection.
+
+The screen is in place: App routing shows the three tabs in the desktop's
+order, and "Country per app" follows section 7 (switch, search, "With a
+country" and "All apps" sections, a country chip opening a picker of the
+countries and cities with an active server in the relay catalogue, a status
+line per app from `WarrenAppRoutesStatusProvider`). Below Android 10 the tab
+stays visible with its switch disabled and says why. The connect screen
+carries the "N apps in other countries" badge, which opens that tab. Code:
+`lib/feature/splittunneling/impl/.../countries/`,
+`lib/feature/home/impl/.../connectioninfo/AppCountriesSummary.kt`.
 
 ## 4. Platform availability
 
