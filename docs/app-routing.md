@@ -155,8 +155,9 @@ Rules:
   one: `se` and `se`/`got` are two); the settings and the RPC refuse none. How
   many route sessions run at once is the server's answer, followed live by the
   tunnel (`route_capacity`): `max_routes` of the anchor once the control plane
-  bound it (R = 32 on the server today), and 2 otherwise (main + 2 = the 3
-  session tokens of an epoch, `TOKEN_QUOTA_PER_EPOCH`), the case of a server
+  bound it (R = 32 on the server today), and 2 otherwise (main + 2 of the 5
+  session tokens of an epoch, `TOKEN_QUOTA_PER_EPOCH`, which leaves 2 to the
+  wallet's other devices), the case of a server
   with route admission off, a main session with no verdict yet, or one that
   cannot anchor. The routes of the plan past that number are reported
   `waiting for a free route`, their apps blocked, and start as soon as the
@@ -247,7 +248,7 @@ Route admission by anchor (warren-core doc 107 sections 10 and 11;
   exit the directory does not list, or with an anchor known unusable, runs on
   tokens directly.
 - A route admitted by anchor is handed no token provider at all, so it holds
-  no serial and leaves the wallet's three tokens to the main session and the
+  no serial and leaves the wallet's five tokens to the main session and the
   routes that need them.
 - At most 2 routes of a tunnel run on tokens at once, whatever the capacity:
   a route that has to run on tokens while two do is reported
@@ -263,7 +264,7 @@ Route admission by anchor (warren-core doc 107 sections 10 and 11;
   of a route that already runs.
 - A route that runs on a token moves to the anchor once it could be admitted
   that way (`upgrade_by_anchor` in `app_routes/session.rs`), so it stops
-  holding one of the wallet's three serials: once the anchor is bound and the
+  holding one of the wallet's five serials: once the anchor is bound and the
   directory lists the route's exit, a session by anchor to the same exit is
   dialed next to the token one; when it is up (its exit assigned its
   addresses), the route's packets move to it and only then does the session
@@ -286,10 +287,10 @@ Route admission by anchor (warren-core doc 107 sections 10 and 11;
 Tokens (`mullvad-daemon/src/warren_token_provider.rs`):
 
 - The wallet's batch is blinded from its seed, so every client of the wallet
-  holds the same three tokens an epoch, and an exit leases each serial to one
-  live session in the whole fleet. A session is handed the whole current-epoch
-  batch and never consumes it. The exit spends the first token of a setup
-  that verifies: a route session (tokens-only admission) sends the lead token
+  holds the same five tokens an epoch (three until 2026-09-27), and an exit
+  leases each serial to one live session in the whole fleet. A session is
+  handed the whole current-epoch batch and never consumes it. The exit spends
+  the first token of a setup that verifies: a route session (tokens-only admission) sends the lead token
   alone, the main session (default admission) sends the whole stack, and when
   the exit refuses the lead the engine redials leading with the next one. A
   reconnect costs no token.
@@ -770,8 +771,8 @@ unresolved owner goes through the main connection.
   main session on RO 135.136.59.234: a copy of `curl` with DE egressed from
   167.233.127.54, one with FR from 135.136.60.142 and every other program
   from the main exit, the three sessions admitted on the wallet's three
-  tokens at once. With the DE relay blocked by nft inside the VM the DE app
-  got nothing (its route `connecting`, curl timing out) while the main exit
+  tokens at once (the quota was three then). With the DE relay blocked by nft
+  inside the VM the DE app got nothing (its route `connecting`, curl timing out) while the main exit
   kept answering, and it recovered once unblocked. Include-only: an app opened
   through `warren-include` with DE egressed from DE, another from RO, and a
   program not included from the VM's own address. Exclusion won over a

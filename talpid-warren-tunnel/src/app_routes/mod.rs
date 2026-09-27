@@ -67,7 +67,9 @@ impl talpid_app_routing::owner::OwnerResolver for HostResolver {
 }
 
 /// Route sessions that may run next to the main one while routes are admitted
-/// on tokens: the three session tokens of an epoch, minus the main session's.
+/// on tokens. Each holds one of the wallet's `TOKEN_QUOTA_PER_EPOCH` serials
+/// (five an epoch), so a device routing apps on tokens takes the main
+/// session's serial and two more, and leaves two to the wallet's other devices.
 pub const TOKEN_ROUTE_SESSIONS: usize = 2;
 
 /// The most route sessions a tunnel runs, whatever the server admits: the
