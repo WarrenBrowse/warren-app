@@ -13,6 +13,7 @@ import { promisify } from 'util';
 
 import { BROKER_MAX_LOG_GZ_B64_CHARS } from '../shared/forum-attach';
 import log from '../shared/logging';
+import { assertPipeAdminOwned } from './pipe-ownership';
 
 const NETWORK_CALL_TIMEOUT = 10000;
 const CHANNEL_STATE_TIMEOUT = 1000 * 60 * 60;
@@ -307,16 +308,8 @@ export class GrpcClient {
     }
 
     if (process.platform === 'win32') {
-      try {
-        const { pipeIsAdminOwned } = await import('windows-utils');
-        pipeIsAdminOwned(this.rpcPath);
-      } catch (e) {
-        if (e && typeof e === 'object' && 'message' in e) {
-          throw new Error(`Failed to verify admin ownership of named pipe. ${e.message}`);
-        } else {
-          throw new Error('Failed to verify admin ownership of named pipe');
-        }
-      }
+      const { pipeIsAdminOwned } = await import('windows-utils');
+      assertPipeAdminOwned(pipeIsAdminOwned, this.rpcPath);
       log.info('Verified pipe ownership');
     } else {
       const stat = fs.statSync(this.rpcPath);
