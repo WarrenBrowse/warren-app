@@ -3563,6 +3563,15 @@ msgctxt "settings-view"
 msgid "VPN settings"
 msgstr ""
 
+#. Accessibility label of a rule in App routing, which
+#. opens the choice of its route. Available placeholders:
+#. %(application)s - the app's name
+#. %(route)s - its route: "Through the VPN", "Outside
+#. the VPN" or the country it leaves from
+msgctxt "split-tunneling-view"
+msgid "%(application)s, %(route)s"
+msgstr ""
+
 msgctxt "split-tunneling-view"
 msgid "%(applicationName)s is problematic and can’t be excluded from the VPN tunnel."
 msgstr ""
@@ -3571,19 +3580,18 @@ msgctxt "split-tunneling-view"
 msgid "%(applicationName)s is problematic and can’t be launched through the VPN alone."
 msgstr ""
 
-#. Information about split tunneling not being supported on the system.
-#. Available placeholders:
-#. %(splitTunneling)s - will be replaced with Split tunneling
 msgctxt "split-tunneling-view"
-msgid "%(splitTunneling)s is not supported by your system."
+msgid "Add an app"
 msgstr ""
 
 msgctxt "split-tunneling-view"
-msgid "Add"
+msgid "All apps are protected by the VPN, except for the rules below."
 msgstr ""
 
+#. Short button adding an app to the rules, after a
+#. "+" sign. Keep it as short as possible.
 msgctxt "split-tunneling-view"
-msgid "All apps"
+msgid "App"
 msgstr ""
 
 msgctxt "split-tunneling-view"
@@ -3600,32 +3608,16 @@ msgctxt "split-tunneling-view"
 msgid "Bypasses the VPN"
 msgstr ""
 
-#. Accessibility label of the country button of an app.
-#. Available placeholders:
-#. %(application)s - the app's name
-#. %(country)s - the country (and city) it leaves from
-msgctxt "split-tunneling-view"
-msgid "Change the country of %(application)s, now %(country)s"
-msgstr ""
-
 msgctxt "split-tunneling-view"
 msgid "Choose"
 msgstr ""
 
-#. Accessibility label of the country button of an app.
-#. Available placeholders:
-#. %(application)s - the app's name
 msgctxt "split-tunneling-view"
-msgid "Choose a country for %(application)s"
+msgid "Choose an exit country"
 msgstr ""
 
 msgctxt "split-tunneling-view"
-msgid "Choose how each app connects."
-msgstr ""
-
-#. Description of the "Country per app" tab.
-msgctxt "split-tunneling-view"
-msgid "Choose the country an app appears from. Other apps keep your main connection."
+msgid "Choose where each app goes."
 msgstr ""
 
 #. Accessibility label of the button listing the
@@ -3633,19 +3625,6 @@ msgstr ""
 #. %(country)s - the country's name
 msgctxt "split-tunneling-view"
 msgid "Cities in %(country)s"
-msgstr ""
-
-#. Link for learning more
-msgctxt "split-tunneling-view"
-msgid "Click here to learn more"
-msgstr ""
-
-msgctxt "split-tunneling-view"
-msgid "Click on an app to launch it. It uses the VPN until you close it, and nothing else does."
-msgstr ""
-
-msgctxt "split-tunneling-view"
-msgid "Click on an app to launch it. Its traffic will bypass the VPN tunnel until you close it."
 msgstr ""
 
 msgctxt "split-tunneling-view"
@@ -3667,11 +3646,7 @@ msgctxt "split-tunneling-view"
 msgid "Countries"
 msgstr ""
 
-msgctxt "split-tunneling-view"
-msgid "Country"
-msgstr ""
-
-#. Title of the dialog choosing the country one app
+#. Title of the screen choosing the country one app
 #. leaves from. Available placeholders:
 #. %(application)s - the app's name
 msgctxt "split-tunneling-view"
@@ -3679,15 +3654,29 @@ msgid "Country for %(application)s"
 msgstr ""
 
 msgctxt "split-tunneling-view"
-msgid "Country per app"
+msgid "Country of your main connection"
+msgstr ""
+
+#. Badge on the route the apps without a rule take.
+msgctxt "split-tunneling-view"
+msgid "Default"
+msgstr ""
+
+msgctxt "split-tunneling-view"
+msgid "Direct connection by default. Only the apps below use the VPN."
+msgstr ""
+
+msgctxt "split-tunneling-view"
+msgid "Direct connection, your real IP is visible"
+msgstr ""
+
+#. Button closing the route of an app.
+msgctxt "split-tunneling-view"
+msgid "Done"
 msgstr ""
 
 msgctxt "split-tunneling-view"
 msgid "Enabled \"Full disk access\" and still having issues?"
-msgstr ""
-
-msgctxt "split-tunneling-view"
-msgid "Excluded apps"
 msgstr ""
 
 #. Button label for browsing applications with split tunneling.
@@ -3708,13 +3697,37 @@ msgctxt "split-tunneling-view"
 msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not use the VPN."
 msgstr ""
 
+#. Tag on a country another app already leaves from.
 msgctxt "split-tunneling-view"
 msgid "In use"
 msgstr ""
 
-#. Button label for launching an application with split tunneling.
 msgctxt "split-tunneling-view"
-msgid "Launch"
+msgid "It uses this country when you open it with “Open through the VPN”."
+msgstr ""
+
+msgctxt "split-tunneling-view"
+msgid "Needs a signed build of Warren VPN"
+msgstr ""
+
+msgctxt "split-tunneling-view"
+msgid "Needs Full Disk Access"
+msgstr ""
+
+msgctxt "split-tunneling-view"
+msgid "Needs macOS 13 or newer"
+msgstr ""
+
+msgctxt "split-tunneling-view"
+msgid "No app uses the VPN. Add one, or send the other apps through the VPN again."
+msgstr ""
+
+msgctxt "split-tunneling-view"
+msgid "No rules. Add an app to open it through the VPN: it uses the VPN until you close it."
+msgstr ""
+
+msgctxt "split-tunneling-view"
+msgid "No rules. Add an app to send it through another country or outside the VPN."
 msgstr ""
 
 msgctxt "split-tunneling-view"
@@ -3727,6 +3740,10 @@ msgctxt "split-tunneling-view"
 msgid "No session token left"
 msgstr ""
 
+msgctxt "split-tunneling-view"
+msgid "Not available on this system"
+msgstr ""
+
 #. Status under an app whose country is saved while the
 #. "Country per app" switch is off.
 msgctxt "split-tunneling-view"
@@ -3734,19 +3751,19 @@ msgid "Off, uses the main connection"
 msgstr ""
 
 msgctxt "split-tunneling-view"
-msgid "Only the apps you choose use the VPN."
-msgstr ""
-
-msgctxt "split-tunneling-view"
 msgid "Only the apps you choose will use the VPN. The rest of this device will not be protected."
 msgstr ""
 
 msgctxt "split-tunneling-view"
-msgid "Only these apps are protected. Everything else on this device uses your normal connection."
+msgid "Open outside the VPN"
 msgstr ""
 
 msgctxt "split-tunneling-view"
 msgid "Open System Settings"
+msgstr ""
+
+msgctxt "split-tunneling-view"
+msgid "Open through the VPN"
 msgstr ""
 
 #. Line under an app started by a launcher script, which
@@ -3754,6 +3771,26 @@ msgstr ""
 #. at the bottom of the list.
 msgctxt "split-tunneling-view"
 msgid "Opens through a script: pick its program with Find another app"
+msgstr ""
+
+#. Title above the switch choosing what the apps without
+#. a rule do: "Through the VPN" or "Outside the VPN".
+msgctxt "split-tunneling-view"
+msgid "Other apps go"
+msgstr ""
+
+#. A route in App routing: the app connects directly, without
+#. the VPN.
+msgctxt "split-tunneling-view"
+msgid "Outside the VPN"
+msgstr ""
+
+msgctxt "split-tunneling-view"
+msgid "Outside the VPN needs a signed build of Warren VPN."
+msgstr ""
+
+msgctxt "split-tunneling-view"
+msgid "Outside the VPN needs macOS 13 or newer."
 msgstr ""
 
 #. This error message is shown if the user tries to launch a Linux desktop
@@ -3769,19 +3806,34 @@ msgctxt "split-tunneling-view"
 msgid "Please try again or send a problem report."
 msgstr ""
 
-msgctxt "split-tunneling-view"
-msgid "Remove country"
-msgstr ""
-
-#. Accessibility label of the button removing the
-#. country of an app. Available placeholders:
+#. Accessibility label of the button removing an app
+#. the user added by hand from the list of apps.
+#. Available placeholders:
 #. %(application)s - the app's name
 msgctxt "split-tunneling-view"
-msgid "Remove the country of %(application)s"
+msgid "Remove %(application)s from the list"
+msgstr ""
+
+#. Button giving an app back the default route.
+msgctxt "split-tunneling-view"
+msgid "Remove the rule"
 msgstr ""
 
 msgctxt "split-tunneling-view"
 msgid "Restart Warren Service"
+msgstr ""
+
+#. Title of the screen choosing how one app connects.
+#. Available placeholders:
+#. %(application)s - the app's name
+msgctxt "split-tunneling-view"
+msgid "Route for %(application)s"
+msgstr ""
+
+#. Title of the list of apps that each have their own
+#. route, followed by their number.
+msgctxt "split-tunneling-view"
+msgid "Rules per app"
 msgstr ""
 
 #. Every anonymous session token of the account is in
@@ -3796,24 +3848,17 @@ msgctxt "split-tunneling-view"
 msgid "Snap apps cannot use a country yet"
 msgstr ""
 
+#. A route in App routing: the app uses the VPN.
 msgctxt "split-tunneling-view"
-msgid "The apps you choose connect as if the VPN were off."
+msgid "Through the VPN"
 msgstr ""
 
 msgctxt "split-tunneling-view"
-msgid "This build of Warren VPN cannot do this. It needs a signed build."
+msgid "Through the VPN, another country"
 msgstr ""
 
 msgctxt "split-tunneling-view"
-msgid "This needs macOS 13 or newer."
-msgstr ""
-
-msgctxt "split-tunneling-view"
-msgid "This replaces Bypass VPN. Your list of apps there is kept."
-msgstr ""
-
-msgctxt "split-tunneling-view"
-msgid "This replaces VPN only for, so every app uses the VPN again except the ones you bypass. Your list of apps there is kept."
+msgid "Through the VPN, from this country"
 msgstr ""
 
 #. Information about split tunneling being unavailable due to
@@ -3828,10 +3873,6 @@ msgctxt "split-tunneling-view"
 msgid "To use this, enable “Full disk access” for “Warren VPN” in the macOS system settings."
 msgstr ""
 
-msgctxt "split-tunneling-view"
-msgid "Turn on"
-msgstr ""
-
 #. Error message showed in a dialog when an application fails to launch.
 msgctxt "split-tunneling-view"
 msgid "Unable to launch selection. %(detailedErrorMessage)s"
@@ -3842,23 +3883,13 @@ msgid "Unavailable"
 msgstr ""
 
 msgctxt "split-tunneling-view"
-msgid "Uses the VPN through its country"
+msgid "Until you close it. Close it first if it is already open."
 msgstr ""
 
+#. Chip of an app that uses the VPN while the other
+#. apps connect directly. Keep it as short as "VPN".
 msgctxt "split-tunneling-view"
-msgid "Using the VPN"
-msgstr ""
-
-msgctxt "split-tunneling-view"
-msgid "VPN only for"
-msgstr ""
-
-msgctxt "split-tunneling-view"
-msgid "VPN only for is on: an app uses its country when you open it from VPN only for."
-msgstr ""
-
-msgctxt "split-tunneling-view"
-msgid "VPN only for is on: every app you did not choose there already bypasses the VPN."
+msgid "VPN"
 msgstr ""
 
 #. The server runs a limited number of per-app
@@ -3873,11 +3904,7 @@ msgid "Waiting for the VPN"
 msgstr ""
 
 msgctxt "split-tunneling-view"
-msgid "With a country"
-msgstr ""
-
-msgctxt "split-tunneling-view"
-msgid "Your system does not support this."
+msgid "Your system cannot send apps outside the VPN."
 msgstr ""
 
 #. Link to the community + support forum
