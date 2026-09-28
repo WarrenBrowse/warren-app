@@ -1085,8 +1085,8 @@ msgid "Unable to authenticate account. Please send a problem report."
 msgstr "Impossible d'authentifier le compte. Veuillez envoyer un rapport de problème."
 
 msgctxt "auth-failure"
-msgid "You are logged in with an invalid public key. Please log out and try another one."
-msgstr "Vous êtes connecté(e) avec une clé publique non valide. Veuillez vous déconnecter et en essayer une autre."
+msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."
+msgstr "Internet bloqué : cet appareil a été révoqué. Reconnectez-vous à votre compte pour utiliser le VPN, ou déconnectez le VPN pour débloquer Internet."
 
 #. Accessibility label of the beta badge button.
 msgctxt "beta-badge"

@@ -1042,6 +1042,10 @@ msgstr ""
 #. %(url)s - the page explaining how to contest it
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
+msgctxt "auth-failure"
+msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."
+msgstr ""
+
 msgstr ""
 
 #. Available placeholder:
@@ -1056,10 +1060,6 @@ msgstr ""
 
 msgctxt "auth-failure"
 msgid "Unable to authenticate account. Please report the problem on our community forum."
-msgstr ""
-
-msgctxt "auth-failure"
-msgid "You are logged in with an invalid public key. Please log out and try another one."
 msgstr ""
 
 #. Accessibility label of the beta badge button.

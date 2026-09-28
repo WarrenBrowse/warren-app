@@ -5074,8 +5074,8 @@ msgid "With the %(domainFronting)s access method, the app reaches the Warren API
 msgstr "%(domainFronting)s ဝင်ရောက်မှုနည်းလမ်းဖြင့် အက်ပ်သည် CDN မှတစ်ဆင့် Warren API သို့ ရောက်ရှိပြီး အသွားအလာကို အခြားအင်တာနက်အသွားအလာများစွာနှင့် ရောစပ်စေကာ ဆင်ဆာဖြတ်တောက်ရန် ပိုခက်ခဲစေသည်။"
 
 msgctxt "auth-failure"
-msgid "You are logged in with an invalid public key. Please log out and try another one."
-msgstr "သင်သည် မမှန်ကန်သော public key ဖြင့် ဝင်ရောက်ထားသည်။ ကျေးဇူးပြု၍ ထွက်ပြီး အခြားတစ်ခုဖြင့် ပြန်စမ်းကြည့်ပါ။"
+msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."
+msgstr "အင်တာနက် ပိတ်ဆို့နေပါသည်- ဤစက်ပစ္စည်းကို ရုပ်သိမ်းထားပါသည်။ ချိတ်ဆက်ရန် ထပ်မံ ဝင်ရောက်ပါ သို့မဟုတ် အင်တာနက် ပိတ်ဆို့မှုကို ဖြုတ်ရန် ချိတ်ဆက်မှု ဖြတ်တောက်ပါ။"
 
 msgctxt "connect-view"
 msgid "Checking... (click to refresh now)"

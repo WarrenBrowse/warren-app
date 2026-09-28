@@ -23,6 +23,11 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   cere din nou automat în loc să se oprească la primul refuz.
 
 ### Reparat
+- [Windows, macOS, Linux] Aplicația menține blocat un dispozitiv revocat atunci când pornește cu
+  conectarea automată activă sau restabilește tunelul după o oprire neașteptată, așa cum face când
+  dispozitivul este revocat în timpul unei conexiuni. Înainte se deconecta și lăsa traficul să
+  treacă neprotejat. O blocare pentru un dispozitiv sau un acces revocat apare acum ca ACCES
+  REVOCAT în aplicație și în `warren status`, împreună cu modul în care poate fi ridicată.
 - [iOS] Prezintă un drept de port cu fiecare cerere de port redirecționat, ca pe celelalte
   platforme, astfel încât serverele care îl cer acordă portul în loc să-l refuze.
 - [iOS] Semnează conexiunea cu portofelul afișat în aplicație. Folosea o cheie derivată din aceeași

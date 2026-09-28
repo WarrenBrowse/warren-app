@@ -1132,8 +1132,8 @@ msgid "Unable to authenticate account. Please send a problem report."
 msgstr "Nu se poate autentifica contul. Vă rugăm să trimiteți un raport de eroare."
 
 msgctxt "auth-failure"
-msgid "You are logged in with an invalid public key. Please log out and try another one."
-msgstr "V-ați autentificat cu o cheie publică nevalidă. Vă rugăm să vă deconectați și să încercați cu o altă cheie."
+msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."
+msgstr "Blocarea accesului la internet: acest dispozitiv a fost revocat. Autentificați-vă din nou pentru a vă conecta sau deconectați-vă pentru a debloca internetul."
 
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake."

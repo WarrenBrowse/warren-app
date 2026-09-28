@@ -26,6 +26,12 @@ par l'application, gardez-le tel quel.
   automatiquement au lieu de s'arrêter au premier refus.
 
 ### Corrigé
+- [Windows, macOS, Linux] Maintenir le blocage d'un appareil révoqué quand l'application démarre
+  avec la connexion automatique activée ou rétablit le tunnel après un arrêt brutal, comme elle le
+  fait quand l'appareil est révoqué pendant une connexion. Elle se déconnectait à la place et
+  laissait passer le trafic sans protection. Un blocage pour un appareil ou un accès révoqué
+  s'affiche désormais comme ACCÈS RÉVOQUÉ dans l'application et dans `warren status`, avec la
+  façon de le lever.
 - [iOS] Présenter un droit de port avec chaque demande de port redirigé, comme les autres
   plateformes, pour que les serveurs qui l'exigent accordent le port au lieu de le refuser.
 - [iOS] Signer la connexion avec le portefeuille affiché dans l'application. Elle utilisait une clé

@@ -269,6 +269,12 @@ when the app can't establish a tunnel for the device. This includes, but is not 
 
 In the above cases the app gives up trying to create a tunnel, but it can't go to the
 [disconnected] state, since it should not unlock the firewall. Then it enters this state.
+
+A device the server revoked, or an account whose access is revoked, holds this state whenever the
+user wants a tunnel: a connect, a reconnect, auto-connect, or a restore after an unclean shutdown.
+The daemon applies it the same way at startup as while running, so a revocation learned before a
+start never opens the firewall. Only a daemon with no account logged in starts disconnected
+instead, since the tunnel and its blocking policy belonged to the account that left.
 This state locks the firewall so no traffic can flow (except the always active exceptions) and
 informs the user what the problem is. The user must then explicitly click disconnect in order
 to unlock the firewall and get access to the internet again.

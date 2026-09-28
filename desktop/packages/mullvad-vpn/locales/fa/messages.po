@@ -5088,8 +5088,8 @@ msgid "With the %(domainFronting)s access method, the app reaches the Warren API
 msgstr "با روش دسترسی %(domainFronting)s، برنامه از طریق یک CDN به warren-api می‌رسد و ترافیک را با حجم زیادی از دیگر ترافیک اینترنت در هم می‌آمیزد، که سانسور آن را دشوارتر می‌کند."
 
 msgctxt "auth-failure"
-msgid "You are logged in with an invalid public key. Please log out and try another one."
-msgstr "شما با یک کلید عمومی نامعتبر وارد شده‌اید. لطفاً خارج شوید و کلید دیگری را امتحان کنید."
+msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."
+msgstr "مسدود کردن اینترنت: دسترسی این دستگاه لغو شده است. برای اتصال دوباره وارد شوید، یا اتصال را قطع کنید تا اینترنت از حالت مسدود خارج شود."
 
 msgctxt "connect-view"
 msgid "Checking... (click to refresh now)"

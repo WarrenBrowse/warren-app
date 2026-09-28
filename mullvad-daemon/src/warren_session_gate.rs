@@ -97,6 +97,32 @@ pub enum OwnConnect {
     BlockBanned(Ban),
 }
 
+/// What a boot does with the secured target state it starts from: the user's
+/// auto-connect, or a restore after an unclean shutdown.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SecuredBoot {
+    /// Dial.
+    Connect,
+    /// The device is revoked: block, as a revocation at runtime does. The
+    /// target stays secured, so the host stays behind the kill switch until
+    /// the user disconnects or logs in again.
+    BlockRevoked,
+    /// A ban holds: block with it, as at runtime.
+    BlockBanned(Ban),
+    /// No account is logged in: drop the target and its block.
+    DropLoggedOut,
+    /// Another product environment holds the machine: drop the target.
+    StandDown,
+}
+
+/// Whether the firewall block a secured boot starts under is kept until the
+/// tunnel state machine takes over. Only a logged-out boot lets it go: a
+/// revoked or banned device is about to be blocked again, and opening the
+/// firewall in between would leak.
+pub fn boot_keeps_block(login: Login, secured: bool) -> bool {
+    secured && login != Login::LoggedOut
+}
+
 /// One logout request, and who is waiting for its answer.
 #[derive(Debug)]
 pub struct LogoutRequest<W> {
@@ -182,6 +208,25 @@ impl<W> SessionGate<W> {
                 Some(ban) => OwnConnect::BlockBanned(ban),
                 None => OwnConnect::Dial,
             },
+        }
+    }
+
+    /// What a boot does with its secured target, given the ban on the
+    /// installed wallet that holds right now, if any, and whether this build
+    /// may restore the tunnel at all (`restore` is false once it stood down
+    /// for another product environment).
+    pub fn secured_boot(&self, ban_in_force: Option<Ban>, restore: bool) -> SecuredBoot {
+        if self.login == Login::LoggedOut {
+            return SecuredBoot::DropLoggedOut;
+        }
+        if !restore {
+            return SecuredBoot::StandDown;
+        }
+        match self.own_connect(ban_in_force) {
+            OwnConnect::Dial => SecuredBoot::Connect,
+            OwnConnect::BlockRevoked => SecuredBoot::BlockRevoked,
+            OwnConnect::BlockBanned(ban) => SecuredBoot::BlockBanned(ban),
+            OwnConnect::Skip => SecuredBoot::DropLoggedOut,
         }
     }
 
@@ -294,7 +339,10 @@ impl<W> SessionGate<W> {
 
 #[cfg(test)]
 mod tests {
-    use super::{ConnectRefusal, Login, LogoutRequest, LogoutStart, OwnConnect, SessionGate};
+    use super::{
+        ConnectRefusal, Login, LogoutRequest, LogoutStart, OwnConnect, SecuredBoot, SessionGate,
+        boot_keeps_block,
+    };
     use crate::device::{PrivateDeviceEvent, PrivateDeviceState};
     use mullvad_types::warren_pubkey::WarrenPubKey;
     use warren_standing::{Ban, BanReasonCode};
@@ -303,6 +351,9 @@ mod tests {
     const TUNNEL_DOWN: bool = true;
     const DISCONNECTED: bool = true;
     const LEFT_DISCONNECTED: bool = false;
+    const RESTORE: bool = true;
+    const STAND_DOWN: bool = false;
+    const SECURED: bool = true;
 
     fn logged_in() -> SessionGate<&'static str> {
         SessionGate::new(Login::LoggedIn)
@@ -434,6 +485,61 @@ mod tests {
     #[test]
     fn a_reconnect_of_a_logged_in_account_in_good_standing_dials() {
         assert_eq!(logged_in().own_connect(None), OwnConnect::Dial);
+    }
+
+    /// Auto-connect and a restore after an unclean shutdown are the user's
+    /// secured target, and the kill switch holds it: the boot blocks a revoked
+    /// device the way a revocation at runtime does, instead of dropping to an
+    /// unprotected host nobody asked for.
+    #[test]
+    fn a_device_revoked_at_boot_holds_the_secured_target_blocked() {
+        let gate = SessionGate::<()>::new(Login::Revoked);
+
+        assert_eq!(gate.secured_boot(None, RESTORE), SecuredBoot::BlockRevoked);
+        assert!(boot_keeps_block(Login::Revoked, SECURED));
+    }
+
+    #[test]
+    fn an_account_banned_at_boot_holds_the_secured_target_blocked() {
+        let held = ban(BanReasonCode::PortForwardingAbuse, Some(1_830_297_600));
+
+        assert_eq!(
+            logged_in().secured_boot(Some(held), RESTORE),
+            SecuredBoot::BlockBanned(held)
+        );
+    }
+
+    /// A logged-out daemon has no tunnel and no kill switch to keep: the
+    /// account they belonged to has left.
+    #[test]
+    fn a_logged_out_boot_drops_the_secured_target_and_its_block() {
+        let gate = SessionGate::<()>::new(Login::LoggedOut);
+
+        assert_eq!(gate.secured_boot(None, RESTORE), SecuredBoot::DropLoggedOut);
+        assert!(!boot_keeps_block(Login::LoggedOut, SECURED));
+    }
+
+    /// Another product environment holds the machine, so this build blocks
+    /// nothing, revoked or not.
+    #[test]
+    fn a_stood_down_boot_drops_the_target_even_on_a_revoked_device() {
+        let gate = SessionGate::<()>::new(Login::Revoked);
+
+        assert_eq!(gate.secured_boot(None, STAND_DOWN), SecuredBoot::StandDown);
+    }
+
+    #[test]
+    fn a_logged_in_boot_in_good_standing_connects() {
+        assert_eq!(
+            logged_in().secured_boot(None, RESTORE),
+            SecuredBoot::Connect
+        );
+        assert!(boot_keeps_block(Login::LoggedIn, SECURED));
+    }
+
+    #[test]
+    fn an_unsecured_boot_keeps_no_block() {
+        assert!(!boot_keeps_block(Login::Revoked, !SECURED));
     }
 
     #[test]

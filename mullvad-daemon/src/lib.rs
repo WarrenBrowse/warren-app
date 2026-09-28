@@ -1985,9 +1985,12 @@ impl Daemon {
                     .endpoint,
                 // A boot with no account logged in does not bring up the
                 // secured state it may have restored, so it must not keep
-                // that state's block.
-                reset_firewall: *target_state != TargetState::Secured
-                    || boot_login != warren_session_gate::Login::LoggedIn,
+                // that state's block. A revoked device keeps it: the boot
+                // blocks it again at once, as a revocation at runtime does.
+                reset_firewall: !warren_session_gate::boot_keeps_block(
+                    boot_login,
+                    *target_state == TargetState::Secured,
+                ),
                 #[cfg(not(target_os = "android"))]
                 split_apps: {
                     let split_apps = tunnel_split_apps(&settings.app_routing);
@@ -2573,26 +2576,50 @@ impl Daemon {
         let action = warren_env_arbitration::secured_boot_action(
             self.settings.settings().warren_env_yield.as_ref(),
         );
-        match self.target_state.to_strict() {
-            either::Either::Right(_) if let Err(refusal) = self.admit_connect() => {
+        let either::Either::Right(state) = self.target_state.to_strict() else {
+            // Fetching GeoIpLocation is automatically done when connecting.
+            // If TargetState is Unsecured we will not connect on lauch and
+            // so we have to explicitly fetch this information.
+            self.fetch_am_i_mullvad();
+            return;
+        };
+        let boot = self.warren_session.secured_boot(
+            self.warren_ban_in_force(),
+            action == warren_env_arbitration::SecuredBootAction::Restore,
+        );
+        match boot {
+            warren_session_gate::SecuredBoot::Connect => {
+                self.send_tunnel_command(Self::secured_state_to_tunnel_command(state));
+                self.warren_session.connect_sent();
+            }
+            // The kill switch holds a secured target whatever stops the
+            // tunnel, so a device revoked or banned before this start is
+            // blocked here exactly as one revoked while running: dropping the
+            // target would open the host to a state its user never chose.
+            warren_session_gate::SecuredBoot::BlockRevoked => {
+                log::info!("Blocking at boot: this device has been revoked");
+                self.block_for_revoked_device();
+            }
+            warren_session_gate::SecuredBoot::BlockBanned(ban) => {
+                log::info!("Blocking at boot: the Warren account is suspended");
+                self.block_for_ban(&ban);
+            }
+            warren_session_gate::SecuredBoot::DropLoggedOut => {
                 // Auto-connect and a restore after an unclean shutdown both
                 // land here, and neither may bring up a tunnel for an account
                 // that is not logged in. Clearing the target matters for the
                 // same reason as in the stand-down arm below.
-                log::info!("not connecting at boot: {refusal}");
+                log::info!(
+                    "not connecting at boot: {}",
+                    warren_session_gate::ConnectRefusal::LoggedOut
+                );
                 // Nothing was restored, so there is nothing to explain.
                 self.warren_status_cache
                     .clear_restored_after_unclean_shutdown();
                 self.target_state.set(TargetState::Unsecured).await;
                 self.fetch_am_i_mullvad();
             }
-            either::Either::Right(state)
-                if action == warren_env_arbitration::SecuredBootAction::Restore =>
-            {
-                self.send_tunnel_command(Self::secured_state_to_tunnel_command(state));
-                self.warren_session.connect_sent();
-            }
-            either::Either::Right(_) => {
+            warren_session_gate::SecuredBoot::StandDown => {
                 log::info!("not restoring the tunnel: this build has stood down");
                 // Skipping the connect is not enough. `target_state` would
                 // stay `Secured`, and every reconnect (a settings change, a
@@ -2601,12 +2628,6 @@ impl Daemon {
                 // machine under the environment holding it.
                 self.target_state.set(TargetState::Unsecured).await;
                 self.fetch_am_i_mullvad();
-            }
-            either::Either::Left(_) => {
-                // Fetching GeoIpLocation is automatically done when connecting.
-                // If TargetState is Unsecured we will not connect on lauch and
-                // so we have to explicitly fetch this information.
-                self.fetch_am_i_mullvad()
             }
         }
     }

@@ -34,6 +34,19 @@ interface ErrorNotificationContext {
   disableSplitTunneling?: () => void;
 }
 
+/**
+ * Whether the tunnel is blocked for a revocation: of the device, which the
+ * daemon reports as `invalidAccount`, or of the account's access (a ban).
+ */
+function isRevocation(details: ErrorStateDetails): boolean {
+  return (
+    details.cause === ErrorStateCause.authFailed &&
+    (details.authFailedError === AuthFailedError.invalidAccount ||
+      details.authFailedError === AuthFailedError.banned ||
+      details.authFailedError === AuthFailedError.bannedPortForwarding)
+  );
+}
+
 export class ErrorNotificationProvider
   implements SystemNotificationProvider, InAppNotificationProvider
 {
@@ -121,7 +134,9 @@ export class ErrorNotificationProvider
             : 'error',
         title: this.context.tunnelState.details.blockingError
           ? messages.pgettext('in-app-notifications', 'NETWORK TRAFFIC MIGHT BE LEAKING')
-          : messages.pgettext('in-app-notifications', 'BLOCKING INTERNET'),
+          : isRevocation(this.context.tunnelState.details)
+            ? messages.pgettext('in-app-notifications', 'ACCESS REVOKED')
+            : messages.pgettext('in-app-notifications', 'BLOCKING INTERNET'),
         subtitle,
         action: this.getActions(this.context.tunnelState.details) ?? undefined,
       };
@@ -165,9 +180,11 @@ export class ErrorNotificationProvider
         case ErrorStateCause.authFailed:
           switch (errorState.authFailedError) {
             case AuthFailedError.invalidAccount:
+              // The daemon blocks with this reason only for a device the
+              // server revoked.
               return messages.pgettext(
                 'auth-failure',
-                'You are logged in with an invalid public key. Please log out and try another one.',
+                'Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet.',
               );
 
             case AuthFailedError.expiredAccount:

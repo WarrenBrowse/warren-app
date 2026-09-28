@@ -348,16 +348,39 @@ fn print_error_state(error_state: &ErrorState) {
         }
         talpid_types::tunnel::ErrorStateCause::AuthFailed(Some(auth_failed)) => {
             println!(
-                "Blocked: Authentication with remote server failed: {}",
-                get_auth_failed_message(AuthFailed::from(auth_failed.as_str()))
+                "{}",
+                auth_failed_line(AuthFailed::from(auth_failed.as_str()))
             );
         }
         cause => println!("Blocked: {cause}"),
     }
 }
 
+/// The line a blocked state caused by an authentication failure prints. The
+/// daemon blocks with `InvalidAccount` only for a device the server revoked,
+/// so that one and the two bans read as a revocation rather than as a failed
+/// authentication.
+fn auth_failed_line(auth_failed: AuthFailed) -> String {
+    let revocation = matches!(
+        auth_failed,
+        AuthFailed::InvalidAccount | AuthFailed::Banned | AuthFailed::BannedPortForwarding
+    );
+    let message = get_auth_failed_message(auth_failed);
+    if revocation {
+        format!("Blocked: ACCESS REVOKED. {message}")
+    } else {
+        format!("Blocked: Authentication with remote server failed: {message}")
+    }
+}
+
 const fn get_auth_failed_message(auth_failed: AuthFailed) -> &'static str {
-    const INVALID_ACCOUNT_MSG: &str = "You've logged in with an account number that is not valid. Please log out and try another one.";
+    const INVALID_ACCOUNT_MSG: &str = concat!(
+        "This device has been revoked. Log in again with `",
+        env!("CARGO_BIN_NAME"),
+        " account login`, or run `",
+        env!("CARGO_BIN_NAME"),
+        " disconnect` to unblock the internet."
+    );
     const EXPIRED_ACCOUNT_MSG: &str = "You have no more VPN time left on this account. Please log in on our website to buy more credit.";
     const TOO_MANY_CONNECTIONS_MSG: &str = "This account has too many simultaneous connections. Disconnect another device or try connecting again shortly.";
     const BANNED_MSG: &str = "Your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake.";
@@ -397,6 +420,46 @@ mod tests {
             legs_not_delivering,
             tunnel_type: TunnelType::Warren,
         }
+    }
+
+    /// A block the daemon holds for a revocation reads as one, whether it
+    /// started while running or at boot, with what lifts it.
+    #[test]
+    fn a_block_for_a_revoked_device_reads_as_access_revoked() {
+        let line = auth_failed_line(AuthFailed::InvalidAccount);
+
+        assert!(line.starts_with("Blocked: ACCESS REVOKED. "), "{line}");
+        assert!(line.contains("device has been revoked"), "{line}");
+        assert!(line.contains("account login"), "{line}");
+        assert!(line.contains("disconnect"), "{line}");
+    }
+
+    #[test]
+    fn a_block_for_a_ban_reads_as_access_revoked() {
+        for (ban, message) in [
+            (
+                AuthFailed::Banned,
+                get_auth_failed_message(AuthFailed::Banned),
+            ),
+            (
+                AuthFailed::BannedPortForwarding,
+                get_auth_failed_message(AuthFailed::BannedPortForwarding),
+            ),
+        ] {
+            let line = auth_failed_line(ban);
+
+            assert_eq!(line, format!("Blocked: ACCESS REVOKED. {message}"));
+        }
+    }
+
+    #[test]
+    fn an_expired_account_is_not_read_as_a_revocation() {
+        let line = auth_failed_line(AuthFailed::ExpiredAccount);
+
+        assert!(
+            line.starts_with("Blocked: Authentication with remote server failed: "),
+            "{line}"
+        );
     }
 
     /// The published terms call the 12-month ban a revocation, and the port

@@ -5213,8 +5213,8 @@ msgid "With the %(domainFronting)s access method, the app reaches the Warren API
 msgstr "Mit der Zugriffsmethode %(domainFronting)s erreicht die App die Warren-API über ein CDN und vermischt den Datenverkehr mit viel anderem Internetverkehr, was die Zensur erschwert."
 
 msgctxt "auth-failure"
-msgid "You are logged in with an invalid public key. Please log out and try another one."
-msgstr "Sie sind mit einem ungültigen öffentlichen Schlüssel angemeldet. Bitte melden Sie sich ab und versuchen Sie es mit einem anderen."
+msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."
+msgstr "Internet wird blockiert: Dieses Gerät wurde widerrufen. Melden Sie sich erneut an, um eine Verbindung herzustellen, oder trennen Sie die Verbindung, um die Internetsperre aufzuheben."
 
 msgctxt "connect-view"
 msgid "Checking... (click to refresh now)"

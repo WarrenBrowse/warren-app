@@ -5071,8 +5071,8 @@ msgid "With the %(domainFronting)s access method, the app reaches the Warren API
 msgstr "%(domainFronting)s アクセス方式では、アプリは CDN を介して Warren API に接続し、トラフィックを他の多数のインターネット通信に紛れ込ませることで、検閲をより困難にします。"
 
 msgctxt "auth-failure"
-msgid "You are logged in with an invalid public key. Please log out and try another one."
-msgstr "無効な公開鍵でログインしています。ログアウトして、別の公開鍵をお試しください。"
+msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."
+msgstr "インターネットのブロック：このデバイスは取り消されました。接続するには再度ログインするか、切断してインターネットのブロックを解除してください。"
 
 msgctxt "connect-view"
 msgid "Checking... (click to refresh now)"

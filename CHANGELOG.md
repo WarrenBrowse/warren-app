@@ -33,6 +33,11 @@ Line wrap the file at 100 chars.                                              Th
   automatically instead of stopping on the first refusal.
 
 ### Fixed
+- [Windows, macOS, Linux] Keep blocking a revoked device when the app starts with auto-connect on
+  or restores the tunnel after an unclean shutdown, as it does when the device is revoked while
+  connected. It disconnected instead and let the traffic out unprotected. A block for a revoked
+  device or a revoked access now shows as ACCESS REVOKED in the app and in `warren status`, with
+  how to lift it.
 - [iOS] Present a port entitlement with each forwarded port request, as the other platforms do, so
   the servers that require one grant the port instead of refusing it.
 - [iOS] Sign the connection with the wallet shown in the app. It used a key derived from the same
