@@ -38,10 +38,12 @@ do_start() {
         --make-pidfile --pidfile "$PIDFILE" --exec "$SUPERVISOR"
 }
 
+# $1: the signal the supervisor forwards to the daemon, TERM for a stop and
+# USR1 for a restart, which stops the daemon without lifting its firewall.
 do_stop() {
     # The supervisor forwards the signal to the daemon and waits for it, so the
     # retry window covers the daemon's own fail-closed teardown.
-    start-stop-daemon --stop --quiet --oknodo --retry TERM/30/KILL/5 \
+    start-stop-daemon --stop --quiet --oknodo --retry "$1/30/KILL/5" \
         --pidfile "$PIDFILE"
     stop_status=$?
     rm -f "$PIDFILE"
@@ -65,7 +67,7 @@ case "${1:-}" in
         ;;
     stop)
         printf '%s' "Stopping $DESC: "
-        if do_stop; then
+        if do_stop TERM; then
             echo "$NAME."
         else
             echo "failed."
@@ -74,7 +76,7 @@ case "${1:-}" in
         ;;
     restart | force-reload)
         printf '%s' "Restarting $DESC: "
-        do_stop || true
+        do_stop USR1 || true
         # The daemon binds a management socket and the firewall tables; give the
         # kernel a moment to release them before the new process claims them.
         sleep 1

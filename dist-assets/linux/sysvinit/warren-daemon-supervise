@@ -24,7 +24,17 @@ forward_term() {
     fi
 }
 
+# USR1 is a restart: the daemon stops blocking, with its target state saved, and
+# the init script starts it again (the systemd unit's RestartKillSignal).
+forward_restart() {
+    running=0
+    if [ -n "$child" ]; then
+        kill -USR1 "$child" 2>/dev/null || true
+    fi
+}
+
 trap forward_term TERM INT
+trap forward_restart USR1
 
 while [ "$running" -eq 1 ]; do
     "$DAEMON" -vv --disable-stdout-timestamps &

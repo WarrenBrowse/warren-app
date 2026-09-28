@@ -237,6 +237,13 @@ async fn create_daemon(
     let cache_dir = mullvad_paths::cache_dir()
         .map_err(|e| e.display_chain_with_msg("Unable to get cache dir"))?;
 
+    let command_channel = DaemonCommandChannel::new();
+    // Before the daemon starts, so a restart asked for during startup is queued rather than
+    // killing the process with the signal's default action.
+    #[cfg(target_os = "linux")]
+    mullvad_daemon::shutdown::install_restart_signal_handler(command_channel.sender())
+        .map_err(|e| format!("Failed to install the SIGUSR1 handler: {e}"))?;
+
     Daemon::start(
         DaemonConfig {
             log_dir,
@@ -247,7 +254,7 @@ async fn create_daemon(
             endpoint: mullvad_api::ApiEndpoint::from_env_vars(),
             log_handle,
         },
-        DaemonCommandChannel::new(),
+        command_channel,
     )
     .await
     .map_err(|e| e.display_chain_with_msg("Unable to initialize daemon"))

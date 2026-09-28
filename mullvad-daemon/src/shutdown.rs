@@ -73,6 +73,25 @@ fn runlevel_output_is_running(output: &str) -> Option<bool> {
     }
 }
 
+/// On `SIGUSR1`, stop the daemon the way an app update does: the target state is saved and the
+/// firewall keeps blocking, so the daemon that starts next resumes where this one stopped. The
+/// systemd unit sends it for `systemctl restart` (`RestartKillSignal`), which would otherwise
+/// arrive as a SIGTERM from a running host, read as a user stop, and open the firewall for the
+/// length of the restart.
+#[cfg(target_os = "linux")]
+pub fn install_restart_signal_handler(commands: crate::DaemonCommandSender) -> std::io::Result<()> {
+    use tokio::signal::unix::{SignalKind, signal};
+
+    let mut sigusr1 = signal(SignalKind::user_defined1())?;
+    tokio::spawn(async move {
+        if sigusr1.recv().await.is_some() {
+            log::warn!("SIGUSR1 caught, stopping for a restart with the firewall kept blocking");
+            let _ = commands.send(crate::DaemonCommand::PrepareRestart(true));
+        }
+    });
+    Ok(())
+}
+
 /// Currently returns false all of the time to ensure that no leaks occur during shutdown.
 // FIXME: implement shutdown detection - the current implementation will always block network
 // traffic when the daemon is shut down.
@@ -84,6 +103,29 @@ pub fn is_shutdown_user_initiated() -> bool {
 #[cfg(test)]
 mod tests {
     use super::runlevel_output_is_running;
+
+    #[cfg(target_os = "linux")]
+    #[tokio::test]
+    async fn sigusr1_stops_the_daemon_as_a_restart_that_keeps_blocking() {
+        use crate::{DaemonCommand, DaemonCommandChannel, InternalDaemonEvent};
+        use futures::StreamExt;
+
+        let mut channel = DaemonCommandChannel::new();
+        super::install_restart_signal_handler(channel.sender()).unwrap();
+
+        nix::sys::signal::raise(nix::sys::signal::Signal::SIGUSR1).unwrap();
+
+        let event =
+            tokio::time::timeout(std::time::Duration::from_secs(5), channel.receiver.next())
+                .await
+                .expect("no command after SIGUSR1");
+        assert!(matches!(
+            event,
+            Some(InternalDaemonEvent::Command(DaemonCommand::PrepareRestart(
+                true
+            )))
+        ));
+    }
 
     #[test]
     fn halt_and_reboot_runlevels_are_a_machine_shutdown() {

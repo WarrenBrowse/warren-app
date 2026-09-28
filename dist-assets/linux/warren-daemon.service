@@ -17,6 +17,10 @@ Restart=always
 RestartSec=1
 ExecStart=/usr/bin/warren-daemon -vv --disable-stdout-timestamps
 Environment="WARREN_RESOURCE_DIR=/opt/Warren VPN/resources/"
+# `systemctl restart` stops the daemon with SIGUSR1 instead of SIGTERM. A SIGTERM on a running
+# host reads as a user stop and opens the firewall until the next daemon starts; SIGUSR1 stops it
+# the way an app update does, blocking, with the target state saved for the next start.
+RestartKillSignal=SIGUSR1
 
 [Install]
 WantedBy=multi-user.target
