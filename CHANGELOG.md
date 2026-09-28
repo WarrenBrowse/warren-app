@@ -46,12 +46,48 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Disconnect and remove the VPN configuration when logging out or erasing the wallet, so the
   tunnel can neither stay up nor come back on demand for a wallet that left the device.
 
+## [1.1.41] - 2026-09-29
 ### Changed
 - [Windows, macOS, Linux, Android] Replace the three tabs of App routing with one list of rules:
   pick an app, then send it through the VPN, through the VPN from another country, or outside the
   VPN. A switch above the list sets what the other apps do, through the VPN or outside it (the
   former VPN only for). Nothing needs turning on: a route is in force as soon as an app uses it, and
   stops with its last app.
+- [Windows, macOS, Linux] Show the Warren W in the tray and the menu bar instead of the lock. It
+  fills as the VPN connects, and the notification dot sits between its ears.
+- [Windows, macOS, Linux] Fold the network list of Local network sharing behind one row that says
+  how many networks are shared, and the IP version options behind one row that shows the current
+  choice.
+- [Windows] Ship version 1.3.0.0 of the split tunneling driver.
+
+### Fixed
+- [Linux] Keep the traffic blocked when the daemon restarts, and when it stops with lockdown mode
+  on. The block was lifted as the daemon exited, so `systemctl restart warren-daemon` let the
+  traffic out unprotected and left the VPN disconnected. The blocker that runs at boot before the
+  daemon now hands its block over the same way.
+- [macOS] Keep the traffic blocked when the daemon stops with lockdown mode on, as on Linux.
+- [macOS] Leave a Warren VPN installed beside Warren VPN Beta in place when the Beta app is
+  deleted, and lift the block the deleted app left. The Mac stayed offline and the other install
+  was removed with it.
+- [Windows, macOS, Linux, Android] Connect about four seconds sooner after the app starts when
+  another device of the same wallet, on an older version, already took the current connection
+  tokens. The first connection waited for tokens the server had given to that device.
+- [Android] Bring the VPN back after an app update when always-on VPN is off. The update stopped the
+  VPN and it stayed down.
+- [Windows] Block Hyper-V virtual machines and WSL while the VPN disconnects or reconnects. Their
+  traffic could leave outside the VPN for that moment.
+- [Windows] Give the DNS cache flush 10 seconds before giving up, so it no longer fails on a busy
+  computer.
+
+### Security
+- [Windows, macOS, Linux] Stop resuming TLS sessions in the connections to the Warren servers, so a
+  server cannot link one connection of the app to the next.
+- [Windows] Refuse a connection to the daemon whose named pipe no administrator owns. The result of
+  that check was ignored, so a program without privileges could pose as the daemon.
+- [macOS] Run nothing from the app bundle in the uninstall the daemon starts as root when the app is
+  deleted.
+- [Linux] Make `warren-exclude` and `warren-include`, which run with elevated rights, ignore the
+  cgroup paths set in the environment and refuse a path outside a cgroup filesystem.
 
 ## [1.1.40] - 2026-09-28
 ### Fixed

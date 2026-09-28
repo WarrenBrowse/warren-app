@@ -37,12 +37,51 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   portofelului, ca tunelul să nu poată nici rămâne deschis, nici reporni la cerere pentru un
   portofel care a părăsit dispozitivul.
 
+## [1.1.41] - 2026-09-29
 ### Modificat
 - [Windows, macOS, Linux, Android] Cele trei file din Rutare aplicații devin o singură listă de
   reguli: alegi o aplicație, apoi o trimiți prin VPN, prin VPN dintr-o altă țară sau fără VPN. Un
   comutator deasupra listei stabilește pe unde trec celelalte aplicații, prin VPN sau fără VPN
   (fostul VPN selectiv). Nu mai trebuie activat nimic: o rută se aplică de îndată ce o aplicație o
   folosește și se oprește odată cu ultima ei aplicație.
+- [Windows, macOS, Linux] W-ul Warren apare în bara de sistem și în bara de meniu în locul
+  lacătului. Se umple pe măsură ce VPN-ul se conectează, iar punctul de notificare stă între
+  urechile lui.
+- [Windows, macOS, Linux] Lista de rețele din Partajarea rețelei locale se strânge într-un rând care
+  arată câte rețele sunt partajate, iar opțiunile de versiune IP într-un rând care arată alegerea
+  curentă.
+- [Windows] Driverul de split tunneling trece la versiunea 1.3.0.0.
+
+### Reparat
+- [Linux] Traficul rămâne blocat când daemonul repornește și când se oprește cu Mod Blocare
+  activ. Blocarea era ridicată la ieșirea daemonului, așa că `systemctl restart warren-daemon`
+  lăsa traficul să iasă neprotejat și lăsa VPN-ul deconectat. Blocajul care rulează la pornirea
+  sistemului, înaintea daemonului, îi predă acum blocarea în același fel.
+- [macOS] Traficul rămâne blocat când daemonul se oprește cu Mod Blocare activ, ca pe Linux.
+- [macOS] Un Warren VPN instalat lângă Warren VPN Beta rămâne pe loc când aplicația Beta e ștearsă,
+  iar blocarea lăsată de aplicația ștearsă e ridicată. Mac-ul rămânea offline, iar cealaltă
+  instalare era ștearsă odată cu ea.
+- [Windows, macOS, Linux, Android] Conectarea se face cu aproximativ patru secunde mai repede după
+  pornirea aplicației când un alt dispozitiv al aceluiași portofel, pe o versiune mai veche, a luat
+  deja jetoanele de conectare curente. Prima conexiune aștepta jetoane pe care serverul le dăduse
+  acelui dispozitiv.
+- [Android] VPN-ul revine după o actualizare a aplicației când VPN activ permanent e dezactivat.
+  Actualizarea oprea VPN-ul, iar acesta rămânea oprit.
+- [Windows] Mașinile virtuale Hyper-V și WSL sunt blocate cât timp VPN-ul se deconectează sau se
+  reconectează. Traficul lor putea ieși în afara VPN-ului în acel moment.
+- [Windows] Golirea cache-ului DNS are 10 secunde înainte de a renunța, ca să nu mai eșueze pe un
+  calculator încărcat.
+
+### Securitate
+- [Windows, macOS, Linux] Sesiunile TLS nu mai sunt reluate în conexiunile către serverele Warren,
+  ca un server să nu poată lega o conexiune a aplicației de următoarea.
+- [Windows] O conexiune la daemon e refuzată când named pipe-ul lui nu aparține unui administrator.
+  Rezultatul acestei verificări era ignorat, așa că un program fără privilegii se putea da drept
+  daemon.
+- [macOS] Dezinstalarea pe care daemonul o pornește ca root când aplicația e ștearsă nu mai rulează
+  nimic din pachetul aplicației.
+- [Linux] `warren-exclude` și `warren-include`, care rulează cu drepturi ridicate, ignoră căile de
+  cgroup setate în mediu și refuză o cale din afara unui sistem de fișiere cgroup.
 
 ## [1.1.40] - 2026-09-28
 ### Reparat

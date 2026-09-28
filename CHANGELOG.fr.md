@@ -41,12 +41,54 @@ par l'application, gardez-le tel quel.
   du portefeuille, pour que le tunnel ne puisse ni rester ouvert ni revenir à la demande pour un
   portefeuille qui a quitté l'appareil.
 
+## [1.1.41] - 2026-09-29
 ### Modifié
 - [Windows, macOS, Linux, Android] Remplacer les trois onglets du routage des apps par une seule
   liste de règles : choisissez une app, puis faites-la passer par le VPN, par le VPN depuis un autre
   pays, ou hors VPN. Un sélecteur au-dessus de la liste fixe le chemin des autres apps, par le VPN
   ou hors VPN (l'ancien VPN ciblé). Plus rien à activer : un chemin s'applique dès qu'une app
   l'utilise et s'arrête avec sa dernière app.
+- [Windows, macOS, Linux] Afficher le W de Warren dans la barre des tâches et la barre des menus à
+  la place du cadenas. Il se remplit pendant la connexion du VPN, et le point de notification se
+  place entre ses oreilles.
+- [Windows, macOS, Linux] Replier la liste des réseaux du partage réseau local derrière une ligne
+  qui indique combien de réseaux sont partagés, et les options de version IP derrière une ligne qui
+  affiche le choix en cours.
+- [Windows] Livrer la version 1.3.0.0 du pilote de split tunneling.
+
+### Corrigé
+- [Linux] Garder le trafic bloqué quand le daemon redémarre, et quand il s'arrête avec le mode
+  verrouillage activé. Le blocage était levé à la sortie du daemon, si bien que
+  `systemctl restart warren-daemon` laissait sortir le trafic sans protection et laissait le VPN
+  déconnecté. Le bloqueur qui tourne au démarrage de la machine, avant le daemon, lui transmet
+  désormais son blocage de la même façon.
+- [macOS] Garder le trafic bloqué quand le daemon s'arrête avec le mode verrouillage activé, comme
+  sur Linux.
+- [macOS] Laisser en place un Warren VPN installé à côté de Warren VPN Beta quand l'app Beta est
+  supprimée, et lever le blocage laissé par l'app supprimée. Le Mac restait hors ligne et l'autre
+  installation était supprimée avec elle.
+- [Windows, macOS, Linux, Android] Se connecter environ quatre secondes plus tôt après le lancement
+  de l'app quand un autre appareil du même portefeuille, sur une version plus ancienne, a déjà pris
+  les jetons de connexion en cours. La première connexion attendait des jetons que le serveur avait
+  donnés à cet appareil.
+- [Android] Rétablir le VPN après une mise à jour de l'app quand le VPN permanent est désactivé. La
+  mise à jour arrêtait le VPN et il restait coupé.
+- [Windows] Bloquer les machines virtuelles Hyper-V et WSL pendant que le VPN se déconnecte ou se
+  reconnecte. Leur trafic pouvait sortir hors du VPN pendant ce moment.
+- [Windows] Laisser 10 secondes au vidage du cache DNS avant d'abandonner, pour qu'il n'échoue plus
+  sur un ordinateur chargé.
+
+### Sécurité
+- [Windows, macOS, Linux] Ne plus reprendre les sessions TLS dans les connexions aux serveurs
+  Warren, pour qu'un serveur ne puisse pas relier une connexion de l'app à la suivante.
+- [Windows] Refuser une connexion au daemon dont le named pipe n'appartient à aucun administrateur.
+  Le résultat de cette vérification était ignoré, si bien qu'un programme sans privilèges pouvait se
+  faire passer pour le daemon.
+- [macOS] N'exécuter aucun fichier du bundle de l'app dans la désinstallation que le daemon lance en
+  root quand l'app est supprimée.
+- [Linux] Faire ignorer à `warren-exclude` et `warren-include`, qui s'exécutent avec des droits
+  élevés, les chemins de cgroup définis dans l'environnement, et leur faire refuser un chemin hors
+  d'un système de fichiers cgroup.
 
 ## [1.1.40] - 2026-09-28
 ### Corrigé
