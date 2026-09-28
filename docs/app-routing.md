@@ -871,13 +871,12 @@ builder calls).
 - Guard: a builder given no allowed package, or only packages it cannot find,
   captures every app. So an include-only list with no installed package never
   reaches the builder as an allow list: the tunnel is a full tunnel, which
-  keeps the chosen apps protected, and the screen says so ("None of the apps
-  you chose is on this device, so every app uses the VPN until you choose
-  one."). The connect screen label counts only installed apps, and is absent
-  in that case. Since an app with a country joins the list (section 3.3), a
-  first country chosen in that state, or the "Country per app" switch turned
-  on over saved countries, would turn the full tunnel into a list of the apps
-  with a country, so the tab asks first (section 3.5).
+  keeps the chosen apps protected, and App routing says so in a warning
+  (section 3.5). The connect screen label counts only installed apps, and is
+  absent in that case. A first rule in that state, the VPN or a country for an
+  app of the device (an app with a country joins the list, section 3.3),
+  would turn the full tunnel into a list, so the screen asks first
+  (section 3.5).
 - Every blackhole plan carries the same allow list: the included apps stay
   captured while the tunnel is down, and every other app stays online. In
   exclude mode the blackhole still captures every app, excluded ones
@@ -890,7 +889,8 @@ builder calls).
   up (new one established first, old one closed after), so an app added while
   blocked is held at once.
 - The system setting "Block connections without VPN" blocks every app outside
-  the VPN, so with it on only the included apps have Internet; the tab says so.
+  the VPN, so with it on only the included apps have Internet; App routing
+  says so under its list whenever some app is outside the VPN.
 - DNS: an included app resolves through the tunnel like any tunneled app. An
   app outside the list uses the physical network's resolver, as an excluded
   app does (`split-tunneling.md`).
@@ -959,30 +959,55 @@ Android's own:
   the directory in this process (a restored token bundle knows its epoch
   before any directory read, which is what the daemon's test relies on).
 
-The screen follows section 7: App routing shows the three tabs in the
-desktop's order, and "Country per app" has its switch, a search, the "With a
-country" and "All apps" sections, a country chip per app opening a picker of
-the countries and cities with an active server in the relay catalogue (it
-never moves the main connection, and choosing turns the switch on), and a
-status line per app. A choice that would turn include-only's full tunnel
-(section 3.4) into a list opens a confirmation first ("Only <app> will use
-the VPN", saying that every other app will use the normal connection);
-cancelling leaves the settings as they were. The question is
-`countryChoiceNarrowsFullTunnel` (`lib/model/.../AppRouting.kt`), which runs
-`effectiveAppExits` and `resolveAppRouting`, the functions the tunnel
-resolves its apps with, before the choice and after it (the switch on), and
-asks exactly when the first answer is every app and the second a list.
-Turning the tab's switch on while countries are saved narrows the tunnel the
-same way, so it asks the same question (`appExitsSwitchNarrowsFullTunnel`,
-the saved countries before and after the switch) and shows a confirmation
-that says the apps with a country become the only ones in the VPN; cancelling
-leaves the switch off. The connect screen carries the "N apps in other
-countries" badge, red when a route cannot run for a reason other than the
-tunnel being down, which opens that tab. Code:
-`lib/feature/splittunneling/impl/.../countries/`,
+The screen is the desktop's single list (section 7). "Other apps go"
+chooses the default route, "Through the VPN" or "Outside the VPN" (which is
+include-only), and "Rules per app" lists every app of the device whose route
+differs from it, with a chip (a flag and the country, "Outside the VPN", or
+"VPN") and, for a country, the status line of its route. A row, or an app
+picked from "+ App" (the apps without a rule, a search and the system apps
+switch), opens the app's route page: through the VPN, through the VPN from
+another country, or outside the VPN. The option the other apps take carries
+"Default", choosing it or "Remove the rule" gives the app the default again,
+and an app picked from "+ App" gets no rule until another option is chosen.
+The country option opens a page of the countries and cities with an active
+server in the relay catalogue, which never moves the main connection. Below
+Android 10 that option is disabled and says the feature needs Android 10.
+There is no switch: bypass turns on with the first app sent outside the VPN
+and off with the last one, and the countries turn on with the first one.
+
+The translation between the list and the settings is `AppRoutingSettings`
+(`lib/model/.../AppRoutingRules.kt`), the Kotlin twin of the desktop
+`src/shared/app-routing.ts`, and `AppRoutingRulesTest` replays the desktop's
+cases. `rules()` is the list, one route per app after the precedence of
+section 1, with what is saved but not in force left out. `planAppRoute` and
+`planDefaultRoute` are the writes of one change, and
+`SplitTunnelingRepository.apply` makes them one at a time and in their order,
+so the tunnel, which follows each write, never routes the app a third way and
+never moves another app. The default change empties both lists and keeps the
+countries: toward the VPN the mode goes off first, toward direct it becomes
+include-only last.
+
+Two parts are Android's own. With "Outside the VPN" as the default and no app
+of the device in the list, the tunnel runs as the full tunnel of section 3.4,
+so the list shows a warning that every app uses the VPN until one is added,
+in place of the empty state. And a change that turns a tunnel carrying every
+app, or every app but the bypassing ones, into a list asks first: the first
+rule in that state ("Only <app> will use the VPN", saying every other app
+will use the normal connection), and "Outside the VPN" chosen as the default
+while apps have a country (only those apps will use the VPN). Cancelling
+leaves the settings as they were. The question is `changeNarrowsTunnel`,
+which resolves the settings before and after the change with
+`resolveAppRouting`, the function the tunnel resolves its apps with. While
+some app is outside the VPN, a note under the list says that the system's
+"Block connections without VPN" leaves those apps without Internet.
+
+The connect screen carries the "N apps in other countries" badge, red when a
+route cannot run for a reason other than the tunnel being down, which opens
+App routing. Code: `lib/feature/splittunneling/impl/` (the list, the route,
+add and country pages, `SplitTunnelingViewModel`),
 `lib/feature/home/impl/.../connectioninfo/AppCountriesSummary.kt`; the
-settings live in `WarrenLocalSettingsRepository` (`app_exits`,
-`app_exits_enabled`).
+settings live in `WarrenLocalSettingsRepository` (`split_tunneling_mode`, the
+two app lists, `app_exits`, `app_exits_enabled`).
 
 Validation, 2026-09-27, beta build of this branch on the `warren-test`
 emulator (API 35, arm64), subscribed wallet already in the app, Chrome and a
