@@ -16,7 +16,7 @@ use std::{
     path::{Path, PathBuf},
     process::Stdio,
     sync::{Arc, LazyLock, Mutex},
-    time::Duration,
+    time::{Duration, Instant},
 };
 use talpid_macos::process::{list_pids, process_path};
 use talpid_platform_metadata::MacosVersion;
@@ -301,7 +301,7 @@ async fn handle_eslogger_output(
             let val: ESMessage = match serde_json::from_str(&line) {
                 Ok(val) => val,
                 Err(error) => {
-                    log::error!("Failed to parse eslogger message: {error}");
+                    log_parse_error_throttled(&error);
                     continue;
                 }
             };
@@ -358,6 +358,54 @@ async fn handle_eslogger_output(
     log::debug!("Process monitor stopped");
 
     result
+}
+
+/// Logs an unparseable `eslogger` line at most once per [`LogThrottle::INTERVAL`]. `eslogger`
+/// emits one line per syscall, so output it cannot parse (an unknown schema version) would
+/// otherwise flood the log.
+fn log_parse_error_throttled(error: &serde_json::Error) {
+    static THROTTLE: Mutex<LogThrottle> = Mutex::new(LogThrottle::new());
+
+    let Some(suppressed) = THROTTLE.lock().unwrap().admit(Instant::now()) else {
+        return;
+    };
+    match suppressed {
+        0 => log::error!("Failed to parse eslogger message: {error}"),
+        suppressed => log::error!(
+            "Failed to parse eslogger message: {error} ({suppressed} similar errors suppressed)"
+        ),
+    }
+}
+
+/// Lets one occurrence through per [`Self::INTERVAL`] and counts the others.
+struct LogThrottle {
+    last_admitted: Option<Instant>,
+    suppressed: u32,
+}
+
+impl LogThrottle {
+    const INTERVAL: Duration = Duration::from_secs(60);
+
+    const fn new() -> Self {
+        LogThrottle {
+            last_admitted: None,
+            suppressed: 0,
+        }
+    }
+
+    /// `Some(n)` when the occurrence at `now` should be logged, `n` being how many were
+    /// suppressed since the last one logged; `None` when it should be suppressed.
+    fn admit(&mut self, now: Instant) -> Option<u32> {
+        let due = self
+            .last_admitted
+            .is_none_or(|last| now.duration_since(last) >= Self::INTERVAL);
+        if !due {
+            self.suppressed += 1;
+            return None;
+        }
+        self.last_admitted = Some(now);
+        Some(std::mem::take(&mut self.suppressed))
+    }
 }
 
 /// Launch a new instance of `eslogger`, listening for exec, fork, and exit syscalls
@@ -783,6 +831,18 @@ fn check_os_version_support_inner(version: MacosVersion) -> Result<(), Error> {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn a_parse_error_is_logged_once_per_interval_with_the_count_it_suppressed() {
+        let start = Instant::now();
+        let mut throttle = LogThrottle::new();
+
+        assert_eq!(throttle.admit(start), Some(0));
+        assert_eq!(throttle.admit(start + Duration::from_secs(1)), None);
+        assert_eq!(throttle.admit(start + Duration::from_secs(59)), None);
+        assert_eq!(throttle.admit(start + LogThrottle::INTERVAL), Some(2));
+        assert_eq!(throttle.admit(start + LogThrottle::INTERVAL), None);
+    }
 
     use std::time::Duration;
     use talpid_platform_metadata::MacosVersion;
