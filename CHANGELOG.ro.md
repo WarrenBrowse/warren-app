@@ -38,11 +38,11 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   portofel care a părăsit dispozitivul.
 
 ### Modificat
-- [Windows, macOS, Linux] Cele trei file din Rutare aplicații devin o singură listă de reguli:
-  alegi o aplicație, apoi o trimiți prin VPN, prin VPN dintr-o altă țară sau fără VPN. Un comutator
-  deasupra listei stabilește pe unde trec celelalte aplicații, prin VPN sau fără VPN (fostul VPN
-  selectiv). Nu mai trebuie activat nimic: o rută se aplică de îndată ce o aplicație o folosește și
-  se oprește odată cu ultima ei aplicație.
+- [Windows, macOS, Linux, Android] Cele trei file din Rutare aplicații devin o singură listă de
+  reguli: alegi o aplicație, apoi o trimiți prin VPN, prin VPN dintr-o altă țară sau fără VPN. Un
+  comutator deasupra listei stabilește pe unde trec celelalte aplicații, prin VPN sau fără VPN
+  (fostul VPN selectiv). Nu mai trebuie activat nimic: o rută se aplică de îndată ce o aplicație o
+  folosește și se oprește odată cu ultima ei aplicație.
 
 ## [1.1.40] - 2026-09-28
 ### Reparat
