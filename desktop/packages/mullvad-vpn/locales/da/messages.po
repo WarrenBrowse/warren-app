@@ -1587,6 +1587,10 @@ msgid "<a>%(lockdownModeSettingName)s</a> is enabled. Please click “Connect“
 msgstr "<a>%(lockdownModeSettingName)s</a> er aktiveret. Klik på \"Tilslut\" eller deaktiver “%(lockdownModeSettingName)s“ for at ophæve blokeringen af ​​internettet."
 
 msgctxt "in-app-notifications"
+msgid "ACCESS REVOKED"
+msgstr "ADGANG INDDRAGET"
+
+msgctxt "in-app-notifications"
 msgid "ACCOUNT CREDIT EXPIRES SOON"
 msgstr "KONTOKREDIT UDLØBER SNART"
 
@@ -1626,6 +1630,10 @@ msgstr "Klik her for at se nyhederne."
 msgctxt "in-app-notifications"
 msgid "Click here to update"
 msgstr "Klik her for at opdatere"
+
+msgctxt "in-app-notifications"
+msgid "Connecting is not possible while access is revoked."
+msgstr "Det er ikke muligt at oprette forbindelse, så længe adgangen er inddraget."
 
 #. Label of the voucher code an announcement granted to this account.
 msgctxt "in-app-notifications"

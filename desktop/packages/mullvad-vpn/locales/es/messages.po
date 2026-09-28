@@ -1587,6 +1587,10 @@ msgid "<a>%(lockdownModeSettingName)s</a> is enabled. Please click “Connect“
 msgstr "<a>%(lockdownModeSettingName)s</a> está habilitado. Haga clic en «Conectar» o deshabilite «%(lockdownModeSettingName)s» para desbloquear internet."
 
 msgctxt "in-app-notifications"
+msgid "ACCESS REVOKED"
+msgstr "ACCESO REVOCADO"
+
+msgctxt "in-app-notifications"
 msgid "ACCOUNT CREDIT EXPIRES SOON"
 msgstr "EL CRÉDITO DE SU CUENTA CADUCA PRONTO"
 
@@ -1626,6 +1630,10 @@ msgstr "Haga clic aquí para ver las novedades."
 msgctxt "in-app-notifications"
 msgid "Click here to update"
 msgstr "Haga clic aquí para actualizar"
+
+msgctxt "in-app-notifications"
+msgid "Connecting is not possible while access is revoked."
+msgstr "No es posible conectarse mientras el acceso esté revocado."
 
 #. Label of the voucher code an announcement granted to this account.
 msgctxt "in-app-notifications"

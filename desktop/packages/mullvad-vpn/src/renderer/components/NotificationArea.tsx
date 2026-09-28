@@ -32,6 +32,7 @@ import {
   AppUpgradeProgressNotificationProvider,
   AppUpgradeReadyNotificationProvider,
   NewVersionNotificationProvider,
+  WarrenAccessRevokedNotificationProvider,
   WarrenAccountStrikeNotificationProvider,
   WarrenAnnouncementNotificationProvider,
   WarrenConnectingStuckNotificationProvider,
@@ -255,6 +256,14 @@ export default function NotificationArea(props: IProps) {
       disableSplitTunneling,
       splitTunnelingSupported,
       ban: warrenStatus?.accountStanding?.ban,
+      locale,
+    }),
+    // The disconnected counterpart of the ban the error banner above shows:
+    // the daemon refuses every connect while access is revoked, and this says
+    // why the connect button does nothing.
+    new WarrenAccessRevokedNotificationProvider({
+      tunnelState,
+      accountStanding: warrenStatus?.accountStanding ?? null,
       locale,
     }),
     // Under the tunnel's own error (a ban shows there, with its lapse date),

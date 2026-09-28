@@ -162,3 +162,30 @@ export function banInForce(
   }
   return ban.lapsesAtUnixSecs === null || nowMs < ban.lapsesAtUnixSecs * 1000 ? ban : undefined;
 }
+
+/** The ban in force, with its cause and its end when it has one. */
+export function banLine(ban: WarrenAccountBan, locale: string): string {
+  const until =
+    ban.lapsesAtUnixSecs === null ? undefined : formatStandingDay(ban.lapsesAtUnixSecs, locale);
+  if (ban.reason === 'port-forwarding-abuse') {
+    return until === undefined
+      ? messages.pgettext('port-forwarding-view', 'Access revoked for port-forwarding abuse.')
+      : sprintf(
+          // TRANSLATORS: Available placeholder:
+          // TRANSLATORS: %(date)s - the day the revocation ends, e.g. 24 September 2027
+          messages.pgettext(
+            'port-forwarding-view',
+            'Access revoked for port-forwarding abuse until %(date)s.',
+          ),
+          { date: until },
+        );
+  }
+  return until === undefined
+    ? messages.pgettext('port-forwarding-view', 'Access revoked.')
+    : sprintf(
+        // TRANSLATORS: Available placeholder:
+        // TRANSLATORS: %(date)s - the day the revocation ends, e.g. 24 September 2027
+        messages.pgettext('port-forwarding-view', 'Access revoked until %(date)s.'),
+        { date: until },
+      );
+}

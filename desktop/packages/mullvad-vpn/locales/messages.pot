@@ -1795,6 +1795,10 @@ msgid "<a>%(lockdownModeSettingName)s</a> is enabled. Please click “Connect“
 msgstr ""
 
 msgctxt "in-app-notifications"
+msgid "ACCESS REVOKED"
+msgstr ""
+
+msgctxt "in-app-notifications"
 msgid "ACCOUNT CREDIT EXPIRES SOON"
 msgstr ""
 
@@ -1853,6 +1857,10 @@ msgstr ""
 #. Link text to go to the app upgrade view
 msgctxt "in-app-notifications"
 msgid "Click here to update"
+msgstr ""
+
+msgctxt "in-app-notifications"
+msgid "Connecting is not possible while access is revoked."
 msgstr ""
 
 #. Confirmation shown once the voucher code is on the clipboard.

@@ -53,6 +53,10 @@ Line wrap the file at 100 chars.                                              Th
   an error, leaving the account logged in, when the tunnel does not come down in time.
 - [Windows, macOS, Linux] Close the connections to the server when disconnecting. They stayed open
   up to 15 seconds after the app showed Disconnected.
+- [Windows, macOS, Linux] Refuse to connect while access to the account is revoked or the device is
+  revoked, and say why in the app and the CLI, with the day the revocation ends. While access was
+  revoked, a connect blocked all traffic until the user disconnected. Connecting works again as soon
+  as the revocation ends.
 
 ## [1.1.38] - 2026-09-28
 ### Added

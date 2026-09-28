@@ -1603,6 +1603,10 @@ msgid "<a>%(lockdownModeSettingName)s</a> is enabled. Please click “Connect“
 msgstr "Включена опция «<a>%(lockdownModeSettingName)s</a>». Нажмите «Подключить» либо отключите «%(lockdownModeSettingName)s», чтобы восстановить доступ к Интернету."
 
 msgctxt "in-app-notifications"
+msgid "ACCESS REVOKED"
+msgstr "ДОСТУП ОТОЗВАН"
+
+msgctxt "in-app-notifications"
 msgid "ACCOUNT CREDIT EXPIRES SOON"
 msgstr "ЗАКАНЧИВАЕТСЯ БАЛАНС НА УЧЕТНОЙ ЗАПИСИ"
 
@@ -1642,6 +1646,10 @@ msgstr "Нажмите здесь и узнайте, что нового."
 msgctxt "in-app-notifications"
 msgid "Click here to update"
 msgstr "Чтобы обновить, нажмите здесь"
+
+msgctxt "in-app-notifications"
+msgid "Connecting is not possible while access is revoked."
+msgstr "Подключение невозможно, пока доступ отозван."
 
 #. Label of the voucher code an announcement granted to this account.
 msgctxt "in-app-notifications"

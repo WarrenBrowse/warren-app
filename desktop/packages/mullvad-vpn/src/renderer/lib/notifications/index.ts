@@ -2,6 +2,7 @@ export * from './new-version';
 export * from './app-upgrade-progress';
 export * from './app-upgrade-error';
 export * from './app-upgrade-ready';
+export * from './warren-access-revoked';
 export * from './warren-account-strike';
 export * from './warren-announcement';
 export * from './warren-connecting-stuck';

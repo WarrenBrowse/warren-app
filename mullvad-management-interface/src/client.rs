@@ -886,11 +886,18 @@ fn map_device_error(status: Status) -> Error {
     }
 }
 
-/// The daemon refuses a connect with UNAUTHENTICATED for one reason: no
-/// account is logged in (the stand-down is FAILED_PRECONDITION).
+/// The daemon refuses a connect with UNAUTHENTICATED when no account is
+/// logged in or the device is revoked (its details tell which), and with
+/// PERMISSION_DENIED and its own details while the account's access is
+/// revoked. Any other PERMISSION_DENIED is the RPC access gate's, and the
+/// stand-down is FAILED_PRECONDITION: both keep the daemon's words.
 fn map_connect_error(status: Status) -> Error {
-    match status.code() {
-        Code::Unauthenticated => Error::NotLoggedIn,
+    match (status.code(), status.details()) {
+        (Code::Unauthenticated, crate::DEVICE_REVOKED_DETAILS) => Error::DeviceRevoked,
+        (Code::Unauthenticated, _) => Error::NotLoggedIn,
+        (Code::PermissionDenied, crate::ACCESS_REVOKED_DETAILS) => {
+            Error::AccessRevoked(status.message().to_owned())
+        }
         _other => Error::Rpc(Box::new(status)),
     }
 }
@@ -981,6 +988,42 @@ mod session_gate_error_tests {
         let error = map_connect_error(Status::unauthenticated("no account is logged in"));
 
         assert!(matches!(error, Error::NotLoggedIn), "{error:?}");
+    }
+
+    #[test]
+    fn a_connect_refused_on_a_revoked_device_is_device_revoked() {
+        let status = Status::with_details(
+            tonic::Code::Unauthenticated,
+            "this device has been revoked",
+            crate::DEVICE_REVOKED_DETAILS.into(),
+        );
+
+        assert!(matches!(map_connect_error(status), Error::DeviceRevoked));
+    }
+
+    #[test]
+    fn a_connect_refused_for_a_revoked_access_keeps_the_daemons_words() {
+        let error = map_connect_error(Status::with_details(
+            tonic::Code::PermissionDenied,
+            "access to this Warren account is revoked until 2028-01-01 00:00 UTC",
+            crate::ACCESS_REVOKED_DETAILS.into(),
+        ));
+
+        assert!(
+            matches!(&error, Error::AccessRevoked(message) if message.contains("2028-01-01")),
+            "{error:?}"
+        );
+    }
+
+    #[test]
+    fn a_connect_refused_by_the_rpc_access_gate_is_not_read_as_a_ban() {
+        let error = map_connect_error(Status::with_details(
+            tonic::Code::PermissionDenied,
+            "Warren is set up by another account on this computer",
+            b"owned_by_another_account".to_vec().into(),
+        ));
+
+        assert!(matches!(error, Error::Rpc(_)), "{error:?}");
     }
 
     #[test]

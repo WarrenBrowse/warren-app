@@ -37,6 +37,13 @@ pub const API_ACCESS_METHOD_EXISTS_DETAILS: &[u8] = b"api_access_method_exists";
 pub const CUSTOM_LIST_LIST_NOT_FOUND_DETAILS: &[u8] = b"custom_list_list_not_found";
 pub const CUSTOM_LIST_LIST_EXISTS_DETAILS: &[u8] = b"custom_list_list_exists";
 pub const CUSTOM_LIST_LIST_NAME_TOO_LONG_DETAILS: &[u8] = b"custom_list_list_name_too_long";
+/// Details of an UNAUTHENTICATED connect refusal for a device the server
+/// revoked, which a client tells from the logged-out one by these alone.
+pub const DEVICE_REVOKED_DETAILS: &[u8] = b"device_revoked";
+/// Details of a PERMISSION_DENIED connect refusal while the account's access
+/// is revoked. The RPC access gate answers PERMISSION_DENIED too, with its own
+/// details, so the code alone says nothing.
+pub const ACCESS_REVOKED_DETAILS: &[u8] = b"access_revoked";
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -95,6 +102,13 @@ pub enum Error {
 
     #[error("No account is logged in on this device: log in before connecting")]
     NotLoggedIn,
+
+    #[error("This device has been revoked: log in again before connecting")]
+    DeviceRevoked,
+
+    /// The daemon's own words, which name the ban's cause and its end.
+    #[error("{0}")]
+    AccessRevoked(String),
 
     #[error(
         "The tunnel did not come down in time, so this device is still logged in: retry the logout"

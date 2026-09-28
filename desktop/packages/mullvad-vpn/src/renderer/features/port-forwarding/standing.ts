@@ -1,12 +1,10 @@
-import { sprintf } from 'sprintf-js';
-
 import {
   banInForce,
-  formatStandingDay,
+  banLine,
   strikeCaseReference,
   strikeWarning,
 } from '../../../shared/account-standing';
-import { WarrenAccountBan, WarrenAccountStanding } from '../../../shared/daemon-rpc-types';
+import { WarrenAccountStanding } from '../../../shared/daemon-rpc-types';
 import { messages } from '../../../shared/gettext';
 
 /** What the port-forwarding view shows of the wallet's standing. */
@@ -63,30 +61,4 @@ export function bannedVoucherLines(
       'The voucher was not used: keep it and redeem it once the revocation ends.',
     ),
   ];
-}
-
-function banLine(ban: WarrenAccountBan, locale: string): string {
-  const until =
-    ban.lapsesAtUnixSecs === null ? undefined : formatStandingDay(ban.lapsesAtUnixSecs, locale);
-  if (ban.reason === 'port-forwarding-abuse') {
-    return until === undefined
-      ? messages.pgettext('port-forwarding-view', 'Access revoked for port-forwarding abuse.')
-      : sprintf(
-          // TRANSLATORS: Available placeholder:
-          // TRANSLATORS: %(date)s - the day the revocation ends, e.g. 24 September 2027
-          messages.pgettext(
-            'port-forwarding-view',
-            'Access revoked for port-forwarding abuse until %(date)s.',
-          ),
-          { date: until },
-        );
-  }
-  return until === undefined
-    ? messages.pgettext('port-forwarding-view', 'Access revoked.')
-    : sprintf(
-        // TRANSLATORS: Available placeholder:
-        // TRANSLATORS: %(date)s - the day the revocation ends, e.g. 24 September 2027
-        messages.pgettext('port-forwarding-view', 'Access revoked until %(date)s.'),
-        { date: until },
-      );
 }

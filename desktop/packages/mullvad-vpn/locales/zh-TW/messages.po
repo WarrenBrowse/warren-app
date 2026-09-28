@@ -1579,6 +1579,10 @@ msgid "<a>%(lockdownModeSettingName)s</a> is enabled. Please click “Connect“
 msgstr "已啟用 <a>%(lockdownModeSettingName)s</a>。請按一下「連線」或停用「%(lockdownModeSettingName)s」以解除網際網路封鎖。"
 
 msgctxt "in-app-notifications"
+msgid "ACCESS REVOKED"
+msgstr "存取權限已撤銷"
+
+msgctxt "in-app-notifications"
 msgid "ACCOUNT CREDIT EXPIRES SOON"
 msgstr "帳戶點數即將到期"
 
@@ -1618,6 +1622,10 @@ msgstr "按一下此處查看最新動態。"
 msgctxt "in-app-notifications"
 msgid "Click here to update"
 msgstr "按一下此處更新"
+
+msgctxt "in-app-notifications"
+msgid "Connecting is not possible while access is revoked."
+msgstr "存取權限撤銷期間無法連線。"
 
 #. Label of the voucher code an announcement granted to this account.
 msgctxt "in-app-notifications"

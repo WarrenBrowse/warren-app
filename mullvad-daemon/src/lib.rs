@@ -1568,8 +1568,11 @@ impl Daemon {
         // The forced logout just above lands through the event loop, after the
         // boot connect decision: count it as done so the boot does not bring
         // up a tunnel for an account that is on its way out.
-        let boot_logged_out =
-            data.logged_out() || (data.pubkey().is_some() && !warren_identity.has_user_identity());
+        let boot_login = if data.pubkey().is_some() && !warren_identity.has_user_identity() {
+            warren_session_gate::Login::LoggedOut
+        } else {
+            warren_session_gate::Login::from(&data)
+        };
 
         let account_history = account_history::AccountHistory::new(
             &config.settings_dir,
@@ -1970,9 +1973,11 @@ impl Daemon {
                     .await
                     .map_err(Error::ApiConnectionModeError)?
                     .endpoint,
-                // A logged-out boot does not bring up the secured state it
-                // may have restored, so it must not keep that state's block.
-                reset_firewall: *target_state != TargetState::Secured || boot_logged_out,
+                // A boot with no account logged in does not bring up the
+                // secured state it may have restored, so it must not keep
+                // that state's block.
+                reset_firewall: *target_state != TargetState::Secured
+                    || boot_login != warren_session_gate::Login::LoggedIn,
                 #[cfg(not(target_os = "android"))]
                 split_apps: {
                     let split_apps = tunnel_split_apps(&settings.app_routing);
@@ -2493,7 +2498,7 @@ impl Daemon {
             app_route_reports: Vec::new(),
             app_route_reports_tunnel: 0,
             app_routes_published: Vec::new(),
-            warren_session: warren_session_gate::SessionGate::new(boot_logged_out),
+            warren_session: warren_session_gate::SessionGate::new(boot_login),
         };
 
         // Cross-environment arbitration: watch every OTHER product
@@ -2553,12 +2558,12 @@ impl Daemon {
             self.settings.settings().warren_env_yield.as_ref(),
         );
         match self.target_state.to_strict() {
-            either::Either::Right(_) if self.warren_session.admit_connect().is_err() => {
+            either::Either::Right(_) if let Err(refusal) = self.admit_connect() => {
                 // Auto-connect and a restore after an unclean shutdown both
                 // land here, and neither may bring up a tunnel for an account
                 // that is not logged in. Clearing the target matters for the
                 // same reason as in the stand-down arm below.
-                log::info!("not connecting at boot: no account is logged in");
+                log::info!("not connecting at boot: {refusal}");
                 // Nothing was restored, so there is nothing to explain.
                 self.warren_status_cache
                     .clear_restored_after_unclean_shutdown();
@@ -3605,12 +3610,15 @@ impl Daemon {
                 log::info!("Disconnecting because account number was cleared");
                 self.set_target_state(TargetState::Unsecured).await;
             }
-            // If we're currently in a secured state, reconnect to make sure we immediately
-            // enter the error state.
+            // The wallet signs the tunnel whatever the device state says, so
+            // a redial would carry on for a device the server no longer
+            // knows. A tunnel the user asked for blocks instead, the way a
+            // ban does, rather than falling back to an unprotected link.
             AccountEvent::Device(PrivateDeviceEvent::Revoked)
                 if *self.target_state == TargetState::Secured =>
             {
-                self.connect_tunnel();
+                log::info!("Blocking: this device has been revoked");
+                self.block_for_revoked_device();
             }
             AccountEvent::Expiry(expiry) if *self.target_state == TargetState::Secured => {
                 if expiry >= &chrono::Utc::now() {
@@ -3886,7 +3894,7 @@ impl Daemon {
         // The tunnel is signed by the identity, which a logout that keeps it
         // leaves in place: without this check a logged-out daemon connects.
         if new_target_state == TargetState::Secured
-            && let Err(refusal) = self.warren_session.admit_connect()
+            && let Err(refusal) = self.admit_connect()
         {
             log::info!("Refusing to connect: {refusal}");
             Self::oneshot_send(tx, Err(refusal), "state change refused");
@@ -3917,9 +3925,9 @@ impl Daemon {
             return;
         }
         // The error-state arm would bring a tunnel up for an account that is
-        // not logged in, or back under a logout waiting on its teardown.
-        if self.warren_session.admit_connect().is_err() {
-            Self::oneshot_send(tx, false, "reconnect refused while logged out");
+        // not logged in, is revoked, or waits on a logout's teardown.
+        if self.admit_connect().is_err() {
+            Self::oneshot_send(tx, false, "reconnect refused by the session gate");
             return;
         }
         if *self.target_state == TargetState::Secured || self.tunnel_state.is_in_error_state() {
@@ -6507,14 +6515,35 @@ impl Daemon {
         }
     }
 
+    /// Whether a connect may go ahead now: an account is logged in, its
+    /// device is not revoked, no logout is waiting, and no ban holds.
+    fn admit_connect(&self) -> Result<(), warren_session_gate::ConnectRefusal> {
+        self.warren_session
+            .admit_connect(self.warren_ban_in_force())
+    }
+
     fn connect_tunnel(&mut self) {
         // A v7 session never shows the wallet to the exit, so the exit cannot
         // refuse a banned account there: the ban the issuers answered is the
-        // only place it shows, and dialing would only hide it.
-        if let Some(ban) = self.warren_ban_in_force() {
-            log::info!("Not connecting: the Warren account is suspended");
-            self.block_for_ban(&ban);
-            return;
+        // only place it shows, and dialing would only hide it. The wallet
+        // signs the tunnel whatever the device state says, so a revoked
+        // device is held blocked here too, whichever reconnect asked.
+        match self.warren_session.own_connect(self.warren_ban_in_force()) {
+            warren_session_gate::OwnConnect::Dial => {}
+            warren_session_gate::OwnConnect::Skip => {
+                log::info!("Not connecting: no account is logged in");
+                return;
+            }
+            warren_session_gate::OwnConnect::BlockRevoked => {
+                log::info!("Not connecting: this device has been revoked");
+                self.block_for_revoked_device();
+                return;
+            }
+            warren_session_gate::OwnConnect::BlockBanned(ban) => {
+                log::info!("Not connecting: the Warren account is suspended");
+                self.block_for_ban(&ban);
+                return;
+            }
         }
         // Only a connect that dials asks for a fresh standing. The blocked
         // state retries every minute, and polling on each of those would turn
@@ -6526,6 +6555,13 @@ impl Daemon {
         self.warren_blocked_for_ban = false;
         self.send_tunnel_command(TunnelCommand::Connect);
         self.warren_session.connect_sent();
+    }
+
+    fn block_for_revoked_device(&mut self) {
+        self.warren_blocked_for_ban = false;
+        self.send_tunnel_command(TunnelCommand::Block(ErrorStateCause::AuthFailed(Some(
+            AuthFailed::InvalidAccount.as_str().to_string(),
+        ))));
     }
 
     fn block_for_ban(&mut self, ban: &warren_standing::Ban) {

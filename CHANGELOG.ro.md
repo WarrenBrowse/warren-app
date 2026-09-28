@@ -46,6 +46,10 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   semnalează o eroare și lasă contul autentificat.
 - [Windows, macOS, Linux] Aplicația închide conexiunile la server la deconectare. Acestea rămâneau
   deschise până la 15 secunde după ce aplicația afișa „Deconectat”.
+- [Windows, macOS, Linux] Aplicația refuză conectarea cât timp accesul la cont sau dispozitivul este
+  revocat și spune de ce în aplicație și în CLI, cu ziua în care se încheie revocarea. Cât timp
+  accesul era revocat, o încercare de conectare bloca tot traficul până la deconectare. Conectarea
+  redevine posibilă imediat ce revocarea se încheie.
 
 ## [1.1.38] - 2026-09-28
 ### Adăugat

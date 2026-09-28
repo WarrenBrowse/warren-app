@@ -1579,6 +1579,10 @@ msgid "<a>%(lockdownModeSettingName)s</a> is enabled. Please click “Connect“
 msgstr "<a>%(lockdownModeSettingName)s</a>이(가) 활성화되었습니다. \"연결\"을 클릭하거나 \"%(lockdownModeSettingName)s\"을(를) 비활성화하여 인터넷 차단을 해제하세요."
 
 msgctxt "in-app-notifications"
+msgid "ACCESS REVOKED"
+msgstr "액세스 취소됨"
+
+msgctxt "in-app-notifications"
 msgid "ACCOUNT CREDIT EXPIRES SOON"
 msgstr "계정 크레딧이 곧 만료됩니다"
 
@@ -1618,6 +1622,10 @@ msgstr "업데이트 내역을 확인하려면 여기를 클릭하세요."
 msgctxt "in-app-notifications"
 msgid "Click here to update"
 msgstr "업데이트하려면 여기를 클릭하세요"
+
+msgctxt "in-app-notifications"
+msgid "Connecting is not possible while access is revoked."
+msgstr "액세스가 취소된 동안에는 연결할 수 없습니다."
 
 #. Label of the voucher code an announcement granted to this account.
 msgctxt "in-app-notifications"

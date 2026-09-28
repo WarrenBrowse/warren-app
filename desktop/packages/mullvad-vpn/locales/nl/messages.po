@@ -1587,6 +1587,10 @@ msgid "<a>%(lockdownModeSettingName)s</a> is enabled. Please click “Connect“
 msgstr "<a>%(lockdownModeSettingName)s</a> is ingeschakeld. Klik op \"Verbinden\" of schakel \"%(lockdownModeSettingName)s\" uit om het internet te deblokkeren."
 
 msgctxt "in-app-notifications"
+msgid "ACCESS REVOKED"
+msgstr "TOEGANG INGETROKKEN"
+
+msgctxt "in-app-notifications"
 msgid "ACCOUNT CREDIT EXPIRES SOON"
 msgstr "ACCOUNTKREDIET VERVALT BINNENKORT"
 
@@ -1626,6 +1630,10 @@ msgstr "Klik hier om te zien wat er nieuw is."
 msgctxt "in-app-notifications"
 msgid "Click here to update"
 msgstr "Klik hier om bij te werken"
+
+msgctxt "in-app-notifications"
+msgid "Connecting is not possible while access is revoked."
+msgstr "Verbinden is niet mogelijk zolang de toegang is ingetrokken."
 
 #. Label of the voucher code an announcement granted to this account.
 msgctxt "in-app-notifications"

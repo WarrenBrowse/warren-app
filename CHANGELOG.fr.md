@@ -50,6 +50,10 @@ par l'application, gardez-le tel quel.
   signale une erreur et laisse le compte connecté.
 - [Windows, macOS, Linux] Fermer les connexions au serveur à la déconnexion. Elles restaient
   ouvertes jusqu'à 15 secondes après l'affichage de « Déconnecté ».
+- [Windows, macOS, Linux] Refuser la connexion tant que l'accès au compte ou l'appareil est révoqué,
+  et en donner la raison dans l'application et la CLI, avec le jour où la révocation prend fin. Tant
+  que l'accès était révoqué, une tentative de connexion bloquait tout le trafic jusqu'à la
+  déconnexion. La connexion redevient possible dès la fin de la révocation.
 
 ## [1.1.38] - 2026-09-28
 ### Ajouté

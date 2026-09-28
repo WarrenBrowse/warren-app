@@ -3062,12 +3062,26 @@ fn map_env_yield_error(error: crate::warren_env_arbitration::EnvYieldError) -> S
 
 /// A connect refused for want of a logged-in account is UNAUTHENTICATED, which
 /// is what lets a client tell it from the stand-down (FAILED_PRECONDITION) with
-/// no string matching: the CLI names the fix, the GUI drops to its login view.
+/// no string matching: the CLI names the fix, the GUI reads the login state
+/// again and lands on the view that fixes it. A revoked device is refused the
+/// same way, told apart by its details. A revoked access (a ban) is
+/// PERMISSION_DENIED: logging in again changes nothing, and the GUI shows the
+/// ban from the standing it already holds.
 fn map_connect_refusal(refusal: crate::warren_session_gate::ConnectRefusal) -> Status {
     use crate::warren_session_gate::ConnectRefusal;
     match refusal {
         ConnectRefusal::EnvYield(error) => map_env_yield_error(error),
         ConnectRefusal::LoggedOut => Status::unauthenticated(refusal.to_string()),
+        ConnectRefusal::DeviceRevoked => Status::with_details(
+            Code::Unauthenticated,
+            refusal.to_string(),
+            mullvad_management_interface::DEVICE_REVOKED_DETAILS.into(),
+        ),
+        ConnectRefusal::AccessRevoked(_) => Status::with_details(
+            Code::PermissionDenied,
+            refusal.to_string(),
+            mullvad_management_interface::ACCESS_REVOKED_DETAILS.into(),
+        ),
         // Still logged in, so not the login prompt: a retry once the logout
         // has settled either way is the answer.
         ConnectRefusal::LoggingOut => Status::aborted(refusal.to_string()),
@@ -3291,6 +3305,34 @@ mod session_gate_status_tests {
         )));
 
         assert_eq!(status.code(), Code::FailedPrecondition);
+    }
+
+    #[test]
+    fn a_connect_refused_on_a_revoked_device_says_so_in_its_details() {
+        let status = map_connect_refusal(ConnectRefusal::DeviceRevoked);
+
+        assert_eq!(status.code(), Code::Unauthenticated);
+        assert_eq!(
+            status.details(),
+            mullvad_management_interface::DEVICE_REVOKED_DETAILS
+        );
+    }
+
+    /// A ban is no login problem: the GUI must not drop to its login view.
+    #[test]
+    fn a_connect_refused_for_a_revoked_access_is_permission_denied() {
+        let status = map_connect_refusal(ConnectRefusal::AccessRevoked(warren_standing::Ban {
+            reason: warren_standing::BanReasonCode::Other,
+            banned_at_unix_secs: None,
+            lapses_at_unix_secs: Some(1_830_297_600),
+        }));
+
+        assert_eq!(status.code(), Code::PermissionDenied);
+        assert_eq!(
+            status.details(),
+            mullvad_management_interface::ACCESS_REVOKED_DETAILS
+        );
+        assert!(status.message().contains("2028-01-01"), "{status:?}");
     }
 
     /// Still logged in: the GUI must not drop to its login view on this one.

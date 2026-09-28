@@ -3,7 +3,11 @@
 //! A logged-out daemon has no tunnel: the session, its routes and forwarded
 //! ports, and the kill switch all belong to the account that left. So a
 //! connect is refused while no account is logged in, whoever asks for it (a
-//! client, the boot auto-connect, a scheduled reconnect), and a logout takes
+//! client, the boot auto-connect, a scheduled reconnect). The same holds for a
+//! device the server revoked, and for an account whose access is revoked (a
+//! ban in force): the issuers refuse such a wallet its credentials, so the
+//! daemon says so up front rather than dialing into that refusal. A ban has an
+//! end, its lapse or an operator's lift, and the gate reopens with it. A logout takes
 //! the tunnel down BEFORE it touches the login state or the identity. The
 //! identity signs the tunnel, so the only safe moment to drop it is once the
 //! tunnel reports disconnected. The wait is bounded: a teardown that does not
@@ -12,7 +16,9 @@
 
 use std::time::Duration;
 
-use crate::device::PrivateDeviceEvent;
+use warren_standing::{Ban, BanReasonCode};
+
+use crate::device::{PrivateDeviceEvent, PrivateDeviceState};
 use crate::warren_env_arbitration::EnvYieldError;
 
 /// How long a logout waits for the tunnel to report disconnected. The
@@ -34,6 +40,61 @@ pub enum ConnectRefusal {
     /// A logout is waiting for the tunnel to come down.
     #[error("this device is logging out")]
     LoggingOut,
+    /// The server revoked this device.
+    #[error("this device has been revoked: log in again before connecting")]
+    DeviceRevoked,
+    /// The account's access is revoked, and stays so until the ban ends.
+    #[error("{}", suspension_message(.0))]
+    AccessRevoked(Ban),
+}
+
+/// How a refused connect words a ban: its cause, and its end when it has one,
+/// as a UTC day.
+fn suspension_message(ban: &Ban) -> String {
+    let until = ban
+        .lapses_at_unix_secs
+        .and_then(|secs| i64::try_from(secs).ok())
+        .and_then(|secs| chrono::DateTime::from_timestamp(secs, 0))
+        .map(|lapse| format!(" until {} UTC", lapse.format("%Y-%m-%d %H:%M")))
+        .unwrap_or_default();
+    let cause = match ban.reason {
+        BanReasonCode::PortForwardingAbuse => "after repeated abuse reports about a forwarded port",
+        _ => "for a usage policy violation",
+    };
+    format!("access to this Warren account is revoked{until} {cause}")
+}
+
+/// Whether an account is logged in, as far as the tunnel is concerned.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Login {
+    LoggedIn,
+    LoggedOut,
+    Revoked,
+}
+
+impl From<&PrivateDeviceState> for Login {
+    fn from(state: &PrivateDeviceState) -> Self {
+        match state {
+            PrivateDeviceState::LoggedIn(_) => Login::LoggedIn,
+            PrivateDeviceState::LoggedOut => Login::LoggedOut,
+            PrivateDeviceState::Revoked => Login::Revoked,
+        }
+    }
+}
+
+/// What a connect the daemon issues on its own does: a reconnect after a
+/// settings change, a relay list refresh, an expiry or ban lift, which reach
+/// the tunnel without passing the gate a client's connect passes.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum OwnConnect {
+    /// Dial.
+    Dial,
+    /// No account is logged in: leave the tunnel as it is.
+    Skip,
+    /// The device is revoked: hold the block the revocation put in place.
+    BlockRevoked,
+    /// A ban holds: block with it.
+    BlockBanned(Ban),
 }
 
 /// One logout request, and who is waiting for its answer.
@@ -65,7 +126,7 @@ struct PendingLogout<W> {
 /// The login state as far as the tunnel is concerned, and the logout waiting
 /// on a teardown, if any.
 pub struct SessionGate<W> {
-    logged_out: bool,
+    login: Login,
     pending: Option<PendingLogout<W>>,
     generations: u64,
     /// A connect was sent to the tunnel and no transition has shown it
@@ -75,41 +136,69 @@ pub struct SessionGate<W> {
 }
 
 impl<W> SessionGate<W> {
-    pub fn new(logged_out: bool) -> Self {
+    pub fn new(login: Login) -> Self {
         Self {
-            logged_out,
+            login,
             pending: None,
             generations: 0,
             connect_in_flight: false,
         }
     }
 
-    /// Follows the account manager's login state. A revocation is not a
-    /// logout: it says nothing about whether an account is logged in, and
-    /// reading it as a login would reopen the gate a logout just closed.
+    /// Follows the account manager's login state. A revocation observed
+    /// after a logout leaves it logged out: it may be the revocation the
+    /// account manager handled before the logout, and either way only a login
+    /// reopens the gate.
     pub fn observe_device_event(&mut self, event: &PrivateDeviceEvent) {
         match event {
-            PrivateDeviceEvent::Login(_) => self.logged_out = false,
-            PrivateDeviceEvent::Logout => self.logged_out = true,
-            PrivateDeviceEvent::Revoked => {}
+            PrivateDeviceEvent::Login(_) => self.login = Login::LoggedIn,
+            PrivateDeviceEvent::Logout => self.login = Login::LoggedOut,
+            PrivateDeviceEvent::Revoked if self.login == Login::LoggedOut => {}
+            PrivateDeviceEvent::Revoked => self.login = Login::Revoked,
         }
     }
 
     /// Records a completed logout at once, a turn before the account
     /// manager's own event, so a connect queued in between finds it.
     pub fn logged_out_now(&mut self) {
-        self.logged_out = true;
+        self.login = Login::LoggedOut;
     }
 
-    /// Whether a connect may go ahead. A logout waiting on its teardown
-    /// refuses too: the connect would bring back the tunnel it is waiting on.
-    pub fn admit_connect(&self) -> Result<(), ConnectRefusal> {
+    /// Whether an account is logged in. The API work tied to the wallet runs
+    /// only then.
+    pub fn logged_in(&self) -> bool {
+        self.login == Login::LoggedIn
+    }
+
+    /// What a connect the daemon issues on its own does, given the ban on the
+    /// installed wallet that holds right now, if any. Those connects follow a
+    /// target the user set to secured, so a revoked device and a ban keep the
+    /// tunnel blocked rather than dial.
+    pub fn own_connect(&self, ban_in_force: Option<Ban>) -> OwnConnect {
+        match self.login {
+            Login::LoggedOut => OwnConnect::Skip,
+            Login::Revoked => OwnConnect::BlockRevoked,
+            Login::LoggedIn => match ban_in_force {
+                Some(ban) => OwnConnect::BlockBanned(ban),
+                None => OwnConnect::Dial,
+            },
+        }
+    }
+
+    /// Whether a connect may go ahead, given the ban on the installed wallet
+    /// that holds right now, if any. A logout waiting on its teardown refuses
+    /// too: the connect would bring back the tunnel it is waiting on.
+    pub fn admit_connect(&self, ban_in_force: Option<Ban>) -> Result<(), ConnectRefusal> {
         if self.pending.is_some() {
-            Err(ConnectRefusal::LoggingOut)
-        } else if self.logged_out {
-            Err(ConnectRefusal::LoggedOut)
-        } else {
-            Ok(())
+            return Err(ConnectRefusal::LoggingOut);
+        }
+        match self.login {
+            Login::LoggedOut => Err(ConnectRefusal::LoggedOut),
+            Login::Revoked => Err(ConnectRefusal::DeviceRevoked),
+            Login::LoggedIn => match ban_in_force {
+                Some(ban) => Err(ConnectRefusal::AccessRevoked(ban)),
+                None => Ok(()),
+            },
         }
     }
 
@@ -205,9 +294,10 @@ impl<W> SessionGate<W> {
 
 #[cfg(test)]
 mod tests {
-    use super::{ConnectRefusal, LogoutRequest, LogoutStart, SessionGate};
-    use crate::device::PrivateDeviceEvent;
+    use super::{ConnectRefusal, Login, LogoutRequest, LogoutStart, OwnConnect, SessionGate};
+    use crate::device::{PrivateDeviceEvent, PrivateDeviceState};
     use mullvad_types::warren_pubkey::WarrenPubKey;
+    use warren_standing::{Ban, BanReasonCode};
 
     const TUNNEL_UP: bool = false;
     const TUNNEL_DOWN: bool = true;
@@ -215,7 +305,7 @@ mod tests {
     const LEFT_DISCONNECTED: bool = false;
 
     fn logged_in() -> SessionGate<&'static str> {
-        SessionGate::new(false)
+        SessionGate::new(Login::LoggedIn)
     }
 
     fn generation_of(start: LogoutStart<&'static str>) -> u64 {
@@ -232,27 +322,162 @@ mod tests {
             .collect()
     }
 
-    #[test]
-    fn a_connect_is_admitted_while_logged_in() {
-        assert_eq!(logged_in().admit_connect(), Ok(()));
+    fn ban(reason: BanReasonCode, lapses_at_unix_secs: Option<u64>) -> Ban {
+        Ban {
+            reason,
+            banned_at_unix_secs: None,
+            lapses_at_unix_secs,
+        }
     }
 
     #[test]
-    fn a_connect_is_refused_while_logged_out() {
-        let gate = SessionGate::<()>::new(true);
+    fn a_connect_is_refused_while_a_ban_holds() {
+        let gate = logged_in();
+        let ban = ban(BanReasonCode::PortForwardingAbuse, Some(1_830_000_000));
 
-        assert_eq!(gate.admit_connect(), Err(ConnectRefusal::LoggedOut));
+        assert_eq!(
+            gate.admit_connect(Some(ban)),
+            Err(ConnectRefusal::AccessRevoked(ban))
+        );
     }
 
     #[test]
-    fn a_login_admits_connects_again() {
-        let mut gate = SessionGate::<()>::new(true);
+    fn the_end_of_a_ban_admits_connects_again() {
+        let gate = logged_in();
+        let held = ban(BanReasonCode::Other, None);
+        assert!(gate.admit_connect(Some(held)).is_err());
+
+        assert_eq!(gate.admit_connect(None), Ok(()));
+    }
+
+    #[test]
+    fn a_logged_out_refusal_wins_over_a_ban() {
+        let gate = SessionGate::<()>::new(Login::LoggedOut);
+
+        assert_eq!(
+            gate.admit_connect(Some(ban(BanReasonCode::Other, None))),
+            Err(ConnectRefusal::LoggedOut)
+        );
+    }
+
+    #[test]
+    fn a_connect_is_refused_on_a_revoked_device() {
+        let mut gate = logged_in();
+
+        gate.observe_device_event(&PrivateDeviceEvent::Revoked);
+
+        assert_eq!(gate.admit_connect(None), Err(ConnectRefusal::DeviceRevoked));
+        assert!(!gate.logged_in());
+    }
+
+    #[test]
+    fn a_device_revoked_at_boot_is_refused() {
+        let gate = SessionGate::<()>::new(Login::from(&PrivateDeviceState::Revoked));
+
+        assert_eq!(gate.admit_connect(None), Err(ConnectRefusal::DeviceRevoked));
+    }
+
+    #[test]
+    fn a_login_after_a_revocation_admits_connects_again() {
+        let mut gate = logged_in();
+        gate.observe_device_event(&PrivateDeviceEvent::Revoked);
 
         gate.observe_device_event(&PrivateDeviceEvent::Login(WarrenPubKey::from_bytes(
             &[7; 32],
         )));
 
-        assert_eq!(gate.admit_connect(), Ok(()));
+        assert_eq!(gate.admit_connect(None), Ok(()));
+    }
+
+    /// The wallet's API work follows this, so it must turn off on a logout,
+    /// completed or observed, and back on only at a login.
+    #[test]
+    fn logged_in_follows_logins_and_logouts() {
+        let mut gate = logged_in();
+        assert!(gate.logged_in());
+
+        gate.logged_out_now();
+        assert!(!gate.logged_in());
+
+        gate.observe_device_event(&PrivateDeviceEvent::Login(WarrenPubKey::from_bytes(
+            &[7; 32],
+        )));
+        assert!(gate.logged_in());
+
+        gate.observe_device_event(&PrivateDeviceEvent::Logout);
+        assert!(!gate.logged_in());
+    }
+
+    #[test]
+    fn a_reconnect_on_a_revoked_device_holds_the_block() {
+        let mut gate = logged_in();
+        gate.observe_device_event(&PrivateDeviceEvent::Revoked);
+
+        assert_eq!(gate.own_connect(None), OwnConnect::BlockRevoked);
+    }
+
+    #[test]
+    fn a_reconnect_while_a_ban_holds_blocks_with_the_ban() {
+        let gate = logged_in();
+        let held = ban(BanReasonCode::Other, None);
+
+        assert_eq!(gate.own_connect(Some(held)), OwnConnect::BlockBanned(held));
+    }
+
+    #[test]
+    fn a_reconnect_with_no_account_logged_in_does_nothing() {
+        let gate = SessionGate::<()>::new(Login::LoggedOut);
+
+        assert_eq!(gate.own_connect(None), OwnConnect::Skip);
+    }
+
+    #[test]
+    fn a_reconnect_of_a_logged_in_account_in_good_standing_dials() {
+        assert_eq!(logged_in().own_connect(None), OwnConnect::Dial);
+    }
+
+    #[test]
+    fn a_suspension_names_its_cause_and_its_end() {
+        let refusal = ConnectRefusal::AccessRevoked(ban(
+            BanReasonCode::PortForwardingAbuse,
+            Some(1_830_297_600),
+        ));
+
+        let message = refusal.to_string();
+
+        assert!(message.contains("forwarded port"), "{message}");
+        assert!(message.contains("until 2028-01-01 00:00 UTC"), "{message}");
+    }
+
+    #[test]
+    fn a_suspension_without_an_end_names_none() {
+        let message = ConnectRefusal::AccessRevoked(ban(BanReasonCode::Other, None)).to_string();
+
+        assert!(message.contains("usage policy"), "{message}");
+        assert!(!message.contains("until"), "{message}");
+    }
+
+    #[test]
+    fn a_connect_is_admitted_while_logged_in() {
+        assert_eq!(logged_in().admit_connect(None), Ok(()));
+    }
+
+    #[test]
+    fn a_connect_is_refused_while_logged_out() {
+        let gate = SessionGate::<()>::new(Login::LoggedOut);
+
+        assert_eq!(gate.admit_connect(None), Err(ConnectRefusal::LoggedOut));
+    }
+
+    #[test]
+    fn a_login_admits_connects_again() {
+        let mut gate = SessionGate::<()>::new(Login::LoggedOut);
+
+        gate.observe_device_event(&PrivateDeviceEvent::Login(WarrenPubKey::from_bytes(
+            &[7; 32],
+        )));
+
+        assert_eq!(gate.admit_connect(None), Ok(()));
     }
 
     #[test]
@@ -261,7 +486,7 @@ mod tests {
 
         gate.observe_device_event(&PrivateDeviceEvent::Logout);
 
-        assert_eq!(gate.admit_connect(), Err(ConnectRefusal::LoggedOut));
+        assert_eq!(gate.admit_connect(None), Err(ConnectRefusal::LoggedOut));
     }
 
     #[test]
@@ -271,7 +496,7 @@ mod tests {
 
         gate.observe_device_event(&PrivateDeviceEvent::Revoked);
 
-        assert_eq!(gate.admit_connect(), Err(ConnectRefusal::LoggedOut));
+        assert_eq!(gate.admit_connect(None), Err(ConnectRefusal::LoggedOut));
     }
 
     #[test]
@@ -280,7 +505,7 @@ mod tests {
 
         generation_of(gate.request_logout("cli", false, TUNNEL_UP, true));
 
-        assert_eq!(gate.admit_connect(), Err(ConnectRefusal::LoggingOut));
+        assert_eq!(gate.admit_connect(None), Err(ConnectRefusal::LoggingOut));
         assert!(gate.logout_pending());
     }
 
@@ -372,7 +597,7 @@ mod tests {
             "a failed logout must not be carried out when the tunnel lands later"
         );
         assert_eq!(
-            gate.admit_connect(),
+            gate.admit_connect(None),
             Ok(()),
             "the account is still logged in"
         );
@@ -432,7 +657,7 @@ mod tests {
             gate.request_logout("cli", false, TUNNEL_DOWN, false),
             LogoutStart::CompleteNow(_)
         ));
-        assert_eq!(gate.admit_connect(), Err(ConnectRefusal::LoggedOut));
+        assert_eq!(gate.admit_connect(None), Err(ConnectRefusal::LoggedOut));
     }
 
     #[test]

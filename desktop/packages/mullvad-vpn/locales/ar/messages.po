@@ -1619,6 +1619,10 @@ msgid "<a>%(lockdownModeSettingName)s</a> is enabled. Please click “Connect“
 msgstr "تم تفعيل خيار <a>%(lockdownModeSettingName)s</a>. يُرجى النقر فوق \"اتصال\" أو تعطيل \"%(lockdownModeSettingName)s\" لإلغاء حظر الإنترنت."
 
 msgctxt "in-app-notifications"
+msgid "ACCESS REVOKED"
+msgstr "تم إلغاء الوصول"
+
+msgctxt "in-app-notifications"
 msgid "ACCOUNT CREDIT EXPIRES SOON"
 msgstr "سينتهي رصيد الحساب قريبًا"
 
@@ -1658,6 +1662,10 @@ msgstr "انقر هنا للاطلاع على آخر المستجدات."
 msgctxt "in-app-notifications"
 msgid "Click here to update"
 msgstr "انقر هنا للتحديث"
+
+msgctxt "in-app-notifications"
+msgid "Connecting is not possible while access is revoked."
+msgstr "لا يمكن الاتصال ما دام الوصول ملغى."
 
 #. Label of the voucher code an announcement granted to this account.
 msgctxt "in-app-notifications"

@@ -1,12 +1,16 @@
-import { status as grpcStatus } from '@grpc/grpc-js';
+import { Metadata, status as grpcStatus } from '@grpc/grpc-js';
 import { describe, expect, it, vi } from 'vitest';
 
 import { connectHandlingRefusal, connectRefusalOf } from '../../src/main/connect-refusal';
 import TunnelStateHandler from '../../src/main/tunnel-state';
 import { TunnelState } from '../../src/shared/daemon-rpc-types';
 
-function rpcError(code: grpcStatus) {
-  return Object.assign(new Error('refused'), { code });
+function rpcError(code: grpcStatus, reason?: string) {
+  const metadata = new Metadata();
+  if (reason !== undefined) {
+    metadata.set('grpc-status-details-bin', Buffer.from(reason));
+  }
+  return Object.assign(new Error('refused'), { code, metadata });
 }
 
 function deps(connect: () => Promise<void>) {
@@ -20,6 +24,18 @@ function deps(connect: () => Promise<void>) {
 describe('connectRefusalOf', () => {
   it('reads UNAUTHENTICATED as no account logged in', () => {
     expect(connectRefusalOf(rpcError(grpcStatus.UNAUTHENTICATED))).toBe('not-logged-in');
+  });
+
+  it('reads PERMISSION_DENIED with the ban reason as a revoked access', () => {
+    expect(connectRefusalOf(rpcError(grpcStatus.PERMISSION_DENIED, 'access_revoked'))).toBe(
+      'access-revoked',
+    );
+  });
+
+  it('leaves the access gate refusal alone', () => {
+    expect(
+      connectRefusalOf(rpcError(grpcStatus.PERMISSION_DENIED, 'owned_by_another_account')),
+    ).toBeUndefined();
   });
 
   it('reads FAILED_PRECONDITION as the stand-down', () => {
@@ -40,6 +56,15 @@ describe('connectHandlingRefusal', () => {
 
     expect(d.discardExpectedState).toHaveBeenCalledOnce();
     expect(d.resyncDeviceState).toHaveBeenCalledOnce();
+  });
+
+  it('drops the predicted connecting state and leaves a revoked access to its banner', async () => {
+    const d = deps(() => Promise.reject(rpcError(grpcStatus.PERMISSION_DENIED, 'access_revoked')));
+
+    await expect(connectHandlingRefusal(d)).resolves.toBeUndefined();
+
+    expect(d.discardExpectedState).toHaveBeenCalledOnce();
+    expect(d.resyncDeviceState).not.toHaveBeenCalled();
   });
 
   it('drops the predicted state and rethrows any other failure', async () => {

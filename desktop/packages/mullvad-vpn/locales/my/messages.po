@@ -1579,6 +1579,10 @@ msgid "<a>%(lockdownModeSettingName)s</a> is enabled. Please click “Connect“
 msgstr "<a>%(lockdownModeSettingName)s</a> ကို ဖွင့်ထားပါသည်။ အင်တာနက် ပြန်ဖွင့်ရန်အတွက် \"ချိတ်ဆက်မည်\" ကို နှိပ်ပါ သို့မဟုတ် \"%(lockdownModeSettingName)s\" ကို ပိတ်လိုက်ပါ။"
 
 msgctxt "in-app-notifications"
+msgid "ACCESS REVOKED"
+msgstr "ဝင်ရောက်ခွင့် ရုပ်သိမ်းထားသည်"
+
+msgctxt "in-app-notifications"
 msgid "ACCOUNT CREDIT EXPIRES SOON"
 msgstr "မကြာမီ အကောင့် ခရက်ဒစ် သက်တမ်းကုန်ပါတော့မည်"
 
@@ -1618,6 +1622,10 @@ msgstr "အသစ်ထူးသော အကြောင်းအရာကိ�
 msgctxt "in-app-notifications"
 msgid "Click here to update"
 msgstr "အပ်ဒိတ်လုပ်ရန် ဤနေရာကို နှိပ်ပါ"
+
+msgctxt "in-app-notifications"
+msgid "Connecting is not possible while access is revoked."
+msgstr "ဝင်ရောက်ခွင့်ကို ရုပ်သိမ်းထားစဉ် ချိတ်ဆက်၍ မရပါ။"
 
 #. Label of the voucher code an announcement granted to this account.
 msgctxt "in-app-notifications"

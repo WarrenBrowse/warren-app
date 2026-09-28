@@ -1587,6 +1587,10 @@ msgid "<a>%(lockdownModeSettingName)s</a> is enabled. Please click “Connect“
 msgstr "<a>%(lockdownModeSettingName)s</a> er aktivert. Klikk på «Koble til» eller deaktiver «%(lockdownModeSettingName)s» for å oppheve blokkeringen av internett."
 
 msgctxt "in-app-notifications"
+msgid "ACCESS REVOKED"
+msgstr "TILGANG TILBAKEKALT"
+
+msgctxt "in-app-notifications"
 msgid "ACCOUNT CREDIT EXPIRES SOON"
 msgstr "KREDITTEN PÅ KONTOEN UTLØPER SNART"
 
@@ -1626,6 +1630,10 @@ msgstr "Klikk her for å se hva som er nytt."
 msgctxt "in-app-notifications"
 msgid "Click here to update"
 msgstr "Klikk her for å oppdatere"
+
+msgctxt "in-app-notifications"
+msgid "Connecting is not possible while access is revoked."
+msgstr "Det er ikke mulig å koble til så lenge tilgangen er tilbakekalt."
 
 #. Label of the voucher code an announcement granted to this account.
 msgctxt "in-app-notifications"

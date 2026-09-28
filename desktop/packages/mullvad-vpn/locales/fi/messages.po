@@ -1587,6 +1587,10 @@ msgid "<a>%(lockdownModeSettingName)s</a> is enabled. Please click “Connect“
 msgstr "<a>%(lockdownModeSettingName)s</a> on käytössä. Poista internetin esto napsauttamalla Yhdistä tai poistamalla %(lockdownModeSettingName)s käytöstä."
 
 msgctxt "in-app-notifications"
+msgid "ACCESS REVOKED"
+msgstr "KÄYTTÖOIKEUS PERUTTU"
+
+msgctxt "in-app-notifications"
 msgid "ACCOUNT CREDIT EXPIRES SOON"
 msgstr "TILIN KÄYTTÖAIKA PÄÄTTYY PIAN"
 
@@ -1626,6 +1630,10 @@ msgstr "Katso uudet ominaisuudet napsauttamalla tästä."
 msgctxt "in-app-notifications"
 msgid "Click here to update"
 msgstr "Päivitä napsauttamalla tätä"
+
+msgctxt "in-app-notifications"
+msgid "Connecting is not possible while access is revoked."
+msgstr "Yhdistäminen ei ole mahdollista, kun käyttöoikeus on peruttu."
 
 #. Label of the voucher code an announcement granted to this account.
 msgctxt "in-app-notifications"

@@ -1579,6 +1579,10 @@ msgid "<a>%(lockdownModeSettingName)s</a> is enabled. Please click “Connect“
 msgstr "<a>%(lockdownModeSettingName)s</a>已启用。请点击“连接”或停用“%(lockdownModeSettingName)s“以解除阻止互联网。"
 
 msgctxt "in-app-notifications"
+msgid "ACCESS REVOKED"
+msgstr "访问权限已撤销"
+
+msgctxt "in-app-notifications"
 msgid "ACCOUNT CREDIT EXPIRES SOON"
 msgstr "帐户额度即将到期"
 
@@ -1618,6 +1622,10 @@ msgstr "点击此处查看最新变化。"
 msgctxt "in-app-notifications"
 msgid "Click here to update"
 msgstr "点击此处进行更新"
+
+msgctxt "in-app-notifications"
+msgid "Connecting is not possible while access is revoked."
+msgstr "访问权限撤销期间无法连接。"
 
 #. Label of the voucher code an announcement granted to this account.
 msgctxt "in-app-notifications"

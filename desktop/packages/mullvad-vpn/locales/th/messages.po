@@ -1579,6 +1579,10 @@ msgid "<a>%(lockdownModeSettingName)s</a> is enabled. Please click “Connect“
 msgstr "<a>%(lockdownModeSettingName)s</a> เปิดใช้งานอยู่ โปรดคลิก “เชื่อมต่อ” หรือปิดใช้งาน “%(lockdownModeSettingName)s” เพื่อปลดบล็อกอินเทอร์เน็ต"
 
 msgctxt "in-app-notifications"
+msgid "ACCESS REVOKED"
+msgstr "การเข้าถึงถูกเพิกถอน"
+
+msgctxt "in-app-notifications"
 msgid "ACCOUNT CREDIT EXPIRES SOON"
 msgstr "เครดิตในบัญชีจะหมดอายุในเร็ว ๆ นี้"
 
@@ -1618,6 +1622,10 @@ msgstr "คลิกที่นี่ เพื่อดูว่ามีอ�
 msgctxt "in-app-notifications"
 msgid "Click here to update"
 msgstr "คลิกที่นี่เพื่ออัปเดต"
+
+msgctxt "in-app-notifications"
+msgid "Connecting is not possible while access is revoked."
+msgstr "ไม่สามารถเชื่อมต่อได้ในขณะที่การเข้าถึงถูกเพิกถอน"
 
 #. Label of the voucher code an announcement granted to this account.
 msgctxt "in-app-notifications"

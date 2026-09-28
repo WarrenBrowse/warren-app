@@ -1643,6 +1643,10 @@ msgid "<a>%(lockdownModeSettingName)s</a> is enabled. Please click “Connect“
 msgstr "<a>%(lockdownModeSettingName)s</a> este activată. Vă rugăm să faceți clic pe „Conectare“ sau să dezactivați opțiunea „%(lockdownModeSettingName)s“ pentru a debloca accesul la internet."
 
 msgctxt "in-app-notifications"
+msgid "ACCESS REVOKED"
+msgstr "ACCES REVOCAT"
+
+msgctxt "in-app-notifications"
 msgid "ACCOUNT CREDIT EXPIRES SOON"
 msgstr "SOLDUL CONTULUI EXPIRĂ ÎN CURÂND"
 
@@ -1682,6 +1686,10 @@ msgstr "Faceți clic aici pentru a vedea noutățile."
 msgctxt "in-app-notifications"
 msgid "Click here to update"
 msgstr "Faceți clic aici pentru a actualiza"
+
+msgctxt "in-app-notifications"
+msgid "Connecting is not possible while access is revoked."
+msgstr "Conectarea nu este posibilă cât timp accesul este revocat."
 
 #. Label of the voucher code an announcement granted to this account.
 msgctxt "in-app-notifications"

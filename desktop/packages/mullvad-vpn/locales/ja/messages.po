@@ -1579,6 +1579,10 @@ msgid "<a>%(lockdownModeSettingName)s</a> is enabled. Please click “Connect“
 msgstr "<a>%(lockdownModeSettingName)s</a>が有効です。「接続」をクリックするか、「%(lockdownModeSettingName)s」を無効にしてインターネットのブロックを解除してください。"
 
 msgctxt "in-app-notifications"
+msgid "ACCESS REVOKED"
+msgstr "アクセス取り消し"
+
+msgctxt "in-app-notifications"
 msgid "ACCOUNT CREDIT EXPIRES SOON"
 msgstr "アカウントのクレジットがもうすぐ無効になります。"
 
@@ -1618,6 +1622,10 @@ msgstr "新機能を確認するにはここをクリックしてください。
 msgctxt "in-app-notifications"
 msgid "Click here to update"
 msgstr "ここをクリックして更新"
+
+msgctxt "in-app-notifications"
+msgid "Connecting is not possible while access is revoked."
+msgstr "アクセスが取り消されている間は接続できません。"
 
 #. Label of the voucher code an announcement granted to this account.
 msgctxt "in-app-notifications"
