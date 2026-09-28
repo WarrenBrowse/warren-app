@@ -605,9 +605,10 @@ While include-only is active the desktop view says it under the default
 ("Direct connection by default. Only the apps below use the VPN."), warns when
 no rule puts any app in the VPN, and the main screen labels the connection
 state "Only selected apps are protected" with the number of apps on the VPN.
-Choosing it needs no confirmation on desktop: it is one click to undo and
-visible on the main screen. Android asks first where the choice narrows a full
-tunnel (section 3.5).
+Choosing it asks once on desktop ("Only the apps you choose will use the VPN.
+The rest of this device will not be protected."), since it takes every app
+without a rule off the VPN at once; going back through the VPN never asks.
+Android asks where the choice narrows a full tunnel (section 3.5).
 
 ### 3.1 Linux
 
@@ -1178,6 +1179,14 @@ The translation between the list and the daemon lives in
   are cleared before it turns back on, so no rule nobody sees comes back.
 - `planDefaultRoute` switches the default. Toward the VPN the mode goes off
   first; toward direct it goes last; both lists are emptied, the countries kept.
+- Changes run one at a time across every screen
+  (`split-tunneling/hooks/use-routing-actions.ts`): each is planned from the
+  settings the daemon last reported, and the next waits until those settings
+  show the previous one (`routingReflects`, up to 3 s), since the daemon
+  commits two overlapping requests over each other. Entries are removed under
+  the id the daemon stored, whose case can differ from the view's, and a
+  program picked in the file dialog is resolved to its daemon id
+  (`appRouting.resolveApplication`) before its route is planned.
 - `test/unit/app-routing-rules.spec.ts` replays each plan call by call and
   checks those three properties at every step.
 
@@ -1193,10 +1202,12 @@ Linux keeps no list for either mode, since an app leaves or joins the VPN when
 Warren opens it: the route screen offers "Open outside the VPN" (with the VPN
 as the default) or "Open through the VPN" (with direct as the default) as an
 action that launches the app from its desktop entry (`launchPath`, set by
-`getPathBasedApplications`), and the rules are the countries only. Under
-direct as the default an app with a country uses it when opened that way, and
-the route screen says so; the empty list there says how opened apps join the
-VPN rather than warning that none does. Apps are keyed by the program they run,
+`getPathBasedApplications`), and the rules are the countries only. A browser
+that hands a new window to its running process says, in the warning colour,
+to close it first; one that launches elsewhere cannot be opened this way.
+Under direct as the default an app with a country uses it when opened that
+way, and both its row and its route screen say so; the empty list there says
+how opened apps join the VPN rather than warning that none does. Apps are keyed by the program they run,
 resolved through `PATH`, symlinks and shell wrappers whose last line is
 `exec [-a NAME] PROGRAM ... "$@"` with a literal program
 (`desktop/packages/mullvad-vpn/src/main/linux-app-routing.ts`). A Flatpak or

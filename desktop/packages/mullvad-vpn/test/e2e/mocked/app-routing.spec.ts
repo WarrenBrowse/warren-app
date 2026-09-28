@@ -292,7 +292,17 @@ test.describe('App routing', () => {
       appExits: [{ app: QBIT.absolutepath, exit: { country: 'ro' } }],
     });
     await segment('Outside the VPN').click();
+    // The rest of the device leaves the VPN: asked once, and nothing moves before.
+    const dialog = page.getByTestId('outside-default-dialog');
+    await expect(dialog).toContainText(
+      'Only the apps you choose will use the VPN. The rest of this device will not be protected.',
+    );
+    await dialog.getByRole('button', { name: 'Cancel' }).click();
+    await expect(dialog).not.toBeVisible();
+    expect(await takeRoutingCalls(0)).toEqual([]);
 
+    await segment('Outside the VPN').click();
+    await dialog.getByRole('button', { name: 'Continue' }).click();
     expect(await takeRoutingCalls(2)).toEqual([
       ['removeExcluded', STEAM.absolutepath],
       ['setSplitMode', 'include-only'],

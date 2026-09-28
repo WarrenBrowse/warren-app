@@ -175,7 +175,7 @@ function CountryItem({
 // never moves.
 export function CountryScreen() {
   const { routing, platform } = useAppRouting();
-  const { target, showList, showRoute } = useSplitTunnelingContext();
+  const { target, showRoute } = useSplitTunnelingContext();
   const { setAppRoute } = useRoutingActions();
   const relayLocations = useSelector((state) => state.settings.relayLocations);
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -218,14 +218,9 @@ export function CountryScreen() {
       busy.current = true;
       await setAppRoute(target, { kind: 'country', exit });
       busy.current = false;
-      // A picked program is resolved to another id by the main process.
-      if (typeof target.application === 'string') {
-        showList();
-      } else {
-        showRoute();
-      }
+      showRoute();
     },
-    [setAppRoute, showList, showRoute, target],
+    [setAppRoute, showRoute, target],
   );
 
   if (target === undefined) {

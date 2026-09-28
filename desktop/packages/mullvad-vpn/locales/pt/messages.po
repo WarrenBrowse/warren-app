@@ -2982,6 +2982,18 @@ msgctxt "split-tunneling-view"
 msgid "Your system cannot send apps outside the VPN."
 msgstr "O seu sistema não permite passar aplicações fora da VPN."
 
+msgctxt "split-tunneling-view"
+msgid "Only the apps you choose will use the VPN. The rest of this device will not be protected."
+msgstr "Só as aplicações que escolher vão usar a VPN. O resto deste dispositivo não ficará protegido."
+
+msgctxt "split-tunneling-view"
+msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not be excluded from the VPN tunnel."
+msgstr "Caso já esteja a ser executada, feche a %(applicationName)s antes de a lançar através daqui. Caso contrário, poderá não ser excluída do túnel VPN."
+
+msgctxt "split-tunneling-view"
+msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not use the VPN."
+msgstr "Caso já esteja a ser executada, feche a %(applicationName)s antes de a lançar a partir daqui. Caso contrário, poderá não usar a VPN."
+
 #. Button label for continuing problem report submission with an outdated app version.
 msgctxt "support-view"
 msgid "Continue anyway"

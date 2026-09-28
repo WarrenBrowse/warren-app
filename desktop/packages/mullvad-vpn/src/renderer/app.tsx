@@ -579,6 +579,8 @@ export default class AppRenderer {
     IpcRendererEventChannel.linuxSplitTunneling.launchIncludedApplication(application);
   public getAppRoutingApplications = (updateCaches = false) =>
     IpcRendererEventChannel.appRouting.getApplications(updateCaches);
+  public resolveAppRoutingApplication = (application: string) =>
+    IpcRendererEventChannel.appRouting.resolveApplication(application);
   public setAppSplitMode = (mode: AppSplitMode) =>
     IpcRendererEventChannel.appRouting.setSplitMode(mode);
   public addIncludedApp = (application: ISplitTunnelingApplication | string) =>

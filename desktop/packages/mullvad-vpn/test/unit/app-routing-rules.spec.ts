@@ -9,6 +9,7 @@ import {
   planAppRoute,
   planDefaultRoute,
   type RoutingOp,
+  routingReflects,
 } from '../../src/shared/app-routing';
 import type { AppRoutingSettings, ExitChoice } from '../../src/shared/daemon-rpc-types';
 
@@ -316,6 +317,78 @@ describe('planDefaultRoute, the "Other apps" choice', () => {
     expect(planDefaultRoute(settings(), 'vpn', 'darwin')).toEqual([]);
     expect(planDefaultRoute(settings({ splitMode: 'include-only' }), 'direct', 'darwin')).toEqual(
       [],
+    );
+  });
+});
+
+describe('planAppRoute with ids that differ in case', () => {
+  const STORED = 'C:\\Games\\Steam.exe';
+  const ASKED = 'c:\\games\\steam.EXE';
+
+  it('removes an entry under the exact id the daemon stored, which it compares as is', () => {
+    const routing = settings({
+      splitMode: 'exclude',
+      excludedApps: [STORED],
+      appExits: [{ app: STORED, exit: NL }],
+    });
+    expect(planAppRoute(routing, ASKED, VPN, 'win32')).toEqual([
+      { op: 'clear-exit', app: STORED },
+      { op: 'remove-excluded', app: STORED },
+      { op: 'set-split-mode', mode: 'off' },
+    ]);
+  });
+
+  it('takes an included app out of its list under its stored id', () => {
+    const routing = settings({ splitMode: 'include-only', includedApps: [STORED] });
+    expect(planAppRoute(routing, ASKED, DIRECT, 'win32')).toEqual([
+      { op: 'remove-included', app: STORED },
+    ]);
+  });
+});
+
+describe('planDefaultRoute toward direct', () => {
+  it('sends no app outside the VPN before the last call', () => {
+    const routing = settings({
+      splitMode: 'exclude',
+      excludedApps: [STEAM],
+      includedApps: [SLACK],
+      appExits: [{ app: FIREFOX, exit: NL }],
+    });
+    const ops = planDefaultRoute(routing, 'direct', 'darwin');
+    const states = statesAlong(routing, ops);
+    for (const state of states.slice(1, -1)) {
+      for (const app of APPS.filter((other) => other !== STEAM)) {
+        expect(appRouteFor(state, app, 'darwin').kind).not.toBe('direct');
+      }
+    }
+  });
+});
+
+describe('routingReflects, whether the daemon has applied a change', () => {
+  const routing = settings({ splitMode: 'exclude', excludedApps: [STEAM] });
+
+  it('holds once every app routes as planned, whatever the list order', () => {
+    const planned = applyRoutingOps(
+      routing,
+      planAppRoute(routing, SLACK, DIRECT, 'darwin'),
+      'darwin',
+    );
+    const reported = { ...planned, excludedApps: [SLACK, STEAM] };
+    expect(routingReflects(reported, planned, 'darwin')).toBe(true);
+  });
+
+  it('fails while the daemon still reports the state before the change', () => {
+    const planned = applyRoutingOps(
+      routing,
+      planAppRoute(routing, SLACK, DIRECT, 'darwin'),
+      'darwin',
+    );
+    expect(routingReflects(routing, planned, 'darwin')).toBe(false);
+  });
+
+  it('fails while the default differs, even with no rule on either side', () => {
+    expect(routingReflects(settings(), settings({ splitMode: 'include-only' }), 'darwin')).toBe(
+      false,
     );
   });
 });

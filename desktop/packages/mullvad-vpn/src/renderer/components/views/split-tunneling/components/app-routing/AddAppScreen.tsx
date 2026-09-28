@@ -5,6 +5,7 @@ import styled from 'styled-components';
 import { appRules, sameAppId } from '../../../../../../shared/app-routing';
 import { type ISplitTunnelingApplication } from '../../../../../../shared/application-types';
 import { messages } from '../../../../../../shared/gettext';
+import log from '../../../../../../shared/logging';
 import { useAppContext } from '../../../../../context';
 import { useAppRouting } from '../../../../../features/app-routing/hooks';
 import { Flex, IconButton, Spinner } from '../../../../../lib/components';
@@ -97,7 +98,8 @@ function AppItem({ application, onPick, onForget }: AppItemProps) {
 // rule exists until a route other than the default is chosen there.
 export function AddAppScreen() {
   const { routing, platform } = useAppRouting();
-  const { forgetManuallyAddedSplitTunnelingApplication } = useAppContext();
+  const { forgetManuallyAddedSplitTunnelingApplication, resolveAppRoutingApplication } =
+    useAppContext();
   const { catalog, reloadCatalog, setBrowsing, showList, showRoute } = useSplitTunnelingContext();
   const [searchTerm, setSearchTerm] = React.useState('');
 
@@ -129,8 +131,18 @@ export function AddAppScreen() {
   const pickFile = useFilePicker(
     messages.pgettext('split-tunneling-view', 'Choose'),
     setBrowsing,
-    (filePath: string) =>
-      showRoute({ id: filePath, name: basename(filePath), application: filePath }),
+    async (filePath: string) => {
+      // Planned under the id the daemon will store (a shortcut's target, a
+      // desktop entry's program), so the rules the plan reads are that app's.
+      let id = filePath;
+      try {
+        id = await resolveAppRoutingApplication(filePath);
+      } catch {
+        log.error('Could not resolve a picked program');
+      }
+      showRoute({ id, name: basename(filePath), application: filePath });
+      await reloadCatalog();
+    },
     getFilePickerOptionsForPlatform(),
   );
 

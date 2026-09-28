@@ -1689,6 +1689,9 @@ class ApplicationMain
       }
       return this.splitTunnelingApi.getApplications(updateCaches);
     });
+    IpcMainEventChannel.appRouting.handleResolveApplication((application) =>
+      this.resolveRoutedApplication(application),
+    );
     IpcMainEventChannel.appRouting.handleSetSplitMode((mode) => {
       return this.daemonRpc.setAppSplitMode(mode);
     });

@@ -31,6 +31,7 @@ const applications: ISplitTunnelingApplication[] = [
     deletable: false,
     routingLimitation: 'script',
     launchPath: '/usr/share/applications/firefox.desktop',
+    launchWarning: 'launches-in-existing-process',
   },
 ];
 
@@ -94,8 +95,12 @@ test.describe('App routing on Linux', () => {
     await expect(page.getByTestId('route-country')).toContainText(
       'Opens through a script: pick its program with Find another app',
     );
-    // Opening it outside the VPN goes through its desktop entry, which works.
+    // Opening it outside the VPN goes through its desktop entry, which works,
+    // but a browser already open keeps its window where it was.
     await expect(page.getByTestId('route-open-outside')).toBeEnabled();
+    await expect(page.getByTestId('route-open-outside')).toContainText(
+      'If it’s already running, close Firefox before launching it from here.',
+    );
     await page.keyboard.press('Escape');
   });
 
@@ -107,6 +112,10 @@ test.describe('App routing on Linux', () => {
     await expect(
       page.getByText('Direct connection by default. Only the apps below use the VPN.'),
     ).toBeVisible();
+    // The row says the country waits for the app to be opened from Warren.
+    await expect(page.getByTestId('app-rules')).toContainText(
+      'It uses this country when you open it with “Open through the VPN”.',
+    );
     await page
       .getByTestId('app-rules')
       .getByRole('button', { name: /^Signal/ })

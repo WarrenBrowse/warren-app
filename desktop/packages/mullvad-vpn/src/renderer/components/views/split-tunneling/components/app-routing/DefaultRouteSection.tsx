@@ -5,6 +5,7 @@ import { type DefaultRoute, defaultRoute } from '../../../../../../shared/app-ro
 import { messages } from '../../../../../../shared/gettext';
 import { useAppContext } from '../../../../../context';
 import { useAppRouting } from '../../../../../features/app-routing/hooks';
+import { Dialog } from '../../../../../lib/components/dialog';
 import { Link } from '../../../../../lib/components/link';
 import { colors } from '../../../../../lib/foundations';
 import { sourceSansPro } from '../../../../common-styles';
@@ -133,7 +134,16 @@ export function DefaultRouteSection() {
     [current, setDefaultRoute],
   );
   const chooseVpn = React.useCallback(() => void choose('vpn'), [choose]);
-  const chooseOutside = React.useCallback(() => void choose('direct'), [choose]);
+  // Outside the VPN takes every app without a rule off the VPN at once, so it
+  // is asked for once more; going back through the VPN never is.
+  const [confirming, setConfirming] = React.useState(false);
+  const askOutside = React.useCallback(() => setConfirming(true), []);
+  const cancelOutside = React.useCallback(() => setConfirming(false), []);
+  const confirmOutside = React.useCallback(() => {
+    setConfirming(false);
+    void choose('direct');
+  }, [choose]);
+  const onConfirmOpenChange = React.useCallback((open: boolean) => setConfirming(open), []);
 
   return (
     <StyledSection>
@@ -157,7 +167,7 @@ export function DefaultRouteSection() {
           aria-pressed={current === 'direct'}
           $selected={current === 'direct'}
           disabled={outsideDisabled}
-          onClick={chooseOutside}>
+          onClick={current === 'direct' ? undefined : askOutside}>
           {outsideVpnLabel()}
         </StyledSegment>
       </StyledSegments>
@@ -179,6 +189,31 @@ export function DefaultRouteSection() {
         </StyledNote>
       )}
       {current !== 'direct' && availability === 'needs-full-disk-access' && <FullDiskAccessNote />}
+      <Dialog open={confirming} onOpenChange={onConfirmOpenChange}>
+        <Dialog.Portal>
+          <Dialog.Popup data-testid="outside-default-dialog">
+            <Dialog.PopupContent>
+              <Dialog.Icon icon="alert-circle" color="yellow" />
+              <Dialog.TextGroup>
+                <Dialog.Text>
+                  {messages.pgettext(
+                    'split-tunneling-view',
+                    'Only the apps you choose will use the VPN. The rest of this device will not be protected.',
+                  )}
+                </Dialog.Text>
+              </Dialog.TextGroup>
+              <Dialog.ButtonGroup>
+                <Dialog.Button variant="success" onClick={confirmOutside}>
+                  <Dialog.Button.Text>{messages.gettext('Continue')}</Dialog.Button.Text>
+                </Dialog.Button>
+                <Dialog.Button onClick={cancelOutside}>
+                  <Dialog.Button.Text>{messages.gettext('Cancel')}</Dialog.Button.Text>
+                </Dialog.Button>
+              </Dialog.ButtonGroup>
+            </Dialog.PopupContent>
+          </Dialog.Popup>
+        </Dialog.Portal>
+      </Dialog>
     </StyledSection>
   );
 }

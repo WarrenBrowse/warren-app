@@ -54,11 +54,11 @@ const StyledOptionTitle = styled.span({
   overflowWrap: 'anywhere',
 });
 
-const StyledOptionSubtitle = styled.span({
+const StyledOptionSubtitle = styled.span<{ $warns?: boolean }>((props) => ({
   fontSize: '14px',
   lineHeight: '19px',
-  color: colors.whiteAlpha60,
-});
+  color: props.$warns ? colors.nose : colors.whiteAlpha60,
+}));
 
 const StyledBadge = styled.span({
   flexShrink: 0,
@@ -98,6 +98,7 @@ type OptionCardProps = {
   selected?: boolean;
   disabled?: boolean;
   opensMore?: boolean;
+  warns?: boolean;
   testId: string;
   onClick: () => void;
 };
@@ -114,7 +115,7 @@ function OptionCard(props: OptionCardProps) {
       {props.glyph}
       <StyledOptionText>
         <StyledOptionTitle>{props.title}</StyledOptionTitle>
-        <StyledOptionSubtitle>{props.subtitle}</StyledOptionSubtitle>
+        <StyledOptionSubtitle $warns={props.warns}>{props.subtitle}</StyledOptionSubtitle>
       </StyledOptionText>
       {props.isDefault && (
         <StyledBadge>
@@ -151,7 +152,8 @@ function LinuxLaunchCard({ target, into, supported }: LinuxLaunchProps) {
   const { launchExcludedApplication, launchIncludedApplication } = useAppContext();
   const [error, setError] = React.useState<string>();
   const closeError = React.useCallback(() => setError(undefined), []);
-  const problematic = asApplication(target)?.launchWarning === 'launches-elsewhere';
+  const warning = asApplication(target)?.launchWarning;
+  const problematic = warning === 'launches-elsewhere';
 
   const launch = React.useCallback(async () => {
     const run = into === 'outside' ? launchExcludedApplication : launchIncludedApplication;
@@ -165,8 +167,25 @@ function LinuxLaunchCard({ target, into, supported }: LinuxLaunchProps) {
     'split-tunneling-view',
     'Until you close it. Close it first if it is already open.',
   );
+  let warns = false;
   if (!supported) {
     subtitle = messages.pgettext('split-tunneling-view', 'Not available on this system');
+  } else if (warning === 'launches-in-existing-process') {
+    // A browser that is already open takes the new window into its running
+    // process, which stays where it was: say it plainly, in the warning colour.
+    warns = true;
+    subtitle = sprintf(
+      into === 'outside'
+        ? messages.pgettext(
+            'split-tunneling-view',
+            'If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not be excluded from the VPN tunnel.',
+          )
+        : messages.pgettext(
+            'split-tunneling-view',
+            'If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not use the VPN.',
+          ),
+      { applicationName: target.name },
+    );
   } else if (problematic) {
     subtitle = sprintf(
       into === 'outside'
@@ -195,6 +214,7 @@ function LinuxLaunchCard({ target, into, supported }: LinuxLaunchProps) {
               messages.pgettext('split-tunneling-view', 'Open through the VPN')
         }
         subtitle={subtitle}
+        warns={warns}
         disabled={!supported || problematic}
         onClick={launch}
       />
@@ -243,9 +263,7 @@ export function RouteScreen() {
       await setAppRoute(target, route);
       pending.current = false;
       setBusy(false);
-      // A picked program is resolved by the main process to the id the
-      // daemon keys, which this screen cannot follow.
-      if (leave || typeof target.application === 'string') {
+      if (leave) {
         showList();
       }
     },

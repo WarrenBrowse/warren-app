@@ -110,6 +110,13 @@ const StyledChipCell = styled.span({
   minWidth: 0,
 });
 
+const StyledCaveat = styled.span({
+  display: 'block',
+  fontSize: '13px',
+  lineHeight: '17px',
+  color: colors.nose,
+});
+
 const StyledStatusCell = styled.span({
   gridColumn: '2 / 4',
   minWidth: 0,
@@ -176,6 +183,7 @@ export function AppRulesSection() {
   const exitNames = useExitChoiceNames();
   const rules = appRules(routing, platform);
   const direct = defaultRoute(routing) === 'direct';
+  const linuxLaunchOnly = direct && platform === 'linux';
 
   const rows = React.useMemo(() => {
     const resolved = resolveApplications(
@@ -256,6 +264,16 @@ export function AppRulesSection() {
                 onOpen={showRoute}>
                 {route.kind === 'country' && (
                   <RouteStatusLine line={appRouteLine(routing, statuses, app, platform)} />
+                )}
+                {route.kind === 'country' && linuxLaunchOnly && (
+                  // Linux keeps no list: the country only applies to the app
+                  // opened from Warren, which the row must not hide.
+                  <StyledCaveat>
+                    {messages.pgettext(
+                      'split-tunneling-view',
+                      'It uses this country when you open it with “Open through the VPN”.',
+                    )}
+                  </StyledCaveat>
                 )}
               </RuleRow>
             );

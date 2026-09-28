@@ -227,9 +227,14 @@ export function planAppRoute(
   }
 
   const ops: RoutingOp[] = [];
-  const excluded = includesApp(routing.excludedApps, app, platform);
-  const included = includesApp(routing.includedApps, app, platform);
-  const hasExit = appExitFor(routing, app, platform) !== undefined;
+  // The daemon compares ids as stored, so an entry is removed under its own
+  // spelling, which can differ in case from the id the view holds.
+  const stored = (apps: readonly string[]) => apps.find((other) => sameAppId(other, app, platform));
+  const excludedId = stored(routing.excludedApps);
+  const includedId = stored(routing.includedApps);
+  const exitId = stored(routing.appExits.map((entry) => entry.app));
+  const excluded = excludedId !== undefined;
+  const included = includedId !== undefined;
   const excludedLeft = routing.excludedApps.filter((other) => !sameAppId(other, app, platform));
 
   // Bypass or the countries switched on again must not bring back entries
@@ -245,8 +250,8 @@ export function planAppRoute(
     case 'direct':
       // Only with the VPN as the default: direct is otherwise "no rule".
       if (fallback === 'direct') {
-        if (included) ops.push({ op: 'remove-included', app });
-        if (hasExit) ops.push({ op: 'clear-exit', app });
+        if (includedId !== undefined) ops.push({ op: 'remove-included', app: includedId });
+        if (exitId !== undefined) ops.push({ op: 'clear-exit', app: exitId });
         break;
       }
       if (routing.splitMode !== 'exclude') {
@@ -255,7 +260,7 @@ export function planAppRoute(
       if (!excluded) ops.push({ op: 'add-excluded', app });
       if (routing.splitMode !== 'exclude') ops.push({ op: 'set-split-mode', mode: 'exclude' });
       // Bypass wins over a country, so the country goes once the app bypasses.
-      if (hasExit) ops.push({ op: 'clear-exit', app });
+      if (exitId !== undefined) ops.push({ op: 'clear-exit', app: exitId });
       break;
 
     case 'country':
@@ -263,9 +268,9 @@ export function planAppRoute(
       ops.push({ op: 'set-exit', app, exit: next.exit });
       if (!routing.appExitsEnabled) ops.push({ op: 'set-exits-enabled', enabled: true });
       // The country is in force from here, so the app leaves its list.
-      if (included) ops.push({ op: 'remove-included', app });
-      if (excluded) {
-        ops.push({ op: 'remove-excluded', app });
+      if (includedId !== undefined) ops.push({ op: 'remove-included', app: includedId });
+      if (excludedId !== undefined) {
+        ops.push({ op: 'remove-excluded', app: excludedId });
         if (routing.splitMode === 'exclude' && excludedLeft.length === 0) {
           ops.push({ op: 'set-split-mode', mode: 'off' });
         }
@@ -276,13 +281,13 @@ export function planAppRoute(
       if (fallback === 'direct') {
         // Included first: an app with a country stays in the VPN throughout.
         if (!included) ops.push({ op: 'add-included', app });
-        if (hasExit) ops.push({ op: 'clear-exit', app });
+        if (exitId !== undefined) ops.push({ op: 'clear-exit', app: exitId });
         break;
       }
       // Bypass wins over a country, so the country goes while it still bypasses.
-      if (hasExit) ops.push({ op: 'clear-exit', app });
-      if (excluded) {
-        ops.push({ op: 'remove-excluded', app });
+      if (exitId !== undefined) ops.push({ op: 'clear-exit', app: exitId });
+      if (excludedId !== undefined) {
+        ops.push({ op: 'remove-excluded', app: excludedId });
         if (routing.splitMode === 'exclude' && excludedLeft.length === 0) {
           ops.push({ op: 'set-split-mode', mode: 'off' });
         }
@@ -314,6 +319,24 @@ export function planDefaultRoute(
   return next === 'vpn'
     ? [{ op: 'set-split-mode', mode: 'off' }, ...clearLists]
     : [...clearLists, { op: 'set-split-mode', mode: 'include-only' }];
+}
+
+// Whether `actual` routes every app the way `expected` does, whatever the
+// order of its lists: what tells the view that the daemon has applied a plan.
+export function routingReflects(
+  actual: AppRoutingSettings,
+  expected: AppRoutingSettings,
+  platform: Platform,
+): boolean {
+  if (defaultRoute(actual) !== defaultRoute(expected)) {
+    return false;
+  }
+  const apps = [...appRules(actual, platform), ...appRules(expected, platform)].map(
+    (rule) => rule.app,
+  );
+  return apps.every((app) =>
+    sameRoute(appRouteFor(actual, app, platform), appRouteFor(expected, app, platform)),
+  );
 }
 
 // What the daemon holds once it has applied `ops`, for the view to reason

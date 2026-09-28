@@ -572,6 +572,9 @@ export const ipcSchema = {
       boolean,
       { fromCache: boolean; applications: ISplitTunnelingApplication[] }
     >(),
+    // The id the daemon keys a program picked with the file dialog under: the
+    // target of a shortcut, the program of a desktop entry.
+    resolveApplication: invoke<string, string>(),
     setSplitMode: invoke<AppSplitMode, void>(),
     addIncludedApp: invoke<ISplitTunnelingApplication | string, void>(),
     removeIncludedApp: invoke<string, void>(),

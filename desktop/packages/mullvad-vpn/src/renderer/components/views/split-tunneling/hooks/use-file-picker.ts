@@ -5,7 +5,7 @@ import { useAppContext } from '../../../../context';
 export function useFilePicker(
   buttonLabel: string,
   setOpen: (value: boolean) => void,
-  select: (path: string) => void,
+  select: (path: string) => void | Promise<void>,
   filter?: { name: string; extensions: string[] },
 ) {
   const { showOpenDialog } = useAppContext();
@@ -20,7 +20,7 @@ export function useFilePicker(
     setOpen(false);
 
     if (file.filePaths[0]) {
-      select(file.filePaths[0]);
+      await select(file.filePaths[0]);
     }
   }, [setOpen, showOpenDialog, buttonLabel, filter, select]);
 
