@@ -95,6 +95,14 @@ One commit per upstream fix (or per inseparable group).
       -w /ws/warren-app rust:<toolchain> cargo test -p <crate>
     ```
     Mount the workspace root, because the sibling path deps live there.
+    A real Linux host, for anything that moves the firewall, routes or the
+    service units: the Lima VMs (`limactl list`, `wl-ubuntu-2404` carries the
+    beta package). Run each test as a detached `systemd-run` unit with a
+    `systemd-run --on-active=<s> warren-beta disconnect` deadman beside it:
+    a blocking firewall cuts Lima's own ssh, and a graceful `limactl stop`
+    then `start` is the way back in. Measure leaks with a `curl` bound to the
+    physical NIC (`--interface`), never `ping` (Lima's network answers ICMP
+    itself).
   - Windows: CI's `windows-daemon` job, or the `warren:warren-windows-vm` skill.
 
   A cross `cargo check --target x86_64-pc-windows-msvc` fails on this Mac

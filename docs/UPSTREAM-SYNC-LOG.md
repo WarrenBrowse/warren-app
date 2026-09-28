@@ -21,18 +21,28 @@ Conventions:
 ## Open items
 
 Carried from the latest review. Each is relevant to Warren and could not be
-taken as a mechanical pick.
+finished as a pick.
 
 | upstream | what | why it is open |
 |---|---|---|
-| d7944e34ab, f2282386a4 | Linux: `SIGUSR1` makes the daemon stop without tearing the firewall down, and the unit sets `RestartKillSignal=SIGUSR1`, so `systemctl restart` does not leak | Warren has neither (`dist-assets/linux/warren-daemon.service`). Daemon change plus unit change, to validate on a real Linux host (egress watched during a restart). Warren's `DaemonCommand::PrepareRestart` already exists. |
-| 9df9e5aedf | Windows: block Hyper-V traffic while the tunnel is disconnecting | Port the Windows half only. Upstream also adds a `Disconnecting` policy that blocks everything on Linux and macOS; whether that would drop the QUIC close Warren sends on teardown has not been checked. Needs the Windows VM. Warren's `FirewallPolicy` also carries `lan_networks`, which upstream's variant lacks. |
-| 12259737fa | GHSA-p9rr-wc9m-qmwg: the management socket existed with loose permissions before the group restriction was applied | Upstream's fix does not apply: Warren binds the socket with std and chmods it afterwards (`mullvad-management-interface/src/lib.rs`, `apply_socket_permissions`), and `RpcGate` authorizes every RPC against the caller's uid. Residual: between `bind` and `chmod` the socket has the process umask's permissions. Decide whether to bind under a restrictive umask. |
-| b5271f66c2, d76b53a840 | Windows split tunnel: pass the WFP sublayer GUIDs to the driver, new GUIDs to avoid clashing with other software | Needs upstream's newer `mullvad-split-tunnel.sys`. Warren already salts its own sublayer GUIDs (`windows/winfw/src/winfw/mullvadguids.cpp`); how the two interact is unchecked. |
-| 1f170ae04c | macOS split tunnel: throttle the "failed to parse eslogger message" log spam | Low value, conflicts with Warren's rewrite of `split_tunnel/macos/process.rs`. Port by hand if the spam shows up in problem reports. |
-| 80b14dd924, 63ad024026 | Deterministic Windows PE timestamps, no absolute PDB paths | Reproducible builds. Outside the watch list; worth a decision of its own. |
-| b43b225318 | TLS session tickets disabled in every API client, against tracking across connections | Concerns Warren's API client, which lives in warren-sdk-rs, not here. To raise there. |
-| 02a8099325 | Android: bind the VPN service after an app update so always-on reconnects | Warren's Android app was rewritten without the daemon. Check whether it shows the same symptom before porting anything. |
+| b5271f66c2, d76b53a840, and the binaries bumps d3f72f0a3d, c2c5b5e628 | Windows split tunnel: win-split-tunnel 1.3.0.0 takes its WFP sublayer GUIDs from the caller | Worth more to Warren than to Mullvad: Warren puts winfw in Mullvad's sublayers so the driver's filters land in them, and falls back to salted private sublayers (no split tunneling, include-only held back) when another product holds them. With 1.3.0.0 Warren could hand the driver its own GUIDs and coexist with Mullvad. Needs the `dist-assets/binaries` bump (it also drops the wireguard-nt DLLs), the IOCTL change, a rethink of `split_tunnel_sublayers_shared`, and a Windows run of split tunneling. A lot of its own; the driver ships for aarch64 too, so the ARM64 VM can test it. |
+| none (Warren only) | macOS: the pf firewall's `Drop` lifts the block the state machine keeps for lockdown and for the restart an update arms, as it did on Linux | The Linux fix (`keep_policy_on_drop`) was not extended to macOS: `is_shutdown_user_initiated()` is always false there, so a kept block would also outlive the stop the uninstaller causes, and `uninstall_macos.sh --from-daemon` no longer resets pf. Needs the uninstall path settled first, then a run in a macOS VM (the tart VMs on this Mac are CI machines). |
+| 9df9e5aedf | Windows: block Hyper-V guests while the tunnel is torn down | Ported (b8f390294e) and built by CI, not validated on a host with Hyper-V: the only Windows guest is ARM64 under QEMU on an M2, and the Hyper-V firewall needs nested virtualization, which Apple's hypervisor offers from M3 on (assumption from Apple's documentation, not measured). Validate on an x64 Windows 11 with WSL. |
+| 02a8099325 | Android: reconnect after an app update when always-on VPN did not bring the service back | Upstream binds its service and lets its daemon restore the persisted target. Warren's Android service has no daemon and no persisted connect intent (`WarrenVpnService`), so binding would restore nothing; the port would be a stored intent plus a `KEY_CONNECT_ACTION` on `MY_PACKAGE_REPLACED`, as the boot receiver does. Not started: the symptom has to be reproduced first, and the only emulator was in use by another agent. |
+
+## 2026-09-28 (second pass): the open items of the first review
+
+No new upstream range; this pass worked the open items. Everything below was
+validated where it runs, except where the Open items table says otherwise.
+
+| upstream | here | outcome |
+|---|---|---|
+| d7944e34ab, f2282386a4 | 0799000538, f2e2cf98da | Picked, and it uncovered a Warren defect. Linux's `Firewall` gained a `Drop` in the fork that resets the policy, so the block the state machine keeps on shutdown (lockdown, the restart lock an update arms) was lifted a moment later, and the early-boot blocker lifted its own block as its process exited: every Linux boot ran unprotected from that exit to the daemon's start (3.7 s measured in the VM). Measured in an Ubuntu 24.04 VM across `systemctl restart` with the tunnel blocking: 1.1.35 as shipped, 538 clear-text egress successes over 19 s and the daemon back Disconnected; with both fixes and `RestartKillSignal=SIGUSR1`, 0 of 3,680 samples leaked and the daemon came back to its secured target. The sysvinit script restarts with USR1 too. |
+| 1f170ae04c | 47341c9710 | Ported, with a test the upstream change lacked. |
+| 80b14dd924, 63ad024026 | eb4926c679 | Picked as is. |
+| b43b225318 | b38ba0e594, SDK 5b05eee, pin 2fa039f205 | Ported to both Warren clients that resumed: the daemon's reqwest clients and the SDK's `ReqwestTransport` (the SDK's marked transport and the engine's TLS already refused resumption). A preconfigured rustls config replaces reqwest's `tls_sni`, so SNI moved into the same config; tests check both against a local server that issues tickets. Found on the way: `api.beta.warrenbrowse.com` refuses TLS without SNI (alert `InternalError`), before and after the change, so the SDK's SNI-less fallback cannot succeed against it. |
+| 9df9e5aedf | b8f390294e | Ported (Windows only); see Open items for what is not validated. |
+| 12259737fa | none | Not applicable. The daemon binds the socket and chmods it afterwards; measured umask under systemd 0022, so the socket is `0755` in between and neither group nor others can connect (connecting needs write). launchd and sysvinit at 022 is an assumption, not measured. |
 
 ## 2026-09-28: baseline to upstream `0d06537e5f`
 

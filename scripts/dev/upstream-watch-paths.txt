@@ -25,3 +25,6 @@ desktop/packages/mullvad-vpn/src/main/grpc-client.ts
 desktop/packages/windows-utils
 mullvad-management-interface/src/lib.rs
 mullvad-management-interface/src/client.rs
+
+# Binaries Warren ships as Mullvad built them: the split tunnel driver moves here.
+dist-assets/binaries

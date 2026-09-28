@@ -39,7 +39,7 @@ while IFS= read -r line; do
     [[ -n "$line" ]] && WATCH+=("$line")
 done < "$WATCH_FILE"
 
-PICKED="$(git log --format=%s HEAD | grep -oE '\(upstream [0-9a-f]{10}\)' | grep -oE '[0-9a-f]{10}' || true)"
+PICKED="$(git log --format=%s HEAD | grep -oE '\(upstream [0-9a-f]{10}(, [0-9a-f]{10})*\)' | grep -oE '[0-9a-f]{10}' || true)"
 
 echo "Upstream range: ${FROM_SHA:0:10} ($(git show -s --format=%cs "$FROM_SHA")) .. ${TO_SHA:0:10} ($(git show -s --format=%cs "$TO_SHA"))"
 echo "Commits in range: $(git rev-list --count --no-merges "$FROM_SHA..$TO_SHA") (merges excluded)"
