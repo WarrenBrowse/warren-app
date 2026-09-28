@@ -1,5 +1,7 @@
+import { useCallback, useState } from 'react';
 import styled from 'styled-components';
 
+import { LogoutResult } from '../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../shared/gettext';
 import { useAppContext } from '../../../context';
 import { Button, Flex } from '../../../lib/components';
@@ -11,6 +13,7 @@ import { useSelector } from '../../../redux/store';
 import { AppMainHeader } from '../../app-main-header';
 import { bigText, measurements, smallText } from '../../common-styles';
 import CustomScrollbars from '../../CustomScrollbars';
+import { LogoutFailure } from '../../LogoutFailure';
 
 export const StyledCustomScrollbars = styled(CustomScrollbars)({
   flex: 1,
@@ -30,6 +33,12 @@ export const StyledMessage = styled.span(smallText, {
 export function DeviceRevokedView() {
   const { leaveRevokedDevice } = useAppContext();
   const tunnelState = useSelector((state) => state.connection.status);
+  const [logoutResult, setLogoutResult] = useState<LogoutResult>();
+
+  const goToLogin = useCallback(async () => {
+    setLogoutResult(undefined);
+    setLogoutResult(await leaveRevokedDevice());
+  }, [leaveRevokedDevice]);
 
   return (
     <View backgroundColor="darkBlue">
@@ -67,9 +76,11 @@ export function DeviceRevokedView() {
               </StyledMessage>
             </FlexColumn>
 
+            <LogoutFailure result={logoutResult} onRetry={goToLogin} />
+
             <Button
               variant={tunnelState.state === 'disconnected' ? 'primary' : 'destructive'}
-              onClick={leaveRevokedDevice}>
+              onClick={goToLogin}>
               <Button.Text>
                 {
                   // TRANSLATORS: Button label for navigating to login.

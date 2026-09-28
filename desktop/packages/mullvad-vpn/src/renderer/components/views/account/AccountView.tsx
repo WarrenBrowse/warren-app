@@ -4,6 +4,7 @@ import styled from 'styled-components';
 
 import { formatRemainingTime, hasExpired } from '../../../../shared/account-expiry';
 import { isBetaBuild } from '../../../../shared/constants/product-env';
+import { LogoutResult } from '../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../shared/gettext';
 import { RoutePath } from '../../../../shared/routes';
 import { useAppContext } from '../../../context';
@@ -17,6 +18,7 @@ import { useSelector } from '../../../redux/store';
 import { AppNavigationHeader } from '../..';
 import { BetaBadge } from '../../beta-badge';
 import { BackAction } from '../../keyboard-navigation';
+import { LogoutFailure } from '../../LogoutFailure';
 import { ModalAlert, ModalAlertType } from '../../Modal';
 import { ExternalPaymentButton } from '../../payment';
 import { RedeemVoucherButton } from '../../RedeemVoucher';
@@ -214,6 +216,7 @@ export function AccountView() {
   // subscription) is unrecoverable.
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
   const [backedUp, setBackedUp] = useState(false);
+  const [logoutResult, setLogoutResult] = useState<LogoutResult>();
 
   const openLogoutConfirm = useCallback(() => {
     setBackedUp(false);
@@ -225,7 +228,8 @@ export function AccountView() {
   // then it is run with the wrong `this`.
   const doLogout = useCallback(async () => {
     setLogoutConfirmOpen(false);
-    await logout('gui-logout-button');
+    setLogoutResult(undefined);
+    setLogoutResult(await logout('gui-logout-button'));
   }, [logout]);
 
   const goToKeys = useCallback(() => {
@@ -309,6 +313,10 @@ export function AccountView() {
                   }
                 </Text>
               </LogoutButton>
+
+              {/* The retry skips the confirmation: the user already confirmed
+                  the backup for this logout. */}
+              <LogoutFailure result={logoutResult} onRetry={doLogout} />
             </FlexColumn>
           </StyledViewContainer>
         </View.Content>

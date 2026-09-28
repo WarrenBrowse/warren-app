@@ -5051,6 +5051,19 @@ msgid "Backup keys"
 msgstr "備份金鑰"
 
 msgctxt "account-view"
+msgid "Could not log out: the VPN did not disconnect in time. You are still logged in."
+msgstr "無法登出：VPN 未能及時中斷連線。您仍處於登入狀態。"
+
+msgctxt "account-view"
+msgid "Could not log out. You are still logged in."
+msgstr "無法登出。您仍處於登入狀態。"
+
+#. Button that runs a logout again after it failed.
+msgctxt "account-view"
+msgid "Try again"
+msgstr "再試一次"
+
+msgctxt "account-view"
 msgid "Public key"
 msgstr "公鑰"
 

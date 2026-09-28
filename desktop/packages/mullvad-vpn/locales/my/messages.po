@@ -5054,6 +5054,19 @@ msgid "Backup keys"
 msgstr "သော့များကို အရန်သိမ်းရန်"
 
 msgctxt "account-view"
+msgid "Could not log out: the VPN did not disconnect in time. You are still logged in."
+msgstr "ထွက်ခွာ၍ မရပါ- VPN ချိတ်ဆက်မှုကို အချိန်မီ ဖြတ်တောက်၍ မရပါ။ သင် ဝင်ရောက်ထားဆဲ ဖြစ်ပါသည်။"
+
+msgctxt "account-view"
+msgid "Could not log out. You are still logged in."
+msgstr "ထွက်ခွာ၍ မရပါ။ သင် ဝင်ရောက်ထားဆဲ ဖြစ်ပါသည်။"
+
+#. Button that runs a logout again after it failed.
+msgctxt "account-view"
+msgid "Try again"
+msgstr "ထပ်ကြိုးစားရန်"
+
+msgctxt "account-view"
 msgid "Public key"
 msgstr "အများသုံးသော့"
 

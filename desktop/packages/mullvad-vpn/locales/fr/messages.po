@@ -570,6 +570,19 @@ msgid "Backup keys"
 msgstr "Sauvegarder les clés"
 
 msgctxt "account-view"
+msgid "Could not log out: the VPN did not disconnect in time. You are still logged in."
+msgstr "Déconnexion du compte impossible : le VPN ne s'est pas déconnecté à temps. Vous êtes toujours connecté(e) à votre compte."
+
+msgctxt "account-view"
+msgid "Could not log out. You are still logged in."
+msgstr "Déconnexion du compte impossible. Vous êtes toujours connecté(e) à votre compte."
+
+#. Button that runs a logout again after it failed.
+msgctxt "account-view"
+msgid "Try again"
+msgstr "Réessayer"
+
+msgctxt "account-view"
 msgid "Currently unavailable"
 msgstr "Actuellement indisponible"
 

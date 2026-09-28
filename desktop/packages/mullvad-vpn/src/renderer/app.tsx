@@ -27,6 +27,7 @@ import {
   IRelayListWithEndpointData,
   ISettings,
   liftConstraint,
+  LogoutResult,
   LogoutSource,
   NatPmpSettings,
   NewAccessMethodSetting,
@@ -690,18 +691,22 @@ export default class AppRenderer {
     }
   };
 
-  public logout = async (source: LogoutSource) => {
+  // Resolves how the logout ended, so the view it was asked from can say why
+  // the account is still logged in and offer a retry.
+  public logout = async (source: LogoutSource): Promise<LogoutResult> => {
     try {
-      await IpcRendererEventChannel.account.logout(source);
+      return await IpcRendererEventChannel.account.logout(source);
     } catch (e) {
       const error = e as Error;
       log.info('Failed to logout: ', error.message);
+      return 'failed';
     }
   };
 
-  public leaveRevokedDevice = async () => {
-    await this.logout('gui-device-revoked');
+  public leaveRevokedDevice = async (): Promise<LogoutResult> => {
+    const result = await this.logout('gui-device-revoked');
     await this.disconnectTunnel('gui-device-revoked');
+    return result;
   };
 
   // Mints a fresh Warren identity in the daemon (generates a new BIP39

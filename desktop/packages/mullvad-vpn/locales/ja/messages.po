@@ -5051,6 +5051,19 @@ msgid "Backup keys"
 msgstr "鍵をバックアップ"
 
 msgctxt "account-view"
+msgid "Could not log out: the VPN did not disconnect in time. You are still logged in."
+msgstr "ログアウトできませんでした：VPN が時間内に切断されませんでした。ログインしたままです。"
+
+msgctxt "account-view"
+msgid "Could not log out. You are still logged in."
+msgstr "ログアウトできませんでした。ログインしたままです。"
+
+#. Button that runs a logout again after it failed.
+msgctxt "account-view"
+msgid "Try again"
+msgstr "再試行"
+
+msgctxt "account-view"
 msgid "Public key"
 msgstr "公開鍵"
 

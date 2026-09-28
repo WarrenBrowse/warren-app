@@ -5227,6 +5227,19 @@ msgid "Backup keys"
 msgstr "Резервне копіювання ключів"
 
 msgctxt "account-view"
+msgid "Could not log out: the VPN did not disconnect in time. You are still logged in."
+msgstr "Не вдалося вийти: VPN не відключився вчасно. Ви досі в обліковому записі."
+
+msgctxt "account-view"
+msgid "Could not log out. You are still logged in."
+msgstr "Не вдалося вийти. Ви досі в обліковому записі."
+
+#. Button that runs a logout again after it failed.
+msgctxt "account-view"
+msgid "Try again"
+msgstr "Повторити"
+
+msgctxt "account-view"
 msgid "Public key"
 msgstr "Відкритий ключ"
 

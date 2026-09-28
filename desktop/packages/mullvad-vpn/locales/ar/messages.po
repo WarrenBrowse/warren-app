@@ -5136,6 +5136,19 @@ msgid "Backup keys"
 msgstr "النسخ الاحتياطي للمفاتيح"
 
 msgctxt "account-view"
+msgid "Could not log out: the VPN did not disconnect in time. You are still logged in."
+msgstr "تعذّر تسجيل الخروج: لم ينقطع اتصال VPN في الوقت المحدد. ما زلت مسجّل الدخول."
+
+msgctxt "account-view"
+msgid "Could not log out. You are still logged in."
+msgstr "تعذّر تسجيل الخروج. ما زلت مسجّل الدخول."
+
+#. Button that runs a logout again after it failed.
+msgctxt "account-view"
+msgid "Try again"
+msgstr "إعادة المحاولة"
+
+msgctxt "account-view"
 msgid "Public key"
 msgstr "المفتاح العام"
 

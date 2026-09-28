@@ -15,6 +15,14 @@ export type DisconnectSource =
 // `logout_account` in the daemon's management interface.
 export type LogoutSource = 'gui-logout-button' | 'gui-device-revoked' | 'gui-discard-new-account';
 
+// How a logout the daemon answered ended. `tunnel-still-up` is its refusal
+// when the tunnel did not come down within its bound: nothing was changed, the
+// account is still logged in, and a retry can succeed.
+export type LogoutOutcome = 'logged-out' | 'tunnel-still-up';
+
+// A logout as the renderer sees it: `failed` is any other failure.
+export type LogoutResult = LogoutOutcome | 'failed';
+
 export interface IAccountData {
   expiry: string;
 }

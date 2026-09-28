@@ -5227,6 +5227,19 @@ msgid "Backup keys"
 msgstr "Utwórz kopię zapasową kluczy"
 
 msgctxt "account-view"
+msgid "Could not log out: the VPN did not disconnect in time. You are still logged in."
+msgstr "Nie udało się wylogować: połączenie VPN nie zostało rozłączone na czas. Nadal jesteś zalogowany."
+
+msgctxt "account-view"
+msgid "Could not log out. You are still logged in."
+msgstr "Nie udało się wylogować. Nadal jesteś zalogowany."
+
+#. Button that runs a logout again after it failed.
+msgctxt "account-view"
+msgid "Try again"
+msgstr "Spróbuj ponownie"
+
+msgctxt "account-view"
 msgid "Public key"
 msgstr "Klucz publiczny"
 

@@ -5051,6 +5051,19 @@ msgid "Backup keys"
 msgstr "키 백업"
 
 msgctxt "account-view"
+msgid "Could not log out: the VPN did not disconnect in time. You are still logged in."
+msgstr "로그아웃할 수 없습니다: VPN 연결이 제시간에 끊기지 않았습니다. 아직 로그인되어 있습니다."
+
+msgctxt "account-view"
+msgid "Could not log out. You are still logged in."
+msgstr "로그아웃할 수 없습니다. 아직 로그인되어 있습니다."
+
+#. Button that runs a logout again after it failed.
+msgctxt "account-view"
+msgid "Try again"
+msgstr "다시 시도"
+
+msgctxt "account-view"
 msgid "Public key"
 msgstr "공개 키"
 

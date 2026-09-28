@@ -5193,6 +5193,19 @@ msgid "Backup keys"
 msgstr "Backup delle chiavi"
 
 msgctxt "account-view"
+msgid "Could not log out: the VPN did not disconnect in time. You are still logged in."
+msgstr "Impossibile uscire dall'account: la VPN non si è disconnessa in tempo. Sei ancora connesso all'account."
+
+msgctxt "account-view"
+msgid "Could not log out. You are still logged in."
+msgstr "Impossibile uscire dall'account. Sei ancora connesso all'account."
+
+#. Button that runs a logout again after it failed.
+msgctxt "account-view"
+msgid "Try again"
+msgstr "Riprova"
+
+msgctxt "account-view"
 msgid "Public key"
 msgstr "Chiave pubblica"
 

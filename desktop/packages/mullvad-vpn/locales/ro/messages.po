@@ -577,6 +577,19 @@ msgid "Backup keys"
 msgstr "Chei de rezervă"
 
 msgctxt "account-view"
+msgid "Could not log out: the VPN did not disconnect in time. You are still logged in."
+msgstr "Nu v-ați putut deconecta de la cont: VPN-ul nu s-a deconectat la timp. Sunteți încă autentificat."
+
+msgctxt "account-view"
+msgid "Could not log out. You are still logged in."
+msgstr "Nu v-ați putut deconecta de la cont. Sunteți încă autentificat."
+
+#. Button that runs a logout again after it failed.
+msgctxt "account-view"
+msgid "Try again"
+msgstr "Încercați din nou"
+
+msgctxt "account-view"
 msgid "Currently unavailable"
 msgstr "Momentan indisponibil"
 

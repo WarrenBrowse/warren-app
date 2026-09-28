@@ -4,6 +4,7 @@ import {
   DeviceEvent,
   DeviceState,
   IAccountData,
+  LogoutOutcome,
   LogoutSource,
   TunnelState,
   VoucherResponse,
@@ -19,6 +20,7 @@ import { Scheduler } from '../shared/scheduler';
 import AccountDataCache from './account-data-cache';
 import { DaemonRpc } from './daemon-rpc';
 import { IpcMainEventChannel } from './ipc-event-channel';
+import { logoutReportingRefusal } from './logout-refusal';
 import { NotificationSender } from './notification-controller';
 import { systemTimeMonitor } from './system-time-monitor';
 import { TunnelStateProvider } from './tunnel-state';
@@ -206,13 +208,18 @@ export default class Account {
     }
   }
 
-  private async logout(source: LogoutSource): Promise<void> {
+  private async logout(source: LogoutSource): Promise<LogoutOutcome> {
     try {
-      await this.daemonRpc.logoutAccount(source);
+      const outcome = await logoutReportingRefusal(() => this.daemonRpc.logoutAccount(source));
+      if (outcome === 'tunnel-still-up') {
+        log.info('Logout refused by the daemon: the tunnel did not come down in time');
+        return outcome;
+      }
 
       this.delegate.closeNotificationsInCategory(SystemNotificationCategory.expiry);
       this.expiryNotificationFrequencyScheduler.cancel();
       this.firstExpiryNotificationScheduler.cancel();
+      return outcome;
     } catch (e) {
       const error = e as Error;
       log.info(`Failed to logout: ${error.message}`);

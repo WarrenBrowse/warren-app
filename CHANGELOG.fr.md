@@ -32,6 +32,9 @@ par l'application, gardez-le tel quel.
   laissait passer le trafic sans protection. Un blocage pour un appareil ou un accès révoqué
   s'affiche désormais comme ACCÈS RÉVOQUÉ dans l'application et dans `warren status`, avec la
   façon de le lever.
+- [Windows, macOS, Linux] Indiquer dans l'application qu'une déconnexion du compte a été refusée
+  parce que le VPN ne s'est pas coupé à temps, et proposer de réessayer. L'application n'affichait
+  rien et le compte restait connecté.
 - [iOS] Présenter un droit de port avec chaque demande de port redirigé, comme les autres
   plateformes, pour que les serveurs qui l'exigent accordent le port au lieu de le refuser.
 - [iOS] Signer la connexion avec le portefeuille affiché dans l'application. Elle utilisait une clé

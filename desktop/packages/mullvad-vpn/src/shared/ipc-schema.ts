@@ -21,6 +21,7 @@ import {
   IDnsOptions,
   IRelayListWithEndpointData,
   ISettings,
+  LogoutOutcome,
   LogoutSource,
   NatPmpSettings,
   NatPmpStatus,
@@ -483,7 +484,7 @@ export const ipcSchema = {
     '': notifyRenderer<IAccountData | undefined>(),
     device: notifyRenderer<DeviceEvent>(),
     create: invoke<void, string>(),
-    logout: invoke<LogoutSource, void>(),
+    logout: invoke<LogoutSource, LogoutOutcome>(),
     // Returns the BIP39 mnemonic (12 words) so the user can back it
     // up. Empty string if the identity has never been bootstrapped.
     // The renderer caller must display it with a safety warning and

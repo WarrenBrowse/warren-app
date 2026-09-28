@@ -518,6 +518,14 @@ msgid "Backup keys"
 msgstr ""
 
 msgctxt "account-view"
+msgid "Could not log out: the VPN did not disconnect in time. You are still logged in."
+msgstr ""
+
+msgctxt "account-view"
+msgid "Could not log out. You are still logged in."
+msgstr ""
+
+msgctxt "account-view"
 msgid "Currently unavailable"
 msgstr ""
 
@@ -579,6 +587,11 @@ msgstr ""
 #. %(date)s - the renewal date
 msgctxt "account-view"
 msgid "Renews monthly, next around %(date)s"
+msgstr ""
+
+#. Button that runs a logout again after it failed.
+msgctxt "account-view"
+msgid "Try again"
 msgstr ""
 
 #. Button that turns automatic renewal off.
@@ -1030,6 +1043,10 @@ msgid "Blocking internet: account is out of time"
 msgstr ""
 
 msgctxt "auth-failure"
+msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."
+msgstr ""
+
+msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
 msgstr ""
 
@@ -1042,10 +1059,6 @@ msgstr ""
 #. %(url)s - the page explaining how to contest it
 msgctxt "auth-failure"
 msgid "Blocking internet: your access has been revoked until %(date)s after repeated abuse reports about a forwarded port. You can contest this at %(url)s"
-msgctxt "auth-failure"
-msgid "Blocking internet: this device has been revoked. Log in again to connect, or disconnect to unblock the internet."
-msgstr ""
-
 msgstr ""
 
 #. Available placeholder:
