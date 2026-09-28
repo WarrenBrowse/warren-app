@@ -223,6 +223,12 @@ unsafe extern "system" {
 
     #[link_name = "WinFw_SplitTunnelSublayersShared"]
     pub fn WinFw_SplitTunnelSublayersShared() -> bool;
+
+    #[link_name = "WinFw_SplitTunnelSublayers"]
+    pub fn WinFw_SplitTunnelSublayers(
+        baseline: *mut windows_sys::core::GUID,
+        dns: *mut windows_sys::core::GUID,
+    ) -> bool;
 }
 
 pub type LogSink = extern "system" fn(level: log::Level, msg: *const c_char, context: *mut c_void);

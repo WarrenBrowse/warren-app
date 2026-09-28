@@ -27,8 +27,8 @@ use talpid_types::ErrorExt;
 use talpid_windows::{io::Overlapped, process::ProcessSnapshot, sync::Event};
 use windows_sys::Win32::{
     Foundation::{
-        ERROR_ACCESS_DENIED, ERROR_FILE_NOT_FOUND, ERROR_INVALID_PARAMETER, ERROR_IO_PENDING,
-        NTSTATUS, WAIT_ABANDONED, WAIT_ABANDONED_0, WAIT_FAILED, WAIT_OBJECT_0,
+        ERROR_ACCESS_DENIED, ERROR_FILE_NOT_FOUND, ERROR_INVALID_FUNCTION, ERROR_INVALID_PARAMETER,
+        ERROR_IO_PENDING, NTSTATUS, WAIT_ABANDONED, WAIT_ABANDONED_0, WAIT_FAILED, WAIT_OBJECT_0,
     },
     Networking::WinSock::{IN_ADDR, IN6_ADDR},
     Storage::FileSystem::FILE_FLAG_OVERLAPPED,
@@ -39,6 +39,7 @@ use windows_sys::Win32::{
         Threading::{INFINITE, WaitForMultipleObjects, WaitForSingleObject},
     },
 };
+use windows_sys::core::GUID;
 
 const DRIVER_SYMBOLIC_NAME: &str = "\\\\.\\MULLVADSPLITTUNNEL";
 const ST_DEVICE_TYPE: u32 = 0x8000;
@@ -48,9 +49,13 @@ const fn ctl_code(device_type: u32, function: u32, method: u32, access: u32) -> 
 }
 
 #[repr(u32)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 #[expect(dead_code)]
 pub enum DriverIoctlCode {
-    Initialize = ctl_code(ST_DEVICE_TYPE, 1, METHOD_NEITHER, FILE_ANY_ACCESS),
+    /// Since driver 1.3.0.0: takes the [`SublayerGuids`] to add the driver's filters to.
+    Initialize = ctl_code(ST_DEVICE_TYPE, 1, METHOD_BUFFERED, FILE_ANY_ACCESS),
+    /// Before driver 1.3.0.0, which adds its filters to Mullvad's fixed sublayers.
+    InitializeLegacy = ctl_code(ST_DEVICE_TYPE, 1, METHOD_NEITHER, FILE_ANY_ACCESS),
     DequeEvent = ctl_code(ST_DEVICE_TYPE, 2, METHOD_BUFFERED, FILE_ANY_ACCESS),
     RegisterProcesses = ctl_code(ST_DEVICE_TYPE, 3, METHOD_BUFFERED, FILE_ANY_ACCESS),
     RegisterIpAddresses = ctl_code(ST_DEVICE_TYPE, 4, METHOD_BUFFERED, FILE_ANY_ACCESS),
@@ -166,6 +171,46 @@ bitflags! {
 
 pub struct DeviceHandle {
     handle: fs::File,
+    /// The sublayers to hand the driver at every initialization.
+    sublayers: Option<SublayerGuids>,
+    /// Whether the driver took [`Self::sublayers`] at its last initialization.
+    takes_sublayers: std::sync::atomic::AtomicBool,
+}
+
+/// `ST_SUBLAYER_GUIDS`, the input of [`DriverIoctlCode::Initialize`].
+#[repr(C)]
+#[derive(Clone, Copy)]
+pub struct SublayerGuids {
+    /// The sublayer of the firewall's baseline filters.
+    pub baseline: GUID,
+    /// The sublayer of the firewall's DNS filters.
+    pub dns: GUID,
+}
+
+/// Initializes a driver of either protocol: the one that takes the sublayers first, the legacy
+/// one when the driver does not know that code. A driver keeps running across an app update
+/// until it is unloaded, and a co-installed Mullvad loads its own, so either may answer here.
+/// Returns whether the driver took the sublayers.
+fn initialize_with(
+    sublayers: Option<&SublayerGuids>,
+    mut ioctl: impl FnMut(DriverIoctlCode, Option<&[mem::MaybeUninit<u8>]>) -> io::Result<()>,
+) -> io::Result<bool> {
+    if let Some(sublayers) = sublayers {
+        match ioctl(
+            DriverIoctlCode::Initialize,
+            Some(as_uninit_byte_slice(sublayers)),
+        ) {
+            Ok(()) => return Ok(true),
+            Err(error) if error.raw_os_error() == Some(ERROR_INVALID_FUNCTION as i32) => {
+                log::info!(
+                    "The split tunnel driver predates 1.3.0.0; its filters stay in Mullvad's sublayers"
+                );
+            }
+            Err(error) => return Err(error),
+        }
+    }
+    ioctl(DriverIoctlCode::InitializeLegacy, None)?;
+    Ok(false)
 }
 
 unsafe impl Sync for DeviceHandle {}
@@ -213,13 +258,22 @@ pub enum DeviceHandleError {
 }
 
 impl DeviceHandle {
-    pub fn new() -> Result<Self, DeviceHandleError> {
-        let device = Self::new_handle_only()?;
+    /// `sublayers`: where the driver should add its filters, which must be the firewall's own.
+    pub fn new(sublayers: Option<SublayerGuids>) -> Result<Self, DeviceHandleError> {
+        let device = Self::new_handle_only(sublayers)?;
         device.reinitialize()?;
         Ok(device)
     }
 
-    pub(super) fn new_handle_only() -> Result<Self, DeviceHandleError> {
+    /// Whether the driver took the sublayers at its last initialization.
+    pub fn takes_sublayers(&self) -> bool {
+        self.takes_sublayers
+            .load(std::sync::atomic::Ordering::Relaxed)
+    }
+
+    pub(super) fn new_handle_only(
+        sublayers: Option<SublayerGuids>,
+    ) -> Result<Self, DeviceHandleError> {
         log::trace!("Connecting to the driver");
 
         let handle = OpenOptions::new()
@@ -234,7 +288,11 @@ impl DeviceHandle {
                 Some(ERROR_ACCESS_DENIED) => DeviceHandleError::ConnectionDenied,
                 _ => DeviceHandleError::ConnectionError(e),
             })?;
-        Ok(Self { handle })
+        Ok(Self {
+            handle,
+            sublayers,
+            takes_sublayers: std::sync::atomic::AtomicBool::new(false),
+        })
     }
 
     pub fn reinitialize(&self) -> Result<(), DeviceHandleError> {
@@ -256,7 +314,11 @@ impl DeviceHandle {
     }
 
     fn initialize(&self) -> io::Result<()> {
-        device_io_control(self, DriverIoctlCode::Initialize as u32, None, 0)?;
+        let takes = initialize_with(self.sublayers.as_ref(), |code, input| {
+            device_io_control(self, code as u32, input, 0).map(|_| ())
+        })?;
+        self.takes_sublayers
+            .store(takes, std::sync::atomic::Ordering::Relaxed);
         Ok(())
     }
 
@@ -1062,4 +1124,96 @@ fn write_string_to_buffer(buffer: &mut [MaybeUninit<u8>], byte_offset: usize, st
 /// Casts a struct to a slice of possibly uninitialized bytes.
 pub fn as_uninit_byte_slice<T: Copy + Sized>(value: &T) -> &[mem::MaybeUninit<u8>] {
     unsafe { std::slice::from_raw_parts(value as *const _ as *const _, mem::size_of::<T>()) }
+}
+
+#[cfg(test)]
+mod initialize_tests {
+    use super::*;
+
+    const SUBLAYERS: SublayerGuids = SublayerGuids {
+        baseline: GUID {
+            data1: 1,
+            data2: 2,
+            data3: 3,
+            data4: [4; 8],
+        },
+        dns: GUID {
+            data1: 5,
+            data2: 6,
+            data3: 7,
+            data4: [8; 8],
+        },
+    };
+
+    fn unknown_code() -> io::Error {
+        io::Error::from_raw_os_error(ERROR_INVALID_FUNCTION as i32)
+    }
+
+    #[test]
+    fn the_codes_are_the_drivers() {
+        // IOCTL_ST_INITIALIZE in win-split-tunnel 1.3.0.0 (METHOD_BUFFERED), and before it.
+        assert_eq!(DriverIoctlCode::Initialize as u32, 0x8000_0004);
+        assert_eq!(DriverIoctlCode::InitializeLegacy as u32, 0x8000_0007);
+        assert_eq!(mem::size_of::<SublayerGuids>(), 32);
+    }
+
+    #[test]
+    fn a_current_driver_takes_the_sublayers() {
+        let mut calls = Vec::new();
+        let takes = initialize_with(Some(&SUBLAYERS), |code, input| {
+            calls.push((code, input.map(<[_]>::len)));
+            Ok(())
+        })
+        .unwrap();
+
+        assert!(takes);
+        assert_eq!(calls, [(DriverIoctlCode::Initialize, Some(32))]);
+    }
+
+    #[test]
+    fn a_driver_that_predates_the_sublayers_is_initialized_the_old_way() {
+        let mut calls = Vec::new();
+        let takes = initialize_with(Some(&SUBLAYERS), |code, _| {
+            calls.push(code);
+            match code {
+                DriverIoctlCode::Initialize => Err(unknown_code()),
+                _ => Ok(()),
+            }
+        })
+        .unwrap();
+
+        assert!(!takes);
+        assert_eq!(
+            calls,
+            [
+                DriverIoctlCode::Initialize,
+                DriverIoctlCode::InitializeLegacy
+            ]
+        );
+    }
+
+    #[test]
+    fn another_failure_is_not_taken_for_an_old_driver() {
+        let mut calls = Vec::new();
+        let result = initialize_with(Some(&SUBLAYERS), |code, _| {
+            calls.push(code);
+            Err(io::Error::from_raw_os_error(ERROR_INVALID_PARAMETER as i32))
+        });
+
+        assert!(result.is_err());
+        assert_eq!(calls, [DriverIoctlCode::Initialize]);
+    }
+
+    #[test]
+    fn without_sublayers_only_the_old_way_is_tried() {
+        let mut calls = Vec::new();
+        let takes = initialize_with(None, |code, _| {
+            calls.push(code);
+            Ok(())
+        })
+        .unwrap();
+
+        assert!(!takes);
+        assert_eq!(calls, [DriverIoctlCode::InitializeLegacy]);
+    }
 }

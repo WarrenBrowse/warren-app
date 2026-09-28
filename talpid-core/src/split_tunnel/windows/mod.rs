@@ -2,6 +2,7 @@
 
 mod driver;
 mod path_monitor;
+pub use driver::SublayerGuids;
 mod service;
 mod volume_monitor;
 mod windows;
@@ -137,6 +138,7 @@ impl SplitTunnel {
         volume_update_rx: mpsc::UnboundedReceiver<()>,
         route_manager: RouteManagerHandle,
         initial_apps: &SplitApps,
+        sublayers: Option<driver::SublayerGuids>,
     ) -> Self {
         let initial_paths = &initial_apps.apps;
         let state = InitializedSplitTunnelState::new(
@@ -145,6 +147,7 @@ impl SplitTunnel {
             daemon_tx,
             volume_update_rx,
             route_manager,
+            sublayers,
         )
         .map(|mut state| {
             state.mode = initial_apps.mode;
@@ -302,6 +305,7 @@ impl FailedSplitTunnelState {
         SplitTunnelHandle {
             loaded: false,
             excluded_processes: None,
+            driver_takes_sublayers: false,
         }
     }
 
@@ -351,6 +355,8 @@ struct InitializedSplitTunnelState {
     route_manager: RouteManagerHandle,
     /// Which way the listed apps are split.
     mode: SplitTunnelMode,
+    /// Whether the driver adds its filters to the sublayers it was handed.
+    driver_takes_sublayers: bool,
 }
 
 enum Request {
@@ -384,6 +390,7 @@ struct InterfaceAddresses {
 pub struct SplitTunnelHandle {
     loaded: bool,
     excluded_processes: Option<Weak<RwLock<HashMap<usize, ExcludedProcess>>>>,
+    driver_takes_sublayers: bool,
 }
 
 impl SplitTunnelHandle {
@@ -403,6 +410,13 @@ impl SplitTunnelHandle {
     pub fn is_loaded(&self) -> bool {
         self.loaded
     }
+
+    /// Whether the driver adds its filters to the firewall's sublayers, which it was handed at
+    /// initialization (driver 1.3.0.0 on). An older driver uses Mullvad's fixed sublayers, which
+    /// the firewall only holds when no other policy did.
+    pub fn driver_takes_sublayers(&self) -> bool {
+        self.driver_takes_sublayers
+    }
 }
 
 enum EventResult {
@@ -420,11 +434,17 @@ impl InitializedSplitTunnelState {
         daemon_tx: Weak<mpsc::UnboundedSender<TunnelCommand>>,
         volume_update_rx: mpsc::UnboundedReceiver<()>,
         route_manager: RouteManagerHandle,
+        sublayers: Option<driver::SublayerGuids>,
     ) -> Result<Self, Error> {
         let excluded_processes = Arc::new(RwLock::new(HashMap::new()));
 
-        let (request_tx, handle) =
-            Self::spawn_request_thread(resource_dir, volume_update_rx, excluded_processes.clone())?;
+        let (request_tx, handle) = Self::spawn_request_thread(
+            resource_dir,
+            sublayers,
+            volume_update_rx,
+            excluded_processes.clone(),
+        )?;
+        let driver_takes_sublayers = handle.takes_sublayers();
 
         let (event_thread, quit_event) =
             Self::spawn_event_listener(handle, excluded_processes.clone(), daemon_tx.clone())?;
@@ -440,6 +460,7 @@ impl InitializedSplitTunnelState {
             excluded_processes,
             route_manager,
             mode: SplitTunnelMode::default(),
+            driver_takes_sublayers,
         })
     }
 
@@ -675,6 +696,7 @@ impl InitializedSplitTunnelState {
 
     fn spawn_request_thread(
         resource_dir: PathBuf,
+        sublayers: Option<driver::SublayerGuids>,
         volume_update_rx: mpsc::UnboundedReceiver<()>,
         excluded_processes: Arc<RwLock<HashMap<usize, ExcludedProcess>>>,
     ) -> Result<(RequestTx, Arc<driver::DeviceHandle>), Error> {
@@ -698,7 +720,7 @@ impl InitializedSplitTunnelState {
         std::thread::spawn(move || {
             let init_fn = || {
                 service::install_driver_if_required(&resource_dir).map_err(Error::ServiceError)?;
-                driver::DeviceHandle::new()
+                driver::DeviceHandle::new(sublayers)
                     .map(Arc::new)
                     .map_err(Error::InitializationError)
             };
@@ -985,6 +1007,7 @@ impl InitializedSplitTunnelState {
         SplitTunnelHandle {
             loaded: true,
             excluded_processes: Some(Arc::downgrade(&self.excluded_processes)),
+            driver_takes_sublayers: self.driver_takes_sublayers,
         }
     }
 }

@@ -422,6 +422,15 @@ impl Firewall {
         self.inner.split_tunnel_sublayers_shared()
     }
 
+    /// The baseline and DNS sublayers this firewall's filters are in, for the split tunnel
+    /// driver to add its own filters to. `None` before initialization.
+    #[cfg(windows)]
+    pub fn split_tunnel_sublayers(
+        &self,
+    ) -> Option<(windows_sys::core::GUID, windows_sys::core::GUID)> {
+        self.inner.split_tunnel_sublayers()
+    }
+
     /// Whether include-only can select the included apps' traffic here.
     #[cfg(target_os = "linux")]
     pub fn can_include(&self) -> bool {

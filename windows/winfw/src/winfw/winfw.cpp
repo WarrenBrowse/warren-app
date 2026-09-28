@@ -148,7 +148,7 @@ void LogSublayerSharing()
 
 	g_logSink(MULLVAD_LOG_LEVEL_WARNING,
 		"Another firewall policy is live in the sublayers shared with the split tunnel driver; "
-		"using private sublayers, so split tunneling cannot be engaged", g_logSinkContext);
+		"using private sublayers, which only a split tunnel driver of 1.3.0.0 or later can be told about", g_logSinkContext);
 }
 
 } // anonymous namespace
@@ -832,4 +832,23 @@ WINFW_API
 WinFw_SplitTunnelSublayersShared()
 {
 	return nullptr != g_fwContext && MullvadGuids::UsingSharedSublayers();
+}
+
+WINFW_LINKAGE
+bool
+WINFW_API
+WinFw_SplitTunnelSublayers(
+	GUID *baseline,
+	GUID *dns
+)
+{
+	if (nullptr == g_fwContext || nullptr == baseline || nullptr == dns)
+	{
+		return false;
+	}
+
+	*baseline = MullvadGuids::SublayerBaseline();
+	*dns = MullvadGuids::SublayerDns();
+
+	return true;
 }

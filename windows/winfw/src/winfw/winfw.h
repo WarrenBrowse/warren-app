@@ -349,3 +349,19 @@ WINFW_LINKAGE
 bool
 WINFW_API
 WinFw_SplitTunnelSublayersShared();
+
+//
+// SplitTunnelSublayers:
+//
+// Writes the keys of the sublayers the baseline and DNS filters are in, shared
+// or private, so the split tunnel driver can be told to add its own filters to
+// them (driver 1.3.0.0 and later). Returns false before initialization.
+//
+extern "C"
+WINFW_LINKAGE
+bool
+WINFW_API
+WinFw_SplitTunnelSublayers(
+	GUID *baseline,
+	GUID *dns
+);

@@ -132,6 +132,18 @@ pub(super) fn split_tunnel_sublayers_shared() -> bool {
     unsafe { WinFw_SplitTunnelSublayersShared() }
 }
 
+/// The baseline and DNS sublayers winfw's filters are in, to hand the split tunnel driver.
+/// `None` before initialization.
+pub(super) fn split_tunnel_sublayers() -> Option<(windows_sys::core::GUID, windows_sys::core::GUID)>
+{
+    let mut baseline = windows_sys::core::GUID::from_u128(0);
+    let mut dns = windows_sys::core::GUID::from_u128(0);
+    // SAFETY: both pointers are to live, writable GUIDs for the duration of the call, which
+    // only writes them.
+    unsafe { WinFw_SplitTunnelSublayers(&raw mut baseline, &raw mut dns) }
+        .then_some((baseline, dns))
+}
+
 /// Apply blocking firewall rules Sets the underlying active policy to Blocked. Exceptions
 /// permitted through the firewall is defined by `winfw_settings` and `allowed_endpoint`. See
 /// the BlockAll class for more information.

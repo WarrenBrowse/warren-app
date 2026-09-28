@@ -548,6 +548,9 @@ impl TunnelStateMachine {
             volume_update_rx,
             args.route_manager.clone(),
             &args.settings.split_apps,
+            firewall
+                .split_tunnel_sublayers()
+                .map(|(baseline, dns)| split_tunnel::SublayerGuids { baseline, dns }),
         );
 
         // Include-only needs the driver to hold the included apps back from
@@ -563,7 +566,10 @@ impl TunnelStateMachine {
             if enforceable_mode(split_apps.mode, include_only_ready) != split_apps.mode {
                 split_apps = SplitApps::default();
             }
-            if split_apps.engages_split_tunnel() && !firewall.split_tunnel_sublayers_shared() {
+            if split_apps.engages_split_tunnel()
+                && !firewall.split_tunnel_sublayers_shared()
+                && !split_tunnel.handle().driver_takes_sublayers()
+            {
                 log::warn!(
                     "Another firewall policy holds the split tunnel's sublayers; \
                      tunneling every app"
@@ -1067,7 +1073,10 @@ impl SharedTunnelStateValues {
             SplitApps::default()
         };
         // The driver would add its permits to another policy's sublayers.
-        if apps.engages_split_tunnel() && !self.firewall.split_tunnel_sublayers_shared() {
+        if apps.engages_split_tunnel()
+            && !self.firewall.split_tunnel_sublayers_shared()
+            && !self.split_tunnel.handle().driver_takes_sublayers()
+        {
             log::error!("Another firewall policy holds the split tunnel's sublayers");
             let _ = tx.send(Err(split_tunnel::Error::Unavailable));
             return false;

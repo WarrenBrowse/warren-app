@@ -337,6 +337,11 @@ fn the_baseline_and_dns_filters_share_the_sublayers_the_driver_adds_its_filters_
     );
     assert_eq!(engine.sublayer_owner(SHARED_BASELINE), Some(None));
     assert!(winfw::split_tunnel_sublayers_shared());
+    let (baseline, dns) = winfw::split_tunnel_sublayers().expect("initialized");
+    assert_eq!(
+        (id(baseline), id(dns)),
+        (id(SHARED_BASELINE), id(SHARED_DNS))
+    );
 
     drop(fw);
     assert_eq!(
@@ -567,4 +572,35 @@ fn include_only_keeps_the_system_resolvers_encrypted_dns_in_the_tunnel() {
         !full_tunnel.iter().any(|name| name == RESOLVER_BLOCK),
         "the full tunnel has nothing outside the tunnel to keep it from"
     );
+}
+
+#[test]
+#[ignore = "needs an elevated process and winfw.dll; applies a blocked policy"]
+fn the_sublayers_handed_to_the_driver_are_the_ones_our_filters_are_in() {
+    let _lock = WINFW.lock().unwrap_or_else(|poison| poison.into_inner());
+    assert!(winfw::split_tunnel_sublayers().is_none(), "before init");
+    let engine = Engine::open();
+    engine.add_foreign_provider();
+    engine.add_shared_baseline();
+    engine.add_foreign_filter(SHARED_BASELINE);
+    let fw = Winfw::init();
+
+    fw.block_with_lan();
+
+    let (baseline, dns) = winfw::split_tunnel_sublayers().expect("initialized");
+    let ours = engine.sublayers_of_filters(our_provider());
+    assert!(
+        ours.contains(&id(baseline)),
+        "no filter in the baseline sublayer handed over"
+    );
+    assert!(
+        ours.contains(&id(dns)),
+        "no filter in the DNS sublayer handed over"
+    );
+    assert_ne!(
+        id(baseline),
+        id(SHARED_BASELINE),
+        "a foreign policy holds the shared one"
+    );
+    drop(fw);
 }

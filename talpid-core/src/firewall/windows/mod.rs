@@ -175,6 +175,13 @@ impl Firewall {
         winfw::split_tunnel_sublayers_shared()
     }
 
+    /// The baseline and DNS sublayers this firewall's filters are in.
+    pub fn split_tunnel_sublayers(
+        &self,
+    ) -> Option<(windows_sys::core::GUID, windows_sys::core::GUID)> {
+        winfw::split_tunnel_sublayers()
+    }
+
     pub fn apply_policy(&mut self, policy: FirewallPolicy) -> Result<(), Error> {
         let should_block_hyperv = matches!(
             policy,
