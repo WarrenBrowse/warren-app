@@ -289,20 +289,21 @@ runs:
       env:
         ENGINE_TOKEN: ${{ inputs.engine-token != '' && inputs.engine-token || inputs.warren-core-token }}
       run: |
-        # Idempotent across runs: ~/.gitconfig PERSISTS on a self-hosted runner,
-        # so a plain `git config` (overwrite) on a key a prior run already made
-        # multi-valued fails "cannot overwrite multiple values". Reset the key
-        # first (--unset-all, tolerate absent on the very first run), then --add
-        # both rewrites.
-        bash ci/git-config-global.sh --unset-all url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf 2>/dev/null || true
-        bash ci/git-config-global.sh --add url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf "ssh://git@github.com/WarrenBrowse/"
-        bash ci/git-config-global.sh --add url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf "https://github.com/WarrenBrowse/"
+        # ~/.gitconfig PERSISTS on a self-hosted runner and is SHARED by every
+        # runner of a machine (three on the Mac Studio), so each write is one
+        # `--replace-all`, which git makes under its own lock. An unset followed
+        # by an add is two writes: two concurrent jobs interleaved them and left
+        # two extraheader values, so every WarrenBrowse request then carried two
+        # Authorization headers and GitHub refused it with a 400, from the
+        # checkout step on, in every later job of that machine (2026-09-28).
+        insteadof=url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf
+        bash ci/git-config-global.sh --replace-all "$insteadof" "ssh://git@github.com/WarrenBrowse/" '^ssh://git@github\.com/WarrenBrowse/$'
+        bash ci/git-config-global.sh --replace-all "$insteadof" "https://github.com/WarrenBrowse/" '^https://github\.com/WarrenBrowse/$'
         # Authenticated from the first request, for the same reason as the
         # sibling clones above: cargo's fetch of the quinn fork would otherwise
         # start anonymous and die on GitHub's per-IP throttle.
         auth="$(printf 'x-access-token:%s' "$ENGINE_TOKEN" | base64 | tr -d '\n')"
-        bash ci/git-config-global.sh --unset-all http."https://github.com/WarrenBrowse/".extraheader 2>/dev/null || true
-        bash ci/git-config-global.sh --add http."https://github.com/WarrenBrowse/".extraheader "AUTHORIZATION: basic ${auth}"
+        bash ci/git-config-global.sh --replace-all http."https://github.com/WarrenBrowse/".extraheader "AUTHORIZATION: basic ${auth}"
         echo "CARGO_NET_GIT_FETCH_WITH_CLI=true" >> "$GITHUB_ENV"
 
     - name: Assert Cargo.lock pins the quinn fork (prevents silent quinn-patch drop)
