@@ -47,6 +47,17 @@ class UserPreferencesRepository(
             prefs.toBuilder().setShowAlwaysOnVpnAdvice(show).build()
         }
 
+    suspend fun setTunnelRequested(requested: Boolean) =
+        userPreferencesStore.updateData { prefs ->
+            prefs.toBuilder().setTunnelRequested(requested).build()
+        }
+
+    /** Whether the OS runs the connected tunnel as always-on VPN. */
+    suspend fun setAlwaysOnVpn(alwaysOnVpn: Boolean) =
+        userPreferencesStore.updateData { prefs ->
+            prefs.toBuilder().setAlwaysOnVpn(alwaysOnVpn).build()
+        }
+
     suspend fun setShowAndroid16ConnectWarning(show: Boolean) =
         userPreferencesStore.updateData { prefs ->
             prefs.toBuilder().setShowAndroid16ConnectWarning(show).build()

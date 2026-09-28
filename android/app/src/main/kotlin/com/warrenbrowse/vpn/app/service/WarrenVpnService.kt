@@ -38,6 +38,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.android.ext.android.getKoin
 import org.koin.core.context.loadKoinModules
 
@@ -78,6 +79,10 @@ class WarrenVpnService : LifecycleVpnService() {
             override fun onReceive(context: Context, intent: Intent) =
                 WarrenJni.notifyPackagesChanged()
         }
+
+    /** The always-on state last written to the preferences, so a connected state re-emitted with
+     * new figures does not write it again. */
+    private var recordedAlwaysOnVpn: Boolean? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -166,6 +171,7 @@ class WarrenVpnService : LifecycleVpnService() {
                         Logger.w("Quinn tunnel failed: ${state.reason}")
                         foregroundNotificationHandler.stopForeground()
                     }
+                    is WarrenTunnelState.Connected -> recordAlwaysOnVpn()
                     is WarrenTunnelState.Blocking -> {
                         // Kill switch engaged: keep the service in the
                         // foreground so the blackhole interface stays up
@@ -298,6 +304,7 @@ class WarrenVpnService : LifecycleVpnService() {
                             }
                         if (config != null) {
                             lifecycleScope.launch {
+                                recordTunnelRequested(true)
                                 // Ownership of the mnemonic transfers to the
                                 // adapter, which holds it as a zeroizable
                                 // Mnemonic for the session's reconnect path and
@@ -321,7 +328,10 @@ class WarrenVpnService : LifecycleVpnService() {
                 // Disconnect always routes through the Quinn adapter
                 // now. If no session is running, this is a no-op
                 // (Mutex + state-machine guard inside the adapter).
-                lifecycleScope.launch { quinnAdapter.disconnect() }
+                lifecycleScope.launch {
+                    recordTunnelRequested(false)
+                    quinnAdapter.disconnect()
+                }
 
                 // If disconnect intent is received and no one is using this service, simply stop
                 // foreground and let system stop service when it deems it not to be necessary.
@@ -367,6 +377,21 @@ class WarrenVpnService : LifecycleVpnService() {
             Binder()
         }
 
+    /** What an update needs to know to bring the tunnel back; see `TunnelRestoreAfterUpdateReceiver`. */
+    private suspend fun recordTunnelRequested(requested: Boolean) =
+        getKoin().get<UserPreferencesRepository>().setTunnelRequested(requested)
+
+    /** Read once the tunnel is up: while it is still being set up, even an always-on start
+     * answers false. */
+    private suspend fun recordAlwaysOnVpn() {
+        val alwaysOnVpn = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && isAlwaysOn
+        if (alwaysOnVpn != recordedAlwaysOnVpn) {
+            Logger.i("Tunnel connected (always-on VPN: $alwaysOnVpn)")
+            getKoin().get<UserPreferencesRepository>().setAlwaysOnVpn(alwaysOnVpn)
+            recordedAlwaysOnVpn = alwaysOnVpn
+        }
+    }
+
     override fun onRevoke() {
         Logger.d("onRevoke")
         // The system closes the interface as soon as this returns, so the
@@ -375,6 +400,9 @@ class WarrenVpnService : LifecycleVpnService() {
         // never hang the main thread past the ANR budget. A teardown the bound
         // cut short still runs, on the adapter's scope, once the lock frees.
         runBlocking(Dispatchers.IO) {
+            // Another VPN took over, or the user revoked this one: nothing to
+            // bring back after an update.
+            withTimeoutOrNull(REVOKE_TEARDOWN_TIMEOUT_MS) { recordTunnelRequested(false) }
             if (!quinnAdapter.disconnectWithin(REVOKE_TEARDOWN_TIMEOUT_MS)) {
                 Logger.w(
                     "onRevoke: teardown still pending after $REVOKE_TEARDOWN_TIMEOUT_MS ms; " +

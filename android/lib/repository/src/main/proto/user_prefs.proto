@@ -32,4 +32,13 @@ message UserPreferences {
   // so a card put away must not come back on every launch with the code it
   // already handed over.
   repeated string dismissed_announcements = 10;
+  // Whether the service is carrying a tunnel the user asked for: set when it
+  // starts one, cleared on a disconnect and when another VPN takes over. An
+  // update kills the service; this is what tells the app, once replaced,
+  // that it has a tunnel to bring back.
+  bool tunnel_requested = 11;
+  // Whether the OS ran this app as always-on VPN when its tunnel last came up
+  // (VpnService.isAlwaysOn). The OS restarts an always-on VPN after an
+  // update by itself; the system setting that says so is not readable by an app.
+  bool always_on_vpn = 12;
 }
