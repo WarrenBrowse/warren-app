@@ -44,6 +44,8 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   fraza de recuperare pe care o păstrează. Ieșirea din cont deconectează acum mai întâi VPN-ul și
   închide sesiunea contului abia după ce tunelul s-a oprit. Dacă tunelul nu se oprește la timp,
   semnalează o eroare și lasă contul autentificat.
+- [Windows, macOS, Linux] Aplicația închide conexiunile la server la deconectare. Acestea rămâneau
+  deschise până la 15 secunde după ce aplicația afișa „Deconectat”.
 
 ## [1.1.38] - 2026-09-28
 ### Adăugat

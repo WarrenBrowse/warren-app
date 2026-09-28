@@ -51,6 +51,8 @@ Line wrap the file at 100 chars.                                              Th
   After `warren account logout` the app could still connect with the recovery phrase it keeps.
   Logging out now also disconnects first and signs out only once the tunnel is down, and reports
   an error, leaving the account logged in, when the tunnel does not come down in time.
+- [Windows, macOS, Linux] Close the connections to the server when disconnecting. They stayed open
+  up to 15 seconds after the app showed Disconnected.
 
 ## [1.1.38] - 2026-09-28
 ### Added

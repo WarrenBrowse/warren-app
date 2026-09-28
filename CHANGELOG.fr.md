@@ -48,6 +48,8 @@ par l'application, gardez-le tel quel.
   phrase de récupération qu'elle conserve. La déconnexion du compte coupe aussi le VPN d'abord et
   ne déconnecte le compte qu'une fois le tunnel fermé. Si le tunnel ne se ferme pas à temps, elle
   signale une erreur et laisse le compte connecté.
+- [Windows, macOS, Linux] Fermer les connexions au serveur à la déconnexion. Elles restaient
+  ouvertes jusqu'à 15 secondes après l'affichage de « Déconnecté ».
 
 ## [1.1.38] - 2026-09-28
 ### Ajouté

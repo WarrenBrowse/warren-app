@@ -297,6 +297,7 @@ pub use peer_fence::WarrenMigrateHandle;
 mod reconnect_signal;
 mod session_liveness;
 mod session_placement;
+mod teardown_sessions;
 use adapter::MullvadTunPacketDevice;
 
 /// Daemon-side NAT-PMP lifecycle wrapper that owns the refresh loop +
@@ -1313,8 +1314,7 @@ enum MonitorBackend {
         /// Migration watchdog task (route-change verification + the
         /// forced-reconnect/escalation fallbacks). Aborted FIRST during
         /// teardown: it holds a supervisor watch receiver and a control
-        /// handle, and the supervisor's no-receivers shutdown check
-        /// must still fire once the pumps drop theirs.
+        /// handle, which must not outlive the tunnel.
         watchdog_handle: tokio::task::JoinHandle<()>,
         /// IpAssign drift guard: escalates when a reconnect republishes
         /// a different exit-allocated IPv4 than the one the TUN holds.
@@ -1351,6 +1351,11 @@ enum MonitorBackend {
         /// threshold); only the supervisor sees the cross-redial pattern
         /// (the carrier-blackhole failure mode).
         supervisor_datapath_dead_rx: tokio::sync::watch::Receiver<bool>,
+        /// The supervisor's published session, kept so teardown can close
+        /// the last one itself (see [`teardown_sessions`]). Holding it keeps
+        /// the supervisor's no-receivers shutdown from firing, which teardown
+        /// does not rely on: it aborts the supervisor.
+        session_rx: tokio::sync::watch::Receiver<Option<std::sync::Arc<MultiHopBundle>>>,
     },
 }
 
@@ -2638,11 +2643,9 @@ impl WarrenTunnelMonitor {
             })
         };
 
-        // Drop the local watch receiver. The uplink/downlink pumps and
-        // the watchdog keep theirs alive; teardown aborts the watchdog
-        // first, then the pumps, so the supervisor still observes
-        // `tx.closed()` and terminates cleanly.
-        drop(client_rx);
+        // The local watch receiver goes to the monitor, whose teardown
+        // closes the last published session through it. Teardown aborts the
+        // supervisor rather than waiting for it to see `tx.closed()`.
 
         let pump_spawn_t = Instant::now();
         log::debug!(
@@ -2744,6 +2747,7 @@ impl WarrenTunnelMonitor {
                 pump_error_rx,
                 supervisor_fatal_rx,
                 supervisor_datapath_dead_rx,
+                session_rx: client_rx,
             },
             event_hook,
             // Handed off from the initial-dial race above (not re-taken from
@@ -2826,6 +2830,7 @@ impl WarrenTunnelMonitor {
                 drain_reactor: tokio::task::JoinHandle<()>,
                 liveness: tokio::task::JoinHandle<()>,
                 egress_probe: tokio::task::JoinHandle<()>,
+                session_rx: tokio::sync::watch::Receiver<Option<std::sync::Arc<MultiHopBundle>>>,
             },
         }
         let (pump_error_rx, handles, mut supervisor_fatal_rx, mut supervisor_datapath_dead_rx) =
@@ -2843,6 +2848,7 @@ impl WarrenTunnelMonitor {
                     pump_error_rx,
                     supervisor_fatal_rx: fatal_rx,
                     supervisor_datapath_dead_rx: datapath_dead_rx,
+                    session_rx,
                 } => (
                     pump_error_rx,
                     BackendHandles::MultiHop {
@@ -2855,6 +2861,7 @@ impl WarrenTunnelMonitor {
                         drain_reactor: drain_reactor_handle,
                         liveness: liveness_handle,
                         egress_probe: egress_probe_handle,
+                        session_rx,
                     },
                     Some(fatal_rx),
                     Some(datapath_dead_rx),
@@ -3033,10 +3040,9 @@ impl WarrenTunnelMonitor {
         // kernel-side before returning, otherwise an immediate retry
         // could race with `open_tun()` on the same interface name.
         //
-        // Multi-hop aborts in a deterministic order: uplink/downlink
-        // first (release their watch receivers), then the supervisor
-        // (whose `tx.closed()` would otherwise race with the pump
-        // teardown).
+        // Multi-hop aborts in a deterministic order: the receiver
+        // holders, then uplink/downlink, then the supervisor, and last
+        // closes the session it published (see `teardown_sessions`).
         let tasks_t = Instant::now();
         runtime.block_on(async {
             match handles {
@@ -3050,11 +3056,10 @@ impl WarrenTunnelMonitor {
                     drain_reactor,
                     liveness,
                     egress_probe,
+                    session_rx,
                 } => {
                     // Watchdog first: it holds a supervisor watch
-                    // receiver + control handle; dropping them before
-                    // the pumps keeps the supervisor's no-receivers
-                    // shutdown check working as before.
+                    // receiver + control handle.
                     watchdog.abort();
                     let _ = watchdog.await;
                     // The liveness guard also holds a supervisor watch
@@ -3083,6 +3088,14 @@ impl WarrenTunnelMonitor {
                     let _ = tokio::join!(uplink, downlink);
                     supervisor.abort();
                     let _ = supervisor.await;
+                    // Before Disconnected is reported: nothing of this tunnel
+                    // may still talk to the exit once the state says it is
+                    // down.
+                    let last = session_rx.borrow().clone();
+                    let closed = teardown_sessions::close_leftover_sessions(last.as_ref());
+                    if closed > 0 {
+                        log::debug!("Warren teardown closed {closed} transport sessions");
+                    }
                 }
             }
         });
