@@ -19,8 +19,9 @@ const APP_PATH: &str = match warren_product_env::CURRENT {
     warren_product_env::ProductEnv::Beta => "/Applications/Warren VPN Beta.app",
 };
 
-/// Uninstall script to run if the .app disappears
-const UNINSTALL_SCRIPT: &[u8] = include_bytes!("../../dist-assets/uninstall_macos.sh");
+/// Uninstall script to run if the .app disappears. The file names the prod install; see
+/// [`uninstall_script_for`].
+const UNINSTALL_SCRIPT: &str = include_str!("../../dist-assets/uninstall_macos.sh");
 
 /// Arguments the daemon runs [`UNINSTALL_SCRIPT`] with, as root.
 const UNINSTALL_SCRIPT_ARGS: &[&str] = &[
@@ -30,6 +31,117 @@ const UNINSTALL_SCRIPT_ARGS: &[&str] = &[
     // from the app bundle as root.
     "--from-daemon",
 ];
+
+/// [`UNINSTALL_SCRIPT`] with the names `env` installs under. A beta daemon running the prod
+/// script would unload and delete the prod install and leave its own behind.
+///
+/// The same renames as `transformEnvAssetText` in `tasks/distribution.cjs`, for the names this
+/// script contains. Each rule leaves a match alone when the text after it shows the name is
+/// already another one, as the JS lookaheads do.
+fn uninstall_script_for(env: warren_product_env::ProductEnv) -> String {
+    if env == warren_product_env::ProductEnv::Prod {
+        return UNINSTALL_SCRIPT.to_owned();
+    }
+    let suffix = format!("-{}", env.name());
+    let name = env.display_name();
+    let app_id = env.application_id();
+    let other_env = |sep: &str| {
+        let beta = format!("{sep}Beta");
+        let staging = format!("{sep}Staging");
+        move |rest: &str| rest.starts_with(&beta) || rest.starts_with(&staging)
+    };
+    let continues_name = |rest: &str| {
+        rest.starts_with(|c: char| c == '.' || c == '-' || c == '_' || c.is_alphanumeric())
+    };
+    let continues_word =
+        |rest: &str| rest.starts_with(|c: char| c == '-' || c == '_' || c.is_alphanumeric());
+
+    let mut script = UNINSTALL_SCRIPT.to_owned();
+    script = replace_unless(
+        &script,
+        r"Warren\ VPN",
+        &name.replace(' ', r"\ "),
+        other_env(r"\ "),
+    );
+    script = replace_unless(&script, "Warren VPN", name, other_env(" "));
+    script = script.replace("com.warrenbrowse.vpn.daemon", &format!("{app_id}.daemon"));
+    script = replace_unless(&script, "com.warrenbrowse.vpn", app_id, continues_name);
+    script = replace_unless(
+        &script,
+        "/usr/local/bin/warren-problem-report",
+        &format!("/usr/local/bin/warren-problem-report{suffix}"),
+        continues_word,
+    );
+    script = replace_unless(
+        &script,
+        "/usr/local/bin/warren",
+        &format!("/usr/local/bin/warren{suffix}"),
+        continues_word,
+    );
+    script = replace_unless(
+        &script,
+        "warren-vpn",
+        &format!("warren-vpn{suffix}"),
+        continues_word,
+    );
+    script = replace_unless(
+        &script,
+        "/zsh/site-functions/_warren",
+        &format!("/zsh/site-functions/_warren{suffix}"),
+        continues_word,
+    );
+    script.replace(
+        "/fish/vendor_completions.d/warren.fish",
+        &format!("/fish/vendor_completions.d/warren{suffix}.fish"),
+    )
+}
+
+/// Replaces each `needle` in `text` unless `blocked` holds for the text that follows it.
+fn replace_unless(text: &str, needle: &str, with: &str, blocked: impl Fn(&str) -> bool) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    while let Some(at) = rest.find(needle) {
+        let after = &rest[at + needle.len()..];
+        out.push_str(&rest[..at]);
+        out.push_str(if blocked(after) { needle } else { with });
+        rest = after;
+    }
+    out.push_str(rest);
+    out
+}
+
+/// Clears what would keep the kill switch up once this daemon stops: the target state, lockdown
+/// and auto-connect. The block a secured target or lockdown leaves outlives the daemon on
+/// purpose, and after an uninstall nothing would be left to lift it.
+async fn disarm_for_uninstall(commands: &crate::DaemonEventSender<crate::DaemonCommand>) {
+    use crate::DaemonCommand;
+    use talpid_core::mpsc::Sender;
+
+    let (tx, rx) = futures::channel::oneshot::channel();
+    if commands
+        .send(DaemonCommand::SetTargetState(
+            tx,
+            mullvad_types::states::TargetState::Unsecured,
+        ))
+        .is_ok()
+    {
+        let _ = rx.await;
+    }
+    let (tx, rx) = futures::channel::oneshot::channel();
+    if commands
+        .send(DaemonCommand::SetLockdownMode(tx, false))
+        .is_ok()
+    {
+        let _ = rx.await;
+    }
+    let (tx, rx) = futures::channel::oneshot::channel();
+    if commands
+        .send(DaemonCommand::SetAutoConnect(tx, false))
+        .is_ok()
+    {
+        let _ = rx.await;
+    }
+}
 
 /// Bump filehandle limit
 pub fn bump_filehandle_limit() {
@@ -70,6 +182,7 @@ pub fn bump_filehandle_limit() {
 /// Detect when the app bundle is deleted
 pub async fn handle_app_bundle_removal(
     account_manager_handle: AccountManagerHandle,
+    commands: crate::DaemonEventSender<crate::DaemonCommand>,
 ) -> anyhow::Result<()> {
     /// Path to extract the uninstall script to.
     /// This directory must be owned by root to prevent privilege escalation.
@@ -145,9 +258,18 @@ pub async fn handle_app_bundle_removal(
         ));
     }
 
-    tokio::fs::write(UNINSTALL_SCRIPT_PATH, UNINSTALL_SCRIPT)
-        .await
-        .context("Failed to write uninstall script")?;
+    tokio::fs::write(
+        UNINSTALL_SCRIPT_PATH,
+        uninstall_script_for(warren_product_env::CURRENT),
+    )
+    .await
+    .context("Failed to write uninstall script")?;
+
+    // First, so the daemon lifts its own block and the stop the script causes leaves none.
+    log(format_args!(
+        "Disconnecting, and turning lockdown and auto-connect off"
+    ));
+    disarm_for_uninstall(&commands).await;
 
     // If reset_firewall errors, log the error and continue anyway.
     log(format_args!("Resetting firewall"));
@@ -248,6 +370,75 @@ mod test {
     use super::*;
     use std::os::unix::fs::PermissionsExt;
 
+    #[tokio::test]
+    async fn an_uninstall_clears_everything_that_keeps_the_kill_switch_up() {
+        use crate::{DaemonCommand, DaemonCommandChannel, InternalDaemonEvent};
+        use futures::StreamExt;
+        use mullvad_types::states::TargetState;
+
+        let channel = DaemonCommandChannel::new();
+        // The event sender only holds the channel weakly; the daemon keeps it alive otherwise.
+        let _alive = channel.sender();
+        let (events, mut received) = channel.destructure();
+        let answering = tokio::spawn(async move {
+            let mut seen = Vec::new();
+            while let Some(InternalDaemonEvent::Command(command)) = received.next().await {
+                match command {
+                    DaemonCommand::SetTargetState(tx, state) => {
+                        seen.push(format!("target {state:?}"));
+                        let _ = tx.send(Ok(true));
+                    }
+                    DaemonCommand::SetLockdownMode(tx, on) => {
+                        seen.push(format!("lockdown {on}"));
+                        let _ = tx.send(Ok(()));
+                    }
+                    DaemonCommand::SetAutoConnect(tx, on) => {
+                        seen.push(format!("auto-connect {on}"));
+                        let _ = tx.send(Ok(()));
+                    }
+                    _ => seen.push("other".to_owned()),
+                }
+                if seen.len() == 3 {
+                    break;
+                }
+            }
+            seen
+        });
+
+        disarm_for_uninstall(&events.to_specialized_sender()).await;
+        drop(events);
+
+        let seen = tokio::time::timeout(std::time::Duration::from_secs(5), answering)
+            .await
+            .expect("the disarm sent fewer than three commands")
+            .unwrap();
+        assert_eq!(
+            seen,
+            [
+                format!("target {:?}", TargetState::Unsecured),
+                "lockdown false".to_owned(),
+                "auto-connect false".to_owned(),
+            ]
+        );
+    }
+
+    /// The GUI package's copy is renamed by `transformEnvAssetText`; both copies are held to the
+    /// same fixtures (`product-env-uninstall.spec.ts` regenerates them).
+    #[test]
+    fn the_uninstall_script_carries_the_names_of_the_environment_that_runs_it() {
+        use warren_product_env::ProductEnv;
+        let fixtures = Path::new(env!("CARGO_MANIFEST_DIR")).join("../fixtures/uninstall-macos");
+
+        assert_eq!(uninstall_script_for(ProductEnv::Prod), UNINSTALL_SCRIPT);
+        for (env, fixture) in [
+            (ProductEnv::Beta, "beta.sh"),
+            (ProductEnv::Staging, "staging.sh"),
+        ] {
+            let expected = std::fs::read_to_string(fixtures.join(fixture)).unwrap();
+            assert_eq!(uninstall_script_for(env), expected, "{}", env.name());
+        }
+    }
+
     /// An admin user can write into /Applications, so anything the root uninstall runs from the
     /// app bundle is a privilege escalation. The script runs with a `PATH` holding only a fake
     /// `sudo` that records each command instead of running it, so nothing real is executed.
@@ -265,7 +456,7 @@ mod test {
         .unwrap();
         std::fs::set_permissions(&sudo, std::fs::Permissions::from_mode(0o755)).unwrap();
         let script = dir.path().join("uninstall.sh");
-        std::fs::write(&script, UNINSTALL_SCRIPT).unwrap();
+        std::fs::write(&script, uninstall_script_for(warren_product_env::CURRENT)).unwrap();
 
         let status = std::process::Command::new("/bin/bash")
             .arg(&script)

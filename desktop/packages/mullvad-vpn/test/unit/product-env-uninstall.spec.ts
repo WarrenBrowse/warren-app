@@ -88,6 +88,27 @@ describe('per-environment macOS uninstaller', () => {
     timeoutMs,
   );
 
+  // The daemon runs its own copy of this script when the app bundle is deleted, with the renames
+  // redone in Rust (`uninstall_script_for` in mullvad-daemon/src/macos.rs). Both are held to
+  // these files, so the two renames cannot drift apart. `UPDATE_GOLDEN=1` rewrites them after an
+  // edit of the script.
+  it(
+    'renames exactly as the fixtures the daemon replays',
+    async () => {
+      const fixtures = path.resolve(__dirname, '../../../../../fixtures/uninstall-macos');
+      for (const productEnv of ['beta', 'staging']) {
+        const script = await uninstallScriptFor(productEnv);
+        const fixture = path.join(fixtures, `${productEnv}.sh`);
+        if (process.env.UPDATE_GOLDEN === '1') {
+          fs.mkdirSync(fixtures, { recursive: true });
+          fs.writeFileSync(fixture, script);
+        }
+        expect(script).toBe(fs.readFileSync(fixture, 'utf8'));
+      }
+    },
+    timeoutMs,
+  );
+
   // The completion links point INTO the app bundle, so one left behind makes
   // every new zsh print a compinit error for a file that no longer exists.
   it(
