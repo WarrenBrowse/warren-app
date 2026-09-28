@@ -54,6 +54,17 @@ export default class TunnelStateHandler {
     }, 3000);
   }
 
+  // Puts the predicted state back to the one the daemon last reported, for a
+  // command the daemon refused and that will therefore produce no new state.
+  public discardExpectedState() {
+    this.tunnelStateFallbackScheduler.cancel();
+    if (this.tunnelStateFallback) {
+      const fallback = this.tunnelStateFallback;
+      this.tunnelStateFallback = undefined;
+      this.setTunnelState(fallback);
+    }
+  }
+
   public handleNewTunnelState(newState: TunnelState) {
     // Remove fallback state since we know the real state now
     if (this.tunnelStateFallback) {

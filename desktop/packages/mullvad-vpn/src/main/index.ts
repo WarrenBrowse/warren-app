@@ -82,6 +82,7 @@ import {
   printCommandLineOptions,
   printElectronOptions,
 } from './command-line-options';
+import { connectHandlingRefusal } from './connect-refusal';
 import { daemonAccessRefusal } from './daemon-access';
 import { DaemonRpc, SubscriptionListener } from './daemon-rpc';
 import Expectation from './expectation';
@@ -484,7 +485,14 @@ class ApplicationMain
   public connectTunnel = async (): Promise<void> => {
     if (this.tunnelState.allowConnect(this.daemonRpc.isConnected, this.account.isLoggedIn())) {
       this.tunnelState.expectNextTunnelState('connecting');
-      await this.daemonRpc.connectTunnel();
+      await connectHandlingRefusal({
+        connect: () => this.daemonRpc.connectTunnel(),
+        discardExpectedState: () => this.tunnelState.discardExpectedState(),
+        resyncDeviceState: async () => {
+          const deviceState = await this.daemonRpc.getDevice();
+          this.account.handleDeviceEvent({ type: deviceState.type, deviceState } as DeviceEvent);
+        },
+      });
     }
   };
 
