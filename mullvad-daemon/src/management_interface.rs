@@ -858,6 +858,13 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(payload))
     }
 
+    async fn has_warren_identity(&self, request: Request<()>) -> ServiceResult<bool> {
+        let call = Self::call_of(&request);
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(&call, DaemonCommand::HasWarrenIdentity(tx))?;
+        Ok(Response::new(self.wait_for_result(rx).await?))
+    }
+
     /// Replaces the BIP39 mnemonic (= restore identity). BIP39
     /// validation + atomic write. The daemon hot-swaps the in-memory
     /// signer and triggers an auto-login so no restart is needed.

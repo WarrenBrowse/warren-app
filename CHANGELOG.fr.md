@@ -58,6 +58,9 @@ par l'application, gardez-le tel quel.
   port forwarding, l'état du compte ni les codes de campagne quand aucun compte n'est connecté.
   Après `warren account logout`, qui conserve la phrase de récupération, ces requêtes continuaient
   en arrière-plan. Elles reprennent à la connexion suivante.
+- [Windows, macOS, Linux] Indiquer dans `warren account get` que l'appareil est déconnecté du compte
+  et que la phrase de récupération est conservée, après une déconnexion qui la conserve. La commande
+  affichait qu'aucune identité n'était présente sur l'appareil.
 
 ## [1.1.38] - 2026-09-28
 ### Ajouté

@@ -524,6 +524,9 @@ pub enum DaemonCommand {
     /// before the allocator recycles it once the GUI has serialized
     /// it onto the gRPC response.
     GetWarrenMnemonic(oneshot::Sender<Option<zeroize::Zeroizing<String>>>),
+    /// Whether a recovery phrase is kept on this device. A logout that
+    /// keeps it leaves this `true` with no account logged in.
+    HasWarrenIdentity(oneshot::Sender<bool>),
     /// Read-only observations about the Warren datapath, for `warren doctor`.
     /// Probes nothing and changes nothing: it reports the resolved connection
     /// count, whatever carrier-bind verdict is already cached for the current
@@ -3357,6 +3360,11 @@ impl Daemon {
             GetWwwAuthToken(tx) => self.on_get_www_auth_token(tx).await,
             GetWarrenAccountStanding(tx) => self.on_get_warren_account_standing(tx),
             GetWarrenMnemonic(tx) => self.on_get_warren_mnemonic(tx),
+            HasWarrenIdentity(tx) => Self::oneshot_send(
+                tx,
+                self.warren_identity.has_user_identity(),
+                "has_warren_identity",
+            ),
             GetWarrenDiagnostics(tx) => self.on_get_warren_diagnostics(tx),
             SignForumLogin(tx, sid) => self.on_sign_forum_login(tx, sid),
             SignForumNotifications(tx) => self.on_sign_forum_notifications(tx),

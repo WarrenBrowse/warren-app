@@ -52,6 +52,7 @@ interface IManagementServiceService extends grpc.ServiceDefinition<grpc.UntypedS
     getWarrenDiagnostics: IManagementServiceService_IGetWarrenDiagnostics;
     getWarrenNetworkStats: IManagementServiceService_IGetWarrenNetworkStats;
     getWarrenMnemonic: IManagementServiceService_IGetWarrenMnemonic;
+    hasWarrenIdentity: IManagementServiceService_IHasWarrenIdentity;
     setWarrenMnemonic: IManagementServiceService_ISetWarrenMnemonic;
     signForumLogin: IManagementServiceService_ISignForumLogin;
     signForumNotifications: IManagementServiceService_ISignForumNotifications;
@@ -502,6 +503,15 @@ interface IManagementServiceService_IGetWarrenMnemonic extends grpc.MethodDefini
     requestDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
     responseSerialize: grpc.serialize<google_protobuf_wrappers_pb.StringValue>;
     responseDeserialize: grpc.deserialize<google_protobuf_wrappers_pb.StringValue>;
+}
+interface IManagementServiceService_IHasWarrenIdentity extends grpc.MethodDefinition<google_protobuf_empty_pb.Empty, google_protobuf_wrappers_pb.BoolValue> {
+    path: "/mullvad_daemon.management_interface.ManagementService/HasWarrenIdentity";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
+    requestDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
+    responseSerialize: grpc.serialize<google_protobuf_wrappers_pb.BoolValue>;
+    responseDeserialize: grpc.deserialize<google_protobuf_wrappers_pb.BoolValue>;
 }
 interface IManagementServiceService_ISetWarrenMnemonic extends grpc.MethodDefinition<google_protobuf_wrappers_pb.StringValue, google_protobuf_empty_pb.Empty> {
     path: "/mullvad_daemon.management_interface.ManagementService/SetWarrenMnemonic";
@@ -1348,6 +1358,7 @@ export interface IManagementServiceServer extends grpc.UntypedServiceImplementat
     getWarrenDiagnostics: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, management_interface_pb.WarrenDiagnostics>;
     getWarrenNetworkStats: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, management_interface_pb.WarrenNetworkStats>;
     getWarrenMnemonic: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, google_protobuf_wrappers_pb.StringValue>;
+    hasWarrenIdentity: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, google_protobuf_wrappers_pb.BoolValue>;
     setWarrenMnemonic: grpc.handleUnaryCall<google_protobuf_wrappers_pb.StringValue, google_protobuf_empty_pb.Empty>;
     signForumLogin: grpc.handleUnaryCall<management_interface_pb.ForumLoginRequest, management_interface_pb.ForumLoginSignature>;
     signForumNotifications: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, management_interface_pb.ForumLoginSignature>;
@@ -1559,6 +1570,9 @@ export interface IManagementServiceClient {
     getWarrenMnemonic(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
     getWarrenMnemonic(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
     getWarrenMnemonic(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
+    hasWarrenIdentity(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.BoolValue) => void): grpc.ClientUnaryCall;
+    hasWarrenIdentity(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.BoolValue) => void): grpc.ClientUnaryCall;
+    hasWarrenIdentity(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.BoolValue) => void): grpc.ClientUnaryCall;
     setWarrenMnemonic(request: google_protobuf_wrappers_pb.StringValue, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     setWarrenMnemonic(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     setWarrenMnemonic(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
@@ -1944,6 +1958,9 @@ export class ManagementServiceClient extends grpc.Client implements IManagementS
     public getWarrenMnemonic(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
     public getWarrenMnemonic(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
     public getWarrenMnemonic(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.StringValue) => void): grpc.ClientUnaryCall;
+    public hasWarrenIdentity(request: google_protobuf_empty_pb.Empty, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.BoolValue) => void): grpc.ClientUnaryCall;
+    public hasWarrenIdentity(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.BoolValue) => void): grpc.ClientUnaryCall;
+    public hasWarrenIdentity(request: google_protobuf_empty_pb.Empty, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_wrappers_pb.BoolValue) => void): grpc.ClientUnaryCall;
     public setWarrenMnemonic(request: google_protobuf_wrappers_pb.StringValue, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public setWarrenMnemonic(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public setWarrenMnemonic(request: google_protobuf_wrappers_pb.StringValue, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;

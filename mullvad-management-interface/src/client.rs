@@ -417,6 +417,12 @@ impl MullvadProxyClient {
         Ok(self.0.get_warren_mnemonic(()).await?.into_inner())
     }
 
+    /// Whether a recovery phrase is kept on this device, whatever the login
+    /// state: a logout that keeps the phrase leaves it there.
+    pub async fn has_warren_identity(&mut self) -> Result<bool> {
+        Ok(self.0.has_warren_identity(()).await?.into_inner())
+    }
+
     /// Restores/imports a Warren identity from a BIP39 recovery phrase.
     /// The daemon validates BIP39 before persisting and hot-swaps the
     /// in-memory signer (no restart needed); an invalid phrase maps to

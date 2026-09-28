@@ -1183,6 +1183,18 @@ getWarrenMnemonic: {
     responseSerialize: serialize_google_protobuf_StringValue,
     responseDeserialize: deserialize_google_protobuf_StringValue,
   },
+  // Whether a recovery phrase is kept on this device, whatever the login state.
+hasWarrenIdentity: {
+    path: '/mullvad_daemon.management_interface.ManagementService/HasWarrenIdentity',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_empty_pb.Empty,
+    responseType: google_protobuf_wrappers_pb.BoolValue,
+    requestSerialize: serialize_google_protobuf_Empty,
+    requestDeserialize: deserialize_google_protobuf_Empty,
+    responseSerialize: serialize_google_protobuf_BoolValue,
+    responseDeserialize: deserialize_google_protobuf_BoolValue,
+  },
   // Replaces the user identity with the supplied BIP39 mnemonic.
 // **Irreversible**: any subscription tied to the current identity is
 // lost. The GUI caller must display a strong confirmation before

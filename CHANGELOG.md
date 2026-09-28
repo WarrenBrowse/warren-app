@@ -61,6 +61,8 @@ Line wrap the file at 100 chars.                                              Th
   account standing and campaign codes while no account is logged in. After `warren account logout`,
   which keeps the recovery phrase, these requests went on in the background. They resume at the next
   login.
+- [Windows, macOS, Linux] Say in `warren account get` that the device is logged out and the recovery
+  phrase kept, after a logout that keeps the phrase. It said there was no identity on the device.
 
 ## [1.1.38] - 2026-09-28
 ### Added

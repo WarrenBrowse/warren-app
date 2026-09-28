@@ -6,7 +6,6 @@ use mullvad_management_interface::MullvadProxyClient;
 use mullvad_types::device::DeviceState;
 use std::io::{self, BufRead, IsTerminal, Write};
 
-const NOT_LOGGED_IN_MESSAGE: &str = "No Warren identity on this device";
 const REVOKED_MESSAGE: &str = "The current device has been revoked";
 
 // A Warren account IS a BIP39 recovery phrase (no account numbers): the phrase
@@ -171,9 +170,10 @@ impl Account {
                 }
             }
             DeviceState::LoggedOut => {
-                println!("{NOT_LOGGED_IN_MESSAGE}");
-                println!("Create one with `{BIN_NAME} account create`, or restore yours");
-                println!("with `{BIN_NAME} account login`.");
+                let phrase_kept = rpc.has_warren_identity().await?;
+                for line in logged_out_lines(phrase_kept) {
+                    println!("{line}");
+                }
             }
             DeviceState::Revoked => {
                 println!("{REVOKED_MESSAGE}");
@@ -209,6 +209,25 @@ impl Account {
             submission.new_expiry.with_timezone(&chrono::Local),
         );
         Ok(())
+    }
+}
+
+/// What `account get` says on a logged-out device. A logout that keeps the
+/// recovery phrase leaves it on the device, where `account create` would
+/// replace it, so the two cases are not worded alike.
+fn logged_out_lines(phrase_kept: bool) -> Vec<String> {
+    if phrase_kept {
+        vec![
+            "Logged out. The recovery phrase is kept on this device.".to_owned(),
+            format!("Log back in with `{BIN_NAME} account login` and that phrase."),
+            format!("`{BIN_NAME} account create` would replace it with a new account."),
+        ]
+    } else {
+        vec![
+            "No Warren identity on this device".to_owned(),
+            format!("Create one with `{BIN_NAME} account create`, or restore yours"),
+            format!("with `{BIN_NAME} account login`."),
+        ]
     }
 }
 
@@ -278,6 +297,25 @@ fn format_duration(seconds: u64) -> String {
 mod tests {
     use super::*;
     use clap::Parser;
+
+    #[test]
+    fn a_logout_that_kept_the_phrase_says_so() {
+        let text = logged_out_lines(true).join("\n");
+
+        assert!(text.starts_with("Logged out."), "{text}");
+        assert!(text.contains("phrase is kept on this device"), "{text}");
+        assert!(!text.contains("No Warren identity"), "{text}");
+    }
+
+    #[test]
+    fn a_device_with_no_phrase_says_there_is_no_identity() {
+        let text = logged_out_lines(false).join("\n");
+
+        assert!(
+            text.starts_with("No Warren identity on this device"),
+            "{text}"
+        );
+    }
 
     #[test]
     fn redeem_takes_no_voucher_argument_to_read_it_from_input() {

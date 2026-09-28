@@ -123,6 +123,7 @@ rpc_classes! {
 
         // The wallet and the forum signatures made with its key.
         GetWarrenMnemonic => Identity,
+        HasWarrenIdentity => Identity,
         SetWarrenMnemonic => InstallWallet,
         SignForumLogin => Identity,
         SignForumNotifications => Identity,

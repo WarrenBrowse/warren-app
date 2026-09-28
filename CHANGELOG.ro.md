@@ -54,6 +54,9 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   forwarding, starea contului sau coduri de campanie cât timp niciun cont nu este autentificat. După
   `warren account logout`, care păstrează fraza de recuperare, aceste cereri continuau în fundal.
   Ele se reiau la următoarea autentificare.
+- [Windows, macOS, Linux] `warren account get` spune acum că dispozitivul este deconectat de la cont
+  și că fraza de recuperare este păstrată, după o ieșire din cont care o păstrează. Afișa că pe
+  dispozitiv nu există nicio identitate.
 
 ## [1.1.38] - 2026-09-28
 ### Adăugat

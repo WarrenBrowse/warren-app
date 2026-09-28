@@ -94,6 +94,8 @@ service ManagementService {
   // and explicit user confirmation. The returned string is a
   // cryptographic secret, never logged by the daemon (no-log policy).
   rpc GetWarrenMnemonic(google.protobuf.Empty) returns (google.protobuf.StringValue) {}
+  // Whether a recovery phrase is kept on this device, whatever the login state.
+  rpc HasWarrenIdentity(google.protobuf.Empty) returns (google.protobuf.BoolValue) {}
   // Replaces the user identity with the supplied BIP39 mnemonic.
   // **Irreversible**: any subscription tied to the current identity is
   // lost. The GUI caller must display a strong confirmation before
