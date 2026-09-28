@@ -661,7 +661,7 @@ function newConfig() {
 // and a glob that stops at win32/ leaves those inside the archive, which shows
 // an empty tray at runtime, in packaged builds only, with no error and no way
 // to reproduce it from `npm run develop`.
-const WINDOWS_ASAR_UNPACK = ['build/assets/images/menubar-icons/win32/**/lock-*.ico', '**/*.node'];
+const WINDOWS_ASAR_UNPACK = ['build/assets/images/menubar-icons/win32/**/tray-*.ico', '**/*.node'];
 
 async function packWin() {
   const DEFAULT_ARCH = targets === 'aarch64-pc-windows-msvc' ? 'arm64' : 'x64';

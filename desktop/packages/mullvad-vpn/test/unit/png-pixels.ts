@@ -146,8 +146,16 @@ const hex = (r: number, g: number, b: number) =>
  * numerous: the dot of the connecting frame rings itself in a colour that is in
  * neither layer. Eroding that fringe away leaves the colours the icon is drawn
  * in. `minShare` then drops a stray speck that survived the erosion.
+ *
+ * `erode = false` keeps every pixel at least `minAlpha` opaque, for a drawing
+ * made of strokes too thin to leave any pixel surrounded by its own colour.
  */
-export function dominantColours(buf: Buffer, minShare = 0.005): Set<string> {
+export function dominantColours(
+  buf: Buffer,
+  minShare = 0.005,
+  erode = true,
+  minAlpha = 0xff,
+): Set<string> {
   const { header, data, plte, trns } = readChunks(buf);
   const { width, height, bitDepth, colourType } = header;
   const bitsPerPixel = SAMPLES[colourType] * bitDepth;
@@ -173,7 +181,7 @@ export function dominantColours(buf: Buffer, minShare = 0.005): Set<string> {
       return hex(plte![entry * 3], plte![entry * 3 + 1], plte![entry * 3 + 2]);
     }
     const index = y * stride + x * SAMPLES[colourType];
-    if (hasAlpha && samples[index + SAMPLES[colourType] - 1] !== 0xff) {
+    if (hasAlpha && samples[index + SAMPLES[colourType] - 1] < minAlpha) {
       return undefined;
     }
     return greyscale
@@ -192,7 +200,7 @@ export function dominantColours(buf: Buffer, minShare = 0.005): Set<string> {
       const surrounded = [at(x - 1, y), at(x + 1, y), at(x, y - 1), at(x, y + 1)].every(
         (neighbour) => neighbour === colour,
       );
-      if (!surrounded) {
+      if (erode && !surrounded) {
         continue;
       }
       solid += 1;
@@ -207,4 +215,41 @@ export function dominantColours(buf: Buffer, minShare = 0.005): Set<string> {
     }
   }
   return dominant;
+}
+
+/** Width and height, from the IHDR. */
+export function pngSize(buf: Buffer): { width: number; height: number } {
+  const { header } = readChunks(buf);
+  return { width: header.width, height: header.height };
+}
+
+/**
+ * How much of the image is painted, as the sum of every pixel's opacity in
+ * units of one fully opaque pixel. The monochrome tray icons are alpha masks
+ * under a single tint, so this is the only thing that can tell them apart.
+ */
+export function coverage(buf: Buffer): number {
+  const { header, data, trns } = readChunks(buf);
+  const { width, height, bitDepth, colourType } = header;
+  const bitsPerPixel = SAMPLES[colourType] * bitDepth;
+  const stride = Math.ceil((width * bitsPerPixel) / 8);
+  const samples = unfilter(data, header, stride, Math.ceil(bitsPerPixel / 8));
+  const perByte = 8 / bitDepth;
+  const mask = (1 << bitDepth) - 1;
+
+  let total = 0;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (colourType === INDEXED) {
+        const byte = samples[y * stride + Math.floor(x / perByte)];
+        const entry = (byte >> (bitDepth * (perByte - 1 - (x % perByte)))) & mask;
+        total += trns && entry < trns.length ? trns[entry] : 0xff;
+      } else if (colourType === 4 || colourType === 6) {
+        total += samples[y * stride + x * SAMPLES[colourType] + SAMPLES[colourType] - 1];
+      } else {
+        total += 0xff;
+      }
+    }
+  }
+  return total / 0xff;
 }

@@ -12,6 +12,30 @@ export type TrayIconType = 'unsecured' | 'securing' | 'secured';
 
 type IconParameters = { monochromatic: boolean; notification: boolean };
 
+// The frames scripts/menubar-icon-frames.py draws: the inside of the W filling
+// from empty (unsecured) to halfway (securing) to full (secured). The tray steps
+// one frame per tick towards its target, so connecting shows the fill rising
+// through the securing state, and disconnecting drains it back.
+export const TRAY_ICON_FRAME_COUNT = 14;
+const SECURING_FRAME = 8;
+// Per frame, so a whole connect takes 13 ticks, about 0.7 s.
+const FRAME_DURATION_MS = 55;
+
+export function trayIconTargetFrame(type: TrayIconType): number {
+  switch (type) {
+    case 'unsecured':
+      return 0;
+    case 'securing':
+      return SECURING_FRAME;
+    case 'secured':
+      return TRAY_ICON_FRAME_COUNT - 1;
+  }
+}
+
+export function trayIconFileName(frame: number, suffix: string): string {
+  return `tray-${frame + 1}${suffix}`;
+}
+
 // The file-name suffix that picks one cell of the icon matrix. Exported so the
 // asset gates can enumerate every icon the controller may ask for from the
 // matrix itself, instead of from a copy of it that drifts.
@@ -136,7 +160,7 @@ export default class TrayIconController {
   private initAnimation() {
     const initialFrame = this.targetFrame();
     const animation = new KeyframeAnimation();
-    animation.speed = 100;
+    animation.speed = FRAME_DURATION_MS;
     animation.onFrame = this.onFrame;
     animation.play({ start: initialFrame, end: initialFrame });
 
@@ -164,14 +188,9 @@ export default class TrayIconController {
   }
 
   private loadImageSet(suffix: string): NativeImage[] {
-    const frames = Array.from({ length: 10 }, (_, i) => i + 1);
-    return frames.map((frame) => this.getImage(frame, suffix));
-  }
-
-  private getImage(frame: number, suffix?: string) {
-    const fileName = `lock-${frame}${suffix}`;
-
-    return new TrayIcon(fileName).toNativeImage();
+    return Array.from({ length: TRAY_ICON_FRAME_COUNT }, (_, frame) =>
+      new TrayIcon(trayIconFileName(frame, suffix)).toNativeImage(),
+    );
   }
 
   private async getSystemUsesLightTheme(): Promise<boolean | undefined> {
@@ -211,13 +230,6 @@ export default class TrayIconController {
   }
 
   private targetFrame(): number {
-    switch (this.iconTypeValue) {
-      case 'unsecured':
-        return 0;
-      case 'securing':
-        return 9;
-      case 'secured':
-        return 8;
-    }
+    return trayIconTargetFrame(this.iconTypeValue);
   }
 }

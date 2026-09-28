@@ -21,7 +21,6 @@ const BADGED_DIR = 'beta';
 const PLATFORMS = ['darwin', 'linux', 'win32'] as const;
 // The two that ship a plain PNG, whose pixels can be read back.
 const PIXEL_PLATFORMS = ['darwin', 'linux'] as const;
-const FRAMES = Array.from({ length: 10 }, (_, index) => index + 1);
 
 /** The production accent to beta accent table the generator applies. */
 function palette(): Map<string, string> {
@@ -47,10 +46,15 @@ function svgColours(files: string[]): Set<string> {
   return found;
 }
 
-function lockSources(): string[] {
+// The coloured sources only: a `_mono` source is flattened to a single tint by
+// the generator, and the placeholder is neutral grey.
+function colouredSources(): string[] {
   return fs
     .readdirSync(SVG_DIR)
-    .filter((name) => name.startsWith('lock-') && !name.startsWith('lock-placeholder'))
+    .filter(
+      (name) =>
+        name.startsWith('tray-') && !name.startsWith('tray-placeholder') && !name.includes('_mono'),
+    )
     .map((name) => path.join(SVG_DIR, name));
 }
 
@@ -60,7 +64,7 @@ function lockSources(): string[] {
 const isMonochrome = (name: string) => /Template|_white|_black/.test(name);
 // The startup placeholder is drawn in neutral greys and shows no tunnel state,
 // so it carries no accent either.
-const isPlaceholder = (name: string) => name.startsWith('lock-placeholder');
+const isPlaceholder = (name: string) => name.startsWith('tray-placeholder');
 const isColoured = (name: string) => !isMonochrome(name) && !isPlaceholder(name);
 
 function filesIn(dir: string): string[] {
@@ -72,6 +76,55 @@ function filesIn(dir: string): string[] {
 }
 
 const sorted = (colours: Iterable<string>) => [...colours].sort();
+
+const channels = (colour: string) =>
+  [1, 3, 5].map((offset) => parseInt(colour.slice(offset, offset + 2), 16));
+
+/** Within `tolerance` units, per channel, of some mix of colours `a` and `b`. */
+function onSegment(colour: string, a: string, b: string, tolerance: number): boolean {
+  const [c, x, y] = [channels(colour), channels(a), channels(b)];
+  const d = x.map((value, i) => y[i] - value);
+  const length = d.reduce((sum, value) => sum + value * value, 0);
+  const t =
+    length === 0
+      ? 0
+      : Math.min(
+          1,
+          Math.max(0, d.reduce((sum, value, i) => sum + value * (c[i] - x[i]), 0) / length),
+        );
+  return c.every((value, i) => Math.abs(value - (x[i] + t * d[i])) <= tolerance);
+}
+
+/**
+ * The colours an icon is drawn in, out of `known`. The early frames are an
+ * outline and a sliver of fill, too thin for the erosion of `dominantColours`
+ * to leave anything, and at 22px not one pixel of the bare outline is fully
+ * opaque. A file with no solid area falls back to its nearly opaque pixels. A
+ * single-colour stroke on a transparent ground antialiases through its alpha,
+ * which leaves those within a few units of rounding of the colour it is drawn
+ * in, so such a colour is read as that known colour. Where the outline overlaps
+ * the fill, the edge mixes the two, and a mix of two known colours brings in no
+ * colour of its own, so it is dropped. Anything else stays itself and fails.
+ */
+function drawnColours(buf: Buffer, known: Set<string>): Set<string> {
+  const solid = dominantColours(buf);
+  if (solid.size > 0) {
+    return solid;
+  }
+  const candidates = [...known];
+  const found = new Set<string>();
+  for (const colour of dominantColours(buf, 0, false, 0xe0)) {
+    const exact = candidates.find((candidate) => onSegment(colour, candidate, candidate, 3));
+    if (exact) {
+      found.add(exact);
+    } else if (
+      !candidates.some((a) => candidates.some((b) => a !== b && onSegment(colour, a, b, 3)))
+    ) {
+      found.add(colour);
+    }
+  }
+  return found;
+}
 
 const realPlatform = process.platform;
 
@@ -105,7 +158,8 @@ function assetPath(icon: InstanceType<TrayIconModule['TrayIcon']>): string {
  * rather than a copy of it, plus the Linux startup placeholder.
  */
 async function iconNamesFor(platform: string): Promise<string[]> {
-  const { trayIconSuffix } = await trayIconController();
+  const { trayIconSuffix, trayIconFileName, TRAY_ICON_FRAME_COUNT } = await trayIconController();
+  const frames = Array.from({ length: TRAY_ICON_FRAME_COUNT }, (_, frame) => frame);
   const names: string[] = [];
   for (const monochromatic of [false, true]) {
     for (const notification of [false, true]) {
@@ -113,12 +167,12 @@ async function iconNamesFor(platform: string): Promise<string[]> {
       const themes = platform === 'win32' ? [true, false, undefined] : [undefined];
       for (const systemUsesLightTheme of themes) {
         const suffix = trayIconSuffix(platform, monochromatic, notification, systemUsesLightTheme);
-        names.push(...FRAMES.map((frame) => `lock-${frame}${suffix}`));
+        names.push(...frames.map((frame) => trayIconFileName(frame, suffix)));
       }
     }
   }
   if (platform === 'linux') {
-    names.push('lock-placeholder');
+    names.push('tray-placeholder');
   }
   return [...new Set(names)];
 }
@@ -151,8 +205,8 @@ describe('the tray icon of a non-prod build', () => {
     const { TrayIcon } = await trayIconModule('prod');
     for (const platform of PLATFORMS) {
       switchPlatform(platform);
-      expect(assetPath(new TrayIcon('lock-1')), platform).toBe(
-        `${platform}/lock-1.${extensionFor(platform)}`,
+      expect(assetPath(new TrayIcon('tray-1')), platform).toBe(
+        `${platform}/tray-1.${extensionFor(platform)}`,
       );
     }
   });
@@ -225,28 +279,32 @@ describe('the tray icon of a non-prod build', () => {
   });
 });
 
-describe('the tray lock of a non-prod build', () => {
-  it('has a beta accent for every colour the lock frames are drawn in', () => {
+describe('the tray icon colours of a non-prod build', () => {
+  it('has a beta accent for every colour the tray frames are drawn in', () => {
     // A frame restyled or added in production must not reach a beta build
     // still wearing the production colours, so the table is checked against
     // the sources rather than the other way round. The notification dot is
-    // deliberately absent from it: it means "attention" in both builds, and it
-    // is composited over the lock rather than being part of it.
+    // deliberately absent from it: it means "attention" in both builds.
     const table = palette();
+    const notificationDot = svgColours([path.join(SVG_DIR, 'notification.svg')]);
 
-    for (const colour of svgColours(lockSources())) {
-      expect(table.has(colour), `${colour} is painted by a lock frame`).toBe(true);
+    for (const colour of svgColours(colouredSources())) {
+      if (notificationDot.has(colour)) {
+        continue;
+      }
+      expect(table.has(colour), `${colour} is painted by a tray frame`).toBe(true);
     }
   });
 
   it('is drawn in the production accents in a production build', () => {
     const table = palette();
     const notificationDot = svgColours([path.join(SVG_DIR, 'notification.svg')]);
+    const known = new Set([...table.keys(), ...notificationDot]);
 
     for (const platform of PIXEL_PLATFORMS) {
       const dir = path.join(ASSETS_DIR, platform);
       for (const name of filesIn(dir).filter(isColoured)) {
-        const colours = dominantColours(fs.readFileSync(path.join(dir, name)));
+        const colours = drawnColours(fs.readFileSync(path.join(dir, name)), known);
 
         expect(colours.size, `${platform}/${name}`).toBeGreaterThan(0);
         for (const colour of colours) {
@@ -259,15 +317,17 @@ describe('the tray lock of a non-prod build', () => {
     }
   });
 
-  it('is the production lock recoloured, with no production accent left', () => {
+  it('is the production icon recoloured, with no production accent left', () => {
     const table = palette();
     const productionAccents = new Set(table.keys());
+    const notificationDot = svgColours([path.join(SVG_DIR, 'notification.svg')]);
+    const known = new Set([...table.keys(), ...table.values(), ...notificationDot]);
 
     for (const platform of PIXEL_PLATFORMS) {
       const prodDir = path.join(ASSETS_DIR, platform);
       for (const name of filesIn(prodDir).filter(isColoured)) {
-        const production = dominantColours(fs.readFileSync(path.join(prodDir, name)));
-        const beta = dominantColours(fs.readFileSync(path.join(prodDir, BADGED_DIR, name)));
+        const production = drawnColours(fs.readFileSync(path.join(prodDir, name)), known);
+        const beta = drawnColours(fs.readFileSync(path.join(prodDir, BADGED_DIR, name)), known);
         // A colour the table does not name stays where it is, which is how the
         // notification dot keeps its amber in both trees.
         const expected = new Set([...production].map((colour) => table.get(colour) ?? colour));

@@ -5,7 +5,7 @@ import { TrayIcon } from './tray-icon';
 
 function getInitialIcon() {
   if (process.platform === 'linux') {
-    return new TrayIcon('lock-placeholder');
+    return new TrayIcon('tray-placeholder');
   }
 
   return new TrayIcon();
