@@ -37,17 +37,21 @@ par l'application, gardez-le tel quel.
 - [iOS] Indiquer que le compte utilise déjà son nombre maximal d'appareils simultanés quand ses
   autres appareils occupent toutes les connexions auxquelles il a droit, au lieu d'une simple
   déconnexion.
-- [Android] Déconnecter le VPN à la déconnexion du compte. Le tunnel restait ouvert une fois le
-  portefeuille effacé et continuait de transporter le trafic pendant que l'application affichait
-  l'écran de connexion.
 - [iOS] Déconnecter le VPN et retirer sa configuration à la déconnexion du compte ou à l'effacement
   du portefeuille, pour que le tunnel ne puisse ni rester ouvert ni revenir à la demande pour un
   portefeuille qui a quitté l'appareil.
+
+## [1.1.39] - 2026-09-28
+### Corrigé
+- [Android] Déconnecter le VPN à la déconnexion du compte. Le tunnel restait ouvert une fois le
+  portefeuille effacé et continuait de transporter le trafic pendant que l'application affichait
+  l'écran de connexion. Si le VPN ne se coupe pas dans les 15 secondes, le portefeuille est
+  conservé et l'application propose de réessayer.
 - [Windows, macOS, Linux] Refuser la connexion quand aucun compte n'est connecté, et l'indiquer
   dans la CLI. Après `warren account logout`, l'application pouvait encore se connecter avec la
   phrase de récupération qu'elle conserve. La déconnexion du compte coupe aussi le VPN d'abord et
-  ne déconnecte le compte qu'une fois le tunnel fermé. Si le tunnel ne se ferme pas à temps, elle
-  signale une erreur et laisse le compte connecté.
+  ne déconnecte le compte qu'une fois le tunnel fermé. Si le tunnel ne se ferme pas à temps, le
+  compte reste connecté et la CLI signale une erreur.
 - [Windows, macOS, Linux] Fermer les connexions au serveur à la déconnexion. Elles restaient
   ouvertes jusqu'à 15 secondes après l'affichage de « Déconnecté ».
 - [Windows, macOS, Linux] Refuser la connexion tant que l'accès au compte ou l'appareil est révoqué,
@@ -61,6 +65,10 @@ par l'application, gardez-le tel quel.
 - [Windows, macOS, Linux] Indiquer dans `warren account get` que l'appareil est déconnecté du compte
   et que la phrase de récupération est conservée, après une déconnexion qui la conserve. La commande
   affichait qu'aucune identité n'était présente sur l'appareil.
+- [Windows, macOS, Linux] Afficher tout de suite l'état réel de la connexion quand une connexion est
+  refusée, au lieu d'afficher la connexion en cours pendant trois secondes.
+- [Windows, macOS, Linux, Android] Repartir d'une nouvelle estimation du débit quand l'appareil
+  change de réseau, au lieu de réutiliser celle mesurée sur le réseau précédent.
 
 ## [1.1.38] - 2026-09-28
 ### Ajouté

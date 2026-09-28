@@ -1,52 +1,24 @@
-### Added
-- [Android] Add Country per app to App routing, as on desktop: each app you choose goes to the
-  Internet through an exit in its own country or city, while every other app keeps the main
-  connection. Choose a country from the chip on an app's row; the row shows whether its connection
-  is up and the address the app appears from. Countries change without reconnecting the VPN. As
-  many run at once as the server admits, a country past that waits for a free route, and an app
-  whose country cannot be reached is blocked rather than sent another way. The connect screen
-  shows how many apps are in other countries. Needs Android 10 or newer.
-- [Android] Ask before a country makes its app the only one in the VPN. While VPN only for is on
-  and none of its apps is on the device, every app uses the VPN, and giving one app a country would
-  take every other app out of it: App routing now says so and waits for your answer.
-
-### Changed
-- [Windows, macOS, Linux] Translate the network list of Local network sharing in all 23 languages.
-- [Android] Name App routing in the privacy notice, in every language, where it still spoke of
-  split tunneling.
-
 ### Fixed
-- [Windows, macOS, Linux, Android] Say that the account already uses its maximum number of
-  simultaneous devices when the server refuses another one, instead of calling the subscription
-  expired.
-- [Windows, macOS, Linux, Android] Say that the account already uses its maximum number of
-  simultaneous devices when its other devices hold every connection it is entitled to, instead of
-  calling the subscription expired. On a server not updated yet, the app says it when it knows the
-  subscription is still active.
-- [Windows, macOS, Linux, Android] Reset the open connections of an app whose country changes
-  while connected, or whose country is set or removed, so it reconnects through its new route at
-  once. Its connections used to hang: a browser kept waiting, name resolution included, until it
-  was restarted.
-- [Android] Keep every app's traffic moving while Country per app finds out which app opened a
-  new connection. That lookup asks the system once per connection and used to hold the whole
-  tunnel meanwhile, which a burst of new connections turned into pauses of up to a second.
-- [Linux] Reach the local network while connected with Local network sharing on: the router,
-  printers and other devices, and the networks added to its list that the computer reaches
-  directly or by a static route, over IPv4 and IPv6. The firewall let that traffic through, but the
-  routes sent it into the VPN, where nothing answered. Turning sharing off or editing the list
-  applies without reconnecting, and the VPN's own addresses stay in the VPN whatever is shared.
-- [Windows, macOS, Linux] Give the apps sent to another country their route from the first
-  connection after a fresh install. The first token refresh failed while the VPN was connecting,
-  so those apps stayed blocked until the next reconnect.
-- [Windows, macOS, Linux] Route an app given a city while the connection uses two hops, as
-  Android does. The city picks the exit only, and the connection may enter anywhere the main one
-  can; the app used to stay blocked unless an entry server sat in that same city.
-- [Android] Ask before turning on Country per app makes the apps with a country the only ones in
-  the VPN. While VPN only for is on and none of its apps is on the device, every app uses the VPN,
-  and turning on Country per app over saved countries narrowed it to those apps without a word.
-- [Android] Give the apps sent to another country their route within a second or two of the first
-  connection. The first token refresh could not reach the server while the VPN was connecting, so
-  those apps waited up to a minute, and past two of them, until the next reconnect.
-- [Android] Keep the VPN connected when the server moves the connection to another address inside
-  the tunnel. The app dropped the connection and reconnected; a forwarded port is now asked for
-  again on the new address.
+- [Android] Disconnect when logging out. The tunnel stayed up after the wallet was erased and kept
+  carrying traffic while the app showed the login screen. When the VPN does not come down within
+  15 seconds, the wallet is kept and the app asks to try again.
+- [Windows, macOS, Linux] Refuse to connect while no account is logged in, and say so in the CLI.
+  After `warren account logout` the app could still connect with the recovery phrase it keeps.
+  Logging out now also disconnects first and signs out only once the tunnel is down. When the
+  tunnel does not come down in time, the account stays logged in and the CLI reports an error.
+- [Windows, macOS, Linux] Close the connections to the server when disconnecting. They stayed open
+  up to 15 seconds after the app showed Disconnected.
+- [Windows, macOS, Linux] Refuse to connect while access to the account is revoked or the device is
+  revoked, and say why in the app and the CLI, with the day the revocation ends. While access was
+  revoked, a connect blocked all traffic until the user disconnected. Connecting works again as soon
+  as the revocation ends.
+- [Windows, macOS, Linux] Stop asking the servers for connection tokens, port entitlements, the
+  account standing and campaign codes while no account is logged in. After `warren account logout`,
+  which keeps the recovery phrase, these requests went on in the background. They resume at the next
+  login.
+- [Windows, macOS, Linux] Say in `warren account get` that the device is logged out and the recovery
+  phrase kept, after a logout that keeps the phrase. It said there was no identity on the device.
+- [Windows, macOS, Linux] Show the real connection state at once when a connect is refused, instead
+  of showing the connection in progress for three seconds.
+- [Windows, macOS, Linux, Android] Start a new estimate of the connection's speed when the device
+  moves to another network, instead of reusing the one measured on the previous network.

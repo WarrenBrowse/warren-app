@@ -33,17 +33,21 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Aplicația spune că acest cont folosește deja numărul maxim de dispozitive simultane când
   celelalte dispozitive ale lui ocupă toate conexiunile la care are dreptul, în loc de o simplă
   deconectare.
-- [Android] Deconectează VPN-ul la ieșirea din cont. Tunelul rămânea deschis după ștergerea
-  portofelului și transporta în continuare traficul, în timp ce aplicația arăta ecranul de
-  autentificare.
 - [iOS] Deconectează VPN-ul și elimină configurația lui la ieșirea din cont sau la ștergerea
   portofelului, ca tunelul să nu poată nici rămâne deschis, nici reporni la cerere pentru un
   portofel care a părăsit dispozitivul.
+
+## [1.1.39] - 2026-09-28
+### Reparat
+- [Android] Deconectează VPN-ul la ieșirea din cont. Tunelul rămânea deschis după ștergerea
+  portofelului și transporta în continuare traficul, în timp ce aplicația arăta ecranul de
+  autentificare. Dacă VPN-ul nu se oprește în 15 secunde, portofelul este păstrat și aplicația
+  îți cere să încerci din nou.
 - [Windows, macOS, Linux] Aplicația refuză conectarea cât timp niciun cont nu este autentificat și
   spune asta în CLI. După `warren account logout`, aplicația se putea conecta în continuare cu
   fraza de recuperare pe care o păstrează. Ieșirea din cont deconectează acum mai întâi VPN-ul și
   închide sesiunea contului abia după ce tunelul s-a oprit. Dacă tunelul nu se oprește la timp,
-  semnalează o eroare și lasă contul autentificat.
+  contul rămâne autentificat, iar CLI-ul semnalează o eroare.
 - [Windows, macOS, Linux] Aplicația închide conexiunile la server la deconectare. Acestea rămâneau
   deschise până la 15 secunde după ce aplicația afișa „Deconectat”.
 - [Windows, macOS, Linux] Aplicația refuză conectarea cât timp accesul la cont sau dispozitivul este
@@ -57,6 +61,10 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [Windows, macOS, Linux] `warren account get` spune acum că dispozitivul este deconectat de la cont
   și că fraza de recuperare este păstrată, după o ieșire din cont care o păstrează. Afișa că pe
   dispozitiv nu există nicio identitate.
+- [Windows, macOS, Linux] Aplicația afișează imediat starea reală a conexiunii când o conectare este
+  refuzată, în loc să arate conectarea în curs timp de trei secunde.
+- [Windows, macOS, Linux, Android] Aplicația pornește o estimare nouă a vitezei când dispozitivul
+  trece pe altă rețea, în loc să o refolosească pe cea măsurată pe rețeaua anterioară.
 
 ## [1.1.38] - 2026-09-28
 ### Adăugat

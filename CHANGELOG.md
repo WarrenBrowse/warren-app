@@ -43,14 +43,18 @@ Line wrap the file at 100 chars.                                              Th
   revocation ends.
 - [iOS] Say that the account already uses its maximum number of simultaneous devices when its
   other devices hold every connection it is entitled to, instead of showing a plain disconnection.
-- [Android] Disconnect when logging out. The tunnel stayed up after the wallet was erased and kept
-  carrying traffic while the app showed the login screen.
 - [iOS] Disconnect and remove the VPN configuration when logging out or erasing the wallet, so the
   tunnel can neither stay up nor come back on demand for a wallet that left the device.
+
+## [1.1.39] - 2026-09-28
+### Fixed
+- [Android] Disconnect when logging out. The tunnel stayed up after the wallet was erased and kept
+  carrying traffic while the app showed the login screen. When the VPN does not come down within
+  15 seconds, the wallet is kept and the app asks to try again.
 - [Windows, macOS, Linux] Refuse to connect while no account is logged in, and say so in the CLI.
   After `warren account logout` the app could still connect with the recovery phrase it keeps.
-  Logging out now also disconnects first and signs out only once the tunnel is down, and reports
-  an error, leaving the account logged in, when the tunnel does not come down in time.
+  Logging out now also disconnects first and signs out only once the tunnel is down. When the
+  tunnel does not come down in time, the account stays logged in and the CLI reports an error.
 - [Windows, macOS, Linux] Close the connections to the server when disconnecting. They stayed open
   up to 15 seconds after the app showed Disconnected.
 - [Windows, macOS, Linux] Refuse to connect while access to the account is revoked or the device is
@@ -63,6 +67,10 @@ Line wrap the file at 100 chars.                                              Th
   login.
 - [Windows, macOS, Linux] Say in `warren account get` that the device is logged out and the recovery
   phrase kept, after a logout that keeps the phrase. It said there was no identity on the device.
+- [Windows, macOS, Linux] Show the real connection state at once when a connect is refused, instead
+  of showing the connection in progress for three seconds.
+- [Windows, macOS, Linux, Android] Start a new estimate of the connection's speed when the device
+  moves to another network, instead of reusing the one measured on the previous network.
 
 ## [1.1.38] - 2026-09-28
 ### Added

@@ -1,60 +1,27 @@
-### Adăugat
-- [Android] Adaugă „Țară per aplicație” în Rutare aplicații, ca pe desktop: fiecare aplicație aleasă
-  iese spre Internet printr-un exit din propria țară sau propriul oraș, în timp ce toate celelalte
-  aplicații păstrează conexiunea principală. Țara se alege din eticheta de pe rândul aplicației, iar
-  rândul arată dacă legătura ei e activă și adresa sub care apare aplicația. Schimbarea unei țări nu
-  reconectează VPN-ul. Rulează în același timp câte admite serverul, o țară peste acest număr
-  așteaptă să se elibereze o rută, iar o aplicație a cărei țară nu poate fi atinsă e blocată în loc
-  să fie trimisă pe altă cale. Ecranul de conectare arată câte aplicații sunt în alte țări. Necesită
-  Android 10 sau mai nou.
-- [Android] Aplicația cere confirmare înainte ca o țară să facă din aplicația ei singura care
-  folosește VPN-ul. Cât timp „VPN selectiv” e activat, dar niciuna dintre aplicațiile lui nu e pe
-  dispozitiv, toate aplicațiile folosesc VPN-ul, iar o țară aleasă pentru o aplicație le-ar scoate
-  pe toate celelalte din el: Rutare aplicații spune acum acest lucru și așteaptă răspunsul tău.
-
-### Modificat
-- [Windows, macOS, Linux] Lista de rețele a Partajării rețelei locale e tradusă în toate cele 23 de
-  limbi.
-- [Android] Nota de confidențialitate numește Rutarea aplicațiilor în toate limbile, acolo unde
-  încă vorbea de split tunneling.
-
 ### Reparat
-- [Windows, macOS, Linux, Android] Aplicația spune că acest cont folosește deja numărul maxim de
-  dispozitive simultane când serverul refuză încă unul, în loc să anunțe că abonamentul a expirat.
-- [Windows, macOS, Linux, Android] Aplicația spune că acest cont folosește deja numărul
-  maxim de dispozitive simultane când celelalte dispozitive ale lui ocupă toate conexiunile la care
-  are dreptul, în loc să anunțe că abonamentul a expirat. Pe un server încă neactualizat, aplicația
-  o spune când știe că abonamentul e încă activ.
-- [Windows, macOS, Linux, Android] Conexiunile deschise ale unei aplicații a cărei țară se schimbă
-  în timpul conexiunii, sau care primește ori pierde o țară, sunt resetate, ca aplicația să se
-  reconecteze imediat prin noua rută. Înainte, conexiunile ei rămâneau blocate: un browser aștepta,
-  inclusiv rezolvarea numelor, până era repornit.
-- [Android] Traficul tuturor aplicațiilor continuă cât timp „Țară per aplicație” află ce
-  aplicație a deschis o conexiune nouă. Căutarea întreabă sistemul o dată pe conexiune și bloca
-  până acum tot tunelul între timp, iar o rafală de conexiuni noi ducea la pauze de până la o
-  secundă.
-- [Linux] Ajungi la rețeaua locală cât timp ești conectat, cu Partajarea rețelei locale pornită:
-  routerul, imprimantele și celelalte dispozitive, precum și rețelele adăugate în listă pe care
-  computerul le atinge direct sau printr-o rută statică, prin IPv4 și IPv6. Firewallul lăsa
-  traficul să treacă, dar rutele îl trimiteau în VPN, unde nu răspundea nimic. Oprirea partajării
-  sau modificarea listei se aplică fără reconectare, iar adresele VPN-ului rămân în VPN orice ai
-  partaja.
-- [Windows, macOS, Linux] Aplicațiile trimise în altă țară își primesc ruta de la prima conectare
-  după o instalare nouă. Prima reîmprospătare a tokenurilor eșua cât timp VPN-ul se conecta, iar
-  aceste aplicații rămâneau blocate până la reconectarea următoare.
-- [Windows, macOS, Linux] O aplicație căreia i s-a ales un oraș e rutată și când conexiunea
-  folosește două salturi, ca pe Android. Orașul alege doar exit-ul, iar conexiunea poate intra
-  oriunde poate intra conexiunea principală; înainte aplicația rămânea blocată dacă niciun server
-  de intrare nu se afla chiar în acel oraș.
-- [Android] Aplicația cere confirmare înainte ca activarea „Țară per aplicație” să facă din
-  aplicațiile cu o țară singurele care folosesc VPN-ul. Cât timp „VPN selectiv” e activat, dar
-  niciuna dintre aplicațiile lui nu e pe dispozitiv, toate aplicațiile folosesc VPN-ul, iar
-  activarea „Țară per aplicație” cu țări deja salvate îl restrângea la acele aplicații fără niciun
-  avertisment.
-- [Android] Aplicațiile trimise în altă țară își primesc ruta la o secundă sau două după prima
-  conectare. Prima reîmprospătare a tokenurilor nu putea ajunge la server cât timp VPN-ul se
-  conecta, așa că aceste aplicații așteptau până la un minut, iar dincolo de două, până la
-  reconectarea următoare.
-- [Android] VPN-ul rămâne conectat când serverul mută conexiunea pe o altă adresă din tunel.
-  Aplicația întrerupea conexiunea și se reconecta; un port redirecționat e acum cerut din nou pe
-  noua adresă.
+- [Android] Deconectează VPN-ul la ieșirea din cont. Tunelul rămânea deschis după ștergerea
+  portofelului și transporta în continuare traficul, în timp ce aplicația arăta ecranul de
+  autentificare. Dacă VPN-ul nu se oprește în 15 secunde, portofelul este păstrat și aplicația
+  îți cere să încerci din nou.
+- [Windows, macOS, Linux] Aplicația refuză conectarea cât timp niciun cont nu este autentificat și
+  spune asta în CLI. După `warren account logout`, aplicația se putea conecta în continuare cu
+  fraza de recuperare pe care o păstrează. Ieșirea din cont deconectează acum mai întâi VPN-ul și
+  închide sesiunea contului abia după ce tunelul s-a oprit. Dacă tunelul nu se oprește la timp,
+  contul rămâne autentificat, iar CLI-ul semnalează o eroare.
+- [Windows, macOS, Linux] Aplicația închide conexiunile la server la deconectare. Acestea rămâneau
+  deschise până la 15 secunde după ce aplicația afișa „Deconectat”.
+- [Windows, macOS, Linux] Aplicația refuză conectarea cât timp accesul la cont sau dispozitivul este
+  revocat și spune de ce în aplicație și în CLI, cu ziua în care se încheie revocarea. Cât timp
+  accesul era revocat, o încercare de conectare bloca tot traficul până la deconectare. Conectarea
+  redevine posibilă imediat ce revocarea se încheie.
+- [Windows, macOS, Linux] Aplicația nu mai cere serverelor jetoane de conectare, autorizări de port
+  forwarding, starea contului sau coduri de campanie cât timp niciun cont nu este autentificat. După
+  `warren account logout`, care păstrează fraza de recuperare, aceste cereri continuau în fundal.
+  Ele se reiau la următoarea autentificare.
+- [Windows, macOS, Linux] `warren account get` spune acum că dispozitivul este deconectat de la cont
+  și că fraza de recuperare este păstrată, după o ieșire din cont care o păstrează. Afișa că pe
+  dispozitiv nu există nicio identitate.
+- [Windows, macOS, Linux] Aplicația afișează imediat starea reală a conexiunii când o conectare este
+  refuzată, în loc să arate conectarea în curs timp de trei secunde.
+- [Windows, macOS, Linux, Android] Aplicația pornește o estimare nouă a vitezei când dispozitivul
+  trece pe altă rețea, în loc să o refolosească pe cea măsurată pe rețeaua anterioară.

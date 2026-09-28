@@ -1,59 +1,27 @@
-### Ajouté
-- [Android] Ajouter Pays par app au routage des apps, comme sur ordinateur : chaque app choisie
-  sort sur Internet par une exit dans son propre pays ou sa propre ville, pendant que toutes les
-  autres apps gardent la connexion principale. Le pays se choisit depuis la pastille de la ligne de
-  l'app, et la ligne indique si sa connexion est établie et l'adresse sous laquelle l'app apparaît.
-  Changer un pays ne reconnecte pas le VPN. Il en tourne à la fois autant que le serveur en admet,
-  un pays au-delà attend qu'une route se libère, et une app dont le pays est injoignable est bloquée
-  plutôt qu'envoyée ailleurs. L'écran de connexion indique combien d'apps sont dans d'autres pays.
-  Nécessite Android 10 ou plus récent.
-- [Android] Demander confirmation avant qu'un pays fasse de son app la seule à passer par le VPN.
-  Tant que VPN ciblé est activé sans qu'aucune de ses apps soit installée sur l'appareil, toutes
-  les apps passent par le VPN, et donner un pays à une app en sortirait toutes les autres : le
-  routage des apps le signale désormais et attend votre réponse.
-
-### Modifié
-- [Windows, macOS, Linux] Traduire la liste des réseaux du partage réseau local dans les 23 langues.
-- [Android] Nommer le routage des apps dans l'avis de confidentialité, dans toutes les langues, là
-  où il parlait encore de split tunneling.
-
 ### Corrigé
-- [Windows, macOS, Linux, Android] Indiquer que le compte utilise déjà son nombre maximal
-  d'appareils simultanés quand le serveur en refuse un de plus, au lieu d'annoncer un abonnement
-  expiré.
-- [Windows, macOS, Linux, Android] Indiquer que le compte utilise déjà son nombre maximal
-  d'appareils simultanés quand ses autres appareils occupent toutes les connexions auxquelles il a
-  droit, au lieu d'annoncer un abonnement expiré. Sur un serveur pas encore mis à jour, l'app
-  l'indique quand elle sait l'abonnement encore actif.
-- [Windows, macOS, Linux, Android] Réinitialiser les connexions ouvertes d'une app dont le pays
-  change pendant la connexion, ou dont le pays est ajouté ou retiré, pour qu'elle se reconnecte
-  aussitôt par sa nouvelle route. Ses connexions restaient bloquées : un navigateur attendait,
-  résolution de noms comprise, jusqu'à ce qu'on le redémarre.
-- [Android] Garder le trafic de toutes les apps en mouvement pendant que Pays par app cherche
-  quelle app a ouvert une nouvelle connexion. Cette recherche interroge le système une fois par
-  connexion et bloquait jusqu'ici tout le tunnel pendant ce temps, ce qu'une rafale de nouvelles
-  connexions transformait en pauses allant jusqu'à une seconde.
-- [Linux] Atteindre le réseau local pendant la connexion quand le partage réseau local est activé :
-  le routeur, les imprimantes et les autres appareils, ainsi que les réseaux ajoutés à sa liste que
-  l'ordinateur atteint directement ou par une route statique, en IPv4 comme en IPv6. Le pare-feu
-  laissait passer ce trafic, mais les routes l'envoyaient dans le VPN, où rien ne répondait.
-  Désactiver le partage ou modifier la liste s'applique sans reconnexion, et les adresses du VPN
-  lui-même restent dans le VPN quoi qu'on partage.
-- [Windows, macOS, Linux] Donner leur route aux apps envoyées vers un autre pays dès la première
-  connexion après une installation neuve. Le premier renouvellement des tokens échouait pendant
-  que le VPN se connectait, et ces apps restaient bloquées jusqu'à la reconnexion suivante.
-- [Windows, macOS, Linux] Router une app à laquelle une ville est attribuée quand la connexion
-  passe par deux sauts, comme sur Android. La ville choisit seulement l'exit, et la connexion peut
-  entrer partout où la connexion principale le peut ; l'app restait bloquée sauf si un serveur
-  d'entrée se trouvait dans cette même ville.
-- [Android] Demander confirmation avant qu'activer Pays par app fasse des apps qui ont un pays les
-  seules à passer par le VPN. Tant que VPN ciblé est activé sans qu'aucune de ses apps soit
-  installée sur l'appareil, toutes les apps passent par le VPN, et activer Pays par app avec des
-  pays déjà enregistrés le réduisait à ces apps sans prévenir.
-- [Android] Donner leur route aux apps envoyées vers un autre pays une à deux secondes après la
-  première connexion. Le premier renouvellement des tokens ne pouvait pas joindre le serveur
-  pendant que le VPN se connectait : ces apps attendaient jusqu'à une minute, et au-delà de deux,
-  jusqu'à la reconnexion suivante.
-- [Android] Garder le VPN connecté quand le serveur déplace la connexion vers une autre adresse dans
-  le tunnel. L'app coupait la connexion puis se reconnectait ; un port redirigé est maintenant
-  redemandé sur la nouvelle adresse.
+- [Android] Déconnecter le VPN à la déconnexion du compte. Le tunnel restait ouvert une fois le
+  portefeuille effacé et continuait de transporter le trafic pendant que l'application affichait
+  l'écran de connexion. Si le VPN ne se coupe pas dans les 15 secondes, le portefeuille est
+  conservé et l'application propose de réessayer.
+- [Windows, macOS, Linux] Refuser la connexion quand aucun compte n'est connecté, et l'indiquer
+  dans la CLI. Après `warren account logout`, l'application pouvait encore se connecter avec la
+  phrase de récupération qu'elle conserve. La déconnexion du compte coupe aussi le VPN d'abord et
+  ne déconnecte le compte qu'une fois le tunnel fermé. Si le tunnel ne se ferme pas à temps, le
+  compte reste connecté et la CLI signale une erreur.
+- [Windows, macOS, Linux] Fermer les connexions au serveur à la déconnexion. Elles restaient
+  ouvertes jusqu'à 15 secondes après l'affichage de « Déconnecté ».
+- [Windows, macOS, Linux] Refuser la connexion tant que l'accès au compte ou l'appareil est révoqué,
+  et en donner la raison dans l'application et la CLI, avec le jour où la révocation prend fin. Tant
+  que l'accès était révoqué, une tentative de connexion bloquait tout le trafic jusqu'à la
+  déconnexion. La connexion redevient possible dès la fin de la révocation.
+- [Windows, macOS, Linux] Ne plus demander aux serveurs de jetons de connexion, d'autorisations de
+  port forwarding, l'état du compte ni les codes de campagne quand aucun compte n'est connecté.
+  Après `warren account logout`, qui conserve la phrase de récupération, ces requêtes continuaient
+  en arrière-plan. Elles reprennent à la connexion suivante.
+- [Windows, macOS, Linux] Indiquer dans `warren account get` que l'appareil est déconnecté du compte
+  et que la phrase de récupération est conservée, après une déconnexion qui la conserve. La commande
+  affichait qu'aucune identité n'était présente sur l'appareil.
+- [Windows, macOS, Linux] Afficher tout de suite l'état réel de la connexion quand une connexion est
+  refusée, au lieu d'afficher la connexion en cours pendant trois secondes.
+- [Windows, macOS, Linux, Android] Repartir d'une nouvelle estimation du débit quand l'appareil
+  change de réseau, au lieu de réutiliser celle mesurée sur le réseau précédent.
