@@ -36,6 +36,9 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [Android] Deconectează VPN-ul la ieșirea din cont. Tunelul rămânea deschis după ștergerea
   portofelului și transporta în continuare traficul, în timp ce aplicația arăta ecranul de
   autentificare.
+- [iOS] Deconectează VPN-ul și elimină configurația lui la ieșirea din cont sau la ștergerea
+  portofelului, ca tunelul să nu poată nici rămâne deschis, nici reporni la cerere pentru un
+  portofel care a părăsit dispozitivul.
 
 ## [1.1.38] - 2026-09-28
 ### Adăugat

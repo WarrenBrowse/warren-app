@@ -53,8 +53,6 @@ final class AccountInteractor: Sendable {
     }
 
     func logout() async {
-        await MainActor.run {
-            WarrenWalletLogout.perform(tunnelManager: tunnelManager)
-        }
+        await WarrenWalletLogout.perform(tunnelManager: tunnelManager)
     }
 }

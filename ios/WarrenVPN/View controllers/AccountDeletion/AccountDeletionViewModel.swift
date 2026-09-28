@@ -44,9 +44,7 @@ struct TunnelManagerAccountDeletionBackEnd: AccountDeletionBackEnd {
                 }
             }
         }
-        await MainActor.run {
-            WarrenWalletLogout.perform(tunnelManager: tunnelManager)
-        }
+        await WarrenWalletLogout.perform(tunnelManager: tunnelManager)
     }
 }
 

@@ -5,8 +5,8 @@
 //  Created by Warren on 2026-05-22 (C.6 follow-up).
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  Settings → "Erase wallet" destructive action. Wipes the wallet from
-//  the iOS Keychain (`WarrenWalletKeychain.delete()`), zeroes any
+//  Settings → "Erase wallet" destructive action. Takes the tunnel down,
+//  wipes the wallet from the iOS Keychain (`WarrenWalletKeychain.delete()`), zeroes any
 //  in-memory copy, and dismisses back to Settings. Gated by a
 //  confirmation alert because the operation is irreversible without
 //  the backup mnemonic.
@@ -28,6 +28,16 @@ final class WarrenWalletEraseViewController: UIViewController {
     weak var delegate: WarrenWalletEraseViewControllerDelegate?
 
     private let logger = Logger(label: "WarrenWalletEraseViewController")
+    private let tunnelManager: TunnelManager
+
+    init(tunnelManager: TunnelManager) {
+        self.tunnelManager = tunnelManager
+        super.init(nibName: nil, bundle: nil)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
 
     private let stackView: UIStackView = {
         let stack = UIStackView()
@@ -133,7 +143,11 @@ final class WarrenWalletEraseViewController: UIViewController {
                 ),
                 style: .destructive,
                 handler: { [weak self] _ in
-                    self?.performWipe()
+                    guard let self else { return }
+                    Task { @MainActor in
+                        await WarrenWalletLogout.takeTunnelDown(tunnelManager: self.tunnelManager)
+                        self.performWipe()
+                    }
                 }
             )
         )

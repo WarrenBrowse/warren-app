@@ -195,7 +195,7 @@ final class SettingsViewControllerFactory {
     /// Wallet wipe (Settings → Erase wallet, destructive). Pushes the
     /// dedicated VC with its own confirmation alert.
     private func makeWarrenWalletEraseViewController() -> MakeChildResult {
-        let controller = WarrenWalletEraseViewController()
+        let controller = WarrenWalletEraseViewController(tunnelManager: interactorFactory.tunnelManager)
         return .viewController(controller)
     }
 

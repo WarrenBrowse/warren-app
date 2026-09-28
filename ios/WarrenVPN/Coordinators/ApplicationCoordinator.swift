@@ -408,9 +408,7 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
     private func logoutRevokedDevice() {
         Task { [weak self] in
             guard let self else { return }
-            await MainActor.run {
-                WarrenWalletLogout.perform(tunnelManager: tunnelManager)
-            }
+            await WarrenWalletLogout.perform(tunnelManager: tunnelManager)
             continueFlow(animated: true)
         }
     }

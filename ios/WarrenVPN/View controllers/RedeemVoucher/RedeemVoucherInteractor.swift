@@ -37,9 +37,7 @@ final class RedeemVoucherInteractor: @unchecked Sendable {
     }
 
     func logout() async {
-        await MainActor.run {
-            WarrenWalletLogout.perform(tunnelManager: tunnelManager)
-        }
+        await WarrenWalletLogout.perform(tunnelManager: tunnelManager)
     }
 
     func cancelAll() {

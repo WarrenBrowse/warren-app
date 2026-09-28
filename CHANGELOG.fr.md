@@ -40,6 +40,9 @@ par l'application, gardez-le tel quel.
 - [Android] Déconnecter le VPN à la déconnexion du compte. Le tunnel restait ouvert une fois le
   portefeuille effacé et continuait de transporter le trafic pendant que l'application affichait
   l'écran de connexion.
+- [iOS] Déconnecter le VPN et retirer sa configuration à la déconnexion du compte ou à l'effacement
+  du portefeuille, pour que le tunnel ne puisse ni rester ouvert ni revenir à la demande pour un
+  portefeuille qui a quitté l'appareil.
 
 ## [1.1.38] - 2026-09-28
 ### Ajouté

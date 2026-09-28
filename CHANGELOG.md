@@ -45,6 +45,8 @@ Line wrap the file at 100 chars.                                              Th
   other devices hold every connection it is entitled to, instead of showing a plain disconnection.
 - [Android] Disconnect when logging out. The tunnel stayed up after the wallet was erased and kept
   carrying traffic while the app showed the login screen.
+- [iOS] Disconnect and remove the VPN configuration when logging out or erasing the wallet, so the
+  tunnel can neither stay up nor come back on demand for a wallet that left the device.
 
 ## [1.1.38] - 2026-09-28
 ### Added

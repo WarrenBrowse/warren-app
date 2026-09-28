@@ -153,6 +153,77 @@ class TunnelManagerTests: XCTestCase {
         )
     }
 
+    /// Logging out erases the wallet, and a logged-out app keeps no tunnel: the
+    /// VPN configuration goes with it, and On Demand with the configuration, so
+    /// the system cannot bring the tunnel back for a wallet that left. Beta
+    /// 1.1.38 showed the login screen over a tunnel still carrying traffic.
+    func testLoggingOutTakesTheTunnelDownAndRemovesItsConfiguration() async throws {
+        let relaySelector = RelaySelectorStub { _ in
+            try RelaySelectorStub.nonFallible().selectRelays(
+                tunnelSettings: LatestTunnelSettings(),
+                connectionAttemptCount: 0
+            )
+        }
+
+        let tunnelManager = TunnelManager(
+            backgroundTaskProvider: application,
+            tunnelStore: TunnelStore(application: application),
+            relayCacheTracker: relayCacheTracker,
+            apiProxy: apiProxy,
+            relaySelector: relaySelector
+        )
+
+        let simulatorTunnelProviderHost = SimulatorTunnelProviderHost(
+            relaySelector: relaySelector,
+            apiTransportProvider: APITransportProvider(
+                requestFactory: MullvadApiRequestFactory(
+                    apiContext: apiContext,
+                    encoder: REST.Coding.makeJSONEncoder()
+                )
+            )
+        )
+        SimulatorTunnelProvider.shared.delegate = simulatorTunnelProviderHost
+
+        let connectedExpectation = expectation(description: "Connected!")
+        nonisolated(unsafe) var didHandleConnected = false
+        let tunnelObserver = TunnelBlockObserver(
+            didUpdateTunnelStatus: { _, tunnelStatus in
+                guard case .connected = tunnelStatus.state, !didHandleConnected else { return }
+                didHandleConnected = true
+                connectedExpectation.fulfill()
+            }
+        )
+        self.tunnelObserver = tunnelObserver
+        tunnelManager.addObserver(tunnelObserver)
+
+        tunnelManager.setWalletBackedDeviceState(
+            ss58Address: "5Test",
+            publicKeyHex: "00",
+            persist: true
+        )
+        tunnelManager.startTunnel()
+        await fulfillment(of: [connectedExpectation], timeout: .UnitTest.timeout)
+        let configurationsWhileConnected = storedTunnelConfigurationCount()
+
+        await WarrenWalletLogout.perform(tunnelManager: tunnelManager)
+
+        XCTAssertEqual(
+            storedTunnelConfigurationCount(),
+            configurationsWhileConnected - 1,
+            "the VPN configuration, and the On Demand rule it carries, must leave with the wallet"
+        )
+        XCTAssertEqual(tunnelManager.tunnelStatus.state, .disconnected)
+        XCTAssertEqual(tunnelManager.deviceState, .loggedOut)
+    }
+
+    private func storedTunnelConfigurationCount() -> Int {
+        var count = 0
+        SimulatorTunnelProviderManager.loadAllFromPreferences { managers, _ in
+            count = managers?.count ?? 0
+        }
+        return count
+    }
+
     /// This test verifies that a refresh tunnel status operation is scheduled whenever the tunnel is being restarted
     func testReconnectingTunnelRefreshesItsStatus() async throws {
         throw XCTSkip("TODO: Fix this flaky test or relieve it of its misery")
