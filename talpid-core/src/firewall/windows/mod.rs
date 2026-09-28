@@ -247,6 +247,14 @@ impl Firewall {
         apply_result
     }
 
+    /// Blocks Hyper-V guest traffic without touching the WFP policy in force.
+    pub fn block_hyperv(&mut self) {
+        with_wmi_if_enabled(|wmi| {
+            let result = hyperv::add_blocking_hyperv_firewall_rules(wmi);
+            consume_and_log_hyperv_err("Add block-all Hyper-V filter", result);
+        });
+    }
+
     pub fn reset_policy(&mut self) -> Result<(), Error> {
         winfw::reset().map_err(Error::ResettingPolicy)?;
 

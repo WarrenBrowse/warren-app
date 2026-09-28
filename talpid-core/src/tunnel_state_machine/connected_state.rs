@@ -138,6 +138,7 @@ impl ConnectedState {
                 );
             } else {
                 return DisconnectingState::enter(
+                    shared_values,
                     connected_state.tunnel_close_tx,
                     connected_state.tunnel_close_event,
                     AfterDisconnect::Block(ErrorStateCause::IsOffline),
@@ -152,6 +153,7 @@ impl ConnectedState {
 
         if let Err(error) = connected_state.set_firewall_policy(shared_values) {
             DisconnectingState::enter(
+                shared_values,
                 connected_state.tunnel_close_tx,
                 connected_state.tunnel_close_event,
                 AfterDisconnect::Block(ErrorStateCause::SetFirewallPolicyError(error)),
@@ -159,6 +161,7 @@ impl ConnectedState {
         } else if let Err(error) = connected_state.set_dns(shared_values) {
             log::error!("{}", error.display_chain_with_msg("Failed to set DNS"));
             DisconnectingState::enter(
+                shared_values,
                 connected_state.tunnel_close_tx,
                 connected_state.tunnel_close_event,
                 AfterDisconnect::Block(ErrorStateCause::SetDnsError),
@@ -345,6 +348,7 @@ impl ConnectedState {
         Self::reset_routes(shared_values);
 
         EventConsequence::NewState(DisconnectingState::enter(
+            shared_values,
             self.tunnel_close_tx,
             self.tunnel_close_event,
             after_disconnect,

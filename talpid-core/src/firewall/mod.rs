@@ -436,6 +436,12 @@ impl Firewall {
         self.inner.keep_policy_on_drop();
     }
 
+    /// Blocks Hyper-V guests (WSL) outright, leaving the rest of the policy in force as is.
+    #[cfg(windows)]
+    pub fn block_hyperv(&mut self) {
+        self.inner.block_hyperv();
+    }
+
     /// Sets whether the firewall should persist the blocking rules across a reboot.
     #[cfg(target_os = "windows")]
     pub fn persist(&mut self, persist: bool) {

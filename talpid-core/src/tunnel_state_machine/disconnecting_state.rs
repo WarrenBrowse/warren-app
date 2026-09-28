@@ -18,13 +18,21 @@ pub struct DisconnectingState {
 }
 
 impl DisconnectingState {
+    #[cfg_attr(not(windows), expect(unused_variables))]
     pub(super) fn enter(
+        shared_values: &mut SharedTunnelStateValues,
         tunnel_close_tx: oneshot::Sender<()>,
         tunnel_close_event: TunnelCloseEvent,
         after_disconnect: AfterDisconnect,
     ) -> (Box<dyn TunnelState>, TunnelStateTransition) {
         let _ = tunnel_close_tx.send(());
         let action_after_disconnect = after_disconnect.action();
+
+        // The connected policy lets Hyper-V guests (WSL) out through the host's tunnel, and WFP
+        // does not see their traffic. Once the tunnel goes away they would leave through the
+        // physical interface until the next state applies its policy.
+        #[cfg(windows)]
+        shared_values.firewall.block_hyperv();
 
         (
             Box::new(DisconnectingState {
