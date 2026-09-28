@@ -23,6 +23,15 @@ const notifyLanSettings = async (allowLan: boolean, lanNetworks: ILanNetworks) =
   await util.ipc.settings[''].notify({ ...getDefaultSettings(), allowLan, lanNetworks });
 };
 
+const sharedNetworksTrigger = () => page.getByRole('button', { name: 'Shared networks' });
+
+const expandSharedNetworks = async () => {
+  const trigger = sharedNetworksTrigger();
+  if ((await trigger.getAttribute('aria-expanded')) !== 'true') {
+    await trigger.click();
+  }
+};
+
 test.describe('Local network sharing networks', () => {
   test.beforeAll(async () => {
     ({ page, util } = await startMockedApp());
@@ -36,17 +45,26 @@ test.describe('Local network sharing networks', () => {
     await util?.closePage();
   });
 
-  test('lists the shared networks only while sharing is on', async () => {
+  test('folds the shared networks behind a summary while sharing is on', async () => {
     await notifyLanSettings(false, { networks: DEFAULT_NETWORKS, custom: false });
-    await expect(page.getByText('Add a network')).not.toBeVisible();
+    await expect(sharedNetworksTrigger()).not.toBeVisible();
 
     await notifyLanSettings(true, { networks: DEFAULT_NETWORKS, custom: false });
+    await expect(sharedNetworksTrigger()).toBeVisible();
+    await expect(sharedNetworksTrigger()).toContainText('6 networks');
+    await expect(page.getByText('192.168.0.0/16')).not.toBeVisible();
+
+    await sharedNetworksTrigger().click();
     await expect(page.getByText('192.168.0.0/16')).toBeVisible();
     await expect(page.getByText('Reset to default')).not.toBeVisible();
+
+    await sharedNetworksTrigger().click();
+    await expect(page.getByText('192.168.0.0/16')).not.toBeVisible();
   });
 
   test('adds a network to the current list', async () => {
     await notifyLanSettings(true, { networks: DEFAULT_NETWORKS, custom: false });
+    await expandSharedNetworks();
     await page.getByText('Add a network').click();
     await page.getByPlaceholder('Enter a network, e.g. 192.168.1.0/24').fill('400::/7');
 
@@ -59,6 +77,7 @@ test.describe('Local network sharing networks', () => {
 
   test('refuses a network too broad to be local without asking the daemon', async () => {
     await notifyLanSettings(true, { networks: DEFAULT_NETWORKS, custom: false });
+    await expandSharedNetworks();
     await page.getByText('Add a network').click();
     await page.getByPlaceholder('Enter a network, e.g. 192.168.1.0/24').fill('0.0.0.0/0');
     await page.keyboard.press('Enter');
@@ -72,6 +91,7 @@ test.describe('Local network sharing networks', () => {
   test('removes a network and resets a custom list', async () => {
     const custom = [...DEFAULT_NETWORKS, '400::/7'];
     await notifyLanSettings(true, { networks: custom, custom: true });
+    await expandSharedNetworks();
 
     const [removed] = await Promise.all([
       util.ipc.settings.setLanNetworks.expect(),

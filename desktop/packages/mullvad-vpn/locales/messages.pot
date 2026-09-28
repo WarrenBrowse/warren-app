@@ -4126,6 +4126,12 @@ msgctxt "user-interface-settings-view"
 msgid "User interface settings"
 msgstr ""
 
+msgctxt "vpn-settings-view"
+msgid "%(count)d network"
+msgid_plural "%(count)d networks"
+msgstr[0] ""
+msgstr[1] ""
+
 #. Value shown for the bandwidth limit in beta builds.
 #. Available placeholders:
 #. %(mbps)d - the bandwidth cap in Mbps
@@ -4381,6 +4387,12 @@ msgstr ""
 
 msgctxt "vpn-settings-view"
 msgid "Set only when the exit runs a public TLS certificate (X.509 mode). Leave empty for the default raw-key mode."
+msgstr ""
+
+#. Folded row under "Local network sharing" that unfolds the list
+#. of networks reachable outside the tunnel.
+msgctxt "vpn-settings-view"
+msgid "Shared networks"
 msgstr ""
 
 #. Label for settings that enables block of social media.

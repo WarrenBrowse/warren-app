@@ -1,4 +1,5 @@
 import React, { useCallback, useState } from 'react';
+import { sprintf } from 'sprintf-js';
 import styled from 'styled-components';
 
 import { messages } from '../../../../../shared/gettext';
@@ -11,7 +12,7 @@ import { SettingsAccordion } from '../../../../components/settings-accordion';
 import { SettingsListItem } from '../../../../components/settings-list-item';
 import { IconButton } from '../../../../lib/components';
 import { AccordionProps } from '../../../../lib/components/accordion';
-import { ListItemProps } from '../../../../lib/components/list-item';
+import { ListItem, ListItemProps } from '../../../../lib/components/list-item';
 import { spacings } from '../../../../lib/foundations';
 import { useBoolean, useStyledRef } from '../../../../lib/utility-hooks';
 import { useAllowLan, useLanNetworks } from '../../hooks';
@@ -144,60 +145,62 @@ export function AllowLanSetting({ position, ...props }: AllowLanSettingProps) {
 
         {customisable && (
           <SettingsAccordion.Content>
-            <Cell.Section role="listbox">
-              <List items={lanNetworks.networks} getKey={stringValueAsKey} skipAddTransition>
-                {(network) => <NetworkItem network={network} onRemove={onRemove} />}
-              </List>
-            </Cell.Section>
+            <SharedNetworks count={lanNetworks.networks.length}>
+              <Cell.Section role="listbox">
+                <List items={lanNetworks.networks} getKey={stringValueAsKey} skipAddTransition>
+                  {(network) => <NetworkItem network={network} onRemove={onRemove} />}
+                </List>
+              </Cell.Section>
 
-            {inputVisible && (
-              <div ref={inputContainerRef}>
-                <Cell.RowInput
-                  placeholder={
-                    // TRANSLATORS: Placeholder of the field where the user types a network to share
-                    // TRANSLATORS: outside the tunnel, in CIDR notation.
-                    messages.pgettext('vpn-settings-view', 'Enter a network, e.g. 192.168.1.0/24')
-                  }
-                  onSubmit={onAdd}
-                  onChange={onInputChange}
-                  onBlur={onInputBlur}
-                  invalid={addError !== undefined}
-                  paddingLeft={32}
-                  autofocus
-                />
-              </div>
-            )}
-
-            <StyledActionContainer>
-              <StyledActionButton onClick={showInput} disabled={inputVisible} tabIndex={-1}>
-                <StyledLabel tabIndex={-1}>
-                  {messages.pgettext('vpn-settings-view', 'Add a network')}
-                </StyledLabel>
-              </StyledActionButton>
-              <IconButton variant="secondary" onClick={showInput}>
-                <IconButton.Icon icon="add-circle" />
-              </IconButton>
-            </StyledActionContainer>
-
-            {lanNetworks.custom && (
-              <StyledActionContainer>
-                <StyledActionButton onClick={onReset} tabIndex={-1}>
-                  <StyledLabel tabIndex={-1}>
-                    {
-                      // TRANSLATORS: Restores the list of networks shared outside the tunnel
-                      // TRANSLATORS: to the built-in private IP ranges.
-                      messages.pgettext('vpn-settings-view', 'Reset to default')
+              {inputVisible && (
+                <div ref={inputContainerRef}>
+                  <Cell.RowInput
+                    placeholder={
+                      // TRANSLATORS: Placeholder of the field where the user types a network to share
+                      // TRANSLATORS: outside the tunnel, in CIDR notation.
+                      messages.pgettext('vpn-settings-view', 'Enter a network, e.g. 192.168.1.0/24')
                     }
+                    onSubmit={onAdd}
+                    onChange={onInputChange}
+                    onBlur={onInputBlur}
+                    invalid={addError !== undefined}
+                    paddingLeft={32}
+                    autofocus
+                  />
+                </div>
+              )}
+
+              <StyledActionContainer>
+                <StyledActionButton onClick={showInput} disabled={inputVisible} tabIndex={-1}>
+                  <StyledLabel tabIndex={-1}>
+                    {messages.pgettext('vpn-settings-view', 'Add a network')}
                   </StyledLabel>
                 </StyledActionButton>
-                <IconButton
-                  variant="secondary"
-                  onClick={onReset}
-                  aria-label={messages.pgettext('vpn-settings-view', 'Reset to default')}>
-                  <IconButton.Icon icon="history-remove" />
+                <IconButton variant="secondary" onClick={showInput}>
+                  <IconButton.Icon icon="add-circle" />
                 </IconButton>
               </StyledActionContainer>
-            )}
+
+              {lanNetworks.custom && (
+                <StyledActionContainer>
+                  <StyledActionButton onClick={onReset} tabIndex={-1}>
+                    <StyledLabel tabIndex={-1}>
+                      {
+                        // TRANSLATORS: Restores the list of networks shared outside the tunnel
+                        // TRANSLATORS: to the built-in private IP ranges.
+                        messages.pgettext('vpn-settings-view', 'Reset to default')
+                      }
+                    </StyledLabel>
+                  </StyledActionButton>
+                  <IconButton
+                    variant="secondary"
+                    onClick={onReset}
+                    aria-label={messages.pgettext('vpn-settings-view', 'Reset to default')}>
+                    <IconButton.Icon icon="history-remove" />
+                  </IconButton>
+                </StyledActionContainer>
+              )}
+            </SharedNetworks>
           </SettingsAccordion.Content>
         )}
 
@@ -213,6 +216,50 @@ export function AllowLanSetting({ position, ...props }: AllowLanSettingProps) {
             </SettingsListItem.Footer.Text>
           </SettingsListItem.Footer>
         )}
+      </SettingsAccordion.Container>
+    </SettingsAccordion>
+  );
+}
+
+interface SharedNetworksProps {
+  count: number;
+  children: React.ReactNode;
+}
+
+// The list stays folded by default: the ranges rarely change, and unfolded they push the rest
+// of the VPN settings a full screen down.
+function SharedNetworks({ count, children }: SharedNetworksProps) {
+  return (
+    <SettingsAccordion accordionId="allow-lan-networks">
+      <SettingsAccordion.Container>
+        <SettingsAccordion.Header level={1} position="last">
+          <SettingsAccordion.Header.AccordionTrigger>
+            <SettingsAccordion.Header.Item>
+              <SettingsAccordion.Header.Item.Title>
+                {
+                  // TRANSLATORS: Folded row under "Local network sharing" that unfolds the list
+                  // TRANSLATORS: of networks reachable outside the tunnel.
+                  messages.pgettext('vpn-settings-view', 'Shared networks')
+                }
+              </SettingsAccordion.Header.Item.Title>
+              <SettingsAccordion.Header.Item.ActionGroup>
+                <ListItem.Item.Text>
+                  {sprintf(
+                    messages.npgettext(
+                      'vpn-settings-view',
+                      '%(count)d network',
+                      '%(count)d networks',
+                      count,
+                    ),
+                    { count },
+                  )}
+                </ListItem.Item.Text>
+                <SettingsAccordion.Header.Item.Chevron />
+              </SettingsAccordion.Header.Item.ActionGroup>
+            </SettingsAccordion.Header.Item>
+          </SettingsAccordion.Header.AccordionTrigger>
+        </SettingsAccordion.Header>
+        <SettingsAccordion.Content>{children}</SettingsAccordion.Content>
       </SettingsAccordion.Container>
     </SettingsAccordion>
   );
