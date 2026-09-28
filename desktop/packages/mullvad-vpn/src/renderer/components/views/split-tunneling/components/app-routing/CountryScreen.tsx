@@ -210,10 +210,14 @@ export function CountryScreen() {
     [],
   );
 
+  // A second pick before the daemon answers would plan from a stale state.
+  const busy = React.useRef(false);
   const select = React.useCallback(
     async (exit: ExitChoice) => {
-      if (target === undefined) return;
+      if (target === undefined || busy.current) return;
+      busy.current = true;
       await setAppRoute(target, { kind: 'country', exit });
+      busy.current = false;
       // A picked program is resolved to another id by the main process.
       if (typeof target.application === 'string') {
         showList();

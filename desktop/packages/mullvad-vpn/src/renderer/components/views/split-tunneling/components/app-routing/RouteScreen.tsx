@@ -230,13 +230,18 @@ export function RouteScreen() {
   const { setAppRoute } = useRoutingActions();
   const availability = useSplitModeAvailability();
   const exitNames = useExitChoiceNames();
+  // The options wait for the daemon's answer: a second choice planned from
+  // the state the first one is changing could undo half of it.
   const [busy, setBusy] = React.useState(false);
+  const pending = React.useRef(false);
 
   const choose = React.useCallback(
     async (route: AppRoute, leave = false) => {
-      if (target === undefined) return;
+      if (target === undefined || pending.current) return;
+      pending.current = true;
       setBusy(true);
       await setAppRoute(target, route);
+      pending.current = false;
       setBusy(false);
       // A picked program is resolved by the main process to the id the
       // daemon keys, which this screen cannot follow.

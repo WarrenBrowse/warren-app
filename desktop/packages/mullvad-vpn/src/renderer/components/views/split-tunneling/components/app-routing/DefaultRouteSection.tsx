@@ -120,16 +120,20 @@ export function DefaultRouteSection() {
   const note = current === 'direct' ? undefined : outsideUnavailableNote(availability, platform);
   const titleId = React.useId();
 
+  // One switch at a time: a second click before the daemon answers would plan
+  // from the state the first one is changing.
+  const pending = React.useRef(false);
   const choose = React.useCallback(
-    (route: DefaultRoute) => {
-      if (route !== current) {
-        void setDefaultRoute(route);
-      }
+    async (route: DefaultRoute) => {
+      if (route === current || pending.current) return;
+      pending.current = true;
+      await setDefaultRoute(route);
+      pending.current = false;
     },
     [current, setDefaultRoute],
   );
-  const chooseVpn = React.useCallback(() => choose('vpn'), [choose]);
-  const chooseOutside = React.useCallback(() => choose('direct'), [choose]);
+  const chooseVpn = React.useCallback(() => void choose('vpn'), [choose]);
+  const chooseOutside = React.useCallback(() => void choose('direct'), [choose]);
 
   return (
     <StyledSection>
