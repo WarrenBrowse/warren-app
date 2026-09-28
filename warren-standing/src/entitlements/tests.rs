@@ -338,6 +338,31 @@ async fn the_batch_is_topped_up_on_the_ten_minute_cadence_and_not_before() {
 }
 
 #[tokio::test(start_paused = true)]
+async fn no_refresh_reaches_the_issuer_while_the_account_is_logged_out() {
+    let issuer = FakeIssuer::new(&[100]);
+    let (_t, now) = clock(NOW);
+    let (activity, gate) = tokio::sync::watch::channel(false);
+    let mint = EntitlementMint::new(now).with_activity(gate);
+    let source = mint.slot_source([1; 32], key(), || client(&issuer));
+
+    tokio::time::advance(Duration::from_secs(3 * 600)).await;
+    tokio::task::yield_now().await;
+    assert_eq!(
+        issuer.issue_calls(),
+        0,
+        "no issuance for a logged-out wallet"
+    );
+    assert!(source.credential(0).is_none());
+
+    activity.send(true).unwrap();
+    wait_for(|| issuer.issue_calls() >= 1).await;
+    assert!(
+        source.credential(0).is_some(),
+        "a login stocks the batch without waiting for the next tick"
+    );
+}
+
+#[tokio::test(start_paused = true)]
 async fn the_issuers_ban_refusal_reaches_the_standing_of_the_wallet_it_refused() {
     let issuer = FakeIssuer::new(&[100]);
     issuer.0.ban_wallet.store(true, Ordering::SeqCst);

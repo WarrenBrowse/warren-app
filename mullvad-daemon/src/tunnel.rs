@@ -267,6 +267,10 @@ struct InnerParametersGenerator {
     /// Where the token and entitlement refresh tasks report an issuer that
     /// refused the wallet as banned. Set once at boot.
     warren_standing: Option<crate::warren_account_standing::StandingMonitor>,
+    /// Whether the wallet's credential refresh may run: off while no account
+    /// is logged in. Captured by the token and entitlement managers the first
+    /// time a wallet is seen, so it is wired at boot, before any tunnel.
+    warren_wallet_activity: crate::warren_wallet_activity::WalletActivity,
     /// The API server keys the daemon pins, which alone may vouch for the
     /// route KEM key of the token directory (warren-core doc 107 section
     /// 6.5), and where the last signed block is kept. Fixed at construction,
@@ -461,6 +465,7 @@ impl ParametersGenerator {
             warren_api_url,
             warren_api_transport: None,
             warren_standing: None,
+            warren_wallet_activity: crate::warren_wallet_activity::WalletActivity::new(true),
             warren_route_kem_trust,
             warren_pinned_exit_pubkeys: mullvad_types::settings::WarrenPinnedExitPubkeys::default(),
             warren_pin_update_tx: None,
@@ -527,6 +532,15 @@ impl ParametersGenerator {
         tx: Option<tokio::sync::mpsc::UnboundedSender<WarrenPinUpdate>>,
     ) {
         self.0.lock().await.warren_pin_update_tx = tx;
+    }
+
+    /// Wire the switch the credential refresh tasks wait on while no account
+    /// is logged in. Called once at boot.
+    pub async fn set_warren_wallet_activity(
+        &self,
+        activity: crate::warren_wallet_activity::WalletActivity,
+    ) {
+        self.0.lock().await.warren_wallet_activity = activity;
     }
 
     /// Wire the account standing monitor the credential refresh tasks report
@@ -1116,23 +1130,27 @@ impl ParametersGenerator {
             // anchors and its routes need no token each where it is offered,
             // under a key one of the daemon's pinned server keys signed.
             let route_kem_trust = &inner.warren_route_kem_trust;
+            let activity = &inner.warren_wallet_activity;
             params.session_tokens = Some(crate::warren_token_provider::source_for(
                 api_url,
                 seed,
                 inner.warren_standing.as_ref(),
                 route_kem_trust,
+                activity,
             ));
             params.route_admission = Some(crate::warren_token_provider::route_admission_for(
                 api_url,
                 seed,
                 inner.warren_standing.as_ref(),
                 route_kem_trust,
+                activity,
             ));
             params.credentials = Some(crate::warren_token_provider::credentials_for(
                 api_url,
                 seed,
                 inner.warren_standing.as_ref(),
                 route_kem_trust,
+                activity,
             ));
             // Port entitlements ride the same wallet and the same coarse
             // refresh. The exit refuses a Map request without one (warren-core
@@ -1141,6 +1159,7 @@ impl ParametersGenerator {
                 api_url,
                 seed,
                 inner.warren_standing.as_ref(),
+                activity,
             ));
         }
         // TOFU pubkey-pinning verify hook,

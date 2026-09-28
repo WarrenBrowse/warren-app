@@ -54,6 +54,10 @@ par l'application, gardez-le tel quel.
   et en donner la raison dans l'application et la CLI, avec le jour où la révocation prend fin. Tant
   que l'accès était révoqué, une tentative de connexion bloquait tout le trafic jusqu'à la
   déconnexion. La connexion redevient possible dès la fin de la révocation.
+- [Windows, macOS, Linux] Ne plus demander aux serveurs de jetons de connexion, d'autorisations de
+  port forwarding, l'état du compte ni les codes de campagne quand aucun compte n'est connecté.
+  Après `warren account logout`, qui conserve la phrase de récupération, ces requêtes continuaient
+  en arrière-plan. Elles reprennent à la connexion suivante.
 
 ## [1.1.38] - 2026-09-28
 ### Ajouté

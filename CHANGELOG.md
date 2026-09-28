@@ -57,6 +57,10 @@ Line wrap the file at 100 chars.                                              Th
   revoked, and say why in the app and the CLI, with the day the revocation ends. While access was
   revoked, a connect blocked all traffic until the user disconnected. Connecting works again as soon
   as the revocation ends.
+- [Windows, macOS, Linux] Stop asking the servers for connection tokens, port entitlements, the
+  account standing and campaign codes while no account is logged in. After `warren account logout`,
+  which keeps the recovery phrase, these requests went on in the background. They resume at the next
+  login.
 
 ## [1.1.38] - 2026-09-28
 ### Added

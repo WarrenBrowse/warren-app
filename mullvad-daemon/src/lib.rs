@@ -148,6 +148,7 @@ mod warren_token_provider;
 /// Assembles a complete `talpid_warren_tunnel::WarrenTunnelParameters`
 /// from the relay selector + signing_key + config-side constants.
 pub mod warren_tunnel_params;
+mod warren_wallet_activity;
 
 use crate::{
     relay_list::parsed_relays::parse_relays_from_file, target_state::PersistentTargetState,
@@ -1252,6 +1253,9 @@ pub struct Daemon {
     /// Whether an account is logged in, as far as the tunnel is concerned,
     /// and the logout waiting on a teardown.
     warren_session: warren_session_gate::SessionGate<ResponseTx<(), Error>>,
+    /// Lets the API work tied to the wallet run while an account is logged
+    /// in, and parks it otherwise. Follows `warren_session`.
+    warren_wallet_activity: warren_wallet_activity::WalletActivity,
 }
 pub struct DaemonConfig {
     pub log_dir: Option<PathBuf>,
@@ -1573,6 +1577,9 @@ impl Daemon {
         } else {
             warren_session_gate::Login::from(&data)
         };
+        let warren_wallet_activity = warren_wallet_activity::WalletActivity::new(
+            boot_login == warren_session_gate::Login::LoggedIn,
+        );
 
         let account_history = account_history::AccountHistory::new(
             &config.settings_dir,
@@ -2248,6 +2255,7 @@ impl Daemon {
                 warren_server_pubkey.clone(),
                 Some(mullvad_version::VERSION.to_owned()),
                 voucher_source,
+                warren_wallet_activity.clone(),
                 move |announcements| announcements_status.set_announcements(announcements),
             );
         }
@@ -2266,8 +2274,12 @@ impl Daemon {
                 std::sync::Arc::new(move |update| {
                     let _ = standing_tx.send(InternalDaemonEvent::WarrenAccountStanding(update));
                 }),
+                warren_wallet_activity.clone(),
             )
         });
+        parameters_generator
+            .set_warren_wallet_activity(warren_wallet_activity.clone())
+            .await;
         if let Some(monitor) = &warren_standing_monitor {
             let _ = warren_standing_slot.set(monitor.clone());
             parameters_generator
@@ -2499,6 +2511,7 @@ impl Daemon {
             app_route_reports_tunnel: 0,
             app_routes_published: Vec::new(),
             warren_session: warren_session_gate::SessionGate::new(boot_login),
+            warren_wallet_activity,
         };
 
         // Cross-environment arbitration: watch every OTHER product
@@ -3579,6 +3592,8 @@ impl Daemon {
     async fn handle_device_event(&mut self, event: AccountEvent) {
         if let AccountEvent::Device(device_event) = &event {
             self.warren_session.observe_device_event(device_event);
+            self.warren_wallet_activity
+                .set(self.warren_session.logged_in());
         }
         match &event {
             AccountEvent::Device(PrivateDeviceEvent::Login(pubkey)) => {
@@ -4671,6 +4686,7 @@ impl Daemon {
         });
         if logout_result.is_ok() {
             self.warren_session.logged_out_now();
+            self.warren_wallet_activity.set(false);
         }
 
         let result = match logout_result {

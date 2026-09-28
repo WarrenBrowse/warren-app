@@ -50,6 +50,10 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   revocat și spune de ce în aplicație și în CLI, cu ziua în care se încheie revocarea. Cât timp
   accesul era revocat, o încercare de conectare bloca tot traficul până la deconectare. Conectarea
   redevine posibilă imediat ce revocarea se încheie.
+- [Windows, macOS, Linux] Aplicația nu mai cere serverelor jetoane de conectare, autorizări de port
+  forwarding, starea contului sau coduri de campanie cât timp niciun cont nu este autentificat. După
+  `warren account logout`, care păstrează fraza de recuperare, aceste cereri continuau în fundal.
+  Ele se reiau la următoarea autentificare.
 
 ## [1.1.38] - 2026-09-28
 ### Adăugat

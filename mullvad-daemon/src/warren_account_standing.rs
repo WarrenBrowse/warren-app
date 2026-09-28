@@ -23,6 +23,8 @@ use tokio::sync::{mpsc, oneshot};
 use warren_api::{AccountStandingResponse, ClientError};
 use warren_standing::{Ban, Standing, StandingTracker, StandingUpdate, StrikeLedger};
 
+use crate::warren_wallet_activity::WalletActivity;
+
 /// How often the standing is asked for: the token refresh cadence, so the
 /// request pattern the API sees stays the one it already sees.
 pub(crate) const POLL_INTERVAL: Duration = Duration::from_secs(600);
@@ -83,6 +85,9 @@ pub enum FetchError {
     /// The monitor task is gone (daemon shutting down).
     #[error("the account standing monitor has stopped")]
     Stopped,
+    /// No account is logged in, so the standing is not asked for.
+    #[error("no account is logged in on this device")]
+    LoggedOut,
 }
 
 enum Command {
@@ -103,14 +108,24 @@ pub(crate) struct StandingMonitor {
 impl StandingMonitor {
     /// Starts the monitor. `on_update` runs on the monitor task for every
     /// change; `cache_dir` holds the strike ledger (`None` keeps it in memory).
+    /// Nothing is asked of the API while `activity` is off, and the standing
+    /// is asked for as soon as it comes back on.
     pub(crate) fn spawn(
         source: Arc<dyn StandingSource>,
         cache_dir: Option<PathBuf>,
         on_update: Arc<dyn Fn(StandingUpdate) + Send + Sync>,
+        activity: WalletActivity,
     ) -> Self {
         let (tx, rx) = mpsc::unbounded_channel();
         let ledger_path = cache_dir.map(|dir| dir.join(LEDGER_FILE));
-        tokio::spawn(run(source, ledger_path, tx.clone(), rx, on_update));
+        tokio::spawn(run(
+            source,
+            ledger_path,
+            tx.clone(),
+            rx,
+            on_update,
+            activity,
+        ));
         Self { tx }
     }
 
@@ -155,6 +170,7 @@ async fn run(
     tx: mpsc::UnboundedSender<Command>,
     mut rx: mpsc::UnboundedReceiver<Command>,
     on_update: Arc<dyn Fn(StandingUpdate) + Send + Sync>,
+    activity: WalletActivity,
 ) {
     let ledger = ledger_path.as_deref().map(load_ledger).unwrap_or_default();
     let mut monitor = Monitor {
@@ -166,10 +182,19 @@ async fn run(
     };
     let mut tick = tokio::time::interval(POLL_INTERVAL);
     tick.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Delay);
+    let mut activity_changes = activity.subscribe();
     loop {
         tokio::select! {
             _ = tick.tick() => {
-                let _ = monitor.poll().await;
+                if activity.is_active() {
+                    let _ = monitor.poll().await;
+                }
+            }
+            // The sender lives in `activity`, so this only ends on a change.
+            Ok(()) = activity_changes.changed() => {
+                if *activity_changes.borrow_and_update() {
+                    let _ = monitor.poll().await;
+                }
             }
             command = rx.recv() => match command {
                 None => return,
@@ -177,12 +202,14 @@ async fn run(
                     let recent = monitor
                         .last_poll
                         .is_some_and(|at| at.elapsed() < MIN_POKE_GAP);
-                    if !recent {
+                    if !recent && activity.is_active() {
                         let _ = monitor.poll().await;
                     }
                 }
                 Some(Command::Poll) => {
-                    let _ = monitor.poll().await;
+                    if activity.is_active() {
+                        let _ = monitor.poll().await;
+                    }
                 }
                 Some(Command::WalletChanged) => {
                     monitor.forget_wallet();
@@ -194,7 +221,12 @@ async fn run(
                 }
                 Some(Command::IssuanceBan { wallet, ban }) => monitor.issuance_ban(&wallet, ban),
                 Some(Command::FetchNow(reply)) => {
-                    let _ = reply.send(monitor.poll().await);
+                    let answer = if activity.is_active() {
+                        monitor.poll().await
+                    } else {
+                        Err(FetchError::LoggedOut)
+                    };
+                    let _ = reply.send(answer);
                 }
             },
         }
@@ -454,7 +486,8 @@ mod tests {
     async fn the_standing_is_polled_at_start_and_on_the_interval() {
         let source = FakeSource::new(answer(&[]));
         let (_updates, sink) = collector();
-        let _monitor = StandingMonitor::spawn(source.clone(), None, sink);
+        let _monitor =
+            StandingMonitor::spawn(source.clone(), None, sink, WalletActivity::new(true));
         settle().await;
         assert_eq!(source.fetches(), 1, "the first poll runs at start");
 
@@ -471,7 +504,7 @@ mod tests {
     async fn a_connect_polls_unless_the_last_poll_is_recent() {
         let source = FakeSource::new(answer(&[]));
         let (_updates, sink) = collector();
-        let monitor = StandingMonitor::spawn(source.clone(), None, sink);
+        let monitor = StandingMonitor::spawn(source.clone(), None, sink, WalletActivity::new(true));
         settle().await;
 
         monitor.poke();
@@ -489,7 +522,7 @@ mod tests {
         let source = FakeSource::new(answer(&[]));
         *source.answer.lock().unwrap() = Err(503);
         let (updates, sink) = collector();
-        let monitor = StandingMonitor::spawn(source.clone(), None, sink);
+        let monitor = StandingMonitor::spawn(source.clone(), None, sink, WalletActivity::new(true));
         settle().await;
 
         monitor.report_issuance_ban(WALLET.to_owned(), ban());
@@ -503,7 +536,7 @@ mod tests {
     async fn an_issuance_ban_of_another_wallet_is_ignored() {
         let source = FakeSource::new(answer(&[]));
         let (updates, sink) = collector();
-        let monitor = StandingMonitor::spawn(source.clone(), None, sink);
+        let monitor = StandingMonitor::spawn(source.clone(), None, sink, WalletActivity::new(true));
         settle().await;
         let before = updates.lock().unwrap().len();
 
@@ -580,7 +613,7 @@ mod tests {
         let source = FakeSource::new(answer(&[]));
         *source.answer.lock().unwrap() = Err(503);
         let (updates, sink) = collector();
-        let monitor = StandingMonitor::spawn(source.clone(), None, sink);
+        let monitor = StandingMonitor::spawn(source.clone(), None, sink, WalletActivity::new(true));
         settle().await;
         let refusal = warren_api::TokenClientError::Api(ClientError::Banned {
             reason_code: BanReasonCode::PortForwardingAbuse,
@@ -604,7 +637,7 @@ mod tests {
     async fn any_other_refresh_failure_is_not_reported() {
         let source = FakeSource::new(answer(&[]));
         let (updates, sink) = collector();
-        let monitor = StandingMonitor::spawn(source.clone(), None, sink);
+        let monitor = StandingMonitor::spawn(source.clone(), None, sink, WalletActivity::new(true));
         settle().await;
         let before = updates.lock().unwrap().len();
 
@@ -619,10 +652,53 @@ mod tests {
     }
 
     #[tokio::test(start_paused = true)]
+    async fn nothing_is_asked_of_the_api_while_logged_out() {
+        let source = FakeSource::new(answer(&[]));
+        let (_updates, sink) = collector();
+        let activity = WalletActivity::new(false);
+        let monitor = StandingMonitor::spawn(source.clone(), None, sink, activity);
+
+        settle().await;
+        monitor.poke();
+        monitor.wallet_changed();
+        tokio::time::advance(POLL_INTERVAL * 3).await;
+        settle().await;
+
+        assert_eq!(source.fetches(), 0);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_login_asks_for_the_standing_at_once() {
+        let source = FakeSource::new(answer(&[]));
+        let (_updates, sink) = collector();
+        let activity = WalletActivity::new(false);
+        let _monitor = StandingMonitor::spawn(source.clone(), None, sink, activity.clone());
+        settle().await;
+
+        activity.set(true);
+        settle().await;
+
+        assert_eq!(source.fetches(), 1);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn fetch_now_refuses_while_logged_out() {
+        let source = FakeSource::new(answer(&["PF-1"]));
+        let (_updates, sink) = collector();
+        let monitor =
+            StandingMonitor::spawn(source.clone(), None, sink, WalletActivity::new(false));
+
+        let answer = monitor.fetch_now().await;
+
+        assert!(matches!(answer, Err(FetchError::LoggedOut)), "{answer:?}");
+        assert_eq!(source.fetches(), 0);
+    }
+
+    #[tokio::test(start_paused = true)]
     async fn fetch_now_answers_the_standing() {
         let source = FakeSource::new(answer(&["PF-1"]));
         let (_updates, sink) = collector();
-        let monitor = StandingMonitor::spawn(source.clone(), None, sink);
+        let monitor = StandingMonitor::spawn(source.clone(), None, sink, WalletActivity::new(true));
 
         let standing = monitor.fetch_now().await.expect("the API answered");
 
@@ -634,7 +710,7 @@ mod tests {
         let source = FakeSource::new(answer(&[]));
         *source.answer.lock().unwrap() = Err(503);
         let (_updates, sink) = collector();
-        let monitor = StandingMonitor::spawn(source.clone(), None, sink);
+        let monitor = StandingMonitor::spawn(source.clone(), None, sink, WalletActivity::new(true));
 
         assert!(matches!(
             monitor.fetch_now().await,
@@ -649,7 +725,7 @@ mod tests {
     async fn without_a_wallet_nothing_is_fetched_and_the_standing_is_forgotten() {
         let source = FakeSource::new(answer(&[]));
         let (updates, sink) = collector();
-        let monitor = StandingMonitor::spawn(source.clone(), None, sink);
+        let monitor = StandingMonitor::spawn(source.clone(), None, sink, WalletActivity::new(true));
         settle().await;
         *source.wallet.lock().unwrap() = None;
 
@@ -665,7 +741,7 @@ mod tests {
     async fn a_wallet_change_forgets_the_standing_then_asks_for_the_new_one() {
         let source = FakeSource::new(answer(&["PF-1"]));
         let (updates, sink) = collector();
-        let monitor = StandingMonitor::spawn(source.clone(), None, sink);
+        let monitor = StandingMonitor::spawn(source.clone(), None, sink, WalletActivity::new(true));
         settle().await;
         *source.wallet.lock().unwrap() = Some("wallet-b".to_owned());
 
@@ -688,7 +764,12 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let source = FakeSource::new(answer(&["PF-1"]));
         let (_updates, sink) = collector();
-        let _monitor = StandingMonitor::spawn(source.clone(), Some(dir.path().to_owned()), sink);
+        let _monitor = StandingMonitor::spawn(
+            source.clone(),
+            Some(dir.path().to_owned()),
+            sink,
+            WalletActivity::new(true),
+        );
         settle().await;
 
         let mode = std::fs::metadata(dir.path().join(LEDGER_FILE))
@@ -704,12 +785,22 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let source = FakeSource::new(answer(&["PF-2026-0001"]));
         let (first_updates, sink) = collector();
-        let _first = StandingMonitor::spawn(source.clone(), Some(dir.path().to_owned()), sink);
+        let _first = StandingMonitor::spawn(
+            source.clone(),
+            Some(dir.path().to_owned()),
+            sink,
+            WalletActivity::new(true),
+        );
         settle().await;
         assert_eq!(announced(&first_updates), ["PF-2026-0001"]);
 
         let (second_updates, sink) = collector();
-        let _second = StandingMonitor::spawn(source.clone(), Some(dir.path().to_owned()), sink);
+        let _second = StandingMonitor::spawn(
+            source.clone(),
+            Some(dir.path().to_owned()),
+            sink,
+            WalletActivity::new(true),
+        );
         settle().await;
 
         assert!(announced(&second_updates).is_empty());

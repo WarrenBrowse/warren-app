@@ -148,6 +148,7 @@ pub struct EntitlementMint<T> {
     managers: Mutex<HashMap<[u8; 32], Arc<MintedSlots<T>>>>,
     ban_sink: Option<BanSink>,
     runtime: Option<tokio::runtime::Handle>,
+    activity: Option<tokio::sync::watch::Receiver<bool>>,
 }
 
 impl<T: HttpTransport + 'static> EntitlementMint<T> {
@@ -157,6 +158,7 @@ impl<T: HttpTransport + 'static> EntitlementMint<T> {
             managers: Mutex::new(HashMap::new()),
             ban_sink: None,
             runtime: None,
+            activity: None,
         }
     }
 
@@ -165,6 +167,17 @@ impl<T: HttpTransport + 'static> EntitlementMint<T> {
     #[must_use]
     pub fn with_ban_sink(mut self, sink: BanSink) -> Self {
         self.ban_sink = Some(sink);
+        self
+    }
+
+    /// Refreshes only while `activity` reads `true`, and holds each refresh
+    /// back while it reads `false`: a client whose account logged out, with
+    /// the wallet still loaded, must not keep asking the issuer for it. A
+    /// refresh held back runs as soon as `activity` reads `true` again. With
+    /// no `activity`, or once its sender is gone, the refresh always runs.
+    #[must_use]
+    pub fn with_activity(mut self, activity: tokio::sync::watch::Receiver<bool>) -> Self {
+        self.activity = Some(activity);
         self
     }
 
@@ -227,6 +240,7 @@ impl<T: HttpTransport + 'static> EntitlementMint<T> {
                     self.now.clone(),
                     wallet_pubkey,
                     self.ban_sink.clone(),
+                    self.activity.clone(),
                 );
                 match &self.runtime {
                     Some(runtime) => {
@@ -255,10 +269,19 @@ async fn refresh_forever<T: HttpTransport + 'static>(
     now: NowFn,
     wallet_pubkey: [u8; 32],
     ban_sink: Option<BanSink>,
+    mut activity: Option<tokio::sync::watch::Receiver<bool>>,
 ) {
     let mut tick = tokio::time::interval(REFRESH_INTERVAL);
     loop {
         tick.tick().await;
+        if let Some(activity) = activity.as_mut()
+            && !*activity.borrow_and_update()
+        {
+            log::info!("Warren port-entitlement refresh paused: no account is logged in");
+            // A sender gone reads as no gate at all, per `with_activity`.
+            let _ = activity.wait_for(|active| *active).await;
+            log::info!("Warren port-entitlement refresh resumed");
+        }
         let n = now();
         match manager.refresh_auto(n).await {
             // Presence only, never the credential: a refresh that answered 200

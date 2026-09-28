@@ -19,6 +19,7 @@ use warren_standing::entitlements::EntitlementMint;
 use crate::warren_account_standing::StandingMonitor;
 use crate::warren_api_transport::WarrenApiTransport;
 use crate::warren_sdk_client::SharedWarrenSeed;
+use crate::warren_wallet_activity::WalletActivity;
 
 /// Process-lived, so a rule that reconnects presents the entitlement the exit
 /// already spent for it rather than a fresh one.
@@ -32,11 +33,13 @@ fn now_unix_secs() -> u64 {
 }
 
 /// The entitlement provider for `seed`'s wallet against `api_url`. A ban the
-/// issuer answers goes to `standing`, the daemon's one monitor.
+/// issuer answers goes to `standing`, the daemon's one monitor. The mint's
+/// refresh runs only while `activity` lets the wallet's API work run.
 pub(crate) fn provider_for(
     api_url: &str,
     seed: &SharedWarrenSeed,
     standing: Option<&StandingMonitor>,
+    activity: &WalletActivity,
 ) -> PortEntitlementProvider {
     let seed_bytes: [u8; 32] = **seed.read().expect("warren seed RwLock poisoned");
     let wallet_pubkey = WarrenIdentity::from_seed(&seed_bytes).public_key();
@@ -46,15 +49,15 @@ pub(crate) fn provider_for(
 
     let mint = MINT.get_or_init(|| {
         let standing = standing.cloned();
-        EntitlementMint::new(Arc::new(now_unix_secs)).with_ban_sink(Arc::new(
-            move |wallet, error| {
+        EntitlementMint::new(Arc::new(now_unix_secs))
+            .with_ban_sink(Arc::new(move |wallet, error| {
                 crate::warren_account_standing::report_if_banned(
                     standing.as_ref(),
                     &warren_identity::ss58::encode(wallet),
                     error,
                 )
-            },
-        ))
+            }))
+            .with_activity(activity.subscribe())
     });
     let api_url = api_url.to_owned();
     mint.slot_source(wallet_pubkey, blinding, move || {

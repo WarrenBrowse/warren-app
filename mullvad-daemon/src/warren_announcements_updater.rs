@@ -47,6 +47,7 @@ use crate::warren_artifact_refresh::{
     FETCH_TIMEOUT, FetchResponse, TransportRetryBackoff, conditional_get, now_unix, split_pins,
 };
 use crate::warren_notices_updater::NoticeLevel;
+use crate::warren_wallet_activity::WalletActivity;
 
 /// How often the announcements are re-fetched. Same cadence and the same
 /// reasoning as the notices: short enough that a withdrawal reaches a
@@ -245,6 +246,9 @@ pub struct WarrenAnnouncementsUpdater {
     /// Address that must never be used to ask for a code. See
     /// [`Self::claim`].
     sentinel_address: String,
+    /// Off while no account is logged in: the wallet a logout keeps is not
+    /// asked for a code, and the one it holds is not shown.
+    wallet_activity: WalletActivity,
     codes: Option<SessionCodes>,
     http: reqwest::Client,
     on_update: Box<dyn Fn(Vec<DisplayAnnouncement>) + Send>,
@@ -260,6 +264,7 @@ impl WarrenAnnouncementsUpdater {
         pinned_server_pubkey: Option<String>,
         client_version: Option<String>,
         voucher_source: Option<Arc<dyn CampaignVoucherSource>>,
+        wallet_activity: WalletActivity,
         on_update: impl Fn(Vec<DisplayAnnouncement>) + Send + 'static,
     ) {
         let http = build_http_client(&api_url);
@@ -272,6 +277,7 @@ impl WarrenAnnouncementsUpdater {
             last: None,
             voucher_source,
             sentinel_address: sentinel_address(),
+            wallet_activity,
             codes: None,
             http,
             on_update: Box::new(on_update),
@@ -399,6 +405,9 @@ impl WarrenAnnouncementsUpdater {
     /// not cached at all, so a transient outage never tells a cohort
     /// member they were never eligible.
     async fn claim(&mut self, campaign_id: &str) -> Option<String> {
+        if !self.wallet_activity.is_active() {
+            return None;
+        }
         let source = Arc::clone(self.voucher_source.as_ref()?);
         let address = source.address();
         if address == self.sentinel_address {
@@ -586,6 +595,7 @@ mod tests {
             last: None,
             voucher_source,
             sentinel_address: sentinel_address(),
+            wallet_activity: WalletActivity::new(true),
             codes: None,
             http: reqwest::Client::new(),
             on_update: Box::new(move |announcements| {
@@ -743,6 +753,26 @@ mod tests {
             source.calls(),
             vec!["prod-launch".to_owned()],
             "only the announcement carrying an offer may reach the signed endpoint"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_logged_out_wallet_is_not_asked_for_a_code() {
+        let source = FakeSource::granting("ABCDEFGHJKMNPQRS");
+        let (mut updater, published) = recording_updater(
+            None,
+            Some(Arc::clone(&source) as Arc<dyn CampaignVoucherSource>),
+        );
+        updater.wallet_activity = WalletActivity::new(false);
+        let mut offer = announcement("a1", "Warren production is open");
+        offer.voucher_campaign_id = Some("prod-launch".to_owned());
+
+        updater.publish(&envelope(vec![offer], 3_600)).await;
+
+        assert_eq!(only_batch(&published)[0].voucher_code, None);
+        assert!(
+            source.calls().is_empty(),
+            "no signed lookup while logged out"
         );
     }
 

@@ -70,6 +70,7 @@ use warren_identity::WarrenIdentity;
 use crate::warren_account_standing::StandingMonitor;
 use crate::warren_api_transport::WarrenApiTransport;
 use crate::warren_sdk_client::SharedWarrenSeed;
+use crate::warren_wallet_activity::WalletActivity;
 
 type Manager = TokenManager<WarrenApiTransport>;
 
@@ -97,6 +98,7 @@ fn spawn_refresh(
     wallet: String,
     standing: Option<StandingMonitor>,
     remembered_at: Option<PathBuf>,
+    activity: WalletActivity,
 ) {
     // The manager mints only epochs it has not minted yet.
     tokio::spawn(refresh_forever(move || {
@@ -105,7 +107,13 @@ fn spawn_refresh(
         let wallet = wallet.clone();
         let standing = standing.clone();
         let remembered_at = remembered_at.clone();
+        let activity = activity.clone();
         async move {
+            // The round also reads the route admission block, so a logged-out
+            // daemon does neither.
+            activity
+                .park_while_inactive("Warren v7 token refresh")
+                .await;
             let refreshed = refresh_announcing_mints(&manager, &credentials, &now_unix_secs).await;
             if let Some(path) = remembered_at.as_deref()
                 && manager.epoch_at(now_unix_secs()).is_some()
@@ -141,9 +149,10 @@ pub(crate) fn source_for(
     seed: &SharedWarrenSeed,
     standing: Option<&StandingMonitor>,
     trust: &RouteKemTrust,
+    activity: &WalletActivity,
 ) -> SessionTokenSource {
     session_source(
-        wallet_for(api_url, seed, standing, trust).manager,
+        wallet_for(api_url, seed, standing, trust, activity).manager,
         Arc::new(now_unix_secs),
     )
 }
@@ -155,8 +164,9 @@ pub(crate) fn credentials_for(
     seed: &SharedWarrenSeed,
     standing: Option<&StandingMonitor>,
     trust: &RouteKemTrust,
+    activity: &WalletActivity,
 ) -> watch::Receiver<Credentials> {
-    wallet_for(api_url, seed, standing, trust)
+    wallet_for(api_url, seed, standing, trust, activity)
         .credentials
         .subscribe()
 }
@@ -169,20 +179,23 @@ pub(crate) fn route_admission_for(
     seed: &SharedWarrenSeed,
     standing: Option<&StandingMonitor>,
     trust: &RouteKemTrust,
+    activity: &WalletActivity,
 ) -> Arc<dyn RouteAdmissionSource> {
     Arc::new(DirectoryRouteAdmission::new(
-        wallet_for(api_url, seed, standing, trust).manager,
+        wallet_for(api_url, seed, standing, trust, activity).manager,
         trust.clone(),
         Arc::new(now_unix_secs),
     ))
 }
 
-/// The wallet's manager, built and refreshed from its first use.
+/// The wallet's manager, built and refreshed from its first use, while
+/// `activity` lets the wallet's API work run.
 fn wallet_for(
     api_url: &str,
     seed: &SharedWarrenSeed,
     standing: Option<&StandingMonitor>,
     trust: &RouteKemTrust,
+    activity: &WalletActivity,
 ) -> Wallet {
     let seed_bytes = seed.read().unwrap_or_else(PoisonError::into_inner);
     let identity = WarrenIdentity::from_seed(&seed_bytes);
@@ -206,6 +219,7 @@ fn wallet_for(
                 key,
                 standing.cloned(),
                 trust.remembered_at.clone(),
+                activity.clone(),
             );
             Wallet {
                 manager,

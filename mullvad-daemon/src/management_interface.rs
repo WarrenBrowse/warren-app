@@ -382,6 +382,9 @@ fn standing_fetch_status(error: &crate::warren_account_standing::FetchError) -> 
     use crate::warren_account_standing::FetchError;
     match error {
         FetchError::NoWallet => Status::failed_precondition("no Warren wallet is installed"),
+        FetchError::LoggedOut => {
+            Status::failed_precondition("no account is logged in on this device")
+        }
         FetchError::WalletChanged => {
             Status::aborted("the Warren wallet changed while its standing was fetched")
         }
