@@ -134,6 +134,7 @@ mod warren_remote_config;
 /// client sends, so one local outage cannot flood the operator feed.
 mod warren_report_budget;
 mod warren_sdk_client;
+mod warren_session_gate;
 /// Loads or generates the user's BIP39 mnemonic from
 /// `<settings_dir>/warren_mnemonic.txt`, derives it into an Ed25519
 /// `SigningKey` and exposes a shared `WarrenAuthSigner` for the
@@ -394,6 +395,19 @@ pub enum Error {
     #[error("Failed to log out of account")]
     LogoutError(#[source] device::Error),
 
+    /// The tunnel did not report disconnected within the bound, so the logout
+    /// left the login and the identity in place.
+    #[error(
+        "The tunnel did not come down in time, so this device is still logged in: \
+         retry the logout"
+    )]
+    LogoutTunnelStillUp,
+
+    /// A login or an identity change arrived while a logout waits for the
+    /// tunnel to come down: the logout would undo it.
+    #[error("A logout is in progress: retry once it has completed")]
+    LogoutInProgress,
+
     #[error("Failed to delete account")]
     DeleteAccountError(#[source] device::Error),
 
@@ -476,12 +490,12 @@ pub enum Error {
 pub enum DaemonCommand {
     /// Set target state. Does nothing if the daemon already has the state that is being set.
     ///
-    /// `Err` only ever refuses a connect, and only while this build has
-    /// stood down for a higher-priority product environment. A disconnect is
-    /// always accepted: the whole point of the stand-down is to reach the
-    /// disconnected state.
+    /// `Err` only ever refuses a connect: while this build has stood down for
+    /// a higher-priority product environment, or while no account is logged
+    /// in. A disconnect is always accepted: reaching the disconnected state is
+    /// the whole point of both.
     SetTargetState(
-        ResponseTx<bool, warren_env_arbitration::EnvYieldError>,
+        ResponseTx<bool, warren_session_gate::ConnectRefusal>,
         TargetState,
     ),
     /// Reconnect the tunnel, if one is connecting/connected.
@@ -936,6 +950,8 @@ pub(crate) enum InternalDaemonEvent {
     },
     /// The app exits were resolved again.
     AppRoutesPlanned,
+    /// The teardown deadline of the logout with this generation fired.
+    LogoutTeardownDeadline(u64),
 }
 
 /// How long the daemon waits for the shutdown that `prepare-restart` promised
@@ -1233,6 +1249,9 @@ pub struct Daemon {
     app_route_reports_tunnel: u64,
     /// The route statuses clients last heard, so they hear only changes.
     app_routes_published: Vec<AppRouteStatus>,
+    /// Whether an account is logged in, as far as the tunnel is concerned,
+    /// and the logout waiting on a teardown.
+    warren_session: warren_session_gate::SessionGate<ResponseTx<(), Error>>,
 }
 pub struct DaemonConfig {
     pub log_dir: Option<PathBuf>,
@@ -1545,6 +1564,12 @@ impl Daemon {
                 }
             });
         }
+
+        // The forced logout just above lands through the event loop, after the
+        // boot connect decision: count it as done so the boot does not bring
+        // up a tunnel for an account that is on its way out.
+        let boot_logged_out =
+            data.logged_out() || (data.pubkey().is_some() && !warren_identity.has_user_identity());
 
         let account_history = account_history::AccountHistory::new(
             &config.settings_dir,
@@ -1945,7 +1970,9 @@ impl Daemon {
                     .await
                     .map_err(Error::ApiConnectionModeError)?
                     .endpoint,
-                reset_firewall: *target_state != TargetState::Secured,
+                // A logged-out boot does not bring up the secured state it
+                // may have restored, so it must not keep that state's block.
+                reset_firewall: *target_state != TargetState::Secured || boot_logged_out,
                 #[cfg(not(target_os = "android"))]
                 split_apps: {
                     let split_apps = tunnel_split_apps(&settings.app_routing);
@@ -2466,6 +2493,7 @@ impl Daemon {
             app_route_reports: Vec::new(),
             app_route_reports_tunnel: 0,
             app_routes_published: Vec::new(),
+            warren_session: warren_session_gate::SessionGate::new(boot_logged_out),
         };
 
         // Cross-environment arbitration: watch every OTHER product
@@ -2511,6 +2539,11 @@ impl Daemon {
         self.handle_initial_target_state().await;
         self.handle_events().await;
         self.disconnect_tunnel_and_wait().await;
+        // The tunnel is down: a logout still waiting is carried out rather than
+        // dropped unanswered.
+        for request in self.warren_session.abandon() {
+            self.complete_logout(request).await;
+        }
         self.finalize().await;
         Ok(())
     }
@@ -2520,10 +2553,23 @@ impl Daemon {
             self.settings.settings().warren_env_yield.as_ref(),
         );
         match self.target_state.to_strict() {
+            either::Either::Right(_) if self.warren_session.admit_connect().is_err() => {
+                // Auto-connect and a restore after an unclean shutdown both
+                // land here, and neither may bring up a tunnel for an account
+                // that is not logged in. Clearing the target matters for the
+                // same reason as in the stand-down arm below.
+                log::info!("not connecting at boot: no account is logged in");
+                // Nothing was restored, so there is nothing to explain.
+                self.warren_status_cache
+                    .clear_restored_after_unclean_shutdown();
+                self.target_state.set(TargetState::Unsecured).await;
+                self.fetch_am_i_mullvad();
+            }
             either::Either::Right(state)
                 if action == warren_env_arbitration::SecuredBootAction::Restore =>
             {
                 self.send_tunnel_command(Self::secured_state_to_tunnel_command(state));
+                self.warren_session.connect_sent();
             }
             either::Either::Right(_) => {
                 log::info!("not restoring the tunnel: this build has stood down");
@@ -2657,6 +2703,7 @@ impl Daemon {
                 }
             }
             AppRoutesPlanned => self.publish_app_routes_if_changed(),
+            LogoutTeardownDeadline(generation) => self.on_logout_teardown_deadline(generation),
         }
         should_stop
     }
@@ -3094,6 +3141,12 @@ impl Daemon {
         self.management_interface
             .notifier()
             .notify_new_state(tunnel_state);
+        for request in self
+            .warren_session
+            .tunnel_transition(self.tunnel_state.is_disconnected())
+        {
+            self.complete_logout(request).await;
+        }
         // Route sessions live inside the main connection: what the last
         // tunnel reported about them no longer holds once it is down.
         if !self.tunnel_state.is_connected() {
@@ -3519,6 +3572,9 @@ impl Daemon {
     }
 
     async fn handle_device_event(&mut self, event: AccountEvent) {
+        if let AccountEvent::Device(device_event) = &event {
+            self.warren_session.observe_device_event(device_event);
+        }
         match &event {
             AccountEvent::Device(PrivateDeviceEvent::Login(pubkey)) => {
                 if let Err(error) = self.account_history.set(pubkey.as_str().to_owned()).await {
@@ -3812,7 +3868,7 @@ impl Daemon {
 
     async fn on_set_target_state(
         &mut self,
-        tx: ResponseTx<bool, warren_env_arbitration::EnvYieldError>,
+        tx: ResponseTx<bool, warren_session_gate::ConnectRefusal>,
         new_target_state: TargetState,
     ) {
         // Refuse a connect while a higher-priority product environment holds
@@ -3824,6 +3880,15 @@ impl Daemon {
             new_target_state == TargetState::Secured,
             self.settings.settings().warren_env_yield.as_ref(),
         ) {
+            Self::oneshot_send(tx, Err(refusal.into()), "state change refused");
+            return;
+        }
+        // The tunnel is signed by the identity, which a logout that keeps it
+        // leaves in place: without this check a logged-out daemon connects.
+        if new_target_state == TargetState::Secured
+            && let Err(refusal) = self.warren_session.admit_connect()
+        {
+            log::info!("Refusing to connect: {refusal}");
             Self::oneshot_send(tx, Err(refusal), "state change refused");
             return;
         }
@@ -3849,6 +3914,12 @@ impl Daemon {
         .is_err()
         {
             Self::oneshot_send(tx, false, "reconnect refused while stood down");
+            return;
+        }
+        // The error-state arm would bring a tunnel up for an account that is
+        // not logged in, or back under a logout waiting on its teardown.
+        if self.warren_session.admit_connect().is_err() {
+            Self::oneshot_send(tx, false, "reconnect refused while logged out");
             return;
         }
         if *self.target_state == TargetState::Secured || self.tunnel_state.is_in_error_state() {
@@ -3891,6 +3962,10 @@ impl Daemon {
     /// Returns the new pubkey (SS58) as the account "token". No-log
     /// policy: the mnemonic itself is never logged or returned here.
     fn on_create_new_account(&mut self, tx: ResponseTx<String, Error>) {
+        if self.warren_session.logout_pending() {
+            Self::oneshot_send(tx, Err(Error::LogoutInProgress), "create_account response");
+            return;
+        }
         let account_manager = self.account_manager.clone();
         let settings_dir = self.settings_dir.clone();
         let identity = self.warren_identity.clone();
@@ -4275,6 +4350,14 @@ impl Daemon {
         tx: oneshot::Sender<std::io::Result<()>>,
         mnemonic: zeroize::Zeroizing<String>,
     ) {
+        if self.warren_session.logout_pending() {
+            Self::oneshot_send(
+                tx,
+                Err(io::Error::other(Error::LogoutInProgress.to_string())),
+                "set_warren_mnemonic response",
+            );
+            return;
+        }
         let write_result = warren_signer::set_warren_mnemonic(&self.settings_dir, &mnemonic);
         log::info!(
             "on_set_warren_mnemonic: result_ok={} (content NEVER logged)",
@@ -4486,6 +4569,10 @@ impl Daemon {
     }
 
     fn on_login_account(&mut self, tx: ResponseTx<(), Error>, account_number: String) {
+        if self.warren_session.logout_pending() {
+            Self::oneshot_send(tx, Err(Error::LogoutInProgress), "login_account response");
+            return;
+        }
         let account_manager = self.account_manager.clone();
         let availability = self.api_runtime.availability_handle();
 
@@ -4522,7 +4609,48 @@ impl Daemon {
     /// device: only the device-login state is cleared, so the account
     /// stays recoverable. This avoids irreversible data loss on a
     /// revocation the user did not initiate.
+    ///
+    /// Either way the tunnel comes down first, and the logout is carried out
+    /// only once it reports disconnected (see [`warren_session_gate`]). A
+    /// repeated logout takes the same path, so it still disconnects a tunnel
+    /// that came up in between and answers `Ok`.
     async fn on_logout_account(&mut self, tx: ResponseTx<(), Error>, wipe_identity: bool) {
+        let initiated = self.set_target_state(TargetState::Unsecured).await;
+        let tunnel_disconnected = self.tunnel_state.is_disconnected();
+        if !initiated && !tunnel_disconnected {
+            self.disconnect_tunnel();
+        }
+        match self
+            .warren_session
+            .request_logout(tx, wipe_identity, tunnel_disconnected, initiated)
+        {
+            warren_session_gate::LogoutStart::CompleteNow(request) => {
+                self.complete_logout(request).await;
+            }
+            warren_session_gate::LogoutStart::AwaitTeardown { generation } => {
+                log::info!("Logout waits for the tunnel to come down");
+                let deadline_tx = self.tx.clone();
+                tokio::spawn(async move {
+                    tokio::time::sleep(warren_session_gate::LOGOUT_TEARDOWN_TIMEOUT).await;
+                    let _ =
+                        deadline_tx.send(InternalDaemonEvent::LogoutTeardownDeadline(generation));
+                });
+            }
+            warren_session_gate::LogoutStart::Joined => {
+                log::debug!("Logout joins the one waiting for the tunnel to come down");
+            }
+        }
+    }
+
+    /// Carries out a logout once the tunnel is down.
+    async fn complete_logout(
+        &mut self,
+        request: warren_session_gate::LogoutRequest<ResponseTx<(), Error>>,
+    ) {
+        let warren_session_gate::LogoutRequest {
+            waiter: tx,
+            wipe_identity,
+        } = request;
         // Whatever the logout does to the stored identity, the account that
         // was on screen is gone, and the published card carries the voucher
         // code drawn for it. Done before the logout itself, so a failure
@@ -4533,6 +4661,9 @@ impl Daemon {
             log::error!("{}", error.display_chain_with_msg("Logout failed"));
             Error::LogoutError(error)
         });
+        if logout_result.is_ok() {
+            self.warren_session.logged_out_now();
+        }
 
         let result = match logout_result {
             Ok(()) if wipe_identity => {
@@ -4567,6 +4698,21 @@ impl Daemon {
         };
 
         Self::oneshot_send(tx, result, "logout_account response");
+    }
+
+    /// The tunnel did not come down within the bound: the logouts waiting on
+    /// it fail and leave the login and the identity in place. The disconnect
+    /// stays queued behind whatever held the tunnel, so a retry logs out once
+    /// it lands.
+    fn on_logout_teardown_deadline(&mut self, generation: u64) {
+        for tx in self.warren_session.teardown_deadline(generation) {
+            log::warn!("Logout abandoned: the tunnel did not come down in time");
+            Self::oneshot_send(
+                tx,
+                Err(Error::LogoutTunnelStillUp),
+                "logout_account response",
+            );
+        }
     }
 
     #[cfg(target_os = "android")]
@@ -6379,6 +6525,7 @@ impl Daemon {
         }
         self.warren_blocked_for_ban = false;
         self.send_tunnel_command(TunnelCommand::Connect);
+        self.warren_session.connect_sent();
     }
 
     fn block_for_ban(&mut self, ban: &warren_standing::Ban) {

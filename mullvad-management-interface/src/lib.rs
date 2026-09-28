@@ -93,6 +93,14 @@ pub enum Error {
     #[error("You are already logged in. Log out to create a new account")]
     AlreadyLoggedIn,
 
+    #[error("No account is logged in on this device: log in before connecting")]
+    NotLoggedIn,
+
+    #[error(
+        "The tunnel did not come down in time, so this device is still logged in: retry the logout"
+    )]
+    LogoutTunnelStillUp,
+
     #[error("The account does not exist")]
     InvalidAccount,
 

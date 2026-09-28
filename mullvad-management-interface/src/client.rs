@@ -134,7 +134,12 @@ impl MullvadProxyClient {
     }
 
     pub async fn connect_tunnel(&mut self) -> Result<bool> {
-        Ok(self.0.connect_tunnel(()).await?.into_inner())
+        Ok(self
+            .0
+            .connect_tunnel(())
+            .await
+            .map_err(map_connect_error)?
+            .into_inner())
     }
 
     pub async fn disconnect_tunnel(&mut self, source: &str) -> Result<bool> {
@@ -548,7 +553,10 @@ impl MullvadProxyClient {
     }
 
     pub async fn logout_account(&mut self, source: &str) -> Result<()> {
-        self.0.logout_account(source.to_owned()).await?;
+        self.0
+            .logout_account(source.to_owned())
+            .await
+            .map_err(map_logout_error)?;
         Ok(())
     }
 
@@ -878,6 +886,24 @@ fn map_device_error(status: Status) -> Error {
     }
 }
 
+/// The daemon refuses a connect with UNAUTHENTICATED for one reason: no
+/// account is logged in (the stand-down is FAILED_PRECONDITION).
+fn map_connect_error(status: Status) -> Error {
+    match status.code() {
+        Code::Unauthenticated => Error::NotLoggedIn,
+        _other => Error::Rpc(Box::new(status)),
+    }
+}
+
+/// ABORTED on a logout is the teardown that missed its deadline: nothing was
+/// changed and a retry can succeed.
+fn map_logout_error(status: Status) -> Error {
+    match status.code() {
+        Code::Aborted => Error::LogoutTunnelStillUp,
+        _other => Error::Rpc(Box::new(status)),
+    }
+}
+
 #[cfg(not(target_os = "android"))]
 fn map_custom_list_error(status: Status) -> Error {
     match (status.code(), status.details()) {
@@ -943,5 +969,34 @@ impl RelaySelectorClient {
     ) -> Result<crate::types::relay_selector::RelayPartitions> {
         let result = self.0.partition_relays(predicate).await?.into_inner();
         Ok(result)
+    }
+}
+
+#[cfg(test)]
+mod session_gate_error_tests {
+    use super::{Error, Status, map_connect_error, map_logout_error};
+
+    #[test]
+    fn a_connect_refused_as_unauthenticated_is_not_logged_in() {
+        let error = map_connect_error(Status::unauthenticated("no account is logged in"));
+
+        assert!(matches!(error, Error::NotLoggedIn), "{error:?}");
+    }
+
+    #[test]
+    fn a_connect_refused_by_the_stand_down_keeps_the_daemons_words() {
+        let error = map_connect_error(Status::failed_precondition("prod holds this machine"));
+
+        assert!(
+            matches!(&error, Error::Rpc(status) if status.message() == "prod holds this machine"),
+            "{error:?}"
+        );
+    }
+
+    #[test]
+    fn a_logout_aborted_by_the_daemon_is_a_tunnel_still_up() {
+        let error = map_logout_error(Status::aborted("the tunnel did not come down in time"));
+
+        assert!(matches!(error, Error::LogoutTunnelStillUp), "{error:?}");
     }
 }

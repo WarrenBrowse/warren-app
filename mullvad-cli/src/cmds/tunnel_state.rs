@@ -16,7 +16,7 @@ pub async fn connect(wait: bool) -> Result<()> {
         None
     };
 
-    if rpc.connect_tunnel().await?
+    if rpc.connect_tunnel().await.map_err(connect_refusal)?
         && let Some(receiver) = listener
     {
         wait_for_tunnel_state(receiver, |state| match state {
@@ -95,26 +95,58 @@ async fn wait_for_tunnel_state(
     Err(anyhow!("Failed to wait for expected tunnel state"))
 }
 
-/// Checks the if the user is logged in. If not, we print a warning to get their
-/// attention.
+/// A connect the daemon refused because no account is logged in, told with
+/// the command that fixes it. Any other failure passes through unchanged.
+fn connect_refusal(error: mullvad_management_interface::Error) -> anyhow::Error {
+    match error {
+        mullvad_management_interface::Error::NotLoggedIn => anyhow!(
+            "Not connecting: no account is logged in on this device. Log in with \
+             `{BIN_NAME} account login` first."
+        ),
+        other => other.into(),
+    }
+}
+
+/// Warns about a revoked device, which a connect puts in the blocked state.
 ///
-/// When using the CLI, the user could potentially end up in a situation where
-/// they try to connect to a Warren relay without having successfully logged in
-/// to their account. In this case, we at least want to issue a warning to guide
-/// the user when they inevitably will go troubleshooting.
+/// A logged-out device needs no warning here: the daemon refuses to connect it
+/// and says so.
 fn print_account_loggedout(state: &DeviceState) {
     match state {
-        DeviceState::LoggedOut => println!("Warning: You are not logged in to an account."),
         DeviceState::Revoked => println!("Warning: This device has been revoked"),
-        DeviceState::LoggedIn(_) => return, // Normal case, do nothing.
+        DeviceState::LoggedOut | DeviceState::LoggedIn(_) => return,
     };
 
     println!(
         "Warren is blocking all network traffic until you perform one of the following actions:
 
-1. Login to a Warren account with available time/credits.
+1. Log in to a Warren account with available time/credits.
 2. Disconnect from Warren VPN. This can either be done from the CLI or the Warren App.
 
 For more information, try 'warren account -h' or 'warren disconnect -h'"
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::connect_refusal;
+    use mullvad_management_interface::{Error, Status};
+
+    #[test]
+    fn a_logged_out_connect_names_the_login_command() {
+        let message = connect_refusal(Error::NotLoggedIn).to_string();
+
+        assert!(message.contains("no account is logged in"), "{message}");
+        assert!(message.contains("account login"), "{message}");
+    }
+
+    #[test]
+    fn any_other_connect_failure_passes_through() {
+        let error = connect_refusal(Error::from(Status::unavailable("daemon is down")));
+
+        assert!(
+            matches!(error.downcast_ref::<Error>(), Some(Error::Rpc(_))),
+            "{error:?}"
+        );
+    }
 }

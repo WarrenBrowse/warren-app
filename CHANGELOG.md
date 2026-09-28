@@ -47,6 +47,10 @@ Line wrap the file at 100 chars.                                              Th
   carrying traffic while the app showed the login screen.
 - [iOS] Disconnect and remove the VPN configuration when logging out or erasing the wallet, so the
   tunnel can neither stay up nor come back on demand for a wallet that left the device.
+- [Windows, macOS, Linux] Refuse to connect while no account is logged in, and say so in the CLI.
+  After `warren account logout` the app could still connect with the recovery phrase it keeps.
+  Logging out now also disconnects first and signs out only once the tunnel is down, and reports
+  an error, leaving the account logged in, when the tunnel does not come down in time.
 
 ## [1.1.38] - 2026-09-28
 ### Added

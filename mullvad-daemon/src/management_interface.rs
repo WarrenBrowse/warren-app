@@ -500,7 +500,7 @@ impl ManagementService for ManagementServiceImpl {
         let connect_issued = self
             .wait_for_result(rx)
             .await?
-            .map_err(map_env_yield_error)?;
+            .map_err(map_connect_refusal)?;
         Ok(Response::new(connect_issued))
     }
 
@@ -517,7 +517,7 @@ impl ManagementService for ManagementServiceImpl {
         let disconnect_issued = self
             .wait_for_result(rx)
             .await?
-            .map_err(map_env_yield_error)?;
+            .map_err(map_connect_refusal)?;
         Ok(Response::new(disconnect_issued))
     }
 
@@ -3060,6 +3060,20 @@ fn map_env_yield_error(error: crate::warren_env_arbitration::EnvYieldError) -> S
     Status::failed_precondition(error.to_string())
 }
 
+/// A connect refused for want of a logged-in account is UNAUTHENTICATED, which
+/// is what lets a client tell it from the stand-down (FAILED_PRECONDITION) with
+/// no string matching: the CLI names the fix, the GUI drops to its login view.
+fn map_connect_refusal(refusal: crate::warren_session_gate::ConnectRefusal) -> Status {
+    use crate::warren_session_gate::ConnectRefusal;
+    match refusal {
+        ConnectRefusal::EnvYield(error) => map_env_yield_error(error),
+        ConnectRefusal::LoggedOut => Status::unauthenticated(refusal.to_string()),
+        // Still logged in, so not the login prompt: a retry once the logout
+        // has settled either way is the answer.
+        ConnectRefusal::LoggingOut => Status::aborted(refusal.to_string()),
+    }
+}
+
 /// A guarded settings change carries two very different answers, and they
 /// must not collapse into one status: a save that failed is the daemon's
 /// problem, an arbitration refusal is another product environment holding
@@ -3080,6 +3094,11 @@ fn map_daemon_error(error: crate::Error) -> Status {
         DaemonError::AlreadyLoggedIn => Status::already_exists(error.to_string()),
         DaemonError::LoginError(error) => map_device_error(&error),
         DaemonError::LogoutError(error) => map_device_error(&error),
+        // ABORTED: nothing was changed and a retry can succeed, which is what
+        // a client tells the user.
+        DaemonError::LogoutTunnelStillUp | DaemonError::LogoutInProgress => {
+            Status::aborted(error.to_string())
+        }
         DaemonError::DeleteAccountError(error) => map_device_error(&error),
         // NOT_FOUND is how the GUI knows an unknown voucher and drops a held
         // one; a missing device is no verdict on the voucher.
@@ -3246,6 +3265,56 @@ mod app_routing_error_tests {
         let status = map_app_routing_error(AppRoutingError::InvalidCountry);
 
         assert_eq!(status.code(), Code::InvalidArgument);
+    }
+}
+
+#[cfg(test)]
+mod session_gate_status_tests {
+    use super::{Code, map_connect_refusal, map_daemon_error};
+    use crate::warren_env_arbitration::EnvYieldError;
+    use crate::warren_session_gate::ConnectRefusal;
+
+    /// The CLI and the GUI key the logged-out refusal on its code alone, so it
+    /// must not share one with the stand-down.
+    #[test]
+    fn a_connect_refused_while_logged_out_is_unauthenticated() {
+        let status = map_connect_refusal(ConnectRefusal::LoggedOut);
+
+        assert_eq!(status.code(), Code::Unauthenticated);
+        assert!(status.message().contains("log in"), "{status:?}");
+    }
+
+    #[test]
+    fn a_connect_refused_by_the_stand_down_stays_a_failed_precondition() {
+        let status = map_connect_refusal(ConnectRefusal::EnvYield(EnvYieldError::YieldedTo(
+            "prod".to_owned(),
+        )));
+
+        assert_eq!(status.code(), Code::FailedPrecondition);
+    }
+
+    /// Still logged in: the GUI must not drop to its login view on this one.
+    #[test]
+    fn a_connect_refused_during_a_logout_is_not_read_as_logged_out() {
+        let status = map_connect_refusal(ConnectRefusal::LoggingOut);
+
+        assert_eq!(status.code(), Code::Aborted);
+    }
+
+    #[test]
+    fn a_logout_whose_teardown_missed_the_deadline_is_aborted() {
+        let status = map_daemon_error(crate::Error::LogoutTunnelStillUp);
+
+        assert_eq!(status.code(), Code::Aborted);
+    }
+
+    /// A login during a logout is refused as retryable, never as a verdict on
+    /// the account (UNAUTHENTICATED would read as an invalid account).
+    #[test]
+    fn a_login_refused_during_a_logout_is_aborted() {
+        let status = map_daemon_error(crate::Error::LogoutInProgress);
+
+        assert_eq!(status.code(), Code::Aborted);
     }
 }
 

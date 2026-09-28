@@ -39,6 +39,11 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Deconectează VPN-ul și elimină configurația lui la ieșirea din cont sau la ștergerea
   portofelului, ca tunelul să nu poată nici rămâne deschis, nici reporni la cerere pentru un
   portofel care a părăsit dispozitivul.
+- [Windows, macOS, Linux] Aplicația refuză conectarea cât timp niciun cont nu este autentificat și
+  spune asta în CLI. După `warren account logout`, aplicația se putea conecta în continuare cu
+  fraza de recuperare pe care o păstrează. Ieșirea din cont deconectează acum mai întâi VPN-ul și
+  închide sesiunea contului abia după ce tunelul s-a oprit. Dacă tunelul nu se oprește la timp,
+  semnalează o eroare și lasă contul autentificat.
 
 ## [1.1.38] - 2026-09-28
 ### Adăugat

@@ -43,6 +43,11 @@ par l'application, gardez-le tel quel.
 - [iOS] Déconnecter le VPN et retirer sa configuration à la déconnexion du compte ou à l'effacement
   du portefeuille, pour que le tunnel ne puisse ni rester ouvert ni revenir à la demande pour un
   portefeuille qui a quitté l'appareil.
+- [Windows, macOS, Linux] Refuser la connexion quand aucun compte n'est connecté, et l'indiquer
+  dans la CLI. Après `warren account logout`, l'application pouvait encore se connecter avec la
+  phrase de récupération qu'elle conserve. La déconnexion du compte coupe aussi le VPN d'abord et
+  ne déconnecte le compte qu'une fois le tunnel fermé. Si le tunnel ne se ferme pas à temps, elle
+  signale une erreur et laisse le compte connecté.
 
 ## [1.1.38] - 2026-09-28
 ### Ajouté
