@@ -1,17 +1,18 @@
 //! Closes the transport sessions a torn-down tunnel still holds open.
 //!
 //! Aborting the tunnel's tasks drops their references to the session bundle,
-//! and the bundle closes its QUIC sessions when the last reference goes. One
-//! reference outlives the teardown: the engine's path-health prober holds the
-//! bundle through each probe round, a sleep of its whole cadence (15 s by
-//! default), and gives it up early only when the bundle's sessions close,
-//! which nothing did. So the sessions stayed open for up to a cadence after
-//! the tunnel reported Disconnected: the exit kept a live session for a client
-//! that had left, and the path probe, which holds clones of the connections
-//! and ends only once all of them are closed, logged them after the
-//! disconnect. Teardown therefore closes the last published bundle itself,
-//! before it returns, whoever still holds it; the prober then lets go at once.
-//! The close is idempotent, so a bundle already closed costs nothing.
+//! and the bundle closes its QUIC sessions when the last reference goes. Until
+//! warrenguard ed1e11a, one reference outlived the teardown: the engine's
+//! path-health prober held the bundle through each probe round, a sleep of its
+//! whole cadence (15 s by default), so the sessions stayed open for up to a
+//! cadence after the tunnel reported Disconnected: the exit kept a live
+//! session for a client that had left, and the path probe, which holds clones
+//! of the connections and ends only once all of them are closed, logged them
+//! after the disconnect. The engine now holds the bundle only across
+//! synchronous steps. Teardown still closes the last published bundle itself,
+//! before it returns, whoever still holds it, so the next holder that outlives
+//! a teardown cannot bring the symptom back. The close is idempotent, so a
+//! bundle already closed costs nothing.
 
 use std::sync::Arc;
 
