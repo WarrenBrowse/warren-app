@@ -3135,6 +3135,12 @@ mod tests {
             super::TerminalVerdict::from(Some(RejectionReason::TokensRefusedWithoutReason)),
             super::TerminalVerdict::TokensRefused
         );
+    }
+
+    /// The unexplained token walk ends on a state and an event of its own, which
+    /// the app reads against the subscription it knows.
+    #[test]
+    fn a_session_whose_tokens_were_refused_without_reason_ends_on_its_own_state() {
         let (state, event) = super::terminal_for(super::TerminalVerdict::TokensRefused);
         assert_eq!(state, super::WarrenTunnelStateC::TokensRefused);
         assert_eq!(event, super::WarrenTunnelEventTagC::EventTokensRefused);
