@@ -428,6 +428,14 @@ impl Firewall {
         self.inner.can_include()
     }
 
+    /// Leaves the applied policy in force after this instance is dropped, which otherwise
+    /// resets it. For the kill switch that must outlive the daemon: lockdown, and the lock a
+    /// restart or an app update arms. Windows gets the same from [`Self::persist`].
+    #[cfg(target_os = "linux")]
+    pub fn keep_policy_on_drop(&mut self) {
+        self.inner.keep_policy_on_drop();
+    }
+
     /// Sets whether the firewall should persist the blocking rules across a reboot.
     #[cfg(target_os = "windows")]
     pub fn persist(&mut self, persist: bool) {

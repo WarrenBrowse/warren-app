@@ -30,6 +30,8 @@ pub async fn initialize_firewall() -> Result<(), Error> {
     };
     log::info!("Applying firewall policy {policy}");
     firewall.apply_policy(policy)?;
+    // This process exits right away and the block has to hold until the daemon replaces it.
+    firewall.keep_policy_on_drop();
     Ok(())
 }
 
@@ -40,4 +42,38 @@ async fn get_lan_sharing() -> Result<(bool, Vec<IpNetwork>), Error> {
     //       is probably acceptable.
     let settings = SettingsPersister::read_only(&path).await;
     Ok((settings.allow_lan, settings.lan_networks()))
+}
+
+/// Against the kernel's nftables: run as root, or in a network namespace with `CAP_NET_ADMIN`
+/// (`docker run --cap-add NET_ADMIN`).
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn table_present() -> bool {
+        let tables = std::process::Command::new("nft")
+            .args(["list", "tables"])
+            .output()
+            .expect("nft is installed");
+        String::from_utf8_lossy(&tables.stdout).contains(&format!(
+            "table inet {}",
+            warren_product_env::CURRENT.firewall_id()
+        ))
+    }
+
+    #[tokio::test]
+    #[ignore = "needs CAP_NET_ADMIN"]
+    async fn the_early_boot_block_outlives_the_process_that_applies_it() {
+        initialize_firewall().await.unwrap();
+
+        let present = table_present();
+        Firewall::new(mullvad_types::TUNNEL_FWMARK, None, None)
+            .unwrap()
+            .reset_policy()
+            .unwrap();
+        assert!(
+            present,
+            "the early-boot block was lifted when its firewall was dropped"
+        );
+    }
 }

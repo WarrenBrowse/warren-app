@@ -773,6 +773,12 @@ impl TunnelStateMachine {
                     "Lockdown is armed (setting or app-update restart lock); leaving the \
                      kill-switch firewall in place on shutdown"
                 );
+                // The firewall resets itself when dropped, which would lift this block a moment
+                // after the line above claims to keep it. macOS drops it the same way; keeping it
+                // there waits on a check of the uninstall path, which stops the daemon without
+                // lifting pf afterwards.
+                #[cfg(target_os = "linux")]
+                self.shared_values.firewall.keep_policy_on_drop();
             } else if let Err(error) = self.shared_values.firewall.reset_policy() {
                 log::error!("Failed to reset firewall during shutdown: {error}");
             }
