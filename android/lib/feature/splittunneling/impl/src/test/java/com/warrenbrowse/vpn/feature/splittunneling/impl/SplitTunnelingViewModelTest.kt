@@ -1,11 +1,13 @@
 package com.warrenbrowse.vpn.feature.splittunneling.impl
 
 import androidx.lifecycle.viewModelScope
+import app.cash.turbine.ReceiveTurbine
 import app.cash.turbine.test
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.slot
 import io.mockk.unmockkAll
-import io.mockk.verify
 import java.util.concurrent.TimeUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -19,70 +21,109 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.AppData
 import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.ApplicationsProvider
-import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.SplitTunnelingUseCase
-import com.warrenbrowse.vpn.feature.splittunneling.impl.countries.CountryPerAppUiState
 import com.warrenbrowse.vpn.lib.common.Lc
 import com.warrenbrowse.vpn.lib.common.test.TestCoroutineRule
 import com.warrenbrowse.vpn.lib.model.AppExit
+import com.warrenbrowse.vpn.lib.model.AppRoute
 import com.warrenbrowse.vpn.lib.model.AppRouteLine
 import com.warrenbrowse.vpn.lib.model.AppRouteState
 import com.warrenbrowse.vpn.lib.model.AppRouteStatus
+import com.warrenbrowse.vpn.lib.model.AppRouting
+import com.warrenbrowse.vpn.lib.model.AppRoutingSettings
+import com.warrenbrowse.vpn.lib.model.DefaultRoute
 import com.warrenbrowse.vpn.lib.model.PackageName
+import com.warrenbrowse.vpn.lib.model.RoutingOp
 import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
+import com.warrenbrowse.vpn.lib.model.changeNarrowsTunnel
 import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenAppRoutesStatusProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenRelaySummary
-import io.mockk.coVerify
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.extension.ExtendWith
 
+/**
+ * App routing's single list over the settings model. The repository is backed by the settings it
+ * would write, so each test observes where the apps end up rather than which call was made.
+ */
 @ExperimentalCoroutinesApi
 @ExtendWith(TestCoroutineRule::class)
 @Timeout(3000L, unit = TimeUnit.MILLISECONDS)
 class SplitTunnelingViewModelTest {
 
-    private val mockedApplicationsProvider = mockk<ApplicationsProvider>()
-    private val mockedSplitTunnelingRepository = mockk<SplitTunnelingRepository>(relaxed = true)
-    private val mockedUserPreferencesRepository = mockk<UserPreferencesRepository>()
+    private val applicationsProvider = mockk<ApplicationsProvider>()
+    private val repository = mockk<SplitTunnelingRepository>(relaxed = true)
+    private val preferences = mockk<UserPreferencesRepository>(relaxed = true)
+    private val relayProvider = mockk<WarrenRelayProvider>(relaxed = true)
     private lateinit var testSubject: SplitTunnelingViewModel
 
     private val splitMode = MutableStateFlow(SplitTunnelMode.Off)
-    private val excludedApps: MutableStateFlow<Set<PackageName>> = MutableStateFlow(emptySet())
-    private val includedApps: MutableStateFlow<Set<PackageName>> = MutableStateFlow(emptySet())
-    private val showSystemApps: MutableStateFlow<Boolean> = MutableStateFlow(false)
+    private val excludedApps = MutableStateFlow<Set<PackageName>>(emptySet())
+    private val includedApps = MutableStateFlow<Set<PackageName>>(emptySet())
     private val appExits = MutableStateFlow<Map<String, AppExit>>(emptyMap())
     private val appExitsEnabled = MutableStateFlow(false)
+    private val vpnOnlyForCount = MutableStateFlow<Int?>(null)
+    private val showSystemApps = MutableStateFlow(false)
     private val appRoutes = MutableStateFlow<List<AppRouteStatus>>(emptyList())
     private val catalogue = MutableStateFlow<List<WarrenRelaySummary>>(emptyList())
     private val appRoutesProvider =
         object : WarrenAppRoutesStatusProvider {
             override val appRoutes = this@SplitTunnelingViewModelTest.appRoutes
         }
-    private val mockedRelayProvider = mockk<WarrenRelayProvider>(relaxed = true)
+    private val writes = mutableListOf<RoutingOp>()
 
-    private val chat = AppData(PackageName("org.chat"), 0, "Chat")
     private val bank = AppData(PackageName("org.bank"), 0, "Bank")
+    private val chat = AppData(PackageName("org.chat"), 0, "Chat")
     private val maps = AppData(PackageName("org.maps"), 0, "Maps")
+    private val clock = AppData(PackageName("android.clock"), 0, "Clock", isSystemApp = true)
+
+    private fun settings() =
+        AppRoutingSettings(
+            splitMode.value,
+            excludedApps.value.mapTo(LinkedHashSet()) { it.value },
+            includedApps.value.mapTo(LinkedHashSet()) { it.value },
+            appExitsEnabled.value,
+            appExits.value,
+        )
+
+    private fun store(next: AppRoutingSettings) {
+        splitMode.value = next.splitMode
+        excludedApps.value = next.excludedApps.mapTo(LinkedHashSet(), ::PackageName)
+        includedApps.value = next.includedApps.mapTo(LinkedHashSet(), ::PackageName)
+        appExitsEnabled.value = next.appExitsEnabled
+        appExits.value = next.appExits
+        vpnOnlyForCount.value =
+            (next.tunnelRouting(::installed) as? AppRouting.OnlyFor)?.packages?.size
+    }
+
+    private fun installed(app: String) = app in setOf(bank, chat, maps, clock).map { it.packageName.value }
 
     @BeforeEach
     fun setup() {
-        every { mockedSplitTunnelingRepository.splitMode } returns splitMode
-        every { mockedSplitTunnelingRepository.excludedApps } returns excludedApps
-        every { mockedSplitTunnelingRepository.includedApps } returns includedApps
-        every { mockedSplitTunnelingRepository.setSplitMode(any()) } answers
+        every { repository.splitMode } returns splitMode
+        every { repository.excludedApps } returns excludedApps
+        every { repository.includedApps } returns includedApps
+        every { repository.appExits } returns appExits
+        every { repository.appExitsEnabled } returns appExitsEnabled
+        every { repository.vpnOnlyForCount } returns vpnOnlyForCount
+        every { repository.routingSettings() } answers { settings() }
+        val ops = slot<List<RoutingOp>>()
+        every { repository.apply(capture(ops)) } answers
             {
-                splitMode.value = firstArg()
+                writes += ops.captured
+                store(settings().apply(ops.captured))
             }
-        every { mockedUserPreferencesRepository.showSystemAppsSplitTunneling() } returns
-            showSystemApps
-        every { mockedSplitTunnelingRepository.appExits } returns appExits
-        every { mockedSplitTunnelingRepository.appExitsEnabled } returns appExitsEnabled
-        every { mockedRelayProvider.catalogue } returns catalogue
+        val asked = slot<List<RoutingOp>>()
+        every { repository.changeNarrowsTunnel(capture(asked)) } answers
+            {
+                changeNarrowsTunnel(settings(), settings().apply(asked.captured), ::installed)
+            }
+        every { preferences.showSystemAppsSplitTunneling() } returns showSystemApps
+        every { relayProvider.catalogue } returns catalogue
     }
 
     @AfterEach
@@ -92,343 +133,258 @@ class SplitTunnelingViewModelTest {
     }
 
     @Test
-    fun `initial state should be loading`() = runTest {
-        initTestSubject(emptyList())
+    fun `the list starts loading`() = runTest {
+        initTestSubject()
 
         assertIs<Lc.Loading<Loading>>(testSubject.uiState.value)
     }
 
     @Test
-    fun `the bypass tab lists the excluded apps as chosen`() = runTest {
-        excludedApps.value = setOf(chat.packageName)
-        includedApps.value = setOf(bank.packageName)
-        initTestSubject(listOf(bank, chat, maps))
+    fun `a fresh install shows the VPN as the default and no rule`() = runTest {
+        initTestSubject()
 
         testSubject.uiState.test {
             val state = awaitContent()
-            assertEquals(SplitTunnelingTab.Bypass, state.tab)
-            assertEquals(listOf(chat), state.selectedApps)
-            assertEquals(listOf(bank, maps), state.otherApps)
+            assertEquals(DefaultRoute.Vpn, state.defaultRoute)
+            assertEquals(emptyList(), state.rules)
+            assertTrue(state.showNoRules)
+            assertFalse(state.someAppOutside)
         }
     }
 
     @Test
-    fun `the screen opens on vpn only for while include-only is on and lists its apps`() =
+    fun `the list shows each app with a rule once, by name, with the line of a country`() =
         runTest {
-            splitMode.value = SplitTunnelMode.IncludeOnly
-            excludedApps.value = setOf(chat.packageName)
-            includedApps.value = setOf(bank.packageName)
-            initTestSubject(listOf(bank, chat, maps))
+            store(
+                AppRoutingSettings(
+                    SplitTunnelMode.Exclude,
+                    excludedApps = setOf("org.maps", "org.gone"),
+                    appExitsEnabled = true,
+                    appExits = mapOf("org.chat" to AppExit("ro"), "org.maps" to AppExit("nl")),
+                )
+            )
+            appRoutes.value =
+                listOf(AppRouteStatus(AppExit("ro"), AppRouteState.Connected, "192.0.2.4", listOf("org.chat")))
+            initTestSubject()
 
             testSubject.uiState.test {
                 val state = awaitContent()
-                assertEquals(SplitTunnelingTab.IncludeOnly, state.tab)
-                assertTrue(state.tabModeOn)
-                assertEquals(listOf(bank), state.selectedApps)
-                assertEquals(listOf(chat, maps), state.otherApps)
-            }
-        }
-
-    @Test
-    fun `an app tapped in a tab is added to or removed from that tab's list`() = runTest {
-        includedApps.value = setOf(bank.packageName)
-        initTestSubject(listOf(bank, chat))
-
-        testSubject.onAddAppClick(chat.packageName)
-        testSubject.onSelectTab(SplitTunnelingTab.IncludeOnly)
-        testSubject.onAddAppClick(chat.packageName)
-        testSubject.onRemoveAppClick(bank.packageName)
-
-        verify { mockedSplitTunnelingRepository.addExcludedApp(chat.packageName) }
-        verify { mockedSplitTunnelingRepository.addIncludedApp(chat.packageName) }
-        verify { mockedSplitTunnelingRepository.removeIncludedApp(bank.packageName) }
-        verify(exactly = 0) { mockedSplitTunnelingRepository.addIncludedApp(bank.packageName) }
-    }
-
-    @Test
-    fun `turning vpn only for on waits for the confirmation`() = runTest {
-        initTestSubject(listOf(bank))
-        testSubject.onSelectTab(SplitTunnelingTab.IncludeOnly)
-
-        testSubject.uiState.test {
-            awaitContent()
-            testSubject.onSplitModeSwitch(true)
-            assertEquals(
-                ModeChangeConfirmation(leavesDeviceUnprotected = true, replaces = null),
-                awaitContent().confirmation,
-            )
-            verify(exactly = 0) { mockedSplitTunnelingRepository.setSplitMode(any()) }
-
-            testSubject.onConfirmModeChange()
-            verify { mockedSplitTunnelingRepository.setSplitMode(SplitTunnelMode.IncludeOnly) }
-            val applied = expectMostRecentContent()
-            assertNull(applied.confirmation)
-            assertEquals(SplitTunnelMode.IncludeOnly, applied.splitMode)
-        }
-    }
-
-    @Test
-    fun `a cancelled confirmation leaves the mode as it was`() = runTest {
-        splitMode.value = SplitTunnelMode.IncludeOnly
-        initTestSubject(listOf(bank))
-        testSubject.onSelectTab(SplitTunnelingTab.Bypass)
-
-        testSubject.uiState.test {
-            awaitContent()
-            testSubject.onSplitModeSwitch(true)
-            assertEquals(SplitTunnelMode.IncludeOnly, awaitContent().confirmation?.replaces)
-
-            testSubject.onCancelModeChange()
-            assertNull(awaitContent().confirmation)
-            verify(exactly = 0) { mockedSplitTunnelingRepository.setSplitMode(any()) }
-        }
-    }
-
-    @Test
-    fun `a change that needs no confirmation applies at once`() = runTest {
-        initTestSubject(listOf(bank))
-
-        testSubject.onSplitModeSwitch(true)
-        testSubject.onSelectTab(SplitTunnelingTab.IncludeOnly)
-        splitMode.value = SplitTunnelMode.IncludeOnly
-        testSubject.onSplitModeSwitch(false)
-
-        verify { mockedSplitTunnelingRepository.setSplitMode(SplitTunnelMode.Exclude) }
-        verify { mockedSplitTunnelingRepository.setSplitMode(SplitTunnelMode.Off) }
-    }
-
-    @Test
-    fun `include-only with no chosen app on the device is named`() = runTest {
-        splitMode.value = SplitTunnelMode.IncludeOnly
-        includedApps.value = setOf(PackageName("org.uninstalled"))
-        initTestSubject(listOf(bank))
-
-        testSubject.uiState.test {
-            assertTrue(awaitContent().includeOnlyWithoutApps)
-            includedApps.value = setOf(bank.packageName)
-            assertFalse(awaitContent().includeOnlyWithoutApps)
-        }
-    }
-
-    @Test
-    fun `the connect screen chip opens the country tab whatever the mode`() = runTest {
-        splitMode.value = SplitTunnelMode.IncludeOnly
-        initTestSubject(listOf(bank), initialTab = SplitTunnelingTab.CountryPerApp)
-
-        testSubject.uiState.test {
-            val state = awaitContent()
-            assertEquals(SplitTunnelingTab.CountryPerApp, state.tab)
-            assertFalse(state.tabModeOn)
-        }
-    }
-
-    @Test
-    fun `the country tab lists the apps with a country apart, by name, each with its line`() =
-        runTest {
-            appExitsEnabled.value = true
-            appExits.value = mapOf(maps.packageName.value to AppExit("se"), chat.packageName.value to AppExit("de", "Berlin"))
-            appRoutes.value =
-                listOf(
-                    AppRouteStatus(AppExit("se"), AppRouteState.Connected, "198.51.100.7", listOf(maps.packageName.value)),
-                )
-            initTestSubject(listOf(bank, chat, maps), initialTab = SplitTunnelingTab.CountryPerApp)
-
-            testSubject.uiState.test {
-                val countries = awaitCountries()
-                assertEquals(listOf(chat, maps), countries.withCountry.map { it.app })
                 assertEquals(
-                    listOf(AppRouteLine.Waiting, AppRouteLine.Connected("198.51.100.7")),
-                    countries.withCountry.map { it.line },
+                    listOf(
+                        AppRuleItem(chat, AppRoute.Country(AppExit("ro")), AppRouteLine.Connected("192.0.2.4")),
+                        AppRuleItem(maps, AppRoute.Direct, null),
+                    ),
+                    state.rules,
                 )
-                assertEquals(AppExit("de", "Berlin"), countries.withCountry.first().exit)
-                assertEquals(listOf(bank), countries.otherApps)
+                assertTrue(state.someAppOutside)
             }
         }
 
     @Test
-    fun `a saved country with the switch off reads as paused`() = runTest {
-        appExits.value = mapOf(chat.packageName.value to AppExit("se"))
-        initTestSubject(listOf(chat), initialTab = SplitTunnelingTab.CountryPerApp)
+    fun `an app sent outside the VPN turns bypass on, and back on the VPN turns it off`() = runTest {
+        initTestSubject()
 
         testSubject.uiState.test {
-            assertEquals(AppRouteLine.Paused, awaitCountries().withCountry.single().line)
+            awaitContent()
+            testSubject.onOpenApp(chat)
+            val route = awaitPage<AppRoutingPage.Route>()
+            assertEquals(AppRoute.Vpn, route.route)
+            assertFalse(route.hasRule)
+
+            testSubject.onChooseRoute(AppRoute.Direct)
+            assertTrue(awaitPage<AppRoutingPage.Route>().hasRule)
+            assertEquals(SplitTunnelMode.Exclude, splitMode.value)
+            assertEquals(setOf(chat.packageName), excludedApps.value)
+
+            testSubject.onRemoveRule()
+            assertEquals(AppRoutingPage.Rules, awaitContent().page)
+            assertEquals(SplitTunnelMode.Off, splitMode.value)
+            assertEquals(emptySet(), excludedApps.value)
+            cancelAndIgnoreRemainingEvents()
         }
     }
 
     @Test
-    fun `the country search narrows both sections`() = runTest {
-        appExits.value = mapOf(chat.packageName.value to AppExit("se"), maps.packageName.value to AppExit("fi"))
-        initTestSubject(listOf(bank, chat, maps), initialTab = SplitTunnelingTab.CountryPerApp)
-
-        testSubject.onCountrySearchChange("A")
-        testSubject.uiState.test {
-            val countries = awaitCountries()
-            assertEquals(listOf(chat, maps), countries.withCountry.map { it.app })
-            assertEquals(listOf(bank), countries.otherApps)
-            testSubject.onCountrySearchChange("ma")
-            val narrowed = awaitCountries()
-            assertEquals(listOf(maps), narrowed.withCountry.map { it.app })
-            assertEquals(emptyList(), narrowed.otherApps)
-            testSubject.onCountrySearchChange("zzz")
-            assertTrue(awaitCountries().noSearchResult)
-        }
-    }
-
-    @Test
-    fun `choosing in the picker saves the country, closes the picker and moves nothing else`() =
-        runTest {
-            appExits.value = mapOf(chat.packageName.value to AppExit("de"))
-            catalogue.value = listOf(relay("de", "Berlin"), relay("se", "Stockholm"))
-            initTestSubject(listOf(bank, chat), initialTab = SplitTunnelingTab.CountryPerApp)
-
-            testSubject.uiState.test {
-                awaitCountries()
-                testSubject.onPickCountry(chat)
-                val picker = awaitCountries().picker!!
-                assertEquals(AppExit("de"), picker.current)
-                assertEquals(setOf("de"), picker.expanded)
-                assertEquals(listOf("DE", "SE"), picker.options.map { it.name })
-
-                testSubject.onChooseExit(AppExit("se", "Stockholm"))
-                assertNull(awaitCountries().picker)
-            }
-            verify { mockedSplitTunnelingRepository.setAppExit(chat.packageName, AppExit("se", "Stockholm")) }
-            coVerify { mockedRelayProvider.refreshIfStale() }
-            verify(exactly = 0) { mockedSplitTunnelingRepository.setSplitMode(any()) }
-        }
-
-    @Test
-    fun `a first country that would narrow the full tunnel waits for the confirmation`() =
-        runTest {
-            splitMode.value = SplitTunnelMode.IncludeOnly
-            every {
-                mockedSplitTunnelingRepository.countryChoiceNarrowsFullTunnel(chat.packageName, any())
-            } returns true
-            initTestSubject(listOf(bank, chat), initialTab = SplitTunnelingTab.CountryPerApp)
-
-            testSubject.uiState.test {
-                awaitCountries()
-                testSubject.onPickCountry(chat)
-                awaitCountries()
-                testSubject.onChooseExit(AppExit("se"))
-                val asking = expectMostRecentContent().countryPerApp!!
-                assertNull(asking.picker)
-                assertEquals(chat, asking.onlyAppConfirmation)
-                verify(exactly = 0) { mockedSplitTunnelingRepository.setAppExit(any(), any()) }
-
-                testSubject.onConfirmOnlyApp()
-                assertNull(expectMostRecentContent().countryPerApp!!.onlyAppConfirmation)
-            }
-            verify { mockedSplitTunnelingRepository.setAppExit(chat.packageName, AppExit("se")) }
-        }
-
-    @Test
-    fun `a cancelled first country leaves the settings untouched`() = runTest {
-        splitMode.value = SplitTunnelMode.IncludeOnly
-        every {
-            mockedSplitTunnelingRepository.countryChoiceNarrowsFullTunnel(any(), any())
-        } returns true
-        initTestSubject(listOf(chat), initialTab = SplitTunnelingTab.CountryPerApp)
+    fun `a country is chosen on its page, and the route page shows it`() = runTest {
+        catalogue.value = listOf(relay("de", "Berlin"), relay("ro", "Bucharest"))
+        initTestSubject()
 
         testSubject.uiState.test {
-            awaitCountries()
-            testSubject.onPickCountry(chat)
-            testSubject.onChooseExit(AppExit("se"))
-            assertEquals(chat, expectMostRecentContent().countryPerApp!!.onlyAppConfirmation)
+            awaitContent()
+            testSubject.onOpenApp(chat)
+            testSubject.onOpenCountries()
+            val picker = awaitPage<AppRoutingPage.Country>().picker
+            assertEquals(listOf("DE", "RO"), picker.options.map { it.name })
 
-            testSubject.onCancelOnlyApp()
-            assertNull(expectMostRecentContent().countryPerApp!!.onlyAppConfirmation)
+            testSubject.onChooseExit(AppExit("ro", "Bucharest"))
+            val route = awaitContentMatching { (it.page as? AppRoutingPage.Route)?.hasRule == true }
+            assertEquals(
+                AppRoute.Country(AppExit("ro", "Bucharest")),
+                (route.page as AppRoutingPage.Route).route,
+            )
+            cancelAndIgnoreRemainingEvents()
         }
-        verify(exactly = 0) { mockedSplitTunnelingRepository.setAppExit(any(), any()) }
-        verify(exactly = 0) { mockedSplitTunnelingRepository.setAppExitsEnabled(any()) }
+        assertTrue(appExitsEnabled.value)
+        assertEquals(mapOf("org.chat" to AppExit("ro", "Bucharest")), appExits.value)
+        coVerify { relayProvider.refreshIfStale() }
     }
 
     @Test
-    fun `removing a country from the row or the picker clears it`() = runTest {
-        appExits.value = mapOf(chat.packageName.value to AppExit("de"), bank.packageName.value to AppExit("se"))
-        initTestSubject(listOf(bank, chat), initialTab = SplitTunnelingTab.CountryPerApp)
+    fun `below Android 10 the country page never opens`() = runTest {
+        initTestSubject(countrySupported = false)
 
-        testSubject.onClearAppCountry(bank.packageName)
-        testSubject.onPickCountry(chat)
-        testSubject.onRemovePickedCountry()
-
-        verify { mockedSplitTunnelingRepository.clearAppExit(bank.packageName) }
-        verify { mockedSplitTunnelingRepository.clearAppExit(chat.packageName) }
+        testSubject.uiState.test {
+            awaitContent()
+            testSubject.onOpenApp(chat)
+            awaitPage<AppRoutingPage.Route>()
+            testSubject.onOpenCountries()
+            expectNoEvents()
+        }
     }
 
     @Test
-    fun `a country switch that narrows nothing turns on at once and leaves the split mode alone`() =
+    fun `outside the VPN as the default keeps the countries and warns while every app is in the VPN`() =
         runTest {
-            splitMode.value = SplitTunnelMode.IncludeOnly
-            initTestSubject(listOf(bank), initialTab = SplitTunnelingTab.CountryPerApp)
+            store(
+                AppRoutingSettings(
+                    SplitTunnelMode.Exclude,
+                    excludedApps = setOf("org.bank"),
+                )
+            )
+            initTestSubject()
 
             testSubject.uiState.test {
                 awaitContent()
-                testSubject.onAppExitsSwitch(true)
-                testSubject.onSplitModeSwitch(true)
-                // A pending confirmation would have produced a new state.
-                expectNoEvents()
+                testSubject.onChooseDefault(DefaultRoute.Direct)
+                val state = awaitContent()
+                assertEquals(DefaultRoute.Direct, state.defaultRoute)
+                assertEquals(emptyList(), state.rules)
+                assertTrue(state.fullTunnelFallback)
+                assertNull(state.confirmation)
             }
-            verify { mockedSplitTunnelingRepository.setAppExitsEnabled(true) }
-            verify(exactly = 0) { mockedSplitTunnelingRepository.setSplitMode(any()) }
+            assertEquals(SplitTunnelMode.IncludeOnly, splitMode.value)
+            assertEquals(emptySet(), excludedApps.value)
         }
 
     @Test
-    fun `turning the country switch on where it would narrow the full tunnel waits for the confirmation`() =
+    fun `the first rule over the full tunnel fallback asks first, naming the app`() = runTest {
+        store(AppRoutingSettings(SplitTunnelMode.IncludeOnly))
+        initTestSubject()
+
+        testSubject.uiState.test {
+            awaitContent()
+            testSubject.onOpenApp(bank)
+            awaitPage<AppRoutingPage.Route>()
+            testSubject.onChooseRoute(AppRoute.Vpn)
+            assertEquals(NarrowingConfirmation(bank), awaitContent().confirmation)
+            assertEquals(emptySet(), includedApps.value)
+
+            testSubject.onCancelNarrowing()
+            assertNull(awaitContent().confirmation)
+            assertEquals(emptySet(), includedApps.value)
+
+            testSubject.onChooseRoute(AppRoute.Vpn)
+            assertEquals(NarrowingConfirmation(bank), awaitContent().confirmation)
+            testSubject.onConfirmNarrowing()
+            val state = expectMostRecentContent()
+            assertNull(state.confirmation)
+            assertEquals(listOf(AppRuleItem(bank, AppRoute.Vpn, null)), state.rules)
+            assertFalse(state.fullTunnelFallback)
+        }
+        assertEquals(setOf(bank.packageName), includedApps.value)
+    }
+
+    @Test
+    fun `outside the VPN as the default over apps with a country asks first`() = runTest {
+        store(
+            AppRoutingSettings(appExitsEnabled = true, appExits = mapOf("org.chat" to AppExit("nl")))
+        )
+        initTestSubject()
+
+        testSubject.uiState.test {
+            awaitContent()
+            testSubject.onChooseDefault(DefaultRoute.Direct)
+            assertEquals(NarrowingConfirmation(null), awaitContent().confirmation)
+            assertEquals(SplitTunnelMode.Off, splitMode.value)
+
+            testSubject.onConfirmNarrowing()
+            assertEquals(DefaultRoute.Direct, expectMostRecentContent().defaultRoute)
+        }
+        assertEquals(SplitTunnelMode.IncludeOnly, splitMode.value)
+    }
+
+    @Test
+    fun `a second rule with outside the VPN as the default asks nothing`() = runTest {
+        store(AppRoutingSettings(SplitTunnelMode.IncludeOnly, includedApps = setOf("org.bank")))
+        initTestSubject()
+
+        testSubject.uiState.test {
+            awaitContent()
+            testSubject.onOpenApp(chat)
+            testSubject.onChooseRoute(AppRoute.Vpn)
+            assertNull(expectMostRecentContent().confirmation)
+        }
+        assertEquals(setOf(bank.packageName, chat.packageName), includedApps.value)
+    }
+
+    @Test
+    fun `the add page lists the apps without a rule, narrowed by the search, system apps on demand`() =
         runTest {
-            splitMode.value = SplitTunnelMode.IncludeOnly
-            appExits.value = mapOf(chat.packageName.value to AppExit("de"))
-            every { mockedSplitTunnelingRepository.appExitsSwitchNarrowsFullTunnel() } returns true
-            initTestSubject(listOf(bank, chat), initialTab = SplitTunnelingTab.CountryPerApp)
+            store(AppRoutingSettings(SplitTunnelMode.Exclude, excludedApps = setOf("org.bank")))
+            initTestSubject()
 
             testSubject.uiState.test {
-                assertFalse(awaitCountries().appExitsOnConfirmation)
-                testSubject.onAppExitsSwitch(true)
-                assertTrue(expectMostRecentContent().countryPerApp!!.appExitsOnConfirmation)
-                verify(exactly = 0) { mockedSplitTunnelingRepository.setAppExitsEnabled(any()) }
+                awaitContent()
+                testSubject.onOpenAddApp()
+                assertEquals(listOf(chat, maps), awaitPage<AppRoutingPage.AddApp>().apps)
 
-                testSubject.onConfirmOnlyApp()
-                assertFalse(expectMostRecentContent().countryPerApp!!.appExitsOnConfirmation)
+                testSubject.onAddAppSearchChange("ma")
+                assertEquals(listOf(maps), awaitPage<AppRoutingPage.AddApp>().apps)
+
+                testSubject.onAddAppSearchChange("")
+                showSystemApps.value = true
+                assertEquals(
+                    listOf(chat, clock, maps),
+                    expectMostRecentPage<AppRoutingPage.AddApp>().apps,
+                )
             }
-            verify { mockedSplitTunnelingRepository.setAppExitsEnabled(true) }
-            verify(exactly = 0) { mockedSplitTunnelingRepository.setSplitMode(any()) }
         }
 
     @Test
-    fun `a cancelled country switch stays off`() = runTest {
-        splitMode.value = SplitTunnelMode.IncludeOnly
-        appExits.value = mapOf(chat.packageName.value to AppExit("de"))
-        every { mockedSplitTunnelingRepository.appExitsSwitchNarrowsFullTunnel() } returns true
-        initTestSubject(listOf(chat), initialTab = SplitTunnelingTab.CountryPerApp)
+    fun `back goes from the countries to the route to the list, then leaves`() = runTest {
+        initTestSubject()
 
         testSubject.uiState.test {
-            awaitCountries()
-            testSubject.onAppExitsSwitch(true)
-            assertTrue(expectMostRecentContent().countryPerApp!!.appExitsOnConfirmation)
+            awaitContent()
+            testSubject.onOpenApp(chat)
+            testSubject.onOpenCountries()
+            awaitPage<AppRoutingPage.Country>()
 
-            testSubject.onCancelOnlyApp()
-            assertFalse(expectMostRecentContent().countryPerApp!!.appExitsOnConfirmation)
+            assertTrue(testSubject.onBack())
+            awaitPage<AppRoutingPage.Route>()
+            assertTrue(testSubject.onBack())
+            assertEquals(AppRoutingPage.Rules, awaitContent().page)
+            assertFalse(testSubject.onBack())
         }
-        verify(exactly = 0) { mockedSplitTunnelingRepository.setAppExitsEnabled(any()) }
     }
 
     @Test
-    fun `below Android 10 the country tab cannot be turned on nor a country chosen`() = runTest {
-        initTestSubject(
-            listOf(bank),
-            initialTab = SplitTunnelingTab.CountryPerApp,
-            countryPerAppSupported = false,
-        )
+    fun `an app picked from the add page gets no rule until a route other than the default`() =
+        runTest {
+            initTestSubject()
 
-        testSubject.uiState.test {
-            assertFalse(awaitCountries().supported)
-            testSubject.onAppExitsSwitch(true)
-            testSubject.onPickCountry(bank)
-            // An open picker would have produced a new state.
-            expectNoEvents()
+            testSubject.uiState.test {
+                awaitContent()
+                testSubject.onOpenAddApp()
+                awaitPage<AppRoutingPage.AddApp>()
+                testSubject.onOpenApp(maps)
+                assertEquals(maps, awaitPage<AppRoutingPage.Route>().app)
+                testSubject.onChooseRoute(AppRoute.Vpn)
+                testSubject.onDone()
+                assertEquals(emptyList(), awaitContent().rules)
+            }
+            assertEquals(emptyList(), writes)
         }
-        verify(exactly = 0) { mockedSplitTunnelingRepository.setAppExitsEnabled(any()) }
-    }
 
     private fun relay(country: String, city: String) =
         WarrenRelaySummary(
@@ -441,49 +397,54 @@ class SplitTunnelingViewModelTest {
             weight = 1,
         )
 
-    private suspend fun app.cash.turbine.ReceiveTurbine<Lc<Loading, SplitTunnelingUiState>>
-        .awaitCountries(): CountryPerAppUiState {
-        var countries = awaitContent().countryPerApp
-        while (countries == null) countries = awaitContent().countryPerApp
-        return countries
-    }
-
-    private suspend fun app.cash.turbine.ReceiveTurbine<Lc<Loading, SplitTunnelingUiState>>
-        .awaitContent(): SplitTunnelingUiState {
+    private suspend fun ReceiveTurbine<Lc<Loading, AppRoutingUiState>>.awaitContent():
+        AppRoutingUiState {
         var item = awaitItem()
         while (item !is Lc.Content) item = awaitItem()
         return item.value
     }
 
-    private fun app.cash.turbine.ReceiveTurbine<Lc<Loading, SplitTunnelingUiState>>
-        .expectMostRecentContent(): SplitTunnelingUiState {
+    private suspend fun ReceiveTurbine<Lc<Loading, AppRoutingUiState>>.awaitContentMatching(
+        predicate: (AppRoutingUiState) -> Boolean
+    ): AppRoutingUiState {
+        var state = awaitContent()
+        while (!predicate(state)) state = awaitContent()
+        return state
+    }
+
+    private suspend inline fun <reified P : AppRoutingPage> ReceiveTurbine<
+        Lc<Loading, AppRoutingUiState>
+    >
+        .awaitPage(): P {
+        var page = awaitContent().page
+        while (page !is P) page = awaitContent().page
+        return page
+    }
+
+    private fun ReceiveTurbine<Lc<Loading, AppRoutingUiState>>.expectMostRecentContent():
+        AppRoutingUiState {
         val item = expectMostRecentItem()
-        assertIs<Lc.Content<SplitTunnelingUiState>>(item)
+        assertIs<Lc.Content<AppRoutingUiState>>(item)
         return item.value
     }
 
-    private fun initTestSubject(
-        appList: List<AppData>,
-        initialTab: SplitTunnelingTab? = null,
-        countryPerAppSupported: Boolean = true,
-    ) {
-        every { mockedApplicationsProvider.apps() } returns appList
+    private inline fun <reified P : AppRoutingPage> ReceiveTurbine<
+        Lc<Loading, AppRoutingUiState>
+    >
+        .expectMostRecentPage(): P = assertIs<P>(expectMostRecentContent().page)
+
+    private fun initTestSubject(countrySupported: Boolean = true) {
+        every { applicationsProvider.apps() } returns listOf(bank, chat, clock, maps)
         testSubject =
             SplitTunnelingViewModel(
                 isModal = false,
-                initialTab = initialTab,
-                mockedSplitTunnelingRepository,
-                mockedUserPreferencesRepository,
-                SplitTunnelingUseCase(
-                    mockedSplitTunnelingRepository,
-                    mockedApplicationsProvider,
-                    mockedUserPreferencesRepository,
-                    UnconfinedTestDispatcher(),
-                ),
-                appRoutesProvider,
-                mockedRelayProvider,
-                countryPerAppSupported = countryPerAppSupported,
-                UnconfinedTestDispatcher(),
+                splitTunnelingRepository = repository,
+                userPreferencesRepository = preferences,
+                applicationsProvider = applicationsProvider,
+                appRoutesStatusProvider = appRoutesProvider,
+                relayProvider = relayProvider,
+                countryPerAppSupported = countrySupported,
+                dispatcher = UnconfinedTestDispatcher(),
                 countryName = { it.uppercase() },
             )
     }

@@ -10,10 +10,11 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import com.warrenbrowse.vpn.lib.model.AppExit
 import com.warrenbrowse.vpn.lib.model.AppRouting
+import com.warrenbrowse.vpn.lib.model.AppRoutingSettings
 import com.warrenbrowse.vpn.lib.model.PackageName
+import com.warrenbrowse.vpn.lib.model.RoutingOp
 import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
-import com.warrenbrowse.vpn.lib.model.appExitsSwitchNarrowsFullTunnel
-import com.warrenbrowse.vpn.lib.model.countryChoiceNarrowsFullTunnel
+import com.warrenbrowse.vpn.lib.model.changeNarrowsTunnel
 import com.warrenbrowse.vpn.lib.model.effectiveAppExits
 import com.warrenbrowse.vpn.lib.model.resolveAppRouting
 
@@ -41,7 +42,7 @@ class SplitTunnelingRepository(
 
     val includedApps: StateFlow<Set<PackageName>> = settings.includedApps.asPackageNames()
 
-    /** The switch of the "Country per app" tab. */
+    /** Whether the saved countries are in force. */
     val appExitsEnabled: StateFlow<Boolean> = settings.appExitsEnabled
 
     /** Every saved country, in force or not, by package name. */
@@ -90,60 +91,44 @@ class SplitTunnelingRepository(
             }
             .stateIn(scope, SharingStarted.Eagerly, null)
 
-    fun setSplitMode(mode: SplitTunnelMode) = settings.setSplitMode(mode)
-
-    fun addExcludedApp(app: PackageName) = settings.addExcludedApp(app.value)
-
-    fun removeExcludedApp(app: PackageName) = settings.removeExcludedApp(app.value)
-
-    fun addIncludedApp(app: PackageName) = settings.addIncludedApp(app.value)
-
-    fun removeIncludedApp(app: PackageName) = settings.removeIncludedApp(app.value)
-
-    fun setAppExitsEnabled(enabled: Boolean) = settings.setAppExitsEnabled(enabled)
+    /** The saved settings as they are now, for App routing to plan a change against. */
+    fun routingSettings(): AppRoutingSettings =
+        AppRoutingSettings(
+            splitMode = settings.splitMode.value,
+            excludedApps = settings.excludedApps.value,
+            includedApps = settings.includedApps.value,
+            appExitsEnabled = settings.appExitsEnabled.value,
+            appExits = settings.appExits.value,
+        )
 
     /**
-     * Chooses [exit] for [app]. Choosing a country is asking for it, so a
-     * switched off tab is turned on, as on desktop.
+     * Writes [ops] one at a time and in their order: the tunnel follows each write on its own, and
+     * the order is what keeps every state in between safe ([AppRoutingSettings.planAppRoute]).
      */
-    fun setAppExit(app: PackageName, exit: AppExit) {
-        settings.setAppExit(app.value, exit)
-        if (!settings.appExitsEnabled.value) settings.setAppExitsEnabled(true)
+    fun apply(ops: List<RoutingOp>) {
+        for (op in ops) {
+            when (op) {
+                is RoutingOp.SetSplitMode -> settings.setSplitMode(op.mode)
+                is RoutingOp.AddExcluded -> settings.addExcludedApp(op.app)
+                is RoutingOp.RemoveExcluded -> settings.removeExcludedApp(op.app)
+                is RoutingOp.AddIncluded -> settings.addIncludedApp(op.app)
+                is RoutingOp.RemoveIncluded -> settings.removeIncludedApp(op.app)
+                is RoutingOp.SetExit -> settings.setAppExit(op.app, op.exit)
+                is RoutingOp.ClearExit -> settings.clearAppExit(op.app)
+                is RoutingOp.SetExitsEnabled -> settings.setAppExitsEnabled(op.enabled)
+            }
+        }
     }
 
-    fun clearAppExit(app: PackageName) = settings.clearAppExit(app.value)
-
     /**
-     * Whether choosing [exit] for [app] would turn the include-only full-tunnel fallback into a
-     * list holding only the apps with a country, so the screen asks first. It asks the package
-     * manager, so only ever off the main thread.
-     */
-    fun countryChoiceNarrowsFullTunnel(app: PackageName, exit: AppExit): Boolean =
-        countryChoiceNarrowsFullTunnel(
-            settings.splitMode.value,
-            settings.excludedApps.value,
-            settings.includedApps.value,
-            settings.appExits.value,
-            settings.appExitsEnabled.value,
-            app.value,
-            exit,
-            isAppInstalled,
-        )
-
-    /**
-     * Whether turning the "Country per app" switch on would turn the include-only full-tunnel
-     * fallback into a list holding only the apps with a country, so the screen asks first. It asks
+     * Whether [ops] would turn a tunnel that carries every app into a list, where include-only runs
+     * as a full tunnel because none of its apps is on the device, so the screen asks first. It asks
      * the package manager, so only ever off the main thread.
      */
-    fun appExitsSwitchNarrowsFullTunnel(): Boolean =
-        appExitsSwitchNarrowsFullTunnel(
-            settings.splitMode.value,
-            settings.excludedApps.value,
-            settings.includedApps.value,
-            settings.appExits.value,
-            settings.appExitsEnabled.value,
-            isAppInstalled,
-        )
+    fun changeNarrowsTunnel(ops: List<RoutingOp>): Boolean {
+        val now = routingSettings()
+        return changeNarrowsTunnel(now, now.apply(ops), isAppInstalled)
+    }
 
     private fun StateFlow<Set<String>>.asPackageNames(): StateFlow<Set<PackageName>> =
         map { set -> set.mapTo(LinkedHashSet(), ::PackageName) }

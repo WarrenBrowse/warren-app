@@ -4,8 +4,8 @@ import kotlinx.parcelize.Parcelize
 import com.warrenbrowse.vpn.core.NavKey2
 
 /**
- * Opens App routing on the tab of the split mode in force, or on "Country per app" when
- * [countryPerApp].
+ * Opens App routing. [countryPerApp] says it was opened from the connect screen's "apps in other
+ * countries" badge, whose shared transition it continues.
  */
 @Parcelize
 data class SplitTunnelingNavKey(val isModal: Boolean = false, val countryPerApp: Boolean = false) :

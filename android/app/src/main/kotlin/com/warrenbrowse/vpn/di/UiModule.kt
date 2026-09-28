@@ -29,8 +29,6 @@ import com.warrenbrowse.vpn.feature.settings.impl.support.ForumActivityViewModel
 import com.warrenbrowse.vpn.feature.settings.impl.support.ReportProblemViewModel
 import com.warrenbrowse.vpn.feature.splittunneling.impl.SplitTunnelingViewModel
 import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.ApplicationsProvider
-import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.SplitTunnelingUseCase
-import com.warrenbrowse.vpn.feature.splittunneling.impl.search.SearchSplitTunnelingViewModel
 import com.warrenbrowse.vpn.lib.model.PackageName
 import com.warrenbrowse.vpn.lib.repository.AppVersionInfoRepository
 import com.warrenbrowse.vpn.lib.repository.AutoStartAndConnectOnBootRepository
@@ -109,7 +107,6 @@ val uiModule = module {
             }
         }
     }
-    single { SplitTunnelingUseCase(get(), get(), get(), Dispatchers.IO) }
     single { SplashCompleteRepository() }
     single {
         AutoStartAndConnectOnBootRepository(
@@ -271,10 +268,9 @@ val uiModule = module {
     viewModel { params ->
         SplitTunnelingViewModel(
             isModal = params[0],
-            initialTab = params.getOrNull(),
             splitTunnelingRepository = get(),
             userPreferencesRepository = get(),
-            splitTunnelingUseCase = get(),
+            applicationsProvider = get(),
             appRoutesStatusProvider = get(),
             relayProvider = get(),
             // ConnectivityManager.getConnectionOwnerUid, which names the app
@@ -282,10 +278,6 @@ val uiModule = module {
             countryPerAppSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q,
             dispatcher = Dispatchers.IO,
         )
-    }
-
-    viewModel { params ->
-        SearchSplitTunnelingViewModel(tab = params.get(), get(), get(), Dispatchers.IO)
     }
 
     // This view model must be single so we correctly attach lifecycle and share it with activity

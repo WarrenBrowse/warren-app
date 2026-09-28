@@ -2,6 +2,7 @@ package com.warrenbrowse.vpn.feature.splittunneling.impl
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import java.text.Collator
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,33 +10,45 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.AppData
-import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.SplitTunnelingUseCase
-import com.warrenbrowse.vpn.feature.splittunneling.impl.countries.AppRoutingInputs
-import com.warrenbrowse.vpn.feature.splittunneling.impl.countries.CountryPerAppUiState
-import com.warrenbrowse.vpn.feature.splittunneling.impl.countries.CountryPickerUiState
-import com.warrenbrowse.vpn.feature.splittunneling.impl.countries.countryPerAppSections
+import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.ApplicationsProvider
 import com.warrenbrowse.vpn.feature.splittunneling.impl.countries.countryPicker
 import com.warrenbrowse.vpn.lib.common.Lc
 import com.warrenbrowse.vpn.lib.common.constant.VIEW_MODEL_STOP_TIMEOUT
 import com.warrenbrowse.vpn.lib.model.AppExit
-import com.warrenbrowse.vpn.lib.model.PackageName
+import com.warrenbrowse.vpn.lib.model.AppRoute
+import com.warrenbrowse.vpn.lib.model.AppRouteLine
+import com.warrenbrowse.vpn.lib.model.AppRouteStatus
+import com.warrenbrowse.vpn.lib.model.AppRoutingSettings
+import com.warrenbrowse.vpn.lib.model.DefaultRoute
+import com.warrenbrowse.vpn.lib.model.RoutingOp
 import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
+import com.warrenbrowse.vpn.lib.model.appRouteLine
+import com.warrenbrowse.vpn.lib.model.asAppRoute
 import com.warrenbrowse.vpn.lib.model.countryDisplayName
 import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenAppRoutesStatusProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenRelaySummary
 
-@Suppress("TooManyFunctions")
+/**
+ * App routing: the default route, the rules, and the pages that change them. Every change is a
+ * plan of the settings model ([AppRoutingSettings.planAppRoute], [AppRoutingSettings.planDefaultRoute])
+ * that the repository writes in order, so the precedence and the safe order stay in one place.
+ */
+@Suppress("TooManyFunctions", "LongParameterList")
 class SplitTunnelingViewModel(
-    isModal: Boolean,
-    initialTab: SplitTunnelingTab?,
+    private val isModal: Boolean,
     private val splitTunnelingRepository: SplitTunnelingRepository,
     private val userPreferencesRepository: UserPreferencesRepository,
-    splitTunnelingUseCase: SplitTunnelingUseCase,
+    applicationsProvider: ApplicationsProvider,
     appRoutesStatusProvider: WarrenAppRoutesStatusProvider,
     private val relayProvider: WarrenRelayProvider,
     /** Whether the device can run per-app countries (Android 10 and newer). */
@@ -44,87 +57,60 @@ class SplitTunnelingViewModel(
     private val countryName: (String) -> String = { countryDisplayName(it) },
 ) : ViewModel() {
 
-    // Without an explicit tab, the screen opens on the tab of the mode in
-    // force, so a user sent here by the "VPN only for" label lands on its list.
-    private val tab =
-        MutableStateFlow(
-            initialTab
-                ?: if (splitTunnelingRepository.splitMode.value == SplitTunnelMode.IncludeOnly) {
-                    SplitTunnelingTab.IncludeOnly
-                } else {
-                    SplitTunnelingTab.Bypass
-                }
-        )
-
-    private val pendingMode = MutableStateFlow<SplitTunnelMode?>(null)
-
-    private val countrySearch = MutableStateFlow("")
-    private val picking = MutableStateFlow<AppData?>(null)
+    private val page = MutableStateFlow<PageKey>(PageKey.Rules)
+    private val addSearch = MutableStateFlow("")
     private val pickerSearch = MutableStateFlow("")
     private val pickerExpanded = MutableStateFlow<Set<String>>(emptySet())
-    private val pendingOnlyApps = MutableStateFlow<OnlyAppsChange?>(null)
+    private val pending = MutableStateFlow<PendingChange?>(null)
 
-    private val routing: Flow<AppRoutingInputs> =
+    // The writes of one change must not interleave with the next one's.
+    private val writing = Mutex()
+
+    private val settings: Flow<AppRoutingSettings> =
         combine(
             splitTunnelingRepository.splitMode,
             splitTunnelingRepository.excludedApps,
-            splitTunnelingRepository.appExits,
+            splitTunnelingRepository.includedApps,
             splitTunnelingRepository.appExitsEnabled,
-            appRoutesStatusProvider.appRoutes,
-        ) { mode, excluded, exits, enabled, statuses ->
-            AppRoutingInputs(mode, excluded.mapTo(HashSet()) { it.value }, exits, enabled, statuses)
-        }
-
-    private val picker: Flow<CountryPickerUiState?> =
-        combine(
-            picking,
             splitTunnelingRepository.appExits,
-            relayProvider.catalogue,
-            pickerSearch,
-            pickerExpanded,
-        ) { app, exits, relays, search, expanded ->
-            app?.let { countryPicker(it, exits, relays, search, expanded, countryName) }
-        }
-
-    private val countrySearchAndPending: Flow<Pair<String, OnlyAppsChange?>> =
-        combine(countrySearch, pendingOnlyApps) { search, pending -> search to pending }
-
-    private val baseState: Flow<SplitTunnelingUiState> =
-        combine(
-            splitTunnelingUseCase(tab),
-            splitTunnelingRepository.splitMode,
-            userPreferencesRepository.showSystemAppsSplitTunneling(),
-            tab,
-            pendingMode,
-        ) { splitApps, mode, showSystemApps, shownTab, pending ->
-            SplitTunnelingUiState(
-                splitMode = mode,
-                tab = shownTab,
-                selectedApps = splitApps.selectedApps,
-                otherApps = splitApps.otherApps,
-                showSystemApps = showSystemApps,
-                isModal = isModal,
-                confirmation = pending?.let { modeChangeConfirmation(mode, it) },
+        ) { mode, excluded, included, enabled, exits ->
+            AppRoutingSettings(
+                mode,
+                excluded.mapTo(LinkedHashSet()) { it.value },
+                included.mapTo(LinkedHashSet()) { it.value },
+                enabled,
+                exits,
             )
         }
 
-    val uiState: StateFlow<Lc<Loading, SplitTunnelingUiState>> =
-        combine(baseState, routing, countrySearchAndPending, picker) {
-                base,
-                routing,
-                (search, pending),
-                picker ->
-                val countryPerApp =
-                    if (base.tab == SplitTunnelingTab.CountryPerApp) {
-                        countryPerAppState(base, routing, search, picker)
-                            .copy(
-                                onlyAppConfirmation = (pending as? OnlyAppsChange.Exit)?.app,
-                                appExitsOnConfirmation = pending == OnlyAppsChange.SwitchOn,
-                            )
-                    } else {
-                        null
-                    }
-                Lc.Content(base.copy(countryPerApp = countryPerApp))
+    private val sources: Flow<Sources> =
+        combine(
+            flow { emit(applicationsProvider.apps()) }.flowOn(dispatcher),
+            settings,
+            splitTunnelingRepository.vpnOnlyForCount,
+            appRoutesStatusProvider.appRoutes,
+        ) { apps, settings, onlyForCount, statuses ->
+            Sources(apps, settings, onlyForCount, statuses)
+        }
+
+    private val pageInputs: Flow<PageInputs> =
+        combine(
+            page,
+            addSearch,
+            userPreferencesRepository.showSystemAppsSplitTunneling(),
+            pickerSearch,
+            pickerExpanded,
+        ) { page, search, showSystemApps, pickerSearch, expanded ->
+            PageInputs(page, search, showSystemApps, pickerSearch, expanded)
+        }
+
+    val uiState: StateFlow<Lc<Loading, AppRoutingUiState>> =
+        combine(sources, pageInputs, relayProvider.catalogue, pending) {
+                sources,
+                inputs,
+                catalogue,
+                pending ->
+                Lc.Content(state(sources, inputs, catalogue, pending)) as Lc<Loading, AppRoutingUiState>
             }
             .stateIn(
                 viewModelScope,
@@ -132,109 +118,113 @@ class SplitTunnelingViewModel(
                 Lc.Loading(Loading(isModal = isModal)),
             )
 
-    private fun countryPerAppState(
-        base: SplitTunnelingUiState,
-        routing: AppRoutingInputs,
-        search: String,
-        picker: CountryPickerUiState?,
-    ): CountryPerAppUiState {
-        val (withCountry, others) =
-            countryPerAppSections(base.selectedApps, base.otherApps, routing, search)
-        return CountryPerAppUiState(
-            supported = countryPerAppSupported,
-            enabled = routing.enabled,
-            searchTerm = search,
-            withCountry = withCountry,
-            otherApps = others,
-            picker = picker.takeIf { countryPerAppSupported },
+    private fun state(
+        sources: Sources,
+        inputs: PageInputs,
+        catalogue: List<WarrenRelaySummary>,
+        pending: PendingChange?,
+    ): AppRoutingUiState {
+        val settings = sources.settings
+        val byPackage = sources.apps.associateBy { it.packageName.value }
+        val collator = Collator.getInstance()
+        val rules =
+            settings
+                .rules()
+                .mapNotNull { rule ->
+                    byPackage[rule.app]?.let { app ->
+                        AppRuleItem(app, rule.route, sources.line(rule.app, rule.route))
+                    }
+                }
+                .sortedWith { a, b -> collator.compare(a.app.name, b.app.name) }
+        val page =
+            when (val key = inputs.page) {
+                PageKey.Rules -> AppRoutingPage.Rules
+                PageKey.AddApp -> {
+                    val ruled = rules.mapTo(HashSet()) { it.app.packageName }
+                    val needle = inputs.addSearch.trim()
+                    AppRoutingPage.AddApp(
+                        searchTerm = inputs.addSearch,
+                        showSystemApps = inputs.showSystemApps,
+                        apps =
+                            sources.apps
+                                .filter { it.packageName !in ruled }
+                                .filter { inputs.showSystemApps || !it.isSystemApp }
+                                .filter { needle.isEmpty() || it.name.contains(needle, true) }
+                                .sortedWith { a, b -> collator.compare(a.name, b.name) },
+                    )
+                }
+                is PageKey.Route -> {
+                    val route = settings.routeOf(key.app.packageName.value)
+                    AppRoutingPage.Route(
+                        app = key.app,
+                        route = route,
+                        defaultRoute = settings.defaultRoute,
+                        line = sources.line(key.app.packageName.value, route),
+                    )
+                }
+                is PageKey.Country ->
+                    AppRoutingPage.Country(
+                        countryPicker(
+                            key.app,
+                            settings.effectiveAppExits,
+                            catalogue,
+                            inputs.pickerSearch,
+                            inputs.pickerExpanded,
+                            countryName,
+                        )
+                    )
+            }
+        return AppRoutingUiState(
+            defaultRoute = settings.defaultRoute,
+            rules = rules,
+            fullTunnelFallback =
+                settings.splitMode == SplitTunnelMode.IncludeOnly && sources.onlyForCount == null,
+            countrySupported = countryPerAppSupported,
+            isModal = isModal,
+            page = page,
+            confirmation = pending?.let { NarrowingConfirmation(it.app) },
         )
     }
 
-    fun onSelectTab(selected: SplitTunnelingTab) {
-        tab.value = selected
+    /** The "Other apps go" choice. */
+    fun onChooseDefault(next: DefaultRoute) {
+        change(app = null) { it.planDefaultRoute(next) }
     }
 
-    /** The switch of the shown tab. */
-    fun onSplitModeSwitch(on: Boolean) {
-        val tabMode = tab.value.mode ?: return
-        val next = if (on) tabMode else SplitTunnelMode.Off
-        if (modeChangeConfirmation(splitTunnelingRepository.splitMode.value, next) != null) {
-            pendingMode.value = next
-        } else {
-            applyMode(next)
-        }
+    fun onOpenAddApp() {
+        addSearch.value = ""
+        page.value = PageKey.AddApp
     }
 
-    fun onConfirmModeChange() {
-        val next = pendingMode.value ?: return
-        pendingMode.value = null
-        applyMode(next)
+    fun onAddAppSearchChange(term: String) {
+        addSearch.value = term
     }
 
-    fun onCancelModeChange() {
-        pendingMode.value = null
-    }
-
-    private fun applyMode(mode: SplitTunnelMode) {
-        viewModelScope.launch(dispatcher) { splitTunnelingRepository.setSplitMode(mode) }
-    }
-
-    fun onAddAppClick(packageName: PackageName) {
-        val shown = tab.value
-        viewModelScope.launch(dispatcher) {
-            when (shown) {
-                SplitTunnelingTab.Bypass -> splitTunnelingRepository.addExcludedApp(packageName)
-                SplitTunnelingTab.IncludeOnly -> splitTunnelingRepository.addIncludedApp(packageName)
-                SplitTunnelingTab.CountryPerApp -> Unit
-            }
-        }
-    }
-
-    fun onRemoveAppClick(packageName: PackageName) {
-        val shown = tab.value
-        viewModelScope.launch(dispatcher) {
-            when (shown) {
-                SplitTunnelingTab.Bypass -> splitTunnelingRepository.removeExcludedApp(packageName)
-                SplitTunnelingTab.IncludeOnly ->
-                    splitTunnelingRepository.removeIncludedApp(packageName)
-                SplitTunnelingTab.CountryPerApp -> Unit
-            }
-        }
-    }
-
-    fun onShowSystemAppsClick(show: Boolean) {
+    fun onShowSystemApps(show: Boolean) {
         viewModelScope.launch(dispatcher) {
             userPreferencesRepository.setShowSystemAppsSplitTunneling(show)
         }
     }
 
-    /**
-     * The switch of the "Country per app" tab. It is not a split mode and leaves it alone, and
-     * below Android 10 it cannot be turned on. Turning it on where the saved countries would become
-     * the only apps in the VPN, where every app uses it now, waits for the user's answer.
-     */
-    fun onAppExitsSwitch(on: Boolean) {
-        if (on && !countryPerAppSupported) return
-        viewModelScope.launch(dispatcher) {
-            if (on && splitTunnelingRepository.appExitsSwitchNarrowsFullTunnel()) {
-                pendingOnlyApps.value = OnlyAppsChange.SwitchOn
-            } else {
-                splitTunnelingRepository.setAppExitsEnabled(on)
-            }
-        }
+    /** Opens the route of [app], from its row or from the add page. Nothing is saved yet. */
+    fun onOpenApp(app: AppData) {
+        page.value = PageKey.Route(app)
     }
 
-    fun onCountrySearchChange(term: String) {
-        countrySearch.value = term
+    /** Through the VPN or outside it, for the app whose route is open. */
+    fun onChooseRoute(route: AppRoute) {
+        val app = (page.value as? PageKey.Route)?.app ?: return
+        change(app) { it.planAppRoute(app.packageName.value, route) }
     }
 
-    /** Opens the picker on [app], with the cities of its own country shown. */
-    fun onPickCountry(app: AppData) {
+    /** Opens the countries of the app whose route is open, with the cities of its own shown. */
+    fun onOpenCountries() {
         if (!countryPerAppSupported) return
+        val app = (page.value as? PageKey.Route)?.app ?: return
+        val current = splitTunnelingRepository.routingSettings().routeOf(app.packageName.value)
         pickerSearch.value = ""
-        pickerExpanded.value =
-            setOfNotNull(splitTunnelingRepository.appExits.value[app.packageName.value]?.country)
-        picking.value = app
+        pickerExpanded.value = setOfNotNull((current as? AppRoute.Country)?.exit?.country)
+        page.value = PageKey.Country(app)
         viewModelScope.launch(dispatcher) { relayProvider.refreshIfStale() }
     }
 
@@ -248,63 +238,107 @@ class SplitTunnelingViewModel(
     }
 
     /**
-     * Saves [exit] for the app the picker is open on and closes it. It only records the choice:
-     * the main connection neither moves nor reconnects, and a switched off tab is turned on by
-     * the repository. A choice that would make the app the only one in the VPN, where every app
-     * uses it now, waits for the user's answer instead.
+     * Gives the app the country [exit] and goes back to its route. It only records the choice: the
+     * main connection neither moves nor reconnects.
      */
     fun onChooseExit(exit: AppExit) {
-        val app = picking.value ?: return
-        picking.value = null
+        val app = (page.value as? PageKey.Country)?.app ?: return
+        page.value = PageKey.Route(app)
+        change(app) { it.planAppRoute(app.packageName.value, AppRoute.Country(exit)) }
+    }
+
+    /** The app follows the default again, and the list shows once more. */
+    fun onRemoveRule() {
+        val app = (page.value as? PageKey.Route)?.app ?: return
+        page.value = PageKey.Rules
+        change(app) { it.planAppRoute(app.packageName.value, it.defaultRoute.asAppRoute()) }
+    }
+
+    fun onDone() {
+        page.value = PageKey.Rules
+    }
+
+    /** Goes one page back; false on the list, which the screen then leaves. */
+    fun onBack(): Boolean {
+        page.value =
+            when (val current = page.value) {
+                PageKey.Rules -> return false
+                PageKey.AddApp,
+                is PageKey.Route -> PageKey.Rules
+                is PageKey.Country -> PageKey.Route(current.app)
+            }
+        return true
+    }
+
+    fun onConfirmNarrowing() {
+        val change = pending.value ?: return
+        pending.value = null
         viewModelScope.launch(dispatcher) {
-            if (splitTunnelingRepository.countryChoiceNarrowsFullTunnel(app.packageName, exit)) {
-                pendingOnlyApps.value = OnlyAppsChange.Exit(app, exit)
+            writing.withLock { splitTunnelingRepository.apply(change.ops) }
+        }
+    }
+
+    fun onCancelNarrowing() {
+        pending.value = null
+    }
+
+    /**
+     * Plans a change against the settings as they are and writes it, unless it makes a few apps
+     * the only ones in the VPN where every app uses it now: that one waits for the user's answer.
+     */
+    private fun change(app: AppData?, plan: (AppRoutingSettings) -> List<RoutingOp>) {
+        viewModelScope.launch(dispatcher) {
+            writing.withLock {
+                val ops = plan(splitTunnelingRepository.routingSettings())
+                when {
+                    ops.isEmpty() -> Unit
+                    splitTunnelingRepository.changeNarrowsTunnel(ops) ->
+                        pending.value = PendingChange(app, ops)
+                    else -> splitTunnelingRepository.apply(ops)
+                }
+            }
+        }
+    }
+
+    private data class Sources(
+        val apps: List<AppData>,
+        val settings: AppRoutingSettings,
+        val onlyForCount: Int?,
+        val statuses: List<AppRouteStatus>,
+    ) {
+        /** The state of the route of an app with a country, which the others do not have. */
+        fun line(app: String, route: AppRoute): AppRouteLine? =
+            if (route is AppRoute.Country) {
+                appRouteLine(
+                    settings.splitMode,
+                    settings.excludedApps,
+                    settings.appExits,
+                    settings.appExitsEnabled,
+                    statuses,
+                    app,
+                )
             } else {
-                splitTunnelingRepository.setAppExit(app.packageName, exit)
+                null
             }
-        }
     }
 
-    /** Applies the change held by the "only these apps" confirmation: a country, or the switch. */
-    fun onConfirmOnlyApp() {
-        val change = pendingOnlyApps.value ?: return
-        pendingOnlyApps.value = null
-        viewModelScope.launch(dispatcher) {
-            when (change) {
-                is OnlyAppsChange.Exit ->
-                    splitTunnelingRepository.setAppExit(change.app.packageName, change.exit)
-                OnlyAppsChange.SwitchOn -> splitTunnelingRepository.setAppExitsEnabled(true)
-            }
-        }
+    private data class PageInputs(
+        val page: PageKey,
+        val addSearch: String,
+        val showSystemApps: Boolean,
+        val pickerSearch: String,
+        val pickerExpanded: Set<String>,
+    )
+
+    private sealed interface PageKey {
+        data object Rules : PageKey
+
+        data object AddApp : PageKey
+
+        data class Route(val app: AppData) : PageKey
+
+        data class Country(val app: AppData) : PageKey
     }
 
-    fun onCancelOnlyApp() {
-        pendingOnlyApps.value = null
-    }
-
-    fun onRemovePickedCountry() {
-        val app = picking.value ?: return
-        picking.value = null
-        onClearAppCountry(app.packageName)
-    }
-
-    fun onDismissPicker() {
-        picking.value = null
-    }
-
-    fun onClearAppCountry(packageName: PackageName) {
-        viewModelScope.launch(dispatcher) { splitTunnelingRepository.clearAppExit(packageName) }
-    }
-}
-
-/**
- * A change that waits for the user's answer because it would make the apps with a country the only
- * ones in the VPN, where include-only runs as a full tunnel (docs/app-routing.md section 3.4).
- */
-private sealed interface OnlyAppsChange {
-    /** A first country for [app]. */
-    data class Exit(val app: AppData, val exit: AppExit) : OnlyAppsChange
-
-    /** The "Country per app" switch turned on over saved countries. */
-    data object SwitchOn : OnlyAppsChange
+    private data class PendingChange(val app: AppData?, val ops: List<RoutingOp>)
 }

@@ -4,39 +4,16 @@ import java.text.Collator
 import com.warrenbrowse.vpn.feature.splittunneling.impl.applist.AppData
 import com.warrenbrowse.vpn.lib.model.AppExit
 import com.warrenbrowse.vpn.lib.model.AppRouteLine
-import com.warrenbrowse.vpn.lib.model.AppRouteStatus
 import com.warrenbrowse.vpn.lib.model.AppRouteUnavailableReason
-import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
-import com.warrenbrowse.vpn.lib.model.appRouteLine
 import com.warrenbrowse.vpn.lib.repository.WarrenRelaySummary
 
-/** One app of the "With a country" section: its country and the line under its name. */
-data class AppCountryItem(val app: AppData, val exit: AppExit, val line: AppRouteLine?)
-
-/** The "Country per app" tab (docs/app-routing.md section 2.6). */
-data class CountryPerAppUiState(
-    /** False below Android 10, where the owner of a flow cannot be looked up. */
-    val supported: Boolean = true,
-    val enabled: Boolean = false,
-    val searchTerm: String = "",
-    val withCountry: List<AppCountryItem> = emptyList(),
-    val otherApps: List<AppData> = emptyList(),
-    val picker: CountryPickerUiState? = null,
-    /**
-     * The app whose country waits for the user's answer, because it would become the only app in
-     * the VPN (include-only running as a full tunnel, docs/app-routing.md section 3.4).
-     */
-    val onlyAppConfirmation: AppData? = null,
-    /**
-     * Whether turning the tab's switch on waits for the user's answer, because the saved countries
-     * would become the only apps in the VPN (include-only running as a full tunnel,
-     * docs/app-routing.md section 3.4).
-     */
-    val appExitsOnConfirmation: Boolean = false,
-) {
-    val noSearchResult: Boolean
-        get() = searchTerm.isNotBlank() && withCountry.isEmpty() && otherApps.isEmpty()
-}
+/** What a row of the country page, or its button, can do. */
+class CountryPickerActions(
+    val onSearchChange: (String) -> Unit,
+    val onToggleCountry: (String) -> Unit,
+    val onChoose: (AppExit) -> Unit,
+    val onCancel: () -> Unit,
+)
 
 /** The country picker opened for [app]. */
 data class CountryPickerUiState(
@@ -53,15 +30,6 @@ data class CountryPickerUiState(
 
 /** A country with an active server, and its cities with one, by display name. */
 data class CountryOption(val country: String, val name: String, val cities: List<String>)
-
-/** What the per-app routes are computed from, as the repository and the engine report it. */
-data class AppRoutingInputs(
-    val mode: SplitTunnelMode,
-    val excludedApps: Set<String>,
-    val appExits: Map<String, AppExit>,
-    val enabled: Boolean,
-    val statuses: List<AppRouteStatus>,
-)
 
 /** The colour of the dot before a route line. */
 enum class RouteTone {
@@ -106,40 +74,6 @@ fun buildCountryOptions(
             }
         }
         .sortedWith(compareBy(collator) { it.name })
-}
-
-/**
- * The two sections of the tab: the apps with a country ([chosen], the tab's list) with the line
- * under each, and every other app, both by name and narrowed to [searchTerm].
- */
-fun countryPerAppSections(
-    chosen: List<AppData>,
-    others: List<AppData>,
-    routing: AppRoutingInputs,
-    searchTerm: String,
-): Pair<List<AppCountryItem>, List<AppData>> {
-    val needle = searchTerm.trim()
-    val collator = Collator.getInstance()
-    val byName = Comparator<AppData> { a, b -> collator.compare(a.name, b.name) }
-    fun List<AppData>.shown() =
-        filter { needle.isEmpty() || it.name.contains(needle, ignoreCase = true) }.sortedWith(byName)
-
-    val withCountry =
-        chosen.shown().mapNotNull { app ->
-            val id = app.packageName.value
-            val exit = routing.appExits[id] ?: return@mapNotNull null
-            val line =
-                appRouteLine(
-                    routing.mode,
-                    routing.excludedApps,
-                    routing.appExits,
-                    routing.enabled,
-                    routing.statuses,
-                    id,
-                )
-            AppCountryItem(app, exit, line)
-        }
-    return withCountry to others.shown()
 }
 
 /** The picker for [app], its options built from [relays]. */

@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import com.warrenbrowse.vpn.lib.model.AppExit
-import com.warrenbrowse.vpn.lib.model.PackageName
+import com.warrenbrowse.vpn.lib.model.RoutingOp
 import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
 import org.junit.jupiter.api.Test
 
@@ -95,31 +95,66 @@ class SplitTunnelingRepositoryTest {
     }
 
     @Test
-    fun `a first country asks before it narrows the full tunnel, and only then`() {
+    fun `a first rule asks before it narrows the full tunnel, and only then`() {
         val repository = repository()
+        val firstCountry = listOf(RoutingOp.SetExit("org.mail", AppExit("de")))
 
         included.value = setOf("org.gone")
-        val fromFullTunnel = repository.countryChoiceNarrowsFullTunnel(PackageName("org.mail"), AppExit("de"))
+        val fromFullTunnel = repository.changeNarrowsTunnel(firstCountry)
         included.value = setOf("org.bank")
-        val fromList = repository.countryChoiceNarrowsFullTunnel(PackageName("org.mail"), AppExit("de"))
+        val fromList = repository.changeNarrowsTunnel(firstCountry)
 
         assertTrue(fromFullTunnel)
         assertFalse(fromList)
     }
 
     @Test
-    fun `turning the country switch on asks before it narrows the full tunnel, and only then`() {
-        val repository = repository()
-        appExits.value = mapOf("org.mail" to AppExit("de"))
-        appExitsEnabled.value = false
+    fun `a change reaches the settings one write at a time, in its order`() {
+        val written = mutableListOf<String>()
+        val recording =
+            mockk<WarrenLocalSettingsRepository>(relaxed = true) {
+                every { splitMode } returns this@SplitTunnelingRepositoryTest.splitMode
+                every { includedApps } returns included
+                every { excludedApps } returns MutableStateFlow(emptySet())
+                every { appExits } returns this@SplitTunnelingRepositoryTest.appExits
+                every { appExitsEnabled } returns this@SplitTunnelingRepositoryTest.appExitsEnabled
+                every { setSplitMode(any()) } answers { written += "mode ${firstArg<Any>()}" }
+                every { addExcludedApp(any()) } answers { written += "+excluded ${firstArg<Any>()}" }
+                every { removeExcludedApp(any()) } answers { written += "-excluded ${firstArg<Any>()}" }
+                every { addIncludedApp(any()) } answers { written += "+included ${firstArg<Any>()}" }
+                every { removeIncludedApp(any()) } answers { written += "-included ${firstArg<Any>()}" }
+                every { setAppExit(any(), any()) } answers { written += "exit ${firstArg<Any>()}" }
+                every { clearAppExit(any()) } answers { written += "-exit ${firstArg<Any>()}" }
+                every { setAppExitsEnabled(any()) } answers { written += "exits ${firstArg<Any>()}" }
+            }
+        val repository = SplitTunnelingRepository(recording) { true }
 
-        included.value = setOf("org.gone")
-        val fromFullTunnel = repository.appExitsSwitchNarrowsFullTunnel()
-        included.value = setOf("org.bank")
-        val fromList = repository.appExitsSwitchNarrowsFullTunnel()
+        repository.apply(
+            listOf(
+                RoutingOp.ClearExit("org.old"),
+                RoutingOp.SetExit("org.mail", AppExit("de")),
+                RoutingOp.SetExitsEnabled(true),
+                RoutingOp.RemoveIncluded("org.mail"),
+                RoutingOp.AddIncluded("org.bank"),
+                RoutingOp.RemoveExcluded("org.chat"),
+                RoutingOp.AddExcluded("org.game"),
+                RoutingOp.SetSplitMode(SplitTunnelMode.Exclude),
+            )
+        )
 
-        assertTrue(fromFullTunnel)
-        assertFalse(fromList)
+        assertEquals(
+            listOf(
+                "-exit org.old",
+                "exit org.mail",
+                "exits true",
+                "-included org.mail",
+                "+included org.bank",
+                "-excluded org.chat",
+                "+excluded org.game",
+                "mode Exclude",
+            ),
+            written,
+        )
     }
 
     private companion object {
