@@ -16,6 +16,8 @@
 
 use std::time::Duration;
 
+use mullvad_types::auth_failed::AuthFailed;
+use talpid_types::tunnel::ErrorStateCause;
 use warren_standing::{Ban, BanReasonCode};
 
 use crate::device::{PrivateDeviceEvent, PrivateDeviceState};
@@ -115,12 +117,34 @@ pub enum SecuredBoot {
     StandDown,
 }
 
-/// Whether the firewall block a secured boot starts under is kept until the
-/// tunnel state machine takes over. Only a logged-out boot lets it go: a
-/// revoked or banned device is about to be blocked again, and opening the
-/// firewall in between would leak.
-pub fn boot_keeps_block(login: Login, secured: bool) -> bool {
-    secured && login != Login::LoggedOut
+impl SecuredBoot {
+    /// Whether the block the previous run may have left is kept while the
+    /// tunnel state machine starts. A dial and a revocation keep it, so
+    /// nothing leaks before the tunnel is up or blocked again; a boot that
+    /// drops its target lets it go, since nothing of this build is meant to
+    /// hold the machine.
+    pub fn keeps_firewall_block(&self) -> bool {
+        matches!(
+            self,
+            SecuredBoot::Connect | SecuredBoot::BlockRevoked | SecuredBoot::BlockBanned(_)
+        )
+    }
+
+    /// The error state the tunnel state machine starts in, if the boot
+    /// blocks. It has to start there: a disconnected state ignores a block
+    /// command, and one would leave the firewall to whatever the previous run
+    /// left, with no way for the user to lift it.
+    pub fn initial_block(&self) -> Option<ErrorStateCause> {
+        match self {
+            SecuredBoot::BlockRevoked => Some(ErrorStateCause::AuthFailed(Some(
+                AuthFailed::InvalidAccount.as_str().to_owned(),
+            ))),
+            SecuredBoot::BlockBanned(ban) => {
+                Some(ErrorStateCause::AuthFailed(Some(ban.auth_failed_reason())))
+            }
+            SecuredBoot::Connect | SecuredBoot::DropLoggedOut | SecuredBoot::StandDown => None,
+        }
+    }
 }
 
 /// One logout request, and who is waiting for its answer.
@@ -341,10 +365,11 @@ impl<W> SessionGate<W> {
 mod tests {
     use super::{
         ConnectRefusal, Login, LogoutRequest, LogoutStart, OwnConnect, SecuredBoot, SessionGate,
-        boot_keeps_block,
     };
     use crate::device::{PrivateDeviceEvent, PrivateDeviceState};
+    use mullvad_types::auth_failed::AuthFailed;
     use mullvad_types::warren_pubkey::WarrenPubKey;
+    use talpid_types::tunnel::ErrorStateCause;
     use warren_standing::{Ban, BanReasonCode};
 
     const TUNNEL_UP: bool = false;
@@ -353,7 +378,6 @@ mod tests {
     const LEFT_DISCONNECTED: bool = false;
     const RESTORE: bool = true;
     const STAND_DOWN: bool = false;
-    const SECURED: bool = true;
 
     fn logged_in() -> SessionGate<&'static str> {
         SessionGate::new(Login::LoggedIn)
@@ -492,54 +516,65 @@ mod tests {
     /// device the way a revocation at runtime does, instead of dropping to an
     /// unprotected host nobody asked for.
     #[test]
-    fn a_device_revoked_at_boot_holds_the_secured_target_blocked() {
+    fn a_device_revoked_at_boot_starts_in_the_error_state() {
         let gate = SessionGate::<()>::new(Login::Revoked);
 
-        assert_eq!(gate.secured_boot(None, RESTORE), SecuredBoot::BlockRevoked);
-        assert!(boot_keeps_block(Login::Revoked, SECURED));
+        let boot = gate.secured_boot(None, RESTORE);
+
+        assert_eq!(boot, SecuredBoot::BlockRevoked);
+        assert!(boot.keeps_firewall_block());
+        assert!(matches!(
+            boot.initial_block(),
+            Some(ErrorStateCause::AuthFailed(Some(reason)))
+                if reason == AuthFailed::InvalidAccount.as_str()
+        ));
     }
 
     #[test]
-    fn an_account_banned_at_boot_holds_the_secured_target_blocked() {
+    fn an_account_banned_at_boot_starts_in_the_error_state_of_its_ban() {
         let held = ban(BanReasonCode::PortForwardingAbuse, Some(1_830_297_600));
 
-        assert_eq!(
-            logged_in().secured_boot(Some(held), RESTORE),
-            SecuredBoot::BlockBanned(held)
-        );
+        let boot = logged_in().secured_boot(Some(held), RESTORE);
+
+        assert_eq!(boot, SecuredBoot::BlockBanned(held));
+        assert!(boot.keeps_firewall_block());
+        assert!(matches!(
+            boot.initial_block(),
+            Some(ErrorStateCause::AuthFailed(Some(reason))) if reason == held.auth_failed_reason()
+        ));
     }
 
     /// A logged-out daemon has no tunnel and no kill switch to keep: the
     /// account they belonged to has left.
     #[test]
     fn a_logged_out_boot_drops_the_secured_target_and_its_block() {
-        let gate = SessionGate::<()>::new(Login::LoggedOut);
+        let boot = SessionGate::<()>::new(Login::LoggedOut).secured_boot(None, RESTORE);
 
-        assert_eq!(gate.secured_boot(None, RESTORE), SecuredBoot::DropLoggedOut);
-        assert!(!boot_keeps_block(Login::LoggedOut, SECURED));
+        assert_eq!(boot, SecuredBoot::DropLoggedOut);
+        assert!(!boot.keeps_firewall_block());
+        assert!(boot.initial_block().is_none());
     }
 
     /// Another product environment holds the machine, so this build blocks
     /// nothing, revoked or not.
     #[test]
-    fn a_stood_down_boot_drops_the_target_even_on_a_revoked_device() {
-        let gate = SessionGate::<()>::new(Login::Revoked);
+    fn a_stood_down_boot_drops_the_target_and_its_block_even_on_a_revoked_device() {
+        let boot = SessionGate::<()>::new(Login::Revoked).secured_boot(None, STAND_DOWN);
 
-        assert_eq!(gate.secured_boot(None, STAND_DOWN), SecuredBoot::StandDown);
+        assert_eq!(boot, SecuredBoot::StandDown);
+        assert!(!boot.keeps_firewall_block());
+        assert!(boot.initial_block().is_none());
     }
 
+    /// The dial starts from the block the previous run left, so nothing leaks
+    /// before the tunnel is up.
     #[test]
-    fn a_logged_in_boot_in_good_standing_connects() {
-        assert_eq!(
-            logged_in().secured_boot(None, RESTORE),
-            SecuredBoot::Connect
-        );
-        assert!(boot_keeps_block(Login::LoggedIn, SECURED));
-    }
+    fn a_logged_in_boot_in_good_standing_connects_under_the_kept_block() {
+        let boot = logged_in().secured_boot(None, RESTORE);
 
-    #[test]
-    fn an_unsecured_boot_keeps_no_block() {
-        assert!(!boot_keeps_block(Login::Revoked, !SECURED));
+        assert_eq!(boot, SecuredBoot::Connect);
+        assert!(boot.keeps_firewall_block());
+        assert!(boot.initial_block().is_none());
     }
 
     #[test]

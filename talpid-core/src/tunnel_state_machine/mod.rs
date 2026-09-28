@@ -185,6 +185,10 @@ pub struct InitialTunnelState {
     pub allowed_endpoint: AllowedEndpoint,
     /// Whether to reset any existing firewall rules when initializing the disconnected state.
     pub reset_firewall: bool,
+    /// Start in the error state with this cause instead of the disconnected
+    /// state. The disconnected state ignores a block command, so a boot that
+    /// must block (a secured target on a revoked device) starts blocked here.
+    pub initial_block: Option<ErrorStateCause>,
     /// What the split tunnel diverts, and which way.
     #[cfg(any(target_os = "windows", target_os = "macos", target_os = "linux"))]
     pub split_apps: SplitApps,
@@ -425,6 +429,9 @@ impl PartialEq for LockdownMode {
 /// by the stream.
 struct TunnelStateMachine {
     current_state: Option<Box<dyn TunnelState>>,
+    /// The transition into a starting state other than disconnected, which
+    /// the listener has to learn of since it assumes disconnected.
+    initial_transition: Option<TunnelStateTransition>,
     commands: TunnelCommandReceiver,
     shared_values: SharedTunnelStateValues,
 }
@@ -636,11 +643,21 @@ impl TunnelStateMachine {
         };
 
         tokio::task::spawn_blocking(move || {
-            let (initial_state, _) =
-                DisconnectedState::enter(&mut shared_values, args.settings.reset_firewall);
+            let (initial_state, initial_transition) = match args.settings.initial_block {
+                Some(cause) => {
+                    let (state, transition) = ErrorState::enter(&mut shared_values, cause);
+                    (state, Some(transition))
+                }
+                None => {
+                    let (state, _) =
+                        DisconnectedState::enter(&mut shared_values, args.settings.reset_firewall);
+                    (state, None)
+                }
+            };
 
             Ok(TunnelStateMachine {
                 current_state: Some(initial_state),
+                initial_transition,
                 commands: args.commands_rx.fuse(),
                 shared_values,
             })
@@ -653,6 +670,12 @@ impl TunnelStateMachine {
         use EventConsequence::*;
 
         let runtime = self.shared_values.runtime.clone();
+
+        if let Some(transition) = self.initial_transition.take()
+            && change_listener.send(transition).is_err()
+        {
+            log::error!("{}", Error::SendStateChange);
+        }
 
         while let Some(state) = self.current_state.take() {
             let consequence = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {

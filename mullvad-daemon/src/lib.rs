@@ -1256,6 +1256,9 @@ pub struct Daemon {
     /// Whether an account is logged in, as far as the tunnel is concerned,
     /// and the logout waiting on a teardown.
     warren_session: warren_session_gate::SessionGate<ResponseTx<(), Error>>,
+    /// What the boot decided for a secured target, `None` for an unsecured
+    /// one. Taken by the first pass of the event loop.
+    secured_boot: Option<warren_session_gate::SecuredBoot>,
     /// Lets the API work tied to the wallet run while an account is logged
     /// in, and parks it otherwise. Follows `warren_session`.
     warren_wallet_activity: warren_wallet_activity::WalletActivity,
@@ -1957,6 +1960,19 @@ impl Daemon {
             let _ = settings_changed_event_sender.send(InternalDaemonEvent::SettingsChanged);
         });
 
+        // What the boot does with a secured target is settled before the
+        // tunnel state machine starts, because a boot that blocks has to start
+        // it in the error state. No standing has been fetched yet, so no ban
+        // is known here: one learned later blocks through the standing
+        // monitor, as while running.
+        let secured_boot = (*target_state == TargetState::Secured).then(|| {
+            warren_session_gate::SessionGate::<()>::new(boot_login).secured_boot(
+                None,
+                warren_env_arbitration::secured_boot_action(settings.warren_env_yield.as_ref())
+                    == warren_env_arbitration::SecuredBootAction::Restore,
+            )
+        });
+
         let route_manager = RouteManagerHandle::spawn(
             #[cfg(target_os = "linux")]
             mullvad_types::TUNNEL_FWMARK,
@@ -1983,14 +1999,14 @@ impl Daemon {
                     .await
                     .map_err(Error::ApiConnectionModeError)?
                     .endpoint,
-                // A boot with no account logged in does not bring up the
-                // secured state it may have restored, so it must not keep
-                // that state's block. A revoked device keeps it: the boot
-                // blocks it again at once, as a revocation at runtime does.
-                reset_firewall: !warren_session_gate::boot_keeps_block(
-                    boot_login,
-                    *target_state == TargetState::Secured,
-                ),
+                // A dial and a revocation keep the block the previous run may
+                // have left; a boot that drops its secured target lets it go.
+                reset_firewall: !secured_boot
+                    .as_ref()
+                    .is_some_and(warren_session_gate::SecuredBoot::keeps_firewall_block),
+                initial_block: secured_boot
+                    .as_ref()
+                    .and_then(warren_session_gate::SecuredBoot::initial_block),
                 #[cfg(not(target_os = "android"))]
                 split_apps: {
                     let split_apps = tunnel_split_apps(&settings.app_routing);
@@ -2517,6 +2533,7 @@ impl Daemon {
             app_route_reports_tunnel: 0,
             app_routes_published: Vec::new(),
             warren_session: warren_session_gate::SessionGate::new(boot_login),
+            secured_boot,
             warren_wallet_activity,
         };
 
@@ -2573,36 +2590,31 @@ impl Daemon {
     }
 
     async fn handle_initial_target_state(&mut self) {
-        let action = warren_env_arbitration::secured_boot_action(
-            self.settings.settings().warren_env_yield.as_ref(),
-        );
-        let either::Either::Right(state) = self.target_state.to_strict() else {
+        let (either::Either::Right(state), Some(boot)) =
+            (self.target_state.to_strict(), self.secured_boot.take())
+        else {
             // Fetching GeoIpLocation is automatically done when connecting.
             // If TargetState is Unsecured we will not connect on lauch and
             // so we have to explicitly fetch this information.
             self.fetch_am_i_mullvad();
             return;
         };
-        let boot = self.warren_session.secured_boot(
-            self.warren_ban_in_force(),
-            action == warren_env_arbitration::SecuredBootAction::Restore,
-        );
         match boot {
             warren_session_gate::SecuredBoot::Connect => {
                 self.send_tunnel_command(Self::secured_state_to_tunnel_command(state));
                 self.warren_session.connect_sent();
             }
             // The kill switch holds a secured target whatever stops the
-            // tunnel, so a device revoked or banned before this start is
-            // blocked here exactly as one revoked while running: dropping the
-            // target would open the host to a state its user never chose.
+            // tunnel, so a device revoked before this start stays blocked as
+            // one revoked while running. The tunnel state machine started in
+            // the error state for it: a block command sent now would find it
+            // disconnected, which ignores one.
             warren_session_gate::SecuredBoot::BlockRevoked => {
                 log::info!("Blocking at boot: this device has been revoked");
-                self.block_for_revoked_device();
             }
-            warren_session_gate::SecuredBoot::BlockBanned(ban) => {
+            warren_session_gate::SecuredBoot::BlockBanned(_) => {
                 log::info!("Blocking at boot: the Warren account is suspended");
-                self.block_for_ban(&ban);
+                self.warren_blocked_for_ban = true;
             }
             warren_session_gate::SecuredBoot::DropLoggedOut => {
                 // Auto-connect and a restore after an unclean shutdown both
