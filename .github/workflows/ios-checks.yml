@@ -123,12 +123,26 @@ jobs:
       # unwraps its App Group container at startup
       # (`ApplicationConfiguration.swift`), and stripping entitlements makes
       # every host-application test crash on launch with no useful message.
+      #
+      # One simulator, no parallel clones. With the plan's targets marked
+      # parallelizable, xcodebuild boots a second clone of the simulator and
+      # launches a second test host while the first clone is running tests,
+      # and the hosted runner freezes the running test process for one to two
+      # minutes while it does. Whatever test is on the clock then "exceeds its
+      # execution time allowance of 1 minute" and still passes once the
+      # process thaws, or misses a 10-second expectation it would have met.
+      # 14 of 42 attempts failed between 2026-09-23 and 2026-09-28; the
+      # reports read name a dozen unrelated tests, and in each one checked the
+      # timeout landed while the other clone was booting, installing or
+      # launching its host. The tests themselves add up to about four minutes;
+      # the clones cost more than they save.
       - name: Run unit tests
         run: |
           set -o pipefail && env NSUnbufferedIO=YES xcodebuild \
             -project WarrenVPN.xcodeproj \
             -scheme WarrenVPN \
             -testPlan WarrenVPNCI \
+            -parallel-testing-enabled NO \
             -destination "platform=iOS Simulator,name=iPhone 17" \
             -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_PATH" \
             -disableAutomaticPackageResolution \
