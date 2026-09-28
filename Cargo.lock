@@ -6981,8 +6981,8 @@ dependencies = [
 
 [[package]]
 name = "warren-quinn"
-version = "0.11.11-fork.14"
-source = "git+https://github.com/WarrenBrowse/warren-quinn.git?tag=v0.11.17-fork.14#5cc3213aca2ece13450de3bf8eb34cf3e9856d96"
+version = "0.11.11-fork.15"
+source = "git+https://github.com/WarrenBrowse/warren-quinn.git?tag=v0.11.17-fork.15#3770670bfa1549e9ca663f220da2d13056248faa"
 dependencies = [
  "bytes",
  "cfg_aliases",
@@ -7000,8 +7000,8 @@ dependencies = [
 
 [[package]]
 name = "warren-quinn-proto"
-version = "0.11.17-fork.14"
-source = "git+https://github.com/WarrenBrowse/warren-quinn.git?tag=v0.11.17-fork.14#5cc3213aca2ece13450de3bf8eb34cf3e9856d96"
+version = "0.11.17-fork.15"
+source = "git+https://github.com/WarrenBrowse/warren-quinn.git?tag=v0.11.17-fork.15#3770670bfa1549e9ca663f220da2d13056248faa"
 dependencies = [
  "bytes",
  "fastbloom",
@@ -7023,8 +7023,8 @@ dependencies = [
 
 [[package]]
 name = "warren-quinn-udp"
-version = "0.6.1-fork.14"
-source = "git+https://github.com/WarrenBrowse/warren-quinn.git?tag=v0.11.17-fork.14#5cc3213aca2ece13450de3bf8eb34cf3e9856d96"
+version = "0.6.1-fork.15"
+source = "git+https://github.com/WarrenBrowse/warren-quinn.git?tag=v0.11.17-fork.15#3770670bfa1549e9ca663f220da2d13056248faa"
 dependencies = [
  "cfg_aliases",
  "libc",
