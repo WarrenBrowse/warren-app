@@ -1547,6 +1547,7 @@ mod tests {
         Credentials {
             rounds: 1,
             has_tokens,
+            issued_elsewhere: false,
         }
     }
 

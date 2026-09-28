@@ -107,6 +107,10 @@ pub struct Credentials {
     pub rounds: u64,
     /// Whether the wallet holds session tokens for the current epoch.
     pub has_tokens: bool,
+    /// Whether the issuer served the current epoch to another batch of the
+    /// wallet (`already_issued`), such as one a device on a release that
+    /// blinds otherwise sent first: no token of this epoch will come.
+    pub issued_elsewhere: bool,
 }
 
 /// Route admission by anchor as the control plane announces it in its token

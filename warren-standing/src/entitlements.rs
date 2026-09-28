@@ -272,6 +272,10 @@ async fn refresh_forever<T: HttpTransport + 'static>(
     mut activity: Option<tokio::sync::watch::Receiver<bool>>,
 ) {
     let mut tick = tokio::time::interval(REFRESH_INTERVAL);
+    // Whether the batch served elsewhere is already reported: the state lasts
+    // at least the whole epoch, and a tick every ten minutes must not repeat
+    // it. Reported again once it has cleared and comes back.
+    let mut reported_elsewhere = false;
     loop {
         tick.tick().await;
         if let Some(activity) = activity.as_mut()
@@ -288,10 +292,22 @@ async fn refresh_forever<T: HttpTransport + 'static>(
             // and stocked nothing (the issuer already served this account this
             // epoch, or refused it) is otherwise indistinguishable from one
             // that did, and shows up only as a Map request the exit refuses.
-            Ok(()) => log::info!(
-                "Warren port-entitlement refresh ok (slot stocked={})",
-                manager.credential_for_slot(PROBE_SLOT, n).is_some()
-            ),
+            Ok(()) if manager.issued_to_another_batch(n) => {
+                if !std::mem::replace(&mut reported_elsewhere, true) {
+                    log::warn!(
+                        "Warren port-entitlement refresh: the issuer served this epoch's \
+                         entitlements to another batch of the wallet (a device of it on an \
+                         older release?); every forward is refused until the epoch ends"
+                    );
+                }
+            }
+            Ok(()) => {
+                reported_elsewhere = false;
+                log::info!(
+                    "Warren port-entitlement refresh ok (slot stocked={})",
+                    manager.credential_for_slot(PROBE_SLOT, n).is_some()
+                );
+            }
             // A ban refusal goes to the standing, which blocks the tunnel;
             // anything else is transient, the batch keeps vending what it
             // already holds and the next tick retries. The error chain carries

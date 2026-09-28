@@ -57,7 +57,8 @@ pub(crate) use talpid_warren_tunnel::app_routes::admission::{
 };
 pub(crate) use talpid_warren_tunnel::app_routes::tokens::session_source;
 use talpid_warren_tunnel::app_routes::tokens::{
-    announce_refresh, refresh_announcing_mints, refresh_forever,
+    ISSUED_ELSEWHERE_WARNING, IssuedElsewhereNotice, announce_refresh, refresh_announcing_mints,
+    refresh_forever,
 };
 use talpid_warren_tunnel::{
     SessionTokenSource,
@@ -101,8 +102,10 @@ fn spawn_refresh(
     activity: WalletActivity,
 ) {
     // The manager mints only epochs it has not minted yet.
+    let notice = Arc::new(IssuedElsewhereNotice::default());
     tokio::spawn(refresh_forever(move || {
         let manager = Arc::clone(&manager);
+        let notice = Arc::clone(&notice);
         let credentials = credentials.clone();
         let wallet = wallet.clone();
         let standing = standing.clone();
@@ -121,6 +124,9 @@ fn spawn_refresh(
                 remember_route_admission(path, manager.route_admission().as_ref());
             }
             announce_refresh(&credentials, &manager, now_unix_secs());
+            if notice.due(&manager, now_unix_secs()) {
+                log::warn!("{ISSUED_ELSEWHERE_WARNING}");
+            }
             match refreshed {
                 Ok(_) => {
                     log::debug!("Warren v7 token refresh round succeeded");

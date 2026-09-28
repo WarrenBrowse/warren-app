@@ -42,6 +42,11 @@ test-helpers = []
 
 [dev-dependencies]
 base64 = "0.22.0"
+# A fake token issuer running the engine's real blind-RSA signing, so a
+# refresh round meets the issuer's answers as the daemon does.
+data-encoding = "2"
+rand010 = { package = "rand", version = "0.10" }
+warrenguard-token = { path = "../../warrenguard/crates/warrenguard-token" }
 hex = "0.4"
 tempfile = "3"
 tokio = { workspace = true, features = ["test-util", "macros", "time", "rt-multi-thread"] }

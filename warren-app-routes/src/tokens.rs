@@ -108,7 +108,8 @@ impl<T: HttpTransport> SessionLead<T> {
 }
 
 /// Announces a finished refresh round of `manager`'s credentials at `now`,
-/// and whether the wallet then holds tokens for the epoch: a tunnel started
+/// whether the wallet then holds tokens for the epoch, and whether the issuer
+/// served that epoch to another batch of the wallet: a tunnel started
 /// before either the tokens or the route admission key were at hand takes
 /// them up from this instead of waiting for its next reconnect, and the first
 /// tunnel of a daemon run waits for the first round to finish
@@ -119,31 +120,80 @@ pub fn announce_refresh<T: HttpTransport>(
     now: u64,
 ) {
     let has_tokens = !epoch_batch(manager, now).is_empty();
+    let issued_elsewhere = issued_elsewhere(manager, now);
     credentials.send_modify(|announced| {
         announced.rounds = announced.rounds.wrapping_add(1);
         announced.has_tokens = has_tokens;
+        announced.issued_elsewhere = issued_elsewhere;
     });
 }
 
-/// Announces, while a refresh round is still running, that the wallet now
-/// holds tokens for the epoch of `now`, and says whether it does: a round
-/// also mints the later epochs of its horizon, one request each, and the
-/// first tunnel of a daemon run needs the current epoch only. Rounds are not
-/// counted here.
+/// Announces, while a refresh round is still running, that the epoch of
+/// `now` is settled: the wallet holds its tokens, or the issuer served it to
+/// another batch of the wallet and none will come. Says whether it is: a
+/// round also mints the later epochs of its horizon, one request each, and
+/// the first tunnel of a daemon run needs the current epoch only. Rounds are
+/// not counted here.
 pub fn announce_minted<T: HttpTransport>(
     credentials: &tokio::sync::watch::Sender<crate::Credentials>,
     manager: &TokenManager<T>,
     now: u64,
 ) -> bool {
-    if epoch_batch(manager, now).is_empty() {
+    let has_tokens = !epoch_batch(manager, now).is_empty();
+    let issued_elsewhere = issued_elsewhere(manager, now);
+    if !has_tokens && !issued_elsewhere {
         return false;
     }
     credentials.send_if_modified(|announced| {
-        let newly = !announced.has_tokens;
-        announced.has_tokens = true;
+        let newly = (has_tokens && !announced.has_tokens)
+            || (issued_elsewhere && !announced.issued_elsewhere);
+        announced.has_tokens |= has_tokens;
+        announced.issued_elsewhere |= issued_elsewhere;
         newly
     });
     true
+}
+
+/// Says when to report that the issuer served the current epoch to another
+/// batch of the wallet.
+/// Once per epoch: refresh rounds run every [`REFRESH_PERIOD`], and the state
+/// lasts the whole epoch.
+#[derive(Default)]
+pub struct IssuedElsewhereNotice {
+    /// The epoch last reported, plus one, so zero reads as none yet.
+    reported: std::sync::atomic::AtomicU64,
+}
+
+impl IssuedElsewhereNotice {
+    /// Whether a refresh round of `manager` at `now` should report it: the
+    /// epoch of `now` was served to another batch and was not reported yet.
+    pub fn due<T: HttpTransport>(&self, manager: &TokenManager<T>, now: u64) -> bool {
+        let Some(epoch) = manager
+            .epoch_at(now)
+            .filter(|&epoch| manager.issued_to_another_batch(epoch))
+        else {
+            return false;
+        };
+        let marker = epoch.wrapping_add(1);
+        self.reported
+            .swap(marker, std::sync::atomic::Ordering::Relaxed)
+            != marker
+    }
+}
+
+/// What a refresh round logs when [`IssuedElsewhereNotice::due`]: without it
+/// the round reads as one that minted nothing yet, while every session of the
+/// epoch logs in with the wallet.
+pub const ISSUED_ELSEWHERE_WARNING: &str = "Warren v7 token refresh: the issuer served this \
+    epoch's session tokens to another batch of the wallet (a device of it on an older \
+    release?); sessions log in with the wallet until the epoch ends";
+
+/// Whether the issuer served the epoch of `now` to another batch of the
+/// wallet (`already_issued`).
+fn issued_elsewhere<T: HttpTransport>(manager: &TokenManager<T>, now: u64) -> bool {
+    manager
+        .epoch_at(now)
+        .is_some_and(|epoch| manager.issued_to_another_batch(epoch))
 }
 
 /// The coarse refresh period of a wallet's credentials, and the first wait
@@ -327,7 +377,8 @@ mod tests {
             *followed.borrow(),
             crate::Credentials {
                 rounds: 0,
-                has_tokens: true
+                has_tokens: true,
+                issued_elsewhere: false,
             },
             "a round in progress is not counted as finished"
         );
@@ -342,7 +393,8 @@ mod tests {
             *followed.borrow(),
             crate::Credentials {
                 rounds: 1,
-                has_tokens: false
+                has_tokens: false,
+                issued_elsewhere: false,
             },
             "only an earlier epoch's batch"
         );
@@ -352,7 +404,8 @@ mod tests {
             *followed.borrow(),
             crate::Credentials {
                 rounds: 2,
-                has_tokens: true
+                has_tokens: true,
+                issued_elsewhere: false,
             }
         );
     }
@@ -382,9 +435,156 @@ mod tests {
             *followed.borrow(),
             crate::Credentials {
                 rounds: 0,
-                has_tokens: true
+                has_tokens: true,
+                issued_elsewhere: false,
             }
         );
+    }
+
+    /// An issuer whose ledger holds another batch of the wallet for the
+    /// current epoch, as when a device on a release that blinds otherwise
+    /// took it first: that epoch is refused `already_issued`. The later epoch
+    /// is refused the same way, or never answered when `later_unanswered`.
+    struct IssuedElsewhere {
+        keys: std::collections::HashMap<u64, warrenguard_token::IssuerSecretKey>,
+        later_unanswered: bool,
+    }
+
+    impl IssuedElsewhere {
+        fn new(later_unanswered: bool) -> Self {
+            use rand010::SeedableRng;
+            let mut rng = rand010::rngs::StdRng::seed_from_u64(7);
+            Self {
+                keys: [EPOCH, EPOCH + 1]
+                    .into_iter()
+                    .map(|epoch| {
+                        let key = warrenguard_token::IssuerSecretKey::generate(&mut rng)
+                            .expect("an issuer key");
+                        (epoch, key)
+                    })
+                    .collect(),
+                later_unanswered,
+            }
+        }
+
+        fn directory(&self) -> warren_api::TokenIssuerDirectory {
+            let mut keys: Vec<warren_api::TokenIssuerKey> = self
+                .keys
+                .iter()
+                .map(|(&epoch, key)| {
+                    let public = key.public_key();
+                    warren_api::TokenIssuerKey {
+                        epoch,
+                        token_key_id: public.key_id().to_hex(),
+                        spki_b64: data_encoding::BASE64URL_NOPAD.encode(&public.to_spki()),
+                        not_before: epoch * EPOCH_SECS,
+                        not_after: (epoch + 1) * EPOCH_SECS,
+                    }
+                })
+                .collect();
+            keys.sort_by_key(|k| k.epoch);
+            warren_api::TokenIssuerDirectory {
+                issuer_name: "api.warrenbrowse.com".to_owned(),
+                token_type: 2,
+                epoch_secs: EPOCH_SECS,
+                context_label: "warren/session-token/v1".to_owned(),
+                quota_per_epoch: 3,
+                prefetch_epochs: 48,
+                keys,
+                attribution_verifying_key_hex: None,
+                route_admission: None,
+            }
+        }
+    }
+
+    impl warren_api::HttpTransport for IssuedElsewhere {
+        async fn execute(
+            &self,
+            request: warren_api::HttpRequest,
+        ) -> Result<warren_api::HttpResponse, warren_api::TransportError> {
+            let ok = |body: Vec<u8>| Ok(warren_api::HttpResponse { status: 200, body });
+            if request.url.ends_with("/v1/tokens/keys") {
+                return ok(serde_json::to_vec(&self.directory()).expect("a directory"));
+            }
+            let asked: warren_api::TokenIssueRequest =
+                serde_json::from_slice(&request.body).expect("an issue request");
+            if self.later_unanswered && asked.epochs.iter().any(|e| e.epoch != EPOCH) {
+                std::future::pending::<()>().await;
+            }
+            let epochs = asked
+                .epochs
+                .iter()
+                .map(|e| warren_api::TokenEpochResponse {
+                    epoch: e.epoch,
+                    issued: false,
+                    blind_signatures: Vec::new(),
+                    token_key_id: None,
+                    reject_reason: Some("already_issued".to_owned()),
+                    attribution_tags: Vec::new(),
+                })
+                .collect();
+            ok(serde_json::to_vec(&warren_api::TokenIssueResponse { epochs }).expect("a response"))
+        }
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_running_round_announces_an_epoch_issued_elsewhere_before_it_ends() {
+        let (credentials, followed) = tokio::sync::watch::channel(crate::Credentials::default());
+        let manager = restored_manager_over(IssuedElsewhere::new(true), &[]);
+
+        let round = super::refresh_announcing_mints(&manager, &credentials, &|| NOW);
+        let ended = tokio::time::timeout(std::time::Duration::from_secs(1), round).await;
+
+        assert!(ended.is_err(), "the round is still running");
+        assert_eq!(
+            *followed.borrow(),
+            crate::Credentials {
+                rounds: 0,
+                has_tokens: false,
+                issued_elsewhere: true,
+            }
+        );
+    }
+
+    #[tokio::test]
+    async fn a_finished_round_announces_an_epoch_issued_elsewhere() {
+        let (credentials, followed) = tokio::sync::watch::channel(crate::Credentials::default());
+        let manager = restored_manager_over(IssuedElsewhere::new(false), &[]);
+        manager.refresh(NOW).await.expect("a round");
+
+        super::announce_refresh(&credentials, &manager, NOW);
+
+        assert_eq!(
+            *followed.borrow(),
+            crate::Credentials {
+                rounds: 1,
+                has_tokens: false,
+                issued_elsewhere: true,
+            }
+        );
+    }
+
+    #[tokio::test]
+    async fn an_epoch_issued_elsewhere_is_reported_once_per_epoch() {
+        let manager = restored_manager_over(IssuedElsewhere::new(false), &[]);
+        manager.refresh(NOW).await.expect("a round");
+        let notice = super::IssuedElsewhereNotice::default();
+
+        let first = notice.due(&manager, NOW);
+        let again = notice.due(&manager, NOW + 600);
+
+        assert!(first, "the first round that meets it says so");
+        assert!(
+            !again,
+            "a round every ten minutes must not repeat it all epoch"
+        );
+    }
+
+    #[test]
+    fn an_epoch_this_wallet_holds_is_never_reported() {
+        let manager = restored_manager(&[(EPOCH, &[1])]);
+
+        assert!(!super::IssuedElsewhereNotice::default().due(&manager, NOW));
     }
 
     /// When each round of a refresh task runs, in seconds from its start,

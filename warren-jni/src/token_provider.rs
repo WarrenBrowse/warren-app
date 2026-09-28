@@ -44,7 +44,8 @@ use warren_api::{
 use warren_app_routes::Credentials;
 use warren_app_routes::admission::{RouteKemTrust, remember_route_admission};
 use warren_app_routes::tokens::{
-    announce_minted, announce_refresh, refresh_announcing_mints, refresh_forever,
+    ISSUED_ELSEWHERE_WARNING, IssuedElsewhereNotice, announce_minted, announce_refresh,
+    refresh_announcing_mints, refresh_forever,
 };
 
 /// The most tokens one setup request may carry: the default admission sends
@@ -284,8 +285,10 @@ fn spawn_refresh<T: HttpTransport + 'static>(
         directory_read,
         credentials,
     } = wallet;
+    let notice = Arc::new(IssuedElsewhereNotice::default());
     tokio::spawn(refresh_forever(move || {
         let manager = Arc::clone(&manager);
+        let notice = Arc::clone(&notice);
         let directory_read = Arc::clone(&directory_read);
         let credentials = credentials.clone();
         let now = Arc::clone(&now);
@@ -315,6 +318,9 @@ fn spawn_refresh<T: HttpTransport + 'static>(
                             .epoch_at(now())
                             .map_or(0, |epoch| manager.available(epoch))
                     );
+                    if notice.due(&manager, now()) {
+                        log::warn!("{ISSUED_ELSEWHERE_WARNING}");
+                    }
                     true
                 }
                 // A ban refusal is not transient: it goes to the standing,
@@ -878,7 +884,8 @@ mod tests {
             *followed.borrow(),
             Credentials {
                 rounds: 1,
-                has_tokens: true
+                has_tokens: true,
+                issued_elsewhere: false,
             }
         );
         assert!(wallet.directory_read.load(Ordering::Acquire));
@@ -903,7 +910,8 @@ mod tests {
             *followed.borrow(),
             Credentials {
                 rounds: 2,
-                has_tokens: true
+                has_tokens: true,
+                issued_elsewhere: false,
             }
         );
     }
@@ -928,7 +936,8 @@ mod tests {
             *wallet.credentials.borrow(),
             Credentials {
                 rounds: 0,
-                has_tokens: true
+                has_tokens: true,
+                issued_elsewhere: false,
             },
             "a first tunnel of this process has nothing to wait for"
         );

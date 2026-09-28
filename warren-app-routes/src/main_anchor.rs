@@ -47,15 +47,18 @@ pub fn anchor_for(admission: &dyn RouteAdmissionSource) -> RouteAnchorHandle {
     }
 }
 
-/// Resolves once the wallet holds tokens for the current epoch or the
-/// daemon finished its first credentials refresh round, at once when either
-/// already holds (a later tunnel of the run, or a first round that failed),
-/// and after `bound` at most.
+/// Resolves once the wallet holds tokens for the current epoch, the issuer
+/// is known to have served that epoch to another batch of the wallet (no
+/// token will come), or the daemon finished its first credentials refresh
+/// round; at once when one of them already holds (a later tunnel of the run,
+/// or a first round that failed), and after `bound` at most.
 pub async fn first_refresh(
     mut credentials: watch::Receiver<Credentials>,
     bound: std::time::Duration,
 ) {
-    let refreshed = credentials.wait_for(|announced| announced.has_tokens || announced.rounds > 0);
+    let refreshed = credentials.wait_for(|announced| {
+        announced.has_tokens || announced.issued_elsewhere || announced.rounds > 0
+    });
     let _ = tokio::time::timeout(bound, refreshed).await;
 }
 
@@ -119,6 +122,7 @@ mod tests {
             credentials.send_replace(Credentials {
                 rounds: 1,
                 has_tokens: true,
+                issued_elsewhere: false,
             });
             std::future::pending::<()>().await;
         };
@@ -157,6 +161,28 @@ mod tests {
             started.elapsed(),
             std::time::Duration::from_millis(700),
             "the rest of the round (later epochs) is not waited for"
+        );
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_first_tunnel_goes_on_as_soon_as_the_epoch_is_known_to_be_issued_elsewhere() {
+        let (credentials, followed) = watch::channel(Credentials::default());
+        let started = tokio::time::Instant::now();
+        let refused = async {
+            tokio::time::sleep(std::time::Duration::from_millis(700)).await;
+            credentials.send_modify(|announced| announced.issued_elsewhere = true);
+            std::future::pending::<()>().await;
+        };
+
+        tokio::select! {
+            () = first_refresh(followed, FIRST_REFRESH_WAIT) => {}
+            () = refused => unreachable!(),
+        }
+
+        assert_eq!(
+            started.elapsed(),
+            std::time::Duration::from_millis(700),
+            "no token of this epoch will come, so waiting for one is waiting for nothing"
         );
     }
 
@@ -276,6 +302,7 @@ mod tests {
     const REFRESHED: Credentials = Credentials {
         rounds: 1,
         has_tokens: true,
+        issued_elsewhere: false,
     };
 
     async fn settle() {
@@ -308,6 +335,7 @@ mod tests {
             follower.credentials.send_replace(Credentials {
                 rounds: round,
                 has_tokens: true,
+                issued_elsewhere: false,
             });
             settle().await;
         }
