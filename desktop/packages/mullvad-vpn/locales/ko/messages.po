@@ -2694,21 +2694,6 @@ msgctxt "split-tunneling-view"
 msgid "%(applicationName)s is problematic and can’t be launched through the VPN alone."
 msgstr "%(applicationName)s에 문제가 있어 이 앱만 VPN을 통해 실행할 수 없습니다."
 
-#. Information about split tunneling not being supported on the system.
-#. Available placeholders:
-#. %(splitTunneling)s - will be replaced with Split tunneling
-msgctxt "split-tunneling-view"
-msgid "%(splitTunneling)s is not supported by your system."
-msgstr "시스템에서 %(splitTunneling)s을(를) 지원하지 않습니다."
-
-msgctxt "split-tunneling-view"
-msgid "Add"
-msgstr "추가"
-
-msgctxt "split-tunneling-view"
-msgid "All apps"
-msgstr "모든 앱"
-
 msgctxt "split-tunneling-view"
 msgid "App routing"
 msgstr "앱 라우팅"
@@ -2722,45 +2707,16 @@ msgid "Bypasses the VPN"
 msgstr "VPN 우회 중"
 
 msgctxt "split-tunneling-view"
-msgid "Change the country of %(application)s, now %(country)s"
-msgstr "%(application)s의 국가 변경, 현재 %(country)s"
-
-msgctxt "split-tunneling-view"
 msgid "Choose"
 msgstr "선택"
-
-msgctxt "split-tunneling-view"
-msgid "Choose a country for %(application)s"
-msgstr "%(application)s의 국가 선택"
-
-msgctxt "split-tunneling-view"
-msgid "Choose how each app connects."
-msgstr "각 앱의 연결 방식을 선택하세요."
 
 msgctxt "split-tunneling-view"
 msgid "Choose the apps you want to exclude from the VPN tunnel."
 msgstr "VPN 터널에서 제외할 앱을 선택하세요."
 
 msgctxt "split-tunneling-view"
-msgid "Choose the country an app appears from. Other apps keep your main connection."
-msgstr "앱이 어느 국가에서 접속하는 것으로 보일지 선택하세요. 다른 앱은 기본 연결을 그대로 사용합니다."
-
-msgctxt "split-tunneling-view"
 msgid "Cities in %(country)s"
 msgstr "%(country)s의 도시"
-
-#. Link for learning more
-msgctxt "split-tunneling-view"
-msgid "Click here to learn more"
-msgstr "자세한 내용은 여기를 클릭하세요"
-
-msgctxt "split-tunneling-view"
-msgid "Click on an app to launch it. It uses the VPN until you close it, and nothing else does."
-msgstr "앱을 클릭하여 실행하세요. 앱을 닫을 때까지 해당 앱만 VPN을 사용합니다."
-
-msgctxt "split-tunneling-view"
-msgid "Click on an app to launch it. Its traffic will bypass the VPN tunnel until you close it."
-msgstr "앱을 클릭하여 실행하세요. 트래픽은 사용자가 닫을 때까지 VPN 터널을 우회합니다."
 
 msgctxt "split-tunneling-view"
 msgid "Connected"
@@ -2779,10 +2735,6 @@ msgid "Countries"
 msgstr "국가"
 
 msgctxt "split-tunneling-view"
-msgid "Country"
-msgstr "국가"
-
-msgctxt "split-tunneling-view"
 msgid "Country for %(application)s"
 msgstr "%(application)s의 국가"
 
@@ -2795,16 +2747,8 @@ msgid "Waiting for a free route"
 msgstr "사용 가능한 경로 대기 중"
 
 msgctxt "split-tunneling-view"
-msgid "Country per app"
-msgstr "앱별 국가"
-
-msgctxt "split-tunneling-view"
 msgid "Enabled \"Full disk access\" and still having issues?"
 msgstr "\"전체 디스크 액세스\"를 활성화했는데도 계속 문제가 발생하나요?"
-
-msgctxt "split-tunneling-view"
-msgid "Excluded apps"
-msgstr "제외된 앱"
 
 #. Button label for browsing applications with split tunneling.
 msgctxt "split-tunneling-view"
@@ -2816,21 +2760,8 @@ msgid "Flatpak apps cannot use a country yet"
 msgstr "Flatpak 앱은 아직 국가를 사용할 수 없습니다"
 
 msgctxt "split-tunneling-view"
-msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not be excluded from the VPN tunnel."
-msgstr "이미 실행 중인 경우 여기에서 실행하기 전에 %(applicationName)s을(를) 닫으세요. 그렇지 않으면 VPN 터널에서 제외되지 않을 수 있습니다."
-
-msgctxt "split-tunneling-view"
-msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not use the VPN."
-msgstr "이미 실행 중인 경우 여기에서 실행하기 전에 %(applicationName)s을(를) 닫으세요. 그렇지 않으면 VPN을 사용하지 않을 수 있습니다."
-
-msgctxt "split-tunneling-view"
 msgid "In use"
 msgstr "사용 중"
-
-#. Button label for launching an application with split tunneling.
-msgctxt "split-tunneling-view"
-msgid "Launch"
-msgstr "실행"
 
 msgctxt "split-tunneling-view"
 msgid "No server there"
@@ -2843,18 +2774,6 @@ msgstr "남은 세션 토큰 없음"
 msgctxt "split-tunneling-view"
 msgid "Off, uses the main connection"
 msgstr "꺼짐, 기본 연결 사용"
-
-msgctxt "split-tunneling-view"
-msgid "Only the apps you choose use the VPN."
-msgstr "선택한 앱만 VPN을 사용합니다."
-
-msgctxt "split-tunneling-view"
-msgid "Only the apps you choose will use the VPN. The rest of this device will not be protected."
-msgstr "선택한 앱만 VPN을 사용하게 됩니다. 이 기기의 나머지 트래픽은 보호되지 않습니다."
-
-msgctxt "split-tunneling-view"
-msgid "Only these apps are protected. Everything else on this device uses your normal connection."
-msgstr "이 앱들만 보호됩니다. 이 기기의 나머지 트래픽은 모두 일반 연결을 사용합니다."
 
 msgctxt "split-tunneling-view"
 msgid "Open System Settings"
@@ -2878,40 +2797,12 @@ msgid "Please try again or send a problem report."
 msgstr "다시 시도하거나 문제 보고서를 보내주세요."
 
 msgctxt "split-tunneling-view"
-msgid "Remove country"
-msgstr "국가 제거"
-
-msgctxt "split-tunneling-view"
-msgid "Remove the country of %(application)s"
-msgstr "%(application)s의 국가 제거"
-
-msgctxt "split-tunneling-view"
 msgid "Restart Warren Service"
 msgstr "Warren 서비스 다시 시작"
 
 msgctxt "split-tunneling-view"
 msgid "Snap apps cannot use a country yet"
 msgstr "Snap 앱은 아직 국가를 사용할 수 없습니다"
-
-msgctxt "split-tunneling-view"
-msgid "The apps you choose connect as if the VPN were off."
-msgstr "선택한 앱은 VPN이 꺼진 것처럼 연결됩니다."
-
-msgctxt "split-tunneling-view"
-msgid "This build of Warren VPN cannot do this. It needs a signed build."
-msgstr "이 Warren VPN 빌드에서는 이 기능을 사용할 수 없습니다. 서명된 빌드가 필요합니다."
-
-msgctxt "split-tunneling-view"
-msgid "This needs macOS 13 or newer."
-msgstr "macOS 13 이상이 필요합니다."
-
-msgctxt "split-tunneling-view"
-msgid "This replaces Bypass VPN. Your list of apps there is kept."
-msgstr "이 설정은 \"VPN 우회\"를 대체합니다. 해당 앱 목록은 유지됩니다."
-
-msgctxt "split-tunneling-view"
-msgid "This replaces VPN only for, so every app uses the VPN again except the ones you bypass. Your list of apps there is kept."
-msgstr "이 설정은 \"선택한 앱만 VPN\"을 대체하므로, 우회하는 앱을 제외한 모든 앱이 다시 VPN을 사용합니다. 해당 앱 목록은 유지됩니다."
 
 #. Information about split tunneling being unavailable due to
 #. missing support in the user's operating system.
@@ -2929,10 +2820,6 @@ msgctxt "split-tunneling-view"
 msgid "To use this, enable “Full disk access” for “Warren VPN” in the macOS system settings."
 msgstr "이 기능을 사용하려면 macOS 시스템 설정에서 \"Warren VPN\"에 대해 \"전체 디스크 액세스\"를 활성화하세요."
 
-msgctxt "split-tunneling-view"
-msgid "Turn on"
-msgstr "켜기"
-
 #. Error message showed in a dialog when an application fails to launch.
 msgctxt "split-tunneling-view"
 msgid "Unable to launch selection. %(detailedErrorMessage)s"
@@ -2943,36 +2830,148 @@ msgid "Unavailable"
 msgstr "사용할 수 없음"
 
 msgctxt "split-tunneling-view"
-msgid "Uses the VPN through its country"
-msgstr "지정한 국가를 통해 VPN 사용"
-
-msgctxt "split-tunneling-view"
-msgid "Using the VPN"
-msgstr "VPN 사용 중"
-
-msgctxt "split-tunneling-view"
-msgid "VPN only for"
-msgstr "선택한 앱만 VPN"
-
-msgctxt "split-tunneling-view"
-msgid "VPN only for is on: an app uses its country when you open it from VPN only for."
-msgstr "\"선택한 앱만 VPN\"이 켜져 있습니다: 앱은 \"선택한 앱만 VPN\"에서 열 때 해당 국가를 사용합니다."
-
-msgctxt "split-tunneling-view"
-msgid "VPN only for is on: every app you did not choose there already bypasses the VPN."
-msgstr "\"선택한 앱만 VPN\"이 켜져 있습니다: 여기에서 선택하지 않은 앱은 이미 VPN을 우회합니다."
-
-msgctxt "split-tunneling-view"
 msgid "Waiting for the VPN"
 msgstr "VPN 대기 중"
 
 msgctxt "split-tunneling-view"
-msgid "With a country"
-msgstr "국가가 지정된 앱"
+msgid "%(application)s, %(route)s"
+msgstr "%(application)s, %(route)s"
 
 msgctxt "split-tunneling-view"
-msgid "Your system does not support this."
-msgstr "시스템에서 이 기능을 지원하지 않습니다."
+msgid "Add an app"
+msgstr "앱 추가"
+
+msgctxt "split-tunneling-view"
+msgid "All apps are protected by the VPN, except for the rules below."
+msgstr "아래 규칙을 제외한 모든 앱이 VPN으로 보호됩니다."
+
+msgctxt "split-tunneling-view"
+msgid "App"
+msgstr "앱"
+
+msgctxt "split-tunneling-view"
+msgid "Choose an exit country"
+msgstr "출구 국가 선택"
+
+msgctxt "split-tunneling-view"
+msgid "Choose where each app goes."
+msgstr "각 앱이 어디를 거쳐 연결될지 선택하세요."
+
+msgctxt "split-tunneling-view"
+msgid "Country of your main connection"
+msgstr "기본 연결의 국가"
+
+msgctxt "split-tunneling-view"
+msgid "Default"
+msgstr "기본값"
+
+msgctxt "split-tunneling-view"
+msgid "Direct connection by default. Only the apps below use the VPN."
+msgstr "기본적으로 직접 연결합니다. 아래 앱만 VPN을 사용합니다."
+
+msgctxt "split-tunneling-view"
+msgid "Direct connection, your real IP is visible"
+msgstr "직접 연결, 실제 IP가 노출됩니다"
+
+msgctxt "split-tunneling-view"
+msgid "Done"
+msgstr "완료"
+
+msgctxt "split-tunneling-view"
+msgid "It uses this country when you open it with “Open through the VPN”."
+msgstr "“VPN으로 열기”로 열면 이 국가를 사용합니다."
+
+msgctxt "split-tunneling-view"
+msgid "Needs Full Disk Access"
+msgstr "전체 디스크 액세스 필요"
+
+msgctxt "split-tunneling-view"
+msgid "Needs a signed build of Warren VPN"
+msgstr "서명된 Warren VPN 빌드 필요"
+
+msgctxt "split-tunneling-view"
+msgid "Needs macOS 13 or newer"
+msgstr "macOS 13 이상 필요"
+
+msgctxt "split-tunneling-view"
+msgid "No app uses the VPN. Add one, or send the other apps through the VPN again."
+msgstr "VPN을 사용하는 앱이 없습니다. 앱을 추가하거나 다른 앱을 다시 VPN 경유로 설정하세요."
+
+msgctxt "split-tunneling-view"
+msgid "No rules. Add an app to open it through the VPN: it uses the VPN until you close it."
+msgstr "규칙이 없습니다. 앱을 추가해 VPN으로 여세요. 앱을 닫을 때까지 VPN을 사용합니다."
+
+msgctxt "split-tunneling-view"
+msgid "No rules. Add an app to send it through another country or outside the VPN."
+msgstr "규칙이 없습니다. 앱을 추가해 다른 국가를 거치거나 VPN을 우회하게 하세요."
+
+msgctxt "split-tunneling-view"
+msgid "Not available on this system"
+msgstr "이 시스템에서는 사용할 수 없음"
+
+msgctxt "split-tunneling-view"
+msgid "Open outside the VPN"
+msgstr "VPN 우회로 열기"
+
+msgctxt "split-tunneling-view"
+msgid "Open through the VPN"
+msgstr "VPN으로 열기"
+
+msgctxt "split-tunneling-view"
+msgid "Other apps go"
+msgstr "다른 앱 연결"
+
+msgctxt "split-tunneling-view"
+msgid "Outside the VPN"
+msgstr "VPN 우회"
+
+msgctxt "split-tunneling-view"
+msgid "Outside the VPN needs a signed build of Warren VPN."
+msgstr "“VPN 우회”에는 서명된 Warren VPN 빌드가 필요합니다."
+
+msgctxt "split-tunneling-view"
+msgid "Outside the VPN needs macOS 13 or newer."
+msgstr "“VPN 우회”에는 macOS 13 이상이 필요합니다."
+
+msgctxt "split-tunneling-view"
+msgid "Remove %(application)s from the list"
+msgstr "목록에서 %(application)s 제거"
+
+msgctxt "split-tunneling-view"
+msgid "Remove the rule"
+msgstr "규칙 제거"
+
+msgctxt "split-tunneling-view"
+msgid "Route for %(application)s"
+msgstr "%(application)s 경로"
+
+msgctxt "split-tunneling-view"
+msgid "Rules per app"
+msgstr "앱별 규칙"
+
+msgctxt "split-tunneling-view"
+msgid "Through the VPN"
+msgstr "VPN 경유"
+
+msgctxt "split-tunneling-view"
+msgid "Through the VPN, another country"
+msgstr "VPN 경유, 다른 국가"
+
+msgctxt "split-tunneling-view"
+msgid "Through the VPN, from this country"
+msgstr "VPN 경유, 이 국가에서"
+
+msgctxt "split-tunneling-view"
+msgid "Until you close it. Close it first if it is already open."
+msgstr "앱을 닫을 때까지 유지됩니다. 이미 열려 있다면 먼저 닫으세요."
+
+msgctxt "split-tunneling-view"
+msgid "VPN"
+msgstr "VPN"
+
+msgctxt "split-tunneling-view"
+msgid "Your system cannot send apps outside the VPN."
+msgstr "이 시스템에서는 앱이 VPN을 우회할 수 없습니다."
 
 #. Button label for continuing problem report submission with an outdated app version.
 msgctxt "support-view"

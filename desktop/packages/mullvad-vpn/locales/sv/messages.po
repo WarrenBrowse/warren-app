@@ -2703,21 +2703,6 @@ msgctxt "split-tunneling-view"
 msgid "%(applicationName)s is problematic and can’t be launched through the VPN alone."
 msgstr "%(applicationName)s är problematiskt och kan inte startas ensamt via VPN."
 
-#. Information about split tunneling not being supported on the system.
-#. Available placeholders:
-#. %(splitTunneling)s - will be replaced with Split tunneling
-msgctxt "split-tunneling-view"
-msgid "%(splitTunneling)s is not supported by your system."
-msgstr "Ditt system har inte stöd för %(splitTunneling)s."
-
-msgctxt "split-tunneling-view"
-msgid "Add"
-msgstr "Lägg till"
-
-msgctxt "split-tunneling-view"
-msgid "All apps"
-msgstr "Alla appar"
-
 msgctxt "split-tunneling-view"
 msgid "App routing"
 msgstr "Approutning"
@@ -2731,45 +2716,16 @@ msgid "Bypasses the VPN"
 msgstr "Går förbi VPN"
 
 msgctxt "split-tunneling-view"
-msgid "Change the country of %(application)s, now %(country)s"
-msgstr "Ändra land för %(application)s, nu %(country)s"
-
-msgctxt "split-tunneling-view"
 msgid "Choose"
 msgstr "Välj"
-
-msgctxt "split-tunneling-view"
-msgid "Choose a country for %(application)s"
-msgstr "Välj ett land för %(application)s"
-
-msgctxt "split-tunneling-view"
-msgid "Choose how each app connects."
-msgstr "Välj hur varje app ansluter."
 
 msgctxt "split-tunneling-view"
 msgid "Choose the apps you want to exclude from the VPN tunnel."
 msgstr "Välj de appar du vill exkludera från VPN-tunneln."
 
 msgctxt "split-tunneling-view"
-msgid "Choose the country an app appears from. Other apps keep your main connection."
-msgstr "Välj vilket land en app ska synas från. Andra appar behåller din huvudanslutning."
-
-msgctxt "split-tunneling-view"
 msgid "Cities in %(country)s"
 msgstr "%(country)s: städer"
-
-#. Link for learning more
-msgctxt "split-tunneling-view"
-msgid "Click here to learn more"
-msgstr "Klicka här för mer information"
-
-msgctxt "split-tunneling-view"
-msgid "Click on an app to launch it. It uses the VPN until you close it, and nothing else does."
-msgstr "Klicka på en app för att starta den. Bara den appen använder VPN tills du stänger den."
-
-msgctxt "split-tunneling-view"
-msgid "Click on an app to launch it. Its traffic will bypass the VPN tunnel until you close it."
-msgstr "Klicka på ett program för att starta det. Dess trafik förbigår VPN-tunneln tills du stänger det."
 
 msgctxt "split-tunneling-view"
 msgid "Connected"
@@ -2788,10 +2744,6 @@ msgid "Countries"
 msgstr "Länder"
 
 msgctxt "split-tunneling-view"
-msgid "Country"
-msgstr "Land"
-
-msgctxt "split-tunneling-view"
 msgid "Country for %(application)s"
 msgstr "Land för %(application)s"
 
@@ -2804,16 +2756,8 @@ msgid "Waiting for a free route"
 msgstr "Väntar på en ledig rutt"
 
 msgctxt "split-tunneling-view"
-msgid "Country per app"
-msgstr "Land per app"
-
-msgctxt "split-tunneling-view"
 msgid "Enabled \"Full disk access\" and still having issues?"
 msgstr "Har du aktiverat \"Fullständig diskåtkomst\" och har fortfarande problem?"
-
-msgctxt "split-tunneling-view"
-msgid "Excluded apps"
-msgstr "Exkluderade appar"
 
 #. Button label for browsing applications with split tunneling.
 msgctxt "split-tunneling-view"
@@ -2825,21 +2769,8 @@ msgid "Flatpak apps cannot use a country yet"
 msgstr "Flatpak-appar kan inte använda ett land än"
 
 msgctxt "split-tunneling-view"
-msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not be excluded from the VPN tunnel."
-msgstr "Om det redan körs ska du stänga %(applicationName)s innan du startar det härifrån. Annars kanske det inte exkluderas från VPN-tunneln."
-
-msgctxt "split-tunneling-view"
-msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not use the VPN."
-msgstr "Om %(applicationName)s redan körs ska du stänga den innan du startar den härifrån. Annars kanske den inte använder VPN."
-
-msgctxt "split-tunneling-view"
 msgid "In use"
 msgstr "Används"
-
-#. Button label for launching an application with split tunneling.
-msgctxt "split-tunneling-view"
-msgid "Launch"
-msgstr "Starta"
 
 msgctxt "split-tunneling-view"
 msgid "No server there"
@@ -2852,18 +2783,6 @@ msgstr "Inga sessionstokens kvar"
 msgctxt "split-tunneling-view"
 msgid "Off, uses the main connection"
 msgstr "Av, använder huvudanslutningen"
-
-msgctxt "split-tunneling-view"
-msgid "Only the apps you choose use the VPN."
-msgstr "Endast apparna du väljer använder VPN."
-
-msgctxt "split-tunneling-view"
-msgid "Only the apps you choose will use the VPN. The rest of this device will not be protected."
-msgstr "Endast apparna du väljer kommer att använda VPN. Resten av den här enheten skyddas inte."
-
-msgctxt "split-tunneling-view"
-msgid "Only these apps are protected. Everything else on this device uses your normal connection."
-msgstr "Endast dessa appar är skyddade. Allt annat på den här enheten använder din vanliga anslutning."
 
 msgctxt "split-tunneling-view"
 msgid "Open System Settings"
@@ -2887,40 +2806,12 @@ msgid "Please try again or send a problem report."
 msgstr "Försök igen eller skicka en problemrapport."
 
 msgctxt "split-tunneling-view"
-msgid "Remove country"
-msgstr "Ta bort land"
-
-msgctxt "split-tunneling-view"
-msgid "Remove the country of %(application)s"
-msgstr "Ta bort landet för %(application)s"
-
-msgctxt "split-tunneling-view"
 msgid "Restart Warren Service"
 msgstr "Starta om Warren-tjänsten"
 
 msgctxt "split-tunneling-view"
 msgid "Snap apps cannot use a country yet"
 msgstr "Snap-appar kan inte använda ett land än"
-
-msgctxt "split-tunneling-view"
-msgid "The apps you choose connect as if the VPN were off."
-msgstr "Apparna du väljer ansluter som om VPN var avstängt."
-
-msgctxt "split-tunneling-view"
-msgid "This build of Warren VPN cannot do this. It needs a signed build."
-msgstr "Den här versionen av Warren VPN kan inte göra detta. Det kräver en signerad version."
-
-msgctxt "split-tunneling-view"
-msgid "This needs macOS 13 or newer."
-msgstr "Detta kräver macOS 13 eller senare."
-
-msgctxt "split-tunneling-view"
-msgid "This replaces Bypass VPN. Your list of apps there is kept."
-msgstr "Detta ersätter \"Förbi VPN\". Din lista med appar där behålls."
-
-msgctxt "split-tunneling-view"
-msgid "This replaces VPN only for, so every app uses the VPN again except the ones you bypass. Your list of apps there is kept."
-msgstr "Detta ersätter \"VPN endast för\", så alla appar använder VPN igen utom de som går förbi VPN. Din lista med appar där behålls."
 
 #. Information about split tunneling being unavailable due to
 #. missing support in the user's operating system.
@@ -2938,10 +2829,6 @@ msgctxt "split-tunneling-view"
 msgid "To use this, enable “Full disk access” for “Warren VPN” in the macOS system settings."
 msgstr "Om du vill använda detta ska du ge \"Fullständig diskåtkomst\" till \"Warren VPN\" i macOS-systeminställningarna."
 
-msgctxt "split-tunneling-view"
-msgid "Turn on"
-msgstr "Slå på"
-
 #. Error message showed in a dialog when an application fails to launch.
 msgctxt "split-tunneling-view"
 msgid "Unable to launch selection. %(detailedErrorMessage)s"
@@ -2952,36 +2839,148 @@ msgid "Unavailable"
 msgstr "Inte tillgänglig"
 
 msgctxt "split-tunneling-view"
-msgid "Uses the VPN through its country"
-msgstr "Använder VPN via sitt land"
-
-msgctxt "split-tunneling-view"
-msgid "Using the VPN"
-msgstr "Använder VPN"
-
-msgctxt "split-tunneling-view"
-msgid "VPN only for"
-msgstr "VPN endast för"
-
-msgctxt "split-tunneling-view"
-msgid "VPN only for is on: an app uses its country when you open it from VPN only for."
-msgstr "\"VPN endast för\" är på: en app använder sitt land bara när du öppnar den från \"VPN endast för\"."
-
-msgctxt "split-tunneling-view"
-msgid "VPN only for is on: every app you did not choose there already bypasses the VPN."
-msgstr "\"VPN endast för\" är på: alla appar du inte har valt där går redan förbi VPN."
-
-msgctxt "split-tunneling-view"
 msgid "Waiting for the VPN"
 msgstr "Väntar på VPN"
 
 msgctxt "split-tunneling-view"
-msgid "With a country"
-msgstr "Med ett land"
+msgid "%(application)s, %(route)s"
+msgstr "%(application)s, %(route)s"
 
 msgctxt "split-tunneling-view"
-msgid "Your system does not support this."
-msgstr "Ditt system har inte stöd för detta."
+msgid "Add an app"
+msgstr "Lägg till en app"
+
+msgctxt "split-tunneling-view"
+msgid "All apps are protected by the VPN, except for the rules below."
+msgstr "Alla appar skyddas av VPN, utom reglerna nedan."
+
+msgctxt "split-tunneling-view"
+msgid "App"
+msgstr "App"
+
+msgctxt "split-tunneling-view"
+msgid "Choose an exit country"
+msgstr "Välj ett utgångsland"
+
+msgctxt "split-tunneling-view"
+msgid "Choose where each app goes."
+msgstr "Välj vilken väg varje app tar."
+
+msgctxt "split-tunneling-view"
+msgid "Country of your main connection"
+msgstr "Landet för din huvudanslutning"
+
+msgctxt "split-tunneling-view"
+msgid "Default"
+msgstr "Standard"
+
+msgctxt "split-tunneling-view"
+msgid "Direct connection by default. Only the apps below use the VPN."
+msgstr "Direktanslutning som standard. Endast apparna nedan använder VPN."
+
+msgctxt "split-tunneling-view"
+msgid "Direct connection, your real IP is visible"
+msgstr "Direktanslutning, din riktiga IP syns"
+
+msgctxt "split-tunneling-view"
+msgid "Done"
+msgstr "Klar"
+
+msgctxt "split-tunneling-view"
+msgid "It uses this country when you open it with “Open through the VPN”."
+msgstr "Den använder det här landet när du öppnar den med ”Öppna via VPN”."
+
+msgctxt "split-tunneling-view"
+msgid "Needs Full Disk Access"
+msgstr "Kräver fullständig diskåtkomst"
+
+msgctxt "split-tunneling-view"
+msgid "Needs a signed build of Warren VPN"
+msgstr "Kräver en signerad version av Warren VPN"
+
+msgctxt "split-tunneling-view"
+msgid "Needs macOS 13 or newer"
+msgstr "Kräver macOS 13 eller senare"
+
+msgctxt "split-tunneling-view"
+msgid "No app uses the VPN. Add one, or send the other apps through the VPN again."
+msgstr "Ingen app använder VPN. Lägg till en, eller skicka de andra apparna via VPN igen."
+
+msgctxt "split-tunneling-view"
+msgid "No rules. Add an app to open it through the VPN: it uses the VPN until you close it."
+msgstr "Inga regler. Lägg till en app för att öppna den via VPN: den använder VPN tills du stänger den."
+
+msgctxt "split-tunneling-view"
+msgid "No rules. Add an app to send it through another country or outside the VPN."
+msgstr "Inga regler. Lägg till en app för att skicka den via ett annat land eller utanför VPN."
+
+msgctxt "split-tunneling-view"
+msgid "Not available on this system"
+msgstr "Inte tillgängligt på det här systemet"
+
+msgctxt "split-tunneling-view"
+msgid "Open outside the VPN"
+msgstr "Öppna utanför VPN"
+
+msgctxt "split-tunneling-view"
+msgid "Open through the VPN"
+msgstr "Öppna via VPN"
+
+msgctxt "split-tunneling-view"
+msgid "Other apps go"
+msgstr "Andra appar går"
+
+msgctxt "split-tunneling-view"
+msgid "Outside the VPN"
+msgstr "Utanför VPN"
+
+msgctxt "split-tunneling-view"
+msgid "Outside the VPN needs a signed build of Warren VPN."
+msgstr "”Utanför VPN” kräver en signerad version av Warren VPN."
+
+msgctxt "split-tunneling-view"
+msgid "Outside the VPN needs macOS 13 or newer."
+msgstr "”Utanför VPN” kräver macOS 13 eller senare."
+
+msgctxt "split-tunneling-view"
+msgid "Remove %(application)s from the list"
+msgstr "Ta bort %(application)s från listan"
+
+msgctxt "split-tunneling-view"
+msgid "Remove the rule"
+msgstr "Ta bort regeln"
+
+msgctxt "split-tunneling-view"
+msgid "Route for %(application)s"
+msgstr "Rutt för %(application)s"
+
+msgctxt "split-tunneling-view"
+msgid "Rules per app"
+msgstr "Regler per app"
+
+msgctxt "split-tunneling-view"
+msgid "Through the VPN"
+msgstr "Via VPN"
+
+msgctxt "split-tunneling-view"
+msgid "Through the VPN, another country"
+msgstr "Via VPN, annat land"
+
+msgctxt "split-tunneling-view"
+msgid "Through the VPN, from this country"
+msgstr "Via VPN, från det här landet"
+
+msgctxt "split-tunneling-view"
+msgid "Until you close it. Close it first if it is already open."
+msgstr "Tills du stänger den. Stäng den först om den redan är öppen."
+
+msgctxt "split-tunneling-view"
+msgid "VPN"
+msgstr "VPN"
+
+msgctxt "split-tunneling-view"
+msgid "Your system cannot send apps outside the VPN."
+msgstr "Ditt system kan inte skicka appar utanför VPN."
 
 #. Button label for continuing problem report submission with an outdated app version.
 msgctxt "support-view"

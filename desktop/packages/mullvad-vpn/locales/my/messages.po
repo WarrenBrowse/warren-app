@@ -2694,21 +2694,6 @@ msgctxt "split-tunneling-view"
 msgid "%(applicationName)s is problematic and can’t be launched through the VPN alone."
 msgstr "%(applicationName)s သည် ပြဿနာဖြစ်စေသဖြင့် VPN ကို ၎င်းတစ်ခုတည်း သုံးအောင် စတင်ဆောင်ရွက်၍ မရနိုင်ပါ။"
 
-#. Information about split tunneling not being supported on the system.
-#. Available placeholders:
-#. %(splitTunneling)s - will be replaced with Split tunneling
-msgctxt "split-tunneling-view"
-msgid "%(splitTunneling)s is not supported by your system."
-msgstr "%(splitTunneling)s ကို သင့်စနစ်က မပံ့ပိုးပါ။"
-
-msgctxt "split-tunneling-view"
-msgid "Add"
-msgstr "ပေါင်းထည့်ရန်"
-
-msgctxt "split-tunneling-view"
-msgid "All apps"
-msgstr "အက်ပ်များ အားလုံး"
-
 msgctxt "split-tunneling-view"
 msgid "App routing"
 msgstr "အက်ပ် လမ်းကြောင်းပေးခြင်း"
@@ -2722,45 +2707,16 @@ msgid "Bypasses the VPN"
 msgstr "VPN ကို ကျော်သည်"
 
 msgctxt "split-tunneling-view"
-msgid "Change the country of %(application)s, now %(country)s"
-msgstr "%(application)s ၏ နိုင်ငံကို ပြောင်းရန်၊ လက်ရှိ %(country)s"
-
-msgctxt "split-tunneling-view"
 msgid "Choose"
 msgstr "ရွေးရန်"
-
-msgctxt "split-tunneling-view"
-msgid "Choose a country for %(application)s"
-msgstr "%(application)s အတွက် နိုင်ငံ ရွေးရန်"
-
-msgctxt "split-tunneling-view"
-msgid "Choose how each app connects."
-msgstr "အက်ပ်တစ်ခုစီ ချိတ်ဆက်ပုံကို ရွေးပါ။"
 
 msgctxt "split-tunneling-view"
 msgid "Choose the apps you want to exclude from the VPN tunnel."
 msgstr "VPN Tunnel မှ ဖယ်ထုတ်လိုသည့် အက်ပ်များကို ရွေးချယ်ပါ။"
 
 msgctxt "split-tunneling-view"
-msgid "Choose the country an app appears from. Other apps keep your main connection."
-msgstr "အက်ပ်တစ်ခုကို မည်သည့်နိုင်ငံမှ ချိတ်ဆက်သကဲ့သို့ ပေါ်စေမည်ကို ရွေးပါ။ အခြားအက်ပ်များသည် သင်၏ ပင်မချိတ်ဆက်မှုကို ဆက်သုံးပါသည်။"
-
-msgctxt "split-tunneling-view"
 msgid "Cities in %(country)s"
 msgstr "%(country)s ရှိ မြို့များ"
-
-#. Link for learning more
-msgctxt "split-tunneling-view"
-msgid "Click here to learn more"
-msgstr "ပိုမိုသိရှိရန် ဤနေရာကိုနှိပ်ပါ"
-
-msgctxt "split-tunneling-view"
-msgid "Click on an app to launch it. It uses the VPN until you close it, and nothing else does."
-msgstr "စတင်ဆောင်ရွက်ရန် အက်ပ်ကို နှိပ်ပါ။ ၎င်းကို သင်မပိတ်မချင်း ၎င်းတစ်ခုတည်းသာ VPN ကို သုံးပါမည်။"
-
-msgctxt "split-tunneling-view"
-msgid "Click on an app to launch it. Its traffic will bypass the VPN tunnel until you close it."
-msgstr "၎င်းကို စတင်ဆောင်ရွက်ရန် အက်ပ်ကို နှိပ်ပါ။ ၎င်းကူးလူးမှုသည် ၎င်းကို သင်မပိတ်မချင်း VPN Tunnel ကို သုံး၍ ရှောင်ကွင်းသွားပါမည်။"
 
 msgctxt "split-tunneling-view"
 msgid "Connected"
@@ -2779,10 +2735,6 @@ msgid "Countries"
 msgstr "နိုင်ငံများ"
 
 msgctxt "split-tunneling-view"
-msgid "Country"
-msgstr "နိုင်ငံ"
-
-msgctxt "split-tunneling-view"
 msgid "Country for %(application)s"
 msgstr "%(application)s အတွက် နိုင်ငံ"
 
@@ -2795,16 +2747,8 @@ msgid "Waiting for a free route"
 msgstr "လမ်းကြောင်းလွတ် စောင့်နေသည်"
 
 msgctxt "split-tunneling-view"
-msgid "Country per app"
-msgstr "အက်ပ်အလိုက် နိုင်ငံ"
-
-msgctxt "split-tunneling-view"
 msgid "Enabled \"Full disk access\" and still having issues?"
 msgstr "\"Full disk access\" ကို ဖွင့်ထားပြီးဖြစ်သော်လည်း ပြဿနာများဆက်ရှိနေပါသလား။"
-
-msgctxt "split-tunneling-view"
-msgid "Excluded apps"
-msgstr "ဖယ်ထုတ်ထားသည့် အက်ပ်များ"
 
 #. Button label for browsing applications with split tunneling.
 msgctxt "split-tunneling-view"
@@ -2816,21 +2760,8 @@ msgid "Flatpak apps cannot use a country yet"
 msgstr "Flatpak အက်ပ်များသည် နိုင်ငံကို မသုံးနိုင်သေးပါ"
 
 msgctxt "split-tunneling-view"
-msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not be excluded from the VPN tunnel."
-msgstr "၎င်းသည် လုပ်ဆောင်နေပြီး ဖြစ်ပါက ၎င်းကို ဤမှ စတင်မဆောင်ရွက်မီ %(applicationName)s ကို ပိတ်ပါ။ သို့မဟုတ်ပါက ၎င်းကို VPN Tunnel မှ ဖယ်၍ ရနိုင်မည် မဟုတ်ပါ။"
-
-msgctxt "split-tunneling-view"
-msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not use the VPN."
-msgstr "၎င်းသည် လုပ်ဆောင်နေပြီး ဖြစ်ပါက ၎င်းကို ဤမှ စတင်မဆောင်ရွက်မီ %(applicationName)s ကို ပိတ်ပါ။ သို့မဟုတ်ပါက ၎င်းသည် VPN ကို မသုံးဘဲ ဖြစ်နိုင်ပါသည်။"
-
-msgctxt "split-tunneling-view"
 msgid "In use"
 msgstr "သုံးနေသည်"
-
-#. Button label for launching an application with split tunneling.
-msgctxt "split-tunneling-view"
-msgid "Launch"
-msgstr "စတင်ဆောင်ရွက်ရန်"
 
 msgctxt "split-tunneling-view"
 msgid "No server there"
@@ -2843,18 +2774,6 @@ msgstr "ဆက်ရှင် တိုကင် မကျန်တော့ပ�
 msgctxt "split-tunneling-view"
 msgid "Off, uses the main connection"
 msgstr "ပိတ်ထားသည်၊ ပင်မချိတ်ဆက်မှုကို သုံးသည်"
-
-msgctxt "split-tunneling-view"
-msgid "Only the apps you choose use the VPN."
-msgstr "သင်ရွေးသော အက်ပ်များသာ VPN ကို သုံးပါသည်။"
-
-msgctxt "split-tunneling-view"
-msgid "Only the apps you choose will use the VPN. The rest of this device will not be protected."
-msgstr "သင်ရွေးသော အက်ပ်များသာ VPN ကို သုံးပါမည်။ ဤစက်၏ ကျန်အပိုင်းကို ကာကွယ်မည်မဟုတ်ပါ။"
-
-msgctxt "split-tunneling-view"
-msgid "Only these apps are protected. Everything else on this device uses your normal connection."
-msgstr "ဤအက်ပ်များသာ ကာကွယ်ထားပါသည်။ ဤစက်ပေါ်ရှိ ကျန်အရာအားလုံးသည် သင်၏ ပုံမှန်ချိတ်ဆက်မှုကို သုံးပါသည်။"
 
 msgctxt "split-tunneling-view"
 msgid "Open System Settings"
@@ -2878,40 +2797,12 @@ msgid "Please try again or send a problem report."
 msgstr "ထပ်ကြိုးစားကြည့်ပါ သို့မဟုတ် ပြဿနာ ရီပို့တ်တစ်ခု ပေးပို့ပေးပါ။"
 
 msgctxt "split-tunneling-view"
-msgid "Remove country"
-msgstr "နိုင်ငံ ဖယ်ရှားရန်"
-
-msgctxt "split-tunneling-view"
-msgid "Remove the country of %(application)s"
-msgstr "%(application)s ၏ နိုင်ငံကို ဖယ်ရှားရန်"
-
-msgctxt "split-tunneling-view"
 msgid "Restart Warren Service"
 msgstr "Warren ဝန်ဆောင်မှုကို ပြန်လည်စတင်ရန်"
 
 msgctxt "split-tunneling-view"
 msgid "Snap apps cannot use a country yet"
 msgstr "Snap အက်ပ်များသည် နိုင်ငံကို မသုံးနိုင်သေးပါ"
-
-msgctxt "split-tunneling-view"
-msgid "The apps you choose connect as if the VPN were off."
-msgstr "သင်ရွေးသော အက်ပ်များသည် VPN ပိတ်ထားသကဲ့သို့ ချိတ်ဆက်ပါသည်။"
-
-msgctxt "split-tunneling-view"
-msgid "This build of Warren VPN cannot do this. It needs a signed build."
-msgstr "ဤ Warren VPN ဗားရှင်းဖြင့် ၎င်းကို မလုပ်ဆောင်နိုင်ပါ။ လက်မှတ်ထိုးထားသော ဗားရှင်း လိုအပ်ပါသည်။"
-
-msgctxt "split-tunneling-view"
-msgid "This needs macOS 13 or newer."
-msgstr "macOS 13 သို့မဟုတ် ပိုသစ်သော ဗားရှင်း လိုအပ်ပါသည်။"
-
-msgctxt "split-tunneling-view"
-msgid "This replaces Bypass VPN. Your list of apps there is kept."
-msgstr "၎င်းသည် “VPN ကို ကျော်ရန်” ကို အစားထိုးပါသည်။ ထိုနေရာရှိ သင်၏အက်ပ်စာရင်းကို ဆက်ထားပါမည်။"
-
-msgctxt "split-tunneling-view"
-msgid "This replaces VPN only for, so every app uses the VPN again except the ones you bypass. Your list of apps there is kept."
-msgstr "၎င်းသည် “VPN သုံးမည့်အက်ပ်များ” ကို အစားထိုးသဖြင့် VPN ကို ကျော်သော အက်ပ်များမှလွဲ၍ အက်ပ်အားလုံး VPN ကို ပြန်သုံးပါမည်။ ထိုနေရာရှိ သင်၏အက်ပ်စာရင်းကို ဆက်ထားပါမည်။"
 
 #. Information about split tunneling being unavailable due to
 #. missing support in the user's operating system.
@@ -2929,10 +2820,6 @@ msgctxt "split-tunneling-view"
 msgid "To use this, enable “Full disk access” for “Warren VPN” in the macOS system settings."
 msgstr "၎င်းကို အသုံးပြုရန်အတွက် macOS စနစ်ဆက်တင်ထဲရှိ “Warren VPN” အတွက် “Full disk access” ကို ဖွင့်ပေးပါ။"
 
-msgctxt "split-tunneling-view"
-msgid "Turn on"
-msgstr "ဖွင့်ရန်"
-
 #. Error message showed in a dialog when an application fails to launch.
 msgctxt "split-tunneling-view"
 msgid "Unable to launch selection. %(detailedErrorMessage)s"
@@ -2943,36 +2830,148 @@ msgid "Unavailable"
 msgstr "မရနိုင်ပါ"
 
 msgctxt "split-tunneling-view"
-msgid "Uses the VPN through its country"
-msgstr "၎င်း၏ နိုင်ငံမှတစ်ဆင့် VPN ကို သုံးသည်"
-
-msgctxt "split-tunneling-view"
-msgid "Using the VPN"
-msgstr "VPN သုံးနေသည်"
-
-msgctxt "split-tunneling-view"
-msgid "VPN only for"
-msgstr "VPN သုံးမည့်အက်ပ်များ"
-
-msgctxt "split-tunneling-view"
-msgid "VPN only for is on: an app uses its country when you open it from VPN only for."
-msgstr "“VPN သုံးမည့်အက်ပ်များ” ဖွင့်ထားသည်: “VPN သုံးမည့်အက်ပ်များ” မှ ဖွင့်မှသာ အက်ပ်သည် ၎င်း၏ နိုင်ငံကို သုံးပါသည်။"
-
-msgctxt "split-tunneling-view"
-msgid "VPN only for is on: every app you did not choose there already bypasses the VPN."
-msgstr "“VPN သုံးမည့်အက်ပ်များ” ဖွင့်ထားသည်: ထိုနေရာတွင် သင်မရွေးထားသော အက်ပ်အားလုံးသည် VPN ကို ကျော်ပြီးဖြစ်သည်။"
-
-msgctxt "split-tunneling-view"
 msgid "Waiting for the VPN"
 msgstr "VPN ကို စောင့်နေသည်"
 
 msgctxt "split-tunneling-view"
-msgid "With a country"
-msgstr "နိုင်ငံ သတ်မှတ်ထားသည်"
+msgid "%(application)s, %(route)s"
+msgstr "%(application)s၊ %(route)s"
 
 msgctxt "split-tunneling-view"
-msgid "Your system does not support this."
-msgstr "သင့်စနစ်က ၎င်းကို မပံ့ပိုးပါ။"
+msgid "Add an app"
+msgstr "အက်ပ် ထည့်ရန်"
+
+msgctxt "split-tunneling-view"
+msgid "All apps are protected by the VPN, except for the rules below."
+msgstr "အောက်ပါ စည်းမျဉ်းများမှလွဲ၍ အက်ပ်အားလုံးကို VPN က ကာကွယ်ထားပါသည်။"
+
+msgctxt "split-tunneling-view"
+msgid "App"
+msgstr "အက်ပ်"
+
+msgctxt "split-tunneling-view"
+msgid "Choose an exit country"
+msgstr "ထွက်ပေါက်နိုင်ငံ ရွေးရန်"
+
+msgctxt "split-tunneling-view"
+msgid "Choose where each app goes."
+msgstr "အက်ပ်တစ်ခုစီ မည်သည့်လမ်းကြောင်းမှ သွားမည်ကို ရွေးပါ။"
+
+msgctxt "split-tunneling-view"
+msgid "Country of your main connection"
+msgstr "သင်၏ ပင်မချိတ်ဆက်မှု နိုင်ငံ"
+
+msgctxt "split-tunneling-view"
+msgid "Default"
+msgstr "ပုံသေ"
+
+msgctxt "split-tunneling-view"
+msgid "Direct connection by default. Only the apps below use the VPN."
+msgstr "ပုံသေအားဖြင့် တိုက်ရိုက်ချိတ်ဆက်ပါသည်။ အောက်ပါ အက်ပ်များသာ VPN ကို သုံးပါသည်။"
+
+msgctxt "split-tunneling-view"
+msgid "Direct connection, your real IP is visible"
+msgstr "တိုက်ရိုက်ချိတ်ဆက်မှု၊ သင်၏ IP အစစ်ကို မြင်နိုင်ပါသည်"
+
+msgctxt "split-tunneling-view"
+msgid "Done"
+msgstr "ပြီးပါပြီ"
+
+msgctxt "split-tunneling-view"
+msgid "It uses this country when you open it with “Open through the VPN”."
+msgstr "“VPN မှတစ်ဆင့် ဖွင့်ရန်” ဖြင့် ဖွင့်သောအခါ ဤနိုင်ငံကို သုံးပါသည်။"
+
+msgctxt "split-tunneling-view"
+msgid "Needs Full Disk Access"
+msgstr "“Full disk access” လိုအပ်ပါသည်"
+
+msgctxt "split-tunneling-view"
+msgid "Needs a signed build of Warren VPN"
+msgstr "လက်မှတ်ထိုးထားသော Warren VPN ဗားရှင်း လိုအပ်ပါသည်"
+
+msgctxt "split-tunneling-view"
+msgid "Needs macOS 13 or newer"
+msgstr "macOS 13 သို့မဟုတ် ပိုသစ်သည့်ဗားရှင်း လိုအပ်ပါသည်"
+
+msgctxt "split-tunneling-view"
+msgid "No app uses the VPN. Add one, or send the other apps through the VPN again."
+msgstr "VPN ကို သုံးသည့် အက်ပ် မရှိပါ။ တစ်ခု ထည့်ပါ၊ သို့မဟုတ် အခြားအက်ပ်များကို VPN မှတစ်ဆင့် ပြန်ပို့ပါ။"
+
+msgctxt "split-tunneling-view"
+msgid "No rules. Add an app to open it through the VPN: it uses the VPN until you close it."
+msgstr "စည်းမျဉ်း မရှိပါ။ VPN မှတစ်ဆင့် ဖွင့်ရန် အက်ပ်တစ်ခု ထည့်ပါ၊ ၎င်းကို ပိတ်သည်အထိ VPN ကို သုံးပါမည်။"
+
+msgctxt "split-tunneling-view"
+msgid "No rules. Add an app to send it through another country or outside the VPN."
+msgstr "စည်းမျဉ်း မရှိပါ။ အခြားနိုင်ငံမှတစ်ဆင့် သို့မဟုတ် VPN ပြင်ပသို့ ပို့ရန် အက်ပ်တစ်ခု ထည့်ပါ။"
+
+msgctxt "split-tunneling-view"
+msgid "Not available on this system"
+msgstr "ဤစနစ်တွင် မရနိုင်ပါ"
+
+msgctxt "split-tunneling-view"
+msgid "Open outside the VPN"
+msgstr "VPN ပြင်ပတွင် ဖွင့်ရန်"
+
+msgctxt "split-tunneling-view"
+msgid "Open through the VPN"
+msgstr "VPN မှတစ်ဆင့် ဖွင့်ရန်"
+
+msgctxt "split-tunneling-view"
+msgid "Other apps go"
+msgstr "အခြားအက်ပ်များ"
+
+msgctxt "split-tunneling-view"
+msgid "Outside the VPN"
+msgstr "VPN ပြင်ပ"
+
+msgctxt "split-tunneling-view"
+msgid "Outside the VPN needs a signed build of Warren VPN."
+msgstr "“VPN ပြင်ပ” မုဒ်အတွက် လက်မှတ်ထိုးထားသော Warren VPN ဗားရှင်း လိုအပ်ပါသည်။"
+
+msgctxt "split-tunneling-view"
+msgid "Outside the VPN needs macOS 13 or newer."
+msgstr "“VPN ပြင်ပ” မုဒ်အတွက် macOS 13 သို့မဟုတ် ပိုသစ်သည့်ဗားရှင်း လိုအပ်ပါသည်။"
+
+msgctxt "split-tunneling-view"
+msgid "Remove %(application)s from the list"
+msgstr "%(application)s ကို စာရင်းမှ ဖယ်ရှားရန်"
+
+msgctxt "split-tunneling-view"
+msgid "Remove the rule"
+msgstr "စည်းမျဉ်း ဖယ်ရှားရန်"
+
+msgctxt "split-tunneling-view"
+msgid "Route for %(application)s"
+msgstr "%(application)s ၏ လမ်းကြောင်း"
+
+msgctxt "split-tunneling-view"
+msgid "Rules per app"
+msgstr "အက်ပ်အလိုက် စည်းမျဉ်းများ"
+
+msgctxt "split-tunneling-view"
+msgid "Through the VPN"
+msgstr "VPN မှတစ်ဆင့်"
+
+msgctxt "split-tunneling-view"
+msgid "Through the VPN, another country"
+msgstr "VPN မှတစ်ဆင့်၊ အခြားနိုင်ငံ"
+
+msgctxt "split-tunneling-view"
+msgid "Through the VPN, from this country"
+msgstr "VPN မှတစ်ဆင့်၊ ဤနိုင်ငံမှ"
+
+msgctxt "split-tunneling-view"
+msgid "Until you close it. Close it first if it is already open."
+msgstr "သင် ပိတ်သည်အထိ။ ဖွင့်ထားပြီးဖြစ်ပါက အရင်ပိတ်ပါ။"
+
+msgctxt "split-tunneling-view"
+msgid "VPN"
+msgstr "VPN"
+
+msgctxt "split-tunneling-view"
+msgid "Your system cannot send apps outside the VPN."
+msgstr "သင့်စနစ်သည် အက်ပ်များကို VPN ပြင်ပသို့ မပို့နိုင်ပါ။"
 
 #. Button label for continuing problem report submission with an outdated app version.
 msgctxt "support-view"
