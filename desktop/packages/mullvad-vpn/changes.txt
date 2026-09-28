@@ -1,24 +1,9 @@
 ### Fixed
-- [Android] Disconnect when logging out. The tunnel stayed up after the wallet was erased and kept
-  carrying traffic while the app showed the login screen. When the VPN does not come down within
-  15 seconds, the wallet is kept and the app asks to try again.
-- [Windows, macOS, Linux] Refuse to connect while no account is logged in, and say so in the CLI.
-  After `warren account logout` the app could still connect with the recovery phrase it keeps.
-  Logging out now also disconnects first and signs out only once the tunnel is down. When the
-  tunnel does not come down in time, the account stays logged in and the CLI reports an error.
-- [Windows, macOS, Linux] Close the connections to the server when disconnecting. They stayed open
-  up to 15 seconds after the app showed Disconnected.
-- [Windows, macOS, Linux] Refuse to connect while access to the account is revoked or the device is
-  revoked, and say why in the app and the CLI, with the day the revocation ends. While access was
-  revoked, a connect blocked all traffic until the user disconnected. Connecting works again as soon
-  as the revocation ends.
-- [Windows, macOS, Linux] Stop asking the servers for connection tokens, port entitlements, the
-  account standing and campaign codes while no account is logged in. After `warren account logout`,
-  which keeps the recovery phrase, these requests went on in the background. They resume at the next
-  login.
-- [Windows, macOS, Linux] Say in `warren account get` that the device is logged out and the recovery
-  phrase kept, after a logout that keeps the phrase. It said there was no identity on the device.
-- [Windows, macOS, Linux] Show the real connection state at once when a connect is refused, instead
-  of showing the connection in progress for three seconds.
-- [Windows, macOS, Linux, Android] Start a new estimate of the connection's speed when the device
-  moves to another network, instead of reusing the one measured on the previous network.
+- [Windows, macOS, Linux] Keep blocking a revoked device when the app starts with auto-connect on
+  or restores the tunnel after an unclean shutdown, as it does when the device is revoked while
+  connected. It disconnected instead and let the traffic out unprotected. A block for a revoked
+  device or a revoked access now shows as ACCESS REVOKED in the app and in `warren status`, with
+  how to lift it.
+- [Windows, macOS, Linux] Say in the app when a logout is refused because the VPN did not
+  disconnect in time, and offer to try again. The app showed nothing and the account stayed logged
+  in.

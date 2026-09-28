@@ -26,15 +26,6 @@ par l'application, gardez-le tel quel.
   automatiquement au lieu de s'arrêter au premier refus.
 
 ### Corrigé
-- [Windows, macOS, Linux] Maintenir le blocage d'un appareil révoqué quand l'application démarre
-  avec la connexion automatique activée ou rétablit le tunnel après un arrêt brutal, comme elle le
-  fait quand l'appareil est révoqué pendant une connexion. Elle se déconnectait à la place et
-  laissait passer le trafic sans protection. Un blocage pour un appareil ou un accès révoqué
-  s'affiche désormais comme ACCÈS RÉVOQUÉ dans l'application et dans `warren status`, avec la
-  façon de le lever.
-- [Windows, macOS, Linux] Indiquer dans l'application qu'une déconnexion du compte a été refusée
-  parce que le VPN ne s'est pas coupé à temps, et proposer de réessayer. L'application n'affichait
-  rien et le compte restait connecté.
 - [iOS] Présenter un droit de port avec chaque demande de port redirigé, comme les autres
   plateformes, pour que les serveurs qui l'exigent accordent le port au lieu de le refuser.
 - [iOS] Signer la connexion avec le portefeuille affiché dans l'application. Elle utilisait une clé
@@ -49,6 +40,18 @@ par l'application, gardez-le tel quel.
 - [iOS] Déconnecter le VPN et retirer sa configuration à la déconnexion du compte ou à l'effacement
   du portefeuille, pour que le tunnel ne puisse ni rester ouvert ni revenir à la demande pour un
   portefeuille qui a quitté l'appareil.
+
+## [1.1.40] - 2026-09-28
+### Corrigé
+- [Windows, macOS, Linux] Maintenir le blocage d'un appareil révoqué quand l'application démarre
+  avec la connexion automatique activée ou rétablit le tunnel après un arrêt brutal, comme elle le
+  fait quand l'appareil est révoqué pendant une connexion. Elle se déconnectait à la place et
+  laissait passer le trafic sans protection. Un blocage pour un appareil ou un accès révoqué
+  s'affiche désormais comme ACCÈS RÉVOQUÉ dans l'application et dans `warren status`, avec la
+  façon de le lever.
+- [Windows, macOS, Linux] Indiquer dans l'application qu'une déconnexion du compte a été refusée
+  parce que le VPN ne s'est pas coupé à temps, et proposer de réessayer. L'application n'affichait
+  rien et le compte restait connecté.
 
 ## [1.1.39] - 2026-09-28
 ### Corrigé

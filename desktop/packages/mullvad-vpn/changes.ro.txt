@@ -1,27 +1,9 @@
 ### Reparat
-- [Android] Deconectează VPN-ul la ieșirea din cont. Tunelul rămânea deschis după ștergerea
-  portofelului și transporta în continuare traficul, în timp ce aplicația arăta ecranul de
-  autentificare. Dacă VPN-ul nu se oprește în 15 secunde, portofelul este păstrat și aplicația
-  îți cere să încerci din nou.
-- [Windows, macOS, Linux] Aplicația refuză conectarea cât timp niciun cont nu este autentificat și
-  spune asta în CLI. După `warren account logout`, aplicația se putea conecta în continuare cu
-  fraza de recuperare pe care o păstrează. Ieșirea din cont deconectează acum mai întâi VPN-ul și
-  închide sesiunea contului abia după ce tunelul s-a oprit. Dacă tunelul nu se oprește la timp,
-  contul rămâne autentificat, iar CLI-ul semnalează o eroare.
-- [Windows, macOS, Linux] Aplicația închide conexiunile la server la deconectare. Acestea rămâneau
-  deschise până la 15 secunde după ce aplicația afișa „Deconectat”.
-- [Windows, macOS, Linux] Aplicația refuză conectarea cât timp accesul la cont sau dispozitivul este
-  revocat și spune de ce în aplicație și în CLI, cu ziua în care se încheie revocarea. Cât timp
-  accesul era revocat, o încercare de conectare bloca tot traficul până la deconectare. Conectarea
-  redevine posibilă imediat ce revocarea se încheie.
-- [Windows, macOS, Linux] Aplicația nu mai cere serverelor jetoane de conectare, autorizări de port
-  forwarding, starea contului sau coduri de campanie cât timp niciun cont nu este autentificat. După
-  `warren account logout`, care păstrează fraza de recuperare, aceste cereri continuau în fundal.
-  Ele se reiau la următoarea autentificare.
-- [Windows, macOS, Linux] `warren account get` spune acum că dispozitivul este deconectat de la cont
-  și că fraza de recuperare este păstrată, după o ieșire din cont care o păstrează. Afișa că pe
-  dispozitiv nu există nicio identitate.
-- [Windows, macOS, Linux] Aplicația afișează imediat starea reală a conexiunii când o conectare este
-  refuzată, în loc să arate conectarea în curs timp de trei secunde.
-- [Windows, macOS, Linux, Android] Aplicația pornește o estimare nouă a vitezei când dispozitivul
-  trece pe altă rețea, în loc să o refolosească pe cea măsurată pe rețeaua anterioară.
+- [Windows, macOS, Linux] Aplicația menține blocat un dispozitiv revocat atunci când pornește cu
+  conectarea automată activă sau restabilește tunelul după o oprire neașteptată, așa cum face când
+  dispozitivul este revocat în timpul unei conexiuni. Înainte se deconecta și lăsa traficul să
+  treacă neprotejat. O blocare pentru un dispozitiv sau un acces revocat apare acum ca ACCES
+  REVOCAT în aplicație și în `warren status`, împreună cu modul în care poate fi ridicată.
+- [Windows, macOS, Linux] Aplicația spune când ieșirea din cont este refuzată pentru că VPN-ul nu
+  s-a deconectat la timp și îți propune să încerci din nou. Înainte nu afișa nimic, iar contul
+  rămânea autentificat.

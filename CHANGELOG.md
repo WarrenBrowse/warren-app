@@ -33,14 +33,6 @@ Line wrap the file at 100 chars.                                              Th
   automatically instead of stopping on the first refusal.
 
 ### Fixed
-- [Windows, macOS, Linux] Keep blocking a revoked device when the app starts with auto-connect on
-  or restores the tunnel after an unclean shutdown, as it does when the device is revoked while
-  connected. It disconnected instead and let the traffic out unprotected. A block for a revoked
-  device or a revoked access now shows as ACCESS REVOKED in the app and in `warren status`, with
-  how to lift it.
-- [Windows, macOS, Linux] Say in the app when a logout is refused because the VPN did not
-  disconnect in time, and offer to try again. The app showed nothing and the account stayed logged
-  in.
 - [iOS] Present a port entitlement with each forwarded port request, as the other platforms do, so
   the servers that require one grant the port instead of refusing it.
 - [iOS] Sign the connection with the wallet shown in the app. It used a key derived from the same
@@ -53,6 +45,17 @@ Line wrap the file at 100 chars.                                              Th
   other devices hold every connection it is entitled to, instead of showing a plain disconnection.
 - [iOS] Disconnect and remove the VPN configuration when logging out or erasing the wallet, so the
   tunnel can neither stay up nor come back on demand for a wallet that left the device.
+
+## [1.1.40] - 2026-09-28
+### Fixed
+- [Windows, macOS, Linux] Keep blocking a revoked device when the app starts with auto-connect on
+  or restores the tunnel after an unclean shutdown, as it does when the device is revoked while
+  connected. It disconnected instead and let the traffic out unprotected. A block for a revoked
+  device or a revoked access now shows as ACCESS REVOKED in the app and in `warren status`, with
+  how to lift it.
+- [Windows, macOS, Linux] Say in the app when a logout is refused because the VPN did not
+  disconnect in time, and offer to try again. The app showed nothing and the account stayed logged
+  in.
 
 ## [1.1.39] - 2026-09-28
 ### Fixed
