@@ -20,6 +20,8 @@ dependencies {
     implementation(projects.lib.feature.settings.api)
     implementation(projects.lib.feature.splittunneling.api)
     implementation(projects.lib.repository)
+    // Logging out takes the tunnel down before the wallet goes (WarrenLogoutUseCase).
+    implementation(projects.lib.usecase)
     // WarrenWalletSettingsSection consumes Mnemonic / WalletState (lib/model)
     // + MnemonicDisplay / BiometricPromptAuthorizer (lib/ui/component).
     implementation(projects.lib.model)

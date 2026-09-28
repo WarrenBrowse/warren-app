@@ -37,6 +37,9 @@ par l'application, gardez-le tel quel.
 - [iOS] Indiquer que le compte utilise déjà son nombre maximal d'appareils simultanés quand ses
   autres appareils occupent toutes les connexions auxquelles il a droit, au lieu d'une simple
   déconnexion.
+- [Android] Déconnecter le VPN à la déconnexion du compte. Le tunnel restait ouvert une fois le
+  portefeuille effacé et continuait de transporter le trafic pendant que l'application affichait
+  l'écran de connexion.
 
 ## [1.1.38] - 2026-09-28
 ### Ajouté

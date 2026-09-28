@@ -33,6 +33,9 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Aplicația spune că acest cont folosește deja numărul maxim de dispozitive simultane când
   celelalte dispozitive ale lui ocupă toate conexiunile la care are dreptul, în loc de o simplă
   deconectare.
+- [Android] Deconectează VPN-ul la ieșirea din cont. Tunelul rămânea deschis după ștergerea
+  portofelului și transporta în continuare traficul, în timp ce aplicația arăta ecranul de
+  autentificare.
 
 ## [1.1.38] - 2026-09-28
 ### Adăugat

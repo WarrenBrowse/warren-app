@@ -43,6 +43,8 @@ Line wrap the file at 100 chars.                                              Th
   revocation ends.
 - [iOS] Say that the account already uses its maximum number of simultaneous devices when its
   other devices hold every connection it is entitled to, instead of showing a plain disconnection.
+- [Android] Disconnect when logging out. The tunnel stayed up after the wallet was erased and kept
+  carrying traffic while the app showed the login screen.
 
 ## [1.1.38] - 2026-09-28
 ### Added

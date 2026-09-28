@@ -79,6 +79,8 @@ import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha20
 import com.warrenbrowse.vpn.lib.ui.theme.color.positive
+import com.warrenbrowse.vpn.lib.usecase.WarrenLogoutOutcome
+import com.warrenbrowse.vpn.lib.usecase.WarrenLogoutUseCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -104,6 +106,7 @@ import org.koin.compose.koinInject
 fun WarrenWalletSettings(navigator: Navigator) {
     val activity = LocalContext.current as FragmentActivity
     val walletRepository = koinInject<WalletRepository>()
+    val logOut = koinInject<WarrenLogoutUseCase>()
     val forumIdentityRepository = koinInject<ForumIdentityRepository>()
     val forumIdentity by forumIdentityRepository.identity.collectAsStateWithLifecycle()
     val subscriptionInvoker = koinInject<WarrenSubscriptionInvoker>()
@@ -346,9 +349,11 @@ fun WarrenWalletSettings(navigator: Navigator) {
             onConfirm = {
                 dismiss()
                 scope.launch {
-                    val erased = runCatching { walletRepository.erase() }
-                    if (erased.isFailure) {
-                        Logger.w(throwable = erased.exceptionOrNull()) { "wallet erase failed" }
+                    val outcome = logOut()
+                    if (outcome != WarrenLogoutOutcome.LoggedOut) {
+                        Logger.w(throwable = (outcome as? WarrenLogoutOutcome.EraseFailed)?.cause) {
+                            "logout did not complete, wallet kept: ${outcome::class.simpleName}"
+                        }
                         // A dead coroutine would leave the user on an account
                         // screen for a wallet that is still there, with no sign
                         // anything went wrong.
