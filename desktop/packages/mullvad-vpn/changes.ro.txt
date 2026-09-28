@@ -1,26 +1,60 @@
 ### Adăugat
-- [macOS, Linux] Alege rețelele pe care Partajarea rețelei locale le lasă să treacă, în rândul ei
-  din setări, ca pentru serverele DNS personalizate, sau cu `warren lan networks add`, `remove` și
-  `reset`. Lista pornește de la intervalele private obișnuite. O rețea mai largă decât un /8 în IPv4
-  sau un /7 în IPv6, ori una care ar ajunge la IPv4 ocolind VPN-ul, este refuzată.
+- [Android] Adaugă „Țară per aplicație” în Rutare aplicații, ca pe desktop: fiecare aplicație aleasă
+  iese spre Internet printr-un exit din propria țară sau propriul oraș, în timp ce toate celelalte
+  aplicații păstrează conexiunea principală. Țara se alege din eticheta de pe rândul aplicației, iar
+  rândul arată dacă legătura ei e activă și adresa sub care apare aplicația. Schimbarea unei țări nu
+  reconectează VPN-ul. Rulează în același timp câte admite serverul, o țară peste acest număr
+  așteaptă să se elibereze o rută, iar o aplicație a cărei țară nu poate fi atinsă e blocată în loc
+  să fie trimisă pe altă cale. Ecranul de conectare arată câte aplicații sunt în alte țări. Necesită
+  Android 10 sau mai nou.
+- [Android] Aplicația cere confirmare înainte ca o țară să facă din aplicația ei singura care
+  folosește VPN-ul. Cât timp „VPN selectiv” e activat, dar niciuna dintre aplicațiile lui nu e pe
+  dispozitiv, toate aplicațiile folosesc VPN-ul, iar o țară aleasă pentru o aplicație le-ar scoate
+  pe toate celelalte din el: Rutare aplicații spune acum acest lucru și așteaptă răspunsul tău.
 
 ### Modificat
-- [Windows, macOS, Linux] Oferă tuturor rândurilor din lista de locații același aspect, inclusiv
-  celor Recente și listelor personalizate: steagul rotund, numele, încărcarea unui singur exit și un
-  buton discret la capătul rândului, deschis și printr-un clic dreapta, care adaugă locul într-o
-  listă sau îl scoate de acolo ori creează o listă nouă care îl conține deja. Locul selectat se
-  recunoaște după culoarea numelui și un inel în jurul steagului, fără o bifă care să împingă
-  numele. O listă goală nu mai este afișată.
-- [Android] Toate rândurile selectorului de locație au aceeași formă, inclusiv cele recente și
-  listele personalizate: steagul rotund, numele deasupra țării, încărcarea unui singur exit și un
-  buton de meniu discret, deschis și printr-o apăsare lungă, care adaugă locația într-o listă sau o
-  scoate imediat, ori creează o listă nouă care o conține. Locația selectată se recunoaște după
-  numele verde și inelul verde din jurul steagului. O listă goală nu mai apare în selector.
+- [Windows, macOS, Linux] Lista de rețele a Partajării rețelei locale e tradusă în toate cele 23 de
+  limbi.
+- [Android] Nota de confidențialitate numește Rutarea aplicațiilor în toate limbile, acolo unde
+  încă vorbea de split tunneling.
 
 ### Reparat
-- [macOS] Comutatorul „Deschide aplicația din bara de activități” rămâne în setările interfeței cât
-  timp e activat, astfel încât o aplicație desprinsă de o versiune de dezvoltare poate fi fixată la
-  loc.
-- [Windows, macOS, Linux, Android] O încărcare mare continuă să curgă când conexiunea e saturată și
-  un trafic mai ușor trece pe lângă ea. Aplicația trimitea unele pachete atât de în urma celorlalte
-  încât serverul le arunca drept reluări.
+- [Windows, macOS, Linux, Android] Aplicația spune că acest cont folosește deja numărul maxim de
+  dispozitive simultane când serverul refuză încă unul, în loc să anunțe că abonamentul a expirat.
+- [Windows, macOS, Linux, Android] Aplicația spune că acest cont folosește deja numărul
+  maxim de dispozitive simultane când celelalte dispozitive ale lui ocupă toate conexiunile la care
+  are dreptul, în loc să anunțe că abonamentul a expirat. Pe un server încă neactualizat, aplicația
+  o spune când știe că abonamentul e încă activ.
+- [Windows, macOS, Linux, Android] Conexiunile deschise ale unei aplicații a cărei țară se schimbă
+  în timpul conexiunii, sau care primește ori pierde o țară, sunt resetate, ca aplicația să se
+  reconecteze imediat prin noua rută. Înainte, conexiunile ei rămâneau blocate: un browser aștepta,
+  inclusiv rezolvarea numelor, până era repornit.
+- [Android] Traficul tuturor aplicațiilor continuă cât timp „Țară per aplicație” află ce
+  aplicație a deschis o conexiune nouă. Căutarea întreabă sistemul o dată pe conexiune și bloca
+  până acum tot tunelul între timp, iar o rafală de conexiuni noi ducea la pauze de până la o
+  secundă.
+- [Linux] Ajungi la rețeaua locală cât timp ești conectat, cu Partajarea rețelei locale pornită:
+  routerul, imprimantele și celelalte dispozitive, precum și rețelele adăugate în listă pe care
+  computerul le atinge direct sau printr-o rută statică, prin IPv4 și IPv6. Firewallul lăsa
+  traficul să treacă, dar rutele îl trimiteau în VPN, unde nu răspundea nimic. Oprirea partajării
+  sau modificarea listei se aplică fără reconectare, iar adresele VPN-ului rămân în VPN orice ai
+  partaja.
+- [Windows, macOS, Linux] Aplicațiile trimise în altă țară își primesc ruta de la prima conectare
+  după o instalare nouă. Prima reîmprospătare a tokenurilor eșua cât timp VPN-ul se conecta, iar
+  aceste aplicații rămâneau blocate până la reconectarea următoare.
+- [Windows, macOS, Linux] O aplicație căreia i s-a ales un oraș e rutată și când conexiunea
+  folosește două salturi, ca pe Android. Orașul alege doar exit-ul, iar conexiunea poate intra
+  oriunde poate intra conexiunea principală; înainte aplicația rămânea blocată dacă niciun server
+  de intrare nu se afla chiar în acel oraș.
+- [Android] Aplicația cere confirmare înainte ca activarea „Țară per aplicație” să facă din
+  aplicațiile cu o țară singurele care folosesc VPN-ul. Cât timp „VPN selectiv” e activat, dar
+  niciuna dintre aplicațiile lui nu e pe dispozitiv, toate aplicațiile folosesc VPN-ul, iar
+  activarea „Țară per aplicație” cu țări deja salvate îl restrângea la acele aplicații fără niciun
+  avertisment.
+- [Android] Aplicațiile trimise în altă țară își primesc ruta la o secundă sau două după prima
+  conectare. Prima reîmprospătare a tokenurilor nu putea ajunge la server cât timp VPN-ul se
+  conecta, așa că aceste aplicații așteptau până la un minut, iar dincolo de două, până la
+  reconectarea următoare.
+- [Android] VPN-ul rămâne conectat când serverul mută conexiunea pe o altă adresă din tunel.
+  Aplicația întrerupea conexiunea și se reconecta; un port redirecționat e acum cerut din nou pe
+  noua adresă.

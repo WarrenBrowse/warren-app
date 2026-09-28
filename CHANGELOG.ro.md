@@ -13,6 +13,29 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 
 ## [Unreleased]
 ### Adăugat
+- [iOS] Vezi avertismentele înregistrate pe contul tău când un port redirecționat e închis după o
+  raportare de abuz: o notificare pentru fiecare avertisment, un banner cu referința dosarului care
+  deschide pagina despre contestare, și lista completă în ecranul port forwarding cu adresa la care
+  să scrii. Avertismentele apar imediat ce actualizarea de server corespunzătoare e activă.
+- [iOS] Vezi revocarea contului, cu ziua în care se încheie când există una, în loc de o simplă
+  deconectare, iar conexiunea se oprește când revocarea e aflată în timpul unei sesiuni.
+- [iOS] Află când serverul refuză un port redirecționat din lipsă de drept de port, iar aplicația
+  cere din nou automat în loc să se oprească la primul refuz.
+
+### Reparat
+- [iOS] Prezintă un drept de port cu fiecare cerere de port redirecționat, ca pe celelalte
+  platforme, astfel încât serverele care îl cer acordă portul în loc să-l refuze.
+- [iOS] Semnează conexiunea cu portofelul afișat în aplicație. Folosea o cheie derivată din aceeași
+  frază de recuperare, dar diferită de adresa afișată, așa că serverele nu vedeau abonamentul pe ea.
+- [iOS] Vezi revocarea când un voucher sau o achiziție App Store e refuzată pentru un cont
+  revocat. Nicio achiziție nu pornește, iar o achiziție deja plătită rămâne în așteptare, ca să
+  fie creditată după încheierea revocării.
+- [iOS] Aplicația spune că acest cont folosește deja numărul maxim de dispozitive simultane când
+  celelalte dispozitive ale lui ocupă toate conexiunile la care are dreptul, în loc de o simplă
+  deconectare.
+
+## [1.1.38] - 2026-09-28
+### Adăugat
 - [Android] Adaugă „Țară per aplicație” în Rutare aplicații, ca pe desktop: fiecare aplicație aleasă
   iese spre Internet printr-un exit din propria țară sau propriul oraș, în timp ce toate celelalte
   aplicații păstrează conexiunea principală. Țara se alege din eticheta de pe rândul aplicației, iar
@@ -25,14 +48,6 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   folosește VPN-ul. Cât timp „VPN selectiv” e activat, dar niciuna dintre aplicațiile lui nu e pe
   dispozitiv, toate aplicațiile folosesc VPN-ul, iar o țară aleasă pentru o aplicație le-ar scoate
   pe toate celelalte din el: Rutare aplicații spune acum acest lucru și așteaptă răspunsul tău.
-- [iOS] Vezi avertismentele înregistrate pe contul tău când un port redirecționat e închis după o
-  raportare de abuz: o notificare pentru fiecare avertisment, un banner cu referința dosarului care
-  deschide pagina despre contestare, și lista completă în ecranul port forwarding cu adresa la care
-  să scrii. Avertismentele apar imediat ce actualizarea de server corespunzătoare e activă.
-- [iOS] Vezi revocarea contului, cu ziua în care se încheie când există una, în loc de o simplă
-  deconectare, iar conexiunea se oprește când revocarea e aflată în timpul unei sesiuni.
-- [iOS] Află când serverul refuză un port redirecționat din lipsă de drept de port, iar aplicația
-  cere din nou automat în loc să se oprească la primul refuz.
 
 ### Modificat
 - [Windows, macOS, Linux] Lista de rețele a Partajării rețelei locale e tradusă în toate cele 23 de
@@ -41,19 +56,12 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   încă vorbea de split tunneling.
 
 ### Reparat
-- [iOS] Prezintă un drept de port cu fiecare cerere de port redirecționat, ca pe celelalte
-  platforme, astfel încât serverele care îl cer acordă portul în loc să-l refuze.
-- [iOS] Semnează conexiunea cu portofelul afișat în aplicație. Folosea o cheie derivată din aceeași
-  frază de recuperare, dar diferită de adresa afișată, așa că serverele nu vedeau abonamentul pe ea.
-- [iOS] Vezi revocarea când un voucher sau o achiziție App Store e refuzată pentru un cont
-  revocat. Nicio achiziție nu pornește, iar o achiziție deja plătită rămâne în așteptare, ca să
-  fie creditată după încheierea revocării.
 - [Windows, macOS, Linux, Android] Aplicația spune că acest cont folosește deja numărul maxim de
   dispozitive simultane când serverul refuză încă unul, în loc să anunțe că abonamentul a expirat.
-- [Windows, macOS, Linux, Android, iOS] Aplicația spune că acest cont folosește deja numărul
+- [Windows, macOS, Linux, Android] Aplicația spune că acest cont folosește deja numărul
   maxim de dispozitive simultane când celelalte dispozitive ale lui ocupă toate conexiunile la care
-  are dreptul, în loc să anunțe că abonamentul a expirat. Pe iOS apărea doar o deconectare. Pe un
-  server încă neactualizat, aplicația o spune când știe că abonamentul e încă activ.
+  are dreptul, în loc să anunțe că abonamentul a expirat. Pe un server încă neactualizat, aplicația
+  o spune când știe că abonamentul e încă activ.
 - [Windows, macOS, Linux, Android] Conexiunile deschise ale unei aplicații a cărei țară se schimbă
   în timpul conexiunii, sau care primește ori pierde o țară, sunt resetate, ca aplicația să se
   reconecteze imediat prin noua rută. Înainte, conexiunile ei rămâneau blocate: un browser aștepta,

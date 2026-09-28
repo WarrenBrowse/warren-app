@@ -23,16 +23,6 @@ Line wrap the file at 100 chars.                                              Th
 
 ## [Unreleased]
 ### Added
-- [Android] Add Country per app to App routing, as on desktop: each app you choose goes to the
-  Internet through an exit in its own country or city, while every other app keeps the main
-  connection. Choose a country from the chip on an app's row; the row shows whether its connection
-  is up and the address the app appears from. Countries change without reconnecting the VPN. As
-  many run at once as the server admits, a country past that waits for a free route, and an app
-  whose country cannot be reached is blocked rather than sent another way. The connect screen
-  shows how many apps are in other countries. Needs Android 10 or newer.
-- [Android] Ask before a country makes its app the only one in the VPN. While VPN only for is on
-  and none of its apps is on the device, every app uses the VPN, and giving one app a country would
-  take every other app out of it: App routing now says so and waits for your answer.
 - [iOS] Show the warnings recorded against your account when a forwarded port is closed after an
   abuse report: a notification for each warning, a banner with its case reference that opens the
   page on contesting it, and the full list in the port forwarding screen with the address to write
@@ -41,11 +31,6 @@ Line wrap the file at 100 chars.                                              Th
   a plain disconnection, and stop the connection when the revocation is learned during a session.
 - [iOS] Say when the server refuses a forwarded port for want of an entitlement, and ask again
   automatically instead of stopping on the first refusal.
-
-### Changed
-- [Windows, macOS, Linux] Translate the network list of Local network sharing in all 23 languages.
-- [Android] Name App routing in the privacy notice, in every language, where it still spoke of
-  split tunneling.
 
 ### Fixed
 - [iOS] Present a port entitlement with each forwarded port request, as the other platforms do, so
@@ -56,13 +41,35 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Show the revocation when a voucher or an App Store purchase is refused for a revoked
   account. No purchase starts, and a purchase already paid stays pending, to be credited once the
   revocation ends.
+- [iOS] Say that the account already uses its maximum number of simultaneous devices when its
+  other devices hold every connection it is entitled to, instead of showing a plain disconnection.
+
+## [1.1.38] - 2026-09-28
+### Added
+- [Android] Add Country per app to App routing, as on desktop: each app you choose goes to the
+  Internet through an exit in its own country or city, while every other app keeps the main
+  connection. Choose a country from the chip on an app's row; the row shows whether its connection
+  is up and the address the app appears from. Countries change without reconnecting the VPN. As
+  many run at once as the server admits, a country past that waits for a free route, and an app
+  whose country cannot be reached is blocked rather than sent another way. The connect screen
+  shows how many apps are in other countries. Needs Android 10 or newer.
+- [Android] Ask before a country makes its app the only one in the VPN. While VPN only for is on
+  and none of its apps is on the device, every app uses the VPN, and giving one app a country would
+  take every other app out of it: App routing now says so and waits for your answer.
+
+### Changed
+- [Windows, macOS, Linux] Translate the network list of Local network sharing in all 23 languages.
+- [Android] Name App routing in the privacy notice, in every language, where it still spoke of
+  split tunneling.
+
+### Fixed
 - [Windows, macOS, Linux, Android] Say that the account already uses its maximum number of
   simultaneous devices when the server refuses another one, instead of calling the subscription
   expired.
-- [Windows, macOS, Linux, Android, iOS] Say that the account already uses its maximum number of
+- [Windows, macOS, Linux, Android] Say that the account already uses its maximum number of
   simultaneous devices when its other devices hold every connection it is entitled to, instead of
-  calling the subscription expired. iOS used to show a plain disconnection. On a server not updated
-  yet, the app says it when it knows the subscription is still active.
+  calling the subscription expired. On a server not updated yet, the app says it when it knows the
+  subscription is still active.
 - [Windows, macOS, Linux, Android] Reset the open connections of an app whose country changes
   while connected, or whose country is set or removed, so it reconnects through its new route at
   once. Its connections used to hang: a browser kept waiting, name resolution included, until it

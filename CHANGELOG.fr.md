@@ -14,6 +14,32 @@ par l'application, gardez-le tel quel.
 
 ## [Unreleased]
 ### Ajouté
+- [iOS] Afficher les avertissements enregistrés sur votre compte quand un port redirigé est fermé
+  après un signalement d'abus : une notification par avertissement, une bannière avec sa référence
+  de dossier qui ouvre la page expliquant comment le contester, et la liste complète dans l'écran
+  port forwarding avec l'adresse à laquelle écrire. Les avertissements s'affichent dès que la mise
+  à jour serveur correspondante est en ligne.
+- [iOS] Afficher la révocation d'un compte, avec le jour où elle prend fin quand il y en a un, au
+  lieu d'une simple déconnexion, et arrêter la connexion quand la révocation est apprise en cours
+  de session.
+- [iOS] Dire quand le serveur refuse un port redirigé faute de droit de port, et redemander
+  automatiquement au lieu de s'arrêter au premier refus.
+
+### Corrigé
+- [iOS] Présenter un droit de port avec chaque demande de port redirigé, comme les autres
+  plateformes, pour que les serveurs qui l'exigent accordent le port au lieu de le refuser.
+- [iOS] Signer la connexion avec le portefeuille affiché dans l'application. Elle utilisait une clé
+  issue de la même phrase de récupération mais différente de l'adresse affichée, si bien que les
+  serveurs n'y voyaient pas l'abonnement.
+- [iOS] Afficher la révocation quand un bon ou un achat App Store est refusé pour un compte
+  révoqué. Aucun achat ne démarre, et un achat déjà payé reste en attente, pour être crédité une
+  fois la révocation terminée.
+- [iOS] Indiquer que le compte utilise déjà son nombre maximal d'appareils simultanés quand ses
+  autres appareils occupent toutes les connexions auxquelles il a droit, au lieu d'une simple
+  déconnexion.
+
+## [1.1.38] - 2026-09-28
+### Ajouté
 - [Android] Ajouter Pays par app au routage des apps, comme sur ordinateur : chaque app choisie
   sort sur Internet par une exit dans son propre pays ou sa propre ville, pendant que toutes les
   autres apps gardent la connexion principale. Le pays se choisit depuis la pastille de la ligne de
@@ -26,16 +52,6 @@ par l'application, gardez-le tel quel.
   Tant que VPN ciblé est activé sans qu'aucune de ses apps soit installée sur l'appareil, toutes
   les apps passent par le VPN, et donner un pays à une app en sortirait toutes les autres : le
   routage des apps le signale désormais et attend votre réponse.
-- [iOS] Afficher les avertissements enregistrés sur votre compte quand un port redirigé est fermé
-  après un signalement d'abus : une notification par avertissement, une bannière avec sa référence
-  de dossier qui ouvre la page expliquant comment le contester, et la liste complète dans l'écran
-  port forwarding avec l'adresse à laquelle écrire. Les avertissements s'affichent dès que la mise
-  à jour serveur correspondante est en ligne.
-- [iOS] Afficher la révocation d'un compte, avec le jour où elle prend fin quand il y en a un, au
-  lieu d'une simple déconnexion, et arrêter la connexion quand la révocation est apprise en cours
-  de session.
-- [iOS] Dire quand le serveur refuse un port redirigé faute de droit de port, et redemander
-  automatiquement au lieu de s'arrêter au premier refus.
 
 ### Modifié
 - [Windows, macOS, Linux] Traduire la liste des réseaux du partage réseau local dans les 23 langues.
@@ -43,21 +59,13 @@ par l'application, gardez-le tel quel.
   où il parlait encore de split tunneling.
 
 ### Corrigé
-- [iOS] Présenter un droit de port avec chaque demande de port redirigé, comme les autres
-  plateformes, pour que les serveurs qui l'exigent accordent le port au lieu de le refuser.
-- [iOS] Signer la connexion avec le portefeuille affiché dans l'application. Elle utilisait une clé
-  issue de la même phrase de récupération mais différente de l'adresse affichée, si bien que les
-  serveurs n'y voyaient pas l'abonnement.
-- [iOS] Afficher la révocation quand un bon ou un achat App Store est refusé pour un compte
-  révoqué. Aucun achat ne démarre, et un achat déjà payé reste en attente, pour être crédité une
-  fois la révocation terminée.
 - [Windows, macOS, Linux, Android] Indiquer que le compte utilise déjà son nombre maximal
   d'appareils simultanés quand le serveur en refuse un de plus, au lieu d'annoncer un abonnement
   expiré.
-- [Windows, macOS, Linux, Android, iOS] Indiquer que le compte utilise déjà son nombre maximal
+- [Windows, macOS, Linux, Android] Indiquer que le compte utilise déjà son nombre maximal
   d'appareils simultanés quand ses autres appareils occupent toutes les connexions auxquelles il a
-  droit, au lieu d'annoncer un abonnement expiré. iOS n'affichait qu'une déconnexion. Sur un
-  serveur pas encore mis à jour, l'app l'indique quand elle sait l'abonnement encore actif.
+  droit, au lieu d'annoncer un abonnement expiré. Sur un serveur pas encore mis à jour, l'app
+  l'indique quand elle sait l'abonnement encore actif.
 - [Windows, macOS, Linux, Android] Réinitialiser les connexions ouvertes d'une app dont le pays
   change pendant la connexion, ou dont le pays est ajouté ou retiré, pour qu'elle se reconnecte
   aussitôt par sa nouvelle route. Ses connexions restaient bloquées : un navigateur attendait,

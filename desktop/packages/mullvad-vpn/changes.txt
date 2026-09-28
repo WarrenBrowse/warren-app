@@ -1,24 +1,52 @@
 ### Added
-- [macOS, Linux] Choose the networks Local network sharing lets through, in its settings row as for
-  custom DNS servers, or with `warren lan networks add`, `remove` and `reset`. The list starts with
-  the usual private ranges. A network wider than a /8 in IPv4 or a /7 in IPv6, or one that would
-  reach IPv4 around the VPN, is refused.
+- [Android] Add Country per app to App routing, as on desktop: each app you choose goes to the
+  Internet through an exit in its own country or city, while every other app keeps the main
+  connection. Choose a country from the chip on an app's row; the row shows whether its connection
+  is up and the address the app appears from. Countries change without reconnecting the VPN. As
+  many run at once as the server admits, a country past that waits for a free route, and an app
+  whose country cannot be reached is blocked rather than sent another way. The connect screen
+  shows how many apps are in other countries. Needs Android 10 or newer.
+- [Android] Ask before a country makes its app the only one in the VPN. While VPN only for is on
+  and none of its apps is on the device, every app uses the VPN, and giving one app a country would
+  take every other app out of it: App routing now says so and waits for your answer.
 
 ### Changed
-- [Windows, macOS, Linux] Give every row of the location list the same layout, Recents and custom
-  lists included: the round flag, the name, the load of a single exit, and a quiet button at the
-  end, also opened by a right click, that adds the place to a list or takes it out, or starts a new
-  list already holding it. The selected place shows as a coloured name and a ring around its flag,
-  with no check mark pushing the name aside. A list with nothing in it is no longer shown.
-- [Android] Give every row of the location picker the same shape, recents and custom lists included:
-  the round flag, the name over its country, the load of a single exit, and a quiet menu button,
-  also opened by a long press, that adds the location to a list or removes it at once, or starts a
-  new list holding it. The selected location shows as a green name and a green ring around its flag.
-  A list with nothing in it no longer shows in the picker.
+- [Windows, macOS, Linux] Translate the network list of Local network sharing in all 23 languages.
+- [Android] Name App routing in the privacy notice, in every language, where it still spoke of
+  split tunneling.
 
 ### Fixed
-- [macOS] Keep the Unpin app from taskbar switch in the interface settings while it is on, so an
-  app unpinned by a development build can be pinned back.
-- [Windows, macOS, Linux, Android] Keep a large upload flowing when the connection is saturated and
-  lighter traffic runs beside it. The app sent some of its packets so far behind the others that
-  the server discarded them as replays.
+- [Windows, macOS, Linux, Android] Say that the account already uses its maximum number of
+  simultaneous devices when the server refuses another one, instead of calling the subscription
+  expired.
+- [Windows, macOS, Linux, Android] Say that the account already uses its maximum number of
+  simultaneous devices when its other devices hold every connection it is entitled to, instead of
+  calling the subscription expired. On a server not updated yet, the app says it when it knows the
+  subscription is still active.
+- [Windows, macOS, Linux, Android] Reset the open connections of an app whose country changes
+  while connected, or whose country is set or removed, so it reconnects through its new route at
+  once. Its connections used to hang: a browser kept waiting, name resolution included, until it
+  was restarted.
+- [Android] Keep every app's traffic moving while Country per app finds out which app opened a
+  new connection. That lookup asks the system once per connection and used to hold the whole
+  tunnel meanwhile, which a burst of new connections turned into pauses of up to a second.
+- [Linux] Reach the local network while connected with Local network sharing on: the router,
+  printers and other devices, and the networks added to its list that the computer reaches
+  directly or by a static route, over IPv4 and IPv6. The firewall let that traffic through, but the
+  routes sent it into the VPN, where nothing answered. Turning sharing off or editing the list
+  applies without reconnecting, and the VPN's own addresses stay in the VPN whatever is shared.
+- [Windows, macOS, Linux] Give the apps sent to another country their route from the first
+  connection after a fresh install. The first token refresh failed while the VPN was connecting,
+  so those apps stayed blocked until the next reconnect.
+- [Windows, macOS, Linux] Route an app given a city while the connection uses two hops, as
+  Android does. The city picks the exit only, and the connection may enter anywhere the main one
+  can; the app used to stay blocked unless an entry server sat in that same city.
+- [Android] Ask before turning on Country per app makes the apps with a country the only ones in
+  the VPN. While VPN only for is on and none of its apps is on the device, every app uses the VPN,
+  and turning on Country per app over saved countries narrowed it to those apps without a word.
+- [Android] Give the apps sent to another country their route within a second or two of the first
+  connection. The first token refresh could not reach the server while the VPN was connecting, so
+  those apps waited up to a minute, and past two of them, until the next reconnect.
+- [Android] Keep the VPN connected when the server moves the connection to another address inside
+  the tunnel. The app dropped the connection and reconnected; a forwarded port is now asked for
+  again on the new address.
