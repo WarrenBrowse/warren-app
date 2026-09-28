@@ -6186,3 +6186,13 @@ msgstr ", "
 msgctxt "connect-view"
 msgid "%(country)s, %(city)s"
 msgstr "%(country)s, %(city)s"
+
+msgctxt "vpn-settings-view"
+msgid "Shared networks"
+msgstr "Redes compartidas"
+
+msgctxt "vpn-settings-view"
+msgid "%(count)d network"
+msgid_plural "%(count)d networks"
+msgstr[0] "%(count)d red"
+msgstr[1] "%(count)d redes"

@@ -6158,3 +6158,12 @@ msgstr "၊ "
 msgctxt "connect-view"
 msgid "%(country)s, %(city)s"
 msgstr "%(country)s၊ %(city)s"
+
+msgctxt "vpn-settings-view"
+msgid "Shared networks"
+msgstr "ဝေမျှထားသော ကွန်ရက်များ"
+
+msgctxt "vpn-settings-view"
+msgid "%(count)d network"
+msgid_plural "%(count)d networks"
+msgstr[0] "ကွန်ရက် %(count)d ခု"
