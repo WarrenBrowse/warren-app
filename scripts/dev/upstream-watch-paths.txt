@@ -1,0 +1,27 @@
+# Upstream (mullvad/mullvadvpn-app) paths whose commits every upstream review
+# triages one by one. Everything else upstream touches is Warren-owned and is
+# only looked at through its CHANGELOG security entries and the keyword scan
+# of scripts/dev/upstream-triage.sh. Why this list: docs/UPSTREAM-DETACH.md.
+#
+# One git pathspec per line; blank lines and # comments are ignored.
+
+# Platform integration layers Warren barely diverged from.
+talpid-routing
+talpid-dns
+talpid-net
+talpid-core/src/firewall
+windows/winfw
+mullvad-leak-checker
+talpid-core/src/split_tunnel
+mullvad-exclude
+
+# Privilege boundaries: setuid helpers, the root uninstaller, the IPC trust
+# checks. Upstream's GHSA fixes of 2026-09 landed here, outside the first list.
+talpid-cgroup
+dist-assets/uninstall_macos.sh
+dist-assets/pkg-scripts
+dist-assets/linux
+desktop/packages/mullvad-vpn/src/main/grpc-client.ts
+desktop/packages/windows-utils
+mullvad-management-interface/src/lib.rs
+mullvad-management-interface/src/client.rs
