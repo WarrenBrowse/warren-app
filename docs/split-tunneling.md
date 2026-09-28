@@ -1,38 +1,51 @@
 # Split tunneling
 
 Split tunneling decides, app by app, whether traffic goes through the VPN. In the app it is the
-**App routing** page, with three modes. The design, the datapath and the tests behind them are in
+**App routing** page: one list of rules, where each app takes one route, and one choice for every
+app without a rule. The design, the datapath and the tests behind it are in
 [app routing](app-routing.md).
 
-## The three modes
+## Routes and the default
 
-| mode (tab) | what the user gets |
+| route of an app | what the user gets |
 |-|-|
-| **Bypass VPN** (exclude) | The chosen apps communicate with the network as if Warren VPN were disconnected. Every other app uses the VPN. |
-| **VPN only for** (include-only) | Only the chosen apps use the VPN, and they never reach the Internet outside it, also while the tunnel reconnects. The rest of the device uses the normal connection. System DNS keeps going through the tunnel resolver. |
-| **Country per app** | Each chosen app leaves the Internet from a country of its own, through a second Warren session; every other tunneled app keeps the main connection. At most 2 countries at a time besides the main connection. |
+| **Through the VPN** | The app uses the main connection, like every app when the VPN is the default. |
+| **Through the VPN, another country** | The app leaves the Internet from a country of its own, through a route session of its own; every other tunneled app keeps the main connection. As many countries run at once as the server admits, and a country past that waits for a free route. |
+| **Outside the VPN** | The app communicates with the network as if Warren VPN were disconnected. |
 
-Bypass VPN and VPN only for exclude each other: one split mode is on at a time, and switching keeps
-both lists. Country per app composes with either:
+"Other apps go" sets what the apps without a rule do:
 
-* an app in Bypass VPN bypasses the VPN, and its country is ignored;
-* in VPN only for, an app with a country is in the VPN and leaves from its country. On Linux,
-  where an app joins the VPN when it is opened through `warren-include`, that holds for the app
-  opened from the VPN only for tab;
+* **Through the VPN** (the default): every app uses the VPN except the apps sent outside it
+  (exclude, formerly Bypass VPN);
+* **Outside the VPN** (include-only, formerly VPN only for): only the apps given the VPN or a
+  country use it, and they never reach the Internet outside it, also while the tunnel reconnects.
+  The rest of the device uses the normal connection. System DNS keeps going through the tunnel
+  resolver.
+
+Nothing has a switch: exclusion turns on with its first app and off with its last, countries turn
+on with the first one, and the default is the one explicit choice. Switching the default keeps the
+countries and drops the other rules. Each app has one route, so combinations the older tabs allowed
+without showing them (an app both bypassing and with a country) no longer occur; the daemon still
+applies its precedence to settings written before:
+
+* an excluded app bypasses the VPN, and its country is ignored;
+* with Outside the VPN as the default, an app with a country is in the VPN and leaves from its
+  country. On Linux, where an app joins the VPN when it is opened through `warren-include`, that
+  holds for the app opened with **Open through the VPN**;
 * an app whose country's session is connecting or down gets no traffic at all until it is up. It
   never falls back to the main connection or to the normal one.
 
-While VPN only for is on, the main screen says "Only selected apps are protected" under the
-connection state, with the number of apps in the VPN (on Linux, without a number, since the apps
-are chosen when they are opened).
+While Outside the VPN is the default, the main screen says "Only selected apps are protected" under
+the connection state, with the number of apps in the VPN (on Linux, without a number, since the
+apps are chosen when they are opened).
 
-### Where each mode is available
+### Where each route is available
 
-| mode | Windows | macOS | Linux | Android | iOS |
+| route | Windows | macOS | Linux | Android | iOS |
 |-|-|-|-|-|-|
-| Bypass VPN | yes | macOS 13 or later, signed build, Full Disk Access | yes, apps opened through `warren-exclude` | yes | no |
-| VPN only for | yes | macOS 13 or later, signed build, Full Disk Access | cgroup v2 with nftables socket matching; apps opened through `warren-include` | yes | no |
-| Country per app | yes* | yes, no Full Disk Access needed | yes*, for apps whose program can be named (below) | not yet | no |
+| Outside the VPN, for an app | yes | macOS 13 or later, signed build, Full Disk Access | yes, apps opened with **Open outside the VPN** (`warren-exclude`) | yes | no |
+| Outside the VPN, as the default | yes | macOS 13 or later, signed build, Full Disk Access | cgroup v2 with nftables socket matching; apps opened with **Open through the VPN** (`warren-include`) | yes | no |
+| Through the VPN, another country | yes* | yes, no Full Disk Access needed | yes*, for apps whose program can be named (below) | yes, Android 10 or newer | no |
 
 *: implemented; the datapath has been run against real exits on macOS, on Linux (a Debian 13 VM)
 and on Windows (a Windows 11 ARM64 VM).
@@ -44,18 +57,20 @@ missing and links the Full Disk Access pane when that is it.
 On Linux a per-app country names the program the kernel runs. A desktop entry is followed through
 `PATH`, symlinks and a shell wrapper whose last line execs a fixed program with `"$@"`. A Flatpak or
 Snap app, or one started by a script whose program cannot be read, cannot take a country, and its
-row says so; picking the real program with **Find another app** works for the script case.
+route screen says so; picking the real program with **Find another app** works for the script case.
 
 ## Vocabulary
 
 * **Split tunneling** - The name of the feature.
-* **Excluded app** - An app that only communicates outside of the VPN tunnel (Bypass VPN).
-* **Included app** - An app that communicates inside the VPN tunnel. Outside VPN only for, this is
-  every app that is not excluded; in VPN only for, only the chosen apps and those with a country.
+* **Excluded app** - An app that only communicates outside of the VPN tunnel (its route is
+  Outside the VPN while the VPN is the default).
+* **Included app** - An app that communicates inside the VPN tunnel. With the VPN as the default,
+  this is every app that is not excluded; with Outside the VPN as the default, only the apps given
+  the VPN or a country.
 * **To exclude** - The act of enabling split tunneling for a specific app, excluding its traffic
   from the VPN tunnel.
-* **To include** - Putting an app's traffic in the VPN tunnel: removing it from Bypass VPN, or
-  adding it to VPN only for.
+* **To include** - Putting an app's traffic in the VPN tunnel: removing its Outside the VPN rule,
+  or giving it the VPN or a country while Outside the VPN is the default.
 
 ## DNS
 

@@ -97,7 +97,7 @@ as intended.
 
 ## The daemon's signature, and why split tunneling depends on it
 
-macOS split tunneling (exclude and "VPN only for these apps") watches process
+macOS split tunneling (Outside the VPN, per app or as the default) watches process
 launches through `/usr/bin/eslogger`. Apple's binary carries the Endpoint
 Security entitlement, so Warren needs none, but the daemon that spawns it must
 hold Full Disk Access. That grant is recorded against the daemon's designated
