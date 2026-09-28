@@ -19,6 +19,18 @@ const APP_PATH: &str = match warren_product_env::CURRENT {
     warren_product_env::ProductEnv::Beta => "/Applications/Warren VPN Beta.app",
 };
 
+/// Uninstall script to run if the .app disappears
+const UNINSTALL_SCRIPT: &[u8] = include_bytes!("../../dist-assets/uninstall_macos.sh");
+
+/// Arguments the daemon runs [`UNINSTALL_SCRIPT`] with, as root.
+const UNINSTALL_SCRIPT_ARGS: &[&str] = &[
+    // Don't prompt for confirmation.
+    "--yes",
+    // The daemon resets the firewall and logs out itself, and the script must not run anything
+    // from the app bundle as root.
+    "--from-daemon",
+];
+
 /// Bump filehandle limit
 pub fn bump_filehandle_limit() {
     let mut limits = libc::rlimit {
@@ -59,9 +71,6 @@ pub fn bump_filehandle_limit() {
 pub async fn handle_app_bundle_removal(
     account_manager_handle: AccountManagerHandle,
 ) -> anyhow::Result<()> {
-    /// Uninstall script to run if the .app disappears
-    const UNINSTALL_SCRIPT: &[u8] = include_bytes!("../../dist-assets/uninstall_macos.sh");
-
     /// Path to extract the uninstall script to.
     /// This directory must be owned by root to prevent privilege escalation.
     const UNINSTALL_SCRIPT_PATH: &str = "/var/root/uninstall_warren.sh";
@@ -157,8 +166,7 @@ pub async fn handle_app_bundle_removal(
     let mut cmd = Command::new("/bin/bash");
     cmd
         .arg(UNINSTALL_SCRIPT_PATH)
-        // Don't prompt for confirmation.
-        .arg("--yes")
+        .args(UNINSTALL_SCRIPT_ARGS)
         // Spawn as its own process group.
         // This prevents the command from being killed when the daemon is killed.
         .process_group(0)
@@ -233,4 +241,49 @@ fn process_has_mullvad_installer(pid: pid_t) -> io::Result<bool> {
         }
     }
     Ok(false)
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::os::unix::fs::PermissionsExt;
+
+    /// An admin user can write into /Applications, so anything the root uninstall runs from the
+    /// app bundle is a privilege escalation. The script runs with a `PATH` holding only a fake
+    /// `sudo` that records each command instead of running it, so nothing real is executed.
+    #[test]
+    fn the_uninstall_the_daemon_runs_executes_nothing_from_the_app_bundle() {
+        let dir = tempfile::tempdir().unwrap();
+        let bin = dir.path().join("bin");
+        std::fs::create_dir(&bin).unwrap();
+        let record = dir.path().join("sudo.log");
+        let sudo = bin.join("sudo");
+        std::fs::write(
+            &sudo,
+            format!("#!/bin/sh\necho \"$1\" >> '{}'\n", record.display()),
+        )
+        .unwrap();
+        std::fs::set_permissions(&sudo, std::fs::Permissions::from_mode(0o755)).unwrap();
+        let script = dir.path().join("uninstall.sh");
+        std::fs::write(&script, UNINSTALL_SCRIPT).unwrap();
+
+        let status = std::process::Command::new("/bin/bash")
+            .arg(&script)
+            .args(UNINSTALL_SCRIPT_ARGS)
+            .env_clear()
+            .env("PATH", &bin)
+            .stdin(Stdio::null())
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .status()
+            .unwrap();
+        assert!(status.success());
+
+        let commands = std::fs::read_to_string(&record).unwrap();
+        let from_bundle: Vec<&str> = commands
+            .lines()
+            .filter(|command| command.starts_with("/Applications/"))
+            .collect();
+        assert!(from_bundle.is_empty(), "ran {from_bundle:?} as root");
+    }
 }

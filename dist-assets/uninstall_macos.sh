@@ -3,10 +3,12 @@
 set -ue
 
 ASSUMEYES="n"
+FROMDAEMON="n"
 
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         --yes) ASSUMEYES="y";;
+        --from-daemon) FROMDAEMON="y";;
         *)
             echo "Unknown parameter: $1"
             exit 1
@@ -31,9 +33,15 @@ DAEMON_PLIST_PATH="/Library/LaunchDaemons/com.warrenbrowse.vpn.daemon.plist"
 sudo launchctl unload -w "$DAEMON_PLIST_PATH"
 sudo rm -f "$DAEMON_PLIST_PATH"
 
-echo "Resetting firewall"
-sudo /Applications/Warren\ VPN.app/Contents/Resources/warren-setup reset-firewall || echo "Failed to reset firewall"
-sudo /Applications/Warren\ VPN.app/Contents/Resources/warren-setup remove-device || echo "Failed to remove device from account"
+# The daemon has already reset the firewall and logged out itself. Run as root from the daemon,
+# executing anything in the app bundle would let an admin user, who can write to /Applications,
+# gain root.
+if [[ $FROMDAEMON == "n" ]]; then
+    echo "Resetting firewall"
+    sudo /Applications/Warren\ VPN.app/Contents/Resources/warren-setup reset-firewall || echo "Failed to reset firewall"
+    echo "Removing device from account"
+    sudo /Applications/Warren\ VPN.app/Contents/Resources/warren-setup remove-device || echo "Failed to remove device from account"
+fi
 
 echo "Removing zsh shell completion symlink ..."
 sudo rm -f /usr/local/share/zsh/site-functions/_warren
