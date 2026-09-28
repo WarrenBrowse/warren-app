@@ -105,11 +105,13 @@ pub(crate) async fn signing_timestamp(host: &str) -> u64 {
 }
 
 async fn read_offset(host: &str, device_now: u64) -> i64 {
-    let Ok(client) = reqwest::Client::builder()
-        .connect_timeout(CONNECT_TIMEOUT)
-        .timeout(TOTAL_TIMEOUT)
-        .build()
-    else {
+    let Ok(client) = crate::warren_tls::configure(
+        reqwest::Client::builder()
+            .connect_timeout(CONNECT_TIMEOUT)
+            .timeout(TOTAL_TIMEOUT),
+        true,
+    )
+    .build() else {
         return 0;
     };
     match client.get(health_url(host)).send().await {

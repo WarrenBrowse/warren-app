@@ -197,6 +197,7 @@ fn build_http_client(api_url: &str) -> reqwest::Client {
 
     let mut builder =
         crate::warren_api_dns::with_api_resolver(reqwest::Client::builder().timeout(FETCH_TIMEOUT));
+    let mut sni = true;
     if let Some(ip) = API_PINNED_IP
         && reqwest::Url::parse(api_url)
             .ok()
@@ -206,14 +207,13 @@ fn build_http_client(api_url: &str) -> reqwest::Client {
             })
             .unwrap_or(false)
     {
-        builder = builder
-            .resolve(
-                API_HOST_DEFAULT,
-                std::net::SocketAddr::new(ip, API_PORT_DEFAULT),
-            )
-            .tls_sni(false);
+        builder = builder.resolve(
+            API_HOST_DEFAULT,
+            std::net::SocketAddr::new(ip, API_PORT_DEFAULT),
+        );
+        sni = false;
     }
-    builder
+    crate::warren_tls::configure(builder, sni)
         .build()
         .expect("reqwest client build failed: invalid TLS backend configuration")
 }

@@ -58,14 +58,16 @@ fn build_http_client(api_url: &str) -> reqwest::Client {
 
     let mut builder =
         crate::warren_api_dns::with_api_resolver(reqwest::Client::builder().timeout(FETCH_TIMEOUT));
+    let mut sni = true;
     if let Some(addr) = pin_target(api_url, API_PINNED_IP) {
         // No DNS query (resolve the host to the pinned IP) and no SNI on the
         // wire - the dedicated endpoint presents the cert without SNI.
-        builder = builder.resolve(API_HOST_DEFAULT, addr).tls_sni(false);
+        builder = builder.resolve(API_HOST_DEFAULT, addr);
+        sni = false;
     }
     // expect, not a fallback: reqwest::Client::new() would silently drop the
-    // pinned `.resolve()` + `.tls_sni(false)` above and leak a DNS query + SNI.
-    builder
+    // pinned `.resolve()` and the SNI choice above and leak a DNS query + SNI.
+    crate::warren_tls::configure(builder, sni)
         .build()
         .expect("reqwest client build failed: invalid TLS backend configuration")
 }

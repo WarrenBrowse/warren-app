@@ -71,10 +71,11 @@ pub(crate) fn spawn(api_base: String, cache: WarrenStatusCache) {
 async fn run(api_base: String, cache: WarrenStatusCache) {
     // Resolved from the daemon's address cache like every other Warren
     // fetcher, so a blocking state does not silently freeze the descriptor.
-    let Ok(client) =
-        crate::warren_api_dns::with_api_resolver(reqwest::Client::builder().timeout(FETCH_TIMEOUT))
-            .build()
-    else {
+    let Ok(client) = crate::warren_tls::configure(
+        crate::warren_api_dns::with_api_resolver(reqwest::Client::builder().timeout(FETCH_TIMEOUT)),
+        true,
+    )
+    .build() else {
         log::warn!("network-info fetcher disabled: reqwest client build failed");
         return;
     };

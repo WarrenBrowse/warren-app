@@ -292,8 +292,11 @@ impl WarrenNetworkStats {
                 // Resolved from the daemon's address cache like every other
                 // Warren fetcher, so a blocking state that drops system DNS
                 // does not blank the view.
-                let client = crate::warren_api_dns::with_api_resolver(
-                    reqwest::Client::builder().timeout(FETCH_TIMEOUT),
+                let client = crate::warren_tls::configure(
+                    crate::warren_api_dns::with_api_resolver(
+                        reqwest::Client::builder().timeout(FETCH_TIMEOUT),
+                    ),
+                    true,
                 )
                 .build()
                 .map_err(StatsError::Transport)?;

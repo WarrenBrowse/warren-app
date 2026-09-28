@@ -1369,10 +1369,12 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
     // The API host resolves from the daemon's address cache
     // (`crate::warren_api_dns`): this refresh is one of the ways out of the
     // blocking state, and that state drops every DNS query on the host.
-    let http =
-        crate::warren_api_dns::with_api_resolver(reqwest::Client::builder().timeout(FETCH_TIMEOUT))
-            .build()
-            .expect("reqwest client build failed: invalid TLS backend configuration");
+    let http = crate::warren_tls::configure(
+        crate::warren_api_dns::with_api_resolver(reqwest::Client::builder().timeout(FETCH_TIMEOUT)),
+        true,
+    )
+    .build()
+    .expect("reqwest client build failed: invalid TLS backend configuration");
 
     // Resolve the root trust anchor once. `Unconfigured` fails closed:
     // multi-hop is refused so the client never trusts an unpinned,

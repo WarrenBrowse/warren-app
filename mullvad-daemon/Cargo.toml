@@ -124,6 +124,10 @@ warren-standing = { path = "../warren-standing" }
 # (no client signature); the server-signed v2 response is verified at
 # load time by `DaemonWarrenRelaySelector`.
 reqwest = { workspace = true }
+# The daemon's own TLS config for those clients (`warren_tls`): the roots and
+# provider reqwest's rustls backend uses, without session resumption.
+rustls = { workspace = true, features = ["ring", "std"] }
+webpki-roots = { workspace = true }
 # Warren fork - Phase 2 auth wallet: the BIP39 mnemonic stored in
 # `<settings_dir>/warren_mnemonic.txt` is derived into an Ed25519
 # SigningKey at daemon boot. `warren-identity` is the SDK (warren-sdk-rs), a
@@ -210,6 +214,8 @@ tracing-subscriber = { workspace = true, features = ["chrono"] }
 warren-contract = { path = "../../warren-contract" }
 
 [dev-dependencies]
+# A local TLS server that issues session tickets, for `warren_tls`.
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring"] }
 ed25519-dalek = { version = "=2.2.0", default-features = false, features = ["std"] }
 # Mints authentically-signed multi-hop directory bodies so the cold-start
 # cache tests exercise the REAL verification path (signature + pins +

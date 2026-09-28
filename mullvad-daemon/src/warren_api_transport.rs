@@ -162,12 +162,11 @@ fn build_clients(resolver: Option<&Arc<dyn reqwest::dns::Resolve>>) -> Clients {
         let build = |sni: bool| {
             let mut builder = reqwest::Client::builder()
                 .connect_timeout(CONNECT_TIMEOUT)
-                .timeout(TOTAL_TIMEOUT)
-                .tls_sni(sni);
+                .timeout(TOTAL_TIMEOUT);
             if let Some(resolver) = resolver.cloned() {
                 builder = builder.dns_resolver2(resolver);
             }
-            builder
+            crate::warren_tls::configure(builder, sni)
                 .build()
                 .expect("reqwest client build failed: invalid TLS backend configuration")
         };

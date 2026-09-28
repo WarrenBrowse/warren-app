@@ -60,6 +60,8 @@ mod warren_api_dns;
 mod warren_api_transport;
 /// Which session each app's exit goes through, and what the user sees of it.
 mod warren_app_routes;
+/// TLS for the daemon's reqwest clients: no session resumption.
+mod warren_tls;
 /// Shared policy pieces of the periodic signed-artifact refreshers
 /// (fast retry, ETag conditional GET, atomic cache write).
 mod warren_artifact_refresh;
