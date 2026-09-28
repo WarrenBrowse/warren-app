@@ -10,6 +10,10 @@ export interface ISplitTunnelingApplication extends IApplication {
   deletable: boolean;
   // Set on Linux when the app runs no program a per-app country can name.
   routingLimitation?: 'flatpak' | 'snap' | 'script';
+  // Linux: the desktop entry Warren opens the app from, outside or inside the
+  // VPN, since both are launches there rather than lists.
+  launchPath?: string;
+  launchWarning?: Warning;
 }
 
 export interface ILinuxApplication extends IApplication {

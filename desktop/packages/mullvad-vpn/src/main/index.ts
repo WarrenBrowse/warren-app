@@ -1486,8 +1486,13 @@ class ApplicationMain
   }
 
   private async updateAppRoutingApplications(appRouting: AppRoutingSettings): Promise<void> {
+    // Every app a rule of the view can name, the bypassing ones included.
     const paths = [
-      ...new Set([...appRouting.includedApps, ...appRouting.appExits.map((entry) => entry.app)]),
+      ...new Set([
+        ...(this.linuxSplitTunneling ? [] : appRouting.excludedApps),
+        ...appRouting.includedApps,
+        ...appRouting.appExits.map((entry) => entry.app),
+      ]),
     ];
 
     let applications: ISplitTunnelingApplication[] = [];

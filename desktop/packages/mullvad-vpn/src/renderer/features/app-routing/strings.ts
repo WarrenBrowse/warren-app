@@ -1,6 +1,6 @@
 import { sprintf } from 'sprintf-js';
 
-import { AppRouteLine, SplitModeAvailability } from '../../../shared/app-routing';
+import { AppRouteLine } from '../../../shared/app-routing';
 import { ISplitTunnelingApplication } from '../../../shared/application-types';
 import { messages } from '../../../shared/gettext';
 
@@ -73,25 +73,5 @@ export function appRouteLineText(line: AppRouteLine): string {
         case undefined:
           return messages.pgettext('split-tunneling-view', 'Unavailable');
       }
-  }
-}
-
-// One line for a split mode the device cannot run, or undefined when the view
-// shows something richer (the Full Disk Access steps) or nothing at all.
-export function splitModeUnavailableText(availability: SplitModeAvailability): string | undefined {
-  switch (availability) {
-    case 'needs-signed-build':
-      return messages.pgettext(
-        'split-tunneling-view',
-        'This build of Warren VPN cannot do this. It needs a signed build.',
-      );
-    case 'needs-newer-macos':
-      return messages.pgettext('split-tunneling-view', 'This needs macOS 13 or newer.');
-    case 'unsupported':
-      return messages.pgettext('split-tunneling-view', 'Your system does not support this.');
-    case 'available':
-    case 'checking':
-    case 'needs-full-disk-access':
-      return undefined;
   }
 }

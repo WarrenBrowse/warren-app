@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { Page } from 'playwright';
+import { ElectronApplication, Page } from 'playwright';
 
 import { getDefaultSettings } from '../../../src/main/default-settings';
 import { ISplitTunnelingApplication } from '../../../src/shared/application-types';
@@ -30,11 +30,12 @@ const app = (name: string, color: string): ISplitTunnelingApplication => ({
   deletable: false,
 });
 
-const FIREFOX = app('Firefox', '#e66000');
-const SLACK = app('Slack', '#4a154b');
-const STEAM = app('Steam', '#1b2838');
-const SPOTIFY = app('Spotify', '#1db954');
-const applications = [FIREFOX, SLACK, STEAM, SPOTIFY];
+const FIREFOX = app('Firefox', '#b8430d');
+const BANK = app('My bank', '#2f6b57');
+const QBIT = app('qBittorrent', '#2f5fa8');
+const SIGNAL = app('Signal', '#2c58c4');
+const STEAM = app('Steam', '#3b5b7a');
+const applications = [FIREFOX, BANK, QBIT, SIGNAL, STEAM];
 
 const relay = mockData.relayList.countries[0].cities[0].relays[0];
 const country = (
@@ -54,28 +55,27 @@ const country = (
 });
 const relayList = {
   countries: [
-    country('Sweden', 'se', [
-      ['Gothenburg', 'got'],
-      ['Stockholm', 'sto'],
-    ]),
     country('Germany', 'de', [
       ['Berlin', 'ber'],
       ['Frankfurt', 'fra'],
     ]),
+    country('Finland', 'fi', [['Helsinki', 'hel']]),
     country('France', 'fr', [['Paris', 'par']]),
-    country('Switzerland', 'ch', [['Zurich', 'zrh']]),
-    country('Japan', 'jp', [['Tokyo', 'tyo']]),
+    country('Netherlands', 'nl', [['Amsterdam', 'ams']]),
+    country('Romania', 'ro', [['Bucharest', 'buh']]),
+    country('Singapore', 'sg', [['Singapore', 'sin']]),
   ],
 };
 
 const location: ILocation = {
-  country: 'Sweden',
-  city: 'Gothenburg',
-  latitude: 58,
-  longitude: 12,
+  country: 'Germany',
+  city: 'Berlin',
+  latitude: 52,
+  longitude: 13,
   mullvadExitIp: true,
 };
 
+let electronApp: ElectronApplication;
 let page: Page;
 let util: MockedTestUtils;
 let routes: RoutesObjectModel;
@@ -101,14 +101,64 @@ async function pushState(appRouting: Partial<AppRoutingSettings>, statuses: AppR
   await util.ipc.appRouting.routes.notify(statuses);
 }
 
-const tab = (name: string) => page.getByRole('tab', { name });
+// The daemon calls the view makes, in order, named after their IPC group.
+type RoutingCall = [string, unknown];
+
+function routingEvents(): Record<string, string> {
+  return {
+    [util.ipc.appRouting.setSplitMode.eventKey]: 'setSplitMode',
+    [util.ipc.appRouting.addIncludedApp.eventKey]: 'addIncludedApp',
+    [util.ipc.appRouting.removeIncludedApp.eventKey]: 'removeIncludedApp',
+    [util.ipc.appRouting.setAppExitsEnabled.eventKey]: 'setAppExitsEnabled',
+    [util.ipc.appRouting.setAppExit.eventKey]: 'setAppExit',
+    [util.ipc.appRouting.clearAppExit.eventKey]: 'clearAppExit',
+    [util.ipc.splitTunneling.addApplication.eventKey]: 'addExcluded',
+    [util.ipc.splitTunneling.removeApplication.eventKey]: 'removeExcluded',
+  };
+}
+
+async function recordRoutingCalls() {
+  await electronApp.evaluate(({ ipcMain }, events) => {
+    const store = globalThis as { routingCalls?: Array<[string, unknown]> };
+    store.routingCalls = [];
+    for (const event of events) {
+      ipcMain.removeHandler(event);
+      ipcMain.handle(event, (_event, arg) => {
+        store.routingCalls!.push([event, arg]);
+        return { type: 'success', value: undefined };
+      });
+    }
+  }, Object.keys(routingEvents()));
+}
+
+async function takeRoutingCalls(count: number): Promise<RoutingCall[]> {
+  const names = routingEvents();
+  let calls: Array<[string, unknown]> = [];
+  await expect
+    .poll(async () => {
+      calls = await electronApp.evaluate(() => {
+        const store = globalThis as { routingCalls?: Array<[string, unknown]> };
+        return store.routingCalls ?? [];
+      });
+      return calls.length;
+    })
+    .toBe(count);
+  await electronApp.evaluate(() => {
+    (globalThis as { routingCalls?: unknown[] }).routingCalls = [];
+  });
+  return calls.map(([event, arg]) => [names[event], arg]);
+}
+
 const screenshot = (name: string) => page.screenshot({ path: `${SCREENSHOTS}/${name}.png` });
+const rules = () => page.getByTestId('app-rules');
+const segment = (name: string) =>
+  page.getByRole('group', { name: 'Other apps go' }).getByRole('button', { name });
 
 test.describe.configure({ mode: 'serial' });
 
 test.describe('App routing', () => {
   test.beforeAll(async () => {
-    ({ page, util } = await startMockedApp());
+    ({ app: electronApp, page, util } = await startMockedApp());
     routes = new RoutesObjectModel(page, util);
     await util.expectRoute(RoutePath.main);
 
@@ -117,9 +167,10 @@ test.describe('App routing', () => {
       wireguardEndpointData: mockData.wireguardEndpointData,
     });
     await util.ipc.macOsSplitTunneling.needFullDiskPermissions.handle(false);
-    await util.ipc.splitTunneling.getApplications.handle({ fromCache: false, applications });
+    await util.ipc.splitTunneling.isSupported.notify(true);
     await util.ipc.appRouting.getApplications.handle({ fromCache: false, applications });
     await pushState({});
+    await recordRoutingCalls();
 
     await routes.main.gotoSettings();
     await routes.settings.gotoSplitTunnelingSettings();
@@ -129,213 +180,180 @@ test.describe('App routing', () => {
     await util?.closePage();
   });
 
-  test('opens on Bypass VPN under its new name', async () => {
+  test('opens on one list with the VPN as the default, and no switch', async () => {
     await expect(page.getByRole('heading', { level: 1, name: 'App routing' })).toBeVisible();
-    await expect(tab('Bypass VPN')).toHaveAttribute('aria-selected', 'true');
-    await expect(page.getByRole('tabpanel')).toContainText(
-      'The apps you choose connect as if the VPN were off.',
-    );
-    await screenshot('01-bypass');
+    await expect(page.getByRole('tab')).toHaveCount(0);
+    await expect(page.getByRole('switch')).toHaveCount(0);
+    await expect(segment('Through the VPN')).toHaveAttribute('aria-pressed', 'true');
+    await expect(segment('Outside the VPN')).toHaveAttribute('aria-pressed', 'false');
+    await expect(
+      page.getByText('All apps are protected by the VPN, except for the rules below.'),
+    ).toBeVisible();
+    await expect(
+      page.getByText('No rules. Add an app to send it through another country or outside the VPN.'),
+    ).toBeVisible();
+    await screenshot('01-empty');
   });
 
-  test('moves between tabs with the arrow keys', async () => {
-    await tab('Bypass VPN').focus();
-    await page.keyboard.press('ArrowRight');
+  test('gives an app a country from the list, with no switch to turn on first', async () => {
+    await page.getByRole('button', { name: 'Add an app' }).click();
+    const add = page.getByTestId('add-app-screen');
+    await expect(add.getByRole('heading', { name: 'Add an app' })).toBeVisible();
+    await expect(add).toContainText('Steam');
+    await screenshot('02-add-app');
 
-    await expect(tab('Country per app')).toHaveAttribute('aria-selected', 'true');
-    await expect(tab('Country per app')).toBeFocused();
-    await expect(page.getByTestId('apps-without-country')).toContainText('Spotify');
-    const description = page.getByRole('tabpanel');
-    await expect(description).toContainText(
-      'Choose the country an app appears from. Other apps keep your main connection.',
-    );
-    await expect(description).not.toContainText('at a time');
-    await screenshot('02-countries-empty');
-  });
+    await add.getByRole('button', { name: 'Firefox' }).click();
+    const route = page.getByTestId('route-screen');
+    await expect(route.getByRole('heading', { name: 'Route for Firefox' })).toBeVisible();
+    await expect(page.getByTestId('route-vpn')).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.getByTestId('route-vpn')).toContainText('Default');
+    await expect(route.getByRole('button', { name: 'Remove the rule' })).toHaveCount(0);
 
-  test('gives an app a country in one click', async () => {
-    await page.getByRole('button', { name: 'Choose a country for Firefox' }).click();
-    const picker = page.getByTestId('country-picker');
-    await expect(picker).toBeVisible();
-    await screenshot('03-country-picker');
+    await page.getByTestId('route-country').click();
+    const countries = page.getByTestId('country-screen');
+    await expect(countries.getByRole('heading', { name: 'Country for Firefox' })).toBeVisible();
+    await screenshot('03-country');
+    await countries.getByPlaceholder('Search for...').fill('neth');
+    await countries.getByRole('button', { name: 'Netherlands', exact: true }).click();
 
-    await picker.getByPlaceholder('Search for...').fill('swe');
-    const [request] = await Promise.all([
-      util.ipc.appRouting.setAppExit.expect(undefined),
-      picker.getByRole('button', { name: 'Sweden', exact: true }).click(),
+    expect(await takeRoutingCalls(1)).toEqual([
+      ['setAppExit', { application: FIREFOX, exit: { country: 'nl' } }],
     ]);
-    expect(request).toEqual({ application: FIREFOX, exit: { country: 'se' } });
-
-    await pushState({ appExits: [{ app: FIREFOX.absolutepath, exit: { country: 'se' } }] }, [
+    await pushState({ appExits: [{ app: FIREFOX.absolutepath, exit: { country: 'nl' } }] }, [
       {
-        exit: { country: 'se' },
+        exit: { country: 'nl' },
         state: 'connected',
         publicIp: '198.51.100.7',
         apps: [FIREFOX.absolutepath],
       },
     ]);
-
-    const routed = page.getByTestId('apps-with-country');
-    await expect(routed).toContainText('Firefox');
-    await expect(routed).toContainText('Connected, IP 198.51.100.7');
-    await screenshot('04-country-set');
-  });
-
-  test('offers a third country while two are in use', async () => {
-    await pushState(
-      {
-        appExits: [
-          { app: FIREFOX.absolutepath, exit: { country: 'se' } },
-          { app: SLACK.absolutepath, exit: { country: 'de', city: 'ber' } },
-        ],
-      },
-      [
-        {
-          exit: { country: 'se' },
-          state: 'connected',
-          publicIp: '198.51.100.7',
-          apps: [FIREFOX.absolutepath],
-        },
-        {
-          exit: { country: 'de', city: 'ber' },
-          state: 'connected',
-          publicIp: '198.51.100.8',
-          apps: [SLACK.absolutepath],
-        },
-      ],
+    await expect(page.getByTestId('route-country')).toContainText('Netherlands');
+    await expect(page.getByTestId('route-country')).toContainText(
+      'Through the VPN, from this country',
     );
+    await expect(route.getByRole('button', { name: 'Remove the rule' })).toBeVisible();
+    await screenshot('04-route');
 
-    await page.getByRole('button', { name: 'Choose a country for Steam' }).click();
-    const picker = page.getByTestId('country-picker');
-    await expect(picker.getByRole('button', { name: /^Sweden/ })).toContainText('In use');
-    await expect(picker.locator('[aria-disabled="true"]')).toHaveCount(0);
-    await expect(picker.getByRole('note')).toHaveCount(0);
-    // Only the app's own country opens on its cities.
-    await expect(picker.getByRole('button', { name: /^Berlin/ })).toHaveCount(0);
-    await screenshot('05-third-country-picker');
-
-    const [request] = await Promise.all([
-      util.ipc.appRouting.setAppExit.expect(undefined),
-      picker.getByRole('button', { name: /^France/ }).click(),
-    ]);
-    expect(request).toEqual({ application: STEAM, exit: { country: 'fr' } });
-    await expect(picker).not.toBeVisible();
+    await route.getByRole('button', { name: 'Done' }).click();
+    await expect(rules()).toContainText('Firefox');
+    await expect(rules()).toContainText('Netherlands');
+    await expect(rules()).toContainText('Connected, IP 198.51.100.7');
   });
 
-  test('saves a fourth country and says when its route waits for a free one', async () => {
-    const threeCountries = [
-      { app: FIREFOX.absolutepath, exit: { country: 'se' } },
-      { app: SLACK.absolutepath, exit: { country: 'de', city: 'ber' } },
-      { app: STEAM.absolutepath, exit: { country: 'fr' } },
-    ];
-    await pushState({ appExits: threeCountries });
+  test('sends an app outside the VPN, which turns the bypass on by itself', async () => {
+    await page.getByRole('button', { name: 'Add an app' }).click();
+    await page.getByTestId('add-app-screen').getByRole('button', { name: 'Steam' }).click();
+    await page.getByTestId('route-outside').click();
 
-    await page.getByRole('button', { name: 'Choose a country for Spotify' }).click();
-    const picker = page.getByTestId('country-picker');
-    await expect(picker.locator('[aria-disabled="true"]')).toHaveCount(0);
-    const [request] = await Promise.all([
-      util.ipc.appRouting.setAppExit.expect(undefined),
-      picker.getByRole('button', { name: /^Switzerland/ }).click(),
+    expect(await takeRoutingCalls(2)).toEqual([
+      ['addExcluded', STEAM],
+      ['setSplitMode', 'exclude'],
     ]);
-    expect(request).toEqual({ application: SPOTIFY, exit: { country: 'ch' } });
-
-    await pushState(
-      { appExits: [...threeCountries, { app: SPOTIFY.absolutepath, exit: { country: 'ch' } }] },
-      [
-        {
-          exit: { country: 'se' },
-          state: 'connected',
-          publicIp: '198.51.100.7',
-          apps: [FIREFOX.absolutepath],
-        },
-        {
-          exit: { country: 'de', city: 'ber' },
-          state: 'connected',
-          publicIp: '198.51.100.8',
-          apps: [SLACK.absolutepath],
-        },
-        {
-          exit: { country: 'fr' },
-          state: 'unavailable',
-          reason: 'limit-reached',
-          apps: [STEAM.absolutepath],
-        },
-        {
-          exit: { country: 'ch' },
-          state: 'unavailable',
-          reason: 'waiting-for-route',
-          apps: [SPOTIFY.absolutepath],
-        },
+    await pushState({
+      splitMode: 'exclude',
+      excludedApps: [STEAM.absolutepath, BANK.absolutepath],
+      appExits: [
+        { app: FIREFOX.absolutepath, exit: { country: 'nl' } },
+        { app: QBIT.absolutepath, exit: { country: 'ro' } },
       ],
-    );
+    });
+    await expect(page.getByTestId('route-outside')).toHaveAttribute('aria-pressed', 'true');
+    await page.getByRole('button', { name: 'Done' }).click();
 
-    const rows = page.getByTestId('apps-with-country').getByTestId('app-country-row');
-    await expect(rows).toHaveCount(4);
-    await expect(rows.filter({ hasText: 'Spotify' })).toContainText('Waiting for a free route');
-    await expect(rows.filter({ hasText: 'Steam' })).toContainText('Session limit reached');
-    await screenshot('06-four-countries');
-  });
-
-  test('asks once before VPN only for leaves the device unprotected', async () => {
-    await tab('VPN only for').click();
-    await page.getByRole('switch').click();
-
-    const dialog = page.getByTestId('mode-change-dialog');
-    await expect(dialog).toContainText('The rest of this device will not be protected.');
-    await screenshot('07-include-only-confirm');
-
-    const [mode] = await Promise.all([
-      util.ipc.appRouting.setSplitMode.expect(undefined),
-      dialog.getByRole('button', { name: 'Turn on' }).click(),
+    await expect(page.getByText('Rules per app4')).toBeVisible();
+    const names = await rules().getByRole('button').allInnerTexts();
+    expect(names.map((text) => text.split('\n')[0])).toEqual([
+      'Firefox',
+      'My bank',
+      'qBittorrent',
+      'Steam',
     ]);
-    expect(mode).toBe('include-only');
+    await expect(rules().getByRole('button', { name: 'Steam, Outside the VPN' })).toBeVisible();
+    await expect(rules().getByRole('button', { name: 'qBittorrent, Romania' })).toBeVisible();
+    await screenshot('05-rules');
   });
 
-  test('keeps a warning in the tab while VPN only for is on', async () => {
+  test('turns the bypass off with the rule of its last app', async () => {
+    await pushState({ splitMode: 'exclude', excludedApps: [STEAM.absolutepath] });
+    await rules().getByRole('button', { name: 'Steam, Outside the VPN' }).click();
+    await page.getByRole('button', { name: 'Remove the rule' }).click();
+
+    expect(await takeRoutingCalls(2)).toEqual([
+      ['removeExcluded', STEAM.absolutepath],
+      ['setSplitMode', 'off'],
+    ]);
+    await expect(page.getByTestId('route-screen')).toHaveCount(0);
+  });
+
+  test('makes "Outside the VPN" the default, keeping the countries', async () => {
+    await pushState({
+      splitMode: 'exclude',
+      excludedApps: [STEAM.absolutepath],
+      appExits: [{ app: QBIT.absolutepath, exit: { country: 'ro' } }],
+    });
+    await segment('Outside the VPN').click();
+
+    expect(await takeRoutingCalls(2)).toEqual([
+      ['removeExcluded', STEAM.absolutepath],
+      ['setSplitMode', 'include-only'],
+    ]);
     await pushState({
       splitMode: 'include-only',
-      includedApps: [SLACK.absolutepath],
-      appExits: [{ app: FIREFOX.absolutepath, exit: { country: 'se' } }],
+      appExits: [{ app: QBIT.absolutepath, exit: { country: 'ro' } }],
     });
+    await expect(segment('Outside the VPN')).toHaveAttribute('aria-pressed', 'true');
+    await expect(
+      page.getByText('Direct connection by default. Only the apps below use the VPN.'),
+    ).toBeVisible();
+    await expect(rules().getByRole('button', { name: 'qBittorrent, Romania' })).toBeVisible();
+  });
 
-    await expect(page.getByTestId('include-only-banner')).toContainText(
-      'Only these apps are protected. Everything else on this device uses your normal connection.',
+  test('puts an app on the VPN while the others connect directly', async () => {
+    await page.getByRole('button', { name: 'Add an app' }).click();
+    await page.getByTestId('add-app-screen').getByRole('button', { name: 'Signal' }).click();
+    await expect(page.getByTestId('route-outside')).toContainText('Default');
+    await page.getByTestId('route-vpn').click();
+
+    expect(await takeRoutingCalls(1)).toEqual([['addIncludedApp', SIGNAL]]);
+    await pushState({
+      splitMode: 'include-only',
+      includedApps: [SIGNAL.absolutepath, FIREFOX.absolutepath],
+      appExits: [{ app: QBIT.absolutepath, exit: { country: 'ro' } }],
+    });
+    await page.getByRole('button', { name: 'Done' }).click();
+    await expect(rules().getByRole('button', { name: 'Signal, Through the VPN' })).toBeVisible();
+    await screenshot('06-outside-default');
+  });
+
+  test('warns when nothing uses the VPN', async () => {
+    await pushState({ splitMode: 'include-only' });
+    await expect(page.getByRole('note')).toContainText(
+      'No app uses the VPN. Add one, or send the other apps through the VPN again.',
     );
-    const included = page.getByTestId('included-applications');
-    await expect(included).toContainText('Slack');
-    await expect(included).toContainText('Uses the VPN through its country');
-    await screenshot('08-include-only-on');
+    await screenshot('07-outside-empty');
+
+    await segment('Through the VPN').click();
+    expect(await takeRoutingCalls(1)).toEqual([['setSplitMode', 'off']]);
   });
 
-  test('says Bypass VPN replaces VPN only for and keeps the lists', async () => {
-    await tab('Bypass VPN').click();
-    await page.getByRole('switch').click();
-
-    const dialog = page.getByTestId('mode-change-dialog');
-    await expect(dialog).toContainText('This replaces VPN only for');
-    await screenshot('09-bypass-replaces');
-    await dialog.getByRole('button', { name: 'Cancel' }).click();
-    await expect(dialog).not.toBeVisible();
-  });
-
-  test('labels the main screen and leads back to the tab', async () => {
+  test('labels the main screen and leads back to the view', async () => {
     await pushState(
       {
         splitMode: 'include-only',
-        includedApps: [SLACK.absolutepath],
+        includedApps: [SIGNAL.absolutepath],
         appExits: [
-          { app: FIREFOX.absolutepath, exit: { country: 'se' } },
-          { app: STEAM.absolutepath, exit: { country: 'de' } },
+          { app: FIREFOX.absolutepath, exit: { country: 'nl' } },
+          { app: QBIT.absolutepath, exit: { country: 'ro' } },
         ],
       },
       [
         {
-          exit: { country: 'se' },
+          exit: { country: 'nl' },
           state: 'connected',
           publicIp: '198.51.100.7',
           apps: [FIREFOX.absolutepath],
         },
-        { exit: { country: 'de' }, state: 'connecting', apps: [STEAM.absolutepath] },
+        { exit: { country: 'ro' }, state: 'connecting', apps: [QBIT.absolutepath] },
       ],
     );
     await util.ipc.tunnel[''].notify({
@@ -359,30 +377,58 @@ test.describe('App routing', () => {
     await util.expectRoute(RoutePath.main);
 
     await expect(page.getByTestId('include-only-label')).toHaveText('VPN only for 3 apps');
-    await expect(page.getByText('Only selected apps are protected')).toBeVisible();
-    await expect(page.getByText('You are protected')).not.toBeVisible();
     await expect(page.getByTestId('app-countries-indicator')).toHaveText(
       '2 apps in other countries',
     );
-    await screenshot('10-main-screen');
+    await screenshot('08-main-screen');
 
     await page.getByTestId('include-only-label').click();
     await util.expectRoute(RoutePath.splitTunneling);
-    await expect(tab('VPN only for')).toHaveAttribute('aria-selected', 'true');
+    await expect(segment('Outside the VPN')).toHaveAttribute('aria-pressed', 'true');
   });
 
-  test('explains a macOS build that cannot run Bypass VPN', async () => {
+  test('keeps "Outside the VPN" out of reach of a build that cannot run it', async () => {
     test.skip(process.platform !== 'darwin', 'the signed-build state is macOS only');
+    await pushState({ appExits: [{ app: FIREFOX.absolutepath, exit: { country: 'nl' } }] });
     await util.ipc.splitTunneling.isSupported.notify(false);
-    await tab('Bypass VPN').click();
 
-    await expect(page.getByRole('note')).toContainText('It needs a signed build.');
-    await expect(page.getByRole('switch')).toBeDisabled();
-    await screenshot('11-needs-signed-build');
+    await expect(segment('Outside the VPN')).toBeDisabled();
+    await expect(page.getByRole('note')).toContainText(
+      'Outside the VPN needs a signed build of Warren VPN.',
+    );
+    await screenshot('09-unsigned');
+
+    await rules().getByRole('button', { name: 'Firefox, Netherlands' }).click();
+    await expect(page.getByTestId('route-outside')).toBeDisabled();
+    await expect(page.getByTestId('route-outside')).toContainText(
+      'Needs a signed build of Warren VPN',
+    );
+    // A country needs no signature.
+    await expect(page.getByTestId('route-country')).toBeEnabled();
+    await page.keyboard.press('Escape');
+    await expect(page.getByTestId('route-screen')).toHaveCount(0);
   });
 
   test('fits its French copy', async () => {
     await util.ipc.splitTunneling.isSupported.notify(true);
+    await pushState(
+      {
+        splitMode: 'exclude',
+        excludedApps: [STEAM.absolutepath, BANK.absolutepath],
+        appExits: [
+          { app: FIREFOX.absolutepath, exit: { country: 'nl' } },
+          { app: QBIT.absolutepath, exit: { country: 'ro' } },
+        ],
+      },
+      [
+        {
+          exit: { country: 'nl' },
+          state: 'connected',
+          publicIp: '198.51.100.7',
+          apps: [FIREFOX.absolutepath],
+        },
+      ],
+    );
     await page.getByRole('button', { name: 'Close' }).click();
     await util.expectRoute(RoutePath.main);
 
@@ -396,17 +442,22 @@ test.describe('App routing', () => {
     await page.getByRole('button', { name: 'Routage des apps' }).click();
     await util.expectRoute(RoutePath.splitTunneling);
 
-    await expect(tab('VPN ciblé')).toHaveAttribute('aria-selected', 'true');
-    await screenshot('12-fr-include-only');
-    await tab('Pays par app').click();
-    await screenshot('13-fr-countries');
-    await page.getByRole('button', { name: 'Choisir un pays pour Spotify' }).click();
-    await screenshot('14-fr-picker');
+    await expect(page.getByText('Les autres apps passent')).toBeVisible();
+    await screenshot('10-fr-rules');
+    await rules()
+      .getByRole('button', { name: /^qBittorrent/ })
+      .click();
+    await expect(page.getByRole('heading', { name: 'Route de qBittorrent' })).toBeVisible();
+    await screenshot('11-fr-route');
+    await page.getByTestId('route-country').click();
+    await screenshot('12-fr-country');
+    await page.keyboard.press('Escape');
+    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Ajouter une app' }).click();
+    await screenshot('13-fr-add');
     await page.keyboard.press('Escape');
 
-    await util.expectRouteChange(() => page.getByRole('button').first().click());
-    await util.expectRouteChange(() => page.getByRole('button').first().click());
-    await util.expectRoute(RoutePath.main);
-    await screenshot('15-fr-main');
+    await pushState({ splitMode: 'include-only' });
+    await screenshot('14-fr-outside-empty');
   });
 });

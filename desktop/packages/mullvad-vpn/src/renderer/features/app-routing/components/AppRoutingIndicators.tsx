@@ -20,7 +20,7 @@ export function AppCountriesIndicator() {
   const { routing, statuses, platform } = useAppRouting();
   const tunnelState = useSelector((state) => state.connection.status.state);
   const openAppRouting = useOpenAppRouting();
-  const open = React.useCallback(() => openAppRouting('countries'), [openAppRouting]);
+  const open = React.useCallback(() => openAppRouting(), [openAppRouting]);
 
   const { appsWithOwnCountry, anyRouteUnavailable } = appRoutingSummary(
     routing,
@@ -92,7 +92,7 @@ export function IncludeOnlyLabel() {
     (event: React.MouseEvent) => {
       // The label sits inside the card header, whose click expands the card.
       event.stopPropagation();
-      openAppRouting('include-only');
+      openAppRouting();
     },
     [openAppRouting],
   );

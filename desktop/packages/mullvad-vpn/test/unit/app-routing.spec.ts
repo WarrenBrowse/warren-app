@@ -5,12 +5,10 @@ import {
   appRouteLine,
   appRoutingSummary,
   buildCountryOptions,
-  countryNeedsIncludedLaunch,
   effectiveAppExits,
   effectiveIncludedApps,
   exitChoiceNames,
   exitChoicesInUse,
-  modeChangeConfirmation,
   resolveApplications,
   routeStatusForApp,
   sameAppId,
@@ -215,35 +213,6 @@ describe('appRoutingSummary, for the main screen', () => {
   });
 });
 
-describe('modeChangeConfirmation', () => {
-  it('warns that the rest of the device is unprotected when include-only turns on', () => {
-    expect(modeChangeConfirmation('off', 'include-only')).toEqual({
-      leavesDeviceUnprotected: true,
-      replaces: undefined,
-    });
-  });
-
-  it('says include-only replaces Bypass when Bypass is on', () => {
-    expect(modeChangeConfirmation('exclude', 'include-only')).toEqual({
-      leavesDeviceUnprotected: true,
-      replaces: 'exclude',
-    });
-  });
-
-  it('says Bypass replaces include-only when include-only is on', () => {
-    expect(modeChangeConfirmation('include-only', 'exclude')).toEqual({
-      leavesDeviceUnprotected: false,
-      replaces: 'include-only',
-    });
-  });
-
-  it('asks nothing to turn Bypass on from off, or to turn a mode off', () => {
-    expect(modeChangeConfirmation('off', 'exclude')).toBeUndefined();
-    expect(modeChangeConfirmation('include-only', 'off')).toBeUndefined();
-    expect(modeChangeConfirmation('exclude', 'off')).toBeUndefined();
-  });
-});
-
 describe('buildCountryOptions, for the per-app country picker', () => {
   const relay = (active: boolean) => ({ active });
   const locations = [
@@ -293,18 +262,7 @@ describe('buildCountryOptions, for the per-app country picker', () => {
   });
 });
 
-describe('countryNeedsIncludedLaunch, for the Country per app tab', () => {
-  it('holds on Linux in include-only mode, where only apps opened from VPN only for are in it', () => {
-    expect(countryNeedsIncludedLaunch('linux', 'include-only')).toBe(true);
-  });
-
-  it('holds nowhere else: the daemon includes an app with a country itself', () => {
-    expect(countryNeedsIncludedLaunch('linux', 'exclude')).toBe(false);
-    expect(countryNeedsIncludedLaunch('darwin', 'include-only')).toBe(false);
-  });
-});
-
-describe('splitModeAvailability, for Bypass VPN and VPN only for', () => {
+describe('splitModeAvailability, for the routes outside the VPN', () => {
   const base = { supported: true, needsFullDiskAccess: false, isMacOs13OrNewer: true };
 
   it('is available where the daemon supports it', () => {

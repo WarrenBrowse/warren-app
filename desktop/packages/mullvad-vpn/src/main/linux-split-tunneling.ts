@@ -216,6 +216,7 @@ export async function getPathBasedApplications(
     if (target === undefined) {
       continue;
     }
+    const launch = { launchPath: application.absolutepath, launchWarning: application.warning };
     const entry: ISplitTunnelingApplication =
       target.kind === 'program'
         ? {
@@ -223,6 +224,7 @@ export async function getPathBasedApplications(
             name: application.name,
             icon: application.icon,
             deletable: false,
+            ...launch,
           }
         : {
             absolutepath: application.absolutepath,
@@ -230,6 +232,7 @@ export async function getPathBasedApplications(
             icon: application.icon,
             deletable: false,
             routingLimitation: target.reason,
+            ...launch,
           };
     if (!applications.some((known) => known.absolutepath === entry.absolutepath)) {
       applications.push(entry);

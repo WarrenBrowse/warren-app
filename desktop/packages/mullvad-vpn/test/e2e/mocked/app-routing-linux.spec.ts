@@ -3,30 +3,53 @@ import { Page } from 'playwright';
 
 import { getDefaultSettings } from '../../../src/main/default-settings';
 import { ISplitTunnelingApplication } from '../../../src/shared/application-types';
+import { AppRoutingSettings } from '../../../src/shared/daemon-rpc-types';
 import { RoutePath } from '../../../src/shared/routes';
 import { RoutesObjectModel } from '../route-object-models';
 import { MockedTestUtils, startMockedApp } from './mocked-utils';
 
 const SCREENSHOTS = process.env.APP_ROUTING_SCREENSHOTS ?? 'test-results/app-routing';
 
+const SIGNAL: ISplitTunnelingApplication = {
+  absolutepath: '/usr/lib/signal-desktop/signal-desktop',
+  name: 'Signal',
+  deletable: false,
+  launchPath: '/usr/share/applications/signal-desktop.desktop',
+};
 const applications: ISplitTunnelingApplication[] = [
-  { absolutepath: '/usr/lib/signal-desktop/signal-desktop', name: 'Signal', deletable: false },
+  SIGNAL,
   {
     absolutepath: '/var/lib/flatpak/exports/share/applications/org.gimp.GIMP.desktop',
     name: 'GIMP',
     deletable: false,
     routingLimitation: 'flatpak',
+    launchPath: '/var/lib/flatpak/exports/share/applications/org.gimp.GIMP.desktop',
   },
   {
     absolutepath: '/usr/share/applications/firefox.desktop',
     name: 'Firefox',
     deletable: false,
     routingLimitation: 'script',
+    launchPath: '/usr/share/applications/firefox.desktop',
   },
 ];
 
 let page: Page;
 let util: MockedTestUtils;
+
+async function pushRouting(appRouting: Partial<AppRoutingSettings>) {
+  const settings = getDefaultSettings();
+  await util.ipc.settings[''].notify({
+    ...settings,
+    appRouting: { ...settings.appRouting, appExitsEnabled: true, ...appRouting },
+  });
+}
+
+async function openRoute(name: string) {
+  await page.getByRole('button', { name: 'Add an app' }).click();
+  await page.getByTestId('add-app-screen').getByRole('button', { name }).click();
+  await expect(page.getByTestId('route-screen')).toBeVisible();
+}
 
 test.describe('App routing on Linux', () => {
   test.beforeAll(async () => {
@@ -35,38 +58,79 @@ test.describe('App routing on Linux', () => {
     delete process.env.WARREN_E2E_PLATFORM;
     const routes = new RoutesObjectModel(page, util);
     await util.expectRoute(RoutePath.main);
-    await util.ipc.linuxSplitTunneling.getApplications.handle([]);
+    await util.ipc.splitTunneling.isSupported.notify(true);
     await util.ipc.appRouting.getApplications.handle({ fromCache: false, applications });
-    const settings = getDefaultSettings();
-    await util.ipc.settings[''].notify({
-      ...settings,
-      appRouting: { ...settings.appRouting, splitMode: 'include-only', appExitsEnabled: true },
-    });
+    await pushRouting({});
 
     await routes.main.gotoSettings();
     await routes.settings.gotoSplitTunnelingSettings();
-    await page.getByRole('tab', { name: 'Country per app' }).click();
   });
 
   test.afterAll(async () => {
     await util?.closePage();
   });
 
-  test('says why a sandboxed or scripted app takes no country', async () => {
-    const list = page.getByTestId('apps-without-country');
-
-    await expect(list).toContainText('Flatpak apps cannot use a country yet');
-    await expect(list).toContainText(
-      'Opens through a script: pick its program with Find another app',
-    );
-    await expect(page.getByRole('button', { name: 'Choose a country for GIMP' })).toBeDisabled();
-    await expect(page.getByRole('button', { name: 'Choose a country for Signal' })).toBeEnabled();
+  test('opens an app outside the VPN from its desktop entry, since Linux keeps no list', async () => {
+    await openRoute('Signal');
+    await expect(page.getByTestId('route-outside')).toHaveCount(0);
+    const [launched] = await Promise.all([
+      util.ipc.linuxSplitTunneling.launchApplication.expect({ success: true }),
+      page.getByTestId('route-open-outside').click(),
+    ]);
+    expect(launched).toBe(SIGNAL.launchPath);
+    await page.screenshot({ path: `${SCREENSHOTS}/17-linux-route.png` });
+    await page.keyboard.press('Escape');
   });
 
-  test('says a country takes effect for an app opened from VPN only for', async () => {
-    await expect(page.getByRole('note')).toContainText(
-      'VPN only for is on: an app uses its country when you open it from VPN only for.',
+  test('says why a sandboxed or scripted app takes no country', async () => {
+    await openRoute('GIMP');
+    await expect(page.getByTestId('route-country')).toBeDisabled();
+    await expect(page.getByTestId('route-country')).toContainText(
+      'Flatpak apps cannot use a country yet',
     );
-    await page.screenshot({ path: `${SCREENSHOTS}/17-linux-countries.png` });
+    await page.keyboard.press('Escape');
+
+    await openRoute('Firefox');
+    await expect(page.getByTestId('route-country')).toContainText(
+      'Opens through a script: pick its program with Find another app',
+    );
+    // Opening it outside the VPN goes through its desktop entry, which works.
+    await expect(page.getByTestId('route-open-outside')).toBeEnabled();
+    await page.keyboard.press('Escape');
+  });
+
+  test('opens an app through the VPN while the others connect directly', async () => {
+    await pushRouting({
+      splitMode: 'include-only',
+      appExits: [{ app: SIGNAL.absolutepath, exit: { country: 'se' } }],
+    });
+    await expect(
+      page.getByText('Direct connection by default. Only the apps below use the VPN.'),
+    ).toBeVisible();
+    await page
+      .getByTestId('app-rules')
+      .getByRole('button', { name: /^Signal/ })
+      .click();
+    await expect(page.getByTestId('route-vpn')).toHaveCount(0);
+    await expect(page.getByRole('note')).toHaveText(
+      'It uses this country when you open it with “Open through the VPN”.',
+    );
+    const [launched] = await Promise.all([
+      util.ipc.linuxSplitTunneling.launchIncludedApplication.expect({ success: true }),
+      page.getByTestId('route-open-vpn').click(),
+    ]);
+    expect(launched).toBe(SIGNAL.launchPath);
+    await page.screenshot({ path: `${SCREENSHOTS}/18-linux-include.png` });
+    await page.keyboard.press('Escape');
+  });
+
+  test('does not claim that nothing uses the VPN, since opened apps do', async () => {
+    await pushRouting({ splitMode: 'include-only', appExits: [] });
+    await expect(page.getByRole('note')).toHaveCount(0);
+    await expect(
+      page.getByText(
+        'No rules. Add an app to open it through the VPN: it uses the VPN until you close it.',
+      ),
+    ).toBeVisible();
   });
 });

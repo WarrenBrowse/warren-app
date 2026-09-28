@@ -1,12 +1,19 @@
 import React, { useCallback, useMemo, useState } from 'react';
 
-import { modeChangeConfirmation } from '../../../../shared/app-routing';
-import { AppSplitMode } from '../../../../shared/daemon-rpc-types';
-import { AppRoutingTab } from '../../../../shared/ipc-types';
-import { useAppRouting } from '../../../features/app-routing/hooks';
-import { useHistory } from '../../../lib/history';
+import { type ISplitTunnelingApplication } from '../../../../shared/application-types';
 import { useStyledRef } from '../../../lib/utility-hooks';
 import { type CustomScrollbarsRef } from '../../CustomScrollbars';
+import { useRoutingApplications } from './hooks/use-routing-applications';
+
+// The app a route or country screen is about: one from the list, or a program
+// the user picked, which the main process resolves to the id the daemon keys.
+export type RoutingTarget = {
+  id: string;
+  name: string;
+  application: ISplitTunnelingApplication | string;
+};
+
+export type RoutingScreen = 'list' | 'add' | 'route' | 'country';
 
 type SplitTunnelingContextProviderProps = {
   children: React.ReactNode;
@@ -16,13 +23,15 @@ type SplitTunnelingContext = {
   browsing: boolean;
   scrollbarsRef: React.RefObject<CustomScrollbarsRef | null>;
   setBrowsing: (value: boolean) => void;
-  tab: AppRoutingTab;
-  setTab: (tab: AppRoutingTab) => void;
-  // A split mode waiting for the user to confirm what it changes.
-  pendingSplitMode?: AppSplitMode;
-  requestSplitMode: (mode: AppSplitMode) => void;
-  confirmSplitMode: () => void;
-  cancelSplitMode: () => void;
+  screen: RoutingScreen;
+  target?: RoutingTarget;
+  showList: () => void;
+  showAdd: () => void;
+  showRoute: (target?: RoutingTarget) => void;
+  showCountry: () => void;
+  // Every app a rule can name, undefined while the first scan runs.
+  catalog?: ISplitTunnelingApplication[];
+  reloadCatalog: () => Promise<void>;
 };
 
 const SplitTunnelingContext = React.createContext<SplitTunnelingContext | undefined>(undefined);
@@ -35,65 +44,51 @@ export const useSplitTunnelingContext = (): SplitTunnelingContext => {
   return context;
 };
 
-// A link can name the tab to open; otherwise the view opens on the mode in
-// force, so a user who turned on "VPN only for" finds it where they left it.
-function useInitialTab(splitMode: AppSplitMode): AppRoutingTab {
-  const { location } = useHistory();
-  const requested = location.state?.options?.find((option) => option.type === 'app-routing-tab');
-  if (requested) {
-    return requested.tab;
-  }
-  return splitMode === 'include-only' ? 'include-only' : 'bypass';
-}
-
 export function SplitTunnelingContextProvider({ children }: SplitTunnelingContextProviderProps) {
   const [browsing, setBrowsing] = useState(false);
   const scrollbarsRef = useStyledRef<CustomScrollbarsRef>();
-  const { routing, setSplitMode } = useAppRouting();
-  const initialTab = useInitialTab(routing.splitMode);
-  const [tab, setTab] = useState<AppRoutingTab>(initialTab);
-  const [pendingSplitMode, setPendingSplitMode] = useState<AppSplitMode>();
+  const [screen, setScreen] = useState<RoutingScreen>('list');
+  const [target, setTarget] = useState<RoutingTarget>();
+  const { applications: catalog, reload: reloadCatalog } = useRoutingApplications();
 
-  const requestSplitMode = useCallback(
-    (mode: AppSplitMode) => {
-      if (modeChangeConfirmation(routing.splitMode, mode)) {
-        setPendingSplitMode(mode);
-      } else {
-        void setSplitMode(mode);
-      }
-    },
-    [routing.splitMode, setSplitMode],
-  );
-
-  const confirmSplitMode = useCallback(() => {
-    if (pendingSplitMode !== undefined) {
-      void setSplitMode(pendingSplitMode);
+  const showList = useCallback(() => {
+    setScreen('list');
+    setTarget(undefined);
+  }, []);
+  const showAdd = useCallback(() => setScreen('add'), []);
+  const showRoute = useCallback((next?: RoutingTarget) => {
+    if (next !== undefined) {
+      setTarget(next);
     }
-    setPendingSplitMode(undefined);
-  }, [pendingSplitMode, setSplitMode]);
-
-  const cancelSplitMode = useCallback(() => setPendingSplitMode(undefined), []);
+    setScreen('route');
+  }, []);
+  const showCountry = useCallback(() => setScreen('country'), []);
 
   const value = useMemo(
     () => ({
       browsing,
       scrollbarsRef,
       setBrowsing,
-      tab,
-      setTab,
-      pendingSplitMode,
-      requestSplitMode,
-      confirmSplitMode,
-      cancelSplitMode,
+      screen,
+      target,
+      showList,
+      showAdd,
+      showRoute,
+      showCountry,
+      catalog,
+      reloadCatalog,
     }),
     [
       browsing,
       scrollbarsRef,
-      tab,
-      pendingSplitMode,
-      requestSplitMode,
-      confirmSplitMode,
-      cancelSplitMode,
+      screen,
+      target,
+      showList,
+      showAdd,
+      showRoute,
+      showCountry,
+      catalog,
+      reloadCatalog,
     ],
   );
 

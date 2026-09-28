@@ -17,9 +17,9 @@ import { textDirection } from '../../../src/shared/text-direction';
 import { mockData } from '../mock-data';
 import { MockedTestUtils, startMockedApp } from './mocked-utils';
 
-// The App routing view is narrow (three tabs side by side, chips and badges), so every catalog
-// is rendered here and checked for clipped labels, and Arabic and Persian are checked to be laid
-// out right to left. Screenshots land in <APP_ROUTING_SCREENSHOTS>/<locale>/ for whoever changes
+// The App routing view is narrow (a two-way switch, chips and badges on 400 px), so every
+// catalog is rendered here and checked for clipped labels, and Arabic and Persian are checked to
+// be laid out right to left. Screenshots land in <APP_ROUTING_SCREENSHOTS>/<locale>/ for whoever changes
 // the copy.
 // APP_ROUTING_LOCALES=all renders every catalog; the default is a sample of scripts and lengths.
 const SCREENSHOTS = process.env.APP_ROUTING_SCREENSHOTS ?? 'test-results/app-routing';
@@ -221,80 +221,98 @@ for (const locale of LOCALES) {
       await util.expectRoute(RoutePath.main);
     });
 
-    test('fits the three tabs', async () => {
+    test('fits the list of rules', async () => {
       await page.getByTestId('include-only-label').click();
       await util.expectRoute(RoutePath.splitTunneling);
       await expect(
         page.getByRole('heading', { level: 1, name: t('split-tunneling-view', 'App routing') }),
       ).toBeVisible();
 
-      const tabs = page.getByRole('tab');
-      await expect(tabs).toHaveText([
-        t('split-tunneling-view', 'Bypass VPN'),
-        t('split-tunneling-view', 'Country per app'),
-        t('split-tunneling-view', 'VPN only for'),
+      const segments = page
+        .getByRole('group', { name: t('split-tunneling-view', 'Other apps go') })
+        .getByRole('button');
+      await expect(segments).toHaveText([
+        t('split-tunneling-view', 'Through the VPN'),
+        t('split-tunneling-view', 'Outside the VPN'),
       ]);
-      expect(await clipped(tabs)).toEqual([]);
-      // The tabs share the bar equally; a word too long to wrap widens its tab and squeezes the
-      // other two instead of overflowing, so a clip check alone would not see it.
-      const widths = await tabs.evaluateAll((elements) =>
+      expect(await clipped(segments)).toEqual([]);
+      // The two choices share the bar equally, whatever the length of either.
+      const widths = await segments.evaluateAll((elements) =>
         elements.map((element) => element.getBoundingClientRect().width),
       );
       expect(Math.max(...widths) - Math.min(...widths)).toBeLessThan(2);
-      // The first tab sits on the side the catalog is read from.
+      // The first choice sits on the side the catalog is read from.
       const [first, last] = await Promise.all([
-        tabs.nth(0).boundingBox(),
-        tabs.nth(2).boundingBox(),
+        segments.nth(0).boundingBox(),
+        segments.nth(1).boundingBox(),
       ]);
       if (textDirection(locale) === 'rtl') {
         expect(first!.x).toBeGreaterThan(last!.x);
       } else {
         expect(first!.x).toBeLessThan(last!.x);
       }
-      await shot('02-include-only');
 
-      await tabs.nth(1).click();
-      await expect(page.getByTestId('apps-with-country')).toBeVisible();
-      await expect(page.getByRole('tabpanel')).toContainText(
-        t(
-          'split-tunneling-view',
-          'Choose the country an app appears from. Other apps keep your main connection.',
-        ),
-      );
+      const rules = page.getByTestId('app-rules');
+      await expect(rules.getByRole('button')).toHaveCount(3);
       // A status line ends in an ellipsis rather than wrap, so a translation that does not
       // fit would lose its end: both lines must show in full.
       for (const line of ['Waiting for a free route', 'Session limit reached']) {
         const text = t('split-tunneling-view', line);
-        const element = page.getByTestId('apps-with-country').getByTitle(text, { exact: true });
+        const element = rules.getByTitle(text, { exact: true });
         await expect(element).toHaveText(text);
         expect(await truncated(element)).toEqual([]);
       }
-      await shot('03-countries');
+      await shot('02-rules-outside-default');
 
-      await tabs.nth(0).click();
-      await shot('04-bypass');
+      await util.ipc.settings[''].notify({
+        ...getDefaultSettings(),
+        appRouting: { ...appRouting, splitMode: 'exclude', includedApps: [] },
+      });
+      await expect(rules.getByRole('button')).toHaveCount(4);
+      // The chips of a rule never cut their route short.
+      expect(await truncated(rules.locator('[aria-hidden="true"] > span'))).toEqual([]);
+      await shot('03-rules-vpn-default');
     });
 
-    test('fits the country picker', async () => {
-      await page.getByRole('tab').nth(1).click();
-      await page.getByTestId('apps-without-country').getByRole('button').first().click();
-      const picker = page.getByTestId('country-picker');
-      await expect(picker).toBeVisible();
-      expect(await clipped(picker.getByRole('button'))).toEqual([]);
-      await shot('05-country-picker');
+    test('fits the route of an app', async () => {
+      await page.getByTestId('app-rules').getByRole('button').first().click();
+      const route = page.getByTestId('route-screen');
+      await expect(route).toBeVisible();
+      expect(await clipped(route.getByRole('button'))).toEqual([]);
+      await shot('04-route');
+
+      await page.getByTestId('route-country').click();
+      const countries = page.getByTestId('country-screen');
+      await expect(countries).toBeVisible();
+      expect(await clipped(countries.getByRole('button'))).toEqual([]);
+      await shot('05-country');
       await page.keyboard.press('Escape');
-      await expect(picker).not.toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(route).not.toBeVisible();
     });
 
-    test('fits the mode change dialog', async () => {
-      await page.getByRole('tab').nth(0).click();
-      await page.getByRole('switch').click();
-      const dialog = page.getByTestId('mode-change-dialog');
-      await expect(dialog).toBeVisible();
-      expect(await clipped(dialog.getByRole('button'))).toEqual([]);
-      await shot('06-mode-change');
+    test('fits the list of apps to add', async () => {
+      await page.getByRole('button', { name: t('split-tunneling-view', 'Add an app') }).click();
+      const add = page.getByTestId('add-app-screen');
+      await expect(add).toBeVisible();
+      expect(await clipped(add.getByRole('button'))).toEqual([]);
+      await shot('06-add');
       await page.keyboard.press('Escape');
-      await expect(dialog).not.toBeVisible();
+      await expect(add).not.toBeVisible();
+    });
+
+    test('fits the warning of a device where nothing uses the VPN', async () => {
+      await util.ipc.settings[''].notify({
+        ...getDefaultSettings(),
+        appRouting: { ...appRouting, includedApps: [], appExits: [] },
+      });
+      await expect(page.getByRole('note')).toHaveText(
+        t(
+          'split-tunneling-view',
+          'No app uses the VPN. Add one, or send the other apps through the VPN again.',
+        ),
+      );
+      await shot('10-outside-empty');
     });
 
     test('fits the shared networks of Local network sharing', async () => {

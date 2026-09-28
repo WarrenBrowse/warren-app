@@ -554,7 +554,7 @@ export const ipcSchema = {
       { fromCache: boolean; applications: ISplitTunnelingApplication[] }
     >(),
     addApplication: invoke<ISplitTunnelingApplication | string, void>(),
-    removeApplication: invoke<ISplitTunnelingApplication, void>(),
+    removeApplication: invoke<ISplitTunnelingApplication | string, void>(),
     forgetManuallyAddedApplication: invoke<ISplitTunnelingApplication, void>(),
     getSupported: invoke<void, boolean>(),
     isSupported: notifyRenderer<boolean>(),

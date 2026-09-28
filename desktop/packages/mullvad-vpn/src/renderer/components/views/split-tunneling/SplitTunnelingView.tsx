@@ -9,15 +9,14 @@ import { NavigationContainer } from '../../NavigationContainer';
 import { NavigationScrollbars } from '../../NavigationScrollbars';
 import SettingsHeader, { HeaderSubTitle, HeaderTitle } from '../../SettingsHeader';
 import {
-  AppRoutingTabs,
-  CountryPerAppSettings,
-  IncludeOnlySettings,
-  LinuxSettings,
-  ModeChangeDialog,
-  Settings,
-  tabId,
-  tabPanelId,
-} from './components';
+  AddAppScreen,
+  AppRulesSection,
+  CountryScreen,
+  DefaultRouteSection,
+  RouteScreen,
+} from './components/app-routing';
+import { useFullDiskAccessCheck } from './components/split-tunneling-settings/hooks';
+import { SplitTunnelingSettingsContextProvider } from './components/split-tunneling-settings/SplitTunnelingSettingsContext';
 import { SplitTunnelingContextProvider, useSplitTunnelingContext } from './SplitTunnelingContext';
 
 const StyledPageCover = styled.div<{ $show: boolean }>((props) => ({
@@ -35,66 +34,57 @@ const StyledNavigationScrollbars = styled(NavigationScrollbars)({
   flex: 1,
 });
 
-function TabPanel() {
-  const { tab } = useSplitTunnelingContext();
-  const linux = window.env.platform === 'linux';
-
-  let content;
-  switch (tab) {
-    case 'bypass':
-      content = linux ? <LinuxSettings launchMode="exclude" /> : <Settings />;
-      break;
-    case 'countries':
-      content = <CountryPerAppSettings />;
-      break;
-    case 'include-only':
-      content = linux ? <LinuxSettings launchMode="include" /> : <IncludeOnlySettings />;
-      break;
-  }
+function RulesList() {
+  const { pop } = useHistory();
+  const { scrollbarsRef } = useSplitTunnelingContext();
+  const title = messages.pgettext('split-tunneling-view', 'App routing');
 
   return (
-    <div role="tabpanel" id={tabPanelId(tab)} aria-labelledby={tabId(tab)}>
-      {content}
-    </div>
+    <BackAction action={pop}>
+      <NavigationContainer>
+        <AppNavigationHeader title={title} />
+        <StyledNavigationScrollbars ref={scrollbarsRef}>
+          <View.Content>
+            <SettingsHeader>
+              <HeaderTitle>{title}</HeaderTitle>
+              <HeaderSubTitle>
+                {messages.pgettext('split-tunneling-view', 'Choose where each app goes.')}
+              </HeaderSubTitle>
+            </SettingsHeader>
+            <DefaultRouteSection />
+            <AppRulesSection />
+          </View.Content>
+        </StyledNavigationScrollbars>
+      </NavigationContainer>
+    </BackAction>
   );
 }
 
+// App routing: one list of rules, one route per app, and what the other apps
+// do. The add, route and country screens take the whole window in turn.
 function SplitTunnelingInner() {
-  const { pop } = useHistory();
-  const { browsing, scrollbarsRef } = useSplitTunnelingContext();
-  const title = messages.pgettext('split-tunneling-view', 'App routing');
+  const { browsing, screen } = useSplitTunnelingContext();
+  useFullDiskAccessCheck();
 
   return (
     <>
       <StyledPageCover $show={browsing} />
       <View backgroundColor="darkBlue">
-        <BackAction action={pop}>
-          <NavigationContainer>
-            <AppNavigationHeader title={title} />
-            <StyledNavigationScrollbars ref={scrollbarsRef}>
-              <View.Content>
-                <SettingsHeader>
-                  <HeaderTitle>{title}</HeaderTitle>
-                  <HeaderSubTitle>
-                    {messages.pgettext('split-tunneling-view', 'Choose how each app connects.')}
-                  </HeaderSubTitle>
-                </SettingsHeader>
-                <AppRoutingTabs />
-                <TabPanel />
-              </View.Content>
-            </StyledNavigationScrollbars>
-          </NavigationContainer>
-        </BackAction>
+        {screen === 'list' && <RulesList />}
+        {screen === 'add' && <AddAppScreen />}
+        {screen === 'route' && <RouteScreen />}
+        {screen === 'country' && <CountryScreen />}
       </View>
-      <ModeChangeDialog />
     </>
   );
 }
 
 export function SplitTunnelingView() {
   return (
-    <SplitTunnelingContextProvider>
-      <SplitTunnelingInner />
-    </SplitTunnelingContextProvider>
+    <SplitTunnelingSettingsContextProvider>
+      <SplitTunnelingContextProvider>
+        <SplitTunnelingInner />
+      </SplitTunnelingContextProvider>
+    </SplitTunnelingSettingsContextProvider>
   );
 }

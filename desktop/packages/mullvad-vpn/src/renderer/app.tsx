@@ -901,8 +901,8 @@ export default class AppRenderer {
     return IpcRendererEventChannel.splitTunneling.getApplications(updateCache);
   }
 
-  public removeSplitTunnelingApplication(application: ISplitTunnelingApplication) {
-    void IpcRendererEventChannel.splitTunneling.removeApplication(application);
+  public removeSplitTunnelingApplication(application: ISplitTunnelingApplication | string) {
+    return IpcRendererEventChannel.splitTunneling.removeApplication(application);
   }
 
   public async showLaunchDaemonSettings() {

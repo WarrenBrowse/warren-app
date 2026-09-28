@@ -100,11 +100,7 @@ export const useGetFeatureIndicator = () => {
   }, [history]);
 
   const gotoSplitTunnelingFeature = React.useCallback(() => {
-    // The daemon raises this indicator for exclusion only.
-    history.push(RoutePath.splitTunneling, {
-      transition: TransitionType.show,
-      options: [{ type: 'app-routing-tab', tab: 'bypass' }],
-    });
+    history.push(RoutePath.splitTunneling, { transition: TransitionType.show });
   }, [history]);
 
   const gotoServerIpOverride = React.useCallback(() => {
