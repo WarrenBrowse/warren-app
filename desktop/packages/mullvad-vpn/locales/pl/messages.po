@@ -5231,8 +5231,8 @@ msgid "Could not log out: the VPN did not disconnect in time. You are still logg
 msgstr "Nie udało się wylogować: połączenie VPN nie zostało rozłączone na czas. Nadal jesteś zalogowany."
 
 msgctxt "account-view"
-msgid "Could not log out. You are still logged in."
-msgstr "Nie udało się wylogować. Nadal jesteś zalogowany."
+msgid "Something went wrong while logging out."
+msgstr "Podczas wylogowywania coś poszło nie tak."
 
 #. Button that runs a logout again after it failed.
 msgctxt "account-view"

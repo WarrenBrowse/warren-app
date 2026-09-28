@@ -5055,8 +5055,8 @@ msgid "Could not log out: the VPN did not disconnect in time. You are still logg
 msgstr "로그아웃할 수 없습니다: VPN 연결이 제시간에 끊기지 않았습니다. 아직 로그인되어 있습니다."
 
 msgctxt "account-view"
-msgid "Could not log out. You are still logged in."
-msgstr "로그아웃할 수 없습니다. 아직 로그인되어 있습니다."
+msgid "Something went wrong while logging out."
+msgstr "로그아웃하는 중에 문제가 발생했습니다."
 
 #. Button that runs a logout again after it failed.
 msgctxt "account-view"

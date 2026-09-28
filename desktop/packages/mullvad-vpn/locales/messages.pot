@@ -522,10 +522,6 @@ msgid "Could not log out: the VPN did not disconnect in time. You are still logg
 msgstr ""
 
 msgctxt "account-view"
-msgid "Could not log out. You are still logged in."
-msgstr ""
-
-msgctxt "account-view"
 msgid "Currently unavailable"
 msgstr ""
 
@@ -587,6 +583,10 @@ msgstr ""
 #. %(date)s - the renewal date
 msgctxt "account-view"
 msgid "Renews monthly, next around %(date)s"
+msgstr ""
+
+msgctxt "account-view"
+msgid "Something went wrong while logging out."
 msgstr ""
 
 #. Button that runs a logout again after it failed.

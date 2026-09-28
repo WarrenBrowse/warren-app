@@ -27,8 +27,8 @@ describe('the logout failure', () => {
     );
   });
 
-  it('says a logout that failed otherwise left the account logged in', () => {
-    expect(logoutFailureMessage('failed')).to.equal('Could not log out. You are still logged in.');
+  it('says a logout failed otherwise, without claiming where it stopped', () => {
+    expect(logoutFailureMessage('failed')).to.equal('Something went wrong while logging out.');
   });
 
   it('shows nothing once the logout went through, or before any', () => {

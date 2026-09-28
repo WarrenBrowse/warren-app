@@ -21,7 +21,7 @@ export function logoutFailureMessage(result: LogoutResult | undefined): string |
         'Could not log out: the VPN did not disconnect in time. You are still logged in.',
       );
     case 'failed':
-      return messages.pgettext('account-view', 'Could not log out. You are still logged in.');
+      return messages.pgettext('account-view', 'Something went wrong while logging out.');
     default:
       return undefined;
   }

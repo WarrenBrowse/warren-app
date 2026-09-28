@@ -5197,8 +5197,8 @@ msgid "Could not log out: the VPN did not disconnect in time. You are still logg
 msgstr "Não foi possível terminar a sessão: a VPN não se desligou a tempo. A sessão continua iniciada."
 
 msgctxt "account-view"
-msgid "Could not log out. You are still logged in."
-msgstr "Não foi possível terminar a sessão. A sessão continua iniciada."
+msgid "Something went wrong while logging out."
+msgstr "Ocorreu um problema ao terminar a sessão."
 
 #. Button that runs a logout again after it failed.
 msgctxt "account-view"

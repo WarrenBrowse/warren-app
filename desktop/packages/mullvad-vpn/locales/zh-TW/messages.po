@@ -5055,8 +5055,8 @@ msgid "Could not log out: the VPN did not disconnect in time. You are still logg
 msgstr "無法登出：VPN 未能及時中斷連線。您仍處於登入狀態。"
 
 msgctxt "account-view"
-msgid "Could not log out. You are still logged in."
-msgstr "無法登出。您仍處於登入狀態。"
+msgid "Something went wrong while logging out."
+msgstr "登出時發生問題。"
 
 #. Button that runs a logout again after it failed.
 msgctxt "account-view"

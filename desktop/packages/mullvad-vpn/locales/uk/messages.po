@@ -5231,8 +5231,8 @@ msgid "Could not log out: the VPN did not disconnect in time. You are still logg
 msgstr "Не вдалося вийти: VPN не відключився вчасно. Ви досі в обліковому записі."
 
 msgctxt "account-view"
-msgid "Could not log out. You are still logged in."
-msgstr "Не вдалося вийти. Ви досі в обліковому записі."
+msgid "Something went wrong while logging out."
+msgstr "Під час виходу з облікового запису щось пішло не так."
 
 #. Button that runs a logout again after it failed.
 msgctxt "account-view"
