@@ -103,7 +103,29 @@ One commit per upstream fix (or per inseparable group).
     then `start` is the way back in. Measure leaks with a `curl` bound to the
     physical NIC (`--interface`), never `ping` (Lima's network answers ICMP
     itself).
+  - macOS, for pf or the daemon's lifecycle: never the Mac hosting the session.
+    The tart VMs here are CI machines (`macos-01` is c411's forge runner, with
+    its own pf anchor and WireGuard). `tart clone` it, and before the clone's
+    first boot mount its `disk.img` (`hdiutil attach -imagekey
+    diskimage-class=CRawDiskImage -nomount`, then the Data volume) and move
+    `forge.runner`, `forge.wg0` and `forge.pf` out of the launchd directories;
+    inside, drop the `forge` anchor from `/etc/pf.conf`, or its block-all masks
+    every leak. Install the released beta `.pkg`, then swap
+    `Contents/Resources/warren-daemon` for your build. `tart delete` the clone
+    afterwards.
+  - Android: always-on VPN only takes effect from the system VPN settings
+    screen; `settings put secure always_on_vpn_app` writes the value and the
+    system ignores it (`dumpsys vpn_management` shows what is live). The app
+    cannot read that setting either.
   - Windows: CI's `windows-daemon` job, or the `warren:warren-windows-vm` skill.
+    A `workflow_dispatch` of `warren-checks.yml` on a pushed branch runs it
+    before `main` does. In the ARM64 guest, build natively (the drivers in
+    `dist-assets/binaries/aarch64-pc-windows-msvc` load there), put MSBuild's
+    `Bin/arm64` on the PATH and init `windows/libwfp` and
+    `windows/windows-libraries` first; send long PowerShell on stdin rather
+    than through `wrun.py`, whose command line stops at 8191 characters; and
+    pipe scripts with `printf '%s'`, since zsh's `echo` turns the `\b` of
+    `C:\b1` into a backspace.
 
   A cross `cargo check --target x86_64-pc-windows-msvc` fails on this Mac
   (ring needs MSVC) whatever the change is.
