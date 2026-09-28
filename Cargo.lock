@@ -6740,6 +6740,7 @@ dependencies = [
  "rand 0.10.1",
  "rand 0.8.6",
  "reqwest",
+ "rustls",
  "serde",
  "serde_json",
  "sha2",
@@ -6749,6 +6750,7 @@ dependencies = [
  "warren-identity",
  "warrenguard-multihop",
  "warrenguard-token",
+ "webpki-roots",
  "zeroize",
 ]
 
