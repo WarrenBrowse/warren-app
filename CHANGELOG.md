@@ -46,6 +46,13 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Disconnect and remove the VPN configuration when logging out or erasing the wallet, so the
   tunnel can neither stay up nor come back on demand for a wallet that left the device.
 
+### Changed
+- [Windows, macOS, Linux] Replace the three tabs of App routing with one list of rules: pick an
+  app, then send it through the VPN, through the VPN from another country, or outside the VPN. A
+  switch above the list sets what the other apps do, through the VPN or outside it (the former VPN
+  only for). Nothing needs turning on: a route is in force as soon as an app uses it, and stops with
+  its last app.
+
 ## [1.1.40] - 2026-09-28
 ### Fixed
 - [Windows, macOS, Linux] Keep blocking a revoked device when the app starts with auto-connect on

@@ -41,6 +41,13 @@ par l'application, gardez-le tel quel.
   du portefeuille, pour que le tunnel ne puisse ni rester ouvert ni revenir à la demande pour un
   portefeuille qui a quitté l'appareil.
 
+### Modifié
+- [Windows, macOS, Linux] Remplacer les trois onglets du routage des apps par une seule liste de
+  règles : choisissez une app, puis faites-la passer par le VPN, par le VPN depuis un autre pays, ou
+  hors VPN. Un sélecteur au-dessus de la liste fixe le chemin des autres apps, par le VPN ou hors VPN
+  (l'ancien VPN ciblé). Plus rien à activer : un chemin s'applique dès qu'une app l'utilise et
+  s'arrête avec sa dernière app.
+
 ## [1.1.40] - 2026-09-28
 ### Corrigé
 - [Windows, macOS, Linux] Maintenir le blocage d'un appareil révoqué quand l'application démarre

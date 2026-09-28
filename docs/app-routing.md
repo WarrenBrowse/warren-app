@@ -1,27 +1,34 @@
 # App routing: exclude, per-app country, VPN-only-for
 
-Status on `main` (2026-09-27): per-app country runs in the datapath on
+Status on `main` (2026-09-28): per-app country runs in the datapath on
 desktop (sections 2.2 to 2.6, real exits measured from macOS and Windows) and
 on Android (section 3.5, beta exits measured from an emulator, routes admitted
 by anchor); include-only runs on macOS, Linux, Windows and Android (section 3,
-the Windows run in section 3.2, Android in 3.4); the desktop GUI covers all
-three tabs (section 7) and the Android screen too (section 3.5); section 3.3 is
-how the modes and the countries combine. Route sessions are admitted by the
+the Windows run in section 3.2, Android in 3.4); the desktop GUI is one list of
+rules (section 7) and the Android screen follows it (section 3.5); section 3.3
+is how the modes and the countries combine. Route sessions are admitted by the
 main session's anchor where the server offers it, with no token each and no
 artificial limit on the number of countries (section 2.2, warren-core doc 107).
 This document is the contract the implementation lots follow. When the code and
 this file disagree, fix one of them in the same commit.
 
-The split tunneling page becomes **App routing**, with three tabs:
+The split tunneling page is **App routing**: one list of rules, each app with a
+single route, and one choice for every app without a rule.
 
-| tab | mode | what the user gets |
+| route of an app | mode behind it | what the app gets |
 |---|---|---|
-| **Bypass VPN** | exclude (existing) | selected apps talk to the network as if Warren were off |
-| **Country per app** | per-app exit (new) | each selected app leaves the Internet from its own country, every other app keeps the main connection |
-| **VPN only for** | include-only (new) | the system is NOT tunneled; only the selected apps are |
+| **Through the VPN** | the main connection | the main exit, like any app when the VPN is the default |
+| **Through the VPN, another country** | per-app exit | its own exit country, every other app keeping the main connection |
+| **Outside the VPN** | exclude, or no rule under include-only | the network as if Warren were off |
 
-"Bypass VPN" and "VPN only for" are mutually exclusive (one split mode at a
-time). "Country per app" composes with both.
+"Other apps go" chooses the default: **Through the VPN** (split mode `Off` or
+`Exclude`) or **Outside the VPN** (split mode `IncludeOnly`, the former "VPN
+only for"). A rule is an app whose route differs from the default, so the list
+shows bypassing apps under the first and apps on the VPN under the second, and
+the apps with a country under both. No mode has a switch: bypass turns on with
+its first app and off with its last, the countries turn on with the first one,
+and the default is the one explicit choice. The daemon model below is
+unchanged; the view translates both ways (section 7).
 
 ## 1. Settings model
 
@@ -32,10 +39,10 @@ exclusion there is launch-based; the new struct is persisted on Linux too.
 ```
 AppRoutingSettings {
     split_mode: Off | Exclude | IncludeOnly,
-    excluded_apps: set<AppId>,          // tab 1, kept when the mode changes
-    included_apps: set<AppId>,          // tab 3, kept when the mode changes
-    app_exits_enabled: bool,            // tab 2 master switch
-    app_exits: map<AppId, ExitChoice>,  // tab 2
+    excluded_apps: set<AppId>,          // "Outside the VPN" rules, VPN default
+    included_apps: set<AppId>,          // "Through the VPN" rules, direct default
+    app_exits_enabled: bool,            // on with the first country
+    app_exits: map<AppId, ExitChoice>,  // "another country" rules
 }
 ExitChoice { country: CountryCode, city: Option<CityCode> }
 ```
@@ -594,10 +601,13 @@ platform, see below), so an included app's names never go to the ISP.
 | Android | `VpnService.Builder.addAllowedApplication`, never mixed with `addDisallowedApplication` in one builder (Android refuses it), with a guard for an empty or fully uninstalled list (Android would otherwise capture everything), and the same allow list on every blackhole plan. Details in section 3.4. |
 | iOS | not available. |
 
-The GUI shows a persistent, calm warning while include-only is active: a
-banner in the tab ("Only these apps are protected. Everything else on this
-device uses your normal connection.") and a short label on the main screen
-under the connection state. Turning the mode on asks for one confirmation.
+While include-only is active the desktop view says it under the default
+("Direct connection by default. Only the apps below use the VPN."), warns when
+no rule puts any app in the VPN, and the main screen labels the connection
+state "Only selected apps are protected" with the number of apps on the VPN.
+Choosing it needs no confirmation on desktop: it is one click to undo and
+visible on the main screen. Android asks first where the choice narrows a full
+tunnel (section 3.5).
 
 ### 3.1 Linux
 
@@ -1144,54 +1154,79 @@ no restart.
 ## 7. Desktop GUI
 
 The view keeps the split tunneling route (`RoutePath.splitTunneling`), renamed
-**App routing**, with the three tabs above; a link opens a given tab through
-the `app-routing-tab` location option. The rules it shows are computed in
-`desktop/packages/mullvad-vpn/src/shared/app-routing.ts`, which mirrors the
-daemon's precedence. There is no limit on the number of countries to mirror:
-a route past what the server admits shows `Waiting for a free route` on its
-row.
+**App routing**. It shows the default ("Other apps go", two segments), then
+"Rules per app" with a "+ App" button, one row per rule (the app, and a chip
+with its route: a flag and the country or city, "Outside the VPN", or "VPN").
+The add, route and country screens take the whole window in turn, like sheets,
+and Escape or their bottom button closes them. The design is poka's mockup of
+2026-09-28 (six states: empty, rules with the VPN as the default, the route of
+an app, the country choice, Outside the VPN as the default, a build that cannot
+run it).
 
-- **Country per app** gives an app its exit in one click: a chip on each row
-  opens a searchable country and city picker that only reports the choice and
-  never moves the main connection. Choosing a country while the tab switch is
-  off turns it on. Every country and city with an active server can be
-  chosen.
-- A first country in include-only needs no confirmation on desktop, unlike
-  Android (section 3.5): an include-only list with no app tunnels no app
-  (macOS runs the classifier with an empty list, `engages_split_tunnel`, and
-  the Windows driver then splits no app to the tunnel), and Linux takes no
-  list, so a country only ever adds its app to the VPN.
-- Each app with a country shows its route state from `AppRouteStatus` (pushed
-  as `DaemonEvent.app_routes`): connecting, connected with its public IP, or
-  the reason it is unavailable. A route waiting for the main connection is not
-  shown as a fault.
-- **Bypass VPN** and **VPN only for** share one availability answer: on macOS
-  the daemon's `SplitTunnelIsSupported` false means a build that cannot run the
-  classifier (the GUI says it needs a signed build), then `NeedFullDiskPermissions`
-  drives the existing Full Disk Access steps. Turning a mode off is never
-  refused. Turning include-only on, or switching between the two modes, goes
-  through one confirmation; both lists are kept.
-- On Linux both modes are launch based (`warren-exclude`, `warren-include`) and
-  per-app countries are path based: a desktop entry is keyed by the program it
-  runs, resolved through `PATH`, symlinks and shell wrappers whose last line
-  is `exec [-a NAME] PROGRAM ... "$@"` with a literal program
-  (`desktop/packages/mullvad-vpn/src/main/linux-app-routing.ts`). A Flatpak or
-  Snap app, or a script whose program cannot be read, is listed with the
-  reason and offers no country; the file picker reaches the real program. In
-  include-only mode the tab says a country applies to the app opened from VPN
-  only for.
-- While include-only is on, the connection card's line under the state reads
-  "Only selected apps are protected" instead of "You are protected", above the
-  "VPN only for N apps" label (no count on Linux). "N apps in other countries"
-  sits among the feature badges (red when a route cannot run). Both open their
-  tab.
-- The mocked Playwright specs `app-routing.spec.ts`,
+The translation between the list and the daemon lives in
+`desktop/packages/mullvad-vpn/src/shared/app-routing.ts`:
+
+- `appRouteFor` is the route the daemon gives an app, after the precedence of
+  section 1, and `appRules` the apps whose route differs from the default.
+  Entries saved but not in force (an exclusion list while the mode is `Off`,
+  countries while `app_exits_enabled` is off, lists left by the older tabs)
+  are hidden.
+- `planAppRoute` is the ordered daemon calls that give one app a route. The
+  calls are separate RPCs, so every state between two of them carries traffic:
+  the order keeps the app on its old or its new route at each step, never a
+  third one, and never moves another app. Entries saved while a feature was off
+  are cleared before it turns back on, so no rule nobody sees comes back.
+- `planDefaultRoute` switches the default. Toward the VPN the mode goes off
+  first; toward direct it goes last; both lists are emptied, the countries kept.
+- `test/unit/app-routing-rules.spec.ts` replays each plan call by call and
+  checks those three properties at every step.
+
+Availability (`splitModeAvailability`): Outside the VPN, as a default or for an
+app, is what the classifier or the driver runs, so on macOS it needs a signed
+build, macOS 13 and Full Disk Access. When it cannot run, its segment and its
+option are disabled with the reason under them (the mockup's unsigned state);
+Full Disk Access shows a line with the way to the settings pane and, once
+opened, the service restart. Going back through the VPN, and removing a rule,
+are never refused. A country needs none of this.
+
+Linux keeps no list for either mode, since an app leaves or joins the VPN when
+Warren opens it: the route screen offers "Open outside the VPN" (with the VPN
+as the default) or "Open through the VPN" (with direct as the default) as an
+action that launches the app from its desktop entry (`launchPath`, set by
+`getPathBasedApplications`), and the rules are the countries only. Under
+direct as the default an app with a country uses it when opened that way, and
+the route screen says so; the empty list there says how opened apps join the
+VPN rather than warning that none does. Apps are keyed by the program they run,
+resolved through `PATH`, symlinks and shell wrappers whose last line is
+`exec [-a NAME] PROGRAM ... "$@"` with a literal program
+(`desktop/packages/mullvad-vpn/src/main/linux-app-routing.ts`). A Flatpak or
+Snap app, or a script whose program cannot be read, offers no country and says
+why; the file picker reaches the real program.
+
+Each rule with a country shows its route state from `AppRouteStatus` (pushed as
+`DaemonEvent.app_routes`) on a line under the name and the chip: connecting,
+connected with its public IP, or the reason it is unavailable. A route waiting
+for the main connection is not shown as a fault. There is no limit on the
+number of countries to mirror: a route past what the server admits shows
+`Waiting for a free route`. The country screen lists every country and city
+with an active server and tags the exits already in use by another app.
+
+While include-only is on, the connection card's line under the state reads
+"Only selected apps are protected" instead of "You are protected", above the
+"VPN only for N apps" label (no count on Linux). "N apps in other countries"
+sits among the feature badges (red when a route cannot run). Both open the
+view.
+
+- The mocked Playwright specs `app-routing.spec.ts` (the flow on macOS, the
+  calls it makes to the daemon in order, the unsigned build, French),
   `app-routing-windows.spec.ts` and `app-routing-linux.spec.ts` render the
   Windows and Linux views on any host through `WARREN_E2E_PLATFORM`, which the
   preload reads only under the end-to-end harness (`CI=e2e`).
 - `app-routing-locales.spec.ts` opens the view in other catalogs through
   `WARREN_E2E_LOCALE` (read by the mocked main under the same harness, and the
   only way to reach ar, fa and uk, which the language picker does not list),
-  fails when a tab label is clipped or widens its tab, and screenshots each
-  state per locale. `APP_ROUTING_LOCALES=all` renders every catalog; run it
-  after changing any App routing copy.
+  fails when a segment, a chip, a status line or a button is clipped, when the
+  two segments differ in width, or when a right-to-left catalog does not
+  mirror them, and screenshots each screen per locale.
+  `APP_ROUTING_LOCALES=all` renders every catalog; run it after changing any
+  App routing copy.
