@@ -60,8 +60,6 @@ mod warren_api_dns;
 mod warren_api_transport;
 /// Which session each app's exit goes through, and what the user sees of it.
 mod warren_app_routes;
-/// TLS for the daemon's reqwest clients: no session resumption.
-mod warren_tls;
 /// Shared policy pieces of the periodic signed-artifact refreshers
 /// (fast retry, ETag conditional GET, atomic cache write).
 mod warren_artifact_refresh;
@@ -146,6 +144,8 @@ pub mod warren_stale_route_sweep;
 /// Live Warren tunnel status cache surfaced to the gRPC management
 /// interface (`GetWarrenStatus` rpc + `WarrenStatusUpdates` stream).
 pub mod warren_status;
+/// TLS for the daemon's reqwest clients: no session resumption.
+mod warren_tls;
 mod warren_token_provider;
 /// Assembles a complete `talpid_warren_tunnel::WarrenTunnelParameters`
 /// from the relay selector + signing_key + config-side constants.
