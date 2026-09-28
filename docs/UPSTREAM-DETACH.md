@@ -31,14 +31,25 @@ barely diverged (so picks apply cleanly):
 - firewall code: `talpid-core/src/firewall/`, `windows/winfw/`
 - `mullvad-leak-checker/`
 - split tunneling (`talpid-core` split-tunnel modules, `mullvad-exclude`)
+- privilege boundaries, added 2026-09-28 after three upstream security fixes
+  landed outside the list above: `talpid-cgroup/` (setuid helpers), the
+  install and uninstall scripts, and the IPC trust checks on both ends of the
+  management socket
+
+The authoritative list is `scripts/dev/upstream-watch-paths.txt`; the triage
+script reads it. Upstream security fixes are taken wherever they land, list or
+not.
 
 Everything else (tunnel backend, relay selection, API client, account/identity,
 UI) is Warren-owned and no longer chases upstream.
 
 ## How to operate this
 
-- Periodically review upstream commits touching the watch list above; pick the
-  security/correctness fixes.
+- Review upstream periodically with the `upstream-sync` skill
+  (`.claude/skills/upstream-sync/`). It runs `scripts/dev/upstream-triage.sh`
+  from the commit in `.upstream-reviewed`, judges each watch-list commit and
+  each upstream security entry, picks what applies, and records every verdict
+  in [`UPSTREAM-SYNC-LOG.md`](UPSTREAM-SYNC-LOG.md).
 - Do NOT attempt whole-tree rebases or merges.
 - This unblocks the dead-weight purge that was previously kept "for rebase
   hygiene" (legacy RelaySelector, settings migrations, access-method/shadowsocks
