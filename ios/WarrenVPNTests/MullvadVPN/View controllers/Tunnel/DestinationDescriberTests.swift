@@ -25,6 +25,16 @@ final class DestinationDescriberTests: XCTestCase {
         store.reset()
     }
 
+    // Other suites point `SettingsManager.unitTestStore` at their own store (a
+    // Swift Testing suite does it from its initializer), and nothing here deletes
+    // a saved list, so a fixed name meets its own earlier save when a test runs
+    // again in the same process and `save` throws `duplicateName`. A name unique
+    // to each run cannot collide, whichever store is current. It stays short
+    // because `save` refuses a name longer than `NameInputFormatter.maxLength`.
+    private func uniqueListName() -> String {
+        "List-\(UUID().uuidString.prefix(8))"
+    }
+
     func testDescribeList() throws {
         let relayCache = MockRelayCache()
         let customListRepository = CustomListRepository()
@@ -33,10 +43,11 @@ final class DestinationDescriberTests: XCTestCase {
             customListRepository: customListRepository
         )
         let listid = UUID()
+        let listName = uniqueListName()
         try customListRepository.save(
             list: .init(
                 id: listid,
-                name: "NameOfList",
+                name: listName,
                 locations: [.country("se"), .country("dk")]
             ))
         XCTAssertEqual(
@@ -45,7 +56,7 @@ final class DestinationDescriberTests: XCTestCase {
                     locations: [.country("se"), .country("dk")],
                     customListSelection: .init(listId: listid, isList: true)
                 )),
-            "NameOfList"
+            listName
         )
     }
 
@@ -60,7 +71,7 @@ final class DestinationDescriberTests: XCTestCase {
         try customListRepository.save(
             list: .init(
                 id: listid,
-                name: "NameOfList2",
+                name: uniqueListName(),
                 locations: [.country("se"), .country("dk")]
             ))
         XCTAssertEqual(
