@@ -37,6 +37,12 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   portofelului, ca tunelul să nu poată nici rămâne deschis, nici reporni la cerere pentru un
   portofel care a părăsit dispozitivul.
 
+## [1.1.43] - 2026-09-29
+### Reparat
+- [macOS] Rețeaua Tailscale rămâne accesibilă cât timp VPN-ul este conectat. Fiecare pachet către
+  un dispozitiv Tailscale era blocat. Interfața Tailscale trece acum, inclusiv când Tailscale
+  pornește după VPN; celelalte rețele rămân blocate.
+
 ## [1.1.42] - 2026-09-29
 ### Reparat
 - [Windows, macOS, Linux, Android] Conexiunile pe care o aplicație le deschisese înainte de

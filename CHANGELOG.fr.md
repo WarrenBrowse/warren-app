@@ -41,6 +41,12 @@ par l'application, gardez-le tel quel.
   du portefeuille, pour que le tunnel ne puisse ni rester ouvert ni revenir à la demande pour un
   portefeuille qui a quitté l'appareil.
 
+## [1.1.43] - 2026-09-29
+### Corrigé
+- [macOS] Le réseau Tailscale reste joignable pendant que le VPN est connecté. Chaque paquet vers
+  un appareil Tailscale était bloqué. L'interface de Tailscale passe désormais, y compris quand
+  Tailscale démarre après le VPN ; les autres réseaux restent bloqués.
+
 ## [1.1.42] - 2026-09-29
 ### Corrigé
 - [Windows, macOS, Linux, Android] Les connexions qu'une app avait ouvertes avant la connexion du

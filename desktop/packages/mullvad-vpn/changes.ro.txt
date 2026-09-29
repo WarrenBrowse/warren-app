@@ -1,5 +1,4 @@
 ### Reparat
-- [Windows, macOS, Linux, Android] Conexiunile pe care o aplicație le deschisese înainte de
-  conectarea VPN-ului eșuează imediat, iar aplicația le redeschide prin VPN. Rămâneau blocate fără
-  nicio eroare până când aplicația renunța, așa că imediat după conectare paginile și apelurile deja
-  deschise nu se mai încărcau, ca și cum n-ar fi existat internet.
+- [macOS] Rețeaua Tailscale rămâne accesibilă cât timp VPN-ul este conectat. Fiecare pachet către
+  un dispozitiv Tailscale era blocat. Interfața Tailscale trece acum, inclusiv când Tailscale
+  pornește după VPN; celelalte rețele rămân blocate.

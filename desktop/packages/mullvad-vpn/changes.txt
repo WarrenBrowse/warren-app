@@ -1,5 +1,4 @@
 ### Fixed
-- [Windows, macOS, Linux, Android] Make the connections an app opened before the VPN connected
-  fail at once, so the app opens them again through the VPN. They hung without an error until the
-  app gave up, so right after connecting the pages and calls already open stopped loading, as if
-  there were no internet.
+- [macOS] Keep a Tailscale network reachable while the VPN is connected. Every packet to a
+  Tailscale device was blocked. Tailscale's own interface now gets through, including when
+  Tailscale starts after the VPN; other networks stay blocked.

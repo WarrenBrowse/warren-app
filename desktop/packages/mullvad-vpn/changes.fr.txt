@@ -1,5 +1,4 @@
 ### Corrigé
-- [Windows, macOS, Linux, Android] Les connexions qu'une app avait ouvertes avant la connexion du
-  VPN échouent tout de suite, et l'app les rouvre par le VPN. Elles restaient bloquées sans erreur
-  jusqu'à ce que l'app abandonne : juste après la connexion, les pages et les appels déjà ouverts
-  ne chargeaient plus, comme sans internet.
+- [macOS] Le réseau Tailscale reste joignable pendant que le VPN est connecté. Chaque paquet vers
+  un appareil Tailscale était bloqué. L'interface de Tailscale passe désormais, y compris quand
+  Tailscale démarre après le VPN ; les autres réseaux restent bloqués.
