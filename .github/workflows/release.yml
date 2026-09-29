@@ -818,6 +818,12 @@ jobs:
         with:
           submodules: recursive
 
+      # checkout's `clean` stops at the superproject. On this persistent runner a
+      # submodule dropped upstream (dist-assets/binaries/wireguard-nt, beta-v1.1.41)
+      # stays on disk as untracked files, and releasePreflight refuses the dirty tree.
+      - name: Remove untracked files left in submodules
+        run: git submodule foreach --recursive --quiet git clean -ffdxq
+
       - name: Set up JDK
         uses: actions/setup-java@v4
         with:
