@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.warrenbrowse.vpn.lib.model.AppExit
 import com.warrenbrowse.vpn.lib.model.SplitTunnelMode
+import com.warrenbrowse.vpn.lib.model.ThemePreference
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot
@@ -755,5 +756,24 @@ class WarrenLocalSettingsRepositoryTest {
         assertTrue(repo.appExitsEnabled.value)
         verify { mockEditor.putStringSet("app_exits", setOf("org.chat\tse\t")) }
         verify { mockEditor.putBoolean("app_exits_enabled", true) }
+    }
+
+    @Test
+    fun `the theme follows the system until the user picks one`() {
+        val repo = WarrenLocalSettingsRepository(mockContext)
+
+        assertEquals(ThemePreference.SYSTEM, repo.themePreference.value)
+    }
+
+    @Test
+    fun `the theme choice reads back from disk and persists a change`() {
+        every { mockPrefs.getString("theme_preference", any()) } returns "light"
+        val repo = WarrenLocalSettingsRepository(mockContext)
+        assertEquals(ThemePreference.LIGHT, repo.themePreference.value)
+
+        repo.setThemePreference(ThemePreference.DARK)
+
+        assertEquals(ThemePreference.DARK, repo.themePreference.value)
+        verify { mockEditor.putString("theme_preference", "dark") }
     }
 }
