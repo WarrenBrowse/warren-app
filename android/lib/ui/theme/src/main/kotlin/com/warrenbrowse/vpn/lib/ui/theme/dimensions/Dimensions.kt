@@ -9,6 +9,25 @@ data class Dimensions(
     val bottomPadding: Dp = 4.dp,
     val buttonHeight: Dp = 44.dp,
     val buttonSpacing: Dp = 8.dp,
+    // Desktop CardButton: 32 px tall, radius 6, the location and shuffle
+    // buttons 4 px apart, the shuffle 40 px wide.
+    val cardButtonHeight: Dp = 32.dp,
+    val cardButtonRadius: Dp = 6.dp,
+    val cardButtonRowGap: Dp = 4.dp,
+    // Desktop BetaBadge overlay: one line in a 36.5 px card, 13.5 px under the
+    // header and 15 px in from the edge, its pill 21 px tall.
+    val betaBannerMarginTop: Dp = 13.5.dp,
+    val betaBannerMarginStart: Dp = 15.dp,
+    val betaBannerHeight: Dp = 36.5.dp,
+    val betaBannerPaddingStart: Dp = 8.dp,
+    val betaBannerPaddingEnd: Dp = 12.dp,
+    val betaBannerGap: Dp = 8.dp,
+    val betaBannerRadius: Dp = 12.dp,
+    val betaBannerShadowOffsetY: Dp = 2.dp,
+    val betaBannerShadowBlur: Dp = 8.dp,
+    val betaPillHeight: Dp = 21.dp,
+    val betaPillPaddingHorizontal: Dp = 8.dp,
+    val betaPillRadius: Dp = 6.dp,
     val cellEndPadding: Dp = 16.dp,
     val cellFooterTopPadding: Dp = 4.dp,
     val cellHeight: Dp = 56.dp,
@@ -24,20 +43,35 @@ data class Dimensions(
     val circularProgressBarSmallStrokeWidth: Dp = 4.dp,
     val connectButtonExtraPadding: Dp = 4.dp,
     val connectionCardMaxWidth: Dp = 480.dp,
-    // Desktop ConnectionPanel: radius16 on the glass card.
+    // Desktop ConnectionPanel: an opaque card of radius 16, 14 px from the
+    // sides and 6 px above the footer, its blocks 10.5 px apart, with the
+    // 22 px expand chevron box around an 18 px glyph.
     val connectionCardRadius: Dp = 16.dp,
-    // Desktop FeatureIndicator: 2 x 8 padding, radius8, pills stacked 5 px
-    // apart (ConnectionCard.BadgeGap).
-    val chipVerticalPadding: Dp = 2.dp,
+    val connectionCardHorizontalPadding: Dp = 20.dp,
+    val connectionCardMarginHorizontal: Dp = 14.dp,
+    val connectionCardMarginBottom: Dp = 6.dp,
+    val connectionCardBlockGap: Dp = 10.5.dp,
+    val connectionCardShadowOffsetY: Dp = 5.dp,
+    val connectionCardShadowBlur: Dp = 16.dp,
+    val connectionCardChevronSize: Dp = 22.dp,
+    val connectionCardChevronIconSize: Dp = 18.dp,
+    // Desktop Hostname: 2 px under the location line.
+    val hostnameGapAbove: Dp = 2.dp,
+    // Desktop FeatureIndicator: 5.5 x 8 padding, radius 7, pills stacked 2 px
+    // apart and 4 px above the card.
+    val chipVerticalPadding: Dp = 5.5.dp,
     val chipHorizontalPadding: Dp = 8.dp,
-    val chipCornerRadius: Dp = 8.dp,
-    val chipStackGap: Dp = 5.dp,
+    val chipCornerRadius: Dp = 7.dp,
+    val chipStackGap: Dp = 2.dp,
+    val chipsToCardGap: Dp = 4.dp,
+    val chipShadowOffsetY: Dp = 1.5.dp,
+    val chipShadowBlur: Dp = 5.dp,
     // The chip stack turns the minimum-interactive row off (0.dp is Material's
     // documented "no enforcement"), so a chip's layout height is its pill and
-    // the 5 dp gap above is the gap the user sees. With the row left at 48 dp
-    // the pills measured 27.81 dp apart on a 1080x2400 screen, six times the
-    // desktop gap, which is what the stack was reported for. DesignParityTest
-    // carries why that is still an honest target.
+    // the gap above is the gap the user sees. With the row left at 48 dp the
+    // pills measured 48 dp centre to centre on a 1080x2400 screen, which is
+    // what the stack was reported for. DesignParityTest carries why that is
+    // still an honest target.
     val chipInteractiveMinSize: Dp = 0.dp,
     // Desktop AppMainFooter: 7 x 16.
     val footerVerticalPadding: Dp = 7.dp,
@@ -48,15 +82,18 @@ data class Dimensions(
     val notificationBannerElevation: Dp = 8.dp,
     // Desktop DialogPopup: radius 12 on the darkBlue container.
     val dialogCornerRadius: Dp = 12.dp,
-    // Desktop ConnectionPanel: 14 px vertical, 16 px horizontal.
-    val connectionCardVerticalPadding: Dp = 14.dp,
-    // Desktop ConnectionStatus: 12 px between the eye and the text; the eye is
-    // an 18 px glyph in a 36 px well of radius 11.
+    // Desktop ConnectionPanel: 20 px all round.
+    val connectionCardVerticalPadding: Dp = 20.dp,
+    // Desktop ConnectionStatus: 12 px between the eye and the text, 1 px
+    // between title and subtitle, 12 px between the chevron and the flag; the
+    // eye is an 18 px glyph in a 34 px well of radius 8.
     val connectionStatusGap: Dp = 12.dp,
-    val connectionStatusWellSize: Dp = 36.dp,
-    val connectionStatusWellRadius: Dp = 11.dp,
+    val connectionStatusTextGap: Dp = 1.dp,
+    val connectionStatusTrailingGap: Dp = 12.dp,
+    val connectionStatusWellSize: Dp = 34.dp,
+    val connectionStatusWellRadius: Dp = 8.dp,
     val connectionStatusIconSize: Dp = 18.dp,
-    // Desktop CurrentCountryFlag: a 22 px round flag with the white hairline.
+    // Desktop CurrentCountryFlag: a 22 px round flag with a hairline ring.
     val countryFlagSize: Dp = 22.dp,
     val deleteIconSize: Dp = 24.dp,
     val dialogIconHeight: Dp = 48.dp,
@@ -105,6 +142,7 @@ data class Dimensions(
     val searchFieldHeightExpanded: Dp = 72.dp,
     val searchFieldHorizontalPadding: Dp = 20.dp,
     val searchIconSize: Dp = 24.dp,
+    val shuffleButtonWidth: Dp = 40.dp,
     val selectableCellTextMargin: Dp = 8.dp,
     val settingsDetailsImageMaxWidth: Dp = 480.dp,
     // These two should be consolidated into one value when OK'd with design.
@@ -117,6 +155,9 @@ data class Dimensions(
     // enough to be the screen's subject, narrow enough for a 360 dp phone with
     // the side margins (the lockup is about three times as wide as it is tall).
     val splashLockupHeight: Dp = 72.dp,
+    // The hairline of the opaque connect-screen surfaces: the card, its
+    // buttons, the chips, the beta banner and the flag ring.
+    val surfaceBorderWidth: Dp = 0.5.dp,
     val switchIconSize: Dp = 24.dp,
     // The desktop ShuffleButton is 40 px wide for a pointer; a finger gets the
     // 48 dp floor, and the location button 1 dp away wins any tap left of it.

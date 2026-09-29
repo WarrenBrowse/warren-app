@@ -16,6 +16,8 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.dp
 import com.warrenbrowse.vpn.lib.ui.theme.color.ColorDarkTokens
 import com.warrenbrowse.vpn.lib.ui.theme.color.ColorLightTokens
+import com.warrenbrowse.vpn.lib.ui.theme.color.LocalWarrenSurfaces
+import com.warrenbrowse.vpn.lib.ui.theme.color.WarrenSurfaces
 import com.warrenbrowse.vpn.lib.ui.theme.dimensions.Dimensions
 import com.warrenbrowse.vpn.lib.ui.theme.dimensions.defaultDimensions
 
@@ -133,9 +135,13 @@ fun ProvideDimens(dimensions: Dimensions, content: @Composable () -> Unit) {
 
 private val LocalAppDimens = staticCompositionLocalOf { defaultDimensions }
 
+/**
+ * [surfaces] is the palette of the resolved light or dark theme. Only the connect screen's own
+ * surfaces read it: every other screen has no light design yet and keeps the dark Material scheme.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppTheme(content: @Composable () -> Unit) {
+fun AppTheme(surfaces: WarrenSurfaces = WarrenSurfaces.Dark, content: @Composable () -> Unit) {
     val typography = MullvadMaterial3Typography
     // Set dimensions and type scale based on configurations here
     val dimensions = defaultDimensions
@@ -147,7 +153,8 @@ fun AppTheme(content: @Composable () -> Unit) {
             typography = typography,
             content = {
                 CompositionLocalProvider(
-                    LocalRippleConfiguration provides RippleConfiguration(rippleAlpha = rippleAlpha)
+                    LocalRippleConfiguration provides RippleConfiguration(rippleAlpha = rippleAlpha),
+                    LocalWarrenSurfaces provides surfaces,
                 ) {
                     content()
                 }
