@@ -6234,3 +6234,19 @@ msgstr[0] "%(count)d сеть"
 msgstr[1] "%(count)d сети"
 msgstr[2] "%(count)d сетей"
 msgstr[3] "%(count)d сети"
+
+msgctxt "user-interface-settings-view"
+msgid "Theme"
+msgstr "Тема"
+
+msgctxt "user-interface-settings-view"
+msgid "System"
+msgstr "Системная"
+
+msgctxt "user-interface-settings-view"
+msgid "Dark"
+msgstr "Тёмная"
+
+msgctxt "user-interface-settings-view"
+msgid "Light"
+msgstr "Светлая"

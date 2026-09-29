@@ -6196,3 +6196,19 @@ msgid "%(count)d network"
 msgid_plural "%(count)d networks"
 msgstr[0] "%(count)d verkko"
 msgstr[1] "%(count)d verkkoa"
+
+msgctxt "user-interface-settings-view"
+msgid "Theme"
+msgstr "Teema"
+
+msgctxt "user-interface-settings-view"
+msgid "System"
+msgstr "Järjestelmä"
+
+msgctxt "user-interface-settings-view"
+msgid "Dark"
+msgstr "Tumma"
+
+msgctxt "user-interface-settings-view"
+msgid "Light"
+msgstr "Vaalea"

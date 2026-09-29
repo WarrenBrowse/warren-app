@@ -6196,3 +6196,19 @@ msgid "%(count)d network"
 msgid_plural "%(count)d networks"
 msgstr[0] "%(count)d red"
 msgstr[1] "%(count)d redes"
+
+msgctxt "user-interface-settings-view"
+msgid "Theme"
+msgstr "Tema"
+
+msgctxt "user-interface-settings-view"
+msgid "System"
+msgstr "Sistema"
+
+msgctxt "user-interface-settings-view"
+msgid "Dark"
+msgstr "Oscuro"
+
+msgctxt "user-interface-settings-view"
+msgid "Light"
+msgstr "Claro"

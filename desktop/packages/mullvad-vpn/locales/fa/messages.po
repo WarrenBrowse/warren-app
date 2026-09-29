@@ -6183,3 +6183,19 @@ msgid "%(count)d network"
 msgid_plural "%(count)d networks"
 msgstr[0] "%(count)d شبکه"
 msgstr[1] "%(count)d شبکه"
+
+msgctxt "user-interface-settings-view"
+msgid "Theme"
+msgstr "پوسته"
+
+msgctxt "user-interface-settings-view"
+msgid "System"
+msgstr "سیستم"
+
+msgctxt "user-interface-settings-view"
+msgid "Dark"
+msgstr "تیره"
+
+msgctxt "user-interface-settings-view"
+msgid "Light"
+msgstr "روشن"

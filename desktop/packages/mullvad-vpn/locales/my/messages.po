@@ -6167,3 +6167,19 @@ msgctxt "vpn-settings-view"
 msgid "%(count)d network"
 msgid_plural "%(count)d networks"
 msgstr[0] "ကွန်ရက် %(count)d ခု"
+
+msgctxt "user-interface-settings-view"
+msgid "Theme"
+msgstr "အပြင်အဆင်"
+
+msgctxt "user-interface-settings-view"
+msgid "System"
+msgstr "စနစ်"
+
+msgctxt "user-interface-settings-view"
+msgid "Dark"
+msgstr "အမှောင်"
+
+msgctxt "user-interface-settings-view"
+msgid "Light"
+msgstr "အလင်း"

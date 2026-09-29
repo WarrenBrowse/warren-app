@@ -6259,3 +6259,19 @@ msgstr[2] "%(count)d شبكة"
 msgstr[3] "%(count)d شبكات"
 msgstr[4] "%(count)d شبكة"
 msgstr[5] "%(count)d شبكة"
+
+msgctxt "user-interface-settings-view"
+msgid "Theme"
+msgstr "السمة"
+
+msgctxt "user-interface-settings-view"
+msgid "System"
+msgstr "النظام"
+
+msgctxt "user-interface-settings-view"
+msgid "Dark"
+msgstr "داكن"
+
+msgctxt "user-interface-settings-view"
+msgid "Light"
+msgstr "فاتح"

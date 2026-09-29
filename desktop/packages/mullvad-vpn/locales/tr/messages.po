@@ -6196,3 +6196,19 @@ msgid "%(count)d network"
 msgid_plural "%(count)d networks"
 msgstr[0] "%(count)d ağ"
 msgstr[1] "%(count)d ağ"
+
+msgctxt "user-interface-settings-view"
+msgid "Theme"
+msgstr "Tema"
+
+msgctxt "user-interface-settings-view"
+msgid "System"
+msgstr "Sistem"
+
+msgctxt "user-interface-settings-view"
+msgid "Dark"
+msgstr "Koyu"
+
+msgctxt "user-interface-settings-view"
+msgid "Light"
+msgstr "Açık"

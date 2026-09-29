@@ -5346,3 +5346,19 @@ msgid_plural "%(count)d networks"
 msgstr[0] "%(count)d rețea"
 msgstr[1] "%(count)d rețele"
 msgstr[2] "%(count)d de rețele"
+
+msgctxt "user-interface-settings-view"
+msgid "Theme"
+msgstr "Temă"
+
+msgctxt "user-interface-settings-view"
+msgid "System"
+msgstr "Sistem"
+
+msgctxt "user-interface-settings-view"
+msgid "Dark"
+msgstr "Întunecată"
+
+msgctxt "user-interface-settings-view"
+msgid "Light"
+msgstr "Luminoasă"

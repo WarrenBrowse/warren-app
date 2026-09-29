@@ -6164,3 +6164,19 @@ msgctxt "vpn-settings-view"
 msgid "%(count)d network"
 msgid_plural "%(count)d networks"
 msgstr[0] "%(count)d เครือข่าย"
+
+msgctxt "user-interface-settings-view"
+msgid "Theme"
+msgstr "ธีม"
+
+msgctxt "user-interface-settings-view"
+msgid "System"
+msgstr "ระบบ"
+
+msgctxt "user-interface-settings-view"
+msgid "Dark"
+msgstr "มืด"
+
+msgctxt "user-interface-settings-view"
+msgid "Light"
+msgstr "สว่าง"
