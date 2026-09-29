@@ -48,7 +48,12 @@ Line wrap the file at 100 chars.                                              Th
 - [macOS] Keep a Tailscale network reachable while the VPN is connected. The kill switch refused
   every packet on the Tailscale interface, so no peer answered. It now lets the Tailscale address
   ranges through that interface alone, follows Tailscale when it starts or stops after the VPN
-  connected, and leaves every other interface blocked.
+  connected, and leaves every other interface blocked. Only an interface holding a Tailscale
+  address of the fd7a:115c:a1e0::/48 prefix qualifies, so NetBird, Cloudflare WARP and other
+  overlays stay blocked. Tailscale's name service on 100.100.100.100 keeps working: it answers
+  tailnet names, and forwards other names over the tailnet to the Tailscale exit node when the
+  member configured one. Nothing leaves a physical interface in clear. On macOS 14.6 to 15.0 the
+  tailnet source addresses are also kept out of the VPN address translation.
 
 ## [1.1.42] - 2026-09-29
 ### Fixed

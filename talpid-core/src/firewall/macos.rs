@@ -1,6 +1,7 @@
+use std::collections::BTreeSet;
 use std::env;
 use std::io;
-use std::net::{IpAddr, Ipv4Addr};
+use std::net::{IpAddr, Ipv4Addr, SocketAddr};
 use std::ptr;
 use std::sync::LazyLock;
 
@@ -315,60 +316,15 @@ impl Firewall {
             return Ok(vec![]);
         };
 
-        let mut rules = vec![];
-
-        // no nat from/to localhost
-        let no_nat_localhost = pfctl::NatRuleBuilder::default()
-            .interface("lo0")
-            .action(pfctl::NatRuleAction::NoNat)
-            .build()?;
-        rules.push(no_nat_localhost);
-
-        // no nat to LAN nets
-        for net in policy
-            .lan_networks()
-            .iter()
-            .chain(ALLOWED_LAN_MULTICAST_NETS.iter())
-        {
-            let rule = pfctl::NatRuleBuilder::default()
-                .action(pfctl::NatRuleAction::NoNat)
-                .to(pfctl::Ip::from(*net))
-                .build()?;
-            rules.push(rule);
-        }
-
-        // no nat to [vpn ip]
-        for peer_endpoint in peer_endpoints {
-            let no_nat_to_vpn_server = pfctl::NatRuleBuilder::default()
-                .action(pfctl::NatRuleAction::NoNat)
-                .to(peer_endpoint.endpoint.address)
-                .build()?;
-            rules.push(no_nat_to_vpn_server);
-        }
-
-        // no nat on [tun interface]
-        let no_nat_on_tun = pfctl::NatRuleBuilder::default()
-            .action(pfctl::NatRuleAction::NoNat)
-            .interface(&tunnel.interface)
-            .build()?;
-        rules.push(no_nat_on_tun);
-
-        // Masquerade other traffic via VPN utun
-        for ip in &tunnel.ips {
-            // nat from {inet,inet6} any to any -> [tun ip]
-            let nat_primary_to_tun = pfctl::NatRuleBuilder::default()
-                .action(pfctl::NatRuleAction::Nat {
-                    nat_to: pfctl::NatEndpoint::from(pfctl::Ip::from(*ip)),
-                })
-                .from(Ip::Net(match ip {
-                    IpAddr::V4(_) => "0.0.0.0/0".parse().unwrap(),
-                    IpAddr::V6(_) => "::/0".parse().unwrap(),
-                }))
-                .build()?;
-            rules.push(nat_primary_to_tun);
-        }
-
-        Ok(rules)
+        nat_rules(
+            &tunnel.interface,
+            &tunnel.ips,
+            peer_endpoints
+                .iter()
+                .map(|peer_endpoint| peer_endpoint.endpoint.address),
+            policy.lan_networks(),
+            &tailnet::current_coexisting_tailnet_interfaces(Some(&tunnel.interface)),
+        )
     }
 
     fn get_policy_specific_rules(
@@ -441,8 +397,12 @@ impl Firewall {
             } => {
                 let mut rules = vec![];
 
-                // Before every DNS rule: Tailscale's MagicDNS answers on port 53 inside its own
-                // interface, and the DNS blocks below refuse port 53 on any interface.
+                // Before every DNS rule: the DNS blocks below refuse port 53 on any interface,
+                // and 100.100.100.100:53 on the Tailscale interface is Tailscale's MagicDNS,
+                // answered by the Tailscale process itself. It resolves tailnet names only,
+                // unless the member configured a Tailscale exit node: then Tailscale forwards
+                // other names over the tailnet to that node. Nothing leaves a physical interface
+                // in clear.
                 rules.append(&mut self.get_tailnet_rules(&tunnel.interface)?);
 
                 for server in super::allowed_tunnel_dns(dns_config) {
@@ -1129,6 +1089,78 @@ fn allow_lan_rules(
     Ok(rules)
 }
 
+/// The NAT rules of the macOS [14.6, 15.1) workaround, see [`Firewall::get_nat_rules`].
+///
+/// A coexisting Tailscale interface is exempt: masquerading its packets to the tunnel address
+/// would rewrite the tailnet source addresses, and no peer would recognize them.
+fn nat_rules(
+    tunnel_interface: &str,
+    tunnel_ips: &[IpAddr],
+    peers: impl IntoIterator<Item = SocketAddr>,
+    lan_networks: &[IpNetwork],
+    tailnet_interfaces: &BTreeSet<String>,
+) -> Result<Vec<pfctl::NatRule>> {
+    let mut rules = vec![];
+
+    // no nat from/to localhost
+    let no_nat_localhost = pfctl::NatRuleBuilder::default()
+        .interface("lo0")
+        .action(pfctl::NatRuleAction::NoNat)
+        .build()?;
+    rules.push(no_nat_localhost);
+
+    // no nat to LAN nets
+    for net in lan_networks.iter().chain(ALLOWED_LAN_MULTICAST_NETS.iter()) {
+        let rule = pfctl::NatRuleBuilder::default()
+            .action(pfctl::NatRuleAction::NoNat)
+            .to(pfctl::Ip::from(*net))
+            .build()?;
+        rules.push(rule);
+    }
+
+    // no nat to [vpn ip]
+    for peer in peers {
+        let no_nat_to_vpn_server = pfctl::NatRuleBuilder::default()
+            .action(pfctl::NatRuleAction::NoNat)
+            .to(peer)
+            .build()?;
+        rules.push(no_nat_to_vpn_server);
+    }
+
+    // no nat on [tun interface]
+    let no_nat_on_tun = pfctl::NatRuleBuilder::default()
+        .action(pfctl::NatRuleAction::NoNat)
+        .interface(tunnel_interface)
+        .build()?;
+    rules.push(no_nat_on_tun);
+
+    // no nat on [tailnet interfaces]
+    for interface in tailnet_interfaces {
+        let no_nat_on_tailnet = pfctl::NatRuleBuilder::default()
+            .action(pfctl::NatRuleAction::NoNat)
+            .interface(interface.as_str())
+            .build()?;
+        rules.push(no_nat_on_tailnet);
+    }
+
+    // Masquerade other traffic via VPN utun
+    for ip in tunnel_ips {
+        // nat from {inet,inet6} any to any -> [tun ip]
+        let nat_primary_to_tun = pfctl::NatRuleBuilder::default()
+            .action(pfctl::NatRuleAction::Nat {
+                nat_to: pfctl::NatEndpoint::from(pfctl::Ip::from(*ip)),
+            })
+            .from(Ip::Net(match ip {
+                IpAddr::V4(_) => "0.0.0.0/0".parse().unwrap(),
+                IpAddr::V6(_) => "::/0".parse().unwrap(),
+            }))
+            .build()?;
+        rules.push(nat_primary_to_tun);
+    }
+
+    Ok(rules)
+}
+
 /// The rules that let a coexisting Tailscale interface carry its tailnet traffic while the tunnel
 /// is up: to and from the two tailnet ranges, on that interface only. What enters the interface is
 /// encrypted by the Tailscale process, whose own sockets are filtered like any other.
@@ -1297,11 +1329,42 @@ mod tests {
     }
 
     #[test]
+    fn a_tailscale_interface_holding_only_its_ula_still_gets_the_four_rules() {
+        let interfaces = [host("utun13", true, &["fd7a:115c:a1e0::5"])];
+
+        let rules =
+            tailnet_rules(RuleLogging::None, &interfaces, Some("utun14")).expect("rules build");
+
+        assert_eq!(rules.len(), 4);
+        assert!(rules.contains(&tailnet_pass(
+            "utun13",
+            pfctl::Direction::In,
+            "100.64.0.0/10"
+        )));
+    }
+
+    /// NetBird and Cloudflare WARP put CGNAT addresses on their utun. Tailscale's rules opening
+    /// there would let the peers of those overlays in.
+    #[test]
+    fn a_utun_with_only_a_cgnat_address_gets_no_rule() {
+        let interfaces = [
+            host("utun8", true, &["100.64.12.9"]),
+            host("utun9", true, &["100.96.0.3"]),
+        ];
+
+        let rules =
+            tailnet_rules(RuleLogging::None, &interfaces, Some("utun14")).expect("rules build");
+
+        assert!(rules.is_empty());
+    }
+
+    #[test]
     fn nothing_that_does_not_qualify_gets_a_rule() {
         let interfaces = [
             host("utun14", true, &["100.64.0.9"]),
-            host("utun13", false, &["100.106.181.5"]),
-            host("en0", true, &["100.72.3.4"]),
+            host("utun13", false, &["100.106.181.5", "fd7a:115c:a1e0::5"]),
+            host("en0", true, &["100.72.3.4", "fd7a:115c:a1e0::4"]),
+            host("utun8", true, &["100.64.12.9"]),
             host("utun3", true, &["10.8.0.2", "fe80::2"]),
         ];
 
@@ -1317,7 +1380,7 @@ mod tests {
     fn tailnet_rules_never_open_a_physical_interface_or_a_foreign_range() {
         let interfaces = [
             host("en0", true, &["100.72.3.4"]),
-            host("utun13", true, &["100.106.181.5"]),
+            host("utun13", true, &["100.106.181.5", "fd7a:115c:a1e0::5"]),
             host("utun15", true, &["fd7a:115c:a1e0::7"]),
         ];
 
@@ -1335,5 +1398,63 @@ mod tests {
         for rule in &rules {
             assert!(expected.contains(rule), "unexpected rule: {rule:?}");
         }
+    }
+
+    fn no_nat_on(interface: &str) -> pfctl::NatRule {
+        pfctl::NatRuleBuilder::default()
+            .action(pfctl::NatRuleAction::NoNat)
+            .interface(interface)
+            .build()
+            .expect("valid rule")
+    }
+
+    fn masquerade_to(ip: &str) -> pfctl::NatRule {
+        pfctl::NatRuleBuilder::default()
+            .action(pfctl::NatRuleAction::Nat {
+                nat_to: pfctl::NatEndpoint::from(pfctl::Ip::from(ip.parse::<IpAddr>().unwrap())),
+            })
+            .from(Ip::Net("0.0.0.0/0".parse().unwrap()))
+            .build()
+            .expect("valid rule")
+    }
+
+    fn workaround_rules(tailnet: &[&str]) -> Vec<pfctl::NatRule> {
+        let tailnet = tailnet.iter().map(|n| (*n).to_owned()).collect();
+        nat_rules(
+            "utun14",
+            &["10.66.0.2".parse().unwrap()],
+            ["203.0.113.7:443".parse().unwrap()],
+            &[net("192.168.0.0/16")],
+            &tailnet,
+        )
+        .expect("rules build")
+    }
+
+    /// Masquerading a tailnet packet to the tunnel address would rewrite its source, which is
+    /// what keeps the tailnet broken on macOS 14.6 to 15.0.
+    #[test]
+    fn the_nat_workaround_exempts_a_tailnet_interface_before_it_masquerades() {
+        let rules = workaround_rules(&["utun13"]);
+
+        let exempt = rules
+            .iter()
+            .position(|rule| *rule == no_nat_on("utun13"))
+            .expect("the tailnet interface is exempt");
+        let masquerade = rules
+            .iter()
+            .position(|rule| *rule == masquerade_to("10.66.0.2"))
+            .expect("the tunnel address masquerades");
+        assert!(exempt < masquerade);
+    }
+
+    #[test]
+    fn the_nat_workaround_exempts_only_the_interfaces_it_is_given() {
+        let without = workaround_rules(&[]);
+        let with = workaround_rules(&["utun13"]);
+
+        assert!(!without.contains(&no_nat_on("utun13")));
+        assert_eq!(with.len(), without.len() + 1);
+        assert!(without.contains(&no_nat_on("utun14")));
+        assert!(without.contains(&masquerade_to("10.66.0.2")));
     }
 }

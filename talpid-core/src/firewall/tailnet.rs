@@ -52,12 +52,16 @@ pub struct TailnetPass {
     pub net: IpNetwork,
 }
 
-fn is_tailnet_address(address: IpAddr) -> bool {
-    TAILNET_V4.contains(address) || TAILNET_V6.contains(address)
+/// Whether an address is one only Tailscale hands out. Every Tailscale node carries one from its
+/// ULA prefix, which no other overlay uses, whereas the CGNAT block is shared with NetBird,
+/// Cloudflare WARP and some carrier networks.
+fn is_tailscale_ula(address: IpAddr) -> bool {
+    TAILNET_V6.contains(address)
 }
 
 /// The names of the interfaces that coexist with Warren's tunnel: a `utun` interface other than
-/// `own_interface`, that is up and holds a tailnet address.
+/// `own_interface`, that is up and holds an address of Tailscale's ULA prefix. The IPv4 range is
+/// then allowed on it as well, but never qualifies an interface on its own.
 pub fn coexisting_tailnet_interfaces(
     interfaces: &[HostInterface],
     own_interface: Option<&str>,
@@ -68,7 +72,7 @@ pub fn coexisting_tailnet_interfaces(
             interface.name.starts_with(TUNNEL_INTERFACE_PREFIX)
                 && Some(interface.name.as_str()) != own_interface
                 && interface.up
-                && interface.addresses.iter().copied().any(is_tailnet_address)
+                && interface.addresses.iter().copied().any(is_tailscale_ula)
         })
         .map(|interface| interface.name.clone())
         .collect()
@@ -170,10 +174,29 @@ mod tests {
     #[test]
     fn an_up_utun_with_a_tailnet_v4_address_qualifies() {
         let found = coexisting_tailnet_interfaces(
-            &[iface("utun13", true, &["100.106.181.5", "fe80::1"])],
+            &[iface(
+                "utun13",
+                true,
+                &["100.106.181.5", "fd7a:115c:a1e0::5", "fe80::1"],
+            )],
             Some("utun14"),
         );
         assert_eq!(found, names(&["utun13"]));
+    }
+
+    /// NetBird holds an address of the CGNAT block on its utun, and Cloudflare WARP one of
+    /// 100.96.0.0/12. Neither carries Tailscale's ULA prefix, and opening the tailnet rules on
+    /// them would let the peers of those overlays in.
+    #[test]
+    fn a_cgnat_only_utun_of_another_overlay_does_not_qualify() {
+        let found = coexisting_tailnet_interfaces(
+            &[
+                iface("utun8", true, &["100.64.12.9", "fe80::8"]),
+                iface("utun9", true, &["100.96.0.3"]),
+            ],
+            Some("utun14"),
+        );
+        assert!(found.is_empty());
     }
 
     #[test]
@@ -188,7 +211,7 @@ mod tests {
     #[test]
     fn the_warren_tunnel_itself_never_qualifies() {
         let found = coexisting_tailnet_interfaces(
-            &[iface("utun14", true, &["100.64.0.9"])],
+            &[iface("utun14", true, &["100.64.0.9", "fd7a:115c:a1e0::9"])],
             Some("utun14"),
         );
         assert!(found.is_empty());
@@ -197,7 +220,11 @@ mod tests {
     #[test]
     fn a_down_utun_does_not_qualify() {
         let found = coexisting_tailnet_interfaces(
-            &[iface("utun13", false, &["100.106.181.5"])],
+            &[iface(
+                "utun13",
+                false,
+                &["100.106.181.5", "fd7a:115c:a1e0::5"],
+            )],
             Some("utun14"),
         );
         assert!(found.is_empty());
@@ -205,8 +232,10 @@ mod tests {
 
     #[test]
     fn a_physical_interface_with_a_cgnat_address_does_not_qualify() {
-        let found =
-            coexisting_tailnet_interfaces(&[iface("en0", true, &["100.72.3.4"])], Some("utun14"));
+        let found = coexisting_tailnet_interfaces(
+            &[iface("en0", true, &["100.72.3.4", "fd7a:115c:a1e0::4"])],
+            Some("utun14"),
+        );
         assert!(found.is_empty());
     }
 
@@ -225,8 +254,14 @@ mod tests {
 
     #[test]
     fn without_a_warren_tunnel_a_tailnet_utun_still_qualifies() {
-        let found =
-            coexisting_tailnet_interfaces(&[iface("utun13", true, &["100.106.181.5"])], None);
+        let found = coexisting_tailnet_interfaces(
+            &[iface(
+                "utun13",
+                true,
+                &["100.106.181.5", "fd7a:115c:a1e0::5"],
+            )],
+            None,
+        );
         assert_eq!(found, names(&["utun13"]));
     }
 
@@ -256,7 +291,7 @@ mod tests {
         let interfaces = [
             iface("en0", true, &["100.72.3.4", "192.168.1.5"]),
             iface("bridge100", true, &["fd7a:115c:a1e0::9"]),
-            iface("utun13", true, &["100.106.181.5"]),
+            iface("utun13", true, &["100.106.181.5", "fd7a:115c:a1e0::5"]),
             iface("utun14", true, &["10.66.0.2"]),
             iface("utun15", true, &["fd7a:115c:a1e0::7"]),
         ];
