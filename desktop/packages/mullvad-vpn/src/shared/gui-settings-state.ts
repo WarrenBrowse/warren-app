@@ -1,3 +1,4 @@
+import { ThemePreference } from './theme';
 import { StoredTorrentClient } from './torrent-client';
 
 // This is a special value which is when contained within IGuiSettingsState.preferredLocale
@@ -65,6 +66,11 @@ export interface IGuiSettingsState {
 
   // Tells the app whether or not to show the map in the main view.
   animateMap: boolean;
+
+  // The palette of the screens: the operating system's, or a fixed one.
+  // Optional so settings files written before the setting existed keep
+  // validating; absent means following the system.
+  theme?: ThemePreference;
 
   // Onboarding wizard: true while a wizard run is owed to the user.
   // Set when the daemon confirms a freshly minted identity, and by the

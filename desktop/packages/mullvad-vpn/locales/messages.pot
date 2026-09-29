@@ -4078,6 +4078,11 @@ msgctxt "user-interface-settings-view"
 msgid "Be told when someone replies to you on the community forum. Turning this off also hides the forum bell."
 msgstr ""
 
+#. Theme option: always the dark screens.
+msgctxt "user-interface-settings-view"
+msgid "Dark"
+msgstr ""
+
 msgctxt "user-interface-settings-view"
 msgid "Enable or disable system notifications. The critical notifications will always be displayed."
 msgstr ""
@@ -4097,6 +4102,11 @@ msgctxt "user-interface-settings-view"
 msgid "Language"
 msgstr ""
 
+#. Theme option: always the light (cream) screens.
+msgctxt "user-interface-settings-view"
+msgid "Light"
+msgstr ""
+
 msgctxt "user-interface-settings-view"
 msgid "Monochromatic tray icon"
 msgstr ""
@@ -4111,6 +4121,16 @@ msgstr ""
 
 msgctxt "user-interface-settings-view"
 msgid "Start minimized"
+msgstr ""
+
+#. Theme option: the screens follow the light or dark setting of the device.
+msgctxt "user-interface-settings-view"
+msgid "System"
+msgstr ""
+
+#. Title of the setting choosing between the light and dark screens.
+msgctxt "user-interface-settings-view"
+msgid "Theme"
 msgstr ""
 
 msgctxt "user-interface-settings-view"

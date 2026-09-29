@@ -56,6 +56,7 @@ import { LogLevel } from './logging-types';
 import { WarrenNetworkStatsResult } from './network-stats';
 import { RenewalUiState } from './renewal';
 import { RoutePath } from './routes';
+import { ThemePreference } from './theme';
 import {
   ProbeResult,
   TorrentClientConfigResult,
@@ -461,6 +462,7 @@ export const ipcSchema = {
     setPreferredLocale: invoke<string, ILocaleChange>(),
     setUnpinnedWindow: send<boolean>(),
     setAnimateMap: send<boolean>(),
+    setTheme: send<ThemePreference>(),
     // Onboarding wizard gate. Set true when a fresh identity is minted
     // and by the Settings "Replay onboarding" entry, cleared when the
     // wizard is finished or skipped.

@@ -157,6 +157,7 @@ const initialState: ISettingsReduxState = {
     changelogDisplayedForVersion: '',
     updateDismissedForVersion: '',
     animateMap: true,
+    theme: 'system',
   },
   relaySettings: {
     normal: {

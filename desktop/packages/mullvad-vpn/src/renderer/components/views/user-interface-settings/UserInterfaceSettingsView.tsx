@@ -4,6 +4,7 @@ import {
   MonochromaticTrayIconSetting,
   NotificationsSetting,
   StartMinimizedSetting,
+  ThemeSetting,
   UnpinnedWindowSetting,
 } from '../../../features/client/components';
 import { showUnpinnedWindowSetting } from '../../../features/client/utils';
@@ -39,6 +40,7 @@ export function UserInterfaceSettingsView() {
                   {messages.pgettext('user-interface-settings-view', 'User interface settings')}
                 </HeaderTitle>
 
+                <ThemeSetting />
                 <NotificationsSetting position="solo" />
                 <ForumNotificationsSetting position="solo" />
                 <MonochromaticTrayIconSetting position="solo" />

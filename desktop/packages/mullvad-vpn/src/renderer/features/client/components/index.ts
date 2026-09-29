@@ -10,5 +10,6 @@ export * from './notifications-setting';
 export * from './notifications-switch';
 export * from './start-minimized-setting';
 export * from './start-minimized-switch';
+export * from './theme-setting';
 export * from './unpinned-window-setting';
 export * from './unpinned-window-switch';

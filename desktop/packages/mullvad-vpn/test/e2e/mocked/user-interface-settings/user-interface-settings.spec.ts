@@ -68,6 +68,48 @@ test.describe('User interface settings', () => {
     });
   });
 
+  test.describe('Theme setting', () => {
+    const themeTrigger = () => page.getByRole('button', { name: 'Theme' });
+    const documentTheme = () =>
+      page.evaluate(() => document.documentElement.getAttribute('data-theme'));
+
+    test('follows the system until a theme is chosen', async () => {
+      const header = page
+        .getByText('Theme', { exact: true })
+        .locator('xpath=ancestor::*[.//button[@aria-expanded]][1]');
+      await expect(header).toContainText('System');
+      await expect(page.getByRole('option', { name: 'Light' })).not.toBeVisible();
+    });
+
+    test('sends the chosen theme', async () => {
+      if ((await themeTrigger().getAttribute('aria-expanded')) !== 'true') {
+        await themeTrigger().click();
+      }
+      const [sent] = await Promise.all([
+        util.ipc.guiSettings.setTheme.expect(),
+        page.getByRole('option', { name: 'Light' }).click(),
+      ]);
+      expect(sent).toBe('light');
+    });
+
+    test('paints the screens in the theme the settings hold', async () => {
+      await setGuiSettings({ theme: 'light' });
+      await expect.poll(documentTheme).toBe('light');
+
+      await setGuiSettings({ theme: 'dark' });
+      await expect.poll(documentTheme).toBe('dark');
+    });
+
+    test('paints the system theme when following it', async () => {
+      await page.emulateMedia({ colorScheme: 'light' });
+      await setGuiSettings({ theme: 'system' });
+      await expect.poll(documentTheme).toBe('light');
+
+      await page.emulateMedia({ colorScheme: 'dark' });
+      await expect.poll(documentTheme).toBe('dark');
+    });
+  });
+
   test.describe('Monochromatic tray icon settings', () => {
     test('Should toggle monochromatic tray icon setting', async () => {
       const monochromaticTrayIconSwitch =

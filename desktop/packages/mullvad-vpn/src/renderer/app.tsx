@@ -52,6 +52,7 @@ import log, { ConsoleOutput } from '../shared/logging';
 import { LogLevel } from '../shared/logging-types';
 import { RoutePath } from '../shared/routes';
 import { Scheduler } from '../shared/scheduler';
+import { ThemePreference } from '../shared/theme';
 import { isTorrentClientConfigError, TorrentClientConfigUpdate } from '../shared/torrent-client';
 import AppRouter from './components/AppRouter';
 import { BlockingUpdateGate } from './components/BlockingUpdateGate';
@@ -634,6 +635,8 @@ export default class AppRenderer {
   public getMapData = () => IpcRendererEventChannel.map.getData();
   public setAnimateMap = (displayMap: boolean): void =>
     IpcRendererEventChannel.guiSettings.setAnimateMap(displayMap);
+  public setTheme = (theme: ThemePreference): void =>
+    IpcRendererEventChannel.guiSettings.setTheme(theme);
   // Onboarding wizard: persists the gate via the main-process GUI settings
   // file, so a GUI restart mid-wizard resumes it. The renderer side is kept
   // in sync through the existing `guiSettings.''` notifyRenderer broadcast.

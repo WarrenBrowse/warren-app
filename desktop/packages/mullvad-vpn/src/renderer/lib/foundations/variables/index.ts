@@ -3,3 +3,4 @@ export * from './radius-variables';
 export * from './typography-variables';
 export * from './spacing-variables';
 export * from './load-color-variables';
+export * from './surface-variables';

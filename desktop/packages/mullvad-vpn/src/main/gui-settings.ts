@@ -4,6 +4,7 @@ import * as path from 'path';
 
 import { IGuiSettingsState, SYSTEM_PREFERRED_LOCALE_KEY } from '../shared/gui-settings-state';
 import log from '../shared/logging';
+import { DEFAULT_THEME_PREFERENCE, parseThemePreference, ThemePreference } from '../shared/theme';
 import { parseStoredTorrentClient, StoredTorrentClient } from '../shared/torrent-client';
 
 const settingsSchema: Record<keyof IGuiSettingsState, string> = {
@@ -20,6 +21,7 @@ const settingsSchema: Record<keyof IGuiSettingsState, string> = {
   changelogDisplayedForVersion: 'string',
   updateDismissedForVersion: 'string',
   animateMap: 'boolean',
+  theme: 'string',
   onboardingPending: 'boolean',
   backupPending: 'boolean',
   dismissedAnnouncements: 'Array<string>',
@@ -42,6 +44,7 @@ const defaultSettings: IGuiSettingsState = {
   changelogDisplayedForVersion: '',
   updateDismissedForVersion: '',
   animateMap: true,
+  theme: DEFAULT_THEME_PREFERENCE,
   onboardingPending: false,
   backupPending: false,
   dismissedAnnouncements: [],
@@ -123,6 +126,14 @@ export default class GuiSettings {
 
   get monochromaticIcon(): boolean {
     return this.stateValue.monochromaticIcon;
+  }
+
+  set theme(newValue: ThemePreference) {
+    this.changeStateAndNotify({ ...this.stateValue, theme: newValue });
+  }
+
+  get theme(): ThemePreference {
+    return parseThemePreference(this.stateValue.theme);
   }
 
   set startMinimized(newValue: boolean) {

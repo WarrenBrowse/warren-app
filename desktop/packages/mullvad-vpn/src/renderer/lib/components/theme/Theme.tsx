@@ -10,7 +10,9 @@ import {
   lineHeights,
   radius,
   spacingPrimitives,
+  surfaceVariables,
 } from '../../foundations/variables';
+import { useDocumentTheme } from './use-document-theme';
 
 type VariablesProps = React.PropsWithChildren<object>;
 
@@ -32,6 +34,16 @@ const GlobalStyle = createGlobalStyle`
     }).reduce((styleString, [key, value]) => ({ ...styleString, [key]: value }), {})}
   }
 
+  /* Dark is the palette without an attribute too, so the first paint before
+     the theme is resolved is never a flash of cream. */
+  :root {
+    ${surfaceVariables('dark')}
+  }
+
+  :root[data-theme='light'] {
+    ${surfaceVariables('light')}
+  }
+
   body {
     background-color: ${roundWindowCorners ? 'transparent' : colors.darkBlue};
   }
@@ -48,6 +60,7 @@ const GlobalStyle = createGlobalStyle`
 `;
 
 export const Theme = ({ children }: VariablesProps) => {
+  useDocumentTheme();
   return (
     <>
       <GlobalStyle />

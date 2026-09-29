@@ -6,3 +6,4 @@ export * from './use-monochromatic-tray-icon';
 export * from './use-locale';
 export * from './use-start-minimized';
 export * from './use-unpinned-window';
+export * from './use-theme';

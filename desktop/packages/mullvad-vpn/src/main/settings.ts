@@ -4,6 +4,7 @@ import { ISettings } from '../shared/daemon-rpc-types';
 import { guiSettingsForRenderer } from '../shared/gui-settings-state';
 import { ICurrentAppVersionInfo } from '../shared/ipc-types';
 import log from '../shared/logging';
+import { parseThemePreference, ThemePreference } from '../shared/theme';
 import { getOpenAtLogin, setOpenAtLogin } from './autostart';
 import { DaemonRpc } from './daemon-rpc';
 import { getDefaultSettings } from './default-settings';
@@ -168,6 +169,10 @@ export default class Settings implements Readonly<ISettings> {
 
     IpcMainEventChannel.guiSettings.handleSetAnimateMap((animateMap: boolean) => {
       this.guiSettings.animateMap = animateMap;
+    });
+
+    IpcMainEventChannel.guiSettings.handleSetTheme((theme: ThemePreference) => {
+      this.guiSettings.theme = parseThemePreference(theme);
     });
 
     IpcMainEventChannel.guiSettings.handleSetOnboardingPending((pending: boolean) => {
