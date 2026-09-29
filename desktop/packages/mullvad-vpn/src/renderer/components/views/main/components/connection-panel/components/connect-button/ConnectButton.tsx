@@ -3,7 +3,8 @@ import { useCallback } from 'react';
 import { messages } from '../../../../../../../../shared/gettext';
 import log from '../../../../../../../../shared/logging';
 import { useAppContext } from '../../../../../../../context';
-import { Button, ButtonProps } from '../../../../../../../lib/components';
+import { ButtonProps } from '../../../../../../../lib/components';
+import { CardButton } from '../card-button';
 
 export function ConnectButton(props: ButtonProps) {
   const { connectTunnel } = useAppContext();
@@ -20,8 +21,8 @@ export function ConnectButton(props: ButtonProps) {
   // Green "go": the button signals its action, not the state (the exposed state
   // is already shown in red by the status card).
   return (
-    <Button variant="success" onClick={onConnect} {...props}>
-      <Button.Text>{messages.pgettext('tunnel-control', 'Connect')}</Button.Text>
-    </Button>
+    <CardButton $tone="connect" onClick={onConnect} {...props}>
+      <CardButton.Text>{messages.pgettext('tunnel-control', 'Connect')}</CardButton.Text>
+    </CardButton>
   );
 }

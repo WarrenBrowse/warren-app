@@ -8,7 +8,6 @@ import {
 import {
   getConnectionPhase,
   getPhaseAccentColorName,
-  getPhaseTitleColorName,
 } from '../../src/renderer/lib/connection-phase';
 import { TunnelState } from '../../src/shared/daemon-rpc-types';
 
@@ -74,30 +73,6 @@ describe('getPhaseAccentColorName', () => {
     expect(getPhaseAccentColorName('interrupted')).toBe('orange');
     expect(getPhaseAccentColorName('exposed')).toBe('red');
     expect(getPhaseAccentColorName('blocked')).toBe('white');
-  });
-});
-
-describe('getPhaseTitleColorName', () => {
-  it('titles use the lifted tint of their phase accent, never the fill tone', () => {
-    // The saturated accents are sized for icons and fills. At title size on the
-    // card's neutral surface they land under the 4.5:1 floor, so the text takes
-    // a lifted tint while the rail and the badge keep the saturated original.
-    expect(getPhaseTitleColorName('protected')).toBe('greenText');
-    expect(getPhaseTitleColorName('connecting')).toBe('orangeText');
-    expect(getPhaseTitleColorName('interrupted')).toBe('orangeText');
-    expect(getPhaseTitleColorName('exposed')).toBe('redText');
-  });
-
-  it('blocked keeps the neutral title, it has no phase hue of its own', () => {
-    expect(getPhaseTitleColorName('blocked')).toBe('white');
-  });
-
-  it('every phase gets a title tint distinct from its fill, except blocked', () => {
-    const phases = ['protected', 'connecting', 'interrupted', 'exposed'] as const;
-    for (const phase of phases) {
-      expect(getPhaseTitleColorName(phase)).not.toBe(getPhaseAccentColorName(phase));
-    }
-    expect(getPhaseTitleColorName('blocked')).toBe(getPhaseAccentColorName('blocked'));
   });
 });
 

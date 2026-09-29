@@ -3,15 +3,28 @@ import styled from 'styled-components';
 
 import { TunnelState } from '../../../../../../../../shared/daemon-rpc-types';
 import { messages, relayLocations } from '../../../../../../../../shared/gettext';
-import { colors } from '../../../../../../../lib/foundations';
+import { FontFamilies, surfaces } from '../../../../../../../lib/foundations';
 import { useSelector } from '../../../../../../../redux/store';
-import { largeText } from '../../../../../../common-styles';
 import Marquee from '../../../../../../Marquee';
 import { ConnectionPanelAccordion } from '../../../../styles';
 
-const StyledLocation = styled.span(largeText, {
-  color: colors.white,
+// The top padding is the card's gap to the status row, inside the accordion so
+// that it folds away with the line when disconnected.
+const StyledLocation = styled.span({
+  display: 'block',
+  paddingTop: '10.5px',
+  fontFamily: FontFamilies.openSans,
+  fontSize: '15px',
+  fontWeight: 700,
+  lineHeight: '19px',
+  color: surfaces.text,
   flexShrink: 0,
+});
+
+// A flex line is exactly its text's height: the marquee's inline-block, aligned
+// in a line box of its own, added a pixel and a half under every line.
+const StyledMarquee = styled(Marquee)({
+  display: 'flex',
 });
 
 export function Location() {
@@ -27,7 +40,7 @@ export function Location() {
   return (
     <ConnectionPanelAccordion expanded={showLocation}>
       <StyledLocation>
-        <Marquee>{text}</Marquee>
+        <StyledMarquee>{text}</StyledMarquee>
       </StyledLocation>
     </ConnectionPanelAccordion>
   );

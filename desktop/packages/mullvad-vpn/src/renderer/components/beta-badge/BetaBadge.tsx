@@ -5,7 +5,7 @@ import { isBetaBuild } from '../../../shared/constants/product-env';
 import { urls } from '../../../shared/constants/urls';
 import { messages } from '../../../shared/gettext';
 import { Button, Text } from '../../lib/components';
-import { colors } from '../../lib/foundations';
+import { colors, FontFamilies, surfaces } from '../../lib/foundations';
 import { useBoolean } from '../../lib/utility-hooks';
 import { useSelector } from '../../redux/store';
 import { ExternalLink } from '../ExternalLink';
@@ -21,18 +21,50 @@ const Chip = styled.span`
   background-color: ${colors.yellow};
 `;
 
-// Glass pill matching the NotificationBanner card language, for the
-// map/connect view where it floats over the scenery backdrop.
+// The overlay banner is an opaque surface of the theme, like the connection
+// card: over the scenery a translucent one took the landscape's hue.
+const OverlayChip = styled.span`
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 21px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background-color: ${surfaces.pill};
+  color: ${surfaces.pillText};
+  font-family: ${FontFamilies.openSans};
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+`;
+
+const OverlayLine = styled.span`
+  color: ${surfaces.text};
+  font-family: ${FontFamilies.openSans};
+  font-size: 11px;
+  font-weight: 600;
+`;
+
+// One line whatever the language: the banner widens to its text rather than
+// wrapping it.
 const OverlayCard = styled.button`
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
-  border-radius: 14px;
-  border: 1px solid ${colors.whiteAlpha20};
-  background-color: ${colors.blackAlpha60};
-  backdrop-filter: blur(10px);
+  width: max-content;
+  height: 36.5px;
+  padding: 0 12px 0 8px;
+  white-space: nowrap;
+  border-radius: 12px;
+  border: 0.5px solid ${surfaces.line};
+  background-color: ${surfaces.card};
+  box-shadow: 0 2px 8px ${surfaces.shadowSoft};
   cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid ${surfaces.text};
+    outline-offset: 2px;
+  }
 `;
 
 // Full-width flat card matching the settings/account card surfaces.
@@ -65,27 +97,31 @@ export function BetaBadge({ variant }: BetaBadgeProps) {
     return null;
   }
 
-  const Card = variant === 'overlay' ? OverlayCard : RowCard;
+  // TRANSLATORS: Accessibility label of the beta badge button.
+  const ariaLabel = messages.pgettext('beta-badge', 'About the Warren beta');
+  // TRANSLATORS: Label of the beta badge shown in beta builds.
+  const betaLabel = messages.pgettext('beta-badge', 'BETA');
   return (
     <>
-      <Card
-        onClick={showDialog}
-        aria-label={
-          // TRANSLATORS: Accessibility label of the beta badge button.
-          messages.pgettext('beta-badge', 'About the Warren beta')
-        }>
-        <Chip>
-          <Text variant="labelTinySemiBold" color="darkBlue">
-            {
-              // TRANSLATORS: Label of the beta badge shown in beta builds.
-              messages.pgettext('beta-badge', 'BETA')
-            }
+      {variant === 'overlay' ? (
+        <OverlayCard onClick={showDialog} aria-label={ariaLabel}>
+          <OverlayChip>{betaLabel}</OverlayChip>
+          <OverlayLine>
+            <BetaCapLine />
+          </OverlayLine>
+        </OverlayCard>
+      ) : (
+        <RowCard onClick={showDialog} aria-label={ariaLabel}>
+          <Chip>
+            <Text variant="labelTinySemiBold" color="darkBlue">
+              {betaLabel}
+            </Text>
+          </Chip>
+          <Text variant="footnoteMini" color="whiteAlpha60">
+            <BetaCapLine />
           </Text>
-        </Chip>
-        <Text variant="footnoteMini" color="whiteAlpha60">
-          <BetaCapLine />
-        </Text>
-      </Card>
+        </RowCard>
+      )}
       <BetaInfoDialog visible={dialogVisible} onClose={hideDialog} />
     </>
   );

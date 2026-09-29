@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /** SHA-256 of design-tokens.json at generation time. */
-const val DESIGN_TOKENS_SHA256 = "2c7619a748c6c8e53949df541736774b3859dfbb024614b0137c68d562fee160"
+const val DESIGN_TOKENS_SHA256 = "0cc6a01c8fa72ec9f4957ea25e51c232e945dd42d6bb49fc82f95f32780b9988"
 
 @Suppress("MagicNumber", "unused")
 object DesignTokens {
@@ -131,51 +131,167 @@ object DesignTokens {
         val Mini = 15.sp
     }
 
+    object Surfaces {
+        object Dark {
+            val Card = Color(0xFF282623)
+            val Line = Color(0xFF45423C)
+            val ShadowSoft = Color(0x59000000)
+            val ShadowStrong = Color(0x73000000)
+            val Pill = Color(0xFFD9A441)
+            val PillText = Color(0xFF231A06)
+            val Text = Color(0xFFF2EFE6)
+            val TextSecondary = Color(0xFFD6D2C8)
+            val TextMuted = Color(0xFFB5B0A4)
+            val Button = Color(0xFF3A3834)
+            val ButtonHover = Color(0xFF45423D)
+            val ButtonPressed = Color(0xFF312F2B)
+            val ButtonLine = Color(0xFF55524B)
+            val Exposed = Color(0xFFF08A6E)
+            val ExposedWell = Color(0xFF4A2A22)
+            val Connecting = Color(0xFFF0A360)
+            val ConnectingWell = Color(0xFF4A341C)
+            val Protected = Color(0xFF9FD07E)
+            val ProtectedWell = Color(0xFF243A1F)
+            val Connect = Color(0xFF3F6B2E)
+            val ConnectHover = Color(0xFF487A35)
+            val ConnectPressed = Color(0xFF355A27)
+            val Disconnect = Color(0xFFA8381F)
+            val DisconnectHover = Color(0xFFB84126)
+            val DisconnectPressed = Color(0xFF8F2F1A)
+            val Cancel = Color(0xFFA05818)
+            val CancelHover = Color(0xFFB0621C)
+            val CancelPressed = Color(0xFF8A4C15)
+            val ActionText = Color(0xFFFFFFFF)
+        }
+        object Light {
+            val Card = Color(0xFFF7F1E3)
+            val Line = Color(0xFFD9CDB2)
+            val ShadowSoft = Color(0x2E3C321E)
+            val ShadowStrong = Color(0x473C321E)
+            val Pill = Color(0xFF7A5412)
+            val PillText = Color(0xFFFFFFFF)
+            val Text = Color(0xFF2A2822)
+            val TextSecondary = Color(0xFF4A463D)
+            val TextMuted = Color(0xFF5C574C)
+            val Button = Color(0xFFEBE3D0)
+            val ButtonHover = Color(0xFFE4DAC3)
+            val ButtonPressed = Color(0xFFDCD0B6)
+            val ButtonLine = Color(0xFFCFC2A5)
+            val Exposed = Color(0xFFA3321C)
+            val ExposedWell = Color(0xFFF3D9CF)
+            val Connecting = Color(0xFF8A4B0F)
+            val ConnectingWell = Color(0xFFF3E0C8)
+            val Protected = Color(0xFF2F6A2A)
+            val ProtectedWell = Color(0xFFD8E8CC)
+            val Connect = Color(0xFF3F6B2E)
+            val ConnectHover = Color(0xFF487A35)
+            val ConnectPressed = Color(0xFF355A27)
+            val Disconnect = Color(0xFFA8381F)
+            val DisconnectHover = Color(0xFFB84126)
+            val DisconnectPressed = Color(0xFF8F2F1A)
+            val Cancel = Color(0xFFA05818)
+            val CancelHover = Color(0xFFB0621C)
+            val CancelPressed = Color(0xFF8A4C15)
+            val ActionText = Color(0xFFFFFFFF)
+        }
+    }
+
     object ConnectionCard {
-        val PaddingVertical = 14.dp
-        val PaddingHorizontal = 16.dp
+        val PaddingVertical = 20.dp
+        val PaddingHorizontal = 20.dp
         val Radius = 16.dp
-        const val SurfaceColor = "darkerBlue50Alpha80"
-        const val SurfaceAlpha = 0.8f
-        val BorderWidth = 1.dp
-        const val BorderAlpha = 0.2f
-        val RailWidth = 3.dp
-        val BadgeGap = 5.dp
-        val BadgesToCardGap = 8.dp
-        val ButtonGap = 12.dp
-        const val Transition = 300
+        const val Surface = "card"
+        val BorderWidth = 0.5.dp
+        const val BorderSurface = "line"
+        val ShadowOffsetY = 5.dp
+        val ShadowBlur = 16.dp
+        const val ShadowSurface = "shadowStrong"
+        val MarginHorizontal = 14.dp
+        val MarginBottom = 6.dp
+        val BlockGap = 10.5.dp
+        val BadgeGap = 2.dp
+        val BadgesToCardGap = 4.dp
+        val ChevronButtonSize = 22.dp
+        val ChevronIconSize = 18.dp
     }
 
     object ConnectionStatus {
         val RowGap = 12.dp
-        val WellSize = 36.dp
-        val WellRadius = 11.dp
-        const val WellFillAlpha = 0.22f
-        const val WellBorderAlpha = 0.45f
+        val TextGap = 1.dp
+        val TrailingGap = 12.dp
+        val WellSize = 34.dp
+        val WellRadius = 8.dp
         const val WellTransition = 300
         val IconSize = 18.dp
-        val TitleSize = 19.sp
-        val TitleLineHeight = 22.sp
-        val SubtitleSize = 13.sp
-        val SubtitleLineHeight = 18.sp
-        const val SubtitleAlpha = 0.8f
+        val TitleSize = 16.sp
+        val TitleLineHeight = 19.2.sp
+        const val TitleWeight = 600
+        val SubtitleSize = 11.5.sp
+        val SubtitleLineHeight = 15.sp
+        const val SubtitleSurface = "textSecondary"
+    }
+
+    object ConnectionLocation {
+        val GapAbove = 10.5.dp
+        val Size = 15.sp
+        val LineHeight = 19.sp
+        const val Weight = 700
+        const val Surface = "text"
+        val HostnameGapAbove = 2.dp
+        val HostnameSize = 12.sp
+        val HostnameLineHeight = 16.5.sp
+        const val HostnameSurface = "textMuted"
+    }
+
+    object CardButton {
+        val Height = 32.dp
+        val Radius = 6.dp
+        val BorderWidth = 0.5.dp
+        val TextSize = 13.sp
+        val TextLineHeight = 18.sp
+        const val TextWeight = 600
+        val RowGap = 4.dp
+        val ShuffleWidth = 40.dp
     }
 
     object FeatureChip {
-        val PaddingVertical = 2.dp
+        val PaddingVertical = 5.5.dp
         val PaddingHorizontal = 8.dp
-        val Radius = 8.dp
-        val BorderWidth = 1.dp
-        const val FillColor = "blue10"
-        const val BorderColor = "blue"
-        const val ErrorFillColor = "redAlpha40"
-        const val ErrorFillAlpha = 0.4f
+        val Radius = 7.dp
+        val BorderWidth = 0.5.dp
+        val ShadowOffsetY = 1.5.dp
+        val ShadowBlur = 5.dp
+        const val FillSurface = "card"
+        const val BorderSurface = "line"
+        const val ErrorFillSurface = "exposedWell"
+        const val ErrorBorderSurface = "exposed"
     }
 
     object CountryFlag {
         val Size = 22.dp
-        val BorderWidth = 1.dp
-        const val BorderAlpha = 0.2f
+        val RingWidth = 0.5.dp
+        const val RingSurface = "line"
+    }
+
+    object BetaBanner {
+        val MarginTop = 13.5.dp
+        val MarginStart = 15.dp
+        val Height = 36.5.dp
+        val PaddingStart = 8.dp
+        val PaddingEnd = 12.dp
+        val Gap = 8.dp
+        val Radius = 12.dp
+        val BorderWidth = 0.5.dp
+        val ShadowOffsetY = 2.dp
+        val ShadowBlur = 8.dp
+        val PillHeight = 21.dp
+        val PillPaddingHorizontal = 8.dp
+        val PillRadius = 6.dp
+        val PillTextSize = 11.sp
+        const val PillTextWeight = 700
+        val PillLetterSpacing = 0.5.sp
+        val TextSize = 11.sp
+        const val TextWeight = 600
     }
 
     object Footer {

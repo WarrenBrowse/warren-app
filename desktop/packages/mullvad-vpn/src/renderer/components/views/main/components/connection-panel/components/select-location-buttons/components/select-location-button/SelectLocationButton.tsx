@@ -4,13 +4,14 @@ import { sprintf } from 'sprintf-js';
 import { ICustomList } from '../../../../../../../../../../shared/daemon-rpc-types';
 import { messages, relayLocations } from '../../../../../../../../../../shared/gettext';
 import { RoutePath } from '../../../../../../../../../../shared/routes';
-import { Button, ButtonProps } from '../../../../../../../../../lib/components';
+import { ButtonProps } from '../../../../../../../../../lib/components';
 import { TransitionType, useHistory } from '../../../../../../../../../lib/history';
 import {
   IRelayLocationCountryRedux,
   RelaySettingsRedux,
 } from '../../../../../../../../../redux/settings/reducers';
 import { useSelector } from '../../../../../../../../../redux/store';
+import { CardButton } from '../../../card-button';
 
 export function SelectLocationButton(props: ButtonProps) {
   const { push } = useHistory();
@@ -30,19 +31,20 @@ export function SelectLocationButton(props: ButtonProps) {
   }, [push]);
 
   return (
-    <Button
+    <CardButton
+      $tone="neutral"
       onClick={onSelectLocation}
       aria-label={sprintf(
         messages.pgettext('accessibility', 'Select location. Current location is %(location)s'),
         { location: selectedRelayName },
       )}
       {...props}>
-      <Button.Text>
+      <CardButton.Text>
         {tunnelState === 'disconnected'
           ? selectedRelayName
           : messages.pgettext('tunnel-control', 'Switch location')}
-      </Button.Text>
-    </Button>
+      </CardButton.Text>
+    </CardButton>
   );
 }
 

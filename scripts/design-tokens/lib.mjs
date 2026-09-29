@@ -24,12 +24,20 @@ const CONNECTION_PANEL = `${RENDERER}/components/views/main/components/connectio
 
 const SOURCES = {
   colors: `${TOKENS}/color-tokens.ts`,
+  surfaces: `${TOKENS}/surface-tokens.ts`,
   radius: `${TOKENS}/radius-tokens.ts`,
   spacing: `${TOKENS}/spacing-tokens.ts`,
   typography: `${TOKENS}/typography-tokens.ts`,
   icon: `${RENDERER}/lib/components/icon/Icon.tsx`,
   connectionPanel: `${CONNECTION_PANEL}/ConnectionPanel.tsx`,
   connectionStatus: `${CONNECTION_PANEL}/components/connection-status/ConnectionStatus.tsx`,
+  location: `${CONNECTION_PANEL}/components/location/Location.tsx`,
+  hostname: `${CONNECTION_PANEL}/components/hostname/Hostname.tsx`,
+  cardButton: `${CONNECTION_PANEL}/components/card-button/CardButton.tsx`,
+  selectLocationButtons: `${CONNECTION_PANEL}/components/select-location-buttons/SelectLocationButtons.tsx`,
+  shuffleButton: `${CONNECTION_PANEL}/components/select-location-buttons/components/shuffle-button/ShuffleButton.tsx`,
+  betaBadge: `${RENDERER}/components/beta-badge/BetaBadge.tsx`,
+  mainView: `${RENDERER}/components/views/main/MainView.tsx`,
   featureIndicator: `${RENDERER}/lib/components/feature-indicator/FeatureIndicator.tsx`,
   countryFlag: `${RENDERER}/components/CurrentCountryFlag.tsx`,
   footer: `${RENDERER}/components/app-main-header/components/AppMainFooter.tsx`,
@@ -48,7 +56,7 @@ function read(repoRoot, relative) {
  * component can never be mistaken for another's.
  */
 function block(text, name) {
-  const start = text.indexOf(`const ${name}`);
+  const start = text.search(new RegExp(`const ${name}\\b`));
   if (start < 0) throw new Error(`block ${name} not found`);
   const rest = text.slice(start + 1);
   const end = rest.search(/\n(const|export|function|interface|type) /);
@@ -62,6 +70,11 @@ function match(text, regex, what) {
 }
 
 const num = (text, regex, what) => Number(match(text, regex, what));
+
+/** A number written with or without its `px`, as a dp entry. */
+const NUM = '(\\d+(?:\\.\\d+)?)';
+const px = (text, before, what, after = 'px') =>
+  Number(match(text, new RegExp(`${before}${NUM}${after}`), what));
 
 /** `rgb(1, 2, 3)` / `rgba(1, 2, 3, 0.4)` / `transparent` to Android `#AARRGGBB`. */
 export function cssColorToHex(css) {
@@ -83,6 +96,26 @@ function colorTokens(text) {
   }
   if (Object.keys(out).length === 0) throw new Error('no colour tokens found');
   return out;
+}
+
+/**
+ * Both themes of the connect-screen surfaces: the `const dark = { ... }` table
+ * and the `light: { ... }` table, which must name the same tokens.
+ */
+function surfaceTokens(text) {
+  const table = (start) => {
+    const from = text.indexOf(start);
+    if (from < 0) throw new Error(`surface table ${start} not found`);
+    const body = text.slice(from, text.indexOf('}', from));
+    const out = {};
+    for (const m of body.matchAll(/^\s+(\w+):\s*'([^']+)',/gm)) out[m[1]] = cssColorToHex(m[2]);
+    return out;
+  };
+  const dark = table('const dark = {');
+  const light = table('light: {');
+  const names = (t) => Object.keys(t).join(',');
+  if (names(dark) !== names(light)) throw new Error('the two surface themes name different tokens');
+  return { dark, light };
 }
 
 function pxEnum(text, what) {
@@ -121,6 +154,7 @@ const dp = (value) => ({ value, unit: 'dp' });
 const sp = (value) => ({ value, unit: 'sp' });
 const ms = (value) => ({ value, unit: 'ms' });
 const ratio = (value) => ({ value, unit: 'ratio' });
+const weight = (value) => ({ value, unit: 'weight' });
 
 /** The alpha channel of a colour token, as the 0..1 fraction the CSS carried. */
 function alphaOf(colors, name) {
@@ -128,29 +162,159 @@ function alphaOf(colors, name) {
   return ratio(Number((parseInt(colors[name].slice(1, 3), 16) / 255).toFixed(2)));
 }
 
-function componentTokens(repoRoot, colors, radius) {
+function componentTokens(repoRoot, colors) {
   const panel = read(repoRoot, SOURCES.connectionPanel);
   const card = block(panel, 'StyledCard');
   const [cardPadV, cardPadH] = match(card, /padding: '(\d+px \d+px)'/, 'card padding')
     .split(' ')
     .map((v) => Number(v.replace('px', '')));
-  const cardSurface = match(card, /backgroundColor: colors\.(\w+)/, 'card surface');
-  const cardBorder = match(card, /border: `1px solid \$\{colors\.(\w+)\}`/, 'card border');
+  const cardShadow = match(card, /boxShadow: `0 (\d+px \d+px) /, 'card shadow')
+    .split(' ')
+    .map((v) => Number(v.replace('px', '')));
+  const chevron = block(panel, 'StyledConnectionPanelChevron');
 
   const status = read(repoRoot, SOURCES.connectionStatus);
   const well = block(status, 'StyledIconWell');
+  const title = block(status, 'StyledTitle');
+  const subtitle = block(status, 'StyledSubtitle');
   const icon = read(repoRoot, SOURCES.icon);
   const iconSizes = block(icon, 'iconSizes');
-  const wellIconSize = match(status, /<Icon icon=\{eyeIcon\} color=\{colorName\} size="(\w+)"/, 'eye size');
+  const iconSize = (name) => num(iconSizes, new RegExp(`${name}: (\\d+),`), `icon size ${name}`);
+  const wellIconSize = match(status, /<StyledEye icon=\{eyeIcon\} size="(\w+)"/, 'eye size');
+  const chevronIconSize = match(panel, /<StyledConnectionPanelChevron\s+size="(\w+)"/, 'chevron size');
+
+  const location = block(read(repoRoot, SOURCES.location), 'StyledLocation');
+  const hostnameText = read(repoRoot, SOURCES.hostname);
+  const hostnameRow = block(hostnameText, 'StyledHostnameRow');
+  const hostname = block(hostnameText, 'StyledHostname');
+
+  const button = block(read(repoRoot, SOURCES.cardButton), 'CardButton');
+  const buttonRow = block(read(repoRoot, SOURCES.selectLocationButtons), 'StyledRow');
+  const shuffle = block(read(repoRoot, SOURCES.shuffleButton), 'StyledShuffleButton');
 
   const chip = read(repoRoot, SOURCES.featureIndicator);
-  const [chipPadV, chipPadH] = match(block(chip, 'StyledFlex'), /padding: (\d+px \d+px);/, 'chip padding')
+  const chipBox = block(chip, 'StyledFeatureIndicator');
+  const [chipPadV, chipPadH] = match(block(chip, 'StyledFlex'), /padding: ([\d.]+px [\d.]+px);/, 'chip padding')
     .split(' ')
     .map((v) => Number(v.replace('px', '')));
-  const chipRadius = match(block(chip, 'StyledFeatureIndicator'), /border-radius: \$\{Radius\.(\w+)\}/, 'chip radius');
+  const chipShadow = match(chipBox, /`0 ([\d.]+px [\d.]+px) /, 'chip shadow')
+    .split(' ')
+    .map((v) => Number(v.replace('px', '')));
   const chipVariants = block(chip, 'styles');
 
   const flag = block(read(repoRoot, SOURCES.countryFlag), 'StyledFlag');
+
+  const beta = read(repoRoot, SOURCES.betaBadge);
+  const banner = block(beta, 'OverlayCard');
+  const pill = block(beta, 'OverlayChip');
+  const bannerLine = block(beta, 'OverlayLine');
+  const bannerSlot = block(read(repoRoot, SOURCES.mainView), 'StyledBetaBadge');
+  const [bannerPadStart, bannerPadEnd] = [
+    px(banner, 'padding: 0 \\d+px 0 ', 'banner padding start'),
+    px(banner, 'padding: 0 ', 'banner padding end'),
+  ];
+
+  // The connect-screen surfaces are named by their surface token, which each
+  // theme of `surfaces` resolves.
+  const surfaceOf = (text, regex, what) => match(text, regex, what);
+
+  return {
+    connectionCard: {
+      paddingVertical: dp(cardPadV),
+      paddingHorizontal: dp(cardPadH),
+      radius: dp(px(card, "borderRadius: '", 'card radius', "px'")),
+      surface: surfaceOf(card, /backgroundColor: surfaces\.(\w+)/, 'card surface'),
+      borderWidth: dp(px(card, 'border: `', 'card border', 'px solid')),
+      borderSurface: surfaceOf(card, /border: `[\d.]+px solid \$\{surfaces\.(\w+)\}`/, 'card border colour'),
+      shadowOffsetY: dp(cardShadow[0]),
+      shadowBlur: dp(cardShadow[1]),
+      shadowSurface: surfaceOf(card, /boxShadow: `0 \d+px \d+px \$\{surfaces\.(\w+)\}`/, 'card shadow colour'),
+      marginHorizontal: dp(px(panel, "const PANEL_MARGIN = '", 'panel margin', "px'")),
+      marginBottom: dp(px(block(panel, 'StyledOuter'), 'margin: `auto \\$\\{PANEL_MARGIN\\} ', 'panel bottom margin')),
+      blockGap: dp(px(panel, "const CARD_GAP = '", 'card gap', "px'")),
+      badgeGap: dp(px(block(panel, 'StyledFeatureBadges'), "gap: '", 'badge gap', "px'")),
+      badgesToCardGap: dp(px(block(panel, 'StyledOuter'), "gap: '", 'outer gap', "px'")),
+      chevronButtonSize: dp(px(chevron, "width: '", 'chevron button', "px'")),
+      chevronIconSize: dp(iconSize(chevronIconSize)),
+    },
+    connectionStatus: {
+      rowGap: dp(px(block(status, 'StyledRow'), "gap: '", 'status gap', "px'")),
+      textGap: dp(px(block(status, 'StyledTextColumn'), "gap: '", 'title gap', "px'")),
+      trailingGap: dp(px(block(status, 'StyledTrailing'), "gap: '", 'trailing gap', "px'")),
+      wellSize: dp(px(well, "width: '", 'well size', "px'")),
+      wellRadius: dp(px(well, "borderRadius: '", 'well radius', "px'")),
+      wellTransition: ms(num(well, /transition: 'background-color (\d+)ms/, 'well transition')),
+      iconSize: dp(iconSize(wellIconSize)),
+      titleSize: sp(px(title, "fontSize: '", 'title size', "px'")),
+      titleLineHeight: sp(px(title, "lineHeight: '", 'title line height', "px'")),
+      titleWeight: weight(num(title, /fontWeight: (\d+),/, 'title weight')),
+      subtitleSize: sp(px(subtitle, "fontSize: '", 'subtitle size', "px'")),
+      subtitleLineHeight: sp(px(subtitle, "lineHeight: '", 'subtitle line height', "px'")),
+      subtitleSurface: surfaceOf(subtitle, /color: surfaces\.(\w+)/, 'subtitle colour'),
+    },
+    connectionLocation: {
+      gapAbove: dp(px(location, "paddingTop: '", 'location gap', "px'")),
+      size: sp(px(location, "fontSize: '", 'location size', "px'")),
+      lineHeight: sp(px(location, "lineHeight: '", 'location line height', "px'")),
+      weight: weight(num(location, /fontWeight: (\d+),/, 'location weight')),
+      surface: surfaceOf(location, /color: surfaces\.(\w+)/, 'location colour'),
+      hostnameGapAbove: dp(px(hostnameRow, "paddingTop: '", 'hostname gap', "px'")),
+      hostnameSize: sp(px(hostname, "fontSize: '", 'hostname size', "px'")),
+      hostnameLineHeight: sp(px(hostname, "lineHeight: '", 'hostname line height', "px'")),
+      hostnameSurface: surfaceOf(hostname, /color: surfaces\.(\w+)/, 'hostname colour'),
+    },
+    cardButton: {
+      height: dp(px(button, 'min-height: ', 'button height')),
+      radius: dp(px(button, '--radius: ', 'button radius')),
+      borderWidth: dp(px(button, 'border: ', 'button border', 'px solid')),
+      textSize: sp(px(button, 'font-size: ', 'button text size')),
+      textLineHeight: sp(px(button, 'line-height: ', 'button text line height')),
+      textWeight: weight(num(button, /font-weight: (\d+);/, 'button text weight')),
+      rowGap: dp(px(buttonRow, "gap: '", 'button row gap', "px'")),
+      shuffleWidth: dp(px(shuffle, "width: '", 'shuffle width', "px'")),
+    },
+    featureChip: {
+      paddingVertical: dp(chipPadV),
+      paddingHorizontal: dp(chipPadH),
+      radius: dp(px(chipBox, 'border-radius: ', 'chip radius')),
+      borderWidth: dp(px(chipBox, 'border: ', 'chip border', 'px solid')),
+      shadowOffsetY: dp(chipShadow[0]),
+      shadowBlur: dp(chipShadow[1]),
+      fillSurface: match(chipVariants, /primary: \{\s*backgroundColor: surfaces\.(\w+)/, 'chip fill'),
+      borderSurface: match(chipVariants, /primary: \{\s*backgroundColor: surfaces\.\w+,\s*borderColor: surfaces\.(\w+)/, 'chip border'),
+      errorFillSurface: match(chipVariants, /error: \{\s*backgroundColor: surfaces\.(\w+)/, 'chip error fill'),
+      errorBorderSurface: match(chipVariants, /error: \{\s*backgroundColor: surfaces\.\w+,\s*borderColor: surfaces\.(\w+)/, 'chip error border'),
+    },
+    countryFlag: {
+      size: dp(num(flag, /width: (\d+)px;/, 'flag size')),
+      ringWidth: dp(px(flag, 'box-shadow: 0 0 0 ', 'flag ring')),
+      ringSurface: match(flag, /box-shadow: 0 0 0 [\d.]+px \$\{surfaces\.(\w+)\}/, 'flag ring colour'),
+    },
+    betaBanner: {
+      marginTop: dp(px(bannerSlot, 'margin-top: ', 'banner margin top')),
+      marginStart: dp(px(bannerSlot, 'margin-inline-start: ', 'banner margin start')),
+      height: dp(px(banner, 'height: ', 'banner height')),
+      paddingStart: dp(bannerPadStart),
+      paddingEnd: dp(bannerPadEnd),
+      gap: dp(px(banner, 'gap: ', 'banner gap')),
+      radius: dp(px(banner, 'border-radius: ', 'banner radius')),
+      borderWidth: dp(px(banner, 'border: ', 'banner border', 'px solid')),
+      shadowOffsetY: dp(px(banner, 'box-shadow: 0 ', 'banner shadow')),
+      shadowBlur: dp(px(banner, 'box-shadow: 0 \\d+px ', 'banner shadow blur')),
+      pillHeight: dp(px(pill, 'height: ', 'pill height')),
+      pillPaddingHorizontal: dp(px(pill, 'padding: 0 ', 'pill padding')),
+      pillRadius: dp(px(pill, 'border-radius: ', 'pill radius')),
+      pillTextSize: sp(px(pill, 'font-size: ', 'pill text size')),
+      pillTextWeight: weight(num(pill, /font-weight: (\d+);/, 'pill weight')),
+      pillLetterSpacing: sp(px(pill, 'letter-spacing: ', 'pill letter spacing')),
+      textSize: sp(px(bannerLine, 'font-size: ', 'banner text size')),
+      textWeight: weight(num(bannerLine, /font-weight: (\d+);/, 'banner text weight')),
+    },
+    ...otherComponentTokens(repoRoot, colors),
+  };
+}
+
+function otherComponentTokens(repoRoot, colors) {
   const footer = block(read(repoRoot, SOURCES.footer), 'StyledFooter');
   const [footerPadV, footerPadH] = match(footer, /padding: (\d+px \d+px);/, 'footer padding')
     .split(' ')
@@ -173,49 +337,6 @@ function componentTokens(repoRoot, colors, radius) {
   const nav = read(repoRoot, SOURCES.navigation);
 
   return {
-    connectionCard: {
-      paddingVertical: dp(cardPadV),
-      paddingHorizontal: dp(cardPadH),
-      radius: dp(num(card, /borderRadius: '(\d+)px'/, 'card radius')),
-      surfaceColor: cardSurface,
-      surfaceAlpha: alphaOf(colors, cardSurface),
-      borderWidth: dp(1),
-      borderAlpha: alphaOf(colors, cardBorder),
-      railWidth: dp(num(card, /width: '(\d+)px'/, 'rail width')),
-      badgeGap: dp(num(block(panel, 'StyledFeatureBadges'), /gap: '(\d+)px'/, 'badge gap')),
-      badgesToCardGap: dp(num(block(panel, 'StyledOuter'), /gap: '(\d+)px'/, 'outer gap')),
-      buttonGap: dp(num(block(panel, 'StyledConnectionButtonContainer'), /gap: '(\d+)px'/, 'button gap')),
-      transition: ms(num(card, /transition: 'background-color (\d+)ms/, 'rail transition')),
-    },
-    connectionStatus: {
-      rowGap: dp(num(block(status, 'StyledRow'), /gap: '(\d+)px'/, 'status gap')),
-      wellSize: dp(num(well, /width: '(\d+)px'/, 'well size')),
-      wellRadius: dp(num(well, /borderRadius: '(\d+)px'/, 'well radius')),
-      wellFillAlpha: ratio(num(well, /backgroundColor: `color-mix\(in srgb, \$\{props\.\$accent\} (\d+)%/, 'well fill') / 100),
-      wellBorderAlpha: ratio(num(well, /border: `1px solid color-mix\(in srgb, \$\{props\.\$accent\} (\d+)%/, 'well border') / 100),
-      wellTransition: ms(num(well, /transition: 'background-color (\d+)ms/, 'well transition')),
-      iconSize: dp(num(iconSizes, new RegExp(`${wellIconSize}: (\\d+),`), 'icon size')),
-      titleSize: sp(num(block(status, 'StyledTitle'), /fontSize: '(\d+)px'/, 'title size')),
-      titleLineHeight: sp(num(block(status, 'StyledTitle'), /lineHeight: '(\d+)px'/, 'title line height')),
-      subtitleSize: sp(num(block(status, 'StyledSubtitle'), /fontSize: '(\d+)px'/, 'subtitle size')),
-      subtitleLineHeight: sp(num(block(status, 'StyledSubtitle'), /lineHeight: '(\d+)px'/, 'subtitle line height')),
-      subtitleAlpha: alphaOf(colors, match(block(status, 'StyledSubtitle'), /color: colors\.(\w+)/, 'subtitle colour')),
-    },
-    featureChip: {
-      paddingVertical: dp(chipPadV),
-      paddingHorizontal: dp(chipPadH),
-      radius: dp(radius[chipRadius]),
-      borderWidth: dp(1),
-      fillColor: match(chipVariants, /primary: \{\s*backgroundColor: colors\.(\w+)/, 'chip fill'),
-      borderColor: match(chipVariants, /primary: \{\s*backgroundColor: colors\.\w+,\s*borderColor: colors\.(\w+)/, 'chip border'),
-      errorFillColor: match(chipVariants, /error: \{\s*backgroundColor: colors\.(\w+)/, 'chip error fill'),
-      errorFillAlpha: alphaOf(colors, match(chipVariants, /error: \{\s*backgroundColor: colors\.(\w+)/, 'chip error fill')),
-    },
-    countryFlag: {
-      size: dp(num(flag, /width: (\d+)px;/, 'flag size')),
-      borderWidth: dp(num(flag, /border: (\d+)px solid/, 'flag border')),
-      borderAlpha: alphaOf(colors, match(flag, /border: \d+px solid \$\{colors\.(\w+)\}/, 'flag border colour')),
-    },
     footer: {
       paddingVertical: dp(footerPadV),
       paddingHorizontal: dp(footerPadH),
@@ -274,7 +395,8 @@ export function buildTokens(repoRoot) {
     radius,
     spacing: pxEnum(read(repoRoot, SOURCES.spacing), 'spacing'),
     typography: typographyTokens(read(repoRoot, SOURCES.typography)),
-    components: componentTokens(repoRoot, colors, radius),
+    surfaces: surfaceTokens(read(repoRoot, SOURCES.surfaces)),
+    components: componentTokens(repoRoot, colors),
   };
 }
 
@@ -295,6 +417,8 @@ function kotlinValue(entry) {
       return `${entry.value}`;
     case 'ratio':
       return `${entry.value}f`;
+    case 'weight':
+      return `${entry.value}`;
     default:
       throw new Error(`unit ${entry.unit}`);
   }
@@ -302,7 +426,8 @@ function kotlinValue(entry) {
 
 function kotlinDecl(name, entry) {
   const value = kotlinValue(entry);
-  const isConst = typeof entry === 'string' || entry.unit === 'ms' || entry.unit === 'ratio';
+  const isConst =
+    typeof entry === 'string' || entry.unit === 'ms' || entry.unit === 'ratio' || entry.unit === 'weight';
   return `        ${isConst ? 'const val' : 'val'} ${pascal(name)} = ${value}`;
 }
 
@@ -360,6 +485,16 @@ export function renderKotlin(tokens, jsonText) {
   lines.push('');
   lines.push('    object LineHeights {');
   for (const [name, px] of Object.entries(tokens.typography.lineHeights)) lines.push(`        val ${pascal(name)} = ${px}.sp`);
+  lines.push('    }');
+  lines.push('');
+  lines.push('    object Surfaces {');
+  for (const [theme, table] of Object.entries(tokens.surfaces)) {
+    lines.push(`        object ${pascal(theme)} {`);
+    for (const [name, hex] of Object.entries(table)) {
+      lines.push(`            val ${pascal(name)} = Color(0x${hex.slice(1)})`);
+    }
+    lines.push('        }');
+  }
   lines.push('    }');
   for (const [component, entries] of Object.entries(tokens.components)) {
     lines.push('');

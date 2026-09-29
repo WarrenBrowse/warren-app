@@ -3,8 +3,8 @@ import { useCallback } from 'react';
 import { messages } from '../../../../../../../../shared/gettext';
 import log from '../../../../../../../../shared/logging';
 import { useAppContext } from '../../../../../../../context';
-import { Button } from '../../../../../../../lib/components';
 import { useSelector } from '../../../../../../../redux/store';
+import { CardButton } from '../card-button';
 
 export function DisconnectButton() {
   const { disconnectTunnel } = useAppContext();
@@ -24,14 +24,14 @@ export function DisconnectButton() {
   // neutral in the blocked/error state where the action is "turn off the switch".
   const connecting = tunnelState === 'connecting';
   const connected = tunnelState === 'connected';
-  const variant = connected ? 'destructive' : connecting ? 'warning' : 'primary';
+  const tone = connected ? 'disconnect' : connecting ? 'cancel' : 'neutral';
 
   // While connecting the click aborts the attempt, so the button reads "Cancel".
   return (
-    <Button variant={variant} onClick={onDisconnect}>
-      <Button.Text>
+    <CardButton $tone={tone} onClick={onDisconnect}>
+      <CardButton.Text>
         {connecting ? messages.gettext('Cancel') : messages.gettext('Disconnect')}
-      </Button.Text>
-    </Button>
+      </CardButton.Text>
+    </CardButton>
   );
 }

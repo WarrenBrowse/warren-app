@@ -6,7 +6,7 @@ import { appRoutingSummary } from '../../../../shared/app-routing';
 import { messages } from '../../../../shared/gettext';
 import { tinyText } from '../../../components/common-styles';
 import { FeatureIndicator, Icon } from '../../../lib/components';
-import { colors } from '../../../lib/foundations';
+import { colors, surfaces } from '../../../lib/foundations';
 import { useSelector } from '../../../redux/store';
 import { useAppRouting, useOpenAppRouting } from '../hooks';
 
@@ -71,13 +71,13 @@ const StyledIncludeOnlyLabel = styled.button({
   borderRadius: '6px',
   border: `1px solid color-mix(in srgb, ${colors.yellow} 45%, transparent)`,
   backgroundColor: `color-mix(in srgb, ${colors.yellow} 12%, transparent)`,
-  color: colors.white,
+  color: surfaces.text,
   cursor: 'default',
   '&&:hover': {
     borderColor: colors.yellow,
   },
   '&&:focus-visible': {
-    outline: `2px solid ${colors.white}`,
+    outline: `2px solid ${surfaces.text}`,
     outlineOffset: '1px',
   },
 });

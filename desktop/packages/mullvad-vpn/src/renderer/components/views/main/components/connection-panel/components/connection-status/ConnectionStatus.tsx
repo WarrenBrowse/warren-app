@@ -1,16 +1,12 @@
+import React from 'react';
 import styled from 'styled-components';
 
 import { Icon } from '../../../../../../../lib/components';
-import {
-  getConnectionPhase,
-  getPhaseAccentColorName,
-  getPhaseTitleColorName,
-} from '../../../../../../../lib/connection-phase';
+import { getConnectionPhase, getPhaseCardColors } from '../../../../../../../lib/connection-phase';
 import { useExitEgressDead } from '../../../../../../../lib/exit-egress';
-import { colors } from '../../../../../../../lib/foundations';
+import { FontFamilies, surfaces } from '../../../../../../../lib/foundations';
 import { useHostOffline } from '../../../../../../../lib/host-offline';
 import { useSelector } from '../../../../../../../redux/store';
-import { largeText, smallText } from '../../../../../../common-styles';
 import { CurrentCountryFlag } from '../../../../../../CurrentCountryFlag';
 import {
   getConnectionStatusLabelText,
@@ -26,46 +22,60 @@ const StyledRow = styled.div({
 const StyledTextColumn = styled.div({
   display: 'flex',
   flexDirection: 'column',
+  gap: '1px',
+  flexGrow: 1,
   minWidth: 0,
 });
 
 // The flag hugs the end edge in EVERY state so it never appears to move; the
 // expand chevron (only present when expandable) slots in before it instead.
-const StyledFlagSlot = styled.div({
-  marginInlineStart: 'auto',
+const StyledTrailing = styled.div({
   display: 'flex',
   alignItems: 'center',
+  gap: '12px',
+  flexShrink: 0,
 });
 
-// The eye sits in a tinted well rather than bare on the surface. It gives the
-// phase colour a filled shape to live in, which is what carries the state at a
+// The eye sits in a filled well rather than bare on the surface. The well gives
+// the phase colour a shape to live in, which is what carries the state at a
 // glance; the title then only has to be readable, not loud.
-const StyledIconWell = styled.div<{ $accent: string }>((props) => ({
+const StyledIconWell = styled.div<{ $well: string }>((props) => ({
   display: 'grid',
   placeItems: 'center',
   flexShrink: 0,
-  width: '36px',
-  height: '36px',
-  borderRadius: '11px',
-  backgroundColor: `color-mix(in srgb, ${props.$accent} 22%, transparent)`,
-  border: `1px solid color-mix(in srgb, ${props.$accent} 45%, transparent)`,
-  transition: 'background-color 300ms ease-out, border-color 300ms ease-out',
+  width: '34px',
+  height: '34px',
+  borderRadius: '8px',
+  backgroundColor: props.$well,
+  transition: 'background-color 300ms ease-out',
 }));
 
-const StyledTitle = styled.span<{ $color: string }>(largeText, (props) => ({
+const StyledEye = styled(Icon)<{ $color: string }>((props) => ({
+  backgroundColor: props.$color,
+}));
+
+const StyledTitle = styled.span<{ $color: string }>((props) => ({
+  fontFamily: FontFamilies.openSans,
+  fontSize: '16px',
+  fontWeight: 600,
+  lineHeight: '19.2px',
   color: props.$color,
-  fontSize: '19px',
-  lineHeight: '22px',
 }));
 
-const StyledSubtitle = styled.span(smallText, {
-  color: colors.whiteAlpha80,
-  fontSize: '13px',
-  lineHeight: '18px',
-  fontWeight: '400',
+const StyledSubtitle = styled.span({
+  fontFamily: FontFamilies.openSans,
+  fontSize: '11.5px',
+  fontWeight: 400,
+  lineHeight: '15px',
+  color: surfaces.textSecondary,
 });
 
-export function ConnectionStatus() {
+export type ConnectionStatusProps = {
+  // Drawn before the flag, in the same row: the card's expand chevron.
+  trailing?: React.ReactNode;
+};
+
+export function ConnectionStatus({ trailing }: ConnectionStatusProps) {
   const tunnelState = useSelector((state) => state.connection.status);
   const hostOffline = useHostOffline();
   const exitEgressDead = useExitEgressDead();
@@ -74,7 +84,7 @@ export function ConnectionStatus() {
   );
 
   const phase = getConnectionPhase(tunnelState, hostOffline, exitEgressDead);
-  const colorName = getPhaseAccentColorName(phase);
+  const { title, well } = getPhaseCardColors(phase);
   // A crossed-out eye ("hide") reads as protected/hidden in the burrow (secured,
   // blocked, or the interrupted hold where the kill switch keeps everything
   // fail-closed); an open eye ("show") reads as exposed/visible.
@@ -84,18 +94,17 @@ export function ConnectionStatus() {
 
   return (
     <StyledRow role="status">
-      <StyledIconWell $accent={colors[colorName]}>
-        <Icon icon={eyeIcon} color={colorName} size="small" />
+      <StyledIconWell $well={well}>
+        <StyledEye icon={eyeIcon} size="small" $color={title} />
       </StyledIconWell>
       <StyledTextColumn>
-        <StyledTitle $color={colors[getPhaseTitleColorName(phase)]}>
-          {getConnectionStatusLabelText(tunnelState, phase)}
-        </StyledTitle>
+        <StyledTitle $color={title}>{getConnectionStatusLabelText(tunnelState, phase)}</StyledTitle>
         {subtitle ? <StyledSubtitle>{subtitle}</StyledSubtitle> : null}
       </StyledTextColumn>
-      <StyledFlagSlot>
+      <StyledTrailing>
+        {trailing}
         <CurrentCountryFlag />
-      </StyledFlagSlot>
+      </StyledTrailing>
     </StyledRow>
   );
 }

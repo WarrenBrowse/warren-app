@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import styled from 'styled-components';
 
 import {
@@ -7,10 +7,7 @@ import {
 } from '../../../../../features/app-routing/components';
 import { PortForwardingIndicator } from '../../../../../features/port-forwarding/components';
 import { IconButton } from '../../../../../lib/components';
-import { getConnectionPhase, getPhaseAccentColor } from '../../../../../lib/connection-phase';
-import { useExitEgressDead } from '../../../../../lib/exit-egress';
-import { colors } from '../../../../../lib/foundations';
-import { useHostOffline } from '../../../../../lib/host-offline';
+import { surfaces } from '../../../../../lib/foundations';
 import { useBoolean } from '../../../../../lib/utility-hooks';
 import { useSelector } from '../../../../../redux/store';
 import CustomScrollbars from '../../../../CustomScrollbars';
@@ -27,7 +24,12 @@ import {
   SelectLocationButtons,
 } from './components';
 
-const PANEL_MARGIN = '16px';
+const PANEL_MARGIN = '14px';
+
+// The one gap between the blocks of the card (status, location, buttons), so the
+// space the card holds is shared between them rather than pooling under the
+// last button.
+const CARD_GAP = '10.5px';
 
 const StyledAccordion = styled(ConnectionPanelAccordion)({
   flexShrink: 0,
@@ -39,11 +41,11 @@ const StyledOuter = styled.div({
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'flex-end',
-  gap: '8px',
+  gap: '4px',
   maxHeight: `calc(100% - 2 * ${PANEL_MARGIN})`,
   // Hug the very bottom so the card sits low and uncovers more of the scenery
   // (Bula + the burrow) above it.
-  margin: `auto ${PANEL_MARGIN} 8px`,
+  margin: `auto ${PANEL_MARGIN} 6px`,
 });
 
 // Feature pills stacked vertically, left-aligned, just above the card.
@@ -51,18 +53,14 @@ const StyledFeatureBadges = styled.div({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'flex-start',
-  gap: '5px',
+  gap: '2px',
   minHeight: 0,
   overflow: 'hidden',
 });
 
-// The card is the largest surface on the screen, so a plain translucent scrim
-// let the landscape's hue flood it: over the watercolor grass it measured
-// (77, 73, 41), a solid olive, which dropped the status title to 2.9:1 and the
-// detail labels to 2.3:1 and broke the palette's own rule that neutrals stay
-// neutral. Desaturating and darkening the backdrop BEFORE the scrim keeps the
-// glass depth while pinning the surface neutral on every plate.
-const StyledCard = styled.div<{ $accent: string }>((props) => ({
+// Opaque, in the theme's paper. A translucent card let each landscape tint it,
+// so the same card read olive on one country and slate on the next.
+const StyledCard = styled.div({
   position: 'relative',
   display: 'flex',
   flexDirection: 'column',
@@ -70,55 +68,48 @@ const StyledCard = styled.div<{ $accent: string }>((props) => ({
   // cannot shrink grows over the top edge and takes its chevron with it.
   flexShrink: 1,
   minHeight: 0,
-  padding: '14px 16px',
+  padding: '20px 20px',
   borderRadius: '16px',
   overflow: 'hidden',
-  backgroundColor: colors.darkerBlue50Alpha80,
-  backdropFilter: 'blur(14px) saturate(0.35) brightness(0.5)',
-  border: `1px solid ${colors.whiteAlpha20}`,
-  boxShadow: '0 10px 28px rgba(0, 0, 0, 0.45)',
-
-  // The phase rail. It states connected vs exposed before a word is read, and
-  // unlike the tinted title it survives at a glance and for a colour-blind
-  // reader it still moves with the icon and the action button.
-  '&::before': {
-    content: '""',
-    position: 'absolute',
-    insetInlineStart: 0,
-    top: 0,
-    bottom: 0,
-    width: '3px',
-    backgroundColor: props.$accent,
-    transition: 'background-color 300ms ease-out',
-  },
-}));
+  backgroundColor: surfaces.card,
+  border: `0.5px solid ${surfaces.line}`,
+  boxShadow: `0 5px 16px ${surfaces.shadowStrong}`,
+});
 
 const StyledConnectionButtonContainer = styled.div({
   transition: 'margin-top 300ms ease-out',
   flexShrink: 0,
   display: 'flex',
   flexDirection: 'column',
-  gap: '12px',
-  marginTop: '12px',
+  gap: CARD_GAP,
+  marginTop: CARD_GAP,
 });
 
 const StyledCustomScrollbars = styled(CustomScrollbars)({
   flexShrink: 1,
 });
 
-// Sits before the country flag, which owns the top end corner in
-// every state so it never appears to move when the chevron comes and goes.
+// Sits in the status row before the country flag, which owns the end of the
+// row in every state so it never appears to move when the chevron comes and goes.
 const StyledConnectionPanelChevron = styled(IconButton)({
-  position: 'absolute',
-  top: '16px',
-  insetInlineEnd: '46px',
-  width: 'fit-content',
+  '--background': surfaces.text,
+  '--hover': surfaces.textMuted,
+  '--pressed': surfaces.textSecondary,
+  display: 'grid',
+  placeItems: 'center',
+  width: '22px',
+  height: '22px',
+  borderRadius: '6px',
+  '&&:focus-visible': {
+    outline: `2px solid ${surfaces.text}`,
+    outlineOffset: '0',
+  },
 });
 
 const StyledConnectionStatusContainer = styled.div<{ $expanded: boolean }>((props) => ({
   flexShrink: 0,
   paddingBottom: props.$expanded ? '16px' : 0,
-  borderBottom: props.$expanded ? `1px ${colors.whiteAlpha20} solid` : 'none',
+  borderBottom: props.$expanded ? `1px ${surfaces.line} solid` : 'none',
   transitionProperty: 'padding-bottom',
   transitionDuration: '300ms',
   transitionTimingFunction: 'ease-out',
@@ -127,10 +118,6 @@ const StyledConnectionStatusContainer = styled.div<{ $expanded: boolean }>((prop
 export function ConnectionPanel() {
   const [expanded, , collapse, toggleExpandedImpl] = useBoolean();
   const tunnelState = useSelector((state) => state.connection.status);
-
-  const hostOffline = useHostOffline();
-  const exitEgressDead = useExitEgressDead();
-  const accent = getPhaseAccentColor(getConnectionPhase(tunnelState, hostOffline, exitEgressDead));
 
   const allowExpand = tunnelState.state === 'connected' || tunnelState.state === 'connecting';
 
@@ -142,6 +129,16 @@ export function ConnectionPanel() {
 
   useEffect(collapse, [tunnelState.state, collapse]);
 
+  // The row it sits in expands the card on click as well, so the chevron's own
+  // click stops there instead of toggling twice.
+  const onChevronClick = useCallback(
+    (event: React.MouseEvent) => {
+      event.stopPropagation();
+      toggleExpanded();
+    },
+    [toggleExpanded],
+  );
+
   return (
     <BackAction disabled={!expanded} action={collapse}>
       <StyledOuter>
@@ -151,16 +148,20 @@ export function ConnectionPanel() {
           <PortForwardingIndicator />
           <AppCountriesIndicator />
         </StyledFeatureBadges>
-        <StyledCard $accent={accent}>
-          {allowExpand && (
-            <StyledConnectionPanelChevron
-              onClick={toggleExpanded}
-              data-testid="connection-panel-chevron">
-              <IconButton.Icon icon={expanded ? 'chevron-down' : 'chevron-up'} />
-            </StyledConnectionPanelChevron>
-          )}
+        <StyledCard>
           <StyledConnectionStatusContainer $expanded={expanded} onClick={toggleExpanded}>
-            <ConnectionStatus />
+            <ConnectionStatus
+              trailing={
+                allowExpand && (
+                  <StyledConnectionPanelChevron
+                    size="small"
+                    onClick={onChevronClick}
+                    data-testid="connection-panel-chevron">
+                    <IconButton.Icon icon={expanded ? 'chevron-down' : 'chevron-up'} />
+                  </StyledConnectionPanelChevron>
+                )
+              }
+            />
             <IncludeOnlyLabel />
             <Location />
             <Hostname />

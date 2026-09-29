@@ -1,7 +1,19 @@
-import { MultiButton, SelectLocationButton, ShuffleButton } from './components';
+import styled from 'styled-components';
 
-// The location selector always carries a shuffle side button (random exit),
-// matching the mockups, in every connection state.
+import { SelectLocationButton, ShuffleButton } from './components';
+
+const StyledRow = styled.div({
+  display: 'flex',
+  gap: '4px',
+});
+
+// The location selector always carries a shuffle button (random exit) at its
+// side, in every connection state.
 export function SelectLocationButtons() {
-  return <MultiButton mainButton={SelectLocationButton} sideButton={ShuffleButton} />;
+  return (
+    <StyledRow>
+      <SelectLocationButton />
+      <ShuffleButton />
+    </StyledRow>
+  );
 }

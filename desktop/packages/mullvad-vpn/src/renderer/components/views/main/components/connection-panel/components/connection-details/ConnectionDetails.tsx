@@ -13,7 +13,7 @@ import {
   TunnelState,
 } from '../../../../../../../../shared/daemon-rpc-types';
 import { messages, relayLocations } from '../../../../../../../../shared/gettext';
-import { colors } from '../../../../../../../lib/foundations';
+import { surfaces } from '../../../../../../../lib/foundations';
 import { useSelector } from '../../../../../../../redux/store';
 import { tinyText } from '../../../../../../common-styles';
 
@@ -31,7 +31,7 @@ const StyledConnectionDetailsHeading = styled.h2(tinyText, {
   margin: '0 0 4px',
   fontSize: '10px',
   lineHeight: '15px',
-  color: colors.whiteAlpha60,
+  color: surfaces.textMuted,
 });
 
 const StyledConnectionDetailsContainer = styled.div({
@@ -56,13 +56,13 @@ const StyledIpLabelContainer = styled.div({
 
 const StyledConnectionDetailsLabel = styled.span(tinyText, {
   display: 'block',
-  color: colors.white,
+  color: surfaces.text,
   fontWeight: '400',
   minHeight: '1em',
 });
 
 const StyledConnectionDetailsTitle = styled(StyledConnectionDetailsLabel)({
-  color: colors.whiteAlpha60,
+  color: surfaces.textMuted,
   whiteSpace: 'nowrap',
 });
 

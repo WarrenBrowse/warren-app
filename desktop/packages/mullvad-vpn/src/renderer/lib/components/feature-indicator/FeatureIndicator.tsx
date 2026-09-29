@@ -1,6 +1,6 @@
 import styled, { css } from 'styled-components';
 
-import { colors, Radius } from '../../foundations';
+import { surfaces } from '../../foundations';
 import { Flex } from '../flex';
 import { FeatureIndicatorText } from './components';
 import { FeatureIndicatorProvider } from './FeatureIndicatorContext';
@@ -9,14 +9,15 @@ export type FeatureIndicatorProps = {
   variant?: 'primary' | 'transparent' | 'error';
 } & React.ComponentPropsWithRef<'button'>;
 
+// Opaque chips in the theme's paper, like the card under them: a translucent
+// chip took the hue of whatever landscape it floated over.
 const styles = {
-  radius: Radius.radius4,
   variants: {
     primary: {
-      backgroundColor: colors.blue10,
-      borderColor: colors.blue,
-      borderColorHover: colors.whiteAlpha80,
-      borderColorPressed: colors.white,
+      backgroundColor: surfaces.card,
+      borderColor: surfaces.line,
+      borderColorHover: surfaces.textMuted,
+      borderColorPressed: surfaces.text,
     },
     transparent: {
       backgroundColor: 'transparent',
@@ -28,10 +29,10 @@ const styles = {
     // state surfaces in red so the user notices it on the main screen
     // without opening settings.
     error: {
-      backgroundColor: colors.redAlpha40,
-      borderColor: colors.red,
-      borderColorHover: colors.whiteAlpha80,
-      borderColorPressed: colors.white,
+      backgroundColor: surfaces.exposedWell,
+      borderColor: surfaces.exposed,
+      borderColorHover: surfaces.textMuted,
+      borderColorPressed: surfaces.text,
     },
   },
 };
@@ -45,9 +46,10 @@ const StyledFeatureIndicator = styled.button<{
     return css`
       display: flex;
 
-      border-radius: ${Radius.radius8};
+      border-radius: 7px;
       background: ${variant.backgroundColor};
-      border: 1px solid ${variant.borderColor};
+      border: 0.5px solid ${variant.borderColor};
+      box-shadow: ${variantProp === 'transparent' ? 'none' : `0 1.5px 5px ${surfaces.shadowSoft}`};
 
       ${() => {
         if ($clickable) {
@@ -67,7 +69,7 @@ const StyledFeatureIndicator = styled.button<{
         background: var(--disabled);
       }
       &&:focus-visible {
-        outline: 2px solid ${colors.white};
+        outline: 2px solid ${surfaces.text};
         outline-offset: -2px;
       }
     `;
@@ -75,7 +77,7 @@ const StyledFeatureIndicator = styled.button<{
 `;
 
 const StyledFlex = styled(Flex)`
-  padding: 2px 8px;
+  padding: 5.5px 8px;
 `;
 
 function FeatureIndicator({

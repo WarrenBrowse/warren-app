@@ -5,10 +5,21 @@ import { messages } from '../../../../../../../../../../shared/gettext';
 import log from '../../../../../../../../../../shared/logging';
 import { useAppContext } from '../../../../../../../../../context';
 import { useRelayLocations } from '../../../../../../../../../features/locations/hooks';
-import { Button, ButtonProps, Icon } from '../../../../../../../../../lib/components';
+import { ButtonProps, Icon } from '../../../../../../../../../lib/components';
+import { surfaces } from '../../../../../../../../../lib/foundations';
+import { CardButton } from '../../../card-button';
 
-const StyledShuffleButton = styled(Button)({
+const StyledShuffleButton = styled(CardButton)({
+  flexShrink: 0,
+  justifyContent: 'center',
+  width: '40px',
   minWidth: '40px',
+});
+
+// The icon set paints white by default; on the card it takes the text colour,
+// which is dark on the cream theme.
+const StyledShuffleIcon = styled(Icon)({
+  backgroundColor: surfaces.text,
 });
 
 // Picks a random exit country among those with an active relay, then connects.
@@ -41,15 +52,15 @@ export function ShuffleButton(props: ButtonProps) {
 
   return (
     <StyledShuffleButton
+      $tone="neutral"
       onClick={onShuffle}
       // Disabled until the relay list has an active exit, so a click never
       // silently no-ops before the list loads.
       disabled={available.length === 0}
-      width="fit"
       // TRANSLATORS: Accessibility label for the button that connects to a random exit.
       aria-label={messages.pgettext('tunnel-control', 'Random location')}
       {...props}>
-      <Icon icon="shuffle" />
+      <StyledShuffleIcon icon="shuffle" size="small" />
     </StyledShuffleButton>
   );
 }

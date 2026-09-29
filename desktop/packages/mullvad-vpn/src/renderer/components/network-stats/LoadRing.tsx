@@ -29,8 +29,16 @@ export type LoadRingProps = {
   muted?: boolean;
 };
 
+// A surface that paints its own palette (the connection card, which turns cream
+// in the light theme) redefines these properties; everywhere else the ring
+// keeps the band colours of the palette.
+function bandColor(level: LoadLevel): string {
+  const fallback = colors[loadLevelColors[level]];
+  return level === 'unknown' ? fallback : `var(--load-ring-${level}, ${fallback})`;
+}
+
 export function LoadRing({ level, percent, muted }: LoadRingProps) {
-  const color = colors[muted ? 'whiteOnDarkBlue40' : loadLevelColors[level]];
+  const color = muted ? colors.whiteOnDarkBlue40 : bandColor(level);
   const { center, radius, circumference } = ringGeometry(DIAMETER, STROKE);
 
   return (
@@ -46,7 +54,7 @@ export function LoadRing({ level, percent, muted }: LoadRingProps) {
         r={radius}
         fill="none"
         strokeWidth={STROKE}
-        style={{ stroke: colors[loadRingTrackColor] }}
+        style={{ stroke: `var(--load-ring-track, ${colors[loadRingTrackColor]})` }}
       />
       {percent > 0 && (
         <StyledArc

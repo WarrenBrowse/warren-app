@@ -15,7 +15,7 @@ import { bandArcPercent, liveThresholdNote, loadLevelLabel } from '../../lib/net
 import { ArrowGlyph, PersonGlyph } from './glyphs';
 import { LoadRing } from './LoadRing';
 
-const StyledBadge = styled.span<{ $muted: boolean }>(({ $muted }) => ({
+export const StyledExitLoadBadge = styled.span<{ $muted: boolean }>(({ $muted }) => ({
   display: 'inline-flex',
   alignItems: 'center',
   gap: '8px',
@@ -31,7 +31,7 @@ const StyledBadge = styled.span<{ $muted: boolean }>(({ $muted }) => ({
   transition: 'opacity 300ms ease-out',
 }));
 
-const StyledPart = styled.span({
+export const StyledExitLoadPart = styled.span({
   display: 'inline-flex',
   alignItems: 'center',
   gap: '4px',
@@ -58,13 +58,13 @@ export function ExitLoadBadge({ exit, stats, locale, throughput, stale }: ExitLo
 
   if (mode === 'offline') {
     return (
-      <StyledBadge $muted data-testid="exit-load-badge">
+      <StyledExitLoadBadge $muted data-testid="exit-load-badge">
         <LoadRing level="unknown" percent={0} muted />
         {
           // TRANSLATORS: A Warren exit that is not serving right now.
           messages.pgettext('network-stats', 'Offline')
         }
-      </StyledBadge>
+      </StyledExitLoadBadge>
     );
   }
 
@@ -90,29 +90,29 @@ export function ExitLoadBadge({ exit, stats, locale, throughput, stale }: ExitLo
       );
 
   return (
-    <StyledBadge
+    <StyledExitLoadBadge
       $muted={stale === true}
       role="img"
       aria-label={label}
       title={percent ? label : `${label}. ${liveThresholdNote(stats.exitLiveThreshold)}`}
       data-testid="exit-load-badge">
-      <StyledPart>
+      <StyledExitLoadPart>
         <LoadRing
           level={exit.loadLevel}
           percent={live ? exit.loadPercent! : bandArcPercent(exit.loadLevel)}
         />
         {percent}
-      </StyledPart>
-      <StyledPart>
+      </StyledExitLoadPart>
+      <StyledExitLoadPart>
         <PersonGlyph />
         {users}
-      </StyledPart>
+      </StyledExitLoadPart>
       {throughput && live && (
-        <StyledPart>
+        <StyledExitLoadPart>
           <ArrowGlyph direction="down" />
           {formatBitsPerSecond(exit.downloadBps, locale)}
-        </StyledPart>
+        </StyledExitLoadPart>
       )}
-    </StyledBadge>
+    </StyledExitLoadBadge>
   );
 }

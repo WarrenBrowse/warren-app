@@ -45,11 +45,12 @@ const StyledMain = styled.main`
 `;
 
 // Left-aligned under whatever the stack holds above it, so it never covers a
-// notification. Renders nothing outside beta builds.
+// notification, and on the connection card's edge. Renders nothing outside beta
+// builds.
 const StyledBetaBadge = styled.div`
   align-self: flex-start;
-  margin-top: 16px;
-  margin-inline-start: 16px;
+  margin-top: 13.5px;
+  margin-inline-start: 15px;
 `;
 
 export function MainView() {

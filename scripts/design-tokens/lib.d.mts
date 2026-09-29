@@ -3,7 +3,7 @@
 
 export interface Measure {
   value: number;
-  unit: 'dp' | 'sp' | 'ms' | 'ratio';
+  unit: 'dp' | 'sp' | 'ms' | 'ratio' | 'weight';
 }
 
 export type ComponentTokens = Record<string, Record<string, Measure | string>>;
@@ -12,6 +12,8 @@ export interface DesignTokens {
   $comment: string;
   sources: Record<string, string>;
   colors: Record<string, string>;
+  // The connect-screen surfaces, one `#AARRGGBB` table per theme.
+  surfaces: { dark: Record<string, string>; light: Record<string, string> };
   radius: Record<string, number>;
   spacing: Record<string, number>;
   typography: {

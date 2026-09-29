@@ -3,17 +3,18 @@ import styled from 'styled-components';
 
 import { relayLocations as relayLocationsCatalog } from '../../shared/gettext';
 import { countryCodeFromName, systemRegionCode } from '../lib/country-code';
-import { colors } from '../lib/foundations';
+import { surfaces } from '../lib/foundations';
 import { useSelector } from '../redux/store';
 
 const FLAGS_BASE = 'assets/images/flags';
 const UNKNOWN_FLAG = `${FLAGS_BASE}/xx.svg`;
 
+// Ringed outside the disc, so the ring never eats into the flag.
 const StyledFlag = styled.img`
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  border: 1px solid ${colors.whiteAlpha20};
+  box-shadow: 0 0 0 0.5px ${surfaces.line};
   flex-shrink: 0;
   user-select: none;
   -webkit-user-drag: none;
