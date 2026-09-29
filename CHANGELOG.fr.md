@@ -41,6 +41,13 @@ par l'application, gardez-le tel quel.
   du portefeuille, pour que le tunnel ne puisse ni rester ouvert ni revenir à la demande pour un
   portefeuille qui a quitté l'appareil.
 
+## [1.1.42] - 2026-09-29
+### Corrigé
+- [Windows, macOS, Linux, Android] Les connexions qu'une app avait ouvertes avant la connexion du
+  VPN échouent tout de suite, et l'app les rouvre par le VPN. Elles restaient bloquées sans erreur
+  jusqu'à ce que l'app abandonne : juste après la connexion, les pages et les appels déjà ouverts
+  ne chargeaient plus, comme sans internet.
+
 ## [1.1.41] - 2026-09-29
 ### Modifié
 - [Windows, macOS, Linux, Android] Remplacer les trois onglets du routage des apps par une seule

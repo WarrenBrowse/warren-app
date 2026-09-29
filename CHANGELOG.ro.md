@@ -37,6 +37,13 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   portofelului, ca tunelul să nu poată nici rămâne deschis, nici reporni la cerere pentru un
   portofel care a părăsit dispozitivul.
 
+## [1.1.42] - 2026-09-29
+### Reparat
+- [Windows, macOS, Linux, Android] Conexiunile pe care o aplicație le deschisese înainte de
+  conectarea VPN-ului eșuează imediat, iar aplicația le redeschide prin VPN. Rămâneau blocate fără
+  nicio eroare până când aplicația renunța, așa că imediat după conectare paginile și apelurile deja
+  deschise nu se mai încărcau, ca și cum n-ar fi existat internet.
+
 ## [1.1.41] - 2026-09-29
 ### Modificat
 - [Windows, macOS, Linux, Android] Cele trei file din Rutare aplicații devin o singură listă de

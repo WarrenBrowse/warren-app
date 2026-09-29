@@ -46,6 +46,13 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Disconnect and remove the VPN configuration when logging out or erasing the wallet, so the
   tunnel can neither stay up nor come back on demand for a wallet that left the device.
 
+## [1.1.42] - 2026-09-29
+### Fixed
+- [Windows, macOS, Linux, Android] Make the connections an app opened before the VPN connected
+  fail at once, so the app opens them again through the VPN. They hung without an error until the
+  app gave up, so right after connecting the pages and calls already open stopped loading, as if
+  there were no internet.
+
 ## [1.1.41] - 2026-09-29
 ### Changed
 - [Windows, macOS, Linux, Android] Replace the three tabs of App routing with one list of rules:
