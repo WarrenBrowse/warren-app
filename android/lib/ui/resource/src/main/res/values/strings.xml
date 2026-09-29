@@ -231,6 +231,10 @@
     <string name="invalid_ipv6_config">Invalid IPv6 config, please try to change the VPN settings.</string>
     <string name="cont">Continue</string>
     <string name="language">Language</string>
+    <string name="theme">Theme</string>
+    <string name="theme_system">System</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_light">Light</string>
     <string name="system_default">System default</string>
     <!-- Wallet UI (D.5) -->
     <string name="wallet_create_cta">Create a new account</string>

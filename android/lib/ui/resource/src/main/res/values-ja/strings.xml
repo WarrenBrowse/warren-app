@@ -223,6 +223,10 @@
     <string name="invalid_ipv6_config">IPv6の設定が無効です。VPNの設定を変更してください。</string>
     <string name="cont">続行</string>
     <string name="language">言語</string>
+    <string name="theme">テーマ</string>
+    <string name="theme_system">システム</string>
+    <string name="theme_dark">ダーク</string>
+    <string name="theme_light">ライト</string>
     <string name="system_default">システムデフォルト</string>
     <string name="wallet_create_cta">新規アカウントを作成</string>
     <string name="wallet_import_title">アカウントを復元する</string>

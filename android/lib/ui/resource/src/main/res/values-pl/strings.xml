@@ -229,6 +229,10 @@
     <string name="invalid_ipv6_config">Nieprawidłowa konfiguracja protokołu IPv6, spróbuj zmienić ustawienia VPN.</string>
     <string name="cont">Kontynuuj</string>
     <string name="language">Język</string>
+    <string name="theme">Motyw</string>
+    <string name="theme_system">Systemowy</string>
+    <string name="theme_dark">Ciemny</string>
+    <string name="theme_light">Jasny</string>
     <string name="system_default">Domyślne ustawienie systemowe</string>
     <string name="wallet_create_cta">Utwórz nowe konto</string>
     <string name="wallet_import_title">Przywróć swoje konto</string>

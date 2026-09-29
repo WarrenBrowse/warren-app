@@ -12,6 +12,9 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
@@ -41,6 +44,7 @@ import com.warrenbrowse.vpn.feature.settings.api.WarrenWalletSettingsNavKey
 import com.warrenbrowse.vpn.feature.splittunneling.api.SplitTunnelingNavKey
 import com.warrenbrowse.vpn.lib.common.Lc
 import com.warrenbrowse.vpn.lib.common.util.appendHideNavOnPlayBuild
+import com.warrenbrowse.vpn.lib.model.ThemePreference
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenNetworkInfoProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenProductFlags
@@ -99,6 +103,7 @@ fun Settings(navigator: Navigator) {
     // last answer), so a cold start never shows one wording and swaps it.
     val localSettings = koinInject<WarrenLocalSettingsRepository>()
     val cachedRateBps by localSettings.cachedNetworkRateBps.collectAsStateWithLifecycle()
+    val themePreference by localSettings.themePreference.collectAsStateWithLifecycle()
 
     BackHandler(enabled = navigator.screenIsListDetailTargetWidth) {
         navigator.goBackUntil(SettingsNavKey, inclusive = true)
@@ -112,6 +117,8 @@ fun Settings(navigator: Navigator) {
         showBetaBadge = productFlags.isBeta,
         betaCapBps = if (networkInfo != null) networkInfo?.defaultRateBps else cachedRateBps,
         betaCapResolved = networkInfo != null || cachedRateBps != null,
+        themePreference = themePreference,
+        onThemePreferenceChange = localSettings::setThemePreference,
         onSplitTunnelingCellClick =
             dropUnlessResumed { navigator.navigateReplaceIfDetailPane(SplitTunnelingNavKey()) },
         onAppInfoClick = dropUnlessResumed { navigator.navigateReplaceIfDetailPane(AppInfoNavKey) },
@@ -154,6 +161,8 @@ fun SettingsScreen(
     showBetaBadge: Boolean = false,
     betaCapBps: Long? = null,
     betaCapResolved: Boolean = false,
+    themePreference: ThemePreference = ThemePreference.SYSTEM,
+    onThemePreferenceChange: (ThemePreference) -> Unit = {},
     onSplitTunnelingCellClick: () -> Unit,
     onAppInfoClick: () -> Unit,
     onMultihopClick: () -> Unit,
@@ -173,6 +182,7 @@ fun SettingsScreen(
         navigationIcon = { NavigateCloseIconButton(onBackClick) },
     ) { modifier ->
         val lazyListState = rememberLazyListState()
+        var themeExpanded by rememberSaveable { mutableStateOf(false) }
         LazyColumn(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier =
@@ -194,6 +204,10 @@ fun SettingsScreen(
                         showBetaBadge = showBetaBadge,
                         betaCapBps = betaCapBps,
                         betaCapResolved = betaCapResolved,
+                        themePreference = themePreference,
+                        themeExpanded = themeExpanded,
+                        onThemeExpandedChange = { themeExpanded = it },
+                        onThemePreferenceChange = onThemePreferenceChange,
                         onSplitTunnelingCellClick = onSplitTunnelingCellClick,
                         onAppInfoClick = onAppInfoClick,
                         onMultihopClick = onMultihopClick,
@@ -218,6 +232,10 @@ private fun LazyListScope.content(
     showBetaBadge: Boolean = false,
     betaCapBps: Long? = null,
     betaCapResolved: Boolean = false,
+    themePreference: ThemePreference,
+    themeExpanded: Boolean,
+    onThemeExpandedChange: (Boolean) -> Unit,
+    onThemePreferenceChange: (ThemePreference) -> Unit,
     onSplitTunnelingCellClick: () -> Unit,
     onAppInfoClick: () -> Unit,
     onMultihopClick: () -> Unit,
@@ -271,12 +289,20 @@ private fun LazyListScope.content(
 
     // Desktop's "User interface settings" container, kept as its own group
     // directly after the tunnel block rather than dissolved into App info.
+    // The theme opens it, as on desktop.
+    themeSetting(
+        preference = themePreference,
+        expanded = themeExpanded,
+        onToggle = onThemeExpandedChange,
+        onSelect = onThemePreferenceChange,
+    )
+
     if (onLanguageClick != null) {
         itemWithDivider {
             NavigationListItem(
                 title = stringResource(id = R.string.language),
                 onClick = onLanguageClick,
-                position = Position.Top,
+                position = Position.Middle,
             )
         }
     }
@@ -285,7 +311,7 @@ private fun LazyListScope.content(
         NavigationListItem(
             title = stringResource(id = R.string.settings_notifications),
             onClick = onNotificationSettingsCellClick,
-            position = if (onLanguageClick != null) Position.Bottom else Position.Single,
+            position = Position.Bottom,
         )
     }
 

@@ -226,6 +226,10 @@
     <string name="invalid_ipv6_config">Configuración de IPv6 no válida. Intente cambiar los ajustes de VPN.</string>
     <string name="cont">Continuar</string>
     <string name="language">Idioma</string>
+    <string name="theme">Tema</string>
+    <string name="theme_system">Sistema</string>
+    <string name="theme_dark">Oscuro</string>
+    <string name="theme_light">Claro</string>
     <string name="system_default">Valor predeterminado del sistema</string>
     <string name="wallet_create_cta">Crear una nueva cuenta</string>
     <string name="wallet_import_title">Restaura tu cuenta</string>

@@ -229,6 +229,10 @@
     <string name="invalid_ipv6_config">Недействительная конфигурация IPv6. Попробуйте изменить настройки VPN.</string>
     <string name="cont">Продолжить</string>
     <string name="language">Язык</string>
+    <string name="theme">Тема</string>
+    <string name="theme_system">Системная</string>
+    <string name="theme_dark">Тёмная</string>
+    <string name="theme_light">Светлая</string>
     <string name="system_default">Системные настройки по умолчанию</string>
     <string name="wallet_create_cta">Создать учетную запись</string>
     <string name="wallet_import_title">Восстановите свою учётную запись</string>

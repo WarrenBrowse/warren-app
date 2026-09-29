@@ -225,6 +225,10 @@
     <string name="invalid_ipv6_config">Virheellinen IPv6-määritys, kokeile muuttaa VPN-asetuksia.</string>
     <string name="cont">Jatka</string>
     <string name="language">Kieli</string>
+    <string name="theme">Teema</string>
+    <string name="theme_system">Järjestelmä</string>
+    <string name="theme_dark">Tumma</string>
+    <string name="theme_light">Vaalea</string>
     <string name="system_default">Järjestelmän oletusarvo</string>
     <string name="wallet_create_cta">Luo uusi tili</string>
     <string name="wallet_import_title">Palauta tilisi</string>

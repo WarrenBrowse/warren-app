@@ -233,6 +233,10 @@
     <string name="invalid_ipv6_config">تكوين IPv6 غير صالح، يرجى تجربة تغيير إعدادات VPN.</string>
     <string name="cont">استمرار</string>
     <string name="language">اللغة</string>
+    <string name="theme">السمة</string>
+    <string name="theme_system">النظام</string>
+    <string name="theme_dark">داكن</string>
+    <string name="theme_light">فاتح</string>
     <string name="system_default">الافتراضية للنظام</string>
     <string name="wallet_create_cta">إنشاء حساب جديد</string>
     <string name="wallet_import_title">استعد حسابك</string>

@@ -223,6 +223,10 @@
     <string name="invalid_ipv6_config">IPv6 組態無效，請嘗試變更 VPN 設定。</string>
     <string name="cont">繼續</string>
     <string name="language">語言</string>
+    <string name="theme">主題</string>
+    <string name="theme_system">跟隨系統</string>
+    <string name="theme_dark">深色</string>
+    <string name="theme_light">淺色</string>
     <string name="system_default">系統預設</string>
     <string name="wallet_create_cta">建立新帳戶</string>
     <string name="wallet_import_title">復原您的帳戶</string>

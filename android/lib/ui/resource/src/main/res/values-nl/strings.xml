@@ -225,6 +225,10 @@
     <string name="invalid_ipv6_config">Ongeldige IPv6-configuratie, probeer de VPN-instellingen te wijzigen.</string>
     <string name="cont">Doorgaan</string>
     <string name="language">Taal</string>
+    <string name="theme">Thema</string>
+    <string name="theme_system">Systeem</string>
+    <string name="theme_dark">Donker</string>
+    <string name="theme_light">Licht</string>
     <string name="system_default">Systeemstandaard</string>
     <string name="wallet_create_cta">Nieuw account aanmaken</string>
     <string name="wallet_import_title">Herstel je account</string>

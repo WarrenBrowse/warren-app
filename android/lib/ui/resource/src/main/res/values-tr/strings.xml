@@ -225,6 +225,10 @@
     <string name="invalid_ipv6_config">Geçersiz IPv6 yapılandırması, lütfen VPN ayarlarını değiştirmeyi deneyin.</string>
     <string name="cont">İleri</string>
     <string name="language">Dil</string>
+    <string name="theme">Tema</string>
+    <string name="theme_system">Sistem</string>
+    <string name="theme_dark">Koyu</string>
+    <string name="theme_light">Açık</string>
     <string name="system_default">Sistem varsayılanı</string>
     <string name="wallet_create_cta">Yeni hesap oluştur</string>
     <string name="wallet_import_title">Hesabınızı geri yükleyin</string>

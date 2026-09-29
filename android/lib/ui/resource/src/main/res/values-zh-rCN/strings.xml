@@ -223,6 +223,10 @@
     <string name="invalid_ipv6_config">IPv6 配置无效，请尝试更改 VPN 设置。</string>
     <string name="cont">继续</string>
     <string name="language">语言</string>
+    <string name="theme">主题</string>
+    <string name="theme_system">跟随系统</string>
+    <string name="theme_dark">深色</string>
+    <string name="theme_light">浅色</string>
     <string name="system_default">系统默认值</string>
     <string name="wallet_create_cta">创建新帐户</string>
     <string name="wallet_import_title">恢复您的账户</string>

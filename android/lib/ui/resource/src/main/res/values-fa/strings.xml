@@ -225,6 +225,10 @@
     <string name="invalid_ipv6_config">پیکربندی IPv6 نامعتبر است، لطفاً سعی کنید تنظیمات VPN را تغییر دهید.</string>
     <string name="cont">ادامه</string>
     <string name="language">زبان</string>
+    <string name="theme">پوسته</string>
+    <string name="theme_system">سیستم</string>
+    <string name="theme_dark">تیره</string>
+    <string name="theme_light">روشن</string>
     <string name="system_default">پیش‌فرض سیستم</string>
     <string name="wallet_create_cta">ایجاد یک حساب جدید</string>
     <string name="wallet_import_title">حساب خود را بازیابی کنید</string>

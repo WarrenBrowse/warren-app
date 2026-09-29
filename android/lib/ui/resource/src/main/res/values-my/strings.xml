@@ -223,6 +223,10 @@
     <string name="invalid_ipv6_config">IPv6 သတ်မှတ်မှု မမှန်ကန်ပါ၊ VPN ဆက်တင်များကို ပြောင်းကြည့်ပါ။</string>
     <string name="cont">ဆက်လုပ်မည်</string>
     <string name="language">ဘာသာစကား</string>
+    <string name="theme">အပြင်အဆင်</string>
+    <string name="theme_system">စနစ်</string>
+    <string name="theme_dark">အမှောင်</string>
+    <string name="theme_light">အလင်း</string>
     <string name="system_default">စနစ် ပုံသေ</string>
     <string name="wallet_create_cta">အကောင့်သစ် ဖွင့်ရန်</string>
     <string name="wallet_import_title">သင်၏အကောင့်ကို ပြန်လည်ရယူပါ</string>

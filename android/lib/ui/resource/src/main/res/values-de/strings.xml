@@ -225,6 +225,10 @@
     <string name="invalid_ipv6_config">Ungültige IPv6-Konfiguration. Versuchen Sie bitte, die VPN-Einstellungen zu ändern.</string>
     <string name="cont">Fortfahren</string>
     <string name="language">Sprache</string>
+    <string name="theme">Design</string>
+    <string name="theme_system">System</string>
+    <string name="theme_dark">Dunkel</string>
+    <string name="theme_light">Hell</string>
     <string name="system_default">Systemstandard</string>
     <string name="wallet_create_cta">Neues Konto erstellen</string>
     <string name="wallet_import_title">Stellen Sie Ihr Konto wieder her</string>

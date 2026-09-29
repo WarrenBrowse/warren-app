@@ -225,6 +225,10 @@
     <string name="invalid_ipv6_config">Ugyldig IPv6-konfiruasjon. Prøv å endre VPN-innstillingene.</string>
     <string name="cont">Fortsett</string>
     <string name="language">Språk</string>
+    <string name="theme">Tema</string>
+    <string name="theme_system">System</string>
+    <string name="theme_dark">Mørk</string>
+    <string name="theme_light">Lys</string>
     <string name="system_default">Systemstandard</string>
     <string name="wallet_create_cta">Opprett en ny konto</string>
     <string name="wallet_import_title">Gjenopprett kontoen din</string>

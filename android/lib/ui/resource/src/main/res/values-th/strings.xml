@@ -223,6 +223,10 @@
     <string name="invalid_ipv6_config">การตั้งค่า IPv6 ไม่ถูกต้อง โปรดลองเปลี่ยนการตั้งค่า VPN</string>
     <string name="cont">ดำเนินการต่อ</string>
     <string name="language">ภาษา</string>
+    <string name="theme">ธีม</string>
+    <string name="theme_system">ระบบ</string>
+    <string name="theme_dark">มืด</string>
+    <string name="theme_light">สว่าง</string>
     <string name="system_default">ค่าเริ่มต้นของระบบ</string>
     <string name="wallet_create_cta">สร้างบัญชีใหม่</string>
     <string name="wallet_import_title">กู้คืนบัญชีของคุณ</string>

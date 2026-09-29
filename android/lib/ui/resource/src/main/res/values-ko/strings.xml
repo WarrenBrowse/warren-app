@@ -223,6 +223,10 @@
     <string name="invalid_ipv6_config">IPv6 구성이 유효하지 않습니다. VPN 설정을 변경해 주세요.</string>
     <string name="cont">계속</string>
     <string name="language">언어</string>
+    <string name="theme">테마</string>
+    <string name="theme_system">시스템</string>
+    <string name="theme_dark">다크</string>
+    <string name="theme_light">라이트</string>
     <string name="system_default">시스템 기본값</string>
     <string name="wallet_create_cta">새 계정 생성</string>
     <string name="wallet_import_title">계정 복원하기</string>

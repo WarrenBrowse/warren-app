@@ -229,6 +229,10 @@
     <string name="invalid_ipv6_config">Помилка конфігурації IPv6, спробуйте змінити налаштування VPN.</string>
     <string name="cont">Продовжити</string>
     <string name="language">Мова</string>
+    <string name="theme">Тема</string>
+    <string name="theme_system">Системна</string>
+    <string name="theme_dark">Темна</string>
+    <string name="theme_light">Світла</string>
     <string name="system_default">Системне значення за замовчуванням</string>
     <string name="wallet_create_cta">Створити обліковий запис</string>
     <string name="wallet_import_title">Відновіть свій обліковий запис</string>
