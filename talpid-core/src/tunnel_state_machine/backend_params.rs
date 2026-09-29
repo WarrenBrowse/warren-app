@@ -8,7 +8,9 @@
 
 use std::net::SocketAddr;
 
-use talpid_types::net::{Endpoint, TransportProtocol, TunnelEndpoint};
+use talpid_types::net::{
+    AllowedClients, AllowedEndpoint, Endpoint, TransportProtocol, TunnelEndpoint,
+};
 use talpid_warren_tunnel::WarrenTunnelParameters;
 
 /// Lightweight snapshot of Warren tunnel endpoint data needed by the
@@ -27,7 +29,7 @@ pub(crate) struct WarrenBackendInfo {
     /// (`warrenguard_multihop::dial`), so opening only the primary would let
     /// our own kill switch block the one address a v6-only host can use
     /// (`incidents/2026-09-20-an-ipv6-only-mobile-network-*`). One more
-    /// destination, still scoped to the daemon's own uid.
+    /// destination, still scoped to the daemon ([`relay_peers`]).
     pub relay_endpoint_v6: Option<SocketAddr>,
     pub exit_endpoint: Option<SocketAddr>,
     pub enable_daita: bool,
@@ -107,8 +109,7 @@ impl BackendParams {
     /// fallback also failed" on every attempt.
     ///
     /// This opens one more protocol, never one more destination, and the
-    /// rule stays scoped to the daemon's own uid (`AllowedClients::Root` off
-    /// Windows) exactly like the UDP one.
+    /// rule stays scoped to the daemon exactly like the UDP one ([`relay_peers`]).
     pub fn get_next_hop_endpoints(&self) -> Vec<Endpoint> {
         let carriers = |addr| {
             [TransportProtocol::Udp, TransportProtocol::Tcp]
@@ -238,6 +239,30 @@ fn warren_tunnel_endpoint(info: &WarrenBackendInfo) -> TunnelEndpoint {
     }
 }
 
+/// The firewall allowances for the tunnel's next hop, shared by the connecting
+/// and the connected policies: the entry relay in multi-hop, the exit's
+/// addresses in single-hop.
+///
+/// Scoped to the daemon's own uid off Windows (its executable on Windows). The
+/// tunnel routes that hop outside itself, so an allowance open to every uid
+/// would let any local process, a web page's `fetch` included, send a flow the
+/// page controls to the entry from the real address. Another Warren client on
+/// this host, the browser extension's helper, stands aside while this tunnel is
+/// up instead of being let through (2026-09-29).
+pub(crate) fn relay_peers(endpoints: impl IntoIterator<Item = Endpoint>) -> Vec<AllowedEndpoint> {
+    #[cfg(target_os = "windows")]
+    let clients = AllowedClients::from(vec![std::env::current_exe().unwrap()]);
+    #[cfg(not(target_os = "windows"))]
+    let clients = AllowedClients::Root;
+    endpoints
+        .into_iter()
+        .map(|endpoint| AllowedEndpoint {
+            endpoint,
+            clients: clients.clone(),
+        })
+        .collect()
+}
+
 #[cfg(test)]
 mod tests {
     //! Security regression: validate that the accessors produce the
@@ -267,6 +292,41 @@ mod tests {
         info.relay_endpoint = Some(relay_endpoint.parse().unwrap());
         info.exit_endpoint = Some(exit_endpoint.parse().unwrap());
         info
+    }
+
+    /// The next hop is routed outside the tunnel, so only the daemon may reach
+    /// it: opened to every uid, a web page could send a flow it times to the
+    /// entry relay from the real address (security review, 2026-09-29).
+    #[cfg(not(target_os = "windows"))]
+    #[test]
+    fn only_the_daemon_may_reach_the_next_hop() {
+        use talpid_types::net::{AllowedClients, AllowedEndpoint, Endpoint};
+
+        let udp = Endpoint::from_socket_address(
+            "37.27.217.153:443".parse().unwrap(),
+            TransportProtocol::Udp,
+        );
+        let tcp = Endpoint::from_socket_address(
+            "37.27.217.153:443".parse().unwrap(),
+            TransportProtocol::Tcp,
+        );
+
+        let peers = super::relay_peers([udp, tcp]);
+
+        assert_eq!(
+            peers,
+            vec![
+                AllowedEndpoint {
+                    endpoint: udp,
+                    clients: AllowedClients::Root,
+                },
+                AllowedEndpoint {
+                    endpoint: tcp,
+                    clients: AllowedClients::Root,
+                },
+            ],
+            "one allowance per next-hop endpoint, for the daemon only"
+        );
     }
 
     #[test]

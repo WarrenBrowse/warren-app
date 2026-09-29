@@ -3,7 +3,7 @@ use futures::channel::{mpsc, oneshot};
 use futures::stream::Fuse;
 
 use talpid_tunnel::{TunnelEvent, TunnelMetadata};
-use talpid_types::net::{AllowedClients, AllowedEndpoint, Endpoint};
+use talpid_types::net::{AllowedEndpoint, Endpoint};
 use talpid_types::tunnel::{ErrorStateCause, FirewallPolicyError};
 use talpid_types::{BoxedError, ErrorExt};
 
@@ -202,19 +202,7 @@ impl ConnectedState {
     /// The peer allowances of the connected policy: the tunnel's own sockets
     /// to each relay endpoint it named.
     fn allowed_peers(&self) -> Vec<AllowedEndpoint> {
-        #[cfg(target_os = "windows")]
-        let clients = AllowedClients::from(vec![std::env::current_exe().unwrap()]);
-
-        #[cfg(not(target_os = "windows"))]
-        let clients = AllowedClients::Root;
-
-        self.peer_endpoints
-            .iter()
-            .map(|&endpoint| AllowedEndpoint {
-                endpoint,
-                clients: clients.clone(),
-            })
-            .collect()
+        super::backend_params::relay_peers(self.peer_endpoints.iter().copied())
     }
 
     fn get_firewall_policy(&self, shared_values: &SharedTunnelStateValues) -> FirewallPolicy {

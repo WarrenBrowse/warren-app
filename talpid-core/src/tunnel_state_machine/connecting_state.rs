@@ -10,11 +10,11 @@ use talpid_routing::RouteManagerHandle;
 use talpid_tunnel::tun_provider::TunProvider;
 use talpid_tunnel::{EventHook, TunnelArgs, TunnelEvent, TunnelMetadata};
 use talpid_types::ErrorExt;
-use talpid_types::net::{AllowedClients, AllowedEndpoint, AllowedTunnelTraffic};
+use talpid_types::net::AllowedTunnelTraffic;
 use talpid_types::tunnel::{ErrorStateCause, FirewallPolicyError};
 use talpid_warren_tunnel::WarrenTunnelParameters;
 
-use super::backend_params::BackendParams;
+use super::backend_params::{BackendParams, relay_peers};
 
 use super::connected_state::TunnelEventsReceiver;
 use super::{
@@ -396,24 +396,10 @@ impl ConnectingState {
         #[cfg(target_os = "linux")]
         shared_values.disable_connectivity_check();
 
-        let endpoints = params.get_next_hop_endpoints();
-
-        #[cfg(target_os = "windows")]
-        let clients = AllowedClients::from(vec![std::env::current_exe().unwrap()]);
-
-        #[cfg(not(target_os = "windows"))]
-        let clients = AllowedClients::Root;
-
         #[cfg(target_os = "windows")]
         let exit_endpoint_ip = params.get_exit_hop_endpoint().map(|ep| ep.address.ip());
 
-        let peer_endpoints = endpoints
-            .into_iter()
-            .map(|endpoint| AllowedEndpoint {
-                endpoint,
-                clients: clients.clone(),
-            })
-            .collect();
+        let peer_endpoints = relay_peers(params.get_next_hop_endpoints());
 
         #[cfg(target_os = "macos")]
         let redirect_interface = shared_values
