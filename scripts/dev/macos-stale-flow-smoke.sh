@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Prove, on a REAL exit, that a socket opened before the connect fails at once
-# instead of hanging silently for the whole tunnel lifetime.
+# instead of hanging silently for the whole tunnel lifetime, and that another
+# Warren client running as the user (the browser extension's helper) keeps
+# browsing: it stands aside, and only the daemon reaches the relay.
 #
 # Why this exists: a socket connected before the tunnel came up keeps the
 # physical interface's address as its source. After the default route moves
@@ -66,6 +68,10 @@ DEADMAN_SECONDS="${DEADMAN_SECONDS:-120}"
 MAX_ERROR_SECS="${MAX_ERROR_SECS:-2}"
 export WARREN_RPC_SOCKET_PATH="/var/run/$PRODUCT_DIR"
 
+# Reads the whole status before matching it: under pipefail, `status | grep -q`
+# fails whenever grep exits on its match before the CLI has written its last
+# line (SIGPIPE), which reported a connected tunnel as never connected.
+is_connected() { case "$("$CLI" status 2>/dev/null)" in Connected*) return 0 ;; esac; return 1; }
 say() { printf '%s\n' "$*"; }
 FAIL=0
 
@@ -136,6 +142,14 @@ DEV_PID=$!
 for _ in $(seq 1 20); do [ -S "$WARREN_RPC_SOCKET_PATH" ] && break; sleep 1; done
 [ -S "$WARREN_RPC_SOCKET_PATH" ] || { say "FAIL: the dev daemon never opened $WARREN_RPC_SOCKET_PATH"; FAIL=1; exit 1; }
 
+# With lockdown armed, the installed daemon leaves its kill switch in place when
+# it stops, and the dev daemon only lifts it once it has settled. Sockets opened
+# before that are refused by our own firewall and prove nothing.
+for _ in $(seq 1 20); do
+    /usr/bin/python3 -c "import socket; socket.create_connection(('1.1.1.1', 443), timeout=2).close()" 2>/dev/null && break
+    sleep 1
+done
+
 # ------------------------------------------------ sockets opened BEFORE connect
 # A connected UDP socket (a QUIC session) and an idle TCP connection, both
 # holding the physical interface's address. The probe waits for a "go" file,
@@ -182,10 +196,10 @@ for _ in $(seq 1 50); do [ -f "$PROBE_DIR/ready" ] && break; sleep 0.1; done
 say "connecting"
 "$CLI" connect >/dev/null 2>&1
 for _ in $(seq 1 40); do
-    "$CLI" status 2>/dev/null | grep -q Connected && break
+    is_connected && break
     sleep 1
 done
-"$CLI" status 2>/dev/null | grep -q Connected || { say "FAIL: never reached Connected"; FAIL=1; exit 1; }
+is_connected || { say "FAIL: never reached Connected"; FAIL=1; exit 1; }
 sleep 2
 
 touch "$PROBE_DIR/go"
@@ -194,6 +208,48 @@ cat "$PROBE_DIR/out"
 
 FRESH="$(curl -s -m6 -o /dev/null -w '%{http_code}' https://1.1.1.1/cdn-cgi/trace || echo FAIL)"
 say "fresh connection through the tunnel: HTTP $FRESH"
+
+# The relay is routed outside the tunnel, so only the daemon may reach it: a
+# process of the user must be refused, or a web page could send a flow it times
+# to the entry from the real address. The browser extension's helper, a Warren
+# client running as the user on the same relay, stands aside instead
+# (warren-sdk `stand_aside_behind_system_warren`), which the Brave check below
+# proves.
+RELAY="$(grep 'Applying firewall policy: Connected to' "/var/log/$PRODUCT_DIR/daemon.log" | tail -1 \
+    | sed -n 's/.*Connected to { \([0-9.]*\):443\/UDP.*/\1/p')"
+USER_TCP="skipped"
+if [ -n "$RELAY" ] && [ -n "${SUDO_USER:-}" ]; then
+    USER_TCP="$(sudo -u "$SUDO_USER" /usr/bin/python3 -c "
+import socket, time
+t0 = time.monotonic()
+try:
+    socket.create_connection(('$RELAY', 443), timeout=5).close()
+    print('connected')
+except OSError as e:
+    print('refused (%s) after %.2fs' % (e, time.monotonic() - t0))
+")"
+fi
+say "a process of $SUDO_USER reaching the relay $RELAY:443: $USER_TCP"
+
+# The browser itself, when it runs with the extension connected: a page through
+# the helper must load while the app is connected.
+BROWSER="skipped (no Brave with warren-host running)"
+if [ -n "${SUDO_USER:-}" ] && pgrep -x "Brave Browser" >/dev/null && pgrep -f warren-host >/dev/null; then
+    as_user() { sudo -u "$SUDO_USER" osascript -e "tell application \"Brave Browser\" to $1" 2>/dev/null; }
+    as_user "make new window" >/dev/null
+    WID="$(as_user "get id of front window")"
+    as_user "set URL of active tab of (window id $WID) to \"https://en.wikipedia.org/wiki/Special:Random\"" >/dev/null
+    BROWSER="still loading after 15s"
+    for _ in $(seq 1 30); do
+        sleep 0.5
+        if [ "$(as_user "get loading of active tab of (window id $WID)")" = "false" ]; then
+            BROWSER="loaded: $(as_user "get title of active tab of (window id $WID)")"
+            break
+        fi
+    done
+    as_user "close (window id $WID)" >/dev/null
+fi
+say "a page in Brave through the extension: $BROWSER"
 
 "$CLI" disconnect >/dev/null 2>&1
 sleep 2
@@ -219,3 +275,13 @@ grep -q '^TCP error ' "$PROBE_DIR/out" \
     && say "ok: the stale TCP connection failed as soon as it sent" \
     || { say "FAIL: the stale TCP connection did not fail when it sent"; FAIL=1; }
 [ "$FRESH" = "200" ] || { say "FAIL: a fresh connection did not get through the tunnel"; FAIL=1; }
+case "$USER_TCP" in
+    refused*) say "ok: only the daemon reaches the relay outside the tunnel" ;;
+    skipped) say "SKIP: no relay address or no SUDO_USER, the relay check did not run" ;;
+    *) say "FAIL: a process of the user reaches the relay outside the tunnel"; FAIL=1 ;;
+esac
+case "$BROWSER" in
+    loaded:*) say "ok: the browser loads pages through the extension while the app is connected" ;;
+    skipped*) ;;
+    *) say "FAIL: the browser stalls through the extension while the app is connected"; FAIL=1 ;;
+esac

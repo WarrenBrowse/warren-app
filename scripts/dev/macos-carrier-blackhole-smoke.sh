@@ -75,6 +75,10 @@ DEADMAN_SECONDS="${DEADMAN_SECONDS:-180}"
 MAX_RECOVER_SECS="${MAX_RECOVER_SECS:-8}"
 export WARREN_RPC_SOCKET_PATH="/var/run/$PRODUCT_DIR"
 
+# Reads the whole status before matching it: under pipefail, `status | grep -q`
+# fails whenever grep exits on its match before the CLI has written its last
+# line (SIGPIPE), which reported a connected tunnel as never connected.
+is_connected() { case "$("$CLI" status 2>/dev/null)" in Connected*) return 0 ;; esac; return 1; }
 say() { printf '%s\n' "$*"; }
 FAIL=0
 
@@ -157,7 +161,7 @@ for _ in $(seq 1 20); do [ -S "$WARREN_RPC_SOCKET_PATH" ] && break; sleep 1; don
 say "connecting"
 "$CLI" connect >/dev/null 2>&1
 for _ in $(seq 1 40); do
-    "$CLI" status 2>/dev/null | grep -q Connected && break
+    is_connected && break
     sleep 1
 done
 
