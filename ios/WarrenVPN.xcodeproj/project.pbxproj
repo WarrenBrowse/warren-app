@@ -68,6 +68,7 @@
 		06AC116228F94C450037AF9A /* ApplicationConfiguration.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58BFA5CB22A7CE1F00A6173D /* ApplicationConfiguration.swift */; };
 		06B2CC252668CC323F91F138 /* WarrenForumAttachPromptStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01E8F6C905B7F52620039880 /* WarrenForumAttachPromptStateTests.swift */; };
 		07210005B6715F4501377AE9 /* WarrenTunnelStatisticsViewTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A436FEFD79CF74A9A98F5160 /* WarrenTunnelStatisticsViewTests.swift */; };
+		0ABC8D4EFEE86BF62AB9C38A /* ProductBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 44D9C4AEA97F097041D48911 /* ProductBanner.swift */; };
 		0BF075EF918D344849E95E01 /* WarrenGzipTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 290FFF2D6A88B5AB30BD7FF4 /* WarrenGzipTests.swift */; };
 		0CF221770199A1037C69AB60 /* WarrenQuinnAdapterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDF686FB1FFD31D8827125C3 /* WarrenQuinnAdapterTests.swift */; };
 		1091DCD9DF532738D446B104 /* WarrenForumDigestPoller.swift in Sources */ = {isa = PBXBuildFile; fileRef = 30FE1CB34DC0FB0229766FAC /* WarrenForumDigestPoller.swift */; };
@@ -82,6 +83,7 @@
 		1BA12DA441BA260489F72C48 /* WarrenFailoverBannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E9046C307DEE8E15A14705F7 /* WarrenFailoverBannerView.swift */; };
 		1BFE2983A46F8D5C450D4271 /* WarrenLaunchAnnouncementsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0937BAFECADD977890B048BB /* WarrenLaunchAnnouncementsTests.swift */; };
 		1CAA6458750314DA8CBE32A2 /* Settings.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 26AF969EC5F8DB7B39216445 /* Settings.xcstrings */; };
+		1D456CA1AF5DC1C4351CBF58 /* CardButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C5B17471EEC3A04C428CA4 /* CardButton.swift */; };
 		2131A267FF1EE88DFA621AB3 /* WarrenEnvStandDownNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE499E2BBAED720F9573A6DD /* WarrenEnvStandDownNotificationProvider.swift */; };
 		21FCCBF0E4B62BF0E9F37873 /* WarrenForumEventsJournalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9011860F35E46016074F0F50 /* WarrenForumEventsJournalTests.swift */; };
 		2313BA996FBC4C7AB1C89088 /* WireGuardKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 016EE03B2F8524EB0035B25C /* WireGuardKey.swift */; };
@@ -100,6 +102,7 @@
 		3150505A447A1F806C4A18FE /* WarrenAppGroupKeyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5968217D68AEED5186653B3 /* WarrenAppGroupKeyTests.swift */; };
 		34570EFCE7B7703EE43F9780 /* WarrenAppVersionGateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59AD333B05A4015A37A4FD36 /* WarrenAppVersionGateTests.swift */; };
 		34C0CD946F4CFE1D8F6120AF /* WarrenWalletTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52A878961076F78F42C4BD70 /* WarrenWalletTests.swift */; };
+		35EF95AA32001BE2E3168CCD /* ConnectSurface.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2677BDD38A85F97380655D4F /* ConnectSurface.swift */; };
 		360E703C78260AAA9747B0D6 /* WarrenApiHostResolutionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = BCC7F56A31F448B9F9DBB6D1 /* WarrenApiHostResolutionTests.swift */; };
 		366696F18279A4B75F754D60 /* WarrenPortForwarding.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6D6D8D16E857F20933BD15F6 /* WarrenPortForwarding.swift */; };
 		36A9D443214464D1D5725BC3 /* WarrenWalletGenerateViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2AE61426DEC27860AFC0D2EA /* WarrenWalletGenerateViewController.swift */; };
@@ -639,7 +642,6 @@
 		7AA130992CFF365D00640DF9 /* ConnectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA130982CFF365A00640DF9 /* ConnectionView.swift */; };
 		7AA1309B2D0048D800640DF9 /* MainButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA1309A2D0048D800640DF9 /* MainButton.swift */; };
 		7AA1309F2D007B2500640DF9 /* VisualEffectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA1309E2D007B2500640DF9 /* VisualEffectView.swift */; };
-		7AA130A12D01B1E200640DF9 /* SplitMainButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA130A02D01B1E200640DF9 /* SplitMainButton.swift */; };
 		7AA513862BC91C6B00D081A4 /* LogRotationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA513852BC91C6B00D081A4 /* LogRotationTests.swift */; };
 		7AA564462F29014D001D1FB9 /* IncludeAllNetworksPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA564452F290144001D1FB9 /* IncludeAllNetworksPage.swift */; };
 		7AA564482F2B6813001D1FB9 /* String+Assets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AA564472F2B680D001D1FB9 /* String+Assets.swift */; };
@@ -763,7 +765,6 @@
 		85FB5A102B6960A30015DCED /* AccountDeletionPage.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85FB5A0F2B6960A30015DCED /* AccountDeletionPage.swift */; };
 		8688BC9975396BAC7909E939 /* WarrenForumAttachUpload.swift in Sources */ = {isa = PBXBuildFile; fileRef = 77D55C1EB744552DD16C8022 /* WarrenForumAttachUpload.swift */; };
 		87A647B96EC28D42434F4D03 /* AllLocationDataSourceBenchmarkTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87A647B96EC28D42434F4D02 /* AllLocationDataSourceBenchmarkTests.swift */; };
-		8817B4F4114644805B181DD8 /* ChipStackLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 03641E0A42B0009B4FF7125F /* ChipStackLayoutTests.swift */; };
 		88E4742CDFA4831D3FD0BC59 /* WarrenConnectingStuckNotificationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4D576A77440D3913D84E26B6 /* WarrenConnectingStuckNotificationProvider.swift */; };
 		89FAC61A88D651B617CE77B1 /* WarrenWalletLoginCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 43AB698353B23DAD21E76DB9 /* WarrenWalletLoginCoordinator.swift */; };
 		8A4B88A695B4F4548417487C /* SceneryLayoutTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B5248552DB197C896789682D /* SceneryLayoutTests.swift */; };
@@ -779,6 +780,7 @@
 		982C0E988565162719F1F6CD /* WarrenAppGroupEvents.swift in Sources */ = {isa = PBXBuildFile; fileRef = C22157641BAA2EE822C65A14 /* WarrenAppGroupEvents.swift */; };
 		9A9178B0D184553274A03720 /* WarrenAppGroupEventsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 69D9EA944346A66F854BBE62 /* WarrenAppGroupEventsTests.swift */; };
 		9D992EF8CC16D6FE7BDFF161 /* WarrenProblemReportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F934A57F6E5D74E2B11366E /* WarrenProblemReportTests.swift */; };
+		9D9B59C80450338340F3D323 /* ConnectSurfaceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27F9599C11527BF21CC1D385 /* ConnectSurfaceTests.swift */; };
 		9F13D355DF69A1A98DB17F46 /* WarrenAnnouncementsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4F607625AC9E8F0C74409A44 /* WarrenAnnouncementsTests.swift */; };
 		A1C1B1FED172219DF9EE4A35 /* WarrenForumPreflight.swift in Sources */ = {isa = PBXBuildFile; fileRef = 139CB6EA407200C99CEA0111 /* WarrenForumPreflight.swift */; };
 		A52963DB473093BE6F037914 /* WarrenAppGroupKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DC64B22A05A2627B01EADB9 /* WarrenAppGroupKey.swift */; };
@@ -1673,7 +1675,6 @@
 		01FFF9602F0BE14E00BDAF45 /* ObfuscationMethod.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObfuscationMethod.swift; sourceTree = "<group>"; };
 		02105C2CDFD1FD4A2552F49E /* WarrenForumActivityPanelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenForumActivityPanelTests.swift; sourceTree = "<group>"; };
 		02729CBAC67895DA4769372D /* WarrenWalletCoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenWalletCoordinator.swift; sourceTree = "<group>"; };
-		03641E0A42B0009B4FF7125F /* ChipStackLayoutTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ChipStackLayoutTests.swift; sourceTree = "<group>"; };
 		04FF295BCD79680DF7BFC8A0 /* WarrenForumActivityPanel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenForumActivityPanel.swift; sourceTree = "<group>"; };
 		05E1C4C669A27B2790569666 /* StorePaymentOutcomeTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StorePaymentOutcomeTests.swift; sourceTree = "<group>"; };
 		062B45BB28FD8C3B00746E77 /* RESTDefaults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RESTDefaults.swift; sourceTree = "<group>"; };
@@ -1712,6 +1713,7 @@
 		10769BF2C0D35B953296669C /* WarrenNetworkInfo.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenNetworkInfo.swift; sourceTree = "<group>"; };
 		117BD68BE2C77CD7DD746086 /* WarrenWalletRoutingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenWalletRoutingTests.swift; sourceTree = "<group>"; };
 		139CB6EA407200C99CEA0111 /* WarrenForumPreflight.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenForumPreflight.swift; sourceTree = "<group>"; };
+		16C5B17471EEC3A04C428CA4 /* CardButton.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CardButton.swift; sourceTree = "<group>"; };
 		197FF985CD18EA65FE765862 /* WarrenWallet.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenWallet.swift; sourceTree = "<group>"; };
 		1A936A414CE52F9EA1F098C1 /* WarrenWalletLogout.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenWalletLogout.swift; sourceTree = "<group>"; };
 		1BF1B043F5FC0467E7AC28C7 /* WarrenProductAnchorsTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenProductAnchorsTests.swift; sourceTree = "<group>"; };
@@ -1722,9 +1724,11 @@
 		21B9E41732A255F7BEF938A1 /* StoreSubscriptionTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StoreSubscriptionTests.swift; sourceTree = "<group>"; };
 		22D72FC6FA618C9F9D644673 /* WarrenIncidentReport.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenIncidentReport.swift; sourceTree = "<group>"; };
 		24F65F5890E5679E93AF8F65 /* ios-manifest.json */ = {isa = PBXFileReference; includeInIndex = 1; path = "ios-manifest.json"; sourceTree = "<group>"; };
+		2677BDD38A85F97380655D4F /* ConnectSurface.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConnectSurface.swift; sourceTree = "<group>"; };
 		26A72BCA8C08FEA431AF4457 /* WarrenWalletInteractorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenWalletInteractorTests.swift; sourceTree = "<group>"; };
 		26AF969EC5F8DB7B39216445 /* Settings.xcstrings */ = {isa = PBXFileReference; includeInIndex = 1; path = Settings.xcstrings; sourceTree = "<group>"; };
 		26C6C88FF811F04678F88CC2 /* WarrenAnnouncementNotificationProviderTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenAnnouncementNotificationProviderTests.swift; sourceTree = "<group>"; };
+		27F9599C11527BF21CC1D385 /* ConnectSurfaceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConnectSurfaceTests.swift; sourceTree = "<group>"; };
 		28CA642BD064C2972F7792BE /* WarrenMnemonicDisplayView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenMnemonicDisplayView.swift; sourceTree = "<group>"; };
 		290FFF2D6A88B5AB30BD7FF4 /* WarrenGzipTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = WarrenGzipTests.swift; sourceTree = "<group>"; };
 		29ACE2686C7ABAE92EBB8423 /* Wallet.xcstrings */ = {isa = PBXFileReference; includeInIndex = 1; path = Wallet.xcstrings; sourceTree = "<group>"; };
@@ -1778,6 +1782,7 @@
 		44B02E3A2BC5732D008EDF34 /* LoggingTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LoggingTests.swift; sourceTree = "<group>"; };
 		44B3C43C2C00CBBC0079782C /* PacketTunnelActorReducerTests.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PacketTunnelActorReducerTests.swift; sourceTree = "<group>"; };
 		44CAEAA02D442F56004A8E65 /* LocationIdentifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationIdentifier.swift; sourceTree = "<group>"; };
+		44D9C4AEA97F097041D48911 /* ProductBanner.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ProductBanner.swift; sourceTree = "<group>"; };
 		44DD7D232B6CFFD70005F67F /* StartTunnelOperationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StartTunnelOperationTests.swift; sourceTree = "<group>"; };
 		44DD7D262B6D18FB0005F67F /* MockTunnelInteractor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockTunnelInteractor.swift; sourceTree = "<group>"; };
 		44DD7D282B7113CA0005F67F /* MockTunnel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockTunnel.swift; sourceTree = "<group>"; };
@@ -2275,7 +2280,6 @@
 		7AA130982CFF365A00640DF9 /* ConnectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConnectionView.swift; sourceTree = "<group>"; };
 		7AA1309A2D0048D800640DF9 /* MainButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainButton.swift; sourceTree = "<group>"; };
 		7AA1309E2D007B2500640DF9 /* VisualEffectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VisualEffectView.swift; sourceTree = "<group>"; };
-		7AA130A02D01B1E200640DF9 /* SplitMainButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplitMainButton.swift; sourceTree = "<group>"; };
 		7AA513852BC91C6B00D081A4 /* LogRotationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LogRotationTests.swift; sourceTree = "<group>"; };
 		7AA564452F290144001D1FB9 /* IncludeAllNetworksPage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IncludeAllNetworksPage.swift; sourceTree = "<group>"; };
 		7AA564472F2B680D001D1FB9 /* String+Assets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "String+Assets.swift"; sourceTree = "<group>"; };
@@ -3153,9 +3157,9 @@
 				44E1F7592D3FDCBA003A60FF /* DestinationDescriberTests.swift */,
 				B5248552DB197C896789682D /* SceneryLayoutTests.swift */,
 				76D6CF91095AFA9928A86639 /* ConnectionPhaseColorTests.swift */,
-				03641E0A42B0009B4FF7125F /* ChipStackLayoutTests.swift */,
 				DB7363BBA27EE2B775D859D4 /* ConnectionViewActionsTests.swift */,
 				907B623DE4787EAEB619F633 /* DaitaTruthfulnessTests.swift */,
+				27F9599C11527BF21CC1D385 /* ConnectSurfaceTests.swift */,
 			);
 			path = Tunnel;
 			sourceTree = "<group>";
@@ -3204,6 +3208,9 @@
 				4419AA8A2D2826E5001B13C9 /* DetailsView.swift */,
 				F0ADF1D22D01B6B400299F09 /* FeatureIndicatorsViewModel.swift */,
 				4419AA8D2D2828A4001B13C9 /* HeaderView.swift */,
+				2677BDD38A85F97380655D4F /* ConnectSurface.swift */,
+				16C5B17471EEC3A04C428CA4 /* CardButton.swift */,
+				44D9C4AEA97F097041D48911 /* ProductBanner.swift */,
 			);
 			path = ConnectionView;
 			sourceTree = "<group>";
@@ -3615,7 +3622,6 @@
 				F95CDDA72EE07F7F000E9D97 /* PressedExposingButton.swift */,
 				7A8A190F2CEE3918000BCB5B /* RowSeparator.swift */,
 				58F19E34228C15BA00C7710B /* SpinnerActivityIndicatorView.swift */,
-				7AA130A02D01B1E200640DF9 /* SplitMainButton.swift */,
 				E1FD0DF428AA7CE400299DB4 /* StatusActivityView.swift */,
 				58EF581025D69DB400AEBA94 /* StatusImageView.swift */,
 				7AA1309E2D007B2500640DF9 /* VisualEffectView.swift */,
@@ -6373,7 +6379,6 @@
 				C0C9A3A16E07DE71BD0A68D2 /* WarrenForumAttachCopyTests.swift in Sources */,
 				80ED41D4C498ACFFF07DE25C /* WarrenSecureClipboardTests.swift in Sources */,
 				3896AE79BA5C5EC2F0052E9D /* ConnectionPhaseColorTests.swift in Sources */,
-				8817B4F4114644805B181DD8 /* ChipStackLayoutTests.swift in Sources */,
 				2993D51289EF38434CC5F014 /* WarrenMnemonicTextTests.swift in Sources */,
 				EA58E43AEF9C45C18CB7EDA4 /* ConnectionViewActionsTests.swift in Sources */,
 				C84902AF25E065BD54CC9D97 /* DaitaTruthfulnessTests.swift in Sources */,
@@ -6392,6 +6397,7 @@
 				C828F79C599BA6CD80C11B8D /* WarrenPinTrustOutcomeTests.swift in Sources */,
 				BBC051F9183094269277752C /* WarrenAccountStandingFeedTests.swift in Sources */,
 				4E537A1334B564B7355E7999 /* WarrenThemeTests.swift in Sources */,
+				9D9B59C80450338340F3D323 /* ConnectSurfaceTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -6711,7 +6717,6 @@
 				7A0EAE9A2D01B41500D3EB8B /* MainButtonStyle.swift in Sources */,
 				58CEB3022AFD365600E6E088 /* SwitchCellContentConfiguration.swift in Sources */,
 				F0C9CE3E2F110C3B00EF41CE /* UIStackView+Contentsize.swift in Sources */,
-				7AA130A12D01B1E200640DF9 /* SplitMainButton.swift in Sources */,
 				F97C38E82DF025D9006DCB08 /* MullvadAlert.swift in Sources */,
 				7AA1309F2D007B2500640DF9 /* VisualEffectView.swift in Sources */,
 				7A0C0F632A979C4A0058EFCE /* Coordinator+Router.swift in Sources */,
@@ -7006,6 +7011,9 @@
 				6932BFDD7367B3C8366E5B85 /* WarrenAccountStandingFeed.swift in Sources */,
 				5A16E75D5DEE3DDBD4A6D5A7 /* WarrenAccountStrikeNotificationProvider.swift in Sources */,
 				ABA80404BA5A440D64CB3E14 /* WarrenTheme.swift in Sources */,
+				35EF95AA32001BE2E3168CCD /* ConnectSurface.swift in Sources */,
+				1D456CA1AF5DC1C4351CBF58 /* CardButton.swift in Sources */,
+				0ABC8D4EFEE86BF62AB9C38A /* ProductBanner.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -39,6 +39,9 @@ struct HeaderBarPresentation: Sendable {
     let style: HeaderBarStyle
     let showsDivider: Bool
     var tone: HeaderBarTone = .light
+    /// Whether the header shows the non-prod chip. Off where the screen names
+    /// the build itself.
+    var showsProductChip = true
 
     static var `default`: HeaderBarPresentation {
         HeaderBarPresentation(style: .default, showsDivider: false)
@@ -775,6 +778,7 @@ class RootContainerViewController: UIViewController {
         headerBarView.backgroundColor = headerBarPresentation.style.backgroundColor()
         headerBarView.showsDivider = headerBarPresentation.showsDivider
         headerBarView.tone = headerBarPresentation.tone
+        headerBarView.isProductChipSuppressed = !headerBarPresentation.showsProductChip
     }
 
     private func updateHeaderBarStyleFromChildPreferences(animated: Bool) {

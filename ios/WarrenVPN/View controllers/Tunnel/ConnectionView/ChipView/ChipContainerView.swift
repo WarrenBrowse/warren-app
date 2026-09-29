@@ -9,19 +9,14 @@
 import SwiftUI
 
 /// The active features, as the vertical stack of pills the art direction asks
-/// for: left-aligned, one per row, every one of them visible.
-///
-/// This was a wrapping horizontal flow with an "N more..." escape hatch, which
-/// is neither what desktop draws (`FeatureIndicators.tsx`, a flex column at
-/// `gap: 5px`) nor what Android draws (`FeatureIndicatorsPanel.kt`, a `Column`
-/// at `Dimens.chipStackGap`). The flow also measured its own rows by hand
-/// through alignment guides and reported its height back through a state
-/// variable, so it re-laid out twice per appearance; a `VStack` sizes itself.
+/// for: left-aligned, one per row, every one of them visible, 2 apart
+/// (`connectionCard.badgeGap` in design-tokens.json, desktop
+/// `StyledFeatureBadges`, Android `FeatureIndicatorsPanel.kt`).
 struct ChipContainerView<ViewModel>: View where ViewModel: ChipViewModelProtocol {
     @ObservedObject var viewModel: ViewModel
 
     var body: some View {
-        VStack(alignment: .leading, spacing: UIMetrics.FeatureIndicators.chipStackGap) {
+        VStack(alignment: .leading, spacing: ConnectSurfaceMetrics.Card.chipGap) {
             ForEach(viewModel.chips) { data in
                 ChipView(item: data) {
                     viewModel.onPressed(item: data)

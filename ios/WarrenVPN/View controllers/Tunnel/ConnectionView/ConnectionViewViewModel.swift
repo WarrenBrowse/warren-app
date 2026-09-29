@@ -8,6 +8,7 @@
 
 import Combine
 import WarrenREST
+import WarrenRustRuntime
 import WarrenSettings
 import WarrenTypes
 import SwiftUI
@@ -128,6 +129,7 @@ class ConnectionViewViewModel: ObservableObject {
         case cancel
         case selectLocation
         case shuffleLocation
+        case explainNetwork
     }
 
     @Published private(set) var tunnelStatus: TunnelStatus
@@ -146,6 +148,17 @@ class ConnectionViewViewModel: ObservableObject {
     @Published private(set) var shuffleEnabled: Bool = false
 
     let destinationDescriber: DestinationDescribing
+
+    /// The non-prod marker the banner over the scenery carries, nil on prod.
+    var productBadge: String? = WarrenProductAnchors.current.environmentBadge
+
+    /// What the server says about its network, once it has answered. The
+    /// banner names the speed cap from it.
+    @Published var networkInfo: WarrenNetworkInfo?
+
+    var productBannerLine: String {
+        WarrenBetaExplanation.summary(networkInfo: networkInfo)
+    }
 
     var tunnelIsConnected: Bool {
         if case .connected = tunnelStatus.state {
@@ -214,7 +227,7 @@ extension ConnectionViewViewModel {
     }
 
     var eyeSymbolName: String {
-        connectionPhase.showsCrossedEye ? "eye.slash.fill" : "eye.fill"
+        connectionPhase.showsCrossedEye ? "eye.slash" : "eye"
     }
 
     var disableButtons: Bool {

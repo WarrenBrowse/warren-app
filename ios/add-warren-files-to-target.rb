@@ -62,9 +62,6 @@ FILES_TO_ADD = {
   # The status card's two phase colours: the written tint and the filled accent.
   "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/ConnectionPhaseColorTests.swift" => "WarrenVPNTests",
 
-  # The feature pills stack one per row, the same gap on all three clients.
-  "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/ChipStackLayoutTests.swift" => "WarrenVPNTests",
-
   # The signed incident report the exit key-change alert files.
   "WarrenRustRuntime/WarrenIncidentReport.swift" => "WarrenRustRuntime",
   "WarrenRustRuntimeTests/WarrenIncidentReportTests.swift" => "WarrenRustRuntimeTests",
@@ -288,6 +285,13 @@ FILES_TO_ADD = {
   # The theme choice (system, dark, light).
   "WarrenVPN/UI appearance/WarrenTheme.swift" => "WarrenVPN",
   "WarrenVPNTests/MullvadVPN/Classes/WarrenThemeTests.swift" => "WarrenVPNTests",
+
+  # The connect screen's themed surfaces, copied from design-tokens.json and
+  # held to it by a test: the card, its buttons and the beta banner.
+  "WarrenVPN/View controllers/Tunnel/ConnectionView/ConnectSurface.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/Tunnel/ConnectionView/CardButton.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/Tunnel/ConnectionView/ProductBanner.swift" => "WarrenVPN",
+  "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/ConnectSurfaceTests.swift" => "WarrenVPNTests",
 }.freeze
 
 # Files that need to live in MULTIPLE targets (mirrors the Mullvad

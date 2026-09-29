@@ -25,6 +25,7 @@ class TunnelCoordinator: Coordinator, Presenting {
 
     var showSelectLocationPicker: (() -> Void)?
     var showFeatureSetting: ((AppRoute) -> Void)?
+    var explainNetwork: (() -> Void)?
 
     init(
         tunnelManager: TunnelManager,
@@ -47,6 +48,10 @@ class TunnelCoordinator: Coordinator, Presenting {
 
         controller.shouldShowCancelTunnelAlert = { [weak self] in
             self?.showCancelTunnelAlert()
+        }
+
+        controller.shouldExplainNetwork = { [weak self] in
+            self?.explainNetwork?()
         }
 
         controller.shouldShowSettingsForFeature = { [weak self] feature in

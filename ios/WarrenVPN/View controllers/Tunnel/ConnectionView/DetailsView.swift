@@ -12,25 +12,30 @@ extension ConnectionView {
     internal struct DetailsView: View {
         @ObservedObject var viewModel: ConnectionViewViewModel
         @State private var columnWidth: CGFloat = 0
+        @Environment(\.colorScheme) private var colorScheme
+
+        private var palette: ConnectSurfacePalette {
+            ConnectSurfacePalette(colorScheme: colorScheme)
+        }
 
         var body: some View {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     Text(LocalizedStringKey("Connection details"))
                         .font(.footnote.weight(.semibold))
-                        .foregroundStyle(UIColor.primaryTextColor.color.opacity(0.6))
+                        .foregroundStyle(palette.color(.textMuted))
                     Spacer()
                 }
 
                 if let tunnelProtocolName = viewModel.tunnelProtocolName {
                     Text(verbatim: tunnelProtocolName)
                         .font(.subheadline)
-                        .foregroundStyle(UIColor.primaryTextColor.color)
+                        .foregroundStyle(palette.color(.text))
                 }
                 if viewModel.isMultihop {
                     Text(LocalizedStringKey("Multihop (2 hops)"))
                         .font(.subheadline)
-                        .foregroundStyle(UIColor.primaryTextColor.color)
+                        .foregroundStyle(palette.color(.text))
                 }
 
                 VStack(alignment: .leading, spacing: 0) {
@@ -65,13 +70,13 @@ extension ConnectionView {
             HStack(alignment: .top, spacing: 8) {
                 Text(title)
                     .font(.subheadline)
-                    .foregroundStyle(UIColor.primaryTextColor.color.opacity(0.6))
+                    .foregroundStyle(palette.color(.textMuted))
                     .frame(minWidth: columnWidth, alignment: .leading)
                     .sizeOfView { columnWidth = max(columnWidth, $0.width) }
                     .accessibilityHidden(true)
                 Text(value)
                     .font(.subheadline)
-                    .foregroundStyle(UIColor.primaryTextColor.color)
+                    .foregroundStyle(palette.color(.text))
                     .accessibilityLabel(Text(title) + Text(verbatim: " \(value)"))
                     .accessibilityIdentifier(accessibilityId.asString)
             }

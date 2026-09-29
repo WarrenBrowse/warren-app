@@ -53,6 +53,22 @@ final class HeaderBarViewTests: XCTestCase {
         XCTAssertEqual(header.productChipLabel.backgroundColor, UIColor.Warren.yellow)
     }
 
+    /// The connect screen names a marked build in its own banner, so the
+    /// header there holds the chip back, and gives it back everywhere else.
+    func testAScreenWithItsOwnBannerHoldsTheChipBack() {
+        let header = HeaderBarView(frame: .zero)
+        header.productBadge = "BETA"
+
+        header.isProductChipSuppressed = true
+        XCTAssertTrue(header.productChipLabel.isHidden)
+        XCTAssertFalse(header.productChipLabel.isAccessibilityElement)
+        XCTAssertFalse(header.productChipLabel.isUserInteractionEnabled)
+
+        header.isProductChipSuppressed = false
+        XCTAssertFalse(header.productChipLabel.isHidden)
+        XCTAssertTrue(header.productChipLabel.isAccessibilityElement)
+    }
+
     // MARK: - The forum slot
 
     /// The slot carries the bell, the lifebuoy or nothing, and the badge only

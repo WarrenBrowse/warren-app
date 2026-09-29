@@ -736,6 +736,10 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
             self?.router.present(route, animated: true)
         }
 
+        tunnelCoordinator.explainNetwork = { [weak self] in
+            self?.explainNetwork()
+        }
+
         return tunnelCoordinator
     }
 
@@ -1331,6 +1335,12 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
     func rootContainerViewControllerShouldExplainNetwork(
         _ controller: RootContainerViewController
     ) {
+        explainNetwork()
+    }
+
+    /// Raised by the header chip on every screen but the connect screen, which
+    /// carries the same marker in its banner instead.
+    private func explainNetwork() {
         // Fetched rather than cached: the cap is an operator decision that can
         // change between launches, and the answer is only ever read here.
         Task { [weak self] in

@@ -118,6 +118,7 @@ class TunnelViewController: UIViewController, RootContainment {
     var shouldShowSelectLocationPicker: (() -> Void)?
     var shouldShowCancelTunnelAlert: (() -> Void)?
     var shouldShowSettingsForFeature: ((FeatureType) -> Void)?
+    var shouldExplainNetwork: (() -> Void)?
 
     let activityIndicator: SpinnerActivityIndicatorView = {
         let activityIndicator = SpinnerActivityIndicatorView(style: .large)
@@ -148,10 +149,13 @@ class TunnelViewController: UIViewController, RootContainment {
             // The phase color moved into the scenery + connection card; the
             // header floats transparent over the artwork with dark content
             // (desktop MainView), instead of an opaque state-colored bar.
+            // A marked build names itself in the banner over the scenery
+            // here, so the header chip would say it twice.
             return HeaderBarPresentation(
                 style: .transparent,
                 showsDivider: false,
-                tone: .dark
+                tone: .dark,
+                showsProductChip: false
             )
         case .loggedOut:
             return HeaderBarPresentation(style: .default, showsDivider: true)
@@ -281,6 +285,9 @@ class TunnelViewController: UIViewController, RootContainment {
             case .shuffleLocation:
                 self?.logger.debug("User tapped shuffle location button")
                 self?.interactor.shuffleExitLocation()
+
+            case .explainNetwork:
+                self?.shouldExplainNetwork?()
             }
         }
 
@@ -296,6 +303,46 @@ class TunnelViewController: UIViewController, RootContainment {
         updateBackdrop(animated: false)
         subscribeToFailoverEvents()
         subscribeToPinMismatchEvents()
+        subscribeToTheme()
+        loadNetworkCap()
+    }
+
+    // MARK: - Theme
+
+    /// Only the connect screen's own surfaces have a light design, so the
+    /// theme is applied to the hosted connection view and nowhere above it:
+    /// the scenery, the header and the footer keep the look they were drawn
+    /// with.
+    private func subscribeToTheme() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applyTheme),
+            name: .warrenThemePreferenceDidChange,
+            object: nil
+        )
+        registerForTraitChanges([UITraitUserInterfaceStyle.self], target: self, action: #selector(applyTheme))
+        applyTheme()
+    }
+
+    @objc private func applyTheme() {
+        let theme = WarrenTheme(
+            preference: .current,
+            systemStyle: traitCollection.userInterfaceStyle
+        )
+        connectionController?.overrideUserInterfaceStyle = theme.userInterfaceStyle
+    }
+
+    /// The banner names the speed cap when the server gives one. Fetched once
+    /// per screen, off the main thread; until it lands the banner says the
+    /// bandwidth is limited, which is true on every beta.
+    private func loadNetworkCap() {
+        guard connectionViewViewModel.productBadge != nil else { return }
+        Task { [weak self] in
+            let info = await Task.detached(priority: .utility) {
+                WarrenNetworkInfoClient.fetch()
+            }.value
+            self?.connectionViewViewModel.networkInfo = info
+        }
     }
 
     // The tunnel extension writes its events from a process of its own, so the

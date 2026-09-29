@@ -19,20 +19,26 @@ import SwiftUI
 /// baseline (no Mullvad-style bridge/Shadowsocks rotation needed).
 /// Shown in the connection-details panel below the relay info.
 public struct WarrenObfuscationIndicatorView: View {
-    public init() {}
+    /// The connect card hands its themed palette in; the settings screens,
+    /// which have no light design, keep the dark one.
+    let palette: ConnectSurfacePalette
+
+    init(palette: ConnectSurfacePalette = ConnectSurfacePalette(theme: .dark)) {
+        self.palette = palette
+    }
 
     public var body: some View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.shield.fill")
-                .foregroundColor(.Warren.yellow)
+                .foregroundColor(palette.color(.pill))
                 .font(.title3)
             VStack(alignment: .leading, spacing: 2) {
                 Text(String(localized: "HTTP/3 mimicry active", table: "Settings"))
                     .font(.warrenSmallSemiBold)
-                    .foregroundColor(.white)
+                    .foregroundColor(palette.color(.text))
                 Text(String(localized: "Your VPN traffic is indistinguishable from regular HTTPS browsing.", table: "Settings"))
                     .font(.warrenMicro)
-                    .foregroundColor(.white.opacity(0.7))
+                    .foregroundColor(palette.color(.textSecondary))
             }
             Spacer()
         }
@@ -40,10 +46,10 @@ public struct WarrenObfuscationIndicatorView: View {
         .padding(.vertical, 12)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color.Warren.surface)
+                .fill(palette.color(.button))
                 .overlay(
                     RoundedRectangle(cornerRadius: 10)
-                        .stroke(Color.Warren.yellow.opacity(0.3), lineWidth: 1)
+                        .strokeBorder(palette.color(.buttonLine), lineWidth: 0.5)
                 )
         )
         .accessibilityElement(children: .combine)

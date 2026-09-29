@@ -13,55 +13,84 @@ extension ConnectionView {
         @ObservedObject var viewModel: ConnectionViewViewModel
         @Binding var isExpanded: Bool
 
+        @Environment(\.colorScheme) private var colorScheme
+
         var body: some View {
-            HStack(alignment: .center, spacing: 12) {
-                // Phase-colored status eye (desktop Bula card iconography):
-                // crossed-out = hidden/protected, open = visible/exposed.
-                Image(systemName: viewModel.eyeSymbolName)
-                    .font(.title3.weight(.semibold))
-                    .foregroundStyle(viewModel.accentColorForSecureLabel.color)
+            let palette = ConnectSurfacePalette(colorScheme: colorScheme)
+            let metrics = ConnectSurfaceMetrics.Status.self
+            let phase = viewModel.connectionPhase
+
+            HStack(alignment: .center, spacing: metrics.rowGap) {
+                // The eye sits in a quiet well of the phase hue (desktop
+                // ConnectionStatus): crossed out = hidden, open = visible.
+                RoundedRectangle(cornerRadius: metrics.wellRadius)
+                    .fill(palette.color(phase.cardWellToken))
+                    .frame(width: metrics.wellSize, height: metrics.wellSize)
+                    .overlay {
+                        Image(systemName: viewModel.eyeSymbolName)
+                            .font(.system(size: metrics.iconSize - 2, weight: .medium))
+                            .frame(width: metrics.iconSize, height: metrics.iconSize)
+                            .foregroundStyle(palette.color(phase.cardTitleToken))
+                    }
+                    .animation(.easeInOut(duration: 0.3), value: phase)
                     .accessibilityIdentifier("connectionStatusEye")
                     .accessibilityHidden(true)
 
-                VStack(alignment: .leading, spacing: 0) {
+                VStack(alignment: .leading, spacing: metrics.textGap) {
                     Text(viewModel.localizedTitleForSecureLabel)
-                        .font(.title3.weight(.semibold))
-                        .foregroundStyle(viewModel.textColorForSecureLabel.color)
+                        .connectFont(
+                            size: metrics.titleSize,
+                            weight: .semibold,
+                            lineHeight: metrics.titleLineHeight,
+                            relativeTo: .headline
+                        )
+                        .foregroundStyle(palette.color(phase.cardTitleToken))
                         .accessibilityIdentifier(viewModel.accessibilityIdForSecureLabel.asString)
                         .accessibilityLabel(viewModel.localizedAccessibilityLabelForSecureLabel)
                         .accessibilityRemoveTraits(.isButton)
 
                     if let subtitle = viewModel.localizedSubtitleForSecureLabel {
                         Text(subtitle)
-                            .font(.footnote)
-                            // primaryTextColor at 0.8 IS desktop's whiteAlpha80,
-                            // rgba(247, 247, 248, 0.8), which secondaryTextColor
-                            // (pure white at 0.8) is not.
-                            .foregroundStyle(UIColor.primaryTextColor.color.opacity(0.8))
+                            .connectFont(
+                                size: metrics.subtitleSize,
+                                lineHeight: metrics.subtitleLineHeight,
+                                relativeTo: .footnote
+                            )
+                            .foregroundStyle(palette.color(.textSecondary))
                             .accessibilityIdentifier("connectionStatusSubtitle")
                     }
                 }
 
-                Spacer()
+                Spacer(minLength: 0)
 
-                Image(.iconChevronUp)
-                    .renderingMode(.template)
-                    .rotationEffect(isExpanded ? .degrees(-180) : .degrees(0))
-                    .foregroundStyle(.white)
-                    .accessibilityRemoveTraits(.isImage)
-                    .accessibilityLabel(
-                        isExpanded
-                            ? LocalizedStringKey("Collapse connection details")
-                            : LocalizedStringKey("Expand connection details")
-                    )
-                    .showIf(viewModel.showsConnectionDetails)
+                HStack(spacing: metrics.trailingGap) {
+                    Image(.iconChevronUp)
+                        .renderingMode(.template)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(
+                            width: ConnectSurfaceMetrics.Card.chevronIconSize,
+                            height: ConnectSurfaceMetrics.Card.chevronIconSize
+                        )
+                        .rotationEffect(isExpanded ? .degrees(-180) : .degrees(0))
+                        .frame(
+                            width: ConnectSurfaceMetrics.Card.chevronBoxSize,
+                            height: ConnectSurfaceMetrics.Card.chevronBoxSize
+                        )
+                        .foregroundStyle(palette.color(.text))
+                        .accessibilityRemoveTraits(.isImage)
+                        .accessibilityLabel(
+                            isExpanded
+                                ? LocalizedStringKey("Collapse connection details")
+                                : LocalizedStringKey("Expand connection details")
+                        )
+                        .showIf(viewModel.showsConnectionDetails)
 
-                // The flag owns the top-right corner in EVERY state so it
-                // never appears to move; the chevron slots in on its left.
-                if let flag = viewModel.currentCountryFlagEmoji {
-                    Text(flag)
-                        .font(.system(size: 22))
-                        .accessibilityHidden(true)
+                    // The flag owns the end of the row in EVERY state so it
+                    // never appears to move; the chevron slots in on its left.
+                    if let flag = viewModel.currentCountryFlagEmoji {
+                        CountryFlag(emoji: flag, ring: palette.color(.line))
+                    }
                 }
             }
             .accessibilityElement(children: .contain)
@@ -76,6 +105,23 @@ extension ConnectionView {
                 AccessibilityIdentifier.relayStatusCollapseButton.asString
             )
         }
+    }
+}
+
+/// The flag as a round badge with a hairline ring (desktop CurrentCountryFlag).
+/// The emoji is drawn larger than the circle so its rectangle fills the disc.
+private struct CountryFlag: View {
+    let emoji: String
+    let ring: Color
+
+    var body: some View {
+        let metrics = ConnectSurfaceMetrics.Flag.self
+        Text(verbatim: emoji)
+            .font(.system(size: metrics.size * 1.45))
+            .frame(width: metrics.size, height: metrics.size)
+            .clipShape(Circle())
+            .overlay(Circle().strokeBorder(ring, lineWidth: metrics.ringWidth))
+            .accessibilityHidden(true)
     }
 }
 

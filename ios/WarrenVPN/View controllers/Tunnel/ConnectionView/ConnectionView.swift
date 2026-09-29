@@ -23,101 +23,131 @@ struct ConnectionView: View {
     /// when the connection details expand.
     var cardTopChanged: ((CGFloat) -> Void)?
 
+    @Environment(\.colorScheme) private var colorScheme
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        let palette = ConnectSurfacePalette(colorScheme: colorScheme)
+        let card = ConnectSurfaceMetrics.Card.self
+        let cardShape = RoundedRectangle(cornerRadius: card.radius)
+
+        VStack(alignment: .leading, spacing: card.chipsToCardGap) {
+            if let badge = connectionViewModel.productBadge {
+                ProductBanner(badge: badge, line: connectionViewModel.productBannerLine) {
+                    action?(.explainNetwork)
+                }
+                .padding(.top, 13.5)
+                .padding(.leading, 15)
+                .padding(.trailing, card.marginHorizontal)
+            }
+
             Spacer()
                 .accessibilityIdentifier(AccessibilityIdentifier.connectionView.asString)
                 .accessibilityHidden(true)
 
-            // Active features float ABOVE the glass card as a stack of pills
-            // over the scenery (desktop StyledFeatureBadges), not inside it.
+            // Active features float ABOVE the card as a stack of pills over
+            // the scenery (desktop StyledFeatureBadges), not inside it.
             ChipContainerView(viewModel: indicatorsViewModel)
-                .padding(.horizontal, 16)
+                .padding(.horizontal, card.marginHorizontal)
                 .showIf(hasFeatureIndicators && connectionViewModel.showsConnectionDetails)
 
-            VStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 0) {
-                    HeaderView(viewModel: connectionViewModel, isExpanded: $isExpanded)
-                        .padding(.bottom, 4)
-
-                    Divider()
-                        .background(UIColor.secondaryTextColor.color)
-                        .padding(.top, 4)
-                        .padding(.bottom, 8)
-                        .accessibilityHidden(true)
-                        .showIf(isExpanded)
-
-                    ScrollView {
-                        VStack(alignment: .leading, spacing: 2) {
-                            if let titleForCountryAndCity = connectionViewModel.titleForCountryAndCity {
-                                Text(titleForCountryAndCity)
-                                    .lineLimit(isExpanded ? 2 : 1)
-                                    .font(.title3.weight(.semibold))
-                                    .foregroundStyle(UIColor.primaryTextColor.color)
-                                    .accessibilityHidden(true)
-                            }
-                            if let titleForServer = connectionViewModel.titleForServer {
-                                Text(titleForServer)
-                                    .lineLimit(isExpanded ? 3 : 1)
-                                    .font(.body)
-                                    .foregroundStyle(UIColor.primaryTextColor.color.opacity(0.6))
-                                    .accessibilityIdentifier(
-                                        AccessibilityIdentifier.connectionPanelServerLabel.asString
-                                    )
-                                    .accessibilityLabel(connectionViewModel.accessibilityLabelForServer ?? "")
-                                    .multilineTextAlignment(.leading)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-                            HStack {
-                                VStack(alignment: .leading, spacing: 0) {
-                                    DetailsView(viewModel: connectionViewModel)
-                                        .padding(.vertical, 8)
-                                        .showIf(isExpanded)
-
-                                    // Warren-specific: always-on HTTP/3
-                                    // mimicry indicator. Shown inside expanded
-                                    // details only when the tunnel is secured
-                                    // - surfaces the baseline obfuscation so
-                                    // users know their traffic is
-                                    // indistinguishable from regular HTTPS.
-                                    WarrenObfuscationIndicatorView()
-                                        .padding(.top, 8)
-                                        .padding(.bottom, 4)
-                                        .showIf(isExpanded && connectionViewModel.tunnelStatus.state.isSecured)
-                                }
-                                Spacer()
-                            }
-                        }.frame(maxWidth: .infinity, alignment: .leading)
-                            .sizeOfView { size in
-                                withAnimation {
-                                    scrollViewHeight = size.height
-                                }
-                            }
+            VStack(alignment: .leading, spacing: 0) {
+                HeaderView(viewModel: connectionViewModel, isExpanded: $isExpanded)
+                    .padding(.bottom, isExpanded ? 16 : 0)
+                    .overlay(alignment: .bottom) {
+                        Rectangle()
+                            .fill(palette.color(.line))
+                            .frame(height: 1)
+                            .showIf(isExpanded)
+                            .accessibilityHidden(true)
                     }
-                    .frame(maxHeight: scrollViewHeight)
-                    .scrollBounceBehavior(.basedOnSize)
+
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 0) {
+                        if let titleForCountryAndCity = connectionViewModel.titleForCountryAndCity {
+                            Text(titleForCountryAndCity)
+                                .lineLimit(isExpanded ? 2 : 1)
+                                .connectFont(
+                                    size: ConnectSurfaceMetrics.Location.size,
+                                    weight: .bold,
+                                    lineHeight: ConnectSurfaceMetrics.Location.lineHeight,
+                                    relativeTo: .headline
+                                )
+                                .foregroundStyle(palette.color(.text))
+                                .padding(.top, ConnectSurfaceMetrics.Location.gapAbove)
+                                .accessibilityHidden(true)
+                        }
+                        if let titleForServer = connectionViewModel.titleForServer {
+                            Text(titleForServer)
+                                .lineLimit(isExpanded ? 3 : 1)
+                                .connectFont(
+                                    size: ConnectSurfaceMetrics.Location.hostnameSize,
+                                    lineHeight: ConnectSurfaceMetrics.Location.hostnameLineHeight,
+                                    relativeTo: .footnote
+                                )
+                                .foregroundStyle(palette.color(.textMuted))
+                                .padding(.top, ConnectSurfaceMetrics.Location.hostnameGapAbove)
+                                .accessibilityIdentifier(
+                                    AccessibilityIdentifier.connectionPanelServerLabel.asString
+                                )
+                                .accessibilityLabel(connectionViewModel.accessibilityLabelForServer ?? "")
+                                .multilineTextAlignment(.leading)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        HStack {
+                            VStack(alignment: .leading, spacing: 0) {
+                                DetailsView(viewModel: connectionViewModel)
+                                    .padding(.vertical, 8)
+                                    .showIf(isExpanded)
+
+                                // Warren-specific: always-on HTTP/3 mimicry
+                                // indicator, shown in the expanded details
+                                // only while the tunnel is secured, so users
+                                // know their traffic looks like regular HTTPS.
+                                WarrenObfuscationIndicatorView(palette: palette)
+                                    .padding(.top, 8)
+                                    .padding(.bottom, 4)
+                                    .showIf(isExpanded && connectionViewModel.tunnelStatus.state.isSecured)
+                            }
+                            Spacer()
+                        }
+                    }.frame(maxWidth: .infinity, alignment: .leading)
+                        .sizeOfView { size in
+                            withAnimation {
+                                scrollViewHeight = size.height
+                            }
+                        }
                 }
+                .frame(maxHeight: scrollViewHeight)
+                .scrollBounceBehavior(.basedOnSize)
                 .transformEffect(.identity)
                 .animation(.default, value: hasFeatureIndicators)
+
                 ButtonPanel(viewModel: connectionViewModel, action: action)
+                    .padding(.top, card.blockGap)
             }
-            .padding(16)
-            // Glass card over the scenery (desktop connection card): denser
-            // black when expanded, material blur underneath so the artwork
-            // shimmers through, hairline border and soft drop shadow.
+            .padding(card.padding)
+            // Opaque, in the theme's paper: a translucent card let each
+            // landscape tint it, so it read olive on one country and slate on
+            // the next.
             .background {
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(.ultraThinMaterial)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 16)
-                            .fill(Color.black.opacity(isExpanded ? 0.6 : 0.5))
+                cardShape
+                    .fill(palette.color(.card))
+                    .shadow(
+                        color: palette.color(.shadowStrong),
+                        radius: card.shadowBlur / 2,
+                        x: 0,
+                        y: card.shadowOffsetY
                     )
             }
-            .environment(\.colorScheme, .dark)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Color.white.opacity(0.2), lineWidth: 1))
-            .shadow(color: Color.black.opacity(0.35), radius: 12, x: 0, y: 8)
-            .padding(EdgeInsets(top: 0, leading: 16, bottom: 8, trailing: 16))
+            .overlay(cardShape.strokeBorder(palette.color(.line), lineWidth: card.borderWidth))
+            .padding(
+                EdgeInsets(
+                    top: 0,
+                    leading: card.marginHorizontal,
+                    bottom: card.marginBottom,
+                    trailing: card.marginHorizontal
+                )
+            )
             .topOfView { top in
                 cardTopChanged?(top)
             }

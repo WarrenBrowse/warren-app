@@ -8,12 +8,19 @@
 
 import SwiftUI
 
+/// A feature pill over the scenery: an opaque surface of the theme, like the
+/// card below it (desktop `FeatureIndicator`).
 struct ChipView: View {
     let item: ChipModel
     let onPress: (() -> Void)?
-    private let borderWidth: CGFloat = 1
+
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
+        let palette = ConnectSurfacePalette(colorScheme: colorScheme)
+        let metrics = ConnectSurfaceMetrics.Chip.self
+        let shape = RoundedRectangle(cornerRadius: metrics.radius)
+
         Button {
             onPress?()
         } label: {
@@ -24,25 +31,25 @@ struct ChipView: View {
                         .frame(width: 14, height: 14)
                 }
                 Text(item.name)
-                    .font(.subheadline)
+                    .connectFont(size: metrics.textSize, weight: .semibold, relativeTo: .caption)
                     .lineLimit(1)
-                    .foregroundStyle(UIColor.primaryTextColor.color)
-                    .padding(.vertical, 4)
+                    .foregroundStyle(palette.color(.text))
             }
-            .padding(.horizontal, UIMetrics.FeatureIndicators.chipViewHorizontalPadding)
+            .padding(.vertical, metrics.paddingVertical)
+            .padding(.horizontal, metrics.paddingHorizontal)
+            .background(
+                shape
+                    .fill(palette.color(.card))
+                    .shadow(
+                        color: palette.color(.shadowSoft),
+                        radius: metrics.shadowBlur / 2,
+                        x: 0,
+                        y: metrics.shadowOffsetY
+                    )
+            )
+            .overlay(shape.strokeBorder(palette.color(.line), lineWidth: metrics.borderWidth))
         }
-        .background(
-            RoundedRectangle(cornerRadius: 8)
-                .stroke(
-                    UIColor.primaryColor.color,
-                    lineWidth: borderWidth
-                )
-                .background(
-                    RoundedRectangle(cornerRadius: 8)
-                        .fill(UIColor.secondaryColor.color)
-                )
-                .padding(borderWidth)
-        )
+        .buttonStyle(.plain)
     }
 }
 

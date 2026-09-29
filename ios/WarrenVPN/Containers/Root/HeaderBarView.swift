@@ -60,6 +60,12 @@ class HeaderBarView: UIView {
         didSet { applyProductBadge() }
     }
 
+    /// Set while the screen below carries the marker itself (the connect
+    /// screen's banner), so the build is not named twice.
+    var isProductChipSuppressed = false {
+        didSet { applyProductBadge() }
+    }
+
     private let deviceInfoHolder: UIStackView = {
         let stackView = UIStackView()
         stackView.axis = .horizontal
@@ -278,13 +284,14 @@ class HeaderBarView: UIView {
 
     private func applyProductBadge() {
         productChipLabel.text = productBadge
-        productChipLabel.isHidden = productBadge == nil
+        let showsChip = productBadge != nil && !isProductChipSuppressed
+        productChipLabel.isHidden = !showsChip
         // The chip is the only place in the app that names this build's
         // network, so on a marked build it is also the way in to what that
         // network costs the user in speed. Prod shows no chip and nothing to
         // open.
-        productChipLabel.isUserInteractionEnabled = productBadge != nil
-        productChipLabel.isAccessibilityElement = productBadge != nil
+        productChipLabel.isUserInteractionEnabled = showsChip
+        productChipLabel.isAccessibilityElement = showsChip
         productChipLabel.accessibilityTraits = .button
         productChipLabel.accessibilityLabel = productBadge.map { badge in
             String(

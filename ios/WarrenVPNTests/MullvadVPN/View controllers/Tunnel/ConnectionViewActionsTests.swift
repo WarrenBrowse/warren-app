@@ -26,17 +26,17 @@ final class ConnectionViewActionsTests: XCTestCase {
     /// next reader has to prove unreachable.
     func testThereIsNoReconnectActionLeftToRaise() {
         let actions: [ConnectionViewViewModel.TunnelAction] = [
-            .connect, .disconnect, .cancel, .selectLocation, .shuffleLocation,
+            .connect, .disconnect, .cancel, .selectLocation, .shuffleLocation, .explainNetwork,
         ]
         // Exhaustive: adding a case makes this switch fail to compile, which is
         // the point of listing them.
         for action in actions {
             switch action {
-            case .connect, .disconnect, .cancel, .selectLocation, .shuffleLocation:
+            case .connect, .disconnect, .cancel, .selectLocation, .shuffleLocation, .explainNetwork:
                 continue
             }
         }
-        XCTAssertEqual(actions.count, 5)
+        XCTAssertEqual(actions.count, 6)
     }
 
     func testTheShuffleIsOfferedOnlyWhenThereIsAnActiveExitToPick() throws {

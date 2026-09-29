@@ -16,8 +16,8 @@ extension ConnectionView {
         var action: Action?
 
         var body: some View {
-            VStack(spacing: 16) {
-                locationButton(with: action)
+            VStack(spacing: ConnectSurfaceMetrics.Card.blockGap) {
+                locationButtons(with: action)
                     .disabled(viewModel.disableButtons)
                 actionButton(with: action)
                     .disabled(viewModel.disableButtons)
@@ -25,57 +25,55 @@ extension ConnectionView {
         }
 
         /// One control for the location, with the shuffle on its side, in every
-        /// tunnel state. It used to be three: a split button whose side half
-        /// was a reconnect the other clients no longer offer, plus a detached
-        /// shuffle square next to it, plus the plain label in the disconnected
-        /// states. Sharing the row with that square is what squeezed the label
-        /// enough to wrap "Changer de localisation" onto two lines.
-        /// Android's twin is `SwitchLocationButton.kt`.
+        /// tunnel state: two separate rounded buttons on one row (desktop
+        /// `SelectLocationButtons`). The reconnect half the other clients no
+        /// longer offer stays gone. Android's twin is `SwitchLocationButton.kt`.
         @ViewBuilder
-        private func locationButton(with action: Action?) -> some View {
-            SplitMainButton(
-                text: viewModel.localizedTitleForSelectLocationButton,
-                systemImage: "shuffle",
-                style: .default,
-                accessibilityId: .selectLocationButton,
-                secondaryAccessibilityId: .shuffleLocationButton,
-                secondaryAccessibilityLabel: LocalizedStringKey("Random location"),
-                secondaryAccessibilityHint: LocalizedStringKey("Connect to a randomly selected location"),
-                secondaryEnabled: viewModel.shuffleEnabled,
-                primaryAction: { action?(.selectLocation) },
-                secondaryAction: { action?(.shuffleLocation) }
-            )
+        private func locationButtons(with action: Action?) -> some View {
+            HStack(spacing: ConnectSurfaceMetrics.Button.rowGap) {
+                Button(action: { action?(.selectLocation) }) {
+                    Text(viewModel.localizedTitleForSelectLocationButton)
+                }
+                .buttonStyle(CardButtonStyle(tone: .neutral))
+                .accessibilityIdentifier(AccessibilityIdentifier.selectLocationButton.asString)
+
+                Button(action: { action?(.shuffleLocation) }) {
+                    Image(systemName: "shuffle")
+                        .font(.system(size: 14, weight: .semibold))
+                }
+                .buttonStyle(CardButtonStyle(tone: .neutral))
+                .frame(width: ConnectSurfaceMetrics.Button.shuffleWidth)
+                .disabled(!viewModel.shuffleEnabled)
+                .accessibilityLabel(LocalizedStringKey("Random location"))
+                .accessibilityHint(LocalizedStringKey("Connect to a randomly selected location"))
+                .accessibilityIdentifier(AccessibilityIdentifier.shuffleLocationButton.asString)
+            }
         }
 
         @ViewBuilder
         private func actionButton(with action: Action?) -> some View {
+            let fill = CardButtonStyle(tone: .action(viewModel.actionButtonFillToken))
             switch viewModel.actionButton {
             case .connect:
-                MainButton(
-                    text: LocalizedStringKey("Connect"),
-                    style: .success,
-                    action: { action?(.connect) }
-                )
+                Button(action: { action?(.connect) }) {
+                    Text(LocalizedStringKey("Connect"))
+                }
+                .buttonStyle(fill)
                 .accessibilityIdentifier(AccessibilityIdentifier.connectButton.asString)
             case .disconnect:
-                MainButton(
-                    text: LocalizedStringKey("Disconnect"),
-                    style: .danger,
-                    action: { action?(.disconnect) }
-                )
+                Button(action: { action?(.disconnect) }) {
+                    Text(LocalizedStringKey("Disconnect"))
+                }
+                .buttonStyle(fill)
                 .accessibilityIdentifier(AccessibilityIdentifier.disconnectButton.asString)
             case .cancel:
-                MainButton(
-                    text: LocalizedStringKey(
-                        viewModel.tunnelStatus.state == .waitingForConnectivity(.noConnection)
-                            ? "Disconnect"
-                            : "Cancel"
-                    ),
-                    style: .danger,
-                    action: { action?(.cancel) }
-                )
+                let disconnects = viewModel.tunnelStatus.state == .waitingForConnectivity(.noConnection)
+                Button(action: { action?(.cancel) }) {
+                    Text(LocalizedStringKey(disconnects ? "Disconnect" : "Cancel"))
+                }
+                .buttonStyle(fill)
                 .accessibilityIdentifier(
-                    viewModel.tunnelStatus.state == .waitingForConnectivity(.noConnection)
+                    disconnects
                         ? AccessibilityIdentifier.disconnectButton.asString
                         : AccessibilityIdentifier.cancelButton.asString
                 )
