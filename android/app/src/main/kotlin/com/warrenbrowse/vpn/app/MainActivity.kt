@@ -1,5 +1,10 @@
 package com.warrenbrowse.vpn.app
 
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.warrenbrowse.vpn.app.design.surfaces
+import com.warrenbrowse.vpn.app.design.systemColorTheme
 import android.content.Intent
 import android.graphics.Color
 import android.os.Build
@@ -145,7 +150,11 @@ class MainActivity : AppCompatActivity(), AndroidScopeComponent {
         super.onCreate(savedInstanceState)
 
         setContent {
-            AppTheme {
+            // Only the connect screen's surfaces follow the resolved theme;
+            // the rest of the app has no light design yet and stays dark.
+            val themePreference by localSettings.themePreference.collectAsStateWithLifecycle()
+            val uiMode = LocalConfiguration.current.uiMode
+            AppTheme(surfaces = themePreference.resolve(systemColorTheme(uiMode)).surfaces()) {
                 WarrenApp(serviceConnectionManager)
                 // Overlays: the forum-login and the attach-logs consent
                 // prompts, shown when a `warren://forum-login` or a
