@@ -197,6 +197,10 @@ quinn-proto = { git = "https://github.com/WarrenBrowse/warren-quinn.git", tag = 
 # quinn), so it is patched too. Lib names stay quinn/quinn_proto/quinn_udp, so
 # every `use quinn` and the mullvad-logging crate-name filters are unchanged.
 quinn-udp = { git = "https://github.com/WarrenBrowse/warren-quinn.git", tag = "v0.11.17-fork.15", package = "warren-quinn-udp" }
+# pf answers a rejected UDP packet only when the rule carries an ICMP code, which
+# crates.io pfctl never sets: the kill switch's `block return` then dropped every
+# stale UDP socket's packets in silence. The fork's deltas: its README.
+pfctl = { git = "https://github.com/WarrenBrowse/pfctl-rs.git", tag = "v0.7.0-warren.1" }
 
 # The warrenguard rev pinned in .warrenguard-version still declares the fork over
 # ssh://, which an anonymous clone cannot fetch; redirecting that source keeps the
