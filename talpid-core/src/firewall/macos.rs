@@ -12,6 +12,7 @@ use talpid_types::net::{
     ALLOWED_LAN_MULTICAST_NETS, AllowedEndpoint, AllowedTunnelTraffic, TransportProtocol,
 };
 
+use super::tailnet::{self, HostInterface, PassDirection};
 use super::{FirewallArguments, FirewallPolicy};
 
 pub use pfctl::Error;
@@ -390,6 +391,10 @@ impl Firewall {
                 }
                 rules.push(self.get_allowed_endpoint_rule(allowed_endpoint)?);
 
+                if let Some(tunnel) = tunnel {
+                    rules.append(&mut self.get_tailnet_rules(&tunnel.interface)?);
+                }
+
                 // Important to block DNS after allow relay rule (so the relay can operate
                 // over port 53) but before allow LAN (so DNS does not leak to the LAN)
                 rules.append(&mut self.get_block_dns_rules()?);
@@ -435,6 +440,10 @@ impl Firewall {
                 ..
             } => {
                 let mut rules = vec![];
+
+                // Before every DNS rule: Tailscale's MagicDNS answers on port 53 inside its own
+                // interface, and the DNS blocks below refuse port 53 on any interface.
+                rules.append(&mut self.get_tailnet_rules(&tunnel.interface)?);
 
                 for server in super::allowed_tunnel_dns(dns_config) {
                     rules.append(
@@ -508,6 +517,20 @@ impl Firewall {
                 Ok(rules)
             }
         }
+    }
+
+    /// Let the tailnet ranges through on each coexisting Tailscale interface, read from the host
+    /// now.
+    fn get_tailnet_rules(&self, tunnel_interface: &str) -> Result<Vec<pfctl::FilterRule>> {
+        let interfaces = match tailnet::read_host_interfaces() {
+            Ok(interfaces) => interfaces,
+            Err(error) => {
+                // A kill switch that cannot see the interfaces stays closed.
+                log::warn!("Failed to read the host interfaces: {error}");
+                return Ok(vec![]);
+            }
+        };
+        tailnet_rules(self.rule_logging, &interfaces, Some(tunnel_interface))
     }
 
     /// Route outbound traffic to the selected interface
@@ -1106,6 +1129,39 @@ fn allow_lan_rules(
     Ok(rules)
 }
 
+/// The rules that let a coexisting Tailscale interface carry its tailnet traffic while the tunnel
+/// is up: to and from the two tailnet ranges, on that interface only. What enters the interface is
+/// encrypted by the Tailscale process, whose own sockets are filtered like any other.
+///
+/// `interfaces` is the host as read by [`tailnet::read_host_interfaces`], and `own_interface` the
+/// Warren tunnel's, which is never one of them.
+fn tailnet_rules(
+    rule_logging: RuleLogging,
+    interfaces: &[HostInterface],
+    own_interface: Option<&str>,
+) -> Result<Vec<pfctl::FilterRule>> {
+    let coexisting = tailnet::coexisting_tailnet_interfaces(interfaces, own_interface);
+    tailnet::tailnet_passes(&coexisting)
+        .into_iter()
+        .map(|pass| {
+            let mut builder = rule_builder(rule_logging, FilterRuleAction::Pass);
+            builder
+                .quick(true)
+                .interface(pass.interface.as_str())
+                .keep_state(pfctl::StatePolicy::Keep);
+            match pass.direction {
+                PassDirection::Out => builder
+                    .direction(pfctl::Direction::Out)
+                    .to(pfctl::Ip::from(pass.net)),
+                PassDirection::In => builder
+                    .direction(pfctl::Direction::In)
+                    .from(pfctl::Ip::from(pass.net)),
+            };
+            builder.build()
+        })
+        .collect()
+}
+
 #[derive(Debug, Copy, Clone, Eq, PartialEq, Hash)]
 enum RuleLogging {
     None,
@@ -1189,5 +1245,95 @@ mod tests {
             allow_lan_rules(RuleLogging::None, &[net("192.168.0.0/16")]).expect("rules build");
         assert!(rules.contains(&pass_out_to(net("192.168.0.0/16"))));
         assert!(!rules.contains(&pass_out_to(net("10.0.0.0/8"))));
+    }
+
+    fn host(name: &str, up: bool, addresses: &[&str]) -> HostInterface {
+        HostInterface {
+            name: name.to_owned(),
+            up,
+            addresses: addresses.iter().map(|a| a.parse().unwrap()).collect(),
+        }
+    }
+
+    fn tailnet_pass(
+        interface: &str,
+        direction: pfctl::Direction,
+        network: &str,
+    ) -> pfctl::FilterRule {
+        let mut builder = rule_builder(RuleLogging::None, FilterRuleAction::Pass);
+        builder
+            .quick(true)
+            .interface(interface)
+            .keep_state(pfctl::StatePolicy::Keep)
+            .direction(direction);
+        match direction {
+            pfctl::Direction::Out => builder.to(pfctl::Ip::from(net(network))),
+            _ => builder.from(pfctl::Ip::from(net(network))),
+        };
+        builder.build().expect("valid rule")
+    }
+
+    /// The reported case: Tailscale on utun13 next to the Warren tunnel on utun14.
+    #[test]
+    fn a_tailscale_interface_gets_exactly_its_four_scoped_rules() {
+        let interfaces = [
+            host("en0", true, &["192.168.1.20"]),
+            host("utun13", true, &["100.106.181.5", "fd7a:115c:a1e0::5"]),
+            host("utun14", true, &["10.66.0.2"]),
+        ];
+
+        let rules =
+            tailnet_rules(RuleLogging::None, &interfaces, Some("utun14")).expect("rules build");
+
+        assert_eq!(rules.len(), 4);
+        for (direction, network) in [
+            (pfctl::Direction::Out, "100.64.0.0/10"),
+            (pfctl::Direction::In, "100.64.0.0/10"),
+            (pfctl::Direction::Out, "fd7a:115c:a1e0::/48"),
+            (pfctl::Direction::In, "fd7a:115c:a1e0::/48"),
+        ] {
+            assert!(rules.contains(&tailnet_pass("utun13", direction, network)));
+        }
+    }
+
+    #[test]
+    fn nothing_that_does_not_qualify_gets_a_rule() {
+        let interfaces = [
+            host("utun14", true, &["100.64.0.9"]),
+            host("utun13", false, &["100.106.181.5"]),
+            host("en0", true, &["100.72.3.4"]),
+            host("utun3", true, &["10.8.0.2", "fe80::2"]),
+        ];
+
+        let rules =
+            tailnet_rules(RuleLogging::None, &interfaces, Some("utun14")).expect("rules build");
+
+        assert!(rules.is_empty());
+    }
+
+    /// The rules are the passes and nothing more: every interface they name is a tunnel device
+    /// and no rule reaches an unrestricted or foreign destination.
+    #[test]
+    fn tailnet_rules_never_open_a_physical_interface_or_a_foreign_range() {
+        let interfaces = [
+            host("en0", true, &["100.72.3.4"]),
+            host("utun13", true, &["100.106.181.5"]),
+            host("utun15", true, &["fd7a:115c:a1e0::7"]),
+        ];
+
+        let rules =
+            tailnet_rules(RuleLogging::None, &interfaces, Some("utun14")).expect("rules build");
+
+        let mut expected = Vec::new();
+        for interface in ["utun13", "utun15"] {
+            for network in ["100.64.0.0/10", "fd7a:115c:a1e0::/48"] {
+                expected.push(tailnet_pass(interface, pfctl::Direction::Out, network));
+                expected.push(tailnet_pass(interface, pfctl::Direction::In, network));
+            }
+        }
+        assert_eq!(rules.len(), expected.len());
+        for rule in &rules {
+            assert!(expected.contains(rule), "unexpected rule: {rule:?}");
+        }
     }
 }

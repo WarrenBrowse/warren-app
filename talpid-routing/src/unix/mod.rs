@@ -124,6 +124,7 @@ pub(crate) enum RouteManagerCommand {
     NewDefaultRouteListener(oneshot::Sender<mpsc::UnboundedReceiver<DefaultRouteEvent>>),
     GetDefaultRoutes(oneshot::Sender<(Option<DefaultRoute>, Option<DefaultRoute>)>),
     NewInterfaceChangeListener(oneshot::Sender<mpsc::UnboundedReceiver<InterfaceEvent>>),
+    NewAddressChangeListener(oneshot::Sender<mpsc::UnboundedReceiver<AddressChangeEvent>>),
     /// Return gateway for V4 and V6
     GetDefaultGateway(oneshot::Sender<(Option<Gateway>, Option<Gateway>)>),
 }
@@ -133,6 +134,12 @@ pub(crate) enum RouteManagerCommand {
 pub struct InterfaceEvent {
     pub interface_index: u16,
     pub mtu: u16,
+}
+
+/// Event that is sent when an interface gained or lost an address, or went up or down.
+#[cfg(target_os = "macos")]
+pub struct AddressChangeEvent {
+    pub interface_index: u16,
 }
 
 /// Event that is sent when a preferred non-tunnel default route is
@@ -296,6 +303,19 @@ impl RouteManagerHandle {
         let (response_tx, response_rx) = oneshot::channel();
         self.tx
             .unbounded_send(RouteManagerCommand::NewInterfaceChangeListener(response_tx))
+            .map_err(|_| Error::RouteManagerDown)?;
+        response_rx.await.map_err(|_| Error::ManagerChannelDown)
+    }
+
+    /// Listen for interfaces gaining or losing an address, or going up or down. Unlike
+    /// [`Self::interface_change_listener`], this fires on address changes too.
+    #[cfg(target_os = "macos")]
+    pub async fn address_change_listener(
+        &self,
+    ) -> Result<impl Stream<Item = AddressChangeEvent> + use<>, Error> {
+        let (response_tx, response_rx) = oneshot::channel();
+        self.tx
+            .unbounded_send(RouteManagerCommand::NewAddressChangeListener(response_tx))
             .map_err(|_| Error::RouteManagerDown)?;
         response_rx.await.map_err(|_| Error::ManagerChannelDown)
     }

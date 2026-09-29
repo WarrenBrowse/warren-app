@@ -432,6 +432,16 @@ impl ConnectedState {
                 let _ = complete_tx.send(());
                 SameState(self)
             }
+            #[cfg(target_os = "macos")]
+            Some(TunnelCommand::TailnetInterfacesChanged) => {
+                match self.set_firewall_policy(shared_values) {
+                    Ok(()) => SameState(self),
+                    Err(error) => self.disconnect(
+                        shared_values,
+                        AfterDisconnect::Block(ErrorStateCause::SetFirewallPolicyError(error)),
+                    ),
+                }
+            }
             Some(TunnelCommand::Connectivity(connectivity)) => {
                 shared_values.connectivity = connectivity;
                 match grace_action(

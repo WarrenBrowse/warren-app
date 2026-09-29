@@ -581,6 +581,8 @@ impl ConnectingState {
                 let _ = complete_tx.send(());
                 SameState(self)
             }
+            #[cfg(target_os = "macos")]
+            Some(TunnelCommand::TailnetInterfacesChanged) => self.reset_firewall(shared_values),
             Some(TunnelCommand::Connectivity(connectivity)) => {
                 shared_values.connectivity = connectivity;
                 if connectivity.is_offline() {

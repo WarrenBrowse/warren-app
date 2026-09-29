@@ -120,6 +120,8 @@ pub struct RouteManagerImpl {
     default_route_listeners: Vec<mpsc::UnboundedSender<DefaultRouteEvent>>,
 
     interface_change_listeners: Vec<mpsc::UnboundedSender<super::InterfaceEvent>>,
+
+    address_change_listeners: Vec<mpsc::UnboundedSender<super::AddressChangeEvent>>,
 }
 
 impl RouteManagerImpl {
@@ -160,6 +162,7 @@ impl RouteManagerImpl {
             check_default_routes_restored: Box::pin(futures::stream::pending()),
             unhandled_default_route_changes: false,
             interface_change_listeners: vec![],
+            address_change_listeners: vec![],
         })
     }
 
@@ -246,6 +249,12 @@ impl RouteManagerImpl {
                         Some(RouteManagerCommand::NewInterfaceChangeListener(tx)) => {
                             let (events_tx, events_rx) = mpsc::unbounded();
                             self.interface_change_listeners.push(events_tx);
+                            let _ = tx.send(events_rx);
+                        }
+
+                        Some(RouteManagerCommand::NewAddressChangeListener(tx)) => {
+                            let (events_tx, events_rx) = mpsc::unbounded();
+                            self.address_change_listeners.push(events_tx);
                             let _ = tx.send(events_rx);
                         }
 
@@ -382,6 +391,17 @@ impl RouteManagerImpl {
         talpid_types::detect_flood!();
 
         log::trace!("got RouteSocketMessage::{:?}", message.as_ref().unwrap());
+
+        if let Ok(message) = &message
+            && let Some(event) = address_change_of(message)
+        {
+            self.address_change_listeners.retain(|tx| {
+                tx.unbounded_send(super::AddressChangeEvent {
+                    interface_index: event.interface_index,
+                })
+                .is_ok()
+            });
+        }
 
         match message {
             Ok(RouteSocketMessage::DeleteRoute(route)) => {
@@ -836,6 +856,64 @@ fn default_route_msg(family: interface::Family) -> RouteMessage {
 fn route_matches_interface(default_route: &RouteMessage, interface_route: &RouteMessage) -> bool {
     default_route.gateway_ip() == interface_route.gateway_ip()
         && default_route.interface_index() == interface_route.interface_index()
+}
+
+/// The interface a routing socket message reports as having gained or lost an address, or as having
+/// changed state (for example up or down).
+fn address_change_of(message: &RouteSocketMessage) -> Option<super::AddressChangeEvent> {
+    let interface_index = match message {
+        RouteSocketMessage::AddAddress(address) | RouteSocketMessage::DeleteAddress(address) => {
+            address.interface_index()
+        }
+        RouteSocketMessage::Interface(interface) => interface.index(),
+        _ => return None,
+    };
+    Some(super::AddressChangeEvent { interface_index })
+}
+
+#[cfg(test)]
+mod address_change_tests {
+    use super::{RouteSocketMessage, address_change_of};
+
+    /// Raw bytes of a routing socket message of `msg_type` for interface `index`. The address
+    /// payload is empty, which is a valid message for this purpose.
+    fn message(msg_type: u8, index: u16) -> RouteSocketMessage {
+        let (size, index_offset) = match i32::from(msg_type) {
+            libc::RTM_IFINFO => (std::mem::size_of::<libc::if_msghdr>(), 12),
+            _ => (std::mem::size_of::<libc::ifa_msghdr>(), 12),
+        };
+        // The parser reads a longer route header before it dispatches on the type.
+        let mut bytes = vec![0u8; size.max(128)];
+        bytes[..2].copy_from_slice(&u16::try_from(size).unwrap().to_ne_bytes());
+        bytes[2] = libc::RTM_VERSION as u8;
+        bytes[3] = msg_type;
+        bytes[index_offset..index_offset + 2].copy_from_slice(&index.to_ne_bytes());
+        RouteSocketMessage::parse_message(&bytes).expect("well-formed message")
+    }
+
+    #[test]
+    fn a_new_address_names_its_interface() {
+        let event = address_change_of(&message(libc::RTM_NEWADDR as u8, 17));
+        assert_eq!(event.map(|e| e.interface_index), Some(17));
+    }
+
+    #[test]
+    fn a_deleted_address_names_its_interface() {
+        let event = address_change_of(&message(libc::RTM_DELADDR as u8, 18));
+        assert_eq!(event.map(|e| e.interface_index), Some(18));
+    }
+
+    #[test]
+    fn an_interface_state_change_names_its_interface() {
+        let event = address_change_of(&message(libc::RTM_IFINFO as u8, 19));
+        assert_eq!(event.map(|e| e.interface_index), Some(19));
+    }
+
+    #[test]
+    fn an_unrelated_message_is_not_an_address_change() {
+        let other = message(libc::RTM_MISS as u8, 1);
+        assert!(address_change_of(&other).is_none());
+    }
 }
 
 #[cfg(test)]

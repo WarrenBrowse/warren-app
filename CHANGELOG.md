@@ -45,6 +45,10 @@ Line wrap the file at 100 chars.                                              Th
   other devices hold every connection it is entitled to, instead of showing a plain disconnection.
 - [iOS] Disconnect and remove the VPN configuration when logging out or erasing the wallet, so the
   tunnel can neither stay up nor come back on demand for a wallet that left the device.
+- [macOS] Keep a Tailscale network reachable while the VPN is connected. The kill switch refused
+  every packet on the Tailscale interface, so no peer answered. It now lets the Tailscale address
+  ranges through that interface alone, follows Tailscale when it starts or stops after the VPN
+  connected, and leaves every other interface blocked.
 
 ## [1.1.42] - 2026-09-29
 ### Fixed

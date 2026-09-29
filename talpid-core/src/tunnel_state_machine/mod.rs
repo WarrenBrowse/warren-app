@@ -6,6 +6,8 @@ mod disconnecting_state;
 mod error_state;
 mod exit_refusal;
 mod lan_routes;
+#[cfg(target_os = "macos")]
+mod tailnet_watch;
 mod tunnel_monitor;
 
 pub use exit_refusal::{SubscriptionStatus, SubscriptionStatusProvider};
@@ -306,6 +308,10 @@ pub enum TunnelCommand {
     /// Enable or disable the lockdown_mode feature.
     #[cfg(not(target_os = "android"))]
     LockdownMode(LockdownMode, oneshot::Sender<()>),
+    /// The set of Tailscale interfaces coexisting with the tunnel changed. Connected states apply
+    /// their firewall policy again so it lets tailnet traffic through the interfaces there now.
+    #[cfg(target_os = "macos")]
+    TailnetInterfacesChanged,
     /// Notify the state machine of the connectivity of the device.
     Connectivity(Connectivity),
     /// Open tunnel connection.
@@ -539,6 +545,21 @@ impl TunnelStateMachine {
         .await;
         let connectivity = offline_monitor.connectivity().await;
         let _ = initial_offline_state_tx.unbounded_send(connectivity);
+
+        // Subscribed before the task starts, so no change slips between its first read and the
+        // first event.
+        #[cfg(target_os = "macos")]
+        match args.route_manager.address_change_listener().await {
+            Ok(events) => {
+                tokio::spawn(tailnet_watch::run_tailnet_watch(
+                    Box::pin(events),
+                    || crate::firewall::tailnet::current_coexisting_tailnet_interfaces(None),
+                    args.command_tx.clone(),
+                    tailnet_watch::SETTLE,
+                ));
+            }
+            Err(error) => log::warn!("Failed to watch for tailnet interface changes: {error}"),
+        }
 
         #[cfg(windows)]
         let split_tunnel = split_tunnel::SplitTunnel::new(

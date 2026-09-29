@@ -49,7 +49,7 @@ async-trait = "0.1"
 either = { version = "1.15.0", features = ["serde"] }
 hickory-proto = { workspace = true }
 hickory-server = { workspace = true, features = ["resolver"] }
-nix = { workspace = true, features = ["signal", "socket", "user"] }
+nix = { workspace = true, features = ["net", "signal", "socket", "user"] }
 pcap = { version = "2.1", features = ["capture-stream"] }
 pfctl = "0.7.0"
 pnet_packet = { workspace = true }

@@ -237,6 +237,8 @@ impl TunnelState for ErrorState {
                 let _ = complete_tx.send(());
                 SameState(self)
             }
+            #[cfg(target_os = "macos")]
+            Some(TunnelCommand::TailnetInterfacesChanged) => SameState(self),
             Some(TunnelCommand::Connectivity(connectivity)) => {
                 shared_values.connectivity = connectivity;
                 if reconnects_on_connectivity(&self.block_reason, connectivity) {

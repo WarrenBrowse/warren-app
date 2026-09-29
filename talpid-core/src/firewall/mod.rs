@@ -17,6 +17,8 @@ cfg_if::cfg_if! {
         /// Firewall implementation for macOS
         mod macos;
         use macos as imp;
+        /// Tailscale interfaces coexisting with the tunnel
+        pub(crate) mod tailnet;
     } else if #[cfg(target_os = "linux")] {
         /// Firewall implementation for desktop Linux
         pub mod linux;
