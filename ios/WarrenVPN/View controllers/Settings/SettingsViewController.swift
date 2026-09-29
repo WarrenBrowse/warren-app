@@ -94,8 +94,45 @@ extension SettingsViewController: @preconcurrency SettingsDataSourceDelegate {
             showDebugOptionsSheet()
             return
         }
+        if item == .warrenTheme {
+            showThemeSheet()
+            return
+        }
         guard let route = item.navigationRoute else { return }
         delegate?.settingsViewController(self, didRequestRoutePresentation: route)
+    }
+
+    /// The three theme choices. Only the connect screen has a light design so
+    /// far, so the choice repaints that screen and leaves the others dark.
+    private func showThemeSheet() {
+        let sheetController = UIAlertController(
+            title: NSLocalizedString("Theme", tableName: "Settings", comment: ""),
+            message: nil,
+            preferredStyle: UIDevice.current.userInterfaceIdiom == .pad ? .alert : .actionSheet
+        )
+        sheetController.overrideUserInterfaceStyle = .dark
+        sheetController.view.tintColor = .AlertController.tintColor
+
+        let current = WarrenThemePreference.current
+        for preference in WarrenThemePreference.allCases {
+            let action = UIAlertAction(
+                title: preference.localizedTitle,
+                style: .default,
+                handler: { [weak self] _ in
+                    preference.apply()
+                    self?.dataSource?.reload()
+                }
+            )
+            sheetController.addAction(action)
+            if preference == current {
+                sheetController.preferredAction = action
+            }
+        }
+        sheetController.addAction(
+            UIAlertAction(title: NSLocalizedString("Cancel", comment: ""), style: .cancel)
+        )
+
+        present(sheetController, animated: true)
     }
 
     /// Developer tooling relocated from the account view: the account
@@ -171,7 +208,7 @@ private extension SettingsDataSource.Item {
             .warrenForumSignInCode
         case .warrenPortForwarding:
             .warrenPortForwarding
-        case .debugOptions:
+        case .warrenTheme, .debugOptions:
             nil
         }
     }

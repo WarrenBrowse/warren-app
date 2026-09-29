@@ -248,6 +248,15 @@ final class SettingsCellFactory: @preconcurrency CellFactoryProtocol {
             cell.disclosureType = .chevron
             cell.breadcrumb = breadcrumbs.first { $0.navigationRoute == .warrenPortForwarding }
 
+        case .warrenTheme:
+            guard let cell = cell as? SettingsCell else { return }
+
+            cell.titleLabel.text = NSLocalizedString("Theme", tableName: "Settings", comment: "")
+            cell.detailTitleLabel.text = WarrenThemePreference.current.localizedTitle
+            cell.setAccessibilityIdentifier(item.accessibilityIdentifier)
+            cell.disclosureType = .none
+            cell.breadcrumb = nil
+
         case .debugOptions:
             guard let cell = cell as? SettingsCell else { return }
 

@@ -88,6 +88,20 @@ public struct WarrenEnvStandDownRecord: Codable, Equatable, Sendable {
     }
 }
 
+/// The theme the user asked for: follow the device, or one palette whatever
+/// the device says. Desktop's `ThemePreference` (`src/shared/theme.ts`).
+public enum WarrenThemePreference: String, CaseIterable, Sendable {
+    case system
+    case dark
+    case light
+
+    /// A stored value this version does not know, written by a later one,
+    /// follows the system rather than failing.
+    public init(storedValue: String?) {
+        self = storedValue.flatMap(Self.init(rawValue:)) ?? .system
+    }
+}
+
 public protocol AppPreferencesDataSource {
     var hasDoneFirstTimeLaunch: Bool { get set }
     var hasDoneFirstTimeLogin: Bool { get set }
@@ -119,6 +133,7 @@ enum AppStorageKey: String {
     case warrenEnvStandDown
     case warrenDismissedAnnouncements
     case warrenDismissedStrikes
+    case warrenThemePreference
 }
 
 public final class AppPreferences: AppPreferencesDataSource {
@@ -187,4 +202,14 @@ public final class AppPreferences: AppPreferencesDataSource {
     /// preferences name no case; the next strike raises the banner again.
     @CompositeStorage(key: AppStorageKey.warrenDismissedStrikes.rawValue, container: .standard)
     public var warrenDismissedStrikes: [String] = []
+
+    @PrimitiveStorage(key: AppStorageKey.warrenThemePreference.rawValue, container: .standard)
+    private var storedThemePreference = WarrenThemePreference.system.rawValue
+
+    /// The theme the connect screen is painted in. Read from the stored raw
+    /// value so an unknown one degrades to the default instead of trapping.
+    public var warrenThemePreference: WarrenThemePreference {
+        get { WarrenThemePreference(storedValue: storedThemePreference) }
+        set { storedThemePreference = newValue.rawValue }
+    }
 }

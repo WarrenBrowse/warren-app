@@ -68,6 +68,7 @@ final class SettingsDataSource: UITableViewDiffableDataSource<SettingsDataSource
         case warrenAbout
         case warrenForumSignInCode
         case warrenPortForwarding
+        case warrenTheme
         // Developer tooling; only ever appended to the snapshot in DEBUG
         // builds, so release users never see it.
         case debugOptions
@@ -108,6 +109,8 @@ final class SettingsDataSource: UITableViewDiffableDataSource<SettingsDataSource
                 .warrenForumSignInCodeCell
             case .warrenPortForwarding:
                 .warrenPortForwardingCell
+            case .warrenTheme:
+                .warrenThemeCell
             case .debugOptions:
                 .debugOptionsCell
             }
@@ -314,7 +317,7 @@ final class SettingsDataSource: UITableViewDiffableDataSource<SettingsDataSource
         if WarrenWalletKeychain.exists() {
             miscItems.append(.warrenForumSignInCode)
         }
-        miscItems += [.faq, .language]
+        miscItems += [.faq, .warrenTheme, .language]
         snapshot.appendItems(miscItems, toSection: .misc)
         #if DEBUG
             snapshot.appendItems([.debugOptions], toSection: .misc)

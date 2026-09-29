@@ -284,6 +284,10 @@ FILES_TO_ADD = {
   # Settings, General, VPN and Device Management, and the header chip.
   "WarrenVPNTests/MullvadVPN/TunnelManager/TunnelConfigurationTests.swift" => "WarrenVPNTests",
   "WarrenVPNTests/MullvadVPN/Classes/HeaderBarViewTests.swift" => "WarrenVPNTests",
+
+  # The theme choice (system, dark, light).
+  "WarrenVPN/UI appearance/WarrenTheme.swift" => "WarrenVPN",
+  "WarrenVPNTests/MullvadVPN/Classes/WarrenThemeTests.swift" => "WarrenVPNTests",
 }.freeze
 
 # Files that need to live in MULTIPLE targets (mirrors the Mullvad
