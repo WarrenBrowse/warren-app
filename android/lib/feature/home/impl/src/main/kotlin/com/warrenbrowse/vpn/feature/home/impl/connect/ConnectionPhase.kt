@@ -88,12 +88,6 @@ internal fun ConnectionPhase.titleTone(): SceneryTone =
 /** The saturated accent of a phase, for fills where 3:1 is enough. */
 @Composable fun ConnectionPhase.accentColor(): Color = accentTone().color()
 
-/**
- * The colour of the status TITLE, as opposed to the fills: the lifted tints
- * built for 4.5:1 on the card at title size (desktop
- * `getPhaseTitleColorName`), white for the neutral blocked phase.
- */
-@Composable fun ConnectionPhase.titleColor(): Color = titleTone().color()
 
 // The one place a scenery.json tone meets the Material theme. Exhaustive, so a
 // tone added to the table does not compile until it has its colour here.

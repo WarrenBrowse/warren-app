@@ -35,6 +35,7 @@ import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.tag.LOCATION_INFO_CONNECTION_IN_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.LOCATION_INFO_CONNECTION_OUT_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
+import com.warrenbrowse.vpn.lib.ui.theme.color.LocalWarrenSurfaces
 import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
 
@@ -139,7 +140,7 @@ private fun LabelValueRow(label: String?, value: String, modifier: Modifier = Mo
         if (label != null) {
             Text(
                 text = label,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = LocalWarrenSurfaces.current.textMuted,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -150,7 +151,7 @@ private fun LabelValueRow(label: String?, value: String, modifier: Modifier = Mo
         // rather than hiding half of itself behind an ellipsis.
         Text(
             text = value,
-            color = MaterialTheme.colorScheme.onPrimary,
+            color = LocalWarrenSurfaces.current.text,
             style = MaterialTheme.typography.bodyMedium,
             maxLines = 1,
             modifier = Modifier.marqueeLine(),
@@ -237,7 +238,7 @@ fun ConnectionDetails(
 
         Text(
             text = stringResource(R.string.connection_details_in),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = LocalWarrenSurfaces.current.textMuted,
             style = MaterialTheme.typography.bodyMedium,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
@@ -263,7 +264,7 @@ fun ConnectionDetails(
         ) {
             Text(
                 text = inIPV4,
-                color = MaterialTheme.colorScheme.onPrimary,
+                color = LocalWarrenSurfaces.current.text,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -277,7 +278,7 @@ fun ConnectionDetails(
         if (outEndpoint != null) {
             Text(
                 text = stringResource(R.string.connection_details_out),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = LocalWarrenSurfaces.current.textMuted,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -306,7 +307,7 @@ fun ConnectionDetails(
                         Text(
                             modifier = Modifier.testTag(LOCATION_INFO_CONNECTION_OUT_TEST_TAG),
                             text = outEndpoint,
-                            color = MaterialTheme.colorScheme.onPrimary,
+                            color = LocalWarrenSurfaces.current.text,
                             style = MaterialTheme.typography.bodyMedium,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -323,7 +324,7 @@ fun ConnectionDetails(
         if (outPrimaryLabel != null && outPrimaryValue != null) {
             Text(
                 text = outPrimaryLabel,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = LocalWarrenSurfaces.current.textMuted,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -359,7 +360,7 @@ fun ConnectionDetails(
                                     Modifier
                                 },
                             text = outPrimaryValue,
-                            color = MaterialTheme.colorScheme.onPrimary,
+                            color = LocalWarrenSurfaces.current.text,
                             style = MaterialTheme.typography.bodyMedium,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
@@ -381,7 +382,7 @@ fun ConnectionDetails(
                         append(SPACE_CHAR)
                         append(stringResource(R.string.ipv6))
                     },
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = LocalWarrenSurfaces.current.textMuted,
                 style = MaterialTheme.typography.bodyMedium,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -409,7 +410,7 @@ fun ConnectionDetails(
                     @Composable {
                         Text(
                             text = outIPV6,
-                            color = MaterialTheme.colorScheme.onPrimary,
+                            color = LocalWarrenSurfaces.current.text,
                             style = MaterialTheme.typography.bodyMedium,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,

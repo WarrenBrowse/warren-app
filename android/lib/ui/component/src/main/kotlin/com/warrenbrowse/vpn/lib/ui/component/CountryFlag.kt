@@ -48,14 +48,18 @@ private const val REGIONAL_INDICATOR_A = 0x1F1E6
 
 /**
  * Round country flag (desktop CurrentCountryFlag): the desktop's own flag
- * artwork in a circle with the white hairline, so every surface shows the same
- * flag on every client. Decorative: the text beside it names the country.
+ * artwork in a circle with a hairline ring, so every surface shows the same
+ * flag on every client. The ring defaults to the white hairline of the charcoal
+ * screens; the connection card passes its own line. Decorative: the text beside
+ * it names the country.
  */
 @Composable
 fun CountryFlag(
     countryCode: String?,
     modifier: Modifier = Modifier,
     size: Dp = Dimens.countryFlagSize,
+    ringColor: Color = Color.White.copy(alpha = Alpha20),
+    ringWidth: Dp = Dimens.thinBorderWidth,
 ) {
     when (val source = countryFlagSource(countryCode)) {
         is CountryFlagSource.Artwork ->
@@ -66,11 +70,7 @@ fun CountryFlag(
                     modifier
                         .size(size)
                         .clip(CircleShape)
-                        .border(
-                            Dimens.thinBorderWidth,
-                            Color.White.copy(alpha = Alpha20),
-                            CircleShape,
-                        ),
+                        .border(ringWidth, ringColor, CircleShape),
             )
         is CountryFlagSource.Emoji ->
             Text(text = source.glyph, fontSize = size.value.sp, modifier = modifier)

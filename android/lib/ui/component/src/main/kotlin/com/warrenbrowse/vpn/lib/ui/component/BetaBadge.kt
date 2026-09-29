@@ -1,6 +1,15 @@
 package com.warrenbrowse.vpn.lib.ui.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.unit.DpOffset
+import com.warrenbrowse.vpn.lib.ui.theme.CardTypography
+import com.warrenbrowse.vpn.lib.ui.theme.Dimens
+import com.warrenbrowse.vpn.lib.ui.theme.color.LocalWarrenSurfaces
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -25,9 +34,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha60
-import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha20
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.border
 import com.warrenbrowse.vpn.lib.ui.resource.R
@@ -50,7 +57,7 @@ private const val BPS_PER_MBPS = 1_000_000L
  * eyes a second into every cold start.
  */
 /**
- * Where the badge sits (desktop BetaBadge): [Overlay] is the glass pill over
+ * Where the badge sits (desktop BetaBadge): [Overlay] is the opaque banner over
  * the scenery on the home screen, left aligned and only as wide as its line;
  * [Row] is the full-width settings row on a charcoal screen.
  */
@@ -68,32 +75,100 @@ fun BetaBadge(
 ) {
     var dialogVisible by remember { mutableStateOf(false) }
     val capMbps = capBps?.let { (it / BPS_PER_MBPS).toInt() }?.takeIf { it > 0 }
-
-    // The pill is 32 dp tall and the row 44: both keep their visual size while
-    // the node reserves the 48 dp touch floor around them, the way a Material
-    // chip does (minimumInteractiveComponentSize before the clip, so the
-    // reserved space stays unpainted).
-    val container =
-        when (variant) {
-            BetaBadgeVariant.Overlay -> {
-                val shape = RoundedCornerShape(14.dp)
-                Modifier.minimumInteractiveComponentSize()
-                    .wrapContentWidth()
-                    .clip(shape)
-                    .background(Color.Black.copy(alpha = Alpha60))
-                    .border(1.dp, Color.White.copy(alpha = Alpha20), shape)
-                    .clickable { dialogVisible = true }
-                    .padding(horizontal = 12.dp, vertical = 6.dp)
-            }
-            BetaBadgeVariant.Row ->
-                Modifier.minimumInteractiveComponentSize()
-                    .fillMaxWidth()
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(MaterialTheme.colorScheme.surfaceContainerLowest)
-                    .clickable { dialogVisible = true }
-                    .padding(horizontal = 16.dp, vertical = 12.dp)
+    val line =
+        when {
+            !capResolved -> null
+            capMbps != null -> stringResource(R.string.beta_badge_line_capped, capMbps)
+            else -> stringResource(R.string.beta_badge_line)
         }
-    Row(modifier = modifier.then(container), verticalAlignment = Alignment.CenterVertically) {
+
+    when (variant) {
+        BetaBadgeVariant.Overlay ->
+            BetaOverlayBanner(line = line, onClick = { dialogVisible = true }, modifier = modifier)
+        BetaBadgeVariant.Row ->
+            BetaRow(line = line, onClick = { dialogVisible = true }, modifier = modifier)
+    }
+
+    if (dialogVisible) {
+        BetaInfoDialog(capMbps = capMbps, onDismiss = { dialogVisible = false })
+    }
+}
+
+/**
+ * The home-screen banner (desktop BetaBadge overlay): an opaque card of the theme, like the
+ * connection card, since a translucent one took the landscape's hue. One line whatever the
+ * language: the banner widens to its text rather than wrapping it.
+ */
+@Composable
+private fun BetaOverlayBanner(line: String?, onClick: () -> Unit, modifier: Modifier) {
+    val surfaces = LocalWarrenSurfaces.current
+    val shape = RoundedCornerShape(Dimens.betaBannerRadius)
+    Row(
+        modifier =
+            modifier
+                .wrapContentWidth(align = Alignment.Start, unbounded = true)
+                .height(Dimens.betaBannerHeight)
+                .dropShadow(
+                    shape,
+                    Shadow(
+                        radius = Dimens.betaBannerShadowBlur,
+                        color = surfaces.shadowSoft,
+                        offset = DpOffset(0.dp, Dimens.betaBannerShadowOffsetY),
+                    ),
+                )
+                .clip(shape)
+                .background(surfaces.card)
+                .border(Dimens.surfaceBorderWidth, surfaces.line, shape)
+                .clickable(onClick = onClick)
+                .padding(start = Dimens.betaBannerPaddingStart, end = Dimens.betaBannerPaddingEnd),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Dimens.betaBannerGap),
+    ) {
+        Box(
+            modifier =
+                Modifier.height(Dimens.betaPillHeight)
+                    .clip(RoundedCornerShape(Dimens.betaPillRadius))
+                    .background(surfaces.pill)
+                    .padding(horizontal = Dimens.betaPillPaddingHorizontal),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(
+                text = stringResource(R.string.beta_badge_label),
+                style = CardTypography.betaPill,
+                color = surfaces.pillText,
+                maxLines = 1,
+            )
+        }
+        if (line != null) {
+            Text(
+                text = line,
+                style = CardTypography.betaLine,
+                color = surfaces.text,
+                maxLines = 1,
+                softWrap = false,
+            )
+        }
+    }
+}
+
+/** The full-width settings row on a charcoal screen. */
+@Composable
+private fun BetaRow(line: String?, onClick: () -> Unit, modifier: Modifier) {
+    // The row is 44 dp and keeps its visual size while the node reserves the
+    // 48 dp touch floor around it, the way a Material chip does
+    // (minimumInteractiveComponentSize before the clip, so the reserved space
+    // stays unpainted).
+    Row(
+        modifier =
+            modifier
+                .minimumInteractiveComponentSize()
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainerLowest)
+                .clickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Text(
             text = stringResource(R.string.beta_badge_label),
             // Desktop labelTinySemiBold: 12/600.
@@ -107,23 +182,15 @@ fun BetaBadge(
                 .background(MaterialTheme.colorScheme.warning)
                 .padding(horizontal = 8.dp, vertical = 2.dp),
         )
-        if (capResolved) {
+        if (line != null) {
             Text(
-                text = if (capMbps != null) {
-                    stringResource(R.string.beta_badge_line_capped, capMbps)
-                } else {
-                    stringResource(R.string.beta_badge_line)
-                },
+                text = line,
                 // Desktop footnoteMini: the smallest semibold at 60 % white.
                 style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.SemiBold),
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha60),
                 modifier = Modifier.padding(start = 10.dp),
             )
         }
-    }
-
-    if (dialogVisible) {
-        BetaInfoDialog(capMbps = capMbps, onDismiss = { dialogVisible = false })
     }
 }
 

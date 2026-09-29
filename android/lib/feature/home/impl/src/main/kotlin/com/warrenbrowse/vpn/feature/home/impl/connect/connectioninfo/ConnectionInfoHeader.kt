@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
+import com.warrenbrowse.vpn.lib.ui.theme.color.LocalWarrenSurfaces
 
 @Composable
 fun ConnectionInfoHeader(text: String, modifier: Modifier = Modifier) {
@@ -14,7 +15,7 @@ fun ConnectionInfoHeader(text: String, modifier: Modifier = Modifier) {
         modifier = modifier.padding(top = Dimens.smallPadding),
         text = text,
         style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = LocalWarrenSurfaces.current.textMuted,
         overflow = TextOverflow.Ellipsis,
     )
 }

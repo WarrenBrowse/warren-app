@@ -38,6 +38,7 @@ import com.warrenbrowse.vpn.lib.model.NetworkStatsClock
 import com.warrenbrowse.vpn.lib.model.NetworkStatsFormat
 import com.warrenbrowse.vpn.lib.model.WarrenNetworkStats
 import com.warrenbrowse.vpn.lib.ui.designsystem.networkstats.LoadRing
+import com.warrenbrowse.vpn.lib.ui.designsystem.networkstats.LoadRingPalette
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha60
 import java.util.Locale as JavaLocale
@@ -96,6 +97,9 @@ fun ExitLoadBadge(
     modifier: Modifier = Modifier,
     showThroughput: Boolean = true,
     stale: Boolean = false,
+    // A surface that paints its own palette (the connection card) passes its
+    // text colour, type and ring colours; elsewhere the badge is muted white.
+    appearance: ExitLoadAppearance? = null,
 ) {
     val dim by
         animateFloatAsState(
@@ -104,8 +108,9 @@ fun ExitLoadBadge(
             label = "exit_load_badge_alpha",
         )
     val locale = figureLocale()
-    val muted = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha60)
-    val style = badgeTextStyle()
+    val muted = appearance?.textColor ?: MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha60)
+    val style = appearance?.textStyle ?: badgeTextStyle()
+    val ring = appearance?.ringPalette
     when (badge) {
         ExitLoadBadge.Offline -> {
             val offline = stringResource(R.string.network_stats_offline)
@@ -115,7 +120,7 @@ fun ExitLoadBadge(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(FIGURE_GAP),
             ) {
-                LoadRing(level = LoadLevel.UNKNOWN, arcFraction = 0f, muted = true)
+                LoadRing(level = LoadLevel.UNKNOWN, arcFraction = 0f, muted = true, palette = ring)
                 Text(text = offline, style = style, color = muted, maxLines = 1)
             }
         }
@@ -145,7 +150,7 @@ fun ExitLoadBadge(
                     modifier.alpha(dim).clearAndSetSemantics { contentDescription = description },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                LoadRing(level = badge.level, arcFraction = badge.arcFraction)
+                LoadRing(level = badge.level, arcFraction = badge.arcFraction, palette = ring)
                 if (percent != null) {
                     Spacer(Modifier.width(FIGURE_GAP))
                     Text(text = percent, style = style, color = muted, maxLines = 1)
@@ -160,6 +165,13 @@ fun ExitLoadBadge(
         }
     }
 }
+
+/** How a surface with its own palette writes the badge. */
+data class ExitLoadAppearance(
+    val textColor: Color,
+    val textStyle: TextStyle,
+    val ringPalette: LoadRingPalette,
+)
 
 @Composable
 private fun Figure(glyph: ImageVector, text: String, style: TextStyle, color: Color) {

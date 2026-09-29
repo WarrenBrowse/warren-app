@@ -11,7 +11,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
-import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -21,7 +20,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -42,8 +40,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -86,8 +82,14 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.warrenbrowse.vpn.lib.ui.theme.color.positive
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.unit.DpOffset
+import com.warrenbrowse.vpn.lib.ui.component.networkstats.ExitLoadAppearance
+import com.warrenbrowse.vpn.lib.ui.theme.CardTypography
+import com.warrenbrowse.vpn.lib.ui.theme.color.LocalWarrenSurfaces
 import kotlinx.coroutines.delay
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.background
@@ -188,7 +190,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
-import com.warrenbrowse.vpn.lib.ui.theme.color.warning
 
 private const val CONNECT_BUTTON_THROTTLE_MILLIS = 1000
 
@@ -942,13 +943,15 @@ private fun Content(
                         onClickReEnableAfterStandDown = onClickReEnableAfterStandDown,
                     )
                     if (showBetaBadge) {
-                        // No vertical padding: the badge reserves its 48 dp touch
-                        // row around a 32 dp pill, which already spaces it.
                         BetaBadge(
                             capBps = betaCapBps,
                             capResolved = betaCapResolved,
                             variant = BetaBadgeVariant.Overlay,
-                            modifier = Modifier.padding(horizontal = Dimens.mediumPadding),
+                            modifier =
+                                Modifier.padding(
+                                    start = Dimens.betaBannerMarginStart,
+                                    top = Dimens.betaBannerMarginTop,
+                                ),
                         )
                     }
                 }
@@ -967,7 +970,11 @@ private fun Content(
                         Box(
                             Modifier.widthIn(max = Dimens.connectionCardMaxWidth)
                                 .fillMaxWidth()
-                                .padding(horizontal = Dimens.mediumPadding)
+                                .padding(
+                                    start = Dimens.connectionCardMarginHorizontal,
+                                    end = Dimens.connectionCardMarginHorizontal,
+                                    bottom = Dimens.chipsToCardGap,
+                                )
                         ) {
                             AlwaysExpandedFeatureIndicators(
                                 features = features,
@@ -1128,18 +1135,10 @@ internal fun accountTimeLeftLabel(
     }
 }
 
-// Desktop glass card: black at 50% (60% expanded) over the scenery with a
-// hairline border, backdrop-blur approximated by the scrim alone.
-private const val CARD_ALPHA_COLLAPSED = 0.5f
-private const val CARD_ALPHA_EXPANDED = 0.6f
-
-// Every geometry and tint change inside the card runs on the desktop
-// ConnectionPanelAccordion clock (300ms ease-out), so the rule, the padding,
-// the glass tint and the location block never settle on different curves.
+// Every geometry change inside the card runs on the desktop
+// ConnectionPanelAccordion clock (300ms ease-out), so the rule, the padding and
+// the location block never settle on different curves.
 private const val CARD_TRANSITION_MILLIS = 300
-
-// The chevron's reserved slot, matching the Material icon's own 24dp box.
-private val CHEVRON_SLOT_SIZE = 24.dp
 
 // A long "Country, City" or an "<exit> via <entry>" hostname pair does not fit
 // the card on a phone. The line scrolls its overflow instead of dying in an
@@ -1175,29 +1174,37 @@ private fun ConnectionCard(
     // Back is the primary dismiss gesture on Android: it collapses the card
     // before it navigates away, and stays inert while the card is collapsed.
     BackHandler(enabled = expanded) { expanded = false }
-    // Pinned to the same 300ms ease-out as the geometry around it (desktop
-    // ConnectionPanel animates its tint on the accordion's own clock); the
-    // default spring would settle the tint on a different curve.
-    val containerColor =
-        animateColorAsState(
-            if (expanded) Color.Black.copy(alpha = CARD_ALPHA_EXPANDED)
-            else Color.Black.copy(alpha = CARD_ALPHA_COLLAPSED),
-            animationSpec = tween(CARD_TRANSITION_MILLIS, easing = LinearOutSlowInEasing),
-            label = "connection_card_color",
-        )
+    val surfaces = LocalWarrenSurfaces.current
+    val shape = RoundedCornerShape(Dimens.connectionCardRadius)
 
-    Card(
+    // Opaque, in the theme's paper. A translucent card let each landscape tint
+    // it, so the same card read olive on one country and slate on the next.
+    Box(
         modifier =
-            modifier.widthIn(max = Dimens.connectionCardMaxWidth).padding(Dimens.mediumPadding),
-        shape = RoundedCornerShape(Dimens.connectionCardRadius),
-        colors = CardDefaults.cardColors(containerColor = containerColor.value),
-        border = BorderStroke(1.dp, Color.White.copy(alpha = Alpha20)),
+            modifier
+                .widthIn(max = Dimens.connectionCardMaxWidth)
+                .padding(
+                    start = Dimens.connectionCardMarginHorizontal,
+                    end = Dimens.connectionCardMarginHorizontal,
+                    bottom = Dimens.connectionCardMarginBottom,
+                )
+                .dropShadow(
+                    shape,
+                    Shadow(
+                        radius = Dimens.connectionCardShadowBlur,
+                        color = surfaces.shadowStrong,
+                        offset = DpOffset(0.dp, Dimens.connectionCardShadowOffsetY),
+                    ),
+                )
+                .clip(shape)
+                .background(surfaces.card)
+                .border(Dimens.surfaceBorderWidth, surfaces.line, shape)
     ) {
         Column(
             modifier =
                 Modifier.padding(
                     vertical = Dimens.connectionCardVerticalPadding,
-                    horizontal = Dimens.mediumPadding,
+                    horizontal = Dimens.connectionCardHorizontalPadding,
                 )
         ) {
             ConnectionCardHeader(
@@ -1223,12 +1230,12 @@ private fun ConnectionCard(
                         exp,
                         autoRecoveryCount = state.autoRecoveryCount,
                     )
-                } else {
-                    Spacer(Modifier.height(Dimens.smallSpacer))
                 }
             }
 
-            Spacer(Modifier.height(Dimens.mediumPadding))
+            // Desktop CARD_GAP: the one gap between the blocks of the card, so
+            // the space the card holds is shared between them.
+            Spacer(Modifier.height(Dimens.connectionCardBlockGap))
 
             ButtonPanel(
                 state,
@@ -1258,7 +1265,12 @@ private fun ConnectionCardStatusRow(
     expanded: Boolean,
     hasTunnel: Boolean,
 ) {
-    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Top) {
+    val surfaces = LocalWarrenSurfaces.current
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(Dimens.connectionStatusTrailingGap),
+    ) {
         ConnectionStatusText(
             state = state.tunnelState,
             hostOffline = state.hostOffline,
@@ -1270,15 +1282,22 @@ private fun ConnectionCardStatusRow(
                 animationSpec = tween(CARD_TRANSITION_MILLIS),
                 label = "connection_card_chevron_alpha",
             )
-        Box(Modifier.size(CHEVRON_SLOT_SIZE), contentAlignment = Alignment.Center) {
+        Box(
+            Modifier.size(Dimens.connectionCardChevronSize),
+            contentAlignment = Alignment.Center,
+        ) {
             if (chevronAlpha > 0f) {
                 // The card grows upwards, so the arrow points up while
                 // collapsed; the announcement still names what the tap does.
-                ExpandChevron(
-                    isExpanded = expanded,
-                    pointsUpWhenCollapsed = true,
-                    modifier = Modifier.alpha(chevronAlpha),
-                )
+                CompositionLocalProvider(LocalContentColor provides surfaces.text) {
+                    ExpandChevron(
+                        isExpanded = expanded,
+                        pointsUpWhenCollapsed = true,
+                        modifier =
+                            Modifier.size(Dimens.connectionCardChevronIconSize)
+                                .alpha(chevronAlpha),
+                    )
+                }
             }
         }
         // While a tunnel exists the flag is the exit country; without one there
@@ -1304,7 +1323,8 @@ private fun ConnectionCardStatusRow(
         ) { code ->
             CountryFlag(
                 countryCode = code,
-                modifier = Modifier.padding(start = Dimens.smallPadding),
+                ringColor = surfaces.line,
+                ringWidth = Dimens.surfaceBorderWidth,
             )
         }
     }
@@ -1353,34 +1373,33 @@ private fun ConnectionCardHeader(
                 // The exit's load closes the hostname line, or the location line while there is
                 // no hostname, instead of adding a row: the card is bottom-anchored, so a new row
                 // would lift its top edge over the scenery.
+                val surfaces = LocalWarrenSurfaces.current
                 val hostnameText = location.hostnameText()
                 Row(
-                    modifier = Modifier.fillMaxWidth().padding(top = Dimens.tinyPadding),
+                    modifier =
+                        Modifier.fillMaxWidth().padding(top = Dimens.connectionCardBlockGap),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
                         modifier = Modifier.weight(1f).marqueeLine(),
                         text = location.asString(),
-                        // Desktop Location: 18/24 semibold.
-                        style =
-                            MaterialTheme.typography.titleMedium.copy(
-                                fontSize = 18.sp,
-                                lineHeight = 24.sp,
-                            ),
-                        color = MaterialTheme.colorScheme.onSurface,
+                        style = CardTypography.location,
+                        color = surfaces.text,
                         maxLines = 1,
                     )
                     if (hostnameText == null) exitLoad?.invoke()
                 }
                 AnimatedContent(hostnameText, label = "hostname") {
                     if (it != null) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                        Row(
+                            modifier = Modifier.padding(top = Dimens.hostnameGapAbove),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
                             Text(
                                 modifier = Modifier.weight(1f).marqueeLine(),
                                 text = it,
-                                // Desktop Hostname: 14/20 at 60 % white.
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha60),
+                                style = CardTypography.hostname,
+                                color = surfaces.textMuted,
                                 maxLines = 1,
                             )
                             exitLoad?.invoke()
@@ -1400,7 +1419,10 @@ private fun ConnectionCardHeader(
 @Composable
 private fun IncludeOnlyLabel(count: Int, onClick: () -> Unit) {
     val shape = RoundedCornerShape(INCLUDE_ONLY_LABEL_RADIUS)
-    val warning = MaterialTheme.colorScheme.warning
+    val surfaces = LocalWarrenSurfaces.current
+    // The ocre of the card palette, which keeps its contrast on the cream card
+    // where the charcoal theme's yellow does not.
+    val warning = surfaces.pill
     Row(
         modifier =
             Modifier.padding(top = Dimens.smallPadding)
@@ -1421,7 +1443,7 @@ private fun IncludeOnlyLabel(count: Int, onClick: () -> Unit) {
         Text(
             text = pluralStringResource(R.plurals.vpn_only_for_apps, count, count),
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurface,
+            color = surfaces.text,
         )
     }
 }
@@ -1445,11 +1467,18 @@ private fun DarkStatusBarGlyphs() {
 /** The exit's load on the hostname line: the ring, the percentage while live, the people. */
 @Composable
 private fun CompactExitLoad(load: ConnectedExitLoad) {
+    val surfaces = LocalWarrenSurfaces.current
     ExitLoadBadge(
         badge = load.stats.loadBadgeOf(load.exit),
         modifier = Modifier.padding(start = Dimens.smallPadding),
         showThroughput = false,
         stale = rememberSnapshotStale(load.stats),
+        appearance =
+            ExitLoadAppearance(
+                textColor = surfaces.textSecondary,
+                textStyle = CardTypography.exitLoad,
+                ringPalette = cardLoadRingPalette(surfaces),
+            ),
     )
 }
 
@@ -1505,7 +1534,7 @@ private fun ConnectionInfo(
             Modifier.fillMaxWidth()
                 .drawVerticalScrollbar(
                     scrollState,
-                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = AlphaScrollbar),
+                    color = LocalWarrenSurfaces.current.textMuted.copy(alpha = AlphaScrollbar),
                 )
                 .verticalScroll(scrollState)
     ) {
@@ -1529,7 +1558,7 @@ private fun ConnectionInfo(
             Column {
                 HorizontalDivider(
                     Modifier.padding(vertical = Dimens.smallPadding),
-                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(Alpha20),
+                    color = LocalWarrenSurfaces.current.line,
                 )
                 ConnectionDetailPanel(
                     connectionDetails,
@@ -1607,7 +1636,7 @@ private fun ButtonPanel(
             action.invoke()
         }
     }
-    Column(modifier = Modifier.padding(top = Dimens.tinyPadding)) {
+    Column {
         SwitchLocationButton(
             text = state.selectedRelayItemTitle ?: stringResource(id = R.string.switch_location),
             onSwitchLocation = onSwitchLocationClick,
@@ -1618,7 +1647,7 @@ private fun ButtonPanel(
                     .focusRequester(selectButtonFocusRequester),
             shuffleButtonTestTag = SHUFFLE_BUTTON_TEST_TAG,
         )
-        Spacer(Modifier.height(Dimens.buttonSpacing))
+        Spacer(Modifier.height(Dimens.connectionCardBlockGap))
 
         ConnectionButton(
             modifier = Modifier.fillMaxWidth().testTag(CONNECT_BUTTON_TEST_TAG),

@@ -34,6 +34,28 @@ private val RING_DIAMETER = 12.dp
 private val RING_STROKE = 2.dp
 
 /**
+ * The band colours of a surface that paints its own palette (the connection card, cream in the
+ * light theme); everywhere else the ring keeps the band colours of the Material scheme.
+ */
+data class LoadRingPalette(
+    val low: Color,
+    val moderate: Color,
+    val high: Color,
+    val saturated: Color,
+    val track: Color,
+) {
+    /** Null for a band this palette has no colour for, which keeps the neutral ring. */
+    fun colorOf(level: LoadLevel): Color? =
+        when (level) {
+            LoadLevel.LOW -> low
+            LoadLevel.MODERATE -> moderate
+            LoadLevel.HIGH -> high
+            LoadLevel.SATURATED -> saturated
+            LoadLevel.UNKNOWN -> null
+        }
+}
+
+/**
  * The colour of a load band. The band is decided server-side so every client paints the same exit
  * the same way; this only maps it onto the palette, and anything unknown stays neutral.
  */
@@ -62,10 +84,11 @@ fun LoadRing(
     arcFraction: Float,
     modifier: Modifier = Modifier,
     muted: Boolean = false,
+    palette: LoadRingPalette? = null,
 ) {
     val color by
         animateColorAsState(
-            loadLevelColor(level, muted),
+            palette?.takeUnless { muted }?.colorOf(level) ?: loadLevelColor(level, muted),
             animationSpec = tween(TWEEN_MILLIS / 2),
             label = "load_ring_color",
         )
@@ -75,7 +98,7 @@ fun LoadRing(
             animationSpec = tween(TWEEN_MILLIS, easing = LinearOutSlowInEasing),
             label = "load_ring_sweep",
         )
-    val track = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha20)
+    val track = palette?.track ?: MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha20)
     Canvas(modifier = modifier.size(RING_DIAMETER)) {
         val strokePx = RING_STROKE.toPx()
         val topLeft = Offset(strokePx / 2, strokePx / 2)

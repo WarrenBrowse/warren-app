@@ -5,7 +5,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,12 +13,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -27,15 +25,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.unit.sp
 import com.warrenbrowse.vpn.lib.model.ActionAfterDisconnect
 import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
 import com.warrenbrowse.vpn.lib.ui.theme.Dimens
-import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha80
-import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaStatusWellBorder
-import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaStatusWellFill
+import com.warrenbrowse.vpn.lib.ui.theme.CardTypography
+import com.warrenbrowse.vpn.lib.ui.theme.color.LocalWarrenSurfaces
 import com.warrenbrowse.vpn.lib.ui.theme.tokens.DesignTokens
 
 @Preview
@@ -44,7 +40,7 @@ private fun PreviewConnectionStatusText(
     @PreviewParameter(TunnelStatePreviewParameterProvider::class) tunnelState: TunnelState
 ) {
     AppTheme {
-        Column(modifier = Modifier.background(MaterialTheme.colorScheme.surface)) {
+        Column(modifier = Modifier.background(LocalWarrenSurfaces.current.card)) {
             ConnectionStatusText(state = tunnelState)
         }
     }
@@ -92,9 +88,9 @@ private fun statusCopy(state: TunnelState, hostOffline: Boolean): StatusCopy =
     }
 
 /**
- * The connection card status header: a phase-colored eye (open while the user
- * is visible to the network, crossed once hidden) in its tinted well, beside the
- * accent-colored status title and its factual subtitle.
+ * The connection card status header: a phase-coloured eye (open while the user is visible to the
+ * network, crossed once hidden) in its quiet well, beside the phase-coloured title and its factual
+ * subtitle, in the card palette of the resolved theme (desktop ConnectionStatus).
  */
 @Composable
 fun ConnectionStatusText(
@@ -102,8 +98,9 @@ fun ConnectionStatusText(
     hostOffline: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
+    val surfaces = LocalWarrenSurfaces.current
     val phase = state.connectionPhase(hostOffline)
-    val accent = phase.accentColor()
+    val colors = phase.cardColors(surfaces)
     val copy = statusCopy(state, hostOffline)
 
     Row(
@@ -115,29 +112,23 @@ fun ConnectionStatusText(
             modifier.semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        StatusEyeWell(accent = accent, eyeOpen = phase.isEyeOpen())
-        Column(modifier = Modifier.padding(start = Dimens.connectionStatusGap)) {
+        StatusEyeWell(colors = colors, eyeOpen = phase.isEyeOpen())
+        Column(
+            modifier = Modifier.padding(start = Dimens.connectionStatusGap),
+            verticalArrangement = Arrangement.spacedBy(Dimens.connectionStatusTextGap),
+        ) {
             Text(
                 text = stringResource(id = copy.title),
-                // The lifted tint, not the fill: the saturated accent reads at
-                // about 3.5:1 on the card at this size (desktop rule).
-                color = phase.titleColor(),
-                // Desktop ConnectionStatus: 19/22 semibold.
-                style =
-                    MaterialTheme.typography.titleLarge.copy(fontSize = 19.sp, lineHeight = 22.sp),
+                color = colors.title,
+                style = CardTypography.statusTitle,
                 maxLines = 1,
                 modifier = Modifier.marqueeLine(),
             )
             copy.subtitle?.let { subtitle ->
                 Text(
                     text = stringResource(id = subtitle),
-                    // Desktop: 13/18 at 80 % white.
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha80),
-                    style =
-                        MaterialTheme.typography.bodyMedium.copy(
-                            fontSize = 13.sp,
-                            lineHeight = 18.sp,
-                        ),
+                    color = surfaces.textSecondary,
+                    style = CardTypography.statusSubtitle,
                     maxLines = 1,
                     modifier = Modifier.marqueeLine(),
                 )
@@ -147,39 +138,35 @@ fun ConnectionStatusText(
 }
 
 /**
- * The eye sits in a well tinted with the phase accent rather than bare on the
- * card (desktop StyledIconWell): the colour gets a filled shape to live in,
- * which is what carries the state at a glance, so the title only has to be
- * readable. Fill and hairline follow a phase change on the desktop's 300 ms
- * ease-out.
+ * The eye sits in a filled well rather than bare on the card (desktop StyledIconWell): the well
+ * gives the phase colour a shape to live in, which is what carries the state at a glance, so the
+ * title only has to be readable. The fill follows a phase change on the desktop's 300 ms ease-out.
  */
 @Composable
-private fun StatusEyeWell(accent: Color, eyeOpen: Boolean) {
+private fun StatusEyeWell(colors: PhaseCardColors, eyeOpen: Boolean) {
     val fill by
         animateColorAsState(
-            targetValue = accent.copy(alpha = AlphaStatusWellFill),
+            targetValue = colors.well,
             animationSpec = tween(DesignTokens.ConnectionStatus.WellTransition, easing = EaseOut),
             label = "status_well_fill",
         )
-    val hairline by
+    val tint by
         animateColorAsState(
-            targetValue = accent.copy(alpha = AlphaStatusWellBorder),
+            targetValue = colors.title,
             animationSpec = tween(DesignTokens.ConnectionStatus.WellTransition, easing = EaseOut),
-            label = "status_well_border",
+            label = "status_eye_tint",
         )
-    val shape = RoundedCornerShape(Dimens.connectionStatusWellRadius)
     Box(
         modifier =
             Modifier.size(Dimens.connectionStatusWellSize)
-                .background(fill, shape)
-                .border(Dimens.thinBorderWidth, hairline, shape),
+                .background(fill, RoundedCornerShape(Dimens.connectionStatusWellRadius)),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
             painter =
                 painterResource(if (eyeOpen) R.drawable.ic_eye_show else R.drawable.ic_eye_hide),
             contentDescription = null, // The status title carries the meaning.
-            tint = accent,
+            tint = tint,
             modifier = Modifier.size(Dimens.connectionStatusIconSize),
         )
     }

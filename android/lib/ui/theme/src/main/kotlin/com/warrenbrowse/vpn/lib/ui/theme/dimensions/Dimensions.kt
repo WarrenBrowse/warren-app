@@ -41,7 +41,6 @@ data class Dimensions(
     val circularProgressBarMediumStrokeWidth: Dp = 4.dp,
     val circularProgressBarSmallSize: Dp = 24.dp,
     val circularProgressBarSmallStrokeWidth: Dp = 4.dp,
-    val connectButtonExtraPadding: Dp = 4.dp,
     val connectionCardMaxWidth: Dp = 480.dp,
     // Desktop ConnectionPanel: an opaque card of radius 16, 14 px from the
     // sides and 6 px above the footer, its blocks 10.5 px apart, with the
@@ -129,8 +128,6 @@ data class Dimensions(
     val orDivierMinHeight: Dp = 48.dp,
     val privacyPolicyIconSize: Dp = 16.dp,
     val problemReportTextFieldMinHeight: Dp = 220.dp,
-    val reconnectButtonMinInteractiveComponentSize: Dp = 40.dp,
-    val reconnectButtonDivider: Dp = 1.dp,
     val relayCirclePadding: Dp = 5.dp,
     val relayCircleSize: Dp = 16.dp,
     val relayItemCornerRadius: Dp = 16.dp,
@@ -159,9 +156,6 @@ data class Dimensions(
     // buttons, the chips, the beta banner and the flag ring.
     val surfaceBorderWidth: Dp = 0.5.dp,
     val switchIconSize: Dp = 24.dp,
-    // The desktop ShuffleButton is 40 px wide for a pointer; a finger gets the
-    // 48 dp floor, and the location button 1 dp away wins any tap left of it.
-    val switchLocationRetryMinWidth: Dp = 48.dp,
     val thinBorderWidth: Dp = 1.dp,
     val tinyPadding: Dp = 4.dp,
     // Desktop MainHeader: 32 px icons, 48 px lockup.
