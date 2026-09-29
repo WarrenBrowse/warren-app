@@ -23,6 +23,8 @@ Line wrap the file at 100 chars.                                              Th
 
 ## [Unreleased]
 ### Added
+- [iOS] Add a light theme for the connect screen, and a Theme setting: System, Dark or Light. System
+  follows the appearance of the device, and stays dark when the device states none.
 - [iOS] Show the warnings recorded against your account when a forwarded port is closed after an
   abuse report: a notification for each warning, a banner with its case reference that opens the
   page on contesting it, and the full list in the port forwarding screen with the address to write
@@ -45,6 +47,18 @@ Line wrap the file at 100 chars.                                              Th
   other devices hold every connection it is entitled to, instead of showing a plain disconnection.
 - [iOS] Disconnect and remove the VPN configuration when logging out or erasing the wallet, so the
   tunnel can neither stay up nor come back on demand for a wallet that left the device.
+
+## [1.1.44] - 2026-09-29
+### Added
+- [Windows, macOS, Linux, Android] Add a light theme, and a Theme setting in User interface
+  settings: System, Dark or Light. System follows the light or dark setting of the device, and stays
+  dark when the device states none.
+
+### Changed
+- [Windows, macOS, Linux, Android] Redraw the connect screen. The connection card, the BETA banner
+  and the feature labels are opaque instead of letting the scenery show through, the status reads in
+  salmon while you are visible and in green once connected, Connect is dark green and Disconnect
+  brick red, and the BETA banner always holds on one line.
 
 ## [1.1.43] - 2026-09-29
 ### Fixed

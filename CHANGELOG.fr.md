@@ -14,6 +14,8 @@ par l'application, gardez-le tel quel.
 
 ## [Unreleased]
 ### Ajouté
+- [iOS] Un thème clair pour l'écran de connexion, et un réglage Thème : Système, Sombre ou Clair.
+  Système suit l'apparence de l'appareil, et reste sombre quand l'appareil n'en indique aucune.
 - [iOS] Afficher les avertissements enregistrés sur votre compte quand un port redirigé est fermé
   après un signalement d'abus : une notification par avertissement, une bannière avec sa référence
   de dossier qui ouvre la page expliquant comment le contester, et la liste complète dans l'écran
@@ -40,6 +42,18 @@ par l'application, gardez-le tel quel.
 - [iOS] Déconnecter le VPN et retirer sa configuration à la déconnexion du compte ou à l'effacement
   du portefeuille, pour que le tunnel ne puisse ni rester ouvert ni revenir à la demande pour un
   portefeuille qui a quitté l'appareil.
+
+## [1.1.44] - 2026-09-29
+### Ajouté
+- [Windows, macOS, Linux, Android] Un thème clair, et un réglage Thème dans les paramètres de
+  l'interface : Système, Sombre ou Clair. Système suit le réglage clair ou sombre de l'appareil, et
+  reste sombre quand l'appareil n'en indique aucun.
+
+### Modifié
+- [Windows, macOS, Linux, Android] L'écran de connexion est redessiné. La carte de connexion, le
+  bandeau BETA et les étiquettes réseau sont opaques au lieu de laisser passer le décor, l'état
+  s'affiche en saumon quand vous êtes visible et en vert une fois connecté, Connexion est en vert
+  foncé et Déconnexion en rouge brique, et le bandeau BETA tient toujours sur une ligne.
 
 ## [1.1.43] - 2026-09-29
 ### Corrigé

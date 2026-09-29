@@ -13,6 +13,9 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 
 ## [Unreleased]
 ### Adăugat
+- [iOS] O temă luminoasă pentru ecranul de conectare și o setare Temă: Sistem, Întunecată sau
+  Luminoasă. Sistem urmează aspectul dispozitivului și rămâne întunecată când dispozitivul nu indică
+  niciunul.
 - [iOS] Vezi avertismentele înregistrate pe contul tău când un port redirecționat e închis după o
   raportare de abuz: o notificare pentru fiecare avertisment, un banner cu referința dosarului care
   deschide pagina despre contestare, și lista completă în ecranul port forwarding cu adresa la care
@@ -36,6 +39,18 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Deconectează VPN-ul și elimină configurația lui la ieșirea din cont sau la ștergerea
   portofelului, ca tunelul să nu poată nici rămâne deschis, nici reporni la cerere pentru un
   portofel care a părăsit dispozitivul.
+
+## [1.1.44] - 2026-09-29
+### Adăugat
+- [Windows, macOS, Linux, Android] O temă luminoasă și o setare Temă în setările interfeței: Sistem,
+  Întunecată sau Luminoasă. Sistem urmează setarea luminoasă sau întunecată a dispozitivului și
+  rămâne întunecată când dispozitivul nu indică niciuna.
+
+### Modificat
+- [Windows, macOS, Linux, Android] Ecranul de conectare este redesenat. Cardul de conexiune,
+  bannerul BETA și etichetele de rețea sunt opace în loc să lase peisajul să se vadă prin ele,
+  starea apare în somon cât timp ești vizibil și în verde după conectare, Conectare este verde
+  închis și Deconectare roșu cărămiziu, iar bannerul BETA rămâne mereu pe un singur rând.
 
 ## [1.1.43] - 2026-09-29
 ### Reparat

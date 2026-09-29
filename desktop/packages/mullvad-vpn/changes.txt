@@ -1,4 +1,10 @@
-### Fixed
-- [macOS] Keep a Tailscale network reachable while the VPN is connected. Every packet to a
-  Tailscale device was blocked. Tailscale's own interface now gets through, including when
-  Tailscale starts after the VPN; other networks stay blocked.
+### Added
+- [Windows, macOS, Linux, Android] Add a light theme, and a Theme setting in User interface
+  settings: System, Dark or Light. System follows the light or dark setting of the device, and stays
+  dark when the device states none.
+
+### Changed
+- [Windows, macOS, Linux, Android] Redraw the connect screen. The connection card, the BETA banner
+  and the feature labels are opaque instead of letting the scenery show through, the status reads in
+  salmon while you are visible and in green once connected, Connect is dark green and Disconnect
+  brick red, and the BETA banner always holds on one line.
