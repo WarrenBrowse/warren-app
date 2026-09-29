@@ -76,6 +76,14 @@ final class WarrenThemeTests: XCTestCase {
         XCTAssertEqual(AppPreferences().warrenThemePreference, .dark)
     }
 
+    /// A UI test launch that resets every preference must start from the
+    /// default theme. A choice left behind by an earlier run painted the
+    /// "System, light device" capture dark.
+    func testAFullPreferencesResetClearsTheThemeChoice() {
+        let cleared = UITestAppPreferencesPolicy.all.resolvedKeys().map(\.rawValue)
+        XCTAssertTrue(cleared.contains("warrenThemePreference"), "\(cleared)")
+    }
+
     /// The three choices and the row that holds them are read in every
     /// language the app ships, with desktop's words (`user-interface-settings-view`).
     func testTheSettingIsLocalizedInEveryLanguage() throws {
