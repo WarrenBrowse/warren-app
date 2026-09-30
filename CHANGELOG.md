@@ -47,9 +47,12 @@ Line wrap the file at 100 chars.                                              Th
   other devices hold every connection it is entitled to, instead of showing a plain disconnection.
 - [iOS] Disconnect and remove the VPN configuration when logging out or erasing the wallet, so the
   tunnel can neither stay up nor come back on demand for a wallet that left the device.
-- [Desktop] Keep port forwarding, session tokens and the account screen working on a computer whose
-  clock is more than a minute off: every signed request now takes the servers' clock from the first
-  refusal, and the problem report says how far off the clock is.
+- [Windows, macOS, Linux] Keep port forwarding, session tokens and the account screen working on a
+  computer whose clock is more than a minute off: every signed request now takes the servers' clock
+  from the first refusal, and the problem report says how far off the clock is.
+- [Android, iOS] Keep port forwarding, session tokens and the account screen working on a device
+  whose clock is more than a minute off: every signed request now takes the servers' clock from the
+  first refusal any request meets.
 
 ## [1.1.45] - 2026-09-30
 ### Fixed

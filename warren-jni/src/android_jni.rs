@@ -1436,8 +1436,11 @@ fn get_subscription_inner(mnemonic: &str) -> Result<u64, SubscriptionFetchError>
         .map_err(|e| SubscriptionFetchError::Setup(format!("invalid mnemonic: {e}")))?;
     // The identity is per call (the mnemonic never lingers); the HTTP stack
     // under it is the process-wide one.
-    let client =
-        warren_api::WarrenApiClient::new(PRODUCT_API_URL.to_owned(), identity, api_transport());
+    let client = warren_standing::server_clock::attach(warren_api::WarrenApiClient::new(
+        PRODUCT_API_URL.to_owned(),
+        identity,
+        api_transport(),
+    ));
     let resp = runtime
         .block_on(client.subscription())
         .map_err(SubscriptionFetchError::Client)?;
@@ -1776,8 +1779,11 @@ fn campaign_voucher(mnemonic: &str, campaign_id: &str) -> Result<Option<String>,
     if let Held::Known(code) = CAMPAIGN_CODES.lock().held(&address, campaign_id) {
         return Ok(code);
     }
-    let client =
-        warren_api::WarrenApiClient::new(PRODUCT_API_URL.to_owned(), identity, api_transport());
+    let client = warren_standing::server_clock::attach(warren_api::WarrenApiClient::new(
+        PRODUCT_API_URL.to_owned(),
+        identity,
+        api_transport(),
+    ));
     let fetched = runtime
         .block_on(client.campaign_voucher(campaign_id))
         .map_err(|e| {
@@ -1942,11 +1948,11 @@ fn incident_client(
     let runtime = runtime().ok_or(NotSent::Runtime)?;
     let identity =
         warren_identity::WarrenIdentity::from_mnemonic(mnemonic).map_err(|_| NotSent::Identity)?;
-    let client = warren_api::WarrenApiClient::new(
+    let client = warren_standing::server_clock::attach(warren_api::WarrenApiClient::new(
         PRODUCT_API_URL.to_owned(),
         identity,
         IncidentTransport::new(),
-    );
+    ));
     Ok((runtime, client))
 }
 
@@ -2023,11 +2029,11 @@ fn account_standing(mnemonic: &str) -> String {
         return NOT_POLLED.to_owned();
     };
     let wallet_pubkey = identity.public_key();
-    let client = warren_api::WarrenApiClient::new(
+    let client = warren_standing::server_clock::attach(warren_api::WarrenApiClient::new(
         PRODUCT_API_URL.to_owned(),
         identity,
         IncidentTransport::new(),
-    );
+    ));
     let result = runtime.block_on(client.account_standing());
     if let Err(error) = &result {
         // The class only: the error's body may echo identity material. A 404

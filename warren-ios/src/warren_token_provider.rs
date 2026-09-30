@@ -97,11 +97,11 @@ pub(crate) fn provider_for(signing_key: SigningKey, blinding: BlindingKey) -> Se
         guard
             .entry(pubkey)
             .or_insert_with(|| {
-                let client = WarrenApiClient::new(
+                let client = warren_standing::server_clock::attach(WarrenApiClient::new(
                     WARREN_API_URL.to_owned(),
                     WarrenIdentity::from_signing_key(signing_key),
                     ReqwestTransport::new(),
-                );
+                ));
                 let manager = Arc::new(TokenManager::new(Arc::new(client), blinding));
                 spawn_refresh(manager.clone(), pubkey);
                 manager

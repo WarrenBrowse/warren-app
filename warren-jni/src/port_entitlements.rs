@@ -56,11 +56,11 @@ mod android {
         });
         let wallet_pubkey = signing_key.verifying_key().to_bytes();
         mint.rule_credential(wallet_pubkey, ANDROID_RULE_SLOT, blinding, move || {
-            WarrenApiClient::new(
+            warren_standing::server_clock::attach(WarrenApiClient::new(
                 crate::product::PRODUCT_API_URL.to_owned(),
                 WarrenIdentity::from_signing_key(signing_key),
                 ProtectedTransport::for_mint(),
-            )
+            ))
         })
     }
 }

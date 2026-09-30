@@ -96,11 +96,11 @@ fn send(
 ) -> Result<(), NotSent> {
     let handle = crate::warren_ios_runtime().map_err(|_| NotSent::Runtime)?;
     let identity = WarrenIdentity::from_seed(seed);
-    let client = warren_api::WarrenApiClient::new(
+    let client = warren_standing::server_clock::attach(warren_api::WarrenApiClient::new(
         warren_product_env::API_URL.to_owned(),
         identity,
         ReqwestTransport::new(),
-    );
+    ));
     handle
         .block_on(client.report_pubkey_mismatch(request))
         .map_err(client_error_class)

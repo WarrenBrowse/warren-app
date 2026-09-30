@@ -91,11 +91,11 @@ mod ios {
         });
         let wallet_pubkey = signing_key.verifying_key().to_bytes();
         mint.slot_source(wallet_pubkey, blinding, move || {
-            WarrenApiClient::new(
+            warren_standing::server_clock::attach(WarrenApiClient::new(
                 warren_product_env::API_URL.to_owned(),
                 WarrenIdentity::from_signing_key(signing_key),
                 ReqwestTransport::new(),
-            )
+            ))
         })
     }
 }

@@ -39,9 +39,12 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Deconectează VPN-ul și elimină configurația lui la ieșirea din cont sau la ștergerea
   portofelului, ca tunelul să nu poată nici rămâne deschis, nici reporni la cerere pentru un
   portofel care a părăsit dispozitivul.
-- [Desktop] Port forwarding-ul, tokenurile de sesiune și ecranul contului funcționează și pe un
-  computer al cărui ceas are o abatere de peste un minut: fiecare cerere semnată ia acum ceasul
-  serverelor de la primul refuz, iar raportul de problemă arată abaterea ceasului.
+- [Windows, macOS, Linux] Port forwarding-ul, tokenurile de sesiune și ecranul contului funcționează
+  și pe un computer al cărui ceas are o abatere de peste un minut: fiecare cerere semnată ia acum
+  ceasul serverelor de la primul refuz, iar raportul de problemă arată abaterea ceasului.
+- [Android, iOS] Port forwarding-ul, tokenurile de sesiune și ecranul contului funcționează și pe un
+  dispozitiv al cărui ceas are o abatere de peste un minut: fiecare cerere semnată ia acum ceasul
+  serverelor de la primul refuz întâlnit.
 
 ## [1.1.45] - 2026-09-30
 ### Reparat

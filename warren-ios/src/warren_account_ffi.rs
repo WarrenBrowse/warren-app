@@ -120,11 +120,11 @@ fn err_client_json(err: &ClientError) -> *mut c_char {
 /// hot-swap to worry about since the FFI boundary is stateless (the
 /// caller hands in the current seed on every call).
 fn client_for_seed(seed: &[u8; SEED_LEN]) -> WarrenApiClient<ReqwestTransport> {
-    WarrenApiClient::new(
+    warren_standing::server_clock::attach(WarrenApiClient::new(
         WARREN_API_URL.to_owned(),
         WarrenIdentity::from_seed(seed),
         ReqwestTransport::new(),
-    )
+    ))
 }
 
 /// Signed `GET /v1/subscription`. Returns the wallet's subscription
@@ -403,8 +403,11 @@ pub unsafe extern "C" fn warren_account_standing(
         };
         let identity = WarrenIdentity::from_seed(&seed);
         let wallet_pubkey = identity.public_key();
-        let client =
-            WarrenApiClient::new(WARREN_API_URL.to_owned(), identity, ReqwestTransport::new());
+        let client = warren_standing::server_clock::attach(WarrenApiClient::new(
+            WARREN_API_URL.to_owned(),
+            identity,
+            ReqwestTransport::new(),
+        ));
         let result = handle.block_on(client.account_standing());
         if let Err(ClientError::ServerStatus { status, .. }) = &result
             && *status != 404
