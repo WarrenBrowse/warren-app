@@ -1245,7 +1245,13 @@ impl<'a> PolicyBatch<'a> {
     /// names inside that interface, and forwards other names over the tailnet to the member's
     /// Tailscale exit node when one is configured: nothing leaves a physical interface in clear.
     fn add_allow_tailnet_rules(&mut self, interfaces: &[String]) -> Result<()> {
-        let set = interfaces.iter().cloned().collect();
+        // An interface gone since it was read is skipped: dropping its allowance fails closed,
+        // while failing the whole policy would block the member for a Tailscale restart.
+        let set = interfaces
+            .iter()
+            .filter(|name| crate::linux::iface_index(name).is_ok())
+            .cloned()
+            .collect();
         for pass in super::tailnet::tailnet_passes(&set) {
             let (chain, direction, end) = match pass.direction {
                 super::tailnet::PassDirection::Out => (&self.out_chain, Direction::Out, End::Dst),

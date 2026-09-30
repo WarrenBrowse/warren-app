@@ -8,6 +8,7 @@
 #include <libwfp/conditions/conditioninterface.h>
 #include <libwfp/conditions/conditionip.h>
 #include <libwfp/conditions/conditionport.h>
+#include <iphlpapi.h>
 
 using namespace wfp::conditions;
 
@@ -40,6 +41,17 @@ PermitTailnet::PermitTailnet(const std::wstring &interfaceAlias)
 
 bool PermitTailnet::apply(IObjectInstaller &objectInstaller)
 {
+	//
+	// An adapter gone since it was read is skipped: dropping its allowance fails
+	// closed, while failing the whole policy would block the member for a
+	// Tailscale restart.
+	//
+	NET_LUID luid;
+	if (NO_ERROR != ConvertInterfaceAliasToLuid(m_interfaceAlias.c_str(), &luid))
+	{
+		return true;
+	}
+
 	struct Leg
 	{
 		const GUID &layer;

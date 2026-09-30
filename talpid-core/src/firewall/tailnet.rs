@@ -131,23 +131,35 @@ fn is_tunnel_device(name: &str) -> bool {
     name.starts_with(TUNNEL_INTERFACE_PREFIX)
 }
 
-/// A Windows adapter that is a tunnel: a virtual one (not backed by hardware) of the virtual,
-/// tunnel or PPP kind. Tailscale's Wintun adapter reports the virtual kind, as Warren's own does.
+/// A Windows adapter that is a tunnel of Tailscale's kind: virtual (not backed by hardware) and
+/// of the proprietary virtual type Wintun reports, as Tailscale's adapter and Warren's own do.
+/// Not PPP (a PPPoE link) nor the tunnel type (Teredo, IP-HTTPS, 6to4): those put their packets on
+/// the wire in clear, and the network they face can hand them any address.
 #[cfg(any(windows, test))]
 fn is_windows_tunnel(if_type: u32, hardware: bool) -> bool {
-    const IF_TYPE_PPP: u32 = 23;
     const IF_TYPE_PROP_VIRTUAL: u32 = 53;
-    const IF_TYPE_TUNNEL: u32 = 131;
-    !hardware && matches!(if_type, IF_TYPE_PPP | IF_TYPE_PROP_VIRTUAL | IF_TYPE_TUNNEL)
+    !hardware && if_type == IF_TYPE_PROP_VIRTUAL
+}
+
+/// Whether a Linux device's `tun_flags` names a TUN device, not a TAP one: a TAP device bridges an
+/// overlay (ZeroTier, OpenVPN in TAP mode) whose addresses another party can set.
+#[cfg(any(target_os = "linux", test))]
+fn is_tun_flags(flags: &str) -> bool {
+    const IFF_TUN: u32 = 0x1;
+    const IFF_TAP: u32 = 0x2;
+    u32::from_str_radix(flags.trim().trim_start_matches("0x"), 16)
+        .is_ok_and(|flags| flags & IFF_TUN != 0 && flags & IFF_TAP == 0)
 }
 
 /// A TUN device: the kernel exposes `tun_flags` for those alone, whatever they are named.
 #[cfg(target_os = "linux")]
 fn is_tunnel_device(name: &str) -> bool {
-    std::path::Path::new("/sys/class/net")
-        .join(name)
-        .join("tun_flags")
-        .exists()
+    std::fs::read_to_string(
+        std::path::Path::new("/sys/class/net")
+            .join(name)
+            .join("tun_flags"),
+    )
+    .is_ok_and(|flags| is_tun_flags(&flags))
 }
 
 /// The routing table that sends the tailnet ranges to a coexisting tailnet interface on Linux.
@@ -173,12 +185,13 @@ pub fn linux_route_plan(interface: Option<&str>) -> Vec<Vec<String>> {
     let ranges = [("-4", TAILNET_V4), ("-6", TAILNET_V6)];
     let words = |line: &[&str]| line.iter().map(|w| (*w).to_owned()).collect::<Vec<_>>();
     let mut plan = Vec::new();
+    // Only what this plan adds is removed: another program's routes in the table stay.
     for (family, net) in ranges {
         let net = net.to_string();
         plan.push(words(&[
             family, "rule", "del", "to", &net, "lookup", &table, "pref", &pref,
         ]));
-        plan.push(words(&[family, "route", "flush", "table", &table]));
+        plan.push(words(&[family, "route", "del", &net, "table", &table]));
     }
     let Some(interface) = interface else {
         return plan;
@@ -216,7 +229,7 @@ pub fn linux_route_plan(interface: Option<&str>) -> Vec<Vec<String>> {
 #[cfg(target_os = "linux")]
 pub fn apply_linux_routes(interface: Option<&str>) -> io::Result<()> {
     for args in linux_route_plan(interface) {
-        let clearing = args.iter().any(|w| w == "del" || w == "flush");
+        let clearing = args.iter().any(|w| w == "del");
         let status = std::process::Command::new("ip")
             .args(&args)
             .stdout(std::process::Stdio::null())
@@ -335,7 +348,11 @@ mod tests {
             is_windows_tunnel(53, false),
             "Wintun, Tailscale's and Warren's"
         );
-        assert!(is_windows_tunnel(131, false));
+        // PPP (a PPPoE link) and the tunnel kind (Teredo, IP-HTTPS, 6to4) put
+        // their packets on the wire in clear: a network that hands one of them
+        // a Tailscale address must not get this allowance.
+        assert!(!is_windows_tunnel(23, false), "PPP");
+        assert!(!is_windows_tunnel(131, false), "Teredo, IP-HTTPS, 6to4");
         assert!(!is_windows_tunnel(6, false), "Ethernet");
         assert!(!is_windows_tunnel(71, false), "Wi-Fi");
         assert!(!is_windows_tunnel(53, true), "backed by hardware");
@@ -370,6 +387,29 @@ mod tests {
                 "-6 rule add to fd7a:115c:a1e0::/48 lookup 101 pref 48",
             ]
         );
+    }
+
+    #[test]
+    fn only_a_tun_device_counts_as_a_tunnel_on_linux() {
+        assert!(is_tun_flags("0x1001\n"), "IFF_TUN with IFF_NO_PI");
+        assert!(
+            !is_tun_flags("0x1002\n"),
+            "IFF_TAP: a bridged overlay, not Tailscale"
+        );
+        assert!(!is_tun_flags("garbage"));
+    }
+
+    #[test]
+    fn the_linux_route_plan_removes_only_its_own_routes() {
+        let plan = linux_route_plan(None);
+        assert!(
+            plan.iter().all(|c| !c.contains(&"flush".to_owned())),
+            "another program's routes in the table stay: {plan:?}"
+        );
+        let own_v4: Vec<String> = ["-4", "route", "del", "100.64.0.0/10", "table", "101"]
+            .map(String::from)
+            .to_vec();
+        assert!(plan.contains(&own_v4), "{plan:?}");
     }
 
     #[test]
