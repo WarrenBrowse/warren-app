@@ -279,6 +279,84 @@ mod tests {
         }
     }
 
+    /// The daemon's transport, recording the status and body of every
+    /// answer.
+    #[derive(Clone)]
+    struct Recording {
+        inner: crate::warren_api_transport::WarrenApiTransport,
+        answers: Arc<Mutex<Vec<(u16, String)>>>,
+    }
+
+    impl HttpTransport for Recording {
+        async fn execute(&self, request: HttpRequest) -> Result<HttpResponse, TransportError> {
+            let response = self.inner.execute(request).await?;
+            self.answers.lock().unwrap().push((
+                response.status,
+                String::from_utf8_lossy(&response.body).into_owned(),
+            ));
+            Ok(response)
+        }
+    }
+
+    /// Against the real API (`WARREN_LIVE_API`, e.g.
+    /// `https://api.beta.warrenbrowse.com`), with a throwaway wallet: the
+    /// shared clock starts out stamping 91 s ahead of the servers, as the
+    /// machine of forum topic 219 did. The API refuses the stamp for the
+    /// clock, its `Date` reaches the SDK through the daemon's transport, and
+    /// the same request signed again at the corrected stamp is no longer
+    /// refused for the clock. Neither this machine's clock nor its network
+    /// settings are touched. Run with `--ignored`.
+    #[tokio::test]
+    #[ignore = "reaches the live API named by WARREN_LIVE_API"]
+    async fn a_live_api_refusal_for_the_clock_corrects_the_stamp() {
+        let Ok(api) = std::env::var("WARREN_LIVE_API") else {
+            panic!("set WARREN_LIVE_API to the API base, e.g. https://api.beta.warrenbrowse.com");
+        };
+        let clock = ApiClock::new();
+        let device_now = now();
+        clock.observe(&http_date(device_now + 91), device_now);
+        let answers = Arc::new(Mutex::new(Vec::new()));
+        let transport = Recording {
+            inner: crate::warren_api_transport::WarrenApiTransport::new(),
+            answers: Arc::clone(&answers),
+        };
+        let seed: [u8; 32] = rand::random();
+        let client = clock.attach(WarrenApiClient::new(
+            api,
+            WarrenIdentity::from_seed(&seed),
+            transport,
+        ));
+
+        let result = client.subscription().await;
+
+        let answers = answers.lock().unwrap().clone();
+        let statuses: Vec<u16> = answers.iter().map(|(status, _)| *status).collect();
+        eprintln!(
+            "live answers: {answers:?}; offset now {:?}; result: {}",
+            clock.measured_offset(),
+            match &result {
+                Ok(_) => "a subscription".to_owned(),
+                Err(error) => format!("{error}"),
+            }
+        );
+        assert_eq!(statuses.first(), Some(&401), "the skewed stamp is refused");
+        assert_eq!(statuses.len(), 2, "one refusal, one corrected retry");
+        assert!(
+            !matches!(
+                result,
+                Err(warren_api::ClientError::ClockSkew { .. })
+                    | Err(warren_api::ClientError::ServerStatus { status: 401, .. })
+            ),
+            "the corrected stamp must not be refused for the clock"
+        );
+        assert!(
+            clock
+                .measured_offset()
+                .is_some_and(|offset| offset.unsigned_abs() <= 5),
+            "the refusal's Date shows this machine's own clock"
+        );
+    }
+
     fn client(clock: &ApiClock, api: &SkewedApi) -> WarrenApiClient<SkewedApi> {
         clock.attach(WarrenApiClient::new(
             "https://api.example.test".to_owned(),
