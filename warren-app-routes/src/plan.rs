@@ -41,6 +41,14 @@ pub trait PlanRules {
     /// picks one, with `inputs`' hops and entry country and without a
     /// draining exit. `None` when nothing serves it.
     fn select(&self, inputs: &PlanInputs<'_>, choice: &Self::Choice) -> Option<MultiHopConfig>;
+
+    /// Whether this client's network routes `dir.nodes[entry]`, the entry of
+    /// a circuit the last plan kept. A kept circuit whose entry the network
+    /// stopped routing (a move to an IPv6-only network) is selected again,
+    /// the way the main connection repicks its own. Every entry by default.
+    fn routes_entry(&self, _dir: &VerifiedMultiHopDirectory, _entry: usize) -> bool {
+        true
+    }
 }
 
 /// What the main connection is made of, which a route copies.
@@ -227,17 +235,18 @@ fn still_valid<P: PlanRules>(
     choice: &P::Choice,
 ) -> bool {
     let dir = inputs.directory;
-    let entry = dir
+    let entry_idx = dir
         .nodes
         .iter()
-        .find(|node| node.relay.relay_id == circuit.relay.relay_id);
+        .position(|node| node.relay.relay_id == circuit.relay.relay_id);
     let exit = dir
         .nodes
         .iter()
         .find(|node| node.exit.exit_id == circuit.exit.exit_id);
-    let (Some(entry), Some(exit)) = (entry, exit) else {
+    let (Some(entry_idx), Some(exit)) = (entry_idx, exit) else {
         return false;
     };
+    let entry = &dir.nodes[entry_idx];
     let drained = |node: &NodeEntry| inputs.drained.contains(node.exit.exit_id.as_bytes());
     circuit.single_node != inputs.two_hop
         && !drained(entry)
@@ -247,6 +256,7 @@ fn still_valid<P: PlanRules>(
                 .entry_country
                 .is_none_or(|country| entry.country.eq_ignore_ascii_case(country)))
         && rules.admits(choice, exit)
+        && rules.routes_entry(dir, entry_idx)
 }
 
 fn exit_matches<P: PlanRules>(

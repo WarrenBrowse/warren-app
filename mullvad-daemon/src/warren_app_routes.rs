@@ -237,6 +237,12 @@ impl PlanRules for DesktopRules {
             )
         }
     }
+
+    fn routes_entry(&self, dir: &VerifiedMultiHopDirectory, entry: usize) -> bool {
+        !self
+            .unroutable_entries
+            .contains(&dir.nodes[entry].relay.relay_id)
+    }
 }
 
 /// Resolves every exit in force (`warren_app_routes::plan`). `previous`
@@ -397,6 +403,30 @@ mod tests {
         );
 
         assert_eq!(exit, 3, "the lighter exit, since the city names it");
+    }
+
+    #[test]
+    fn a_kept_route_whose_node_the_network_stopped_routing_is_selected_again() {
+        // The last plan rode Berlin; the host then moved to a network that
+        // cannot reach it, while Bad Homburg stays reachable.
+        let dir = fleet();
+        let main = main_in(&dir, "se");
+        let settings = routing(&[("browser", choice("de", None))]);
+        let first = plan(
+            &settings,
+            Some(&inputs(&dir, Some(&main))),
+            &BTreeMap::new(),
+        );
+        assert_eq!(exit_of(&first.tunnel.routes[0]), 2, "precondition: Berlin");
+        let unroutable = [[2; 16]];
+        let moved = RouteInputs {
+            unroutable_entries: &unroutable,
+            ..inputs(&dir, Some(&main))
+        };
+
+        let next = plan(&settings, Some(&moved), &first.circuits);
+
+        assert_eq!(exit_of(&next.tunnel.routes[0]), 3);
     }
 
     #[test]

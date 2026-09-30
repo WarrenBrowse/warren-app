@@ -248,11 +248,20 @@ impl PlanRules for AndroidRules {
             |candidates| {
                 let in_dir: Vec<usize> = candidates.iter().map(|&k| usable[k]).collect();
                 let kept = (self.reachable)(dir, &in_dir);
-                candidates
+                let routed: Vec<usize> = candidates
                     .iter()
                     .copied()
                     .filter(|&k| kept.contains(&usable[k]))
-                    .collect()
+                    .collect();
+                // A network that routes none of them still gets its route
+                // dialed, as the desktop does: the session then ends in the
+                // engine's `NoReachableEntry`, which the status names, where
+                // selecting nothing would read as "no server there".
+                if routed.is_empty() {
+                    candidates.to_vec()
+                } else {
+                    routed
+                }
             },
         )
         .ok()?;
@@ -262,6 +271,10 @@ impl PlanRules for AndroidRules {
             &dir.nodes[usable[exit_at]],
             inputs.two_hop,
         ))
+    }
+
+    fn routes_entry(&self, dir: &VerifiedMultiHopDirectory, entry: usize) -> bool {
+        !(self.reachable)(dir, &[entry]).is_empty()
     }
 }
 
@@ -499,13 +512,6 @@ mod tests {
         // The main session's own rule, applied to a route: Sweden, first in
         // the directory, publishes nothing this network routes, so the route
         // enters through the next node that can front the Berlin exit.
-        fn all_but_sweden(dir: &VerifiedMultiHopDirectory, candidates: &[usize]) -> Vec<usize> {
-            candidates
-                .iter()
-                .copied()
-                .filter(|&i| dir.nodes[i].country != "se")
-                .collect()
-        }
         let dir = fleet();
         let inputs = PlanInputs {
             two_hop: true,
@@ -522,6 +528,60 @@ mod tests {
         let circuit = &planned.tunnel.routes[0].circuit;
         assert_eq!(circuit.relay.relay_id, [3; 16], "the first routable entry");
         assert_eq!(circuit.exit.exit_id.as_bytes(), &[2; 16]);
+    }
+
+    fn all_but_sweden(dir: &VerifiedMultiHopDirectory, candidates: &[usize]) -> Vec<usize> {
+        candidates
+            .iter()
+            .copied()
+            .filter(|&i| dir.nodes[i].country != "se")
+            .collect()
+    }
+
+    #[test]
+    fn a_kept_route_whose_entry_the_network_stopped_routing_is_selected_again() {
+        // The last plan entered in Sweden; the phone then moved to a network
+        // that cannot reach it.
+        let dir = fleet();
+        let exits = [exit("org.browser", "de", None)];
+        let choice = ExitChoice::of(&exits[0]).unwrap();
+        let previous =
+            BTreeMap::from([(choice, circuit_of(&dir, &dir.nodes[0], &dir.nodes[1], true))]);
+        let inputs = PlanInputs {
+            two_hop: true,
+            reachable: all_but_sweden,
+            ..inputs(&dir, 1)
+        };
+
+        let planned = plan(&exits, Some(&inputs), &previous);
+
+        let circuit = &planned.tunnel.routes[0].circuit;
+        assert_eq!(circuit.relay.relay_id, [3; 16], "repicked off Sweden");
+        assert_eq!(circuit.exit.exit_id.as_bytes(), &[2; 16], "same exit");
+    }
+
+    #[test]
+    fn a_route_on_a_network_that_routes_no_entry_is_dialed_for_its_verdict() {
+        // Selecting nothing would show "no server there"; dialing lets the
+        // session end in the engine's typed verdict, which names the network.
+        fn nothing(_: &VerifiedMultiHopDirectory, _: &[usize]) -> Vec<usize> {
+            Vec::new()
+        }
+        let dir = fleet();
+        let inputs = PlanInputs {
+            two_hop: true,
+            reachable: nothing,
+            ..inputs(&dir, 1)
+        };
+
+        let planned = plan(
+            &[exit("org.browser", "de", None)],
+            Some(&inputs),
+            &BTreeMap::new(),
+        );
+
+        assert_eq!(planned.tunnel.routes.len(), 1);
+        assert!(planned.tunnel.blocked_apps.is_empty());
     }
 
     #[test]
