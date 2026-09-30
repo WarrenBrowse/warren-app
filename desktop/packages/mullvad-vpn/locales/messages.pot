@@ -1250,11 +1250,19 @@ msgctxt "connect-view"
 msgid "Port forwarding: %(ports)s"
 msgstr ""
 
+#. Alerting chip on the main screen when a port forward
 #. could not be established.
 msgctxt "connect-view"
 msgid "Port forwarding: blocked"
 msgstr ""
 
+#. Alerting chip on the main screen when the servers
+#. refuse port forwarding because this device's clock is wrong.
+msgctxt "connect-view"
+msgid "Port forwarding: clock of this device is off"
+msgstr ""
+
+#. Alerting chip on the main screen when the requested
 #. public port is already taken on the connected exit.
 msgctxt "connect-view"
 msgid "Port forwarding: port in use"
@@ -2887,12 +2895,6 @@ msgctxt "port-forwarding-view"
 msgid "Maximum of %(max)d ports reached"
 msgstr ""
 
-#. Short status of a rule the account has no port
-#. entitlement left for; the app asks again on its own.
-msgctxt "port-forwarding-view"
-msgid "no entitlement left, retrying"
-msgstr ""
-
 msgctxt "port-forwarding-view"
 msgid "no port available"
 msgstr ""
@@ -2954,6 +2956,12 @@ msgctxt "port-forwarding-view"
 msgid "Port %(port)d was closed after an abuse report. %(client)s keeps its port until you apply one."
 msgstr ""
 
+#. Short status of a rule for which no port entitlement
+#. could be obtained yet; the app asks again on its own.
+msgctxt "port-forwarding-view"
+msgid "port entitlement unavailable, retrying"
+msgstr ""
+
 msgctxt "port-forwarding-view"
 msgid "Port forwarding"
 msgstr ""
@@ -3010,6 +3018,28 @@ msgstr ""
 
 msgctxt "port-forwarding-view"
 msgid "Test connection"
+msgstr ""
+
+#. Status of a rule whose port entitlement the servers
+#. refused because this device's clock runs ahead.
+#. Available placeholders:
+#. %(seconds)d - how many seconds ahead the clock is
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s ahead, turn on automatic time"
+msgstr ""
+
+#. Status of a rule whose port entitlement the servers
+#. refused because this device's clock runs behind.
+#. Available placeholders:
+#. %(seconds)d - how many seconds behind the clock is
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s behind, turn on automatic time"
+msgstr ""
+
+#. Status of a rule whose port entitlement the servers
+#. refused because this device's clock is wrong.
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is off, turn on automatic time"
 msgstr ""
 
 msgctxt "port-forwarding-view"

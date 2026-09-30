@@ -37,17 +37,24 @@ impl MapOutcome {
 }
 
 /// The status Kotlin polls while a refused rule waits:
-/// `{"state":"refused","refusal":"no_entitlement"|"entitlement_refused","retry_in_secs":N}`.
+/// `{"state":"refused","refusal":"no_entitlement"|"entitlement_refused"|"clock_skew","retry_in_secs":N}`,
+/// plus `"clock_offset_secs":N` (the servers' clock minus the device's) on a
+/// clock refusal that said by how much.
 pub(crate) fn refused_status_json(refusal: PortRefusal, retry_in_secs: u32) -> String {
-    serde_json::json!({
+    let (name, clock_offset_secs) = match refusal {
+        PortRefusal::NoEntitlement => ("no_entitlement", None),
+        PortRefusal::EntitlementRefused => ("entitlement_refused", None),
+        PortRefusal::ClockSkew { offset_secs } => ("clock_skew", offset_secs),
+    };
+    let mut status = serde_json::json!({
         "state": "refused",
-        "refusal": match refusal {
-            PortRefusal::NoEntitlement => "no_entitlement",
-            PortRefusal::EntitlementRefused => "entitlement_refused",
-        },
+        "refusal": name,
         "retry_in_secs": retry_in_secs,
-    })
-    .to_string()
+    });
+    if let Some(offset) = clock_offset_secs {
+        status["clock_offset_secs"] = offset.into();
+    }
+    status.to_string()
 }
 
 #[cfg(test)]
@@ -93,5 +100,41 @@ mod tests {
                 "retry_in_secs": 10,
             })
         );
+    }
+
+    /// Forum topic 219: the rule said the batch was used up while every mint
+    /// was refused for the device's clock. The status names the clock and
+    /// the offset, which Kotlin turns into advice.
+    #[test]
+    fn a_clock_refusal_names_the_clock_and_the_offset() {
+        let json: serde_json::Value = serde_json::from_str(&refused_status_json(
+            PortRefusal::ClockSkew {
+                offset_secs: Some(-91),
+            },
+            30,
+        ))
+        .unwrap();
+
+        assert_eq!(
+            json,
+            serde_json::json!({
+                "state": "refused",
+                "refusal": "clock_skew",
+                "retry_in_secs": 30,
+                "clock_offset_secs": -91,
+            })
+        );
+    }
+
+    #[test]
+    fn a_clock_refusal_that_did_not_say_by_how_much_carries_no_offset() {
+        let json: serde_json::Value = serde_json::from_str(&refused_status_json(
+            PortRefusal::ClockSkew { offset_secs: None },
+            30,
+        ))
+        .unwrap();
+
+        assert_eq!(json["refusal"], "clock_skew");
+        assert!(json.get("clock_offset_secs").is_none(), "{json}");
     }
 }

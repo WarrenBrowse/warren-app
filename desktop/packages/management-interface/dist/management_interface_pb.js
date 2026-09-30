@@ -23225,7 +23225,8 @@ proto.mullvad_daemon.management_interface.NatPmpStatus.toObject = function(inclu
     attemptsRemaining: jspb.Message.getFieldWithDefault(msg, 7, 0),
     windowResetSecs: jspb.Message.getFieldWithDefault(msg, 8, 0),
     mappingsList: jspb.Message.toObjectList(msg.getMappingsList(),
-    proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.toObject, includeInstance)
+    proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.toObject, includeInstance),
+    clockOffsetSecs: jspb.Message.getFieldWithDefault(msg, 10, 0)
   };
 
   if (includeInstance) {
@@ -23298,6 +23299,10 @@ proto.mullvad_daemon.management_interface.NatPmpStatus.deserializeBinaryFromRead
       var value = new proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping;
       reader.readMessage(value,proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.deserializeBinaryFromReader);
       msg.addMappings(value);
+      break;
+    case 10:
+      var value = /** @type {number} */ (reader.readSint64());
+      msg.setClockOffsetSecs(value);
       break;
     default:
       reader.skipField();
@@ -23392,6 +23397,13 @@ proto.mullvad_daemon.management_interface.NatPmpStatus.serializeBinaryToWriter =
       proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.serializeBinaryToWriter
     );
   }
+  f = /** @type {number} */ (jspb.Message.getField(message, 10));
+  if (f != null) {
+    writer.writeSint64(
+      10,
+      f
+    );
+  }
 };
 
 
@@ -23414,7 +23426,8 @@ proto.mullvad_daemon.management_interface.NatPmpStatus.ErrorReason = {
   SUGGESTED_PORT_IN_USE: 1,
   OUT_OF_RESOURCES: 2,
   NOT_AUTHORIZED: 3,
-  NO_ENTITLEMENT: 4
+  NO_ENTITLEMENT: 4,
+  CLOCK_SKEW: 5
 };
 
 
@@ -23458,7 +23471,8 @@ proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.toObject = functi
     errorReason: jspb.Message.getFieldWithDefault(msg, 7, 0),
     retryAfterSecs: jspb.Message.getFieldWithDefault(msg, 8, 0),
     attemptsRemaining: jspb.Message.getFieldWithDefault(msg, 9, 0),
-    windowResetSecs: jspb.Message.getFieldWithDefault(msg, 10, 0)
+    windowResetSecs: jspb.Message.getFieldWithDefault(msg, 10, 0),
+    clockOffsetSecs: jspb.Message.getFieldWithDefault(msg, 11, 0)
   };
 
   if (includeInstance) {
@@ -23534,6 +23548,10 @@ proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.deserializeBinary
     case 10:
       var value = /** @type {number} */ (reader.readUint32());
       msg.setWindowResetSecs(value);
+      break;
+    case 11:
+      var value = /** @type {number} */ (reader.readSint64());
+      msg.setClockOffsetSecs(value);
       break;
     default:
       reader.skipField();
@@ -23631,6 +23649,13 @@ proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.serializeBinaryTo
   if (f != null) {
     writer.writeUint32(
       10,
+      f
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 11));
+  if (f != null) {
+    writer.writeSint64(
+      11,
       f
     );
   }
@@ -23944,6 +23969,42 @@ proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.hasWind
 
 
 /**
+ * optional sint64 clock_offset_secs = 11;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.getClockOffsetSecs = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 11, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.setClockOffsetSecs = function(value) {
+  return jspb.Message.setField(this, 11, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.clearClockOffsetSecs = function() {
+  return jspb.Message.setField(this, 11, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.Mapping.prototype.hasClockOffsetSecs = function() {
+  return jspb.Message.getField(this, 11) != null;
+};
+
+
+/**
  * optional State state = 1;
  * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus.State}
  */
@@ -24248,6 +24309,42 @@ proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.addMappings = f
  */
 proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.clearMappingsList = function() {
   return this.setMappingsList([]);
+};
+
+
+/**
+ * optional sint64 clock_offset_secs = 10;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.getClockOffsetSecs = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 10, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.setClockOffsetSecs = function(value) {
+  return jspb.Message.setField(this, 10, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.NatPmpStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.clearClockOffsetSecs = function() {
+  return jspb.Message.setField(this, 10, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.NatPmpStatus.prototype.hasClockOffsetSecs = function() {
+  return jspb.Message.getField(this, 10) != null;
 };
 
 

@@ -1289,6 +1289,10 @@ msgctxt "connect-view"
 msgid "Port forwarding: blocked"
 msgstr "هدایت درگاه: مسدود شد"
 
+msgctxt "connect-view"
+msgid "Port forwarding: clock of this device is off"
+msgstr "هدایت درگاه: ساعت این دستگاه درست نیست"
+
 #. public port is already taken on the connected exit.
 msgctxt "connect-view"
 msgid "Port forwarding: port in use"
@@ -6115,8 +6119,20 @@ msgid "malware"
 msgstr "بدافزار"
 
 msgctxt "port-forwarding-view"
-msgid "no entitlement left, retrying"
-msgstr "سهمیهٔ درگاه باقی نمانده، در حال تلاش دوباره"
+msgid "port entitlement unavailable, retrying"
+msgstr "حق درگاه در دسترس نیست، در حال تلاش دوباره"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is off, turn on automatic time"
+msgstr "ساعت این دستگاه درست نیست، زمان خودکار را روشن کنید"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s ahead, turn on automatic time"
+msgstr "ساعت این دستگاه %(seconds)d ثانیه جلو است، زمان خودکار را روشن کنید"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s behind, turn on automatic time"
+msgstr "ساعت این دستگاه %(seconds)d ثانیه عقب است، زمان خودکار را روشن کنید"
 
 msgctxt "port-forwarding-view"
 msgid "other"

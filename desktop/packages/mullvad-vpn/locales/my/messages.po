@@ -1281,6 +1281,10 @@ msgctxt "connect-view"
 msgid "Port forwarding: blocked"
 msgstr "ပို့တ် ပြန်ညွှန်းခြင်း: ပိတ်ဆို့ခံရသည်"
 
+msgctxt "connect-view"
+msgid "Port forwarding: clock of this device is off"
+msgstr "ပို့တ် ပြန်ညွှန်းခြင်း: ဤစက်၏ နာရီ မှားနေသည်"
+
 #. public port is already taken on the connected exit.
 msgctxt "connect-view"
 msgid "Port forwarding: port in use"
@@ -6100,8 +6104,20 @@ msgid "malware"
 msgstr "malware"
 
 msgctxt "port-forwarding-view"
-msgid "no entitlement left, retrying"
-msgstr "ပို့တ်ခွင့် မကျန်တော့ပါ၊ ပြန်ကြိုးစားနေသည်"
+msgid "port entitlement unavailable, retrying"
+msgstr "ပို့တ်ခွင့် မရရှိနိုင်ပါ၊ ပြန်ကြိုးစားနေသည်"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is off, turn on automatic time"
+msgstr "ဤစက်၏ နာရီ မှားနေသည်၊ အလိုအလျောက် အချိန်ကို ဖွင့်ပါ"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s ahead, turn on automatic time"
+msgstr "ဤစက်၏ နာရီ %(seconds)d စက္ကန့် စောနေသည်၊ အလိုအလျောက် အချိန်ကို ဖွင့်ပါ"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s behind, turn on automatic time"
+msgstr "ဤစက်၏ နာရီ %(seconds)d စက္ကန့် နောက်ကျနေသည်၊ အလိုအလျောက် အချိန်ကို ဖွင့်ပါ"
 
 msgctxt "port-forwarding-view"
 msgid "other"

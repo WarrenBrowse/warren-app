@@ -1358,6 +1358,10 @@ msgctxt "connect-view"
 msgid "Port forwarding: blocked"
 msgstr "Port forwarding: blocată"
 
+msgctxt "connect-view"
+msgid "Port forwarding: clock of this device is off"
+msgstr "Port forwarding: ceasul acestui dispozitiv nu e corect"
+
 #. public port is already taken on the connected exit.
 msgctxt "connect-view"
 msgid "Port forwarding: port in use"
@@ -5229,8 +5233,20 @@ msgid "malware"
 msgstr "malware"
 
 msgctxt "port-forwarding-view"
-msgid "no entitlement left, retrying"
-msgstr "niciun drept de port disponibil, se reîncearcă"
+msgid "port entitlement unavailable, retrying"
+msgstr "drept de port indisponibil, se reîncearcă"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is off, turn on automatic time"
+msgstr "ceasul acestui dispozitiv nu e corect, activează ora automată"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s ahead, turn on automatic time"
+msgstr "ceasul acestui dispozitiv e înainte cu %(seconds)d s, activează ora automată"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s behind, turn on automatic time"
+msgstr "ceasul acestui dispozitiv e în urmă cu %(seconds)d s, activează ora automată"
 
 msgctxt "port-forwarding-view"
 msgid "other"

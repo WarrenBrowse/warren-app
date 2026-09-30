@@ -3518,10 +3518,9 @@ async fn run_nat_pmp_controller(
                     return;
                 };
                 st.refusals = st.refusals.saturating_add(1);
-                let refusal = NatPmpRefusal::of_request(
-                    st.credential
-                        .as_ref()
-                        .is_some_and(warren_standing::entitlements::RuleCredential::on_refused),
+                let refusal = st.credential.as_ref().map_or(
+                    NatPmpRefusal::NoEntitlement,
+                    warren_standing::entitlements::RuleCredential::on_refused,
                 );
                 let retry_in_secs = refusal.retry_after_secs(st.refusals);
                 st.retry_at = Some(
@@ -5598,6 +5597,69 @@ mod tests {
         assert_eq!(reported.len(), 1, "{reported:?}");
         assert_eq!(reported[0].1, NatPmpRefusal::NoEntitlement);
         assert_eq!(reported[0].2, 5);
+    }
+
+    /// A batch left empty because the issuer refused this device's clock.
+    struct ClockRefusedBatch;
+
+    impl warren_standing::entitlements::SlotBatch for ClockRefusedBatch {
+        fn credential(&self, _slot: usize) -> Option<Vec<u8>> {
+            None
+        }
+
+        fn refused(&self, _slot: usize, _presented: &[u8]) {}
+
+        fn hold(&self, _slot: usize) -> u64 {
+            0
+        }
+
+        fn release(&self, _slot: usize, _claim: u64) {}
+
+        fn shortage(&self) -> Option<NatPmpRefusal> {
+            Some(NatPmpRefusal::ClockSkew {
+                offset_secs: Some(-91),
+            })
+        }
+    }
+
+    /// Forum topic 219: the rule row said the entitlements were used up while
+    /// every mint was refused for the machine's clock. The refusal the daemon
+    /// reports names the clock, and by how much.
+    #[tokio::test]
+    async fn a_rule_left_bare_by_a_clock_refusal_is_reported_as_the_clock() {
+        let server = spawn_refusing_stub(usize::MAX).await;
+        let (observer, _log, refusals) = collector_observer_with_refusals();
+        let cfg = natpmp_cfg(60);
+        let (_tx, rx) = tokio::sync::watch::channel(Some(cfg.clone()));
+        let clock_refused: PortEntitlementProvider = Arc::new(ClockRefusedBatch);
+
+        let runtime = tokio::runtime::Handle::current();
+        let handle = runtime.spawn(run_nat_pmp_controller(
+            runtime.clone(),
+            server,
+            None,
+            observer,
+            Some(cfg),
+            rx,
+            Some(clock_refused),
+        ));
+
+        for _ in 0..100 {
+            if !refusals.lock().unwrap().is_empty() {
+                break;
+            }
+            tokio::time::sleep(Duration::from_millis(20)).await;
+        }
+        handle.abort();
+
+        let reported = refusals.lock().unwrap().clone();
+        assert_eq!(reported.len(), 1, "{reported:?}");
+        assert_eq!(
+            reported[0].1,
+            NatPmpRefusal::ClockSkew {
+                offset_secs: Some(-91)
+            }
+        );
     }
 
     fn natpmp_cfg(lifetime_secs: u32) -> NatPmpConfig {

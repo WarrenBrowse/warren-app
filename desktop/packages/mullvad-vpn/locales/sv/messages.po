@@ -1289,6 +1289,10 @@ msgctxt "connect-view"
 msgid "Port forwarding: blocked"
 msgstr "Portvidarebefordran: blockerad"
 
+msgctxt "connect-view"
+msgid "Port forwarding: clock of this device is off"
+msgstr "Portvidarebefordran: enhetens klocka går fel"
+
 #. public port is already taken on the connected exit.
 msgctxt "connect-view"
 msgid "Port forwarding: port in use"
@@ -6128,8 +6132,20 @@ msgid "malware"
 msgstr "malware"
 
 msgctxt "port-forwarding-view"
-msgid "no entitlement left, retrying"
-msgstr "inget porttillstånd kvar, försöker igen"
+msgid "port entitlement unavailable, retrying"
+msgstr "porttillstånd otillgängligt, försöker igen"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is off, turn on automatic time"
+msgstr "enhetens klocka går fel, slå på automatisk tid"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s ahead, turn on automatic time"
+msgstr "enhetens klocka går %(seconds)d s före, slå på automatisk tid"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s behind, turn on automatic time"
+msgstr "enhetens klocka går %(seconds)d s efter, slå på automatisk tid"
 
 msgctxt "port-forwarding-view"
 msgid "other"

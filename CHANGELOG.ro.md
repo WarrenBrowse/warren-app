@@ -45,6 +45,9 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [Android, iOS] Port forwarding-ul, tokenurile de sesiune și ecranul contului funcționează și pe un
   dispozitiv al cărui ceas are o abatere de peste un minut: fiecare cerere semnată ia acum ceasul
   serverelor de la primul refuz întâlnit.
+- [Windows, macOS, Linux] Aplicația spune că ceasul acestui computer nu e corect, cu câte secunde
+  și în ce sens, când serverele refuză port forwarding-ul din acest motiv, în loc să spună că
+  drepturile de port s-au epuizat.
 
 ## [1.1.45] - 2026-09-30
 ### Reparat

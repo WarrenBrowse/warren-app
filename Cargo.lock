@@ -7052,6 +7052,7 @@ dependencies = [
  "data-encoding",
  "ed25519-dalek",
  "hex",
+ "httpdate",
  "log",
  "rand 0.10.1",
  "serde",

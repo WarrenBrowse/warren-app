@@ -27,6 +27,8 @@ import {
 import {
   appliedPort,
   clipboardTextForMapping,
+  ClockSkew,
+  clockSkewOf,
   mappingForRule,
   protocolsOverlap,
   rulePort,
@@ -571,7 +573,7 @@ function RuleStatus({ mapping }: { mapping: NatPmpMapping | undefined }) {
     case 'failed':
       return (
         <Text variant="labelTiny" color="red">
-          {natPmpShortFailure(status.errorReason)}
+          {natPmpShortFailure(mapping)}
         </Text>
       );
     case 'disabled':
@@ -631,8 +633,45 @@ function CopyPortButton({ mapping }: { mapping: NatPmpMapping }) {
   );
 }
 
+/** What a rule refused for this device's clock tells the user to do. */
+function clockSkewAdvice(skew: ClockSkew | undefined): string {
+  if (skew === undefined || skew.seconds === undefined) {
+    // TRANSLATORS: Status of a rule whose port entitlement the servers
+    // TRANSLATORS: refused because this device's clock is wrong.
+    return messages.pgettext(
+      'port-forwarding-view',
+      'the clock of this device is off, turn on automatic time',
+    );
+  }
+  return skew.direction === 'ahead'
+    ? sprintf(
+        // TRANSLATORS: Status of a rule whose port entitlement the servers
+        // TRANSLATORS: refused because this device's clock runs ahead.
+        // TRANSLATORS: Available placeholders:
+        // TRANSLATORS: %(seconds)d - how many seconds ahead the clock is
+        messages.pgettext(
+          'port-forwarding-view',
+          'the clock of this device is %(seconds)d s ahead, turn on automatic time',
+        ),
+        { seconds: skew.seconds },
+      )
+    : sprintf(
+        // TRANSLATORS: Status of a rule whose port entitlement the servers
+        // TRANSLATORS: refused because this device's clock runs behind.
+        // TRANSLATORS: Available placeholders:
+        // TRANSLATORS: %(seconds)d - how many seconds behind the clock is
+        messages.pgettext(
+          'port-forwarding-view',
+          'the clock of this device is %(seconds)d s behind, turn on automatic time',
+        ),
+        { seconds: skew.seconds },
+      );
+}
+
 /** Short, inline failure label keyed on the structured reason. */
-function natPmpShortFailure(reason: NatPmpErrorReason): string {
+function natPmpShortFailure(mapping: NatPmpMapping): string {
+  const reason: NatPmpErrorReason =
+    mapping.status.state === 'failed' ? mapping.status.errorReason : 'unknown';
   switch (reason) {
     case 'suggested-port-in-use':
       return messages.pgettext('port-forwarding-view', 'port in use');
@@ -643,9 +682,11 @@ function natPmpShortFailure(reason: NatPmpErrorReason): string {
       // TRANSLATORS: refused; the app asks again on its own.
       return messages.pgettext('port-forwarding-view', 'refused, retrying');
     case 'no-entitlement':
-      // TRANSLATORS: Short status of a rule the account has no port
-      // TRANSLATORS: entitlement left for; the app asks again on its own.
-      return messages.pgettext('port-forwarding-view', 'no entitlement left, retrying');
+      // TRANSLATORS: Short status of a rule for which no port entitlement
+      // TRANSLATORS: could be obtained yet; the app asks again on its own.
+      return messages.pgettext('port-forwarding-view', 'port entitlement unavailable, retrying');
+    case 'clock-skew':
+      return clockSkewAdvice(clockSkewOf(mapping));
     case 'unknown':
     default:
       return messages.pgettext('port-forwarding-view', 'failed');

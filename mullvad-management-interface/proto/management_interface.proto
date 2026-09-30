@@ -1358,16 +1358,23 @@ message NatPmpStatus {
     // address, or belongs to the epoch that just ended): the daemon asks
     // again after `retry_after_secs`.
     NOT_AUTHORIZED = 3;
-    // The rule had no entitlement to present (the wallet's batch for this
-    // epoch is used up, or none could be minted) and the exit refuses a
-    // request without one. The daemon asks again after `retry_after_secs`.
+    // The rule had no entitlement to present (none could be minted yet, or
+    // the issuer served this epoch's batch to another device of the wallet)
+    // and the exit refuses a request without one. The daemon asks again
+    // after `retry_after_secs`.
     NO_ENTITLEMENT = 4;
+    // The rule had no entitlement to present because the issuer refused this
+    // device's clock, further off the servers' than the daemon's correction
+    // covers. `clock_offset_secs` says by how much when the refusal said.
+    // The daemon asks again after `retry_after_secs`.
+    CLOCK_SKEW = 5;
   }
   optional ErrorReason error_reason = 5;
   // Set when state == RATE_LIMITED: seconds the user must wait before a
   // rate-limit slot frees and a new port change is accepted, the UI deban
-  // countdown. Also set when state == FAILED with NOT_AUTHORIZED or
-  // NO_ENTITLEMENT: seconds until the daemon asks again on its own.
+  // countdown. Also set when state == FAILED with NOT_AUTHORIZED,
+  // NO_ENTITLEMENT or CLOCK_SKEW: seconds until the daemon asks again on its
+  // own.
   optional uint32 retry_after_secs = 6;
   // Set when state == MAPPED. Per-source rate-limit slots still
   // available, as reported by the exit. The UI warns at <= 1 and blocks
@@ -1393,11 +1400,16 @@ message NatPmpStatus {
     optional uint32 retry_after_secs = 8;
     optional uint32 attempts_remaining = 9;
     optional uint32 window_reset_secs = 10;
+    optional sint64 clock_offset_secs = 11;
   }
   // Multi-port: one entry per active rule. Empty == no active mappings
   // (feature off or all rules removed). New clients read this; the
   // top-level fields above are kept only for backward compatibility.
   repeated Mapping mappings = 9;
+  // Set when state == FAILED with CLOCK_SKEW and the refusal said: the
+  // servers' clock minus this device's, in seconds (positive when the device
+  // is behind).
+  optional sint64 clock_offset_secs = 10;
 }
 
 message RelayOverride {

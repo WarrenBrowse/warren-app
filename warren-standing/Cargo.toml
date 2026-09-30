@@ -38,6 +38,8 @@ warrenguard-natpmp-client = { path = "../../warrenguard/crates/warrenguard-natpm
 warrenguard-natpmp-protocol = { path = "../../warrenguard/crates/warrenguard-natpmp-protocol" }
 warren-contract = { path = "../../warren-contract" }
 warren-identity = { path = "../../warren-sdk-rs/crates/warren-identity" }
+# The issuer's clock refusal carries its own clock in a `Date` header.
+httpdate = "1"
 ed25519-dalek = { version = "=2.2.0", features = ["zeroize", "rand_core"] }
 data-encoding = "2"
 rand010 = { package = "rand", version = "0.10" }

@@ -1281,6 +1281,10 @@ msgctxt "connect-view"
 msgid "Port forwarding: blocked"
 msgstr "ポート転送: ブロックされました"
 
+msgctxt "connect-view"
+msgid "Port forwarding: clock of this device is off"
+msgstr "ポート転送: このデバイスの時計がずれています"
+
 #. public port is already taken on the connected exit.
 msgctxt "connect-view"
 msgid "Port forwarding: port in use"
@@ -6097,8 +6101,20 @@ msgid "malware"
 msgstr "マルウェア"
 
 msgctxt "port-forwarding-view"
-msgid "no entitlement left, retrying"
-msgstr "ポート利用枠なし、再試行中"
+msgid "port entitlement unavailable, retrying"
+msgstr "ポート利用権を取得できません、再試行中"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is off, turn on automatic time"
+msgstr "このデバイスの時計がずれています、時刻の自動設定をオンにしてください"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s ahead, turn on automatic time"
+msgstr "このデバイスの時計が%(seconds)d秒進んでいます、時刻の自動設定をオンにしてください"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s behind, turn on automatic time"
+msgstr "このデバイスの時計が%(seconds)d秒遅れています、時刻の自動設定をオンにしてください"
 
 msgctxt "port-forwarding-view"
 msgid "other"

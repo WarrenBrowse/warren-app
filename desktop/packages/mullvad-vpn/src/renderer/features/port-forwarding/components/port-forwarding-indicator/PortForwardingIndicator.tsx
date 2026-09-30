@@ -9,7 +9,7 @@ import { TransitionType, useHistory } from '../../../../lib/history';
 import { joinList } from '../../../../lib/list-format';
 import { useSelector } from '../../../../redux/store';
 import { usePortForwarding } from '../../hooks';
-import { protocolLabel } from '../../mapping';
+import { blockedChipReason, protocolLabel } from '../../mapping';
 
 const StyledWrapper = styled.div({
   display: 'flex',
@@ -44,21 +44,12 @@ export function PortForwardingIndicator() {
   const open = mappings.flatMap((m) =>
     m.status.state === 'mapped' ? [{ port: m.status.externalPort, protocol: m.protocol }] : [],
   );
-  const blocked = mappings.filter((m) => m.status.state === 'failed');
+  const blocked = blockedChipReason(mappings);
 
   // Error state takes priority over the success listing: a blocked port
   // forward must be visible and alarming even when no other mapping is live.
-  if (blocked.length > 0) {
-    const portInUse = blocked.some(
-      (m) => m.status.state === 'failed' && m.status.errorReason === 'suggested-port-in-use',
-    );
-    const label = portInUse
-      ? // TRANSLATORS: Alerting chip on the main screen when the requested
-        // TRANSLATORS: public port is already taken on the connected exit.
-        messages.pgettext('connect-view', 'Port forwarding: port in use')
-      : // TRANSLATORS: Alerting chip on the main screen when a port forward
-        // TRANSLATORS: could not be established.
-        messages.pgettext('connect-view', 'Port forwarding: blocked');
+  if (blocked !== undefined) {
+    const label = blockedChipLabel(blocked);
     return (
       <StyledWrapper>
         <FeatureIndicator variant="error" onClick={openSettings}>
@@ -88,4 +79,21 @@ export function PortForwardingIndicator() {
       </FeatureIndicator>
     </StyledWrapper>
   );
+}
+
+function blockedChipLabel(reason: 'port-in-use' | 'clock-skew' | 'blocked'): string {
+  switch (reason) {
+    case 'port-in-use':
+      // TRANSLATORS: Alerting chip on the main screen when the requested
+      // TRANSLATORS: public port is already taken on the connected exit.
+      return messages.pgettext('connect-view', 'Port forwarding: port in use');
+    case 'clock-skew':
+      // TRANSLATORS: Alerting chip on the main screen when the servers
+      // TRANSLATORS: refuse port forwarding because this device's clock is wrong.
+      return messages.pgettext('connect-view', 'Port forwarding: clock of this device is off');
+    case 'blocked':
+      // TRANSLATORS: Alerting chip on the main screen when a port forward
+      // TRANSLATORS: could not be established.
+      return messages.pgettext('connect-view', 'Port forwarding: blocked');
+  }
 }

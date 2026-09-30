@@ -68,3 +68,41 @@ export function protocolsOverlap(a: NatPmpProto, b: NatPmpProto): boolean {
 export function clipboardTextForMapping(mapping: NatPmpMapping | undefined): string | undefined {
   return mapping?.status.state === 'mapped' ? String(mapping.status.externalPort) : undefined;
 }
+
+/** How far off this device's clock is, for a rule the servers refused for
+ * it: `seconds` is undefined when the refusal did not say by how much. */
+export type ClockSkew = { seconds: number; direction: 'ahead' | 'behind' } | { seconds: undefined };
+
+/** The clock refusal a rule is failing on, or `undefined` for any other
+ * state. The offset is the servers' clock minus this device's, so a negative
+ * one is a device running ahead. */
+export function clockSkewOf(mapping: NatPmpMapping | undefined): ClockSkew | undefined {
+  if (mapping?.status.state !== 'failed' || mapping.status.errorReason !== 'clock-skew') {
+    return undefined;
+  }
+  const offset = mapping.status.clockOffsetSecs;
+  if (offset === undefined) {
+    return { seconds: undefined };
+  }
+  return { seconds: Math.abs(offset), direction: offset < 0 ? 'ahead' : 'behind' };
+}
+
+/** Why the main-screen chip is red, the most actionable reason first: a
+ * port conflict (fixed in the port-forwarding screen), then the device's
+ * clock (fixed in the system's time settings), then anything else.
+ * `undefined` when no rule failed. */
+export function blockedChipReason(
+  mappings: NatPmpMapping[],
+): 'port-in-use' | 'clock-skew' | 'blocked' | undefined {
+  const failed = mappings.flatMap((m) => (m.status.state === 'failed' ? [m.status] : []));
+  if (failed.length === 0) {
+    return undefined;
+  }
+  if (failed.some((status) => status.errorReason === 'suggested-port-in-use')) {
+    return 'port-in-use';
+  }
+  if (failed.some((status) => status.errorReason === 'clock-skew')) {
+    return 'clock-skew';
+  }
+  return 'blocked';
+}

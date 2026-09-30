@@ -1289,6 +1289,10 @@ msgctxt "connect-view"
 msgid "Port forwarding: blocked"
 msgstr "Bağlantı noktası yönlendirme: engellendi"
 
+msgctxt "connect-view"
+msgid "Port forwarding: clock of this device is off"
+msgstr "Bağlantı noktası yönlendirme: bu cihazın saati yanlış"
+
 #. public port is already taken on the connected exit.
 msgctxt "connect-view"
 msgid "Port forwarding: port in use"
@@ -6128,8 +6132,20 @@ msgid "malware"
 msgstr "malware"
 
 msgctxt "port-forwarding-view"
-msgid "no entitlement left, retrying"
-msgstr "bağlantı noktası hakkı kalmadı, yeniden deneniyor"
+msgid "port entitlement unavailable, retrying"
+msgstr "bağlantı noktası hakkı kullanılamıyor, yeniden deneniyor"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is off, turn on automatic time"
+msgstr "bu cihazın saati yanlış, otomatik saati açın"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s ahead, turn on automatic time"
+msgstr "bu cihazın saati %(seconds)d sn ileride, otomatik saati açın"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s behind, turn on automatic time"
+msgstr "bu cihazın saati %(seconds)d sn geride, otomatik saati açın"
 
 msgctxt "port-forwarding-view"
 msgid "other"

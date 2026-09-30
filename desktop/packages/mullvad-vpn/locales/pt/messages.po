@@ -1289,6 +1289,10 @@ msgctxt "connect-view"
 msgid "Port forwarding: blocked"
 msgstr "Encaminhamento de portas: bloqueado"
 
+msgctxt "connect-view"
+msgid "Port forwarding: clock of this device is off"
+msgstr "Encaminhamento de portas: relógio deste dispositivo errado"
+
 #. public port is already taken on the connected exit.
 msgctxt "connect-view"
 msgid "Port forwarding: port in use"
@@ -6128,8 +6132,20 @@ msgid "malware"
 msgstr "malware"
 
 msgctxt "port-forwarding-view"
-msgid "no entitlement left, retrying"
-msgstr "sem direito de porta disponível, a tentar novamente"
+msgid "port entitlement unavailable, retrying"
+msgstr "direito de porta indisponível, a tentar novamente"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is off, turn on automatic time"
+msgstr "o relógio deste dispositivo está errado, ative a hora automática"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s ahead, turn on automatic time"
+msgstr "o relógio deste dispositivo está %(seconds)d s adiantado, ative a hora automática"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s behind, turn on automatic time"
+msgstr "o relógio deste dispositivo está %(seconds)d s atrasado, ative a hora automática"
 
 msgctxt "port-forwarding-view"
 msgid "other"

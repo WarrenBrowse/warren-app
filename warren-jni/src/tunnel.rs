@@ -1288,7 +1288,8 @@ fn maybe_spawn_nat_pmp(
                 crate::natpmp_refusal::MapOutcome::Refused => {
                     // A refused entitlement also moves the rule to another
                     // one of the batch, which the wallet's other devices hold.
-                    let (refusal, retry_in_secs) = refusals.on_refused(rule.on_refused());
+                    let refusal = rule.on_refused();
+                    let retry_in_secs = refusals.on_refused(refusal);
                     log::info!(
                         "NAT-PMP request refused ({refusal:?}), asking again in {retry_in_secs}s"
                     );

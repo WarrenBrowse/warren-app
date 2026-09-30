@@ -1210,6 +1210,10 @@ msgid "Port forwarding: blocked"
 msgstr "Port forwarding : bloqué"
 
 msgctxt "connect-view"
+msgid "Port forwarding: clock of this device is off"
+msgstr "Port forwarding : horloge de cet appareil décalée"
+
+msgctxt "connect-view"
 msgid "Congrats!"
 msgstr "Félicitations !"
 
@@ -4966,8 +4970,20 @@ msgid "malware"
 msgstr "logiciel malveillant"
 
 msgctxt "port-forwarding-view"
-msgid "no entitlement left, retrying"
-msgstr "plus de droit de port disponible, nouvel essai"
+msgid "port entitlement unavailable, retrying"
+msgstr "droit de port indisponible, nouvel essai"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is off, turn on automatic time"
+msgstr "l'horloge de cet appareil est décalée, activez l'heure automatique"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s ahead, turn on automatic time"
+msgstr "l'horloge de cet appareil avance de %(seconds)d s, activez l'heure automatique"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s behind, turn on automatic time"
+msgstr "l'horloge de cet appareil retarde de %(seconds)d s, activez l'heure automatique"
 
 msgctxt "port-forwarding-view"
 msgid "other"

@@ -9,9 +9,18 @@
 /// What a refused rule had presented, which is what the refusal means.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PortRefusal {
-    /// The rule had no entitlement to present: the wallet's batch for this
-    /// epoch is used up, none could be minted, or the wallet is banned.
+    /// The rule had no entitlement to present: none could be minted yet (the
+    /// API unreachable, the first mint still landing), the issuer served this
+    /// epoch's batch to another device of the wallet, or the wallet is banned.
     NoEntitlement,
+    /// The rule had no entitlement to present because the issuer refused this
+    /// device's clock: it is further off the servers' than the correction the
+    /// SDK applies can cover. Only the device's own time settings fix it.
+    ClockSkew {
+        /// The servers' clock minus this device's, in seconds (positive when
+        /// the device is behind), when the refusal said.
+        offset_secs: Option<i64>,
+    },
     /// The exit refused the entitlement the rule presented. Usually transient:
     /// the serial is still held by this client's previous tunnel address
     /// until the exit reaps it, or it belongs to the epoch that just ended.
@@ -19,17 +28,6 @@ pub enum PortRefusal {
 }
 
 impl PortRefusal {
-    /// The refusal of a request that did (`true`) or did not carry an
-    /// entitlement.
-    #[must_use]
-    pub fn of_request(presented_entitlement: bool) -> Self {
-        if presented_entitlement {
-            Self::EntitlementRefused
-        } else {
-            Self::NoEntitlement
-        }
-    }
-
     /// Seconds to wait before asking again after the `attempt`-th refusal in
     /// a row (from 1). A refused entitlement usually heals within a cycle, so
     /// it is asked for again soon; a missing one comes back with the next mint
@@ -41,7 +39,7 @@ impl PortRefusal {
         const MISSING: [u32; 6] = [5, 30, 60, 120, 300, 600];
         let table: &[u32] = match self {
             Self::EntitlementRefused => &REFUSED,
-            Self::NoEntitlement => &MISSING,
+            Self::NoEntitlement | Self::ClockSkew { .. } => &MISSING,
         };
         let index = usize::try_from(attempt.saturating_sub(1)).unwrap_or(usize::MAX);
         table.get(index).or(table.last()).copied().unwrap_or(600)
@@ -56,12 +54,11 @@ pub struct RefusalCount {
 }
 
 impl RefusalCount {
-    /// One more refusal of a request that did (`presented`) or did not carry
-    /// an entitlement: what it means and how long to wait before asking again.
-    pub fn on_refused(&mut self, presented: bool) -> (PortRefusal, u32) {
+    /// One more refusal, meaning `refusal`: how long to wait before asking
+    /// again.
+    pub fn on_refused(&mut self, refusal: PortRefusal) -> u32 {
         self.refusals = self.refusals.saturating_add(1);
-        let refusal = PortRefusal::of_request(presented);
-        (refusal, refusal.retry_after_secs(self.refusals))
+        refusal.retry_after_secs(self.refusals)
     }
 
     /// The port was granted: the next refusal starts the waits over.
@@ -78,28 +75,19 @@ mod tests {
     fn a_request_without_an_entitlement_is_counted_on_the_mint_cadence() {
         let mut count = RefusalCount::default();
 
-        assert_eq!(count.on_refused(false), (PortRefusal::NoEntitlement, 5));
-        assert_eq!(count.on_refused(false), (PortRefusal::NoEntitlement, 30));
+        assert_eq!(count.on_refused(PortRefusal::NoEntitlement), 5);
+        assert_eq!(count.on_refused(PortRefusal::NoEntitlement), 30);
     }
 
     #[test]
     fn a_grant_starts_the_waits_over() {
         let mut count = RefusalCount::default();
-        count.on_refused(true);
-        count.on_refused(true);
+        count.on_refused(PortRefusal::EntitlementRefused);
+        count.on_refused(PortRefusal::EntitlementRefused);
 
         count.on_granted();
 
-        assert_eq!(count.on_refused(true), (PortRefusal::EntitlementRefused, 2));
-    }
-
-    #[test]
-    fn a_request_that_carried_an_entitlement_was_refused_it() {
-        assert_eq!(
-            PortRefusal::of_request(true),
-            PortRefusal::EntitlementRefused
-        );
-        assert_eq!(PortRefusal::of_request(false), PortRefusal::NoEntitlement);
+        assert_eq!(count.on_refused(PortRefusal::EntitlementRefused), 2);
     }
 
     #[test]
@@ -115,5 +103,20 @@ mod tests {
         let retry = |n| PortRefusal::NoEntitlement.retry_after_secs(n);
         assert_eq!(retry(1), 5, "the first mint may still be landing");
         assert_eq!(retry(99), 600, "the wait stops growing");
+    }
+
+    /// A clock set right comes back with the next mint, on the same cadence
+    /// as a missing entitlement: asking sooner only meets the same refusal.
+    #[test]
+    fn a_clock_refusal_is_asked_again_on_the_mint_cadence() {
+        let clock = PortRefusal::ClockSkew {
+            offset_secs: Some(-91),
+        };
+        for attempt in [1, 2, 3, 99] {
+            assert_eq!(
+                clock.retry_after_secs(attempt),
+                PortRefusal::NoEntitlement.retry_after_secs(attempt)
+            );
+        }
     }
 }

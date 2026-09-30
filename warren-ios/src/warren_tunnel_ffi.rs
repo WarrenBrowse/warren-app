@@ -232,8 +232,9 @@ pub enum WarrenTunnelEventTagC {
     EventBanned = 10,
     /// The exit refused the mapping as not authorized and the tunnel asks
     /// again on its own after `data_nat_pmp_retry_after_seconds`.
-    /// `data_nat_pmp_failure_reason` is `no_entitlement` or
-    /// `entitlement_refused`.
+    /// `data_nat_pmp_failure_reason` is `no_entitlement`,
+    /// `entitlement_refused` or `clock_skew`, the last with the offset in
+    /// `data_nat_pmp_clock_offset_seconds` when the refusal said.
     EventNatPmpRefused = 11,
     /// Terminal counterpart of `DeviceLimit`: fired instead of
     /// `EventDisconnected` when the session ended on the device limit.
@@ -267,6 +268,12 @@ pub struct WarrenTunnelEventC {
     pub data_ban_reason: *const c_char,
     /// Banned : when the ban lapses, Unix seconds; `0` when unknown.
     pub data_ban_lapses_at_unix_secs: u64,
+    /// NatPmpRefused with `clock_skew` : whether the refusal said how far
+    /// off the device's clock is. `false` for every other event.
+    pub data_nat_pmp_clock_offset_known: bool,
+    /// The servers' clock minus the device's, in seconds (positive when the
+    /// device is behind), read when `data_nat_pmp_clock_offset_known`.
+    pub data_nat_pmp_clock_offset_seconds: i64,
 }
 
 /// Event callback signature. Called from a Tokio task on the
@@ -864,6 +871,8 @@ mod handle_impl {
                 data_nat_pmp_retry_after_seconds: 0,
                 data_ban_reason: std::ptr::null(),
                 data_ban_lapses_at_unix_secs: 0,
+                data_nat_pmp_clock_offset_known: false,
+                data_nat_pmp_clock_offset_seconds: 0,
             };
             let Ok(cb_entry) = self.event_callback.lock() else {
                 return;
@@ -935,6 +944,8 @@ mod handle_impl {
                 data_nat_pmp_retry_after_seconds: ffi.retry_after_secs,
                 data_ban_reason: std::ptr::null(),
                 data_ban_lapses_at_unix_secs: 0,
+                data_nat_pmp_clock_offset_known: ffi.clock_offset_secs.is_some(),
+                data_nat_pmp_clock_offset_seconds: ffi.clock_offset_secs.unwrap_or(0),
             };
             let Ok(cb_entry) = self.event_callback.lock() else {
                 return;
@@ -991,6 +1002,8 @@ mod handle_impl {
                 data_nat_pmp_retry_after_seconds: 0,
                 data_ban_reason: reason_c.as_ptr(),
                 data_ban_lapses_at_unix_secs: ban.lapses_at_unix_secs.unwrap_or(0),
+                data_nat_pmp_clock_offset_known: false,
+                data_nat_pmp_clock_offset_seconds: 0,
             };
             let Ok(cb_entry) = self.event_callback.lock() else {
                 return;
@@ -2150,7 +2163,8 @@ fn maybe_spawn_nat_pmp(
                     reason: warrenguard_natpmp_client::NatPmpFailureReason::NotAuthorized,
                     ..
                 } => {
-                    let (refusal, retry_in_secs) = refusals.on_refused(rule.on_refused());
+                    let refusal = rule.on_refused();
+                    let retry_in_secs = refusals.on_refused(refusal);
                     tracing::info!(
                         retry_in_secs,
                         "NAT-PMP request refused as not authorized, asking again"

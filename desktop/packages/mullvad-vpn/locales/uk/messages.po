@@ -1305,6 +1305,10 @@ msgctxt "connect-view"
 msgid "Port forwarding: blocked"
 msgstr "Переадресація портів: заблокована"
 
+msgctxt "connect-view"
+msgid "Port forwarding: clock of this device is off"
+msgstr "Переадресація портів: годинник цього пристрою йде неправильно"
+
 #. public port is already taken on the connected exit.
 msgctxt "connect-view"
 msgid "Port forwarding: port in use"
@@ -6164,8 +6168,20 @@ msgid "malware"
 msgstr "шкідливе ПЗ"
 
 msgctxt "port-forwarding-view"
-msgid "no entitlement left, retrying"
-msgstr "права на порт вичерпано, повторна спроба"
+msgid "port entitlement unavailable, retrying"
+msgstr "право на порт недоступне, повторна спроба"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is off, turn on automatic time"
+msgstr "годинник цього пристрою йде неправильно, увімкніть автоматичний час"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s ahead, turn on automatic time"
+msgstr "годинник цього пристрою поспішає на %(seconds)d с, увімкніть автоматичний час"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s behind, turn on automatic time"
+msgstr "годинник цього пристрою відстає на %(seconds)d с, увімкніть автоматичний час"
 
 msgctxt "port-forwarding-view"
 msgid "other"

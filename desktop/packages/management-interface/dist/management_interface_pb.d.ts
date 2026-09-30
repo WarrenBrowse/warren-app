@@ -2870,6 +2870,11 @@ export class NatPmpStatus extends jspb.Message {
     setMappingsList(value: Array<NatPmpStatus.Mapping>): NatPmpStatus;
     addMappings(value?: NatPmpStatus.Mapping, index?: number): NatPmpStatus.Mapping;
 
+    hasClockOffsetSecs(): boolean;
+    clearClockOffsetSecs(): void;
+    getClockOffsetSecs(): number | undefined;
+    setClockOffsetSecs(value: number): NatPmpStatus;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): NatPmpStatus.AsObject;
     static toObject(includeInstance: boolean, msg: NatPmpStatus): NatPmpStatus.AsObject;
@@ -2891,6 +2896,7 @@ export namespace NatPmpStatus {
         attemptsRemaining?: number,
         windowResetSecs?: number,
         mappingsList: Array<NatPmpStatus.Mapping.AsObject>,
+        clockOffsetSecs?: number,
     }
 
 
@@ -2937,6 +2943,11 @@ export namespace NatPmpStatus {
         getWindowResetSecs(): number | undefined;
         setWindowResetSecs(value: number): Mapping;
 
+        hasClockOffsetSecs(): boolean;
+        clearClockOffsetSecs(): void;
+        getClockOffsetSecs(): number | undefined;
+        setClockOffsetSecs(value: number): Mapping;
+
         serializeBinary(): Uint8Array;
         toObject(includeInstance?: boolean): Mapping.AsObject;
         static toObject(includeInstance: boolean, msg: Mapping): Mapping.AsObject;
@@ -2959,6 +2970,7 @@ export namespace NatPmpStatus {
             retryAfterSecs?: number,
             attemptsRemaining?: number,
             windowResetSecs?: number,
+            clockOffsetSecs?: number,
         }
     }
 
@@ -2977,6 +2989,7 @@ export namespace NatPmpStatus {
     OUT_OF_RESOURCES = 2,
     NOT_AUTHORIZED = 3,
     NO_ENTITLEMENT = 4,
+    CLOCK_SKEW = 5,
     }
 
 }

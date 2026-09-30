@@ -1281,6 +1281,10 @@ msgctxt "connect-view"
 msgid "Port forwarding: blocked"
 msgstr "連接埠轉發：已遭封鎖"
 
+msgctxt "connect-view"
+msgid "Port forwarding: clock of this device is off"
+msgstr "連接埠轉發：此裝置的時鐘不準"
+
 #. public port is already taken on the connected exit.
 msgctxt "connect-view"
 msgid "Port forwarding: port in use"
@@ -6097,8 +6101,20 @@ msgid "malware"
 msgstr "惡意軟體"
 
 msgctxt "port-forwarding-view"
-msgid "no entitlement left, retrying"
-msgstr "已無連接埠額度，正在重試"
+msgid "port entitlement unavailable, retrying"
+msgstr "連接埠權限暫不可用，正在重試"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is off, turn on automatic time"
+msgstr "此裝置的時鐘不準，請開啟自動設定時間"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s ahead, turn on automatic time"
+msgstr "此裝置的時鐘快了 %(seconds)d 秒，請開啟自動設定時間"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s behind, turn on automatic time"
+msgstr "此裝置的時鐘慢了 %(seconds)d 秒，請開啟自動設定時間"
 
 msgctxt "port-forwarding-view"
 msgid "other"

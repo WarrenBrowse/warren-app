@@ -137,6 +137,21 @@ fn nat_pmp_error_reason_to_i32(reason: &talpid_warren_tunnel::NatPmpFailureReaso
     r as i32
 }
 
+/// The diagnostic line of a clock refusal. The renderer words its own advice
+/// from the reason and the offset; this is what logs and older clients show.
+fn clock_refusal_message(offset_secs: Option<i64>) -> String {
+    match offset_secs {
+        Some(offset) => {
+            let direction = if offset < 0 { "ahead of" } else { "behind" };
+            format!(
+                "the servers refused this device's clock ({} s {direction} theirs)",
+                offset.unsigned_abs()
+            )
+        }
+        None => "the servers refused this device's clock".to_owned(),
+    }
+}
+
 /// Map one per-rule mapping snapshot into the proto `Mapping` message.
 fn nat_pmp_mapping_to_proto(
     m: &crate::warren_status::NatPmpMappingSnapshot,
@@ -162,6 +177,7 @@ fn nat_pmp_mapping_to_proto(
         retry_after_secs: None,
         attempts_remaining: None,
         window_reset_secs: None,
+        clock_offset_secs: None,
     };
     match &m.state {
         NatPmpStateSnapshot::Disabled => Mapping {
@@ -202,14 +218,21 @@ fn nat_pmp_mapping_to_proto(
         } => {
             use talpid_warren_tunnel::NatPmpRefusal;
             use types::nat_pmp_status::ErrorReason;
-            let (reason, what) = match refusal {
+            let (reason, what, clock_offset_secs) = match *refusal {
                 NatPmpRefusal::NoEntitlement => (
                     ErrorReason::NoEntitlement,
-                    "no port entitlement left to present",
+                    "no port entitlement to present yet".to_owned(),
+                    None,
+                ),
+                NatPmpRefusal::ClockSkew { offset_secs } => (
+                    ErrorReason::ClockSkew,
+                    clock_refusal_message(offset_secs),
+                    offset_secs,
                 ),
                 NatPmpRefusal::EntitlementRefused => (
                     ErrorReason::NotAuthorized,
-                    "the exit refused this port's entitlement",
+                    "the exit refused this port's entitlement".to_owned(),
+                    None,
                 ),
             };
             Mapping {
@@ -217,6 +240,7 @@ fn nat_pmp_mapping_to_proto(
                 error_message: Some(format!("{what}, asking again in {retry_in_secs}s")),
                 error_reason: Some(reason as i32),
                 retry_after_secs: Some(*retry_in_secs),
+                clock_offset_secs,
                 ..base
             }
         }
@@ -246,6 +270,7 @@ fn nat_pmp_state_to_proto(
         attempts_remaining: None,
         window_reset_secs: None,
         mappings: proto_mappings,
+        clock_offset_secs: None,
     };
     if let Some(first) = status.mappings.first() {
         status.state = first.state;
@@ -256,6 +281,7 @@ fn nat_pmp_state_to_proto(
         status.retry_after_secs = first.retry_after_secs;
         status.attempts_remaining = first.attempts_remaining;
         status.window_reset_secs = first.window_reset_secs;
+        status.clock_offset_secs = first.clock_offset_secs;
     }
     status
 }
@@ -3502,7 +3528,57 @@ mod tests {
         assert_eq!(mapping.retry_after_secs, Some(30));
         assert_eq!(
             mapping.error_message.as_deref(),
-            Some("no port entitlement left to present, asking again in 30s")
+            Some("no port entitlement to present yet, asking again in 30s")
+        );
+        assert_eq!(mapping.clock_offset_secs, None);
+    }
+
+    /// Forum topic 219: the rule said the entitlements were used up while
+    /// every mint was refused for a clock 91 s fast. The status names the
+    /// clock and the offset, which the renderer turns into advice.
+    #[test]
+    fn a_rule_left_bare_by_a_clock_refusal_names_the_clock_and_the_offset() {
+        let mapping = super::nat_pmp_mapping_to_proto(&refused_rule(
+            talpid_warren_tunnel::NatPmpRefusal::ClockSkew {
+                offset_secs: Some(-91),
+            },
+        ));
+
+        assert_eq!(mapping.state, types::nat_pmp_status::State::Failed as i32);
+        assert_eq!(
+            mapping.error_reason,
+            Some(types::nat_pmp_status::ErrorReason::ClockSkew as i32)
+        );
+        assert_eq!(mapping.clock_offset_secs, Some(-91));
+        assert_eq!(mapping.retry_after_secs, Some(30));
+        assert_eq!(
+            mapping.error_message.as_deref(),
+            Some(
+                "the servers refused this device's clock (91 s ahead of theirs), asking again in 30s"
+            )
+        );
+        let status = super::nat_pmp_state_to_proto(&[refused_rule(
+            talpid_warren_tunnel::NatPmpRefusal::ClockSkew {
+                offset_secs: Some(-91),
+            },
+        )]);
+        assert_eq!(status.clock_offset_secs, Some(-91), "the legacy mirror");
+    }
+
+    #[test]
+    fn a_clock_refusal_without_an_offset_still_names_the_clock() {
+        let mapping = super::nat_pmp_mapping_to_proto(&refused_rule(
+            talpid_warren_tunnel::NatPmpRefusal::ClockSkew { offset_secs: None },
+        ));
+
+        assert_eq!(
+            mapping.error_reason,
+            Some(types::nat_pmp_status::ErrorReason::ClockSkew as i32)
+        );
+        assert_eq!(mapping.clock_offset_secs, None);
+        assert_eq!(
+            mapping.error_message.as_deref(),
+            Some("the servers refused this device's clock, asking again in 30s")
         );
     }
 

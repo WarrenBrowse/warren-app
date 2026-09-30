@@ -100,6 +100,10 @@ pub(crate) struct NatPmpFfiEvent {
     /// opposite things, and a screen that mixed them would count down a
     /// lease as a refusal.
     pub retry_after_secs: u32,
+    /// The servers' clock minus the device's, in seconds, for a refusal of
+    /// the device's clock that said by how much; `None` for every other
+    /// event.
+    pub clock_offset_secs: Option<i64>,
 }
 
 /// Projects a reduced NAT-PMP event onto the FFI event surface. Returns
@@ -116,6 +120,7 @@ pub(crate) fn project_natpmp_event(kind: &NatPmpEventKind) -> Option<NatPmpFfiEv
             lifetime_secs: *lifetime_secs,
             reason: None,
             retry_after_secs: 0,
+            clock_offset_secs: None,
         }),
         NatPmpEventKind::Renewed {
             external_port,
@@ -126,6 +131,7 @@ pub(crate) fn project_natpmp_event(kind: &NatPmpEventKind) -> Option<NatPmpFfiEv
             lifetime_secs: *lifetime_secs,
             reason: None,
             retry_after_secs: 0,
+            clock_offset_secs: None,
         }),
         NatPmpEventKind::Failed { reason } => Some(NatPmpFfiEvent {
             tag: WarrenTunnelEventTagC::EventNatPmpFailed,
@@ -133,6 +139,7 @@ pub(crate) fn project_natpmp_event(kind: &NatPmpEventKind) -> Option<NatPmpFfiEv
             lifetime_secs: 0,
             reason: Some(reason.clone()),
             retry_after_secs: 0,
+            clock_offset_secs: None,
         }),
         NatPmpEventKind::RateLimited { retry_after_secs } => Some(NatPmpFfiEvent {
             tag: WarrenTunnelEventTagC::EventNatPmpRateLimited,
@@ -140,6 +147,7 @@ pub(crate) fn project_natpmp_event(kind: &NatPmpEventKind) -> Option<NatPmpFfiEv
             lifetime_secs: 0,
             reason: None,
             retry_after_secs: *retry_after_secs,
+            clock_offset_secs: None,
         }),
         NatPmpEventKind::Refused {
             refusal,
@@ -150,6 +158,10 @@ pub(crate) fn project_natpmp_event(kind: &NatPmpEventKind) -> Option<NatPmpFfiEv
             lifetime_secs: 0,
             reason: Some(refusal_name(*refusal).to_owned()),
             retry_after_secs: *retry_in_secs,
+            clock_offset_secs: match refusal {
+                warren_standing::PortRefusal::ClockSkew { offset_secs } => *offset_secs,
+                _ => None,
+            },
         }),
         NatPmpEventKind::Ignored => None,
     }
@@ -161,6 +173,7 @@ fn refusal_name(refusal: warren_standing::PortRefusal) -> &'static str {
     match refusal {
         warren_standing::PortRefusal::NoEntitlement => "no_entitlement",
         warren_standing::PortRefusal::EntitlementRefused => "entitlement_refused",
+        warren_standing::PortRefusal::ClockSkew { .. } => "clock_skew",
     }
 }
 
@@ -286,6 +299,25 @@ mod tests {
         assert_eq!(ffi.reason.as_deref(), Some("no_entitlement"));
         assert_eq!(ffi.retry_after_secs, 30);
         assert_eq!(ffi.external_port, 0);
+    }
+
+    /// Forum topic 219: the screen said the entitlements were used up while
+    /// every mint was refused for the device's clock. The event names the
+    /// clock and carries the offset the screen turns into advice.
+    #[test]
+    fn a_clock_refusal_names_the_clock_and_carries_the_offset() {
+        let ffi = project_natpmp_event(&NatPmpEventKind::Refused {
+            refusal: warren_standing::PortRefusal::ClockSkew {
+                offset_secs: Some(-91),
+            },
+            retry_in_secs: 30,
+        })
+        .expect("a refusal is shown");
+
+        assert_eq!(ffi.tag, WarrenTunnelEventTagC::EventNatPmpRefused);
+        assert_eq!(ffi.reason.as_deref(), Some("clock_skew"));
+        assert_eq!(ffi.clock_offset_secs, Some(-91));
+        assert_eq!(ffi.retry_after_secs, 30);
     }
 
     #[test]

@@ -668,10 +668,16 @@ export type NatPmpErrorReason =
   // The exit refused the entitlement the rule presented. Usually transient:
   // the daemon asks again after `retryAfterSecs`.
   | 'not-authorized'
-  // The rule had no entitlement to present (the wallet's batch for this
-  // epoch is used up, or none could be minted), and the exit refuses a
-  // request without one. The daemon asks again after `retryAfterSecs`.
-  | 'no-entitlement';
+  // The rule had no entitlement to present (none could be minted yet, or
+  // the issuer served this epoch's batch to another device of the wallet),
+  // and the exit refuses a request without one. The daemon asks again after
+  // `retryAfterSecs`.
+  | 'no-entitlement'
+  // The rule had no entitlement to present because the servers refused this
+  // device's clock; `clockOffsetSecs` says by how much when they said. Only
+  // the system's time settings fix it. The daemon asks again after
+  // `retryAfterSecs`.
+  | 'clock-skew';
 
 // Lifecycle state of a single NAT-PMP mapping (one per rule).
 export type NatPmpMappingState =
@@ -700,6 +706,9 @@ export type NatPmpMappingState =
       // Set when the daemon asks again on its own: seconds until it does, as
       // of the refusal.
       retryAfterSecs?: number;
+      // Set with 'clock-skew' when the servers said: their clock minus this
+      // device's, in seconds (negative when this device is ahead).
+      clockOffsetSecs?: number;
     }
   // NAT-PMP is off for this mapping (daemon reported DISABLED). Distinct
   // from 'requesting' so the UI does not spin a "requesting…" label

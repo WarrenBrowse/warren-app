@@ -34,8 +34,11 @@ use std::sync::{Arc, Mutex, PoisonError};
 use std::time::Duration;
 
 use warren_api::{
-    BlindingKey, HttpTransport, PortEntitlementManager, TokenClientError, WarrenApiClient,
+    BlindingKey, ClientError, HttpTransport, PortEntitlementManager, TokenClientError,
+    WarrenApiClient,
 };
+
+use crate::PortRefusal;
 
 /// Unix-seconds clock seam. The clock is a system boundary: tests drive epochs
 /// deterministically, production wires the system clock.
@@ -63,6 +66,11 @@ pub trait SlotBatch: Send + Sync {
     /// is free for a refused rule to move to. Ignored when another rule took
     /// the slot since, whose entitlement it would take away.
     fn release(&self, slot: usize, claim: u64);
+    /// Why the batch has nothing to present, when its last refresh says more
+    /// than a missing entitlement: the issuer refused this device's clock.
+    fn shortage(&self) -> Option<PortRefusal> {
+        None
+    }
 }
 
 /// A batch that answers from a function and cannot move a slot: fixed
@@ -90,6 +98,34 @@ struct MintedSlots<T> {
     manager: Arc<PortEntitlementManager<T>>,
     now: NowFn,
     holders: Mutex<Holders>,
+    shortage: Arc<Shortage>,
+}
+
+/// What the last refresh that reached the issuer said about the batch being
+/// empty, written by the refresh task and read when a bare request is refused.
+#[derive(Default)]
+struct Shortage(Mutex<Option<PortRefusal>>);
+
+impl Shortage {
+    fn get(&self) -> Option<PortRefusal> {
+        *self.0.lock().unwrap_or_else(PoisonError::into_inner)
+    }
+
+    /// Records the clock refusal a refresh ended on, and clears it once a
+    /// refresh goes through. Any other failure says nothing about the clock,
+    /// so the last word on it stands.
+    fn on_refresh(&self, outcome: &Result<(), TokenClientError>) {
+        let mut shortage = self.0.lock().unwrap_or_else(PoisonError::into_inner);
+        match outcome {
+            Ok(()) => *shortage = None,
+            Err(TokenClientError::Api(ClientError::ClockSkew { offset_secs })) => {
+                *shortage = Some(PortRefusal::ClockSkew {
+                    offset_secs: *offset_secs,
+                });
+            }
+            Err(_) => (),
+        }
+    }
 }
 
 #[derive(Default)]
@@ -121,6 +157,10 @@ impl<T: HttpTransport + 'static> SlotBatch for MintedSlots<T> {
             holders.by_slot.remove(&slot);
             self.manager.release(slot);
         }
+    }
+
+    fn shortage(&self) -> Option<PortRefusal> {
+        self.shortage.get()
     }
 }
 
@@ -235,12 +275,14 @@ impl<T: HttpTransport + 'static> EntitlementMint<T> {
                     Arc::new(make_client()),
                     blinding,
                 ));
+                let shortage = Arc::new(Shortage::default());
                 let refresh = refresh_forever(
                     manager.clone(),
                     self.now.clone(),
                     wallet_pubkey,
                     self.ban_sink.clone(),
                     self.activity.clone(),
+                    Arc::clone(&shortage),
                 );
                 match &self.runtime {
                     Some(runtime) => {
@@ -254,6 +296,7 @@ impl<T: HttpTransport + 'static> EntitlementMint<T> {
                     manager,
                     now: self.now.clone(),
                     holders: Mutex::new(Holders::default()),
+                    shortage,
                 })
             })
             .clone()
@@ -270,6 +313,7 @@ async fn refresh_forever<T: HttpTransport + 'static>(
     wallet_pubkey: [u8; 32],
     ban_sink: Option<BanSink>,
     mut activity: Option<tokio::sync::watch::Receiver<bool>>,
+    shortage: Arc<Shortage>,
 ) {
     let mut tick = tokio::time::interval(REFRESH_INTERVAL);
     // Whether the batch served elsewhere is already reported: the state lasts
@@ -287,7 +331,9 @@ async fn refresh_forever<T: HttpTransport + 'static>(
             log::info!("Warren port-entitlement refresh resumed");
         }
         let n = now();
-        match manager.refresh_auto(n).await {
+        let outcome = manager.refresh_auto(n).await;
+        shortage.on_refresh(&outcome);
+        match outcome {
             // Presence only, never the credential: a refresh that answered 200
             // and stocked nothing (the issuer already served this account this
             // epoch, or refused it) is otherwise indistinguishable from one
@@ -312,6 +358,12 @@ async fn refresh_forever<T: HttpTransport + 'static>(
             // anything else is transient, the batch keeps vending what it
             // already holds and the next tick retries. The error chain carries
             // no credential or seed material.
+            Err(TokenClientError::Api(ClientError::ClockSkew { offset_secs })) => {
+                log::warn!(
+                    "Warren port-entitlement refresh refused for this device's clock \
+                     (server minus device: {offset_secs:?} s); keeping existing"
+                );
+            }
             Err(e) => {
                 if ban_sink
                     .as_ref()
@@ -430,15 +482,20 @@ impl RuleCredential {
     /// The exit refused the rule's last request (NAT-PMP `NotAuthorized`).
     /// When it carried an entitlement, the slot moves to one no other rule
     /// holds, so the next request does not meet the same verdict. Answers
-    /// whether it carried one.
-    pub fn on_refused(&self) -> bool {
+    /// what the refusal means: a refused entitlement, or a missing one, named
+    /// after the issuer's clock refusal when that is why the batch is empty.
+    pub fn on_refused(&self) -> PortRefusal {
         let presented = self.rule.state().presented.clone();
         match presented {
             Some(credential) => {
                 self.rule.source.refused(self.rule.slot, &credential);
-                true
+                PortRefusal::EntitlementRefused
             }
-            None => false,
+            None => self
+                .rule
+                .source
+                .shortage()
+                .unwrap_or(PortRefusal::NoEntitlement),
         }
     }
 }

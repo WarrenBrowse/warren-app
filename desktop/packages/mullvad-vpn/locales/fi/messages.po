@@ -1289,6 +1289,10 @@ msgctxt "connect-view"
 msgid "Port forwarding: blocked"
 msgstr "Porttiohjaus: estetty"
 
+msgctxt "connect-view"
+msgid "Port forwarding: clock of this device is off"
+msgstr "Porttiohjaus: tämän laitteen kello on väärässä"
+
 #. public port is already taken on the connected exit.
 msgctxt "connect-view"
 msgid "Port forwarding: port in use"
@@ -6128,8 +6132,20 @@ msgid "malware"
 msgstr "malware"
 
 msgctxt "port-forwarding-view"
-msgid "no entitlement left, retrying"
-msgstr "porttioikeus käytetty loppuun, yritetään uudelleen"
+msgid "port entitlement unavailable, retrying"
+msgstr "porttioikeus ei saatavilla, yritetään uudelleen"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is off, turn on automatic time"
+msgstr "tämän laitteen kello on väärässä, ota automaattinen aika käyttöön"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s ahead, turn on automatic time"
+msgstr "tämän laitteen kello on %(seconds)d s edellä, ota automaattinen aika käyttöön"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s behind, turn on automatic time"
+msgstr "tämän laitteen kello on %(seconds)d s jäljessä, ota automaattinen aika käyttöön"
 
 msgctxt "port-forwarding-view"
 msgid "other"

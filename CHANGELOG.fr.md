@@ -49,6 +49,9 @@ par l'application, gardez-le tel quel.
 - [Android, iOS] Garder le port forwarding, les jetons de session et l'écran du compte en état de
   marche sur un appareil dont l'horloge a plus d'une minute d'écart : chaque requête signée prend
   désormais l'horloge des serveurs dès le premier refus rencontré.
+- [Windows, macOS, Linux] Indiquer que l'horloge de cet ordinateur est décalée, de combien de
+  secondes et dans quel sens, quand les serveurs refusent le port forwarding pour cette raison, au
+  lieu d'annoncer que les droits de port sont épuisés.
 
 ## [1.1.45] - 2026-09-30
 ### Corrigé

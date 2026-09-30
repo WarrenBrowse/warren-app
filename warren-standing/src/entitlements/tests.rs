@@ -22,6 +22,7 @@ use super::{
     CredentialSource, EntitlementMint, NowFn, RuleCredential, RuleSlots, SlotBatch, SlotSource,
     await_first_credential,
 };
+use crate::PortRefusal;
 
 const EPOCH_SECS: u64 = 3600;
 const QUOTA: u32 = 5;
@@ -41,6 +42,10 @@ struct IssuerState {
     /// `{"error":"banned"}`, warren-core doc 105 §5.3).
     ban_wallet: AtomicBool,
     fail_transport: AtomicBool,
+    /// Answers every issue request with the API's clock refusal (401
+    /// `{"error":"clock_skew"}`), its `Date` this far ahead of the device:
+    /// past the quarter of an hour the SDK may move a stamp forward by.
+    clock_ahead_secs: Mutex<Option<u64>>,
     issue_calls: AtomicUsize,
     /// warren-api's issuance ledger: the batch that took each epoch. The SAME
     /// batch is served again with freshly minted tags, any other one is
@@ -63,6 +68,7 @@ impl FakeIssuer {
             refuse_issuance: AtomicBool::new(false),
             ban_wallet: AtomicBool::new(false),
             fail_transport: AtomicBool::new(false),
+            clock_ahead_secs: Mutex::new(None),
             issue_calls: AtomicUsize::new(0),
             ledger: Mutex::new(HashMap::new()),
         }))
@@ -145,6 +151,13 @@ impl HttpTransport for FakeIssuer {
                 403,
                 br#"{"error":"banned","reason_code":"other"}"#.to_vec(),
             ));
+        }
+        if let Some(ahead) = *self.0.clock_ahead_secs.lock().unwrap() {
+            let server_now = std::time::SystemTime::now() + std::time::Duration::from_secs(ahead);
+            return Ok(
+                HttpResponse::new(401, br#"{"error":"clock_skew"}"#.to_vec())
+                    .with_date(httpdate::fmt_http_date(server_now)),
+            );
         }
         let req: TokenIssueRequest = serde_json::from_slice(&request.body).unwrap();
         let mut epochs = Vec::new();
@@ -385,6 +398,54 @@ async fn the_issuers_ban_refusal_reaches_the_standing_of_the_wallet_it_refused()
         None,
         "only that wallet"
     );
+}
+
+/// Forum topic 219: every refresh was refused for the device's clock, and the
+/// rules said the batch was used up. A bare request refused then names the
+/// clock, and how far off it is, so the person can set it right.
+#[tokio::test(start_paused = true)]
+async fn a_bare_request_refused_while_the_issuer_refuses_the_clock_names_the_clock() {
+    let issuer = FakeIssuer::new(&[100]);
+    *issuer.0.clock_ahead_secs.lock().unwrap() = Some(3_600);
+    let (_t, now) = clock(NOW);
+    let mint = EntitlementMint::new(now);
+    let rule = mint.rule_credential([1; 32], 0, key(), || client(&issuer));
+    wait_for(|| issuer.issue_calls() >= 1).await;
+    // The refusal is recorded once the refresh pass has ended.
+    for _ in 0..50 {
+        tokio::task::yield_now().await;
+    }
+
+    assert_eq!(rule.provider()(), None, "nothing could be minted");
+    match rule.on_refused() {
+        PortRefusal::ClockSkew {
+            offset_secs: Some(offset),
+        } => assert!(offset.abs_diff(3_600) <= 2, "{offset}"),
+        other => panic!("the clock must be named, got {other:?}"),
+    }
+}
+
+/// Once a refresh goes through, the clock is no longer the reason: a batch
+/// that is still empty then says so without blaming the clock.
+#[tokio::test(start_paused = true)]
+async fn a_refresh_that_goes_through_stops_blaming_the_clock() {
+    let issuer = FakeIssuer::new(&[100]);
+    *issuer.0.clock_ahead_secs.lock().unwrap() = Some(3_600);
+    let (_t, now) = clock(NOW);
+    let mint = EntitlementMint::new(now);
+    let rule = mint.rule_credential([1; 32], 0, key(), || client(&issuer));
+    wait_for(|| issuer.issue_calls() >= 1).await;
+
+    *issuer.0.clock_ahead_secs.lock().unwrap() = None;
+    issuer.0.refuse_issuance.store(true, Ordering::SeqCst);
+    tokio::time::advance(super::REFRESH_INTERVAL).await;
+    wait_for(|| issuer.issue_calls() >= 2).await;
+    for _ in 0..50 {
+        tokio::task::yield_now().await;
+    }
+
+    assert_eq!(rule.provider()(), None);
+    assert_eq!(rule.on_refused(), PortRefusal::NoEntitlement);
 }
 
 #[tokio::test(start_paused = true)]
@@ -707,7 +768,11 @@ fn a_refused_bare_request_moves_no_slot() {
     let rule = RuleCredential::new(batch.clone(), 0);
     let _ = rule.provider()();
 
-    assert!(!rule.on_refused(), "nothing was presented");
+    assert_eq!(
+        rule.on_refused(),
+        PortRefusal::NoEntitlement,
+        "nothing was presented"
+    );
     assert_eq!(batch.refused.load(Ordering::SeqCst), 0);
 }
 
@@ -743,7 +808,11 @@ async fn a_rule_gone_after_its_successor_took_the_slot_leaves_the_successor_its_
     let before = mint.rule_credential([1; 32], 0, key(), || client(&issuer));
     wait_for(|| issuer.issue_calls() >= 1).await;
     let _ = before.provider()().expect("slot 0 stocked");
-    assert!(before.on_refused(), "moved off place 0");
+    assert_eq!(
+        before.on_refused(),
+        PortRefusal::EntitlementRefused,
+        "moved off place 0"
+    );
     let after = mint.rule_credential([1; 32], 0, key(), || unreachable!("one manager"));
     let moved = token_of(&after.provider()().expect("the successor's place"));
 
@@ -780,7 +849,11 @@ async fn a_refused_rule_moves_to_an_entitlement_no_other_rule_holds() {
     let refused = token_of(&first.provider()().expect("slot 0 stocked"));
     let other = token_of(&second.provider()().expect("slot 1 stocked"));
 
-    assert!(first.on_refused(), "an entitlement was presented");
+    assert_eq!(
+        first.on_refused(),
+        PortRefusal::EntitlementRefused,
+        "an entitlement was presented"
+    );
 
     let moved = token_of(&first.provider()().expect("another entitlement"));
     assert_ne!(moved, refused, "the refused serial is presented again");

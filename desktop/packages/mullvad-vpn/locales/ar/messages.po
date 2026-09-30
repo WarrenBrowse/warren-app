@@ -1321,6 +1321,10 @@ msgctxt "connect-view"
 msgid "Port forwarding: blocked"
 msgstr "إعادة توجيه المنافذ: محظورة"
 
+msgctxt "connect-view"
+msgid "Port forwarding: clock of this device is off"
+msgstr "إعادة توجيه المنافذ: ساعة هذا الجهاز غير مضبوطة"
+
 #. public port is already taken on the connected exit.
 msgctxt "connect-view"
 msgid "Port forwarding: port in use"
@@ -6187,8 +6191,20 @@ msgid "malware"
 msgstr "برمجيات خبيثة"
 
 msgctxt "port-forwarding-view"
-msgid "no entitlement left, retrying"
-msgstr "لم يتبقَّ حق لفتح منفذ، جارٍ إعادة المحاولة"
+msgid "port entitlement unavailable, retrying"
+msgstr "حق فتح المنفذ غير متاح، جارٍ إعادة المحاولة"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is off, turn on automatic time"
+msgstr "ساعة هذا الجهاز غير مضبوطة، فعّل الوقت التلقائي"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s ahead, turn on automatic time"
+msgstr "ساعة هذا الجهاز متقدمة بمقدار %(seconds)d ث، فعّل الوقت التلقائي"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s behind, turn on automatic time"
+msgstr "ساعة هذا الجهاز متأخرة بمقدار %(seconds)d ث، فعّل الوقت التلقائي"
 
 msgctxt "port-forwarding-view"
 msgid "other"

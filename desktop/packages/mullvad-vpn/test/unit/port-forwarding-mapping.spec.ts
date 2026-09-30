@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import {
   appliedPort,
+  blockedChipReason,
   clipboardTextForMapping,
+  clockSkewOf,
   mappingForRule,
   protocolLabel,
   protocolsOverlap,
@@ -193,5 +195,62 @@ describe('clipboardTextForMapping', () => {
     expect(clipboardTextForMapping(requesting)).toBeUndefined();
     expect(clipboardTextForMapping(failed)).toBeUndefined();
     expect(clipboardTextForMapping(undefined)).toBeUndefined();
+  });
+});
+
+function failedMapping(
+  errorReason: 'clock-skew' | 'no-entitlement' | 'suggested-port-in-use',
+  clockOffsetSecs?: number,
+): NatPmpMapping {
+  return {
+    internalPort: 6881,
+    protocol: NatPmpProto.both,
+    status: { state: 'failed', errorMessage: '', errorReason, retryAfterSecs: 30, clockOffsetSecs },
+  };
+}
+
+describe('clockSkewOf', () => {
+  // Forum topic 219: a Windows clock 91 s fast, every mint refused, and the
+  // rule said the entitlements were used up.
+  it('says a clock 91 s fast is ahead by 91 s', () => {
+    expect(clockSkewOf(failedMapping('clock-skew', -91))).to.deep.equal({
+      seconds: 91,
+      direction: 'ahead',
+    });
+  });
+
+  it('says a clock the servers are ahead of is behind', () => {
+    expect(clockSkewOf(failedMapping('clock-skew', 1200))).to.deep.equal({
+      seconds: 1200,
+      direction: 'behind',
+    });
+  });
+
+  it('still names the clock when the refusal did not say by how much', () => {
+    expect(clockSkewOf(failedMapping('clock-skew'))).to.deep.equal({ seconds: undefined });
+  });
+
+  it('is nothing for any other refusal', () => {
+    expect(clockSkewOf(failedMapping('no-entitlement'))).to.equal(undefined);
+    expect(clockSkewOf(undefined)).to.equal(undefined);
+  });
+});
+
+describe('blockedChipReason', () => {
+  it('names the clock over a generic block, since only the clock has a remedy here', () => {
+    expect(
+      blockedChipReason([failedMapping('no-entitlement'), failedMapping('clock-skew', -91)]),
+    ).to.equal('clock-skew');
+  });
+
+  it('puts a port conflict first, the one the user can fix in this screen', () => {
+    expect(
+      blockedChipReason([failedMapping('clock-skew', -91), failedMapping('suggested-port-in-use')]),
+    ).to.equal('port-in-use');
+  });
+
+  it('is blocked for any other failure, and nothing when no rule failed', () => {
+    expect(blockedChipReason([failedMapping('no-entitlement')])).to.equal('blocked');
+    expect(blockedChipReason([mappedMapping(0, NatPmpProto.udp, 55484)])).to.equal(undefined);
   });
 });

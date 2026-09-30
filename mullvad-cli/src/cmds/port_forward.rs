@@ -539,6 +539,7 @@ fn error_reason_json_label(reason: i32) -> &'static str {
         Ok(ErrorReason::OutOfResources) => "out_of_resources",
         Ok(ErrorReason::NotAuthorized) => "not_authorized",
         Ok(ErrorReason::NoEntitlement) => "no_entitlement",
+        Ok(ErrorReason::ClockSkew) => "clock_skew",
         Ok(ErrorReason::Unknown) | Err(_) => "unknown",
     }
 }
@@ -685,8 +686,9 @@ fn wait_verdict(mappings: &[Mapping]) -> WaitVerdict {
 /// A refusal the daemon asks again for on its own: the rule's entitlement
 /// refused (usually healed within a cycle, the serial still being held by
 /// this client's previous address or belonging to the epoch that just ended)
-/// or not available yet (the first mint still landing, or the batch used up
-/// until the next epoch). A wait treats both as in flight, like a rate limit.
+/// or not available yet (the first mint still landing). A wait treats both
+/// as in flight, like a rate limit. A clock the servers refuse is not: the
+/// daemon asks again too, but only the machine's time settings heal it.
 fn retried_refusal(m: &Mapping) -> bool {
     matches!(
         m.error_reason.map(ErrorReason::try_from),
@@ -1231,6 +1233,10 @@ mod tests {
             "no_entitlement"
         );
         assert_eq!(
+            error_reason_json_label(ErrorReason::ClockSkew as i32),
+            "clock_skew"
+        );
+        assert_eq!(
             error_reason_json_label(ErrorReason::Unknown as i32),
             "unknown"
         );
@@ -1283,6 +1289,14 @@ mod tests {
     fn wait_keeps_going_while_the_daemon_waits_for_an_entitlement() {
         let snapshot = [refused(ErrorReason::NoEntitlement, Some(5))];
         assert_eq!(wait_verdict(&snapshot), WaitVerdict::Keep);
+    }
+
+    /// The daemon asks again, but only the machine's time settings heal a
+    /// clock the servers refuse: a wait would sit out its whole timeout.
+    #[test]
+    fn wait_gives_up_on_a_clock_the_servers_refuse() {
+        let snapshot = [refused(ErrorReason::ClockSkew, Some(5))];
+        assert_eq!(wait_verdict(&snapshot), WaitVerdict::Failed);
     }
 
     #[test]

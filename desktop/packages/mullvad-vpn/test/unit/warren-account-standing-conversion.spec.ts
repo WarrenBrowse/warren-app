@@ -93,4 +93,32 @@ describe('a refused port-forwarding rule', () => {
       retryAfterSecs: 30,
     });
   });
+
+  it('names the clock the servers refused, and by how much', () => {
+    const mapping = new grpcTypes.NatPmpStatus.Mapping();
+    mapping.setState(grpcTypes.NatPmpStatus.State.FAILED);
+    mapping.setErrorReason(grpcTypes.NatPmpStatus.ErrorReason.CLOCK_SKEW);
+    mapping.setRetryAfterSecs(30);
+    mapping.setClockOffsetSecs(-91);
+    const status = new grpcTypes.NatPmpStatus();
+    status.setMappingsList([mapping]);
+
+    expect(convertFromNatPmpStatus(status).mappings[0].status).to.deep.include({
+      state: 'failed',
+      errorReason: 'clock-skew',
+      retryAfterSecs: 30,
+      clockOffsetSecs: -91,
+    });
+  });
+
+  it('leaves the offset out when the refusal did not say it', () => {
+    const mapping = new grpcTypes.NatPmpStatus.Mapping();
+    mapping.setState(grpcTypes.NatPmpStatus.State.FAILED);
+    mapping.setErrorReason(grpcTypes.NatPmpStatus.ErrorReason.CLOCK_SKEW);
+    const status = new grpcTypes.NatPmpStatus();
+    status.setMappingsList([mapping]);
+
+    const converted = convertFromNatPmpStatus(status).mappings[0].status;
+    expect(converted.state === 'failed' && converted.clockOffsetSecs).to.equal(undefined);
+  });
 });

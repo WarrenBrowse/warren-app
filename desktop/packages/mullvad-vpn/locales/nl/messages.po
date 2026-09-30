@@ -1289,6 +1289,10 @@ msgctxt "connect-view"
 msgid "Port forwarding: blocked"
 msgstr "Poortdoorschakeling: geblokkeerd"
 
+msgctxt "connect-view"
+msgid "Port forwarding: clock of this device is off"
+msgstr "Poortdoorschakeling: klok van dit apparaat loopt verkeerd"
+
 #. public port is already taken on the connected exit.
 msgctxt "connect-view"
 msgid "Port forwarding: port in use"
@@ -6128,8 +6132,20 @@ msgid "malware"
 msgstr "malware"
 
 msgctxt "port-forwarding-view"
-msgid "no entitlement left, retrying"
-msgstr "geen poortrecht meer, nieuwe poging"
+msgid "port entitlement unavailable, retrying"
+msgstr "poortrecht niet beschikbaar, nieuwe poging"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is off, turn on automatic time"
+msgstr "de klok van dit apparaat loopt verkeerd, zet automatische tijd aan"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s ahead, turn on automatic time"
+msgstr "de klok van dit apparaat loopt %(seconds)d s voor, zet automatische tijd aan"
+
+msgctxt "port-forwarding-view"
+msgid "the clock of this device is %(seconds)d s behind, turn on automatic time"
+msgstr "de klok van dit apparaat loopt %(seconds)d s achter, zet automatische tijd aan"
 
 msgctxt "port-forwarding-view"
 msgid "other"

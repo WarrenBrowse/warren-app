@@ -76,8 +76,9 @@ typedef enum WarrenTunnelEventTagC {
   /**
    * The exit refused the mapping as not authorized and the tunnel asks
    * again on its own after `data_nat_pmp_retry_after_seconds`.
-   * `data_nat_pmp_failure_reason` is `no_entitlement` or
-   * `entitlement_refused`.
+   * `data_nat_pmp_failure_reason` is `no_entitlement`,
+   * `entitlement_refused` or `clock_skew`, the last with the offset in
+   * `data_nat_pmp_clock_offset_seconds` when the refusal said.
    */
   EventNatPmpRefused = 11,
   /**
@@ -359,6 +360,16 @@ typedef struct WarrenTunnelEventC {
    * Banned : when the ban lapses, Unix seconds; `0` when unknown.
    */
   uint64_t data_ban_lapses_at_unix_secs;
+  /**
+   * NatPmpRefused with `clock_skew` : whether the refusal said how far
+   * off the device's clock is. `false` for every other event.
+   */
+  bool data_nat_pmp_clock_offset_known;
+  /**
+   * The servers' clock minus the device's, in seconds (positive when the
+   * device is behind), read when `data_nat_pmp_clock_offset_known`.
+   */
+  int64_t data_nat_pmp_clock_offset_seconds;
 } WarrenTunnelEventC;
 
 /**

@@ -934,6 +934,7 @@ function convertFromNatPmpMappingState(
         errorMessage: mapping.getErrorMessage() ?? '',
         errorReason: convertFromNatPmpErrorReason(mapping.getErrorReason()),
         retryAfterSecs: mapping.hasRetryAfterSecs() ? mapping.getRetryAfterSecs() : undefined,
+        clockOffsetSecs: mapping.hasClockOffsetSecs() ? mapping.getClockOffsetSecs() : undefined,
       };
     case grpcTypes.NatPmpStatus.State.DISABLED:
       return { state: 'disabled' };
@@ -965,6 +966,8 @@ function convertFromNatPmpErrorReason(
       return 'not-authorized';
     case grpcTypes.NatPmpStatus.ErrorReason.NO_ENTITLEMENT:
       return 'no-entitlement';
+    case grpcTypes.NatPmpStatus.ErrorReason.CLOCK_SKEW:
+      return 'clock-skew';
     case grpcTypes.NatPmpStatus.ErrorReason.UNKNOWN:
     default:
       return 'unknown';
