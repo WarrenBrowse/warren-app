@@ -149,6 +149,13 @@ class WarrenQuinnAdapter(
     // 2026 (IPv4 only), so a cold start gates exactly as it did.
     @Volatile
     private var relayFamilies: RelayFamilies = RelayFamilies.V4_ONLY
+
+    /**
+     * The connectivity the last dial left from. A verdict about the network
+     * (no entry routable) is about this one, not about whatever the phone
+     * moved to while the verdict was on its way.
+     */
+    private var dialedOn: Connectivity? = null
     // Held as a zeroizable [Mnemonic] (CharArray-backed), NOT a String: the
     // recovery phrase must not linger as a long-lived immutable String on the
     // JVM heap for the whole session (a heap dump would extract it verbatim).
@@ -315,6 +322,7 @@ class WarrenQuinnAdapter(
         handoverNotified = false
         activeConfig = config
         relayFamilies = platform.relayFamilies(config)
+        dialedOn = connectivity.value
         if (mnemonic !== activeMnemonic) {
             activeMnemonic?.close()
             activeMnemonic = mnemonic
@@ -977,7 +985,7 @@ class WarrenQuinnAdapter(
         afterNetworkChange: Boolean = false,
     ) {
         val mnemonic = activeMnemonic ?: return
-        val parkedOn = connectivity.value
+        val parkedOn = dialedOn ?: connectivity.value
         pendingHandover?.cancel()
         pendingHandover = scope.launch {
             autoRecovery.armAutomation()

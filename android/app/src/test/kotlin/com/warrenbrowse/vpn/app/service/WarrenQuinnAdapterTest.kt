@@ -170,10 +170,15 @@ class WarrenQuinnAdapterTest {
         @Volatile
         var connectGate: CountDownLatch? = null
 
+        /** Runs inside each dial with its 1-based count, before its status lands. */
+        @Volatile
+        var beforeConnect: ((Int) -> Unit)? = null
+
         override fun connectTunnel(tunFd: Int, mnemonic: String, configJson: String): Int {
             calls += CONNECT_TUNNEL
             configs += configJson
             threads[CONNECT_TUNNEL] = Thread.currentThread().name
+            beforeConnect?.invoke(configs.size)
             connectGate?.await()
             statusOnConnect?.let { status = it }
             publish()
@@ -616,6 +621,42 @@ class WarrenQuinnAdapterTest {
                 platform.statusOnConnect = STATUS_CONNECTED
                 connectivity.value = Connectivity.Online(IpAvailability.Ipv4AndIpv6)
                 awaitReal("the retry must dial once the network changed") {
+                    adapter.state.value is WarrenTunnelState.Connected && platform.configs.size == 2
+                }
+                adapter.disconnect()
+            } finally {
+                unmockkStatic(SystemClock::class)
+            }
+        }
+
+    /**
+     * The network changed while the dial that met the verdict was in flight:
+     * the verdict is about the network the dial left from, so the retry must
+     * not wait for yet another change.
+     */
+    @Test
+    fun `ensure a network that changed during the unroutable dial is dialed at once`() =
+        runTest {
+            mockkStatic(SystemClock::class)
+            every { SystemClock.elapsedRealtime() } returns 0L
+            try {
+                val platform = RecordingPlatform()
+                val connectivity =
+                    MutableStateFlow<Connectivity>(Connectivity.Online(IpAvailability.Ipv6))
+                platform.families = RelayFamilies(RelayFamilies.IPV4 or RelayFamilies.IPV6)
+                platform.beforeConnect = { dial ->
+                    if (dial == 1) {
+                        connectivity.value = Connectivity.Online(IpAvailability.Ipv4AndIpv6)
+                        platform.statusOnConnect = STATUS_NO_REACHABLE_ENTRY
+                    } else {
+                        platform.statusOnConnect = STATUS_CONNECTED
+                    }
+                }
+                val adapter =
+                    adapterWith(platform, dropRetryGraceMs = 0L, connectivity = connectivity)
+                adapter.connect(config(), Mnemonic(PHRASE))
+
+                awaitReal("the retry must dial on the network the phone moved to") {
                     adapter.state.value is WarrenTunnelState.Connected && platform.configs.size == 2
                 }
                 adapter.disconnect()
