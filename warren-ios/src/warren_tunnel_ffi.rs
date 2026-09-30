@@ -1372,7 +1372,8 @@ fn spawn_multi_hop(
             crate::warren_multihop_directory::engine_entry_probe,
         ) else {
             tracing::warn!(
-                "Warren multi-hop: no valid circuit in the directory whose entry this network routes"
+                "Warren multi-hop: no valid circuit in the directory (none, or none whose entry \
+                 this network routes)"
             );
             arc_for_task.set_state(WarrenTunnelStateC::Failed);
             arc_for_task.fire_event(WarrenTunnelEventTagC::EventDisconnected);

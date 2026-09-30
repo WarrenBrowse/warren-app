@@ -107,9 +107,9 @@ mod purchase_claim;
 #[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 mod circuit_retarget;
 
-// The address families the fleet's entry hops publish, read off the verified
-// directory so the Kotlin retry loop compares them against the families the
-// device's network carries instead of assuming IPv4 forever.
+// The address families the entries a circuit may use publish, read off the
+// verified directory so the Kotlin retry loop compares them against the
+// families the device's network carries, and the families that network routes.
 #[cfg(any(test, target_os = "android"))]
 mod entry_families;
 

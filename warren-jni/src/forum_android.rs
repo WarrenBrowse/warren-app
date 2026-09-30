@@ -1070,9 +1070,11 @@ fn collect(
     // Past Kotlin's cap on purpose: one per node, and none may stay in clear.
     redact.extend(crate::android_jni::cached_cover_domains());
     // Why the tunnel cannot come up on this network, without naming a node.
-    metadata.extend(crate::dial_facts::header(
-        crate::entry_families::measure_network_families(),
-    ));
+    #[cfg(feature = "tunnel")]
+    let network_families = crate::entry_families::measure_network_families();
+    #[cfg(not(feature = "tunnel"))]
+    let network_families = None;
+    metadata.extend(crate::dial_facts::header(network_families));
     let Some(rust_log_dir) = crate::android_jni::rust_log_dir() else {
         return Err("initLogger must run first".to_owned());
     };

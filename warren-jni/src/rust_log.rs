@@ -148,9 +148,11 @@ pub fn format_line(
 const NOISY_CRATES: [&str; 6] = ["h2", "hyper", "hyper_util", "rustls", "reqwest", "tower"];
 
 fn is_noisy(target: &str) -> bool {
-    NOISY_CRATES
-        .iter()
-        .any(|prefix| target == *prefix || target.starts_with(&format!("{prefix}::")))
+    NOISY_CRATES.iter().any(|prefix| {
+        target
+            .strip_prefix(prefix)
+            .is_some_and(|rest| rest.is_empty() || rest.starts_with("::"))
+    })
 }
 
 /// Whether a record is worth the file. The file keeps info and above, minus
