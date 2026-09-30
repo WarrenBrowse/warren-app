@@ -237,7 +237,7 @@ impl TunnelState for ErrorState {
                 let _ = complete_tx.send(());
                 SameState(self)
             }
-            #[cfg(target_os = "macos")]
+            #[cfg(any(target_os = "macos", target_os = "linux"))]
             Some(TunnelCommand::TailnetInterfacesChanged) => SameState(self),
             Some(TunnelCommand::Connectivity(connectivity)) => {
                 shared_values.connectivity = connectivity;

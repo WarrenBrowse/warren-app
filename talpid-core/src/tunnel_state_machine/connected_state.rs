@@ -432,7 +432,7 @@ impl ConnectedState {
                 let _ = complete_tx.send(());
                 SameState(self)
             }
-            #[cfg(target_os = "macos")]
+            #[cfg(any(target_os = "macos", target_os = "linux"))]
             Some(TunnelCommand::TailnetInterfacesChanged) => {
                 match self.set_firewall_policy(shared_values) {
                     Ok(()) => SameState(self),

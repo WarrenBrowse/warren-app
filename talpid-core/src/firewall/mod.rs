@@ -8,6 +8,10 @@ use talpid_dns::ResolvedDnsConfig;
 use talpid_tunnel::TunnelMetadata;
 use talpid_types::net::{ALLOWED_LAN_NETS, AllowedEndpoint, AllowedTunnelTraffic};
 
+/// Tailscale interfaces coexisting with the tunnel
+#[cfg(any(target_os = "macos", target_os = "linux"))]
+pub(crate) mod tailnet;
+
 cfg_if::cfg_if! {
     if #[cfg(target_os = "windows")] {
         /// Firewall implementation for Windows
@@ -17,8 +21,6 @@ cfg_if::cfg_if! {
         /// Firewall implementation for macOS
         mod macos;
         use macos as imp;
-        /// Tailscale interfaces coexisting with the tunnel
-        pub(crate) mod tailnet;
     } else if #[cfg(target_os = "linux")] {
         /// Firewall implementation for desktop Linux
         pub mod linux;

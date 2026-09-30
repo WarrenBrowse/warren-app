@@ -23,8 +23,8 @@ pub const TAILNET_V6: IpNetwork = IpNetwork::V6(
     Ipv6Network::new_checked(Ipv6Addr::new(0xfd7a, 0x115c, 0xa1e0, 0, 0, 0, 0, 0), 48).unwrap(),
 );
 
-/// Only a tunnel device can be a tailnet interface. A physical interface that happens to carry a
-/// CGNAT address (some carrier and hotel networks do) must not open its LAN.
+/// macOS tunnel devices: only one can be a tailnet interface there.
+#[cfg(target_os = "macos")]
 const TUNNEL_INTERFACE_PREFIX: &str = "utun";
 
 /// An interface of the host, reduced to what qualification needs.
@@ -32,6 +32,10 @@ const TUNNEL_INTERFACE_PREFIX: &str = "utun";
 pub struct HostInterface {
     pub name: String,
     pub up: bool,
+    /// A tunnel device (`utun` on macOS, a TUN device on Linux). Only a tunnel device can be a
+    /// tailnet interface: a physical interface that happens to carry a CGNAT address (some carrier
+    /// and hotel networks do) must not open its LAN.
+    pub tunnel: bool,
     pub addresses: Vec<IpAddr>,
 }
 
@@ -59,7 +63,7 @@ fn is_tailscale_ula(address: IpAddr) -> bool {
     TAILNET_V6.contains(address)
 }
 
-/// The names of the interfaces that coexist with Warren's tunnel: a `utun` interface other than
+/// The names of the interfaces that coexist with Warren's tunnel: a tunnel device other than
 /// `own_interface`, that is up and holds an address of Tailscale's ULA prefix. The IPv4 range is
 /// then allowed on it as well, but never qualifies an interface on its own.
 pub fn coexisting_tailnet_interfaces(
@@ -69,7 +73,7 @@ pub fn coexisting_tailnet_interfaces(
     interfaces
         .iter()
         .filter(|interface| {
-            interface.name.starts_with(TUNNEL_INTERFACE_PREFIX)
+            interface.tunnel
                 && Some(interface.name.as_str()) != own_interface
                 && interface.up
                 && interface.addresses.iter().copied().any(is_tailscale_ula)
@@ -117,6 +121,101 @@ impl SetTracker {
     }
 }
 
+#[cfg(target_os = "macos")]
+fn is_tunnel_device(name: &str) -> bool {
+    name.starts_with(TUNNEL_INTERFACE_PREFIX)
+}
+
+/// A TUN device: the kernel exposes `tun_flags` for those alone, whatever they are named.
+#[cfg(target_os = "linux")]
+fn is_tunnel_device(name: &str) -> bool {
+    std::path::Path::new("/sys/class/net")
+        .join(name)
+        .join("tun_flags")
+        .exists()
+}
+
+/// The routing table that sends the tailnet ranges to a coexisting tailnet interface on Linux.
+///
+/// Warren's split sends everything but its own carrier to its tunnel (`ip rule` priorities 49 to
+/// 51), ahead of Tailscale's own rules, so tailnet traffic entered Warren's tunnel and died there.
+/// A table of Warren's own, looked up at a priority ahead of those, keeps it on the tailnet
+/// interface without depending on Tailscale's table number. When the interface goes away the
+/// kernel drops its routes with it, the lookup misses, and the traffic falls back into Warren's
+/// tunnel.
+#[cfg(any(target_os = "linux", test))]
+pub const LINUX_TAILNET_TABLE: u32 = 101;
+/// The priority of the rules that look [`LINUX_TAILNET_TABLE`] up, ahead of Warren's split.
+#[cfg(any(target_os = "linux", test))]
+pub const LINUX_TAILNET_RULE_PREF: u32 = 48;
+
+/// The `ip` invocations that make the Linux tailnet routing match `interface`: always the removal
+/// of what a previous application left, then, with an interface, its routes and rules.
+#[cfg(any(target_os = "linux", test))]
+pub fn linux_route_plan(interface: Option<&str>) -> Vec<Vec<String>> {
+    let table = LINUX_TAILNET_TABLE.to_string();
+    let pref = LINUX_TAILNET_RULE_PREF.to_string();
+    let ranges = [("-4", TAILNET_V4), ("-6", TAILNET_V6)];
+    let words = |line: &[&str]| line.iter().map(|w| (*w).to_owned()).collect::<Vec<_>>();
+    let mut plan = Vec::new();
+    for (family, net) in ranges {
+        let net = net.to_string();
+        plan.push(words(&[
+            family, "rule", "del", "to", &net, "lookup", &table, "pref", &pref,
+        ]));
+        plan.push(words(&[family, "route", "flush", "table", &table]));
+    }
+    let Some(interface) = interface else {
+        return plan;
+    };
+    for (family, net) in ranges {
+        plan.push(words(&[
+            family,
+            "route",
+            "replace",
+            &net.to_string(),
+            "dev",
+            interface,
+            "table",
+            &table,
+        ]));
+    }
+    for (family, net) in ranges {
+        plan.push(words(&[
+            family,
+            "rule",
+            "add",
+            "to",
+            &net.to_string(),
+            "lookup",
+            &table,
+            "pref",
+            &pref,
+        ]));
+    }
+    plan
+}
+
+/// Runs [`linux_route_plan`]. A removal of what is not there fails harmlessly and is ignored; an
+/// addition that fails is reported, and leaves the tailnet in Warren's tunnel, which is closed.
+#[cfg(target_os = "linux")]
+pub fn apply_linux_routes(interface: Option<&str>) -> io::Result<()> {
+    for args in linux_route_plan(interface) {
+        let clearing = args.iter().any(|w| w == "del" || w == "flush");
+        let status = std::process::Command::new("ip")
+            .args(&args)
+            .stdout(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .status()?;
+        if !status.success() && !clearing {
+            return Err(io::Error::other(
+                "an ip command for the tailnet routes failed",
+            ));
+        }
+    }
+    Ok(())
+}
+
 /// Reads the host's interfaces, one entry per interface name.
 pub fn read_host_interfaces() -> io::Result<Vec<HostInterface>> {
     use nix::net::if_::InterfaceFlags;
@@ -129,6 +228,7 @@ pub fn read_host_interfaces() -> io::Result<Vec<HostInterface>> {
             .or_insert_with(|| HostInterface {
                 name: entry.interface_name.clone(),
                 up: entry.flags.contains(InterfaceFlags::IFF_UP),
+                tunnel: is_tunnel_device(&entry.interface_name),
                 addresses: Vec::new(),
             });
         let Some(address) = entry.address else {
@@ -163,8 +263,58 @@ mod tests {
         HostInterface {
             name: name.to_owned(),
             up,
+            tunnel: name.starts_with("utun") || name.starts_with("tailscale"),
             addresses: addresses.iter().map(|a| a.parse().unwrap()).collect(),
         }
+    }
+
+    #[test]
+    fn a_linux_tun_holding_a_tailscale_address_qualifies() {
+        let found = coexisting_tailnet_interfaces(
+            &[
+                iface("tailscale0", true, &["100.64.0.2", "fd7a:115c:a1e0::2"]),
+                iface("eth0", true, &["192.168.139.40", "fd7a:115c:a1e0::9"]),
+            ],
+            Some("tun0"),
+        );
+        assert_eq!(found, names(&["tailscale0"]));
+    }
+
+    #[test]
+    fn the_linux_route_plan_sends_both_tailnet_ranges_to_the_tailscale_interface() {
+        let plan = linux_route_plan(Some("tailscale0"));
+        let adds: Vec<String> = plan
+            .iter()
+            .map(|c| c.join(" "))
+            .filter(|c| c.contains(" add ") || c.contains(" replace "))
+            .collect();
+        assert_eq!(
+            adds,
+            [
+                "-4 route replace 100.64.0.0/10 dev tailscale0 table 101",
+                "-6 route replace fd7a:115c:a1e0::/48 dev tailscale0 table 101",
+                "-4 rule add to 100.64.0.0/10 lookup 101 pref 48",
+                "-6 rule add to fd7a:115c:a1e0::/48 lookup 101 pref 48",
+            ]
+        );
+    }
+
+    #[test]
+    fn the_linux_route_plan_always_clears_first_and_adds_nothing_without_an_interface() {
+        let clears = linux_route_plan(None);
+        assert!(!clears.is_empty());
+        assert!(
+            clears
+                .iter()
+                .all(|c| c.contains(&"del".to_owned()) || c.contains(&"flush".to_owned())),
+            "{clears:?}"
+        );
+        let with = linux_route_plan(Some("tailscale0"));
+        assert_eq!(
+            &with[..clears.len()],
+            &clears[..],
+            "a re-apply starts from nothing"
+        );
     }
 
     fn names(names: &[&str]) -> BTreeSet<String> {

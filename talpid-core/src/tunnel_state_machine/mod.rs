@@ -6,7 +6,7 @@ mod disconnecting_state;
 mod error_state;
 mod exit_refusal;
 mod lan_routes;
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", target_os = "linux"))]
 mod tailnet_watch;
 mod tunnel_monitor;
 
@@ -310,7 +310,7 @@ pub enum TunnelCommand {
     LockdownMode(LockdownMode, oneshot::Sender<()>),
     /// The set of Tailscale interfaces coexisting with the tunnel changed. Connected states apply
     /// their firewall policy again so it lets tailnet traffic through the interfaces there now.
-    #[cfg(target_os = "macos")]
+    #[cfg(any(target_os = "macos", target_os = "linux"))]
     TailnetInterfacesChanged,
     /// Notify the state machine of the connectivity of the device.
     Connectivity(Connectivity),
@@ -560,6 +560,18 @@ impl TunnelStateMachine {
             }
             Err(error) => log::warn!("Failed to watch for tailnet interface changes: {error}"),
         }
+        // Linux has no such listener here: a periodic look at the interfaces stands in for the
+        // events, and only a change of the tailnet set becomes a command.
+        #[cfg(target_os = "linux")]
+        tokio::spawn(tailnet_watch::run_tailnet_watch(
+            Box::pin(futures::stream::unfold((), |()| async {
+                tokio::time::sleep(tailnet_watch::LINUX_POLL).await;
+                Some(((), ()))
+            })),
+            || crate::firewall::tailnet::current_coexisting_tailnet_interfaces(None),
+            args.command_tx.clone(),
+            tailnet_watch::SETTLE,
+        ));
 
         #[cfg(windows)]
         let split_tunnel = split_tunnel::SplitTunnel::new(

@@ -35,6 +35,9 @@ Line wrap the file at 100 chars.                                              Th
   automatically instead of stopping on the first refusal.
 
 ### Fixed
+- [Linux] Keep a Tailscale network reachable while the VPN is connected, as on macOS. Tailnet
+  traffic went into the VPN tunnel and was blocked there; Tailscale's own interface now carries it,
+  including when Tailscale starts after the VPN, and other networks stay blocked.
 - [iOS] Present a port entitlement with each forwarded port request, as the other platforms do, so
   the servers that require one grant the port instead of refusing it.
 - [iOS] Sign the connection with the wallet shown in the app. It used a key derived from the same

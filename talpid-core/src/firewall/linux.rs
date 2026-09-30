@@ -195,6 +195,7 @@ impl Firewall {
         let batch = PolicyBatch::new(&table).finalize(&policy, self)?;
         Self::send_and_process(&batch)?;
         Self::apply_kernel_config(&policy);
+        apply_tailnet_routes(tailnet_interfaces(&policy).first().map(String::as_str));
         self.verify_tables(&[table_name()])
     }
 
@@ -213,6 +214,7 @@ impl Firewall {
 
         log::debug!("Removing table and chain from netfilter");
         Self::send_and_process(&batch)?;
+        apply_tailnet_routes(None);
 
         // Confirm the table is actually gone. The apply path verifies the
         // table is present after applying; teardown must symmetrically confirm
@@ -917,6 +919,7 @@ impl<'a> PolicyBatch<'a> {
                     self.add_allow_tunnel_endpoint_rules(endpoint, fwmark);
                 }
                 self.add_allow_endpoint_rules(allowed_endpoint);
+                self.add_allow_tailnet_rules(&tailnet_interfaces(policy))?;
 
                 // Important to block DNS after allow relay rule (so the relay can operate
                 // over port 53) but before allow LAN (so DNS does not leak to the LAN)
@@ -977,6 +980,10 @@ impl<'a> PolicyBatch<'a> {
                         *server,
                     )?;
                 }
+
+                // Tailscale's name service answers inside its own interface, so its rules come
+                // before the DNS block (see `add_allow_tailnet_rules`).
+                self.add_allow_tailnet_rules(&tailnet_interfaces(policy))?;
 
                 // Important to block DNS *before* we allow the tunnel and allow LAN. So DNS
                 // can't leak to the wrong IPs in the tunnel or on the LAN.
@@ -1231,6 +1238,28 @@ impl<'a> PolicyBatch<'a> {
         Ok(())
     }
 
+    /// Lets tailnet traffic through each coexisting Tailscale interface, and nothing else there:
+    /// out towards, and in from, Tailscale's address ranges. Whatever enters that interface is
+    /// encrypted by Tailscale, whose own sockets these rules leave to the rest of the policy (they
+    /// go through Warren's tunnel). Tailscale's name service (100.100.100.100) answers tailnet
+    /// names inside that interface, and forwards other names over the tailnet to the member's
+    /// Tailscale exit node when one is configured: nothing leaves a physical interface in clear.
+    fn add_allow_tailnet_rules(&mut self, interfaces: &[String]) -> Result<()> {
+        let set = interfaces.iter().cloned().collect();
+        for pass in super::tailnet::tailnet_passes(&set) {
+            let (chain, direction, end) = match pass.direction {
+                super::tailnet::PassDirection::Out => (&self.out_chain, Direction::Out, End::Dst),
+                super::tailnet::PassDirection::In => (&self.in_chain, Direction::In, End::Src),
+            };
+            let mut rule = Rule::new(chain);
+            check_iface(&mut rule, direction, &pass.interface)?;
+            check_net(&mut rule, end, pass.net);
+            add_verdict(&mut rule, &Verdict::Accept);
+            self.batch.add(&rule, nftnl::MsgType::Add);
+        }
+        Ok(())
+    }
+
     fn add_allow_tunnel_rules(&mut self, tunnel_interface: &str) -> Result<()> {
         self.batch.add(
             &allow_interface_rule(&self.out_chain, Direction::Out, tunnel_interface)?,
@@ -1349,6 +1378,30 @@ fn allow_tunnel_dns_rule<'a>(
     add_verdict(&mut rule, &Verdict::Accept);
 
     Ok(rule)
+}
+
+/// The Tailscale interfaces coexisting with the tunnel of a policy that carries traffic, read from
+/// the host now; none for a policy with no tunnel up.
+fn tailnet_interfaces(policy: &FirewallPolicy) -> Vec<String> {
+    let own = match policy {
+        FirewallPolicy::Connected { tunnel, .. }
+        | FirewallPolicy::Connecting {
+            tunnel: Some(tunnel),
+            ..
+        } => &tunnel.interface,
+        _ => return Vec::new(),
+    };
+    super::tailnet::current_coexisting_tailnet_interfaces(Some(own))
+        .into_iter()
+        .collect()
+}
+
+/// Points the tailnet ranges at `interface`, or clears that routing. A failure leaves the tailnet
+/// in Warren's tunnel, where it goes nowhere: logged, never fatal to the policy.
+fn apply_tailnet_routes(interface: Option<&str>) {
+    if let Err(error) = super::tailnet::apply_linux_routes(interface) {
+        log::warn!("Failed to route the tailnet ranges: {error}");
+    }
 }
 
 fn allow_interface_rule<'a>(

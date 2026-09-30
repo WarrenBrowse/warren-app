@@ -1283,6 +1283,7 @@ mod tests {
         HostInterface {
             name: name.to_owned(),
             up,
+            tunnel: name.starts_with("utun"),
             addresses: addresses.iter().map(|a| a.parse().unwrap()).collect(),
         }
     }
