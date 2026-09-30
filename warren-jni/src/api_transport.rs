@@ -87,10 +87,7 @@ mod tests {
 
     impl HttpTransport for Probe {
         async fn execute(&self, _request: HttpRequest) -> Result<HttpResponse, TransportError> {
-            Ok(HttpResponse {
-                status: 200,
-                body: self.id.to_string().into_bytes(),
-            })
+            Ok(HttpResponse::new(200, self.id.to_string().into_bytes()))
         }
     }
 

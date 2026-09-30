@@ -202,10 +202,10 @@ mod tests {
             if let Some(block) = &self.0 {
                 body["route_admission"] = block.clone();
             }
-            Ok(warren_api::HttpResponse {
-                status: 200,
-                body: serde_json::to_vec(&body).unwrap(),
-            })
+            Ok(warren_api::HttpResponse::new(
+                200,
+                serde_json::to_vec(&body).unwrap(),
+            ))
         }
     }
 

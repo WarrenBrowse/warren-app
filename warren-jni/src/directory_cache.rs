@@ -208,14 +208,8 @@ mod tests {
             );
             self.0.calls.fetch_add(1, Ordering::SeqCst);
             match &*self.0.answer.lock() {
-                Answer::Body(body) => Ok(HttpResponse {
-                    status: 200,
-                    body: body.as_bytes().to_vec(),
-                }),
-                Answer::NotFound => Ok(HttpResponse {
-                    status: 404,
-                    body: Vec::new(),
-                }),
+                Answer::Body(body) => Ok(HttpResponse::new(200, body.as_bytes().to_vec())),
+                Answer::NotFound => Ok(HttpResponse::new(404, Vec::new())),
                 // An `Io` failure, the class a request dying in its timeout
                 // reports; a `Connect` one would make the SDK retry the other
                 // hosts and the no-SNI path, which is its own contract.

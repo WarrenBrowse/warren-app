@@ -575,7 +575,7 @@ mod tests {
             if self.0.fail_transport.load(Ordering::SeqCst) {
                 return Err(TransportError::Connect("fake transport down".to_owned()));
             }
-            let ok = |body: Vec<u8>| Ok(HttpResponse { status: 200, body });
+            let ok = |body: Vec<u8>| Ok(HttpResponse::new(200, body));
             if request.url.ends_with("/v1/tokens/keys") {
                 return ok(serde_json::to_vec(&self.directory()).unwrap());
             }
@@ -586,11 +586,11 @@ mod tests {
             );
             self.0.issue_calls.fetch_add(1, Ordering::SeqCst);
             if self.0.ban_wallet.load(Ordering::SeqCst) {
-                return Ok(HttpResponse {
-                    status: 403,
-                    body: br#"{"error":"banned","reason_code":"port_forwarding_abuse","lapses_at_unix_secs":2000000000}"#
+                return Ok(HttpResponse::new(
+                    403,
+                    br#"{"error":"banned","reason_code":"port_forwarding_abuse","lapses_at_unix_secs":2000000000}"#
                         .to_vec(),
-                });
+                ));
             }
             let req: TokenIssueRequest = serde_json::from_slice(&request.body).unwrap();
             self.0

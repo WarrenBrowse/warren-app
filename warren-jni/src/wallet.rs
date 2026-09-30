@@ -216,10 +216,7 @@ mod tests {
             let issue: warren_api::TokenIssueRequest =
                 serde_json::from_slice(&request.body).unwrap();
             *self.blinded.lock() = issue.epochs[0].blinded.clone();
-            Ok(warren_api::HttpResponse {
-                status: 503,
-                body: Vec::new(),
-            })
+            Ok(warren_api::HttpResponse::new(503, Vec::new()))
         }
     }
 

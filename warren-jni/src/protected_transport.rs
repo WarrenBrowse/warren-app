@@ -317,9 +317,7 @@ impl HttpTransport for ProtectedTransport {
 impl ProtectedTransport {
     /// [`HttpTransport::execute`] that also hands back the response's `Date`
     /// header, the trusted clock the forum flows correct a skewed device
-    /// against. The SDK's response type carries no headers, so the one
-    /// header that matters is read here, where the HTTP/1.1 exchange is
-    /// visible.
+    /// against, for the callers that read it outside an SDK client.
     pub(crate) async fn execute_dated(
         &self,
         request: HttpRequest,
@@ -374,9 +372,9 @@ impl ProtectedTransport {
 }
 
 /// The two response headers the forum flows read: `Date`, the trusted clock a
-/// skewed device is corrected against, and `ETag`, the validator of the next
-/// conditional GET. The SDK's response type carries no headers, so they are
-/// read here, where the HTTP/1.1 exchange is visible.
+/// skewed device is corrected against (also carried on the SDK response), and
+/// `ETag`, the validator of the next conditional GET, read here where the
+/// HTTP/1.1 exchange is visible.
 pub(crate) struct ResponseMeta {
     pub(crate) date: Option<String>,
     pub(crate) etag: Option<String>,
@@ -513,7 +511,14 @@ where
         .map_err(io_err)?
         .to_bytes()
         .to_vec();
-    Ok((HttpResponse { status, body }, meta))
+    // The SDK reads the server's clock off a refusal's `Date` and signs
+    // again at it, so the header rides on the response every client sees.
+    let response = HttpResponse::new(status, body);
+    let response = match &meta.date {
+        Some(date) => response.with_date(date.clone()),
+        None => response,
+    };
+    Ok((response, meta))
 }
 
 /// Loopback HTTP/1.1 servers for the host tests of this transport and of the
@@ -889,6 +894,37 @@ mod tests {
         assert_eq!(etag, None);
         let captured = String::from_utf8_lossy(&server.await.expect("server")).to_ascii_lowercase();
         assert!(!captured.contains("if-none-match"), "{captured}");
+    }
+
+    /// The SDK learns the server's clock from a refusal's `Date` and signs
+    /// again at it, through the plain [`HttpTransport::execute`] every API
+    /// client calls: a transport that kept the header to itself left a
+    /// drifted device refused on every signed call (forum topic 219).
+    #[tokio::test]
+    async fn the_answers_date_reaches_the_sdk_through_the_plain_execute() {
+        let listener = TcpListener::bind("127.0.0.1:0").await.expect("bind");
+        let addr = listener.local_addr().expect("addr");
+        let server = tokio::spawn(serve_one(
+            listener,
+            "HTTP/1.1 401 Unauthorized\r\ndate: Tue, 14 Nov 2023 22:13:20 GMT\r\n\
+             content-length: 0\r\nconnection: close\r\n\r\n"
+                .to_owned(),
+        ));
+
+        let transport = ProtectedTransport::with_protect(Arc::new(|_| true));
+        let response = transport
+            .execute(get(format!(
+                "http://127.0.0.1:{}/v1/subscription",
+                addr.port()
+            )))
+            .await
+            .expect("a refusal is a response");
+
+        assert_eq!(
+            response.date.as_deref(),
+            Some("Tue, 14 Nov 2023 22:13:20 GMT")
+        );
+        server.await.expect("server");
     }
 
     #[tokio::test]

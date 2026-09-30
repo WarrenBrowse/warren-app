@@ -243,12 +243,23 @@ async fn send(clients: &Clients, request: HttpRequest) -> Result<HttpResponse, T
         }
         let resp = builder.send().await.map_err(|e| to_transport_error(&e))?;
         let status = resp.status().as_u16();
+        // The SDK reads the server's clock off a refusal's `Date` and signs
+        // again at it; without the header a drifted clock is refused forever.
+        let date = resp
+            .headers()
+            .get(reqwest::header::DATE)
+            .and_then(|value| value.to_str().ok())
+            .map(str::to_owned);
         let body = resp
             .bytes()
             .await
             .map_err(|e| to_transport_error(&e))?
             .to_vec();
-        Ok(HttpResponse { status, body })
+        let response = HttpResponse::new(status, body);
+        Ok(match date {
+            Some(date) => response.with_date(date),
+            None => response,
+        })
     }
 }
 
@@ -303,6 +314,39 @@ mod tests {
         mock.assert();
     }
 
+    /// The SDK learns the server's clock from a refusal's `Date` header and
+    /// signs again at it: a transport that dropped the header would leave a
+    /// device whose clock drifted refused on every signed call (forum topic
+    /// 219, a Windows clock 91 s fast).
+    #[tokio::test]
+    async fn the_answers_date_header_reaches_the_sdk() {
+        let mut server = mockito::Server::new_async().await;
+        let _mock = server
+            .mock("GET", "/v1/subscription")
+            .with_status(401)
+            .with_header("date", "Tue, 14 Nov 2023 22:13:20 GMT")
+            .with_body(r#"{"error":"clock_skew"}"#)
+            .create();
+        let addr: SocketAddr = server.host_with_port().parse().expect("mockito addr");
+
+        let transport = WarrenApiTransport::with_resolver(resolver_for(addr));
+        let response = transport
+            .execute(HttpRequest {
+                method: Method::Get,
+                url: format!("http://{API_HOST}:{}/v1/subscription", addr.port()),
+                headers: vec![],
+                body: vec![],
+                use_sni: true,
+            })
+            .await
+            .expect("answered");
+
+        assert_eq!(
+            response.date.as_deref(),
+            Some("Tue, 14 Nov 2023 22:13:20 GMT")
+        );
+    }
+
     /// The SNI toggle must select a genuinely different client: collapsing the
     /// two would silently disable the SDK's no-SNI anti-censorship retry.
     /// Whether SNI leaves the wire is the SDK's own test, which needs TLS.
@@ -316,10 +360,7 @@ mod tests {
     }
 
     fn answered() -> Result<HttpResponse, TransportError> {
-        Ok(HttpResponse {
-            status: 200,
-            body: b"ok".to_vec(),
-        })
+        Ok(HttpResponse::new(200, b"ok".to_vec()))
     }
 
     /// Runs `send_following_routes` over attempts that end with `outcomes`,

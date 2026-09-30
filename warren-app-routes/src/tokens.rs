@@ -502,7 +502,7 @@ mod tests {
             &self,
             request: warren_api::HttpRequest,
         ) -> Result<warren_api::HttpResponse, warren_api::TransportError> {
-            let ok = |body: Vec<u8>| Ok(warren_api::HttpResponse { status: 200, body });
+            let ok = |body: Vec<u8>| Ok(warren_api::HttpResponse::new(200, body));
             if request.url.ends_with("/v1/tokens/keys") {
                 return ok(serde_json::to_vec(&self.directory()).expect("a directory"));
             }

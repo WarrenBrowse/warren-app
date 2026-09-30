@@ -6736,6 +6736,7 @@ dependencies = [
  "ed25519-dalek",
  "hex",
  "hkdf",
+ "httpdate",
  "rand 0.10.1",
  "rand 0.8.6",
  "reqwest",
