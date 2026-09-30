@@ -78,26 +78,32 @@ impl EntryRetarget {
         });
         self.avoided.push((refused, now_unix));
         let exit_relay_id = nodes[self.exit].relay_id;
-        let usable = |i: &usize| {
-            nodes[*i].relay_id != exit_relay_id && !self.avoided.iter().any(|&(a, _)| a == *i)
-        };
+        let distinct = |i: &usize| nodes[*i].relay_id != exit_relay_id;
         let country = self
             .entry_country
             .as_deref()
             .map(str::trim)
             .filter(|c| !c.is_empty());
+        // The country bounds the pool whenever it has a node that can front
+        // the exit, avoided or not, as `circuit_select::entry_candidates`
+        // decides it: a pinned country whose only entry refused is not left
+        // for another country.
         let in_country: Vec<usize> = country
             .map(|c| {
                 (0..nodes.len())
-                    .filter(|i| usable(i) && nodes[*i].country.eq_ignore_ascii_case(c))
+                    .filter(|i| distinct(i) && nodes[*i].country.eq_ignore_ascii_case(c))
                     .collect()
             })
             .unwrap_or_default();
-        let candidates: Vec<usize> = if in_country.is_empty() {
-            (0..nodes.len()).filter(usable).collect()
+        let pool: Vec<usize> = if in_country.is_empty() {
+            (0..nodes.len()).filter(distinct).collect()
         } else {
             in_country
         };
+        let candidates: Vec<usize> = pool
+            .into_iter()
+            .filter(|i| !self.avoided.iter().any(|&(a, _)| a == *i))
+            .collect();
         if candidates.is_empty() {
             return None;
         }
@@ -171,14 +177,24 @@ pub(crate) fn refusal_hook(
     bind_addr: std::net::SocketAddr,
 ) -> warrenguard_transport::supervisor::DialRefusedObserver {
     std::sync::Arc::new(move |_hop, relay_id: [u8; 16], _exit_id| {
-        let reachable = |candidates: &[usize]| {
-            crate::circuit_select::probe_reachable(|i| &dir.nodes[i].relay, candidates, bind_addr)
-        };
+        // Probed once, before the retarget lock: each probe socket takes a
+        // `VpnService.protect` upcall into the JVM, which must not run under
+        // the lock the supervisor's observer holds.
+        let every_node: Vec<usize> = (0..dir.nodes.len()).collect();
+        let routed =
+            crate::circuit_select::probe_reachable(|i| &dir.nodes[i].relay, &every_node, bind_addr);
         if let Some(refused) = dir.nodes.iter().position(|n| n.relay.relay_id == relay_id) {
             crate::dial_facts::record_dial_error(crate::dial_facts::refusal_class(
-                !reachable(&[refused]).is_empty(),
+                routed.contains(&refused),
             ));
         }
+        let reachable = |candidates: &[usize]| {
+            candidates
+                .iter()
+                .copied()
+                .filter(|i| routed.contains(i))
+                .collect()
+        };
         let Some(entry) =
             retarget
                 .lock()
@@ -356,6 +372,18 @@ mod tests {
         });
 
         assert_eq!(got, Some(3));
+    }
+
+    #[test]
+    fn a_pinned_country_whose_only_entry_refused_is_not_left_for_another() {
+        // One node per country is the live fleet's shape: the refused FR
+        // entry is avoided, and DE must not take its place.
+        let nodes = [node(1, "FR"), node(2, "FI"), node(3, "DE")];
+        let v = views(&nodes);
+        let mut retarget = EntryRetarget::new(0, 1, Some("fr"));
+
+        assert_eq!(retarget.on_refusal(&v, &[1; 16], NOW, all_reachable), None);
+        assert_eq!(retarget.entry(), 0);
     }
 
     #[test]
