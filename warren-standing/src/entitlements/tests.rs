@@ -435,6 +435,10 @@ async fn a_refresh_that_goes_through_stops_blaming_the_clock() {
     let mint = EntitlementMint::new(now);
     let rule = mint.rule_credential([1; 32], 0, key(), || client(&issuer));
     wait_for(|| issuer.issue_calls() >= 1).await;
+    for _ in 0..50 {
+        tokio::task::yield_now().await;
+    }
+    assert!(matches!(rule.on_refused(), PortRefusal::ClockSkew { .. }));
 
     *issuer.0.clock_ahead_secs.lock().unwrap() = None;
     issuer.0.refuse_issuance.store(true, Ordering::SeqCst);
@@ -445,6 +449,32 @@ async fn a_refresh_that_goes_through_stops_blaming_the_clock() {
     }
 
     assert_eq!(rule.provider()(), None);
+    assert_eq!(rule.on_refused(), PortRefusal::NoEntitlement);
+}
+
+/// A ban refusal means the issuer accepted the signature, so the clock was
+/// right: once one arrives, the clock is no longer blamed.
+#[tokio::test(start_paused = true)]
+async fn a_ban_refusal_stops_blaming_the_clock() {
+    let issuer = FakeIssuer::new(&[100]);
+    *issuer.0.clock_ahead_secs.lock().unwrap() = Some(3_600);
+    let (_t, now) = clock(NOW);
+    let mint = EntitlementMint::new(now);
+    let rule = mint.rule_credential([1; 32], 0, key(), || client(&issuer));
+    wait_for(|| issuer.issue_calls() >= 1).await;
+    for _ in 0..50 {
+        tokio::task::yield_now().await;
+    }
+    assert!(matches!(rule.on_refused(), PortRefusal::ClockSkew { .. }));
+
+    *issuer.0.clock_ahead_secs.lock().unwrap() = None;
+    issuer.0.ban_wallet.store(true, Ordering::SeqCst);
+    tokio::time::advance(super::REFRESH_INTERVAL).await;
+    wait_for(|| issuer.issue_calls() >= 2).await;
+    for _ in 0..50 {
+        tokio::task::yield_now().await;
+    }
+
     assert_eq!(rule.on_refused(), PortRefusal::NoEntitlement);
 }
 

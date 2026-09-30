@@ -111,13 +111,15 @@ impl Shortage {
         *self.0.lock().unwrap_or_else(PoisonError::into_inner)
     }
 
-    /// Records the clock refusal a refresh ended on, and clears it once a
-    /// refresh goes through. Any other failure says nothing about the clock,
-    /// so the last word on it stands.
+    /// Records the clock refusal a refresh ended on, and clears it once the
+    /// issuer accepts a signature again: a refresh that goes through, or a
+    /// ban refusal, which the issuer answers only past the clock check. Any
+    /// other failure says nothing about the clock, so the last word on it
+    /// stands.
     fn on_refresh(&self, outcome: &Result<(), TokenClientError>) {
         let mut shortage = self.0.lock().unwrap_or_else(PoisonError::into_inner);
         match outcome {
-            Ok(()) => *shortage = None,
+            Ok(()) | Err(TokenClientError::Api(ClientError::Banned { .. })) => *shortage = None,
             Err(TokenClientError::Api(ClientError::ClockSkew { offset_secs })) => {
                 *shortage = Some(PortRefusal::ClockSkew {
                     offset_secs: *offset_secs,
