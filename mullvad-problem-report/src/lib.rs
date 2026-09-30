@@ -586,7 +586,17 @@ impl ProblemReport {
         let out2 = Self::redact_home_dir(&out1);
         let out3 = Self::redact_network_info(&out2);
         let out4 = Self::redact_uuid_v4(&out3);
-        self.redact_custom_strings(&out4).to_string()
+        let out5 = Self::redact_tls_server_name(&out4);
+        self.redact_custom_strings(&out5).to_string()
+    }
+
+    /// Redact the TLS server name in rustls's `DnsName("...")` rendering. For
+    /// a Warren relay that name is its cover domain, one per node, so a report
+    /// carrying it names the entry the user dialed. Whatever filters rustls at
+    /// the log source, a logcat dump still holds lines an older build wrote.
+    fn redact_tls_server_name(input: &str) -> Cow<'_, str> {
+        static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r#"DnsName\("[^"]*"\)"#).unwrap());
+        RE.replace_all(input, r#"DnsName("[REDACTED]")"#)
     }
 
     fn redact_account_number(input: &str) -> Cow<'_, str> {
@@ -1045,6 +1055,19 @@ mod tests {
     #[test]
     fn doesnt_redact_not_ipv6() {
         assert_does_not_redact("[talpid_core::firewall]");
+    }
+
+    #[test]
+    fn redacts_the_server_name_rustls_prints() {
+        // A rustls debug line names the TLS server name it verifies, and for
+        // a Warren entry relay that is its cover domain: naming it names the
+        // entry the user dialed (forum topic 210 report).
+        let report = ProblemReport::new(vec![]);
+        let line = r#"rustls::client::hs: Resuming session for DnsName("ro1.edge.example.net")"#;
+        assert_eq!(
+            report.redact(line),
+            r#"rustls::client::hs: Resuming session for DnsName("[REDACTED]")"#
+        );
     }
 
     #[test]

@@ -1161,6 +1161,24 @@ fn fetch_multihop_directory_raw() -> String {
         .unwrap_or_default()
 }
 
+/// The cover domains of the directory this process last fetched, for the
+/// problem report's redactor (`crate::report::cover_domains_of`). Empty when
+/// no unexpired copy is held.
+#[cfg(target_os = "android")]
+pub(crate) fn cached_cover_domains() -> Vec<String> {
+    let Some(raw) = DIRECTORY_CACHE.unexpired(now_unix_secs()) else {
+        return Vec::new();
+    };
+    let server_pins: Vec<&str> = SERVER_PUBKEY_HEX.into_iter().collect();
+    warren_discovery_core::verify_multihop_directory_any(
+        &raw,
+        &server_pins,
+        &[crate::tunnel::WARREN_MULTIHOP_ROOT_PUBKEY_HEX],
+    )
+    .map(|directory| crate::report::cover_domains_of(&directory))
+    .unwrap_or_default()
+}
+
 /// The verification `tunnel::run_multi_hop_session` runs at dial time, on the
 /// same pins, so the cache never remembers a blob the dial would reject.
 #[cfg(target_os = "android")]

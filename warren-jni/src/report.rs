@@ -100,6 +100,33 @@ pub fn collect_envelope(result: &Result<u64, String>) -> String {
     }
 }
 
+/// The cover domains `directory` publishes, entry and exit side, for the
+/// redactor. A cover domain is one per node, so a report that carries it
+/// names the entry relay the user dialed; the collector's own rules know
+/// nothing of them.
+#[must_use]
+pub fn cover_domains_of(
+    directory: &warren_discovery_core::VerifiedMultiHopDirectory,
+) -> Vec<String> {
+    let mut domains: Vec<String> = directory
+        .nodes
+        .iter()
+        .flat_map(|n| {
+            [
+                n.relay.cover_domain.as_deref(),
+                n.exit.cover_domain.as_deref(),
+            ]
+        })
+        .flatten()
+        .map(str::trim)
+        .filter(|d| !d.is_empty())
+        .map(str::to_owned)
+        .collect();
+    domains.sort();
+    domains.dedup();
+    domains
+}
+
 /// Collects the redacted report into `output_path`. The metadata block gets
 /// every key Kotlin supplied (platform, ROM, clock, deep-link routing, tunnel
 /// state, probes); the log blocks are the Rust engine log directory, the
@@ -199,5 +226,20 @@ mod tests {
             r#"{"ok":false,"error":"collect failed: write datax"}"#,
             "a path never survives into the envelope"
         );
+    }
+
+    #[test]
+    fn every_cover_domain_of_the_directory_is_redacted_once() {
+        use warren_app_routes::plan::fixture::{directory, test_node};
+        let mut ro = test_node(1, "ro", "Bucharest", 10);
+        ro.relay.cover_domain = Some("ro1.edge.example.net".to_owned());
+        ro.exit.cover_domain = Some("ro1.edge.example.net".to_owned());
+        let mut de = test_node(2, "de", "Berlin", 10);
+        de.relay.cover_domain = Some(" de1.edge.example.net ".to_owned());
+        let plain = test_node(3, "fi", "Helsinki", 10);
+
+        let domains = cover_domains_of(&directory(vec![ro, de, plain]));
+
+        assert_eq!(domains, ["de1.edge.example.net", "ro1.edge.example.net"]);
     }
 }

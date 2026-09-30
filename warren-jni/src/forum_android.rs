@@ -1066,7 +1066,9 @@ fn collect(
     for_send: bool,
 ) -> Result<u64, String> {
     let mut metadata = crate::report::parse_metadata(metadata_json)?;
-    let redact = crate::report::parse_redact_strings(redact_json);
+    let mut redact = crate::report::parse_redact_strings(redact_json);
+    // Past Kotlin's cap on purpose: one per node, and none may stay in clear.
+    redact.extend(crate::android_jni::cached_cover_domains());
     // Why the tunnel cannot come up on this network, without naming a node.
     metadata.extend(crate::dial_facts::header(
         crate::entry_families::measure_network_families(),

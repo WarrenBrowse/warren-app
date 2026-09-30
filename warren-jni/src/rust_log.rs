@@ -143,18 +143,31 @@ pub fn format_line(
     )
 }
 
-/// Whether a record is worth the file. Logcat keeps everything down to
-/// debug; the file keeps info and above, minus the HTTP stack's per-frame
-/// chatter, which would drown the lines a report is read for.
-#[must_use]
-pub fn file_wants(target: &str, level: log::Level) -> bool {
-    if level > log::Level::Info {
-        return false;
-    }
-    let noisy = ["h2", "hyper", "hyper_util", "rustls", "reqwest", "tower"];
-    !noisy
+/// The HTTP and TLS stack: per-frame chatter at debug, and rustls names the
+/// server it verifies, which for an entry relay is its cover domain.
+const NOISY_CRATES: [&str; 6] = ["h2", "hyper", "hyper_util", "rustls", "reqwest", "tower"];
+
+fn is_noisy(target: &str) -> bool {
+    NOISY_CRATES
         .iter()
         .any(|prefix| target == *prefix || target.starts_with(&format!("{prefix}::")))
+}
+
+/// Whether a record is worth the file. The file keeps info and above, minus
+/// the HTTP stack's per-frame chatter, which would drown the lines a report
+/// is read for.
+#[must_use]
+pub fn file_wants(target: &str, level: log::Level) -> bool {
+    level <= log::Level::Info && !is_noisy(target)
+}
+
+/// Whether a record goes to logcat: everything down to debug, except the
+/// HTTP and TLS stack below a warning. A problem report carries a logcat
+/// dump, and a rustls debug line there named the entry relay's cover domain
+/// (forum topic 210), which nothing may record.
+#[must_use]
+pub fn logcat_wants(target: &str, level: log::Level) -> bool {
+    level <= log::Level::Debug && (level <= log::Level::Warn || !is_noisy(target))
 }
 
 /// A `log::Log` that writes every record to logcat and the selected ones to
@@ -174,7 +187,9 @@ impl<L: log::Log> log::Log for Tee<L> {
     }
 
     fn log(&self, record: &log::Record<'_>) {
-        self.logcat.log(record);
+        if logcat_wants(record.target(), record.level()) {
+            self.logcat.log(record);
+        }
         if file_wants(record.target(), record.level()) {
             let line = format_line(
                 chrono::Utc::now(),
@@ -275,5 +290,18 @@ mod tests {
             file_wants("h2like_crate", log::Level::Info),
             "prefix match is on the path"
         );
+    }
+
+    #[test]
+    fn logcat_keeps_our_debug_but_not_the_tls_stack_below_a_warning() {
+        // rustls debug names the server it verifies, and for an entry relay
+        // that is the cover domain: a problem report's logcat dump carried
+        // it (forum topic 210), against the rule that nothing records the
+        // entry relay.
+        assert!(logcat_wants("warren_jni::tunnel", log::Level::Debug));
+        assert!(!logcat_wants("rustls::client::hs", log::Level::Debug));
+        assert!(!logcat_wants("rustls::common_state", log::Level::Info));
+        assert!(!logcat_wants("hyper_util::client", log::Level::Debug));
+        assert!(logcat_wants("rustls::common_state", log::Level::Warn));
     }
 }
