@@ -594,7 +594,23 @@ fn pick_two_hop_circuit_with_rtt(
             now_unix,
         )
     };
-    let pick = sticky_or_fresh_pair(dir, &pairs, current, locality, advisory, now_unix, &rank)?;
+    // A current circuit whose entry the network stopped routing keeps its
+    // exit when a routable entry can front it: only the entry is the
+    // network's business, and a fresh ranking could move the exit, and with
+    // it the user's public address, for nothing.
+    let keep_exit = current.and_then(|cur| {
+        let (relay, exit) = circuit_identity(cur);
+        let xi = exit_index(dir, &exit)?;
+        (unroutable_entries.contains(&relay) && pairs.iter().any(|&(_, x)| x == xi)).then_some(xi)
+    });
+    let pick = match keep_exit {
+        Some(xi) => {
+            let same_exit: Vec<(usize, usize)> =
+                pairs.iter().copied().filter(|&(_, x)| x == xi).collect();
+            rank(&same_exit)?
+        }
+        None => sticky_or_fresh_pair(dir, &pairs, current, locality, advisory, now_unix, &rank)?,
+    };
     let in_use = current.and_then(|cur| {
         let (relay, exit) = circuit_identity(cur);
         Some((relay_index(dir, &relay)?, exit_index(dir, &exit)?))
@@ -2777,6 +2793,25 @@ mod tests {
         let next = pass_with_unroutable(&d, true, Some(&current), &[current.relay.relay_id]);
 
         assert_ne!(next.relay.relay_id, current.relay.relay_id);
+    }
+
+    #[test]
+    fn a_circuit_whose_entry_the_network_stopped_routing_keeps_its_exit() {
+        // Only the entry is the network's business: moving the exit would
+        // change the user's public address for nothing.
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "ro", 1, 1_000),
+            node(&op, 2, "de", 2, 100),
+            node(&op, 3, "nl", 3, 10),
+            node(&op, 4, "fi", 4, 500),
+        ]);
+        let current = pass_with_unroutable(&d, true, None, &[]);
+        assert_eq!(current.relay.relay_id, [1; 16], "precondition: RO enters");
+
+        let next = pass_with_unroutable(&d, true, Some(&current), &[[1; 16]]);
+
+        assert_eq!(moved(&current, &next), Moved::Entry);
     }
 
     #[test]
