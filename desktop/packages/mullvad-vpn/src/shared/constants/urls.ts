@@ -16,7 +16,8 @@ export const urls = {
   api: productAnchors.apiBaseUrl,
   faq: 'https://warren.ro/faq',
   privacyGuide: 'https://warren.ro/no-log',
-  download: 'https://warren.ro/telecharger',
+  // The compiled channel's download page, like `api` above.
+  download: productAnchors.downloadUrl,
   // Community + support forum. Login is wallet-based (DiscourseConnect wallet
   // SSO, doc 55); the `warren://forum-login` deep link is handled in the main
   // process. See forum-login.ts.

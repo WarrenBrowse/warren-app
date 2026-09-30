@@ -12,7 +12,8 @@
       "application_id": "com.warrenbrowse.vpn",
       "deep_link_scheme": "warren",
       "connect_host": "connect.warrenbrowse.com",
-      "forum_public_url": "https://forum.warrenbrowse.com"
+      "forum_public_url": "https://forum.warrenbrowse.com",
+      "download_url": "https://warren.ro/telecharger"
     },
     "staging": {
       "name": "staging",
@@ -24,7 +25,8 @@
       "application_id": "com.warrenbrowse.vpn.staging",
       "deep_link_scheme": "warren-staging",
       "connect_host": "connect.warrenbrowse.com",
-      "forum_public_url": "https://forum.warrenbrowse.com"
+      "forum_public_url": "https://forum.warrenbrowse.com",
+      "download_url": "https://beta.warren.ro/telecharger"
     },
     "beta": {
       "name": "beta",
@@ -36,7 +38,8 @@
       "application_id": "com.warrenbrowse.vpn.beta",
       "deep_link_scheme": "warren-beta",
       "connect_host": "connect.warrenbrowse.com",
-      "forum_public_url": "https://forum.warrenbrowse.com"
+      "forum_public_url": "https://forum.warrenbrowse.com",
+      "download_url": "https://beta.warren.ro/telecharger"
     }
   }
 }

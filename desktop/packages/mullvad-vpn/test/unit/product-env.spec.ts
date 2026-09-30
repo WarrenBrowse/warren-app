@@ -75,6 +75,19 @@ describe('product_env.json, the desktop reader', () => {
       expect(env.productAnchors.displayName, row.name).toBe(row.display_name);
       expect(env.productAnchors.unixProductDir, row.name).toBe(row.unix_product_dir);
       expect(env.productAnchors.deepLinkScheme, row.name).toBe(row.deep_link_scheme);
+      expect(env.productAnchors.downloadUrl, row.name).toBe(row.download_url);
+    }
+  });
+
+  // The update notice opens `urls.download`: a beta build that opened the
+  // production page offered its users the other channel (forum topic 204).
+  it('sends each build to the download page of its own channel', async () => {
+    for (const row of rows) {
+      const constants = await importForProductEnv<typeof import('../../src/shared/constants/urls')>(
+        row.name,
+        '../../src/shared/constants/urls',
+      );
+      expect(constants.urls.download, row.name).toBe(row.download_url);
     }
   });
 

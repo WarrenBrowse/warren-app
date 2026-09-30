@@ -172,6 +172,10 @@ protector covers, so a tunnel between states swallows the lookup.
 - `environments`: `{env: row}` for `prod`, `staging` and `beta`, each row
   `{name, api_url, api_host, desktop_update_url, display_name,
   unix_product_dir, application_id, deep_link_scheme, connect_host,
-  forum_public_url}`. `application_id` is both the Electron `appId` and the
-  Android `applicationId`; `connect_host` and `forum_public_url` are the same
-  in every row today because one broker and one forum serve all three stacks.
+  forum_public_url, download_url}`. `application_id` is both the Electron
+  `appId` and the Android `applicationId`; `connect_host` and
+  `forum_public_url` are the same in every row today because one broker and
+  one forum serve all three stacks. `download_url` is the download page of the
+  channel's website, which the update banner opens: a beta build that sent its
+  users to the production page offered them the other channel (forum topic
+  204). Staging has no website and points at the beta page.

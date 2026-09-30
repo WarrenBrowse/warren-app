@@ -61,18 +61,24 @@ const productAnchorsByEnvironment = {
     // fight over OS-level scheme registration (lockstep with
     // tasks/distribution.cjs and the Android manifest placeholder).
     deepLinkScheme: 'warren',
+    // Download page of the channel's own website, which the update notice
+    // opens: a beta build that opened the prod page offered the other channel.
+    downloadUrl: 'https://warren.ro/telecharger',
   },
   staging: {
     apiBaseUrl: 'https://api.staging.warrenbrowse.com/',
     displayName: 'Warren VPN Staging',
     unixProductDir: 'warren-vpn-staging',
     deepLinkScheme: 'warren-staging',
+    // No staging website: the beta page, never the production one.
+    downloadUrl: 'https://beta.warren.ro/telecharger',
   },
   beta: {
     apiBaseUrl: 'https://api.beta.warrenbrowse.com/',
     displayName: 'Warren VPN Beta',
     unixProductDir: 'warren-vpn-beta',
     deepLinkScheme: 'warren-beta',
+    downloadUrl: 'https://beta.warren.ro/telecharger',
   },
 } as const;
 

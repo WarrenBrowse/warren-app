@@ -225,6 +225,19 @@ impl ProductEnv {
         }
     }
 
+    /// Download page of this environment's website, which the update banner
+    /// opens. The channel's own site: a beta build that opened the production
+    /// page offered its users the other channel (forum topic 204). Staging
+    /// has no website and never ships, so it sends its testers to the beta
+    /// page, never to production. Locale-neutral: the site picks the language.
+    #[must_use]
+    pub const fn download_url(self) -> &'static str {
+        match self {
+            ProductEnv::Prod => "https://warren.ro/telecharger",
+            ProductEnv::Staging | ProductEnv::Beta => "https://beta.warren.ro/telecharger",
+        }
+    }
+
     /// Every anchor of this environment as one JSON object: the table the
     /// mobile FFI hands Kotlin (`WarrenJni.productAnchorsJson`) and Swift
     /// (`warren_product_anchors`). Its keys are the columns of
@@ -244,6 +257,7 @@ impl ProductEnv {
             "deep_link_scheme": self.deep_link_scheme(),
             "connect_host": self.connect_host(),
             "forum_public_url": self.forum_public_url(),
+            "download_url": self.download_url(),
         })
         .to_string()
     }

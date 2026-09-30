@@ -1,5 +1,7 @@
 <resources>
     <string name="app_name" translatable="false">Warren VPN</string>
+    <!-- The prod channel's download page; the beta and staging flavors
+         overlay their own (android/app/src/<flavor>/res). -->
     <string name="download_url" translatable="false">https://warren.ro/telecharger</string>
     <string name="market_uri" translatable="false">market://details?id=%s</string>
     <string name="faqs_and_guides_url" translatable="false">https://warren.ro/faq</string>

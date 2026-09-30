@@ -23,11 +23,22 @@ const IOS_API_XCCONFIG: &str = "ios/Configurations/Api.xcconfig.template";
 const IOS_PBXPROJ: &str = "ios/WarrenVPN.xcodeproj/project.pbxproj";
 const IOS_ASSET_CATALOG: &str = "ios/WarrenVPN/Supporting Files/Assets.xcassets";
 const WARREN_CHECKS_WORKFLOW: &str = ".github/workflows/warren-checks.yml";
+/// The library default of the Android string resources: the prod value.
+const ANDROID_DEFAULT_URLS: &str =
+    "android/lib/ui/resource/src/main/res/values/strings_non_translatable.xml";
+/// A non-prod flavor's overlay of those resources, by flavor name.
+const ANDROID_FLAVOR_URLS: &str = "android/app/src/{env}/res/values/strings_non_translatable.xml";
+const ANDROID_BETA_URLS: &str = "android/app/src/beta/res/values/strings_non_translatable.xml";
+const ANDROID_STAGING_URLS: &str =
+    "android/app/src/staging/res/values/strings_non_translatable.xml";
 
 /// Every copy of the product table this suite holds, so the workflow filter
 /// can be asked whether an edit to one of them runs the suite at all.
-const COPIES_READ_BY_THIS_SUITE: [&str; 8] = [
+const COPIES_READ_BY_THIS_SUITE: [&str; 11] = [
     PRODUCT_ENV_TS,
+    ANDROID_DEFAULT_URLS,
+    ANDROID_BETA_URLS,
+    ANDROID_STAGING_URLS,
     DISTRIBUTION_CJS,
     BUILD_GRADLE,
     IOS_PRODUCT_ENV_XCCONFIG,
@@ -142,6 +153,41 @@ fn the_desktop_typescript_table_is_the_crates() {
             env.deep_link_scheme(),
             "{name}: deepLinkScheme"
         );
+        assert_eq!(
+            js_string(block, "downloadUrl", PRODUCT_ENV_TS),
+            env.download_url(),
+            "{name}: downloadUrl"
+        );
+    }
+}
+
+/// The value of the one `<string name="<name>" ...>value</string>` of an
+/// Android resource file, `None` when the file does not set it.
+fn android_string(source: &str, name: &str) -> Option<String> {
+    let re = Regex::new(&format!(r#"<string name="{name}"[^>]*>([^<]*)</string>"#)).expect("regex");
+    let mut matches = re.captures_iter(source);
+    let first = matches.next()?;
+    assert!(matches.next().is_none(), "`{name}` is set twice");
+    Some(first[1].to_owned())
+}
+
+/// The update banner opens `download_url`: the library default is the prod
+/// page, and each other flavor overlays its own channel's page. A beta app
+/// that fell through to the default sent its users to the production
+/// download page (forum topic 204).
+#[test]
+fn the_android_download_page_is_the_crates() {
+    let default = android_string(&repo_file(ANDROID_DEFAULT_URLS), "download_url")
+        .unwrap_or_else(|| panic!("no `download_url` in {ANDROID_DEFAULT_URLS}"));
+    for env in ALL {
+        let name = env.name();
+        let overlay_path = ANDROID_FLAVOR_URLS.replace("{env}", name);
+        let overlay =
+            std::fs::read_to_string(format!("{}/../{overlay_path}", env!("CARGO_MANIFEST_DIR")))
+                .ok()
+                .and_then(|source| android_string(&source, "download_url"));
+        let resolved = overlay.unwrap_or_else(|| default.clone());
+        assert_eq!(resolved, env.download_url(), "{name}: download_url");
     }
 }
 

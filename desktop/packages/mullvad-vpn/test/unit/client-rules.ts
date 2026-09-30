@@ -113,6 +113,7 @@ export interface ProductEnvRow {
   deep_link_scheme: string;
   connect_host: string;
   forum_public_url: string;
+  download_url: string;
 }
 
 export interface ProductEnvFixture {

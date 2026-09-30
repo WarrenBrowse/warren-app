@@ -2,4 +2,9 @@
     <!-- Beta flavor overlay: distinct launcher name so the beta app is
          tellable from the prod one installed on the same device. -->
     <string name="app_name" translatable="false">Warren VPN Beta</string>
+    <!-- The page the update banner opens, on this channel's website: falling
+         through to the library default sent beta users to the production
+         download page (forum topic 204). Held to the product table by
+         warren-product-env/tests/platform_lockstep.rs. -->
+    <string name="download_url" translatable="false">https://beta.warren.ro/telecharger</string>
 </resources>

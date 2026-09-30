@@ -31,7 +31,7 @@ fn every_environment_row_is_the_crates_anchor_table() {
     );
     for env in ALL {
         let row = &environments[env.name()];
-        let columns: [(&str, &str); 10] = [
+        let columns: [(&str, &str); 11] = [
             ("name", env.name()),
             ("api_url", env.api_url()),
             ("api_host", env.api_host()),
@@ -42,6 +42,7 @@ fn every_environment_row_is_the_crates_anchor_table() {
             ("deep_link_scheme", env.deep_link_scheme()),
             ("connect_host", env.connect_host()),
             ("forum_public_url", env.forum_public_url()),
+            ("download_url", env.download_url()),
         ];
         for (column, anchor) in columns {
             assert_eq!(str_of(row, column), anchor, "{}: {column}", env.name());

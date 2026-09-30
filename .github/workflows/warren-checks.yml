@@ -88,6 +88,11 @@ on:
       # to it must run the Warren test scope; the desktop copies it reads are
       # under desktop/** already.
       - "android/app/build.gradle.kts"
+      # And the download page each flavor's update banner opens: the library
+      # default is the prod page, each other flavor overlays its channel's.
+      - "android/lib/ui/resource/src/main/res/values/strings_non_translatable.xml"
+      - "android/app/src/beta/res/values/strings_non_translatable.xml"
+      - "android/app/src/staging/res/values/strings_non_translatable.xml"
       # The iOS endpoint xcconfig is drift-gated against the product anchors by
       # a mullvad-daemon test, so an edit here must run the Warren test scope.
       - "ios/Configurations/**"

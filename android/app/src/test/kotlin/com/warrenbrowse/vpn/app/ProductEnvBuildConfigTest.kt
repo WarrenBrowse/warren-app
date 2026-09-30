@@ -6,6 +6,7 @@ import com.warrenbrowse.vpn.app.forum.forumLoginLinkFromCode
 import com.warrenbrowse.vpn.app.product.ProductAnchors
 import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures
 import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.string
+import java.io.File
 import java.net.URI
 import kotlinx.serialization.json.jsonObject
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -56,6 +57,25 @@ class ProductEnvBuildConfigTest {
     fun the_forum_and_connect_hosts_are_the_fixtures() {
         assertEquals(URI(row.string("forum_public_url")).host, FORUM_HOST)
         assertEquals(row.string("connect_host"), forumLoginLinkFromCode("0".repeat(32)).host)
+    }
+
+    @Test
+    fun the_update_banner_opens_the_fixtures_download_page() {
+        // Topic 204: the beta app fell through to the library default and
+        // opened the production download page. The flavor's overlay wins
+        // over the library default, as the resource merger resolves it.
+        assertEquals(row.string("download_url"), flavorString("download_url"))
+    }
+
+    /** [name] as this flavor resolves it: its own overlay, else the library default. */
+    private fun flavorString(name: String): String {
+        val pattern = Regex("<string name=\"$name\"[^>]*>([^<]*)</string>")
+        val overlay = File("src/${BuildConfig.FLAVOR}/res/values/strings_non_translatable.xml")
+        val default = File("../lib/ui/resource/src/main/res/values/strings_non_translatable.xml")
+        return listOf(overlay, default)
+            .filter(File::isFile)
+            .firstNotNullOfOrNull { pattern.find(it.readText())?.groupValues?.get(1) }
+            ?: error("no `$name` string for the ${BuildConfig.FLAVOR} flavor")
     }
 
     @Test
