@@ -62,6 +62,19 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Say that the clock of this device is off, by how many seconds and in which direction, when
   the servers refuse port forwarding for it, instead of saying that the port entitlements are used
   up.
+- [Android] Connect on an IPv6-only mobile network through an entry server that answers on IPv6.
+  The app took the first entry server of the list whatever the location chosen, and that server
+  answers on IPv4 only, so the connection could never come up there.
+- [iOS, Windows, macOS, Linux] Choose an entry server the network in use can reach, which on an
+  IPv6-only network means one that answers on IPv6.
+- [Android] Say that no entry server can be reached on this network when that is why the internet
+  is blocked, with a notification title of its own. The message no longer claims that the entry
+  servers answer on IPv4 only, and it now suggests another entry country or location.
+- [Android] Keep the name of the entry server out of the problem report, where the system log
+  lines of the secure connection showed it. The report now says which address types the entry
+  servers offer, which ones the network carries, and how the last connection attempt failed.
+- [Android, Windows, macOS, Linux] Open the download page of the beta website from the update
+  notice of a beta build, and the production one only from a production build.
 
 ## [1.1.45] - 2026-09-30
 ### Fixed

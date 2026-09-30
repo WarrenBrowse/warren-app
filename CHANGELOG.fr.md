@@ -58,6 +58,22 @@ par l'application, gardez-le tel quel.
 - [iOS] Indiquer que l'horloge de cet appareil est décalée, de combien de secondes et dans quel
   sens, quand les serveurs refusent le port forwarding pour cette raison, au lieu d'annoncer que
   les droits de port sont épuisés.
+- [Android] Se connecter sur un réseau mobile en IPv6 seulement, par un serveur d'entrée qui
+  répond en IPv6. L'application prenait le premier serveur d'entrée de la liste quelle que soit la
+  localisation choisie, et ce serveur ne répond qu'en IPv4 : la connexion ne pouvait pas s'établir.
+- [iOS, Windows, macOS, Linux] Choisir un serveur d'entrée que le réseau utilisé peut joindre, ce
+  qui, sur un réseau en IPv6 seulement, veut dire un serveur qui répond en IPv6.
+- [Android] Indiquer qu'aucun serveur d'entrée n'est joignable sur ce réseau quand c'est la raison
+  du blocage d'internet, avec un titre de notification qui lui est propre. Le message n'affirme
+  plus que les serveurs d'entrée ne répondent qu'en IPv4, et propose un autre pays d'entrée ou une
+  autre localisation.
+- [Android] Retirer du rapport de problème le nom du serveur d'entrée, qui apparaissait dans les
+  lignes du journal système de la connexion sécurisée. Le rapport indique désormais les types
+  d'adresse offerts par les serveurs d'entrée, ceux que porte le réseau, et la façon dont la
+  dernière tentative de connexion a échoué.
+- [Android, Windows, macOS, Linux] Ouvrir la page de téléchargement du site bêta depuis l'avis de
+  mise à jour d'une version bêta, et celle du site de production seulement depuis une version de
+  production.
 
 ## [1.1.45] - 2026-09-30
 ### Corrigé

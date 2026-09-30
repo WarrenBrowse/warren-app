@@ -54,6 +54,21 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Aplicația spune că ceasul acestui dispozitiv nu e corect, cu câte secunde și în ce sens,
   când serverele refuză port forwarding-ul din acest motiv, în loc să spună că drepturile de port
   s-au epuizat.
+- [Android] Aplicația se conectează pe o rețea mobilă doar IPv6, printr-un server de intrare care
+  răspunde pe IPv6. Aplicația lua primul server de intrare din listă oricare ar fi locația aleasă,
+  iar acel server răspunde doar pe IPv4, deci conexiunea nu se putea deschide.
+- [iOS, Windows, macOS, Linux] Aplicația alege un server de intrare pe care rețeaua folosită îl
+  poate atinge, adică pe o rețea doar IPv6 un server care răspunde pe IPv6.
+- [Android] Aplicația spune că niciun server de intrare nu e accesibil pe această rețea când acesta
+  e motivul pentru care internetul e blocat, cu un titlu de notificare propriu. Mesajul nu mai
+  afirmă că serverele de intrare răspund doar pe IPv4 și propune altă țară de intrare sau altă
+  locație.
+- [Android] Raportul de problemă nu mai conține numele serverului de intrare, care apărea în
+  liniile jurnalului de sistem ale conexiunii securizate. Raportul arată acum tipurile de adresă
+  oferite de serverele de intrare, pe cele pe care le poartă rețeaua și felul în care a eșuat
+  ultima încercare de conectare.
+- [Android, Windows, macOS, Linux] Anunțul de actualizare al unei versiuni beta deschide pagina de
+  descărcare a site-ului beta, iar pe cea a site-ului de producție doar o versiune de producție.
 
 ## [1.1.45] - 2026-09-30
 ### Reparat
