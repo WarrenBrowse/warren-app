@@ -743,8 +743,11 @@
     <string name="abuse_category_phishing">تصيّد احتيالي</string>
     <string name="abuse_category_csam">مواد الاعتداء الجنسي على الأطفال</string>
     <string name="abuse_category_other">أخرى</string>
-    <string name="tunnel_natpmp_status_refused_no_entitlement">الحالة: لم يتبقَّ حق فتح منفذ، إعادة المحاولة خلال %1$s ثانية</string>
+    <string name="tunnel_natpmp_status_refused_no_entitlement">الحالة: حق فتح المنفذ غير متاح، إعادة المحاولة خلال %1$s ثانية</string>
     <string name="tunnel_natpmp_status_refused_entitlement">الحالة: مرفوض، إعادة المحاولة خلال %1$s ثانية</string>
+    <string name="tunnel_natpmp_status_refused_clock_off">الحالة: ساعة هذا الجهاز غير مضبوطة، فعّل الوقت التلقائي</string>
+    <string name="tunnel_natpmp_status_refused_clock_ahead">الحالة: ساعة هذا الجهاز متقدمة بمقدار %1$d ث، فعّل الوقت التلقائي</string>
+    <string name="tunnel_natpmp_status_refused_clock_behind">الحالة: ساعة هذا الجهاز متأخرة بمقدار %1$d ث، فعّل الوقت التلقائي</string>
     <string name="network_stats_load_low">حمل منخفض</string>
     <string name="network_stats_load_moderate">حمل متوسط</string>
     <string name="network_stats_load_high">حمل مرتفع</string>

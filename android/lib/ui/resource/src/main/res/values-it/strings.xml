@@ -720,8 +720,11 @@
     <string name="abuse_category_phishing">phishing</string>
     <string name="abuse_category_csam">materiale pedopornografico</string>
     <string name="abuse_category_other">altro</string>
-    <string name="tunnel_natpmp_status_refused_no_entitlement">Stato: nessun diritto di porta disponibile, nuovo tentativo tra %1$ss</string>
+    <string name="tunnel_natpmp_status_refused_no_entitlement">Stato: diritto di porta non disponibile, nuovo tentativo tra %1$ss</string>
     <string name="tunnel_natpmp_status_refused_entitlement">Stato: rifiutato, nuovo tentativo tra %1$ss</string>
+    <string name="tunnel_natpmp_status_refused_clock_off">Stato: l\'orologio di questo dispositivo non è corretto, attiva l\'ora automatica</string>
+    <string name="tunnel_natpmp_status_refused_clock_ahead">Stato: l\'orologio di questo dispositivo è avanti di %1$d s, attiva l\'ora automatica</string>
+    <string name="tunnel_natpmp_status_refused_clock_behind">Stato: l\'orologio di questo dispositivo è indietro di %1$d s, attiva l\'ora automatica</string>
     <string name="network_stats_load_low">Carico basso</string>
     <string name="network_stats_load_moderate">Carico moderato</string>
     <string name="network_stats_load_high">Carico alto</string>

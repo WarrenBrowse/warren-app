@@ -731,8 +731,11 @@
     <string name="abuse_category_phishing">фишинг</string>
     <string name="abuse_category_csam">материалы сексуального насилия над детьми</string>
     <string name="abuse_category_other">другое</string>
-    <string name="tunnel_natpmp_status_refused_no_entitlement">Статус: права на порт исчерпаны, повтор через %1$sс</string>
+    <string name="tunnel_natpmp_status_refused_no_entitlement">Статус: право на порт недоступно, повтор через %1$sс</string>
     <string name="tunnel_natpmp_status_refused_entitlement">Статус: отказано, повтор через %1$sс</string>
+    <string name="tunnel_natpmp_status_refused_clock_off">Статус: часы этого устройства идут неверно, включите автоматическое время</string>
+    <string name="tunnel_natpmp_status_refused_clock_ahead">Статус: часы этого устройства спешат на %1$d с, включите автоматическое время</string>
+    <string name="tunnel_natpmp_status_refused_clock_behind">Статус: часы этого устройства отстают на %1$d с, включите автоматическое время</string>
     <string name="network_stats_load_low">Низкая нагрузка</string>
     <string name="network_stats_load_moderate">Средняя нагрузка</string>
     <string name="network_stats_load_high">Высокая нагрузка</string>

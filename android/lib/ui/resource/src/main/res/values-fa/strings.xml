@@ -719,8 +719,11 @@
     <string name="abuse_category_phishing">فیشینگ</string>
     <string name="abuse_category_csam">محتوای سوءاستفاده جنسی از کودکان</string>
     <string name="abuse_category_other">سایر</string>
-    <string name="tunnel_natpmp_status_refused_no_entitlement">وضعیت: سهمیه درگاه باقی نمانده، تلاش مجدد در %1$s ثانیه</string>
+    <string name="tunnel_natpmp_status_refused_no_entitlement">وضعیت: حق درگاه در دسترس نیست، تلاش مجدد در %1$s ثانیه</string>
     <string name="tunnel_natpmp_status_refused_entitlement">وضعیت: رد شد، تلاش مجدد در %1$s ثانیه</string>
+    <string name="tunnel_natpmp_status_refused_clock_off">وضعیت: ساعت این دستگاه درست نیست، زمان خودکار را روشن کنید</string>
+    <string name="tunnel_natpmp_status_refused_clock_ahead">وضعیت: ساعت این دستگاه %1$d ثانیه جلو است، زمان خودکار را روشن کنید</string>
+    <string name="tunnel_natpmp_status_refused_clock_behind">وضعیت: ساعت این دستگاه %1$d ثانیه عقب است، زمان خودکار را روشن کنید</string>
     <string name="network_stats_load_low">بار کم</string>
     <string name="network_stats_load_moderate">بار متوسط</string>
     <string name="network_stats_load_high">بار زیاد</string>

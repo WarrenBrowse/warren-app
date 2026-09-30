@@ -719,8 +719,11 @@
     <string name="abuse_category_phishing">phishing</string>
     <string name="abuse_category_csam">material med sexuella övergrepp mot barn</string>
     <string name="abuse_category_other">övrigt</string>
-    <string name="tunnel_natpmp_status_refused_no_entitlement">Status: inget porttillstånd kvar, försöker igen om %1$ss</string>
+    <string name="tunnel_natpmp_status_refused_no_entitlement">Status: porttillstånd otillgängligt, försöker igen om %1$ss</string>
     <string name="tunnel_natpmp_status_refused_entitlement">Status: nekad, försöker igen om %1$ss</string>
+    <string name="tunnel_natpmp_status_refused_clock_off">Status: enhetens klocka går fel, slå på automatisk tid</string>
+    <string name="tunnel_natpmp_status_refused_clock_ahead">Status: enhetens klocka går %1$d s före, slå på automatisk tid</string>
+    <string name="tunnel_natpmp_status_refused_clock_behind">Status: enhetens klocka går %1$d s efter, slå på automatisk tid</string>
     <string name="network_stats_load_low">Låg belastning</string>
     <string name="network_stats_load_moderate">Måttlig belastning</string>
     <string name="network_stats_load_high">Hög belastning</string>

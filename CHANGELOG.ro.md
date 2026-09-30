@@ -48,6 +48,9 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [Windows, macOS, Linux] Aplicația spune că ceasul acestui computer nu e corect, cu câte secunde
   și în ce sens, când serverele refuză port forwarding-ul din acest motiv, în loc să spună că
   drepturile de port s-au epuizat.
+- [Android] Aplicația spune că ceasul acestui dispozitiv nu e corect, cu câte secunde și în ce
+  sens, când serverele refuză port forwarding-ul din acest motiv, în loc să spună că drepturile de
+  port s-au epuizat.
 
 ## [1.1.45] - 2026-09-30
 ### Reparat

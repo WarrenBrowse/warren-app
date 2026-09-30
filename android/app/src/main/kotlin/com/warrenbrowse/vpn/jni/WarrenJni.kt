@@ -376,8 +376,10 @@ object WarrenJni {
      * Returns the live NAT-PMP port-forwarding status as a JSON object: `{"state":
      * "idle"|"requesting"|"mapped"|"rate_limited"|"failed"|"refused", "external_port": Int?,
      * "lifetime_secs": Int?, "retry_after_secs": Int?, "reason": String?}`. `refused` is an exit
-     * refusing the request as not authorized, with `"refusal":"no_entitlement"|"entitlement_refused"`
-     * and `"retry_in_secs"` until the native side asks again on its own.
+     * refusing the request as not authorized, with
+     * `"refusal":"no_entitlement"|"entitlement_refused"|"clock_skew"` and `"retry_in_secs"` until
+     * the native side asks again on its own; `clock_skew` adds `"clock_offset_secs"` (the servers'
+     * clock minus the device's) when the refusal said by how much.
      *
      * Read on every [awaitStatusChange] wake. `idle` when port forwarding is off or no mapping is
      * active.

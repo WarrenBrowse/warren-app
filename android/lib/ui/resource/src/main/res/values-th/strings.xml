@@ -713,8 +713,11 @@
     <string name="abuse_category_phishing">ฟิชชิง</string>
     <string name="abuse_category_csam">สื่อการล่วงละเมิดทางเพศเด็ก</string>
     <string name="abuse_category_other">อื่น ๆ</string>
-    <string name="tunnel_natpmp_status_refused_no_entitlement">สถานะ: ไม่มีสิทธิ์เปิดพอร์ตเหลือแล้ว ลองใหม่ใน %1$ss</string>
+    <string name="tunnel_natpmp_status_refused_no_entitlement">สถานะ: สิทธิ์เปิดพอร์ตไม่พร้อมใช้งาน ลองใหม่ใน %1$ss</string>
     <string name="tunnel_natpmp_status_refused_entitlement">สถานะ: ถูกปฏิเสธ ลองใหม่ใน %1$ss</string>
+    <string name="tunnel_natpmp_status_refused_clock_off">สถานะ: นาฬิกาของอุปกรณ์นี้ไม่ตรง เปิดเวลาอัตโนมัติ</string>
+    <string name="tunnel_natpmp_status_refused_clock_ahead">สถานะ: นาฬิกาของอุปกรณ์นี้เร็วไป %1$d วินาที เปิดเวลาอัตโนมัติ</string>
+    <string name="tunnel_natpmp_status_refused_clock_behind">สถานะ: นาฬิกาของอุปกรณ์นี้ช้าไป %1$d วินาที เปิดเวลาอัตโนมัติ</string>
     <string name="network_stats_load_low">โหลดต่ำ</string>
     <string name="network_stats_load_moderate">โหลดปานกลาง</string>
     <string name="network_stats_load_high">โหลดสูง</string>

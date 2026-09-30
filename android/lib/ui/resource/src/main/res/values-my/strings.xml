@@ -713,8 +713,11 @@
     <string name="abuse_category_phishing">phishing</string>
     <string name="abuse_category_csam">ကလေးသူငယ် လိင်ပိုင်းဆိုင်ရာ အလွဲသုံးစားပြုမှု ပစ္စည်းများ</string>
     <string name="abuse_category_other">အခြား</string>
-    <string name="tunnel_natpmp_status_refused_no_entitlement">အခြေအနေ: ပို့တ်ခွင့် မကျန်တော့ပါ၊ %1$ss အတွင်း ပြန်ကြိုးစားမည်</string>
+    <string name="tunnel_natpmp_status_refused_no_entitlement">အခြေအနေ: ပို့တ်ခွင့် မရရှိနိုင်ပါ၊ %1$ss အတွင်း ပြန်ကြိုးစားမည်</string>
     <string name="tunnel_natpmp_status_refused_entitlement">အခြေအနေ: ငြင်းပယ်ခံရသည်၊ %1$ss အတွင်း ပြန်ကြိုးစားမည်</string>
+    <string name="tunnel_natpmp_status_refused_clock_off">အခြေအနေ: ဤစက်၏ နာရီ မှားနေသည်၊ အလိုအလျောက် အချိန်ကို ဖွင့်ပါ</string>
+    <string name="tunnel_natpmp_status_refused_clock_ahead">အခြေအနေ: ဤစက်၏ နာရီ %1$d စက္ကန့် စောနေသည်၊ အလိုအလျောက် အချိန်ကို ဖွင့်ပါ</string>
+    <string name="tunnel_natpmp_status_refused_clock_behind">အခြေအနေ: ဤစက်၏ နာရီ %1$d စက္ကန့် နောက်ကျနေသည်၊ အလိုအလျောက် အချိန်ကို ဖွင့်ပါ</string>
     <string name="network_stats_load_low">ဝန်နည်း</string>
     <string name="network_stats_load_moderate">ဝန်အလယ်အလတ်</string>
     <string name="network_stats_load_high">ဝန်များ</string>

@@ -729,8 +729,11 @@
     <string name="abuse_category_phishing">phishing</string>
     <string name="abuse_category_csam">materiale cu abuz sexual asupra minorilor</string>
     <string name="abuse_category_other">altele</string>
-    <string name="tunnel_natpmp_status_refused_no_entitlement">Stare: niciun drept de port disponibil, se reîncearcă în %1$ss</string>
+    <string name="tunnel_natpmp_status_refused_no_entitlement">Stare: drept de port indisponibil, se reîncearcă în %1$ss</string>
     <string name="tunnel_natpmp_status_refused_entitlement">Stare: refuzat, se reîncearcă în %1$ss</string>
+    <string name="tunnel_natpmp_status_refused_clock_off">Stare: ceasul acestui dispozitiv nu e corect, activează ora automată</string>
+    <string name="tunnel_natpmp_status_refused_clock_ahead">Stare: ceasul acestui dispozitiv e înainte cu %1$d s, activează ora automată</string>
+    <string name="tunnel_natpmp_status_refused_clock_behind">Stare: ceasul acestui dispozitiv e în urmă cu %1$d s, activează ora automată</string>
     <string name="network_stats_load_low">Încărcare redusă</string>
     <string name="network_stats_load_moderate">Încărcare moderată</string>
     <string name="network_stats_load_high">Încărcare ridicată</string>

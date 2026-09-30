@@ -719,8 +719,11 @@
     <string name="abuse_category_phishing">phishing</string>
     <string name="abuse_category_csam">materiale med seksuelt misbrug af børn</string>
     <string name="abuse_category_other">andet</string>
-    <string name="tunnel_natpmp_status_refused_no_entitlement">Status: ingen porttilladelse tilbage, prøver igen om %1$ss</string>
+    <string name="tunnel_natpmp_status_refused_no_entitlement">Status: porttilladelse utilgængelig, prøver igen om %1$ss</string>
     <string name="tunnel_natpmp_status_refused_entitlement">Status: afvist, prøver igen om %1$ss</string>
+    <string name="tunnel_natpmp_status_refused_clock_off">Status: enhedens ur går forkert, slå automatisk tid til</string>
+    <string name="tunnel_natpmp_status_refused_clock_ahead">Status: enhedens ur går %1$d s foran, slå automatisk tid til</string>
+    <string name="tunnel_natpmp_status_refused_clock_behind">Status: enhedens ur går %1$d s bagud, slå automatisk tid til</string>
     <string name="network_stats_load_low">Lav belastning</string>
     <string name="network_stats_load_moderate">Moderat belastning</string>
     <string name="network_stats_load_high">Høj belastning</string>

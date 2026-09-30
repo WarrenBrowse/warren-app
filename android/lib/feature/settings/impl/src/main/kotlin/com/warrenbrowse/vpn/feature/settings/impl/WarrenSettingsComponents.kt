@@ -752,16 +752,32 @@ private fun natPmpFailedLabel(context: android.content.Context, json: String): S
 
 /**
  * The exit refused the request as not authorized (warren-core doc 105): what
- * was missing, and when Rust asks again on its own.
+ * was missing, and when Rust asks again on its own. A refusal for the device
+ * clock says how far off it is and what to do instead, since asking again
+ * cannot help until the clock is set right.
  */
 private fun natPmpRefusedLabel(context: android.content.Context, json: String): String {
     val retry = jsonField(json, "retry_in_secs") ?: "0"
-    return if (jsonField(json, "refusal") == "entitlement_refused") {
-        context.getString(R.string.tunnel_natpmp_status_refused_entitlement, retry)
-    } else {
-        context.getString(R.string.tunnel_natpmp_status_refused_no_entitlement, retry)
+    return when (jsonField(json, "refusal")) {
+        "entitlement_refused" ->
+            context.getString(R.string.tunnel_natpmp_status_refused_entitlement, retry)
+        "clock_skew" ->
+            natPmpClockLabel(context, jsonField(json, "clock_offset_secs")?.toLongOrNull())
+        else -> context.getString(R.string.tunnel_natpmp_status_refused_no_entitlement, retry)
     }
 }
+
+/**
+ * [offsetSecs] is the servers' clock minus this device's, so a negative one is
+ * a device running ahead; null when the refusal did not say by how much.
+ */
+private fun natPmpClockLabel(context: android.content.Context, offsetSecs: Long?): String =
+    when {
+        offsetSecs == null -> context.getString(R.string.tunnel_natpmp_status_refused_clock_off)
+        offsetSecs < 0 ->
+            context.getString(R.string.tunnel_natpmp_status_refused_clock_ahead, -offsetSecs)
+        else -> context.getString(R.string.tunnel_natpmp_status_refused_clock_behind, offsetSecs)
+    }
 
 /**
  * The line shown when no mapping is live. Only a connected tunnel can be idle;

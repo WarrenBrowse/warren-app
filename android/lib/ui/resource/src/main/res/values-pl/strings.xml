@@ -731,8 +731,11 @@
     <string name="abuse_category_phishing">phishing</string>
     <string name="abuse_category_csam">materiały przedstawiające seksualne wykorzystywanie dzieci</string>
     <string name="abuse_category_other">inne</string>
-    <string name="tunnel_natpmp_status_refused_no_entitlement">Status: brak uprawnienia do portu, ponowna próba za %1$ss</string>
+    <string name="tunnel_natpmp_status_refused_no_entitlement">Status: uprawnienie do portu niedostępne, ponowna próba za %1$ss</string>
     <string name="tunnel_natpmp_status_refused_entitlement">Status: odrzucono, ponowna próba za %1$ss</string>
+    <string name="tunnel_natpmp_status_refused_clock_off">Status: zegar tego urządzenia jest nieprawidłowy, włącz automatyczny czas</string>
+    <string name="tunnel_natpmp_status_refused_clock_ahead">Status: zegar tego urządzenia spieszy się o %1$d s, włącz automatyczny czas</string>
+    <string name="tunnel_natpmp_status_refused_clock_behind">Status: zegar tego urządzenia spóźnia się o %1$d s, włącz automatyczny czas</string>
     <string name="network_stats_load_low">Niskie obciążenie</string>
     <string name="network_stats_load_moderate">Umiarkowane obciążenie</string>
     <string name="network_stats_load_high">Wysokie obciążenie</string>

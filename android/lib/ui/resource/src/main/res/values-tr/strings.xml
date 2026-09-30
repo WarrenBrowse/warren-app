@@ -719,8 +719,11 @@
     <string name="abuse_category_phishing">phishing</string>
     <string name="abuse_category_csam">çocuk cinsel istismarı materyali</string>
     <string name="abuse_category_other">diğer</string>
-    <string name="tunnel_natpmp_status_refused_no_entitlement">Durum: bağlantı noktası hakkı kalmadı, %1$ss içinde yeniden denenecek</string>
+    <string name="tunnel_natpmp_status_refused_no_entitlement">Durum: bağlantı noktası hakkı kullanılamıyor, %1$ss içinde yeniden denenecek</string>
     <string name="tunnel_natpmp_status_refused_entitlement">Durum: reddedildi, %1$ss içinde yeniden denenecek</string>
+    <string name="tunnel_natpmp_status_refused_clock_off">Durum: bu cihazın saati yanlış, otomatik saati açın</string>
+    <string name="tunnel_natpmp_status_refused_clock_ahead">Durum: bu cihazın saati %1$d sn ileride, otomatik saati açın</string>
+    <string name="tunnel_natpmp_status_refused_clock_behind">Durum: bu cihazın saati %1$d sn geride, otomatik saati açın</string>
     <string name="network_stats_load_low">Düşük yük</string>
     <string name="network_stats_load_moderate">Orta yük</string>
     <string name="network_stats_load_high">Yüksek yük</string>

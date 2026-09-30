@@ -713,8 +713,11 @@
     <string name="abuse_category_phishing">피싱</string>
     <string name="abuse_category_csam">아동 성착취물</string>
     <string name="abuse_category_other">기타</string>
-    <string name="tunnel_natpmp_status_refused_no_entitlement">상태: 남은 포트 권한 없음, %1$s초 후 재시도</string>
+    <string name="tunnel_natpmp_status_refused_no_entitlement">상태: 포트 권한을 사용할 수 없음, %1$s초 후 재시도</string>
     <string name="tunnel_natpmp_status_refused_entitlement">상태: 거부됨, %1$s초 후 재시도</string>
+    <string name="tunnel_natpmp_status_refused_clock_off">상태: 이 기기의 시계가 맞지 않습니다, 자동 시간 설정을 켜세요</string>
+    <string name="tunnel_natpmp_status_refused_clock_ahead">상태: 이 기기의 시계가 %1$d초 빠릅니다, 자동 시간 설정을 켜세요</string>
+    <string name="tunnel_natpmp_status_refused_clock_behind">상태: 이 기기의 시계가 %1$d초 느립니다, 자동 시간 설정을 켜세요</string>
     <string name="network_stats_load_low">낮은 부하</string>
     <string name="network_stats_load_moderate">보통 부하</string>
     <string name="network_stats_load_high">높은 부하</string>

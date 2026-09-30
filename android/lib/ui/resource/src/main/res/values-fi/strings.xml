@@ -719,8 +719,11 @@
     <string name="abuse_category_phishing">phishing</string>
     <string name="abuse_category_csam">lasten seksuaalista hyväksikäyttöä sisältävä materiaali</string>
     <string name="abuse_category_other">muu</string>
-    <string name="tunnel_natpmp_status_refused_no_entitlement">Tila: porttioikeus käytetty loppuun, uudelleenyritys %1$ss kuluttua</string>
+    <string name="tunnel_natpmp_status_refused_no_entitlement">Tila: porttioikeus ei saatavilla, uudelleenyritys %1$ss kuluttua</string>
     <string name="tunnel_natpmp_status_refused_entitlement">Tila: hylätty, uudelleenyritys %1$ss kuluttua</string>
+    <string name="tunnel_natpmp_status_refused_clock_off">Tila: tämän laitteen kello on väärässä, ota automaattinen aika käyttöön</string>
+    <string name="tunnel_natpmp_status_refused_clock_ahead">Tila: tämän laitteen kello on %1$d s edellä, ota automaattinen aika käyttöön</string>
+    <string name="tunnel_natpmp_status_refused_clock_behind">Tila: tämän laitteen kello on %1$d s jäljessä, ota automaattinen aika käyttöön</string>
     <string name="network_stats_load_low">Matala kuorma</string>
     <string name="network_stats_load_moderate">Kohtalainen kuorma</string>
     <string name="network_stats_load_high">Korkea kuorma</string>

@@ -719,8 +719,11 @@
     <string name="abuse_category_phishing">Phishing</string>
     <string name="abuse_category_csam">Darstellungen sexuellen Kindesmissbrauchs</string>
     <string name="abuse_category_other">Sonstiges</string>
-    <string name="tunnel_natpmp_status_refused_no_entitlement">Status: kein Port-Kontingent mehr, erneuter Versuch in %1$ss</string>
+    <string name="tunnel_natpmp_status_refused_no_entitlement">Status: Portberechtigung nicht verfügbar, erneuter Versuch in %1$ss</string>
     <string name="tunnel_natpmp_status_refused_entitlement">Status: abgelehnt, erneuter Versuch in %1$ss</string>
+    <string name="tunnel_natpmp_status_refused_clock_off">Status: die Uhr dieses Geräts geht falsch, automatische Uhrzeit aktivieren</string>
+    <string name="tunnel_natpmp_status_refused_clock_ahead">Status: die Uhr dieses Geräts geht %1$d s vor, automatische Uhrzeit aktivieren</string>
+    <string name="tunnel_natpmp_status_refused_clock_behind">Status: die Uhr dieses Geräts geht %1$d s nach, automatische Uhrzeit aktivieren</string>
     <string name="network_stats_load_low">Geringe Last</string>
     <string name="network_stats_load_moderate">Mittlere Last</string>
     <string name="network_stats_load_high">Hohe Last</string>

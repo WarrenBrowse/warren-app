@@ -757,8 +757,11 @@
     <string name="abuse_category_phishing">phishing</string>
     <string name="abuse_category_csam">child sexual abuse material</string>
     <string name="abuse_category_other">other</string>
-    <string name="tunnel_natpmp_status_refused_no_entitlement">Status: no entitlement left, retrying in %1$ss</string>
+    <string name="tunnel_natpmp_status_refused_no_entitlement">Status: port entitlement unavailable, retrying in %1$ss</string>
     <string name="tunnel_natpmp_status_refused_entitlement">Status: refused, retrying in %1$ss</string>
+    <string name="tunnel_natpmp_status_refused_clock_off">Status: the clock of this device is off, turn on automatic time</string>
+    <string name="tunnel_natpmp_status_refused_clock_ahead">Status: the clock of this device is %1$d s ahead, turn on automatic time</string>
+    <string name="tunnel_natpmp_status_refused_clock_behind">Status: the clock of this device is %1$d s behind, turn on automatic time</string>
     <string name="network_stats_load_low">Low load</string>
     <string name="network_stats_load_moderate">Moderate load</string>
     <string name="network_stats_load_high">High load</string>

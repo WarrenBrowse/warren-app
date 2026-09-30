@@ -39,7 +39,13 @@ class NatPmpStatusLabelTest {
         every { getString(eq(R.string.tunnel_natpmp_status_failed_reason), any()) } answers
             { " - ${fmtArgs()[0]}" }
         every { getString(eq(R.string.tunnel_natpmp_status_refused_no_entitlement), any()) } answers
-            { "Status: no entitlement left, retrying in ${fmtArgs()[0]}s" }
+            { "Status: port entitlement unavailable, retrying in ${fmtArgs()[0]}s" }
+        every { getString(R.string.tunnel_natpmp_status_refused_clock_off) } returns
+            "Status: the clock of this device is off, turn on automatic time"
+        every { getString(eq(R.string.tunnel_natpmp_status_refused_clock_ahead), any()) } answers
+            { "Status: the clock of this device is ${fmtArgs()[0]} s ahead, turn on automatic time" }
+        every { getString(eq(R.string.tunnel_natpmp_status_refused_clock_behind), any()) } answers
+            { "Status: the clock of this device is ${fmtArgs()[0]} s behind, turn on automatic time" }
         every { getString(eq(R.string.tunnel_natpmp_status_refused_entitlement), any()) } answers
             { "Status: refused, retrying in ${fmtArgs()[0]}s" }
     }
@@ -47,11 +53,51 @@ class NatPmpStatusLabelTest {
     @Test
     fun `a refusal for want of an entitlement says so and when it is asked again`() {
         assertEquals(
-            "Status: no entitlement left, retrying in 30s",
+            "Status: port entitlement unavailable, retrying in 30s",
             natPmpStatusLabel(
                 context,
                 tunnelConnected = true,
                 json = """{"state":"refused","refusal":"no_entitlement","retry_in_secs":30}""",
+            ),
+        )
+    }
+
+    // Forum topic 219: every mint was refused for a clock 91 s fast, and the
+    // line said the entitlements were used up.
+    @Test
+    fun `a refusal for the device clock says how far ahead it is and what to do`() {
+        assertEquals(
+            "Status: the clock of this device is 91 s ahead, turn on automatic time",
+            natPmpStatusLabel(
+                context,
+                tunnelConnected = true,
+                json =
+                    """{"state":"refused","refusal":"clock_skew","retry_in_secs":30,"clock_offset_secs":-91}""",
+            ),
+        )
+    }
+
+    @Test
+    fun `a refusal for a device clock running behind says so`() {
+        assertEquals(
+            "Status: the clock of this device is 1200 s behind, turn on automatic time",
+            natPmpStatusLabel(
+                context,
+                tunnelConnected = true,
+                json =
+                    """{"state":"refused","refusal":"clock_skew","retry_in_secs":30,"clock_offset_secs":1200}""",
+            ),
+        )
+    }
+
+    @Test
+    fun `a refusal for the device clock without an offset still names the clock`() {
+        assertEquals(
+            "Status: the clock of this device is off, turn on automatic time",
+            natPmpStatusLabel(
+                context,
+                tunnelConnected = true,
+                json = """{"state":"refused","refusal":"clock_skew","retry_in_secs":30}""",
             ),
         )
     }

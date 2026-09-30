@@ -719,8 +719,11 @@
     <string name="abuse_category_phishing">phishing</string>
     <string name="abuse_category_csam">materiaal van seksueel misbruik van kinderen</string>
     <string name="abuse_category_other">overig</string>
-    <string name="tunnel_natpmp_status_refused_no_entitlement">Status: geen poortrecht meer over, opnieuw proberen over %1$ss</string>
+    <string name="tunnel_natpmp_status_refused_no_entitlement">Status: poortrecht niet beschikbaar, opnieuw proberen over %1$ss</string>
     <string name="tunnel_natpmp_status_refused_entitlement">Status: geweigerd, opnieuw proberen over %1$ss</string>
+    <string name="tunnel_natpmp_status_refused_clock_off">Status: de klok van dit apparaat loopt verkeerd, zet automatische tijd aan</string>
+    <string name="tunnel_natpmp_status_refused_clock_ahead">Status: de klok van dit apparaat loopt %1$d s voor, zet automatische tijd aan</string>
+    <string name="tunnel_natpmp_status_refused_clock_behind">Status: de klok van dit apparaat loopt %1$d s achter, zet automatische tijd aan</string>
     <string name="network_stats_load_low">Lage belasting</string>
     <string name="network_stats_load_moderate">Gemiddelde belasting</string>
     <string name="network_stats_load_high">Hoge belasting</string>
