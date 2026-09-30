@@ -49,6 +49,7 @@
     <ClCompile Include="rules\includeonly\blockoutsidetunnel.cpp" />
     <ClCompile Include="rules\includeonly\blocksystemresolver.cpp" />
     <ClCompile Include="rules\multi\permitendpoint.cpp" />
+    <ClCompile Include="rules\multi\permittailnet.cpp" />
     <ClCompile Include="rules\persistent\blockall.cpp" />
     <ClCompile Include="rules\shared.cpp" />
     <ClCompile Include="sessioncontroller.cpp" />
@@ -89,6 +90,7 @@
     <ClInclude Include="rules\includeonly\blockoutsidetunnel.h" />
     <ClInclude Include="rules\includeonly\blocksystemresolver.h" />
     <ClInclude Include="rules\multi\permitendpoint.h" />
+    <ClInclude Include="rules\multi\permittailnet.h" />
     <ClInclude Include="rules\persistent\blockall.h" />
     <ClInclude Include="rules\ports.h" />
     <ClInclude Include="rules\shared.h" />

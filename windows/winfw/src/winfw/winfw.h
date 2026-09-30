@@ -186,7 +186,9 @@ WinFw_ApplyPolicyConnecting(
 	size_t relayClientLen,
 	const wchar_t *tunnelInterfaceAlias,
 	const WinFwAllowedEndpoint *allowedEndpoint,
-	const WinFwAllowedTunnelTraffic *allowedTunnelTraffic
+	const WinFwAllowedTunnelTraffic *allowedTunnelTraffic,
+	const wchar_t * const *tailnetInterfaceAliases,
+	size_t numTailnetInterfaces
 );
 
 //
@@ -198,6 +200,7 @@ WinFw_ApplyPolicyConnecting(
 // - Non-DNS traffic inside the VPN tunnel
 // - DNS requests inside the VPN tunnel to any server in 'tunnelDnsServers'
 // - DNS requests outside the VPN tunnel to any server in 'nonTunnelDnsServers'
+// - Tailnet traffic on each Tailscale adapter in 'tailnetInterfaceAliases'
 //
 // Parameters:
 //
@@ -228,7 +231,9 @@ WinFw_ApplyPolicyConnected(
 	size_t numTunnelDnsServers,
 	const wchar_t * const *nonTunnelDnsServers,
 	size_t numNonTunnelDnsServers,
-	bool allowExternalDns
+	bool allowExternalDns,
+	const wchar_t * const *tailnetInterfaceAliases,
+	size_t numTailnetInterfaces
 );
 
 //

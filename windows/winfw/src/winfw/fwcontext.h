@@ -32,7 +32,8 @@ public:
 		const std::vector<std::wstring> &relayClients,
 		const std::optional<std::wstring> &tunnelInterfaceAlias,
 		const std::optional<WinFwAllowedEndpoint> &allowedEndpoint,
-		const WinFwAllowedTunnelTraffic &allowedTunnelTraffic
+		const WinFwAllowedTunnelTraffic &allowedTunnelTraffic,
+		const std::vector<std::wstring> &tailnetInterfaceAliases
 	);
 
 	bool applyPolicyConnected
@@ -44,7 +45,8 @@ public:
 		const std::wstring &tunnelInterfaceAlias,
 		const std::vector<wfp::IpAddress> &tunnelDnsServers,
 		const std::vector<wfp::IpAddress> &nonTunnelDnsServers,
-		bool allowExternalDns
+		bool allowExternalDns,
+		const std::vector<std::wstring> &tailnetInterfaceAliases
 	);
 
 	bool applyPolicyBlocked(

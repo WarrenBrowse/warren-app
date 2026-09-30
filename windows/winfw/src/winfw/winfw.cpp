@@ -200,6 +200,39 @@ WinFw_Initialize(
 	return true;
 }
 
+
+namespace
+{
+
+//
+// The Tailscale adapter aliases the caller names, if any. A null array is only
+// valid with a zero count.
+//
+std::vector<std::wstring> TailnetAliases(const wchar_t * const *aliases, size_t count)
+{
+	if (0 != count && nullptr == aliases)
+	{
+		THROW_ERROR("Invalid argument: tailnetInterfaceAliases");
+	}
+
+	std::vector<std::wstring> result;
+	result.reserve(count);
+
+	for (size_t i = 0; i < count; i++)
+	{
+		if (nullptr == aliases[i])
+		{
+			THROW_ERROR("Invalid argument: tailnetInterfaceAliases");
+		}
+
+		result.emplace_back(aliases[i]);
+	}
+
+	return result;
+}
+
+} // anonymous namespace
+
 extern "C"
 WINFW_LINKAGE
 bool
@@ -353,7 +386,9 @@ WinFw_ApplyPolicyConnecting(
 	size_t relayClientsLen,
 	const wchar_t *tunnelInterfaceAlias,
 	const WinFwAllowedEndpoint *allowedEndpoint,
-	const WinFwAllowedTunnelTraffic *allowedTunnelTraffic
+	const WinFwAllowedTunnelTraffic *allowedTunnelTraffic,
+	const wchar_t * const *tailnetInterfaceAliases,
+	size_t numTailnetInterfaces
 )
 {
 	if (nullptr == g_fwContext)
@@ -414,7 +449,8 @@ WinFw_ApplyPolicyConnecting(
 			relayClientWstrings,
 			tunnelInterfaceAlias != nullptr ? std::make_optional(tunnelInterfaceAlias) : std::nullopt,
 			MakeOptional(allowedEndpoint),
-			*allowedTunnelTraffic
+			*allowedTunnelTraffic,
+			TailnetAliases(tailnetInterfaceAliases, numTailnetInterfaces)
 		) ? WINFW_POLICY_STATUS_SUCCESS : WINFW_POLICY_STATUS_GENERAL_FAILURE;
 	}
 	catch (common::error::WindowsException &err)
@@ -451,7 +487,9 @@ WinFw_ApplyPolicyConnected(
 	size_t numTunnelDnsServers,
 	const wchar_t * const *nonTunnelDnsServers,
 	size_t numNonTunnelDnsServers,
-	bool allowExternalDns
+	bool allowExternalDns,
+	const wchar_t * const *tailnetInterfaceAliases,
+	size_t numTailnetInterfaces
 )
 {
 	if (nullptr == g_fwContext)
@@ -562,7 +600,8 @@ WinFw_ApplyPolicyConnected(
 			tunnelInterfaceAlias,
 			convertedTunnelDnsServers,
 			convertedNonTunnelDnsServers,
-			allowExternalDns
+			allowExternalDns,
+			TailnetAliases(tailnetInterfaceAliases, numTailnetInterfaces)
 		) ? WINFW_POLICY_STATUS_SUCCESS : WINFW_POLICY_STATUS_GENERAL_FAILURE;
 	}
 	catch (common::error::WindowsException &err)

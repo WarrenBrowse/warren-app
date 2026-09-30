@@ -162,6 +162,8 @@ unsafe extern "system" {
         tunnelIfaceAlias: *const libc::wchar_t,
         allowedEndpoint: *const WinFwAllowedEndpoint<'_>,
         allowedTunnelTraffic: &WinFwAllowedTunnelTraffic,
+        tailnetIfaceAliases: *const *const libc::wchar_t,
+        numTailnetIfaces: usize,
     ) -> WinFwPolicyStatus;
 
     #[link_name = "WinFw_ApplyPolicyConnected"]
@@ -178,6 +180,8 @@ unsafe extern "system" {
         nonTunnelDnsServers: *const *const libc::wchar_t,
         numNonTunnelDnsServers: usize,
         allowExternalDns: bool,
+        tailnetIfaceAliases: *const *const libc::wchar_t,
+        numTailnetIfaces: usize,
     ) -> WinFwPolicyStatus;
 
     #[link_name = "WinFw_ApplyPolicyBlocked"]

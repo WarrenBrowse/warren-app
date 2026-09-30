@@ -67,7 +67,7 @@ impl DisconnectingState {
                 shared_values.set_lockdown_mode(lockdown_mode);
                 let _ = complete_tx.send(());
             }
-            #[cfg(any(target_os = "macos", target_os = "linux"))]
+            #[cfg(any(target_os = "macos", target_os = "linux", windows))]
             Some(TunnelCommand::TailnetInterfacesChanged) => {}
             Some(TunnelCommand::Connectivity(connectivity)) => {
                 shared_values.connectivity = connectivity;

@@ -542,6 +542,7 @@ fn apply_connected(include_only: bool) {
         &WinFwSettings::connected(true, include_only),
         "Loopback Pseudo-Interface 1",
         &dns,
+        &[],
     )
     .expect("connected policy");
 }

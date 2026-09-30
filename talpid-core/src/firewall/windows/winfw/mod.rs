@@ -169,7 +169,14 @@ pub(super) fn apply_policy_connecting(
     tunnel_interface: Option<&str>,
     allowed_endpoint: AllowedEndpoint,
     allowed_tunnel_traffic: &AllowedTunnelTraffic,
+    tailnet_interfaces: &[String],
 ) -> Result<(), FirewallPolicyError> {
+    // SAFETY: must stay allocated until `WinFw_ApplyPolicyConnecting` has returned.
+    let tailnet_wstrs: Vec<WideCString> = tailnet_interfaces
+        .iter()
+        .map(WideCString::from_str_truncate)
+        .collect();
+    let tailnet_ptrs: Vec<*const u16> = tailnet_wstrs.iter().map(|w| w.as_ptr()).collect();
     let mut winfw_relays = vec![];
     let mut ip_strs = vec![];
     let mut clients = None;
@@ -281,6 +288,8 @@ pub(super) fn apply_policy_connecting(
             interface_wstr_ptr,
             &raw const allowed_endpoint,
             &allowed_tunnel_traffic,
+            tailnet_ptrs.as_ptr(),
+            tailnet_ptrs.len(),
         )
     };
     // SAFETY: All of these must remain allocated until `WinFw_ApplyPolicyConnecting` has returned.
@@ -294,6 +303,7 @@ pub(super) fn apply_policy_connecting(
     drop(exit_endpoint_ip_wstr);
     drop(winfw_relays);
     drop(ip_strs);
+    drop(tailnet_wstrs);
     res.into_result()
 }
 
@@ -303,7 +313,14 @@ pub(super) fn apply_policy_connected(
     winfw_settings: &WinFwSettings,
     tunnel_interface: &str,
     dns_config: &talpid_dns::ResolvedDnsConfig,
+    tailnet_interfaces: &[String],
 ) -> Result<(), FirewallPolicyError> {
+    // SAFETY: must stay allocated until `WinFw_ApplyPolicyConnected` has returned.
+    let tailnet_wstrs: Vec<WideCString> = tailnet_interfaces
+        .iter()
+        .map(WideCString::from_str_truncate)
+        .collect();
+    let tailnet_ptrs: Vec<*const u16> = tailnet_wstrs.iter().map(|w| w.as_ptr()).collect();
     let mut winfw_relays = vec![];
     let mut ip_strs = vec![];
     let mut clients = None;
@@ -383,6 +400,8 @@ pub(super) fn apply_policy_connected(
             non_tunnel_dns_servers.as_ptr(),
             non_tunnel_dns_servers.len(),
             dns_config.allow_external_dns(),
+            tailnet_ptrs.as_ptr(),
+            tailnet_ptrs.len(),
         )
     };
 
@@ -391,6 +410,7 @@ pub(super) fn apply_policy_connected(
     drop(ip_strs);
     drop(winfw_relays);
     drop(relay_client_wstrs);
+    drop(tailnet_wstrs);
     result.into_result()
 }
 

@@ -311,6 +311,7 @@ impl Firewall {
     ) -> Result<(), Error> {
         log::trace!("Applying 'connecting' firewall policy");
         let tunnel_interface = tunnel_metadata.map(|metadata| metadata.interface.as_ref());
+        let tailnet = tunnel_interface.map(tailnet_interfaces).unwrap_or_default();
         winfw::apply_policy_connecting(
             peer_endpoints,
             exit_endpoint_ip,
@@ -318,6 +319,7 @@ impl Firewall {
             tunnel_interface,
             allowed_endpoint,
             allowed_tunnel_traffic,
+            &tailnet,
         )
         .map_err(Error::ApplyingConnectingPolicy)
     }
@@ -338,6 +340,7 @@ impl Firewall {
             winfw_settings,
             tunnel_interface,
             dns_config,
+            &tailnet_interfaces(tunnel_interface),
         )
         .map_err(Error::ApplyingConnectedPolicy)
     }
@@ -457,6 +460,13 @@ fn with_wmi_if_enabled(f: impl FnOnce(&wmi::WMIConnection)) {
             f(con)
         }
     })
+}
+
+/// The Tailscale adapters coexisting with the tunnel `own`, read from the host now.
+fn tailnet_interfaces(own: &str) -> Vec<String> {
+    super::tailnet::current_coexisting_tailnet_interfaces(Some(own))
+        .into_iter()
+        .collect()
 }
 
 #[cfg(test)]

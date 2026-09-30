@@ -21,6 +21,7 @@
 #include "rules/dns/permittunnel.h"
 #include "rules/dns/permitnontunnel.h"
 #include "rules/multi/permitendpoint.h"
+#include "rules/multi/permittailnet.h"
 #include "rules/includeonly/blockoutsidetunnel.h"
 #include "rules/includeonly/blocksystemresolver.h"
 #include <libwfp/transaction.h>
@@ -209,7 +210,8 @@ bool FwContext::applyPolicyConnecting
 	const std::vector<std::wstring> &relayClients,
 	const std::optional<std::wstring> &tunnelInterfaceAlias,
 	const std::optional<WinFwAllowedEndpoint> &allowedEndpoint,
-	const WinFwAllowedTunnelTraffic &allowedTunnelTraffic
+	const WinFwAllowedTunnelTraffic &allowedTunnelTraffic,
+	const std::vector<std::wstring> &tailnetInterfaceAliases
 )
 {
 	Ruleset ruleset;
@@ -301,6 +303,11 @@ bool FwContext::applyPolicyConnecting
 			}
 			// For the "None" case, do nothing.
 		}
+
+		for (const auto &alias : tailnetInterfaceAliases)
+		{
+			ruleset.emplace_back(std::make_unique<multi::PermitTailnet>(alias));
+		}
 	}
 
 	return applyPolicy(std::move(ruleset), tunnelInterfaceAlias, Policy::Connecting);
@@ -315,7 +322,8 @@ bool FwContext::applyPolicyConnected
 	const std::wstring &tunnelInterfaceAlias,
 	const std::vector<wfp::IpAddress> &tunnelDnsServers,
 	const std::vector<wfp::IpAddress> &nonTunnelDnsServers,
-	bool allowExternalDns
+	bool allowExternalDns,
+	const std::vector<std::wstring> &tailnetInterfaceAliases
 )
 {
 	Ruleset ruleset;
@@ -354,6 +362,11 @@ bool FwContext::applyPolicyConnected
 		std::nullopt,
 		exitEndpointIp
 	));
+
+	for (const auto &alias : tailnetInterfaceAliases)
+	{
+		ruleset.emplace_back(std::make_unique<multi::PermitTailnet>(alias));
+	}
 
 	if (settings.permitNonTunnelIpv4)
 	{

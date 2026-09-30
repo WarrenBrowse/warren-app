@@ -10,13 +10,15 @@
 
 use std::collections::BTreeSet;
 use std::io;
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr};
+use std::net::{IpAddr, Ipv6Addr};
 
-use ipnetwork::{IpNetwork, Ipv4Network, Ipv6Network};
+use ipnetwork::{IpNetwork, Ipv6Network};
 
+#[cfg(any(target_os = "macos", target_os = "linux", test))]
 /// The Tailscale IPv4 range (the CGNAT block, 100.64.0.0/10).
-pub const TAILNET_V4: IpNetwork =
-    IpNetwork::V4(Ipv4Network::new_checked(Ipv4Addr::new(100, 64, 0, 0), 10).unwrap());
+pub const TAILNET_V4: IpNetwork = IpNetwork::V4(
+    ipnetwork::Ipv4Network::new_checked(std::net::Ipv4Addr::new(100, 64, 0, 0), 10).unwrap(),
+);
 
 /// The Tailscale IPv6 range (fd7a:115c:a1e0::/48).
 pub const TAILNET_V6: IpNetwork = IpNetwork::V6(
@@ -39,6 +41,7 @@ pub struct HostInterface {
     pub addresses: Vec<IpAddr>,
 }
 
+#[cfg(any(target_os = "macos", target_os = "linux", test))]
 /// Direction of a [`TailnetPass`], seen from the host.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PassDirection {
@@ -48,6 +51,7 @@ pub enum PassDirection {
     In,
 }
 
+#[cfg(any(target_os = "macos", target_os = "linux", test))]
 /// One allowance: traffic on `interface` in `direction` with the far end inside `net`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TailnetPass {
@@ -82,6 +86,7 @@ pub fn coexisting_tailnet_interfaces(
         .collect()
 }
 
+#[cfg(any(target_os = "macos", target_os = "linux", test))]
 /// The allowances for `interfaces`: both directions of both ranges, on each interface.
 pub fn tailnet_passes(interfaces: &BTreeSet<String>) -> Vec<TailnetPass> {
     let mut passes = Vec::with_capacity(interfaces.len() * 4);
@@ -124,6 +129,16 @@ impl SetTracker {
 #[cfg(target_os = "macos")]
 fn is_tunnel_device(name: &str) -> bool {
     name.starts_with(TUNNEL_INTERFACE_PREFIX)
+}
+
+/// A Windows adapter that is a tunnel: a virtual one (not backed by hardware) of the virtual,
+/// tunnel or PPP kind. Tailscale's Wintun adapter reports the virtual kind, as Warren's own does.
+#[cfg(any(windows, test))]
+fn is_windows_tunnel(if_type: u32, hardware: bool) -> bool {
+    const IF_TYPE_PPP: u32 = 23;
+    const IF_TYPE_PROP_VIRTUAL: u32 = 53;
+    const IF_TYPE_TUNNEL: u32 = 131;
+    !hardware && matches!(if_type, IF_TYPE_PPP | IF_TYPE_PROP_VIRTUAL | IF_TYPE_TUNNEL)
 }
 
 /// A TUN device: the kernel exposes `tun_flags` for those alone, whatever they are named.
@@ -217,6 +232,52 @@ pub fn apply_linux_routes(interface: Option<&str>) -> io::Result<()> {
 }
 
 /// Reads the host's interfaces, one entry per interface name.
+#[cfg(windows)]
+pub fn read_host_interfaces() -> io::Result<Vec<HostInterface>> {
+    use std::collections::BTreeMap;
+    use windows_sys::Win32::NetworkManagement::IpHelper::{GetIfEntry2, MIB_IF_ROW2};
+    use windows_sys::Win32::NetworkManagement::Ndis::IfOperStatusUp;
+
+    let mut by_luid: BTreeMap<u64, HostInterface> = BTreeMap::new();
+    for row in talpid_windows::net::get_unicast_table(None)? {
+        let Ok(address) = talpid_windows::net::try_socketaddr_from_inet_sockaddr(row.Address)
+        else {
+            continue;
+        };
+        // SAFETY: every variant of the LUID union is a plain 64-bit value.
+        let key = unsafe { row.InterfaceLuid.Value };
+        if let std::collections::btree_map::Entry::Vacant(vacant) = by_luid.entry(key) {
+            let Ok(alias) = talpid_windows::net::alias_from_luid(&row.InterfaceLuid) else {
+                continue;
+            };
+            // SAFETY: a zeroed row is a valid input once its LUID is set.
+            let mut entry: MIB_IF_ROW2 = unsafe { std::mem::zeroed() };
+            entry.InterfaceLuid = row.InterfaceLuid;
+            // SAFETY: `entry` is a valid, writable row for the duration of the call.
+            let (up, tunnel) = if unsafe { GetIfEntry2(&raw mut entry) } == 0 {
+                let hardware = entry.InterfaceAndOperStatusFlags._bitfield & 1 != 0;
+                (
+                    entry.OperStatus == IfOperStatusUp,
+                    is_windows_tunnel(entry.Type, hardware),
+                )
+            } else {
+                (false, false)
+            };
+            vacant.insert(HostInterface {
+                name: alias.to_string_lossy().into_owned(),
+                up,
+                tunnel,
+                addresses: Vec::new(),
+            });
+        }
+        if let Some(interface) = by_luid.get_mut(&key) {
+            interface.addresses.push(address.ip());
+        }
+    }
+    Ok(by_luid.into_values().collect())
+}
+
+#[cfg(unix)]
 pub fn read_host_interfaces() -> io::Result<Vec<HostInterface>> {
     use nix::net::if_::InterfaceFlags;
     use std::collections::BTreeMap;
@@ -266,6 +327,18 @@ mod tests {
             tunnel: name.starts_with("utun") || name.starts_with("tailscale"),
             addresses: addresses.iter().map(|a| a.parse().unwrap()).collect(),
         }
+    }
+
+    #[test]
+    fn only_a_virtual_tunnel_adapter_counts_as_a_tunnel_on_windows() {
+        assert!(
+            is_windows_tunnel(53, false),
+            "Wintun, Tailscale's and Warren's"
+        );
+        assert!(is_windows_tunnel(131, false));
+        assert!(!is_windows_tunnel(6, false), "Ethernet");
+        assert!(!is_windows_tunnel(71, false), "Wi-Fi");
+        assert!(!is_windows_tunnel(53, true), "backed by hardware");
     }
 
     #[test]

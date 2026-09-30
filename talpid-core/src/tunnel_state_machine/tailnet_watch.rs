@@ -20,9 +20,9 @@ use crate::firewall::tailnet::SetTracker;
 /// up, then assigns its addresses, then adds routes, each announced separately.
 pub(super) const SETTLE: Duration = Duration::from_millis(500);
 
-/// How often Linux looks at its interfaces, for want of an event source here.
-#[cfg(target_os = "linux")]
-pub(super) const LINUX_POLL: Duration = Duration::from_secs(2);
+/// How often Linux and Windows look at their interfaces, for want of an event source here.
+#[cfg(any(target_os = "linux", windows))]
+pub(super) const INTERFACE_POLL: Duration = Duration::from_secs(2);
 
 /// The longest a steady stream of events can postpone a read.
 const LONGEST_SETTLE: Duration = Duration::from_secs(5);

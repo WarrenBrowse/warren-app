@@ -9,7 +9,7 @@ use talpid_tunnel::TunnelMetadata;
 use talpid_types::net::{ALLOWED_LAN_NETS, AllowedEndpoint, AllowedTunnelTraffic};
 
 /// Tailscale interfaces coexisting with the tunnel
-#[cfg(any(target_os = "macos", target_os = "linux"))]
+#[cfg(any(target_os = "macos", target_os = "linux", windows))]
 pub(crate) mod tailnet;
 
 cfg_if::cfg_if! {

@@ -233,7 +233,7 @@ impl TunnelState for DisconnectedState {
                 }
             }
             // Blocked and disconnected policies carry no tailnet rules.
-            #[cfg(any(target_os = "macos", target_os = "linux"))]
+            #[cfg(any(target_os = "macos", target_os = "linux", windows))]
             Some(TunnelCommand::TailnetInterfacesChanged) => SameState(self),
             Some(TunnelCommand::Connectivity(connectivity)) => {
                 shared_values.connectivity = connectivity;
