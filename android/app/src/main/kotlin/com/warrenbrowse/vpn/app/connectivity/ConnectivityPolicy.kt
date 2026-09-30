@@ -12,15 +12,17 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 
 /**
- * The address families the fleet's entry hops publish, as reported by
- * `WarrenJni.directoryDialableFamilies` over the verified directory.
+ * The address families the entries a dial may use publish, as reported by
+ * `WarrenJni.circuitEntryFamilies` over the verified directory: the pinned
+ * entry country's nodes, or the exit itself on a one-hop circuit.
  *
  * It exists because "this network cannot dial a relay" is a comparison between
  * two sets, and the app used to hardcode one of them: relays were IPv4, so an
- * IPv6-only network was declared hopeless. That was true of every deployment
- * until a node bound a v6 listener, and it cost an IPv6-only mobile network
- * every connection it attempted
- * (`incidents/2026-09-20-an-ipv6-only-mobile-network-*`).
+ * IPv6-only network was declared hopeless
+ * (`incidents/2026-09-20-an-ipv6-only-mobile-network-*`). Measured over the
+ * whole fleet instead, one dual-stack node anywhere made every network look
+ * dialable, and the precise cause never fired while the entries the dial could
+ * take published IPv4 only (topic 210).
  */
 @JvmInline
 value class RelayFamilies(val mask: Int) {
@@ -49,9 +51,9 @@ value class RelayFamilies(val mask: Int) {
 
 /**
  * Whether a Warren relay dial can succeed on this connectivity, given the
- * families [relays] actually publishes.
+ * families the candidate entries [relays] actually publish.
  *
- * An online edge that shares no family with the fleet must not start a connect
+ * An online edge that shares no family with those entries must not start a connect
  * cycle that can only fail: on such a network `sendmsg` answers `ENETUNREACH`
  * at the first packet and every retry repeats it. An edge that shares one is
  * dialed, and which of the two addresses gets used is then the engine's

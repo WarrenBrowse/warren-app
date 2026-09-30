@@ -69,6 +69,7 @@ class WarrenQuinnAdapterTest {
         const val STATUS_UNAUTHORIZED = 4
         const val STATUS_BANNED = 6
         const val STATUS_DEVICE_LIMIT = 7
+        const val STATUS_NO_REACHABLE_ENTRY = 8
 
         const val SELF_PACKAGE = "com.warrenbrowse.vpn.test"
 
@@ -270,7 +271,7 @@ class WarrenQuinnAdapterTest {
         /** What the fleet publishes; a test drives an IPv6-serving fleet by setting it. */
         var families: RelayFamilies = RelayFamilies.V4_ONLY
 
-        override fun relayFamilies(directoryRaw: String?): RelayFamilies = families
+        override fun relayFamilies(config: WarrenTunnelConfig): RelayFamilies = families
 
         /** What `getBanVerdict` answers after a `Banned` edge. */
         @Volatile
@@ -582,6 +583,46 @@ class WarrenQuinnAdapterTest {
             unmockkStatic(SystemClock::class)
         }
     }
+
+    /**
+     * The engine's own verdict (topic 210): the kernel routes none of the
+     * entries this circuit may use. The phone browses fine, so the block must
+     * say the network is the cause, and a redial on the same network would
+     * only meet the same verdict: the retry waits for the network to change,
+     * then dials again.
+     */
+    @Test
+    fun `ensure a network that routes no entry is named and redialed only once it changes`() =
+        runTest {
+            mockkStatic(SystemClock::class)
+            every { SystemClock.elapsedRealtime() } returns 0L
+            try {
+                val platform = RecordingPlatform()
+                val connectivity =
+                    MutableStateFlow<Connectivity>(Connectivity.Online(IpAvailability.Ipv6))
+                platform.families = RelayFamilies(RelayFamilies.IPV4 or RelayFamilies.IPV6)
+                val adapter =
+                    adapterWith(platform, dropRetryGraceMs = 0L, connectivity = connectivity)
+                platform.statusOnConnect = STATUS_NO_REACHABLE_ENTRY
+                adapter.connect(config(), Mnemonic(PHRASE))
+
+                awaitReal("the block must name the network") {
+                    val state = adapter.state.value
+                    state is WarrenTunnelState.Blocking && state.noDialableNetwork
+                }
+                Thread.sleep(300)
+                assertEquals(1, platform.configs.size, "no redial on the same network")
+
+                platform.statusOnConnect = STATUS_CONNECTED
+                connectivity.value = Connectivity.Online(IpAvailability.Ipv4AndIpv6)
+                awaitReal("the retry must dial once the network changed") {
+                    adapter.state.value is WarrenTunnelState.Connected && platform.configs.size == 2
+                }
+                adapter.disconnect()
+            } finally {
+                unmockkStatic(SystemClock::class)
+            }
+        }
 
     /**
      * The other park, and the one topic 210 actually hit first: the handover

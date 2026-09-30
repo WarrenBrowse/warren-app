@@ -40,11 +40,12 @@ sealed class ErrorStateCause {
     data object WarrenTrafficReleased : ErrorStateCause()
 
     /**
-     * The device is online and its network carries no address family a Warren
-     * entry point can be dialed on (an IPv6-only mobile network: every entry
-     * endpoint is an IPv4 literal). The retry loop is parked and the kill
-     * switch is holding the traffic, so this is the one blocked state waiting
-     * cannot end: the user changes network or disconnects. Distinct from
+     * The device is online and its network carries no address family any
+     * entry the circuit may use can be dialed on (an IPv6-only mobile network
+     * with an entry country whose servers publish IPv4 only, topic 210). The
+     * retry loop is parked and the kill switch is holding the traffic, so this
+     * is the one blocked state waiting cannot end: the user changes network,
+     * picks another entry country or location, or disconnects. Distinct from
      * [IsOffline], which would be a lie here (the phone browses normally).
      */
     data object WarrenNoDialableNetwork : ErrorStateCause()

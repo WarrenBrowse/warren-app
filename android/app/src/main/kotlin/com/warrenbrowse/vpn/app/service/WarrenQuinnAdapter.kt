@@ -314,7 +314,7 @@ class WarrenQuinnAdapter(
         userInitiatedDisconnect = false
         handoverNotified = false
         activeConfig = config
-        relayFamilies = platform.relayFamilies(config.multihopDirectoryRaw)
+        relayFamilies = platform.relayFamilies(config)
         if (mnemonic !== activeMnemonic) {
             activeMnemonic?.close()
             activeMnemonic = mnemonic
@@ -494,6 +494,20 @@ class WarrenQuinnAdapter(
                                 _state.value = WarrenTunnelState.Disconnected
                             } else {
                                 onSessionDeviceLimited(sessionConfig)
+                            }
+                        }
+                        break
+                    }
+                    if (code == STATUS_NO_REACHABLE_ENTRY) {
+                        // The engine's kernel probe found no entry this
+                        // network routes (topic 210). Blocked like any drop,
+                        // under its own cause, and redialed once the network
+                        // changes: the same network meets the same verdict.
+                        lock.withLock {
+                            if (userInitiatedDisconnect) {
+                                _state.value = WarrenTunnelState.Disconnected
+                            } else {
+                                onNoReachableEntry(sessionConfig)
                             }
                         }
                         break
@@ -873,6 +887,27 @@ class WarrenQuinnAdapter(
     }
 
     /**
+     * Handle the engine finding no entry this network routes: every entry the
+     * circuit may use publishes only address families the network does not
+     * carry. Blocked as any unexpected drop is, never counted as a flap (the
+     * tunnel did not flap, the network cannot carry it), and named, since the
+     * phone browses normally and a generic block reads as a Warren outage.
+     * The redial waits for the network to change. Must be called holding
+     * [lock].
+     */
+    private fun onNoReachableEntry(config: WarrenTunnelConfig) {
+        _natPmpStatus.value = NATPMP_IDLE
+        _appRoutesStatus.value = APP_ROUTES_NONE
+        _effectiveMtu.value = null
+        Logger.w("WarrenQuinnAdapter: no entry reachable on this network; blocking")
+        enterBlockingMode(config, NO_DIALABLE_NETWORK)
+        (_state.value as? WarrenTunnelState.Blocking)?.let {
+            _state.value = it.copy(noDialableNetwork = true)
+        }
+        scheduleDropReconnect(config, afterNetworkChange = true)
+    }
+
+    /**
      * Handle a suspended wallet (warren-core doc 105), the way [onSessionExpired]
      * handles a lapsed one: never a reconnect, the kill switch kept under
      * lockdown, traffic released otherwise. The state carries the verdict's
@@ -933,12 +968,23 @@ class WarrenQuinnAdapter(
      * new tunnel (it calls [exitBlockingMode] on success), so there is no
      * leak window between attempts. Repeated failures re-enter blocking via
      * [onSessionDown], forming a bounded retry loop.
+     *
+     * [afterNetworkChange] first waits for the connectivity to differ from
+     * what it is now, for a failure the same network can only repeat.
      */
-    private fun scheduleDropReconnect(config: WarrenTunnelConfig) {
+    private fun scheduleDropReconnect(
+        config: WarrenTunnelConfig,
+        afterNetworkChange: Boolean = false,
+    ) {
         val mnemonic = activeMnemonic ?: return
+        val parkedOn = connectivity.value
         pendingHandover?.cancel()
         pendingHandover = scope.launch {
             autoRecovery.armAutomation()
+            if (afterNetworkChange) {
+                connectivity.first { it != parkedOn }
+                Logger.i("WarrenQuinnAdapter: the network changed; dialing again")
+            }
             delay(dropRetryGraceMs)
             awaitDialableNetwork()
             // Resolved after the wait, on the catalogue as it stands then: the
@@ -1186,7 +1232,7 @@ class WarrenQuinnAdapter(
         val relays = relayFamilies
         if (connectivity.value.canDialRelay(relays)) return
         Logger.i(
-            "WarrenQuinnAdapter: no dialable network (offline or IPv6-only); " +
+            "WarrenQuinnAdapter: no dialable network (offline, or no family the entries publish); " +
                 "waiting for the online edge before reconnecting"
         )
         val parkedOver = nameTheParkedNetwork()
@@ -1306,6 +1352,10 @@ class WarrenQuinnAdapter(
         // The account already uses its maximum number of simultaneous
         // devices. Mirrors `warren_jni::redial::SessionStatus::DeviceLimit`.
         const val STATUS_DEVICE_LIMIT = 7
+
+        // This network routes none of the entries the circuit may use.
+        // Mirrors `warren_jni::redial::SessionStatus::NoReachableEntry`.
+        const val STATUS_NO_REACHABLE_ENTRY = 8
 
         // The auth-failed token opening it is what ConnectionProxy maps to
         // `AuthFailedError.TooManyConnections`, as the desktop daemon does.

@@ -168,6 +168,7 @@ impl Planner {
             entry_country: self.main.entry_country.as_deref(),
             main_exit: self.main.main_exit,
             drained: &self.drained,
+            reachable: crate::app_routes_plan::engine_entry_probe,
         };
         let planned = if self.attributable {
             plan(&self.exits, Some(&inputs), &self.circuits)

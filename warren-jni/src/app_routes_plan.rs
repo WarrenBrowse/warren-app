@@ -23,6 +23,24 @@ use warren_discovery_core::{ExitCandidate, NodeEntry, VerifiedMultiHopDirectory,
 
 use crate::circuit_select::{NodeSel, select_circuit_indices};
 
+/// Which of `candidates` (directory indices of entry nodes, in order of
+/// preference) this host's network can route, in the same order.
+pub(crate) type EntryProbe = fn(&VerifiedMultiHopDirectory, &[usize]) -> Vec<usize>;
+
+/// The production [`EntryProbe`]: the engine's kernel probe, from the
+/// wildcard bind every route session dials with, through the same
+/// `VpnService.protect` escape as its carrier socket.
+pub(crate) fn engine_entry_probe(
+    dir: &VerifiedMultiHopDirectory,
+    candidates: &[usize],
+) -> Vec<usize> {
+    crate::circuit_select::probe_reachable(
+        |i| &dir.nodes[i].relay,
+        candidates,
+        std::net::SocketAddr::from((std::net::Ipv4Addr::UNSPECIFIED, 0)),
+    )
+}
+
 /// One app's country, as Kotlin sends it (`AppExit` in `lib/model`): the
 /// package name, an ISO 3166-1 alpha-2 country, and the relay list's city
 /// name or none for any city.
@@ -117,6 +135,10 @@ pub(crate) struct PlanInputs<'a> {
     pub main_exit: [u8; 16],
     /// Exits that announced a maintenance drain.
     pub drained: &'a [[u8; 16]],
+    /// Which entries this host's network routes: a route session dials its
+    /// entry from the same network as the main one, so an entry the network
+    /// cannot route is left out the way the main session leaves it out.
+    pub reachable: EntryProbe,
 }
 
 /// Why no session can carry an exit's apps.
@@ -164,7 +186,9 @@ pub(crate) type Resolution = shared::Resolution<Unavailable>;
 pub(crate) type Planned = shared::Planned<ExitChoice, Unavailable>;
 
 /// How Android names an exit and picks one inside a choice.
-struct AndroidRules;
+struct AndroidRules {
+    reachable: EntryProbe,
+}
 
 impl PlanRules for AndroidRules {
     type Choice = ExitChoice;
@@ -217,6 +241,15 @@ impl PlanRules for AndroidRules {
             inputs.two_hop,
             None,
             inputs.entry_country,
+            |candidates| {
+                let in_dir: Vec<usize> = candidates.iter().map(|&k| usable[k]).collect();
+                let kept = (self.reachable)(dir, &in_dir);
+                candidates
+                    .iter()
+                    .copied()
+                    .filter(|&k| kept.contains(&usable[k]))
+                    .collect()
+            },
         )
         .ok()?;
         Some(circuit_of(
@@ -281,12 +314,10 @@ pub(crate) fn plan(
         main_exit: Some(inputs.main_exit),
         drained: inputs.drained,
     });
-    shared::plan(
-        &AndroidRules,
-        by_choice(exits),
-        shared_inputs.as_ref(),
-        previous,
-    )
+    let rules = AndroidRules {
+        reachable: inputs.map_or(engine_entry_probe, |inputs| inputs.reachable),
+    };
+    shared::plan(&rules, by_choice(exits), shared_inputs.as_ref(), previous)
 }
 
 /// What the user sees for each exit in force, as the JSON document
@@ -362,7 +393,13 @@ mod tests {
             entry_country: None,
             main_exit: [main_exit; 16],
             drained: &[],
+            reachable: every_entry,
         }
+    }
+
+    /// A network that routes every entry.
+    fn every_entry(_: &VerifiedMultiHopDirectory, candidates: &[usize]) -> Vec<usize> {
+        candidates.to_vec()
     }
 
     fn exit_of(route: &PlannedRoute) -> u8 {
@@ -451,6 +488,36 @@ mod tests {
         assert_eq!(circuit.relay.relay_id, [4; 16]);
         assert_eq!(circuit.exit.exit_id.as_bytes(), &[2; 16]);
         assert!(!circuit.single_node);
+    }
+
+    #[test]
+    fn a_two_hop_route_passes_over_an_entry_the_network_cannot_route() {
+        // The main session's own rule, applied to a route: Sweden, first in
+        // the directory, publishes nothing this network routes, so the route
+        // enters through the next node that can front the Berlin exit.
+        fn all_but_sweden(dir: &VerifiedMultiHopDirectory, candidates: &[usize]) -> Vec<usize> {
+            candidates
+                .iter()
+                .copied()
+                .filter(|&i| dir.nodes[i].country != "se")
+                .collect()
+        }
+        let dir = fleet();
+        let inputs = PlanInputs {
+            two_hop: true,
+            reachable: all_but_sweden,
+            ..inputs(&dir, 1)
+        };
+
+        let planned = plan(
+            &[exit("org.browser", "de", None)],
+            Some(&inputs),
+            &BTreeMap::new(),
+        );
+
+        let circuit = &planned.tunnel.routes[0].circuit;
+        assert_eq!(circuit.relay.relay_id, [3; 16], "the first routable entry");
+        assert_eq!(circuit.exit.exit_id.as_bytes(), &[2; 16]);
     }
 
     #[test]
@@ -612,6 +679,7 @@ mod tests {
             entry_country: case.entry_country.as_deref(),
             main_exit,
             drained: &case.drained,
+            reachable: every_entry,
         };
         let previous = case
             .previous

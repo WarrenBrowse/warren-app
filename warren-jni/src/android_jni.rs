@@ -36,7 +36,7 @@ use jnix::{
     jni::{
         JNIEnv,
         objects::{JClass, JObject, JString, JValue},
-        sys::{jbyteArray, jint, jlong, jstring},
+        sys::{jboolean, jbyteArray, jint, jlong, jstring},
     },
 };
 use tokio::sync::oneshot;
@@ -962,29 +962,57 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_fetchMultihopDire
     }
 }
 
-/// The address families the fleet's entry hops can be dialed on, as a bitmask
-/// (`1` IPv4, `2` IPv6, `0` nothing usable), read off the VERIFIED directory
-/// Kotlin already holds. The retry loop parks only when the device's network
-/// shares no family with this answer, so a fleet that starts binding IPv6
-/// unparks an IPv6-only network with no client change beyond this number.
+/// The address families the entries a circuit to `exit_pubkey_hex` may use
+/// publish, as a bitmask (`1` IPv4, `2` IPv6, `0` nothing usable), read off
+/// the VERIFIED directory Kotlin already holds: the pinned entry country's
+/// nodes (or every node distinct from the exit, or the exit itself on a
+/// one-hop circuit), the same candidates the dial chooses among
+/// (`crate::entry_families::candidate_families`). The retry loop parks only
+/// when the device's network shares no family with this answer, so the
+/// precise "no dialable network" cause fires whenever no candidate entry can
+/// be dialed, whatever the rest of the fleet publishes.
 ///
-/// Pure: no logger, no runtime, no network, and nothing of the directory is
-/// logged. An unverifiable or empty blob answers `0`.
+/// `entry_country` and `entry_relay_pubkey_hex` are empty for "none". Pure:
+/// no logger, no runtime, no network, and nothing of the directory is
+/// logged. An unverifiable blob or an exit it does not list answers `0`.
 #[unsafe(no_mangle)]
-pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_directoryDialableFamilies<'local>(
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_circuitEntryFamilies<'local>(
     env: JNIEnv<'local>,
     _class: JClass<'local>,
     directory_raw: JString<'local>,
+    exit_pubkey_hex: JString<'local>,
+    two_hop: jboolean,
+    entry_country: JString<'local>,
+    entry_relay_pubkey_hex: JString<'local>,
 ) -> jint {
     let jnix_env = JnixEnv::from(env);
     let raw = String::from_java(&jnix_env, directory_raw);
+    let Ok(exit) =
+        warrenguard_wire::WarrenPubkey::from_hex(&String::from_java(&jnix_env, exit_pubkey_hex))
+    else {
+        return 0;
+    };
+    let entry_country = String::from_java(&jnix_env, entry_country);
+    let want_entry = warrenguard_wire::WarrenPubkey::from_hex(&String::from_java(
+        &jnix_env,
+        entry_relay_pubkey_hex,
+    ))
+    .ok();
     let server_pins: Vec<&str> = SERVER_PUBKEY_HEX.into_iter().collect();
     match warren_discovery_core::verify_multihop_directory_any(
         &raw,
         &server_pins,
         &[crate::tunnel::WARREN_MULTIHOP_ROOT_PUBKEY_HEX],
     ) {
-        Ok(directory) => crate::entry_families::directory_families(&directory),
+        Ok(directory) => crate::entry_families::candidate_families(
+            &directory,
+            exit.as_bytes(),
+            two_hop != 0,
+            want_entry
+                .as_ref()
+                .map(warrenguard_wire::WarrenPubkey::as_bytes),
+            Some(entry_country.as_str()),
+        ),
         Err(_) => 0,
     }
 }

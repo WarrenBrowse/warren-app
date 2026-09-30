@@ -77,7 +77,7 @@ mod natpmp_refusal;
 // Multi-hop circuit selection (single-hop collapse vs distinct-entry two-hop):
 // pure index arithmetic, host-tested; the datapath that dials the chosen node
 // is Android-gated in `tunnel`.
-#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
+#[cfg(any(test, target_os = "android"))]
 mod circuit_select;
 
 // Country per app (`docs/app-routing.md` sections 2 and 3.5): which app owns a
@@ -109,6 +109,9 @@ mod circuit_retarget;
 // device's network carries instead of assuming IPv4 forever.
 #[cfg(any(test, target_os = "android"))]
 mod entry_families;
+
+#[cfg(any(test, target_os = "android"))]
+mod dial_facts;
 
 // v7 anonymous session credentials (Privacy Pass, warren-core doc 64): the per-wallet
 // token mint/refresh/stack core is host-tested with a mock transport; the

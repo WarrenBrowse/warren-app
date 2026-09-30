@@ -141,7 +141,7 @@ sealed interface WarrenConnectedInfo {
      * rather than a flap.
      *
      * [noDialableNetwork] is set while the retry is parked on a network carrying no address family
-     * a relay dial can use (an IPv6-only mobile network against an IPv4-only entry fleet). The
+     * a relay dial can use (an IPv6-only mobile network against IPv4-only candidate entries). The
      * phone has working internet, so the error must not read as "offline": waiting cannot end it.
      *
      * A [reason] opening on a `[BANNED*]` token is a suspension, as for [Failed].

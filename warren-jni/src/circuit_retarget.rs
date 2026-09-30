@@ -52,11 +52,20 @@ impl EntryRetarget {
     /// The directory index of another entry to dial the same exit through
     /// after the node carrying `refused_relay_id` refused a dial, or `None`
     /// to stay on the supervisor's backoff.
+    ///
+    /// `reachable` keeps, in order, the candidates this host's network can
+    /// route (production: [`crate::circuit_select::probe_reachable`]), so a
+    /// refusal is never answered with an entry the network cannot reach. When
+    /// the entry country has entries left and the network routes none of
+    /// them, the answer is `None`, never an entry in another country: for an
+    /// unroutable entry the supervisor then ends in `NoReachableEntry`, which
+    /// the user is shown.
     pub(crate) fn on_refusal(
         &mut self,
         nodes: &[NodeSel<'_>],
         refused_relay_id: &[u8; 16],
         now_unix: u64,
+        reachable: impl FnOnce(&[usize]) -> Vec<usize>,
     ) -> Option<usize> {
         // Only a refusal naming the entry dialed now counts: a report naming
         // any other node says nothing about the circuit in use.
@@ -69,19 +78,30 @@ impl EntryRetarget {
         });
         self.avoided.push((refused, now_unix));
         let exit_relay_id = nodes[self.exit].relay_id;
-        let usable = |i: usize| {
-            nodes[i].relay_id != exit_relay_id && !self.avoided.iter().any(|&(a, _)| a == i)
+        let usable = |i: &usize| {
+            nodes[*i].relay_id != exit_relay_id && !self.avoided.iter().any(|&(a, _)| a == *i)
         };
         let country = self
             .entry_country
             .as_deref()
             .map(str::trim)
             .filter(|c| !c.is_empty());
-        let entry = country
-            .and_then(|c| {
-                (0..nodes.len()).find(|&i| usable(i) && nodes[i].country.eq_ignore_ascii_case(c))
+        let in_country: Vec<usize> = country
+            .map(|c| {
+                (0..nodes.len())
+                    .filter(|i| usable(i) && nodes[*i].country.eq_ignore_ascii_case(c))
+                    .collect()
             })
-            .or_else(|| (0..nodes.len()).find(|&i| usable(i)))?;
+            .unwrap_or_default();
+        let candidates: Vec<usize> = if in_country.is_empty() {
+            (0..nodes.len()).filter(usable).collect()
+        } else {
+            in_country
+        };
+        if candidates.is_empty() {
+            return None;
+        }
+        let entry = *reachable(&candidates).first()?;
         self.entry = entry;
         Some(entry)
     }
@@ -153,6 +173,42 @@ mod tests {
 
     const NOW: u64 = 1_000_000;
 
+    /// A network that routes every entry.
+    fn all_reachable(candidates: &[usize]) -> Vec<usize> {
+        candidates.to_vec()
+    }
+
+    #[test]
+    fn a_refusal_is_answered_with_an_entry_this_network_routes() {
+        // Forum topic 210: after the v4-only entry proves unroutable, the
+        // next entry in directory order is v4-only too; the retarget passes
+        // over it rather than feeding the supervisor a second doomed dial.
+        let nodes = [node(1, "RO"), node(2, "FI"), node(3, "FR"), node(4, "DE")];
+        let v = views(&nodes);
+        let mut retarget = EntryRetarget::new(0, 1, None);
+
+        let got = retarget.on_refusal(&v, &[1; 16], NOW, |candidates| {
+            candidates.iter().copied().filter(|&i| i != 2).collect()
+        });
+
+        assert_eq!(got, Some(3));
+    }
+
+    #[test]
+    fn a_pinned_country_the_network_cannot_route_is_not_left_for_another() {
+        let nodes = [node(1, "FR"), node(2, "FI"), node(3, "FR"), node(4, "DE")];
+        let v = views(&nodes);
+        let mut retarget = EntryRetarget::new(0, 1, Some("fr"));
+
+        let got = retarget.on_refusal(&v, &[1; 16], NOW, |candidates| {
+            assert_eq!(candidates, &[2], "only the pinned country is offered");
+            Vec::new()
+        });
+
+        assert_eq!(got, None);
+        assert_eq!(retarget.entry(), 0);
+    }
+
     /// The session's exit announcing a maintenance drain until `deadline`.
     fn drain_notice(deadline_unix_secs: u64) -> ExitDrainNotice {
         ExitDrainNotice {
@@ -171,7 +227,7 @@ mod tests {
         let mut retarget = EntryRetarget::new(0, 1, None);
 
         assert_eq!(
-            retarget.on_refusal(&v, &[1; 16], NOW),
+            retarget.on_refusal(&v, &[1; 16], NOW, all_reachable),
             Some(2),
             "the exit stays, so does the inner address it assigned"
         );
@@ -187,7 +243,7 @@ mod tests {
         let v = views(&nodes);
         let mut retarget = EntryRetarget::new(1, 1, None);
 
-        assert_eq!(retarget.on_refusal(&v, &[2; 16], NOW), None);
+        assert_eq!(retarget.on_refusal(&v, &[2; 16], NOW, all_reachable), None);
         assert_eq!(retarget.entry(), 1);
     }
 
@@ -198,9 +254,15 @@ mod tests {
         let nodes = [node(1, "DE"), node(2, "FR"), node(3, "SE"), node(4, "NL")];
         let v = views(&nodes);
         let mut retarget = EntryRetarget::new(0, 1, None);
-        assert_eq!(retarget.on_refusal(&v, &[1; 16], NOW), Some(2));
+        assert_eq!(
+            retarget.on_refusal(&v, &[1; 16], NOW, all_reachable),
+            Some(2)
+        );
 
-        assert_eq!(retarget.on_refusal(&v, &[1; 16], NOW + 1), None);
+        assert_eq!(
+            retarget.on_refusal(&v, &[1; 16], NOW + 1, all_reachable),
+            None
+        );
     }
 
     #[test]
@@ -209,7 +271,10 @@ mod tests {
         let v = views(&nodes);
         let mut retarget = EntryRetarget::new(0, 1, Some("de"));
 
-        assert_eq!(retarget.on_refusal(&v, &[1; 16], NOW), Some(3));
+        assert_eq!(
+            retarget.on_refusal(&v, &[1; 16], NOW, all_reachable),
+            Some(3)
+        );
     }
 
     #[test]
@@ -217,14 +282,23 @@ mod tests {
         let nodes = [node(1, "DE"), node(2, "FR"), node(3, "SE")];
         let v = views(&nodes);
         let mut retarget = EntryRetarget::new(0, 1, None);
-        assert_eq!(retarget.on_refusal(&v, &[1; 16], NOW), Some(2));
+        assert_eq!(
+            retarget.on_refusal(&v, &[1; 16], NOW, all_reachable),
+            Some(2)
+        );
 
         // The replacement refuses too, while the first one is still avoided.
-        assert_eq!(retarget.on_refusal(&v, &[3; 16], NOW + 30), None);
+        assert_eq!(
+            retarget.on_refusal(&v, &[3; 16], NOW + 30, all_reachable),
+            None
+        );
 
         // Once the first refusal's window is over, that entry is back.
         let later = NOW + DRAINED_EXIT_AVOID_TTL.as_secs();
-        assert_eq!(retarget.on_refusal(&v, &[3; 16], later), Some(0));
+        assert_eq!(
+            retarget.on_refusal(&v, &[3; 16], later, all_reachable),
+            Some(0)
+        );
     }
 
     #[test]
@@ -236,7 +310,10 @@ mod tests {
         let mut retarget = EntryRetarget::new(0, 1, None);
 
         for second in 0..5 {
-            assert_eq!(retarget.on_refusal(&v, &[1; 16], NOW + second), None);
+            assert_eq!(
+                retarget.on_refusal(&v, &[1; 16], NOW + second, all_reachable),
+                None
+            );
         }
 
         assert_eq!(retarget.avoided, vec![(0, NOW + 4)]);
@@ -248,7 +325,7 @@ mod tests {
         let v = views(&nodes);
         let mut retarget = EntryRetarget::new(0, 1, None);
 
-        assert_eq!(retarget.on_refusal(&v, &[1; 16], NOW), None);
+        assert_eq!(retarget.on_refusal(&v, &[1; 16], NOW, all_reachable), None);
     }
 
     #[tokio::test(start_paused = true)]

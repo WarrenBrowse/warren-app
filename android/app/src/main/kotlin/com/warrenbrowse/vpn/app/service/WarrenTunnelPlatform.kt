@@ -104,13 +104,15 @@ interface WarrenTunnelPlatform {
     fun unregisterNetworkCallback(callback: ConnectivityManager.NetworkCallback)
 
     /**
-     * The address families the fleet's entry hops publish, read off the verified directory this
-     * session dials with. The retry loop compares them against the families the device's network
-     * carries, so "no network can reach Warren" is measured rather than assumed. A null or
-     * unverifiable directory answers [RelayFamilies.V4_ONLY], the shape every fleet had until 2026,
-     * which keeps the gate behaving as it did rather than guessing.
+     * The address families the entries [config]'s circuit may use publish, read off the verified
+     * directory it dials with (the pinned entry country's nodes, or the exit itself on a one-hop
+     * circuit). The retry loop compares them against the families the device's network carries,
+     * so "no network can reach Warren" is measured against the entries this dial could take
+     * rather than the whole fleet. A missing or unverifiable directory answers
+     * [RelayFamilies.V4_ONLY], the shape every fleet had until 2026, which keeps the gate behaving
+     * as it did rather than guessing.
      */
-    fun relayFamilies(directoryRaw: String?): RelayFamilies
+    fun relayFamilies(config: WarrenTunnelConfig): RelayFamilies
 
     /** This app's own package name. */
     val selfPackage: String
@@ -272,10 +274,18 @@ class AndroidTunnelPlatform(
         }
     }
 
-    override fun relayFamilies(directoryRaw: String?): RelayFamilies {
-        val raw = directoryRaw?.takeIf { it.isNotBlank() } ?: return RelayFamilies.V4_ONLY
-        val mask = WarrenJni.directoryDialableFamilies(raw)
-        // `0` is a directory that carries nothing dialable or did not verify.
+    override fun relayFamilies(config: WarrenTunnelConfig): RelayFamilies {
+        val raw = config.multihopDirectoryRaw?.takeIf { it.isNotBlank() } ?: return RelayFamilies.V4_ONLY
+        val mask =
+            WarrenJni.circuitEntryFamilies(
+                raw,
+                config.exitPubkeyHex,
+                config.multihopTwoHop,
+                config.entryCountry.orEmpty(),
+                config.entryHop?.relayPubkeyHex.orEmpty(),
+            )
+        // `0` is a directory that carries nothing dialable, did not verify, or
+        // does not list the exit.
         // Falling back to the historical shape keeps the gate from parking a
         // device for a fault that is not its network's.
         return if (mask == 0) RelayFamilies.V4_ONLY else RelayFamilies(mask)

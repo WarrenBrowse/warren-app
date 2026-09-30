@@ -407,6 +407,12 @@ async fn run_multi_hop_session(
     // never silently downgraded to 1-hop. `None`/older payloads default to
     // 2-hop, preserving the shipping Android behavior. Selection logic + its
     // fail-closed contract live in the host-tested `crate::circuit_select`.
+    //
+    // Among the candidates only an entry this network routes is dialed: a
+    // v4-only node listed first in the directory was the entry for every
+    // exit, and an IPv6-only network failed every connect on it (forum
+    // topic 210). The probe carries the dial socket's own protect escape.
+    let bind_addr: SocketAddr = "0.0.0.0:0".parse().expect("static bind addr");
     let two_hop = config.multihop_two_hop.unwrap_or(true);
     let views = node_views(&dir);
     let (entry_idx, exit_idx) = match crate::circuit_select::select_circuit_indices(
@@ -415,6 +421,15 @@ async fn run_multi_hop_session(
         two_hop,
         want_entry.as_ref().map(WarrenPubkey::as_bytes),
         config.entry_country.as_deref(),
+        |candidates| {
+            crate::dial_facts::record_entry_families(crate::entry_families::families_of(
+                candidates.iter().map(|&i| {
+                    let relay = &dir.nodes[i].relay;
+                    (&relay.endpoint, relay.endpoint_v6.as_ref())
+                }),
+            ));
+            crate::circuit_select::probe_reachable(|i| &dir.nodes[i].relay, candidates, bind_addr)
+        },
     ) {
         Ok(pair) => pair,
         // No-logs: state the failure category, never the exit/entry identity.
@@ -426,6 +441,15 @@ async fn run_multi_hop_session(
         Err(crate::circuit_select::CircuitSelectError::NoDistinctEntry) => {
             log::error!("multi-hop: no distinct entry relay available; failing closed");
             status.store(SessionStatus::Disconnected as i32);
+            return;
+        }
+        Err(crate::circuit_select::CircuitSelectError::NoReachableEntry) => {
+            log::warn!(
+                "multi-hop: no entry relay reachable on this network's address families; \
+                 failing closed"
+            );
+            crate::dial_facts::record_dial_error(crate::dial_facts::DialErrorClass::NoRoute);
+            status.store(SessionStatus::NoReachableEntry as i32);
             return;
         }
     };
@@ -443,7 +467,6 @@ async fn run_multi_hop_session(
         ),
     ));
 
-    let bind_addr: SocketAddr = "0.0.0.0:0".parse().expect("static bind addr");
     // No-logs: never record the entry-relay address or the exit identity pubkey -
     // that pair would deanonymize the chosen circuit (and this tag is captured
     // into user-submitted problem reports). Only non-identifying mode booleans
@@ -578,6 +601,7 @@ async fn run_multi_hop_session(
                 Arc::clone(&migrate_slot),
                 exit_idx,
                 exit_mlkem768_pubkey.clone(),
+                bind_addr,
             )),
             on_path_rtt: None,
             session_token_provider: token_provider.clone(),
@@ -696,10 +720,23 @@ async fn run_multi_hop_session(
         // The supervisor holds the only remaining sender once this is dropped,
         // so the driver's watch closes with it at teardown.
         drop(ip_assign_channel);
+        // Whether the supervisor stopped because this network routes no
+        // entry. It is sent right after the session watch the supervisor
+        // held has closed, so the attempt's end reads it with a short wait.
+        let (unroutable_tx, mut unroutable_rx) = oneshot::channel::<bool>();
         let _supervisor_task = AbortOnDrop::spawn(async move {
-            if let Err(e) = supervisor.run().await {
-                log::warn!("multi-hop supervisor terminated: {e}");
-            }
+            let unroutable = match supervisor.run().await {
+                Ok(()) => false,
+                Err(e) => {
+                    log::warn!("multi-hop supervisor terminated: {e}");
+                    crate::dial_facts::record_dial_error(crate::dial_facts::class_of(&e));
+                    matches!(
+                        e,
+                        warrenguard_transport::multihop::MultiHopError::NoReachableEntry
+                    )
+                }
+            };
+            let _ = unroutable_tx.send(unroutable);
         });
         // Aborted with the attempt: the handle it holds subscribes a watch
         // receiver, which would otherwise keep the supervisor from seeing that
@@ -859,6 +896,18 @@ async fn run_multi_hop_session(
                 return;
             }
             AttemptEnd::Session(end) => {
+                if end == SessionEnd::Down
+                    && matches!(
+                        tokio::time::timeout(SUPERVISOR_VERDICT_WAIT, &mut unroutable_rx).await,
+                        Ok(Ok(true))
+                    )
+                {
+                    log::warn!(
+                        "multi-hop: no entry relay reachable on this network's address families"
+                    );
+                    status.store(SessionStatus::NoReachableEntry as i32);
+                    return;
+                }
                 // No-logs: `SessionEnd` carries only a failure category, never
                 // identity.
                 log::info!("multi-hop session ended: {end:?}");
@@ -891,18 +940,31 @@ fn node_views(
 /// The refusal is charged to the node the connection terminates at,
 /// `relay_id`, whatever hop the engine reports, and it only ever moves the
 /// session to another entry for the same exit (see `crate::circuit_retarget`
-/// for why a refusal never moves the exit).
+/// for why a refusal never moves the exit). The entry it moves to is one this
+/// network routes: the engine reports an entry it cannot route through this
+/// same observer, and ends in `NoReachableEntry` unless the observer names
+/// one it can, from inside the call.
 fn refusal_hook(
     dir: std::sync::Arc<warren_discovery_core::VerifiedMultiHopDirectory>,
     retarget: std::sync::Arc<parking_lot::Mutex<crate::circuit_retarget::EntryRetarget>>,
     migrate: std::sync::Arc<std::sync::OnceLock<warrenguard_transport::supervisor::MigrateHandle>>,
     exit_idx: usize,
     exit_mlkem768_pubkey: Option<Vec<u8>>,
+    bind_addr: SocketAddr,
 ) -> warrenguard_transport::supervisor::DialRefusedObserver {
     std::sync::Arc::new(move |_hop, relay_id: [u8; 16], _exit_id| {
-        let Some(entry) = retarget
-            .lock()
-            .on_refusal(&node_views(&dir), &relay_id, unix_now_secs())
+        let reachable = |candidates: &[usize]| {
+            crate::circuit_select::probe_reachable(|i| &dir.nodes[i].relay, candidates, bind_addr)
+        };
+        if let Some(refused) = dir.nodes.iter().position(|n| n.relay.relay_id == relay_id) {
+            crate::dial_facts::record_dial_error(crate::dial_facts::refusal_class(
+                !reachable(&[refused]).is_empty(),
+            ));
+        }
+        let Some(entry) =
+            retarget
+                .lock()
+                .on_refusal(&node_views(&dir), &relay_id, unix_now_secs(), reachable)
         else {
             return;
         };
@@ -1016,6 +1078,11 @@ fn build_multihop_daita_state(config: &WarrenTunnelConfig) -> DaitaState {
 pub fn parse_config(json: &str) -> Result<WarrenTunnelConfig, TunnelStartError> {
     serde_json::from_str(json).map_err(TunnelStartError::InvalidConfig)
 }
+
+/// How long an attempt that ended with the session watch closed waits for the
+/// supervisor's own verdict. The supervisor drops that watch as it returns,
+/// so its error follows the closure by a scheduling round, never by a dial.
+const SUPERVISOR_VERDICT_WAIT: std::time::Duration = std::time::Duration::from_millis(500);
 
 /// The Kotlin-side default of `WarrenTunnelConfig.mtu`
 /// (`WarrenLocalSettingsRepository.MTU_MAX`), for a payload that omits it,

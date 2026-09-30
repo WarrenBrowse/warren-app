@@ -1067,6 +1067,10 @@ fn collect(
 ) -> Result<u64, String> {
     let mut metadata = crate::report::parse_metadata(metadata_json)?;
     let redact = crate::report::parse_redact_strings(redact_json);
+    // Why the tunnel cannot come up on this network, without naming a node.
+    metadata.extend(crate::dial_facts::header(
+        crate::entry_families::measure_network_families(),
+    ));
     let Some(rust_log_dir) = crate::android_jni::rust_log_dir() else {
         return Err("initLogger must run first".to_owned());
     };

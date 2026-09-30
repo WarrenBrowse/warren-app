@@ -28,6 +28,11 @@
 //!   the wallet held by its other devices), and a redial meets the same count
 //!   until one of them disconnects. Kotlin shows "too many connections", never
 //!   the expired-subscription message.
+//! - `NoReachableEntry` (8) ends the session because this network routes
+//!   none of the entries the circuit may use (every candidate publishes only
+//!   address families the network does not carry, forum topic 210). Kotlin
+//!   blocks under the "no dialable network" cause and redials once the
+//!   network changes, since a redial on the same one meets the same verdict.
 
 /// Tunnel session status reported back to Kotlin via
 /// `WarrenJni.getTunnelStatus()`. Encoded as an `i32` rather than an enum
@@ -54,4 +59,7 @@ pub enum SessionStatus {
     /// The account already holds its maximum of simultaneous wallet-signed
     /// sessions: see the module doc.
     DeviceLimit = 7,
+    /// This network routes none of the circuit's candidate entries: see the
+    /// module doc.
+    NoReachableEntry = 8,
 }

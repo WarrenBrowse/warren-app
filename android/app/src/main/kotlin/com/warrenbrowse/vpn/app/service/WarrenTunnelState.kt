@@ -101,7 +101,7 @@ sealed class WarrenTunnelState {
      *
      * [noDialableNetwork] is set while the retry is parked on a network that
      * carries no address family a relay dial can use (an IPv6-only mobile
-     * network against an IPv4-only entry fleet). The phone has working
+     * network against IPv4-only candidate entries). The phone has working
      * internet and the kill switch is holding its traffic, so this is the
      * one blocked state the user cannot wait out: it ends by moving to
      * another network or by disconnecting.
