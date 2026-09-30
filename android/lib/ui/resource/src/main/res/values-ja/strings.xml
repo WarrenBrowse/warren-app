@@ -57,8 +57,9 @@
     <string name="warren_tunnel_flapping_title">ネットワークが不安定です</string>
     <string name="warren_tunnel_flapping">ネットワークが不安定なようです。トンネルが連続して何度も再接続しました。接続が安定してから再接続してください。</string>
     <string name="warren_kill_switch_active">トンネルがダウンしている間、キルスイッチが通信をブロックし続けます。接続は保護されており、トンネルが復旧すると自動的に再開します。</string>
-    <string name="warren_no_dialable_network_title">IPv4 のないネットワーク</string>
-    <string name="warren_no_dialable_network">このネットワークは端末に IPv4 アドレスを割り当てず、Warren の入口ノードは IPv4 でしか応答しないため、ここではトンネルを確立できません。キルスイッチは通信を遮断したままです。インターネットに戻るには接続を解除するか、IPv4 を提供するネットワークに移動してください。</string>
+    <string name="warren_no_dialable_network_title">到達できる入口サーバーがありません</string>
+    <string name="warren_no_dialable_network">この接続で使える Warren の入口サーバーのいずれも、このネットワークが提供するアドレスの種類 (IPv4 または IPv6) で応答しないため、ここではトンネルを確立できません。キルスイッチは通信を遮断したままです。インターネットに戻るには接続を解除するか、別のネットワークに切り替えるか、別の入口の国または場所を選んでください。</string>
+    <string name="warren_no_dialable_network_notification_title">ブロック中: このネットワークから入口サーバーに到達できません</string>
     <string name="warren_traffic_released_title">VPN の外を通る通信</string>
     <string name="warren_traffic_released">接続が何度も切れたため、Warren は再試行を停止し、通信は現在 VPN の外にある通常のネットワークを経由しています。この場合も通信を遮断したままにするには、VPN設定でロックダウンモードをオンにしてください。</string>
     <string name="warren_traffic_released_notification">VPN の外を通る通信</string>

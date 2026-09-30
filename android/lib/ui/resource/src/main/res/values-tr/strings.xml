@@ -57,8 +57,9 @@
     <string name="warren_tunnel_flapping_title">KARARSIZ AĞ</string>
     <string name="warren_tunnel_flapping">Ağınız kararsız görünüyor: tünel art arda çok fazla kez yeniden bağlandı. Bağlantınız oturduktan sonra yeniden bağlanın.</string>
     <string name="warren_kill_switch_active">Tünel kapalıyken kill switch trafiğinizi engellemeye devam eder. Bağlantınız korunuyor; tünel geri geldiğinde otomatik olarak sürdürülür.</string>
-    <string name="warren_no_dialable_network_title">IPv4 OLMAYAN AĞ</string>
-    <string name="warren_no_dialable_network">Bu ağ cihazınıza IPv4 adresi vermiyor ve Warren giriş noktaları yalnızca IPv4 üzerinden yanıt veriyor, bu yüzden tünel burada kurulamıyor. Kill switch trafiğinizi engellemeye devam ediyor: internete dönmek için bağlantıyı kesin ya da IPv4 sunan bir ağa geçin.</string>
+    <string name="warren_no_dialable_network_title">ERİŞİLEBİLİR GİRİŞ SUNUCUSU YOK</string>
+    <string name="warren_no_dialable_network">Bu bağlantının kullanabileceği Warren giriş sunucularından hiçbiri bu ağın sağladığı adres türünde (IPv4 veya IPv6) yanıt vermiyor, bu yüzden tünel burada kurulamıyor. Kill switch trafiğinizi engellemeye devam ediyor: internete dönmek için bağlantıyı kesin, başka bir ağa geçin ya da başka bir giriş ülkesi veya konum seçin.</string>
+    <string name="warren_no_dialable_network_notification_title">Engellendi: bu ağ hiçbir giriş sunucusuna ulaşmıyor</string>
     <string name="warren_traffic_released_title">VPN DIŞINDA TRAFİK</string>
     <string name="warren_traffic_released">Bağlantınız sürekli koptuğu için Warren yeniden denemeyi bıraktı ve trafiğiniz artık VPN dışında, normal ağınız üzerinden geçiyor. Bu durumda engelli kalmak için VPN ayarlarında Kilitleme modunu açın.</string>
     <string name="warren_traffic_released_notification">VPN dışında trafik</string>

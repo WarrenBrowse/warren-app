@@ -16,6 +16,13 @@ sealed interface NotificationTunnelState {
 
         data object Blocked : Error
 
+        /**
+         * Blocked because this network reaches no entry server the circuit may
+         * use. Its own title: under the generic one a user's quote could not
+         * tell this network apart from an outage (topic 210).
+         */
+        data object NoDialableNetwork : Error
+
         data object VpnPermissionDenied : Error
 
         data class AlwaysOnVpn(val appName: String) : Error

@@ -61,6 +61,8 @@ internal fun NotificationTunnelState.notificationTitle(context: Context): String
         NotificationTunnelState.Disconnecting -> context.getString(R.string.disconnecting)
         NotificationTunnelState.Blocking -> context.getString(R.string.blocking)
         NotificationTunnelState.Error.Blocked -> context.getString(R.string.blocking_internet)
+        NotificationTunnelState.Error.NoDialableNetwork ->
+            context.getString(R.string.warren_no_dialable_network_notification_title)
         is NotificationTunnelState.Error.Critical -> context.getString(R.string.critical_error)
         NotificationTunnelState.Error.TrafficReleased ->
             context.getString(R.string.warren_traffic_released_notification)

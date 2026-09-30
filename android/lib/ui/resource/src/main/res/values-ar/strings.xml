@@ -57,8 +57,9 @@
     <string name="warren_tunnel_flapping_title">شبكة غير مستقرة</string>
     <string name="warren_tunnel_flapping">يبدو أن شبكتك غير مستقرة: أعاد النفق الاتصال مرات كثيرة متتالية. أعد الاتصال بعد استقرار شبكتك.</string>
     <string name="warren_kill_switch_active">يُبقي مفتاح الإيقاف التلقائي حركة بياناتك محظورة أثناء توقف النفق. اتصالك محمي، وسيُستأنف تلقائياً بمجرد عودة النفق.</string>
-    <string name="warren_no_dialable_network_title">شبكة بدون IPv4</string>
-    <string name="warren_no_dialable_network">لا تمنح هذه الشبكة جهازك أي عنوان IPv4، ونقاط دخول Warren تستجيب عبر IPv4 فقط، لذا لا يمكن إنشاء النفق هنا. لا يزال مفتاح الإيقاف يحجب حركة بياناتك: اقطع الاتصال لاستعادة الإنترنت، أو انتقل إلى شبكة توفّر IPv4.</string>
+    <string name="warren_no_dialable_network_title">لا يوجد خادم دخول يمكن الوصول إليه</string>
+    <string name="warren_no_dialable_network">لا يستجيب أي من خوادم دخول Warren التي يمكن لهذا الاتصال استخدامها على نوع العنوان (IPv4 أو IPv6) الذي توفّره هذه الشبكة، لذا لا يمكن إنشاء النفق هنا. لا يزال مفتاح الإيقاف يحجب حركة بياناتك: اقطع الاتصال لاستعادة الإنترنت، أو انتقل إلى شبكة أخرى، أو اختر بلد دخول آخر أو موقعًا آخر.</string>
+    <string name="warren_no_dialable_network_notification_title">محظور: هذه الشبكة لا تصل إلى أي خادم دخول</string>
     <string name="warren_traffic_released_title">حركة البيانات خارج شبكة VPN</string>
     <string name="warren_traffic_released">انقطع اتصالك مرارًا، فتوقّف Warren عن إعادة المحاولة وأصبحت حركة بياناتك تمر الآن عبر شبكتك المعتادة خارج شبكة VPN. لإبقائها محجوبة في هذه الحالة، فعّل وضع التأمين في إعدادات شبكة VPN.</string>
     <string name="warren_traffic_released_notification">حركة البيانات خارج شبكة VPN</string>

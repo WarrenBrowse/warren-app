@@ -57,8 +57,9 @@
     <string name="warren_tunnel_flapping_title">USTABILT NETTVERK</string>
     <string name="warren_tunnel_flapping">Nettverket ditt ser ustabilt ut: tunnelen koblet til på nytt for mange ganger på rad. Koble til på nytt når forbindelsen har stabilisert seg.</string>
     <string name="warren_kill_switch_active">Avbruddsbryteren holder trafikken din blokkert mens tunnelen er nede. Tilkoblingen din er beskyttet, og den gjenopptas automatisk når tunnelen er tilbake.</string>
-    <string name="warren_no_dialable_network_title">NETTVERK UTEN IPv4</string>
-    <string name="warren_no_dialable_network">Dette nettverket gir ikke enheten din en IPv4-adresse, og Warrens inngangspunkter svarer bare på IPv4, så tunnelen kan ikke opprettes her. Kill switchen holder trafikken din blokkert: koble fra for å få internett tilbake, eller bytt til et nettverk med IPv4.</string>
+    <string name="warren_no_dialable_network_title">INGEN INNGANGSSERVER TILGJENGELIG</string>
+    <string name="warren_no_dialable_network">Ingen av Warren-inngangsserverne denne tilkoblingen kan bruke, svarer på adressetypen (IPv4 eller IPv6) dette nettverket gir, så tunnelen kan ikke opprettes her. Kill switchen holder trafikken din blokkert: koble fra for å få internett tilbake, bytt nettverk, eller velg et annet inngangsland eller en annen plassering.</string>
+    <string name="warren_no_dialable_network_notification_title">Blokkert: dette nettverket når ingen inngangsserver</string>
     <string name="warren_traffic_released_title">TRAFIKK UTENFOR VPN</string>
     <string name="warren_traffic_released">Forbindelsen din falt ut gang på gang, så Warren sluttet å prøve på nytt, og trafikken din går nå gjennom det vanlige nettverket ditt, utenfor VPN. Slå på Låsemodus under VPN-innstillinger for å forbli blokkert når dette skjer.</string>
     <string name="warren_traffic_released_notification">Trafikk utenfor VPN</string>

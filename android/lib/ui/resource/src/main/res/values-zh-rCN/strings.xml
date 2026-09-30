@@ -57,8 +57,9 @@
     <string name="warren_tunnel_flapping_title">网络不稳定</string>
     <string name="warren_tunnel_flapping">你的网络似乎不稳定：隧道连续重连次数过多。请等连接稳定后再重新连接。</string>
     <string name="warren_kill_switch_active">隧道中断期间，终止开关会持续阻止你的流量。你的连接受到保护，隧道恢复后会自动继续。</string>
-    <string name="warren_no_dialable_network_title">没有 IPv4 的网络</string>
-    <string name="warren_no_dialable_network">该网络未向你的设备分配 IPv4 地址，而 Warren 的入口节点只在 IPv4 上回应，因此无法在此建立隧道。终止开关仍在拦截你的流量：断开连接以恢复上网，或改用提供 IPv4 的网络。</string>
+    <string name="warren_no_dialable_network_title">无法连接任何入口服务器</string>
+    <string name="warren_no_dialable_network">此连接可用的 Warren 入口服务器都不在该网络提供的地址类型（IPv4 或 IPv6）上回应，因此无法在此建立隧道。终止开关仍在拦截你的流量：断开连接以恢复上网，或切换到其他网络，或选择其他入口国家或位置。</string>
+    <string name="warren_no_dialable_network_notification_title">已拦截：此网络无法连接任何入口服务器</string>
     <string name="warren_traffic_released_title">流量正在绕过 VPN</string>
     <string name="warren_traffic_released">你的连接反复中断，Warren 已停止重试，你的流量现在经由你的常规网络传输，不经过 VPN。若希望此时保持拦截，请在 VPN 设置中开启锁定模式。</string>
     <string name="warren_traffic_released_notification">流量正在绕过 VPN</string>

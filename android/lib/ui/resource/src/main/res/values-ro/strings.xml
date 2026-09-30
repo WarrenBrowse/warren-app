@@ -59,8 +59,9 @@
     <string name="warren_tunnel_flapping_title">REȚEA INSTABILĂ</string>
     <string name="warren_tunnel_flapping">Rețeaua dvs. pare instabilă: tunelul s-a reconectat de prea multe ori la rând. Reconectați-vă după ce conexiunea s-a stabilizat.</string>
     <string name="warren_kill_switch_active">Kill Switch-ul menține traficul blocat cât timp tunelul este căzut. Conexiunea dvs. este protejată și va fi reluată automat imediat ce tunelul revine.</string>
-    <string name="warren_no_dialable_network_title">REȚEA FĂRĂ IPv4</string>
-    <string name="warren_no_dialable_network">Această rețea nu oferă nicio adresă IPv4 dispozitivului dvs., iar punctele de intrare Warren răspund doar pe IPv4, deci tunelul nu poate fi deschis aici. Kill Switch-ul menține traficul blocat: deconectați-vă pentru a recăpăta internetul sau treceți pe o rețea care oferă IPv4.</string>
+    <string name="warren_no_dialable_network_title">NICIUN SERVER DE INTRARE ACCESIBIL</string>
+    <string name="warren_no_dialable_network">Niciunul dintre serverele de intrare Warren pe care le poate folosi această conexiune nu răspunde pe tipul de adresă (IPv4 sau IPv6) oferit de această rețea, deci tunelul nu poate fi deschis aici. Kill Switch-ul menține traficul blocat: deconectați-vă pentru a recăpăta internetul, treceți pe altă rețea sau alegeți altă țară de intrare ori altă locație.</string>
+    <string name="warren_no_dialable_network_notification_title">Blocat: această rețea nu ajunge la niciun server de intrare</string>
     <string name="warren_traffic_released_title">TRAFIC ÎN AFARA VPN-ULUI</string>
     <string name="warren_traffic_released">Conexiunea dvs. a căzut în mod repetat, așa că Warren nu a mai reîncercat, iar traficul dvs. trece acum prin rețeaua obișnuită, în afara VPN-ului. Pentru a rămâne blocat în această situație, activați Mod Blocare din Setări VPN.</string>
     <string name="warren_traffic_released_notification">Trafic în afara VPN-ului</string>

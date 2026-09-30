@@ -23,6 +23,7 @@ import com.warrenbrowse.vpn.lib.model.GeoIpLocation
 import com.warrenbrowse.vpn.lib.model.Notification
 import com.warrenbrowse.vpn.lib.model.NotificationChannelId
 import com.warrenbrowse.vpn.lib.model.NotificationId
+import com.warrenbrowse.vpn.lib.model.NotificationAction
 import com.warrenbrowse.vpn.lib.model.NotificationTunnelState
 import com.warrenbrowse.vpn.lib.model.NotificationUpdate
 import com.warrenbrowse.vpn.lib.model.PrepareError
@@ -138,6 +139,27 @@ class TunnelStateNotificationProviderTest {
             assertEquals(NotificationTunnelState.Error.TrafficReleased, update.value.state)
         }
     }
+
+    @Test
+    fun `a block on a network that reaches no entry is notified under its own cause`() =
+        runTest {
+            provider.notifications.test {
+                awaitItem() // Skip initial emission
+
+                tunnelStateFlow.value =
+                    TunnelState.Error(
+                        ErrorState(ErrorStateCause.WarrenNoDialableNetwork, isBlocking = true)
+                    )
+
+                val update = awaitItem()
+                assertTrue(update is NotificationUpdate.Notify)
+                assertEquals(NotificationTunnelState.Error.NoDialableNetwork, update.value.state)
+                assertEquals(
+                    listOf(NotificationAction.Tunnel.Reconnect, NotificationAction.Tunnel.Disconnect),
+                    update.value.actions,
+                )
+            }
+        }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test

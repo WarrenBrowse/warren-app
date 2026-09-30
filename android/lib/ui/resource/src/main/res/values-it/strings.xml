@@ -57,8 +57,9 @@
     <string name="warren_tunnel_flapping_title">RETE INSTABILE</string>
     <string name="warren_tunnel_flapping">La tua rete sembra instabile: il tunnel si è riconnesso troppe volte di seguito. Riconnettiti quando la connessione si sarà stabilizzata.</string>
     <string name="warren_kill_switch_active">Il kill switch mantiene bloccato il tuo traffico mentre il tunnel è inattivo. La connessione è protetta e riprenderà automaticamente al ritorno del tunnel.</string>
-    <string name="warren_no_dialable_network_title">RETE SENZA IPv4</string>
-    <string name="warren_no_dialable_network">Questa rete non assegna alcun indirizzo IPv4 al suo dispositivo e i punti di ingresso Warren rispondono solo su IPv4, quindi il tunnel non può essere stabilito qui. Il kill switch mantiene il traffico bloccato: si disconnetta per recuperare internet oppure passi a una rete che fornisce IPv4.</string>
+    <string name="warren_no_dialable_network_title">NESSUN SERVER DI INGRESSO RAGGIUNGIBILE</string>
+    <string name="warren_no_dialable_network">Nessuno dei server di ingresso Warren utilizzabili da questa connessione risponde sul tipo di indirizzo (IPv4 o IPv6) fornito da questa rete, quindi il tunnel non può essere stabilito qui. Il kill switch mantiene il traffico bloccato: si disconnetta per recuperare internet, cambi rete oppure scelga un altro paese di ingresso o un\'altra posizione.</string>
+    <string name="warren_no_dialable_network_notification_title">Bloccato: questa rete non raggiunge alcun server di ingresso</string>
     <string name="warren_traffic_released_title">TRAFFICO FUORI DALLA VPN</string>
     <string name="warren_traffic_released">La connessione cadeva di continuo, quindi Warren ha smesso di riprovare e il traffico ora passa dalla sua rete abituale, fuori dalla VPN. Per restare bloccato in questi casi, attivi la Modalità Blocco nelle Impostazioni VPN.</string>
     <string name="warren_traffic_released_notification">Traffico fuori dalla VPN</string>

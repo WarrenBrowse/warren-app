@@ -57,8 +57,9 @@
     <string name="warren_tunnel_flapping_title">INSTABILES NETZWERK</string>
     <string name="warren_tunnel_flapping">Dein Netzwerk scheint instabil zu sein: Der Tunnel hat sich zu oft hintereinander neu verbunden. Verbinde dich erneut, sobald sich deine Verbindung stabilisiert hat.</string>
     <string name="warren_kill_switch_active">Der Killswitch blockiert deinen Datenverkehr, solange der Tunnel ausgefallen ist. Deine Verbindung ist geschützt und wird automatisch fortgesetzt, sobald der Tunnel wieder steht.</string>
-    <string name="warren_no_dialable_network_title">NETZWERK OHNE IPv4</string>
-    <string name="warren_no_dialable_network">Dieses Netzwerk weist Ihrem Gerät keine IPv4-Adresse zu, und die Warren-Eingangsknoten antworten nur über IPv4. Der Tunnel kann hier also nicht aufgebaut werden. Der Kill Switch blockiert Ihren Datenverkehr weiterhin: Trennen Sie die Verbindung, um wieder ins Internet zu kommen, oder wechseln Sie in ein Netzwerk mit IPv4.</string>
+    <string name="warren_no_dialable_network_title">KEIN EINGANGSSERVER ERREICHBAR</string>
+    <string name="warren_no_dialable_network">Keiner der Warren-Eingangsserver, die diese Verbindung nutzen kann, antwortet über den Adresstyp (IPv4 oder IPv6), den dieses Netzwerk bereitstellt. Der Tunnel kann hier also nicht aufgebaut werden. Der Kill Switch blockiert Ihren Datenverkehr weiterhin: Trennen Sie die Verbindung, um wieder ins Internet zu kommen, wechseln Sie das Netzwerk oder wählen Sie ein anderes Eingangsland oder einen anderen Standort.</string>
+    <string name="warren_no_dialable_network_notification_title">Blockiert: Dieses Netzwerk erreicht keinen Eingangsserver</string>
     <string name="warren_traffic_released_title">DATENVERKEHR AUSSERHALB DES VPN</string>
     <string name="warren_traffic_released">Ihre Verbindung ist immer wieder abgebrochen. Warren hat daher aufgehört, es erneut zu versuchen, und Ihr Datenverkehr läuft jetzt über Ihr normales Netzwerk, außerhalb des VPN. Um in diesem Fall blockiert zu bleiben, aktivieren Sie den Sperrmodus in den VPN-Einstellungen.</string>
     <string name="warren_traffic_released_notification">Datenverkehr außerhalb des VPN</string>

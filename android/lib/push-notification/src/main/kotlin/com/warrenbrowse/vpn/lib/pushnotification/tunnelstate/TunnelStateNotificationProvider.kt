@@ -95,6 +95,8 @@ class TunnelStateNotificationProvider(
                 NotificationTunnelState.Error.AlwaysOnVpn(cause.appName)
             cause is ErrorStateCause.WarrenTrafficReleased ->
                 NotificationTunnelState.Error.TrafficReleased
+            cause is ErrorStateCause.WarrenNoDialableNetwork && errorState.isBlocking ->
+                NotificationTunnelState.Error.NoDialableNetwork
             errorState.isBlocking -> NotificationTunnelState.Error.Blocked
             else -> NotificationTunnelState.Error.Critical
         }
@@ -113,6 +115,7 @@ class TunnelStateNotificationProvider(
             }
             NotificationTunnelState.Disconnecting -> listOf(NotificationAction.Tunnel.Connect)
             NotificationTunnelState.Error.Blocked,
+            NotificationTunnelState.Error.NoDialableNetwork,
             NotificationTunnelState.Blocking,
             NotificationTunnelState.Error.DeviceOffline,
             is NotificationTunnelState.Connected ->

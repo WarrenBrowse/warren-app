@@ -41,6 +41,23 @@ class TunnelStateNotificationCopyTest {
             { "Connecting to ${secondArg<Array<Any>>()[0]}" }
         every { context.getString(eq(R.string.country_comma_city), any(), any()) } answers
             { "${secondArg<Array<Any>>()[0]}, ${secondArg<Array<Any>>()[1]}" }
+        every { context.getString(R.string.blocking_internet) } returns "Blocking internet"
+        every { context.getString(R.string.warren_no_dialable_network_notification_title) } returns
+            "Blocked: this network reaches no Warren entry"
+    }
+
+    @Test
+    fun `a block on a network that reaches no entry does not read as a generic block`() {
+        // Topic 210: every blocking cause titled "Internet blocked", so the
+        // quote a user posted could not tell this network apart from an outage.
+        assertEquals(
+            "Blocked: this network reaches no Warren entry",
+            NotificationTunnelState.Error.NoDialableNetwork.notificationTitle(context),
+        )
+        assertEquals(
+            "Blocking internet",
+            NotificationTunnelState.Error.Blocked.notificationTitle(context),
+        )
     }
 
     @Test
