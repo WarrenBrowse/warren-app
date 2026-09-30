@@ -1369,8 +1369,11 @@ fn spawn_multi_hop(
             &entry_rtt,
             now_secs(),
             &[],
+            crate::warren_multihop_directory::engine_entry_probe,
         ) else {
-            tracing::warn!("Warren multi-hop: no valid circuit in the directory");
+            tracing::warn!(
+                "Warren multi-hop: no valid circuit in the directory whose entry this network routes"
+            );
             arc_for_task.set_state(WarrenTunnelStateC::Failed);
             arc_for_task.fire_event(WarrenTunnelEventTagC::EventDisconnected);
             return;
@@ -1438,6 +1441,7 @@ fn spawn_multi_hop(
                 &exit_country,
                 &circuit,
                 warrenguard_transport::drain_policy::DRAINED_EXIT_AVOID_TTL.as_secs(),
+                crate::warren_multihop_directory::engine_entry_probe,
             ),
         ));
         let migrate_slot = std::sync::Arc::new(std::sync::OnceLock::new());

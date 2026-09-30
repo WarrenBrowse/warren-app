@@ -78,6 +78,30 @@ pub struct SelectedCircuit {
     pub generation: u64,
 }
 
+/// Which of `candidates` (directory indices of entry nodes, in order of
+/// preference) this host's network can route, in the same order.
+///
+/// Choosing an entry by ranking alone ignores address families: on an
+/// IPv6-only network a v4-only node was the entry for every exit and failed
+/// before its first packet (forum topic 210).
+pub type EntryProbe = fn(&VerifiedMultiHopDirectory, &[usize]) -> Vec<usize>;
+
+/// The production [`EntryProbe`]: the engine's kernel route lookup from the
+/// wildcard bind the supervisor dials with. The packet tunnel's own sockets
+/// leave on the physical network, so the answer describes that network. A
+/// probe that cannot answer keeps the candidate.
+#[cfg(target_os = "ios")]
+#[must_use]
+pub fn engine_entry_probe(dir: &VerifiedMultiHopDirectory, candidates: &[usize]) -> Vec<usize> {
+    warrenguard_transport::reachable_entries(
+        candidates.iter().map(|&i| &dir.nodes[i].relay),
+        std::net::SocketAddr::from((std::net::Ipv4Addr::UNSPECIFIED, 0)),
+        None,
+    )
+    .map(|kept| kept.into_iter().map(|k| candidates[k]).collect())
+    .unwrap_or_default()
+}
+
 /// Selects a circuit from a verified directory honoring the optional
 /// country hints. `two_hop` picks a 2-hop circuit (entry != exit, different
 /// countries); otherwise a 1-hop circuit (one node as both relay and exit).
@@ -88,7 +112,12 @@ pub struct SelectedCircuit {
 /// weight ordering bit-identical.
 ///
 /// `avoid` lists the nodes (by exit id) left out in both roles: those that
-/// refused a dial or announced a drain.
+/// refused a dial or announced a drain. `reachable` leaves out the entries
+/// this network cannot route (production: [`engine_entry_probe`]); a pinned
+/// entry country the network cannot route selects nothing rather than an
+/// entry elsewhere.
+// The selection surface, flat like the pickers it dispatches to.
+#[expect(clippy::too_many_arguments)]
 pub fn select_circuit(
     dir: &VerifiedMultiHopDirectory,
     two_hop: bool,
@@ -97,6 +126,7 @@ pub fn select_circuit(
     entry_rtt: &RttCache,
     now_unix: u64,
     avoid: &[[u8; 16]],
+    reachable: EntryProbe,
 ) -> Option<SelectedCircuit> {
     if two_hop {
         select_two_hop(
@@ -107,9 +137,10 @@ pub fn select_circuit(
             now_unix,
             avoid,
             None,
+            reachable,
         )
     } else {
-        select_one_hop(dir, exit_country, avoid)
+        select_one_hop(dir, exit_country, avoid, reachable)
     }
 }
 
@@ -191,7 +222,9 @@ fn circuit_from(
     }
 }
 
-/// `only_exit` restricts the pairs to those ending at that exit.
+/// `only_exit` restricts the pairs to those ending at that exit; `reachable`
+/// keeps only the pairs whose entry this network routes.
+#[expect(clippy::too_many_arguments)]
 fn select_two_hop(
     dir: &VerifiedMultiHopDirectory,
     entry_country: &str,
@@ -200,6 +233,7 @@ fn select_two_hop(
     now_unix: u64,
     avoid: &[[u8; 16]],
     only_exit: Option<[u8; 16]>,
+    reachable: EntryProbe,
 ) -> Option<SelectedCircuit> {
     // The diversity rule is the shared neutral one, and the pick is the shared
     // path-aware selector fed by the client-measured entry RTTs (None on empty
@@ -210,6 +244,11 @@ fn select_two_hop(
     if let Some(exit) = only_exit {
         pairs.retain(|&(_, x)| *dir.nodes[x].exit.exit_id.as_bytes() == exit);
     }
+    let mut entries: Vec<usize> = pairs.iter().map(|&(e, _)| e).collect();
+    entries.sort_unstable();
+    entries.dedup();
+    let routed = reachable(dir, &entries);
+    pairs.retain(|(e, _)| routed.contains(e));
     let (entry_idx, exit_idx) = select_circuit_path_aware(
         dir,
         &pairs,
@@ -228,12 +267,16 @@ fn select_two_hop(
 /// `warren_discovery_core::pick_exit` (highest weight, ties broken by the
 /// smallest `exit_id`), the same call the daemon's `select_one_hop_circuit`
 /// makes, so a directory resolves to one node on every platform.
+///
+/// The node is the entry too, so only a node this network routes is a
+/// candidate.
 fn select_one_hop(
     dir: &VerifiedMultiHopDirectory,
     exit_country: &str,
     avoid: &[[u8; 16]],
+    reachable: EntryProbe,
 ) -> Option<SelectedCircuit> {
-    let candidates: Vec<usize> = dir
+    let matching: Vec<usize> = dir
         .nodes
         .iter()
         .enumerate()
@@ -241,6 +284,7 @@ fn select_one_hop(
         .filter(|(_, n)| !avoid.contains(n.exit.exit_id.as_bytes()))
         .map(|(i, _)| i)
         .collect();
+    let candidates = reachable(dir, &matching);
     let ranked: Vec<ExitCandidate> = candidates
         .iter()
         .map(|&i| ExitCandidate::from(&dir.nodes[i]))
@@ -272,11 +316,14 @@ pub struct CircuitRetarget {
     /// can be over.
     avoided: Vec<([u8; 16], u64)>,
     avoid_ttl_secs: u64,
+    reachable: EntryProbe,
 }
 
 impl CircuitRetarget {
     /// Start from the circuit the session dialed first. `avoid_ttl_secs` is
-    /// the engine's drained-exit avoid window.
+    /// the engine's drained-exit avoid window; `reachable` is the probe every
+    /// move selects through, so a refusal (the engine reports an entry it
+    /// cannot route as one) is never answered with an unroutable entry.
     #[must_use]
     pub fn new(
         dir: VerifiedMultiHopDirectory,
@@ -285,6 +332,7 @@ impl CircuitRetarget {
         exit_country: &str,
         current: &SelectedCircuit,
         avoid_ttl_secs: u64,
+        reachable: EntryProbe,
     ) -> Self {
         Self {
             dir,
@@ -295,6 +343,7 @@ impl CircuitRetarget {
             exit_id: *current.exit.exit_id.as_bytes(),
             avoided: Vec::new(),
             avoid_ttl_secs,
+            reachable,
         }
     }
 
@@ -376,9 +425,10 @@ impl CircuitRetarget {
                     now_unix,
                     &avoid,
                     keep_exit,
+                    self.reachable,
                 )
             } else {
-                select_one_hop(&self.dir, &self.exit_country, &avoid)
+                select_one_hop(&self.dir, &self.exit_country, &avoid, self.reachable)
             }?;
             let ids = (candidate.relay.relay_id, *candidate.exit.exit_id.as_bytes());
             if keep_exit.is_some_and(|exit| exit != ids.1) || ids == (self.relay_id, self.exit_id) {
@@ -408,6 +458,61 @@ mod tests {
     use super::*;
 
     const NOW: u64 = 1_000_000;
+
+    /// A network that routes every entry.
+    fn every_entry(_: &VerifiedMultiHopDirectory, candidates: &[usize]) -> Vec<usize> {
+        candidates.to_vec()
+    }
+
+    /// A network that routes nothing published in Romania or France: the
+    /// v4-only nodes of the live beta directory, seen from an IPv6-only
+    /// network (forum topic 210).
+    fn not_ro_or_fr(dir: &VerifiedMultiHopDirectory, candidates: &[usize]) -> Vec<usize> {
+        candidates
+            .iter()
+            .copied()
+            .filter(|&i| !matches!(dir.nodes[i].country.as_str(), "ro" | "fr"))
+            .collect()
+    }
+
+    #[test]
+    fn a_two_hop_circuit_enters_through_a_node_this_network_routes() {
+        let op = op_key();
+        // RO is the heaviest entry, so the ranking alone picks it.
+        let d = dir(vec![
+            node(&op, 1, "ro", 1, 1_000),
+            node(&op, 2, "de", 2, 100),
+            node(&op, 3, "nl", 3, 100),
+        ]);
+        let first = select_two_hop(&d, "", "nl", &RttCache::new(), NOW, &[], None, every_entry)
+            .expect("circuit");
+        assert_eq!(first.relay.relay_id, [1; 16], "precondition: RO ranks first");
+
+        let routed = select_two_hop(&d, "", "nl", &RttCache::new(), NOW, &[], None, not_ro_or_fr)
+            .expect("DE can front NL");
+
+        assert_eq!(routed.relay.relay_id, [2; 16]);
+    }
+
+    #[test]
+    fn a_pinned_entry_country_this_network_cannot_route_selects_nothing() {
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "fr", 1, 100),
+            node(&op, 2, "de", 2, 100),
+            node(&op, 3, "nl", 3, 100),
+        ]);
+        let routed = select_circuit(&d, true, "fr", "nl", &RttCache::new(), NOW, &[], not_ro_or_fr);
+        assert!(routed.is_none(), "never an entry outside the pinned country");
+    }
+
+    #[test]
+    fn a_one_hop_pick_passes_over_a_node_this_network_cannot_route() {
+        let op = op_key();
+        let d = dir(vec![node(&op, 1, "ro", 1, 1_000), node(&op, 2, "de", 2, 10)]);
+        let routed = select_one_hop(&d, "", &[], not_ro_or_fr).expect("DE is routable");
+        assert_eq!(routed.relay.relay_id, [2; 16]);
+    }
 
     fn op_key() -> SigningKey {
         SigningKey::from_bytes(&[0x42; 32])
@@ -501,7 +606,7 @@ mod tests {
                 })
                 .collect();
             let d = dir(nodes);
-            let picked = select_one_hop(&d, "", &[]).map(|c| c.relay.relay_id);
+            let picked = select_one_hop(&d, "", &[], every_entry).map(|c| c.relay.relay_id);
             let expected = case["expected"]
                 .as_u64()
                 .map(|i| d.nodes[usize::try_from(i).expect("index")].relay.relay_id);
@@ -524,7 +629,7 @@ mod tests {
             node(&op, 3, "nl", 3, 100),
         ]);
         let baseline =
-            select_two_hop(&d, "", "nl", &RttCache::new(), NOW, &[], None).expect("circuit");
+            select_two_hop(&d, "", "nl", &RttCache::new(), NOW, &[], None, every_entry).expect("circuit");
         assert_eq!(
             baseline.relay.relay_id, [1; 16],
             "precondition: id tie-break"
@@ -532,7 +637,7 @@ mod tests {
         let mut store = RttCache::new();
         store.record([2; 32], 200, NOW);
         store.record([3; 32], 15, NOW);
-        let biased = select_two_hop(&d, "", "nl", &store, NOW, &[], None).expect("circuit");
+        let biased = select_two_hop(&d, "", "nl", &store, NOW, &[], None, every_entry).expect("circuit");
         assert_eq!(
             biased.relay.relay_id, [2; 16],
             "the measured near entry must outrank the id tie-break"
@@ -555,7 +660,7 @@ mod tests {
                     *d.nodes[x].exit.exit_id.as_bytes(),
                 )
             });
-            let got = select_two_hop(&d, "", "nl", &RttCache::new(), NOW, &[], None)
+            let got = select_two_hop(&d, "", "nl", &RttCache::new(), NOW, &[], None, every_entry)
                 .map(|c| (c.relay.relay_id, *c.exit.exit_id.as_bytes()));
             assert_eq!(got, legacy, "weights {weights:?}");
         }
@@ -565,7 +670,7 @@ mod tests {
     fn selected_circuit_carries_the_directory_trust_context() {
         let op = op_key();
         let d = dir(vec![node(&op, 1, "de", 1, 100), node(&op, 3, "nl", 3, 100)]);
-        let c = select_two_hop(&d, "", "nl", &RttCache::new(), NOW, &[], None).expect("circuit");
+        let c = select_two_hop(&d, "", "nl", &RttCache::new(), NOW, &[], None, every_entry).expect("circuit");
         assert_eq!(c.generation, 1);
         assert_eq!(c.operational_pubkey, op.verifying_key());
     }
@@ -587,10 +692,18 @@ mod tests {
             &RttCache::new(),
             NOW,
             &[],
+            every_entry,
         )
         .expect("a first circuit");
-        let retarget =
-            CircuitRetarget::new(d.clone(), true, entry_country, exit_country, &first, TTL);
+        let retarget = CircuitRetarget::new(
+            d.clone(),
+            true,
+            entry_country,
+            exit_country,
+            &first,
+            TTL,
+            every_entry,
+        );
         (first, retarget)
     }
 
@@ -652,8 +765,10 @@ mod tests {
         // On a one-hop circuit the refusing node is the exit itself.
         let op = op_key();
         let d = dir(vec![node(&op, 1, "de", 1, 100), node(&op, 2, "fr", 2, 50)]);
-        let first = select_circuit(&d, false, "", "", &RttCache::new(), NOW, &[]).expect("circuit");
-        let mut retarget = CircuitRetarget::new(d.clone(), false, "", "", &first, TTL);
+        let first = select_circuit(&d, false, "", "", &RttCache::new(), NOW, &[], every_entry)
+            .expect("circuit");
+        let mut retarget =
+            CircuitRetarget::new(d.clone(), false, "", "", &first, TTL, every_entry);
 
         assert!(
             retarget
