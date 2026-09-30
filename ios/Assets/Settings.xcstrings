@@ -16036,151 +16036,598 @@
         }
       }
     },
-    "Status: no entitlement left, retrying in %1$@s": {
+    "Status: port entitlement unavailable, retrying in %1$@s": {
       "extractionState": "manual",
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Status: no entitlement left, retrying in %1$@s"
+            "value": "Status: port entitlement unavailable, retrying in %1$@s"
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الحالة: لم يتبقَّ حق فتح منفذ، إعادة المحاولة خلال %1$@ ثانية"
+            "value": "الحالة: حق فتح المنفذ غير متاح، إعادة المحاولة خلال %1$@ ثانية"
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Status: ingen porttilladelse tilbage, prøver igen om %1$@s"
+            "value": "Status: porttilladelse utilgængelig, prøver igen om %1$@s"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Status: kein Port-Kontingent mehr, erneuter Versuch in %1$@s"
+            "value": "Status: Portberechtigung nicht verfügbar, erneuter Versuch in %1$@s"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Estado: sin derecho de puerto disponible, reintento en %1$@s"
+            "value": "Estado: derecho de puerto no disponible, reintento en %1$@s"
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "وضعیت: سهمیه درگاه باقی نمانده، تلاش مجدد در %1$@ ثانیه"
+            "value": "وضعیت: حق درگاه در دسترس نیست، تلاش مجدد در %1$@ ثانیه"
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tila: porttioikeus käytetty loppuun, uudelleenyritys %1$@s kuluttua"
+            "value": "Tila: porttioikeus ei saatavilla, uudelleenyritys %1$@s kuluttua"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Statut : plus de droit de port disponible, nouvel essai dans %1$@s"
+            "value": "Statut : droit de port indisponible, nouvel essai dans %1$@s"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stato: nessun diritto di porta disponibile, nuovo tentativo tra %1$@s"
+            "value": "Stato: diritto di porta non disponibile, nuovo tentativo tra %1$@s"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ステータス: ポート利用枠なし、%1$@ 秒後に再試行"
+            "value": "ステータス: ポート利用権を取得できません、%1$@ 秒後に再試行"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "상태: 남은 포트 권한 없음, %1$@초 후 재시도"
+            "value": "상태: 포트 권한을 사용할 수 없음, %1$@초 후 재시도"
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "အခြေအနေ: ပို့တ်ခွင့် မကျန်တော့ပါ၊ %1$@s အတွင်း ပြန်ကြိုးစားမည်"
+            "value": "အခြေအနေ: ပို့တ်ခွင့် မရရှိနိုင်ပါ၊ %1$@s အတွင်း ပြန်ကြိုးစားမည်"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Status: ingen porttillatelse igjen, prøver på nytt om %1$@s"
+            "value": "Status: porttillatelse utilgjengelig, prøver på nytt om %1$@s"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Status: geen poortrecht meer over, opnieuw proberen over %1$@s"
+            "value": "Status: poortrecht niet beschikbaar, opnieuw proberen over %1$@s"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Status: brak uprawnienia do portu, ponowna próba za %1$@s"
+            "value": "Status: uprawnienie do portu niedostępne, ponowna próba za %1$@s"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Estado: sem direito de porta disponível, nova tentativa em %1$@s"
+            "value": "Estado: direito de porta indisponível, nova tentativa em %1$@s"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Stare: niciun drept de port disponibil, se reîncearcă în %1$@s"
+            "value": "Stare: drept de port indisponibil, se reîncearcă în %1$@s"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Статус: права на порт исчерпаны, повтор через %1$@с"
+            "value": "Статус: право на порт недоступно, повтор через %1$@с"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Status: inget porttillstånd kvar, försöker igen om %1$@s"
+            "value": "Status: porttillstånd otillgängligt, försöker igen om %1$@s"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "สถานะ: ไม่มีสิทธิ์เปิดพอร์ตเหลือแล้ว ลองใหม่ใน %1$@s"
+            "value": "สถานะ: สิทธิ์เปิดพอร์ตไม่พร้อมใช้งาน ลองใหม่ใน %1$@s"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Durum: bağlantı noktası hakkı kalmadı, %1$@s içinde yeniden denenecek"
+            "value": "Durum: bağlantı noktası hakkı kullanılamıyor, %1$@s içinde yeniden denenecek"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Статус: права на порт вичерпано, повтор через %1$@с"
+            "value": "Статус: право на порт недоступне, повтор через %1$@с"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "状态：已无端口额度，%1$@ 秒后重试"
+            "value": "状态：端口权限暂不可用，%1$@ 秒后重试"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "狀態：已無連接埠額度，%1$@ 秒後重試"
+            "value": "狀態：連接埠權限暫不可用，%1$@ 秒後重試"
+          }
+        }
+      }
+    },
+    "Status: the clock of this device is off, turn on automatic time": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: the clock of this device is off, turn on automatic time"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحالة: ساعة هذا الجهاز غير مضبوطة، فعّل الوقت التلقائي"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: enhedens ur går forkert, slå automatisk tid til"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: die Uhr dieses Geräts geht falsch, automatische Uhrzeit aktivieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado: el reloj de este dispositivo no está en hora, activa la hora automática"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وضعیت: ساعت این دستگاه درست نیست، زمان خودکار را روشن کنید"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tila: tämän laitteen kello on väärässä, ota automaattinen aika käyttöön"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statut : l'horloge de cet appareil est décalée, activez l'heure automatique"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stato: l'orologio di questo dispositivo non è corretto, attiva l'ora automatica"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ステータス: このデバイスの時計がずれています、時刻の自動設定をオンにしてください"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "상태: 이 기기의 시계가 맞지 않습니다, 자동 시간 설정을 켜세요"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အခြေအနေ: ဤစက်၏ နာရီ မှားနေသည်၊ အလိုအလျောက် အချိန်ကို ဖွင့်ပါ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: klokken på denne enheten går feil, slå på automatisk tid"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: de klok van dit apparaat loopt verkeerd, zet automatische tijd aan"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: zegar tego urządzenia jest nieprawidłowy, włącz automatyczny czas"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado: o relógio deste dispositivo está errado, ative a hora automática"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stare: ceasul acestui dispozitiv nu e corect, activează ora automată"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Статус: часы этого устройства идут неверно, включите автоматическое время"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: enhetens klocka går fel, slå på automatisk tid"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "สถานะ: นาฬิกาของอุปกรณ์นี้ไม่ตรง เปิดเวลาอัตโนมัติ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durum: bu cihazın saati yanlış, otomatik saati açın"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Статус: годинник цього пристрою йде неправильно, увімкніть автоматичний час"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "状态：此设备的时钟不准，请开启自动设置时间"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "狀態：此裝置的時鐘不準，請開啟自動設定時間"
+          }
+        }
+      }
+    },
+    "Status: the clock of this device is %1$@ s ahead, turn on automatic time": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: the clock of this device is %1$@ s ahead, turn on automatic time"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحالة: ساعة هذا الجهاز متقدمة بمقدار %1$@ ث، فعّل الوقت التلقائي"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: enhedens ur går %1$@ s foran, slå automatisk tid til"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: die Uhr dieses Geräts geht %1$@ s vor, automatische Uhrzeit aktivieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado: el reloj de este dispositivo va %1$@ s adelantado, activa la hora automática"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وضعیت: ساعت این دستگاه %1$@ ثانیه جلو است، زمان خودکار را روشن کنید"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tila: tämän laitteen kello on %1$@ s edellä, ota automaattinen aika käyttöön"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statut : l'horloge de cet appareil avance de %1$@ s, activez l'heure automatique"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stato: l'orologio di questo dispositivo è avanti di %1$@ s, attiva l'ora automatica"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ステータス: このデバイスの時計が%1$@秒進んでいます、時刻の自動設定をオンにしてください"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "상태: 이 기기의 시계가 %1$@초 빠릅니다, 자동 시간 설정을 켜세요"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အခြေအနေ: ဤစက်၏ နာရီ %1$@ စက္ကန့် စောနေသည်၊ အလိုအလျောက် အချိန်ကို ဖွင့်ပါ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: klokken på denne enheten går %1$@ s for fort, slå på automatisk tid"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: de klok van dit apparaat loopt %1$@ s voor, zet automatische tijd aan"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: zegar tego urządzenia spieszy się o %1$@ s, włącz automatyczny czas"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado: o relógio deste dispositivo está %1$@ s adiantado, ative a hora automática"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stare: ceasul acestui dispozitiv e înainte cu %1$@ s, activează ora automată"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Статус: часы этого устройства спешат на %1$@ с, включите автоматическое время"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: enhetens klocka går %1$@ s före, slå på automatisk tid"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "สถานะ: นาฬิกาของอุปกรณ์นี้เร็วไป %1$@ วินาที เปิดเวลาอัตโนมัติ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durum: bu cihazın saati %1$@ sn ileride, otomatik saati açın"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Статус: годинник цього пристрою поспішає на %1$@ с, увімкніть автоматичний час"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "状态：此设备的时钟快了 %1$@ 秒，请开启自动设置时间"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "狀態：此裝置的時鐘快了 %1$@ 秒，請開啟自動設定時間"
+          }
+        }
+      }
+    },
+    "Status: the clock of this device is %1$@ s behind, turn on automatic time": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: the clock of this device is %1$@ s behind, turn on automatic time"
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحالة: ساعة هذا الجهاز متأخرة بمقدار %1$@ ث، فعّل الوقت التلقائي"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: enhedens ur går %1$@ s bagud, slå automatisk tid til"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: die Uhr dieses Geräts geht %1$@ s nach, automatische Uhrzeit aktivieren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado: el reloj de este dispositivo va %1$@ s atrasado, activa la hora automática"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وضعیت: ساعت این دستگاه %1$@ ثانیه عقب است، زمان خودکار را روشن کنید"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tila: tämän laitteen kello on %1$@ s jäljessä, ota automaattinen aika käyttöön"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Statut : l'horloge de cet appareil retarde de %1$@ s, activez l'heure automatique"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stato: l'orologio di questo dispositivo è indietro di %1$@ s, attiva l'ora automatica"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ステータス: このデバイスの時計が%1$@秒遅れています、時刻の自動設定をオンにしてください"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "상태: 이 기기의 시계가 %1$@초 느립니다, 자동 시간 설정을 켜세요"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အခြေအနေ: ဤစက်၏ နာရီ %1$@ စက္ကန့် နောက်ကျနေသည်၊ အလိုအလျောက် အချိန်ကို ဖွင့်ပါ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: klokken på denne enheten går %1$@ s for sakte, slå på automatisk tid"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: de klok van dit apparaat loopt %1$@ s achter, zet automatische tijd aan"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: zegar tego urządzenia spóźnia się o %1$@ s, włącz automatyczny czas"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado: o relógio deste dispositivo está %1$@ s atrasado, ative a hora automática"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Stare: ceasul acestui dispozitiv e în urmă cu %1$@ s, activează ora automată"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Статус: часы этого устройства отстают на %1$@ с, включите автоматическое время"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status: enhetens klocka går %1$@ s efter, slå på automatisk tid"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "สถานะ: นาฬิกาของอุปกรณ์นี้ช้าไป %1$@ วินาที เปิดเวลาอัตโนมัติ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Durum: bu cihazın saati %1$@ sn geride, otomatik saati açın"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Статус: годинник цього пристрою відстає на %1$@ с, увімкніть автоматичний час"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "状态：此设备的时钟慢了 %1$@ 秒，请开启自动设置时间"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "狀態：此裝置的時鐘慢了 %1$@ 秒，請開啟自動設定時間"
           }
         }
       }

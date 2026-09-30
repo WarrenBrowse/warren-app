@@ -36,10 +36,13 @@ struct WarrenNatPmpSnapshot: Equatable {
     var retryAfterSeconds: Int?
     var rateLimitedAt: Date?
     /// What the exit refused the last mapping for as not authorized
-    /// (`no_entitlement` or `entitlement_refused`), and when; the tunnel asks
-    /// again after `retryAfterSeconds`.
+    /// (`no_entitlement`, `entitlement_refused` or `clock_skew`), and when;
+    /// the tunnel asks again after `retryAfterSeconds`.
     var refusal: String?
     var refusedAt: Date?
+    /// With `clock_skew`: the servers' clock minus the device's, in seconds,
+    /// when the refusal said.
+    var clockOffsetSeconds: Int?
 
     static func read(fromSuite suiteName: String?) -> WarrenNatPmpSnapshot {
         guard let suiteName, let defaults = UserDefaults(suiteName: suiteName) else {
@@ -55,7 +58,8 @@ struct WarrenNatPmpSnapshot: Equatable {
             retryAfterSeconds: defaults.object(forKey: WarrenAppGroupKey.natPmpRetryAfterSeconds.rawValue) as? Int,
             rateLimitedAt: defaults.object(forKey: WarrenAppGroupKey.natPmpRateLimitedAt.rawValue) as? Date,
             refusal: defaults.string(forKey: WarrenAppGroupKey.natPmpRefusal.rawValue),
-            refusedAt: defaults.object(forKey: WarrenAppGroupKey.natPmpRefusedAt.rawValue) as? Date
+            refusedAt: defaults.object(forKey: WarrenAppGroupKey.natPmpRefusedAt.rawValue) as? Date,
+            clockOffsetSeconds: defaults.object(forKey: WarrenAppGroupKey.natPmpClockOffsetSeconds.rawValue) as? Int
         )
     }
 }
@@ -297,6 +301,25 @@ public struct WarrenNatPmpSettingsView: View {
         .onDisappear { viewModel.commitPort() }
     }
 
+    /// What a refusal of this device's clock tells the user to do.
+    private func clockAdvice(offsetSeconds: Int?) -> String {
+        guard let offsetSeconds else {
+            return String(localized: "Status: the clock of this device is off, turn on automatic time", table: "Settings")
+        }
+        let seconds = String(offsetSeconds.magnitude)
+        return offsetSeconds < 0
+            ? String(
+                format: String(
+                    localized: "Status: the clock of this device is %1$@ s ahead, turn on automatic time",
+                    table: "Settings"),
+                seconds)
+            : String(
+                format: String(
+                    localized: "Status: the clock of this device is %1$@ s behind, turn on automatic time",
+                    table: "Settings"),
+                seconds)
+    }
+
     /// Live status rows, one per state the snapshot can be in.
     @ViewBuilder
     private func statusRows(state: WarrenPortForwardingState) -> some View {
@@ -344,12 +367,16 @@ public struct WarrenNatPmpSettingsView: View {
             Text(
                 String(
                     format: noEntitlement
-                        ? String(localized: "Status: no entitlement left, retrying in %1$@s", table: "Settings")
+                        ? String(localized: "Status: port entitlement unavailable, retrying in %1$@s", table: "Settings")
                         : String(localized: "Status: refused, retrying in %1$@s", table: "Settings"),
                     String(Int(retryIn.rounded(.up))))
             )
             .font(.warrenMicro)
             .foregroundColor(.white.opacity(0.7))
+        case let .clockRefused(offsetSeconds):
+            Text(clockAdvice(offsetSeconds: offsetSeconds))
+                .font(.warrenMicro)
+                .foregroundColor(.Warren.error)
         case let .failed(portConflict):
             if portConflict {
                 Text(String(localized: "That port is already taken on this exit.", table: "Settings"))

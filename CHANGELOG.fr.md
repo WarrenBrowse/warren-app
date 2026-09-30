@@ -55,6 +55,9 @@ par l'application, gardez-le tel quel.
 - [Android] Indiquer que l'horloge de cet appareil est décalée, de combien de secondes et dans quel
   sens, quand les serveurs refusent le port forwarding pour cette raison, au lieu d'annoncer que
   les droits de port sont épuisés.
+- [iOS] Indiquer que l'horloge de cet appareil est décalée, de combien de secondes et dans quel
+  sens, quand les serveurs refusent le port forwarding pour cette raison, au lieu d'annoncer que
+  les droits de port sont épuisés.
 
 ## [1.1.45] - 2026-09-30
 ### Corrigé

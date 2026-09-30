@@ -474,11 +474,16 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
             defaults.set("rate-limited", forKey: WarrenAppGroupKey.natPmpStatus.rawValue)
             defaults.set(Int(retryAfter), forKey: WarrenAppGroupKey.natPmpRetryAfterSeconds.rawValue)
             defaults.set(Date(), forKey: WarrenAppGroupKey.natPmpRateLimitedAt.rawValue)
-        case .natPmpRefused(let refusal, let retryIn):
+        case .natPmpRefused(let refusal, let retryIn, let clockOffset):
             // Not a failure: the tunnel asks again on its own, and the screen
             // says what was refused and counts down to the next try.
             defaults.set("refused", forKey: WarrenAppGroupKey.natPmpStatus.rawValue)
             defaults.set(refusal, forKey: WarrenAppGroupKey.natPmpRefusal.rawValue)
+            if let clockOffset {
+                defaults.set(Int(clockOffset), forKey: WarrenAppGroupKey.natPmpClockOffsetSeconds.rawValue)
+            } else {
+                defaults.removeObject(forKey: WarrenAppGroupKey.natPmpClockOffsetSeconds.rawValue)
+            }
             defaults.set(Int(retryIn), forKey: WarrenAppGroupKey.natPmpRetryAfterSeconds.rawValue)
             defaults.set(Date(), forKey: WarrenAppGroupKey.natPmpRefusedAt.rawValue)
             defaults.removeObject(forKey: WarrenAppGroupKey.natPmpExternalPort.rawValue)
@@ -518,6 +523,7 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         defaults.removeObject(forKey: WarrenAppGroupKey.natPmpRateLimitedAt.rawValue)
         defaults.removeObject(forKey: WarrenAppGroupKey.natPmpRefusal.rawValue)
         defaults.removeObject(forKey: WarrenAppGroupKey.natPmpRefusedAt.rawValue)
+        defaults.removeObject(forKey: WarrenAppGroupKey.natPmpClockOffsetSeconds.rawValue)
     }
 
     /// Mirror an exit-pubkey TOFU mismatch into the App Group `UserDefaults`

@@ -64,6 +64,26 @@ final class WarrenPortForwardingTests: XCTestCase {
         XCTAssertEqual(state(refused), .refused(noEntitlement: true, retryIn: 20))
     }
 
+    /// Forum topic 219: every mint was refused for a clock 91 s fast, and the
+    /// screen said the entitlements were used up. The refusal names the clock
+    /// and the offset instead, since asking again cannot help until it is set.
+    func testARefusalForTheDeviceClockNamesTheClockAndTheOffset() {
+        var refused = snapshot(status: "refused", retryAfterSeconds: 30)
+        refused.refusal = "clock_skew"
+        refused.clockOffsetSeconds = -91
+        refused.refusedAt = now
+
+        XCTAssertEqual(state(refused), .clockRefused(offsetSeconds: -91))
+    }
+
+    func testARefusalForTheDeviceClockWithoutAnOffsetStillNamesTheClock() {
+        var refused = snapshot(status: "refused", retryAfterSeconds: 30)
+        refused.refusal = "clock_skew"
+        refused.refusedAt = now
+
+        XCTAssertEqual(state(refused), .clockRefused(offsetSeconds: nil))
+    }
+
     func testARefusedEntitlementIsNamedApart() {
         var refused = snapshot(status: "refused", retryAfterSeconds: 2)
         refused.refusal = "entitlement_refused"

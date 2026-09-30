@@ -59,6 +59,9 @@ Line wrap the file at 100 chars.                                              Th
 - [Android] Say that the clock of this device is off, by how many seconds and in which direction,
   when the servers refuse port forwarding for it, instead of saying that the port entitlements are
   used up.
+- [iOS] Say that the clock of this device is off, by how many seconds and in which direction, when
+  the servers refuse port forwarding for it, instead of saying that the port entitlements are used
+  up.
 
 ## [1.1.45] - 2026-09-30
 ### Fixed

@@ -226,9 +226,11 @@ public enum WarrenTunnelEvent: Sendable {
     /// own, and the screen can say when.
     case natPmpRateLimited(retryAfter: UInt32)
     /// The exit refused the mapping as not authorized and the tunnel asks
-    /// again on its own in `retryIn` seconds. `refusal` is `no_entitlement`
-    /// or `entitlement_refused`.
-    case natPmpRefused(refusal: String, retryIn: UInt32)
+    /// again on its own in `retryIn` seconds. `refusal` is `no_entitlement`,
+    /// `entitlement_refused` or `clock_skew`; with `clock_skew`,
+    /// `clockOffset` is the servers' clock minus the device's in seconds,
+    /// when the refusal said.
+    case natPmpRefused(refusal: String, retryIn: UInt32, clockOffset: Int64?)
 }
 
 /// What an auth-failed reason says about a ban (warren-core doc 105), read off
@@ -953,7 +955,12 @@ private let eventCallbackBridge:
             mapped = .natPmpRateLimited(retryAfter: event.data_nat_pmp_retry_after_seconds)
         case EventNatPmpRefused:
             let refusal = event.data_nat_pmp_failure_reason.flatMap { String(cString: $0) } ?? ""
-            mapped = .natPmpRefused(refusal: refusal, retryIn: event.data_nat_pmp_retry_after_seconds)
+            mapped = .natPmpRefused(
+                refusal: refusal,
+                retryIn: event.data_nat_pmp_retry_after_seconds,
+                clockOffset: event.data_nat_pmp_clock_offset_known
+                    ? event.data_nat_pmp_clock_offset_seconds : nil
+            )
         default:
             return
         }

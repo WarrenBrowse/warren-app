@@ -22,7 +22,7 @@ final class WarrenAppGroupKeyTests: XCTestCase {
     /// test fails fast so the omission is caught at build time.
     func test_allCases_includesAllExpectedKeys() {
         let cases = WarrenAppGroupKey.allCases
-        XCTAssertEqual(cases.count, 21, "Add the new key to consumers before expanding allCases")
+        XCTAssertEqual(cases.count, 22, "Add the new key to consumers before expanding allCases")
         // Event surfaces (PacketTunnel extension to main app observer).
         XCTAssertTrue(cases.contains(.lastFailoverExit))
         XCTAssertTrue(cases.contains(.lastFailoverAt))
@@ -38,6 +38,7 @@ final class WarrenAppGroupKeyTests: XCTestCase {
         // A mapping refused as not authorized, and asked for again.
         XCTAssertTrue(cases.contains(.natPmpRefusal))
         XCTAssertTrue(cases.contains(.natPmpRefusedAt))
+        XCTAssertTrue(cases.contains(.natPmpClockOffsetSeconds))
         // The day a ban lapses, for the suspension message.
         XCTAssertTrue(cases.contains(.accountBanLapsesAt))
         // The goodput prober's verdict for the live session.

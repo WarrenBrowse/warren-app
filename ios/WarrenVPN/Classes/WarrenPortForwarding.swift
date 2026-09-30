@@ -29,6 +29,11 @@ public enum WarrenPortForwardingState: Equatable, Sendable {
     /// for want of an entitlement, or refusing the one presented. The tunnel
     /// asks again on its own in `retryIn`.
     case refused(noEntitlement: Bool, retryIn: TimeInterval)
+    /// The servers refused this device's clock, so no entitlement could be
+    /// minted. `offsetSeconds` is their clock minus the device's (negative
+    /// when the device runs ahead), when they said. Asking again cannot help
+    /// until the clock is set right, so no countdown is shown.
+    case clockRefused(offsetSeconds: Int?)
 }
 
 /// The category the engine reports when the port the user pinned is already
@@ -57,6 +62,8 @@ public enum WarrenPortForwarding {
             return .mapped(port: port, renewsIn: renewCountdown(snapshot: snapshot, now: now))
         case "failed":
             return .failed(portConflict: snapshot.failureReason == warrenPortInUseReason)
+        case "refused" where snapshot.refusal == "clock_skew":
+            return .clockRefused(offsetSeconds: snapshot.clockOffsetSeconds)
         case "refused":
             return .refused(
                 noEntitlement: snapshot.refusal != "entitlement_refused",

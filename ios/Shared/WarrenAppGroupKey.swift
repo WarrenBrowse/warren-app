@@ -73,12 +73,17 @@ public enum WarrenAppGroupKey: String, CaseIterable {
     case natPmpRateLimitedAt = "WarrenTunnel.natPmpRateLimitedAt"
 
     /// `String`. What the exit refused the last mapping for, as not
-    /// authorized (warren-core doc 105): `no_entitlement` or
-    /// `entitlement_refused`. The tunnel asks again on its own after
+    /// authorized (warren-core doc 105): `no_entitlement`,
+    /// `entitlement_refused` or `clock_skew`. The tunnel asks again on its own after
     /// `natPmpRetryAfterSeconds`, counted from `natPmpRefusedAt` (`Date`).
     case natPmpRefusal = "WarrenTunnel.natPmpRefusal"
 
     case natPmpRefusedAt = "WarrenTunnel.natPmpRefusedAt"
+
+    /// `Int`. With a `clock_skew` refusal, the servers' clock minus the
+    /// device's, in seconds (negative when the device runs ahead). Absent when
+    /// the refusal did not say, or for any other refusal.
+    case natPmpClockOffsetSeconds = "WarrenTunnel.natPmpClockOffsetSeconds"
 
     /// `Date`. When the ban the tunnel was last blocked for lapses
     /// (warren-core doc 105), for the suspension message. Absent when the
