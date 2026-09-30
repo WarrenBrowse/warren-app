@@ -9,6 +9,7 @@ impl From<WarrenDiagnostics> for proto::WarrenDiagnostics {
             requested_n_connections: u32::from(diagnostics.requested_n_connections),
             carrier_verdict: diagnostics.carrier_verdict.map(proto::CarrierVerdict::from),
             dual_homed_interfaces: diagnostics.dual_homed_interfaces,
+            server_clock_offset_secs: diagnostics.server_clock_offset_secs,
         }
     }
 }
@@ -42,6 +43,7 @@ impl TryFrom<proto::WarrenDiagnostics> for WarrenDiagnostics {
                 .map(CarrierVerdictReport::try_from)
                 .transpose()?,
             dual_homed_interfaces: diagnostics.dual_homed_interfaces,
+            server_clock_offset_secs: diagnostics.server_clock_offset_secs,
         })
     }
 }
@@ -78,6 +80,7 @@ mod tests {
             requested_n_connections: 8,
             carrier_verdict,
             dual_homed_interfaces: vec!["en0".to_owned(), "en5".to_owned()],
+            server_clock_offset_secs: Some(-91),
         }
     }
 
@@ -100,6 +103,19 @@ mod tests {
             WarrenDiagnostics::try_from(proto::WarrenDiagnostics::from(original.clone())).unwrap();
         assert_eq!(restored.carrier_verdict, None);
         assert_eq!(restored, original);
+    }
+
+    /// A clock nobody read yet must not come back as a right one: `0 s` would
+    /// tell a reporter their clock is fine when nothing was measured.
+    #[test]
+    fn a_clock_not_measured_roundtrips_as_not_measured() {
+        let original = WarrenDiagnostics {
+            server_clock_offset_secs: None,
+            ..diagnostics(None)
+        };
+        let restored =
+            WarrenDiagnostics::try_from(proto::WarrenDiagnostics::from(original.clone())).unwrap();
+        assert_eq!(restored.server_clock_offset_secs, None);
     }
 
     #[test]

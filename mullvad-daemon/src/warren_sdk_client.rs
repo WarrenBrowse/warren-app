@@ -112,11 +112,11 @@ impl SharedWarrenApiClient {
     }
 
     fn client(&self) -> WarrenApiClient<WarrenApiTransport> {
-        WarrenApiClient::new(
+        crate::warren_api_clock::shared().attach(WarrenApiClient::new(
             self.api_base.clone(),
             snapshot_identity(&self.seed),
             self.transport.clone(),
-        )
+        ))
     }
 
     /// Signed `GET /v1/subscription`.
@@ -233,6 +233,21 @@ mod tests {
         );
 
         assert_eq!(client.wallet(), None);
+    }
+
+    /// A client is rebuilt per call, so a clock of its own would start from
+    /// the device clock every time and pay a refusal per call on a machine
+    /// whose clock drifted (forum topic 219).
+    #[test]
+    fn every_client_it_builds_stamps_with_the_daemons_one_clock() {
+        let client = SharedWarrenApiClient::new(
+            "https://api.example.test".to_owned(),
+            seed_handle([7u8; 32]),
+        );
+
+        let shared = crate::warren_api_clock::shared().server_clock();
+        assert!(Arc::ptr_eq(client.client().server_clock(), shared));
+        assert!(Arc::ptr_eq(client.client().server_clock(), shared));
     }
 
     #[test]

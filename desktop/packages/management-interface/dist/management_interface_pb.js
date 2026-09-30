@@ -9344,7 +9344,8 @@ proto.mullvad_daemon.management_interface.WarrenDiagnostics.toObject = function(
   var f, obj = {
     requestedNConnections: jspb.Message.getFieldWithDefault(msg, 1, 0),
     carrierVerdict: (f = msg.getCarrierVerdict()) && proto.mullvad_daemon.management_interface.CarrierVerdict.toObject(includeInstance, f),
-    dualHomedInterfacesList: (f = jspb.Message.getRepeatedField(msg, 3)) == null ? undefined : f
+    dualHomedInterfacesList: (f = jspb.Message.getRepeatedField(msg, 3)) == null ? undefined : f,
+    serverClockOffsetSecs: jspb.Message.getFieldWithDefault(msg, 4, 0)
   };
 
   if (includeInstance) {
@@ -9394,6 +9395,10 @@ proto.mullvad_daemon.management_interface.WarrenDiagnostics.deserializeBinaryFro
       var value = /** @type {string} */ (reader.readString());
       msg.addDualHomedInterfaces(value);
       break;
+    case 4:
+      var value = /** @type {number} */ (reader.readSint64());
+      msg.setServerClockOffsetSecs(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -9442,6 +9447,13 @@ proto.mullvad_daemon.management_interface.WarrenDiagnostics.serializeBinaryToWri
   if (f.length > 0) {
     writer.writeRepeatedString(
       3,
+      f
+    );
+  }
+  f = /** @type {number} */ (jspb.Message.getField(message, 4));
+  if (f != null) {
+    writer.writeSint64(
+      4,
       f
     );
   }
@@ -9537,6 +9549,42 @@ proto.mullvad_daemon.management_interface.WarrenDiagnostics.prototype.addDualHom
  */
 proto.mullvad_daemon.management_interface.WarrenDiagnostics.prototype.clearDualHomedInterfacesList = function() {
   return this.setDualHomedInterfacesList([]);
+};
+
+
+/**
+ * optional sint64 server_clock_offset_secs = 4;
+ * @return {number}
+ */
+proto.mullvad_daemon.management_interface.WarrenDiagnostics.prototype.getServerClockOffsetSecs = function() {
+  return /** @type {number} */ (jspb.Message.getFieldWithDefault(this, 4, 0));
+};
+
+
+/**
+ * @param {number} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenDiagnostics} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenDiagnostics.prototype.setServerClockOffsetSecs = function(value) {
+  return jspb.Message.setField(this, 4, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.WarrenDiagnostics} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenDiagnostics.prototype.clearServerClockOffsetSecs = function() {
+  return jspb.Message.setField(this, 4, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenDiagnostics.prototype.hasServerClockOffsetSecs = function() {
+  return jspb.Message.getField(this, 4) != null;
 };
 
 

@@ -212,8 +212,11 @@ fn wallet_for(
     guard
         .entry(key.clone())
         .or_insert_with(|| {
-            let client =
-                WarrenApiClient::new(api_url.to_owned(), identity, WarrenApiTransport::new());
+            let client = crate::warren_api_clock::shared().attach(WarrenApiClient::new(
+                api_url.to_owned(),
+                identity,
+                WarrenApiTransport::new(),
+            ));
             let manager = Arc::new(
                 TokenManager::new(Arc::new(client), BlindingKey::session(&seed_bytes))
                     .with_server_pubkey_pins(trust.server_pins.iter().cloned()),

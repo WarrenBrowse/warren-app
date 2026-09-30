@@ -61,10 +61,10 @@ pub(crate) fn provider_for(
     });
     let api_url = api_url.to_owned();
     mint.slot_source(wallet_pubkey, blinding, move || {
-        WarrenApiClient::new(
+        crate::warren_api_clock::shared().attach(WarrenApiClient::new(
             api_url,
             WarrenIdentity::from_seed(&seed_bytes),
             WarrenApiTransport::new(),
-        )
+        ))
     })
 }

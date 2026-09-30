@@ -157,6 +157,8 @@ pub async fn run() -> Result<()> {
                     "no verdict cached for the current network",
                 ),
             }
+            let (status, observation) = clock_observation(diagnostics.server_clock_offset_secs);
+            report.push(status, "clock", observation);
             if diagnostics.dual_homed_interfaces.len() >= 2 {
                 report.push(
                     Status::Warn,
@@ -183,6 +185,34 @@ pub async fn run() -> Result<()> {
     }
 
     finish(&report);
+}
+
+/// The row for this machine's clock against the Warren servers'. Past half a
+/// minute the daemon moves every signed stamp by the offset, which covers a
+/// drift the servers would otherwise refuse, but only up to a point, and the
+/// fix that lasts is the system's automatic time.
+fn clock_observation(offset_secs: Option<i64>) -> (Status, String) {
+    match offset_secs {
+        None => (
+            Status::Info,
+            "not measured yet (no server answer read since the daemon started)".to_owned(),
+        ),
+        Some(offset) if offset.unsigned_abs() <= 30 => (
+            Status::Ok,
+            format!("within {} s of the Warren servers", offset.unsigned_abs()),
+        ),
+        Some(offset) => {
+            let direction = if offset < 0 { "ahead of" } else { "behind" };
+            (
+                Status::Warn,
+                format!(
+                    "this machine is {} s {direction} the Warren servers; turn on automatic \
+                     date and time",
+                    offset.unsigned_abs()
+                ),
+            )
+        }
+    }
 }
 
 fn report_tunnel_state(report: &mut Report, state: &TunnelState) {
@@ -292,6 +322,30 @@ fn finish(report: &Report) -> ! {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_clock_off_by_more_than_the_correction_ignores_is_a_warning_that_says_which_way() {
+        let (status, observation) = clock_observation(Some(-91));
+        assert_eq!(status, Status::Warn);
+        assert!(observation.contains("91 s ahead"), "{observation}");
+
+        let (status, observation) = clock_observation(Some(300));
+        assert_eq!(status, Status::Warn);
+        assert!(observation.contains("300 s behind"), "{observation}");
+    }
+
+    #[test]
+    fn a_clock_within_half_a_minute_of_the_servers_is_fine() {
+        assert_eq!(clock_observation(Some(-2)).0, Status::Ok);
+        assert_eq!(clock_observation(Some(30)).0, Status::Ok);
+    }
+
+    #[test]
+    fn a_clock_the_daemon_never_read_is_not_called_right() {
+        let (status, observation) = clock_observation(None);
+        assert_eq!(status, Status::Info);
+        assert!(observation.contains("not measured"), "{observation}");
+    }
 
     #[test]
     fn a_clean_run_exits_zero() {

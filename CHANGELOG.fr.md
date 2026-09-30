@@ -42,6 +42,10 @@ par l'application, gardez-le tel quel.
 - [iOS] Déconnecter le VPN et retirer sa configuration à la déconnexion du compte ou à l'effacement
   du portefeuille, pour que le tunnel ne puisse ni rester ouvert ni revenir à la demande pour un
   portefeuille qui a quitté l'appareil.
+- [Desktop] Garder le port forwarding, les jetons de session et l'écran du compte en état de marche
+  sur un ordinateur dont l'horloge a plus d'une minute d'écart : chaque requête signée prend
+  désormais l'horloge des serveurs dès le premier refus, et le rapport de problème indique l'écart
+  de l'horloge.
 
 ## [1.1.45] - 2026-09-30
 ### Corrigé

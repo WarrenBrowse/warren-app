@@ -33,6 +33,11 @@ pub struct WarrenDiagnostics {
     /// LAN then picks which interface carries the carrier's replies, which can
     /// cost a large part of the downlink with nothing else showing it.
     pub dual_homed_interfaces: Vec<String>,
+    /// The Warren servers' clock minus this machine's, in seconds (positive
+    /// when this machine is behind), from the last answer read. `None` while
+    /// no answer has been read. Past a minute either way every signed request
+    /// is refused unless the correction the daemon applies can cover it.
+    pub server_clock_offset_secs: Option<i64>,
 }
 
 /// A remembered carrier-bind verdict and how stale it is.

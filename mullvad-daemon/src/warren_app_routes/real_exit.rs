@@ -690,11 +690,13 @@ impl Harness {
             .expect("a mnemonic identity keeps its seed");
         let manager = Arc::new(
             TokenManager::new(
-                Arc::new(WarrenApiClient::new(
-                    API.to_owned(),
-                    identity,
-                    crate::warren_api_transport::WarrenApiTransport::new(),
-                )),
+                Arc::new(
+                    crate::warren_api_clock::shared().attach(WarrenApiClient::new(
+                        API.to_owned(),
+                        identity,
+                        crate::warren_api_transport::WarrenApiTransport::new(),
+                    )),
+                ),
                 BlindingKey::session(&seed),
             )
             .with_mint_horizon(0)

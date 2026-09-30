@@ -926,6 +926,11 @@ export class WarrenDiagnostics extends jspb.Message {
     setDualHomedInterfacesList(value: Array<string>): WarrenDiagnostics;
     addDualHomedInterfaces(value: string, index?: number): string;
 
+    hasServerClockOffsetSecs(): boolean;
+    clearServerClockOffsetSecs(): void;
+    getServerClockOffsetSecs(): number | undefined;
+    setServerClockOffsetSecs(value: number): WarrenDiagnostics;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): WarrenDiagnostics.AsObject;
     static toObject(includeInstance: boolean, msg: WarrenDiagnostics): WarrenDiagnostics.AsObject;
@@ -941,6 +946,7 @@ export namespace WarrenDiagnostics {
         requestedNConnections: number,
         carrierVerdict?: CarrierVerdict.AsObject,
         dualHomedInterfacesList: Array<string>,
+        serverClockOffsetSecs?: number,
     }
 }
 

@@ -616,6 +616,10 @@ message WarrenDiagnostics {
   // subnet, sent only when two or more do. Names only: an address here would
   // be identity material.
   repeated string dual_homed_interfaces = 3;
+  // The Warren servers' clock minus this machine's, in seconds (positive
+  // when this machine is behind), as the last answer read showed it. Absent
+  // while no answer has been read.
+  optional sint64 server_clock_offset_secs = 4;
 }
 
 message CarrierVerdict {

@@ -31,6 +31,8 @@ uuid = { version = "1.4.1", features = ["v4"] }
 
 [target.'cfg(not(target_os="android"))'.dependencies]
 clap = { workspace = true }
+mullvad-management-interface = { path = "../mullvad-management-interface" }
+tokio = { workspace = true, features = ["rt", "time"] }
 tracing-subscriber = { workspace = true }
 
 [target.'cfg(windows)'.build-dependencies]

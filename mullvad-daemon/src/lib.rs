@@ -50,13 +50,17 @@ mod warren_account_standing;
 /// Periodic refresher for the server-signed launch announcements, plus the
 /// second, wallet-signed call that draws this account's campaign voucher.
 mod warren_announcements_updater;
+/// The daemon's own `warren_api::HttpTransport`: the SDK's bundled reqwest
+/// transport cannot be told how to resolve, and these calls must reach the
+/// API through the address cache rather than through system DNS.
+/// The Warren servers' clock, one for the process: every signed API client
+/// and the forum signer stamp with it, so a machine whose clock drifted is
+/// corrected by the first refusal any of them meets.
+mod warren_api_clock;
 /// DNS for the daemon's own Warren fetchers: answers the API host from the
 /// address cache the firewall's allowed endpoint is built from, so a recovery
 /// fetch survives the blocking state that drops system DNS.
 mod warren_api_dns;
-/// The daemon's own `warren_api::HttpTransport`: the SDK's bundled reqwest
-/// transport cannot be told how to resolve, and these calls must reach the
-/// API through the address cache rather than through system DNS.
 mod warren_api_transport;
 /// Which session each app's exit goes through, and what the user sees of it.
 mod warren_app_routes;
@@ -68,10 +72,6 @@ mod warren_artifact_refresh;
 /// down by itself. Holds the decision as pure functions and the watcher that
 /// observes the foreign daemons over their own management sockets.
 pub mod warren_env_arbitration;
-/// The broker's clock, read before a wallet-signed forum request is stamped,
-/// so a machine whose own clock never synchronised is not refused on every
-/// attempt.
-mod warren_forum_clock;
 mod warren_forum_digest_updater;
 /// App-side wrapper around the SDK's `warren_api::WarrenApiClient` that
 /// rebuilds its owned `WarrenIdentity` from a shared, hot-swappable BIP39
@@ -4159,6 +4159,7 @@ impl Daemon {
         let requested_n_connections = crate::warren_tunnel_params::resolve_n_connections(
             self.settings.settings().warren_n_connections,
         );
+        let server_clock_offset_secs = crate::warren_api_clock::shared().measured_offset();
 
         // macOS is the only platform with a carrier-bind guard to report on,
         // and resolving the default route the verdict is keyed by is a round
@@ -4199,6 +4200,7 @@ impl Daemon {
                         requested_n_connections,
                         carrier_verdict,
                         dual_homed_interfaces: observed.dual_homed_interfaces,
+                        server_clock_offset_secs,
                     },
                     "get_warren_diagnostics",
                 );
@@ -4211,6 +4213,7 @@ impl Daemon {
                 requested_n_connections,
                 carrier_verdict: None,
                 dual_homed_interfaces: Vec::new(),
+                server_clock_offset_secs,
             },
             "get_warren_diagnostics",
         );
@@ -4326,7 +4329,7 @@ impl Daemon {
         let authorized_as = signer.pubkey_ss58();
         tokio::spawn(async move {
             let timestamp =
-                warren_forum_clock::signing_timestamp(warren_forum::connect_host()).await;
+                warren_api_clock::forum_signing_timestamp(warren_forum::connect_host()).await;
             let signed = signed_forum_request_for(&signer, &authorized_as, path, body, timestamp);
             match signed {
                 Some(_) => log::debug!("{flow}: signed"),
@@ -4373,7 +4376,7 @@ impl Daemon {
         let authorized_as = signer.pubkey_ss58();
         tokio::spawn(async move {
             let timestamp =
-                warren_forum_clock::signing_timestamp(warren_forum::connect_host()).await;
+                warren_api_clock::forum_signing_timestamp(warren_forum::connect_host()).await;
             let result = signed_forum_report_for(
                 &signer,
                 &authorized_as,
@@ -7243,11 +7246,9 @@ mod forum_report_tests {
         let device_now = SERVER_NOW - 300;
         let signer = WarrenAuthSigner::new(SigningKey::from_bytes(&[9u8; 32]));
 
-        let offset = crate::warren_forum_clock::offset_from_date(
-            Some("Tue, 14 Nov 2023 22:13:20 GMT"),
-            device_now,
-        );
-        let timestamp = crate::warren_forum_clock::corrected_timestamp(device_now, offset);
+        let clock = warren_api::clock::ServerClock::new();
+        clock.observe_date("Tue, 14 Nov 2023 22:13:20 GMT", device_now);
+        let timestamp = clock.stamp(device_now);
         let (headers, body) =
             super::signed_forum_report(&signer, r#"{"area":"other"}"#, None, timestamp)
                 .expect("the report signs");

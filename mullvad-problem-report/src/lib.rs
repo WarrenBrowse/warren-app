@@ -83,11 +83,30 @@ pub enum LogError {
     ReadLogError { path: String },
 }
 
+/// This machine's clock against the Warren servers', as the daemon measured
+/// it: the servers refuse every signed request stamped more than a minute
+/// off, so a report about "nothing works" needs to say where the clock stood.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub enum ClockOffset {
+    /// The daemon did not answer, so nothing is known.
+    #[default]
+    Unknown,
+    /// The daemon has read no server answer yet.
+    NotMeasured,
+    /// The servers' clock minus this machine's, in seconds (positive when
+    /// this machine is behind).
+    Measured(i64),
+}
+
 /// Problem report collector
 #[derive(Debug, Default)]
 pub struct ProblemReportCollector {
     pub extra_logs: Vec<PathBuf>,
     pub redact_custom_strings: Vec<String>,
+    /// Always written to the report header, `unknown` when left unset. Not
+    /// on Android, whose probes write the same keys from their own reading.
+    #[cfg(not(target_os = "android"))]
+    pub clock_offset: ClockOffset,
 
     #[cfg(target_os = "android")]
     pub android_log_dir: PathBuf,
@@ -108,6 +127,8 @@ impl ProblemReportCollector {
     /// Collect the problem report and writes it to the specified output
     pub fn write(self, output: WriteSource<impl Write>) -> Result<(), Error> {
         let mut problem_report = ProblemReport::new(self.redact_custom_strings);
+        #[cfg(not(target_os = "android"))]
+        problem_report.record_clock_offset(self.clock_offset);
 
         let daemon_logs_dir = {
             #[cfg(target_os = "android")]
@@ -498,6 +519,20 @@ impl ProblemReport {
     #[cfg(target_os = "android")]
     pub fn add_metadata(&mut self, key: String, value: String) {
         self.metadata.insert(key, value);
+    }
+
+    /// Writes `offset` to the header as `clock-offset` and
+    /// `clock-offset-source`, the keys and the form the Android report uses.
+    #[cfg(not(target_os = "android"))]
+    fn record_clock_offset(&mut self, offset: ClockOffset) {
+        let (value, source) = match offset {
+            ClockOffset::Unknown => ("unknown".to_owned(), "none"),
+            ClockOffset::NotMeasured => ("not measured".to_owned(), "daemon"),
+            ClockOffset::Measured(secs) => (format!("{secs}s"), "daemon"),
+        };
+        self.metadata.insert("clock-offset".to_owned(), value);
+        self.metadata
+            .insert("clock-offset-source".to_owned(), source.to_owned());
     }
 
     /// Attach some file logs to this report. This method adds the error chain instead of the log
@@ -1092,6 +1127,50 @@ mod tests {
         let report = ProblemReport::new(vec![]);
         let res = report.redact(input);
         assert_eq!(input, res);
+    }
+
+    fn header_of(report: &ProblemReport) -> BTreeMap<String, String> {
+        let mut written = Vec::new();
+        report.write_to(&mut written).expect("the report writes");
+        ProblemReport::parse_metadata(std::str::from_utf8(&written).expect("UTF-8"))
+            .expect("the header parses")
+    }
+
+    /// Forum topic 219: a machine 91 s fast was refused on every signed call,
+    /// and nothing in its report said the clock was off. The header carries
+    /// what the daemon measured, in the form the Android report uses.
+    #[cfg(not(target_os = "android"))]
+    #[test]
+    fn the_header_carries_the_clock_offset_the_daemon_measured() {
+        let mut report = ProblemReport::new(Vec::new());
+        report.record_clock_offset(ClockOffset::Measured(-91));
+
+        let header = header_of(&report);
+        assert_eq!(header["clock-offset"], "-91s");
+        assert_eq!(header["clock-offset-source"], "daemon");
+    }
+
+    /// A clock nobody measured must not read as a right one.
+    #[cfg(not(target_os = "android"))]
+    #[test]
+    fn a_clock_the_daemon_never_read_says_not_measured() {
+        let mut report = ProblemReport::new(Vec::new());
+        report.record_clock_offset(ClockOffset::NotMeasured);
+
+        let header = header_of(&report);
+        assert_eq!(header["clock-offset"], "not measured");
+        assert_eq!(header["clock-offset-source"], "daemon");
+    }
+
+    #[cfg(not(target_os = "android"))]
+    #[test]
+    fn a_daemon_that_did_not_answer_leaves_the_clock_unknown() {
+        let mut report = ProblemReport::new(Vec::new());
+        report.record_clock_offset(ClockOffset::default());
+
+        let header = header_of(&report);
+        assert_eq!(header["clock-offset"], "unknown");
+        assert_eq!(header["clock-offset-source"], "none");
     }
 
     #[test]
