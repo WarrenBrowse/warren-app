@@ -17,17 +17,22 @@
 //! clock against the servers', the same whichever wallet signs.
 //!
 //! The forum broker's `Date` is still read before a forum request is signed,
-//! as the daemon did before the SDK carried the correction, and it is recorded
-//! on the same clock.
+//! as the daemon did before the SDK carried the correction. That reading
+//! corrects the forum stamp it was read for and nothing else: the SDK learns
+//! only from a refusal, whose `Date` cannot be a cached copy, and a health
+//! answer is not one. A broker that gives no usable `Date` leaves the forum
+//! stamp to the shared clock.
 //!
 //! **No-log policy**: only the offset (a duration) is ever logged, never the
 //! request, the key or anything a report carries.
 
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{Arc, OnceLock};
+use std::sync::{Arc, Mutex, OnceLock, PoisonError};
 use std::time::Duration;
 
-use warren_api::clock::{MAX_FORWARD_CORRECTION_SECS, ServerClock, applicable_offset};
+use warren_api::clock::{
+    MAX_FORWARD_CORRECTION_SECS, ServerClock, applicable_offset, clock_offset_secs,
+    corrected_timestamp,
+};
 use warren_api::{HttpTransport, WarrenApiClient};
 
 /// Connect and total budget of the broker clock read. Deliberately under the
@@ -37,20 +42,19 @@ use warren_api::{HttpTransport, WarrenApiClient};
 const CONNECT_TIMEOUT: Duration = Duration::from_secs(5);
 const TOTAL_TIMEOUT: Duration = Duration::from_secs(8);
 
-/// The server clock of this process, and whether it was ever read.
+/// The server clock of this process, and the last reading of the broker's.
 pub(crate) struct ApiClock {
     clock: Arc<ServerClock>,
-    /// Set when this module records a reading. The SDK records a refusal's
-    /// `Date` on [`Self::clock`] without saying so; a non-zero offset tells
-    /// that reading apart from none.
-    read: AtomicBool,
+    /// The offset the broker's last usable `Date` showed, kept for the
+    /// problem report only.
+    broker_offset: Mutex<Option<i64>>,
 }
 
 impl ApiClock {
     fn new() -> Self {
         Self {
             clock: Arc::new(ServerClock::new()),
-            read: AtomicBool::new(false),
+            broker_offset: Mutex::new(None),
         }
     }
 
@@ -68,30 +72,43 @@ impl ApiClock {
         &self.clock
     }
 
-    /// Records the offset the `Date` of an answer received at `device_now`
-    /// shows. Returns it, or `None` when the header does not parse.
-    fn observe(&self, date: &str, device_now: u64) -> Option<i64> {
-        let offset = self.clock.observe_date(date, device_now)?;
-        self.read.store(true, Ordering::Relaxed);
-        Some(offset)
-    }
-
     /// The last measured offset (server minus device, seconds, positive when
-    /// this machine is behind), or `None` while no answer has been read.
+    /// this machine is behind): the one an API refusal showed, else the
+    /// broker's last reading, else `None`. The SDK records a refusal's `Date`
+    /// without saying so, so a zero offset on the shared clock reads as no
+    /// refusal seen.
     pub(crate) fn measured_offset(&self) -> Option<i64> {
         let offset = self.clock.offset_secs();
-        (self.read.load(Ordering::Relaxed) || offset != 0).then_some(offset)
+        if offset != 0 {
+            return Some(offset);
+        }
+        *self
+            .broker_offset
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
     }
 
     /// The timestamp a forum request is signed at when the device clock reads
-    /// `device_now` and the broker answered with `broker_date`. A broker
-    /// answer without a usable `Date` leaves the last reading standing, which
-    /// may be the API's.
+    /// `device_now` and the broker answered with `broker_date`: corrected by
+    /// the broker's own reading when it gave one, by the shared clock's
+    /// otherwise.
     fn forum_stamp(&self, broker_date: Option<&str>, device_now: u64) -> u64 {
-        if let Some(date) = broker_date {
-            self.observe(date, device_now);
-        }
-        self.clock.stamp(device_now)
+        let Some(offset) = broker_date.and_then(|date| clock_offset_secs(date, device_now)) else {
+            return self.clock.stamp(device_now);
+        };
+        *self
+            .broker_offset
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner) = Some(offset);
+        corrected_timestamp(device_now, offset)
+    }
+
+    /// The offset the forum stamp is corrected by right now, for its log line.
+    fn forum_offset(&self) -> i64 {
+        self.broker_offset
+            .lock()
+            .unwrap_or_else(PoisonError::into_inner)
+            .unwrap_or_else(|| self.clock.offset_secs())
     }
 }
 
@@ -116,7 +133,7 @@ pub(crate) async fn forum_signing_timestamp(host: &str) -> u64 {
     let date = read_broker_date(host).await;
     let clock = shared();
     let stamp = clock.forum_stamp(date.as_deref(), device_now);
-    let offset = clock.clock.offset_secs();
+    let offset = clock.forum_offset();
     match applicable_offset(offset) {
         0 if offset > MAX_FORWARD_CORRECTION_SECS => log::info!(
             "Server clock: the servers answered {offset} s ahead, too far to stamp at; signing on this machine's clock"
@@ -156,7 +173,7 @@ async fn read_broker_date(host: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use std::sync::Mutex;
-    use std::sync::atomic::AtomicUsize;
+    use std::sync::atomic::{AtomicUsize, Ordering};
 
     use warren_api::transport::{HttpRequest, HttpResponse, TransportError};
     use warren_identity::WarrenIdentity;
@@ -193,6 +210,20 @@ mod tests {
         let read = ApiClock::new();
         read.clock.observe_date(SERVER_DATE, SERVER_NOW + 91);
         assert_eq!(read.forum_stamp(None, SERVER_NOW + 91), SERVER_NOW);
+    }
+
+    /// The SDK learns only from a refusal, whose `Date` cannot be a cached
+    /// copy. The broker's health answer is not a refusal, so it corrects the
+    /// forum stamp it was read for and leaves the API clients' stamps alone.
+    #[test]
+    fn a_broker_reading_does_not_move_the_api_clients_stamps() {
+        let clock = ApiClock::new();
+
+        assert_eq!(
+            clock.forum_stamp(Some(SERVER_DATE), SERVER_NOW - 300),
+            SERVER_NOW
+        );
+        assert_eq!(clock.clock.stamp(SERVER_NOW - 300), SERVER_NOW - 300);
     }
 
     #[test]
@@ -314,7 +345,9 @@ mod tests {
         };
         let clock = ApiClock::new();
         let device_now = now();
-        clock.observe(&http_date(device_now + 91), device_now);
+        clock
+            .clock
+            .observe_date(&http_date(device_now + 91), device_now);
         let answers = Arc::new(Mutex::new(Vec::new()));
         let transport = Recording {
             inner: crate::warren_api_transport::WarrenApiTransport::new(),
@@ -332,8 +365,8 @@ mod tests {
         let answers = answers.lock().unwrap().clone();
         let statuses: Vec<u16> = answers.iter().map(|(status, _)| *status).collect();
         eprintln!(
-            "live answers: {answers:?}; offset now {:?}; result: {}",
-            clock.measured_offset(),
+            "live answers: {answers:?}; offset now {} s; result: {}",
+            clock.clock.offset_secs(),
             match &result {
                 Ok(_) => "a subscription".to_owned(),
                 Err(error) => format!("{error}"),
@@ -350,10 +383,8 @@ mod tests {
             "the corrected stamp must not be refused for the clock"
         );
         assert!(
-            clock
-                .measured_offset()
-                .is_some_and(|offset| offset.unsigned_abs() <= 5),
-            "the refusal's Date shows this machine's own clock"
+            clock.clock.offset_secs().unsigned_abs() <= 5,
+            "the refusal's Date replaced the 91 s the clock started with"
         );
     }
 

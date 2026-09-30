@@ -50,17 +50,17 @@ mod warren_account_standing;
 /// Periodic refresher for the server-signed launch announcements, plus the
 /// second, wallet-signed call that draws this account's campaign voucher.
 mod warren_announcements_updater;
-/// The daemon's own `warren_api::HttpTransport`: the SDK's bundled reqwest
-/// transport cannot be told how to resolve, and these calls must reach the
-/// API through the address cache rather than through system DNS.
 /// The Warren servers' clock, one for the process: every signed API client
-/// and the forum signer stamp with it, so a machine whose clock drifted is
-/// corrected by the first refusal any of them meets.
+/// stamps with it, so a machine whose clock drifted is corrected by the
+/// first refusal any of them meets.
 mod warren_api_clock;
 /// DNS for the daemon's own Warren fetchers: answers the API host from the
 /// address cache the firewall's allowed endpoint is built from, so a recovery
 /// fetch survives the blocking state that drops system DNS.
 mod warren_api_dns;
+/// The daemon's own `warren_api::HttpTransport`: the SDK's bundled reqwest
+/// transport cannot be told how to resolve, and these calls must reach the
+/// API through the address cache rather than through system DNS.
 mod warren_api_transport;
 /// Which session each app's exit goes through, and what the user sees of it.
 mod warren_app_routes;
