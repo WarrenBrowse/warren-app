@@ -42,11 +42,22 @@ par l'application, gardez-le tel quel.
 - [iOS] Déconnecter le VPN et retirer sa configuration à la déconnexion du compte ou à l'effacement
   du portefeuille, pour que le tunnel ne puisse ni rester ouvert ni revenir à la demande pour un
   portefeuille qui a quitté l'appareil.
+- [iOS] Garder le port forwarding, les jetons de session et l'écran du compte en état de
+  marche sur un appareil dont l'horloge a plus d'une minute d'écart : chaque requête signée prend
+  désormais l'horloge des serveurs dès le premier refus rencontré.
+- [iOS] Indiquer que l'horloge de cet appareil est décalée, de combien de secondes et dans quel
+  sens, quand les serveurs refusent le port forwarding pour cette raison, au lieu d'annoncer que
+  les droits de port sont épuisés.
+- [iOS] Choisir un serveur d'entrée que le réseau utilisé peut joindre, ce
+  qui, sur un réseau en IPv6 seulement, veut dire un serveur qui répond en IPv6.
+
+## [1.1.46] - 2026-09-30
+### Corrigé
 - [Windows, macOS, Linux] Garder le port forwarding, les jetons de session et l'écran du compte en
   état de marche sur un ordinateur dont l'horloge a plus d'une minute d'écart : chaque requête
   signée prend désormais l'horloge des serveurs dès le premier refus, et le rapport de problème
   indique l'écart de l'horloge.
-- [Android, iOS] Garder le port forwarding, les jetons de session et l'écran du compte en état de
+- [Android] Garder le port forwarding, les jetons de session et l'écran du compte en état de
   marche sur un appareil dont l'horloge a plus d'une minute d'écart : chaque requête signée prend
   désormais l'horloge des serveurs dès le premier refus rencontré.
 - [Windows, macOS, Linux] Indiquer que l'horloge de cet ordinateur est décalée, de combien de
@@ -55,13 +66,10 @@ par l'application, gardez-le tel quel.
 - [Android] Indiquer que l'horloge de cet appareil est décalée, de combien de secondes et dans quel
   sens, quand les serveurs refusent le port forwarding pour cette raison, au lieu d'annoncer que
   les droits de port sont épuisés.
-- [iOS] Indiquer que l'horloge de cet appareil est décalée, de combien de secondes et dans quel
-  sens, quand les serveurs refusent le port forwarding pour cette raison, au lieu d'annoncer que
-  les droits de port sont épuisés.
 - [Android] Se connecter sur un réseau mobile en IPv6 seulement, par un serveur d'entrée qui
   répond en IPv6. L'application prenait le premier serveur d'entrée de la liste quelle que soit la
   localisation choisie, et ce serveur ne répond qu'en IPv4 : la connexion ne pouvait pas s'établir.
-- [iOS, Windows, macOS, Linux] Choisir un serveur d'entrée que le réseau utilisé peut joindre, ce
+- [Windows, macOS, Linux] Choisir un serveur d'entrée que le réseau utilisé peut joindre, ce
   qui, sur un réseau en IPv6 seulement, veut dire un serveur qui répond en IPv6.
 - [Android] Indiquer qu'aucun serveur d'entrée n'est joignable sur ce réseau quand c'est la raison
   du blocage d'internet, avec un titre de notification qui lui est propre. Le message n'affirme
@@ -74,6 +82,9 @@ par l'application, gardez-le tel quel.
 - [Android, Windows, macOS, Linux] Ouvrir la page de téléchargement du site bêta depuis l'avis de
   mise à jour d'une version bêta, et celle du site de production seulement depuis une version de
   production.
+- [Windows, macOS, Linux, Android] Indiquer dans le routage des apps que le réseau utilisé
+  n'atteint aucun serveur d'entrée quand c'est la raison pour laquelle la route d'une app ne peut
+  pas fonctionner.
 
 ## [1.1.45] - 2026-09-30
 ### Corrigé

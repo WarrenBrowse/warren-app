@@ -39,10 +39,21 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Deconectează VPN-ul și elimină configurația lui la ieșirea din cont sau la ștergerea
   portofelului, ca tunelul să nu poată nici rămâne deschis, nici reporni la cerere pentru un
   portofel care a părăsit dispozitivul.
+- [iOS] Port forwarding-ul, tokenurile de sesiune și ecranul contului funcționează și pe un
+  dispozitiv al cărui ceas are o abatere de peste un minut: fiecare cerere semnată ia acum ceasul
+  serverelor de la primul refuz întâlnit.
+- [iOS] Aplicația spune că ceasul acestui dispozitiv nu e corect, cu câte secunde și în ce sens,
+  când serverele refuză port forwarding-ul din acest motiv, în loc să spună că drepturile de port
+  s-au epuizat.
+- [iOS] Aplicația alege un server de intrare pe care rețeaua folosită îl
+  poate atinge, adică pe o rețea doar IPv6 un server care răspunde pe IPv6.
+
+## [1.1.46] - 2026-09-30
+### Reparat
 - [Windows, macOS, Linux] Port forwarding-ul, tokenurile de sesiune și ecranul contului funcționează
   și pe un computer al cărui ceas are o abatere de peste un minut: fiecare cerere semnată ia acum
   ceasul serverelor de la primul refuz, iar raportul de problemă arată abaterea ceasului.
-- [Android, iOS] Port forwarding-ul, tokenurile de sesiune și ecranul contului funcționează și pe un
+- [Android] Port forwarding-ul, tokenurile de sesiune și ecranul contului funcționează și pe un
   dispozitiv al cărui ceas are o abatere de peste un minut: fiecare cerere semnată ia acum ceasul
   serverelor de la primul refuz întâlnit.
 - [Windows, macOS, Linux] Aplicația spune că ceasul acestui computer nu e corect, cu câte secunde
@@ -51,13 +62,10 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [Android] Aplicația spune că ceasul acestui dispozitiv nu e corect, cu câte secunde și în ce
   sens, când serverele refuză port forwarding-ul din acest motiv, în loc să spună că drepturile de
   port s-au epuizat.
-- [iOS] Aplicația spune că ceasul acestui dispozitiv nu e corect, cu câte secunde și în ce sens,
-  când serverele refuză port forwarding-ul din acest motiv, în loc să spună că drepturile de port
-  s-au epuizat.
 - [Android] Aplicația se conectează pe o rețea mobilă doar IPv6, printr-un server de intrare care
   răspunde pe IPv6. Aplicația lua primul server de intrare din listă oricare ar fi locația aleasă,
   iar acel server răspunde doar pe IPv4, deci conexiunea nu se putea deschide.
-- [iOS, Windows, macOS, Linux] Aplicația alege un server de intrare pe care rețeaua folosită îl
+- [Windows, macOS, Linux] Aplicația alege un server de intrare pe care rețeaua folosită îl
   poate atinge, adică pe o rețea doar IPv6 un server care răspunde pe IPv6.
 - [Android] Aplicația spune că niciun server de intrare nu e accesibil pe această rețea când acesta
   e motivul pentru care internetul e blocat, cu un titlu de notificare propriu. Mesajul nu mai
@@ -69,6 +77,8 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   ultima încercare de conectare.
 - [Android, Windows, macOS, Linux] Anunțul de actualizare al unei versiuni beta deschide pagina de
   descărcare a site-ului beta, iar pe cea a site-ului de producție doar o versiune de producție.
+- [Windows, macOS, Linux, Android] Rutare aplicații spune că rețeaua folosită nu ajunge la niciun
+  server de intrare când acesta e motivul pentru care ruta unei aplicații nu poate funcționa.
 
 ## [1.1.45] - 2026-09-30
 ### Reparat

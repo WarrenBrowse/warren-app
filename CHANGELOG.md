@@ -47,10 +47,21 @@ Line wrap the file at 100 chars.                                              Th
   other devices hold every connection it is entitled to, instead of showing a plain disconnection.
 - [iOS] Disconnect and remove the VPN configuration when logging out or erasing the wallet, so the
   tunnel can neither stay up nor come back on demand for a wallet that left the device.
+- [iOS] Keep port forwarding, session tokens and the account screen working on a device
+  whose clock is more than a minute off: every signed request now takes the servers' clock from the
+  first refusal any request meets.
+- [iOS] Say that the clock of this device is off, by how many seconds and in which direction, when
+  the servers refuse port forwarding for it, instead of saying that the port entitlements are used
+  up.
+- [iOS] Choose an entry server the network in use can reach, which on an
+  IPv6-only network means one that answers on IPv6.
+
+## [1.1.46] - 2026-09-30
+### Fixed
 - [Windows, macOS, Linux] Keep port forwarding, session tokens and the account screen working on a
   computer whose clock is more than a minute off: every signed request now takes the servers' clock
   from the first refusal, and the problem report says how far off the clock is.
-- [Android, iOS] Keep port forwarding, session tokens and the account screen working on a device
+- [Android] Keep port forwarding, session tokens and the account screen working on a device
   whose clock is more than a minute off: every signed request now takes the servers' clock from the
   first refusal any request meets.
 - [Windows, macOS, Linux] Say that the clock of this computer is off, by how many seconds and in
@@ -59,13 +70,10 @@ Line wrap the file at 100 chars.                                              Th
 - [Android] Say that the clock of this device is off, by how many seconds and in which direction,
   when the servers refuse port forwarding for it, instead of saying that the port entitlements are
   used up.
-- [iOS] Say that the clock of this device is off, by how many seconds and in which direction, when
-  the servers refuse port forwarding for it, instead of saying that the port entitlements are used
-  up.
 - [Android] Connect on an IPv6-only mobile network through an entry server that answers on IPv6.
   The app took the first entry server of the list whatever the location chosen, and that server
   answers on IPv4 only, so the connection could never come up there.
-- [iOS, Windows, macOS, Linux] Choose an entry server the network in use can reach, which on an
+- [Windows, macOS, Linux] Choose an entry server the network in use can reach, which on an
   IPv6-only network means one that answers on IPv6.
 - [Android] Say that no entry server can be reached on this network when that is why the internet
   is blocked, with a notification title of its own. The message no longer claims that the entry
@@ -75,6 +83,8 @@ Line wrap the file at 100 chars.                                              Th
   servers offer, which ones the network carries, and how the last connection attempt failed.
 - [Android, Windows, macOS, Linux] Open the download page of the beta website from the update
   notice of a beta build, and the production one only from a production build.
+- [Windows, macOS, Linux, Android] Say in App routing that the network in use reaches no entry
+  server when that is why an app's route cannot run.
 
 ## [1.1.45] - 2026-09-30
 ### Fixed

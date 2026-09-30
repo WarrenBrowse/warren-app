@@ -1,7 +1,30 @@
 ### Reparat
-- [Linux] Rețeaua Tailscale rămâne accesibilă cât timp VPN-ul este conectat, ca pe macOS. Traficul
-  tailnet intra în tunelul VPN și era blocat acolo; interfața Tailscale îl transportă acum, inclusiv
-  când Tailscale pornește după VPN, iar celelalte rețele rămân blocate.
-- [Windows] Traficul unei rețele Tailscale nu mai este blocat pe adaptorul Tailscale cât timp VPN-ul
-  este conectat. Conexiunea Tailscale către releele sale contează în continuare drept trafic în afara
-  VPN-ului.
+- [Windows, macOS, Linux] Port forwarding-ul, tokenurile de sesiune și ecranul contului funcționează
+  și pe un computer al cărui ceas are o abatere de peste un minut: fiecare cerere semnată ia acum
+  ceasul serverelor de la primul refuz, iar raportul de problemă arată abaterea ceasului.
+- [Android] Port forwarding-ul, tokenurile de sesiune și ecranul contului funcționează și pe un
+  dispozitiv al cărui ceas are o abatere de peste un minut: fiecare cerere semnată ia acum ceasul
+  serverelor de la primul refuz întâlnit.
+- [Windows, macOS, Linux] Aplicația spune că ceasul acestui computer nu e corect, cu câte secunde
+  și în ce sens, când serverele refuză port forwarding-ul din acest motiv, în loc să spună că
+  drepturile de port s-au epuizat.
+- [Android] Aplicația spune că ceasul acestui dispozitiv nu e corect, cu câte secunde și în ce
+  sens, când serverele refuză port forwarding-ul din acest motiv, în loc să spună că drepturile de
+  port s-au epuizat.
+- [Android] Aplicația se conectează pe o rețea mobilă doar IPv6, printr-un server de intrare care
+  răspunde pe IPv6. Aplicația lua primul server de intrare din listă oricare ar fi locația aleasă,
+  iar acel server răspunde doar pe IPv4, deci conexiunea nu se putea deschide.
+- [Windows, macOS, Linux] Aplicația alege un server de intrare pe care rețeaua folosită îl
+  poate atinge, adică pe o rețea doar IPv6 un server care răspunde pe IPv6.
+- [Android] Aplicația spune că niciun server de intrare nu e accesibil pe această rețea când acesta
+  e motivul pentru care internetul e blocat, cu un titlu de notificare propriu. Mesajul nu mai
+  afirmă că serverele de intrare răspund doar pe IPv4 și propune altă țară de intrare sau altă
+  locație.
+- [Android] Raportul de problemă nu mai conține numele serverului de intrare, care apărea în
+  liniile jurnalului de sistem ale conexiunii securizate. Raportul arată acum tipurile de adresă
+  oferite de serverele de intrare, pe cele pe care le poartă rețeaua și felul în care a eșuat
+  ultima încercare de conectare.
+- [Android, Windows, macOS, Linux] Anunțul de actualizare al unei versiuni beta deschide pagina de
+  descărcare a site-ului beta, iar pe cea a site-ului de producție doar o versiune de producție.
+- [Windows, macOS, Linux, Android] Rutare aplicații spune că rețeaua folosită nu ajunge la niciun
+  server de intrare când acesta e motivul pentru care ruta unei aplicații nu poate funcționa.
