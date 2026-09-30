@@ -486,7 +486,10 @@ mod tests {
         ]);
         let first = select_two_hop(&d, "", "nl", &RttCache::new(), NOW, &[], None, every_entry)
             .expect("circuit");
-        assert_eq!(first.relay.relay_id, [1; 16], "precondition: RO ranks first");
+        assert_eq!(
+            first.relay.relay_id, [1; 16],
+            "precondition: RO ranks first"
+        );
 
         let routed = select_two_hop(&d, "", "nl", &RttCache::new(), NOW, &[], None, not_ro_or_fr)
             .expect("DE can front NL");
@@ -502,14 +505,29 @@ mod tests {
             node(&op, 2, "de", 2, 100),
             node(&op, 3, "nl", 3, 100),
         ]);
-        let routed = select_circuit(&d, true, "fr", "nl", &RttCache::new(), NOW, &[], not_ro_or_fr);
-        assert!(routed.is_none(), "never an entry outside the pinned country");
+        let routed = select_circuit(
+            &d,
+            true,
+            "fr",
+            "nl",
+            &RttCache::new(),
+            NOW,
+            &[],
+            not_ro_or_fr,
+        );
+        assert!(
+            routed.is_none(),
+            "never an entry outside the pinned country"
+        );
     }
 
     #[test]
     fn a_one_hop_pick_passes_over_a_node_this_network_cannot_route() {
         let op = op_key();
-        let d = dir(vec![node(&op, 1, "ro", 1, 1_000), node(&op, 2, "de", 2, 10)]);
+        let d = dir(vec![
+            node(&op, 1, "ro", 1, 1_000),
+            node(&op, 2, "de", 2, 10),
+        ]);
         let routed = select_one_hop(&d, "", &[], not_ro_or_fr).expect("DE is routable");
         assert_eq!(routed.relay.relay_id, [2; 16]);
     }
@@ -628,8 +646,8 @@ mod tests {
             node(&op, 2, "fr", 2, 100),
             node(&op, 3, "nl", 3, 100),
         ]);
-        let baseline =
-            select_two_hop(&d, "", "nl", &RttCache::new(), NOW, &[], None, every_entry).expect("circuit");
+        let baseline = select_two_hop(&d, "", "nl", &RttCache::new(), NOW, &[], None, every_entry)
+            .expect("circuit");
         assert_eq!(
             baseline.relay.relay_id, [1; 16],
             "precondition: id tie-break"
@@ -637,7 +655,8 @@ mod tests {
         let mut store = RttCache::new();
         store.record([2; 32], 200, NOW);
         store.record([3; 32], 15, NOW);
-        let biased = select_two_hop(&d, "", "nl", &store, NOW, &[], None, every_entry).expect("circuit");
+        let biased =
+            select_two_hop(&d, "", "nl", &store, NOW, &[], None, every_entry).expect("circuit");
         assert_eq!(
             biased.relay.relay_id, [2; 16],
             "the measured near entry must outrank the id tie-break"
@@ -670,7 +689,8 @@ mod tests {
     fn selected_circuit_carries_the_directory_trust_context() {
         let op = op_key();
         let d = dir(vec![node(&op, 1, "de", 1, 100), node(&op, 3, "nl", 3, 100)]);
-        let c = select_two_hop(&d, "", "nl", &RttCache::new(), NOW, &[], None, every_entry).expect("circuit");
+        let c = select_two_hop(&d, "", "nl", &RttCache::new(), NOW, &[], None, every_entry)
+            .expect("circuit");
         assert_eq!(c.generation, 1);
         assert_eq!(c.operational_pubkey, op.verifying_key());
     }
@@ -767,8 +787,7 @@ mod tests {
         let d = dir(vec![node(&op, 1, "de", 1, 100), node(&op, 2, "fr", 2, 50)]);
         let first = select_circuit(&d, false, "", "", &RttCache::new(), NOW, &[], every_entry)
             .expect("circuit");
-        let mut retarget =
-            CircuitRetarget::new(d.clone(), false, "", "", &first, TTL, every_entry);
+        let mut retarget = CircuitRetarget::new(d.clone(), false, "", "", &first, TTL, every_entry);
 
         assert!(
             retarget
