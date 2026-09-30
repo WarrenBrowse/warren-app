@@ -40,6 +40,15 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   portofelului, ca tunelul să nu poată nici rămâne deschis, nici reporni la cerere pentru un
   portofel care a părăsit dispozitivul.
 
+## [1.1.45] - 2026-09-30
+### Reparat
+- [Linux] Rețeaua Tailscale rămâne accesibilă cât timp VPN-ul este conectat, ca pe macOS. Traficul
+  tailnet intra în tunelul VPN și era blocat acolo; interfața Tailscale îl transportă acum, inclusiv
+  când Tailscale pornește după VPN, iar celelalte rețele rămân blocate.
+- [Windows] Traficul unei rețele Tailscale nu mai este blocat pe adaptorul Tailscale cât timp VPN-ul
+  este conectat. Conexiunea Tailscale către releele sale contează în continuare drept trafic în afara
+  VPN-ului.
+
 ## [1.1.44] - 2026-09-29
 ### Adăugat
 - [Windows, macOS, Linux, Android] O temă luminoasă și o setare Temă în setările interfeței: Sistem,

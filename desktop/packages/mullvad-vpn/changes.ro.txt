@@ -1,10 +1,7 @@
-### Adăugat
-- [Windows, macOS, Linux, Android] O temă luminoasă și o setare Temă în setările interfeței: Sistem,
-  Întunecată sau Luminoasă. Sistem urmează setarea luminoasă sau întunecată a dispozitivului și
-  rămâne întunecată când dispozitivul nu indică niciuna.
-
-### Modificat
-- [Windows, macOS, Linux, Android] Ecranul de conectare este redesenat. Cardul de conexiune,
-  bannerul BETA și etichetele de rețea sunt opace în loc să lase peisajul să se vadă prin ele,
-  starea apare în somon cât timp ești vizibil și în verde după conectare, Conectare este verde
-  închis și Deconectare roșu cărămiziu, iar bannerul BETA rămâne mereu pe un singur rând.
+### Reparat
+- [Linux] Rețeaua Tailscale rămâne accesibilă cât timp VPN-ul este conectat, ca pe macOS. Traficul
+  tailnet intra în tunelul VPN și era blocat acolo; interfața Tailscale îl transportă acum, inclusiv
+  când Tailscale pornește după VPN, iar celelalte rețele rămân blocate.
+- [Windows] Traficul unei rețele Tailscale nu mai este blocat pe adaptorul Tailscale cât timp VPN-ul
+  este conectat. Conexiunea Tailscale către releele sale contează în continuare drept trafic în afara
+  VPN-ului.

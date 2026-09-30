@@ -43,6 +43,16 @@ par l'application, gardez-le tel quel.
   du portefeuille, pour que le tunnel ne puisse ni rester ouvert ni revenir à la demande pour un
   portefeuille qui a quitté l'appareil.
 
+## [1.1.45] - 2026-09-30
+### Corrigé
+- [Linux] Le réseau Tailscale reste joignable pendant que le VPN est connecté, comme sur macOS. Le
+  trafic du tailnet partait dans le tunnel du VPN et y était bloqué ; l'interface de Tailscale le
+  porte désormais, y compris quand Tailscale démarre après le VPN, et les autres réseaux restent
+  bloqués.
+- [Windows] Le trafic d'un réseau Tailscale n'est plus bloqué sur l'adaptateur Tailscale pendant que
+  le VPN est connecté. La connexion de Tailscale à ses relais compte toujours comme du trafic hors du
+  VPN.
+
 ## [1.1.44] - 2026-09-29
 ### Ajouté
 - [Windows, macOS, Linux, Android] Un thème clair, et un réglage Thème dans les paramètres de

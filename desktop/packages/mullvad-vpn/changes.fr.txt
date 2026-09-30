@@ -1,10 +1,8 @@
-### Ajouté
-- [Windows, macOS, Linux, Android] Un thème clair, et un réglage Thème dans les paramètres de
-  l'interface : Système, Sombre ou Clair. Système suit le réglage clair ou sombre de l'appareil, et
-  reste sombre quand l'appareil n'en indique aucun.
-
-### Modifié
-- [Windows, macOS, Linux, Android] L'écran de connexion est redessiné. La carte de connexion, le
-  bandeau BETA et les étiquettes réseau sont opaques au lieu de laisser passer le décor, l'état
-  s'affiche en saumon quand vous êtes visible et en vert une fois connecté, Connexion est en vert
-  foncé et Déconnexion en rouge brique, et le bandeau BETA tient toujours sur une ligne.
+### Corrigé
+- [Linux] Le réseau Tailscale reste joignable pendant que le VPN est connecté, comme sur macOS. Le
+  trafic du tailnet partait dans le tunnel du VPN et y était bloqué ; l'interface de Tailscale le
+  porte désormais, y compris quand Tailscale démarre après le VPN, et les autres réseaux restent
+  bloqués.
+- [Windows] Le trafic d'un réseau Tailscale n'est plus bloqué sur l'adaptateur Tailscale pendant que
+  le VPN est connecté. La connexion de Tailscale à ses relais compte toujours comme du trafic hors du
+  VPN.
