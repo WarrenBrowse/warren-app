@@ -841,6 +841,7 @@ impl Harness {
                 entry_country: "",
                 main_circuit: Some(&self.main_circuit),
                 drained: &[],
+                unroutable_entries: &[],
                 locality: ClientLocality {
                     continent: None,
                     country: None,

@@ -393,6 +393,27 @@ fn without_home_entries(
     if filtered.is_empty() { pairs } else { filtered }
 }
 
+/// Drop the pairs whose ENTRY this host cannot route on any family it
+/// publishes (`unroutable`, from `talpid_warren_tunnel::warren_unroutable_relays`),
+/// unless that would leave nothing. Ranking alone ignores address families:
+/// on an IPv6-only network a v4-only entry was picked for every exit and
+/// failed before its first packet (forum topic 210). When no pair is left
+/// the unfiltered set is dialed as before, and the engine ends that dial in
+/// its typed `NoReachableEntry` rather than this selection inventing a
+/// circuit outside the user's constraints.
+fn routable_pairs(
+    dir: &VerifiedMultiHopDirectory,
+    pairs: Vec<(usize, usize)>,
+    unroutable: &[[u8; 16]],
+) -> Vec<(usize, usize)> {
+    let routed: Vec<(usize, usize)> = pairs
+        .iter()
+        .copied()
+        .filter(|&(e, _)| !unroutable.contains(&dir.nodes[e].relay.relay_id))
+        .collect();
+    if routed.is_empty() { pairs } else { routed }
+}
+
 /// Selects a circuit from a verified directory honoring the country
 /// hints, ranking entries by client proximity then the shared
 /// path-aware score (weight-ordered when `advisory` is `None`).
@@ -421,6 +442,7 @@ pub fn select_circuit(
         use_warren_obfuscation,
         exclude_exit_ids,
         |_| true,
+        &[],
         locality,
         advisory,
         now_unix,
@@ -430,7 +452,8 @@ pub fn select_circuit(
 /// [`select_circuit`] restricted to the exits `exit_admits` accepts. The
 /// filter narrows the exit leg only: the entry keeps the country hint and
 /// the home-country rule, so a per-app city choice (which names an exit)
-/// can enter anywhere the main connection could.
+/// can enter anywhere the main connection could, and like it only through
+/// an entry this host routes ([`routable_pairs`]).
 #[must_use]
 #[expect(clippy::too_many_arguments)]
 pub fn select_circuit_exiting_through(
@@ -441,6 +464,7 @@ pub fn select_circuit_exiting_through(
     use_warren_obfuscation: bool,
     exclude_exit_ids: &[[u8; 16]],
     exit_admits: impl Fn(&NodeEntry) -> bool,
+    unroutable_entries: &[[u8; 16]],
     locality: ClientLocality,
     advisory: Option<&PathQualityAdvisory>,
     now_unix: u64,
@@ -458,6 +482,7 @@ pub fn select_circuit_exiting_through(
     } else {
         pairs
     };
+    let pairs = routable_pairs(dir, pairs, unroutable_entries);
     let (entry_idx, exit_idx) = pick_pair_path_aware(
         dir,
         &pairs,
@@ -516,6 +541,7 @@ fn pick_two_hop_circuit(
         current,
         exclude_exit_ids,
         &[],
+        &[],
         locality,
         advisory,
         &RttCache::new(),
@@ -536,6 +562,7 @@ fn pick_two_hop_circuit_with_rtt(
     current: Option<&MultiHopConfig>,
     exclude_exit_ids: &[[u8; 16]],
     refused_entries: &[[u8; 16]],
+    unroutable_entries: &[[u8; 16]],
     locality: ClientLocality,
     advisory: Option<&PathQualityAdvisory>,
     entry_rtt: &RttCache,
@@ -554,6 +581,9 @@ fn pick_two_hop_circuit_with_rtt(
     } else {
         pairs
     };
+    // An entry this network cannot route leaves `pairs` here, so a sticky
+    // circuit through one is repicked like a node that left the directory.
+    let pairs = routable_pairs(dir, pairs, unroutable_entries);
     let rank = |pairs: &[(usize, usize)]| {
         pick_pair_path_aware(
             dir,
@@ -739,6 +769,9 @@ fn pick_pair_path_aware(
 /// Picks a **1-hop** circuit with sticky stability (toggle OFF). Keeps
 /// `current` when its single node is still present and still matches the
 /// `exit_country` hint; otherwise makes a fresh weighted pick.
+///
+/// The node is the entry too, so one this network cannot route is neither
+/// kept nor picked while another can serve.
 #[must_use]
 fn pick_one_hop_circuit(
     dir: &VerifiedMultiHopDirectory,
@@ -747,6 +780,7 @@ fn pick_one_hop_circuit(
     use_warren_obfuscation: bool,
     current: Option<&MultiHopConfig>,
     exclude_exit_ids: &[[u8; 16]],
+    unroutable_entries: &[[u8; 16]],
 ) -> Option<MultiHopConfig> {
     if let Some(cur) = current {
         let (cur_relay, cur_exit) = circuit_identity(cur);
@@ -759,16 +793,18 @@ fn pick_one_hop_circuit(
             && ri == xi
             && country_matches(exit_country, &dir.nodes[ri].country)
             && !exclude_exit_ids.contains(&cur_exit)
+            && !unroutable_entries.contains(&cur_relay)
         {
             return assemble(dir, ri, ri, enable_gso, use_warren_obfuscation);
         }
     }
-    select_one_hop_circuit(
+    select_one_hop_among(
         dir,
         exit_country,
         enable_gso,
         use_warren_obfuscation,
         exclude_exit_ids,
+        unroutable_entries,
     )
 }
 
@@ -790,7 +826,27 @@ pub fn select_one_hop_circuit(
     use_warren_obfuscation: bool,
     exclude_exit_ids: &[[u8; 16]],
 ) -> Option<MultiHopConfig> {
-    let candidates: Vec<usize> = dir
+    select_one_hop_among(
+        dir,
+        exit_country,
+        enable_gso,
+        use_warren_obfuscation,
+        exclude_exit_ids,
+        &[],
+    )
+}
+
+/// [`select_one_hop_circuit`] among the nodes this network routes, or among
+/// all of them when it routes none (see [`routable_pairs`]).
+pub(crate) fn select_one_hop_among(
+    dir: &VerifiedMultiHopDirectory,
+    exit_country: &str,
+    enable_gso: bool,
+    use_warren_obfuscation: bool,
+    exclude_exit_ids: &[[u8; 16]],
+    unroutable_entries: &[[u8; 16]],
+) -> Option<MultiHopConfig> {
+    let matching: Vec<usize> = dir
         .nodes
         .iter()
         .enumerate()
@@ -801,6 +857,12 @@ pub fn select_one_hop_circuit(
         .filter(|(_, n)| !exclude_exit_ids.contains(n.exit.exit_id.as_bytes()))
         .map(|(i, _)| i)
         .collect();
+    let routed: Vec<usize> = matching
+        .iter()
+        .copied()
+        .filter(|&i| !unroutable_entries.contains(&dir.nodes[i].relay.relay_id))
+        .collect();
+    let candidates = if routed.is_empty() { matching } else { routed };
     // The pick is the shared deterministic rule (highest weight, ties broken
     // by the smallest exit_id): `warren_discovery_core::pick_exit`, promoted
     // from this very function so every client family lands on the same node
@@ -1054,11 +1116,20 @@ fn select_boot_circuit(
         None,
         &[],
         &[],
+        &unroutable_entries_of(dir),
         detect_client_locality(),
         None,
         &RttCache::new(),
         now_unix,
     )
+}
+
+/// The directory's entries this host cannot route now (see
+/// [`routable_pairs`]).
+pub(crate) fn unroutable_entries_of(dir: &VerifiedMultiHopDirectory) -> Vec<[u8; 16]> {
+    let relays: Vec<&warrenguard_multihop::RelayDescriptorSigned> =
+        dir.nodes.iter().map(|n| &n.relay).collect();
+    talpid_warren_tunnel::warren_unroutable_relays(&relays)
 }
 
 /// Resolves a [`RootPinMode`] to its pin set plus whether multi-hop is
@@ -1243,6 +1314,7 @@ fn select_next_circuit(
     current: Option<&MultiHopConfig>,
     drained: &[[u8; 16]],
     refused_entries: &[[u8; 16]],
+    unroutable_entries: &[[u8; 16]],
     locality: ClientLocality,
     advisory: Option<&PathQualityAdvisory>,
     entry_rtt: &RttCache,
@@ -1258,13 +1330,22 @@ fn select_next_circuit(
             current,
             drained,
             refused_entries,
+            unroutable_entries,
             locality,
             advisory,
             entry_rtt,
             now_unix,
         )
     } else {
-        pick_one_hop_circuit(dir, &settings.exit_country, true, true, current, drained)
+        pick_one_hop_circuit(
+            dir,
+            &settings.exit_country,
+            true,
+            true,
+            current,
+            drained,
+            unroutable_entries,
+        )
     }
 }
 
@@ -1650,12 +1731,16 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                         // tunnel measured something, which keeps this pick
                         // bit-identical to the no-store selection.
                         let entry_rtt = cfg.parameters_generator.warren_entry_rtt_snapshot().await;
+                        // Measured each pass: a network change moves it, and
+                        // the online edge wakes this loop.
+                        let unroutable = unroutable_entries_of(dir);
                         let c = select_next_circuit(
                             dir,
                             &settings,
                             last_circuit.as_ref(),
                             &excluded,
                             &refused,
+                            &unroutable,
                             detect_client_locality(),
                             cached_advisory.as_ref(),
                             &entry_rtt,
@@ -2052,6 +2137,7 @@ mod tests {
             false,
             &[],
             |exit| exit.relay.relay_id == [3; 16],
+            &[],
             ClientLocality::default(),
             None,
             0,
@@ -2634,6 +2720,99 @@ mod tests {
         }
     }
 
+    /// An updater pass over `d` from `current`, with `unroutable` the
+    /// entries this network cannot route.
+    fn pass_with_unroutable(
+        d: &VerifiedMultiHopDirectory,
+        enabled: bool,
+        current: Option<&MultiHopConfig>,
+        unroutable: &[[u8; 16]],
+    ) -> MultiHopConfig {
+        select_next_circuit(
+            d,
+            &multi_hop_settings(enabled),
+            current,
+            &[],
+            &[],
+            unroutable,
+            ClientLocality::default(),
+            None,
+            &RttCache::new(),
+            NOW,
+        )
+        .expect("a circuit")
+    }
+
+    #[test]
+    fn a_two_hop_pass_enters_through_a_node_this_network_routes() {
+        // Forum topic 210: the heaviest entry publishes IPv4 only and the
+        // network is IPv6-only.
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "ro", 1, 1_000),
+            node(&op, 2, "de", 2, 100),
+            node(&op, 3, "nl", 3, 100),
+        ]);
+        let ranked = pass_with_unroutable(&d, true, None, &[]);
+        assert_eq!(
+            ranked.relay.relay_id, [1; 16],
+            "precondition: RO ranks first"
+        );
+
+        let routed = pass_with_unroutable(&d, true, None, &[[1; 16]]);
+
+        assert_ne!(routed.relay.relay_id, [1; 16]);
+    }
+
+    #[test]
+    fn a_circuit_whose_entry_the_network_stopped_routing_is_not_kept() {
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "ro", 1, 1_000),
+            node(&op, 2, "de", 2, 100),
+            node(&op, 3, "nl", 3, 100),
+        ]);
+        let current = pass_with_unroutable(&d, true, None, &[]);
+
+        let next = pass_with_unroutable(&d, true, Some(&current), &[current.relay.relay_id]);
+
+        assert_ne!(next.relay.relay_id, current.relay.relay_id);
+    }
+
+    #[test]
+    fn a_network_that_routes_no_entry_leaves_the_selection_as_it_was() {
+        // Nothing to prefer: the dial ends in the engine's typed
+        // NoReachableEntry instead of this selection inventing a circuit.
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "ro", 1, 1_000),
+            node(&op, 2, "de", 2, 100),
+        ]);
+        let ranked = pass_with_unroutable(&d, true, None, &[]);
+
+        let unroutable = pass_with_unroutable(&d, true, None, &[[1; 16], [2; 16]]);
+
+        assert_eq!(circuit_identity(&unroutable), circuit_identity(&ranked));
+    }
+
+    #[test]
+    fn a_one_hop_node_this_network_cannot_route_is_neither_kept_nor_picked() {
+        let op = op_key();
+        let d = dir(vec![
+            node(&op, 1, "ro", 1, 1_000),
+            node(&op, 2, "de", 2, 100),
+        ]);
+        let current = pass_with_unroutable(&d, false, None, &[]);
+        assert_eq!(
+            current.relay.relay_id, [1; 16],
+            "precondition: RO is heaviest"
+        );
+
+        let next = pass_with_unroutable(&d, false, Some(&current), &[[1; 16]]);
+
+        assert_eq!(next.relay.relay_id, [2; 16]);
+    }
+
     /// Which hop of the circuit in use an updater pass replaced.
     #[derive(Debug, PartialEq, Eq)]
     enum Moved {
@@ -2670,6 +2849,7 @@ mod tests {
             Some(current),
             &[],
             &refused.active(NOW),
+            &[],
             ClientLocality::default(),
             None,
             &RttCache::new(),
@@ -2704,6 +2884,7 @@ mod tests {
                 Some(current),
                 &[draining],
                 &[],
+                &[],
                 ClientLocality::default(),
                 None,
                 &RttCache::new(),
@@ -2729,6 +2910,7 @@ mod tests {
             Some(&one_hop),
             &[],
             &[relay(1)],
+            &[],
             ClientLocality::default(),
             None,
             &RttCache::new(),
@@ -2801,6 +2983,7 @@ mod tests {
             Some(&current),
             &[],
             &[d.nodes[0].relay.relay_id],
+            &[],
             eu_locality(),
             None,
             &rtt,
@@ -2831,6 +3014,7 @@ mod tests {
                 None,
                 &[],
                 refused,
+                &[],
                 ClientLocality::default(),
                 None,
                 &RttCache::new(),
@@ -3347,11 +3531,12 @@ mod tests {
             node(&op, 2, "de", 0, 100),
             node(&op, 3, "se", 0, 100),
         ]);
-        let first = pick_one_hop_circuit(&d, "", true, true, None, &[]).expect("circuit");
+        let first = pick_one_hop_circuit(&d, "", true, true, None, &[], &[]).expect("circuit");
         let first_id = circuit_identity(&first);
         let mut cur = first;
         for _ in 0..50 {
-            let next = pick_one_hop_circuit(&d, "", true, true, Some(&cur), &[]).expect("circuit");
+            let next =
+                pick_one_hop_circuit(&d, "", true, true, Some(&cur), &[], &[]).expect("circuit");
             assert_eq!(circuit_identity(&next), first_id, "1-hop node must stick");
             cur = next;
         }
@@ -4007,6 +4192,7 @@ mod tests {
             None,
             &[],
             &[],
+            &[],
             eu_locality(),
             None,
             &store,
@@ -4048,6 +4234,7 @@ mod tests {
                 true,
                 false,
                 None,
+                &[],
                 &[],
                 &[],
                 eu_locality(),

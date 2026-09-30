@@ -30,7 +30,7 @@ use tokio::sync::watch;
 use warren_discovery_core::{NodeEntry, VerifiedMultiHopDirectory};
 
 use crate::warren_multi_hop_directory::{
-    ClientLocality, detect_client_locality, select_circuit_exiting_through, select_one_hop_circuit,
+    ClientLocality, detect_client_locality, select_circuit_exiting_through, select_one_hop_among,
 };
 
 #[cfg(test)]
@@ -134,12 +134,18 @@ impl RoutePlanner {
     /// the one published is not published again, so the live route sessions
     /// are left alone.
     pub fn replan(&mut self, main_circuit: Option<&MultiHopConfig>, drained: &[[u8; 16]]) {
+        let unroutable = self
+            .directory
+            .as_deref()
+            .map(crate::warren_multi_hop_directory::unroutable_entries_of)
+            .unwrap_or_default();
         let inputs = self.directory.as_deref().map(|directory| RouteInputs {
             directory,
             two_hop: self.multi_hop.enabled,
             entry_country: &self.multi_hop.entry_country,
             main_circuit,
             drained,
+            unroutable_entries: &unroutable,
             locality: detect_client_locality(),
             now_unix: crate::warren_artifact_refresh::now_unix(),
         });
@@ -173,6 +179,9 @@ pub(crate) struct RouteInputs<'a> {
     pub main_circuit: Option<&'a MultiHopConfig>,
     /// Exits that announced a maintenance drain.
     pub drained: &'a [[u8; 16]],
+    /// Entries this host cannot route: a route session dials from the same
+    /// network as the main one, and leaves them out the way it does.
+    pub unroutable_entries: &'a [[u8; 16]],
     pub locality: ClientLocality,
     pub now_unix: u64,
 }
@@ -181,6 +190,7 @@ pub(crate) struct RouteInputs<'a> {
 struct DesktopRules {
     locality: ClientLocality,
     now_unix: u64,
+    unroutable_entries: Vec<[u8; 16]>,
 }
 
 impl PlanRules for DesktopRules {
@@ -203,6 +213,7 @@ impl PlanRules for DesktopRules {
                 true,
                 inputs.drained,
                 |exit| city_matches(choice, &exit.city),
+                &self.unroutable_entries,
                 self.locality,
                 None,
                 self.now_unix,
@@ -216,7 +227,14 @@ impl PlanRules for DesktopRules {
                 .map(|node| *node.exit.exit_id.as_bytes())
                 .chain(inputs.drained.iter().copied())
                 .collect();
-            select_one_hop_circuit(inputs.directory, choice.country(), true, true, &excluded)
+            select_one_hop_among(
+                inputs.directory,
+                choice.country(),
+                true,
+                true,
+                &excluded,
+                &self.unroutable_entries,
+            )
         }
     }
 }
@@ -238,6 +256,8 @@ pub(crate) fn plan(
     let rules = DesktopRules {
         locality: inputs.map(|inputs| inputs.locality).unwrap_or_default(),
         now_unix: inputs.map_or(0, |inputs| inputs.now_unix),
+        unroutable_entries: inputs
+            .map_or_else(Vec::new, |inputs| inputs.unroutable_entries.to_vec()),
     };
     let shared_inputs = inputs.map(|inputs| PlanInputs {
         directory: inputs.directory,
@@ -299,6 +319,7 @@ mod tests {
     };
 
     use super::*;
+    use crate::warren_multi_hop_directory::select_one_hop_circuit;
 
     /// Sweden (Stockholm), Germany (Berlin, and a lighter Bad Homburg),
     /// Finland.
@@ -325,6 +346,7 @@ mod tests {
             entry_country: "",
             main_circuit: main,
             drained: &[],
+            unroutable_entries: &[],
             locality: ClientLocality::default(),
             now_unix: 0,
         }
@@ -383,6 +405,7 @@ mod tests {
         let drained = [[2; 16]];
         let inputs = RouteInputs {
             drained: &drained,
+            unroutable_entries: &[],
             ..inputs(&dir, Some(&main))
         };
 
@@ -598,6 +621,7 @@ mod tests {
             entry_country: case.entry_country.as_deref().unwrap_or(""),
             main_circuit: main.as_ref(),
             drained: &case.drained,
+            unroutable_entries: &[],
             locality: ClientLocality::default(),
             now_unix: 0,
         };

@@ -1733,12 +1733,23 @@ impl WarrenTunnelMonitor {
                 runtime.clone(),
             ));
         }
+        // Whether the supervisor stopped because this network routes no
+        // entry: sent right after the session watch it held has closed.
+        let (unroutable_tx, mut unroutable_rx) = tokio::sync::oneshot::channel::<bool>();
         let supervisor_handle = runtime.spawn(async move {
-            if let Err(e) = supervisor.run().await {
-                log::warn!(
-                    "{TRACE_PREFIX} multi-hop supervisor terminated with non-retriable error: {e:#}"
-                );
-            }
+            let unroutable = match supervisor.run().await {
+                Ok(()) => false,
+                Err(e) => {
+                    log::warn!(
+                        "{TRACE_PREFIX} multi-hop supervisor terminated with non-retriable error: {e:#}"
+                    );
+                    matches!(
+                        e,
+                        warrenguard_transport::multihop::MultiHopError::NoReachableEntry
+                    )
+                }
+            };
+            let _ = unroutable_tx.send(unroutable);
         });
 
         let handshake_t = Instant::now();
@@ -1786,6 +1797,17 @@ impl WarrenTunnelMonitor {
                                 return Err(Error::Handshake(format!(
                                     "multi-hop supervisor did not produce an initial session within {initial_wait_bound:?}"
                                 )));
+                            }
+                            if matches!(changed, Ok(Err(_))) {
+                                let unroutable = matches!(
+                                    tokio::time::timeout(
+                                        SUPERVISOR_VERDICT_WAIT,
+                                        &mut unroutable_rx
+                                    )
+                                    .await,
+                                    Ok(Ok(true))
+                                );
+                                return Err(initial_session_closed(unroutable));
                             }
                         }
                         _ = supervisor_fatal_rx.changed() => {
@@ -3805,6 +3827,61 @@ fn multi_hop_daita_shared(
     }
 }
 
+/// How long a closed first session waits for the supervisor's own verdict:
+/// the supervisor drops its session watch as it returns, so its error follows
+/// the closure by a scheduling round, never by a dial.
+const SUPERVISOR_VERDICT_WAIT: std::time::Duration = std::time::Duration::from_millis(500);
+
+/// The error a first session that closed before it came up ends in:
+/// `unroutable` when the engine found no entry this network routes (forum
+/// topic 210), which the log then names instead of a generic failure.
+fn initial_session_closed(unroutable: bool) -> Error {
+    Error::Handshake(if unroutable {
+        "no entry relay reachable on this network's address families".to_owned()
+    } else {
+        "multi-hop supervisor stopped before an initial session".to_owned()
+    })
+}
+
+/// The relay ids among `relays` this host holds no route to on any family
+/// they publish, from the engine's kernel probe
+/// ([`warrenguard_transport::reachable_entries`]). The probe carries the
+/// escape a route lookup needs to see the physical network while a Warren
+/// tunnel is up: on Linux the carrier's fwmark, which the tunnel's policy rule
+/// sends to the main table. macOS and Windows resolve their escape per dial
+/// from the physical interface; unescaped there, a route lookup can only see
+/// the tunnel's added routes on top of the physical ones, so it may keep an
+/// entry the dial then finds unroutable, never drop a routable one.
+#[must_use]
+pub fn warren_unroutable_relays(
+    relays: &[&warrenguard_multihop::RelayDescriptorSigned],
+) -> Vec<[u8; 16]> {
+    #[cfg(target_os = "linux")]
+    let bypass = Some(warren_carrier_socket_bypass(0));
+    #[cfg(not(target_os = "linux"))]
+    let bypass: Option<warrenguard_tun_core::SocketBypass> = None;
+    let routed = warrenguard_transport::reachable_entries(
+        relays.iter().copied(),
+        std::net::SocketAddr::from((std::net::Ipv4Addr::UNSPECIFIED, 0)),
+        bypass,
+    )
+    .unwrap_or_default();
+    relay_ids_left_out(relays, &routed)
+}
+
+/// The relay ids of `relays` whose index is not in `kept`.
+fn relay_ids_left_out(
+    relays: &[&warrenguard_multihop::RelayDescriptorSigned],
+    kept: &[usize],
+) -> Vec<[u8; 16]> {
+    relays
+        .iter()
+        .enumerate()
+        .filter(|(i, _)| !kept.contains(i))
+        .map(|(_, r)| r.relay_id)
+        .collect()
+}
+
 /// The [`SocketBypass`](warrenguard_tun_core::SocketBypass) the Warren carrier
 /// (QUIC dial) socket must carry so `default_route_split`'s `/1` split-default
 /// captures every OTHER destination, exit IP included, without capturing the
@@ -4139,6 +4216,53 @@ mod tests {
     use super::*;
     use warrenguard_multihop::{ExitDescriptorSigned, RelayDescriptorSigned};
     use warrenguard_wire::WarrenPubkey;
+
+    #[test]
+    fn a_first_session_ended_by_an_unroutable_fleet_names_the_network() {
+        let Error::Handshake(unroutable) = initial_session_closed(true) else {
+            panic!("a handshake failure");
+        };
+        assert!(
+            unroutable.contains("no entry relay reachable"),
+            "{unroutable}"
+        );
+        let Error::Handshake(other) = initial_session_closed(false) else {
+            panic!("a handshake failure");
+        };
+        assert!(!other.contains("reachable"), "{other}");
+    }
+
+    #[test]
+    fn a_relay_the_probe_did_not_keep_is_named_by_its_relay_id() {
+        let relay = |tag: u8| RelayDescriptorSigned {
+            relay_id: [tag; 16],
+            relay_ed25519_pubkey: [tag; 32],
+            endpoint: "192.0.2.1:443".parse().expect("static addr parses"),
+            endpoint_v6: None,
+            cover_domain: None,
+            tcp_fallback: false,
+            signature: [0; 64],
+        };
+        let (a, b, c) = (relay(1), relay(2), relay(3));
+
+        assert_eq!(relay_ids_left_out(&[&a, &b, &c], &[0, 2]), vec![[2; 16]]);
+        assert_eq!(relay_ids_left_out(&[&a, &b], &[]), vec![[1; 16], [2; 16]]);
+    }
+
+    #[test]
+    fn a_relay_this_host_routes_is_never_named_unroutable() {
+        // Loopback is routed on every host, escape or not.
+        let loopback = RelayDescriptorSigned {
+            relay_id: [9; 16],
+            relay_ed25519_pubkey: [9; 32],
+            endpoint: "127.0.0.1:9".parse().expect("static addr parses"),
+            endpoint_v6: None,
+            cover_domain: None,
+            tcp_fallback: false,
+            signature: [0; 64],
+        };
+        assert!(warren_unroutable_relays(&[&loopback]).is_empty());
+    }
 
     #[test]
     fn a_session_presents_no_more_tokens_than_one_setup_may_carry() {
