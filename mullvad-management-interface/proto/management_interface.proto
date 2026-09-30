@@ -1481,6 +1481,7 @@ message AppRouteStatus {
     LIMIT_REACHED = 3;
     NO_RELAY = 4;
     WAITING_FOR_ROUTE = 5;
+    NO_DIALABLE_NETWORK = 6;
   }
   ExitChoice exit = 1;
   State state = 2;

@@ -2751,6 +2751,10 @@ msgid "Waiting for a free route"
 msgstr "กำลังรอเส้นทางที่ว่าง"
 
 msgctxt "split-tunneling-view"
+msgid "This network reaches no entry server"
+msgstr "เครือข่ายนี้เข้าถึงเซิร์ฟเวอร์ขาเข้าไม่ได้"
+
+msgctxt "split-tunneling-view"
 msgid "Enabled \"Full disk access\" and still having issues?"
 msgstr "เปิดใช้งาน \"การเข้าถึงดิสก์ทั้งหมด\" แล้ว และยังมีปัญหาอยู่ใช่หรือไม่"
 

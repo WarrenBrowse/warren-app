@@ -2751,6 +2751,10 @@ msgid "Waiting for a free route"
 msgstr "空きルートを待機中"
 
 msgctxt "split-tunneling-view"
+msgid "This network reaches no entry server"
+msgstr "このネットワークから入口サーバーに到達できません"
+
+msgctxt "split-tunneling-view"
 msgid "Enabled \"Full disk access\" and still having issues?"
 msgstr "[フルディスクアクセス] を有効にしても問題が解決しませんか？"
 

@@ -14,4 +14,10 @@ describe('appRouteLineText, the line under an app with a country', () => {
       'Session limit reached',
     );
   });
+
+  it('names a network that reaches no entry server rather than a missing server', () => {
+    expect(appRouteLineText({ kind: 'unavailable', reason: 'no-dialable-network' })).toBe(
+      'This network reaches no entry server',
+    );
+  });
 });

@@ -2960,6 +2960,10 @@ msgid "Waiting for a free route"
 msgstr "Se așteaptă o rută liberă"
 
 msgctxt "split-tunneling-view"
+msgid "This network reaches no entry server"
+msgstr "Această rețea nu ajunge la niciun server de intrare"
+
+msgctxt "split-tunneling-view"
 msgid "Enabled \"Full disk access\" and still having issues?"
 msgstr "Ați activat opțiunea „Acces complet la disc” și încă aveți probleme?"
 

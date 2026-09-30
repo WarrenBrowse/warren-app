@@ -171,6 +171,27 @@
       }
     },
     {
+      "name": "a_route_on_a_network_that_reaches_no_entry_names_the_network",
+      "_comment": "The route session ended because this network routes none of its entries (forum topic 210): the user is told the network is the cause, never that no server exists.",
+      "two_hop": false,
+      "entry_country": null,
+      "main_exit": 1,
+      "exits": [{ "app": "chat", "country": "fi", "city": null }],
+      "connected": true,
+      "reports": [{ "exit": 4, "state": "no_reachable_entry" }],
+      "expect": {
+        "routes": [{ "entry": 4, "exit": 4, "apps": ["chat"] }],
+        "main": [],
+        "blocked": [],
+        "resolutions": [
+          { "country": "fi", "city": null, "kind": "route", "exit": 4, "public_ip": "198.51.100.4" }
+        ],
+        "statuses": [
+          { "country": "fi", "city": null, "state": "unavailable", "reason": "no_dialable_network", "public_ip": null, "apps": ["chat"] }
+        ]
+      }
+    },
+    {
       "name": "a_two_hop_city_route_enters_outside_that_city",
       "_comment": "A per-app city constrains the exit only: the entry keeps the main connection's constraint, so it may sit outside that city.",
       "two_hop": true,

@@ -127,6 +127,7 @@ describe('convertFromDaemonEvent', () => {
     expect(reasonOf(Reason.TUNNEL_DOWN)).toBe('tunnel-down');
     expect(reasonOf(Reason.LIMIT_REACHED)).toBe('limit-reached');
     expect(reasonOf(Reason.NO_RELAY)).toBe('no-relay');
+    expect(reasonOf(Reason.NO_DIALABLE_NETWORK)).toBe('no-dialable-network');
   });
 
   it('names a route waiting for the server to admit it', () => {

@@ -124,6 +124,7 @@
     <string name="app_route_limit_reached">Oturum sınırı doldu</string>
     <string name="app_route_waiting_for_route">Boş bir rota bekleniyor</string>
     <string name="app_route_no_relay">Bu konumda sunucu yok</string>
+    <string name="app_route_no_dialable_network">Bu ağ hiçbir giriş sunucusuna ulaşmıyor</string>
     <string name="app_route_unavailable">Kullanılamıyor</string>
     <string name="app_country_only_app_title">VPN\'i yalnızca %1$s kullanacak</string>
     <string name="country_picker_title">%1$s uygulamasının ülkesi</string>

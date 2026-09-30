@@ -71,6 +71,8 @@ pub enum Unavailable {
     NoRelay,
     /// Every route the server admits right now is taken.
     WaitingForRoute,
+    /// This network routes none of the entries the route may use.
+    NoDialableNetwork,
 }
 
 /// Which session an exit choice goes through. `R` is why none can, as the
@@ -313,6 +315,9 @@ fn session_view<R: From<Unavailable>>(
         RouteSessionState::Unavailable(RouteUnavailable::NoToken) => Unavailable::NoToken,
         RouteSessionState::Unavailable(RouteUnavailable::Refused) => Unavailable::LimitReached,
         RouteSessionState::Unavailable(RouteUnavailable::Failed) => Unavailable::NoRelay,
+        RouteSessionState::Unavailable(RouteUnavailable::NoReachableEntry) => {
+            Unavailable::NoDialableNetwork
+        }
     };
     (RouteView::Unavailable(reason.into()), None)
 }
@@ -807,6 +812,12 @@ mod tests {
         assert_eq!(
             reason(RouteSessionState::Unavailable(RouteUnavailable::Failed)),
             RouteView::Unavailable(Unavailable::NoRelay)
+        );
+        assert_eq!(
+            reason(RouteSessionState::Unavailable(
+                RouteUnavailable::NoReachableEntry
+            )),
+            RouteView::Unavailable(Unavailable::NoDialableNetwork)
         );
     }
 

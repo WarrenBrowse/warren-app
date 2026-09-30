@@ -209,6 +209,9 @@ fn state_label(state: AppRouteState) -> &'static str {
         AppRouteState::Unavailable(UnavailableReason::WaitingForRoute) => {
             "waiting for a free route"
         }
+        AppRouteState::Unavailable(UnavailableReason::NoDialableNetwork) => {
+            "unavailable, this network reaches no entry server"
+        }
     }
 }
 
@@ -291,6 +294,7 @@ mod tests {
             UnavailableReason::LimitReached,
             UnavailableReason::NoRelay,
             UnavailableReason::WaitingForRoute,
+            UnavailableReason::NoDialableNetwork,
         ]
         .map(|reason| state_label(AppRouteState::Unavailable(reason)));
 
@@ -302,6 +306,7 @@ mod tests {
                 "unavailable, the session limit is reached",
                 "unavailable, no server in this location",
                 "waiting for a free route",
+                "unavailable, this network reaches no entry server",
             ]
         );
     }

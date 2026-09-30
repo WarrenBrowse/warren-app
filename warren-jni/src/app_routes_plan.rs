@@ -149,6 +149,8 @@ pub(crate) enum Unavailable {
     LimitReached,
     NoRelay,
     WaitingForRoute,
+    /// This network routes none of the entries the route may use.
+    NoDialableNetwork,
     /// The platform cannot name a flow's app (no owner lookup), so no route
     /// could carry one: none is dialed.
     Unsupported,
@@ -162,6 +164,7 @@ impl From<shared::Unavailable> for Unavailable {
             shared::Unavailable::LimitReached => Self::LimitReached,
             shared::Unavailable::NoRelay => Self::NoRelay,
             shared::Unavailable::WaitingForRoute => Self::WaitingForRoute,
+            shared::Unavailable::NoDialableNetwork => Self::NoDialableNetwork,
         }
     }
 }
@@ -174,6 +177,7 @@ impl Unavailable {
             Self::LimitReached => "limit_reached",
             Self::NoRelay => "no_relay",
             Self::WaitingForRoute => "waiting_for_route",
+            Self::NoDialableNetwork => "no_dialable_network",
             Self::Unsupported => "unsupported",
         }
     }
@@ -634,6 +638,7 @@ mod tests {
             shared::Unavailable::LimitReached,
             shared::Unavailable::NoRelay,
             shared::Unavailable::WaitingForRoute,
+            shared::Unavailable::NoDialableNetwork,
         ]
         .map(|reason| Unavailable::from(reason).wire());
 
@@ -644,7 +649,8 @@ mod tests {
                 "no_token",
                 "limit_reached",
                 "no_relay",
-                "waiting_for_route"
+                "waiting_for_route",
+                "no_dialable_network"
             ]
         );
         assert_eq!(Unavailable::Unsupported.wire(), "unsupported");

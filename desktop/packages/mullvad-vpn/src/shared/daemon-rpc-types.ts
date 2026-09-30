@@ -1052,7 +1052,9 @@ export type AppRouteUnavailableReason =
   | 'no-token'
   | 'limit-reached'
   | 'no-relay'
-  | 'waiting-for-route';
+  | 'waiting-for-route'
+  // This network routes none of the entry servers the route may use.
+  | 'no-dialable-network';
 
 // The live state of one exit in force and the apps that use it.
 export type AppRouteStatus = {

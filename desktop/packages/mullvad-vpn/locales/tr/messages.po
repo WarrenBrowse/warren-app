@@ -2760,6 +2760,10 @@ msgid "Waiting for a free route"
 msgstr "Boş bir rota bekleniyor"
 
 msgctxt "split-tunneling-view"
+msgid "This network reaches no entry server"
+msgstr "Bu ağ hiçbir giriş sunucusuna ulaşmıyor"
+
+msgctxt "split-tunneling-view"
 msgid "Enabled \"Full disk access\" and still having issues?"
 msgstr "\"Tam disk erişimi\" etkinleştirilmesine rağmen sorun mu yaşıyorsunuz?"
 

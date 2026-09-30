@@ -2778,6 +2778,10 @@ msgid "Waiting for a free route"
 msgstr "Ждёт свободный маршрут"
 
 msgctxt "split-tunneling-view"
+msgid "This network reaches no entry server"
+msgstr "Эта сеть не достигает ни одного сервера входа"
+
+msgctxt "split-tunneling-view"
 msgid "Enabled \"Full disk access\" and still having issues?"
 msgstr "Включили полный доступ к диску, но проблемы остались?"
 

@@ -297,6 +297,7 @@ fn unavailable(reason: Unavailable) -> UnavailableReason {
         Unavailable::LimitReached => UnavailableReason::LimitReached,
         Unavailable::NoRelay => UnavailableReason::NoRelay,
         Unavailable::WaitingForRoute => UnavailableReason::WaitingForRoute,
+        Unavailable::NoDialableNetwork => UnavailableReason::NoDialableNetwork,
     }
 }
 
@@ -562,6 +563,7 @@ mod tests {
             Unavailable::LimitReached,
             Unavailable::NoRelay,
             Unavailable::WaitingForRoute,
+            Unavailable::NoDialableNetwork,
         ]
         .map(unavailable);
 
@@ -573,6 +575,7 @@ mod tests {
                 UnavailableReason::LimitReached,
                 UnavailableReason::NoRelay,
                 UnavailableReason::WaitingForRoute,
+                UnavailableReason::NoDialableNetwork,
             ]
         );
     }

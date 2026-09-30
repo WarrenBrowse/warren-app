@@ -2760,6 +2760,10 @@ msgid "Waiting for a free route"
 msgstr "À espera de uma rota livre"
 
 msgctxt "split-tunneling-view"
+msgid "This network reaches no entry server"
+msgstr "Esta rede não alcança nenhum servidor de entrada"
+
+msgctxt "split-tunneling-view"
 msgid "Enabled \"Full disk access\" and still having issues?"
 msgstr "Ativou a opção \"Acesso completo ao disco\" e continua a ter problemas?"
 

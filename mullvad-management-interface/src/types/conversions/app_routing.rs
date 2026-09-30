@@ -130,6 +130,7 @@ impl From<&AppRouteStatus> for proto::AppRouteStatus {
                     UnavailableReason::LimitReached => Reason::LimitReached,
                     UnavailableReason::NoRelay => Reason::NoRelay,
                     UnavailableReason::WaitingForRoute => Reason::WaitingForRoute,
+                    UnavailableReason::NoDialableNetwork => Reason::NoDialableNetwork,
                 },
             ),
         };
@@ -166,6 +167,7 @@ impl TryFrom<proto::AppRouteStatus> for AppRouteStatus {
                         Reason::LimitReached => UnavailableReason::LimitReached,
                         Reason::NoRelay => UnavailableReason::NoRelay,
                         Reason::WaitingForRoute => UnavailableReason::WaitingForRoute,
+                        Reason::NoDialableNetwork => UnavailableReason::NoDialableNetwork,
                     },
                 ),
             };
@@ -291,6 +293,7 @@ mod tests {
             UnavailableReason::LimitReached,
             UnavailableReason::NoRelay,
             UnavailableReason::WaitingForRoute,
+            UnavailableReason::NoDialableNetwork,
         ]
         .map(|reason| AppRouteStatus {
             state: AppRouteState::Unavailable(reason),

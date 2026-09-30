@@ -186,6 +186,29 @@ class AppExitsTest {
     }
 
     @Test
+    fun `a route on a network that reaches no entry server reads under its own reason`() {
+        // The native side names it `no_dialable_network` (topic 210); read as
+        // an unknown reason it would fall back to the generic line.
+        val json =
+            """
+            {"routes":[{"country":"se","state":"unavailable","reason":"no_dialable_network",
+              "apps":["org.browser"]}]}
+            """
+
+        assertEquals(
+            listOf(
+                AppRouteStatus(
+                    se,
+                    AppRouteState.Unavailable(AppRouteUnavailableReason.NoDialableNetwork),
+                    null,
+                    listOf("org.browser"),
+                )
+            ),
+            AppRouteStatusParser.parse(json),
+        )
+    }
+
+    @Test
     fun `an app counted with a country is one whose country is in force`() {
         val appExits = exits("org.browser" to se, "org.chat" to deBerlin)
 

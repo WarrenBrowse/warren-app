@@ -1839,6 +1839,8 @@ function convertFromAppRouteUnavailableReason(
       return 'no-relay';
     case grpcTypes.AppRouteStatus.UnavailableReason.WAITING_FOR_ROUTE:
       return 'waiting-for-route';
+    case grpcTypes.AppRouteStatus.UnavailableReason.NO_DIALABLE_NETWORK:
+      return 'no-dialable-network';
     case grpcTypes.AppRouteStatus.UnavailableReason.NONE:
       return undefined;
   }

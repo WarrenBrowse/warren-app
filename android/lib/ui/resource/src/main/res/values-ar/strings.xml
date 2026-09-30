@@ -128,6 +128,7 @@
     <string name="app_route_limit_reached">تم بلوغ حد الجلسات</string>
     <string name="app_route_waiting_for_route">في انتظار مسار متاح</string>
     <string name="app_route_no_relay">لا يوجد خادم هناك</string>
+    <string name="app_route_no_dialable_network">هذه الشبكة لا تصل إلى أي خادم دخول</string>
     <string name="app_route_unavailable">غير متاح</string>
     <string name="app_country_only_app_title">لن يستخدم VPN إلا %1$s</string>
     <string name="country_picker_title">دولة %1$s</string>

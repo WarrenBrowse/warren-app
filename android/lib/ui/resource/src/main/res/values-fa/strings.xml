@@ -124,6 +124,7 @@
     <string name="app_route_limit_reached">سقف نشست‌ها پر شد</string>
     <string name="app_route_waiting_for_route">در انتظار مسیر آزاد</string>
     <string name="app_route_no_relay">آنجا سروری نیست</string>
+    <string name="app_route_no_dialable_network">این شبکه به هیچ سرور ورودی نمی‌رسد</string>
     <string name="app_route_unavailable">ناموجود</string>
     <string name="app_country_only_app_title">فقط %1$s از VPN استفاده خواهد کرد</string>
     <string name="country_picker_title">کشور %1$s</string>

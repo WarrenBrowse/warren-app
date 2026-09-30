@@ -3310,6 +3310,7 @@ export namespace AppRouteStatus {
     LIMIT_REACHED = 3,
     NO_RELAY = 4,
     WAITING_FOR_ROUTE = 5,
+    NO_DIALABLE_NETWORK = 6,
     }
 
 }

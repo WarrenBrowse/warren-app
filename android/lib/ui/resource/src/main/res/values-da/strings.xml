@@ -124,6 +124,7 @@
     <string name="app_route_limit_reached">Maks. antal sessioner nået</string>
     <string name="app_route_waiting_for_route">Venter på en ledig rute</string>
     <string name="app_route_no_relay">Ingen server på placeringen</string>
+    <string name="app_route_no_dialable_network">Dette netværk når ingen indgangsserver</string>
     <string name="app_route_unavailable">Ikke tilgængelig</string>
     <string name="app_country_only_app_title">Kun %1$s vil bruge VPN</string>
     <string name="country_picker_title">Land for %1$s</string>

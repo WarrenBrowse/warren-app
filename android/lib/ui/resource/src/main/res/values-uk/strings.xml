@@ -126,6 +126,7 @@
     <string name="app_route_limit_reached">Досягнуто ліміту сеансів</string>
     <string name="app_route_waiting_for_route">Чекає на вільний маршрут</string>
     <string name="app_route_no_relay">Немає серверів у цьому місці</string>
+    <string name="app_route_no_dialable_network">Ця мережа не досягає жодного сервера входу</string>
     <string name="app_route_unavailable">Недоступно</string>
     <string name="app_country_only_app_title">VPN використовуватиме лише %1$s</string>
     <string name="country_picker_title">Країна для %1$s</string>

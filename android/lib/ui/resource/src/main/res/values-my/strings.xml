@@ -123,6 +123,7 @@
     <string name="app_route_limit_reached">ဆက်ရှင် အကန့်အသတ် ပြည့်ပြီ</string>
     <string name="app_route_waiting_for_route">လမ်းကြောင်းလွတ် စောင့်နေသည်</string>
     <string name="app_route_no_relay">ထိုနေရာတွင် ဆာဗာ မရှိပါ</string>
+    <string name="app_route_no_dialable_network">ဤကွန်ရက်မှ ဝင်ပေါက်ဆာဗာ မရောက်နိုင်ပါ</string>
     <string name="app_route_unavailable">မရနိုင်ပါ</string>
     <string name="app_country_only_app_title">%1$s သာ VPN ကို သုံးပါမည်</string>
     <string name="country_picker_title">%1$s အတွက် နိုင်ငံ</string>

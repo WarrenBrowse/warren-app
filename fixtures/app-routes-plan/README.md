@@ -64,7 +64,7 @@ divergence removes its entry in the same commit.
   - `connected`: whether the main connection is up; `reports` (optional): what
     the tunnel reports of its route sessions, each an `exit` tag and a `state`
     among `connecting`, `connected`, `waiting`, `no_token`, `refused`,
-    `failed`.
+    `failed`, `no_reachable_entry`.
   - `expect`:
     - `routes`: the route sessions, in order, each with its `entry` and `exit`
       tags and its `apps`.
@@ -75,5 +75,5 @@ divergence removes its entry in the same commit.
       `unavailable` with its `reason`.
     - `statuses`: what the user sees per choice, in order: `state`
       (`connecting`, `connected`, `unavailable`), `reason` (`tunnel_down`,
-      `no_token`, `limit_reached`, `no_relay`, `waiting_for_route`, or
-      `null`), `public_ip`, and the `apps`.
+      `no_token`, `limit_reached`, `no_relay`, `waiting_for_route`,
+      `no_dialable_network`, or `null`), `public_ip`, and the `apps`.

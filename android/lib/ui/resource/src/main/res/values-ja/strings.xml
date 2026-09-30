@@ -123,6 +123,7 @@
     <string name="app_route_limit_reached">セッションの上限に到達</string>
     <string name="app_route_waiting_for_route">空きルートを待機中</string>
     <string name="app_route_no_relay">その場所にサーバーなし</string>
+    <string name="app_route_no_dialable_network">このネットワークから入口サーバーに到達できません</string>
     <string name="app_route_unavailable">使用不可</string>
     <string name="app_country_only_app_title">VPNを使用するのは%1$sだけになります</string>
     <string name="country_picker_title">%1$sの国</string>

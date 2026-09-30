@@ -57,6 +57,9 @@ enum class AppRouteUnavailableReason(val wire: String) {
     LimitReached("limit_reached"),
     NoRelay("no_relay"),
     WaitingForRoute("waiting_for_route"),
+
+    /** This network routes none of the entry servers the route may use. */
+    NoDialableNetwork("no_dialable_network"),
 }
 
 /** What the user sees for one exit: its state, the address its apps appear from, and its apps. */

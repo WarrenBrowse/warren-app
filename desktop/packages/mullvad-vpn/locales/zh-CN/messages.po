@@ -2751,6 +2751,10 @@ msgid "Waiting for a free route"
 msgstr "正在等待空闲路由"
 
 msgctxt "split-tunneling-view"
+msgid "This network reaches no entry server"
+msgstr "此网络无法连接任何入口服务器"
+
+msgctxt "split-tunneling-view"
 msgid "Enabled \"Full disk access\" and still having issues?"
 msgstr "已启用“完全磁盘访问权限”，仍有问题？"
 

@@ -70,6 +70,11 @@ export function appRouteLineText(line: AppRouteLine): string {
           return messages.pgettext('split-tunneling-view', 'Waiting for a free route');
         case 'no-relay':
           return messages.pgettext('split-tunneling-view', 'No server there');
+        case 'no-dialable-network':
+          // TRANSLATORS: None of the entry servers this per-app connection
+          // TRANSLATORS: may use answers on the address type (IPv4 or IPv6)
+          // TRANSLATORS: of the network the device is on.
+          return messages.pgettext('split-tunneling-view', 'This network reaches no entry server');
         case undefined:
           return messages.pgettext('split-tunneling-view', 'Unavailable');
       }

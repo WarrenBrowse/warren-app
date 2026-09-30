@@ -375,6 +375,7 @@ fn session_state(state: &str) -> RouteSessionState {
         "no_token" => RouteSessionState::Unavailable(RouteUnavailable::NoToken),
         "refused" => RouteSessionState::Unavailable(RouteUnavailable::Refused),
         "failed" => RouteSessionState::Unavailable(RouteUnavailable::Failed),
+        "no_reachable_entry" => RouteSessionState::Unavailable(RouteUnavailable::NoReachableEntry),
         other => panic!("unknown route session state {other}"),
     }
 }

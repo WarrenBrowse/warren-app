@@ -3878,6 +3878,13 @@ msgctxt "split-tunneling-view"
 msgid "Snap apps cannot use a country yet"
 msgstr ""
 
+#. None of the entry servers this per-app connection
+#. may use answers on the address type (IPv4 or IPv6)
+#. of the network the device is on.
+msgctxt "split-tunneling-view"
+msgid "This network reaches no entry server"
+msgstr ""
+
 #. A route in App routing: the app uses the VPN.
 msgctxt "split-tunneling-view"
 msgid "Through the VPN"

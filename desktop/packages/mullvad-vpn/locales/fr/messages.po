@@ -5094,6 +5094,10 @@ msgid "Waiting for a free route"
 msgstr "En attente d'une route libre"
 
 msgctxt "split-tunneling-view"
+msgid "This network reaches no entry server"
+msgstr "Ce réseau n'atteint aucun serveur d'entrée"
+
+msgctxt "split-tunneling-view"
 msgid "No server there"
 msgstr "Aucun serveur à cet endroit"
 

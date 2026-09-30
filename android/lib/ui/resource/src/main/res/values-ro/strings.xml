@@ -127,6 +127,7 @@
     <string name="app_route_limit_reached">Limită de sesiuni atinsă</string>
     <string name="app_route_waiting_for_route">Se așteaptă o rută liberă</string>
     <string name="app_route_no_relay">Niciun server acolo</string>
+    <string name="app_route_no_dialable_network">Această rețea nu ajunge la niciun server de intrare</string>
     <string name="app_route_unavailable">Indisponibil</string>
     <string name="app_country_only_app_title">Doar %1$s va folosi VPN-ul</string>
     <string name="country_picker_title">Țara pentru %1$s</string>

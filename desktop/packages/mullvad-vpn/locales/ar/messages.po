@@ -2796,6 +2796,10 @@ msgid "Waiting for a free route"
 msgstr "في انتظار مسار متاح"
 
 msgctxt "split-tunneling-view"
+msgid "This network reaches no entry server"
+msgstr "هذه الشبكة لا تصل إلى أي خادم دخول"
+
+msgctxt "split-tunneling-view"
 msgid "Enabled \"Full disk access\" and still having issues?"
 msgstr "هل فعَّلت \"الوصول الكامل للقرص\" ولا تزال تواجه مشكلات؟"
 

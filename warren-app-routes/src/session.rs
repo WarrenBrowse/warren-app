@@ -303,6 +303,7 @@ pub(crate) fn unavailable_reason(error: &MultiHopError) -> RouteUnavailable {
     match error {
         MultiHopError::NoSessionToken(NoSessionTokenCause::Empty) => RouteUnavailable::NoToken,
         MultiHopError::NoSessionToken(_) | MultiHopError::Rejected(_) => RouteUnavailable::Refused,
+        MultiHopError::NoReachableEntry => RouteUnavailable::NoReachableEntry,
         _ => RouteUnavailable::Failed,
     }
 }
@@ -983,6 +984,15 @@ mod tests {
         ));
 
         assert_eq!(reason, RouteUnavailable::Refused);
+    }
+
+    #[test]
+    fn a_route_whose_entries_the_network_cannot_route_names_the_network() {
+        // Forum topic 210: a failure the user can only end by changing
+        // network, which the generic "failed" hid.
+        let reason = unavailable_reason(&MultiHopError::NoReachableEntry);
+
+        assert_eq!(reason, RouteUnavailable::NoReachableEntry);
     }
 
     #[test]

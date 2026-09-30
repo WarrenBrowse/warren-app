@@ -123,6 +123,7 @@
     <string name="app_route_limit_reached">已达会话上限</string>
     <string name="app_route_waiting_for_route">正在等待空闲路由</string>
     <string name="app_route_no_relay">该位置无服务器</string>
+    <string name="app_route_no_dialable_network">此网络无法连接任何入口服务器</string>
     <string name="app_route_unavailable">不可用</string>
     <string name="app_country_only_app_title">只有 %1$s 会使用 VPN</string>
     <string name="country_picker_title">%1$s 的国家</string>

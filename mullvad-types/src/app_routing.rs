@@ -367,6 +367,9 @@ pub enum UnavailableReason {
     /// Every route the server admits right now is in use: this one starts as
     /// soon as one is free.
     WaitingForRoute,
+    /// This network routes none of the entries the route may use: every one
+    /// publishes only address families the network does not carry.
+    NoDialableNetwork,
 }
 
 /// What the user sees for one exit: the state of its session, the public

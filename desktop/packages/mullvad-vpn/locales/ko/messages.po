@@ -2751,6 +2751,10 @@ msgid "Waiting for a free route"
 msgstr "사용 가능한 경로 대기 중"
 
 msgctxt "split-tunneling-view"
+msgid "This network reaches no entry server"
+msgstr "이 네트워크에서 진입 서버에 연결할 수 없음"
+
+msgctxt "split-tunneling-view"
 msgid "Enabled \"Full disk access\" and still having issues?"
 msgstr "\"전체 디스크 액세스\"를 활성화했는데도 계속 문제가 발생하나요?"
 

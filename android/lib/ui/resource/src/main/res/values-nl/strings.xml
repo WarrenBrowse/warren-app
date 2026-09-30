@@ -124,6 +124,7 @@
     <string name="app_route_limit_reached">Sessielimiet bereikt</string>
     <string name="app_route_waiting_for_route">Wacht op een vrije route</string>
     <string name="app_route_no_relay">Geen server op deze locatie</string>
+    <string name="app_route_no_dialable_network">Dit netwerk bereikt geen toegangsserver</string>
     <string name="app_route_unavailable">Niet beschikbaar</string>
     <string name="app_country_only_app_title">Alleen %1$s zal de VPN gebruiken</string>
     <string name="country_picker_title">Land voor %1$s</string>

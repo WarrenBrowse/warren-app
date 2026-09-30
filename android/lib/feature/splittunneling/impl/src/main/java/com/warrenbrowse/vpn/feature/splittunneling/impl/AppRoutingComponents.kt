@@ -176,6 +176,7 @@ private fun unavailableText(reason: AppRouteUnavailableReason?): Int =
         AppRouteUnavailableReason.LimitReached -> R.string.app_route_limit_reached
         AppRouteUnavailableReason.WaitingForRoute -> R.string.app_route_waiting_for_route
         AppRouteUnavailableReason.NoRelay -> R.string.app_route_no_relay
+        AppRouteUnavailableReason.NoDialableNetwork -> R.string.app_route_no_dialable_network
         null -> R.string.app_route_unavailable
     }
 

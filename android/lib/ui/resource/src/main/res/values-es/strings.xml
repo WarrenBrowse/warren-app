@@ -124,6 +124,7 @@
     <string name="app_route_limit_reached">Límite de sesiones alcanzado</string>
     <string name="app_route_waiting_for_route">Esperando una ruta libre</string>
     <string name="app_route_no_relay">No hay servidor ahí</string>
+    <string name="app_route_no_dialable_network">Esta red no llega a ningún servidor de entrada</string>
     <string name="app_route_unavailable">No disponible</string>
     <string name="app_country_only_app_title">Solo %1$s usará la VPN</string>
     <string name="country_picker_title">País de %1$s</string>

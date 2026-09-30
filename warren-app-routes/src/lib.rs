@@ -192,6 +192,10 @@ pub enum RouteUnavailable {
     Refused,
     /// The session failed for a reason a retry will not fix by itself.
     Failed,
+    /// This network routes none of the entries the route may use: every one
+    /// publishes only address families the network does not carry. Ends when
+    /// the device moves to another network.
+    NoReachableEntry,
 }
 
 /// Where a route session stands.

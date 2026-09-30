@@ -2751,6 +2751,10 @@ msgid "Waiting for a free route"
 msgstr "လမ်းကြောင်းလွတ် စောင့်နေသည်"
 
 msgctxt "split-tunneling-view"
+msgid "This network reaches no entry server"
+msgstr "ဤကွန်ရက်မှ ဝင်ပေါက်ဆာဗာ မရောက်နိုင်ပါ"
+
+msgctxt "split-tunneling-view"
 msgid "Enabled \"Full disk access\" and still having issues?"
 msgstr "\"Full disk access\" ကို ဖွင့်ထားပြီးဖြစ်သော်လည်း ပြဿနာများဆက်ရှိနေပါသလား။"
 

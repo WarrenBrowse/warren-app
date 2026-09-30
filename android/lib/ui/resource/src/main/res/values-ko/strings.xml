@@ -123,6 +123,7 @@
     <string name="app_route_limit_reached">세션 한도 도달</string>
     <string name="app_route_waiting_for_route">사용 가능한 경로 대기 중</string>
     <string name="app_route_no_relay">해당 위치에 서버 없음</string>
+    <string name="app_route_no_dialable_network">이 네트워크에서 진입 서버에 연결할 수 없음</string>
     <string name="app_route_unavailable">사용할 수 없음</string>
     <string name="app_country_only_app_title">%1$s만 VPN을 사용하게 됩니다</string>
     <string name="country_picker_title">%1$s의 국가</string>

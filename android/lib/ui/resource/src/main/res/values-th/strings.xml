@@ -123,6 +123,7 @@
     <string name="app_route_limit_reached">ครบจำนวนเซสชันแล้ว</string>
     <string name="app_route_waiting_for_route">กำลังรอเส้นทางที่ว่าง</string>
     <string name="app_route_no_relay">ไม่มีเซิร์ฟเวอร์ที่นั่น</string>
+    <string name="app_route_no_dialable_network">เครือข่ายนี้เข้าถึงเซิร์ฟเวอร์ขาเข้าไม่ได้</string>
     <string name="app_route_unavailable">ไม่พร้อมใช้งาน</string>
     <string name="app_country_only_app_title">จะมีเพียง %1$s ที่ใช้ VPN</string>
     <string name="country_picker_title">ประเทศของ %1$s</string>
