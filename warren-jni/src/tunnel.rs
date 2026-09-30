@@ -414,22 +414,13 @@ async fn run_multi_hop_session(
     // topic 210). The probe carries the dial socket's own protect escape.
     let bind_addr: SocketAddr = "0.0.0.0:0".parse().expect("static bind addr");
     let two_hop = config.multihop_two_hop.unwrap_or(true);
-    let views = node_views(&dir);
-    let (entry_idx, exit_idx) = match crate::circuit_select::select_circuit_indices(
-        &views,
+    let (entry_idx, exit_idx) = match crate::circuit_retarget::select_dial_circuit(
+        &dir,
         want_exit.as_bytes(),
         two_hop,
         want_entry.as_ref().map(WarrenPubkey::as_bytes),
         config.entry_country.as_deref(),
-        |candidates| {
-            crate::dial_facts::record_entry_families(crate::entry_families::families_of(
-                candidates.iter().map(|&i| {
-                    let relay = &dir.nodes[i].relay;
-                    (&relay.endpoint, relay.endpoint_v6.as_ref())
-                }),
-            ));
-            crate::circuit_select::probe_reachable(|i| &dir.nodes[i].relay, candidates, bind_addr)
-        },
+        bind_addr,
     ) {
         Ok(pair) => pair,
         // No-logs: state the failure category, never the exit/entry identity.
@@ -595,7 +586,7 @@ async fn run_multi_hop_session(
             n_connections: 1,
             pre_swap_check: None,
             on_overlap_swapped: None,
-            on_dial_refused: Some(refusal_hook(
+            on_dial_refused: Some(crate::circuit_retarget::refusal_hook(
                 Arc::clone(&dir),
                 Arc::clone(&retarget),
                 Arc::clone(&migrate_slot),
@@ -917,69 +908,6 @@ async fn run_multi_hop_session(
     }
 
     status.store(SessionStatus::Disconnected as i32);
-}
-
-/// The per-node fields circuit selection reads, borrowed from the verified
-/// directory.
-fn node_views(
-    dir: &warren_discovery_core::VerifiedMultiHopDirectory,
-) -> Vec<crate::circuit_select::NodeSel<'_>> {
-    dir.nodes
-        .iter()
-        .map(|n| crate::circuit_select::NodeSel {
-            exit_ed25519: &n.exit.exit_ed25519_pubkey,
-            relay_id: &n.relay.relay_id,
-            relay_ed25519: &n.relay.relay_ed25519_pubkey,
-            country: &n.country,
-        })
-        .collect()
-}
-
-/// The supervisor's dial-refusal observer for one attempt.
-///
-/// The refusal is charged to the node the connection terminates at,
-/// `relay_id`, whatever hop the engine reports, and it only ever moves the
-/// session to another entry for the same exit (see `crate::circuit_retarget`
-/// for why a refusal never moves the exit). The entry it moves to is one this
-/// network routes: the engine reports an entry it cannot route through this
-/// same observer, and ends in `NoReachableEntry` unless the observer names
-/// one it can, from inside the call.
-fn refusal_hook(
-    dir: std::sync::Arc<warren_discovery_core::VerifiedMultiHopDirectory>,
-    retarget: std::sync::Arc<parking_lot::Mutex<crate::circuit_retarget::EntryRetarget>>,
-    migrate: std::sync::Arc<std::sync::OnceLock<warrenguard_transport::supervisor::MigrateHandle>>,
-    exit_idx: usize,
-    exit_mlkem768_pubkey: Option<Vec<u8>>,
-    bind_addr: SocketAddr,
-) -> warrenguard_transport::supervisor::DialRefusedObserver {
-    std::sync::Arc::new(move |_hop, relay_id: [u8; 16], _exit_id| {
-        let reachable = |candidates: &[usize]| {
-            crate::circuit_select::probe_reachable(|i| &dir.nodes[i].relay, candidates, bind_addr)
-        };
-        if let Some(refused) = dir.nodes.iter().position(|n| n.relay.relay_id == relay_id) {
-            crate::dial_facts::record_dial_error(crate::dial_facts::refusal_class(
-                !reachable(&[refused]).is_empty(),
-            ));
-        }
-        let Some(entry) =
-            retarget
-                .lock()
-                .on_refusal(&node_views(&dir), &relay_id, unix_now_secs(), reachable)
-        else {
-            return;
-        };
-        // No-logs: the category of the reaction, never the node.
-        log::info!("multi-hop entry refused the dial; dialing the exit through another");
-        let exit = &dir.nodes[exit_idx].exit;
-        if let Some(handle) = migrate.get() {
-            handle.migrate_to(warrenguard_transport::supervisor::CircuitTarget {
-                relay: std::sync::Arc::new(dir.nodes[entry].relay.clone()),
-                exit_id: exit.exit_id,
-                exit_x25519_multihop_pubkey: exit.exit_x25519_multihop_pubkey,
-                exit_mlkem768_pubkey: exit_mlkem768_pubkey.clone(),
-            });
-        }
-    })
 }
 
 /// Seconds since the Unix epoch, 0 on a clock before it.

@@ -52,6 +52,9 @@ mod migration;
 #[cfg(test)]
 mod loopback_exit;
 
+#[cfg(test)]
+mod live_entry_choice;
+
 #[cfg(all(target_os = "android", feature = "tunnel"))]
 mod tunnel;
 

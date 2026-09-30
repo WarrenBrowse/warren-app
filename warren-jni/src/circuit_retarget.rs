@@ -107,6 +107,107 @@ impl EntryRetarget {
     }
 }
 
+/// The circuit a dial takes: [`crate::circuit_select::select_circuit_indices`]
+/// through the engine's kernel probe from `bind_addr` (the dial socket's
+/// own bind and protect escape), with the families of the candidate entries
+/// recorded for the problem report.
+pub(crate) fn select_dial_circuit(
+    dir: &warren_discovery_core::VerifiedMultiHopDirectory,
+    want_exit: &[u8; 32],
+    two_hop: bool,
+    want_entry: Option<&[u8; 32]>,
+    want_country: Option<&str>,
+    bind_addr: std::net::SocketAddr,
+) -> Result<(usize, usize), crate::circuit_select::CircuitSelectError> {
+    crate::circuit_select::select_circuit_indices(
+        &node_views(dir),
+        want_exit,
+        two_hop,
+        want_entry,
+        want_country,
+        |candidates| {
+            crate::dial_facts::record_entry_families(crate::entry_families::families_of(
+                candidates.iter().map(|&i| {
+                    let relay = &dir.nodes[i].relay;
+                    (&relay.endpoint, relay.endpoint_v6.as_ref())
+                }),
+            ));
+            crate::circuit_select::probe_reachable(|i| &dir.nodes[i].relay, candidates, bind_addr)
+        },
+    )
+}
+
+/// The per-node fields circuit selection reads, borrowed from the verified
+/// directory.
+pub(crate) fn node_views(
+    dir: &warren_discovery_core::VerifiedMultiHopDirectory,
+) -> Vec<crate::circuit_select::NodeSel<'_>> {
+    dir.nodes
+        .iter()
+        .map(|n| crate::circuit_select::NodeSel {
+            exit_ed25519: &n.exit.exit_ed25519_pubkey,
+            relay_id: &n.relay.relay_id,
+            relay_ed25519: &n.relay.relay_ed25519_pubkey,
+            country: &n.country,
+        })
+        .collect()
+}
+
+/// The supervisor's dial-refusal observer for one attempt.
+///
+/// The refusal is charged to the node the connection terminates at,
+/// `relay_id`, whatever hop the engine reports, and it only ever moves the
+/// session to another entry for the same exit (see `crate::circuit_retarget`
+/// for why a refusal never moves the exit). The entry it moves to is one this
+/// network routes: the engine reports an entry it cannot route through this
+/// same observer, and ends in `NoReachableEntry` unless the observer names
+/// one it can, from inside the call.
+pub(crate) fn refusal_hook(
+    dir: std::sync::Arc<warren_discovery_core::VerifiedMultiHopDirectory>,
+    retarget: std::sync::Arc<parking_lot::Mutex<crate::circuit_retarget::EntryRetarget>>,
+    migrate: std::sync::Arc<std::sync::OnceLock<warrenguard_transport::supervisor::MigrateHandle>>,
+    exit_idx: usize,
+    exit_mlkem768_pubkey: Option<Vec<u8>>,
+    bind_addr: std::net::SocketAddr,
+) -> warrenguard_transport::supervisor::DialRefusedObserver {
+    std::sync::Arc::new(move |_hop, relay_id: [u8; 16], _exit_id| {
+        let reachable = |candidates: &[usize]| {
+            crate::circuit_select::probe_reachable(|i| &dir.nodes[i].relay, candidates, bind_addr)
+        };
+        if let Some(refused) = dir.nodes.iter().position(|n| n.relay.relay_id == relay_id) {
+            crate::dial_facts::record_dial_error(crate::dial_facts::refusal_class(
+                !reachable(&[refused]).is_empty(),
+            ));
+        }
+        let Some(entry) =
+            retarget
+                .lock()
+                .on_refusal(&node_views(&dir), &relay_id, unix_now(), reachable)
+        else {
+            return;
+        };
+        // No-logs: the category of the reaction, never the node.
+        log::info!("multi-hop entry refused the dial; dialing the exit through another");
+        let exit = &dir.nodes[exit_idx].exit;
+        if let Some(handle) = migrate.get() {
+            handle.migrate_to(warrenguard_transport::supervisor::CircuitTarget {
+                relay: std::sync::Arc::new(dir.nodes[entry].relay.clone()),
+                exit_id: exit.exit_id,
+                exit_x25519_multihop_pubkey: exit.exit_x25519_multihop_pubkey,
+                exit_mlkem768_pubkey: exit_mlkem768_pubkey.clone(),
+            });
+        }
+    })
+}
+
+/// Seconds since the Unix epoch, 0 on a clock before it.
+fn unix_now() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_secs())
+        .unwrap_or(0)
+}
+
 /// Latch `leaving` once the exit announces a drain, after the anti-stampede
 /// delay that spreads its clients before its deadline, when `another_exit`
 /// says Kotlin has one to fail over to. `fraction` is the client's uniform
@@ -142,6 +243,69 @@ pub(crate) async fn leave_on_drain(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// A signed directory whose first two nodes publish IPv6 only and the
+    /// others a loopback IPv4 address. Dialed from the pinned IPv4 bind
+    /// `127.0.0.1:0`, which reaches no IPv6 address, the first two stand for
+    /// v4-only entries seen from an IPv6-only network (the other way round),
+    /// on any test host and without touching its routes.
+    fn two_unroutable_nodes() -> warren_discovery_core::VerifiedMultiHopDirectory {
+        use warren_app_routes::plan::fixture::{directory, test_node};
+        let node = |tag: u8, country: &str, endpoint: &str| {
+            let mut node = test_node(tag, country, "City", 10);
+            node.relay.endpoint = endpoint.parse().expect("static addr");
+            node
+        };
+        directory(vec![
+            node(1, "ro", "[2001:db8::1]:443"),
+            node(2, "fr", "[2001:db8::2]:443"),
+            node(3, "de", "127.0.0.1:9"),
+            node(4, "nl", "127.0.0.1:10"),
+        ])
+    }
+
+    const PINNED_V4: &str = "127.0.0.1:0";
+
+    #[test]
+    fn a_dial_enters_through_the_first_candidate_the_kernel_routes() {
+        let dir = two_unroutable_nodes();
+        let exit = dir.nodes[3].exit.exit_ed25519_pubkey;
+
+        let got = select_dial_circuit(
+            &dir,
+            &exit,
+            true,
+            None,
+            None,
+            PINNED_V4.parse().expect("static addr"),
+        );
+
+        assert_eq!(got, Ok((2, 3)), "the IPv6-only nodes are passed over");
+    }
+
+    #[test]
+    fn a_refusal_from_an_entry_the_kernel_cannot_route_moves_to_one_it_can() {
+        // The engine reports an unroutable entry through the refusal hook;
+        // the hook must answer with an entry this host routes.
+        let dir = std::sync::Arc::new(two_unroutable_nodes());
+        let retarget = std::sync::Arc::new(parking_lot::Mutex::new(EntryRetarget::new(0, 3, None)));
+        let hook = refusal_hook(
+            std::sync::Arc::clone(&dir),
+            std::sync::Arc::clone(&retarget),
+            std::sync::Arc::new(std::sync::OnceLock::new()),
+            3,
+            None,
+            PINNED_V4.parse().expect("static addr"),
+        );
+
+        hook(
+            warrenguard_transport::multihop::DialRefusedHop::Entry,
+            dir.nodes[0].relay.relay_id,
+            *dir.nodes[3].exit.exit_id.as_bytes(),
+        );
+
+        assert_eq!(retarget.lock().entry(), 2, "FR is IPv6-only too");
+    }
 
     struct OwnedNode {
         exit_ed: [u8; 32],
