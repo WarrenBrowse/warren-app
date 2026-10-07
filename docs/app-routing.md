@@ -1264,7 +1264,7 @@ global lockdown mode narrowed to a list of apps.
 |---|---|---|---|
 | Windows | persistent WFP filters of their own (winfw `WinFw_SetLockedApps`) | yes, across a reboot | enforced, the real-engine tests run elevated in CI |
 | Android | a VpnService interface that captures only the locked apps, with no pump | while Warren holds the VPN slot, from boot | enforced, validated on an emulator |
-| Linux | a cgroup the app is opened in by Warren | until the app exits | not yet: the option is hidden |
+| Linux | nftables over a cgroup the app is opened in by Warren (`warren-include --locked`) | yes, until the app exits | enforced, the real-kernel tests run as root in a VM |
 | macOS | needs a Network Extension content filter and a Developer ID build | | not yet: the option is hidden |
 | iOS | no per-app traffic identification outside MDM | | not available |
 
@@ -1320,7 +1320,43 @@ Residuals:
 - Not yet run end to end with the daemon on a Windows host against a real exit
   (the winfw behaviour is, in CI).
 
-### 8.2 Android
+### 8.2 Linux
+
+Linux keeps no list here either (section 7): an app is locked when Warren opens
+it, through "Open never without the VPN" on its route screen, which runs
+`warren-include --locked`. The launcher joins
+`/sys/fs/cgroup/warren-inclusions/warren-locked`, which the daemon creates
+(`NftEnforcer` in `talpid-core/src/app_locks.rs`) and the launcher never does,
+so a program asked to be locked never runs unlocked. Under the included cgroup,
+include-only tunnels it too; its child processes inherit the cgroup.
+
+- The lock is a table of its own, `<firewall id>-locks`
+  (`set_app_lock` in `talpid-core/src/firewall/linux.rs`), which the policy
+  table's reset leaves alone, and which stays while no daemon runs. Recovery
+  (`reset_policy_all_generations`, the packages' `reset-firewall`) removes it.
+- While no tunnel is up, its output chain accepts loopback (and the LAN when
+  shared) for a socket of the locked cgroup and rejects the rest at once; its
+  input chain drops the rest. While one is up it holds no rule: the policy then
+  keeps every app that is not excluded in the tunnel, and the output hook could
+  not judge an include-only packet once the mangle chain rerouted it, while
+  `socket cgroupv2` is refused in postrouting.
+- The daemon locks with no tunnel before its shutdown resets the policy
+  (`finalize`), since the policy was what held them while connected.
+- A Flatpak or Snap app starts in a cgroup of its own, so it cannot be opened
+  locked: the option says so and is disabled.
+
+Tests: `lock_tests` (the rules) and `lock_kernel_tests` (root, ignored by
+default: this process in a cgroup two levels down is refused with no tunnel and
+released by one; the lock outlives a policy reset and recovery removes it; a
+process outside the cgroup is never held), run on 2026-10-07 in an Ubuntu 24.04
+VM (kernel 6.8).
+
+Residuals: a program already running may take the new window into its running
+process, which stays where it was (the route screen says to close it first, as
+for "Open through the VPN"); a program opened another way is not locked; not
+yet run end to end with the daemon against a real exit.
+
+### 8.3 Android
 
 `WarrenQuinnAdapter` holds a third interface next to the tunnel and the kill
 switch: the lock guard (`planLockGuard`), an allow list of the locked apps on
@@ -1361,12 +1397,12 @@ forcing Warren to stop, releases the locked apps; the route page says so.
 A locked app traffic that a system service carries for it (a download through
 `DownloadManager`, a push) belongs to that service, as in section 3.5.
 
-### 8.3 What the user sees
+### 8.4 What the user sees
 
 The route page of an app carries a "Never without the VPN" switch under the
 three routes, with what it does in one sentence. It cannot be turned on for an
 app outside the VPN (it says to choose a route through the VPN first), and is
-hidden where the platform cannot hold it. Sending a locked app outside the VPN
+hidden on macOS. On Linux it is a launch action, "Open never without the VPN". Sending a locked app outside the VPN
 lifts the lock first (`planAppRoute`), so the app never takes a third route on
 the way. A locked app is a rule even on the default route; its chip ends with a
 padlock, and while the VPN is not connected its line reads "Blocked until the
