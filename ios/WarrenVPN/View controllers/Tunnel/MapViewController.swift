@@ -336,8 +336,12 @@ final class SceneryViewController: UIViewController {
         "germany": "SceneryGermany",
         "fi": "SceneryFinland",
         "finland": "SceneryFinland",
+        "fr": "SceneryFrance",
+        "france": "SceneryFrance",
         "nl": "SceneryNetherlands",
         "netherlands": "SceneryNetherlands",
+        "ro": "SceneryRomania",
+        "romania": "SceneryRomania",
         "sg": "ScenerySingapore",
         "singapore": "ScenerySingapore",
     ]

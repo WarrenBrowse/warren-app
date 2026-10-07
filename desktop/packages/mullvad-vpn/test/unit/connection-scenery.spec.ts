@@ -96,10 +96,13 @@ describe('resolveCountryImage', () => {
     expect(resolveCountryImage('netherlands')).toMatch(/netherlands\.webp$/);
     expect(resolveCountryImage('  SINGAPORE ')).toMatch(/singapore\.webp$/);
     expect(resolveCountryImage('Finland')).toMatch(/finland\.webp$/);
+    expect(resolveCountryImage('France')).toMatch(/france\.webp$/);
+    expect(resolveCountryImage('Romania')).toMatch(/romania\.webp$/);
+    expect(resolveCountryImage('ro')).toMatch(/romania\.webp$/);
   });
 
   it('falls back to the plain for unknown or missing countries', () => {
-    expect(resolveCountryImage('France')).toBe(PLAINE_IMAGE);
+    expect(resolveCountryImage('Sweden')).toBe(PLAINE_IMAGE);
     expect(resolveCountryImage(undefined)).toBe(PLAINE_IMAGE);
     expect(resolveCountryImage('')).toBe(PLAINE_IMAGE);
   });
@@ -142,7 +145,7 @@ describe('resolveScenery', () => {
   });
 
   it('the country phases fall back to the plain for an exit with no art', () => {
-    expect(resolveScenery('connecting', 'France').image).toBe(PLAINE_IMAGE);
+    expect(resolveScenery('connecting', 'Sweden').image).toBe(PLAINE_IMAGE);
     expect(resolveScenery('protected', undefined).image).toBe(PLAINE_IMAGE);
   });
 });

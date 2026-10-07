@@ -52,13 +52,21 @@ class SceneryStateTest {
             R.drawable.scenery_singapore,
             resolveScenery(ConnectionPhase.Interrupted, "sg").landscape,
         )
+        assertEquals(
+            R.drawable.scenery_france,
+            resolveScenery(ConnectionPhase.Protected, "France").landscape,
+        )
+        assertEquals(
+            R.drawable.scenery_romania,
+            resolveScenery(ConnectionPhase.Connecting, "RO").landscape,
+        )
     }
 
     @Test
     fun `an exit with no bespoke art falls back to the plain`() {
         assertEquals(
             R.drawable.scenery_plaine,
-            resolveScenery(ConnectionPhase.Protected, "France").landscape,
+            resolveScenery(ConnectionPhase.Protected, "Sweden").landscape,
         )
         assertEquals(
             R.drawable.scenery_plaine,

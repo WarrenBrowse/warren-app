@@ -131,8 +131,12 @@ internal object SceneryTable {
             "germany" to R.drawable.scenery_germany,
             "fi" to R.drawable.scenery_finland,
             "finland" to R.drawable.scenery_finland,
+            "fr" to R.drawable.scenery_france,
+            "france" to R.drawable.scenery_france,
             "nl" to R.drawable.scenery_netherlands,
             "netherlands" to R.drawable.scenery_netherlands,
+            "ro" to R.drawable.scenery_romania,
+            "romania" to R.drawable.scenery_romania,
             "sg" to R.drawable.scenery_singapore,
             "singapore" to R.drawable.scenery_singapore,
         )

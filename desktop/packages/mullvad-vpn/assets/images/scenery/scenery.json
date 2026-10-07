@@ -36,12 +36,28 @@
       "iosImageset": "SceneryFinland"
     },
     {
+      "slug": "france",
+      "role": "country",
+      "country": "FR",
+      "countryName": "France",
+      "master": "INTERFACE PARIS V142.jpg",
+      "iosImageset": "SceneryFrance"
+    },
+    {
       "slug": "netherlands",
       "role": "country",
       "country": "NL",
       "countryName": "Netherlands",
       "master": "INTERFACE PAYS BAS V14.jpg",
       "iosImageset": "SceneryNetherlands"
+    },
+    {
+      "slug": "romania",
+      "role": "country",
+      "country": "RO",
+      "countryName": "Romania",
+      "master": "INTERFACE ROUMANIE V142.jpg",
+      "iosImageset": "SceneryRomania"
     },
     {
       "slug": "singapore",
