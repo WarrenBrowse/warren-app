@@ -23,14 +23,6 @@ Line wrap the file at 100 chars.                                              Th
 
 ## [Unreleased]
 ### Added
-- [Windows] Add "Never without the VPN" to the route of an app in App routing: the app has no
-  Internet whenever the VPN does not carry it, while disconnected and with Warren VPN closed or
-  stopped included. Locked apps show a padlock, and the main screen says how many wait for the VPN.
-- [Android] Add "Never without the VPN" to the route of an app. While Warren is the VPN app of the
-  device, the locked apps have no Internet without the VPN, from boot, and every other app keeps
-  its connection.
-- [linux] Add "Open never without the VPN" to the route of an app: the app opened this way has no
-  Internet while the VPN is off, until it is closed.
 - [iOS] Add a light theme for the connect screen, and a Theme setting: System, Dark or Light. System
   follows the appearance of the device, and stays dark when the device states none.
 - [iOS] Show the warnings recorded against your account when a forwarded port is closed after an
@@ -43,8 +35,6 @@ Line wrap the file at 100 chars.                                              Th
   automatically instead of stopping on the first refusal.
 
 ### Fixed
-- [Windows] Fix the firewall reset run by the uninstaller and by the recovery tool, which removed
-  the rules and then crashed, so the uninstaller recorded it as failed.
 - [iOS] Present a port entitlement with each forwarded port request, as the other platforms do, so
   the servers that require one grant the port instead of refusing it.
 - [iOS] Sign the connection with the wallet shown in the app. It used a key derived from the same
@@ -65,6 +55,23 @@ Line wrap the file at 100 chars.                                              Th
   up.
 - [iOS] Choose an entry server the network in use can reach, which on an
   IPv6-only network means one that answers on IPv6.
+
+## [1.1.47] - 2026-10-07
+### Added
+- [Windows] Add "Never without the VPN" to the route of an app in App routing: the app has no
+  Internet whenever the VPN does not carry it, while disconnected and with Warren VPN closed or
+  stopped included. Locked apps show a padlock, and the main screen says how many wait for the VPN.
+- [Android] Add "Never without the VPN" to the route of an app. While Warren is the VPN app of the
+  device, the locked apps have no Internet without the VPN, from boot, and every other app keeps
+  its connection.
+- [Linux] Add "Open never without the VPN" to the route of an app: the app opened this way has no
+  Internet while the VPN is off, until it is closed.
+- [Windows, macOS, Linux, Android] Show a landscape of France and one of Romania on the connect
+  screen when the exit is in that country, and redraw the default plain landscape.
+
+### Fixed
+- [Windows] Fix the firewall reset run by the uninstaller and by the recovery tool, which removed
+  the rules and then crashed, so the uninstaller recorded it as failed.
 
 ## [1.1.46] - 2026-09-30
 ### Fixed

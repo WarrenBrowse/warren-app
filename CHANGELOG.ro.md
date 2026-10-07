@@ -13,14 +13,6 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 
 ## [Unreleased]
 ### Adăugat
-- [Windows] „Niciodată fără VPN” pe ruta unei aplicații în Rutarea aplicațiilor: aplicația nu are
-  internet ori de câte ori VPN-ul nu o transportă, inclusiv deconectat și cu Warren VPN închis sau
-  oprit. Aplicațiile blocate au un lacăt, iar ecranul principal arată câte așteaptă VPN-ul.
-- [Android] „Niciodată fără VPN” pe ruta unei aplicații. Cât timp Warren este aplicația VPN a
-  dispozitivului, aplicațiile blocate nu au internet fără VPN, de la pornire, iar celelalte își
-  păstrează conexiunea.
-- [linux] „Deschide, niciodată fără VPN” pe ruta unei aplicații: aplicația deschisă astfel nu are
-  internet cât timp VPN-ul e oprit, până când e închisă.
 - [iOS] O temă luminoasă pentru ecranul de conectare și o setare Temă: Sistem, Întunecată sau
   Luminoasă. Sistem urmează aspectul dispozitivului și rămâne întunecată când dispozitivul nu indică
   niciunul.
@@ -34,8 +26,6 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   cere din nou automat în loc să se oprească la primul refuz.
 
 ### Reparat
-- [Windows] Repară resetarea firewall-ului rulată de dezinstalare și de instrumentul de recuperare,
-  care elimina regulile și apoi se oprea cu o eroare, așa că dezinstalarea o înregistra ca eșuată.
 - [iOS] Prezintă un drept de port cu fiecare cerere de port redirecționat, ca pe celelalte
   platforme, astfel încât serverele care îl cer acordă portul în loc să-l refuze.
 - [iOS] Semnează conexiunea cu portofelul afișat în aplicație. Folosea o cheie derivată din aceeași
@@ -57,6 +47,23 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   s-au epuizat.
 - [iOS] Aplicația alege un server de intrare pe care rețeaua folosită îl
   poate atinge, adică pe o rețea doar IPv6 un server care răspunde pe IPv6.
+
+## [1.1.47] - 2026-10-07
+### Adăugat
+- [Windows] „Niciodată fără VPN” pe ruta unei aplicații în Rutarea aplicațiilor: aplicația nu are
+  internet ori de câte ori VPN-ul nu o transportă, inclusiv deconectat și cu Warren VPN închis sau
+  oprit. Aplicațiile blocate au un lacăt, iar ecranul principal arată câte așteaptă VPN-ul.
+- [Android] „Niciodată fără VPN” pe ruta unei aplicații. Cât timp Warren este aplicația VPN a
+  dispozitivului, aplicațiile blocate nu au internet fără VPN, de la pornire, iar celelalte își
+  păstrează conexiunea.
+- [Linux] „Deschide, niciodată fără VPN” pe ruta unei aplicații: aplicația deschisă astfel nu are
+  internet cât timp VPN-ul e oprit, până când e închisă.
+- [Windows, macOS, Linux, Android] Un peisaj al Franței și unul al României pe ecranul de
+  conectare când ieșirea e în acea țară, iar peisajul implicit de câmpie e redesenat.
+
+### Reparat
+- [Windows] Repară resetarea firewall-ului rulată de dezinstalare și de instrumentul de recuperare,
+  care elimina regulile și apoi se oprea cu o eroare, așa că dezinstalarea o înregistra ca eșuată.
 
 ## [1.1.46] - 2026-09-30
 ### Reparat

@@ -51,6 +51,25 @@ par l'application, gardez-le tel quel.
 - [iOS] Choisir un serveur d'entrée que le réseau utilisé peut joindre, ce
   qui, sur un réseau en IPv6 seulement, veut dire un serveur qui répond en IPv6.
 
+## [1.1.47] - 2026-10-07
+### Ajouté
+- [Windows] « Jamais sans le VPN » sur la route d'une application dans Routage des apps :
+  l'application n'a pas d'accès Internet tant que le VPN ne la transporte pas, y compris
+  déconnecté et avec Warren VPN fermé ou arrêté. Les applications verrouillées portent un cadenas,
+  et l'écran principal indique combien attendent le VPN.
+- [Android] « Jamais sans le VPN » sur la route d'une application. Tant que Warren est
+  l'application VPN de l'appareil, les applications verrouillées n'ont pas d'accès Internet sans
+  le VPN, dès le démarrage, et toutes les autres gardent leur connexion.
+- [Linux] « Ouvrir sans jamais sortir du VPN » sur la route d'une application : l'application
+  ouverte ainsi n'a pas d'accès Internet tant que le VPN est coupé, jusqu'à sa fermeture.
+- [Windows, macOS, Linux, Android] Un paysage de la France et un de la Roumanie sur l'écran de
+  connexion quand la sortie est dans ce pays, et le paysage de plaine par défaut redessiné.
+
+### Corrigé
+- [Windows] Corriger la réinitialisation du pare-feu lancée par le désinstalleur et par l'outil de
+  récupération, qui retirait les règles puis plantait, si bien que le désinstalleur l'enregistrait
+  comme un échec.
+
 ## [1.1.46] - 2026-09-30
 ### Corrigé
 - [Windows, macOS, Linux] Garder le port forwarding, les jetons de session et l'écran du compte en

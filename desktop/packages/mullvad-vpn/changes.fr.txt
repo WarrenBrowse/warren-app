@@ -1,33 +1,17 @@
+### Ajouté
+- [Windows] « Jamais sans le VPN » sur la route d'une application dans Routage des apps :
+  l'application n'a pas d'accès Internet tant que le VPN ne la transporte pas, y compris
+  déconnecté et avec Warren VPN fermé ou arrêté. Les applications verrouillées portent un cadenas,
+  et l'écran principal indique combien attendent le VPN.
+- [Android] « Jamais sans le VPN » sur la route d'une application. Tant que Warren est
+  l'application VPN de l'appareil, les applications verrouillées n'ont pas d'accès Internet sans
+  le VPN, dès le démarrage, et toutes les autres gardent leur connexion.
+- [Linux] « Ouvrir sans jamais sortir du VPN » sur la route d'une application : l'application
+  ouverte ainsi n'a pas d'accès Internet tant que le VPN est coupé, jusqu'à sa fermeture.
+- [Windows, macOS, Linux, Android] Un paysage de la France et un de la Roumanie sur l'écran de
+  connexion quand la sortie est dans ce pays, et le paysage de plaine par défaut redessiné.
+
 ### Corrigé
-- [Windows, macOS, Linux] Garder le port forwarding, les jetons de session et l'écran du compte en
-  état de marche sur un ordinateur dont l'horloge a plus d'une minute d'écart : chaque requête
-  signée prend désormais l'horloge des serveurs dès le premier refus, et le rapport de problème
-  indique l'écart de l'horloge.
-- [Android] Garder le port forwarding, les jetons de session et l'écran du compte en état de
-  marche sur un appareil dont l'horloge a plus d'une minute d'écart : chaque requête signée prend
-  désormais l'horloge des serveurs dès le premier refus rencontré.
-- [Windows, macOS, Linux] Indiquer que l'horloge de cet ordinateur est décalée, de combien de
-  secondes et dans quel sens, quand les serveurs refusent le port forwarding pour cette raison, au
-  lieu d'annoncer que les droits de port sont épuisés.
-- [Android] Indiquer que l'horloge de cet appareil est décalée, de combien de secondes et dans quel
-  sens, quand les serveurs refusent le port forwarding pour cette raison, au lieu d'annoncer que
-  les droits de port sont épuisés.
-- [Android] Se connecter sur un réseau mobile en IPv6 seulement, par un serveur d'entrée qui
-  répond en IPv6. L'application prenait le premier serveur d'entrée de la liste quelle que soit la
-  localisation choisie, et ce serveur ne répond qu'en IPv4 : la connexion ne pouvait pas s'établir.
-- [Windows, macOS, Linux] Choisir un serveur d'entrée que le réseau utilisé peut joindre, ce
-  qui, sur un réseau en IPv6 seulement, veut dire un serveur qui répond en IPv6.
-- [Android] Indiquer qu'aucun serveur d'entrée n'est joignable sur ce réseau quand c'est la raison
-  du blocage d'internet, avec un titre de notification qui lui est propre. Le message n'affirme
-  plus que les serveurs d'entrée ne répondent qu'en IPv4, et propose un autre pays d'entrée ou une
-  autre localisation.
-- [Android] Retirer du rapport de problème le nom du serveur d'entrée, qui apparaissait dans les
-  lignes du journal système de la connexion sécurisée. Le rapport indique désormais les types
-  d'adresse offerts par les serveurs d'entrée, ceux que porte le réseau, et la façon dont la
-  dernière tentative de connexion a échoué.
-- [Android, Windows, macOS, Linux] Ouvrir la page de téléchargement du site bêta depuis l'avis de
-  mise à jour d'une version bêta, et celle du site de production seulement depuis une version de
-  production.
-- [Windows, macOS, Linux, Android] Indiquer dans le routage des apps que le réseau utilisé
-  n'atteint aucun serveur d'entrée quand c'est la raison pour laquelle la route d'une app ne peut
-  pas fonctionner.
+- [Windows] Corriger la réinitialisation du pare-feu lancée par le désinstalleur et par l'outil de
+  récupération, qui retirait les règles puis plantait, si bien que le désinstalleur l'enregistrait
+  comme un échec.
