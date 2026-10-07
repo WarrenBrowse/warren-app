@@ -128,6 +128,17 @@
     <string name="app_route_no_relay">Нет серверов в этом месте</string>
     <string name="app_route_no_dialable_network">Эта сеть не достигает ни одного сервера входа</string>
     <string name="app_route_unavailable">Недоступно</string>
+    <string name="app_route_never_without_vpn">Никогда без VPN</string>
+    <string name="app_route_never_without_vpn_subtitle">Когда VPN выключен, у %1$s нет интернета, даже если Warren VPN закрыт.</string>
+    <string name="app_route_lock_needs_vpn_route">Выберите маршрут через VPN, чтобы включить это</string>
+    <string name="app_route_lock_android_note">Действует, пока Warren VPN является VPN-приложением этого устройства. Включение другого VPN-приложения снимает его.</string>
+    <string name="app_route_blocked">Заблокировано до подключения VPN</string>
+    <plurals name="apps_blocked_until_vpn">
+        <item quantity="one">%1$d приложение заблокировано до подключения VPN</item>
+        <item quantity="few">%1$d приложения заблокированы до подключения VPN</item>
+        <item quantity="many">%1$d приложений заблокировано до подключения VPN</item>
+        <item quantity="other">%1$d приложения заблокировано до подключения VPN</item>
+    </plurals>
     <string name="app_country_only_app_title">VPN будет использовать только %1$s</string>
     <string name="country_picker_title">Страна для %1$s</string>
     <string name="country_picker_cities_in">%1$s: города</string>

@@ -26,6 +26,7 @@ class SplitTunnelingRepositoryTest {
     private val included = MutableStateFlow(setOf("org.bank", "org.mail", "org.gone"))
     private val appExits = MutableStateFlow<Map<String, AppExit>>(emptyMap())
     private val appExitsEnabled = MutableStateFlow(true)
+    private val locked = MutableStateFlow<Set<String>>(emptySet())
     private val settings =
         mockk<WarrenLocalSettingsRepository> {
             every { splitMode } returns this@SplitTunnelingRepositoryTest.splitMode
@@ -33,10 +34,11 @@ class SplitTunnelingRepositoryTest {
             every { excludedApps } returns MutableStateFlow(setOf("org.chat"))
             every { appExits } returns this@SplitTunnelingRepositoryTest.appExits
             every { appExitsEnabled } returns this@SplitTunnelingRepositoryTest.appExitsEnabled
+            every { lockedApps } returns locked
         }
     private val installed = setOf("org.bank", "org.mail", "org.chat")
 
-    private fun repository() = SplitTunnelingRepository(settings) { it in installed }
+    private fun repository() = SplitTunnelingRepository(settings, isAppInstalled = { it in installed })
 
     private fun SplitTunnelingRepository.awaitCount(predicate: (Int?) -> Boolean): Int? =
         runBlocking { withTimeout(TIMEOUT_MS) { vpnOnlyForCount.first(predicate) } }
@@ -118,6 +120,9 @@ class SplitTunnelingRepositoryTest {
                 every { excludedApps } returns MutableStateFlow(emptySet())
                 every { appExits } returns this@SplitTunnelingRepositoryTest.appExits
                 every { appExitsEnabled } returns this@SplitTunnelingRepositoryTest.appExitsEnabled
+                every { lockedApps } returns MutableStateFlow(emptySet())
+                every { lockApp(any()) } answers { written += "lock ${firstArg<Any>()}" }
+                every { unlockApp(any()) } answers { written += "unlock ${firstArg<Any>()}" }
                 every { setSplitMode(any()) } answers { written += "mode ${firstArg<Any>()}" }
                 every { addExcludedApp(any()) } answers { written += "+excluded ${firstArg<Any>()}" }
                 every { removeExcludedApp(any()) } answers { written += "-excluded ${firstArg<Any>()}" }
@@ -127,7 +132,7 @@ class SplitTunnelingRepositoryTest {
                 every { clearAppExit(any()) } answers { written += "-exit ${firstArg<Any>()}" }
                 every { setAppExitsEnabled(any()) } answers { written += "exits ${firstArg<Any>()}" }
             }
-        val repository = SplitTunnelingRepository(recording) { true }
+        val repository = SplitTunnelingRepository(recording, isAppInstalled = { true })
 
         repository.apply(
             listOf(
@@ -139,6 +144,8 @@ class SplitTunnelingRepositoryTest {
                 RoutingOp.RemoveExcluded("org.chat"),
                 RoutingOp.AddExcluded("org.game"),
                 RoutingOp.SetSplitMode(SplitTunnelMode.Exclude),
+                RoutingOp.Lock("org.bank"),
+                RoutingOp.Unlock("org.mail"),
             )
         )
 
@@ -152,9 +159,51 @@ class SplitTunnelingRepositoryTest {
                 "-excluded org.chat",
                 "+excluded org.game",
                 "mode Exclude",
+                "lock org.bank",
+                "unlock org.mail",
             ),
             written,
         )
+    }
+
+    @Test
+    fun `a lock brings the service up to hold the app, and nothing else does`() {
+        val relaxed = mockk<WarrenLocalSettingsRepository>(relaxed = true) {
+            every { splitMode } returns this@SplitTunnelingRepositoryTest.splitMode
+            every { includedApps } returns included
+            every { excludedApps } returns MutableStateFlow(emptySet())
+            every { appExits } returns this@SplitTunnelingRepositoryTest.appExits
+            every { appExitsEnabled } returns this@SplitTunnelingRepositoryTest.appExitsEnabled
+            every { lockedApps } returns locked
+        }
+        var holds = 0
+        val repository = SplitTunnelingRepository(relaxed, { true }) { holds++ }
+
+        repository.apply(listOf(RoutingOp.AddIncluded("org.bank")))
+        repository.apply(listOf(RoutingOp.Unlock("org.bank")))
+        assertEquals(0, holds)
+
+        repository.apply(listOf(RoutingOp.Lock("org.bank")))
+        assertEquals(1, holds)
+    }
+
+    @Test
+    fun `counts the locked apps on the device`() {
+        locked.value = setOf("org.bank", "org.gone")
+
+        val count = runBlocking {
+            withTimeout(TIMEOUT_MS) { repository().lockedCount.first { it > 0 } }
+        }
+
+        assertEquals(1, count)
+    }
+
+    @Test
+    fun `a locked app counts among the apps vpn only for carries`() {
+        included.value = setOf("org.mail")
+        locked.value = setOf("org.bank")
+
+        assertEquals(2, repository().awaitCount { it == 2 })
     }
 
     private companion object {

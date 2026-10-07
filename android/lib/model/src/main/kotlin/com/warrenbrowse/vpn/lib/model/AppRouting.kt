@@ -36,21 +36,36 @@ sealed interface AppRouting {
  *
  * [appsWithCountry] are the apps whose country is in force ([effectiveAppExits]): in include-only
  * they are tunneled as well, since choosing a country for an app is enough to put it in the VPN
- * (docs/app-routing.md section 1, rule 2).
+ * (docs/app-routing.md section 1, rule 2). [lockedApps] are never outside the tunnel: never
+ * bypassing, and carried in include-only (section 8).
  */
 fun resolveAppRouting(
     mode: SplitTunnelMode,
     excludedApps: Set<String>,
     includedApps: Set<String>,
     appsWithCountry: Set<String> = emptySet(),
+    lockedApps: Set<String> = emptySet(),
     isInstalled: (String) -> Boolean,
 ): AppRouting =
     when (mode) {
         SplitTunnelMode.Off -> AppRouting.AllApps
-        SplitTunnelMode.Exclude ->
-            if (excludedApps.isEmpty()) AppRouting.AllApps else AppRouting.Bypass(excludedApps)
+        SplitTunnelMode.Exclude -> {
+            val bypassing = excludedApps - lockedApps
+            if (bypassing.isEmpty()) AppRouting.AllApps else AppRouting.Bypass(bypassing)
+        }
         SplitTunnelMode.IncludeOnly -> {
-            val present = (includedApps + appsWithCountry).filterTo(LinkedHashSet(), isInstalled)
+            val present =
+                (includedApps + appsWithCountry + lockedApps).filterTo(LinkedHashSet(), isInstalled)
             if (present.isEmpty()) AppRouting.AllApps else AppRouting.OnlyFor(present)
         }
     }
+
+/**
+ * The interface that holds the locked apps while the tunnel does not carry them: exactly the
+ * locked apps on the device, or null when there is none, since a builder given no allowed app
+ * captures every app.
+ */
+fun lockGuardRouting(lockedApps: Set<String>, isInstalled: (String) -> Boolean): AppRouting? {
+    val present = lockedApps.filterTo(LinkedHashSet(), isInstalled)
+    return if (present.isEmpty()) null else AppRouting.OnlyFor(present)
+}

@@ -25,19 +25,21 @@ data class AppExit(val country: String, val city: String? = null) {
 
 /**
  * The exits in force after the precedence rules of docs/app-routing.md section 1: none while the
- * tab's switch is off, and none for an app that bypasses the VPN while exclusion is in force. The
- * Kotlin twin of `AppRoutingSettings::effective_app_exits` (`mullvad-types`).
+ * tab's switch is off, and none for an app that bypasses the VPN while exclusion is in force. A
+ * locked app never bypasses it. The Kotlin twin of `AppRoutingSettings::effective_app_exits`
+ * (`mullvad-types`).
  */
 fun effectiveAppExits(
     mode: SplitTunnelMode,
     excludedApps: Set<String>,
     appExits: Map<String, AppExit>,
     enabled: Boolean,
+    lockedApps: Set<String> = emptySet(),
 ): Map<String, AppExit> =
     when {
         !enabled -> emptyMap()
         mode != SplitTunnelMode.Exclude -> appExits
-        else -> appExits.filterKeys { it !in excludedApps }
+        else -> appExits.filterKeys { it !in excludedApps || it in lockedApps }
     }
 
 /** Where the session of one exit stands, as the native engine reports it. */
@@ -72,6 +74,9 @@ data class AppRouteStatus(
 
 /** The status line under an app that has a country, the twin of the desktop `AppRouteLine`. */
 sealed interface AppRouteLine {
+    /** A locked app while the VPN does not carry it: it has no Internet meanwhile. */
+    data object Blocked : AppRouteLine
+
     /** The country is saved while the tab's switch is off. */
     data object Paused : AppRouteLine
 

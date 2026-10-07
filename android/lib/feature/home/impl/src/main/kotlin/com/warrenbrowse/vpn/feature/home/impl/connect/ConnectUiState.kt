@@ -36,6 +36,8 @@ data class ConnectUiState(
     // the label under the connection state that says the rest of the device
     // is not protected.
     val vpnOnlyForCount: Int? = null,
+    /** The apps locked to the VPN on the device, blocked whenever it is not connected. */
+    val lockedAppsCount: Int = 0,
 ) {
 
     companion object {

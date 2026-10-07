@@ -715,6 +715,23 @@ class WarrenLocalSettingsRepositoryTest {
     }
 
     @Test
+    fun `locking an app writes the lock and drops its exclusion, unlocking keeps it dropped`() {
+        every { mockPrefs.getStringSet(any(), any()) } answers { secondArg<Set<String>?>()?.toMutableSet() }
+        every { mockEditor.putStringSet(any(), any()) } returns mockEditor
+        val repo = WarrenLocalSettingsRepository(mockContext)
+        repo.addExcludedApp("org.bank")
+
+        repo.lockApp("org.bank")
+        assertEquals(setOf("org.bank"), repo.lockedApps.value)
+        assertEquals(emptySet<String>(), repo.excludedApps.value)
+
+        repo.unlockApp("org.bank")
+        assertEquals(emptySet<String>(), repo.lockedApps.value)
+        assertEquals(emptySet<String>(), repo.excludedApps.value)
+        verify { mockEditor.putStringSet("split_tunneling_locked_apps", setOf("org.bank")) }
+    }
+
+    @Test
     fun `flows emit current value to new collectors`() {
         every { mockPrefs.getBoolean(any(), any()) } returns false
         val repo = WarrenLocalSettingsRepository(mockContext)

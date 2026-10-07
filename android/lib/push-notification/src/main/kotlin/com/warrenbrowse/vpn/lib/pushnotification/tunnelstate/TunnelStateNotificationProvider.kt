@@ -4,7 +4,9 @@ import android.content.Context
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
 import com.warrenbrowse.vpn.lib.model.ActionAfterDisconnect
@@ -30,6 +32,8 @@ class TunnelStateNotificationProvider(
     preferences: UserPreferencesRepository,
     channelId: NotificationChannelId,
     scope: CoroutineScope,
+    /** The apps locked to the VPN on the device, which the disconnected notification counts. */
+    lockedApps: Flow<Int> = flowOf(0),
 ) : NotificationProvider<Notification.Tunnel> {
     val notificationId = NotificationId(2)
 
@@ -38,9 +42,14 @@ class TunnelStateNotificationProvider(
                 connectionProxy.tunnelState,
                 deviceRepository.deviceState,
                 preferences.preferencesFlow(),
-            ) { tunnelState, deviceState, prefs ->
+                lockedApps,
+            ) { tunnelState, deviceState, prefs, locked ->
+                // Locked apps are held whether a wallet is there or not, and the
+                // service holding them shows this notification.
                 if (
-                    deviceState is DeviceState.LoggedOut && tunnelState is TunnelState.Disconnected
+                    deviceState is DeviceState.LoggedOut &&
+                        tunnelState is TunnelState.Disconnected &&
+                        locked == 0
                 ) {
                     return@combine NotificationUpdate.Cancel(notificationId)
                 }
@@ -48,6 +57,7 @@ class TunnelStateNotificationProvider(
                     tunnelState.toNotificationTunnelState(
                         prepareError = context.prepareVpnSafe().leftOrNull(),
                         showLocation = prefs.showLocationInSystemNotification,
+                        lockedApps = locked,
                     )
 
                 return@combine NotificationUpdate.Notify(
@@ -65,9 +75,11 @@ class TunnelStateNotificationProvider(
     private fun TunnelState.toNotificationTunnelState(
         prepareError: PrepareError?,
         showLocation: Boolean,
+        lockedApps: Int,
     ) =
         when (this) {
-            is TunnelState.Disconnected -> NotificationTunnelState.Disconnected(prepareError)
+            is TunnelState.Disconnected ->
+                NotificationTunnelState.Disconnected(prepareError, lockedApps)
             is TunnelState.Connecting ->
                 NotificationTunnelState.Connecting(if (showLocation) location else null)
             is TunnelState.Disconnecting ->

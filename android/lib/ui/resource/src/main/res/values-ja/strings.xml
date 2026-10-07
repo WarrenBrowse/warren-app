@@ -125,6 +125,14 @@
     <string name="app_route_no_relay">その場所にサーバーなし</string>
     <string name="app_route_no_dialable_network">このネットワークから入口サーバーに到達できません</string>
     <string name="app_route_unavailable">使用不可</string>
+    <string name="app_route_never_without_vpn">VPNなしでは接続しない</string>
+    <string name="app_route_never_without_vpn_subtitle">VPNがオフのとき、%1$sはインターネットに接続できません。Warren VPNを閉じていても同じです。</string>
+    <string name="app_route_lock_needs_vpn_route">有効にするには、VPN経由のルートを選択してください</string>
+    <string name="app_route_lock_android_note">Warren VPNがこの端末のVPNアプリである間有効です。別のVPNアプリをオンにすると解除されます。</string>
+    <string name="app_route_blocked">VPNが接続するまでブロック中</string>
+    <plurals name="apps_blocked_until_vpn">
+        <item quantity="other">%1$d 個のアプリがVPNの接続までブロック中</item>
+    </plurals>
     <string name="app_country_only_app_title">VPNを使用するのは%1$sだけになります</string>
     <string name="country_picker_title">%1$sの国</string>
     <string name="country_picker_cities_in">%1$sの都市</string>

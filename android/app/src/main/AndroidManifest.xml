@@ -168,6 +168,13 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+        <receiver
+                android:name=".receiver.LockedAppsBootCompletedReceiver"
+                android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
         <!-- D.4 step 38: ScheduleNotificationBootCompletedReceiver removed
              (was rescheduling account-expiry alarms after boot). -->
 

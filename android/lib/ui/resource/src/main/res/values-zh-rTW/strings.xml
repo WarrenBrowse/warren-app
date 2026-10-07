@@ -125,6 +125,14 @@
     <string name="app_route_no_relay">該位置沒有伺服器</string>
     <string name="app_route_no_dialable_network">此網路無法連上任何入口伺服器</string>
     <string name="app_route_unavailable">無法使用</string>
+    <string name="app_route_never_without_vpn">絕不脫離 VPN</string>
+    <string name="app_route_never_without_vpn_subtitle">VPN 關閉時，%1$s 無法上網，即使 Warren VPN 已關閉也是如此。</string>
+    <string name="app_route_lock_needs_vpn_route">選擇經過 VPN 的路由以開啟此項</string>
+    <string name="app_route_lock_android_note">只要 Warren VPN 是此裝置的 VPN 應用程式就會生效。開啟其他 VPN 應用程式會解除此項。</string>
+    <string name="app_route_blocked">已封鎖，直到 VPN 連線</string>
+    <plurals name="apps_blocked_until_vpn">
+        <item quantity="other">%1$d 個應用程式已封鎖，直到 VPN 連線</item>
+    </plurals>
     <string name="app_country_only_app_title">只有 %1$s 會使用 VPN</string>
     <string name="country_picker_title">%1$s 的國家</string>
     <string name="country_picker_cities_in">%1$s 的城市</string>

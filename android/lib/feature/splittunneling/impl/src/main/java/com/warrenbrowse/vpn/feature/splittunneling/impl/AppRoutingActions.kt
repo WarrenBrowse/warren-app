@@ -14,6 +14,8 @@ class AppRoutingActions(
     val onShowSystemApps: (Boolean) -> Unit,
     val onOpenApp: (AppData) -> Unit,
     val onChooseRoute: (AppRoute) -> Unit,
+    /** "Never without the VPN" on the route of the open app. */
+    val onSetLocked: (Boolean) -> Unit,
     val onOpenCountries: () -> Unit,
     val onRemoveRule: () -> Unit,
     val onDone: () -> Unit,

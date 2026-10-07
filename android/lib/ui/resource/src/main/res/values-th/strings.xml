@@ -125,6 +125,14 @@
     <string name="app_route_no_relay">ไม่มีเซิร์ฟเวอร์ที่นั่น</string>
     <string name="app_route_no_dialable_network">เครือข่ายนี้เข้าถึงเซิร์ฟเวอร์ขาเข้าไม่ได้</string>
     <string name="app_route_unavailable">ไม่พร้อมใช้งาน</string>
+    <string name="app_route_never_without_vpn">ไม่ใช้งานโดยไม่มี VPN</string>
+    <string name="app_route_never_without_vpn_subtitle">เมื่อปิด VPN %1$s จะไม่มีอินเทอร์เน็ต แม้จะปิด Warren VPN อยู่ก็ตาม</string>
+    <string name="app_route_lock_needs_vpn_route">เลือกเส้นทางผ่าน VPN เพื่อเปิดใช้ตัวเลือกนี้</string>
+    <string name="app_route_lock_android_note">ใช้ได้ตราบใดที่ Warren VPN เป็นแอป VPN ของอุปกรณ์นี้ การเปิดแอป VPN อื่นจะยกเลิกการตั้งค่านี้</string>
+    <string name="app_route_blocked">ถูกบล็อกจนกว่า VPN จะเชื่อมต่อ</string>
+    <plurals name="apps_blocked_until_vpn">
+        <item quantity="other">%1$d แอปถูกบล็อกจนกว่า VPN จะเชื่อมต่อ</item>
+    </plurals>
     <string name="app_country_only_app_title">จะมีเพียง %1$s ที่ใช้ VPN</string>
     <string name="country_picker_title">ประเทศของ %1$s</string>
     <string name="country_picker_cities_in">เมืองใน %1$s</string>

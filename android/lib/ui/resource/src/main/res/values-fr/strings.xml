@@ -126,6 +126,16 @@
     <string name="app_route_no_relay">Aucun serveur à cet endroit</string>
     <string name="app_route_no_dialable_network">Ce réseau n\'atteint aucun serveur d\'entrée</string>
     <string name="app_route_unavailable">Indisponible</string>
+    <string name="app_route_never_without_vpn">Jamais sans le VPN</string>
+    <string name="app_route_never_without_vpn_subtitle">Quand le VPN est coupé, %1$s n\'a pas accès à Internet, même si Warren VPN est fermé.</string>
+    <string name="app_route_lock_needs_vpn_route">Choisissez une route par le VPN pour activer ce réglage</string>
+    <string name="app_route_lock_android_note">Tient tant que Warren VPN est l\'app VPN de cet appareil. Activer une autre app VPN le lève.</string>
+    <string name="app_route_blocked">Bloquée tant que le VPN n\'est pas connecté</string>
+    <plurals name="apps_blocked_until_vpn">
+        <item quantity="one">%1$d app bloquée tant que le VPN n\'est pas connecté</item>
+        <item quantity="many">%1$d apps bloquées tant que le VPN n\'est pas connecté</item>
+        <item quantity="other">%1$d apps bloquées tant que le VPN n\'est pas connecté</item>
+    </plurals>
     <string name="app_country_only_app_title">Seule l\'app %1$s utilisera le VPN</string>
     <string name="country_picker_title">Pays de %1$s</string>
     <string name="country_picker_cities_in">%1$s : villes</string>

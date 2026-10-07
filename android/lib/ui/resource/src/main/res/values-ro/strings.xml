@@ -129,6 +129,16 @@
     <string name="app_route_no_relay">Niciun server acolo</string>
     <string name="app_route_no_dialable_network">Această rețea nu ajunge la niciun server de intrare</string>
     <string name="app_route_unavailable">Indisponibil</string>
+    <string name="app_route_never_without_vpn">Niciodată fără VPN</string>
+    <string name="app_route_never_without_vpn_subtitle">Când VPN-ul este oprit, %1$s nu are internet, chiar și cu Warren VPN închis.</string>
+    <string name="app_route_lock_needs_vpn_route">Alegeți o rută prin VPN pentru a activa această opțiune</string>
+    <string name="app_route_lock_android_note">Rămâne activ cât timp Warren VPN este aplicația VPN a acestui dispozitiv. Pornirea altei aplicații VPN îl anulează.</string>
+    <string name="app_route_blocked">Blocată până la conectarea VPN-ului</string>
+    <plurals name="apps_blocked_until_vpn">
+        <item quantity="one">%1$d aplicație blocată până la conectarea VPN-ului</item>
+        <item quantity="few">%1$d aplicații blocate până la conectarea VPN-ului</item>
+        <item quantity="other">%1$d de aplicații blocate până la conectarea VPN-ului</item>
+    </plurals>
     <string name="app_country_only_app_title">Doar %1$s va folosi VPN-ul</string>
     <string name="country_picker_title">Țara pentru %1$s</string>
     <string name="country_picker_cities_in">%1$s: orașe</string>

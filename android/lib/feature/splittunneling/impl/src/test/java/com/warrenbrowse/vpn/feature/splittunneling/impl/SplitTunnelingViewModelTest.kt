@@ -66,6 +66,8 @@ class SplitTunnelingViewModelTest {
     private val includedApps = MutableStateFlow<Set<PackageName>>(emptySet())
     private val appExits = MutableStateFlow<Map<String, AppExit>>(emptyMap())
     private val appExitsEnabled = MutableStateFlow(false)
+    private val lockedApps = MutableStateFlow<Set<String>>(emptySet())
+    private val tunnelConnected = MutableStateFlow(true)
     private val vpnOnlyForCount = MutableStateFlow<Int?>(null)
     private val showSystemApps = MutableStateFlow(false)
     private val appRoutes = MutableStateFlow<List<AppRouteStatus>>(emptyList())
@@ -88,6 +90,7 @@ class SplitTunnelingViewModelTest {
             includedApps.value.mapTo(LinkedHashSet()) { it.value },
             appExitsEnabled.value,
             appExits.value,
+            lockedApps.value,
         )
 
     private fun store(next: AppRoutingSettings) {
@@ -96,6 +99,7 @@ class SplitTunnelingViewModelTest {
         includedApps.value = next.includedApps.mapTo(LinkedHashSet(), ::PackageName)
         appExitsEnabled.value = next.appExitsEnabled
         appExits.value = next.appExits
+        lockedApps.value = next.lockedApps
         vpnOnlyForCount.value =
             (next.tunnelRouting(::installed) as? AppRouting.OnlyFor)?.packages?.size
     }
@@ -110,6 +114,7 @@ class SplitTunnelingViewModelTest {
         every { repository.appExits } returns appExits
         every { repository.appExitsEnabled } returns appExitsEnabled
         every { repository.vpnOnlyForCount } returns vpnOnlyForCount
+        every { repository.lockedApps } returns lockedApps
         every { repository.routingSettings() } answers { settings() }
         val ops = slot<List<RoutingOp>>()
         every { repository.apply(capture(ops)) } answers
@@ -428,6 +433,53 @@ class SplitTunnelingViewModelTest {
         return item.value
     }
 
+    @Test
+    fun `an app locked on its route keeps its route and shows the lock on its rule`() = runTest {
+        initTestSubject()
+
+        testSubject.uiState.test {
+            awaitItem()
+            testSubject.onOpenApp(bank)
+            testSubject.onSetLocked(true)
+
+            assertEquals(listOf<RoutingOp>(RoutingOp.Lock("org.bank")), writes)
+            val route = expectMostRecentPage<AppRoutingPage.Route>()
+            assertTrue(route.locked && route.hasRule)
+            testSubject.onDone()
+            val rule = expectMostRecentContent().rules.single()
+            assertEquals(AppRoute.Vpn, rule.route)
+            assertTrue(rule.locked)
+        }
+    }
+
+    @Test
+    fun `a locked app is blocked while the VPN is off`() = runTest {
+        lockedApps.value = setOf("org.bank")
+        tunnelConnected.value = false
+        initTestSubject()
+
+        testSubject.uiState.test {
+            assertEquals(AppRouteLine.Blocked, awaitContent().rules.single().line)
+            tunnelConnected.value = true
+            assertEquals(null, expectMostRecentContent().rules.single().line)
+        }
+    }
+
+    @Test
+    fun `an app outside the VPN is not locked`() = runTest {
+        splitMode.value = SplitTunnelMode.IncludeOnly
+        initTestSubject()
+
+        testSubject.uiState.test {
+            awaitItem()
+            testSubject.onOpenApp(chat)
+            testSubject.onSetLocked(true)
+
+            assertEquals(emptyList<RoutingOp>(), writes)
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
+
     private inline fun <reified P : AppRoutingPage> ReceiveTurbine<
         Lc<Loading, AppRoutingUiState>
     >
@@ -446,6 +498,7 @@ class SplitTunnelingViewModelTest {
                 countryPerAppSupported = countrySupported,
                 dispatcher = UnconfinedTestDispatcher(),
                 countryName = { it.uppercase() },
+                tunnelConnected = tunnelConnected,
             )
     }
 }

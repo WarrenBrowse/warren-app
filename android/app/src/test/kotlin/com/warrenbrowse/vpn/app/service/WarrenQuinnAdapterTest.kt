@@ -56,6 +56,8 @@ class WarrenQuinnAdapterTest {
     private companion object {
         const val ESTABLISH_LIVE = "establish(live)"
         const val ESTABLISH_BLACKHOLE = "establish(blackhole)"
+        const val ESTABLISH_LOCK_GUARD = "establish(lockGuard)"
+        const val CLOSE_LOCK_GUARD = "close(lockGuard)"
         const val CONNECT_TUNNEL = "connectTunnel"
         const val DISCONNECT_TUNNEL = "disconnectTunnel"
         const val AWAIT_CLOSED = "awaitTunnelClosed"
@@ -126,6 +128,7 @@ class WarrenQuinnAdapterTest {
         private val activeTun: ParcelFileDescriptor = fd("activeTun")
         private val liveTun: ParcelFileDescriptor = fd("liveTun", dupTo = activeTun)
         private val blackholeTun: ParcelFileDescriptor = fd("blackhole")
+        private val lockGuardTun: ParcelFileDescriptor = fd("lockGuard")
 
         private fun fd(tag: String, dupTo: ParcelFileDescriptor? = null): ParcelFileDescriptor {
             val descriptor = mockk<ParcelFileDescriptor>(relaxed = true)
@@ -151,12 +154,21 @@ class WarrenQuinnAdapterTest {
         override fun isAppInstalled(packageName: String): Boolean = packageName in installed
 
         override fun establish(plan: WarrenTunInterfacePlan): ParcelFileDescriptor? {
-            val call = if (plan.blocking) ESTABLISH_BLACKHOLE else ESTABLISH_LIVE
+            val call =
+                when {
+                    plan.lockGuard -> ESTABLISH_LOCK_GUARD
+                    plan.blocking -> ESTABLISH_BLACKHOLE
+                    else -> ESTABLISH_LIVE
+                }
             calls += call
             plans += plan
             threads[call] = Thread.currentThread().name
-            if (plan.blocking && blackholeFails) return null
-            return if (plan.blocking) blackholeTun else liveTun
+            return when {
+                plan.lockGuard -> lockGuardTun
+                plan.blocking && blackholeFails -> null
+                plan.blocking -> blackholeTun
+                else -> liveTun
+            }
         }
 
         /** The wire config of every dial, in order. */
@@ -302,8 +314,10 @@ class WarrenQuinnAdapterTest {
         splitMode: MutableStateFlow<SplitTunnelMode> = MutableStateFlow(SplitTunnelMode.Off),
         includedApps: MutableStateFlow<Set<String>> = MutableStateFlow(emptySet()),
         appExits: MutableStateFlow<Map<String, AppExit>> = MutableStateFlow(emptyMap()),
+        lockedApps: MutableStateFlow<Set<String>> = MutableStateFlow(emptySet()),
     ): WarrenQuinnAdapter {
         val settings = mockk<WarrenLocalSettingsRepository>(relaxed = true)
+        every { settings.lockedApps } returns lockedApps
         every { settings.splitMode } returns splitMode
         every { settings.excludedApps } returns MutableStateFlow(emptySet())
         every { settings.includedApps } returns includedApps
@@ -1731,5 +1745,134 @@ class WarrenQuinnAdapterTest {
 
         assertEquals("""{"routes":[]}""", adapter.appRoutesStatus.value)
     }
-}
 
+    /**
+     * "Never without the VPN" (docs/app-routing.md section 8): a user disconnect
+     * hands the device back to the bare network, except the locked apps, which a
+     * blackhole of their own holds. It is up before the live TUN closes, so no
+     * gap opens, and it carries only the locked apps: this app's own API calls,
+     * and every other app, stay online.
+     */
+    @Test
+    fun `ensure a disconnect holds the locked apps behind a blackhole of their own`() = runTest {
+        val platform = RecordingPlatform()
+        platform.installed = setOf("org.bank")
+        val adapter =
+            adapterWith(platform, lockedApps = MutableStateFlow(setOf("org.bank", "org.gone")))
+        adapter.connect(config(), Mnemonic(PHRASE))
+        platform.calls.clear()
+
+        adapter.disconnect()
+
+        val calls = platform.calls.toList()
+        assertTrue(
+            calls.indexOf(ESTABLISH_LOCK_GUARD) in 0 until calls.indexOf(CLOSE_ACTIVE),
+            "the guard must be up before the live TUN closes, got: $calls",
+        )
+        val guard = platform.plans.toList().last()
+        assertTrue(guard.blocking && guard.lockGuard)
+        assertEquals(AppRouting.OnlyFor(setOf("org.bank")), guard.appRouting)
+        assertTrue(adapter.lockGuardActive.value)
+    }
+
+    /** An allow list with no app on the device captures every app: no guard then. */
+    @Test
+    fun `ensure no guard comes up when no locked app is on the device`() = runTest {
+        val platform = RecordingPlatform()
+        val adapter = adapterWith(platform, lockedApps = MutableStateFlow(setOf("org.gone")))
+        adapter.connect(config(), Mnemonic(PHRASE))
+
+        adapter.disconnect()
+
+        assertFalse(ESTABLISH_LOCK_GUARD in platform.calls.toList())
+        assertFalse(adapter.lockGuardActive.value)
+    }
+
+    /** The guard goes only once the live TUN holds the locked apps. */
+    @Test
+    fun `ensure a connect replaces the guard only once the live tun is up`() = runTest {
+        val platform = RecordingPlatform()
+        platform.installed = setOf("org.bank")
+        val adapter = adapterWith(platform, lockedApps = MutableStateFlow(setOf("org.bank")))
+        adapter.holdLockedApps()
+        assertTrue(adapter.lockGuardActive.value)
+        platform.calls.clear()
+
+        adapter.connect(config(), Mnemonic(PHRASE))
+
+        val calls = platform.calls.toList()
+        assertTrue(
+            calls.indexOf(ESTABLISH_LIVE) in 0 until calls.indexOf(CLOSE_LOCK_GUARD),
+            "the live TUN must be up before the guard closes, got: $calls",
+        )
+        assertFalse(adapter.lockGuardActive.value)
+        adapter.disconnect()
+    }
+
+    /**
+     * Another VPN took the slot, or the system is destroying the service: an
+     * interface established then would take the slot back or outlive its owner.
+     */
+    @Test
+    fun `ensure a teardown that must not hold the locked apps leaves no guard`() = runTest {
+        val platform = RecordingPlatform()
+        platform.installed = setOf("org.bank")
+        val adapter = adapterWith(platform, lockedApps = MutableStateFlow(setOf("org.bank")))
+        adapter.holdLockedApps()
+        platform.calls.clear()
+
+        adapter.disconnectWithin(1_000, holdLockedApps = false)
+
+        assertTrue(CLOSE_LOCK_GUARD in platform.calls.toList())
+        assertFalse(ESTABLISH_LOCK_GUARD in platform.calls.toList())
+        assertFalse(adapter.lockGuardActive.value)
+    }
+
+    /** Without lockdown a flapping tunnel releases the device, never the locked apps. */
+    @Test
+    fun `ensure released traffic keeps the locked apps held`() = runTest {
+        mockkStatic(SystemClock::class)
+        every { SystemClock.elapsedRealtime() } returns 0L
+        try {
+            val platform = RecordingPlatform()
+            platform.installed = setOf("org.bank")
+            val adapter =
+                adapterWith(
+                    platform,
+                    dropRetryGraceMs = 0L,
+                    lockedApps = MutableStateFlow(setOf("org.bank")),
+                )
+            adapter.connect(config().copy(lockdownMode = false), Mnemonic(PHRASE))
+
+            platform.statusOnConnect = STATUS_DISCONNECTED
+            platform.status = STATUS_DISCONNECTED
+            awaitReal(
+                "the released device must keep the locked apps held",
+                detail = { "${adapter.state.value} ${platform.calls}" },
+            ) {
+                adapter.state.value is WarrenTunnelState.Failed && adapter.lockGuardActive.value
+            }
+        } finally {
+            unmockkStatic(SystemClock::class)
+        }
+    }
+
+    /** A lock set or lifted with no tunnel reaches the guard at once. */
+    @Test
+    fun `ensure the guard follows the locked apps while disconnected`() = runTest {
+        val platform = RecordingPlatform()
+        platform.installed = setOf("org.bank", "org.mail")
+        val locked = MutableStateFlow(setOf("org.bank"))
+        val adapter = adapterWith(platform, lockedApps = locked)
+        adapter.holdLockedApps()
+
+        locked.value = setOf("org.bank", "org.mail")
+        awaitReal("the guard must take the new app", detail = { "${platform.plans}" }) {
+            platform.plans.toList().last().appRouting ==
+                AppRouting.OnlyFor(setOf("org.bank", "org.mail"))
+        }
+
+        locked.value = emptySet()
+        awaitReal("the guard must go with the last lock") { !adapter.lockGuardActive.value }
+    }
+}

@@ -126,6 +126,15 @@
     <string name="app_route_no_relay">Bu konumda sunucu yok</string>
     <string name="app_route_no_dialable_network">Bu ağ hiçbir giriş sunucusuna ulaşmıyor</string>
     <string name="app_route_unavailable">Kullanılamıyor</string>
+    <string name="app_route_never_without_vpn">Asla VPN olmadan</string>
+    <string name="app_route_never_without_vpn_subtitle">VPN kapalıyken %1$s, Warren VPN kapalı olsa bile internete erişemez.</string>
+    <string name="app_route_lock_needs_vpn_route">Bunu açmak için VPN üzerinden bir rota seçin</string>
+    <string name="app_route_lock_android_note">Warren VPN bu cihazın VPN uygulaması olduğu sürece geçerlidir. Başka bir VPN uygulamasını açmak bunu kaldırır.</string>
+    <string name="app_route_blocked">VPN bağlanana kadar engellendi</string>
+    <plurals name="apps_blocked_until_vpn">
+        <item quantity="one">%1$d uygulama VPN bağlanana kadar engellendi</item>
+        <item quantity="other">%1$d uygulama VPN bağlanana kadar engellendi</item>
+    </plurals>
     <string name="app_country_only_app_title">VPN\'i yalnızca %1$s kullanacak</string>
     <string name="country_picker_title">%1$s uygulamasının ülkesi</string>
     <string name="country_picker_cities_in">%1$s: şehirler</string>

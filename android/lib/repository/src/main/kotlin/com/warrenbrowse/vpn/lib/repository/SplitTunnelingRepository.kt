@@ -33,6 +33,9 @@ class SplitTunnelingRepository(
     private val settings: WarrenLocalSettingsRepository,
     // A PackageManager lookup, so it is only ever asked off the main thread.
     private val isAppInstalled: (String) -> Boolean,
+    // Brings the tunnel service up to hold a newly locked app when no tunnel
+    // runs, since nothing else would until the next connect.
+    private val holdLockedApps: () -> Unit = {},
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -48,6 +51,15 @@ class SplitTunnelingRepository(
     /** Every saved country, in force or not, by package name. */
     val appExits: StateFlow<Map<String, AppExit>> = settings.appExits
 
+    /** Apps locked to the VPN, by package name. */
+    val lockedApps: StateFlow<Set<String>> = settings.lockedApps
+
+    /** How many locked apps are on the device: those a blackhole holds while the VPN is off. */
+    val lockedCount: StateFlow<Int> =
+        settings.lockedApps
+            .map { apps -> apps.count(isAppInstalled) }
+            .stateIn(scope, SharingStarted.Eagerly, 0)
+
     /** The countries in force after the precedence rules, by package name. */
     val effectiveAppExits: StateFlow<Map<String, AppExit>> =
         combine(
@@ -55,8 +67,9 @@ class SplitTunnelingRepository(
                 settings.excludedApps,
                 settings.appExits,
                 settings.appExitsEnabled,
-            ) { mode, excluded, exits, enabled ->
-                effectiveAppExits(mode, excluded, exits, enabled)
+                settings.lockedApps,
+            ) { mode, excluded, exits, enabled, locked ->
+                effectiveAppExits(mode, excluded, exits, enabled, locked)
             }
             .stateIn(
                 scope,
@@ -66,6 +79,7 @@ class SplitTunnelingRepository(
                     settings.excludedApps.value,
                     settings.appExits.value,
                     settings.appExitsEnabled.value,
+                    settings.lockedApps.value,
                 ),
             )
 
@@ -79,10 +93,11 @@ class SplitTunnelingRepository(
                 settings.excludedApps,
                 settings.includedApps,
                 effectiveAppExits,
-            ) { mode, excluded, included, exits ->
+                settings.lockedApps,
+            ) { mode, excluded, included, exits, locked ->
                 when (
                     val routing =
-                        resolveAppRouting(mode, excluded, included, exits.keys, isAppInstalled)
+                        resolveAppRouting(mode, excluded, included, exits.keys, locked, isAppInstalled)
                 ) {
                     is AppRouting.OnlyFor -> routing.packages.size
                     AppRouting.AllApps,
@@ -99,6 +114,7 @@ class SplitTunnelingRepository(
             includedApps = settings.includedApps.value,
             appExitsEnabled = settings.appExitsEnabled.value,
             appExits = settings.appExits.value,
+            lockedApps = settings.lockedApps.value,
         )
 
     /**
@@ -116,8 +132,11 @@ class SplitTunnelingRepository(
                 is RoutingOp.SetExit -> settings.setAppExit(op.app, op.exit)
                 is RoutingOp.ClearExit -> settings.clearAppExit(op.app)
                 is RoutingOp.SetExitsEnabled -> settings.setAppExitsEnabled(op.enabled)
+                is RoutingOp.Lock -> settings.lockApp(op.app)
+                is RoutingOp.Unlock -> settings.unlockApp(op.app)
             }
         }
+        if (ops.any { it is RoutingOp.Lock }) holdLockedApps()
     }
 
     /**

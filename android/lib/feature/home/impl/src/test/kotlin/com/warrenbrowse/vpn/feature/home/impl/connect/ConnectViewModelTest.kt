@@ -90,6 +90,7 @@ class ConnectViewModelTest {
     private val hostOfflineFlow = MutableStateFlow(false)
     private val autoRecoveryCountFlow = MutableStateFlow(0)
     private val vpnOnlyForCountFlow = MutableStateFlow<Int?>(null)
+    private val lockedCountFlow = MutableStateFlow(0)
     private val mockSplitTunneling: SplitTunnelingRepository = mockk()
     private val mockHostOfflineProvider: WarrenHostOfflineProvider = mockk()
     private val mockAutoRecoveryProvider: WarrenAutoRecoveryProvider = mockk()
@@ -117,6 +118,7 @@ class ConnectViewModelTest {
         every { mockHostOfflineProvider.hostOffline } returns hostOfflineFlow
         every { mockAutoRecoveryProvider.autoRecoveryCount } returns autoRecoveryCountFlow
         every { mockSplitTunneling.vpnOnlyForCount } returns vpnOnlyForCountFlow
+        every { mockSplitTunneling.lockedCount } returns lockedCountFlow
         every { mockRelayProvider.list() } returns emptyList()
         every { mockRelayProvider.catalogue } returns catalogueFlow
         every { mockNetworkStatsProvider.state } returns networkStatsState
@@ -171,6 +173,15 @@ class ConnectViewModelTest {
             assertEquals(3, awaitItem().vpnOnlyForCount)
             vpnOnlyForCountFlow.value = null
             assertEquals(null, awaitItem().vpnOnlyForCount)
+        }
+    }
+
+    @Test
+    fun `the locked apps label carries the number of apps locked to the vpn`() = runTest {
+        viewModel.uiState.test {
+            assertEquals(0, awaitItem().lockedAppsCount)
+            lockedCountFlow.value = 2
+            assertEquals(2, awaitItem().lockedAppsCount)
         }
     }
 

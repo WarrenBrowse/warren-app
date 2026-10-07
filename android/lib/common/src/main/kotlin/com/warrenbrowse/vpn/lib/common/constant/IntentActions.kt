@@ -6,6 +6,12 @@ const val KEY_RECONNECT_ACTION = "$WARREN_PACKAGE_NAME.reconnect_action"
 const val KEY_DISCONNECT_ACTION = "$WARREN_PACKAGE_NAME.disconnect_action"
 const val KEY_REQUEST_VPN_PROFILE = "$WARREN_PACKAGE_NAME.request_vpn_profile"
 
+/**
+ * Holds the apps locked to the VPN behind their own blackhole while no tunnel
+ * runs (docs/app-routing.md section 8): sent at boot and when a lock is set.
+ */
+const val KEY_HOLD_LOCKED_APPS_ACTION = "$WARREN_PACKAGE_NAME.hold_locked_apps_action"
+
 /** Opens the community-forum activity panel; what the forum notification does when tapped. */
 const val KEY_OPEN_FORUM_ACTIVITY = "$WARREN_PACKAGE_NAME.open_forum_activity"
 

@@ -24,6 +24,7 @@ import com.warrenbrowse.vpn.di.vpnServiceModule
 import com.warrenbrowse.vpn.jni.WarrenJni
 import com.warrenbrowse.vpn.lib.common.constant.KEY_CONNECT_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_DISCONNECT_ACTION
+import com.warrenbrowse.vpn.lib.common.constant.KEY_HOLD_LOCKED_APPS_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_RECONNECT_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_CONNECT_QUINN_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_TUNNEL_CONFIG_JSON
@@ -33,6 +34,7 @@ import com.warrenbrowse.vpn.lib.pushnotification.NotificationChannelFactory
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationManager
 import com.warrenbrowse.vpn.lib.repository.MnemonicCache
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -169,7 +171,7 @@ class WarrenVpnService : LifecycleVpnService() {
                 when (state) {
                     is WarrenTunnelState.Failed -> {
                         Logger.w("Quinn tunnel failed: ${state.reason}")
-                        foregroundNotificationHandler.stopForeground()
+                        foregroundNotificationHandler.stopForegroundUnlessHolding()
                     }
                     is WarrenTunnelState.Connected -> recordAlwaysOnVpn()
                     is WarrenTunnelState.Blocking -> {
@@ -182,6 +184,8 @@ class WarrenVpnService : LifecycleVpnService() {
                 }
             }
         }
+
+        foregroundNotificationHandler.followLockGuard(lifecycleScope, quinnAdapter, isIdle)
 
         // Log any API endpoint override seeded by mockapi tests so the
         // future warren-api-client can pick it up.
@@ -335,8 +339,23 @@ class WarrenVpnService : LifecycleVpnService() {
 
                 // If disconnect intent is received and no one is using this service, simply stop
                 // foreground and let system stop service when it deems it not to be necessary.
-                if (bindCount.get() == 0) {
+                // Locked apps keep it there: their blackhole comes up with the teardown.
+                if (
+                    bindCount.get() == 0 &&
+                        getKoin().get<WarrenLocalSettingsRepository>().lockedApps.value.isEmpty()
+                ) {
                     foregroundNotificationHandler.stopForeground()
+                }
+            }
+
+            intent?.action == KEY_HOLD_LOCKED_APPS_ACTION -> {
+                // Sent at boot and when an app is locked with no tunnel up. The
+                // foreground comes first, as for every action this service is
+                // started with; the adapter leaves it if nothing is to be held.
+                foregroundNotificationHandler.startForeground()
+                lifecycleScope.launch {
+                    quinnAdapter.holdLockedApps()
+                    if (isIdle()) foregroundNotificationHandler.stopForeground()
                 }
             }
         }
@@ -403,7 +422,9 @@ class WarrenVpnService : LifecycleVpnService() {
             // Another VPN took over, or the user revoked this one: nothing to
             // bring back after an update.
             withTimeoutOrNull(REVOKE_TEARDOWN_TIMEOUT_MS) { recordTunnelRequested(false) }
-            if (!quinnAdapter.disconnectWithin(REVOKE_TEARDOWN_TIMEOUT_MS)) {
+            // The VPN slot is another app's now: an interface established here
+            // would take it back, so the locked apps are not held.
+            if (!quinnAdapter.disconnectWithin(REVOKE_TEARDOWN_TIMEOUT_MS, holdLockedApps = false)) {
                 Logger.w(
                     "onRevoke: teardown still pending after $REVOKE_TEARDOWN_TIMEOUT_MS ms; " +
                         "it finishes in the background"
@@ -452,6 +473,17 @@ class WarrenVpnService : LifecycleVpnService() {
             },
             ContextCompat.RECEIVER_NOT_EXPORTED,
         )
+    }
+
+    /**
+     * Whether nothing needs the foreground: no tunnel interface of the tunnel's
+     * own, no blackhole holding locked apps, and nobody bound to the service.
+     */
+    private val isIdle: () -> Boolean = {
+        val state = quinnAdapter.state.value
+        (state is WarrenTunnelState.Disconnected || state is WarrenTunnelState.Failed) &&
+            !quinnAdapter.lockGuardActive.value &&
+            bindCount.get() == 0
     }
 
     // If an intent is from the system it is because of the OS starting/stopping the VPN.

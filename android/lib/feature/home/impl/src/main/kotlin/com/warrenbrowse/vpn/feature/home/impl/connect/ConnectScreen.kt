@@ -1,5 +1,8 @@
 package com.warrenbrowse.vpn.feature.home.impl.connect
 
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.material.icons.outlined.Lock
 import androidx.core.view.WindowCompat
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.runtime.DisposableEffect
@@ -1351,7 +1354,25 @@ private fun ConnectionCardHeader(
         val hasTunnel = state.tunnelState.isConnectingOrConnected()
         ConnectionCardStatusRow(state, location, expanded, hasTunnel)
         state.vpnOnlyForCount?.let { count ->
-            IncludeOnlyLabel(count = count, onClick = onIncludeOnlyLabelClick)
+            AppRoutingLabel(
+                text = pluralStringResource(R.plurals.vpn_only_for_apps, count, count),
+                icon = painterResource(R.drawable.ic_forum_alert_circle),
+                onClick = onIncludeOnlyLabelClick,
+            )
+        }
+        // Locked apps have no Internet until the VPN connects, which an app that
+        // stopped working must never leave unexplained (desktop LockedAppsLabel).
+        if (state.lockedAppsCount > 0 && state.tunnelState !is TunnelState.Connected) {
+            AppRoutingLabel(
+                text =
+                    pluralStringResource(
+                        R.plurals.apps_blocked_until_vpn,
+                        state.lockedAppsCount,
+                        state.lockedAppsCount,
+                    ),
+                icon = rememberVectorPainter(Icons.Outlined.Lock),
+                onClick = onIncludeOnlyLabelClick,
+            )
         }
 
         // The exit location reads under the status only once a tunnel exists;
@@ -1412,12 +1433,12 @@ private fun ConnectionCardHeader(
 }
 
 /**
- * Under the connection state while only chosen apps use the VPN (desktop
- * IncludeOnlyLabel), so the rest of the device being unprotected is never a
- * surprise, whatever the tunnel is doing. It opens the list those apps are on.
+ * A label under the connection state that opens App routing, so what App routing does to the
+ * device is never a surprise whatever the tunnel is doing: only chosen apps use the VPN (desktop
+ * IncludeOnlyLabel), or locked apps have no Internet until it connects (desktop LockedAppsLabel).
  */
 @Composable
-private fun IncludeOnlyLabel(count: Int, onClick: () -> Unit) {
+private fun AppRoutingLabel(text: String, icon: Painter, onClick: () -> Unit) {
     val shape = RoundedCornerShape(INCLUDE_ONLY_LABEL_RADIUS)
     val surfaces = LocalWarrenSurfaces.current
     // The ocre of the card palette, which keeps its contrast on the cream card
@@ -1435,13 +1456,13 @@ private fun IncludeOnlyLabel(count: Int, onClick: () -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(Dimens.tinyPadding),
     ) {
         Icon(
-            painter = painterResource(R.drawable.ic_forum_alert_circle),
+            painter = icon,
             contentDescription = null,
             tint = warning,
             modifier = Modifier.size(Dimens.smallIconSize),
         )
         Text(
-            text = pluralStringResource(R.plurals.vpn_only_for_apps, count, count),
+            text = text,
             style = MaterialTheme.typography.labelMedium,
             color = surfaces.text,
         )

@@ -112,6 +112,15 @@ class WarrenLocalSettingsRepository(context: Context) : WarrenEnvStandDownStore 
         MutableStateFlow(prefs.getStringSet(KEY_INCLUDED_APPS, emptySet())?.toSet() ?: emptySet())
     val includedApps: StateFlow<Set<String>> = _includedApps.asStateFlow()
 
+    /**
+     * Package names locked to the VPN: never outside the tunnel, and held by
+     * a blackhole of their own while it does not carry them
+     * (docs/app-routing.md section 8).
+     */
+    private val _lockedApps =
+        MutableStateFlow(prefs.getStringSet(KEY_LOCKED_APPS, emptySet())?.toSet() ?: emptySet())
+    val lockedApps: StateFlow<Set<String>> = _lockedApps.asStateFlow()
+
     /** The switch of the "Country per app" tab; the countries are kept while it is off. */
     private val _appExitsEnabled = MutableStateFlow(prefs.getBoolean(KEY_APP_EXITS_ENABLED, false))
     val appExitsEnabled: StateFlow<Boolean> = _appExitsEnabled.asStateFlow()
@@ -345,6 +354,19 @@ class WarrenLocalSettingsRepository(context: Context) : WarrenEnvStandDownStore 
 
     fun removeIncludedApp(packageName: String) =
         updateAppSet(KEY_INCLUDED_APPS, _includedApps) { it - packageName }
+
+    /**
+     * Locks [packageName] to the VPN. The lock is written before the exclusion
+     * goes: the tunnel follows each write, and a lock wins over an exclusion,
+     * so the app never leaves the tunnel in between.
+     */
+    fun lockApp(packageName: String) {
+        updateAppSet(KEY_LOCKED_APPS, _lockedApps) { it + packageName }
+        removeExcludedApp(packageName)
+    }
+
+    fun unlockApp(packageName: String) =
+        updateAppSet(KEY_LOCKED_APPS, _lockedApps) { it - packageName }
 
     fun setAppExitsEnabled(enabled: Boolean) {
         prefs.edit().putBoolean(KEY_APP_EXITS_ENABLED, enabled).apply()
@@ -863,6 +885,7 @@ class WarrenLocalSettingsRepository(context: Context) : WarrenEnvStandDownStore 
     private const val KEY_SPLIT_TUNNELING_ENABLED = "split_tunneling_enabled"
     private const val KEY_EXCLUDED_APPS = "split_tunneling_excluded_apps"
     private const val KEY_INCLUDED_APPS = "split_tunneling_included_apps"
+    private const val KEY_LOCKED_APPS = "split_tunneling_locked_apps"
     private const val KEY_SPLIT_MODE = "split_tunneling_mode"
     private const val KEY_APP_EXITS = "app_exits"
     private const val KEY_APP_EXITS_ENABLED = "app_exits_enabled"

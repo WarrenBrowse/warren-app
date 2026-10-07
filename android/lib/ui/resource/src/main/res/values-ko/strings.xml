@@ -125,6 +125,14 @@
     <string name="app_route_no_relay">해당 위치에 서버 없음</string>
     <string name="app_route_no_dialable_network">이 네트워크에서 진입 서버에 연결할 수 없음</string>
     <string name="app_route_unavailable">사용할 수 없음</string>
+    <string name="app_route_never_without_vpn">VPN 없이는 연결 안 함</string>
+    <string name="app_route_never_without_vpn_subtitle">VPN이 꺼져 있으면 %1$s은(는) 인터넷에 연결되지 않습니다. Warren VPN을 닫아도 마찬가지입니다.</string>
+    <string name="app_route_lock_needs_vpn_route">이 기능을 켜려면 VPN 경유 경로를 선택하세요</string>
+    <string name="app_route_lock_android_note">Warren VPN이 이 기기의 VPN 앱인 동안 유지됩니다. 다른 VPN 앱을 켜면 해제됩니다.</string>
+    <string name="app_route_blocked">VPN이 연결될 때까지 차단됨</string>
+    <plurals name="apps_blocked_until_vpn">
+        <item quantity="other">%1$d개 앱이 VPN 연결 전까지 차단됨</item>
+    </plurals>
     <string name="app_country_only_app_title">%1$s만 VPN을 사용하게 됩니다</string>
     <string name="country_picker_title">%1$s의 국가</string>
     <string name="country_picker_cities_in">%1$s의 도시</string>

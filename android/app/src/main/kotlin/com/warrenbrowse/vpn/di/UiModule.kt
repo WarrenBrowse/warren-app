@@ -1,5 +1,8 @@
 package com.warrenbrowse.vpn.di
 
+import kotlinx.coroutines.flow.map
+import com.warrenbrowse.vpn.lib.model.TunnelState
+import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import android.content.ComponentName
 import android.content.pm.PackageManager
 import android.os.Build
@@ -7,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.MainActivity
+import com.warrenbrowse.vpn.app.connect.holdLockedApps
 import com.warrenbrowse.vpn.app.product.PROD_APPLICATION_ID
 import com.warrenbrowse.vpn.app.product.isApplicationInstalled
 import com.warrenbrowse.vpn.app.WarrenAppViewModel
@@ -97,15 +101,20 @@ val uiModule = module {
     single { ChangelogRepository(get(), get(), get()) }
     single { RelayListRepository() }
     single {
-        val packageManager = androidContext().packageManager
-        SplitTunnelingRepository(get()) { packageName ->
-            try {
-                packageManager.getApplicationInfo(packageName, 0)
-                true
-            } catch (_: PackageManager.NameNotFoundException) {
-                false
-            }
-        }
+        val context = androidContext()
+        val packageManager = context.packageManager
+        SplitTunnelingRepository(
+            get(),
+            isAppInstalled = { packageName ->
+                try {
+                    packageManager.getApplicationInfo(packageName, 0)
+                    true
+                } catch (_: PackageManager.NameNotFoundException) {
+                    false
+                }
+            },
+            holdLockedApps = { holdLockedApps(context) },
+        )
     }
     single { SplashCompleteRepository() }
     single {
@@ -277,6 +286,8 @@ val uiModule = module {
             // behind a flow, exists from Android 10.
             countryPerAppSupported = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q,
             dispatcher = Dispatchers.IO,
+            tunnelConnected =
+                get<ConnectionProxy>().tunnelState.map { it is TunnelState.Connected },
         )
     }
 

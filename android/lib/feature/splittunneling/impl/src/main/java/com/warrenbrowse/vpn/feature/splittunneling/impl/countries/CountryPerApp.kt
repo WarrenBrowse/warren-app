@@ -115,7 +115,8 @@ fun AppRouteLine.tone(): RouteTone =
     when (this) {
         is AppRouteLine.Connected -> RouteTone.Positive
         AppRouteLine.Connecting,
-        AppRouteLine.Waiting -> RouteTone.Pending
+        AppRouteLine.Waiting,
+        AppRouteLine.Blocked -> RouteTone.Pending
         is AppRouteLine.Unavailable ->
             if (reason == AppRouteUnavailableReason.TunnelDown) RouteTone.Pending
             else RouteTone.Error

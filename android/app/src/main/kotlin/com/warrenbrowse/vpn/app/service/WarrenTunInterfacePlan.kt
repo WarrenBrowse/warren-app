@@ -31,6 +31,11 @@ data class WarrenTunInterfacePlan(
      * allow list of the live plan (see [planTunInterface]).
      */
     val appRouting: AppRouting = AppRouting.AllApps,
+    /**
+     * A [blocking] interface that holds only the apps locked to the VPN while
+     * no tunnel runs ([planLockGuard]).
+     */
+    val lockGuard: Boolean = false,
 ) {
     data class TunCidr(val address: String, val prefixLength: Int)
 }
@@ -163,6 +168,35 @@ fun planTunInterface(
         appRouting = appRouting,
     )
 }
+
+/**
+ * The blackhole that holds the apps locked to the VPN while no tunnel runs
+ * (docs/app-routing.md section 8): exactly [routing]'s apps, every address
+ * family, no DNS, no pump. This app is not on it, so its own API calls, like
+ * every app that is not locked, keep the network. "Allow LAN" does not open
+ * it, as it does not open the kill switch.
+ */
+fun planLockGuard(routing: AppRouting.OnlyFor): WarrenTunInterfacePlan =
+    WarrenTunInterfacePlan(
+        session = BLOCKING_SESSION,
+        addresses =
+            listOf(
+                WarrenTunInterfacePlan.TunCidr(
+                    WarrenTunDefaults.IPV4_ADDRESS,
+                    WarrenTunDefaults.IPV4_PREFIX,
+                )
+            ),
+        routes =
+            listOf(
+                WarrenTunInterfacePlan.TunCidr(WarrenTunDefaults.IPV4_DEFAULT_ROUTE, 0),
+                WarrenTunInterfacePlan.TunCidr(WarrenTunDefaults.IPV6_DEFAULT_ROUTE, 0),
+            ),
+        dnsServers = emptyList(),
+        mtu = WarrenTunDefaults.MTU,
+        blocking = true,
+        appRouting = routing,
+        lockGuard = true,
+    )
 
 /**
  * The routing the interface applies for [routing] resolved from the settings.

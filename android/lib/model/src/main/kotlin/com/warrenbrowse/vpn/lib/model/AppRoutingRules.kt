@@ -15,8 +15,8 @@ sealed interface AppRoute {
     data class Country(val exit: AppExit) : AppRoute
 }
 
-/** An app whose route differs from the default. */
-data class AppRule(val app: String, val route: AppRoute)
+/** An app whose route differs from the default, or that is locked to the VPN. */
+data class AppRule(val app: String, val route: AppRoute, val locked: Boolean = false)
 
 /** One settings write; a change is a list of them, applied in order. */
 sealed interface RoutingOp {
@@ -35,6 +35,11 @@ sealed interface RoutingOp {
     data class ClearExit(val app: String) : RoutingOp
 
     data class SetExitsEnabled(val enabled: Boolean) : RoutingOp
+
+    /** Locks [app] to the VPN, which also drops its exclusion. */
+    data class Lock(val app: String) : RoutingOp
+
+    data class Unlock(val app: String) : RoutingOp
 }
 
 /**
@@ -49,27 +54,30 @@ data class AppRoutingSettings(
     val includedApps: Set<String> = emptySet(),
     val appExitsEnabled: Boolean = false,
     val appExits: Map<String, AppExit> = emptyMap(),
+    /** Apps never outside the VPN, and blocked whenever it does not carry them. */
+    val lockedApps: Set<String> = emptySet(),
 ) {
     val defaultRoute: DefaultRoute
         get() = if (splitMode == SplitTunnelMode.IncludeOnly) DefaultRoute.Direct else DefaultRoute.Vpn
 
     /** The countries in force after the precedence rules. */
     val effectiveAppExits: Map<String, AppExit>
-        get() = effectiveAppExits(splitMode, excludedApps, appExits, appExitsEnabled)
+        get() = effectiveAppExits(splitMode, excludedApps, appExits, appExitsEnabled, lockedApps)
 
     /** The route the tunnel gives [app], after the precedence rules. */
     fun routeOf(app: String): AppRoute {
         val exit = effectiveAppExits[app]
         return when {
-            splitMode == SplitTunnelMode.Exclude && app in excludedApps -> AppRoute.Direct
+            splitMode == SplitTunnelMode.Exclude && app in excludedApps && app !in lockedApps ->
+                AppRoute.Direct
             exit != null -> AppRoute.Country(exit)
             splitMode != SplitTunnelMode.IncludeOnly -> AppRoute.Vpn
-            app in includedApps -> AppRoute.Vpn
+            app in includedApps || app in lockedApps -> AppRoute.Vpn
             else -> AppRoute.Direct
         }
     }
 
-    /** The apps whose route differs from the default, in list order. */
+    /** The apps whose route differs from the default, and the locked apps, in list order. */
     fun rules(): List<AppRule> {
         val candidates = LinkedHashSet<String>()
         when (splitMode) {
@@ -78,8 +86,11 @@ data class AppRoutingSettings(
             SplitTunnelMode.Off -> Unit
         }
         if (appExitsEnabled) candidates += appExits.keys
+        candidates += lockedApps
         val fallback = defaultRoute.asAppRoute()
-        return candidates.map { AppRule(it, routeOf(it)) }.filter { it.route != fallback }
+        return candidates
+            .map { AppRule(it, routeOf(it), locked = it in lockedApps) }
+            .filter { it.locked || it.route != fallback }
     }
 
     /**
@@ -107,7 +118,10 @@ data class AppRoutingSettings(
         }
 
         when (next) {
-            AppRoute.Direct ->
+            AppRoute.Direct -> {
+                // The lock goes first: it holds the app on its old route whatever else changes,
+                // which would pass it through a third one on the way.
+                if (app in lockedApps) ops += RoutingOp.Unlock(app)
                 if (fallback == DefaultRoute.Direct) {
                     // Direct is "no rule" here.
                     if (included) ops += RoutingOp.RemoveIncluded(app)
@@ -125,6 +139,7 @@ data class AppRoutingSettings(
                     // Bypass wins over a country, so the country goes once the app bypasses.
                     if (hasExit) ops += RoutingOp.ClearExit(app)
                 }
+            }
             is AppRoute.Country -> {
                 // The same for countries saved while they were off.
                 if (!appExitsEnabled) {
@@ -151,7 +166,37 @@ data class AppRoutingSettings(
     }
 
     /**
-     * The writes that switch what the apps without a rule do. The countries stay; both lists are
+     * The writes that lock [app] to the VPN or lift its lock, without moving it: lifting a lock
+     * keeps the route the lock was giving the app.
+     *
+     * @throws IllegalArgumentException when asked to lock an app outside the VPN.
+     */
+    fun planAppLock(app: String, locked: Boolean): List<RoutingOp> {
+        if ((app in lockedApps) == locked) return emptyList()
+        val route = routeOf(app)
+        if (locked) {
+            require(route != AppRoute.Direct) { "An app outside the VPN cannot be locked to it" }
+            return listOf(RoutingOp.Lock(app))
+        }
+        val ops = mutableListOf<RoutingOp>()
+        if (
+            route == AppRoute.Vpn &&
+                splitMode == SplitTunnelMode.IncludeOnly &&
+                app !in includedApps
+        ) {
+            ops += RoutingOp.AddIncluded(app)
+        }
+        if (splitMode == SplitTunnelMode.Exclude && app in excludedApps) {
+            ops += RoutingOp.RemoveExcluded(app)
+            if ((excludedApps - app).isEmpty()) ops += RoutingOp.SetSplitMode(SplitTunnelMode.Off)
+        }
+        ops += RoutingOp.Unlock(app)
+        return ops
+    }
+
+    /**
+     * The writes that switch what the apps without a rule do. The countries and the locks stay;
+     * both lists are
      * emptied, since a list kept from an earlier choice would come back as rules nobody just made.
      * Toward the VPN the mode goes first and toward direct it goes last, so every app is in the
      * VPN while the lists are emptied.
@@ -178,12 +223,29 @@ data class AppRoutingSettings(
                 is RoutingOp.SetExit -> state.copy(appExits = state.appExits + (op.app to op.exit))
                 is RoutingOp.ClearExit -> state.copy(appExits = state.appExits - op.app)
                 is RoutingOp.SetExitsEnabled -> state.copy(appExitsEnabled = op.enabled)
+                is RoutingOp.Lock ->
+                    state.copy(
+                        excludedApps = state.excludedApps - op.app,
+                        lockedApps = state.lockedApps + op.app,
+                    )
+                is RoutingOp.Unlock -> state.copy(lockedApps = state.lockedApps - op.app)
             }
         }
 
     /** What the tunnel carries under these settings, with the include-only guard of section 3.4. */
     fun tunnelRouting(isInstalled: (String) -> Boolean): AppRouting =
-        resolveAppRouting(splitMode, excludedApps, includedApps, effectiveAppExits.keys, isInstalled)
+        resolveAppRouting(
+            splitMode,
+            excludedApps,
+            includedApps,
+            effectiveAppExits.keys,
+            lockedApps,
+            isInstalled,
+        )
+
+    /** What holds the locked apps while the tunnel does not carry them ([lockGuardRouting]). */
+    fun lockGuardRouting(isInstalled: (String) -> Boolean): AppRouting? =
+        lockGuardRouting(lockedApps, isInstalled)
 }
 
 fun DefaultRoute.asAppRoute(): AppRoute =

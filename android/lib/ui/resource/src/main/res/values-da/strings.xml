@@ -126,6 +126,15 @@
     <string name="app_route_no_relay">Ingen server på placeringen</string>
     <string name="app_route_no_dialable_network">Dette netværk når ingen indgangsserver</string>
     <string name="app_route_unavailable">Ikke tilgængelig</string>
+    <string name="app_route_never_without_vpn">Aldrig uden VPN</string>
+    <string name="app_route_never_without_vpn_subtitle">Når VPN er slået fra, har %1$s intet internet, også når Warren VPN er lukket.</string>
+    <string name="app_route_lock_needs_vpn_route">Vælg en rute gennem VPN for at slå dette til</string>
+    <string name="app_route_lock_android_note">Gælder, så længe Warren VPN er enhedens VPN-app. Slår du en anden VPN-app til, ophæves det.</string>
+    <string name="app_route_blocked">Blokeret, indtil VPN forbinder</string>
+    <plurals name="apps_blocked_until_vpn">
+        <item quantity="one">%1$d app blokeret, indtil VPN forbinder</item>
+        <item quantity="other">%1$d apps blokeret, indtil VPN forbinder</item>
+    </plurals>
     <string name="app_country_only_app_title">Kun %1$s vil bruge VPN</string>
     <string name="country_picker_title">Land for %1$s</string>
     <string name="country_picker_cities_in">%1$s: byer</string>

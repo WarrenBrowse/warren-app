@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.di
 
+import kotlinx.coroutines.flow.map
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -374,6 +375,18 @@ val appModule = module {
             get(),
             get<NotificationChannel.TunnelUpdates>().id,
             MainScope(),
+            lockedApps =
+                get<WarrenLocalSettingsRepository>().lockedApps.map { apps ->
+                    val packageManager = androidContext().packageManager
+                    apps.count { app ->
+                        try {
+                            packageManager.getApplicationInfo(app, 0)
+                            true
+                        } catch (_: PackageManager.NameNotFoundException) {
+                            false
+                        }
+                    }
+                },
         )
     } bind NotificationProvider::class
     single { ForumActivityNotificationProvider(get<NotificationChannel.ForumActivity>().id) } binds

@@ -125,6 +125,14 @@
     <string name="app_route_no_relay">ထိုနေရာတွင် ဆာဗာ မရှိပါ</string>
     <string name="app_route_no_dialable_network">ဤကွန်ရက်မှ ဝင်ပေါက်ဆာဗာ မရောက်နိုင်ပါ</string>
     <string name="app_route_unavailable">မရနိုင်ပါ</string>
+    <string name="app_route_never_without_vpn">VPN မပါဘဲ ဘယ်တော့မှ မချိတ်ဆက်ရ</string>
+    <string name="app_route_never_without_vpn_subtitle">VPN ပိတ်ထားသည့်အခါ Warren VPN ကို ပိတ်ထားလျှင်ပင် %1$s သည် အင်တာနက် မရပါ။</string>
+    <string name="app_route_lock_needs_vpn_route">၎င်းကို ဖွင့်ရန် VPN မှတစ်ဆင့် လမ်းကြောင်းတစ်ခု ရွေးပါ</string>
+    <string name="app_route_lock_android_note">Warren VPN သည် ဤစက်၏ VPN အက်ပ်ဖြစ်နေသရွေ့ အကျိုးသက်ရောက်သည်။ အခြား VPN အက်ပ်ကို ဖွင့်ပါက ဖယ်ရှားသွားမည်။</string>
+    <string name="app_route_blocked">VPN ချိတ်ဆက်သည်အထိ ပိတ်ဆို့ထားသည်</string>
+    <plurals name="apps_blocked_until_vpn">
+        <item quantity="other">အက်ပ် %1$d ခုကို VPN ချိတ်ဆက်သည်အထိ ပိတ်ဆို့ထားသည်</item>
+    </plurals>
     <string name="app_country_only_app_title">%1$s သာ VPN ကို သုံးပါမည်</string>
     <string name="country_picker_title">%1$s အတွက် နိုင်ငံ</string>
     <string name="country_picker_cities_in">%1$s ရှိ မြို့များ</string>

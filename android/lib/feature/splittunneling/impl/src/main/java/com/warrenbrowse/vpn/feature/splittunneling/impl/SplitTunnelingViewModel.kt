@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -55,6 +56,8 @@ class SplitTunnelingViewModel(
     private val countryPerAppSupported: Boolean,
     private val dispatcher: CoroutineDispatcher,
     private val countryName: (String) -> String = { countryDisplayName(it) },
+    /** Whether the VPN carries the apps now; a locked app is blocked otherwise. */
+    tunnelConnected: Flow<Boolean> = flowOf(true),
 ) : ViewModel() {
 
     private val page = MutableStateFlow<PageKey>(PageKey.Rules)
@@ -68,19 +71,24 @@ class SplitTunnelingViewModel(
 
     private val settings: Flow<AppRoutingSettings> =
         combine(
-            splitTunnelingRepository.splitMode,
-            splitTunnelingRepository.excludedApps,
-            splitTunnelingRepository.includedApps,
-            splitTunnelingRepository.appExitsEnabled,
-            splitTunnelingRepository.appExits,
-        ) { mode, excluded, included, enabled, exits ->
-            AppRoutingSettings(
-                mode,
-                excluded.mapTo(LinkedHashSet()) { it.value },
-                included.mapTo(LinkedHashSet()) { it.value },
-                enabled,
-                exits,
-            )
+            combine(
+                splitTunnelingRepository.splitMode,
+                splitTunnelingRepository.excludedApps,
+                splitTunnelingRepository.includedApps,
+                splitTunnelingRepository.appExitsEnabled,
+                splitTunnelingRepository.appExits,
+            ) { mode, excluded, included, enabled, exits ->
+                AppRoutingSettings(
+                    mode,
+                    excluded.mapTo(LinkedHashSet()) { it.value },
+                    included.mapTo(LinkedHashSet()) { it.value },
+                    enabled,
+                    exits,
+                )
+            },
+            splitTunnelingRepository.lockedApps,
+        ) { settings, locked ->
+            settings.copy(lockedApps = locked)
         }
 
     private val sources: Flow<Sources> =
@@ -89,8 +97,9 @@ class SplitTunnelingViewModel(
             settings,
             splitTunnelingRepository.vpnOnlyForCount,
             appRoutesStatusProvider.appRoutes,
-        ) { apps, settings, onlyForCount, statuses ->
-            Sources(apps, settings, onlyForCount, statuses)
+            tunnelConnected,
+        ) { apps, settings, onlyForCount, statuses, connected ->
+            Sources(apps, settings, onlyForCount, statuses, connected)
         }
 
     private val pageInputs: Flow<PageInputs> =
@@ -132,7 +141,12 @@ class SplitTunnelingViewModel(
                 .rules()
                 .mapNotNull { rule ->
                     byPackage[rule.app]?.let { app ->
-                        AppRuleItem(app, rule.route, sources.line(rule.app, rule.route))
+                        AppRuleItem(
+                            app,
+                            rule.route,
+                            sources.line(rule.app, rule.route),
+                            locked = rule.locked,
+                        )
                     }
                 }
                 .sortedWith { a, b -> collator.compare(a.app.name, b.app.name) }
@@ -160,6 +174,7 @@ class SplitTunnelingViewModel(
                         route = route,
                         defaultRoute = settings.defaultRoute,
                         line = sources.line(key.app.packageName.value, route),
+                        locked = key.app.packageName.value in settings.lockedApps,
                     )
                 }
                 is PageKey.Country ->
@@ -218,6 +233,16 @@ class SplitTunnelingViewModel(
     }
 
     /** Opens the countries of the app whose route is open, with the cities of its own shown. */
+    /** "Never without the VPN": an app outside the VPN cannot be locked, so that asks nothing. */
+    fun onSetLocked(locked: Boolean) {
+        val app = (page.value as? PageKey.Route)?.app ?: return
+        change(app) { settings ->
+            val name = app.packageName.value
+            if (locked && settings.routeOf(name) == AppRoute.Direct) emptyList()
+            else settings.planAppLock(name, locked)
+        }
+    }
+
     fun onOpenCountries() {
         if (!countryPerAppSupported) return
         val app = (page.value as? PageKey.Route)?.app ?: return
@@ -305,10 +330,16 @@ class SplitTunnelingViewModel(
         val settings: AppRoutingSettings,
         val onlyForCount: Int?,
         val statuses: List<AppRouteStatus>,
+        val tunnelConnected: Boolean,
     ) {
-        /** The state of the route of an app with a country, which the others do not have. */
+        /**
+         * A locked app is blocked while the VPN is off, whatever its route; otherwise the state of
+         * the route of an app with a country, which the others do not have.
+         */
         fun line(app: String, route: AppRoute): AppRouteLine? =
-            if (route is AppRoute.Country) {
+            if (!tunnelConnected && app in settings.lockedApps) {
+                AppRouteLine.Blocked
+            } else if (route is AppRoute.Country) {
                 appRouteLine(
                     settings.splitMode,
                     settings.excludedApps,

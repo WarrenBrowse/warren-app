@@ -20,6 +20,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
+import androidx.compose.material.icons.outlined.Lock
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.rounded.Android
 import androidx.compose.material.icons.rounded.CheckCircle
@@ -67,9 +68,12 @@ import com.warrenbrowse.vpn.lib.ui.theme.color.positive
 import com.warrenbrowse.vpn.lib.ui.theme.color.positiveText
 import com.warrenbrowse.vpn.lib.ui.theme.color.warning
 
-/** The pill on the right of a rule: a flag and a country, outside the VPN, or the VPN. */
+/**
+ * The pill on the right of a rule: a flag and a country, outside the VPN, or the VPN, closed by a
+ * padlock when the app is locked to the VPN.
+ */
 @Composable
-internal fun RouteChip(route: AppRoute, modifier: Modifier = Modifier) {
+internal fun RouteChip(route: AppRoute, modifier: Modifier = Modifier, locked: Boolean = false) {
     Row(
         modifier =
             modifier
@@ -87,7 +91,16 @@ internal fun RouteChip(route: AppRoute, modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.weight(1f, fill = false),
         )
+        if (locked) {
+            Icon(
+                imageVector = Icons.Outlined.Lock,
+                contentDescription = stringResource(R.string.app_route_never_without_vpn),
+                tint = MaterialTheme.colorScheme.positiveText,
+                modifier = Modifier.size(LockGlyphSize),
+            )
+        }
     }
 }
 
@@ -158,6 +171,7 @@ internal fun RouteStatusLine(line: AppRouteLine, modifier: Modifier = Modifier) 
 @Composable
 internal fun appRouteLineText(line: AppRouteLine): String =
     when (line) {
+        AppRouteLine.Blocked -> stringResource(R.string.app_route_blocked)
         AppRouteLine.Paused -> stringResource(R.string.app_route_paused)
         AppRouteLine.Bypassed -> stringResource(R.string.app_route_bypassed)
         AppRouteLine.Waiting -> stringResource(R.string.app_route_waiting)
@@ -292,6 +306,7 @@ internal val TitleIconSize = 44.dp
 internal val CheckSize = 24.dp
 internal val OptionGlyphSize = 26.dp
 private val ChipGlyphSize = 22.dp
+private val LockGlyphSize = 16.dp
 private val ChipMinHeight = 34.dp
 private val ChipMaxWidth = 170.dp
 private val ChipBorder = 1.5.dp

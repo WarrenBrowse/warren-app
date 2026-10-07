@@ -130,6 +130,19 @@
     <string name="app_route_no_relay">لا يوجد خادم هناك</string>
     <string name="app_route_no_dialable_network">هذه الشبكة لا تصل إلى أي خادم دخول</string>
     <string name="app_route_unavailable">غير متاح</string>
+    <string name="app_route_never_without_vpn">أبدًا دون VPN</string>
+    <string name="app_route_never_without_vpn_subtitle">عند إيقاف VPN، لا يصل %1$s إلى الإنترنت، حتى مع إغلاق Warren VPN.</string>
+    <string name="app_route_lock_needs_vpn_route">اختر مسارًا عبر VPN لتفعيل هذا الخيار</string>
+    <string name="app_route_lock_android_note">يعمل ما دام Warren VPN هو تطبيق VPN على هذا الجهاز. تشغيل تطبيق VPN آخر يرفعه.</string>
+    <string name="app_route_blocked">محظور حتى يتصل VPN</string>
+    <plurals name="apps_blocked_until_vpn">
+        <item quantity="zero">%1$d تطبيق محظور حتى يتصل VPN</item>
+        <item quantity="one">%1$d تطبيق محظور حتى يتصل VPN</item>
+        <item quantity="two">تطبيقان (%1$d) محظوران حتى يتصل VPN</item>
+        <item quantity="few">%1$d تطبيقات محظورة حتى يتصل VPN</item>
+        <item quantity="many">%1$d تطبيقًا محظورًا حتى يتصل VPN</item>
+        <item quantity="other">%1$d تطبيق محظور حتى يتصل VPN</item>
+    </plurals>
     <string name="app_country_only_app_title">لن يستخدم VPN إلا %1$s</string>
     <string name="country_picker_title">دولة %1$s</string>
     <string name="country_picker_cities_in">مدن %1$s</string>

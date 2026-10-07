@@ -14,6 +14,7 @@ import com.warrenbrowse.vpn.app.connectivity.isOnlineWithNoDialableFamily
 import com.warrenbrowse.vpn.lib.model.AppExit
 import com.warrenbrowse.vpn.lib.model.AppRouting
 import com.warrenbrowse.vpn.lib.model.effectiveAppExits
+import com.warrenbrowse.vpn.lib.model.lockGuardRouting
 import com.warrenbrowse.vpn.lib.model.resolveAppRouting
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
@@ -23,6 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -197,6 +199,14 @@ class WarrenQuinnAdapter(
     // enabled we keep `blockingFd` established as a blackhole interface so
     // traffic stays captured instead of leaking to the physical network.
     private var blockingFd: ParcelFileDescriptor? = null
+    // The blackhole that holds the apps locked to the VPN while neither the
+    // tunnel nor the kill switch does (docs/app-routing.md section 8).
+    private var lockGuardFd: ParcelFileDescriptor? = null
+    private val _lockGuardActive = MutableStateFlow(false)
+
+    /** Whether locked apps are held by their own blackhole, which the service keeps in the foreground. */
+    val lockGuardActive: StateFlow<Boolean> = _lockGuardActive.asStateFlow()
+
     // Distinguishes a user-requested teardown (release traffic) from an
     // unexpected drop (engage the kill switch).
     private var userInitiatedDisconnect = false
@@ -216,7 +226,8 @@ class WarrenQuinnAdapter(
                     settings.excludedApps,
                     settings.appExits,
                     settings.appExitsEnabled,
-                ) { _, _, _, _ ->
+                    settings.lockedApps,
+                ) { _, _, _, _, _ ->
                     currentAppExits()
                 }
                 .distinctUntilChanged()
@@ -230,12 +241,15 @@ class WarrenQuinnAdapter(
         // include-only list is not held by the one already up.
         scope.launch {
             combine(
-                    settings.splitMode,
-                    settings.excludedApps,
-                    settings.includedApps,
-                    settings.appExits,
-                    settings.appExitsEnabled,
-                ) { _, _, _, _, _ ->
+                    listOf<Flow<Any?>>(
+                        settings.splitMode,
+                        settings.excludedApps,
+                        settings.includedApps,
+                        settings.appExits,
+                        settings.appExitsEnabled,
+                        settings.lockedApps,
+                    )
+                ) {
                     currentAppRouting()
                 }
                 .drop(1)
@@ -249,12 +263,17 @@ class WarrenQuinnAdapter(
                     }
                 }
         }
+        // The guard follows the locked apps while it holds them, or while it
+        // should: a first lock set with no tunnel brings it up at once.
+        scope.launch {
+            settings.lockedApps.drop(1).distinctUntilChanged().collect { refreshLockGuard() }
+        }
     }
 
     /**
      * The apps the TUN captures, from the split settings, the countries in
-     * force (an app with one is tunneled in include-only) and the installed
-     * apps.
+     * force (an app with one is tunneled in include-only), the locked apps
+     * (never outside the tunnel) and the installed apps.
      */
     private fun currentAppRouting(): AppRouting =
         tunAppRouting(
@@ -263,6 +282,7 @@ class WarrenQuinnAdapter(
                 settings.excludedApps.value,
                 settings.includedApps.value,
                 currentAppExits().keys,
+                settings.lockedApps.value,
                 platform::isAppInstalled,
             ),
             platform.selfPackage,
@@ -275,6 +295,7 @@ class WarrenQuinnAdapter(
             settings.excludedApps.value,
             settings.appExits.value,
             settings.appExitsEnabled.value,
+            settings.lockedApps.value,
         )
 
     /**
@@ -287,6 +308,45 @@ class WarrenQuinnAdapter(
 
     private fun blackholePlan(config: WarrenTunnelConfig): WarrenTunInterfacePlan =
         planTunInterface(config, blocking = true, appRouting = currentAppRouting())
+
+    /**
+     * Hold the locked apps behind their own blackhole while neither the tunnel
+     * nor the kill switch does: from a service started with no tunnel (a boot,
+     * a lock set while disconnected). A no-op while either runs.
+     */
+    suspend fun holdLockedApps() = withContext(dispatcher) { refreshLockGuard() }
+
+    private suspend fun refreshLockGuard() = lock.withLock {
+        if (activeFd != null || blockingFd != null) return@withLock
+        holdLockedAppsLocked()
+    }
+
+    /**
+     * Put up, replace (new one first) or take down the guard for the locked apps
+     * on the device. Must be called holding [lock]. A guard that cannot be
+     * established (the VPN permission was withdrawn) leaves the previous one.
+     */
+    private fun holdLockedAppsLocked() {
+        val routing = lockGuardRouting(settings.lockedApps.value, platform::isAppInstalled)
+        if (routing !is AppRouting.OnlyFor) {
+            releaseLockGuard()
+            return
+        }
+        val fd = platform.establish(planLockGuard(routing))
+        if (fd == null) {
+            Logger.w("WarrenQuinnAdapter: the locked apps could not be held")
+            return
+        }
+        lockGuardFd?.close()
+        lockGuardFd = fd
+        _lockGuardActive.value = true
+    }
+
+    private fun releaseLockGuard() {
+        lockGuardFd?.close()
+        lockGuardFd = null
+        _lockGuardActive.value = false
+    }
 
     /** Replace a blackhole that is up with one for the current selection, new one first. */
     private suspend fun refreshBlackhole() = lock.withLock {
@@ -360,6 +420,9 @@ class WarrenQuinnAdapter(
         // interface just established replaced it.
         activeFd?.close()
         activeFd = liveDup
+        // The live interface holds the locked apps from here (they are never
+        // outside the tunnel), so their own blackhole can go.
+        releaseLockGuard()
 
         val wire =
             withDrainFailover(config).copy(appExits = appExitsWire(currentAppExits())).toWireJson()
@@ -669,9 +732,14 @@ class WarrenQuinnAdapter(
         connectLocked(newConfig, mnemonic)
     }
 
-    suspend fun disconnect() = withContext(dispatcher) {
+    /**
+     * [holdLockedApps] off leaves the locked apps without their blackhole: for a
+     * system revoke, where the VPN slot is another app's, and for the service's
+     * destruction, which would leave an interface with no owner.
+     */
+    suspend fun disconnect(holdLockedApps: Boolean = true) = withContext(dispatcher) {
         lock.withLock {
-            teardownLocked()
+            teardownLocked(holdLockedApps = holdLockedApps)
             // User teardown is terminal: wipe the cached mnemonic.
             activeMnemonic?.close()
             activeMnemonic = null
@@ -683,7 +751,7 @@ class WarrenQuinnAdapter(
      * service's `onDestroy`, whose lifecycle scope is already cancelled by the
      * time it runs and which must not block the main thread on the teardown.
      */
-    fun disconnectInBackground(): Job = scope.launch { disconnect() }
+    fun disconnectInBackground(): Job = scope.launch { disconnect(holdLockedApps = false) }
 
     /**
      * [disconnect] bounded by [timeoutMs], for the system revoke: its caller
@@ -694,9 +762,9 @@ class WarrenQuinnAdapter(
      * adapter's own scope and runs the moment the lock frees. Returns whether
      * the teardown completed within the bound.
      */
-    suspend fun disconnectWithin(timeoutMs: Long): Boolean {
-        val completed = withTimeoutOrNull(timeoutMs) { disconnect() } != null
-        if (!completed) disconnectInBackground()
+    suspend fun disconnectWithin(timeoutMs: Long, holdLockedApps: Boolean = true): Boolean {
+        val completed = withTimeoutOrNull(timeoutMs) { disconnect(holdLockedApps) } != null
+        if (!completed) scope.launch { disconnect(holdLockedApps) }
         return completed
     }
 
@@ -709,7 +777,7 @@ class WarrenQuinnAdapter(
      * [reconnecting] marks a teardown a re-dial is already queued behind, so
      * the card reads it as a connection in progress rather than a disconnect.
      */
-    private fun teardownLocked(reconnecting: Boolean = false) {
+    private fun teardownLocked(reconnecting: Boolean = false, holdLockedApps: Boolean = true) {
         // The native teardown and the fd juggling below take real time, and the
         // card must not keep offering a live Connect (or a green Connected)
         // while the tunnel is coming down.
@@ -728,6 +796,9 @@ class WarrenQuinnAdapter(
         pendingHandover?.cancel()
         pendingHandover = null
         platform.disconnectTunnel()
+        // Up before the interfaces below close, so the locked apps never reach
+        // the bare network in between.
+        if (holdLockedApps) holdLockedAppsLocked() else releaseLockGuard()
         statusWatchJob?.cancel()
         statusWatchJob = null
         activeFd?.close()
@@ -835,9 +906,11 @@ class WarrenQuinnAdapter(
             blockingFd = fd
             // The blackhole atomically replaced the active interface; the old
             // active fd is now stale, so close it (the interface itself stays
-            // up as the blackhole).
+            // up as the blackhole). It holds the locked apps as well (every app,
+            // or an include-only list they are on), so their own one can go.
             activeFd?.close()
             activeFd = null
+            releaseLockGuard()
             Logger.w("WarrenQuinnAdapter: lockdown engaged, traffic blocked ($reason)")
         }
         _state.value =
@@ -956,6 +1029,9 @@ class WarrenQuinnAdapter(
      */
     private fun releaseTraffic() {
         platform.disconnectTunnel()
+        // Every app but the locked ones: their blackhole is up before the
+        // interfaces holding them close.
+        holdLockedAppsLocked()
         activeFd?.close()
         activeFd = null
         exitBlockingMode()

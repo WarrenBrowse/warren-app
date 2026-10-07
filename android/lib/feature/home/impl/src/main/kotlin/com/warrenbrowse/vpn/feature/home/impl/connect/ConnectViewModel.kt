@@ -93,11 +93,13 @@ class ConnectViewModel(
                     offline || wedged
                 },
                 // Paired to stay within the eight inputs `combine` takes.
-                autoRecoveryProvider.autoRecoveryCount.combine(splitTunneling.vpnOnlyForCount) {
-                    count,
-                    vpnOnlyFor ->
-                    count to vpnOnlyFor
-                },
+                autoRecoveryProvider.autoRecoveryCount
+                    .combine(splitTunneling.vpnOnlyForCount) { count, vpnOnlyFor ->
+                        count to vpnOnlyFor
+                    }
+                    .combine(splitTunneling.lockedCount) { (count, vpnOnlyFor), locked ->
+                        Triple(count, vpnOnlyFor, locked)
+                    },
                 // The pinned location below is derived from the relay
                 // catalogue, which is fetched asynchronously. Without this
                 // input the first pass latches the empty cold-cache snapshot
@@ -111,7 +113,7 @@ class ConnectViewModel(
                 lastKnownDisconnectedLocation,
                 exitPin,
                 hostOffline,
-                (autoRecoveryCount, vpnOnlyForCount),
+                (autoRecoveryCount, vpnOnlyForCount, lockedAppsCount),
                 relays ->
                 // Warren's relay list carries no coordinates and there is no
                 // device-GeoIP service, so the Warren tunnel state never reports
@@ -170,6 +172,7 @@ class ConnectViewModel(
                     hostOffline = hostOffline,
                     autoRecoveryCount = autoRecoveryCount,
                     vpnOnlyForCount = vpnOnlyForCount,
+                    lockedAppsCount = lockedAppsCount,
                 )
             }
             .stateIn(

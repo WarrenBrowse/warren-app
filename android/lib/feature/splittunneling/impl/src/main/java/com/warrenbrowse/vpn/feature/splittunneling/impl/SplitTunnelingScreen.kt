@@ -100,6 +100,7 @@ fun SharedTransitionScope.SplitTunneling(
                 onShowSystemApps = viewModel::onShowSystemApps,
                 onOpenApp = viewModel::onOpenApp,
                 onChooseRoute = viewModel::onChooseRoute,
+                onSetLocked = viewModel::onSetLocked,
                 onOpenCountries = viewModel::onOpenCountries,
                 onRemoveRule = viewModel::onRemoveRule,
                 onDone = viewModel::onDone,
@@ -458,7 +459,7 @@ private fun RuleRow(
             )
             rule.line?.let { RouteStatusLine(it) }
         }
-        RouteChip(rule.route)
+        RouteChip(rule.route, locked = rule.locked)
     }
 }
 

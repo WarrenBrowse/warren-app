@@ -126,6 +126,15 @@
     <string name="app_route_no_relay">Sijainnissa ei palvelimia</string>
     <string name="app_route_no_dialable_network">Tämä verkko ei tavoita yhtään sisääntulopalvelinta</string>
     <string name="app_route_unavailable">Ei saatavilla</string>
+    <string name="app_route_never_without_vpn">Ei koskaan ilman VPN:ää</string>
+    <string name="app_route_never_without_vpn_subtitle">Kun VPN on pois päältä, %1$s ei pääse internetiin, vaikka Warren VPN olisi suljettu.</string>
+    <string name="app_route_lock_needs_vpn_route">Valitse reitti VPN:n kautta ottaaksesi tämän käyttöön</string>
+    <string name="app_route_lock_android_note">Pysyy voimassa, kun Warren VPN on tämän laitteen VPN-sovellus. Toisen VPN-sovelluksen käyttöönotto poistaa sen.</string>
+    <string name="app_route_blocked">Estetty, kunnes VPN yhdistää</string>
+    <plurals name="apps_blocked_until_vpn">
+        <item quantity="one">%1$d sovellus estetty, kunnes VPN yhdistää</item>
+        <item quantity="other">%1$d sovellusta estetty, kunnes VPN yhdistää</item>
+    </plurals>
     <string name="app_country_only_app_title">Vain %1$s käyttää VPN:ää</string>
     <string name="country_picker_title">Sovelluksen %1$s maa</string>
     <string name="country_picker_cities_in">%1$s: kaupungit</string>

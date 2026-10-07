@@ -1,7 +1,9 @@
 package com.warrenbrowse.vpn.lib.model
 
 sealed interface NotificationTunnelState {
-    data class Disconnected(val prepareError: PrepareError?) : NotificationTunnelState
+    /** [lockedApps]: the apps locked to the VPN on the device, blocked until it connects. */
+    data class Disconnected(val prepareError: PrepareError?, val lockedApps: Int = 0) :
+        NotificationTunnelState
 
     data class Connecting(val location: GeoIpLocation?) : NotificationTunnelState
 

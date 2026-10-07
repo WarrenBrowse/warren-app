@@ -40,8 +40,16 @@ data class AppRoutingUiState(
         get() = defaultRoute == DefaultRoute.Direct || rules.any { it.route == AppRoute.Direct }
 }
 
-/** One row of the list: an app, its route, and for a country the state of its route. */
-data class AppRuleItem(val app: AppData, val route: AppRoute, val line: AppRouteLine?)
+/**
+ * One row of the list: an app, its route, whether it is locked to the VPN, and the line under it
+ * (the state of a country's route, or a locked app blocked while the VPN is off).
+ */
+data class AppRuleItem(
+    val app: AppData,
+    val route: AppRoute,
+    val line: AppRouteLine?,
+    val locked: Boolean = false,
+)
 
 sealed interface AppRoutingPage {
     /** The default route and the rules. */
@@ -60,9 +68,10 @@ sealed interface AppRoutingPage {
         val route: AppRoute,
         val defaultRoute: DefaultRoute,
         val line: AppRouteLine?,
+        val locked: Boolean = false,
     ) : AppRoutingPage {
         val hasRule: Boolean
-            get() = route != defaultRoute.asAppRoute()
+            get() = route != defaultRoute.asAppRoute() || locked
     }
 
     /** The countries and cities one app can leave from. */

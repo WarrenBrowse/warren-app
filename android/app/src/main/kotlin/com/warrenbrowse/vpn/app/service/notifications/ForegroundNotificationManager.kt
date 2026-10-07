@@ -4,6 +4,10 @@ import android.app.Service
 import android.content.pm.ServiceInfo
 import android.os.Build
 import co.touchlab.kermit.Logger
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
+import com.warrenbrowse.vpn.app.service.WarrenQuinnAdapter
 import com.warrenbrowse.vpn.app.service.WarrenVpnService
 import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
 import com.warrenbrowse.vpn.lib.model.Notification
@@ -27,6 +31,27 @@ class ForegroundNotificationManager(
         Logger.d("stopForeground")
         vpnService.stopForeground(Service.STOP_FOREGROUND_DETACH)
     }
+
+    /**
+     * The blackhole holding the apps locked to the VPN lives as long as the
+     * service does: in the foreground while [adapter] holds it, and out of it
+     * with the blackhole when [idle] says nothing else needs it there.
+     */
+    fun followLockGuard(scope: CoroutineScope, adapter: WarrenQuinnAdapter, idle: () -> Boolean) {
+        lockGuardActive = adapter.lockGuardActive
+        scope.launch {
+            adapter.lockGuardActive.collect { held ->
+                if (held) startForeground() else if (idle()) stopForeground()
+            }
+        }
+    }
+
+    /** [stopForeground], unless the service holds the blackhole of locked apps. */
+    fun stopForegroundUnlessHolding() {
+        if (lockGuardActive?.value != true) stopForeground()
+    }
+
+    private var lockGuardActive: StateFlow<Boolean>? = null
 
     private fun getTunnelStateNotificationOrDefault(): Notification.Tunnel {
         val current = tunnelStateNotificationProvider.notifications.value
