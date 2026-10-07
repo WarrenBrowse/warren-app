@@ -2059,6 +2059,31 @@ setAppExit: {
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },
+  // An app locked to the VPN is never outside the tunnel and is blocked
+// whenever the tunnel does not carry it. Refused where this build cannot
+// enforce it.
+addLockedApp: {
+    path: '/mullvad_daemon.management_interface.ManagementService/AddLockedApp',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_wrappers_pb.StringValue,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_google_protobuf_StringValue,
+    requestDeserialize: deserialize_google_protobuf_StringValue,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  removeLockedApp: {
+    path: '/mullvad_daemon.management_interface.ManagementService/RemoveLockedApp',
+    requestStream: false,
+    responseStream: false,
+    requestType: google_protobuf_wrappers_pb.StringValue,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_google_protobuf_StringValue,
+    requestDeserialize: deserialize_google_protobuf_StringValue,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
   // One status per exit in force. Also pushed as DaemonEvent.app_routes.
 getAppRouteStatus: {
     path: '/mullvad_daemon.management_interface.ManagementService/GetAppRouteStatus',

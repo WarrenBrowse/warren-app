@@ -25854,7 +25854,7 @@ proto.mullvad_daemon.management_interface.AppExit.prototype.hasExit = function()
  * @private {!Array<number>}
  * @const
  */
-proto.mullvad_daemon.management_interface.AppRoutingSettings.repeatedFields_ = [2,3,5];
+proto.mullvad_daemon.management_interface.AppRoutingSettings.repeatedFields_ = [2,3,5,6];
 
 
 
@@ -25892,7 +25892,8 @@ proto.mullvad_daemon.management_interface.AppRoutingSettings.toObject = function
     includedAppsList: (f = jspb.Message.getRepeatedField(msg, 3)) == null ? undefined : f,
     appExitsEnabled: jspb.Message.getBooleanFieldWithDefault(msg, 4, false),
     appExitsList: jspb.Message.toObjectList(msg.getAppExitsList(),
-    proto.mullvad_daemon.management_interface.AppExit.toObject, includeInstance)
+    proto.mullvad_daemon.management_interface.AppExit.toObject, includeInstance),
+    lockedAppsList: (f = jspb.Message.getRepeatedField(msg, 6)) == null ? undefined : f
   };
 
   if (includeInstance) {
@@ -25949,6 +25950,10 @@ proto.mullvad_daemon.management_interface.AppRoutingSettings.deserializeBinaryFr
       var value = new proto.mullvad_daemon.management_interface.AppExit;
       reader.readMessage(value,proto.mullvad_daemon.management_interface.AppExit.deserializeBinaryFromReader);
       msg.addAppExits(value);
+      break;
+    case 6:
+      var value = /** @type {string} */ (reader.readString());
+      msg.addLockedApps(value);
       break;
     default:
       reader.skipField();
@@ -26013,6 +26018,13 @@ proto.mullvad_daemon.management_interface.AppRoutingSettings.serializeBinaryToWr
       5,
       f,
       proto.mullvad_daemon.management_interface.AppExit.serializeBinaryToWriter
+    );
+  }
+  f = message.getLockedAppsList();
+  if (f.length > 0) {
+    writer.writeRepeatedString(
+      6,
+      f
     );
   }
 };
@@ -26163,6 +26175,43 @@ proto.mullvad_daemon.management_interface.AppRoutingSettings.prototype.addAppExi
  */
 proto.mullvad_daemon.management_interface.AppRoutingSettings.prototype.clearAppExitsList = function() {
   return this.setAppExitsList([]);
+};
+
+
+/**
+ * repeated string locked_apps = 6;
+ * @return {!Array<string>}
+ */
+proto.mullvad_daemon.management_interface.AppRoutingSettings.prototype.getLockedAppsList = function() {
+  return /** @type {!Array<string>} */ (jspb.Message.getRepeatedField(this, 6));
+};
+
+
+/**
+ * @param {!Array<string>} value
+ * @return {!proto.mullvad_daemon.management_interface.AppRoutingSettings} returns this
+ */
+proto.mullvad_daemon.management_interface.AppRoutingSettings.prototype.setLockedAppsList = function(value) {
+  return jspb.Message.setField(this, 6, value || []);
+};
+
+
+/**
+ * @param {string} value
+ * @param {number=} opt_index
+ * @return {!proto.mullvad_daemon.management_interface.AppRoutingSettings} returns this
+ */
+proto.mullvad_daemon.management_interface.AppRoutingSettings.prototype.addLockedApps = function(value, opt_index) {
+  return jspb.Message.addToRepeatedField(this, 6, value, opt_index);
+};
+
+
+/**
+ * Clears the list making it empty but non-null.
+ * @return {!proto.mullvad_daemon.management_interface.AppRoutingSettings} returns this
+ */
+proto.mullvad_daemon.management_interface.AppRoutingSettings.prototype.clearLockedAppsList = function() {
+  return this.setLockedAppsList([]);
 };
 
 

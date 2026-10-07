@@ -83,6 +83,7 @@ impl From<&AppRoutingSettings> for proto::AppRoutingSettings {
                     exit: Some(proto::ExitChoice::from(exit)),
                 })
                 .collect(),
+            locked_apps: apps(&settings.locked_apps),
         }
     }
 }
@@ -112,6 +113,7 @@ impl TryFrom<proto::AppRoutingSettings> for AppRoutingSettings {
             included_apps: apps(&settings.included_apps),
             app_exits_enabled: settings.app_exits_enabled,
             app_exits,
+            locked_apps: apps(&settings.locked_apps),
         })
     }
 }
@@ -209,6 +211,7 @@ mod tests {
         settings.included_apps.insert(app(APPS[1]));
         settings.set_app_exit(app(APPS[2]), ExitChoice::new("se", Some("got")).unwrap());
         settings.set_app_exit(app(APPS[1]), ExitChoice::new("de", None).unwrap());
+        settings.lock_app(app(APPS[2]));
         settings
     }
 

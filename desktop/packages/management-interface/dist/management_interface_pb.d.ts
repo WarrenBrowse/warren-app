@@ -3236,6 +3236,10 @@ export class AppRoutingSettings extends jspb.Message {
     getAppExitsList(): Array<AppExit>;
     setAppExitsList(value: Array<AppExit>): AppRoutingSettings;
     addAppExits(value?: AppExit, index?: number): AppExit;
+    clearLockedAppsList(): void;
+    getLockedAppsList(): Array<string>;
+    setLockedAppsList(value: Array<string>): AppRoutingSettings;
+    addLockedApps(value: string, index?: number): string;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): AppRoutingSettings.AsObject;
@@ -3254,6 +3258,7 @@ export namespace AppRoutingSettings {
         includedAppsList: Array<string>,
         appExitsEnabled: boolean,
         appExitsList: Array<AppExit.AsObject>,
+        lockedAppsList: Array<string>,
     }
 }
 

@@ -311,6 +311,11 @@ service ManagementService {
   // admits at once is reported WAITING_FOR_ROUTE.
   rpc SetAppExit(AppExit) returns (google.protobuf.Empty) {}
   rpc ClearAppExit(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
+  // An app locked to the VPN is never outside the tunnel and is blocked
+  // whenever the tunnel does not carry it. Refused where this build cannot
+  // enforce it.
+  rpc AddLockedApp(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
+  rpc RemoveLockedApp(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
   // One status per exit in force. Also pushed as DaemonEvent.app_routes.
   rpc GetAppRouteStatus(google.protobuf.Empty) returns (AppRouteStatusList) {}
 
@@ -1464,6 +1469,7 @@ message AppRoutingSettings {
   repeated string included_apps = 3;
   bool app_exits_enabled = 4;
   repeated AppExit app_exits = 5;
+  repeated string locked_apps = 6;
 }
 
 message AppRouteStatus {

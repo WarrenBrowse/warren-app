@@ -286,6 +286,11 @@ fn macos_split_tunnel_available(capability: split_tunnel::Capability) -> Result<
     }
 }
 
+/// Whether this build enforces a lock on an app: one that only a launch can
+/// put in place (Linux) or that the platform cannot hold (macOS, until a
+/// content filter exists) is refused, never saved as a promise nobody keeps.
+const APP_LOCK_SUPPORTED: bool = false;
+
 /// What the tunnel diverts for `routing`, in the form its split tunnel takes:
 /// the excluded apps while excluding, the apps in the tunnel in include-only
 /// mode, nothing otherwise. Linux chooses its apps at launch, so only the
@@ -296,7 +301,7 @@ fn tunnel_split_apps(routing: &AppRoutingSettings) -> SplitApps {
         SplitMode::Off => return SplitApps::default(),
         SplitMode::Exclude => (
             SplitTunnelMode::Exclude,
-            routing.excluded_apps.iter().collect(),
+            routing.effective_excluded_apps().into_iter().collect(),
         ),
         SplitMode::IncludeOnly => (
             SplitTunnelMode::IncludeOnly,
@@ -329,15 +334,11 @@ fn enforceable_split_apps(split_apps: SplitApps, include_only_supported: bool) -
 /// excluding, nothing otherwise.
 #[cfg(target_os = "android")]
 fn tunnel_split_apps(routing: &AppRoutingSettings) -> Vec<String> {
-    if routing.exclusions_active() {
-        routing
-            .excluded_apps
-            .iter()
-            .map(AppId::to_tunnel_command_repr)
-            .collect()
-    } else {
-        vec![]
-    }
+    routing
+        .effective_excluded_apps()
+        .into_iter()
+        .map(AppId::to_tunnel_command_repr)
+        .collect()
 }
 
 /// Whether the split tunnel has work to do for `routing`.
@@ -832,6 +833,10 @@ pub enum DaemonCommand {
     SetAppExit(ResponseTx<(), Error>, AppId, ExitChoice),
     /// Send an app back through the main connection
     ClearAppExit(ResponseTx<(), Error>, AppId),
+    /// Lock an app to the tunnel: blocked whenever the tunnel does not carry it
+    AddLockedApp(ResponseTx<(), Error>, AppId),
+    /// Let a locked app reach the network outside the tunnel again
+    RemoveLockedApp(ResponseTx<(), Error>, AppId),
     /// Where the session of each exit in force stands
     GetAppRouteStatus(oneshot::Sender<Vec<AppRouteStatus>>),
     /// Returns all processes currently being excluded from the tunnel
@@ -3572,6 +3577,23 @@ impl Daemon {
             ClearAppExit(tx, app) => {
                 self.update_app_routing(tx, "clear_app_exit response", |routing| {
                     routing.app_exits.remove(&app);
+                    Ok(())
+                })
+                .await
+            }
+            AddLockedApp(tx, app) => {
+                self.update_app_routing(tx, "add_locked_app response", |routing| {
+                    if !APP_LOCK_SUPPORTED {
+                        return Err(AppRoutingError::LockUnavailable);
+                    }
+                    routing.lock_app(app);
+                    Ok(())
+                })
+                .await
+            }
+            RemoveLockedApp(tx, app) => {
+                self.update_app_routing(tx, "remove_locked_app response", |routing| {
+                    routing.unlock_app(&app);
                     Ok(())
                 })
                 .await
@@ -7696,6 +7718,16 @@ mod tunnel_split_apps_tests {
         apps.sort();
         assert_eq!(split.mode, SplitTunnelMode::IncludeOnly);
         assert_eq!(apps, expected);
+    }
+
+    #[test]
+    fn a_locked_app_is_never_handed_to_the_tunnel_as_excluded() {
+        let mut routing = routing(SplitMode::Exclude);
+        routing.locked_apps.insert(app(APPS[0]));
+
+        let split = tunnel_split_apps(&routing);
+
+        assert!(split.apps.is_empty(), "{:?}", split.apps);
     }
 
     #[test]

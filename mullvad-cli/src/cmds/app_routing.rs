@@ -36,6 +36,11 @@ pub enum AppRouting {
     #[clap(subcommand)]
     Exit(Exit),
 
+    /// Manage the apps that never reach the Internet without the VPN: they
+    /// are blocked whenever the VPN does not carry them
+    #[clap(subcommand)]
+    Lock(AppList),
+
     /// Show where the connection of each chosen country stands
     Status,
 }
@@ -126,6 +131,14 @@ impl AppRouting {
                 rpc.clear_app_exit(path).await?;
                 println!("The app now uses the main connection");
             }
+            AppRouting::Lock(AppList::Add { path }) => {
+                rpc.add_locked_app(path).await?;
+                println!("The app now never reaches the Internet without the VPN");
+            }
+            AppRouting::Lock(AppList::Remove { path }) => {
+                rpc.remove_locked_app(path).await?;
+                println!("The app may reach the Internet without the VPN again");
+            }
             AppRouting::Status => {
                 let statuses = rpc.get_app_route_status().await?;
                 print!("{}", render_statuses(&statuses));
@@ -164,6 +177,10 @@ fn render_settings(settings: &AppRoutingSettings) -> String {
     out.push_str(&format!("Per-app countries: {exits}\n"));
     for (app, exit) in &settings.app_exits {
         out.push_str(&format!("    {}: {}\n", app.as_str(), exit_label(exit)));
+    }
+    out.push_str("Apps that never reach the Internet without the VPN:\n");
+    for app in &settings.locked_apps {
+        out.push_str(&format!("    {}\n", app.as_str()));
     }
     out
 }
@@ -239,6 +256,7 @@ mod tests {
         };
         settings.included_apps.insert(app(BROWSER));
         settings.set_app_exit(app(BROWSER), ExitChoice::new("se", Some("got")).unwrap());
+        settings.lock_app(app(BROWSER));
 
         let rendered = render_settings(&settings);
 
@@ -248,7 +266,8 @@ mod tests {
                 "Split mode: include-only\n\
                  Apps that bypass the VPN:\n\
                  Apps alone in the VPN:\n    {BROWSER}\n\
-                 Per-app countries: on\n    {BROWSER}: se, got\n"
+                 Per-app countries: on\n    {BROWSER}: se, got\n\
+                 Apps that never reach the Internet without the VPN:\n    {BROWSER}\n"
             )
         );
     }

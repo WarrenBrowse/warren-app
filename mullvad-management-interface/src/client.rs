@@ -770,6 +770,18 @@ impl MullvadProxyClient {
         Ok(())
     }
 
+    pub async fn add_locked_app<P: AsRef<Path>>(&mut self, path: P) -> Result<()> {
+        let path = path.as_ref().to_str().ok_or(Error::PathMustBeUtf8)?;
+        self.0.add_locked_app(path.to_owned()).await?;
+        Ok(())
+    }
+
+    pub async fn remove_locked_app<P: AsRef<Path>>(&mut self, path: P) -> Result<()> {
+        let path = path.as_ref().to_str().ok_or(Error::PathMustBeUtf8)?;
+        self.0.remove_locked_app(path.to_owned()).await?;
+        Ok(())
+    }
+
     pub async fn set_app_exits_enabled(&mut self, enabled: bool) -> Result<()> {
         self.0.set_app_exits_enabled(enabled).await?;
         Ok(())

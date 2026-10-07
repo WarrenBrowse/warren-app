@@ -2252,6 +2252,32 @@ impl ManagementService for ManagementServiceImpl {
             .map(Response::new)
     }
 
+    async fn add_locked_app(&self, request: Request<String>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
+        log::debug!("add_locked_app");
+        let app =
+            types::app_routing::app_id(&request.into_inner()).map_err(map_protobuf_type_err)?;
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(&call, DaemonCommand::AddLockedApp(tx, app))?;
+        self.wait_for_result(rx)
+            .await?
+            .map_err(map_daemon_error)
+            .map(Response::new)
+    }
+
+    async fn remove_locked_app(&self, request: Request<String>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
+        log::debug!("remove_locked_app");
+        let app =
+            types::app_routing::app_id(&request.into_inner()).map_err(map_protobuf_type_err)?;
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(&call, DaemonCommand::RemoveLockedApp(tx, app))?;
+        self.wait_for_result(rx)
+            .await?
+            .map_err(map_daemon_error)
+            .map(Response::new)
+    }
+
     async fn set_app_exits_enabled(&self, request: Request<bool>) -> ServiceResult<()> {
         let call = Self::call_of(&request);
         log::debug!("set_app_exits_enabled");
@@ -3187,10 +3213,13 @@ fn map_daemon_error(error: crate::Error) -> Status {
     }
 }
 
-/// A refused app routing change: always a malformed request, since any
-/// number of exits is accepted.
+/// A refused app routing change: a malformed request, since any number of
+/// exits is accepted, or a lock this build cannot enforce.
 fn map_app_routing_error(error: AppRoutingError) -> Status {
-    Status::invalid_argument(error.to_string())
+    match error {
+        AppRoutingError::LockUnavailable => Status::failed_precondition(error.to_string()),
+        error => Status::invalid_argument(error.to_string()),
+    }
 }
 
 #[cfg(windows)]
@@ -3315,6 +3344,15 @@ mod app_routing_error_tests {
         let status = map_app_routing_error(AppRoutingError::InvalidCountry);
 
         assert_eq!(status.code(), Code::InvalidArgument);
+    }
+
+    /// The GUI tells a lock this build cannot enforce from a malformed
+    /// request by the code alone.
+    #[test]
+    fn a_lock_this_build_cannot_enforce_is_a_failed_precondition() {
+        let status = map_app_routing_error(AppRoutingError::LockUnavailable);
+
+        assert_eq!(status.code(), Code::FailedPrecondition);
     }
 }
 

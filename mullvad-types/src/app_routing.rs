@@ -42,6 +42,8 @@ pub enum AppRoutingError {
     InvalidCountry,
     #[error("the city is not a city code")]
     InvalidCity,
+    #[error("this build cannot lock an app to the VPN")]
+    LockUnavailable,
 }
 
 /// The conventions an app id follows on one platform.
@@ -279,12 +281,45 @@ pub struct AppRoutingSettings {
     /// is the server's answer, which the tunnel follows live, so a choice
     /// past it waits for a free route rather than being refused here.
     pub app_exits: BTreeMap<AppId, ExitChoice>,
+    /// Apps that never reach the network outside the tunnel, whatever the
+    /// split mode: blocked whenever the tunnel does not carry them, the
+    /// disconnected state and a stopped daemon included.
+    pub locked_apps: BTreeSet<AppId>,
 }
 
 impl AppRoutingSettings {
     /// Whether the excluded apps are outside the tunnel right now.
     pub fn exclusions_active(&self) -> bool {
         self.split_mode == SplitMode::Exclude
+    }
+
+    /// Locks `app` to the tunnel. Its exclusion goes with it, so that
+    /// unlocking it later does not send it outside the tunnel unasked.
+    pub fn lock_app(&mut self, app: AppId) {
+        self.excluded_apps.remove(&app);
+        self.locked_apps.insert(app);
+    }
+
+    pub fn unlock_app(&mut self, app: &AppId) {
+        self.locked_apps.remove(app);
+    }
+
+    /// The apps outside the tunnel: the excluded ones while excluding, but
+    /// never a locked one, since a lock left out of force would let the app
+    /// out in clear while the user believes it held.
+    pub fn effective_excluded_apps(&self) -> BTreeSet<&AppId> {
+        if !self.exclusions_active() {
+            return BTreeSet::new();
+        }
+        self.excluded_apps
+            .iter()
+            .filter(|app| !self.locked_apps.contains(*app))
+            .collect()
+    }
+
+    /// The apps blocked whenever the tunnel does not carry them.
+    pub fn effective_locked_apps(&self) -> BTreeSet<&AppId> {
+        self.locked_apps.iter().collect()
     }
 
     /// Chooses `exit` for `app`, replacing any earlier choice.
@@ -299,15 +334,17 @@ impl AppRoutingSettings {
         if !self.app_exits_enabled {
             return BTreeMap::new();
         }
+        let excluded = self.effective_excluded_apps();
         self.app_exits
             .iter()
-            .filter(|(app, _)| !(self.exclusions_active() && self.excluded_apps.contains(*app)))
+            .filter(|(app, _)| !excluded.contains(app))
             .collect()
     }
 
     /// The apps tunneled while `split_mode` is `IncludeOnly`: the included
-    /// apps, and every app with an exit in force, since choosing a country
-    /// for an app in that mode puts it in the tunnel. Empty in other modes.
+    /// apps, every app with an exit in force, since choosing a country for
+    /// an app in that mode puts it in the tunnel, and every locked app.
+    /// Empty in other modes.
     pub fn effective_included_apps(&self) -> BTreeSet<&AppId> {
         if self.split_mode != SplitMode::IncludeOnly {
             return BTreeSet::new();
@@ -315,6 +352,7 @@ impl AppRoutingSettings {
         self.included_apps
             .iter()
             .chain(self.effective_app_exits().into_keys())
+            .chain(&self.locked_apps)
             .collect()
     }
 
@@ -661,6 +699,96 @@ mod tests {
     }
 
     #[test]
+    fn a_locked_app_is_never_outside_the_tunnel() {
+        let mut settings = routed(SplitMode::Exclude);
+        settings.excluded_apps.insert(app("/locked"));
+        settings.locked_apps.insert(app("/locked"));
+
+        let excluded: Vec<&str> = settings
+            .effective_excluded_apps()
+            .iter()
+            .map(|id| id.as_str())
+            .collect();
+
+        assert_eq!(excluded, ["/excluded"]);
+    }
+
+    #[test]
+    fn nothing_is_excluded_outside_exclude_mode() {
+        assert!(routed(SplitMode::Off).effective_excluded_apps().is_empty());
+        assert!(
+            routed(SplitMode::IncludeOnly)
+                .effective_excluded_apps()
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn a_locked_app_keeps_its_exit_even_when_listed_as_excluded() {
+        let mut settings = routed(SplitMode::Exclude);
+        settings.locked_apps.insert(app("/excluded"));
+
+        let exits: Vec<&str> = settings
+            .effective_app_exits()
+            .keys()
+            .map(|id| id.as_str())
+            .collect();
+
+        assert_eq!(exits, ["/excluded", "/routed"]);
+    }
+
+    #[test]
+    fn a_locked_app_is_in_the_tunnel_in_include_only_mode() {
+        let mut settings = routed(SplitMode::IncludeOnly);
+        settings.app_exits_enabled = false;
+        settings.locked_apps.insert(app("/locked"));
+
+        let included: Vec<&str> = settings
+            .effective_included_apps()
+            .iter()
+            .map(|id| id.as_str())
+            .collect();
+
+        assert_eq!(included, ["/included", "/locked"]);
+    }
+
+    #[test]
+    fn locking_an_app_drops_its_exclusion_and_unlocking_does_not_restore_it() {
+        let mut settings = routed(SplitMode::Exclude);
+
+        settings.lock_app(app("/excluded"));
+        settings.unlock_app(&app("/excluded"));
+
+        assert!(!settings.excluded_apps.contains(&app("/excluded")));
+        assert!(settings.locked_apps.is_empty());
+    }
+
+    #[test]
+    fn the_locked_apps_hold_whatever_the_split_mode() {
+        for mode in [SplitMode::Off, SplitMode::Exclude, SplitMode::IncludeOnly] {
+            let mut settings = routed(mode);
+            settings.lock_app(app("/locked"));
+
+            let locked: Vec<&str> = settings
+                .effective_locked_apps()
+                .iter()
+                .map(|id| id.as_str())
+                .collect();
+
+            assert_eq!(locked, ["/locked"], "{mode:?}");
+        }
+    }
+
+    #[test]
+    fn settings_saved_before_locks_existed_load_with_none() {
+        let json = r#"{"split_mode": "exclude", "excluded_apps": ["/usr/bin/curl"]}"#;
+
+        let settings: AppRoutingSettings = serde_json::from_str(json).unwrap();
+
+        assert!(settings.locked_apps.is_empty());
+    }
+
+    #[test]
     fn reports_one_status_per_exit_in_force_with_its_apps() {
         let mut settings = routed(SplitMode::Exclude);
         settings.set_app_exit(app("/also-routed"), exit("de"));
@@ -702,6 +830,7 @@ mod tests {
                 "included_apps": ["/usr/bin/curl"],
                 "app_exits_enabled": true,
                 "app_exits": { "/usr/bin/curl": { "country": "se", "city": "got" } },
+                "locked_apps": [],
             })
         );
         assert_eq!(
