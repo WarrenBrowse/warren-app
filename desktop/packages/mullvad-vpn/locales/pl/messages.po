@@ -6304,3 +6304,23 @@ msgstr[0] "%(count)d aplikacja zablokowana do połączenia VPN"
 msgstr[1] "%(count)d aplikacje zablokowane do połączenia VPN"
 msgstr[2] "%(count)d aplikacji zablokowanych do połączenia VPN"
 msgstr[3] "%(count)d aplikacji zablokowanych do połączenia VPN"
+
+msgctxt "split-tunneling-view"
+msgid "Open never without the VPN"
+msgstr "Otwórz, nigdy bez VPN"
+
+msgctxt "split-tunneling-view"
+msgid "Until you close it, it has no Internet while the VPN is off. Close it first if it is already open."
+msgstr "Do czasu zamknięcia nie ma dostępu do internetu, gdy VPN jest wyłączony. Najpierw ją zamknij, jeśli jest już otwarta."
+
+msgctxt "split-tunneling-view"
+msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not be locked to the VPN."
+msgstr "Jeśli aplikacja %(applicationName)s już jest uruchomiona, zamknij ją przed uruchomieniem jej stąd. W przeciwnym razie może nie zostać przypisana do VPN."
+
+msgctxt "split-tunneling-view"
+msgid "%(applicationName)s is problematic and can’t be opened locked to the VPN."
+msgstr "Aplikacja %(applicationName)s sprawia problem i nie można jej otworzyć przypisanej do VPN."
+
+msgctxt "split-tunneling-view"
+msgid "Flatpak and Snap apps cannot be opened locked to the VPN"
+msgstr "Aplikacji Flatpak i Snap nie można otworzyć przypisanych do VPN"

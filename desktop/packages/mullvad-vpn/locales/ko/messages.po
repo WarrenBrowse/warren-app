@@ -6231,3 +6231,23 @@ msgctxt "connect-view"
 msgid "%(count)d app blocked until the VPN connects"
 msgid_plural "%(count)d apps blocked until the VPN connects"
 msgstr[0] "%(count)d개 앱이 VPN 연결 전까지 차단됨"
+
+msgctxt "split-tunneling-view"
+msgid "Open never without the VPN"
+msgstr "VPN 없이는 연결 안 하도록 열기"
+
+msgctxt "split-tunneling-view"
+msgid "Until you close it, it has no Internet while the VPN is off. Close it first if it is already open."
+msgstr "닫을 때까지 VPN이 꺼져 있으면 인터넷에 연결되지 않습니다. 이미 열려 있으면 먼저 닫으세요."
+
+msgctxt "split-tunneling-view"
+msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not be locked to the VPN."
+msgstr "이미 실행 중인 경우 여기에서 실행하기 전에 %(applicationName)s을(를) 닫으세요. 그렇지 않으면 VPN에 고정되지 않을 수 있습니다."
+
+msgctxt "split-tunneling-view"
+msgid "%(applicationName)s is problematic and can’t be opened locked to the VPN."
+msgstr "%(applicationName)s에 문제가 있어 VPN에 고정해 열 수 없습니다."
+
+msgctxt "split-tunneling-view"
+msgid "Flatpak and Snap apps cannot be opened locked to the VPN"
+msgstr "Flatpak 및 Snap 앱은 VPN에 고정해 열 수 없습니다"

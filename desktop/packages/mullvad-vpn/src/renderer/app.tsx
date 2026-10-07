@@ -578,6 +578,8 @@ export default class AppRenderer {
     IpcRendererEventChannel.macOsSplitTunneling.needFullDiskPermissions();
   public launchIncludedApplication = (application: ILinuxSplitTunnelingApplication | string) =>
     IpcRendererEventChannel.linuxSplitTunneling.launchIncludedApplication(application);
+  public launchLockedApplication = (application: ILinuxSplitTunnelingApplication | string) =>
+    IpcRendererEventChannel.linuxSplitTunneling.launchLockedApplication(application);
   public getAppRoutingApplications = (updateCaches = false) =>
     IpcRendererEventChannel.appRouting.getApplications(updateCaches);
   public resolveAppRoutingApplication = (application: string) =>

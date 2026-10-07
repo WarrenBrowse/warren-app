@@ -242,9 +242,11 @@ impl Firewall {
 
             log::debug!("Removing netfilter table {}", env.firewall_id());
             // Sweep every environment before reporting: stopping at the first
-            // failure would leave the remaining tables blocking.
+            // failure would leave the remaining tables blocking. The locks
+            // go too: recovery hands the whole machine back.
             if let Err(error) = Self::send_and_process(&batch.finalize())
                 .and_then(|()| self.verify_table_removed(&name))
+                .and_then(|()| remove_app_lock(env.firewall_id()))
             {
                 first_error.get_or_insert(error);
             }
@@ -1710,6 +1712,157 @@ fn lock_down_arp_ignore_sysctl() -> io::Result<()> {
     Ok(())
 }
 
+/// The table of the apps locked to the VPN (docs/app-routing.md section 8):
+/// one of its own, which the policy table's reset never removes, so a lock
+/// holds while no daemon runs.
+fn lock_table_name(firewall_id: &str) -> CString {
+    CString::new(format!("{firewall_id}-locks")).expect("a firewall id has no interior nul")
+}
+
+/// The ancestor level of [`talpid_cgroup::LOCKED_CGROUP_NAME`]: under the
+/// included cgroup, which sits right under the root.
+const LOCKED_CGROUP_LEVEL: u32 = 2;
+
+/// One rule of the lock table, in both its chains: output, where a locked
+/// socket's packet is judged, and input, where one arriving for it is.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum LockRule {
+    AcceptLoopback,
+    AcceptLan(IpNetwork),
+    /// Outbound: fails the app at once rather than letting it time out.
+    Reject,
+    /// Inbound.
+    Drop,
+}
+
+/// The rules of the lock table. While a tunnel is up there are none: the
+/// policy then holds every app that is not excluded to the tunnel (a locked
+/// app never is), and the output hook could not tell where an include-only
+/// packet leaves once the mangle chain rerouted it. Without one, a locked
+/// socket gets loopback and, when shared, the LAN.
+fn lock_rules(tunnel_up: bool, lan: &[IpNetwork], direction: Direction) -> Vec<LockRule> {
+    if tunnel_up {
+        return Vec::new();
+    }
+    let mut rules = vec![LockRule::AcceptLoopback];
+    rules.extend(lan.iter().copied().map(LockRule::AcceptLan));
+    rules.push(match direction {
+        Direction::Out => LockRule::Reject,
+        Direction::In => LockRule::Drop,
+    });
+    rules
+}
+
+/// The LAN a locked app keeps when it is shared: the built-in ranges and
+/// multicast.
+fn lock_lan(allow_lan: bool) -> Vec<IpNetwork> {
+    if !allow_lan {
+        return Vec::new();
+    }
+    talpid_types::net::ALLOWED_LAN_NETS
+        .iter()
+        .chain(ALLOWED_LAN_MULTICAST_NETS.iter())
+        .copied()
+        .collect()
+}
+
+/// Locks the programs in `locked` to the tunnel: replaces the lock table in
+/// one batch. `tunnel_up` says whether a tunnel carries traffic now.
+pub fn set_app_lock(locked: &CGroup2, tunnel_up: bool, allow_lan: bool) -> Result<()> {
+    let name = lock_table_name(warren_product_env::FIREWALL_ID);
+    let table = Table::new(&name, ProtoFamily::Inet);
+    let mut batch = Batch::new();
+    batch.add(&table, nftnl::MsgType::Add);
+    batch.add(&table, nftnl::MsgType::Del);
+    batch.add(&table, nftnl::MsgType::Add);
+
+    let lan = lock_lan(allow_lan);
+    for (direction, chain_name, hook) in [
+        (Direction::Out, OUT_CHAIN_NAME, nftnl::Hook::Out),
+        (Direction::In, IN_CHAIN_NAME, nftnl::Hook::In),
+    ] {
+        let mut chain = Chain::new(chain_name, &table);
+        chain.set_hook(hook, 0);
+        chain.set_type(nftnl::ChainType::Filter);
+        chain.set_policy(nftnl::Policy::Accept);
+        batch.add(&chain, nftnl::MsgType::Add);
+        for lock_rule in lock_rules(tunnel_up, &lan, direction) {
+            let mut rule = Rule::new(&chain);
+            rule.add_expr(&nft_expr!(socket cgroupv2 level LOCKED_CGROUP_LEVEL));
+            rule.add_expr(&nft_expr!(cmp == locked.inode()));
+            let end = match direction {
+                Direction::Out => End::Dst,
+                Direction::In => End::Src,
+            };
+            let verdict = match lock_rule {
+                LockRule::AcceptLoopback => {
+                    check_iface(&mut rule, direction, "lo")?;
+                    Verdict::Accept
+                }
+                LockRule::AcceptLan(net) => {
+                    check_net(&mut rule, end, net);
+                    Verdict::Accept
+                }
+                LockRule::Reject => Verdict::Reject(RejectionType::Icmp(IcmpCode::PortUnreach)),
+                LockRule::Drop => Verdict::Drop,
+            };
+            add_verdict(&mut rule, &verdict);
+            batch.add(&rule, nftnl::MsgType::Add);
+        }
+    }
+    Firewall::send_and_process(&batch.finalize())
+}
+
+/// Removes the lock table of the environment `firewall_id`.
+fn remove_app_lock(firewall_id: &str) -> Result<()> {
+    let name = lock_table_name(firewall_id);
+    let table = Table::new(&name, ProtoFamily::Inet);
+    let mut batch = Batch::new();
+    batch.add(&table, nftnl::MsgType::Add);
+    batch.add(&table, nftnl::MsgType::Del);
+    Firewall::send_and_process(&batch.finalize())
+}
+
+#[cfg(test)]
+mod lock_tests {
+    use super::*;
+
+    #[test]
+    fn with_no_tunnel_a_locked_app_keeps_loopback_alone() {
+        assert_eq!(
+            lock_rules(false, &[], Direction::Out),
+            [LockRule::AcceptLoopback, LockRule::Reject]
+        );
+        assert_eq!(
+            lock_rules(false, &[], Direction::In),
+            [LockRule::AcceptLoopback, LockRule::Drop]
+        );
+    }
+
+    #[test]
+    fn a_shared_lan_stays_open_to_a_locked_app() {
+        let lan = lock_lan(true);
+        let rules = lock_rules(false, &lan, Direction::Out);
+
+        assert_eq!(rules.first(), Some(&LockRule::AcceptLoopback));
+        assert_eq!(rules.last(), Some(&LockRule::Reject));
+        assert!(rules.contains(&LockRule::AcceptLan("192.168.0.0/16".parse().unwrap())));
+        assert!(lock_lan(false).is_empty());
+    }
+
+    #[test]
+    fn a_tunnel_leaves_the_locked_apps_to_the_policy() {
+        assert!(lock_rules(true, &lock_lan(true), Direction::Out).is_empty());
+        assert!(lock_rules(true, &[], Direction::In).is_empty());
+    }
+
+    #[test]
+    fn each_environment_locks_in_a_table_of_its_own() {
+        assert_eq!(lock_table_name("mullvad").to_str(), Ok("mullvad-locks"));
+        assert_ne!(lock_table_name("mullvad"), lock_table_name("warren-beta"));
+    }
+}
+
 #[cfg(test)]
 mod include_only_tests {
     use super::*;
@@ -1915,5 +2068,114 @@ mod drop_tests {
             .reset_policy()
             .unwrap();
         assert!(kept);
+    }
+}
+
+/// The lock table against the real kernel. Each test moves its own process
+/// into a cgroup two levels down, as the locked programs are, then back.
+#[cfg(test)]
+mod lock_kernel_tests {
+    use super::*;
+    use std::net::{SocketAddr, TcpStream};
+    use std::sync::Mutex;
+    use std::time::Duration;
+
+    /// One process, one cgroup: the tests take turns.
+    static CGROUP: Mutex<()> = Mutex::new(());
+
+    /// Off-link, so a refusal can only be the lock's: nothing answers there
+    /// in time, and a connection that is not refused times out instead.
+    const PROBE: &str = "192.0.2.1:9";
+
+    struct InLockedCgroup {
+        root: CGroup2,
+        locked: CGroup2,
+    }
+
+    impl InLockedCgroup {
+        fn enter() -> Self {
+            let root = CGroup2::open(talpid_cgroup::CGROUP2_DEFAULT_MOUNT_PATH).unwrap();
+            let locked = root
+                .create_or_open_child("warren-lock-test")
+                .unwrap()
+                .create_or_open_child("locked")
+                .unwrap();
+            locked.add_pid(nix::unistd::getpid()).unwrap();
+            InLockedCgroup { root, locked }
+        }
+    }
+
+    impl Drop for InLockedCgroup {
+        fn drop(&mut self) {
+            let _ = self.root.add_pid(nix::unistd::getpid());
+            let _ = remove_app_lock(warren_product_env::FIREWALL_ID);
+        }
+    }
+
+    fn refused_by_the_lock() -> bool {
+        let probe: SocketAddr = PROBE.parse().unwrap();
+        match TcpStream::connect_timeout(&probe, Duration::from_millis(1500)) {
+            Err(error) => error.kind() == io::ErrorKind::ConnectionRefused,
+            Ok(_) => false,
+        }
+    }
+
+    #[test]
+    #[ignore = "needs root: moves this process between cgroups and edits nftables"]
+    fn a_locked_program_reaches_nothing_with_no_tunnel_and_is_released_by_one() {
+        let _turn = CGROUP.lock().unwrap_or_else(|poison| poison.into_inner());
+        let cgroup = InLockedCgroup::enter();
+        assert!(
+            !refused_by_the_lock(),
+            "something else refuses the probe already"
+        );
+
+        set_app_lock(&cgroup.locked, false, false).unwrap();
+        let locked = refused_by_the_lock();
+        set_app_lock(&cgroup.locked, true, false).unwrap();
+        let released = !refused_by_the_lock();
+
+        assert!(
+            locked,
+            "a locked program reached the network with no tunnel"
+        );
+        assert!(released, "the lock outlived the tunnel");
+    }
+
+    #[test]
+    #[ignore = "needs root: moves this process between cgroups and edits nftables"]
+    fn the_lock_outlives_a_reset_of_the_policy_and_recovery_removes_it() {
+        let _turn = CGROUP.lock().unwrap_or_else(|poison| poison.into_inner());
+        let cgroup = InLockedCgroup::enter();
+        set_app_lock(&cgroup.locked, false, false).unwrap();
+
+        Firewall::new(0, None, None)
+            .unwrap()
+            .reset_policy()
+            .unwrap();
+        let kept = refused_by_the_lock();
+        Firewall::new(0, None, None)
+            .unwrap()
+            .reset_policy_all_generations()
+            .unwrap();
+        let removed = !refused_by_the_lock();
+
+        assert!(kept, "a policy reset lifted the lock");
+        assert!(removed, "recovery left the lock");
+    }
+
+    #[test]
+    #[ignore = "needs root: moves this process between cgroups and edits nftables"]
+    fn a_program_outside_the_locked_cgroup_is_never_held() {
+        let _turn = CGROUP.lock().unwrap_or_else(|poison| poison.into_inner());
+        let cgroup = InLockedCgroup::enter();
+        set_app_lock(&cgroup.locked, false, false).unwrap();
+
+        cgroup.root.add_pid(nix::unistd::getpid()).unwrap();
+
+        assert!(
+            !refused_by_the_lock(),
+            "the lock held a program it does not name"
+        );
     }
 }

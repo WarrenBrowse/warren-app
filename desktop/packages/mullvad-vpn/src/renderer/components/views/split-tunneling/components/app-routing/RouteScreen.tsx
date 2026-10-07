@@ -239,78 +239,130 @@ function launchPath(target: RoutingTarget): string {
 
 type LinuxLaunchProps = {
   target: RoutingTarget;
-  into: 'outside' | 'vpn';
+  into: 'outside' | 'vpn' | 'locked';
   supported: boolean;
 };
 
+// What each way of opening an app is called and says when it cannot run.
+function linuxLaunchCopy(into: LinuxLaunchProps['into']) {
+  switch (into) {
+    case 'outside':
+      return {
+        // TRANSLATORS: Linux: opens the app now, outside the VPN.
+        title: messages.pgettext('split-tunneling-view', 'Open outside the VPN'),
+        subtitle: messages.pgettext(
+          'split-tunneling-view',
+          'Until you close it. Close it first if it is already open.',
+        ),
+        alreadyRunning: messages.pgettext(
+          'split-tunneling-view',
+          'If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not be excluded from the VPN tunnel.',
+        ),
+        problematic: messages.pgettext(
+          'split-tunneling-view',
+          '%(applicationName)s is problematic and can’t be excluded from the VPN tunnel.',
+        ),
+      };
+    case 'vpn':
+      return {
+        // TRANSLATORS: Linux: opens the app now, through the VPN.
+        title: messages.pgettext('split-tunneling-view', 'Open through the VPN'),
+        subtitle: messages.pgettext(
+          'split-tunneling-view',
+          'Until you close it. Close it first if it is already open.',
+        ),
+        alreadyRunning: messages.pgettext(
+          'split-tunneling-view',
+          'If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not use the VPN.',
+        ),
+        problematic: messages.pgettext(
+          'split-tunneling-view',
+          '%(applicationName)s is problematic and can’t be launched through the VPN alone.',
+        ),
+      };
+    case 'locked':
+      return {
+        // TRANSLATORS: Linux: opens the app now, blocked whenever the VPN is
+        // TRANSLATORS: off ("Never without the VPN" on the other platforms).
+        title: messages.pgettext('split-tunneling-view', 'Open never without the VPN'),
+        subtitle: messages.pgettext(
+          'split-tunneling-view',
+          'Until you close it, it has no Internet while the VPN is off. Close it first if it is already open.',
+        ),
+        alreadyRunning: messages.pgettext(
+          'split-tunneling-view',
+          'If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not be locked to the VPN.',
+        ),
+        problematic: messages.pgettext(
+          'split-tunneling-view',
+          '%(applicationName)s is problematic and can’t be opened locked to the VPN.',
+        ),
+      };
+  }
+}
+
 function LinuxLaunchCard({ target, into, supported }: LinuxLaunchProps) {
-  const { launchExcludedApplication, launchIncludedApplication } = useAppContext();
+  const { launchExcludedApplication, launchIncludedApplication, launchLockedApplication } =
+    useAppContext();
   const [error, setError] = React.useState<string>();
   const closeError = React.useCallback(() => setError(undefined), []);
   const warning = asApplication(target)?.launchWarning;
+  const limitation = asApplication(target)?.routingLimitation;
+  // Flatpak and Snap start the app in a cgroup of their own, out of the one
+  // Warren opened it in, so a lock would not hold.
+  const sandboxed = into === 'locked' && (limitation === 'flatpak' || limitation === 'snap');
   const problematic = warning === 'launches-elsewhere';
+  const copy = linuxLaunchCopy(into);
 
   const launch = React.useCallback(async () => {
-    const run = into === 'outside' ? launchExcludedApplication : launchIncludedApplication;
+    const run =
+      into === 'outside'
+        ? launchExcludedApplication
+        : into === 'locked'
+          ? launchLockedApplication
+          : launchIncludedApplication;
     const result = await run(launchPath(target));
     if ('error' in result) {
       setError(result.error);
     }
-  }, [into, launchExcludedApplication, launchIncludedApplication, target]);
+  }, [into, launchExcludedApplication, launchIncludedApplication, launchLockedApplication, target]);
 
-  let subtitle = messages.pgettext(
-    'split-tunneling-view',
-    'Until you close it. Close it first if it is already open.',
-  );
+  let subtitle = copy.subtitle;
   let warns = false;
   if (!supported) {
     subtitle = messages.pgettext('split-tunneling-view', 'Not available on this system');
+  } else if (sandboxed) {
+    subtitle = messages.pgettext(
+      'split-tunneling-view',
+      'Flatpak and Snap apps cannot be opened locked to the VPN',
+    );
   } else if (warning === 'launches-in-existing-process') {
     // A browser that is already open takes the new window into its running
     // process, which stays where it was: say it plainly, in the warning colour.
     warns = true;
-    subtitle = sprintf(
-      into === 'outside'
-        ? messages.pgettext(
-            'split-tunneling-view',
-            'If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not be excluded from the VPN tunnel.',
-          )
-        : messages.pgettext(
-            'split-tunneling-view',
-            'If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not use the VPN.',
-          ),
-      { applicationName: target.name },
-    );
+    subtitle = sprintf(copy.alreadyRunning, { applicationName: target.name });
   } else if (problematic) {
-    subtitle = sprintf(
-      into === 'outside'
-        ? messages.pgettext(
-            'split-tunneling-view',
-            '%(applicationName)s is problematic and can’t be excluded from the VPN tunnel.',
-          )
-        : messages.pgettext(
-            'split-tunneling-view',
-            '%(applicationName)s is problematic and can’t be launched through the VPN alone.',
-          ),
-      { applicationName: target.name },
-    );
+    subtitle = sprintf(copy.problematic, { applicationName: target.name });
   }
+
+  const glyph =
+    into === 'outside' ? (
+      <OutsideGlyph size={26} />
+    ) : into === 'locked' ? (
+      <LockGlyph size={26} />
+    ) : (
+      <ShieldGlyph size={26} />
+    );
 
   return (
     <>
       <OptionCard
-        testId={into === 'outside' ? 'route-open-outside' : 'route-open-vpn'}
-        glyph={into === 'outside' ? <OutsideGlyph size={26} /> : <ShieldGlyph size={26} />}
-        title={
-          into === 'outside'
-            ? // TRANSLATORS: Linux: opens the app now, outside the VPN.
-              messages.pgettext('split-tunneling-view', 'Open outside the VPN')
-            : // TRANSLATORS: Linux: opens the app now, through the VPN.
-              messages.pgettext('split-tunneling-view', 'Open through the VPN')
-        }
+        testId={`route-open-${into === 'vpn' ? 'vpn' : into}`}
+        glyph={glyph}
+        title={copy.title}
         subtitle={subtitle}
         warns={warns}
-        disabled={!supported || problematic}
+        disabled={!supported || problematic || sandboxed}
         onClick={launch}
       />
       <ModalAlert
@@ -485,6 +537,10 @@ export function RouteScreen() {
             disabled={busy || outsideReason !== undefined}
             onClick={chooseOutside}
           />
+        )}
+
+        {linux && (
+          <LinuxLaunchCard target={target} into="locked" supported={availability === 'available'} />
         )}
 
         {appLockSupported(platform) && (

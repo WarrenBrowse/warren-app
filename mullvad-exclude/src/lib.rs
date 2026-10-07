@@ -3,6 +3,24 @@
 //! apps" is on. Both are setuid root and never talk to the daemon: they put
 //! themselves in the daemon's cgroup, drop root, and exec the program.
 
+/// The option of `warren-include` that opens the program locked to the VPN
+/// (docs/app-routing.md section 8): blocked whenever no tunnel carries it.
+pub const LOCKED_FLAG: &str = "--locked";
+
+/// Whether the arguments open the program locked, and the program and its
+/// arguments: the option comes first, and only `warren-include` takes it.
+#[cfg_attr(not(any(target_os = "linux", test)), expect(dead_code))]
+fn split_locked_flag(
+    launch: Launch,
+    mut args: Vec<std::ffi::OsString>,
+) -> (bool, Vec<std::ffi::OsString>) {
+    let locked = launch == Launch::Include && args.first().is_some_and(|arg| arg == LOCKED_FLAG);
+    if locked {
+        args.remove(0);
+    }
+    (locked, args)
+}
+
 /// Which way a launcher splits the program it runs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Launch {
@@ -40,6 +58,24 @@ mod tests {
     use super::*;
 
     const OWNED_BY_1000: &str = r#"{"version":1,"owner":{"uid":1000}}"#;
+
+    #[test]
+    fn the_locked_option_comes_first_and_only_for_include() {
+        let args = |raw: &[&str]| raw.iter().map(std::ffi::OsString::from).collect::<Vec<_>>();
+
+        assert_eq!(
+            split_locked_flag(Launch::Include, args(&["--locked", "firefox", "--locked"])),
+            (true, args(&["firefox", "--locked"]))
+        );
+        assert_eq!(
+            split_locked_flag(Launch::Include, args(&["firefox", "--locked"])),
+            (false, args(&["firefox", "--locked"]))
+        );
+        assert_eq!(
+            split_locked_flag(Launch::Exclude, args(&["--locked", "firefox"])),
+            (false, args(&["--locked", "firefox"]))
+        );
+    }
 
     #[test]
     fn root_and_the_owner_may_split() {
@@ -81,8 +117,8 @@ mod inner {
         path::Path,
     };
     use talpid_cgroup::{
-        CGROUP2_DEFAULT_MOUNT_PATH, INCLUDE_CGROUP_NAME, SPLIT_TUNNEL_CGROUP_NAME,
-        find_net_cls_mount, v1::CGroup1, v2::CGroup2,
+        CGROUP2_DEFAULT_MOUNT_PATH, INCLUDE_CGROUP_NAME, LOCKED_CGROUP_NAME,
+        SPLIT_TUNNEL_CGROUP_NAME, find_net_cls_mount, v1::CGroup1, v2::CGroup2,
     };
 
     #[derive(thiserror::Error, Debug)]
@@ -128,7 +164,12 @@ mod inner {
                 let program = args
                     .next()
                     .unwrap_or_else(|| env!("CARGO_PKG_NAME").to_string());
-                eprintln!("Usage: {program} COMMAND [ARGS]");
+                match launch {
+                    Launch::Include => {
+                        eprintln!("Usage: {program} [{}] COMMAND [ARGS]", super::LOCKED_FLAG)
+                    }
+                    Launch::Exclude => eprintln!("Usage: {program} COMMAND [ARGS]"),
+                }
                 std::process::exit(1);
             }
             e => {
@@ -158,12 +199,12 @@ mod inner {
     }
 
     fn run(launch: Launch) -> Result<Infallible, Error> {
-        let mut args_iter = env::args_os().skip(1);
-        let program = args_iter.next().ok_or(Error::InvalidArguments)?;
+        let (locked, args) = super::split_locked_flag(launch, env::args_os().skip(1).collect());
+        let program = args.first().ok_or(Error::InvalidArguments)?;
         let program = CString::new(program.as_bytes()).map_err(Error::ArgumentNul)?;
 
-        let args: Vec<CString> = env::args_os()
-            .skip(1)
+        let args: Vec<CString> = args
+            .iter()
             .map(|arg| CString::new(arg.as_bytes()))
             .collect::<Result<Vec<CString>, NulError>>()
             .map_err(Error::ArgumentNul)?;
@@ -175,7 +216,7 @@ mod inner {
 
         match launch {
             Launch::Exclude => exclude(getpid())?,
-            Launch::Include => include(getpid())?,
+            Launch::Include => include(getpid(), locked)?,
         }
 
         // Drop root privileges, the group first: once the uid is no longer
@@ -201,8 +242,15 @@ mod inner {
     /// daemon opened, so a program in any other cgroup would not be tunneled.
     /// A missing cgroup fails the launch instead of running the program
     /// outside the tunnel.
-    fn include(pid: Pid) -> Result<(), Error> {
-        let path = Path::new(CGROUP2_DEFAULT_MOUNT_PATH).join(INCLUDE_CGROUP_NAME);
+    ///
+    /// Locked, it joins the cgroup of the locked programs inside it instead,
+    /// which the daemon creates too, with the same refusal when it is missing:
+    /// a program asked to be locked must never run unlocked.
+    fn include(pid: Pid, locked: bool) -> Result<(), Error> {
+        let mut path = Path::new(CGROUP2_DEFAULT_MOUNT_PATH).join(INCLUDE_CGROUP_NAME);
+        if locked {
+            path.push(LOCKED_CGROUP_NAME);
+        }
         let cgroup = CGroup2::open(path).map_err(Error::NoIncludeCGroup)?;
         Ok(cgroup.add_pid(pid)?)
     }

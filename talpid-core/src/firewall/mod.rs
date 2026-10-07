@@ -38,6 +38,8 @@ use crate::tunnel_state_machine::LinuxNetworkingIdentifiers;
 use talpid_cgroup::v2::CGroup2;
 
 pub use self::imp::Error;
+#[cfg(target_os = "linux")]
+pub use self::imp::set_app_lock;
 #[cfg(windows)]
 pub use self::imp::set_locked_apps;
 

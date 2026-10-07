@@ -83,6 +83,26 @@ test.describe('App routing on Linux', () => {
     await page.keyboard.press('Escape');
   });
 
+  test('opens an app never without the VPN, which a sandboxed app cannot be', async () => {
+    await openRoute('Signal');
+    // Linux keeps no list: the lock is the way the app is opened, no switch.
+    await expect(page.getByTestId('route-lock')).toHaveCount(0);
+    const [launched] = await Promise.all([
+      util.ipc.linuxSplitTunneling.launchLockedApplication.expect({ success: true }),
+      page.getByTestId('route-open-locked').click(),
+    ]);
+    expect(launched).toBe(SIGNAL.launchPath);
+    await page.screenshot({ path: `${SCREENSHOTS}/19-linux-locked.png` });
+    await page.keyboard.press('Escape');
+
+    await openRoute('GIMP');
+    await expect(page.getByTestId('route-open-locked')).toBeDisabled();
+    await expect(page.getByTestId('route-open-locked')).toContainText(
+      'Flatpak and Snap apps cannot be opened locked to the VPN',
+    );
+    await page.keyboard.press('Escape');
+  });
+
   test('says why a sandboxed or scripted app takes no country', async () => {
     await openRoute('GIMP');
     await expect(page.getByTestId('route-country')).toBeDisabled();

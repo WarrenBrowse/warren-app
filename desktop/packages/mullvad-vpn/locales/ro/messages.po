@@ -5415,3 +5415,23 @@ msgid_plural "%(count)d apps blocked until the VPN connects"
 msgstr[0] "%(count)d aplicație blocată până la conectarea VPN-ului"
 msgstr[1] "%(count)d aplicații blocate până la conectarea VPN-ului"
 msgstr[2] "%(count)d de aplicații blocate până la conectarea VPN-ului"
+
+msgctxt "split-tunneling-view"
+msgid "Open never without the VPN"
+msgstr "Deschide, niciodată fără VPN"
+
+msgctxt "split-tunneling-view"
+msgid "Until you close it, it has no Internet while the VPN is off. Close it first if it is already open."
+msgstr "Până o închideți, nu are internet cât timp VPN-ul este oprit. Închideți-o mai întâi dacă este deja deschisă."
+
+msgctxt "split-tunneling-view"
+msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not be locked to the VPN."
+msgstr "Dacă rulează deja, închideți %(applicationName)s înainte de a lansa aplicația de aici. În caz contrar, s-ar putea să nu fie legată de VPN."
+
+msgctxt "split-tunneling-view"
+msgid "%(applicationName)s is problematic and can’t be opened locked to the VPN."
+msgstr "Aplicația %(applicationName)s este problematică și nu poate fi deschisă legată de VPN."
+
+msgctxt "split-tunneling-view"
+msgid "Flatpak and Snap apps cannot be opened locked to the VPN"
+msgstr "Aplicațiile Flatpak și Snap nu pot fi deschise legate de VPN"

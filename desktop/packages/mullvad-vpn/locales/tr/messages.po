@@ -6264,3 +6264,23 @@ msgid "%(count)d app blocked until the VPN connects"
 msgid_plural "%(count)d apps blocked until the VPN connects"
 msgstr[0] "%(count)d uygulama VPN bağlanana kadar engellendi"
 msgstr[1] "%(count)d uygulama VPN bağlanana kadar engellendi"
+
+msgctxt "split-tunneling-view"
+msgid "Open never without the VPN"
+msgstr "Asla VPN olmadan değil, aç"
+
+msgctxt "split-tunneling-view"
+msgid "Until you close it, it has no Internet while the VPN is off. Close it first if it is already open."
+msgstr "Kapatana kadar, VPN kapalıyken internete erişemez. Zaten açıksa önce kapatın."
+
+msgctxt "split-tunneling-view"
+msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not be locked to the VPN."
+msgstr "Zaten çalışıyorsa, buradan başlatmadan önce %(applicationName)s uygulamasını kapatın. Aksi takdirde VPN'e kilitlenmeyebilir."
+
+msgctxt "split-tunneling-view"
+msgid "%(applicationName)s is problematic and can’t be opened locked to the VPN."
+msgstr "%(applicationName)s uygulaması sorunlu ve VPN'e kilitli olarak açılamıyor."
+
+msgctxt "split-tunneling-view"
+msgid "Flatpak and Snap apps cannot be opened locked to the VPN"
+msgstr "Flatpak ve Snap uygulamaları VPN'e kilitli olarak açılamaz"

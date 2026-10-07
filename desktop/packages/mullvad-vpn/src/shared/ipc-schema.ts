@@ -544,6 +544,12 @@ export const ipcSchema = {
       ILinuxSplitTunnelingApplication | string,
       LaunchApplicationResult
     >(),
+    // Launches a program locked to the VPN, blocked whenever no tunnel
+    // carries it, through `warren-include --locked`.
+    launchLockedApplication: invoke<
+      ILinuxSplitTunnelingApplication | string,
+      LaunchApplicationResult
+    >(),
   },
   macOsSplitTunneling: {
     needFullDiskPermissions: invoke<void, boolean>(),

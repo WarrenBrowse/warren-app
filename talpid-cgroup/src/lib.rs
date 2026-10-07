@@ -20,6 +20,11 @@ pub const SPLIT_TUNNEL_CGROUP_NAME: &str = "mullvad-exclusions";
 /// does not know.
 pub const INCLUDE_CGROUP_NAME: &str = "warren-inclusions";
 
+/// The cgroup2, under [`INCLUDE_CGROUP_NAME`], of the programs opened locked
+/// to the VPN (`warren-include --locked`): blocked whenever no tunnel carries
+/// them. Under the included cgroup, so include-only tunnels them too.
+pub const LOCKED_CGROUP_NAME: &str = "warren-locked";
+
 /// The path where linux normally mounts the cgroup2 filesystem.
 pub const CGROUP2_DEFAULT_MOUNT_PATH: &str = "/sys/fs/cgroup";
 

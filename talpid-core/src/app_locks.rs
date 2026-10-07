@@ -1,4 +1,6 @@
 //! Apps locked to the VPN: blocked whenever the tunnel does not carry them.
+//! Windows holds a list of executables ([`WinFwEnforcer`]); Linux the cgroup
+//! the locked programs are opened in ([`NftEnforcer`]).
 //!
 //! The lock belongs to no tunnel state. It is installed once and follows the
 //! tunnel interface, which only the connected state has: every other state,
@@ -139,6 +141,45 @@ impl Enforcer for WinFwEnforcer {
         crate::firewall::set_locked_apps(
             &lock.apps,
             lock.tunnel_interface.as_deref(),
+            lock.allow_lan,
+        )
+    }
+}
+
+/// The lock held by nftables over the cgroup the locked programs are opened
+/// in (`warren-include --locked`): the apps are the cgroup's, so [`Lock::apps`]
+/// plays no part, and only whether a tunnel is up and the LAN shared do.
+#[cfg(target_os = "linux")]
+pub struct NftEnforcer {
+    locked: talpid_cgroup::v2::CGroup2,
+}
+
+#[cfg(target_os = "linux")]
+impl NftEnforcer {
+    /// Opens the cgroup of the locked programs, creating it (and the included
+    /// cgroup it sits in) when it is missing.
+    ///
+    /// # Errors
+    ///
+    /// When cgroup2 is not mounted where it is expected, or cannot be written.
+    pub fn new() -> Result<Self, talpid_cgroup::Error> {
+        // The fixed mount, as `warren-include` uses: it runs setuid root and
+        // trusts nothing of its caller's environment.
+        let locked = talpid_cgroup::v2::CGroup2::open(talpid_cgroup::CGROUP2_DEFAULT_MOUNT_PATH)?
+            .create_or_open_child(talpid_cgroup::INCLUDE_CGROUP_NAME)?
+            .create_or_open_child(talpid_cgroup::LOCKED_CGROUP_NAME)?;
+        Ok(Self { locked })
+    }
+}
+
+#[cfg(target_os = "linux")]
+impl Enforcer for NftEnforcer {
+    type Error = crate::firewall::Error;
+
+    fn enforce(&mut self, lock: &Lock) -> Result<(), Self::Error> {
+        crate::firewall::set_app_lock(
+            &self.locked,
+            lock.tunnel_interface.is_some(),
             lock.allow_lan,
         )
     }

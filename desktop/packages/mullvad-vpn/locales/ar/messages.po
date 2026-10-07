@@ -6331,3 +6331,23 @@ msgstr[2] "تطبيقان (%(count)d) محظوران حتى يتصل VPN"
 msgstr[3] "%(count)d تطبيقات محظورة حتى يتصل VPN"
 msgstr[4] "%(count)d تطبيقًا محظورًا حتى يتصل VPN"
 msgstr[5] "%(count)d تطبيق محظور حتى يتصل VPN"
+
+msgctxt "split-tunneling-view"
+msgid "Open never without the VPN"
+msgstr "فتح دون الخروج من VPN أبدًا"
+
+msgctxt "split-tunneling-view"
+msgid "Until you close it, it has no Internet while the VPN is off. Close it first if it is already open."
+msgstr "حتى تغلقه، لا يصل إلى الإنترنت أثناء إيقاف VPN. أغلقه أولًا إن كان مفتوحًا."
+
+msgctxt "split-tunneling-view"
+msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not be locked to the VPN."
+msgstr "إذا كان التطبيق قيد التشغيل بالفعل، فأغلق %(applicationName)s قبل تشغيله من هنا. وإلا، فقد لا يُقفل على VPN."
+
+msgctxt "split-tunneling-view"
+msgid "%(applicationName)s is problematic and can’t be opened locked to the VPN."
+msgstr "التطبيق %(applicationName)s يُمثِّل مشكلة ولا يمكن فتحه مقفلًا على VPN."
+
+msgctxt "split-tunneling-view"
+msgid "Flatpak and Snap apps cannot be opened locked to the VPN"
+msgstr "لا يمكن فتح تطبيقات Flatpak وSnap مقفلة على VPN"

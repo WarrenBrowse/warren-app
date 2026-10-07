@@ -3620,6 +3620,10 @@ msgctxt "split-tunneling-view"
 msgid "%(applicationName)s is problematic and can’t be launched through the VPN alone."
 msgstr ""
 
+msgctxt "split-tunneling-view"
+msgid "%(applicationName)s is problematic and can’t be opened locked to the VPN."
+msgstr ""
+
 #. Accessibility description of a rule locked to the VPN.
 #. Available placeholders:
 #. %(route)s - its route: "Through the VPN" or the country
@@ -3742,6 +3746,10 @@ msgctxt "split-tunneling-view"
 msgid "Find another app"
 msgstr ""
 
+msgctxt "split-tunneling-view"
+msgid "Flatpak and Snap apps cannot be opened locked to the VPN"
+msgstr ""
+
 #. Line under a Flatpak app in the "Country per app" list.
 msgctxt "split-tunneling-view"
 msgid "Flatpak apps cannot use a country yet"
@@ -3749,6 +3757,10 @@ msgstr ""
 
 msgctxt "split-tunneling-view"
 msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not be excluded from the VPN tunnel."
+msgstr ""
+
+msgctxt "split-tunneling-view"
+msgid "If it’s already running, close %(applicationName)s before launching it from here. Otherwise it might not be locked to the VPN."
 msgstr ""
 
 msgctxt "split-tunneling-view"
@@ -3820,6 +3832,10 @@ msgstr ""
 
 msgctxt "split-tunneling-view"
 msgid "Only the apps you choose will use the VPN. The rest of this device will not be protected."
+msgstr ""
+
+msgctxt "split-tunneling-view"
+msgid "Open never without the VPN"
 msgstr ""
 
 msgctxt "split-tunneling-view"
@@ -3955,6 +3971,10 @@ msgstr ""
 
 msgctxt "split-tunneling-view"
 msgid "Unavailable"
+msgstr ""
+
+msgctxt "split-tunneling-view"
+msgid "Until you close it, it has no Internet while the VPN is off. Close it first if it is already open."
 msgstr ""
 
 msgctxt "split-tunneling-view"

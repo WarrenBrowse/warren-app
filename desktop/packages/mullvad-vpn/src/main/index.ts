@@ -1682,6 +1682,11 @@ class ApplicationMain
     IpcMainEventChannel.linuxSplitTunneling.handleLaunchIncludedApplication((application) => {
       return this.linuxSplitTunneling!.launchApplication(application, 'warren-include');
     });
+    IpcMainEventChannel.linuxSplitTunneling.handleLaunchLockedApplication((application) => {
+      return this.linuxSplitTunneling!.launchApplication(application, 'warren-include', [
+        '--locked',
+      ]);
+    });
 
     IpcMainEventChannel.appRouting.handleGetApplications(async (updateCaches) => {
       if (this.linuxSplitTunneling) {

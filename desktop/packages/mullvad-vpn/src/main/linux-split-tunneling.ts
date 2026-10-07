@@ -43,6 +43,8 @@ export type LinuxLauncher = 'warren-exclude' | 'warren-include';
 export async function launchApplication(
   app: ILinuxSplitTunnelingApplication | string,
   launcher: LinuxLauncher = 'warren-exclude',
+  // Options of the launcher itself, before the program: `--locked`.
+  launcherOptions: string[] = [],
 ): Promise<LaunchApplicationResult> {
   let excludeArguments: string[];
   try {
@@ -54,7 +56,9 @@ export async function launchApplication(
 
   return new Promise((resolve, _reject) => {
     const scheduler = new Scheduler();
-    const proc = child_process.spawn(launcher, excludeArguments, { detached: true });
+    const proc = child_process.spawn(launcher, [...launcherOptions, ...excludeArguments], {
+      detached: true,
+    });
 
     // If the process exits within 200 milliseconds the user is notified that it failed to launch.
     scheduler.schedule(() => {
