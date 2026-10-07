@@ -594,6 +594,10 @@ export default class AppRenderer {
     IpcRendererEventChannel.appRouting.setAppExit({ application, exit });
   public clearAppExit = (application: string) =>
     IpcRendererEventChannel.appRouting.clearAppExit(application);
+  public addLockedApp = (application: ISplitTunnelingApplication | string) =>
+    IpcRendererEventChannel.appRouting.addLockedApp(application);
+  public removeLockedApp = (application: string) =>
+    IpcRendererEventChannel.appRouting.removeLockedApp(application);
   public setObfuscationSettings = (obfuscationSettings: ObfuscationSettings) =>
     IpcRendererEventChannel.settings.setObfuscationSettings(obfuscationSettings);
   public setEnableDaita = (value: boolean) =>

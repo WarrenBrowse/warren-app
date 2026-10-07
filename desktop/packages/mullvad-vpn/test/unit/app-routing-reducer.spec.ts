@@ -22,6 +22,7 @@ describe('settings reducer, app routing slice', () => {
       includedApps: [],
       appExitsEnabled: false,
       appExits: [],
+      lockedApps: [],
     });
     expect(initial.appRouteStatus).toEqual([]);
     expect(initial.appRoutingApplications).toEqual([]);
@@ -34,6 +35,7 @@ describe('settings reducer, app routing slice', () => {
       includedApps: ['/usr/bin/firefox'],
       appExitsEnabled: true,
       appExits: [{ app: '/usr/bin/slack', exit: { country: 'se' } }],
+      lockedApps: ['/usr/bin/firefox'],
     };
 
     const next = settingsReducer(initial, settingsActions.updateAppRouting(routing));

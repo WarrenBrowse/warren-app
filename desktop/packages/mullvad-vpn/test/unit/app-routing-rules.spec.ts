@@ -34,6 +34,7 @@ function settings(overrides: Partial<AppRoutingSettings> = {}): AppRoutingSettin
     includedApps: [],
     appExitsEnabled: true,
     appExits: [],
+    lockedApps: [],
     ...overrides,
   };
 }

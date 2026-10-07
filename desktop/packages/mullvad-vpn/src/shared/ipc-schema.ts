@@ -586,5 +586,8 @@ export const ipcSchema = {
       void
     >(),
     clearAppExit: invoke<string, void>(),
+    // Apps never outside the VPN, blocked whenever it does not carry them.
+    addLockedApp: invoke<ISplitTunnelingApplication | string, void>(),
+    removeLockedApp: invoke<string, void>(),
   },
 };

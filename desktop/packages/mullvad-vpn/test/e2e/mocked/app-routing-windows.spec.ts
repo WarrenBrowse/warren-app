@@ -57,6 +57,7 @@ test.describe('App routing on Windows', () => {
         includedApps: [],
         appExitsEnabled: true,
         appExits: [],
+        lockedApps: [],
       },
     });
     // Windows paths compare without case, like the daemon compares them.

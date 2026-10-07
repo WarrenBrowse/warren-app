@@ -1043,6 +1043,8 @@ export type AppRoutingSettings = {
   includedApps: string[];
   appExitsEnabled: boolean;
   appExits: AppExit[];
+  // Apps never outside the VPN, and blocked whenever it does not carry them.
+  lockedApps: string[];
 };
 
 export type AppRouteState = 'connecting' | 'connected' | 'unavailable';

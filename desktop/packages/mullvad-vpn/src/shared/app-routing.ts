@@ -45,8 +45,25 @@ export function appExitFor(
   return routing.appExits.find((entry) => sameAppId(entry.app, app, platform))?.exit;
 }
 
+// Linux takes no list for either split mode: an app leaves or joins the VPN
+// when Warren opens it (warren-exclude, warren-include), and is locked to it
+// the same way.
+function listsApply(platform: Platform): boolean {
+  return platform !== 'linux';
+}
+
+// Locked to the VPN: never outside it, and blocked whenever it does not
+// carry the app. The lock wins over an exclusion, as in the daemon.
+export function isAppLocked(routing: AppRoutingSettings, app: string, platform: Platform): boolean {
+  return listsApply(platform) && includesApp(routing.lockedApps, app, platform);
+}
+
 function isBypassing(routing: AppRoutingSettings, app: string, platform: Platform): boolean {
-  return routing.splitMode === 'exclude' && includesApp(routing.excludedApps, app, platform);
+  return (
+    routing.splitMode === 'exclude' &&
+    includesApp(routing.excludedApps, app, platform) &&
+    !isAppLocked(routing, app, platform)
+  );
 }
 
 // The exits in force after the precedence rules of docs/app-routing.md: none
@@ -74,14 +91,19 @@ export function appExitDisplayState(
   return routing.appExitsEnabled ? 'active' : 'paused';
 }
 
-// The apps tunneled while include-only is on: the included apps and every app
-// with a country in force, since choosing a country puts an app in the VPN.
+// The apps tunneled while include-only is on: the included apps, every app
+// with a country in force, since choosing a country puts an app in the VPN,
+// and every locked app.
 export function effectiveIncludedApps(routing: AppRoutingSettings, platform: Platform): string[] {
   if (routing.splitMode !== 'include-only') {
     return [];
   }
   const apps = [...routing.includedApps];
-  for (const { app } of effectiveAppExits(routing, platform)) {
+  const candidates = [
+    ...effectiveAppExits(routing, platform).map(({ app }) => app),
+    ...(listsApply(platform) ? routing.lockedApps : []),
+  ];
+  for (const app of candidates) {
     if (!includesApp(apps, app, platform)) {
       apps.push(app);
     }
@@ -103,6 +125,8 @@ export type AppRoutingSummary = {
   // the VPN when it is opened from Warren rather than from a list.
   vpnOnlyForCount?: number;
   appsWithOwnCountry: number;
+  // The apps locked to the VPN, blocked whenever it does not carry them.
+  lockedCount: number;
   // A route that cannot run for a reason of its own. A route waiting for the
   // main connection is not a fault; one waiting for a free route is, since
   // its apps do not leave from their country meanwhile.
@@ -122,6 +146,7 @@ export function appRoutingSummary(
         ? effectiveIncludedApps(routing, platform).length
         : undefined,
     appsWithOwnCountry: effectiveAppExits(routing, platform).length,
+    lockedCount: listsApply(platform) ? routing.lockedApps.length : 0,
     anyRouteUnavailable: statuses.some(
       (status) => status.state === 'unavailable' && status.reason !== 'tunnel-down',
     ),
@@ -136,7 +161,7 @@ export type DefaultRoute = 'vpn' | 'direct';
 
 export type AppRoute = { kind: 'vpn' } | { kind: 'direct' } | { kind: 'country'; exit: ExitChoice };
 
-export type AppRule = { app: string; route: AppRoute };
+export type AppRule = { app: string; route: AppRoute; locked?: true };
 
 export type RoutingOp =
   | { op: 'set-split-mode'; mode: AppSplitMode }
@@ -146,16 +171,12 @@ export type RoutingOp =
   | { op: 'remove-included'; app: string }
   | { op: 'set-exit'; app: string; exit: ExitChoice }
   | { op: 'clear-exit'; app: string }
-  | { op: 'set-exits-enabled'; enabled: boolean };
+  | { op: 'set-exits-enabled'; enabled: boolean }
+  | { op: 'lock'; app: string }
+  | { op: 'unlock'; app: string };
 
 export function defaultRoute(routing: AppRoutingSettings): DefaultRoute {
   return routing.splitMode === 'include-only' ? 'direct' : 'vpn';
-}
-
-// Linux takes no list for either split mode: an app leaves or joins the VPN
-// when Warren opens it (warren-exclude, warren-include).
-function listsApply(platform: Platform): boolean {
-  return platform !== 'linux';
 }
 
 // The route the daemon gives an app, after its precedence rules.
@@ -178,7 +199,9 @@ export function appRouteFor(
   if (!lists) {
     return { kind: 'direct' };
   }
-  return includesApp(routing.includedApps, app, platform) ? { kind: 'vpn' } : { kind: 'direct' };
+  return includesApp(routing.includedApps, app, platform) || isAppLocked(routing, app, platform)
+    ? { kind: 'vpn' }
+    : { kind: 'direct' };
 }
 
 function sameRoute(a: AppRoute, b: AppRoute): boolean {
@@ -188,7 +211,8 @@ function sameRoute(a: AppRoute, b: AppRoute): boolean {
   return a.kind === b.kind;
 }
 
-// The apps whose route differs from the default, in the daemon's list order.
+// The apps whose route differs from the default, and the locked apps, in the
+// daemon's list order.
 export function appRules(routing: AppRoutingSettings, platform: Platform): AppRule[] {
   const lists = listsApply(platform);
   const candidates: string[] = [];
@@ -202,11 +226,15 @@ export function appRules(routing: AppRoutingSettings, platform: Platform): AppRu
   if (lists && routing.splitMode === 'exclude') consider(routing.excludedApps);
   if (lists && routing.splitMode === 'include-only') consider(routing.includedApps);
   if (routing.appExitsEnabled) consider(routing.appExits.map((entry) => entry.app));
+  if (lists) consider(routing.lockedApps);
 
   const fallback = defaultRoute(routing);
   return candidates
-    .map((app) => ({ app, route: appRouteFor(routing, app, platform) }))
-    .filter((rule) => rule.route.kind !== fallback);
+    .map((app): AppRule => {
+      const route = appRouteFor(routing, app, platform);
+      return isAppLocked(routing, app, platform) ? { app, route, locked: true } : { app, route };
+    })
+    .filter((rule) => rule.locked || rule.route.kind !== fallback);
 }
 
 // The daemon calls that give one app `next`, in an order where every state in
@@ -236,6 +264,7 @@ export function planAppRoute(
   const excluded = excludedId !== undefined;
   const included = includedId !== undefined;
   const excludedLeft = routing.excludedApps.filter((other) => !sameAppId(other, app, platform));
+  const lockedId = stored(routing.lockedApps);
 
   // Bypass or the countries switched on again must not bring back entries
   // saved while they were off: nobody sees them in the list.
@@ -248,6 +277,9 @@ export function planAppRoute(
 
   switch (next.kind) {
     case 'direct':
+      // The lock goes first: it holds the app on its old route whatever else
+      // changes, which would pass it through a third one on the way.
+      if (lockedId !== undefined) ops.push({ op: 'unlock', app: lockedId });
       // Only with the VPN as the default: direct is otherwise "no rule".
       if (fallback === 'direct') {
         if (includedId !== undefined) ops.push({ op: 'remove-included', app: includedId });
@@ -297,8 +329,50 @@ export function planAppRoute(
   return ops;
 }
 
+// The daemon calls that lock `app` to the VPN or lift its lock, without
+// moving it: lifting a lock keeps the route the lock was giving the app.
+export function planAppLock(
+  routing: AppRoutingSettings,
+  app: string,
+  locked: boolean,
+  platform: Platform,
+): RoutingOp[] {
+  if (!listsApply(platform)) {
+    throw new Error('Linux locks an app to the VPN when it opens it, it keeps no list');
+  }
+  if (isAppLocked(routing, app, platform) === locked) {
+    return [];
+  }
+  const route = appRouteFor(routing, app, platform);
+  if (locked) {
+    if (route.kind === 'direct') {
+      throw new Error('An app outside the VPN cannot be locked to it');
+    }
+    return [{ op: 'lock', app }];
+  }
+
+  const stored = (apps: readonly string[]) => apps.find((other) => sameAppId(other, app, platform));
+  const ops: RoutingOp[] = [];
+  if (
+    route.kind === 'vpn' &&
+    routing.splitMode === 'include-only' &&
+    stored(routing.includedApps) === undefined
+  ) {
+    ops.push({ op: 'add-included', app });
+  }
+  const excludedId = stored(routing.excludedApps);
+  if (routing.splitMode === 'exclude' && excludedId !== undefined) {
+    ops.push({ op: 'remove-excluded', app: excludedId });
+    if (routing.excludedApps.every((other) => sameAppId(other, app, platform))) {
+      ops.push({ op: 'set-split-mode', mode: 'off' });
+    }
+  }
+  ops.push({ op: 'unlock', app: stored(routing.lockedApps) ?? app });
+  return ops;
+}
+
 // The daemon calls that switch what apps without a rule do. The countries
-// stay; the two lists are emptied, since a list kept from an earlier choice
+// and the locks stay; the two lists are emptied, since a list kept from an earlier choice
 // would come back as rules nobody just made.
 export function planDefaultRoute(
   routing: AppRoutingSettings,
@@ -334,8 +408,10 @@ export function routingReflects(
   const apps = [...appRules(actual, platform), ...appRules(expected, platform)].map(
     (rule) => rule.app,
   );
-  return apps.every((app) =>
-    sameRoute(appRouteFor(actual, app, platform), appRouteFor(expected, app, platform)),
+  return apps.every(
+    (app) =>
+      sameRoute(appRouteFor(actual, app, platform), appRouteFor(expected, app, platform)) &&
+      isAppLocked(actual, app, platform) === isAppLocked(expected, app, platform),
   );
 }
 
@@ -386,6 +462,16 @@ export function applyRoutingOps(
         break;
       case 'set-exits-enabled':
         next = { ...next, appExitsEnabled: op.enabled };
+        break;
+      case 'lock':
+        next = {
+          ...next,
+          excludedApps: without(next.excludedApps, op.app),
+          lockedApps: withApp(next.lockedApps, op.app),
+        };
+        break;
+      case 'unlock':
+        next = { ...next, lockedApps: without(next.lockedApps, op.app) };
         break;
     }
   }
@@ -471,13 +557,40 @@ export function splitModeAvailability(input: {
   return input.needsFullDiskAccess ? 'needs-full-disk-access' : 'available';
 }
 
+// Whether this platform can hold a lock, which the view does not offer
+// otherwise. Windows holds it in its filtering engine; macOS needs a content
+// filter Warren does not ship yet, and Linux locks an app when Warren opens it.
+export function appLockSupported(platform: Platform): boolean {
+  return platform !== 'darwin' && platform !== 'linux';
+}
+
 export type AppRouteLine =
+  | { kind: 'blocked' }
   | { kind: 'paused' }
   | { kind: 'bypassed' }
   | { kind: 'waiting' }
   | { kind: 'connecting' }
   | { kind: 'connected'; publicIp?: string }
   | { kind: 'unavailable'; reason?: AppRouteUnavailableReason };
+
+// The status line under a rule: a locked app that the VPN does not carry is
+// blocked, whatever its route; an app with a country says where its route
+// stands; any other rule has none.
+export function ruleLine(
+  routing: AppRoutingSettings,
+  statuses: readonly AppRouteStatus[],
+  app: string,
+  platform: Platform,
+  tunnelConnected: boolean,
+): AppRouteLine | undefined {
+  if (!tunnelConnected && isAppLocked(routing, app, platform)) {
+    return { kind: 'blocked' };
+  }
+  if (appRouteFor(routing, app, platform).kind !== 'country') {
+    return undefined;
+  }
+  return appRouteLine(routing, statuses, app, platform);
+}
 
 // The status line under an app that has a country. A country that is not in
 // force says why before any route state, which could be a stale push.

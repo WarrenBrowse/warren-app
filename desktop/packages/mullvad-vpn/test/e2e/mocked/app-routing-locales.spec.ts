@@ -97,6 +97,7 @@ const appRouting: AppRoutingSettings = {
     { app: STEAM.absolutepath, exit: { country: 'de' } },
     { app: SLACK.absolutepath, exit: { country: 'ch' } },
   ],
+  lockedApps: [],
 };
 
 const statuses: AppRouteStatus[] = [

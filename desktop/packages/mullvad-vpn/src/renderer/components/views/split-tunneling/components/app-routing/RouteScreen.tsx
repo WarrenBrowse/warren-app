@@ -2,15 +2,23 @@ import React from 'react';
 import { sprintf } from 'sprintf-js';
 import styled from 'styled-components';
 
-import { type AppRoute, appRouteFor, defaultRoute } from '../../../../../../shared/app-routing';
+import {
+  appLockSupported,
+  type AppRoute,
+  appRouteFor,
+  defaultRoute,
+  isAppLocked,
+} from '../../../../../../shared/app-routing';
 import { type ISplitTunnelingApplication } from '../../../../../../shared/application-types';
 import { messages } from '../../../../../../shared/gettext';
 import { useAppContext } from '../../../../../context';
-import { CountryFlag } from '../../../../../features/app-routing/components';
+import { CountryFlag, LockGlyph } from '../../../../../features/app-routing/components';
 import { useAppRouting, useExitChoiceNames } from '../../../../../features/app-routing/hooks';
 import { routingLimitationText } from '../../../../../features/app-routing/strings';
 import { Button } from '../../../../../lib/components';
+import { Switch } from '../../../../../lib/components/switch';
 import { colors } from '../../../../../lib/foundations';
+import { useSelector } from '../../../../../redux/store';
 import { ModalAlert, ModalAlertType } from '../../../../Modal';
 import { useRoutingActions } from '../../hooks/use-routing-actions';
 import { type RoutingTarget, useSplitTunnelingContext } from '../../SplitTunnelingContext';
@@ -18,7 +26,12 @@ import { useSplitModeAvailability } from '../split-tunneling-settings/hooks';
 import { AppAvatar } from './AppAvatar';
 import { CheckBadge, GlobeGlyph, OutsideGlyph, ShieldGlyph } from './glyphs';
 import { ScreenFrame } from './ScreenFrame';
-import { outsideUnavailableReason, outsideVpnLabel, throughVpnLabel } from './strings';
+import {
+  neverWithoutVpnLabel,
+  outsideUnavailableReason,
+  outsideVpnLabel,
+  throughVpnLabel,
+} from './strings';
 import {
   StyledHelp,
   StyledRowButton,
@@ -128,6 +141,88 @@ function OptionCard(props: OptionCardProps) {
       {props.selected && <CheckBadge />}
       {props.opensMore && <ChevronGlyph />}
     </StyledOption>
+  );
+}
+
+// Set apart from the three routes above it: it is not a fourth one.
+const StyledLockCard = styled.div({
+  marginTop: '8px',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '14px',
+  minHeight: '68px',
+  padding: '10px 14px',
+  borderRadius: '10px',
+  backgroundColor: colors.blue40,
+});
+
+// As light as the titles of the routes, which the switch label would bold.
+const StyledLockTitle = styled(StyledOptionTitle)({
+  fontWeight: 400,
+});
+
+const StyledLockText = styled.span({
+  flex: 1,
+  minWidth: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '2px',
+});
+
+type LockCardProps = {
+  applicationName: string;
+  locked: boolean;
+  // Why the switch cannot be turned on here, if it cannot.
+  unavailableReason?: string;
+  busy: boolean;
+  onChange: (locked: boolean) => void;
+};
+
+// "Never without the VPN": a property of the route, not a route of its own,
+// so it sits apart from the three options and combines with a country.
+function LockCard(props: LockCardProps) {
+  const descriptionId = React.useId();
+  const lockdownMode = useSelector((state) => state.settings.lockdownMode);
+
+  let description = sprintf(
+    // TRANSLATORS: Under the "Never without the VPN" switch of an app.
+    // TRANSLATORS: Available placeholders:
+    // TRANSLATORS: %(application)s - the app's name
+    messages.pgettext(
+      'split-tunneling-view',
+      'When the VPN is off, %(application)s has no Internet, even with Warren VPN closed.',
+    ),
+    { application: props.applicationName },
+  );
+  if (props.unavailableReason !== undefined) {
+    description = props.unavailableReason;
+  } else if (lockdownMode) {
+    description = messages.pgettext(
+      'split-tunneling-view',
+      'Lockdown mode already blocks every app while the VPN is off.',
+    );
+  }
+
+  // A lock that is on can always be lifted, whatever else stopped applying.
+  const disabled = props.busy || (props.unavailableReason !== undefined && !props.locked);
+
+  return (
+    <StyledLockCard data-testid="route-lock">
+      <LockGlyph size={26} color={props.locked ? colors.greenText : colors.whiteOnDarkBlue40} />
+      <Switch
+        checked={props.locked}
+        onCheckedChange={props.onChange}
+        descriptionId={descriptionId}
+        disabled={disabled}>
+        <StyledLockText>
+          <Switch.Label>
+            <StyledLockTitle>{neverWithoutVpnLabel()}</StyledLockTitle>
+          </Switch.Label>
+          <StyledOptionSubtitle id={descriptionId}>{description}</StyledOptionSubtitle>
+        </StyledLockText>
+        <Switch.Input data-testid="route-lock-switch" />
+      </Switch>
+    </StyledLockCard>
   );
 }
 
@@ -247,7 +342,7 @@ function LinuxLaunchCard({ target, into, supported }: LinuxLaunchProps) {
 export function RouteScreen() {
   const { routing, platform } = useAppRouting();
   const { target, showList, showCountry } = useSplitTunnelingContext();
-  const { setAppRoute } = useRoutingActions();
+  const { setAppRoute, setAppLocked } = useRoutingActions();
   const availability = useSplitModeAvailability();
   const exitNames = useExitChoiceNames();
   // The options wait for the daemon's answer: a second choice planned from
@@ -269,6 +364,18 @@ export function RouteScreen() {
     },
     [setAppRoute, showList, target],
   );
+  const setLocked = React.useCallback(
+    async (locked: boolean) => {
+      if (target === undefined || pending.current) return;
+      pending.current = true;
+      setBusy(true);
+      await setAppLocked(target, locked);
+      pending.current = false;
+      setBusy(false);
+    },
+    [setAppLocked, target],
+  );
+  const changeLock = React.useCallback((locked: boolean) => void setLocked(locked), [setLocked]);
   const chooseVpn = React.useCallback(() => void choose({ kind: 'vpn' }), [choose]);
   const chooseOutside = React.useCallback(() => void choose({ kind: 'direct' }), [choose]);
 
@@ -283,7 +390,12 @@ export function RouteScreen() {
   }
 
   const current = appRouteFor(routing, target.id, platform);
-  const hasRule = current.kind !== fallback;
+  const locked = isAppLocked(routing, target.id, platform);
+  const hasRule = current.kind !== fallback || locked;
+  const lockReason =
+    current.kind === 'direct'
+      ? messages.pgettext('split-tunneling-view', 'Choose a route through the VPN to turn this on')
+      : undefined;
   const linux = platform === 'linux';
   const limitation = asApplication(target)?.routingLimitation;
   const outsideReason =
@@ -372,6 +484,16 @@ export function RouteScreen() {
             selected={current.kind === 'direct'}
             disabled={busy || outsideReason !== undefined}
             onClick={chooseOutside}
+          />
+        )}
+
+        {appLockSupported(platform) && (
+          <LockCard
+            applicationName={target.name}
+            locked={locked}
+            unavailableReason={lockReason}
+            busy={busy}
+            onChange={changeLock}
           />
         )}
 

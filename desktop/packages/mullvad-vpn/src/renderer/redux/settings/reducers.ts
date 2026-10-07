@@ -231,6 +231,7 @@ const initialState: ISettingsReduxState = {
     includedApps: [],
     appExitsEnabled: false,
     appExits: [],
+    lockedApps: [],
   },
   appRouteStatus: [],
   appRoutingApplications: [],

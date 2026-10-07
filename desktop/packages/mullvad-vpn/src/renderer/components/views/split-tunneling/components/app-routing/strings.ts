@@ -84,3 +84,28 @@ export function routeDescription(route: AppRoute, exitLabel: string | undefined)
       return exitLabel ?? route.exit.country.toUpperCase();
   }
 }
+
+export function neverWithoutVpnLabel(): string {
+  // TRANSLATORS: Switch on the route of an app: the app is blocked whenever
+  // TRANSLATORS: the VPN does not carry it, so it never connects without it.
+  return messages.pgettext('split-tunneling-view', 'Never without the VPN');
+}
+
+// A rule in words, for its accessible name: its route, and its lock.
+export function ruleDescription(
+  route: AppRoute,
+  exitLabel: string | undefined,
+  locked: boolean,
+): string {
+  const description = routeDescription(route, exitLabel);
+  return locked
+    ? sprintf(
+        // TRANSLATORS: Accessibility description of a rule locked to the VPN.
+        // TRANSLATORS: Available placeholders:
+        // TRANSLATORS: %(route)s - its route: "Through the VPN" or the country
+        // TRANSLATORS: it leaves from
+        messages.pgettext('split-tunneling-view', '%(route)s, never without the VPN'),
+        { route: description },
+      )
+    : description;
+}

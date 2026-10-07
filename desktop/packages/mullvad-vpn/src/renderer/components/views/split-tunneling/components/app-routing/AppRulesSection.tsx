@@ -4,21 +4,22 @@ import styled from 'styled-components';
 
 import {
   type AppRoute,
-  appRouteLine,
   appRules,
   defaultRoute,
   resolveApplications,
+  ruleLine,
 } from '../../../../../../shared/app-routing';
 import { messages } from '../../../../../../shared/gettext';
 import { RouteStatusLine } from '../../../../../features/app-routing/components';
 import { useAppRouting, useExitChoiceNames } from '../../../../../features/app-routing/hooks';
 import { colors } from '../../../../../lib/foundations';
+import { useSelector } from '../../../../../redux/store';
 import { sourceSansPro } from '../../../../common-styles';
 import { type RoutingTarget, useSplitTunnelingContext } from '../../SplitTunnelingContext';
 import { AppAvatar } from './AppAvatar';
 import { WarningGlyph } from './glyphs';
 import { RouteChip } from './RouteChip';
-import { routeDescription } from './strings';
+import { ruleDescription } from './strings';
 import { pill, StyledCard, StyledSection, StyledSectionTitle, StyledWarningCard } from './styles';
 
 const StyledHeader = styled.div({
@@ -143,11 +144,12 @@ type RuleRowProps = {
   icon?: string;
   route: AppRoute;
   exitLabel?: string;
+  locked: boolean;
   onOpen: (target: RoutingTarget) => void;
   children?: React.ReactNode;
 };
 
-function RuleRow({ target, icon, route, exitLabel, onOpen, children }: RuleRowProps) {
+function RuleRow({ target, icon, route, exitLabel, locked, onOpen, children }: RuleRowProps) {
   const open = React.useCallback(() => onOpen(target), [onOpen, target]);
   return (
     <li>
@@ -160,7 +162,7 @@ function RuleRow({ target, icon, route, exitLabel, onOpen, children }: RuleRowPr
           // TRANSLATORS: %(route)s - its route: "Through the VPN", "Outside
           // TRANSLATORS: the VPN" or the country it leaves from
           messages.pgettext('split-tunneling-view', '%(application)s, %(route)s'),
-          { application: target.name, route: routeDescription(route, exitLabel) },
+          { application: target.name, route: ruleDescription(route, exitLabel, locked) },
         )}
         onClick={open}>
         <StyledAvatarCell>
@@ -168,7 +170,7 @@ function RuleRow({ target, icon, route, exitLabel, onOpen, children }: RuleRowPr
         </StyledAvatarCell>
         <StyledRuleName>{target.name}</StyledRuleName>
         <StyledChipCell>
-          <RouteChip route={route} exitLabel={exitLabel} />
+          <RouteChip route={route} exitLabel={exitLabel} locked={locked} />
         </StyledChipCell>
         {children && <StyledStatusCell>{children}</StyledStatusCell>}
       </StyledRuleButton>
@@ -181,6 +183,7 @@ export function AppRulesSection() {
   const { routing, statuses, applications: metadata, platform } = useAppRouting();
   const { catalog, showAdd, showRoute } = useSplitTunnelingContext();
   const exitNames = useExitChoiceNames();
+  const tunnelConnected = useSelector((state) => state.connection.status.state === 'connected');
   const rules = appRules(routing, platform);
   const direct = defaultRoute(routing) === 'direct';
   const linuxLaunchOnly = direct && platform === 'linux';
@@ -252,8 +255,9 @@ export function AppRulesSection() {
 
       {rows.length > 0 && (
         <StyledList data-testid="app-rules">
-          {rows.map(({ app, route, application }) => {
+          {rows.map(({ app, route, locked, application }) => {
             const names = route.kind === 'country' ? exitNames(route.exit) : undefined;
+            const line = ruleLine(routing, statuses, app, platform, tunnelConnected);
             return (
               <RuleRow
                 key={app}
@@ -261,10 +265,9 @@ export function AppRulesSection() {
                 icon={application.icon}
                 route={route}
                 exitLabel={names ? (names.city ?? names.country) : undefined}
+                locked={locked === true}
                 onOpen={showRoute}>
-                {route.kind === 'country' && (
-                  <RouteStatusLine line={appRouteLine(routing, statuses, app, platform)} />
-                )}
+                {line && <RouteStatusLine line={line} />}
                 {route.kind === 'country' && linuxLaunchOnly && (
                   // Linux keeps no list: the country only applies to the app
                   // opened from Warren, which the row must not hide.

@@ -11,6 +11,7 @@ function dotColor(line: AppRouteLine): Colors {
       return 'green';
     case 'connecting':
     case 'waiting':
+    case 'blocked':
       return 'yellow';
     case 'unavailable':
       return line.reason === 'tunnel-down' ? 'yellow' : 'red';

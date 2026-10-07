@@ -4,6 +4,7 @@ import styled from 'styled-components';
 import {
   AppCountriesIndicator,
   IncludeOnlyLabel,
+  LockedAppsLabel,
 } from '../../../../../features/app-routing/components';
 import { PortForwardingIndicator } from '../../../../../features/port-forwarding/components';
 import { IconButton } from '../../../../../lib/components';
@@ -163,6 +164,7 @@ export function ConnectionPanel() {
               }
             />
             <IncludeOnlyLabel />
+            <LockedAppsLabel />
             <Location />
             <Hostname />
           </StyledConnectionStatusContainer>

@@ -27,6 +27,7 @@ function settings(overrides: Partial<AppRoutingSettings> = {}): AppRoutingSettin
     includedApps: [],
     appExitsEnabled: true,
     appExits: [],
+    lockedApps: [],
     ...overrides,
   };
 }
@@ -169,6 +170,13 @@ describe('appRoutingSummary, for the main screen', () => {
 
     expect(summary.includeOnly).toBe(true);
     expect(summary.vpnOnlyForCount).toBeUndefined();
+  });
+
+  it('counts the apps locked to the VPN', () => {
+    const routing = settings({ lockedApps: [FIREFOX, SLACK] });
+
+    expect(appRoutingSummary(routing, [], 'darwin').lockedCount).toBe(2);
+    expect(appRoutingSummary(routing, [], 'linux').lockedCount).toBe(0);
   });
 
   it('counts the apps that leave from their own country', () => {

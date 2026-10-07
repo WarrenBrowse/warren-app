@@ -6270,3 +6270,37 @@ msgstr "Тёмная"
 msgctxt "user-interface-settings-view"
 msgid "Light"
 msgstr "Светлая"
+
+msgctxt "split-tunneling-view"
+msgid "Never without the VPN"
+msgstr "Никогда без VPN"
+
+msgctxt "split-tunneling-view"
+msgid "When the VPN is off, %(application)s has no Internet, even with Warren VPN closed."
+msgstr "Когда VPN выключен, у %(application)s нет интернета, даже если Warren VPN закрыт."
+
+msgctxt "split-tunneling-view"
+msgid "Lockdown mode already blocks every app while the VPN is off."
+msgstr "Режим блокировки уже блокирует все приложения, пока VPN выключен."
+
+
+
+msgctxt "split-tunneling-view"
+msgid "Choose a route through the VPN to turn this on"
+msgstr "Выберите маршрут через VPN, чтобы включить это"
+
+msgctxt "split-tunneling-view"
+msgid "%(route)s, never without the VPN"
+msgstr "%(route)s, никогда без VPN"
+
+msgctxt "split-tunneling-view"
+msgid "Blocked until the VPN connects"
+msgstr "Заблокировано до подключения VPN"
+
+msgctxt "connect-view"
+msgid "%(count)d app blocked until the VPN connects"
+msgid_plural "%(count)d apps blocked until the VPN connects"
+msgstr[0] "%(count)d приложение заблокировано до подключения VPN"
+msgstr[1] "%(count)d приложения заблокированы до подключения VPN"
+msgstr[2] "%(count)d приложений заблокировано до подключения VPN"
+msgstr[3] "%(count)d приложения заблокировано до подключения VPN"

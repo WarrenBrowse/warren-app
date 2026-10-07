@@ -2,7 +2,7 @@ import styled from 'styled-components';
 
 import { type AppRoute } from '../../../../../../shared/app-routing';
 import { messages } from '../../../../../../shared/gettext';
-import { CountryFlag } from '../../../../../features/app-routing/components';
+import { CountryFlag, LockGlyph } from '../../../../../features/app-routing/components';
 import { OutsideGlyph, ShieldGlyph } from './glyphs';
 import { outsideVpnLabel } from './strings';
 import { pill } from './styles';
@@ -24,21 +24,34 @@ const StyledGlyph = styled.span({
   marginInlineStart: '4px',
 });
 
+const StyledLock = styled.span({
+  display: 'flex',
+  marginInlineStart: '-2px',
+});
+
 export type RouteChipProps = {
   route: AppRoute;
   // The exit's place as shown: the city when one is chosen, else the country.
   exitLabel?: string;
+  // Locked to the VPN: a padlock closes the chip.
+  locked?: boolean;
 };
 
 // The route of a rule, as the pill at the end of its row. Part of the row's
 // button, which carries the accessible name.
-export function RouteChip({ route, exitLabel }: RouteChipProps) {
+export function RouteChip({ route, exitLabel, locked }: RouteChipProps) {
+  const lock = locked ? (
+    <StyledLock data-testid="route-chip-lock">
+      <LockGlyph size={15} />
+    </StyledLock>
+  ) : null;
   switch (route.kind) {
     case 'country':
       return (
         <StyledChip aria-hidden>
           <CountryFlag country={route.exit.country} size={22} />
           <StyledLabel>{exitLabel}</StyledLabel>
+          {lock}
         </StyledChip>
       );
     case 'direct':
@@ -63,6 +76,7 @@ export function RouteChip({ route, exitLabel }: RouteChipProps) {
               messages.pgettext('split-tunneling-view', 'VPN')
             }
           </StyledLabel>
+          {lock}
         </StyledChip>
       );
   }

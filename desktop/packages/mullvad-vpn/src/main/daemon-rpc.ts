@@ -918,6 +918,14 @@ export class DaemonRpc extends GrpcClient {
     await this.callString(this.client.clearAppExit, app);
   }
 
+  public async addLockedApp(path: string): Promise<void> {
+    await this.callString(this.client.addLockedApp, path);
+  }
+
+  public async removeLockedApp(path: string): Promise<void> {
+    await this.callString(this.client.removeLockedApp, path);
+  }
+
   public async getAppRouteStatus(): Promise<AppRouteStatus[]> {
     const response = await this.callEmpty<grpcTypes.AppRouteStatusList>(
       this.client.getAppRouteStatus,

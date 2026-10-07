@@ -9,6 +9,7 @@ import { FeatureIndicator, Icon } from '../../../lib/components';
 import { colors, surfaces } from '../../../lib/foundations';
 import { useSelector } from '../../../redux/store';
 import { useAppRouting, useOpenAppRouting } from '../hooks';
+import { LockGlyph } from './LockGlyph';
 
 const StyledWrapper = styled.div({
   display: 'flex',
@@ -123,6 +124,49 @@ export function IncludeOnlyLabel() {
   return (
     <StyledIncludeOnlyLabel type="button" onClick={open} data-testid="include-only-label">
       <Icon icon="alert-circle" size="tiny" color="yellow" aria-hidden />
+      {label}
+    </StyledIncludeOnlyLabel>
+  );
+}
+
+// Under the connection state while the VPN does not carry the apps locked to
+// it, so an app with no Internet is never a mystery.
+export function LockedAppsLabel() {
+  const { routing, statuses, platform } = useAppRouting();
+  const tunnelState = useSelector((state) => state.connection.status.state);
+  const openAppRouting = useOpenAppRouting();
+
+  const open = React.useCallback(
+    (event: React.MouseEvent) => {
+      // The label sits inside the card header, whose click expands the card.
+      event.stopPropagation();
+      openAppRouting();
+    },
+    [openAppRouting],
+  );
+
+  const { lockedCount } = appRoutingSummary(routing, statuses, platform);
+  if (lockedCount === 0 || tunnelState === 'connected') {
+    return null;
+  }
+
+  const label = sprintf(
+    // TRANSLATORS: Label under the connection state while the VPN is not
+    // TRANSLATORS: connected and some apps are locked to it, so they have
+    // TRANSLATORS: no Internet. Available placeholders:
+    // TRANSLATORS: %(count)d - the number of apps locked to the VPN
+    messages.npgettext(
+      'connect-view',
+      '%(count)d app blocked until the VPN connects',
+      '%(count)d apps blocked until the VPN connects',
+      lockedCount,
+    ),
+    { count: lockedCount },
+  );
+
+  return (
+    <StyledIncludeOnlyLabel type="button" onClick={open} data-testid="locked-apps-label">
+      <LockGlyph size={14} color={colors.yellow} />
       {label}
     </StyledIncludeOnlyLabel>
   );

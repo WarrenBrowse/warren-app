@@ -6232,3 +6232,35 @@ msgstr "Donker"
 msgctxt "user-interface-settings-view"
 msgid "Light"
 msgstr "Licht"
+
+msgctxt "split-tunneling-view"
+msgid "Never without the VPN"
+msgstr "Nooit zonder de VPN"
+
+msgctxt "split-tunneling-view"
+msgid "When the VPN is off, %(application)s has no Internet, even with Warren VPN closed."
+msgstr "Als de VPN uit staat, heeft %(application)s geen internet, ook als Warren VPN gesloten is."
+
+msgctxt "split-tunneling-view"
+msgid "Lockdown mode already blocks every app while the VPN is off."
+msgstr "Lockdownmodus blokkeert al elke app zolang de VPN uit staat."
+
+
+
+msgctxt "split-tunneling-view"
+msgid "Choose a route through the VPN to turn this on"
+msgstr "Kies een route via de VPN om dit in te schakelen"
+
+msgctxt "split-tunneling-view"
+msgid "%(route)s, never without the VPN"
+msgstr "%(route)s, nooit zonder de VPN"
+
+msgctxt "split-tunneling-view"
+msgid "Blocked until the VPN connects"
+msgstr "Geblokkeerd tot de VPN verbinding maakt"
+
+msgctxt "connect-view"
+msgid "%(count)d app blocked until the VPN connects"
+msgid_plural "%(count)d apps blocked until the VPN connects"
+msgstr[0] "%(count)d app geblokkeerd tot de VPN verbinding maakt"
+msgstr[1] "%(count)d apps geblokkeerd tot de VPN verbinding maakt"

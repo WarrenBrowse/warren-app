@@ -6200,3 +6200,34 @@ msgstr "深色"
 msgctxt "user-interface-settings-view"
 msgid "Light"
 msgstr "浅色"
+
+msgctxt "split-tunneling-view"
+msgid "Never without the VPN"
+msgstr "绝不脱离 VPN"
+
+msgctxt "split-tunneling-view"
+msgid "When the VPN is off, %(application)s has no Internet, even with Warren VPN closed."
+msgstr "VPN 关闭时，%(application)s 无法上网，即使 Warren VPN 已关闭也是如此。"
+
+msgctxt "split-tunneling-view"
+msgid "Lockdown mode already blocks every app while the VPN is off."
+msgstr "锁定模式已在 VPN 关闭期间阻止所有应用。"
+
+
+
+msgctxt "split-tunneling-view"
+msgid "Choose a route through the VPN to turn this on"
+msgstr "选择经过 VPN 的路由以开启此项"
+
+msgctxt "split-tunneling-view"
+msgid "%(route)s, never without the VPN"
+msgstr "%(route)s，绝不脱离 VPN"
+
+msgctxt "split-tunneling-view"
+msgid "Blocked until the VPN connects"
+msgstr "已阻止，直到 VPN 连接"
+
+msgctxt "connect-view"
+msgid "%(count)d app blocked until the VPN connects"
+msgid_plural "%(count)d apps blocked until the VPN connects"
+msgstr[0] "%(count)d 个应用已阻止，直到 VPN 连接"

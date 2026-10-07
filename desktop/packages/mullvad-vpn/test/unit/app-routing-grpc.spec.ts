@@ -30,7 +30,8 @@ describe('convertFromAppRoutingSettings', () => {
       .setAppExitsList([
         new grpcTypes.AppExit().setApp('/usr/bin/slack').setExit(exitChoice('se', 'got')),
         new grpcTypes.AppExit().setApp('/usr/bin/chromium').setExit(exitChoice('de')),
-      ]);
+      ])
+      .setLockedAppsList(['/usr/bin/signal-desktop']);
 
     expect(convertFromAppRoutingSettings(proto, undefined)).toEqual({
       splitMode: 'include-only',
@@ -41,6 +42,7 @@ describe('convertFromAppRoutingSettings', () => {
         { app: '/usr/bin/slack', exit: { country: 'se', city: 'got' } },
         { app: '/usr/bin/chromium', exit: { country: 'de' } },
       ],
+      lockedApps: ['/usr/bin/signal-desktop'],
     });
   });
 
@@ -61,6 +63,7 @@ describe('convertFromAppRoutingSettings', () => {
       includedApps: [],
       appExitsEnabled: false,
       appExits: [],
+      lockedApps: [],
     });
   });
 

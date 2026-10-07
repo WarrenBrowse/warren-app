@@ -37,6 +37,7 @@ export function getDefaultSettings(): ISettings {
       includedApps: [],
       appExitsEnabled: false,
       appExits: [],
+      lockedApps: [],
     },
     relaySettings: {
       normal: getDefaultRelaySettingsNormal(),

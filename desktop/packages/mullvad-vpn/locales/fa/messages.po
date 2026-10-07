@@ -6219,3 +6219,35 @@ msgstr "تیره"
 msgctxt "user-interface-settings-view"
 msgid "Light"
 msgstr "روشن"
+
+msgctxt "split-tunneling-view"
+msgid "Never without the VPN"
+msgstr "هرگز بدون VPN"
+
+msgctxt "split-tunneling-view"
+msgid "When the VPN is off, %(application)s has no Internet, even with Warren VPN closed."
+msgstr "وقتی VPN خاموش است، %(application)s به اینترنت دسترسی ندارد، حتی اگر Warren VPN بسته باشد."
+
+msgctxt "split-tunneling-view"
+msgid "Lockdown mode already blocks every app while the VPN is off."
+msgstr "حالت قفل از قبل همه برنامه‌ها را هنگام خاموش بودن VPN مسدود می‌کند."
+
+
+
+msgctxt "split-tunneling-view"
+msgid "Choose a route through the VPN to turn this on"
+msgstr "برای روشن کردن این گزینه، مسیری از طریق VPN انتخاب کنید"
+
+msgctxt "split-tunneling-view"
+msgid "%(route)s, never without the VPN"
+msgstr "%(route)s، هرگز بدون VPN"
+
+msgctxt "split-tunneling-view"
+msgid "Blocked until the VPN connects"
+msgstr "تا وصل شدن VPN مسدود است"
+
+msgctxt "connect-view"
+msgid "%(count)d app blocked until the VPN connects"
+msgid_plural "%(count)d apps blocked until the VPN connects"
+msgstr[0] "%(count)d برنامه تا وصل شدن VPN مسدود است"
+msgstr[1] "%(count)d برنامه تا وصل شدن VPN مسدود است"

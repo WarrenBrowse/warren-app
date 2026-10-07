@@ -28,6 +28,10 @@ export function routingLimitationText(
 
 export function appRouteLineText(line: AppRouteLine): string {
   switch (line.kind) {
+    case 'blocked':
+      // TRANSLATORS: Status under an app locked to the VPN while the VPN is
+      // TRANSLATORS: not connected: the app has no Internet meanwhile.
+      return messages.pgettext('split-tunneling-view', 'Blocked until the VPN connects');
     case 'paused':
       // TRANSLATORS: Status under an app whose country is saved while the
       // TRANSLATORS: "Country per app" switch is off.

@@ -1805,6 +1805,7 @@ export function convertFromAppRoutingSettings(
       includedApps: [],
       appExitsEnabled: false,
       appExits: [],
+      lockedApps: [],
     };
   }
 
@@ -1822,6 +1823,7 @@ export function convertFromAppRoutingSettings(
     includedApps: appRouting.getIncludedAppsList(),
     appExitsEnabled: appRouting.getAppExitsEnabled(),
     appExits,
+    lockedApps: appRouting.getLockedAppsList(),
   };
 }
 

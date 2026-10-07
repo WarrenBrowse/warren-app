@@ -1492,6 +1492,7 @@ class ApplicationMain
         ...(this.linuxSplitTunneling ? [] : appRouting.excludedApps),
         ...appRouting.includedApps,
         ...appRouting.appExits.map((entry) => entry.app),
+        ...appRouting.lockedApps,
       ]),
     ];
 
@@ -1709,6 +1710,12 @@ class ApplicationMain
     });
     IpcMainEventChannel.appRouting.handleClearAppExit((application) => {
       return this.daemonRpc.clearAppExit(application);
+    });
+    IpcMainEventChannel.appRouting.handleAddLockedApp(async (application) => {
+      await this.daemonRpc.addLockedApp(await this.resolveRoutedApplication(application));
+    });
+    IpcMainEventChannel.appRouting.handleRemoveLockedApp((application) => {
+      return this.daemonRpc.removeLockedApp(application);
     });
 
     IpcMainEventChannel.app.handleQuit((source: DisconnectSource) =>

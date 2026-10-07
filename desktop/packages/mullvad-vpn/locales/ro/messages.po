@@ -5382,3 +5382,36 @@ msgstr "Întunecată"
 msgctxt "user-interface-settings-view"
 msgid "Light"
 msgstr "Luminoasă"
+
+msgctxt "split-tunneling-view"
+msgid "Never without the VPN"
+msgstr "Niciodată fără VPN"
+
+msgctxt "split-tunneling-view"
+msgid "When the VPN is off, %(application)s has no Internet, even with Warren VPN closed."
+msgstr "Când VPN-ul este oprit, %(application)s nu are internet, chiar și cu Warren VPN închis."
+
+msgctxt "split-tunneling-view"
+msgid "Lockdown mode already blocks every app while the VPN is off."
+msgstr "Modul Blocare blochează deja orice aplicație cât timp VPN-ul este oprit."
+
+
+
+msgctxt "split-tunneling-view"
+msgid "Choose a route through the VPN to turn this on"
+msgstr "Alegeți o rută prin VPN pentru a activa această opțiune"
+
+msgctxt "split-tunneling-view"
+msgid "%(route)s, never without the VPN"
+msgstr "%(route)s, niciodată fără VPN"
+
+msgctxt "split-tunneling-view"
+msgid "Blocked until the VPN connects"
+msgstr "Blocată până la conectarea VPN-ului"
+
+msgctxt "connect-view"
+msgid "%(count)d app blocked until the VPN connects"
+msgid_plural "%(count)d apps blocked until the VPN connects"
+msgstr[0] "%(count)d aplicație blocată până la conectarea VPN-ului"
+msgstr[1] "%(count)d aplicații blocate până la conectarea VPN-ului"
+msgstr[2] "%(count)d de aplicații blocate până la conectarea VPN-ului"

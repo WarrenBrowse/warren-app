@@ -90,6 +90,7 @@ function settingsWith(appRouting: Partial<AppRoutingSettings>): ISettings {
       includedApps: [],
       appExitsEnabled: true,
       appExits: [],
+      lockedApps: [],
       ...appRouting,
     },
   };

@@ -5,6 +5,7 @@ import {
   applyRoutingOps,
   type AppRoute,
   type DefaultRoute,
+  planAppLock,
   planAppRoute,
   planDefaultRoute,
   type RoutingOp,
@@ -75,6 +76,12 @@ export function useRoutingActions() {
           case 'set-exits-enabled':
             await app.setAppExitsEnabled(op.enabled);
             break;
+          case 'lock':
+            await app.addLockedApp(named(op.app));
+            break;
+          case 'unlock':
+            await app.removeLockedApp(op.app);
+            break;
         }
       }
     },
@@ -119,10 +126,16 @@ export function useRoutingActions() {
     [enqueue, platform],
   );
 
+  const setAppLocked = React.useCallback(
+    (subject: Subject, locked: boolean) =>
+      enqueue((routing) => planAppLock(routing, subject.id, locked, platform), subject),
+    [enqueue, platform],
+  );
+
   const setDefaultRoute = React.useCallback(
     (route: DefaultRoute) => enqueue((routing) => planDefaultRoute(routing, route, platform)),
     [enqueue, platform],
   );
 
-  return { setAppRoute, setDefaultRoute };
+  return { setAppRoute, setAppLocked, setDefaultRoute };
 }

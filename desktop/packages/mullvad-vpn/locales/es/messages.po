@@ -6232,3 +6232,35 @@ msgstr "Oscuro"
 msgctxt "user-interface-settings-view"
 msgid "Light"
 msgstr "Claro"
+
+msgctxt "split-tunneling-view"
+msgid "Never without the VPN"
+msgstr "Nunca sin la VPN"
+
+msgctxt "split-tunneling-view"
+msgid "When the VPN is off, %(application)s has no Internet, even with Warren VPN closed."
+msgstr "Cuando la VPN está desactivada, %(application)s no tiene Internet, aunque Warren VPN esté cerrado."
+
+msgctxt "split-tunneling-view"
+msgid "Lockdown mode already blocks every app while the VPN is off."
+msgstr "El modo de bloqueo ya bloquea todas las apps mientras la VPN está desactivada."
+
+
+
+msgctxt "split-tunneling-view"
+msgid "Choose a route through the VPN to turn this on"
+msgstr "Elija una ruta por la VPN para activar esta opción"
+
+msgctxt "split-tunneling-view"
+msgid "%(route)s, never without the VPN"
+msgstr "%(route)s, nunca sin la VPN"
+
+msgctxt "split-tunneling-view"
+msgid "Blocked until the VPN connects"
+msgstr "Bloqueada hasta que la VPN se conecte"
+
+msgctxt "connect-view"
+msgid "%(count)d app blocked until the VPN connects"
+msgid_plural "%(count)d apps blocked until the VPN connects"
+msgstr[0] "%(count)d app bloqueada hasta que la VPN se conecte"
+msgstr[1] "%(count)d apps bloqueadas hasta que la VPN se conecte"

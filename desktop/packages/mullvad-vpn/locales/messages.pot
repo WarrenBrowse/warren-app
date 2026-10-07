@@ -1145,6 +1145,16 @@ msgctxt "connect-container"
 msgid "%(city)s (%(hostname)s)"
 msgstr ""
 
+#. Label under the connection state while the VPN is not
+#. connected and some apps are locked to it, so they have
+#. no Internet. Available placeholders:
+#. %(count)d - the number of apps locked to the VPN
+msgctxt "connect-view"
+msgid "%(count)d app blocked until the VPN connects"
+msgid_plural "%(count)d apps blocked until the VPN connects"
+msgstr[0] ""
+msgstr[1] ""
+
 #. Chip on the main screen while some apps leave the
 #. Internet from a country of their own. Available placeholders:
 #. %(count)d - the number of such apps
@@ -3610,6 +3620,14 @@ msgctxt "split-tunneling-view"
 msgid "%(applicationName)s is problematic and can’t be launched through the VPN alone."
 msgstr ""
 
+#. Accessibility description of a rule locked to the VPN.
+#. Available placeholders:
+#. %(route)s - its route: "Through the VPN" or the country
+#. it leaves from
+msgctxt "split-tunneling-view"
+msgid "%(route)s, never without the VPN"
+msgstr ""
+
 msgctxt "split-tunneling-view"
 msgid "Add an app"
 msgstr ""
@@ -3628,6 +3646,12 @@ msgctxt "split-tunneling-view"
 msgid "App routing"
 msgstr ""
 
+#. Status under an app locked to the VPN while the VPN is
+#. not connected: the app has no Internet meanwhile.
+msgctxt "split-tunneling-view"
+msgid "Blocked until the VPN connects"
+msgstr ""
+
 msgctxt "split-tunneling-view"
 msgid "Bypass VPN"
 msgstr ""
@@ -3640,6 +3664,10 @@ msgstr ""
 
 msgctxt "split-tunneling-view"
 msgid "Choose"
+msgstr ""
+
+msgctxt "split-tunneling-view"
+msgid "Choose a route through the VPN to turn this on"
 msgstr ""
 
 msgctxt "split-tunneling-view"
@@ -3737,6 +3765,10 @@ msgid "It uses this country when you open it with “Open through the VPN”."
 msgstr ""
 
 msgctxt "split-tunneling-view"
+msgid "Lockdown mode already blocks every app while the VPN is off."
+msgstr ""
+
+msgctxt "split-tunneling-view"
 msgid "Needs a signed build of Warren VPN"
 msgstr ""
 
@@ -3746,6 +3778,12 @@ msgstr ""
 
 msgctxt "split-tunneling-view"
 msgid "Needs macOS 13 or newer"
+msgstr ""
+
+#. Switch on the route of an app: the app is blocked whenever
+#. the VPN does not carry it, so it never connects without it.
+msgctxt "split-tunneling-view"
+msgid "Never without the VPN"
 msgstr ""
 
 msgctxt "split-tunneling-view"
@@ -3938,6 +3976,13 @@ msgstr ""
 
 msgctxt "split-tunneling-view"
 msgid "Waiting for the VPN"
+msgstr ""
+
+#. Under the "Never without the VPN" switch of an app.
+#. Available placeholders:
+#. %(application)s - the app's name
+msgctxt "split-tunneling-view"
+msgid "When the VPN is off, %(application)s has no Internet, even with Warren VPN closed."
 msgstr ""
 
 msgctxt "split-tunneling-view"
