@@ -89,3 +89,33 @@ std::unique_ptr<wfp::SublayerBuilder> MullvadObjects::SublayerPersistent()
 
 	return builder;
 }
+
+//static
+std::unique_ptr<wfp::ProviderBuilder> MullvadObjects::ProviderAppLocks()
+{
+	auto builder = std::make_unique<wfp::ProviderBuilder>();
+
+	(*builder)
+		.name(L"Warren VPN app locks")
+		.description(L"Apps that never reach the network outside the Warren VPN tunnel")
+		.persistent()
+		.key(MullvadGuids::ProviderAppLocks());
+
+	return builder;
+}
+
+//static
+std::unique_ptr<wfp::SublayerBuilder> MullvadObjects::SublayerAppLocks()
+{
+	auto builder = std::make_unique<wfp::SublayerBuilder>();
+
+	(*builder)
+		.name(L"Warren VPN app locks")
+		.description(L"Filters that hold the apps locked to the VPN to the tunnel")
+		.key(MullvadGuids::SublayerAppLocks())
+		.provider(MullvadGuids::ProviderAppLocks())
+		.persistent()
+		.weight(MAXUINT16);
+
+	return builder;
+}

@@ -174,6 +174,32 @@ const GUID &MullvadGuids::SplitTunnelDriverProvider()
 }
 
 //static
+const GUID &MullvadGuids::ProviderAppLocks()
+{
+	static const GUID g = WarrenEnvGuid({
+		0xc4da0442,
+		0x3774,
+		0x48fb,
+		{ 0xb8, 0xc5, 0xe1, 0xae, 0xc1, 0x7e, 0xb8, 0xa2 }
+	});
+
+	return g;
+}
+
+//static
+const GUID &MullvadGuids::SublayerAppLocks()
+{
+	static const GUID g = WarrenEnvGuid({
+		0x4f912d22,
+		0xb0ed,
+		0x4e9b,
+		{ 0xb0, 0x35, 0x80, 0xbe, 0x01, 0x3b, 0x21, 0x71 }
+	});
+
+	return g;
+}
+
+//static
 const GUID &MullvadGuids::SublayerPersistent()
 {
 	static const GUID g = WarrenEnvGuid({

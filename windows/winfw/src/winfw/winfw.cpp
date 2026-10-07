@@ -2,6 +2,7 @@
 #include "winfw.h"
 #include "fwcontext.h"
 #include "objectpurger.h"
+#include "applocks.h"
 #include "mullvadobjects.h"
 #include "mullvadguids.h"
 #include "rules/persistent/blockall.h"
@@ -787,6 +788,66 @@ WinFw_SweepForeignGenerations(
 
 		return ObjectPurger::Execute(
 			ObjectPurger::GetRemoveAllGenerationsFunctor(saltList, removedObjects))
+			? WINFW_POLICY_STATUS_SUCCESS
+			: WINFW_POLICY_STATUS_GENERAL_FAILURE;
+	}
+	catch (common::error::WindowsException &err)
+	{
+		return HandlePolicyException(err);
+	}
+	catch (std::exception &err)
+	{
+		if (nullptr != g_logSink)
+		{
+			g_logSink(MULLVAD_LOG_LEVEL_ERROR, err.what(), g_logSinkContext);
+		}
+
+		return WINFW_POLICY_STATUS_GENERAL_FAILURE;
+	}
+	catch (...)
+	{
+		return WINFW_POLICY_STATUS_GENERAL_FAILURE;
+	}
+}
+
+WINFW_LINKAGE
+WINFW_POLICY_STATUS
+WINFW_API
+WinFw_SetLockedApps(
+	const wchar_t * const *apps,
+	size_t numApps,
+	const wchar_t *tunnelInterfaceAlias,
+	bool permitLan
+)
+{
+	try
+	{
+		if (nullptr == apps && 0 != numApps)
+		{
+			THROW_ERROR("Invalid argument: apps");
+		}
+
+		std::vector<std::wstring> locked;
+		locked.reserve(numApps);
+
+		for (size_t i = 0; i < numApps; ++i)
+		{
+			if (nullptr == apps[i])
+			{
+				THROW_ERROR("Invalid argument: apps");
+			}
+
+			locked.emplace_back(apps[i]);
+		}
+
+		std::optional<std::wstring> alias;
+
+		if (nullptr != tunnelInterfaceAlias)
+		{
+			alias = tunnelInterfaceAlias;
+		}
+
+		return applocks::Apply(locked, alias, permitLan)
 			? WINFW_POLICY_STATUS_SUCCESS
 			: WINFW_POLICY_STATUS_GENERAL_FAILURE;
 	}

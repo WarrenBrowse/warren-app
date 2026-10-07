@@ -225,6 +225,22 @@ unsafe extern "system" {
         num_apps: usize,
     ) -> WinFwPolicyStatus;
 
+    /// Locks the given apps to the tunnel interface named by
+    /// `tunnel_interface_alias` (null for none), loopback and, when
+    /// `permit_lan`, the LAN, with persistent filters that need no
+    /// initialized context.
+    ///
+    /// `apps` must point to `num_apps` valid null-terminated wide strings
+    /// (or be null with `num_apps` zero), and `tunnel_interface_alias` be
+    /// null or a valid null-terminated wide string; the callee copies them.
+    #[link_name = "WinFw_SetLockedApps"]
+    pub fn WinFw_SetLockedApps(
+        apps: *const *const libc::wchar_t,
+        num_apps: usize,
+        tunnel_interface_alias: *const libc::wchar_t,
+        permit_lan: bool,
+    ) -> WinFwPolicyStatus;
+
     #[link_name = "WinFw_SplitTunnelSublayersShared"]
     pub fn WinFw_SplitTunnelSublayersShared() -> bool;
 

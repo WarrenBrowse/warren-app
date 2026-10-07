@@ -27,6 +27,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="applocks.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="mullvadguids.cpp" />
     <ClCompile Include="mullvadobjects.cpp" />
@@ -46,6 +47,7 @@
     <ClCompile Include="rules\dns\permitloopback.cpp" />
     <ClCompile Include="rules\dns\permitnontunnel.cpp" />
     <ClCompile Include="rules\dns\permittunnel.cpp" />
+    <ClCompile Include="rules\applocks\locktotunnel.cpp" />
     <ClCompile Include="rules\includeonly\blockoutsidetunnel.cpp" />
     <ClCompile Include="rules\includeonly\blocksystemresolver.cpp" />
     <ClCompile Include="rules\multi\permitendpoint.cpp" />
@@ -87,6 +89,8 @@
     <ClInclude Include="rules\dns\permitloopback.h" />
     <ClInclude Include="rules\dns\permitnontunnel.h" />
     <ClInclude Include="rules\dns\permittunnel.h" />
+    <ClInclude Include="applocks.h" />
+    <ClInclude Include="rules\applocks\locktotunnel.h" />
     <ClInclude Include="rules\includeonly\blockoutsidetunnel.h" />
     <ClInclude Include="rules\includeonly\blocksystemresolver.h" />
     <ClInclude Include="rules\multi\permitendpoint.h" />

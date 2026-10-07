@@ -125,6 +125,26 @@ pub(super) fn set_included_apps(apps: &[OsString]) -> Result<(), FirewallPolicyE
     result.into_result()
 }
 
+/// Lock `apps` to `tunnel_interface` (none when `None`), loopback and, when
+/// `allow_lan`, the LAN, in every state and while no daemon runs. An empty
+/// list removes every lock.
+pub(super) fn set_locked_apps(
+    apps: &[OsString],
+    tunnel_interface: Option<&str>,
+    allow_lan: bool,
+) -> Result<(), FirewallPolicyError> {
+    let apps: Vec<WideCString> = apps.iter().map(WideCString::from_os_str_truncate).collect();
+    let app_ptrs: Vec<*const u16> = apps.iter().map(|app| app.as_ptr()).collect();
+    let alias = tunnel_interface.map(WideCString::from_str_truncate);
+    let alias_ptr = alias.as_ref().map_or(ptr::null(), |alias| alias.as_ptr());
+    // SAFETY: `app_ptrs` holds `app_ptrs.len()` pointers to the null-terminated
+    // strings of `apps`, and `alias_ptr` is null or points into `alias`, all
+    // alive until the call returns; the callee copies them.
+    let result =
+        unsafe { WinFw_SetLockedApps(app_ptrs.as_ptr(), app_ptrs.len(), alias_ptr, allow_lan) };
+    result.into_result()
+}
+
 /// Whether winfw's baseline and DNS filters share the sublayers the split
 /// tunnel driver adds its own filters to.
 pub(super) fn split_tunnel_sublayers_shared() -> bool {

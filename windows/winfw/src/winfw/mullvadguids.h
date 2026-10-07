@@ -181,6 +181,15 @@ public:
 	static const GUID &ProviderPersistent();
 	static const GUID &SublayerPersistent();
 
+	//
+	// Apps locked to the tunnel. A provider of their own, which the purge at
+	// initialization does not remove, so a lock holds while no daemon runs:
+	// across a service stop, an upgrade and a reboot. Recovery and the
+	// uninstaller remove it with every other generation's objects.
+	//
+	static const GUID &ProviderAppLocks();
+	static const GUID &SublayerAppLocks();
+
 	static const GUID &Filter_Boottime_BlockAll_Inbound_Ipv4();
 	static const GUID &Filter_Boottime_BlockAll_Outbound_Ipv4();
 	static const GUID &Filter_Boottime_BlockAll_Inbound_Ipv6();

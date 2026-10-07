@@ -96,6 +96,8 @@ private:
 	common::Buffer m_assembled;
 };
 
+} // anonymous namespace
+
 std::unique_ptr<IFilterCondition> AppCondition(const std::wstring &app)
 {
 	if (IsDevicePath(app))
@@ -124,8 +126,6 @@ std::vector<std::wstring> ResolvableApps(const std::vector<std::wstring> &apps)
 
 	return resolvable;
 }
-
-} // anonymous namespace
 
 BlockOutsideTunnel::BlockOutsideTunnel(
 	const std::vector<std::wstring> &apps,

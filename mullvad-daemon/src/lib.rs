@@ -289,7 +289,17 @@ fn macos_split_tunnel_available(capability: split_tunnel::Capability) -> Result<
 /// Whether this build enforces a lock on an app: one that only a launch can
 /// put in place (Linux) or that the platform cannot hold (macOS, until a
 /// content filter exists) is refused, never saved as a promise nobody keeps.
-const APP_LOCK_SUPPORTED: bool = false;
+const APP_LOCK_SUPPORTED: bool = cfg!(windows);
+
+/// The executables locked to the VPN, in the form the firewall takes.
+#[cfg(windows)]
+fn locked_app_paths(routing: &AppRoutingSettings) -> Vec<std::ffi::OsString> {
+    routing
+        .effective_locked_apps()
+        .into_iter()
+        .map(AppId::to_tunnel_command_repr)
+        .collect()
+}
 
 /// What the tunnel diverts for `routing`, in the form its split tunnel takes:
 /// the excluded apps while excluding, the apps in the tunnel in include-only
@@ -435,6 +445,10 @@ pub enum Error {
 
     #[error("The app routing change is invalid")]
     AppRouting(#[source] AppRoutingError),
+
+    #[cfg(windows)]
+    #[error("Failed to lock the apps to the VPN")]
+    AppLock(#[source] talpid_core::firewall::Error),
 
     #[error("An account is already set")]
     AlreadyLoggedIn,
@@ -1200,6 +1214,10 @@ pub struct Daemon {
     tunnel_state_machine_handle: TunnelStateMachineHandle,
     #[cfg(target_os = "windows")]
     volume_update_tx: mpsc::UnboundedSender<()>,
+    /// The apps locked to the VPN, held by persistent firewall filters that
+    /// follow the tunnel interface across every state transition.
+    #[cfg(windows)]
+    app_locks: talpid_core::app_locks::AppLocks<talpid_core::app_locks::WinFwEnforcer>,
     location_handler: GeoIpHandler,
     leak_checker: LeakChecker,
     /// Mirrors the tunnel into the desktop's own network indicator.
@@ -2474,6 +2492,27 @@ impl Daemon {
             internal_event_tx.clone().to_specialized_sender(),
         );
 
+        // Enforced at once, with no tunnel: a lock left by an earlier run
+        // names that run's adapter, and the list may have changed since.
+        #[cfg(windows)]
+        let app_locks = {
+            let own_executables = std::env::current_exe()
+                .map(|exe| vec![exe.into_os_string()])
+                .unwrap_or_default();
+            let mut app_locks = talpid_core::app_locks::AppLocks::new(
+                talpid_core::app_locks::WinFwEnforcer,
+                own_executables,
+                settings.allow_lan,
+            );
+            if let Err(error) = app_locks.set_apps(locked_app_paths(&settings.app_routing)) {
+                log::error!(
+                    "{}",
+                    error.display_chain_with_msg("Failed to lock the apps to the VPN")
+                );
+            }
+            app_locks
+        };
+
         let leak_checker = {
             let mut leak_checker = LeakChecker::new(route_manager.clone());
             let internal_event_tx = internal_event_tx.clone();
@@ -2517,6 +2556,8 @@ impl Daemon {
             tunnel_state_machine_handle,
             #[cfg(target_os = "windows")]
             volume_update_tx,
+            #[cfg(windows)]
+            app_locks,
             location_handler,
             leak_checker,
             nm_vpn_indicator: nm_vpn_indicator::NmVpnIndicator::new(&config.settings_dir),
@@ -3075,6 +3116,8 @@ impl Daemon {
         &mut self,
         tunnel_state_transition: TunnelStateTransition,
     ) {
+        #[cfg(windows)]
+        self.follow_tunnel_with_app_locks(&tunnel_state_transition);
         self.leak_checker
             .on_tunnel_state_transition(tunnel_state_transition.clone());
         self.nm_vpn_indicator
@@ -3853,6 +3896,13 @@ impl Daemon {
             Self::oneshot_send(tx, Err(error), response_msg);
             return;
         }
+        // Locked before anything else moves, so no step of the change can
+        // let a newly locked app out; a lock the firewall refuses is not saved.
+        #[cfg(windows)]
+        if let Err(error) = self.app_locks.set_apps(locked_app_paths(&app_routing)) {
+            Self::oneshot_send(tx, Err(Error::AppLock(error)), response_msg);
+            return;
+        }
 
         let split_apps = tunnel_split_apps(&app_routing);
         #[cfg(target_os = "linux")]
@@ -3898,6 +3948,22 @@ impl Daemon {
             }
             let _ = daemon_tx.send(InternalDaemonEvent::AppRoutingChanged(app_routing, tx));
         });
+    }
+
+    /// Lets the locked apps use the tunnel interface while connected, and
+    /// nothing outside loopback (and the LAN when shared) in any other state.
+    #[cfg(windows)]
+    fn follow_tunnel_with_app_locks(&mut self, transition: &TunnelStateTransition) {
+        let tunnel_interface = match transition {
+            TunnelStateTransition::Connected(endpoint) => endpoint.tunnel_interface.clone(),
+            _ => None,
+        };
+        if let Err(error) = self.app_locks.follow_tunnel(tunnel_interface) {
+            log::error!(
+                "{}",
+                error.display_chain_with_msg("Failed to let the locked apps use the tunnel")
+            );
+        }
     }
 
     /// Refuses a change the split tunnel cannot carry out here. Turning a
@@ -5151,6 +5217,14 @@ impl Daemon {
             .await
         {
             Ok(settings_changed) => {
+                #[cfg(windows)]
+                if let Err(error) = self.app_locks.set_allow_lan(allow_lan) {
+                    log::error!(
+                        "{}",
+                        error
+                            .display_chain_with_msg("Failed to share the LAN with the locked apps")
+                    );
+                }
                 if settings_changed {
                     self.send_tunnel_command(TunnelCommand::AllowLan(
                         allow_lan,

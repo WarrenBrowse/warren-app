@@ -1,12 +1,28 @@
 #pragma once
 
 #include <winfw/rules/ifirewallrule.h>
+#include <libwfp/conditions/ifiltercondition.h>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
 namespace rules::includeonly
 {
+
+//
+// The app id condition of an executable, given by its DOS path or by the NT
+// device path the split tunnel driver reports. Throws when the path does not
+// resolve.
+//
+std::unique_ptr<wfp::conditions::IFilterCondition> AppCondition(const std::wstring &app);
+
+//
+// The apps of `apps` whose path resolves to an app id. An app that does not
+// resolve cannot run, and a filter must never be left without an app
+// condition, since it would then match every app on the machine.
+//
+std::vector<std::wstring> ResolvableApps(const std::vector<std::wstring> &apps);
 
 //
 // "VPN only for these apps": the included apps may use the tunnel interface

@@ -38,6 +38,8 @@ use crate::tunnel_state_machine::LinuxNetworkingIdentifiers;
 use talpid_cgroup::v2::CGroup2;
 
 pub use self::imp::Error;
+#[cfg(windows)]
+pub use self::imp::set_locked_apps;
 
 #[cfg(any(target_os = "linux", target_os = "macos"))]
 const IPV6_LINK_LOCAL: Ipv6Network =

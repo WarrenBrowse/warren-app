@@ -78,7 +78,8 @@ ObjectPurger::RemovalFunctor ObjectPurger::GetRemoveAllGenerationsFunctor(
 	uint32_t *removedObjects)
 {
 	//
-	// Both provider keys, rekeyed to every salt we are asked to sweep, and
+	// Every provider key, the app locks' included, rekeyed to every salt we
+	// are asked to sweep, and
 	// ONLY those: recovery (ResetAllGenerations) passes every environment's
 	// salt including its own, while the startup sweep
 	// (SweepForeignGenerations) deliberately excludes the running build's
@@ -90,6 +91,7 @@ ObjectPurger::RemovalFunctor ObjectPurger::GetRemoveAllGenerationsFunctor(
 	{
 		providers.insert(WarrenGuidForSalt(MullvadGuids::Provider(), salt));
 		providers.insert(WarrenGuidForSalt(MullvadGuids::ProviderPersistent(), salt));
+		providers.insert(WarrenGuidForSalt(MullvadGuids::ProviderAppLocks(), salt));
 	}
 
 	return [providers = std::move(providers), removedObjects](wfp::FilterEngine &engine)

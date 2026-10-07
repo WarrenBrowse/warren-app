@@ -18,6 +18,8 @@ pub mod logging;
 /// Abstractions and extra features on `std::mpsc`
 pub mod mpsc;
 
+pub mod app_locks;
+
 /// Abstractions over operating system firewalls.
 pub mod firewall;
 

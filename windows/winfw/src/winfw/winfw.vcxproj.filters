@@ -64,6 +64,10 @@
     <ClCompile Include="rules\multi\permittailnet.cpp">
       <Filter>rules\multi</Filter>
     </ClCompile>
+    <ClCompile Include="applocks.cpp" />
+    <ClCompile Include="rules\applocks\locktotunnel.cpp">
+      <Filter>rules\applocks</Filter>
+    </ClCompile>
     <ClCompile Include="rules\includeonly\blockoutsidetunnel.cpp">
       <Filter>rules\includeonly</Filter>
     </ClCompile>
@@ -148,6 +152,10 @@
     <ClInclude Include="rules\multi\permittailnet.h">
       <Filter>rules\multi</Filter>
     </ClInclude>
+    <ClInclude Include="applocks.h" />
+    <ClInclude Include="rules\applocks\locktotunnel.h">
+      <Filter>rules\applocks</Filter>
+    </ClInclude>
     <ClInclude Include="rules\includeonly\blockoutsidetunnel.h">
       <Filter>rules\includeonly</Filter>
     </ClInclude>
@@ -174,6 +182,9 @@
     </Filter>
     <Filter Include="rules\persistent">
       <UniqueIdentifier>{d98577af-1119-4c3a-8a04-d24f461ee61c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="rules\applocks">
+      <UniqueIdentifier>{0b9d4b7e-55a1-4c2f-9e31-6a3f1d2c8e47}</UniqueIdentifier>
     </Filter>
     <Filter Include="rules\includeonly">
       <UniqueIdentifier>{8024497c-3763-48d8-802d-b8e0c2080499}</UniqueIdentifier>

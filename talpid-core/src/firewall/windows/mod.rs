@@ -80,6 +80,20 @@ pub enum Error {
     /// Failure to hold the apps of include-only to the tunnel
     #[error("Failed to hold the included apps to the tunnel")]
     HoldingIncludedApps(#[source] FirewallPolicyError),
+
+    /// Failure to lock apps to the tunnel
+    #[error("Failed to lock the apps to the tunnel")]
+    LockingApps(#[source] FirewallPolicyError),
+}
+
+/// Locks `apps` to `tunnel_interface`, loopback and, when `allow_lan`, the
+/// LAN. Independent of any policy and of initialization (`crate::app_locks`).
+pub fn set_locked_apps(
+    apps: &[std::ffi::OsString],
+    tunnel_interface: Option<&str>,
+    allow_lan: bool,
+) -> Result<(), Error> {
+    winfw::set_locked_apps(apps, tunnel_interface, allow_lan).map_err(Error::LockingApps)
 }
 
 /// The Windows implementation for the firewall.

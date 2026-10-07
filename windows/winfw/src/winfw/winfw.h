@@ -341,6 +341,29 @@ WinFw_SetIncludedApps(
 );
 
 //
+// SetLockedApps:
+//
+// Apps locked to the VPN: the given apps (executable paths) may use the
+// tunnel interface named by `tunnelInterfaceAlias` (null while there is no
+// tunnel), loopback, and the LAN when `permitLan` is set, and nothing else.
+// The filters are persistent and belong to no policy, so they hold in every
+// state and while no daemon runs, across a reboot included; initialization
+// leaves them in place. Only zero apps, ResetAllGenerations and the
+// uninstaller remove them. Needs no initialized context. An app whose path
+// does not resolve is skipped.
+//
+extern "C"
+WINFW_LINKAGE
+WINFW_POLICY_STATUS
+WINFW_API
+WinFw_SetLockedApps(
+	const wchar_t * const *apps,
+	size_t numApps,
+	const wchar_t *tunnelInterfaceAlias,
+	bool permitLan
+);
+
+//
 // SplitTunnelSublayersShared:
 //
 // Whether the baseline and DNS filters live in the sublayers the split tunnel

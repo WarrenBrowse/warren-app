@@ -605,3 +605,165 @@ fn the_sublayers_handed_to_the_driver_are_the_ones_our_filters_are_in() {
     );
     drop(fw);
 }
+
+/// Lifts every lock when dropped, even when the test fails: the locks are
+/// persistent and would otherwise outlive the test process.
+struct Locks;
+
+impl Drop for Locks {
+    fn drop(&mut self) {
+        let _ = winfw::set_locked_apps(&[], None, false);
+    }
+}
+
+fn lock_this_test(tunnel_interface: Option<&str>, allow_lan: bool) -> Locks {
+    let this_test: OsString = std::env::current_exe().unwrap().into();
+    winfw::set_locked_apps(&[this_test], tunnel_interface, allow_lan).expect("lock installed");
+    Locks
+}
+
+fn app_locks_provider() -> GUID {
+    let base = GUID::from_u128(0xc4da0442_3774_48fb_b8c5_e1aec17eb8a2);
+    GUID {
+        data1: base.data1 ^ warren_product_env::CURRENT.guid_salt(),
+        ..base
+    }
+}
+
+/// The alias of the interface the probe leaves through, which stands in for
+/// the tunnel.
+fn interface_reaching(addr: &str) -> String {
+    use windows_sys::Win32::NetworkManagement::{
+        IpHelper::{ConvertInterfaceIndexToLuid, ConvertInterfaceLuidToAlias, GetBestInterface},
+        Ndis::NET_LUID_LH,
+    };
+
+    let SocketAddr::V4(addr) = addr.parse::<SocketAddr>().unwrap() else {
+        panic!("an IPv4 probe");
+    };
+    let ip = addr.ip();
+    let mut index = 0u32;
+    // SAFETY: valid out pointer; the address is in network byte order.
+    let status = unsafe { GetBestInterface(u32::from_ne_bytes(ip.octets()), &raw mut index) };
+    assert_eq!(status, 0, "GetBestInterface");
+    let mut luid = NET_LUID_LH { Value: 0 };
+    // SAFETY: valid out pointer.
+    let status = unsafe { ConvertInterfaceIndexToLuid(index, &raw mut luid) };
+    assert_eq!(status, 0, "ConvertInterfaceIndexToLuid");
+    let mut alias = vec![0u16; 257];
+    // SAFETY: `alias` is writable for its length.
+    let status =
+        unsafe { ConvertInterfaceLuidToAlias(&raw const luid, alias.as_mut_ptr(), alias.len()) };
+    assert_eq!(status, 0, "ConvertInterfaceLuidToAlias");
+    let end = alias.iter().position(|c| *c == 0).unwrap();
+    String::from_utf16_lossy(&alias[..end])
+}
+
+#[test]
+#[ignore = "needs an elevated process and winfw.dll; locks this process"]
+fn a_locked_app_reaches_nothing_but_loopback_with_no_tunnel_and_no_policy() {
+    let _lock = WINFW.lock().unwrap_or_else(|poison| poison.into_inner());
+    assert!(
+        !blocked_by_the_filtering_engine(LAN_PROBE),
+        "something else blocks the probe already"
+    );
+
+    let locks = lock_this_test(None, false);
+    let locked = blocked_by_the_filtering_engine(LAN_PROBE);
+    drop(locks);
+    let released = !blocked_by_the_filtering_engine(LAN_PROBE);
+
+    assert!(locked, "a locked app reached the network with no tunnel");
+    assert!(released, "the lock outlived its apps");
+}
+
+#[test]
+#[ignore = "needs an elevated process and winfw.dll; locks this process"]
+fn a_locked_app_reaches_the_lan_when_it_is_shared() {
+    let _lock = WINFW.lock().unwrap_or_else(|poison| poison.into_inner());
+
+    let _locks = lock_this_test(None, true);
+
+    assert!(
+        !blocked_by_the_filtering_engine(LAN_PROBE),
+        "a locked app was cut from a shared LAN"
+    );
+}
+
+#[test]
+#[ignore = "needs an elevated process and winfw.dll; locks this process"]
+fn a_locked_app_may_use_the_tunnel_interface() {
+    let _lock = WINFW.lock().unwrap_or_else(|poison| poison.into_inner());
+    let tunnel = interface_reaching(LAN_PROBE);
+
+    let _locks = lock_this_test(Some(&tunnel), false);
+
+    assert!(
+        !blocked_by_the_filtering_engine(LAN_PROBE),
+        "a locked app was cut from the tunnel interface"
+    );
+}
+
+#[test]
+#[ignore = "needs an elevated process and winfw.dll; locks this process"]
+fn a_tunnel_interface_that_no_longer_exists_leaves_the_lock_closed() {
+    let _lock = WINFW.lock().unwrap_or_else(|poison| poison.into_inner());
+
+    let _locks = lock_this_test(Some("warren winfw test: no such adapter"), false);
+
+    assert!(
+        blocked_by_the_filtering_engine(LAN_PROBE),
+        "a vanished tunnel interface opened the lock"
+    );
+}
+
+#[test]
+#[ignore = "needs an elevated process and winfw.dll; locks this process"]
+fn the_locks_outlive_the_initialization_and_teardown_of_the_policies() {
+    let _lock = WINFW.lock().unwrap_or_else(|poison| poison.into_inner());
+    let _locks = lock_this_test(None, false);
+
+    drop(Winfw::init());
+
+    assert!(
+        blocked_by_the_filtering_engine(LAN_PROBE),
+        "a daemon start or stop lifted the lock"
+    );
+}
+
+#[test]
+#[ignore = "needs an elevated process and winfw.dll; locks this process"]
+fn recovery_removes_the_locks_with_every_other_object() {
+    let _lock = WINFW.lock().unwrap_or_else(|poison| poison.into_inner());
+    let engine = Engine::open();
+    let _locks = lock_this_test(None, false);
+
+    winfw::reset_all_generations().expect("recovery");
+
+    assert!(
+        !blocked_by_the_filtering_engine(LAN_PROBE),
+        "recovery left the lock"
+    );
+    assert!(engine.filter_names(app_locks_provider()).is_empty());
+}
+
+#[test]
+#[ignore = "needs an elevated process and winfw.dll"]
+fn a_locked_app_that_does_not_resolve_locks_nothing() {
+    let _lock = WINFW.lock().unwrap_or_else(|poison| poison.into_inner());
+    let engine = Engine::open();
+
+    winfw::set_locked_apps(
+        &[OsString::from(r"C:\warren-winfw-test\absent.exe")],
+        None,
+        false,
+    )
+    .expect("lock installed");
+    let _locks = Locks;
+
+    assert!(
+        !blocked_by_the_filtering_engine(LAN_PROBE),
+        "a lock with no app to match blocked every app"
+    );
+    assert!(engine.filter_names(app_locks_provider()).is_empty());
+}

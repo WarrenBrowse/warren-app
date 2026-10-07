@@ -19,4 +19,7 @@ public:
 
 	static std::unique_ptr<wfp::ProviderBuilder> ProviderPersistent();
 	static std::unique_ptr<wfp::SublayerBuilder> SublayerPersistent();
+
+	static std::unique_ptr<wfp::ProviderBuilder> ProviderAppLocks();
+	static std::unique_ptr<wfp::SublayerBuilder> SublayerAppLocks();
 };
