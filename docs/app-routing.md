@@ -1374,8 +1374,15 @@ it, so its own API calls and every app that is not locked keep the network.
   or outlive its owner.
 - The service stays in the foreground while it is up, and the disconnected
   notification counts the locked apps. It starts at boot
-  (`LockedAppsBootCompletedReceiver`) and when a lock is set with no tunnel
-  (`KEY_HOLD_LOCKED_APPS_ACTION`).
+  (`LockedAppsBootCompletedReceiver`), when a lock is set with no tunnel
+  (`KEY_HOLD_LOCKED_APPS_ACTION`), and whenever the service is created while
+  this app is still the prepared VPN app (the UI binding it after the system
+  killed the process).
+- What the UI says follows the blackhole, never the list: its state reaches
+  the connect screen and the notification (`WarrenLockGuardProvider`), so
+  locked apps it does not hold (another VPN app took the slot) read "N locked
+  apps can reach the Internet without the VPN", in the warning colour, rather
+  than "blocked".
 - An allow list with no app on the device would capture every app, so no
   locked app installed means no guard.
 - "Allow LAN" does not open it, as it does not open the kill switch.
@@ -1391,6 +1398,8 @@ Validation, 2026-10-07, betaDebug of this branch on the `warren-test` emulator
 | disconnect | the guard back on Chrome's uid alone |
 | reboot, no auto-connect | the guard up again before the app was opened; the service in the foreground, notification "Disconnected and unsecure" / "1 app blocked until the VPN connects" |
 | lock lifted | no VPN network left |
+| Warren force-stopped, then opened | no VPN network while stopped; on opening, the guard back on Chrome's uid alone |
+| VPN consent withdrawn (`appops set ... ACTIVATE_VPN deny`), Warren force-stopped, then opened | no guard, and the connect screen read "1 locked app can reach the Internet without the VPN" |
 
 Residuals: Android runs one VPN at a time, so turning another VPN app on, or
 forcing Warren to stop, releases the locked apps; the route page says so.
