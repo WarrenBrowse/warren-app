@@ -21,6 +21,10 @@ single route, and one choice for every app without a rule.
 | **Through the VPN, another country** | per-app exit | its own exit country, every other app keeping the main connection |
 | **Outside the VPN** | exclude, or no rule under include-only | the network as if Warren were off |
 
+Any route through the VPN takes an option of its own, **Never without the
+VPN** (section 8): the app is blocked whenever the VPN does not carry it,
+the disconnected state and a stopped daemon included.
+
 "Other apps go" chooses the default: **Through the VPN** (split mode `Off` or
 `Exclude`) or **Outside the VPN** (split mode `IncludeOnly`, the former "VPN
 only for"). A rule is an app whose route differs from the default, so the list
@@ -43,6 +47,7 @@ AppRoutingSettings {
     included_apps: set<AppId>,          // "Through the VPN" rules, direct default
     app_exits_enabled: bool,            // on with the first country
     app_exits: map<AppId, ExitChoice>,  // "another country" rules
+    locked_apps: set<AppId>,            // "Never without the VPN" (section 8)
 }
 ExitChoice { country: CountryCode, city: Option<CityCode> }
 ```
@@ -65,7 +70,12 @@ ExitChoice { country: CountryCode, city: Option<CityCode> }
      `warren-include`, so there this holds for the app opened that way
      (section 3.3);
   3. otherwise an app with an `app_exits` entry leaves through its country, and
-     everything else through the main connection.
+     everything else through the main connection;
+  4. an app in `locked_apps` is never outside the tunnel: an `excluded_apps`
+     entry is not in force for it (its country stays in force), it is
+     tunneled under `IncludeOnly`, and it is blocked whenever the tunnel does
+     not carry it (section 8). Locking an app drops its exclusion, so lifting
+     the lock later does not send it outside the tunnel unasked.
 - The split-tunneling RPCs keep their access class (owner and administrators
   only, `docs/security.md`), including the new ones.
 - On Android the settings live in `WarrenLocalSettingsRepository`
@@ -1241,3 +1251,124 @@ view.
   mirror them, and screenshots each screen per locale.
   `APP_ROUTING_LOCALES=all` renders every catalog; run it after changing any
   App routing copy.
+
+## 8. Never without the VPN (per-app lock)
+
+A locked app reaches the network only through the Warren tunnel. It is never
+outside the tunnel (section 1, rule 4), and while the tunnel does not carry it
+(connecting, error, disconnected, a stopped daemon, a device that just booted)
+it is blocked, every other app keeping whatever the state gives it. It is the
+global lockdown mode narrowed to a list of apps.
+
+| platform | mechanism | holds while no daemon runs | status |
+|---|---|---|---|
+| Windows | persistent WFP filters of their own (winfw `WinFw_SetLockedApps`) | yes, across a reboot | enforced, the real-engine tests run elevated in CI |
+| Android | a VpnService interface that captures only the locked apps, with no pump | while Warren holds the VPN slot, from boot | enforced, validated on an emulator |
+| Linux | a cgroup the app is opened in by Warren | until the app exits | not yet: the option is hidden |
+| macOS | needs a Network Extension content filter and a Developer ID build | | not yet: the option is hidden |
+| iOS | no per-app traffic identification outside MDM | | not available |
+
+The daemon refuses a lock (`AppRoutingError::LockUnavailable`,
+`FAILED_PRECONDITION`) where the platform does not enforce one, so a list is
+never saved that nothing holds.
+
+### 8.1 Windows
+
+`talpid-core/src/app_locks.rs` keeps the lock the daemon wants and puts it in
+force through winfw; the daemon owns it and follows every tunnel state
+transition (`follow_tunnel_with_app_locks` in `mullvad-daemon/src/lib.rs`).
+
+- winfw installs, in a sublayer and under a provider of their own
+  (`ProviderAppLocks`, `SublayerAppLocks`, salted per environment like every
+  other key), a hard (`definitive`) block of the locked executables at
+  `ALE_AUTH_CONNECT` and `ALE_AUTH_RECV_ACCEPT`, IPv4 and IPv6, for anything
+  that is not loopback and not on the tunnel interface. Connected, the tunnel
+  interface is the alias the connected policy is applied with; in any other
+  state there is none and the apps get loopback only. With LAN sharing on, a
+  permit of the LAN and multicast ranges weighs above the block in the same
+  sublayer.
+- The filters are persistent and belong to no policy. The purge winfw runs at
+  initialization and teardown removes the providers `Provider` and
+  `ProviderPersistent` only, so a daemon start, stop, crash or upgrade, and a
+  reboot, leave the locks in force. `WinFw_ResetAllGenerations` (the
+  uninstaller's `warren-setup reset-firewall`, and recovery) removes them with
+  every other generation's objects; the startup sweep of foreign generations
+  removes another environment's.
+- A lock change is one WFP transaction: the old filters go and the new ones
+  arrive together. An executable whose path does not resolve is skipped, and a
+  list where none resolves installs nothing, since a filter with no app
+  condition would match every app. An alias that no longer resolves (the
+  adapter was removed since) leaves the apps blocked outside loopback.
+- The daemon never locks its own executable, whose relay connection leaves
+  outside the tunnel.
+- Every change is put in force before the settings are saved, so a lock the
+  firewall refuses is answered with an error and not saved.
+
+Tests: `talpid-core/src/firewall/windows/winfw_tests.rs` (elevated, against
+the real filtering engine: blocked with no tunnel and no policy, the LAN when
+shared, the tunnel interface, an alias that no longer resolves, the lock
+outliving winfw's initialization and teardown, recovery removing it, an
+unresolvable app locking nothing), `talpid-core/src/app_locks.rs` (what is put
+in force and when).
+
+Residuals:
+- The lock is by executable path, as every WFP app condition: a copy of the
+  executable elsewhere, or a child process of another executable, is not held.
+- Name lookups go through the system resolver (the Dnscache service), which is
+  not the app: while disconnected, a locked app's lookups reach the network's
+  resolver, though no connection of the app follows them.
+- Not yet run end to end with the daemon on a Windows host against a real exit
+  (the winfw behaviour is, in CI).
+
+### 8.2 Android
+
+`WarrenQuinnAdapter` holds a third interface next to the tunnel and the kill
+switch: the lock guard (`planLockGuard`), an allow list of the locked apps on
+the device, every address family routed, no DNS, no pump. This app is not on
+it, so its own API calls and every app that is not locked keep the network.
+
+- It comes up wherever the traffic is handed back to the bare network: a user
+  disconnect (`teardownLocked`), and a drop released without lockdown, an
+  expiry, a ban (`releaseTraffic`). It is established before the interfaces it
+  replaces close. It goes once the live interface is up on a connect, or the
+  kill-switch blackhole is (which holds the locked apps too: every app, or an
+  include-only list they are on).
+- A system revoke (another VPN took the slot) and the service's destruction
+  tear down without it: an interface established then would take the slot back
+  or outlive its owner.
+- The service stays in the foreground while it is up, and the disconnected
+  notification counts the locked apps. It starts at boot
+  (`LockedAppsBootCompletedReceiver`) and when a lock is set with no tunnel
+  (`KEY_HOLD_LOCKED_APPS_ACTION`).
+- An allow list with no app on the device would capture every app, so no
+  locked app installed means no guard.
+- "Allow LAN" does not open it, as it does not open the kill switch.
+
+Validation, 2026-10-07, betaDebug of this branch on the `warren-test` emulator
+(API 35, arm64), Chrome locked, FOSS Browser as the control, IP echo through
+`api.ipify.org`:
+
+| check | observed |
+|---|---|
+| Chrome locked, Warren disconnected | one VPN network, `Uids: <{10145-10145, 20145-20145}>` (Chrome's uid only); Chrome loaded nothing, the other browser showed the host's address; the connect screen read "1 app blocked until the VPN connects" |
+| connect | the VPN network carried every uid; Chrome showed 50.7.46.90 (NL exit); the label went |
+| disconnect | the guard back on Chrome's uid alone |
+| reboot, no auto-connect | the guard up again before the app was opened; the service in the foreground, notification "Disconnected and unsecure" / "1 app blocked until the VPN connects" |
+| lock lifted | no VPN network left |
+
+Residuals: Android runs one VPN at a time, so turning another VPN app on, or
+forcing Warren to stop, releases the locked apps; the route page says so.
+A locked app traffic that a system service carries for it (a download through
+`DownloadManager`, a push) belongs to that service, as in section 3.5.
+
+### 8.3 What the user sees
+
+The route page of an app carries a "Never without the VPN" switch under the
+three routes, with what it does in one sentence. It cannot be turned on for an
+app outside the VPN (it says to choose a route through the VPN first), and is
+hidden where the platform cannot hold it. Sending a locked app outside the VPN
+lifts the lock first (`planAppRoute`), so the app never takes a third route on
+the way. A locked app is a rule even on the default route; its chip ends with a
+padlock, and while the VPN is not connected its line reads "Blocked until the
+VPN connects". The main screen says how many apps wait for the VPN, and opens
+App routing.
