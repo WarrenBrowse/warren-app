@@ -28,7 +28,9 @@ filter = 'package(talpid-core) & test(resolver::)'
 test-group = 'talpid-resolver-serial'
 
 [[profile.warren-ci.overrides]]
-filter = 'package(talpid-core) & test(/winfw_tests::/)'
+# `warren-setup reset-firewall` removes every Warren WFP object, a winfw test's
+# included, so it joins their group.
+filter = '(package(talpid-core) & test(/winfw_tests::/)) | (package(mullvad-setup) & binary(reset_firewall))'
 test-group = 'winfw-machine-serial'
 # A retry would hide a filter left behind by the first attempt.
 retries = 0

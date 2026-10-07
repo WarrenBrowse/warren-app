@@ -24,17 +24,16 @@ const HYPERV_LEAK_WARNING_MSG: &str = "Hyper-V (e.g. WSL machines) may leak in b
 
 // `COMLibrary` must be initialized for per thread, so use TLS
 thread_local! {
-    static WMI: Option<wmi::WMIConnection> = {
-        let result = hyperv::init_wmi();
-        if matches!(&result, Err(hyperv::Error::ObtainHyperVClass(_))) {
-            log::warn!("The Hyper-V firewall is not available. {HYPERV_LEAK_WARNING_MSG}");
-            return None;
-        }
-        consume_and_log_hyperv_err(
-            "Initialize COM and WMI",
-            result,
-        )
-    };
+    static WMI: Option<wmi::WMIConnection> = connect_wmi();
+}
+
+fn connect_wmi() -> Option<wmi::WMIConnection> {
+    let result = hyperv::init_wmi();
+    if matches!(&result, Err(hyperv::Error::ObtainHyperVClass(_))) {
+        log::warn!("The Hyper-V firewall is not available. {HYPERV_LEAK_WARNING_MSG}");
+        return None;
+    }
+    consume_and_log_hyperv_err("Initialize COM and WMI", result)
 }
 
 /// Enable or disable blocking Hyper-V rule
@@ -302,7 +301,12 @@ impl Firewall {
     pub fn reset_policy_all_generations(&mut self) -> Result<(), Error> {
         winfw::reset_all_generations().map_err(Error::ResettingPolicy)?;
 
-        with_wmi_if_enabled(|wmi| {
+        // A connection released before this returns, not the thread's own:
+        // `warren-setup reset-firewall` runs this on its main thread, and a
+        // connection still held there when the process exits crashes it in
+        // combase.dll (0xC0000005), which the uninstaller and the deadman read
+        // as a failed reset.
+        with_scoped_wmi_if_enabled(|wmi| {
             let result = hyperv::remove_blocking_hyperv_firewall_rules(wmi);
             consume_and_log_hyperv_err("Remove block-all Hyper-V filter", result);
         });
@@ -474,6 +478,16 @@ fn with_wmi_if_enabled(f: impl FnOnce(&wmi::WMIConnection)) {
             f(con)
         }
     })
+}
+
+// Run a closure with a WMI connection of its own, dropped when it returns
+fn with_scoped_wmi_if_enabled(f: impl FnOnce(&wmi::WMIConnection)) {
+    if !*BLOCK_HYPERV {
+        return;
+    }
+    if let Some(con) = connect_wmi() {
+        f(&con)
+    }
 }
 
 /// The Tailscale adapters coexisting with the tunnel `own`, read from the host now.

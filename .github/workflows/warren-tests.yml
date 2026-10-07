@@ -540,11 +540,12 @@ jobs:
 
       # The same package set as above, so the test binaries are the ones
       # already built: `-p talpid-core` alone unifies other features and
-      # recompiles it (2 minutes on the first run).
+      # recompiles it (2 minutes on the first run). `warren-setup
+      # reset-firewall` runs here too, as the uninstaller runs it.
       - name: winfw against the real filtering engine (elevated)
         timeout-minutes: 15
         run: |
           # shellcheck disable=SC2086
           bash ci/codemagic/watchdog.sh cargo nextest run --locked --profile warren-ci \
             --no-fail-fast $WINDOWS_CRATES --run-ignored only \
-            -E 'package(talpid-core) & test(/winfw_tests::/)'
+            -E '(package(talpid-core) & test(/winfw_tests::/)) | (package(mullvad-setup) & binary(reset_firewall))'

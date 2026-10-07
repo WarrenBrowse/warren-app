@@ -34,6 +34,8 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   cere din nou automat în loc să se oprească la primul refuz.
 
 ### Reparat
+- [Windows] Repară resetarea firewall-ului rulată de dezinstalare și de instrumentul de recuperare,
+  care elimina regulile și apoi se oprea cu o eroare, așa că dezinstalarea o înregistra ca eșuată.
 - [iOS] Prezintă un drept de port cu fiecare cerere de port redirecționat, ca pe celelalte
   platforme, astfel încât serverele care îl cer acordă portul în loc să-l refuze.
 - [iOS] Semnează conexiunea cu portofelul afișat în aplicație. Folosea o cheie derivată din aceeași
