@@ -337,6 +337,12 @@ for (const locale of LOCALES) {
           t('vpn-settings-view', 'Traffic to these networks goes outside the VPN tunnel.'),
         ),
       ).toBeVisible();
+      // The list is folded behind its summary row.
+      const sharedNetworks = view.getByRole('button', {
+        name: t('vpn-settings-view', 'Shared networks'),
+      });
+      expect(await clipped(sharedNetworks)).toEqual([]);
+      await sharedNetworks.click();
       // Addresses read left to right in every catalog, right-to-left ones included.
       await expect(view.getByText('192.168.0.0/16', { exact: true })).toHaveCSS('direction', 'ltr');
       const reset = view.getByText(t('vpn-settings-view', 'Reset to default'), { exact: true });

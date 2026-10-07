@@ -96,9 +96,12 @@ test.describe('Never without the VPN, on Windows', () => {
     const excluded = util.ipc.splitTunneling.addApplication
       .expect(undefined)
       .then(() => calls.push('exclude'));
+    const bypassOn = util.ipc.appRouting.setSplitMode
+      .expect(undefined)
+      .then((mode) => calls.push(`mode ${mode}`));
     await page.getByTestId('route-outside').click();
-    await Promise.all([unlocked, excluded]);
-    expect(calls).toEqual(['unlock', 'exclude']);
+    await Promise.all([unlocked, excluded, bypassOn]);
+    expect(calls).toEqual(['unlock', 'exclude', 'mode exclude']);
 
     await notifyRouting(routing({ splitMode: 'exclude', excludedApps: [FIREFOX.absolutepath] }));
     const lock = page.getByRole('switch', { name: 'Never without the VPN' });
