@@ -1265,8 +1265,8 @@ global lockdown mode narrowed to a list of apps.
 | Windows | persistent WFP filters of their own (winfw `WinFw_SetLockedApps`) | yes, across a reboot | enforced, the real-engine tests run elevated in CI |
 | Android | a VpnService interface that captures only the locked apps, with no pump | while Warren holds the VPN slot, from boot | enforced, validated on an emulator |
 | Linux | nftables over a cgroup the app is opened in by Warren (`warren-include --locked`) | yes, until the app exits | enforced, the real-kernel tests run as root in a VM |
-| macOS | needs a Network Extension content filter and a Developer ID build | | not yet: the option is hidden |
-| iOS | no per-app traffic identification outside MDM | | not available |
+| macOS | needs a Network Extension content filter and a Developer ID build (section 8.5) | | not yet: the option is hidden |
+| iOS | no per-app traffic identification outside MDM (section 8.5) | | not available |
 
 The daemon refuses a lock (`AppRoutingError::LockUnavailable`,
 `FAILED_PRECONDITION`) where the platform does not enforce one, so a list is
@@ -1314,11 +1314,40 @@ in force and when).
 Residuals:
 - The lock is by executable path, as every WFP app condition: a copy of the
   executable elsewhere, or a child process of another executable, is not held.
+  WFP matches no process id, so holding the children of another program would
+  mean holding that program everywhere; a copy is another program, which the
+  user locks on its own.
 - Name lookups go through the system resolver (the Dnscache service), which is
   not the app: while disconnected, a locked app's lookups reach the network's
   resolver, though no connection of the app follows them.
-- Not yet run end to end with the daemon on a Windows host against a real exit
-  (the winfw behaviour is, in CI).
+
+Validation end to end, 2026-10-07, the Windows 11 ARM64 VM (build 26100), a
+native ARM64 debug build of `7c746f31f9` (daemon and winfw, beta) run as the
+dev service, the test wallet, a copy of `curl.exe` at `C:\b1\lk` locked and
+the system `curl.exe` as the control, `https://api.ipify.org` as the echo:
+
+| check | observed |
+|---|---|
+| disconnected | the locked curl refused in 21 ms, the control on the VM's own address; with LAN sharing on, the locked curl reached the gateway |
+| connected | both from the NL exit (50.7.46.90) |
+| disconnected again | refused again |
+| service stopped while connected | refused, the control on the VM's own address |
+| reboot, service not started | still refused |
+| another copy of the same `curl.exe` elsewhere | on the VM's own address (the path residual) |
+| service started, disconnected | refused |
+| lock removed, then set again | released at once, refused again at once |
+| `warren-setup reset-firewall`, service stopped | released |
+| service started after the reset | refused again: the daemon puts the saved lock back in force |
+
+The first connect stayed blocked on "The split tunneling module reported an
+error": the VM's settings held an exclusion from an earlier session and this
+build had no split tunnel driver; split mode off, it connected.
+`warren-setup reset-firewall` crashed in `combase.dll` (0xC0000005) after
+removing the filters, on every run, the lock playing no part. It exited 0
+with the Hyper-V step off (`TALPID_FIREWALL_BLOCK_HYPERV=0`), and exits 0 now
+that the reset uses a WMI connection released before it returns instead of
+the one its main thread kept until the process exited;
+`mullvad-setup/tests/reset_firewall.rs` runs it in the elevated CI step.
 
 ### 8.2 Linux
 
@@ -1351,10 +1380,41 @@ released by one; the lock outlives a policy reset and recovery removes it; a
 process outside the cgroup is never held), run on 2026-10-07 in an Ubuntu 24.04
 VM (kernel 6.8).
 
-Residuals: a program already running may take the new window into its running
-process, which stays where it was (the route screen says to close it first, as
-for "Open through the VPN"); a program opened another way is not locked; not
-yet run end to end with the daemon against a real exit.
+Validation end to end, 2026-10-07, the same VM (aarch64, debug build of
+`7c746f31f9`, beta, the test wallet), `curl https://api.ipify.org` opened
+through `warren-include --locked` against a plain `curl` as the control. The
+packaged beta daemon of the VM was stopped for the run: two daemons of one
+environment share the nft table names, and an unattended upgrade that
+restarted it mid-run removed the test daemon's policy table.
+
+| check | observed |
+|---|---|
+| disconnected | the locked curl refused in 3 ms (`Couldn't connect`), the control on the VM's own address; the locked app reached the LAN gateway with LAN sharing on |
+| connected | both from the NL exit (50.7.46.90); the lock table held no rule |
+| disconnected again | the locked curl refused again |
+| daemon stopped while connected (SIGTERM) | the lock table stayed alone; the locked curl refused, the control on the VM's own address |
+| daemon started again, disconnected | still refused |
+| include-only, connected | the locked app and an app opened through `warren-include` both from the NL exit, the control on the VM's own address; two more connect cycles gave the same |
+| include-only, disconnected | the locked app refused, the included one on the VM's own address |
+| include-only, daemon stopped while connected | the locked app refused |
+| `warren-setup reset-firewall` | the lock table gone, the locked app on the VM's own address |
+| `warren app-routing lock add` | refused, `FailedPrecondition` "this build cannot lock an app to the VPN": Linux keeps no list |
+
+The first include-only connect of the run, right after the policy table had
+been removed under the daemon, gave the included and the locked apps a DNS
+timeout while their traffic by address left from the exit; the cause was not
+established, and the three later cycles resolved normally.
+
+Residuals:
+- A program already running may take the new window into its running process,
+  which stays where it was (the route screen says to close it first, as for
+  "Open through the VPN"); a program opened another way is not locked. A
+  program that must always be locked can be started that way from its own
+  desktop entry or autostart file (`warren-include --locked <program>`).
+- Name lookups go through `systemd-resolved` where the distribution uses it,
+  a process outside the cgroup: while disconnected, a locked app's lookups
+  reach the network's resolver (measured: `getent ahosts` answered), though
+  no connection of the app follows them.
 
 ### 8.3 Android
 
@@ -1417,3 +1477,39 @@ the way. A locked app is a rule even on the default route; its chip ends with a
 padlock, and while the VPN is not connected its line reads "Blocked until the
 VPN connects". The main screen says how many apps wait for the VPN, and opens
 App routing.
+
+### 8.5 macOS and iOS
+
+macOS has no per-app firewall a daemon can drive: pf matches no process, and
+the split tunnel's classifier (section 3) only steers packets while the daemon
+runs. The mechanism that holds is a content filter, an `NEFilterDataProvider`
+shipped as a system extension inside the app. It sees every new flow with the
+audit token of the process that opened it, so it can tell the app by its code
+signature (firmer than the Windows path condition), and it runs whether the
+daemon does or not. It would keep the lock list itself, drop a locked app's
+flows unless the daemon reports a connected tunnel over XPC, and drop them
+when it cannot reach the daemon.
+
+What it needs before any code can ship, all of it on the Apple developer
+account (the account holder's action):
+
+- the Developer ID Application and Installer certificates, the same ones the
+  split tunnel waits for (`docs/macos-signing.md`). On 2026-10-07 the build Mac
+  had no code signing identity (`security find-identity -v -p codesigning`:
+  0) and the repo no macOS signing secret, so release builds are signed ad hoc;
+- App IDs for the app and the extension with the Network Extensions and System
+  Extension capabilities, and a Developer ID provisioning profile for each,
+  embedded in the bundle;
+- the entitlements `com.apple.developer.networking.networkextension`
+  (`content-filter-provider-systemextension`) on both and
+  `com.apple.developer.system-extension.install` on the app.
+
+On the user's Mac the app must run from `/Applications`, and the user approves
+the extension in System Settings (Privacy and Security), then the filter
+prompt; an MDM profile can approve both. These are Apple's documented
+requirements, not yet tried on a Warren build.
+
+iOS identifies an app's traffic only through per-app VPN or a content filter,
+and Apple's documentation reserves both to supervised (MDM) devices, a content
+filter otherwise needing the Family Controls entitlement Apple grants to
+parental-control apps. Neither fits an App Store VPN, so iOS has no lock.
