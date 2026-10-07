@@ -82,7 +82,8 @@ private fun GeoIpLocation.shortName(): String = city?.takeIf { it.isNotBlank() }
 internal fun NotificationTunnelState.notificationText(context: Context): CharSequence? {
     if (this is NotificationTunnelState.Disconnected && lockedApps > 0) {
         return context.resources.getQuantityString(
-            R.plurals.apps_blocked_until_vpn,
+            if (lockedAppsHeld) R.plurals.apps_blocked_until_vpn
+            else R.plurals.apps_locked_not_held,
             lockedApps,
             lockedApps,
         )

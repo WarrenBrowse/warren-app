@@ -32,6 +32,7 @@ import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 import com.warrenbrowse.vpn.lib.repository.ExitPin
 import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenLockGuardProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenAutoRecoveryProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenHostOfflineProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
@@ -91,6 +92,7 @@ class ConnectViewModelTest {
     private val autoRecoveryCountFlow = MutableStateFlow(0)
     private val vpnOnlyForCountFlow = MutableStateFlow<Int?>(null)
     private val lockedCountFlow = MutableStateFlow(0)
+    private val lockGuardFlow = MutableStateFlow(true)
     private val mockSplitTunneling: SplitTunnelingRepository = mockk()
     private val mockHostOfflineProvider: WarrenHostOfflineProvider = mockk()
     private val mockAutoRecoveryProvider: WarrenAutoRecoveryProvider = mockk()
@@ -151,6 +153,10 @@ class ConnectViewModelTest {
                 exitSwitchedNotificationUseCase = mockk(relaxed = true),
                 envStandDownUseCase = mockk(relaxed = true),
                 networkStatsProvider = mockNetworkStatsProvider,
+                lockGuard =
+                    object : WarrenLockGuardProvider {
+                        override val lockGuardActive = lockGuardFlow
+                    },
             )
     }
 
@@ -182,6 +188,16 @@ class ConnectViewModelTest {
             assertEquals(0, awaitItem().lockedAppsCount)
             lockedCountFlow.value = 2
             assertEquals(2, awaitItem().lockedAppsCount)
+        }
+    }
+
+    @Test
+    fun `locked apps whose blackhole is down are not counted as blocked`() = runTest {
+        lockedCountFlow.value = 1
+        viewModel.uiState.test {
+            assertEquals(true, awaitItem().lockedAppsHeld)
+            lockGuardFlow.value = false
+            assertEquals(false, awaitItem().lockedAppsHeld)
         }
     }
 

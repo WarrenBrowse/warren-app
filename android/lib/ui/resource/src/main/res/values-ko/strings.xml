@@ -133,6 +133,9 @@
     <plurals name="apps_blocked_until_vpn">
         <item quantity="other">%1$d개 앱이 VPN 연결 전까지 차단됨</item>
     </plurals>
+    <plurals name="apps_locked_not_held">
+        <item quantity="other">고정한 앱 %1$d개가 VPN 없이 인터넷에 연결할 수 있습니다</item>
+    </plurals>
     <string name="app_country_only_app_title">%1$s만 VPN을 사용하게 됩니다</string>
     <string name="country_picker_title">%1$s의 국가</string>
     <string name="country_picker_cities_in">%1$s의 도시</string>

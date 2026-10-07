@@ -139,6 +139,12 @@
         <item quantity="many">%1$d застосунків заблоковано до підключення VPN</item>
         <item quantity="other">%1$d застосунку заблоковано до підключення VPN</item>
     </plurals>
+    <plurals name="apps_locked_not_held">
+        <item quantity="one">%1$d прив\'язаний застосунок може виходити в інтернет без VPN</item>
+        <item quantity="few">%1$d прив\'язані застосунки можуть виходити в інтернет без VPN</item>
+        <item quantity="many">%1$d прив\'язаних застосунків можуть виходити в інтернет без VPN</item>
+        <item quantity="other">%1$d прив\'язаного застосунку можуть виходити в інтернет без VPN</item>
+    </plurals>
     <string name="app_country_only_app_title">VPN використовуватиме лише %1$s</string>
     <string name="country_picker_title">Країна для %1$s</string>
     <string name="country_picker_cities_in">%1$s: міста</string>

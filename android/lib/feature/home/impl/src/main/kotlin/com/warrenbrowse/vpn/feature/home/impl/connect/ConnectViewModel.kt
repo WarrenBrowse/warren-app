@@ -35,6 +35,7 @@ import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenLockGuardProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenAutoRecoveryProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenHostOfflineProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
@@ -69,6 +70,7 @@ class ConnectViewModel(
     private val exitSwitchedNotificationUseCase: ExitSwitchedNotificationUseCase,
     private val envStandDownUseCase: EnvStandDownUseCase,
     private val networkStatsProvider: WarrenNetworkStatsProvider,
+    lockGuard: WarrenLockGuardProvider,
 ) : ViewModel() {
     private val _uiSideEffect = Channel<UiSideEffect>()
 
@@ -97,7 +99,9 @@ class ConnectViewModel(
                     .combine(splitTunneling.vpnOnlyForCount) { count, vpnOnlyFor ->
                         count to vpnOnlyFor
                     }
-                    .combine(splitTunneling.lockedCount) { (count, vpnOnlyFor), locked ->
+                    .combine(splitTunneling.lockedCount.combine(lockGuard.lockGuardActive, ::Pair)) {
+                        (count, vpnOnlyFor),
+                        locked ->
                         Triple(count, vpnOnlyFor, locked)
                     },
                 // The pinned location below is derived from the relay
@@ -113,8 +117,9 @@ class ConnectViewModel(
                 lastKnownDisconnectedLocation,
                 exitPin,
                 hostOffline,
-                (autoRecoveryCount, vpnOnlyForCount, lockedAppsCount),
+                (autoRecoveryCount, vpnOnlyForCount, lockedApps),
                 relays ->
+                val (lockedAppsCount, lockGuardActive) = lockedApps
                 // Warren's relay list carries no coordinates and there is no
                 // device-GeoIP service, so the Warren tunnel state never reports
                 // a location. The pinned scope stands in when the engine has not
@@ -173,6 +178,7 @@ class ConnectViewModel(
                     autoRecoveryCount = autoRecoveryCount,
                     vpnOnlyForCount = vpnOnlyForCount,
                     lockedAppsCount = lockedAppsCount,
+                    lockedAppsHeld = lockGuardActive || tunnelState.holdsEveryApp(),
                 )
             }
             .stateIn(
@@ -326,3 +332,17 @@ class ConnectViewModel(
         }
     }
 }
+
+/**
+ * Whether the tunnel's own interface holds every app, the locked ones included, so they need no
+ * blackhole of their own: a connection on its way, or the kill switch. Disconnected, or with the
+ * traffic released, only the locked apps' blackhole holds them.
+ */
+private fun TunnelState.holdsEveryApp(): Boolean =
+    when (this) {
+        is TunnelState.Disconnected -> false
+        is TunnelState.Error -> errorState.isBlocking
+        is TunnelState.Connecting,
+        is TunnelState.Connected,
+        is TunnelState.Disconnecting -> true
+    }

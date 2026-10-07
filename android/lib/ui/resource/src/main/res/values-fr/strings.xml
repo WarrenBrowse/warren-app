@@ -136,6 +136,11 @@
         <item quantity="many">%1$d apps bloquées tant que le VPN n\'est pas connecté</item>
         <item quantity="other">%1$d apps bloquées tant que le VPN n\'est pas connecté</item>
     </plurals>
+    <plurals name="apps_locked_not_held">
+        <item quantity="one">%1$d app verrouillée peut accéder à Internet sans le VPN</item>
+        <item quantity="many">%1$d apps verrouillées peuvent accéder à Internet sans le VPN</item>
+        <item quantity="other">%1$d apps verrouillées peuvent accéder à Internet sans le VPN</item>
+    </plurals>
     <string name="app_country_only_app_title">Seule l\'app %1$s utilisera le VPN</string>
     <string name="country_picker_title">Pays de %1$s</string>
     <string name="country_picker_cities_in">%1$s : villes</string>

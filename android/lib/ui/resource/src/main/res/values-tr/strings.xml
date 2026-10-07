@@ -135,6 +135,10 @@
         <item quantity="one">%1$d uygulama VPN bağlanana kadar engellendi</item>
         <item quantity="other">%1$d uygulama VPN bağlanana kadar engellendi</item>
     </plurals>
+    <plurals name="apps_locked_not_held">
+        <item quantity="one">VPN\'e kilitli %1$d uygulama VPN olmadan internete erişebilir</item>
+        <item quantity="other">VPN\'e kilitli %1$d uygulama VPN olmadan internete erişebilir</item>
+    </plurals>
     <string name="app_country_only_app_title">VPN\'i yalnızca %1$s kullanacak</string>
     <string name="country_picker_title">%1$s uygulamasının ülkesi</string>
     <string name="country_picker_cities_in">%1$s: şehirler</string>

@@ -255,6 +255,7 @@ val uiModule = module {
             exitSwitchedNotificationUseCase = get(),
             envStandDownUseCase = get(),
             networkStatsProvider = get(),
+            lockGuard = get(),
         )
     }
     viewModel { DeviceRevokedViewModel(get(), get()) }

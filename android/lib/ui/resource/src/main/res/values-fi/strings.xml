@@ -135,6 +135,10 @@
         <item quantity="one">%1$d sovellus estetty, kunnes VPN yhdistää</item>
         <item quantity="other">%1$d sovellusta estetty, kunnes VPN yhdistää</item>
     </plurals>
+    <plurals name="apps_locked_not_held">
+        <item quantity="one">%1$d lukittu sovellus pääsee internetiin ilman VPN:ää</item>
+        <item quantity="other">%1$d lukittua sovellusta pääsee internetiin ilman VPN:ää</item>
+    </plurals>
     <string name="app_country_only_app_title">Vain %1$s käyttää VPN:ää</string>
     <string name="country_picker_title">Sovelluksen %1$s maa</string>
     <string name="country_picker_cities_in">%1$s: kaupungit</string>

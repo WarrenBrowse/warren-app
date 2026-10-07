@@ -133,6 +133,9 @@
     <plurals name="apps_blocked_until_vpn">
         <item quantity="other">%1$d 个应用已阻止，直到 VPN 连接</item>
     </plurals>
+    <plurals name="apps_locked_not_held">
+        <item quantity="other">%1$d 个已锁定的应用可以不经 VPN 上网</item>
+    </plurals>
     <string name="app_country_only_app_title">只有 %1$s 会使用 VPN</string>
     <string name="country_picker_title">%1$s 的国家</string>
     <string name="country_picker_cities_in">%1$s 的城市</string>

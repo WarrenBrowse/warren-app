@@ -135,6 +135,10 @@
         <item quantity="one">%1$d برنامه تا وصل شدن VPN مسدود است</item>
         <item quantity="other">%1$d برنامه تا وصل شدن VPN مسدود است</item>
     </plurals>
+    <plurals name="apps_locked_not_held">
+        <item quantity="one">%1$d برنامه قفل‌شده بدون VPN به اینترنت دسترسی دارد</item>
+        <item quantity="other">%1$d برنامه قفل‌شده بدون VPN به اینترنت دسترسی دارند</item>
+    </plurals>
     <string name="app_country_only_app_title">فقط %1$s از VPN استفاده خواهد کرد</string>
     <string name="country_picker_title">کشور %1$s</string>
     <string name="country_picker_cities_in">شهرهای %1$s</string>

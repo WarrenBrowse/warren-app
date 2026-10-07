@@ -80,6 +80,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenFailoverProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenHostOfflineProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenJniBridge
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenLockGuardProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenNetworkInfoProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenNetworkStatsProvider
@@ -153,6 +154,7 @@ val appModule = module {
             WarrenFailoverProvider::class,
             WarrenPathMetricsProvider::class,
             WarrenAppRoutesStatusProvider::class,
+            WarrenLockGuardProvider::class,
         )
 
     // Process-wide truthful connectivity source: feeds the adapter's
@@ -387,6 +389,7 @@ val appModule = module {
                         }
                     }
                 },
+            lockGuardActive = get<WarrenQuinnStateProxy>().lockGuardActive,
         )
     } bind NotificationProvider::class
     single { ForumActivityNotificationProvider(get<NotificationChannel.ForumActivity>().id) } binds

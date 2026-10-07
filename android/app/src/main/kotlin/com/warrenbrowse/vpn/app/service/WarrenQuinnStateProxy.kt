@@ -5,6 +5,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenAppRoutesStatusProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenAutoRecoveryProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenConnectedInfo
 import com.warrenbrowse.vpn.lib.repository.WarrenFailoverProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenLockGuardProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenPathHealthProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenPathMetricsProvider
@@ -39,7 +40,8 @@ class WarrenQuinnStateProxy :
     WarrenPathHealthProvider,
     WarrenFailoverProvider,
     WarrenPathMetricsProvider,
-    WarrenAppRoutesStatusProvider {
+    WarrenAppRoutesStatusProvider,
+    WarrenLockGuardProvider {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
     private val _state = MutableStateFlow<WarrenTunnelState>(WarrenTunnelState.Disconnected)
@@ -87,6 +89,14 @@ class WarrenQuinnStateProxy :
 
     private val _appRoutes = MutableStateFlow<List<AppRouteStatus>>(emptyList())
     override val appRoutes: StateFlow<List<AppRouteStatus>> = _appRoutes.asStateFlow()
+
+    private val _lockGuardActive = MutableStateFlow(false)
+    override val lockGuardActive: StateFlow<Boolean> = _lockGuardActive.asStateFlow()
+
+    /** Called by [WarrenVpnService] whenever the blackhole of the locked apps comes up or goes. */
+    fun updateLockGuardActive(active: Boolean) {
+        _lockGuardActive.value = active
+    }
 
     /** Called by [WarrenVpnService] on every change of a "Country per app" route. */
     fun updateAppRoutes(routes: List<AppRouteStatus>) {

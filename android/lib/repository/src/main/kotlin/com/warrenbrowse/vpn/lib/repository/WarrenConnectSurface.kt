@@ -248,6 +248,17 @@ interface WarrenFailoverProvider {
 }
 
 /**
+ * Lib-side surface for the blackhole that holds the apps locked to the VPN while no tunnel runs
+ * (docs/app-routing.md section 8.3). `true` only while that interface is up: a locked app whose
+ * blackhole is down (another VPN app took the slot, the service died) reaches the bare network, and
+ * the UI must say so rather than count it as blocked. The concrete impl is
+ * `app/service/WarrenQuinnStateProxy`.
+ */
+interface WarrenLockGuardProvider {
+    val lockGuardActive: StateFlow<Boolean>
+}
+
+/**
  * Lib-side surface for the Warren disconnect path. The concrete impl lives in
  * `app/connect/WarrenDisconnectUseCase` and is bound to this interface in `di/AppModule`. The
  * disconnect path does not need biometric authorisation (it tears down a running session); a plain

@@ -28,6 +28,7 @@ import com.warrenbrowse.vpn.lib.common.constant.KEY_HOLD_LOCKED_APPS_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_RECONNECT_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_CONNECT_QUINN_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_TUNNEL_CONFIG_JSON
+import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
 import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
 import com.warrenbrowse.vpn.lib.model.AppRouteStatusParser
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationChannelFactory
@@ -185,7 +186,7 @@ class WarrenVpnService : LifecycleVpnService() {
             }
         }
 
-        foregroundNotificationHandler.followLockGuard(lifecycleScope, quinnAdapter, isIdle)
+        followLockedApps()
 
         // Log any API endpoint override seeded by mockapi tests so the
         // future warren-api-client can pick it up.
@@ -473,6 +474,24 @@ class WarrenVpnService : LifecycleVpnService() {
             },
             ContextCompat.RECEIVER_NOT_EXPORTED,
         )
+    }
+
+    /**
+     * The blackhole of the locked apps: the foreground follows it, the UI reads it through the
+     * proxy, and a service created for any reason (the UI binding it, a restart after the system
+     * killed the process) holds the locked apps again, but only while this app is still the
+     * prepared VPN app: an interface established after another app took the slot would take it
+     * back.
+     */
+    private val followLockedApps: () -> Unit = {
+        foregroundNotificationHandler.followLockGuard(lifecycleScope, quinnAdapter, isIdle)
+        lifecycleScope.launch {
+            quinnAdapter.lockGuardActive.collect(quinnStateProxy::updateLockGuardActive)
+        }
+        val locked = getKoin().get<WarrenLocalSettingsRepository>().lockedApps.value
+        if (locked.isNotEmpty() && prepareVpnSafe().isRight()) {
+            lifecycleScope.launch { quinnAdapter.holdLockedApps() }
+        }
     }
 
     /**

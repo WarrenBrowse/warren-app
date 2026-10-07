@@ -135,6 +135,10 @@
         <item quantity="one">%1$d app geblokkeerd tot de VPN verbinding maakt</item>
         <item quantity="other">%1$d apps geblokkeerd tot de VPN verbinding maakt</item>
     </plurals>
+    <plurals name="apps_locked_not_held">
+        <item quantity="one">%1$d gebonden app kan het internet bereiken zonder de VPN</item>
+        <item quantity="other">%1$d gebonden apps kunnen het internet bereiken zonder de VPN</item>
+    </plurals>
     <string name="app_country_only_app_title">Alleen %1$s zal de VPN gebruiken</string>
     <string name="country_picker_title">Land voor %1$s</string>
     <string name="country_picker_cities_in">%1$s: steden</string>

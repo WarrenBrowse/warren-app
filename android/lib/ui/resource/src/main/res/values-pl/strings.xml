@@ -139,6 +139,12 @@
         <item quantity="many">%1$d aplikacji zablokowanych do połączenia VPN</item>
         <item quantity="other">%1$d aplikacji zablokowanych do połączenia VPN</item>
     </plurals>
+    <plurals name="apps_locked_not_held">
+        <item quantity="one">%1$d przypisana aplikacja ma dostęp do internetu bez VPN</item>
+        <item quantity="few">%1$d przypisane aplikacje mają dostęp do internetu bez VPN</item>
+        <item quantity="many">%1$d przypisanych aplikacji ma dostęp do internetu bez VPN</item>
+        <item quantity="other">%1$d przypisanej aplikacji ma dostęp do internetu bez VPN</item>
+    </plurals>
     <string name="app_country_only_app_title">Tylko %1$s będzie korzystać z VPN</string>
     <string name="country_picker_title">Kraj aplikacji %1$s</string>
     <string name="country_picker_cities_in">%1$s: miasta</string>

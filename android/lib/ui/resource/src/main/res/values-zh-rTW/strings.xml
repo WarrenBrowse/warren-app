@@ -133,6 +133,9 @@
     <plurals name="apps_blocked_until_vpn">
         <item quantity="other">%1$d 個應用程式已封鎖，直到 VPN 連線</item>
     </plurals>
+    <plurals name="apps_locked_not_held">
+        <item quantity="other">%1$d 個已鎖定的應用程式可以不經 VPN 上網</item>
+    </plurals>
     <string name="app_country_only_app_title">只有 %1$s 會使用 VPN</string>
     <string name="country_picker_title">%1$s 的國家</string>
     <string name="country_picker_cities_in">%1$s 的城市</string>

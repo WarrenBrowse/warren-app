@@ -38,6 +38,11 @@ data class ConnectUiState(
     val vpnOnlyForCount: Int? = null,
     /** The apps locked to the VPN on the device, blocked whenever it is not connected. */
     val lockedAppsCount: Int = 0,
+    /**
+     * Whether something holds the locked apps while the VPN is not connected: their own blackhole,
+     * or the kill switch. False once another VPN app took the slot.
+     */
+    val lockedAppsHeld: Boolean = true,
 ) {
 
     companion object {

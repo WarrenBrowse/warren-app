@@ -1353,27 +1353,7 @@ private fun ConnectionCardHeader(
     ) {
         val hasTunnel = state.tunnelState.isConnectingOrConnected()
         ConnectionCardStatusRow(state, location, expanded, hasTunnel)
-        state.vpnOnlyForCount?.let { count ->
-            AppRoutingLabel(
-                text = pluralStringResource(R.plurals.vpn_only_for_apps, count, count),
-                icon = painterResource(R.drawable.ic_forum_alert_circle),
-                onClick = onIncludeOnlyLabelClick,
-            )
-        }
-        // Locked apps have no Internet until the VPN connects, which an app that
-        // stopped working must never leave unexplained (desktop LockedAppsLabel).
-        if (state.lockedAppsCount > 0 && state.tunnelState !is TunnelState.Connected) {
-            AppRoutingLabel(
-                text =
-                    pluralStringResource(
-                        R.plurals.apps_blocked_until_vpn,
-                        state.lockedAppsCount,
-                        state.lockedAppsCount,
-                    ),
-                icon = rememberVectorPainter(Icons.Outlined.Lock),
-                onClick = onIncludeOnlyLabelClick,
-            )
-        }
+        AppRoutingLabels(state, onIncludeOnlyLabelClick)
 
         // The exit location reads under the status only once a tunnel exists;
         // while disconnected the selector button already names the chosen exit
@@ -1429,6 +1409,36 @@ private fun ConnectionCardHeader(
                 }
             }
         }
+    }
+}
+
+/** The labels App routing puts under the connection state, each opening it. */
+@Composable
+private fun AppRoutingLabels(state: ConnectUiState, onClick: () -> Unit) {
+    state.vpnOnlyForCount?.let { count ->
+        AppRoutingLabel(
+            text = pluralStringResource(R.plurals.vpn_only_for_apps, count, count),
+            icon = painterResource(R.drawable.ic_forum_alert_circle),
+            onClick = onClick,
+        )
+    }
+    // Locked apps have no Internet until the VPN connects, which an app that stopped working must
+    // never leave unexplained (desktop LockedAppsLabel); and when their blackhole is down (another
+    // VPN app took the slot) they reach the Internet without it, which must not read as blocked.
+    if (state.lockedAppsCount > 0 && state.tunnelState !is TunnelState.Connected) {
+        AppRoutingLabel(
+            text =
+                pluralStringResource(
+                    if (state.lockedAppsHeld) R.plurals.apps_blocked_until_vpn
+                    else R.plurals.apps_locked_not_held,
+                    state.lockedAppsCount,
+                    state.lockedAppsCount,
+                ),
+            icon =
+                if (state.lockedAppsHeld) rememberVectorPainter(Icons.Outlined.Lock)
+                else painterResource(R.drawable.ic_forum_alert_circle),
+            onClick = onClick,
+        )
     }
 }
 

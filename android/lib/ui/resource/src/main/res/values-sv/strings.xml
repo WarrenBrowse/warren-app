@@ -135,6 +135,10 @@
         <item quantity="one">%1$d app blockerad tills VPN ansluter</item>
         <item quantity="other">%1$d appar blockerade tills VPN ansluter</item>
     </plurals>
+    <plurals name="apps_locked_not_held">
+        <item quantity="one">%1$d låst app kan nå internet utan VPN</item>
+        <item quantity="other">%1$d låsta appar kan nå internet utan VPN</item>
+    </plurals>
     <string name="app_country_only_app_title">Endast %1$s kommer att använda VPN</string>
     <string name="country_picker_title">Land för %1$s</string>
     <string name="country_picker_cities_in">%1$s: städer</string>

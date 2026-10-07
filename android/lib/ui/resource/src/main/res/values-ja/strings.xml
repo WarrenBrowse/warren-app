@@ -133,6 +133,9 @@
     <plurals name="apps_blocked_until_vpn">
         <item quantity="other">%1$d 個のアプリがVPNの接続までブロック中</item>
     </plurals>
+    <plurals name="apps_locked_not_held">
+        <item quantity="other">固定した %1$d 個のアプリがVPNなしでインターネットに接続できます</item>
+    </plurals>
     <string name="app_country_only_app_title">VPNを使用するのは%1$sだけになります</string>
     <string name="country_picker_title">%1$sの国</string>
     <string name="country_picker_cities_in">%1$sの都市</string>

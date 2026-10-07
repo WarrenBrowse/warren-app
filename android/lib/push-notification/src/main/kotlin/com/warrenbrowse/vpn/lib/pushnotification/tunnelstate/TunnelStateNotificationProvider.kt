@@ -34,6 +34,8 @@ class TunnelStateNotificationProvider(
     scope: CoroutineScope,
     /** The apps locked to the VPN on the device, which the disconnected notification counts. */
     lockedApps: Flow<Int> = flowOf(0),
+    /** Whether their blackhole holds them, which the notification says when it does not. */
+    lockGuardActive: Flow<Boolean> = flowOf(true),
 ) : NotificationProvider<Notification.Tunnel> {
     val notificationId = NotificationId(2)
 
@@ -42,8 +44,8 @@ class TunnelStateNotificationProvider(
                 connectionProxy.tunnelState,
                 deviceRepository.deviceState,
                 preferences.preferencesFlow(),
-                lockedApps,
-            ) { tunnelState, deviceState, prefs, locked ->
+                lockedApps.combine(lockGuardActive, ::Pair),
+            ) { tunnelState, deviceState, prefs, (locked, held) ->
                 // Locked apps are held whether a wallet is there or not, and the
                 // service holding them shows this notification.
                 if (
@@ -58,6 +60,7 @@ class TunnelStateNotificationProvider(
                         prepareError = context.prepareVpnSafe().leftOrNull(),
                         showLocation = prefs.showLocationInSystemNotification,
                         lockedApps = locked,
+                        lockedAppsHeld = held,
                     )
 
                 return@combine NotificationUpdate.Notify(
@@ -76,10 +79,11 @@ class TunnelStateNotificationProvider(
         prepareError: PrepareError?,
         showLocation: Boolean,
         lockedApps: Int,
+        lockedAppsHeld: Boolean,
     ) =
         when (this) {
             is TunnelState.Disconnected ->
-                NotificationTunnelState.Disconnected(prepareError, lockedApps)
+                NotificationTunnelState.Disconnected(prepareError, lockedApps, lockedAppsHeld)
             is TunnelState.Connecting ->
                 NotificationTunnelState.Connecting(if (showLocation) location else null)
             is TunnelState.Disconnecting ->

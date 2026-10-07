@@ -139,6 +139,11 @@
         <item quantity="few">%1$d aplicații blocate până la conectarea VPN-ului</item>
         <item quantity="other">%1$d de aplicații blocate până la conectarea VPN-ului</item>
     </plurals>
+    <plurals name="apps_locked_not_held">
+        <item quantity="one">%1$d aplicație legată de VPN poate accesa internetul fără el</item>
+        <item quantity="few">%1$d aplicații legate de VPN pot accesa internetul fără el</item>
+        <item quantity="other">%1$d de aplicații legate de VPN pot accesa internetul fără el</item>
+    </plurals>
     <string name="app_country_only_app_title">Doar %1$s va folosi VPN-ul</string>
     <string name="country_picker_title">Țara pentru %1$s</string>
     <string name="country_picker_cities_in">%1$s: orașe</string>

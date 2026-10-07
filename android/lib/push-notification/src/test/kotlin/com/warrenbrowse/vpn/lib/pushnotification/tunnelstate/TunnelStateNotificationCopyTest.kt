@@ -135,6 +135,27 @@ class TunnelStateNotificationCopyTest {
     }
 
     @Test
+    fun `a disconnect says whether the locked apps are held`() {
+        val resources = mockk<android.content.res.Resources>()
+        every { context.resources } returns resources
+        every { resources.getQuantityString(R.plurals.apps_blocked_until_vpn, 2, 2) } returns
+            "2 apps blocked until the VPN connects"
+        every { resources.getQuantityString(R.plurals.apps_locked_not_held, 2, 2) } returns
+            "2 locked apps can reach the Internet without the VPN"
+
+        assertEquals(
+            "2 apps blocked until the VPN connects",
+            NotificationTunnelState.Disconnected(null, lockedApps = 2).notificationText(context),
+        )
+        assertEquals(
+            "2 locked apps can reach the Internet without the VPN",
+            NotificationTunnelState.Disconnected(null, lockedApps = 2, lockedAppsHeld = false)
+                .notificationText(context),
+        )
+        assertNull(NotificationTunnelState.Disconnected(null).notificationText(context))
+    }
+
+    @Test
     fun `states without a location have no detail line`() {
         assertNull(NotificationTunnelState.Blocking.notificationText(context))
     }

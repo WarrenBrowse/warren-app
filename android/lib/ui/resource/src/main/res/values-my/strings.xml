@@ -133,6 +133,9 @@
     <plurals name="apps_blocked_until_vpn">
         <item quantity="other">အက်ပ် %1$d ခုကို VPN ချိတ်ဆက်သည်အထိ ပိတ်ဆို့ထားသည်</item>
     </plurals>
+    <plurals name="apps_locked_not_held">
+        <item quantity="other">သော့ခတ်ထားသော အက်ပ် %1$d ခုသည် VPN မပါဘဲ အင်တာနက်သို့ ရောက်နိုင်ပါသည်</item>
+    </plurals>
     <string name="app_country_only_app_title">%1$s သာ VPN ကို သုံးပါမည်</string>
     <string name="country_picker_title">%1$s အတွက် နိုင်ငံ</string>
     <string name="country_picker_cities_in">%1$s ရှိ မြို့များ</string>

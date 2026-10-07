@@ -133,6 +133,9 @@
     <plurals name="apps_blocked_until_vpn">
         <item quantity="other">%1$d แอปถูกบล็อกจนกว่า VPN จะเชื่อมต่อ</item>
     </plurals>
+    <plurals name="apps_locked_not_held">
+        <item quantity="other">แอปที่ล็อกไว้ %1$d แอปเข้าถึงอินเทอร์เน็ตได้โดยไม่มี VPN</item>
+    </plurals>
     <string name="app_country_only_app_title">จะมีเพียง %1$s ที่ใช้ VPN</string>
     <string name="country_picker_title">ประเทศของ %1$s</string>
     <string name="country_picker_cities_in">เมืองใน %1$s</string>
