@@ -13,6 +13,14 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 
 ## [Unreleased]
 ### Adăugat
+- [Windows] „Niciodată fără VPN” pe ruta unei aplicații în Rutarea aplicațiilor: aplicația nu are
+  internet ori de câte ori VPN-ul nu o transportă, inclusiv deconectat și cu Warren VPN închis sau
+  oprit. Aplicațiile blocate au un lacăt, iar ecranul principal arată câte așteaptă VPN-ul.
+- [Android] „Niciodată fără VPN” pe ruta unei aplicații. Cât timp Warren este aplicația VPN a
+  dispozitivului, aplicațiile blocate nu au internet fără VPN, de la pornire, iar celelalte își
+  păstrează conexiunea.
+- [linux] „Deschide, niciodată fără VPN” pe ruta unei aplicații: aplicația deschisă astfel nu are
+  internet cât timp VPN-ul e oprit, până când e închisă.
 - [iOS] O temă luminoasă pentru ecranul de conectare și o setare Temă: Sistem, Întunecată sau
   Luminoasă. Sistem urmează aspectul dispozitivului și rămâne întunecată când dispozitivul nu indică
   niciunul.

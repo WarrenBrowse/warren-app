@@ -23,6 +23,14 @@ Line wrap the file at 100 chars.                                              Th
 
 ## [Unreleased]
 ### Added
+- [Windows] Add "Never without the VPN" to the route of an app in App routing: the app has no
+  Internet whenever the VPN does not carry it, while disconnected and with Warren VPN closed or
+  stopped included. Locked apps show a padlock, and the main screen says how many wait for the VPN.
+- [Android] Add "Never without the VPN" to the route of an app. While Warren is the VPN app of the
+  device, the locked apps have no Internet without the VPN, from boot, and every other app keeps
+  its connection.
+- [linux] Add "Open never without the VPN" to the route of an app: the app opened this way has no
+  Internet while the VPN is off, until it is closed.
 - [iOS] Add a light theme for the connect screen, and a Theme setting: System, Dark or Light. System
   follows the appearance of the device, and stays dark when the device states none.
 - [iOS] Show the warnings recorded against your account when a forwarded port is closed after an
