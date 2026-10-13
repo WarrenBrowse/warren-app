@@ -3719,8 +3719,8 @@ msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "Multihopp används för att aktivera DAITA för din valda plats"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one QUIC server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
-msgstr "Multihopp dirigerar din trafik till en QUIC-server och ut genom en annan, vilket gör det svårare att spåra. Detta leder till ökad fördröjning men bättre anonymitet online."
+msgid "Multihop routes your traffic into one QUIC server and out of another, adding a server between you and the sites you visit. This increases latency."
+msgstr "Multihop skickar in din trafik genom en QUIC-server och ut genom en annan, så att det finns ytterligare en server mellan dig och webbplatserna du besöker. Det ökar latensen."
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
@@ -5451,8 +5451,8 @@ msgid "Forum access requires a Warren subscription. This wallet has never subscr
 msgstr "Åtkomst till forumet kräver en Warren-prenumeration. Den här plånboken har aldrig haft en prenumeration."
 
 msgctxt "forum-login"
-msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
-msgstr "Ingen e-post och inget lösenord används. Du visas under ett anonymt alias som inte kan kopplas till ditt Warren-konto. Godkänn bara om du själv startade den här inloggningen."
+msgid "No email and no password are used. You appear under a random pseudonym, and only the Warren support team can match it to a wallet, for support purposes. Only approve if you started this sign-in."
+msgstr "Ingen e-post och inget lösenord används. Du visas under en slumpmässig pseudonym, och bara Warrens supportteam kan koppla den till en plånbok, i supportsyfte. Godkänn bara om du själv startade den här inloggningen."
 
 msgctxt "forum-login"
 msgid "Sign in to the Warren community forum?"
@@ -5543,8 +5543,8 @@ msgid "The Warren support service could not accept the report. Nothing is wrong 
 msgstr "Warrens supporttjänst kunde inte ta emot rapporten. Det är inget fel på din sida. Försök igen senare och säg till på forumet om det fortsätter att misslyckas."
 
 msgctxt "forum-attach"
-msgid "The logs are anonymized: wallet addresses and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
-msgstr "Loggarna anonymiseras: plånboksadresser och personuppgifter tas bort. De skickas privat till Warrens supportteam och visas aldrig offentligt på forumet. Du kan se exakt vad som skickas innan du godkänner."
+msgid "Wallet addresses and personal data are redacted from the logs. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "Plånboksadresser och personuppgifter tas bort från loggarna. De skickas privat till Warrens supportpersonal och visas aldrig offentligt på forumet. Du kan se exakt vad som skickas innan du godkänner."
 
 msgctxt "forum-attach"
 msgid "This request has expired. Start again from the forum page."
@@ -5832,8 +5832,8 @@ msgid "%(count)d characters (at least %(min)d)"
 msgstr "%(count)d tecken (minst %(min)d)"
 
 msgctxt "report-problem"
-msgid "Anonymized logs from this app, visible to the support team only."
-msgstr "Anonymiserade loggar från den här appen, synliga endast för supportteamet."
+msgid "Redacted logs from this app, visible to the support team only."
+msgstr "Rensade loggar från den här appen, synliga endast för supportteamet."
 
 msgctxt "report-problem"
 msgid "Browsing (pages not loading, slow, broken sites)"
@@ -5984,8 +5984,8 @@ msgid "Where does the problem happen?"
 msgstr "Var uppstår problemet?"
 
 msgctxt "report-problem"
-msgid "Your description is posted on the community forum under your anonymous forum name. The technical logs, if you include them, go privately to the support team and never appear publicly."
-msgstr "Din beskrivning publiceras på communityforumet under ditt anonyma forumnamn. De tekniska loggarna går, om du tar med dem, privat till supportteamet och visas aldrig offentligt."
+msgid "Your description is posted on the community forum under your forum pseudonym. The technical logs, if you include them, go privately to the support team and never appear publicly."
+msgstr "Din beskrivning publiceras på communityforumet under din forumpseudonym. De tekniska loggarna går, om du tar med dem, privat till supportteamet och visas aldrig offentligt."
 
 msgctxt "report-problem"
 msgid "Your report is on the forum and your logs reached the support team."

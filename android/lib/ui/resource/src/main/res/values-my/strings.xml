@@ -433,7 +433,7 @@
     <string name="onboarding_prop_obfuscation_title">အမြဲဖွင့်ထားသော obfuscation</string>
     <string name="onboarding_prop_obfuscation_body">သင့်ထွက်ဝင်ဒေတာသည် သာမန် HTTPS ဘရောက်ဆာသုံးနေသကဲ့သို့ ဖြစ်နေသည် (HTTP/3 mimicry)။</string>
     <string name="onboarding_prop_no_logs_title">log မရှိ, ခြေရာခံမှု မရှိ</string>
-    <string name="onboarding_prop_no_logs_body">ထွက်ဝင်ဒေတာကို သင်နှင့် ချိတ်ဆက်၍ မရပါ - log လုပ်ရန် အကောင့်အထောက်အထား မရှိပါ။</string>
+    <string name="onboarding_prop_no_logs_body">Warren သည် သင့်ဒေတာစီးဆင်းမှုကို မှတ်တမ်းမတင်ဘဲ သင့်အကောင့်တွင် အမည် သို့မဟုတ် အီးမေးလ် မပါပါ။</string>
     <string name="onboarding_prop_keys_title">key များကို သင် ကိုင်ဆောင်ထားသည်</string>
     <string name="onboarding_prop_keys_body">၁၂ လုံးပါ ပြန်လည်ရယူရေး စကားစုသည် သင့်တစ်ခုတည်းသော credential ဖြစ်သည်။ ၎င်းကို လုံခြုံစွာ အရန်သိမ်းပါ။</string>
     <string name="onboarding_get_started">စတင်ရန်</string>
@@ -565,7 +565,7 @@
     <string name="feature_daita_not_active_on_server">%1$s: ဤဆာဗာတွင် အသက်မဝင်ပါ</string>
     <string name="forum_login_title">Warren အသိုက်အဝန်း ဖိုရမ်သို့ ဝင်ရောက်မလား?</string>
     <string name="forum_login_body_first">Warren အသိုက်အဝန်း ဖိုရမ်သို့ ဝင်ရောက်ရန် တောင်းဆိုမှုတစ်ခု ရှိပါသည်။ သင်ဖြစ်ကြောင်း သက်သေပြရန်အတွက် သင့်အက်ပ်သည် သင့်ပိုက်ဆံအိတ်ကီးဖြင့် တစ်ကြိမ်သုံး challenge ကို လက်မှတ်ရေးထိုးပါမည်။</string>
-    <string name="forum_login_body_second">အီးမေးလ်နှင့် စကားဝှက် အသုံးမပြုပါ။ သင်သည် သင့် Warren အကောင့်နှင့် ချိတ်ဆက်၍မရသော အမည်ဝှက်ဖြင့် ပေါ်လာပါမည်။ ဤဝင်ရောက်မှုကို သင်ကိုယ်တိုင် စတင်ခဲ့မှသာ အတည်ပြုပါ။</string>
+    <string name="forum_login_body_second">အီးမေးလ်နှင့် စကားဝှက် မသုံးပါ။ သင်သည် ကျပန်း အမည်ဝှက်ဖြင့် ပေါ်လာပြီး ၎င်းကို wallet တစ်ခုနှင့် ချိတ်ဆက်နိုင်သူမှာ အကူအညီပေးရန်အတွက် Warren အကူအညီအဖွဲ့သာ ဖြစ်သည်။ ဤဝင်ရောက်မှုကို သင်ကိုယ်တိုင် စတင်ခဲ့မှသာ အတည်ပြုပါ။</string>
     <string name="forum_login_title_cross_device">အခြားစက်ပစ္စည်းတစ်ခုပေါ်တွင် ဖိုရမ်သို့ ဝင်ရောက်မလား?</string>
     <string name="forum_login_body_first_cross_device">မည်သည့် browser ဝင်ရောက်နေသည်၊ ယင်းသည် ယခု သင့်ရှေ့တွင် ရှိမရှိကို Warren မခွဲခြားနိုင်ပါ။ သင်ဖြစ်ကြောင်း သက်သေပြရန်အတွက် သင့်အက်ပ်သည် သင့်ပိုက်ဆံအိတ်ကီးဖြင့် တစ်ကြိမ်သုံး challenge ကို လက်မှတ်ရေးထိုးပါမည်။</string>
     <string name="forum_login_body_second_cross_device">ထိုဝင်ရောက်မှုစာမျက်နှာကို ယခုကြည့်နေမှသာ အတည်ပြုပါ။ တစ်စုံတစ်ယောက်က ဤကုဒ်ကို ပို့ပေးခဲ့ပါက ၎င်းသည် သင့်အနေဖြင့် ဝင်ရောက်နေခြင်း ဖြစ်သည်။ အီးမေးလ်နှင့် စကားဝှက် အသုံးမပြုပါ။</string>
@@ -597,7 +597,7 @@
     <string name="forum_attach_title">သင့်မှတ်တမ်းများကို ဖိုရမ်ရှိ သင့်အစီရင်ခံစာတွင် ပူးတွဲမည်လား။</string>
     <string name="forum_attach_body_topic">Warren ဖိုရမ်ရှိ သင့်ချို့ယွင်းချက်အစီရင်ခံစာ (ခေါင်းစဉ် %1$d) က ပြဿနာကို ရှာဖွေရာတွင် အထောက်အကူဖြစ်စေရန် ဤအက်ပ်၏ နည်းပညာမှတ်တမ်းများကို ပူးတွဲပေးရန် တောင်းဆိုနေသည်။</string>
     <string name="forum_attach_body_pre_topic">Warren ဖိုရမ်တွင် သင်ရေးနေသော ချို့ယွင်းချက်အစီရင်ခံစာက ပြဿနာကို ရှာဖွေရာတွင် အထောက်အကူဖြစ်စေရန် ဤအက်ပ်၏ နည်းပညာမှတ်တမ်းများကို ပူးတွဲပေးရန် တောင်းဆိုနေသည်။ အစီရင်ခံစာကို တင်ပြီးသည်နှင့် မှတ်တမ်းများ ပါဝင်သွားပါမည်။</string>
-    <string name="forum_attach_body_second">မှတ်တမ်းများကို အမည်မသိပြုလုပ်ထားသည်။ ပိုက်ဆံအိတ်လိပ်စာများနှင့် ကိုယ်ရေးအချက်အလက်များကို ဖယ်ရှားထားသည်။ ၎င်းတို့ကို Warren ပံ့ပိုးမှုအဖွဲ့ထံ သီးသန့်ပေးပို့ပြီး ဖိုရမ်တွင် လူသိရှင်ကြား ဘယ်တော့မှ မပေါ်ပါ။ အတည်မပြုမီ ပေးပို့မည့်အရာကို အတိအကျ ကြည့်ရှုနိုင်သည်။ ထိုဖိုရမ်စာမျက်နှာကို သင်ကိုယ်တိုင် ဖွင့်ခဲ့မှသာ အတည်ပြုပါ။</string>
+    <string name="forum_attach_body_second">Wallet လိပ်စာများနှင့် ကိုယ်ရေးအချက်အလက်များကို မှတ်တမ်းများမှ ဖယ်ရှားထားသည်။ ၎င်းတို့ကို Warren အကူအညီဝန်ထမ်းများထံ သီးသန့်ပို့ပြီး ဖိုရမ်တွင် အများပြည်သူမြင်အောင် ဘယ်တော့မှ မပြပါ။ အတည်မပြုမီ ပို့မည့်အရာကို အတိအကျ ကြည့်နိုင်သည်။ ထိုဖိုရမ်စာမျက်နှာကို သင်ကိုယ်တိုင် ဖွင့်ခဲ့မှသာ အတည်ပြုပါ။</string>
     <string name="forum_attach_approve">မှတ်တမ်းများကို ပူးတွဲမည်</string>
     <string name="forum_attach_sending">မှတ်တမ်းများကို ပူးတွဲနေသည်၊ ခဏစောင့်ပါ။</string>
     <string name="forum_attach_collect_failed">မှတ်တမ်းများကို စုဆောင်း၍ မရပါ။ ခဏအကြာတွင် ထပ်ကြိုးစားပါ။</string>
@@ -611,7 +611,7 @@
     <string name="account_forum_name_label">ဖိုရမ်အမည်</string>
     <string name="report_problem">ပြဿနာ ရီပို့တ်လုပ်ရန်</string>
     <string name="report_problem_row_subtitle">ဖော်ပြချက်နှင့် သင့်မှတ်တမ်းများကို ပံ့ပိုးမှုအဖွဲ့သို့ ပေးပို့ရန်</string>
-    <string name="report_problem_intro">သင့်ဖော်ပြချက်ကို သင့်အမည်မသိ ဖိုရမ်အမည်ဖြင့် အသိုက်အဝန်းဖိုရမ်တွင် တင်ပါမည်။ နည်းပညာမှတ်တမ်းများ ထည့်သွင်းပါက ပံ့ပိုးမှုအဖွဲ့သို့သာ သီးသန့်ပေးပို့ပြီး လူသိရှင်ကြား ဘယ်တော့မှ မပေါ်ပါ။</string>
+    <string name="report_problem_intro">သင့်ဖော်ပြချက်ကို ဖိုရမ်အမည်ဝှက်ဖြင့် အသိုင်းအဝိုင်းဖိုရမ်တွင် တင်ပါမည်။ နည်းပညာမှတ်တမ်းများကို ထည့်ပါက အကူအညီအဖွဲ့ထံ သီးသန့်ပို့ပြီး အများပြည်သူမြင်အောင် ဘယ်တော့မှ မပြပါ။</string>
     <string name="report_problem_pick_one">တစ်ခု ရွေးပါ</string>
     <string name="report_problem_area_label">ပြဿနာက ဘယ်နေရာမှာ ဖြစ်သလဲ</string>
     <string name="report_problem_area_browsing">အင်တာနက်ကြည့်ရှုခြင်း (စာမျက်နှာများ မပွင့်၊ နှေး၊ ဝက်ဘ်ဆိုက်များ ပျက်)</string>
@@ -630,7 +630,7 @@
     <string name="report_problem_frequency_sometimes">တစ်ခါတစ်ရံ</string>
     <string name="report_problem_frequency_once">တစ်ကြိမ် ဖြစ်ခဲ့သည်</string>
     <string name="report_problem_include_logs">နည်းပညာမှတ်တမ်းများ ထည့်သွင်းရန်</string>
-    <string name="report_problem_include_logs_description">ဤအက်ပ်မှ အမည်မသိပြုလုပ်ထားသော မှတ်တမ်းများ၊ ပံ့ပိုးမှုအဖွဲ့သာ မြင်နိုင်သည်။</string>
+    <string name="report_problem_include_logs_description">ဤအက်ပ်မှ ပြင်ဆင်ဖယ်ရှားထားသော မှတ်တမ်းများ၊ အကူအညီအဖွဲ့သာ မြင်နိုင်သည်။</string>
     <string name="report_problem_view_logs">မှတ်တမ်းများကို ကြည့်ရန်</string>
     <string name="report_problem_collecting">အစီရင်ခံစာ ပြင်ဆင်နေသည်၊ ခဏစောင့်ပါ။</string>
     <string name="report_problem_collect_failed">မှတ်တမ်းများ စုဆောင်း၍ မရပါ။ ဖော်ပြချက်ကိုတော့ ပေးပို့နိုင်ပါသေးသည်။</string>

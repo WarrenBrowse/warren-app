@@ -445,7 +445,7 @@
     <string name="onboarding_prop_obfuscation_title">Постоянная обфускация</string>
     <string name="onboarding_prop_obfuscation_body">Ваш трафик выглядит как обычный просмотр HTTPS (маскировка под HTTP/3).</string>
     <string name="onboarding_prop_no_logs_title">Без логов, без слежки</string>
-    <string name="onboarding_prop_no_logs_body">Мы не можем связать трафик с вами, нет личности аккаунта, которую можно было бы логировать.</string>
+    <string name="onboarding_prop_no_logs_body">Warren не хранит записей о вашем трафике, а у вашей учётной записи нет ни имени, ни e-mail.</string>
     <string name="onboarding_prop_keys_title">Ключи у вас</string>
     <string name="onboarding_prop_keys_body">Фраза восстановления из 12 слов это ваш единственный ключ доступа. Сохраните её надёжно.</string>
     <string name="onboarding_get_started">Начать</string>
@@ -586,7 +586,7 @@
     <string name="feature_daita_not_active_on_server">%1$s: не активна на этом сервере</string>
     <string name="forum_login_title">Войти на форум сообщества Warren?</string>
     <string name="forum_login_body_first">Запрошен вход на форум сообщества Warren. Приложение подпишет одноразовый запрос ключом вашего кошелька, чтобы подтвердить, что это вы.</string>
-    <string name="forum_login_body_second">Электронная почта и пароль не используются. Вы отображаетесь под анонимным именем, которое нельзя связать с вашей учётной записью Warren. Подтверждайте вход, только если вы сами его начали.</string>
+    <string name="forum_login_body_second">Не используются ни e-mail, ни пароль. Вы отображаетесь под случайным псевдонимом, и связать его с кошельком может только команда поддержки Warren, в целях поддержки. Подтверждайте, только если этот вход начали вы сами.</string>
     <string name="forum_login_title_cross_device">Войти на форум на другом устройстве?</string>
     <string name="forum_login_body_first_cross_device">Warren не может определить, в каком браузере выполняется вход и находится ли он сейчас перед вами. Приложение подпишет одноразовый запрос ключом вашего кошелька, чтобы подтвердить, что это вы.</string>
     <string name="forum_login_body_second_cross_device">Подтверждайте, только если вы прямо сейчас видите эту страницу входа. Если кто-то прислал вам этот код, он входит от вашего имени. Электронная почта и пароль не используются.</string>
@@ -618,7 +618,7 @@
     <string name="forum_attach_title">Приложить ваши журналы к вашему отчёту на форуме?</string>
     <string name="forum_attach_body_topic">Ваш отчёт об ошибке на форуме Warren (тема %1$d) запрашивает у этого приложения его технические журналы, чтобы помочь найти причину проблемы.</string>
     <string name="forum_attach_body_pre_topic">Отчёт об ошибке, который вы пишете на форуме Warren, запрашивает у этого приложения его технические журналы, чтобы помочь найти причину проблемы. Они будут добавлены к отчёту, когда вы его опубликуете.</string>
-    <string name="forum_attach_body_second">Журналы обезличены: адреса кошелька и личные данные удалены. Они передаются только команде поддержки Warren и никогда не публикуются на форуме. Перед подтверждением вы можете посмотреть, что именно будет отправлено. Подтверждайте, только если вы сами открыли эту страницу форума.</string>
+    <string name="forum_attach_body_second">Адреса кошельков и персональные данные удаляются из журналов. Журналы передаются конфиденциально сотрудникам поддержки Warren и никогда не появляются публично на форуме. Перед подтверждением вы можете увидеть, что именно будет отправлено. Подтверждайте, только если эту страницу форума открыли вы сами.</string>
     <string name="forum_attach_approve">Приложить журналы</string>
     <string name="forum_attach_sending">Журналы отправляются, подождите.</string>
     <string name="forum_attach_collect_failed">Не удалось собрать журналы. Повторите попытку через мгновение.</string>
@@ -632,7 +632,7 @@
     <string name="account_forum_name_label">Имя на форуме</string>
     <string name="report_problem">Сообщение о проблеме</string>
     <string name="report_problem_row_subtitle">Отправить описание и ваши журналы команде поддержки</string>
-    <string name="report_problem_intro">Ваше описание публикуется на форуме сообщества под вашим анонимным именем на форуме. Технические журналы, если вы их приложите, приватно передаются команде поддержки и никогда не появляются публично.</string>
+    <string name="report_problem_intro">Ваше описание публикуется на форуме сообщества под вашим псевдонимом на форуме. Технические журналы, если вы их прикладываете, передаются конфиденциально команде поддержки и никогда не публикуются.</string>
     <string name="report_problem_pick_one">Выберите</string>
     <string name="report_problem_area_label">Где возникает проблема?</string>
     <string name="report_problem_area_browsing">Просмотр сайтов (страницы не загружаются, медленно, сайты не работают)</string>
@@ -651,7 +651,7 @@
     <string name="report_problem_frequency_sometimes">Иногда</string>
     <string name="report_problem_frequency_once">Произошло один раз</string>
     <string name="report_problem_include_logs">Приложить технические журналы</string>
-    <string name="report_problem_include_logs_description">Обезличенные журналы этого приложения, видны только команде поддержки.</string>
+    <string name="report_problem_include_logs_description">Очищенные журналы этого приложения, видимые только команде поддержки.</string>
     <string name="report_problem_view_logs">Просмотреть журналы</string>
     <string name="report_problem_collecting">Подготовка отчёта, подождите.</string>
     <string name="report_problem_collect_failed">Не удалось собрать журналы. Вы всё равно можете отправить описание.</string>

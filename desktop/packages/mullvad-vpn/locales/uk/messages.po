@@ -3737,8 +3737,8 @@ msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "Подвійний VPN використовується, щоб увімкнути DAITA для вибраного розташування"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one QUIC server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
-msgstr "Подвійний VPN спрямовує ваш трафік з одного сервера QUIC на інший, що ускладнює відстеження. Це збільшує затримку, але підвищує анонімність в Інтернеті."
+msgid "Multihop routes your traffic into one QUIC server and out of another, adding a server between you and the sites you visit. This increases latency."
+msgstr "Multihop спрямовує ваш трафік через один сервер QUIC на вхід і через інший на вихід, додаючи ще один сервер між вами та сайтами, які ви відвідуєте. Це збільшує затримку."
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
@@ -5485,8 +5485,8 @@ msgid "Forum access requires a Warren subscription. This wallet has never subscr
 msgstr "Доступ до форуму потребує підписки Warren. З цього гаманця підписку ніколи не оформлювали."
 
 msgctxt "forum-login"
-msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
-msgstr "Електронна пошта й пароль не використовуються. Ви відображаєтесь під анонімним іменем, яке не можна пов'язати з вашим обліковим записом Warren. Підтверджуйте вхід, лише якщо ви самі його розпочали."
+msgid "No email and no password are used. You appear under a random pseudonym, and only the Warren support team can match it to a wallet, for support purposes. Only approve if you started this sign-in."
+msgstr "Не використовуються ні e-mail, ні пароль. Ви відображаєтеся під випадковим псевдонімом, і пов’язати його з гаманцем може лише команда підтримки Warren, для цілей підтримки. Підтверджуйте, лише якщо цей вхід розпочали ви самі."
 
 msgctxt "forum-login"
 msgid "Sign in to the Warren community forum?"
@@ -5577,8 +5577,8 @@ msgid "The Warren support service could not accept the report. Nothing is wrong 
 msgstr "Служба підтримки Warren не змогла прийняти звіт. З вашого боку все гаразд. Спробуйте пізніше та напишіть на форумі, якщо помилка повторюється."
 
 msgctxt "forum-attach"
-msgid "The logs are anonymized: wallet addresses and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
-msgstr "Журнали анонімізуються: адреси гаманців і особисті дані вилучаються. Вони надходять приватно до служби підтримки Warren і ніколи не з'являються публічно на форумі. Перед підтвердженням ви можете точно побачити, що буде надіслано."
+msgid "Wallet addresses and personal data are redacted from the logs. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "Адреси гаманців і персональні дані видаляються з журналів. Журнали надходять конфіденційно до персоналу підтримки Warren і ніколи не з’являються публічно на форумі. Перед підтвердженням ви можете побачити, що саме буде надіслано."
 
 msgctxt "forum-attach"
 msgid "This request has expired. Start again from the forum page."
@@ -5868,8 +5868,8 @@ msgid "%(count)d characters (at least %(min)d)"
 msgstr "%(count)d символів (щонайменше %(min)d)"
 
 msgctxt "report-problem"
-msgid "Anonymized logs from this app, visible to the support team only."
-msgstr "Знеособлені журнали цього застосунку, видимі лише команді підтримки."
+msgid "Redacted logs from this app, visible to the support team only."
+msgstr "Очищені журнали цього застосунку, видимі лише команді підтримки."
 
 msgctxt "report-problem"
 msgid "Browsing (pages not loading, slow, broken sites)"
@@ -6020,8 +6020,8 @@ msgid "Where does the problem happen?"
 msgstr "Де виникає проблема?"
 
 msgctxt "report-problem"
-msgid "Your description is posted on the community forum under your anonymous forum name. The technical logs, if you include them, go privately to the support team and never appear publicly."
-msgstr "Ваш опис публікується на форумі спільноти під вашим анонімним іменем на форумі. Технічні журнали, якщо ви їх додасте, приватно передаються команді підтримки і ніколи не з'являються публічно."
+msgid "Your description is posted on the community forum under your forum pseudonym. The technical logs, if you include them, go privately to the support team and never appear publicly."
+msgstr "Ваш опис публікується на форумі спільноти під вашим псевдонімом на форумі. Технічні журнали, якщо ви їх додаєте, надходять конфіденційно команді підтримки й ніколи не з’являються публічно."
 
 msgctxt "report-problem"
 msgid "Your report is on the forum and your logs reached the support team."

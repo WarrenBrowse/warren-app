@@ -433,7 +433,7 @@
     <string name="onboarding_prop_obfuscation_title">一律啟用混淆</string>
     <string name="onboarding_prop_obfuscation_body">您的流量看起來像一般的 HTTPS 瀏覽（HTTP/3 模擬）。</string>
     <string name="onboarding_prop_no_logs_title">不記錄、不追蹤</string>
-    <string name="onboarding_prop_no_logs_body">我們無法將流量與您連結，因為沒有可記錄的帳戶身分。</string>
+    <string name="onboarding_prop_no_logs_body">Warren 不保留你的流量紀錄，你的帳戶也沒有姓名或電子郵件。</string>
     <string name="onboarding_prop_keys_title">您掌握金鑰</string>
     <string name="onboarding_prop_keys_body">12 個字的復原片語是您唯一的憑證。請妥善備份。</string>
     <string name="onboarding_get_started">開始使用</string>
@@ -565,7 +565,7 @@
     <string name="feature_daita_not_active_on_server">%1$s：未在此伺服器上啟用</string>
     <string name="forum_login_title">登入 Warren 社群論壇？</string>
     <string name="forum_login_body_first">已請求登入 Warren 社群論壇。為證明是您本人，應用程式將使用您的錢包金鑰對一次性挑戰進行簽署。</string>
-    <string name="forum_login_body_second">不使用電子郵件和密碼。您將以無法連結至 Warren 帳戶的匿名代號顯示。僅當此次登入由您本人發起時才核准。</string>
+    <string name="forum_login_body_second">不使用電子郵件，也不使用密碼。你會以隨機化名顯示，只有 Warren 支援團隊能基於支援目的將其與錢包連結。僅在此次登入由你本人發起時才核准。</string>
     <string name="forum_login_title_cross_device">在另一部裝置上登入論壇？</string>
     <string name="forum_login_body_first_cross_device">Warren 無法判斷正在登入的是哪一個瀏覽器，也無法判斷它此刻是否就在您面前。為證明是您本人，應用程式將使用您的錢包金鑰對一次性挑戰進行簽署。</string>
     <string name="forum_login_body_second_cross_device">僅當您此刻正看著那個登入頁面時才核准。如果有人傳送此代碼給您，對方正在以您的身分登入。不使用電子郵件和密碼。</string>
@@ -597,7 +597,7 @@
     <string name="forum_attach_title">將您的記錄檔附加至論壇報告？</string>
     <string name="forum_attach_body_topic">您在 Warren 論壇上的錯誤報告（主題 %1$d）要求本應用程式附加其技術記錄檔，以協助診斷問題。</string>
     <string name="forum_attach_body_pre_topic">您正在 Warren 論壇上撰寫的錯誤報告要求本應用程式附加其技術記錄檔，以協助診斷問題。記錄檔會在您發佈報告後一併附上。</string>
-    <string name="forum_attach_body_second">記錄檔已匿名化：錢包地址和個人資料均已移除。記錄檔僅私下傳送給 Warren 支援團隊，絕不會公開顯示在論壇上。核准前，您可以查看將要傳送的確切內容。僅當該論壇頁面由您本人開啟時才核准。</string>
+    <string name="forum_attach_body_second">錢包地址和個人資料會從日誌中移除。日誌會私下傳送給 Warren 支援人員，絕不會在論壇上公開顯示。核准前你可以確切查看將要傳送的內容。僅在該論壇頁面由你本人開啟時才核准。</string>
     <string name="forum_attach_approve">附加記錄檔</string>
     <string name="forum_attach_sending">正在附加記錄檔，請稍候。</string>
     <string name="forum_attach_collect_failed">無法收集記錄檔。請稍後再試。</string>
@@ -611,7 +611,7 @@
     <string name="account_forum_name_label">論壇名稱</string>
     <string name="report_problem">回報問題</string>
     <string name="report_problem_row_subtitle">向支援團隊傳送問題描述和記錄檔</string>
-    <string name="report_problem_intro">您的描述會以匿名論壇名稱發布在社群論壇上。若包含技術記錄檔，記錄檔只會私下傳送給支援團隊，絕不會公開。</string>
+    <string name="report_problem_intro">你的描述會以你的論壇化名發佈在社群論壇上。技術日誌（如果你附上）會私下傳送給支援團隊，絕不會公開。</string>
     <string name="report_problem_pick_one">請選擇</string>
     <string name="report_problem_area_label">問題出現在哪裡？</string>
     <string name="report_problem_area_browsing">瀏覽（頁面無法載入、緩慢、網站異常）</string>
@@ -630,7 +630,7 @@
     <string name="report_problem_frequency_sometimes">有時</string>
     <string name="report_problem_frequency_once">只發生過一次</string>
     <string name="report_problem_include_logs">包含技術記錄檔</string>
-    <string name="report_problem_include_logs_description">本應用程式的匿名化記錄檔，僅支援團隊可見。</string>
+    <string name="report_problem_include_logs_description">此應用程式經過去識別化的日誌，僅支援團隊可見。</string>
     <string name="report_problem_view_logs">查看日誌</string>
     <string name="report_problem_collecting">正在準備報告，請稍候。</string>
     <string name="report_problem_collect_failed">無法收集記錄檔。您仍然可以傳送描述。</string>

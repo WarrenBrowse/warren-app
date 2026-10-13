@@ -38,7 +38,7 @@ struct WarrenForumAttachConsentView: View {
 
                 Text(
                     NSLocalizedString(
-                        "The logs are anonymized: wallet addresses and personal data are removed. They go privately to the Warren support team and never appear publicly on the forum. You can view exactly what will be sent before approving. Only approve if you opened that forum page yourself.",
+                        "Wallet addresses and personal data are removed from the logs. They go privately to the Warren support team and never appear publicly on the forum. You can view exactly what will be sent before approving. Only approve if you opened that forum page yourself.",
                         comment: "Forum attach consent prompt, what leaves the device and the caution")
                 )
                 .font(.footnote)

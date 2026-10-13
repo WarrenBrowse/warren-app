@@ -16,19 +16,16 @@ struct TermsOfServiceView: View {
 
     let termsOfService = LocalizedStringKey(
         """
-        You have a right to privacy. That’s why we never store activity logs, don’t ask for personal \
-        information, and encourage anonymous payments.
+        Warren keeps no activity logs and asks for no name or email.
 
-        In some situations, as outlined in our privacy policy, we might process personal data that you \
-        choose to send, for example if you email us.
-
-        We strongly believe in retaining as little data as possible because we want you to remain anonymous.
+        The privacy policy lists the data Warren does process, such as payment references kept for \
+        refunds, and the data you choose to send, for example in a problem report.
         """)
 
     let privacyPolicyText = NSLocalizedString("privacy policy", comment: "").localizedCapitalized
     var scrollableContent: some View {
         ScrollView {
-            Text(LocalizedStringKey("Do you agree to remaining anonymous?"))
+            Text(LocalizedStringKey("Before you start"))
                 .font(.warrenLarge)
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity, alignment: .leading)

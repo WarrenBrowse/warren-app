@@ -437,7 +437,7 @@
     <string name="onboarding_prop_obfuscation_title">Alltid på-obfuskering</string>
     <string name="onboarding_prop_obfuscation_body">Din trafik ser ut som vanlig HTTPS-surfning (HTTP/3-mimik).</string>
     <string name="onboarding_prop_no_logs_title">Inga loggar, ingen spårning</string>
-    <string name="onboarding_prop_no_logs_body">Vi kan inte koppla trafik till dig - det finns ingen kontoidentitet att logga.</string>
+    <string name="onboarding_prop_no_logs_body">Warren sparar inga uppgifter om din trafik, och ditt konto har varken namn eller e-post.</string>
     <string name="onboarding_prop_keys_title">Du har nycklarna</string>
     <string name="onboarding_prop_keys_body">En återställningsfras med 12 ord är din enda inloggningsuppgift. Säkerhetskopiera den på ett säkert sätt.</string>
     <string name="onboarding_get_started">Kom igång</string>
@@ -572,7 +572,7 @@
     <string name="feature_daita_not_active_on_server">%1$s: inte aktivt på den här servern</string>
     <string name="forum_login_title">Logga in på Warren-gemenskapsforumet?</string>
     <string name="forum_login_body_first">En inloggning till Warren-gemenskapsforumet begärdes. Din app signerar en engångsutmaning med din plånboksnyckel för att bevisa att det är du.</string>
-    <string name="forum_login_body_second">Ingen e-post och inget lösenord används. Du visas under ett anonymt alias som inte kan kopplas till ditt Warren-konto. Godkänn bara om du själv startade den här inloggningen.</string>
+    <string name="forum_login_body_second">Ingen e-post och inget lösenord används. Du visas under en slumpmässig pseudonym, och bara Warrens supportteam kan koppla den till en plånbok, i supportsyfte. Godkänn bara om du själv startade den här inloggningen.</string>
     <string name="forum_login_title_cross_device">Logga in på forumet på en annan enhet?</string>
     <string name="forum_login_body_first_cross_device">Warren kan inte se vilken webbläsare som loggas in, eller om den står framför dig just nu. Din app signerar en engångsutmaning med din plånboksnyckel för att bevisa att det är du.</string>
     <string name="forum_login_body_second_cross_device">Godkänn bara om du tittar på den inloggningssidan just nu. Om någon skickade koden till dig loggar de in som du. Ingen e-post och inget lösenord används.</string>
@@ -604,7 +604,7 @@
     <string name="forum_attach_title">Bifoga dina loggar till din forumrapport?</string>
     <string name="forum_attach_body_topic">Din felrapport på Warren-forumet (ämne %1$d) ber den här appen att bifoga sina tekniska loggar för att hjälpa till att hitta problemet.</string>
     <string name="forum_attach_body_pre_topic">Felrapporten du skriver på Warren-forumet ber den här appen att bifoga sina tekniska loggar för att hjälpa till att hitta problemet. De läggs till i rapporten när du publicerar den.</string>
-    <string name="forum_attach_body_second">Loggarna är anonymiserade: plånboksadresser och personuppgifter är borttagna. De skickas förtroligt till Warrens supportteam och visas aldrig offentligt på forumet. Du kan se exakt vad som skickas innan du godkänner. Godkänn bara om du själv öppnade den forumsidan.</string>
+    <string name="forum_attach_body_second">Plånboksadresser och personuppgifter tas bort från loggarna. De skickas privat till Warrens supportpersonal och visas aldrig offentligt på forumet. Du kan se exakt vad som skickas innan du godkänner. Godkänn bara om du själv öppnade den forumsidan.</string>
     <string name="forum_attach_approve">Bifoga loggarna</string>
     <string name="forum_attach_sending">Bifogar loggarna, vänta.</string>
     <string name="forum_attach_collect_failed">Loggarna kunde inte samlas in. Försök igen om en stund.</string>
@@ -618,7 +618,7 @@
     <string name="account_forum_name_label">Forumnamn</string>
     <string name="report_problem">Rapportera ett problem</string>
     <string name="report_problem_row_subtitle">Skicka en beskrivning och dina loggar till supportteamet</string>
-    <string name="report_problem_intro">Din beskrivning publiceras på communityforumet under ditt anonyma forumnamn. De tekniska loggarna går, om du tar med dem, privat till supportteamet och visas aldrig offentligt.</string>
+    <string name="report_problem_intro">Din beskrivning publiceras på communityforumet under din forumpseudonym. De tekniska loggarna går, om du tar med dem, privat till supportteamet och visas aldrig offentligt.</string>
     <string name="report_problem_pick_one">Välj en</string>
     <string name="report_problem_area_label">Var uppstår problemet?</string>
     <string name="report_problem_area_browsing">Surfning (sidor laddas inte, långsamt, trasiga webbplatser)</string>
@@ -637,7 +637,7 @@
     <string name="report_problem_frequency_sometimes">Ibland</string>
     <string name="report_problem_frequency_once">Det hände en gång</string>
     <string name="report_problem_include_logs">Ta med tekniska loggar</string>
-    <string name="report_problem_include_logs_description">Anonymiserade loggar från den här appen, synliga endast för supportteamet.</string>
+    <string name="report_problem_include_logs_description">Rensade loggar från den här appen, synliga endast för supportteamet.</string>
     <string name="report_problem_view_logs">Visa loggarna</string>
     <string name="report_problem_collecting">Rapporten förbereds, vänta.</string>
     <string name="report_problem_collect_failed">Loggarna kunde inte samlas in. Du kan ändå skicka beskrivningen.</string>

@@ -440,7 +440,7 @@
     <string name="onboarding_prop_obfuscation_title">Ofuscación siempre activa</string>
     <string name="onboarding_prop_obfuscation_body">Tu tráfico parece navegación HTTPS normal (mimetismo HTTP/3).</string>
     <string name="onboarding_prop_no_logs_title">Sin registros, sin rastreo</string>
-    <string name="onboarding_prop_no_logs_body">No podemos vincular el tráfico contigo: no hay ninguna identidad de cuenta que registrar.</string>
+    <string name="onboarding_prop_no_logs_body">Warren no guarda ningún registro de tu tráfico, y tu cuenta no tiene nombre ni correo electrónico.</string>
     <string name="onboarding_prop_keys_title">Tú tienes las claves</string>
     <string name="onboarding_prop_keys_body">Una frase de recuperación de 12 palabras es tu única credencial. Haz una copia de seguridad de forma segura.</string>
     <string name="onboarding_get_started">Empezar</string>
@@ -575,7 +575,7 @@
     <string name="feature_daita_not_active_on_server">%1$s: no está activo en este servidor</string>
     <string name="forum_login_title">¿Iniciar sesión en el foro de la comunidad Warren?</string>
     <string name="forum_login_body_first">Se solicitó un inicio de sesión en el foro de la comunidad Warren. Tu aplicación firmará un desafío de un solo uso con la clave de tu monedero para demostrar que eres tú.</string>
-    <string name="forum_login_body_second">No se usa ningún correo electrónico ni contraseña. Apareces con un seudónimo anónimo que no puede vincularse a tu cuenta de Warren. Aprueba solo si iniciaste tú este acceso.</string>
+    <string name="forum_login_body_second">No se usa ningún correo electrónico ni contraseña. Apareces con un seudónimo aleatorio, y solo el equipo de soporte de Warren puede asociarlo a un monedero, con fines de soporte. Aprueba solo si iniciaste tú este inicio de sesión.</string>
     <string name="forum_login_title_cross_device">¿Iniciar sesión en el foro en otro dispositivo?</string>
     <string name="forum_login_body_first_cross_device">Warren no puede saber qué navegador está iniciando sesión, ni si lo tienes delante ahora mismo. Tu aplicación firmará un desafío de un solo uso con la clave de tu monedero para demostrar que eres tú.</string>
     <string name="forum_login_body_second_cross_device">Aprueba solo si estás viendo esa página de inicio de sesión ahora mismo. Si alguien te envió este código, está iniciando sesión como tú. No se usa ningún correo electrónico ni contraseña.</string>
@@ -607,7 +607,7 @@
     <string name="forum_attach_title">¿Adjuntar tus registros a tu informe del foro?</string>
     <string name="forum_attach_body_topic">Tu informe de error en el foro de Warren (tema %1$d) pide a esta aplicación que adjunte sus registros técnicos para ayudar a diagnosticar el problema.</string>
     <string name="forum_attach_body_pre_topic">El informe de error que estás escribiendo en el foro de Warren pide a esta aplicación que adjunte sus registros técnicos para ayudar a diagnosticar el problema. Se añadirán al informe cuando lo publiques.</string>
-    <string name="forum_attach_body_second">Los registros están anonimizados: se eliminan las direcciones de monedero y los datos personales. Se envían de forma privada al equipo de soporte de Warren y nunca aparecen públicamente en el foro. Puedes ver exactamente lo que se enviará antes de aprobar. Aprueba solo si abriste tú esa página del foro.</string>
+    <string name="forum_attach_body_second">Las direcciones de monedero y los datos personales se eliminan de los registros. Se envían de forma privada al personal de soporte de Warren y nunca aparecen públicamente en el foro. Puedes ver exactamente qué se enviará antes de aprobar. Aprueba solo si abriste tú esa página del foro.</string>
     <string name="forum_attach_approve">Adjuntar los registros</string>
     <string name="forum_attach_sending">Adjuntando los registros, espera un momento.</string>
     <string name="forum_attach_collect_failed">No se pudieron recopilar los registros. Inténtalo de nuevo en un momento.</string>
@@ -621,7 +621,7 @@
     <string name="account_forum_name_label">Nombre en el foro</string>
     <string name="report_problem">Informar de un problema</string>
     <string name="report_problem_row_subtitle">Enviar una descripción y tus registros al equipo de soporte</string>
-    <string name="report_problem_intro">Tu descripción se publica en el foro de la comunidad con tu nombre de foro anónimo. Los registros técnicos, si los incluyes, van de forma privada al equipo de soporte y nunca aparecen públicamente.</string>
+    <string name="report_problem_intro">Tu descripción se publica en el foro de la comunidad con tu seudónimo del foro. Los registros técnicos, si los incluyes, van de forma privada al equipo de soporte y nunca aparecen públicamente.</string>
     <string name="report_problem_pick_one">Elige una opción</string>
     <string name="report_problem_area_label">¿Dónde ocurre el problema?</string>
     <string name="report_problem_area_browsing">Navegación (páginas que no cargan, lentitud, sitios rotos)</string>
@@ -640,7 +640,7 @@
     <string name="report_problem_frequency_sometimes">A veces</string>
     <string name="report_problem_frequency_once">Ocurrió una vez</string>
     <string name="report_problem_include_logs">Incluir registros técnicos</string>
-    <string name="report_problem_include_logs_description">Registros anonimizados de esta aplicación, visibles solo para el equipo de soporte.</string>
+    <string name="report_problem_include_logs_description">Registros depurados de esta app, visibles solo para el equipo de soporte.</string>
     <string name="report_problem_view_logs">Ver los registros</string>
     <string name="report_problem_collecting">Preparando el informe, espera un momento.</string>
     <string name="report_problem_collect_failed">No se pudieron recopilar los registros. Aun así puedes enviar la descripción.</string>

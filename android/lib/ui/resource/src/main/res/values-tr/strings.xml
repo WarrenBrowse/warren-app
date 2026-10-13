@@ -437,7 +437,7 @@
     <string name="onboarding_prop_obfuscation_title">Her zaman açık gizleme</string>
     <string name="onboarding_prop_obfuscation_body">Trafiğiniz sıradan HTTPS gezinmesi gibi görünür (HTTP/3 taklidi).</string>
     <string name="onboarding_prop_no_logs_title">Günlük yok, izleme yok</string>
-    <string name="onboarding_prop_no_logs_body">Trafiği sizinle ilişkilendiremeyiz; günlüğe kaydedilecek bir hesap kimliği yok.</string>
+    <string name="onboarding_prop_no_logs_body">Warren trafiğinizin kaydını tutmaz ve hesabınızda ad ya da e-posta yoktur.</string>
     <string name="onboarding_prop_keys_title">Anahtarlar sizde</string>
     <string name="onboarding_prop_keys_body">12 kelimelik kurtarma ifadesi tek kimlik bilginizdir. Güvenli bir şekilde yedekleyin.</string>
     <string name="onboarding_get_started">Başla</string>
@@ -572,7 +572,7 @@
     <string name="feature_daita_not_active_on_server">%1$s: bu sunucuda etkin değil</string>
     <string name="forum_login_title">Warren topluluk forumuna giriş yapılsın mı?</string>
     <string name="forum_login_body_first">Warren topluluk forumuna giriş talep edildi. Uygulamanız, sizin olduğunuzu kanıtlamak için cüzdan anahtarınızla tek seferlik bir doğrulama kodunu imzalayacak.</string>
-    <string name="forum_login_body_second">E-posta ve parola kullanılmaz. Warren hesabınızla ilişkilendirilemeyen anonim bir takma adla görünürsünüz. Yalnızca bu girişi siz başlattıysanız onaylayın.</string>
+    <string name="forum_login_body_second">E-posta ya da parola kullanılmaz. Rastgele bir takma adla görünürsünüz ve bu adı bir cüzdanla yalnızca Warren destek ekibi, destek amacıyla ilişkilendirebilir. Yalnızca bu oturum açmayı siz başlattıysanız onaylayın.</string>
     <string name="forum_login_title_cross_device">Foruma başka bir cihazda giriş yapılsın mı?</string>
     <string name="forum_login_body_first_cross_device">Warren, hangi tarayıcının giriş yaptığını ya da o tarayıcının şu anda karşınızda olup olmadığını bilemez. Uygulamanız, sizin olduğunuzu kanıtlamak için cüzdan anahtarınızla tek seferlik bir doğrulama kodunu imzalayacak.</string>
     <string name="forum_login_body_second_cross_device">Yalnızca şu anda o giriş sayfasına bakıyorsanız onaylayın. Bu kodu size biri gönderdiyse sizin adınıza giriş yapıyor demektir. E-posta ve parola kullanılmaz.</string>
@@ -604,7 +604,7 @@
     <string name="forum_attach_title">Günlükleriniz forumdaki raporunuza eklensin mi?</string>
     <string name="forum_attach_body_topic">Warren forumundaki hata raporunuz (konu %1$d), sorunun teşhisine yardımcı olmak için bu uygulamadan teknik günlüklerini eklemesini istiyor.</string>
     <string name="forum_attach_body_pre_topic">Warren forumunda yazmakta olduğunuz hata raporu, sorunun teşhisine yardımcı olmak için bu uygulamadan teknik günlüklerini eklemesini istiyor. Raporu gönderdiğinizde günlükler rapora eklenir.</string>
-    <string name="forum_attach_body_second">Günlükler anonimleştirilmiştir: cüzdan adresleri ve kişisel veriler kaldırılır. Yalnızca Warren destek ekibine özel olarak iletilir ve forumda hiçbir zaman herkese açık görünmez. Onaylamadan önce tam olarak neyin gönderileceğini görebilirsiniz. Yalnızca o forum sayfasını siz açtıysanız onaylayın.</string>
+    <string name="forum_attach_body_second">Cüzdan adresleri ve kişisel veriler günlüklerden çıkarılır. Günlükler Warren destek ekibine gizli olarak gider ve forumda asla herkese açık görünmez. Onaylamadan önce tam olarak neyin gönderileceğini görebilirsiniz. Yalnızca o forum sayfasını siz açtıysanız onaylayın.</string>
     <string name="forum_attach_approve">Günlükleri ekle</string>
     <string name="forum_attach_sending">Günlükler ekleniyor, lütfen bekleyin.</string>
     <string name="forum_attach_collect_failed">Günlükler toplanamadı. Birazdan tekrar deneyin.</string>
@@ -618,7 +618,7 @@
     <string name="account_forum_name_label">Forum adı</string>
     <string name="report_problem">Bir sorun bildir</string>
     <string name="report_problem_row_subtitle">Destek ekibine bir açıklama ve günlüklerinizi gönderin</string>
-    <string name="report_problem_intro">Açıklamanız, topluluk forumunda anonim forum adınızla yayımlanır. Teknik günlükler, eklerseniz, gizli olarak destek ekibine gider ve asla herkese açık görünmez.</string>
+    <string name="report_problem_intro">Açıklamanız topluluk forumunda forum takma adınızla yayımlanır. Teknik günlükler, eklerseniz, destek ekibine gizli olarak gider ve asla herkese açık görünmez.</string>
     <string name="report_problem_pick_one">Birini seçin</string>
     <string name="report_problem_area_label">Sorun nerede oluşuyor?</string>
     <string name="report_problem_area_browsing">Gezinme (sayfalar yüklenmiyor, yavaş, bozuk siteler)</string>
@@ -637,7 +637,7 @@
     <string name="report_problem_frequency_sometimes">Bazen</string>
     <string name="report_problem_frequency_once">Bir kez oldu</string>
     <string name="report_problem_include_logs">Teknik günlükleri ekle</string>
-    <string name="report_problem_include_logs_description">Bu uygulamanın anonimleştirilmiş günlükleri, yalnızca destek ekibi görebilir.</string>
+    <string name="report_problem_include_logs_description">Bu uygulamanın ayıklanmış günlükleri, yalnızca destek ekibi görebilir.</string>
     <string name="report_problem_view_logs">Günlükleri görüntüle</string>
     <string name="report_problem_collecting">Rapor hazırlanıyor, lütfen bekleyin.</string>
     <string name="report_problem_collect_failed">Günlükler toplanamadı. Yine de açıklamayı gönderebilirsiniz.</string>

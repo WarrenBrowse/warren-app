@@ -47,7 +47,7 @@ import org.koin.androidx.compose.koinViewModel
  * The in-app bug report: the forum's "Report a bug" form, filed with the
  * wallet signature and the redacted logs through the connect broker, so a user
  * who cannot complete the browser sign-in can still be heard. The description
- * is public under the anonymous forum name; the logs go privately to the
+ * is public under the forum pseudonym; the logs go privately to the
  * support team, and can be read here before they leave the device (the
  * desktop's "View the logs").
  */

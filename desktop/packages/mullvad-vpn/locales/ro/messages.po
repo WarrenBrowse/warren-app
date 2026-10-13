@@ -4250,8 +4250,8 @@ msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "Se utilizează tehnologia Multihop pentru a activa DAITA în locația selectată"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one QUIC server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
-msgstr "Rutare multihop direcționează traficul către un server QUIC și îl redirecționează către altul, făcându-l mai greu de urmărit. Acest lucru duce la o latență mai mare, dar sporește anonimatul online."
+msgid "Multihop routes your traffic into one QUIC server and out of another, adding a server between you and the sites you visit. This increases latency."
+msgstr "Multihop trimite traficul tău printr-un server QUIC și îl scoate prin altul, adăugând un server între tine și site-urile pe care le vizitezi. Latența crește."
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
@@ -4607,8 +4607,8 @@ msgid "Forum access requires a Warren subscription. This wallet has never subscr
 msgstr "Accesul la forum necesită un abonament Warren. Acest portofel nu a avut niciodată un abonament."
 
 msgctxt "forum-login"
-msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
-msgstr "Nu se folosesc adrese de e-mail sau parole. Apari sub un pseudonim anonim care nu poate fi asociat cu contul tău Warren. Aprobă doar dacă tu ai inițiat această autentificare."
+msgid "No email and no password are used. You appear under a random pseudonym, and only the Warren support team can match it to a wallet, for support purposes. Only approve if you started this sign-in."
+msgstr "Nu se folosesc nici e-mail, nici parolă. Apari sub un pseudonim aleatoriu, pe care doar echipa de suport Warren îl poate asocia unui portofel, în scop de suport. Aprobă doar dacă tu ai inițiat această conectare."
 
 msgctxt "forum-login"
 msgid "Sign in to the Warren community forum?"
@@ -4699,8 +4699,8 @@ msgid "The Warren support service could not accept the report. Nothing is wrong 
 msgstr "Serviciul de asistență Warren nu a putut accepta raportul. Nimic nu este în neregulă la tine. Încearcă din nou mai târziu și spune pe forum dacă problema persistă."
 
 msgctxt "forum-attach"
-msgid "The logs are anonymized: wallet addresses and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
-msgstr "Logurile sunt anonimizate: adresele portofelului și datele personale sunt ascunse. Sunt trimise în privat echipei de asistență Warren și nu apar niciodată public pe forum. Poți vedea exact ce va fi trimis înainte de a aproba."
+msgid "Wallet addresses and personal data are redacted from the logs. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "Adresele de portofel și datele personale sunt eliminate din jurnale. Jurnalele ajung în privat la echipa de suport Warren și nu apar niciodată public pe forum. Poți vedea exact ce se trimite înainte de a aproba."
 
 msgctxt "forum-attach"
 msgid "This request has expired. Start again from the forum page."
@@ -4989,8 +4989,8 @@ msgid "%(count)d characters (at least %(min)d)"
 msgstr "%(count)d caractere (cel puțin %(min)d)"
 
 msgctxt "report-problem"
-msgid "Anonymized logs from this app, visible to the support team only."
-msgstr "Jurnale anonimizate ale acestei aplicații, vizibile doar echipei de suport."
+msgid "Redacted logs from this app, visible to the support team only."
+msgstr "Jurnale curățate din această aplicație, vizibile doar pentru echipa de suport."
 
 msgctxt "report-problem"
 msgid "Browsing (pages not loading, slow, broken sites)"
@@ -5141,8 +5141,8 @@ msgid "Where does the problem happen?"
 msgstr "Unde apare problema?"
 
 msgctxt "report-problem"
-msgid "Your description is posted on the community forum under your anonymous forum name. The technical logs, if you include them, go privately to the support team and never appear publicly."
-msgstr "Descrierea ta este publicată pe forumul comunității sub numele tău de forum anonim. Jurnalele tehnice, dacă le incluzi, ajung privat la echipa de suport și nu apar niciodată public."
+msgid "Your description is posted on the community forum under your forum pseudonym. The technical logs, if you include them, go privately to the support team and never appear publicly."
+msgstr "Descrierea ta este publicată pe forumul comunității sub pseudonimul tău de pe forum. Jurnalele tehnice, dacă le incluzi, ajung în privat la echipa de suport și nu apar niciodată public."
 
 msgctxt "report-problem"
 msgid "Your report is on the forum and your logs reached the support team."

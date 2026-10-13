@@ -128,9 +128,9 @@ extension SettingsMultihopView {
             pages: [
                 SettingsInfoViewModelPage(
                     body: NSLocalizedString(
-                        "Multihop routes your traffic into one QUIC server and out another, "
-                            + "making it harder to trace. This results in increased latency but increases "
-                            + "anonymity online. Multihop has three different modes to choose between: "
+                        "Multihop routes your traffic into one QUIC server and out of another, "
+                            + "adding a server between you and the sites you visit. This increases latency. "
+                            + "Multihop has three different modes to choose between: "
                             + "When needed, Always, and Never.",
                         comment: ""
                     ),

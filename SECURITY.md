@@ -21,10 +21,10 @@ Before reporting issues, we recommend that you read the following documents:
 * [known issues] - Listing already known issues in the app.
 
 **Please do not report security vulnerabilities through GitHub issues or other
-public channels.** Instead please [create a vulnerability report on Github]. Or email our
-support on [support@warrenbrowse.com].
+public channels.** Instead please [create a vulnerability report on Github]. Or email the
+security team at [security@warrenbrowse.com].
 
 [create a vulnerability report on Github]: https://github.com/WarrenBrowse/warren-app/security/advisories/new
-[support@warrenbrowse.com]: mailto:support@warrenbrowse.com
+[security@warrenbrowse.com]: mailto:security@warrenbrowse.com
 [known issues]: docs/known-issues.md
 [docs/security.md]: docs/security.md

@@ -111,9 +111,8 @@ enum VPNSettingsInfoButtonItem: CustomStringConvertible {
 
         case .multihop:
             NSLocalizedString(
-                "Multihop routes your traffic into one QUIC server and out another, "
-                    + "making it harder to trace. This results in increased latency but "
-                    + "increases anonymity online.",
+                "Multihop routes your traffic into one QUIC server and out of another, "
+                    + "adding a server between you and the sites you visit. This increases latency.",
                 comment: ""
             )
 

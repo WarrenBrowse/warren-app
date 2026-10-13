@@ -445,7 +445,7 @@
     <string name="onboarding_prop_obfuscation_title">Ofuscare întotdeauna activă</string>
     <string name="onboarding_prop_obfuscation_body">Traficul dvs. arată ca o navigare HTTPS obișnuită (mimetism HTTP/3).</string>
     <string name="onboarding_prop_no_logs_title">Fără jurnale, fără urmărire</string>
-    <string name="onboarding_prop_no_logs_body">Nu putem lega traficul de dvs. nu există o identitate de cont de înregistrat.</string>
+    <string name="onboarding_prop_no_logs_body">Warren nu păstrează nicio evidență a traficului tău, iar contul tău nu are nume sau e-mail.</string>
     <string name="onboarding_prop_keys_title">Dvs. dețineți cheile</string>
     <string name="onboarding_prop_keys_body">O frază de recuperare din 12 cuvinte este singura dvs. credențială. Salvați-o în siguranță.</string>
     <string name="onboarding_get_started">Începeți</string>
@@ -583,7 +583,7 @@
     <string name="feature_daita_not_active_on_server">%1$s: nu este activă pe acest server</string>
     <string name="forum_login_title">Te autentifici pe forumul comunității Warren?</string>
     <string name="forum_login_body_first">S-a solicitat autentificarea pe forumul comunității Warren. Aplicația va semna o provocare unică cu cheia portofelului tău pentru a dovedi că ești tu.</string>
-    <string name="forum_login_body_second">Nu se folosesc adrese de e-mail sau parole. Apari sub un pseudonim anonim care nu poate fi asociat cu contul tău Warren. Aprobă doar dacă tu ai inițiat această autentificare.</string>
+    <string name="forum_login_body_second">Nu se folosesc nici e-mail, nici parolă. Apari sub un pseudonim aleatoriu, pe care doar echipa de suport Warren îl poate asocia unui portofel, în scop de suport. Aprobă doar dacă tu ai inițiat această conectare.</string>
     <string name="forum_login_title_cross_device">Te autentifici pe forum de pe alt dispozitiv?</string>
     <string name="forum_login_body_first_cross_device">Warren nu poate ști care browser se autentifică, nici dacă îl ai în față chiar acum. Aplicația va semna o provocare unică cu cheia portofelului tău pentru a dovedi că ești tu.</string>
     <string name="forum_login_body_second_cross_device">Aprobă doar dacă te uiți chiar acum la acea pagină de autentificare. Dacă cineva ți-a trimis acest cod, se autentifică în numele tău. Nu se folosesc adrese de e-mail sau parole.</string>
@@ -615,7 +615,7 @@
     <string name="forum_attach_title">Atașezi jurnalele tale la raportul tău de pe forum?</string>
     <string name="forum_attach_body_topic">Raportul tău de eroare de pe forumul Warren (subiectul %1$d) cere acestei aplicații să atașeze jurnalele sale tehnice, pentru a ajuta la diagnosticarea problemei.</string>
     <string name="forum_attach_body_pre_topic">Raportul de eroare pe care îl scrii pe forumul Warren cere acestei aplicații să atașeze jurnalele sale tehnice, pentru a ajuta la diagnosticarea problemei. Vor fi adăugate raportului odată ce îl publici.</string>
-    <string name="forum_attach_body_second">Jurnalele sunt anonimizate: adresele de portofel și datele personale sunt eliminate. Ajung în privat la echipa de suport Warren și nu apar niciodată public pe forum. Poți vedea exact ce va fi trimis înainte de a aproba. Aprobă doar dacă tu ai deschis acea pagină de pe forum.</string>
+    <string name="forum_attach_body_second">Adresele de portofel și datele personale sunt eliminate din jurnale. Jurnalele ajung în privat la echipa de suport Warren și nu apar niciodată public pe forum. Poți vedea exact ce se trimite înainte de a aproba. Aprobă doar dacă tu ai deschis acea pagină de forum.</string>
     <string name="forum_attach_approve">Atașează jurnalele</string>
     <string name="forum_attach_sending">Se atașează jurnalele, te rugăm să aștepți.</string>
     <string name="forum_attach_collect_failed">Jurnalele nu au putut fi colectate. Încearcă din nou peste un moment.</string>
@@ -629,7 +629,7 @@
     <string name="account_forum_name_label">Nume pe forum</string>
     <string name="report_problem">Raportați o problemă</string>
     <string name="report_problem_row_subtitle">Trimite o descriere și jurnalele tale echipei de suport</string>
-    <string name="report_problem_intro">Descrierea ta este publicată pe forumul comunității sub numele tău de forum anonim. Jurnalele tehnice, dacă le incluzi, ajung privat la echipa de suport și nu apar niciodată public.</string>
+    <string name="report_problem_intro">Descrierea ta este publicată pe forumul comunității sub pseudonimul tău de pe forum. Jurnalele tehnice, dacă le incluzi, ajung în privat la echipa de suport și nu apar niciodată public.</string>
     <string name="report_problem_pick_one">Alege una</string>
     <string name="report_problem_area_label">Unde apare problema?</string>
     <string name="report_problem_area_browsing">Navigare (pagini care nu se încarcă, lentoare, site-uri stricate)</string>
@@ -648,7 +648,7 @@
     <string name="report_problem_frequency_sometimes">Uneori</string>
     <string name="report_problem_frequency_once">S-a întâmplat o dată</string>
     <string name="report_problem_include_logs">Include jurnalele tehnice</string>
-    <string name="report_problem_include_logs_description">Jurnale anonimizate ale acestei aplicații, vizibile doar echipei de suport.</string>
+    <string name="report_problem_include_logs_description">Jurnale curățate din această aplicație, vizibile doar pentru echipa de suport.</string>
     <string name="report_problem_view_logs">Vizualizează logurile</string>
     <string name="report_problem_collecting">Se pregătește raportul, te rugăm să aștepți.</string>
     <string name="report_problem_collect_failed">Jurnalele nu au putut fi colectate. Poți totuși trimite descrierea.</string>

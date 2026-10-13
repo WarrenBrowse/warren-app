@@ -21,7 +21,7 @@ With Warren VPN, your traffic travels through an encrypted tunnel to one of our 
 It also means the third-party trackers embedded in the websites you visit cannot read your real IP address and use it to follow you from one site to another.
 
 <b>FREE THE INTERNET FROM MASS SURVEILLANCE AND DATA COLLECTION</b>
-A free and open society is one where people have the right to privacy. That is why we fight for a free internet: free from mass surveillance and censorship, free from data markets where your personal information is for sale, free from authorities monitoring every click you make. Warren VPN is our contribution to that fight.
+A free and open society is one where people have the right to privacy. That is why we fight for a free internet: free from mass surveillance and censorship, and free from data markets where your personal information is for sale. Warren VPN is our contribution to that fight.
 
 <b>TELEMETRY AND CRASH REPORTS</b>
 The app collects a very minimal amount of telemetry and never ties it to your wallet, IP address, or other identifiable information. App logs are never sent automatically: you send them explicitly if you choose to report a problem. App version checks run periodically to tell the app whether an upgrade is available and whether the running version is still supported.

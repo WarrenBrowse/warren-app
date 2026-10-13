@@ -440,7 +440,7 @@
     <string name="onboarding_prop_obfuscation_title">Ofuscação sempre ativa</string>
     <string name="onboarding_prop_obfuscation_body">O seu tráfego parece navegação HTTPS comum (imitação de HTTP/3).</string>
     <string name="onboarding_prop_no_logs_title">Sem registos, sem rastreio</string>
-    <string name="onboarding_prop_no_logs_body">Não conseguimos associar o tráfego a si - não existe identidade de conta para registar.</string>
+    <string name="onboarding_prop_no_logs_body">A Warren não guarda qualquer registo do seu tráfego, e a sua conta não tem nome nem e-mail.</string>
     <string name="onboarding_prop_keys_title">As chaves são suas</string>
     <string name="onboarding_prop_keys_body">Uma frase de recuperação de 12 palavras é a sua única credencial. Faça uma cópia de segurança em segurança.</string>
     <string name="onboarding_get_started">Começar</string>
@@ -575,7 +575,7 @@
     <string name="feature_daita_not_active_on_server">%1$s: não ativo neste servidor</string>
     <string name="forum_login_title">Iniciar sessão no fórum da comunidade Warren?</string>
     <string name="forum_login_body_first">Foi solicitado um início de sessão no fórum da comunidade Warren. A sua aplicação vai assinar um desafio de uso único com a chave da sua carteira para provar que é você.</string>
-    <string name="forum_login_body_second">Não são usados e-mail nem palavra-passe. Aparece sob um pseudónimo anónimo que não pode ser associado à sua conta Warren. Aprove apenas se foi você que iniciou este início de sessão.</string>
+    <string name="forum_login_body_second">Não é usado nenhum e-mail nem palavra-passe. Aparece sob um pseudónimo aleatório, e só a equipa de suporte da Warren o pode associar a uma carteira, para fins de suporte. Aprove apenas se foi você que iniciou este início de sessão.</string>
     <string name="forum_login_title_cross_device">Iniciar sessão no fórum noutro dispositivo?</string>
     <string name="forum_login_body_first_cross_device">O Warren não consegue saber qual navegador está a iniciar sessão, nem se o tem à frente neste momento. A sua aplicação vai assinar um desafio de uso único com a chave da sua carteira para provar que é você.</string>
     <string name="forum_login_body_second_cross_device">Aprove apenas se estiver a ver essa página de início de sessão neste momento. Se alguém lhe enviou este código, está a iniciar sessão como você. Não são usados e-mail nem palavra-passe.</string>
@@ -607,7 +607,7 @@
     <string name="forum_attach_title">Anexar os seus registos ao seu relatório no fórum?</string>
     <string name="forum_attach_body_topic">O seu relatório de erro no fórum Warren (tópico %1$d) pede a esta aplicação que anexe os seus registos técnicos, para ajudar a diagnosticar o problema.</string>
     <string name="forum_attach_body_pre_topic">O relatório de erro que está a escrever no fórum Warren pede a esta aplicação que anexe os seus registos técnicos, para ajudar a diagnosticar o problema. Serão juntos ao relatório assim que o publicar.</string>
-    <string name="forum_attach_body_second">Os registos são anonimizados: os endereços de carteira e os dados pessoais são removidos. Seguem em privado para a equipa de suporte da Warren e nunca aparecem publicamente no fórum. Pode ver exatamente o que será enviado antes de aprovar. Aprove apenas se foi você que abriu essa página do fórum.</string>
+    <string name="forum_attach_body_second">Os endereços de carteira e os dados pessoais são removidos dos registos. Os registos seguem em privado para a equipa de suporte da Warren e nunca aparecem publicamente no fórum. Pode ver exatamente o que será enviado antes de aprovar. Aprove apenas se foi você que abriu essa página do fórum.</string>
     <string name="forum_attach_approve">Anexar os registos</string>
     <string name="forum_attach_sending">A anexar os registos, aguarde.</string>
     <string name="forum_attach_collect_failed">Não foi possível recolher os registos. Tente novamente dentro de momentos.</string>
@@ -621,7 +621,7 @@
     <string name="account_forum_name_label">Nome no fórum</string>
     <string name="report_problem">Reportar um problema</string>
     <string name="report_problem_row_subtitle">Enviar uma descrição e os teus registos à equipa de suporte</string>
-    <string name="report_problem_intro">A tua descrição é publicada no fórum da comunidade com o teu nome de fórum anónimo. Os registos técnicos, se os incluíres, vão em privado para a equipa de suporte e nunca aparecem publicamente.</string>
+    <string name="report_problem_intro">A sua descrição é publicada no fórum da comunidade sob o seu pseudónimo do fórum. Os registos técnicos, se os incluir, seguem em privado para a equipa de suporte e nunca aparecem publicamente.</string>
     <string name="report_problem_pick_one">Escolhe uma opção</string>
     <string name="report_problem_area_label">Onde ocorre o problema?</string>
     <string name="report_problem_area_browsing">Navegação (páginas que não carregam, lentidão, sites avariados)</string>
@@ -640,7 +640,7 @@
     <string name="report_problem_frequency_sometimes">Às vezes</string>
     <string name="report_problem_frequency_once">Aconteceu uma vez</string>
     <string name="report_problem_include_logs">Incluir registos técnicos</string>
-    <string name="report_problem_include_logs_description">Registos anonimizados desta aplicação, visíveis apenas pela equipa de suporte.</string>
+    <string name="report_problem_include_logs_description">Registos depurados desta app, visíveis apenas para a equipa de suporte.</string>
     <string name="report_problem_view_logs">Ver os registos</string>
     <string name="report_problem_collecting">A preparar o relatório, aguarda.</string>
     <string name="report_problem_collect_failed">Não foi possível recolher os registos. Podes enviar a descrição na mesma.</string>

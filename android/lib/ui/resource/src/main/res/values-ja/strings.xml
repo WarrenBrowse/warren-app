@@ -433,7 +433,7 @@
     <string name="onboarding_prop_obfuscation_title">常時有効の難読化</string>
     <string name="onboarding_prop_obfuscation_body">通信は通常の HTTPS ブラウジングのように見えます (HTTP/3 模倣)。</string>
     <string name="onboarding_prop_no_logs_title">ログなし、追跡なし</string>
-    <string name="onboarding_prop_no_logs_body">通信をあなたに結び付けることはできません。ログに記録するアカウントの身元が存在しません。</string>
+    <string name="onboarding_prop_no_logs_body">Warren はあなたの通信を記録せず、アカウントには名前もメールアドレスもありません。</string>
     <string name="onboarding_prop_keys_title">鍵はあなたが保持します</string>
     <string name="onboarding_prop_keys_body">12 語の復元フレーズが唯一の認証情報です。安全にバックアップしてください。</string>
     <string name="onboarding_get_started">始める</string>
@@ -565,7 +565,7 @@
     <string name="feature_daita_not_active_on_server">%1$s: このサーバーでは無効</string>
     <string name="forum_login_title">Warren コミュニティフォーラムにサインインしますか？</string>
     <string name="forum_login_body_first">Warren コミュニティフォーラムへのサインインが要求されました。本人であることを証明するため、アプリがウォレットキーで使い捨てのチャレンジに署名します。</string>
-    <string name="forum_login_body_second">メールアドレスもパスワードも使用しません。あなたは Warren アカウントに紐付けられない匿名のハンドル名で表示されます。ご自身でこのサインインを開始した場合のみ承認してください。</string>
+    <string name="forum_login_body_second">メールアドレスもパスワードも使用しません。あなたはランダムな仮名で表示され、その仮名をウォレットと結び付けられるのは、サポートのために Warren のサポートチームだけです。このサインインを自分で開始した場合のみ承認してください。</string>
     <string name="forum_login_title_cross_device">別のデバイスでフォーラムにサインインしますか？</string>
     <string name="forum_login_body_first_cross_device">どのブラウザーがサインインしているのか、それがいま目の前にあるのかを Warren は判別できません。本人であることを証明するため、アプリがウォレットキーで使い捨てのチャレンジに署名します。</string>
     <string name="forum_login_body_second_cross_device">そのサインインページを今まさに見ている場合のみ承認してください。誰かからこのコードを送られた場合、その人があなたとしてサインインしようとしています。メールアドレスもパスワードも使用しません。</string>
@@ -597,7 +597,7 @@
     <string name="forum_attach_title">フォーラムのレポートにログを添付しますか？</string>
     <string name="forum_attach_body_topic">Warren フォーラムのバグレポート（トピック %1$d）が、問題の診断に役立てるため、このアプリの技術ログを添付するよう求めています。</string>
     <string name="forum_attach_body_pre_topic">Warren フォーラムで作成中のバグレポートが、問題の診断に役立てるため、このアプリの技術ログを添付するよう求めています。ログはレポートを投稿した時点で追加されます。</string>
-    <string name="forum_attach_body_second">ログは匿名化されています。ウォレットアドレスと個人データは削除されます。ログは Warren サポートチームに非公開で送られ、フォーラム上に公開されることはありません。承認する前に、送信される内容を正確に確認できます。ご自身でそのフォーラムページを開いた場合のみ承認してください。</string>
+    <string name="forum_attach_body_second">ウォレットアドレスと個人データはログから削除されます。ログは Warren のサポートスタッフに非公開で送られ、フォーラムで公開されることはありません。承認する前に、送信される内容を正確に確認できます。そのフォーラムページを自分で開いた場合のみ承認してください。</string>
     <string name="forum_attach_approve">ログを添付</string>
     <string name="forum_attach_sending">ログを添付しています。しばらくお待ちください。</string>
     <string name="forum_attach_collect_failed">ログを収集できませんでした。しばらくしてからもう一度お試しください。</string>
@@ -611,7 +611,7 @@
     <string name="account_forum_name_label">フォーラム名</string>
     <string name="report_problem">問題を報告する</string>
     <string name="report_problem_row_subtitle">説明とログをサポートチームに送信</string>
-    <string name="report_problem_intro">説明は、匿名のフォーラム名でコミュニティフォーラムに公開されます。技術ログを含めた場合、ログはサポートチームにのみ非公開で届き、公開されることはありません。</string>
+    <string name="report_problem_intro">あなたの説明は、フォーラム上の仮名でコミュニティフォーラムに投稿されます。技術ログを含めた場合、それはサポートチームに非公開で送られ、公開されることはありません。</string>
     <string name="report_problem_pick_one">選択してください</string>
     <string name="report_problem_area_label">問題はどこで起きますか？</string>
     <string name="report_problem_area_browsing">ブラウジング（ページが読み込めない、遅い、サイトが壊れている）</string>
@@ -630,7 +630,7 @@
     <string name="report_problem_frequency_sometimes">ときどき</string>
     <string name="report_problem_frequency_once">一度だけ</string>
     <string name="report_problem_include_logs">技術ログを含める</string>
-    <string name="report_problem_include_logs_description">このアプリの匿名化されたログで、サポートチームのみが閲覧できます。</string>
+    <string name="report_problem_include_logs_description">このアプリの編集済みログ。サポートチームのみが閲覧できます。</string>
     <string name="report_problem_view_logs">ログを表示</string>
     <string name="report_problem_collecting">レポートを準備しています。お待ちください。</string>
     <string name="report_problem_collect_failed">ログを収集できませんでした。説明だけでも送信できます。</string>

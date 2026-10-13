@@ -440,7 +440,7 @@
     <string name="onboarding_prop_obfuscation_title">Obfuscation toujours active</string>
     <string name="onboarding_prop_obfuscation_body">Votre trafic ressemble à une navigation HTTPS ordinaire (mimétisme HTTP/3).</string>
     <string name="onboarding_prop_no_logs_title">Aucune trace, aucun suivi</string>
-    <string name="onboarding_prop_no_logs_body">Nous ne pouvons pas relier le trafic à vous : il n\'y a aucune identité de compte à tracer.</string>
+    <string name="onboarding_prop_no_logs_body">Warren ne garde aucune trace de votre trafic, et votre compte n’a ni nom ni e-mail.</string>
     <string name="onboarding_prop_keys_title">Vous détenez les clés</string>
     <string name="onboarding_prop_keys_body">Une phrase de récupération de 12 mots est votre seul identifiant. Sauvegardez-la en lieu sûr.</string>
     <string name="onboarding_get_started">Commencer</string>
@@ -575,7 +575,7 @@
     <string name="feature_daita_not_active_on_server">%1$s : non actif sur ce serveur</string>
     <string name="forum_login_title">Se connecter au forum communautaire Warren ?</string>
     <string name="forum_login_body_first">Une connexion au forum communautaire Warren a été demandée. Votre application va signer un défi à usage unique avec la clé de votre portefeuille pour prouver que c\'est bien vous.</string>
-    <string name="forum_login_body_second">Aucun e-mail ni mot de passe n\'est utilisé. Vous apparaissez sous un pseudonyme anonyme qui ne peut pas être relié à votre compte Warren. N\'approuvez que si vous êtes à l\'origine de cette connexion.</string>
+    <string name="forum_login_body_second">Aucun e-mail ni mot de passe n’est utilisé. Vous apparaissez sous un pseudonyme aléatoire, que seule l’équipe de support de Warren peut relier à un portefeuille, pour les besoins du support. N’approuvez que si vous êtes à l’origine de cette connexion.</string>
     <string name="forum_login_title_cross_device">Se connecter au forum sur un autre appareil ?</string>
     <string name="forum_login_body_first_cross_device">Warren ne peut pas savoir quel navigateur se connecte, ni s\'il est devant vous en ce moment. Votre application va signer un défi à usage unique avec la clé de votre portefeuille pour prouver que c\'est bien vous.</string>
     <string name="forum_login_body_second_cross_device">N\'approuvez que si vous avez cette page de connexion sous les yeux en ce moment. Si quelqu\'un vous a envoyé ce code, il se connecte en votre nom. Aucun e-mail ni mot de passe n\'est utilisé.</string>
@@ -607,7 +607,7 @@
     <string name="forum_attach_title">Joindre vos journaux à votre rapport sur le forum ?</string>
     <string name="forum_attach_body_topic">Votre rapport de bug sur le forum Warren (sujet %1$d) demande à cette application d\'y joindre ses journaux techniques, pour aider à diagnostiquer le problème.</string>
     <string name="forum_attach_body_pre_topic">Le rapport de bug que vous rédigez sur le forum Warren demande à cette application d\'y joindre ses journaux techniques, pour aider à diagnostiquer le problème. Ils rejoindront le rapport une fois celui-ci publié.</string>
-    <string name="forum_attach_body_second">Les journaux sont anonymisés : les adresses de portefeuille et les données personnelles en sont retirées. Ils sont transmis en privé à l\'équipe support de Warren et n\'apparaissent jamais publiquement sur le forum. Vous pouvez consulter exactement ce qui sera envoyé avant d\'approuver. N\'approuvez que si vous avez ouvert cette page du forum vous-même.</string>
+    <string name="forum_attach_body_second">Les adresses de portefeuille et les données personnelles sont retirées des journaux. Ceux-ci sont transmis en privé à l’équipe de support de Warren et n’apparaissent jamais publiquement sur le forum. Vous pouvez voir exactement ce qui sera envoyé avant d’approuver. N’approuvez que si vous avez ouvert vous-même cette page du forum.</string>
     <string name="forum_attach_approve">Joindre les journaux</string>
     <string name="forum_attach_sending">Envoi des journaux, veuillez patienter.</string>
     <string name="forum_attach_collect_failed">Les journaux n\'ont pas pu être collectés. Réessayez dans un instant.</string>
@@ -621,7 +621,7 @@
     <string name="account_forum_name_label">Nom sur le forum</string>
     <string name="report_problem">Signaler un problème</string>
     <string name="report_problem_row_subtitle">Envoyer une description et vos journaux à l\'équipe support</string>
-    <string name="report_problem_intro">Votre description est publiée sur le forum communautaire sous votre nom de forum anonyme. Les journaux techniques, si vous les incluez, sont transmis en privé à l\'équipe support et n\'apparaissent jamais publiquement.</string>
+    <string name="report_problem_intro">Votre description est publiée sur le forum communautaire sous votre pseudonyme du forum. Les journaux techniques, si vous les joignez, sont transmis en privé à l’équipe de support et n’apparaissent jamais publiquement.</string>
     <string name="report_problem_pick_one">Choisir</string>
     <string name="report_problem_area_label">Où se produit le problème ?</string>
     <string name="report_problem_area_browsing">Navigation (pages qui ne chargent pas, lenteur, sites cassés)</string>
@@ -640,7 +640,7 @@
     <string name="report_problem_frequency_sometimes">Parfois</string>
     <string name="report_problem_frequency_once">C\'est arrivé une fois</string>
     <string name="report_problem_include_logs">Inclure les journaux techniques</string>
-    <string name="report_problem_include_logs_description">Journaux anonymisés de cette application, visibles uniquement par l\'équipe support.</string>
+    <string name="report_problem_include_logs_description">Journaux expurgés de cette application, visibles par l’équipe de support uniquement.</string>
     <string name="report_problem_view_logs">Voir les journaux</string>
     <string name="report_problem_collecting">Préparation du rapport, veuillez patienter.</string>
     <string name="report_problem_collect_failed">Les journaux n\'ont pas pu être collectés. Vous pouvez tout de même envoyer la description.</string>

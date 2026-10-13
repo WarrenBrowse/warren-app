@@ -3710,8 +3710,8 @@ msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "正在使用多跳为您的所选位置启用 DAITA"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one QUIC server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
-msgstr "多跳技术会将您的流量传输到一个 QUIC 服务器并从另一个服务器传出，从而提高追踪的难度。这会导致延迟增加，但会提高在线匿名性。"
+msgid "Multihop routes your traffic into one QUIC server and out of another, adding a server between you and the sites you visit. This increases latency."
+msgstr "多跳会让你的流量从一台 QUIC 服务器进入、从另一台服务器离开，在你和所访问的网站之间多加一台服务器。这会增加延迟。"
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
@@ -5421,8 +5421,8 @@ msgid "Forum access requires a Warren subscription. This wallet has never subscr
 msgstr "访问论坛需要 Warren 订阅。此钱包从未订阅过。"
 
 msgctxt "forum-login"
-msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
-msgstr "不使用电子邮件和密码。您将以无法关联到 Warren 账户的匿名昵称显示。仅当此次登录由您本人发起时才批准。"
+msgid "No email and no password are used. You appear under a random pseudonym, and only the Warren support team can match it to a wallet, for support purposes. Only approve if you started this sign-in."
+msgstr "不使用电子邮件，也不使用密码。你将以随机化名显示，只有 Warren 支持团队能出于支持目的将其与钱包关联。仅当此次登录由你本人发起时才批准。"
 
 msgctxt "forum-login"
 msgid "Sign in to the Warren community forum?"
@@ -5513,8 +5513,8 @@ msgid "The Warren support service could not accept the report. Nothing is wrong 
 msgstr "Warren 支持服务无法接收该报告。你这边没有问题。请稍后重试，如果仍然失败请在论坛上说明。"
 
 msgctxt "forum-attach"
-msgid "The logs are anonymized: wallet addresses and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
-msgstr "日志已匿名化：钱包地址和个人数据会被隐去。日志将私密发送给 Warren 支持人员，绝不会在论坛上公开显示。在批准前，您可以准确查看将要发送的内容。"
+msgid "Wallet addresses and personal data are redacted from the logs. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "钱包地址和个人数据会从日志中移除。日志会私下发送给 Warren 支持人员，绝不会在论坛上公开显示。批准前你可以准确查看将要发送的内容。"
 
 msgctxt "forum-attach"
 msgid "This request has expired. Start again from the forum page."
@@ -5801,8 +5801,8 @@ msgid "%(count)d characters (at least %(min)d)"
 msgstr "%(count)d 个字符（至少 %(min)d 个）"
 
 msgctxt "report-problem"
-msgid "Anonymized logs from this app, visible to the support team only."
-msgstr "本应用的匿名化日志，仅支持团队可见。"
+msgid "Redacted logs from this app, visible to the support team only."
+msgstr "此应用经过脱敏的日志，仅支持团队可见。"
 
 msgctxt "report-problem"
 msgid "Browsing (pages not loading, slow, broken sites)"
@@ -5953,8 +5953,8 @@ msgid "Where does the problem happen?"
 msgstr "问题出现在哪里？"
 
 msgctxt "report-problem"
-msgid "Your description is posted on the community forum under your anonymous forum name. The technical logs, if you include them, go privately to the support team and never appear publicly."
-msgstr "您的描述将以匿名论坛名发布在社区论坛上。如果包含技术日志，日志只会私下发送给支持团队，绝不会公开。"
+msgid "Your description is posted on the community forum under your forum pseudonym. The technical logs, if you include them, go privately to the support team and never appear publicly."
+msgstr "你的描述会以你的论坛化名发布在社区论坛上。技术日志（如果你附上）会私下发送给支持团队，绝不会公开。"
 
 msgctxt "report-problem"
 msgid "Your report is on the forum and your logs reached the support team."

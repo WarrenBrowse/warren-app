@@ -433,7 +433,7 @@
     <string name="onboarding_prop_obfuscation_title">การพรางตัวที่เปิดตลอดเวลา</string>
     <string name="onboarding_prop_obfuscation_body">การรับส่งข้อมูลของคุณดูเหมือนการท่องเว็บ HTTPS ทั่วไป (เลียนแบบ HTTP/3)</string>
     <string name="onboarding_prop_no_logs_title">ไม่มีบันทึก ไม่มีการติดตาม</string>
-    <string name="onboarding_prop_no_logs_body">เราไม่สามารถเชื่อมโยงการรับส่งข้อมูลกับคุณได้ ไม่มีตัวตนบัญชีให้บันทึก</string>
+    <string name="onboarding_prop_no_logs_body">Warren ไม่เก็บบันทึกทราฟฟิกของคุณ และบัญชีของคุณไม่มีชื่อหรืออีเมล</string>
     <string name="onboarding_prop_keys_title">คุณถือคีย์ไว้เอง</string>
     <string name="onboarding_prop_keys_body">วลีกู้คืน 12 คำคือข้อมูลรับรองเดียวของคุณ สำรองไว้ให้ปลอดภัย</string>
     <string name="onboarding_get_started">เริ่มต้นใช้งาน</string>
@@ -565,7 +565,7 @@
     <string name="feature_daita_not_active_on_server">%1$s: ไม่ได้ทำงานบนเซิร์ฟเวอร์นี้</string>
     <string name="forum_login_title">เข้าสู่ระบบฟอรัมชุมชน Warren หรือไม่?</string>
     <string name="forum_login_body_first">มีการร้องขอเข้าสู่ระบบฟอรัมชุมชน Warren แอปของคุณจะลงนามคำท้าทายแบบใช้ครั้งเดียวด้วยคีย์กระเป๋าเงินของคุณเพื่อยืนยันว่าเป็นคุณ</string>
-    <string name="forum_login_body_second">ไม่มีการใช้อีเมลและรหัสผ่าน คุณจะปรากฏภายใต้ชื่อผู้ใช้นิรนามที่ไม่สามารถเชื่อมโยงกับบัญชี Warren ของคุณได้ อนุมัติเฉพาะเมื่อคุณเป็นผู้เริ่มการเข้าสู่ระบบนี้เท่านั้น</string>
+    <string name="forum_login_body_second">ไม่มีการใช้อีเมลหรือรหัสผ่าน คุณจะปรากฏภายใต้นามแฝงแบบสุ่ม และมีเพียงทีมสนับสนุนของ Warren เท่านั้นที่เชื่อมโยงนามแฝงนี้กับวอลเล็ตได้ เพื่อวัตถุประสงค์ในการให้การสนับสนุน อนุมัติเฉพาะเมื่อคุณเป็นผู้เริ่มการลงชื่อเข้าใช้นี้เอง</string>
     <string name="forum_login_title_cross_device">เข้าสู่ระบบฟอรัมบนอุปกรณ์อื่นหรือไม่?</string>
     <string name="forum_login_body_first_cross_device">Warren ไม่สามารถบอกได้ว่าเบราว์เซอร์ใดกำลังเข้าสู่ระบบ หรือเบราว์เซอร์นั้นอยู่ตรงหน้าคุณในตอนนี้หรือไม่ แอปของคุณจะลงนามคำท้าทายแบบใช้ครั้งเดียวด้วยคีย์กระเป๋าเงินของคุณเพื่อยืนยันว่าเป็นคุณ</string>
     <string name="forum_login_body_second_cross_device">อนุมัติเฉพาะเมื่อคุณกำลังดูหน้าเข้าสู่ระบบนั้นอยู่ในขณะนี้เท่านั้น หากมีผู้ส่งโค้ดนี้ให้คุณ แสดงว่าผู้นั้นกำลังเข้าสู่ระบบในชื่อของคุณ ไม่มีการใช้อีเมลและรหัสผ่าน</string>
@@ -597,7 +597,7 @@
     <string name="forum_attach_title">แนบบันทึกของคุณไปกับรายงานบนฟอรัมหรือไม่</string>
     <string name="forum_attach_body_topic">รายงานข้อบกพร่องของคุณบนฟอรัม Warren (หัวข้อ %1$d) ขอให้แอปนี้แนบบันทึกทางเทคนิคของแอป เพื่อช่วยวินิจฉัยปัญหา</string>
     <string name="forum_attach_body_pre_topic">รายงานข้อบกพร่องที่คุณกำลังเขียนบนฟอรัม Warren ขอให้แอปนี้แนบบันทึกทางเทคนิคของแอป เพื่อช่วยวินิจฉัยปัญหา บันทึกจะถูกรวมเข้ากับรายงานเมื่อคุณโพสต์</string>
-    <string name="forum_attach_body_second">บันทึกถูกทำให้ไม่ระบุตัวตน: ที่อยู่กระเป๋าเงินและข้อมูลส่วนบุคคลถูกลบออก บันทึกจะถูกส่งเป็นการส่วนตัวถึงทีมสนับสนุนของ Warren และไม่ปรากฏต่อสาธารณะบนฟอรัม คุณสามารถดูสิ่งที่จะส่งได้อย่างละเอียดก่อนอนุมัติ อนุมัติเฉพาะเมื่อคุณเป็นผู้เปิดหน้าฟอรัมนั้นด้วยตัวเอง</string>
+    <string name="forum_attach_body_second">ที่อยู่วอลเล็ตและข้อมูลส่วนบุคคลจะถูกลบออกจากบันทึก บันทึกจะถูกส่งเป็นการส่วนตัวถึงเจ้าหน้าที่สนับสนุนของ Warren และไม่ปรากฏต่อสาธารณะบนฟอรัม คุณดูได้ว่าจะส่งอะไรบ้างก่อนอนุมัติ อนุมัติเฉพาะเมื่อคุณเป็นผู้เปิดหน้าฟอรัมนั้นเอง</string>
     <string name="forum_attach_approve">แนบบันทึก</string>
     <string name="forum_attach_sending">กำลังแนบบันทึก โปรดรอสักครู่</string>
     <string name="forum_attach_collect_failed">ไม่สามารถรวบรวมบันทึกได้ โปรดลองอีกครั้งในอีกสักครู่</string>
@@ -611,7 +611,7 @@
     <string name="account_forum_name_label">ชื่อในฟอรัม</string>
     <string name="report_problem">รายงานปัญหา</string>
     <string name="report_problem_row_subtitle">ส่งคำอธิบายและบันทึกของคุณให้ทีมสนับสนุน</string>
-    <string name="report_problem_intro">คำอธิบายของคุณจะถูกโพสต์บนฟอรัมชุมชนภายใต้ชื่อฟอรัมนิรนามของคุณ บันทึกทางเทคนิค หากคุณแนบมาด้วย จะถูกส่งเป็นการส่วนตัวให้ทีมสนับสนุนเท่านั้นและไม่ปรากฏต่อสาธารณะ</string>
+    <string name="report_problem_intro">คำอธิบายของคุณจะโพสต์บนฟอรัมชุมชนภายใต้นามแฝงในฟอรัมของคุณ ส่วนบันทึกทางเทคนิค หากคุณแนบไว้ จะส่งถึงทีมสนับสนุนเป็นการส่วนตัวและไม่ปรากฏต่อสาธารณะ</string>
     <string name="report_problem_pick_one">เลือกหนึ่งรายการ</string>
     <string name="report_problem_area_label">ปัญหาเกิดขึ้นที่ไหน</string>
     <string name="report_problem_area_browsing">การท่องเว็บ (หน้าเว็บไม่โหลด ช้า เว็บไซต์เสีย)</string>
@@ -630,7 +630,7 @@
     <string name="report_problem_frequency_sometimes">บางครั้ง</string>
     <string name="report_problem_frequency_once">เกิดขึ้นครั้งเดียว</string>
     <string name="report_problem_include_logs">แนบบันทึกทางเทคนิค</string>
-    <string name="report_problem_include_logs_description">บันทึกแบบไม่ระบุตัวตนจากแอปนี้ มองเห็นได้เฉพาะทีมสนับสนุน</string>
+    <string name="report_problem_include_logs_description">บันทึกที่ตัดข้อมูลออกแล้วจากแอปนี้ มองเห็นได้เฉพาะทีมสนับสนุน</string>
     <string name="report_problem_view_logs">ดูบันทึก</string>
     <string name="report_problem_collecting">กำลังเตรียมรายงาน โปรดรอ</string>
     <string name="report_problem_collect_failed">ไม่สามารถรวบรวมบันทึกได้ คุณยังส่งคำอธิบายได้</string>

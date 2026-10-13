@@ -295,7 +295,7 @@ final class WarrenForumLoginFlow: @unchecked Sendable {
                 "Approve only if you are looking at that sign-in page right now. If someone sent you this code, they are signing in as you. No email and no password are used.",
                 comment: "Forum login consent prompt warning, cross device")
             : NSLocalizedString(
-                "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in.",
+                "No email and no password are used. You appear under a random pseudonym, and only the Warren support team can match it to a wallet, for support purposes. Only approve if you started this sign-in.",
                 comment: "Forum login consent prompt warning")
         let message = first + "\n\n" + second
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)

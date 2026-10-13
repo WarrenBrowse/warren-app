@@ -437,7 +437,7 @@
     <string name="onboarding_prop_obfuscation_title">Aina päällä oleva häivytys</string>
     <string name="onboarding_prop_obfuscation_body">Liikenteesi näyttää tavalliselta HTTPS-selaamiselta (HTTP/3-jäljittely).</string>
     <string name="onboarding_prop_no_logs_title">Ei lokeja, ei seurantaa</string>
-    <string name="onboarding_prop_no_logs_body">Emme voi yhdistää liikennettä sinuun - lokiin ei ole tili-identiteettiä.</string>
+    <string name="onboarding_prop_no_logs_body">Warren ei tallenna liikenteestäsi mitään, eikä tililläsi ole nimeä tai sähköpostiosoitetta.</string>
     <string name="onboarding_prop_keys_title">Sinä pidät avaimia hallussasi</string>
     <string name="onboarding_prop_keys_body">12 sanan palautuslause on ainoa tunnisteesi. Varmuuskopioi se turvallisesti.</string>
     <string name="onboarding_get_started">Aloita</string>
@@ -572,7 +572,7 @@
     <string name="feature_daita_not_active_on_server">%1$s: ei käytössä tällä palvelimella</string>
     <string name="forum_login_title">Kirjaudutaanko Warrenin yhteisöfoorumille?</string>
     <string name="forum_login_body_first">Warrenin yhteisöfoorumille pyydettiin kirjautumista. Sovelluksesi allekirjoittaa kertaluonteisen haasteen lompakkoavaimellasi todistaakseen, että se olet sinä.</string>
-    <string name="forum_login_body_second">Sähköpostia tai salasanaa ei käytetä. Näyt anonyymillä nimimerkillä, jota ei voi yhdistää Warren-tiliisi. Hyväksy vain, jos aloitit tämän kirjautumisen itse.</string>
+    <string name="forum_login_body_second">Sähköpostia tai salasanaa ei käytetä. Näyt satunnaisella salanimellä, ja vain Warrenin tukitiimi voi yhdistää sen lompakkoon tukitarkoituksiin. Hyväksy vain, jos aloitit tämän kirjautumisen itse.</string>
     <string name="forum_login_title_cross_device">Kirjaudutaanko foorumille toisella laitteella?</string>
     <string name="forum_login_body_first_cross_device">Warren ei voi tietää, mikä selain kirjautuu sisään tai onko se juuri nyt edessäsi. Sovelluksesi allekirjoittaa kertaluonteisen haasteen lompakkoavaimellasi todistaakseen, että se olet sinä.</string>
     <string name="forum_login_body_second_cross_device">Hyväksy vain, jos katsot kyseistä kirjautumissivua juuri nyt. Jos joku lähetti sinulle tämän koodin, hän kirjautuu sinuna. Sähköpostia tai salasanaa ei käytetä.</string>
@@ -604,7 +604,7 @@
     <string name="forum_attach_title">Liitetäänkö lokisi foorumiraporttiisi?</string>
     <string name="forum_attach_body_topic">Vikaraporttisi Warren-foorumilla (aihe %1$d) pyytää tätä sovellusta liittämään tekniset lokinsa ongelman selvittämiseksi.</string>
     <string name="forum_attach_body_pre_topic">Vikaraportti, jota kirjoitat Warren-foorumilla, pyytää tätä sovellusta liittämään tekniset lokinsa ongelman selvittämiseksi. Ne liitetään raporttiin, kun julkaiset sen.</string>
-    <string name="forum_attach_body_second">Lokit on anonymisoitu: lompakko-osoitteet ja henkilötiedot on poistettu. Ne menevät luottamuksellisesti Warrenin tukitiimille eivätkä koskaan näy julkisesti foorumilla. Voit katsoa tarkalleen, mitä lähetetään, ennen hyväksymistä. Hyväksy vain, jos avasit tuon foorumisivun itse.</string>
+    <string name="forum_attach_body_second">Lompakko-osoitteet ja henkilötiedot poistetaan lokeista. Ne lähetetään luottamuksellisesti Warrenin tukihenkilöstölle, eivätkä ne koskaan näy julkisesti foorumilla. Näet tarkalleen, mitä lähetetään, ennen kuin hyväksyt. Hyväksy vain, jos avasit kyseisen foorumisivun itse.</string>
     <string name="forum_attach_approve">Liitä lokit</string>
     <string name="forum_attach_sending">Liitetään lokeja, odota hetki.</string>
     <string name="forum_attach_collect_failed">Lokeja ei voitu kerätä. Yritä hetken kuluttua uudelleen.</string>
@@ -618,7 +618,7 @@
     <string name="account_forum_name_label">Foorumin nimi</string>
     <string name="report_problem">Raportoi ongelma</string>
     <string name="report_problem_row_subtitle">Lähetä kuvaus ja lokisi tukitiimille</string>
-    <string name="report_problem_intro">Kuvauksesi julkaistaan yhteisöfoorumilla anonyymillä foorumnimelläsi. Tekniset lokit menevät, jos sisällytät ne, yksityisesti tukitiimille eivätkä koskaan näy julkisesti.</string>
+    <string name="report_problem_intro">Kuvauksesi julkaistaan yhteisöfoorumilla foorumin salanimelläsi. Tekniset lokit, jos liität ne, menevät luottamuksellisesti tukitiimille eivätkä koskaan näy julkisesti.</string>
     <string name="report_problem_pick_one">Valitse yksi</string>
     <string name="report_problem_area_label">Missä ongelma ilmenee?</string>
     <string name="report_problem_area_browsing">Selaaminen (sivut eivät lataudu, hitaus, rikkinäiset sivustot)</string>
@@ -637,7 +637,7 @@
     <string name="report_problem_frequency_sometimes">Joskus</string>
     <string name="report_problem_frequency_once">Se tapahtui kerran</string>
     <string name="report_problem_include_logs">Sisällytä tekniset lokit</string>
-    <string name="report_problem_include_logs_description">Tämän sovelluksen anonymisoidut lokit, näkyvät vain tukitiimille.</string>
+    <string name="report_problem_include_logs_description">Tämän sovelluksen puhdistetut lokit, vain tukitiimin nähtävissä.</string>
     <string name="report_problem_view_logs">Näytä lokit</string>
     <string name="report_problem_collecting">Raporttia valmistellaan, odota hetki.</string>
     <string name="report_problem_collect_failed">Lokeja ei voitu kerätä. Voit silti lähettää kuvauksen.</string>

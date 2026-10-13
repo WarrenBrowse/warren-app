@@ -156,7 +156,7 @@ function frequencyLabel(frequency: ForumReportFrequency): string {
  * The in-app bug report: the forum's "Report a bug" form, filed with the
  * wallet signature and the redacted logs through the connect broker, so a
  * user who cannot complete the browser sign-in can still be heard. The
- * description is public under the anonymous forum name; the logs go privately
+ * description is public under the forum pseudonym; the logs go privately
  * to the support team, and can be read here before they leave the machine.
  * The Android "Report a problem" screen is the reference; the rules live in
  * `features/report-problem/form-state.ts`.
@@ -302,7 +302,7 @@ export function ReportProblemView() {
                     // TRANSLATORS: Explains where the report and the logs go.
                     messages.pgettext(
                       'report-problem',
-                      'Your description is posted on the community forum under your anonymous forum name. The technical logs, if you include them, go privately to the support team and never appear publicly.',
+                      'Your description is posted on the community forum under your forum pseudonym. The technical logs, if you include them, go privately to the support team and never appear publicly.',
                     )
                   }
                 </Text>
@@ -454,7 +454,7 @@ export function ReportProblemView() {
                           // TRANSLATORS: Description of the switch that attaches the logs.
                           messages.pgettext(
                             'report-problem',
-                            'Anonymized logs from this app, visible to the support team only.',
+                            'Redacted logs from this app, visible to the support team only.',
                           )
                         }
                       </SettingsListItem.Footer.Text>

@@ -437,7 +437,7 @@
     <string name="onboarding_prop_obfuscation_title">مبهم‌سازی همیشه‌روشن</string>
     <string name="onboarding_prop_obfuscation_body">ترافیک شما مانند مرور عادی HTTPS به نظر می‌رسد (تقلید HTTP/3).</string>
     <string name="onboarding_prop_no_logs_title">بدون گزارش، بدون ردیابی</string>
-    <string name="onboarding_prop_no_logs_body">ما نمی‌توانیم ترافیک را به شما نسبت دهیم - هیچ هویت حسابی برای ثبت وجود ندارد.</string>
+    <string name="onboarding_prop_no_logs_body">Warren هیچ سابقه‌ای از ترافیک شما نگه نمی‌دارد و حساب شما نام یا ایمیلی ندارد.</string>
     <string name="onboarding_prop_keys_title">کلیدها در دست شماست</string>
     <string name="onboarding_prop_keys_body">یک عبارت بازیابی ۱۲ کلمه‌ای تنها اعتبارنامه شماست. آن را با خیال راحت پشتیبان بگیرید.</string>
     <string name="onboarding_get_started">شروع کنید</string>
@@ -572,7 +572,7 @@
     <string name="feature_daita_not_active_on_server">%1$s: روی این سرور فعال نیست</string>
     <string name="forum_login_title">ورود به انجمن جامعه Warren؟</string>
     <string name="forum_login_body_first">درخواست ورود به انجمن جامعه Warren ثبت شد. برنامه شما برای اثبات هویتتان، یک چالش یک‌بارمصرف را با کلید کیف پول شما امضا می‌کند.</string>
-    <string name="forum_login_body_second">هیچ ایمیل و رمز عبوری استفاده نمی‌شود. شما با یک نام مستعار ناشناس نمایش داده می‌شوید که قابل ارتباط با حساب Warren شما نیست. فقط در صورتی تأیید کنید که خودتان این ورود را آغاز کرده‌اید.</string>
+    <string name="forum_login_body_second">هیچ ایمیل و رمز عبوری استفاده نمی‌شود. شما با یک نام مستعار تصادفی نمایش داده می‌شوید و فقط تیم پشتیبانی Warren می‌تواند آن را، برای اهداف پشتیبانی، به یک کیف پول مرتبط کند. فقط در صورتی تأیید کنید که خودتان این ورود را آغاز کرده‌اید.</string>
     <string name="forum_login_title_cross_device">ورود به انجمن در دستگاهی دیگر؟</string>
     <string name="forum_login_body_first_cross_device">Warren نمی‌تواند بداند کدام مرورگر وارد می‌شود یا آیا همین حالا پیش روی شماست. برنامه شما برای اثبات هویتتان، یک چالش یک‌بارمصرف را با کلید کیف پول شما امضا می‌کند.</string>
     <string name="forum_login_body_second_cross_device">فقط در صورتی تأیید کنید که همین حالا آن صفحه ورود را می‌بینید. اگر کسی این کد را برای شما فرستاده است، او با نام شما وارد می‌شود. هیچ ایمیل و رمز عبوری استفاده نمی‌شود.</string>
@@ -604,7 +604,7 @@
     <string name="forum_attach_title">گزارش‌های شما به گزارش انجمن پیوست شود؟</string>
     <string name="forum_attach_body_topic">گزارش مشکل شما در انجمن Warren (موضوع %1$d) از این برنامه می‌خواهد گزارش‌های فنی خود را پیوست کند تا به تشخیص مشکل کمک شود.</string>
     <string name="forum_attach_body_pre_topic">گزارش مشکلی که در انجمن Warren می‌نویسید از این برنامه می‌خواهد گزارش‌های فنی خود را پیوست کند تا به تشخیص مشکل کمک شود. پس از ارسال گزارش، این گزارش‌ها به آن افزوده می‌شوند.</string>
-    <string name="forum_attach_body_second">گزارش‌ها ناشناس شده‌اند: نشانی‌های کیف پول و داده‌های شخصی حذف شده‌اند. آنها به‌صورت خصوصی به تیم پشتیبانی Warren می‌رسند و هرگز به‌طور عمومی در انجمن نمایش داده نمی‌شوند. می‌توانید پیش از تأیید دقیقاً ببینید چه چیزی ارسال می‌شود. فقط در صورتی تأیید کنید که خودتان آن صفحهٔ انجمن را باز کرده‌اید.</string>
+    <string name="forum_attach_body_second">نشانی‌های کیف پول و داده‌های شخصی از گزارش‌ها حذف می‌شوند. گزارش‌ها به‌صورت خصوصی برای کارکنان پشتیبانی Warren ارسال می‌شوند و هرگز در انجمن به‌طور عمومی نمایش داده نمی‌شوند. پیش از تأیید می‌توانید دقیقاً ببینید چه چیزی ارسال می‌شود. فقط در صورتی تأیید کنید که خودتان آن صفحهٔ انجمن را باز کرده‌اید.</string>
     <string name="forum_attach_approve">پیوست گزارش‌ها</string>
     <string name="forum_attach_sending">در حال پیوست گزارش‌ها، لطفاً صبر کنید.</string>
     <string name="forum_attach_collect_failed">جمع‌آوری گزارش‌ها ممکن نشد. کمی بعد دوباره تلاش کنید.</string>
@@ -618,7 +618,7 @@
     <string name="account_forum_name_label">نام انجمن</string>
     <string name="report_problem">گزارش مشکل</string>
     <string name="report_problem_row_subtitle">ارسال شرح مشکل و گزارش‌های شما به تیم پشتیبانی</string>
-    <string name="report_problem_intro">شرح شما در انجمن جامعه زیر نام ناشناس انجمن شما منتشر می‌شود. گزارش‌های فنی، اگر آن‌ها را ضمیمه کنید، به‌صورت خصوصی به تیم پشتیبانی می‌رسند و هرگز عمومی نمی‌شوند.</string>
+    <string name="report_problem_intro">توضیح شما با نام مستعار انجمن‌تان در انجمن کاربران منتشر می‌شود. گزارش‌های فنی، اگر آن‌ها را پیوست کنید، به‌صورت خصوصی به تیم پشتیبانی می‌روند و هرگز عمومی نمی‌شوند.</string>
     <string name="report_problem_pick_one">یکی را انتخاب کنید</string>
     <string name="report_problem_area_label">مشکل کجا رخ می‌دهد؟</string>
     <string name="report_problem_area_browsing">مرور وب (صفحات بارگذاری نمی‌شوند، کندی، سایت‌های خراب)</string>
@@ -637,7 +637,7 @@
     <string name="report_problem_frequency_sometimes">گاهی</string>
     <string name="report_problem_frequency_once">یک بار رخ داد</string>
     <string name="report_problem_include_logs">ضمیمه کردن گزارش‌های فنی</string>
-    <string name="report_problem_include_logs_description">گزارش‌های ناشناس‌شدهٔ این برنامه، فقط برای تیم پشتیبانی قابل مشاهده است.</string>
+    <string name="report_problem_include_logs_description">گزارش‌های پالایش‌شده از این برنامه، فقط برای تیم پشتیبانی قابل مشاهده.</string>
     <string name="report_problem_view_logs">مشاهده لاگ‌ها</string>
     <string name="report_problem_collecting">در حال آماده‌سازی گزارش، لطفاً صبر کنید.</string>
     <string name="report_problem_collect_failed">گزارش‌ها جمع‌آوری نشدند. همچنان می‌توانید شرح مشکل را بفرستید.</string>

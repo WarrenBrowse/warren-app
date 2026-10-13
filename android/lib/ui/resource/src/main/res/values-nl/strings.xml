@@ -437,7 +437,7 @@
     <string name="onboarding_prop_obfuscation_title">Altijd actieve obfuscatie</string>
     <string name="onboarding_prop_obfuscation_body">Je verkeer lijkt op gewoon HTTPS-browsen (HTTP/3-nabootsing).</string>
     <string name="onboarding_prop_no_logs_title">Geen logs, geen tracking</string>
-    <string name="onboarding_prop_no_logs_body">We kunnen verkeer niet aan jou koppelen - er is geen accountidentiteit om te loggen.</string>
+    <string name="onboarding_prop_no_logs_body">Warren bewaart geen registratie van je verkeer, en je account heeft geen naam of e-mailadres.</string>
     <string name="onboarding_prop_keys_title">Jij hebt de sleutels</string>
     <string name="onboarding_prop_keys_body">Een herstelzin van 12 woorden is je enige inloggegeven. Maak er een veilige back-up van.</string>
     <string name="onboarding_get_started">Aan de slag</string>
@@ -572,7 +572,7 @@
     <string name="feature_daita_not_active_on_server">%1$s: niet actief op deze server</string>
     <string name="forum_login_title">Aanmelden bij het Warren community-forum?</string>
     <string name="forum_login_body_first">Er is een aanmelding bij het Warren community-forum aangevraagd. Je app ondertekent een eenmalige challenge met je wallet-sleutel om te bewijzen dat jij het bent.</string>
-    <string name="forum_login_body_second">Er worden geen e-mail en geen wachtwoord gebruikt. Je verschijnt onder een anonieme naam die niet aan je Warren-account kan worden gekoppeld. Keur alleen goed als je deze aanmelding zelf hebt gestart.</string>
+    <string name="forum_login_body_second">Er wordt geen e-mail en geen wachtwoord gebruikt. Je verschijnt onder een willekeurig pseudoniem, en alleen het supportteam van Warren kan het aan een wallet koppelen, voor supportdoeleinden. Keur alleen goed als je deze aanmelding zelf hebt gestart.</string>
     <string name="forum_login_title_cross_device">Aanmelden bij het forum op een ander apparaat?</string>
     <string name="forum_login_body_first_cross_device">Warren kan niet zien welke browser wordt aangemeld, of die nu voor je staat. Je app ondertekent een eenmalige challenge met je wallet-sleutel om te bewijzen dat jij het bent.</string>
     <string name="forum_login_body_second_cross_device">Keur alleen goed als je die aanmeldpagina nu voor je hebt. Als iemand je deze code heeft gestuurd, meldt die persoon zich aan als jou. Er worden geen e-mail en geen wachtwoord gebruikt.</string>
@@ -604,7 +604,7 @@
     <string name="forum_attach_title">Je logboeken aan je forumrapport toevoegen?</string>
     <string name="forum_attach_body_topic">Je foutrapport op het Warren-forum (onderwerp %1$d) vraagt deze app om zijn technische logboeken bij te voegen, om het probleem te helpen opsporen.</string>
     <string name="forum_attach_body_pre_topic">Het foutrapport dat je op het Warren-forum aan het schrijven bent, vraagt deze app om zijn technische logboeken bij te voegen, om het probleem te helpen opsporen. Ze worden aan het rapport toegevoegd zodra je het plaatst.</string>
-    <string name="forum_attach_body_second">De logboeken zijn geanonimiseerd: wallet-adressen en persoonlijke gegevens zijn verwijderd. Ze gaan vertrouwelijk naar het supportteam van Warren en verschijnen nooit openbaar op het forum. Je kunt vóór het goedkeuren precies bekijken wat er wordt verzonden. Keur alleen goed als je die forumpagina zelf hebt geopend.</string>
+    <string name="forum_attach_body_second">Walletadressen en persoonsgegevens worden uit de logs verwijderd. Ze gaan vertrouwelijk naar de supportmedewerkers van Warren en verschijnen nooit openbaar op het forum. Je kunt precies zien wat er wordt verstuurd voordat je goedkeurt. Keur alleen goed als je die forumpagina zelf hebt geopend.</string>
     <string name="forum_attach_approve">Logboeken bijvoegen</string>
     <string name="forum_attach_sending">Logboeken worden bijgevoegd, even geduld.</string>
     <string name="forum_attach_collect_failed">De logboeken konden niet worden verzameld. Probeer het zo meteen opnieuw.</string>
@@ -618,7 +618,7 @@
     <string name="account_forum_name_label">Forumnaam</string>
     <string name="report_problem">Een probleem rapporteren</string>
     <string name="report_problem_row_subtitle">Een beschrijving en je logboeken naar het supportteam sturen</string>
-    <string name="report_problem_intro">Je beschrijving wordt op het communityforum geplaatst onder je anonieme forumnaam. De technische logboeken gaan, als je ze meestuurt, vertrouwelijk naar het supportteam en verschijnen nooit openbaar.</string>
+    <string name="report_problem_intro">Je beschrijving wordt op het communityforum geplaatst onder je forumpseudoniem. De technische logs gaan, als je ze meestuurt, vertrouwelijk naar het supportteam en verschijnen nooit openbaar.</string>
     <string name="report_problem_pick_one">Kies er een</string>
     <string name="report_problem_area_label">Waar treedt het probleem op?</string>
     <string name="report_problem_area_browsing">Browsen (pagina\'s laden niet, traag, kapotte sites)</string>
@@ -637,7 +637,7 @@
     <string name="report_problem_frequency_sometimes">Soms</string>
     <string name="report_problem_frequency_once">Het is één keer gebeurd</string>
     <string name="report_problem_include_logs">Technische logboeken meesturen</string>
-    <string name="report_problem_include_logs_description">Geanonimiseerde logboeken van deze app, alleen zichtbaar voor het supportteam.</string>
+    <string name="report_problem_include_logs_description">Opgeschoonde logs van deze app, alleen zichtbaar voor het supportteam.</string>
     <string name="report_problem_view_logs">De logs bekijken</string>
     <string name="report_problem_collecting">Het rapport wordt voorbereid, even geduld.</string>
     <string name="report_problem_collect_failed">De logboeken konden niet worden verzameld. Je kunt de beschrijving toch versturen.</string>

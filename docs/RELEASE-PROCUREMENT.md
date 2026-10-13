@@ -130,7 +130,7 @@ Linux `.deb`/`.rpm` are unsigned by convention (users verify via SHA-256 checksu
     - SSL.com (~280 EUR/year, fast OV validation)
     - DigiCert (~430 USD/year)
     - Sectigo (~270 EUR/year)
-2. Complete the OV validation process (typically 2-3 days). The CA verifies the organization (warrenBrowse SRL or holcommOn SAS) via D-U-N-S number or equivalent EU registry.
+2. Complete the OV validation process (typically 2-3 days). The CA verifies the organization (warrenBrowse SRL, the manufacturer of the client under the EU Cyber Resilience Act) via D-U-N-S number or equivalent EU registry.
 3. Export the certificate as `.pfx` from the CA's portal. Apply a strong passphrase.
 4. Base64-encode and add secrets:
 
@@ -256,9 +256,25 @@ Then check the run logs at https://github.com/WarrenBrowse/warren-app/actions. E
 
 If a sign step still skips, double-check the secret name spelling (GitHub is case-sensitive).
 
+## Publisher identity: warrenBrowse SRL, applied once the company is registered
+
+warrenBrowse SRL is the manufacturer of the client under the EU Cyber Resilience Act
+(decision of 2026-10-13, Lexter compliance report). The day the SRL is registered, every place
+that names a publisher switches to it in one commit, together with the code-signing identities
+above:
+
+- `windows/winfw/src/winfw/winfw.rc` lines 11 and 15 (`CompanyName`, `LegalCopyright`, which
+  still read "Mullvad VPN AB");
+- the `author` and publisher fields of `desktop/packages/mullvad-vpn/package.json` and of the
+  electron-builder configuration;
+- the iOS `project.pbxproj` organization name and the Play and App Store listings.
+
+They stay unchanged until then: naming a company that does not exist yet on a signed binary
+would be a false statement. Tracked in `warren-core/PROD-READINESS.md` section 8.
+
 ## Total checklist before tagging beta
 
-- [ ] Apple Developer Program active (warrenBrowse SRL or holcommOn SAS)
+- [ ] Apple Developer Program active (warrenBrowse SRL)
 - [ ] macOS `.p12` Developer ID Application + Installer + notarytool credentials
 - [ ] Windows OV `.pfx` certificate
 - [ ] iOS Distribution certificate + provisioning profile + App Store Connect API key

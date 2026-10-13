@@ -433,7 +433,7 @@
     <string name="onboarding_prop_obfuscation_title">始终启用的混淆</string>
     <string name="onboarding_prop_obfuscation_body">你的流量看起来像普通的 HTTPS 浏览（HTTP/3 拟态）。</string>
     <string name="onboarding_prop_no_logs_title">无日志，无追踪</string>
-    <string name="onboarding_prop_no_logs_body">我们无法将流量与你关联 - 没有可记录的账户身份。</string>
+    <string name="onboarding_prop_no_logs_body">Warren 不保留你的流量记录，你的账户也没有姓名或电子邮件。</string>
     <string name="onboarding_prop_keys_title">你掌握密钥</string>
     <string name="onboarding_prop_keys_body">12 个单词的恢复短语是你唯一的凭证。请妥善备份。</string>
     <string name="onboarding_get_started">开始使用</string>
@@ -565,7 +565,7 @@
     <string name="feature_daita_not_active_on_server">%1$s：未在此服务器上启用</string>
     <string name="forum_login_title">登录 Warren 社区论坛？</string>
     <string name="forum_login_body_first">已请求登录 Warren 社区论坛。为证明是您本人，应用将使用您的钱包密钥对一次性质询进行签名。</string>
-    <string name="forum_login_body_second">不使用电子邮件和密码。您将以无法关联到 Warren 账户的匿名昵称显示。仅当此次登录由您本人发起时才批准。</string>
+    <string name="forum_login_body_second">不使用电子邮件，也不使用密码。你将以随机化名显示，只有 Warren 支持团队能出于支持目的将其与钱包关联。仅当此次登录由你本人发起时才批准。</string>
     <string name="forum_login_title_cross_device">在另一台设备上登录论坛？</string>
     <string name="forum_login_body_first_cross_device">Warren 无法判断正在登录的是哪个浏览器，也无法判断它此刻是否就在您面前。为证明是您本人，应用将使用您的钱包密钥对一次性质询进行签名。</string>
     <string name="forum_login_body_second_cross_device">仅当您此刻正看着那个登录页面时才批准。如果有人向您发送了此代码，对方正在以您的身份登录。不使用电子邮件和密码。</string>
@@ -597,7 +597,7 @@
     <string name="forum_attach_title">将您的日志附加到论坛报告？</string>
     <string name="forum_attach_body_topic">您在 Warren 论坛上的错误报告（主题 %1$d）请求本应用附加其技术日志，以帮助诊断问题。</string>
     <string name="forum_attach_body_pre_topic">您正在 Warren 论坛上撰写的错误报告请求本应用附加其技术日志，以帮助诊断问题。日志将在您发布报告后随之附上。</string>
-    <string name="forum_attach_body_second">日志已匿名化：钱包地址和个人数据均已移除。日志仅私下发送给 Warren 支持团队，绝不会公开显示在论坛上。批准前，您可以查看将要发送的确切内容。仅当该论坛页面由您本人打开时才批准。</string>
+    <string name="forum_attach_body_second">钱包地址和个人数据会从日志中移除。日志会私下发送给 Warren 支持人员，绝不会在论坛上公开显示。批准前你可以准确查看将要发送的内容。仅当该论坛页面由你本人打开时才批准。</string>
     <string name="forum_attach_approve">附加日志</string>
     <string name="forum_attach_sending">正在附加日志，请稍候。</string>
     <string name="forum_attach_collect_failed">无法收集日志。请稍后重试。</string>
@@ -611,7 +611,7 @@
     <string name="account_forum_name_label">论坛名称</string>
     <string name="report_problem">报告问题</string>
     <string name="report_problem_row_subtitle">向支持团队发送问题描述和日志</string>
-    <string name="report_problem_intro">您的描述将以匿名论坛名发布在社区论坛上。如果包含技术日志，日志只会私下发送给支持团队，绝不会公开。</string>
+    <string name="report_problem_intro">你的描述会以你的论坛化名发布在社区论坛上。技术日志（如果你附上）会私下发送给支持团队，绝不会公开。</string>
     <string name="report_problem_pick_one">请选择</string>
     <string name="report_problem_area_label">问题出现在哪里？</string>
     <string name="report_problem_area_browsing">浏览（页面无法加载、缓慢、网站异常）</string>
@@ -630,7 +630,7 @@
     <string name="report_problem_frequency_sometimes">有时</string>
     <string name="report_problem_frequency_once">只发生过一次</string>
     <string name="report_problem_include_logs">包含技术日志</string>
-    <string name="report_problem_include_logs_description">本应用的匿名化日志，仅支持团队可见。</string>
+    <string name="report_problem_include_logs_description">此应用经过脱敏的日志，仅支持团队可见。</string>
     <string name="report_problem_view_logs">查看日志</string>
     <string name="report_problem_collecting">正在准备报告，请稍候。</string>
     <string name="report_problem_collect_failed">无法收集日志。您仍然可以发送描述。</string>

@@ -433,7 +433,7 @@
     <string name="onboarding_prop_obfuscation_title">항상 켜져 있는 난독화</string>
     <string name="onboarding_prop_obfuscation_body">트래픽이 일반적인 HTTPS 브라우징처럼 보입니다 (HTTP/3 모방).</string>
     <string name="onboarding_prop_no_logs_title">로그 없음, 추적 없음</string>
-    <string name="onboarding_prop_no_logs_body">트래픽을 사용자와 연결할 수 없습니다. 기록할 계정 신원이 없습니다.</string>
+    <string name="onboarding_prop_no_logs_body">Warren은 트래픽 기록을 남기지 않으며, 계정에는 이름도 이메일도 없습니다.</string>
     <string name="onboarding_prop_keys_title">키는 사용자가 보유합니다</string>
     <string name="onboarding_prop_keys_body">12단어 복구 문구가 유일한 자격 증명입니다. 안전하게 백업하세요.</string>
     <string name="onboarding_get_started">시작하기</string>
@@ -565,7 +565,7 @@
     <string name="feature_daita_not_active_on_server">%1$s: 이 서버에서 활성화되지 않음</string>
     <string name="forum_login_title">Warren 커뮤니티 포럼에 로그인하시겠습니까?</string>
     <string name="forum_login_body_first">Warren 커뮤니티 포럼 로그인이 요청되었습니다. 본인임을 증명하기 위해 앱이 지갑 키로 일회용 챌린지에 서명합니다.</string>
-    <string name="forum_login_body_second">이메일과 비밀번호를 사용하지 않습니다. Warren 계정과 연결할 수 없는 익명 핸들로 표시됩니다. 직접 이 로그인을 시작한 경우에만 승인하세요.</string>
+    <string name="forum_login_body_second">이메일과 비밀번호는 사용하지 않습니다. 무작위 가명으로 표시되며, 지원 목적으로 Warren 지원팀만 이 가명을 지갑과 연결할 수 있습니다. 이 로그인을 직접 시작한 경우에만 승인하세요.</string>
     <string name="forum_login_title_cross_device">다른 기기에서 포럼에 로그인하시겠습니까?</string>
     <string name="forum_login_body_first_cross_device">어떤 브라우저가 로그인되는지, 그것이 지금 당신 앞에 있는지 Warren은 알 수 없습니다. 본인임을 증명하기 위해 앱이 지갑 키로 일회용 챌린지에 서명합니다.</string>
     <string name="forum_login_body_second_cross_device">지금 그 로그인 페이지를 직접 보고 있는 경우에만 승인하세요. 누군가 이 코드를 보냈다면 그 사람이 당신으로 로그인하는 것입니다. 이메일과 비밀번호를 사용하지 않습니다.</string>
@@ -597,7 +597,7 @@
     <string name="forum_attach_title">포럼 보고서에 로그를 첨부할까요?</string>
     <string name="forum_attach_body_topic">Warren 포럼의 버그 보고서(주제 %1$d)가 문제 진단에 도움이 되도록 이 앱의 기술 로그를 첨부해 달라고 요청합니다.</string>
     <string name="forum_attach_body_pre_topic">Warren 포럼에서 작성 중인 버그 보고서가 문제 진단에 도움이 되도록 이 앱의 기술 로그를 첨부해 달라고 요청합니다. 로그는 보고서를 게시하면 함께 첨부됩니다.</string>
-    <string name="forum_attach_body_second">로그는 익명화되어 있으며 지갑 주소와 개인 정보는 제거됩니다. 로그는 Warren 지원팀에만 비공개로 전달되고 포럼에 공개되지 않습니다. 승인하기 전에 전송될 내용을 정확히 확인할 수 있습니다. 직접 해당 포럼 페이지를 연 경우에만 승인하세요.</string>
+    <string name="forum_attach_body_second">지갑 주소와 개인 데이터는 로그에서 제거됩니다. 로그는 Warren 지원 담당자에게 비공개로 전달되며 포럼에 공개되지 않습니다. 승인하기 전에 전송될 내용을 정확히 확인할 수 있습니다. 그 포럼 페이지를 직접 연 경우에만 승인하세요.</string>
     <string name="forum_attach_approve">로그 첨부</string>
     <string name="forum_attach_sending">로그를 첨부하는 중입니다. 잠시 기다려 주세요.</string>
     <string name="forum_attach_collect_failed">로그를 수집할 수 없습니다. 잠시 후 다시 시도하세요.</string>
@@ -611,7 +611,7 @@
     <string name="account_forum_name_label">포럼 이름</string>
     <string name="report_problem">문제 신고</string>
     <string name="report_problem_row_subtitle">설명과 로그를 지원팀에 보내기</string>
-    <string name="report_problem_intro">설명은 익명의 포럼 이름으로 커뮤니티 포럼에 게시됩니다. 기술 로그를 포함하면 지원팀에게만 비공개로 전달되며 절대 공개되지 않습니다.</string>
+    <string name="report_problem_intro">설명은 포럼 가명으로 커뮤니티 포럼에 게시됩니다. 기술 로그를 포함하면 지원팀에만 비공개로 전달되며 공개되지 않습니다.</string>
     <string name="report_problem_pick_one">선택하세요</string>
     <string name="report_problem_area_label">문제가 어디에서 발생하나요?</string>
     <string name="report_problem_area_browsing">브라우징 (페이지가 열리지 않음, 느림, 사이트 오류)</string>
@@ -630,7 +630,7 @@
     <string name="report_problem_frequency_sometimes">가끔</string>
     <string name="report_problem_frequency_once">한 번 발생했음</string>
     <string name="report_problem_include_logs">기술 로그 포함</string>
-    <string name="report_problem_include_logs_description">이 앱의 익명화된 로그이며 지원팀만 볼 수 있습니다.</string>
+    <string name="report_problem_include_logs_description">이 앱의 정리된 로그이며 지원팀만 볼 수 있습니다.</string>
     <string name="report_problem_view_logs">로그 보기</string>
     <string name="report_problem_collecting">보고서를 준비하는 중입니다. 잠시 기다려 주세요.</string>
     <string name="report_problem_collect_failed">로그를 수집할 수 없습니다. 설명만 보낼 수는 있습니다.</string>

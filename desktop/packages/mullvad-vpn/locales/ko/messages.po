@@ -3710,8 +3710,8 @@ msgid "Multihop is being used to enable DAITA for your selected location"
 msgstr "선택한 위치의 DAITA를 활성화하기 위해 멀티홉을 사용 중입니다"
 
 msgctxt "wireguard-settings-view"
-msgid "Multihop routes your traffic into one QUIC server and out another, making it harder to trace. This results in increased latency but increases anonymity online."
-msgstr "멀티홉은 사용자의 트래픽을 하나의 QUIC 서버로 라우팅하고 다른 서버로 전달하여 추적을 더 어렵게 만듭니다. 그로 인해 대기 시간은 증가하지만 온라인 익명성은 증대됩니다."
+msgid "Multihop routes your traffic into one QUIC server and out of another, adding a server between you and the sites you visit. This increases latency."
+msgstr "멀티홉은 트래픽을 한 QUIC 서버로 들여보내 다른 서버로 내보내므로, 사용자와 방문하는 사이트 사이에 서버가 하나 더 추가됩니다. 그만큼 지연 시간이 늘어납니다."
 
 #. Warning text in a dialog that is displayed after a setting is toggled.
 msgctxt "wireguard-settings-view"
@@ -5421,8 +5421,8 @@ msgid "Forum access requires a Warren subscription. This wallet has never subscr
 msgstr "포럼을 이용하려면 Warren 구독이 필요합니다. 이 지갑은 구독한 적이 없습니다."
 
 msgctxt "forum-login"
-msgid "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
-msgstr "이메일과 비밀번호를 사용하지 않습니다. Warren 계정과 연결할 수 없는 익명 핸들로 표시됩니다. 직접 이 로그인을 시작한 경우에만 승인하세요."
+msgid "No email and no password are used. You appear under a random pseudonym, and only the Warren support team can match it to a wallet, for support purposes. Only approve if you started this sign-in."
+msgstr "이메일과 비밀번호는 사용하지 않습니다. 무작위 가명으로 표시되며, 지원 목적으로 Warren 지원팀만 이 가명을 지갑과 연결할 수 있습니다. 이 로그인을 직접 시작한 경우에만 승인하세요."
 
 msgctxt "forum-login"
 msgid "Sign in to the Warren community forum?"
@@ -5513,8 +5513,8 @@ msgid "The Warren support service could not accept the report. Nothing is wrong 
 msgstr "Warren 지원 서비스가 보고서를 받지 못했습니다. 사용자 쪽에는 문제가 없습니다. 나중에 다시 시도하고, 계속 실패하면 포럼에 알려주세요."
 
 msgctxt "forum-attach"
-msgid "The logs are anonymized: wallet addresses and personal data are redacted. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
-msgstr "로그는 익명화됩니다. 지갑 주소와 개인 정보는 가려집니다. 로그는 Warren 지원 담당자에게 비공개로 전송되며 포럼에 공개적으로 표시되지 않습니다. 승인하기 전에 전송될 내용을 정확히 확인할 수 있습니다."
+msgid "Wallet addresses and personal data are redacted from the logs. They go privately to the Warren support staff and never appear publicly on the forum. You can view exactly what will be sent before approving."
+msgstr "지갑 주소와 개인 데이터는 로그에서 제거됩니다. 로그는 Warren 지원 담당자에게 비공개로 전달되며 포럼에 공개되지 않습니다. 승인하기 전에 전송될 내용을 정확히 확인할 수 있습니다."
 
 msgctxt "forum-attach"
 msgid "This request has expired. Start again from the forum page."
@@ -5801,8 +5801,8 @@ msgid "%(count)d characters (at least %(min)d)"
 msgstr "%(count)d자 (최소 %(min)d자)"
 
 msgctxt "report-problem"
-msgid "Anonymized logs from this app, visible to the support team only."
-msgstr "이 앱의 익명화된 로그이며 지원팀만 볼 수 있습니다."
+msgid "Redacted logs from this app, visible to the support team only."
+msgstr "이 앱의 정리된 로그이며 지원팀만 볼 수 있습니다."
 
 msgctxt "report-problem"
 msgid "Browsing (pages not loading, slow, broken sites)"
@@ -5953,8 +5953,8 @@ msgid "Where does the problem happen?"
 msgstr "문제가 어디에서 발생하나요?"
 
 msgctxt "report-problem"
-msgid "Your description is posted on the community forum under your anonymous forum name. The technical logs, if you include them, go privately to the support team and never appear publicly."
-msgstr "설명은 익명의 포럼 이름으로 커뮤니티 포럼에 게시됩니다. 기술 로그를 포함하면 지원팀에게만 비공개로 전달되며 절대 공개되지 않습니다."
+msgid "Your description is posted on the community forum under your forum pseudonym. The technical logs, if you include them, go privately to the support team and never appear publicly."
+msgstr "설명은 포럼 가명으로 커뮤니티 포럼에 게시됩니다. 기술 로그를 포함하면 지원팀에만 비공개로 전달되며 공개되지 않습니다."
 
 msgctxt "report-problem"
 msgid "Your report is on the forum and your logs reached the support team."

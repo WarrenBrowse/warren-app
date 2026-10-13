@@ -453,7 +453,7 @@
     <string name="onboarding_prop_obfuscation_title">تشويش مُفعَّل دائمًا</string>
     <string name="onboarding_prop_obfuscation_body">تبدو حركة مرورك مثل تصفّح HTTPS عادي (محاكاة HTTP/3).</string>
     <string name="onboarding_prop_no_logs_title">لا سجلّات، لا تتبّع</string>
-    <string name="onboarding_prop_no_logs_body">لا يمكننا ربط حركة المرور بك - لا توجد هوية حساب لتسجيلها.</string>
+    <string name="onboarding_prop_no_logs_body">لا يحتفظ Warren بأي سجل لحركة مرورك، ولا يحمل حسابك اسمًا ولا بريدًا إلكترونيًا.</string>
     <string name="onboarding_prop_keys_title">المفاتيح بين يديك</string>
     <string name="onboarding_prop_keys_body">عبارة الاسترداد المكوّنة من 12 كلمة هي بيانات اعتمادك الوحيدة. انسخها احتياطيًا بأمان.</string>
     <string name="onboarding_get_started">ابدأ الآن</string>
@@ -600,7 +600,7 @@
     <string name="feature_daita_not_active_on_server">%1$s: غير مُفعَّل على هذا الخادم</string>
     <string name="forum_login_title">تسجيل الدخول إلى منتدى مجتمع Warren؟</string>
     <string name="forum_login_body_first">تم طلب تسجيل الدخول إلى منتدى مجتمع Warren. سيوقّع تطبيقك على تحدٍّ لمرة واحدة باستخدام مفتاح محفظتك لإثبات أنك أنت.</string>
-    <string name="forum_login_body_second">لا يُستخدم بريد إلكتروني ولا كلمة مرور. تظهر باسم مستعار مجهول لا يمكن ربطه بحساب Warren الخاص بك. وافق فقط إذا كنت أنت من بدأ تسجيل الدخول هذا.</string>
+    <string name="forum_login_body_second">لا يُستخدم أي بريد إلكتروني ولا كلمة مرور. تظهر باسم مستعار عشوائي، ولا يستطيع ربطه بمحفظة إلا فريق دعم Warren، لأغراض الدعم فقط. لا توافق إلا إذا كنت أنت من بدأ تسجيل الدخول هذا.</string>
     <string name="forum_login_title_cross_device">تسجيل الدخول إلى المنتدى على جهاز آخر؟</string>
     <string name="forum_login_body_first_cross_device">لا يمكن لـ Warren معرفة المتصفح الذي يجري تسجيل دخوله، ولا ما إذا كان أمامك الآن. سيوقّع تطبيقك على تحدٍّ لمرة واحدة باستخدام مفتاح محفظتك لإثبات أنك أنت.</string>
     <string name="forum_login_body_second_cross_device">وافق فقط إذا كنت تنظر إلى صفحة تسجيل الدخول تلك الآن. إذا أرسل لك أحدهم هذا الرمز، فهو يسجّل الدخول باسمك. لا يُستخدم بريد إلكتروني ولا كلمة مرور.</string>
@@ -632,7 +632,7 @@
     <string name="forum_attach_title">إرفاق سجلاتك بتقريرك على المنتدى؟</string>
     <string name="forum_attach_body_topic">يطلب تقرير المشكلة الخاص بك على منتدى Warren (الموضوع %1$d) من هذا التطبيق إرفاق سجلاته التقنية للمساعدة في تشخيص المشكلة.</string>
     <string name="forum_attach_body_pre_topic">يطلب تقرير المشكلة الذي تكتبه على منتدى Warren من هذا التطبيق إرفاق سجلاته التقنية للمساعدة في تشخيص المشكلة. تُضاف السجلات إلى التقرير بمجرد نشره.</string>
-    <string name="forum_attach_body_second">السجلات مجهولة الهوية: تُحذف عناوين المحافظ والبيانات الشخصية. تُرسل سرًا إلى فريق دعم Warren ولا تظهر علنًا على المنتدى أبدًا. يمكنك معاينة ما سيُرسل بالضبط قبل الموافقة. وافق فقط إذا كنت أنت من فتح صفحة المنتدى تلك.</string>
+    <string name="forum_attach_body_second">تُحذف عناوين المحافظ والبيانات الشخصية من السجلات. تُرسل السجلات بشكل خاص إلى فريق دعم Warren ولا تظهر علنًا في المنتدى أبدًا. يمكنك رؤية ما سيُرسل بالضبط قبل الموافقة. لا توافق إلا إذا كنت أنت من فتح صفحة المنتدى تلك.</string>
     <string name="forum_attach_approve">إرفاق السجلات</string>
     <string name="forum_attach_sending">جارٍ إرفاق السجلات، يُرجى الانتظار.</string>
     <string name="forum_attach_collect_failed">تعذر جمع السجلات. حاول مرة أخرى بعد قليل.</string>
@@ -646,7 +646,7 @@
     <string name="account_forum_name_label">اسم المنتدى</string>
     <string name="report_problem">الإبلاغ عن مشكلة</string>
     <string name="report_problem_row_subtitle">أرسل وصفًا وسجلاتك إلى فريق الدعم</string>
-    <string name="report_problem_intro">يُنشر وصفك في منتدى المجتمع تحت اسمك المجهول في المنتدى. أما السجلات التقنية، إن أرفقتها، فتصل بشكل خاص إلى فريق الدعم ولا تظهر علنًا أبدًا.</string>
+    <string name="report_problem_intro">يُنشر وصفك في منتدى المجتمع باسمك المستعار في المنتدى. أما السجلات التقنية، إن أرفقتها، فتذهب بشكل خاص إلى فريق الدعم ولا تظهر علنًا أبدًا.</string>
     <string name="report_problem_pick_one">اختر واحدًا</string>
     <string name="report_problem_area_label">أين تحدث المشكلة؟</string>
     <string name="report_problem_area_browsing">التصفح (صفحات لا تُحمَّل، بطء، مواقع معطلة)</string>
@@ -665,7 +665,7 @@
     <string name="report_problem_frequency_sometimes">أحيانًا</string>
     <string name="report_problem_frequency_once">حدث مرة واحدة</string>
     <string name="report_problem_include_logs">إرفاق السجلات التقنية</string>
-    <string name="report_problem_include_logs_description">سجلات مجهولة الهوية من هذا التطبيق، لا يراها إلا فريق الدعم.</string>
+    <string name="report_problem_include_logs_description">سجلات منقّحة من هذا التطبيق، لا يراها إلا فريق الدعم.</string>
     <string name="report_problem_view_logs">عرض السجلات</string>
     <string name="report_problem_collecting">جارٍ تحضير التقرير، يرجى الانتظار.</string>
     <string name="report_problem_collect_failed">تعذر جمع السجلات. لا يزال بإمكانك إرسال الوصف.</string>

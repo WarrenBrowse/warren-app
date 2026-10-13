@@ -187,7 +187,7 @@ export function ForumLoginPrompt() {
             )
           : messages.pgettext(
               'forum-login',
-              'No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in.',
+              'No email and no password are used. You appear under a random pseudonym, and only the Warren support team can match it to a wallet, for support purposes. Only approve if you started this sign-in.',
             ),
       ]}
       buttons={[

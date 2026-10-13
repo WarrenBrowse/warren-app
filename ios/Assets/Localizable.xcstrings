@@ -28282,144 +28282,144 @@
         }
       }
     },
-    "Do you agree to remaining anonymous?": {
+    "Before you start": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "هل توافق على البقاء مجهول الهوية؟"
+            "value": "قبل أن تبدأ"
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accepterer du at være anonym?"
+            "value": "Før du begynder"
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sind Sie einverstanden, anonym zu bleiben?"
+            "value": "Bevor du beginnst"
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "¿Acepta permanecer anónimo?"
+            "value": "Antes de empezar"
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "آیا موافقید ناشناس بمانید؟"
+            "value": "پیش از شروع"
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Haluatko pysyä anonyymina?"
+            "value": "Ennen kuin aloitat"
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Acceptez-vous de rester anonyme ?"
+            "value": "Avant de commencer"
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Accetti di mantenere l'anonimato?"
+            "value": "Prima di iniziare"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "匿名状態を維持することに同意しますか？"
+            "value": "はじめる前に"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "익명을 유지하는 데 동의하십니까?"
+            "value": "시작하기 전에"
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "အမည်ဝှက်ထားရန် သဘောတူပါသလား။"
+            "value": "မစတင်မီ"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Samtykker du til å forbli anonym?"
+            "value": "Før du begynner"
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gaat u ermee akkoord om anoniem te blijven?"
+            "value": "Voordat je begint"
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Czy zgadzasz się na utrzymanie anonimowości?"
+            "value": "Zanim zaczniesz"
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Concorda em permanecer anónimo?"
+            "value": "Antes de começar"
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sunteți de acord să rămâneți anonim?"
+            "value": "Înainte de a începe"
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Согласны ли вы сохранить анонимность?"
+            "value": "Прежде чем начать"
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vill du förbli anonym?"
+            "value": "Innan du börjar"
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "คุณยินยอมที่จะไม่เปิดเผยตัวตนใช่ไหม"
+            "value": "ก่อนเริ่มต้น"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Anonim kalmayı kabul ediyor musunuz?"
+            "value": "Başlamadan önce"
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ви погоджуєтеся зберегти анонімність?"
+            "value": "Перш ніж почати"
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "您是否同意保持匿名？"
+            "value": "开始之前"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "您是否同意維持匿名？"
+            "value": "開始之前"
           }
         }
       }
@@ -52506,288 +52506,288 @@
         }
       }
     },
-    "Multihop routes your traffic into one QUIC server and out another, making it harder to trace. This results in increased latency but increases anonymity online.": {
+    "Multihop routes your traffic into one QUIC server and out of another, adding a server between you and the sites you visit. This increases latency.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يوجِّه القفز المتعدد حركة البيانات لديك من خادم QUIC إلى آخر، مما يجعل من الصعب تتبُّعها. ويؤدي ذلك إلى زيادة زمن الوصول، لكنه يزيد من إخفاء الهوية على الإنترنت."
+            "value": "يمرّر Multihop حركة مرورك عبر خادم QUIC ويُخرجها من خادم آخر، فيضيف خادمًا بينك وبين المواقع التي تزورها. يؤدي ذلك إلى زيادة زمن الاستجابة."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop dirigerer din trafik ind på en QUIC-server og ud på en anden, hvilket gør det sværere at spore den. Dette resulterer i øget ventetid, men øger anonymiteten online."
+            "value": "Multihop sender din trafik ind gennem én QUIC-server og ud gennem en anden, så der er en ekstra server mellem dig og de websteder, du besøger. Det øger forsinkelsen."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop leitet Ihren Traffic in einen QUIC-Server hinein und aus einem anderen heraus, so dass er schwerer zu verfolgen ist. Dies führt zu einer erhöhten Latenzzeit, erhöht aber die Anonymität im Internet."
+            "value": "Multihop leitet deinen Datenverkehr über einen QUIC-Server hinein und über einen anderen hinaus und schaltet so einen weiteren Server zwischen dich und die besuchten Websites. Das erhöht die Latenz."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "El salto múltiple dirige su tráfico a través de un servidor QUIC y lo envía a otro, lo que dificulta su rastreo. Esto genera una mayor latencia, pero aumenta el anonimato en Internet."
+            "value": "Multihop envía tu tráfico por un servidor QUIC y lo hace salir por otro, añadiendo un servidor entre tú y los sitios que visitas. Esto aumenta la latencia."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "مولتی‌هاپ ترافیک شما را وارد یک سرور QUIC کرده و از سروری دیگر خارج می‌کند، که ردیابی آن را دشوارتر می‌سازد. این کار باعث افزایش تأخیر می‌شود، اما ناشناس‌بودن شما را در اینترنت بیشتر می‌کند."
+            "value": "Multihop ترافیک شما را از یک سرور QUIC وارد و از سرور دیگری خارج می‌کند و یک سرور بین شما و سایت‌هایی که بازدید می‌کنید اضافه می‌کند. این کار تأخیر را افزایش می‌دهد."
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop reitittää liikenteesi yhteen QUIC-palvelimeen ja ulos toisesta palvelimesta, mikä tekee siitä hankalampaa jäljittää. Tuloksena on suurempi viive, mutta se parantaa nimettömyyttä verkossa."
+            "value": "Multihop ohjaa liikenteesi sisään yhden QUIC-palvelimen kautta ja ulos toisen kautta, jolloin sinun ja vierailemiesi sivustojen väliin tulee lisäpalvelin. Tämä lisää viivettä."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le multihop fait passer votre trafic par un serveur QUIC et le fait sortir par un autre, ce qui le rend plus difficile à tracer. Cela se traduit par une latence accrue, mais plus d'anonymat en ligne."
+            "value": "Le multihop fait entrer votre trafic par un serveur QUIC et le fait sortir par un autre, ce qui ajoute un serveur entre vous et les sites que vous visitez. La latence augmente."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il multihop instrada il tuo traffico in un server QUIC in entrata e in un altro in uscita, rendendo più difficile il tracciamento. Questo aumenta la latenza ma aumenta anche l'anonimato online."
+            "value": "Multihop fa entrare il tuo traffico da un server QUIC e lo fa uscire da un altro, aggiungendo un server tra te e i siti che visiti. Questo aumenta la latenza."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "マルチホップはトラフィックをあるQUICサーバーにルーティングし、別サーバーに送出することで追跡を困難にします。これによって遅延が増加しますが、オンラインの匿名性は高まります。"
+            "value": "マルチホップは、通信をある QUIC サーバーから入れて別のサーバーから出すことで、あなたと訪問先サイトの間にサーバーを 1 台追加します。その分レイテンシが増えます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "멀티홉은 사용자의 트래픽을 하나의 QUIC 서버로 라우팅하고 다른 서버로 전달하여 추적을 더 어렵게 만듭니다. 그로 인해 대기 시간은 증가하지만 온라인 익명성은 증대됩니다."
+            "value": "멀티홉은 트래픽을 한 QUIC 서버로 들여보내 다른 서버로 내보내므로, 사용자와 방문하는 사이트 사이에 서버가 하나 더 추가됩니다. 그만큼 지연 시간이 늘어납니다."
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "မာလ်တီဟော့ပ်သည် သင်၏အသွားအလာကို QUIC ဆာဗာတစ်ခုသို့ လမ်းကြောင်းပေးပြီး အခြားတစ်နေရာမှ ထွက်စေသောကြောင့် ခြေရာခံရန် ပိုမိုခက်ခဲစေသည်။ ၎င်းသည် အချိန်ကို ပိုမိုကြန့်ကြာစေသော်လည်း အွန်လိုင်းတွင် ပို၍ သိုသိုသိပ်သိပ်ဖြစ်စေသည်။"
+            "value": "Multihop သည် သင့်ဒေတာကို QUIC ဆာဗာတစ်ခုမှ ဝင်ပြီး နောက်တစ်ခုမှ ထွက်စေသဖြင့် သင်နှင့် သင်ဝင်ကြည့်သော ဆိုက်များကြားတွင် ဆာဗာတစ်ခု ထပ်တိုးသည်။ ၎င်းကြောင့် latency တိုးလာသည်။"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihopp dirigerer trafikken din inn på én QUIC-server og ut på en annen, noe som gjør det vanskeligere å spore den. Dette resulterer i økt ventetid, men øker anonymiteten på nettet."
+            "value": "Multihop sender trafikken din inn gjennom én QUIC-server og ut gjennom en annen, slik at det står en ekstra server mellom deg og nettstedene du besøker. Det øker forsinkelsen."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop leidt uw verkeer de ene QUIC-server in en de andere uit, waardoor het moeilijker te traceren is. Dit leidt tot een hogere latentie, maar verhoogt de online anonimiteit."
+            "value": "Multihop leidt je verkeer via de ene QUIC-server naar binnen en via een andere naar buiten, zodat er een extra server tussen jou en de sites die je bezoekt staat. Dit verhoogt de latentie."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Funkcja wielokrotnego przeskoku kieruje Twój ruch przychodzący do jednego serwera QUIC, a wychodzący wysyła z innego, co utrudnia jego śledzenie. Skutkuje to zwiększoną latencją, ale zwiększa anonimowość online."
+            "value": "Multihop kieruje Twój ruch do jednego serwera QUIC i wyprowadza go przez inny, dodając serwer między Tobą a odwiedzanymi stronami. Zwiększa to opóźnienie."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop encaminha o tráfego para entrar num servidor QUIC e sair por outro, dificultando o seguimento. Isto resulta em maior latência, mas aumenta o anonimato online."
+            "value": "O Multihop faz entrar o seu tráfego por um servidor QUIC e sair por outro, acrescentando um servidor entre si e os sites que visita. Isto aumenta a latência."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop direcționează traficul către un server QUIC și îl scoate prin altul, ceea ce îngreunează urmărirea. Acest lucru duce la o latență mai mare, dar crește anonimatul online."
+            "value": "Multihop trimite traficul tău printr-un server QUIC și îl scoate prin altul, adăugând un server între tine și site-urile pe care le vizitezi. Latența crește."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Функция «Многократный переход» перенаправляет трафик с одного сервера QUIC на другой, что затрудняет отслеживание. Это увеличивает задержку, но зато повышает анонимность в сети."
+            "value": "Multihop направляет ваш трафик через один сервер QUIC на вход и через другой на выход, добавляя ещё один сервер между вами и посещаемыми сайтами. Это увеличивает задержку."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihopp dirigerar din trafik till en QUIC-server och ut genom en annan, vilket gör det svårare att spåra. Detta leder till ökad fördröjning men bättre anonymitet online."
+            "value": "Multihop skickar in din trafik genom en QUIC-server och ut genom en annan, så att det finns ytterligare en server mellan dig och webbplatserna du besöker. Det ökar latensen."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "มัลติฮอปจะกำหนดเส้นทางการรับส่งข้อมูลของคุณ ไปยังหนึ่งในเซิร์ฟเวอร์ QUIC และออกไปยังอีกเซิร์ฟเวอร์หนึ่ง ซึ่งทำให้ติดตามได้ยากขึ้น นี่จะส่งผลให้มีเวลาแฝงเพิ่มขึ้น แต่ก็จะช่วยปกปิดตัวตนออนไลน์ได้มากขึ้น"
+            "value": "Multihop ส่งทราฟฟิกของคุณเข้าทางเซิร์ฟเวอร์ QUIC หนึ่งและออกทางอีกเซิร์ฟเวอร์หนึ่ง จึงมีเซิร์ฟเวอร์เพิ่มขึ้นระหว่างคุณกับเว็บไซต์ที่คุณเข้าชม ซึ่งทำให้มีความหน่วงมากขึ้น"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Çoklu geçiş, trafiğinizi bir QUIC sunucusundan diğerine yönlendirerek izlemeyi zorlaştırır. Bu, gecikmenin artmasına neden olur ancak çevrimiçi gizliliği artırır."
+            "value": "Multihop trafiğinizi bir QUIC sunucusundan sokup başka birinden çıkarır ve sizinle ziyaret ettiğiniz siteler arasına bir sunucu daha ekler. Bu, gecikmeyi artırır."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Подвійний VPN спрямовує ваш трафік з одного сервера QUIC на інший, що ускладнює відстеження. Це збільшує затримку, але підвищує анонімність в Інтернеті."
+            "value": "Multihop спрямовує ваш трафік через один сервер QUIC на вхід і через інший на вихід, додаючи ще один сервер між вами та сайтами, які ви відвідуєте. Це збільшує затримку."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "多跳技术会将您的流量传输到一个 QUIC 服务器并从另一个服务器传出，从而提高追踪的难度。这会导致延迟增加，但会提高在线匿名性。"
+            "value": "多跳会让你的流量从一台 QUIC 服务器进入、从另一台服务器离开，在你和所访问的网站之间多加一台服务器。这会增加延迟。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "多點跳躍可將您的流量傳入一個 QUIC 伺服器，再傳出至另一個伺服器，使其更難以追蹤。雖然這會導致延遲時間增加，卻能提高線上的匿名程度。"
+            "value": "多重跳躍會讓你的流量從一台 QUIC 伺服器進入、從另一台伺服器離開，在你和造訪的網站之間多加一台伺服器。這會增加延遲。"
           }
         }
       }
     },
-    "Multihop routes your traffic into one QUIC server and out another, making it harder to trace. This results in increased latency but increases anonymity online. Multihop has three different modes to choose between: When needed, Always, and Never.": {
+    "Multihop routes your traffic into one QUIC server and out of another, adding a server between you and the sites you visit. This increases latency. Multihop has three different modes to choose between: When needed, Always, and Never.": {
       "comment": "Description of the Multihop feature, including its benefits and modes of operation.",
       "isCommentAutoGenerated": true,
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "يمرر Multihop حركة بياناتك عبر خادم QUIC للدخول وآخر للخروج، مما يجعل تتبعها أصعب. يؤدي هذا إلى زيادة زمن الاستجابة لكنه يعزز إخفاء هويتك على الإنترنت. يوفر Multihop ثلاثة أوضاع للاختيار بينها: عند الحاجة، ودائمًا، وأبدًا."
+            "value": "يمرّر Multihop حركة مرورك عبر خادم QUIC ويُخرجها من خادم آخر، فيضيف خادمًا بينك وبين المواقع التي تزورها. يؤدي ذلك إلى زيادة زمن الاستجابة. يوفر Multihop ثلاثة أوضاع للاختيار بينها: عند الحاجة، ودائمًا، وأبدًا."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop dirigerer din trafik ind i én QUIC-server og ud af en anden, hvilket gør den sværere at spore. Det medfører øget forsinkelse, men øger anonymiteten online. Multihop har tre forskellige tilstande at vælge imellem: Efter behov, Altid og Aldrig."
+            "value": "Multihop sender din trafik ind gennem én QUIC-server og ud gennem en anden, så der er en ekstra server mellem dig og de websteder, du besøger. Det øger forsinkelsen. Multihop har tre forskellige tilstande at vælge imellem: Efter behov, Altid og Aldrig."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop leitet deinen Datenverkehr über einen QUIC-Server hinein und über einen anderen hinaus, wodurch er schwerer nachzuverfolgen ist. Das erhöht die Latenz, steigert aber deine Anonymität im Internet. Multihop bietet drei Modi zur Auswahl: Bei Bedarf, Immer und Nie."
+            "value": "Multihop leitet deinen Datenverkehr über einen QUIC-Server hinein und über einen anderen hinaus und schaltet so einen weiteren Server zwischen dich und die besuchten Websites. Das erhöht die Latenz. Multihop bietet drei Modi zur Auswahl: Bei Bedarf, Immer und Nie."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop enruta tu tráfico de entrada por un servidor QUIC y de salida por otro, lo que dificulta su rastreo. Esto aumenta la latencia, pero mejora el anonimato en internet. Multihop tiene tres modos distintos para elegir: Cuando sea necesario, Siempre y Nunca."
+            "value": "Multihop envía tu tráfico por un servidor QUIC y lo hace salir por otro, añadiendo un servidor entre tú y los sitios que visitas. Esto aumenta la latencia. Multihop tiene tres modos distintos para elegir: Cuando sea necesario, Siempre y Nunca."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop ترافیک شما را از یک سرور QUIC وارد و از سرور دیگری خارج می‌کند و ردیابی آن را دشوارتر می‌سازد. این کار تأخیر را افزایش می‌دهد اما ناشناسی آنلاین را بیشتر می‌کند. Multihop سه حالت مختلف برای انتخاب دارد: در صورت نیاز، همیشه و هرگز."
+            "value": "Multihop ترافیک شما را از یک سرور QUIC وارد و از سرور دیگری خارج می‌کند و یک سرور بین شما و سایت‌هایی که بازدید می‌کنید اضافه می‌کند. این کار تأخیر را افزایش می‌دهد. Multihop سه حالت مختلف برای انتخاب دارد: در صورت نیاز، همیشه و هرگز."
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop reitittää liikenteesi yhden QUIC-palvelimen kautta sisään ja toisen kautta ulos, mikä vaikeuttaa sen jäljittämistä. Tämä lisää viivettä mutta parantaa anonymiteettiä verkossa. Multihopissa on kolme valittavaa tilaa: Tarvittaessa, Aina ja Ei koskaan."
+            "value": "Multihop ohjaa liikenteesi sisään yhden QUIC-palvelimen kautta ja ulos toisen kautta, jolloin sinun ja vierailemiesi sivustojen väliin tulee lisäpalvelin. Tämä lisää viivettä. Multihopissa on kolme valittavaa tilaa: Tarvittaessa, Aina ja Ei koskaan."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Le Multihop fait entrer votre trafic par un serveur QUIC et le fait sortir par un autre, ce qui rend son suivi plus difficile. La latence augmente, mais votre anonymat en ligne est renforcé. Le Multihop propose trois modes au choix : Si nécessaire, Toujours et Jamais."
+            "value": "Le multihop fait entrer votre trafic par un serveur QUIC et le fait sortir par un autre, ce qui ajoute un serveur entre vous et les sites que vous visitez. La latence augmente. Le Multihop propose trois modes au choix : Si nécessaire, Toujours et Jamais."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop instrada il tuo traffico in un server QUIC e lo fa uscire da un altro, rendendolo più difficile da tracciare. Ciò comporta una maggiore latenza ma aumenta l'anonimato online. Multihop offre tre diverse modalità tra cui scegliere: Quando necessario, Sempre e Mai."
+            "value": "Multihop fa entrare il tuo traffico da un server QUIC e lo fa uscire da un altro, aggiungendo un server tra te e i siti che visiti. Questo aumenta la latenza. Multihop offre tre diverse modalità tra cui scegliere: Quando necessario, Sempre e Mai."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihopは、通信を1つのQUICサーバーに送り込み、別のサーバーから送り出すことで、追跡を困難にします。これにより遅延は増加しますが、オンラインでの匿名性が高まります。Multihopには「必要なときに」「常に」「しない」の3つのモードがあり、選択できます。"
+            "value": "マルチホップは、通信をある QUIC サーバーから入れて別のサーバーから出すことで、あなたと訪問先サイトの間にサーバーを 1 台追加します。その分レイテンシが増えます。Multihopには「必要なときに」「常に」「しない」の3つのモードがあり、選択できます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop은 트래픽을 하나의 QUIC 서버로 들여보내고 다른 서버로 내보내어 추적을 더 어렵게 만듭니다. 이로 인해 지연 시간은 늘어나지만 온라인 익명성은 높아집니다. Multihop에는 선택할 수 있는 세 가지 모드가 있습니다: 필요할 때, 항상, 사용 안 함."
+            "value": "멀티홉은 트래픽을 한 QUIC 서버로 들여보내 다른 서버로 내보내므로, 사용자와 방문하는 사이트 사이에 서버가 하나 더 추가됩니다. 그만큼 지연 시간이 늘어납니다. Multihop에는 선택할 수 있는 세 가지 모드가 있습니다: 필요할 때, 항상, 사용 안 함."
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop သည် သင့်ဒေတာသွားလာမှုကို QUIC ဆာဗာတစ်ခုသို့ ဝင်ရောက်စေပြီး အခြားတစ်ခုမှ ထွက်ခွာစေကာ ခြေရာခံရန် ပိုမိုခက်ခဲစေပါသည်။ ၎င်းကြောင့် နှောင့်နှေးမှု မြင့်တက်လာသော်လည်း အွန်လိုင်းတွင် အမည်ဝှက်ထားနိုင်မှု တိုးပွားစေပါသည်။ Multihop တွင် ရွေးချယ်နိုင်သော မုဒ်သုံးမျိုး ရှိသည်: လိုအပ်သည့်အခါ၊ အမြဲတမ်း၊ နှင့် ဘယ်တော့မှ။"
+            "value": "Multihop သည် သင့်ဒေတာကို QUIC ဆာဗာတစ်ခုမှ ဝင်ပြီး နောက်တစ်ခုမှ ထွက်စေသဖြင့် သင်နှင့် သင်ဝင်ကြည့်သော ဆိုက်များကြားတွင် ဆာဗာတစ်ခု ထပ်တိုးသည်။ ၎င်းကြောင့် latency တိုးလာသည်။ Multihop တွင် ရွေးချယ်နိုင်သော မုဒ်သုံးမျိုး ရှိသည်: လိုအပ်သည့်အခါ၊ အမြဲတမ်း၊ နှင့် ဘယ်တော့မှ။"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop ruter trafikken din inn på én QUIC-server og ut av en annen, noe som gjør den vanskeligere å spore. Dette gir økt forsinkelse, men øker anonymiteten på nettet. Multihop har tre ulike moduser å velge mellom: Ved behov, Alltid og Aldri."
+            "value": "Multihop sender trafikken din inn gjennom én QUIC-server og ut gjennom en annen, slik at det står en ekstra server mellom deg og nettstedene du besøker. Det øker forsinkelsen. Multihop har tre ulike moduser å velge mellom: Ved behov, Alltid og Aldri."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop leidt je verkeer via de ene QUIC-server naar binnen en via een andere naar buiten, waardoor het moeilijker te traceren is. Dit leidt tot een hogere latentie, maar vergroot je anonimiteit online. Multihop heeft drie verschillende modi om uit te kiezen: Indien nodig, Altijd en Nooit."
+            "value": "Multihop leidt je verkeer via de ene QUIC-server naar binnen en via een andere naar buiten, zodat er een extra server tussen jou en de sites die je bezoekt staat. Dit verhoogt de latentie. Multihop heeft drie verschillende modi om uit te kiezen: Indien nodig, Altijd en Nooit."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop kieruje Twój ruch do jednego serwera QUIC, a wypuszcza go z innego, co utrudnia jego śledzenie. Powoduje to zwiększenie opóźnień, ale podnosi anonimowość w sieci. Multihop oferuje trzy różne tryby do wyboru: W razie potrzeby, Zawsze oraz Nigdy."
+            "value": "Multihop kieruje Twój ruch do jednego serwera QUIC i wyprowadza go przez inny, dodając serwer między Tobą a odwiedzanymi stronami. Zwiększa to opóźnienie. Multihop oferuje trzy różne tryby do wyboru: W razie potrzeby, Zawsze oraz Nigdy."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "O Multihop encaminha o seu tráfego para um servidor QUIC e para fora através de outro, dificultando o rastreio. Isto resulta numa latência mais elevada, mas aumenta o anonimato online. O Multihop tem três modos diferentes à escolha: Quando necessário, Sempre e Nunca."
+            "value": "O Multihop faz entrar o seu tráfego por um servidor QUIC e sair por outro, acrescentando um servidor entre si e os sites que visita. Isto aumenta a latência. O Multihop tem três modos diferentes à escolha: Quando necessário, Sempre e Nunca."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop direcționează traficul către un server QUIC și îl scoate prin altul, ceea ce îngreunează urmărirea. Acest lucru duce la o latență mai mare, dar crește anonimatul online. Multihop are trei moduri diferite din care puteți alege: La nevoie, Întotdeauna și Niciodată."
+            "value": "Multihop trimite traficul tău printr-un server QUIC și îl scoate prin altul, adăugând un server între tine și site-urile pe care le vizitezi. Latența crește. Multihop are trei moduri diferite din care puteți alege: La nevoie, Întotdeauna și Niciodată."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop направляет ваш трафик через один сервер QUIC и выводит через другой, что затрудняет его отслеживание. Это увеличивает задержку, но повышает анонимность в сети. У Multihop есть три режима на выбор: при необходимости, всегда и никогда."
+            "value": "Multihop направляет ваш трафик через один сервер QUIC на вход и через другой на выход, добавляя ещё один сервер между вами и посещаемыми сайтами. Это увеличивает задержку. У Multihop есть три режима на выбор: при необходимости, всегда и никогда."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop dirigerar din trafik in i en QUIC-server och ut genom en annan, vilket gör den svårare att spåra. Detta resulterar i ökad fördröjning men ökar anonymiteten på nätet. Multihop har tre olika lägen att välja mellan: Vid behov, Alltid och Aldrig."
+            "value": "Multihop skickar in din trafik genom en QUIC-server och ut genom en annan, så att det finns ytterligare en server mellan dig och webbplatserna du besöker. Det ökar latensen. Multihop har tre olika lägen att välja mellan: Vid behov, Alltid och Aldrig."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop จะกำหนดเส้นทางทราฟฟิกของคุณเข้าสู่เซิร์ฟเวอร์ QUIC หนึ่งแห่งและออกอีกแห่งหนึ่ง ทำให้ติดตามได้ยากขึ้น ส่งผลให้เกิดความหน่วงที่เพิ่มขึ้นแต่เพิ่มความไม่ระบุตัวตนบนโลกออนไลน์ Multihop มีโหมดให้เลือกสามแบบ: เมื่อจำเป็น เสมอ และไม่เคย"
+            "value": "Multihop ส่งทราฟฟิกของคุณเข้าทางเซิร์ฟเวอร์ QUIC หนึ่งและออกทางอีกเซิร์ฟเวอร์หนึ่ง จึงมีเซิร์ฟเวอร์เพิ่มขึ้นระหว่างคุณกับเว็บไซต์ที่คุณเข้าชม ซึ่งทำให้มีความหน่วงมากขึ้น Multihop มีโหมดให้เลือกสามแบบ: เมื่อจำเป็น เสมอ และไม่เคย"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop, trafiğinizi bir QUIC sunucusuna yönlendirip başka bir sunucudan çıkarır ve böylece izlenmesini zorlaştırır. Bu, gecikmeyi artırır ancak çevrimiçi anonimliğinizi yükseltir. Multihop'ta seçebileceğiniz üç farklı mod vardır: Gerektiğinde, Her zaman ve Asla."
+            "value": "Multihop trafiğinizi bir QUIC sunucusundan sokup başka birinden çıkarır ve sizinle ziyaret ettiğiniz siteler arasına bir sunucu daha ekler. Bu, gecikmeyi artırır. Multihop'ta seçebileceğiniz üç farklı mod vardır: Gerektiğinde, Her zaman ve Asla."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop спрямовує ваш трафік через один сервер QUIC на вхід і через інший на вихід, що ускладнює відстеження. Це збільшує затримку, але підвищує анонімність в Інтернеті. Multihop має три режими на вибір: «За потреби», «Завжди» і «Ніколи»."
+            "value": "Multihop спрямовує ваш трафік через один сервер QUIC на вхід і через інший на вихід, додаючи ще один сервер між вами та сайтами, які ви відвідуєте. Це збільшує затримку. Multihop має три режими на вибір: «За потреби», «Завжди» і «Ніколи»."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop 会将你的流量从一台 QUIC 服务器进入，再从另一台服务器流出，使其更难被追踪。这会增加延迟，但能提升你在线的匿名性。Multihop 提供三种模式可供选择：按需、始终和从不。"
+            "value": "多跳会让你的流量从一台 QUIC 服务器进入、从另一台服务器离开，在你和所访问的网站之间多加一台服务器。这会增加延迟。Multihop 提供三种模式可供选择：按需、始终和从不。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "Multihop 會將你的流量導入一台 QUIC 伺服器，再從另一台送出，讓流量更難被追蹤。這會增加延遲，但能提升你在網路上的匿名性。Multihop 提供三種模式可供選擇：需要時、永遠和永不。"
+            "value": "多重跳躍會讓你的流量從一台 QUIC 伺服器進入、從另一台伺服器離開，在你和造訪的網站之間多加一台伺服器。這會增加延遲。Multihop 提供三種模式可供選擇：需要時、永遠和永不。"
           }
         }
       }
@@ -55492,150 +55492,150 @@
         }
       }
     },
-    "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in.": {
+    "No email and no password are used. You appear under a random pseudonym, and only the Warren support team can match it to a wallet, for support purposes. Only approve if you started this sign-in.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "No email and no password are used. You appear under an anonymous handle that cannot be linked to your Warren account. Only approve if you started this sign-in."
+            "value": "No email and no password are used. You appear under a random pseudonym, and only the Warren support team can match it to a wallet, for support purposes. Only approve if you started this sign-in."
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "لا يُستخدم بريد إلكتروني ولا كلمة مرور. تظهر باسم مستعار مجهول لا يمكن ربطه بحساب Warren الخاص بك. وافق فقط إذا كنت أنت من بدأ تسجيل الدخول هذا."
+            "value": "لا يُستخدم أي بريد إلكتروني ولا كلمة مرور. تظهر باسم مستعار عشوائي، ولا يستطيع ربطه بمحفظة إلا فريق دعم Warren، لأغراض الدعم فقط. لا توافق إلا إذا كنت أنت من بدأ تسجيل الدخول هذا."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Der bruges ingen e-mail og ingen adgangskode. Du vises under et anonymt kaldenavn, der ikke kan knyttes til din Warren-konto. Godkend kun, hvis du selv har startet dette login."
+            "value": "Der bruges ingen e-mail og ingen adgangskode. Du vises under et tilfældigt pseudonym, og kun Warrens supportteam kan knytte det til en wallet, til supportformål. Godkend kun, hvis du selv har startet dette login."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Es werden keine E-Mail und kein Passwort verwendet. Du erscheinst unter einem anonymen Namen, der nicht mit deinem Warren-Konto verknüpft werden kann. Bestätige nur, wenn du diese Anmeldung selbst gestartet hast."
+            "value": "Es werden weder E-Mail noch Passwort verwendet. Du erscheinst unter einem zufälligen Pseudonym, und nur das Warren-Supportteam kann es zu Supportzwecken einer Wallet zuordnen. Bestätige nur, wenn du diese Anmeldung selbst gestartet hast."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "No se usa ningún correo electrónico ni contraseña. Apareces con un seudónimo anónimo que no puede vincularse a tu cuenta de Warren. Aprueba solo si iniciaste tú este acceso."
+            "value": "No se usa ningún correo electrónico ni contraseña. Apareces con un seudónimo aleatorio, y solo el equipo de soporte de Warren puede asociarlo a un monedero, con fines de soporte. Aprueba solo si iniciaste tú este inicio de sesión."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "هیچ ایمیل و رمز عبوری استفاده نمی‌شود. شما با یک نام مستعار ناشناس نمایش داده می‌شوید که قابل ارتباط با حساب Warren شما نیست. فقط در صورتی تأیید کنید که خودتان این ورود را آغاز کرده‌اید."
+            "value": "هیچ ایمیل و رمز عبوری استفاده نمی‌شود. شما با یک نام مستعار تصادفی نمایش داده می‌شوید و فقط تیم پشتیبانی Warren می‌تواند آن را، برای اهداف پشتیبانی، به یک کیف پول مرتبط کند. فقط در صورتی تأیید کنید که خودتان این ورود را آغاز کرده‌اید."
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sähköpostia tai salasanaa ei käytetä. Näyt anonyymillä nimimerkillä, jota ei voi yhdistää Warren-tiliisi. Hyväksy vain, jos aloitit tämän kirjautumisen itse."
+            "value": "Sähköpostia tai salasanaa ei käytetä. Näyt satunnaisella salanimellä, ja vain Warrenin tukitiimi voi yhdistää sen lompakkoon tukitarkoituksiin. Hyväksy vain, jos aloitit tämän kirjautumisen itse."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aucun e-mail ni mot de passe n'est utilisé. Vous apparaissez sous un pseudonyme anonyme qui ne peut pas être relié à votre compte Warren. N'approuvez que si vous êtes à l'origine de cette connexion."
+            "value": "Aucun e-mail ni mot de passe n’est utilisé. Vous apparaissez sous un pseudonyme aléatoire, que seule l’équipe de support de Warren peut relier à un portefeuille, pour les besoins du support. N’approuvez que si vous êtes à l’origine de cette connexion."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Non vengono usati né e-mail né password. Compari con uno pseudonimo anonimo che non può essere collegato al tuo account Warren. Approva solo se sei stato tu ad avviare questo accesso."
+            "value": "Non vengono usati né email né password. Appari con uno pseudonimo casuale, e solo il team di supporto di Warren può collegarlo a un portafoglio, per finalità di supporto. Approva solo se hai avviato tu questo accesso."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "メールアドレスもパスワードも使用しません。あなたは Warren アカウントに紐付けられない匿名のハンドル名で表示されます。ご自身でこのサインインを開始した場合のみ承認してください。"
+            "value": "メールアドレスもパスワードも使用しません。あなたはランダムな仮名で表示され、その仮名をウォレットと結び付けられるのは、サポートのために Warren のサポートチームだけです。このサインインを自分で開始した場合のみ承認してください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이메일과 비밀번호를 사용하지 않습니다. Warren 계정과 연결할 수 없는 익명 핸들로 표시됩니다. 직접 이 로그인을 시작한 경우에만 승인하세요."
+            "value": "이메일과 비밀번호는 사용하지 않습니다. 무작위 가명으로 표시되며, 지원 목적으로 Warren 지원팀만 이 가명을 지갑과 연결할 수 있습니다. 이 로그인을 직접 시작한 경우에만 승인하세요."
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "အီးမေးလ်နှင့် စကားဝှက် အသုံးမပြုပါ။ သင်သည် သင့် Warren အကောင့်နှင့် ချိတ်ဆက်၍မရသော အမည်ဝှက်ဖြင့် ပေါ်လာပါမည်။ ဤဝင်ရောက်မှုကို သင်ကိုယ်တိုင် စတင်ခဲ့မှသာ အတည်ပြုပါ။"
+            "value": "အီးမေးလ်နှင့် စကားဝှက် မသုံးပါ။ သင်သည် ကျပန်း အမည်ဝှက်ဖြင့် ပေါ်လာပြီး ၎င်းကို wallet တစ်ခုနှင့် ချိတ်ဆက်နိုင်သူမှာ အကူအညီပေးရန်အတွက် Warren အကူအညီအဖွဲ့သာ ဖြစ်သည်။ ဤဝင်ရောက်မှုကို သင်ကိုယ်တိုင် စတင်ခဲ့မှသာ အတည်ပြုပါ။"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Verken e-post eller passord brukes. Du vises under et anonymt kallenavn som ikke kan knyttes til Warren-kontoen din. Godkjenn bare hvis du selv startet denne innloggingen."
+            "value": "Ingen e-post og intet passord brukes. Du vises under et tilfeldig pseudonym, og bare Warrens supportteam kan knytte det til en lommebok, til supportformål. Godkjenn bare hvis du selv startet denne påloggingen."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Er worden geen e-mail en geen wachtwoord gebruikt. Je verschijnt onder een anonieme naam die niet aan je Warren-account kan worden gekoppeld. Keur alleen goed als je deze aanmelding zelf hebt gestart."
+            "value": "Er wordt geen e-mail en geen wachtwoord gebruikt. Je verschijnt onder een willekeurig pseudoniem, en alleen het supportteam van Warren kan het aan een wallet koppelen, voor supportdoeleinden. Keur alleen goed als je deze aanmelding zelf hebt gestart."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nie są używane żadne adresy e-mail ani hasła. Występujesz pod anonimowym pseudonimem, którego nie można powiązać z Twoim kontem Warren. Zatwierdź tylko wtedy, gdy to Ty rozpocząłeś to logowanie."
+            "value": "Nie używamy adresu e-mail ani hasła. Występujesz pod losowym pseudonimem, a powiązać go z portfelem może tylko zespół wsparcia Warren, na potrzeby wsparcia. Zatwierdź tylko wtedy, gdy sam rozpocząłeś to logowanie."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Não são usados e-mail nem palavra-passe. Aparece sob um pseudónimo anónimo que não pode ser associado à sua conta Warren. Aprove apenas se foi você que iniciou este início de sessão."
+            "value": "Não é usado nenhum e-mail nem palavra-passe. Aparece sob um pseudónimo aleatório, e só a equipa de suporte da Warren o pode associar a uma carteira, para fins de suporte. Aprove apenas se foi você que iniciou este início de sessão."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Nu se folosesc adrese de e-mail sau parole. Apari sub un pseudonim anonim care nu poate fi asociat cu contul tău Warren. Aprobă doar dacă tu ai inițiat această autentificare."
+            "value": "Nu se folosesc nici e-mail, nici parolă. Apari sub un pseudonim aleatoriu, pe care doar echipa de suport Warren îl poate asocia unui portofel, în scop de suport. Aprobă doar dacă tu ai inițiat această conectare."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Электронная почта и пароль не используются. Вы отображаетесь под анонимным именем, которое нельзя связать с вашей учётной записью Warren. Подтверждайте вход, только если вы сами его начали."
+            "value": "Не используются ни e-mail, ни пароль. Вы отображаетесь под случайным псевдонимом, и связать его с кошельком может только команда поддержки Warren, в целях поддержки. Подтверждайте, только если этот вход начали вы сами."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ingen e-post och inget lösenord används. Du visas under ett anonymt alias som inte kan kopplas till ditt Warren-konto. Godkänn bara om du själv startade den här inloggningen."
+            "value": "Ingen e-post och inget lösenord används. Du visas under en slumpmässig pseudonym, och bara Warrens supportteam kan koppla den till en plånbok, i supportsyfte. Godkänn bara om du själv startade den här inloggningen."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ไม่มีการใช้อีเมลและรหัสผ่าน คุณจะปรากฏภายใต้ชื่อผู้ใช้นิรนามที่ไม่สามารถเชื่อมโยงกับบัญชี Warren ของคุณได้ อนุมัติเฉพาะเมื่อคุณเป็นผู้เริ่มการเข้าสู่ระบบนี้เท่านั้น"
+            "value": "ไม่มีการใช้อีเมลหรือรหัสผ่าน คุณจะปรากฏภายใต้นามแฝงแบบสุ่ม และมีเพียงทีมสนับสนุนของ Warren เท่านั้นที่เชื่อมโยงนามแฝงนี้กับวอลเล็ตได้ เพื่อวัตถุประสงค์ในการให้การสนับสนุน อนุมัติเฉพาะเมื่อคุณเป็นผู้เริ่มการลงชื่อเข้าใช้นี้เอง"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "E-posta ve parola kullanılmaz. Warren hesabınızla ilişkilendirilemeyen anonim bir takma adla görünürsünüz. Yalnızca bu girişi siz başlattıysanız onaylayın."
+            "value": "E-posta ya da parola kullanılmaz. Rastgele bir takma adla görünürsünüz ve bu adı bir cüzdanla yalnızca Warren destek ekibi, destek amacıyla ilişkilendirebilir. Yalnızca bu oturum açmayı siz başlattıysanız onaylayın."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Електронна пошта й пароль не використовуються. Ви відображаєтесь під анонімним іменем, яке не можна пов'язати з вашим обліковим записом Warren. Підтверджуйте вхід, лише якщо ви самі його розпочали."
+            "value": "Не використовуються ні e-mail, ні пароль. Ви відображаєтеся під випадковим псевдонімом, і пов’язати його з гаманцем може лише команда підтримки Warren, для цілей підтримки. Підтверджуйте, лише якщо цей вхід розпочали ви самі."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "不使用电子邮件和密码。您将以无法关联到 Warren 账户的匿名昵称显示。仅当此次登录由您本人发起时才批准。"
+            "value": "不使用电子邮件，也不使用密码。你将以随机化名显示，只有 Warren 支持团队能出于支持目的将其与钱包关联。仅当此次登录由你本人发起时才批准。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "不使用電子郵件和密碼。您將以無法連結至 Warren 帳戶的匿名代號顯示。僅當此次登入由您本人發起時才核准。"
+            "value": "不使用電子郵件，也不使用密碼。你會以隨機化名顯示，只有 Warren 支援團隊能基於支援目的將其與錢包連結。僅在此次登入由你本人發起時才核准。"
           }
         }
       }
@@ -81720,150 +81720,150 @@
         }
       }
     },
-    "The logs are anonymized: wallet addresses and personal data are removed. They go privately to the Warren support team and never appear publicly on the forum. You can view exactly what will be sent before approving. Only approve if you opened that forum page yourself.": {
+    "Wallet addresses and personal data are removed from the logs. They go privately to the Warren support team and never appear publicly on the forum. You can view exactly what will be sent before approving. Only approve if you opened that forum page yourself.": {
       "localizations": {
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "The logs are anonymized: wallet addresses and personal data are removed. They go privately to the Warren support team and never appear publicly on the forum. You can view exactly what will be sent before approving. Only approve if you opened that forum page yourself."
+            "value": "Wallet addresses and personal data are removed from the logs. They go privately to the Warren support team and never appear publicly on the forum. You can view exactly what will be sent before approving. Only approve if you opened that forum page yourself."
           }
         },
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "السجلات مجهولة الهوية: تُحذف عناوين المحافظ والبيانات الشخصية. تُرسل سرًا إلى فريق دعم Warren ولا تظهر علنًا على المنتدى أبدًا. يمكنك معاينة ما سيُرسل بالضبط قبل الموافقة. وافق فقط إذا كنت أنت من فتح صفحة المنتدى تلك."
+            "value": "تُحذف عناوين المحافظ والبيانات الشخصية من السجلات. تُرسل السجلات بشكل خاص إلى فريق دعم Warren ولا تظهر علنًا في المنتدى أبدًا. يمكنك رؤية ما سيُرسل بالضبط قبل الموافقة. لا توافق إلا إذا كنت أنت من فتح صفحة المنتدى تلك."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Logfilerne er anonymiserede: wallet-adresser og personlige oplysninger er fjernet. De sendes fortroligt til Warrens supportteam og vises aldrig offentligt på forummet. Du kan se præcis, hvad der sendes, før du godkender. Godkend kun, hvis du selv har åbnet den forumside."
+            "value": "Wallet-adresser og personlige oplysninger fjernes fra logfilerne. De sendes fortroligt til Warrens supportpersonale og vises aldrig offentligt på forummet. Du kan se præcis, hvad der sendes, før du godkender. Godkend kun, hvis du selv har åbnet den forumside."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Die Protokolle sind anonymisiert: Wallet-Adressen und persönliche Daten sind entfernt. Sie gehen vertraulich an das Support-Team von Warren und erscheinen nie öffentlich im Forum. Du kannst vor der Bestätigung genau ansehen, was gesendet wird. Bestätige nur, wenn du diese Forumsseite selbst geöffnet hast."
+            "value": "Wallet-Adressen und persönliche Daten werden aus den Protokollen entfernt. Sie gehen vertraulich an das Warren-Supportpersonal und erscheinen nie öffentlich im Forum. Du kannst vor der Bestätigung genau sehen, was gesendet wird. Bestätige nur, wenn du diese Forumseite selbst geöffnet hast."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Los registros están anonimizados: se eliminan las direcciones de monedero y los datos personales. Se envían de forma privada al equipo de soporte de Warren y nunca aparecen públicamente en el foro. Puedes ver exactamente lo que se enviará antes de aprobar. Aprueba solo si abriste tú esa página del foro."
+            "value": "Las direcciones de monedero y los datos personales se eliminan de los registros. Se envían de forma privada al personal de soporte de Warren y nunca aparecen públicamente en el foro. Puedes ver exactamente qué se enviará antes de aprobar. Aprueba solo si abriste tú esa página del foro."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "گزارش‌ها ناشناس شده‌اند: نشانی‌های کیف پول و داده‌های شخصی حذف شده‌اند. آنها به‌صورت خصوصی به تیم پشتیبانی Warren می‌رسند و هرگز به‌طور عمومی در انجمن نمایش داده نمی‌شوند. می‌توانید پیش از تأیید دقیقاً ببینید چه چیزی ارسال می‌شود. فقط در صورتی تأیید کنید که خودتان آن صفحهٔ انجمن را باز کرده‌اید."
+            "value": "نشانی‌های کیف پول و داده‌های شخصی از گزارش‌ها حذف می‌شوند. گزارش‌ها به‌صورت خصوصی برای کارکنان پشتیبانی Warren ارسال می‌شوند و هرگز در انجمن به‌طور عمومی نمایش داده نمی‌شوند. پیش از تأیید می‌توانید دقیقاً ببینید چه چیزی ارسال می‌شود. فقط در صورتی تأیید کنید که خودتان آن صفحهٔ انجمن را باز کرده‌اید."
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lokit on anonymisoitu: lompakko-osoitteet ja henkilötiedot on poistettu. Ne menevät luottamuksellisesti Warrenin tukitiimille eivätkä koskaan näy julkisesti foorumilla. Voit katsoa tarkalleen, mitä lähetetään, ennen hyväksymistä. Hyväksy vain, jos avasit tuon foorumisivun itse."
+            "value": "Lompakko-osoitteet ja henkilötiedot poistetaan lokeista. Ne lähetetään luottamuksellisesti Warrenin tukihenkilöstölle, eivätkä ne koskaan näy julkisesti foorumilla. Näet tarkalleen, mitä lähetetään, ennen kuin hyväksyt. Hyväksy vain, jos avasit kyseisen foorumisivun itse."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Les journaux sont anonymisés : les adresses de portefeuille et les données personnelles en sont retirées. Ils sont transmis en privé à l'équipe support de Warren et n'apparaissent jamais publiquement sur le forum. Vous pouvez consulter exactement ce qui sera envoyé avant d'approuver. N'approuvez que si vous avez ouvert cette page du forum vous-même."
+            "value": "Les adresses de portefeuille et les données personnelles sont retirées des journaux. Ceux-ci sont transmis en privé à l’équipe de support de Warren et n’apparaissent jamais publiquement sur le forum. Vous pouvez voir exactement ce qui sera envoyé avant d’approuver. N’approuvez que si vous avez ouvert vous-même cette page du forum."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "I log sono anonimizzati: gli indirizzi del wallet e i dati personali vengono rimossi. Arrivano in privato al team di supporto di Warren e non compaiono mai pubblicamente sul forum. Puoi vedere esattamente cosa verrà inviato prima di approvare. Approva solo se sei stato tu ad aprire quella pagina del forum."
+            "value": "Gli indirizzi dei portafogli e i dati personali vengono rimossi dai log. I log vengono inviati in privato allo staff di supporto di Warren e non compaiono mai pubblicamente sul forum. Puoi vedere esattamente cosa verrà inviato prima di approvare. Approva solo se hai aperto tu quella pagina del forum."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "ログは匿名化されています。ウォレットアドレスと個人データは削除されます。ログは Warren サポートチームに非公開で送られ、フォーラム上に公開されることはありません。承認する前に、送信される内容を正確に確認できます。ご自身でそのフォーラムページを開いた場合のみ承認してください。"
+            "value": "ウォレットアドレスと個人データはログから削除されます。ログは Warren のサポートスタッフに非公開で送られ、フォーラムで公開されることはありません。承認する前に、送信される内容を正確に確認できます。そのフォーラムページを自分で開いた場合のみ承認してください。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "로그는 익명화되어 있으며 지갑 주소와 개인 정보는 제거됩니다. 로그는 Warren 지원팀에만 비공개로 전달되고 포럼에 공개되지 않습니다. 승인하기 전에 전송될 내용을 정확히 확인할 수 있습니다. 직접 해당 포럼 페이지를 연 경우에만 승인하세요."
+            "value": "지갑 주소와 개인 데이터는 로그에서 제거됩니다. 로그는 Warren 지원 담당자에게 비공개로 전달되며 포럼에 공개되지 않습니다. 승인하기 전에 전송될 내용을 정확히 확인할 수 있습니다. 그 포럼 페이지를 직접 연 경우에만 승인하세요."
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "မှတ်တမ်းများကို အမည်မသိပြုလုပ်ထားသည်။ ပိုက်ဆံအိတ်လိပ်စာများနှင့် ကိုယ်ရေးအချက်အလက်များကို ဖယ်ရှားထားသည်။ ၎င်းတို့ကို Warren ပံ့ပိုးမှုအဖွဲ့ထံ သီးသန့်ပေးပို့ပြီး ဖိုရမ်တွင် လူသိရှင်ကြား ဘယ်တော့မှ မပေါ်ပါ။ အတည်မပြုမီ ပေးပို့မည့်အရာကို အတိအကျ ကြည့်ရှုနိုင်သည်။ ထိုဖိုရမ်စာမျက်နှာကို သင်ကိုယ်တိုင် ဖွင့်ခဲ့မှသာ အတည်ပြုပါ။"
+            "value": "Wallet လိပ်စာများနှင့် ကိုယ်ရေးအချက်အလက်များကို မှတ်တမ်းများမှ ဖယ်ရှားထားသည်။ ၎င်းတို့ကို Warren အကူအညီဝန်ထမ်းများထံ သီးသန့်ပို့ပြီး ဖိုရမ်တွင် အများပြည်သူမြင်အောင် ဘယ်တော့မှ မပြပါ။ အတည်မပြုမီ ပို့မည့်အရာကို အတိအကျ ကြည့်နိုင်သည်။ ထိုဖိုရမ်စာမျက်နှာကို သင်ကိုယ်တိုင် ဖွင့်ခဲ့မှသာ အတည်ပြုပါ။"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Loggene er anonymiserte: wallet-adresser og personopplysninger er fjernet. De sendes fortrolig til Warrens supportteam og vises aldri offentlig på forumet. Du kan se nøyaktig hva som sendes før du godkjenner. Godkjenn bare hvis du selv åpnet den forumsiden."
+            "value": "Lommebokadresser og personopplysninger fjernes fra loggene. De sendes fortrolig til Warrens supportpersonale og vises aldri offentlig på forumet. Du kan se nøyaktig hva som sendes før du godkjenner. Godkjenn bare hvis du selv åpnet den forumsiden."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "De logboeken zijn geanonimiseerd: wallet-adressen en persoonlijke gegevens zijn verwijderd. Ze gaan vertrouwelijk naar het supportteam van Warren en verschijnen nooit openbaar op het forum. Je kunt vóór het goedkeuren precies bekijken wat er wordt verzonden. Keur alleen goed als je die forumpagina zelf hebt geopend."
+            "value": "Walletadressen en persoonsgegevens worden uit de logs verwijderd. Ze gaan vertrouwelijk naar de supportmedewerkers van Warren en verschijnen nooit openbaar op het forum. Je kunt precies zien wat er wordt verstuurd voordat je goedkeurt. Keur alleen goed als je die forumpagina zelf hebt geopend."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dzienniki są zanonimizowane: adresy portfela i dane osobowe zostały usunięte. Trafiają poufnie do zespołu wsparcia Warren i nigdy nie pojawiają się publicznie na forum. Przed zatwierdzeniem możesz dokładnie zobaczyć, co zostanie wysłane. Zatwierdź tylko wtedy, gdy to Ty otworzyłeś tę stronę forum."
+            "value": "Adresy portfeli i dane osobowe są usuwane z logów. Logi trafiają poufnie do personelu wsparcia Warren i nigdy nie pojawiają się publicznie na forum. Przed zatwierdzeniem możesz zobaczyć dokładnie, co zostanie wysłane. Zatwierdź tylko wtedy, gdy sam otworzyłeś tę stronę forum."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Os registos são anonimizados: os endereços de carteira e os dados pessoais são removidos. Seguem em privado para a equipa de suporte da Warren e nunca aparecem publicamente no fórum. Pode ver exatamente o que será enviado antes de aprovar. Aprove apenas se foi você que abriu essa página do fórum."
+            "value": "Os endereços de carteira e os dados pessoais são removidos dos registos. Os registos seguem em privado para a equipa de suporte da Warren e nunca aparecem publicamente no fórum. Pode ver exatamente o que será enviado antes de aprovar. Aprove apenas se foi você que abriu essa página do fórum."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Jurnalele sunt anonimizate: adresele de portofel și datele personale sunt eliminate. Ajung în privat la echipa de suport Warren și nu apar niciodată public pe forum. Poți vedea exact ce va fi trimis înainte de a aproba. Aprobă doar dacă tu ai deschis acea pagină de pe forum."
+            "value": "Adresele de portofel și datele personale sunt eliminate din jurnale. Jurnalele ajung în privat la echipa de suport Warren și nu apar niciodată public pe forum. Poți vedea exact ce se trimite înainte de a aproba. Aprobă doar dacă tu ai deschis acea pagină de forum."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Журналы обезличены: адреса кошелька и личные данные удалены. Они передаются только команде поддержки Warren и никогда не публикуются на форуме. Перед подтверждением вы можете посмотреть, что именно будет отправлено. Подтверждайте, только если вы сами открыли эту страницу форума."
+            "value": "Адреса кошельков и персональные данные удаляются из журналов. Журналы передаются конфиденциально сотрудникам поддержки Warren и никогда не появляются публично на форуме. Перед подтверждением вы можете увидеть, что именно будет отправлено. Подтверждайте, только если эту страницу форума открыли вы сами."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Loggarna är anonymiserade: plånboksadresser och personuppgifter är borttagna. De skickas förtroligt till Warrens supportteam och visas aldrig offentligt på forumet. Du kan se exakt vad som skickas innan du godkänner. Godkänn bara om du själv öppnade den forumsidan."
+            "value": "Plånboksadresser och personuppgifter tas bort från loggarna. De skickas privat till Warrens supportpersonal och visas aldrig offentligt på forumet. Du kan se exakt vad som skickas innan du godkänner. Godkänn bara om du själv öppnade den forumsidan."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "บันทึกถูกทำให้ไม่ระบุตัวตน: ที่อยู่กระเป๋าเงินและข้อมูลส่วนบุคคลถูกลบออก บันทึกจะถูกส่งเป็นการส่วนตัวถึงทีมสนับสนุนของ Warren และไม่ปรากฏต่อสาธารณะบนฟอรัม คุณสามารถดูสิ่งที่จะส่งได้อย่างละเอียดก่อนอนุมัติ อนุมัติเฉพาะเมื่อคุณเป็นผู้เปิดหน้าฟอรัมนั้นด้วยตัวเอง"
+            "value": "ที่อยู่วอลเล็ตและข้อมูลส่วนบุคคลจะถูกลบออกจากบันทึก บันทึกจะถูกส่งเป็นการส่วนตัวถึงเจ้าหน้าที่สนับสนุนของ Warren และไม่ปรากฏต่อสาธารณะบนฟอรัม คุณดูได้ว่าจะส่งอะไรบ้างก่อนอนุมัติ อนุมัติเฉพาะเมื่อคุณเป็นผู้เปิดหน้าฟอรัมนั้นเอง"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Günlükler anonimleştirilmiştir: cüzdan adresleri ve kişisel veriler kaldırılır. Yalnızca Warren destek ekibine özel olarak iletilir ve forumda hiçbir zaman herkese açık görünmez. Onaylamadan önce tam olarak neyin gönderileceğini görebilirsiniz. Yalnızca o forum sayfasını siz açtıysanız onaylayın."
+            "value": "Cüzdan adresleri ve kişisel veriler günlüklerden çıkarılır. Günlükler Warren destek ekibine gizli olarak gider ve forumda asla herkese açık görünmez. Onaylamadan önce tam olarak neyin gönderileceğini görebilirsiniz. Yalnızca o forum sayfasını siz açtıysanız onaylayın."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Журнали знеособлені: адреси гаманця й особисті дані вилучено. Вони передаються лише команді підтримки Warren і ніколи не з'являються публічно на форумі. Перед підтвердженням ви можете переглянути, що саме буде надіслано. Підтверджуйте, лише якщо ви самі відкрили цю сторінку форуму."
+            "value": "Адреси гаманців і персональні дані видаляються з журналів. Журнали надходять конфіденційно до персоналу підтримки Warren і ніколи не з’являються публічно на форумі. Перед підтвердженням ви можете побачити, що саме буде надіслано. Підтверджуйте, лише якщо цю сторінку форуму відкрили ви самі."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "日志已匿名化：钱包地址和个人数据均已移除。日志仅私下发送给 Warren 支持团队，绝不会公开显示在论坛上。批准前，您可以查看将要发送的确切内容。仅当该论坛页面由您本人打开时才批准。"
+            "value": "钱包地址和个人数据会从日志中移除。日志会私下发送给 Warren 支持人员，绝不会在论坛上公开显示。批准前你可以准确查看将要发送的内容。仅当该论坛页面由你本人打开时才批准。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "記錄檔已匿名化：錢包地址和個人資料均已移除。記錄檔僅私下傳送給 Warren 支援團隊，絕不會公開顯示在論壇上。核准前，您可以查看將要傳送的確切內容。僅當該論壇頁面由您本人開啟時才核准。"
+            "value": "錢包地址和個人資料會從日誌中移除。日誌會私下傳送給 Warren 支援人員，絕不會在論壇上公開顯示。核准前你可以確切查看將要傳送的內容。僅在該論壇頁面由你本人開啟時才核准。"
           }
         }
       }
@@ -97437,144 +97437,144 @@
         }
       }
     },
-    "You have a right to privacy. That’s why we never store activity logs, don’t ask for personal information, and encourage anonymous payments.\n\nIn some situations, as outlined in our privacy policy, we might process personal data that you choose to send, for example if you email us.\n\nWe strongly believe in retaining as little data as possible because we want you to remain anonymous.": {
+    "Warren keeps no activity logs and asks for no name or email.\n\nThe privacy policy lists the data Warren does process, such as payment references kept for refunds, and the data you choose to send, for example in a problem report.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "الخصوصية حق لك. لهذا لا نخزّن أبدًا سجلات النشاط، ولا نطلب معلومات شخصية، ونشجع الدفع المجهول.\n\nفي بعض الحالات، كما هو موضح في سياسة الخصوصية لدينا، قد نعالج بيانات شخصية تختار أنت إرسالها، مثلاً إذا راسلتنا عبر البريد الإلكتروني.\n\nنؤمن بشدة بالاحتفاظ بأقل قدر ممكن من البيانات لأننا نريد أن تبقى مجهول الهوية."
+            "value": "لا يحتفظ Warren بسجلات النشاط ولا يطلب اسمًا ولا بريدًا إلكترونيًا.\n\nتسرد سياسة الخصوصية البيانات التي يعالجها Warren فعلًا، مثل مراجع الدفع المحفوظة لأغراض الاسترداد، والبيانات التي تختار إرسالها، كما في بلاغ عن مشكلة."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Du har ret til privatliv. Derfor lagrer vi aldrig aktivitetslogfiler, vi beder ikke om personoplysninger, og vi opfordrer til anonyme betalinger.\n\nI nogle situationer, som beskrevet i vores privatlivspolitik, kan vi behandle personoplysninger, som du vælger at sende, f.eks. hvis du sender os en e-mail.\n\nVi er overbeviste om, at vi skal opbevare så få data som muligt, da vi ønsker, at du forbliver anonym."
+            "value": "Warren gemmer ingen aktivitetslogfiler og beder hverken om navn eller e-mail.\n\nPrivatlivspolitikken oplyser, hvilke data Warren faktisk behandler, f.eks. betalingsreferencer, der gemmes til refusioner, og de data, du selv vælger at sende, f.eks. i en problemrapport."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sie haben ein Recht auf Privatsphäre. Aus diesem Grund speichern wir niemals Aktivitätsprotokolle, fragen keine personenbezogenen Daten ab und empfehlen die Verwendung anonymer Zahlungsmethoden.\n\nIn bestimmten Situationen, wie in unserer Datenschutzrichtlinie beschrieben, können wir personenbezogene Daten verarbeiten, die Sie uns freiwillig übermitteln, beispielsweise wenn Sie uns eine E-Mail senden.\n\nWir sind der festen Überzeugung, dass so wenig Daten wie möglich gespeichert werden sollten, da wir möchten, dass Sie anonym bleiben."
+            "value": "Warren speichert keine Aktivitätsprotokolle und fragt weder nach Namen noch nach E-Mail.\n\nDie Datenschutzerklärung listet die Daten auf, die Warren tatsächlich verarbeitet, etwa für Erstattungen aufbewahrte Zahlungsreferenzen, und die Daten, die du selbst sendest, zum Beispiel in einem Problembericht."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tiene derecho a la privacidad. Por eso nunca guardamos registros de actividad, no pedimos información personal y animamos a realizar pagos anónimos.\n\nEn algunas situaciones, como se detalla en nuestra política de privacidad, podríamos procesar datos personales que usted haya decidido enviarnos, por ejemplo, cuando nos manda un correo electrónico.\n\nNos esforzamos por retener la menor cantidad de datos posible porque queremos que permanezca anónimo."
+            "value": "Warren no guarda registros de actividad y no pide nombre ni correo electrónico.\n\nLa política de privacidad enumera los datos que Warren sí trata, como las referencias de pago conservadas para los reembolsos, y los datos que decides enviar, por ejemplo en un informe de problema."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "شما حق حریم خصوصی دارید. به همین دلیل هرگز گزارش فعالیت ذخیره نمی‌کنیم، اطلاعات شخصی نمی‌خواهیم و پرداخت ناشناس را تشویق می‌کنیم.\n\nدر برخی موقعیت‌ها، همان‌طور که در سیاست حریم خصوصی ما آمده است، ممکن است داده‌های شخصی‌ای را که خودتان انتخاب می‌کنید برای ما بفرستید پردازش کنیم، برای مثال اگر به ما ایمیل بزنید.\n\nما قویاً به نگه‌داشتن کمترین دادهٔ ممکن باور داریم، چون می‌خواهیم ناشناس بمانید."
+            "value": "Warren هیچ گزارش فعالیتی نگه نمی‌دارد و نام یا ایمیل نمی‌خواهد.\n\nسیاست حریم خصوصی داده‌هایی را که Warren واقعاً پردازش می‌کند فهرست کرده است، مانند ارجاع‌های پرداخت که برای بازپرداخت نگه داشته می‌شوند، و داده‌هایی که خودتان ارسال می‌کنید، برای مثال در گزارش مشکل."
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Sinulla on oikeus yksityisyyteen. Tästä syystä emme koskaan tallenna toimintalokeja, emme pyydä henkilötietoja ja kannustamme käyttämään anonyymeja maksutapoja.\n\nJoissakin tilanteissa saatamme käsitellä tietosuojakäytännössämme kuvatulla tavalla henkilötietojasi, joita päätät lähettää meille, jos esimerkiksi lähetät meille sähköpostiviestin.\n\nUskomme vahvasti mahdollisimman pienen tietomäärän säilyttämiseen, koska haluamme sinun pysyvän anonyymina."
+            "value": "Warren ei tallenna toimintalokeja eikä kysy nimeä tai sähköpostiosoitetta.\n\nTietosuojakäytännössä luetellaan tiedot, joita Warren käsittelee, kuten palautuksia varten säilytetyt maksuviitteet, sekä tiedot, jotka itse päätät lähettää, esimerkiksi ongelmaraportissa."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Vous avez droit à la confidentialité. C'est pourquoi nous ne stockons jamais les journaux d'activité, ne demandons pas d'informations personnelles et encourageons les paiements anonymes.\n\nDans certaines situations, de la manière décrite dans notre politique de confidentialité, il est possible que nous traitions des données personnelles que vous choisissez de nous envoyer, par exemple si vous nous envoyez un e-mail.\n\nNous croyons fermement en l'importance de conserver le moins de données possibles, car nous voulons que vous restiez anonyme."
+            "value": "Warren ne conserve aucun journal d’activité et ne demande ni nom ni e-mail.\n\nLa politique de confidentialité liste les données que Warren traite, comme les références de paiement conservées pour les remboursements, et celles que vous choisissez d’envoyer, par exemple dans un signalement de problème."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "La privacy è un tuo diritto. Ecco perché non memorizziamo mai log delle attività, non chiediamo informazioni personali e incoraggiamo i pagamenti anonimi.\n\nIn alcune situazioni, come indicato nella nostra informativa sulla privacy, potremmo trattare i dati personali che scegli di inviare, ad esempio in caso di una tua e-mail.\n\nCrediamo fermamente nell'importanza di archiviare il minor numero possibile di dati perché vogliamo che tu mantenga l'anonimato."
+            "value": "Warren non conserva registri di attività e non chiede né nome né email.\n\nL’informativa sulla privacy elenca i dati che Warren tratta, come i riferimenti di pagamento conservati per i rimborsi, e i dati che scegli di inviare, ad esempio in una segnalazione di problema."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "あなたにはプライバシー保護の権利があります。そのため、当社ではアクティビティログを保存せず、個人情報の提供も求めず、匿名でのお支払いを推奨しています。\n\nプライバシーポリシーに記載されている通り、特定の状況下 (例: 当社へのメールによるお問い合わせ) においてご自身で送信を選択された個人データについては処理を行う可能性があります。\n\n当社では、匿名性を維持するために可能な限り最小限のデータ保持を心がけています。"
+            "value": "Warren はアクティビティログを保存せず、名前やメールアドレスも求めません。\n\nプライバシーポリシーには、返金のために保管する支払い参照番号など Warren が実際に処理するデータと、問題報告などであなたが送ることを選んだデータが記載されています。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "귀하에게는 프라이버시권이 있습니다. 그래서 당사는 절대 활동 로그를 저장하지 않고, 개인 정보를 요구하지 않으며, 익명 결제를 권장합니다.\n\n개인정보 보호정책에서 설명한 바와 같이, 때때로 당사는 사용자가 이메일을 보내는 경우 등 사용자가 전송하기로 선택한 개인 데이터를 처리할 수 있습니다.\n\n당사는 사용자가 익명성을 유지할 수 있도록, 가능한 한 최소한의 데이터만 보관해야 한다고 굳게 믿습니다."
+            "value": "Warren은 활동 로그를 보관하지 않으며 이름이나 이메일을 요구하지 않습니다.\n\n개인정보 처리방침에는 환불을 위해 보관하는 결제 참조 번호처럼 Warren이 실제로 처리하는 데이터와, 문제 신고 등에서 사용자가 보내기로 선택한 데이터가 나와 있습니다."
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "သင့်တွင် ကိုယ်ရေးအချက်အလက်များကို ကာကွယ်ရန် အခွင့်အရေးရှိပါသည်။ ထို့ကြောင့် ကျွန်ုပ်တို့သည် မည်သည့်အခါမျှ သင်၏ လုပ်ဆောင်မှုမှတ်တမ်းများကို သိမ်းဆည်းခြင်းမရှိ ကိုယ်ရေးအချက်အလက်များကို မေးမြန်းခြင်းမရှိဘဲ အမည်ဝှက်၍ ငွေပေးချေမှုများ လုပ်ဆောင်ခြင်းကို အားပေးပါသည်။\n\nကျွန်ုပ်တို့၏ ကိုယ်ပိုင်အချက်အလက် မူဝါဒတွင် ဖော်ပြထားသည့်အတိုင်း အချို့အခြေအနေများတွင် သင်ပေးပို့ရန် ရွေးချယ်သော ကိုယ်ရေးဒေတာကို ဥပမာအားဖြင့် သင်က ကျွန်ုပ်တို့ထံ အီးမေးလ်ပေးပို့ပါက ကျွန်ုပ်တို့က အဆိုပါဒေတာကို စီမံဆောင်ရွက်ပါမည်။\n\nအမည်ဝှက်မှုကို တတ်နိုင်သမျှ အလုံခြုံဆုံးဖြစ်စေရန် ကျွန်ုပ်တို့သည် ဒေတာကို တတ်နိုင်သမျှ အနည်းဆုံးသာ ထိန်းသိမ်းထားခြင်းကို အထူး အားပေးပါသည်။"
+            "value": "Warren သည် လုပ်ဆောင်ချက်မှတ်တမ်းများ မသိမ်းဘဲ အမည် သို့မဟုတ် အီးမေးလ် မတောင်းပါ။\n\nကိုယ်ရေးလုံခြုံမှုမူဝါဒတွင် ငွေပြန်အမ်းရန် သိမ်းထားသော ငွေပေးချေမှုရည်ညွှန်းချက်များကဲ့သို့ Warren လုပ်ဆောင်သည့် ဒေတာများနှင့် ပြဿနာအစီရင်ခံစာကဲ့သို့ သင်ပို့ရန် ရွေးချယ်သော ဒေတာများကို ဖော်ပြထားသည်။"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Du har rett til personvern. Derfor lagrer vi aldri aktivitetslogger, ber ikke om personlig informasjon og oppfordrer til anonyme betalinger.\n\nI enkelte situasjoner, som beskrevet i vår personvernpolicy, kan vi behandle personopplysninger som du velger å sende oss, for eksempel hvis du sender oss en e-post.\n\nVi er overbevist om at det er viktig å lagre så lite data som mulig, fordi vi ønsker at du skal forbli anonym."
+            "value": "Warren lagrer ingen aktivitetslogger og ber verken om navn eller e-post.\n\nPersonvernerklæringen viser hvilke data Warren faktisk behandler, for eksempel betalingsreferanser som lagres for refusjoner, og dataene du selv velger å sende, for eksempel i en problemrapport."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "U hebt recht op privacy. Daarom slaan we nooit activiteitenlogboeken op, vragen we niet om persoonlijke informatie en raden we aan om anoniem te betalen.\n\nZoals beschreven in ons privacybeleid, kunnen we persoonsgegevens verwerken als u ervoor kiest deze te sturen, bijvoorbeeld als u ons een e-mail stuurt.\n\nWij zijn sterk overtuigd van het belang om zo min mogelijk gegevens te bewaren, omdat we willen dat u anoniem blijft."
+            "value": "Warren bewaart geen activiteitenlogs en vraagt niet om naam of e-mailadres.\n\nHet privacybeleid vermeldt welke gegevens Warren wel verwerkt, zoals betalingsreferenties die voor terugbetalingen worden bewaard, en de gegevens die je zelf verstuurt, bijvoorbeeld in een probleemmelding."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Masz prawo do prywatności. Dlatego nigdy nie przechowujemy dzienników aktywności, nie prosimy o podawanie danych osobowych i zachęcamy do dokonywania anonimowych płatności.\n\nW niektórych sytuacjach, zgodnie z naszą polityką prywatności, możemy przetwarzać dane osobowe, które zdecydujesz się nam przesłać, na przykład w wiadomości e-mail.\n\nJesteśmy głęboko przekonani, że należy przechowywać jak najmniej danych, ponieważ zależy nam na zachowaniu Twojej anonimowości."
+            "value": "Warren nie przechowuje logów aktywności i nie prosi o imię ani adres e-mail.\n\nPolityka prywatności wymienia dane, które Warren przetwarza, takie jak referencje płatności przechowywane na potrzeby zwrotów, oraz dane, które sam zdecydujesz się wysłać, na przykład w zgłoszeniu problemu."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tem direito à privacidade. É por isso que nunca armazenamos registos de atividade, não solicitamos informações pessoais e incentivamos pagamentos anónimos.\n\nEm algumas situações, conforme descrito na nossa política de privacidade, podemos processar dados pessoais que decida enviar, por exemplo, se nos enviar um e-mail.\n\nAcreditamos firmemente em reter o mínimo de dados possível, porque queremos que permaneça anónimo."
+            "value": "A Warren não guarda registos de atividade e não pede nome nem e-mail.\n\nA política de privacidade indica os dados que a Warren trata, como as referências de pagamento guardadas para reembolsos, e os dados que decide enviar, por exemplo num relatório de problema."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Aveți dreptul la confidențialitate. De aceea nu stocăm niciodată jurnale de activitate, nu cerem informații personale și încurajăm plățile anonime.\n\nÎn unele situații, conform politicii noastre de confidențialitate, este posibil să prelucrăm date personale pe care alegeți să ni le trimiteți, de exemplu dacă ne scrieți pe e-mail.\n\nCredem cu tărie în păstrarea cât mai puține date posibil, deoarece dorim să rămâneți anonim."
+            "value": "Warren nu păstrează jurnale de activitate și nu cere nici nume, nici e-mail.\n\nPolitica de confidențialitate enumeră datele pe care Warren le prelucrează, precum referințele de plată păstrate pentru rambursări, și datele pe care alegi să le trimiți, de exemplu într-un raport de problemă."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Вы имеете право на конфиденциальность. Поэтому мы никогда не храним журналы активности, не запрашиваем личную информацию и поощряем анонимные платежи.\n\nВ некоторых ситуациях, как указано в нашей политике конфиденциальности, мы можем обрабатывать личные данные, которые вы решили нам отправить, например, написав нам на электронную почту.\n\nМы твердо верим в необходимость хранения как можно меньшего количества данных, потому что хотим, чтобы вы оставались анонимными."
+            "value": "Warren не хранит журналы активности и не просит имя или e-mail.\n\nВ политике конфиденциальности перечислены данные, которые Warren всё же обрабатывает, например платёжные ссылки, хранящиеся для возвратов, и данные, которые вы решаете отправить сами, например в сообщении о проблеме."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Du har rätt till ett privatliv och därför lagrar vi aldrig några aktivitetsloggar, ber aldrig om några personuppgifter samt uppmuntrar till anonyma betalningar.\n\nI vissa situationer kan vi behandla personuppgifter som du väljer att skicka in, till exempel om du skickar e-postmeddelanden till oss. Detta anges i sekretesspolicyn.\n\nVi tror starkt på att lagra så lite data som möjligt eftersom vi vill att du ska förbli anonym."
+            "value": "Warren sparar inga aktivitetsloggar och ber varken om namn eller e-post.\n\nIntegritetspolicyn listar de uppgifter som Warren faktiskt behandlar, till exempel betalningsreferenser som sparas för återbetalningar, och de uppgifter du själv väljer att skicka, till exempel i en problemrapport."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "คุณมีสิทธิ์ในความเป็นส่วนตัว นั่นคือเหตุผลที่เราไม่เคยเก็บบันทึกกิจกรรม ไม่ขอข้อมูลส่วนบุคคล และสนับสนุนการชำระเงินแบบไม่ระบุตัวตน\n\nในบางกรณี ตามที่ระบุไว้ในนโยบายความเป็นส่วนตัวของเรา เราอาจประมวลผลข้อมูลส่วนบุคคลที่คุณเลือกส่ง เช่น หากคุณส่งอีเมลถึงเรา\n\nเราเชื่อมั่นอย่างยิ่งในการเก็บรักษาข้อมูลให้น้อยที่สุดเท่าที่จะทำได้ เพราะเราต้องการให้คุณยังคงไม่เปิดเผยตัวตน"
+            "value": "Warren ไม่เก็บบันทึกกิจกรรม และไม่ขอชื่อหรืออีเมล\n\nนโยบายความเป็นส่วนตัวระบุข้อมูลที่ Warren ประมวลผล เช่น เลขอ้างอิงการชำระเงินที่เก็บไว้เพื่อการคืนเงิน และข้อมูลที่คุณเลือกส่งเอง เช่น ในรายงานปัญหา"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Gizlilik hakkınız olduğu için hiçbir zaman etkinlik kayıtlarını saklamıyoruz, kişisel bilgilerinizi istemiyoruz ve anonim ödemeleri teşvik ediyoruz.\n\nGizlilik politikamızda belirtildiği gibi, bazı durumlarda (ör. bize e-posta gönderdiğinizde) göndermeyi seçtiğiniz kişisel verileri işleyebiliriz.\n\nAnonim kalmanızı istediğimiz için mümkün olduğunca az veri saklıyoruz."
+            "value": "Warren etkinlik günlüğü tutmaz ve ad ya da e-posta istemez.\n\nGizlilik politikası, Warren’ın işlediği verileri, örneğin iadeler için saklanan ödeme referanslarını, ve sizin göndermeyi seçtiğiniz verileri, örneğin bir sorun bildiriminde, listeler."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ви маєте право на конфіденційність. Тому ми не зберігаємо журналів активності, не просимо надати персональні дані й заохочуємо анонімні платежі.\n\nУ деяких ситуаціях, указаних у нашій політиці конфіденційності, ми можемо обробляти персональні дані, які ви вирішили нам надіслати, наприклад, написавши нам лист.\n\nНаша позиція, зберігати мінімум даних, щоб гарантувати вашу анонімність."
+            "value": "Warren не зберігає журнали активності й не просить імені чи e-mail.\n\nУ політиці конфіденційності перелічено дані, які Warren усе ж обробляє, наприклад платіжні посилання, що зберігаються для повернень, і дані, які ви самі вирішуєте надіслати, наприклад у повідомленні про проблему."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "您拥有隐私权。因此，我们绝不存储活动日志、不要求提供个人信息，并鼓励匿名付款。\n\n如我们的隐私政策所述，在某些情况下，我们可能会处理您选择发送的个人数据，例如当您给我们发送电子邮件时。\n\n我们坚信应尽可能少地保留数据，因为我们希望您能保持匿名。"
+            "value": "Warren 不保留活动日志，也不要求提供姓名或电子邮件。\n\n隐私政策列出了 Warren 确实会处理的数据，例如为退款而保留的付款参考号，以及你选择发送的数据，例如问题报告中的内容。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "您保有隱私權。因此，我們絕不儲存活動記錄、不會索取個人資訊，並且鼓勵使用匿名付款。\n\n在某些情況下，如我們的隱私權政策所述，我們可能會處理您選擇傳送的個人資料，例如您寄給我們的電子郵件。\n\n因為我們希望您維持匿名，所以會盡量減少保留資料。"
+            "value": "Warren 不保留活動日誌，也不要求提供姓名或電子郵件。\n\n隱私權政策列出了 Warren 確實會處理的資料，例如為退款而保留的付款參考號碼，以及你選擇傳送的資料，例如問題回報中的內容。"
           }
         }
       }
