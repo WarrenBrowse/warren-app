@@ -47,6 +47,9 @@ struct IssuerState {
     /// past the quarter of an hour the SDK may move a stamp forward by.
     clock_ahead_secs: Mutex<Option<u64>>,
     issue_calls: AtomicUsize,
+    /// Every request that reached the transport, the failed ones included:
+    /// how often the mint knocks, whatever the answer.
+    requests: AtomicUsize,
     /// warren-api's issuance ledger: the batch that took each epoch. The SAME
     /// batch is served again with freshly minted tags, any other one is
     /// refused `already_issued`.
@@ -70,12 +73,17 @@ impl FakeIssuer {
             fail_transport: AtomicBool::new(false),
             clock_ahead_secs: Mutex::new(None),
             issue_calls: AtomicUsize::new(0),
+            requests: AtomicUsize::new(0),
             ledger: Mutex::new(HashMap::new()),
         }))
     }
 
     fn issue_calls(&self) -> usize {
         self.0.issue_calls.load(Ordering::SeqCst)
+    }
+
+    fn requests(&self) -> usize {
+        self.0.requests.load(Ordering::SeqCst)
     }
 
     fn directory(&self) -> TokenIssuerDirectory {
@@ -131,6 +139,7 @@ impl FakeIssuer {
 
 impl HttpTransport for FakeIssuer {
     async fn execute(&self, request: HttpRequest) -> Result<HttpResponse, TransportError> {
+        self.0.requests.fetch_add(1, Ordering::SeqCst);
         if self.0.fail_transport.load(Ordering::SeqCst) {
             return Err(TransportError::Connect("fake transport down".to_owned()));
         }
@@ -321,33 +330,94 @@ async fn first_map_request(credential: Option<CredentialSource>) -> Vec<u8> {
     buf[..n].to_vec()
 }
 
+/// Forum topic 226: a desktop daemon mints at start, while its kill switch
+/// still blocks the API, so that first round always failed. Waiting the whole
+/// ten-minute period left a fresh install's port forward refused for up to
+/// twenty minutes. A lost round is retried within seconds, like the session
+/// token mint's (`warren-app-routes` `refresh_forever`).
 #[tokio::test(start_paused = true)]
-async fn the_batch_is_topped_up_on_the_ten_minute_cadence_and_not_before() {
+async fn a_round_lost_while_the_api_is_unreachable_is_retried_within_seconds() {
     let issuer = FakeIssuer::new(&[100]);
-    // The API is down when the wallet is first seen, so the immediate tick
-    // stocks nothing and the request would go out bare.
     issuer.0.fail_transport.store(true, Ordering::SeqCst);
     let (_t, now) = clock(NOW);
     let mint = EntitlementMint::new(now);
     let rule = mint.rule_credential([1; 32], 0, key(), || client(&issuer));
     let source = rule.provider();
-    tokio::task::yield_now().await;
+    wait_for(|| issuer.requests() >= 1).await;
     assert!(source().is_none(), "nothing minted yet");
 
-    // The API heals, but the cadence is coarse on purpose: nothing is fetched
-    // again before the interval elapses.
     issuer.0.fail_transport.store(false, Ordering::SeqCst);
-    tokio::time::advance(Duration::from_secs(599)).await;
-    tokio::task::yield_now().await;
-    assert_eq!(
-        issuer.issue_calls(),
-        0,
-        "the mint must not retry before the interval elapses"
-    );
-
-    tokio::time::advance(Duration::from_secs(1)).await;
+    tokio::time::advance(super::FIRST_RETRY).await;
     wait_for(|| issuer.issue_calls() >= 1).await;
-    assert!(source().is_some(), "the tick must stock the batch");
+    for _ in 0..50 {
+        tokio::task::yield_now().await;
+    }
+    assert!(source().is_some(), "the retry must stock the batch");
+}
+
+#[tokio::test(start_paused = true)]
+async fn retries_after_failures_back_off_up_to_the_refresh_interval() {
+    let issuer = FakeIssuer::new(&[100]);
+    issuer.0.fail_transport.store(true, Ordering::SeqCst);
+    let (_t, now) = clock(NOW);
+    let mint = EntitlementMint::new(now);
+    let _rule = mint.rule_credential([1; 32], 0, key(), || client(&issuer));
+    wait_for(|| issuer.requests() >= 1).await;
+    let mut rounds = issuer.requests();
+    let mut wait = super::FIRST_RETRY;
+    for _ in 0..8 {
+        tokio::time::advance(wait - Duration::from_secs(1)).await;
+        tokio::task::yield_now().await;
+        assert_eq!(issuer.requests(), rounds, "no round before {wait:?}");
+        tokio::time::advance(Duration::from_secs(1)).await;
+        wait_for(|| issuer.requests() > rounds).await;
+        rounds = issuer.requests();
+        wait = (wait * 2).min(super::REFRESH_INTERVAL);
+    }
+    assert_eq!(
+        wait,
+        super::REFRESH_INTERVAL,
+        "the backoff is capped at the period"
+    );
+}
+
+#[tokio::test(start_paused = true)]
+async fn a_round_that_succeeds_waits_the_whole_refresh_interval() {
+    // Issuance timing must not track session timing: once stocked, the mint
+    // stays on its coarse period.
+    let issuer = FakeIssuer::new(&[100]);
+    let (_t, now) = clock(NOW);
+    let mint = EntitlementMint::new(now);
+    let _rule = mint.rule_credential([1; 32], 0, key(), || client(&issuer));
+    wait_for(|| issuer.issue_calls() >= 1).await;
+    for _ in 0..50 {
+        tokio::task::yield_now().await;
+    }
+    let rounds = issuer.requests();
+
+    tokio::time::advance(super::REFRESH_INTERVAL - Duration::from_secs(1)).await;
+    tokio::task::yield_now().await;
+    assert_eq!(issuer.requests(), rounds, "nothing before the interval");
+    tokio::time::advance(Duration::from_secs(1)).await;
+    wait_for(|| issuer.requests() > rounds).await;
+}
+
+#[tokio::test(start_paused = true)]
+async fn a_banned_wallet_is_not_asked_again_before_the_interval() {
+    let issuer = FakeIssuer::new(&[100]);
+    issuer.0.ban_wallet.store(true, Ordering::SeqCst);
+    let (_t, now) = clock(NOW);
+    let mint = EntitlementMint::new(now).with_ban_sink(Arc::new(|_, _| true));
+    let _rule = mint.rule_credential([1; 32], 0, key(), || client(&issuer));
+    wait_for(|| issuer.issue_calls() >= 1).await;
+    for _ in 0..50 {
+        tokio::task::yield_now().await;
+    }
+    let rounds = issuer.requests();
+
+    tokio::time::advance(super::REFRESH_INTERVAL - Duration::from_secs(1)).await;
+    tokio::task::yield_now().await;
+    assert_eq!(issuer.requests(), rounds, "a ban is not retried early");
 }
 
 #[tokio::test(start_paused = true)]

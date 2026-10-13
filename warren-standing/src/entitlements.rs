@@ -169,6 +169,13 @@ impl<T: HttpTransport + 'static> SlotBatch for MintedSlots<T> {
 /// How often the batch is topped up, the session-token mint's cadence.
 pub const REFRESH_INTERVAL: Duration = Duration::from_secs(600);
 
+/// The first wait after a lost round, doubled at each further loss up to
+/// [`REFRESH_INTERVAL`]: the session-token mint's schedule. A desktop daemon
+/// mints at start, while its kill switch still blocks the API, so its first
+/// round is lost by design and must not cost a fresh install ten minutes of
+/// refused port forwarding.
+pub const FIRST_RETRY: Duration = Duration::from_secs(15);
+
 /// How long a mobile tunnel's first mapping request waits for the mint before
 /// going out bare ([`await_first_credential`]). Sized off the observed
 /// cold-start cost of the v7 token mint on Android's protected transport
@@ -305,9 +312,11 @@ impl<T: HttpTransport + 'static> EntitlementMint<T> {
     }
 }
 
-/// The first tick fires immediately (stock as soon as a wallet is seen), then
-/// every [`REFRESH_INTERVAL`]. The manager only mints epochs it has not
-/// attempted yet, so in steady state a tick costs one unsigned directory
+/// The first round runs immediately (stock as soon as a wallet is seen), then
+/// every [`REFRESH_INTERVAL`] after a round that went through or that the
+/// issuer answered with a ban, and from [`FIRST_RETRY`] doubling up to the
+/// interval after any other failure. The manager only mints epochs it has not
+/// attempted yet, so in steady state a round costs one unsigned directory
 /// fetch.
 async fn refresh_forever<T: HttpTransport + 'static>(
     manager: Arc<PortEntitlementManager<T>>,
@@ -317,13 +326,12 @@ async fn refresh_forever<T: HttpTransport + 'static>(
     mut activity: Option<tokio::sync::watch::Receiver<bool>>,
     shortage: Arc<Shortage>,
 ) {
-    let mut tick = tokio::time::interval(REFRESH_INTERVAL);
+    let mut retry = FIRST_RETRY;
     // Whether the batch served elsewhere is already reported: the state lasts
     // at least the whole epoch, and a tick every ten minutes must not repeat
     // it. Reported again once it has cleared and comes back.
     let mut reported_elsewhere = false;
     loop {
-        tick.tick().await;
         if let Some(activity) = activity.as_mut()
             && !*activity.borrow_and_update()
         {
@@ -335,7 +343,7 @@ async fn refresh_forever<T: HttpTransport + 'static>(
         let n = now();
         let outcome = manager.refresh_auto(n).await;
         shortage.on_refresh(&outcome);
-        match outcome {
+        let lost = match outcome {
             // Presence only, never the credential: a refresh that answered 200
             // and stocked nothing (the issuer already served this account this
             // epoch, or refused it) is otherwise indistinguishable from one
@@ -348,6 +356,7 @@ async fn refresh_forever<T: HttpTransport + 'static>(
                          older release?); every forward is refused until the epoch ends"
                     );
                 }
+                false
             }
             Ok(()) => {
                 reported_elsewhere = false;
@@ -355,16 +364,19 @@ async fn refresh_forever<T: HttpTransport + 'static>(
                     "Warren port-entitlement refresh ok (slot stocked={})",
                     manager.credential_for_slot(PROBE_SLOT, n).is_some()
                 );
+                false
             }
             // A ban refusal goes to the standing, which blocks the tunnel;
             // anything else is transient, the batch keeps vending what it
-            // already holds and the next tick retries. The error chain carries
+            // already holds and the round is retried soon. The error chain carries
             // no credential or seed material.
             Err(TokenClientError::Api(ClientError::ClockSkew { offset_secs })) => {
                 log::warn!(
                     "Warren port-entitlement refresh refused for this device's clock \
                      (server minus device: {offset_secs:?} s); keeping existing"
                 );
+                // The next request is stamped from the refusal's clock.
+                true
             }
             Err(e) => {
                 if ban_sink
@@ -372,11 +384,23 @@ async fn refresh_forever<T: HttpTransport + 'static>(
                     .is_some_and(|sink| sink(&wallet_pubkey, &e))
                 {
                     log::warn!("Warren port-entitlement refresh refused: the account is banned");
+                    false
                 } else {
                     log::warn!("Warren port-entitlement refresh failed (keeping existing): {e}");
+                    true
                 }
             }
-        }
+        };
+        // A ban is an answer, never retried early; any other loss is.
+        let wait = if lost {
+            let wait = retry;
+            retry = (retry * 2).min(REFRESH_INTERVAL);
+            wait
+        } else {
+            retry = FIRST_RETRY;
+            REFRESH_INTERVAL
+        };
+        tokio::time::sleep(wait).await;
     }
 }
 
