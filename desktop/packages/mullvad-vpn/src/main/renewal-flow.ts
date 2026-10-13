@@ -1,6 +1,6 @@
 import { WarrenAccountBan } from '../shared/daemon-rpc-types';
 import log from '../shared/logging';
-import { RenewalUiState } from '../shared/renewal';
+import { RenewalNotice, RenewalPrice, RenewalUiState } from '../shared/renewal';
 import { mintPurchaseClaim, pullSecretHash, PurchaseClaim } from './purchase-claim';
 
 // Client-side auto-renewal (warren-core doc 65). The recurring state
@@ -11,6 +11,8 @@ import { mintPurchaseClaim, pullSecretHash, PurchaseClaim } from './purchase-cla
 // regular purchase flow with a fresh purchase claim (wpid + pull secret);
 // the daemon redeems the voucher without ever learning about the renewal.
 
+export type { RenewalNotice, RenewalPrice };
+
 export const RENEWAL_PERIOD_SECS = 30 * 86_400;
 // Fire window: from 3 days before expiry until expiry.
 export const RENEWAL_WINDOW_MS = 3 * 86_400_000;
@@ -20,6 +22,10 @@ export const RENEWAL_WINDOW_MS = 3 * 86_400_000;
 // charge time), so the notice for the next cycle can always be shown
 // with the full monthly lead. No compliant notice = no charge, ever.
 export const RENEWAL_NOTICE_LEAD_MS = 30 * 86_400_000;
+// ...and is never shown earlier than this: a notice of the end of a 12-month
+// commitment shown at the purchase would not be timely (GEO 111/2011 art. 50,
+// Lexter memo para 36(e)).
+export const RENEWAL_NOTICE_EARLIEST_MS = 45 * 86_400_000;
 // The legal pre-charge reminder leads the charge by at least this much.
 export const RENEWAL_REMINDER_LEAD_MS = 6 * 3_600_000;
 // Absolute floor on that lead. A window entered with less runway than
@@ -51,6 +57,12 @@ export interface RenewalState {
   // forwarded to the checkout as dispute evidence.
   noticedPeriod?: number;
   noticeShownAtMs?: number;
+  // Monthly price announced by that notice: the ceiling of the period's
+  // charge, since a higher price must be announced a month ahead.
+  noticedMonthlyCents?: number;
+  // When the mandate was adopted: the opt-in floor of the first notice holds
+  // only for a purchase recent enough to count as the notice itself.
+  adoptedAtMs?: number;
   // Last successful renewal charge (receipt display).
   lastChargeMs?: number;
   // Charge instant for the current period, drawn ONCE (reminder lead +
@@ -99,15 +111,23 @@ export interface RenewalFlowDelegate {
   // that opted in, even if the login changed while the charge request
   // was in flight.
   trackRenewalPurchase(claim: PurchaseClaim, accountTag: string): void;
+  // Current monthly price and best tariff, undefined when unknown.
+  currentPrice(currency: string): Promise<RenewalPrice | undefined>;
   notifyReminder(): void;
-  // The 30-day pre-renewal notice: "renews on <date>".
-  notifyUpcoming(renewsAtMs: number): void;
+  // The 30-day pre-renewal notice: date, amount, best tariff, how to cancel.
+  notifyUpcoming(notice: RenewalNotice): void;
+  // A price raised after this period's notice: the period is not charged.
+  notifyPriceIncreaseSkipped(notice: RenewalNotice): void;
   // Post-charge receipt with cancellation instructions.
   notifyReceipt(): void;
   notifyActionRequired(): void;
   notifyFailure(): void;
   notifyDisabled(): void;
   notifyStateChange(state: RenewalUiState | undefined): void;
+}
+
+function currencyOf(state: RenewalState): string {
+  return (state.currency ?? 'EUR').toUpperCase();
 }
 
 export function periodOfExpiry(expiryIso: string): number {
@@ -174,12 +194,57 @@ export async function fetchRenewalHandoff(
   }
 }
 
+const MONTH_SECS = 2_592_000;
+
+// The monthly price of `currency` and the lowest monthly rate any plan of it
+// offers, read from warren-api's public ladder (`GET /v1/pricing`), the
+// source the checkout charges from. No identity is sent: the ladder is public.
+// `undefined` on any failure or for a currency without a monthly tier.
+export async function fetchRenewalPrice(
+  apiUrl: string,
+  currency: string,
+  fetchFn: (url: string, init?: RequestInit) => Promise<Response> = fetch,
+): Promise<RenewalPrice | undefined> {
+  try {
+    const res = await fetchFn(`${apiUrl}v1/pricing`);
+    if (!res.ok) {
+      return undefined;
+    }
+    const body = (await res.json()) as { tiers?: unknown };
+    if (!Array.isArray(body.tiers)) {
+      return undefined;
+    }
+    const tiers = body.tiers
+      .filter((t): t is Record<string, unknown> => typeof t === 'object' && t !== null)
+      .filter(
+        (t) =>
+          t['currency'] === currency &&
+          typeof t['min_amount_units'] === 'number' &&
+          typeof t['duration_secs'] === 'number' &&
+          t['duration_secs'] >= MONTH_SECS,
+      )
+      .map((t) => ({
+        amount: t['min_amount_units'] as number,
+        secs: t['duration_secs'] as number,
+      }));
+    const monthly = tiers.find((t) => t.secs === MONTH_SECS);
+    if (monthly === undefined) {
+      return undefined;
+    }
+    const best = Math.min(...tiers.map((t) => Math.round(t.amount / (t.secs / MONTH_SECS))));
+    return { monthlyCents: monthly.amount, bestMonthlyCents: best };
+  } catch {
+    return undefined;
+  }
+}
+
 export default class RenewalFlow {
   private timer?: NodeJS.Timeout;
   private fireTimer?: NodeJS.Timeout;
   private inFlight = false;
   private cancelInFlight = false;
   private pausedByBan = false;
+  private price?: RenewalPrice;
 
   public constructor(
     private delegate: RenewalFlowDelegate,
@@ -194,9 +259,9 @@ export default class RenewalFlow {
   // Called at startup and on login: arms the periodic recheck.
   public resume(): void {
     if (this.timer === undefined) {
-      this.timer = setInterval(() => this.maybeSchedule(), RENEWAL_RECHECK_INTERVAL_MS);
+      this.timer = setInterval(() => void this.recheck(), RENEWAL_RECHECK_INTERVAL_MS);
     }
-    this.maybeSchedule();
+    void this.recheck();
   }
 
   public dispose(): void {
@@ -221,6 +286,7 @@ export default class RenewalFlow {
     if (!handoff?.customerId || !handoff.renewalToken || !handoff.months) {
       return;
     }
+    const adoptedAtMs = Date.now();
     this.store.set({
       customerId: handoff.customerId,
       renewalToken: handoff.renewalToken,
@@ -237,9 +303,11 @@ export default class RenewalFlow {
       // by the 20-day dedup (already_renewed).
       lastRenewedPeriod: undefined,
       attempt: 0,
+      adoptedAtMs,
     });
     log.info('Auto-renewal mandate adopted');
     this.delegate.notifyStateChange(this.uiState);
+    await this.refreshPrice();
     this.maybeSchedule();
   }
 
@@ -296,25 +364,45 @@ export default class RenewalFlow {
       return;
     }
     let current = state;
-    if (current.noticedPeriod !== period) {
-      // On the FIRST cycle of the mandate the recorded instant is
-      // floored at expiry - lead: the opt-in disclosure at checkout
-      // (durable receipt carrying the renewal terms) necessarily
-      // precedes the credit that produced this expiry, and
-      // expiry - lead >= credit time whatever the prior balance was,
-      // so the floor never overclaims the real lead. Without it a
-      // fresh 1-month plan could never pass the gate (adopt runs
-      // seconds after the credit). Later cycles are stamped at wall
-      // clock only: their notice proof must be a real display instant.
-      const shownAt =
-        current.noticedPeriod === undefined
-          ? Math.min(now, expiryMs - RENEWAL_NOTICE_LEAD_MS)
-          : now;
+    if (current.noticedPeriod !== period && now >= expiryMs - RENEWAL_NOTICE_EARLIEST_MS) {
+      // On the FIRST cycle of a mandate adopted inside the notice window
+      // the recorded instant is floored at expiry - lead: the opt-in
+      // disclosure at checkout (durable receipt carrying the renewal
+      // terms) necessarily precedes the credit that produced this expiry,
+      // and expiry - lead >= credit time whatever the prior balance was,
+      // so the floor never overclaims the real lead. Without it a fresh
+      // 1-month plan could never pass the gate (adopt runs seconds after
+      // the credit). A purchase older than the window is no timely notice,
+      // so a long plan and every later cycle are stamped at wall clock
+      // only: their notice proof must be a real display instant.
+      const floored =
+        current.noticedPeriod === undefined &&
+        (current.adoptedAtMs ?? 0) >= expiryMs - RENEWAL_NOTICE_EARLIEST_MS;
+      const shownAt = floored ? Math.min(now, expiryMs - RENEWAL_NOTICE_LEAD_MS) : now;
       if (shownAt + RENEWAL_NOTICE_LEAD_MS <= expiryMs) {
-        this.delegate.notifyUpcoming(expiryMs);
-        current = { ...current, noticedPeriod: period, noticeShownAtMs: shownAt };
+        const notice = this.notice(current, expiryMs, shownAt);
+        this.delegate.notifyUpcoming(notice);
+        current = {
+          ...current,
+          noticedPeriod: period,
+          noticeShownAtMs: shownAt,
+          noticedMonthlyCents: notice.monthlyCents,
+        };
         this.persist(current);
       }
+    } else if (
+      current.noticedPeriod === period &&
+      current.noticedMonthlyCents !== undefined &&
+      this.price !== undefined &&
+      this.price.monthlyCents > current.noticedMonthlyCents &&
+      now + RENEWAL_NOTICE_LEAD_MS <= expiryMs
+    ) {
+      // A raise still a full lead away from the renewal date is announced
+      // now, with the way out, and becomes the period's new ceiling.
+      const notice = this.notice(current, expiryMs, now, current.noticedMonthlyCents);
+      this.delegate.notifyUpcoming(notice);
+      current = { ...current, noticeShownAtMs: now, noticedMonthlyCents: notice.monthlyCents };
+      this.persist(current);
     }
 
     const windowStart = expiryMs - RENEWAL_WINDOW_MS;
@@ -418,10 +506,26 @@ export default class RenewalFlow {
       return;
     }
 
+    this.inFlight = true;
+    // A price raised after this period's notice was never announced a month
+    // ahead: the period is skipped rather than charged at the new price.
+    await this.refreshPrice();
+    if (this.eligibleState() === undefined) {
+      // Turned off (or the login changed) while the price was fetched.
+      this.inFlight = false;
+      return;
+    }
+    const ceiling = state.noticedMonthlyCents;
+    if (ceiling !== undefined && this.price !== undefined && this.price.monthlyCents > ceiling) {
+      this.inFlight = false;
+      this.persist({ ...state, scheduledFireMs: undefined });
+      this.delegate.notifyPriceIncreaseSkipped(this.notice(state, expiryMs, Date.now(), ceiling));
+      return;
+    }
+
     // The checkout binds the cycle's purchase to the pull secret's hash
     // before it charges; the secret itself stays here for the pull.
     const claim = mintPurchaseClaim();
-    this.inFlight = true;
     let outcome: RenewOutcome;
     try {
       outcome = await this.delegate.requestRenew({
@@ -432,10 +536,12 @@ export default class RenewalFlow {
         // Decision 12.8: renewal cycles are always monthly, whatever
         // the initial plan bought.
         months: 1,
-        currency: (state.currency ?? 'EUR').toUpperCase(),
+        currency: currencyOf(state),
         period,
         attempt: state.attempt,
         notice_shown_at: Math.floor((state.noticeShownAtMs ?? 0) / 1000),
+        // The announced monthly price: the checkout refuses to charge above it.
+        ...(ceiling !== undefined ? { max_amount_cents: ceiling } : {}),
       });
     } catch (e) {
       log.warn(`Renewal request failed: ${(e as Error).message}`);
@@ -451,7 +557,8 @@ export default class RenewalFlow {
     // subsequent renewal legally noticeable without an email channel.
     const nextExpiryMs = expiryMs + RENEWAL_PERIOD_SECS * 1000;
     switch (outcome) {
-      case 'succeeded':
+      case 'succeeded': {
+        const next = this.notice(state, nextExpiryMs, now);
         this.persist({
           ...state,
           lastRenewedPeriod: period,
@@ -460,17 +567,20 @@ export default class RenewalFlow {
           lastChargeMs: now,
           noticedPeriod: period + 1,
           noticeShownAtMs: now,
+          noticedMonthlyCents: next.monthlyCents,
         });
         this.delegate.notifyReceipt();
-        this.delegate.notifyUpcoming(nextExpiryMs);
+        this.delegate.notifyUpcoming(next);
         // The regular purchase machinery polls, redeems and lets the
         // daemon announce the added time. The mandate's tag pins the
         // voucher to the opted-in account even if the login changed
         // while the request was in flight.
         this.delegate.trackRenewalPurchase(claim, state.accountTag);
         break;
-      case 'already_renewed':
+      }
+      case 'already_renewed': {
         // Another device holding the same restored state won the race.
+        const next = this.notice(state, nextExpiryMs, now);
         this.persist({
           ...state,
           lastRenewedPeriod: period,
@@ -478,9 +588,11 @@ export default class RenewalFlow {
           scheduledFireMs: undefined,
           noticedPeriod: period + 1,
           noticeShownAtMs: now,
+          noticedMonthlyCents: next.monthlyCents,
         });
-        this.delegate.notifyUpcoming(nextExpiryMs);
+        this.delegate.notifyUpcoming(next);
         break;
+      }
       case 'requires_user_action':
         this.persist({ ...state, attempt: state.attempt + 1, scheduledFireMs: now + 86_400_000 });
         this.delegate.notifyActionRequired();
@@ -569,5 +681,60 @@ export default class RenewalFlow {
       clearTimeout(this.fireTimer);
       this.fireTimer = undefined;
     }
+  }
+
+  // Refresh the price the notices announce, then re-evaluate. The schedule
+  // runs once before the fetch too, so a recheck never waits on the network.
+  private async recheck(): Promise<void> {
+    this.maybeSchedule();
+    if (await this.refreshPrice()) {
+      this.maybeSchedule();
+    }
+  }
+
+  private async refreshPrice(): Promise<boolean> {
+    const state = this.eligibleState();
+    if (!state) {
+      return false;
+    }
+    let price: RenewalPrice | undefined;
+    try {
+      price = await this.delegate.currentPrice(currencyOf(state));
+    } catch {
+      price = undefined;
+    }
+    if (price === undefined) {
+      return false;
+    }
+    this.price = price;
+    return true;
+  }
+
+  // The monthly price a notice announces: the live one when known, else the
+  // price the mandate was bought at.
+  private monthlyCents(state: RenewalState): number | undefined {
+    if (this.price !== undefined) {
+      return this.price.monthlyCents;
+    }
+    return state.priceCents !== undefined && state.months > 0
+      ? Math.round(state.priceCents / state.months)
+      : undefined;
+  }
+
+  private notice(
+    state: RenewalState,
+    renewsAtMs: number,
+    shownAtMs: number,
+    previousMonthlyCents?: number,
+  ): RenewalNotice {
+    const monthlyCents = this.monthlyCents(state);
+    return {
+      renewsAtMs,
+      shownAtMs,
+      currency: currencyOf(state),
+      monthlyCents,
+      bestMonthlyCents: this.price?.bestMonthlyCents ?? monthlyCents,
+      previousMonthlyCents,
+    };
   }
 }

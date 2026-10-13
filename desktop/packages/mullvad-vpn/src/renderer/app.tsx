@@ -538,6 +538,8 @@ export default class AppRenderer {
   public buyCredit = (): Promise<void> => IpcRendererEventChannel.account.buyCredit();
 
   public disableRenewal = (): Promise<void> => IpcRendererEventChannel.account.disableRenewal();
+  public openRenewalNotice = (id: string): Promise<void> =>
+    IpcRendererEventChannel.account.openRenewalNotice(id);
   public checkPendingPurchases = (): Promise<void> =>
     IpcRendererEventChannel.account.checkPendingPurchases();
 

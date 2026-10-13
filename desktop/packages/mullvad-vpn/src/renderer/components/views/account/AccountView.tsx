@@ -92,12 +92,35 @@ function SubscriptionCard() {
   );
 }
 
+// One archived pre-renewal notice, opened as a PDF by the system viewer.
+function RenewalNoticeButton(props: {
+  id: string;
+  shownAtMs: number;
+  onOpen: (id: string) => Promise<void>;
+}) {
+  const { id, shownAtMs, onOpen } = props;
+  const open = useCallback(() => void onOpen(id), [onOpen, id]);
+  return (
+    <Button width="fit" onClick={open}>
+      <Button.Text>
+        {sprintf(
+          // TRANSLATORS: Opens one archived renewal notice.
+          // TRANSLATORS: Available placeholder:
+          // TRANSLATORS: %(date)s - the date the notice was issued
+          messages.pgettext('account-view', 'Notice of %(date)s'),
+          { date: new Date(shownAtMs).toLocaleDateString() },
+        )}
+      </Button.Text>
+    </Button>
+  );
+}
+
 // Device-held auto-renewal mandate (warren-core doc 65): display data pushed by the
 // main process, turn-off is one click with no extra confirmation
 // (anti-subscription-trap posture: cancelling must be effortless).
 function RenewalCard() {
   const renewalState = useSelector((state) => state.account.renewalState);
-  const { disableRenewal } = useAppContext();
+  const { disableRenewal, openRenewalNotice } = useAppContext();
   const [disabling, setDisabling] = useState(false);
   const onDisable = useCallback(async () => {
     setDisabling(true);
@@ -177,6 +200,24 @@ function RenewalCard() {
           <Text variant="labelTiny" color="whiteAlpha60">
             {lastCharge}
           </Text>
+        )}
+        {renewalState.notices !== undefined && renewalState.notices.length > 0 && (
+          <FlexColumn gap="tiny">
+            <Text variant="labelTiny" color="whiteAlpha60">
+              {
+                // TRANSLATORS: Label of the list of archived renewal notices (PDF files).
+                messages.pgettext('account-view', 'Renewal notices')
+              }
+            </Text>
+            {renewalState.notices.map((notice) => (
+              <RenewalNoticeButton
+                key={notice.id}
+                id={notice.id}
+                shownAtMs={notice.shownAtMs}
+                onOpen={openRenewalNotice}
+              />
+            ))}
+          </FlexColumn>
         )}
       </FlexColumn>
     </Card>

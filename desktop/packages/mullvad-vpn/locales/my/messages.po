@@ -6254,3 +6254,51 @@ msgstr "%(applicationName)s သည် ပြဿနာဖြစ်စေသဖြ
 msgctxt "split-tunneling-view"
 msgid "Flatpak and Snap apps cannot be opened locked to the VPN"
 msgstr "Flatpak နှင့် Snap အက်ပ်များကို VPN တွင် သော့ခတ်ပြီး ဖွင့်၍ မရပါ"
+
+msgctxt "account-view"
+msgid "Notice of %(date)s"
+msgstr "%(date)s အသိပေးချက်"
+
+msgctxt "account-view"
+msgid "Renewal notices"
+msgstr "သက်တမ်းတိုး အသိပေးချက်များ"
+
+msgctxt "notifications"
+msgid "Amount charged: %(price)s, VAT included."
+msgstr "ကောက်ခံမည့်ပမာဏ: %(price)s (VAT ပါဝင်ပြီး)။"
+
+msgctxt "notifications"
+msgid "Automatic renewal notice"
+msgstr "အလိုအလျောက် သက်တမ်းတိုးခြင်း အသိပေးချက်"
+
+msgctxt "notifications"
+msgid "Best monthly rate Warren offers today: %(price)s."
+msgstr "ယနေ့ Warren ပေးသော အကောင်းဆုံး လစဉ်နှုန်း: %(price)s။"
+
+msgctxt "notifications"
+msgid "Issued on %(date)s"
+msgstr "ထုတ်ပြန်သည့်ရက်: %(date)s"
+
+msgctxt "notifications"
+msgid "The monthly price changed after your renewal notice, so this renewal was not charged. Your Warren time ends around %(date)s unless you buy more."
+msgstr "သင့်သက်တမ်းတိုး အသိပေးချက်ပြီးနောက် လစဉ်စျေးနှုန်း ပြောင်းသွားသဖြင့် ဤသက်တမ်းတိုးခြင်းကို ငွေမကောက်ခံပါ။ ထပ်မဝယ်ပါက သင့် Warren အချိန်သည် %(date)s ဝန်းကျင်တွင် ကုန်ဆုံးမည်။"
+
+msgctxt "notifications"
+msgid "The monthly price changes from %(previous)s to %(price)s, VAT included, from this renewal."
+msgstr "ဤသက်တမ်းတိုးခြင်းမှစ၍ လစဉ်စျေးနှုန်းသည် %(previous)s မှ %(price)s (VAT ပါဝင်ပြီး) သို့ ပြောင်းမည်။"
+
+msgctxt "notifications"
+msgid "The monthly price of your automatic renewal changes from %(previous)s to %(price)s from around %(date)s. You can turn auto-renewal off anytime in Account settings, at no cost."
+msgstr "%(date)s ဝန်းကျင်မှစ၍ သင့်အလိုအလျောက် သက်တမ်းတိုးခြင်း၏ လစဉ်စျေးနှုန်းသည် %(previous)s မှ %(price)s သို့ ပြောင်းမည်။ အကောင့်ဆက်တင်များတွင် အလိုအလျောက် သက်တမ်းတိုးခြင်းကို အချိန်မရွေး အခမဲ့ ပိတ်နိုင်သည်။"
+
+msgctxt "notifications"
+msgid "You can turn automatic renewal off at any time, at no cost, in Account settings of the Warren app or at %(url)s. Turning it off takes effect immediately."
+msgstr "Warren အက်ပ်၏ အကောင့်ဆက်တင်များ သို့မဟုတ် %(url)s တွင် အလိုအလျောက် သက်တမ်းတိုးခြင်းကို အချိန်မရွေး အခမဲ့ ပိတ်နိုင်သည်။ ပိတ်လိုက်သည်နှင့် ချက်ချင်း သက်ရောက်သည်။"
+
+msgctxt "notifications"
+msgid "Your Warren time renews automatically around %(date)s, at %(price)s per month. You can turn auto-renewal off anytime in Account settings, at no cost."
+msgstr "သင့် Warren အချိန်သည် %(date)s ဝန်းကျင်တွင် တစ်လလျှင် %(price)s ဖြင့် အလိုအလျောက် သက်တမ်းတိုးမည်။ အကောင့်ဆက်တင်များတွင် အလိုအလျောက် သက်တမ်းတိုးခြင်းကို အချိန်မရွေး အခမဲ့ ပိတ်နိုင်သည်။"
+
+msgctxt "notifications"
+msgid "Your Warren time renews automatically on or around %(date)s, for one month."
+msgstr "သင့် Warren အချိန်သည် %(date)s သို့မဟုတ် ၎င်းဝန်းကျင်တွင် တစ်လအတွက် အလိုအလျောက် သက်တမ်းတိုးမည်။"

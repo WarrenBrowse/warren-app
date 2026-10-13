@@ -3,12 +3,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { pullSecretHash, PurchaseClaim } from '../../src/main/purchase-claim';
 import RenewalFlow, {
   fetchRenewalHandoff,
+  fetchRenewalPrice,
   periodOfExpiry,
   RENEWAL_MAX_ATTEMPTS,
+  RENEWAL_NOTICE_EARLIEST_MS,
   RENEWAL_NOTICE_LEAD_MS,
   RENEWAL_RECHECK_INTERVAL_MS,
   RENEWAL_WINDOW_MS,
   RenewalFlowDelegate,
+  RenewalNotice,
+  RenewalPrice,
   RenewalState,
   RenewalStore,
   RenewOutcome,
@@ -47,6 +51,9 @@ class FakeDelegate implements RenewalFlowDelegate {
   public disabled = 0;
   public onRenew?: () => void;
   public ban: WarrenAccountBan | undefined;
+  public price: RenewalPrice | undefined;
+  public noticesSeen: RenewalNotice[] = [];
+  public priceSkips = 0;
 
   accountTag = () => this.tag;
   accountBan = () => this.ban;
@@ -68,7 +75,12 @@ class FakeDelegate implements RenewalFlowDelegate {
     this.tracked.push({ claim, tag });
   };
   notifyReminder = () => void this.reminders++;
-  notifyUpcoming = () => void this.notices++;
+  currentPrice = () => Promise.resolve(this.price);
+  notifyUpcoming = (notice: RenewalNotice) => {
+    this.notices++;
+    this.noticesSeen.push(notice);
+  };
+  notifyPriceIncreaseSkipped = () => void this.priceSkips++;
   notifyReceipt = () => void this.receipts++;
   notifyActionRequired = () => void this.actionRequired++;
   notifyFailure = () => void this.failures++;
@@ -335,6 +347,104 @@ describe('RenewalFlow', () => {
     expect(delegate.renewCalls).toHaveLength(0);
   });
 
+  it('a long plan is noticed in the 45 days before the renewal date, never at purchase', async () => {
+    // The end-of-commitment notice must be timely (GEO 111/2011 art. 50,
+    // Lexter memo para 36(e)): shown at the purchase of a 12-month plan it
+    // would precede the renewal by eleven months.
+    delegate.expiry = new Date(Date.now() + 365 * DAY_MS).toISOString();
+    const expiryMs = Date.parse(delegate.expiry);
+    delegate.handoff = { customerId: 'cus_1', renewalToken: 'ab'.repeat(32), months: 12 };
+    await flow.adopt(REDEEMED);
+    expect(delegate.notices).toBe(0);
+    expect(store.state?.noticedPeriod).toBeUndefined();
+
+    vi.setSystemTime(expiryMs - RENEWAL_NOTICE_EARLIEST_MS - DAY_MS);
+    flow.maybeSchedule();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(delegate.notices).toBe(0);
+
+    vi.setSystemTime(expiryMs - 40 * DAY_MS);
+    flow.maybeSchedule();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(delegate.notices).toBe(1);
+    expect(store.state?.noticedPeriod).toBe(periodOfExpiry(delegate.expiry));
+    expect(store.state?.noticeShownAtMs).toBe(expiryMs - 40 * DAY_MS);
+  });
+
+  it('a long plan first noticed too late is neither backdated nor charged', async () => {
+    // The opt-in floor stands for a notice only when the purchase itself was
+    // recent enough to be one: a year-old checkout disclosure is not.
+    delegate.expiry = new Date(Date.now() + 365 * DAY_MS).toISOString();
+    const expiryMs = Date.parse(delegate.expiry);
+    delegate.handoff = { customerId: 'cus_1', renewalToken: 'ab'.repeat(32), months: 12 };
+    await flow.adopt(REDEEMED);
+
+    vi.setSystemTime(expiryMs - 10 * DAY_MS);
+    flow.maybeSchedule();
+    expect(delegate.notices).toBe(0);
+    vi.setSystemTime(expiryMs - 2 * DAY_MS);
+    await runWindow();
+    expect(delegate.renewCalls).toHaveLength(0);
+  });
+
+  it('the notice carries the monthly price and the best tariff', async () => {
+    delegate.price = { monthlyCents: 700, bestMonthlyCents: 650 };
+    delegate.expiry = new Date(Date.now() + 30 * DAY_MS).toISOString();
+    delegate.handoff = {
+      customerId: 'cus_1',
+      renewalToken: 'ab'.repeat(32),
+      months: 1,
+      currency: 'eur',
+    };
+    await flow.adopt(REDEEMED);
+
+    expect(delegate.noticesSeen).toHaveLength(1);
+    const notice = delegate.noticesSeen[0];
+    expect(notice.renewsAtMs).toBe(Date.parse(delegate.expiry));
+    expect(notice.monthlyCents).toBe(700);
+    expect(notice.bestMonthlyCents).toBe(650);
+    expect(notice.currency).toBe('EUR');
+    expect(store.state?.noticedMonthlyCents).toBe(700);
+  });
+
+  it('a price raised after the notice is not charged at the new price', async () => {
+    // An increase must be announced a month ahead with a free way out
+    // (directive 2018/1972 art. 105(4)): one decided after this period's
+    // notice cannot be charged on this period.
+    delegate.expiry = new Date(Date.now() + 2 * DAY_MS).toISOString();
+    store.state = { ...noticedState(delegate.expiry), noticedMonthlyCents: 700 };
+    delegate.price = { monthlyCents: 800, bestMonthlyCents: 800 };
+
+    await runWindow();
+
+    expect(delegate.renewCalls).toHaveLength(0);
+    expect(delegate.priceSkips).toBe(1);
+  });
+
+  it('a price raised a month ahead is noticed again, then charged with the new ceiling', async () => {
+    delegate.expiry = new Date(Date.now() + 40 * DAY_MS).toISOString();
+    const expiryMs = Date.parse(delegate.expiry);
+    store.state = {
+      ...baseState(),
+      noticedPeriod: periodOfExpiry(delegate.expiry),
+      noticeShownAtMs: expiryMs - 41 * DAY_MS,
+      noticedMonthlyCents: 700,
+    };
+    delegate.price = { monthlyCents: 800, bestMonthlyCents: 800 };
+
+    flow.resume();
+    await vi.advanceTimersByTimeAsync(0);
+    expect(delegate.noticesSeen).toHaveLength(1);
+    expect(delegate.noticesSeen[0].monthlyCents).toBe(800);
+    expect(delegate.noticesSeen[0].previousMonthlyCents).toBe(700);
+    expect(store.state?.noticedMonthlyCents).toBe(800);
+
+    vi.setSystemTime(expiryMs - 2 * DAY_MS);
+    await runWindow();
+    expect(delegate.renewCalls).toHaveLength(1);
+    expect(delegate.renewCalls[0].max_amount_cents).toBe(800);
+  });
+
   it('a successful charge emits the receipt and the next cycle notice', async () => {
     delegate.expiry = new Date(Date.now() + 2 * DAY_MS).toISOString();
     store.state = noticedState(delegate.expiry);
@@ -557,5 +667,40 @@ describe('fetchRenewalHandoff', () => {
     const refused = () => Promise.resolve(new Response('{"error":"refused"}', { status: 404 }));
 
     expect(await fetchRenewalHandoff(API, REDEEMED, refused)).toBeUndefined();
+  });
+});
+
+// The price a notice announces comes from the public ladder warren-api
+// serves to the checkout (`GET /v1/pricing`), the same source the charge
+// is computed from.
+describe('fetchRenewalPrice', () => {
+  const ladder = {
+    tiers: [
+      { currency: 'EUR', min_amount_units: 700, duration_secs: 2_592_000 },
+      { currency: 'EUR', min_amount_units: 1800, duration_secs: 7_776_000 },
+      { currency: 'USD', min_amount_units: 800, duration_secs: 2_592_000 },
+    ],
+  };
+  const ok = (body: unknown) =>
+    Promise.resolve({ ok: true, json: () => Promise.resolve(body) } as unknown as Response);
+
+  it('reads the monthly price and the best monthly rate of the currency', async () => {
+    const urls: string[] = [];
+    const price = await fetchRenewalPrice('https://api.test/', 'EUR', (url) => {
+      urls.push(url);
+      return ok(ladder);
+    });
+
+    expect(urls).toEqual(['https://api.test/v1/pricing']);
+    expect(price).toEqual({ monthlyCents: 700, bestMonthlyCents: 600 });
+  });
+
+  it('knows no price for a currency without a monthly tier, nor on a failure', async () => {
+    expect(await fetchRenewalPrice('https://api.test/', 'GBP', () => ok(ladder))).toBeUndefined();
+    expect(
+      await fetchRenewalPrice('https://api.test/', 'EUR', () =>
+        Promise.reject(new Error('offline')),
+      ),
+    ).toBeUndefined();
   });
 });

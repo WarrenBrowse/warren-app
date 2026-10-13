@@ -2,6 +2,7 @@ import { sprintf } from 'sprintf-js';
 
 import { closeToExpiry } from '../account-expiry';
 import { messages } from '../gettext';
+import { formatMinorUnits, RenewalNotice } from '../renewal';
 import {
   InAppNotification,
   InAppNotificationProvider,
@@ -52,19 +53,58 @@ export class RenewalUpcomingInAppNotificationProvider implements InAppNotificati
   }
 }
 
-// The 30-day pre-renewal notice (doc 77): shown at adopt and right
-// after each charge, when the app is necessarily open.
+// The 30-day pre-renewal notice (doc 77): the date, the monthly amount and
+// the way out, and a raise names the old and the new price (directive
+// 2018/1972 art. 105(4)). The same notice is archived as a PDF.
 export class RenewalUpcomingNotificationProvider implements SystemNotificationProvider {
-  public constructor(private renewsAtMs: number) {}
+  public constructor(
+    private notice: RenewalNotice,
+    private locale: string,
+  ) {}
 
   public mayDisplay() {
     return true;
   }
 
   public getSystemNotification(): SystemNotification {
-    const date = new Date(this.renewsAtMs).toLocaleDateString();
-    return {
-      message: sprintf(
+    const { notice, locale } = this;
+    const date = new Date(notice.renewsAtMs).toLocaleDateString(locale);
+    const price =
+      notice.monthlyCents === undefined
+        ? undefined
+        : formatMinorUnits(notice.monthlyCents, notice.currency, locale);
+    let message: string;
+    if (price !== undefined && notice.previousMonthlyCents !== undefined) {
+      message = sprintf(
+        // TRANSLATORS: Notice of a price increase of the automatic renewal.
+        // TRANSLATORS: Available placeholders:
+        // TRANSLATORS: %(previous)s - the former monthly price
+        // TRANSLATORS: %(price)s - the new monthly price
+        // TRANSLATORS: %(date)s - the renewal date the new price applies from
+        messages.pgettext(
+          'notifications',
+          'The monthly price of your automatic renewal changes from %(previous)s to %(price)s from around %(date)s. You can turn auto-renewal off anytime in Account settings, at no cost.',
+        ),
+        {
+          previous: formatMinorUnits(notice.previousMonthlyCents, notice.currency, locale),
+          price,
+          date,
+        },
+      );
+    } else if (price !== undefined) {
+      message = sprintf(
+        // TRANSLATORS: The 30-day advance notice before an automatic renewal charge.
+        // TRANSLATORS: Available placeholders:
+        // TRANSLATORS: %(date)s - the renewal date
+        // TRANSLATORS: %(price)s - the monthly price
+        messages.pgettext(
+          'notifications',
+          'Your Warren time renews automatically around %(date)s, at %(price)s per month. You can turn auto-renewal off anytime in Account settings, at no cost.',
+        ),
+        { date, price },
+      );
+    } else {
+      message = sprintf(
         // TRANSLATORS: The 30-day advance notice before an automatic renewal charge.
         // TRANSLATORS: Available placeholder:
         // TRANSLATORS: %(date)s - the renewal date
@@ -73,6 +113,38 @@ export class RenewalUpcomingNotificationProvider implements SystemNotificationPr
           'Your Warren time renews automatically around %(date)s, at the monthly rate. You can turn auto-renewal off anytime in Account settings.',
         ),
         { date },
+      );
+    }
+    return {
+      message,
+      severity: SystemNotificationSeverityType.medium,
+      category: SystemNotificationCategory.renewal,
+    };
+  }
+}
+
+// A price raised after the period's notice: that renewal is not charged.
+export class RenewalPriceIncreaseSkippedNotificationProvider implements SystemNotificationProvider {
+  public constructor(
+    private notice: RenewalNotice,
+    private locale: string,
+  ) {}
+
+  public mayDisplay() {
+    return true;
+  }
+
+  public getSystemNotification(): SystemNotification {
+    return {
+      message: sprintf(
+        // TRANSLATORS: The price rose after the renewal notice, so the renewal is not charged.
+        // TRANSLATORS: Available placeholder:
+        // TRANSLATORS: %(date)s - the date the Warren time ends
+        messages.pgettext(
+          'notifications',
+          'The monthly price changed after your renewal notice, so this renewal was not charged. Your Warren time ends around %(date)s unless you buy more.',
+        ),
+        { date: new Date(this.notice.renewsAtMs).toLocaleDateString(this.locale) },
       ),
       severity: SystemNotificationSeverityType.medium,
       category: SystemNotificationCategory.renewal,

@@ -6324,3 +6324,51 @@ msgstr "С приложением %(applicationName)s возникла проб�
 msgctxt "split-tunneling-view"
 msgid "Flatpak and Snap apps cannot be opened locked to the VPN"
 msgstr "Приложения Flatpak и Snap нельзя открыть с привязкой к VPN"
+
+msgctxt "account-view"
+msgid "Notice of %(date)s"
+msgstr "Уведомление от %(date)s"
+
+msgctxt "account-view"
+msgid "Renewal notices"
+msgstr "Уведомления о продлении"
+
+msgctxt "notifications"
+msgid "Amount charged: %(price)s, VAT included."
+msgstr "Списываемая сумма: %(price)s, включая НДС."
+
+msgctxt "notifications"
+msgid "Automatic renewal notice"
+msgstr "Уведомление об автоматическом продлении"
+
+msgctxt "notifications"
+msgid "Best monthly rate Warren offers today: %(price)s."
+msgstr "Лучший месячный тариф Warren на сегодня: %(price)s."
+
+msgctxt "notifications"
+msgid "Issued on %(date)s"
+msgstr "Выдано %(date)s"
+
+msgctxt "notifications"
+msgid "The monthly price changed after your renewal notice, so this renewal was not charged. Your Warren time ends around %(date)s unless you buy more."
+msgstr "Месячная цена изменилась после уведомления о продлении, поэтому это продление не было списано. Ваше время Warren закончится около %(date)s, если вы не купите ещё."
+
+msgctxt "notifications"
+msgid "The monthly price changes from %(previous)s to %(price)s, VAT included, from this renewal."
+msgstr "С этого продления месячная цена меняется с %(previous)s на %(price)s, включая НДС."
+
+msgctxt "notifications"
+msgid "The monthly price of your automatic renewal changes from %(previous)s to %(price)s from around %(date)s. You can turn auto-renewal off anytime in Account settings, at no cost."
+msgstr "Месячная цена автоматического продления меняется с %(previous)s на %(price)s примерно с %(date)s. Вы можете в любой момент бесплатно отключить автопродление в настройках учётной записи."
+
+msgctxt "notifications"
+msgid "You can turn automatic renewal off at any time, at no cost, in Account settings of the Warren app or at %(url)s. Turning it off takes effect immediately."
+msgstr "Вы можете в любой момент бесплатно отключить автопродление в настройках учётной записи приложения Warren или на %(url)s. Отключение действует сразу."
+
+msgctxt "notifications"
+msgid "Your Warren time renews automatically around %(date)s, at %(price)s per month. You can turn auto-renewal off anytime in Account settings, at no cost."
+msgstr "Ваше время Warren автоматически продлится около %(date)s по цене %(price)s в месяц. Вы можете в любой момент бесплатно отключить автопродление в настройках учётной записи."
+
+msgctxt "notifications"
+msgid "Your Warren time renews automatically on or around %(date)s, for one month."
+msgstr "Ваше время Warren автоматически продлится на месяц %(date)s или около этой даты."

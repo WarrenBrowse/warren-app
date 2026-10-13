@@ -516,6 +516,8 @@ export const ipcSchema = {
     renewal: notifyRenderer<RenewalUiState | undefined>(),
     getRenewalState: invoke<void, RenewalUiState | undefined>(),
     disableRenewal: invoke<void, void>(),
+    // Opens an archived pre-renewal notice (a PDF) with the system viewer.
+    openRenewalNotice: invoke<string, void>(),
   },
   accountHistory: {
     '': notifyRenderer<WarrenPubKey | undefined>(),

@@ -6284,3 +6284,51 @@ msgstr "%(applicationName)s on ongelmallinen, eikä sitä voida avata VPN:ään 
 msgctxt "split-tunneling-view"
 msgid "Flatpak and Snap apps cannot be opened locked to the VPN"
 msgstr "Flatpak- ja Snap-sovelluksia ei voi avata VPN:ään lukittuina"
+
+msgctxt "account-view"
+msgid "Notice of %(date)s"
+msgstr "Ilmoitus %(date)s"
+
+msgctxt "account-view"
+msgid "Renewal notices"
+msgstr "Uusimisilmoitukset"
+
+msgctxt "notifications"
+msgid "Amount charged: %(price)s, VAT included."
+msgstr "Veloitettava summa: %(price)s, sis. ALV."
+
+msgctxt "notifications"
+msgid "Automatic renewal notice"
+msgstr "Ilmoitus automaattisesta uusimisesta"
+
+msgctxt "notifications"
+msgid "Best monthly rate Warren offers today: %(price)s."
+msgstr "Edullisin Warrenin tänään tarjoama kuukausihinta: %(price)s."
+
+msgctxt "notifications"
+msgid "Issued on %(date)s"
+msgstr "Annettu %(date)s"
+
+msgctxt "notifications"
+msgid "The monthly price changed after your renewal notice, so this renewal was not charged. Your Warren time ends around %(date)s unless you buy more."
+msgstr "Kuukausihinta muuttui uusimisilmoituksesi jälkeen, joten tätä uusimista ei veloitettu. Warren-aikasi päättyy noin %(date)s, ellet osta lisää."
+
+msgctxt "notifications"
+msgid "The monthly price changes from %(previous)s to %(price)s, VAT included, from this renewal."
+msgstr "Kuukausihinta muuttuu tästä uusimisesta alkaen %(previous)s:sta %(price)s:aan, sis. ALV."
+
+msgctxt "notifications"
+msgid "The monthly price of your automatic renewal changes from %(previous)s to %(price)s from around %(date)s. You can turn auto-renewal off anytime in Account settings, at no cost."
+msgstr "Automaattisen uusimisesi kuukausihinta muuttuu noin %(date)s alkaen %(previous)s:sta %(price)s:aan. Voit poistaa automaattisen uusimisen käytöstä milloin tahansa tiliasetuksista maksutta."
+
+msgctxt "notifications"
+msgid "You can turn automatic renewal off at any time, at no cost, in Account settings of the Warren app or at %(url)s. Turning it off takes effect immediately."
+msgstr "Voit poistaa automaattisen uusimisen käytöstä milloin tahansa maksutta Warren-sovelluksen tiliasetuksista tai osoitteessa %(url)s. Muutos tulee voimaan heti."
+
+msgctxt "notifications"
+msgid "Your Warren time renews automatically around %(date)s, at %(price)s per month. You can turn auto-renewal off anytime in Account settings, at no cost."
+msgstr "Warren-aikasi uusitaan automaattisesti noin %(date)s hintaan %(price)s kuukaudessa. Voit poistaa automaattisen uusimisen käytöstä milloin tahansa tiliasetuksista maksutta."
+
+msgctxt "notifications"
+msgid "Your Warren time renews automatically on or around %(date)s, for one month."
+msgstr "Warren-aikasi uusitaan automaattisesti kuukaudeksi %(date)s tai sen tienoilla."

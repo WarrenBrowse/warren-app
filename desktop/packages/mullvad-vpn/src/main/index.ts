@@ -2,6 +2,7 @@ import { exec, execFile } from 'child_process';
 import { createHash } from 'crypto';
 import {
   app,
+  BrowserWindow,
   clipboard,
   nativeTheme,
   powerMonitor,
@@ -57,6 +58,7 @@ import {
   RenewalActionRequiredNotificationProvider,
   RenewalDisabledNotificationProvider,
   RenewalFailedNotificationProvider,
+  RenewalPriceIncreaseSkippedNotificationProvider,
   RenewalReceiptNotificationProvider,
   RenewalReminderNotificationProvider,
   RenewalUpcomingNotificationProvider,
@@ -65,6 +67,7 @@ import {
   SystemNotification,
   SystemNotificationCategory,
 } from '../shared/notifications/notification';
+import { RenewalUiState } from '../shared/renewal';
 import { RoutePath } from '../shared/routes';
 import {
   isTorrentClientConfigError,
@@ -147,9 +150,12 @@ import PurchaseFlow from './purchase-flow';
 import ReconnectionBackoff from './reconnection-backoff';
 import RenewalFlow, {
   fetchRenewalHandoff,
+  fetchRenewalPrice,
+  RenewalNotice,
   RenewOutcome,
   renewOutcomeOfHttpStatus,
 } from './renewal-flow';
+import { RenewalNoticeArchive, renewalNoticeDocument, renewalNoticeHtml } from './renewal-notice';
 import SafeStorageRenewalStore from './renewal-store';
 import Settings, { SettingsDelegate } from './settings';
 import { createTorrentClientAdapter } from './torrent-client/adapters';
@@ -326,6 +332,9 @@ class ApplicationMain
     }
   });
   private renewalFlow: RenewalFlow;
+  private renewalNotices = new RenewalNoticeArchive(
+    path.join(app.getPath('userData'), 'renewal-notices'),
+  );
 
   private relayList?: IRelayListWithEndpointData;
 
@@ -379,8 +388,20 @@ class ApplicationMain
           this.purchaseFlow.trackExternal(claim, accountTag),
         notifyReminder: () =>
           this.notify(new RenewalReminderNotificationProvider().getSystemNotification()),
-        notifyUpcoming: (renewsAtMs) =>
-          this.notify(new RenewalUpcomingNotificationProvider(renewsAtMs).getSystemNotification()),
+        currentPrice: (currency) => fetchRenewalPrice(urls.api, currency),
+        notifyUpcoming: (notice) => {
+          this.notify(
+            new RenewalUpcomingNotificationProvider(notice, this.locale).getSystemNotification(),
+          );
+          void this.archiveRenewalNotice(notice);
+        },
+        notifyPriceIncreaseSkipped: (notice) =>
+          this.notify(
+            new RenewalPriceIncreaseSkippedNotificationProvider(
+              notice,
+              this.locale,
+            ).getSystemNotification(),
+          ),
         notifyReceipt: () =>
           this.notify(new RenewalReceiptNotificationProvider().getSystemNotification()),
         notifyActionRequired: () =>
@@ -389,7 +410,8 @@ class ApplicationMain
           this.notify(new RenewalFailedNotificationProvider().getSystemNotification()),
         notifyDisabled: () =>
           this.notify(new RenewalDisabledNotificationProvider().getSystemNotification()),
-        notifyStateChange: (state) => IpcMainEventChannel.account.notifyRenewal?.(state),
+        notifyStateChange: (state) =>
+          IpcMainEventChannel.account.notifyRenewal?.(this.withRenewalNotices(state)),
       },
       new SafeStorageRenewalStore(),
     );
@@ -849,6 +871,33 @@ class ApplicationMain
     // exit so we never leave an orphaned, unresponsive tray icon behind. The
     // timer is unref'd so it never keeps an otherwise-clean quit alive.
     setTimeout(() => app.exit(0), 2000).unref();
+  }
+
+  private withRenewalNotices(state: RenewalUiState | undefined): RenewalUiState | undefined {
+    return state && { ...state, notices: this.renewalNotices.list() };
+  }
+
+  // The durable half of a pre-renewal notice: the same text, printed to a PDF
+  // the user keeps (GEO 111/2011 art. 50). A failure is logged and the
+  // notification still stands; the next notice is archived as usual.
+  private async archiveRenewalNotice(notice: RenewalNotice): Promise<void> {
+    const html = renewalNoticeHtml(renewalNoticeDocument(notice, this.locale));
+    const window = new BrowserWindow({
+      show: false,
+      webPreferences: { javascript: false, sandbox: true },
+    });
+    try {
+      await window.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+      const pdf = await window.webContents.printToPDF({});
+      await this.renewalNotices.save(notice, pdf);
+      IpcMainEventChannel.account.notifyRenewal?.(
+        this.withRenewalNotices(this.renewalFlow.uiState),
+      );
+    } catch (e) {
+      log.error(`Could not archive the renewal notice: ${(e as Error).message}`);
+    } finally {
+      window.destroy();
+    }
   }
 
   private detectLocale(): string {
@@ -1745,9 +1794,16 @@ class ApplicationMain
       this.purchaseFlow.checkPendingNow(true),
     );
     IpcMainEventChannel.account.handleGetRenewalState(() =>
-      Promise.resolve(this.renewalFlow.uiState),
+      Promise.resolve(this.withRenewalNotices(this.renewalFlow.uiState)),
     );
     IpcMainEventChannel.account.handleDisableRenewal(() => this.renewalFlow.disable());
+    IpcMainEventChannel.account.handleOpenRenewalNotice(async (id) => {
+      // Only a file the archive wrote: the id comes from the renderer.
+      const file = this.renewalNotices.pathOf(id);
+      if (file !== undefined) {
+        await shell.openPath(file);
+      }
+    });
 
     IpcMainEventChannel.app.handleGetPathBaseName((filePath) =>
       Promise.resolve(path.basename(filePath)),

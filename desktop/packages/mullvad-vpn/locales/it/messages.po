@@ -6284,3 +6284,51 @@ msgstr "L'applicazione %(applicationName)s causa problemi e non può essere aper
 msgctxt "split-tunneling-view"
 msgid "Flatpak and Snap apps cannot be opened locked to the VPN"
 msgstr "Le app Flatpak e Snap non possono essere aperte vincolate alla VPN"
+
+msgctxt "account-view"
+msgid "Notice of %(date)s"
+msgstr "Avviso del %(date)s"
+
+msgctxt "account-view"
+msgid "Renewal notices"
+msgstr "Avvisi di rinnovo"
+
+msgctxt "notifications"
+msgid "Amount charged: %(price)s, VAT included."
+msgstr "Importo addebitato: %(price)s, IVA inclusa."
+
+msgctxt "notifications"
+msgid "Automatic renewal notice"
+msgstr "Avviso di rinnovo automatico"
+
+msgctxt "notifications"
+msgid "Best monthly rate Warren offers today: %(price)s."
+msgstr "Miglior tariffa mensile offerta oggi da Warren: %(price)s."
+
+msgctxt "notifications"
+msgid "Issued on %(date)s"
+msgstr "Emesso il %(date)s"
+
+msgctxt "notifications"
+msgid "The monthly price changed after your renewal notice, so this renewal was not charged. Your Warren time ends around %(date)s unless you buy more."
+msgstr "Il prezzo mensile è cambiato dopo l’avviso di rinnovo, quindi questo rinnovo non è stato addebitato. Il tuo tempo Warren termina intorno al %(date)s se non ne acquisti altro."
+
+msgctxt "notifications"
+msgid "The monthly price changes from %(previous)s to %(price)s, VAT included, from this renewal."
+msgstr "Il prezzo mensile passa da %(previous)s a %(price)s, IVA inclusa, a partire da questo rinnovo."
+
+msgctxt "notifications"
+msgid "The monthly price of your automatic renewal changes from %(previous)s to %(price)s from around %(date)s. You can turn auto-renewal off anytime in Account settings, at no cost."
+msgstr "Il prezzo mensile del tuo rinnovo automatico passa da %(previous)s a %(price)s a partire da circa il %(date)s. Puoi disattivare il rinnovo automatico in qualsiasi momento nelle impostazioni dell’account, senza costi."
+
+msgctxt "notifications"
+msgid "You can turn automatic renewal off at any time, at no cost, in Account settings of the Warren app or at %(url)s. Turning it off takes effect immediately."
+msgstr "Puoi disattivare il rinnovo automatico in qualsiasi momento, senza costi, nelle impostazioni dell’account dell’app Warren o su %(url)s. La disattivazione ha effetto immediato."
+
+msgctxt "notifications"
+msgid "Your Warren time renews automatically around %(date)s, at %(price)s per month. You can turn auto-renewal off anytime in Account settings, at no cost."
+msgstr "Il tuo tempo Warren si rinnova automaticamente intorno al %(date)s, a %(price)s al mese. Puoi disattivare il rinnovo automatico in qualsiasi momento nelle impostazioni dell’account, senza costi."
+
+msgctxt "notifications"
+msgid "Your Warren time renews automatically on or around %(date)s, for one month."
+msgstr "Il tuo tempo Warren si rinnova automaticamente il %(date)s o intorno a quella data, per un mese."

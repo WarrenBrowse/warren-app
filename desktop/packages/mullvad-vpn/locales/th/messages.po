@@ -6251,3 +6251,51 @@ msgstr "%(applicationName)s ก่อให้เกิดปัญหา แล
 msgctxt "split-tunneling-view"
 msgid "Flatpak and Snap apps cannot be opened locked to the VPN"
 msgstr "แอป Flatpak และ Snap ไม่สามารถเปิดโดยล็อกไว้กับ VPN ได้"
+
+msgctxt "account-view"
+msgid "Notice of %(date)s"
+msgstr "ประกาศวันที่ %(date)s"
+
+msgctxt "account-view"
+msgid "Renewal notices"
+msgstr "ประกาศการต่ออายุ"
+
+msgctxt "notifications"
+msgid "Amount charged: %(price)s, VAT included."
+msgstr "จำนวนเงินที่เรียกเก็บ: %(price)s รวมภาษีมูลค่าเพิ่มแล้ว"
+
+msgctxt "notifications"
+msgid "Automatic renewal notice"
+msgstr "ประกาศการต่ออายุอัตโนมัติ"
+
+msgctxt "notifications"
+msgid "Best monthly rate Warren offers today: %(price)s."
+msgstr "อัตรารายเดือนที่ดีที่สุดที่ Warren เสนอวันนี้: %(price)s"
+
+msgctxt "notifications"
+msgid "Issued on %(date)s"
+msgstr "ออกเมื่อ %(date)s"
+
+msgctxt "notifications"
+msgid "The monthly price changed after your renewal notice, so this renewal was not charged. Your Warren time ends around %(date)s unless you buy more."
+msgstr "ราคารายเดือนเปลี่ยนไปหลังประกาศการต่ออายุของคุณ จึงไม่มีการเรียกเก็บเงินสำหรับการต่ออายุครั้งนี้ เวลา Warren ของคุณจะหมดประมาณ %(date)s หากคุณไม่ซื้อเพิ่ม"
+
+msgctxt "notifications"
+msgid "The monthly price changes from %(previous)s to %(price)s, VAT included, from this renewal."
+msgstr "ราคารายเดือนเปลี่ยนจาก %(previous)s เป็น %(price)s รวมภาษีมูลค่าเพิ่ม ตั้งแต่การต่ออายุครั้งนี้"
+
+msgctxt "notifications"
+msgid "The monthly price of your automatic renewal changes from %(previous)s to %(price)s from around %(date)s. You can turn auto-renewal off anytime in Account settings, at no cost."
+msgstr "ราคารายเดือนของการต่ออายุอัตโนมัติของคุณจะเปลี่ยนจาก %(previous)s เป็น %(price)s ตั้งแต่ประมาณ %(date)s คุณปิดการต่ออายุอัตโนมัติได้ทุกเมื่อในการตั้งค่าบัญชี โดยไม่มีค่าใช้จ่าย"
+
+msgctxt "notifications"
+msgid "You can turn automatic renewal off at any time, at no cost, in Account settings of the Warren app or at %(url)s. Turning it off takes effect immediately."
+msgstr "คุณปิดการต่ออายุอัตโนมัติได้ทุกเมื่อโดยไม่มีค่าใช้จ่าย ในการตั้งค่าบัญชีของแอป Warren หรือที่ %(url)s การปิดจะมีผลทันที"
+
+msgctxt "notifications"
+msgid "Your Warren time renews automatically around %(date)s, at %(price)s per month. You can turn auto-renewal off anytime in Account settings, at no cost."
+msgstr "เวลา Warren ของคุณจะต่ออายุอัตโนมัติประมาณ %(date)s ในราคา %(price)s ต่อเดือน คุณปิดการต่ออายุอัตโนมัติได้ทุกเมื่อในการตั้งค่าบัญชี โดยไม่มีค่าใช้จ่าย"
+
+msgctxt "notifications"
+msgid "Your Warren time renews automatically on or around %(date)s, for one month."
+msgstr "เวลา Warren ของคุณจะต่ออายุอัตโนมัติเป็นเวลาหนึ่งเดือนในวันที่ %(date)s หรือใกล้เคียง"

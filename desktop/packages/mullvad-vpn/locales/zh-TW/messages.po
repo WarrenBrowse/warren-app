@@ -6251,3 +6251,51 @@ msgstr "%(applicationName)s 發生問題，無法鎖定在 VPN 上開啟。"
 msgctxt "split-tunneling-view"
 msgid "Flatpak and Snap apps cannot be opened locked to the VPN"
 msgstr "Flatpak 和 Snap 應用程式無法鎖定在 VPN 上開啟"
+
+msgctxt "account-view"
+msgid "Notice of %(date)s"
+msgstr "%(date)s 的通知"
+
+msgctxt "account-view"
+msgid "Renewal notices"
+msgstr "續訂通知"
+
+msgctxt "notifications"
+msgid "Amount charged: %(price)s, VAT included."
+msgstr "扣款金額：%(price)s，含加值稅。"
+
+msgctxt "notifications"
+msgid "Automatic renewal notice"
+msgstr "自動續訂通知"
+
+msgctxt "notifications"
+msgid "Best monthly rate Warren offers today: %(price)s."
+msgstr "Warren 目前提供的最優月費：%(price)s。"
+
+msgctxt "notifications"
+msgid "Issued on %(date)s"
+msgstr "發出日期：%(date)s"
+
+msgctxt "notifications"
+msgid "The monthly price changed after your renewal notice, so this renewal was not charged. Your Warren time ends around %(date)s unless you buy more."
+msgstr "月費在你的續訂通知之後有所變動，因此本次續訂沒有扣款。除非你另行購買，你的 Warren 時數將在 %(date)s 前後結束。"
+
+msgctxt "notifications"
+msgid "The monthly price changes from %(previous)s to %(price)s, VAT included, from this renewal."
+msgstr "自本次續訂起，月費由 %(previous)s 調整為 %(price)s，含加值稅。"
+
+msgctxt "notifications"
+msgid "The monthly price of your automatic renewal changes from %(previous)s to %(price)s from around %(date)s. You can turn auto-renewal off anytime in Account settings, at no cost."
+msgstr "自 %(date)s 前後起，你的自動續訂月費由 %(previous)s 調整為 %(price)s。你可以隨時在帳戶設定中免費關閉自動續訂。"
+
+msgctxt "notifications"
+msgid "You can turn automatic renewal off at any time, at no cost, in Account settings of the Warren app or at %(url)s. Turning it off takes effect immediately."
+msgstr "你可以隨時在 Warren 應用程式的帳戶設定中或透過 %(url)s 免費關閉自動續訂，關閉後立即生效。"
+
+msgctxt "notifications"
+msgid "Your Warren time renews automatically around %(date)s, at %(price)s per month. You can turn auto-renewal off anytime in Account settings, at no cost."
+msgstr "你的 Warren 時數將在 %(date)s 前後以每月 %(price)s 自動續訂。你可以隨時在帳戶設定中免費關閉自動續訂。"
+
+msgctxt "notifications"
+msgid "Your Warren time renews automatically on or around %(date)s, for one month."
+msgstr "你的 Warren 時數將在 %(date)s 當天或前後自動續訂一個月。"

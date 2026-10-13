@@ -5435,3 +5435,51 @@ msgstr "Aplicația %(applicationName)s este problematică și nu poate fi deschi
 msgctxt "split-tunneling-view"
 msgid "Flatpak and Snap apps cannot be opened locked to the VPN"
 msgstr "Aplicațiile Flatpak și Snap nu pot fi deschise legate de VPN"
+
+msgctxt "account-view"
+msgid "Notice of %(date)s"
+msgstr "Notificarea din %(date)s"
+
+msgctxt "account-view"
+msgid "Renewal notices"
+msgstr "Notificări de reînnoire"
+
+msgctxt "notifications"
+msgid "Amount charged: %(price)s, VAT included."
+msgstr "Suma încasată: %(price)s, cu TVA inclus."
+
+msgctxt "notifications"
+msgid "Automatic renewal notice"
+msgstr "Notificare de reînnoire automată"
+
+msgctxt "notifications"
+msgid "Best monthly rate Warren offers today: %(price)s."
+msgstr "Cel mai bun tarif lunar oferit azi de Warren: %(price)s."
+
+msgctxt "notifications"
+msgid "Issued on %(date)s"
+msgstr "Emis la %(date)s"
+
+msgctxt "notifications"
+msgid "The monthly price changed after your renewal notice, so this renewal was not charged. Your Warren time ends around %(date)s unless you buy more."
+msgstr "Prețul lunar s-a schimbat după notificarea de reînnoire, așa că această reînnoire nu a fost încasată. Timpul tău Warren se încheie în jurul datei de %(date)s, dacă nu cumperi mai mult."
+
+msgctxt "notifications"
+msgid "The monthly price changes from %(previous)s to %(price)s, VAT included, from this renewal."
+msgstr "Prețul lunar se schimbă de la %(previous)s la %(price)s, cu TVA inclus, de la această reînnoire."
+
+msgctxt "notifications"
+msgid "The monthly price of your automatic renewal changes from %(previous)s to %(price)s from around %(date)s. You can turn auto-renewal off anytime in Account settings, at no cost."
+msgstr "Prețul lunar al reînnoirii automate se schimbă de la %(previous)s la %(price)s începând din jurul datei de %(date)s. Poți dezactiva oricând reînnoirea automată din setările contului, fără costuri."
+
+msgctxt "notifications"
+msgid "You can turn automatic renewal off at any time, at no cost, in Account settings of the Warren app or at %(url)s. Turning it off takes effect immediately."
+msgstr "Poți dezactiva oricând reînnoirea automată, fără costuri, din setările contului în aplicația Warren sau la %(url)s. Dezactivarea are efect imediat."
+
+msgctxt "notifications"
+msgid "Your Warren time renews automatically around %(date)s, at %(price)s per month. You can turn auto-renewal off anytime in Account settings, at no cost."
+msgstr "Timpul tău Warren se reînnoiește automat în jurul datei de %(date)s, la %(price)s pe lună. Poți dezactiva oricând reînnoirea automată din setările contului, fără costuri."
+
+msgctxt "notifications"
+msgid "Your Warren time renews automatically on or around %(date)s, for one month."
+msgstr "Timpul tău Warren se reînnoiește automat la %(date)s sau în jurul acestei date, pentru o lună."

@@ -6251,3 +6251,51 @@ msgstr "%(applicationName)s에 문제가 있어 VPN에 고정해 열 수 없습�
 msgctxt "split-tunneling-view"
 msgid "Flatpak and Snap apps cannot be opened locked to the VPN"
 msgstr "Flatpak 및 Snap 앱은 VPN에 고정해 열 수 없습니다"
+
+msgctxt "account-view"
+msgid "Notice of %(date)s"
+msgstr "%(date)s 통지"
+
+msgctxt "account-view"
+msgid "Renewal notices"
+msgstr "갱신 통지"
+
+msgctxt "notifications"
+msgid "Amount charged: %(price)s, VAT included."
+msgstr "청구 금액: %(price)s(부가세 포함)."
+
+msgctxt "notifications"
+msgid "Automatic renewal notice"
+msgstr "자동 갱신 통지"
+
+msgctxt "notifications"
+msgid "Best monthly rate Warren offers today: %(price)s."
+msgstr "현재 Warren이 제공하는 최저 월 요금: %(price)s."
+
+msgctxt "notifications"
+msgid "Issued on %(date)s"
+msgstr "발행일: %(date)s"
+
+msgctxt "notifications"
+msgid "The monthly price changed after your renewal notice, so this renewal was not charged. Your Warren time ends around %(date)s unless you buy more."
+msgstr "갱신 통지 이후 월 요금이 변경되어 이번 갱신은 청구되지 않았습니다. 추가로 구매하지 않으면 Warren 이용 기간은 %(date)s 무렵 종료됩니다."
+
+msgctxt "notifications"
+msgid "The monthly price changes from %(previous)s to %(price)s, VAT included, from this renewal."
+msgstr "이번 갱신부터 월 요금이 %(previous)s에서 %(price)s(부가세 포함)로 변경됩니다."
+
+msgctxt "notifications"
+msgid "The monthly price of your automatic renewal changes from %(previous)s to %(price)s from around %(date)s. You can turn auto-renewal off anytime in Account settings, at no cost."
+msgstr "%(date)s 무렵부터 자동 갱신의 월 요금이 %(previous)s에서 %(price)s로 변경됩니다. 계정 설정에서 언제든지 무료로 자동 갱신을 끌 수 있습니다."
+
+msgctxt "notifications"
+msgid "You can turn automatic renewal off at any time, at no cost, in Account settings of the Warren app or at %(url)s. Turning it off takes effect immediately."
+msgstr "자동 갱신은 Warren 앱의 계정 설정이나 %(url)s에서 언제든지 무료로 끌 수 있습니다. 끄면 즉시 적용됩니다."
+
+msgctxt "notifications"
+msgid "Your Warren time renews automatically around %(date)s, at %(price)s per month. You can turn auto-renewal off anytime in Account settings, at no cost."
+msgstr "Warren 이용 기간은 %(date)s 무렵 월 %(price)s에 자동 갱신됩니다. 계정 설정에서 언제든지 무료로 자동 갱신을 끌 수 있습니다."
+
+msgctxt "notifications"
+msgid "Your Warren time renews automatically on or around %(date)s, for one month."
+msgstr "Warren 이용 기간은 %(date)s 또는 그 무렵에 한 달 단위로 자동 갱신됩니다."

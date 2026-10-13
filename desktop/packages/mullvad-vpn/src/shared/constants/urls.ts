@@ -30,6 +30,8 @@ export const urls = {
   // paid terms once a legal entity exists, so this one URL always resolves to
   // the contract the user is actually under.
   terms: 'https://warren.ro/cgu',
+  // Cancellation page of the checkout: the way out every renewal notice names.
+  cancelContract: 'https://checkout.warrenbrowse.com/resiliation',
   // Abuse-report and appeal policy. Addressed to rights holders, hosts and
   // authorities, and the page a user lands on to contest a port-forwarding
   // strike, so it is linked from the port-forwarding view and the ban notice.

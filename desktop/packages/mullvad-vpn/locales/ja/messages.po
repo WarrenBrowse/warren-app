@@ -6251,3 +6251,51 @@ msgstr "%(applicationName)sには問題があるため、VPNに固定して開�
 msgctxt "split-tunneling-view"
 msgid "Flatpak and Snap apps cannot be opened locked to the VPN"
 msgstr "FlatpakとSnapのアプリはVPNに固定して開けません"
+
+msgctxt "account-view"
+msgid "Notice of %(date)s"
+msgstr "%(date)s の通知"
+
+msgctxt "account-view"
+msgid "Renewal notices"
+msgstr "更新の通知"
+
+msgctxt "notifications"
+msgid "Amount charged: %(price)s, VAT included."
+msgstr "請求額: %(price)s(税込)"
+
+msgctxt "notifications"
+msgid "Automatic renewal notice"
+msgstr "自動更新のお知らせ"
+
+msgctxt "notifications"
+msgid "Best monthly rate Warren offers today: %(price)s."
+msgstr "Warren が現在提供している最安の月額料金: %(price)s"
+
+msgctxt "notifications"
+msgid "Issued on %(date)s"
+msgstr "発行日: %(date)s"
+
+msgctxt "notifications"
+msgid "The monthly price changed after your renewal notice, so this renewal was not charged. Your Warren time ends around %(date)s unless you buy more."
+msgstr "更新の通知の後に月額料金が変わったため、今回の更新は請求されませんでした。追加購入しない限り、Warren の利用期間は %(date)s ごろに終了します。"
+
+msgctxt "notifications"
+msgid "The monthly price changes from %(previous)s to %(price)s, VAT included, from this renewal."
+msgstr "今回の更新から、月額料金は %(previous)s から %(price)s(税込)に変わります。"
+
+msgctxt "notifications"
+msgid "The monthly price of your automatic renewal changes from %(previous)s to %(price)s from around %(date)s. You can turn auto-renewal off anytime in Account settings, at no cost."
+msgstr "%(date)s ごろから、自動更新の月額料金が %(previous)s から %(price)s に変わります。自動更新はアカウント設定からいつでも無料でオフにできます。"
+
+msgctxt "notifications"
+msgid "You can turn automatic renewal off at any time, at no cost, in Account settings of the Warren app or at %(url)s. Turning it off takes effect immediately."
+msgstr "自動更新は、Warren アプリのアカウント設定または %(url)s で、いつでも無料でオフにできます。オフにするとすぐに反映されます。"
+
+msgctxt "notifications"
+msgid "Your Warren time renews automatically around %(date)s, at %(price)s per month. You can turn auto-renewal off anytime in Account settings, at no cost."
+msgstr "Warren の利用期間は %(date)s ごろに月額 %(price)s で自動更新されます。自動更新はアカウント設定からいつでも無料でオフにできます。"
+
+msgctxt "notifications"
+msgid "Your Warren time renews automatically on or around %(date)s, for one month."
+msgstr "Warren の利用期間は %(date)s ごろに 1 か月分自動更新されます。"

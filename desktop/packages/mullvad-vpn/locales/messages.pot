@@ -560,6 +560,13 @@ msgctxt "account-view"
 msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
 msgstr ""
 
+#. Opens one archived renewal notice.
+#. Available placeholder:
+#. %(date)s - the date the notice was issued
+msgctxt "account-view"
+msgid "Notice of %(date)s"
+msgstr ""
+
 msgctxt "account-view"
 msgid "OUT OF TIME"
 msgstr ""
@@ -576,6 +583,11 @@ msgstr ""
 
 msgctxt "account-view"
 msgid "Public key (wallet address)"
+msgstr ""
+
+#. Label of the list of archived renewal notices (PDF files).
+msgctxt "account-view"
+msgid "Renewal notices"
 msgstr ""
 
 #. Permanent line showing the next automatic renewal date.
@@ -2516,6 +2528,13 @@ msgctxt "notifications"
 msgid "Account is out of time"
 msgstr ""
 
+#. Renewal notice document: the amount that will be charged.
+#. Available placeholder:
+#. %(price)s - the monthly price
+msgctxt "notifications"
+msgid "Amount charged: %(price)s, VAT included."
+msgstr ""
+
 msgctxt "notifications"
 msgid "App is out of sync. Please quit and restart."
 msgstr ""
@@ -2530,6 +2549,17 @@ msgstr ""
 
 msgctxt "notifications"
 msgid "Automatic renewal has been turned off for this account."
+msgstr ""
+
+msgctxt "notifications"
+msgid "Automatic renewal notice"
+msgstr ""
+
+#. Renewal notice document: the lowest monthly price any plan offers.
+#. Available placeholder:
+#. %(price)s - the best monthly price
+msgctxt "notifications"
+msgid "Best monthly rate Warren offers today: %(price)s."
 msgstr ""
 
 #. The system notification that notifies the user when a beta update is
@@ -2603,6 +2633,13 @@ msgctxt "notifications"
 msgid "IPv6 is not available, please try changing Device IP version setting."
 msgstr ""
 
+#. First line of the renewal notice document.
+#. Available placeholder:
+#. %(date)s - the date the notice was issued
+msgctxt "notifications"
+msgid "Issued on %(date)s"
+msgstr ""
+
 msgctxt "notifications"
 msgid "Lockdown mode active, connection blocked"
 msgstr ""
@@ -2665,6 +2702,30 @@ msgctxt "notifications"
 msgid "The apps excluded with %(splitTunneling)s might not work properly right now."
 msgstr ""
 
+#. The price rose after the renewal notice, so the renewal is not charged.
+#. Available placeholder:
+#. %(date)s - the date the Warren time ends
+msgctxt "notifications"
+msgid "The monthly price changed after your renewal notice, so this renewal was not charged. Your Warren time ends around %(date)s unless you buy more."
+msgstr ""
+
+#. Renewal notice document announcing a price increase.
+#. Available placeholders:
+#. %(previous)s - the former monthly price
+#. %(price)s - the new monthly price
+msgctxt "notifications"
+msgid "The monthly price changes from %(previous)s to %(price)s, VAT included, from this renewal."
+msgstr ""
+
+#. Notice of a price increase of the automatic renewal.
+#. Available placeholders:
+#. %(previous)s - the former monthly price
+#. %(price)s - the new monthly price
+#. %(date)s - the renewal date the new price applies from
+msgctxt "notifications"
+msgid "The monthly price of your automatic renewal changes from %(previous)s to %(price)s from around %(date)s. You can turn auto-renewal off anytime in Account settings, at no cost."
+msgstr ""
+
 msgctxt "notifications"
 msgid "Unable to apply firewall rules."
 msgstr ""
@@ -2717,6 +2778,13 @@ msgctxt "notifications"
 msgid "Upgrade"
 msgstr ""
 
+#. Renewal notice document: how to cancel, free of charge.
+#. Available placeholder:
+#. %(url)s - the page to cancel the contract
+msgctxt "notifications"
+msgid "You can turn automatic renewal off at any time, at no cost, in Account settings of the Warren app or at %(url)s. Turning it off takes effect immediately."
+msgstr ""
+
 msgctxt "notifications"
 msgid "Your bank asks for a confirmation to renew. Open Warren and buy credit to confirm."
 msgstr ""
@@ -2740,10 +2808,25 @@ msgid "Your privacy might be at risk with this unsupported app version. Please u
 msgstr ""
 
 #. The 30-day advance notice before an automatic renewal charge.
+#. Available placeholders:
+#. %(date)s - the renewal date
+#. %(price)s - the monthly price
+msgctxt "notifications"
+msgid "Your Warren time renews automatically around %(date)s, at %(price)s per month. You can turn auto-renewal off anytime in Account settings, at no cost."
+msgstr ""
+
+#. The 30-day advance notice before an automatic renewal charge.
 #. Available placeholder:
 #. %(date)s - the renewal date
 msgctxt "notifications"
 msgid "Your Warren time renews automatically around %(date)s, at the monthly rate. You can turn auto-renewal off anytime in Account settings."
+msgstr ""
+
+#. Renewal notice document: the next automatic renewal date.
+#. Available placeholder:
+#. %(date)s - the renewal date
+msgctxt "notifications"
+msgid "Your Warren time renews automatically on or around %(date)s, for one month."
 msgstr ""
 
 msgctxt "notifications"

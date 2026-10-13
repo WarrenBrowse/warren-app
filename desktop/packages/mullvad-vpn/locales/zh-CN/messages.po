@@ -6251,3 +6251,51 @@ msgstr "%(applicationName)s 出现问题，无法锁定在 VPN 上打开。"
 msgctxt "split-tunneling-view"
 msgid "Flatpak and Snap apps cannot be opened locked to the VPN"
 msgstr "Flatpak 和 Snap 应用无法锁定在 VPN 上打开"
+
+msgctxt "account-view"
+msgid "Notice of %(date)s"
+msgstr "%(date)s 的通知"
+
+msgctxt "account-view"
+msgid "Renewal notices"
+msgstr "续订通知"
+
+msgctxt "notifications"
+msgid "Amount charged: %(price)s, VAT included."
+msgstr "扣款金额：%(price)s，含增值税。"
+
+msgctxt "notifications"
+msgid "Automatic renewal notice"
+msgstr "自动续订通知"
+
+msgctxt "notifications"
+msgid "Best monthly rate Warren offers today: %(price)s."
+msgstr "Warren 当前提供的最优月度价格：%(price)s。"
+
+msgctxt "notifications"
+msgid "Issued on %(date)s"
+msgstr "发出日期：%(date)s"
+
+msgctxt "notifications"
+msgid "The monthly price changed after your renewal notice, so this renewal was not charged. Your Warren time ends around %(date)s unless you buy more."
+msgstr "月度价格在你的续订通知之后发生了变化，因此本次续订没有扣款。除非你另行购买，你的 Warren 时长将在 %(date)s 前后结束。"
+
+msgctxt "notifications"
+msgid "The monthly price changes from %(previous)s to %(price)s, VAT included, from this renewal."
+msgstr "自本次续订起，月度价格由 %(previous)s 调整为 %(price)s，含增值税。"
+
+msgctxt "notifications"
+msgid "The monthly price of your automatic renewal changes from %(previous)s to %(price)s from around %(date)s. You can turn auto-renewal off anytime in Account settings, at no cost."
+msgstr "自 %(date)s 前后起，你的自动续订月度价格由 %(previous)s 调整为 %(price)s。你可以随时在账户设置中免费关闭自动续订。"
+
+msgctxt "notifications"
+msgid "You can turn automatic renewal off at any time, at no cost, in Account settings of the Warren app or at %(url)s. Turning it off takes effect immediately."
+msgstr "你可以随时在 Warren 应用的账户设置中或通过 %(url)s 免费关闭自动续订，关闭后立即生效。"
+
+msgctxt "notifications"
+msgid "Your Warren time renews automatically around %(date)s, at %(price)s per month. You can turn auto-renewal off anytime in Account settings, at no cost."
+msgstr "你的 Warren 时长将在 %(date)s 前后以每月 %(price)s 自动续订。你可以随时在账户设置中免费关闭自动续订。"
+
+msgctxt "notifications"
+msgid "Your Warren time renews automatically on or around %(date)s, for one month."
+msgstr "你的 Warren 时长将在 %(date)s 当天或前后自动续订一个月。"
