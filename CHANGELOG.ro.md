@@ -48,6 +48,12 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Aplicația alege un server de intrare pe care rețeaua folosită îl
   poate atinge, adică pe o rețea doar IPv6 un server care răspunde pe IPv6.
 
+## [1.1.48] - 2026-10-13
+### Reparat
+- [Windows, macOS, Linux, Android] Repară port forwarding-ul refuzat timp de câteva minute după o
+  instalare nouă sau o pornire fără rețea: o cerere de autorizare de port eșuată e reluată acum
+  după câteva secunde, nu după zece minute.
+
 ## [1.1.47] - 2026-10-07
 ### Adăugat
 - [Windows] „Niciodată fără VPN” pe ruta unei aplicații în Rutarea aplicațiilor: aplicația nu are

@@ -51,6 +51,12 @@ par l'application, gardez-le tel quel.
 - [iOS] Choisir un serveur d'entrée que le réseau utilisé peut joindre, ce
   qui, sur un réseau en IPv6 seulement, veut dire un serveur qui répond en IPv6.
 
+## [1.1.48] - 2026-10-13
+### Corrigé
+- [Windows, macOS, Linux, Android] Corriger le port forwarding refusé pendant plusieurs minutes
+  après une première installation ou un démarrage sans réseau : une demande d'autorisation de port
+  qui échoue est désormais relancée au bout de quelques secondes, et non plus de dix minutes.
+
 ## [1.1.47] - 2026-10-07
 ### Ajouté
 - [Windows] « Jamais sans le VPN » sur la route d'une application dans Routage des apps :

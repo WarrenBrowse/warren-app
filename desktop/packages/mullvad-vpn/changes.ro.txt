@@ -1,15 +1,4 @@
-### Adăugat
-- [Windows] „Niciodată fără VPN” pe ruta unei aplicații în Rutarea aplicațiilor: aplicația nu are
-  internet ori de câte ori VPN-ul nu o transportă, inclusiv deconectat și cu Warren VPN închis sau
-  oprit. Aplicațiile blocate au un lacăt, iar ecranul principal arată câte așteaptă VPN-ul.
-- [Android] „Niciodată fără VPN” pe ruta unei aplicații. Cât timp Warren este aplicația VPN a
-  dispozitivului, aplicațiile blocate nu au internet fără VPN, de la pornire, iar celelalte își
-  păstrează conexiunea.
-- [Linux] „Deschide, niciodată fără VPN” pe ruta unei aplicații: aplicația deschisă astfel nu are
-  internet cât timp VPN-ul e oprit, până când e închisă.
-- [Windows, macOS, Linux, Android] Un peisaj al Franței și unul al României pe ecranul de
-  conectare când ieșirea e în acea țară, iar peisajul implicit de câmpie e redesenat.
-
 ### Reparat
-- [Windows] Repară resetarea firewall-ului rulată de dezinstalare și de instrumentul de recuperare,
-  care elimina regulile și apoi se oprea cu o eroare, așa că dezinstalarea o înregistra ca eșuată.
+- [Windows, macOS, Linux, Android] Repară port forwarding-ul refuzat timp de câteva minute după o
+  instalare nouă sau o pornire fără rețea: o cerere de autorizare de port eșuată e reluată acum
+  după câteva secunde, nu după zece minute.

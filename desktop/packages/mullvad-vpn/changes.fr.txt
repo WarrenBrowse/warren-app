@@ -1,17 +1,4 @@
-### Ajouté
-- [Windows] « Jamais sans le VPN » sur la route d'une application dans Routage des apps :
-  l'application n'a pas d'accès Internet tant que le VPN ne la transporte pas, y compris
-  déconnecté et avec Warren VPN fermé ou arrêté. Les applications verrouillées portent un cadenas,
-  et l'écran principal indique combien attendent le VPN.
-- [Android] « Jamais sans le VPN » sur la route d'une application. Tant que Warren est
-  l'application VPN de l'appareil, les applications verrouillées n'ont pas d'accès Internet sans
-  le VPN, dès le démarrage, et toutes les autres gardent leur connexion.
-- [Linux] « Ouvrir sans jamais sortir du VPN » sur la route d'une application : l'application
-  ouverte ainsi n'a pas d'accès Internet tant que le VPN est coupé, jusqu'à sa fermeture.
-- [Windows, macOS, Linux, Android] Un paysage de la France et un de la Roumanie sur l'écran de
-  connexion quand la sortie est dans ce pays, et le paysage de plaine par défaut redessiné.
-
 ### Corrigé
-- [Windows] Corriger la réinitialisation du pare-feu lancée par le désinstalleur et par l'outil de
-  récupération, qui retirait les règles puis plantait, si bien que le désinstalleur l'enregistrait
-  comme un échec.
+- [Windows, macOS, Linux, Android] Corriger le port forwarding refusé pendant plusieurs minutes
+  après une première installation ou un démarrage sans réseau : une demande d'autorisation de port
+  qui échoue est désormais relancée au bout de quelques secondes, et non plus de dix minutes.

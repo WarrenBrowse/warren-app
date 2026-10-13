@@ -56,6 +56,12 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Choose an entry server the network in use can reach, which on an
   IPv6-only network means one that answers on IPv6.
 
+## [1.1.48] - 2026-10-13
+### Fixed
+- [Windows, macOS, Linux, Android] Fix port forwarding refused for several minutes after a fresh
+  install or a start without network: a failed request for port entitlements is now retried
+  within seconds instead of ten minutes.
+
 ## [1.1.47] - 2026-10-07
 ### Added
 - [Windows] Add "Never without the VPN" to the route of an app in App routing: the app has no
