@@ -419,6 +419,12 @@ public final class WarrenWalletInteractor: @unchecked Sendable {
                 return
             }
             defer { wallet.forgetSecret() }
+            // The forum link goes first, signed by the wallet, so it does not
+            // outlive the account (GDPR erasure). Best effort: a failure here
+            // never blocks the deletion.
+            if !WarrenForumActivityClient.unlink(seed: wallet.seed) {
+                self?.logger.info("forum unlink before account deletion did not succeed")
+            }
             switch WarrenAccountClient.deleteAccount(seed: wallet.seed) {
             case .success:
                 completion(.success(()))

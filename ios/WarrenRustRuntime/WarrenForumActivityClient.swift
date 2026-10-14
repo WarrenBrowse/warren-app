@@ -152,6 +152,22 @@ public enum WarrenForumActivityClient {
         return seen(fromEnvelope: String(cString: raw))
     }
 
+    /// Removes the link between the wallet and its forum pseudonym, sent
+    /// before account deletion so the link does not outlive the account.
+    /// Blocking; best effort: account deletion goes ahead whatever it returns
+    /// (warren-connect's own purge drops an idle link after 730 days).
+    @discardableResult
+    public static func unlink(seed: Data) -> Bool {
+        guard seed.count == seedByteCount else { return false }
+        let raw = seed.withUnsafeBytes { buffer -> UnsafeMutablePointer<CChar>? in
+            guard let base = buffer.bindMemory(to: UInt8.self).baseAddress else { return nil }
+            return warren_forum_unlink(base)
+        }
+        guard let raw else { return false }
+        defer { warren_wallet_free_mnemonic(raw) }
+        return seen(fromEnvelope: String(cString: raw))
+    }
+
     // MARK: - Envelope decoding (pure, tested off-device)
 
     /// `{"counts":"03f"|null,"fetch":"ok"}`. An envelope that cannot be read

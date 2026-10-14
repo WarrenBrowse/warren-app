@@ -1285,6 +1285,25 @@ pub fn build_signed_notifications_seen_request(
     )
 }
 
+/// The wallet's own GDPR unlink (`POST /v1/forum/unlink`), sent at account
+/// deletion so the link between the wallet and its forum pseudonym does not
+/// outlive the account. Signed over its own path and an empty body: the
+/// account is the signer's. Its answer is read with
+/// [`seen_outcome_for_response`] (any 2xx, including a wallet that had no
+/// link).
+pub fn build_signed_unlink_request(
+    signing_key: &SigningKey,
+    timestamp: u64,
+) -> Result<SignedForumRequest, ForumRequestError> {
+    signed_post(
+        signing_key,
+        warren_product_env::CONNECT_HOST,
+        "/v1/forum/unlink",
+        NOTIFICATIONS_BODY.to_vec(),
+        timestamp,
+    )
+}
+
 /// What happened, as far as the panel needs to distinguish it. Mirrors the
 /// desktop `ForumNotificationKind`; the tokens are warren-connect's.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -2414,6 +2433,21 @@ mod tests {
         assert_eq!(seen.body, b"{}");
         assert_wire_parity(&seen, "/v1/forum/notifications/seen");
         assert_eq!(header(&seen, "X-Warren-Timestamp"), "1800000000");
+    }
+
+    #[test]
+    fn the_unlink_signs_its_own_path_over_an_empty_body() {
+        // GDPR unlink at account deletion: the account is derived from the
+        // signature, so the body names nobody, and its path keeps a
+        // notification signature from standing in for it.
+        let unlink = build_signed_unlink_request(&signing_key(), 1_800_000_000).expect("builds");
+        assert_eq!(
+            unlink.url,
+            "https://connect.warrenbrowse.com/v1/forum/unlink"
+        );
+        assert_eq!(unlink.body, b"{}");
+        assert_wire_parity(&unlink, "/v1/forum/unlink");
+        assert_eq!(header(&unlink, "X-Warren-Timestamp"), "1800000000");
     }
 
     fn row() -> serde_json::Value {

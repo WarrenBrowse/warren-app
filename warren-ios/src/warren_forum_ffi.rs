@@ -766,6 +766,42 @@ pub unsafe extern "C" fn warren_forum_notifications_seen(seed: *const u8) -> *mu
     })
 }
 
+/// Removes the link between the wallet and its forum pseudonym
+/// (`POST /v1/forum/unlink`), what account deletion sends first so the link
+/// does not outlive the account. Returns `{"ok":true}` (also for a wallet that
+/// had no link) or the classed failure; the caller deletes the account either
+/// way. The seed and the signature are never logged.
+///
+/// Blocking; call off the main thread.
+///
+/// # Safety
+/// `seed`, when non-null, must point to at least 32 readable bytes. The
+/// returned pointer must be freed exactly once via
+/// `warren_wallet_free_mnemonic`.
+#[unsafe(no_mangle)]
+pub unsafe extern "C" fn warren_forum_unlink(seed: *const u8) -> *mut c_char {
+    crate::ffi_guard(std::ptr::null_mut(), || {
+        // SAFETY: the input upholds the documented precondition.
+        let Some(seed) = (unsafe { read_seed(seed) }) else {
+            return json_cstring(forum::seen_envelope(&Err(FailReason::Build)));
+        };
+        let outcome = signed_forum_post(&seed, "forumUnlink", forum::build_signed_unlink_request)
+            .and_then(|(status, _)| {
+                let outcome = forum::seen_outcome_for_response(status);
+                log::info!(
+                    "forumUnlink: provider answered {status} ({})",
+                    if outcome.is_ok() {
+                        "unlinked"
+                    } else {
+                        "failed"
+                    }
+                );
+                outcome
+            });
+        json_cstring(forum::seen_envelope(&outcome))
+    })
+}
+
 /// The shape the two account-bound panel calls share: the clock preflight
 /// against the connect host, the signed request at the corrected time, the
 /// POST. `build` is the shared-crate builder for the route, so the signature

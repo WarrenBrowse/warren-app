@@ -1218,6 +1218,22 @@ char *warren_forum_notifications(const uint8_t *seed);
 char *warren_forum_notifications_seen(const uint8_t *seed);
 
 /**
+ * Removes the link between the wallet and its forum pseudonym
+ * (`POST /v1/forum/unlink`), what account deletion sends first so the link
+ * does not outlive the account. Returns `{"ok":true}` (also for a wallet that
+ * had no link) or the classed failure; the caller deletes the account either
+ * way. The seed and the signature are never logged.
+ *
+ * Blocking; call off the main thread.
+ *
+ * # Safety
+ * `seed`, when non-null, must point to at least 32 readable bytes. The
+ * returned pointer must be freed exactly once via
+ * `warren_wallet_free_mnemonic`.
+ */
+char *warren_forum_unlink(const uint8_t *seed);
+
+/**
  * Files the signed pubkey-mismatch report for the exit the user was just
  * warned about.
  *

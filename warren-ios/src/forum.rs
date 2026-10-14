@@ -102,8 +102,33 @@ pub fn build_signed_notifications_seen_request(
     warren_forum::build_signed_notifications_seen_request(&identity.signing_key(), timestamp)
 }
 
+/// Build the signed GDPR unlink sent before account deletion. Delegates to
+/// [`warren_forum::build_signed_unlink_request`].
+///
+/// # Errors
+///
+/// [`ForumRequestError::Invalid`] if the RNG is unusable.
+pub fn build_signed_unlink_request(
+    identity: &WarrenIdentity,
+    timestamp: u64,
+) -> Result<SignedForumRequest, ForumRequestError> {
+    warren_forum::build_signed_unlink_request(&identity.signing_key(), timestamp)
+}
+
 #[cfg(test)]
 mod tests {
+
+    #[test]
+    fn the_unlink_signs_its_own_route_from_a_seed_identity() {
+        let identity = WarrenIdentity::from_seed(&[0x11u8; 32]);
+        let unlink = build_signed_unlink_request(&identity, 1_800_000_000)
+            .expect("a valid identity must build the unlink");
+        assert_eq!(
+            unlink.url,
+            "https://connect.warrenbrowse.com/v1/forum/unlink"
+        );
+        assert_eq!(unlink.body, b"{}");
+    }
     use super::*;
 
     const SID: &str = "0123456789abcdef0123456789abcdef";
