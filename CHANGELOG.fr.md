@@ -51,6 +51,23 @@ par l'application, gardez-le tel quel.
 - [iOS] Choisir un serveur d'entrée que le réseau utilisé peut joindre, ce
   qui, sur un réseau en IPv6 seulement, veut dire un serveur qui répond en IPv6.
 
+## [1.1.49] - 2026-10-14
+### Ajouté
+- [Windows, macOS, Linux] Se rétracter d'un achat en cryptomonnaie dans les 14 jours depuis
+  l'écran Compte : l'application garde les achats qu'elle a crédités, envoie une déclaration signée
+  par votre wallet, et affiche sa référence, sa date et le montant remboursé.
+- [Windows, macOS, Linux] Afficher l'avis de renouvellement 30 jours avant chaque échéance, avec le
+  montant et le meilleur tarif, et le garder en PDF daté dans l'écran Compte. Une hausse de prix
+  est annoncée un mois à l'avance et n'est jamais prélevée sans cet avis.
+
+### Modifié
+- Toujours se connecter avec des jetons anonymes : le serveur de sortie ne sait jamais quel compte
+  est connecté. Un appareil qui n'a pas de jeton pour la période en cours attend de nouveaux jetons
+  au lieu de se connecter avec la signature du wallet.
+- [iOS] Supprimer le compte délie d'abord le pseudonyme du forum du wallet.
+- Mettre à jour la bibliothèque QUIC vers sa dernière version, avec ses correctifs de sécurité.
+- Retirer de l'application les mots « anonyme » et « intraçable » là où ils exagéraient le service.
+
 ## [1.1.48] - 2026-10-13
 ### Corrigé
 - [Windows, macOS, Linux, Android] Corriger le port forwarding refusé pendant plusieurs minutes

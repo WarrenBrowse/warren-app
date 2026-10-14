@@ -1,4 +1,15 @@
-### Fixed
-- [Windows, macOS, Linux, Android] Fix port forwarding refused for several minutes after a fresh
-  install or a start without network: a failed request for port entitlements is now retried
-  within seconds instead of ten minutes.
+### Added
+- [Windows, macOS, Linux] Withdraw a cryptocurrency purchase within 14 days from the Account
+  screen: the app keeps the purchases it redeemed, sends a declaration signed by your wallet, and
+  shows its reference, date and refund amount.
+- [Windows, macOS, Linux] Show the renewal notice 30 days before each renewal, with the amount and
+  the best tariff, and keep it as a dated PDF in the Account screen. A price increase is announced
+  a month ahead and is never charged without that notice.
+
+### Changed
+- Always connect with anonymous tokens: the exit server never learns which account is connected.
+  A device that holds no token for the current period waits for new tokens instead of connecting
+  with the wallet signature.
+- [iOS] Deleting the account first unlinks the forum pseudonym from the wallet.
+- Update the QUIC library to its latest release, with its security fixes.
+- Remove the words "anonymous" and "untraceable" from the app where they overstated the service.

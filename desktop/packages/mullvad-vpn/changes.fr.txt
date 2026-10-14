@@ -1,4 +1,15 @@
-### Corrigé
-- [Windows, macOS, Linux, Android] Corriger le port forwarding refusé pendant plusieurs minutes
-  après une première installation ou un démarrage sans réseau : une demande d'autorisation de port
-  qui échoue est désormais relancée au bout de quelques secondes, et non plus de dix minutes.
+### Ajouté
+- [Windows, macOS, Linux] Se rétracter d'un achat en cryptomonnaie dans les 14 jours depuis
+  l'écran Compte : l'application garde les achats qu'elle a crédités, envoie une déclaration signée
+  par votre wallet, et affiche sa référence, sa date et le montant remboursé.
+- [Windows, macOS, Linux] Afficher l'avis de renouvellement 30 jours avant chaque échéance, avec le
+  montant et le meilleur tarif, et le garder en PDF daté dans l'écran Compte. Une hausse de prix
+  est annoncée un mois à l'avance et n'est jamais prélevée sans cet avis.
+
+### Modifié
+- Toujours se connecter avec des jetons anonymes : le serveur de sortie ne sait jamais quel compte
+  est connecté. Un appareil qui n'a pas de jeton pour la période en cours attend de nouveaux jetons
+  au lieu de se connecter avec la signature du wallet.
+- [iOS] Supprimer le compte délie d'abord le pseudonyme du forum du wallet.
+- Mettre à jour la bibliothèque QUIC vers sa dernière version, avec ses correctifs de sécurité.
+- Retirer de l'application les mots « anonyme » et « intraçable » là où ils exagéraient le service.

@@ -48,6 +48,23 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Aplicația alege un server de intrare pe care rețeaua folosită îl
   poate atinge, adică pe o rețea doar IPv6 un server care răspunde pe IPv6.
 
+## [1.1.49] - 2026-10-14
+### Adăugat
+- [Windows, macOS, Linux] Retragerea dintr-o achiziție în criptomonedă în 14 zile, din ecranul
+  Cont: aplicația păstrează achizițiile pe care le-a creditat, trimite o declarație semnată de
+  wallet-ul tău și afișează referința, data și suma rambursată.
+- [Windows, macOS, Linux] Afișarea notificării de reînnoire cu 30 de zile înainte de fiecare
+  scadență, cu suma și cel mai bun tarif, păstrată ca PDF datat în ecranul Cont. O creștere de preț
+  este anunțată cu o lună înainte și nu este niciodată încasată fără această notificare.
+
+### Modificat
+- Conectarea se face mereu cu jetoane anonime: serverul de ieșire nu află niciodată ce cont este
+  conectat. Un dispozitiv fără jeton pentru perioada curentă așteaptă jetoane noi în loc să se
+  conecteze cu semnătura wallet-ului.
+- [iOS] Ștergerea contului dezleagă mai întâi pseudonimul de pe forum de wallet.
+- Actualizarea bibliotecii QUIC la ultima versiune, cu corecțiile ei de securitate.
+- Eliminarea cuvintelor „anonim" și „de neurmărit" din aplicație acolo unde exagerau serviciul.
+
 ## [1.1.48] - 2026-10-13
 ### Reparat
 - [Windows, macOS, Linux, Android] Repară port forwarding-ul refuzat timp de câteva minute după o
