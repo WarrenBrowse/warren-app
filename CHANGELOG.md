@@ -56,6 +56,11 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Choose an entry server the network in use can reach, which on an
   IPv6-only network means one that answers on IPv6.
 
+## [1.1.51] - 2026-10-14
+### Security
+- Take the TLS library fix for a handshake downgrade: a server answer could make the key exchange
+  fall back from the post-quantum hybrid to a classical one (rustls 0.23.46).
+
 ## [1.1.50] - 2026-10-14
 ### Added
 - [Windows, macOS, Linux] Withdraw a cryptocurrency purchase within 14 days from the Account

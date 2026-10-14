@@ -48,6 +48,12 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Aplicația alege un server de intrare pe care rețeaua folosită îl
   poate atinge, adică pe o rețea doar IPv6 un server care răspunde pe IPv6.
 
+## [1.1.51] - 2026-10-14
+### Securitate
+- Preluarea corecției bibliotecii TLS împotriva unei retrogradări a negocierii: un răspuns al
+  serverului putea face schimbul de chei să treacă de la hibridul post-cuantic la unul clasic
+  (rustls 0.23.46).
+
 ## [1.1.50] - 2026-10-14
 ### Adăugat
 - [Windows, macOS, Linux] Retragerea dintr-o achiziție în criptomonedă în 14 zile, din ecranul

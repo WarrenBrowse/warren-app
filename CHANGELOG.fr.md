@@ -51,6 +51,12 @@ par l'application, gardez-le tel quel.
 - [iOS] Choisir un serveur d'entrée que le réseau utilisé peut joindre, ce
   qui, sur un réseau en IPv6 seulement, veut dire un serveur qui répond en IPv6.
 
+## [1.1.51] - 2026-10-14
+### Sécurité
+- Intégration du correctif de la bibliothèque TLS contre un repli de la poignée de main : une
+  réponse du serveur pouvait faire passer l'échange de clés de l'hybride post-quantique à un échange
+  classique (rustls 0.23.46).
+
 ## [1.1.50] - 2026-10-14
 ### Ajouté
 - [Windows, macOS, Linux] Se rétracter d'un achat en cryptomonnaie dans les 14 jours depuis
