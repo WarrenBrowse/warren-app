@@ -5535,3 +5535,15 @@ msgstr "Niciun cont nu este conectat."
 msgctxt "account-view"
 msgid "The withdrawal could not be recorded. Try again later."
 msgstr "Retragerea nu a putut fi înregistrată. Încearcă din nou mai târziu."
+
+msgctxt "in-app-notifications"
+msgid "DEVICE CLOCK IS OFF"
+msgstr "CEASUL DISPOZITIVULUI ESTE DEREGLAT"
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off by %(minutes)d min: set it right to connect."
+msgstr "Ceasul acestui dispozitiv este decalat cu %(minutes)d min: potriviți-l pentru a vă conecta."
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off: set it right to connect."
+msgstr "Ceasul acestui dispozitiv este decalat: potriviți-l pentru a vă conecta."

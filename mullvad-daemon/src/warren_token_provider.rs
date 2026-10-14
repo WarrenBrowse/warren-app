@@ -72,9 +72,39 @@ use warren_identity::WarrenIdentity;
 use crate::warren_account_standing::StandingMonitor;
 use crate::warren_api_transport::WarrenApiTransport;
 use crate::warren_sdk_client::SharedWarrenSeed;
+use crate::warren_status::{TokenClockSkew, WarrenStatusCache};
 use crate::warren_wallet_activity::WalletActivity;
 
 type Manager = TokenManager<WarrenApiTransport>;
+
+/// Where the refresh loop reports a clock refusal: the daemon's status cache,
+/// installed once at startup. A loop that runs before it is installed (tests)
+/// reports nowhere.
+static CLOCK_STATUS: OnceLock<WarrenStatusCache> = OnceLock::new();
+
+/// Sends every token refresh's clock verdict to `cache`, so the UI can tell
+/// the user their device clock keeps the tunnel down.
+pub(crate) fn report_clock_skew_to(cache: WarrenStatusCache) {
+    let _ = CLOCK_STATUS.set(cache);
+}
+
+/// What a refresh round says about this device's clock: `Some(Some(_))` when
+/// the issuer refused it for the clock, `Some(None)` when the issuer accepted
+/// it, and `None` when the round failed for another reason, which says
+/// nothing about whether the clock was fixed.
+fn clock_verdict<T>(
+    refreshed: &Result<T, warren_api::TokenClientError>,
+) -> Option<Option<TokenClockSkew>> {
+    match refreshed {
+        Ok(_) => Some(None),
+        Err(warren_api::TokenClientError::Api(warren_api::ClientError::ClockSkew {
+            offset_secs,
+        })) => Some(Some(TokenClockSkew {
+            offset_secs: *offset_secs,
+        })),
+        Err(_) => None,
+    }
+}
 
 /// One manager per wallet, reused across reconnects so its RAM token store,
 /// its once-per-epoch issuance bookkeeping and its held serials survive
@@ -125,6 +155,9 @@ fn spawn_refresh(
                 remember_route_admission(path, manager.route_admission().as_ref());
             }
             announce_refresh(&credentials, &manager, now_unix_secs());
+            if let (Some(verdict), Some(status)) = (clock_verdict(&refreshed), CLOCK_STATUS.get()) {
+                status.set_token_clock_skew(verdict);
+            }
             if notice.due(&manager, now_unix_secs()) {
                 log::warn!("{ISSUED_ELSEWHERE_WARNING}");
             }
@@ -237,4 +270,38 @@ fn wallet_for(
             }
         })
         .clone()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use warren_api::{ClientError, TokenClientError};
+
+    #[test]
+    fn a_refresh_refused_for_the_clock_reports_the_offset() {
+        let refused: Result<(), TokenClientError> =
+            Err(TokenClientError::Api(ClientError::ClockSkew {
+                offset_secs: Some(-420),
+            }));
+        assert_eq!(
+            clock_verdict(&refused),
+            Some(Some(TokenClockSkew {
+                offset_secs: Some(-420)
+            })),
+            "a clock refusal must reach the UI with its offset"
+        );
+    }
+
+    #[test]
+    fn a_successful_refresh_clears_the_clock_refusal() {
+        assert_eq!(clock_verdict(&Ok(())), Some(None));
+    }
+
+    #[test]
+    fn another_failure_says_nothing_about_the_clock() {
+        // A network failure cannot tell whether the clock was fixed: the
+        // previous verdict stands until the issuer answers again.
+        let other: Result<(), TokenClientError> = Err(TokenClientError::BadDirectoryPolicy);
+        assert_eq!(clock_verdict(&other), None);
+    }
 }

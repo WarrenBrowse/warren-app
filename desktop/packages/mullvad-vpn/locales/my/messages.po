@@ -6354,3 +6354,15 @@ msgstr "မည်သည့်အကောင့်မျှ ဝင်ရော�
 msgctxt "account-view"
 msgid "The withdrawal could not be recorded. Try again later."
 msgstr "ပယ်ဖျက်မှုကို မှတ်တမ်းတင်၍ မရပါ။ နောက်မှ ထပ်ကြိုးစားပါ။"
+
+msgctxt "in-app-notifications"
+msgid "DEVICE CLOCK IS OFF"
+msgstr "စက်၏ နာရီ မှားနေသည်"
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off by %(minutes)d min: set it right to connect."
+msgstr "ဤစက်၏ နာရီသည် %(minutes)d မိနစ် မှားနေသည်: ချိတ်ဆက်ရန် နာရီကို မှန်အောင် ပြင်ပါ။"
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off: set it right to connect."
+msgstr "ဤစက်၏ နာရီ မှားနေသည်: ချိတ်ဆက်ရန် နာရီကို မှန်အောင် ပြင်ပါ။"

@@ -5534,3 +5534,15 @@ msgstr "Aucun compte n'est connecté."
 msgctxt "account-view"
 msgid "The withdrawal could not be recorded. Try again later."
 msgstr "La rétractation n'a pas pu être enregistrée. Réessayez plus tard."
+
+msgctxt "in-app-notifications"
+msgid "DEVICE CLOCK IS OFF"
+msgstr "L'HORLOGE DE L'APPAREIL EST DÉCALÉE"
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off by %(minutes)d min: set it right to connect."
+msgstr "L'horloge de cet appareil est décalée de %(minutes)d min : remettez-la à l'heure pour vous connecter."
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off: set it right to connect."
+msgstr "L'horloge de cet appareil est décalée : remettez-la à l'heure pour vous connecter."

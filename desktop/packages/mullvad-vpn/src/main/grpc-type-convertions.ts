@@ -78,6 +78,7 @@ import {
   WarrenNetworkInfo,
   WarrenNotice,
   WarrenStatus,
+  WarrenTokenClockSkew,
   wrapConstraint,
 } from '../shared/daemon-rpc-types';
 import log from '../shared/logging';
@@ -713,7 +714,17 @@ export function convertFromWarrenStatus(status: grpcTypes.WarrenStatus): WarrenS
     envYield: convertFromWarrenEnvYield(status.getEnvYield()),
     announcements: status.getAnnouncementsList().map(convertFromWarrenAnnouncement),
     accountStanding: convertFromWarrenAccountStanding(status.getAccountStanding()),
+    tokenClockSkew: convertFromWarrenTokenClockSkew(status.getTokenClockSkew()),
   };
+}
+
+export function convertFromWarrenTokenClockSkew(
+  skew: grpcTypes.WarrenTokenClockSkew | undefined,
+): WarrenTokenClockSkew | null {
+  if (skew === undefined) {
+    return null;
+  }
+  return { offsetSecs: skew.hasOffsetSecs() ? skew.getOffsetSecs() : undefined };
 }
 
 export function convertFromWarrenAccountStanding(

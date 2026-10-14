@@ -6351,3 +6351,15 @@ msgstr "没有账户登录。"
 msgctxt "account-view"
 msgid "The withdrawal could not be recorded. Try again later."
 msgstr "无法记录撤回，请稍后再试。"
+
+msgctxt "in-app-notifications"
+msgid "DEVICE CLOCK IS OFF"
+msgstr "设备时钟不准确"
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off by %(minutes)d min: set it right to connect."
+msgstr "此设备的时钟偏差 %(minutes)d 分钟：请校准时间后再连接。"
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off: set it right to connect."
+msgstr "此设备的时钟不准确：请校准时间后再连接。"

@@ -6371,3 +6371,15 @@ msgstr "هیچ حسابی وارد نشده است."
 msgctxt "account-view"
 msgid "The withdrawal could not be recorded. Try again later."
 msgstr "ثبت انصراف ممکن نشد. بعداً دوباره تلاش کنید."
+
+msgctxt "in-app-notifications"
+msgid "DEVICE CLOCK IS OFF"
+msgstr "ساعت دستگاه درست نیست"
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off by %(minutes)d min: set it right to connect."
+msgstr "ساعت این دستگاه %(minutes)d دقیقه اختلاف دارد: برای اتصال آن را تنظیم کنید."
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off: set it right to connect."
+msgstr "ساعت این دستگاه درست نیست: برای اتصال آن را تنظیم کنید."

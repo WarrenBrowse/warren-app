@@ -878,6 +878,9 @@ export interface WarrenStatus {
   // window and the ban in force. `null` until the daemon learned it, and for
   // a caller that may not see the wallet owner's identity.
   accountStanding: WarrenAccountStanding | null;
+  // Set while the token issuer refuses this wallet's refresh for the device
+  // clock; `null` once a refresh succeeds. Drives the device clock banner.
+  tokenClockSkew: WarrenTokenClockSkew | null;
 }
 
 // Category of the abuse report behind a strike.
@@ -1331,4 +1334,11 @@ export function compareRelayLocationLoose(lhs?: RelayLocation, rhs?: RelayLocati
   } else {
     return lhs === rhs;
   }
+}
+
+/** A token refresh refused for this device's clock. `offsetSecs` is the
+ * servers' clock minus this device's, when the refusal said: negative for a
+ * device running ahead. */
+export interface WarrenTokenClockSkew {
+  offsetSecs?: number;
 }

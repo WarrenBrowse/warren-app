@@ -377,6 +377,11 @@ fn warren_status_snapshot_to_proto(
             .account_standing
             .as_ref()
             .map(types::WarrenAccountStanding::from),
+        token_clock_skew: snap
+            .token_clock_skew
+            .map(|skew| types::WarrenTokenClockSkew {
+                offset_secs: skew.offset_secs,
+            }),
     }
 }
 
@@ -3670,6 +3675,27 @@ mod tests {
             Some(types::nat_pmp_status::ErrorReason::NotAuthorized as i32)
         );
         assert_eq!(mapping.retry_after_secs, Some(30));
+    }
+
+    /// A refresh refused for the device clock reaches the UI with its offset,
+    /// so the banner can say by how much; the steady state carries nothing.
+    #[test]
+    fn a_token_clock_refusal_reaches_the_status_with_its_offset() {
+        let snapshot = crate::warren_status::WarrenStatusSnapshot {
+            token_clock_skew: Some(crate::warren_status::TokenClockSkew {
+                offset_secs: Some(-420),
+            }),
+            ..Default::default()
+        };
+        let status = super::warren_status_snapshot_to_proto(snapshot);
+        assert_eq!(
+            status.token_clock_skew,
+            Some(types::WarrenTokenClockSkew {
+                offset_secs: Some(-420)
+            })
+        );
+        let steady = super::warren_status_snapshot_to_proto(Default::default());
+        assert_eq!(steady.token_clock_skew, None);
     }
 
     fn a_strike() -> types::WarrenAccountStrike {

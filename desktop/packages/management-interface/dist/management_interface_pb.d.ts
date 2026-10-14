@@ -2346,6 +2346,11 @@ export class WarrenStatus extends jspb.Message {
     getAccountStanding(): WarrenAccountStanding | undefined;
     setAccountStanding(value?: WarrenAccountStanding): WarrenStatus;
 
+    hasTokenClockSkew(): boolean;
+    clearTokenClockSkew(): void;
+    getTokenClockSkew(): WarrenTokenClockSkew | undefined;
+    setTokenClockSkew(value?: WarrenTokenClockSkew): WarrenStatus;
+
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): WarrenStatus.AsObject;
     static toObject(includeInstance: boolean, msg: WarrenStatus): WarrenStatus.AsObject;
@@ -2377,6 +2382,30 @@ export namespace WarrenStatus {
         envYield?: WarrenEnvYield.AsObject,
         announcementsList: Array<WarrenAnnouncement.AsObject>,
         accountStanding?: WarrenAccountStanding.AsObject,
+        tokenClockSkew?: WarrenTokenClockSkew.AsObject,
+    }
+}
+
+export class WarrenTokenClockSkew extends jspb.Message { 
+
+    hasOffsetSecs(): boolean;
+    clearOffsetSecs(): void;
+    getOffsetSecs(): number | undefined;
+    setOffsetSecs(value: number): WarrenTokenClockSkew;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WarrenTokenClockSkew.AsObject;
+    static toObject(includeInstance: boolean, msg: WarrenTokenClockSkew): WarrenTokenClockSkew.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WarrenTokenClockSkew, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WarrenTokenClockSkew;
+    static deserializeBinaryFromReader(message: WarrenTokenClockSkew, reader: jspb.BinaryReader): WarrenTokenClockSkew;
+}
+
+export namespace WarrenTokenClockSkew {
+    export type AsObject = {
+        offsetSecs?: number,
     }
 }
 

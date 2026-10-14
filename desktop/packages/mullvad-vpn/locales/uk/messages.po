@@ -6424,3 +6424,15 @@ msgstr "Жоден обліковий запис не ввійшов."
 msgctxt "account-view"
 msgid "The withdrawal could not be recorded. Try again later."
 msgstr "Не вдалося зареєструвати відмову. Спробуйте пізніше."
+
+msgctxt "in-app-notifications"
+msgid "DEVICE CLOCK IS OFF"
+msgstr "ГОДИННИК ПРИСТРОЮ ЙДЕ НЕПРАВИЛЬНО"
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off by %(minutes)d min: set it right to connect."
+msgstr "Годинник цього пристрою збився на %(minutes)d хв: налаштуйте його, щоб підключитися."
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off: set it right to connect."
+msgstr "Годинник цього пристрою збився: налаштуйте його, щоб підключитися."

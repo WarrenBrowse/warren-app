@@ -6384,3 +6384,15 @@ msgstr "No hay ninguna cuenta conectada."
 msgctxt "account-view"
 msgid "The withdrawal could not be recorded. Try again later."
 msgstr "No se pudo registrar el desistimiento. Inténtalo más tarde."
+
+msgctxt "in-app-notifications"
+msgid "DEVICE CLOCK IS OFF"
+msgstr "EL RELOJ DEL DISPOSITIVO ESTÁ DESAJUSTADO"
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off by %(minutes)d min: set it right to connect."
+msgstr "El reloj de este dispositivo está desajustado %(minutes)d min: corríjalo para conectarse."
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off: set it right to connect."
+msgstr "El reloj de este dispositivo está desajustado: corríjalo para conectarse."

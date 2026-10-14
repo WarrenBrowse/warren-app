@@ -283,6 +283,20 @@ pub struct WarrenStatusSnapshot {
     /// them answered, and without a wallet. Account-bound: the management
     /// interface withholds it from a caller that may not see the owner.
     pub account_standing: Option<warren_standing::Standing>,
+    /// The token issuer refused this wallet's last refresh because the
+    /// device clock is outside its window; `None` once a refresh succeeds.
+    /// With no token to admit the main session on, the tunnel cannot come
+    /// up until the clock is fixed, so the UI names the cause instead of
+    /// showing an endless connect.
+    pub token_clock_skew: Option<TokenClockSkew>,
+}
+
+/// A token refresh refused for this device's clock.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct TokenClockSkew {
+    /// The servers' clock minus this device's, in seconds, when the refusal
+    /// carried it: negative for a device running ahead.
+    pub offset_secs: Option<i64>,
 }
 
 /// One other product environment, as the watcher last saw it.
@@ -336,6 +350,7 @@ impl Default for WarrenStatusSnapshot {
             env_yield: None,
             announcements: Vec::new(),
             account_standing: None,
+            token_clock_skew: None,
         }
     }
 }
@@ -381,6 +396,7 @@ struct InternalState {
     env_yield: Option<EnvYieldSnapshot>,
     announcements: Vec<crate::warren_announcements_updater::DisplayAnnouncement>,
     account_standing: Option<warren_standing::Standing>,
+    token_clock_skew: Option<TokenClockSkew>,
 }
 
 impl Default for InternalState {
@@ -406,6 +422,7 @@ impl Default for InternalState {
             env_yield: None,
             announcements: Vec::new(),
             account_standing: None,
+            token_clock_skew: None,
         }
     }
 }
@@ -480,6 +497,7 @@ impl WarrenStatusCache {
             env_yield: inner.env_yield.clone(),
             announcements: inner.announcements.clone(),
             account_standing: inner.account_standing.clone(),
+            token_clock_skew: inner.token_clock_skew,
         }
     }
 
@@ -775,6 +793,24 @@ impl WarrenStatusCache {
                 return;
             }
             inner.pubkey_mismatch_pending = None;
+            Self::snapshot_of(&inner)
+        };
+        let _ = self.tx.send_replace(snapshot);
+    }
+
+    /// Record whether the token issuer refused the last refresh for this
+    /// device's clock, pushed by the token refresh loop after each round.
+    /// Idempotent: every failed round repeats the verdict.
+    pub fn set_token_clock_skew(&self, skew: Option<TokenClockSkew>) {
+        let snapshot = {
+            let mut inner = self
+                .state
+                .write()
+                .expect("warren_status state lock poisoned");
+            if inner.token_clock_skew == skew {
+                return;
+            }
+            inner.token_clock_skew = skew;
             Self::snapshot_of(&inner)
         };
         let _ = self.tx.send_replace(snapshot);
@@ -1781,6 +1817,43 @@ mod tests {
         cache.set_host_offline(true);
         rx.borrow_and_update();
         cache.set_host_offline(true);
+        assert!(!rx.has_changed().unwrap_or(false));
+    }
+
+    // --- Token issuer clock refusal ---------------------------------
+
+    #[test]
+    fn default_snapshot_reports_no_token_clock_skew() {
+        assert_eq!(WarrenStatusSnapshot::default().token_clock_skew, None);
+        assert_eq!(WarrenStatusCache::new().snapshot().token_clock_skew, None);
+    }
+
+    #[test]
+    fn a_clock_refusal_is_pushed_and_a_successful_refresh_drops_it() {
+        let cache = WarrenStatusCache::new();
+        let mut rx = cache.subscribe();
+        rx.borrow_and_update();
+        let skew = TokenClockSkew {
+            offset_secs: Some(-300),
+        };
+        cache.set_token_clock_skew(Some(skew));
+        assert!(rx.has_changed().unwrap_or(false));
+        assert_eq!(rx.borrow_and_update().token_clock_skew, Some(skew));
+        cache.set_token_clock_skew(None);
+        assert!(rx.has_changed().unwrap_or(false));
+        assert_eq!(rx.borrow_and_update().token_clock_skew, None);
+    }
+
+    #[test]
+    fn an_unchanged_clock_verdict_is_not_pushed_again() {
+        // Every failed refresh round repeats the verdict; the stream must not
+        // repaint the banner for an identical one.
+        let cache = WarrenStatusCache::new();
+        let mut rx = cache.subscribe();
+        let skew = TokenClockSkew { offset_secs: None };
+        cache.set_token_clock_skew(Some(skew));
+        rx.borrow_and_update();
+        cache.set_token_clock_skew(Some(skew));
         assert!(!rx.has_changed().unwrap_or(false));
     }
 

@@ -6384,3 +6384,15 @@ msgstr "Inget konto är inloggat."
 msgctxt "account-view"
 msgid "The withdrawal could not be recorded. Try again later."
 msgstr "Ångern kunde inte registreras. Försök igen senare."
+
+msgctxt "in-app-notifications"
+msgid "DEVICE CLOCK IS OFF"
+msgstr "ENHETENS KLOCKA GÅR FEL"
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off by %(minutes)d min: set it right to connect."
+msgstr "Klockan på den här enheten går %(minutes)d min fel: ställ in den rätt för att ansluta."
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off: set it right to connect."
+msgstr "Klockan på den här enheten går fel: ställ in den rätt för att ansluta."

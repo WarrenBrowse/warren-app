@@ -1996,6 +1996,10 @@ msgctxt "in-app-notifications"
 msgid "Could not upgrade the app."
 msgstr ""
 
+msgctxt "in-app-notifications"
+msgid "DEVICE CLOCK IS OFF"
+msgstr ""
+
 #. Notification title when app upgrade is verifying the installer.
 msgctxt "in-app-notifications"
 msgid "DOWNLOAD COMPLETE! VERIFYING..."
@@ -2123,6 +2127,18 @@ msgstr ""
 
 msgctxt "in-app-notifications"
 msgid "The server stopped forwarding your traffic. Warren will switch or reconnect automatically."
+msgstr ""
+
+#. Banner shown while the servers refuse to hand out
+#. connection tokens because the device clock is wrong.
+#. Available placeholders:
+#. %(minutes)d - how many minutes the clock is off
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off by %(minutes)d min: set it right to connect."
+msgstr ""
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off: set it right to connect."
 msgstr ""
 
 msgctxt "in-app-notifications"

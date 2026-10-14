@@ -6351,3 +6351,15 @@ msgstr "ログインしているアカウントがありません。"
 msgctxt "account-view"
 msgid "The withdrawal could not be recorded. Try again later."
 msgstr "撤回を記録できませんでした。後でもう一度お試しください。"
+
+msgctxt "in-app-notifications"
+msgid "DEVICE CLOCK IS OFF"
+msgstr "デバイスの時計がずれています"
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off by %(minutes)d min: set it right to connect."
+msgstr "このデバイスの時計が%(minutes)d分ずれています。接続するには時刻を正しく設定してください。"
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off: set it right to connect."
+msgstr "このデバイスの時計がずれています。接続するには時刻を正しく設定してください。"

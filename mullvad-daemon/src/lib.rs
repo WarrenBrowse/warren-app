@@ -1427,6 +1427,7 @@ impl Daemon {
         let command_sender = daemon_command_channel.sender();
         let app_upgrade_broadcast = tokio::sync::broadcast::channel(32).0;
         let warren_status_cache = warren_status::WarrenStatusCache::new();
+        warren_token_provider::report_clock_skew_to(warren_status_cache.clone());
         let warren_network_stats = warren_network_stats::WarrenNetworkStats::new();
         let management_interface = ManagementInterfaceServer::start(
             command_sender,

@@ -35,6 +35,7 @@ import {
   WarrenAccessRevokedNotificationProvider,
   WarrenAccountStrikeNotificationProvider,
   WarrenAnnouncementNotificationProvider,
+  WarrenClockSkewNotificationProvider,
   WarrenConnectingStuckNotificationProvider,
   WarrenEnvStandDownNotificationProvider,
   WarrenExitEgressNotificationProvider,
@@ -216,6 +217,11 @@ export default function NotificationArea(props: IProps) {
     // holds Connected through its migration grace window).
     new WarrenHostOfflineNotificationProvider({
       hostOffline: hostOffline,
+    }),
+    // The servers refuse this device's clock: with no session token the
+    // tunnel cannot come up until the user sets the clock right.
+    new WarrenClockSkewNotificationProvider({
+      tokenClockSkew: warrenStatus?.tokenClockSkew ?? null,
     }),
     // Same rank family, distinct cause: the host network is fine but
     // the exit stopped forwarding (doc 62 item 5). Only meaningful

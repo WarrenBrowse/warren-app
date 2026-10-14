@@ -1082,6 +1082,18 @@ message WarrenStatus {
   // wallet. Withheld from a caller that may not see the owner's identity: it
   // names the ports the account forwarded and the cases against it.
   WarrenAccountStanding account_standing = 19;
+  // Set while the token issuer refuses this wallet's refresh because the
+  // device clock is outside its window. With no session token the tunnel
+  // cannot come up, so the UI tells the user to set the clock right. Absent
+  // once a refresh succeeds.
+  WarrenTokenClockSkew token_clock_skew = 20;
+}
+
+// A token refresh refused for this device's clock.
+message WarrenTokenClockSkew {
+  // The servers' clock minus this device's, in seconds, when the refusal
+  // said: negative for a device running ahead.
+  optional sint64 offset_secs = 1;
 }
 
 // The wallet's port-forward abuse standing.

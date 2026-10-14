@@ -6451,3 +6451,15 @@ msgstr "لم يُسجَّل الدخول إلى أي حساب."
 msgctxt "account-view"
 msgid "The withdrawal could not be recorded. Try again later."
 msgstr "تعذّر تسجيل التراجع. حاول مرة أخرى لاحقًا."
+
+msgctxt "in-app-notifications"
+msgid "DEVICE CLOCK IS OFF"
+msgstr "ساعة الجهاز غير مضبوطة"
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off by %(minutes)d min: set it right to connect."
+msgstr "ساعة هذا الجهاز منحرفة بمقدار %(minutes)d دقيقة: اضبطها للاتصال."
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off: set it right to connect."
+msgstr "ساعة هذا الجهاز غير مضبوطة: اضبطها للاتصال."

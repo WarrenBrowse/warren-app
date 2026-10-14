@@ -6351,3 +6351,15 @@ msgstr "로그인된 계정이 없습니다."
 msgctxt "account-view"
 msgid "The withdrawal could not be recorded. Try again later."
 msgstr "철회를 기록하지 못했습니다. 나중에 다시 시도하세요."
+
+msgctxt "in-app-notifications"
+msgid "DEVICE CLOCK IS OFF"
+msgstr "기기 시계가 맞지 않습니다"
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off by %(minutes)d min: set it right to connect."
+msgstr "이 기기의 시계가 %(minutes)d분 어긋나 있습니다. 연결하려면 시간을 올바르게 맞추세요."
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off: set it right to connect."
+msgstr "이 기기의 시계가 어긋나 있습니다. 연결하려면 시간을 올바르게 맞추세요."

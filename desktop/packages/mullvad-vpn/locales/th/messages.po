@@ -6351,3 +6351,15 @@ msgstr "ไม่มีบัญชีที่เข้าสู่ระบบ
 msgctxt "account-view"
 msgid "The withdrawal could not be recorded. Try again later."
 msgstr "ไม่สามารถบันทึกการยกเลิกได้ โปรดลองอีกครั้งภายหลัง"
+
+msgctxt "in-app-notifications"
+msgid "DEVICE CLOCK IS OFF"
+msgstr "นาฬิกาของอุปกรณ์ไม่ตรง"
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off by %(minutes)d min: set it right to connect."
+msgstr "นาฬิกาของอุปกรณ์นี้คลาดเคลื่อน %(minutes)d นาที โปรดตั้งเวลาให้ถูกต้องเพื่อเชื่อมต่อ"
+
+msgctxt "in-app-notifications"
+msgid "This device’s clock is off: set it right to connect."
+msgstr "นาฬิกาของอุปกรณ์นี้คลาดเคลื่อน โปรดตั้งเวลาให้ถูกต้องเพื่อเชื่อมต่อ"
