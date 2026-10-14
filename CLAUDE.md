@@ -29,7 +29,9 @@ looking at the wrong repository.
 ## Android CI: what is gated, and what cannot be
 
 `.github/workflows/android-checks.yml` runs the JVM unit tests on push/PR
-touching `android/**` or `warren-jni/**`. Before it existed (2026-08-02) an
+touching `android/**` or `warren-jni/**`, and lints warren-jni for
+`aarch64-linux-android` with warnings denied (the desktop clippy never
+compiles its Android-only code). Before it existed (2026-08-02) an
 android-only change triggered **nothing**: the inherited `android-*.yml`
 workflows are all dispatch-only in this fork and `warren-checks.yml` is
 paths-filtered to the daemon/desktop tree. That is how a blocking HTTPS call on

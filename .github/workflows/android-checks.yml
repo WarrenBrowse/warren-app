@@ -104,6 +104,22 @@ jobs:
         working-directory: android
         run: ./gradlew --no-daemon --stacktrace app:cargoBuildArm64 app:cargoBuildArm
 
+      # Lints the same Android-only code with warnings denied. The cross-compile
+      # above builds it but lets a lint through, and the desktop clippy in
+      # warren-checks never sees it: two lint errors sat in warren-jni unnoticed
+      # until a manual run on 2026-10-14. The gradle step has installed the
+      # pinned NDK under ANDROID_HOME by now; clippy only needs its clang for the
+      # C build scripts.
+      - name: Clippy, Android arm64
+        run: |
+          NDK="$ANDROID_HOME/ndk/$(sed -n 's/^ndk = "\(.*\)"/\1/p' android/gradle/libs.versions.toml)"
+          TC="$NDK/toolchains/llvm/prebuilt/darwin-x86_64/bin"
+          export CC_aarch64_linux_android="$TC/aarch64-linux-android26-clang"
+          export AR_aarch64_linux_android="$TC/llvm-ar"
+          export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$TC/aarch64-linux-android26-clang"
+          cargo clippy --locked --target aarch64-linux-android -p warren-jni --all-targets -- -D warnings
+          cargo clippy --locked --target aarch64-linux-android -p warren-jni --all-features --all-targets -- -D warnings
+
       - name: Unit tests
         run: |
           android/gradlew -p android --no-daemon --stacktrace \

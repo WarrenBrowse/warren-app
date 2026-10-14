@@ -1937,7 +1937,6 @@ fn report_exit_down(
 /// minus the `budget` class (one report per user decision, so there is no
 /// loop to cap). Blocks on a network POST: invoke off the main thread.
 #[unsafe(no_mangle)]
-#[allow(clippy::too_many_arguments, reason = "the wire body has six fields")]
 pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_reportPubkeyMismatch<'local>(
     env: JNIEnv<'local>,
     _class: JClass<'local>,

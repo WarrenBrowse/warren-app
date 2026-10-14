@@ -367,7 +367,9 @@ fn post_best_effort(url: Option<String>) {
 }
 
 /// An unsigned GET whose status and body are read back: the two status
-/// reads that place a typed code.
+/// reads that place a typed code. Only the non-tunnel arm of
+/// `get_plain_within` reaches it.
+#[cfg(not(feature = "tunnel"))]
 async fn get_plain(
     transport: &ForumTransport,
     url: String,
