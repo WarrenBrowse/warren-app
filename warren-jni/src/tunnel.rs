@@ -225,10 +225,12 @@ pub async fn run_session(
     // it, not the teardown it caused.
     crate::android_jni::reset_egress_dead();
 
-    // v7 anonymous admission (default, warren-core doc 64): background-minted Privacy
+    // v7 anonymous admission (warren-core doc 64): background-minted Privacy
     // Pass tokens are presented at setup so the exit admits the session
-    // without learning the wallet; an empty stack (nothing minted yet, epoch
-    // drained, no issuance) keeps the v6 wallet-signed path.
+    // without learning the wallet. The main session is tokens-only
+    // (`MAIN_SESSION_ADMISSION`): an empty stack (nothing minted yet, epoch
+    // drained, no issuance) ends the attempt, and the next one takes the
+    // tokens the refresh brings.
     //
     // Every session of the tunnel (the main one and each route session of
     // "Country per app") opens a provider of its own, holding the serial it
@@ -599,6 +601,7 @@ async fn run_multi_hop_session(
         };
 
         let (supervisor, sessions) = MultiHopSupervisor::new(supervisor_config);
+        let supervisor = supervisor.with_session_admission(crate::MAIN_SESSION_ADMISSION);
         // The main session anchors whenever apps can be attributed, a
         // country set or not, so a country chosen while connected gets its
         // route by anchor without a reconnect (warren-core doc 107; the

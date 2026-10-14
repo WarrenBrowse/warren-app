@@ -1116,11 +1116,12 @@ impl ParametersGenerator {
                 warren_tunnel_params::assemble_from_last_good(&last_good, key, multi_hop, nat_pmp)
             }
         };
-        // v7 anonymous admission (default, warren-core doc 64): when the daemon has an API
+        // v7 anonymous admission (warren-core doc 64): when the daemon has an API
         // URL and a real wallet seed, present Privacy Pass tokens so the exit
-        // admits without learning the account pubkey. On token exhaustion or a
-        // logged-out wallet the provider yields an empty stack and the
-        // supervisor falls back to the v6 wallet-signed path.
+        // admits without learning the account pubkey. The main session is
+        // tokens-only (talpid-warren-tunnel `MAIN_SESSION_ADMISSION`): on token
+        // exhaustion or a logged-out wallet it does not come up, and the state
+        // machine retries once the refresh refills the store.
         if let (Some(api_url), Some(seed)) = (
             inner.warren_api_url.as_ref(),
             inner.warren_identity_seed.as_ref(),

@@ -208,6 +208,28 @@ mod forum_android;
 #[cfg(any(test, target_os = "android"))]
 mod rust_log;
 
+/// The admission of the tunnel's main session. Tokens only: the
+/// wallet-signed v6 request tells the exit which account is connected, so the
+/// main session never falls back to it (poka, 2026-10-14).
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
+pub(crate) const MAIN_SESSION_ADMISSION: warrenguard_transport::supervisor::SessionAdmission =
+    warrenguard_transport::supervisor::SessionAdmission::TokensOnly;
+
+#[cfg(test)]
+mod admission_tests {
+    #[test]
+    fn the_main_session_is_admitted_on_tokens_only_and_never_names_the_wallet() {
+        assert!(
+            matches!(
+                super::MAIN_SESSION_ADMISSION,
+                warrenguard_transport::supervisor::SessionAdmission::TokensOnly
+            ),
+            "the wallet-signed v6 admission tells the exit which account is connected; \
+             the main session must never fall back to it"
+        );
+    }
+}
+
 // ---------------------------------------------------------------------------
 // Security fix tests (host-runnable, no JNI required)
 // ---------------------------------------------------------------------------

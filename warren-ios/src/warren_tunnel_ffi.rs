@@ -1457,10 +1457,11 @@ fn spawn_multi_hop(
         // and the downlink pump both publish). The reassign task below
         // forwards each fresh address to Swift.
         let ip_assign_channel = IpAssignChannel::new();
-        // v7 anonymous admission (default, warren-core doc 64): present Privacy Pass tokens
-        // minted for the SAME wallet the handshake signs with, so the exit
-        // admits without learning the account pubkey. Empty stack (exhaustion)
-        // falls back to the v6 wallet-signed path.
+        // v7 anonymous admission (warren-core doc 64): present Privacy Pass
+        // tokens minted for the SAME wallet the handshake signs with, so the
+        // exit admits without learning the account pubkey. The main session is
+        // tokens-only: with no usable token it does not come up, and the next
+        // connect attempt takes the tokens the refresh brings.
         let session_token_provider = Some(crate::warren_token_provider::provider_for(
             signing_key.clone(),
             session_blinding,
@@ -1552,6 +1553,12 @@ fn spawn_multi_hop(
             n_connections: 1,
         };
         let (supervisor, watch) = MultiHopSupervisor::new(cfg);
+        // Tokens only: the wallet-signed v6 request tells the exit which account
+        // is connected, so the main session never falls back to it (poka,
+        // 2026-10-14; desktop `MAIN_SESSION_ADMISSION`, whose test pins it).
+        let supervisor = supervisor.with_session_admission(
+            warrenguard_transport::supervisor::SessionAdmission::TokensOnly,
+        );
         let _ = migrate_slot.set(supervisor.migrate_handle());
         arc_for_task.set_supervisor(supervisor.handle());
         // Publish what the exit actually GRANTED, not what the client asked

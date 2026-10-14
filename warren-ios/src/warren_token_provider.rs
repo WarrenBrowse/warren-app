@@ -14,8 +14,8 @@
 //! tokens. An exit leases each serial to one live session in the whole fleet:
 //! every dial is handed the whole current-epoch batch and the engine walks it,
 //! redialling with the next token when the exit refuses one. Nothing is
-//! consumed. v7 is the default; with no token this epoch the provider returns
-//! an empty stack and the supervisor falls back to the v6 wallet-signed path.
+//! consumed. v7 is the only admission; with no token this epoch the provider
+//! returns an empty stack and the tokens-only main session does not come up.
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, OnceLock};

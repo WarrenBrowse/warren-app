@@ -27,7 +27,9 @@ use talpid_tunnel::{
 };
 use talpid_types::net::AllowedTunnelTraffic;
 use warrenguard_multihop::RejectionReason;
+use warrenguard_transport::multihop::{MultiHopError, NoSessionTokenCause};
 use warrenguard_transport::route_anchor::RouteAnchorHandle;
+use warrenguard_transport::supervisor::SessionAdmission;
 // Re-exported below so downstream crates (talpid-core, mullvad-daemon)
 // can construct `MultiHopConfig` without depending on warrenguard-multihop
 // directly. Same pattern as `warren-relay-selector::warren_types`.
@@ -611,8 +613,8 @@ pub struct WarrenTunnelParameters {
     /// it. When a provider yields a non-empty stack, the session presents
     /// `IpRequestV7` and the exit admits on a token, never learning the
     /// account pubkey. `None` (or an empty stack when no token is held this
-    /// epoch) keeps the main session on the v6 wallet-signed path, and leaves
-    /// every route session unavailable. The daemon sources this from its
+    /// epoch) keeps the main session from coming up (it is tokens-only, see
+    /// `MAIN_SESSION_ADMISSION`), and leaves every route session unavailable. The daemon sources this from its
     /// long-lived `warren_api::TokenManager`, which mints on a timer; a
     /// provider never mints and never consumes.
     pub session_tokens: Option<SessionTokenSource>,
@@ -1679,13 +1681,16 @@ impl WarrenTunnelMonitor {
                     },
                 ) as warrenguard_transport::supervisor::DialRefusedObserver
             }),
-            // Anonymous v7 admission when the daemon supplied a token provider
-            // (default in the app): the exit admits on a Privacy Pass token and
-            // never learns the wallet. Empty stack / None falls back to v6.
+            // Anonymous v7 admission: the exit admits on a Privacy Pass token
+            // and never learns the wallet. The main session is tokens-only
+            // (`MAIN_SESSION_ADMISSION`): with no usable token it does not
+            // come up, and the state machine retries once the refresh refills
+            // the store.
             session_token_provider: params.session_tokens.as_ref().map(|open| open()),
         };
         let route_anchor = route_anchor_for(params);
         let (supervisor, mut client_rx) = MultiHopSupervisor::new(supervisor_config);
+        let supervisor = supervisor.with_session_admission(MAIN_SESSION_ADMISSION);
         let supervisor = match &route_anchor {
             Some(anchor) => supervisor.with_route_anchor(anchor.clone()),
             None => supervisor,
@@ -1733,23 +1738,21 @@ impl WarrenTunnelMonitor {
                 runtime.clone(),
             ));
         }
-        // Whether the supervisor stopped because this network routes no
-        // entry: sent right after the session watch it held has closed.
-        let (unroutable_tx, mut unroutable_rx) = tokio::sync::oneshot::channel::<bool>();
+        // Why the supervisor stopped (no routable entry, no usable token, or
+        // anything else): sent right after the session watch it held has
+        // closed.
+        let (verdict_tx, mut verdict_rx) = tokio::sync::oneshot::channel::<SupervisorVerdict>();
         let supervisor_handle = runtime.spawn(async move {
-            let unroutable = match supervisor.run().await {
-                Ok(()) => false,
+            let verdict = match supervisor.run().await {
+                Ok(()) => SupervisorVerdict::Other,
                 Err(e) => {
                     log::warn!(
                         "{TRACE_PREFIX} multi-hop supervisor terminated with non-retriable error: {e:#}"
                     );
-                    matches!(
-                        e,
-                        warrenguard_transport::multihop::MultiHopError::NoReachableEntry
-                    )
+                    SupervisorVerdict::of(&e)
                 }
             };
-            let _ = unroutable_tx.send(unroutable);
+            let _ = verdict_tx.send(verdict);
         });
 
         let handshake_t = Instant::now();
@@ -1799,15 +1802,16 @@ impl WarrenTunnelMonitor {
                                 )));
                             }
                             if matches!(changed, Ok(Err(_))) {
-                                let unroutable = matches!(
-                                    tokio::time::timeout(
-                                        SUPERVISOR_VERDICT_WAIT,
-                                        &mut unroutable_rx
-                                    )
-                                    .await,
-                                    Ok(Ok(true))
-                                );
-                                return Err(initial_session_closed(unroutable));
+                                let verdict = match tokio::time::timeout(
+                                    SUPERVISOR_VERDICT_WAIT,
+                                    &mut verdict_rx,
+                                )
+                                .await
+                                {
+                                    Ok(Ok(verdict)) => verdict,
+                                    _ => SupervisorVerdict::Other,
+                                };
+                                return Err(initial_session_closed(verdict));
                             }
                         }
                         _ = supervisor_fatal_rx.changed() => {
@@ -3832,14 +3836,48 @@ fn multi_hop_daita_shared(
 /// the closure by a scheduling round, never by a dial.
 const SUPERVISOR_VERDICT_WAIT: std::time::Duration = std::time::Duration::from_millis(500);
 
-/// The error a first session that closed before it came up ends in:
-/// `unroutable` when the engine found no entry this network routes (forum
-/// topic 210), which the log then names instead of a generic failure.
-fn initial_session_closed(unroutable: bool) -> Error {
-    Error::Handshake(if unroutable {
-        "no entry relay reachable on this network's address families".to_owned()
-    } else {
-        "multi-hop supervisor stopped before an initial session".to_owned()
+/// The admission of the tunnel's main session. Tokens only: the wallet-signed
+/// v6 request tells the exit which account is connected, so the main session
+/// never falls back to it (poka, 2026-10-14; Lexter compliance report § 3.1).
+pub const MAIN_SESSION_ADMISSION: SessionAdmission = SessionAdmission::TokensOnly;
+
+/// Why the main supervisor stopped, as far as the first-session error needs it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum SupervisorVerdict {
+    /// The engine found no entry this network routes (forum topic 210).
+    Unroutable,
+    /// The tokens-only main session had no token the exit would admit.
+    NoToken(NoSessionTokenCause),
+    /// Anything else.
+    Other,
+}
+
+impl SupervisorVerdict {
+    fn of(error: &MultiHopError) -> Self {
+        match error {
+            MultiHopError::NoReachableEntry => Self::Unroutable,
+            MultiHopError::NoSessionToken(cause) => Self::NoToken(*cause),
+            _ => Self::Other,
+        }
+    }
+}
+
+/// The error a first session that closed before it came up ends in, naming
+/// the cause the log needs instead of a generic failure. Every case stays a
+/// recoverable handshake failure: a network change brings an entry back, and
+/// the token refresh refills an empty store.
+fn initial_session_closed(verdict: SupervisorVerdict) -> Error {
+    Error::Handshake(match verdict {
+        SupervisorVerdict::Unroutable => {
+            "no entry relay reachable on this network's address families".to_owned()
+        }
+        SupervisorVerdict::NoToken(cause) => format!(
+            "no anonymous session token the exit admits ({cause}); retrying as the token \
+             refresh brings new ones"
+        ),
+        SupervisorVerdict::Other => {
+            "multi-hop supervisor stopped before an initial session".to_owned()
+        }
     })
 }
 
@@ -4219,17 +4257,67 @@ mod tests {
 
     #[test]
     fn a_first_session_ended_by_an_unroutable_fleet_names_the_network() {
-        let Error::Handshake(unroutable) = initial_session_closed(true) else {
+        let Error::Handshake(unroutable) = initial_session_closed(SupervisorVerdict::Unroutable)
+        else {
             panic!("a handshake failure");
         };
         assert!(
             unroutable.contains("no entry relay reachable"),
             "{unroutable}"
         );
-        let Error::Handshake(other) = initial_session_closed(false) else {
+        let Error::Handshake(other) = initial_session_closed(SupervisorVerdict::Other) else {
             panic!("a handshake failure");
         };
         assert!(!other.contains("reachable"), "{other}");
+    }
+
+    #[test]
+    fn the_main_session_is_admitted_on_tokens_only_and_never_names_the_wallet() {
+        assert!(
+            matches!(MAIN_SESSION_ADMISSION, SessionAdmission::TokensOnly),
+            "the wallet-signed v6 admission tells the exit which account is connected; \
+             the main session must never fall back to it"
+        );
+    }
+
+    #[test]
+    fn a_first_session_without_a_token_says_so_and_stays_recoverable() {
+        for cause in [
+            NoSessionTokenCause::Empty,
+            NoSessionTokenCause::AllRefused,
+            NoSessionTokenCause::AllInUse,
+        ] {
+            let err = initial_session_closed(SupervisorVerdict::NoToken(cause));
+            let Error::Handshake(message) = &err else {
+                panic!("a handshake failure, got {err:?}");
+            };
+            assert!(
+                message.contains("no anonymous session token"),
+                "{cause:?}: {message}"
+            );
+            assert!(
+                err.is_recoverable(),
+                "{cause:?}: the token refresh refills the store, so the state machine must retry"
+            );
+        }
+    }
+
+    #[test]
+    fn the_supervisor_verdict_names_a_missing_token() {
+        assert_eq!(
+            SupervisorVerdict::of(&MultiHopError::NoSessionToken(
+                NoSessionTokenCause::AllInUse
+            )),
+            SupervisorVerdict::NoToken(NoSessionTokenCause::AllInUse)
+        );
+        assert_eq!(
+            SupervisorVerdict::of(&MultiHopError::NoReachableEntry),
+            SupervisorVerdict::Unroutable
+        );
+        assert_eq!(
+            SupervisorVerdict::of(&MultiHopError::NoSession),
+            SupervisorVerdict::Other
+        );
     }
 
     #[test]

@@ -31,7 +31,7 @@ pub type SessionTokenSource = Arc<dyn Fn() -> SessionTokenProvider + Send + Sync
 /// Wraps a source of serialized token bytes (one 354-byte Privacy Pass token
 /// each, e.g. `warren_api::TokenManager::session_stack`) into a
 /// [`SessionTokenProvider`] the multi-hop supervisor consumes. An empty stack
-/// keeps the v6 wallet-signed path of a main session.
+/// keeps a tokens-only main session from coming up.
 ///
 /// The stack is cut to the first [`warrenguard_wire::MAX_SESSION_TOKENS`]: the
 /// default admission sends the whole stack in one setup request, and an exit

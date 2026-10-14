@@ -71,9 +71,9 @@ type NowFn = Arc<dyn Fn() -> u64 + Send + Sync>;
 
 /// Source of the per-session token stack, in the serialized form the tunnel
 /// layer wraps into wire `SessionToken`s: the current epoch's batch, never
-/// consumed. An empty stack means "no token this epoch" and keeps the v6
-/// wallet-signed path (availability over a temporary anonymity downgrade,
-/// matching desktop and iOS).
+/// consumed. An empty stack means "no token this epoch": the tokens-only main
+/// session does not come up until the refresh brings tokens (matching desktop
+/// and iOS).
 #[cfg(test)]
 pub(crate) type StackSource =
     Arc<dyn Fn() -> Vec<[u8; warrenguard_token::TOKEN_LEN]> + Send + Sync>;
@@ -813,7 +813,7 @@ mod tests {
         wait_for(|| state.issue_calls.load(Ordering::SeqCst) >= 1).await;
 
         // The issuer answered but refused (wallet not subscribed): no token,
-        // the dial rides the v6 wallet-signed path.
+        // so the tokens-only main session does not come up.
         assert!(source().is_empty());
     }
 

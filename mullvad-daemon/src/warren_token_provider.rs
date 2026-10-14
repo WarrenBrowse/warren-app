@@ -25,11 +25,12 @@
 //! serial goes to the tail of a stack and never out of it: it may be the very
 //! serial the exit admitted this session on, the only one it would renew.
 //!
-//! v7 is the default: [`source_for`] is set on every assembled
-//! [`talpid_warren_tunnel::WarrenTunnelParameters`]. With no token this epoch
-//! (or a logged-out sentinel wallet with no subscription) the main session's
-//! stack is empty and the supervisor falls back to the v6 wallet-signed path,
-//! so the tunnel always works; a route session is then unavailable.
+//! v7 is the only admission: [`source_for`] is set on every assembled
+//! [`talpid_warren_tunnel::WarrenTunnelParameters`], and the main session is
+//! tokens-only. With no token this epoch (or a logged-out sentinel wallet with
+//! no subscription) the main session does not come up and the state machine
+//! retries until the refresh brings tokens; a route session is then
+//! unavailable too.
 //!
 //! An issuer that refuses the wallet as banned is reported to the account
 //! standing monitor, which blocks the tunnel with the suspension before any

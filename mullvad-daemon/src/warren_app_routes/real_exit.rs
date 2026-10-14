@@ -731,10 +731,10 @@ impl Harness {
             from_tunnel,
         };
 
-        // The main session, under the main session's default admission
-        // (tokens, else the wallet) but with a key that is no wallet: an exit
-        // that admits it can only have admitted a token. It anchors when
-        // route admission is offered, as the tunnel's does.
+        // The main session, under the tunnel's tokens-only admission and with a
+        // key that is no wallet: an exit that admits it can only have admitted
+        // a token. It anchors when route admission is offered, as the
+        // tunnel's does.
         let anchor = admission.as_ref().map(|admission| {
             RouteAnchorHandle::new(RouteAnchorConfig {
                 kem: admission.kem().clone(),
@@ -746,6 +746,8 @@ impl Harness {
             main_source(),
             ip_assign.clone(),
         ));
+        // The tunnel's own admission: tokens only, never the wallet.
+        let main = main.with_session_admission(talpid_warren_tunnel::MAIN_SESSION_ADMISSION);
         let main = match &anchor {
             Some(anchor) => main.with_route_anchor(anchor.clone()),
             None => main,
