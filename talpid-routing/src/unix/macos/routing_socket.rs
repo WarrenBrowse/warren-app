@@ -160,9 +160,13 @@ impl RoutingSocketInner {
         let fd = socket(AddressFamily::Route, SockType::Raw, SockFlag::empty(), None)?;
         let _ = fcntl::fcntl(&fd, fcntl::FcntlArg::F_SETFL(fcntl::OFlag::O_NONBLOCK))?;
         let socket = File::from(fd);
-        Ok(Self {
-            socket: AsyncFd::new(socket)?,
-        })
+        // tokio 1.53 deprecated the safe constructors in favour of `unsafe` ones
+        // (tokio#8587). The I/O safety they ask for holds here: the `AsyncFd` takes
+        // the `File` by value, so nothing else can close or reuse the descriptor
+        // while it is registered.
+        #[expect(deprecated)]
+        let socket = AsyncFd::new(socket)?;
+        Ok(Self { socket })
     }
 
     async fn read(&mut self, out: &mut [u8]) -> std::io::Result<usize> {

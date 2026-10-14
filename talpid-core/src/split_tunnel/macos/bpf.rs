@@ -260,9 +260,13 @@ impl BpfStream {
     }
 
     fn from_file(file: File) -> Result<Self, Error> {
-        Ok(BpfStream {
-            inner: AsyncFd::with_interest(file, Interest::READABLE).map_err(Error::AsyncFd)?,
-        })
+        // tokio 1.53 deprecated the safe constructors in favour of `unsafe` ones
+        // (tokio#8587). The I/O safety they ask for holds here: the `AsyncFd` takes
+        // the `File` by value, so nothing else can close or reuse the descriptor
+        // while it is registered.
+        #[expect(deprecated)]
+        let inner = AsyncFd::with_interest(file, Interest::READABLE).map_err(Error::AsyncFd)?;
+        Ok(BpfStream { inner })
     }
 }
 
