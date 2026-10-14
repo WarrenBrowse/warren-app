@@ -884,9 +884,11 @@ function linuxAfterPack(baseAfterPack) {
     const targetExecutable = path.join(context.appOutDir, `warren-gui${envSuffix}`);
     const launcherScript = path.join(context.appOutDir, 'warren-gui-launcher.sh');
 
+    // generateFuseConfig is async since electron-builder 26.15: an unawaited
+    // promise reaches @electron/fuses without a fuse version and the pack fails.
     await context.packager.addElectronFuses(
       context,
-      context.packager.generateFuseConfig(LINUX_ELECTRON_FUSES),
+      await context.packager.generateFuseConfig(LINUX_ELECTRON_FUSES),
     );
     // rename the packaged executable to warren-gui
     await fs.promises.rename(sourceExecutable, targetExecutable);

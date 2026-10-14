@@ -19,7 +19,7 @@ export declare function linuxAfterPack(
 ): (context: {
   appOutDir: string;
   packager: {
-    generateFuseConfig(fuses: unknown): unknown;
+    generateFuseConfig(fuses: unknown): unknown | Promise<unknown>;
     addElectronFuses(context: { appOutDir: string }, fuses: unknown): Promise<unknown>;
   };
 }) => Promise<void>;

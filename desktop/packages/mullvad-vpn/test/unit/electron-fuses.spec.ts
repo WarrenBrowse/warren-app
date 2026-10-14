@@ -96,4 +96,33 @@ describe('the Electron fuses', () => {
     },
     timeoutMs,
   );
+
+  it(
+    'reach the fuse flipper resolved when electron-builder generates them asynchronously',
+    async () => {
+      const { linuxAfterPack } = await distribution();
+      const appOutDir = fs.mkdtempSync(path.join(os.tmpdir(), 'warren-linux-pack-'));
+      try {
+        fs.writeFileSync(path.join(appOutDir, 'warren-vpn'), 'electron');
+        fs.writeFileSync(path.join(appOutDir, 'warren-gui-launcher.sh'), 'launcher');
+        const flipped: unknown[] = [];
+        const packager = {
+          // electron-builder 26.15 made this async; a promise handed on
+          // unresolved reaches @electron/fuses without a fuse version.
+          generateFuseConfig: (fuses: unknown) => Promise.resolve({ generatedFrom: fuses }),
+          addElectronFuses: (_context: { appOutDir: string }, fuses: unknown) => {
+            flipped.push(fuses);
+            return Promise.resolve();
+          },
+        };
+
+        await linuxAfterPack(undefined)({ appOutDir, packager });
+
+        expect(flipped).toEqual([{ generatedFrom: HARDENED }]);
+      } finally {
+        fs.rmSync(appOutDir, { recursive: true, force: true });
+      }
+    },
+    timeoutMs,
+  );
 });
