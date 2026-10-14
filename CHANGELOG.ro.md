@@ -48,7 +48,7 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Aplicația alege un server de intrare pe care rețeaua folosită îl
   poate atinge, adică pe o rețea doar IPv6 un server care răspunde pe IPv6.
 
-## [1.1.49] - 2026-10-14
+## [1.1.50] - 2026-10-14
 ### Adăugat
 - [Windows, macOS, Linux] Retragerea dintr-o achiziție în criptomonedă în 14 zile, din ecranul
   Cont: aplicația păstrează achizițiile pe care le-a creditat, trimite o declarație semnată de

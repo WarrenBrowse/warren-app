@@ -56,7 +56,7 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Choose an entry server the network in use can reach, which on an
   IPv6-only network means one that answers on IPv6.
 
-## [1.1.49] - 2026-10-14
+## [1.1.50] - 2026-10-14
 ### Added
 - [Windows, macOS, Linux] Withdraw a cryptocurrency purchase within 14 days from the Account
   screen: the app keeps the purchases it redeemed, sends a declaration signed by your wallet, and

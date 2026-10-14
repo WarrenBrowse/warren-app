@@ -51,7 +51,7 @@ par l'application, gardez-le tel quel.
 - [iOS] Choisir un serveur d'entrée que le réseau utilisé peut joindre, ce
   qui, sur un réseau en IPv6 seulement, veut dire un serveur qui répond en IPv6.
 
-## [1.1.49] - 2026-10-14
+## [1.1.50] - 2026-10-14
 ### Ajouté
 - [Windows, macOS, Linux] Se rétracter d'un achat en cryptomonnaie dans les 14 jours depuis
   l'écran Compte : l'application garde les achats qu'elle a crédités, envoie une déclaration signée
