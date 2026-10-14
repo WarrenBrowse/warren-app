@@ -19,9 +19,9 @@
     "test": "npm run test --workspaces --if-present"
   },
   "devDependencies": {
-    "@babel/core": "7.26.10",
-    "@babel/helpers": "7.26.10",
-    "@babel/runtime": "7.26.10",
+    "@babel/core": "7.29.7",
+    "@babel/helpers": "7.29.7",
+    "@babel/runtime": "7.29.7",
     "@eslint/js": "^9.10.0",
     "@types/eslint__js": "^8.42.3",
     "@types/node": "^22.19.2",
@@ -29,7 +29,7 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "eslint-plugin-simple-import-sort": "^12.1.1",
-    "postcss": "8.5.15",
+    "postcss": "8.5.30",
     "prettier": "^3.3.3",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.15.0"
@@ -44,7 +44,7 @@
   },
   "overrides": {
     "grpc_tools_node_protoc_ts": {
-      "handlebars": "^4.7.9"
+      "handlebars": "^4.7.10"
     }
   }
 }
