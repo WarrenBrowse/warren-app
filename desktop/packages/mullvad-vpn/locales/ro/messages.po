@@ -5483,3 +5483,55 @@ msgstr "Timpul tău Warren se reînnoiește automat în jurul datei de %(date)s,
 msgctxt "notifications"
 msgid "Your Warren time renews automatically on or around %(date)s, for one month."
 msgstr "Timpul tău Warren se reînnoiește automat la %(date)s sau în jurul acestei date, pentru o lună."
+
+msgctxt "account-view"
+msgid "Withdrawal (14 days)"
+msgstr "Retragere (14 zile)"
+
+msgctxt "account-view"
+msgid "Purchase of %(date)s, withdrawal possible until %(deadline)s"
+msgstr "Achiziție din %(date)s, retragere posibilă până la %(deadline)s"
+
+msgctxt "account-view"
+msgid "Withdraw"
+msgstr "Retrage-te"
+
+msgctxt "account-view"
+msgid "Refund address (crypto payment only)"
+msgstr "Adresă de rambursare (doar pentru plata în cripto)"
+
+msgctxt "account-view"
+msgid "Confirm the withdrawal"
+msgstr "Confirmă retragerea"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded on %(date)s, reference %(reference)s"
+msgstr "Retragere înregistrată pe %(date)s, referință %(reference)s"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded, reference %(reference)s"
+msgstr "Retragere înregistrată, referință %(reference)s"
+
+msgctxt "account-view"
+msgid "Refund owed: %(amount)s"
+msgstr "Sumă de rambursat: %(amount)s"
+
+msgctxt "account-view"
+msgid "This purchase was not credited to this account."
+msgstr "Această achiziție nu a fost creditată în acest cont."
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: contact support."
+msgstr "O retragere cu altă adresă de rambursare este deja înregistrată: contactează asistența."
+
+msgctxt "account-view"
+msgid "The refund address is not valid."
+msgstr "Adresa de rambursare nu este validă."
+
+msgctxt "account-view"
+msgid "No account is logged in."
+msgstr "Niciun cont nu este conectat."
+
+msgctxt "account-view"
+msgid "The withdrawal could not be recorded. Try again later."
+msgstr "Retragerea nu a putut fi înregistrată. Încearcă din nou mai târziu."

@@ -6332,3 +6332,55 @@ msgstr "Din Warren-tid förnyas automatiskt runt %(date)s för %(price)s per må
 msgctxt "notifications"
 msgid "Your Warren time renews automatically on or around %(date)s, for one month."
 msgstr "Din Warren-tid förnyas automatiskt med en månad den %(date)s eller runt det datumet."
+
+msgctxt "account-view"
+msgid "Withdrawal (14 days)"
+msgstr "Ångerrätt (14 dagar)"
+
+msgctxt "account-view"
+msgid "Purchase of %(date)s, withdrawal possible until %(deadline)s"
+msgstr "Köp från %(date)s, ångra möjligt till %(deadline)s"
+
+msgctxt "account-view"
+msgid "Withdraw"
+msgstr "Ångra köpet"
+
+msgctxt "account-view"
+msgid "Refund address (crypto payment only)"
+msgstr "Återbetalningsadress (endast vid kryptobetalning)"
+
+msgctxt "account-view"
+msgid "Confirm the withdrawal"
+msgstr "Bekräfta ångern"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded on %(date)s, reference %(reference)s"
+msgstr "Ånger registrerad %(date)s, referens %(reference)s"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded, reference %(reference)s"
+msgstr "Ånger registrerad, referens %(reference)s"
+
+msgctxt "account-view"
+msgid "Refund owed: %(amount)s"
+msgstr "Belopp att återbetala: %(amount)s"
+
+msgctxt "account-view"
+msgid "This purchase was not credited to this account."
+msgstr "Det här köpet krediterades inte det här kontot."
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: contact support."
+msgstr "En ånger med en annan återbetalningsadress är redan registrerad: kontakta supporten."
+
+msgctxt "account-view"
+msgid "The refund address is not valid."
+msgstr "Återbetalningsadressen är inte giltig."
+
+msgctxt "account-view"
+msgid "No account is logged in."
+msgstr "Inget konto är inloggat."
+
+msgctxt "account-view"
+msgid "The withdrawal could not be recorded. Try again later."
+msgstr "Ångern kunde inte registreras. Försök igen senare."

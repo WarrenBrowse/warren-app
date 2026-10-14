@@ -6332,3 +6332,55 @@ msgstr "Warren süreniz yaklaşık %(date)s tarihinde aylık %(price)s karşıl�
 msgctxt "notifications"
 msgid "Your Warren time renews automatically on or around %(date)s, for one month."
 msgstr "Warren süreniz %(date)s tarihinde ya da o civarda bir ay için otomatik olarak yenilenir."
+
+msgctxt "account-view"
+msgid "Withdrawal (14 days)"
+msgstr "Cayma (14 gün)"
+
+msgctxt "account-view"
+msgid "Purchase of %(date)s, withdrawal possible until %(deadline)s"
+msgstr "%(date)s tarihli satın alma, %(deadline)s tarihine kadar cayma mümkün"
+
+msgctxt "account-view"
+msgid "Withdraw"
+msgstr "Cay"
+
+msgctxt "account-view"
+msgid "Refund address (crypto payment only)"
+msgstr "İade adresi (yalnızca kripto ödeme)"
+
+msgctxt "account-view"
+msgid "Confirm the withdrawal"
+msgstr "Caymayı onayla"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded on %(date)s, reference %(reference)s"
+msgstr "Cayma %(date)s tarihinde kaydedildi, referans %(reference)s"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded, reference %(reference)s"
+msgstr "Cayma kaydedildi, referans %(reference)s"
+
+msgctxt "account-view"
+msgid "Refund owed: %(amount)s"
+msgstr "İade edilecek tutar: %(amount)s"
+
+msgctxt "account-view"
+msgid "This purchase was not credited to this account."
+msgstr "Bu satın alma bu hesaba yansıtılmadı."
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: contact support."
+msgstr "Başka bir iade adresiyle bir cayma zaten kayıtlı: destek ile iletişime geç."
+
+msgctxt "account-view"
+msgid "The refund address is not valid."
+msgstr "İade adresi geçerli değil."
+
+msgctxt "account-view"
+msgid "No account is logged in."
+msgstr "Hiçbir hesapla oturum açılmadı."
+
+msgctxt "account-view"
+msgid "The withdrawal could not be recorded. Try again later."
+msgstr "Cayma kaydedilemedi. Daha sonra yeniden dene."

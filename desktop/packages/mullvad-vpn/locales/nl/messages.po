@@ -6332,3 +6332,55 @@ msgstr "Je Warren-tijd wordt rond %(date)s automatisch verlengd, voor %(price)s 
 msgctxt "notifications"
 msgid "Your Warren time renews automatically on or around %(date)s, for one month."
 msgstr "Je Warren-tijd wordt op of rond %(date)s automatisch met een maand verlengd."
+
+msgctxt "account-view"
+msgid "Withdrawal (14 days)"
+msgstr "Herroeping (14 dagen)"
+
+msgctxt "account-view"
+msgid "Purchase of %(date)s, withdrawal possible until %(deadline)s"
+msgstr "Aankoop van %(date)s, herroeping mogelijk tot %(deadline)s"
+
+msgctxt "account-view"
+msgid "Withdraw"
+msgstr "Herroepen"
+
+msgctxt "account-view"
+msgid "Refund address (crypto payment only)"
+msgstr "Terugbetalingsadres (alleen bij cryptobetaling)"
+
+msgctxt "account-view"
+msgid "Confirm the withdrawal"
+msgstr "Herroeping bevestigen"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded on %(date)s, reference %(reference)s"
+msgstr "Herroeping geregistreerd op %(date)s, referentie %(reference)s"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded, reference %(reference)s"
+msgstr "Herroeping geregistreerd, referentie %(reference)s"
+
+msgctxt "account-view"
+msgid "Refund owed: %(amount)s"
+msgstr "Terug te betalen bedrag: %(amount)s"
+
+msgctxt "account-view"
+msgid "This purchase was not credited to this account."
+msgstr "Deze aankoop is niet op dit account bijgeschreven."
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: contact support."
+msgstr "Er is al een herroeping met een ander terugbetalingsadres geregistreerd: neem contact op met support."
+
+msgctxt "account-view"
+msgid "The refund address is not valid."
+msgstr "Het terugbetalingsadres is ongeldig."
+
+msgctxt "account-view"
+msgid "No account is logged in."
+msgstr "Er is geen account aangemeld."
+
+msgctxt "account-view"
+msgid "The withdrawal could not be recorded. Try again later."
+msgstr "De herroeping kon niet worden geregistreerd. Probeer het later opnieuw."

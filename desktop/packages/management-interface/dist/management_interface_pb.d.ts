@@ -2130,6 +2130,70 @@ export namespace ForumLoginRequest {
     }
 }
 
+export class WithdrawalDeclaration extends jspb.Message { 
+    getWpid(): string;
+    setWpid(value: string): WithdrawalDeclaration;
+
+    hasRefundAddress(): boolean;
+    clearRefundAddress(): void;
+    getRefundAddress(): string | undefined;
+    setRefundAddress(value: string): WithdrawalDeclaration;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WithdrawalDeclaration.AsObject;
+    static toObject(includeInstance: boolean, msg: WithdrawalDeclaration): WithdrawalDeclaration.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WithdrawalDeclaration, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WithdrawalDeclaration;
+    static deserializeBinaryFromReader(message: WithdrawalDeclaration, reader: jspb.BinaryReader): WithdrawalDeclaration;
+}
+
+export namespace WithdrawalDeclaration {
+    export type AsObject = {
+        wpid: string,
+        refundAddress?: string,
+    }
+}
+
+export class WithdrawalAcknowledgement extends jspb.Message { 
+    getReference(): string;
+    setReference(value: string): WithdrawalAcknowledgement;
+
+    hasSubmittedAt(): boolean;
+    clearSubmittedAt(): void;
+    getSubmittedAt(): string | undefined;
+    setSubmittedAt(value: string): WithdrawalAcknowledgement;
+
+    hasRefundAmountMinor(): boolean;
+    clearRefundAmountMinor(): void;
+    getRefundAmountMinor(): number | undefined;
+    setRefundAmountMinor(value: number): WithdrawalAcknowledgement;
+
+    hasCurrency(): boolean;
+    clearCurrency(): void;
+    getCurrency(): string | undefined;
+    setCurrency(value: string): WithdrawalAcknowledgement;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): WithdrawalAcknowledgement.AsObject;
+    static toObject(includeInstance: boolean, msg: WithdrawalAcknowledgement): WithdrawalAcknowledgement.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: WithdrawalAcknowledgement, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): WithdrawalAcknowledgement;
+    static deserializeBinaryFromReader(message: WithdrawalAcknowledgement, reader: jspb.BinaryReader): WithdrawalAcknowledgement;
+}
+
+export namespace WithdrawalAcknowledgement {
+    export type AsObject = {
+        reference: string,
+        submittedAt?: string,
+        refundAmountMinor?: number,
+        currency?: string,
+    }
+}
+
 export class ForumLoginSignature extends jspb.Message { 
     getPubkeySs58(): string;
     setPubkeySs58(value: string): ForumLoginSignature;

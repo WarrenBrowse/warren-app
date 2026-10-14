@@ -174,6 +174,7 @@ import UserInterface, { UserInterfaceDelegate } from './user-interface';
 import Version, { GUI_VERSION } from './version';
 import { announcementUrlToOpen } from './warren-announcement-links';
 import { fetchWarrenNetworkStats } from './warren-network-stats';
+import WithdrawablePurchases, { WITHDRAWABLE_PURCHASES_FILE } from './withdrawable-purchases';
 
 const execAsync = util.promisify(exec);
 
@@ -335,6 +336,13 @@ class ApplicationMain
   private renewalNotices = new RenewalNoticeArchive(
     path.join(app.getPath('userData'), 'renewal-notices'),
   );
+  // The purchases this app redeemed, kept sealed on the device for their
+  // 14-day withdrawal period only.
+  private withdrawablePurchases = new WithdrawablePurchases(
+    new SealedPendingPurchaseStore(new SafeStorageSecretStore(), () =>
+      path.join(app.getPath('userData'), WITHDRAWABLE_PURCHASES_FILE),
+    ),
+  );
 
   private relayList?: IRelayListWithEndpointData;
 
@@ -362,7 +370,10 @@ class ApplicationMain
         // pubkey: gui_settings.json must stay identity-free).
         accountTag: () => this.currentAccountTag(),
         accountBanned: () => this.accountBanInForce() !== undefined,
-        onRedeemed: (claim) => void this.renewalFlow.adopt(claim),
+        onRedeemed: (claim) => {
+          this.withdrawablePurchases.record(claim.wpid, this.currentAccountTag());
+          void this.renewalFlow.adopt(claim);
+        },
       },
       new SealedPendingPurchaseStore(new SafeStorageSecretStore(), () =>
         path.join(app.getPath('userData'), PENDING_PURCHASES_FILE),
@@ -1803,6 +1814,22 @@ class ApplicationMain
       if (file !== undefined) {
         await shell.openPath(file);
       }
+    });
+
+    IpcMainEventChannel.account.handleListWithdrawablePurchases(() =>
+      Promise.resolve(this.withdrawablePurchases.open(this.currentAccountTag())),
+    );
+    IpcMainEventChannel.account.handleDeclareWithdrawal(async (request) => {
+      // Only a purchase this app redeemed for the account logged in: the
+      // wpid comes from the renderer.
+      if (!this.withdrawablePurchases.isOpen(request.wpid, this.currentAccountTag())) {
+        return { type: 'error', reason: 'not-proven' } as const;
+      }
+      const result = await this.daemonRpc.declareWithdrawal(request);
+      if (result.type === 'declared') {
+        this.withdrawablePurchases.markDeclared(request.wpid, result.acknowledgement);
+      }
+      return result;
     });
 
     IpcMainEventChannel.app.handleGetPathBaseName((filePath) =>

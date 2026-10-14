@@ -6332,3 +6332,55 @@ msgstr "Tu tiempo de Warren se renueva automáticamente hacia el %(date)s, a %(p
 msgctxt "notifications"
 msgid "Your Warren time renews automatically on or around %(date)s, for one month."
 msgstr "Tu tiempo de Warren se renueva automáticamente el %(date)s o en torno a esa fecha, por un mes."
+
+msgctxt "account-view"
+msgid "Withdrawal (14 days)"
+msgstr "Desistimiento (14 días)"
+
+msgctxt "account-view"
+msgid "Purchase of %(date)s, withdrawal possible until %(deadline)s"
+msgstr "Compra del %(date)s, desistimiento posible hasta el %(deadline)s"
+
+msgctxt "account-view"
+msgid "Withdraw"
+msgstr "Desistir"
+
+msgctxt "account-view"
+msgid "Refund address (crypto payment only)"
+msgstr "Dirección de reembolso (solo pago en cripto)"
+
+msgctxt "account-view"
+msgid "Confirm the withdrawal"
+msgstr "Confirmar el desistimiento"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded on %(date)s, reference %(reference)s"
+msgstr "Desistimiento registrado el %(date)s, referencia %(reference)s"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded, reference %(reference)s"
+msgstr "Desistimiento registrado, referencia %(reference)s"
+
+msgctxt "account-view"
+msgid "Refund owed: %(amount)s"
+msgstr "Importe a reembolsar: %(amount)s"
+
+msgctxt "account-view"
+msgid "This purchase was not credited to this account."
+msgstr "Esta compra no se acreditó en esta cuenta."
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: contact support."
+msgstr "Ya hay un desistimiento registrado con otra dirección de reembolso: contacta con soporte."
+
+msgctxt "account-view"
+msgid "The refund address is not valid."
+msgstr "La dirección de reembolso no es válida."
+
+msgctxt "account-view"
+msgid "No account is logged in."
+msgstr "No hay ninguna cuenta conectada."
+
+msgctxt "account-view"
+msgid "The withdrawal could not be recorded. Try again later."
+msgstr "No se pudo registrar el desistimiento. Inténtalo más tarde."

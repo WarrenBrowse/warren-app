@@ -6372,3 +6372,55 @@ msgstr "Twój czas Warren odnowi się automatycznie około %(date)s za %(price)s
 msgctxt "notifications"
 msgid "Your Warren time renews automatically on or around %(date)s, for one month."
 msgstr "Twój czas Warren odnowi się automatycznie na miesiąc w dniu %(date)s lub w jego okolicach."
+
+msgctxt "account-view"
+msgid "Withdrawal (14 days)"
+msgstr "Odstąpienie (14 dni)"
+
+msgctxt "account-view"
+msgid "Purchase of %(date)s, withdrawal possible until %(deadline)s"
+msgstr "Zakup z %(date)s, odstąpienie możliwe do %(deadline)s"
+
+msgctxt "account-view"
+msgid "Withdraw"
+msgstr "Odstąp od umowy"
+
+msgctxt "account-view"
+msgid "Refund address (crypto payment only)"
+msgstr "Adres zwrotu (tylko płatność kryptowalutą)"
+
+msgctxt "account-view"
+msgid "Confirm the withdrawal"
+msgstr "Potwierdź odstąpienie"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded on %(date)s, reference %(reference)s"
+msgstr "Odstąpienie zarejestrowane %(date)s, numer %(reference)s"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded, reference %(reference)s"
+msgstr "Odstąpienie zarejestrowane, numer %(reference)s"
+
+msgctxt "account-view"
+msgid "Refund owed: %(amount)s"
+msgstr "Kwota do zwrotu: %(amount)s"
+
+msgctxt "account-view"
+msgid "This purchase was not credited to this account."
+msgstr "Ten zakup nie został zaksięgowany na tym koncie."
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: contact support."
+msgstr "Odstąpienie z innym adresem zwrotu jest już zarejestrowane: skontaktuj się z pomocą."
+
+msgctxt "account-view"
+msgid "The refund address is not valid."
+msgstr "Adres zwrotu jest nieprawidłowy."
+
+msgctxt "account-view"
+msgid "No account is logged in."
+msgstr "Żadne konto nie jest zalogowane."
+
+msgctxt "account-view"
+msgid "The withdrawal could not be recorded. Try again later."
+msgstr "Nie udało się zarejestrować odstąpienia. Spróbuj ponownie później."

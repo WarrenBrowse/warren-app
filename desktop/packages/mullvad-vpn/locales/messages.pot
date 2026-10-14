@@ -491,6 +491,10 @@ msgctxt "accessibility"
 msgid "Use the right arrow key to focus the settings button."
 msgstr ""
 
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: contact support."
+msgstr ""
+
 #. Title label in navigation bar
 msgctxt "account-view"
 msgid "Account"
@@ -515,6 +519,11 @@ msgstr ""
 #. backup view (= reveal/copy BIP39 mnemonic).
 msgctxt "account-view"
 msgid "Backup keys"
+msgstr ""
+
+#. Button that records the withdrawal.
+msgctxt "account-view"
+msgid "Confirm the withdrawal"
 msgstr ""
 
 msgctxt "account-view"
@@ -560,6 +569,11 @@ msgctxt "account-view"
 msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
 msgstr ""
 
+#. Shown when no account is logged in on the device.
+msgctxt "account-view"
+msgid "No account is logged in."
+msgstr ""
+
 #. Opens one archived renewal notice.
 #. Available placeholder:
 #. %(date)s - the date the notice was issued
@@ -585,6 +599,26 @@ msgctxt "account-view"
 msgid "Public key (wallet address)"
 msgstr ""
 
+#. One purchase that can still be withdrawn from.
+#. Available placeholders:
+#. %(date)s - when the purchase was credited
+#. %(deadline)s - last day of the 14-day withdrawal period
+msgctxt "account-view"
+msgid "Purchase of %(date)s, withdrawal possible until %(deadline)s"
+msgstr ""
+
+#. Field for the address a crypto payment is refunded to.
+msgctxt "account-view"
+msgid "Refund address (crypto payment only)"
+msgstr ""
+
+#. The amount that will be refunded after a withdrawal.
+#. Available placeholder:
+#. %(amount)s - the amount with its currency
+msgctxt "account-view"
+msgid "Refund owed: %(amount)s"
+msgstr ""
+
 #. Label of the list of archived renewal notices (PDF files).
 msgctxt "account-view"
 msgid "Renewal notices"
@@ -601,6 +635,22 @@ msgctxt "account-view"
 msgid "Something went wrong while logging out."
 msgstr ""
 
+#. The refund address typed for a crypto payment is not valid.
+msgctxt "account-view"
+msgid "The refund address is not valid."
+msgstr ""
+
+#. The withdrawal could not be recorded (network or server); retrying may work.
+msgctxt "account-view"
+msgid "The withdrawal could not be recorded. Try again later."
+msgstr ""
+
+#. Shown when the server refuses a withdrawal because the
+#. purchase was not redeemed by this account.
+msgctxt "account-view"
+msgid "This purchase was not credited to this account."
+msgstr ""
+
 #. Button that runs a logout again after it failed.
 msgctxt "account-view"
 msgid "Try again"
@@ -609,6 +659,31 @@ msgstr ""
 #. Button that turns automatic renewal off.
 msgctxt "account-view"
 msgid "Turn off"
+msgstr ""
+
+#. Button that starts the 14-day withdrawal of a purchase.
+msgctxt "account-view"
+msgid "Withdraw"
+msgstr ""
+
+#. Label of the block listing the purchases that can be withdrawn from.
+msgctxt "account-view"
+msgid "Withdrawal (14 days)"
+msgstr ""
+
+#. Proof of a recorded withdrawal.
+#. Available placeholders:
+#. %(date)s - when the withdrawal was recorded
+#. %(reference)s - the reference of the declaration
+msgctxt "account-view"
+msgid "Withdrawal recorded on %(date)s, reference %(reference)s"
+msgstr ""
+
+#. Proof of a recorded withdrawal when its date is unknown.
+#. Available placeholder:
+#. %(reference)s - the reference of the declaration
+msgctxt "account-view"
+msgid "Withdrawal recorded, reference %(reference)s"
 msgstr ""
 
 #. Page title for anti censorship settings view

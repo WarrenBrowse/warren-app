@@ -6299,3 +6299,55 @@ msgstr "你的 Warren 時數將在 %(date)s 前後以每月 %(price)s 自動續�
 msgctxt "notifications"
 msgid "Your Warren time renews automatically on or around %(date)s, for one month."
 msgstr "你的 Warren 時數將在 %(date)s 當天或前後自動續訂一個月。"
+
+msgctxt "account-view"
+msgid "Withdrawal (14 days)"
+msgstr "撤回（14 天）"
+
+msgctxt "account-view"
+msgid "Purchase of %(date)s, withdrawal possible until %(deadline)s"
+msgstr "%(date)s 的購買，可在 %(deadline)s 前撤回"
+
+msgctxt "account-view"
+msgid "Withdraw"
+msgstr "撤回"
+
+msgctxt "account-view"
+msgid "Refund address (crypto payment only)"
+msgstr "退款地址（僅限加密貨幣付款）"
+
+msgctxt "account-view"
+msgid "Confirm the withdrawal"
+msgstr "確認撤回"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded on %(date)s, reference %(reference)s"
+msgstr "撤回已於 %(date)s 記錄，編號 %(reference)s"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded, reference %(reference)s"
+msgstr "撤回已記錄，編號 %(reference)s"
+
+msgctxt "account-view"
+msgid "Refund owed: %(amount)s"
+msgstr "應退金額：%(amount)s"
+
+msgctxt "account-view"
+msgid "This purchase was not credited to this account."
+msgstr "此購買未記入此帳戶。"
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: contact support."
+msgstr "已有使用其他退款地址的撤回記錄：請聯絡支援團隊。"
+
+msgctxt "account-view"
+msgid "The refund address is not valid."
+msgstr "退款地址無效。"
+
+msgctxt "account-view"
+msgid "No account is logged in."
+msgstr "沒有帳戶登入。"
+
+msgctxt "account-view"
+msgid "The withdrawal could not be recorded. Try again later."
+msgstr "無法記錄撤回，請稍後再試。"

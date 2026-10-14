@@ -6372,3 +6372,55 @@ msgstr "Ваше время Warren автоматически продлится
 msgctxt "notifications"
 msgid "Your Warren time renews automatically on or around %(date)s, for one month."
 msgstr "Ваше время Warren автоматически продлится на месяц %(date)s или около этой даты."
+
+msgctxt "account-view"
+msgid "Withdrawal (14 days)"
+msgstr "Отказ от покупки (14 дней)"
+
+msgctxt "account-view"
+msgid "Purchase of %(date)s, withdrawal possible until %(deadline)s"
+msgstr "Покупка от %(date)s, отказ возможен до %(deadline)s"
+
+msgctxt "account-view"
+msgid "Withdraw"
+msgstr "Отказаться"
+
+msgctxt "account-view"
+msgid "Refund address (crypto payment only)"
+msgstr "Адрес для возврата (только для оплаты криптовалютой)"
+
+msgctxt "account-view"
+msgid "Confirm the withdrawal"
+msgstr "Подтвердить отказ"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded on %(date)s, reference %(reference)s"
+msgstr "Отказ зарегистрирован %(date)s, номер %(reference)s"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded, reference %(reference)s"
+msgstr "Отказ зарегистрирован, номер %(reference)s"
+
+msgctxt "account-view"
+msgid "Refund owed: %(amount)s"
+msgstr "Сумма к возврату: %(amount)s"
+
+msgctxt "account-view"
+msgid "This purchase was not credited to this account."
+msgstr "Эта покупка не была зачислена на этот аккаунт."
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: contact support."
+msgstr "Отказ с другим адресом для возврата уже зарегистрирован: обратитесь в поддержку."
+
+msgctxt "account-view"
+msgid "The refund address is not valid."
+msgstr "Адрес для возврата недействителен."
+
+msgctxt "account-view"
+msgid "No account is logged in."
+msgstr "Ни один аккаунт не выполнил вход."
+
+msgctxt "account-view"
+msgid "The withdrawal could not be recorded. Try again later."
+msgstr "Не удалось зарегистрировать отказ. Повторите попытку позже."

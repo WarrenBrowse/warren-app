@@ -141,6 +141,7 @@ rpc_classes! {
         GetWwwAuthToken => Identity,
         SubmitVoucher => Identity,
         PullPurchaseVoucher => Identity,
+        DeclareWithdrawal => Identity,
         DeleteAccount => Identity,
         GetDevice => Identity,
         UpdateDevice => Identity,

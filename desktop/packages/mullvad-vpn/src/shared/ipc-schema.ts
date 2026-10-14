@@ -65,6 +65,7 @@ import {
   TorrentClientPublicConfig,
   TorrentClientStatus,
 } from './torrent-client';
+import { WithdrawablePurchase, WithdrawalRequest, WithdrawalResult } from './withdrawal';
 
 interface ILogEntry {
   level: LogLevel;
@@ -518,6 +519,9 @@ export const ipcSchema = {
     disableRenewal: invoke<void, void>(),
     // Opens an archived pre-renewal notice (a PDF) with the system viewer.
     openRenewalNotice: invoke<string, void>(),
+    // In-app withdrawal of a purchase this app redeemed in the last 14 days.
+    listWithdrawablePurchases: invoke<void, WithdrawablePurchase[]>(),
+    declareWithdrawal: invoke<WithdrawalRequest, WithdrawalResult>(),
   },
   accountHistory: {
     '': notifyRenderer<WarrenPubKey | undefined>(),

@@ -248,6 +248,12 @@ service ManagementService {
   // code (wpid then pull secret) and returned unredeemed, so the caller can
   // seal it before it submits it. UNAVAILABLE while the payment has not landed.
   rpc PullPurchaseVoucher(google.protobuf.StringValue) returns (google.protobuf.StringValue) {}
+  // In-app withdrawal (retractation) of a purchase this wallet redeemed:
+  // the wallet-signed declaration, the buyer having never seen the voucher
+  // code. PERMISSION_DENIED: this wallet did not redeem that purchase;
+  // ALREADY_EXISTS: a declaration with another refund address is on file;
+  // INVALID_ARGUMENT: malformed id or address; UNAUTHENTICATED: no wallet.
+  rpc DeclareWithdrawal(WithdrawalDeclaration) returns (WithdrawalAcknowledgement) {}
   // Android only
   rpc DeleteAccount(google.protobuf.Empty) returns (google.protobuf.Empty) {}
 
@@ -937,6 +943,23 @@ message ForumLoginRequest {
 // POST to `https://<connect-host>/v1/forum/login`. None of these is a
 // long-lived secret: the signature is bound to the fixed path + body +
 // nonce + timestamp (60 s window, single-use server side).
+message WithdrawalDeclaration {
+  // The 32-hex purchase id the app minted for the purchase.
+  string wpid = 1;
+  // Where a crypto payment is refunded; absent for a card payment.
+  optional string refund_address = 2;
+}
+
+message WithdrawalAcknowledgement {
+  // Random reference of the recorded declaration, the buyer's proof.
+  string reference = 1;
+  // When the declaration was recorded, RFC 3339 in UTC.
+  optional string submitted_at = 2;
+  // What will be refunded, in minor units of `currency`.
+  optional int64 refund_amount_minor = 3;
+  optional string currency = 4;
+}
+
 message ForumLoginSignature {
   string pubkey_ss58 = 1;
   string signature_hex = 2;

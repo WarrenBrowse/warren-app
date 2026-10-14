@@ -1762,6 +1762,32 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new((*voucher).clone()))
     }
 
+    /// The in-app withdrawal of a purchase this wallet redeemed. Neither the
+    /// wpid nor the refund address is logged.
+    async fn declare_withdrawal(
+        &self,
+        request: Request<types::WithdrawalDeclaration>,
+    ) -> ServiceResult<types::WithdrawalAcknowledgement> {
+        let call = Self::call_of(&request);
+        log::debug!("declare_withdrawal");
+        let declaration = request.into_inner();
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(
+            &call,
+            DaemonCommand::DeclareWithdrawal(tx, declaration.wpid, declaration.refund_address),
+        )?;
+        let ack = self
+            .wait_for_result(rx)
+            .await?
+            .map_err(map_withdrawal_error)?;
+        Ok(Response::new(types::WithdrawalAcknowledgement {
+            reference: ack.reference,
+            submitted_at: ack.submitted_at,
+            refund_amount_minor: ack.refund_amount_minor,
+            currency: ack.currency,
+        }))
+    }
+
     // Device management
     async fn get_device(&self, request: Request<()>) -> ServiceResult<types::DeviceState> {
         let call = Self::call_of(&request);
@@ -3158,6 +3184,19 @@ fn map_guarded_setting_error(error: crate::GuardedSettingError) -> Status {
     match error {
         crate::GuardedSettingError::Settings(error) => Status::from(error),
         crate::GuardedSettingError::EnvYield(error) => map_env_yield_error(error),
+    }
+}
+
+/// The verdicts the GUI tells apart, each on its own code.
+fn map_withdrawal_error(error: crate::warren_withdrawal::DeclarationError) -> Status {
+    use crate::warren_withdrawal::DeclarationError;
+    let message = error.to_string();
+    match error {
+        DeclarationError::NoWallet => Status::unauthenticated(message),
+        DeclarationError::Invalid => Status::invalid_argument(message),
+        DeclarationError::NotProven => Status::permission_denied(message),
+        DeclarationError::AlreadyFiled => Status::already_exists(message),
+        DeclarationError::Unavailable => Status::unavailable(message),
     }
 }
 

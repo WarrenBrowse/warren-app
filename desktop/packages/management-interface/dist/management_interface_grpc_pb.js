@@ -701,6 +701,28 @@ function deserialize_mullvad_daemon_management_interface_WarrenStatus(buffer_arg
   return management_interface_pb.WarrenStatus.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_mullvad_daemon_management_interface_WithdrawalAcknowledgement(arg) {
+  if (!(arg instanceof management_interface_pb.WithdrawalAcknowledgement)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.WithdrawalAcknowledgement');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_WithdrawalAcknowledgement(buffer_arg) {
+  return management_interface_pb.WithdrawalAcknowledgement.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
+function serialize_mullvad_daemon_management_interface_WithdrawalDeclaration(arg) {
+  if (!(arg instanceof management_interface_pb.WithdrawalDeclaration)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.WithdrawalDeclaration');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_WithdrawalDeclaration(buffer_arg) {
+  return management_interface_pb.WithdrawalDeclaration.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 
 var ManagementServiceService = exports.ManagementServiceService = {
   // Control and get tunnel state
@@ -1625,6 +1647,22 @@ pullPurchaseVoucher: {
     requestDeserialize: deserialize_google_protobuf_StringValue,
     responseSerialize: serialize_google_protobuf_StringValue,
     responseDeserialize: deserialize_google_protobuf_StringValue,
+  },
+  // In-app withdrawal (retractation) of a purchase this wallet redeemed:
+// the wallet-signed declaration, the buyer having never seen the voucher
+// code. PERMISSION_DENIED: this wallet did not redeem that purchase;
+// ALREADY_EXISTS: a declaration with another refund address is on file;
+// INVALID_ARGUMENT: malformed id or address; UNAUTHENTICATED: no wallet.
+declareWithdrawal: {
+    path: '/mullvad_daemon.management_interface.ManagementService/DeclareWithdrawal',
+    requestStream: false,
+    responseStream: false,
+    requestType: management_interface_pb.WithdrawalDeclaration,
+    responseType: management_interface_pb.WithdrawalAcknowledgement,
+    requestSerialize: serialize_mullvad_daemon_management_interface_WithdrawalDeclaration,
+    requestDeserialize: deserialize_mullvad_daemon_management_interface_WithdrawalDeclaration,
+    responseSerialize: serialize_mullvad_daemon_management_interface_WithdrawalAcknowledgement,
+    responseDeserialize: deserialize_mullvad_daemon_management_interface_WithdrawalAcknowledgement,
   },
   // Android only
 deleteAccount: {

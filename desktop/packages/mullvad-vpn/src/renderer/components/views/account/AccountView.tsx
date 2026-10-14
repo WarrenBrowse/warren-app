@@ -24,6 +24,7 @@ import { ExternalPaymentButton } from '../../payment';
 import { RedeemVoucherButton } from '../../RedeemVoucher';
 import { HeaderTitle } from '../../SettingsHeader';
 import { AccountExpiryRow, ForumHandleRow, LabelledRow, WarrenPubKeyRow } from './components';
+import { WithdrawalCard } from './WithdrawalCard';
 
 const StyledViewContainer = styled(View.Container)`
   height: 100%;
@@ -304,6 +305,7 @@ export function AccountView() {
               <BetaBadge variant="row" />
 
               {isBetaBuild ? null : <RenewalCard />}
+              {isBetaBuild ? null : <WithdrawalCard />}
 
               <Card>
                 <FlexColumn gap="medium">

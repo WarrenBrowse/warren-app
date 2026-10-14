@@ -6332,3 +6332,55 @@ msgstr "Warren-aikasi uusitaan automaattisesti noin %(date)s hintaan %(price)s k
 msgctxt "notifications"
 msgid "Your Warren time renews automatically on or around %(date)s, for one month."
 msgstr "Warren-aikasi uusitaan automaattisesti kuukaudeksi %(date)s tai sen tienoilla."
+
+msgctxt "account-view"
+msgid "Withdrawal (14 days)"
+msgstr "Peruuttaminen (14 päivää)"
+
+msgctxt "account-view"
+msgid "Purchase of %(date)s, withdrawal possible until %(deadline)s"
+msgstr "Osto %(date)s, peruuttaminen mahdollista %(deadline)s asti"
+
+msgctxt "account-view"
+msgid "Withdraw"
+msgstr "Peru osto"
+
+msgctxt "account-view"
+msgid "Refund address (crypto payment only)"
+msgstr "Palautusosoite (vain kryptomaksu)"
+
+msgctxt "account-view"
+msgid "Confirm the withdrawal"
+msgstr "Vahvista peruutus"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded on %(date)s, reference %(reference)s"
+msgstr "Peruutus kirjattu %(date)s, viite %(reference)s"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded, reference %(reference)s"
+msgstr "Peruutus kirjattu, viite %(reference)s"
+
+msgctxt "account-view"
+msgid "Refund owed: %(amount)s"
+msgstr "Palautettava summa: %(amount)s"
+
+msgctxt "account-view"
+msgid "This purchase was not credited to this account."
+msgstr "Tätä ostoa ei hyvitetty tälle tilille."
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: contact support."
+msgstr "Peruutus toisella palautusosoitteella on jo kirjattu: ota yhteyttä tukeen."
+
+msgctxt "account-view"
+msgid "The refund address is not valid."
+msgstr "Palautusosoite ei kelpaa."
+
+msgctxt "account-view"
+msgid "No account is logged in."
+msgstr "Mikään tili ei ole kirjautuneena."
+
+msgctxt "account-view"
+msgid "The withdrawal could not be recorded. Try again later."
+msgstr "Peruutusta ei voitu kirjata. Yritä myöhemmin uudelleen."

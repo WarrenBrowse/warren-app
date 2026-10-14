@@ -6319,3 +6319,55 @@ msgstr "زمان Warren شما حدود %(date)s به‌طور خودکار با
 msgctxt "notifications"
 msgid "Your Warren time renews automatically on or around %(date)s, for one month."
 msgstr "زمان Warren شما در %(date)s یا حدود آن، به مدت یک ماه به‌طور خودکار تمدید می‌شود."
+
+msgctxt "account-view"
+msgid "Withdrawal (14 days)"
+msgstr "انصراف (۱۴ روز)"
+
+msgctxt "account-view"
+msgid "Purchase of %(date)s, withdrawal possible until %(deadline)s"
+msgstr "خرید %(date)s، انصراف تا %(deadline)s ممکن است"
+
+msgctxt "account-view"
+msgid "Withdraw"
+msgstr "انصراف"
+
+msgctxt "account-view"
+msgid "Refund address (crypto payment only)"
+msgstr "نشانی بازپرداخت (فقط پرداخت با رمزارز)"
+
+msgctxt "account-view"
+msgid "Confirm the withdrawal"
+msgstr "تأیید انصراف"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded on %(date)s, reference %(reference)s"
+msgstr "انصراف در %(date)s ثبت شد، شماره %(reference)s"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded, reference %(reference)s"
+msgstr "انصراف ثبت شد، شماره %(reference)s"
+
+msgctxt "account-view"
+msgid "Refund owed: %(amount)s"
+msgstr "مبلغ بازپرداخت: %(amount)s"
+
+msgctxt "account-view"
+msgid "This purchase was not credited to this account."
+msgstr "این خرید به این حساب واریز نشده است."
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: contact support."
+msgstr "یک انصراف با نشانی بازپرداخت دیگری از قبل ثبت شده است: با پشتیبانی تماس بگیرید."
+
+msgctxt "account-view"
+msgid "The refund address is not valid."
+msgstr "نشانی بازپرداخت معتبر نیست."
+
+msgctxt "account-view"
+msgid "No account is logged in."
+msgstr "هیچ حسابی وارد نشده است."
+
+msgctxt "account-view"
+msgid "The withdrawal could not be recorded. Try again later."
+msgstr "ثبت انصراف ممکن نشد. بعداً دوباره تلاش کنید."

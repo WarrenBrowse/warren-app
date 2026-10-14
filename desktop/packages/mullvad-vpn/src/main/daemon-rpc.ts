@@ -40,6 +40,7 @@ import {
   WarrenStatus,
 } from '../shared/daemon-rpc-types';
 import { ExitHostname } from '../shared/network-stats';
+import { WithdrawalRequest, WithdrawalResult } from '../shared/withdrawal';
 import { daemonRpcPath } from './daemon-rpc-path';
 import { ConnectionObserver, GrpcClient, noConnectionError } from './grpc-client';
 import {
@@ -70,6 +71,7 @@ import {
   ensureExists,
 } from './grpc-type-convertions';
 import { pullFailureOfStatus, voucherFailureOfStatus } from './voucher-response';
+import { withdrawalFailureOfStatus } from './withdrawable-purchases';
 
 const DAEMON_RPC_PATH = daemonRpcPath(
   process.platform,
@@ -473,6 +475,35 @@ export class DaemonRpc extends GrpcClient {
       return voucher === '' ? { type: 'error' } : { type: 'pulled', voucher };
     } catch (e) {
       return pullFailureOfStatus((e as grpc.ServiceError).code);
+    }
+  }
+
+  // The wpid and the refund address go to the daemon only, which signs the
+  // declaration; nothing here logs them.
+  public async declareWithdrawal(request: WithdrawalRequest): Promise<WithdrawalResult> {
+    const declaration = new grpcTypes.WithdrawalDeclaration();
+    declaration.setWpid(request.wpid);
+    if (request.refundAddress !== undefined && request.refundAddress.trim() !== '') {
+      declaration.setRefundAddress(request.refundAddress.trim());
+    }
+    try {
+      const response = await this.call<
+        grpcTypes.WithdrawalDeclaration,
+        grpcTypes.WithdrawalAcknowledgement
+      >(this.client.declareWithdrawal, declaration);
+      return {
+        type: 'declared',
+        acknowledgement: {
+          reference: response.getReference(),
+          ...(response.hasSubmittedAt() ? { submittedAt: response.getSubmittedAt() } : {}),
+          ...(response.hasRefundAmountMinor()
+            ? { refundAmountMinor: response.getRefundAmountMinor() }
+            : {}),
+          ...(response.hasCurrency() ? { currency: response.getCurrency() } : {}),
+        },
+      };
+    } catch (e) {
+      return { type: 'error', reason: withdrawalFailureOfStatus((e as grpc.ServiceError).code) };
     }
   }
 

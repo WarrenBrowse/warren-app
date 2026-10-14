@@ -6299,3 +6299,55 @@ msgstr "Warren の利用期間は %(date)s ごろに月額 %(price)s で自動�
 msgctxt "notifications"
 msgid "Your Warren time renews automatically on or around %(date)s, for one month."
 msgstr "Warren の利用期間は %(date)s ごろに 1 か月分自動更新されます。"
+
+msgctxt "account-view"
+msgid "Withdrawal (14 days)"
+msgstr "撤回（14日間）"
+
+msgctxt "account-view"
+msgid "Purchase of %(date)s, withdrawal possible until %(deadline)s"
+msgstr "%(date)s の購入、%(deadline)s まで撤回できます"
+
+msgctxt "account-view"
+msgid "Withdraw"
+msgstr "撤回する"
+
+msgctxt "account-view"
+msgid "Refund address (crypto payment only)"
+msgstr "返金先アドレス（暗号資産での支払いのみ）"
+
+msgctxt "account-view"
+msgid "Confirm the withdrawal"
+msgstr "撤回を確定"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded on %(date)s, reference %(reference)s"
+msgstr "%(date)s に撤回を記録しました。参照番号 %(reference)s"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded, reference %(reference)s"
+msgstr "撤回を記録しました。参照番号 %(reference)s"
+
+msgctxt "account-view"
+msgid "Refund owed: %(amount)s"
+msgstr "返金額：%(amount)s"
+
+msgctxt "account-view"
+msgid "This purchase was not credited to this account."
+msgstr "この購入はこのアカウントに反映されていません。"
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: contact support."
+msgstr "別の返金先アドレスで撤回がすでに記録されています。サポートにお問い合わせください。"
+
+msgctxt "account-view"
+msgid "The refund address is not valid."
+msgstr "返金先アドレスが無効です。"
+
+msgctxt "account-view"
+msgid "No account is logged in."
+msgstr "ログインしているアカウントがありません。"
+
+msgctxt "account-view"
+msgid "The withdrawal could not be recorded. Try again later."
+msgstr "撤回を記録できませんでした。後でもう一度お試しください。"

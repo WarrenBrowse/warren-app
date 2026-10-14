@@ -5482,3 +5482,55 @@ msgstr "Votre temps Warren se renouvelle automatiquement vers le %(date)s, à %(
 msgctxt "notifications"
 msgid "Your Warren time renews automatically on or around %(date)s, for one month."
 msgstr "Votre temps Warren se renouvelle automatiquement le %(date)s ou vers cette date, pour un mois."
+
+msgctxt "account-view"
+msgid "Withdrawal (14 days)"
+msgstr "Rétractation (14 jours)"
+
+msgctxt "account-view"
+msgid "Purchase of %(date)s, withdrawal possible until %(deadline)s"
+msgstr "Achat du %(date)s, rétractation possible jusqu'au %(deadline)s"
+
+msgctxt "account-view"
+msgid "Withdraw"
+msgstr "Se rétracter"
+
+msgctxt "account-view"
+msgid "Refund address (crypto payment only)"
+msgstr "Adresse de remboursement (paiement crypto uniquement)"
+
+msgctxt "account-view"
+msgid "Confirm the withdrawal"
+msgstr "Confirmer la rétractation"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded on %(date)s, reference %(reference)s"
+msgstr "Rétractation enregistrée le %(date)s, référence %(reference)s"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded, reference %(reference)s"
+msgstr "Rétractation enregistrée, référence %(reference)s"
+
+msgctxt "account-view"
+msgid "Refund owed: %(amount)s"
+msgstr "Montant remboursé : %(amount)s"
+
+msgctxt "account-view"
+msgid "This purchase was not credited to this account."
+msgstr "Cet achat n'a pas été crédité sur ce compte."
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: contact support."
+msgstr "Une rétractation avec une autre adresse de remboursement est déjà enregistrée : contactez le support."
+
+msgctxt "account-view"
+msgid "The refund address is not valid."
+msgstr "L'adresse de remboursement n'est pas valide."
+
+msgctxt "account-view"
+msgid "No account is logged in."
+msgstr "Aucun compte n'est connecté."
+
+msgctxt "account-view"
+msgid "The withdrawal could not be recorded. Try again later."
+msgstr "La rétractation n'a pas pu être enregistrée. Réessayez plus tard."

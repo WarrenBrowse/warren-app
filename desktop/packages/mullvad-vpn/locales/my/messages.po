@@ -6302,3 +6302,55 @@ msgstr "သင့် Warren အချိန်သည် %(date)s ဝန်းက
 msgctxt "notifications"
 msgid "Your Warren time renews automatically on or around %(date)s, for one month."
 msgstr "သင့် Warren အချိန်သည် %(date)s သို့မဟုတ် ၎င်းဝန်းကျင်တွင် တစ်လအတွက် အလိုအလျောက် သက်တမ်းတိုးမည်။"
+
+msgctxt "account-view"
+msgid "Withdrawal (14 days)"
+msgstr "ဝယ်ယူမှု ပယ်ဖျက်ခြင်း (ရက် 14)"
+
+msgctxt "account-view"
+msgid "Purchase of %(date)s, withdrawal possible until %(deadline)s"
+msgstr "%(date)s ဝယ်ယူမှု၊ %(deadline)s အထိ ပယ်ဖျက်နိုင်သည်"
+
+msgctxt "account-view"
+msgid "Withdraw"
+msgstr "ပယ်ဖျက်ရန်"
+
+msgctxt "account-view"
+msgid "Refund address (crypto payment only)"
+msgstr "ငွေပြန်အမ်းမည့် လိပ်စာ (crypto ဖြင့် ပေးချေမှုအတွက်သာ)"
+
+msgctxt "account-view"
+msgid "Confirm the withdrawal"
+msgstr "ပယ်ဖျက်မှုကို အတည်ပြုရန်"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded on %(date)s, reference %(reference)s"
+msgstr "%(date)s တွင် ပယ်ဖျက်မှုကို မှတ်တမ်းတင်ပြီး၊ ရည်ညွှန်းနံပါတ် %(reference)s"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded, reference %(reference)s"
+msgstr "ပယ်ဖျက်မှုကို မှတ်တမ်းတင်ပြီး၊ ရည်ညွှန်းနံပါတ် %(reference)s"
+
+msgctxt "account-view"
+msgid "Refund owed: %(amount)s"
+msgstr "ပြန်အမ်းမည့် ပမာဏ: %(amount)s"
+
+msgctxt "account-view"
+msgid "This purchase was not credited to this account."
+msgstr "ဤဝယ်ယူမှုကို ဤအကောင့်သို့ ထည့်သွင်းမထားပါ။"
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: contact support."
+msgstr "အခြား ငွေပြန်အမ်းလိပ်စာဖြင့် ပယ်ဖျက်မှု မှတ်တမ်းရှိပြီးဖြစ်သည်: အကူအညီဌာနကို ဆက်သွယ်ပါ။"
+
+msgctxt "account-view"
+msgid "The refund address is not valid."
+msgstr "ငွေပြန်အမ်းလိပ်စာ မမှန်ကန်ပါ။"
+
+msgctxt "account-view"
+msgid "No account is logged in."
+msgstr "မည်သည့်အကောင့်မျှ ဝင်ရောက်ထားခြင်း မရှိပါ။"
+
+msgctxt "account-view"
+msgid "The withdrawal could not be recorded. Try again later."
+msgstr "ပယ်ဖျက်မှုကို မှတ်တမ်းတင်၍ မရပါ။ နောက်မှ ထပ်ကြိုးစားပါ။"

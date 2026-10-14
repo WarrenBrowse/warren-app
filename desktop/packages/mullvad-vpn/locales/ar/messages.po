@@ -6399,3 +6399,55 @@ msgstr "يتجدد وقتك على Warren تلقائيًا في حدود %(date)
 msgctxt "notifications"
 msgid "Your Warren time renews automatically on or around %(date)s, for one month."
 msgstr "يتجدد وقتك على Warren تلقائيًا في %(date)s أو قرابته، لمدة شهر واحد."
+
+msgctxt "account-view"
+msgid "Withdrawal (14 days)"
+msgstr "التراجع (14 يومًا)"
+
+msgctxt "account-view"
+msgid "Purchase of %(date)s, withdrawal possible until %(deadline)s"
+msgstr "شراء بتاريخ %(date)s، التراجع ممكن حتى %(deadline)s"
+
+msgctxt "account-view"
+msgid "Withdraw"
+msgstr "تراجع"
+
+msgctxt "account-view"
+msgid "Refund address (crypto payment only)"
+msgstr "عنوان الاسترداد (للدفع بالعملات المشفرة فقط)"
+
+msgctxt "account-view"
+msgid "Confirm the withdrawal"
+msgstr "تأكيد التراجع"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded on %(date)s, reference %(reference)s"
+msgstr "تم تسجيل التراجع في %(date)s، المرجع %(reference)s"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded, reference %(reference)s"
+msgstr "تم تسجيل التراجع، المرجع %(reference)s"
+
+msgctxt "account-view"
+msgid "Refund owed: %(amount)s"
+msgstr "المبلغ المسترد: %(amount)s"
+
+msgctxt "account-view"
+msgid "This purchase was not credited to this account."
+msgstr "لم تُقيَّد عملية الشراء هذه في هذا الحساب."
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: contact support."
+msgstr "يوجد بالفعل تراجع مسجل بعنوان استرداد آخر: تواصل مع الدعم."
+
+msgctxt "account-view"
+msgid "The refund address is not valid."
+msgstr "عنوان الاسترداد غير صالح."
+
+msgctxt "account-view"
+msgid "No account is logged in."
+msgstr "لم يُسجَّل الدخول إلى أي حساب."
+
+msgctxt "account-view"
+msgid "The withdrawal could not be recorded. Try again later."
+msgstr "تعذّر تسجيل التراجع. حاول مرة أخرى لاحقًا."

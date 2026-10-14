@@ -6332,3 +6332,55 @@ msgstr "Din Warren-tid fornyes automatisk omkring %(date)s til %(price)s om mån
 msgctxt "notifications"
 msgid "Your Warren time renews automatically on or around %(date)s, for one month."
 msgstr "Din Warren-tid fornyes automatisk den %(date)s eller deromkring, for en måned."
+
+msgctxt "account-view"
+msgid "Withdrawal (14 days)"
+msgstr "Fortrydelse (14 dage)"
+
+msgctxt "account-view"
+msgid "Purchase of %(date)s, withdrawal possible until %(deadline)s"
+msgstr "Køb fra %(date)s, fortrydelse mulig indtil %(deadline)s"
+
+msgctxt "account-view"
+msgid "Withdraw"
+msgstr "Fortryd"
+
+msgctxt "account-view"
+msgid "Refund address (crypto payment only)"
+msgstr "Refusionsadresse (kun ved kryptobetaling)"
+
+msgctxt "account-view"
+msgid "Confirm the withdrawal"
+msgstr "Bekræft fortrydelsen"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded on %(date)s, reference %(reference)s"
+msgstr "Fortrydelse registreret %(date)s, reference %(reference)s"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded, reference %(reference)s"
+msgstr "Fortrydelse registreret, reference %(reference)s"
+
+msgctxt "account-view"
+msgid "Refund owed: %(amount)s"
+msgstr "Beløb til refusion: %(amount)s"
+
+msgctxt "account-view"
+msgid "This purchase was not credited to this account."
+msgstr "Dette køb blev ikke krediteret denne konto."
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: contact support."
+msgstr "En fortrydelse med en anden refusionsadresse er allerede registreret: kontakt support."
+
+msgctxt "account-view"
+msgid "The refund address is not valid."
+msgstr "Refusionsadressen er ikke gyldig."
+
+msgctxt "account-view"
+msgid "No account is logged in."
+msgstr "Ingen konto er logget ind."
+
+msgctxt "account-view"
+msgid "The withdrawal could not be recorded. Try again later."
+msgstr "Fortrydelsen kunne ikke registreres. Prøv igen senere."

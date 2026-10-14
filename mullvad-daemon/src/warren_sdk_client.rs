@@ -22,6 +22,7 @@ use std::sync::{Arc, RwLock};
 use warren_api::{
     AccountStandingResponse, ClientError, IncidentExitDownRequest, IncidentPubkeyMismatchRequest,
     RegisterAccountRequest, RegisterAccountResponse, SubscriptionResponse, WarrenApiClient,
+    dto::WithdrawalAck,
 };
 use warren_identity::WarrenIdentity;
 use zeroize::Zeroizing;
@@ -134,6 +135,18 @@ impl SharedWarrenApiClient {
     /// strikes and ban.
     pub async fn account_standing(&self) -> Result<AccountStandingResponse, ClientError> {
         self.client().account_standing().await
+    }
+
+    /// Signed `POST /v1/account/refund/by-wpid`: the withdrawal of a purchase
+    /// this wallet redeemed. Neither the wpid nor the address is logged.
+    pub async fn declare_crypto_withdrawal(
+        &self,
+        wpid: &str,
+        refund_address: Option<&str>,
+    ) -> Result<WithdrawalAck, ClientError> {
+        self.client()
+            .declare_crypto_withdrawal(wpid, refund_address)
+            .await
     }
 
     /// Signed `DELETE /v1/account`.

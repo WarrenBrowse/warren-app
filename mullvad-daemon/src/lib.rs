@@ -151,6 +151,7 @@ mod warren_token_provider;
 /// from the relay selector + signing_key + config-side constants.
 pub mod warren_tunnel_params;
 mod warren_wallet_activity;
+mod warren_withdrawal;
 
 use crate::{
     relay_list::parsed_relays::parse_relays_from_file, target_state::PersistentTargetState,
@@ -656,6 +657,13 @@ pub enum DaemonCommand {
     PullPurchaseVoucher(
         ResponseTx<zeroize::Zeroizing<String>, Error>,
         zeroize::Zeroizing<String>,
+    ),
+    /// Declare the withdrawal of a purchase this wallet redeemed: its wpid and
+    /// the optional refund address. Neither is logged.
+    DeclareWithdrawal(
+        ResponseTx<warren_api::dto::WithdrawalAck, warren_withdrawal::DeclarationError>,
+        String,
+        Option<String>,
     ),
     /// Request account history
     GetAccountHistory(oneshot::Sender<Option<AccountNumber>>),
@@ -3503,6 +3511,9 @@ impl Daemon {
             SetWarrenMnemonic(tx, mnemonic) => self.on_set_warren_mnemonic(tx, mnemonic),
             SubmitVoucher(tx, voucher) => self.on_submit_voucher(tx, voucher),
             PullPurchaseVoucher(tx, claim) => self.on_pull_purchase_voucher(tx, claim),
+            DeclareWithdrawal(tx, wpid, refund_address) => {
+                self.on_declare_withdrawal(tx, wpid, refund_address).await
+            }
             GetRelayLocations(tx) => self.on_get_relay_locations(tx),
             UpdateRelayLocations => self.on_update_relay_locations().await,
             UpdateDefaultLocationCountry(tx) => self.on_update_default_location(tx).await,
@@ -4713,6 +4724,34 @@ impl Daemon {
                     .map_err(Error::VoucherSubmission),
                 "pull_purchase_voucher response",
             );
+        });
+    }
+
+    async fn on_declare_withdrawal(
+        &mut self,
+        tx: ResponseTx<warren_api::dto::WithdrawalAck, warren_withdrawal::DeclarationError>,
+        wpid: String,
+        refund_address: Option<String>,
+    ) {
+        let (Some(api_url), Some(seed)) = (
+            self.warren_api_url_for_incidents(),
+            self.parameters_generator.warren_seed_for_incidents().await,
+        ) else {
+            Self::oneshot_send(
+                tx,
+                Err(warren_withdrawal::DeclarationError::NoWallet),
+                "declare_withdrawal response",
+            );
+            return;
+        };
+        tokio::spawn(async move {
+            let client = crate::warren_sdk_client::SharedWarrenApiClient::new(api_url, seed);
+            let result =
+                warren_withdrawal::declare(&client, &wpid, refund_address.as_deref()).await;
+            if let Err(error) = &result {
+                log::info!("withdrawal declaration not recorded: {error}");
+            }
+            Self::oneshot_send(tx, result, "declare_withdrawal response");
         });
     }
 

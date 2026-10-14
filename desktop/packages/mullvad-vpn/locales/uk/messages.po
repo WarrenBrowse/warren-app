@@ -6372,3 +6372,55 @@ msgstr "Ваш час Warren автоматично поновиться бли�
 msgctxt "notifications"
 msgid "Your Warren time renews automatically on or around %(date)s, for one month."
 msgstr "Ваш час Warren автоматично поновиться на місяць %(date)s або близько цієї дати."
+
+msgctxt "account-view"
+msgid "Withdrawal (14 days)"
+msgstr "Відмова від покупки (14 днів)"
+
+msgctxt "account-view"
+msgid "Purchase of %(date)s, withdrawal possible until %(deadline)s"
+msgstr "Покупка від %(date)s, відмова можлива до %(deadline)s"
+
+msgctxt "account-view"
+msgid "Withdraw"
+msgstr "Відмовитися"
+
+msgctxt "account-view"
+msgid "Refund address (crypto payment only)"
+msgstr "Адреса для повернення (лише для оплати криптовалютою)"
+
+msgctxt "account-view"
+msgid "Confirm the withdrawal"
+msgstr "Підтвердити відмову"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded on %(date)s, reference %(reference)s"
+msgstr "Відмову зареєстровано %(date)s, номер %(reference)s"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded, reference %(reference)s"
+msgstr "Відмову зареєстровано, номер %(reference)s"
+
+msgctxt "account-view"
+msgid "Refund owed: %(amount)s"
+msgstr "Сума до повернення: %(amount)s"
+
+msgctxt "account-view"
+msgid "This purchase was not credited to this account."
+msgstr "Цю покупку не зараховано на цей обліковий запис."
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: contact support."
+msgstr "Відмову з іншою адресою для повернення вже зареєстровано: зверніться до підтримки."
+
+msgctxt "account-view"
+msgid "The refund address is not valid."
+msgstr "Адреса для повернення недійсна."
+
+msgctxt "account-view"
+msgid "No account is logged in."
+msgstr "Жоден обліковий запис не ввійшов."
+
+msgctxt "account-view"
+msgid "The withdrawal could not be recorded. Try again later."
+msgstr "Не вдалося зареєструвати відмову. Спробуйте пізніше."

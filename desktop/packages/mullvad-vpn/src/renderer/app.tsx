@@ -54,6 +54,7 @@ import { RoutePath } from '../shared/routes';
 import { Scheduler } from '../shared/scheduler';
 import { ThemePreference } from '../shared/theme';
 import { isTorrentClientConfigError, TorrentClientConfigUpdate } from '../shared/torrent-client';
+import { WithdrawablePurchase, WithdrawalRequest, WithdrawalResult } from '../shared/withdrawal';
 import AppRouter from './components/AppRouter';
 import { BlockingUpdateGate } from './components/BlockingUpdateGate';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -540,6 +541,12 @@ export default class AppRenderer {
   public disableRenewal = (): Promise<void> => IpcRendererEventChannel.account.disableRenewal();
   public openRenewalNotice = (id: string): Promise<void> =>
     IpcRendererEventChannel.account.openRenewalNotice(id);
+
+  public listWithdrawablePurchases = (): Promise<WithdrawablePurchase[]> =>
+    IpcRendererEventChannel.account.listWithdrawablePurchases();
+
+  public declareWithdrawal = (request: WithdrawalRequest): Promise<WithdrawalResult> =>
+    IpcRendererEventChannel.account.declareWithdrawal(request);
   public checkPendingPurchases = (): Promise<void> =>
     IpcRendererEventChannel.account.checkPendingPurchases();
 

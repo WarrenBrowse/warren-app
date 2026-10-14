@@ -6299,3 +6299,55 @@ msgstr "เวลา Warren ของคุณจะต่ออายุอั�
 msgctxt "notifications"
 msgid "Your Warren time renews automatically on or around %(date)s, for one month."
 msgstr "เวลา Warren ของคุณจะต่ออายุอัตโนมัติเป็นเวลาหนึ่งเดือนในวันที่ %(date)s หรือใกล้เคียง"
+
+msgctxt "account-view"
+msgid "Withdrawal (14 days)"
+msgstr "การยกเลิกการซื้อ (14 วัน)"
+
+msgctxt "account-view"
+msgid "Purchase of %(date)s, withdrawal possible until %(deadline)s"
+msgstr "ซื้อเมื่อ %(date)s ยกเลิกได้จนถึง %(deadline)s"
+
+msgctxt "account-view"
+msgid "Withdraw"
+msgstr "ยกเลิกการซื้อ"
+
+msgctxt "account-view"
+msgid "Refund address (crypto payment only)"
+msgstr "ที่อยู่สำหรับคืนเงิน (เฉพาะการชำระด้วยคริปโต)"
+
+msgctxt "account-view"
+msgid "Confirm the withdrawal"
+msgstr "ยืนยันการยกเลิก"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded on %(date)s, reference %(reference)s"
+msgstr "บันทึกการยกเลิกเมื่อ %(date)s หมายเลขอ้างอิง %(reference)s"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded, reference %(reference)s"
+msgstr "บันทึกการยกเลิกแล้ว หมายเลขอ้างอิง %(reference)s"
+
+msgctxt "account-view"
+msgid "Refund owed: %(amount)s"
+msgstr "ยอดเงินที่จะคืน: %(amount)s"
+
+msgctxt "account-view"
+msgid "This purchase was not credited to this account."
+msgstr "การซื้อนี้ไม่ได้ถูกเติมเข้าบัญชีนี้"
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: contact support."
+msgstr "มีการยกเลิกที่ใช้ที่อยู่คืนเงินอื่นบันทึกไว้แล้ว โปรดติดต่อฝ่ายสนับสนุน"
+
+msgctxt "account-view"
+msgid "The refund address is not valid."
+msgstr "ที่อยู่สำหรับคืนเงินไม่ถูกต้อง"
+
+msgctxt "account-view"
+msgid "No account is logged in."
+msgstr "ไม่มีบัญชีที่เข้าสู่ระบบ"
+
+msgctxt "account-view"
+msgid "The withdrawal could not be recorded. Try again later."
+msgstr "ไม่สามารถบันทึกการยกเลิกได้ โปรดลองอีกครั้งภายหลัง"

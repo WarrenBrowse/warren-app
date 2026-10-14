@@ -6332,3 +6332,55 @@ msgstr "Deine Warren-Zeit verlängert sich automatisch um den %(date)s zu %(pric
 msgctxt "notifications"
 msgid "Your Warren time renews automatically on or around %(date)s, for one month."
 msgstr "Deine Warren-Zeit verlängert sich automatisch am oder um den %(date)s um einen Monat."
+
+msgctxt "account-view"
+msgid "Withdrawal (14 days)"
+msgstr "Widerruf (14 Tage)"
+
+msgctxt "account-view"
+msgid "Purchase of %(date)s, withdrawal possible until %(deadline)s"
+msgstr "Kauf vom %(date)s, Widerruf möglich bis %(deadline)s"
+
+msgctxt "account-view"
+msgid "Withdraw"
+msgstr "Widerrufen"
+
+msgctxt "account-view"
+msgid "Refund address (crypto payment only)"
+msgstr "Erstattungsadresse (nur bei Kryptozahlung)"
+
+msgctxt "account-view"
+msgid "Confirm the withdrawal"
+msgstr "Widerruf bestätigen"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded on %(date)s, reference %(reference)s"
+msgstr "Widerruf am %(date)s erfasst, Referenz %(reference)s"
+
+msgctxt "account-view"
+msgid "Withdrawal recorded, reference %(reference)s"
+msgstr "Widerruf erfasst, Referenz %(reference)s"
+
+msgctxt "account-view"
+msgid "Refund owed: %(amount)s"
+msgstr "Erstattungsbetrag: %(amount)s"
+
+msgctxt "account-view"
+msgid "This purchase was not credited to this account."
+msgstr "Dieser Kauf wurde diesem Konto nicht gutgeschrieben."
+
+msgctxt "account-view"
+msgid "A withdrawal with another refund address is already recorded: contact support."
+msgstr "Ein Widerruf mit einer anderen Erstattungsadresse ist bereits erfasst: Wende dich an den Support."
+
+msgctxt "account-view"
+msgid "The refund address is not valid."
+msgstr "Die Erstattungsadresse ist ungültig."
+
+msgctxt "account-view"
+msgid "No account is logged in."
+msgstr "Kein Konto ist angemeldet."
+
+msgctxt "account-view"
+msgid "The withdrawal could not be recorded. Try again later."
+msgstr "Der Widerruf konnte nicht erfasst werden. Versuche es später erneut."
