@@ -188,9 +188,9 @@ warren-core itself (`warren-core/conformance/`), so nothing here needs it.
   (SS58, X-Warren signing, `/v1` DTOs) and `warren-discovery-core`. Pinned in
   `.warren-contract-version`.
 
-The quinn fork is the published `WarrenBrowse/warren-quinn` git-dep (pinned by
-tag `v0.11.16-fork.8`), wired through `[patch.crates-io]` in this repo's root
-`Cargo.toml`. The crates are renamed (`warren-quinn`/`-proto`/`-udp`) but their
+The quinn fork is the published `WarrenBrowse/warren-quinn` git-dep, pinned by
+tag and wired through `[patch.crates-io]` in this repo's root `Cargo.toml` (the
+authority for the current tag). The crates are renamed (`warren-quinn`/`-proto`/`-udp`) but their
 lib names stay `quinn`/`quinn_proto`/`quinn_udp`, so every `use quinn` and the
 mullvad-logging crate-name filters are unchanged; warrenguard consumes the same
 fork. There is no vendored tree and no setup script.

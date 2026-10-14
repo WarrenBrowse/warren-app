@@ -6991,8 +6991,8 @@ dependencies = [
 
 [[package]]
 name = "warren-quinn"
-version = "0.11.11-fork.15"
-source = "git+https://github.com/WarrenBrowse/warren-quinn.git?tag=v0.11.17-fork.15#3770670bfa1549e9ca663f220da2d13056248faa"
+version = "0.11.12-fork.16"
+source = "git+https://github.com/WarrenBrowse/warren-quinn.git?tag=v0.11.19-fork.16#f467edc7dcbc3308040ff32302913c354b2a71f2"
 dependencies = [
  "bytes",
  "cfg_aliases",
@@ -7010,8 +7010,8 @@ dependencies = [
 
 [[package]]
 name = "warren-quinn-proto"
-version = "0.11.17-fork.15"
-source = "git+https://github.com/WarrenBrowse/warren-quinn.git?tag=v0.11.17-fork.15#3770670bfa1549e9ca663f220da2d13056248faa"
+version = "0.11.19-fork.16"
+source = "git+https://github.com/WarrenBrowse/warren-quinn.git?tag=v0.11.19-fork.16#f467edc7dcbc3308040ff32302913c354b2a71f2"
 dependencies = [
  "bytes",
  "fastbloom",
@@ -7033,8 +7033,8 @@ dependencies = [
 
 [[package]]
 name = "warren-quinn-udp"
-version = "0.6.1-fork.15"
-source = "git+https://github.com/WarrenBrowse/warren-quinn.git?tag=v0.11.17-fork.15#3770670bfa1549e9ca663f220da2d13056248faa"
+version = "0.6.1-fork.16"
+source = "git+https://github.com/WarrenBrowse/warren-quinn.git?tag=v0.11.19-fork.16#f467edc7dcbc3308040ff32302913c354b2a71f2"
 dependencies = [
  "cfg_aliases",
  "libc",
@@ -7283,6 +7283,7 @@ name = "warrenguard-token"
 version = "0.1.0"
 dependencies = [
  "blind-rsa-signatures",
+ "pkcs1",
  "rand 0.10.1",
  "rsa",
  "sha2",
