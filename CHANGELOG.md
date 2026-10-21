@@ -56,6 +56,15 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Choose an entry server the network in use can reach, which on an
   IPv6-only network means one that answers on IPv6.
 
+## [1.1.52] - 2026-10-21
+### Fixed
+- [Windows, macOS, Linux, Android] Get the chosen forwarded port back as soon as the VPN connects
+  after a restart of the computer or of the app, or after an update. The app introduced itself to
+  the servers as a new client at each start, and the port stayed reserved to its previous session
+  for several minutes.
+- [Windows, macOS, Linux] Say that the clock of this device is off when the servers refuse the
+  session tokens for it, instead of trying to connect without end.
+
 ## [1.1.51] - 2026-10-14
 ### Security
 - Take the TLS library fix for a handshake downgrade: a server answer could make the key exchange

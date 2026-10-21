@@ -51,6 +51,15 @@ par l'application, gardez-le tel quel.
 - [iOS] Choisir un serveur d'entrée que le réseau utilisé peut joindre, ce
   qui, sur un réseau en IPv6 seulement, veut dire un serveur qui répond en IPv6.
 
+## [1.1.52] - 2026-10-21
+### Corrigé
+- [Windows, macOS, Linux, Android] Le port forwarding retrouve le port choisi dès la connexion après
+  un redémarrage de l'ordinateur ou de l'application, ou après une mise à jour. L'application se présentait aux
+  serveurs comme un nouveau client à chaque démarrage, et le port restait réservé à sa session
+  précédente pendant plusieurs minutes.
+- [Windows, macOS, Linux] Signaler que l'horloge de l'appareil est décalée quand les serveurs
+  refusent les jetons de session pour cette raison, au lieu de tenter de se connecter sans fin.
+
 ## [1.1.51] - 2026-10-14
 ### Sécurité
 - Intégration du correctif de la bibliothèque TLS contre un repli de la poignée de main : une

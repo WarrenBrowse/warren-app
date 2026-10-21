@@ -48,6 +48,16 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Aplicația alege un server de intrare pe care rețeaua folosită îl
   poate atinge, adică pe o rețea doar IPv6 un server care răspunde pe IPv6.
 
+## [1.1.52] - 2026-10-21
+### Corectat
+- [Windows, macOS, Linux, Android] Port forwarding-ul își regăsește portul ales imediat la
+  conectare după o repornire a computerului sau a aplicației, ori după o actualizare. La fiecare pornire, aplicația se
+  prezenta serverelor ca un client nou, iar portul rămânea rezervat sesiunii anterioare timp de
+  câteva minute.
+- [Windows, macOS, Linux] Semnalarea faptului că ceasul dispozitivului este decalat atunci când
+  serverele refuză din acest motiv jetoanele de sesiune, în loc de încercări de conectare fără
+  sfârșit.
+
 ## [1.1.51] - 2026-10-14
 ### Securitate
 - Preluarea corecției bibliotecii TLS împotriva unei retrogradări a negocierii: un răspuns al

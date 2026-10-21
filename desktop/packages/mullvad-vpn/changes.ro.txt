@@ -1,4 +1,8 @@
-### Securitate
-- Preluarea corecției bibliotecii TLS împotriva unei retrogradări a negocierii: un răspuns al
-  serverului putea face schimbul de chei să treacă de la hibridul post-cuantic la unul clasic
-  (rustls 0.23.46).
+### Corectat
+- [Windows, macOS, Linux, Android] Port forwarding-ul își regăsește portul ales imediat la
+  conectare după o repornire a computerului sau a aplicației, ori după o actualizare. La fiecare pornire, aplicația se
+  prezenta serverelor ca un client nou, iar portul rămânea rezervat sesiunii anterioare timp de
+  câteva minute.
+- [Windows, macOS, Linux] Semnalarea faptului că ceasul dispozitivului este decalat atunci când
+  serverele refuză din acest motiv jetoanele de sesiune, în loc de încercări de conectare fără
+  sfârșit.
