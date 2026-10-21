@@ -33,7 +33,7 @@
 //! Tokens still never cross the JNI boundary into Kotlin.
 
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 
@@ -45,7 +45,7 @@ use warren_app_routes::Credentials;
 use warren_app_routes::admission::{RouteKemTrust, remember_route_admission};
 use warren_app_routes::tokens::{
     ISSUED_ELSEWHERE_WARNING, IssuedElsewhereNotice, announce_minted, announce_refresh,
-    refresh_announcing_mints, refresh_forever,
+    refresh_announcing_mints, refresh_forever, with_install_rotation,
 };
 
 /// The most tokens one setup request may carry: the default admission sends
@@ -144,6 +144,10 @@ pub(crate) struct TokenMint<T> {
     /// directory (warren-core doc 107 section 6.5), and the file the last
     /// signed route admission block is kept in across a process death.
     route_kem_trust: RouteKemTrust,
+    /// Where the install's token rotation is kept
+    /// ([`warren_app_routes::tokens::install_rotation`]). Without it each
+    /// process draws its own and leads with another serial after a restart.
+    rotation_dir: Option<PathBuf>,
 }
 
 /// One wallet's token manager, and whether it has read the token directory
@@ -178,7 +182,16 @@ impl<T: HttpTransport + 'static> TokenMint<T> {
             restored: AtomicBool::new(false),
             ban_sink: None,
             route_kem_trust: RouteKemTrust::default(),
+            rotation_dir: None,
         }
+    }
+
+    /// Keeps the install's token rotation in `dir`, so the next process leads
+    /// with the serial this one's sessions were admitted on, and the exit
+    /// hands it back its inner address and forwarded ports.
+    pub(crate) fn with_rotation_dir(mut self, dir: &Path) -> Self {
+        self.rotation_dir = Some(dir.to_path_buf());
+        self
     }
 
     /// Trusts the pins of `trust` to sign the route KEM key, and keeps the
@@ -212,9 +225,12 @@ impl<T: HttpTransport + 'static> TokenMint<T> {
             .entry(wallet_pubkey)
             .or_insert_with(|| {
                 let manager = Arc::new(
-                    TokenManager::new(Arc::new(make_client()), key)
-                        .with_mint_horizon(MINT_HORIZON_EPOCHS)
-                        .with_server_pubkey_pins(self.route_kem_trust.server_pins.iter().cloned()),
+                    with_install_rotation(
+                        TokenManager::new(Arc::new(make_client()), key),
+                        self.rotation_dir.as_deref(),
+                    )
+                    .with_mint_horizon(MINT_HORIZON_EPOCHS)
+                    .with_server_pubkey_pins(self.route_kem_trust.server_pins.iter().cloned()),
                 );
                 if let Some(persist) = &self.persist
                     && !self.restored.swap(true, Ordering::SeqCst)
@@ -416,11 +432,15 @@ mod android {
     /// first directory read still anchors.
     pub(crate) fn tokens_for(signing_key: SigningKey, blinding: BlindingKey) -> SessionTokens {
         let mint = MINT.get_or_init(|| {
-            TokenMint::new(Arc::new(now_unix_secs), persist_file())
+            let mint = TokenMint::new(Arc::new(now_unix_secs), persist_file())
                 .with_ban_sink(Arc::new(|wallet, error| {
                     crate::standing::store().on_refresh_error(wallet, error, now_unix_secs())
                 }))
-                .with_route_kem_trust(route_kem_trust())
+                .with_route_kem_trust(route_kem_trust());
+            match APP_FILES_DIR.get() {
+                Some(dir) => mint.with_rotation_dir(dir),
+                None => mint,
+            }
         });
         let wallet_pubkey = signing_key.verifying_key().to_bytes();
         let wallet = mint.wallet(wallet_pubkey, blinding, move || {
@@ -941,6 +961,30 @@ mod tests {
             },
             "a first tunnel of this process has nothing to wait for"
         );
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_restarted_process_leads_with_the_token_its_predecessor_led_with() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let path = dir.path().join("v7-tokens.json");
+        let batch: Vec<String> = (1..=200u8)
+            .map(|fill| {
+                let mut token = [fill; warrenguard_token::TOKEN_LEN];
+                token[..2].copy_from_slice(&2u16.to_be_bytes());
+                BASE64URL_NOPAD.encode(&token)
+            })
+            .collect();
+        let bundle = serde_json::json!({ "epoch_secs": EPOCH_SECS, "epochs": { "100": batch } });
+        std::fs::write(&path, bundle.to_string()).unwrap();
+        let offline = FakeIssuer::new(&[100]);
+        offline.0.fail_transport.store(true, Ordering::SeqCst);
+        let lead = || {
+            let mint = TokenMint::new(now_fixed(), Some(PersistFile::new(path.clone())))
+                .with_rotation_dir(dir.path());
+            wallet_a(&mint, &offline).manager.session_stack(NOW)[0]
+        };
+
+        assert_eq!(lead(), lead());
     }
 
     #[tokio::test(start_paused = true)]

@@ -1428,6 +1428,7 @@ impl Daemon {
         let app_upgrade_broadcast = tokio::sync::broadcast::channel(32).0;
         let warren_status_cache = warren_status::WarrenStatusCache::new();
         warren_token_provider::report_clock_skew_to(warren_status_cache.clone());
+        warren_token_provider::keep_rotation_in(config.cache_dir.clone());
         let warren_network_stats = warren_network_stats::WarrenNetworkStats::new();
         let management_interface = ManagementInterfaceServer::start(
             command_sender,

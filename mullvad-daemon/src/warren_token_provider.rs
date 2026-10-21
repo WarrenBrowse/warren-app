@@ -59,7 +59,7 @@ pub(crate) use talpid_warren_tunnel::app_routes::admission::{
 pub(crate) use talpid_warren_tunnel::app_routes::tokens::session_source;
 use talpid_warren_tunnel::app_routes::tokens::{
     ISSUED_ELSEWHERE_WARNING, IssuedElsewhereNotice, announce_refresh, refresh_announcing_mints,
-    refresh_forever,
+    refresh_forever, with_install_rotation,
 };
 use talpid_warren_tunnel::{
     SessionTokenSource,
@@ -86,6 +86,18 @@ static CLOCK_STATUS: OnceLock<WarrenStatusCache> = OnceLock::new();
 /// the user their device clock keeps the tunnel down.
 pub(crate) fn report_clock_skew_to(cache: WarrenStatusCache) {
     let _ = CLOCK_STATUS.set(cache);
+}
+
+/// Where the install's token rotation is kept, installed once at startup
+/// like [`CLOCK_STATUS`]. A manager built before it is installed (tests)
+/// draws its own.
+static ROTATION_DIR: OnceLock<PathBuf> = OnceLock::new();
+
+/// Keeps the token rotation in `dir`, so a restarted daemon leads with the
+/// serial its predecessor's session was admitted on and the exit hands it
+/// back its inner address and forwarded ports.
+pub(crate) fn keep_rotation_in(dir: PathBuf) {
+    let _ = ROTATION_DIR.set(dir);
 }
 
 /// What a refresh round says about this device's clock: `Some(Some(_))` when
@@ -252,8 +264,11 @@ fn wallet_for(
                 WarrenApiTransport::new(),
             ));
             let manager = Arc::new(
-                TokenManager::new(Arc::new(client), BlindingKey::session(&seed_bytes))
-                    .with_server_pubkey_pins(trust.server_pins.iter().cloned()),
+                with_install_rotation(
+                    TokenManager::new(Arc::new(client), BlindingKey::session(&seed_bytes)),
+                    ROTATION_DIR.get().map(PathBuf::as_path),
+                )
+                .with_server_pubkey_pins(trust.server_pins.iter().cloned()),
             );
             let credentials = watch::Sender::new(Credentials::default());
             spawn_refresh(
