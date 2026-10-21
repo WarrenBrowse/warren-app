@@ -356,6 +356,31 @@ async fn a_round_lost_while_the_api_is_unreachable_is_retried_within_seconds() {
 }
 
 #[tokio::test(start_paused = true)]
+async fn a_lost_round_runs_again_as_soon_as_the_host_comes_back_online() {
+    let issuer = FakeIssuer::new(&[100]);
+    issuer.0.fail_transport.store(true, Ordering::SeqCst);
+    let (_t, now) = clock(NOW);
+    let (online, edge) = tokio::sync::watch::channel(0u64);
+    let mint = EntitlementMint::new(now).with_online_edge(edge);
+    let rule = mint.rule_credential([1; 32], 0, key(), || client(&issuer));
+    let source = rule.provider();
+    wait_for(|| issuer.requests() >= 1).await;
+
+    issuer.0.fail_transport.store(false, Ordering::SeqCst);
+    tokio::time::advance(Duration::from_secs(4)).await;
+    online.send_modify(|n| *n += 1);
+    wait_for(|| issuer.issue_calls() >= 1).await;
+    for _ in 0..50 {
+        tokio::task::yield_now().await;
+    }
+
+    assert!(
+        source().is_some(),
+        "the batch is stocked on the edge, before the retry delay"
+    );
+}
+
+#[tokio::test(start_paused = true)]
 async fn retries_after_failures_back_off_up_to_the_refresh_interval() {
     let issuer = FakeIssuer::new(&[100]);
     issuer.0.fail_transport.store(true, Ordering::SeqCst);

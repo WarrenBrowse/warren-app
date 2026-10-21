@@ -25,6 +25,16 @@ use crate::warren_wallet_activity::WalletActivity;
 /// already spent for it rather than a fresh one.
 static MINT: OnceLock<EntitlementMint<WarrenApiTransport>> = OnceLock::new();
 
+/// The daemon's offline-to-online edge, installed once it exists.
+static ONLINE_EDGE: OnceLock<tokio::sync::watch::Receiver<u64>> = OnceLock::new();
+
+/// Runs a lost entitlement round again on every bump of `edge`, so the first
+/// tunnel of a daemon started before the network gets its forwarded port as
+/// soon as the network is up.
+pub(crate) fn wake_on_online(edge: tokio::sync::watch::Receiver<u64>) {
+    let _ = ONLINE_EDGE.set(edge);
+}
+
 fn now_unix_secs() -> u64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
@@ -49,7 +59,7 @@ pub(crate) fn provider_for(
 
     let mint = MINT.get_or_init(|| {
         let standing = standing.cloned();
-        EntitlementMint::new(Arc::new(now_unix_secs))
+        let mint = EntitlementMint::new(Arc::new(now_unix_secs))
             .with_ban_sink(Arc::new(move |wallet, error| {
                 crate::warren_account_standing::report_if_banned(
                     standing.as_ref(),
@@ -57,7 +67,11 @@ pub(crate) fn provider_for(
                     error,
                 )
             }))
-            .with_activity(activity.subscribe())
+            .with_activity(activity.subscribe());
+        match ONLINE_EDGE.get() {
+            Some(edge) => mint.with_online_edge(edge.clone()),
+            None => mint,
+        }
     });
     let api_url = api_url.to_owned();
     mint.slot_source(wallet_pubkey, blinding, move || {

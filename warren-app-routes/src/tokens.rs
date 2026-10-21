@@ -255,22 +255,48 @@ pub const MINTED_POLL: Duration = Duration::from_millis(100);
 
 /// Runs `refresh` now and after each wait: [`REFRESH_PERIOD`] once a round
 /// succeeds, from [`FIRST_RETRY`] doubling up to the period after a failure.
-pub async fn refresh_forever<F, R>(mut refresh: F)
-where
+///
+/// A failed round also ends its wait when `online` moves, the daemon's
+/// offline-to-online edge. A desktop daemon's first round runs before the
+/// host has a route, so it always fails, and the network typically comes up
+/// seconds later: without the edge, the first tunnel waited out the whole
+/// [`FIRST_RETRY`] for its tokens on every start. A round that went through
+/// never runs early, so minting keeps its coarse timer.
+pub async fn refresh_forever<F, R>(
+    mut refresh: F,
+    mut online: Option<tokio::sync::watch::Receiver<u64>>,
+) where
     F: FnMut() -> R,
     R: std::future::Future<Output = bool>,
 {
     let mut retry = FIRST_RETRY;
     loop {
-        let wait = if refresh().await {
+        if refresh().await {
             retry = FIRST_RETRY;
-            REFRESH_PERIOD
+            tokio::time::sleep(REFRESH_PERIOD).await;
         } else {
             let wait = retry;
             retry = (retry * 2).min(REFRESH_PERIOD);
-            wait
+            sleep_or_online(wait, &mut online).await;
+        }
+    }
+}
+
+/// Sleeps `wait`, or less if `online` moves first. A closed edge, whose
+/// sender is gone, only sleeps.
+async fn sleep_or_online(wait: Duration, online: &mut Option<tokio::sync::watch::Receiver<u64>>) {
+    let edge = async {
+        let moved = match online.as_mut() {
+            Some(rx) => rx.changed().await.is_ok(),
+            None => false,
         };
-        tokio::time::sleep(wait).await;
+        if !moved {
+            std::future::pending::<()>().await;
+        }
+    };
+    tokio::select! {
+        () = tokio::time::sleep(wait) => {}
+        () = edge => {}
     }
 }
 
@@ -318,6 +344,7 @@ fn epoch_batch<T: HttpTransport>(
 mod tests {
     use std::sync::Arc;
     use std::sync::atomic::{AtomicU64, Ordering};
+    use std::time::Duration;
 
     use base64::Engine;
     use base64::engine::general_purpose::URL_SAFE_NO_PAD;
@@ -648,20 +675,77 @@ mod tests {
     /// When each round of a refresh task runs, in seconds from its start,
     /// given whether each round succeeds.
     async fn refresh_rounds(outcomes: &[bool]) -> Vec<u64> {
-        let start = tokio::time::Instant::now();
-        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
-        let mut outcomes = Vec::from(outcomes).into_iter();
-        let task = tokio::spawn(super::refresh_forever(move || {
-            let _ = tx.send(start.elapsed().as_secs());
-            let outcome = outcomes.next().unwrap_or(true);
-            async move { outcome }
-        }));
-        let mut rounds = Vec::new();
-        while rounds.len() < 5 {
-            rounds.push(rx.recv().await.expect("the task runs"));
-        }
+        let (rounds, task) = rounds_over(outcomes, None);
+        let rounds = take_rounds(rounds, 5).await;
         task.abort();
         rounds
+    }
+
+    /// Runs `refresh_forever` over `outcomes` (then successes), with
+    /// `online` as its online edge, reporting each round's start in seconds.
+    fn rounds_over(
+        outcomes: &[bool],
+        online: Option<tokio::sync::watch::Receiver<u64>>,
+    ) -> (
+        tokio::sync::mpsc::UnboundedReceiver<u64>,
+        tokio::task::JoinHandle<()>,
+    ) {
+        let start = tokio::time::Instant::now();
+        let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
+        let mut outcomes = Vec::from(outcomes).into_iter();
+        let task = tokio::spawn(super::refresh_forever(
+            move || {
+                let _ = tx.send(start.elapsed().as_secs());
+                let outcome = outcomes.next().unwrap_or(true);
+                async move { outcome }
+            },
+            online,
+        ));
+        (rx, task)
+    }
+
+    async fn take_rounds(mut rx: tokio::sync::mpsc::UnboundedReceiver<u64>, n: usize) -> Vec<u64> {
+        let mut rounds = Vec::new();
+        while rounds.len() < n {
+            rounds.push(rx.recv().await.expect("the task runs"));
+        }
+        rounds
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_failed_round_runs_again_as_soon_as_the_host_comes_back_online() {
+        let (online, edge) = tokio::sync::watch::channel(0u64);
+        let (mut rx, task) = rounds_over(&[false, true], Some(edge));
+        assert_eq!(rx.recv().await, Some(0));
+
+        tokio::time::sleep(Duration::from_secs(4)).await;
+        online.send_modify(|n| *n += 1);
+
+        assert_eq!(rx.recv().await, Some(4));
+        task.abort();
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_round_that_went_through_waits_its_period_whatever_the_network_does() {
+        let (online, edge) = tokio::sync::watch::channel(0u64);
+        let (mut rx, task) = rounds_over(&[true, true], Some(edge));
+        assert_eq!(rx.recv().await, Some(0));
+
+        tokio::time::sleep(Duration::from_secs(4)).await;
+        online.send_modify(|n| *n += 1);
+
+        assert_eq!(rx.recv().await, Some(600));
+        task.abort();
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_closed_online_edge_leaves_the_retry_schedule_as_it_is() {
+        let (online, edge) = tokio::sync::watch::channel(0u64);
+        drop(online);
+        let (rx, task) = rounds_over(&[false, false, true], Some(edge));
+
+        assert_eq!(take_rounds(rx, 3).await, [0, 15, 45]);
+        task.abort();
     }
 
     #[tokio::test(start_paused = true)]

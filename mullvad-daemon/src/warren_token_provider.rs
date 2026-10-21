@@ -100,6 +100,16 @@ pub(crate) fn keep_rotation_in(dir: PathBuf) {
     let _ = ROTATION_DIR.set(dir);
 }
 
+/// The daemon's offline-to-online edge, installed once it exists. A failed
+/// refresh round runs again on it rather than waiting out its retry delay.
+static ONLINE_EDGE: OnceLock<watch::Receiver<u64>> = OnceLock::new();
+
+/// Wakes a failed token refresh on every bump of `edge`, so a daemon that
+/// started before the network gets its tokens as soon as the network is up.
+pub(crate) fn wake_on_online(edge: watch::Receiver<u64>) {
+    let _ = ONLINE_EDGE.set(edge);
+}
+
 /// What a refresh round says about this device's clock: `Some(Some(_))` when
 /// the issuer refused it for the clock, `Some(None)` when the issuer accepted
 /// it, and `None` when the round failed for another reason, which says
@@ -146,50 +156,56 @@ fn spawn_refresh(
 ) {
     // The manager mints only epochs it has not minted yet.
     let notice = Arc::new(IssuedElsewhereNotice::default());
-    tokio::spawn(refresh_forever(move || {
-        let manager = Arc::clone(&manager);
-        let notice = Arc::clone(&notice);
-        let credentials = credentials.clone();
-        let wallet = wallet.clone();
-        let standing = standing.clone();
-        let remembered_at = remembered_at.clone();
-        let activity = activity.clone();
-        async move {
-            // The round also reads the route admission block, so a logged-out
-            // daemon does neither.
-            activity
-                .park_while_inactive("Warren v7 token refresh")
-                .await;
-            let refreshed = refresh_announcing_mints(&manager, &credentials, &now_unix_secs).await;
-            if let Some(path) = remembered_at.as_deref()
-                && manager.epoch_at(now_unix_secs()).is_some()
-            {
-                remember_route_admission(path, manager.route_admission().as_ref());
-            }
-            announce_refresh(&credentials, &manager, now_unix_secs());
-            if let (Some(verdict), Some(status)) = (clock_verdict(&refreshed), CLOCK_STATUS.get()) {
-                status.set_token_clock_skew(verdict);
-            }
-            if notice.due(&manager, now_unix_secs()) {
-                log::warn!("{ISSUED_ELSEWHERE_WARNING}");
-            }
-            match refreshed {
-                Ok(_) => {
-                    log::debug!("Warren v7 token refresh round succeeded");
-                    true
+    tokio::spawn(refresh_forever(
+        move || {
+            let manager = Arc::clone(&manager);
+            let notice = Arc::clone(&notice);
+            let credentials = credentials.clone();
+            let wallet = wallet.clone();
+            let standing = standing.clone();
+            let remembered_at = remembered_at.clone();
+            let activity = activity.clone();
+            async move {
+                // The round also reads the route admission block, so a logged-out
+                // daemon does neither.
+                activity
+                    .park_while_inactive("Warren v7 token refresh")
+                    .await;
+                let refreshed =
+                    refresh_announcing_mints(&manager, &credentials, &now_unix_secs).await;
+                if let Some(path) = remembered_at.as_deref()
+                    && manager.epoch_at(now_unix_secs()).is_some()
+                {
+                    remember_route_admission(path, manager.route_admission().as_ref());
                 }
-                Err(e) => {
-                    log::warn!("Warren v7 token refresh failed (keeping existing tokens): {e}");
-                    crate::warren_account_standing::report_if_banned(
-                        standing.as_ref(),
-                        &wallet,
-                        &e,
-                    );
-                    false
+                announce_refresh(&credentials, &manager, now_unix_secs());
+                if let (Some(verdict), Some(status)) =
+                    (clock_verdict(&refreshed), CLOCK_STATUS.get())
+                {
+                    status.set_token_clock_skew(verdict);
+                }
+                if notice.due(&manager, now_unix_secs()) {
+                    log::warn!("{ISSUED_ELSEWHERE_WARNING}");
+                }
+                match refreshed {
+                    Ok(_) => {
+                        log::debug!("Warren v7 token refresh round succeeded");
+                        true
+                    }
+                    Err(e) => {
+                        log::warn!("Warren v7 token refresh failed (keeping existing tokens): {e}");
+                        crate::warren_account_standing::report_if_banned(
+                            standing.as_ref(),
+                            &wallet,
+                            &e,
+                        );
+                        false
+                    }
                 }
             }
-        }
-    }));
+        },
+        ONLINE_EDGE.get().cloned(),
+    ));
 }
 
 /// The v7 token source for `seed`'s wallet against `api_url`. Builds (and

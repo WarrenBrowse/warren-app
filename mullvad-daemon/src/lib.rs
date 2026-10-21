@@ -2133,6 +2133,8 @@ impl Daemon {
         // (notably on sleep/wake), instead of sitting on a stale set until
         // their next coarse periodic tick.
         let (warren_online_edge_tx, warren_online_edge_rx) = tokio::sync::watch::channel(0u64);
+        warren_token_provider::wake_on_online(warren_online_edge_rx.clone());
+        warren_port_entitlements::wake_on_online(warren_online_edge_rx.clone());
         api::forward_offline_state(
             api_availability.clone(),
             offline_state_rx,

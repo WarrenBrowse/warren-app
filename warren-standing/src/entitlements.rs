@@ -198,6 +198,7 @@ pub struct EntitlementMint<T> {
     ban_sink: Option<BanSink>,
     runtime: Option<tokio::runtime::Handle>,
     activity: Option<tokio::sync::watch::Receiver<bool>>,
+    online_edge: Option<tokio::sync::watch::Receiver<u64>>,
 }
 
 impl<T: HttpTransport + 'static> EntitlementMint<T> {
@@ -208,7 +209,19 @@ impl<T: HttpTransport + 'static> EntitlementMint<T> {
             ban_sink: None,
             runtime: None,
             activity: None,
+            online_edge: None,
         }
+    }
+
+    /// Runs a lost round again as soon as `edge` moves, the client's
+    /// offline-to-online edge, rather than at the end of its retry delay. A
+    /// desktop daemon's first round runs before the host has a route, and the
+    /// first tunnel's forwarded port is refused until a round goes through.
+    /// A round that went through or met a ban still waits its interval.
+    #[must_use]
+    pub fn with_online_edge(mut self, edge: tokio::sync::watch::Receiver<u64>) -> Self {
+        self.online_edge = Some(edge);
+        self
     }
 
     /// Reports every refresh failure to `sink`: the entitlement issuer refuses
@@ -291,6 +304,7 @@ impl<T: HttpTransport + 'static> EntitlementMint<T> {
                     wallet_pubkey,
                     self.ban_sink.clone(),
                     self.activity.clone(),
+                    self.online_edge.clone(),
                     Arc::clone(&shortage),
                 );
                 match &self.runtime {
@@ -324,6 +338,7 @@ async fn refresh_forever<T: HttpTransport + 'static>(
     wallet_pubkey: [u8; 32],
     ban_sink: Option<BanSink>,
     mut activity: Option<tokio::sync::watch::Receiver<bool>>,
+    mut online_edge: Option<tokio::sync::watch::Receiver<u64>>,
     shortage: Arc<Shortage>,
 ) {
     let mut retry = FIRST_RETRY;
@@ -392,15 +407,32 @@ async fn refresh_forever<T: HttpTransport + 'static>(
             }
         };
         // A ban is an answer, never retried early; any other loss is.
-        let wait = if lost {
+        if lost {
             let wait = retry;
             retry = (retry * 2).min(REFRESH_INTERVAL);
-            wait
+            sleep_or_online(wait, &mut online_edge).await;
         } else {
             retry = FIRST_RETRY;
-            REFRESH_INTERVAL
+            tokio::time::sleep(REFRESH_INTERVAL).await;
+        }
+    }
+}
+
+/// Sleeps `wait`, or less if `edge` moves first. A closed edge, whose sender
+/// is gone, only sleeps.
+async fn sleep_or_online(wait: Duration, edge: &mut Option<tokio::sync::watch::Receiver<u64>>) {
+    let moved = async {
+        let moved = match edge.as_mut() {
+            Some(rx) => rx.changed().await.is_ok(),
+            None => false,
         };
-        tokio::time::sleep(wait).await;
+        if !moved {
+            std::future::pending::<()>().await;
+        }
+    };
+    tokio::select! {
+        () = tokio::time::sleep(wait) => {}
+        () = moved => {}
     }
 }
 

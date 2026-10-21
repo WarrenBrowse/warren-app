@@ -302,64 +302,71 @@ fn spawn_refresh<T: HttpTransport + 'static>(
         credentials,
     } = wallet;
     let notice = Arc::new(IssuedElsewhereNotice::default());
-    tokio::spawn(refresh_forever(move || {
-        let manager = Arc::clone(&manager);
-        let notice = Arc::clone(&notice);
-        let directory_read = Arc::clone(&directory_read);
-        let credentials = credentials.clone();
-        let now = Arc::clone(&now);
-        let persist = persist.clone();
-        let route_admission_file = route_admission_file.clone();
-        let ban_sink = ban_sink.clone();
-        async move {
-            let refreshed = refresh_announcing_mints(&manager, &credentials, &*now).await;
-            let succeeded = match refreshed {
-                // Log the current-epoch stock so a successful-but-empty
-                // refresh (the issuer refused this account's epoch) is
-                // distinguishable from a mint that actually stocked tokens.
-                // No secret material logged.
-                Ok(()) => {
-                    if let Some(persist) = &persist {
-                        persist.save(&manager);
+    tokio::spawn(refresh_forever(
+        move || {
+            let manager = Arc::clone(&manager);
+            let notice = Arc::clone(&notice);
+            let directory_read = Arc::clone(&directory_read);
+            let credentials = credentials.clone();
+            let now = Arc::clone(&now);
+            let persist = persist.clone();
+            let route_admission_file = route_admission_file.clone();
+            let ban_sink = ban_sink.clone();
+            async move {
+                let refreshed = refresh_announcing_mints(&manager, &credentials, &*now).await;
+                let succeeded = match refreshed {
+                    // Log the current-epoch stock so a successful-but-empty
+                    // refresh (the issuer refused this account's epoch) is
+                    // distinguishable from a mint that actually stocked tokens.
+                    // No secret material logged.
+                    Ok(()) => {
+                        if let Some(persist) = &persist {
+                            persist.save(&manager);
+                        }
+                        // The route admission block this directory carries, or
+                        // none: kept for the next process, and in force from now.
+                        if let Some(path) = &route_admission_file {
+                            remember_route_admission(path, manager.route_admission().as_ref());
+                        }
+                        directory_read.store(true, Ordering::Release);
+                        log::info!(
+                            "Warren v7 token refresh ok (current-epoch tokens={})",
+                            manager
+                                .epoch_at(now())
+                                .map_or(0, |epoch| manager.available(epoch))
+                        );
+                        if notice.due(&manager, now()) {
+                            log::warn!("{ISSUED_ELSEWHERE_WARNING}");
+                        }
+                        true
                     }
-                    // The route admission block this directory carries, or
-                    // none: kept for the next process, and in force from now.
-                    if let Some(path) = &route_admission_file {
-                        remember_route_admission(path, manager.route_admission().as_ref());
+                    // A ban refusal is not transient: it goes to the standing,
+                    // which blocks the tunnel. Anything else is, and the store
+                    // keeps vending what it already holds until the next round
+                    // retries. Same message as the desktop twin; the error chain
+                    // carries no token or seed material.
+                    Err(e) => {
+                        if ban_sink
+                            .as_ref()
+                            .is_some_and(|sink| sink(&wallet_pubkey, &e))
+                        {
+                            log::warn!("Warren v7 token refresh refused: the account is banned");
+                        } else {
+                            log::warn!(
+                                "Warren v7 token refresh failed (keeping existing tokens): {e}"
+                            );
+                        }
+                        false
                     }
-                    directory_read.store(true, Ordering::Release);
-                    log::info!(
-                        "Warren v7 token refresh ok (current-epoch tokens={})",
-                        manager
-                            .epoch_at(now())
-                            .map_or(0, |epoch| manager.available(epoch))
-                    );
-                    if notice.due(&manager, now()) {
-                        log::warn!("{ISSUED_ELSEWHERE_WARNING}");
-                    }
-                    true
-                }
-                // A ban refusal is not transient: it goes to the standing,
-                // which blocks the tunnel. Anything else is, and the store
-                // keeps vending what it already holds until the next round
-                // retries. Same message as the desktop twin; the error chain
-                // carries no token or seed material.
-                Err(e) => {
-                    if ban_sink
-                        .as_ref()
-                        .is_some_and(|sink| sink(&wallet_pubkey, &e))
-                    {
-                        log::warn!("Warren v7 token refresh refused: the account is banned");
-                    } else {
-                        log::warn!("Warren v7 token refresh failed (keeping existing tokens): {e}");
-                    }
-                    false
-                }
-            };
-            announce_refresh(&credentials, &manager, now());
-            succeeded
-        }
-    }));
+                };
+                announce_refresh(&credentials, &manager, now());
+                succeeded
+            }
+        },
+        // No offline-to-online edge reaches this process; the persisted bundle
+        // is what spares the first tunnel a wait for its first round.
+        None,
+    ));
 }
 
 #[cfg(all(target_os = "android", feature = "tunnel"))]

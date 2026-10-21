@@ -24,7 +24,7 @@ thiserror = { workspace = true }
 # The mobile store wakes the tunnel on a ban through a watch channel, and the
 # entitlement mint (`entitlements`, shared by the desktop daemon, Android and
 # iOS) tops its batch up on a timer task.
-tokio = { workspace = true, features = ["sync", "rt", "time"] }
+tokio = { workspace = true, features = ["sync", "rt", "time", "macros"] }
 log = { workspace = true }
 
 [dev-dependencies]
