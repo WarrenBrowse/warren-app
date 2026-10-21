@@ -196,52 +196,6 @@ fn issued_elsewhere<T: HttpTransport>(manager: &TokenManager<T>, now: u64) -> bo
         .is_some_and(|epoch| manager.issued_to_another_batch(epoch))
 }
 
-/// File under a client's state directory that keeps [`install_rotation`]'s
-/// value across process restarts.
-pub const ROTATION_FILE: &str = "warren-token-rotation";
-
-/// Where this install's sessions start in each epoch's batch
-/// ([`TokenManager::with_rotation`]): read from `dir`, or drawn and kept there
-/// on first use.
-///
-/// The exit recognises a restarted client only by the serial it leads with,
-/// and keeps its inner address and forwarded ports for that serial. A start
-/// drawn per process leads a restarted daemon with another serial, so its
-/// pinned port stays refused for minutes after every reboot or update. In a
-/// directory it cannot write to, each process draws its own. The value is
-/// written to a side file and renamed, because a torn write would still parse
-/// as another number and silently move the next start.
-pub fn install_rotation(dir: &std::path::Path) -> u64 {
-    let path = dir.join(ROTATION_FILE);
-    if let Some(kept) = std::fs::read_to_string(&path)
-        .ok()
-        .and_then(|text| text.trim().parse().ok())
-    {
-        return kept;
-    }
-    let drawn: u64 = rand::random();
-    let partial = dir.join(format!("{ROTATION_FILE}.partial"));
-    if let Err(e) =
-        std::fs::write(&partial, drawn.to_string()).and_then(|()| std::fs::rename(&partial, &path))
-    {
-        log::warn!("Warren token rotation not kept, a restart will lead with another serial: {e}");
-    }
-    drawn
-}
-
-/// `manager`, leading its sessions with [`install_rotation`]'s value for
-/// `dir`. Without a directory it keeps the start it drew for this process.
-#[must_use]
-pub fn with_install_rotation<T: HttpTransport>(
-    manager: TokenManager<T>,
-    dir: Option<&std::path::Path>,
-) -> TokenManager<T> {
-    match dir {
-        Some(dir) => manager.with_rotation(install_rotation(dir)),
-        None => manager,
-    }
-}
-
 /// The coarse refresh period of a wallet's credentials, and the first wait
 /// after a failed round. A failure doubles the wait, up to the period: the
 /// first round runs as the first tunnel connects, and a round lost then left
@@ -861,50 +815,5 @@ mod tests {
         let open = source_over(&[]).0;
 
         assert!(open()().is_empty());
-    }
-
-    #[test]
-    fn the_next_process_reads_back_the_rotation_this_one_drew() {
-        let dir = tempfile::tempdir().expect("a temp dir");
-
-        let drawn = super::install_rotation(dir.path());
-
-        assert_eq!(super::install_rotation(dir.path()), drawn);
-    }
-
-    #[test]
-    fn a_manager_kept_over_an_install_leads_where_its_predecessor_led() {
-        let dir = tempfile::tempdir().expect("a temp dir");
-        let batch: Vec<u8> = (1..=200).collect();
-        let lead = || {
-            let manager = super::with_install_rotation(bare_manager(NoNetwork), Some(dir.path()));
-            restore(manager, &[(EPOCH, &batch)]).session_stack(NOW)[0]
-        };
-
-        assert_eq!(lead(), lead());
-    }
-
-    #[test]
-    fn an_unreadable_rotation_file_is_drawn_again_and_kept() {
-        let dir = tempfile::tempdir().expect("a temp dir");
-        std::fs::write(dir.path().join(super::ROTATION_FILE), b"not a number").unwrap();
-
-        let drawn = super::install_rotation(dir.path());
-
-        assert_eq!(super::install_rotation(dir.path()), drawn);
-    }
-
-    #[test]
-    fn a_rotation_that_cannot_be_kept_is_still_handed_out() {
-        let dir = tempfile::tempdir().expect("a temp dir");
-        let missing = dir.path().join("never-created");
-
-        let one = super::install_rotation(&missing);
-        let other = super::install_rotation(&missing);
-
-        assert_ne!(
-            one, other,
-            "nothing was kept, so each process draws its own"
-        );
     }
 }

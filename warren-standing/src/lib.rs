@@ -29,6 +29,7 @@ mod natpmp_slot;
 mod port_refusal;
 pub mod server_clock;
 mod store;
+pub mod token_rotation;
 mod tracker;
 
 pub use ledger::{LedgerError, StrikeLedger};

@@ -59,7 +59,7 @@ pub(crate) use talpid_warren_tunnel::app_routes::admission::{
 pub(crate) use talpid_warren_tunnel::app_routes::tokens::session_source;
 use talpid_warren_tunnel::app_routes::tokens::{
     ISSUED_ELSEWHERE_WARNING, IssuedElsewhereNotice, announce_refresh, refresh_announcing_mints,
-    refresh_forever, with_install_rotation,
+    refresh_forever,
 };
 use talpid_warren_tunnel::{
     SessionTokenSource,
@@ -68,6 +68,7 @@ use talpid_warren_tunnel::{
 use tokio::sync::watch;
 use warren_api::{BlindingKey, TokenManager, WarrenApiClient};
 use warren_identity::WarrenIdentity;
+use warren_standing::token_rotation::with_install_rotation;
 
 use crate::warren_account_standing::StandingMonitor;
 use crate::warren_api_transport::WarrenApiTransport;

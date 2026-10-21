@@ -26,6 +26,8 @@ thiserror = { workspace = true }
 # iOS) tops its batch up on a timer task.
 tokio = { workspace = true, features = ["sync", "rt", "time", "macros"] }
 log = { workspace = true }
+# Draws the token rotation an install keeps (`token_rotation`).
+rand = { workspace = true }
 
 [dev-dependencies]
 tempfile = "3"

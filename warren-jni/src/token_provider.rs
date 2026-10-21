@@ -45,8 +45,9 @@ use warren_app_routes::Credentials;
 use warren_app_routes::admission::{RouteKemTrust, remember_route_admission};
 use warren_app_routes::tokens::{
     ISSUED_ELSEWHERE_WARNING, IssuedElsewhereNotice, announce_minted, announce_refresh,
-    refresh_announcing_mints, refresh_forever, with_install_rotation,
+    refresh_announcing_mints, refresh_forever,
 };
+use warren_standing::token_rotation::with_install_rotation;
 
 /// The most tokens one setup request may carry: the default admission sends
 /// the whole stack at once, and the wire refuses to decode a request with
@@ -145,7 +146,7 @@ pub(crate) struct TokenMint<T> {
     /// signed route admission block is kept in across a process death.
     route_kem_trust: RouteKemTrust,
     /// Where the install's token rotation is kept
-    /// ([`warren_app_routes::tokens::install_rotation`]). Without it each
+    /// ([`warren_standing::token_rotation::install_rotation`]). Without it each
     /// process draws its own and leads with another serial after a restart.
     rotation_dir: Option<PathBuf>,
 }

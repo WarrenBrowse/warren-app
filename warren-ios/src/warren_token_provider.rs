@@ -88,7 +88,16 @@ fn spawn_refresh(manager: Arc<Manager>, wallet_pubkey: [u8; 32]) {
 /// key is `blinding`. Builds (and starts refreshing) a manager the first time
 /// a wallet is seen; reuses it after. The returned closure hands each dial the
 /// current batch, at most what one setup request may carry, and never mints.
-pub(crate) fn provider_for(signing_key: SigningKey, blinding: BlindingKey) -> SessionTokenProvider {
+///
+/// `rotation_dir` keeps where this install's sessions start in each batch
+/// across extension processes ([`warren_standing::token_rotation`]): without
+/// it a new process leads with another serial and the exit takes it for a
+/// stranger, which costs it its inner address and its forwarded ports.
+pub(crate) fn provider_for(
+    signing_key: SigningKey,
+    blinding: BlindingKey,
+    rotation_dir: Option<&std::path::Path>,
+) -> SessionTokenProvider {
     let pubkey = signing_key.verifying_key().to_bytes();
 
     let map = MANAGERS.get_or_init(|| Mutex::new(HashMap::new()));
@@ -102,7 +111,10 @@ pub(crate) fn provider_for(signing_key: SigningKey, blinding: BlindingKey) -> Se
                     WarrenIdentity::from_signing_key(signing_key),
                     ReqwestTransport::new(),
                 ));
-                let manager = Arc::new(TokenManager::new(Arc::new(client), blinding));
+                let manager = Arc::new(warren_standing::token_rotation::with_install_rotation(
+                    TokenManager::new(Arc::new(client), blinding),
+                    rotation_dir,
+                ));
                 spawn_refresh(manager.clone(), pubkey);
                 manager
             })

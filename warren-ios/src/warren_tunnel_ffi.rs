@@ -1462,9 +1462,15 @@ fn spawn_multi_hop(
         // exit admits without learning the account pubkey. The main session is
         // tokens-only: with no usable token it does not come up, and the next
         // connect attempt takes the tokens the refresh brings.
+        // The pin table lives in the App Group container, which outlives the
+        // extension process: the token rotation is kept beside it.
+        let rotation_dir = pin_store_path
+            .as_deref()
+            .and_then(|path| std::path::Path::new(path).parent());
         let session_token_provider = Some(crate::warren_token_provider::provider_for(
             signing_key.clone(),
             session_blinding,
+            rotation_dir,
         ));
         // Port entitlements ride the same wallet and the same coarse refresh
         // (warren-core doc 99). Built even when port forwarding is off, so
