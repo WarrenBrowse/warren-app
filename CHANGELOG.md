@@ -55,6 +55,16 @@ Line wrap the file at 100 chars.                                              Th
   up.
 - [iOS] Choose an entry server the network in use can reach, which on an
   IPv6-only network means one that answers on IPv6.
+- [iOS] Keep the same session identity from one start of the VPN to the next, so the tunnel gets
+  its address and its chosen forwarded port back after a restart.
+
+## [1.1.53] - 2026-10-22
+### Fixed
+- [Windows, macOS, Linux, Android] Connect as soon as the network comes back when the app starts
+  without one, instead of waiting for the next attempt about 15 seconds later.
+### Security
+- Take the certificate validation fixes that stop trusting intermediate certificates whose trust
+  was withdrawn (rustls-webpki 0.103.16, webpki-roots 1.0.10).
 
 ## [1.1.52] - 2026-10-21
 ### Fixed

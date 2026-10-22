@@ -1,7 +1,6 @@
 ### Fixed
-- [Windows, macOS, Linux, Android] Get the chosen forwarded port back as soon as the VPN connects
-  after a restart of the computer or of the app, or after an update. The app introduced itself to
-  the servers as a new client at each start, and the port stayed reserved to its previous session
-  for several minutes.
-- [Windows, macOS, Linux] Say that the clock of this device is off when the servers refuse the
-  session tokens for it, instead of trying to connect without end.
+- [Windows, macOS, Linux, Android] Connect as soon as the network comes back when the app starts
+  without one, instead of waiting for the next attempt about 15 seconds later.
+### Security
+- Take the certificate validation fixes that stop trusting intermediate certificates whose trust
+  was withdrawn (rustls-webpki 0.103.16, webpki-roots 1.0.10).

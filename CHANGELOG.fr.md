@@ -50,6 +50,17 @@ par l'application, gardez-le tel quel.
   les droits de port sont épuisés.
 - [iOS] Choisir un serveur d'entrée que le réseau utilisé peut joindre, ce
   qui, sur un réseau en IPv6 seulement, veut dire un serveur qui répond en IPv6.
+- [iOS] Garder la même identité de session d'un démarrage du VPN au suivant, pour que le tunnel
+  retrouve son adresse et le port choisi après un redémarrage.
+
+## [1.1.53] - 2026-10-22
+### Corrigé
+- [Windows, macOS, Linux, Android] Se connecter dès le retour du réseau quand l'application démarre
+  sans réseau, au lieu d'attendre la tentative suivante une quinzaine de secondes plus tard.
+### Sécurité
+- Intégration des correctifs de la validation des certificats, qui cesse de faire confiance à des
+  certificats intermédiaires dont la confiance a été retirée (rustls-webpki 0.103.16,
+  webpki-roots 1.0.10).
 
 ## [1.1.52] - 2026-10-21
 ### Corrigé

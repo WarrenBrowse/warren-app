@@ -47,6 +47,17 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
   s-au epuizat.
 - [iOS] Aplicația alege un server de intrare pe care rețeaua folosită îl
   poate atinge, adică pe o rețea doar IPv6 un server care răspunde pe IPv6.
+- [iOS] Păstrarea aceleiași identități de sesiune de la o pornire a VPN-ului la următoarea, astfel
+  încât tunelul își regăsește adresa și portul ales după o repornire.
+
+## [1.1.53] - 2026-10-22
+### Corectat
+- [Windows, macOS, Linux, Android] Conectarea imediat ce rețeaua revine, atunci când aplicația
+  pornește fără rețea, în loc de așteptarea următoarei încercări, cu aproximativ 15 secunde mai
+  târziu.
+### Securitate
+- Preluarea corecțiilor validării certificatelor, care nu mai acordă încredere unor certificate
+  intermediare cărora li s-a retras încrederea (rustls-webpki 0.103.16, webpki-roots 1.0.10).
 
 ## [1.1.52] - 2026-10-21
 ### Corectat

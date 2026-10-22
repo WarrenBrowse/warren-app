@@ -1,7 +1,7 @@
 ### Corrigé
-- [Windows, macOS, Linux, Android] Le port forwarding retrouve le port choisi dès la connexion après
-  un redémarrage de l'ordinateur ou de l'application, ou après une mise à jour. L'application se présentait aux
-  serveurs comme un nouveau client à chaque démarrage, et le port restait réservé à sa session
-  précédente pendant plusieurs minutes.
-- [Windows, macOS, Linux] Signaler que l'horloge de l'appareil est décalée quand les serveurs
-  refusent les jetons de session pour cette raison, au lieu de tenter de se connecter sans fin.
+- [Windows, macOS, Linux, Android] Se connecter dès le retour du réseau quand l'application démarre
+  sans réseau, au lieu d'attendre la tentative suivante une quinzaine de secondes plus tard.
+### Sécurité
+- Intégration des correctifs de la validation des certificats, qui cesse de faire confiance à des
+  certificats intermédiaires dont la confiance a été retirée (rustls-webpki 0.103.16,
+  webpki-roots 1.0.10).
