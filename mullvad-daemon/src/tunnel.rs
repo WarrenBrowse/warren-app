@@ -1572,6 +1572,9 @@ impl ParametersGenerator {
                     // exit is asked for the SAME port (the port follows the
                     // client across a server change).
                     record_granted_external_port(&sticky, id, &event);
+                    if let Some(line) = nat_pmp_event_line(id, &event) {
+                        log::info!("{line}");
+                    }
                     cache_for_nat_pmp.record_nat_pmp_event(id, event);
                 }
                 talpid_warren_tunnel::NatPmpRuleEvent::Refused {
@@ -1993,6 +1996,33 @@ fn build_remap_config(
     let mut cfg = cfg.with_sticky_ports(sticky);
     cfg.remap_epoch = next_epoch;
     Some(cfg)
+}
+
+/// The line a NAT-PMP answer leaves in the daemon log, or `None` for a
+/// same-port renewal. The engine logs each request it sends and nothing of
+/// the answer, so without this a support report cannot tell a port granted
+/// within a second from one never granted. A public port is the one thing
+/// named: it is already published to the internet, and the line carries no
+/// address.
+fn nat_pmp_event_line(id: NatPmpRuleId, event: &NatPmpEvent) -> Option<String> {
+    let rule = format!("{}/{:?}", id.internal_port, id.protocol);
+    match event {
+        NatPmpEvent::Mapped {
+            external_port,
+            lifetime_secs,
+            ..
+        } => Some(format!(
+            "Warren NAT-PMP rule {rule}: granted public port {external_port} for {lifetime_secs}s"
+        )),
+        NatPmpEvent::Renewed { .. } => None,
+        NatPmpEvent::RateLimited { retry_after_secs } => Some(format!(
+            "Warren NAT-PMP rule {rule}: rate limited, asking again in {retry_after_secs}s"
+        )),
+        NatPmpEvent::Failed { reason, error } => Some(format!(
+            "Warren NAT-PMP rule {rule}: failed ({reason:?}): {error}"
+        )),
+        NatPmpEvent::Cancelled => Some(format!("Warren NAT-PMP rule {rule}: released")),
+    }
 }
 
 /// Records the granted external port for `id` into the sticky map so the next
@@ -2666,5 +2696,68 @@ mod subscription_status_tests {
                 "a network or server failure is not an account verdict"
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod nat_pmp_event_line_tests {
+    use super::*;
+    use talpid_warren_tunnel::{NatPmpFailureReason, NatPmpProto};
+
+    fn rule() -> NatPmpRuleId {
+        NatPmpRuleId {
+            internal_port: 60504,
+            protocol: NatPmpProto::Both,
+        }
+    }
+
+    // The grant was the one fact a support report could not show: the
+    // engine logs every request it sends and nothing of the answer, so a
+    // port granted in a second read the same as one never granted.
+    #[test]
+    fn a_grant_names_the_public_port_and_its_lifetime() {
+        let line = nat_pmp_event_line(
+            rule(),
+            &NatPmpEvent::Mapped {
+                external_port: 60504,
+                lifetime_secs: 3600,
+                attempts_remaining: None,
+                window_reset_secs: 0,
+            },
+        );
+        let line = line.expect("a grant is logged");
+        assert!(line.contains("60504"), "{line}");
+        assert!(line.contains("3600"), "{line}");
+    }
+
+    #[test]
+    fn a_failure_names_its_reason() {
+        let line = nat_pmp_event_line(
+            rule(),
+            &NatPmpEvent::Failed {
+                reason: NatPmpFailureReason::SuggestedPortInUse,
+                error: "server refused: suggested port unavailable".to_owned(),
+            },
+        )
+        .expect("a failure is logged");
+        assert!(line.contains("SuggestedPortInUse"), "{line}");
+    }
+
+    // A renewal on the same port happens every half lifetime and says
+    // nothing a reader needs.
+    #[test]
+    fn a_renewal_is_not_logged() {
+        assert!(
+            nat_pmp_event_line(
+                rule(),
+                &NatPmpEvent::Renewed {
+                    external_port: 60504,
+                    lifetime_secs: 3600,
+                    attempts_remaining: None,
+                    window_reset_secs: 0,
+                },
+            )
+            .is_none()
+        );
     }
 }
