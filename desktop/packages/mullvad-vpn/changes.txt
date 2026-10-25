@@ -1,6 +1,9 @@
 ### Fixed
-- [Windows, macOS, Linux, Android] Connect as soon as the network comes back when the app starts
-  without one, instead of waiting for the next attempt about 15 seconds later.
-### Security
-- Take the certificate validation fixes that stop trusting intermediate certificates whose trust
-  was withdrawn (rustls-webpki 0.103.16, webpki-roots 1.0.10).
+- [Windows, macOS, Linux] Announce the forwarded port, and write it into the linked torrent client,
+  when the app opens after the VPN already got it, as it does when the computer starts. Both used
+  to wait for the next change of port, usually a change of country.
+- [Windows, macOS, Linux] Give the forwarded port back to the server when changing country, so the
+  next country grants the same port at the first request instead of refusing it first, and coming
+  back to the previous country gets it back at once.
+- [Windows, macOS, Linux, Android] Ask again at once when a server refuses a port entitlement,
+  instead of two seconds later.

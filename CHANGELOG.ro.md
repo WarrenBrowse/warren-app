@@ -50,6 +50,17 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Păstrarea aceleiași identități de sesiune de la o pornire a VPN-ului la următoarea, astfel
   încât tunelul își regăsește adresa și portul ales după o repornire.
 
+## [1.1.54] - 2026-10-25
+### Corectat
+- [Windows, macOS, Linux] Anunțarea portului redirecționat și scrierea lui în clientul torrent
+  asociat atunci când aplicația se deschide după ce VPN-ul l-a obținut deja, ca la pornirea
+  computerului. Ambele așteptau următoarea schimbare de port, de obicei o schimbare de țară.
+- [Windows, macOS, Linux] Returnarea portului redirecționat către server la schimbarea țării,
+  astfel încât țara următoare acordă același port de la prima cerere în loc să-l refuze întâi, iar
+  revenirea la țara anterioară îl regăsește imediat.
+- [Windows, macOS, Linux, Android] O nouă cerere imediată atunci când un server refuză un drept de
+  port, în loc de două secunde mai târziu.
+
 ## [1.1.53] - 2026-10-22
 ### Corectat
 - [Windows, macOS, Linux, Android] Conectarea imediat ce rețeaua revine, atunci când aplicația

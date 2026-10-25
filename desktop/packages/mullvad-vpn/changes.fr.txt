@@ -1,7 +1,9 @@
 ### Corrigé
-- [Windows, macOS, Linux, Android] Se connecter dès le retour du réseau quand l'application démarre
-  sans réseau, au lieu d'attendre la tentative suivante une quinzaine de secondes plus tard.
-### Sécurité
-- Intégration des correctifs de la validation des certificats, qui cesse de faire confiance à des
-  certificats intermédiaires dont la confiance a été retirée (rustls-webpki 0.103.16,
-  webpki-roots 1.0.10).
+- [Windows, macOS, Linux] Annoncer le port forwardé, et l'écrire dans le client torrent lié, quand
+  l'application s'ouvre après que le VPN l'a déjà obtenu, comme au démarrage de l'ordinateur. Les
+  deux attendaient le changement de port suivant, en général un changement de pays.
+- [Windows, macOS, Linux] Rendre le port forwardé au serveur lors d'un changement de pays, pour que
+  le pays suivant accorde le même port dès la première demande au lieu de le refuser d'abord, et
+  qu'un retour au pays précédent le retrouve aussitôt.
+- [Windows, macOS, Linux, Android] Redemander aussitôt quand un serveur refuse un droit de port,
+  au lieu de deux secondes plus tard.

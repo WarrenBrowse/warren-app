@@ -53,6 +53,17 @@ par l'application, gardez-le tel quel.
 - [iOS] Garder la même identité de session d'un démarrage du VPN au suivant, pour que le tunnel
   retrouve son adresse et le port choisi après un redémarrage.
 
+## [1.1.54] - 2026-10-25
+### Corrigé
+- [Windows, macOS, Linux] Annoncer le port forwardé, et l'écrire dans le client torrent lié, quand
+  l'application s'ouvre après que le VPN l'a déjà obtenu, comme au démarrage de l'ordinateur. Les
+  deux attendaient le changement de port suivant, en général un changement de pays.
+- [Windows, macOS, Linux] Rendre le port forwardé au serveur lors d'un changement de pays, pour que
+  le pays suivant accorde le même port dès la première demande au lieu de le refuser d'abord, et
+  qu'un retour au pays précédent le retrouve aussitôt.
+- [Windows, macOS, Linux, Android] Redemander aussitôt quand un serveur refuse un droit de port,
+  au lieu de deux secondes plus tard.
+
 ## [1.1.53] - 2026-10-22
 ### Corrigé
 - [Windows, macOS, Linux, Android] Se connecter dès le retour du réseau quand l'application démarre

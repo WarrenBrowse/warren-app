@@ -58,6 +58,17 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Keep the same session identity from one start of the VPN to the next, so the tunnel gets
   its address and its chosen forwarded port back after a restart.
 
+## [1.1.54] - 2026-10-25
+### Fixed
+- [Windows, macOS, Linux] Announce the forwarded port, and write it into the linked torrent client,
+  when the app opens after the VPN already got it, as it does when the computer starts. Both used
+  to wait for the next change of port, usually a change of country.
+- [Windows, macOS, Linux] Give the forwarded port back to the server when changing country, so the
+  next country grants the same port at the first request instead of refusing it first, and coming
+  back to the previous country gets it back at once.
+- [Windows, macOS, Linux, Android] Ask again at once when a server refuses a port entitlement,
+  instead of two seconds later.
+
 ## [1.1.53] - 2026-10-22
 ### Fixed
 - [Windows, macOS, Linux, Android] Connect as soon as the network comes back when the app starts

@@ -1,7 +1,9 @@
 ### Corectat
-- [Windows, macOS, Linux, Android] Conectarea imediat ce rețeaua revine, atunci când aplicația
-  pornește fără rețea, în loc de așteptarea următoarei încercări, cu aproximativ 15 secunde mai
-  târziu.
-### Securitate
-- Preluarea corecțiilor validării certificatelor, care nu mai acordă încredere unor certificate
-  intermediare cărora li s-a retras încrederea (rustls-webpki 0.103.16, webpki-roots 1.0.10).
+- [Windows, macOS, Linux] Anunțarea portului redirecționat și scrierea lui în clientul torrent
+  asociat atunci când aplicația se deschide după ce VPN-ul l-a obținut deja, ca la pornirea
+  computerului. Ambele așteptau următoarea schimbare de port, de obicei o schimbare de țară.
+- [Windows, macOS, Linux] Returnarea portului redirecționat către server la schimbarea țării,
+  astfel încât țara următoare acordă același port de la prima cerere în loc să-l refuze întâi, iar
+  revenirea la țara anterioară îl regăsește imediat.
+- [Windows, macOS, Linux, Android] O nouă cerere imediată atunci când un server refuză un drept de
+  port, în loc de două secunde mai târziu.
