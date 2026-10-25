@@ -29,13 +29,14 @@ pub enum PortRefusal {
 
 impl PortRefusal {
     /// Seconds to wait before asking again after the `attempt`-th refusal in
-    /// a row (from 1). A refused entitlement usually heals within a cycle, so
-    /// it is asked for again soon; a missing one comes back with the next mint
+    /// a row (from 1). A refused entitlement is set aside and the next request
+    /// presents another serial, so the first retry goes out at once and the
+    /// later ones space out; a missing one comes back with the next mint
     /// or the next epoch, so it is asked for on the refresh cadence, starting
     /// short because the first mint of a wallet can still be in flight.
     #[must_use]
     pub fn retry_after_secs(self, attempt: u32) -> u32 {
-        const REFUSED: [u32; 6] = [2, 10, 30, 60, 120, 300];
+        const REFUSED: [u32; 6] = [0, 10, 30, 60, 120, 300];
         const MISSING: [u32; 6] = [5, 30, 60, 120, 300, 600];
         let table: &[u32] = match self {
             Self::EntitlementRefused => &REFUSED,
@@ -87,13 +88,18 @@ mod tests {
 
         count.on_granted();
 
-        assert_eq!(count.on_refused(PortRefusal::EntitlementRefused), 2);
+        assert_eq!(count.on_refused(PortRefusal::EntitlementRefused), 0);
     }
 
+    // The refused serial is set aside and the next request presents another
+    // one, so the first retry has nothing to wait for. A change of country
+    // meets exactly this: the previous exit still holds the serial's lease
+    // for a few seconds, and the two seconds of waiting showed as a port that
+    // blocks and then opens (forum topic 226).
     #[test]
-    fn a_refused_entitlement_is_asked_again_soon_then_less_often() {
+    fn a_refused_entitlement_is_asked_again_at_once_then_less_often() {
         let retry = |n| PortRefusal::EntitlementRefused.retry_after_secs(n);
-        assert_eq!(retry(1), 2);
+        assert_eq!(retry(1), 0);
         assert!(retry(2) > retry(1));
         assert_eq!(retry(99), 300, "the wait stops growing");
     }

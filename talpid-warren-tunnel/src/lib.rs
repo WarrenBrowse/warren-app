@@ -5694,7 +5694,10 @@ mod tests {
         let reported = refusals.lock().unwrap().clone();
         assert_eq!(reported.len(), 1, "{reported:?}");
         assert_eq!(reported[0].1, NatPmpRefusal::EntitlementRefused);
-        assert_eq!(reported[0].2, 2);
+        assert_eq!(
+            reported[0].2, 0,
+            "the next serial is presented at once after a refused one"
+        );
         assert!(
             !log.lock()
                 .unwrap()
