@@ -143,6 +143,7 @@ import NotificationController, {
 import { PENDING_PURCHASES_FILE, SealedPendingPurchaseStore } from './pending-purchase-store';
 import { isMacOs13OrNewer } from './platform-version';
 import { ForwardedPortFile, renderForwardedPortFile } from './port-forward-status-file';
+import { readSeenPorts, serializeSeenPorts, writeSeenPorts } from './port-forwarding-seen';
 import { PortForwardingWatcher } from './port-forwarding-watcher';
 import * as problemReport from './problem-report';
 import { resolveBin } from './proc';
@@ -226,6 +227,8 @@ class ApplicationMain
   // Baseline of that stream, reset with the subscription so the replay the
   // daemon sends on reconnect is never announced as a change.
   private portForwardingWatcher = new PortForwardingWatcher();
+  private seenPortsLoaded = false;
+  private seenPortsContent?: string;
   // Last snapshot of that stream, and the machine-readable file it feeds. A
   // torrent client learns its port from the file rather than from the window,
   // so it is republished on every snapshot AND on every tunnel-state change.
@@ -1113,6 +1116,16 @@ class ApplicationMain
       log.warn(`Failed to subscribe to Warren status events: ${error.message}`);
     }
 
+    // The ports seen by the previous GUI process are the baseline of the
+    // first snapshot, so a port the daemon got at boot, before this process
+    // started, is announced and written into the torrent client.
+    if (!this.seenPortsLoaded) {
+      this.seenPortsLoaded = true;
+      this.portForwardingWatcher = new PortForwardingWatcher(
+        await readSeenPorts(app.getPath('userData')),
+      );
+    }
+
     // Subscribe to NAT-PMP refresh-loop status. Same best-effort
     // policy as warrenStatus: failure must not block the bootstrap.
     try {
@@ -1481,11 +1494,21 @@ class ApplicationMain
     this.publishForwardedPortFile();
 
     const changes = this.portForwardingWatcher.observe(snapshot);
+    this.keepSeenPorts();
+    for (const change of changes) {
+      log.info(
+        change.state === 'mapped'
+          ? `Port forwarding: rule ${change.internalPort}/${change.protocol} now forwards public port ${change.port}`
+          : `Port forwarding: rule ${change.internalPort}/${change.protocol} lost public port ${change.previousPort}`,
+      );
+    }
     // One call site, two consumers: the toast the user reads and the write
     // into their torrent client come from the same list of changes, so they
-    // can never name different ports.
+    // can never name different ports. The catch-up after it writes the port
+    // the rule holds when no change carried it (a GUI started after the grant).
     void this.torrentClientSync
       .onChanges(changes)
+      .then(() => this.torrentClientSync.ensureSynced())
       .catch((error: Error) => log.warn(`Cannot update the torrent client: ${error.message}`));
 
     if (!this.settings.gui.portForwardingNotifications) {
@@ -1498,6 +1521,21 @@ class ApplicationMain
         this.settings.gui.enableSystemNotifications,
       );
     }
+  }
+
+  // Keeps the ports this process saw for the next one, only when they changed:
+  // every renewal sends a snapshot, and most name the same port.
+  private keepSeenPorts() {
+    const remembered = this.portForwardingWatcher.remembered();
+    const content = serializeSeenPorts(remembered);
+    if (content === this.seenPortsContent) {
+      return;
+    }
+    this.seenPortsContent = content;
+    void writeSeenPorts(app.getPath('userData'), remembered).catch((error: Error) => {
+      this.seenPortsContent = undefined;
+      log.warn(`Cannot keep the forwarded ports seen: ${error.message}`);
+    });
   }
 
   // Publishes the granted public ports where a script can watch them, next to

@@ -575,3 +575,95 @@ describe('the torrent client after an abuse report', () => {
     expect(harness.statuses).to.deep.equal([]);
   });
 });
+
+// The port the client should listen on is the one the linked rule holds now,
+// whatever the stream of changes said: a GUI that started after the daemon got
+// its port saw no change at all, and the client stayed on the previous port
+// until the next change of country (forum topic 226).
+describe('the torrent client catching up with the current grant', () => {
+  it('writes the port the linked rule holds when this process never wrote it', async () => {
+    const harness = buildHarness({ mappings: [liveMapping(6881, 6881)] });
+
+    await harness.sync.ensureSynced();
+
+    expect(harness.attempts).to.deep.equal([6881]);
+    expect(lastStatus(harness.statuses)).to.deep.equal({ state: 'synced', port: 6881, at: NOW });
+  });
+
+  it('writes nothing once the client holds the granted port', async () => {
+    const harness = buildHarness({ mappings: [liveMapping(6881, 6881)] });
+    await harness.sync.ensureSynced();
+
+    await harness.sync.ensureSynced();
+
+    expect(harness.attempts).to.deep.equal([6881]);
+  });
+
+  it('writes nothing while the linked rule holds no port', async () => {
+    const harness = buildHarness();
+
+    await harness.sync.ensureSynced();
+
+    expect(harness.attempts).to.deep.equal([]);
+  });
+
+  it('re-points the rule when the exit granted another port than it names', async () => {
+    const harness = buildHarness({
+      rules: [autoRule(6881)],
+      mappings: [liveMapping(6881, 58291)],
+    });
+
+    await harness.sync.ensureSynced();
+
+    expect(harness.natPmpWrites).toHaveLength(1);
+    expect(harness.attempts).to.deep.equal([]);
+  });
+
+  // A client that refused the port will refuse it again; asking on every
+  // status the daemon sends would only fill its log. The user's "Apply now"
+  // and the next real change still go through.
+  it('does not ask again for a port the client refused', async () => {
+    const harness = buildHarness({
+      mappings: [liveMapping(6881, 6881)],
+      handlers: [fails({ kind: 'rejected', detail: 'port in use' })],
+    });
+    await harness.sync.ensureSynced();
+
+    await harness.sync.ensureSynced();
+
+    expect(harness.attempts).to.deep.equal([6881]);
+  });
+
+  // At boot the torrent client often starts after the app: an unreachable
+  // client is asked again on the next status rather than given up on.
+  it('asks again on the next status when the client was unreachable', async () => {
+    const unreachable = fails({ kind: 'unreachable' });
+    const harness = buildHarness({
+      mappings: [liveMapping(6881, 6881)],
+      handlers: [unreachable, unreachable, unreachable, unreachable],
+    });
+    await harness.sync.ensureSynced();
+
+    await harness.sync.ensureSynced();
+
+    expect(harness.attempts).to.deep.equal([6881, 6881, 6881, 6881, 6881]);
+    expect(lastStatus(harness.statuses)).to.deep.equal({ state: 'synced', port: 6881, at: NOW });
+  });
+
+  it('stays out of it while no client is configured', async () => {
+    const harness = buildHarness({ kind: 'none', mappings: [liveMapping(6881, 6881)] });
+
+    await harness.sync.ensureSynced();
+
+    expect(harness.attempts).to.deep.equal([]);
+  });
+
+  it('stays held after an abuse report on the client port', async () => {
+    const harness = buildHarness({ mappings: [liveMapping(6881, 6881)] });
+    harness.sync.onStrike(6881);
+
+    await harness.sync.ensureSynced();
+
+    expect(harness.attempts).to.deep.equal([]);
+  });
+});

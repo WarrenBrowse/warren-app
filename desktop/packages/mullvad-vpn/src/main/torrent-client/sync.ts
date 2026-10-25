@@ -106,6 +106,10 @@ export class TorrentClientSync {
    * port that was closed. Survives a daemon reconnect, since only the user
    * lifts it. */
   private heldAfterStrike?: number;
+  /** The last port the client refused for good (a rejected port or login,
+   * which asking again cannot change), so `ensureSynced` does not ask for it
+   * on every status. An unreachable client is asked again. */
+  private refusedPort?: number;
 
   public constructor(private readonly deps: TorrentClientSyncDeps) {}
 
@@ -144,6 +148,36 @@ export class TorrentClientSync {
         return;
       default:
         this.emit({ state: 'waiting', at: this.deps.now() });
+    }
+  }
+
+  /**
+   * Writes the port the linked rule holds now, when the client does not have
+   * it yet. Called after every daemon status, because the change stream alone
+   * misses the one grant that matters most: the port the daemon obtained at
+   * boot, before the GUI started, which reaches it as a first snapshot and is
+   * no change at all.
+   *
+   * A port the client refused is not asked for again here: the next real
+   * change and the user's "Apply now" still are.
+   */
+  public async ensureSynced(): Promise<void> {
+    const config = this.deps.config();
+    if (config === undefined || config.kind === 'none' || this.heldAfterStrike !== undefined) {
+      return;
+    }
+    const linked = this.linkedRule();
+    const port = this.grantedPort();
+    if (linked === undefined || port === undefined || port === this.syncedPort) {
+      return;
+    }
+    if (this.pushing || port === this.refusedPort) {
+      return;
+    }
+    if (port === linked.internalPort) {
+      await this.push(port);
+    } else {
+      await this.repoint(linked, port);
     }
   }
 
@@ -359,6 +393,9 @@ export class TorrentClientSync {
         }
         if (outcome === undefined) {
           this.syncedPort = current;
+          this.refusedPort = undefined;
+        } else if (!worthRetrying(outcome)) {
+          this.refusedPort = current;
         }
         this.emit(
           outcome === undefined
