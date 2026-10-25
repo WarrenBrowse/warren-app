@@ -1254,7 +1254,10 @@ pub struct WarrenTunnelMonitor {
     /// Cancelling the task aborts the watch loop; the controller
     /// drops its owned manager on exit, which calls `cancel()` via
     /// the manager's `Drop` impl.
-    nat_pmp_controller: Option<tokio::task::JoinHandle<()>>,
+    nat_pmp_controller: Option<(
+        tokio::task::JoinHandle<()>,
+        std::sync::Arc<tokio::sync::Notify>,
+    )>,
 
     /// The route sessions of per-app exits. `Some` iff
     /// [`WarrenTunnelParameters::app_routes_rx`] was wired.
@@ -3006,8 +3009,8 @@ impl WarrenTunnelMonitor {
         //   (tunnel dying - nothing to apply).
         let natpmp_t = Instant::now();
         drop(nat_pmp_managers);
-        if let Some(h) = nat_pmp_controller {
-            await_controller_shutdown(&runtime, h);
+        if let Some((h, shutdown)) = nat_pmp_controller {
+            release_and_shutdown_controller(&runtime, h, &shutdown);
         }
         let natpmp_ms = natpmp_t.elapsed().as_millis();
 
@@ -3150,7 +3153,11 @@ struct NatPmpRuntimeArtifacts {
     /// managers directly, one per initial rule. Empty on the controller
     /// path.
     managers: Vec<NatPmpManager>,
-    controller: Option<tokio::task::JoinHandle<()>>,
+    /// The controller task, and what tells it to delete its mappings and end.
+    controller: Option<(
+        tokio::task::JoinHandle<()>,
+        std::sync::Arc<tokio::sync::Notify>,
+    )>,
 }
 
 /// Dispatcher between the legacy "manager owned by monitor" path and
@@ -3230,10 +3237,12 @@ fn spawn_nat_pmp_runtime(
     let initial = params.nat_pmp.clone();
     let entitlements = params.port_entitlement_provider.clone();
     let runtime_clone = runtime.clone();
+    let shutdown = std::sync::Arc::new(tokio::sync::Notify::new());
+    let shutdown_for_task = std::sync::Arc::clone(&shutdown);
     log::info!("Warren NAT-PMP: spawning controller task (live-reconfig path)");
     let controller = runtime.spawn(async move {
         log::info!("Warren NAT-PMP: controller task body entered");
-        run_nat_pmp_controller(
+        run_nat_pmp_controller_until(
             runtime_clone,
             server,
             bind_addr,
@@ -3241,6 +3250,7 @@ fn spawn_nat_pmp_runtime(
             initial,
             control_rx,
             entitlements,
+            shutdown_for_task,
         )
         .await;
         log::info!("Warren NAT-PMP: controller task body exited");
@@ -3248,7 +3258,7 @@ fn spawn_nat_pmp_runtime(
     log::info!("Warren NAT-PMP: controller spawn returned a handle");
     NatPmpRuntimeArtifacts {
         managers: Vec::new(),
-        controller: Some(controller),
+        controller: Some((controller, shutdown)),
     }
 }
 
@@ -3322,7 +3332,39 @@ fn controller_rule_observer(
 ///
 /// On loop exit (watch sender dropped) we drop the manager: its
 /// `Drop` impl handles the refresh-loop cancel + forwarder abort.
+#[cfg(test)]
 async fn run_nat_pmp_controller(
+    runtime: tokio::runtime::Handle,
+    server: std::net::SocketAddr,
+    bind_addr: Option<std::net::IpAddr>,
+    mapping_observer: NatPmpMappingObserver,
+    initial_config: Option<NatPmpConfig>,
+    control_rx: tokio::sync::watch::Receiver<Option<NatPmpConfig>>,
+    entitlements: Option<PortEntitlementProvider>,
+) {
+    run_nat_pmp_controller_until(
+        runtime,
+        server,
+        bind_addr,
+        mapping_observer,
+        initial_config,
+        control_rx,
+        entitlements,
+        std::sync::Arc::new(tokio::sync::Notify::new()),
+    )
+    .await;
+}
+
+/// [`run_nat_pmp_controller`] that, once `shutdown` is notified, deletes every
+/// mapping it holds at the exit (lifetime 0, all rules at once), reports each
+/// rule `Cancelled` and returns. That is how a tunnel leaving an exit hands
+/// its ports back: the exit then returns the entitlements' leases to the API,
+/// and the next exit accepts the same entitlements at the first request.
+#[expect(
+    clippy::too_many_arguments,
+    reason = "the controller's wiring, plus the shutdown signal the teardown holds"
+)]
+async fn run_nat_pmp_controller_until(
     runtime: tokio::runtime::Handle,
     server: std::net::SocketAddr,
     bind_addr: Option<std::net::IpAddr>,
@@ -3330,6 +3372,7 @@ async fn run_nat_pmp_controller(
     initial_config: Option<NatPmpConfig>,
     mut control_rx: tokio::sync::watch::Receiver<Option<NatPmpConfig>>,
     entitlements: Option<PortEntitlementProvider>,
+    shutdown: std::sync::Arc<tokio::sync::Notify>,
 ) {
     use std::collections::{HashMap, HashSet};
 
@@ -3631,6 +3674,17 @@ async fn run_nat_pmp_controller(
                 on_signal(&mut managers, signal, &mapping_observer);
             }
             () = sleep_until_retry(next_retry) => retry_due(&mut managers).await,
+            () = shutdown.notified() => {
+                let releases = managers.drain().map(|(id, mut st)| async move {
+                    st.manager.release().await;
+                    id
+                });
+                for id in futures::future::join_all(releases).await {
+                    mapping_observer(id, NatPmpRuleEvent::Engine(NatPmpEvent::Cancelled));
+                }
+                log::info!("Warren NAT-PMP controller: mappings deleted at the exit for teardown");
+                return;
+            }
         }
     }
 
@@ -3668,6 +3722,30 @@ fn await_controller_shutdown(
         let _ = tokio::time::timeout(CONTROLLER_SHUTDOWN_BOUND, handle).await;
     });
 }
+
+/// Asks the NAT-PMP controller to delete its mappings at the exit and waits
+/// for it, up to [`TEARDOWN_RELEASE_BOUND`]; past that (a tunnel already dead
+/// answers nothing) it is aborted like before. The exits reap a mapping the
+/// client never deleted, so the bound costs a slower handover, never a leak.
+fn release_and_shutdown_controller(
+    runtime: &tokio::runtime::Handle,
+    mut handle: tokio::task::JoinHandle<()>,
+    shutdown: &tokio::sync::Notify,
+) {
+    shutdown.notify_one();
+    let finished = runtime.block_on(async {
+        tokio::time::timeout(TEARDOWN_RELEASE_BOUND, &mut handle)
+            .await
+            .is_ok()
+    });
+    if !finished {
+        await_controller_shutdown(runtime, handle);
+    }
+}
+
+/// How long a teardown gives the exit to acknowledge the deletes: one round
+/// trip to the farthest exit plus the exit's own call to the API.
+const TEARDOWN_RELEASE_BOUND: std::time::Duration = std::time::Duration::from_millis(800);
 
 /// How long the teardown waits for the aborted NAT-PMP controller to release
 /// what it owns before giving up on the ordering.
@@ -6119,6 +6197,105 @@ mod tests {
         );
 
         handle.abort();
+    }
+
+    /// Grants every Map request and records the lifetime each one asked
+    /// for, so a test can count the deletes (lifetime 0) a client sent.
+    async fn spawn_lifetime_recording_stub() -> (std::net::SocketAddr, Arc<StdMutex<Vec<u32>>>) {
+        let seen = Arc::new(StdMutex::new(Vec::new()));
+        let sink = Arc::clone(&seen);
+        let sock = UdpSocket::bind("127.0.0.1:0").await.expect("bind");
+        let addr = sock.local_addr().expect("addr");
+        tokio::spawn(async move {
+            let mut buf = [0u8; 1024];
+            loop {
+                let Ok((n, peer)) = sock.recv_from(&mut buf).await else {
+                    return;
+                };
+                let Ok(warrenguard_natpmp_protocol::Request::Map {
+                    internal_port,
+                    lifetime_secs,
+                    ..
+                }) = parse_request(&buf[..n])
+                else {
+                    continue;
+                };
+                sink.lock().expect("sink").push(lifetime_secs);
+                let resp = serialize_response(&NatPmpResponse::Map {
+                    proto: MapProto::Udp,
+                    result_code: ResultCode::Success,
+                    epoch_secs: 0,
+                    internal_port,
+                    external_port: 49000u16.saturating_add(internal_port),
+                    lifetime_secs,
+                    rate_limit: None,
+                });
+                let _ = sock.send_to(&resp, peer).await;
+            }
+        });
+        (addr, seen)
+    }
+
+    #[test]
+    fn a_tunnel_teardown_deletes_every_granted_mapping_before_it_returns() {
+        // A tunnel torn down to move to another exit (a change of country)
+        // used to drop its mappings without a word: the exit it left kept the
+        // port and the entitlement's lease until it reaped the session, and the
+        // next exit refused that entitlement meanwhile (forum topic 226). The
+        // delete is what lets the exit hand the lease back at once.
+        let rt = tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(2)
+            .enable_all()
+            .build()
+            .expect("runtime");
+        let (server, lifetimes) = rt.block_on(spawn_lifetime_recording_stub());
+        let (observer, log) = collector_observer();
+        let cfg = natpmp_cfg(60);
+        let (_tx, rx) = tokio::sync::watch::channel(Some(cfg.clone()));
+        let shutdown = Arc::new(tokio::sync::Notify::new());
+        let handle = rt.spawn(run_nat_pmp_controller_until(
+            rt.handle().clone(),
+            server,
+            None,
+            observer,
+            Some(cfg),
+            rx,
+            None,
+            Arc::clone(&shutdown),
+        ));
+        let mapped = || {
+            log.lock()
+                .expect("log")
+                .iter()
+                .any(|(_, e)| matches!(e, NatPmpEvent::Mapped { .. }))
+        };
+        for _ in 0..250 {
+            if mapped() {
+                break;
+            }
+            std::thread::sleep(Duration::from_millis(20));
+        }
+        assert!(mapped(), "the rule never got its mapping");
+
+        release_and_shutdown_controller(rt.handle(), handle, &shutdown);
+
+        assert_eq!(
+            lifetimes
+                .lock()
+                .expect("lifetimes")
+                .iter()
+                .filter(|l| **l == 0)
+                .count(),
+            1,
+            "one delete for the one UDP mapping, sent before teardown went on"
+        );
+        assert!(
+            log.lock()
+                .expect("log")
+                .iter()
+                .any(|(_, e)| matches!(e, NatPmpEvent::Cancelled)),
+            "the daemon still hears the rule is gone"
+        );
     }
 
     #[test]
