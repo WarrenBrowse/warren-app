@@ -6992,8 +6992,8 @@ dependencies = [
 
 [[package]]
 name = "warren-quinn"
-version = "0.11.12-fork.16"
-source = "git+https://github.com/WarrenBrowse/warren-quinn.git?tag=v0.11.19-fork.16#f467edc7dcbc3308040ff32302913c354b2a71f2"
+version = "0.11.12-fork.17"
+source = "git+https://github.com/WarrenBrowse/warren-quinn.git?tag=v0.11.19-fork.17#b12aca9c6aed9e59906c601aeab5306cd4f40f37"
 dependencies = [
  "bytes",
  "cfg_aliases",
@@ -7011,8 +7011,8 @@ dependencies = [
 
 [[package]]
 name = "warren-quinn-proto"
-version = "0.11.19-fork.16"
-source = "git+https://github.com/WarrenBrowse/warren-quinn.git?tag=v0.11.19-fork.16#f467edc7dcbc3308040ff32302913c354b2a71f2"
+version = "0.11.19-fork.17"
+source = "git+https://github.com/WarrenBrowse/warren-quinn.git?tag=v0.11.19-fork.17#b12aca9c6aed9e59906c601aeab5306cd4f40f37"
 dependencies = [
  "bytes",
  "fastbloom",
@@ -7034,8 +7034,8 @@ dependencies = [
 
 [[package]]
 name = "warren-quinn-udp"
-version = "0.6.1-fork.16"
-source = "git+https://github.com/WarrenBrowse/warren-quinn.git?tag=v0.11.19-fork.16#f467edc7dcbc3308040ff32302913c354b2a71f2"
+version = "0.6.1-fork.17"
+source = "git+https://github.com/WarrenBrowse/warren-quinn.git?tag=v0.11.19-fork.17#b12aca9c6aed9e59906c601aeab5306cd4f40f37"
 dependencies = [
  "cfg_aliases",
  "libc",
@@ -7043,7 +7043,7 @@ dependencies = [
  "parking_lot",
  "socket2 0.5.10",
  "tracing",
- "windows-sys 0.59.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
