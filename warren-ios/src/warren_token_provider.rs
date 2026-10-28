@@ -49,7 +49,11 @@ fn now_unix_secs() -> u64 {
         .unwrap_or(0)
 }
 
-fn spawn_refresh(manager: Arc<Manager>, wallet_pubkey: [u8; 32]) {
+fn spawn_refresh(
+    manager: Arc<Manager>,
+    device_id: Option<warren_api::DeviceId>,
+    wallet_pubkey: [u8; 32],
+) {
     // On the process runtime: `provider_for` runs on a tunnel's own runtime,
     // which `warren_tunnel_stop` shuts down, and the manager outlives it in
     // `MANAGERS`, so a refresh spawned there would die with the first tunnel
@@ -66,12 +70,14 @@ fn spawn_refresh(manager: Arc<Manager>, wallet_pubkey: [u8; 32]) {
             let devices = crate::warren_devices_ffi::registry();
             if warren_standing::device::settle_round(&manager, devices.device()) {
                 // The registry revoked this device: the manager is never
-                // served again, and a running tunnel ends on the news.
+                // served again, and a running tunnel ends on the news when it
+                // is the device the install asks as now.
                 tracing::info!(
-                    "Warren: this device was disconnected from another device of the account; \
-                     its token refresh stops"
+                    "Warren: a device of this install was revoked; its token refresh stops"
                 );
-                devices.on_revoked();
+                if let Some(id) = device_id {
+                    devices.on_revoked_device(id);
+                }
                 return;
             }
             if let Err(e) = refreshed {
@@ -137,7 +143,7 @@ pub(crate) fn provider_for(
                     ),
                     device,
                 ));
-                spawn_refresh(manager.clone(), pubkey);
+                spawn_refresh(manager.clone(), device_id, pubkey);
                 manager
             })
             .clone()

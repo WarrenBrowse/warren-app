@@ -878,6 +878,7 @@ mod retry_policy_tests {
             talpid_warren_tunnel::Refusal {
                 reason: "[EXPIRED_ACCOUNT] exit rejected the session".to_owned(),
                 if_active: None,
+                retry_while_unverified: false,
             },
         ))
     }
@@ -1000,6 +1001,7 @@ mod retry_policy_tests {
             Some(super::exit_refusal::Refusal {
                 reason: "[EXPIRED_ACCOUNT] exit rejected the session",
                 if_active: None,
+                retry_while_unverified: false,
             })
         );
         assert_eq!(network_glitch().warren_session_rejection(), None);

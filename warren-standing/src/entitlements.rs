@@ -49,10 +49,13 @@ pub type NowFn = Arc<dyn Fn() -> u64 + Send + Sync>;
 /// it was a ban, which the caller then enforces.
 pub type BanSink = Arc<dyn Fn(&[u8; 32], &TokenClientError) -> bool + Send + Sync>;
 
-/// Told once that the install's device was revoked from another device of
-/// the account (warren-core doc 115), with the wallet it concerns. The caller
-/// disconnects and forgets the identity; the mint of that device has stopped.
-pub type RevocationSink = Arc<dyn Fn(&[u8; 32]) + Send + Sync>;
+/// Told once that a device of the install was revoked from another device of
+/// the account (warren-core doc 115), with the wallet and the device it
+/// concerns; the mint of that device has stopped. The caller acts only when
+/// the device is the one the install asks as now
+/// ([`InstallDevice::is_current`]): another loop of a device already revoked
+/// and forgotten reports it too, possibly after a new login.
+pub type RevocationSink = Arc<dyn Fn(&[u8; 32], DeviceId) + Send + Sync>;
 
 /// What one rule presents on a NAT-PMP cycle, or `None` for a bare request.
 /// Structurally the engine's `warrenguard_natpmp_client::CredentialProvider`,
@@ -322,9 +325,10 @@ impl<T: HttpTransport + 'static> EntitlementMint<T> {
         make_client: impl FnOnce() -> WarrenApiClient<T>,
     ) -> Arc<MintedSlots<T>> {
         let registration = self.device.as_ref().map(InstallDevice::registration);
+        let device_id = registration.as_ref().map(|r| r.device_id);
         let mut managers = self.managers.lock().unwrap_or_else(PoisonError::into_inner);
         managers
-            .entry((wallet_pubkey, registration.as_ref().map(|r| r.device_id)))
+            .entry((wallet_pubkey, device_id))
             .or_insert_with(|| {
                 let manager = PortEntitlementManager::new(Arc::new(make_client()), blinding);
                 let manager = Arc::new(match registration {
@@ -340,6 +344,7 @@ impl<T: HttpTransport + 'static> EntitlementMint<T> {
                         ban: self.ban_sink.clone(),
                         revocation: self.revocation_sink.clone(),
                         device: self.device.clone(),
+                        device_id,
                     },
                     self.activity.clone(),
                     self.online_edge.clone(),
@@ -370,6 +375,8 @@ struct Sinks {
     revocation: Option<RevocationSink>,
     /// Keeps the name the registry answers.
     device: Option<InstallDevice>,
+    /// The device the manager asks as.
+    device_id: Option<DeviceId>,
 }
 
 /// The first round runs immediately (stock as soon as a wallet is seen), then
@@ -408,8 +415,8 @@ async fn refresh_forever<T: HttpTransport + 'static>(
                 "Warren port-entitlement refresh stopped: this device was disconnected from \
                  another device of the account"
             );
-            if let Some(sink) = &sinks.revocation {
-                sink(&wallet_pubkey);
+            if let (Some(sink), Some(id)) = (&sinks.revocation, sinks.device_id) {
+                sink(&wallet_pubkey, id);
             }
             return;
         }

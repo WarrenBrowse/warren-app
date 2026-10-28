@@ -1082,6 +1082,11 @@ pub struct Refusal {
     /// why, as an exit too old to name the device limit does. `None` when an
     /// active subscription means the refusal clears once the exit syncs it.
     pub if_active: Option<String>,
+    /// Keep dialing for as long as the account API cannot say whether the
+    /// subscription is active, rather than surfacing [`Self::reason`] after
+    /// the patience: a session no token admits, whose tokens the same API
+    /// mints, so an unanswered query says nothing of an expiry.
+    pub retry_while_unverified: bool,
 }
 
 impl std::fmt::Display for Refusal {
@@ -1161,9 +1166,11 @@ fn reject_error(reason: RejectionReason) -> Error {
             Error::SessionRejected(Refusal {
                 reason: expired_reason(reason),
                 if_active: None,
+                retry_while_unverified: false,
             })
         }
         RejectionReason::TokensRefusedWithoutReason => Error::SessionRejected(Refusal {
+            retry_while_unverified: false,
             reason: expired_reason(reason),
             if_active: Some(format!(
                 "[TOO_MANY_CONNECTIONS] exit refused every session token without a reason \
@@ -3972,9 +3979,11 @@ fn initial_session_closed(verdict: SupervisorVerdict) -> Error {
             Error::SessionRejected(Refusal {
                 reason: reason.clone(),
                 if_active: Some(reason),
+                retry_while_unverified: false,
             })
         }
         SupervisorVerdict::NoToken(cause) => Error::SessionRejected(Refusal {
+            retry_while_unverified: true,
             reason: format!(
                 "[EXPIRED_ACCOUNT] no anonymous session token the exit admits ({cause}), and \
                  no active subscription to mint one"
@@ -4420,6 +4429,10 @@ mod tests {
             refusal.reason
         );
         assert!(
+            !refusal.retry_while_unverified,
+            "the exit itself said every token is in use"
+        );
+        assert!(
             refusal
                 .if_active
                 .as_deref()
@@ -4439,6 +4452,10 @@ mod tests {
                 refusal.reason.starts_with("[EXPIRED_ACCOUNT]"),
                 "{cause:?}: without a subscription there is no token to have: {}",
                 refusal.reason
+            );
+            assert!(
+                refusal.retry_while_unverified,
+                "{cause:?}: an API that cannot answer mints no token either, and says no expiry"
             );
             assert!(
                 refusal

@@ -25,14 +25,11 @@ pub(crate) fn install_device_in(dir: &Path) -> InstallDevice {
     expect(dead_code, reason = "reached from the Android JNI exports only")
 )]
 pub(crate) fn install_in(dir: &Path) {
-    let _ = DEVICES.set(DeviceRegistry::new(Some(install_device_in(dir))));
+    registry().install(install_device_in(dir));
 }
 
-/// The process's registry, with no install device until [`install_in`] ran.
-#[cfg_attr(
-    not(all(target_os = "android", feature = "tunnel")),
-    expect(dead_code, reason = "reached from the Android JNI exports only")
-)]
+/// The process's registry, with no install device until [`install_in`] ran:
+/// one reached before then takes the device once it is installed.
 pub(crate) fn registry() -> &'static DeviceRegistry {
     DEVICES.get_or_init(|| DeviceRegistry::new(None))
 }

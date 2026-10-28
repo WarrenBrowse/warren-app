@@ -83,8 +83,8 @@ mod ios {
                         now_unix_secs(),
                     )
                 }))
-                .with_revocation_sink(Arc::new(|_| {
-                    crate::warren_devices_ffi::registry().on_revoked();
+                .with_revocation_sink(Arc::new(|_, id| {
+                    crate::warren_devices_ffi::registry().on_revoked_device(id);
                 }));
             let mint = match crate::warren_devices_ffi::registry().device() {
                 Some(device) => mint.with_device(device.clone()),

@@ -138,6 +138,10 @@ pub struct Refusal<'a> {
     /// them). `None` when an active subscription means the exit will admit
     /// the session once it syncs.
     pub if_active: Option<&'a str>,
+    /// Keep dialing for as long as the account API cannot say whether there
+    /// is a subscription, instead of surfacing [`Self::reason`] after the
+    /// patience: a session no token admits, whose tokens that same API mints.
+    pub retry_while_unverified: bool,
 }
 
 /// A run of consecutive exit refusals, and what the API said about it.
@@ -152,6 +156,8 @@ struct Run {
     reason: String,
     /// See [`Refusal::if_active`], from the latest refusal of the run.
     if_active: Option<String>,
+    /// See [`Refusal::retry_while_unverified`], from the latest refusal.
+    retry_while_unverified: bool,
     /// Last answer and when it was obtained, so the API is asked at most once
     /// per [`STATUS_TTL`] for the whole run.
     answer: Option<(SubscriptionStatus, Instant)>,
@@ -175,14 +181,17 @@ impl Refusals {
             Some(refusal) => {
                 let reason = refusal.reason.to_owned();
                 let if_active = refusal.if_active.map(str::to_owned);
+                let retry_while_unverified = refusal.retry_while_unverified;
                 if let Some(run) = self.run.as_mut() {
                     run.reason = reason;
                     run.if_active = if_active;
+                    run.retry_while_unverified = retry_while_unverified;
                 } else {
                     self.run = Some(Run {
                         started: now,
                         reason,
                         if_active,
+                        retry_while_unverified,
                         answer: None,
                     });
                 }
@@ -217,7 +226,12 @@ impl Refusals {
     fn decide(&mut self, status: SubscriptionStatus, now: Instant) -> Option<ErrorStateCause> {
         let run = self.run.as_mut()?;
         let refusing_for = now.saturating_duration_since(run.started);
-        match verdict(status, refusing_for, run.if_active.is_some()) {
+        match verdict(
+            status,
+            refusing_for,
+            run.if_active.is_some(),
+            run.retry_while_unverified,
+        ) {
             Verdict::Retry => None,
             Verdict::Surface => {
                 let run = self.run.take().expect("the run was borrowed just above");
@@ -287,6 +301,7 @@ fn verdict(
     status: SubscriptionStatus,
     refusing_for: Duration,
     explained_while_active: bool,
+    retry_while_unverified: bool,
 ) -> Verdict {
     match status {
         SubscriptionStatus::Active
@@ -296,6 +311,7 @@ fn verdict(
         }
         SubscriptionStatus::Active => Verdict::Retry,
         SubscriptionStatus::Inactive => Verdict::Surface,
+        SubscriptionStatus::Unknown if retry_while_unverified => Verdict::Retry,
         SubscriptionStatus::Unknown if refusing_for >= UNVERIFIED_PATIENCE => Verdict::Surface,
         SubscriptionStatus::Unknown => Verdict::Retry,
     }
@@ -377,6 +393,7 @@ mod tests {
             Some(Refusal {
                 reason: REASON,
                 if_active: None,
+                retry_while_unverified: false,
             }),
             at,
         );
@@ -388,9 +405,73 @@ mod tests {
             Some(Refusal {
                 reason: REASON,
                 if_active: Some(DEVICE_LIMIT),
+                retry_while_unverified: false,
             }),
             at,
         );
+    }
+
+    /// A session no token admits, which the account API alone can tell
+    /// apart: no subscription, no token.
+    fn no_token(refusals: &mut Refusals, at: Instant) {
+        refusals.note_attempt(
+            Some(Refusal {
+                reason: REASON,
+                if_active: Some(NO_TOKEN),
+                retry_while_unverified: true,
+            }),
+            at,
+        );
+    }
+
+    const NO_TOKEN: &str = "[NO_SESSION_TOKEN] no anonymous session token the exit admits";
+
+    #[test]
+    fn a_session_no_token_admits_keeps_dialing_while_the_api_cannot_say_why() {
+        // The API that would say whether there is a subscription is the one
+        // that mints the tokens: unreachable, it can call it neither an expiry
+        // nor a missing token, and the next round may bring tokens.
+        let mut refusals = Refusals::default();
+        let started = Instant::now();
+        no_token(&mut refusals, started);
+
+        assert!(
+            refusals
+                .decide(
+                    SubscriptionStatus::Unknown,
+                    started + UNVERIFIED_PATIENCE * 4
+                )
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn whether_to_wait_for_an_answer_follows_the_latest_refusal() {
+        let mut refusals = Refusals::default();
+        let started = Instant::now();
+        refused(&mut refusals, started);
+        no_token(&mut refusals, started + Duration::from_secs(1));
+
+        assert!(
+            refusals
+                .decide(
+                    SubscriptionStatus::Unknown,
+                    started + UNVERIFIED_PATIENCE * 2
+                )
+                .is_none()
+        );
+    }
+
+    #[test]
+    fn a_session_no_token_admits_is_named_once_an_active_subscription_waited() {
+        let mut refusals = Refusals::default();
+        let started = Instant::now();
+        no_token(&mut refusals, started);
+
+        match refusals.decide(SubscriptionStatus::Active, started + UNVERIFIED_PATIENCE) {
+            Some(ErrorStateCause::AuthFailed(Some(reason))) => assert_eq!(reason, NO_TOKEN),
+            other => panic!("expected the missing token, got {other:?}"),
+        }
     }
 
     #[test]
@@ -735,6 +816,7 @@ mod tests {
             Some(Refusal {
                 reason: "[EXPIRED_ACCOUNT] later reason",
                 if_active: None,
+                retry_while_unverified: false,
             }),
             started,
         );

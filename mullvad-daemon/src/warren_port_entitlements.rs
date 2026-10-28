@@ -68,8 +68,8 @@ pub(crate) fn provider_for(
                 )
             }))
             .with_activity(activity.subscribe())
-            .with_revocation_sink(Arc::new(|_| {
-                crate::warren_token_provider::report_revocation();
+            .with_revocation_sink(Arc::new(|_, id| {
+                crate::warren_token_provider::report_revocation(id);
             }));
         let mint = match crate::warren_token_provider::install_device() {
             Some(device) => mint.with_device(device.clone()),

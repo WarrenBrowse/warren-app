@@ -173,6 +173,14 @@ struct PendingLogout<W> {
     generation: u64,
 }
 
+/// Whether a tunnel blocked on `cause` waits for nothing but session tokens:
+/// it parked on `[NO_SESSION_TOKEN]` once an active subscription found none
+/// the exit admits, and a refresh round that brings some should dial again
+/// rather than leave the block to a user who cannot tell it cleared.
+pub fn parked_for_want_of_a_token(cause: &ErrorStateCause) -> bool {
+    matches!(AuthFailed::try_from(cause), Ok(AuthFailed::NoSessionToken))
+}
+
 /// The login state as far as the tunnel is concerned, and the logout waiting
 /// on a teardown, if any.
 pub struct SessionGate<W> {
@@ -379,6 +387,7 @@ impl<W> SessionGate<W> {
 mod tests {
     use super::{
         ConnectRefusal, Login, LogoutRequest, LogoutStart, OwnConnect, SecuredBoot, SessionGate,
+        parked_for_want_of_a_token,
     };
     use crate::device::{PrivateDeviceEvent, PrivateDeviceState};
     use mullvad_types::auth_failed::AuthFailed;
@@ -457,6 +466,23 @@ mod tests {
 
         assert_eq!(gate.admit_connect(None), Err(ConnectRefusal::DeviceRevoked));
         assert!(!gate.logged_in());
+    }
+
+    #[test]
+    fn only_a_block_for_want_of_a_session_token_is_lifted_by_new_tokens() {
+        let blocked = |token: &str| ErrorStateCause::AuthFailed(Some(token.to_owned()));
+
+        assert!(parked_for_want_of_a_token(&blocked(
+            "[NO_SESSION_TOKEN] no anonymous session token the exit admits"
+        )));
+        for other in [
+            blocked("[TOO_MANY_CONNECTIONS] the exit refused every session token"),
+            blocked("[EXPIRED_ACCOUNT] no anonymous session token the exit admits"),
+            ErrorStateCause::AuthFailed(None),
+            ErrorStateCause::IsOffline,
+        ] {
+            assert!(!parked_for_want_of_a_token(&other), "{other:?}");
+        }
     }
 
     #[test]

@@ -10,6 +10,8 @@
 //! and the days they were used: it goes to the account's own screens and never
 //! to a log.
 
+use std::sync::OnceLock;
+
 use serde_json::json;
 use tokio::sync::watch;
 use warren_api::{ClientError, DeviceId, HttpTransport, WarrenApiClient};
@@ -18,7 +20,7 @@ use crate::device::InstallDevice;
 
 /// This install's device, and whether the registry revoked it.
 pub struct DeviceRegistry {
-    device: Option<InstallDevice>,
+    device: OnceLock<InstallDevice>,
     revoked: watch::Sender<bool>,
 }
 
@@ -27,24 +29,33 @@ impl DeviceRegistry {
     /// device (a client built before the install's directory is known).
     #[must_use]
     pub fn new(device: Option<InstallDevice>) -> Self {
-        Self {
-            device,
+        let registry = Self {
+            device: OnceLock::new(),
             revoked: watch::Sender::new(false),
+        };
+        if let Some(device) = device {
+            registry.install(device);
         }
+        registry
+    }
+
+    /// Takes `device` as this install, once: answers whether it did. A
+    /// registry reached before the install's directory is known asks as no
+    /// device until then, rather than for good.
+    pub fn install(&self, device: InstallDevice) -> bool {
+        self.device.set(device).is_ok()
     }
 
     /// The install as a device of its account.
     #[must_use]
     pub fn device(&self) -> Option<&InstallDevice> {
-        self.device.as_ref()
+        self.device.get()
     }
 
     /// This install's device id, `None` without an install device.
     #[must_use]
     pub fn this(&self) -> Option<DeviceId> {
-        self.device
-            .as_ref()
-            .map(|device| device.identity().device_id)
+        self.device.get().map(|device| device.identity().device_id)
     }
 
     /// The registry revoked this device (from another device, or by its own
@@ -53,13 +64,27 @@ impl DeviceRegistry {
     /// it.
     pub fn on_revoked(&self) {
         self.revoked.send_replace(true);
-        if let Some(device) = &self.device
+        if let Some(device) = self.device.get()
             && let Err(error) = device.forget()
         {
             log::warn!(
                 "the revoked device identity could not be forgotten: {}",
                 error.kind()
             );
+        }
+    }
+
+    /// A token or entitlement refresh learned that `id` was revoked: its
+    /// revocation when `id` is the device this install asks as now, nothing
+    /// otherwise (another loop of a device already revoked and forgotten,
+    /// possibly reporting after a new login).
+    pub fn on_revoked_device(&self, id: DeviceId) {
+        if self
+            .device
+            .get()
+            .is_some_and(|device| device.is_current(id))
+        {
+            self.on_revoked();
         }
     }
 
@@ -112,7 +137,7 @@ impl DeviceRegistry {
         match client.rename_device(id, name).await {
             Ok(()) => {
                 let this_device = self.this() == Some(id);
-                if this_device && let Some(device) = &self.device {
+                if this_device && let Some(device) = self.device.get() {
                     device.keep_name(name);
                 }
                 json!({ "ok": true, "this_device": this_device }).to_string()
@@ -382,6 +407,48 @@ mod tests {
 
         assert_eq!(answer, json!({ "ok": false, "error": "revoked" }));
         assert!(devices.revoked());
+    }
+
+    #[test]
+    fn a_registry_takes_its_device_once() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let other = tempfile::tempdir().expect("tempdir");
+        let devices = DeviceRegistry::new(None);
+        assert!(devices.this().is_none());
+
+        assert!(devices.install(install_device_in(dir.path())));
+        let first = devices.this();
+        assert!(!devices.install(install_device_in(other.path())));
+
+        assert!(first.is_some());
+        assert_eq!(devices.this(), first);
+    }
+
+    #[test]
+    fn a_revocation_of_the_device_asked_as_now_is_its_revocation() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let devices = DeviceRegistry::new(Some(install_device_in(dir.path())));
+        let current = devices.this().expect("an install device");
+
+        devices.on_revoked_device(current);
+
+        assert!(devices.revoked());
+        assert!(!dir.path().join(crate::device::DEVICE_FILE).exists());
+    }
+
+    #[test]
+    fn a_revocation_of_an_identity_already_forgotten_concerns_nobody() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let devices = DeviceRegistry::new(Some(install_device_in(dir.path())));
+        let revoked = devices.this().expect("an install device");
+        devices.on_revoked_device(revoked);
+        devices.forget_revocation();
+        let logged_in_again = devices.this().expect("a new identity");
+
+        devices.on_revoked_device(revoked);
+
+        assert!(!devices.revoked());
+        assert_eq!(devices.this(), Some(logged_in_again));
     }
 
     #[test]

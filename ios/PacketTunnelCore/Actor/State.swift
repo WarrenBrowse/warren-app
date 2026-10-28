@@ -270,10 +270,12 @@ public enum BlockedStateReason: String, Codable, Equatable, Sendable {
         case .deviceLocked, .multihopEntryEqualsExit, .outdatedSchema, .noRelaysSatisfyingConstraints,
             .noRelaysSatisfyingPortConstraints, .noRelaysSatisfyingDaitaConstraints,
             .noRelaysSatisfyingFilterConstraints, .noRelaysSatisfyingObfuscationSettings, .readSettings,
-            .invalidRelayPublicKey, .noRelaysSatisfyingObfuscationPortConstraints, .offline:
+            .invalidRelayPublicKey, .noRelaysSatisfyingObfuscationPortConstraints, .offline,
+            // The next token refresh can bring a token the exit admits.
+            .noSessionToken:
             return true
         case .deviceRevoked, .deviceLoggedOut, .tunnelAdapter, .accountExpired, .invalidAccount, .unknown,
-            .accountBanned, .accountBannedPortForwarding, .tooManyDevices, .noSessionToken:
+            .accountBanned, .accountBannedPortForwarding, .tooManyDevices:
             return false
         }
     }

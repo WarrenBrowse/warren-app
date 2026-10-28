@@ -34,17 +34,10 @@ pub(crate) fn install_device_in(dir: &Path, app_version: &str) -> InstallDevice 
     expect(dead_code, reason = "called over the iOS FFI")
 )]
 fn configure(dir: &Path, app_version: &str) {
-    let _ = DEVICES.set(DeviceRegistry::new(Some(install_device_in(
-        dir,
-        app_version,
-    ))));
+    registry().install(install_device_in(dir, app_version));
 }
 
 /// The process's registry, with no install device until it was configured.
-#[cfg_attr(
-    not(target_os = "ios"),
-    expect(dead_code, reason = "reached from the iOS FFI and tunnel only")
-)]
 pub(crate) fn registry() -> &'static DeviceRegistry {
     DEVICES.get_or_init(|| DeviceRegistry::new(None))
 }

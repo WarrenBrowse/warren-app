@@ -1036,6 +1036,8 @@ pub(crate) enum InternalDaemonEvent {
     /// The account's device registry revoked this install (warren-core doc
     /// 115), as a session token or port-entitlement refresh learned it.
     WarrenDeviceRevoked,
+    /// A token refresh round left this epoch's session tokens at hand.
+    WarrenSessionTokensAtHand,
 }
 
 /// How long the daemon waits for the shutdown that `prepare-restart` promised
@@ -1457,6 +1459,10 @@ impl Daemon {
         let revocation_tx = internal_event_tx.clone();
         warren_token_provider::report_revocation_to(Box::new(move || {
             let _ = revocation_tx.send(InternalDaemonEvent::WarrenDeviceRevoked);
+        }));
+        let tokens_tx = internal_event_tx.clone();
+        warren_token_provider::report_tokens_to(Box::new(move || {
+            let _ = tokens_tx.send(InternalDaemonEvent::WarrenSessionTokensAtHand);
         }));
 
         #[cfg(target_os = "android")]
@@ -2875,6 +2881,7 @@ impl Daemon {
             AppRoutesPlanned => self.publish_app_routes_if_changed(),
             LogoutTeardownDeadline(generation) => self.on_logout_teardown_deadline(generation),
             WarrenDeviceRevoked => self.on_warren_device_revoked().await,
+            WarrenSessionTokensAtHand => self.on_warren_session_tokens_at_hand(),
         }
         should_stop
     }
@@ -4809,8 +4816,12 @@ impl Daemon {
             );
             return;
         };
+        let revoked_tx = self.tx.clone();
         tokio::spawn(async move {
             let result = warren_devices::list(&client, this).await;
+            if result == Err(warren_devices::DevicesError::Revoked) {
+                let _ = revoked_tx.send(InternalDaemonEvent::WarrenDeviceRevoked);
+            }
             Self::oneshot_send(tx, result, "list_devices response");
         });
     }
@@ -4828,11 +4839,28 @@ impl Daemon {
             );
             return;
         };
-        let revoked_tx = self.tx.clone();
+        let daemon_tx = self.tx.clone();
         tokio::spawn(async move {
             let result = warren_devices::revoke(&client, &id, this).await;
-            if result == Ok(true) {
-                let _ = revoked_tx.send(InternalDaemonEvent::WarrenDeviceRevoked);
+            match result {
+                // Revoking this device is its logout (warren-core doc 115):
+                // the identity it registered under is dead, and the wallet goes
+                // with it, as a user's own sign-out does.
+                Ok(true) => {
+                    if let Some(device) = warren_token_provider::install_device()
+                        && let Err(error) = device.forget()
+                    {
+                        log::error!("Failed to forget the logged out device identity: {error}");
+                    }
+                    let (logout_tx, _) = oneshot::channel();
+                    let _ = daemon_tx.send(InternalDaemonEvent::Command(
+                        DaemonCommand::LogoutAccount(logout_tx, true),
+                    ));
+                }
+                Err(warren_devices::DevicesError::Revoked) => {
+                    let _ = daemon_tx.send(InternalDaemonEvent::WarrenDeviceRevoked);
+                }
+                _ => {}
             }
             Self::oneshot_send(tx, result.map(|_| ()), "remove_device response");
         });
@@ -5027,6 +5055,18 @@ impl Daemon {
         };
 
         Self::oneshot_send(tx, result, "logout_account response");
+    }
+
+    /// A secured tunnel parked on `[NO_SESSION_TOKEN]` dials again once a
+    /// refresh round brings tokens: nothing else would lift the block.
+    fn on_warren_session_tokens_at_hand(&mut self) {
+        if *self.target_state == TargetState::Secured
+            && let TunnelState::Error(state) = &self.tunnel_state
+            && warren_session_gate::parked_for_want_of_a_token(state.cause())
+        {
+            log::info!("Session tokens are at hand again; reconnecting");
+            self.connect_tunnel();
+        }
     }
 
     /// The account's registry revoked this device from another device of the

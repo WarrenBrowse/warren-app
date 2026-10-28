@@ -292,6 +292,7 @@ impl<T: HttpTransport + 'static> TokenMint<T> {
                         ban: self.ban_sink.clone(),
                         revocation: self.revocation_sink.clone(),
                         device: self.device.clone(),
+                        device_id,
                     },
                 );
                 wallet
@@ -332,6 +333,8 @@ struct Sinks {
     revocation: Option<RevocationSink>,
     /// Keeps the name the registry answers.
     device: Option<InstallDevice>,
+    /// The device the manager asks as.
+    device_id: Option<warren_api::DeviceId>,
 }
 
 fn spawn_refresh<T: HttpTransport + 'static>(
@@ -367,8 +370,8 @@ fn spawn_refresh<T: HttpTransport + 'static>(
                         "Warren: this device was disconnected from another device of the \
                          account; its token refresh stops"
                     );
-                    if let Some(sink) = &sinks.revocation {
-                        sink(&wallet_pubkey);
+                    if let (Some(sink), Some(id)) = (&sinks.revocation, sinks.device_id) {
+                        sink(&wallet_pubkey, id);
                     }
                     return Round::Over;
                 }
@@ -507,8 +510,8 @@ mod android {
                     crate::standing::store().on_refresh_error(wallet, error, now_unix_secs())
                 }))
                 .with_route_kem_trust(route_kem_trust());
-            let mint = mint.with_revocation_sink(Arc::new(|_| {
-                crate::devices::registry().on_revoked();
+            let mint = mint.with_revocation_sink(Arc::new(|_, id| {
+                crate::devices::registry().on_revoked_device(id);
             }));
             let mint = match crate::devices::registry().device() {
                 Some(device) => mint.with_device(device.clone()),
@@ -1228,13 +1231,15 @@ mod tests {
     #[tokio::test(start_paused = true)]
     async fn a_revoked_device_is_reported_once_and_its_refresh_stops() {
         let dir = tempfile::tempdir().expect("tempdir");
+        let device = install_device(dir.path());
+        let kept = device.identity().device_id;
         let issuer = FakeIssuer::new(&[100]);
         issuer.0.revoke_device.store(true, Ordering::SeqCst);
         let reported = Arc::new(parking_lot::Mutex::new(Vec::new()));
         let sink = Arc::clone(&reported);
         let mint = TokenMint::new(now_fixed(), None)
-            .with_device(install_device(dir.path()))
-            .with_revocation_sink(Arc::new(move |wallet| sink.lock().push(*wallet)));
+            .with_device(device)
+            .with_revocation_sink(Arc::new(move |wallet, id| sink.lock().push((*wallet, id))));
 
         let source = source_a(&mint, &issuer);
         wait_for(|| !reported.lock().is_empty()).await;
@@ -1244,7 +1249,7 @@ mod tests {
             tokio::task::yield_now().await;
         }
 
-        assert_eq!(*reported.lock(), vec![[1; 32]]);
+        assert_eq!(*reported.lock(), vec![([1; 32], kept)]);
         assert_eq!(
             issuer.0.requests.load(Ordering::SeqCst),
             requests,
@@ -1260,15 +1265,16 @@ mod tests {
         issuer.0.revoke_device.store(true, Ordering::SeqCst);
         let reported = Arc::new(AtomicUsize::new(0));
         let sink = Arc::clone(&reported);
+        let device = install_device(dir.path());
         let mint = TokenMint::new(now_fixed(), None)
-            .with_device(install_device(dir.path()))
-            .with_revocation_sink(Arc::new(move |_| {
+            .with_device(device.clone())
+            .with_revocation_sink(Arc::new(move |_, _| {
                 sink.fetch_add(1, Ordering::SeqCst);
             }));
         let _revoked = source_a(&mint, &issuer);
         wait_for(|| reported.load(Ordering::SeqCst) == 1).await;
 
-        install_device(dir.path()).forget().expect("forgotten");
+        device.forget().expect("forgotten");
         issuer.0.revoke_device.store(false, Ordering::SeqCst);
         let again = source_a(&mint, &issuer);
         wait_for(|| !again().is_empty()).await;

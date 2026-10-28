@@ -90,6 +90,7 @@ impl Error {
                     .map(|refusal| super::exit_refusal::Refusal {
                         reason: &refusal.reason,
                         if_active: refusal.if_active.as_deref(),
+                        retry_while_unverified: refusal.retry_while_unverified,
                     })
             }
             _ => None,

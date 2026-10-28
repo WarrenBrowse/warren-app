@@ -10,9 +10,10 @@
 //! [`DeviceIdentity`].
 
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex, MutexGuard, PoisonError};
 
 pub use warren_api::DevicePlatform;
-use warren_api::{DeviceIdentity, DeviceRegistration, HttpTransport, TokenManager};
+use warren_api::{DeviceId, DeviceIdentity, DeviceRegistration, HttpTransport, TokenManager};
 
 /// File under a client's state directory that keeps the device identity.
 pub const DEVICE_FILE: &str = "device";
@@ -42,11 +43,17 @@ pub fn registry_app_version(version: &str) -> String {
 
 /// This install as a device of its account: where its identity is kept, the
 /// platform it runs on and the version it runs.
+///
+/// Clones share the identity this process holds, so every manager of the
+/// process asks as one device even where the file cannot be written.
 #[derive(Clone, Debug)]
 pub struct InstallDevice {
     path: PathBuf,
     platform: DevicePlatform,
     app_version: String,
+    /// The identity this process asks as, once read or drawn. Its lock also
+    /// serializes the read-modify-write of a rename against a forget.
+    held: Arc<Mutex<Option<DeviceIdentity>>>,
 }
 
 impl InstallDevice {
@@ -59,16 +66,24 @@ impl InstallDevice {
             path: dir.join(DEVICE_FILE),
             platform,
             app_version: registry_app_version(app_version),
+            held: Arc::new(Mutex::new(None)),
         }
     }
 
-    /// The identity kept for this install, or one drawn and kept now. A
-    /// directory it cannot write to leaves this process its own draw, and an
-    /// unreadable file is replaced by a new draw.
+    /// The identity kept for this install, or one drawn and kept now. The
+    /// file wins when it reads (another process of the install may have
+    /// written it); a directory it cannot write to leaves this process the
+    /// identity it drew first, and an unreadable file is replaced by a new
+    /// draw.
     #[must_use]
     pub fn identity(&self) -> DeviceIdentity {
+        let mut held = self.lock();
         if let Some(kept) = self.read() {
+            *held = Some(kept.clone());
             return kept;
+        }
+        if let Some(held) = held.as_ref() {
+            return held.clone();
         }
         let drawn = DeviceIdentity::generate();
         if let Err(e) = serde_json::to_vec(&drawn)
@@ -77,7 +92,20 @@ impl InstallDevice {
         {
             log::warn!("Warren device identity not kept, the next start registers anew: {e}");
         }
+        *held = Some(drawn.clone());
         drawn
+    }
+
+    /// Whether `id` is the identity this install asks as now, without
+    /// drawing one: a revocation a manager learns about an identity already
+    /// forgotten (another loop of the same revoked device, after a new
+    /// login) concerns nobody any more.
+    #[must_use]
+    pub fn is_current(&self, id: DeviceId) -> bool {
+        let held = self.lock();
+        self.read()
+            .or_else(|| held.clone())
+            .is_some_and(|current| current.device_id == id)
     }
 
     /// What this install registers as: its kept identity, its platform and
@@ -93,6 +121,7 @@ impl InstallDevice {
     /// this device. Writes nothing when the kept name already reads `name`,
     /// and never keeps a name without the identifier it names.
     pub fn keep_name(&self, name: &str) {
+        let mut held = self.lock();
         let Some(mut kept) = self.read() else {
             return;
         };
@@ -106,6 +135,7 @@ impl InstallDevice {
         {
             log::warn!("Warren device name not kept: {e}");
         }
+        *held = Some(kept);
     }
 
     /// Erases the kept identity: the device was revoked, or logged out. The
@@ -117,6 +147,8 @@ impl InstallDevice {
     /// The error of the removal; an identity that is not there is already
     /// forgotten.
     pub fn forget(&self) -> std::io::Result<()> {
+        let mut held = self.lock();
+        *held = None;
         match std::fs::remove_file(&self.path) {
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(()),
             other => other,
@@ -125,6 +157,10 @@ impl InstallDevice {
 
     fn read(&self) -> Option<DeviceIdentity> {
         serde_json::from_slice(&std::fs::read(&self.path).ok()?).ok()
+    }
+
+    fn lock(&self) -> MutexGuard<'_, Option<DeviceIdentity>> {
+        self.held.lock().unwrap_or_else(PoisonError::into_inner)
     }
 }
 
@@ -160,10 +196,11 @@ pub fn settle_round<T: HttpTransport>(
 }
 
 /// Writes `bytes` to a side file then renames it over `path`, because a torn
-/// write would still parse as another identity.
+/// write would still parse as another identity. The side file is this
+/// process's own: the iOS app and its tunnel extension keep one identity file.
 fn write_whole(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
     let mut partial = path.as_os_str().to_owned();
-    partial.push(".partial");
+    partial.push(format!(".partial.{}", std::process::id()));
     std::fs::write(&partial, bytes).and_then(|()| std::fs::rename(&partial, path))
 }
 
@@ -171,7 +208,9 @@ fn write_whole(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
 mod tests {
     use std::sync::Arc;
 
-    use warren_api::{BlindingKey, DevicePlatform, TokenManager, WarrenApiClient};
+    use warren_api::{
+        BlindingKey, DEVICE_ID_LEN, DeviceId, DevicePlatform, TokenManager, WarrenApiClient,
+    };
     use warren_identity::WarrenIdentity;
 
     use super::{
@@ -378,6 +417,43 @@ mod tests {
         let other = device(&missing).identity();
 
         assert_ne!(one.device_id, other.device_id);
+    }
+
+    #[test]
+    fn one_install_hands_out_one_identity_even_where_it_cannot_be_kept() {
+        let dir = tempfile::tempdir().expect("a temp dir");
+        let install = device(&dir.path().join("never-created"));
+
+        let first = install.identity();
+
+        assert_eq!(install.identity(), first);
+        assert_eq!(
+            install.clone().identity(),
+            first,
+            "clones ask as one device"
+        );
+    }
+
+    #[test]
+    fn only_the_identity_kept_now_is_current() {
+        let dir = tempfile::tempdir().expect("a temp dir");
+        let install = device(dir.path());
+        let drawn = install.identity().device_id;
+        let other = DeviceId::from_bytes([7; DEVICE_ID_LEN]);
+
+        assert!(install.is_current(drawn));
+        assert!(!install.is_current(other));
+
+        install.forget().expect("forgotten");
+
+        assert!(
+            !install.is_current(drawn),
+            "a forgotten identity is no longer current"
+        );
+        assert!(
+            !dir.path().join(DEVICE_FILE).exists(),
+            "asking draws no identity"
+        );
     }
 
     #[test]

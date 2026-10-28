@@ -142,16 +142,27 @@ pub(crate) fn report_revocation_to(sink: RevocationSink) {
     let _ = REVOCATION.set(sink);
 }
 
-/// Reports that the install's device was revoked. Both the session tokens
-/// and the port entitlements learn it, so the receiver takes it once.
-pub(crate) fn report_revocation() {
-    log::info!(
-        "Warren: this device was disconnected from another device of the account; its \
-         credential refresh stops"
-    );
-    if let Some(sink) = REVOCATION.get() {
+/// Reports that the device `id` was revoked, when it is the device this
+/// install asks as now. Both the session tokens and the port entitlements
+/// learn it, so the receiver takes it once; the loop of an identity already
+/// forgotten (it may resume only after a new login) concerns nobody.
+pub(crate) fn report_revocation(id: DeviceId) {
+    log::info!("Warren: a device of this install was revoked; its credential refresh stops");
+    if DEVICE.get().is_some_and(|device| device.is_current(id))
+        && let Some(sink) = REVOCATION.get()
+    {
         sink();
     }
+}
+
+/// Told after every refresh round that leaves this epoch's session tokens
+/// at hand, installed once at startup: a tunnel parked for want of one dials
+/// again.
+static TOKENS_AT_HAND: OnceLock<Box<dyn Fn() + Send + Sync>> = OnceLock::new();
+
+/// Reports every refresh round that leaves session tokens at hand to `sink`.
+pub(crate) fn report_tokens_to(sink: Box<dyn Fn() + Send + Sync>) {
+    let _ = TOKENS_AT_HAND.set(sink);
 }
 
 /// The daemon's offline-to-online edge, installed once it exists. A failed
@@ -207,6 +218,7 @@ fn now_unix_secs() -> u64 {
 
 fn spawn_refresh(
     manager: Arc<Manager>,
+    device_id: Option<DeviceId>,
     credentials: watch::Sender<Credentials>,
     wallet: String,
     standing: Option<StandingMonitor>,
@@ -234,7 +246,9 @@ fn spawn_refresh(
                     refresh_announcing_mints(&manager, &credentials, &now_unix_secs).await;
                 if settle_round(&manager, DEVICE.get()) {
                     announce_refresh(&credentials, &manager, now_unix_secs());
-                    report_revocation();
+                    if let Some(id) = device_id {
+                        report_revocation(id);
+                    }
                     return Round::Over;
                 }
                 if let Some(path) = remembered_at.as_deref()
@@ -250,6 +264,14 @@ fn spawn_refresh(
                 }
                 if notice.due(&manager, now_unix_secs()) {
                     log::warn!("{ISSUED_ELSEWHERE_WARNING}");
+                }
+                let now = now_unix_secs();
+                if manager
+                    .epoch_at(now)
+                    .is_some_and(|epoch| manager.available(epoch) > 0)
+                    && let Some(sink) = TOKENS_AT_HAND.get()
+                {
+                    sink();
                 }
                 match refreshed {
                     Ok(_) => {
@@ -358,6 +380,7 @@ fn wallet_for(
             let credentials = watch::Sender::new(Credentials::default());
             spawn_refresh(
                 manager.clone(),
+                device_id,
                 credentials.clone(),
                 key,
                 standing.cloned(),

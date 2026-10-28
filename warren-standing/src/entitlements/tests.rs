@@ -1092,14 +1092,18 @@ async fn a_mint_given_the_install_device_registers_it_and_names_it_on_every_issu
 #[tokio::test(start_paused = true)]
 async fn a_revoked_device_is_reported_once_and_its_mint_stops_asking() {
     let dir = tempfile::tempdir().expect("a temp dir");
+    let device = install_device(dir.path());
+    let kept = device.identity().device_id;
     let issuer = FakeIssuer::new(&[100]);
     issuer.0.revoke_device.store(true, Ordering::SeqCst);
     let (_t, now) = clock(NOW);
     let reported = Arc::new(Mutex::new(Vec::new()));
     let sink = Arc::clone(&reported);
     let mint = EntitlementMint::new(now)
-        .with_device(install_device(dir.path()))
-        .with_revocation_sink(Arc::new(move |wallet| sink.lock().unwrap().push(*wallet)));
+        .with_device(device)
+        .with_revocation_sink(Arc::new(move |wallet, id| {
+            sink.lock().unwrap().push((*wallet, id));
+        }));
 
     let source = mint.slot_source([1; 32], key(), || client(&issuer));
     wait_for(|| !reported.lock().unwrap().is_empty()).await;
@@ -1109,7 +1113,7 @@ async fn a_revoked_device_is_reported_once_and_its_mint_stops_asking() {
         tokio::task::yield_now().await;
     }
 
-    assert_eq!(*reported.lock().unwrap(), vec![[1; 32]]);
+    assert_eq!(*reported.lock().unwrap(), vec![([1; 32], kept)]);
     assert_eq!(
         issuer.requests(),
         rounds,
@@ -1126,15 +1130,16 @@ async fn a_device_registered_again_after_its_revocation_mints_under_its_new_iden
     let (_t, now) = clock(NOW);
     let reported = Arc::new(AtomicUsize::new(0));
     let sink = Arc::clone(&reported);
+    let device = install_device(dir.path());
     let mint = EntitlementMint::new(now)
-        .with_device(install_device(dir.path()))
-        .with_revocation_sink(Arc::new(move |_| {
+        .with_device(device.clone())
+        .with_revocation_sink(Arc::new(move |_, _| {
             sink.fetch_add(1, Ordering::SeqCst);
         }));
     let _revoked = mint.slot_source([1; 32], key(), || client(&issuer));
     wait_for(|| reported.load(Ordering::SeqCst) == 1).await;
 
-    install_device(dir.path()).forget().expect("forgotten");
+    device.forget().expect("forgotten");
     issuer.0.revoke_device.store(false, Ordering::SeqCst);
     let again = mint.slot_source([1; 32], key(), || client(&issuer));
     wait_for(|| again.credential(0).is_some()).await;
