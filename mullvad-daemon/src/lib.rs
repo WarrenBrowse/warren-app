@@ -67,6 +67,7 @@ mod warren_app_routes;
 /// Shared policy pieces of the periodic signed-artifact refreshers
 /// (fast retry, ETag conditional GET, atomic cache write).
 mod warren_artifact_refresh;
+mod warren_devices;
 /// Cross-environment arbitration: while a higher-priority product
 /// environment (prod > staging > beta) holds the machine, this build stands
 /// down by itself. Holds the decision as pure functions and the watcher that
@@ -665,6 +666,11 @@ pub enum DaemonCommand {
         String,
         Option<String>,
     ),
+    /// List the devices of the logged-in account (warren-core doc 115).
+    ListWarrenDevices(ResponseTx<warren_api::DeviceListResponse, warren_devices::DevicesError>),
+    /// Revoke the account's device with this id. Revoking this device is a
+    /// logout: it then disconnects and forgets its identity.
+    RemoveWarrenDevice(ResponseTx<(), warren_devices::DevicesError>, String),
     /// Request account history
     GetAccountHistory(oneshot::Sender<Option<AccountNumber>>),
     /// Remove the last used account, if there is one
@@ -3527,6 +3533,8 @@ impl Daemon {
             DeclareWithdrawal(tx, wpid, refund_address) => {
                 self.on_declare_withdrawal(tx, wpid, refund_address).await
             }
+            ListWarrenDevices(tx) => self.on_list_warren_devices(tx).await,
+            RemoveWarrenDevice(tx, id) => self.on_remove_warren_device(tx, id).await,
             GetRelayLocations(tx) => self.on_get_relay_locations(tx),
             UpdateRelayLocations => self.on_update_relay_locations().await,
             UpdateDefaultLocationCountry(tx) => self.on_update_default_location(tx).await,
@@ -4765,6 +4773,68 @@ impl Daemon {
                 log::info!("withdrawal declaration not recorded: {error}");
             }
             Self::oneshot_send(tx, result, "declare_withdrawal response");
+        });
+    }
+
+    /// The client of the logged-in wallet, and this install's device id,
+    /// `None` without a wallet.
+    async fn warren_devices_client(
+        &self,
+    ) -> Option<(
+        warren_sdk_client::SharedWarrenApiClient,
+        Option<warren_api::DeviceId>,
+    )> {
+        let api_url = self.warren_api_url_for_incidents()?;
+        let seed = self
+            .parameters_generator
+            .warren_seed_for_incidents()
+            .await?;
+        let this =
+            warren_token_provider::install_device().map(|device| device.identity().device_id);
+        Some((
+            warren_sdk_client::SharedWarrenApiClient::new(api_url, seed),
+            this,
+        ))
+    }
+
+    async fn on_list_warren_devices(
+        &mut self,
+        tx: ResponseTx<warren_api::DeviceListResponse, warren_devices::DevicesError>,
+    ) {
+        let Some((client, this)) = self.warren_devices_client().await else {
+            Self::oneshot_send(
+                tx,
+                Err(warren_devices::DevicesError::NoWallet),
+                "list_devices response",
+            );
+            return;
+        };
+        tokio::spawn(async move {
+            let result = warren_devices::list(&client, this).await;
+            Self::oneshot_send(tx, result, "list_devices response");
+        });
+    }
+
+    async fn on_remove_warren_device(
+        &mut self,
+        tx: ResponseTx<(), warren_devices::DevicesError>,
+        id: String,
+    ) {
+        let Some((client, this)) = self.warren_devices_client().await else {
+            Self::oneshot_send(
+                tx,
+                Err(warren_devices::DevicesError::NoWallet),
+                "remove_device response",
+            );
+            return;
+        };
+        let revoked_tx = self.tx.clone();
+        tokio::spawn(async move {
+            let result = warren_devices::revoke(&client, &id, this).await;
+            if result == Ok(true) {
+                let _ = revoked_tx.send(InternalDaemonEvent::WarrenDeviceRevoked);
+            }
+            Self::oneshot_send(tx, result.map(|_| ()), "remove_device response");
         });
     }
 

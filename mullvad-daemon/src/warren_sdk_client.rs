@@ -149,6 +149,19 @@ impl SharedWarrenApiClient {
             .await
     }
 
+    /// Signed `GET /v1/devices`: the account's devices, `this` marked.
+    pub async fn list_devices(
+        &self,
+        this: Option<warren_api::DeviceId>,
+    ) -> Result<warren_api::DeviceListResponse, ClientError> {
+        self.client().list_devices(this).await
+    }
+
+    /// Signed `DELETE /v1/devices/{id}`: revokes a device of the account.
+    pub async fn revoke_device(&self, id: warren_api::DeviceId) -> Result<(), ClientError> {
+        self.client().revoke_device(id).await
+    }
+
     /// Signed `DELETE /v1/account`.
     pub async fn delete_account(&self) -> Result<(), ClientError> {
         self.client().delete_account().await

@@ -36065,7 +36065,12 @@ proto.mullvad_daemon.management_interface.Device.toObject = function(includeInst
     name: jspb.Message.getFieldWithDefault(msg, 2, ""),
     pubkey: msg.getPubkey_asB64(),
     hijackDns: jspb.Message.getBooleanFieldWithDefault(msg, 5, false),
-    created: (f = msg.getCreated()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f)
+    created: (f = msg.getCreated()) && google_protobuf_timestamp_pb.Timestamp.toObject(includeInstance, f),
+    platform: jspb.Message.getFieldWithDefault(msg, 7, ""),
+    appVersion: jspb.Message.getFieldWithDefault(msg, 8, ""),
+    registeredOn: jspb.Message.getFieldWithDefault(msg, 9, ""),
+    lastSeenOn: jspb.Message.getFieldWithDefault(msg, 10, ""),
+    thisDevice: jspb.Message.getBooleanFieldWithDefault(msg, 11, false)
   };
 
   if (includeInstance) {
@@ -36122,6 +36127,26 @@ proto.mullvad_daemon.management_interface.Device.deserializeBinaryFromReader = f
       var value = new google_protobuf_timestamp_pb.Timestamp;
       reader.readMessage(value,google_protobuf_timestamp_pb.Timestamp.deserializeBinaryFromReader);
       msg.setCreated(value);
+      break;
+    case 7:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setPlatform(value);
+      break;
+    case 8:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setAppVersion(value);
+      break;
+    case 9:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setRegisteredOn(value);
+      break;
+    case 10:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setLastSeenOn(value);
+      break;
+    case 11:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setThisDevice(value);
       break;
     default:
       reader.skipField();
@@ -36186,6 +36211,41 @@ proto.mullvad_daemon.management_interface.Device.serializeBinaryToWriter = funct
       6,
       f,
       google_protobuf_timestamp_pb.Timestamp.serializeBinaryToWriter
+    );
+  }
+  f = message.getPlatform();
+  if (f.length > 0) {
+    writer.writeString(
+      7,
+      f
+    );
+  }
+  f = message.getAppVersion();
+  if (f.length > 0) {
+    writer.writeString(
+      8,
+      f
+    );
+  }
+  f = message.getRegisteredOn();
+  if (f.length > 0) {
+    writer.writeString(
+      9,
+      f
+    );
+  }
+  f = message.getLastSeenOn();
+  if (f.length > 0) {
+    writer.writeString(
+      10,
+      f
+    );
+  }
+  f = message.getThisDevice();
+  if (f) {
+    writer.writeBool(
+      11,
+      f
     );
   }
 };
@@ -36324,6 +36384,96 @@ proto.mullvad_daemon.management_interface.Device.prototype.hasCreated = function
 };
 
 
+/**
+ * optional string platform = 7;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.Device.prototype.getPlatform = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 7, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.Device} returns this
+ */
+proto.mullvad_daemon.management_interface.Device.prototype.setPlatform = function(value) {
+  return jspb.Message.setProto3StringField(this, 7, value);
+};
+
+
+/**
+ * optional string app_version = 8;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.Device.prototype.getAppVersion = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 8, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.Device} returns this
+ */
+proto.mullvad_daemon.management_interface.Device.prototype.setAppVersion = function(value) {
+  return jspb.Message.setProto3StringField(this, 8, value);
+};
+
+
+/**
+ * optional string registered_on = 9;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.Device.prototype.getRegisteredOn = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 9, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.Device} returns this
+ */
+proto.mullvad_daemon.management_interface.Device.prototype.setRegisteredOn = function(value) {
+  return jspb.Message.setProto3StringField(this, 9, value);
+};
+
+
+/**
+ * optional string last_seen_on = 10;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.Device.prototype.getLastSeenOn = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 10, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.Device} returns this
+ */
+proto.mullvad_daemon.management_interface.Device.prototype.setLastSeenOn = function(value) {
+  return jspb.Message.setProto3StringField(this, 10, value);
+};
+
+
+/**
+ * optional bool this_device = 11;
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.Device.prototype.getThisDevice = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 11, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.mullvad_daemon.management_interface.Device} returns this
+ */
+proto.mullvad_daemon.management_interface.Device.prototype.setThisDevice = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 11, value);
+};
+
+
 
 /**
  * List of repeated fields within this message type.
@@ -36364,7 +36514,8 @@ proto.mullvad_daemon.management_interface.DeviceList.prototype.toObject = functi
 proto.mullvad_daemon.management_interface.DeviceList.toObject = function(includeInstance, msg) {
   var f, obj = {
     devicesList: jspb.Message.toObjectList(msg.getDevicesList(),
-    proto.mullvad_daemon.management_interface.Device.toObject, includeInstance)
+    proto.mullvad_daemon.management_interface.Device.toObject, includeInstance),
+    olderClientSeenOn: jspb.Message.getFieldWithDefault(msg, 2, "")
   };
 
   if (includeInstance) {
@@ -36406,6 +36557,10 @@ proto.mullvad_daemon.management_interface.DeviceList.deserializeBinaryFromReader
       reader.readMessage(value,proto.mullvad_daemon.management_interface.Device.deserializeBinaryFromReader);
       msg.addDevices(value);
       break;
+    case 2:
+      var value = /** @type {string} */ (reader.readString());
+      msg.setOlderClientSeenOn(value);
+      break;
     default:
       reader.skipField();
       break;
@@ -36441,6 +36596,13 @@ proto.mullvad_daemon.management_interface.DeviceList.serializeBinaryToWriter = f
       1,
       f,
       proto.mullvad_daemon.management_interface.Device.serializeBinaryToWriter
+    );
+  }
+  f = /** @type {string} */ (jspb.Message.getField(message, 2));
+  if (f != null) {
+    writer.writeString(
+      2,
+      f
     );
   }
 };
@@ -36481,6 +36643,42 @@ proto.mullvad_daemon.management_interface.DeviceList.prototype.addDevices = func
  */
 proto.mullvad_daemon.management_interface.DeviceList.prototype.clearDevicesList = function() {
   return this.setDevicesList([]);
+};
+
+
+/**
+ * optional string older_client_seen_on = 2;
+ * @return {string}
+ */
+proto.mullvad_daemon.management_interface.DeviceList.prototype.getOlderClientSeenOn = function() {
+  return /** @type {string} */ (jspb.Message.getFieldWithDefault(this, 2, ""));
+};
+
+
+/**
+ * @param {string} value
+ * @return {!proto.mullvad_daemon.management_interface.DeviceList} returns this
+ */
+proto.mullvad_daemon.management_interface.DeviceList.prototype.setOlderClientSeenOn = function(value) {
+  return jspb.Message.setField(this, 2, value);
+};
+
+
+/**
+ * Clears the field making it undefined.
+ * @return {!proto.mullvad_daemon.management_interface.DeviceList} returns this
+ */
+proto.mullvad_daemon.management_interface.DeviceList.prototype.clearOlderClientSeenOn = function() {
+  return jspb.Message.setField(this, 2, undefined);
+};
+
+
+/**
+ * Returns whether this field is set.
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.DeviceList.prototype.hasOlderClientSeenOn = function() {
+  return jspb.Message.getField(this, 2) != null;
 };
 
 

@@ -1797,9 +1797,26 @@ message Device {
   bytes pubkey = 3;
   bool hijack_dns = 5;
   google.protobuf.Timestamp created = 6;
+  // The account's device registry (warren-core doc 115). Where the device
+  // runs (`android`, `ios`, `macos`, `windows`, `linux`, `cli`, `browser`, or
+  // `other` for one this build does not know), the version it last
+  // registered with, and the days (`YYYY-MM-DD`, UTC) it registered and was
+  // last seen. The registry keeps no finer activity than the day.
+  string platform = 7;
+  string app_version = 8;
+  string registered_on = 9;
+  string last_seen_on = 10;
+  // Whether it is the device this daemon runs on.
+  bool this_device = 11;
 }
 
-message DeviceList { repeated Device devices = 1; }
+message DeviceList {
+  repeated Device devices = 1;
+  // The last day (`YYYY-MM-DD`) a registered device of the account took the
+  // token reservation of an older Warren client that does not register.
+  // Absent when that never happened.
+  optional string older_client_seen_on = 2;
+}
 
 message DeviceRemoval {
   string account_number = 1;

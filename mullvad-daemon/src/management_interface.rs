@@ -1814,19 +1814,36 @@ impl ManagementService for ManagementServiceImpl {
             .map(Response::new)
     }
 
+    /// The devices of the logged-in account, whatever account number the
+    /// request names: the wallet signs the request, so it can only ever list
+    /// its own.
     async fn list_devices(
         &self,
-        _request: Request<AccountNumber>,
+        request: Request<AccountNumber>,
     ) -> ServiceResult<types::DeviceList> {
+        let call = Self::call_of(&request);
         log::debug!("list_devices");
-        Ok(Response::new(types::DeviceList {
-            devices: Vec::new(),
-        }))
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(&call, DaemonCommand::ListWarrenDevices(tx))?;
+        let list = self.wait_for_result(rx).await?.map_err(map_devices_error)?;
+        Ok(Response::new(crate::warren_devices::device_list(list)))
     }
 
-    async fn remove_device(&self, _request: Request<types::DeviceRemoval>) -> ServiceResult<()> {
+    /// Revokes a device of the logged-in account; the account number the
+    /// request names is ignored for the same reason as in `list_devices`.
+    async fn remove_device(&self, request: Request<types::DeviceRemoval>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
         log::debug!("remove_device");
-        Ok(Response::new(()))
+        let removal = request.into_inner();
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(
+            &call,
+            DaemonCommand::RemoveWarrenDevice(tx, removal.device_id),
+        )?;
+        self.wait_for_result(rx)
+            .await?
+            .map_err(map_devices_error)
+            .map(Response::new)
     }
 
     async fn set_wireguard_rotation_interval(
@@ -3205,6 +3222,24 @@ fn map_withdrawal_error(error: crate::warren_withdrawal::DeclarationError) -> St
     }
 }
 
+fn map_devices_error(error: crate::warren_devices::DevicesError) -> Status {
+    use crate::warren_devices::DevicesError;
+    let message = error.to_string();
+    match error {
+        DevicesError::NoWallet => Status::unauthenticated(message),
+        DevicesError::InvalidDevice => Status::invalid_argument(message),
+        DevicesError::NotFound => Status::not_found(message),
+        // The same signal as a connect refused on a revoked device, which the
+        // GUI already reads as one.
+        DevicesError::Revoked => Status::with_details(
+            Code::Unauthenticated,
+            message,
+            mullvad_management_interface::DEVICE_REVOKED_DETAILS.into(),
+        ),
+        DevicesError::Unavailable => Status::unavailable(message),
+    }
+}
+
 fn map_daemon_error(error: crate::Error) -> Status {
     use crate::Error as DaemonError;
 
@@ -3402,7 +3437,7 @@ mod app_routing_error_tests {
 
 #[cfg(test)]
 mod session_gate_status_tests {
-    use super::{Code, map_connect_refusal, map_daemon_error};
+    use super::{Code, map_connect_refusal, map_daemon_error, map_devices_error};
     use crate::warren_env_arbitration::EnvYieldError;
     use crate::warren_session_gate::ConnectRefusal;
 
@@ -3423,6 +3458,34 @@ mod session_gate_status_tests {
         )));
 
         assert_eq!(status.code(), Code::FailedPrecondition);
+    }
+
+    #[test]
+    fn a_device_request_maps_each_refusal_to_the_status_the_gui_acts_on() {
+        use crate::warren_devices::DevicesError;
+
+        assert_eq!(
+            map_devices_error(DevicesError::NoWallet).code(),
+            Code::Unauthenticated
+        );
+        assert_eq!(
+            map_devices_error(DevicesError::InvalidDevice).code(),
+            Code::InvalidArgument
+        );
+        assert_eq!(
+            map_devices_error(DevicesError::NotFound).code(),
+            Code::NotFound
+        );
+        assert_eq!(
+            map_devices_error(DevicesError::Unavailable).code(),
+            Code::Unavailable
+        );
+        let revoked = map_devices_error(DevicesError::Revoked);
+        assert_eq!(revoked.code(), Code::Unauthenticated);
+        assert_eq!(
+            revoked.details(),
+            mullvad_management_interface::DEVICE_REVOKED_DETAILS
+        );
     }
 
     #[test]

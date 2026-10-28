@@ -4612,6 +4612,16 @@ export class Device extends jspb.Message {
     clearCreated(): void;
     getCreated(): google_protobuf_timestamp_pb.Timestamp | undefined;
     setCreated(value?: google_protobuf_timestamp_pb.Timestamp): Device;
+    getPlatform(): string;
+    setPlatform(value: string): Device;
+    getAppVersion(): string;
+    setAppVersion(value: string): Device;
+    getRegisteredOn(): string;
+    setRegisteredOn(value: string): Device;
+    getLastSeenOn(): string;
+    setLastSeenOn(value: string): Device;
+    getThisDevice(): boolean;
+    setThisDevice(value: boolean): Device;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): Device.AsObject;
@@ -4630,6 +4640,11 @@ export namespace Device {
         pubkey: Uint8Array | string,
         hijackDns: boolean,
         created?: google_protobuf_timestamp_pb.Timestamp.AsObject,
+        platform: string,
+        appVersion: string,
+        registeredOn: string,
+        lastSeenOn: string,
+        thisDevice: boolean,
     }
 }
 
@@ -4638,6 +4653,11 @@ export class DeviceList extends jspb.Message {
     getDevicesList(): Array<Device>;
     setDevicesList(value: Array<Device>): DeviceList;
     addDevices(value?: Device, index?: number): Device;
+
+    hasOlderClientSeenOn(): boolean;
+    clearOlderClientSeenOn(): void;
+    getOlderClientSeenOn(): string | undefined;
+    setOlderClientSeenOn(value: string): DeviceList;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): DeviceList.AsObject;
@@ -4652,6 +4672,7 @@ export class DeviceList extends jspb.Message {
 export namespace DeviceList {
     export type AsObject = {
         devicesList: Array<Device.AsObject>,
+        olderClientSeenOn?: string,
     }
 }
 
