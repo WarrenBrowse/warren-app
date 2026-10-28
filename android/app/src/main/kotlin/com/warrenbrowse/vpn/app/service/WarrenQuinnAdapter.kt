@@ -488,12 +488,19 @@ class WarrenQuinnAdapter(
                 if (code != lastSeen) {
                     lastSeen = code
                     Logger.i("WarrenQuinnAdapter: native status $code")
-                    if (code == STATUS_DISCONNECTED || code < 0) {
+                    if (code == STATUS_DISCONNECTED || code == STATUS_NO_SESSION_TOKEN || code < 0) {
                         // Rust task ended (clean exit or error). Engage the
                         // kill switch on an unexpected drop under lockdown;
-                        // otherwise release and stop polling.
+                        // otherwise release and stop polling. A session no
+                        // token admitted is such a drop, named: the refresh
+                        // can bring tokens, and the screens offer the
+                        // account's devices on its cause.
                         val reason =
-                            if (code < 0) "native status code $code" else "tunnel disconnected"
+                            when {
+                                code < 0 -> "native status code $code"
+                                code == STATUS_NO_SESSION_TOKEN -> NO_SESSION_TOKEN_REASON
+                                else -> "tunnel disconnected"
+                            }
                         var escalatedHandover = false
                         lock.withLock {
                             if (userInitiatedDisconnect) {
@@ -1412,6 +1419,7 @@ class WarrenQuinnAdapter(
             STATUS_UNAUTHORIZED -> WarrenTunnelState.Failed("subscription expired", expired = true)
             STATUS_BANNED -> WarrenTunnelState.Failed(BanVerdict.UNKNOWN.reason)
             STATUS_DEVICE_LIMIT -> WarrenTunnelState.Failed(DEVICE_LIMIT_REASON)
+            STATUS_NO_SESSION_TOKEN -> WarrenTunnelState.Failed(NO_SESSION_TOKEN_REASON)
             else -> WarrenTunnelState.Failed("native status code $code")
         }
 
@@ -1440,6 +1448,17 @@ class WarrenQuinnAdapter(
         // This network routes none of the entries the circuit may use.
         // Mirrors `warren_jni::redial::SessionStatus::NoReachableEntry`.
         const val STATUS_NO_REACHABLE_ENTRY = 8
+
+        // A tokens-only session found no token the exit admits, for another
+        // reason than every token being in use elsewhere. Mirrors
+        // `warren_jni::redial::SessionStatus::NoSessionToken`.
+        const val STATUS_NO_SESSION_TOKEN = 9
+
+        // Opens on the auth-failed token the desktop daemon blocks with for
+        // the same cause (warren-core doc 115).
+        const val NO_SESSION_TOKEN_REASON =
+            "[NO_SESSION_TOKEN] no session token the exit admits; other devices of the " +
+                "account hold them"
 
         // The auth-failed token opening it is what ConnectionProxy maps to
         // `AuthFailedError.TooManyConnections`, as the desktop daemon does.

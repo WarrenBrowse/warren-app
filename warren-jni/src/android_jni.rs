@@ -299,6 +299,10 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_initLogger(
     // call carries it.
     #[cfg(feature = "tunnel")]
     crate::token_provider::set_app_files_dir(&files_dir);
+    // The device identity lives beside the token rotation (warren-core doc
+    // 115), in the same directory.
+    #[cfg(feature = "tunnel")]
+    crate::devices::install_in(&files_dir);
     // The strike ledger lives beside the token bundle, in the same private,
     // never-backed-up directory.
     #[cfg(feature = "tunnel")]
@@ -2122,14 +2126,125 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getBanVerdict(
     }
 }
 
-// Device list/remove JNI exports were dropped: Warren's identity is the
-// BIP39 wallet (one wallet = one pubkey), not a Mullvad-style per-account
-// device registry. The backend has no `/v1/devices` list/delete endpoint;
-// it only tracks ephemeral self-managed sessions (`/v1/session/open|close`)
-// capped at MAX_DEVICES_PER_ACCOUNT concurrent, freed on disconnect/TTL, so
-// there is nothing for a user to list or revoke. The Kotlin device-management
-// UI was already removed (commit dc5b0b0928); this finishes that on the Rust
-// side. Desktop is on the same login-state-only model.
+// ---------------------------------------------------------------------------
+// The account's devices (warren-core doc 115)
+// ---------------------------------------------------------------------------
+
+/// Runs one device registry call of `mnemonic`'s wallet and answers its
+/// envelope (`crate::devices`). Rides the VpnService-protected transport like
+/// the standing poll: the list is what a blocked device opens to get out of
+/// its block. Blocks on a network call: invoke off the main thread.
+#[cfg(feature = "tunnel")]
+fn device_call<'local, F, Fut>(
+    jnix_env: &JnixEnv<'local>,
+    mnemonic: JString<'local>,
+    call: F,
+) -> jstring
+where
+    F: FnOnce(warren_api::WarrenApiClient<IncidentTransport>) -> Fut,
+    Fut: std::future::Future<Output = String>,
+{
+    let phrase = Zeroizing::new(String::from_java(jnix_env, mnemonic));
+    let json = match (
+        runtime(),
+        warren_identity::WarrenIdentity::from_mnemonic(&phrase),
+    ) {
+        (Some(runtime), Ok(identity)) => {
+            let client = warren_standing::server_clock::attach(warren_api::WarrenApiClient::new(
+                PRODUCT_API_URL.to_owned(),
+                identity,
+                IncidentTransport::new(),
+            ));
+            runtime.block_on(call(client))
+        }
+        _ => crate::devices::failure("no_wallet"),
+    };
+    match jnix_env.new_string(json) {
+        Ok(s) => s.into_inner() as jstring,
+        Err(_) => std::ptr::null_mut(),
+    }
+}
+
+/// The account's devices, this one marked:
+/// `{"ok":true,"devices":[...],"older_client_seen_on":"YYYY-MM-DD"|null}` or
+/// `{"ok":false,"error":"no_wallet|revoked|unavailable|..."}`.
+#[cfg(feature = "tunnel")]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_listDevices<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    mnemonic: JString<'local>,
+) -> jstring {
+    device_call(&JnixEnv::from(env), mnemonic, |client| async move {
+        crate::devices::registry().list_json(&client).await
+    })
+}
+
+/// Renames the account's device `device_id`:
+/// `{"ok":true,"this_device":bool}` or `{"ok":false,"error":...}`.
+#[cfg(feature = "tunnel")]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_renameDevice<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    mnemonic: JString<'local>,
+    device_id: JString<'local>,
+    name: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let device_id = String::from_java(&jnix_env, device_id);
+    let name = String::from_java(&jnix_env, name);
+    device_call(&jnix_env, mnemonic, |client| async move {
+        crate::devices::registry()
+            .rename_json(&client, &device_id, &name)
+            .await
+    })
+}
+
+/// Revokes the account's device `device_id`:
+/// `{"ok":true,"this_device":bool}` or `{"ok":false,"error":...}`. Revoking
+/// this device is a logout, after which [`Java_com_warrenbrowse_vpn_jni_WarrenJni_deviceRevoked`]
+/// reads `true`.
+#[cfg(feature = "tunnel")]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_revokeDevice<'local>(
+    env: JNIEnv<'local>,
+    _class: JClass<'local>,
+    mnemonic: JString<'local>,
+    device_id: JString<'local>,
+) -> jstring {
+    let jnix_env = JnixEnv::from(env);
+    let device_id = String::from_java(&jnix_env, device_id);
+    device_call(&jnix_env, mnemonic, |client| async move {
+        crate::devices::registry()
+            .revoke_json(&client, &device_id)
+            .await
+    })
+}
+
+/// Whether the registry revoked this device since Kotlin last forgot it: a
+/// token or entitlement refresh learned it, or this device revoked itself.
+/// The token and entitlement refreshes of the revoked device have stopped and
+/// its device identity is forgotten.
+#[cfg(feature = "tunnel")]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_deviceRevoked(
+    _env: JNIEnv<'_>,
+    _class: JClass<'_>,
+) -> jboolean {
+    jboolean::from(crate::devices::registry().revoked())
+}
+
+/// Kotlin took the revocation in (the user left the revoked screen, logged
+/// out or in again).
+#[cfg(feature = "tunnel")]
+#[unsafe(no_mangle)]
+pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_forgetDeviceRevocation(
+    _env: JNIEnv<'_>,
+    _class: JClass<'_>,
+) {
+    crate::devices::registry().forget_revocation();
+}
 
 /// Redeem a subscription voucher (`POST /v1/register`). Binds the wallet
 /// pubkey to a new subscription. The request is unsigned (the pubkey is

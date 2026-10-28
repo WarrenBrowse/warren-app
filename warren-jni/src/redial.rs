@@ -33,6 +33,12 @@
 //!   address families the network does not carry, forum topic 210). Kotlin
 //!   blocks under the "no dialable network" cause and redials once the
 //!   network changes, since a redial on the same one meets the same verdict.
+//! - `NoSessionToken` (9) ends a tokens-only session that found no token the
+//!   exit admits, for a reason other than every token being in use elsewhere
+//!   (that one is `DeviceLimit`): the store is empty for the epoch, or the exit
+//!   refused every token. Kotlin applies the drop policy under its own cause,
+//!   which the screens offer the account's device list on (warren-core doc
+//!   115); the next dial takes the tokens the refresh brings.
 
 /// Tunnel session status reported back to Kotlin via
 /// `WarrenJni.getTunnelStatus()`. Encoded as an `i32` rather than an enum
@@ -62,4 +68,7 @@ pub enum SessionStatus {
     /// This network routes none of the circuit's candidate entries: see the
     /// module doc.
     NoReachableEntry = 8,
+    /// A tokens-only session found no token the exit admits: see the module
+    /// doc.
+    NoSessionToken = 9,
 }

@@ -51,6 +51,7 @@ import com.warrenbrowse.vpn.lib.repository.AccountStrikeAlerts
 import com.warrenbrowse.vpn.lib.repository.ForumActivityAlerts
 import com.warrenbrowse.vpn.lib.repository.WarrenAccountStandingRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenAccountStandingState
+import com.warrenbrowse.vpn.lib.repository.WarrenDeviceBridge
 import com.warrenbrowse.vpn.lib.repository.WarrenStandingBridge
 import com.warrenbrowse.vpn.app.standing.WarrenAccountStandingPoller
 import com.warrenbrowse.vpn.app.connect.HeldVoucherRedeemer
@@ -120,7 +121,7 @@ val appModule = module {
     single { BuildVersion(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE) }
     single { ApiEndpointFromIntentHolder() }
     single { AccountRepository() }
-    single { DeviceRepository() }
+    single { DeviceRepository(bridge = get()) }
     single { UserPreferencesRepository(get(), get()) }
     // ConnectionProxy reads live tunnel state from WarrenTunnelStateProvider.
     single { ConnectionProxy(tunnelStateProvider = get()) }
@@ -130,7 +131,7 @@ val appModule = module {
     // lives in `:app/jni/WarrenJniBridgeImpl` so the `lib/<x>` modules
     // never reach into `:app`.
     single { WarrenJniBridgeImpl() } binds
-        arrayOf(WarrenJniBridge::class, WarrenStandingBridge::class)
+        arrayOf(WarrenJniBridge::class, WarrenStandingBridge::class, WarrenDeviceBridge::class)
 
     single<WalletRepository> {
         AndroidKeystoreWalletRepository(context = androidContext(), jni = get())

@@ -714,23 +714,21 @@ async fn run_multi_hop_session(
         // The supervisor holds the only remaining sender once this is dropped,
         // so the driver's watch closes with it at teardown.
         drop(ip_assign_channel);
-        // Whether the supervisor stopped because this network routes no
-        // entry. It is sent right after the session watch the supervisor
-        // held has closed, so the attempt's end reads it with a short wait.
-        let (unroutable_tx, mut unroutable_rx) = oneshot::channel::<bool>();
+        // The terminal status the supervisor's own stop calls for, if any
+        // (no entry this network routes, no token the exit admits). It is
+        // sent right after the session watch the supervisor held has closed,
+        // so the attempt's end reads it with a short wait.
+        let (stop_tx, mut stop_rx) = oneshot::channel::<Option<SessionStatus>>();
         let _supervisor_task = AbortOnDrop::spawn(async move {
-            let unroutable = match supervisor.run().await {
-                Ok(()) => false,
+            let stop = match supervisor.run().await {
+                Ok(()) => None,
                 Err(e) => {
                     log::warn!("multi-hop supervisor terminated: {e}");
                     crate::dial_facts::record_dial_error(crate::dial_facts::class_of(&e));
-                    matches!(
-                        e,
-                        warrenguard_transport::multihop::MultiHopError::NoReachableEntry
-                    )
+                    crate::supervised_session::supervisor_stop_status(&e)
                 }
             };
-            let _ = unroutable_tx.send(unroutable);
+            let _ = stop_tx.send(stop);
         });
         // Aborted with the attempt: the handle it holds subscribes a watch
         // receiver, which would otherwise keep the supervisor from seeing that
@@ -891,15 +889,11 @@ async fn run_multi_hop_session(
             }
             AttemptEnd::Session(end) => {
                 if end == SessionEnd::Down
-                    && matches!(
-                        tokio::time::timeout(SUPERVISOR_VERDICT_WAIT, &mut unroutable_rx).await,
-                        Ok(Ok(true))
-                    )
+                    && let Ok(Ok(Some(terminal))) =
+                        tokio::time::timeout(SUPERVISOR_VERDICT_WAIT, &mut stop_rx).await
                 {
-                    log::warn!(
-                        "multi-hop: no entry relay reachable on this network's address families"
-                    );
-                    status.store(SessionStatus::NoReachableEntry as i32);
+                    log::warn!("multi-hop: the supervisor stopped the session ({terminal:?})");
+                    status.store(terminal as i32);
                     return;
                 }
                 // No-logs: `SessionEnd` carries only a failure category, never

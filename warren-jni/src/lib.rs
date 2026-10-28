@@ -120,6 +120,9 @@ mod dial_facts;
 // token mint/refresh/stack core is host-tested with a mock transport; the
 // provider that feeds the tunnel handshake is Android-gated inside.
 #[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
+mod devices;
+
+#[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 mod token_provider;
 
 // Port-forwarding entitlements (warren-core doc 99): the Android wiring of the

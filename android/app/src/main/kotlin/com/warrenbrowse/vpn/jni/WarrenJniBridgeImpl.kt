@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.jni
 
+import com.warrenbrowse.vpn.lib.repository.WarrenDeviceBridge
 import com.warrenbrowse.vpn.lib.repository.WarrenJniBridge
 import com.warrenbrowse.vpn.lib.repository.WarrenStandingBridge
 import com.warrenbrowse.vpn.lib.repository.WarrenVersionVerdict
@@ -24,10 +25,24 @@ import kotlinx.serialization.json.jsonPrimitive
  * etc.) intentionally do NOT appear here; they stay app-private.
  */
 @Suppress("TooManyFunctions") // one delegation per JNI export: the count is the surface's size
-class WarrenJniBridgeImpl : WarrenJniBridge, WarrenStandingBridge {
+class WarrenJniBridgeImpl : WarrenJniBridge, WarrenStandingBridge, WarrenDeviceBridge {
     override fun accountStanding(mnemonic: String): String = ready {
         WarrenJni.accountStanding(mnemonic)
     }
+
+    override fun listDevices(mnemonic: String): String = ready { WarrenJni.listDevices(mnemonic) }
+
+    override fun renameDevice(mnemonic: String, deviceId: String, name: String): String = ready {
+        WarrenJni.renameDevice(mnemonic, deviceId, name)
+    }
+
+    override fun revokeDevice(mnemonic: String, deviceId: String): String = ready {
+        WarrenJni.revokeDevice(mnemonic, deviceId)
+    }
+
+    override fun deviceRevoked(): Boolean = ready { WarrenJni.deviceRevoked() }
+
+    override fun forgetDeviceRevocation() = ready { WarrenJni.forgetDeviceRevocation() }
 
     override fun forgetAccountStanding() = ready { WarrenJni.forgetAccountStanding() }
 

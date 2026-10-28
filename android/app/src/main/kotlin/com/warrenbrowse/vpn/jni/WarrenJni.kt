@@ -430,6 +430,26 @@ object WarrenJni {
     external fun forgetAccountStanding()
 
     /**
+     * The account's devices (warren-core doc 115), this one marked, as the envelope
+     * `WarrenDeviceBridge.listDevices` documents. Signed with the wallet derived from [mnemonic]
+     * in Rust, over the VpnService-protected transport. Blocks on a network call: invoke off the
+     * main thread. Never log the mnemonic nor a listed device.
+     */
+    external fun listDevices(mnemonic: String): String
+
+    /** Renames the account's device [deviceId]: `{"ok":true,"this_device":bool}` or a refusal. */
+    external fun renameDevice(mnemonic: String, deviceId: String, name: String): String
+
+    /** Revokes the account's device [deviceId]: `{"ok":true,"this_device":bool}` or a refusal. */
+    external fun revokeDevice(mnemonic: String, deviceId: String): String
+
+    /** Whether the registry revoked this device since [forgetDeviceRevocation]. */
+    external fun deviceRevoked(): Boolean
+
+    /** The revocation was taken in. */
+    external fun forgetDeviceRevocation()
+
+    /**
      * Returns a JSON-encoded array of relay descriptors. Each entry is a `RelayInfo`-shaped object
      * with fields:
      * - `exit_id` : 16-byte stable identifier, lowercase hex

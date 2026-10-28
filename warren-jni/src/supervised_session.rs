@@ -129,6 +129,25 @@ pub(crate) fn account_refusal_status(reason: RejectionReason) -> Option<SessionS
     }
 }
 
+/// The terminal status a supervisor that stopped with `error` leaves for
+/// Kotlin, `None` for a stop the fail-closed drop policy handles as a plain
+/// teardown. A tokens-only session whose every token the exit said is in use
+/// elsewhere is the device limit; one that found no token for any other
+/// reason is [`SessionStatus::NoSessionToken`].
+pub(crate) fn supervisor_stop_status(
+    error: &warrenguard_transport::multihop::MultiHopError,
+) -> Option<SessionStatus> {
+    use warrenguard_transport::multihop::{MultiHopError, NoSessionTokenCause};
+    match error {
+        MultiHopError::NoReachableEntry => Some(SessionStatus::NoReachableEntry),
+        MultiHopError::NoSessionToken(NoSessionTokenCause::AllInUse) => {
+            Some(SessionStatus::DeviceLimit)
+        }
+        MultiHopError::NoSessionToken(_) => Some(SessionStatus::NoSessionToken),
+        _ => None,
+    }
+}
+
 /// The supervisor-side channels this driver consumes.
 pub(crate) struct SupervisedInputs {
     /// Live session watch (`Some` = connected, `None` = redial in flight).
@@ -822,6 +841,36 @@ mod tests {
             SessionStatus::DeviceLimit as i32,
             7,
             "WarrenQuinnAdapter.STATUS_DEVICE_LIMIT mirrors this code"
+        );
+    }
+
+    #[test]
+    fn a_supervisor_stopped_for_want_of_a_token_names_why() {
+        use warrenguard_transport::multihop::{MultiHopError, NoSessionTokenCause};
+
+        assert_eq!(
+            supervisor_stop_status(&MultiHopError::NoSessionToken(
+                NoSessionTokenCause::AllInUse
+            )),
+            Some(SessionStatus::DeviceLimit),
+            "every token held elsewhere is the device limit"
+        );
+        for cause in [NoSessionTokenCause::Empty, NoSessionTokenCause::AllRefused] {
+            assert_eq!(
+                supervisor_stop_status(&MultiHopError::NoSessionToken(cause)),
+                Some(SessionStatus::NoSessionToken),
+                "{cause:?}"
+            );
+        }
+        assert_eq!(
+            supervisor_stop_status(&MultiHopError::NoReachableEntry),
+            Some(SessionStatus::NoReachableEntry)
+        );
+        assert_eq!(supervisor_stop_status(&MultiHopError::NoSession), None);
+        assert_eq!(
+            SessionStatus::NoSessionToken as i32,
+            9,
+            "WarrenQuinnAdapter.STATUS_NO_SESSION_TOKEN mirrors this code"
         );
     }
 

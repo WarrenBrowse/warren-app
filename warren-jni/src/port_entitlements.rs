@@ -48,11 +48,15 @@ mod android {
     /// minting wallet is bit-for-bit the subscribed wallet.
     pub(crate) fn provider_for(signing_key: SigningKey, blinding: BlindingKey) -> RuleCredential {
         let mint = MINT.get_or_init(|| {
-            EntitlementMint::new(Arc::new(now_unix_secs)).with_ban_sink(Arc::new(
-                |wallet, error| {
+            let mint = EntitlementMint::new(Arc::new(now_unix_secs))
+                .with_ban_sink(Arc::new(|wallet, error| {
                     crate::standing::store().on_refresh_error(wallet, error, now_unix_secs())
-                },
-            ))
+                }))
+                .with_revocation_sink(Arc::new(|_| crate::devices::registry().on_revoked()));
+            match crate::devices::registry().device() {
+                Some(device) => mint.with_device(device.clone()),
+                None => mint,
+            }
         });
         let wallet_pubkey = signing_key.verifying_key().to_bytes();
         mint.rule_credential(wallet_pubkey, ANDROID_RULE_SLOT, blinding, move || {

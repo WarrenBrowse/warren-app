@@ -72,6 +72,7 @@ class WarrenQuinnAdapterTest {
         const val STATUS_BANNED = 6
         const val STATUS_DEVICE_LIMIT = 7
         const val STATUS_NO_REACHABLE_ENTRY = 8
+        const val STATUS_NO_SESSION_TOKEN = 9
 
         const val SELF_PACKAGE = "com.warrenbrowse.vpn.test"
 
@@ -801,6 +802,38 @@ class WarrenQuinnAdapterTest {
             assertFalse(CONNECT_TUNNEL in platform.calls, "a device limit must not be redialed")
             adapter.disconnect()
         }
+
+    @Test
+    fun `ensure a session no token admits blocks as a drop under its own cause`() = runTest {
+        // Rust ends a tokens-only session with this status when no token the
+        // exit admits is at hand, for another reason than every token being
+        // in use elsewhere (that one is the device limit). The refresh can
+        // bring tokens, so it is a drop the policy blocks and redials after
+        // its grace, named so the screens can offer the account's devices.
+        mockkStatic(SystemClock::class)
+        every { SystemClock.elapsedRealtime() } returns 0L
+        try {
+            val platform = RecordingPlatform()
+            val adapter = adapterWith(platform)
+            adapter.connect(config(), Mnemonic(PHRASE))
+            awaitReal("the session must reach Connected") {
+                adapter.state.value is WarrenTunnelState.Connected
+            }
+
+            platform.status = STATUS_NO_SESSION_TOKEN
+            awaitReal("a session with no token must block", { adapter.state.value.toString() }) {
+                adapter.state.value is WarrenTunnelState.Blocking
+            }
+
+            val blocked = adapter.state.value as WarrenTunnelState.Blocking
+            assertTrue(blocked.reason.startsWith("[NO_SESSION_TOKEN] "), blocked.reason)
+            assertFalse(blocked.expired, "no token is not an expiry")
+            assertFalse(blocked.flapping, "a drop the policy redials, not a parked tunnel")
+            adapter.disconnect()
+        } finally {
+            unmockkStatic(SystemClock::class)
+        }
+    }
 
     @Test
     fun `ensure a dead egress reads as wedged`() = runTest {

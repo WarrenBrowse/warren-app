@@ -47,6 +47,8 @@ use warren_app_routes::tokens::{
     ISSUED_ELSEWHERE_WARNING, IssuedElsewhereNotice, Round, announce_minted, announce_refresh,
     refresh_announcing_mints, refresh_forever,
 };
+use warren_standing::device::{InstallDevice, settle_round, with_install_device};
+use warren_standing::entitlements::RevocationSink;
 use warren_standing::token_rotation::with_install_rotation;
 
 /// The most tokens one setup request may carry: the default admission sends
@@ -132,10 +134,15 @@ impl PersistFile {
     }
 }
 
-/// Process-lived registry of one [`TokenManager`] per wallet.
+/// A wallet's public key, and the device its manager asks as.
+type WalletKey = ([u8; 32], Option<warren_api::DeviceId>);
+
+/// Process-lived registry of one [`TokenManager`] per wallet and device: a
+/// wallet logged in again after its device was revoked asks as a new device,
+/// with a new manager.
 pub(crate) struct TokenMint<T> {
     now: NowFn,
-    managers: parking_lot::Mutex<HashMap<[u8; 32], WalletTokens<T>>>,
+    managers: parking_lot::Mutex<HashMap<WalletKey, WalletTokens<T>>>,
     persist: Option<Arc<PersistFile>>,
     /// The bundle is restored into the first manager built this process; a
     /// second wallet must not re-load tokens the first already vends.
@@ -149,6 +156,11 @@ pub(crate) struct TokenMint<T> {
     /// ([`warren_standing::token_rotation::install_rotation`]). Without it each
     /// process draws its own and leads with another serial after a restart.
     rotation_dir: Option<PathBuf>,
+    /// The install as a device of its account (warren-core doc 115), which
+    /// every manager registers and asks as.
+    device: Option<InstallDevice>,
+    /// Told once a manager's device was revoked from another device.
+    revocation_sink: Option<RevocationSink>,
 }
 
 /// One wallet's token manager, and whether it has read the token directory
@@ -184,7 +196,24 @@ impl<T: HttpTransport + 'static> TokenMint<T> {
             ban_sink: None,
             route_kem_trust: RouteKemTrust::default(),
             rotation_dir: None,
+            device: None,
+            revocation_sink: None,
         }
+    }
+
+    /// Registers every wallet's manager as `device`: each refresh registers
+    /// it, every issue request names it, and the name the registry answers is
+    /// kept for the next start.
+    pub(crate) fn with_device(mut self, device: InstallDevice) -> Self {
+        self.device = Some(device);
+        self
+    }
+
+    /// Tells `sink` once when the device was revoked; that manager's refresh
+    /// then stops for good.
+    pub(crate) fn with_revocation_sink(mut self, sink: RevocationSink) -> Self {
+        self.revocation_sink = Some(sink);
+        self
     }
 
     /// Keeps the install's token rotation in `dir`, so the next process leads
@@ -221,14 +250,18 @@ impl<T: HttpTransport + 'static> TokenMint<T> {
         key: BlindingKey,
         make_client: impl FnOnce() -> WarrenApiClient<T>,
     ) -> WalletTokens<T> {
+        let device_id = self.device.as_ref().map(|d| d.identity().device_id);
         let mut managers = self.managers.lock();
         managers
-            .entry(wallet_pubkey)
+            .entry((wallet_pubkey, device_id))
             .or_insert_with(|| {
                 let manager = Arc::new(
-                    with_install_rotation(
-                        TokenManager::new(Arc::new(make_client()), key),
-                        self.rotation_dir.as_deref(),
+                    with_install_device(
+                        with_install_rotation(
+                            TokenManager::new(Arc::new(make_client()), key),
+                            self.rotation_dir.as_deref(),
+                        ),
+                        self.device.as_ref(),
                     )
                     .with_mint_horizon(MINT_HORIZON_EPOCHS)
                     .with_server_pubkey_pins(self.route_kem_trust.server_pins.iter().cloned()),
@@ -255,7 +288,11 @@ impl<T: HttpTransport + 'static> TokenMint<T> {
                     self.persist.clone(),
                     self.route_kem_trust.remembered_at.clone(),
                     wallet_pubkey,
-                    self.ban_sink.clone(),
+                    Sinks {
+                        ban: self.ban_sink.clone(),
+                        revocation: self.revocation_sink.clone(),
+                        device: self.device.clone(),
+                    },
                 );
                 wallet
             })
@@ -289,14 +326,23 @@ impl<T: HttpTransport + 'static> TokenMint<T> {
 /// only mints epochs it has not attempted yet, so in steady state a round
 /// costs one unsigned directory fetch. Every round is announced on the
 /// wallet's credentials once what it read is in force.
+/// Where a refresh round's verdicts go besides the store.
+struct Sinks {
+    ban: Option<BanSink>,
+    revocation: Option<RevocationSink>,
+    /// Keeps the name the registry answers.
+    device: Option<InstallDevice>,
+}
+
 fn spawn_refresh<T: HttpTransport + 'static>(
     wallet: WalletTokens<T>,
     now: NowFn,
     persist: Option<Arc<PersistFile>>,
     route_admission_file: Option<PathBuf>,
     wallet_pubkey: [u8; 32],
-    ban_sink: Option<BanSink>,
+    sinks: Sinks,
 ) {
+    let sinks = Arc::new(sinks);
     let WalletTokens {
         manager,
         directory_read,
@@ -312,9 +358,20 @@ fn spawn_refresh<T: HttpTransport + 'static>(
             let now = Arc::clone(&now);
             let persist = persist.clone();
             let route_admission_file = route_admission_file.clone();
-            let ban_sink = ban_sink.clone();
+            let sinks = Arc::clone(&sinks);
             async move {
                 let refreshed = refresh_announcing_mints(&manager, &credentials, &*now).await;
+                if settle_round(&manager, sinks.device.as_ref()) {
+                    announce_refresh(&credentials, &manager, now());
+                    log::info!(
+                        "Warren: this device was disconnected from another device of the \
+                         account; its token refresh stops"
+                    );
+                    if let Some(sink) = &sinks.revocation {
+                        sink(&wallet_pubkey);
+                    }
+                    return Round::Over;
+                }
                 let succeeded = match refreshed {
                     // Log the current-epoch stock so a successful-but-empty
                     // refresh (the issuer refused this account's epoch) is
@@ -347,7 +404,8 @@ fn spawn_refresh<T: HttpTransport + 'static>(
                     // retries. Same message as the desktop twin; the error chain
                     // carries no token or seed material.
                     Err(e) => {
-                        if ban_sink
+                        if sinks
+                            .ban
                             .as_ref()
                             .is_some_and(|sink| sink(&wallet_pubkey, &e))
                         {
@@ -449,6 +507,13 @@ mod android {
                     crate::standing::store().on_refresh_error(wallet, error, now_unix_secs())
                 }))
                 .with_route_kem_trust(route_kem_trust());
+            let mint = mint.with_revocation_sink(Arc::new(|_| {
+                crate::devices::registry().on_revoked();
+            }));
+            let mint = match crate::devices::registry().device() {
+                Some(device) => mint.with_device(device.clone()),
+                None => mint,
+            };
             match APP_FILES_DIR.get() {
                 Some(dir) => mint.with_rotation_dir(dir),
                 None => mint,
@@ -544,6 +609,15 @@ mod tests {
         issue_calls: AtomicUsize,
         /// The blinded messages of every issue request, in arrival order.
         blinded: parking_lot::Mutex<Vec<Vec<String>>>,
+        /// Every request that reached the transport.
+        requests: AtomicUsize,
+        /// Every device registration, in order.
+        registrations: parking_lot::Mutex<Vec<warren_api::DeviceRegistration>>,
+        /// The device each issue request named.
+        issued_as: parking_lot::Mutex<Vec<Option<warren_api::DeviceId>>>,
+        /// Answers registrations and issue requests with the registry's
+        /// revocation (403 `{"error":"device_revoked"}`).
+        revoke_device: AtomicBool,
     }
 
     #[derive(Clone)]
@@ -568,6 +642,10 @@ mod tests {
                 fail_transport: AtomicBool::new(false),
                 issue_calls: AtomicUsize::new(0),
                 blinded: parking_lot::Mutex::new(Vec::new()),
+                requests: AtomicUsize::new(0),
+                registrations: parking_lot::Mutex::new(Vec::new()),
+                issued_as: parking_lot::Mutex::new(Vec::new()),
+                revoke_device: AtomicBool::new(false),
             }))
         }
 
@@ -607,9 +685,34 @@ mod tests {
             if self.0.fail_transport.load(Ordering::SeqCst) {
                 return Err(TransportError::Connect("fake transport down".to_owned()));
             }
+            self.0.requests.fetch_add(1, Ordering::SeqCst);
             let ok = |body: Vec<u8>| Ok(HttpResponse::new(200, body));
             if request.url.ends_with("/v1/tokens/keys") {
                 return ok(serde_json::to_vec(&self.directory()).unwrap());
+            }
+            let revoked = || {
+                Ok(HttpResponse::new(
+                    403,
+                    br#"{"error":"device_revoked"}"#.to_vec(),
+                ))
+            };
+            if request.url.ends_with("/v1/devices") {
+                let registration: warren_api::DeviceRegistration =
+                    serde_json::from_slice(&request.body).unwrap();
+                self.0.registrations.lock().push(registration.clone());
+                if self.0.revoke_device.load(Ordering::SeqCst) {
+                    return revoked();
+                }
+                return ok(serde_json::to_vec(&warren_api::DeviceView {
+                    device_id: registration.device_id,
+                    name: registration.name,
+                    platform: registration.platform,
+                    app_version: registration.app_version,
+                    registered_on: "2026-10-28".to_owned(),
+                    last_seen_on: "2026-10-28".to_owned(),
+                    this_device: true,
+                })
+                .unwrap());
             }
             assert!(
                 request.url.ends_with("/v1/tokens/issue"),
@@ -625,6 +728,10 @@ mod tests {
                 ));
             }
             let req: TokenIssueRequest = serde_json::from_slice(&request.body).unwrap();
+            self.0.issued_as.lock().push(req.device_id);
+            if self.0.revoke_device.load(Ordering::SeqCst) {
+                return revoked();
+            }
             self.0
                 .blinded
                 .lock()
@@ -1086,6 +1193,90 @@ mod tests {
         assert_eq!(
             restored, first_batch,
             "the first dial after process death draws the restored batch"
+        );
+    }
+
+    /// The install's device kept in `dir`, as Android registers it.
+    fn install_device(dir: &std::path::Path) -> warren_standing::device::InstallDevice {
+        warren_standing::device::InstallDevice::new(
+            dir,
+            warren_api::DevicePlatform::Android,
+            "1.1.55",
+        )
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_mint_given_the_install_device_registers_it_and_asks_as_it() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let kept = install_device(dir.path()).identity();
+        let issuer = FakeIssuer::new(&[100]);
+        let mint = TokenMint::new(now_fixed(), None).with_device(install_device(dir.path()));
+
+        let source = source_a(&mint, &issuer);
+        wait_for(|| !source().is_empty()).await;
+
+        let registered = issuer.0.registrations.lock().clone();
+        assert_eq!(
+            registered.first().map(|r| (r.device_id, r.platform)),
+            Some((kept.device_id, warren_api::DevicePlatform::Android))
+        );
+        let issued_as = issuer.0.issued_as.lock().clone();
+        assert!(!issued_as.is_empty());
+        assert!(issued_as.iter().all(|id| *id == Some(kept.device_id)));
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_revoked_device_is_reported_once_and_its_refresh_stops() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let issuer = FakeIssuer::new(&[100]);
+        issuer.0.revoke_device.store(true, Ordering::SeqCst);
+        let reported = Arc::new(parking_lot::Mutex::new(Vec::new()));
+        let sink = Arc::clone(&reported);
+        let mint = TokenMint::new(now_fixed(), None)
+            .with_device(install_device(dir.path()))
+            .with_revocation_sink(Arc::new(move |wallet| sink.lock().push(*wallet)));
+
+        let source = source_a(&mint, &issuer);
+        wait_for(|| !reported.lock().is_empty()).await;
+        let requests = issuer.0.requests.load(Ordering::SeqCst);
+        tokio::time::advance(Duration::from_secs(3 * 600)).await;
+        for _ in 0..50 {
+            tokio::task::yield_now().await;
+        }
+
+        assert_eq!(*reported.lock(), vec![[1; 32]]);
+        assert_eq!(
+            issuer.0.requests.load(Ordering::SeqCst),
+            requests,
+            "a revoked device asks nothing more"
+        );
+        assert!(source().is_empty());
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_device_registered_again_after_its_revocation_gets_tokens_under_its_new_identity() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let issuer = FakeIssuer::new(&[100]);
+        issuer.0.revoke_device.store(true, Ordering::SeqCst);
+        let reported = Arc::new(AtomicUsize::new(0));
+        let sink = Arc::clone(&reported);
+        let mint = TokenMint::new(now_fixed(), None)
+            .with_device(install_device(dir.path()))
+            .with_revocation_sink(Arc::new(move |_| {
+                sink.fetch_add(1, Ordering::SeqCst);
+            }));
+        let _revoked = source_a(&mint, &issuer);
+        wait_for(|| reported.load(Ordering::SeqCst) == 1).await;
+
+        install_device(dir.path()).forget().expect("forgotten");
+        issuer.0.revoke_device.store(false, Ordering::SeqCst);
+        let again = source_a(&mint, &issuer);
+        wait_for(|| !again().is_empty()).await;
+
+        let registered = issuer.0.registrations.lock().clone();
+        assert_ne!(
+            registered.first().map(|r| r.device_id),
+            registered.last().map(|r| r.device_id)
         );
     }
 }
