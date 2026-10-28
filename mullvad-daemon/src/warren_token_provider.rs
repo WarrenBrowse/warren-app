@@ -58,8 +58,8 @@ pub(crate) use talpid_warren_tunnel::app_routes::admission::{
 };
 pub(crate) use talpid_warren_tunnel::app_routes::tokens::session_source;
 use talpid_warren_tunnel::app_routes::tokens::{
-    ISSUED_ELSEWHERE_WARNING, IssuedElsewhereNotice, announce_refresh, refresh_announcing_mints,
-    refresh_forever,
+    ISSUED_ELSEWHERE_WARNING, IssuedElsewhereNotice, Round, announce_refresh,
+    refresh_announcing_mints, refresh_forever,
 };
 use talpid_warren_tunnel::{
     SessionTokenSource,
@@ -191,7 +191,7 @@ fn spawn_refresh(
                 match refreshed {
                     Ok(_) => {
                         log::debug!("Warren v7 token refresh round succeeded");
-                        true
+                        Round::Refreshed
                     }
                     Err(e) => {
                         log::warn!("Warren v7 token refresh failed (keeping existing tokens): {e}");
@@ -200,7 +200,7 @@ fn spawn_refresh(
                             &wallet,
                             &e,
                         );
-                        false
+                        Round::Lost
                     }
                 }
             }

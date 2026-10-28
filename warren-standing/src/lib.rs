@@ -23,6 +23,7 @@
 //! entitlement mint and the slot each rule draws its envelope from, the piece
 //! the desktop daemon, Android and iOS present on every NAT-PMP request.
 
+pub mod device;
 pub mod entitlements;
 mod ledger;
 mod natpmp_slot;

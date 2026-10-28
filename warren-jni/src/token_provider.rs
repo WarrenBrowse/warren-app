@@ -44,7 +44,7 @@ use warren_api::{
 use warren_app_routes::Credentials;
 use warren_app_routes::admission::{RouteKemTrust, remember_route_admission};
 use warren_app_routes::tokens::{
-    ISSUED_ELSEWHERE_WARNING, IssuedElsewhereNotice, announce_minted, announce_refresh,
+    ISSUED_ELSEWHERE_WARNING, IssuedElsewhereNotice, Round, announce_minted, announce_refresh,
     refresh_announcing_mints, refresh_forever,
 };
 use warren_standing::token_rotation::with_install_rotation;
@@ -361,7 +361,11 @@ fn spawn_refresh<T: HttpTransport + 'static>(
                     }
                 };
                 announce_refresh(&credentials, &manager, now());
-                succeeded
+                if succeeded {
+                    Round::Refreshed
+                } else {
+                    Round::Lost
+                }
             }
         },
         // No offline-to-online edge reaches this process; the persisted bundle

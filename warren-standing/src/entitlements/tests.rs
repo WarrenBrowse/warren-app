@@ -10,8 +10,9 @@ use rand010::SeedableRng;
 use rand010::rngs::StdRng;
 use warren_api::transport::{HttpRequest, HttpResponse, HttpTransport, TransportError};
 use warren_api::{
-    AttributionTag, BlindingKey, EntitlementEnvelope, PubkeyHex, TokenEpochResponse,
-    TokenIssueRequest, TokenIssueResponse, TokenIssuerDirectory, TokenIssuerKey, WarrenApiClient,
+    AttributionTag, BlindingKey, DeviceId, DevicePlatform, DeviceRegistration, DeviceView,
+    EntitlementEnvelope, PubkeyHex, TokenEpochResponse, TokenIssueRequest, TokenIssueResponse,
+    TokenIssuerDirectory, TokenIssuerKey, WarrenApiClient,
 };
 use warren_contract::pf_attribution::{CIPHERTEXT_LEN, NONCE_LEN, TAG_VERSION, signing_preimage};
 use warren_identity::WarrenIdentity;
@@ -54,6 +55,17 @@ struct IssuerState {
     /// batch is served again with freshly minted tags, any other one is
     /// refused `already_issued`.
     ledger: Mutex<HashMap<u64, Vec<String>>>,
+    /// Every device registration (`POST /v1/devices`) that reached the
+    /// registry, in order.
+    registrations: Mutex<Vec<DeviceRegistration>>,
+    /// The device each issue request named.
+    issued_as: Mutex<Vec<Option<DeviceId>>>,
+    /// Answers registrations and issue requests with the registry's
+    /// revocation (403 `{"error":"device_revoked"}`).
+    revoke_device: AtomicBool,
+    /// The name the registry holds for the device, answered to every
+    /// registration whatever it carries: a rename made from another device.
+    registry_name: Mutex<Option<String>>,
 }
 
 #[derive(Clone)]
@@ -75,6 +87,10 @@ impl FakeIssuer {
             issue_calls: AtomicUsize::new(0),
             requests: AtomicUsize::new(0),
             ledger: Mutex::new(HashMap::new()),
+            registrations: Mutex::new(Vec::new()),
+            issued_as: Mutex::new(Vec::new()),
+            revoke_device: AtomicBool::new(false),
+            registry_name: Mutex::new(None),
         }))
     }
 
@@ -147,6 +163,40 @@ impl HttpTransport for FakeIssuer {
         if request.url.ends_with("/v1/port-entitlements/keys") {
             return ok(serde_json::to_vec(&self.directory()).unwrap());
         }
+        let revoked = || {
+            Ok(HttpResponse::new(
+                403,
+                br#"{"error":"device_revoked"}"#.to_vec(),
+            ))
+        };
+        if request.url.ends_with("/v1/devices") {
+            let registration: DeviceRegistration = serde_json::from_slice(&request.body).unwrap();
+            self.0
+                .registrations
+                .lock()
+                .unwrap()
+                .push(registration.clone());
+            if self.0.revoke_device.load(Ordering::SeqCst) {
+                return revoked();
+            }
+            let name = self
+                .0
+                .registry_name
+                .lock()
+                .unwrap()
+                .clone()
+                .unwrap_or(registration.name);
+            return ok(serde_json::to_vec(&DeviceView {
+                device_id: registration.device_id,
+                name,
+                platform: registration.platform,
+                app_version: registration.app_version,
+                registered_on: "2026-10-28".to_owned(),
+                last_seen_on: "2026-10-28".to_owned(),
+                this_device: true,
+            })
+            .unwrap());
+        }
         // A client that mints against the SESSION class gets credentials no
         // exit will accept for a port, so refuse to serve those paths here.
         assert!(
@@ -169,6 +219,10 @@ impl HttpTransport for FakeIssuer {
             );
         }
         let req: TokenIssueRequest = serde_json::from_slice(&request.body).unwrap();
+        self.0.issued_as.lock().unwrap().push(req.device_id);
+        if self.0.revoke_device.load(Ordering::SeqCst) {
+            return revoked();
+        }
         let mut epochs = Vec::new();
         for e in &req.epochs {
             if self.0.refuse_issuance.load(Ordering::SeqCst) {
@@ -1006,4 +1060,106 @@ async fn a_restarted_process_presents_the_entitlement_its_rule_held() {
 
     wait_for(|| provider().is_some()).await;
     assert_eq!(token_of(&provider().expect("served")), held);
+}
+
+/// The install's device, kept in `dir`, as a desktop daemon registers it.
+fn install_device(dir: &std::path::Path) -> crate::device::InstallDevice {
+    crate::device::InstallDevice::new(dir, DevicePlatform::Linux, "1.1.55")
+}
+
+#[tokio::test(start_paused = true)]
+async fn a_mint_given_the_install_device_registers_it_and_names_it_on_every_issue_request() {
+    let dir = tempfile::tempdir().expect("a temp dir");
+    let device = install_device(dir.path());
+    let kept = device.identity();
+    let issuer = FakeIssuer::new(&[100]);
+    let (_t, now) = clock(NOW);
+    let mint = EntitlementMint::new(now).with_device(device);
+
+    let source = mint.slot_source([1; 32], key(), || client(&issuer));
+    wait_for(|| source.credential(0).is_some()).await;
+
+    let registrations = issuer.0.registrations.lock().unwrap().clone();
+    assert_eq!(
+        registrations.first().map(|r| (r.device_id, r.platform)),
+        Some((kept.device_id, DevicePlatform::Linux))
+    );
+    let issued_as = issuer.0.issued_as.lock().unwrap().clone();
+    assert!(!issued_as.is_empty());
+    assert!(issued_as.iter().all(|id| *id == Some(kept.device_id)));
+}
+
+#[tokio::test(start_paused = true)]
+async fn a_revoked_device_is_reported_once_and_its_mint_stops_asking() {
+    let dir = tempfile::tempdir().expect("a temp dir");
+    let issuer = FakeIssuer::new(&[100]);
+    issuer.0.revoke_device.store(true, Ordering::SeqCst);
+    let (_t, now) = clock(NOW);
+    let reported = Arc::new(Mutex::new(Vec::new()));
+    let sink = Arc::clone(&reported);
+    let mint = EntitlementMint::new(now)
+        .with_device(install_device(dir.path()))
+        .with_revocation_sink(Arc::new(move |wallet| sink.lock().unwrap().push(*wallet)));
+
+    let source = mint.slot_source([1; 32], key(), || client(&issuer));
+    wait_for(|| !reported.lock().unwrap().is_empty()).await;
+    let rounds = issuer.requests();
+    tokio::time::advance(super::REFRESH_INTERVAL * 3).await;
+    for _ in 0..50 {
+        tokio::task::yield_now().await;
+    }
+
+    assert_eq!(*reported.lock().unwrap(), vec![[1; 32]]);
+    assert_eq!(
+        issuer.requests(),
+        rounds,
+        "a revoked device asks nothing more"
+    );
+    assert!(source.credential(0).is_none());
+}
+
+#[tokio::test(start_paused = true)]
+async fn a_device_registered_again_after_its_revocation_mints_under_its_new_identity() {
+    let dir = tempfile::tempdir().expect("a temp dir");
+    let issuer = FakeIssuer::new(&[100]);
+    issuer.0.revoke_device.store(true, Ordering::SeqCst);
+    let (_t, now) = clock(NOW);
+    let reported = Arc::new(AtomicUsize::new(0));
+    let sink = Arc::clone(&reported);
+    let mint = EntitlementMint::new(now)
+        .with_device(install_device(dir.path()))
+        .with_revocation_sink(Arc::new(move |_| {
+            sink.fetch_add(1, Ordering::SeqCst);
+        }));
+    let _revoked = mint.slot_source([1; 32], key(), || client(&issuer));
+    wait_for(|| reported.load(Ordering::SeqCst) == 1).await;
+
+    install_device(dir.path()).forget().expect("forgotten");
+    issuer.0.revoke_device.store(false, Ordering::SeqCst);
+    let again = mint.slot_source([1; 32], key(), || client(&issuer));
+    wait_for(|| again.credential(0).is_some()).await;
+
+    let registrations = issuer.0.registrations.lock().unwrap().clone();
+    assert_ne!(
+        registrations.first().map(|r| r.device_id),
+        registrations.last().map(|r| r.device_id),
+        "the new identity registers, not the revoked one"
+    );
+}
+
+#[tokio::test(start_paused = true)]
+async fn the_name_the_registry_answers_is_kept_for_the_next_start() {
+    let dir = tempfile::tempdir().expect("a temp dir");
+    let issuer = FakeIssuer::new(&[100]);
+    *issuer.0.registry_name.lock().unwrap() = Some("calm heron".to_owned());
+    let (_t, now) = clock(NOW);
+    let mint = EntitlementMint::new(now).with_device(install_device(dir.path()));
+
+    let source = mint.slot_source([1; 32], key(), || client(&issuer));
+    wait_for(|| source.credential(0).is_some()).await;
+    for _ in 0..50 {
+        tokio::task::yield_now().await;
+    }
+
+    assert_eq!(install_device(dir.path()).identity().name, "calm heron");
 }

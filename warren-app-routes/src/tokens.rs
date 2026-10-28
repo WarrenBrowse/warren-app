@@ -207,6 +207,18 @@ pub const FIRST_RETRY: Duration = Duration::from_secs(15);
 /// which a waiting first tunnel can take before the round ends.
 pub const MINTED_POLL: Duration = Duration::from_millis(100);
 
+/// How one refresh round of a wallet's credentials ended.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Round {
+    /// The round went through: the next one runs a whole period later.
+    Refreshed,
+    /// The round was lost and runs again soon.
+    Lost,
+    /// The wallet's manager will never be served again (its device was
+    /// revoked from another device of the account): no round runs again.
+    Over,
+}
+
 /// Runs `refresh` now and after each wait: [`REFRESH_PERIOD`] once a round
 /// succeeds, from [`FIRST_RETRY`] doubling up to the period after a failure.
 ///
@@ -221,17 +233,21 @@ pub async fn refresh_forever<F, R>(
     mut online: Option<tokio::sync::watch::Receiver<u64>>,
 ) where
     F: FnMut() -> R,
-    R: std::future::Future<Output = bool>,
+    R: std::future::Future<Output = Round>,
 {
     let mut retry = FIRST_RETRY;
     loop {
-        if refresh().await {
-            retry = FIRST_RETRY;
-            tokio::time::sleep(REFRESH_PERIOD).await;
-        } else {
-            let wait = retry;
-            retry = (retry * 2).min(REFRESH_PERIOD);
-            sleep_or_online(wait, &mut online).await;
+        match refresh().await {
+            Round::Refreshed => {
+                retry = FIRST_RETRY;
+                tokio::time::sleep(REFRESH_PERIOD).await;
+            }
+            Round::Lost => {
+                let wait = retry;
+                retry = (retry * 2).min(REFRESH_PERIOD);
+                sleep_or_online(wait, &mut online).await;
+            }
+            Round::Over => return,
         }
     }
 }
@@ -629,8 +645,8 @@ mod tests {
     /// When each round of a refresh task runs, in seconds from its start,
     /// given whether each round succeeds.
     async fn refresh_rounds(outcomes: &[bool]) -> Vec<u64> {
-        let (rounds, task) = rounds_over(outcomes, None);
-        let rounds = take_rounds(rounds, 5).await;
+        let (mut rounds, task) = rounds_over(outcomes, None);
+        let rounds = take_rounds(&mut rounds, 5).await;
         task.abort();
         rounds
     }
@@ -644,13 +660,34 @@ mod tests {
         tokio::sync::mpsc::UnboundedReceiver<u64>,
         tokio::task::JoinHandle<()>,
     ) {
+        let rounds: Vec<super::Round> = outcomes
+            .iter()
+            .map(|&went_through| {
+                if went_through {
+                    super::Round::Refreshed
+                } else {
+                    super::Round::Lost
+                }
+            })
+            .collect();
+        rounds_ending(&rounds, online)
+    }
+
+    /// [`rounds_over`], each round ending as `outcomes` says.
+    fn rounds_ending(
+        outcomes: &[super::Round],
+        online: Option<tokio::sync::watch::Receiver<u64>>,
+    ) -> (
+        tokio::sync::mpsc::UnboundedReceiver<u64>,
+        tokio::task::JoinHandle<()>,
+    ) {
         let start = tokio::time::Instant::now();
         let (tx, rx) = tokio::sync::mpsc::unbounded_channel();
         let mut outcomes = Vec::from(outcomes).into_iter();
         let task = tokio::spawn(super::refresh_forever(
             move || {
                 let _ = tx.send(start.elapsed().as_secs());
-                let outcome = outcomes.next().unwrap_or(true);
+                let outcome = outcomes.next().unwrap_or(super::Round::Refreshed);
                 async move { outcome }
             },
             online,
@@ -658,7 +695,7 @@ mod tests {
         (rx, task)
     }
 
-    async fn take_rounds(mut rx: tokio::sync::mpsc::UnboundedReceiver<u64>, n: usize) -> Vec<u64> {
+    async fn take_rounds(rx: &mut tokio::sync::mpsc::UnboundedReceiver<u64>, n: usize) -> Vec<u64> {
         let mut rounds = Vec::new();
         while rounds.len() < n {
             rounds.push(rx.recv().await.expect("the task runs"));
@@ -696,9 +733,9 @@ mod tests {
     async fn a_closed_online_edge_leaves_the_retry_schedule_as_it_is() {
         let (online, edge) = tokio::sync::watch::channel(0u64);
         drop(online);
-        let (rx, task) = rounds_over(&[false, false, true], Some(edge));
+        let (mut rx, task) = rounds_over(&[false, false, true], Some(edge));
 
-        assert_eq!(take_rounds(rx, 3).await, [0, 15, 45]);
+        assert_eq!(take_rounds(&mut rx, 3).await, [0, 15, 45]);
         task.abort();
     }
 
@@ -707,6 +744,16 @@ mod tests {
         let rounds = refresh_rounds(&[false, false, true, true, true]).await;
 
         assert_eq!(rounds, [0, 15, 45, 645, 1245]);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_round_that_ends_the_wallet_runs_no_other() {
+        let (mut rx, task) = rounds_ending(&[super::Round::Lost, super::Round::Over], None);
+
+        assert_eq!(take_rounds(&mut rx, 2).await, [0, 15]);
+        let later = tokio::time::timeout(super::REFRESH_PERIOD * 3, rx.recv()).await;
+        assert_eq!(later, Ok(None), "the loop ended and dropped its refresh");
+        task.await.expect("the loop returns");
     }
 
     #[tokio::test(start_paused = true)]

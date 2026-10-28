@@ -34,11 +34,12 @@ use std::sync::{Arc, Mutex, PoisonError};
 use std::time::Duration;
 
 use warren_api::{
-    BlindingKey, ClientError, HttpTransport, PortEntitlementManager, TokenClientError,
+    BlindingKey, ClientError, DeviceId, HttpTransport, PortEntitlementManager, TokenClientError,
     WarrenApiClient,
 };
 
 use crate::PortRefusal;
+use crate::device::InstallDevice;
 
 /// Unix-seconds clock seam. The clock is a system boundary: tests drive epochs
 /// deterministically, production wires the system clock.
@@ -47,6 +48,11 @@ pub type NowFn = Arc<dyn Fn() -> u64 + Send + Sync>;
 /// Told of every refresh failure with the wallet it concerns; answers whether
 /// it was a ban, which the caller then enforces.
 pub type BanSink = Arc<dyn Fn(&[u8; 32], &TokenClientError) -> bool + Send + Sync>;
+
+/// Told once that the install's device was revoked from another device of
+/// the account (warren-core doc 115), with the wallet it concerns. The caller
+/// disconnects and forgets the identity; the mint of that device has stopped.
+pub type RevocationSink = Arc<dyn Fn(&[u8; 32]) + Send + Sync>;
 
 /// What one rule presents on a NAT-PMP cycle, or `None` for a bare request.
 /// Structurally the engine's `warrenguard_natpmp_client::CredentialProvider`,
@@ -191,11 +197,18 @@ pub const FIRST_CREDENTIAL_POLL: Duration = Duration::from_millis(250);
 /// session no longer races the mint.
 const PROBE_SLOT: usize = 0;
 
-/// Process-lived registry of one [`PortEntitlementManager`] per wallet.
+/// A wallet's public key, and the device its manager registers as.
+type MintKey = ([u8; 32], Option<DeviceId>);
+
+/// Process-lived registry of one [`PortEntitlementManager`] per wallet and
+/// device: an install logged in again after its revocation registers under a
+/// new identity, and the revoked manager answers nothing for good.
 pub struct EntitlementMint<T> {
     now: NowFn,
-    managers: Mutex<HashMap<[u8; 32], Arc<MintedSlots<T>>>>,
+    managers: Mutex<HashMap<MintKey, Arc<MintedSlots<T>>>>,
     ban_sink: Option<BanSink>,
+    device: Option<InstallDevice>,
+    revocation_sink: Option<RevocationSink>,
     runtime: Option<tokio::runtime::Handle>,
     activity: Option<tokio::sync::watch::Receiver<bool>>,
     online_edge: Option<tokio::sync::watch::Receiver<u64>>,
@@ -207,6 +220,8 @@ impl<T: HttpTransport + 'static> EntitlementMint<T> {
             now,
             managers: Mutex::new(HashMap::new()),
             ban_sink: None,
+            device: None,
+            revocation_sink: None,
             runtime: None,
             activity: None,
             online_edge: None,
@@ -229,6 +244,23 @@ impl<T: HttpTransport + 'static> EntitlementMint<T> {
     #[must_use]
     pub fn with_ban_sink(mut self, sink: BanSink) -> Self {
         self.ban_sink = Some(sink);
+        self
+    }
+
+    /// Registers every wallet's manager as `device` (warren-core doc 115):
+    /// each refresh registers it, every issue request names it, and the name
+    /// the registry answers is kept for the next start.
+    #[must_use]
+    pub fn with_device(mut self, device: InstallDevice) -> Self {
+        self.device = Some(device);
+        self
+    }
+
+    /// Tells `sink` once when the device was revoked. The mint of that
+    /// device stops asking and its slots present nothing from then on.
+    #[must_use]
+    pub fn with_revocation_sink(mut self, sink: RevocationSink) -> Self {
+        self.revocation_sink = Some(sink);
         self
     }
 
@@ -289,20 +321,26 @@ impl<T: HttpTransport + 'static> EntitlementMint<T> {
         blinding: BlindingKey,
         make_client: impl FnOnce() -> WarrenApiClient<T>,
     ) -> Arc<MintedSlots<T>> {
+        let registration = self.device.as_ref().map(InstallDevice::registration);
         let mut managers = self.managers.lock().unwrap_or_else(PoisonError::into_inner);
         managers
-            .entry(wallet_pubkey)
+            .entry((wallet_pubkey, registration.as_ref().map(|r| r.device_id)))
             .or_insert_with(|| {
-                let manager = Arc::new(PortEntitlementManager::new(
-                    Arc::new(make_client()),
-                    blinding,
-                ));
+                let manager = PortEntitlementManager::new(Arc::new(make_client()), blinding);
+                let manager = Arc::new(match registration {
+                    Some(registration) => manager.with_device(registration),
+                    None => manager,
+                });
                 let shortage = Arc::new(Shortage::default());
                 let refresh = refresh_forever(
                     manager.clone(),
                     self.now.clone(),
                     wallet_pubkey,
-                    self.ban_sink.clone(),
+                    Sinks {
+                        ban: self.ban_sink.clone(),
+                        revocation: self.revocation_sink.clone(),
+                        device: self.device.clone(),
+                    },
                     self.activity.clone(),
                     self.online_edge.clone(),
                     Arc::clone(&shortage),
@@ -326,6 +364,14 @@ impl<T: HttpTransport + 'static> EntitlementMint<T> {
     }
 }
 
+/// Where a refresh round's verdicts go besides the batch.
+struct Sinks {
+    ban: Option<BanSink>,
+    revocation: Option<RevocationSink>,
+    /// Keeps the name the registry answers.
+    device: Option<InstallDevice>,
+}
+
 /// The first round runs immediately (stock as soon as a wallet is seen), then
 /// every [`REFRESH_INTERVAL`] after a round that went through or that the
 /// issuer answered with a ban, and from [`FIRST_RETRY`] doubling up to the
@@ -336,7 +382,7 @@ async fn refresh_forever<T: HttpTransport + 'static>(
     manager: Arc<PortEntitlementManager<T>>,
     now: NowFn,
     wallet_pubkey: [u8; 32],
-    ban_sink: Option<BanSink>,
+    sinks: Sinks,
     mut activity: Option<tokio::sync::watch::Receiver<bool>>,
     mut online_edge: Option<tokio::sync::watch::Receiver<u64>>,
     shortage: Arc<Shortage>,
@@ -357,6 +403,19 @@ async fn refresh_forever<T: HttpTransport + 'static>(
         }
         let n = now();
         let outcome = manager.refresh_auto(n).await;
+        if manager.device_revoked() {
+            log::info!(
+                "Warren port-entitlement refresh stopped: this device was disconnected from \
+                 another device of the account"
+            );
+            if let Some(sink) = &sinks.revocation {
+                sink(&wallet_pubkey);
+            }
+            return;
+        }
+        if let (Some(device), Some(name)) = (&sinks.device, manager.device_name()) {
+            device.keep_name(&name);
+        }
         shortage.on_refresh(&outcome);
         let lost = match outcome {
             // Presence only, never the credential: a refresh that answered 200
@@ -394,7 +453,8 @@ async fn refresh_forever<T: HttpTransport + 'static>(
                 true
             }
             Err(e) => {
-                if ban_sink
+                if sinks
+                    .ban
                     .as_ref()
                     .is_some_and(|sink| sink(&wallet_pubkey, &e))
                 {
