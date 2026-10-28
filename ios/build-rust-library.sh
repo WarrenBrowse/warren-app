@@ -52,7 +52,18 @@ fi
 # /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/libexec
 # When this happens, cargo will be tricked into building for the wrong architecture, which will lead to linker issues down the line.
 # cargo does not need to know about all this, therefore, set the path to the bare minimum
-export PATH="${HOME}/.cargo/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/Apple/usr/bin:"
+#
+# The rustup proxies live in ~/.cargo/bin where rustup-init installed them, and
+# in the prefix of Homebrew's rustup where that one did: it puts nothing in
+# ~/.cargo/bin. The GitHub macOS runner image moved to the latter on 2026-10-21,
+# and every iOS build there failed on a cargo that did not exist.
+RUSTUP_PROXIES="${HOME}/.cargo/bin"
+for brew_rustup in /opt/homebrew/opt/rustup/bin /usr/local/opt/rustup/bin; do
+    if [ ! -x "$RUSTUP_PROXIES/cargo" ] && [ -x "$brew_rustup/cargo" ]; then
+        RUSTUP_PROXIES="$brew_rustup"
+    fi
+done
+export PATH="${RUSTUP_PROXIES}:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/Library/Apple/usr/bin:"
 # Since some of the dependencies come from homebrew, add it manually as well
 export PATH="${PATH}:/opt/homebrew/bin:"
 
@@ -64,7 +75,7 @@ fi
 for arch in $ARCHS; do
     case "$arch" in
         arm64)
-            "$HOME"/.cargo/bin/cargo build $LOCKEDFLAG -p "$FFI_TARGET" --lib $RELFLAG --target $TARGET ${FEATURE_FLAGS:+--features "$FEATURE_FLAGS"}
+            "$RUSTUP_PROXIES"/cargo build $LOCKEDFLAG -p "$FFI_TARGET" --lib $RELFLAG --target $TARGET ${FEATURE_FLAGS:+--features "$FEATURE_FLAGS"}
             ;;
     esac
 done
