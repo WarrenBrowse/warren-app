@@ -30,6 +30,11 @@ pub(crate) enum DialErrorClass {
     Handshake,
     /// The exit refused the session by policy.
     Rejected,
+    /// A tokens-only session had no token the exit would admit: the issuer
+    /// served the epoch to another batch of the wallet, or the exit refused
+    /// every token. Never the wallet's fault on this device, and no redial
+    /// fixes it before the store refills.
+    NoToken,
     /// Anything else.
     Other,
 }
@@ -41,6 +46,7 @@ impl DialErrorClass {
             Self::Refused => "refused",
             Self::Handshake => "handshake",
             Self::Rejected => "rejected",
+            Self::NoToken => "no-token",
             Self::Other => "other",
         }
     }
@@ -57,6 +63,7 @@ pub(crate) fn class_of(error: &warrenguard_transport::multihop::MultiHopError) -
         | MultiHopError::Connect(_)
         | MultiHopError::Handshake(_)
         | MultiHopError::TcpFallback(_) => DialErrorClass::Handshake,
+        MultiHopError::NoSessionToken(_) => DialErrorClass::NoToken,
         _ => DialErrorClass::Other,
     }
 }
@@ -175,5 +182,14 @@ mod tests {
             )),
             DialErrorClass::Rejected
         );
+    }
+
+    #[test]
+    fn a_session_with_no_admissible_token_is_named_as_such() {
+        use warrenguard_transport::multihop::{MultiHopError, NoSessionTokenCause};
+        let class = class_of(&MultiHopError::NoSessionToken(NoSessionTokenCause::Empty));
+
+        assert_eq!(class, DialErrorClass::NoToken);
+        assert_eq!(class.word(), "no-token");
     }
 }
