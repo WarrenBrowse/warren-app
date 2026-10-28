@@ -33,9 +33,14 @@ const WARREN_API_URL: &str = warren_product_env::API_URL;
 
 type Manager = TokenManager<ReqwestTransport>;
 
-/// One manager per wallet, reused across reconnects so its RAM token store and
-/// once-per-epoch issuance bookkeeping survive between sessions.
-static MANAGERS: OnceLock<Mutex<HashMap<[u8; 32], Arc<Manager>>>> = OnceLock::new();
+/// A wallet's public key, and the device its manager asks as.
+type WalletKey = ([u8; 32], Option<warren_api::DeviceId>);
+
+/// One manager per wallet and device, reused across reconnects so its RAM
+/// token store and once-per-epoch issuance bookkeeping survive between
+/// sessions. A wallet logged in again after its device was revoked asks as a
+/// new device, with a new manager.
+static MANAGERS: OnceLock<Mutex<HashMap<WalletKey, Arc<Manager>>>> = OnceLock::new();
 
 fn now_unix_secs() -> u64 {
     std::time::SystemTime::now()
@@ -57,7 +62,19 @@ fn spawn_refresh(manager: Arc<Manager>, wallet_pubkey: [u8; 32]) {
         loop {
             tick.tick().await;
             let now = now_unix_secs();
-            if let Err(e) = manager.refresh(now).await {
+            let refreshed = manager.refresh(now).await;
+            let devices = crate::warren_devices_ffi::registry();
+            if warren_standing::device::settle_round(&manager, devices.device()) {
+                // The registry revoked this device: the manager is never
+                // served again, and a running tunnel ends on the news.
+                tracing::info!(
+                    "Warren: this device was disconnected from another device of the account; \
+                     its token refresh stops"
+                );
+                devices.on_revoked();
+                return;
+            }
+            if let Err(e) = refreshed {
                 // The issuer refuses a banned wallet (warren-core doc 105 §5.3):
                 // that goes to the standing, which blocks the tunnel before an
                 // exit is dialed. A v7 client never presents its wallet to an
@@ -99,21 +116,26 @@ pub(crate) fn provider_for(
     rotation_dir: Option<&std::path::Path>,
 ) -> SessionTokenProvider {
     let pubkey = signing_key.verifying_key().to_bytes();
+    let device = crate::warren_devices_ffi::registry().device();
+    let device_id = device.map(|device| device.identity().device_id);
 
     let map = MANAGERS.get_or_init(|| Mutex::new(HashMap::new()));
     let manager = {
         let mut guard = map.lock().expect("token manager map poisoned");
         guard
-            .entry(pubkey)
+            .entry((pubkey, device_id))
             .or_insert_with(|| {
                 let client = warren_standing::server_clock::attach(WarrenApiClient::new(
                     WARREN_API_URL.to_owned(),
                     WarrenIdentity::from_signing_key(signing_key),
                     ReqwestTransport::new(),
                 ));
-                let manager = Arc::new(warren_standing::token_rotation::with_install_rotation(
-                    TokenManager::new(Arc::new(client), blinding),
-                    rotation_dir,
+                let manager = Arc::new(warren_standing::device::with_install_device(
+                    warren_standing::token_rotation::with_install_rotation(
+                        TokenManager::new(Arc::new(client), blinding),
+                        rotation_dir,
+                    ),
+                    device,
                 ));
                 spawn_refresh(manager.clone(), pubkey);
                 manager

@@ -239,6 +239,12 @@ public enum BlockedStateReason: String, Codable, Equatable, Sendable {
     /// Not an expiry: it clears once another device disconnects.
     case tooManyDevices
 
+    /// No session token the exit admits although the subscription is active:
+    /// other devices of the account, or an older client on one of them, hold
+    /// this epoch's tokens. The screens offer the account's devices on it
+    /// (warren-core doc 115).
+    case noSessionToken
+
     /// Device revoked.
     case deviceRevoked
 
@@ -267,7 +273,7 @@ public enum BlockedStateReason: String, Codable, Equatable, Sendable {
             .invalidRelayPublicKey, .noRelaysSatisfyingObfuscationPortConstraints, .offline:
             return true
         case .deviceRevoked, .deviceLoggedOut, .tunnelAdapter, .accountExpired, .invalidAccount, .unknown,
-            .accountBanned, .accountBannedPortForwarding, .tooManyDevices:
+            .accountBanned, .accountBannedPortForwarding, .tooManyDevices, .noSessionToken:
             return false
         }
     }

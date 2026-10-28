@@ -131,6 +131,32 @@ final class WarrenQuinnActorTests: XCTestCase {
         XCTAssertEqual(blocked.reason, .tooManyDevices)
     }
 
+    /// The registry revoked this device from another device of the account:
+    /// the revoked state, which takes the app to its revoked screen.
+    func test_applyEvent_deviceRevoked_surfacesDeviceRevoked() async {
+        let actor = makeStartedActor()
+        actor.applyEvent(.connected)
+        actor.applyEvent(.deviceRevoked)
+        let state = await actor.observedState
+        guard case let .error(blocked) = state else {
+            return XCTFail("Expected .error, got \(state)")
+        }
+        XCTAssertEqual(blocked.reason, .deviceRevoked)
+    }
+
+    /// No token the exit admits, for another reason than the device limit:
+    /// its own reason, on which the screens offer the account's devices.
+    func test_applyEvent_noSessionToken_surfacesNoSessionToken() async {
+        let actor = makeStartedActor()
+        actor.applyEvent(.connected)
+        actor.applyEvent(.noSessionToken)
+        let state = await actor.observedState
+        guard case let .error(blocked) = state else {
+            return XCTFail("Expected .error, got \(state)")
+        }
+        XCTAssertEqual(blocked.reason, .noSessionToken)
+    }
+
     /// An exit too old to say why refuses a token another device holds as it
     /// refuses an invalid one. When the stored subscription is active, every
     /// token refused without a reason is the device limit, never an expiry.

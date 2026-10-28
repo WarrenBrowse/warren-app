@@ -216,6 +216,13 @@ public enum WarrenTunnelEvent: Sendable {
     /// `unauthorized`: the device limit when the subscription is known to be
     /// active, an expiry otherwise.
     case tokensRefused
+    /// This device was revoked from another device of the account
+    /// (warren-core doc 115): its token refresh stopped and its device
+    /// identity is forgotten. Terminal; the app shows its revoked screen.
+    case deviceRevoked
+    /// No session token the exit admits, for another reason than the device
+    /// limit: the screens offer the account's devices on it.
+    case noSessionToken
     case reconnecting
     case failover(toExit: String)
     case natPmpMapped(internalPort: UInt16, externalPort: UInt16, lifetime: UInt32)
@@ -541,6 +548,8 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
         case Banned: mappedState = .failed("account banned")
         case DeviceLimit: mappedState = .failed("device limit")
         case TokensRefused: mappedState = .failed("session tokens refused")
+        case DeviceRevoked: mappedState = .failed("device revoked")
+        case NoSessionToken: mappedState = .failed("no session token")
         default: mappedState = .disconnected
         }
         let connectedDuration: UInt64? =
@@ -707,6 +716,13 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
                 return tupleFrom32(bytes)
             }
 
+        // The install's device (warren-core doc 115) lives beside the pin
+        // table, in the App Group container the app reads it from too, so the
+        // session tokens and port entitlements register and ask as it.
+        if let pinStorePath = config.pinStorePath {
+            Self.configureDevice(stateDirectory: (pinStorePath as NSString).deletingLastPathComponent)
+        }
+
         // Outer-most pin : exit endpoint + bypass CIDRs.
         let handlePtr: UnsafeMutablePointer<WarrenTunnelHandle>? =
             config.exitEndpoint.withCString { exitEndpointC in
@@ -775,6 +791,18 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
             }
         }
         return result >= 0 ? result : nil
+    }
+
+    /// Configures this process's device in the account's registry: its
+    /// identity kept in `stateDirectory` (the App Group container), registering
+    /// as `ios` with the bundle's version. The first call of a process wins.
+    public static func configureDevice(stateDirectory: String) {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
+        stateDirectory.withCString { dirC in
+            version.withCString { versionC in
+                warren_device_configure(dirC, versionC)
+            }
+        }
     }
 
     /// Trust a (possibly new) exit pubkey for `exitIdHex`, overwriting any
@@ -929,6 +957,8 @@ private let eventCallbackBridge:
         case EventUnauthorized: mapped = .unauthorized
         case EventDeviceLimit: mapped = .deviceLimit
         case EventTokensRefused: mapped = .tokensRefused
+        case EventDeviceRevoked: mapped = .deviceRevoked
+        case EventNoSessionToken: mapped = .noSessionToken
         case EventBanned:
             let reason = event.data_ban_reason.flatMap { String(cString: $0) } ?? ""
             let lapses = event.data_ban_lapses_at_unix_secs

@@ -75,15 +75,21 @@ mod ios {
     /// answers goes to the extension's standing, which blocks the tunnel.
     pub(crate) fn provider_for(signing_key: SigningKey, blinding: BlindingKey) -> SlotSource {
         let mint = MINT.get_or_init(|| {
-            let mint = EntitlementMint::new(Arc::new(now_unix_secs)).with_ban_sink(Arc::new(
-                |wallet, error| {
+            let mint = EntitlementMint::new(Arc::new(now_unix_secs))
+                .with_ban_sink(Arc::new(|wallet, error| {
                     crate::warren_standing_ffi::tunnel_store().on_refresh_error(
                         wallet,
                         error,
                         now_unix_secs(),
                     )
-                },
-            ));
+                }))
+                .with_revocation_sink(Arc::new(|_| {
+                    crate::warren_devices_ffi::registry().on_revoked();
+                }));
+            let mint = match crate::warren_devices_ffi::registry().device() {
+                Some(device) => mint.with_device(device.clone()),
+                None => mint,
+            };
             match crate::warren_ios_runtime() {
                 Ok(runtime) => mint.with_runtime(runtime),
                 Err(_) => mint,

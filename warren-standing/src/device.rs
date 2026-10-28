@@ -11,7 +11,8 @@
 
 use std::path::{Path, PathBuf};
 
-use warren_api::{DeviceIdentity, DevicePlatform, DeviceRegistration, HttpTransport, TokenManager};
+pub use warren_api::DevicePlatform;
+use warren_api::{DeviceIdentity, DeviceRegistration, HttpTransport, TokenManager};
 
 /// File under a client's state directory that keeps the device identity.
 pub const DEVICE_FILE: &str = "device";

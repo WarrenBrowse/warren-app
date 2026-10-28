@@ -174,6 +174,16 @@ pub enum WarrenTunnelStateC {
     /// `Unauthorized`: the app reads it as the device limit when it knows the
     /// subscription is active, and as an expiry otherwise.
     TokensRefused = 8,
+    /// This device was revoked from another device of the account
+    /// (warren-core doc 115): its token and entitlement refreshes stopped and
+    /// its device identity is forgotten. Terminal; the app shows its revoked
+    /// screen.
+    DeviceRevoked = 9,
+    /// The tokens-only session found no token the exit admits, for another
+    /// reason than every token being in use elsewhere (that one is
+    /// `DeviceLimit`): the store is empty for the epoch, or the exit refused
+    /// every token. The screens offer the account's devices on it.
+    NoSessionToken = 10,
 }
 
 /// Tunnel status snapshot.
@@ -241,6 +251,10 @@ pub enum WarrenTunnelEventTagC {
     EventDeviceLimit = 12,
     /// Terminal counterpart of `TokensRefused`.
     EventTokensRefused = 13,
+    /// Terminal counterpart of `DeviceRevoked`.
+    EventDeviceRevoked = 14,
+    /// Terminal counterpart of `NoSessionToken`.
+    EventNoSessionToken = 15,
 }
 
 /// Tagged-union event payload.
@@ -442,6 +456,11 @@ enum TerminalVerdict {
     DeviceLimit,
     /// Every session token was refused without a reason.
     TokensRefused,
+    /// The registry revoked this device.
+    DeviceRevoked,
+    /// No session token the exit admits, for another reason than the device
+    /// limit.
+    NoSessionToken,
     /// Everything else: the user disconnected, the tunnel was torn down, or
     /// the refusal was one iOS has nowhere to explain yet.
     Ordinary,
@@ -474,6 +493,31 @@ impl From<Option<warrenguard_multihop::RejectionReason>> for TerminalVerdict {
     }
 }
 
+/// How long a session whose watch closed waits for the supervisor's own
+/// verdict. The supervisor drops that watch as it returns, so its error
+/// follows the closure by a scheduling round, never by a dial.
+#[cfg(feature = "tunnel")]
+const SUPERVISOR_VERDICT_WAIT: std::time::Duration = std::time::Duration::from_millis(500);
+
+/// The verdict the supervisor's own stop calls for, `None` for a stop the
+/// exit's refusal (or its absence) already describes. A tokens-only session
+/// whose every token the exit said is in use elsewhere is the device limit;
+/// one that found no token for any other reason is
+/// [`TerminalVerdict::NoSessionToken`].
+#[cfg(feature = "tunnel")]
+fn supervisor_stop_verdict(
+    error: &warrenguard_transport::multihop::MultiHopError,
+) -> Option<TerminalVerdict> {
+    use warrenguard_transport::multihop::{MultiHopError, NoSessionTokenCause};
+    match error {
+        MultiHopError::NoSessionToken(NoSessionTokenCause::AllInUse) => {
+            Some(TerminalVerdict::DeviceLimit)
+        }
+        MultiHopError::NoSessionToken(_) => Some(TerminalVerdict::NoSessionToken),
+        _ => None,
+    }
+}
+
 /// The state and event a finished session ends on.
 ///
 /// Held as a pure function next to [`watch_transition`] for the same reason:
@@ -497,6 +541,14 @@ fn terminal_for(verdict: TerminalVerdict) -> (WarrenTunnelStateC, WarrenTunnelEv
         TerminalVerdict::TokensRefused => (
             WarrenTunnelStateC::TokensRefused,
             WarrenTunnelEventTagC::EventTokensRefused,
+        ),
+        TerminalVerdict::DeviceRevoked => (
+            WarrenTunnelStateC::DeviceRevoked,
+            WarrenTunnelEventTagC::EventDeviceRevoked,
+        ),
+        TerminalVerdict::NoSessionToken => (
+            WarrenTunnelStateC::NoSessionToken,
+            WarrenTunnelEventTagC::EventNoSessionToken,
         ),
         TerminalVerdict::Ordinary => (
             WarrenTunnelStateC::Disconnected,
@@ -1736,23 +1788,35 @@ fn spawn_multi_hop(
         // teardown by the time the watch loop ended.
         let fatal_rx = supervisor.fatal_rx();
         let ban_arc = std::sync::Arc::clone(&arc_for_task);
+        // The verdict the supervisor's own stop calls for, sent as it stops:
+        // the session watch it held closes with it, so the state loop below
+        // reads it with a short wait.
+        let (stop_tx, mut stop_rx) = tokio::sync::oneshot::channel::<Option<TerminalVerdict>>();
         tokio::spawn(async move {
-            // A ban learned while the session runs ends it, the way the desktop
-            // daemon blocks its tunnel: tokens minted before the ban would
-            // otherwise keep an admitted session alive for their whole
-            // prefetch horizon. Dropping the supervisor closes its session
-            // watch, which is what ends the state loop below.
-            tokio::select! {
-                end = supervisor.run() => {
-                    if let Err(e) = end {
+            // A ban or a revocation learned while the session runs ends it, the
+            // way the desktop daemon brings its tunnel down: tokens minted
+            // before would otherwise keep an admitted session alive for their
+            // whole prefetch horizon. Dropping the supervisor closes its
+            // session watch, which is what ends the state loop below.
+            let stop = tokio::select! {
+                end = supervisor.run() => match end {
+                    Ok(()) => None,
+                    Err(e) => {
                         tracing::error!(error = %e, "multi-hop supervisor terminated");
+                        supervisor_stop_verdict(&e)
                     }
-                }
+                },
                 ban = crate::warren_standing_ffi::tunnel_store().ban_arrives(wallet_pubkey, now_secs) => {
                     tracing::warn!("Warren account was banned during the session; ending it");
                     ban_arc.record_ban(ban);
+                    None
                 }
-            }
+                () = crate::warren_devices_ffi::registry().revocation_arrives() => {
+                    tracing::warn!("this device was revoked during the session; ending it");
+                    None
+                }
+            };
+            let _ = stop_tx.send(stop);
         });
 
         // Reassign task: forward each exit-allocated IPv4 to Swift. Mirrors
@@ -1878,8 +1942,17 @@ fn spawn_multi_hop(
             );
             arc_for_task.record_ban(ban);
         }
+        let stopped_for = tokio::time::timeout(SUPERVISOR_VERDICT_WAIT, &mut stop_rx)
+            .await
+            .ok()
+            .and_then(Result::ok)
+            .flatten();
         let verdict = if arc_for_task.recorded_ban().is_some() {
             TerminalVerdict::Banned
+        } else if crate::warren_devices_ffi::registry().revoked() {
+            TerminalVerdict::DeviceRevoked
+        } else if let Some(stopped_for) = stopped_for {
+            stopped_for
         } else {
             fatal.into()
         };
@@ -3194,6 +3267,61 @@ mod tests {
             (state as i32, event as i32),
             (7, 12),
             "WarrenQuinnAdapter reads these values from the generated header"
+        );
+    }
+
+    /// A device revoked from another device of the account ends on a state
+    /// and an event of its own, which the app shows with its revoked screen.
+    #[test]
+    fn a_session_of_a_revoked_device_ends_revoked() {
+        let (state, event) = super::terminal_for(super::TerminalVerdict::DeviceRevoked);
+        assert_eq!(state, super::WarrenTunnelStateC::DeviceRevoked);
+        assert_eq!(event, super::WarrenTunnelEventTagC::EventDeviceRevoked);
+        assert_eq!(
+            (state as i32, event as i32),
+            (9, 14),
+            "WarrenQuinnAdapter reads these values from the generated header"
+        );
+    }
+
+    /// A session no token admitted ends on a state and an event of its own,
+    /// on which the screens offer the account's devices.
+    #[test]
+    fn a_session_no_token_admitted_ends_on_its_own_state() {
+        let (state, event) = super::terminal_for(super::TerminalVerdict::NoSessionToken);
+        assert_eq!(state, super::WarrenTunnelStateC::NoSessionToken);
+        assert_eq!(event, super::WarrenTunnelEventTagC::EventNoSessionToken);
+        assert_eq!(
+            (state as i32, event as i32),
+            (10, 15),
+            "WarrenQuinnAdapter reads these values from the generated header"
+        );
+    }
+
+    /// The supervisor's own stop for want of a token: every token held
+    /// elsewhere is the device limit, any other cause is no session token,
+    /// and any other stop says nothing the refusal does not.
+    #[cfg(feature = "tunnel")]
+    #[test]
+    fn a_supervisor_stopped_for_want_of_a_token_names_why() {
+        use warrenguard_transport::multihop::{MultiHopError, NoSessionTokenCause};
+
+        assert_eq!(
+            super::supervisor_stop_verdict(&MultiHopError::NoSessionToken(
+                NoSessionTokenCause::AllInUse
+            )),
+            Some(super::TerminalVerdict::DeviceLimit)
+        );
+        for cause in [NoSessionTokenCause::Empty, NoSessionTokenCause::AllRefused] {
+            assert_eq!(
+                super::supervisor_stop_verdict(&MultiHopError::NoSessionToken(cause)),
+                Some(super::TerminalVerdict::NoSessionToken),
+                "{cause:?}"
+            );
+        }
+        assert_eq!(
+            super::supervisor_stop_verdict(&MultiHopError::NoSession),
+            None
         );
     }
 

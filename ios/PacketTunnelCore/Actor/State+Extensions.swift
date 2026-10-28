@@ -207,7 +207,7 @@ extension BlockedStateReason {
             .accountExpired, .deviceRevoked, .unknown, .deviceLoggedOut, .outdatedSchema,
             .invalidRelayPublicKey, .noRelaysSatisfyingPortConstraints, .tunnelAdapter,
             .noRelaysSatisfyingObfuscationPortConstraints, .offline, .accountBanned,
-            .accountBannedPortForwarding, .tooManyDevices:
+            .accountBannedPortForwarding, .tooManyDevices, .noSessionToken:
             return false
         }
     }

@@ -244,6 +244,13 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
             nextState = .error(ObservedBlockedState(reason: .accountExpired))
         case .deviceLimit:
             nextState = .error(ObservedBlockedState(reason: .tooManyDevices))
+        case .deviceRevoked:
+            // The registry revoked this device from another device of the
+            // account: `TunnelManager` takes the device state to revoked, and
+            // `ApplicationCoordinator` shows the revoked screen.
+            nextState = .error(ObservedBlockedState(reason: .deviceRevoked))
+        case .noSessionToken:
+            nextState = .error(ObservedBlockedState(reason: .noSessionToken))
         case .banned(let reason, _):
             // A suspension, which neither the out-of-time screen nor a plain
             // disconnect describes. Its `[BANNED*]` token says whether it is

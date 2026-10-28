@@ -82,6 +82,10 @@ mod warren_standing_ffi;
 // iOS-only modules that reference libc, tokio, mullvad-api, etc.
 #[cfg(target_os = "ios")]
 mod warren_account_ffi;
+// The account's devices (warren-core doc 115): the install's registration and
+// revocation, and the list, rename and revoke calls.
+#[cfg(any(target_os = "ios", test))]
+mod warren_devices_ffi;
 #[cfg(target_os = "ios")]
 mod warren_forum_ffi;
 // The signed pubkey-mismatch report the exit key-change alert files.

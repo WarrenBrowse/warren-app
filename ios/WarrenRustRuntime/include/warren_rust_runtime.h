@@ -90,6 +90,14 @@ typedef enum WarrenTunnelEventTagC {
    * Terminal counterpart of `TokensRefused`.
    */
   EventTokensRefused = 13,
+  /**
+   * Terminal counterpart of `DeviceRevoked`.
+   */
+  EventDeviceRevoked = 14,
+  /**
+   * Terminal counterpart of `NoSessionToken`.
+   */
+  EventNoSessionToken = 15,
 } WarrenTunnelEventTagC;
 
 /**
@@ -136,6 +144,20 @@ typedef enum WarrenTunnelStateC {
    * subscription is active, and as an expiry otherwise.
    */
   TokensRefused = 8,
+  /**
+   * This device was revoked from another device of the account
+   * (warren-core doc 115): its token and entitlement refreshes stopped and
+   * its device identity is forgotten. Terminal; the app shows its revoked
+   * screen.
+   */
+  DeviceRevoked = 9,
+  /**
+   * The tokens-only session found no token the exit admits, for another
+   * reason than every token being in use elsewhere (that one is
+   * `DeviceLimit`): the store is empty for the epoch, or the exit refused
+   * every token. The screens offer the account's devices on it.
+   */
+  NoSessionToken = 10,
 } WarrenTunnelStateC;
 
 typedef struct ApiContext ApiContext;
@@ -1059,6 +1081,68 @@ char *warren_account_standing(const uint8_t *seed, const char *ledger_dir);
  * `ledger_dir`, when non-null, must be a valid null-terminated C string.
  */
 void warren_account_standing_forget(const char *ledger_dir);
+
+/**
+ * Configures this process's device: its identity kept in `state_dir`
+ * (the App Group container, so the app and the extension ask as one
+ * device), registering as `ios` with `app_version`
+ * (`CFBundleShortVersionString`). Call it once per process, before the
+ * first tunnel start or registry call; later calls change nothing.
+ *
+ * # Safety
+ * Both arguments, when non-null, must be valid null-terminated C strings.
+ */
+void warren_device_configure(const char *state_dir, const char *app_version);
+
+/**
+ * The account's devices, this one marked:
+ * `{"ok":true,"devices":[...],"older_client_seen_on":"YYYY-MM-DD"|null}`
+ * or `{"ok":false,"error":...}`.
+ *
+ * # Safety
+ * `seed`, when non-null, must point to at least 32 readable bytes. The
+ * returned pointer must be freed once via `warren_wallet_free_mnemonic`.
+ */
+char *warren_device_list(const uint8_t *seed);
+
+/**
+ * Renames the account's device `device_id`:
+ * `{"ok":true,"this_device":bool}` or `{"ok":false,"error":...}`.
+ *
+ * # Safety
+ * `seed`, when non-null, must point to at least 32 readable bytes;
+ * `device_id` and `name`, when non-null, must be valid null-terminated C
+ * strings. The returned pointer must be freed once via
+ * `warren_wallet_free_mnemonic`.
+ */
+char *warren_device_rename(const uint8_t *seed, const char *device_id, const char *name);
+
+/**
+ * Revokes the account's device `device_id`:
+ * `{"ok":true,"this_device":bool}` or `{"ok":false,"error":...}`.
+ * Revoking this device is a logout, after which
+ * [`warren_device_revoked`] reads `true`.
+ *
+ * # Safety
+ * `seed`, when non-null, must point to at least 32 readable bytes;
+ * `device_id`, when non-null, must be a valid null-terminated C string.
+ * The returned pointer must be freed once via
+ * `warren_wallet_free_mnemonic`.
+ */
+char *warren_device_revoke(const uint8_t *seed, const char *device_id);
+
+/**
+ * Whether the registry revoked this device in this process since
+ * [`warren_device_forget_revocation`]. In the extension the tunnel also
+ * ends on it with `EventDeviceRevoked`.
+ */
+bool warren_device_revoked(void);
+
+/**
+ * The revocation was taken in (the user left the revoked screen, or
+ * logged in again).
+ */
+void warren_device_forget_revocation(void);
 
 /**
  * Sign and submit a forum-login challenge for `sid` to the connect `host`.
