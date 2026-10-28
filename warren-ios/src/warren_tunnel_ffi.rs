@@ -2430,6 +2430,11 @@ pub unsafe extern "C" fn warren_tunnel_start(
         };
         let arc = std::sync::Arc::new(impl_);
         arc.spawn_outbound_dispatcher();
+        // An extension process can outlive a tunnel. A revocation an earlier
+        // tunnel of this process ended on is already the app's to keep (it
+        // persists the revoked device state, which refuses a tunnel start
+        // until a new login), so it must not end this one at once.
+        crate::warren_devices_ffi::registry().forget_revocation();
         spawn_multi_hop(
             std::sync::Arc::clone(&arc),
             directory_json,
