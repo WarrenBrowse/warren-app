@@ -1,6 +1,6 @@
 //! The devices of the logged-in account (warren-core doc 115), as the GUI
-//! lists them and revokes one from another: the wallet-signed `GET` and
-//! `DELETE /v1/devices`. The list names the account's installs and the days
+//! lists, renames and revokes them from one another: the wallet-signed
+//! `GET /v1/devices`, `PATCH` and `DELETE /v1/devices/{id}`. The list names the account's installs and the days
 //! they were used, so it goes to the account's own screens and never to a
 //! log: neither a name nor an identifier is logged here.
 
@@ -19,6 +19,10 @@ pub enum DevicesError {
     /// The device id is not one the registry could have issued.
     #[error("the device id is malformed")]
     InvalidDevice,
+    /// The name is not one the registry keeps: 1 to 40 characters once
+    /// trimmed, none of them a control character.
+    #[error("the device name is not 1 to 40 characters without control characters")]
+    InvalidName,
     /// The account has no such active device (404).
     #[error("the account has no such device")]
     NotFound,
@@ -111,6 +115,37 @@ pub async fn revoke(
         .await
         .map_err(|error| classify(&error))?;
     Ok(this == Some(id))
+}
+
+/// The longest name the registry keeps, in characters.
+pub const DEVICE_NAME_MAX_CHARS: usize = 40;
+
+/// The name as the registry keeps it (trimmed), or why it keeps none.
+pub fn device_name(name: &str) -> Result<String, DevicesError> {
+    let name = name.trim();
+    let chars = name.chars().count();
+    if chars == 0 || chars > DEVICE_NAME_MAX_CHARS || name.chars().any(char::is_control) {
+        return Err(DevicesError::InvalidName);
+    }
+    Ok(name.to_owned())
+}
+
+/// Renames the account's device `id`. A name the registry would refuse is
+/// refused here, before any request.
+pub async fn rename(
+    client: &SharedWarrenApiClient,
+    id: &str,
+    name: &str,
+) -> Result<(), DevicesError> {
+    if client.wallet().is_none() {
+        return Err(DevicesError::NoWallet);
+    }
+    let id = device_id(id)?;
+    let name = device_name(name)?;
+    client
+        .rename_device(id, &name)
+        .await
+        .map_err(|error| classify(&error))
 }
 
 #[cfg(test)]
@@ -308,6 +343,87 @@ mod tests {
 
         assert_eq!(answer.map(|list| list.devices.len()), Ok(0));
         listed.assert();
+    }
+
+    #[tokio::test]
+    async fn a_rename_sends_the_trimmed_name_for_that_device() {
+        let mut server = mockito::Server::new_async().await;
+        let renamed = server
+            .mock(
+                "PATCH",
+                format!("/v1/devices/{}", String::from(id(4))).as_str(),
+            )
+            .match_body(mockito::Matcher::Json(
+                serde_json::json!({"name": "Blue fox"}),
+            ))
+            .with_status(204)
+            .create();
+
+        assert_eq!(
+            rename(&client_of(&server), &String::from(id(4)), "  Blue fox ").await,
+            Ok(())
+        );
+        renamed.assert();
+    }
+
+    #[tokio::test]
+    async fn a_name_the_registry_would_refuse_is_refused_before_any_request() {
+        let mut server = mockito::Server::new_async().await;
+        let never = server
+            .mock("PATCH", mockito::Matcher::Any)
+            .expect(0)
+            .create();
+        let client = client_of(&server);
+        let device = String::from(id(5));
+
+        for name in ["", "   ", &"x".repeat(41), "tab\there", "bell\u{7}"] {
+            assert_eq!(
+                rename(&client, &device, name).await,
+                Err(DevicesError::InvalidName),
+                "{name:?}"
+            );
+        }
+        never.assert();
+    }
+
+    #[test]
+    fn a_name_of_forty_characters_of_any_script_is_kept() {
+        assert_eq!(device_name(&"\u{e9}".repeat(40)), Ok("\u{e9}".repeat(40)));
+    }
+
+    #[tokio::test]
+    async fn a_rename_the_registry_refuses_names_why() {
+        let mut server = mockito::Server::new_async().await;
+        let _gone = server
+            .mock("PATCH", mockito::Matcher::Any)
+            .with_status(404)
+            .create();
+
+        assert_eq!(
+            rename(&client_of(&server), &String::from(id(6)), "Blue fox").await,
+            Err(DevicesError::NotFound)
+        );
+    }
+
+    #[tokio::test]
+    async fn nothing_is_renamed_without_a_wallet() {
+        let mut server = mockito::Server::new_async().await;
+        let never = server
+            .mock("PATCH", mockito::Matcher::Any)
+            .expect(0)
+            .create();
+        let logged_out = SharedWarrenApiClient::new(
+            server.url(),
+            std::sync::Arc::new(std::sync::RwLock::new(
+                crate::warren_sdk_client::sentinel_seed(),
+            )),
+        );
+
+        assert_eq!(
+            rename(&logged_out, &String::from(id(7)), "Blue fox").await,
+            Err(DevicesError::NoWallet)
+        );
+        never.assert();
     }
 
     #[test]

@@ -671,6 +671,8 @@ pub enum DaemonCommand {
     /// Revoke the account's device with this id. Revoking this device is a
     /// logout: it then disconnects and forgets its identity.
     RemoveWarrenDevice(ResponseTx<(), warren_devices::DevicesError>, String),
+    /// Rename the account's device with this id (`id`, `name`).
+    RenameWarrenDevice(ResponseTx<(), warren_devices::DevicesError>, String, String),
     /// Request account history
     GetAccountHistory(oneshot::Sender<Option<AccountNumber>>),
     /// Remove the last used account, if there is one
@@ -3542,6 +3544,7 @@ impl Daemon {
             }
             ListWarrenDevices(tx) => self.on_list_warren_devices(tx).await,
             RemoveWarrenDevice(tx, id) => self.on_remove_warren_device(tx, id).await,
+            RenameWarrenDevice(tx, id, name) => self.on_rename_warren_device(tx, id, name).await,
             GetRelayLocations(tx) => self.on_get_relay_locations(tx),
             UpdateRelayLocations => self.on_update_relay_locations().await,
             UpdateDefaultLocationCountry(tx) => self.on_update_default_location(tx).await,
@@ -4863,6 +4866,30 @@ impl Daemon {
                 _ => {}
             }
             Self::oneshot_send(tx, result.map(|_| ()), "remove_device response");
+        });
+    }
+
+    async fn on_rename_warren_device(
+        &mut self,
+        tx: ResponseTx<(), warren_devices::DevicesError>,
+        id: String,
+        name: String,
+    ) {
+        let Some((client, _)) = self.warren_devices_client().await else {
+            Self::oneshot_send(
+                tx,
+                Err(warren_devices::DevicesError::NoWallet),
+                "rename_device response",
+            );
+            return;
+        };
+        let daemon_tx = self.tx.clone();
+        tokio::spawn(async move {
+            let result = warren_devices::rename(&client, &id, &name).await;
+            if result == Err(warren_devices::DevicesError::Revoked) {
+                let _ = daemon_tx.send(InternalDaemonEvent::WarrenDeviceRevoked);
+            }
+            Self::oneshot_send(tx, result, "rename_device response");
         });
     }
 

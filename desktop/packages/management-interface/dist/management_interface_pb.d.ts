@@ -4700,6 +4700,29 @@ export namespace DeviceRemoval {
     }
 }
 
+export class DeviceRename extends jspb.Message { 
+    getDeviceId(): string;
+    setDeviceId(value: string): DeviceRename;
+    getName(): string;
+    setName(value: string): DeviceRename;
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): DeviceRename.AsObject;
+    static toObject(includeInstance: boolean, msg: DeviceRename): DeviceRename.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: DeviceRename, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): DeviceRename;
+    static deserializeBinaryFromReader(message: DeviceRename, reader: jspb.BinaryReader): DeviceRename;
+}
+
+export namespace DeviceRename {
+    export type AsObject = {
+        deviceId: string,
+        name: string,
+    }
+}
+
 export class DeviceState extends jspb.Message { 
     getState(): DeviceState.State;
     setState(value: DeviceState.State): DeviceState;

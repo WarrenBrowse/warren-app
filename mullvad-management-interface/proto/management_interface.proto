@@ -262,6 +262,12 @@ service ManagementService {
   rpc UpdateDevice(google.protobuf.Empty) returns (google.protobuf.Empty) {}
   rpc ListDevices(google.protobuf.StringValue) returns (DeviceList) {}
   rpc RemoveDevice(DeviceRemoval) returns (google.protobuf.Empty) {}
+  // Renames a device of the logged-in account (warren-core doc 115).
+  // INVALID_ARGUMENT: malformed id, or a name that is not 1 to 40 characters
+  // once trimmed or holds a control character; NOT_FOUND: the account has no
+  // such active device; UNAUTHENTICATED: no wallet, or this device was
+  // revoked (`DEVICE_REVOKED_DETAILS`); UNAVAILABLE: the API did not answer.
+  rpc RenameDevice(DeviceRename) returns (google.protobuf.Empty) {}
 
   // WireGuard key management
   rpc SetWireguardRotationInterval(google.protobuf.Duration) returns (google.protobuf.Empty) {}
@@ -1825,6 +1831,11 @@ message DeviceList {
 message DeviceRemoval {
   string account_number = 1;
   string device_id = 2;
+}
+
+message DeviceRename {
+  string device_id = 1;
+  string name = 2;
 }
 
 message DeviceState {

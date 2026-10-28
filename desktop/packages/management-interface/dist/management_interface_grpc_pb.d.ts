@@ -88,6 +88,7 @@ interface IManagementServiceService extends grpc.ServiceDefinition<grpc.UntypedS
     updateDevice: IManagementServiceService_IUpdateDevice;
     listDevices: IManagementServiceService_IListDevices;
     removeDevice: IManagementServiceService_IRemoveDevice;
+    renameDevice: IManagementServiceService_IRenameDevice;
     setWireguardRotationInterval: IManagementServiceService_ISetWireguardRotationInterval;
     resetWireguardRotationInterval: IManagementServiceService_IResetWireguardRotationInterval;
     rotateWireguardKey: IManagementServiceService_IRotateWireguardKey;
@@ -831,6 +832,15 @@ interface IManagementServiceService_IRemoveDevice extends grpc.MethodDefinition<
     responseSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
     responseDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
 }
+interface IManagementServiceService_IRenameDevice extends grpc.MethodDefinition<management_interface_pb.DeviceRename, google_protobuf_empty_pb.Empty> {
+    path: "/mullvad_daemon.management_interface.ManagementService/RenameDevice";
+    requestStream: false;
+    responseStream: false;
+    requestSerialize: grpc.serialize<management_interface_pb.DeviceRename>;
+    requestDeserialize: grpc.deserialize<management_interface_pb.DeviceRename>;
+    responseSerialize: grpc.serialize<google_protobuf_empty_pb.Empty>;
+    responseDeserialize: grpc.deserialize<google_protobuf_empty_pb.Empty>;
+}
 interface IManagementServiceService_ISetWireguardRotationInterval extends grpc.MethodDefinition<google_protobuf_duration_pb.Duration, google_protobuf_empty_pb.Empty> {
     path: "/mullvad_daemon.management_interface.ManagementService/SetWireguardRotationInterval";
     requestStream: false;
@@ -1424,6 +1434,7 @@ export interface IManagementServiceServer extends grpc.UntypedServiceImplementat
     updateDevice: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, google_protobuf_empty_pb.Empty>;
     listDevices: grpc.handleUnaryCall<google_protobuf_wrappers_pb.StringValue, management_interface_pb.DeviceList>;
     removeDevice: grpc.handleUnaryCall<management_interface_pb.DeviceRemoval, google_protobuf_empty_pb.Empty>;
+    renameDevice: grpc.handleUnaryCall<management_interface_pb.DeviceRename, google_protobuf_empty_pb.Empty>;
     setWireguardRotationInterval: grpc.handleUnaryCall<google_protobuf_duration_pb.Duration, google_protobuf_empty_pb.Empty>;
     resetWireguardRotationInterval: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, google_protobuf_empty_pb.Empty>;
     rotateWireguardKey: grpc.handleUnaryCall<google_protobuf_empty_pb.Empty, google_protobuf_empty_pb.Empty>;
@@ -1709,6 +1720,9 @@ export interface IManagementServiceClient {
     removeDevice(request: management_interface_pb.DeviceRemoval, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     removeDevice(request: management_interface_pb.DeviceRemoval, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     removeDevice(request: management_interface_pb.DeviceRemoval, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    renameDevice(request: management_interface_pb.DeviceRename, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    renameDevice(request: management_interface_pb.DeviceRename, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    renameDevice(request: management_interface_pb.DeviceRename, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     setWireguardRotationInterval(request: google_protobuf_duration_pb.Duration, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     setWireguardRotationInterval(request: google_protobuf_duration_pb.Duration, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     setWireguardRotationInterval(request: google_protobuf_duration_pb.Duration, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
@@ -2106,6 +2120,9 @@ export class ManagementServiceClient extends grpc.Client implements IManagementS
     public removeDevice(request: management_interface_pb.DeviceRemoval, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public removeDevice(request: management_interface_pb.DeviceRemoval, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public removeDevice(request: management_interface_pb.DeviceRemoval, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public renameDevice(request: management_interface_pb.DeviceRename, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public renameDevice(request: management_interface_pb.DeviceRename, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
+    public renameDevice(request: management_interface_pb.DeviceRename, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public setWireguardRotationInterval(request: google_protobuf_duration_pb.Duration, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public setWireguardRotationInterval(request: google_protobuf_duration_pb.Duration, metadata: grpc.Metadata, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;
     public setWireguardRotationInterval(request: google_protobuf_duration_pb.Duration, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: grpc.ServiceError | null, response: google_protobuf_empty_pb.Empty) => void): grpc.ClientUnaryCall;

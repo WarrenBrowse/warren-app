@@ -157,6 +157,15 @@ impl SharedWarrenApiClient {
         self.client().list_devices(this).await
     }
 
+    /// Signed `PATCH /v1/devices/{id}`: renames a device of the account.
+    pub async fn rename_device(
+        &self,
+        id: warren_api::DeviceId,
+        name: &str,
+    ) -> Result<(), ClientError> {
+        self.client().rename_device(id, name).await
+    }
+
     /// Signed `DELETE /v1/devices/{id}`: revokes a device of the account.
     pub async fn revoke_device(&self, id: warren_api::DeviceId) -> Result<(), ClientError> {
         self.client().revoke_device(id).await

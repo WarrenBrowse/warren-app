@@ -1846,6 +1846,23 @@ impl ManagementService for ManagementServiceImpl {
             .map(Response::new)
     }
 
+    /// Renames a device of the logged-in account; like `remove_device`, it
+    /// can only ever name a device of the wallet that signs it.
+    async fn rename_device(&self, request: Request<types::DeviceRename>) -> ServiceResult<()> {
+        let call = Self::call_of(&request);
+        log::debug!("rename_device");
+        let rename = request.into_inner();
+        let (tx, rx) = oneshot::channel();
+        self.send_command_to_daemon(
+            &call,
+            DaemonCommand::RenameWarrenDevice(tx, rename.device_id, rename.name),
+        )?;
+        self.wait_for_result(rx)
+            .await?
+            .map_err(map_devices_error)
+            .map(Response::new)
+    }
+
     async fn set_wireguard_rotation_interval(
         &self,
         _request: Request<types::Duration>,
@@ -3227,7 +3244,9 @@ fn map_devices_error(error: crate::warren_devices::DevicesError) -> Status {
     let message = error.to_string();
     match error {
         DevicesError::NoWallet => Status::unauthenticated(message),
-        DevicesError::InvalidDevice => Status::invalid_argument(message),
+        DevicesError::InvalidDevice | DevicesError::InvalidName => {
+            Status::invalid_argument(message)
+        }
         DevicesError::NotFound => Status::not_found(message),
         // The same signal as a connect refused on a revoked device, which the
         // GUI already reads as one.
@@ -3470,6 +3489,10 @@ mod session_gate_status_tests {
         );
         assert_eq!(
             map_devices_error(DevicesError::InvalidDevice).code(),
+            Code::InvalidArgument
+        );
+        assert_eq!(
+            map_devices_error(DevicesError::InvalidName).code(),
             Code::InvalidArgument
         );
         assert_eq!(

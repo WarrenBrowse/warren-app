@@ -261,6 +261,17 @@ function deserialize_mullvad_daemon_management_interface_DeviceRemoval(buffer_ar
   return management_interface_pb.DeviceRemoval.deserializeBinary(new Uint8Array(buffer_arg));
 }
 
+function serialize_mullvad_daemon_management_interface_DeviceRename(arg) {
+  if (!(arg instanceof management_interface_pb.DeviceRename)) {
+    throw new Error('Expected argument of type mullvad_daemon.management_interface.DeviceRename');
+  }
+  return Buffer.from(arg.serializeBinary());
+}
+
+function deserialize_mullvad_daemon_management_interface_DeviceRename(buffer_arg) {
+  return management_interface_pb.DeviceRename.deserializeBinary(new Uint8Array(buffer_arg));
+}
+
 function serialize_mullvad_daemon_management_interface_DeviceState(arg) {
   if (!(arg instanceof management_interface_pb.DeviceState)) {
     throw new Error('Expected argument of type mullvad_daemon.management_interface.DeviceState');
@@ -1718,6 +1729,22 @@ getDevice: {
     responseType: google_protobuf_empty_pb.Empty,
     requestSerialize: serialize_mullvad_daemon_management_interface_DeviceRemoval,
     requestDeserialize: deserialize_mullvad_daemon_management_interface_DeviceRemoval,
+    responseSerialize: serialize_google_protobuf_Empty,
+    responseDeserialize: deserialize_google_protobuf_Empty,
+  },
+  // Renames a device of the logged-in account (warren-core doc 115).
+// INVALID_ARGUMENT: malformed id, or a name that is not 1 to 40 characters
+// once trimmed or holds a control character; NOT_FOUND: the account has no
+// such active device; UNAUTHENTICATED: no wallet, or this device was
+// revoked (`DEVICE_REVOKED_DETAILS`); UNAVAILABLE: the API did not answer.
+renameDevice: {
+    path: '/mullvad_daemon.management_interface.ManagementService/RenameDevice',
+    requestStream: false,
+    responseStream: false,
+    requestType: management_interface_pb.DeviceRename,
+    responseType: google_protobuf_empty_pb.Empty,
+    requestSerialize: serialize_mullvad_daemon_management_interface_DeviceRename,
+    requestDeserialize: deserialize_mullvad_daemon_management_interface_DeviceRename,
     responseSerialize: serialize_google_protobuf_Empty,
     responseDeserialize: deserialize_google_protobuf_Empty,
   },
