@@ -147,6 +147,7 @@ rpc_classes! {
         UpdateDevice => Identity,
         ListDevices => Identity,
         RemoveDevice => Identity,
+        RenameDevice => Identity,
         SetWireguardRotationInterval => ControlMachine,
         ResetWireguardRotationInterval => ControlMachine,
         RotateWireguardKey => ControlMachine,
