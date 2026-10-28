@@ -49,7 +49,7 @@
 //! (`talpid_warren_tunnel::app_routes::main_anchor`).
 
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock, PoisonError};
 
 use talpid_warren_tunnel::app_routes::admission::remember_route_admission;
@@ -66,8 +66,9 @@ use talpid_warren_tunnel::{
     app_routes::{Credentials, RouteAdmissionSource},
 };
 use tokio::sync::watch;
-use warren_api::{BlindingKey, TokenManager, WarrenApiClient};
+use warren_api::{BlindingKey, DeviceId, DevicePlatform, TokenManager, WarrenApiClient};
 use warren_identity::WarrenIdentity;
+use warren_standing::device::{InstallDevice, settle_round, with_install_device};
 use warren_standing::token_rotation::with_install_rotation;
 
 use crate::warren_account_standing::StandingMonitor;
@@ -101,6 +102,58 @@ pub(crate) fn keep_rotation_in(dir: PathBuf) {
     let _ = ROTATION_DIR.set(dir);
 }
 
+/// The platform this daemon registers its install as (warren-core doc 115).
+#[cfg(target_os = "macos")]
+pub(crate) const DESKTOP_PLATFORM: DevicePlatform = DevicePlatform::Macos;
+#[cfg(target_os = "windows")]
+pub(crate) const DESKTOP_PLATFORM: DevicePlatform = DevicePlatform::Windows;
+#[cfg(not(any(target_os = "macos", target_os = "windows")))]
+pub(crate) const DESKTOP_PLATFORM: DevicePlatform = DevicePlatform::Linux;
+
+/// This install as a device of its account, kept beside the token rotation
+/// and installed once at startup like [`ROTATION_DIR`]. A manager built
+/// before it is installed (tests) asks as no device.
+static DEVICE: OnceLock<InstallDevice> = OnceLock::new();
+
+/// The install's device, its identity kept in `dir`.
+pub(crate) fn install_device_in(dir: &Path) -> InstallDevice {
+    InstallDevice::new(dir, DESKTOP_PLATFORM, mullvad_version::VERSION)
+}
+
+/// Keeps the install's device identity in `dir`, so every start registers as
+/// the same device of the account.
+pub(crate) fn keep_device_in(dir: &Path) {
+    let _ = DEVICE.set(install_device_in(dir));
+}
+
+/// The install's device, once [`keep_device_in`] ran.
+pub(crate) fn install_device() -> Option<&'static InstallDevice> {
+    DEVICE.get()
+}
+
+/// Told when the install's device was revoked from another device of the
+/// account: the daemon disconnects and forgets the identity.
+type RevocationSink = Box<dyn Fn() + Send + Sync>;
+
+static REVOCATION: OnceLock<RevocationSink> = OnceLock::new();
+
+/// Reports every revocation a token or entitlement refresh learns to `sink`.
+pub(crate) fn report_revocation_to(sink: RevocationSink) {
+    let _ = REVOCATION.set(sink);
+}
+
+/// Reports that the install's device was revoked. Both the session tokens
+/// and the port entitlements learn it, so the receiver takes it once.
+pub(crate) fn report_revocation() {
+    log::info!(
+        "Warren: this device was disconnected from another device of the account; its \
+         credential refresh stops"
+    );
+    if let Some(sink) = REVOCATION.get() {
+        sink();
+    }
+}
+
 /// The daemon's offline-to-online edge, installed once it exists. A failed
 /// refresh round runs again on it rather than waiting out its retry delay.
 static ONLINE_EDGE: OnceLock<watch::Receiver<u64>> = OnceLock::new();
@@ -129,10 +182,15 @@ fn clock_verdict<T>(
     }
 }
 
-/// One manager per wallet, reused across reconnects so its RAM token store,
-/// its once-per-epoch issuance bookkeeping and its held serials survive
-/// between sessions, with the announcement of each of its refresh rounds.
-static MANAGERS: OnceLock<Mutex<HashMap<String, Wallet>>> = OnceLock::new();
+/// One manager per wallet and device, reused across reconnects so its RAM
+/// token store, its once-per-epoch issuance bookkeeping and its held serials
+/// survive between sessions, with the announcement of each of its refresh
+/// rounds. A wallet logged in again after its device was revoked asks as a new
+/// device, so it gets a new manager rather than the revoked one.
+static MANAGERS: OnceLock<Mutex<HashMap<WalletKey, Wallet>>> = OnceLock::new();
+
+/// A wallet's address, and the device its manager asks as.
+type WalletKey = (String, Option<DeviceId>);
 
 #[derive(Clone)]
 struct Wallet {
@@ -174,6 +232,11 @@ fn spawn_refresh(
                     .await;
                 let refreshed =
                     refresh_announcing_mints(&manager, &credentials, &now_unix_secs).await;
+                if settle_round(&manager, DEVICE.get()) {
+                    announce_refresh(&credentials, &manager, now_unix_secs());
+                    report_revocation();
+                    return Round::Over;
+                }
                 if let Some(path) = remembered_at.as_deref()
                     && manager.epoch_at(now_unix_secs()).is_some()
                 {
@@ -270,10 +333,12 @@ fn wallet_for(
     let identity = WarrenIdentity::from_seed(&seed_bytes);
     let key = identity.address();
 
+    let device = DEVICE.get();
+    let device_id = device.map(|device| device.identity().device_id);
     let map = MANAGERS.get_or_init(|| Mutex::new(HashMap::new()));
     let mut guard = map.lock().expect("token manager map poisoned");
     guard
-        .entry(key.clone())
+        .entry((key.clone(), device_id))
         .or_insert_with(|| {
             let client = crate::warren_api_clock::shared().attach(WarrenApiClient::new(
                 api_url.to_owned(),
@@ -281,9 +346,12 @@ fn wallet_for(
                 WarrenApiTransport::new(),
             ));
             let manager = Arc::new(
-                with_install_rotation(
-                    TokenManager::new(Arc::new(client), BlindingKey::session(&seed_bytes)),
-                    ROTATION_DIR.get().map(PathBuf::as_path),
+                with_install_device(
+                    with_install_rotation(
+                        TokenManager::new(Arc::new(client), BlindingKey::session(&seed_bytes)),
+                        ROTATION_DIR.get().map(PathBuf::as_path),
+                    ),
+                    device,
                 )
                 .with_server_pubkey_pins(trust.server_pins.iter().cloned()),
             );
@@ -321,6 +389,31 @@ mod tests {
                 offset_secs: Some(-420)
             })),
             "a clock refusal must reach the UI with its offset"
+        );
+    }
+
+    #[test]
+    fn the_install_registers_as_this_desktop_with_the_product_version() {
+        let dir = tempfile::tempdir().expect("a temp dir");
+
+        let registration = install_device_in(dir.path()).registration();
+
+        let expected = if cfg!(target_os = "macos") {
+            DevicePlatform::Macos
+        } else if cfg!(target_os = "windows") {
+            DevicePlatform::Windows
+        } else {
+            DevicePlatform::Linux
+        };
+        assert_eq!(registration.platform, expected);
+        assert_eq!(
+            registration.app_version,
+            warren_standing::device::registry_app_version(mullvad_version::VERSION)
+        );
+        assert_eq!(
+            install_device_in(dir.path()).registration().device_id,
+            registration.device_id,
+            "kept in the cache directory across starts"
         );
     }
 

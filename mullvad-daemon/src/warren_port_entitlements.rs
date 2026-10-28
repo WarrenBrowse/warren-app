@@ -67,7 +67,14 @@ pub(crate) fn provider_for(
                     error,
                 )
             }))
-            .with_activity(activity.subscribe());
+            .with_activity(activity.subscribe())
+            .with_revocation_sink(Arc::new(|_| {
+                crate::warren_token_provider::report_revocation();
+            }));
+        let mint = match crate::warren_token_provider::install_device() {
+            Some(device) => mint.with_device(device.clone()),
+            None => mint,
+        };
         match ONLINE_EDGE.get() {
             Some(edge) => mint.with_online_edge(edge.clone()),
             None => mint,

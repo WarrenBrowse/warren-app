@@ -208,6 +208,20 @@ impl<W> SessionGate<W> {
         }
     }
 
+    /// The account's registry revoked this device (warren-core doc 115):
+    /// answers whether the daemon must act on it now (disconnect, forget the
+    /// identity), which is only once and only for a logged-in device. The
+    /// session tokens and the port entitlements both learn a revocation, and
+    /// one learned after a logout concerns a wallet already gone. Closes the
+    /// gate at once, a turn before the account manager's own event.
+    pub fn revoked_by_account(&mut self) -> bool {
+        if self.login != Login::LoggedIn {
+            return false;
+        }
+        self.login = Login::Revoked;
+        true
+    }
+
     /// Records a completed logout at once, a turn before the account
     /// manager's own event, so a connect queued in between finds it.
     pub fn logged_out_now(&mut self) {
@@ -443,6 +457,27 @@ mod tests {
 
         assert_eq!(gate.admit_connect(None), Err(ConnectRefusal::DeviceRevoked));
         assert!(!gate.logged_in());
+    }
+
+    #[test]
+    fn a_revocation_from_the_account_is_acted_on_once_and_closes_the_gate() {
+        let mut gate = logged_in();
+
+        assert!(gate.revoked_by_account());
+        assert!(
+            !gate.revoked_by_account(),
+            "the second report is the same revocation"
+        );
+        assert_eq!(gate.admit_connect(None), Err(ConnectRefusal::DeviceRevoked));
+    }
+
+    #[test]
+    fn a_revocation_learned_after_a_logout_is_not_acted_on() {
+        let mut gate = logged_in();
+        gate.logged_out_now();
+
+        assert!(!gate.revoked_by_account());
+        assert_eq!(gate.admit_connect(None), Err(ConnectRefusal::LoggedOut));
     }
 
     #[test]

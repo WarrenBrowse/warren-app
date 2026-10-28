@@ -245,6 +245,7 @@ type ResponseTx<T> = oneshot::Sender<Result<T, Error>>;
 enum AccountManagerCommand {
     Login(AccountNumber, ResponseTx<()>),
     Logout(ResponseTx<()>),
+    Revoke(ResponseTx<()>),
     GetData(ResponseTx<PrivateDeviceState>),
     SubmitVoucher(String, ResponseTx<VoucherSubmission>),
     #[cfg(target_os = "android")]
@@ -271,6 +272,14 @@ impl AccountManagerHandle {
 
     pub async fn logout(&self) -> Result<(), Error> {
         self.send_command(AccountManagerCommand::Logout).await
+    }
+
+    /// Marks the login revoked: the device was disconnected from another
+    /// device of the account (warren-core doc 115). Persisted, so the
+    /// revocation survives a restart, and announced as
+    /// [`PrivateDeviceEvent::Revoked`].
+    pub async fn revoke(&self) -> Result<(), Error> {
+        self.send_command(AccountManagerCommand::Revoke).await
     }
 
     pub async fn data(&self) -> Result<PrivateDeviceState, Error> {
@@ -428,6 +437,13 @@ impl AccountManager {
                         Some(AccountManagerCommand::Logout(tx)) => {
                             current_api_call.clear();
                             self.logout(tx).await;
+                        }
+                        Some(AccountManagerCommand::Revoke(tx)) => {
+                            current_api_call.clear();
+                            if self.data.logged_in() {
+                                self.revoke_device(|| Error::InvalidDevice).await;
+                            }
+                            let _ = tx.send(Ok(()));
                         }
                         Some(AccountManagerCommand::GetData(tx)) => {
                             let _ = tx.send(Ok(self.data.clone()));

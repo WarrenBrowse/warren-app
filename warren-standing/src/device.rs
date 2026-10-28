@@ -141,6 +141,23 @@ pub fn with_install_device<T: HttpTransport>(
     }
 }
 
+/// Settles what the registry said of `device` in `manager`'s last refresh:
+/// keeps the name it answered for the next start, and answers whether the
+/// device was revoked from another device of the account, after which the
+/// manager is never served again and its refresh loop ends.
+pub fn settle_round<T: HttpTransport>(
+    manager: &TokenManager<T>,
+    device: Option<&InstallDevice>,
+) -> bool {
+    if manager.device_revoked() {
+        return true;
+    }
+    if let (Some(device), Some(name)) = (device, manager.device_name()) {
+        device.keep_name(&name);
+    }
+    false
+}
+
 /// Writes `bytes` to a side file then renames it over `path`, because a torn
 /// write would still parse as another identity.
 fn write_whole(path: &Path, bytes: &[u8]) -> std::io::Result<()> {
@@ -156,7 +173,89 @@ mod tests {
     use warren_api::{BlindingKey, DevicePlatform, TokenManager, WarrenApiClient};
     use warren_identity::WarrenIdentity;
 
-    use super::{DEVICE_FILE, InstallDevice, registry_app_version, with_install_device};
+    use super::{
+        DEVICE_FILE, InstallDevice, registry_app_version, settle_round, with_install_device,
+    };
+
+    /// The registry at `POST /v1/devices`, answering `status` with `body`;
+    /// every other route is down, so a refresh ends right after registering.
+    struct Registry {
+        status: u16,
+        body: &'static str,
+    }
+
+    impl warren_api::HttpTransport for Registry {
+        async fn execute(
+            &self,
+            request: warren_api::HttpRequest,
+        ) -> Result<warren_api::HttpResponse, warren_api::TransportError> {
+            if !request.url.ends_with("/v1/devices") {
+                return Err(warren_api::TransportError::Connect("down".to_owned()));
+            }
+            let registration: warren_api::DeviceRegistration =
+                serde_json::from_slice(&request.body).unwrap();
+            let body = self
+                .body
+                .replace("{id}", &String::from(registration.device_id));
+            Ok(warren_api::HttpResponse::new(
+                self.status,
+                body.into_bytes(),
+            ))
+        }
+    }
+
+    /// A manager asking as `device` whose registry answers `status`, `body`,
+    /// once it ran one refresh.
+    async fn refreshed(
+        device: &InstallDevice,
+        status: u16,
+        body: &'static str,
+    ) -> TokenManager<Registry> {
+        let seed = [0x42; 32];
+        let manager = with_install_device(
+            TokenManager::new(
+                Arc::new(WarrenApiClient::new(
+                    "https://api.example.test",
+                    WarrenIdentity::from_seed(&seed),
+                    Registry { status, body },
+                )),
+                BlindingKey::session(&seed),
+            ),
+            Some(device),
+        );
+        let _ = manager.refresh(1_000_000).await;
+        manager
+    }
+
+    #[tokio::test]
+    async fn a_round_the_registry_answered_with_a_rename_keeps_the_name() {
+        let dir = tempfile::tempdir().expect("a temp dir");
+        let manager = refreshed(
+            &device(dir.path()),
+            200,
+            r#"{"device_id":"{id}","name":"calm heron","platform":"macos","app_version":"1.1.55","registered_on":"2026-10-28","last_seen_on":"2026-10-28","this_device":true}"#,
+        )
+        .await;
+
+        let revoked = settle_round(&manager, Some(&device(dir.path())));
+
+        assert!(!revoked);
+        assert_eq!(device(dir.path()).identity().name, "calm heron");
+    }
+
+    #[tokio::test]
+    async fn a_round_the_registry_answered_with_a_revocation_ends_the_device() {
+        let dir = tempfile::tempdir().expect("a temp dir");
+        let kept = device(dir.path()).identity();
+        let manager = refreshed(&device(dir.path()), 403, r#"{"error":"device_revoked"}"#).await;
+
+        assert!(settle_round(&manager, Some(&device(dir.path()))));
+        assert_eq!(
+            device(dir.path()).identity(),
+            kept,
+            "the caller forgets the identity, once"
+        );
+    }
 
     struct NoNetwork;
 

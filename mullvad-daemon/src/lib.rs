@@ -1027,6 +1027,9 @@ pub(crate) enum InternalDaemonEvent {
     AppRoutesPlanned,
     /// The teardown deadline of the logout with this generation fired.
     LogoutTeardownDeadline(u64),
+    /// The account's device registry revoked this install (warren-core doc
+    /// 115), as a session token or port-entitlement refresh learned it.
+    WarrenDeviceRevoked,
 }
 
 /// How long the daemon waits for the shutdown that `prepare-restart` promised
@@ -1429,6 +1432,7 @@ impl Daemon {
         let warren_status_cache = warren_status::WarrenStatusCache::new();
         warren_token_provider::report_clock_skew_to(warren_status_cache.clone());
         warren_token_provider::keep_rotation_in(config.cache_dir.clone());
+        warren_token_provider::keep_device_in(&config.cache_dir);
         let warren_network_stats = warren_network_stats::WarrenNetworkStats::new();
         let management_interface = ManagementInterfaceServer::start(
             command_sender,
@@ -1444,6 +1448,10 @@ impl Daemon {
         .map_err(Error::ManagementInterfaceError)?;
 
         let (internal_event_tx, internal_event_rx) = daemon_command_channel.destructure();
+        let revocation_tx = internal_event_tx.clone();
+        warren_token_provider::report_revocation_to(Box::new(move || {
+            let _ = revocation_tx.send(InternalDaemonEvent::WarrenDeviceRevoked);
+        }));
 
         #[cfg(target_os = "android")]
         let connectivity_listener = ConnectivityListener::new(config.android_context.clone())
@@ -2860,6 +2868,7 @@ impl Daemon {
             }
             AppRoutesPlanned => self.publish_app_routes_if_changed(),
             LogoutTeardownDeadline(generation) => self.on_logout_teardown_deadline(generation),
+            WarrenDeviceRevoked => self.on_warren_device_revoked().await,
         }
         should_stop
     }
@@ -4948,6 +4957,52 @@ impl Daemon {
         };
 
         Self::oneshot_send(tx, result, "logout_account response");
+    }
+
+    /// The account's registry revoked this device from another device of the
+    /// account (warren-core doc 115, decision 1): the tunnel comes down, the
+    /// login reads revoked, which the GUI shows with its revoked view, and the
+    /// wallet identity and the device identity are forgotten, so coming back
+    /// takes the recovery phrase and registers as a new device.
+    async fn on_warren_device_revoked(&mut self) {
+        if !self.warren_session.revoked_by_account() {
+            return;
+        }
+        log::info!(
+            "This device was disconnected from another device of the account: disconnecting \
+             and forgetting its identity"
+        );
+        self.warren_wallet_activity.set(false);
+        self.set_target_state(TargetState::Unsecured).await;
+        self.warren_status_cache.forget_announcements();
+        self.forget_warren_standing();
+        if let Err(error) = self.account_manager.revoke().await {
+            log::error!(
+                "{}",
+                error.display_chain_with_msg("Failed to record the device revocation")
+            );
+        }
+        let settings_dir = self.settings_dir.clone();
+        let wipe = tokio::task::spawn_blocking(move || {
+            warren_signer::clear_warren_mnemonic(&settings_dir)
+        })
+        .await
+        .unwrap_or_else(|join_err| Err(io::Error::other(join_err)));
+        if let Err(error) = wipe {
+            log::error!("Failed to erase the revoked device's wallet identity: {error}");
+        }
+        self.warren_identity.clear();
+        if let Err(error) = self.account_history.clear().await {
+            log::error!(
+                "{}",
+                error.display_chain_with_msg("Failed to clear the account history")
+            );
+        }
+        if let Some(device) = warren_token_provider::install_device()
+            && let Err(error) = device.forget()
+        {
+            log::error!("Failed to forget the revoked device identity: {error}");
+        }
     }
 
     /// The tunnel did not come down within the bound: the logouts waiting on
