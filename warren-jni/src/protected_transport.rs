@@ -451,6 +451,7 @@ fn to_hyper_method(method: Method) -> hyper::Method {
         Method::Get => hyper::Method::GET,
         Method::Post => hyper::Method::POST,
         Method::Delete => hyper::Method::DELETE,
+        Method::Patch => hyper::Method::PATCH,
     }
 }
 
@@ -607,7 +608,7 @@ mod tests {
     use warren_api::transport::{HttpRequest, HttpTransport, Method, TransportError};
 
     use super::loopback::serve_one;
-    use super::{ProtectFn, ProtectedTransport, RESOLVED_FOR, ResolveCache};
+    use super::{ProtectFn, ProtectedTransport, RESOLVED_FOR, ResolveCache, to_hyper_method};
 
     #[test]
     fn the_tls_configs_are_built_once_per_process() {
@@ -989,6 +990,16 @@ mod tests {
             .expect("3 s covers a 300 ms server");
         assert_eq!(response.status, 200);
         server.await.expect("server");
+    }
+
+    /// A device rename is the SDK's only `PATCH`; sent as anything else the
+    /// registry answers 405 and the rename is lost.
+    #[test]
+    fn every_sdk_method_keeps_its_http_verb() {
+        assert_eq!(to_hyper_method(Method::Get), hyper::Method::GET);
+        assert_eq!(to_hyper_method(Method::Post), hyper::Method::POST);
+        assert_eq!(to_hyper_method(Method::Delete), hyper::Method::DELETE);
+        assert_eq!(to_hyper_method(Method::Patch), hyper::Method::PATCH);
     }
 
     #[test]
