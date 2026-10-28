@@ -1856,9 +1856,13 @@ class WarrenQuinnAdapterTest {
 
         adapter.disconnectWithin(1_000, holdLockedApps = false)
 
-        assertTrue(CLOSE_LOCK_GUARD in platform.calls.toList())
+        // The bound runs on the test's virtual clock, which can call it spent
+        // while the teardown still waits on the adapter's own dispatcher; the
+        // teardown then finishes in the background, so its end is awaited.
+        awaitReal("the teardown must close the guard", { platform.calls.toString() }) {
+            CLOSE_LOCK_GUARD in platform.calls.toList() && !adapter.lockGuardActive.value
+        }
         assertFalse(ESTABLISH_LOCK_GUARD in platform.calls.toList())
-        assertFalse(adapter.lockGuardActive.value)
     }
 
     /** Without lockdown a flapping tunnel releases the device, never the locked apps. */
