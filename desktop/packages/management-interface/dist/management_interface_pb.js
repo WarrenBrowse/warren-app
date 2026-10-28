@@ -5745,7 +5745,8 @@ proto.mullvad_daemon.management_interface.ErrorState.AuthFailedError = {
   EXPIRED_ACCOUNT: 2,
   TOO_MANY_CONNECTIONS: 3,
   BANNED: 4,
-  BANNED_PORT_FORWARDING: 5
+  BANNED_PORT_FORWARDING: 5,
+  NO_SESSION_TOKEN: 6
 };
 
 /**

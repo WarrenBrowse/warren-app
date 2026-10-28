@@ -19,6 +19,12 @@ pub enum AuthFailed {
     /// token. Distinct from [`Self::Banned`] only so the app can show a
     /// forwarded-port-specific suspension; both are equally fatal.
     BannedPortForwarding,
+    /// Warren: the tokens-only main session found no anonymous session token
+    /// the exit admits although the subscription is active, carried as the
+    /// `[NO_SESSION_TOKEN]` token. Other devices of the account, or an older
+    /// client of it, hold this epoch's tokens, so the app offers the
+    /// account's device list (warren-core doc 115).
+    NoSessionToken,
     Unknown,
 }
 
@@ -31,6 +37,7 @@ impl<'a> From<&'a str> for AuthFailed {
             Some("TOO_MANY_CONNECTIONS") => TooManyConnections,
             Some("BANNED") => Banned,
             Some("BANNED_PORT_FORWARDING") => BannedPortForwarding,
+            Some("NO_SESSION_TOKEN") => NoSessionToken,
             Some(fail_id) => {
                 log::warn!(
                     "Received AUTH_FAILED message with unknown failure ID: {}",
@@ -55,6 +62,7 @@ impl AuthFailed {
             TooManyConnections => "[TOO_MANY_CONNECTIONS]",
             Banned => "[BANNED]",
             BannedPortForwarding => "[BANNED_PORT_FORWARDING]",
+            NoSessionToken => "[NO_SESSION_TOKEN]",
             Unknown => "[Unknown]",
         }
     }
@@ -124,6 +132,19 @@ mod tests {
         for (expected_output, input) in tests.iter() {
             assert_eq!(*expected_output, parse_string(input));
         }
+    }
+
+    #[test]
+    fn a_session_with_no_token_while_subscribed_reads_as_no_session_token() {
+        // The message `talpid-warren-tunnel` carries once an active
+        // subscription has waited out a session no token admits.
+        let reason = "[NO_SESSION_TOKEN] no anonymous session token the exit admits (no token \
+                      available) although the subscription is active";
+        assert!(
+            matches!(AuthFailed::from(reason), AuthFailed::NoSessionToken),
+            "a tokenless session must parse as NoSessionToken"
+        );
+        assert_eq!(AuthFailed::NoSessionToken.as_str(), "[NO_SESSION_TOKEN]");
     }
 
     #[test]

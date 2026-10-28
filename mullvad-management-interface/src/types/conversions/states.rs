@@ -311,6 +311,7 @@ impl From<mullvad_types::auth_failed::AuthFailed> for proto::error_state::AuthFa
             AuthFailed::TooManyConnections => error_state::AuthFailedError::TooManyConnections,
             AuthFailed::Banned => error_state::AuthFailedError::Banned,
             AuthFailed::BannedPortForwarding => error_state::AuthFailedError::BannedPortForwarding,
+            AuthFailed::NoSessionToken => error_state::AuthFailedError::NoSessionToken,
             AuthFailed::Unknown => error_state::AuthFailedError::Unknown,
         }
     }
@@ -334,6 +335,7 @@ impl From<proto::error_state::AuthFailedError> for mullvad_types::auth_failed::A
             error_state::AuthFailedError::TooManyConnections => AuthFailed::TooManyConnections,
             error_state::AuthFailedError::Banned => AuthFailed::Banned,
             error_state::AuthFailedError::BannedPortForwarding => AuthFailed::BannedPortForwarding,
+            error_state::AuthFailedError::NoSessionToken => AuthFailed::NoSessionToken,
             error_state::AuthFailedError::Unknown => AuthFailed::Unknown,
         }
     }
@@ -559,5 +561,20 @@ fn try_firewall_policy_error_from_i32(
         _ => Err(FromProtobufTypeError::invalid_argument(
             "invalid firewall policy error",
         )),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use mullvad_types::auth_failed::AuthFailed;
+
+    use crate::types::proto::error_state::AuthFailedError;
+
+    #[test]
+    fn a_session_with_no_token_crosses_the_interface_as_itself() {
+        let sent = AuthFailedError::from(AuthFailed::NoSessionToken);
+
+        assert_eq!(sent, AuthFailedError::NoSessionToken);
+        assert!(matches!(AuthFailed::from(sent), AuthFailed::NoSessionToken));
     }
 }

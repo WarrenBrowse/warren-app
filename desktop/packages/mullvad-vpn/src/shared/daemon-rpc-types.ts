@@ -113,6 +113,10 @@ export enum AuthFailedError {
   // Warren: banned specifically for port-forwarding abuse, so the app shows a
   // forwarded-port revocation message. Same fatal handling as banned.
   bannedPortForwarding,
+  // Warren: the tokens-only session found no session token the exit admits
+  // although the subscription is active; other devices of the account hold
+  // them, so the app offers the account's device list.
+  noSessionToken,
 }
 
 export enum TunnelParameterError {

@@ -3940,23 +3940,54 @@ impl SupervisorVerdict {
     }
 }
 
+/// The auth-failed token of a tokens-only main session that found no token
+/// the exit admits while the subscription is active: the wallet's other
+/// devices, or an older client of it, hold this epoch's tokens. The apps offer
+/// the account's device list on it (warren-core doc 115).
+pub const NO_SESSION_TOKEN_REASON: &str = "[NO_SESSION_TOKEN]";
+
 /// The error a first session that closed before it came up ends in, naming
-/// the cause the log needs instead of a generic failure. Every case stays a
-/// recoverable handshake failure: a network change brings an entry back, and
-/// the token refresh refills an empty store.
+/// the cause the log needs instead of a generic failure. Every case stays
+/// recoverable: a network change brings an entry back, and the token refresh
+/// refills an empty store.
+///
+/// A missing token is an exit refusal for the state machine
+/// (`talpid-core`'s `exit_refusal`), so a session that never comes up is
+/// surfaced instead of dialed in silence: as the device limit when the exit
+/// said every token is in use elsewhere, and otherwise as an expired account
+/// when the account API says there is no subscription (no subscription, no
+/// token) or as [`NO_SESSION_TOKEN_REASON`] once an active one has waited the
+/// refusal patience out.
 fn initial_session_closed(verdict: SupervisorVerdict) -> Error {
-    Error::Handshake(match verdict {
-        SupervisorVerdict::Unroutable => {
-            "no entry relay reachable on this network's address families".to_owned()
-        }
-        SupervisorVerdict::NoToken(cause) => format!(
-            "no anonymous session token the exit admits ({cause}); retrying as the token \
-             refresh brings new ones"
+    match verdict {
+        SupervisorVerdict::Unroutable => Error::Handshake(
+            "no entry relay reachable on this network's address families".to_owned(),
         ),
-        SupervisorVerdict::Other => {
-            "multi-hop supervisor stopped before an initial session".to_owned()
+        SupervisorVerdict::NoToken(NoSessionTokenCause::AllInUse) => {
+            let reason = format!(
+                "[TOO_MANY_CONNECTIONS] the exit refused every session token \
+                 ({}); other devices of the account hold them",
+                NoSessionTokenCause::AllInUse
+            );
+            Error::SessionRejected(Refusal {
+                reason: reason.clone(),
+                if_active: Some(reason),
+            })
         }
-    })
+        SupervisorVerdict::NoToken(cause) => Error::SessionRejected(Refusal {
+            reason: format!(
+                "[EXPIRED_ACCOUNT] no anonymous session token the exit admits ({cause}), and \
+                 no active subscription to mint one"
+            ),
+            if_active: Some(format!(
+                "{NO_SESSION_TOKEN_REASON} no anonymous session token the exit admits \
+                 ({cause}) although the subscription is active"
+            )),
+        }),
+        SupervisorVerdict::Other => {
+            Error::Handshake("multi-hop supervisor stopped before an initial session".to_owned())
+        }
+    }
 }
 
 /// The relay ids among `relays` this host holds no route to on any family
@@ -4359,23 +4390,63 @@ mod tests {
     }
 
     #[test]
-    fn a_first_session_without_a_token_says_so_and_stays_recoverable() {
+    fn a_first_session_without_a_token_stays_recoverable_and_feeds_the_refusal_run() {
         for cause in [
             NoSessionTokenCause::Empty,
             NoSessionTokenCause::AllRefused,
             NoSessionTokenCause::AllInUse,
         ] {
             let err = initial_session_closed(SupervisorVerdict::NoToken(cause));
-            let Error::Handshake(message) = &err else {
-                panic!("a handshake failure, got {err:?}");
-            };
-            assert!(
-                message.contains("no anonymous session token"),
-                "{cause:?}: {message}"
-            );
+
             assert!(
                 err.is_recoverable(),
                 "{cause:?}: the token refresh refills the store, so the state machine must retry"
+            );
+            assert!(
+                err.session_rejection().is_some(),
+                "{cause:?}: a session that never comes up must not dial in silence forever"
+            );
+        }
+    }
+
+    #[test]
+    fn every_token_in_use_elsewhere_surfaces_as_the_device_limit() {
+        let err = initial_session_closed(SupervisorVerdict::NoToken(NoSessionTokenCause::AllInUse));
+        let refusal = err.session_rejection().expect("a refusal");
+
+        assert!(
+            refusal.reason.starts_with("[TOO_MANY_CONNECTIONS]"),
+            "{}",
+            refusal.reason
+        );
+        assert!(
+            refusal
+                .if_active
+                .as_deref()
+                .is_some_and(|reason| reason.starts_with("[TOO_MANY_CONNECTIONS]")),
+            "{:?}",
+            refusal.if_active
+        );
+    }
+
+    #[test]
+    fn no_token_for_an_active_subscription_surfaces_as_no_session_token() {
+        for cause in [NoSessionTokenCause::Empty, NoSessionTokenCause::AllRefused] {
+            let err = initial_session_closed(SupervisorVerdict::NoToken(cause));
+            let refusal = err.session_rejection().expect("a refusal");
+
+            assert!(
+                refusal.reason.starts_with("[EXPIRED_ACCOUNT]"),
+                "{cause:?}: without a subscription there is no token to have: {}",
+                refusal.reason
+            );
+            assert!(
+                refusal
+                    .if_active
+                    .as_deref()
+                    .is_some_and(|reason| reason.starts_with(NO_SESSION_TOKEN_REASON)),
+                "{cause:?}: {:?}",
+                refusal.if_active
             );
         }
     }

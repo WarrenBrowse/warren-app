@@ -470,6 +470,10 @@ message ErrorState {
     // the port-forwarding reason code), so the app shows a forwarded-port
     // suspension. Same fatal handling as BANNED.
     BANNED_PORT_FORWARDING = 5;
+    // Warren: the tokens-only main session found no session token the exit
+    // admits although the subscription is active; the app offers the
+    // account's device list.
+    NO_SESSION_TOKEN = 6;
   }
 
   enum GenerationError {

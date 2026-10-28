@@ -385,6 +385,7 @@ const fn get_auth_failed_message(auth_failed: AuthFailed) -> &'static str {
     const TOO_MANY_CONNECTIONS_MSG: &str = "This account has too many simultaneous connections. Disconnect another device or try connecting again shortly.";
     const BANNED_MSG: &str = "Your access has been revoked for a usage policy violation. Contact support if you believe this is a mistake.";
     const BANNED_PF_MSG: &str = "Your access has been revoked after repeated abuse reports about a forwarded port. You can contest this at https://warren.ro/signalements";
+    const NO_SESSION_TOKEN_MSG: &str = "No session token is left for this device although the subscription is active: other devices of this account, or an older Warren version on one of them, hold the current ones. Disconnect a device from the device list in the app, or update the older one.";
     const UNKNOWN_MSG: &str = "Unknown error.";
 
     match auth_failed {
@@ -393,6 +394,7 @@ const fn get_auth_failed_message(auth_failed: AuthFailed) -> &'static str {
         AuthFailed::TooManyConnections => TOO_MANY_CONNECTIONS_MSG,
         AuthFailed::Banned => BANNED_MSG,
         AuthFailed::BannedPortForwarding => BANNED_PF_MSG,
+        AuthFailed::NoSessionToken => NO_SESSION_TOKEN_MSG,
         AuthFailed::Unknown => UNKNOWN_MSG,
     }
 }
@@ -450,6 +452,17 @@ mod tests {
 
             assert_eq!(line, format!("Blocked: ACCESS REVOKED. {message}"));
         }
+    }
+
+    #[test]
+    fn a_session_with_no_token_points_at_the_device_list() {
+        let line = auth_failed_line(AuthFailed::NoSessionToken);
+
+        assert!(
+            line.starts_with("Blocked: Authentication with remote server failed: "),
+            "{line}"
+        );
+        assert!(line.contains("device list"), "{line}");
     }
 
     #[test]
