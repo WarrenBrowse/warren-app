@@ -2157,7 +2157,7 @@ where
             ));
             runtime.block_on(call(client))
         }
-        _ => crate::devices::failure("no_wallet"),
+        _ => warren_standing::device_registry::failure("no_wallet"),
     };
     match jnix_env.new_string(json) {
         Ok(s) => s.into_inner() as jstring,

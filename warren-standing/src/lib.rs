@@ -24,6 +24,7 @@
 //! the desktop daemon, Android and iOS present on every NAT-PMP request.
 
 pub mod device;
+pub mod device_registry;
 pub mod entitlements;
 mod ledger;
 mod natpmp_slot;
