@@ -182,11 +182,11 @@ impl IssuedElsewhereNotice {
 }
 
 /// What a refresh round logs when [`IssuedElsewhereNotice::due`]: without it
-/// the round reads as one that minted nothing yet, while every session of the
-/// epoch logs in with the wallet.
+/// the round reads as one that minted nothing yet, while the main session,
+/// admitted on tokens only, has nothing to present until the epoch ends.
 pub const ISSUED_ELSEWHERE_WARNING: &str = "Warren v7 token refresh: the issuer served this \
     epoch's session tokens to another batch of the wallet (a device of it on an older \
-    release?); sessions log in with the wallet until the epoch ends";
+    release?); no tokens-only session can be admitted until the epoch ends";
 
 /// Whether the issuer served the epoch of `now` to another batch of the
 /// wallet (`already_issued`).
