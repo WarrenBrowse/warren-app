@@ -38,6 +38,7 @@ import {
   WarrenPubkeyMismatch,
   WarrenStatus,
 } from './daemon-rpc-types';
+import { DeviceActionResult, DeviceListResult, IDeviceRename } from './devices';
 import { ForumAttachResult, IForumAttachRequest } from './forum-attach';
 import { ForumIdentity } from './forum-identity';
 import { ForumLoginApproval, IForumLoginRequest } from './forum-login';
@@ -482,6 +483,13 @@ export const ipcSchema = {
     // Put a port-forwarding warning away from the banner, keyed by a digest of
     // its case reference. It stays listed in the port-forwarding view.
     dismissStrike: send<string>(),
+  },
+  // The account's devices (warren-core doc 115), through the daemon's wallet.
+  devices: {
+    list: invoke<void, DeviceListResult>(),
+    // Revokes the device with this id. Revoking this device is its logout.
+    remove: invoke<string, DeviceActionResult>(),
+    rename: invoke<IDeviceRename, DeviceActionResult>(),
   },
   account: {
     '': notifyRenderer<IAccountData | undefined>(),

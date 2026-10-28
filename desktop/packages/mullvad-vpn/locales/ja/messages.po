@@ -6363,3 +6363,83 @@ msgstr "このデバイスの時計が%(minutes)d分ずれています。接続�
 msgctxt "in-app-notifications"
 msgid "This device’s clock is off: set it right to connect."
 msgstr "このデバイスの時計がずれています。接続するには時刻を正しく設定してください。"
+
+msgctxt "auth-failure"
+msgid "This device has no session credentials right now. Another device of your account may be holding them."
+msgstr "このデバイスには現在セッション認証情報がありません。アカウントの別のデバイスが保持している可能性があります。"
+
+msgctxt "device-management"
+msgid "A device of this account runs a version of Warren older than 1.1.36. It no longer blocks your other devices. Update or uninstall it."
+msgstr "このアカウントのデバイスの1台が、1.1.36より古いバージョンのWarrenを使用しています。ほかのデバイスをブロックすることはなくなりました。アップデートするかアンインストールしてください。"
+
+msgctxt "device-management"
+msgid "Active today"
+msgstr "今日アクティブ"
+
+msgctxt "device-management"
+msgid "An older version of Warren"
+msgstr "古いバージョンのWarren"
+
+msgctxt "device-management"
+msgid "Browser extension"
+msgstr "ブラウザ拡張機能"
+
+msgctxt "device-management"
+msgid "Command line"
+msgstr "コマンドライン"
+
+msgctxt "device-management"
+msgid "Could not disconnect the device. Try again."
+msgstr "デバイスを接続解除できませんでした。もう一度お試しください。"
+
+msgctxt "device-management"
+msgid "Could not load your devices. Try again."
+msgstr "デバイスを読み込めませんでした。もう一度お試しください。"
+
+msgctxt "device-management"
+msgid "Could not rename the device. Try again."
+msgstr "デバイス名を変更できませんでした。もう一度お試しください。"
+
+msgctxt "device-management"
+msgid "Devices"
+msgstr "デバイス"
+
+msgctxt "device-management"
+msgid "Devices signed in to this account. Disconnecting one signs it out: it needs the recovery phrase to sign in again."
+msgstr "このアカウントにサインインしているデバイスです。接続解除するとそのデバイスはサインアウトされ、再度サインインするにはリカバリーフレーズが必要になります。"
+
+msgctxt "device-management"
+msgid "Disconnect"
+msgstr "接続解除"
+
+msgctxt "device-management"
+msgid "Disconnect %(name)s?"
+msgstr "%(name)sを接続解除しますか？"
+
+msgctxt "device-management"
+msgid "It will be signed out within 10 minutes and will need the recovery phrase to sign in again. For a lost or stolen device, move to a new account instead: a device that keeps the recovery phrase can sign in again."
+msgstr "10分以内にサインアウトされ、再度サインインするにはリカバリーフレーズが必要になります。紛失または盗難にあったデバイスの場合は、代わりに新しいアカウントに移行してください。リカバリーフレーズを保持しているデバイスは再度サインインできます。"
+
+msgctxt "device-management"
+msgid "Last active %(date)s"
+msgstr "最終アクティブ: %(date)s"
+
+msgctxt "device-management"
+msgid "Last seen %(date)s"
+msgstr "最終確認: %(date)s"
+
+msgctxt "device-management"
+msgid "Other platform"
+msgstr "その他のプラットフォーム"
+
+msgctxt "device-management"
+msgid "Rename device"
+msgstr "デバイス名を変更"
+
+msgctxt "device-management"
+msgid "This device"
+msgstr "このデバイス"
+
+msgctxt "device-management"
+msgid "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again."
+msgstr "このデバイスはアカウントの別のデバイスから接続解除されました。再び使用するには、リカバリーフレーズでサインインしてください。"

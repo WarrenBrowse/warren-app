@@ -6363,3 +6363,83 @@ msgstr "此裝置的時鐘偏差 %(minutes)d 分鐘：請校正時間後再連�
 msgctxt "in-app-notifications"
 msgid "This device’s clock is off: set it right to connect."
 msgstr "此裝置的時鐘不準確：請校正時間後再連線。"
+
+msgctxt "auth-failure"
+msgid "This device has no session credentials right now. Another device of your account may be holding them."
+msgstr "此裝置目前沒有工作階段憑證。您帳戶中的另一台裝置可能正在佔用。"
+
+msgctxt "device-management"
+msgid "A device of this account runs a version of Warren older than 1.1.36. It no longer blocks your other devices. Update or uninstall it."
+msgstr "此帳戶中有一台裝置執行的 Warren 版本早於 1.1.36。它不再封鎖您的其他裝置。請更新或解除安裝。"
+
+msgctxt "device-management"
+msgid "Active today"
+msgstr "今天有活動"
+
+msgctxt "device-management"
+msgid "An older version of Warren"
+msgstr "舊版 Warren"
+
+msgctxt "device-management"
+msgid "Browser extension"
+msgstr "瀏覽器擴充功能"
+
+msgctxt "device-management"
+msgid "Command line"
+msgstr "命令列"
+
+msgctxt "device-management"
+msgid "Could not disconnect the device. Try again."
+msgstr "無法中斷該裝置的連線。請再試一次。"
+
+msgctxt "device-management"
+msgid "Could not load your devices. Try again."
+msgstr "無法載入您的裝置。請再試一次。"
+
+msgctxt "device-management"
+msgid "Could not rename the device. Try again."
+msgstr "無法重新命名該裝置。請再試一次。"
+
+msgctxt "device-management"
+msgid "Devices"
+msgstr "裝置"
+
+msgctxt "device-management"
+msgid "Devices signed in to this account. Disconnecting one signs it out: it needs the recovery phrase to sign in again."
+msgstr "已登入此帳戶的裝置。中斷某台裝置的連線會將其登出：它需要復原短語才能重新登入。"
+
+msgctxt "device-management"
+msgid "Disconnect"
+msgstr "中斷連線"
+
+msgctxt "device-management"
+msgid "Disconnect %(name)s?"
+msgstr "要中斷 %(name)s 的連線嗎？"
+
+msgctxt "device-management"
+msgid "It will be signed out within 10 minutes and will need the recovery phrase to sign in again. For a lost or stolen device, move to a new account instead: a device that keeps the recovery phrase can sign in again."
+msgstr "它會在 10 分鐘內登出，並需要復原短語才能重新登入。若裝置遺失或遭竊，請改為移轉到新帳戶：保有復原短語的裝置可以重新登入。"
+
+msgctxt "device-management"
+msgid "Last active %(date)s"
+msgstr "上次活動：%(date)s"
+
+msgctxt "device-management"
+msgid "Last seen %(date)s"
+msgstr "上次出現：%(date)s"
+
+msgctxt "device-management"
+msgid "Other platform"
+msgstr "其他平台"
+
+msgctxt "device-management"
+msgid "Rename device"
+msgstr "重新命名裝置"
+
+msgctxt "device-management"
+msgid "This device"
+msgstr "此裝置"
+
+msgctxt "device-management"
+msgid "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again."
+msgstr "此裝置已被您帳戶中的另一台裝置中斷連線。請使用復原短語登入以繼續使用。"

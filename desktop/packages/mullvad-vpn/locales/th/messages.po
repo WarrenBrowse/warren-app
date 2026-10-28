@@ -6363,3 +6363,83 @@ msgstr "นาฬิกาของอุปกรณ์นี้คลาดเ
 msgctxt "in-app-notifications"
 msgid "This device’s clock is off: set it right to connect."
 msgstr "นาฬิกาของอุปกรณ์นี้คลาดเคลื่อน โปรดตั้งเวลาให้ถูกต้องเพื่อเชื่อมต่อ"
+
+msgctxt "auth-failure"
+msgid "This device has no session credentials right now. Another device of your account may be holding them."
+msgstr "อุปกรณ์นี้ยังไม่มีข้อมูลรับรองเซสชันในขณะนี้ อุปกรณ์อื่นในบัญชีของคุณอาจถือครองอยู่"
+
+msgctxt "device-management"
+msgid "A device of this account runs a version of Warren older than 1.1.36. It no longer blocks your other devices. Update or uninstall it."
+msgstr "อุปกรณ์หนึ่งในบัญชีนี้ใช้ Warren เวอร์ชันที่เก่ากว่า 1.1.36 อุปกรณ์นั้นไม่ได้บล็อกอุปกรณ์อื่นของคุณอีกต่อไป โปรดอัปเดตหรือถอนการติดตั้ง"
+
+msgctxt "device-management"
+msgid "Active today"
+msgstr "ใช้งานวันนี้"
+
+msgctxt "device-management"
+msgid "An older version of Warren"
+msgstr "Warren เวอร์ชันเก่า"
+
+msgctxt "device-management"
+msgid "Browser extension"
+msgstr "ส่วนขยายเบราว์เซอร์"
+
+msgctxt "device-management"
+msgid "Command line"
+msgstr "บรรทัดคำสั่ง"
+
+msgctxt "device-management"
+msgid "Could not disconnect the device. Try again."
+msgstr "ไม่สามารถตัดการเชื่อมต่ออุปกรณ์ได้ โปรดลองอีกครั้ง"
+
+msgctxt "device-management"
+msgid "Could not load your devices. Try again."
+msgstr "ไม่สามารถโหลดอุปกรณ์ของคุณได้ โปรดลองอีกครั้ง"
+
+msgctxt "device-management"
+msgid "Could not rename the device. Try again."
+msgstr "ไม่สามารถเปลี่ยนชื่ออุปกรณ์ได้ โปรดลองอีกครั้ง"
+
+msgctxt "device-management"
+msgid "Devices"
+msgstr "อุปกรณ์"
+
+msgctxt "device-management"
+msgid "Devices signed in to this account. Disconnecting one signs it out: it needs the recovery phrase to sign in again."
+msgstr "อุปกรณ์ที่ลงชื่อเข้าใช้บัญชีนี้ การตัดการเชื่อมต่ออุปกรณ์จะทำให้อุปกรณ์นั้นออกจากระบบ และต้องใช้วลีกู้คืนเพื่อลงชื่อเข้าใช้อีกครั้ง"
+
+msgctxt "device-management"
+msgid "Disconnect"
+msgstr "ตัดการเชื่อมต่อ"
+
+msgctxt "device-management"
+msgid "Disconnect %(name)s?"
+msgstr "ตัดการเชื่อมต่อ %(name)s ใช่ไหม"
+
+msgctxt "device-management"
+msgid "It will be signed out within 10 minutes and will need the recovery phrase to sign in again. For a lost or stolen device, move to a new account instead: a device that keeps the recovery phrase can sign in again."
+msgstr "อุปกรณ์จะออกจากระบบภายใน 10 นาที และต้องใช้วลีกู้คืนเพื่อลงชื่อเข้าใช้อีกครั้ง สำหรับอุปกรณ์ที่สูญหายหรือถูกขโมย ให้ย้ายไปใช้บัญชีใหม่แทน เพราะอุปกรณ์ที่ยังเก็บวลีกู้คืนไว้สามารถลงชื่อเข้าใช้อีกครั้งได้"
+
+msgctxt "device-management"
+msgid "Last active %(date)s"
+msgstr "ใช้งานล่าสุด %(date)s"
+
+msgctxt "device-management"
+msgid "Last seen %(date)s"
+msgstr "พบล่าสุด %(date)s"
+
+msgctxt "device-management"
+msgid "Other platform"
+msgstr "แพลตฟอร์มอื่น"
+
+msgctxt "device-management"
+msgid "Rename device"
+msgstr "เปลี่ยนชื่ออุปกรณ์"
+
+msgctxt "device-management"
+msgid "This device"
+msgstr "อุปกรณ์นี้"
+
+msgctxt "device-management"
+msgid "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again."
+msgstr "อุปกรณ์นี้ถูกตัดการเชื่อมต่อจากอุปกรณ์อื่นในบัญชีของคุณ ลงชื่อเข้าใช้ด้วยวลีกู้คืนเพื่อใช้งานอีกครั้ง"

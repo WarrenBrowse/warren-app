@@ -6396,3 +6396,83 @@ msgstr "Enhedens ur går %(minutes)d min forkert: stil det rigtigt for at oprett
 msgctxt "in-app-notifications"
 msgid "This device’s clock is off: set it right to connect."
 msgstr "Enhedens ur går forkert: stil det rigtigt for at oprette forbindelse."
+
+msgctxt "auth-failure"
+msgid "This device has no session credentials right now. Another device of your account may be holding them."
+msgstr "Denne enhed har ingen sessionsoplysninger lige nu. En anden enhed på din konto bruger dem muligvis."
+
+msgctxt "device-management"
+msgid "A device of this account runs a version of Warren older than 1.1.36. It no longer blocks your other devices. Update or uninstall it."
+msgstr "En enhed på denne konto kører en version af Warren, der er ældre end 1.1.36. Den blokerer ikke længere dine andre enheder. Opdater eller afinstaller den."
+
+msgctxt "device-management"
+msgid "Active today"
+msgstr "Aktiv i dag"
+
+msgctxt "device-management"
+msgid "An older version of Warren"
+msgstr "En ældre version af Warren"
+
+msgctxt "device-management"
+msgid "Browser extension"
+msgstr "Browserudvidelse"
+
+msgctxt "device-management"
+msgid "Command line"
+msgstr "Kommandolinje"
+
+msgctxt "device-management"
+msgid "Could not disconnect the device. Try again."
+msgstr "Enheden kunne ikke frakobles. Prøv igen."
+
+msgctxt "device-management"
+msgid "Could not load your devices. Try again."
+msgstr "Dine enheder kunne ikke indlæses. Prøv igen."
+
+msgctxt "device-management"
+msgid "Could not rename the device. Try again."
+msgstr "Enheden kunne ikke omdøbes. Prøv igen."
+
+msgctxt "device-management"
+msgid "Devices"
+msgstr "Enheder"
+
+msgctxt "device-management"
+msgid "Devices signed in to this account. Disconnecting one signs it out: it needs the recovery phrase to sign in again."
+msgstr "Enheder, der er logget ind på denne konto. Når du frakobler en enhed, bliver den logget ud: den skal bruge gendannelsessætningen for at logge ind igen."
+
+msgctxt "device-management"
+msgid "Disconnect"
+msgstr "Frakobl"
+
+msgctxt "device-management"
+msgid "Disconnect %(name)s?"
+msgstr "Frakobl %(name)s?"
+
+msgctxt "device-management"
+msgid "It will be signed out within 10 minutes and will need the recovery phrase to sign in again. For a lost or stolen device, move to a new account instead: a device that keeps the recovery phrase can sign in again."
+msgstr "Den bliver logget ud inden for 10 minutter og skal bruge gendannelsessætningen for at logge ind igen. Hvis en enhed er mistet eller stjålet, så skift i stedet til en ny konto: en enhed, der har gendannelsessætningen, kan logge ind igen."
+
+msgctxt "device-management"
+msgid "Last active %(date)s"
+msgstr "Sidst aktiv %(date)s"
+
+msgctxt "device-management"
+msgid "Last seen %(date)s"
+msgstr "Sidst set %(date)s"
+
+msgctxt "device-management"
+msgid "Other platform"
+msgstr "Anden platform"
+
+msgctxt "device-management"
+msgid "Rename device"
+msgstr "Omdøb enhed"
+
+msgctxt "device-management"
+msgid "This device"
+msgstr "Denne enhed"
+
+msgctxt "device-management"
+msgid "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again."
+msgstr "Denne enhed blev frakoblet fra en anden enhed på din konto. Log ind med din gendannelsessætning for at bruge den igen."

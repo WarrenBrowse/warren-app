@@ -30,6 +30,37 @@ export const StyledMessage = styled.span(smallText, {
   color: colors.white,
 });
 
+/**
+ * Why this device is signed out: the daemon lands here only once another
+ * device of the account revoked this one (warren-core doc 115).
+ */
+export function DeviceRevokedMessage({ blocking }: { blocking: boolean }) {
+  return (
+    <>
+      <StyledTitle data-testid="title">
+        {messages.pgettext('device-management', 'Session is inactive')}
+      </StyledTitle>
+      <StyledMessage>
+        {
+          // TRANSLATORS: Shown on a device that another device of the account
+          // TRANSLATORS: disconnected (revoked).
+          messages.pgettext(
+            'device-management',
+            'This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again.',
+          )
+        }
+      </StyledMessage>
+      <StyledMessage>
+        {blocking &&
+          messages.pgettext(
+            'device-management',
+            'Going to login will unblock the Internet on this device.',
+          )}
+      </StyledMessage>
+    </>
+  );
+}
+
 export function DeviceRevokedView() {
   const { leaveRevokedDevice } = useAppContext();
   const tunnelState = useSelector((state) => state.connection.status);
@@ -58,22 +89,7 @@ export function DeviceRevokedView() {
               <Flex justifyContent="center" margin={{ bottom: 'medium' }}>
                 <IconBadge state="negative" />
               </Flex>
-              <StyledTitle data-testid="title">
-                {messages.pgettext('device-management', 'Session is inactive')}
-              </StyledTitle>
-              <StyledMessage>
-                {messages.pgettext(
-                  'device-management',
-                  'Your session has ended. To connect again, you will need to log back in.',
-                )}
-              </StyledMessage>
-              <StyledMessage>
-                {tunnelState.state !== 'disconnected' &&
-                  messages.pgettext(
-                    'device-management',
-                    'Going to login will unblock the Internet on this device.',
-                  )}
-              </StyledMessage>
+              <DeviceRevokedMessage blocking={tunnelState.state !== 'disconnected'} />
             </FlexColumn>
 
             <LogoutFailure result={logoutResult} onRetry={goToLogin} />

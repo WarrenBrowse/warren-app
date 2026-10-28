@@ -6396,3 +6396,83 @@ msgstr "Tämän laitteen kello on %(minutes)d min väärässä: korjaa se yhdist
 msgctxt "in-app-notifications"
 msgid "This device’s clock is off: set it right to connect."
 msgstr "Tämän laitteen kello on väärässä: korjaa se yhdistääksesi."
+
+msgctxt "auth-failure"
+msgid "This device has no session credentials right now. Another device of your account may be holding them."
+msgstr "Tällä laitteella ei ole juuri nyt istunnon tunnistetietoja. Jokin toinen tilisi laite saattaa pitää niitä hallussaan."
+
+msgctxt "device-management"
+msgid "A device of this account runs a version of Warren older than 1.1.36. It no longer blocks your other devices. Update or uninstall it."
+msgstr "Jokin tämän tilin laite käyttää Warrenin versiota, joka on vanhempi kuin 1.1.36. Se ei enää estä muita laitteitasi. Päivitä tai poista se."
+
+msgctxt "device-management"
+msgid "Active today"
+msgstr "Aktiivinen tänään"
+
+msgctxt "device-management"
+msgid "An older version of Warren"
+msgstr "Warrenin vanhempi versio"
+
+msgctxt "device-management"
+msgid "Browser extension"
+msgstr "Selainlaajennus"
+
+msgctxt "device-management"
+msgid "Command line"
+msgstr "Komentorivi"
+
+msgctxt "device-management"
+msgid "Could not disconnect the device. Try again."
+msgstr "Laitteen yhteyttä ei voitu katkaista. Yritä uudelleen."
+
+msgctxt "device-management"
+msgid "Could not load your devices. Try again."
+msgstr "Laitteitasi ei voitu ladata. Yritä uudelleen."
+
+msgctxt "device-management"
+msgid "Could not rename the device. Try again."
+msgstr "Laitteen nimeä ei voitu muuttaa. Yritä uudelleen."
+
+msgctxt "device-management"
+msgid "Devices"
+msgstr "Laitteet"
+
+msgctxt "device-management"
+msgid "Devices signed in to this account. Disconnecting one signs it out: it needs the recovery phrase to sign in again."
+msgstr "Tälle tilille kirjautuneet laitteet. Laitteen yhteyden katkaiseminen kirjaa sen ulos: se tarvitsee palautuslauseen kirjautuakseen uudelleen."
+
+msgctxt "device-management"
+msgid "Disconnect"
+msgstr "Katkaise yhteys"
+
+msgctxt "device-management"
+msgid "Disconnect %(name)s?"
+msgstr "Katkaistaanko laitteen %(name)s yhteys?"
+
+msgctxt "device-management"
+msgid "It will be signed out within 10 minutes and will need the recovery phrase to sign in again. For a lost or stolen device, move to a new account instead: a device that keeps the recovery phrase can sign in again."
+msgstr "Laite kirjataan ulos 10 minuutin kuluessa, ja se tarvitsee palautuslauseen kirjautuakseen uudelleen. Jos laite on kadonnut tai varastettu, siirry mieluummin uudelle tilille: laite, jolla palautuslause on tallessa, voi kirjautua uudelleen."
+
+msgctxt "device-management"
+msgid "Last active %(date)s"
+msgstr "Viimeksi aktiivinen %(date)s"
+
+msgctxt "device-management"
+msgid "Last seen %(date)s"
+msgstr "Viimeksi nähty %(date)s"
+
+msgctxt "device-management"
+msgid "Other platform"
+msgstr "Muu alusta"
+
+msgctxt "device-management"
+msgid "Rename device"
+msgstr "Nimeä laite uudelleen"
+
+msgctxt "device-management"
+msgid "This device"
+msgstr "Tämä laite"
+
+msgctxt "device-management"
+msgid "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again."
+msgstr "Tämän laitteen yhteys katkaistiin toiselta tilisi laitteelta. Kirjaudu sisään palautuslauseellasi käyttääksesi sitä uudelleen."

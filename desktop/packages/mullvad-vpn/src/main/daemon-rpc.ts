@@ -39,9 +39,11 @@ import {
   WarrenPubkeyMismatch,
   WarrenStatus,
 } from '../shared/daemon-rpc-types';
+import { DeviceActionResult, DeviceListResult, IDeviceRename } from '../shared/devices';
 import { ExitHostname } from '../shared/network-stats';
 import { WithdrawalRequest, WithdrawalResult } from '../shared/withdrawal';
 import { daemonRpcPath } from './daemon-rpc-path';
+import { convertFromDeviceList, deviceFailureOfError } from './devices';
 import { ConnectionObserver, GrpcClient, noConnectionError } from './grpc-client';
 import {
   convertFromApiAccessMethodSetting,
@@ -504,6 +506,40 @@ export class DaemonRpc extends GrpcClient {
       };
     } catch (e) {
       return { type: 'error', reason: withdrawalFailureOfStatus((e as grpc.ServiceError).code) };
+    }
+  }
+
+  // The devices of the logged-in account. The daemon lists the wallet's own
+  // whatever account number a request names, so none is sent.
+  public async listDevices(): Promise<DeviceListResult> {
+    try {
+      const list = await this.callString<grpcTypes.DeviceList>(this.client.listDevices, '');
+      return { type: 'listed', list: convertFromDeviceList(list) };
+    } catch (e) {
+      return { type: 'error', reason: deviceFailureOfError(e) };
+    }
+  }
+
+  public async removeDevice(id: string): Promise<DeviceActionResult> {
+    const removal = new grpcTypes.DeviceRemoval();
+    removal.setDeviceId(id);
+    try {
+      await this.call<grpcTypes.DeviceRemoval, Empty>(this.client.removeDevice, removal);
+      return { type: 'done' };
+    } catch (e) {
+      return { type: 'error', reason: deviceFailureOfError(e) };
+    }
+  }
+
+  public async renameDevice(rename: IDeviceRename): Promise<DeviceActionResult> {
+    const request = new grpcTypes.DeviceRename();
+    request.setDeviceId(rename.id);
+    request.setName(rename.name);
+    try {
+      await this.call<grpcTypes.DeviceRename, Empty>(this.client.renameDevice, request);
+      return { type: 'done' };
+    } catch (e) {
+      return { type: 'error', reason: deviceFailureOfError(e) };
     }
   }
 

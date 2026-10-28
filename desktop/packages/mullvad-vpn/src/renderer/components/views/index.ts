@@ -14,6 +14,7 @@ export * from './forum-sign-in-code';
 export * from './filter';
 export * from './launch';
 export * from './main';
+export * from './manage-devices';
 export * from './multihop-settings';
 export * from './port-forwarding-settings';
 export * from './report-problem';

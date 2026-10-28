@@ -5547,3 +5547,83 @@ msgstr "Ceasul acestui dispozitiv este decalat cu %(minutes)d min: potriviți-l 
 msgctxt "in-app-notifications"
 msgid "This device’s clock is off: set it right to connect."
 msgstr "Ceasul acestui dispozitiv este decalat: potriviți-l pentru a vă conecta."
+
+msgctxt "auth-failure"
+msgid "This device has no session credentials right now. Another device of your account may be holding them."
+msgstr "Acest dispozitiv nu are momentan date de autentificare pentru sesiune. Este posibil ca un alt dispozitiv al contului tău să le folosească."
+
+msgctxt "device-management"
+msgid "A device of this account runs a version of Warren older than 1.1.36. It no longer blocks your other devices. Update or uninstall it."
+msgstr "Un dispozitiv al acestui cont rulează o versiune Warren mai veche de 1.1.36. Nu îți mai blochează celelalte dispozitive. Actualizează-l sau dezinstalează-l."
+
+msgctxt "device-management"
+msgid "Active today"
+msgstr "Activ astăzi"
+
+msgctxt "device-management"
+msgid "An older version of Warren"
+msgstr "O versiune mai veche de Warren"
+
+msgctxt "device-management"
+msgid "Browser extension"
+msgstr "Extensie de browser"
+
+msgctxt "device-management"
+msgid "Command line"
+msgstr "Linie de comandă"
+
+msgctxt "device-management"
+msgid "Could not disconnect the device. Try again."
+msgstr "Dispozitivul nu a putut fi deconectat. Încearcă din nou."
+
+msgctxt "device-management"
+msgid "Could not load your devices. Try again."
+msgstr "Dispozitivele tale nu au putut fi încărcate. Încearcă din nou."
+
+msgctxt "device-management"
+msgid "Could not rename the device. Try again."
+msgstr "Dispozitivul nu a putut fi redenumit. Încearcă din nou."
+
+msgctxt "device-management"
+msgid "Devices"
+msgstr "Dispozitive"
+
+msgctxt "device-management"
+msgid "Devices signed in to this account. Disconnecting one signs it out: it needs the recovery phrase to sign in again."
+msgstr "Dispozitivele conectate la acest cont. Deconectarea unuia îl scoate din cont: va avea nevoie de fraza de recuperare pentru a se conecta din nou."
+
+msgctxt "device-management"
+msgid "Disconnect"
+msgstr "Deconectează"
+
+msgctxt "device-management"
+msgid "Disconnect %(name)s?"
+msgstr "Deconectezi %(name)s?"
+
+msgctxt "device-management"
+msgid "It will be signed out within 10 minutes and will need the recovery phrase to sign in again. For a lost or stolen device, move to a new account instead: a device that keeps the recovery phrase can sign in again."
+msgstr "Va fi scos din cont în cel mult 10 minute și va avea nevoie de fraza de recuperare pentru a se conecta din nou. Pentru un dispozitiv pierdut sau furat, treci mai bine pe un cont nou: un dispozitiv care păstrează fraza de recuperare se poate conecta din nou."
+
+msgctxt "device-management"
+msgid "Last active %(date)s"
+msgstr "Ultima activitate: %(date)s"
+
+msgctxt "device-management"
+msgid "Last seen %(date)s"
+msgstr "Văzut ultima dată: %(date)s"
+
+msgctxt "device-management"
+msgid "Other platform"
+msgstr "Altă platformă"
+
+msgctxt "device-management"
+msgid "Rename device"
+msgstr "Redenumește dispozitivul"
+
+msgctxt "device-management"
+msgid "This device"
+msgstr "Acest dispozitiv"
+
+msgctxt "device-management"
+msgid "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again."
+msgstr "Acest dispozitiv a fost deconectat de pe un alt dispozitiv al contului tău. Conectează-te cu fraza de recuperare pentru a-l folosi din nou."

@@ -6366,3 +6366,83 @@ msgstr "ဤစက်၏ နာရီသည် %(minutes)d မိနစ် မှ
 msgctxt "in-app-notifications"
 msgid "This device’s clock is off: set it right to connect."
 msgstr "ဤစက်၏ နာရီ မှားနေသည်: ချိတ်ဆက်ရန် နာရီကို မှန်အောင် ပြင်ပါ။"
+
+msgctxt "auth-failure"
+msgid "This device has no session credentials right now. Another device of your account may be holding them."
+msgstr "ဤစက်တွင် ယခုအချိန်တွင် session အထောက်အထားများ မရှိပါ။ သင့်အကောင့်ရှိ အခြားစက်တစ်ခုက ၎င်းတို့ကို ကိုင်ထားနိုင်ပါသည်။"
+
+msgctxt "device-management"
+msgid "A device of this account runs a version of Warren older than 1.1.36. It no longer blocks your other devices. Update or uninstall it."
+msgstr "ဤအကောင့်ရှိ စက်တစ်ခုသည် 1.1.36 ထက် ဟောင်းသော Warren ဗားရှင်းကို အသုံးပြုနေပါသည်။ ၎င်းသည် သင်၏ အခြားစက်များကို မပိတ်ဆို့တော့ပါ။ ၎င်းကို အပ်ဒိတ်လုပ်ပါ သို့မဟုတ် ဖြုတ်ပါ။"
+
+msgctxt "device-management"
+msgid "Active today"
+msgstr "ယနေ့ အသုံးပြုခဲ့သည်"
+
+msgctxt "device-management"
+msgid "An older version of Warren"
+msgstr "Warren ဗားရှင်းဟောင်း"
+
+msgctxt "device-management"
+msgid "Browser extension"
+msgstr "ဘရောက်ဇာ extension"
+
+msgctxt "device-management"
+msgid "Command line"
+msgstr "Command line"
+
+msgctxt "device-management"
+msgid "Could not disconnect the device. Try again."
+msgstr "စက်ကို ချိတ်ဆက်မှုဖြုတ်၍ မရပါ။ ထပ်စမ်းကြည့်ပါ။"
+
+msgctxt "device-management"
+msgid "Could not load your devices. Try again."
+msgstr "သင့်စက်များကို ဖွင့်၍ မရပါ။ ထပ်စမ်းကြည့်ပါ။"
+
+msgctxt "device-management"
+msgid "Could not rename the device. Try again."
+msgstr "စက်အမည်ကို ပြောင်း၍ မရပါ။ ထပ်စမ်းကြည့်ပါ။"
+
+msgctxt "device-management"
+msgid "Devices"
+msgstr "စက်များ"
+
+msgctxt "device-management"
+msgid "Devices signed in to this account. Disconnecting one signs it out: it needs the recovery phrase to sign in again."
+msgstr "ဤအကောင့်သို့ ဝင်ထားသော စက်များ။ စက်တစ်ခုကို ချိတ်ဆက်မှုဖြုတ်ပါက ၎င်းသည် အကောင့်မှ ထွက်သွားမည်ဖြစ်ပြီး ပြန်ဝင်ရန် ပြန်လည်ရယူရေးစကားစု လိုအပ်ပါမည်။"
+
+msgctxt "device-management"
+msgid "Disconnect"
+msgstr "ချိတ်ဆက်မှုဖြုတ်ရန်"
+
+msgctxt "device-management"
+msgid "Disconnect %(name)s?"
+msgstr "%(name)s ကို ချိတ်ဆက်မှုဖြုတ်မလား။"
+
+msgctxt "device-management"
+msgid "It will be signed out within 10 minutes and will need the recovery phrase to sign in again. For a lost or stolen device, move to a new account instead: a device that keeps the recovery phrase can sign in again."
+msgstr "၎င်းသည် 10 မိနစ်အတွင်း အကောင့်မှ ထွက်သွားမည်ဖြစ်ပြီး ပြန်ဝင်ရန် ပြန်လည်ရယူရေးစကားစု လိုအပ်ပါမည်။ ပျောက်ဆုံးသော သို့မဟုတ် ခိုးယူခံရသော စက်အတွက် အကောင့်အသစ်သို့ ပြောင်းပါ။ ပြန်လည်ရယူရေးစကားစုကို သိမ်းထားသော စက်သည် ပြန်ဝင်နိုင်ပါသည်။"
+
+msgctxt "device-management"
+msgid "Last active %(date)s"
+msgstr "နောက်ဆုံးအသုံးပြုခဲ့သည် %(date)s"
+
+msgctxt "device-management"
+msgid "Last seen %(date)s"
+msgstr "နောက်ဆုံးတွေ့ခဲ့သည် %(date)s"
+
+msgctxt "device-management"
+msgid "Other platform"
+msgstr "အခြားပလက်ဖောင်း"
+
+msgctxt "device-management"
+msgid "Rename device"
+msgstr "စက်အမည်ပြောင်းရန်"
+
+msgctxt "device-management"
+msgid "This device"
+msgstr "ဤစက်"
+
+msgctxt "device-management"
+msgid "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again."
+msgstr "ဤစက်ကို သင့်အကောင့်ရှိ အခြားစက်တစ်ခုမှ ချိတ်ဆက်မှုဖြုတ်လိုက်ပါသည်။ ပြန်အသုံးပြုရန် သင်၏ ပြန်လည်ရယူရေးစကားစုဖြင့် ဝင်ပါ။"

@@ -32,6 +32,7 @@ import {
   LoginView,
   LwoSettingsView,
   MainView,
+  ManageDevicesView,
   MultihopSettingsView,
   OnboardingBetaAccessView,
   OnboardingDoneView,
@@ -84,6 +85,7 @@ export default function AppRouter() {
           <Route exact path={RoutePath.setupFinished} component={SetupFinished} />
           <Route exact path={RoutePath.account} component={AccountView} />
           <Route exact path={RoutePath.forumActivity} component={ForumActivityView} />
+          <Route exact path={RoutePath.devices} component={ManageDevicesView} />
           <Route exact path={RoutePath.keys} component={KeysView} />
           <Route exact path={RoutePath.restoreKeys} component={RestoreMnemonicView} />
           <Route exact path={RoutePath.settings} component={SettingsView} />

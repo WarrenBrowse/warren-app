@@ -6383,3 +6383,83 @@ msgstr "ساعت این دستگاه %(minutes)d دقیقه اختلاف دار�
 msgctxt "in-app-notifications"
 msgid "This device’s clock is off: set it right to connect."
 msgstr "ساعت این دستگاه درست نیست: برای اتصال آن را تنظیم کنید."
+
+msgctxt "auth-failure"
+msgid "This device has no session credentials right now. Another device of your account may be holding them."
+msgstr "این دستگاه در حال حاضر اعتبارنامه نشست ندارد. ممکن است دستگاه دیگری از حساب شما آن‌ها را در اختیار داشته باشد."
+
+msgctxt "device-management"
+msgid "A device of this account runs a version of Warren older than 1.1.36. It no longer blocks your other devices. Update or uninstall it."
+msgstr "یکی از دستگاه‌های این حساب نسخه‌ای از Warren قدیمی‌تر از 1.1.36 را اجرا می‌کند. دیگر دستگاه‌های دیگر شما را مسدود نمی‌کند. آن را به‌روزرسانی یا حذف کنید."
+
+msgctxt "device-management"
+msgid "Active today"
+msgstr "امروز فعال"
+
+msgctxt "device-management"
+msgid "An older version of Warren"
+msgstr "نسخه قدیمی‌تر Warren"
+
+msgctxt "device-management"
+msgid "Browser extension"
+msgstr "افزونه مرورگر"
+
+msgctxt "device-management"
+msgid "Command line"
+msgstr "خط فرمان"
+
+msgctxt "device-management"
+msgid "Could not disconnect the device. Try again."
+msgstr "قطع اتصال دستگاه ممکن نشد. دوباره تلاش کنید."
+
+msgctxt "device-management"
+msgid "Could not load your devices. Try again."
+msgstr "بارگیری دستگاه‌های شما ممکن نشد. دوباره تلاش کنید."
+
+msgctxt "device-management"
+msgid "Could not rename the device. Try again."
+msgstr "تغییر نام دستگاه ممکن نشد. دوباره تلاش کنید."
+
+msgctxt "device-management"
+msgid "Devices"
+msgstr "دستگاه‌ها"
+
+msgctxt "device-management"
+msgid "Devices signed in to this account. Disconnecting one signs it out: it needs the recovery phrase to sign in again."
+msgstr "دستگاه‌هایی که به این حساب وارد شده‌اند. قطع اتصال یک دستگاه آن را از حساب خارج می‌کند: برای ورود دوباره به عبارت بازیابی نیاز دارد."
+
+msgctxt "device-management"
+msgid "Disconnect"
+msgstr "قطع اتصال"
+
+msgctxt "device-management"
+msgid "Disconnect %(name)s?"
+msgstr "اتصال %(name)s قطع شود؟"
+
+msgctxt "device-management"
+msgid "It will be signed out within 10 minutes and will need the recovery phrase to sign in again. For a lost or stolen device, move to a new account instead: a device that keeps the recovery phrase can sign in again."
+msgstr "ظرف 10 دقیقه از حساب خارج می‌شود و برای ورود دوباره به عبارت بازیابی نیاز دارد. برای دستگاه گم‌شده یا دزدیده‌شده، به‌جای آن به یک حساب جدید منتقل شوید: دستگاهی که عبارت بازیابی را نگه دارد می‌تواند دوباره وارد شود."
+
+msgctxt "device-management"
+msgid "Last active %(date)s"
+msgstr "آخرین فعالیت: %(date)s"
+
+msgctxt "device-management"
+msgid "Last seen %(date)s"
+msgstr "آخرین بار دیده‌شده: %(date)s"
+
+msgctxt "device-management"
+msgid "Other platform"
+msgstr "پلتفرم دیگر"
+
+msgctxt "device-management"
+msgid "Rename device"
+msgstr "تغییر نام دستگاه"
+
+msgctxt "device-management"
+msgid "This device"
+msgstr "این دستگاه"
+
+msgctxt "device-management"
+msgid "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again."
+msgstr "اتصال این دستگاه از دستگاه دیگری در حساب شما قطع شد. برای استفاده دوباره، با عبارت بازیابی خود وارد شوید."

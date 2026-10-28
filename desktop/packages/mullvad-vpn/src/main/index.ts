@@ -88,6 +88,7 @@ import {
 import { connectHandlingRefusal } from './connect-refusal';
 import { daemonAccessRefusal } from './daemon-access';
 import { DaemonRpc, SubscriptionListener } from './daemon-rpc';
+import { registerDeviceIpc } from './devices';
 import Expectation from './expectation';
 import ForumActivityMonitor, { ForumActivityMonitorDelegate } from './forum-activity-monitor';
 import {
@@ -1853,6 +1854,8 @@ class ApplicationMain
         await shell.openPath(file);
       }
     });
+
+    registerDeviceIpc(IpcMainEventChannel, this.daemonRpc);
 
     IpcMainEventChannel.account.handleListWithdrawablePurchases(() =>
       Promise.resolve(this.withdrawablePurchases.open(this.currentAccountTag())),

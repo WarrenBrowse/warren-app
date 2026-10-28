@@ -6396,3 +6396,83 @@ msgstr "De klok van dit apparaat loopt %(minutes)d min verkeerd: zet hem gelijk 
 msgctxt "in-app-notifications"
 msgid "This device’s clock is off: set it right to connect."
 msgstr "De klok van dit apparaat loopt verkeerd: zet hem gelijk om verbinding te maken."
+
+msgctxt "auth-failure"
+msgid "This device has no session credentials right now. Another device of your account may be holding them."
+msgstr "Dit apparaat heeft op dit moment geen sessiegegevens. Mogelijk heeft een ander apparaat van je account ze in gebruik."
+
+msgctxt "device-management"
+msgid "A device of this account runs a version of Warren older than 1.1.36. It no longer blocks your other devices. Update or uninstall it."
+msgstr "Een apparaat van dit account gebruikt een versie van Warren die ouder is dan 1.1.36. Het blokkeert je andere apparaten niet meer. Werk het bij of verwijder het."
+
+msgctxt "device-management"
+msgid "Active today"
+msgstr "Vandaag actief"
+
+msgctxt "device-management"
+msgid "An older version of Warren"
+msgstr "Een oudere versie van Warren"
+
+msgctxt "device-management"
+msgid "Browser extension"
+msgstr "Browserextensie"
+
+msgctxt "device-management"
+msgid "Command line"
+msgstr "Opdrachtregel"
+
+msgctxt "device-management"
+msgid "Could not disconnect the device. Try again."
+msgstr "Kan het apparaat niet loskoppelen. Probeer het opnieuw."
+
+msgctxt "device-management"
+msgid "Could not load your devices. Try again."
+msgstr "Kan je apparaten niet laden. Probeer het opnieuw."
+
+msgctxt "device-management"
+msgid "Could not rename the device. Try again."
+msgstr "Kan de naam van het apparaat niet wijzigen. Probeer het opnieuw."
+
+msgctxt "device-management"
+msgid "Devices"
+msgstr "Apparaten"
+
+msgctxt "device-management"
+msgid "Devices signed in to this account. Disconnecting one signs it out: it needs the recovery phrase to sign in again."
+msgstr "Apparaten die bij dit account zijn aangemeld. Een apparaat loskoppelen meldt het af: het heeft de herstelzin nodig om opnieuw aan te melden."
+
+msgctxt "device-management"
+msgid "Disconnect"
+msgstr "Loskoppelen"
+
+msgctxt "device-management"
+msgid "Disconnect %(name)s?"
+msgstr "%(name)s loskoppelen?"
+
+msgctxt "device-management"
+msgid "It will be signed out within 10 minutes and will need the recovery phrase to sign in again. For a lost or stolen device, move to a new account instead: a device that keeps the recovery phrase can sign in again."
+msgstr "Het wordt binnen 10 minuten afgemeld en heeft de herstelzin nodig om opnieuw aan te melden. Stap bij een verloren of gestolen apparaat liever over op een nieuw account: een apparaat dat de herstelzin bewaart, kan zich opnieuw aanmelden."
+
+msgctxt "device-management"
+msgid "Last active %(date)s"
+msgstr "Laatst actief op %(date)s"
+
+msgctxt "device-management"
+msgid "Last seen %(date)s"
+msgstr "Laatst gezien op %(date)s"
+
+msgctxt "device-management"
+msgid "Other platform"
+msgstr "Ander platform"
+
+msgctxt "device-management"
+msgid "Rename device"
+msgstr "Naam van apparaat wijzigen"
+
+msgctxt "device-management"
+msgid "This device"
+msgstr "Dit apparaat"
+
+msgctxt "device-management"
+msgid "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again."
+msgstr "Dit apparaat is losgekoppeld vanaf een ander apparaat van je account. Meld je aan met je herstelzin om het weer te gebruiken."

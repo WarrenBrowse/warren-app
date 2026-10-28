@@ -8,7 +8,7 @@ import { LogoutResult } from '../../../../shared/daemon-rpc-types';
 import { messages } from '../../../../shared/gettext';
 import { RoutePath } from '../../../../shared/routes';
 import { useAppContext } from '../../../context';
-import { Button, Checkbox, Flex, Icon, Text } from '../../../lib/components';
+import { Button, Flex, Icon, Text } from '../../../lib/components';
 import { FlexColumn } from '../../../lib/components/flex-column';
 import { View } from '../../../lib/components/view';
 import { colors } from '../../../lib/foundations';
@@ -18,8 +18,8 @@ import { useSelector } from '../../../redux/store';
 import { AppNavigationHeader } from '../..';
 import { BetaBadge } from '../../beta-badge';
 import { BackAction } from '../../keyboard-navigation';
+import { LogoutConfirmDialog } from '../../LogoutConfirmDialog';
 import { LogoutFailure } from '../../LogoutFailure';
-import { ModalAlert, ModalAlertType } from '../../Modal';
 import { ExternalPaymentButton } from '../../payment';
 import { RedeemVoucherButton } from '../../RedeemVoucher';
 import { HeaderTitle } from '../../SettingsHeader';
@@ -228,7 +228,23 @@ function RenewalCard() {
 export function AccountView() {
   const history = useHistory();
   const forumHandle = useSelector((state) => state.account.forumIdentity?.handle);
-  const { updateAccountData, logout } = useAppContext();
+  const { updateAccountData, logout, listDevices } = useAppContext();
+  const [activeDevices, setActiveDevices] = useState<number>();
+
+  useEffect(() => {
+    let current = true;
+    void listDevices()
+      .then((result) => {
+        if (current && result.type === 'listed') {
+          setActiveDevices(result.list.devices.length);
+        }
+      })
+      // The row still opens the list, which says why it cannot load.
+      .catch(() => undefined);
+    return () => {
+      current = false;
+    };
+  }, [listDevices]);
 
   // `updateAccountData` rejects when the API returns 404 (= no
   // active subscription yet on a freshly created Warren account)
@@ -252,18 +268,10 @@ export function AccountView() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => onMount(), []);
 
-  // Logout is a TRUE sign-out: the daemon erases the recovery phrase
-  // from this device. Gate it behind an explicit confirmation that the
-  // user has backed up their phrase, otherwise the account (and its
-  // subscription) is unrecoverable.
   const [logoutConfirmOpen, setLogoutConfirmOpen] = useState(false);
-  const [backedUp, setBackedUp] = useState(false);
   const [logoutResult, setLogoutResult] = useState<LogoutResult>();
 
-  const openLogoutConfirm = useCallback(() => {
-    setBackedUp(false);
-    setLogoutConfirmOpen(true);
-  }, []);
+  const openLogoutConfirm = useCallback(() => setLogoutConfirmOpen(true), []);
   const closeLogoutConfirm = useCallback(() => setLogoutConfirmOpen(false), []);
 
   // Hack needed because if we just call `logout` directly in `onClick`
@@ -276,6 +284,10 @@ export function AccountView() {
 
   const goToKeys = useCallback(() => {
     history.push(RoutePath.keys);
+  }, [history]);
+
+  const goToDevices = useCallback(() => {
+    history.push(RoutePath.devices);
   }, [history]);
 
   const goBackupPhrase = useCallback(() => {
@@ -337,6 +349,23 @@ export function AccountView() {
                 </>
               )}
 
+              <BackupRow onClick={goToDevices} data-testid="devices-row">
+                <Text variant="bodySmallSemibold">
+                  {
+                    // TRANSLATORS: Button label that opens the list of the account's devices.
+                    messages.pgettext('device-management', 'Devices')
+                  }
+                </Text>
+                <Flex gap="small" alignItems="center">
+                  {activeDevices !== undefined && (
+                    <Text variant="bodySmallSemibold" color="whiteAlpha60">
+                      {activeDevices}
+                    </Text>
+                  )}
+                  <Icon icon="chevron-right" color="whiteAlpha60" />
+                </Flex>
+              </BackupRow>
+
               <BackupRow onClick={goToKeys}>
                 <Text variant="bodySmallSemibold">
                   {
@@ -365,48 +394,12 @@ export function AccountView() {
         </View.Content>
       </BackAction>
 
-      <ModalAlert
+      <LogoutConfirmDialog
         isOpen={logoutConfirmOpen}
-        type={ModalAlertType.caution}
-        title={messages.pgettext('account-view', 'Log out of this account?')}
-        message={[
-          messages.pgettext(
-            'account-view',
-            'Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it.',
-          ),
-          messages.pgettext(
-            'account-view',
-            'If you have not backed up your recovery phrase, your subscription will be lost permanently.',
-          ),
-        ]}
-        gridButtons={[
-          <Button key="backup" onClick={goBackupPhrase}>
-            <Button.Text>
-              {
-                // TRANSLATORS: Button that opens the recovery-phrase backup view before logging out.
-                messages.pgettext('account-view', 'Back up my phrase')
-              }
-            </Button.Text>
-          </Button>,
-          <Button key="logout" variant="destructive" disabled={!backedUp} onClick={doLogout}>
-            <Button.Text>{messages.pgettext('account-view', 'Log out')}</Button.Text>
-          </Button>,
-        ]}
-        close={closeLogoutConfirm}>
-        <Checkbox checked={backedUp} onCheckedChange={setBackedUp}>
-          <Flex gap="small" alignItems="flex-start">
-            <Checkbox.Trigger>
-              <Checkbox.Input />
-            </Checkbox.Trigger>
-            <Checkbox.Label>
-              {messages.pgettext(
-                'account-view',
-                'I have backed up my recovery phrase and understand this account will be removed from this device.',
-              )}
-            </Checkbox.Label>
-          </Flex>
-        </Checkbox>
-      </ModalAlert>
+        close={closeLogoutConfirm}
+        onLogout={doLogout}
+        onBackup={goBackupPhrase}
+      />
     </View>
   );
 }

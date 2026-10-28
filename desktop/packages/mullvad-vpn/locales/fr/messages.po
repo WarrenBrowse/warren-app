@@ -5546,3 +5546,83 @@ msgstr "L'horloge de cet appareil est décalée de %(minutes)d min : remettez-la
 msgctxt "in-app-notifications"
 msgid "This device’s clock is off: set it right to connect."
 msgstr "L'horloge de cet appareil est décalée : remettez-la à l'heure pour vous connecter."
+
+msgctxt "auth-failure"
+msgid "This device has no session credentials right now. Another device of your account may be holding them."
+msgstr "Cet appareil n'a pas d'identifiants de session pour le moment. Un autre appareil de votre compte les détient peut-être."
+
+msgctxt "device-management"
+msgid "A device of this account runs a version of Warren older than 1.1.36. It no longer blocks your other devices. Update or uninstall it."
+msgstr "Un appareil de ce compte utilise une version de Warren antérieure à 1.1.36. Il ne bloque plus vos autres appareils. Mettez-le à jour ou désinstallez-le."
+
+msgctxt "device-management"
+msgid "Active today"
+msgstr "Actif aujourd'hui"
+
+msgctxt "device-management"
+msgid "An older version of Warren"
+msgstr "Une ancienne version de Warren"
+
+msgctxt "device-management"
+msgid "Browser extension"
+msgstr "Extension de navigateur"
+
+msgctxt "device-management"
+msgid "Command line"
+msgstr "Ligne de commande"
+
+msgctxt "device-management"
+msgid "Could not disconnect the device. Try again."
+msgstr "Impossible de déconnecter l'appareil. Réessayez."
+
+msgctxt "device-management"
+msgid "Could not load your devices. Try again."
+msgstr "Impossible de charger vos appareils. Réessayez."
+
+msgctxt "device-management"
+msgid "Could not rename the device. Try again."
+msgstr "Impossible de renommer l'appareil. Réessayez."
+
+msgctxt "device-management"
+msgid "Devices"
+msgstr "Appareils"
+
+msgctxt "device-management"
+msgid "Devices signed in to this account. Disconnecting one signs it out: it needs the recovery phrase to sign in again."
+msgstr "Appareils connectés à ce compte. Déconnecter un appareil le déconnecte du compte : il lui faudra la phrase de restauration pour se reconnecter."
+
+msgctxt "device-management"
+msgid "Disconnect"
+msgstr "Déconnecter"
+
+msgctxt "device-management"
+msgid "Disconnect %(name)s?"
+msgstr "Déconnecter %(name)s ?"
+
+msgctxt "device-management"
+msgid "It will be signed out within 10 minutes and will need the recovery phrase to sign in again. For a lost or stolen device, move to a new account instead: a device that keeps the recovery phrase can sign in again."
+msgstr "Il sera déconnecté d'ici 10 minutes et aura besoin de la phrase de restauration pour se reconnecter. Pour un appareil perdu ou volé, passez plutôt à un nouveau compte : un appareil qui conserve la phrase de restauration peut se reconnecter."
+
+msgctxt "device-management"
+msgid "Last active %(date)s"
+msgstr "Actif pour la dernière fois le %(date)s"
+
+msgctxt "device-management"
+msgid "Last seen %(date)s"
+msgstr "Vu pour la dernière fois le %(date)s"
+
+msgctxt "device-management"
+msgid "Other platform"
+msgstr "Autre plateforme"
+
+msgctxt "device-management"
+msgid "Rename device"
+msgstr "Renommer l'appareil"
+
+msgctxt "device-management"
+msgid "This device"
+msgstr "Cet appareil"
+
+msgctxt "device-management"
+msgid "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again."
+msgstr "Cet appareil a été déconnecté depuis un autre appareil de votre compte. Connectez-vous avec votre phrase de restauration pour l'utiliser à nouveau."

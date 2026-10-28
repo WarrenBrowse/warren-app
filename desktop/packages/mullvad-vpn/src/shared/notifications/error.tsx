@@ -11,10 +11,12 @@ import {
   WarrenAccountBan,
 } from '../daemon-rpc-types';
 import { messages } from '../gettext';
+import { RoutePath } from '../routes';
 import {
   InAppNotification,
   InAppNotificationAction,
   InAppNotificationProvider,
+  InAppNotificationSubtitle,
   InAppNotificationTroubleshootButton,
   SystemNotification,
   SystemNotificationCategory,
@@ -32,6 +34,40 @@ interface ErrorNotificationContext {
   locale?: string;
   showFullDiskAccessSettings?: () => void;
   disableSplitTunneling?: () => void;
+}
+
+/**
+ * Whether another device of the account can be what blocks this one (the
+ * device limit, or every session token held elsewhere): the banner then opens
+ * the account's device list.
+ */
+function isCausedByAnotherDevice(details: ErrorStateDetails): boolean {
+  return (
+    details.blockingError === undefined &&
+    details.cause === ErrorStateCause.authFailed &&
+    (details.authFailedError === AuthFailedError.tooManyConnections ||
+      details.authFailedError === AuthFailedError.noSessionToken)
+  );
+}
+
+/** The banner text, followed by the link to the device list when another device may block this one. */
+function withDevicesLink(
+  details: ErrorStateDetails,
+  subtitle: string,
+): string | InAppNotificationSubtitle[] {
+  if (!isCausedByAnotherDevice(details)) {
+    return subtitle;
+  }
+  return [
+    { content: subtitle },
+    {
+      content:
+        // TRANSLATORS: Link in the blocked-state banner that opens the list of the
+        // TRANSLATORS: account's devices.
+        messages.pgettext('device-management', 'Manage devices'),
+      action: { type: 'navigate-internal', link: { to: RoutePath.devices } },
+    },
+  ];
 }
 
 /**
@@ -137,7 +173,7 @@ export class ErrorNotificationProvider
           : isRevocation(this.context.tunnelState.details)
             ? messages.pgettext('in-app-notifications', 'ACCESS REVOKED')
             : messages.pgettext('in-app-notifications', 'BLOCKING INTERNET'),
-        subtitle,
+        subtitle: withDevicesLink(this.context.tunnelState.details, subtitle),
         action: this.getActions(this.context.tunnelState.details) ?? undefined,
       };
     } else {
@@ -239,6 +275,12 @@ export class ErrorNotificationProvider
                 { url: urls.reports },
               );
             }
+
+            case AuthFailedError.noSessionToken:
+              return messages.pgettext(
+                'auth-failure',
+                'This device has no session credentials right now. Another device of your account may be holding them.',
+              );
 
             case AuthFailedError.unknown:
             default:

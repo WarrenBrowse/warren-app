@@ -6463,3 +6463,83 @@ msgstr "ساعة هذا الجهاز منحرفة بمقدار %(minutes)d دق�
 msgctxt "in-app-notifications"
 msgid "This device’s clock is off: set it right to connect."
 msgstr "ساعة هذا الجهاز غير مضبوطة: اضبطها للاتصال."
+
+msgctxt "auth-failure"
+msgid "This device has no session credentials right now. Another device of your account may be holding them."
+msgstr "لا يملك هذا الجهاز بيانات اعتماد للجلسة حاليًا. ربما يحتفظ بها جهاز آخر في حسابك."
+
+msgctxt "device-management"
+msgid "A device of this account runs a version of Warren older than 1.1.36. It no longer blocks your other devices. Update or uninstall it."
+msgstr "يعمل أحد أجهزة هذا الحساب بإصدار من Warren أقدم من 1.1.36. لم يعد يحظر أجهزتك الأخرى. حدّثه أو ألغِ تثبيته."
+
+msgctxt "device-management"
+msgid "Active today"
+msgstr "نشط اليوم"
+
+msgctxt "device-management"
+msgid "An older version of Warren"
+msgstr "إصدار أقدم من Warren"
+
+msgctxt "device-management"
+msgid "Browser extension"
+msgstr "إضافة المتصفح"
+
+msgctxt "device-management"
+msgid "Command line"
+msgstr "سطر الأوامر"
+
+msgctxt "device-management"
+msgid "Could not disconnect the device. Try again."
+msgstr "تعذّر قطع اتصال الجهاز. حاول مرة أخرى."
+
+msgctxt "device-management"
+msgid "Could not load your devices. Try again."
+msgstr "تعذّر تحميل أجهزتك. حاول مرة أخرى."
+
+msgctxt "device-management"
+msgid "Could not rename the device. Try again."
+msgstr "تعذّرت إعادة تسمية الجهاز. حاول مرة أخرى."
+
+msgctxt "device-management"
+msgid "Devices"
+msgstr "الأجهزة"
+
+msgctxt "device-management"
+msgid "Devices signed in to this account. Disconnecting one signs it out: it needs the recovery phrase to sign in again."
+msgstr "الأجهزة المسجّل دخولها إلى هذا الحساب. قطع اتصال أحدها يسجّل خروجه: سيحتاج إلى عبارة الاسترداد لتسجيل الدخول مجددًا."
+
+msgctxt "device-management"
+msgid "Disconnect"
+msgstr "قطع الاتصال"
+
+msgctxt "device-management"
+msgid "Disconnect %(name)s?"
+msgstr "قطع اتصال %(name)s؟"
+
+msgctxt "device-management"
+msgid "It will be signed out within 10 minutes and will need the recovery phrase to sign in again. For a lost or stolen device, move to a new account instead: a device that keeps the recovery phrase can sign in again."
+msgstr "سيُسجَّل خروجه خلال 10 دقائق وسيحتاج إلى عبارة الاسترداد لتسجيل الدخول مجددًا. إذا فُقد الجهاز أو سُرق، فانتقل بدلًا من ذلك إلى حساب جديد: يمكن للجهاز الذي يحتفظ بعبارة الاسترداد تسجيل الدخول مجددًا."
+
+msgctxt "device-management"
+msgid "Last active %(date)s"
+msgstr "آخر نشاط: %(date)s"
+
+msgctxt "device-management"
+msgid "Last seen %(date)s"
+msgstr "آخر ظهور: %(date)s"
+
+msgctxt "device-management"
+msgid "Other platform"
+msgstr "منصة أخرى"
+
+msgctxt "device-management"
+msgid "Rename device"
+msgstr "إعادة تسمية الجهاز"
+
+msgctxt "device-management"
+msgid "This device"
+msgstr "هذا الجهاز"
+
+msgctxt "device-management"
+msgid "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again."
+msgstr "تم قطع اتصال هذا الجهاز من جهاز آخر في حسابك. سجّل الدخول بعبارة الاسترداد لاستخدامه مجددًا."

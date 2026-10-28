@@ -40,6 +40,7 @@ import {
   WarrenPubKey,
   WarrenPubkeyMismatch,
 } from '../shared/daemon-rpc-types';
+import { DeviceActionResult, DeviceListResult, IDeviceRename } from '../shared/devices';
 import { messages, relayLocations } from '../shared/gettext';
 import { IGuiSettingsState, SYSTEM_PREFERRED_LOCALE_KEY } from '../shared/gui-settings-state';
 import {
@@ -547,6 +548,14 @@ export default class AppRenderer {
 
   public declareWithdrawal = (request: WithdrawalRequest): Promise<WithdrawalResult> =>
     IpcRendererEventChannel.account.declareWithdrawal(request);
+
+  public listDevices = (): Promise<DeviceListResult> => IpcRendererEventChannel.devices.list();
+
+  public removeDevice = (id: string): Promise<DeviceActionResult> =>
+    IpcRendererEventChannel.devices.remove(id);
+
+  public renameDevice = (rename: IDeviceRename): Promise<DeviceActionResult> =>
+    IpcRendererEventChannel.devices.rename(rename);
   public checkPendingPurchases = (): Promise<void> =>
     IpcRendererEventChannel.account.checkPendingPurchases();
 

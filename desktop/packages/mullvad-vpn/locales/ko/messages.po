@@ -6363,3 +6363,83 @@ msgstr "이 기기의 시계가 %(minutes)d분 어긋나 있습니다. 연결하
 msgctxt "in-app-notifications"
 msgid "This device’s clock is off: set it right to connect."
 msgstr "이 기기의 시계가 어긋나 있습니다. 연결하려면 시간을 올바르게 맞추세요."
+
+msgctxt "auth-failure"
+msgid "This device has no session credentials right now. Another device of your account may be holding them."
+msgstr "이 장치에는 현재 세션 자격 증명이 없습니다. 계정의 다른 장치가 보유하고 있을 수 있습니다."
+
+msgctxt "device-management"
+msgid "A device of this account runs a version of Warren older than 1.1.36. It no longer blocks your other devices. Update or uninstall it."
+msgstr "이 계정의 장치 중 하나가 1.1.36보다 오래된 버전의 Warren을 실행하고 있습니다. 더 이상 다른 장치를 차단하지 않습니다. 업데이트하거나 제거하세요."
+
+msgctxt "device-management"
+msgid "Active today"
+msgstr "오늘 활동"
+
+msgctxt "device-management"
+msgid "An older version of Warren"
+msgstr "이전 버전의 Warren"
+
+msgctxt "device-management"
+msgid "Browser extension"
+msgstr "브라우저 확장 프로그램"
+
+msgctxt "device-management"
+msgid "Command line"
+msgstr "명령줄"
+
+msgctxt "device-management"
+msgid "Could not disconnect the device. Try again."
+msgstr "장치 연결을 끊지 못했습니다. 다시 시도하세요."
+
+msgctxt "device-management"
+msgid "Could not load your devices. Try again."
+msgstr "장치 목록을 불러오지 못했습니다. 다시 시도하세요."
+
+msgctxt "device-management"
+msgid "Could not rename the device. Try again."
+msgstr "장치 이름을 변경하지 못했습니다. 다시 시도하세요."
+
+msgctxt "device-management"
+msgid "Devices"
+msgstr "장치"
+
+msgctxt "device-management"
+msgid "Devices signed in to this account. Disconnecting one signs it out: it needs the recovery phrase to sign in again."
+msgstr "이 계정에 로그인된 장치입니다. 장치의 연결을 끊으면 로그아웃되며, 다시 로그인하려면 복구 문구가 필요합니다."
+
+msgctxt "device-management"
+msgid "Disconnect"
+msgstr "연결 끊기"
+
+msgctxt "device-management"
+msgid "Disconnect %(name)s?"
+msgstr "%(name)s의 연결을 끊을까요?"
+
+msgctxt "device-management"
+msgid "It will be signed out within 10 minutes and will need the recovery phrase to sign in again. For a lost or stolen device, move to a new account instead: a device that keeps the recovery phrase can sign in again."
+msgstr "10분 이내에 로그아웃되며, 다시 로그인하려면 복구 문구가 필요합니다. 분실하거나 도난당한 장치라면 대신 새 계정으로 옮기세요. 복구 문구를 보관한 장치는 다시 로그인할 수 있습니다."
+
+msgctxt "device-management"
+msgid "Last active %(date)s"
+msgstr "마지막 활동: %(date)s"
+
+msgctxt "device-management"
+msgid "Last seen %(date)s"
+msgstr "마지막 확인: %(date)s"
+
+msgctxt "device-management"
+msgid "Other platform"
+msgstr "기타 플랫폼"
+
+msgctxt "device-management"
+msgid "Rename device"
+msgstr "장치 이름 변경"
+
+msgctxt "device-management"
+msgid "This device"
+msgstr "이 장치"
+
+msgctxt "device-management"
+msgid "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again."
+msgstr "계정의 다른 장치에서 이 장치의 연결을 끊었습니다. 다시 사용하려면 복구 문구로 로그인하세요."

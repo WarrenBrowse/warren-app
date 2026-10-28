@@ -6396,3 +6396,83 @@ msgstr "Klokken på denne enheten går %(minutes)d min feil: still den riktig fo
 msgctxt "in-app-notifications"
 msgid "This device’s clock is off: set it right to connect."
 msgstr "Klokken på denne enheten går feil: still den riktig for å koble til."
+
+msgctxt "auth-failure"
+msgid "This device has no session credentials right now. Another device of your account may be holding them."
+msgstr "Denne enheten har ingen øktlegitimasjon akkurat nå. En annen enhet på kontoen din kan ha dem."
+
+msgctxt "device-management"
+msgid "A device of this account runs a version of Warren older than 1.1.36. It no longer blocks your other devices. Update or uninstall it."
+msgstr "En enhet på denne kontoen kjører en versjon av Warren som er eldre enn 1.1.36. Den blokkerer ikke lenger de andre enhetene dine. Oppdater eller avinstaller den."
+
+msgctxt "device-management"
+msgid "Active today"
+msgstr "Aktiv i dag"
+
+msgctxt "device-management"
+msgid "An older version of Warren"
+msgstr "En eldre versjon av Warren"
+
+msgctxt "device-management"
+msgid "Browser extension"
+msgstr "Nettleserutvidelse"
+
+msgctxt "device-management"
+msgid "Command line"
+msgstr "Kommandolinje"
+
+msgctxt "device-management"
+msgid "Could not disconnect the device. Try again."
+msgstr "Kunne ikke koble fra enheten. Prøv igjen."
+
+msgctxt "device-management"
+msgid "Could not load your devices. Try again."
+msgstr "Kunne ikke laste inn enhetene dine. Prøv igjen."
+
+msgctxt "device-management"
+msgid "Could not rename the device. Try again."
+msgstr "Kunne ikke gi enheten nytt navn. Prøv igjen."
+
+msgctxt "device-management"
+msgid "Devices"
+msgstr "Enheter"
+
+msgctxt "device-management"
+msgid "Devices signed in to this account. Disconnecting one signs it out: it needs the recovery phrase to sign in again."
+msgstr "Enheter som er logget på denne kontoen. Når du kobler fra en enhet, logges den ut: den trenger gjenopprettingsfrasen for å logge på igjen."
+
+msgctxt "device-management"
+msgid "Disconnect"
+msgstr "Koble fra"
+
+msgctxt "device-management"
+msgid "Disconnect %(name)s?"
+msgstr "Koble fra %(name)s?"
+
+msgctxt "device-management"
+msgid "It will be signed out within 10 minutes and will need the recovery phrase to sign in again. For a lost or stolen device, move to a new account instead: a device that keeps the recovery phrase can sign in again."
+msgstr "Den logges ut innen 10 minutter og trenger gjenopprettingsfrasen for å logge på igjen. For en mistet eller stjålet enhet bør du heller bytte til en ny konto: en enhet som har gjenopprettingsfrasen, kan logge på igjen."
+
+msgctxt "device-management"
+msgid "Last active %(date)s"
+msgstr "Sist aktiv %(date)s"
+
+msgctxt "device-management"
+msgid "Last seen %(date)s"
+msgstr "Sist sett %(date)s"
+
+msgctxt "device-management"
+msgid "Other platform"
+msgstr "Annen plattform"
+
+msgctxt "device-management"
+msgid "Rename device"
+msgstr "Gi enheten nytt navn"
+
+msgctxt "device-management"
+msgid "This device"
+msgstr "Denne enheten"
+
+msgctxt "device-management"
+msgid "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again."
+msgstr "Denne enheten ble koblet fra av en annen enhet på kontoen din. Logg på med gjenopprettingsfrasen din for å bruke den igjen."

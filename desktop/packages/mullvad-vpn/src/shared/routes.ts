@@ -15,6 +15,9 @@ export enum RoutePath {
   // rather than a popover: this app opens Account and Settings the same
   // way, and a dropdown over the connect screen exists nowhere else.
   forumActivity = '/forum-activity',
+  // The account's devices (warren-core doc 115): opened from Account and
+  // from the blocked-state banner a device of the account causes.
+  devices = '/account/devices',
   keys = '/account/keys',
   restoreKeys = '/account/keys/restore',
   userInterfaceSettings = '/settings/interface',

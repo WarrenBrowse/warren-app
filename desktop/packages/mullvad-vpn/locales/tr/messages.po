@@ -6396,3 +6396,83 @@ msgstr "Bu cihazın saati %(minutes)d dk kaymış: bağlanmak için saati düzel
 msgctxt "in-app-notifications"
 msgid "This device’s clock is off: set it right to connect."
 msgstr "Bu cihazın saati yanlış: bağlanmak için saati düzeltin."
+
+msgctxt "auth-failure"
+msgid "This device has no session credentials right now. Another device of your account may be holding them."
+msgstr "Bu cihazın şu anda oturum kimlik bilgisi yok. Hesabınızdaki başka bir cihaz bunları tutuyor olabilir."
+
+msgctxt "device-management"
+msgid "A device of this account runs a version of Warren older than 1.1.36. It no longer blocks your other devices. Update or uninstall it."
+msgstr "Bu hesaptaki bir cihaz, Warren'ın 1.1.36'dan eski bir sürümünü çalıştırıyor. Artık diğer cihazlarınızı engellemiyor. Güncelleyin veya kaldırın."
+
+msgctxt "device-management"
+msgid "Active today"
+msgstr "Bugün etkin"
+
+msgctxt "device-management"
+msgid "An older version of Warren"
+msgstr "Warren'ın eski bir sürümü"
+
+msgctxt "device-management"
+msgid "Browser extension"
+msgstr "Tarayıcı uzantısı"
+
+msgctxt "device-management"
+msgid "Command line"
+msgstr "Komut satırı"
+
+msgctxt "device-management"
+msgid "Could not disconnect the device. Try again."
+msgstr "Cihazın bağlantısı kesilemedi. Tekrar deneyin."
+
+msgctxt "device-management"
+msgid "Could not load your devices. Try again."
+msgstr "Cihazlarınız yüklenemedi. Tekrar deneyin."
+
+msgctxt "device-management"
+msgid "Could not rename the device. Try again."
+msgstr "Cihaz yeniden adlandırılamadı. Tekrar deneyin."
+
+msgctxt "device-management"
+msgid "Devices"
+msgstr "Cihazlar"
+
+msgctxt "device-management"
+msgid "Devices signed in to this account. Disconnecting one signs it out: it needs the recovery phrase to sign in again."
+msgstr "Bu hesapta oturum açmış cihazlar. Bir cihazın bağlantısını kesmek oturumunu kapatır: yeniden oturum açmak için kurtarma ifadesine ihtiyaç duyar."
+
+msgctxt "device-management"
+msgid "Disconnect"
+msgstr "Bağlantıyı kes"
+
+msgctxt "device-management"
+msgid "Disconnect %(name)s?"
+msgstr "%(name)s cihazının bağlantısı kesilsin mi?"
+
+msgctxt "device-management"
+msgid "It will be signed out within 10 minutes and will need the recovery phrase to sign in again. For a lost or stolen device, move to a new account instead: a device that keeps the recovery phrase can sign in again."
+msgstr "Oturumu 10 dakika içinde kapatılır ve yeniden oturum açmak için kurtarma ifadesine ihtiyaç duyar. Kaybolan veya çalınan bir cihaz için bunun yerine yeni bir hesaba geçin: kurtarma ifadesini saklayan bir cihaz yeniden oturum açabilir."
+
+msgctxt "device-management"
+msgid "Last active %(date)s"
+msgstr "Son etkinlik: %(date)s"
+
+msgctxt "device-management"
+msgid "Last seen %(date)s"
+msgstr "Son görülme: %(date)s"
+
+msgctxt "device-management"
+msgid "Other platform"
+msgstr "Diğer platform"
+
+msgctxt "device-management"
+msgid "Rename device"
+msgstr "Cihazı yeniden adlandır"
+
+msgctxt "device-management"
+msgid "This device"
+msgstr "Bu cihaz"
+
+msgctxt "device-management"
+msgid "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again."
+msgstr "Bu cihazın bağlantısı, hesabınızdaki başka bir cihazdan kesildi. Yeniden kullanmak için kurtarma ifadenizle oturum açın."

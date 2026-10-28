@@ -1155,6 +1155,10 @@ msgid "Blocking internet: your access has been revoked until %(date)s for a usag
 msgstr ""
 
 msgctxt "auth-failure"
+msgid "This device has no session credentials right now. Another device of your account may be holding them."
+msgstr ""
+
+msgctxt "auth-failure"
 msgid "Too many simultaneous connections on this account. Disconnect another device or try connecting again shortly."
 msgstr ""
 
@@ -1540,6 +1544,69 @@ msgctxt "custom-list-feature"
 msgid "Relay"
 msgstr ""
 
+msgctxt "device-management"
+msgid "A device of this account runs a version of Warren older than 1.1.36. It no longer blocks your other devices. Update or uninstall it."
+msgstr ""
+
+#. Shown under a device of the account that was used today.
+msgctxt "device-management"
+msgid "Active today"
+msgstr ""
+
+#. Title of the row, in the list of the account's devices,
+#. for a device that runs an old version of the app.
+msgctxt "device-management"
+msgid "An older version of Warren"
+msgstr ""
+
+#. Platform of a device of the account: the Warren browser extension.
+msgctxt "device-management"
+msgid "Browser extension"
+msgstr ""
+
+#. Platform of a device of the account: the Warren command-line client.
+msgctxt "device-management"
+msgid "Command line"
+msgstr ""
+
+#. Shown when disconnecting another device of the account failed.
+msgctxt "device-management"
+msgid "Could not disconnect the device. Try again."
+msgstr ""
+
+#. Shown when the list of the account's devices could not be loaded.
+msgctxt "device-management"
+msgid "Could not load your devices. Try again."
+msgstr ""
+
+#. Shown when renaming a device of the account failed.
+msgctxt "device-management"
+msgid "Could not rename the device. Try again."
+msgstr ""
+
+#. Button label that opens the list of the account's devices.
+#. Title of the view that lists the devices of the account.
+msgctxt "device-management"
+msgid "Devices"
+msgstr ""
+
+#. Explanation at the top of the list of the account's devices.
+msgctxt "device-management"
+msgid "Devices signed in to this account. Disconnecting one signs it out: it needs the recovery phrase to sign in again."
+msgstr ""
+
+#. Button that signs another device of the account out.
+msgctxt "device-management"
+msgid "Disconnect"
+msgstr ""
+
+#. Title of the dialog that confirms disconnecting another device.
+#. Available placeholder:
+#. %(name)s - the name of the device
+msgctxt "device-management"
+msgid "Disconnect %(name)s?"
+msgstr ""
+
 #. Button label for navigating to login.
 msgctxt "device-management"
 msgid "Go to login"
@@ -1550,7 +1617,53 @@ msgid "Going to login will unblock the Internet on this device."
 msgstr ""
 
 msgctxt "device-management"
+msgid "It will be signed out within 10 minutes and will need the recovery phrase to sign in again. For a lost or stolen device, move to a new account instead: a device that keeps the recovery phrase can sign in again."
+msgstr ""
+
+#. Shown under a device of the account: the last day it was used.
+#. Available placeholder:
+#. %(date)s - a date in the short form of the language, e.g. 28/10/2026
+msgctxt "device-management"
+msgid "Last active %(date)s"
+msgstr ""
+
+#. Shown on the row of an older Warren client of the account.
+#. Available placeholder:
+#. %(date)s - a date in the short form of the language, e.g. 28/10/2026
+msgctxt "device-management"
+msgid "Last seen %(date)s"
+msgstr ""
+
+#. Link in the blocked-state banner that opens the list of the
+#. account's devices.
+msgctxt "device-management"
+msgid "Manage devices"
+msgstr ""
+
+#. Platform of a device of the account that this version does not know.
+msgctxt "device-management"
+msgid "Other platform"
+msgstr ""
+
+#. Title of the dialog that renames a device of the account.
+msgctxt "device-management"
+msgid "Rename device"
+msgstr ""
+
+msgctxt "device-management"
 msgid "Session is inactive"
+msgstr ""
+
+#. Badge on the row of the device the app runs on, in
+#. the list of the account's devices.
+msgctxt "device-management"
+msgid "This device"
+msgstr ""
+
+#. Shown on a device that another device of the account
+#. disconnected (revoked).
+msgctxt "device-management"
+msgid "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again."
 msgstr ""
 
 #. Label in the main header showing the remaining
@@ -1561,8 +1674,9 @@ msgctxt "device-management"
 msgid "Time left: %(timeLeft)s"
 msgstr ""
 
+#. Button text to retry fetching devices.
 msgctxt "device-management"
-msgid "Your session has ended. To connect again, you will need to log back in."
+msgid "Try again"
 msgstr ""
 
 #. Button label on the fatal-error view that reloads the app
