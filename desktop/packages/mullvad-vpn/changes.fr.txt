@@ -1,9 +1,13 @@
+### Ajouté
+- [Windows, macOS, Linux, Android] Voir les appareils connectés à votre compte dans Compte,
+  Appareils, en renommer un, et en déconnecter un depuis un autre. Un appareil déconnecté est
+  déconnecté du compte et demande la phrase de récupération pour revenir.
+- [Windows, macOS, Linux, Android] Ouvrir la liste des appareils depuis le message de blocage quand
+  le compte a trop de connexions ou que cet appareil n'a pas d'identifiants de session.
 ### Corrigé
-- [Windows, macOS, Linux] Annoncer le port forwardé, et l'écrire dans le client torrent lié, quand
-  l'application s'ouvre après que le VPN l'a déjà obtenu, comme au démarrage de l'ordinateur. Les
-  deux attendaient le changement de port suivant, en général un changement de pays.
-- [Windows, macOS, Linux] Rendre le port forwardé au serveur lors d'un changement de pays, pour que
-  le pays suivant accorde le même port dès la première demande au lieu de le refuser d'abord, et
-  qu'un retour au pays précédent le retrouve aussitôt.
-- [Windows, macOS, Linux, Android] Redemander aussitôt quand un serveur refuse un droit de port,
-  au lieu de deux secondes plus tard.
+- [Windows, macOS, Linux, Android] Se connecter même quand un autre appareil du compte utilise
+  encore une version de Warren antérieure à 1.1.36. Cet appareil prenait en premier les
+  identifiants de session de chaque heure et laissait les appareils à jour bloqués. La liste des
+  appareils l'affiche désormais, avec le conseil de le mettre à jour.
+- [Windows, macOS, Linux, Android] Nommer la cause quand internet est bloqué parce que cet appareil
+  n'a pas d'identifiants de session, au lieu d'un message générique.

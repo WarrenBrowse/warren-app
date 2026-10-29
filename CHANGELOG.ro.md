@@ -50,6 +50,21 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Păstrarea aceleiași identități de sesiune de la o pornire a VPN-ului la următoarea, astfel
   încât tunelul își regăsește adresa și portul ales după o repornire.
 
+## [1.1.55] - 2026-10-29
+### Adăugat
+- [Windows, macOS, Linux, Android] Vezi dispozitivele conectate la contul tău în Cont, Dispozitive,
+  redenumește unul și deconectează unul de pe altul. Un dispozitiv deconectat iese din cont și are
+  nevoie de fraza de recuperare ca să se conecteze din nou.
+- [Windows, macOS, Linux, Android] Deschide lista dispozitivelor din mesajul de blocare când contul
+  are prea multe conexiuni sau acest dispozitiv nu are credențiale de sesiune.
+### Corectat
+- [Windows, macOS, Linux, Android] Conectare chiar și când un alt dispozitiv al contului folosește
+  încă o versiune Warren mai veche de 1.1.36. Acel dispozitiv lua primul credențialele de sesiune
+  ale fiecărei ore și lăsa blocate dispozitivele actualizate. Lista dispozitivelor îl arată acum,
+  cu sfatul de a-l actualiza.
+- [Windows, macOS, Linux, Android] Numește cauza când internetul e blocat pentru că acest dispozitiv
+  nu are credențiale de sesiune, în locul unui mesaj generic.
+
 ## [1.1.54] - 2026-10-25
 ### Corectat
 - [Windows, macOS, Linux] Anunțarea portului redirecționat și scrierea lui în clientul torrent

@@ -53,6 +53,21 @@ par l'application, gardez-le tel quel.
 - [iOS] Garder la même identité de session d'un démarrage du VPN au suivant, pour que le tunnel
   retrouve son adresse et le port choisi après un redémarrage.
 
+## [1.1.55] - 2026-10-29
+### Ajouté
+- [Windows, macOS, Linux, Android] Voir les appareils connectés à votre compte dans Compte,
+  Appareils, en renommer un, et en déconnecter un depuis un autre. Un appareil déconnecté est
+  déconnecté du compte et demande la phrase de récupération pour revenir.
+- [Windows, macOS, Linux, Android] Ouvrir la liste des appareils depuis le message de blocage quand
+  le compte a trop de connexions ou que cet appareil n'a pas d'identifiants de session.
+### Corrigé
+- [Windows, macOS, Linux, Android] Se connecter même quand un autre appareil du compte utilise
+  encore une version de Warren antérieure à 1.1.36. Cet appareil prenait en premier les
+  identifiants de session de chaque heure et laissait les appareils à jour bloqués. La liste des
+  appareils l'affiche désormais, avec le conseil de le mettre à jour.
+- [Windows, macOS, Linux, Android] Nommer la cause quand internet est bloqué parce que cet appareil
+  n'a pas d'identifiants de session, au lieu d'un message générique.
+
 ## [1.1.54] - 2026-10-25
 ### Corrigé
 - [Windows, macOS, Linux] Annoncer le port forwardé, et l'écrire dans le client torrent lié, quand

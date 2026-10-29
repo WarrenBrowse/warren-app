@@ -1,9 +1,13 @@
+### Adăugat
+- [Windows, macOS, Linux, Android] Vezi dispozitivele conectate la contul tău în Cont, Dispozitive,
+  redenumește unul și deconectează unul de pe altul. Un dispozitiv deconectat iese din cont și are
+  nevoie de fraza de recuperare ca să se conecteze din nou.
+- [Windows, macOS, Linux, Android] Deschide lista dispozitivelor din mesajul de blocare când contul
+  are prea multe conexiuni sau acest dispozitiv nu are credențiale de sesiune.
 ### Corectat
-- [Windows, macOS, Linux] Anunțarea portului redirecționat și scrierea lui în clientul torrent
-  asociat atunci când aplicația se deschide după ce VPN-ul l-a obținut deja, ca la pornirea
-  computerului. Ambele așteptau următoarea schimbare de port, de obicei o schimbare de țară.
-- [Windows, macOS, Linux] Returnarea portului redirecționat către server la schimbarea țării,
-  astfel încât țara următoare acordă același port de la prima cerere în loc să-l refuze întâi, iar
-  revenirea la țara anterioară îl regăsește imediat.
-- [Windows, macOS, Linux, Android] O nouă cerere imediată atunci când un server refuză un drept de
-  port, în loc de două secunde mai târziu.
+- [Windows, macOS, Linux, Android] Conectare chiar și când un alt dispozitiv al contului folosește
+  încă o versiune Warren mai veche de 1.1.36. Acel dispozitiv lua primul credențialele de sesiune
+  ale fiecărei ore și lăsa blocate dispozitivele actualizate. Lista dispozitivelor îl arată acum,
+  cu sfatul de a-l actualiza.
+- [Windows, macOS, Linux, Android] Numește cauza când internetul e blocat pentru că acest dispozitiv
+  nu are credențiale de sesiune, în locul unui mesaj generic.

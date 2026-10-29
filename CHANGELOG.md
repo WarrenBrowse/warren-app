@@ -58,6 +58,20 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Keep the same session identity from one start of the VPN to the next, so the tunnel gets
   its address and its chosen forwarded port back after a restart.
 
+## [1.1.55] - 2026-10-29
+### Added
+- [Windows, macOS, Linux, Android] See the devices signed in to your account under Account, Devices,
+  rename one, and disconnect one from another. A disconnected device is signed out and needs the
+  recovery phrase to sign in again.
+- [Windows, macOS, Linux, Android] Open the device list from the blocking message when the account
+  has too many connections or this device has no session credentials.
+### Fixed
+- [Windows, macOS, Linux, Android] Connect even when another device of the account still runs a
+  Warren version older than 1.1.36. That device took the session credentials of each hour first and
+  left the up-to-date devices blocked. The device list now shows it, with the advice to update it.
+- [Windows, macOS, Linux, Android] Name the cause when the internet is blocked because this device
+  has no session credentials, instead of a generic message.
+
 ## [1.1.54] - 2026-10-25
 ### Fixed
 - [Windows, macOS, Linux] Announce the forwarded port, and write it into the linked torrent client,

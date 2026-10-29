@@ -1,9 +1,12 @@
+### Added
+- [Windows, macOS, Linux, Android] See the devices signed in to your account under Account, Devices,
+  rename one, and disconnect one from another. A disconnected device is signed out and needs the
+  recovery phrase to sign in again.
+- [Windows, macOS, Linux, Android] Open the device list from the blocking message when the account
+  has too many connections or this device has no session credentials.
 ### Fixed
-- [Windows, macOS, Linux] Announce the forwarded port, and write it into the linked torrent client,
-  when the app opens after the VPN already got it, as it does when the computer starts. Both used
-  to wait for the next change of port, usually a change of country.
-- [Windows, macOS, Linux] Give the forwarded port back to the server when changing country, so the
-  next country grants the same port at the first request instead of refusing it first, and coming
-  back to the previous country gets it back at once.
-- [Windows, macOS, Linux, Android] Ask again at once when a server refuses a port entitlement,
-  instead of two seconds later.
+- [Windows, macOS, Linux, Android] Connect even when another device of the account still runs a
+  Warren version older than 1.1.36. That device took the session credentials of each hour first and
+  left the up-to-date devices blocked. The device list now shows it, with the advice to update it.
+- [Windows, macOS, Linux, Android] Name the cause when the internet is blocked because this device
+  has no session credentials, instead of a generic message.
