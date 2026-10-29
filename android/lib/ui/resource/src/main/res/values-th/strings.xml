@@ -740,4 +740,24 @@
     <string name="network_stats_load_people">โหลด %1$s, %2$s คน</string>
     <string name="network_stats_band_people">%1$s, %2$s คน</string>
     <string name="network_stats_download">ดาวน์โหลด</string>
+    <string name="devices_title">อุปกรณ์</string>
+    <string name="devices_description">อุปกรณ์ที่ลงชื่อเข้าใช้บัญชีนี้ การตัดการเชื่อมต่ออุปกรณ์จะทำให้อุปกรณ์นั้นออกจากระบบ และต้องใช้วลีกู้คืนเพื่อลงชื่อเข้าใช้อีกครั้ง</string>
+    <string name="device_this_device">อุปกรณ์นี้</string>
+    <string name="device_disconnect">ตัดการเชื่อมต่อ</string>
+    <string name="device_active_today">ใช้งานวันนี้</string>
+    <string name="device_last_active">ใช้งานล่าสุด %1$s</string>
+    <string name="device_last_seen">พบล่าสุด %1$s</string>
+    <string name="device_platform_command_line">บรรทัดคำสั่ง</string>
+    <string name="device_platform_browser_extension">ส่วนขยายเบราว์เซอร์</string>
+    <string name="device_platform_other">แพลตฟอร์มอื่น</string>
+    <string name="device_rename_title">เปลี่ยนชื่ออุปกรณ์</string>
+    <string name="device_rename_save">บันทึก</string>
+    <string name="device_disconnect_confirm_title">ตัดการเชื่อมต่อ %1$s ใช่ไหม</string>
+    <string name="device_disconnect_confirm_body">อุปกรณ์จะออกจากระบบภายใน 10 นาที และต้องใช้วลีกู้คืนเพื่อลงชื่อเข้าใช้อีกครั้ง สำหรับอุปกรณ์ที่สูญหายหรือถูกขโมย ให้ย้ายไปใช้บัญชีใหม่แทน เพราะอุปกรณ์ที่ยังเก็บวลีกู้คืนไว้สามารถลงชื่อเข้าใช้อีกครั้งได้</string>
+    <string name="devices_load_failed">ไม่สามารถโหลดอุปกรณ์ของคุณได้ โปรดลองอีกครั้ง</string>
+    <string name="devices_try_again">ลองอีกครั้ง</string>
+    <string name="device_disconnect_failed">ไม่สามารถตัดการเชื่อมต่ออุปกรณ์ได้ โปรดลองอีกครั้ง</string>
+    <string name="device_rename_failed">ไม่สามารถเปลี่ยนชื่ออุปกรณ์ได้ โปรดลองอีกครั้ง</string>
+    <string name="device_older_client_title">Warren เวอร์ชันเก่า</string>
+    <string name="device_older_client_body">อุปกรณ์หนึ่งในบัญชีนี้ใช้ Warren เวอร์ชันที่เก่ากว่า 1.1.36 อุปกรณ์นั้นไม่ได้บล็อกอุปกรณ์อื่นของคุณอีกต่อไป โปรดอัปเดตหรือถอนการติดตั้ง</string>
 </resources>

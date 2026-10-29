@@ -3,23 +3,26 @@
 splash --> privacy_policy
 splash --> login
 splash --> connect
-splash --> revoked
 
 revoked --> login
 privacy_policy --> login
 
 login --> welcome
-login --> too_many_devices
 login --> settings
 login --> connect
-
-too_many_devices --> login
 
 welcome --> connect
 
 connect --> revoked
 connect --> settings
 connect --> account
+connect --> manage_devices
+
+account --> manage_devices
+
+manage_devices --> remove_device_confirmation
+manage_devices --> login
+manage_devices --> revoked
 connect --> switch_location
 
 switch_location --> search

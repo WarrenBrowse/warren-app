@@ -751,4 +751,24 @@
     <string name="network_stats_load_people">Carga %1$s, %2$s personas</string>
     <string name="network_stats_band_people">%1$s, %2$s personas</string>
     <string name="network_stats_download">Descarga</string>
+    <string name="devices_title">Dispositivos</string>
+    <string name="devices_description">Dispositivos con sesión iniciada en esta cuenta. Desconectar uno cierra su sesión: necesitará la frase de recuperación para volver a iniciarla.</string>
+    <string name="device_this_device">Este dispositivo</string>
+    <string name="device_disconnect">Desconectar</string>
+    <string name="device_active_today">Activo hoy</string>
+    <string name="device_last_active">Última actividad: %1$s</string>
+    <string name="device_last_seen">Visto por última vez: %1$s</string>
+    <string name="device_platform_command_line">Línea de comandos</string>
+    <string name="device_platform_browser_extension">Extensión del navegador</string>
+    <string name="device_platform_other">Otra plataforma</string>
+    <string name="device_rename_title">Cambiar el nombre del dispositivo</string>
+    <string name="device_rename_save">Guardar</string>
+    <string name="device_disconnect_confirm_title">¿Desconectar %1$s?</string>
+    <string name="device_disconnect_confirm_body">Su sesión se cerrará en un plazo de 10 minutos y necesitará la frase de recuperación para volver a iniciarla. Si el dispositivo se perdió o te lo robaron, pásate mejor a una cuenta nueva: un dispositivo que conserve la frase de recuperación puede volver a iniciar sesión.</string>
+    <string name="devices_load_failed">No se pudieron cargar tus dispositivos. Inténtalo de nuevo.</string>
+    <string name="devices_try_again">Volver a intentarlo</string>
+    <string name="device_disconnect_failed">No se pudo desconectar el dispositivo. Inténtalo de nuevo.</string>
+    <string name="device_rename_failed">No se pudo cambiar el nombre del dispositivo. Inténtalo de nuevo.</string>
+    <string name="device_older_client_title">Una versión anterior de Warren</string>
+    <string name="device_older_client_body">Un dispositivo de esta cuenta usa una versión de Warren anterior a la 1.1.36. Ya no bloquea tus otros dispositivos. Actualízalo o desinstálalo.</string>
 </resources>

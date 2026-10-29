@@ -1,6 +1,8 @@
 package com.warrenbrowse.vpn.lib.usecase
 
+import arrow.core.Either
 import co.touchlab.kermit.Logger
+import com.warrenbrowse.vpn.lib.model.DeviceRegistryError
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
@@ -48,6 +50,20 @@ class DeviceRevocationUseCase(
                     Logger.w {
                         "revoked device: logout did not complete (${outcome::class.simpleName})"
                     }
+            }
+        }
+
+    /**
+     * "Log out" on this device's row of the device list: the registry revokes it, then the wallet
+     * leaves the device as on any logout. Held against [takeInRevocation], so the revocation this
+     * raises natively is this logout's and never shows the revoked screen.
+     */
+    suspend fun logOutThisDevice(deviceId: String): Either<DeviceRegistryError, WarrenLogoutOutcome> =
+        acting.withLock {
+            devices.revokeDevice(deviceId).map {
+                val outcome = logOut()
+                devices.dropRevocation()
+                outcome
             }
         }
 

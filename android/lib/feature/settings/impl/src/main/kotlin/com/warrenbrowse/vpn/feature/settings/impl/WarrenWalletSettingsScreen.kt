@@ -21,7 +21,6 @@ import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.ContentCopy
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Checkbox
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -33,6 +32,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -54,10 +54,12 @@ import com.warrenbrowse.vpn.common.compose.safeOpenUri
 import com.warrenbrowse.vpn.common.compose.unlessIsDetail
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.login.api.WarrenKeysNavKey
+import com.warrenbrowse.vpn.feature.managedevices.api.ManageDevicesNavKey
 import com.warrenbrowse.vpn.feature.login.api.WarrenWalletNavKey
 import com.warrenbrowse.vpn.lib.common.util.AccountStandingText
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.model.wallet.shortWarrenAddress
+import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 import com.warrenbrowse.vpn.lib.repository.ForumIdentityRepository
 import com.warrenbrowse.vpn.lib.repository.MnemonicCache
 import com.warrenbrowse.vpn.lib.repository.PurchaseClaim
@@ -71,7 +73,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenVoucherOutcome
 import com.warrenbrowse.vpn.lib.ui.component.BetaBadge
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
 import com.warrenbrowse.vpn.lib.ui.component.button.NavigateBackIconButton
-import com.warrenbrowse.vpn.lib.ui.component.dialog.NegativeConfirmationDialog
+import com.warrenbrowse.vpn.lib.ui.component.dialog.LogoutConfirmationDialog
 import com.warrenbrowse.vpn.lib.ui.component.wallet.BiometricPromptAuthorizer
 import com.warrenbrowse.vpn.lib.ui.designsystem.PrimaryButton
 import com.warrenbrowse.vpn.lib.ui.designsystem.VariantButton
@@ -124,15 +126,18 @@ fun WarrenWalletSettings(navigator: Navigator) {
     val scope = rememberCoroutineScope()
 
     val state by walletRepository.state.collectAsState()
+    // The Devices row's count (desktop AccountView): one list call per visit,
+    // and a row without a count when it fails, since the list says why.
+    val deviceRepository = koinInject<DeviceRepository>()
+    val activeDevices by
+        produceState<Int?>(initialValue = null, deviceRepository) {
+            value = deviceRepository.listDevices().getOrNull()?.devices?.size
+        }
     val copyToClipboard = createCopyToClipboardHandle(isSensitive = false)
 
     var showVoucherDialog by remember { mutableStateOf(false) }
     var viewError by remember { mutableStateOf<String?>(null) }
     var confirmErase by remember { mutableStateOf(false) }
-    // Erasing the wallet is irreversible: gate the destructive action behind an
-    // explicit "I backed up my phrase" acknowledgement, matching the desktop
-    // logout checkbox gate (AccountView).
-    var eraseBackupAck by remember { mutableStateOf(false) }
     // Purchase awaiting its redeem poll: set when the user opens the checkout,
     // then consumed on the next return to the app (see LifecycleResumeEffect
     // below).
@@ -281,6 +286,10 @@ fun WarrenWalletSettings(navigator: Navigator) {
                     )
                 }
 
+                DevicesRow(
+                    activeDevices = activeDevices,
+                    onClick = dropUnlessResumed { navigator.navigate(ManageDevicesNavKey) },
+                )
                 BackupPhraseRow(onClick = revealPhrase)
 
                 // Rare and destructive: a ghost red link kept visually apart
@@ -306,47 +315,13 @@ fun WarrenWalletSettings(navigator: Navigator) {
     }
 
     if (confirmErase) {
-        val dismiss = {
-            confirmErase = false
-            eraseBackupAck = false
-        }
-        // Destructive and irreversible: the red icon and the red confirm say so
-        // before the tap, and the acknowledgement gates it (desktop logout
-        // modal). The escape hatch sits with the actions, not in the message.
-        NegativeConfirmationDialog(
-            message = stringResource(R.string.wallet_settings_erase_confirm_title),
-            messageStyle = MaterialTheme.typography.titleMedium,
-            confirmationText = stringResource(R.string.wallet_settings_erase_confirm_action),
-            isConfirmEnabled = eraseBackupAck,
-            body = {
-                Column(verticalArrangement = Arrangement.spacedBy(Dimens.mediumPadding)) {
-                    Text(stringResource(R.string.account_erase_body_device))
-                    Text(stringResource(R.string.account_erase_body_backup))
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { eraseBackupAck = !eraseBackupAck },
-                        horizontalArrangement = Arrangement.spacedBy(Dimens.smallPadding),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Checkbox(
-                            checked = eraseBackupAck,
-                            onCheckedChange = { eraseBackupAck = it },
-                        )
-                        Text(stringResource(R.string.wallet_settings_erase_backup_ack))
-                    }
-                }
+        val dismiss = { confirmErase = false }
+        LogoutConfirmationDialog(
+            onBackUpPhrase = {
+                dismiss()
+                revealPhrase()
             },
-            secondaryAction = {
-                VariantButton(
-                    onClick = {
-                        dismiss()
-                        revealPhrase()
-                    },
-                    text = stringResource(R.string.account_backup_my_phrase),
-                )
-            },
-            onConfirm = {
+            onLogOut = {
                 dismiss()
                 scope.launch {
                     val outcome = logOut()
@@ -367,7 +342,7 @@ fun WarrenWalletSettings(navigator: Navigator) {
                     navigator.navigate(WarrenWalletNavKey(), clearBackStack = true)
                 }
             },
-            onBack = dismiss,
+            onDismiss = dismiss,
         )
     }
 }
@@ -525,6 +500,30 @@ private fun AccountCard(content: @Composable () -> Unit) {
 }
 
 /**
+ * Desktop "Devices" row: the account's devices (warren-core doc 115) with the active count, styled
+ * as the backup row since both are navigation.
+ */
+@Composable
+private fun DevicesRow(activeDevices: Int?, onClick: () -> Unit) {
+    OutlinedNavigationRow(onClick = onClick) {
+        Text(
+            text = stringResource(R.string.devices_title),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+        )
+        activeDevices?.let {
+            Text(
+                text = it.toString(),
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(end = Dimens.smallPadding),
+            )
+        }
+    }
+}
+
+/**
  * Desktop BackupRow: the phrase backup is navigation, not a coloured command,
  * so it renders as an outlined row with a trailing chevron, distinct from the
  * solid buy/voucher buttons above it. The biometric gate on the reveal is the
@@ -532,6 +531,22 @@ private fun AccountCard(content: @Composable () -> Unit) {
  */
 @Composable
 private fun BackupPhraseRow(onClick: () -> Unit) {
+    OutlinedNavigationRow(onClick = onClick) {
+        Text(
+            text = stringResource(R.string.wallet_settings_view_phrase),
+            style = MaterialTheme.typography.titleSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+/** An outlined row with a trailing chevron: navigation, not a coloured command. */
+@Composable
+private fun OutlinedNavigationRow(
+    onClick: () -> Unit,
+    content: @Composable androidx.compose.foundation.layout.RowScope.() -> Unit,
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -546,12 +561,7 @@ private fun BackupPhraseRow(onClick: () -> Unit) {
             .padding(horizontal = Dimens.mediumPadding, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = stringResource(R.string.wallet_settings_view_phrase),
-            style = MaterialTheme.typography.titleSmall,
-            color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.weight(1f),
-        )
+        content()
         Icon(
             imageVector = Icons.AutoMirrored.Rounded.KeyboardArrowRight,
             contentDescription = null,

@@ -61,6 +61,7 @@ import com.warrenbrowse.vpn.feature.autoconnect.impl.navigation.autoConnectEntry
 import com.warrenbrowse.vpn.feature.home.impl.navigation.homeEntry
 import com.warrenbrowse.vpn.feature.language.impl.navigation.languageEntry
 import com.warrenbrowse.vpn.feature.login.impl.navigation.walletEntry
+import com.warrenbrowse.vpn.feature.managedevices.impl.navigation.manageDevicesEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.walletSettingsEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenDaitaSettingsEntry
 import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenLocationPickerEntry
@@ -205,6 +206,7 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
         changelogEntry(nav3)
         homeEntry(nav3)
         languageEntry(nav3)
+        manageDevicesEntry(nav3)
         // First-run onboarding continues the post-wallet step into the
         // subscription -> done wizard (beta flavor: the auto-granted beta
         // access step, no payment surface); every other wallet entry goes

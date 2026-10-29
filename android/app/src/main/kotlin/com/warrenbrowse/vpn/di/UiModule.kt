@@ -24,6 +24,7 @@ import com.warrenbrowse.vpn.feature.autoconnect.impl.AutoConnectAndLockdownModeV
 import com.warrenbrowse.vpn.feature.home.impl.connect.ConnectViewModel
 import com.warrenbrowse.vpn.feature.home.impl.connect.notificationbanner.InAppNotificationController
 import com.warrenbrowse.vpn.feature.home.impl.devicerevoked.DeviceRevokedViewModel
+import com.warrenbrowse.vpn.feature.managedevices.impl.ManageDevicesViewModel
 import com.warrenbrowse.vpn.feature.language.impl.LanguageViewModel
 import com.warrenbrowse.vpn.feature.login.impl.WarrenWalletBackupViewModel
 import com.warrenbrowse.vpn.feature.login.impl.WarrenWalletViewModel
@@ -263,6 +264,7 @@ val uiModule = module {
         )
     }
     viewModel { DeviceRevokedViewModel(get(), get()) }
+    viewModel { ManageDevicesViewModel(devices = get(), revocation = get()) }
     viewModel { WarrenWalletViewModel(get()) }
     // NavBackStackEntry-scoped: consumes MnemonicCache once at init,
     // holds the Mnemonic for the entry's lifetime, zeros it in

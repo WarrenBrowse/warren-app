@@ -14,6 +14,8 @@ dependencies {
     implementation(projects.lib.feature.language.api)
     // Wallet erase routes back to the login screen (WarrenWalletNavKey).
     implementation(projects.lib.feature.login.api)
+    // The account's devices, opened from the Account screen.
+    implementation(projects.lib.feature.managedevices.api)
     implementation(projects.lib.feature.appinfo.api)
     implementation(projects.lib.feature.autoconnect.api)
     implementation(projects.lib.feature.notification.api)

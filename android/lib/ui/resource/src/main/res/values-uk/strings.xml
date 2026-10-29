@@ -764,4 +764,24 @@
     <string name="network_stats_load_people">Навантаження %1$s, людей: %2$s</string>
     <string name="network_stats_band_people">%1$s, людей: %2$s</string>
     <string name="network_stats_download">Завантаження</string>
+    <string name="devices_title">Пристрої</string>
+    <string name="devices_description">Пристрої, на яких виконано вхід у цей обліковий запис. Відключення пристрою виводить його з облікового запису: щоб увійти знову, йому знадобиться фраза відновлення.</string>
+    <string name="device_this_device">Цей пристрій</string>
+    <string name="device_disconnect">Відключити</string>
+    <string name="device_active_today">Активний сьогодні</string>
+    <string name="device_last_active">Остання активність: %1$s</string>
+    <string name="device_last_seen">Востаннє помічено: %1$s</string>
+    <string name="device_platform_command_line">Командний рядок</string>
+    <string name="device_platform_browser_extension">Розширення браузера</string>
+    <string name="device_platform_other">Інша платформа</string>
+    <string name="device_rename_title">Перейменувати пристрій</string>
+    <string name="device_rename_save">Зберегти</string>
+    <string name="device_disconnect_confirm_title">Відключити %1$s?</string>
+    <string name="device_disconnect_confirm_body">Вихід буде виконано протягом 10 хвилин, і для повторного входу знадобиться фраза відновлення. Якщо пристрій втрачено або викрадено, краще перейдіть на новий обліковий запис: пристрій, на якому збереглася фраза відновлення, може увійти знову.</string>
+    <string name="devices_load_failed">Не вдалося завантажити ваші пристрої. Спробуйте ще раз.</string>
+    <string name="devices_try_again">Повторити</string>
+    <string name="device_disconnect_failed">Не вдалося відключити пристрій. Спробуйте ще раз.</string>
+    <string name="device_rename_failed">Не вдалося перейменувати пристрій. Спробуйте ще раз.</string>
+    <string name="device_older_client_title">Старіша версія Warren</string>
+    <string name="device_older_client_body">Один із пристроїв цього облікового запису використовує версію Warren, старішу за 1.1.36. Він більше не блокує інші ваші пристрої. Оновіть або видаліть його.</string>
 </resources>

@@ -748,4 +748,24 @@
     <string name="network_stats_load_people">Yük %1$s, %2$s kişi</string>
     <string name="network_stats_band_people">%1$s, %2$s kişi</string>
     <string name="network_stats_download">İndirme</string>
+    <string name="devices_title">Cihazlar</string>
+    <string name="devices_description">Bu hesapta oturum açmış cihazlar. Bir cihazın bağlantısını kesmek oturumunu kapatır: yeniden oturum açmak için kurtarma ifadesine ihtiyaç duyar.</string>
+    <string name="device_this_device">Bu cihaz</string>
+    <string name="device_disconnect">Bağlantıyı kes</string>
+    <string name="device_active_today">Bugün etkin</string>
+    <string name="device_last_active">Son etkinlik: %1$s</string>
+    <string name="device_last_seen">Son görülme: %1$s</string>
+    <string name="device_platform_command_line">Komut satırı</string>
+    <string name="device_platform_browser_extension">Tarayıcı uzantısı</string>
+    <string name="device_platform_other">Diğer platform</string>
+    <string name="device_rename_title">Cihazı yeniden adlandır</string>
+    <string name="device_rename_save">Kaydet</string>
+    <string name="device_disconnect_confirm_title">%1$s cihazının bağlantısı kesilsin mi?</string>
+    <string name="device_disconnect_confirm_body">Oturumu 10 dakika içinde kapatılır ve yeniden oturum açmak için kurtarma ifadesine ihtiyaç duyar. Kaybolan veya çalınan bir cihaz için bunun yerine yeni bir hesaba geçin: kurtarma ifadesini saklayan bir cihaz yeniden oturum açabilir.</string>
+    <string name="devices_load_failed">Cihazlarınız yüklenemedi. Tekrar deneyin.</string>
+    <string name="devices_try_again">Tekrar dene</string>
+    <string name="device_disconnect_failed">Cihazın bağlantısı kesilemedi. Tekrar deneyin.</string>
+    <string name="device_rename_failed">Cihaz yeniden adlandırılamadı. Tekrar deneyin.</string>
+    <string name="device_older_client_title">Warren\'ın eski bir sürümü</string>
+    <string name="device_older_client_body">Bu hesaptaki bir cihaz, Warren\'ın 1.1.36\'dan eski bir sürümünü çalıştırıyor. Artık diğer cihazlarınızı engellemiyor. Güncelleyin veya kaldırın.</string>
 </resources>

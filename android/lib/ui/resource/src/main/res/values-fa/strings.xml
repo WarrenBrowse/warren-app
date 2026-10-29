@@ -748,4 +748,24 @@
     <string name="network_stats_load_people">بار %1$s، %2$s نفر</string>
     <string name="network_stats_band_people">%1$s، %2$s نفر</string>
     <string name="network_stats_download">دانلود</string>
+    <string name="devices_title">دستگاه‌ها</string>
+    <string name="devices_description">دستگاه‌هایی که به این حساب وارد شده‌اند. قطع اتصال یک دستگاه آن را از حساب خارج می‌کند: برای ورود دوباره به عبارت بازیابی نیاز دارد.</string>
+    <string name="device_this_device">این دستگاه</string>
+    <string name="device_disconnect">قطع اتصال</string>
+    <string name="device_active_today">امروز فعال</string>
+    <string name="device_last_active">آخرین فعالیت: %1$s</string>
+    <string name="device_last_seen">آخرین بار دیده‌شده: %1$s</string>
+    <string name="device_platform_command_line">خط فرمان</string>
+    <string name="device_platform_browser_extension">افزونه مرورگر</string>
+    <string name="device_platform_other">پلتفرم دیگر</string>
+    <string name="device_rename_title">تغییر نام دستگاه</string>
+    <string name="device_rename_save">ذخیره</string>
+    <string name="device_disconnect_confirm_title">اتصال %1$s قطع شود؟</string>
+    <string name="device_disconnect_confirm_body">ظرف 10 دقیقه از حساب خارج می‌شود و برای ورود دوباره به عبارت بازیابی نیاز دارد. برای دستگاه گم‌شده یا دزدیده‌شده، به‌جای آن به یک حساب جدید منتقل شوید: دستگاهی که عبارت بازیابی را نگه دارد می‌تواند دوباره وارد شود.</string>
+    <string name="devices_load_failed">بارگیری دستگاه‌های شما ممکن نشد. دوباره تلاش کنید.</string>
+    <string name="devices_try_again">دوباره تلاش کنید</string>
+    <string name="device_disconnect_failed">قطع اتصال دستگاه ممکن نشد. دوباره تلاش کنید.</string>
+    <string name="device_rename_failed">تغییر نام دستگاه ممکن نشد. دوباره تلاش کنید.</string>
+    <string name="device_older_client_title">نسخه قدیمی‌تر Warren</string>
+    <string name="device_older_client_body">یکی از دستگاه‌های این حساب نسخه‌ای از Warren قدیمی‌تر از 1.1.36 را اجرا می‌کند. دیگر دستگاه‌های دیگر شما را مسدود نمی‌کند. آن را به‌روزرسانی یا حذف کنید.</string>
 </resources>

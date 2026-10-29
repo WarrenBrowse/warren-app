@@ -121,7 +121,7 @@ val appModule = module {
     single { BuildVersion(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE) }
     single { ApiEndpointFromIntentHolder() }
     single { AccountRepository() }
-    single { DeviceRepository(bridge = get()) }
+    single { DeviceRepository(bridge = get(), wallet = get()) }
     single { UserPreferencesRepository(get(), get()) }
     // ConnectionProxy reads live tunnel state from WarrenTunnelStateProvider.
     single { ConnectionProxy(tunnelStateProvider = get()) }

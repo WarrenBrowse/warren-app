@@ -748,4 +748,24 @@
     <string name="network_stats_load_people">Last %1$s, %2$s Personen</string>
     <string name="network_stats_band_people">%1$s, %2$s Personen</string>
     <string name="network_stats_download">Download</string>
+    <string name="devices_title">Geräte</string>
+    <string name="devices_description">Bei diesem Konto angemeldete Geräte. Wenn Sie ein Gerät trennen, wird es abgemeldet: Für eine erneute Anmeldung braucht es die Wiederherstellungsphrase.</string>
+    <string name="device_this_device">Dieses Gerät</string>
+    <string name="device_disconnect">Trennen</string>
+    <string name="device_active_today">Heute aktiv</string>
+    <string name="device_last_active">Zuletzt aktiv am %1$s</string>
+    <string name="device_last_seen">Zuletzt gesehen am %1$s</string>
+    <string name="device_platform_command_line">Kommandozeile</string>
+    <string name="device_platform_browser_extension">Browser-Erweiterung</string>
+    <string name="device_platform_other">Andere Plattform</string>
+    <string name="device_rename_title">Gerät umbenennen</string>
+    <string name="device_rename_save">Speichern</string>
+    <string name="device_disconnect_confirm_title">%1$s trennen?</string>
+    <string name="device_disconnect_confirm_body">Es wird innerhalb von 10 Minuten abgemeldet und braucht die Wiederherstellungsphrase, um sich erneut anzumelden. Wechseln Sie bei einem verlorenen oder gestohlenen Gerät stattdessen zu einem neuen Konto: Ein Gerät, das die Wiederherstellungsphrase behält, kann sich erneut anmelden.</string>
+    <string name="devices_load_failed">Ihre Geräte konnten nicht geladen werden. Versuchen Sie es erneut.</string>
+    <string name="devices_try_again">Erneut versuchen</string>
+    <string name="device_disconnect_failed">Das Gerät konnte nicht getrennt werden. Versuchen Sie es erneut.</string>
+    <string name="device_rename_failed">Das Gerät konnte nicht umbenannt werden. Versuchen Sie es erneut.</string>
+    <string name="device_older_client_title">Eine ältere Version von Warren</string>
+    <string name="device_older_client_body">Ein Gerät dieses Kontos verwendet eine Warren-Version, die älter als 1.1.36 ist. Es blockiert Ihre anderen Geräte nicht mehr. Aktualisieren oder deinstallieren Sie es.</string>
 </resources>

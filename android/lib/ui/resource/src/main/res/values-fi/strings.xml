@@ -748,4 +748,24 @@
     <string name="network_stats_load_people">Kuorma %1$s, %2$s henkilöä</string>
     <string name="network_stats_band_people">%1$s, %2$s henkilöä</string>
     <string name="network_stats_download">Lataus</string>
+    <string name="devices_title">Laitteet</string>
+    <string name="devices_description">Tälle tilille kirjautuneet laitteet. Laitteen yhteyden katkaiseminen kirjaa sen ulos: se tarvitsee palautuslauseen kirjautuakseen uudelleen.</string>
+    <string name="device_this_device">Tämä laite</string>
+    <string name="device_disconnect">Katkaise yhteys</string>
+    <string name="device_active_today">Aktiivinen tänään</string>
+    <string name="device_last_active">Viimeksi aktiivinen %1$s</string>
+    <string name="device_last_seen">Viimeksi nähty %1$s</string>
+    <string name="device_platform_command_line">Komentorivi</string>
+    <string name="device_platform_browser_extension">Selainlaajennus</string>
+    <string name="device_platform_other">Muu alusta</string>
+    <string name="device_rename_title">Nimeä laite uudelleen</string>
+    <string name="device_rename_save">Tallenna</string>
+    <string name="device_disconnect_confirm_title">Katkaistaanko laitteen %1$s yhteys?</string>
+    <string name="device_disconnect_confirm_body">Laite kirjataan ulos 10 minuutin kuluessa, ja se tarvitsee palautuslauseen kirjautuakseen uudelleen. Jos laite on kadonnut tai varastettu, siirry mieluummin uudelle tilille: laite, jolla palautuslause on tallessa, voi kirjautua uudelleen.</string>
+    <string name="devices_load_failed">Laitteitasi ei voitu ladata. Yritä uudelleen.</string>
+    <string name="devices_try_again">Yritä uudelleen</string>
+    <string name="device_disconnect_failed">Laitteen yhteyttä ei voitu katkaista. Yritä uudelleen.</string>
+    <string name="device_rename_failed">Laitteen nimeä ei voitu muuttaa. Yritä uudelleen.</string>
+    <string name="device_older_client_title">Warrenin vanhempi versio</string>
+    <string name="device_older_client_body">Jokin tämän tilin laite käyttää Warrenin versiota, joka on vanhempi kuin 1.1.36. Se ei enää estä muita laitteitasi. Päivitä tai poista se.</string>
 </resources>

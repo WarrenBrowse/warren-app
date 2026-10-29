@@ -764,4 +764,24 @@
     <string name="network_stats_load_people">Нагрузка %1$s, людей: %2$s</string>
     <string name="network_stats_band_people">%1$s, людей: %2$s</string>
     <string name="network_stats_download">Загрузка</string>
+    <string name="devices_title">Устройства</string>
+    <string name="devices_description">Устройства, на которых выполнен вход в этот аккаунт. Отключение устройства выводит его из аккаунта: чтобы снова войти, ему понадобится фраза восстановления.</string>
+    <string name="device_this_device">Это устройство</string>
+    <string name="device_disconnect">Отключить</string>
+    <string name="device_active_today">Активно сегодня</string>
+    <string name="device_last_active">Последняя активность: %1$s</string>
+    <string name="device_last_seen">Последний раз замечено: %1$s</string>
+    <string name="device_platform_command_line">Командная строка</string>
+    <string name="device_platform_browser_extension">Расширение браузера</string>
+    <string name="device_platform_other">Другая платформа</string>
+    <string name="device_rename_title">Переименовать устройство</string>
+    <string name="device_rename_save">Сохранить</string>
+    <string name="device_disconnect_confirm_title">Отключить %1$s?</string>
+    <string name="device_disconnect_confirm_body">Выход будет выполнен в течение 10 минут, и для повторного входа понадобится фраза восстановления. Если устройство потеряно или украдено, лучше перейдите на новый аккаунт: устройство, на котором сохранилась фраза восстановления, может снова войти.</string>
+    <string name="devices_load_failed">Не удалось загрузить ваши устройства. Попробуйте ещё раз.</string>
+    <string name="devices_try_again">Повторить</string>
+    <string name="device_disconnect_failed">Не удалось отключить устройство. Попробуйте ещё раз.</string>
+    <string name="device_rename_failed">Не удалось переименовать устройство. Попробуйте ещё раз.</string>
+    <string name="device_older_client_title">Старая версия Warren</string>
+    <string name="device_older_client_body">Одно из устройств этого аккаунта использует версию Warren старше 1.1.36. Оно больше не блокирует другие ваши устройства. Обновите или удалите его.</string>
 </resources>

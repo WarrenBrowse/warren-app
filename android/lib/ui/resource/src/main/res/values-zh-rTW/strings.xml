@@ -740,4 +740,24 @@
     <string name="network_stats_load_people">負載 %1$s，%2$s 人</string>
     <string name="network_stats_band_people">%1$s，%2$s 人</string>
     <string name="network_stats_download">下載</string>
+    <string name="devices_title">裝置</string>
+    <string name="devices_description">已登入此帳戶的裝置。中斷某台裝置的連線會將其登出：它需要復原短語才能重新登入。</string>
+    <string name="device_this_device">此裝置</string>
+    <string name="device_disconnect">中斷連線</string>
+    <string name="device_active_today">今天有活動</string>
+    <string name="device_last_active">上次活動：%1$s</string>
+    <string name="device_last_seen">上次出現：%1$s</string>
+    <string name="device_platform_command_line">命令列</string>
+    <string name="device_platform_browser_extension">瀏覽器擴充功能</string>
+    <string name="device_platform_other">其他平台</string>
+    <string name="device_rename_title">重新命名裝置</string>
+    <string name="device_rename_save">儲存</string>
+    <string name="device_disconnect_confirm_title">要中斷 %1$s 的連線嗎？</string>
+    <string name="device_disconnect_confirm_body">它會在 10 分鐘內登出，並需要復原短語才能重新登入。若裝置遺失或遭竊，請改為移轉到新帳戶：保有復原短語的裝置可以重新登入。</string>
+    <string name="devices_load_failed">無法載入您的裝置。請再試一次。</string>
+    <string name="devices_try_again">再試一次</string>
+    <string name="device_disconnect_failed">無法中斷該裝置的連線。請再試一次。</string>
+    <string name="device_rename_failed">無法重新命名該裝置。請再試一次。</string>
+    <string name="device_older_client_title">舊版 Warren</string>
+    <string name="device_older_client_body">此帳戶中有一台裝置執行的 Warren 版本早於 1.1.36。它不再封鎖您的其他裝置。請更新或解除安裝。</string>
 </resources>

@@ -740,4 +740,24 @@
     <string name="network_stats_load_people">ဝန် %1$s၊ လူ %2$s ဦး</string>
     <string name="network_stats_band_people">%1$s၊ လူ %2$s ဦး</string>
     <string name="network_stats_download">ဒေါင်းလုဒ်</string>
+    <string name="devices_title">စက်များ</string>
+    <string name="devices_description">ဤအကောင့်သို့ ဝင်ထားသော စက်များ။ စက်တစ်ခုကို ချိတ်ဆက်မှုဖြုတ်ပါက ၎င်းသည် အကောင့်မှ ထွက်သွားမည်ဖြစ်ပြီး ပြန်ဝင်ရန် ပြန်လည်ရယူရေးစကားစု လိုအပ်ပါမည်။</string>
+    <string name="device_this_device">ဤစက်</string>
+    <string name="device_disconnect">ချိတ်ဆက်မှုဖြုတ်ရန်</string>
+    <string name="device_active_today">ယနေ့ အသုံးပြုခဲ့သည်</string>
+    <string name="device_last_active">နောက်ဆုံးအသုံးပြုခဲ့သည် %1$s</string>
+    <string name="device_last_seen">နောက်ဆုံးတွေ့ခဲ့သည် %1$s</string>
+    <string name="device_platform_command_line">Command line</string>
+    <string name="device_platform_browser_extension">ဘရောက်ဇာ extension</string>
+    <string name="device_platform_other">အခြားပလက်ဖောင်း</string>
+    <string name="device_rename_title">စက်အမည်ပြောင်းရန်</string>
+    <string name="device_rename_save">သိမ်းမည်</string>
+    <string name="device_disconnect_confirm_title">%1$s ကို ချိတ်ဆက်မှုဖြုတ်မလား။</string>
+    <string name="device_disconnect_confirm_body">၎င်းသည် 10 မိနစ်အတွင်း အကောင့်မှ ထွက်သွားမည်ဖြစ်ပြီး ပြန်ဝင်ရန် ပြန်လည်ရယူရေးစကားစု လိုအပ်ပါမည်။ ပျောက်ဆုံးသော သို့မဟုတ် ခိုးယူခံရသော စက်အတွက် အကောင့်အသစ်သို့ ပြောင်းပါ။ ပြန်လည်ရယူရေးစကားစုကို သိမ်းထားသော စက်သည် ပြန်ဝင်နိုင်ပါသည်။</string>
+    <string name="devices_load_failed">သင့်စက်များကို ဖွင့်၍ မရပါ။ ထပ်စမ်းကြည့်ပါ။</string>
+    <string name="devices_try_again">ထပ်ကြိုးစားရန်</string>
+    <string name="device_disconnect_failed">စက်ကို ချိတ်ဆက်မှုဖြုတ်၍ မရပါ။ ထပ်စမ်းကြည့်ပါ။</string>
+    <string name="device_rename_failed">စက်အမည်ကို ပြောင်း၍ မရပါ။ ထပ်စမ်းကြည့်ပါ။</string>
+    <string name="device_older_client_title">Warren ဗားရှင်းဟောင်း</string>
+    <string name="device_older_client_body">ဤအကောင့်ရှိ စက်တစ်ခုသည် 1.1.36 ထက် ဟောင်းသော Warren ဗားရှင်းကို အသုံးပြုနေပါသည်။ ၎င်းသည် သင်၏ အခြားစက်များကို မပိတ်ဆို့တော့ပါ။ ၎င်းကို အပ်ဒိတ်လုပ်ပါ သို့မဟုတ် ဖြုတ်ပါ။</string>
 </resources>

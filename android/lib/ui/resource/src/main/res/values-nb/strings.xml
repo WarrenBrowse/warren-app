@@ -748,4 +748,24 @@
     <string name="network_stats_load_people">Belastning %1$s, %2$s personer</string>
     <string name="network_stats_band_people">%1$s, %2$s personer</string>
     <string name="network_stats_download">Nedlasting</string>
+    <string name="devices_title">Enheter</string>
+    <string name="devices_description">Enheter som er logget på denne kontoen. Når du kobler fra en enhet, logges den ut: den trenger gjenopprettingsfrasen for å logge på igjen.</string>
+    <string name="device_this_device">Denne enheten</string>
+    <string name="device_disconnect">Koble fra</string>
+    <string name="device_active_today">Aktiv i dag</string>
+    <string name="device_last_active">Sist aktiv %1$s</string>
+    <string name="device_last_seen">Sist sett %1$s</string>
+    <string name="device_platform_command_line">Kommandolinje</string>
+    <string name="device_platform_browser_extension">Nettleserutvidelse</string>
+    <string name="device_platform_other">Annen plattform</string>
+    <string name="device_rename_title">Gi enheten nytt navn</string>
+    <string name="device_rename_save">Lagre</string>
+    <string name="device_disconnect_confirm_title">Koble fra %1$s?</string>
+    <string name="device_disconnect_confirm_body">Den logges ut innen 10 minutter og trenger gjenopprettingsfrasen for å logge på igjen. For en mistet eller stjålet enhet bør du heller bytte til en ny konto: en enhet som har gjenopprettingsfrasen, kan logge på igjen.</string>
+    <string name="devices_load_failed">Kunne ikke laste inn enhetene dine. Prøv igjen.</string>
+    <string name="devices_try_again">Prøv igjen</string>
+    <string name="device_disconnect_failed">Kunne ikke koble fra enheten. Prøv igjen.</string>
+    <string name="device_rename_failed">Kunne ikke gi enheten nytt navn. Prøv igjen.</string>
+    <string name="device_older_client_title">En eldre versjon av Warren</string>
+    <string name="device_older_client_body">En enhet på denne kontoen kjører en versjon av Warren som er eldre enn 1.1.36. Den blokkerer ikke lenger de andre enhetene dine. Oppdater eller avinstaller den.</string>
 </resources>

@@ -748,4 +748,24 @@
     <string name="network_stats_load_people">Belasting %1$s, %2$s mensen</string>
     <string name="network_stats_band_people">%1$s, %2$s mensen</string>
     <string name="network_stats_download">Download</string>
+    <string name="devices_title">Apparaten</string>
+    <string name="devices_description">Apparaten die bij dit account zijn aangemeld. Een apparaat loskoppelen meldt het af: het heeft de herstelzin nodig om opnieuw aan te melden.</string>
+    <string name="device_this_device">Dit apparaat</string>
+    <string name="device_disconnect">Loskoppelen</string>
+    <string name="device_active_today">Vandaag actief</string>
+    <string name="device_last_active">Laatst actief op %1$s</string>
+    <string name="device_last_seen">Laatst gezien op %1$s</string>
+    <string name="device_platform_command_line">Opdrachtregel</string>
+    <string name="device_platform_browser_extension">Browserextensie</string>
+    <string name="device_platform_other">Ander platform</string>
+    <string name="device_rename_title">Naam van apparaat wijzigen</string>
+    <string name="device_rename_save">Opslaan</string>
+    <string name="device_disconnect_confirm_title">%1$s loskoppelen?</string>
+    <string name="device_disconnect_confirm_body">Het wordt binnen 10 minuten afgemeld en heeft de herstelzin nodig om opnieuw aan te melden. Stap bij een verloren of gestolen apparaat liever over op een nieuw account: een apparaat dat de herstelzin bewaart, kan zich opnieuw aanmelden.</string>
+    <string name="devices_load_failed">Kan je apparaten niet laden. Probeer het opnieuw.</string>
+    <string name="devices_try_again">Opnieuw proberen</string>
+    <string name="device_disconnect_failed">Kan het apparaat niet loskoppelen. Probeer het opnieuw.</string>
+    <string name="device_rename_failed">Kan de naam van het apparaat niet wijzigen. Probeer het opnieuw.</string>
+    <string name="device_older_client_title">Een oudere versie van Warren</string>
+    <string name="device_older_client_body">Een apparaat van dit account gebruikt een versie van Warren die ouder is dan 1.1.36. Het blokkeert je andere apparaten niet meer. Werk het bij of verwijder het.</string>
 </resources>

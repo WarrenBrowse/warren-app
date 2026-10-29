@@ -751,4 +751,24 @@
     <string name="network_stats_load_people">Carico %1$s, %2$s persone</string>
     <string name="network_stats_band_people">%1$s, %2$s persone</string>
     <string name="network_stats_download">Download</string>
+    <string name="devices_title">Dispositivi</string>
+    <string name="devices_description">Dispositivi che hanno effettuato l\'accesso a questo account. Disconnetterne uno ne chiude la sessione: per accedere di nuovo servirà la frase di recupero.</string>
+    <string name="device_this_device">Questo dispositivo</string>
+    <string name="device_disconnect">Disconnetti</string>
+    <string name="device_active_today">Attivo oggi</string>
+    <string name="device_last_active">Ultima attività: %1$s</string>
+    <string name="device_last_seen">Visto l\'ultima volta: %1$s</string>
+    <string name="device_platform_command_line">Riga di comando</string>
+    <string name="device_platform_browser_extension">Estensione del browser</string>
+    <string name="device_platform_other">Altra piattaforma</string>
+    <string name="device_rename_title">Rinomina dispositivo</string>
+    <string name="device_rename_save">Salva</string>
+    <string name="device_disconnect_confirm_title">Disconnettere %1$s?</string>
+    <string name="device_disconnect_confirm_body">La sua sessione verrà chiusa entro 10 minuti e per accedere di nuovo servirà la frase di recupero. Per un dispositivo perso o rubato, passa invece a un nuovo account: un dispositivo che conserva la frase di recupero può accedere di nuovo.</string>
+    <string name="devices_load_failed">Impossibile caricare i tuoi dispositivi. Riprova.</string>
+    <string name="devices_try_again">Riprova</string>
+    <string name="device_disconnect_failed">Impossibile disconnettere il dispositivo. Riprova.</string>
+    <string name="device_rename_failed">Impossibile rinominare il dispositivo. Riprova.</string>
+    <string name="device_older_client_title">Una versione precedente di Warren</string>
+    <string name="device_older_client_body">Un dispositivo di questo account usa una versione di Warren precedente alla 1.1.36. Non blocca più gli altri tuoi dispositivi. Aggiornalo o disinstallalo.</string>
 </resources>

@@ -748,4 +748,24 @@
     <string name="network_stats_load_people">Belastning %1$s, %2$s personer</string>
     <string name="network_stats_band_people">%1$s, %2$s personer</string>
     <string name="network_stats_download">Nedladdning</string>
+    <string name="devices_title">Enheter</string>
+    <string name="devices_description">Enheter som är inloggade på det här kontot. Om du kopplar från en enhet loggas den ut: den behöver återställningsfrasen för att logga in igen.</string>
+    <string name="device_this_device">Den här enheten</string>
+    <string name="device_disconnect">Koppla från</string>
+    <string name="device_active_today">Aktiv i dag</string>
+    <string name="device_last_active">Senast aktiv %1$s</string>
+    <string name="device_last_seen">Senast sedd %1$s</string>
+    <string name="device_platform_command_line">Kommandorad</string>
+    <string name="device_platform_browser_extension">Webbläsartillägg</string>
+    <string name="device_platform_other">Annan plattform</string>
+    <string name="device_rename_title">Byt namn på enhet</string>
+    <string name="device_rename_save">Spara</string>
+    <string name="device_disconnect_confirm_title">Koppla från %1$s?</string>
+    <string name="device_disconnect_confirm_body">Den loggas ut inom 10 minuter och behöver återställningsfrasen för att logga in igen. För en förlorad eller stulen enhet bör du i stället byta till ett nytt konto: en enhet som har kvar återställningsfrasen kan logga in igen.</string>
+    <string name="devices_load_failed">Det gick inte att läsa in dina enheter. Försök igen.</string>
+    <string name="devices_try_again">Försök igen</string>
+    <string name="device_disconnect_failed">Det gick inte att koppla från enheten. Försök igen.</string>
+    <string name="device_rename_failed">Det gick inte att byta namn på enheten. Försök igen.</string>
+    <string name="device_older_client_title">En äldre version av Warren</string>
+    <string name="device_older_client_body">En enhet på det här kontot kör en version av Warren som är äldre än 1.1.36. Den blockerar inte längre dina andra enheter. Uppdatera eller avinstallera den.</string>
 </resources>

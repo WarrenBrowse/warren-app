@@ -1,5 +1,7 @@
 package com.warrenbrowse.vpn.lib.usecase
 
+import arrow.core.left
+import com.warrenbrowse.vpn.lib.model.DeviceRegistryError
 import com.warrenbrowse.vpn.lib.model.DeviceState
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.model.wallet.SensitiveOpAuthorizer
@@ -36,7 +38,13 @@ class DeviceRevocationUseCaseTest {
             override fun renameDevice(mnemonic: String, deviceId: String, name: String) =
                 error("not called")
 
-            override fun revokeDevice(mnemonic: String, deviceId: String) = error("not called")
+            var revokeAnswer = """{"ok":true,"this_device":true}"""
+
+            override fun revokeDevice(mnemonic: String, deviceId: String): String {
+                events += "revoke $deviceId"
+                if (revokeAnswer.contains("\"ok\":true")) revoked = true
+                return revokeAnswer
+            }
 
             override fun deviceRevoked() = revoked
 
@@ -44,8 +52,6 @@ class DeviceRevocationUseCaseTest {
                 revoked = false
             }
         }
-
-    private val devices = DeviceRepository(bridge)
 
     private val wallet =
         object : WalletRepository {
@@ -70,10 +76,16 @@ class DeviceRevocationUseCaseTest {
                 reason: String,
             ): Mnemonic = error("unused")
 
-            override suspend fun readMnemonic(): Mnemonic = error("unused")
+            override suspend fun readMnemonic(): Mnemonic =
+                Mnemonic(
+                    "abandon abandon abandon abandon abandon abandon " +
+                        "abandon abandon abandon abandon abandon about"
+                )
 
             override suspend fun erase() = error("unused")
         }
+
+    private val devices = DeviceRepository(bridge, wallet)
 
     private var logoutOutcome: WarrenLogoutOutcome = WarrenLogoutOutcome.LoggedOut
 
@@ -160,5 +172,28 @@ class DeviceRevocationUseCaseTest {
 
         assertEquals(DeviceState.Revoked, devices.deviceState.value)
         watching.cancel()
+    }
+
+    @Test
+    fun `logging this device out revokes it, logs the wallet out, and shows no revoked screen`() =
+        runTest {
+            useCase.logOutThisDevice("dev1")
+
+            assertEquals(listOf("revoke dev1", "logout while null"), events)
+            assertNull(devices.deviceState.value)
+
+            // The watcher looking right after finds nothing to act on.
+            useCase.takeInRevocation()
+            assertEquals(2, events.size)
+        }
+
+    @Test
+    fun `a revocation the registry refused leaves the wallet in place`() = runTest {
+        bridge.revokeAnswer = """{"ok":false,"error":"unavailable"}"""
+
+        val result = useCase.logOutThisDevice("dev1")
+
+        assertEquals(DeviceRegistryError.Unavailable.left(), result)
+        assertEquals(listOf("revoke dev1"), events)
     }
 }

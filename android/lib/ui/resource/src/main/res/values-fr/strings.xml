@@ -751,4 +751,24 @@
     <string name="network_stats_load_people">Charge %1$s, %2$s personnes</string>
     <string name="network_stats_band_people">%1$s, %2$s personnes</string>
     <string name="network_stats_download">Téléchargement</string>
+    <string name="devices_title">Appareils</string>
+    <string name="devices_description">Appareils connectés à ce compte. Déconnecter un appareil le déconnecte du compte : il lui faudra la phrase de restauration pour se reconnecter.</string>
+    <string name="device_this_device">Cet appareil</string>
+    <string name="device_disconnect">Déconnecter</string>
+    <string name="device_active_today">Actif aujourd\'hui</string>
+    <string name="device_last_active">Actif pour la dernière fois le %1$s</string>
+    <string name="device_last_seen">Vu pour la dernière fois le %1$s</string>
+    <string name="device_platform_command_line">Ligne de commande</string>
+    <string name="device_platform_browser_extension">Extension de navigateur</string>
+    <string name="device_platform_other">Autre plateforme</string>
+    <string name="device_rename_title">Renommer l\'appareil</string>
+    <string name="device_rename_save">Enregistrer</string>
+    <string name="device_disconnect_confirm_title">Déconnecter %1$s ?</string>
+    <string name="device_disconnect_confirm_body">Il sera déconnecté d\'ici 10 minutes et aura besoin de la phrase de restauration pour se reconnecter. Pour un appareil perdu ou volé, passez plutôt à un nouveau compte : un appareil qui conserve la phrase de restauration peut se reconnecter.</string>
+    <string name="devices_load_failed">Impossible de charger vos appareils. Réessayez.</string>
+    <string name="devices_try_again">Réessayer</string>
+    <string name="device_disconnect_failed">Impossible de déconnecter l\'appareil. Réessayez.</string>
+    <string name="device_rename_failed">Impossible de renommer l\'appareil. Réessayez.</string>
+    <string name="device_older_client_title">Une ancienne version de Warren</string>
+    <string name="device_older_client_body">Un appareil de ce compte utilise une version de Warren antérieure à 1.1.36. Il ne bloque plus vos autres appareils. Mettez-le à jour ou désinstallez-le.</string>
 </resources>

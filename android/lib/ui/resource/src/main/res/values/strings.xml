@@ -786,4 +786,24 @@
     <string name="network_stats_load_people">Load %1$s, %2$s people</string>
     <string name="network_stats_band_people">%1$s, %2$s people</string>
     <string name="network_stats_download">Download</string>
+    <string name="devices_title">Devices</string>
+    <string name="devices_description">Devices signed in to this account. Disconnecting one signs it out: it needs the recovery phrase to sign in again.</string>
+    <string name="device_this_device">This device</string>
+    <string name="device_disconnect">Disconnect</string>
+    <string name="device_active_today">Active today</string>
+    <string name="device_last_active">Last active %1$s</string>
+    <string name="device_last_seen">Last seen %1$s</string>
+    <string name="device_platform_command_line">Command line</string>
+    <string name="device_platform_browser_extension">Browser extension</string>
+    <string name="device_platform_other">Other platform</string>
+    <string name="device_rename_title">Rename device</string>
+    <string name="device_rename_save">Save</string>
+    <string name="device_disconnect_confirm_title">Disconnect %1$s?</string>
+    <string name="device_disconnect_confirm_body">It will be signed out within 10 minutes and will need the recovery phrase to sign in again. For a lost or stolen device, move to a new account instead: a device that keeps the recovery phrase can sign in again.</string>
+    <string name="devices_load_failed">Could not load your devices. Try again.</string>
+    <string name="devices_try_again">Try again</string>
+    <string name="device_disconnect_failed">Could not disconnect the device. Try again.</string>
+    <string name="device_rename_failed">Could not rename the device. Try again.</string>
+    <string name="device_older_client_title">An older version of Warren</string>
+    <string name="device_older_client_body">A device of this account runs a version of Warren older than 1.1.36. It no longer blocks your other devices. Update or uninstall it.</string>
 </resources>

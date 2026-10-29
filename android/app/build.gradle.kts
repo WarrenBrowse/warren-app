@@ -559,7 +559,7 @@ dependencies {
     implementation(project(":lib:common-compose"))
     // lib.grpc dropped (Mullvad daemon gRPC bridge dead).
     implementation(projects.lib.endpoint)
-    // account/addtime/deleteaccount/managedevices/redeemvoucher
+    // account/addtime/deleteaccount/redeemvoucher
     // modules deleted (Mullvad-account features without Warren equivalent).
     // anticensorship module deleted.
     // apiaccess module deleted.
@@ -574,6 +574,8 @@ dependencies {
     // daita module deleted (DAITA via WarrenTunnelSettings).
     implementation(projects.lib.feature.home.impl)
     implementation(projects.lib.feature.home.api)
+    implementation(projects.lib.feature.managedevices.impl)
+    implementation(projects.lib.feature.managedevices.api)
     implementation(projects.lib.feature.language.impl)
     implementation(projects.lib.feature.login.impl)
     implementation(projects.lib.feature.login.api)

@@ -760,4 +760,24 @@
     <string name="network_stats_load_people">Încărcare %1$s, %2$s persoane</string>
     <string name="network_stats_band_people">%1$s, %2$s persoane</string>
     <string name="network_stats_download">Download</string>
+    <string name="devices_title">Dispozitive</string>
+    <string name="devices_description">Dispozitivele conectate la acest cont. Deconectarea unuia îl scoate din cont: va avea nevoie de fraza de recuperare pentru a se conecta din nou.</string>
+    <string name="device_this_device">Acest dispozitiv</string>
+    <string name="device_disconnect">Deconectează</string>
+    <string name="device_active_today">Activ astăzi</string>
+    <string name="device_last_active">Ultima activitate: %1$s</string>
+    <string name="device_last_seen">Văzut ultima dată: %1$s</string>
+    <string name="device_platform_command_line">Linie de comandă</string>
+    <string name="device_platform_browser_extension">Extensie de browser</string>
+    <string name="device_platform_other">Altă platformă</string>
+    <string name="device_rename_title">Redenumește dispozitivul</string>
+    <string name="device_rename_save">Salvare</string>
+    <string name="device_disconnect_confirm_title">Deconectezi %1$s?</string>
+    <string name="device_disconnect_confirm_body">Va fi scos din cont în cel mult 10 minute și va avea nevoie de fraza de recuperare pentru a se conecta din nou. Pentru un dispozitiv pierdut sau furat, treci mai bine pe un cont nou: un dispozitiv care păstrează fraza de recuperare se poate conecta din nou.</string>
+    <string name="devices_load_failed">Dispozitivele tale nu au putut fi încărcate. Încearcă din nou.</string>
+    <string name="devices_try_again">Încercați din nou</string>
+    <string name="device_disconnect_failed">Dispozitivul nu a putut fi deconectat. Încearcă din nou.</string>
+    <string name="device_rename_failed">Dispozitivul nu a putut fi redenumit. Încearcă din nou.</string>
+    <string name="device_older_client_title">O versiune mai veche de Warren</string>
+    <string name="device_older_client_body">Un dispozitiv al acestui cont rulează o versiune Warren mai veche de 1.1.36. Nu îți mai blochează celelalte dispozitive. Actualizează-l sau dezinstalează-l.</string>
 </resources>

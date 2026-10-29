@@ -740,4 +740,24 @@
     <string name="network_stats_load_people">부하 %1$s, %2$s명</string>
     <string name="network_stats_band_people">%1$s, %2$s명</string>
     <string name="network_stats_download">다운로드</string>
+    <string name="devices_title">장치</string>
+    <string name="devices_description">이 계정에 로그인된 장치입니다. 장치의 연결을 끊으면 로그아웃되며, 다시 로그인하려면 복구 문구가 필요합니다.</string>
+    <string name="device_this_device">이 장치</string>
+    <string name="device_disconnect">연결 끊기</string>
+    <string name="device_active_today">오늘 활동</string>
+    <string name="device_last_active">마지막 활동: %1$s</string>
+    <string name="device_last_seen">마지막 확인: %1$s</string>
+    <string name="device_platform_command_line">명령줄</string>
+    <string name="device_platform_browser_extension">브라우저 확장 프로그램</string>
+    <string name="device_platform_other">기타 플랫폼</string>
+    <string name="device_rename_title">장치 이름 변경</string>
+    <string name="device_rename_save">저장</string>
+    <string name="device_disconnect_confirm_title">%1$s의 연결을 끊을까요?</string>
+    <string name="device_disconnect_confirm_body">10분 이내에 로그아웃되며, 다시 로그인하려면 복구 문구가 필요합니다. 분실하거나 도난당한 장치라면 대신 새 계정으로 옮기세요. 복구 문구를 보관한 장치는 다시 로그인할 수 있습니다.</string>
+    <string name="devices_load_failed">장치 목록을 불러오지 못했습니다. 다시 시도하세요.</string>
+    <string name="devices_try_again">다시 시도</string>
+    <string name="device_disconnect_failed">장치 연결을 끊지 못했습니다. 다시 시도하세요.</string>
+    <string name="device_rename_failed">장치 이름을 변경하지 못했습니다. 다시 시도하세요.</string>
+    <string name="device_older_client_title">이전 버전의 Warren</string>
+    <string name="device_older_client_body">이 계정의 장치 중 하나가 1.1.36보다 오래된 버전의 Warren을 실행하고 있습니다. 더 이상 다른 장치를 차단하지 않습니다. 업데이트하거나 제거하세요.</string>
 </resources>

@@ -780,4 +780,24 @@
     <string name="network_stats_load_people">الحمل %1$s، الأشخاص %2$s</string>
     <string name="network_stats_band_people">%1$s، الأشخاص %2$s</string>
     <string name="network_stats_download">التنزيل</string>
+    <string name="devices_title">الأجهزة</string>
+    <string name="devices_description">الأجهزة المسجّل دخولها إلى هذا الحساب. قطع اتصال أحدها يسجّل خروجه: سيحتاج إلى عبارة الاسترداد لتسجيل الدخول مجددًا.</string>
+    <string name="device_this_device">هذا الجهاز</string>
+    <string name="device_disconnect">قطع الاتصال</string>
+    <string name="device_active_today">نشط اليوم</string>
+    <string name="device_last_active">آخر نشاط: %1$s</string>
+    <string name="device_last_seen">آخر ظهور: %1$s</string>
+    <string name="device_platform_command_line">سطر الأوامر</string>
+    <string name="device_platform_browser_extension">إضافة المتصفح</string>
+    <string name="device_platform_other">منصة أخرى</string>
+    <string name="device_rename_title">إعادة تسمية الجهاز</string>
+    <string name="device_rename_save">حفظ</string>
+    <string name="device_disconnect_confirm_title">قطع اتصال %1$s؟</string>
+    <string name="device_disconnect_confirm_body">سيُسجَّل خروجه خلال 10 دقائق وسيحتاج إلى عبارة الاسترداد لتسجيل الدخول مجددًا. إذا فُقد الجهاز أو سُرق، فانتقل بدلًا من ذلك إلى حساب جديد: يمكن للجهاز الذي يحتفظ بعبارة الاسترداد تسجيل الدخول مجددًا.</string>
+    <string name="devices_load_failed">تعذّر تحميل أجهزتك. حاول مرة أخرى.</string>
+    <string name="devices_try_again">إعادة المحاولة</string>
+    <string name="device_disconnect_failed">تعذّر قطع اتصال الجهاز. حاول مرة أخرى.</string>
+    <string name="device_rename_failed">تعذّرت إعادة تسمية الجهاز. حاول مرة أخرى.</string>
+    <string name="device_older_client_title">إصدار أقدم من Warren</string>
+    <string name="device_older_client_body">يعمل أحد أجهزة هذا الحساب بإصدار من Warren أقدم من 1.1.36. لم يعد يحظر أجهزتك الأخرى. حدّثه أو ألغِ تثبيته.</string>
 </resources>

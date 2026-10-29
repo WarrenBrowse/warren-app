@@ -57,8 +57,8 @@ include(
     ":lib:feature:language:api",
     ":lib:feature:login:impl",
     ":lib:feature:login:api",
-    // managedevices module removed (Mullvad multi-device
-    // accounting model ; Warren manages devices via the wallet).
+    ":lib:feature:managedevices:impl",
+    ":lib:feature:managedevices:api",
     // multihop module deleted (multi-hop via WarrenTunnelSettings).
     ":lib:feature:notification:impl",
     ":lib:feature:notification:api",
