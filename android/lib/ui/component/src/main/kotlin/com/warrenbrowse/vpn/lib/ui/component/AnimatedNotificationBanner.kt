@@ -74,6 +74,7 @@ fun AnimatedNotificationBanner(
     onClickDismissNotice: () -> Unit,
     onClickDismissAnnouncement: () -> Unit,
     onClickReEnableAfterStandDown: () -> Unit,
+    onClickManageDevices: () -> Unit,
 ) {
     // Fix for animating to invisible state
     val previous = rememberPrevious(current = notification, shouldUpdate = { _, _ -> true })
@@ -114,6 +115,7 @@ fun AnimatedNotificationBanner(
                     onClickDismissNotice = onClickDismissNotice,
                     onClickDismissAnnouncement = onClickDismissAnnouncement,
                     onClickReEnableAfterStandDown = onClickReEnableAfterStandDown,
+                    onClickManageDevices = onClickManageDevices,
                 ),
             )
     }

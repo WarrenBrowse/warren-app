@@ -806,4 +806,6 @@
     <string name="device_rename_failed">Could not rename the device. Try again.</string>
     <string name="device_older_client_title">An older version of Warren</string>
     <string name="device_older_client_body">A device of this account runs a version of Warren older than 1.1.36. It no longer blocks your other devices. Update or uninstall it.</string>
+    <string name="manage_devices">Manage devices</string>
+    <string name="auth_failed_no_session_token">This device has no session credentials right now. Another device of your account may be holding them.</string>
 </resources>

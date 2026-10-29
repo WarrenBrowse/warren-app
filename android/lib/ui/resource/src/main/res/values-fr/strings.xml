@@ -771,4 +771,6 @@
     <string name="device_rename_failed">Impossible de renommer l\'appareil. Réessayez.</string>
     <string name="device_older_client_title">Une ancienne version de Warren</string>
     <string name="device_older_client_body">Un appareil de ce compte utilise une version de Warren antérieure à 1.1.36. Il ne bloque plus vos autres appareils. Mettez-le à jour ou désinstallez-le.</string>
+    <string name="manage_devices">Gérer les appareils</string>
+    <string name="auth_failed_no_session_token">Cet appareil n\'a pas d\'identifiants de session pour le moment. Un autre appareil de votre compte les détient peut-être.</string>
 </resources>

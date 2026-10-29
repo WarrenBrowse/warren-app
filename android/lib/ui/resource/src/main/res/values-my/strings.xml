@@ -760,4 +760,6 @@
     <string name="device_rename_failed">စက်အမည်ကို ပြောင်း၍ မရပါ။ ထပ်စမ်းကြည့်ပါ။</string>
     <string name="device_older_client_title">Warren ဗားရှင်းဟောင်း</string>
     <string name="device_older_client_body">ဤအကောင့်ရှိ စက်တစ်ခုသည် 1.1.36 ထက် ဟောင်းသော Warren ဗားရှင်းကို အသုံးပြုနေပါသည်။ ၎င်းသည် သင်၏ အခြားစက်များကို မပိတ်ဆို့တော့ပါ။ ၎င်းကို အပ်ဒိတ်လုပ်ပါ သို့မဟုတ် ဖြုတ်ပါ။</string>
+    <string name="manage_devices">စက်များကို စီမံရန်</string>
+    <string name="auth_failed_no_session_token">ဤစက်တွင် ယခုအချိန်တွင် session အထောက်အထားများ မရှိပါ။ သင့်အကောင့်ရှိ အခြားစက်တစ်ခုက ၎င်းတို့ကို ကိုင်ထားနိုင်ပါသည်။</string>
 </resources>

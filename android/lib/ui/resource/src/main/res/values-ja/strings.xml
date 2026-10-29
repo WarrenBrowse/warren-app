@@ -760,4 +760,6 @@
     <string name="device_rename_failed">デバイス名を変更できませんでした。もう一度お試しください。</string>
     <string name="device_older_client_title">古いバージョンのWarren</string>
     <string name="device_older_client_body">このアカウントのデバイスの1台が、1.1.36より古いバージョンのWarrenを使用しています。ほかのデバイスをブロックすることはなくなりました。アップデートするかアンインストールしてください。</string>
+    <string name="manage_devices">デバイスを管理</string>
+    <string name="auth_failed_no_session_token">このデバイスには現在セッション認証情報がありません。アカウントの別のデバイスが保持している可能性があります。</string>
 </resources>

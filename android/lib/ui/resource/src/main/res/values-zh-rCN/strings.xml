@@ -760,4 +760,6 @@
     <string name="device_rename_failed">无法重命名该设备。请重试。</string>
     <string name="device_older_client_title">旧版本的 Warren</string>
     <string name="device_older_client_body">此账户中有一台设备运行的 Warren 版本早于 1.1.36。它不再阻止您的其他设备。请更新或卸载它。</string>
+    <string name="manage_devices">管理设备</string>
+    <string name="auth_failed_no_session_token">此设备目前没有会话凭据。您账户中的另一台设备可能正在占用它们。</string>
 </resources>

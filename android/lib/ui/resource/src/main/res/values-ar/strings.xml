@@ -800,4 +800,6 @@
     <string name="device_rename_failed">تعذّرت إعادة تسمية الجهاز. حاول مرة أخرى.</string>
     <string name="device_older_client_title">إصدار أقدم من Warren</string>
     <string name="device_older_client_body">يعمل أحد أجهزة هذا الحساب بإصدار من Warren أقدم من 1.1.36. لم يعد يحظر أجهزتك الأخرى. حدّثه أو ألغِ تثبيته.</string>
+    <string name="manage_devices">إدارة الأجهزة</string>
+    <string name="auth_failed_no_session_token">لا يملك هذا الجهاز بيانات اعتماد للجلسة حاليًا. ربما يحتفظ بها جهاز آخر في حسابك.</string>
 </resources>

@@ -17,6 +17,8 @@ dependencies {
     implementation(projects.lib.feature.splittunneling.api)
     implementation(projects.lib.pushNotification)
     implementation(projects.lib.repository)
+    // The blocked-state banners open the account's devices.
+    implementation(projects.lib.feature.managedevices.api)
     implementation(projects.lib.tv)
     implementation(projects.lib.ui.util)
     implementation(projects.lib.usecase)

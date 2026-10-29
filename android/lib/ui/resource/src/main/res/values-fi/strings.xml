@@ -768,4 +768,6 @@
     <string name="device_rename_failed">Laitteen nimeä ei voitu muuttaa. Yritä uudelleen.</string>
     <string name="device_older_client_title">Warrenin vanhempi versio</string>
     <string name="device_older_client_body">Jokin tämän tilin laite käyttää Warrenin versiota, joka on vanhempi kuin 1.1.36. Se ei enää estä muita laitteitasi. Päivitä tai poista se.</string>
+    <string name="manage_devices">Hallitse laitteita</string>
+    <string name="auth_failed_no_session_token">Tällä laitteella ei ole juuri nyt istunnon tunnistetietoja. Jokin toinen tilisi laite saattaa pitää niitä hallussaan.</string>
 </resources>

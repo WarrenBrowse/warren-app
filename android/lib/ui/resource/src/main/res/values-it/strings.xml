@@ -771,4 +771,6 @@
     <string name="device_rename_failed">Impossibile rinominare il dispositivo. Riprova.</string>
     <string name="device_older_client_title">Una versione precedente di Warren</string>
     <string name="device_older_client_body">Un dispositivo di questo account usa una versione di Warren precedente alla 1.1.36. Non blocca più gli altri tuoi dispositivi. Aggiornalo o disinstallalo.</string>
+    <string name="manage_devices">Gestisci dispositivi</string>
+    <string name="auth_failed_no_session_token">Questo dispositivo al momento non ha credenziali di sessione. Potrebbe averle un altro dispositivo del tuo account.</string>
 </resources>

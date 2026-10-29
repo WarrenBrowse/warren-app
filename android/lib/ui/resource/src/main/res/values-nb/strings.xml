@@ -768,4 +768,6 @@
     <string name="device_rename_failed">Kunne ikke gi enheten nytt navn. Prøv igjen.</string>
     <string name="device_older_client_title">En eldre versjon av Warren</string>
     <string name="device_older_client_body">En enhet på denne kontoen kjører en versjon av Warren som er eldre enn 1.1.36. Den blokkerer ikke lenger de andre enhetene dine. Oppdater eller avinstaller den.</string>
+    <string name="manage_devices">Behandle enheter</string>
+    <string name="auth_failed_no_session_token">Denne enheten har ingen øktlegitimasjon akkurat nå. En annen enhet på kontoen din kan ha dem.</string>
 </resources>

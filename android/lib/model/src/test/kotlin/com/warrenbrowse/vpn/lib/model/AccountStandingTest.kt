@@ -44,6 +44,28 @@ class AccountStandingTest {
     }
 
     @Test
+    fun `the no-session-token token is an auth failure without being a ban`() {
+        val reason = "[NO_SESSION_TOKEN] no session token the exit admits"
+        assertEquals(AuthFailedError.NoSessionToken, AuthFailedError.fromReason(reason, null))
+        assertNull(AuthFailedError.banOf(reason, null))
+    }
+
+    @Test
+    fun `only a cause another device can hold opens the device list`() {
+        fun authFailed(error: AuthFailedError) =
+            ErrorState(ErrorStateCause.AuthFailed(error), isBlocking = true)
+
+        assertTrue(authFailed(AuthFailedError.TooManyConnections).isCausedByAnotherDevice)
+        assertTrue(authFailed(AuthFailedError.NoSessionToken).isCausedByAnotherDevice)
+        assertFalse(authFailed(AuthFailedError.ExpiredAccount).isCausedByAnotherDevice)
+        assertFalse(authFailed(AuthFailedError.Banned(null)).isCausedByAnotherDevice)
+        assertFalse(
+            ErrorState(ErrorStateCause.WarrenKillSwitchActive, isBlocking = true)
+                .isCausedByAnotherDevice
+        )
+    }
+
+    @Test
     fun `a reason without a ban token is not a ban`() {
         assertNull(AuthFailedError.banOf("subscription expired", null))
         assertNull(AuthFailedError.banOf("[EXPIRED_ACCOUNT] no subscription", null))

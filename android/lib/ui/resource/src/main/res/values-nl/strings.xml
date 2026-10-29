@@ -768,4 +768,6 @@
     <string name="device_rename_failed">Kan de naam van het apparaat niet wijzigen. Probeer het opnieuw.</string>
     <string name="device_older_client_title">Een oudere versie van Warren</string>
     <string name="device_older_client_body">Een apparaat van dit account gebruikt een versie van Warren die ouder is dan 1.1.36. Het blokkeert je andere apparaten niet meer. Werk het bij of verwijder het.</string>
+    <string name="manage_devices">Apparaten beheren</string>
+    <string name="auth_failed_no_session_token">Dit apparaat heeft op dit moment geen sessiegegevens. Mogelijk heeft een ander apparaat van je account ze in gebruik.</string>
 </resources>

@@ -32,6 +32,7 @@ fun PreviewNotificationBannerTv() {
             onClickDismissNotice = {},
             onClickDismissAnnouncement = {},
             onClickReEnableAfterStandDown = {},
+            onClickManageDevices = {},
         )
     }
 }
@@ -53,6 +54,7 @@ fun NotificationBannerTv(
     onClickDismissNotice: () -> Unit,
     onClickDismissAnnouncement: () -> Unit,
     onClickReEnableAfterStandDown: () -> Unit,
+    onClickManageDevices: () -> Unit,
 ) {
     AnimatedNotificationBanner(
         modifier = modifier,
@@ -81,5 +83,6 @@ fun NotificationBannerTv(
         onClickDismissNotice = onClickDismissNotice,
         onClickDismissAnnouncement = onClickDismissAnnouncement,
         onClickReEnableAfterStandDown = onClickReEnableAfterStandDown,
+        onClickManageDevices = onClickManageDevices,
     )
 }

@@ -784,4 +784,6 @@
     <string name="device_rename_failed">Не вдалося перейменувати пристрій. Спробуйте ще раз.</string>
     <string name="device_older_client_title">Старіша версія Warren</string>
     <string name="device_older_client_body">Один із пристроїв цього облікового запису використовує версію Warren, старішу за 1.1.36. Він більше не блокує інші ваші пристрої. Оновіть або видаліть його.</string>
+    <string name="manage_devices">Керування пристроями</string>
+    <string name="auth_failed_no_session_token">Цей пристрій зараз не має облікових даних сеансу. Можливо, їх утримує інший пристрій вашого облікового запису.</string>
 </resources>

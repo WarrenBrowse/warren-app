@@ -111,6 +111,7 @@ import com.warrenbrowse.vpn.core.LocalResultStore
 import com.warrenbrowse.vpn.core.NavKey2
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.appinfo.api.ChangelogNavKey
+import com.warrenbrowse.vpn.feature.managedevices.api.ManageDevicesNavKey
 import com.warrenbrowse.vpn.feature.home.api.Android16UpgradeInfoNavKey
 import com.warrenbrowse.vpn.feature.home.api.ConnectNavKey
 import com.warrenbrowse.vpn.feature.home.impl.connect.button.ConnectionButton
@@ -636,6 +637,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                 }
             },
             onClickReEnableAfterStandDown = connectViewModel::reEnableAfterStandDown,
+            onClickManageDevices = dropUnlessResumed { navigator.navigate(ManageDevicesNavKey) },
             forumSlot = forumSlot,
             onForumClick =
                 dropUnlessResumed {
@@ -767,6 +769,7 @@ fun ConnectScreen(
     onClickDismissNotice: () -> Unit = {},
     onClickDismissAnnouncement: () -> Unit = {},
     onClickReEnableAfterStandDown: () -> Unit = {},
+    onClickManageDevices: () -> Unit = {},
     // The desktop header's forum slot: the bell with its badge, the lifebuoy
     // for a wallet with no forum account, nothing when the setting is off.
     forumSlot: ForumHeaderSlot? = null,
@@ -808,6 +811,7 @@ fun ConnectScreen(
                 onClickDismissNotice,
                 onClickDismissAnnouncement,
                 onClickReEnableAfterStandDown,
+                onClickManageDevices,
                 exitLoad,
             )
         }
@@ -884,6 +888,7 @@ private fun Content(
     onClickDismissNotice: () -> Unit,
     onClickDismissAnnouncement: () -> Unit,
     onClickReEnableAfterStandDown: () -> Unit,
+    onClickManageDevices: () -> Unit,
     exitLoad: (@Composable () -> Unit)?,
 ) {
     // The card's top edge in root coordinates, fed to the backdrop at draw
@@ -940,6 +945,7 @@ private fun Content(
                         onClickDismissNotice = onClickDismissNotice,
                         onClickDismissAnnouncement = onClickDismissAnnouncement,
                         onClickReEnableAfterStandDown = onClickReEnableAfterStandDown,
+                        onClickManageDevices = onClickManageDevices,
                     )
                     if (showBetaBadge) {
                         BetaBadge(

@@ -760,4 +760,6 @@
     <string name="device_rename_failed">ไม่สามารถเปลี่ยนชื่ออุปกรณ์ได้ โปรดลองอีกครั้ง</string>
     <string name="device_older_client_title">Warren เวอร์ชันเก่า</string>
     <string name="device_older_client_body">อุปกรณ์หนึ่งในบัญชีนี้ใช้ Warren เวอร์ชันที่เก่ากว่า 1.1.36 อุปกรณ์นั้นไม่ได้บล็อกอุปกรณ์อื่นของคุณอีกต่อไป โปรดอัปเดตหรือถอนการติดตั้ง</string>
+    <string name="manage_devices">จัดการอุปกรณ์</string>
+    <string name="auth_failed_no_session_token">อุปกรณ์นี้ยังไม่มีข้อมูลรับรองเซสชันในขณะนี้ อุปกรณ์อื่นในบัญชีของคุณอาจถือครองอยู่</string>
 </resources>

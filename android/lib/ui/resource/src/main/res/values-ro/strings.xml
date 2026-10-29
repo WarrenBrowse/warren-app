@@ -780,4 +780,6 @@
     <string name="device_rename_failed">Dispozitivul nu a putut fi redenumit. Încearcă din nou.</string>
     <string name="device_older_client_title">O versiune mai veche de Warren</string>
     <string name="device_older_client_body">Un dispozitiv al acestui cont rulează o versiune Warren mai veche de 1.1.36. Nu îți mai blochează celelalte dispozitive. Actualizează-l sau dezinstalează-l.</string>
+    <string name="manage_devices">Gestionarea dispozitivelor</string>
+    <string name="auth_failed_no_session_token">Acest dispozitiv nu are momentan date de autentificare pentru sesiune. Este posibil ca un alt dispozitiv al contului tău să le folosească.</string>
 </resources>

@@ -784,4 +784,6 @@
     <string name="device_rename_failed">Не удалось переименовать устройство. Попробуйте ещё раз.</string>
     <string name="device_older_client_title">Старая версия Warren</string>
     <string name="device_older_client_body">Одно из устройств этого аккаунта использует версию Warren старше 1.1.36. Оно больше не блокирует другие ваши устройства. Обновите или удалите его.</string>
+    <string name="manage_devices">Управление устройствами</string>
+    <string name="auth_failed_no_session_token">У этого устройства сейчас нет учётных данных сеанса. Возможно, их занимает другое устройство вашего аккаунта.</string>
 </resources>

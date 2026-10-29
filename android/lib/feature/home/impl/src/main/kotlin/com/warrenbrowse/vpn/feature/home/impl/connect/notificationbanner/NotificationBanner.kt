@@ -59,6 +59,7 @@ private fun PreviewNotificationBanner() {
                     onClickDismissNotice = {},
                     onClickDismissAnnouncement = {},
                     onClickReEnableAfterStandDown = {},
+                    onClickManageDevices = {},
                 )
                 Spacer(modifier = Modifier.size(16.dp))
             }
@@ -83,6 +84,7 @@ fun NotificationBanner(
     onClickDismissNotice: () -> Unit,
     onClickDismissAnnouncement: () -> Unit,
     onClickReEnableAfterStandDown: () -> Unit,
+    onClickManageDevices: () -> Unit,
 ) {
     if (isTv()) {
         NotificationBannerTv(
@@ -101,6 +103,7 @@ fun NotificationBanner(
             onClickDismissNotice = onClickDismissNotice,
             onClickDismissAnnouncement = onClickDismissAnnouncement,
             onClickReEnableAfterStandDown = onClickReEnableAfterStandDown,
+            onClickManageDevices = onClickManageDevices,
         )
     } else {
         AnimatedNotificationBanner(
@@ -120,6 +123,7 @@ fun NotificationBanner(
             onClickDismissNotice = onClickDismissNotice,
             onClickDismissAnnouncement = onClickDismissAnnouncement,
             onClickReEnableAfterStandDown = onClickReEnableAfterStandDown,
+            onClickManageDevices = onClickManageDevices,
         )
     }
 }

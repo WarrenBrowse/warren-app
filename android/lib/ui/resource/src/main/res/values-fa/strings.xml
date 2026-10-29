@@ -768,4 +768,6 @@
     <string name="device_rename_failed">تغییر نام دستگاه ممکن نشد. دوباره تلاش کنید.</string>
     <string name="device_older_client_title">نسخه قدیمی‌تر Warren</string>
     <string name="device_older_client_body">یکی از دستگاه‌های این حساب نسخه‌ای از Warren قدیمی‌تر از 1.1.36 را اجرا می‌کند. دیگر دستگاه‌های دیگر شما را مسدود نمی‌کند. آن را به‌روزرسانی یا حذف کنید.</string>
+    <string name="manage_devices">مدیریت دستگاه‌ها</string>
+    <string name="auth_failed_no_session_token">این دستگاه در حال حاضر اعتبارنامه نشست ندارد. ممکن است دستگاه دیگری از حساب شما آن‌ها را در اختیار داشته باشد.</string>
 </resources>

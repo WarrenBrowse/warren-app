@@ -768,4 +768,6 @@
     <string name="device_rename_failed">Das Gerät konnte nicht umbenannt werden. Versuchen Sie es erneut.</string>
     <string name="device_older_client_title">Eine ältere Version von Warren</string>
     <string name="device_older_client_body">Ein Gerät dieses Kontos verwendet eine Warren-Version, die älter als 1.1.36 ist. Es blockiert Ihre anderen Geräte nicht mehr. Aktualisieren oder deinstallieren Sie es.</string>
+    <string name="manage_devices">Geräte verwalten</string>
+    <string name="auth_failed_no_session_token">Dieses Gerät hat derzeit keine Sitzungsnachweise. Möglicherweise belegt ein anderes Gerät Ihres Kontos sie.</string>
 </resources>

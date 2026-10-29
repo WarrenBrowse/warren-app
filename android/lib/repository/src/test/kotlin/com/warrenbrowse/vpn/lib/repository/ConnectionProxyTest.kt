@@ -328,6 +328,23 @@ class ConnectionProxyTest {
         }
 
     @Test
+    fun `a session no token admitted blocks under the no-session-token cause`() = runTest {
+        val state =
+            mapped(
+                WarrenConnectedInfo.Blocking(
+                    "[NO_SESSION_TOKEN] no session token the exit admits; other devices of the " +
+                        "account hold them"
+                )
+            ) as TunnelState.Error
+
+        assertTrue(state.errorState.isBlocking)
+        assertEquals(
+            AuthFailedError.NoSessionToken,
+            (state.errorState.cause as ErrorStateCause.AuthFailed).error,
+        )
+    }
+
+    @Test
     fun `a released device limit is a non-blocking too-many-connections error`() = runTest {
         val state =
             mapped(WarrenConnectedInfo.Failed("[TOO_MANY_CONNECTIONS] too many devices"))

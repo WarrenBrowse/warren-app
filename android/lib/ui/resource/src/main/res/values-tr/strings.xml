@@ -768,4 +768,6 @@
     <string name="device_rename_failed">Cihaz yeniden adlandırılamadı. Tekrar deneyin.</string>
     <string name="device_older_client_title">Warren\'ın eski bir sürümü</string>
     <string name="device_older_client_body">Bu hesaptaki bir cihaz, Warren\'ın 1.1.36\'dan eski bir sürümünü çalıştırıyor. Artık diğer cihazlarınızı engellemiyor. Güncelleyin veya kaldırın.</string>
+    <string name="manage_devices">Cihazları yönet</string>
+    <string name="auth_failed_no_session_token">Bu cihazın şu anda oturum kimlik bilgisi yok. Hesabınızdaki başka bir cihaz bunları tutuyor olabilir.</string>
 </resources>

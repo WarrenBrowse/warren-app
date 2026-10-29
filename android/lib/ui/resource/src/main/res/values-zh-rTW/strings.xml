@@ -760,4 +760,6 @@
     <string name="device_rename_failed">無法重新命名該裝置。請再試一次。</string>
     <string name="device_older_client_title">舊版 Warren</string>
     <string name="device_older_client_body">此帳戶中有一台裝置執行的 Warren 版本早於 1.1.36。它不再封鎖您的其他裝置。請更新或解除安裝。</string>
+    <string name="manage_devices">管理裝置</string>
+    <string name="auth_failed_no_session_token">此裝置目前沒有工作階段憑證。您帳戶中的另一台裝置可能正在佔用。</string>
 </resources>

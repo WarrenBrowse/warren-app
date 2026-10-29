@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.AccountBalanceWallet
 import androidx.compose.material.icons.rounded.Clear
+import androidx.compose.material.icons.rounded.Devices
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.UnfoldMore
 import androidx.compose.material3.MaterialTheme
@@ -112,6 +113,7 @@ fun InAppNotification.toNotificationData(
     onClickDismissNotice: () -> Unit,
     onClickDismissAnnouncement: () -> Unit,
     onClickReEnableAfterStandDown: () -> Unit,
+    onClickManageDevices: () -> Unit,
 ) =
     when (this) {
         is InAppNotification.LaunchAnnouncement ->
@@ -216,7 +218,7 @@ fun InAppNotification.toNotificationData(
                     ),
             )
         is InAppNotification.TunnelStateError ->
-            errorMessageBannerData(statusLevel, error)
+            errorMessageBannerData(statusLevel, error, onClickManageDevices)
         is InAppNotification.UnsupportedVersion ->
             NotificationData(
                 title = stringResource(id = R.string.unsupported_version),
@@ -491,12 +493,40 @@ private fun operatorNoticeBannerData(
 private const val NOTICE_BANNER_MAX_LINES = 3
 
 @Composable
-private fun errorMessageBannerData(statusLevel: StatusLevel, error: ErrorState) =
+private fun errorMessageBannerData(
+    statusLevel: StatusLevel,
+    error: ErrorState,
+    onClickManageDevices: () -> Unit,
+) =
     NotificationData(
         title = error.title().formatWithHtml(),
-        message = NotificationMessage.Text(error.message()),
+        message =
+            if (error.isCausedByAnotherDevice) {
+                // Another device of the account may be what blocks this one
+                // (warren-core doc 115): the banner names the way to see them,
+                // as a link, since an icon alone would carry no reason.
+                ClickableText(
+                    text =
+                        buildAnnotatedString {
+                            append(error.message())
+                            append(SPACE_CHAR)
+                            withStyle(
+                                SpanStyle(
+                                    textDecoration = TextDecoration.Underline,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                            ) {
+                                append(stringResource(id = R.string.manage_devices))
+                            }
+                        },
+                    onClick = onClickManageDevices,
+                    contentDescription = stringResource(id = R.string.manage_devices),
+                )
+            } else {
+                NotificationMessage.Text(error.message())
+            },
         statusLevel = statusLevel,
-        action = error.errorLinkAction(),
+        action = error.errorLinkAction(onClickManageDevices),
     )
 
 /** Opens the community forum, the only support door the app still has. */
@@ -527,7 +557,14 @@ private fun forumAction(): NotificationAction {
 // A forwarded-port suspension is the exception: the message names an appeal
 // page, so the action opens that page rather than the generic forum.
 @Composable
-private fun ErrorState.errorLinkAction(): NotificationAction? {
+private fun ErrorState.errorLinkAction(onClickManageDevices: () -> Unit): NotificationAction? {
+    if (isCausedByAnotherDevice) {
+        return NotificationAction(
+            icon = Icons.Rounded.Devices,
+            onClick = onClickManageDevices,
+            contentDescription = stringResource(R.string.manage_devices),
+        )
+    }
     val uriHandler = LocalUriHandler.current
     val reportsUrl = stringResource(R.string.reports_url)
     val forumUrl = stringResource(R.string.community_forum_url)
@@ -664,7 +701,12 @@ private fun ErrorState.message(): AnnotatedString {
     return when {
         // A released suspension says what it is too: "unable to block all
         // traffic" would send the user after a problem the ban explains.
-        isBlocking || cause is ErrorStateCause.WarrenTrafficReleased || cause.isBan() ->
+        // Likewise a cause another device holds: the generic copy would hide
+        // the device list the banner offers.
+        isBlocking ||
+            cause is ErrorStateCause.WarrenTrafficReleased ||
+            cause.isBan() ||
+            isCausedByAnotherDevice ->
             cause.errorMessageId().formatWithHtml()
         else -> stringResource(R.string.failed_to_block_internet).formatWithHtml()
     }
@@ -739,6 +781,7 @@ private fun AuthFailedError.errorMessageId(): Int =
         AuthFailedError.ExpiredAccount -> R.string.account_credit_has_expired
         AuthFailedError.InvalidAccount -> R.string.auth_failed_invalid_account
         AuthFailedError.TooManyConnections -> R.string.auth_failed_too_many_connections
+        AuthFailedError.NoSessionToken -> R.string.auth_failed_no_session_token
         // A ban is a suspension, not a renewable expiry: distinct copy so the
         // user contacts support rather than trying to top up. The
         // port-forwarding ban names the forwarded-port cause specifically.
