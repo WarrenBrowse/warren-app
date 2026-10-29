@@ -7,6 +7,7 @@
 
 import Foundation
 import WarrenLogging
+import WarrenRustRuntime
 
 /// True sign-out for the wallet identity model: takes the tunnel down, then
 /// wipes the wallet from the Keychain. Unlike the Settings "Erase wallet"
@@ -25,6 +26,8 @@ enum WarrenWalletLogout {
         // The port-forward standing of the wallet that left goes with it, on
         // screen and on disk, rather than at the next poll.
         WarrenAccountStandingFeed.current?.walletDidLeave()
+        // A revocation this process learned concerned the wallet that left.
+        WarrenDeviceRegistryClient.forgetRevocation()
         // No browsing-history store exists yet; clear it here once one lands.
     }
 

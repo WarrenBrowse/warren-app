@@ -70,6 +70,10 @@ struct MullvadInputAlert: Identifiable {
     let action: Action
     let validate: ((String) -> Bool)?
     let dismissButtonTitle: LocalizedStringKey
+    /// The text the field opens with, such as the name being changed.
+    var initialText: String = ""
+    /// The most characters the field takes, `nil` for no limit.
+    var maxLength: Int?
 }
 
 struct AlertModifier: ViewModifier {
@@ -217,7 +221,12 @@ struct InputAlertModifier: ViewModifier {
                     Spacer()
                 }
                 .onAppear {
-                    text = ""
+                    text = alert.initialText
+                }
+                .onChange(of: text) { _, newText in
+                    if let maxLength = alert.maxLength, newText.count > maxLength {
+                        text = String(newText.prefix(maxLength))
+                    }
                 }
                 .accessibilityElement(children: .contain)
                 .accessibilityIdentifier(.alertContainerView)

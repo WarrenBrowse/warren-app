@@ -7,7 +7,9 @@
 //
 
 import WarrenREST
+import WarrenRustRuntime
 import Routing
+import SwiftUI
 import UIKit
 
 enum AccountDismissReason: Equatable, Sendable {
@@ -38,7 +40,9 @@ final class AccountCoordinator: Coordinator, Presentable, Presenting, @unchecked
         self.storePaymentManager = storePaymentManager
     }
 
-    func start(animated: Bool) {
+    /// `showingDevices` opens the account's devices over the account, as the
+    /// device-limit and no-session-token banners do.
+    func start(animated: Bool, showingDevices: Bool = false) {
         navigationController.navigationBar.prefersLargeTitles = true
 
         let accountController = AccountViewController(
@@ -47,7 +51,14 @@ final class AccountCoordinator: Coordinator, Presentable, Presenting, @unchecked
 
         accountController.actionHandler = handleViewControllerAction
 
-        navigationController.pushViewController(accountController, animated: animated)
+        if showingDevices {
+            navigationController.setViewControllers(
+                [accountController, makeDevicesController()],
+                animated: animated
+            )
+        } else {
+            navigationController.pushViewController(accountController, animated: animated)
+        }
         self.accountController = accountController
     }
 
@@ -61,6 +72,8 @@ final class AccountCoordinator: Coordinator, Presentable, Presenting, @unchecked
             navigateToRedeemVoucher()
         case .navigateToBackup:
             navigateToBackup()
+        case .navigateToDevices:
+            navigationController.pushViewController(makeDevicesController(), animated: true)
         case .navigateToDeleteAccount:
             navigateToDeleteAccount()
         case .showPurchaseOptions:
@@ -92,6 +105,61 @@ final class AccountCoordinator: Coordinator, Presentable, Presenting, @unchecked
             WarrenWalletBackupViewController(interactor: WarrenWalletInteractor()),
             animated: true
         )
+    }
+
+    /// The account's devices (warren-core doc 115). "Log out" on this
+    /// device asks with the account's logout confirmation, then revokes it
+    /// before the wallet leaves.
+    private func makeDevicesController() -> UIViewController {
+        let viewModel = DeviceManagementViewModel(deviceManaging: interactor.deviceManaging)
+        viewModel.onRevoked = { [weak self] in
+            self?.takeInRevocation()
+        }
+
+        var view = DeviceManagementView(viewModel: viewModel)
+        view.onLogOutThisDevice = { [weak self, weak viewModel] device in
+            guard let self, let viewModel else { return }
+            confirmLogout { [weak self] in
+                self?.logOutThisDevice(device, viewModel: viewModel)
+            }
+        }
+
+        let controller = UIHostingController(rootView: view)
+        controller.title = NSLocalizedString("Devices", comment: "")
+        controller.view.backgroundColor = .secondaryColor
+        controller.view.setAccessibilityIdentifier(.deviceManagementView)
+        return controller
+    }
+
+    private func takeInRevocation() {
+        Task { @MainActor in
+            // The device state change presents the revoked screen under this
+            // modal; closing the modal reveals it.
+            await interactor.takeInRevocation()
+            didFinish?(self, .none)
+        }
+    }
+
+    private func logOutThisDevice(_ device: WarrenAccountDevice, viewModel: DeviceManagementViewModel) {
+        let presentation = AlertPresentation(
+            id: "account-logout-alert",
+            accessibilityIdentifier: .logOutSpinnerAlertView,
+            icon: .spinner,
+            message: nil,
+            buttons: []
+        )
+        let alertPresenter = AlertPresenter(context: self)
+        alertPresenter.showAlert(presentation: presentation, animated: true)
+
+        Task { @MainActor in
+            let loggedOut = await viewModel.logOutThisDevice(device) { [interactor] in
+                await interactor.logout()
+            }
+            alertPresenter.dismissAlert(presentation: presentation, animated: true)
+            if loggedOut {
+                didFinish?(self, .userLoggedOut)
+            }
+        }
     }
 
     private func navigateToRedeemVoucher() {
@@ -165,7 +233,7 @@ final class AccountCoordinator: Coordinator, Presentable, Presenting, @unchecked
     /// remaining time are unrecoverable. Gate the action behind an
     /// explicit confirmation offering the backup view first (mirrors
     /// the desktop backed-up gate).
-    private func confirmLogout() {
+    private func confirmLogout(onLogOut: (() -> Void)? = nil) {
         let presentation = AlertPresentation(
             id: "account-logout-confirm-alert",
             icon: .alert,
@@ -207,7 +275,11 @@ final class AccountCoordinator: Coordinator, Presentable, Presenting, @unchecked
                     accessibilityId: .logOutDeviceConfirmButton,
                     isGatedByCheckbox: true,
                     handler: { [weak self] in
-                        self?.logOut()
+                        if let onLogOut {
+                            onLogOut()
+                        } else {
+                            self?.logOut()
+                        }
                     }
                 ),
                 AlertAction(

@@ -14,14 +14,18 @@ import Operations
 
 final class AccountInteractor: Sendable {
     let tunnelManager: TunnelManager
+    /// The account's devices (warren-core doc 115), for the Devices row and
+    /// the list it opens.
+    let deviceManaging: any DeviceManaging
 
     nonisolated(unsafe) var didReceiveTunnelState: (() -> Void)?
     nonisolated(unsafe) var didReceiveDeviceState: (@Sendable (DeviceState) -> Void)?
 
     nonisolated(unsafe) private var tunnelObserver: TunnelObserver?
 
-    init(tunnelManager: TunnelManager) {
+    init(tunnelManager: TunnelManager, deviceManaging: any DeviceManaging = DeviceManagementInteractor()) {
         self.tunnelManager = tunnelManager
+        self.deviceManaging = deviceManaging
 
         let tunnelObserver =
             TunnelBlockObserver(
@@ -54,5 +58,16 @@ final class AccountInteractor: Sendable {
 
     func logout() async {
         await WarrenWalletLogout.perform(tunnelManager: tunnelManager)
+    }
+
+    /// This device was revoked from another device of the account: the
+    /// tunnel comes down and the device reads as revoked, which takes the app
+    /// to its revoked screen. The wallet leaves on that screen's "Go to
+    /// login", as it does for a revocation the extension learned.
+    @MainActor func takeInRevocation() async {
+        await withCheckedContinuation { continuation in
+            tunnelManager.stopTunnel { _ in continuation.resume() }
+        }
+        tunnelManager.setDeviceState(.revoked, persist: true)
     }
 }

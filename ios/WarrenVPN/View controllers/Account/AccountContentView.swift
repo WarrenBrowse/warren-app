@@ -14,7 +14,8 @@ import WarrenRustRuntime
 /// date), an identity card (wallet public key with copy), the forum name
 /// card once a forum sign-in has handed one back, then the actions in the
 /// desktop order and styles: buy more credit (green CTA), redeem voucher,
-/// backup keys (outline navigation row), log out (red ghost link). Delete
+/// the account's devices and backup keys (outline navigation rows), log out
+/// (red ghost link). Delete
 /// account has no desktop equivalent but is required on iOS by App Store
 /// review guideline 5.1.1(v).
 class AccountContentView: UIView {
@@ -37,6 +38,8 @@ class AccountContentView: UIView {
         button.setAccessibilityIdentifier(.backupKeysButton)
         return button
     }()
+
+    let devicesRow = AccountDeviceRow()
 
     let logoutButton: GhostDangerButton = {
         let button = GhostDangerButton(title: NSLocalizedString("Log out", comment: ""))
@@ -113,6 +116,7 @@ class AccountContentView: UIView {
         let arrangedSubviews: [UIView] = [
             purchaseButton,
             redeemVoucherButton,
+            devicesRow,
             backupKeysButton,
             logoutButton,
             deleteButton,

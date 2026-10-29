@@ -8,7 +8,8 @@
 
 import XCTest
 
-/// Page class for the "too many devices" page shown when logging on to an account with too many devices
+/// Page class for the account's "Devices" list (warren-core doc 115), opened from Account and from
+/// the device-limit and no-session-token banners.
 class DeviceManagementPage: Page {
     override init(_ app: XCUIApplication) {
         super.init(app)
@@ -34,43 +35,41 @@ class DeviceManagementPage: Page {
     @discardableResult func waitForDeviceList() -> Self {
         XCTAssertTrue(
             app
-                .collectionViews[AccessibilityIdentifier.deviceManagementView]
+                .descendants(matching: .any)[AccessibilityIdentifier.deviceManagementView]
                 .existsAfterWait(timeout: .long)
         )
 
         return self
     }
 
-    @discardableResult func tapRemoveDeviceButton(cellIndex: Int) -> Self {
-        app
-            .cells.element(boundBy: cellIndex)
-            .buttons[AccessibilityIdentifier.deviceCellRemoveButton]
+    /// Taps "Disconnect" on the `index`th other device, this device's row having none.
+    @discardableResult func tapRemoveDeviceButton(index: Int) -> Self {
+        app.buttons
+            .matching(identifier: AccessibilityIdentifier.deviceCellRemoveButton.asString)
+            .element(boundBy: index)
             .tap()
 
         return self
     }
 
-    @discardableResult func tapContinueWithLoginButton() -> Self {
-        app.buttons[AccessibilityIdentifier.continueWithLoginButton].tap()
-        return self
-    }
-
     @discardableResult public func verifyCurrentDeviceExists() -> Self {
         XCTAssertTrue(
-            app.staticTexts["Current device"]
+            app.staticTexts["This device"]
                 .existsAfterWait()
         )
 
         return self
     }
 
+    /// This device's row offers "Log out" rather than "Disconnect".
     @discardableResult public func verifyCurrentDeviceCannotBeRemoved() -> Self {
-        let cells = app.cells
-        let buttons = cells.buttons
+        let rows = app.descendants(matching: .any)
+            .matching(identifier: AccessibilityIdentifier.deviceCell.asString)
+        let removeButtons = app.buttons
+            .matching(identifier: AccessibilityIdentifier.deviceCellRemoveButton.asString)
 
-        // Button count should equal the amount of cells, except for the cell that cannot
-        // be removed and the information text cell at the top of the page.
-        XCTAssertEqual(buttons.count, cells.count - 2)
+        XCTAssertEqual(removeButtons.count, rows.count - 1)
+        XCTAssertTrue(app.buttons[AccessibilityIdentifier.logoutButton].exists)
 
         return self
     }
@@ -88,7 +87,7 @@ class DeviceManagementPage: Page {
     }
 }
 
-/// Confirmation alert displayed when removing a device
+/// Confirmation alert displayed before disconnecting another device
 class DeviceManagementLogOutDeviceConfirmationAlert: Page {
     override init(_ app: XCUIApplication) {
         super.init(app)
@@ -96,7 +95,7 @@ class DeviceManagementLogOutDeviceConfirmationAlert: Page {
         waitForPageToBeShown()
     }
 
-    @discardableResult func tapYesLogOutDeviceButton() -> Self {
+    @discardableResult func tapDisconnectButton() -> Self {
         app.buttons[AccessibilityIdentifier.logOutDeviceConfirmButton]
             .tap()
         return self

@@ -2459,6 +2459,148 @@
         }
       }
     },
+    "A device of this account runs a version of Warren older than 1.1.36. It no longer blocks your other devices. Update or uninstall it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يعمل أحد أجهزة هذا الحساب بإصدار من Warren أقدم من 1.1.36. لم يعد يحظر أجهزتك الأخرى. حدّثه أو ألغِ تثبيته."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En enhed på denne konto kører en version af Warren, der er ældre end 1.1.36. Den blokerer ikke længere dine andre enheder. Opdater eller afinstaller den."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Gerät dieses Kontos verwendet eine Warren-Version, die älter als 1.1.36 ist. Es blockiert Ihre anderen Geräte nicht mehr. Aktualisieren oder deinstallieren Sie es."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un dispositivo de esta cuenta usa una versión de Warren anterior a la 1.1.36. Ya no bloquea tus otros dispositivos. Actualízalo o desinstálalo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "یکی از دستگاه‌های این حساب نسخه‌ای از Warren قدیمی‌تر از 1.1.36 را اجرا می‌کند. دیگر دستگاه‌های دیگر شما را مسدود نمی‌کند. آن را به‌روزرسانی یا حذف کنید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jokin tämän tilin laite käyttää Warrenin versiota, joka on vanhempi kuin 1.1.36. Se ei enää estä muita laitteitasi. Päivitä tai poista se."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un appareil de ce compte utilise une version de Warren antérieure à 1.1.36. Il ne bloque plus vos autres appareils. Mettez-le à jour ou désinstallez-le."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un dispositivo di questo account usa una versione di Warren precedente alla 1.1.36. Non blocca più gli altri tuoi dispositivi. Aggiornalo o disinstallalo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このアカウントのデバイスの1台が、1.1.36より古いバージョンのWarrenを使用しています。ほかのデバイスをブロックすることはなくなりました。アップデートするかアンインストールしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 계정의 장치 중 하나가 1.1.36보다 오래된 버전의 Warren을 실행하고 있습니다. 더 이상 다른 장치를 차단하지 않습니다. 업데이트하거나 제거하세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဤအကောင့်ရှိ စက်တစ်ခုသည် 1.1.36 ထက် ဟောင်းသော Warren ဗားရှင်းကို အသုံးပြုနေပါသည်။ ၎င်းသည် သင်၏ အခြားစက်များကို မပိတ်ဆို့တော့ပါ။ ၎င်းကို အပ်ဒိတ်လုပ်ပါ သို့မဟုတ် ဖြုတ်ပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En enhet på denne kontoen kjører en versjon av Warren som er eldre enn 1.1.36. Den blokkerer ikke lenger de andre enhetene dine. Oppdater eller avinstaller den."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een apparaat van dit account gebruikt een versie van Warren die ouder is dan 1.1.36. Het blokkeert je andere apparaten niet meer. Werk het bij of verwijder het."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jedno z urządzeń tego konta używa wersji Warren starszej niż 1.1.36. Nie blokuje już Twoich pozostałych urządzeń. Zaktualizuj je lub odinstaluj."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Um dispositivo desta conta utiliza uma versão do Warren anterior à 1.1.36. Já não bloqueia os seus outros dispositivos. Atualize-o ou desinstale-o."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un dispozitiv al acestui cont rulează o versiune Warren mai veche de 1.1.36. Nu îți mai blochează celelalte dispozitive. Actualizează-l sau dezinstalează-l."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Одно из устройств этого аккаунта использует версию Warren старше 1.1.36. Оно больше не блокирует другие ваши устройства. Обновите или удалите его."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En enhet på det här kontot kör en version av Warren som är äldre än 1.1.36. Den blockerar inte längre dina andra enheter. Uppdatera eller avinstallera den."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "อุปกรณ์หนึ่งในบัญชีนี้ใช้ Warren เวอร์ชันที่เก่ากว่า 1.1.36 อุปกรณ์นั้นไม่ได้บล็อกอุปกรณ์อื่นของคุณอีกต่อไป โปรดอัปเดตหรือถอนการติดตั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu hesaptaki bir cihaz, Warren'ın 1.1.36'dan eski bir sürümünü çalıştırıyor. Artık diğer cihazlarınızı engellemiyor. Güncelleyin veya kaldırın."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Один із пристроїв цього облікового запису використовує версію Warren, старішу за 1.1.36. Він більше не блокує інші ваші пристрої. Оновіть або видаліть його."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此账户中有一台设备运行的 Warren 版本早于 1.1.36。它不再阻止您的其他设备。请更新或卸载它。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此帳戶中有一台裝置執行的 Warren 版本早於 1.1.36。它不再封鎖您的其他裝置。請更新或解除安裝。"
+          }
+        }
+      }
+    },
     "A sign-in to the Warren community forum was requested. Your app will sign a one-time challenge with your wallet key to prove it is you.": {
       "localizations": {
         "en": {
@@ -2603,6 +2745,291 @@
           "stringUnit": {
             "state": "translated",
             "value": "已請求登入 Warren 社群論壇。為證明是您本人，應用程式將使用您的錢包金鑰對一次性挑戰進行簽署。"
+          }
+        }
+      }
+    },
+    "Active today": {
+      "comment": "Shown under a device of the account that was used today.",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نشط اليوم"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktiv i dag"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Heute aktiv"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activo hoy"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "امروز فعال"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktiivinen tänään"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actif aujourd'hui"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Attivo oggi"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今日アクティブ"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "오늘 활동"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ယနေ့ အသုံးပြုခဲ့သည်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktiv i dag"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vandaag actief"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktywne dzisiaj"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ativo hoje"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activ astăzi"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Активно сегодня"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aktiv i dag"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ใช้งานวันนี้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bugün etkin"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Активний сьогодні"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今天活跃"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "今天有活動"
+          }
+        }
+      }
+    },
+    "An older version of Warren": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إصدار أقدم من Warren"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En ældre version af Warren"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Eine ältere Version von Warren"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una versión anterior de Warren"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسخه قدیمی‌تر Warren"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warrenin vanhempi versio"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une ancienne version de Warren"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Una versione precedente di Warren"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "古いバージョンのWarren"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이전 버전의 Warren"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren ဗားရှင်းဟောင်း"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En eldre versjon av Warren"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Een oudere versie van Warren"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Starsza wersja Warren"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uma versão antiga do Warren"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O versiune mai veche de Warren"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Старая версия Warren"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En äldre version av Warren"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren เวอร์ชันเก่า"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Warren'ın eski bir sürümü"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Старіша версія Warren"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "旧版本的 Warren"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "舊版 Warren"
           }
         }
       }
@@ -13891,6 +14318,149 @@
         }
       }
     },
+    "Browser extension": {
+      "comment": "Platform of a device of the account: the Warren browser extension.",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة المتصفح"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browserudvidelse"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browser-Erweiterung"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extensión del navegador"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افزونه مرورگر"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Selainlaajennus"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extension de navigateur"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estensione del browser"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ブラウザ拡張機能"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "브라우저 확장 프로그램"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဘရောက်ဇာ extension"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nettleserutvidelse"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Browserextensie"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rozszerzenie przeglądarki"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extensão do navegador"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Extensie de browser"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Расширение браузера"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Webbläsartillägg"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ส่วนขยายเบราว์เซอร์"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tarayıcı uzantısı"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Розширення браузера"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "浏览器扩展"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "瀏覽器擴充功能"
+          }
+        }
+      }
+    },
     "Brussels": {
       "localizations": {
         "ar": {
@@ -15181,6 +15751,149 @@
         }
       }
     },
+    "Command line": {
+      "comment": "Platform of a device of the account: the Warren command-line client.",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سطر الأوامر"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kommandolinje"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kommandozeile"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Línea de comandos"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خط فرمان"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Komentorivi"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ligne de commande"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riga di comando"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "コマンドライン"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "명령줄"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Command line"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kommandolinje"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opdrachtregel"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wiersz poleceń"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linha de comandos"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linie de comandă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Командная строка"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kommandorad"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "บรรทัดคำสั่ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Komut satırı"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Командний рядок"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "命令行"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "命令列"
+          }
+        }
+      }
+    },
     "CONNECTED": {
       "localizations": {
         "ar": {
@@ -15461,6 +16174,432 @@
           "stringUnit": {
             "state": "translated",
             "value": "連線中…"
+          }
+        }
+      }
+    },
+    "Could not disconnect the device. Try again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر قطع اتصال الجهاز. حاول مرة أخرى."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enheden kunne ikke frakobles. Prøv igen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Gerät konnte nicht getrennt werden. Versuchen Sie es erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo desconectar el dispositivo. Inténtalo de nuevo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قطع اتصال دستگاه ممکن نشد. دوباره تلاش کنید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laitteen yhteyttä ei voitu katkaista. Yritä uudelleen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de déconnecter l'appareil. Réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile disconnettere il dispositivo. Riprova."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デバイスを接続解除できませんでした。もう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "장치 연결을 끊지 못했습니다. 다시 시도하세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "စက်ကို ချိတ်ဆက်မှုဖြုတ်၍ မရပါ။ ထပ်စမ်းကြည့်ပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kunne ikke koble fra enheten. Prøv igjen."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kan het apparaat niet loskoppelen. Probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się rozłączyć urządzenia. Spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível desligar o dispositivo. Tente novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispozitivul nu a putut fi deconectat. Încearcă din nou."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось отключить устройство. Попробуйте ещё раз."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Det gick inte att koppla från enheten. Försök igen."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไม่สามารถตัดการเชื่อมต่ออุปกรณ์ได้ โปรดลองอีกครั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cihazın bağlantısı kesilemedi. Tekrar deneyin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося відключити пристрій. Спробуйте ще раз."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法断开该设备。请重试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法中斷該裝置的連線。請再試一次。"
+          }
+        }
+      }
+    },
+    "Could not load your devices. Try again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّر تحميل أجهزتك. حاول مرة أخرى."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dine enheder kunne ikke indlæses. Prøv igen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ihre Geräte konnten nicht geladen werden. Versuchen Sie es erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudieron cargar tus dispositivos. Inténtalo de nuevo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بارگیری دستگاه‌های شما ممکن نشد. دوباره تلاش کنید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laitteitasi ei voitu ladata. Yritä uudelleen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de charger vos appareils. Réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile caricare i tuoi dispositivi. Riprova."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デバイスを読み込めませんでした。もう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "장치 목록을 불러오지 못했습니다. 다시 시도하세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "သင့်စက်များကို ဖွင့်၍ မရပါ။ ထပ်စမ်းကြည့်ပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kunne ikke laste inn enhetene dine. Prøv igjen."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kan je apparaten niet laden. Probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się wczytać Twoich urządzeń. Spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível carregar os seus dispositivos. Tente novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispozitivele tale nu au putut fi încărcate. Încearcă din nou."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось загрузить ваши устройства. Попробуйте ещё раз."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Det gick inte att läsa in dina enheter. Försök igen."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไม่สามารถโหลดอุปกรณ์ของคุณได้ โปรดลองอีกครั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cihazlarınız yüklenemedi. Tekrar deneyin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося завантажити ваші пристрої. Спробуйте ще раз."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法加载您的设备。请重试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法載入您的裝置。請再試一次。"
+          }
+        }
+      }
+    },
+    "Could not rename the device. Try again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعذّرت إعادة تسمية الجهاز. حاول مرة أخرى."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enheden kunne ikke omdøbes. Prøv igen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Das Gerät konnte nicht umbenannt werden. Versuchen Sie es erneut."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo cambiar el nombre del dispositivo. Inténtalo de nuevo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تغییر نام دستگاه ممکن نشد. دوباره تلاش کنید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laitteen nimeä ei voitu muuttaa. Yritä uudelleen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossible de renommer l'appareil. Réessayez."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Impossibile rinominare il dispositivo. Riprova."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デバイス名を変更できませんでした。もう一度お試しください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "장치 이름을 변경하지 못했습니다. 다시 시도하세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "စက်အမည်ကို ပြောင်း၍ မရပါ။ ထပ်စမ်းကြည့်ပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kunne ikke gi enheten nytt navn. Prøv igjen."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kan de naam van het apparaat niet wijzigen. Probeer het opnieuw."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nie udało się zmienić nazwy urządzenia. Spróbuj ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Não foi possível mudar o nome do dispositivo. Tente novamente."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispozitivul nu a putut fi redenumit. Încearcă din nou."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не удалось переименовать устройство. Попробуйте ещё раз."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Det gick inte att byta namn på enheten. Försök igen."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ไม่สามารถเปลี่ยนชื่ออุปกรณ์ได้ โปรดลองอีกครั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cihaz yeniden adlandırılamadı. Tekrar deneyin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Не вдалося перейменувати пристрій. Спробуйте ще раз."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "无法重命名该设备。请重试。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "無法重新命名該裝置。請再試一次。"
           }
         }
       }
@@ -24582,6 +25721,583 @@
           "stringUnit": {
             "state": "translated",
             "value": "無法在目前的入口伺服器使用 DAITA。啟用後，請前往「選擇位置」畫面，選擇支援 DAITA 的入口位置。"
+          }
+        }
+      }
+    },
+    "device-management.disconnect": {
+      "comment": "Disconnects another device of the account.",
+      "extractionState": "manual",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قطع الاتصال"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frakobl"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Trennen"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnect"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desconectar"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قطع اتصال"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Katkaise yhteys"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déconnecter"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnetti"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続解除"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "연결 끊기"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ချိတ်ဆက်မှုဖြုတ်ရန်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koble fra"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Loskoppelen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rozłącz"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desligar"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deconectează"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отключить"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koppla från"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ตัดการเชื่อมต่อ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bağlantıyı kes"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відключити"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "断开连接"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "中斷連線"
+          }
+        }
+      }
+    },
+    "Devices": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأجهزة"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enheder"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Geräte"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispositivos"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دستگاه‌ها"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laitteet"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appareils"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispositivi"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デバイス"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "장치"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "စက်များ"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enheter"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apparaten"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Urządzenia"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispositivos"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispozitive"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Устройства"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enheter"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "อุปกรณ์"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cihazlar"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пристрої"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "设备"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "裝置"
+          }
+        }
+      }
+    },
+    "Devices signed in to this account. Disconnecting one signs it out: it needs the recovery phrase to sign in again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأجهزة المسجّل دخولها إلى هذا الحساب. قطع اتصال أحدها يسجّل خروجه: سيحتاج إلى عبارة الاسترداد لتسجيل الدخول مجددًا."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enheder, der er logget ind på denne konto. Når du frakobler en enhed, bliver den logget ud: den skal bruge gendannelsessætningen for at logge ind igen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bei diesem Konto angemeldete Geräte. Wenn Sie ein Gerät trennen, wird es abgemeldet: Für eine erneute Anmeldung braucht es die Wiederherstellungsphrase."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispositivos con sesión iniciada en esta cuenta. Desconectar uno cierra su sesión: necesitará la frase de recuperación para volver a iniciarla."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دستگاه‌هایی که به این حساب وارد شده‌اند. قطع اتصال یک دستگاه آن را از حساب خارج می‌کند: برای ورود دوباره به عبارت بازیابی نیاز دارد."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tälle tilille kirjautuneet laitteet. Laitteen yhteyden katkaiseminen kirjaa sen ulos: se tarvitsee palautuslauseen kirjautuakseen uudelleen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Appareils connectés à ce compte. Déconnecter un appareil le déconnecte du compte : il lui faudra la phrase de restauration pour se reconnecter."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispositivi che hanno effettuato l'accesso a questo account. Disconnetterne uno ne chiude la sessione: per accedere di nuovo servirà la frase di recupero."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このアカウントにサインインしているデバイスです。接続解除するとそのデバイスはサインアウトされ、再度サインインするにはリカバリーフレーズが必要になります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 계정에 로그인된 장치입니다. 장치의 연결을 끊으면 로그아웃되며, 다시 로그인하려면 복구 문구가 필요합니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဤအကောင့်သို့ ဝင်ထားသော စက်များ။ စက်တစ်ခုကို ချိတ်ဆက်မှုဖြုတ်ပါက ၎င်းသည် အကောင့်မှ ထွက်သွားမည်ဖြစ်ပြီး ပြန်ဝင်ရန် ပြန်လည်ရယူရေးစကားစု လိုအပ်ပါမည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enheter som er logget på denne kontoen. Når du kobler fra en enhet, logges den ut: den trenger gjenopprettingsfrasen for å logge på igjen."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apparaten die bij dit account zijn aangemeld. Een apparaat loskoppelen meldt het af: het heeft de herstelzin nodig om opnieuw aan te melden."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Urządzenia zalogowane na tym koncie. Rozłączenie urządzenia wylogowuje je: do ponownego zalogowania potrzebna będzie fraza odzyskiwania."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispositivos com sessão iniciada nesta conta. Desligar um termina a sua sessão: precisará da frase de recuperação para voltar a iniciar sessão."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dispozitivele conectate la acest cont. Deconectarea unuia îl scoate din cont: va avea nevoie de fraza de recuperare pentru a se conecta din nou."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Устройства, на которых выполнен вход в этот аккаунт. Отключение устройства выводит его из аккаунта: чтобы снова войти, ему понадобится фраза восстановления."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enheter som är inloggade på det här kontot. Om du kopplar från en enhet loggas den ut: den behöver återställningsfrasen för att logga in igen."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "อุปกรณ์ที่ลงชื่อเข้าใช้บัญชีนี้ การตัดการเชื่อมต่ออุปกรณ์จะทำให้อุปกรณ์นั้นออกจากระบบ และต้องใช้วลีกู้คืนเพื่อลงชื่อเข้าใช้อีกครั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu hesapta oturum açmış cihazlar. Bir cihazın bağlantısını kesmek oturumunu kapatır: yeniden oturum açmak için kurtarma ifadesine ihtiyaç duyar."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Пристрої, на яких виконано вхід у цей обліковий запис. Відключення пристрою виводить його з облікового запису: щоб увійти знову, йому знадобиться фраза відновлення."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已登录此账户的设备。断开某台设备会使其退出登录：它需要恢复短语才能重新登录。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "已登入此帳戶的裝置。中斷某台裝置的連線會將其登出：它需要復原短語才能重新登入。"
+          }
+        }
+      }
+    },
+    "Disconnect %@?": {
+      "comment": "Title of the confirmation before disconnecting another device of the account: its name.",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قطع اتصال %@؟"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Frakobl %@?"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ trennen?"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Desconectar %@?"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتصال %@ قطع شود؟"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Katkaistaanko laitteen %@ yhteys?"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Déconnecter %@ ?"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Disconnettere %@?"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@を接続解除しますか？"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@의 연결을 끊을까요?"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ ကို ချိတ်ဆက်မှုဖြုတ်မလား။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koble fra %@?"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ loskoppelen?"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rozłączyć %@?"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desligar %@?"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Deconectezi %@?"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Отключить %@?"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Koppla från %@?"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ตัดการเชื่อมต่อ %@ ใช่ไหม"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ cihazının bağlantısı kesilsin mi?"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Відключити %@?"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "断开 %@？"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "要中斷 %@ 的連線嗎？"
           }
         }
       }
@@ -44530,6 +46246,148 @@
         }
       }
     },
+    "It will be signed out within 10 minutes and will need the recovery phrase to sign in again. For a lost or stolen device, move to a new account instead: a device that keeps the recovery phrase can sign in again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سيُسجَّل خروجه خلال 10 دقائق وسيحتاج إلى عبارة الاسترداد لتسجيل الدخول مجددًا. إذا فُقد الجهاز أو سُرق، فانتقل بدلًا من ذلك إلى حساب جديد: يمكن للجهاز الذي يحتفظ بعبارة الاسترداد تسجيل الدخول مجددًا."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den bliver logget ud inden for 10 minutter og skal bruge gendannelsessætningen for at logge ind igen. Hvis en enhed er mistet eller stjålet, så skift i stedet til en ny konto: en enhed, der har gendannelsessætningen, kan logge ind igen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Es wird innerhalb von 10 Minuten abgemeldet und braucht die Wiederherstellungsphrase, um sich erneut anzumelden. Wechseln Sie bei einem verlorenen oder gestohlenen Gerät stattdessen zu einem neuen Konto: Ein Gerät, das die Wiederherstellungsphrase behält, kann sich erneut anmelden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Su sesión se cerrará en un plazo de 10 minutos y necesitará la frase de recuperación para volver a iniciarla. Si el dispositivo se perdió o te lo robaron, pásate mejor a una cuenta nueva: un dispositivo que conserve la frase de recuperación puede volver a iniciar sesión."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ظرف 10 دقیقه از حساب خارج می‌شود و برای ورود دوباره به عبارت بازیابی نیاز دارد. برای دستگاه گم‌شده یا دزدیده‌شده، به‌جای آن به یک حساب جدید منتقل شوید: دستگاهی که عبارت بازیابی را نگه دارد می‌تواند دوباره وارد شود."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laite kirjataan ulos 10 minuutin kuluessa, ja se tarvitsee palautuslauseen kirjautuakseen uudelleen. Jos laite on kadonnut tai varastettu, siirry mieluummin uudelle tilille: laite, jolla palautuslause on tallessa, voi kirjautua uudelleen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Il sera déconnecté d'ici 10 minutes et aura besoin de la phrase de restauration pour se reconnecter. Pour un appareil perdu ou volé, passez plutôt à un nouveau compte : un appareil qui conserve la phrase de restauration peut se reconnecter."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La sua sessione verrà chiusa entro 10 minuti e per accedere di nuovo servirà la frase di recupero. Per un dispositivo perso o rubato, passa invece a un nuovo account: un dispositivo che conserva la frase di recupero può accedere di nuovo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "10分以内にサインアウトされ、再度サインインするにはリカバリーフレーズが必要になります。紛失または盗難にあったデバイスの場合は、代わりに新しいアカウントに移行してください。リカバリーフレーズを保持しているデバイスは再度サインインできます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "10분 이내에 로그아웃되며, 다시 로그인하려면 복구 문구가 필요합니다. 분실하거나 도난당한 장치라면 대신 새 계정으로 옮기세요. 복구 문구를 보관한 장치는 다시 로그인할 수 있습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "၎င်းသည် 10 မိနစ်အတွင်း အကောင့်မှ ထွက်သွားမည်ဖြစ်ပြီး ပြန်ဝင်ရန် ပြန်လည်ရယူရေးစကားစု လိုအပ်ပါမည်။ ပျောက်ဆုံးသော သို့မဟုတ် ခိုးယူခံရသော စက်အတွက် အကောင့်အသစ်သို့ ပြောင်းပါ။ ပြန်လည်ရယူရေးစကားစုကို သိမ်းထားသော စက်သည် ပြန်ဝင်နိုင်ပါသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den logges ut innen 10 minutter og trenger gjenopprettingsfrasen for å logge på igjen. For en mistet eller stjålet enhet bør du heller bytte til en ny konto: en enhet som har gjenopprettingsfrasen, kan logge på igjen."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Het wordt binnen 10 minuten afgemeld en heeft de herstelzin nodig om opnieuw aan te melden. Stap bij een verloren of gestolen apparaat liever over op een nieuw account: een apparaat dat de herstelzin bewaart, kan zich opnieuw aanmelden."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zostanie wylogowane w ciągu 10 minut i do ponownego zalogowania będzie potrzebować frazy odzyskiwania. W przypadku zgubionego lub skradzionego urządzenia przejdź raczej na nowe konto: urządzenie, które zachowa frazę odzyskiwania, może zalogować się ponownie."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A sessão será terminada dentro de 10 minutos e precisará da frase de recuperação para voltar a iniciar sessão. Para um dispositivo perdido ou roubado, mude antes para uma nova conta: um dispositivo que guarde a frase de recuperação pode voltar a iniciar sessão."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Va fi scos din cont în cel mult 10 minute și va avea nevoie de fraza de recuperare pentru a se conecta din nou. Pentru un dispozitiv pierdut sau furat, treci mai bine pe un cont nou: un dispozitiv care păstrează fraza de recuperare se poate conecta din nou."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Выход будет выполнен в течение 10 минут, и для повторного входа понадобится фраза восстановления. Если устройство потеряно или украдено, лучше перейдите на новый аккаунт: устройство, на котором сохранилась фраза восстановления, может снова войти."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den loggas ut inom 10 minuter och behöver återställningsfrasen för att logga in igen. För en förlorad eller stulen enhet bör du i stället byta till ett nytt konto: en enhet som har kvar återställningsfrasen kan logga in igen."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "อุปกรณ์จะออกจากระบบภายใน 10 นาที และต้องใช้วลีกู้คืนเพื่อลงชื่อเข้าใช้อีกครั้ง สำหรับอุปกรณ์ที่สูญหายหรือถูกขโมย ให้ย้ายไปใช้บัญชีใหม่แทน เพราะอุปกรณ์ที่ยังเก็บวลีกู้คืนไว้สามารถลงชื่อเข้าใช้อีกครั้งได้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Oturumu 10 dakika içinde kapatılır ve yeniden oturum açmak için kurtarma ifadesine ihtiyaç duyar. Kaybolan veya çalınan bir cihaz için bunun yerine yeni bir hesaba geçin: kurtarma ifadesini saklayan bir cihaz yeniden oturum açabilir."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Вихід буде виконано протягом 10 хвилин, і для повторного входу знадобиться фраза відновлення. Якщо пристрій втрачено або викрадено, краще перейдіть на новий обліковий запис: пристрій, на якому збереглася фраза відновлення, може увійти знову."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "它将在 10 分钟内退出登录，并需要恢复短语才能重新登录。对于丢失或被盗的设备，请改为迁移到新账户：保留了恢复短语的设备可以重新登录。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "它會在 10 分鐘內登出，並需要復原短語才能重新登入。若裝置遺失或遭竊，請改為移轉到新帳戶：保有復原短語的裝置可以重新登入。"
+          }
+        }
+      }
+    },
     "Italy": {
       "localizations": {
         "ar": {
@@ -45520,6 +47378,292 @@
           "stringUnit": {
             "state": "translated",
             "value": "基輔"
+          }
+        }
+      }
+    },
+    "Last active %@": {
+      "comment": "Shown under a device of the account: the last day it was used, in the short form of the language.",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آخر نشاط: %@"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sidst aktiv %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zuletzt aktiv am %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Última actividad: %@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آخرین فعالیت: %@"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Viimeksi aktiivinen %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Actif pour la dernière fois le %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ultima attività: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最終アクティブ: %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "마지막 활동: %@"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "နောက်ဆုံးအသုံးပြုခဲ့သည် %@"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sist aktiv %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laatst actief op %@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ostatnio aktywne %@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ativo pela última vez a %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ultima activitate: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Последняя активность: %@"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senast aktiv %@"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ใช้งานล่าสุด %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son etkinlik: %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Остання активність: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上次活跃：%@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上次活動：%@"
+          }
+        }
+      }
+    },
+    "Last seen %@": {
+      "comment": "Shown on the row of an older Warren client of the account: a day in the short form of the language.",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آخر ظهور: %@"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sidst set %@"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zuletzt gesehen am %@"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visto por última vez: %@"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آخرین بار دیده‌شده: %@"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Viimeksi nähty %@"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vu pour la dernière fois le %@"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visto l'ultima volta: %@"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "最終確認: %@"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "마지막 확인: %@"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "နောက်ဆုံးတွေ့ခဲ့သည် %@"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sist sett %@"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Laatst gezien op %@"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ostatnio widziane %@"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Visto pela última vez a %@"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Văzut ultima dată: %@"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Последний раз замечено: %@"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senast sedd %@"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "พบล่าสุด %@"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Son görülme: %@"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Востаннє помічено: %@"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上次出现：%@"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "上次出現：%@"
           }
         }
       }
@@ -57506,6 +59650,149 @@
         }
       }
     },
+    "Other platform": {
+      "comment": "Platform of a device of the account that this version does not know.",
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "منصة أخرى"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Anden platform"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Andere Plattform"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Otra plataforma"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "پلتفرم دیگر"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Muu alusta"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Autre plateforme"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Altra piattaforma"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "その他のプラットフォーム"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "기타 플랫폼"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "အခြားပလက်ဖောင်း"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annen plattform"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ander platform"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Inna platforma"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Outra plataforma"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Altă platformă"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Другая платформа"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Annan plattform"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "แพลตฟอร์มอื่น"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Diğer platform"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Інша платформа"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他平台"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "其他平台"
+          }
+        }
+      }
+    },
     "OUT OF TIME": {
       "localizations": {
         "ar": {
@@ -67488,6 +69775,148 @@
         }
       }
     },
+    "Rename device": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إعادة تسمية الجهاز"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Omdøb enhed"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gerät umbenennen"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cambiar el nombre del dispositivo"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تغییر نام دستگاه"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nimeä laite uudelleen"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Renommer l'appareil"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Rinomina dispositivo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "デバイス名を変更"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "장치 이름 변경"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "စက်အမည်ပြောင်းရန်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gi enheten nytt navn"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Naam van apparaat wijzigen"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zmień nazwę urządzenia"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mudar o nome do dispositivo"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Redenumește dispozitivul"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Переименовать устройство"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Byt namn på enhet"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เปลี่ยนชื่ออุปกรณ์"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cihazı yeniden adlandır"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Перейменувати пристрій"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重命名设备"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "重新命名裝置"
+          }
+        }
+      }
+    },
     "Rented": {
       "localizations": {
         "ar": {
@@ -74798,6 +77227,148 @@
         }
       }
     },
+    "Something went wrong while logging out.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حدث خطأ أثناء تسجيل الخروج."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noget gik galt under udlogningen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Beim Abmelden ist ein Fehler aufgetreten."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Algo salió mal al cerrar la sesión."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هنگام خروج از حساب مشکلی پیش آمد."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Uloskirjautumisessa tapahtui virhe."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un problème est survenu lors de la déconnexion du compte."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si è verificato un problema durante l'uscita dall'account."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ログアウト中に問題が発生しました。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "로그아웃하는 중에 문제가 발생했습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ထွက်ခွာစဉ် တစ်ခုခု မှားယွင်းသွားပါသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Noe gikk galt under utloggingen."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Er is iets misgegaan bij het afmelden."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Podczas wylogowywania coś poszło nie tak."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocorreu um problema ao terminar a sessão."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A apărut o problemă la deconectarea de la cont."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "При выходе из учетной записи что-то пошло не так."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Något gick fel vid utloggningen."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "เกิดข้อผิดพลาดระหว่างการออกจากระบบ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Çıkış yapılırken bir sorun oluştu."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Під час виходу з облікового запису щось пішло не так."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "退出登录时出现问题。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "登出時發生問題。"
+          }
+        }
+      }
+    },
     "South Africa": {
       "localizations": {
         "ar": {
@@ -76500,6 +79071,148 @@
           "stringUnit": {
             "state": "translated",
             "value": "TCP"
+          }
+        }
+      }
+    },
+    "This device": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا الجهاز"
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denne enhed"
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Gerät"
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este dispositivo"
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "این دستگاه"
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tämä laite"
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet appareil"
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo dispositivo"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このデバイス"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 장치"
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဤစက်"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denne enheten"
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit apparaat"
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To urządzenie"
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este dispositivo"
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acest dispozitiv"
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Это устройство"
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den här enheten"
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "อุปกรณ์นี้"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu cihaz"
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Цей пристрій"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此设备"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此裝置"
           }
         }
       }

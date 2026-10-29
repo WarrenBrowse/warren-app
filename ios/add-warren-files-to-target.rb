@@ -297,6 +297,17 @@ FILES_TO_ADD = {
   # configuration at launch, the list, its model and their tests.
   "WarrenVPN/Classes/WarrenDeviceLaunch.swift" => "WarrenVPN",
   "WarrenVPNTests/MullvadVPN/DeviceList/WarrenDeviceLaunchTests.swift" => "WarrenVPNTests",
+  "WarrenRustRuntime/WarrenDeviceRegistryClient.swift" => "WarrenRustRuntime",
+  "WarrenRustRuntimeTests/WarrenDeviceRegistryClientTests.swift" => "WarrenRustRuntimeTests",
+  "WarrenVPN/View controllers/DeviceList/DeviceListPresentation.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/DeviceList/DeviceManaging.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/DeviceList/DeviceRowView.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/DeviceList/DeviceListView.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/DeviceList/DeviceManagementView.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/Account/AccountDeviceRow.swift" => "WarrenVPN",
+  "WarrenVPNTests/MullvadVPN/DeviceList/DeviceListPresentationTests.swift" => "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/DeviceList/DeviceManagementViewModelTests.swift" => "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/DeviceList/DeviceListCopyTests.swift" => "WarrenVPNTests",
 }.freeze
 
 # Files that need to live in MULTIPLE targets (mirrors the Mullvad

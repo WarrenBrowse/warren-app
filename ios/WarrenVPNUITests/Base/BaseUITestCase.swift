@@ -315,8 +315,6 @@ class BaseUITestCase: XCTestCase {
 
             retryCount += 1
         } while successIconShown == false && retryCount < maxRetryCount
-        removeExistingDeviceSessionIfNeeded()
-
         skipNotificationPromptIfShown()
 
         HeaderBar(app)
@@ -327,22 +325,6 @@ class BaseUITestCase: XCTestCase {
         if app.otherElements[.notificationPromptView].existsAfterWait(timeout: .short) {
             NotificationPromptPage(app)
                 .tapSkipButton()
-        }
-    }
-
-    private func removeExistingDeviceSessionIfNeeded() {
-        if app.otherElements[.deviceManagementView].existsAfterWait(timeout: .short) {
-            DeviceManagementPage(app)
-                .waitForDeviceList()
-                .tapRemoveDeviceButton(cellIndex: 1)
-
-            DeviceManagementLogOutDeviceConfirmationAlert(app)
-                .tapYesLogOutDeviceButton()
-
-            DeviceManagementPage(app)
-                .waitForDeviceList()
-                .waitForNoLoading()
-                .tapContinueWithLoginButton()
         }
     }
 

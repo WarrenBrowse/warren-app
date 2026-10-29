@@ -16,6 +16,7 @@ enum AccountViewControllerAction: Sendable {
     case logOut
     case navigateToVoucher
     case navigateToBackup
+    case navigateToDevices
     case navigateToDeleteAccount
     case showPurchaseOptions
 }
@@ -94,7 +95,22 @@ class AccountViewController: UIViewController, @unchecked Sendable {
         applyViewState(animated: false)
     }
 
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        refreshDeviceCount()
+    }
+
     // MARK: - Private
+
+    /// The Devices row's count: one list call per visit, and a row without a
+    /// count when it fails, since the list says why.
+    private func refreshDeviceCount() {
+        let deviceManaging = interactor.deviceManaging
+        Task { [weak self] in
+            let count = try? await deviceManaging.listDevices().get().devices.count
+            self?.contentView.devicesRow.activeDeviceCount = count
+        }
+    }
 
     private func configUI() {
         view.addConstrainedSubviews([contentView]) {
@@ -105,6 +121,7 @@ class AccountViewController: UIViewController, @unchecked Sendable {
     private func addActions() {
         contentView.purchaseButton.addTarget(self, action: #selector(requestStoreProducts), for: .touchUpInside)
         contentView.redeemVoucherButton.addTarget(self, action: #selector(redeemVoucher), for: .touchUpInside)
+        contentView.devicesRow.addTarget(self, action: #selector(showDevices), for: .touchUpInside)
         contentView.backupKeysButton.addTarget(self, action: #selector(backupKeys), for: .touchUpInside)
         contentView.logoutButton.addTarget(self, action: #selector(logOut), for: .touchUpInside)
         contentView.deleteButton.addTarget(self, action: #selector(deleteAccount), for: .touchUpInside)
@@ -131,6 +148,7 @@ class AccountViewController: UIViewController, @unchecked Sendable {
         contentView.accountTokenRowView.setButtons(enabled: isInteractionEnabled)
         contentView.redeemVoucherButton.isEnabled = isInteractionEnabled
         contentView.backupKeysButton.isEnabled = isInteractionEnabled
+        contentView.devicesRow.isEnabled = isInteractionEnabled
         contentView.logoutButton.isEnabled = isInteractionEnabled
         contentView.deleteButton.isEnabled = isInteractionEnabled
         navigationItem.rightBarButtonItem?.isEnabled = isInteractionEnabled
@@ -165,6 +183,10 @@ class AccountViewController: UIViewController, @unchecked Sendable {
 
     @objc private func redeemVoucher() {
         actionHandler?(.navigateToVoucher)
+    }
+
+    @objc private func showDevices() {
+        actionHandler?(.navigateToDevices)
     }
 
     @objc private func backupKeys() {
