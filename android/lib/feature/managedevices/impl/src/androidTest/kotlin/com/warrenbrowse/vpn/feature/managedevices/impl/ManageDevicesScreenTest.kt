@@ -1,12 +1,16 @@
 package com.warrenbrowse.vpn.feature.managedevices.impl
 
 import android.graphics.Bitmap
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.isDialog
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -89,7 +93,7 @@ class ManageDevicesScreenTest {
             screenshot("device-list", onRoot())
 
             onNodeWithText("Log out").performClick()
-            onNodeWithText("Disconnect").assertExists()
+            onAllNodesWithText("Disconnect").assertCountEquals(2)
             assertEquals("a", loggedOut)
             assertEquals(null, disconnected)
         }
@@ -145,7 +149,10 @@ class ManageDevicesScreenTest {
         composeExtension.use {
             var opened = false
             setContentWithTheme {
+                // As the connect screen lays it out: the card spans the width.
                 AnimatedNotificationBanner(
+                    modifier = Modifier.fillMaxWidth(),
+                    notificationModifier = Modifier.fillMaxWidth(),
                     notification =
                         InAppNotification.TunnelStateError(
                             ErrorState(ErrorStateCause.AuthFailed(error), isBlocking = true)
