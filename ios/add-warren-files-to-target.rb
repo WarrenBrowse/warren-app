@@ -308,6 +308,8 @@ FILES_TO_ADD = {
   "WarrenVPNTests/MullvadVPN/DeviceList/DeviceListPresentationTests.swift" => "WarrenVPNTests",
   "WarrenVPNTests/MullvadVPN/DeviceList/DeviceManagementViewModelTests.swift" => "WarrenVPNTests",
   "WarrenVPNTests/MullvadVPN/DeviceList/DeviceListCopyTests.swift" => "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/DeviceList/DeviceBannerRoutingTests.swift" => "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/DeviceList/DeviceScreenshotTests.swift" => "WarrenVPNTests",
 }.freeze
 
 # Files that need to live in MULTIPLE targets (mirrors the Mullvad

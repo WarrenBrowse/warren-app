@@ -149,12 +149,6 @@ public enum WarrenDeviceRegistryClient {
         })
     }
 
-    /// Whether a registry call of this process learned this device's
-    /// revocation since `forgetRevocation()`.
-    public static var revokedInThisProcess: Bool {
-        warren_device_revoked()
-    }
-
     /// The revocation was taken in: the wallet left, or the user logged in
     /// again.
     public static func forgetRevocation() {

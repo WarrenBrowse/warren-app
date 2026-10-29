@@ -135,6 +135,9 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
         case .account:
             presentAccount(animated: animated, completion: completion)
 
+        case .devices:
+            presentAccount(animated: animated, showingDevices: true, completion: completion)
+
         case let .settings(subRoute):
             presentSettings(route: subRoute, animated: animated, completion: completion)
 
@@ -418,7 +421,9 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
             router.dismissAll(.primary, animated: false)
             continueFlow(animated: false)
         }
-        router.dismiss(.account, animated: true)
+        // The group, not the route: the account opens as `.devices` from the
+        // device banners.
+        router.dismissAll(.account, animated: true)
     }
 
     private func presentTOS(animated: Bool, completion: @escaping (Coordinator) -> Void) {
@@ -767,7 +772,11 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
         return locationCoordinator
     }
 
-    private func presentAccount(animated: Bool, completion: @escaping (Coordinator) -> Void) {
+    private func presentAccount(
+        animated: Bool,
+        showingDevices: Bool = false,
+        completion: @escaping (Coordinator) -> Void
+    ) {
         let accountInteractor = AccountInteractor(tunnelManager: tunnelManager)
 
         let coordinator = AccountCoordinator(
@@ -780,7 +789,7 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
             self?.didDismissAccount(reason)
         }
 
-        coordinator.start(animated: animated)
+        coordinator.start(animated: animated, showingDevices: showingDevices)
 
         presentChild(
             coordinator,
@@ -1417,12 +1426,19 @@ final class ApplicationCoordinator: Coordinator, Presenting, @preconcurrency Roo
         case .latestChangesInAppNotificationProvider:
             router.present(.changelog)
         case .tunnelStatusNotificationProvider:
-            switch response.actionIdentifier {
-            case TunnelStatusNotificationProvider.ActionIdentifier.showVPNSettings.rawValue:
-                router.present(.settings(.vpnSettings))
-            default: break
+            if let route = Self.route(forTunnelStatusAction: response.actionIdentifier) {
+                router.present(route)
             }
         default: return
+        }
+    }
+
+    /// Where a tap on the tunnel status banner leads.
+    nonisolated static func route(forTunnelStatusAction actionIdentifier: String) -> AppRoute? {
+        switch TunnelStatusNotificationProvider.ActionIdentifier(rawValue: actionIdentifier) {
+        case .showVPNSettings: .settings(.vpnSettings)
+        case .manageDevices: .devices
+        case nil: nil
         }
     }
 

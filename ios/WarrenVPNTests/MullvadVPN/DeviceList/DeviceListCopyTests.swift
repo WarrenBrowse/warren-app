@@ -41,6 +41,8 @@ final class DeviceListCopyTests: XCTestCase {
         "A device of this account runs a version of Warren older than 1.1.36. It no longer blocks your other devices. Update or uninstall it.",
         "Something went wrong while logging out.",
         DeviceListCopy.disconnectKey,
+        "This device has no session credentials right now. Another device of your account may be holding them.",
+        "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again.",
     ]
 
     func testEveryDeviceListStringIsLocalizedInEveryLanguageWithItsPlaceholders() throws {

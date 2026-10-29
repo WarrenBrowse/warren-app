@@ -62,6 +62,11 @@ extension BlockedStateReason {
                 "Too many simultaneous connections on this account. Disconnect another device or try connecting again shortly.",
                 comment: ""
             )
+        case .noSessionToken:
+            NSLocalizedString(
+                "This device has no session credentials right now. Another device of your account may be holding them.",
+                comment: ""
+            )
         default:
             NSLocalizedString(
                 "Unable to start tunnel connection. Please report the problem on our community forum.",

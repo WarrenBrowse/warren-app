@@ -111,6 +111,12 @@ enum AppRoute: AppRouteProtocol {
     case account
 
     /**
+     The account's devices, over the account: what the device-limit and
+     no-session-token banners open.
+     */
+    case devices
+
+    /**
      Settings route. Contains sub-route to display.
      */
     case settings(SettingsNavigationRoute?)
@@ -192,7 +198,7 @@ enum AppRoute: AppRouteProtocol {
 
     var isExclusive: Bool {
         switch self {
-        case .account, .settings, .alert:
+        case .account, .devices, .settings, .alert:
             return true
         default:
             return false
@@ -213,7 +219,7 @@ enum AppRoute: AppRouteProtocol {
             return .primary
         case .selectLocation:
             return .selectLocation
-        case .account:
+        case .account, .devices:
             return .account
         case .settings, .daita, .changelog, .vpnSettings, .multihop, .dnsSettings, .ipOverrides,
             .includeAllNetworks, .apiAccess:

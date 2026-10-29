@@ -79217,6 +79217,290 @@
         }
       }
     },
+    "This device has no session credentials right now. Another device of your account may be holding them.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يملك هذا الجهاز بيانات اعتماد للجلسة حاليًا. ربما يحتفظ بها جهاز آخر في حسابك."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denne enhed har ingen sessionsoplysninger lige nu. En anden enhed på din konto bruger dem muligvis."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Gerät hat derzeit keine Sitzungsnachweise. Möglicherweise belegt ein anderes Gerät Ihres Kontos sie."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este dispositivo no tiene credenciales de sesión en este momento. Puede que otro dispositivo de tu cuenta las esté usando."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "این دستگاه در حال حاضر اعتبارنامه نشست ندارد. ممکن است دستگاه دیگری از حساب شما آن‌ها را در اختیار داشته باشد."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tällä laitteella ei ole juuri nyt istunnon tunnistetietoja. Jokin toinen tilisi laite saattaa pitää niitä hallussaan."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet appareil n'a pas d'identifiants de session pour le moment. Un autre appareil de votre compte les détient peut-être."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo dispositivo al momento non ha credenziali di sessione. Potrebbe averle un altro dispositivo del tuo account."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このデバイスには現在セッション認証情報がありません。アカウントの別のデバイスが保持している可能性があります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 장치에는 현재 세션 자격 증명이 없습니다. 계정의 다른 장치가 보유하고 있을 수 있습니다."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဤစက်တွင် ယခုအချိန်တွင် session အထောက်အထားများ မရှိပါ။ သင့်အကောင့်ရှိ အခြားစက်တစ်ခုက ၎င်းတို့ကို ကိုင်ထားနိုင်ပါသည်။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denne enheten har ingen øktlegitimasjon akkurat nå. En annen enhet på kontoen din kan ha dem."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit apparaat heeft op dit moment geen sessiegegevens. Mogelijk heeft een ander apparaat van je account ze in gebruik."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To urządzenie nie ma obecnie danych uwierzytelniających sesji. Może je zajmować inne urządzenie z Twojego konta."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este dispositivo não tem credenciais de sessão neste momento. Outro dispositivo da sua conta pode estar a utilizá-las."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acest dispozitiv nu are momentan date de autentificare pentru sesiune. Este posibil ca un alt dispozitiv al contului tău să le folosească."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "У этого устройства сейчас нет учётных данных сеанса. Возможно, их занимает другое устройство вашего аккаунта."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den här enheten har inga sessionsuppgifter just nu. En annan enhet på ditt konto kan ha dem."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "อุปกรณ์นี้ยังไม่มีข้อมูลรับรองเซสชันในขณะนี้ อุปกรณ์อื่นในบัญชีของคุณอาจถือครองอยู่"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu cihazın şu anda oturum kimlik bilgisi yok. Hesabınızdaki başka bir cihaz bunları tutuyor olabilir."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Цей пристрій зараз не має облікових даних сеансу. Можливо, їх утримує інший пристрій вашого облікового запису."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此设备目前没有会话凭据。您账户中的另一台设备可能正在占用它们。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此裝置目前沒有工作階段憑證。您帳戶中的另一台裝置可能正在佔用。"
+          }
+        }
+      }
+    },
+    "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم قطع اتصال هذا الجهاز من جهاز آخر في حسابك. سجّل الدخول بعبارة الاسترداد لاستخدامه مجددًا."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denne enhed blev frakoblet fra en anden enhed på din konto. Log ind med din gendannelsessætning for at bruge den igen."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dieses Gerät wurde von einem anderen Gerät Ihres Kontos getrennt. Melden Sie sich mit Ihrer Wiederherstellungsphrase an, um es wieder zu verwenden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este dispositivo se desconectó desde otro dispositivo de tu cuenta. Inicia sesión con tu frase de recuperación para volver a usarlo."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتصال این دستگاه از دستگاه دیگری در حساب شما قطع شد. برای استفاده دوباره، با عبارت بازیابی خود وارد شوید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tämän laitteen yhteys katkaistiin toiselta tilisi laitteelta. Kirjaudu sisään palautuslauseellasi käyttääksesi sitä uudelleen."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cet appareil a été déconnecté depuis un autre appareil de votre compte. Connectez-vous avec votre phrase de restauration pour l'utiliser à nouveau."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Questo dispositivo è stato disconnesso da un altro dispositivo del tuo account. Accedi con la tua frase di recupero per usarlo di nuovo."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このデバイスはアカウントの別のデバイスから接続解除されました。再び使用するには、リカバリーフレーズでサインインしてください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "계정의 다른 장치에서 이 장치의 연결을 끊었습니다. 다시 사용하려면 복구 문구로 로그인하세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဤစက်ကို သင့်အကောင့်ရှိ အခြားစက်တစ်ခုမှ ချိတ်ဆက်မှုဖြုတ်လိုက်ပါသည်။ ပြန်အသုံးပြုရန် သင်၏ ပြန်လည်ရယူရေးစကားစုဖြင့် ဝင်ပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Denne enheten ble koblet fra av en annen enhet på kontoen din. Logg på med gjenopprettingsfrasen din for å bruke den igjen."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dit apparaat is losgekoppeld vanaf een ander apparaat van je account. Meld je aan met je herstelzin om het weer te gebruiken."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To urządzenie zostało rozłączone z innego urządzenia Twojego konta. Zaloguj się frazą odzyskiwania, aby znów z niego korzystać."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este dispositivo foi desligado a partir de outro dispositivo da sua conta. Inicie sessão com a sua frase de recuperação para voltar a utilizá-lo."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Acest dispozitiv a fost deconectat de pe un alt dispozitiv al contului tău. Conectează-te cu fraza de recuperare pentru a-l folosi din nou."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Это устройство было отключено с другого устройства вашего аккаунта. Войдите с помощью фразы восстановления, чтобы снова им пользоваться."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Den här enheten kopplades från av en annan enhet på ditt konto. Logga in med din återställningsfras för att använda den igen."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "อุปกรณ์นี้ถูกตัดการเชื่อมต่อจากอุปกรณ์อื่นในบัญชีของคุณ ลงชื่อเข้าใช้ด้วยวลีกู้คืนเพื่อใช้งานอีกครั้ง"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu cihazın bağlantısı, hesabınızdaki başka bir cihazdan kesildi. Yeniden kullanmak için kurtarma ifadenizle oturum açın."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Цей пристрій відключено з іншого пристрою вашого облікового запису. Увійдіть за допомогою фрази відновлення, щоб знову ним користуватися."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此设备已被您账户中的另一台设备断开。请使用恢复短语登录以继续使用。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此裝置已被您帳戶中的另一台裝置中斷連線。請使用復原短語登入以繼續使用。"
+          }
+        }
+      }
+    },
     "TUNNEL ERROR": {
       "localizations": {
         "ar": {

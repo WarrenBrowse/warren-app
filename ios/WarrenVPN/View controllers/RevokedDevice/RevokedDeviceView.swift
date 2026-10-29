@@ -12,6 +12,15 @@ struct RevokedDeviceView: View {
     @StateObject var viewModel: RevokedDeviceViewModel
     var onLogout: (() -> Void)?
 
+    /// Revocation is the registry's only way to end a device (warren-core
+    /// doc 115), and it always comes from another device of the account.
+    static var bodyText: String {
+        NSLocalizedString(
+            "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again.",
+            comment: ""
+        )
+    }
+
     var body: some View {
         VStack(spacing: 0) {
             ScrollView {
@@ -27,7 +36,7 @@ struct RevokedDeviceView: View {
                         .foregroundStyle(Color.MullvadText.onBackgroundEmphasis100)
                         .padding(.top, 16)
 
-                    Text("You have removed this device. To connect again, you will need to log back in.")
+                    Text(verbatim: Self.bodyText)
                         .font(.warrenSmall)
                         .foregroundStyle(Color.MullvadText.onBackground)
                         .padding(.top, 8)

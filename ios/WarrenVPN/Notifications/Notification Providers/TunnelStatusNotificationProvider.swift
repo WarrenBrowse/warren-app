@@ -14,6 +14,31 @@ import UIKit
 final class TunnelStatusNotificationProvider: NotificationProvider, InAppNotificationProvider, @unchecked Sendable {
     enum ActionIdentifier: String {
         case showVPNSettings
+        /// The account's devices (warren-core doc 115): another device holds
+        /// the tokens this one needs.
+        case manageDevices
+    }
+
+    /// What tapping the banner of a blocked state does, if anything.
+    static func action(for reason: BlockedStateReason) -> ActionIdentifier? {
+        switch reason {
+        case .noRelaysSatisfyingPortConstraints, .noRelaysSatisfyingObfuscationPortConstraints:
+            .showVPNSettings
+        case .tooManyDevices, .noSessionToken:
+            .manageDevices
+        default:
+            nil
+        }
+    }
+
+    /// The banner's body, in markdown: the reason, and for the device states
+    /// the "Manage devices" the tap opens, since an in-app banner carries no
+    /// text button.
+    static func bodyText(for reason: BlockedStateReason) -> String {
+        guard action(for: reason) == .manageDevices else {
+            return reason.localizedReason
+        }
+        return reason.localizedReason + "\n**" + NSLocalizedString("Manage devices", comment: "") + "**"
     }
 
     private var isWaitingForConnectivity = false
@@ -169,29 +194,22 @@ final class TunnelStatusNotificationProvider: NotificationProvider, InAppNotific
             return connectivityNotificationDescription()
         }
 
-        let tapAction: InAppNotificationAction? =
-            switch packetTunnelError {
-            case .noRelaysSatisfyingPortConstraints, .noRelaysSatisfyingObfuscationPortConstraints:
-                InAppNotificationAction {
-                    NotificationManager.shared
-                        .notificationProvider(
-                            self,
-                            didReceiveAction: "\(ActionIdentifier.showVPNSettings)"
-                        )
-                }
-            default:
-                nil
+        let tapAction = Self.action(for: packetTunnelError).map { action in
+            InAppNotificationAction {
+                NotificationManager.shared
+                    .notificationProvider(self, didReceiveAction: action.rawValue)
             }
+        }
         return InAppNotificationDescriptor(
             identifier: identifier,
             style: .error,
             title: NSLocalizedString("BLOCKING INTERNET", comment: ""),
-            body: createNotificationBody(localizedReasonForBlockedStateError(packetTunnelError)),
+            body: Self.notificationBody(Self.bodyText(for: packetTunnelError)),
             tapAction: tapAction
         )
     }
 
-    private func createNotificationBody(_ string: String) -> NSAttributedString {
+    static func notificationBody(_ string: String) -> NSAttributedString {
         NSAttributedString(
             markdownString: string,
             options: MarkdownStylingOptions(font: UIFont.preferredFont(forTextStyle: .body)),
@@ -259,9 +277,5 @@ final class TunnelStatusNotificationProvider: NotificationProvider, InAppNotific
                 )
             )
         )
-    }
-
-    private func localizedReasonForBlockedStateError(_ error: BlockedStateReason) -> String {
-        error.localizedReason
     }
 }
