@@ -292,6 +292,11 @@ FILES_TO_ADD = {
   "WarrenVPN/View controllers/Tunnel/ConnectionView/CardButton.swift" => "WarrenVPN",
   "WarrenVPN/View controllers/Tunnel/ConnectionView/ProductBanner.swift" => "WarrenVPN",
   "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/ConnectSurfaceTests.swift" => "WarrenVPNTests",
+
+  # The account's devices (warren-core doc 115): the app's registry
+  # configuration at launch, the list, its model and their tests.
+  "WarrenVPN/Classes/WarrenDeviceLaunch.swift" => "WarrenVPN",
+  "WarrenVPNTests/MullvadVPN/DeviceList/WarrenDeviceLaunchTests.swift" => "WarrenVPNTests",
 }.freeze
 
 # Files that need to live in MULTIPLE targets (mirrors the Mullvad

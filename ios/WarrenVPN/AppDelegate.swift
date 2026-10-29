@@ -105,6 +105,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         let containerURL = ApplicationConfiguration.containerURL
         migrationManager = MigrationManager(cacheDirectory: containerURL)
         configureLogging()
+        WarrenDeviceLaunch.configure(containerURL: containerURL)
 
         let ipOverrideWrapper = IPOverrideWrapper(
             relayCache: RelayCache(cacheDirectory: containerURL),

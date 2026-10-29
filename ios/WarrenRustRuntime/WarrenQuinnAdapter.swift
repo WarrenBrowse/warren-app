@@ -720,7 +720,7 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
         // table, in the App Group container the app reads it from too, so the
         // session tokens and port entitlements register and ask as it.
         if let pinStorePath = config.pinStorePath {
-            Self.configureDevice(stateDirectory: (pinStorePath as NSString).deletingLastPathComponent)
+            Self.configureDevice(stateDirectory: Self.deviceStateDirectory(pinStorePath: pinStorePath))
         }
 
         // Outer-most pin : exit endpoint + bypass CIDRs.
@@ -791,6 +791,13 @@ public final class WarrenQuinnAdapter: @unchecked Sendable, WarrenQuinnAdapting 
             }
         }
         return result >= 0 ? result : nil
+    }
+
+    /// The directory the install's device identity lives in, beside the pin
+    /// table at `pinStorePath`. The app configures its own process on the
+    /// same directory, so both processes ask as one device.
+    public static func deviceStateDirectory(pinStorePath: String) -> String {
+        (pinStorePath as NSString).deletingLastPathComponent
     }
 
     /// Configures this process's device in the account's registry: its
