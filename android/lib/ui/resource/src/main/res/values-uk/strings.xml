@@ -161,7 +161,7 @@
     <string name="toggle_vpn">Вимк./увімк. VPN</string>
     <string name="go_to_login">Увійти</string>
     <string name="device_inactive_title">Сеанс неактивний</string>
-    <string name="device_inactive_description">Ваш сеанс завершено. Щоб під’єднатися знову, вам потрібно буде ввійти заново.</string>
+    <string name="device_inactive_description">Цей пристрій відключено з іншого пристрою вашого облікового запису. Увійдіть за допомогою фрази відновлення, щоб знову ним користуватися.</string>
     <string name="device_inactive_unblock_warning">Вхід в обліковий запис розблокує Інтернет на цьому пристрої.</string>
     <string name="always_on_vpn_error_notification_title">Опція «Завжди увімкнений VPN» призначена для %1$s</string>
     <string name="always_on_vpn_error_notification_content">Не вдалося запустити тунельне з’єднання. Вимкніть опцію «Завжди увімкнений VPN» для <b>%1$s</b> перед використанням Warren VPN.</string>

@@ -112,7 +112,6 @@ import com.warrenbrowse.vpn.core.NavKey2
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.appinfo.api.ChangelogNavKey
 import com.warrenbrowse.vpn.feature.home.api.Android16UpgradeInfoNavKey
-import com.warrenbrowse.vpn.feature.home.api.DeviceRevokedNavKey
 import com.warrenbrowse.vpn.feature.home.api.ConnectNavKey
 import com.warrenbrowse.vpn.feature.home.impl.connect.button.ConnectionButton
 import com.warrenbrowse.vpn.feature.home.impl.connect.button.SwitchLocationButton
@@ -467,9 +466,6 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
         minActiveState = Lifecycle.State.RESUMED,
     ) { sideEffect ->
         when (sideEffect) {
-            ConnectViewModel.UiSideEffect.RevokedDevice ->
-                navigator.navigate(DeviceRevokedNavKey, clearBackStack = true)
-
             // The VM requests a Warren connect dispatch: invoke the
             // WarrenQuinnConnectInvoker on the current FragmentActivity (the
             // invoker needs the Activity host for the biometric prompt).

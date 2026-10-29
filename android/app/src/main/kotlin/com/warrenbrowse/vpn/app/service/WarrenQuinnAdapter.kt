@@ -563,6 +563,21 @@ class WarrenQuinnAdapter(
                         }
                         break
                     }
+                    if (code == STATUS_DEVICE_REVOKED) {
+                        // Another device of the account revoked this one
+                        // (warren-core doc 115). Not a drop: the wallet leaves
+                        // the device next, so nothing may redial and a kill
+                        // switch would hold the phone offline for an app with
+                        // no account. The tunnel comes down as on a
+                        // disconnect, lockdown or not.
+                        Logger.w("WarrenQuinnAdapter: device revoked; tearing the tunnel down")
+                        lock.withLock {
+                            teardownLocked()
+                            activeMnemonic?.close()
+                            activeMnemonic = null
+                        }
+                        break
+                    }
                     if (code == STATUS_DEVICE_LIMIT) {
                         // Terminal like an expiry: the account already uses
                         // its maximum number of devices, and a redial meets
@@ -1453,6 +1468,10 @@ class WarrenQuinnAdapter(
         // reason than every token being in use elsewhere. Mirrors
         // `warren_jni::redial::SessionStatus::NoSessionToken`.
         const val STATUS_NO_SESSION_TOKEN = 9
+
+        // Another device of the account revoked this one. Mirrors
+        // `warren_jni::redial::SessionStatus::DeviceRevoked`.
+        const val STATUS_DEVICE_REVOKED = 10
 
         // Opens on the auth-failed token the desktop daemon blocks with for
         // the same cause (warren-core doc 115).

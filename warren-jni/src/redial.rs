@@ -39,6 +39,11 @@
 //!   refused every token. Kotlin applies the drop policy under its own cause,
 //!   which the screens offer the account's device list on (warren-core doc
 //!   115); the next dial takes the tokens the refresh brings.
+//! - `DeviceRevoked` (10) is terminal: another device of the account revoked
+//!   this one (warren-core doc 115, decision 1), learned by a token or
+//!   entitlement refresh or a device registry call. Kotlin takes the tunnel
+//!   down, forgets the wallet and shows the revoked screen; coming back takes
+//!   the recovery phrase.
 
 /// Tunnel session status reported back to Kotlin via
 /// `WarrenJni.getTunnelStatus()`. Encoded as an `i32` rather than an enum
@@ -71,4 +76,6 @@ pub enum SessionStatus {
     /// A tokens-only session found no token the exit admits: see the module
     /// doc.
     NoSessionToken = 9,
+    /// Another device of the account revoked this one: see the module doc.
+    DeviceRevoked = 10,
 }

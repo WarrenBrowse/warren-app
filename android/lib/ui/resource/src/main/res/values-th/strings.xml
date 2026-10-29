@@ -149,7 +149,7 @@
     <string name="toggle_vpn">เปิด/ปิด VPN</string>
     <string name="go_to_login">ไปเข้าสู่ระบบ</string>
     <string name="device_inactive_title">เซสชันไม่ได้ใช้งาน</string>
-    <string name="device_inactive_description">เซสชันของคุณสิ้นสุดลงแล้ว หากต้องการเชื่อมต่ออีกครั้ง คุณจะต้องเข้าสู่ระบบใหม่</string>
+    <string name="device_inactive_description">อุปกรณ์นี้ถูกตัดการเชื่อมต่อจากอุปกรณ์อื่นในบัญชีของคุณ ลงชื่อเข้าใช้ด้วยวลีกู้คืนเพื่อใช้งานอีกครั้ง</string>
     <string name="device_inactive_unblock_warning">การไปที่ส่วนเข้าสู่ระบบจะปลดบล็อกอินเทอร์เน็ตบนอุปกรณ์เครื่องนี้</string>
     <string name="always_on_vpn_error_notification_title">VPN เปิดอยู่เสมอ ได้รับการมอบหมายไปยัง %1$s แล้ว</string>
     <string name="always_on_vpn_error_notification_content">ไม่สามารถเริ่มการเชื่อมต่ออุโมงค์ได้ โปรดปิดใช้งาน Always-on VPN เป็นเวลา <b>%1$s</b> ก่อนที่จะใช้งาน Warren VPN</string>

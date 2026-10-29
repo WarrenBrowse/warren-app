@@ -153,7 +153,7 @@
     <string name="toggle_vpn">تغییر وضعیت VPN</string>
     <string name="go_to_login">رفتن به صفحهٔ ورود</string>
     <string name="device_inactive_title">نشست غیرفعال است</string>
-    <string name="device_inactive_description">نشست شما به پایان رسید. برای اتصال مجدد، باید دوباره وارد شوید.</string>
+    <string name="device_inactive_description">اتصال این دستگاه از دستگاه دیگری در حساب شما قطع شد. برای استفاده دوباره، با عبارت بازیابی خود وارد شوید.</string>
     <string name="device_inactive_unblock_warning">با رفتن به صفحهٔ ورود، اینترنت روی این دستگاه باز خواهد شد.</string>
     <string name="always_on_vpn_error_notification_title">VPN همیشه‌فعال به %1$s اختصاص داده شد</string>
     <string name="always_on_vpn_error_notification_content">نمی‌توان اتصال تونل را آغاز کرد. لطفاً پیش از استفاده از Warren VPN، گزینهٔ «VPN همیشه‌فعال» را برای <b>%1$s</b> غیرفعال کنید.</string>

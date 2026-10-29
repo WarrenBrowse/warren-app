@@ -156,7 +156,7 @@
     <string name="toggle_vpn">Attiva/disattiva VPN</string>
     <string name="go_to_login">Vai al login</string>
     <string name="device_inactive_title">Sessione inattiva</string>
-    <string name="device_inactive_description">La tua sessione è terminata. Per connetterti di nuovo dovrai effettuare nuovamente l\'accesso.</string>
+    <string name="device_inactive_description">Questo dispositivo è stato disconnesso da un altro dispositivo del tuo account. Accedi con la tua frase di recupero per usarlo di nuovo.</string>
     <string name="device_inactive_unblock_warning">Andare al login sbloccherà Internet su questo dispositivo.</string>
     <string name="always_on_vpn_error_notification_title">VPN sempre attiva assegnata a %1$s</string>
     <string name="always_on_vpn_error_notification_content">Impossibile avviare la connessione tunnel. Disabilita VPN sempre attiva per <b>%1$s</b> prima di utilizzare Warren VPN.</string>

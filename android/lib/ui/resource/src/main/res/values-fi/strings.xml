@@ -153,7 +153,7 @@
     <string name="toggle_vpn">Vaihda VPN:ää</string>
     <string name="go_to_login">Siirry kirjautumiseen</string>
     <string name="device_inactive_title">Istunto ei ole aktiivinen</string>
-    <string name="device_inactive_description">Istuntosi on päättynyt. Yhdistääksesi uudelleen sinun on kirjauduttava sisään uudestaan.</string>
+    <string name="device_inactive_description">Tämän laitteen yhteys katkaistiin toiselta tilisi laitteelta. Kirjaudu sisään palautuslauseellasi käyttääksesi sitä uudelleen.</string>
     <string name="device_inactive_unblock_warning">Kirjautumiseen siirtyminen purkaa internetin käytön eston tältä laitteelta.</string>
     <string name="always_on_vpn_error_notification_title">%1$s on määritetty aina päällä olevan VPN:n asetukseksi</string>
     <string name="always_on_vpn_error_notification_content">Tunneliyhteyden käynnistäminen ei onnistu. Poista aina päällä oleva VPN käytöstä sovellukselle <b>%1$s</b> ennen Warren VPN:n käyttämistä.</string>

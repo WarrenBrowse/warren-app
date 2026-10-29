@@ -14,9 +14,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -26,12 +24,10 @@ import com.warrenbrowse.vpn.lib.common.constant.VIEW_MODEL_STOP_TIMEOUT
 import com.warrenbrowse.vpn.lib.common.util.combine
 import com.warrenbrowse.vpn.lib.common.util.withPrev
 import com.warrenbrowse.vpn.lib.model.ActionAfterDisconnect
-import com.warrenbrowse.vpn.lib.model.DeviceState
 import com.warrenbrowse.vpn.lib.model.PrepareError
 import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.repository.ChangelogRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
-import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
@@ -50,7 +46,6 @@ import com.warrenbrowse.vpn.lib.usecase.inappnotification.ExitSwitchedNotificati
 
 @Suppress("LongParameterList")
 class ConnectViewModel(
-    private val deviceRepository: DeviceRepository,
     private val changelogRepository: ChangelogRepository,
     inAppNotificationController: InAppNotificationController,
     private val userPreferencesRepository: UserPreferencesRepository,
@@ -75,7 +70,7 @@ class ConnectViewModel(
     private val _uiSideEffect = Channel<UiSideEffect>()
 
     val uiSideEffect =
-        merge(_uiSideEffect.receiveAsFlow(), revokedDeviceEffect())
+        _uiSideEffect.receiveAsFlow()
 
     @OptIn(FlowPreview::class)
     val uiState: StateFlow<ConnectUiState> =
@@ -208,10 +203,6 @@ class ConnectViewModel(
             }
             .stateIn(viewModelScope, SharingStarted.WhileSubscribed(VIEW_MODEL_STOP_TIMEOUT), null)
 
-    init {
-        viewModelScope.launch { deviceRepository.updateDevice() }
-    }
-
     fun onDisconnectClick() {
         viewModelScope.launch {
             // Route disconnect through WarrenQuinnDisconnectInvoker for the
@@ -308,15 +299,9 @@ class ConnectViewModel(
      */
     fun reEnableAfterStandDown() = envStandDownUseCase.reEnable()
 
-    private fun revokedDeviceEffect() =
-        deviceRepository.deviceState.filterIsInstance<DeviceState.Revoked>().map {
-            UiSideEffect.RevokedDevice
-        }
-
     sealed interface UiSideEffect {
         data class OpenUri(val uri: Uri, val errorMessage: String) : UiSideEffect
 
-        data object RevokedDevice : UiSideEffect
 
         // Connect dispatch needs a FragmentActivity for biometric unlock, so
         // the VM emits this side effect and ConnectScreen invokes

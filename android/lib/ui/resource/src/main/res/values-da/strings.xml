@@ -153,7 +153,7 @@
     <string name="toggle_vpn">Slå VPN til/fra</string>
     <string name="go_to_login">Gå til login</string>
     <string name="device_inactive_title">Sessionen er inaktiv</string>
-    <string name="device_inactive_description">Din session er afsluttet. For at oprette forbindelse igen skal du logge ind på ny.</string>
+    <string name="device_inactive_description">Denne enhed blev frakoblet fra en anden enhed på din konto. Log ind med din gendannelsessætning for at bruge den igen.</string>
     <string name="device_inactive_unblock_warning">Hvis du logger på, ophæves blokeringen af internettet på denne enhed.</string>
     <string name="always_on_vpn_error_notification_title">Altid-til VPN tildelt %1$s</string>
     <string name="always_on_vpn_error_notification_content">Kunne ikke starte tunnelforbindelse. Deaktiver Altid-til VPN for <b>%1$s</b>.</string>

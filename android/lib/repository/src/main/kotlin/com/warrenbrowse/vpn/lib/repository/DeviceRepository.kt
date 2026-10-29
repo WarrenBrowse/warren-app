@@ -43,18 +43,35 @@ interface WarrenDeviceBridge {
 }
 
 /**
- * The login state as far as the device registry speaks to it: [DeviceState.Revoked] once the
- * registry revoked this device, which takes the app to its revoked screen. Nothing (`null`) until
- * then: the wallet login itself is the account repositories' to tell.
+ * The login state as far as the device registry speaks to it: [DeviceState.Revoked] once this
+ * device was revoked from another device of the account and the wallet has left it, which takes
+ * the app to its revoked screen. Nothing (`null`) otherwise: the wallet login itself is the
+ * account repositories' to tell.
  */
 class DeviceRepository(private val bridge: WarrenDeviceBridge? = null) {
     private val _deviceState = MutableStateFlow<DeviceState?>(null)
     val deviceState: StateFlow<DeviceState?> = _deviceState.asStateFlow()
 
-    /** Reads whether the registry revoked this device, and emits [DeviceState.Revoked] if so. */
-    suspend fun updateDevice() {
-        if (bridge?.deviceRevoked() == true) {
-            _deviceState.value = DeviceState.Revoked
-        }
+    /** Whether the registry revoked this device since the app last took a revocation in. */
+    fun revokedByRegistry(): Boolean = bridge?.deviceRevoked() == true
+
+    /**
+     * Takes the registry's revocation in: the wallet has left the device, and the revoked screen
+     * says why. The native flag is consumed, so the same revocation is acted on once.
+     */
+    fun showRevoked() {
+        bridge?.forgetDeviceRevocation()
+        _deviceState.value = DeviceState.Revoked
+    }
+
+    /** Drops a revocation that concerns no wallet any more, without a screen. */
+    fun dropRevocation() {
+        bridge?.forgetDeviceRevocation()
+    }
+
+    /** The user left the revoked screen: the next login starts from a clean state. */
+    fun acknowledgeRevocation() {
+        bridge?.forgetDeviceRevocation()
+        _deviceState.value = null
     }
 }

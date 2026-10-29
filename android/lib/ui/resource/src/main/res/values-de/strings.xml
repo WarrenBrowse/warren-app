@@ -153,7 +153,7 @@
     <string name="toggle_vpn">VPN umschalten</string>
     <string name="go_to_login">Zur Anmeldung</string>
     <string name="device_inactive_title">Sitzung inaktiv</string>
-    <string name="device_inactive_description">Ihre Sitzung ist beendet. Um sich erneut zu verbinden, müssen Sie sich wieder anmelden.</string>
+    <string name="device_inactive_description">Dieses Gerät wurde von einem anderen Gerät Ihres Kontos getrennt. Melden Sie sich mit Ihrer Wiederherstellungsphrase an, um es wieder zu verwenden.</string>
     <string name="device_inactive_unblock_warning">Wenn Sie mit der Anmeldung fortfahren, wird die Internetsperre auf diesem Gerät aufgehoben.</string>
     <string name="always_on_vpn_error_notification_title">Always-on VPN ist %1$s zugeordnet</string>
     <string name="always_on_vpn_error_notification_content">Tunnelverbindung kann nicht gestartet werden. Bitte deaktivieren Sie Always-on VPN für <b>%1$s</b>, bevor Sie Warren VPN verwenden.</string>

@@ -18,6 +18,8 @@ import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.connect.WarrenConnectUseCase
 import com.warrenbrowse.vpn.app.connectivity.WarrenConnectivityMonitor
 import com.warrenbrowse.vpn.app.standing.WarrenAccountStandingPoller
+import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
+import com.warrenbrowse.vpn.lib.usecase.DeviceRevocationUseCase
 import com.warrenbrowse.vpn.app.connect.HeldVoucherRedeemer
 import com.warrenbrowse.vpn.app.service.notifications.ForegroundNotificationManager
 import com.warrenbrowse.vpn.di.vpnServiceModule
@@ -153,6 +155,7 @@ class WarrenVpnService : LifecycleVpnService() {
             quinnAdapter.pathWedged.collect { wedged -> quinnStateProxy.updatePathWedged(wedged) }
         }
         launchAccountStanding()
+        launchRevocationWatch()
         lifecycleScope.launch {
             quinnAdapter.effectiveMtu.collect { mtu -> quinnStateProxy.updateEffectiveMtu(mtu) }
         }
@@ -217,6 +220,18 @@ class WarrenVpnService : LifecycleVpnService() {
         }
         lifecycleScope.launch {
             getKoin().get<HeldVoucherRedeemer>().runWhile(disclosureAccepted)
+        }
+    }
+
+    // A revocation from another device of the account (warren-core doc 115) is
+    // acted on for as long as this service lives, the app on screen or a
+    // tunnel up: the native side ends a running session on it, and the wake of
+    // that transition is what brings the wallet's logout and the revoked
+    // screen without a restart.
+    private fun launchRevocationWatch() {
+        val tunnelState = getKoin().get<WarrenTunnelStateProvider>()
+        lifecycleScope.launch {
+            getKoin().get<DeviceRevocationUseCase>().watch(tunnelState.connectedInfo)
         }
     }
 

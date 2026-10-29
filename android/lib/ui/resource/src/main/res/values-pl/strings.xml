@@ -161,7 +161,7 @@
     <string name="toggle_vpn">Przełącz VPN</string>
     <string name="go_to_login">Przejdź do logowania</string>
     <string name="device_inactive_title">Sesja nieaktywna</string>
-    <string name="device_inactive_description">Twoja sesja zakończyła się. Aby połączyć się ponownie, musisz zalogować się jeszcze raz.</string>
+    <string name="device_inactive_description">To urządzenie zostało rozłączone z innego urządzenia Twojego konta. Zaloguj się frazą odzyskiwania, aby znów z niego korzystać.</string>
     <string name="device_inactive_unblock_warning">Przejście do logowania odblokuje Internet na tym urządzeniu.</string>
     <string name="always_on_vpn_error_notification_title">Opcja „Zawsze włączony VPN” przypisana jest do %1$s</string>
     <string name="always_on_vpn_error_notification_content">Nie można uruchomić połączenia tunelowego. Przed rozpoczęciem użytkowania usługi Warren VPN wyłącz opcję „Zawsze włączony VPN” w <b>%1$s</b>.</string>

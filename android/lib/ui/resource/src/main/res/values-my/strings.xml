@@ -149,7 +149,7 @@
     <string name="toggle_vpn">VPN ရွေးသုံးရန်</string>
     <string name="go_to_login">ဝင်ရောက်ရန် သွားပါ</string>
     <string name="device_inactive_title">စက်ရှင် မလှုပ်ရှားပါ</string>
-    <string name="device_inactive_description">သင်၏ စက်ရှင် ပြီးဆုံးသွားပါပြီ။ ပြန်လည်ချိတ်ဆက်ရန် ထပ်မံ၍ လော့ဂ်အင်ဝင်ရန် လိုအပ်ပါသည်။</string>
+    <string name="device_inactive_description">ဤစက်ကို သင့်အကောင့်ရှိ အခြားစက်တစ်ခုမှ ချိတ်ဆက်မှုဖြုတ်လိုက်ပါသည်။ ပြန်အသုံးပြုရန် သင်၏ ပြန်လည်ရယူရေးစကားစုဖြင့် ဝင်ပါ။</string>
     <string name="device_inactive_unblock_warning">ဝင်ရောက်ရန်သွားခြင်းဖြင့် ဤစက်တွင် အင်တာနက်ကို ပိတ်ဆို့ထားမှုမှ ဖယ်ရှားပါလိမ့်မည်။</string>
     <string name="always_on_vpn_error_notification_title">အမြဲဖွင့် VPN ကို %1$s သို့ သတ်မှတ်ထားပါသည်</string>
     <string name="always_on_vpn_error_notification_content">Tunnel ချိတ်ဆက်မှုကို စတင်၍ မရနိုင်ပါ။ Warren VPN ကို မသုံးမီ <b>%1$s</b> အတွက် VPN အမြဲဖွင့်ထားမှုကို ပိတ်ပေးပါ။</string>

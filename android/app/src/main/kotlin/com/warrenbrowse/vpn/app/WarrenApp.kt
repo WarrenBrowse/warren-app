@@ -73,12 +73,15 @@ import com.warrenbrowse.vpn.feature.settings.impl.navigation.warrenSupportEntrie
 import com.warrenbrowse.vpn.feature.splittunneling.impl.navigation.splitTunnelingEntry
 import com.warrenbrowse.vpn.feature.settings.api.ForumActivityNavKey
 import com.warrenbrowse.vpn.lib.repository.AppVersionInfoRepository
+import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 import com.warrenbrowse.vpn.lib.repository.ForumActivityOpenRequests
 import com.warrenbrowse.vpn.lib.repository.WarrenProductFlags
 import com.warrenbrowse.vpn.screen.navigation.NoDaemonNavKey
 import com.warrenbrowse.vpn.screen.navigation.SplashNavKey
 import com.warrenbrowse.vpn.screen.navigation.noDaemonEntry
 import com.warrenbrowse.vpn.feature.home.api.ConnectNavKey
+import com.warrenbrowse.vpn.feature.home.api.DeviceRevokedNavKey
+import com.warrenbrowse.vpn.screen.devicerevoked.showsRevokedScreen
 import com.warrenbrowse.vpn.screen.navigation.OnboardingBetaAccessNavKey
 import com.warrenbrowse.vpn.screen.navigation.OnboardingSubscriptionNavKey
 import com.warrenbrowse.vpn.screen.navigation.OutOfTimeNavKey
@@ -154,6 +157,17 @@ fun WarrenApp(serviceConnectionManager: ServiceConnectionManager) {
             OutOfTimeGateAction.Push -> nav3.navigate(OutOfTimeNavKey)
             OutOfTimeGateAction.Pop -> nav3.goBackUntil(OutOfTimeNavKey, inclusive = true)
             OutOfTimeGateAction.None -> Unit
+        }
+    }
+
+    // Another device of the account revoked this one and the wallet has left
+    // it: the revoked screen replaces whatever was up, settings and the device
+    // list included.
+    val deviceState by koinInject<DeviceRepository>().deviceState.collectAsStateWithLifecycle()
+    val revokedScreenInStack = navigationState.backStack.any { it is DeviceRevokedNavKey }
+    LaunchedEffect(deviceState, revokedScreenInStack) {
+        if (showsRevokedScreen(deviceState, revokedScreenInStack)) {
+            nav3.navigate(DeviceRevokedNavKey, clearBackStack = true)
         }
     }
 

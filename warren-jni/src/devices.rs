@@ -10,6 +10,9 @@ use warren_api::DevicePlatform;
 use warren_standing::device::InstallDevice;
 use warren_standing::device_registry::DeviceRegistry;
 
+use crate::redial::SessionStatus;
+use crate::status_watch::StatusCell;
+
 static DEVICES: OnceLock<DeviceRegistry> = OnceLock::new();
 
 /// The install's device, its identity kept in `dir` beside the token
@@ -34,9 +37,41 @@ pub(crate) fn registry() -> &'static DeviceRegistry {
     DEVICES.get_or_init(|| DeviceRegistry::new(None))
 }
 
+/// Resolves once `registry` revokes this device, the session's status then
+/// reading [`SessionStatus::DeviceRevoked`]: a running tunnel ends on it as it
+/// does on a ban, since the tokens already minted would otherwise keep it
+/// admitted for their whole prefetch horizon.
+pub(crate) async fn session_revoked(registry: &DeviceRegistry, status: &StatusCell) {
+    registry.revocation_arrives().await;
+    status.store(SessionStatus::DeviceRevoked as i32);
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[tokio::test]
+    async fn a_revocation_ends_the_session_on_its_own_status() {
+        let registry = DeviceRegistry::new(None);
+        let status = StatusCell::new(SessionStatus::Connected as i32);
+        let ended = session_revoked(&registry, &status);
+        tokio::pin!(ended);
+        assert!(
+            tokio::time::timeout(std::time::Duration::from_millis(50), &mut ended)
+                .await
+                .is_err(),
+            "a device still registered keeps its session"
+        );
+
+        registry.on_revoked();
+        ended.await;
+
+        assert_eq!(
+            status.load(),
+            10,
+            "WarrenQuinnAdapter reads STATUS_DEVICE_REVOKED as this value"
+        );
+    }
 
     #[test]
     fn the_install_registers_as_android_with_the_product_version() {

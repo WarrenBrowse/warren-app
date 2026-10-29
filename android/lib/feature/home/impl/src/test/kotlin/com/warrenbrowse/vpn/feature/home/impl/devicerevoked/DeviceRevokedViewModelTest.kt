@@ -5,7 +5,6 @@ import arrow.core.right
 import io.mockk.MockKAnnotations
 import io.mockk.coEvery
 import io.mockk.coVerify
-import io.mockk.coVerifyOrder
 import io.mockk.every
 import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
@@ -17,8 +16,11 @@ import kotlinx.coroutines.test.runTest
 import com.warrenbrowse.vpn.lib.common.test.TestCoroutineRule
 import com.warrenbrowse.vpn.lib.model.DisconnectReason
 import com.warrenbrowse.vpn.lib.model.TunnelState
-import com.warrenbrowse.vpn.lib.repository.AccountRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
+import com.warrenbrowse.vpn.lib.repository.DeviceRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenDeviceBridge
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -28,7 +30,25 @@ import org.junit.jupiter.api.extension.ExtendWith
 @ExtendWith(TestCoroutineRule::class)
 class DeviceRevokedViewModelTest {
 
-    @MockK private lateinit var mockedAccountRepository: AccountRepository
+    private val bridge =
+        object : WarrenDeviceBridge {
+            var revoked = true
+
+            override fun listDevices(mnemonic: String) = error("not called")
+
+            override fun renameDevice(mnemonic: String, deviceId: String, name: String) =
+                error("not called")
+
+            override fun revokeDevice(mnemonic: String, deviceId: String) = error("not called")
+
+            override fun deviceRevoked() = revoked
+
+            override fun forgetDeviceRevocation() {
+                revoked = false
+            }
+        }
+
+    private val deviceRepository = DeviceRepository(bridge)
 
     @MockK private lateinit var mockConnectionProxy: ConnectionProxy
 
@@ -42,7 +62,7 @@ class DeviceRevokedViewModelTest {
         every { mockConnectionProxy.tunnelState } returns tunnelStateFlow
         viewModel =
             DeviceRevokedViewModel(
-                accountRepository = mockedAccountRepository,
+                deviceRepository = deviceRepository,
                 connectionProxy = mockConnectionProxy,
             )
     }
@@ -67,32 +87,23 @@ class DeviceRevokedViewModelTest {
     }
 
     @Test
-    fun `onGoToLoginClicked should invoke logout on AccountRepository`() {
-        // Arrange
+    fun `going to login clears the revocation the next login must not find`() {
         coEvery { mockConnectionProxy.disconnect(any()) } returns true.right()
-        coEvery { mockedAccountRepository.logout() } returns Unit.right()
+        deviceRepository.showRevoked()
+        bridge.revoked = true
 
-        // Act
         viewModel.onGoToLoginClicked()
 
-        // Assert
-        coVerify { mockedAccountRepository.logout() }
+        assertNull(deviceRepository.deviceState.value)
+        assertFalse(bridge.revoked)
     }
 
     @Test
-    fun `onGoToLoginClicked should invoke disconnect before logout when connected`() {
-        // Arrange
-        val mockDisconnectReason = DisconnectReason.USER_INITIATED_GO_TO_LOGIN
+    fun `going to login lifts what still holds the traffic`() {
         coEvery { mockConnectionProxy.disconnect(any()) } returns true.right()
-        coEvery { mockedAccountRepository.logout() } returns Unit.right()
 
-        // Act
         viewModel.onGoToLoginClicked()
 
-        // Assert
-        coVerifyOrder {
-            mockConnectionProxy.disconnect(mockDisconnectReason)
-            mockedAccountRepository.logout()
-        }
+        coVerify { mockConnectionProxy.disconnect(DisconnectReason.USER_INITIATED_GO_TO_LOGIN) }
     }
 }

@@ -169,7 +169,7 @@
     <string name="toggle_vpn">زر تبديل VPN</string>
     <string name="go_to_login">الانتقال إلى تسجيل الدخول</string>
     <string name="device_inactive_title">الجلسة غير نشطة</string>
-    <string name="device_inactive_description">انتهت جلستك. لإعادة الاتصال، ستحتاج إلى تسجيل الدخول مرة أخرى.</string>
+    <string name="device_inactive_description">تم قطع اتصال هذا الجهاز من جهاز آخر في حسابك. سجّل الدخول بعبارة الاسترداد لاستخدامه مجددًا.</string>
     <string name="device_inactive_unblock_warning">سيؤدي تسجيل الدخول إلى إلغاء حظر الإنترنت على هذا الجهاز.</string>
     <string name="always_on_vpn_error_notification_title">تم تعيين \"تشغيل VPN دائمًا\" إلى %1$s</string>
     <string name="always_on_vpn_error_notification_content">يتعذَّر بدء اتصال النفق. يُرجى إيقاف \"تشغيل VPN دائمًا\" لـ <b>%1$s</b> قبل استخدام Warren VPN.</string>

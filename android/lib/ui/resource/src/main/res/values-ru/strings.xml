@@ -161,7 +161,7 @@
     <string name="toggle_vpn">Включение VPN</string>
     <string name="go_to_login">Войти</string>
     <string name="device_inactive_title">Сеанс неактивен</string>
-    <string name="device_inactive_description">Ваш сеанс завершён. Чтобы подключиться снова, вам потребуется войти заново.</string>
+    <string name="device_inactive_description">Это устройство было отключено с другого устройства вашего аккаунта. Войдите с помощью фразы восстановления, чтобы снова им пользоваться.</string>
     <string name="device_inactive_unblock_warning">Вход в профиль разблокирует Интернет на этом устройстве.</string>
     <string name="always_on_vpn_error_notification_title">Опция «Постоянная VPN» назначена приложению «%1$s»</string>
     <string name="always_on_vpn_error_notification_content">Не удалось запустить туннельное подключение. Перед использованием Warren VPN отключите опцию «Постоянная VPN» для приложения <b>%1$s</b>.</string>

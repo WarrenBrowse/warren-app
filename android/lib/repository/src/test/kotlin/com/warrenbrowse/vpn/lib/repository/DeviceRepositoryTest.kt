@@ -2,8 +2,9 @@ package com.warrenbrowse.vpn.lib.repository
 
 import com.warrenbrowse.vpn.lib.model.DeviceState
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
-import kotlinx.coroutines.test.runTest
+import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
 
 class DeviceRepositoryTest {
@@ -23,19 +24,42 @@ class DeviceRepositoryTest {
     }
 
     @Test
-    fun `a device the registry revoked emits its revocation`() = runTest {
-        val repository = DeviceRepository(FakeDevices(revoked = true))
+    fun `a revocation shown is consumed natively so it is acted on once`() {
+        val bridge = FakeDevices(revoked = true)
+        val repository = DeviceRepository(bridge)
 
-        repository.updateDevice()
+        repository.showRevoked()
 
         assertEquals(DeviceState.Revoked, repository.deviceState.value)
+        assertFalse(repository.revokedByRegistry())
     }
 
     @Test
-    fun `a device still registered emits nothing`() = runTest {
+    fun `a device still registered reads as not revoked`() {
         val repository = DeviceRepository(FakeDevices(revoked = false))
 
-        repository.updateDevice()
+        assertFalse(repository.revokedByRegistry())
+        assertNull(repository.deviceState.value)
+    }
+
+    @Test
+    fun `a dropped revocation shows no screen`() {
+        val bridge = FakeDevices(revoked = true)
+        val repository = DeviceRepository(bridge)
+        assertTrue(repository.revokedByRegistry())
+
+        repository.dropRevocation()
+
+        assertFalse(repository.revokedByRegistry())
+        assertNull(repository.deviceState.value)
+    }
+
+    @Test
+    fun `leaving the revoked screen clears the revocation`() {
+        val repository = DeviceRepository(FakeDevices(revoked = true))
+        repository.showRevoked()
+
+        repository.acknowledgeRevocation()
 
         assertNull(repository.deviceState.value)
     }

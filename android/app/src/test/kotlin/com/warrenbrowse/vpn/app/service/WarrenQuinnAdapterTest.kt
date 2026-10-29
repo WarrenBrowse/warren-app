@@ -73,6 +73,7 @@ class WarrenQuinnAdapterTest {
         const val STATUS_DEVICE_LIMIT = 7
         const val STATUS_NO_REACHABLE_ENTRY = 8
         const val STATUS_NO_SESSION_TOKEN = 9
+        const val STATUS_DEVICE_REVOKED = 10
 
         const val SELF_PACKAGE = "com.warrenbrowse.vpn.test"
 
@@ -834,6 +835,34 @@ class WarrenQuinnAdapterTest {
             unmockkStatic(SystemClock::class)
         }
     }
+
+    @Test
+    fun `ensure a revoked device takes its tunnel down without a block and is never redialed`() =
+        runTest {
+            // Another device of the account revoked this one (warren-core doc
+            // 115): the wallet is about to leave the device, so nothing can
+            // dial again and a kill switch would hold the phone offline for an
+            // app with no account. The tunnel comes down as on a disconnect,
+            // lockdown or not.
+            val platform = RecordingPlatform()
+            val adapter = adapterWith(platform, dropRetryGraceMs = 50L)
+            adapter.connect(config(), Mnemonic(PHRASE))
+            awaitReal("the session must reach Connected") {
+                adapter.state.value is WarrenTunnelState.Connected
+            }
+            platform.calls.clear()
+
+            platform.status = STATUS_DEVICE_REVOKED
+            awaitReal("the revocation must end the session", { adapter.state.value.toString() }) {
+                adapter.state.value is WarrenTunnelState.Disconnected
+            }
+
+            assertTrue(DISCONNECT_TUNNEL in platform.calls, platform.calls.toString())
+            assertFalse(ESTABLISH_BLACKHOLE in platform.calls, "a revoked device is not blocked")
+            withContext(Dispatchers.Default) { delay(500) }
+            assertFalse(CONNECT_TUNNEL in platform.calls, "a revoked device must not be redialed")
+            assertEquals(WarrenTunnelState.Disconnected, adapter.state.value)
+        }
 
     @Test
     fun `ensure a dead egress reads as wedged`() = runTest {

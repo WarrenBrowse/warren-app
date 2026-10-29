@@ -149,7 +149,7 @@
     <string name="toggle_vpn">切换 VPN</string>
     <string name="go_to_login">前往登录</string>
     <string name="device_inactive_title">会话处于非活动状态</string>
-    <string name="device_inactive_description">您的会话已结束。要重新连接，您需要重新登录。</string>
+    <string name="device_inactive_description">此设备已被您账户中的另一台设备断开。请使用恢复短语登录以继续使用。</string>
     <string name="device_inactive_unblock_warning">前往登录将在此设备上解除阻止互联网。</string>
     <string name="always_on_vpn_error_notification_title">“始终开启 VPN”已分配给 %1$s</string>
     <string name="always_on_vpn_error_notification_content">无法启动隧道连接。在使用 Warren VPN 之前，请为 <b>%1$s</b> 停用“始终开启 VPN”。</string>

@@ -149,7 +149,7 @@
     <string name="toggle_vpn">切換 VPN</string>
     <string name="go_to_login">前往登入</string>
     <string name="device_inactive_title">工作階段處於非作用中狀態</string>
-    <string name="device_inactive_description">您的工作階段已結束。若要重新連線，您需要重新登入。</string>
+    <string name="device_inactive_description">此裝置已被您帳戶中的另一台裝置中斷連線。請使用復原短語登入以繼續使用。</string>
     <string name="device_inactive_unblock_warning">若前往登入，則會在此裝置上解除對網際網路的封鎖。</string>
     <string name="always_on_vpn_error_notification_title">「一律啟用 VPN」已指派給 %1$s</string>
     <string name="always_on_vpn_error_notification_content">無法啟動通道連線。在使用 Warren VPN 之前，請先為 <b>%1$s</b> 停用「始終啟用 VPN」。</string>

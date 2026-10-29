@@ -296,6 +296,9 @@ enum AttemptEnd {
     Cancelled,
     /// A ban on the wallet became known while the session ran.
     Banned(warren_standing::Ban),
+    /// Another device of the account revoked this one while the session ran;
+    /// the status already reads [`SessionStatus::DeviceRevoked`].
+    Revoked,
     /// The session itself ended.
     Session(crate::supervised_session::SessionEnd),
 }
@@ -809,6 +812,7 @@ async fn run_multi_hop_session(
             Some(bps) => tokio::select! {
                 _ = &mut cancel_rx => AttemptEnd::Cancelled,
                 ban = crate::standing::store().ban_arrives(wallet_pubkey, unix_now_secs) => AttemptEnd::Banned(ban),
+                () = crate::devices::session_revoked(crate::devices::registry(), status) => AttemptEnd::Revoked,
                 end = crate::supervised_session::run_supervised(
                     inputs,
                     |spec| crate::rate_limited_tun::RateLimitedTun::new(remap(spec), bps),
@@ -822,6 +826,7 @@ async fn run_multi_hop_session(
             None => tokio::select! {
                 _ = &mut cancel_rx => AttemptEnd::Cancelled,
                 ban = crate::standing::store().ban_arrives(wallet_pubkey, unix_now_secs) => AttemptEnd::Banned(ban),
+                () = crate::devices::session_revoked(crate::devices::registry(), status) => AttemptEnd::Revoked,
                 end = crate::supervised_session::run_supervised(
                     inputs,
                     remap,
@@ -849,6 +854,12 @@ async fn run_multi_hop_session(
             AttemptEnd::Banned(ban) => {
                 log::warn!("multi-hop: the account was banned during the session; ending it");
                 block_for_ban(status, ban);
+                return;
+            }
+            // Revocation is the account's decision (warren-core doc 115): no
+            // redial, Kotlin forgets the wallet on this status.
+            AttemptEnd::Revoked => {
+                log::warn!("multi-hop: this device was revoked during the session; ending it");
                 return;
             }
             // A rejected v7 token (spent serial, clock-skewed epoch) is a

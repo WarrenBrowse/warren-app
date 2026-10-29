@@ -11,11 +11,16 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import com.warrenbrowse.vpn.lib.common.constant.VIEW_MODEL_STOP_TIMEOUT
 import com.warrenbrowse.vpn.lib.model.DisconnectReason
-import com.warrenbrowse.vpn.lib.repository.AccountRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
+import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 
+/**
+ * The revoked screen (warren-core doc 115): the wallet already left the device when it shows, so
+ * going to login only lifts whatever still holds the traffic and clears the revocation, which the
+ * next login must not find.
+ */
 class DeviceRevokedViewModel(
-    private val accountRepository: AccountRepository,
+    private val deviceRepository: DeviceRepository,
     private val connectionProxy: ConnectionProxy,
 ) : ViewModel() {
 
@@ -40,7 +45,7 @@ class DeviceRevokedViewModel(
     fun onGoToLoginClicked() {
         viewModelScope.launch {
             connectionProxy.disconnect(DisconnectReason.USER_INITIATED_GO_TO_LOGIN)
-            accountRepository.logout()
+            deviceRepository.acknowledgeRevocation()
         }
 
         viewModelScope.launch { _uiSideEffect.send(DeviceRevokedSideEffect.NavigateToLogin) }

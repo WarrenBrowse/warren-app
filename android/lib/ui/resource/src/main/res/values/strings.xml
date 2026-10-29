@@ -156,7 +156,7 @@
     <string name="toggle_vpn">Toggle VPN</string>
     <string name="go_to_login">Go to login</string>
     <string name="device_inactive_title">Session is inactive</string>
-    <string name="device_inactive_description">Your session has ended. To connect again, you will need to log back in.</string>
+    <string name="device_inactive_description">This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again.</string>
     <string name="device_inactive_unblock_warning">Going to login will unblock the Internet on this device.</string>
     <string name="always_on_vpn_error_notification_title">Always-on VPN assigned to %s</string>
     <string name="always_on_vpn_error_notification_content">

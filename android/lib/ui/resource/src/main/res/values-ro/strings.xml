@@ -159,7 +159,7 @@
     <string name="toggle_vpn">Comută VPN</string>
     <string name="go_to_login">Mergeți la autentificare</string>
     <string name="device_inactive_title">Sesiune inactivă</string>
-    <string name="device_inactive_description">Sesiunea ta s-a încheiat. Pentru a te conecta din nou, va trebui să te autentifici iar.</string>
+    <string name="device_inactive_description">Acest dispozitiv a fost deconectat de pe un alt dispozitiv al contului tău. Conectează-te cu fraza de recuperare pentru a-l folosi din nou.</string>
     <string name="device_inactive_unblock_warning">Mergerea la autentificare va debloca internetul pe acest dispozitiv.</string>
     <string name="always_on_vpn_error_notification_title">VPN permanent atribuit pentru %s</string>
     <string name="always_on_vpn_error_notification_content">

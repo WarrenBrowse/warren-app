@@ -156,7 +156,7 @@
     <string name="toggle_vpn">Alternar VPN</string>
     <string name="go_to_login">Iniciar sesión</string>
     <string name="device_inactive_title">Sesión inactiva</string>
-    <string name="device_inactive_description">Tu sesión ha finalizado. Para volver a conectarte, deberás iniciar sesión de nuevo.</string>
+    <string name="device_inactive_description">Este dispositivo se desconectó desde otro dispositivo de tu cuenta. Inicia sesión con tu frase de recuperación para volver a usarlo.</string>
     <string name="device_inactive_unblock_warning">Al iniciar la sesión, se desbloqueará el acceso a Internet en este dispositivo.</string>
     <string name="always_on_vpn_error_notification_title">La VPN siempre activa se ha asignado a %1$s</string>
     <string name="always_on_vpn_error_notification_content">No se puede iniciar la conexión de túnel. Deshabilite la VPN siempre activa en <b>%1$s</b> antes de utilizar la VPN de Warren.</string>

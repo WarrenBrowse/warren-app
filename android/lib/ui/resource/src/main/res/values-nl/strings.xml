@@ -153,7 +153,7 @@
     <string name="toggle_vpn">VPN in-/uitschakelen</string>
     <string name="go_to_login">Ga naar aanmelden</string>
     <string name="device_inactive_title">Sessie inactief</string>
-    <string name="device_inactive_description">Je sessie is beëindigd. Om opnieuw verbinding te maken, moet je opnieuw inloggen.</string>
+    <string name="device_inactive_description">Dit apparaat is losgekoppeld vanaf een ander apparaat van je account. Meld je aan met je herstelzin om het weer te gebruiken.</string>
     <string name="device_inactive_unblock_warning">Als u naar aanmelden gaat, wordt het blokkeren van internet op dit apparaat opgeheven.</string>
     <string name="always_on_vpn_error_notification_title">Altijd-aan VPN toegewezen aan %1$s</string>
     <string name="always_on_vpn_error_notification_content">Kan de tunnelverbinding niet starten. Schakel Altijd-aan VPN uit voor <b>%1$s</b> voordat u Warren VPN gebruikt.</string>

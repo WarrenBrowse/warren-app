@@ -153,7 +153,7 @@
     <string name="toggle_vpn">Växla VPN</string>
     <string name="go_to_login">Gå till inloggning</string>
     <string name="device_inactive_title">Sessionen är inaktiv</string>
-    <string name="device_inactive_description">Din session har avslutats. För att ansluta igen måste du logga in på nytt.</string>
+    <string name="device_inactive_description">Den här enheten kopplades från av en annan enhet på ditt konto. Logga in med din återställningsfras för att använda den igen.</string>
     <string name="device_inactive_unblock_warning">Om du loggar in tas blockering av internet bort på den här enheten.</string>
     <string name="always_on_vpn_error_notification_title">Alltid på-VPN har tilldelats %1$s</string>
     <string name="always_on_vpn_error_notification_content">Det går inte att starta tunnelanslutning. Inaktivera Alltid på-VPN för <b>%1$s</b> innan du använder Warren VPN.</string>

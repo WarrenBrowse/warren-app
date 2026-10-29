@@ -153,7 +153,7 @@
     <string name="toggle_vpn">VPN\'i aç/kapat</string>
     <string name="go_to_login">Giriş sayfasına git</string>
     <string name="device_inactive_title">Oturum etkin değil</string>
-    <string name="device_inactive_description">Oturumunuz sona erdi. Yeniden bağlanmak için tekrar giriş yapmanız gerekir.</string>
+    <string name="device_inactive_description">Bu cihazın bağlantısı, hesabınızdaki başka bir cihazdan kesildi. Yeniden kullanmak için kurtarma ifadenizle oturum açın.</string>
     <string name="device_inactive_unblock_warning">Giriş yapmak bu cihazdaki internet engelini kaldıracaktır.</string>
     <string name="always_on_vpn_error_notification_title">Her zaman açık VPN %1$s uygulamasına atandı</string>
     <string name="always_on_vpn_error_notification_content">Tünel bağlantısı başlatılamıyor. Warren VPN\'i kullanmadan önce lütfen Her zaman açık VPN\'i <b>%1$s</b> için devre dışı bırakın.</string>

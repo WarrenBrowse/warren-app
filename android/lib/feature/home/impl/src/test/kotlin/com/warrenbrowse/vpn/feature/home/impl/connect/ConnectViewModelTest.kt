@@ -3,11 +3,8 @@ package com.warrenbrowse.vpn.feature.home.impl.connect
 import androidx.lifecycle.viewModelScope
 import app.cash.turbine.test
 import arrow.core.right
-import io.mockk.Runs
-import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
-import io.mockk.just
 import io.mockk.mockk
 import io.mockk.unmockkAll
 import kotlin.test.assertEquals
@@ -20,7 +17,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import com.warrenbrowse.vpn.feature.home.impl.connect.notificationbanner.InAppNotificationController
 import com.warrenbrowse.vpn.lib.common.test.TestCoroutineRule
-import com.warrenbrowse.vpn.lib.model.DeviceState
 import com.warrenbrowse.vpn.lib.model.ErrorState
 import com.warrenbrowse.vpn.lib.model.GeoIpLocation
 import com.warrenbrowse.vpn.lib.model.InAppNotification
@@ -28,7 +24,6 @@ import com.warrenbrowse.vpn.lib.model.TunnelEndpoint
 import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.repository.ChangelogRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
-import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 import com.warrenbrowse.vpn.lib.repository.ExitPin
 import com.warrenbrowse.vpn.lib.repository.SplitTunnelingRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
@@ -53,7 +48,6 @@ import org.junit.jupiter.api.extension.ExtendWith
 class ConnectViewModelTest {
     private lateinit var viewModel: ConnectViewModel
 
-    private val device = MutableStateFlow<DeviceState?>(null)
     private val notifications = MutableStateFlow<List<InAppNotification>>(emptyList())
 
     // Service connections
@@ -61,7 +55,6 @@ class ConnectViewModelTest {
     private val mockLocation: GeoIpLocation = mockk(relaxed = true)
 
     // Device Repository
-    private val mockDeviceRepository: DeviceRepository = mockk()
 
     // Changelog Repository
     private val mockChangelogRepository: ChangelogRepository = mockk()
@@ -105,10 +98,6 @@ class ConnectViewModelTest {
 
     @BeforeEach
     fun setup() {
-        every { mockDeviceRepository.deviceState } returns device
-
-        coEvery { mockDeviceRepository.updateDevice() } just Runs
-
         every { mockInAppNotificationController.notifications } returns notifications
 
         every { mockConnectionProxy.tunnelState } returns tunnelState
@@ -133,7 +122,6 @@ class ConnectViewModelTest {
 
         viewModel =
             ConnectViewModel(
-                deviceRepository = mockDeviceRepository,
                 changelogRepository = mockChangelogRepository,
                 inAppNotificationController = mockInAppNotificationController,
                 userPreferencesRepository = mockk(),

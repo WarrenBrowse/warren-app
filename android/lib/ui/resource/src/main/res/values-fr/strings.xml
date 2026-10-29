@@ -156,7 +156,7 @@
     <string name="toggle_vpn">Activer/désactiver le VPN</string>
     <string name="go_to_login">Aller à la connexion</string>
     <string name="device_inactive_title">Session inactive</string>
-    <string name="device_inactive_description">Votre session a pris fin. Pour vous reconnecter, vous devrez vous identifier à nouveau.</string>
+    <string name="device_inactive_description">Cet appareil a été déconnecté depuis un autre appareil de votre compte. Connectez-vous avec votre phrase de restauration pour l\'utiliser à nouveau.</string>
     <string name="device_inactive_unblock_warning">Aller à la connexion débloquera la connexion Internet sur cet appareil.</string>
     <string name="always_on_vpn_error_notification_title">« Toujours exiger un VPN » est assigné à %1$s</string>
     <string name="always_on_vpn_error_notification_content">Impossible de démarrer la connexion au tunnel. Veuillez désactiver « Toujours exiger un VPN « pour <b>%1$s</b> avant d\'utiliser Warren VPN.</string>
