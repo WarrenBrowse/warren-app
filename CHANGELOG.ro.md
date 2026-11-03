@@ -50,6 +50,15 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Păstrarea aceleiași identități de sesiune de la o pornire a VPN-ului la următoarea, astfel
   încât tunelul își regăsește adresa și portul ales după o repornire.
 
+## [1.1.56] - 2026-11-03
+### Corectat
+- [Windows, macOS, Linux] Afișarea portului redirecționat imediat la deschiderea aplicației atunci
+  când VPN-ul l-a obținut înaintea ei, ca la pornirea computerului. Portul rămânea ascuns până la
+  următoarea schimbare, de obicei o schimbare de țară, deși era deschis.
+- [Windows] Returnarea efectivă a portului redirecționat către server la schimbarea țării.
+  Returnarea nu ajungea la server, care păstra portul aproximativ treizeci de secunde, iar țara
+  următoare îl refuza în acest timp.
+
 ## [1.1.55] - 2026-10-29
 ### Adăugat
 - [Windows, macOS, Linux, Android] Vezi dispozitivele conectate la contul tău în Cont, Dispozitive,

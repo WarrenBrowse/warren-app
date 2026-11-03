@@ -53,6 +53,15 @@ par l'application, gardez-le tel quel.
 - [iOS] Garder la même identité de session d'un démarrage du VPN au suivant, pour que le tunnel
   retrouve son adresse et le port choisi après un redémarrage.
 
+## [1.1.56] - 2026-11-03
+### Corrigé
+- [Windows, macOS, Linux] Afficher le port forwardé dès l'ouverture de l'application quand le VPN
+  l'a obtenu avant elle, comme au démarrage de l'ordinateur. Le port restait caché jusqu'à son
+  changement suivant, en général un changement de pays, alors qu'il était ouvert.
+- [Windows] Rendre vraiment le port forwardé au serveur lors d'un changement de pays. La restitution
+  n'atteignait pas le serveur, qui gardait le port une trentaine de secondes, et le pays suivant le
+  refusait pendant ce temps.
+
 ## [1.1.55] - 2026-10-29
 ### Ajouté
 - [Windows, macOS, Linux, Android] Voir les appareils connectés à votre compte dans Compte,

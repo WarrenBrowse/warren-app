@@ -58,6 +58,15 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Keep the same session identity from one start of the VPN to the next, so the tunnel gets
   its address and its chosen forwarded port back after a restart.
 
+## [1.1.56] - 2026-11-03
+### Fixed
+- [Windows, macOS, Linux] Show the forwarded port as soon as the app opens when the VPN got it
+  first, as it does when the computer starts. The port stayed hidden until it next changed, usually
+  at a change of country, although it was open.
+- [Windows] Give the forwarded port back to the server when changing country. The release never
+  reached the server, which kept the port for about thirty seconds, and the next country refused it
+  during that time.
+
 ## [1.1.55] - 2026-10-29
 ### Added
 - [Windows, macOS, Linux, Android] See the devices signed in to your account under Account, Devices,
