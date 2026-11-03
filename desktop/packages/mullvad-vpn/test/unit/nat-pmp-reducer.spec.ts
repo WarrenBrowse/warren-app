@@ -149,6 +149,33 @@ describe('settings reducer - NAT-PMP slice', () => {
     });
   });
 
+  it('a status replayed from the app snapshot keeps the instant the main process received it', () => {
+    // The daemon pushes its live mappings once, at subscribe time, which the
+    // main process does before the window exists. A window opened after a
+    // grant only learns the port from the snapshot (forum topic 226), and the
+    // rate-limit countdown must anchor to when that grant arrived.
+    const granted: NatPmpStatus = {
+      mappings: [
+        {
+          internalPort: 60504,
+          protocol: NatPmpProto.both,
+          status: {
+            state: 'mapped',
+            externalPort: 60504,
+            lifetimeGrantedSecs: 3599,
+            windowResetSecs: 0,
+          },
+        },
+      ],
+    };
+    const next = settingsReducer(
+      makeStateWithNatPmp(OFF_DEFAULTS, undefined),
+      settingsActions.updateNatPmpStatus(granted, 1_793_709_000_000),
+    );
+    expect(next.natPmpStatus).toEqual(granted);
+    expect(next.natPmpStatusReceivedAt).toBe(1_793_709_000_000);
+  });
+
   it('UPDATE_NAT_PMP_STATUS with no mappings clears the list', () => {
     const initial = makeStateWithNatPmp(OFF_DEFAULTS, {
       mappings: [

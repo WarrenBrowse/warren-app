@@ -146,6 +146,7 @@ class ApplicationMain {
       isMacOs13OrNewer: true,
       purchaseInFlight: false,
       forumUnread: 0,
+      natPmpStatus: undefined,
       torrentClient: { kind: 'none', url: '', username: '', hasPassword: false },
     }));
 

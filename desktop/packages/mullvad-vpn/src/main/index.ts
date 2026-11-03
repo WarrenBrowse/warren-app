@@ -234,6 +234,7 @@ class ApplicationMain
   // torrent client learns its port from the file rather than from the window,
   // so it is republished on every snapshot AND on every tunnel-state change.
   private natPmpStatus?: NatPmpStatus;
+  private natPmpStatusReceivedAt = 0;
   private forwardedPortFile = new ForwardedPortFile();
   // The torrent client the forwarded port is written into, and the controller
   // that writes it. Fed the very same `PortChange[]` the notification is fed,
@@ -1492,6 +1493,7 @@ class ApplicationMain
   // those would name the same port again on every restart.
   private handleNatPmpStatus(snapshot: NatPmpStatus) {
     this.natPmpStatus = snapshot;
+    this.natPmpStatusReceivedAt = Date.now();
     this.publishForwardedPortFile();
 
     const changes = this.portForwardingWatcher.observe(snapshot);
@@ -1687,6 +1689,10 @@ class ApplicationMain
       forumIdentity: this.forumIdentityStore.get(),
       forumUnread: this.forumUnread,
       warrenStatus: this.warrenStatus,
+      natPmpStatus:
+        this.natPmpStatus === undefined
+          ? undefined
+          : { status: this.natPmpStatus, receivedAt: this.natPmpStatusReceivedAt },
       torrentClient: this.torrentClientConfig.publicConfig(),
       torrentClientStatus: this.torrentClientStatus,
     }));

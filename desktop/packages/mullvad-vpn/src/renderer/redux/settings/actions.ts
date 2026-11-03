@@ -344,11 +344,16 @@ function updateNatPmpSettings(natPmpSettings: NatPmpSettings): IUpdateNatPmpSett
   };
 }
 
-function updateNatPmpStatus(natPmpStatus: NatPmpStatus): IUpdateNatPmpStatusAction {
+/** `receivedAt` defaults to now for a live push; a replay from the app
+ * snapshot passes the instant the main process received it. */
+function updateNatPmpStatus(
+  natPmpStatus: NatPmpStatus,
+  receivedAt: number = Date.now(),
+): IUpdateNatPmpStatusAction {
   return {
     type: 'UPDATE_NAT_PMP_STATUS',
     natPmpStatus,
-    receivedAt: Date.now(),
+    receivedAt,
   };
 }
 

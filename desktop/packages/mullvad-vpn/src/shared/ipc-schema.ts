@@ -100,6 +100,13 @@ export enum MacOsScrollbarVisibility {
   automatic,
 }
 
+/** A NAT-PMP status and the wall-clock instant (ms) it arrived from the
+ * daemon. */
+export interface ReceivedNatPmpStatus {
+  status: NatPmpStatus;
+  receivedAt: number;
+}
+
 export interface IAppStateSnapshot {
   isConnected: boolean;
   autoStart: boolean;
@@ -151,6 +158,13 @@ export interface IAppStateSnapshot {
   // otherwise stay invisible until it next changed, which for a notice can be
   // never.
   warrenStatus?: WarrenStatus;
+  // Latest NAT-PMP status known to the main process, with the instant it
+  // arrived (the rate-limit countdown anchors to it). Same race as
+  // `warrenStatus`, with a worse outcome: the daemon replays its live
+  // mappings once at subscribe time, and the next push is the renewal half a
+  // lease later, so a window opened after a boot-time grant showed no port
+  // until a change of country. Not optional, so the snapshot cannot drop it.
+  natPmpStatus: ReceivedNatPmpStatus | undefined;
   // The torrent client the app writes the forwarded port into, as the
   // renderer may see it (no password, only whether one is stored). Part of
   // the initial snapshot because the settings form has to render the saved

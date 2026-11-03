@@ -434,6 +434,12 @@ export default class AppRenderer {
       // the store.
       this.reduxActions.settings.updateWarrenStatus(initialState.warrenStatus);
     }
+    if (initialState.natPmpStatus) {
+      this.reduxActions.settings.updateNatPmpStatus(
+        initialState.natPmpStatus.status,
+        initialState.natPmpStatus.receivedAt,
+      );
+    }
     this.reduxActions.settings.updateTorrentClient(initialState.torrentClient);
     if (initialState.torrentClientStatus) {
       this.reduxActions.settings.updateTorrentClientStatus(initialState.torrentClientStatus);
