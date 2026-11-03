@@ -962,6 +962,8 @@ impl SharedTunnelStateValues {
     /// sweep ahead of the close strands every forwarded port on the exit
     /// being left until that exit reaps the session (forum topic 226).
     fn reset_routes(&mut self) {
+        use talpid_types::ErrorExt;
+
         if let Err(error) = self.route_manager.clear_routes() {
             log::error!("{}", error.display_chain_with_msg("Failed to clear routes"));
         }
