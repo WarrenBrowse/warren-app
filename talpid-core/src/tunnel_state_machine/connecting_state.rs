@@ -460,28 +460,8 @@ impl ConnectingState {
         }
     }
 
-    fn reset_routes(
-        #[cfg(target_os = "windows")] shared_values: &SharedTunnelStateValues,
-        #[cfg(not(target_os = "windows"))] shared_values: &mut SharedTunnelStateValues,
-    ) {
-        if let Err(error) = shared_values.route_manager.clear_routes() {
-            log::error!("{}", error.display_chain_with_msg("Failed to clear routes"));
-        }
-
-        // Warren split routes are out-of-band from the `RouteManager`
-        // above, so `clear_routes()` cannot remove them. See
-        // `force_route_cleanup`.
-        talpid_warren_tunnel::force_route_cleanup();
-        #[cfg(target_os = "linux")]
-        if let Err(error) = shared_values
-            .runtime
-            .block_on(shared_values.route_manager.clear_routing_rules())
-        {
-            log::error!(
-                "{}",
-                error.display_chain_with_msg("Failed to clear routing rules")
-            );
-        }
+    fn reset_routes(shared_values: &mut SharedTunnelStateValues) {
+        shared_values.reset_routes();
     }
 
     fn disconnect(
@@ -489,8 +469,7 @@ impl ConnectingState {
         shared_values: &mut SharedTunnelStateValues,
         after_disconnect: AfterDisconnect,
     ) -> EventConsequence {
-        Self::reset_routes(shared_values);
-
+        // The routes go once the tunnel has closed (`DisconnectingState`).
         EventConsequence::NewState(DisconnectingState::enter(
             shared_values,
             self.tunnel_close_tx,

@@ -952,6 +952,32 @@ struct SharedTunnelStateValues {
 }
 
 impl SharedTunnelStateValues {
+    /// Removes the tunnel's routes: the `RouteManager`'s, and the Warren split
+    /// routes, which live out-of-band from it (see `force_route_cleanup`).
+    ///
+    /// Only ever called once the tunnel has closed. A live Warren tunnel
+    /// still needs its split on the way out: its teardown deletes the
+    /// forwarded ports at the exit through the tunnel, and on Windows the
+    /// tunnel gateway is reachable through the split routes alone, so a
+    /// sweep ahead of the close strands every forwarded port on the exit
+    /// being left until that exit reaps the session (forum topic 226).
+    fn reset_routes(&mut self) {
+        if let Err(error) = self.route_manager.clear_routes() {
+            log::error!("{}", error.display_chain_with_msg("Failed to clear routes"));
+        }
+        talpid_warren_tunnel::force_route_cleanup();
+        #[cfg(target_os = "linux")]
+        if let Err(error) = self
+            .runtime
+            .block_on(self.route_manager.clear_routing_rules())
+        {
+            log::error!(
+                "{}",
+                error.display_chain_with_msg("Failed to clear routing rules")
+            );
+        }
+    }
+
     /// Updates the lockdown mode and keeps the firewall's reboot-persistence
     /// in sync with it.
     ///

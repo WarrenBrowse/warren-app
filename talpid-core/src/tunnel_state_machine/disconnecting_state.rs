@@ -188,6 +188,9 @@ impl TunnelState for DisconnectingState {
         match result {
             EventResult::Command(command) => self.handle_commands(command, shared_values),
             EventResult::Close(result) => {
+                // Not before: the tunnel's teardown hands its forwarded ports
+                // back to the exit through its own routes.
+                shared_values.reset_routes();
                 let block_reason = result.unwrap_or(None);
                 NewState(self.after_disconnect(block_reason, shared_values))
             }
