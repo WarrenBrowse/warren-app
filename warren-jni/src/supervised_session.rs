@@ -451,6 +451,22 @@ mod tests {
         }
     }
 
+    /// Await the recovery counter reaching `at_least` (or fail the test). The
+    /// engine publishes the new session before it fires the redial observer,
+    /// so `Connected` can be observed while the bump is still in flight: a
+    /// single read right after the status edge is a race, which CI lost once.
+    async fn await_recoveries(at_least: i32, what: &str) {
+        let deadline = tokio::time::Instant::now() + Duration::from_secs(10);
+        while RECOVERIES.load(Ordering::Relaxed) < at_least {
+            assert!(
+                tokio::time::Instant::now() < deadline,
+                "{what}: the recovery counter stayed {}",
+                RECOVERIES.load(Ordering::Relaxed)
+            );
+            tokio::time::sleep(Duration::from_millis(5)).await;
+        }
+    }
+
     /// The Kotlin-facing status must walk Connected -> Reconnecting ->
     /// Connected across an exit that dies and comes back, driven by the real
     /// supervisor and the real supervised pumps: that IS the contract Kotlin
@@ -519,10 +535,11 @@ mod tests {
 
         exit.restart();
         await_status(&STATUS, SessionStatus::Connected, "exit restarted").await;
-        assert!(
-            RECOVERIES.load(Ordering::Relaxed) >= 1,
-            "the redial that landed must bump the auto-recovery counter"
-        );
+        await_recoveries(
+            1,
+            "the redial that landed must bump the auto-recovery counter",
+        )
+        .await;
         assert!(
             exit.accepted.load(Ordering::Relaxed) >= 2,
             "the supervisor must have dialed the exit again, not reused the dead session"
