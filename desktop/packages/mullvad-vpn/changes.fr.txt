@@ -1,7 +1,3 @@
-### Corrigé
-- [Windows, macOS, Linux] Afficher le port forwardé dès l'ouverture de l'application quand le VPN
-  l'a obtenu avant elle, comme au démarrage de l'ordinateur. Le port restait caché jusqu'à son
-  changement suivant, en général un changement de pays, alors qu'il était ouvert.
-- [Windows] Rendre vraiment le port forwardé au serveur lors d'un changement de pays. La restitution
-  n'atteignait pas le serveur, qui gardait le port une trentaine de secondes, et le pays suivant le
-  refusait pendant ce temps.
+### Modifié
+- [Windows, macOS, Linux, Android] Redessiner le paysage de plaine affiché quand le VPN est
+  déconnecté, et le terrier au premier plan de l'écran de connexion.

@@ -50,6 +50,11 @@ extragerea se face după numărul de versiune. Prefixul de platformă (`[macOS]`
 - [iOS] Păstrarea aceleiași identități de sesiune de la o pornire a VPN-ului la următoarea, astfel
   încât tunelul își regăsește adresa și portul ales după o repornire.
 
+## [1.1.57] - 2026-11-09
+### Modificat
+- [Windows, macOS, Linux, Android] Redesenarea peisajului de câmpie afișat cât timp VPN-ul este
+  deconectat și a vizuinii din primul plan al ecranului de conectare.
+
 ## [1.1.56] - 2026-11-03
 ### Corectat
 - [Windows, macOS, Linux] Afișarea portului redirecționat imediat la deschiderea aplicației atunci

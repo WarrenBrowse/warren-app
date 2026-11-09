@@ -53,6 +53,11 @@ par l'application, gardez-le tel quel.
 - [iOS] Garder la même identité de session d'un démarrage du VPN au suivant, pour que le tunnel
   retrouve son adresse et le port choisi après un redémarrage.
 
+## [1.1.57] - 2026-11-09
+### Modifié
+- [Windows, macOS, Linux, Android] Redessiner le paysage de plaine affiché quand le VPN est
+  déconnecté, et le terrier au premier plan de l'écran de connexion.
+
 ## [1.1.56] - 2026-11-03
 ### Corrigé
 - [Windows, macOS, Linux] Afficher le port forwardé dès l'ouverture de l'application quand le VPN

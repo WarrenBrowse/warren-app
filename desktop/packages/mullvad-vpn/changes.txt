@@ -1,7 +1,3 @@
-### Fixed
-- [Windows, macOS, Linux] Show the forwarded port as soon as the app opens when the VPN got it
-  first, as it does when the computer starts. The port stayed hidden until it next changed, usually
-  at a change of country, although it was open.
-- [Windows] Give the forwarded port back to the server when changing country. The release never
-  reached the server, which kept the port for about thirty seconds, and the next country refused it
-  during that time.
+### Changed
+- [Windows, macOS, Linux, Android] Redraw the plain landscape shown while the VPN is disconnected,
+  and the burrow in the foreground of the connect screen.

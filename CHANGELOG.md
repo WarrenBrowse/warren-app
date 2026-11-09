@@ -58,6 +58,11 @@ Line wrap the file at 100 chars.                                              Th
 - [iOS] Keep the same session identity from one start of the VPN to the next, so the tunnel gets
   its address and its chosen forwarded port back after a restart.
 
+## [1.1.57] - 2026-11-09
+### Changed
+- [Windows, macOS, Linux, Android] Redraw the plain landscape shown while the VPN is disconnected,
+  and the burrow in the foreground of the connect screen.
+
 ## [1.1.56] - 2026-11-03
 ### Fixed
 - [Windows, macOS, Linux] Show the forwarded port as soon as the app opens when the VPN got it
