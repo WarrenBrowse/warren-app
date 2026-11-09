@@ -24,22 +24,24 @@ enum SceneryLayout {
     static let feetRow: CGFloat = 1124
 
     /// The first canvas row the burrow layer paints fully opaque across the whole width
-    /// (`terrier.png`, first row whose every column has alpha >= 250, contiguous to the last row).
-    /// Everything below it is one uniform watercolour meadow, which is why scaling only those rows
-    /// continues the ground with no seam and no repetition.
-    static let groundRow: CGFloat = 1301
+    /// (`terrier.png`, first row whose every column has alpha >= 250, contiguous to the last row;
+    /// Terrier V32 misses it at row 1301 by its last two columns). Everything below it is one
+    /// uniform watercolour meadow, which is why scaling only those rows continues the ground with
+    /// no seam and no repetition.
+    static let groundRow: CGFloat = 1302
 
     /// The last canvas row of the meadow before the wash runs out into bare paper: the band's row
-    /// mean climbs 34 levels of 255 over rows 1681 to 1705. The band is scaled so this row lands on
-    /// the screen's bottom edge and the paper rows fall below it.
+    /// mean stays within 34 levels of 255 of it down to row 1701, then climbs to paper. The band is
+    /// scaled so this row lands on the screen's bottom edge and the paper rows fall below it.
     static let meadowEndRow: CGFloat = 1670
 
     /// Canvas columns dropped from each side of the stretched band. The watercolour fades into
-    /// paper at the canvas edges, which the blurred band this replaced used to hide: measured on a
-    /// 1080x2400 screen, the leftmost screen column read 1.60 times the mid-frame brightness, and
-    /// dropping 20 columns brings it to 0.98. The right side fades over about 60 columns and is the
+    /// paper at the canvas edges, which the blurred band this replaced used to hide. On Terrier V32
+    /// the band's column brightness first falls to 1.09 times the mid-frame mean at column 64, and
+    /// on a 1080x2400 screen dropping 20 columns left the leftmost one at 1.24, a pale strip down
+    /// the meadow, against 1.06 with 64. The right side fades over about 60 columns and is the
     /// hill's own sunlit edge rather than an artifact, so it is left alone.
-    static let bandOverscanColumns: CGFloat = 20
+    static let bandOverscanColumns: CGFloat = 64
 
     /// The top of the country flag: the highest thing on the canvas that has to stay on screen.
     /// Measured on the flag's own fabric (Finland rows 463 to 531), with headroom, and the other

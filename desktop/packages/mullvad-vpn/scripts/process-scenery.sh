@@ -16,14 +16,19 @@
 #
 # Output width 1140 = 3x the 380px window, so the art stays crisp on HiDPI.
 #
-# Usage: process-scenery.sh [SRC_DIR]
+# Usage: process-scenery.sh [SRC_DIR [SLUG...]]
 #   SRC_DIR defaults to <repo>/new-da/calques (the master art, git-ignored).
+#   SLUGs restrict the run to those layers, for a delivery that replaces only
+#   some masters: the others keep their shipped files rather than going through
+#   a second lossy encode from a WebP. Each named layer is still emitted for all
+#   three clients.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PKG_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 REPO_DIR="$(cd "$PKG_DIR/../../.." && pwd)"
 SRC_DIR="${1:-$REPO_DIR/new-da/calques}"
+ONLY_SLUGS=" ${*:2} "
 
 DESKTOP_DIR="$PKG_DIR/assets/images/scenery"
 ANDROID_DIR="$REPO_DIR/android/lib/ui/resource/src/main/res/drawable-nodpi"
@@ -58,6 +63,9 @@ mkdir -p "$DESKTOP_DIR" "$ANDROID_DIR"
 
 echo "Encoding scenery from $SRC_DIR"
 while IFS='|' read -r master slug imageset kind; do
+  if [ "$ONLY_SLUGS" != "  " ] && [[ "$ONLY_SLUGS" != *" $slug "* ]]; then
+    continue
+  fi
   src="$SRC_DIR/$master"
   [ -f "$src" ] || { echo "missing master: $src" >&2; exit 1; }
 

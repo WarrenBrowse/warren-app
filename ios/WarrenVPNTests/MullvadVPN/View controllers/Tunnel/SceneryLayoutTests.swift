@@ -55,6 +55,9 @@ final class SceneryLayoutTests: XCTestCase {
         XCTAssertEqual(SceneryLayout.canvasHeight, canvas[1])
         XCTAssertEqual(SceneryLayout.feetRow, try number(fixture, "feet_row"))
         XCTAssertEqual(SceneryLayout.groundRow, try number(fixture, "ground_row"))
+        XCTAssertEqual(SceneryLayout.meadowEndRow, try number(fixture, "meadow_end_row"))
+        XCTAssertEqual(
+            SceneryLayout.bandOverscanColumns, try number(fixture, "band_overscan_columns"))
         XCTAssertEqual(SceneryLayout.gap, try number(fixture, "gap_dp"))
         XCTAssertEqual(SceneryLayout.maxCanvasPan, try number(fixture, "max_canvas_pan_dp"))
         XCTAssertEqual(SceneryLayout.flagTopRow, try number(fixture, "flag_top_row"))

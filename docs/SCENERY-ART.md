@@ -16,7 +16,19 @@ designer as a numbered version (V14, V15, ...) of full-canvas masters.
    entry for a new country (`slug`, `role: "country"`, its ISO `country` code,
    its English relay-list `countryName`, `master`, `iosImageset`). Then run
    `process-scenery.sh` with no arguments; it encodes exactly the layers that
-   table lists.
+   table lists. When a delivery replaces only some masters (the plain and the
+   burrow, say) and the others are not at hand, name the layers to encode:
+   `process-scenery.sh <src-dir> plaine terrier`. The other layers keep their
+   shipped files instead of being re-encoded from a WebP, and each named layer
+   is still emitted for all three clients.
+
+   A new burrow layer moves the rows the mobile layout keys on: the first
+   fully opaque row (`ground_row`), the end of the meadow (`meadow_end_row`) and
+   the paper fade at the left edge (`band_overscan_columns`). Measure them on the
+   encoded `terrier.webp` with the definitions in
+   `fixtures/client-rules/scenery_layout.json`, update that fixture's values,
+   provenance and case expectations, then the constants of `SceneryLayout.kt`
+   and `SceneryLayout.swift`. Both test suites pin the constants to the fixture.
 3. `process-scenery.sh` ends by running `scripts/gen-scenery-tables.mjs`, which
    rewrites the `GENERATED scenery table` blocks of the Android and iOS
    resolvers (`ConnectionPhase.kt`, `MapViewController.swift`: countries by ISO

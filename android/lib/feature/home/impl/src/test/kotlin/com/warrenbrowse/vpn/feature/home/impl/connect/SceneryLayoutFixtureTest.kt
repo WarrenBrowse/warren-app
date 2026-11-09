@@ -39,6 +39,11 @@ class SceneryLayoutFixtureTest {
         assertEquals(SceneryLayout.CANVAS_HEIGHT, canvas[1])
         assertEquals(SceneryLayout.FEET_ROW, fixture.float("feet_row"))
         assertEquals(SceneryLayout.GROUND_ROW, fixture.float("ground_row"))
+        assertEquals(SceneryLayout.MEADOW_END_ROW, fixture.float("meadow_end_row"))
+        assertEquals(
+            SceneryLayout.BAND_OVERSCAN_COLUMNS,
+            fixture.float("band_overscan_columns"),
+        )
         assertEquals(SceneryLayout.GAP_DP, fixture.float("gap_dp"))
         assertEquals(SceneryLayout.MAX_CANVAS_PAN_DP, fixture.float("max_canvas_pan_dp"))
         assertEquals(SceneryLayout.FLAG_TOP_ROW, fixture.float("flag_top_row"))

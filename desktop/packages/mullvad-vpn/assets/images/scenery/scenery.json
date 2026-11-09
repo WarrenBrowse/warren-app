@@ -4,13 +4,13 @@
     {
       "slug": "plaine",
       "role": "plain",
-      "master": "INTERFACE PLAINE V15.jpg",
+      "master": "ACCUEIL V33.jpg",
       "iosImageset": "SceneryPlaine"
     },
     {
       "slug": "terrier",
       "role": "burrow",
-      "master": "INTERFACE TERRIER V15.png",
+      "master": "Terrier V32.png",
       "iosImageset": "SceneryTerrier"
     },
     {
