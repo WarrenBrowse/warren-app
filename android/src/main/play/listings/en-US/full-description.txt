@@ -1,29 +1,36 @@
-Free the internet from data collection with Warren VPN, a service that helps keep your online activity, identity, and location private. Plans start at a few euros per month, with no recurring billing and no account to create.
+Warren VPN routes your traffic through an encrypted tunnel to a Warren server, then on to the site you visit. Sites see the server's address instead of yours. Your internet provider sees that you use Warren, not what you do online.
 
-<b>Get started</b>
+NO ACCOUNT, NO EMAIL
+• There is no account to create: no email, no phone number, no name.
+• The app creates a wallet for you, protected by a 12-word recovery phrase that only you hold. It is your only credential: write it down and keep it offline.
+• Your access is prepaid time attached to that wallet. 7 EUR per month, up to 5 devices at once.
 
-1. Install the app.
-2. Create a wallet. Warren generates a 12-word recovery phrase that is your only credential. Write it down and keep it offline.
-3. Add a subscription from our website or redeem a voucher.
+NO ACTIVITY LOGS
+• Warren keeps no activity logs: we never record the sites you visit or your DNS queries.
+• Our servers run from memory only (RAM-only), rebuilt from a read-only image.
+• Warren is operated by WarrenBrowse SRL, a company established in Romania.
 
-<b>NO ACCOUNTS, NO ACTIVITY LOGS</b>
-&#8226;&#8195;There is no account to create: no email, no phone number, no personal info. Your identity is a recovery phrase you alone control.
-&#8226;&#8195;We keep no activity logs.
-&#8226;&#8195;Pay as you go: a subscription is tied to your wallet, not to who you are.
-&#8226;&#8195;Reach a global network of VPN servers.
-&#8226;&#8195;The app uses the Warren QUIC tunnel, which connects fast and is built for unstable mobile networks.
+LOOKS LIKE ORDINARY WEB TRAFFIC
+Warren tunnels run over QUIC and look like ordinary HTTP/3 browsing on port 443. That keeps the connection fast and steady on mobile networks, and hard to tell apart from a regular website visit. This mode is always on, so every Warren user looks the same on the network.
 
-<b>ALWAYS-ON OBFUSCATION</b>
-Warren tunnels are disguised as ordinary browser traffic (HTTP/3 mimicry over UDP 443). This makes Warren hard to detect or block on restrictive networks, and it cannot be turned off, so every Warren user looks the same on the wire.
+FEATURES
+• Kill switch and Always-on VPN support: traffic stays blocked if the tunnel drops.
+• Split tunneling: choose apps that bypass the VPN.
+• Port forwarding included.
+• DAITA, which pads and shapes traffic against traffic analysis.
+• Optional DNS content blocking (ads, trackers, malware).
+• Servers in several countries.
 
-<b>HOW DOES WARREN VPN WORK?</b>
-With Warren VPN, your traffic travels through an encrypted tunnel to one of our servers and then onward to the website you are visiting. Websites see our server's address instead of yours. Your internet service provider sees only that you are connected to Warren, not what you do online.
-It also means the third-party trackers embedded in the websites you visit cannot read your real IP address and use it to follow you from one site to another.
+OPEN SOURCE
+The app is open source (GPL-3.0) and its tunnel engine is open source (AGPL-3.0). You can read the code that runs on your phone.
 
-<b>FREE THE INTERNET FROM MASS SURVEILLANCE AND DATA COLLECTION</b>
-A free and open society is one where people have the right to privacy. That is why we fight for a free internet: free from mass surveillance and censorship, and free from data markets where your personal information is for sale. Warren VPN is our contribution to that fight.
+HOW TO START
+1. Install the app and create your wallet.
+2. Write down your recovery phrase.
+3. Add time in the app or on warren.ro, or redeem a voucher.
 
-<b>TELEMETRY AND CRASH REPORTS</b>
-The app collects a very minimal amount of telemetry and never ties it to your wallet, IP address, or other identifiable information. App logs are never sent automatically: you send them explicitly if you choose to report a problem. App version checks run periodically to tell the app whether an upgrade is available and whether the running version is still supported.
+PRIVACY
+The app collects a very minimal amount of technical telemetry and never ties it to your wallet, your IP address or anything that identifies you. App logs leave your device only if you send them yourself to report a problem. The app checks for updates periodically. If you use split tunneling, the app reads the list of installed apps on the device only to show it to you; that list never leaves the device.
 
-If the split tunneling feature is used, the app queries your system for the list of installed applications. This list is only read inside the split tunneling view and is never sent from the device.
+Privacy policy: https://warren.ro/en/privacy
+Support: support@warrenbrowse.com
