@@ -314,7 +314,7 @@ const LINUX_ELECTRON_FUSES = {
 function newConfig() {
   return {
     appId: productEnv.appId,
-    copyright: '© 2026 WarrenBrowse SRL',
+    copyright: '© 2026 warrenBrowse SRL',
     productName: productEnv.productName,
     publish: null,
     // Register the `warren://` deep-link scheme so the OS routes the

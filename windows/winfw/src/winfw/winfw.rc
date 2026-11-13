@@ -8,11 +8,11 @@ BLOCK "StringFileInfo"
 BEGIN
     BLOCK "040904E4"
     BEGIN
-        VALUE "CompanyName", "WarrenBrowse SRL"
+        VALUE "CompanyName", "warrenBrowse SRL"
         VALUE "FileDescription", "Warren VPN firewall module"
         VALUE "FileVersion", PRODUCT_VERSION
         VALUE "InternalName", "winfw"
-        VALUE "LegalCopyright", "(c) 2026 WarrenBrowse SRL"
+        VALUE "LegalCopyright", "(c) 2026 warrenBrowse SRL"
         VALUE "OriginalFilename", "winfw.dll"
         VALUE "ProductName", "Warren VPN"
         VALUE "ProductVersion", PRODUCT_VERSION

@@ -9,7 +9,7 @@ license.workspace = true
 publish = false
 
 [package.metadata.winres]
-LegalCopyright = "(c) 2026 WarrenBrowse SRL"
+LegalCopyright = "(c) 2026 warrenBrowse SRL"
 
 [build-dependencies]
 anyhow = { workspace = true }

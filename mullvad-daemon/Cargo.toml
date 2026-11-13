@@ -8,8 +8,8 @@ license.workspace = true
 
 [package.metadata.winres]
 ProductName = "Warren VPN"
-CompanyName = "WarrenBrowse SRL"
-LegalCopyright = "(c) 2026 WarrenBrowse SRL"
+CompanyName = "warrenBrowse SRL"
+LegalCopyright = "(c) 2026 warrenBrowse SRL"
 InternalName = "warren-daemon"
 OriginalFilename = "warren-daemon.exe"
 
@@ -22,8 +22,8 @@ extended-description = "Headless (no GUI) Warren VPN: the warren daemon and CLI 
 # second fighting the other over a live kill switch, so name all of them: the
 # headless package is one Warren daemon per machine.
 conflicts = ["warren-vpn", "warren-vpn-beta", "warren-vpn-staging", "mullvad-vpn"]
-maintainer = "WarrenBrowse SRL <hello@warrenbrowse.com>"
-copyright = "2026, WarrenBrowse SRL <hello@warrenbrowse.com>"
+maintainer = "warrenBrowse SRL <hello@warrenbrowse.com>"
+copyright = "2026, warrenBrowse SRL <hello@warrenbrowse.com>"
 license-file = ["../LICENSE.md", "0"]
 section = "net"
 priority = "optional"
@@ -54,7 +54,7 @@ assets = [
 [package.metadata.generate-rpm]
 name = "warren-vpn-daemon"
 summary = "Warren VPN daemon and CLI (headless, no GUI). Runs and controls the VPN tunnels."
-vendor = "WarrenBrowse SRL <hello@warrenbrowse.com>"
+vendor = "warrenBrowse SRL <hello@warrenbrowse.com>"
 # Disabled: the headless packages are built on a Debian-based runner that lacks
 # rpm's find-requires, which makes auto-req = "yes" fail and drops the .rpm.
 auto-req = "no"

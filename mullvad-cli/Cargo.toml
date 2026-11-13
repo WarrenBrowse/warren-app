@@ -8,8 +8,8 @@ license.workspace = true
 
 [package.metadata.winres]
 ProductName = "Warren VPN"
-CompanyName = "WarrenBrowse SRL"
-LegalCopyright = "(c) 2026 WarrenBrowse SRL"
+CompanyName = "warrenBrowse SRL"
+LegalCopyright = "(c) 2026 warrenBrowse SRL"
 InternalName = "warren-cli"
 OriginalFilename = "warren.exe"
 

@@ -256,12 +256,12 @@ Then check the run logs at https://github.com/WarrenBrowse/warren-app/actions. E
 
 If a sign step still skips, double-check the secret name spelling (GitHub is case-sensitive).
 
-## Publisher identity: WarrenBrowse SRL
+## Publisher identity: warrenBrowse SRL
 
-WarrenBrowse SRL (Romanian trade register J2026061571004, CUI 55817592, D-U-N-S 303237989) is
+warrenBrowse SRL (Romanian trade register J2026061571004, CUI 55817592, D-U-N-S 303237989) is
 the manufacturer of the client under the EU Cyber Resilience Act (decision of 2026-10-13, Lexter
-compliance report). Every place that names a publisher carries that spelling, the one its Play,
-Stripe and Partner Center accounts use:
+compliance report). `warrenBrowse SRL` is the company's official casing (the trade register prints
+the name in capitals, which carries no casing), and every place that names a publisher uses it:
 
 - the Windows PE resources: `CompanyName` and `LegalCopyright` in the `winres` block of every
   binary crate and in `windows/winfw/src/winfw/winfw.rc`;
@@ -277,7 +277,7 @@ attestation-signing task. The code-signing identities above are issued in the co
 
 ## Total checklist before tagging beta
 
-- [ ] Apple Developer Program active (WarrenBrowse SRL)
+- [ ] Apple Developer Program active (warrenBrowse SRL)
 - [ ] macOS `.p12` Developer ID Application + Installer + notarytool credentials
 - [ ] Windows OV `.pfx` certificate
 - [ ] iOS Distribution certificate + provisioning profile + App Store Connect API key

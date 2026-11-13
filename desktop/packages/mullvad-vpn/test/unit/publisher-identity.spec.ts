@@ -5,8 +5,8 @@ import { describe, expect, it } from 'vitest';
 // Windows shows CompanyName in the UAC and file-properties dialogs, and store
 // reviewers compare it, the iOS organization and the package author with the
 // developer account that submits the build. All of them name the legal entity
-// under the spelling its store accounts carry.
-const PUBLISHER = 'WarrenBrowse SRL';
+// under its official casing.
+const PUBLISHER = 'warrenBrowse SRL';
 
 const repoRoot = path.resolve(__dirname, '../../../../..');
 

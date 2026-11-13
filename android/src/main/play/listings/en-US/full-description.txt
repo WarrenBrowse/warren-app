@@ -8,7 +8,7 @@ NO ACCOUNT, NO EMAIL
 NO ACTIVITY LOGS
 • Warren keeps no activity logs: we never record the sites you visit or your DNS queries.
 • Our servers run from memory only (RAM-only), rebuilt from a read-only image.
-• Warren is operated by WarrenBrowse SRL, a company established in Romania.
+• Warren is operated by warrenBrowse SRL, a company established in Romania.
 
 LOOKS LIKE ORDINARY WEB TRAFFIC
 Warren tunnels run over QUIC and look like ordinary HTTP/3 browsing on port 443. That keeps the connection fast and steady on mobile networks, and hard to tell apart from a regular website visit. This mode is always on, so every Warren user looks the same on the network.

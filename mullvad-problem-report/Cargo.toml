@@ -12,8 +12,8 @@ path = "src/main.rs"
 
 [package.metadata.winres]
 ProductName = "Warren VPN"
-CompanyName = "WarrenBrowse SRL"
-LegalCopyright = "(c) 2026 WarrenBrowse SRL"
+CompanyName = "warrenBrowse SRL"
+LegalCopyright = "(c) 2026 warrenBrowse SRL"
 InternalName = "warren-problem-report"
 OriginalFilename = "warren-problem-report.exe"
 
