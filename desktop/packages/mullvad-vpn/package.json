@@ -6,7 +6,7 @@
   "description": "Warren VPN client",
   "main": "build/main.js",
   "author": {
-    "name": "Warren contributors",
+    "name": "WarrenBrowse SRL",
     "email": "support@warrenbrowse.com"
   },
   "type": "module",

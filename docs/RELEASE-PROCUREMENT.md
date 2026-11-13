@@ -256,25 +256,28 @@ Then check the run logs at https://github.com/WarrenBrowse/warren-app/actions. E
 
 If a sign step still skips, double-check the secret name spelling (GitHub is case-sensitive).
 
-## Publisher identity: warrenBrowse SRL, applied once the company is registered
+## Publisher identity: WarrenBrowse SRL
 
-warrenBrowse SRL is the manufacturer of the client under the EU Cyber Resilience Act
-(decision of 2026-10-13, Lexter compliance report). The day the SRL is registered, every place
-that names a publisher switches to it in one commit, together with the code-signing identities
-above:
+WarrenBrowse SRL (Romanian trade register J2026061571004, CUI 55817592, D-U-N-S 303237989) is
+the manufacturer of the client under the EU Cyber Resilience Act (decision of 2026-10-13, Lexter
+compliance report). Every place that names a publisher carries that spelling, the one its Play,
+Stripe and Partner Center accounts use:
 
-- `windows/winfw/src/winfw/winfw.rc` lines 11 and 15 (`CompanyName`, `LegalCopyright`, which
-  still read "Mullvad VPN AB");
-- the `author` and publisher fields of `desktop/packages/mullvad-vpn/package.json` and of the
-  electron-builder configuration;
-- the iOS `project.pbxproj` organization name and the Play and App Store listings.
+- the Windows PE resources: `CompanyName` and `LegalCopyright` in the `winres` block of every
+  binary crate and in `windows/winfw/src/winfw/winfw.rc`;
+- the `author` of `desktop/package.json` and `desktop/packages/mullvad-vpn/package.json`, and
+  the electron-builder `copyright`;
+- the Linux package `maintainer`, `copyright` and `vendor` of `mullvad-daemon`;
+- the iOS `ORGANIZATIONNAME` and `NSHumanReadableCopyright`.
 
-They stay unchanged until then: naming a company that does not exist yet on a signed binary
-would be a false statement. Tracked in `warren-core/PROD-READINESS.md` section 8.
+`test/unit/publisher-identity.spec.ts` (desktop vitest suite) pins every one of them. The
+prebuilt kernel drivers under `dist-assets/binaries/` (split tunnel, wireguard-nt) keep their
+upstream resources: they are signed by their vendor, and rebuilding them is a separate
+attestation-signing task. The code-signing identities above are issued in the company name.
 
 ## Total checklist before tagging beta
 
-- [ ] Apple Developer Program active (warrenBrowse SRL)
+- [ ] Apple Developer Program active (WarrenBrowse SRL)
 - [ ] macOS `.p12` Developer ID Application + Installer + notarytool credentials
 - [ ] Windows OV `.pfx` certificate
 - [ ] iOS Distribution certificate + provisioning profile + App Store Connect API key
