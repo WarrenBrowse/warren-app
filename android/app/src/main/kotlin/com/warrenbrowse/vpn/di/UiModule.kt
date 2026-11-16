@@ -49,8 +49,6 @@ import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.lib.usecase.LastKnownLocationUseCase
 import com.warrenbrowse.vpn.lib.usecase.SelectedLocationTitleUseCase
 import com.warrenbrowse.vpn.lib.usecase.SystemVpnSettingsAvailableUseCase
-import com.warrenbrowse.vpn.lib.usecase.DeviceRevocationUseCase
-import com.warrenbrowse.vpn.lib.usecase.WarrenLogoutUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.AccountExpiryNotificationUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.Android16UpdateWarningUseCase
 import com.warrenbrowse.vpn.lib.usecase.inappnotification.ConnectingStuckNotificationUseCase
@@ -214,11 +212,6 @@ val uiModule = module {
     }
 
     single { SystemVpnSettingsAvailableUseCase(androidContext()) }
-    single { WarrenLogoutUseCase(tunnelState = get(), disconnect = get(), wallet = get()) }
-    single {
-        val logOut = get<WarrenLogoutUseCase>()
-        DeviceRevocationUseCase(devices = get(), wallet = get(), logOut = { logOut() })
-    }
     // SelectedLocationTitleUseCase + LastKnownLocationUseCase are referenced by
     // ConnectViewModel.
     single { SelectedLocationTitleUseCase(get()) }

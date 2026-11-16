@@ -1,6 +1,5 @@
 package com.warrenbrowse.vpn.di
 
-import kotlinx.coroutines.flow.map
 import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
@@ -8,18 +7,20 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.datastore.core.DataStore
 import androidx.datastore.dataStore
 import com.warrenbrowse.vpn.BuildConfig
+import com.warrenbrowse.vpn.app.announcements.WarrenAnnouncementPoller
+import com.warrenbrowse.vpn.app.connect.HeldVoucherRedeemer
+import com.warrenbrowse.vpn.app.connect.PurchaseVoucherKeeper
 import com.warrenbrowse.vpn.app.connect.RelayCatalog
 import com.warrenbrowse.vpn.app.connect.WarrenConnectUseCase
-import com.warrenbrowse.vpn.app.connect.WarrenIncidentReportUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenDisconnectUseCase
+import com.warrenbrowse.vpn.app.connect.WarrenIncidentReportUseCase
+import com.warrenbrowse.vpn.app.connect.WarrenJniPurchaseVoucherBridge
 import com.warrenbrowse.vpn.app.connect.WarrenReconnectUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenSubscriptionUseCase
 import com.warrenbrowse.vpn.app.connect.WarrenTunnelConfigBuilder
 import com.warrenbrowse.vpn.app.connectivity.WarrenConnectivityMonitor
 import com.warrenbrowse.vpn.app.forum.ForumAttachController
 import com.warrenbrowse.vpn.app.forum.ForumDigestPoller
-import com.warrenbrowse.vpn.app.announcements.WarrenAnnouncementPoller
-import com.warrenbrowse.vpn.app.notices.WarrenNoticePoller
 import com.warrenbrowse.vpn.app.forum.ForumEventsJournal
 import com.warrenbrowse.vpn.app.forum.ForumJournal
 import com.warrenbrowse.vpn.app.forum.ForumLoginController
@@ -29,7 +30,9 @@ import com.warrenbrowse.vpn.app.forum.WarrenForumCodeUseCase
 import com.warrenbrowse.vpn.app.forum.WarrenForumLoginUseCase
 import com.warrenbrowse.vpn.app.forum.WarrenSupportReporterImpl
 import com.warrenbrowse.vpn.app.network.WarrenNetworkInfoUseCase
+import com.warrenbrowse.vpn.app.notices.WarrenNoticePoller
 import com.warrenbrowse.vpn.app.service.WarrenQuinnStateProxy
+import com.warrenbrowse.vpn.app.standing.WarrenAccountStandingPoller
 import com.warrenbrowse.vpn.feature.language.impl.LanguageRepository
 import com.warrenbrowse.vpn.jni.WarrenJniBridgeImpl
 import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
@@ -44,41 +47,39 @@ import com.warrenbrowse.vpn.lib.pushnotification.forum.ForumActivityNotification
 import com.warrenbrowse.vpn.lib.pushnotification.standing.AccountStrikeNotificationProvider
 import com.warrenbrowse.vpn.lib.pushnotification.tunnelstate.TunnelStateNotificationProvider
 import com.warrenbrowse.vpn.lib.repository.AccountRepository
+import com.warrenbrowse.vpn.lib.repository.AccountStrikeAlerts
+import com.warrenbrowse.vpn.lib.repository.AndroidKeystoreBlobSealer
 import com.warrenbrowse.vpn.lib.repository.AndroidKeystoreWalletRepository
 import com.warrenbrowse.vpn.lib.repository.ConnectionProxy
 import com.warrenbrowse.vpn.lib.repository.DeviceRepository
-import com.warrenbrowse.vpn.lib.repository.AccountStrikeAlerts
 import com.warrenbrowse.vpn.lib.repository.ForumActivityAlerts
-import com.warrenbrowse.vpn.lib.repository.WarrenAccountStandingRepository
-import com.warrenbrowse.vpn.lib.repository.WarrenAccountStandingState
-import com.warrenbrowse.vpn.lib.repository.WarrenDeviceBridge
-import com.warrenbrowse.vpn.lib.repository.WarrenStandingBridge
-import com.warrenbrowse.vpn.app.standing.WarrenAccountStandingPoller
-import com.warrenbrowse.vpn.app.connect.HeldVoucherRedeemer
-import com.warrenbrowse.vpn.app.connect.PurchaseVoucherKeeper
-import com.warrenbrowse.vpn.app.connect.WarrenJniPurchaseVoucherBridge
-import com.warrenbrowse.vpn.lib.repository.AndroidKeystoreBlobSealer
-import com.warrenbrowse.vpn.lib.repository.PendingVoucherStore
-import com.warrenbrowse.vpn.lib.repository.SealedPendingVoucherStore
-import com.warrenbrowse.vpn.lib.repository.SharedPreferencesBlobShelf
 import com.warrenbrowse.vpn.lib.repository.ForumActivityOpenRequests
 import com.warrenbrowse.vpn.lib.repository.ForumActivityRepository
 import com.warrenbrowse.vpn.lib.repository.ForumActivityState
 import com.warrenbrowse.vpn.lib.repository.ForumIdentityRepository
+import com.warrenbrowse.vpn.lib.repository.ForumIdentityWalletBinding
 import com.warrenbrowse.vpn.lib.repository.ForumNotificationsReader
 import com.warrenbrowse.vpn.lib.repository.ForumPreflight
-import com.warrenbrowse.vpn.lib.repository.ForumIdentityWalletBinding
 import com.warrenbrowse.vpn.lib.repository.ForumSignInRequests
 import com.warrenbrowse.vpn.lib.repository.LocaleRepository
+import com.warrenbrowse.vpn.lib.repository.PendingVoucherStore
+import com.warrenbrowse.vpn.lib.repository.SealedPendingVoucherStore
+import com.warrenbrowse.vpn.lib.repository.SharedPreferencesBlobShelf
 import com.warrenbrowse.vpn.lib.repository.SharedPreferencesForumIdentityRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesMigration
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesRepository
 import com.warrenbrowse.vpn.lib.repository.UserPreferencesSerializer
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenAccountStandingRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenAccountStandingState
+import com.warrenbrowse.vpn.lib.repository.WarrenAnnouncementRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenAnnouncementState
 import com.warrenbrowse.vpn.lib.repository.WarrenAppRoutesStatusProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenAutoRecoveryProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenDeviceBridge
 import com.warrenbrowse.vpn.lib.repository.WarrenFailoverProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenHostOfflineProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenIncidentReporter
 import com.warrenbrowse.vpn.lib.repository.WarrenJniBridge
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenLockGuardProvider
@@ -86,26 +87,27 @@ import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenNetworkInfoProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenNetworkStatsProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenNetworkStatsRepository
-import com.warrenbrowse.vpn.lib.repository.WarrenAnnouncementRepository
-import com.warrenbrowse.vpn.lib.repository.WarrenAnnouncementState
 import com.warrenbrowse.vpn.lib.repository.WarrenNoticeRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenNoticeState
 import com.warrenbrowse.vpn.lib.repository.WarrenPathHealthProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenPathMetricsProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenProductFlags
-import com.warrenbrowse.vpn.lib.repository.WarrenIncidentReporter
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenStandingBridge
 import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenSupportReporter
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
+import com.warrenbrowse.vpn.lib.usecase.DeviceRevocationUseCase
+import com.warrenbrowse.vpn.lib.usecase.WarrenLogoutUseCase
 import com.warrenbrowse.vpn.repository.UserPreferences
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.map
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.createdAtStart
 import org.koin.core.module.dsl.withOptions
@@ -122,6 +124,14 @@ val appModule = module {
     single { ApiEndpointFromIntentHolder() }
     single { AccountRepository() }
     single { DeviceRepository(bridge = get(), wallet = get()) }
+    // Here rather than in uiModule: the VPN service watches for this device's
+    // revocation, and Android starts it without the activity (after an update
+    // while connected, at boot under always-on), when uiModule is not loaded.
+    single { WarrenLogoutUseCase(tunnelState = get(), disconnect = get(), wallet = get()) }
+    single {
+        val logOut = get<WarrenLogoutUseCase>()
+        DeviceRevocationUseCase(devices = get(), wallet = get(), logOut = { logOut() })
+    }
     single { UserPreferencesRepository(get(), get()) }
     // ConnectionProxy reads live tunnel state from WarrenTunnelStateProvider.
     single { ConnectionProxy(tunnelStateProvider = get()) }
