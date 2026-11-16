@@ -14,28 +14,39 @@ export const CANVAS_HEIGHT = sceneryManifest.canvas.height;
 // canvas rows into the landscape's top fill, so the join does not show.
 export const FEATHER_ROWS = 48;
 
-// The mockup's proportions (Warren VPN Accueil, 360x640): a 300px hero on a
-// 360px width, with the mockup's short fade into the page behind the status
-// pill. The clear zone ends where that fade reaches half opacity.
-export const HERO_HEIGHT_RATIO = 300 / 360;
+// The mockup's proportions (Warren VPN Accueil, 380x620): a 300px hero on a
+// 380px width, faded into the page along the mockup's soft curve behind the
+// status pill. The clear zone ends where that fade reaches half opacity.
+export const HERO_HEIGHT_RATIO = 300 / 380;
 export const HERO_MASK_STOPS: Array<[number, number]> = [
   [0, 1],
-  [0.86, 1],
-  [0.94, 0.5],
+  [0.74, 1],
+  [0.79, 0.9],
+  [0.84, 0.7],
+  [0.89, 0.45],
+  [0.94, 0.2],
+  [0.98, 0.06],
   [1, 0],
 ];
-export const CLEAR_BOTTOM_FRACTION = 0.94;
+export const CLEAR_BOTTOM_FRACTION = 0.88;
+// A phone hero takes free height up to this fraction of its width.
+export const HERO_MAX_HEIGHT_RATIO = 1.15;
+// The hero while the connection details are open (176px on the 380px window).
+export const HERO_COMPACT_RATIO = 176 / 380;
+export const COMPACT_TRANSITION_MS = 400;
+// The landscape behind the side margins of a narrowed canvas, blurred.
+export const MARGIN_BLUR_PX = 24;
 
 // The band under the clear zone, for a hero of this height.
 export function heroFade(heroHeight: number): number {
   return heroHeight * (1 - CLEAR_BOTTOM_FRACTION);
 }
 
-// The cameras, the whole burrow and Bula down to his shins while he is out,
-// which puts the cameras where the mockup draws them.
-const GROUND_SPAN = { top: 320, bottom: 995 } as const;
-// Once he is in, the skyline down to the top of the burrow.
-const SKY_BOTTOM_ROW = 760;
+// The cameras, the burrow and Bula down to his tail while he is out, which
+// puts the cameras where the mockup draws them.
+const GROUND_SPAN = { top: 320, bottom: 900 } as const;
+// Once he is in, the skyline down to below the foot of its flag.
+const SKY_BOTTOM_ROW = 680;
 
 export interface FramingSpan {
   top: number;
@@ -50,6 +61,9 @@ export interface FramingInput {
   // The bottom band where the art fades into the panel.
   fade: number;
   span: FramingSpan;
+  // The details are open: keep the art at full width and give its lower part
+  // to the fade rather than shrinking it to fit the span.
+  compact?: boolean;
 }
 
 export interface Frame {
@@ -62,12 +76,22 @@ export interface Frame {
   headroom: number;
 }
 
-export function frameScenery({ width, height, clearTop, fade, span }: FramingInput): Frame {
+export function frameScenery({
+  width,
+  height,
+  clearTop,
+  fade,
+  span,
+  compact,
+}: FramingInput): Frame {
   const clearBottom = height - fade;
-  const scale = Math.min(width / CANVAS_WIDTH, (clearBottom - clearTop) / (span.bottom - span.top));
+  const widthFit = width / CANVAS_WIDTH;
+  const scale = compact
+    ? widthFit
+    : Math.min(widthFit, (clearBottom - clearTop) / (span.bottom - span.top));
   const yMin = clearTop - span.top * scale;
   const yMax = clearBottom - span.bottom * scale;
-  const top = Math.min(yMax, Math.max(yMin, 0));
+  const top = compact ? yMin : Math.min(yMax, Math.max(yMin, 0));
   return {
     scale,
     left: (width - CANVAS_WIDTH * scale) / 2,

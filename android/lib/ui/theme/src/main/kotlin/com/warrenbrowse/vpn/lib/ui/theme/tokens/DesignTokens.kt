@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /** SHA-256 of design-tokens.json at generation time. */
-const val DESIGN_TOKENS_SHA256 = "9c978124d3d12942e632663d8dc969c4564d0f288587a4abf55980f0547b2f5f"
+const val DESIGN_TOKENS_SHA256 = "9e465dc53a93b5f863b9882d28fa6cd6745101e0c236dc889ad549ff7782817c"
 
 @Suppress("MagicNumber", "unused")
 object DesignTokens {
@@ -198,7 +198,20 @@ object DesignTokens {
             val HomeCancelLine = Color(0xFF936831)
             val HomeCancelText = Color(0xFFF1C17F)
             val HomeCancelHover = Color(0x1AEFB062)
-            val HomeBeta = Color(0xFFE8B65C)
+            val HomeBeta = Color(0xFFD6BB78)
+            val HomeNotice = Color(0xCC141311)
+            val HomeNoticeLine = Color(0x12FFFFFF)
+            val HomeNoticeShadow = Color(0x99000000)
+            val HomeNoticeTextSecondary = Color(0xFFA39A8D)
+            val HomeNoticeUpdate = Color(0xFFEEBA70)
+            val HomeNoticeAnnouncement = Color(0xFF94CCF3)
+            val HomeDetails = Color(0xFF1D1B18)
+            val HomeDetailsLine = Color(0xFF2C2925)
+            val HomeActive = Color(0xFF6CB26F)
+            val HomeActiveWell = Color(0x2E72B875)
+            val HomeLoad = Color(0xFF72B875)
+            val HomeLoadTrack = Color(0xFF3A352F)
+            val HomeFlagLine = Color(0x1F000000)
         }
         object Light {
             val Card = Color(0xFFF7F1E3)
@@ -266,7 +279,20 @@ object DesignTokens {
             val HomeCancelLine = Color(0xFFBD853F)
             val HomeCancelText = Color(0xFF8D5406)
             val HomeCancelHover = Color(0x1ABD853F)
-            val HomeBeta = Color(0xFF8A5412)
+            val HomeBeta = Color(0xFF81520A)
+            val HomeNotice = Color(0xE0FAF7F0)
+            val HomeNoticeLine = Color(0x14281E14)
+            val HomeNoticeShadow = Color(0x59281E14)
+            val HomeNoticeTextSecondary = Color(0xFF6F675C)
+            val HomeNoticeUpdate = Color(0xFFA75C00)
+            val HomeNoticeAnnouncement = Color(0xFF1F689D)
+            val HomeDetails = Color(0xFFEBE5DA)
+            val HomeDetailsLine = Color(0xFFDDD4C4)
+            val HomeActive = Color(0xFF6CB26F)
+            val HomeActiveWell = Color(0x2E72B875)
+            val HomeLoad = Color(0xFF72B875)
+            val HomeLoadTrack = Color(0xFFD6CDBD)
+            val HomeFlagLine = Color(0x1F000000)
         }
     }
 
@@ -274,7 +300,8 @@ object DesignTokens {
         object Hero {
             val HeaderInset = 14.dp
             val ClearMargin = 6.dp
-            val LogoHeight = 32.dp
+            val LogoHeight = 37.dp
+            val LogoInset = 6.dp
             const val ScrimStop = 0.34f
             val GlowWidth = 300.dp
             val GlowHeight = 150.dp
@@ -288,10 +315,33 @@ object DesignTokens {
             val Radius = 14.dp
             val PaddingHorizontal = 6.dp
             val Button = 38.dp
-            val Icon = 22.dp
+            val Icon = 23.dp
             val Badge = 8.dp
+            val BadgeInset = 7.dp
             val BadgeRing = 2.dp
             val Blur = 10.dp
+        }
+        object Notice {
+            val MarginTop = 10.dp
+            val MaxWidth = 250.dp
+            val Radius = 14.dp
+            val Blur = 12.dp
+            val Gap = 10.dp
+            val PaddingVertical = 9.dp
+            val PaddingStart = 12.dp
+            val PaddingEnd = 10.dp
+            val ButtonInset = 8.dp
+            val Icon = 20.dp
+            val Close = 18.dp
+            val TitleSize = 13.sp
+            const val TitleWeight = 600
+            val BodySize = 11.sp
+            val BodyGap = 1.dp
+            val ButtonHeight = 30.dp
+            val ButtonPaddingHorizontal = 12.dp
+            val ButtonRadius = 9.dp
+            val ButtonTextSize = 12.sp
+            const val ButtonTextWeight = 600
         }
         object Panel {
             val PaddingHorizontal = 22.dp
@@ -314,8 +364,41 @@ object DesignTokens {
             const val LetterSpacingEm = -0.01f
         }
         object Subtitle {
+            val MarginTop = 2.dp
+            val PaddingVertical = 4.dp
+            val LineHeight = 20.dp
             val TextSize = 13.sp
             val MonoSize = 12.sp
+        }
+        object ExitRow {
+            val MarginTop = 2.dp
+            val Outset = 8.dp
+            val PaddingVertical = 4.dp
+            val Radius = 8.dp
+            val Gap = 10.dp
+            val TextSize = 12.sp
+            val Ring = 11.dp
+            val RingHole = 3.dp
+            val Person = 15.dp
+            val PartGap = 4.dp
+            val Chevron = 20.dp
+            const val ChevronMs = 300
+        }
+        object Details {
+            val MarginTop = 6.dp
+            val Radius = 12.dp
+            val PaddingVertical = 12.dp
+            val PaddingHorizontal = 14.dp
+            val ColumnGap = 16.dp
+            val RowGap = 7.dp
+            val TextSize = 12.sp
+            const val ValueWeight = 500
+            val MonoSize = 11.sp
+            val DividerMargin = 2.dp
+            val ChipSize = 10.sp
+            const val ChipWeight = 600
+            val ChipPaddingVertical = 1.dp
+            val ChipPaddingHorizontal = 6.dp
         }
         object Controls {
             val MarginTop = 16.dp
@@ -323,6 +406,7 @@ object DesignTokens {
             val RowHeight = 46.dp
             val Radius = 10.dp
             val Thumb = 28.dp
+            val ThumbLine = 1.dp
             val PaddingStart = 10.dp
             val PaddingEnd = 14.dp
             val RowGap = 10.dp

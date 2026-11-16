@@ -1,173 +1,269 @@
 {
-  "_comment": "How every client frames the home hero, the mockup's proportions (Warren VPN Accueil, 360x640): the hero is 300/360 of its width tall (plus the status bar on a phone), the three registered scenery layers are drawn in one canvas rect, the header floats over the top and the art fades into the page along mask_stops, the mockup's short fade behind the status pill. A framing names a span of canvas rows that must stay clear between the header (clear_top_px) and the point where that fade reaches half opacity (clear_bottom_fraction of the hero height, given to the formula as fade_px = height * (1 - clear_bottom_fraction)): the cameras, the whole burrow and Bula down to his shins whenever he is out (ground), the country's skyline down to the top of the burrow once he is in (sky). The canvas is drawn at width-fit unless the span cannot fit, then it narrows and centres. Its top sits flush with the hero top when it can; it drops (headroom) only when a skyline would otherwise sit under the header, and rises only when the span bottom would pass the half-opacity point. The rows above a dropped canvas, and the columns beside a narrowed one, take the landscape's topFill from scenery.json, and the canvas edges facing them are feathered over feather_rows canvas rows.",
-  "version": 3,
+  "_comment": "How every client frames the home hero, after the mockup Warren VPN Accueil (default tweaks: 380x620 window, scene 'Equilibree' 300px, fade 'Doux'). The hero is hero_height_ratio of its width tall (plus the status bar on a phone); on a phone it grows to absorb free height up to hero_max_height_ratio of its width. While the connection details are open it shrinks to compact_height_ratio of its width. The three registered scenery layers are drawn in one canvas rect, the header floats over the top and the art fades into the page along mask_stops. A framing names a span of canvas rows that must stay clear between the header (clear_top_px) and the point where that fade reaches half opacity (clear_bottom_fraction of the hero height, given to the formula as fade_px = height * (1 - clear_bottom_fraction)): the cameras, the burrow and Bula down to his tail whenever he is out (ground), the country's skyline down to below its flag once he is in (sky). The canvas is drawn at width-fit unless the span cannot fit, then it narrows and centres. Its top sits flush with the hero top when it can; it drops (headroom) only when a skyline would otherwise sit under the header, and rises only when the span bottom would pass the half-opacity point. A compact hero keeps width-fit and pins the span top under the header, the span bottom going into the fade. The rows above a dropped canvas take the landscape's topFill from scenery.json; the columns beside a narrowed canvas show the same landscape at cover scale blurred by margin_blur_px; the canvas edges facing either are feathered over feather_rows canvas rows.",
+  "version": 4,
   "canvas_px": [
     1140,
     1706
   ],
   "feather_rows": 48,
-  "hero_height_ratio": 0.833333,
+  "hero_height_ratio": 0.789474,
+  "hero_max_height_ratio": 1.15,
+  "compact_height_ratio": 0.463158,
+  "compact_transition_ms": 400,
+  "margin_blur_px": 24,
   "mask_stops": [
     [
       0,
       1
     ],
     [
-      0.86,
+      0.74,
       1
     ],
     [
+      0.79,
+      0.9
+    ],
+    [
+      0.84,
+      0.7
+    ],
+    [
+      0.89,
+      0.45
+    ],
+    [
       0.94,
-      0.5
+      0.2
+    ],
+    [
+      0.98,
+      0.06
     ],
     [
       1,
       0
     ]
   ],
-  "clear_bottom_fraction": 0.94,
+  "clear_bottom_fraction": 0.88,
   "framings": {
     "ground": {
       "top_row": 320,
-      "bottom_row": 995,
-      "provenance": "top_row: 10 rows above the higher camera (plaine.webp, the left camera housing starts at row 330). bottom_row: Bula's shins (bula.webp, his body spans rows 427 to 1124), below the burrow mouth (rows 759 to 920); with the canvas at width-fit this puts the cameras where the mockup draws them."
+      "bottom_row": 900,
+      "provenance": "top_row: 10 rows above the higher camera (plaine.webp, the left camera housing starts at row 330). bottom_row: Bula's tail (bula.webp), just above the bottom of the burrow mouth (rows 759 to 920); with the canvas at width-fit on the 380px window this puts the cameras where the mockup draws them."
     },
     "sky": {
       "top_row": "skylineTopRow of the landscape in scenery.json",
-      "bottom_row": 760,
-      "provenance": "bottom_row: the top of the burrow mouth (row 759): every flag (rows 427 to about 620) lies inside."
+      "bottom_row": 680,
+      "provenance": "bottom_row: below the foot of every flag and landmark of the country plates (flags span rows 427 to about 620), above the top of the burrow mouth (row 759)."
     }
   },
   "formula": [
-    "hero_height = hero_width * hero_height_ratio (+ the status bar inset on a phone)",
+    "hero_height = hero_width * hero_height_ratio (+ the status bar inset on a phone); a phone may grow it up to hero_width * hero_max_height_ratio to take free height; compact: hero_width * compact_height_ratio",
     "fade_px = hero_height * (1 - clear_bottom_fraction)",
     "clear_bottom = hero_height - fade_px",
     "scale = min(hero_width / canvas_px[0], (clear_bottom - clear_top_px) / (span_bottom - span_top))",
     "canvas_left = (hero_width - canvas_px[0] * scale) / 2",
     "y_min = clear_top_px - span_top * scale ; y_max = clear_bottom - span_bottom * scale",
     "canvas_top = min(y_max, max(y_min, 0))",
+    "compact: scale = hero_width / canvas_px[0] ; canvas_top = clear_top_px - span_top * scale",
     "headroom = max(0, canvas_top)",
     "the hero's alpha follows mask_stops ([fraction of the hero height, alpha]) from its top to its bottom"
   ],
   "cases": [
     {
       "name": "desktop_ground",
-      "note": "the 360x640 desktop window, exposed: the hero is the mockup's 300px, the cameras clear the header and Bula is clear down to his shins",
+      "note": "the 380x620 desktop window, exposed: the 300px hero holds the cameras under the header and Bula down to his tail at width-fit",
       "hero_px": [
-        360,
+        380,
         300
       ],
       "clear_top_px": 68,
-      "fade_px": 18.0,
+      "fade_px": 36.0,
       "span_rows": [
         320,
-        995
+        900
       ],
       "expect": {
-        "scale": 0.31579,
+        "scale": 0.33333,
         "canvas_left_px": 0.0,
-        "canvas_top_px": -32.21,
-        "canvas_width_px": 360.0,
-        "canvas_height_px": 538.74,
-        "headroom_px": 0.0,
-        "span_top_px": 68.84,
-        "span_bottom_px": 282.0
+        "canvas_top_px": -36.0,
+        "canvas_width_px": 380.0,
+        "canvas_height_px": 568.67,
+        "headroom_px": 0,
+        "span_top_px": 70.67,
+        "span_bottom_px": 264.0
       }
     },
     {
       "name": "desktop_sky_netherlands",
       "note": "the tallest landmark (the tower cross at row 110): the canvas drops below the hero top and the strip above it takes the canvas top colour",
       "hero_px": [
-        360,
+        380,
         300
       ],
       "clear_top_px": 68,
-      "fade_px": 18.0,
+      "fade_px": 36.0,
       "span_rows": [
         100,
-        760
+        680
       ],
       "expect": {
-        "scale": 0.31579,
+        "scale": 0.33333,
         "canvas_left_px": 0.0,
-        "canvas_top_px": 36.42,
-        "canvas_width_px": 360.0,
-        "canvas_height_px": 538.74,
-        "headroom_px": 36.42,
+        "canvas_top_px": 34.67,
+        "canvas_width_px": 380.0,
+        "canvas_height_px": 568.67,
+        "headroom_px": 34.67,
         "span_top_px": 68.0,
-        "span_bottom_px": 276.42
+        "span_bottom_px": 261.33
       }
     },
     {
       "name": "desktop_sky_finland",
       "note": "a skyline that clears the header on its own: no headroom",
       "hero_px": [
-        360,
+        380,
         300
       ],
       "clear_top_px": 68,
-      "fade_px": 18.0,
+      "fade_px": 36.0,
       "span_rows": [
         235,
-        760
+        680
       ],
       "expect": {
-        "scale": 0.31579,
+        "scale": 0.33333,
         "canvas_left_px": 0.0,
-        "canvas_top_px": 0.0,
-        "canvas_width_px": 360.0,
-        "canvas_height_px": 538.74,
-        "headroom_px": 0.0,
-        "span_top_px": 74.21,
-        "span_bottom_px": 240.0
+        "canvas_top_px": 0,
+        "canvas_width_px": 380.0,
+        "canvas_height_px": 568.67,
+        "headroom_px": 0,
+        "span_top_px": 78.33,
+        "span_bottom_px": 226.67
       }
     },
     {
       "name": "desktop_sky_singapore",
       "note": "the lowest skyline: the canvas top stays at the hero top",
       "hero_px": [
-        360,
+        380,
         300
       ],
       "clear_top_px": 68,
-      "fade_px": 18.0,
+      "fade_px": 36.0,
       "span_rows": [
-        360,
-        760
+        350,
+        680
       ],
       "expect": {
-        "scale": 0.31579,
+        "scale": 0.33333,
         "canvas_left_px": 0.0,
-        "canvas_top_px": 0.0,
-        "canvas_width_px": 360.0,
-        "canvas_height_px": 538.74,
-        "headroom_px": 0.0,
-        "span_top_px": 113.68,
-        "span_bottom_px": 240.0
+        "canvas_top_px": 0,
+        "canvas_width_px": 380.0,
+        "canvas_height_px": 568.67,
+        "headroom_px": 0,
+        "span_top_px": 116.67,
+        "span_bottom_px": 226.67
+      }
+    },
+    {
+      "name": "desktop_compact_finland",
+      "note": "the connection details are open: the hero is 176px, the canvas stays at width-fit with the skyline top under the header and the rest given to the fade",
+      "hero_px": [
+        380,
+        176
+      ],
+      "clear_top_px": 68,
+      "fade_px": 21.12,
+      "span_rows": [
+        235,
+        680
+      ],
+      "compact": true,
+      "expect": {
+        "scale": 0.33333,
+        "canvas_left_px": 0.0,
+        "canvas_top_px": -10.33,
+        "canvas_width_px": 380.0,
+        "canvas_height_px": 568.67,
+        "headroom_px": 0,
+        "span_top_px": 68.0,
+        "span_bottom_px": 216.33
+      }
+    },
+    {
+      "name": "desktop_compact_netherlands",
+      "note": "compact with the tallest landmark: the canvas drops and takes headroom",
+      "hero_px": [
+        380,
+        176
+      ],
+      "clear_top_px": 68,
+      "fade_px": 21.12,
+      "span_rows": [
+        100,
+        680
+      ],
+      "compact": true,
+      "expect": {
+        "scale": 0.33333,
+        "canvas_left_px": 0.0,
+        "canvas_top_px": 34.67,
+        "canvas_width_px": 380.0,
+        "canvas_height_px": 568.67,
+        "headroom_px": 34.67,
+        "span_top_px": 68.0,
+        "span_bottom_px": 261.33
+      }
+    },
+    {
+      "name": "desktop_compact_ground",
+      "note": "compact while connecting: the cameras stay under the header",
+      "hero_px": [
+        380,
+        176
+      ],
+      "clear_top_px": 68,
+      "fade_px": 21.12,
+      "span_rows": [
+        320,
+        900
+      ],
+      "compact": true,
+      "expect": {
+        "scale": 0.33333,
+        "canvas_left_px": 0.0,
+        "canvas_top_px": -38.67,
+        "canvas_width_px": 380.0,
+        "canvas_height_px": 568.67,
+        "headroom_px": 0,
+        "span_top_px": 68.0,
+        "span_bottom_px": 261.33
       }
     },
     {
       "name": "phone_412_ground",
-      "note": "a 412dp phone: the hero is the status bar plus 300/360 of the width",
+      "note": "a 412dp phone with a 24dp status bar: the hero is the status bar plus 300/380 of the width",
       "hero_px": [
         412,
-        367
+        349
       ],
       "clear_top_px": 92,
-      "fade_px": 22.02,
+      "fade_px": 41.88,
       "span_rows": [
         320,
-        995
+        900
       ],
       "expect": {
         "scale": 0.3614,
         "canvas_left_px": 0.0,
-        "canvas_top_px": -14.62,
+        "canvas_top_px": -18.14,
         "canvas_width_px": 412.0,
         "canvas_height_px": 616.55,
-        "headroom_px": 0.0,
-        "span_top_px": 101.03,
-        "span_bottom_px": 344.98
+        "headroom_px": 0,
+        "span_top_px": 97.51,
+        "span_bottom_px": 307.12
       }
     },
     {
@@ -175,13 +271,13 @@
       "note": "the same phone protected in the Netherlands",
       "hero_px": [
         412,
-        367
+        349
       ],
       "clear_top_px": 92,
-      "fade_px": 22.02,
+      "fade_px": 41.88,
       "span_rows": [
         100,
-        760
+        680
       ],
       "expect": {
         "scale": 0.3614,
@@ -191,31 +287,55 @@
         "canvas_height_px": 616.55,
         "headroom_px": 55.86,
         "span_top_px": 92.0,
-        "span_bottom_px": 330.53
+        "span_bottom_px": 301.61
       }
     },
     {
-      "name": "short_hero_ground",
-      "note": "a hero too short for the span at width-fit: the canvas narrows and centres, its sides feathered into the top colour",
+      "name": "phone_412_tall_ground",
+      "note": "a tall phone whose hero absorbed the free height up to hero_max_height_ratio: the canvas sits flush at the top",
       "hero_px": [
         412,
-        260
+        498
       ],
-      "clear_top_px": 64,
-      "fade_px": 15.6,
+      "clear_top_px": 92,
+      "fade_px": 59.76,
       "span_rows": [
         320,
-        995
+        900
       ],
       "expect": {
-        "scale": 0.26726,
-        "canvas_left_px": 53.66,
-        "canvas_top_px": -21.52,
-        "canvas_width_px": 304.68,
-        "canvas_height_px": 455.94,
-        "headroom_px": 0.0,
-        "span_top_px": 64.0,
-        "span_bottom_px": 244.4
+        "scale": 0.3614,
+        "canvas_left_px": 0.0,
+        "canvas_top_px": 0,
+        "canvas_width_px": 412.0,
+        "canvas_height_px": 616.55,
+        "headroom_px": 0,
+        "span_top_px": 115.65,
+        "span_bottom_px": 325.26
+      }
+    },
+    {
+      "name": "wide_ground",
+      "note": "a hero much wider than tall (a tablet in landscape): the canvas narrows and centres, its side margins show the landscape blurred at cover scale",
+      "hero_px": [
+        1024,
+        400
+      ],
+      "clear_top_px": 68,
+      "fade_px": 48.0,
+      "span_rows": [
+        320,
+        900
+      ],
+      "expect": {
+        "scale": 0.48966,
+        "canvas_left_px": 232.9,
+        "canvas_top_px": -88.69,
+        "canvas_width_px": 558.21,
+        "canvas_height_px": 835.35,
+        "headroom_px": 0,
+        "span_top_px": 68.0,
+        "span_bottom_px": 352.0
       }
     }
   ]

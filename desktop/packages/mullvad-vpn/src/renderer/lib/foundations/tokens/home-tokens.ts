@@ -13,9 +13,11 @@ export const homeTokens = {
     // headerInset + toolbarHeight + clearMargin.
     headerInset: 14,
     clearMargin: 6,
-    // The mockup's logo is 40 high with its own margin; the bare wordmark
-    // matches its width at 32.
-    logoHeight: 32,
+    // The mockup's logo image is 40 high with a transparent margin; the bare
+    // wordmark covers the same ink (113 by 37 on the 380px window) at 37,
+    // inset by that margin.
+    logoHeight: 37,
+    logoInset: 6,
     // The page colour washes the top of the art down to this fraction, so the
     // toolbar and the logo read on the brightest sky.
     scrimStop: 0.34,
@@ -31,10 +33,36 @@ export const homeTokens = {
     radius: 14,
     paddingHorizontal: 6,
     button: 38,
-    icon: 22,
+    icon: 23,
+    // The unread dot, inset from the button's top right corner.
     badge: 8,
+    badgeInset: 7,
     badgeRing: 2,
     blur: 10,
+  },
+  // The banners hung under the toolbar, on its right edge.
+  notice: {
+    marginTop: 10,
+    maxWidth: 250,
+    radius: 14,
+    blur: 12,
+    gap: 10,
+    paddingVertical: 9,
+    paddingStart: 12,
+    paddingEnd: 10,
+    // A banner ending on a button sits tighter around it.
+    buttonInset: 8,
+    icon: 20,
+    close: 18,
+    titleSize: 13,
+    titleWeight: 600,
+    bodySize: 11,
+    bodyGap: 1,
+    buttonHeight: 30,
+    buttonPaddingHorizontal: 12,
+    buttonRadius: 9,
+    buttonTextSize: 12,
+    buttonTextWeight: 600,
   },
   panel: {
     paddingHorizontal: 22,
@@ -58,8 +86,46 @@ export const homeTokens = {
     letterSpacingEm: -0.01,
   },
   subtitle: {
+    marginTop: 2,
+    paddingVertical: 4,
+    lineHeight: 20,
     textSize: 13,
     monoSize: 12,
+  },
+  // The exit line under a protected title: name, load, people, and the chevron
+  // that opens the details. The whole row is the button, its hover area
+  // reaching out past the text.
+  exitRow: {
+    marginTop: 2,
+    outset: 8,
+    paddingVertical: 4,
+    radius: 8,
+    gap: 10,
+    textSize: 12,
+    ring: 11,
+    ringHole: 3,
+    person: 15,
+    partGap: 4,
+    chevron: 20,
+    chevronMs: 300,
+  },
+  // The connection details, opened in place under the exit line while the
+  // hero shrinks to make room.
+  details: {
+    marginTop: 6,
+    radius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    columnGap: 16,
+    rowGap: 7,
+    textSize: 12,
+    valueWeight: 500,
+    monoSize: 11,
+    dividerMargin: 2,
+    chipSize: 10,
+    chipWeight: 600,
+    chipPaddingVertical: 1,
+    chipPaddingHorizontal: 6,
   },
   controls: {
     marginTop: 16,
@@ -67,6 +133,8 @@ export const homeTokens = {
     rowHeight: 46,
     radius: 10,
     thumb: 28,
+    // The hairline that keeps a white flag off a white field.
+    thumbLine: 1,
     paddingStart: 10,
     paddingEnd: 14,
     rowGap: 10,

@@ -185,7 +185,20 @@
       "homeCancelLine": "#FF936831",
       "homeCancelText": "#FFF1C17F",
       "homeCancelHover": "#1AEFB062",
-      "homeBeta": "#FFE8B65C"
+      "homeBeta": "#FFD6BB78",
+      "homeNotice": "#CC141311",
+      "homeNoticeLine": "#12FFFFFF",
+      "homeNoticeShadow": "#99000000",
+      "homeNoticeTextSecondary": "#FFA39A8D",
+      "homeNoticeUpdate": "#FFEEBA70",
+      "homeNoticeAnnouncement": "#FF94CCF3",
+      "homeDetails": "#FF1D1B18",
+      "homeDetailsLine": "#FF2C2925",
+      "homeActive": "#FF6CB26F",
+      "homeActiveWell": "#2E72B875",
+      "homeLoad": "#FF72B875",
+      "homeLoadTrack": "#FF3A352F",
+      "homeFlagLine": "#1F000000"
     },
     "light": {
       "card": "#FFF7F1E3",
@@ -253,7 +266,20 @@
       "homeCancelLine": "#FFBD853F",
       "homeCancelText": "#FF8D5406",
       "homeCancelHover": "#1ABD853F",
-      "homeBeta": "#FF8A5412"
+      "homeBeta": "#FF81520A",
+      "homeNotice": "#E0FAF7F0",
+      "homeNoticeLine": "#14281E14",
+      "homeNoticeShadow": "#59281E14",
+      "homeNoticeTextSecondary": "#FF6F675C",
+      "homeNoticeUpdate": "#FFA75C00",
+      "homeNoticeAnnouncement": "#FF1F689D",
+      "homeDetails": "#FFEBE5DA",
+      "homeDetailsLine": "#FFDDD4C4",
+      "homeActive": "#FF6CB26F",
+      "homeActiveWell": "#2E72B875",
+      "homeLoad": "#FF72B875",
+      "homeLoadTrack": "#FFD6CDBD",
+      "homeFlagLine": "#1F000000"
     }
   },
   "home": {
@@ -267,7 +293,11 @@
         "unit": "dp"
       },
       "logoHeight": {
-        "value": 32,
+        "value": 37,
+        "unit": "dp"
+      },
+      "logoInset": {
+        "value": 6,
         "unit": "dp"
       },
       "scrimStop": {
@@ -317,11 +347,15 @@
         "unit": "dp"
       },
       "icon": {
-        "value": 22,
+        "value": 23,
         "unit": "dp"
       },
       "badge": {
         "value": 8,
+        "unit": "dp"
+      },
+      "badgeInset": {
+        "value": 7,
         "unit": "dp"
       },
       "badgeRing": {
@@ -331,6 +365,88 @@
       "blur": {
         "value": 10,
         "unit": "dp"
+      }
+    },
+    "notice": {
+      "marginTop": {
+        "value": 10,
+        "unit": "dp"
+      },
+      "maxWidth": {
+        "value": 250,
+        "unit": "dp"
+      },
+      "radius": {
+        "value": 14,
+        "unit": "dp"
+      },
+      "blur": {
+        "value": 12,
+        "unit": "dp"
+      },
+      "gap": {
+        "value": 10,
+        "unit": "dp"
+      },
+      "paddingVertical": {
+        "value": 9,
+        "unit": "dp"
+      },
+      "paddingStart": {
+        "value": 12,
+        "unit": "dp"
+      },
+      "paddingEnd": {
+        "value": 10,
+        "unit": "dp"
+      },
+      "buttonInset": {
+        "value": 8,
+        "unit": "dp"
+      },
+      "icon": {
+        "value": 20,
+        "unit": "dp"
+      },
+      "close": {
+        "value": 18,
+        "unit": "dp"
+      },
+      "titleSize": {
+        "value": 13,
+        "unit": "sp"
+      },
+      "titleWeight": {
+        "value": 600,
+        "unit": "weight"
+      },
+      "bodySize": {
+        "value": 11,
+        "unit": "sp"
+      },
+      "bodyGap": {
+        "value": 1,
+        "unit": "dp"
+      },
+      "buttonHeight": {
+        "value": 30,
+        "unit": "dp"
+      },
+      "buttonPaddingHorizontal": {
+        "value": 12,
+        "unit": "dp"
+      },
+      "buttonRadius": {
+        "value": 9,
+        "unit": "dp"
+      },
+      "buttonTextSize": {
+        "value": 12,
+        "unit": "sp"
+      },
+      "buttonTextWeight": {
+        "value": 600,
+        "unit": "weight"
       }
     },
     "panel": {
@@ -396,6 +512,18 @@
       }
     },
     "subtitle": {
+      "marginTop": {
+        "value": 2,
+        "unit": "dp"
+      },
+      "paddingVertical": {
+        "value": 4,
+        "unit": "dp"
+      },
+      "lineHeight": {
+        "value": 20,
+        "unit": "dp"
+      },
       "textSize": {
         "value": 13,
         "unit": "sp"
@@ -403,6 +531,114 @@
       "monoSize": {
         "value": 12,
         "unit": "sp"
+      }
+    },
+    "exitRow": {
+      "marginTop": {
+        "value": 2,
+        "unit": "dp"
+      },
+      "outset": {
+        "value": 8,
+        "unit": "dp"
+      },
+      "paddingVertical": {
+        "value": 4,
+        "unit": "dp"
+      },
+      "radius": {
+        "value": 8,
+        "unit": "dp"
+      },
+      "gap": {
+        "value": 10,
+        "unit": "dp"
+      },
+      "textSize": {
+        "value": 12,
+        "unit": "sp"
+      },
+      "ring": {
+        "value": 11,
+        "unit": "dp"
+      },
+      "ringHole": {
+        "value": 3,
+        "unit": "dp"
+      },
+      "person": {
+        "value": 15,
+        "unit": "dp"
+      },
+      "partGap": {
+        "value": 4,
+        "unit": "dp"
+      },
+      "chevron": {
+        "value": 20,
+        "unit": "dp"
+      },
+      "chevronMs": {
+        "value": 300,
+        "unit": "ms"
+      }
+    },
+    "details": {
+      "marginTop": {
+        "value": 6,
+        "unit": "dp"
+      },
+      "radius": {
+        "value": 12,
+        "unit": "dp"
+      },
+      "paddingVertical": {
+        "value": 12,
+        "unit": "dp"
+      },
+      "paddingHorizontal": {
+        "value": 14,
+        "unit": "dp"
+      },
+      "columnGap": {
+        "value": 16,
+        "unit": "dp"
+      },
+      "rowGap": {
+        "value": 7,
+        "unit": "dp"
+      },
+      "textSize": {
+        "value": 12,
+        "unit": "sp"
+      },
+      "valueWeight": {
+        "value": 500,
+        "unit": "weight"
+      },
+      "monoSize": {
+        "value": 11,
+        "unit": "sp"
+      },
+      "dividerMargin": {
+        "value": 2,
+        "unit": "dp"
+      },
+      "chipSize": {
+        "value": 10,
+        "unit": "sp"
+      },
+      "chipWeight": {
+        "value": 600,
+        "unit": "weight"
+      },
+      "chipPaddingVertical": {
+        "value": 1,
+        "unit": "dp"
+      },
+      "chipPaddingHorizontal": {
+        "value": 6,
+        "unit": "dp"
       }
     },
     "controls": {
@@ -424,6 +660,10 @@
       },
       "thumb": {
         "value": 28,
+        "unit": "dp"
+      },
+      "thumbLine": {
+        "value": 1,
         "unit": "dp"
       },
       "paddingStart": {

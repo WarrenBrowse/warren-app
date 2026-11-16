@@ -6,11 +6,15 @@ import { describe, expect, it } from 'vitest';
 import sceneryManifest from '../../assets/images/scenery/scenery.json';
 import {
   CLEAR_BOTTOM_FRACTION,
+  COMPACT_TRANSITION_MS,
   frameScenery,
   framingSpan,
+  HERO_COMPACT_RATIO,
   HERO_HEIGHT_RATIO,
   HERO_MASK_STOPS,
+  HERO_MAX_HEIGHT_RATIO,
   heroFade,
+  MARGIN_BLUR_PX,
 } from '../../src/renderer/components/CountryBackdrop/framing';
 import { loadClientRules } from './client-rules';
 
@@ -20,6 +24,7 @@ interface FramingCase {
   clear_top_px: number;
   fade_px: number;
   span_rows: [number, number];
+  compact?: boolean;
   expect: {
     scale: number;
     canvas_left_px: number;
@@ -35,6 +40,10 @@ interface FramingCase {
 interface FramingFixture {
   canvas_px: [number, number];
   hero_height_ratio: number;
+  hero_max_height_ratio: number;
+  compact_height_ratio: number;
+  compact_transition_ms: number;
+  margin_blur_px: number;
   mask_stops: Array<[number, number]>;
   clear_bottom_fraction: number;
   feather_rows: number;
@@ -59,6 +68,19 @@ describe('scenery framing (fixtures/client-rules/scenery_framing.json)', () => {
     expect(HERO_HEIGHT_RATIO).toBeCloseTo(fixture.hero_height_ratio, 6);
     expect(HERO_MASK_STOPS).toEqual(fixture.mask_stops);
     expect(CLEAR_BOTTOM_FRACTION).toBe(fixture.clear_bottom_fraction);
+    expect(HERO_MAX_HEIGHT_RATIO).toBe(fixture.hero_max_height_ratio);
+    expect(HERO_COMPACT_RATIO).toBeCloseTo(fixture.compact_height_ratio, 6);
+    expect(COMPACT_TRANSITION_MS).toBe(fixture.compact_transition_ms);
+    expect(MARGIN_BLUR_PX).toBe(fixture.margin_blur_px);
+  });
+
+  it('puts the clear bottom where the mask crosses half opacity', () => {
+    const stops = fixture.mask_stops;
+    const at = fixture.clear_bottom_fraction;
+    const index = stops.findIndex(([fraction]) => fraction >= at);
+    const [f0, a0] = stops[index - 1];
+    const [f1, a1] = stops[index];
+    expect(a0 + ((a1 - a0) * (at - f0)) / (f1 - f0)).toBeCloseTo(0.5, 6);
   });
 
   it('ends the clear zone where the fade reaches half opacity', () => {
@@ -77,6 +99,7 @@ describe('scenery framing (fixtures/client-rules/scenery_framing.json)', () => {
         clearTop: fixtureCase.clear_top_px,
         fade: fixtureCase.fade_px,
         span: { top, bottom },
+        compact: fixtureCase.compact,
       });
       const e = fixtureCase.expect;
       expect(frame.scale).toBeCloseTo(e.scale, 4);
@@ -90,8 +113,8 @@ describe('scenery framing (fixtures/client-rules/scenery_framing.json)', () => {
     });
   }
 
-  it('keeps every span between the header and the fade', () => {
-    for (const fixtureCase of fixture.cases) {
+  it('keeps every full-height span between the header and the fade', () => {
+    for (const fixtureCase of fixture.cases.filter((c) => !c.compact)) {
       const [width, height] = fixtureCase.hero_px;
       const [top, bottom] = fixtureCase.span_rows;
       const frame = frameScenery({
@@ -105,6 +128,23 @@ describe('scenery framing (fixtures/client-rules/scenery_framing.json)', () => {
       expect(frame.top + bottom * frame.scale).toBeLessThanOrEqual(
         height - fixtureCase.fade_px + 0.01,
       );
+    }
+  });
+
+  it('keeps a compact hero at width-fit with the span top under the header', () => {
+    for (const fixtureCase of fixture.cases.filter((c) => c.compact)) {
+      const [width, height] = fixtureCase.hero_px;
+      const [top, bottom] = fixtureCase.span_rows;
+      const frame = frameScenery({
+        width,
+        height,
+        clearTop: fixtureCase.clear_top_px,
+        fade: fixtureCase.fade_px,
+        span: { top, bottom },
+        compact: true,
+      });
+      expect(frame.width).toBeCloseTo(width, 6);
+      expect(frame.top + top * frame.scale).toBeCloseTo(fixtureCase.clear_top_px, 6);
     }
   });
 
