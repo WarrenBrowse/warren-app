@@ -29,33 +29,27 @@ enum SceneryFraming {
         let bottom: CGFloat
     }
 
-    /// The cameras and Bula down to his hips while he is out: his legs and the burrow mouth fade
-    /// into the panel, as in the mockup.
-    static let groundSpan = Span(top: 320, bottom: 830)
+    /// The cameras and Bula down to his shins while he is out, below the burrow mouth.
+    static let groundSpan = Span(top: 320, bottom: 995)
 
-    /// Once he is in, the skyline down to the flag.
-    static let skyBottomRow: CGFloat = 610
-
-    static let thumbMarginRows: CGFloat = 40
+    /// Once he is in, the skyline down to the top of the burrow mouth: every flag lies inside.
+    static let skyBottomRow: CGFloat = 760
 
     /// The mockup's proportions (Warren VPN Accueil, 360x640): a 300 point hero on a 360 point
     /// column.
     static let heroHeightRatio: CGFloat = 300 / 360
 
-    /// The hero fades into the page along the mockup's own curve, as (fraction of the hero height,
-    /// alpha) from its top to its bottom.
+    /// The hero fades into the page over its last rows only, the mockup's short and discreet fade
+    /// behind the status pill, as (fraction of the hero height, alpha) from its top to its bottom.
     static let maskStops: [(at: CGFloat, alpha: CGFloat)] = [
         (0, 1),
-        (0.52, 1),
-        (0.64, 0.82),
-        (0.77, 0.5),
-        (0.89, 0.2),
-        (0.96, 0.05),
+        (0.86, 1),
+        (0.94, 0.5),
         (1, 0),
     ]
 
     /// The clear zone ends where that curve reaches half opacity; below it the art keeps fading.
-    static let clearBottomFraction: CGFloat = 0.77
+    static let clearBottomFraction: CGFloat = 0.94
 
     /// The band under the clear zone, for a hero of this height.
     static func fade(forHeroHeight height: CGFloat) -> CGFloat {
@@ -106,15 +100,9 @@ enum SceneryFraming {
     }
 
     /// The span a phase frames: the ground whenever Bula is out, the landscape's skyline down to
-    /// the flag once he is in.
+    /// the burrow once he is in.
     static func span(skyFraming: Bool, skylineTopRow: Int) -> Span {
         skyFraming ? Span(top: CGFloat(skylineTopRow), bottom: skyBottomRow) : groundSpan
-    }
-
-    /// The round location thumbnail is a full-width square of the landscape whose top sits just
-    /// above the skyline, so the landmark crowns it.
-    static func thumbnailTopRow(skylineTopRow: Int) -> CGFloat {
-        min(canvasHeight - canvasWidth, max(0, CGFloat(skylineTopRow) - thumbMarginRows))
     }
 
     /// The connecting blur, as a radius at display size (desktop's `blur(14px)`, Android's

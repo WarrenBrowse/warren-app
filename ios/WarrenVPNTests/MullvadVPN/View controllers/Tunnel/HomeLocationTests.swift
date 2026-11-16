@@ -10,8 +10,8 @@ import XCTest
 
 @testable import WarrenVPN
 
-/// The location row names what desktop's `location-name.ts` names, and its thumbnail is the
-/// picture `LocationThumb.tsx` draws.
+/// The location row names what desktop's `location-name.ts` names, and pictures the country with
+/// the round flag `LocationFlag.tsx` draws.
 final class HomeLocationTests: XCTestCase {
     private let connected = TunnelState.connected(HomeStatusTests.helsinki(), isPostQuantum: false, isDaita: false)
 
@@ -35,27 +35,35 @@ final class HomeLocationTests: XCTestCase {
             HomeLocation(tunnelState: .disconnected, exitLocations: picked, selectedName: nil).name, "Select location")
     }
 
-    /// The landscape square starts 40 rows above the skyline, so the landmark crowns it.
-    func testAnExitWithArtIsPicturedByItsSkyline() {
+    /// Once a tunnel is up or coming up, the flag is the exit's.
+    func testATunnelShowsTheFlagOfTheExitCountry() {
         let location = HomeLocation(tunnelState: connected, exitLocations: .any, selectedName: nil)
-        XCTAssertEqual(location.thumb, .landscape(imageName: "SceneryFinland", topRow: 195))
+        XCTAssertEqual(location.flagCode, "fi")
     }
 
-    func testAPickWithArtIsPicturedByItsLandscapeBeforeTheTunnelIsUp() {
+    func testWithNoTunnelTheFlagIsThePickedCountrys() {
         let picked = RelayConstraint.only(UserSelectedRelays(locations: [.city("nl", "ams")]))
         let location = HomeLocation(tunnelState: .disconnected, exitLocations: picked, selectedName: "Amsterdam")
-        XCTAssertEqual(location.thumb, .landscape(imageName: "SceneryNetherlands", topRow: 60))
+        XCTAssertEqual(location.flagCode, "nl")
     }
 
-    func testACountryWithoutArtShowsItsFlag() {
-        let picked = RelayConstraint.only(UserSelectedRelays(locations: [.country("se")]))
-        let location = HomeLocation(tunnelState: .disconnected, exitLocations: picked, selectedName: "Sweden")
-        XCTAssertEqual(location.thumb, .flag(countryCode: "se"))
+    /// Automatic and a custom list name no country: the row shows only its label.
+    func testAPickThatNamesNoCountryHasNoFlag() {
+        XCTAssertNil(HomeLocation(tunnelState: .disconnected, exitLocations: .any, selectedName: nil).flagCode)
+        let list = UserSelectedRelays(
+            locations: [.country("fi")],
+            customListSelection: UserSelectedRelays.CustomListSelection(listId: UUID(), isList: true)
+        )
+        XCTAssertNil(
+            HomeLocation(tunnelState: .disconnected, exitLocations: .only(list), selectedName: "Work").flagCode)
     }
 
-    func testAutomaticIsPicturedByTheWatchedPlain() {
-        let location = HomeLocation(tunnelState: .disconnected, exitLocations: .any, selectedName: nil)
-        XCTAssertEqual(location.thumb, .landscape(imageName: "SceneryPlaine", topRow: 273))
+    /// The round flags ship in the asset catalog under the relay list's ISO codes, whatever their
+    /// case; a code without a flag draws nothing rather than a blank disc.
+    func testTheFlagIsTheRoundFlagOfTheCatalog() {
+        XCTAssertNotNil(HomeLocationFlagView.image(countryCode: "fi"))
+        XCTAssertNotNil(HomeLocationFlagView.image(countryCode: "GB"))
+        XCTAssertNil(HomeLocationFlagView.image(countryCode: "zz"))
     }
 
     func testAWholeCustomListNamesNoCountry() {

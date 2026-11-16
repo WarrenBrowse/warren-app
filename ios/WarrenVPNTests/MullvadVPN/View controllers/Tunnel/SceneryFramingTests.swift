@@ -100,8 +100,8 @@ final class SceneryFramingTests: XCTestCase {
         controller.update(phase: .exposed, exitCountry: nil, animated: false)
         controller.view.layoutIfNeeded()
         let frame = try XCTUnwrap(controller.canvasFrame)
-        XCTAssertEqual(frame.top, -31.11, accuracy: Self.tolerance)
-        XCTAssertEqual(frame.y(ofRow: SceneryFraming.groundSpan.bottom), 231.0, accuracy: Self.tolerance)
+        XCTAssertEqual(frame.top, -32.21, accuracy: Self.tolerance)
+        XCTAssertEqual(frame.y(ofRow: SceneryFraming.groundSpan.bottom), 282.0, accuracy: Self.tolerance)
     }
 
     /// The hero's alpha follows the mockup curve from its top to its bottom.
@@ -154,21 +154,6 @@ final class SceneryFramingTests: XCTestCase {
         }
     }
 
-    func testTheThumbnailIsCrownedByTheSkyline() throws {
-        let thumbnail = try ClientRulesFixtures.object(try fixture(), "thumbnail")
-        XCTAssertEqual(SceneryFraming.thumbMarginRows, try number(thumbnail, "thumb_margin_rows"))
-        let cases = try ClientRulesFixtures.cases(thumbnail, "cases")
-        XCTAssertFalse(cases.isEmpty)
-        for thumbCase in cases {
-            let skyline = try ClientRulesFixtures.int(thumbCase, "skyline_top_row")
-            XCTAssertEqual(
-                SceneryFraming.thumbnailTopRow(skylineTopRow: skyline),
-                CGFloat(try ClientRulesFixtures.int(thumbCase, "top_row")),
-                "skyline \(skyline)"
-            )
-        }
-    }
-
     /// The framing column of scenery.json, through the generated tables: the ground whenever Bula
     /// is out, the country's own skyline once he is in, and the plain's skyline for a country
     /// without art.
@@ -178,13 +163,13 @@ final class SceneryFramingTests: XCTestCase {
             SceneryViewController.framingSpan(.connecting, country: "Netherlands"), SceneryFraming.groundSpan)
         XCTAssertEqual(
             SceneryViewController.framingSpan(.protected, country: "Netherlands"),
-            SceneryFraming.Span(top: 100, bottom: 610))
+            SceneryFraming.Span(top: 100, bottom: 760))
         XCTAssertEqual(
             SceneryViewController.framingSpan(.protected, country: "nl"),
-            SceneryFraming.Span(top: 100, bottom: 610))
+            SceneryFraming.Span(top: 100, bottom: 760))
         XCTAssertEqual(
             SceneryViewController.framingSpan(.protected, country: "Sweden"),
-            SceneryFraming.Span(top: 313, bottom: 610))
+            SceneryFraming.Span(top: 313, bottom: 760))
         // The kill switch shows the watched plain whatever the exit.
         XCTAssertEqual(SceneryViewController.framingSpan(.blocked, country: "Finland"), SceneryFraming.groundSpan)
     }

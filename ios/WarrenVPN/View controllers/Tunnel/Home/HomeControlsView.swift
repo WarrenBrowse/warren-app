@@ -4,8 +4,8 @@
 //
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  The home's controls (desktop `HomeControls`): the location row with its
-//  round picture and the square shuffle beside it, then the action button,
+//  The home's controls (desktop `HomeControls`): the location row with the
+//  country's round flag and the square shuffle beside it, then the action button,
 //  whose fill says what the tap does: a solid go, an outlined stop.
 //
 
@@ -39,7 +39,9 @@ struct HomeControlsView: View {
             action(.selectLocation)
         } label: {
             HStack(spacing: controls.rowGap) {
-                HomeLocationThumbView(thumb: location.thumb)
+                if let code = location.flagCode, let flag = HomeLocationFlagView.image(countryCode: code) {
+                    HomeLocationFlagView(image: flag)
+                }
                 Text(verbatim: location.name)
                     .font(.instrumentSans(size: controls.labelSize, weight: .medium, relativeTo: .body))
                     .foregroundStyle(palette.color(.homeText))
@@ -206,79 +208,23 @@ struct HomeActionButtonStyle: ButtonStyle {
     }
 }
 
-/// The round picture of a location: a square of its landscape crowned by the
-/// skyline, the flag of a country without art, the watched plain otherwise.
-struct HomeLocationThumbView: View {
-    let thumb: HomeLocationThumb
+/// The round flag of the location's country, as the mockup's location row shows it. The flags
+/// are rasterised from desktop's SVGs by `ios/scripts/generate-round-flags.sh`.
+struct HomeLocationFlagView: View {
+    let image: UIImage
 
     var body: some View {
         let size = HomeMetrics.Controls.thumb
-        Group {
-            switch thumb {
-            case let .landscape(imageName, topRow):
-                HomeLandscapeSquare(imageName: imageName, topRow: topRow)
-            case let .flag(code):
-                Text(verbatim: Self.flagEmoji(countryCode: code) ?? "")
-                    .font(.system(size: size * 1.45))
-                    .frame(width: size, height: size)
-                    .background(Color.black.opacity(0.1))
-            }
-        }
-        .frame(width: size, height: size)
-        .clipShape(Circle())
-        .accessibilityHidden(true)
+        Image(uiImage: image)
+            .resizable()
+            .interpolation(.high)
+            .frame(width: size, height: size)
+            .clipShape(Circle())
+            .accessibilityHidden(true)
     }
 
-    static func flagEmoji(countryCode: String) -> String? {
-        let letterA: Unicode.Scalar = "A"
-        let regionalIndicatorA: UInt32 = 0x1F1E6
-        var flag = ""
-        for letter in countryCode.uppercased().unicodeScalars {
-            guard letter.value >= letterA.value, letter.value < letterA.value + 26,
-                let scalar = Unicode.Scalar(regionalIndicatorA + letter.value - letterA.value)
-            else { return nil }
-            flag.unicodeScalars.append(scalar)
-        }
-        return flag.unicodeScalars.count == 2 ? flag : nil
-    }
-}
-
-/// A full-width square of a landscape from `topRow` down, cut once and cached:
-/// the thumbnail is 28 points, the master 1140 pixels wide.
-private struct HomeLandscapeSquare: View {
-    let imageName: String
-    let topRow: CGFloat
-
-    var body: some View {
-        if let image = Self.square(imageName: imageName, topRow: topRow) {
-            Image(uiImage: image)
-                .resizable()
-                .interpolation(.high)
-        } else {
-            Color.black.opacity(0.1)
-        }
-    }
-
-    private static let cache = NSCache<NSString, UIImage>()
-
-    static func square(imageName: String, topRow: CGFloat) -> UIImage? {
-        let key = "\(imageName)@\(Int(topRow))" as NSString
-        if let cached = cache.object(forKey: key) { return cached }
-        guard let source = UIImage(named: imageName), let cgImage = source.cgImage else { return nil }
-        let pixelsPerRow = CGFloat(cgImage.width) / SceneryFraming.canvasWidth
-        let side = CGFloat(cgImage.width)
-        guard
-            let cropped = cgImage.cropping(
-                to: CGRect(x: 0, y: (topRow * pixelsPerRow).rounded(), width: side, height: side))
-        else { return nil }
-        let thumbSide: CGFloat = 112
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 1
-        let square = UIGraphicsImageRenderer(size: CGSize(width: thumbSide, height: thumbSide), format: format)
-            .image { _ in
-                UIImage(cgImage: cropped).draw(in: CGRect(x: 0, y: 0, width: thumbSide, height: thumbSide))
-            }
-        cache.setObject(square, forKey: key)
-        return square
+    /// The flag of an ISO code in either case, nil for a code the catalog has no flag for.
+    static func image(countryCode: String) -> UIImage? {
+        UIImage(named: "Flags/\(countryCode.lowercased())")
     }
 }
