@@ -1,12 +1,17 @@
+import { DaemonAccessRefusal } from '../../../shared/daemon-access-refusal';
 import { RoutePath } from '../../../shared/routes';
 import { LoginState } from '../../redux/account/reducers';
 
+// A refused account reaches the daemon, so `connectedToDaemon` can be true, yet
+// nothing past the launch view works for it: the login view would offer to
+// create or restore a wallet the daemon refuses to install.
 export function getNavigationBase(
   connectedToDaemon: boolean,
   loginState: LoginState,
   onboardingPending?: boolean,
+  daemonAccessRefusal: DaemonAccessRefusal | null = null,
 ): RoutePath {
-  if (connectedToDaemon) {
+  if (connectedToDaemon && daemonAccessRefusal === null) {
     if (loginState.type === 'none' && loginState.deviceRevoked) {
       return RoutePath.deviceRevoked;
     } else if (

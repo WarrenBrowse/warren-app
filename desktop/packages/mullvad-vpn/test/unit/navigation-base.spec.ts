@@ -48,3 +48,25 @@ describe('getNavigationBase Warren onboarding redirect', () => {
     expect(path).toBe(RoutePath.expired);
   });
 });
+
+// The window's initial state reports the daemon channel as connected even when
+// the bootstrap was refused, because the refusal arrives over that same channel.
+// A second account on a machine whose Warren another account set up then met the
+// welcome screen, and its recovery phrase was answered "invalid" when the daemon
+// had refused the account (forum topic 246, reproduced on Ubuntu 24.04).
+describe('getNavigationBase when the daemon refuses this account', () => {
+  it('keeps a refused account on the launch view, which says why', () => {
+    const path = getNavigationBase(
+      true,
+      { type: 'none', deviceRevoked: false },
+      undefined,
+      'ownedByAnotherAccount',
+    );
+    expect(path).toBe(RoutePath.launch);
+  });
+
+  it('leaves the launch view once the refusal is lifted', () => {
+    const path = getNavigationBase(true, { type: 'none', deviceRevoked: false }, undefined, null);
+    expect(path).toBe(RoutePath.login);
+  });
+});

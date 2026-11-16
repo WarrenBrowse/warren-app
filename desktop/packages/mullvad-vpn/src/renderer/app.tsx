@@ -1023,6 +1023,7 @@ export default class AppRenderer {
       this.connectedToDaemon,
       state.account.status,
       state.settings.guiSettings.onboardingPending,
+      state.userInterface.daemonAccessRefusal,
     );
   }
 

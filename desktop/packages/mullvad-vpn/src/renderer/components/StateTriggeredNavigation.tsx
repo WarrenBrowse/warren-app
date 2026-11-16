@@ -12,13 +12,14 @@ export default function StateTriggeredNavigation() {
   const connectedToDaemon = useSelector((state) => state.userInterface.connectedToDaemon);
   const loginState = useSelector((state) => state.account.status);
   const onboardingPending = useSelector((state) => state.settings.guiSettings.onboardingPending);
+  const daemonAccessRefusal = useSelector((state) => state.userInterface.daemonAccessRefusal);
 
   const prevPath = useRef<RoutePath>(
-    getNavigationBase(connectedToDaemon, loginState, onboardingPending),
+    getNavigationBase(connectedToDaemon, loginState, onboardingPending, daemonAccessRefusal),
   );
   const nextPath = useMemo(
-    () => getNavigationBase(connectedToDaemon, loginState, onboardingPending),
-    [connectedToDaemon, loginState, onboardingPending],
+    () => getNavigationBase(connectedToDaemon, loginState, onboardingPending, daemonAccessRefusal),
+    [connectedToDaemon, loginState, onboardingPending, daemonAccessRefusal],
   );
 
   const updatePath = useEffectEvent((nextPath: RoutePath) => {
