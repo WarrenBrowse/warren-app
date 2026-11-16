@@ -136,15 +136,17 @@ final class HomeScreenshotTests: XCTestCase {
     }
 
     /// The mockup's states at the sizes a phone or a tablet can give the home: a small phone, a
-    /// large one, a tall 20:9 one, a phone on its side and a split-screen column. The window is
+    /// large one, a tall 20:9 one, two short windows wider than tall (split side by side) and a
+    /// narrow split-screen column. The window is
     /// laid out at that size on whatever simulator runs it.
     func testCaptureTheMockupStatesAtEverySize() async throws {
         let sizes: [(String, CGSize)] = [
             ("small-360x640", CGSize(width: 360, height: 640)),
             ("phone-412x915", CGSize(width: 412, height: 915)),
             ("tall-360x800", CGSize(width: 360, height: 800)),
-            ("short-844x390", CGSize(width: 844, height: 390)),
-            ("split-320x700", CGSize(width: 320, height: 700)),
+            ("split-844x390", CGSize(width: 844, height: 390)),
+            ("split-700x500", CGSize(width: 700, height: 500)),
+            ("narrow-320x700", CGSize(width: 320, height: 700)),
         ]
         let cap = WarrenNetworkInfo(
             environment: "beta", degraded: true, defaultRateBps: 20_000_000, paymentsEnabled: false)

@@ -76,6 +76,7 @@ final class SceneryFramingTests: XCTestCase {
             SceneryFraming.compactHeightRatio, try number(fixture, "compact_height_ratio"), accuracy: 0.000001)
         XCTAssertEqual(SceneryFraming.compactTransitionMs, try number(fixture, "compact_transition_ms"))
         XCTAssertEqual(SceneryFraming.marginBlur, try number(fixture, "margin_blur_px"))
+        XCTAssertEqual(HomeLayout.splitBelowHeight, try number(fixture, "split_below_height_px"))
         XCTAssertEqual(SceneryFraming.clearBottomFraction, try number(fixture, "clear_bottom_fraction"))
         let stops = try XCTUnwrap(fixture["mask_stops"] as? [[NSNumber]], "mask_stops")
         XCTAssertEqual(SceneryFraming.maskStops.map(\.at), stops.map { CGFloat($0[0].doubleValue) })

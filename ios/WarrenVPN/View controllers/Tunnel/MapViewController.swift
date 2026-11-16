@@ -453,6 +453,16 @@ final class SceneryViewController: UIViewController {
     // Fades the hero into the page along the mockup's curve: the status block
     // rides up over the last rows, so the art has no edge.
     private let fadeView = GradientView()
+    // Beside the panel of a split home, the hero's edge facing it fades into the page too.
+    private let sideFadeView = GradientView()
+
+    /// The hero sits beside the panel rather than over it.
+    var fadesPanelEdge = false {
+        didSet {
+            guard fadesPanelEdge != oldValue else { return }
+            view.setNeedsLayout()
+        }
+    }
 
     // Blurring the full-resolution art costs tens of milliseconds; cache the
     // result per landscape and width. NSCache rather than a dictionary: these
@@ -607,6 +617,20 @@ final class SceneryViewController: UIViewController {
         }
 
         fadeView.frame = bounds
+        if fadesPanelEdge {
+            let towardsLeft = view.effectiveUserInterfaceLayoutDirection == .rightToLeft
+            sideFadeView.frame = fadeView.bounds
+            sideFadeView.gradientLayer.startPoint = CGPoint(x: towardsLeft ? 1 : 0, y: 0.5)
+            sideFadeView.gradientLayer.endPoint = CGPoint(x: towardsLeft ? 0 : 1, y: 0.5)
+            sideFadeView.gradientLayer.colors = [
+                UIColor.black.cgColor, UIColor.black.cgColor, UIColor.black.withAlphaComponent(0).cgColor,
+            ]
+            let edge = HomeMetrics.Panel.paddingHorizontal / max(bounds.width, 1)
+            sideFadeView.gradientLayer.locations = [0, NSNumber(value: Double(1 - edge)), 1]
+            fadeView.mask = sideFadeView
+        } else {
+            fadeView.mask = nil
+        }
         scrimView.frame = bounds
         scrimView.gradientLayer.locations = [0, NSNumber(value: Double(HomeMetrics.Hero.scrimStop))]
         // Anchored at the corner like desktop's, and stretched by the status
@@ -780,7 +804,8 @@ final class SceneryViewController: UIViewController {
         guard let source = UIImage(named: imageName) else { return }
         let radius = Double(SceneryFraming.marginBlur * SceneryFraming.canvasWidth / rect.width)
         DispatchQueue.global(qos: .userInitiated).async {
-            guard let blurred = Self.gaussianBlurred(source, radius: radius) else { return }
+            // A wash this wide keeps nothing a full-size render would add, so it is blurred small.
+            guard let blurred = Self.gaussianBlurred(source, radius: radius, downscale: 0.125) else { return }
             DispatchQueue.main.async {
                 Self.blurredImageCache.setObject(blurred, forKey: key as NSString)
                 if self.backdropKey == key {
@@ -811,14 +836,16 @@ final class SceneryViewController: UIViewController {
         }
     }
 
-    private static func gaussianBlurred(_ image: UIImage, radius: Double) -> UIImage? {
-        guard let ciImage = CIImage(image: image) else { return nil }
+    private static func gaussianBlurred(_ image: UIImage, radius: Double, downscale: Double = 1) -> UIImage? {
+        guard let source = CIImage(image: image) else { return nil }
+        let ciImage =
+            downscale < 1 ? source.transformed(by: CGAffineTransform(scaleX: downscale, y: downscale)) : source
         // Clamp the edges before blurring so the border does not fade to
         // transparent, then crop back to the original extent.
         let blurred =
             ciImage
             .clampedToExtent()
-            .applyingGaussianBlur(sigma: radius)
+            .applyingGaussianBlur(sigma: radius * downscale)
             .cropped(to: ciImage.extent)
         guard let cgImage = ciContext.createCGImage(blurred, from: blurred.extent) else {
             return nil

@@ -66,6 +66,9 @@ class HeaderBarView: UIView {
     var toolbarFrame: CGRect { toolbarBackground.frame }
 
     private var classicConstraints: [NSLayoutConstraint] = []
+    /// The column centred on the screen, or kept to the hero, the leading half, on a split home.
+    private var centredColumn: [NSLayoutConstraint] = []
+    private var splitColumn: [NSLayoutConstraint] = []
     private var homeConstraints: [NSLayoutConstraint] = []
 
     /// The home toolbar's bottom edge, which the notification banner hangs from.
@@ -537,8 +540,13 @@ class HeaderBarView: UIView {
         addLayoutGuide(homeColumnGuide)
         let columnFill = homeColumnGuide.widthAnchor.constraint(equalTo: safeAreaLayoutGuide.widthAnchor)
         columnFill.priority = .defaultHigh
+        centredColumn = [homeColumnGuide.centerXAnchor.constraint(equalTo: safeAreaLayoutGuide.centerXAnchor)]
+        splitColumn = [
+            homeColumnGuide.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor),
+            homeColumnGuide.widthAnchor.constraint(lessThanOrEqualTo: safeAreaLayoutGuide.widthAnchor, multiplier: 0.5),
+        ]
+        NSLayoutConstraint.activate(centredColumn)
         NSLayoutConstraint.activate([
-            homeColumnGuide.centerXAnchor.constraint(equalTo: safeAreaLayoutGuide.centerXAnchor),
             homeColumnGuide.widthAnchor.constraint(lessThanOrEqualTo: safeAreaLayoutGuide.widthAnchor),
             homeColumnGuide.widthAnchor.constraint(lessThanOrEqualToConstant: HomeMetrics.maxColumnWidth),
             columnFill,
@@ -665,6 +673,14 @@ class HeaderBarView: UIView {
     }
 
     override func layoutSubviews() {
+        // The window decides whether the home splits; the header follows it before laying out.
+        let split =
+            homeTheme != nil
+            && superview.map { HomeLayout.isSplit(width: $0.bounds.width, height: $0.bounds.height) } == true
+        if split != splitColumn.first?.isActive {
+            NSLayoutConstraint.deactivate(split ? centredColumn : splitColumn)
+            NSLayoutConstraint.activate(split ? splitColumn : centredColumn)
+        }
         super.layoutSubviews()
 
         borderLayer.frame = CGRect(x: 0, y: frame.maxY - 1, width: frame.width, height: 1)

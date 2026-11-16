@@ -40,8 +40,9 @@ enum SceneryFraming {
     /// column.
     static let heroHeightRatio: CGFloat = 300 / 380
 
-    /// A phone hero takes free height up to this fraction of its column.
-    static let heroMaxHeightRatio: CGFloat = 1.15
+    /// A hero takes free height up to this fraction of its width, the most the width-fit canvas
+    /// still covers.
+    static let heroMaxHeightRatio: CGFloat = 1.4
 
     /// The hero while the connection details are open (176 on the 380 window).
     static let compactHeightRatio: CGFloat = 176 / 380
@@ -51,8 +52,9 @@ enum SceneryFraming {
     static let compactTransitionMs: CGFloat = 400
     static let compactTransitionCurve: (CGPoint, CGPoint) = (CGPoint(x: 0.3, y: 0.7), CGPoint(x: 0.2, y: 1))
 
-    /// The blur of the landscape behind the side margins of a narrowed canvas, at display size.
-    static let marginBlur: CGFloat = 24
+    /// The blur of the landscape behind the side margins of a narrowed canvas, at display size:
+    /// an ambient wash with no recognisable shape.
+    static let marginBlur: CGFloat = 60
 
     /// The hero fades into the page along the mockup's soft curve ('Doux'), as (fraction of the
     /// hero height, alpha) from its top to its bottom.

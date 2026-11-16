@@ -7,7 +7,8 @@
 //  The home screen (desktop `MainView`): the scenery hero over the panel
 //  (status, controls, chips) and the account footer with the beta mark, the
 //  screen shared between them by `HomeLayout`. The panel and the footer keep a
-//  centred column; the hero spans the full width. The floating header is the
+//  centred column; the hero spans the full width, or the leading half beside
+//  the panel on a short screen wider than tall. The floating header is the
 //  root container's.
 //
 
@@ -55,47 +56,18 @@ struct HomeView: View {
         let palette = ConnectSurfacePalette(colorScheme: colorScheme)
 
         GeometryReader { proxy in
-            let layout = homeLayout(in: proxy.size, detailsOpen: detailsShown)
-            let open = homeLayout(
-                in: proxy.size, detailsOpen: false, panelHeight: panelHeight - (detailsShown ? detailsHeight : 0))
-            VStack(spacing: 0) {
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: 0) {
-                        HomeHeroView(
-                            controller: scenery,
-                            height: layout.heroHeight,
-                            openHeight: open.fullHeight,
-                            compact: layout.compactFraming,
-                            animated: !reduceMotion
-                        )
-                        .frame(height: layout.heroHeight)
-
-                        panel
-                            .frame(maxWidth: HomeMetrics.maxColumnWidth)
-                            .frame(maxWidth: .infinity)
-                            .fixedSize(horizontal: false, vertical: true)
-                            .sizeOfView { panelHeight = $0.height }
-                            // The status block rides up over the hero's fade.
-                            .padding(.top, -HomeMetrics.Panel.overlap)
-
-                        // The room the mockup leaves between the chips and the footer.
-                        Spacer(minLength: 0)
-                    }
-                    .frame(minHeight: max(0, proxy.size.height - footerHeight), alignment: .top)
-                }
-                .scrollDisabled(!layout.scrolls)
-                .scrollBounceBehavior(.basedOnSize)
-                .ignoresSafeArea(.container, edges: .top)
-
-                HomeFooterView(
-                    model: footerModel,
-                    beta: connectionViewModel.productBadge.map {
-                        HomeFooterBeta.label(badge: $0, networkInfo: connectionViewModel.networkInfo)
-                    },
-                    betaHint: connectionViewModel.productBannerLine,
-                    onBeta: { action(.explainNetwork) }
-                )
-                .sizeOfView { footerHeight = $0.height }
+            let layout = HomeLayout.resolve(
+                width: proxy.size.width,
+                height: proxy.size.height,
+                safeTop: hero.safeTop,
+                panelHeight: panelHeight - (detailsShown ? detailsHeight : 0),
+                detailsHeight: detailsShown ? detailsHeight : 0,
+                footerHeight: footerHeight
+            )
+            if layout.split {
+                split(layout, size: proxy.size)
+            } else {
+                stacked(layout, size: proxy.size)
             }
         }
         .ignoresSafeArea(.container, edges: .top)
@@ -105,23 +77,89 @@ struct HomeView: View {
         .accessibilityAction(.escape) { details.isOpen = false }
     }
 
+    /// The hero over the panel, the footer pinned under both.
+    private func stacked(_ layout: HomeLayout, size: CGSize) -> some View {
+        VStack(spacing: 0) {
+            ScrollView(.vertical, showsIndicators: false) {
+                VStack(spacing: 0) {
+                    heroView(layout)
+                        .frame(height: layout.heroHeight)
+
+                    measuredPanel
+                        // The status block rides up over the hero's fade.
+                        .padding(.top, -HomeMetrics.Panel.overlap)
+
+                    // The room the mockup leaves between the chips and the footer.
+                    Spacer(minLength: 0)
+                }
+                .frame(minHeight: max(0, size.height - footerHeight), alignment: .top)
+            }
+            .scrollDisabled(!layout.scrolls)
+            .scrollBounceBehavior(.basedOnSize)
+            .ignoresSafeArea(.container, edges: .top)
+
+            footer
+        }
+    }
+
+    /// The hero on the leading half at full height, the panel scrolling on the other half above
+    /// the footer.
+    private func split(_ layout: HomeLayout, size: CGSize) -> some View {
+        HStack(spacing: 0) {
+            heroView(layout)
+                .frame(width: layout.heroWidth, height: size.height)
+
+            VStack(spacing: 0) {
+                ScrollView(.vertical, showsIndicators: false) {
+                    measuredPanel
+                        .padding(.top, hero.safeTop + HomeMetrics.Hero.headerInset)
+                }
+                .scrollDisabled(!layout.scrolls)
+                .scrollBounceBehavior(.basedOnSize)
+                .ignoresSafeArea(.container, edges: .top)
+
+                footer
+            }
+        }
+    }
+
+    private func heroView(_ layout: HomeLayout) -> some View {
+        HomeHeroView(
+            controller: scenery,
+            height: layout.heroHeight,
+            openHeight: layout.fullHeight,
+            compact: layout.compactFraming,
+            besidePanel: layout.split,
+            animated: !reduceMotion
+        )
+    }
+
+    private var measuredPanel: some View {
+        panel
+            .frame(maxWidth: HomeMetrics.maxColumnWidth)
+            .frame(maxWidth: .infinity)
+            .fixedSize(horizontal: false, vertical: true)
+            .sizeOfView { panelHeight = $0.height }
+    }
+
+    private var footer: some View {
+        HomeFooterView(
+            model: footerModel,
+            beta: connectionViewModel.productBadge.map {
+                HomeFooterBeta.label(badge: $0, networkInfo: connectionViewModel.networkInfo)
+            },
+            betaHint: connectionViewModel.productBannerLine,
+            onBeta: { action(.explainNetwork) }
+        )
+        .sizeOfView { footerHeight = $0.height }
+    }
+
     /// The hero's resize when the details open or close, desktop's `cubic-bezier(0.3, 0.7, 0.2, 1)`.
     static let resize = Animation.timingCurve(
         SceneryFraming.compactTransitionCurve.0.x, SceneryFraming.compactTransitionCurve.0.y,
         SceneryFraming.compactTransitionCurve.1.x, SceneryFraming.compactTransitionCurve.1.y,
         duration: TimeInterval(SceneryFraming.compactTransitionMs / 1000)
     )
-
-    private func homeLayout(in size: CGSize, detailsOpen: Bool, panelHeight: CGFloat? = nil) -> HomeLayout {
-        HomeLayout.resolve(
-            width: size.width,
-            height: size.height,
-            safeTop: hero.safeTop,
-            panelHeight: panelHeight ?? self.panelHeight,
-            footerHeight: footerHeight,
-            detailsOpen: detailsOpen
-        )
-    }
 
     private var panel: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -145,11 +183,13 @@ struct HomeHeroView: UIViewControllerRepresentable {
     let height: CGFloat
     let openHeight: CGFloat
     let compact: Bool
+    let besidePanel: Bool
     let animated: Bool
 
     func makeUIViewController(context: Context) -> SceneryViewController { controller }
 
     func updateUIViewController(_ uiViewController: SceneryViewController, context: Context) {
+        uiViewController.fadesPanelEdge = besidePanel
         uiViewController.setHero(height: height, openHeight: openHeight, compact: compact, animated: animated)
     }
 }

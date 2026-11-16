@@ -258,4 +258,17 @@ final class HeaderBarViewTests: XCTestCase {
         XCTAssertEqual(header.wordmarkFrame.minX, column + 20, accuracy: 0.01)
         XCTAssertEqual(header.toolbarFrame.maxX, 1024 - column - HomeMetrics.Hero.headerInset, accuracy: 0.01)
     }
+
+    /// Split, the header and the banners hang over the hero, the left half of the window.
+    func testInASplitTheHeaderKeepsToTheHero() {
+        let window = UIView(frame: CGRect(x: 0, y: 0, width: 844, height: 390))
+        let header = HeaderBarView(frame: CGRect(x: 0, y: 0, width: 844, height: 70))
+        window.addSubview(header)
+        header.homeTheme = .dark
+        header.setNeedsLayout()
+        header.layoutIfNeeded()
+        header.layoutIfNeeded()
+        XCTAssertEqual(header.wordmarkFrame.minX, 20, accuracy: 0.01)
+        XCTAssertEqual(header.toolbarFrame.maxX, 422 - HomeMetrics.Hero.headerInset, accuracy: 0.01)
+    }
 }

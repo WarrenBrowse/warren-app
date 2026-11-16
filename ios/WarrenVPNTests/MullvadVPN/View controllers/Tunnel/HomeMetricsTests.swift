@@ -183,17 +183,17 @@ final class HomeMetricsTests: XCTestCase {
     // MARK: - Sharing the screen
 
     /// A 400 point phone under a 50 point status bar: the hero is 50 + 400 * 300 / 380 at least,
-    /// 50 + 400 * 1.15 at most, 50 + 400 * 176 / 380 while compact. The panel is 300 high with its
+    /// 50 + 400 * 1.4 at most, 50 + 400 * 176 / 380 while compact. The panel is 300 high with its
     /// 18 point overlap of the hero, the footer 44.
-    private func phone(height: CGFloat, detailsOpen: Bool = false) -> HomeLayout {
+    private func phone(height: CGFloat, details: CGFloat = 0) -> HomeLayout {
         HomeLayout.resolve(
-            width: 400, height: height, safeTop: 50, panelHeight: 300, footerHeight: 44, detailsOpen: detailsOpen)
+            width: 400, height: height, safeTop: 50, panelHeight: 300, detailsHeight: details, footerHeight: 44)
     }
 
     func testATallPhoneGrowsTheHeroToItsMaximumAndLeavesTheRestAboveTheFooter() {
-        let layout = phone(height: 1000)
-        XCTAssertEqual(layout.heroHeight, 510, accuracy: 0.01)
-        XCTAssertEqual(layout.fullHeight, 510, accuracy: 0.01)
+        let layout = phone(height: 1100)
+        XCTAssertEqual(layout.heroHeight, 610, accuracy: 0.01)
+        XCTAssertEqual(layout.fullHeight, 610, accuracy: 0.01)
         XCTAssertEqual(layout.gap, 164, accuracy: 0.01)
         XCTAssertFalse(layout.compactFraming)
         XCTAssertFalse(layout.scrolls)
@@ -222,17 +222,67 @@ final class HomeMetricsTests: XCTestCase {
         XCTAssertEqual(layout.gap, 0)
     }
 
-    func testTheOpenDetailsTakeTheCompactHero() {
-        let layout = phone(height: 1000, detailsOpen: true)
-        XCTAssertEqual(layout.heroHeight, 50 + 400 * 176 / 380, accuracy: 0.01)
-        XCTAssertTrue(layout.compactFraming)
-        XCTAssertFalse(layout.scrolls)
+    /// The open details take only the height the card needs from the hero, so no band is left
+    /// empty above the footer, and the hero keeps its frame when it does not have to move.
+    func testTheOpenDetailsShrinkTheHeroOnlyAsMuchAsTheCardNeeds() {
+        let roomy = phone(height: 1100, details: 150)
+        XCTAssertEqual(roomy.heroHeight, 610, accuracy: 0.01)
+        XCTAssertFalse(roomy.compactFraming)
+        XCTAssertEqual(roomy.gap, 14, accuracy: 0.01)
+
+        let tight = phone(height: 800, details: 150)
+        XCTAssertEqual(tight.heroHeight, 324, accuracy: 0.01)
+        XCTAssertEqual(tight.fullHeight, 474, accuracy: 0.01)
+        XCTAssertTrue(tight.compactFraming)
+        XCTAssertEqual(tight.gap, 0)
     }
 
-    /// A tablet sizes its hero from the 480 point column, not from its full width.
-    func testAWideScreenSizesTheHeroFromTheColumn() {
+    func testTheOpenDetailsNeverTakeTheHeroBelowCompact() {
+        let layout = phone(height: 800, details: 400)
+        XCTAssertEqual(layout.heroHeight, 50 + 400 * 176 / 380, accuracy: 0.01)
+        XCTAssertTrue(layout.scrolls)
+    }
+
+    /// A tablet's column sets the hero's minimum, and the hero still takes the free height up to
+    /// 1.4 of its own full width, so a portrait tablet leaves no band above the footer.
+    func testAWideScreenAbsorbsTheFreeHeightFromItsColumnMinimum() {
+        let portrait = HomeLayout.resolve(
+            width: 834, height: 1210, safeTop: 24, panelHeight: 300, detailsHeight: 0, footerHeight: 44)
+        XCTAssertEqual(portrait.heroHeight, 1210 - 44 - 282, accuracy: 0.01)
+        XCTAssertEqual(portrait.gap, 0)
+        let short = HomeLayout.resolve(
+            width: 1024, height: 600, safeTop: 24, panelHeight: 300, detailsHeight: 0, footerHeight: 44)
+        XCTAssertEqual(short.fullHeight, 24 + 480 * 300 / 380, accuracy: 0.01)
+    }
+
+    // MARK: - Split
+
+    /// Side by side only on a screen wider than tall and shorter than the split height: a phone on
+    /// its side or a short tablet window, never a tablet in landscape.
+    func testOnlyAShortScreenWiderThanTallSplits() {
+        XCTAssertTrue(HomeLayout.isSplit(width: 844, height: 390))
+        XCTAssertTrue(HomeLayout.isSplit(width: 700, height: 500))
+        XCTAssertFalse(HomeLayout.isSplit(width: 390, height: 844))
+        XCTAssertFalse(HomeLayout.isSplit(width: 1210, height: 834))
+        XCTAssertFalse(HomeLayout.isSplit(width: 500, height: 500))
+    }
+
+    /// Split, the hero is the left half at full height and never shrinks for the details; the panel
+    /// scrolls on the right when it, the card and the footer outgrow the screen.
+    func testASplitHeroIsTheLeftHalfAtFullHeightAndNeverCompact() {
         let layout = HomeLayout.resolve(
-            width: 1024, height: 1366, safeTop: 24, panelHeight: 300, footerHeight: 44, detailsOpen: false)
-        XCTAssertEqual(layout.heroHeight, 24 + 480 * 1.15, accuracy: 0.01)
+            width: 844, height: 390, safeTop: 0, panelHeight: 300, detailsHeight: 150, footerHeight: 44)
+        XCTAssertTrue(layout.split)
+        XCTAssertEqual(layout.heroWidth, 422)
+        XCTAssertEqual(layout.heroHeight, 390)
+        XCTAssertFalse(layout.compactFraming)
+        XCTAssertTrue(layout.scrolls)
+        XCTAssertEqual(layout.gap, 0)
+    }
+
+    func testAStackedHeroSpansTheWidth() {
+        let layout = phone(height: 800)
+        XCTAssertFalse(layout.split)
+        XCTAssertEqual(layout.heroWidth, 400)
     }
 }

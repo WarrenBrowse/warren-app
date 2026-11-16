@@ -179,48 +179,82 @@ enum HomeMetrics {
     }
 }
 
-/// How the home shares a screen between the hero, the panel and the footer. The panel keeps its
-/// natural height right under the hero and the footer is pinned at the bottom, so the hero is what
-/// takes the free height: at least the mockup's proportion of the column, at most
-/// `SceneryFraming.heroMaxHeightRatio` of it, and only what is left beyond that becomes the gap
-/// above the footer. A screen too short for the panel under the minimum hero lets the hero go down
-/// to the compact proportion, framed the compact way, and below that the panel scrolls. The open
-/// details always take the compact hero.
+/// How the home shares a screen between the hero, the panel and the footer.
+///
+/// Stacked (every screen but a short one wider than tall): the panel keeps its natural height
+/// right under the hero and the footer is pinned at the bottom, so the hero is what takes the free
+/// height, from the mockup's proportion of the column (the 480 point column on a tablet) up to
+/// `SceneryFraming.heroMaxHeightRatio` of its own full width, and only what is left beyond that
+/// becomes the gap above the footer. A screen too short for the panel under the minimum hero lets
+/// the hero go down to the compact proportion, framed the compact way, and below that the panel
+/// scrolls. The open details take from the hero only the height the card needs, down to compact.
+///
+/// Split (wider than tall and shorter than `splitBelowHeight`): the hero is the left half at full
+/// height and the panel scrolls on the right above the footer; nothing shrinks for the details.
 struct HomeLayout: Equatable {
+    /// Below this height a screen wider than tall puts the hero and the panel side by side.
+    static let splitBelowHeight: CGFloat = 560
+
+    let split: Bool
+    let heroWidth: CGFloat
     let heroHeight: CGFloat
     /// The art is framed the compact way (span top under the header, the rest into the fade).
     let compactFraming: Bool
-    /// The hero height whose scale a compact frame keeps: the hero itself, or the mockup's minimum
-    /// when the screen squeezed it below that. Meaningful with the details closed.
+    /// The hero height whose scale a compact frame keeps: the hero with the details closed, or the
+    /// mockup's minimum when the screen squeezed it below that.
     let fullHeight: CGFloat
     /// The room left between the chips and the footer.
     let gap: CGFloat
     /// The panel does not fit and scrolls above the footer.
     let scrolls: Bool
 
+    static func isSplit(width: CGFloat, height: CGFloat) -> Bool {
+        width > height && height < splitBelowHeight
+    }
+
     /// `height`: the home's own height, the status bar included and the home indicator not.
-    /// `panelHeight`: the panel's natural height, its overlap of the hero included.
+    /// `panelHeight`: the panel's natural height with the details closed, its overlap of the hero
+    /// included. `detailsHeight`: what the open details card adds to it, 0 while closed.
     /// `footerHeight`: the account band's height above the home indicator.
     static func resolve(
         width: CGFloat,
         height: CGFloat,
         safeTop: CGFloat,
         panelHeight: CGFloat,
-        footerHeight: CGFloat,
-        detailsOpen: Bool
+        detailsHeight: CGFloat,
+        footerHeight: CGFloat
     ) -> HomeLayout {
+        if isSplit(width: width, height: height) {
+            let content = safeTop + HomeMetrics.Hero.headerInset + panelHeight + detailsHeight + footerHeight
+            return HomeLayout(
+                split: true,
+                heroWidth: width / 2,
+                heroHeight: height,
+                compactFraming: false,
+                fullHeight: height,
+                gap: 0,
+                scrolls: content > height + 0.5
+            )
+        }
         let column = HomeMetrics.columnWidth(forWidth: width)
         let minimum = SceneryFraming.heroHeight(columnWidth: column, safeTop: safeTop)
-        let maximum = SceneryFraming.heroHeight(
-            columnWidth: column, safeTop: safeTop, ratio: SceneryFraming.heroMaxHeightRatio)
+        let maximum = max(
+            minimum,
+            SceneryFraming.heroHeight(columnWidth: width, safeTop: safeTop, ratio: SceneryFraming.heroMaxHeightRatio)
+        )
         let compact = SceneryFraming.heroHeight(
             columnWidth: column, safeTop: safeTop, ratio: SceneryFraming.compactHeightRatio)
-        let room = height - footerHeight - (panelHeight - HomeMetrics.Panel.overlap)
-        let hero = detailsOpen ? compact : min(maximum, max(compact, room))
+        let closedRoom = height - footerHeight - (panelHeight - HomeMetrics.Panel.overlap)
+        let closed = min(maximum, max(compact, closedRoom))
+        let room = closedRoom - detailsHeight
+        let hero = max(compact, min(closed, room))
+        let full = max(closed, minimum)
         return HomeLayout(
+            split: false,
+            heroWidth: width,
             heroHeight: hero,
-            compactFraming: detailsOpen || hero < minimum - 0.5,
-            fullHeight: max(hero, minimum),
+            compactFraming: hero < full - 0.5,
+            fullHeight: full,
             gap: max(0, room - hero),
             scrolls: room < hero - 0.5
         )
