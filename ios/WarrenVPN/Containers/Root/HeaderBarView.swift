@@ -37,6 +37,34 @@ class HeaderBarView: UIView {
         return imageView
     }()
 
+    /// A paper copy of the wordmark under it, whose shadow is the wide halo
+    /// that separates the ink from whatever the sky holds. Home only.
+    private let wordmarkGlowView: UIImageView = {
+        let imageView = UIImageView(image: UIImage(named: "WarrenWordmark"))
+        imageView.contentMode = .scaleAspectFit
+        imageView.isHidden = true
+        imageView.layer.shadowOffset = .zero
+        imageView.layer.shadowRadius = 7
+        imageView.layer.shadowOpacity = 0.85
+        return imageView
+    }()
+
+    /// The rounded translucent pill the home toolbar's buttons sit on.
+    private let toolbarBackground = HomeToolbarBackgroundView()
+
+    private var classicConstraints: [NSLayoutConstraint] = []
+    private var homeConstraints: [NSLayoutConstraint] = []
+
+    /// The theme of the home screen while the header floats over its art, nil
+    /// on every other screen.
+    var homeTheme: WarrenTheme? {
+        didSet {
+            guard homeTheme != oldValue else { return }
+            applyLayout(home: homeTheme != nil, wasHome: oldValue != nil)
+            applyTone()
+        }
+    }
+
     /// The non-prod marker, beside the wordmark. Once the app is open the home
     /// screen icon is out of sight and the status-bar VPN chip is the system's
     /// own, so this is the in-app answer to "which of the two installs am I
@@ -201,10 +229,19 @@ class HeaderBarView: UIView {
     }
 
     private var contentColor: UIColor {
-        switch tone {
+        if let homeTheme {
+            return ConnectSurfacePalette(theme: homeTheme).uiColor(.homeText)
+        }
+        return switch tone {
         case .light: UIColor.HeaderBar.buttonColor
         case .dark: UIColor.black
         }
+    }
+
+    /// The wordmark is inked like the art, so on the home it keeps its dark ink
+    /// in both themes and rides its paper glow.
+    private var wordmarkColor: UIColor {
+        homeTheme != nil ? ConnectSurfacePalette(theme: .light).uiColor(.homeText) : contentColor
     }
 
     private var subduedContentColor: UIColor {
@@ -216,7 +253,23 @@ class HeaderBarView: UIView {
 
     private func applyTone() {
         wordmarkImageView.image = UIImage(named: "WarrenWordmark")?
-            .withTintColor(contentColor, renderingMode: .alwaysOriginal)
+            .withTintColor(wordmarkColor, renderingMode: .alwaysOriginal)
+        let glow = ConnectSurfacePalette(theme: .light).uiColor(.homeLogoGlow).withAlphaComponent(1)
+        wordmarkGlowView.image = UIImage(named: "WarrenWordmark")?
+            .withTintColor(glow, renderingMode: .alwaysOriginal)
+        wordmarkGlowView.layer.shadowColor = glow.cgColor
+        wordmarkImageView.layer.shadowColor = glow.cgColor
+        if let homeTheme {
+            toolbarBackground.apply(theme: homeTheme)
+            let palette = ConnectSurfacePalette(theme: homeTheme)
+            forumBadgeLabel.backgroundColor = palette.uiColor(.homeBadge)
+            forumBadgeLabel.textColor = palette.uiColor(.homePillPendingText)
+            forumBadgeLabel.layer.borderColor = palette.uiColor(.homeBadgeRing).cgColor
+        } else {
+            forumBadgeLabel.backgroundColor = UIColor.Warren.yellow
+            forumBadgeLabel.textColor = UIColor.Warren.navy
+            forumBadgeLabel.layer.borderColor = nil
+        }
         accountButton.setImage(
             UIImage.Buttons.account.withTintColor(contentColor, renderingMode: .alwaysOriginal),
             for: .normal
@@ -238,6 +291,32 @@ class HeaderBarView: UIView {
         productChipLabel.backgroundColor = UIColor.Warren.yellow
         productChipLabel.textColor = UIColor.Warren.navy
         productChipLabel.layer.borderColor = contentColor.withAlphaComponent(0.35).cgColor
+    }
+
+    /// Swaps the classic bar for the home's floating wordmark and toolbar.
+    private func applyLayout(home: Bool, wasHome: Bool) {
+        guard home != wasHome else { return }
+        if home {
+            NSLayoutConstraint.deactivate(classicConstraints)
+            NSLayoutConstraint.activate(homeConstraints)
+        } else {
+            NSLayoutConstraint.deactivate(homeConstraints)
+            NSLayoutConstraint.activate(classicConstraints)
+        }
+        let buttonSize = home ? HomeMetrics.Toolbar.button : UIMetrics.Button.barButtonSize
+        for button in [forumButton, accountButton, settingsButton] {
+            button.constraints
+                .filter { $0.firstItem === button && $0.firstAttribute == .height && $0.secondItem == nil }
+                .forEach { $0.constant = buttonSize }
+        }
+        buttonContainer.spacing = home ? 0 : 12
+        toolbarBackground.isHidden = !home
+        wordmarkGlowView.isHidden = !home
+        wordmarkImageView.layer.shadowOpacity = home ? 0.95 : 0
+        wordmarkImageView.layer.shadowRadius = home ? 1.5 : 0
+        wordmarkImageView.layer.shadowOffset = .zero
+        forumBadgeLabel.layer.borderWidth = home ? HomeMetrics.Toolbar.badgeRing : 0
+        deviceInfoHolder.isHidden = home
     }
 
     /// The glyph, the badge and the spoken label of the forum slot, all from
@@ -413,13 +492,10 @@ class HeaderBarView: UIView {
 
         [deviceNameLabel, timeLeftLabel].forEach { deviceInfoHolder.addArrangedSubview($0) }
 
+        [wordmarkGlowView, toolbarBackground].forEach { $0.configureForAutoLayout() }
+        addSubview(wordmarkGlowView)
+        addSubview(toolbarBackground)
         addConstrainedSubviews([wordmarkImageView, productChipLabel, buttonContainer, deviceInfoHolder]) {
-            wordmarkImageView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor)
-            wordmarkImageView.topAnchor.constraint(
-                equalTo: layoutMarginsGuide.topAnchor,
-                constant: 8
-            )
-            wordmarkImageView.heightAnchor.constraint(equalToConstant: UIMetrics.headerBarLockupHeight)
             wordmarkImageView.widthAnchor.constraint(
                 equalTo: wordmarkImageView.heightAnchor,
                 multiplier: wordmarkAspectRatio
@@ -437,29 +513,82 @@ class HeaderBarView: UIView {
                 constant: 5
             )
 
+            deviceInfoHolder.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor)
+            deviceInfoHolder.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor)
+
+            // The glow is the wordmark again, in paper, under it: its shadow
+            // is the wide halo, the wordmark's own the tight one.
+            wordmarkGlowView.leadingAnchor.constraint(equalTo: wordmarkImageView.leadingAnchor)
+            wordmarkGlowView.trailingAnchor.constraint(equalTo: wordmarkImageView.trailingAnchor)
+            wordmarkGlowView.topAnchor.constraint(equalTo: wordmarkImageView.topAnchor)
+            wordmarkGlowView.bottomAnchor.constraint(equalTo: wordmarkImageView.bottomAnchor)
+
+            toolbarBackground.leadingAnchor.constraint(
+                equalTo: buttonContainer.leadingAnchor,
+                constant: -HomeMetrics.Toolbar.paddingHorizontal
+            )
+            toolbarBackground.trailingAnchor.constraint(
+                equalTo: buttonContainer.trailingAnchor,
+                constant: HomeMetrics.Toolbar.paddingHorizontal
+            )
+            toolbarBackground.centerYAnchor.constraint(equalTo: buttonContainer.centerYAnchor)
+            toolbarBackground.heightAnchor.constraint(equalToConstant: HomeMetrics.Toolbar.height)
+        }
+
+        classicConstraints = [
+            wordmarkImageView.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor),
+            wordmarkImageView.topAnchor.constraint(
+                equalTo: layoutMarginsGuide.topAnchor,
+                constant: 8
+            ),
+            wordmarkImageView.heightAnchor.constraint(equalToConstant: UIMetrics.headerBarLockupHeight),
+
             // The lockup's letters sit in the bottom band of its box (the W's
             // ears tower above), so the buttons center on the letter band, the
             // optical alignment the eye expects, not on the box middle.
             buttonContainer.centerYAnchor.constraint(
                 equalTo: wordmarkImageView.centerYAnchor,
                 constant: 5
-            )
+            ),
             buttonContainer.trailingAnchor.constraint(
                 equalTo: layoutMarginsGuide.trailingAnchor,
                 constant: buttonContainerTrailingAdjustment
-            )
+            ),
 
-            deviceInfoHolder.leadingAnchor.constraint(equalTo: layoutMarginsGuide.leadingAnchor)
-            deviceInfoHolder.trailingAnchor.constraint(equalTo: layoutMarginsGuide.trailingAnchor)
             deviceInfoHolder.topAnchor.constraint(
                 equalToSystemSpacingBelow: wordmarkImageView.bottomAnchor,
                 multiplier: 1
-            )
+            ),
             layoutMarginsGuide.bottomAnchor.constraint(
                 equalToSystemSpacingBelow: deviceInfoHolder.bottomAnchor,
                 multiplier: 1
-            )
-        }
+            ),
+        ]
+
+        // The home floats the inked wordmark and a toolbar pill over the art
+        // (desktop `HomeHeader`): both inset from the screen edges, the
+        // toolbar under the status bar, and the header ending just below it,
+        // where the notification banners hang.
+        let toolbar = HomeMetrics.Toolbar.self
+        let inset = HomeMetrics.Hero.headerInset
+        homeConstraints = [
+            wordmarkImageView.leadingAnchor.constraint(
+                equalTo: safeAreaLayoutGuide.leadingAnchor,
+                constant: inset + 4
+            ),
+            wordmarkImageView.heightAnchor.constraint(equalToConstant: HomeMetrics.Hero.logoHeight),
+            wordmarkImageView.centerYAnchor.constraint(equalTo: toolbarBackground.centerYAnchor),
+            buttonContainer.topAnchor.constraint(
+                equalTo: layoutMarginsGuide.topAnchor,
+                constant: inset + (toolbar.height - toolbar.button) / 2
+            ),
+            buttonContainer.trailingAnchor.constraint(
+                equalTo: safeAreaLayoutGuide.trailingAnchor,
+                constant: -(inset + toolbar.paddingHorizontal)
+            ),
+            bottomAnchor.constraint(equalTo: toolbarBackground.bottomAnchor, constant: 8),
+        ]
+        NSLayoutConstraint.activate(classicConstraints)
 
         productChipLabel.addGestureRecognizer(
             UITapGestureRecognizer(target: self, action: #selector(handleProductChipTap))
@@ -491,5 +620,56 @@ class HeaderBarView: UIView {
         deviceName = configuration.deviceName
         timeLeft = configuration.expiry
         isAccountButtonHidden = !configuration.showsAccountButton
+    }
+}
+
+/// The home toolbar's pill: a blurred glass of the page colour with a hairline
+/// inset, a dark glass in the dark theme and a paper one in the light theme
+/// (desktop `HomeHeader`'s `StyledToolbar`). The shadow lives on this view and
+/// the clipped glass inside it, since a clipping layer cannot cast one.
+final class HomeToolbarBackgroundView: UIView {
+    private let blurView = UIVisualEffectView(effect: nil)
+    private let tintView = UIView()
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        isHidden = true
+        isUserInteractionEnabled = false
+        let radius = HomeMetrics.Toolbar.radius
+        blurView.layer.cornerRadius = radius
+        blurView.layer.cornerCurve = .continuous
+        blurView.clipsToBounds = true
+        tintView.layer.cornerRadius = radius
+        tintView.layer.cornerCurve = .continuous
+        tintView.layer.borderWidth = 1
+        layer.shadowOffset = CGSize(width: 0, height: 4)
+        layer.shadowRadius = 5
+        layer.shadowOpacity = 1
+        [blurView, tintView].forEach { addSubview($0) }
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func apply(theme: WarrenTheme) {
+        let palette = ConnectSurfacePalette(theme: theme)
+        blurView.effect = UIBlurEffect(
+            style: theme == .dark ? .systemUltraThinMaterialDark : .systemUltraThinMaterialLight
+        )
+        tintView.backgroundColor = palette.uiColor(.homeToolbar)
+        tintView.layer.borderColor = palette.uiColor(.homeToolbarLine).cgColor
+        layer.shadowColor = palette.uiColor(.homeToolbarShadow).cgColor
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        blurView.frame = bounds
+        tintView.frame = bounds
+        let shadowShape = UIBezierPath(
+            roundedRect: bounds.insetBy(dx: 3, dy: 3),
+            cornerRadius: HomeMetrics.Toolbar.radius
+        )
+        layer.shadowPath = shadowShape.cgPath
     }
 }

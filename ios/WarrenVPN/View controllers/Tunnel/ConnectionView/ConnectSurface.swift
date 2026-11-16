@@ -4,9 +4,10 @@
 //
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  The connect screen's own surfaces: the connection card, the feature chips
-//  above it and the beta banner. They are opaque and follow the theme, light
-//  or dark, where the scenery accents of `SceneryTone` do not.
+//  The connect screen's own surfaces: the home page, its status, controls,
+//  chips, toolbar and footer (the `home*` tokens), and the surfaces of the
+//  card design they replaced that other views still draw with. They follow the
+//  theme, light or dark, where the scenery accents of `SceneryTone` do not.
 //
 //  Every value here is a copy of `design-tokens.json` at the repository root
 //  (sections `surfaces` and `components`), which desktop generates. iOS has no
@@ -18,35 +19,47 @@ import UIKit
 
 /// The names of `design-tokens.json` `surfaces.<theme>`, spelled the same.
 enum ConnectSurfaceToken: String, CaseIterable {
-    case card
-    case line
-    case shadowSoft
-    case shadowStrong
     case pill
-    case pillText
     case text
     case textSecondary
-    case textMuted
     case button
-    case buttonHover
-    case buttonPressed
     case buttonLine
-    case exposed
-    case exposedWell
-    case connecting
-    case connectingWell
-    case `protected`
-    case protectedWell
-    case connect
-    case connectHover
-    case connectPressed
-    case disconnect
-    case disconnectHover
-    case disconnectPressed
-    case cancel
-    case cancelHover
-    case cancelPressed
-    case actionText
+    case homePage
+    case homeText
+    case homeTextSecondary
+    case homeTextMono
+    case homeField
+    case homeFieldHover
+    case homeFieldPressed
+    case homeFieldIcon
+    case homeFooter
+    case homeChipText
+    case homeChipLine
+    case homeToolbar
+    case homeToolbarLine
+    case homeToolbarShadow
+    case homeBadge
+    case homeBadgeRing
+    case homeScrim
+    case homeLogoGlow
+    case homePillExposed
+    case homePillExposedText
+    case homePillProtected
+    case homePillProtectedText
+    case homePillPending
+    case homePillPendingText
+    case homePillBlocked
+    case homePillBlockedText
+    case homeConnect
+    case homeConnectHover
+    case homeConnectPressed
+    case homeConnectText
+    case homeDisconnectLine
+    case homeDisconnectText
+    case homeDisconnectHover
+    case homeCancelLine
+    case homeCancelText
+    case homeCancelHover
 }
 
 struct ConnectSurfacePalette: Equatable {
@@ -76,69 +89,93 @@ struct ConnectSurfacePalette: Equatable {
 
     private static func dark(_ token: ConnectSurfaceToken) -> UInt32 {
         switch token {
-        case .card: 0xFF28_2623
-        case .line: 0xFF45_423C
-        case .shadowSoft: 0x5900_0000
-        case .shadowStrong: 0x7300_0000
         case .pill: 0xFFD9_A441
-        case .pillText: 0xFF23_1A06
         case .text: 0xFFF2_EFE6
         case .textSecondary: 0xFFD6_D2C8
-        case .textMuted: 0xFFB5_B0A4
         case .button: 0xFF3A_3834
-        case .buttonHover: 0xFF45_423D
-        case .buttonPressed: 0xFF31_2F2B
         case .buttonLine: 0xFF55_524B
-        case .exposed: 0xFFF0_8A6E
-        case .exposedWell: 0xFF4A_2A22
-        case .connecting: 0xFFF0_A360
-        case .connectingWell: 0xFF4A_341C
-        case .protected: 0xFF9F_D07E
-        case .protectedWell: 0xFF24_3A1F
-        case .connect: 0xFF3F_6B2E
-        case .connectHover: 0xFF48_7A35
-        case .connectPressed: 0xFF35_5A27
-        case .disconnect: 0xFFA8_381F
-        case .disconnectHover: 0xFFB8_4126
-        case .disconnectPressed: 0xFF8F_2F1A
-        case .cancel: 0xFFA0_5818
-        case .cancelHover: 0xFFB0_621C
-        case .cancelPressed: 0xFF8A_4C15
-        case .actionText: 0xFFFF_FFFF
+        case .homePage: 0xFF14_1311
+        case .homeText: 0xFFEF_E9DF
+        case .homeTextSecondary: 0xFF9D_9488
+        case .homeTextMono: 0xFF8A_8175
+        case .homeField: 0xFF21_1F1C
+        case .homeFieldHover: 0xFF2B_2824
+        case .homeFieldPressed: 0xFF1C_1A18
+        case .homeFieldIcon: 0xFFD6_CEC2
+        case .homeFooter: 0xFF1B_1917
+        case .homeChipText: 0xFFC3_BAAD
+        case .homeChipLine: 0xFF36_322D
+        case .homeToolbar: 0xB814_1311
+        case .homeToolbarLine: 0x0FFF_FFFF
+        case .homeToolbarShadow: 0x0000_0000
+        case .homeBadge: 0xFFEF_B062
+        case .homeBadgeRing: 0xFF1D_1B18
+        case .homeScrim: 0x6614_1311
+        case .homeLogoGlow: 0xB3FA_F7F0
+        case .homePillExposed: 0xFFE9_8664
+        case .homePillExposedText: 0xFF1C_0F0A
+        case .homePillProtected: 0xFF7F_C581
+        case .homePillProtectedText: 0xFF0D_160C
+        case .homePillPending: 0xFFEF_B062
+        case .homePillPendingText: 0xFF21_1404
+        case .homePillBlocked: 0xFFD6_CEC2
+        case .homePillBlockedText: 0xFF14_1311
+        case .homeConnect: 0xFF7D_BD7F
+        case .homeConnectHover: 0xFF8C_C98D
+        case .homeConnectPressed: 0xFF6F_AC71
+        case .homeConnectText: 0xFF0F_140E
+        case .homeDisconnectLine: 0xFF92_4D35
+        case .homeDisconnectText: 0xFFF6_A88D
+        case .homeDisconnectHover: 0x1AE9_8664
+        case .homeCancelLine: 0xFF93_6831
+        case .homeCancelText: 0xFFF1_C17F
+        case .homeCancelHover: 0x1AEF_B062
         }
     }
 
     private static func light(_ token: ConnectSurfaceToken) -> UInt32 {
         switch token {
-        case .card: 0xFFF7_F1E3
-        case .line: 0xFFD9_CDB2
-        case .shadowSoft: 0x2E3C_321E
-        case .shadowStrong: 0x473C_321E
         case .pill: 0xFF7A_5412
-        case .pillText: 0xFFFF_FFFF
         case .text: 0xFF2A_2822
         case .textSecondary: 0xFF4A_463D
-        case .textMuted: 0xFF5C_574C
         case .button: 0xFFEB_E3D0
-        case .buttonHover: 0xFFE4_DAC3
-        case .buttonPressed: 0xFFDC_D0B6
         case .buttonLine: 0xFFCF_C2A5
-        case .exposed: 0xFFA3_321C
-        case .exposedWell: 0xFFF3_D9CF
-        case .connecting: 0xFF8A_4B0F
-        case .connectingWell: 0xFFF3_E0C8
-        case .protected: 0xFF2F_6A2A
-        case .protectedWell: 0xFFD8_E8CC
-        case .connect: 0xFF3F_6B2E
-        case .connectHover: 0xFF48_7A35
-        case .connectPressed: 0xFF35_5A27
-        case .disconnect: 0xFFA8_381F
-        case .disconnectHover: 0xFFB8_4126
-        case .disconnectPressed: 0xFF8F_2F1A
-        case .cancel: 0xFFA0_5818
-        case .cancelHover: 0xFFB0_621C
-        case .cancelPressed: 0xFF8A_4C15
-        case .actionText: 0xFFFF_FFFF
+        case .homePage: 0xFFF4_F0E8
+        case .homeText: 0xFF22_1E19
+        case .homeTextSecondary: 0xFF6F_675C
+        case .homeTextMono: 0xFF7A_7266
+        case .homeField: 0xFFE8_E2D6
+        case .homeFieldHover: 0xFFDF_D8CA
+        case .homeFieldPressed: 0xFFD6_CFC0
+        case .homeFieldIcon: 0xFF3A_342C
+        case .homeFooter: 0xFFEB_E5DA
+        case .homeChipText: 0xFF5E_564B
+        case .homeChipLine: 0xFFD6_CDBD
+        case .homeToolbar: 0xCCFA_F7F0
+        case .homeToolbarLine: 0x1428_1E14
+        case .homeToolbarShadow: 0x4028_1E14
+        case .homeBadge: 0xFFD9_7230
+        case .homeBadgeRing: 0xFFFA_F7F0
+        case .homeScrim: 0x59F4_F0E8
+        case .homeLogoGlow: 0xB3FA_F7F0
+        case .homePillExposed: 0xFFDF_7752
+        case .homePillExposedText: 0xFF1C_0F0A
+        case .homePillProtected: 0xFF67_B36A
+        case .homePillProtectedText: 0xFF0D_160C
+        case .homePillPending: 0xFFDF_9B44
+        case .homePillPendingText: 0xFF21_1404
+        case .homePillBlocked: 0xFF3A_342C
+        case .homePillBlockedText: 0xFFF4_F0E8
+        case .homeConnect: 0xFF3B_793F
+        case .homeConnectHover: 0xFF44_8648
+        case .homeConnectPressed: 0xFF32_6A36
+        case .homeConnectText: 0xFFFF_FFFF
+        case .homeDisconnectLine: 0xFFC2_6B4C
+        case .homeDisconnectText: 0xFF9E_4421
+        case .homeDisconnectHover: 0x1AC2_6B4C
+        case .homeCancelLine: 0xFFBD_853F
+        case .homeCancelText: 0xFF8D_5406
+        case .homeCancelHover: 0x1ABD_853F
         }
     }
 }
@@ -151,172 +188,15 @@ extension ConnectSurfacePalette {
     }
 }
 
-/// `design-tokens.json` `components`, in points (dp and sp are points here).
-enum ConnectSurfaceMetrics {
-    enum Card {
-        static let padding: CGFloat = 20
-        static let radius: CGFloat = 16
-        static let borderWidth: CGFloat = 0.5
-        static let shadowOffsetY: CGFloat = 5
-        static let shadowBlur: CGFloat = 16
-        static let marginHorizontal: CGFloat = 14
-        static let marginBottom: CGFloat = 6
-        static let blockGap: CGFloat = 10.5
-        static let chipGap: CGFloat = 2
-        static let chipsToCardGap: CGFloat = 4
-        static let chevronBoxSize: CGFloat = 22
-        static let chevronIconSize: CGFloat = 18
+extension ConnectSurfacePalette {
+    /// The palette of the interface style a view resolved, dark unless it says
+    /// light, the same rule as `WarrenTheme`.
+    init(traitCollection: UITraitCollection) {
+        self.init(theme: traitCollection.userInterfaceStyle == .light ? .light : .dark)
     }
 
-    enum Status {
-        static let rowGap: CGFloat = 12
-        static let textGap: CGFloat = 1
-        static let trailingGap: CGFloat = 12
-        static let wellSize: CGFloat = 34
-        static let wellRadius: CGFloat = 8
-        static let iconSize: CGFloat = 18
-        static let titleSize: CGFloat = 16
-        static let titleLineHeight: CGFloat = 19.2
-        static let subtitleSize: CGFloat = 11.5
-        static let subtitleLineHeight: CGFloat = 15
-    }
-
-    enum Location {
-        static let gapAbove: CGFloat = 10.5
-        static let size: CGFloat = 15
-        static let lineHeight: CGFloat = 19
-        static let hostnameGapAbove: CGFloat = 2
-        static let hostnameSize: CGFloat = 12
-        static let hostnameLineHeight: CGFloat = 16.5
-    }
-
-    enum Button {
-        static let height: CGFloat = 32
-        static let radius: CGFloat = 6
-        static let borderWidth: CGFloat = 0.5
-        static let textSize: CGFloat = 13
-        static let textLineHeight: CGFloat = 18
-        static let rowGap: CGFloat = 4
-        static let shuffleWidth: CGFloat = 40
-    }
-
-    enum Chip {
-        static let paddingVertical: CGFloat = 5.5
-        static let paddingHorizontal: CGFloat = 8
-        static let radius: CGFloat = 7
-        static let borderWidth: CGFloat = 0.5
-        static let shadowOffsetY: CGFloat = 1.5
-        static let shadowBlur: CGFloat = 5
-        /// Not in the shared table: desktop's chip text is 11px semibold.
-        static let textSize: CGFloat = 11
-    }
-
-    enum Flag {
-        static let size: CGFloat = 22
-        static let ringWidth: CGFloat = 0.5
-    }
-
-    enum Banner {
-        static let height: CGFloat = 36.5
-        static let paddingStart: CGFloat = 8
-        static let paddingEnd: CGFloat = 12
-        static let gap: CGFloat = 8
-        static let radius: CGFloat = 12
-        static let borderWidth: CGFloat = 0.5
-        static let shadowOffsetY: CGFloat = 2
-        static let shadowBlur: CGFloat = 8
-        static let pillHeight: CGFloat = 21
-        static let pillPaddingHorizontal: CGFloat = 8
-        static let pillRadius: CGFloat = 6
-        static let pillTextSize: CGFloat = 11
-        static let pillLetterSpacing: CGFloat = 0.5
-        static let textSize: CGFloat = 11
-    }
-}
-
-extension ConnectionPhase {
-    /// The card writes the phase in its own palette: the title carries the
-    /// hue, and the well behind the eye is a quiet fill of it. Desktop's
-    /// `phaseCardColors` (`connection-phase.ts`).
-    var cardTitleToken: ConnectSurfaceToken {
-        switch self {
-        case .exposed: .exposed
-        case .connecting, .interrupted: .connecting
-        case .protected: .protected
-        case .blocked: .text
-        }
-    }
-
-    var cardWellToken: ConnectSurfaceToken {
-        switch self {
-        case .exposed: .exposedWell
-        case .connecting, .interrupted: .connectingWell
-        case .protected: .protectedWell
-        case .blocked: .button
-        }
-    }
-}
-
-extension ConnectionViewViewModel {
-    /// The action button is filled with what the tap does. The blocked state
-    /// offers a cancel that disconnects, and says so, so it takes the
-    /// disconnect fill with the word.
-    var actionButtonFillToken: ConnectSurfaceToken {
-        switch actionButton {
-        case .connect:
-            .connect
-        case .disconnect:
-            .disconnect
-        case .cancel:
-            tunnelStatus.state == .waitingForConnectivity(.noConnection) ? .disconnect : .cancel
-        }
-    }
-}
-
-extension View {
-    /// A system font at a size from the shared table, scaled with Dynamic Type
-    /// like the text style it stands in for, and given the table's line height
-    /// on a single line (SwiftUI has no line height of its own).
-    func connectFont(
-        size: CGFloat,
-        weight: Font.Weight = .regular,
-        lineHeight: CGFloat? = nil,
-        relativeTo textStyle: Font.TextStyle = .body
-    ) -> some View {
-        modifier(ConnectFont(size: size, weight: weight, lineHeight: lineHeight, textStyle: textStyle))
-    }
-}
-
-private struct ConnectFont: ViewModifier {
-    @ScaledMetric private var size: CGFloat
-    @ScaledMetric private var lineHeight: CGFloat
-    private let hasLineHeight: Bool
-    private let weight: Font.Weight
-
-    init(size: CGFloat, weight: Font.Weight, lineHeight: CGFloat?, textStyle: Font.TextStyle) {
-        _size = ScaledMetric(wrappedValue: size, relativeTo: textStyle)
-        _lineHeight = ScaledMetric(wrappedValue: lineHeight ?? size, relativeTo: textStyle)
-        hasLineHeight = lineHeight != nil
-        self.weight = weight
-    }
-
-    func body(content: Content) -> some View {
-        let natural = UIFont.systemFont(ofSize: size, weight: weight.uiFontWeight).lineHeight
-        let leading = hasLineHeight ? max(lineHeight - natural, 0) : 0
-        content
-            .font(.system(size: size, weight: weight))
-            .lineSpacing(leading)
-            .padding(.vertical, leading / 2)
-    }
-}
-
-private extension Font.Weight {
-    var uiFontWeight: UIFont.Weight {
-        switch self {
-        case .bold: .bold
-        case .semibold: .semibold
-        case .medium: .medium
-        default: .regular
-        }
+    /// A token as a colour that follows whatever theme it is drawn in.
+    static func dynamic(_ token: ConnectSurfaceToken) -> UIColor {
+        UIColor { ConnectSurfacePalette(traitCollection: $0).uiColor(token) }
     }
 }

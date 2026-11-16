@@ -7,7 +7,6 @@
 //
 
 import Combine
-import MapKit
 import WarrenLogging
 import WarrenREST
 import WarrenRustRuntime
@@ -15,82 +14,16 @@ import WarrenSettings
 import WarrenTypes
 import SwiftUI
 
-/// Account line resting on the scenery's bottom scrim (desktop AppMainFooter):
-/// the copyable shortened wallet pubkey on the left, the remaining time on the
-/// right. No chrome of its own, the backdrop scrim grounds it.
-private final class WarrenMainFooterViewModel: ObservableObject {
-    @Published var pubkey: String?
-    @Published var expiry: Date?
-}
-
-private struct WarrenMainFooterView: View {
-    @ObservedObject var viewModel: WarrenMainFooterViewModel
-    @State private var justCopied = false
-
-    var body: some View {
-        HStack(alignment: .center) {
-            if let pubkey = viewModel.pubkey {
-                Button {
-                    UIPasteboard.general.string = pubkey
-                    withAnimation { justCopied = true }
-                    Task {
-                        try? await Task.sleep(nanoseconds: 2_000_000_000)
-                        withAnimation { justCopied = false }
-                    }
-                } label: {
-                    HStack(spacing: 4) {
-                        Text(Self.shorten(pubkey))
-                            .font(.system(.footnote, design: .monospaced))
-                            .foregroundStyle(.white.opacity(justCopied ? 0.8 : 0.6))
-                        Image(systemName: justCopied ? "checkmark" : "doc.on.doc")
-                            .font(.caption2)
-                            .foregroundStyle(
-                                justCopied ? Color(uiColor: .successColor) : .white.opacity(0.4))
-                    }
-                }
-                .accessibilityLabel(LocalizedStringKey("Copy public key"))
-            }
-            Spacer()
-            if let expiry = viewModel.expiry {
-                Text(Self.timeLeftText(expiry: expiry))
-                    .font(.footnote)
-                    .foregroundStyle(.white.opacity(0.6))
-            }
-        }
-        .shadow(color: .black.opacity(0.55), radius: 3, x: 0, y: 1)
-        .padding(.horizontal, 18)
-        .padding(.bottom, 7)
-    }
-
-    // head...tail form (U+2026), the Polkadot short-address style used by the
-    // desktop footer.
-    private static func shorten(_ pubkey: String) -> String {
-        guard pubkey.count > 13 else { return pubkey }
-        return "\(pubkey.prefix(6))\u{2026}\(pubkey.suffix(6))"
-    }
-
-    private static func timeLeftText(expiry: Date) -> String {
-        String(
-            format: NSLocalizedString("Time left: %@", comment: ""),
-            CustomDateComponentsFormatting.localizedString(
-                from: Date(),
-                to: expiry,
-                unitsStyle: .full
-            ) ?? ""
-        )
-    }
-}
-
 class TunnelViewController: UIViewController, RootContainment {
     private let logger = Logger(label: "TunnelViewController")
     private let interactor: TunnelViewControllerInteractor
     private var tunnelState: TunnelState = .disconnected
     private var connectionViewViewModel: ConnectionViewViewModel
     private var indicatorsViewViewModel: FeatureIndicatorsViewModel
-    private var connectionView: ConnectionView
-    private var connectionController: UIHostingController<ConnectionView>?
-    private let footerViewModel = WarrenMainFooterViewModel()
-    private var footerController: UIHostingController<WarrenMainFooterView>?
+    private let footerModel = HomeFooterModel()
+    private let homeViewController: HomeViewController
+    /// The exit of the last tunnel that named one, for the states that do not.
+    private var lastExitCountry: String?
 
     // Warren multi-exit failover notification surface. Reads App Group
     // UserDefaults keys written by the tunnel extension on exit-down
@@ -120,42 +53,31 @@ class TunnelViewController: UIViewController, RootContainment {
     var shouldShowSettingsForFeature: ((FeatureType) -> Void)?
     var shouldExplainNetwork: (() -> Void)?
 
-    let activityIndicator: SpinnerActivityIndicatorView = {
-        let activityIndicator = SpinnerActivityIndicatorView(style: .large)
-        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
-        activityIndicator.tintColor = .white
-        activityIndicator.setContentHuggingPriority(.defaultHigh, for: .horizontal)
-        activityIndicator.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
-        return activityIndicator
-    }()
-
-    // Backdrop switch: the per-country scenery (desktop Bula connect screen
-    // port) is the default; set to false to fall back to the legacy 3D map.
-    // MapViewController is kept fully intact behind this flag on purpose.
-    private static let usesSceneryBackdrop = true
-
-    private let mapViewController = MapViewController()
-    private let sceneryViewController = SceneryViewController()
+    /// The palette the home paints in, from the user's choice and the device
+    /// appearance.
+    private var theme: WarrenTheme {
+        WarrenTheme(preference: .current, systemStyle: traitCollection.userInterfaceStyle)
+    }
 
     override var preferredStatusBarStyle: UIStatusBarStyle {
-        // Dark status bar over the bright scenery sky, matching the black
-        // header content (desktop main header dark tone).
+        // In both themes the status bar sits over the paper glow behind the
+        // logo and the brightest rows of the sky, so its glyphs stay dark.
         .darkContent
     }
 
     var preferredHeaderBarPresentation: HeaderBarPresentation {
         switch interactor.deviceState {
         case .loggedIn, .revoked:
-            // The phase color moved into the scenery + connection card; the
-            // header floats transparent over the artwork with dark content
-            // (desktop MainView), instead of an opaque state-colored bar.
-            // A marked build names itself in the banner over the scenery
-            // here, so the header chip would say it twice.
+            // The header floats over the hero: the inked wordmark on its paper
+            // glow and the toolbar pill (desktop `HomeHeader`). The build is
+            // named on the home's own beta line, so the chip would say it
+            // twice.
             return HeaderBarPresentation(
                 style: .transparent,
                 showsDivider: false,
                 tone: .dark,
-                showsProductChip: false
+                showsProductChip: false,
+                home: theme
             )
         case .loggedOut:
             return HeaderBarPresentation(style: .default, showsDivider: true)
@@ -167,8 +89,7 @@ class TunnelViewController: UIViewController, RootContainment {
     }
 
     var prefersDeviceInfoBarHidden: Bool {
-        // The account info lives in the bottom footer over the scenery scrim
-        // (desktop AppMainFooter), not in a header sub-row.
+        // The account line is the home's footer band.
         true
     }
 
@@ -192,10 +113,10 @@ class TunnelViewController: UIViewController, RootContainment {
             tunnelSettings: interactor.tunnelSettings,
             tunnelStatus: interactor.tunnelStatus
         )
-
-        connectionView = ConnectionView(
+        homeViewController = HomeViewController(
             connectionViewModel: connectionViewViewModel,
-            indicatorsViewModel: indicatorsViewViewModel
+            indicatorsViewModel: indicatorsViewViewModel,
+            footerModel: footerModel
         )
 
         super.init(nibName: nil, bundle: nil)
@@ -240,7 +161,6 @@ class TunnelViewController: UIViewController, RootContainment {
             self?.setTunnelState(tunnelStatus.state, animated: true)
             self?.indicatorsViewViewModel.tunnelState = tunnelStatus.state
             self?.indicatorsViewViewModel.observedState = tunnelStatus.observedState
-            self?.view.setNeedsLayout()
         }
 
         interactor.didUpdateTunnelSettings = { [weak self] tunnelSettings in
@@ -252,67 +172,57 @@ class TunnelViewController: UIViewController, RootContainment {
             // the record moved.
             connectionViewViewModel.isStandingDownForHigherEnvironment =
                 interactor.isStandingDownForHigherEnvironment
+            // A new pick changes the target the connecting hero shows.
+            updateScenery(animated: true)
         }
 
-        connectionView.cardTopChanged = { [weak self] topInWindow in
-            guard let self, Self.usesSceneryBackdrop else { return }
-            let sceneryView = self.sceneryViewController.view!
-            self.sceneryViewController.setCardTop(
-                sceneryView.convert(CGPoint(x: 0, y: topInWindow), from: nil).y)
+        homeViewController.action = { [weak self] action in
+            self?.handle(action)
         }
 
-        connectionView.action = { [weak self] action in
-            switch action {
-            case .connect:
-                self?.logger.debug("User tapped connect button")
-                self?.interactor.startTunnel()
-
-            case .cancel:
-                self?.logger.debug("User tapped cancel button")
-                if case .waitingForConnectivity(.noConnection) = self?.interactor.tunnelStatus.state {
-                    self?.shouldShowCancelTunnelAlert?()
-                } else {
-                    self?.interactor.stopTunnel()
-                }
-
-            case .disconnect:
-                self?.logger.debug("User tapped disconnect button")
-                self?.interactor.stopTunnel()
-
-            case .selectLocation:
-                self?.shouldShowSelectLocationPicker?()
-
-            case .shuffleLocation:
-                self?.logger.debug("User tapped shuffle location button")
-                self?.interactor.shuffleExitLocation()
-
-            case .explainNetwork:
-                self?.shouldExplainNetwork?()
-            }
-        }
-
-        if Self.usesSceneryBackdrop {
-            addSceneryController()
-        } else {
-            addMapController()
-        }
-        addActivityIndicator()
-        addFooterView()
-        addConnectionView()
+        addHomeController()
         refreshFooter()
-        updateBackdrop(animated: false)
+        updateScenery(animated: false)
         subscribeToFailoverEvents()
         subscribeToPinMismatchEvents()
         subscribeToTheme()
         loadNetworkCap()
     }
 
+    private func handle(_ action: ConnectionViewViewModel.TunnelAction) {
+        switch action {
+        case .connect:
+            logger.debug("User tapped connect button")
+            interactor.startTunnel()
+
+        case .cancel:
+            logger.debug("User tapped cancel button")
+            if case .waitingForConnectivity(.noConnection) = interactor.tunnelStatus.state {
+                shouldShowCancelTunnelAlert?()
+            } else {
+                interactor.stopTunnel()
+            }
+
+        case .disconnect:
+            logger.debug("User tapped disconnect button")
+            interactor.stopTunnel()
+
+        case .selectLocation:
+            shouldShowSelectLocationPicker?()
+
+        case .shuffleLocation:
+            logger.debug("User tapped shuffle location button")
+            interactor.shuffleExitLocation()
+
+        case .explainNetwork:
+            shouldExplainNetwork?()
+        }
+    }
+
     // MARK: - Theme
 
-    /// Only the connect screen's own surfaces have a light design, so the
-    /// theme is applied to the hosted connection view and nowhere above it:
-    /// the scenery, the header and the footer keep the look they were drawn
-    /// with.
+    /// The whole home follows the theme preference: the hero's scrim and glow,
+    /// the panel, the footer, and the header floating over them.
     private func subscribeToTheme() {
         NotificationCenter.default.addObserver(
             self,
@@ -325,15 +235,12 @@ class TunnelViewController: UIViewController, RootContainment {
     }
 
     @objc private func applyTheme() {
-        let theme = WarrenTheme(
-            preference: .current,
-            systemStyle: traitCollection.userInterfaceStyle
-        )
-        connectionController?.overrideUserInterfaceStyle = theme.userInterfaceStyle
+        homeViewController.theme = theme
+        setNeedsHeaderBarStyleAppearanceUpdate()
     }
 
-    /// The banner names the speed cap when the server gives one. Fetched once
-    /// per screen, off the main thread; until it lands the banner says the
+    /// The beta line names the speed cap when the server gives one. Fetched
+    /// once per screen, off the main thread; until it lands the line says the
     /// bandwidth is limited, which is true on every beta.
     private func loadNetworkCap() {
         guard connectionViewViewModel.productBadge != nil else { return }
@@ -360,7 +267,7 @@ class TunnelViewController: UIViewController, RootContainment {
 
     func setMainContentHidden(_ isHidden: Bool, animated: Bool) {
         let actions = {
-            _ = self.connectionView.opacity(isHidden ? 0 : 1)
+            self.homeViewController.view.alpha = isHidden ? 0 : 1
         }
 
         if animated {
@@ -379,146 +286,63 @@ class TunnelViewController: UIViewController, RootContainment {
 
         guard isViewLoaded else { return }
 
-        updateBackdrop(animated: animated)
-    }
-
-    private func updateBackdrop(animated: Bool) {
-        if Self.usesSceneryBackdrop {
-            updateScenery(animated: animated)
-        } else {
-            updateMap(animated: animated)
-        }
+        updateScenery(animated: animated)
     }
 
     private func updateScenery(animated: Bool) {
-        switch tunnelState {
-        case .connecting, .reconnecting, .negotiatingEphemeralPeer, .pendingReconnect:
-            activityIndicator.startAnimating()
-        default:
-            activityIndicator.stopAnimating()
+        let country = Self.targetCountry(
+            tunnelState: tunnelState,
+            exitLocations: connectionViewViewModel.relayConstraints.exitLocations,
+            lastExitCountry: lastExitCountry
+        )
+        if tunnelState.relays != nil {
+            lastExitCountry = country
         }
-
-        sceneryViewController.update(
+        homeViewController.update(
             phase: ConnectionPhase(tunnelState: tunnelState),
-            exitCountry: tunnelState.relays?.exit.location.country,
+            exitCountry: country,
             animated: animated
         )
     }
 
-    private func updateMap(animated: Bool) {
+    /// The country the tunnel goes to: the selected relay's once there is one;
+    /// while connecting before it is chosen, the country the user picked, so the
+    /// target shows from the first frame (desktop `useTargetCountry`); and while
+    /// the tunnel waits for a network, the exit it was carrying the traffic to,
+    /// which iOS no longer names in that state.
+    static func targetCountry(
+        tunnelState: TunnelState,
+        exitLocations: RelayConstraint<UserSelectedRelays>,
+        lastExitCountry: String? = nil
+    ) -> String? {
+        if let country = tunnelState.relays?.exit.location.country {
+            return country
+        }
         switch tunnelState {
-        case let .connecting(tunnelRelays, _, _):
-            mapViewController.removeLocationMarker()
-            mapViewController.setCenter(tunnelRelays?.exit.location.geoCoordinate, animated: animated)
-            activityIndicator.startAnimating()
-
-        case let .reconnecting(tunnelRelays, _, _), let .negotiatingEphemeralPeer(tunnelRelays, _, _, _):
-            activityIndicator.startAnimating()
-            mapViewController.removeLocationMarker()
-            mapViewController.setCenter(tunnelRelays.exit.location.geoCoordinate, animated: animated)
-
-        case let .connected(tunnelRelays, _, _):
-            let center = tunnelRelays.exit.location.geoCoordinate
-            mapViewController.setCenter(center, animated: animated)
-            activityIndicator.stopAnimating()
-            mapViewController.addLocationMarker(coordinate: center)
-
-        case .pendingReconnect:
-            activityIndicator.startAnimating()
-            mapViewController.removeLocationMarker()
-
-        case .waitingForConnectivity, .error:
-            activityIndicator.stopAnimating()
-            mapViewController.removeLocationMarker()
-
-        case .disconnected, .disconnecting:
-            activityIndicator.stopAnimating()
-            mapViewController.removeLocationMarker()
-            mapViewController.setCenter(nil, animated: animated)
+        case .connecting:
+            guard case let .only(selection) = exitLocations else { return nil }
+            return HomeLocation.countryCode(of: selection)
+        case .waitingForConnectivity(.noNetwork):
+            return lastExitCountry
+        default:
+            return nil
         }
     }
 
-    private func addMapController() {
-        let mapView = mapViewController.view!
+    private func addHomeController() {
+        let homeView = homeViewController.view!
 
-        addChild(mapViewController)
-        mapViewController.alignmentView = activityIndicator
-        mapViewController.didMove(toParent: self)
-
-        view.addConstrainedSubviews([mapView]) {
-            mapView.pinEdgesToSuperview()
+        addChild(homeViewController)
+        view.addConstrainedSubviews([homeView]) {
+            homeView.pinEdgesToSuperview()
         }
-    }
-
-    private func addSceneryController() {
-        let sceneryView = sceneryViewController.view!
-
-        addChild(sceneryViewController)
-        sceneryViewController.didMove(toParent: self)
-
-        view.addConstrainedSubviews([sceneryView]) {
-            sceneryView.pinEdgesToSuperview()
-        }
-    }
-
-    /// Computes a constraint multiplier based on the screen size
-    private func computeHeightBreakpointMultiplier() -> CGFloat {
-        let screenBounds = UIWindow().screen.coordinateSpace.bounds
-        return screenBounds.height < 700 ? 2.0 : 1.5
-    }
-
-    private func addActivityIndicator() {
-        // If the device doesn't have a lot of vertical screen estate, center the progress view higher on the map
-        // so the connection view details do not shadow it unless fully expanded if possible
-        let heightConstraintMultiplier = computeHeightBreakpointMultiplier()
-
-        let verticalCenteredAnchor = activityIndicator.centerYAnchor.anchorWithOffset(to: view.centerYAnchor)
-        view.addConstrainedSubviews([activityIndicator]) {
-            activityIndicator.centerXAnchor.constraint(equalTo: view.centerXAnchor)
-            verticalCenteredAnchor.constraint(
-                equalTo: activityIndicator.heightAnchor,
-                multiplier: heightConstraintMultiplier
-            )
-        }
-    }
-
-    private func addFooterView() {
-        let footerController = UIHostingController(
-            rootView: WarrenMainFooterView(viewModel: footerViewModel))
-        self.footerController = footerController
-
-        let footerProxy = footerController.view!
-        footerProxy.backgroundColor = .clear
-
-        addChild(footerController)
-        footerController.didMove(toParent: self)
-        view.addConstrainedSubviews([footerProxy]) {
-            footerProxy.leadingAnchor.constraint(equalTo: view.leadingAnchor)
-            footerProxy.trailingAnchor.constraint(equalTo: view.trailingAnchor)
-            footerProxy.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor)
-        }
+        homeViewController.didMove(toParent: self)
     }
 
     private func refreshFooter() {
         let accountData = interactor.deviceState.accountData
-        footerViewModel.pubkey = accountData?.number
-        footerViewModel.expiry = accountData?.isExpired == false ? accountData?.expiry : nil
-    }
-
-    private func addConnectionView() {
-        let connectionController = UIHostingController(rootView: connectionView)
-        self.connectionController = connectionController
-
-        let connectionViewProxy = connectionController.view!
-        connectionViewProxy.backgroundColor = .clear
-
-        addChild(connectionController)
-        connectionController.didMove(toParent: self)
-        view.addConstrainedSubviews([activityIndicator, connectionViewProxy]) {
-            connectionViewProxy.pinEdgesToSuperview(.init([.top(0), .leading(0), .trailing(0)]))
-            connectionViewProxy.bottomAnchor.constraint(
-                equalTo: footerController?.view.topAnchor ?? view.bottomAnchor)
-        }
+        footerModel.pubkey = accountData?.number
+        footerModel.expiry = accountData?.isExpired == false ? accountData?.expiry : nil
     }
 
     // MARK: - Warren failover banner
@@ -710,7 +534,7 @@ class TunnelViewController: UIViewController, RootContainment {
     ) -> NSAttributedString {
         let body = NSMutableAttributedString(
             string: bodyLines.joined(separator: "\n\n") + "\n\n",
-            attributes: [.font: UIFont.preferredFont(forTextStyle: .footnote)]
+            attributes: [.font: UIFont.instrumentSans(.footnote)]
         )
         body.append(
             NSAttributedString(
@@ -718,7 +542,7 @@ class TunnelViewController: UIViewController, RootContainment {
                     "Cryptographic mismatch details", tableName: "Settings", comment: "")
                     + "\n",
                 attributes: [
-                    .font: UIFont.preferredFont(forTextStyle: .caption1)
+                    .font: UIFont.instrumentSans(.caption1)
                 ]
             ))
         let rows = WarrenPinMismatchDetails.rows(
@@ -732,7 +556,7 @@ class TunnelViewController: UIViewController, RootContainment {
                 NSAttributedString(
                     string: "\(row.label): \(row.value)\n",
                     attributes: [
-                        .font: UIFont.monospacedSystemFont(ofSize: 11, weight: .regular)
+                        .font: UIFont.jetBrainsMono(size: 11, relativeTo: .caption2)
                     ]
                 ))
         }
@@ -741,7 +565,7 @@ class TunnelViewController: UIViewController, RootContainment {
                 NSAttributedString(
                     string: "\n" + error,
                     attributes: [
-                        .font: UIFont.preferredFont(forTextStyle: .footnote),
+                        .font: UIFont.instrumentSans(.footnote),
                         .foregroundColor: UIColor.dangerTextColor,
                     ]
                 ))

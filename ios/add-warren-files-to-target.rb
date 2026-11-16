@@ -51,9 +51,10 @@ FILES_TO_ADD = {
   # Settings + Tunnel Warren-specific views.
   "WarrenVPN/View controllers/Tunnel/WarrenObfuscationIndicatorView.swift" => "WarrenVPN",
 
-  # The scenery placement, the formula every client replays from
-  # `fixtures/client-rules/scenery_layout.json`.
-  "WarrenVPN/View controllers/Tunnel/SceneryLayout.swift" => "WarrenVPN",
+  # The hero framing, the formula every client replays from
+  # `fixtures/client-rules/scenery_framing.json`.
+  "WarrenVPN/View controllers/Tunnel/SceneryFraming.swift" => "WarrenVPN",
+  "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/SceneryFramingTests.swift" => "WarrenVPNTests",
 
   # Copying a secret without publishing it to Universal Clipboard.
   "WarrenVPN/Classes/WarrenSecureClipboard.swift" => "WarrenVPN",
@@ -287,11 +288,25 @@ FILES_TO_ADD = {
   "WarrenVPNTests/MullvadVPN/Classes/WarrenThemeTests.swift" => "WarrenVPNTests",
 
   # The connect screen's themed surfaces, copied from design-tokens.json and
-  # held to it by a test: the card, its buttons and the beta banner.
+  # held to it by a test.
   "WarrenVPN/View controllers/Tunnel/ConnectionView/ConnectSurface.swift" => "WarrenVPN",
-  "WarrenVPN/View controllers/Tunnel/ConnectionView/CardButton.swift" => "WarrenVPN",
-  "WarrenVPN/View controllers/Tunnel/ConnectionView/ProductBanner.swift" => "WarrenVPN",
   "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/ConnectSurfaceTests.swift" => "WarrenVPNTests",
+
+  # The home: a framed scenery hero over the status, the controls, the chips
+  # and the account footer, with its geometry held to design-tokens.json.
+  "WarrenVPN/View controllers/Tunnel/Home/HomeMetrics.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/Tunnel/Home/HomeStatus.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/Tunnel/Home/HomeLocation.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/Tunnel/Home/HomeTimeLeft.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/Tunnel/Home/HomeView.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/Tunnel/Home/HomeControlsView.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/Tunnel/Home/HomeFooterView.swift" => "WarrenVPN",
+  "WarrenVPN/View controllers/Tunnel/Home/HomeViewController.swift" => "WarrenVPN",
+  "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/HomeMetricsTests.swift" => "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/HomeStatusTests.swift" => "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/HomeLocationTests.swift" => "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/HomeTimeLeftTests.swift" => "WarrenVPNTests",
+  "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/HomeScreenshotTests.swift" => "WarrenVPNTests",
 
   # Instrument Sans and JetBrains Mono, bundled under the OFL with their
   # licences, and the faces the code asks for.

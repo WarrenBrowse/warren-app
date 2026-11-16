@@ -215,21 +215,6 @@ extension ConnectionViewViewModel {
         ConnectionPhase(tunnelState: tunnelStatus.state)
     }
 
-    var textColorForSecureLabel: UIColor {
-        connectionPhase.titleColor
-    }
-
-    /// The eye, the rails and the buttons keep the saturated fill. Held apart
-    /// from `textColorForSecureLabel` because the two used to be one property,
-    /// so lifting the title alone would have de-saturated the eye with it.
-    var accentColorForSecureLabel: UIColor {
-        connectionPhase.accentColor
-    }
-
-    var eyeSymbolName: String {
-        connectionPhase.showsCrossedEye ? "eye.slash" : "eye"
-    }
-
     var disableButtons: Bool {
         // The tunnel refuses to arm while this build has stood down, and the
         // refusal reaches no banner: the stand-down banner is the exclusive
@@ -244,67 +229,6 @@ extension ConnectionViewViewModel {
         return false
     }
 
-    // Status copy mirrors the desktop connection card: a bold truth statement
-    // ("Connection established" / "You are visible") plus a smaller factual
-    // subtitle, instead of the upstream ALL-CAPS state names.
-    var localizedTitleForSecureLabel: LocalizedStringKey {
-        switch tunnelStatus.state {
-        case .connected:
-            LocalizedStringKey("Connection established")
-        case .connecting, .reconnecting, .negotiatingEphemeralPeer, .pendingReconnect,
-            .disconnecting, .disconnected:
-            LocalizedStringKey("You are visible")
-        case .waitingForConnectivity(.noConnection), .error:
-            LocalizedStringKey("BLOCKED CONNECTION")
-        case .waitingForConnectivity(.noNetwork):
-            LocalizedStringKey("Connection interrupted")
-        }
-    }
-
-    var localizedSubtitleForSecureLabel: LocalizedStringKey? {
-        switch tunnelStatus.state {
-        case .connected:
-            LocalizedStringKey("You are protected")
-        case .connecting, .reconnecting, .negotiatingEphemeralPeer, .pendingReconnect,
-            .disconnecting(.reconnect):
-            LocalizedStringKey("Connection in progress")
-        case .disconnecting(.nothing):
-            LocalizedStringKey("Disconnecting...")
-        case .disconnected:
-            LocalizedStringKey("Your connection is not encrypted")
-        case .waitingForConnectivity(.noNetwork):
-            // Still true during the hold: the kill switch keeps everything
-            // fail-closed while waiting for the network to come back.
-            LocalizedStringKey("You are protected")
-        case .waitingForConnectivity(.noConnection), .error:
-            nil
-        }
-    }
-
-    // Emoji flag of the country the user currently appears in, hugging the
-    // card's top-right corner in every state (desktop CurrentCountryFlag).
-    // With a tunnel up or coming up that is the exit country; without one
-    // there is no geoip source at all, so the OS locale region stands in for
-    // the user's own country: offline, no network call, no leak.
-    var currentCountryFlagEmoji: String? {
-        let code = tunnelStatus.state.relays?.exit.location.countryCode
-            ?? Locale.current.region?.identifier
-        return code.flatMap(Self.flagEmoji(countryCode:))
-    }
-
-    private static func flagEmoji(countryCode: String) -> String? {
-        let letterA: Unicode.Scalar = "A"
-        let regionalIndicatorA: UInt32 = 0x1F1E6
-        var flag = ""
-        for letter in countryCode.uppercased().unicodeScalars {
-            guard letter.value >= letterA.value, letter.value < letterA.value + 26,
-                let scalar = Unicode.Scalar(regionalIndicatorA + letter.value - letterA.value)
-            else { return nil }
-            flag.unicodeScalars.append(scalar)
-        }
-        return flag.unicodeScalars.count == 2 ? flag : nil
-    }
-
     var accessibilityIdForSecureLabel: AccessibilityIdentifier {
         switch tunnelStatus.state {
         case .connected:
@@ -316,40 +240,38 @@ extension ConnectionViewViewModel {
         }
     }
 
-    var localizedAccessibilityLabelForSecureLabel: LocalizedStringKey {
-        let localizedLocations = { (tunnelInfo: SelectedRelays) in
-            let country = NSLocalizedString(tunnelInfo.exit.location.country, comment: "")
-            let city = NSLocalizedString(tunnelInfo.exit.location.city, comment: "")
-            return "\(city), \(country)"
+    /// The title as VoiceOver reads it: where the tunnel goes, in words, rather
+    /// than the place name alone.
+    var localizedAccessibilityLabelForSecureLabel: String {
+        let place = { (relays: SelectedRelays) in
+            HomeStatus.placeName(country: relays.exit.location.country, city: relays.exit.location.city)
         }
 
         switch tunnelStatus.state {
         case .disconnected, .waitingForConnectivity, .disconnecting, .pendingReconnect, .error:
-            return localizedTitleForSecureLabel
-        case let .connected(tunnelInfo, _, _):
-            let location = localizedLocations(tunnelInfo)
-            return LocalizedStringKey("Connected to \(location)")
-        case let .connecting(tunnelInfo, _, _):
-            if let tunnelInfo {
-                let location = localizedLocations(tunnelInfo)
-                return LocalizedStringKey("Connecting to \(location)")
-            } else {
-                return localizedTitleForSecureLabel
-            }
-        case let .reconnecting(tunnelInfo, _, _), let .negotiatingEphemeralPeer(tunnelInfo, _, _, _):
-            let location = localizedLocations(tunnelInfo)
-            return LocalizedStringKey("Reconnecting to \(location)")
+            return homeStatus.title
+        case let .connected(relays, _, _):
+            return String(format: NSLocalizedString("Connected to %@", comment: ""), place(relays))
+        case let .connecting(relays, _, _):
+            guard let relays else { return homeStatus.title }
+            return String(format: NSLocalizedString("Connecting to %@", comment: ""), place(relays))
+        case let .reconnecting(relays, _, _), let .negotiatingEphemeralPeer(relays, _, _, _):
+            return String(format: NSLocalizedString("Reconnecting to %@", comment: ""), place(relays))
         }
     }
 
-    var localizedTitleForSelectLocationButton: LocalizedStringKey {
-        switch tunnelStatus.state {
-        case .disconnecting, .pendingReconnect, .disconnected, .waitingForConnectivity(.noNetwork):
-            LocalizedStringKey(connectionName ?? "Select location")
-        case .connecting, .connected, .reconnecting, .waitingForConnectivity(.noConnection),
-            .negotiatingEphemeralPeer, .error:
-            LocalizedStringKey("Switch location")
-        }
+    /// What the home status block says.
+    var homeStatus: HomeStatus {
+        HomeStatus(tunnelState: tunnelStatus.state)
+    }
+
+    /// The home location row: the exit once a tunnel is up, the pick before.
+    var homeLocation: HomeLocation {
+        HomeLocation(
+            tunnelState: tunnelStatus.state,
+            exitLocations: relayConstraints.exitLocations,
+            selectedName: connectionName
+        )
     }
 
     var actionButton: TunnelActionButton {
@@ -361,32 +283,6 @@ extension ConnectionViewViewModel {
             .cancel
         case .connected, .reconnecting, .error:
             .disconnect
-        }
-    }
-
-    var titleForCountryAndCity: LocalizedStringKey? {
-        guard let tunnelRelays = tunnelStatus.state.relays else {
-            return nil
-        }
-
-        let country = NSLocalizedString(tunnelRelays.exit.location.country, comment: "")
-        let city = NSLocalizedString(tunnelRelays.exit.location.city, comment: "")
-
-        return LocalizedStringKey("\(country), \(city)")
-    }
-
-    var titleForServer: LocalizedStringKey? {
-        guard let tunnelRelays = tunnelStatus.state.relays else {
-            return nil
-        }
-
-        let exitName = tunnelRelays.exit.hostname
-        let entryName = tunnelRelays.entry?.hostname
-
-        return if let entryName {
-            LocalizedStringKey("\(exitName) via \(entryName)")
-        } else {
-            "\(exitName)"
         }
     }
 

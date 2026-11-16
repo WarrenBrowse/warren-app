@@ -42,6 +42,9 @@ struct HeaderBarPresentation: Sendable {
     /// Whether the header shows the non-prod chip. Off where the screen names
     /// the build itself.
     var showsProductChip = true
+    /// The theme of the home screen, whose header floats the inked wordmark and
+    /// a toolbar pill over the art. Nil on every other screen.
+    var home: WarrenTheme?
 
     static var `default`: HeaderBarPresentation {
         HeaderBarPresentation(style: .default, showsDivider: false)
@@ -779,6 +782,7 @@ class RootContainerViewController: UIViewController {
         headerBarView.showsDivider = headerBarPresentation.showsDivider
         headerBarView.tone = headerBarPresentation.tone
         headerBarView.isProductChipSuppressed = !headerBarPresentation.showsProductChip
+        headerBarView.homeTheme = headerBarPresentation.home
     }
 
     private func updateHeaderBarStyleFromChildPreferences(animated: Bool) {

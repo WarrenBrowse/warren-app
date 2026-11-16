@@ -8,84 +8,78 @@
 
 import SwiftUI
 
-extension ConnectionView {
-    internal struct DetailsView: View {
-        @ObservedObject var viewModel: ConnectionViewViewModel
-        @State private var columnWidth: CGFloat = 0
-        @Environment(\.colorScheme) private var colorScheme
+/// The connection details the home opens over its hero: the transport, the
+/// hops, and where the traffic goes in and comes out.
+struct ConnectionDetailsView: View {
+    @ObservedObject var viewModel: ConnectionViewViewModel
+    @State private var columnWidth: CGFloat = 0
+    @Environment(\.colorScheme) private var colorScheme
 
-        private var palette: ConnectSurfacePalette {
-            ConnectSurfacePalette(colorScheme: colorScheme)
-        }
-
-        var body: some View {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text(LocalizedStringKey("Connection details"))
-                        .font(.footnote.weight(.semibold))
-                        .foregroundStyle(palette.color(.textMuted))
-                    Spacer()
-                }
-
-                if let tunnelProtocolName = viewModel.tunnelProtocolName {
-                    Text(verbatim: tunnelProtocolName)
-                        .font(.subheadline)
-                        .foregroundStyle(palette.color(.text))
-                }
-                if viewModel.isMultihop {
-                    Text(LocalizedStringKey("Multihop (2 hops)"))
-                        .font(.subheadline)
-                        .foregroundStyle(palette.color(.text))
-                }
-
-                VStack(alignment: .leading, spacing: 0) {
-                    if let inAddress = viewModel.inAddress {
-                        connectionDetailRow(
-                            title: LocalizedStringKey("In"),
-                            value: inAddress,
-                            accessibilityId: .connectionPanelInAddressRow
-                        )
-                    }
-                    // No egress conncheck on the Warren network: the "Out" row
-                    // falls back to the exit location the daemon provides.
-                    if viewModel.tunnelIsConnected, let outExitLocation = viewModel.outExitLocation {
-                        connectionDetailRow(
-                            title: LocalizedStringKey("Out"),
-                            value: outExitLocation,
-                            accessibilityId: .connectionPanelOutAddressRow
-                        )
-                    }
-                }
-            }
-            .animation(.default, value: viewModel.inAddress)
-            .animation(.default, value: viewModel.tunnelIsConnected)
-        }
-
-        @ViewBuilder
-        private func connectionDetailRow(
-            title: LocalizedStringKey,
-            value: String,
-            accessibilityId: AccessibilityIdentifier
-        ) -> some View {
-            HStack(alignment: .top, spacing: 8) {
-                Text(title)
-                    .font(.subheadline)
-                    .foregroundStyle(palette.color(.textMuted))
-                    .frame(minWidth: columnWidth, alignment: .leading)
-                    .sizeOfView { columnWidth = max(columnWidth, $0.width) }
-                    .accessibilityHidden(true)
-                Text(value)
-                    .font(.subheadline)
-                    .foregroundStyle(palette.color(.text))
-                    .accessibilityLabel(Text(title) + Text(verbatim: " \(value)"))
-                    .accessibilityIdentifier(accessibilityId.asString)
-            }
-        }
+    private var palette: ConnectSurfacePalette {
+        ConnectSurfacePalette(colorScheme: colorScheme)
     }
-}
 
-#Preview {
-    ConnectionViewComponentPreview(showIndicators: true) { _, vm, _ in
-        ConnectionView.DetailsView(viewModel: vm)
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(LocalizedStringKey("Connection details"))
+                    .font(.instrumentSans(.footnote, weight: .semibold))
+                    .foregroundStyle(palette.color(.homeTextSecondary))
+                Spacer()
+            }
+
+            if let tunnelProtocolName = viewModel.tunnelProtocolName {
+                Text(verbatim: tunnelProtocolName)
+                    .font(.instrumentSans(.subheadline))
+                    .foregroundStyle(palette.color(.homeText))
+            }
+            if viewModel.isMultihop {
+                Text(LocalizedStringKey("Multihop (2 hops)"))
+                    .font(.instrumentSans(.subheadline))
+                    .foregroundStyle(palette.color(.homeText))
+            }
+
+            VStack(alignment: .leading, spacing: 0) {
+                if let inAddress = viewModel.inAddress {
+                    connectionDetailRow(
+                        title: LocalizedStringKey("In"),
+                        value: inAddress,
+                        accessibilityId: .connectionPanelInAddressRow
+                    )
+                }
+                // No egress conncheck on the Warren network: the "Out" row
+                // falls back to the exit location the daemon provides.
+                if viewModel.tunnelIsConnected, let outExitLocation = viewModel.outExitLocation {
+                    connectionDetailRow(
+                        title: LocalizedStringKey("Out"),
+                        value: outExitLocation,
+                        accessibilityId: .connectionPanelOutAddressRow
+                    )
+                }
+            }
+        }
+        .animation(.default, value: viewModel.inAddress)
+        .animation(.default, value: viewModel.tunnelIsConnected)
+    }
+
+    @ViewBuilder
+    private func connectionDetailRow(
+        title: LocalizedStringKey,
+        value: String,
+        accessibilityId: AccessibilityIdentifier
+    ) -> some View {
+        HStack(alignment: .top, spacing: 8) {
+            Text(title)
+                .font(.instrumentSans(.subheadline))
+                .foregroundStyle(palette.color(.homeTextSecondary))
+                .frame(minWidth: columnWidth, alignment: .leading)
+                .sizeOfView { columnWidth = max(columnWidth, $0.width) }
+                .accessibilityHidden(true)
+            Text(value)
+                .font(.instrumentSans(.subheadline))
+                .foregroundStyle(palette.color(.homeText))
+                .accessibilityLabel(Text(title) + Text(verbatim: " \(value)"))
+                .accessibilityIdentifier(accessibilityId.asString)
+        }
     }
 }

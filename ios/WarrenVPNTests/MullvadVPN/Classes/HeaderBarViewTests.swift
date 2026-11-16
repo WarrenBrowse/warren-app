@@ -147,4 +147,34 @@ final class HeaderBarViewTests: XCTestCase {
 
         XCTAssertNotEqual(overCharcoal, overScenery)
     }
+
+    /// On the home the header floats a toolbar pill of 38 point buttons over
+    /// the art and ends just under it, and every other screen gets the classic
+    /// bar back.
+    func testTheHomeFloatsTheToolbarAndGivesTheBarBackElsewhere() {
+        let header = HeaderBarView(frame: CGRect(x: 0, y: 0, width: 402, height: 200))
+        let height = { (button: UIButton) in
+            button.constraints.first { $0.firstAttribute == .height && $0.secondItem == nil }?.constant
+        }
+
+        header.homeTheme = .dark
+        XCTAssertEqual(height(header.settingsButton), HomeMetrics.Toolbar.button)
+        header.layoutIfNeeded()
+        let homeHeight = header.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).height
+        XCTAssertEqual(
+            homeHeight, HomeMetrics.Hero.headerInset + HomeMetrics.Toolbar.height + 8, accuracy: 0.5)
+
+        header.homeTheme = nil
+        XCTAssertEqual(height(header.settingsButton), UIMetrics.Button.barButtonSize)
+    }
+
+    /// The toolbar's glyphs take the opposite tone of its glass in each theme.
+    func testTheHomeGlyphsFollowTheTheme() throws {
+        let header = HeaderBarView(frame: .zero)
+        header.homeTheme = .dark
+        let onDarkGlass = try XCTUnwrap(header.settingsButton.image(for: .normal))
+        header.homeTheme = .light
+        let onPaperGlass = try XCTUnwrap(header.settingsButton.image(for: .normal))
+        XCTAssertNotEqual(onDarkGlass, onPaperGlass)
+    }
 }
