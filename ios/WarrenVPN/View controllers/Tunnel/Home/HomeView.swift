@@ -4,10 +4,11 @@
 //
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  The home screen (desktop `MainView`): the scenery hero takes whatever
-//  height the panel leaves, up to the width-fit canvas, and the panel below it
-//  (status, controls, chips, the beta line) keeps its natural height above
-//  the account footer. The floating header is the root container's.
+//  The home screen (desktop `MainView`): the scenery hero keeps the mockup's
+//  proportion of the panel column (300 high on 360) plus the status bar, and
+//  the panel below it (status, controls, chips, then the room the mockup
+//  leaves, the beta line and the account footer) takes the rest. The floating
+//  header is the root container's.
 //
 
 import SwiftUI
@@ -24,11 +25,18 @@ final class HomeDetailsModel: ObservableObject {
     @Published var isOpen = false
 }
 
+/// The status bar the hero draws under. SwiftUI only sees the root container's
+/// safe area, which also holds the floating header, so the window's is handed in.
+final class HomeHeroModel: ObservableObject {
+    @Published var safeTop: CGFloat = 0
+}
+
 struct HomeView: View {
     @ObservedObject var connectionViewModel: ConnectionViewViewModel
     @ObservedObject var indicatorsViewModel: FeatureIndicatorsViewModel
     @ObservedObject var footerModel: HomeFooterModel
     @ObservedObject var details: HomeDetailsModel
+    @ObservedObject var hero: HomeHeroModel
     let scenery: SceneryViewController
     let action: (ConnectionViewViewModel.TunnelAction) -> Void
     @Environment(\.colorScheme) private var colorScheme
@@ -39,9 +47,16 @@ struct HomeView: View {
         GeometryReader { proxy in
             VStack(spacing: 0) {
                 HomeHeroView(controller: scenery)
-                    // Never taller than the width-fit canvas; what is left past
-                    // that goes above the footer.
-                    .frame(maxWidth: .infinity, maxHeight: SceneryFraming.maxHeroHeight(forWidth: proxy.size.width))
+                    // The column width drives the height, so a tablet keeps the
+                    // phone's proportions. On a screen too short for the panel
+                    // the hero gives way first.
+                    .frame(
+                        maxWidth: .infinity,
+                        maxHeight: SceneryFraming.heroHeight(
+                            columnWidth: HomeMetrics.columnWidth(forWidth: proxy.size.width),
+                            safeTop: hero.safeTop
+                        )
+                    )
                     .layoutPriority(1)
                     .overlay(alignment: .bottom) {
                         if details.isOpen && connectionViewModel.showsConnectionDetails {
@@ -57,7 +72,16 @@ struct HomeView: View {
                     .padding(.top, -HomeMetrics.Panel.overlap)
                     .fixedSize(horizontal: false, vertical: true)
 
+                // The room the mockup leaves between the chips and the footer.
                 Spacer(minLength: 0)
+
+                if let badge = connectionViewModel.productBadge {
+                    HomeBetaLine(badge: badge, line: connectionViewModel.productBannerLine) {
+                        action(.explainNetwork)
+                    }
+                    .padding(.vertical, 10)
+                    .frame(maxWidth: HomeMetrics.maxColumnWidth)
+                }
 
                 HomeFooterView(model: footerModel)
             }
@@ -74,14 +98,8 @@ struct HomeView: View {
             HomeControlsView(viewModel: connectionViewModel, action: action)
             HomeChipsView(viewModel: indicatorsViewModel)
                 .padding(.top, HomeMetrics.Chips.marginTop)
-            if let badge = connectionViewModel.productBadge {
-                HomeBetaLine(badge: badge, line: connectionViewModel.productBannerLine) {
-                    action(.explainNetwork)
-                }
-                .padding(.vertical, 10)
-            }
         }
-        .padding(.bottom, connectionViewModel.productBadge == nil ? 12 : 0)
+        .padding(.bottom, 12)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(AccessibilityIdentifier.connectionView.asString)
     }
@@ -155,7 +173,7 @@ struct HomeStatusView: View {
                 Image(systemName: detailsOpen ? "chevron.down" : "chevron.up")
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundStyle(palette.color(.homeTextSecondary))
-                    .frame(width: 24, height: 24)
+                    .frame(width: 24, height: 18)
                     .accessibilityAddTraits(.isButton)
                     .accessibilityLabel(
                         detailsOpen
@@ -164,7 +182,7 @@ struct HomeStatusView: View {
                     )
             }
         }
-        .frame(minHeight: 24)
+        .frame(minHeight: 18)
         .contentShape(Rectangle())
         .onTapGesture {
             guard viewModel.showsConnectionDetails else { return }

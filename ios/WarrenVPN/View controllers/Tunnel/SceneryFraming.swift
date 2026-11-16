@@ -29,14 +29,44 @@ enum SceneryFraming {
         let bottom: CGFloat
     }
 
-    /// The cameras and the whole of Bula (his feet are the last row of the rabbit layer with
-    /// alpha >= 128); the burrow mouth lies inside.
-    static let groundSpan = Span(top: 320, bottom: 1131)
+    /// The cameras and Bula down to his hips while he is out: his legs and the burrow mouth fade
+    /// into the panel, as in the mockup.
+    static let groundSpan = Span(top: 320, bottom: 830)
 
-    /// Once Bula is in, the skyline down to the burrow mouth he hides in.
-    static let skyBottomRow: CGFloat = 930
+    /// Once he is in, the skyline down to the flag.
+    static let skyBottomRow: CGFloat = 610
 
     static let thumbMarginRows: CGFloat = 40
+
+    /// The mockup's proportions (Warren VPN Accueil, 360x640): a 300 point hero on a 360 point
+    /// column.
+    static let heroHeightRatio: CGFloat = 300 / 360
+
+    /// The hero fades into the page along the mockup's own curve, as (fraction of the hero height,
+    /// alpha) from its top to its bottom.
+    static let maskStops: [(at: CGFloat, alpha: CGFloat)] = [
+        (0, 1),
+        (0.52, 1),
+        (0.64, 0.82),
+        (0.77, 0.5),
+        (0.89, 0.2),
+        (0.96, 0.05),
+        (1, 0),
+    ]
+
+    /// The clear zone ends where that curve reaches half opacity; below it the art keeps fading.
+    static let clearBottomFraction: CGFloat = 0.77
+
+    /// The band under the clear zone, for a hero of this height.
+    static func fade(forHeroHeight height: CGFloat) -> CGFloat {
+        height * (1 - clearBottomFraction)
+    }
+
+    /// The hero keeps the mockup's proportion of the column it heads, and draws under the status
+    /// bar on top of that.
+    static func heroHeight(columnWidth: CGFloat, safeTop: CGFloat) -> CGFloat {
+        columnWidth * heroHeightRatio + safeTop
+    }
 
     /// Where the canvas lands in the hero, in points from the hero's top left corner.
     struct Frame: Equatable {
@@ -55,7 +85,7 @@ enum SceneryFraming {
     }
 
     /// `clearTop`: below this offset nothing floats over the art (the header bottom plus a margin).
-    /// `fade`: the bottom band where the art fades into the panel.
+    /// `fade`: the band under the clear zone, `fade(forHeroHeight:)`.
     static func frame(width: CGFloat, height: CGFloat, clearTop: CGFloat, fade: CGFloat, span: Span) -> Frame {
         let clearBottom = height - fade
         // A hero shorter than the header leaves no room at all; the canvas then shrinks to a
@@ -75,15 +105,8 @@ enum SceneryFraming {
         )
     }
 
-    /// The tallest a hero may be at a given width: the width-fit canvas. With the canvas top at or
-    /// above the hero top it then always reaches the fade, and with headroom it always reaches the
-    /// hero bottom, so nothing below the canvas is ever left to fill.
-    static func maxHeroHeight(forWidth width: CGFloat) -> CGFloat {
-        canvasHeight * width / canvasWidth
-    }
-
     /// The span a phase frames: the ground whenever Bula is out, the landscape's skyline down to
-    /// the burrow mouth once he is in.
+    /// the flag once he is in.
     static func span(skyFraming: Bool, skylineTopRow: Int) -> Span {
         skyFraming ? Span(top: CGFloat(skylineTopRow), bottom: skyBottomRow) : groundSpan
     }

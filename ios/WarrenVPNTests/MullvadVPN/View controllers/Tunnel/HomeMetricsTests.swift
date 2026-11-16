@@ -32,7 +32,6 @@ final class HomeMetricsTests: XCTestCase {
     private static let expected: [(String, CGFloat)] = [
         ("hero.headerInset", M.Hero.headerInset),
         ("hero.clearMargin", M.Hero.clearMargin),
-        ("hero.fade", M.Hero.fade),
         ("hero.logoHeight", M.Hero.logoHeight),
         ("hero.scrimStop", M.Hero.scrimStop),
         ("hero.glowWidth", M.Hero.glowWidth),
@@ -109,8 +108,18 @@ final class HomeMetricsTests: XCTestCase {
     func testNoSharedHomeMeasurementIsLeftWithoutACopy() throws {
         let home = try homeSection()
         let shared = Set(home.flatMap { section, entries in entries.keys.map { "\(section).\($0)" } })
-        let mirrored = Set(Self.expected.map(\.0))
+        let mirrored = Set(Self.expected.map(\.0)).union(Self.retired)
         XCTAssertEqual(shared.subtracting(mirrored), [], "home tokens with no iOS copy")
+    }
+
+    /// Tokens the home no longer reads: the hero's fade now follows the mockup curve of
+    /// `fixtures/client-rules/scenery_framing.json`, so the fixed band is left for desktop to drop.
+    private static let retired: Set<String> = ["hero.fade"]
+
+    /// The panel column is the screen up to the tablet cap, and it is what sizes the hero.
+    func testTheColumnIsTheScreenWidthUpToTheTabletCap() {
+        XCTAssertEqual(HomeMetrics.columnWidth(forWidth: 393), 393)
+        XCTAssertEqual(HomeMetrics.columnWidth(forWidth: 1032), HomeMetrics.maxColumnWidth)
     }
 
     /// The art is clear of the toolbar below its bottom edge plus the margin, under the status bar.

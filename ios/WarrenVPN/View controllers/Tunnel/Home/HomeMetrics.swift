@@ -17,8 +17,7 @@ enum HomeMetrics {
     enum Hero {
         static let headerInset: CGFloat = 14
         static let clearMargin: CGFloat = 6
-        static let fade: CGFloat = 40
-        static let logoHeight: CGFloat = 40
+        static let logoHeight: CGFloat = 32
         static let scrimStop: CGFloat = 0.34
         static let glowWidth: CGFloat = 300
         static let glowHeight: CGFloat = 150
@@ -112,4 +111,9 @@ enum HomeMetrics {
     /// The widest the panel column grows on a large screen. Not a shared token: desktop's window is
     /// 360 wide, so only a tablet ever needs a cap.
     static let maxColumnWidth: CGFloat = 480
+
+    /// The panel column on a screen this wide, the width the hero's height follows.
+    static func columnWidth(forWidth width: CGFloat) -> CGFloat {
+        min(width, maxColumnWidth)
+    }
 }

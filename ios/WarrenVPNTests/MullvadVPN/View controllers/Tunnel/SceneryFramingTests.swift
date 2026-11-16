@@ -66,6 +66,58 @@ final class SceneryFramingTests: XCTestCase {
         XCTAssertEqual(SceneryFraming.skyBottomRow, try number(sky, "bottom_row"))
     }
 
+    func testTheHeroHasTheMockupProportionsAndFadesAlongItsCurve() throws {
+        let fixture = try fixture()
+        XCTAssertEqual(SceneryFraming.heroHeightRatio, try number(fixture, "hero_height_ratio"), accuracy: 0.000001)
+        XCTAssertEqual(SceneryFraming.clearBottomFraction, try number(fixture, "clear_bottom_fraction"))
+        let stops = try XCTUnwrap(fixture["mask_stops"] as? [[NSNumber]], "mask_stops")
+        XCTAssertEqual(SceneryFraming.maskStops.map(\.at), stops.map { CGFloat($0[0].doubleValue) })
+        XCTAssertEqual(SceneryFraming.maskStops.map(\.alpha), stops.map { CGFloat($0[1].doubleValue) })
+    }
+
+    /// The fade given to the formula ends the clear zone where the mask reaches half opacity.
+    func testTheClearZoneEndsWhereTheFadeReachesHalfOpacity() throws {
+        for testCase in try ClientRulesFixtures.cases(try fixture(), "cases") {
+            let name = try ClientRulesFixtures.string(testCase, "name")
+            let hero = try numbers(testCase, "hero_px")
+            XCTAssertEqual(
+                SceneryFraming.fade(forHeroHeight: hero[1]), try number(testCase, "fade_px"), accuracy: 0.01, name)
+        }
+    }
+
+    /// 300 high on the mockup's 360 width, plus the status bar the hero draws under on a phone.
+    func testTheHeroIsTheColumnWidthAtTheMockupRatioPlusTheStatusBar() {
+        XCTAssertEqual(SceneryFraming.heroHeight(columnWidth: 360, safeTop: 0), 300, accuracy: 0.001)
+        XCTAssertEqual(SceneryFraming.heroHeight(columnWidth: 412, safeTop: 24), 367.33, accuracy: 0.01)
+    }
+
+    /// The controller frames the canvas with the fade of its own height, not a fixed band: the
+    /// desktop window's hero lands exactly where the fixture puts it.
+    func testTheHeroControllerFramesWithTheFadeOfItsHeight() throws {
+        let controller = SceneryViewController()
+        controller.loadViewIfNeeded()
+        controller.view.frame = CGRect(x: 0, y: 0, width: 360, height: 300)
+        controller.update(phase: .exposed, exitCountry: nil, animated: false)
+        controller.view.layoutIfNeeded()
+        let frame = try XCTUnwrap(controller.canvasFrame)
+        XCTAssertEqual(frame.top, -31.11, accuracy: Self.tolerance)
+        XCTAssertEqual(frame.y(ofRow: SceneryFraming.groundSpan.bottom), 231.0, accuracy: Self.tolerance)
+    }
+
+    /// The hero's alpha follows the mockup curve from its top to its bottom.
+    func testTheHeroMaskIsTheMockupCurve() throws {
+        let controller = SceneryViewController()
+        controller.loadViewIfNeeded()
+        controller.view.frame = CGRect(x: 0, y: 0, width: 393, height: 389)
+        controller.view.layoutIfNeeded()
+        let mask = try XCTUnwrap(controller.view.mask as? GradientView)
+        XCTAssertEqual(mask.frame, controller.view.bounds)
+        let locations = try XCTUnwrap(mask.gradientLayer.locations).map { CGFloat($0.doubleValue) }
+        XCTAssertEqual(locations, SceneryFraming.maskStops.map(\.at))
+        let colors = try XCTUnwrap(mask.gradientLayer.colors as? [CGColor])
+        XCTAssertEqual(colors.map(\.alpha), SceneryFraming.maskStops.map(\.alpha))
+    }
+
     func testEveryCaseIsFramedAsTheFixtureExpects() throws {
         let cases = try ClientRulesFixtures.cases(try fixture(), "cases")
         XCTAssertFalse(cases.isEmpty)
@@ -117,13 +169,6 @@ final class SceneryFramingTests: XCTestCase {
         }
     }
 
-    /// The hero is never taller than the width-fit canvas: with the canvas top at or above the hero
-    /// top it then always reaches the fade.
-    func testTheHeroIsCappedAtTheWidthFitCanvas() {
-        XCTAssertEqual(SceneryFraming.maxHeroHeight(forWidth: 360), 538.74, accuracy: 0.01)
-        XCTAssertEqual(SceneryFraming.maxHeroHeight(forWidth: 1140), 1706)
-    }
-
     /// The framing column of scenery.json, through the generated tables: the ground whenever Bula
     /// is out, the country's own skyline once he is in, and the plain's skyline for a country
     /// without art.
@@ -133,13 +178,13 @@ final class SceneryFramingTests: XCTestCase {
             SceneryViewController.framingSpan(.connecting, country: "Netherlands"), SceneryFraming.groundSpan)
         XCTAssertEqual(
             SceneryViewController.framingSpan(.protected, country: "Netherlands"),
-            SceneryFraming.Span(top: 100, bottom: 930))
+            SceneryFraming.Span(top: 100, bottom: 610))
         XCTAssertEqual(
             SceneryViewController.framingSpan(.protected, country: "nl"),
-            SceneryFraming.Span(top: 100, bottom: 930))
+            SceneryFraming.Span(top: 100, bottom: 610))
         XCTAssertEqual(
             SceneryViewController.framingSpan(.protected, country: "Sweden"),
-            SceneryFraming.Span(top: 320, bottom: 930))
+            SceneryFraming.Span(top: 320, bottom: 610))
         // The kill switch shows the watched plain whatever the exit.
         XCTAssertEqual(SceneryViewController.framingSpan(.blocked, country: "Finland"), SceneryFraming.groundSpan)
     }

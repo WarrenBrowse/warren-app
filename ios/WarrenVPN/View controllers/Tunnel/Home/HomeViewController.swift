@@ -14,6 +14,7 @@ import UIKit
 final class HomeViewController: UIViewController {
     let sceneryViewController: SceneryViewController
     private let details: HomeDetailsModel
+    private let hero: HomeHeroModel
     private let hostingController: UIHostingController<HomeView>
 
     /// The tunnel screen's handler for the home's buttons.
@@ -29,14 +30,17 @@ final class HomeViewController: UIViewController {
         let box = ActionBox()
         let scenery = SceneryViewController()
         let details = HomeDetailsModel()
+        let hero = HomeHeroModel()
         sceneryViewController = scenery
         self.details = details
+        self.hero = hero
         hostingController = UIHostingController(
             rootView: HomeView(
                 connectionViewModel: connectionViewModel,
                 indicatorsViewModel: indicatorsViewModel,
                 footerModel: footerModel,
                 details: details,
+                hero: hero,
                 scenery: scenery,
                 action: { box.handler?($0) }
             )
@@ -72,7 +76,11 @@ final class HomeViewController: UIViewController {
         super.viewDidLayoutSubviews()
         // The art runs under the status bar and the floating header; it keeps
         // what matters below the header, which sits under the status bar.
-        sceneryViewController.safeTop = view.window?.safeAreaInsets.top ?? 0
+        let safeTop = view.window?.safeAreaInsets.top ?? 0
+        sceneryViewController.safeTop = safeTop
+        if hero.safeTop != safeTop {
+            hero.safeTop = safeTop
+        }
     }
 
     /// Opens the connection details over the hero, as the chevron does.

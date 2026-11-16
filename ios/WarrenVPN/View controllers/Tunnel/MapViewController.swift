@@ -429,8 +429,8 @@ final class SceneryViewController: UIViewController {
     // brightest plates, and a paper glow behind the inked logo.
     private let scrimView = GradientView()
     private let glowView = GradientView()
-    // Fades the bottom of the hero into the page: the status block rides up
-    // over the last rows, so the art has no edge.
+    // Fades the hero into the page along the mockup's curve: the status block
+    // rides up over the last rows, so the art has no edge.
     private let fadeView = GradientView()
 
     // Blurring the full-resolution art costs tens of milliseconds; cache the
@@ -474,11 +474,10 @@ final class SceneryViewController: UIViewController {
 
         [canvasView, scrimView, glowView].forEach { view.addSubview($0) }
 
-        fadeView.gradientLayer.colors = [
-            UIColor.black.cgColor,
-            UIColor.black.withAlphaComponent(0.55).cgColor,
-            UIColor.clear.cgColor,
-        ]
+        fadeView.gradientLayer.colors = SceneryFraming.maskStops.map {
+            UIColor.black.withAlphaComponent($0.alpha).cgColor
+        }
+        fadeView.gradientLayer.locations = SceneryFraming.maskStops.map { NSNumber(value: Double($0.at)) }
         view.mask = fadeView
 
         glowView.gradientLayer.type = .radial
@@ -533,7 +532,7 @@ final class SceneryViewController: UIViewController {
             width: bounds.width,
             height: bounds.height,
             clearTop: HomeMetrics.clearTop(safeTop: safeTop),
-            fade: HomeMetrics.Hero.fade,
+            fade: SceneryFraming.fade(forHeroHeight: bounds.height),
             span: SceneryFraming.span(
                 skyFraming: Self.sceneryRow(phase).skyFraming,
                 skylineTopRow: Self.skylineTopRow(of: imageName)
@@ -550,13 +549,7 @@ final class SceneryViewController: UIViewController {
             refreshBlurredLandscape(animated: false)
         }
 
-        let fade = HomeMetrics.Hero.fade
         fadeView.frame = bounds
-        fadeView.gradientLayer.locations = [
-            NSNumber(value: Double((bounds.height - fade) / bounds.height)),
-            NSNumber(value: Double((bounds.height - fade * 0.45) / bounds.height)),
-            1,
-        ]
         scrimView.frame = bounds
         scrimView.gradientLayer.locations = [0, NSNumber(value: Double(HomeMetrics.Hero.scrimStop))]
         // Anchored at the corner like desktop's, and stretched by the status
