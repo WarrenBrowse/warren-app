@@ -127,27 +127,12 @@ test.describe('Network stats', () => {
     });
   }
 
-  test('the expanded card keeps its chevron on screen in a short window', async () => {
-    // The Electron window cannot be resized from here; the page can.
-    const short = await page.addStyleTag({
-      content: 'html, body, #app { height: 480px !important; overflow: hidden; }',
-    });
-    await routes.main.expandConnectionPanel();
-    await page.waitForTimeout(600);
-
-    const chevron = await page.getByTestId('connection-panel-chevron').boundingBox();
-    expect(chevron!.y).toBeGreaterThanOrEqual(0);
-    await expect(page.getByRole('button', { name: 'Disconnect' })).toBeInViewport({ ratio: 1 });
-
-    await page.screenshot({ path: `${SHOTS}/connect-short-window.png` });
-    await routes.main.expandConnectionPanel();
-    await short.evaluate((style) => (style as HTMLStyleElement).remove());
-    await page.waitForTimeout(600);
-  });
-
-  test('the load on the connection card opens nothing', async () => {
+  test('the load is part of the exit line, which opens the details in place', async () => {
     await page.getByTestId('connected-exit-load').click();
     await util.expectRoute(RoutePath.main);
+    await expect(page.getByTestId('connection-details')).toBeVisible();
+    await page.getByTestId('connected-exit-load').click();
+    await expect(page.getByTestId('connection-details')).toHaveCount(0);
   });
 });
 

@@ -5336,9 +5336,6 @@ msgctxt "warren-pubkey-warning"
 msgid "Trust new key"
 msgstr "新しい鍵を信頼"
 
-msgctxt "warren-status-view"
-msgid "HTTP/3 mimicry (active)"
-msgstr "HTTP/3 模倣（有効）"
 
 msgctxt "warren-status-view"
 msgid "Last"
@@ -6448,3 +6445,15 @@ msgstr "変更"
 msgctxt "in-app-notifications"
 msgid "Install"
 msgstr "インストール"
+
+msgctxt "connection-info"
+msgid "Protocol"
+msgstr "プロトコル"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry"
+msgstr "HTTP/3 模倣"
+
+msgctxt "warren-status-view"
+msgid "active"
+msgstr "有効"

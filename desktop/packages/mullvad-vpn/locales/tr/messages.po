@@ -4893,9 +4893,6 @@ msgctxt "warren-pubkey-warning"
 msgid "Trust new key"
 msgstr "Yeni anahtara güven"
 
-msgctxt "warren-status-view"
-msgid "HTTP/3 mimicry (active)"
-msgstr "HTTP/3 taklidi (etkin)"
 
 msgctxt "warren-status-view"
 msgid "Last"
@@ -6481,3 +6478,15 @@ msgstr "Değiştir"
 msgctxt "in-app-notifications"
 msgid "Install"
 msgstr "Yükle"
+
+msgctxt "connection-info"
+msgid "Protocol"
+msgstr "Protokol"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry"
+msgstr "HTTP/3 taklidi"
+
+msgctxt "warren-status-view"
+msgid "active"
+msgstr "etkin"

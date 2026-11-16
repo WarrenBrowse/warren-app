@@ -58,12 +58,18 @@ const Icon = ({ size, tone }: { size: number; tone: 'light' | 'dark' }) => (
 );
 
 // The wordmark is one vector (assets/images/warren-wordmark.svg): the ears mark
-// as the "W", then "arren" in the rounded V2 typography. It is painted through a
-// CSS mask rather than an <img> so the tone guard can still recolour it per
-// screen (an <img> cannot inherit currentColor). In the V2 lockup the ears tower
-// to ~2.2x the letter band, so the 1.7 factor keeps the letters readable without
+// as the "W", then "arren" in the rounded V2 typography. It is drawn as an
+// image, which Chromium rasterises at the screen's density: painted through a
+// CSS mask under the header's drop-shadow halo it was rasterised at one CSS
+// pixel per pixel and came out jagged on a Retina screen. The vector's own fill
+// is black, so the light tone inverts it. In the V2 lockup the ears tower to
+// ~2.2x the letter band, so the 1.7 factor keeps the letters readable without
 // the ears blowing past the header's vertical budget.
 const WORDMARK_ASPECT = 17355 / 5720;
+const toneFilter = {
+  dark: 'none',
+  light: 'invert(1) opacity(0.8)',
+};
 const Wordmark = ({
   fontSize,
   tone = 'light',
@@ -75,22 +81,16 @@ const Wordmark = ({
 }) => {
   const height = heightProp ?? Math.round(fontSize * 1.7);
   return (
-    <span
-      role="img"
-      aria-label="Warren"
+    <img
+      src="assets/images/warren-wordmark.svg"
+      alt="Warren"
+      draggable={false}
       style={{
-        display: 'inline-block',
+        display: 'block',
         height,
         width: Math.round(height * WORDMARK_ASPECT),
-        backgroundColor: tint(tone),
-        WebkitMaskImage: 'url(assets/images/warren-wordmark.svg)',
-        maskImage: 'url(assets/images/warren-wordmark.svg)',
-        WebkitMaskRepeat: 'no-repeat',
-        maskRepeat: 'no-repeat',
-        WebkitMaskPosition: 'left center',
-        maskPosition: 'left center',
-        WebkitMaskSize: 'contain',
-        maskSize: 'contain',
+        filter: toneFilter[tone],
+        userSelect: 'none',
       }}
     />
   );

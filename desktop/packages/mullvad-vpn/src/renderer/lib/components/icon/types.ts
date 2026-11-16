@@ -22,6 +22,7 @@ export const icons = {
   download: 'icon-download',
   edit: 'icon-edit',
   'edit-circle': 'icon-edit-circle',
+  'expand-more': 'icon-expand-more',
   external: 'icon-external',
   filter: 'icon-filter',
   'filter-circle': 'icon-filter-circle',

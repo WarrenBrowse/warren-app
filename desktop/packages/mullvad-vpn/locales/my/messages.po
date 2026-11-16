@@ -5339,9 +5339,6 @@ msgctxt "warren-pubkey-warning"
 msgid "Trust new key"
 msgstr "သော့အသစ်ကို ယုံကြည်ရန်"
 
-msgctxt "warren-status-view"
-msgid "HTTP/3 mimicry (active)"
-msgstr "HTTP/3 mimicry (တက်ကြွ)"
 
 msgctxt "warren-status-view"
 msgid "Last"
@@ -6451,3 +6448,15 @@ msgstr "ပြောင်းရန်"
 msgctxt "in-app-notifications"
 msgid "Install"
 msgstr "ထည့်သွင်းရန်"
+
+msgctxt "connection-info"
+msgid "Protocol"
+msgstr "ပရိုတိုကော"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry"
+msgstr "HTTP/3 mimicry"
+
+msgctxt "warren-status-view"
+msgid "active"
+msgstr "တက်ကြွ"

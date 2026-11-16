@@ -1,23 +1,21 @@
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import { sprintf } from 'sprintf-js';
 import styled from 'styled-components';
 
 import { messages } from '../../../../../shared/gettext';
 import { IncludeOnlyLabel, LockedAppsLabel } from '../../../../features/app-routing/components';
-import { Icon, IconButton } from '../../../../lib/components';
+import { Icon } from '../../../../lib/components';
 import { ConnectionPhase, getConnectionPhase } from '../../../../lib/connection-phase';
 import { useExitEgressDead } from '../../../../lib/exit-egress';
 import { FontFamilies, homeTokens, surfaces } from '../../../../lib/foundations';
 import { useHostOffline } from '../../../../lib/host-offline';
-import { useBoolean } from '../../../../lib/utility-hooks';
 import { useSelector } from '../../../../redux/store';
-import CustomScrollbars from '../../../CustomScrollbars';
 import { BackAction } from '../../../keyboard-navigation';
 import { ConnectedExitLoad } from '../components/connection-panel/components/connected-exit-load';
 import { ConnectionDetails } from '../components/connection-panel/components/connection-details';
 import { getHomeStatus } from './home-status-text';
 
-const { panel, pill, title, subtitle } = homeTokens;
+const { panel, pill, title, subtitle, exitRow } = homeTokens;
 
 const pillColors: Record<ConnectionPhase, { background: string; text: string }> = {
   exposed: { background: surfaces.homePillExposed, text: surfaces.homePillExposedText },
@@ -77,64 +75,84 @@ const StyledTitle = styled.h1`
   text-overflow: ellipsis;
 `;
 
-const StyledSubtitleRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  /* Fixed whether or not the details button is there, so the hero above keeps
-     its frame across every state. */
-  height: 18px;
-  --load-ring-low: ${surfaces.homePillProtected};
-  --load-ring-moderate: ${surfaces.homeBadge};
-  --load-ring-high: ${surfaces.homePillPending};
-  --load-ring-saturated: ${surfaces.homePillExposed};
-  --load-ring-track: color-mix(in srgb, ${surfaces.homeTextSecondary} 30%, transparent);
+const StyledSubtitle = styled.p`
+  margin: ${subtitle.marginTop}px 0 0;
+  padding: ${subtitle.paddingVertical}px 0;
+  font-family: ${FontFamilies.sans};
+  font-size: ${subtitle.textSize}px;
+  line-height: ${subtitle.lineHeight}px;
   color: ${surfaces.homeTextSecondary};
-`;
-
-const StyledSubtitle = styled.span<{ $mono: boolean }>`
-  flex: 0 1 auto;
-  min-width: 0;
-  font-family: ${(props) => (props.$mono ? FontFamilies.mono : FontFamilies.sans)};
-  font-size: ${(props) => (props.$mono ? subtitle.monoSize : subtitle.textSize)}px;
-  color: ${(props) => (props.$mono ? surfaces.homeTextMono : surfaces.homeTextSecondary)};
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 `;
 
-const StyledDetailsButton = styled(IconButton)`
-  --background: ${surfaces.homeTextSecondary};
-  --hover: ${surfaces.homeText};
-  --pressed: ${surfaces.homeText};
-  flex-shrink: 0;
-  margin-inline-start: auto;
-`;
-
-// The connection details open over the hero rather than pushing the controls:
-// the window is fixed, and the art is what can give way.
-const StyledDetailsSheet = styled.div<{ $open: boolean }>`
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: calc(100% - ${panel.overlap}px);
-  z-index: 3;
-  max-height: 300px;
+// The exit line is the button that opens the details: its hover well reaches
+// past the text on both sides, as the mockup draws it.
+const StyledExitRow = styled.button`
   display: flex;
-  flex-direction: column;
-  padding: 4px ${panel.paddingHorizontal}px 0;
-  border-radius: 16px 16px 0 0;
-  background-color: ${surfaces.homePage};
-  box-shadow: 0 -12px 24px -12px rgba(0, 0, 0, 0.45);
-  opacity: ${(props) => (props.$open ? 1 : 0)};
-  transform: translateY(${(props) => (props.$open ? 0 : 12)}px);
-  pointer-events: ${(props) => (props.$open ? 'auto' : 'none')};
-  transition:
-    opacity 200ms ease-out,
-    transform 200ms ease-out;
+  align-items: center;
+  gap: ${exitRow.gap}px;
+  min-width: 0;
+  margin: ${exitRow.marginTop}px -${exitRow.outset}px 0;
+  padding: ${exitRow.paddingVertical}px ${exitRow.outset}px;
+  border: none;
+  border-radius: ${exitRow.radius}px;
+  background: none;
+  color: ${surfaces.homeTextMono};
+  font-family: ${FontFamilies.sans};
+  font-size: ${exitRow.textSize}px;
+  text-align: start;
+  cursor: pointer;
+  transition: background-color 150ms ease-out;
+  --load-ring-low: ${surfaces.homeLoad};
+  --load-ring-moderate: ${surfaces.homeBadge};
+  --load-ring-high: ${surfaces.homePillPending};
+  --load-ring-saturated: ${surfaces.homePillExposed};
+  --load-ring-track: ${surfaces.homeLoadTrack};
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    background-color: ${surfaces.homeDetails};
+  }
+  & [data-testid='exit-load-badge'] {
+    gap: ${exitRow.gap}px;
+    color: inherit;
+    font-size: ${exitRow.textSize}px;
+    font-weight: normal;
+  }
 `;
 
-export function HomeStatus() {
+const StyledExitText = styled.span<{ $mono: boolean }>`
+  flex: 0 1 auto;
+  min-width: 0;
+  font-family: ${(props) => (props.$mono ? FontFamilies.mono : FontFamilies.sans)};
+  color: ${(props) => (props.$mono ? surfaces.homeTextMono : surfaces.homeTextSecondary)};
+  font-size: ${(props) => (props.$mono ? exitRow.textSize : subtitle.textSize)}px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+const StyledChevron = styled(Icon)<{ $open: boolean }>`
+  && {
+    flex-shrink: 0;
+    width: ${exitRow.chevron}px;
+    height: ${exitRow.chevron}px;
+    margin-inline-start: auto;
+    background-color: currentColor;
+    transform: rotate(${(props) => (props.$open ? 180 : 0)}deg);
+    transition: transform ${exitRow.chevronMs}ms ease;
+  }
+`;
+
+interface HomeStatusProps {
+  detailsOpen: boolean;
+  toggleDetails: () => void;
+  closeDetails: () => void;
+}
+
+export function HomeStatus({ detailsOpen, toggleDetails, closeDetails }: HomeStatusProps) {
   const tunnelState = useSelector((state) => state.connection.status);
   const connection = useSelector((state) => state.connection);
   const includeOnly = useSelector(
@@ -142,7 +160,6 @@ export function HomeStatus() {
   );
   const hostOffline = useHostOffline();
   const exitEgressDead = useExitEgressDead();
-  const [detailsOpen, , closeDetails, toggleDetails] = useBoolean();
 
   const phase = getConnectionPhase(tunnelState, hostOffline, exitEgressDead);
   const status = getHomeStatus(
@@ -163,51 +180,42 @@ export function HomeStatus() {
   );
   const colors = pillColors[phase];
   const eye = phase === 'exposed' || phase === 'connecting' ? 'show' : 'hide';
-  const hasDetails = tunnelState.state === 'connected' || tunnelState.state === 'connecting';
+  const connected = tunnelState.state === 'connected';
 
   useEffect(closeDetails, [tunnelState.state, closeDetails]);
-  const onToggleDetails = useCallback(() => {
-    if (hasDetails) toggleDetails();
-  }, [hasDetails, toggleDetails]);
 
   return (
     <BackAction disabled={!detailsOpen} action={closeDetails}>
       <StyledStatus role="status">
-        {hasDetails && (
-          <StyledDetailsSheet $open={detailsOpen} aria-hidden={!detailsOpen}>
-            <CustomScrollbars>
-              <ConnectionDetails />
-            </CustomScrollbars>
-          </StyledDetailsSheet>
-        )}
         <StyledPill $background={colors.background} $text={colors.text} data-testid="home-pill">
           <StyledPillIcon icon={eye} $color={colors.text} />
           {status.pill}
         </StyledPill>
         <StyledTitle>{status.title}</StyledTitle>
-        <StyledSubtitleRow>
-          {status.subtitle && (
-            <StyledSubtitle
-              $mono={status.subtitleIsHostname}
-              dir={status.subtitleIsHostname ? 'ltr' : undefined}
-              data-testid="hostname-line">
-              {status.subtitle}
-            </StyledSubtitle>
-          )}
-          {tunnelState.state === 'connected' && <ConnectedExitLoad />}
-          {hasDetails && (
-            <StyledDetailsButton
-              size="small"
-              onClick={onToggleDetails}
-              aria-expanded={detailsOpen}
-              // TRANSLATORS: Accessible name of the button that shows the
-              // TRANSLATORS: connection details on the home screen.
-              aria-label={messages.pgettext('connect-view', 'Connection details')}
-              data-testid="connection-panel-chevron">
-              <IconButton.Icon icon={detailsOpen ? 'chevron-down' : 'chevron-up'} />
-            </StyledDetailsButton>
-          )}
-        </StyledSubtitleRow>
+        {connected ? (
+          <StyledExitRow
+            type="button"
+            onClick={toggleDetails}
+            aria-expanded={detailsOpen}
+            // TRANSLATORS: Accessible name of the button that shows the
+            // TRANSLATORS: connection details on the home screen.
+            aria-label={messages.pgettext('connect-view', 'Connection details')}
+            data-testid="connection-panel-chevron">
+            {status.subtitle && (
+              <StyledExitText
+                $mono={status.subtitleIsHostname}
+                dir={status.subtitleIsHostname ? 'ltr' : undefined}
+                data-testid="hostname-line">
+                {status.subtitle}
+              </StyledExitText>
+            )}
+            <ConnectedExitLoad />
+            <StyledChevron icon="expand-more" $open={detailsOpen} aria-hidden />
+          </StyledExitRow>
+        ) : (
+          <StyledSubtitle>{status.subtitle || '\u00a0'}</StyledSubtitle>
+        )}
+        {connected && detailsOpen && <ConnectionDetails />}
         <IncludeOnlyLabel />
         <LockedAppsLabel />
       </StyledStatus>

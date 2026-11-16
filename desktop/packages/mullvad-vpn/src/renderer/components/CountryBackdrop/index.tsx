@@ -11,10 +11,13 @@ import { useSelector } from '../../redux/store';
 import {
   CANVAS_HEIGHT,
   CANVAS_WIDTH,
+  COMPACT_TRANSITION_MS,
   FEATHER_ROWS,
   Frame,
   frameScenery,
   framingSpan,
+  HERO_COMPACT_RATIO,
+  HERO_HEIGHT_RATIO,
   HERO_MASK_STOPS,
   heroFade,
   phaseLandscape,
@@ -43,12 +46,19 @@ const Root = styled.div<{ $fill: string; $animate: boolean }>`
 // The registered canvas: the three layers fill it exactly, so moving or
 // scaling it moves them together. Edges facing a headroom strip or a side
 // margin are feathered into the top fill behind it.
-const Canvas = styled.div<{ $animate: boolean }>`
+// A reframe that follows the details opening keeps the hero's own pace, so
+// the art and the hero edge move as one.
+const reframe = (ms: number, easing: string) =>
+  ['top', 'left', 'width', 'height'].map((property) => `${property} ${ms}ms ${easing}`).join(', ');
+
+const Canvas = styled.div<{ $animate: boolean; $resize: boolean }>`
   position: absolute;
   transition: ${(props) =>
-    props.$animate
-      ? `top ${hero.frameMs}ms ease-in-out, left ${hero.frameMs}ms ease-in-out, width ${hero.frameMs}ms ease-in-out, height ${hero.frameMs}ms ease-in-out`
-      : 'none'};
+    !props.$animate
+      ? 'none'
+      : props.$resize
+        ? reframe(COMPACT_TRANSITION_MS, 'cubic-bezier(0.3, 0.7, 0.2, 1)')
+        : reframe(hero.frameMs, 'ease-in-out')};
 `;
 
 const Layer = styled.img`
@@ -169,13 +179,16 @@ export function useTargetCountry(): string | undefined {
 }
 
 // The home hero: the scenery framed so that what matters in the current phase
-// stays clear of the floating header and of the fade into the panel.
-export default function CountryBackdrop() {
+// stays clear of the floating header and of the fade into the panel. While
+// `compact` (the details are open) the hero shrinks and the art keeps its
+// width, giving its lower part to the fade.
+export default function CountryBackdrop({ compact = false }: { compact?: boolean }) {
   const status = useSelector((state) => state.connection.status);
   const hostOffline = useHostOffline();
   const exitEgressDead = useExitEgressDead();
   const targetCountry = useTargetCountry();
   const [ref, size] = useMeasure<HTMLDivElement>();
+  const resizing = useResizing(compact);
 
   // e2e runs against deterministic snapshots; skip the decorative scene.
   if (window.env.e2e) {
@@ -186,16 +199,20 @@ export default function CountryBackdrop() {
   const scenery = resolveScenery(phase, targetCountry);
   const landscape = phaseLandscape(phase, targetCountry);
   const animate = !getReduceMotion();
-  const measured = size.width > 0 && size.height > 0;
-  const frame = measured
-    ? frameScenery({
-        width: size.width,
-        height: size.height,
-        clearTop: homeClearTop,
-        fade: heroFade(size.height),
-        span: framingSpan(phase, targetCountry),
-      })
-    : undefined;
+  // Framed for the height the hero is heading to, not the one it is passing
+  // through, so the art never shrinks to fit a hero halfway open.
+  const height = size.width * (compact ? HERO_COMPACT_RATIO : HERO_HEIGHT_RATIO);
+  const frame =
+    size.width > 0
+      ? frameScenery({
+          width: size.width,
+          height,
+          clearTop: homeClearTop,
+          fade: heroFade(height),
+          span: framingSpan(phase, targetCountry),
+          compact,
+        })
+      : undefined;
   const mask = frame ? featherMask(frame) : undefined;
 
   return (
@@ -203,6 +220,7 @@ export default function CountryBackdrop() {
       {frame && (
         <Canvas
           $animate={animate}
+          $resize={resizing}
           data-testid="scenery-canvas"
           style={{
             left: frame.left,
@@ -223,6 +241,20 @@ export default function CountryBackdrop() {
       <LogoGlow />
     </Root>
   );
+}
+
+// True for the length of the hero's own resize after `compact` flips.
+function useResizing(compact: boolean): boolean {
+  const [resizing, setResizing] = useState(false);
+  const previous = useRef(compact);
+  useEffect(() => {
+    if (previous.current === compact) return;
+    previous.current = compact;
+    setResizing(true);
+    const timer = setTimeout(() => setResizing(false), COMPACT_TRANSITION_MS);
+    return () => clearTimeout(timer);
+  }, [compact]);
+  return resizing || previous.current !== compact;
 }
 
 interface CrossfadeLandscapeProps {

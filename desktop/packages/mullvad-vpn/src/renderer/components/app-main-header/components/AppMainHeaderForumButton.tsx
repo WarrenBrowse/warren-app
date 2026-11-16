@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import styled from 'styled-components';
 
 import { urls } from '../../../../shared/constants';
 import { unreadLabel } from '../../../../shared/forum-identity';
@@ -8,37 +7,10 @@ import { RoutePath } from '../../../../shared/routes';
 import { useAppContext } from '../../../context';
 import { IconButton, IconButtonProps, MainHeader } from '../../../lib/components';
 import { useForumHeaderButton, useForumUnreadCount } from '../../../lib/forum-activity';
-import { colors, spacings } from '../../../lib/foundations';
 import { TransitionType, useHistory } from '../../../lib/history';
+import { ToolbarBadge, ToolbarGlyph } from './ToolbarBadge';
 
 export type MainHeaderForumButtonProps = Omit<IconButtonProps, 'icon'>;
-
-// Same geometry as the settings gear's upgrade dot, so the two indicators
-// in this header sit at the same place on their glyph.
-//
-// The brand ocre, deliberately none of the three state accents: red is
-// disconnected, green is connected and orange is connecting, so any of
-// them here would read as a change in the tunnel rather than as forum
-// activity. Dark text on it, since ocre is a mid-light tone.
-const StyledCount = styled.span`
-  position: absolute;
-  top: -2px;
-  right: -4px;
-  min-width: 15px;
-  height: 15px;
-  padding: 0 ${spacings.tiny};
-  border-radius: 8px;
-  background-color: ${colors.fur};
-  color: ${colors.darkBlue};
-  font-size: 10px;
-  line-height: 15px;
-  font-weight: 600;
-  text-align: center;
-`;
-
-const StyledDiv = styled.div`
-  position: relative;
-`;
 
 /**
  * The header's forum slot, which carries one of two buttons or none at all
@@ -105,10 +77,10 @@ export function AppMainHeaderForumButton(props: MainHeaderForumButtonProps) {
       {...props}>
       {/* Outline rather than filled, matching the wordmark's thin stroke
           and the two buttons beside it. */}
-      <StyledDiv>
+      <ToolbarGlyph>
         <IconButton.Icon icon="bell-outline" />
-        {unread > 0 && <StyledCount aria-hidden="true">{unreadLabel(unread)}</StyledCount>}
-      </StyledDiv>
+        {unread > 0 && <ToolbarBadge aria-hidden="true" data-testid="forum-unread-badge" />}
+      </ToolbarGlyph>
     </MainHeader.IconButton>
   );
 }

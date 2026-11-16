@@ -320,9 +320,11 @@ describe('Warren launch announcement card', () => {
       };
 
       expect(sizeOf('bannerTitle')).to.be.greaterThan(sizeOf('bannerSubtitle'));
-      // The banner is the toolbar's glass in either theme, so the body takes
-      // the home's secondary text, which each theme sets against its glass.
-      expect(rulesFor(rendered, 'bannerSubtitle')).to.contain('--surface-home-text-secondary');
+      // The banner is its own glass in either theme, so the body takes the
+      // secondary text each theme sets against that glass.
+      expect(rulesFor(rendered, 'bannerSubtitle')).to.contain(
+        '--surface-home-notice-text-secondary',
+      );
     });
   });
 

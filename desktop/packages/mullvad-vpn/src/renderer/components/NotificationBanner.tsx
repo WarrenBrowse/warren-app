@@ -8,11 +8,13 @@ import {
   InAppNotificationIndicatorType,
 } from '../../shared/notifications/notification';
 import { Icon, IconButton, IconProps } from '../lib/components';
-import { colors, surfaces } from '../lib/foundations';
+import { colors, homeTokens, surfaces } from '../lib/foundations';
 import { useExclusiveTask } from '../lib/hooks/use-exclusive-task';
 import { smallText, tinyText } from './common-styles';
 
 const NOTIFICATION_AREA_ID = 'notification-area';
+
+const { notice } = homeTokens;
 
 // The banner carries operator-authored text, so the title and the body have to
 // separate at a glance rather than being one block of bold 12px. Same hierarchy
@@ -20,18 +22,18 @@ const NOTIFICATION_AREA_ID = 'notification-area';
 // at regular weight with enough contrast to survive the glass surface over the
 // scenery photo.
 export const NotificationTitle = styled.span(smallText, {
-  fontSize: '13px',
+  fontSize: `${notice.titleSize}px`,
   lineHeight: '17px',
-  fontWeight: 600,
+  fontWeight: notice.titleWeight,
   color: surfaces.homeText,
   overflowWrap: 'anywhere',
 });
 
 export const NotificationSubtitleText = styled.span(tinyText, {
-  fontSize: '11px',
+  fontSize: `${notice.bodySize}px`,
   lineHeight: '15px',
   fontWeight: 'normal',
-  color: surfaces.homeTextSecondary,
+  color: surfaces.homeNoticeTextSecondary,
   overflowWrap: 'anywhere',
 });
 
@@ -150,18 +152,23 @@ const StyledCloseButton = styled.button({
   placeItems: 'center',
   width: '24px',
   height: '24px',
+  margin: '-3px',
   padding: 0,
   border: 'none',
   borderRadius: '6px',
   background: 'none',
-  color: surfaces.homeTextSecondary,
+  color: surfaces.homeNoticeTextSecondary,
   cursor: 'pointer',
   '&:hover': { color: surfaces.homeText },
   '&:focus-visible': { outline: `2px solid ${surfaces.homeText}`, outlineOffset: '-2px' },
 });
 
 const StyledCloseIcon = styled(Icon)({
-  '&&': { width: '16px', height: '16px', backgroundColor: 'currentColor' },
+  '&&': {
+    width: `${notice.close}px`,
+    height: `${notice.close}px`,
+    backgroundColor: 'currentColor',
+  },
 });
 
 export function NotificationCloseAction(props: NotificationActionProps) {
@@ -179,15 +186,18 @@ export function NotificationCloseAction(props: NotificationActionProps) {
 // The labelled button a banner ends with: the mockup's light "Install".
 const StyledBannerButton = styled.button({
   flexShrink: 0,
-  padding: '6px 10px',
+  display: 'flex',
+  alignItems: 'center',
+  height: `${notice.buttonHeight}px`,
+  padding: `0 ${notice.buttonPaddingHorizontal}px`,
   border: 'none',
-  borderRadius: '8px',
+  borderRadius: `${notice.buttonRadius}px`,
   background: surfaces.homeText,
   color: surfaces.homePage,
   fontFamily: 'var(--font-family-sans)',
-  fontSize: '12px',
+  fontSize: `${notice.buttonTextSize}px`,
   lineHeight: '16px',
-  fontWeight: 600,
+  fontWeight: notice.buttonTextWeight,
   whiteSpace: 'nowrap',
   cursor: 'pointer',
   '&:hover': { opacity: 0.9 },
@@ -197,7 +207,10 @@ const StyledBannerButton = styled.button({
 export function NotificationButton(props: NotificationActionProps & { label: string }) {
   const [onClick] = useExclusiveTask(props.onClick);
   return (
-    <StyledBannerButton aria-describedby={NOTIFICATION_AREA_ID} onClick={onClick}>
+    <StyledBannerButton
+      aria-describedby={NOTIFICATION_AREA_ID}
+      onClick={onClick}
+      data-banner-button>
       {props.label}
     </StyledBannerButton>
   );
@@ -215,25 +228,29 @@ const iconByLevel: Record<InAppNotificationIndicatorType, IconProps['icon']> = {
 };
 
 const StyledLeadIcon = styled(Icon)<{ $color: string }>((props) => ({
-  '&&': { width: '16px', height: '16px', backgroundColor: props.$color },
+  '&&': { width: `${notice.icon}px`, height: `${notice.icon}px`, backgroundColor: props.$color },
   flexShrink: 0,
 }));
 
 // The glyph a banner leads with, in place of a coloured dot: the mockup's
-// amber download for an update, a megaphone for an announcement.
+// amber download for an update, a blue megaphone for an announcement.
+export function noticeIconColor(
+  kind?: InAppNotificationIcon,
+  indicator?: InAppNotificationIndicatorType,
+): string {
+  if (kind === 'update') return surfaces.homeNoticeUpdate;
+  if (kind === 'announcement') return surfaces.homeNoticeAnnouncement;
+  if (indicator === 'error') return surfaces.homeDisconnectText;
+  if (indicator === 'warning') return surfaces.homeBadge;
+  return surfaces.homeNoticeTextSecondary;
+}
+
 export function NotificationLeadIcon(props: {
   kind?: InAppNotificationIcon;
   indicator?: InAppNotificationIndicatorType;
 }) {
   const icon = props.kind ? iconByKind[props.kind] : iconByLevel[props.indicator ?? 'success'];
-  const color =
-    props.kind === 'announcement'
-      ? surfaces.homeTextSecondary
-      : props.indicator === 'error'
-        ? surfaces.homeDisconnectText
-        : props.indicator === 'success' && !props.kind
-          ? surfaces.homeTextSecondary
-          : surfaces.homeBadge;
+  const color = noticeIconColor(props.kind, props.indicator);
   return (
     <StyledLeadIcon
       icon={icon}
@@ -248,7 +265,7 @@ export function NotificationLeadIcon(props: {
 export const NotificationContent = styled.div.attrs({ id: NOTIFICATION_AREA_ID })({
   display: 'flex',
   flexDirection: 'column',
-  gap: '1px',
+  gap: `${notice.bodyGap}px`,
   flex: 1,
   minWidth: 0,
 });
@@ -291,11 +308,11 @@ const Collapsible = styled(motion.div)({
   justifyContent: 'flex-start',
   translateY: '0%',
   marginInlineStart: 'auto',
-  maxWidth: '272px',
-  borderRadius: '12px',
-  backgroundColor: surfaces.homeToolbar,
-  backdropFilter: 'blur(10px)',
-  boxShadow: `inset 0 0 0 1px ${surfaces.homeToolbarLine}, 0 8px 24px -8px rgba(0, 0, 0, 0.45)`,
+  maxWidth: `${notice.maxWidth}px`,
+  borderRadius: `${notice.radius}px`,
+  backgroundColor: surfaces.homeNotice,
+  backdropFilter: `blur(${notice.blur}px)`,
+  boxShadow: `inset 0 0 0 1px ${surfaces.homeNoticeLine}, 0 8px 24px -10px ${surfaces.homeNoticeShadow}`,
   overflow: 'hidden',
 });
 
@@ -303,9 +320,12 @@ const Content = styled.section({
   display: 'flex',
   flexDirection: 'row',
   alignItems: 'center',
-  gap: '10px',
-  padding: '10px 12px',
+  gap: `${notice.gap}px`,
+  padding: `${notice.paddingVertical}px ${notice.paddingEnd}px ${notice.paddingVertical}px ${notice.paddingStart}px`,
   height: 'fit-content',
+  '&:has([data-banner-button])': {
+    padding: `${notice.buttonInset}px ${notice.buttonInset}px ${notice.buttonInset}px ${notice.paddingStart}px`,
+  },
 });
 
 interface INotificationBannerProps {

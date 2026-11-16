@@ -13,9 +13,8 @@ import {
   TunnelState,
 } from '../../../../../../../../shared/daemon-rpc-types';
 import { messages, relayLocations } from '../../../../../../../../shared/gettext';
-import { surfaces } from '../../../../../../../lib/foundations';
+import { FontFamilies, homeTokens, surfaces } from '../../../../../../../lib/foundations';
 import { useSelector } from '../../../../../../../redux/store';
-import { tinyText } from '../../../../../../common-styles';
 
 interface Endpoint {
   ip: string;
@@ -27,44 +26,64 @@ interface ObfuscationData extends Endpoint {
   obfuscationType: EndpointObfuscationType;
 }
 
-const StyledConnectionDetailsHeading = styled.h2(tinyText, {
-  margin: '0 0 4px',
-  fontSize: '10px',
-  lineHeight: '15px',
-  color: surfaces.textMuted,
-});
+const { details } = homeTokens;
 
-const StyledConnectionDetailsContainer = styled.div({
-  marginTop: '16px',
-  marginBottom: '16px',
-});
+// The mockup's details card: a two-column grid of label and value, the
+// addresses in the mono face, the reconnection counters under a hairline.
+const StyledCard = styled.div`
+  margin-top: ${details.marginTop}px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: ${details.columnGap}px;
+  row-gap: ${details.rowGap}px;
+  padding: ${details.paddingVertical}px ${details.paddingHorizontal}px;
+  border-radius: ${details.radius}px;
+  background-color: ${surfaces.homeDetails};
+  box-shadow: inset 0 0 0 1px ${surfaces.homeDetailsLine};
+  font-family: ${FontFamilies.sans};
+  font-size: ${details.textSize}px;
+  line-height: 1.25;
+  color: ${surfaces.homeTextSecondary};
+`;
 
-const StyledIpTable = styled.div({
-  display: 'grid',
-  gridTemplateColumns: 'minmax(48px, min-content) auto',
-  // Keep a gap between the label column and the value column. Without it
-  // a label as wide as the column (e.g. the localized "Reconnects") leaves
-  // its value glued to it ("Reconnexions0"), unlike shorter labels which
-  // get incidental space from the shared min-content column width.
-  columnGap: '8px',
-});
+const StyledLabel = styled.span`
+  white-space: nowrap;
+`;
 
-const StyledIpLabelContainer = styled.div({
-  display: 'flex',
-  flexDirection: 'column',
-});
+const StyledValue = styled.span<{ $mono?: boolean; $strong?: boolean }>`
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: ${surfaces.homeText};
+  font-family: ${(props) => (props.$mono ? FontFamilies.mono : FontFamilies.sans)};
+  font-size: ${(props) => (props.$mono ? details.monoSize : details.textSize)}px;
+  font-weight: ${(props) => (props.$strong ? details.valueWeight : 'normal')};
+  overflow-wrap: anywhere;
+`;
 
-const StyledConnectionDetailsLabel = styled.span(tinyText, {
-  display: 'block',
-  color: surfaces.text,
-  fontWeight: '400',
-  minHeight: '1em',
-});
+const StyledDivider = styled.span`
+  grid-column: 1 / -1;
+  height: 1px;
+  margin: ${details.dividerMargin}px 0;
+  background-color: ${surfaces.homeDetailsLine};
+`;
 
-const StyledConnectionDetailsTitle = styled(StyledConnectionDetailsLabel)({
-  color: surfaces.textMuted,
-  whiteSpace: 'nowrap',
-});
+const StyledObfuscation = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: ${surfaces.homeText};
+`;
+
+const StyledActiveChip = styled.span`
+  padding: ${details.chipPaddingVertical}px ${details.chipPaddingHorizontal}px;
+  border-radius: 99px;
+  background-color: ${surfaces.homeActiveWell};
+  color: ${surfaces.homeActive};
+  font-size: ${details.chipSize}px;
+  font-weight: ${details.chipWeight};
+`;
 
 export function ConnectionDetails() {
   const reduxConnection = useSelector((state) => state.connection);
@@ -105,53 +124,37 @@ export function ConnectionDetails() {
       : undefined;
 
   return (
-    <StyledConnectionDetailsContainer>
-      <StyledConnectionDetailsHeading>
-        {messages.pgettext('connect-view', 'Connection details')}
-      </StyledConnectionDetailsHeading>
-      <StyledConnectionDetailsLabel data-testid="tunnel-protocol">
+    <StyledCard data-testid="connection-details">
+      <StyledLabel>
+        {
+          // TRANSLATORS: Label of the tunnel protocol in the connection details.
+          messages.pgettext('connection-info', 'Protocol')
+        }
+      </StyledLabel>
+      <StyledValue $strong data-testid="tunnel-protocol">
         {showDetails && tunnelState.details !== undefined && strings.quic}
-      </StyledConnectionDetailsLabel>
-      {multihop && (
-        <StyledConnectionDetailsLabel data-testid="multihop-indicator">
-          {messages.pgettext('connection-info', 'Multihop (2 hops)')}
-        </StyledConnectionDetailsLabel>
-      )}
-      <StyledIpTable>
-        <StyledConnectionDetailsTitle>
-          {messages.pgettext('connection-info', 'In')}
-        </StyledConnectionDetailsTitle>
-        <StyledConnectionDetailsLabel data-testid="in-ip">
-          {hasEntry ? `${entry.ip}:${entry.port} ${entry.protocol.toUpperCase()}` : ''}
-        </StyledConnectionDetailsLabel>
-        <StyledConnectionDetailsTitle>
-          {messages.pgettext('connection-info', 'Out')}
-        </StyledConnectionDetailsTitle>
-        <StyledIpLabelContainer>
-          {hasExit && (
-            <StyledConnectionDetailsLabel data-testid="out-endpoint">
-              {`${exit.ip}:${exit.port} ${exit.protocol.toUpperCase()}`}
-            </StyledConnectionDetailsLabel>
-          )}
-          {connection.ipv4 && (
-            <StyledConnectionDetailsLabel data-testid="out-ip">
-              {connection.ipv4}
-            </StyledConnectionDetailsLabel>
-          )}
-          {connection.ipv6 && (
-            <StyledConnectionDetailsLabel data-testid="out-ip">
-              {connection.ipv6}
-            </StyledConnectionDetailsLabel>
-          )}
-          {exitLocationFallback && (
-            <StyledConnectionDetailsLabel data-testid="out-location">
-              {exitLocationFallback}
-            </StyledConnectionDetailsLabel>
-          )}
-        </StyledIpLabelContainer>
-      </StyledIpTable>
+        {multihop && (
+          <span data-testid="multihop-indicator">
+            {messages.pgettext('connection-info', 'Multihop (2 hops)')}
+          </span>
+        )}
+      </StyledValue>
+      <StyledLabel>{messages.pgettext('connection-info', 'In')}</StyledLabel>
+      <StyledValue $mono data-testid="in-ip">
+        {hasEntry ? `${entry.ip}:${entry.port} ${entry.protocol.toUpperCase()}` : ''}
+      </StyledValue>
+      <StyledLabel>{messages.pgettext('connection-info', 'Out')}</StyledLabel>
+      <StyledValue $mono>
+        {hasExit && (
+          <span data-testid="out-endpoint">{`${exit.ip}:${exit.port} ${exit.protocol.toUpperCase()}`}</span>
+        )}
+        {connection.ipv4 && <span data-testid="out-ip">{connection.ipv4}</span>}
+        {connection.ipv6 && <span data-testid="out-ip">{connection.ipv6}</span>}
+        {exitLocationFallback && <span data-testid="out-location">{exitLocationFallback}</span>}
+      </StyledValue>
+      <StyledDivider />
       <WarrenStatusRows />
-    </StyledConnectionDetailsContainer>
+    </StyledCard>
   );
 }
 
@@ -168,34 +171,42 @@ function WarrenStatusRows() {
   const obfuscationActive = warrenStatus?.obfuscationActive ?? true;
 
   return (
-    <StyledIpTable style={{ marginTop: '8px' }} data-anchor-id="warren-status-reconnect">
-      <StyledConnectionDetailsTitle>
+    <>
+      <StyledLabel data-anchor-id="warren-status-reconnect">
         {messages.pgettext('warren-status-view', 'Reconnects')}
-      </StyledConnectionDetailsTitle>
-      <StyledConnectionDetailsLabel data-testid="warren-reconnect-count">
-        {reconnectCount}
-      </StyledConnectionDetailsLabel>
+      </StyledLabel>
+      <StyledValue data-testid="warren-reconnect-count">{reconnectCount}</StyledValue>
       {reconnectCount > 0 && (
         <>
-          <StyledConnectionDetailsTitle>
-            {messages.pgettext('warren-status-view', 'Last')}
-          </StyledConnectionDetailsTitle>
-          <StyledConnectionDetailsLabel data-testid="warren-last-reconnect-age">
+          <StyledLabel>{messages.pgettext('warren-status-view', 'Last')}</StyledLabel>
+          <StyledValue data-testid="warren-last-reconnect-age">
             {lastReconnectAgeMs === null
               ? messages.pgettext('warren-status-view', 'never')
               : formatAge(lastReconnectAgeMs)}
-          </StyledConnectionDetailsLabel>
+          </StyledValue>
         </>
       )}
-      <StyledConnectionDetailsTitle>
-        {messages.pgettext('warren-status-view', 'Obfuscation')}
-      </StyledConnectionDetailsTitle>
-      <StyledConnectionDetailsLabel data-testid="warren-obfuscation-active">
-        {obfuscationActive
-          ? messages.pgettext('warren-status-view', 'HTTP/3 mimicry (active)')
-          : messages.pgettext('warren-status-view', 'inactive')}
-      </StyledConnectionDetailsLabel>
-    </StyledIpTable>
+      <StyledLabel>{messages.pgettext('warren-status-view', 'Obfuscation')}</StyledLabel>
+      {obfuscationActive ? (
+        <StyledObfuscation data-testid="warren-obfuscation-active">
+          {
+            // TRANSLATORS: The obfuscation the tunnel uses, in the connection
+            // TRANSLATORS: details, followed by a small "active" chip.
+            messages.pgettext('warren-status-view', 'HTTP/3 mimicry')
+          }
+          <StyledActiveChip>
+            {
+              // TRANSLATORS: Small chip after the obfuscation name while it runs.
+              messages.pgettext('warren-status-view', 'active')
+            }
+          </StyledActiveChip>
+        </StyledObfuscation>
+      ) : (
+        <StyledValue data-testid="warren-obfuscation-active">
+          {messages.pgettext('warren-status-view', 'inactive')}
+        </StyledValue>
+      )}
+    </>
   );
 }
 

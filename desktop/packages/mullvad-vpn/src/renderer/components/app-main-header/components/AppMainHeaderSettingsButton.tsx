@@ -1,26 +1,13 @@
 import { useCallback } from 'react';
-import styled from 'styled-components';
 
 import { messages } from '../../../../shared/gettext';
 import { RoutePath } from '../../../../shared/routes';
 import { IconButton, IconButtonProps, MainHeader } from '../../../lib/components';
-import { Dot } from '../../../lib/components/dot';
 import { TransitionType, useHistory } from '../../../lib/history';
 import { useSelector } from '../../../redux/store';
+import { ToolbarBadge, ToolbarGlyph } from './ToolbarBadge';
 
 export type MainHeaderSettingsButtonProps = Omit<IconButtonProps, 'icon'>;
-
-// Tucked onto the gear's upper-right tooth rather than the box corner, so it
-// reads as part of the icon instead of floating next to it.
-const StyledDot = styled(Dot)`
-  position: absolute;
-  top: 2px;
-  right: 2px;
-`;
-
-const StyledDiv = styled.div`
-  position: relative;
-`;
 
 export function AppMainHeaderSettingsButton(props: MainHeaderSettingsButtonProps) {
   const history = useHistory();
@@ -38,10 +25,10 @@ export function AppMainHeaderSettingsButton(props: MainHeaderSettingsButtonProps
           outline gear is hollow, so the upgrade dot sits on it directly and the
           notched "partial" variant is unnecessary. */}
       {suggestedUpgrade ? (
-        <StyledDiv>
+        <ToolbarGlyph>
           <IconButton.Icon icon="settings-outline" />
-          <StyledDot variant="warning" size="tiny" />
-        </StyledDiv>
+          <ToolbarBadge />
+        </ToolbarGlyph>
       ) : (
         <IconButton.Icon icon="settings-outline" />
       )}

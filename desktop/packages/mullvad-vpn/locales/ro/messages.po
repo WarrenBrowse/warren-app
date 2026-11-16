@@ -4119,9 +4119,6 @@ msgctxt "warren-pubkey-warning"
 msgid "The key changed again before it could be trusted. Review the new key and try again."
 msgstr "Cheia s-a schimbat din nou înainte de a i se putea acorda încredere. Verificați noua cheie și încercați din nou."
 
-msgctxt "warren-status-view"
-msgid "HTTP/3 mimicry (active)"
-msgstr "Mimetismul HTTP/3 (activ)"
 
 msgctxt "warren-status-view"
 msgid "inactive"
@@ -5629,3 +5626,15 @@ msgstr "Schimbă"
 msgctxt "in-app-notifications"
 msgid "Install"
 msgstr "Instalează"
+
+msgctxt "connection-info"
+msgid "Protocol"
+msgstr "Protocol"
+
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry"
+msgstr "Mimetismul HTTP/3"
+
+msgctxt "warren-status-view"
+msgid "active"
+msgstr "activ"

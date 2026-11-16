@@ -9,7 +9,7 @@ import { Button } from '../lib/components/button';
 import { Icon } from '../lib/components/icon';
 import { IconButton } from '../lib/components/icon-button';
 import { Text } from '../lib/components/text';
-import { Radius, spacings, surfaces } from '../lib/foundations';
+import { homeTokens, Radius, spacings, surfaces } from '../lib/foundations';
 import { NotificationSubtitleText, NotificationTitle } from './NotificationBanner';
 
 // How long the copy confirmation stays up. Long enough to be read after the
@@ -62,14 +62,18 @@ const StyledDismiss = styled.button({
   border: 'none',
   borderRadius: '6px',
   background: 'none',
-  color: surfaces.homeTextSecondary,
+  color: surfaces.homeNoticeTextSecondary,
   cursor: 'pointer',
   '&:hover': { color: surfaces.homeText },
   '&:focus-visible': { outline: `2px solid ${surfaces.homeText}`, outlineOffset: '-2px' },
 });
 
 const StyledDismissIcon = styled(Icon)({
-  '&&': { width: '16px', height: '16px', backgroundColor: 'currentColor' },
+  '&&': {
+    width: `${homeTokens.notice.close}px`,
+    height: `${homeTokens.notice.close}px`,
+    backgroundColor: 'currentColor',
+  },
 });
 
 // Inset well under the body, so the code reads as a field to act on rather

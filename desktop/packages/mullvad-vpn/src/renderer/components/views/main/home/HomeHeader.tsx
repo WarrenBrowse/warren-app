@@ -26,7 +26,7 @@ const StyledLogo = styled.div`
   display: flex;
   align-items: center;
   height: ${toolbar.height}px;
-  padding: 0 4px;
+  padding: 0 ${hero.logoInset}px;
   filter: drop-shadow(0 0 1px rgba(250, 247, 240, 0.95))
     drop-shadow(0 0 4px rgba(250, 247, 240, 0.85)) drop-shadow(0 0 14px rgba(250, 247, 240, 0.7));
 `;

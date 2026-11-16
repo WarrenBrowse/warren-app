@@ -3,16 +3,21 @@ import styled from 'styled-components';
 import { AppCountriesIndicator } from '../../../features/app-routing/components';
 import { PortForwardingIndicator } from '../../../features/port-forwarding/components';
 import { homeTokens, surfaces } from '../../../lib/foundations';
+import { useBoolean } from '../../../lib/utility-hooks';
 import { AppMainHeader } from '../../app-main-header';
 import CountryBackdrop from '../../CountryBackdrop';
-import { HERO_HEIGHT_RATIO } from '../../CountryBackdrop/framing';
+import {
+  COMPACT_TRANSITION_MS,
+  HERO_COMPACT_RATIO,
+  HERO_HEIGHT_RATIO,
+} from '../../CountryBackdrop/framing';
 import NotificationArea from '../../NotificationArea';
 import { FeatureIndicators, MultihopIndicator } from './components';
 import { HomeControls } from './home/HomeControls';
 import { HomeHeader } from './home/HomeHeader';
 import { HomeStatus } from './home/HomeStatus';
 
-const { panel, chips, toolbar, hero } = homeTokens;
+const { panel, chips, toolbar, hero, notice } = homeTokens;
 
 const StyledHome = styled.div`
   display: flex;
@@ -25,19 +30,24 @@ const StyledHome = styled.div`
   -webkit-font-smoothing: auto;
 `;
 
-// The hero keeps the mockup's proportions (300 high on a 360 width); the panel
-// below takes the rest of the window.
-const StyledHero = styled.div`
+// The hero keeps the mockup's proportions (300 high on a 380 width) and
+// shrinks while the connection details are open; the panel below takes the
+// rest of the window.
+const StyledHero = styled.div<{ $compact: boolean }>`
   position: relative;
   flex-shrink: 0;
-  aspect-ratio: ${1 / HERO_HEIGHT_RATIO};
+  height: calc(100vw * ${(props) => (props.$compact ? HERO_COMPACT_RATIO : HERO_HEIGHT_RATIO)});
+  transition: height ${COMPACT_TRANSITION_MS}ms cubic-bezier(0.3, 0.7, 0.2, 1);
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 `;
 
 // Transient notices float under the toolbar, over the art, so that they never
 // move the controls.
 const StyledNotices = styled.div`
   position: absolute;
-  top: ${hero.headerInset + toolbar.height + 12}px;
+  top: ${hero.headerInset + toolbar.height + notice.marginTop}px;
   left: ${hero.headerInset}px;
   right: ${hero.headerInset}px;
   z-index: 2;
@@ -68,17 +78,22 @@ const StyledChips = styled.div`
 `;
 
 export function MainView() {
+  const [detailsOpen, , closeDetails, toggleDetails] = useBoolean();
   return (
     <StyledHome>
-      <StyledHero>
-        <CountryBackdrop />
+      <StyledHero $compact={detailsOpen}>
+        <CountryBackdrop compact={detailsOpen} />
         <HomeHeader />
         <StyledNotices>
           <NotificationArea />
         </StyledNotices>
       </StyledHero>
       <StyledPanel>
-        <HomeStatus />
+        <HomeStatus
+          detailsOpen={detailsOpen}
+          toggleDetails={toggleDetails}
+          closeDetails={closeDetails}
+        />
         <HomeControls />
         <StyledChips>
           <FeatureIndicators />
