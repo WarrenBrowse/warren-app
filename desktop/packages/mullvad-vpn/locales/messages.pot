@@ -1468,6 +1468,11 @@ msgctxt "connection-info"
 msgid "Out"
 msgstr ""
 
+#. Label of the tunnel protocol in the connection details.
+msgctxt "connection-info"
+msgid "Protocol"
+msgstr ""
+
 #. This is a label shown above a list of options.
 #. Available placeholder:
 #. %(locationName)s - The name of the location being added to the list.
@@ -5172,6 +5177,16 @@ msgctxt "warren-pubkey-warning"
 msgid "Trust new key"
 msgstr ""
 
+#. Small chip after the obfuscation name while it runs.
+msgctxt "warren-status-view"
+msgid "active"
+msgstr ""
+
+#. The obfuscation the tunnel uses, in the connection
+#. details, followed by a small "active" chip.
+msgctxt "warren-status-view"
+msgid "HTTP/3 mimicry"
+msgstr ""
 
 msgctxt "warren-status-view"
 msgid "inactive"
@@ -5325,16 +5340,4 @@ msgstr ""
 
 msgctxt "wireguard-settings-view"
 msgid "Which TCP port the UDP-over-TCP obfuscation protocol should connect to on the VPN server."
-msgstr ""
-
-msgctxt "connection-info"
-msgid "Protocol"
-msgstr ""
-
-msgctxt "warren-status-view"
-msgid "HTTP/3 mimicry"
-msgstr ""
-
-msgctxt "warren-status-view"
-msgid "active"
 msgstr ""
