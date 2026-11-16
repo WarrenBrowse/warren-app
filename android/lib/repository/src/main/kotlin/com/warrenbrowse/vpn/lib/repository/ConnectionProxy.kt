@@ -302,6 +302,7 @@ class ConnectionProxy(private val tunnelStateProvider: WarrenTunnelStateProvider
             quantumResistant = false,
             obfuscation = null,
             daita = info.daita,
+            exitPubkeyHex = info.exitPubkeyHex,
         )
 
     // A dial whose exit host is unknown (or unparseable) reports no endpoint at
@@ -315,6 +316,7 @@ class ConnectionProxy(private val tunnelStateProvider: WarrenTunnelStateProvider
             quantumResistant = false,
             obfuscation = null,
             daita = info.daita,
+            exitPubkeyHex = info.exitPubkeyHex,
         )
     }
 

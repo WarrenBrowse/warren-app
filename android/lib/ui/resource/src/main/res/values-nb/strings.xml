@@ -418,7 +418,6 @@
     <string name="location_disable_recents_confirm">Historikken slettes også hvis du deaktiverer nylige.</string>
     <string name="location_clear_recents_confirm">Vil du tømme de siste stedene dine?</string>
     <string name="location_delete_list_confirm">Vil du slette listen %1$s?</string>
-    <string name="location_exit_ordinal">%1$s %2$d</string>
     <string name="location_unknown_country">Ukjent</string>
     <string name="location_delete_list">Slett liste</string>
     <string name="location_new_list_name">Nytt listenavn</string>

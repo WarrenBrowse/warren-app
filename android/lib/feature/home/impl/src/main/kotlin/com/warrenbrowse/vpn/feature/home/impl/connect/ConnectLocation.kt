@@ -2,8 +2,10 @@ package com.warrenbrowse.vpn.feature.home.impl.connect
 
 import com.warrenbrowse.vpn.lib.model.Endpoint
 import com.warrenbrowse.vpn.lib.model.GeoIpLocation
+import com.warrenbrowse.vpn.lib.model.TunnelEndpoint
 import com.warrenbrowse.vpn.lib.repository.ExitPin
 import com.warrenbrowse.vpn.lib.repository.WarrenRelaySummary
+import com.warrenbrowse.vpn.lib.repository.label
 
 /**
  * The location the connection card shows for a pin the engine has not resolved
@@ -28,17 +30,25 @@ internal fun pinnedExitLocation(pin: ExitPin, relays: List<WarrenRelaySummary>):
     }
 
 /**
- * The exit the tunnel is actually dialling or running on, matched by endpoint
- * host against the catalogue. Null when the host matches nothing known, so the
+ * The exit the tunnel is actually dialling or running on, named by its
+ * [label]. Matched by the exit key the config carries, which tells apart two
+ * exits behind one address, then by endpoint host (a tunnel that names no key,
+ * or a key the catalogue no longer lists). Null when nothing matches, so the
  * caller falls back to the pinned scope.
+ *
+ * Only the exit is named: a multi-hop circuit's entry is never a catalogue
+ * exit the user picked, and the desktop names the exit alone too.
  */
 internal fun activeExitLocation(
-    endpoint: Endpoint,
+    tunnel: TunnelEndpoint,
     relays: List<WarrenRelaySummary>,
 ): GeoIpLocation? {
-    val host = endpoint.hostLiteral() ?: return null
-    val exit = relays.firstOrNull { it.endpoint.substringBeforeLast(':') == host } ?: return null
-    return geoLocation(exit.country, exit.city.ifBlank { null })
+    val key = tunnel.exitPubkeyHex
+    val host = tunnel.endpoint.hostLiteral()
+    val exit =
+        key?.let { relays.firstOrNull { relay -> relay.exitPubkeyHex.equals(it, ignoreCase = true) } }
+            ?: host?.let { relays.firstOrNull { relay -> relay.endpoint.substringBeforeLast(':') == it } }
+    return exit?.let { geoLocation(it.country, it.city.ifBlank { null })?.copy(hostname = it.label) }
 }
 
 /** The endpoint host as the relay catalogue spells it (an IP literal). */

@@ -6,6 +6,7 @@ import kotlin.time.TestTimeSource
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
@@ -208,5 +209,28 @@ class RelayCatalogTest {
 
         assertEquals(2, calls.get(), "a stale snapshot is refetched before a dial")
         assertEquals(dialled, catalog.list(), "the dial's fetch feeds every other reader")
+    }
+
+    @Test
+    fun `ensure a row naming its exit decodes the fleet name`() = runTest {
+        val named = sampleJson.replace("\"weight\":100", "\"weight\":100,\"name\":\"fi-hel-bveh1\"")
+        val catalog = RelayCatalog { named }
+
+        assertEquals("fi-hel-bveh1", catalog.refresh().single().name)
+    }
+
+    @Test
+    fun `ensure a row without a name, or with a null one, decodes with no name`() = runTest {
+        val nullName = sampleJson.replace("\"weight\":100", "\"weight\":100,\"name\":null")
+
+        assertNull(RelayCatalog { sampleJson }.refresh().single().name)
+        assertNull(RelayCatalog { nullName }.refresh().single().name)
+    }
+
+    @Test
+    fun `ensure the wire row hands the fleet name back`() {
+        val summary = sample.copy(name = "fi-hel-bveh1").toSummary()
+
+        assertEquals("fi-hel-bveh1", summary.toRelayInfo().name)
     }
 }

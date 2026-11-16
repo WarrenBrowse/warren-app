@@ -21,14 +21,16 @@ class LocationPickerRowsTest {
         country: String,
         city: String,
         active: Boolean = true,
+        name: String? = null,
     ) = WarrenRelaySummary(
         exitId = exitId,
-        exitPubkeyHex = "aa",
+        exitPubkeyHex = exitId.padEnd(64, 'a'),
         endpoint = "10.0.0.1:443",
         country = country,
         city = city,
         active = active,
         weight = 1,
+        name = name,
     )
 
     private fun byCountry(
@@ -59,8 +61,8 @@ class LocationPickerRowsTest {
         filterIsInstance<PickerRow.SavedRow>().filter { it.section == section }
 
     private val catalogue = listOf(
-        relay("de1", "DE", "Frankfurt"),
-        relay("de2", "DE", "Frankfurt"),
+        relay("de1", "DE", "Frankfurt", name = "de-fra-bveh1"),
+        relay("de2", "DE", "Frankfurt", name = "de-fra-bveh2"),
         relay("fr1", "FR", "Paris"),
         relay("se1", "SE", "Malmo"),
     )
@@ -126,17 +128,35 @@ class LocationPickerRowsTest {
     // Labels
 
     @Test
-    fun `exits sharing a city are numbered from the sorted exit id`() {
+    fun `exits sharing a city are named and ordered by their fleet names`() {
+        val reversed = catalogue.map {
+            when (it.exitId) {
+                "de1" -> it.copy(name = "de-fra-bveh2")
+                "de2" -> it.copy(name = "de-fra-bveh1")
+                else -> it
+            }
+        }
         val built = rows(
-            catalogue,
+            reversed,
             expandedCountries = setOf("DE"),
             expandedCities = setOf(cityKey("DE", "Frankfurt")),
         )
         val exits = built.filterIsInstance<PickerRow.ExitRow>().filter { it.relay.country == "DE" }
 
-        assertEquals(listOf("de1", "de2"), exits.map { it.relay.exitId })
-        assertEquals(listOf(1, 2), exits.map { it.ordinal })
-        assertTrue(exits.all { it.title == "Frankfurt" })
+        assertEquals(listOf("de2", "de1"), exits.map { it.relay.exitId })
+        assertEquals(listOf("de-fra-bveh1", "de-fra-bveh2"), exits.map { it.title })
+    }
+
+    @Test
+    fun `an unnamed exit sharing a city is named by its key`() {
+        val built = rows(
+            catalogue.map { if (it.exitId == "de2") it.copy(name = null) else it },
+            expandedCountries = setOf("DE"),
+            expandedCities = setOf(cityKey("DE", "Frankfurt")),
+        )
+        val unnamed = built.filterIsInstance<PickerRow.ExitRow>().single { it.relay.exitId == "de2" }
+
+        assertEquals("warren-de2aaaaaaaaaaaaa", unnamed.title)
     }
 
     @Test
@@ -151,7 +171,7 @@ class LocationPickerRowsTest {
     }
 
     @Test
-    fun `a lone exit in a city keeps the city name and no ordinal`() {
+    fun `a lone exit in a city keeps the city name`() {
         val built = rows(
             catalogue + relay("de3", "DE", "Berlin"),
             expandedCountries = setOf("DE"),
@@ -159,7 +179,6 @@ class LocationPickerRowsTest {
         val berlin = built.filterIsInstance<PickerRow.ExitRow>().single { it.relay.exitId == "de3" }
 
         assertEquals("Berlin", berlin.title)
-        assertEquals(null, berlin.ordinal)
         assertEquals(1, berlin.depth)
     }
 
@@ -394,13 +413,12 @@ class LocationPickerRowsTest {
     // Row anatomy: one shape for every saved location
 
     @Test
-    fun `a saved exit leads with its country flag, names its country and shows its load`() {
+    fun `a saved exit leads with its country flag, names itself and its city and shows its load`() {
         val place = resolvePlace(ExitPin.Exit("de2"), catalogue)!!
 
         assertEquals("DE", place.flagCountry)
-        assertEquals("Frankfurt", place.title)
-        assertEquals(2, place.ordinal)
-        assertEquals(countryDisplayName("DE"), place.subtitle)
+        assertEquals("de-fra-bveh2", place.title)
+        assertEquals("Frankfurt", place.subtitle)
         assertEquals("de2", place.loadExitId)
     }
 
@@ -410,7 +428,6 @@ class LocationPickerRowsTest {
 
         assertEquals(countryDisplayName("FR"), place.title)
         assertEquals("Paris", place.subtitle)
-        assertEquals(null, place.ordinal)
         assertEquals("fr1", place.loadExitId)
     }
 
@@ -666,6 +683,11 @@ class LocationPickerRowsTest {
         assertTrue(relayMatches(relay("de1", "DE", "Frankfurt"), "de"))
         assertTrue(relayMatches(relay("de1", "DE", "Frankfurt"), "frankfurt"))
         assertFalse(relayMatches(relay("de1", "DE", "Frankfurt"), "zzz"))
+    }
+
+    @Test
+    fun `a search matches the fleet name an exit is shown by`() {
+        assertTrue(relayMatches(relay("de1", "DE", "Frankfurt", name = "de-fra-bveh1"), "bveh1"))
     }
 
     @Test

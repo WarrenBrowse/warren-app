@@ -283,7 +283,7 @@ private fun LocationRowCell(
         is PickerRow.ExitRow ->
             LocationCell(
                 modifier = modifier,
-                title = exitLabel(row.title, row.ordinal),
+                title = row.title,
                 subtitle = row.subtitle,
                 leading = row.flagCountry?.let { LeadingSlot.Flag(it) },
                 badge = loadBadge.badgeFor(row.relay.exitId),
@@ -299,7 +299,7 @@ private fun LocationRowCell(
         is PickerRow.SavedRow ->
             LocationCell(
                 modifier = modifier,
-                title = exitLabel(row.place.title, row.place.ordinal),
+                title = row.place.title,
                 subtitle = row.place.subtitle,
                 leading = row.place.flagCountry?.let { LeadingSlot.Flag(it) },
                 badge = loadBadge.badgeFor(row.place.loadExitId),
@@ -376,11 +376,6 @@ private fun CustomListCell(
         },
     )
 }
-
-/** An exit's label: its place, numbered when its city holds several exits. */
-@Composable
-private fun exitLabel(title: String, ordinal: Int?): String =
-    if (ordinal == null) title else stringResource(R.string.location_exit_ordinal, title, ordinal)
 
 @Composable
 private fun PickerSectionHeader(row: PickerRow, modifier: Modifier, onClearRecents: () -> Unit) {

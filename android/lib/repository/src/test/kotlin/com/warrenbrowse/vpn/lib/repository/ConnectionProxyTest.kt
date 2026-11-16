@@ -67,6 +67,20 @@ class ConnectionProxyTest {
     }
 
     @Test
+    fun `a dial and a live tunnel both name the exit key they run on`() = runTest {
+        val dialling = mapped(
+            WarrenConnectedInfo.Connecting(
+                exitEndpointHost = "185.65.135.10:443",
+                exitPubkeyHex = "3cb7",
+            ),
+        ) as TunnelState.Connecting
+        val live = mapped(connectedInfo().copy(exitPubkeyHex = "3cb7")) as TunnelState.Connected
+
+        assertEquals("3cb7", dialling.endpoint?.exitPubkeyHex)
+        assertEquals("3cb7", live.endpoint.exitPubkeyHex)
+    }
+
+    @Test
     fun `Connecting with no dialled host yet leaves the endpoint unknown`() = runTest {
         val state = mapped(WarrenConnectedInfo.Connecting()) as TunnelState.Connecting
         assertNull(state.endpoint)

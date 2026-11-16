@@ -114,6 +114,31 @@ class WarrenQuinnStateProxyTest {
     }
 
     @Test
+    fun `the exit key reaches the connection card at every stage of a tunnel`() = runTest {
+        val proxy = WarrenQuinnStateProxy()
+        val key = "3cb7f0e1d2c3b4a5"
+
+        proxy.update(WarrenTunnelState.Connecting(exitPubkeyHex = key))
+        val dialling = proxy.connectedInfo.value as WarrenConnectedInfo.Connecting
+        proxy.update(WarrenTunnelState.Reconnecting(exitPubkeyHex = key))
+        val redialling = proxy.connectedInfo.value as WarrenConnectedInfo.Reconnecting
+        proxy.update(
+            WarrenTunnelState.Connected(
+                exitId = key,
+                assignedNatPmpPort = null,
+                multiHop = true,
+                daita = false,
+            )
+        )
+        val live = proxy.connectedInfo.value as WarrenConnectedInfo.Connected
+
+        assertEquals(
+            listOf(key, key, key),
+            listOf(dialling.exitPubkeyHex, redialling.exitPubkeyHex, live.exitPubkeyHex),
+        )
+    }
+
+    @Test
     fun `a release after flapping reaches the connection card as such`() = runTest {
         val proxy = WarrenQuinnStateProxy()
         proxy.update(WarrenTunnelState.Failed("dropped", flapping = true))

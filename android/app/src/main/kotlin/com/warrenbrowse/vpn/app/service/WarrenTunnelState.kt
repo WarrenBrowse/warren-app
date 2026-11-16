@@ -25,6 +25,7 @@ sealed class WarrenTunnelState {
         val entryEndpointHost: String? = null,
         val multiHop: Boolean = false,
         val daita: Boolean = false,
+        val exitPubkeyHex: String? = null,
     ) : WarrenTunnelState()
 
     /**
@@ -35,6 +36,7 @@ sealed class WarrenTunnelState {
      */
     data class Disconnecting(val reconnecting: Boolean = false) : WarrenTunnelState()
 
+    /** [exitId] is the exit's key (`exit_pubkey_hex`), empty until the adapter hydrates it. */
     data class Connected(
         val exitId: String,
         val assignedNatPmpPort: Int?,
@@ -60,6 +62,7 @@ sealed class WarrenTunnelState {
         val entryEndpointHost: String? = null,
         val multiHop: Boolean = false,
         val daita: Boolean = false,
+        val exitPubkeyHex: String? = null,
     ) : WarrenTunnelState()
 
     /**

@@ -125,6 +125,7 @@ internal fun RelayInfo.toSummary(): WarrenRelaySummary =
         city = city,
         active = active,
         weight = weight,
+        name = name,
     )
 
 /** The inverse of [toSummary]: the row back in the wire schema the native side reads. */
@@ -137,4 +138,5 @@ internal fun WarrenRelaySummary.toRelayInfo(): RelayInfo =
         city = city,
         active = active,
         weight = weight,
+        name = name,
     )

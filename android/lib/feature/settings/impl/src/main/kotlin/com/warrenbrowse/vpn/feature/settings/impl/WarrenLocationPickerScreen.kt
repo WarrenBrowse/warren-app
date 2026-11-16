@@ -103,9 +103,9 @@ private val ExpandedKeySaver: Saver<Set<String>, Any> =
  * The entry hop is a country constraint, so its tab lists countries only and
  * a pick auto-advances to the exit tab rather than popping.
  *
- * Rows are labelled geographically only. The catalogue carries no hostname, so
- * several exits in one city are told apart by an ordinal derived from the
- * sorted exit id; the endpoint address is never rendered and never searched.
+ * Rows are labelled geographically, and several exits in one city are told
+ * apart by their fleet names (`fi-hel-bveh1`); the endpoint address is never
+ * rendered and never searched.
  *
  * Every location row has one anatomy wherever it appears (recents, custom
  * lists, the tree): its round flag (ringed in green while it holds the

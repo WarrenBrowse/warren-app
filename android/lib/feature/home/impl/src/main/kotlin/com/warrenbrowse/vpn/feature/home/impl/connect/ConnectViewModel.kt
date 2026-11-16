@@ -135,7 +135,7 @@ class ConnectViewModel(
                             is TunnelState.Connecting ->
                                 tunnelState.location
                                     ?: tunnelState.endpoint?.let {
-                                        activeExitLocation(it.endpoint, relays)
+                                        activeExitLocation(it, relays)
                                     }
                             // Key the title off the ACTIVE exit (the one the
                             // tunnel actually egresses through), not the pinned
@@ -147,7 +147,7 @@ class ConnectViewModel(
                             // catalogue.
                             is TunnelState.Connected ->
                                 tunnelState.location
-                                    ?: activeExitLocation(tunnelState.endpoint.endpoint, relays)
+                                    ?: activeExitLocation(tunnelState.endpoint, relays)
                             is TunnelState.Disconnecting ->
                                 when (tunnelState.actionAfterDisconnect) {
                                     ActionAfterDisconnect.Nothing -> lastKnownDisconnectedLocation

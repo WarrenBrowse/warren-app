@@ -367,6 +367,24 @@ class ConnectViewModelTest {
         )
 
     @Test
+    fun `a protected home names the exit by its fleet name under its place`() = runTest {
+        catalogueFlow.value =
+            listOf(NetworkStatsFixtures.relay.copy(country = "FI", city = "Helsinki", name = "fi-hel-bveh1"))
+
+        viewModel.uiState.test {
+            awaitItem()
+            tunnelState.emit(connectedTo("192.0.2.7"))
+            val state = expectMostRecentItem()
+
+            assertEquals(
+                HomeLine.Hostname("fi-hel-bveh1", entry = null),
+                homeStatus(state.tunnelState, hostOffline = false, state.location, includeOnly = false)
+                    .subtitle,
+            )
+        }
+    }
+
+    @Test
     fun `the network stats are watched only while a tunnel is connected`() = runTest {
         viewModel.connectedExitLoad.test {
             assertNull(awaitItem())

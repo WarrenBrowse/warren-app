@@ -418,7 +418,6 @@
     <string name="location_disable_recents_confirm">Viimeisimpien poistaminen käytöstä tyhjentää myös historian.</string>
     <string name="location_clear_recents_confirm">Haluatko tyhjentää viimeisimmät sijaintisi?</string>
     <string name="location_delete_list_confirm">Haluatko poistaa luettelon %1$s?</string>
-    <string name="location_exit_ordinal">%1$s %2$d</string>
     <string name="location_unknown_country">Tuntematon</string>
     <string name="location_delete_list">Poista lista</string>
     <string name="location_new_list_name">Uuden listan nimi</string>

@@ -937,6 +937,22 @@ class WarrenQuinnAdapterTest {
         adapter.disconnect()
     }
 
+    /** The card names the exit from the dialled config, so a redial must say which exit it is. */
+    @Test
+    fun `ensure a redial names the exit it is redialling`() = runTest {
+        val platform = RecordingPlatform()
+        val (adapter, _) = connectedAdapter(platform)
+
+        platform.status = STATUS_RECONNECTING
+        awaitReal("the redial must reach the adapter") {
+            adapter.state.value is WarrenTunnelState.Reconnecting
+        }
+
+        val redial = adapter.state.value as WarrenTunnelState.Reconnecting
+        assertEquals("ab".repeat(32), redial.exitPubkeyHex)
+        adapter.disconnect()
+    }
+
     /**
      * The fallback is the whole safety net: a wake that never arrives must
      * still leave the card telling the truth within a bounded time.

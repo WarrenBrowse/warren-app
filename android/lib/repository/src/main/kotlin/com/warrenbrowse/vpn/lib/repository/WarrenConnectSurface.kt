@@ -68,13 +68,15 @@ sealed interface WarrenConnectedInfo {
      * chips from the first frame instead of guessing a relay and correcting itself the moment the
      * tunnel comes up.
      *
-     * The hosts are null until a config exists (a dispatch the engine has not picked up yet).
+     * The hosts and the exit key are null until a config exists (a dispatch the engine has not
+     * picked up yet).
      */
     sealed interface Dialling : WarrenConnectedInfo {
         val exitEndpointHost: String?
         val entryEndpointHost: String?
         val multiHop: Boolean
         val daita: Boolean
+        val exitPubkeyHex: String?
     }
 
     data class Connecting(
@@ -82,6 +84,7 @@ sealed interface WarrenConnectedInfo {
         override val entryEndpointHost: String? = null,
         override val multiHop: Boolean = false,
         override val daita: Boolean = false,
+        override val exitPubkeyHex: String? = null,
     ) : Dialling
 
     data class Reconnecting(
@@ -89,6 +92,7 @@ sealed interface WarrenConnectedInfo {
         override val entryEndpointHost: String? = null,
         override val multiHop: Boolean = false,
         override val daita: Boolean = false,
+        override val exitPubkeyHex: String? = null,
     ) : Dialling
 
     /**
@@ -100,7 +104,8 @@ sealed interface WarrenConnectedInfo {
 
     /**
      * Tunnel up. [exitEndpointHost] / [entryEndpointHost] are "host:port" literals from the active
-     * `WarrenTunnelConfig` ([entryEndpointHost] is null for single-hop).
+     * `WarrenTunnelConfig` ([entryEndpointHost] is null for single-hop), [exitPubkeyHex] the key of
+     * the exit it runs on, multi-hop or not.
      */
     data class Connected(
         val exitEndpointHost: String,
@@ -108,6 +113,7 @@ sealed interface WarrenConnectedInfo {
         val multiHop: Boolean,
         val daita: Boolean,
         val assignedNatPmpPort: Int?,
+        val exitPubkeyHex: String? = null,
     ) : WarrenConnectedInfo
 
     /**
@@ -290,6 +296,8 @@ data class WarrenRelaySummary(
     val city: String,
     val active: Boolean,
     val weight: Long,
+    /** The fleet name (`fi-hel-bveh1`), null for a node that has not reported every component. */
+    val name: String? = null,
 )
 
 /**

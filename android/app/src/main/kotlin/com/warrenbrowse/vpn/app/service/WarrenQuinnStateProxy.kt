@@ -148,6 +148,7 @@ class WarrenQuinnStateProxy :
                     entryEndpointHost = entryEndpointHost,
                     multiHop = multiHop,
                     daita = daita,
+                    exitPubkeyHex = exitPubkeyHex,
                 )
             is WarrenTunnelState.Reconnecting ->
                 WarrenConnectedInfo.Reconnecting(
@@ -155,6 +156,7 @@ class WarrenQuinnStateProxy :
                     entryEndpointHost = entryEndpointHost,
                     multiHop = multiHop,
                     daita = daita,
+                    exitPubkeyHex = exitPubkeyHex,
                 )
             is WarrenTunnelState.Disconnecting -> WarrenConnectedInfo.Disconnecting(reconnecting)
             is WarrenTunnelState.Connected ->
@@ -164,6 +166,7 @@ class WarrenQuinnStateProxy :
                     multiHop = multiHop,
                     daita = daita,
                     assignedNatPmpPort = assignedNatPmpPort,
+                    exitPubkeyHex = exitId.ifEmpty { null },
                 )
             is WarrenTunnelState.Failed ->
                 WarrenConnectedInfo.Failed(reason, expired, flapping, banLapsesAtUnixSecs)

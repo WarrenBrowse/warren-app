@@ -418,7 +418,6 @@
     <string name="location_disable_recents_confirm">Door recente uit te schakelen, wordt ook de geschiedenis gewist.</string>
     <string name="location_clear_recents_confirm">Wil je je recente locaties wissen?</string>
     <string name="location_delete_list_confirm">WIlt u de lijst %1$s verwijderen?</string>
-    <string name="location_exit_ordinal">%1$s %2$d</string>
     <string name="location_unknown_country">Onbekend</string>
     <string name="location_delete_list">Lijst verwijderen</string>
     <string name="location_new_list_name">Nieuwe lijstnaam</string>

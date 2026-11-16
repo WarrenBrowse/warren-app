@@ -421,7 +421,6 @@
     <string name="location_disable_recents_confirm">Disabilitando i recenti verrà cancellata anche la cronologia.</string>
     <string name="location_clear_recents_confirm">Vuoi cancellare le posizioni recenti?</string>
     <string name="location_delete_list_confirm">Vuoi eliminare l\'elenco %1$s?</string>
-    <string name="location_exit_ordinal">%1$s %2$d</string>
     <string name="location_unknown_country">Sconosciuto</string>
     <string name="location_delete_list">Elimina elenco</string>
     <string name="location_new_list_name">Nome nuovo elenco</string>

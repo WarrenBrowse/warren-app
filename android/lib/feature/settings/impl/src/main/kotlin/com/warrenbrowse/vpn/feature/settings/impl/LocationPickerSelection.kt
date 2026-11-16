@@ -4,6 +4,7 @@ import com.warrenbrowse.vpn.lib.model.countryDisplayName
 import com.warrenbrowse.vpn.lib.repository.ExitPin
 import com.warrenbrowse.vpn.lib.repository.WarrenConnectedInfo
 import com.warrenbrowse.vpn.lib.repository.WarrenRelaySummary
+import com.warrenbrowse.vpn.lib.repository.label
 import com.warrenbrowse.vpn.lib.repository.pinsCity
 import com.warrenbrowse.vpn.lib.repository.pinsCountry
 import com.warrenbrowse.vpn.lib.ui.designsystem.Position
@@ -97,15 +98,17 @@ internal fun appliedQuery(raw: String): String =
     raw.trim().let { if (it.length >= MIN_SEARCH_LENGTH) it else "" }
 
 /**
- * Search predicate. Deliberately geographical: the catalogue carries no
- * hostname, only an endpoint address, and an address is never shown to the
- * user, so matching it would answer a query with a row the user cannot read.
+ * Search predicate: the place and the fleet name. Neither the endpoint
+ * address, which is never shown, nor the key-based label of an unnamed exit,
+ * whose `warren-` prefix would answer "war" with every unnamed exit, is
+ * matched.
  */
 internal fun relayMatches(relay: WarrenRelaySummary, query: String): Boolean =
     query.isEmpty() ||
         relay.country.contains(query, ignoreCase = true) ||
         countryDisplayName(relay.country).contains(query, ignoreCase = true) ||
-        relay.city.contains(query, ignoreCase = true)
+        relay.city.contains(query, ignoreCase = true) ||
+        relay.name?.contains(query, ignoreCase = true) == true
 
 /** A custom list resolved against the catalogue, ready to render. */
 internal data class CustomListSection(val name: String, val places: List<Place>)
@@ -168,8 +171,6 @@ internal sealed interface ExitSection {
 internal data class Place(
     val location: ExitPin,
     val title: String,
-    /** Rank of the exit among the exits sharing its city, `null` when alone or not an exit. */
-    val ordinal: Int?,
     val subtitle: String?,
     val flagCountry: String?,
     /** The exit whose load the row shows, set only when the place holds exactly one exit. */
@@ -313,15 +314,13 @@ internal sealed interface PickerRow {
 
     /**
      * A location of the country tree standing for exactly one exit: a lone
-     * exit in its city, one of several numbered by [ordinal], or a whole
+     * exit in its city, one of several named by its fleet name, or a whole
      * country served by a single exit (then at depth 0, with its flag and its
      * city as [subtitle]).
      */
     data class ExitRow(
         val relay: WarrenRelaySummary,
         val title: String,
-        /** Rank of this exit among the exits sharing its city, `null` when alone. */
-        val ordinal: Int?,
         val depth: Int,
         override val isPinned: Boolean,
         override val position: Position = Position.Single,
@@ -497,7 +496,6 @@ internal fun resolvePlace(location: ExitPin, relays: List<WarrenRelaySummary>): 
             Place(
                 location = location,
                 title = countryName,
-                ordinal = null,
                 // A country served by one exit names its city, as its tree row does.
                 subtitle = if (loadExitId != null) first.city.ifBlank { null } else null,
                 flagCountry = country,
@@ -508,7 +506,6 @@ internal fun resolvePlace(location: ExitPin, relays: List<WarrenRelaySummary>): 
             Place(
                 location = location,
                 title = first.city.ifBlank { countryName },
-                ordinal = null,
                 subtitle = countryName.takeIf { first.city.isNotBlank() },
                 flagCountry = country,
                 loadExitId = loadExitId,
@@ -518,18 +515,24 @@ internal fun resolvePlace(location: ExitPin, relays: List<WarrenRelaySummary>): 
     }
 }
 
-/** An exit named as the tree names it: its country when alone there, else its city and rank. */
+/**
+ * An exit named as the tree names it: its country when alone there, its fleet
+ * name over its city when its city holds several exits, else its city.
+ */
 private fun exitPlace(location: ExitPin.Exit, relay: WarrenRelaySummary, relays: List<WarrenRelaySummary>): Place {
     val countryName = countryDisplayName(relay.country)
     val aloneInCountry = relays.count { it.country.equals(relay.country, ignoreCase = true) } == 1
-    val cityMates =
-        relaysIn(ExitPin.City(relay.country, relay.city), relays).sortedBy { it.exitId }
+    val sharesCity = !aloneInCountry && relaysIn(ExitPin.City(relay.country, relay.city), relays).size > 1
     return Place(
         location = location,
-        title = if (aloneInCountry) countryName else exitTitle(relay),
-        ordinal = if (!aloneInCountry && cityMates.size > 1) cityMates.indexOf(relay) + 1 else null,
+        title = when {
+            aloneInCountry -> countryName
+            sharesCity -> relay.label
+            else -> exitTitle(relay)
+        },
         subtitle = when {
             aloneInCountry -> relay.city.ifBlank { null }
+            sharesCity -> exitTitle(relay)
             relay.city.isBlank() -> null
             else -> countryName
         },
@@ -644,7 +647,6 @@ private fun singleExitCountryRow(
     PickerRow.ExitRow(
         relay = relay,
         title = countryDisplayName(country),
-        ordinal = null,
         depth = 0,
         isPinned = exitPin == ExitPin.Exit(relay.exitId) ||
             exitPin.pinsCountry(country) ||
@@ -667,7 +669,6 @@ private fun MutableList<PickerRow>.addCityRows(
             PickerRow.ExitRow(
                 relay = relay,
                 title = label,
-                ordinal = null,
                 depth = 1,
                 isPinned = exitPin == ExitPin.Exit(relay.exitId) ||
                     exitPin.pinsCity(country, city),
@@ -688,14 +689,13 @@ private fun MutableList<PickerRow>.addCityRows(
     )
     if (!cityExpanded) return
 
-    // Ordinals are derived from the sorted exit id so the same node keeps the
-    // same number across refreshes; the endpoint address is never a label.
-    cityRelays.sortedBy { it.exitId }.forEachIndexed { i, relay ->
+    // Named and ordered by fleet name, the exit id breaking a tie so the order
+    // holds across refreshes; the endpoint address is never a label.
+    cityRelays.sortedWith(compareBy({ it.label }, { it.exitId })).forEach { relay ->
         add(
             PickerRow.ExitRow(
                 relay = relay,
-                title = label,
-                ordinal = i + 1,
+                title = relay.label,
                 depth = 2,
                 isPinned = exitPin == ExitPin.Exit(relay.exitId),
             )

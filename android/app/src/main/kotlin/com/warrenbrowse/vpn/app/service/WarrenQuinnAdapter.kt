@@ -1408,6 +1408,7 @@ class WarrenQuinnAdapter(
             entryEndpointHost = config.entryHop?.relayEndpoint,
             multiHop = config.entryHop != null && config.multihopTwoHop,
             daita = config.daita != null,
+            exitPubkeyHex = config.exitPubkeyHex,
         )
 
     private fun reconnectingFrom(config: WarrenTunnelConfig) =
@@ -1416,6 +1417,7 @@ class WarrenQuinnAdapter(
             entryEndpointHost = config.entryHop?.relayEndpoint,
             multiHop = config.entryHop != null && config.multihopTwoHop,
             daita = config.daita != null,
+            exitPubkeyHex = config.exitPubkeyHex,
         )
 
     private fun statusFromCode(code: Int, config: WarrenTunnelConfig): WarrenTunnelState =

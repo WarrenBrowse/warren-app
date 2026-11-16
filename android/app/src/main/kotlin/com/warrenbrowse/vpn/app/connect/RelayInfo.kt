@@ -22,4 +22,8 @@ data class RelayInfo(
     val city: String,
     val active: Boolean,
     val weight: Long,
+    // The fleet name the operator knows the exit by (`fi-hel-bveh1`), null for
+    // a node that has not reported every naming component and for rows cached
+    // before the v11 list carried it.
+    val name: String? = null,
 )
