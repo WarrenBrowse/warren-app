@@ -264,10 +264,6 @@
         "value": 6,
         "unit": "dp"
       },
-      "fade": {
-        "value": 40,
-        "unit": "dp"
-      },
       "logoHeight": {
         "value": 32,
         "unit": "dp"

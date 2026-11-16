@@ -127,7 +127,7 @@ describe('scenery framing (fixtures/client-rules/scenery_framing.json)', () => {
     });
     // An exit without bespoke art is framed on the plain's own skyline.
     expect(framingSpan('protected', 'sweden')).toEqual({
-      top: 320,
+      top: 313,
       bottom: fixture.framings.sky.bottom_row,
     });
   });

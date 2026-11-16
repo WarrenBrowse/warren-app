@@ -13,8 +13,6 @@ export const homeTokens = {
     // headerInset + toolbarHeight + clearMargin.
     headerInset: 14,
     clearMargin: 6,
-    // The band at the bottom where the art fades into the page.
-    fade: 40,
     // The mockup's logo is 40 high with its own margin; the bare wordmark
     // matches its width at 32.
     logoHeight: 32,

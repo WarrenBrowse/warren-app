@@ -127,13 +127,13 @@ internal object SceneryTable {
     /** Keyed by the drawable of the landscape. */
     val landscapes: Map<Int, SceneryLandscape> =
         mapOf(
-            R.drawable.scenery_plaine to SceneryLandscape(320, 0xFFD5DEE7),
+            R.drawable.scenery_plaine to SceneryLandscape(313, 0xFFD5DEE7),
             R.drawable.scenery_germany to SceneryLandscape(140, 0xFFF4F3F2),
             R.drawable.scenery_finland to SceneryLandscape(235, 0xFFF9F5F0),
             R.drawable.scenery_france to SceneryLandscape(160, 0xFFF1F2F3),
             R.drawable.scenery_netherlands to SceneryLandscape(100, 0xFFEFF2F3),
-            R.drawable.scenery_romania to SceneryLandscape(300, 0xFFF8F7F6),
-            R.drawable.scenery_singapore to SceneryLandscape(360, 0xFFFCF7F1),
+            R.drawable.scenery_romania to SceneryLandscape(138, 0xFFF8F7F6),
+            R.drawable.scenery_singapore to SceneryLandscape(350, 0xFFFCF7F1),
         )
 
     fun row(phase: ConnectionPhase): SceneryRow =

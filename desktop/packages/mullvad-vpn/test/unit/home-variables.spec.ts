@@ -9,7 +9,7 @@ import {
 // The tables the browser extension's design sync turns into CSS.
 describe('the home tokens as CSS custom properties', () => {
   it('writes each measure with the unit its key names', () => {
-    expect(homeVariables['--home-hero-fade']).toBe('40px');
+    expect(homeVariables['--home-hero-header-inset']).toBe('14px');
     expect(homeVariables['--home-title-text-size']).toBe('26px');
     expect(homeVariables['--home-title-text-weight']).toBe('600');
     expect(homeVariables['--home-title-letter-spacing-em']).toBe('-0.01em');

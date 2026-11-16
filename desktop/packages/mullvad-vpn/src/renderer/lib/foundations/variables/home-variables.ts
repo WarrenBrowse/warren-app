@@ -1,6 +1,6 @@
 import { homeTokens } from '../tokens';
 
-// The home geometry as CSS custom properties (`--home-hero-fade: 40px`), the
+// The home geometry as CSS custom properties (`--home-hero-header-inset: 14px`), the
 // shape the browser extension's design sync copies, so its popup takes the
 // app's measures under the app's own names.
 function cssValue(key: string, value: number): string {

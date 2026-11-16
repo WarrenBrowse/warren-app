@@ -6,7 +6,7 @@
       "role": "plain",
       "master": "ACCUEIL V33.jpg",
       "iosImageset": "SceneryPlaine",
-      "skylineTopRow": 320,
+      "skylineTopRow": 313,
       "topFill": "#d5dee7"
     },
     {
@@ -68,7 +68,7 @@
       "countryName": "Romania",
       "master": "INTERFACE ROUMANIE V142.jpg",
       "iosImageset": "SceneryRomania",
-      "skylineTopRow": 300,
+      "skylineTopRow": 138,
       "topFill": "#f8f7f6"
     },
     {
@@ -78,7 +78,7 @@
       "countryName": "Singapore",
       "master": "INTERFACE SINGAPOUR V14.jpg",
       "iosImageset": "ScenerySingapore",
-      "skylineTopRow": 360,
+      "skylineTopRow": 350,
       "topFill": "#fcf7f1"
     }
   ],

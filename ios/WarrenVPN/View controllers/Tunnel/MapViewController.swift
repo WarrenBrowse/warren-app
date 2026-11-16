@@ -352,13 +352,13 @@ final class SceneryViewController: UIViewController {
 
     // How each landscape is framed in the home hero: its skyline row and the ARGB of its top rows.
     static let landscapeFraming: [String: (skylineTopRow: Int, topFill: UInt32)] = [
-        "SceneryPlaine": (skylineTopRow: 320, topFill: 0xFFD5DEE7),
+        "SceneryPlaine": (skylineTopRow: 313, topFill: 0xFFD5DEE7),
         "SceneryGermany": (skylineTopRow: 140, topFill: 0xFFF4F3F2),
         "SceneryFinland": (skylineTopRow: 235, topFill: 0xFFF9F5F0),
         "SceneryFrance": (skylineTopRow: 160, topFill: 0xFFF1F2F3),
         "SceneryNetherlands": (skylineTopRow: 100, topFill: 0xFFEFF2F3),
-        "SceneryRomania": (skylineTopRow: 300, topFill: 0xFFF8F7F6),
-        "ScenerySingapore": (skylineTopRow: 360, topFill: 0xFFFCF7F1),
+        "SceneryRomania": (skylineTopRow: 138, topFill: 0xFFF8F7F6),
+        "ScenerySingapore": (skylineTopRow: 350, topFill: 0xFFFCF7F1),
     ]
 
     // Which landscape a phase shows (the exit country, or the plain), and the other two layers.

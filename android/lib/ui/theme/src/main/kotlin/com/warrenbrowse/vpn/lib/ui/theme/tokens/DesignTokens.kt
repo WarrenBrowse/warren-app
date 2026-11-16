@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /** SHA-256 of design-tokens.json at generation time. */
-const val DESIGN_TOKENS_SHA256 = "b3a839d212f11bedfe3cf50db795a06f6a52f2dc44bdf1094d0cfc081a128631"
+const val DESIGN_TOKENS_SHA256 = "ce5eef3cc970ac2f98a37a0c4d842114438de45df0ce6db8d88e6dfbc5d53625"
 
 @Suppress("MagicNumber", "unused")
 object DesignTokens {
@@ -272,7 +272,6 @@ object DesignTokens {
         object Hero {
             val HeaderInset = 14.dp
             val ClearMargin = 6.dp
-            val Fade = 40.dp
             val LogoHeight = 32.dp
             const val ScrimStop = 0.34f
             val GlowWidth = 300.dp
