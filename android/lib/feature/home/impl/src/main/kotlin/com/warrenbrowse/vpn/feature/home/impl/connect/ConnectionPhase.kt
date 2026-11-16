@@ -117,6 +117,15 @@ internal data class SceneryRow(
     val countryLandscape: Boolean,
     val showBula: Boolean,
     val blurred: Boolean,
+    /** Frames the skyline down to the burrow (sky) rather than the cameras and Bula (ground). */
+    val skyFraming: Boolean,
+)
+
+/** How a landscape is framed in the home hero (fixtures/client-rules/scenery_framing.json). */
+internal data class SceneryLandscape(
+    val skylineTopRow: Int,
+    /** ARGB of the canvas top rows, for the strip above a canvas that had to drop. */
+    val topFill: Long,
 )
 
 internal object SceneryTable {
@@ -141,18 +150,30 @@ internal object SceneryTable {
             "singapore" to R.drawable.scenery_singapore,
         )
 
+    /** Keyed by the drawable of the landscape. */
+    val landscapes: Map<Int, SceneryLandscape> =
+        mapOf(
+            R.drawable.scenery_plaine to SceneryLandscape(320, 0xFFD5DEE7),
+            R.drawable.scenery_germany to SceneryLandscape(140, 0xFFF4F3F2),
+            R.drawable.scenery_finland to SceneryLandscape(235, 0xFFF9F5F0),
+            R.drawable.scenery_france to SceneryLandscape(160, 0xFFF1F2F3),
+            R.drawable.scenery_netherlands to SceneryLandscape(100, 0xFFEFF2F3),
+            R.drawable.scenery_romania to SceneryLandscape(300, 0xFFF8F7F6),
+            R.drawable.scenery_singapore to SceneryLandscape(360, 0xFFFCF7F1),
+        )
+
     fun row(phase: ConnectionPhase): SceneryRow =
         when (phase) {
             ConnectionPhase.Exposed ->
-                SceneryRow(countryLandscape = false, showBula = true, blurred = false)
+                SceneryRow(countryLandscape = false, showBula = true, blurred = false, skyFraming = false)
             ConnectionPhase.Connecting ->
-                SceneryRow(countryLandscape = true, showBula = true, blurred = true)
+                SceneryRow(countryLandscape = true, showBula = true, blurred = true, skyFraming = false)
             ConnectionPhase.Protected ->
-                SceneryRow(countryLandscape = true, showBula = false, blurred = false)
+                SceneryRow(countryLandscape = true, showBula = false, blurred = false, skyFraming = true)
             ConnectionPhase.Interrupted ->
-                SceneryRow(countryLandscape = true, showBula = false, blurred = true)
+                SceneryRow(countryLandscape = true, showBula = false, blurred = true, skyFraming = true)
             ConnectionPhase.Blocked ->
-                SceneryRow(countryLandscape = false, showBula = false, blurred = true)
+                SceneryRow(countryLandscape = false, showBula = false, blurred = true, skyFraming = false)
         }
 }
 

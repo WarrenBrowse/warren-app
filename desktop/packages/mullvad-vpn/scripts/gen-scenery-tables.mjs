@@ -54,6 +54,20 @@ function phaseRow(manifest, phase) {
 
 const capitalize = (s) => s[0].toUpperCase() + s.slice(1);
 
+/** The plain and every country, each with its framing measurements. */
+function landscapes(manifest) {
+  const all = manifest.layers.filter((l) => l.role === 'plain' || l.role === 'country');
+  for (const layer of all) {
+    if (!Number.isInteger(layer.skylineTopRow) || !/^#[0-9a-f]{6}$/i.test(layer.topFill ?? '')) {
+      throw new Error(`scenery.json: ${layer.slug} needs skylineTopRow and topFill`);
+    }
+  }
+  return all;
+}
+
+/** `#rrggbb` to the opaque `FFRRGGBB` both platforms take. */
+const argb = (hex) => `FF${hex.slice(1).toUpperCase()}`;
+
 export function renderKotlin(manifest) {
   const drawable = (layer) => `R.drawable.scenery_${layer.slug}`;
   const lines = [
@@ -64,6 +78,15 @@ export function renderKotlin(manifest) {
     '    val countryLandscape: Boolean,',
     '    val showBula: Boolean,',
     '    val blurred: Boolean,',
+    '    /** Frames the skyline down to the burrow (sky) rather than the cameras and Bula (ground). */',
+    '    val skyFraming: Boolean,',
+    ')',
+    '',
+    '/** How a landscape is framed in the home hero (fixtures/client-rules/scenery_framing.json). */',
+    'internal data class SceneryLandscape(',
+    '    val skylineTopRow: Int,',
+    '    /** ARGB of the canvas top rows, for the strip above a canvas that had to drop. */',
+    '    val topFill: Long,',
     ')',
     '',
     'internal object SceneryTable {',
@@ -77,13 +100,22 @@ export function renderKotlin(manifest) {
     ...countryKeys(manifest).map(([key, layer]) => `            "${key}" to ${drawable(layer)},`),
     '        )',
     '',
+    '    /** Keyed by the drawable of the landscape. */',
+    '    val landscapes: Map<Int, SceneryLandscape> =',
+    '        mapOf(',
+    ...landscapes(manifest).map(
+      (layer) =>
+        `            ${drawable(layer)} to SceneryLandscape(${layer.skylineTopRow}, 0x${argb(layer.topFill)}),`,
+    ),
+    '        )',
+    '',
     '    fun row(phase: ConnectionPhase): SceneryRow =',
     '        when (phase) {',
     ...PHASES.map((phase) => {
       const row = phaseRow(manifest, phase);
       return (
         `            ConnectionPhase.${capitalize(phase)} ->\n` +
-        `                SceneryRow(countryLandscape = ${row.landscape === 'country'}, showBula = ${row.bula}, blurred = ${row.blurred})`
+        `                SceneryRow(countryLandscape = ${row.landscape === 'country'}, showBula = ${row.bula}, blurred = ${row.blurred}, skyFraming = ${row.framing === 'sky'})`
       );
     }),
     '        }',
@@ -105,16 +137,24 @@ export function renderSwift(manifest) {
     `    private static let burrowImageName = "${layerOf(manifest, 'burrow').iosImageset}"`,
     `    private static let bulaImageName = "${layerOf(manifest, 'bula').iosImageset}"`,
     '',
+    '    // How each landscape is framed in the home hero: its skyline row and the ARGB of its top rows.',
+    '    static let landscapeFraming: [String: (skylineTopRow: Int, topFill: UInt32)] = [',
+    ...landscapes(manifest).map(
+      (layer) =>
+        `        "${layer.iosImageset}": (skylineTopRow: ${layer.skylineTopRow}, topFill: 0x${argb(layer.topFill)}),`,
+    ),
+    '    ]',
+    '',
     '    // Which landscape a phase shows (the exit country, or the plain), and the other two layers.',
     '    private static func sceneryRow(',
     '        _ phase: ConnectionPhase',
-    '    ) -> (countryLandscape: Bool, showsBula: Bool, blurred: Bool) {',
+    '    ) -> (countryLandscape: Bool, showsBula: Bool, blurred: Bool, skyFraming: Bool) {',
     '        switch phase {',
     ...PHASES.map((phase) => {
       const row = phaseRow(manifest, phase);
       return (
         `        case .${phase}:\n` +
-        `            return (countryLandscape: ${row.landscape === 'country'}, showsBula: ${row.bula}, blurred: ${row.blurred})`
+        `            return (countryLandscape: ${row.landscape === 'country'}, showsBula: ${row.bula}, blurred: ${row.blurred}, skyFraming: ${row.framing === 'sky'})`
       );
     }),
     '        }',

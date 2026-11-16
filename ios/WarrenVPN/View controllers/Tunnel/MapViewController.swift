@@ -349,21 +349,32 @@ final class SceneryViewController: UIViewController {
     private static let burrowImageName = "SceneryTerrier"
     private static let bulaImageName = "SceneryBula"
 
+    // How each landscape is framed in the home hero: its skyline row and the ARGB of its top rows.
+    static let landscapeFraming: [String: (skylineTopRow: Int, topFill: UInt32)] = [
+        "SceneryPlaine": (skylineTopRow: 320, topFill: 0xFFD5DEE7),
+        "SceneryGermany": (skylineTopRow: 140, topFill: 0xFFF4F3F2),
+        "SceneryFinland": (skylineTopRow: 235, topFill: 0xFFF9F5F0),
+        "SceneryFrance": (skylineTopRow: 160, topFill: 0xFFF1F2F3),
+        "SceneryNetherlands": (skylineTopRow: 100, topFill: 0xFFEFF2F3),
+        "SceneryRomania": (skylineTopRow: 300, topFill: 0xFFF8F7F6),
+        "ScenerySingapore": (skylineTopRow: 360, topFill: 0xFFFCF7F1),
+    ]
+
     // Which landscape a phase shows (the exit country, or the plain), and the other two layers.
     private static func sceneryRow(
         _ phase: ConnectionPhase
-    ) -> (countryLandscape: Bool, showsBula: Bool, blurred: Bool) {
+    ) -> (countryLandscape: Bool, showsBula: Bool, blurred: Bool, skyFraming: Bool) {
         switch phase {
         case .exposed:
-            return (countryLandscape: false, showsBula: true, blurred: false)
+            return (countryLandscape: false, showsBula: true, blurred: false, skyFraming: false)
         case .connecting:
-            return (countryLandscape: true, showsBula: true, blurred: true)
+            return (countryLandscape: true, showsBula: true, blurred: true, skyFraming: false)
         case .protected:
-            return (countryLandscape: true, showsBula: false, blurred: false)
+            return (countryLandscape: true, showsBula: false, blurred: false, skyFraming: true)
         case .interrupted:
-            return (countryLandscape: true, showsBula: false, blurred: true)
+            return (countryLandscape: true, showsBula: false, blurred: true, skyFraming: true)
         case .blocked:
-            return (countryLandscape: false, showsBula: false, blurred: true)
+            return (countryLandscape: false, showsBula: false, blurred: true, skyFraming: false)
         }
     }
     // END GENERATED scenery table
