@@ -1,0 +1,428 @@
+{
+  "$comment": "The connect-screen component tokens as the desktop measured them before the home redesign. Android still reads them through DesignTokens.kt; the Android home lot replaces them with the generated home section and deletes this file.",
+  "components": {
+    "connectionCard": {
+      "paddingVertical": {
+        "value": 20,
+        "unit": "dp"
+      },
+      "paddingHorizontal": {
+        "value": 20,
+        "unit": "dp"
+      },
+      "radius": {
+        "value": 16,
+        "unit": "dp"
+      },
+      "surface": "card",
+      "borderWidth": {
+        "value": 0.5,
+        "unit": "dp"
+      },
+      "borderSurface": "line",
+      "shadowOffsetY": {
+        "value": 5,
+        "unit": "dp"
+      },
+      "shadowBlur": {
+        "value": 16,
+        "unit": "dp"
+      },
+      "shadowSurface": "shadowStrong",
+      "marginHorizontal": {
+        "value": 14,
+        "unit": "dp"
+      },
+      "marginBottom": {
+        "value": 6,
+        "unit": "dp"
+      },
+      "blockGap": {
+        "value": 10.5,
+        "unit": "dp"
+      },
+      "badgeGap": {
+        "value": 2,
+        "unit": "dp"
+      },
+      "badgesToCardGap": {
+        "value": 4,
+        "unit": "dp"
+      },
+      "chevronButtonSize": {
+        "value": 22,
+        "unit": "dp"
+      },
+      "chevronIconSize": {
+        "value": 18,
+        "unit": "dp"
+      }
+    },
+    "connectionStatus": {
+      "rowGap": {
+        "value": 12,
+        "unit": "dp"
+      },
+      "textGap": {
+        "value": 1,
+        "unit": "dp"
+      },
+      "trailingGap": {
+        "value": 12,
+        "unit": "dp"
+      },
+      "wellSize": {
+        "value": 34,
+        "unit": "dp"
+      },
+      "wellRadius": {
+        "value": 8,
+        "unit": "dp"
+      },
+      "wellTransition": {
+        "value": 300,
+        "unit": "ms"
+      },
+      "iconSize": {
+        "value": 18,
+        "unit": "dp"
+      },
+      "titleSize": {
+        "value": 16,
+        "unit": "sp"
+      },
+      "titleLineHeight": {
+        "value": 19.2,
+        "unit": "sp"
+      },
+      "titleWeight": {
+        "value": 600,
+        "unit": "weight"
+      },
+      "subtitleSize": {
+        "value": 11.5,
+        "unit": "sp"
+      },
+      "subtitleLineHeight": {
+        "value": 15,
+        "unit": "sp"
+      },
+      "subtitleSurface": "textSecondary"
+    },
+    "connectionLocation": {
+      "gapAbove": {
+        "value": 10.5,
+        "unit": "dp"
+      },
+      "size": {
+        "value": 15,
+        "unit": "sp"
+      },
+      "lineHeight": {
+        "value": 19,
+        "unit": "sp"
+      },
+      "weight": {
+        "value": 700,
+        "unit": "weight"
+      },
+      "surface": "text",
+      "hostnameGapAbove": {
+        "value": 2,
+        "unit": "dp"
+      },
+      "hostnameSize": {
+        "value": 12,
+        "unit": "sp"
+      },
+      "hostnameLineHeight": {
+        "value": 16.5,
+        "unit": "sp"
+      },
+      "hostnameSurface": "textMuted"
+    },
+    "cardButton": {
+      "height": {
+        "value": 32,
+        "unit": "dp"
+      },
+      "radius": {
+        "value": 6,
+        "unit": "dp"
+      },
+      "borderWidth": {
+        "value": 0.5,
+        "unit": "dp"
+      },
+      "textSize": {
+        "value": 13,
+        "unit": "sp"
+      },
+      "textLineHeight": {
+        "value": 18,
+        "unit": "sp"
+      },
+      "textWeight": {
+        "value": 600,
+        "unit": "weight"
+      },
+      "rowGap": {
+        "value": 4,
+        "unit": "dp"
+      },
+      "shuffleWidth": {
+        "value": 40,
+        "unit": "dp"
+      }
+    },
+    "featureChip": {
+      "paddingVertical": {
+        "value": 5.5,
+        "unit": "dp"
+      },
+      "paddingHorizontal": {
+        "value": 8,
+        "unit": "dp"
+      },
+      "radius": {
+        "value": 7,
+        "unit": "dp"
+      },
+      "borderWidth": {
+        "value": 0.5,
+        "unit": "dp"
+      },
+      "shadowOffsetY": {
+        "value": 1.5,
+        "unit": "dp"
+      },
+      "shadowBlur": {
+        "value": 5,
+        "unit": "dp"
+      },
+      "fillSurface": "card",
+      "borderSurface": "line",
+      "errorFillSurface": "exposedWell",
+      "errorBorderSurface": "exposed"
+    },
+    "countryFlag": {
+      "size": {
+        "value": 22,
+        "unit": "dp"
+      },
+      "ringWidth": {
+        "value": 0.5,
+        "unit": "dp"
+      },
+      "ringSurface": "line"
+    },
+    "betaBanner": {
+      "marginTop": {
+        "value": 13.5,
+        "unit": "dp"
+      },
+      "marginStart": {
+        "value": 15,
+        "unit": "dp"
+      },
+      "height": {
+        "value": 36.5,
+        "unit": "dp"
+      },
+      "paddingStart": {
+        "value": 8,
+        "unit": "dp"
+      },
+      "paddingEnd": {
+        "value": 12,
+        "unit": "dp"
+      },
+      "gap": {
+        "value": 8,
+        "unit": "dp"
+      },
+      "radius": {
+        "value": 12,
+        "unit": "dp"
+      },
+      "borderWidth": {
+        "value": 0.5,
+        "unit": "dp"
+      },
+      "shadowOffsetY": {
+        "value": 2,
+        "unit": "dp"
+      },
+      "shadowBlur": {
+        "value": 8,
+        "unit": "dp"
+      },
+      "pillHeight": {
+        "value": 21,
+        "unit": "dp"
+      },
+      "pillPaddingHorizontal": {
+        "value": 8,
+        "unit": "dp"
+      },
+      "pillRadius": {
+        "value": 6,
+        "unit": "dp"
+      },
+      "pillTextSize": {
+        "value": 11,
+        "unit": "sp"
+      },
+      "pillTextWeight": {
+        "value": 700,
+        "unit": "weight"
+      },
+      "pillLetterSpacing": {
+        "value": 0.5,
+        "unit": "sp"
+      },
+      "textSize": {
+        "value": 11,
+        "unit": "sp"
+      },
+      "textWeight": {
+        "value": 600,
+        "unit": "weight"
+      }
+    },
+    "footer": {
+      "paddingVertical": {
+        "value": 7,
+        "unit": "dp"
+      },
+      "paddingHorizontal": {
+        "value": 16,
+        "unit": "dp"
+      },
+      "surfaceAlpha": {
+        "value": 0.6,
+        "unit": "ratio"
+      },
+      "borderWidth": {
+        "value": 1,
+        "unit": "dp"
+      },
+      "borderAlpha": {
+        "value": 0.2,
+        "unit": "ratio"
+      }
+    },
+    "notificationBanner": {
+      "maxWidth": {
+        "value": 300,
+        "unit": "dp"
+      },
+      "radius": {
+        "value": 14,
+        "unit": "dp"
+      },
+      "edgeWidth": {
+        "value": 2,
+        "unit": "dp"
+      },
+      "edgeColor": "green",
+      "surfaceAlpha": {
+        "value": 0.6,
+        "unit": "ratio"
+      },
+      "marginTop": {
+        "value": 12,
+        "unit": "dp"
+      },
+      "marginEnd": {
+        "value": 16,
+        "unit": "dp"
+      },
+      "paddingVertical": {
+        "value": 10,
+        "unit": "dp"
+      },
+      "paddingStart": {
+        "value": 16,
+        "unit": "dp"
+      },
+      "paddingEnd": {
+        "value": 12,
+        "unit": "dp"
+      },
+      "elevation": {
+        "value": 8,
+        "unit": "dp"
+      },
+      "transition": {
+        "value": 250,
+        "unit": "ms"
+      }
+    },
+    "scenery": {
+      "blurRadius": {
+        "value": 14,
+        "unit": "dp"
+      },
+      "connectingBrightness": {
+        "value": 0.92,
+        "unit": "ratio"
+      },
+      "connectingZoom": {
+        "value": 1.08,
+        "unit": "ratio"
+      },
+      "blurTransition": {
+        "value": 900,
+        "unit": "ms"
+      },
+      "zoomTransition": {
+        "value": 6000,
+        "unit": "ms"
+      },
+      "crossfade": {
+        "value": 700,
+        "unit": "ms"
+      },
+      "bulaTransition": {
+        "value": 550,
+        "unit": "ms"
+      },
+      "bulaHideDrop": {
+        "value": 0.03,
+        "unit": "ratio"
+      },
+      "washAlpha": {
+        "value": 0.14,
+        "unit": "ratio"
+      },
+      "washBlend": "soft-light",
+      "washTopStop": {
+        "value": 0.22,
+        "unit": "ratio"
+      },
+      "washBottomStop": {
+        "value": 0.78,
+        "unit": "ratio"
+      },
+      "washTransition": {
+        "value": 700,
+        "unit": "ms"
+      }
+    },
+    "navigation": {
+      "duration": {
+        "value": 450,
+        "unit": "ms"
+      },
+      "pushNewFrom": {
+        "value": 1,
+        "unit": "ratio"
+      },
+      "pushOldTo": {
+        "value": -0.33,
+        "unit": "ratio"
+      }
+    }
+  }
+}

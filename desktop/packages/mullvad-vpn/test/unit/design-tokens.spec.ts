@@ -5,12 +5,14 @@ import { describe, expect, it } from 'vitest';
 import {
   buildTokens,
   cssColorToHex,
+  homeUnit,
   JSON_PATH,
   KOTLIN_PATH,
   renderJson,
   renderKotlin,
   sha256,
 } from '../../../../../scripts/design-tokens/lib.mjs';
+import { homeTokens } from '../../src/renderer/lib/foundations/tokens/home-tokens';
 
 // The desktop token files and the connect-screen component sources are the
 // single source of truth for the design system. design-tokens.json at the repo
@@ -69,6 +71,39 @@ describe('design tokens stay generated from the desktop sources', () => {
       .map(([, value]) => value);
     expect(named.length).toBeGreaterThan(0);
     for (const surface of named) expect(tokens.surfaces.dark).toHaveProperty(surface as string);
+  });
+});
+
+describe('the home geometry is copied, value and unit, from home-tokens.ts', () => {
+  const tokens = buildTokens(REPO);
+
+  it('carries every group and every value of the desktop table', () => {
+    expect(Object.keys(tokens.home)).toEqual(Object.keys(homeTokens));
+    for (const [group, entries] of Object.entries(homeTokens)) {
+      for (const [name, value] of Object.entries(entries)) {
+        expect(tokens.home[group][name].value, `${group}.${name}`).toBe(value);
+      }
+    }
+  });
+
+  it('reads the unit off the key', () => {
+    expect(homeUnit('textSize')).toBe('sp');
+    expect(homeUnit('size')).toBe('sp');
+    expect(homeUnit('textWeight')).toBe('weight');
+    expect(homeUnit('letterSpacingEm')).toBe('ratio');
+    expect(homeUnit('scrimStop')).toBe('ratio');
+    expect(homeUnit('frameMs')).toBe('ms');
+    expect(homeUnit('paddingHorizontal')).toBe('dp');
+    expect(tokens.home.title.textSize).toEqual({ value: 26, unit: 'sp' });
+  });
+
+  it('gives the two themes the same home surfaces', () => {
+    const home = (table: Record<string, string>) =>
+      Object.keys(table).filter((n) => n.startsWith('home'));
+    expect(home(tokens.surfaces.light)).toEqual(home(tokens.surfaces.dark));
+    expect(home(tokens.surfaces.dark).length).toBeGreaterThan(30);
+    expect(tokens.surfaces.dark.homePage).toBe('#FF141311');
+    expect(tokens.surfaces.light.homePage).toBe('#FFF4F0E8');
   });
 });
 

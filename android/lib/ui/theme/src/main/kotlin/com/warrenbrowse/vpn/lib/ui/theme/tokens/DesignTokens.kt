@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /** SHA-256 of design-tokens.json at generation time. */
-const val DESIGN_TOKENS_SHA256 = "20d7048633a348083b12178cc99a36e97a545e060cce68a60be910943f2b9597"
+const val DESIGN_TOKENS_SHA256 = "696b922187e1bc24c80d236a03de7ceace60a726b76faa30fabf2c7b4bef0ae7"
 
 @Suppress("MagicNumber", "unused")
 object DesignTokens {
@@ -162,6 +162,42 @@ object DesignTokens {
             val CancelHover = Color(0xFFB0621C)
             val CancelPressed = Color(0xFF8A4C15)
             val ActionText = Color(0xFFFFFFFF)
+            val HomePage = Color(0xFF141311)
+            val HomeText = Color(0xFFEFE9DF)
+            val HomeTextSecondary = Color(0xFF9D9488)
+            val HomeTextMono = Color(0xFF8A8175)
+            val HomeField = Color(0xFF211F1C)
+            val HomeFieldHover = Color(0xFF2B2824)
+            val HomeFieldPressed = Color(0xFF1C1A18)
+            val HomeFieldIcon = Color(0xFFD6CEC2)
+            val HomeFooter = Color(0xFF1B1917)
+            val HomeChipText = Color(0xFFC3BAAD)
+            val HomeChipLine = Color(0xFF36322D)
+            val HomeToolbar = Color(0xB8141311)
+            val HomeToolbarLine = Color(0x0FFFFFFF)
+            val HomeToolbarShadow = Color(0x00000000)
+            val HomeBadge = Color(0xFFEFB062)
+            val HomeBadgeRing = Color(0xFF1D1B18)
+            val HomeScrim = Color(0x66141311)
+            val HomeLogoGlow = Color(0xB3FAF7F0)
+            val HomePillExposed = Color(0xFFE98664)
+            val HomePillExposedText = Color(0xFF1C0F0A)
+            val HomePillProtected = Color(0xFF7FC581)
+            val HomePillProtectedText = Color(0xFF0D160C)
+            val HomePillPending = Color(0xFFEFB062)
+            val HomePillPendingText = Color(0xFF211404)
+            val HomePillBlocked = Color(0xFFD6CEC2)
+            val HomePillBlockedText = Color(0xFF141311)
+            val HomeConnect = Color(0xFF7DBD7F)
+            val HomeConnectHover = Color(0xFF8CC98D)
+            val HomeConnectPressed = Color(0xFF6FAC71)
+            val HomeConnectText = Color(0xFF0F140E)
+            val HomeDisconnectLine = Color(0xFF924D35)
+            val HomeDisconnectText = Color(0xFFF6A88D)
+            val HomeDisconnectHover = Color(0x1AE98664)
+            val HomeCancelLine = Color(0xFF936831)
+            val HomeCancelText = Color(0xFFF1C17F)
+            val HomeCancelHover = Color(0x1AEFB062)
         }
         object Light {
             val Card = Color(0xFFF7F1E3)
@@ -193,6 +229,124 @@ object DesignTokens {
             val CancelHover = Color(0xFFB0621C)
             val CancelPressed = Color(0xFF8A4C15)
             val ActionText = Color(0xFFFFFFFF)
+            val HomePage = Color(0xFFF4F0E8)
+            val HomeText = Color(0xFF221E19)
+            val HomeTextSecondary = Color(0xFF6F675C)
+            val HomeTextMono = Color(0xFF7A7266)
+            val HomeField = Color(0xFFE8E2D6)
+            val HomeFieldHover = Color(0xFFDFD8CA)
+            val HomeFieldPressed = Color(0xFFD6CFC0)
+            val HomeFieldIcon = Color(0xFF3A342C)
+            val HomeFooter = Color(0xFFEBE5DA)
+            val HomeChipText = Color(0xFF5E564B)
+            val HomeChipLine = Color(0xFFD6CDBD)
+            val HomeToolbar = Color(0xCCFAF7F0)
+            val HomeToolbarLine = Color(0x14281E14)
+            val HomeToolbarShadow = Color(0x40281E14)
+            val HomeBadge = Color(0xFFD97230)
+            val HomeBadgeRing = Color(0xFFFAF7F0)
+            val HomeScrim = Color(0x59F4F0E8)
+            val HomeLogoGlow = Color(0xB3FAF7F0)
+            val HomePillExposed = Color(0xFFDF7752)
+            val HomePillExposedText = Color(0xFF1C0F0A)
+            val HomePillProtected = Color(0xFF67B36A)
+            val HomePillProtectedText = Color(0xFF0D160C)
+            val HomePillPending = Color(0xFFDF9B44)
+            val HomePillPendingText = Color(0xFF211404)
+            val HomePillBlocked = Color(0xFF3A342C)
+            val HomePillBlockedText = Color(0xFFF4F0E8)
+            val HomeConnect = Color(0xFF3B793F)
+            val HomeConnectHover = Color(0xFF448648)
+            val HomeConnectPressed = Color(0xFF326A36)
+            val HomeConnectText = Color(0xFFFFFFFF)
+            val HomeDisconnectLine = Color(0xFFC26B4C)
+            val HomeDisconnectText = Color(0xFF9E4421)
+            val HomeDisconnectHover = Color(0x1AC26B4C)
+            val HomeCancelLine = Color(0xFFBD853F)
+            val HomeCancelText = Color(0xFF8D5406)
+            val HomeCancelHover = Color(0x1ABD853F)
+        }
+    }
+
+    object Home {
+        object Hero {
+            val HeaderInset = 14.dp
+            val ClearMargin = 6.dp
+            val Fade = 40.dp
+            val LogoHeight = 40.dp
+            const val ScrimStop = 0.34f
+            val GlowWidth = 300.dp
+            val GlowHeight = 150.dp
+            const val FrameMs = 900
+            const val CrossfadeMs = 700
+            const val BulaMs = 550
+            val BlurRadius = 14.dp
+        }
+        object Toolbar {
+            val Height = 48.dp
+            val Radius = 14.dp
+            val PaddingHorizontal = 6.dp
+            val Button = 38.dp
+            val Icon = 22.dp
+            val Badge = 8.dp
+            val BadgeRing = 2.dp
+            val Blur = 10.dp
+        }
+        object Panel {
+            val PaddingHorizontal = 22.dp
+            val Overlap = 18.dp
+            val Gap = 4.dp
+        }
+        object Pill {
+            val PaddingVertical = 7.dp
+            val PaddingStart = 10.dp
+            val PaddingEnd = 13.dp
+            val Gap = 7.dp
+            val Icon = 16.dp
+            val TextSize = 13.sp
+            const val TextWeight = 700
+        }
+        object Title {
+            val MarginTop = 8.dp
+            val TextSize = 26.sp
+            const val TextWeight = 600
+            const val LetterSpacingEm = -0.01f
+        }
+        object Subtitle {
+            val TextSize = 13.sp
+            val MonoSize = 12.sp
+        }
+        object Controls {
+            val MarginTop = 16.dp
+            val Gap = 8.dp
+            val RowHeight = 46.dp
+            val Radius = 10.dp
+            val Thumb = 28.dp
+            val PaddingStart = 10.dp
+            val PaddingEnd = 14.dp
+            val RowGap = 10.dp
+            val LabelSize = 15.sp
+            const val LabelWeight = 500
+            val ChangeSize = 13.sp
+            val ButtonHeight = 50.dp
+            val ButtonTextSize = 15.sp
+            const val ButtonTextWeight = 600
+            val OutlineWidth = 1.dp
+        }
+        object Chips {
+            val MarginTop = 12.dp
+            val Gap = 6.dp
+            val TextSize = 11.sp
+            val PaddingVertical = 3.dp
+            val PaddingHorizontal = 9.dp
+            val BorderWidth = 1.dp
+        }
+        object Footer {
+            val PaddingVertical = 12.dp
+            val PaddingHorizontal = 22.dp
+            val TextSize = 12.sp
+            val Icon = 16.dp
+            val Gap = 6.dp
         }
     }
 

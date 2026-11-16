@@ -6,21 +6,8 @@
     "radius": "desktop/packages/mullvad-vpn/src/renderer/lib/foundations/tokens/radius-tokens.ts",
     "spacing": "desktop/packages/mullvad-vpn/src/renderer/lib/foundations/tokens/spacing-tokens.ts",
     "typography": "desktop/packages/mullvad-vpn/src/renderer/lib/foundations/tokens/typography-tokens.ts",
-    "icon": "desktop/packages/mullvad-vpn/src/renderer/lib/components/icon/Icon.tsx",
-    "connectionPanel": "desktop/packages/mullvad-vpn/src/renderer/components/views/main/components/connection-panel/ConnectionPanel.tsx",
-    "connectionStatus": "desktop/packages/mullvad-vpn/src/renderer/components/views/main/components/connection-panel/components/connection-status/ConnectionStatus.tsx",
-    "location": "desktop/packages/mullvad-vpn/src/renderer/components/views/main/components/connection-panel/components/location/Location.tsx",
-    "hostname": "desktop/packages/mullvad-vpn/src/renderer/components/views/main/components/connection-panel/components/hostname/Hostname.tsx",
-    "cardButton": "desktop/packages/mullvad-vpn/src/renderer/components/views/main/components/connection-panel/components/card-button/CardButton.tsx",
-    "selectLocationButtons": "desktop/packages/mullvad-vpn/src/renderer/components/views/main/components/connection-panel/components/select-location-buttons/SelectLocationButtons.tsx",
-    "shuffleButton": "desktop/packages/mullvad-vpn/src/renderer/components/views/main/components/connection-panel/components/select-location-buttons/components/shuffle-button/ShuffleButton.tsx",
-    "betaBadge": "desktop/packages/mullvad-vpn/src/renderer/components/beta-badge/BetaBadge.tsx",
-    "mainView": "desktop/packages/mullvad-vpn/src/renderer/components/views/main/MainView.tsx",
-    "featureIndicator": "desktop/packages/mullvad-vpn/src/renderer/lib/components/feature-indicator/FeatureIndicator.tsx",
-    "countryFlag": "desktop/packages/mullvad-vpn/src/renderer/components/CurrentCountryFlag.tsx",
-    "footer": "desktop/packages/mullvad-vpn/src/renderer/components/app-main-header/components/AppMainFooter.tsx",
-    "notificationBanner": "desktop/packages/mullvad-vpn/src/renderer/components/NotificationBanner.tsx",
-    "scenery": "desktop/packages/mullvad-vpn/src/renderer/components/CountryBackdrop/index.tsx",
+    "home": "desktop/packages/mullvad-vpn/src/renderer/lib/foundations/tokens/home-tokens.ts",
+    "legacyComponents": "scripts/design-tokens/legacy-components.json",
     "navigation": "desktop/packages/mullvad-vpn/src/renderer/lib/transition-hooks.ts"
   },
   "colors": {
@@ -162,7 +149,43 @@
       "cancel": "#FFA05818",
       "cancelHover": "#FFB0621C",
       "cancelPressed": "#FF8A4C15",
-      "actionText": "#FFFFFFFF"
+      "actionText": "#FFFFFFFF",
+      "homePage": "#FF141311",
+      "homeText": "#FFEFE9DF",
+      "homeTextSecondary": "#FF9D9488",
+      "homeTextMono": "#FF8A8175",
+      "homeField": "#FF211F1C",
+      "homeFieldHover": "#FF2B2824",
+      "homeFieldPressed": "#FF1C1A18",
+      "homeFieldIcon": "#FFD6CEC2",
+      "homeFooter": "#FF1B1917",
+      "homeChipText": "#FFC3BAAD",
+      "homeChipLine": "#FF36322D",
+      "homeToolbar": "#B8141311",
+      "homeToolbarLine": "#0FFFFFFF",
+      "homeToolbarShadow": "#00000000",
+      "homeBadge": "#FFEFB062",
+      "homeBadgeRing": "#FF1D1B18",
+      "homeScrim": "#66141311",
+      "homeLogoGlow": "#B3FAF7F0",
+      "homePillExposed": "#FFE98664",
+      "homePillExposedText": "#FF1C0F0A",
+      "homePillProtected": "#FF7FC581",
+      "homePillProtectedText": "#FF0D160C",
+      "homePillPending": "#FFEFB062",
+      "homePillPendingText": "#FF211404",
+      "homePillBlocked": "#FFD6CEC2",
+      "homePillBlockedText": "#FF141311",
+      "homeConnect": "#FF7DBD7F",
+      "homeConnectHover": "#FF8CC98D",
+      "homeConnectPressed": "#FF6FAC71",
+      "homeConnectText": "#FF0F140E",
+      "homeDisconnectLine": "#FF924D35",
+      "homeDisconnectText": "#FFF6A88D",
+      "homeDisconnectHover": "#1AE98664",
+      "homeCancelLine": "#FF936831",
+      "homeCancelText": "#FFF1C17F",
+      "homeCancelHover": "#1AEFB062"
     },
     "light": {
       "card": "#FFF7F1E3",
@@ -193,7 +216,307 @@
       "cancel": "#FFA05818",
       "cancelHover": "#FFB0621C",
       "cancelPressed": "#FF8A4C15",
-      "actionText": "#FFFFFFFF"
+      "actionText": "#FFFFFFFF",
+      "homePage": "#FFF4F0E8",
+      "homeText": "#FF221E19",
+      "homeTextSecondary": "#FF6F675C",
+      "homeTextMono": "#FF7A7266",
+      "homeField": "#FFE8E2D6",
+      "homeFieldHover": "#FFDFD8CA",
+      "homeFieldPressed": "#FFD6CFC0",
+      "homeFieldIcon": "#FF3A342C",
+      "homeFooter": "#FFEBE5DA",
+      "homeChipText": "#FF5E564B",
+      "homeChipLine": "#FFD6CDBD",
+      "homeToolbar": "#CCFAF7F0",
+      "homeToolbarLine": "#14281E14",
+      "homeToolbarShadow": "#40281E14",
+      "homeBadge": "#FFD97230",
+      "homeBadgeRing": "#FFFAF7F0",
+      "homeScrim": "#59F4F0E8",
+      "homeLogoGlow": "#B3FAF7F0",
+      "homePillExposed": "#FFDF7752",
+      "homePillExposedText": "#FF1C0F0A",
+      "homePillProtected": "#FF67B36A",
+      "homePillProtectedText": "#FF0D160C",
+      "homePillPending": "#FFDF9B44",
+      "homePillPendingText": "#FF211404",
+      "homePillBlocked": "#FF3A342C",
+      "homePillBlockedText": "#FFF4F0E8",
+      "homeConnect": "#FF3B793F",
+      "homeConnectHover": "#FF448648",
+      "homeConnectPressed": "#FF326A36",
+      "homeConnectText": "#FFFFFFFF",
+      "homeDisconnectLine": "#FFC26B4C",
+      "homeDisconnectText": "#FF9E4421",
+      "homeDisconnectHover": "#1AC26B4C",
+      "homeCancelLine": "#FFBD853F",
+      "homeCancelText": "#FF8D5406",
+      "homeCancelHover": "#1ABD853F"
+    }
+  },
+  "home": {
+    "hero": {
+      "headerInset": {
+        "value": 14,
+        "unit": "dp"
+      },
+      "clearMargin": {
+        "value": 6,
+        "unit": "dp"
+      },
+      "fade": {
+        "value": 40,
+        "unit": "dp"
+      },
+      "logoHeight": {
+        "value": 40,
+        "unit": "dp"
+      },
+      "scrimStop": {
+        "value": 0.34,
+        "unit": "ratio"
+      },
+      "glowWidth": {
+        "value": 300,
+        "unit": "dp"
+      },
+      "glowHeight": {
+        "value": 150,
+        "unit": "dp"
+      },
+      "frameMs": {
+        "value": 900,
+        "unit": "ms"
+      },
+      "crossfadeMs": {
+        "value": 700,
+        "unit": "ms"
+      },
+      "bulaMs": {
+        "value": 550,
+        "unit": "ms"
+      },
+      "blurRadius": {
+        "value": 14,
+        "unit": "dp"
+      }
+    },
+    "toolbar": {
+      "height": {
+        "value": 48,
+        "unit": "dp"
+      },
+      "radius": {
+        "value": 14,
+        "unit": "dp"
+      },
+      "paddingHorizontal": {
+        "value": 6,
+        "unit": "dp"
+      },
+      "button": {
+        "value": 38,
+        "unit": "dp"
+      },
+      "icon": {
+        "value": 22,
+        "unit": "dp"
+      },
+      "badge": {
+        "value": 8,
+        "unit": "dp"
+      },
+      "badgeRing": {
+        "value": 2,
+        "unit": "dp"
+      },
+      "blur": {
+        "value": 10,
+        "unit": "dp"
+      }
+    },
+    "panel": {
+      "paddingHorizontal": {
+        "value": 22,
+        "unit": "dp"
+      },
+      "overlap": {
+        "value": 18,
+        "unit": "dp"
+      },
+      "gap": {
+        "value": 4,
+        "unit": "dp"
+      }
+    },
+    "pill": {
+      "paddingVertical": {
+        "value": 7,
+        "unit": "dp"
+      },
+      "paddingStart": {
+        "value": 10,
+        "unit": "dp"
+      },
+      "paddingEnd": {
+        "value": 13,
+        "unit": "dp"
+      },
+      "gap": {
+        "value": 7,
+        "unit": "dp"
+      },
+      "icon": {
+        "value": 16,
+        "unit": "dp"
+      },
+      "textSize": {
+        "value": 13,
+        "unit": "sp"
+      },
+      "textWeight": {
+        "value": 700,
+        "unit": "weight"
+      }
+    },
+    "title": {
+      "marginTop": {
+        "value": 8,
+        "unit": "dp"
+      },
+      "textSize": {
+        "value": 26,
+        "unit": "sp"
+      },
+      "textWeight": {
+        "value": 600,
+        "unit": "weight"
+      },
+      "letterSpacingEm": {
+        "value": -0.01,
+        "unit": "ratio"
+      }
+    },
+    "subtitle": {
+      "textSize": {
+        "value": 13,
+        "unit": "sp"
+      },
+      "monoSize": {
+        "value": 12,
+        "unit": "sp"
+      }
+    },
+    "controls": {
+      "marginTop": {
+        "value": 16,
+        "unit": "dp"
+      },
+      "gap": {
+        "value": 8,
+        "unit": "dp"
+      },
+      "rowHeight": {
+        "value": 46,
+        "unit": "dp"
+      },
+      "radius": {
+        "value": 10,
+        "unit": "dp"
+      },
+      "thumb": {
+        "value": 28,
+        "unit": "dp"
+      },
+      "paddingStart": {
+        "value": 10,
+        "unit": "dp"
+      },
+      "paddingEnd": {
+        "value": 14,
+        "unit": "dp"
+      },
+      "rowGap": {
+        "value": 10,
+        "unit": "dp"
+      },
+      "labelSize": {
+        "value": 15,
+        "unit": "sp"
+      },
+      "labelWeight": {
+        "value": 500,
+        "unit": "weight"
+      },
+      "changeSize": {
+        "value": 13,
+        "unit": "sp"
+      },
+      "buttonHeight": {
+        "value": 50,
+        "unit": "dp"
+      },
+      "buttonTextSize": {
+        "value": 15,
+        "unit": "sp"
+      },
+      "buttonTextWeight": {
+        "value": 600,
+        "unit": "weight"
+      },
+      "outlineWidth": {
+        "value": 1,
+        "unit": "dp"
+      }
+    },
+    "chips": {
+      "marginTop": {
+        "value": 12,
+        "unit": "dp"
+      },
+      "gap": {
+        "value": 6,
+        "unit": "dp"
+      },
+      "textSize": {
+        "value": 11,
+        "unit": "sp"
+      },
+      "paddingVertical": {
+        "value": 3,
+        "unit": "dp"
+      },
+      "paddingHorizontal": {
+        "value": 9,
+        "unit": "dp"
+      },
+      "borderWidth": {
+        "value": 1,
+        "unit": "dp"
+      }
+    },
+    "footer": {
+      "paddingVertical": {
+        "value": 12,
+        "unit": "dp"
+      },
+      "paddingHorizontal": {
+        "value": 22,
+        "unit": "dp"
+      },
+      "textSize": {
+        "value": 12,
+        "unit": "sp"
+      },
+      "icon": {
+        "value": 16,
+        "unit": "dp"
+      },
+      "gap": {
+        "value": 6,
+        "unit": "dp"
+      }
     }
   },
   "components": {

@@ -8,6 +8,8 @@ export interface Measure {
 
 export type ComponentTokens = Record<string, Record<string, Measure | string>>;
 
+export type HomeTokens = Record<string, Record<string, Measure>>;
+
 export interface DesignTokens {
   $comment: string;
   sources: Record<string, string>;
@@ -22,12 +24,15 @@ export interface DesignTokens {
     fontSizes: Record<string, number>;
     lineHeights: Record<string, number>;
   };
+  // The redesigned home screen, copied from home-tokens.ts.
+  home: HomeTokens;
   components: ComponentTokens;
 }
 
 export const JSON_PATH: string;
 export const KOTLIN_PATH: string;
 export function cssColorToHex(css: string): string;
+export function homeUnit(key: string): Measure['unit'];
 export function buildTokens(repoRoot: string): DesignTokens;
 export function renderJson(tokens: DesignTokens): string;
 export function renderKotlin(tokens: DesignTokens, jsonText: string): string;

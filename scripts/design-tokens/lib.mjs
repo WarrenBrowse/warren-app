@@ -1,8 +1,11 @@
-// The design-token generator: reads the desktop foundation token files and the
-// handful of desktop component sources the connect screen is built from, and
-// produces the checked-in `design-tokens.json` plus the generated Kotlin
-// `DesignTokens.kt`. The desktop is the source of truth for every value here;
-// Android consumes the generated object, never a hand copy.
+// The design-token generator: reads the desktop foundation token files (the
+// home geometry included) and produces the checked-in `design-tokens.json` plus
+// the generated Kotlin `DesignTokens.kt`. The desktop is the source of truth for
+// every value here; Android consumes the generated object, never a hand copy.
+//
+// `components` is the pre-redesign connect screen, frozen in
+// legacy-components.json until the Android home lot stops reading it;
+// `navigation` is still measured on the desktop.
 //
 // Two gates hold the three artefacts together, the way the scenery assets are
 // pinned: `test/unit/design-tokens.spec.ts` (Node only) regenerates everything
@@ -20,7 +23,6 @@ export const KOTLIN_PATH =
 
 const RENDERER = 'desktop/packages/mullvad-vpn/src/renderer';
 const TOKENS = `${RENDERER}/lib/foundations/tokens`;
-const CONNECTION_PANEL = `${RENDERER}/components/views/main/components/connection-panel`;
 
 const SOURCES = {
   colors: `${TOKENS}/color-tokens.ts`,
@@ -28,21 +30,8 @@ const SOURCES = {
   radius: `${TOKENS}/radius-tokens.ts`,
   spacing: `${TOKENS}/spacing-tokens.ts`,
   typography: `${TOKENS}/typography-tokens.ts`,
-  icon: `${RENDERER}/lib/components/icon/Icon.tsx`,
-  connectionPanel: `${CONNECTION_PANEL}/ConnectionPanel.tsx`,
-  connectionStatus: `${CONNECTION_PANEL}/components/connection-status/ConnectionStatus.tsx`,
-  location: `${CONNECTION_PANEL}/components/location/Location.tsx`,
-  hostname: `${CONNECTION_PANEL}/components/hostname/Hostname.tsx`,
-  cardButton: `${CONNECTION_PANEL}/components/card-button/CardButton.tsx`,
-  selectLocationButtons: `${CONNECTION_PANEL}/components/select-location-buttons/SelectLocationButtons.tsx`,
-  shuffleButton: `${CONNECTION_PANEL}/components/select-location-buttons/components/shuffle-button/ShuffleButton.tsx`,
-  betaBadge: `${RENDERER}/components/beta-badge/BetaBadge.tsx`,
-  mainView: `${RENDERER}/components/views/main/MainView.tsx`,
-  featureIndicator: `${RENDERER}/lib/components/feature-indicator/FeatureIndicator.tsx`,
-  countryFlag: `${RENDERER}/components/CurrentCountryFlag.tsx`,
-  footer: `${RENDERER}/components/app-main-header/components/AppMainFooter.tsx`,
-  notificationBanner: `${RENDERER}/components/NotificationBanner.tsx`,
-  scenery: `${RENDERER}/components/CountryBackdrop/index.tsx`,
+  home: `${TOKENS}/home-tokens.ts`,
+  legacyComponents: 'scripts/design-tokens/legacy-components.json',
   navigation: `${RENDERER}/lib/transition-hooks.ts`,
 };
 
@@ -70,11 +59,6 @@ function match(text, regex, what) {
 }
 
 const num = (text, regex, what) => Number(match(text, regex, what));
-
-/** A number written with or without its `px`, as a dp entry. */
-const NUM = '(\\d+(?:\\.\\d+)?)';
-const px = (text, before, what, after = 'px') =>
-  Number(match(text, new RegExp(`${before}${NUM}${after}`), what));
 
 /** `rgb(1, 2, 3)` / `rgba(1, 2, 3, 0.4)` / `transparent` to Android `#AARRGGBB`. */
 export function cssColorToHex(css) {
@@ -150,237 +134,62 @@ function typographyTokens(text) {
   };
 }
 
-const dp = (value) => ({ value, unit: 'dp' });
-const sp = (value) => ({ value, unit: 'sp' });
 const ms = (value) => ({ value, unit: 'ms' });
 const ratio = (value) => ({ value, unit: 'ratio' });
-const weight = (value) => ({ value, unit: 'weight' });
 
-/** The alpha channel of a colour token, as the 0..1 fraction the CSS carried. */
-function alphaOf(colors, name) {
-  if (!(name in colors)) throw new Error(`colour token ${name} missing`);
-  return ratio(Number((parseInt(colors[name].slice(1, 3), 16) / 255).toFixed(2)));
-}
-
-function componentTokens(repoRoot, colors) {
-  const panel = read(repoRoot, SOURCES.connectionPanel);
-  const card = block(panel, 'StyledCard');
-  const [cardPadV, cardPadH] = match(card, /padding: '(\d+px \d+px)'/, 'card padding')
-    .split(' ')
-    .map((v) => Number(v.replace('px', '')));
-  const cardShadow = match(card, /boxShadow: `0 (\d+px \d+px) /, 'card shadow')
-    .split(' ')
-    .map((v) => Number(v.replace('px', '')));
-  const chevron = block(panel, 'StyledConnectionPanelChevron');
-
-  const status = read(repoRoot, SOURCES.connectionStatus);
-  const well = block(status, 'StyledIconWell');
-  const title = block(status, 'StyledTitle');
-  const subtitle = block(status, 'StyledSubtitle');
-  const icon = read(repoRoot, SOURCES.icon);
-  const iconSizes = block(icon, 'iconSizes');
-  const iconSize = (name) => num(iconSizes, new RegExp(`${name}: (\\d+),`), `icon size ${name}`);
-  const wellIconSize = match(status, /<StyledEye icon=\{eyeIcon\} size="(\w+)"/, 'eye size');
-  const chevronIconSize = match(panel, /<StyledConnectionPanelChevron\s+size="(\w+)"/, 'chevron size');
-
-  const location = block(read(repoRoot, SOURCES.location), 'StyledLocation');
-  const hostnameText = read(repoRoot, SOURCES.hostname);
-  const hostnameRow = block(hostnameText, 'StyledHostnameRow');
-  const hostname = block(hostnameText, 'StyledHostname');
-
-  const button = block(read(repoRoot, SOURCES.cardButton), 'CardButton');
-  const buttonRow = block(read(repoRoot, SOURCES.selectLocationButtons), 'StyledRow');
-  const shuffle = block(read(repoRoot, SOURCES.shuffleButton), 'StyledShuffleButton');
-
-  const chip = read(repoRoot, SOURCES.featureIndicator);
-  const chipBox = block(chip, 'StyledFeatureIndicator');
-  const [chipPadV, chipPadH] = match(block(chip, 'StyledFlex'), /padding: ([\d.]+px [\d.]+px);/, 'chip padding')
-    .split(' ')
-    .map((v) => Number(v.replace('px', '')));
-  const chipShadow = match(chipBox, /`0 ([\d.]+px [\d.]+px) /, 'chip shadow')
-    .split(' ')
-    .map((v) => Number(v.replace('px', '')));
-  const chipVariants = block(chip, 'styles');
-
-  const flag = block(read(repoRoot, SOURCES.countryFlag), 'StyledFlag');
-
-  const beta = read(repoRoot, SOURCES.betaBadge);
-  const banner = block(beta, 'OverlayCard');
-  const pill = block(beta, 'OverlayChip');
-  const bannerLine = block(beta, 'OverlayLine');
-  const bannerSlot = block(read(repoRoot, SOURCES.mainView), 'StyledBetaBadge');
-  const [bannerPadStart, bannerPadEnd] = [
-    px(banner, 'padding: 0 \\d+px 0 ', 'banner padding start'),
-    px(banner, 'padding: 0 ', 'banner padding end'),
-  ];
-
-  // The connect-screen surfaces are named by their surface token, which each
-  // theme of `surfaces` resolves.
-  const surfaceOf = (text, regex, what) => match(text, regex, what);
-
-  return {
-    connectionCard: {
-      paddingVertical: dp(cardPadV),
-      paddingHorizontal: dp(cardPadH),
-      radius: dp(px(card, "borderRadius: '", 'card radius', "px'")),
-      surface: surfaceOf(card, /backgroundColor: surfaces\.(\w+)/, 'card surface'),
-      borderWidth: dp(px(card, 'border: `', 'card border', 'px solid')),
-      borderSurface: surfaceOf(card, /border: `[\d.]+px solid \$\{surfaces\.(\w+)\}`/, 'card border colour'),
-      shadowOffsetY: dp(cardShadow[0]),
-      shadowBlur: dp(cardShadow[1]),
-      shadowSurface: surfaceOf(card, /boxShadow: `0 \d+px \d+px \$\{surfaces\.(\w+)\}`/, 'card shadow colour'),
-      marginHorizontal: dp(px(panel, "const PANEL_MARGIN = '", 'panel margin', "px'")),
-      marginBottom: dp(px(block(panel, 'StyledOuter'), 'margin: `auto \\$\\{PANEL_MARGIN\\} ', 'panel bottom margin')),
-      blockGap: dp(px(panel, "const CARD_GAP = '", 'card gap', "px'")),
-      badgeGap: dp(px(block(panel, 'StyledFeatureBadges'), "gap: '", 'badge gap', "px'")),
-      badgesToCardGap: dp(px(block(panel, 'StyledOuter'), "gap: '", 'outer gap', "px'")),
-      chevronButtonSize: dp(px(chevron, "width: '", 'chevron button', "px'")),
-      chevronIconSize: dp(iconSize(chevronIconSize)),
-    },
-    connectionStatus: {
-      rowGap: dp(px(block(status, 'StyledRow'), "gap: '", 'status gap', "px'")),
-      textGap: dp(px(block(status, 'StyledTextColumn'), "gap: '", 'title gap', "px'")),
-      trailingGap: dp(px(block(status, 'StyledTrailing'), "gap: '", 'trailing gap', "px'")),
-      wellSize: dp(px(well, "width: '", 'well size', "px'")),
-      wellRadius: dp(px(well, "borderRadius: '", 'well radius', "px'")),
-      wellTransition: ms(num(well, /transition: 'background-color (\d+)ms/, 'well transition')),
-      iconSize: dp(iconSize(wellIconSize)),
-      titleSize: sp(px(title, "fontSize: '", 'title size', "px'")),
-      titleLineHeight: sp(px(title, "lineHeight: '", 'title line height', "px'")),
-      titleWeight: weight(num(title, /fontWeight: (\d+),/, 'title weight')),
-      subtitleSize: sp(px(subtitle, "fontSize: '", 'subtitle size', "px'")),
-      subtitleLineHeight: sp(px(subtitle, "lineHeight: '", 'subtitle line height', "px'")),
-      subtitleSurface: surfaceOf(subtitle, /color: surfaces\.(\w+)/, 'subtitle colour'),
-    },
-    connectionLocation: {
-      gapAbove: dp(px(location, "paddingTop: '", 'location gap', "px'")),
-      size: sp(px(location, "fontSize: '", 'location size', "px'")),
-      lineHeight: sp(px(location, "lineHeight: '", 'location line height', "px'")),
-      weight: weight(num(location, /fontWeight: (\d+),/, 'location weight')),
-      surface: surfaceOf(location, /color: surfaces\.(\w+)/, 'location colour'),
-      hostnameGapAbove: dp(px(hostnameRow, "paddingTop: '", 'hostname gap', "px'")),
-      hostnameSize: sp(px(hostname, "fontSize: '", 'hostname size', "px'")),
-      hostnameLineHeight: sp(px(hostname, "lineHeight: '", 'hostname line height', "px'")),
-      hostnameSurface: surfaceOf(hostname, /color: surfaces\.(\w+)/, 'hostname colour'),
-    },
-    cardButton: {
-      height: dp(px(button, 'min-height: ', 'button height')),
-      radius: dp(px(button, '--radius: ', 'button radius')),
-      borderWidth: dp(px(button, 'border: ', 'button border', 'px solid')),
-      textSize: sp(px(button, 'font-size: ', 'button text size')),
-      textLineHeight: sp(px(button, 'line-height: ', 'button text line height')),
-      textWeight: weight(num(button, /font-weight: (\d+);/, 'button text weight')),
-      rowGap: dp(px(buttonRow, "gap: '", 'button row gap', "px'")),
-      shuffleWidth: dp(px(shuffle, "width: '", 'shuffle width', "px'")),
-    },
-    featureChip: {
-      paddingVertical: dp(chipPadV),
-      paddingHorizontal: dp(chipPadH),
-      radius: dp(px(chipBox, 'border-radius: ', 'chip radius')),
-      borderWidth: dp(px(chipBox, 'border: ', 'chip border', 'px solid')),
-      shadowOffsetY: dp(chipShadow[0]),
-      shadowBlur: dp(chipShadow[1]),
-      fillSurface: match(chipVariants, /primary: \{\s*backgroundColor: surfaces\.(\w+)/, 'chip fill'),
-      borderSurface: match(chipVariants, /primary: \{\s*backgroundColor: surfaces\.\w+,\s*borderColor: surfaces\.(\w+)/, 'chip border'),
-      errorFillSurface: match(chipVariants, /error: \{\s*backgroundColor: surfaces\.(\w+)/, 'chip error fill'),
-      errorBorderSurface: match(chipVariants, /error: \{\s*backgroundColor: surfaces\.\w+,\s*borderColor: surfaces\.(\w+)/, 'chip error border'),
-    },
-    countryFlag: {
-      size: dp(num(flag, /width: (\d+)px;/, 'flag size')),
-      ringWidth: dp(px(flag, 'box-shadow: 0 0 0 ', 'flag ring')),
-      ringSurface: match(flag, /box-shadow: 0 0 0 [\d.]+px \$\{surfaces\.(\w+)\}/, 'flag ring colour'),
-    },
-    betaBanner: {
-      marginTop: dp(px(bannerSlot, 'margin-top: ', 'banner margin top')),
-      marginStart: dp(px(bannerSlot, 'margin-inline-start: ', 'banner margin start')),
-      height: dp(px(banner, 'height: ', 'banner height')),
-      paddingStart: dp(bannerPadStart),
-      paddingEnd: dp(bannerPadEnd),
-      gap: dp(px(banner, 'gap: ', 'banner gap')),
-      radius: dp(px(banner, 'border-radius: ', 'banner radius')),
-      borderWidth: dp(px(banner, 'border: ', 'banner border', 'px solid')),
-      shadowOffsetY: dp(px(banner, 'box-shadow: 0 ', 'banner shadow')),
-      shadowBlur: dp(px(banner, 'box-shadow: 0 \\d+px ', 'banner shadow blur')),
-      pillHeight: dp(px(pill, 'height: ', 'pill height')),
-      pillPaddingHorizontal: dp(px(pill, 'padding: 0 ', 'pill padding')),
-      pillRadius: dp(px(pill, 'border-radius: ', 'pill radius')),
-      pillTextSize: sp(px(pill, 'font-size: ', 'pill text size')),
-      pillTextWeight: weight(num(pill, /font-weight: (\d+);/, 'pill weight')),
-      pillLetterSpacing: sp(px(pill, 'letter-spacing: ', 'pill letter spacing')),
-      textSize: sp(px(bannerLine, 'font-size: ', 'banner text size')),
-      textWeight: weight(num(bannerLine, /font-weight: (\d+);/, 'banner text weight')),
-    },
-    ...otherComponentTokens(repoRoot, colors),
-  };
-}
-
-function otherComponentTokens(repoRoot, colors) {
-  const footer = block(read(repoRoot, SOURCES.footer), 'StyledFooter');
-  const [footerPadV, footerPadH] = match(footer, /padding: (\d+px \d+px);/, 'footer padding')
-    .split(' ')
-    .map((v) => Number(v.replace('px', '')));
-
-  const banner = read(repoRoot, SOURCES.notificationBanner);
-  const collapsible = block(banner, 'Collapsible');
-  const bannerContent = block(banner, 'Content');
-  // Logical sides, so that the banner mirrors in right-to-left languages.
-  const bannerPadTop = num(bannerContent, /paddingBlock: '(\d+)px'/, 'banner padding block');
-  const bannerPadStart = num(bannerContent, /paddingInlineStart: '(\d+)px'/, 'banner padding start');
-  const bannerPadEnd = num(bannerContent, /paddingInlineEnd: '(\d+)px'/, 'banner padding end');
-  const bannerEdgeColor = match(collapsible, /borderTop: `2px solid \$\{colors\.(\w+)\}`/, 'banner edge');
-
-  const scenery = read(repoRoot, SOURCES.scenery);
-  const scene = block(scenery, 'Scene');
-  const wash = block(scenery, 'AccentWash');
-  const bula = block(scenery, 'Bula');
-
+function navigationTokens(repoRoot) {
   const nav = read(repoRoot, SOURCES.navigation);
-
   return {
-    footer: {
-      paddingVertical: dp(footerPadV),
-      paddingHorizontal: dp(footerPadH),
-      surfaceAlpha: alphaOf(colors, match(footer, /background-color: \$\{colors\.(\w+)\}/, 'footer surface')),
-      borderWidth: dp(num(footer, /border-top: (\d+)px solid/, 'footer border')),
-      borderAlpha: alphaOf(colors, match(footer, /border-top: \d+px solid \$\{colors\.(\w+)\}/, 'footer border colour')),
-    },
-    notificationBanner: {
-      maxWidth: dp(num(collapsible, /maxWidth: '(\d+)px'/, 'banner width')),
-      radius: dp(num(collapsible, /borderRadius: '(\d+)px'/, 'banner radius')),
-      edgeWidth: dp(num(collapsible, /borderTop: `(\d+)px solid/, 'banner edge')),
-      edgeColor: bannerEdgeColor,
-      surfaceAlpha: alphaOf(colors, match(collapsible, /backgroundColor: colors\.(\w+)/, 'banner surface')),
-      marginTop: dp(num(collapsible, /margin: '(\d+)px \d+px 0 auto'/, 'banner margin top')),
-      marginEnd: dp(num(collapsible, /margin: '\d+px (\d+)px 0 auto'/, 'banner margin end')),
-      paddingVertical: dp(bannerPadTop),
-      paddingStart: dp(bannerPadStart),
-      paddingEnd: dp(bannerPadEnd),
-      elevation: dp(num(collapsible, /boxShadow: '0 (\d+)px/, 'banner shadow')),
-      transition: ms(num(banner, /transition=\{\{ duration: ([\d.]+) \}\}/, 'banner transition') * 1000),
-    },
-    scenery: {
-      blurRadius: dp(num(scene, /'blur\((\d+)px\) brightness/, 'scenery blur')),
-      connectingBrightness: ratio(num(scene, /brightness\(([\d.]+)\)' : /, 'scenery brightness')),
-      connectingZoom: ratio(num(scene, /'scale\(([\d.]+)\)' : /, 'scenery zoom')),
-      blurTransition: ms(num(scene, /filter (\d+)ms/, 'blur transition')),
-      zoomTransition: ms(num(scene, /transform (\d+)ms/, 'zoom transition')),
-      crossfade: ms(num(block(scenery, 'FrontLandscape'), /warren-scenery-fade (\d+)ms/, 'crossfade')),
-      bulaTransition: ms(num(bula, /opacity (\d+)ms/, 'bula transition')),
-      bulaHideDrop: ratio(num(bula, /props\.\$visible \? 0 : (\d+)\)\}%/, 'bula drop') / 100),
-      washAlpha: ratio(num(wash, /opacity: ([\d.]+);/, 'wash alpha')),
-      washBlend: match(wash, /mix-blend-mode: ([a-z-]+);/, 'wash blend'),
-      washTopStop: ratio(num(wash, /transparent (\d+)%,\s*transparent/, 'wash top stop') / 100),
-      washBottomStop: ratio(num(wash, /transparent \d+%,\s*transparent (\d+)%/, 'wash bottom stop') / 100),
-      washTransition: ms(num(wash, /'background (\d+)ms/, 'wash transition')),
-    },
-    navigation: {
-      duration: ms(num(nav, /const TRANSITION_DURATION = (\d+);/, 'nav duration')),
-      // The slides are written for a left-to-right reading and multiplied by the sign of the
-      // inline axis, so the factor is the left-to-right offset.
-      pushNewFrom: ratio(num(block(nav, 'newFromTransform'), /\[TransitionType\.push\]: \(inlineSign\) => `translateX\(\$\{(-?\d+) \* inlineSign\}%\)`/, 'push new') / 100),
-      pushOldTo: ratio(num(block(nav, 'oldToTransform'), /\[TransitionType\.push\]: \(inlineSign\) => `translateX\(\$\{(-?\d+) \* inlineSign\}%\)`/, 'push old') / 100),
-    },
+    duration: ms(num(nav, /const TRANSITION_DURATION = (\d+);/, 'nav duration')),
+    // The slides are written for a left-to-right reading and multiplied by the sign of the
+    // inline axis, so the factor is the left-to-right offset.
+    pushNewFrom: ratio(num(block(nav, 'newFromTransform'), /\[TransitionType\.push\]: \(inlineSign\) => `translateX\(\$\{(-?\d+) \* inlineSign\}%\)`/, 'push new') / 100),
+    pushOldTo: ratio(num(block(nav, 'oldToTransform'), /\[TransitionType\.push\]: \(inlineSign\) => `translateX\(\$\{(-?\d+) \* inlineSign\}%\)`/, 'push old') / 100),
   };
+}
+
+function componentTokens(repoRoot) {
+  const legacy = JSON.parse(read(repoRoot, SOURCES.legacyComponents)).components;
+  return { ...legacy, navigation: navigationTokens(repoRoot) };
+}
+
+/** The unit a home key carries, by the naming rule home-tokens.ts documents. */
+export function homeUnit(key) {
+  if (/(^s|S)ize$/.test(key)) return 'sp';
+  if (/(^w|W)eight$/.test(key)) return 'weight';
+  if (/Em$/.test(key)) return 'ratio';
+  if (/(^s|S)top$/.test(key)) return 'ratio';
+  if (/Ms$/.test(key)) return 'ms';
+  return 'dp';
+}
+
+/**
+ * home-tokens.ts is one object literal of groups of numbers. It is read as
+ * data, so a value that is not a plain number is refused rather than guessed.
+ */
+function homeTokens(text) {
+  const from = text.indexOf('export const homeTokens = {');
+  if (from < 0) throw new Error('home-tokens.ts: no homeTokens object');
+  const body = text.slice(from, text.indexOf('} as const;', from));
+  const out = {};
+  let group = null;
+  for (const line of body.split('\n').slice(1)) {
+    const code = line.replace(/\/\/.*$/, '').trim();
+    if (!code) continue;
+    let m;
+    if ((m = /^(\w+): \{$/.exec(code))) {
+      group = m[1];
+      out[group] = {};
+    } else if (code === '},') {
+      group = null;
+    } else if ((m = /^(\w+): (-?\d+(?:\.\d+)?),$/.exec(code)) && group) {
+      out[group][m[1]] = { value: Number(m[2]), unit: homeUnit(m[1]) };
+    } else {
+      throw new Error(`home-tokens.ts: cannot read "${code}"`);
+    }
+  }
+  if (Object.keys(out).length === 0) throw new Error('home-tokens.ts: no groups');
+  return out;
 }
 
 /** Every token, exactly as `design-tokens.json` carries it. */
@@ -396,7 +205,8 @@ export function buildTokens(repoRoot) {
     spacing: pxEnum(read(repoRoot, SOURCES.spacing), 'spacing'),
     typography: typographyTokens(read(repoRoot, SOURCES.typography)),
     surfaces: surfaceTokens(read(repoRoot, SOURCES.surfaces)),
-    components: componentTokens(repoRoot, colors),
+    home: homeTokens(read(repoRoot, SOURCES.home)),
+    components: componentTokens(repoRoot),
   };
 }
 
@@ -493,6 +303,14 @@ export function renderKotlin(tokens, jsonText) {
     for (const [name, hex] of Object.entries(table)) {
       lines.push(`            val ${pascal(name)} = Color(0x${hex.slice(1)})`);
     }
+    lines.push('        }');
+  }
+  lines.push('    }');
+  lines.push('');
+  lines.push('    object Home {');
+  for (const [group, entries] of Object.entries(tokens.home)) {
+    lines.push(`        object ${pascal(group)} {`);
+    for (const [name, entry] of Object.entries(entries)) lines.push(`    ${kotlinDecl(name, entry)}`);
     lines.push('        }');
   }
   lines.push('    }');
