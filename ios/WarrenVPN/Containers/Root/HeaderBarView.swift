@@ -52,6 +52,19 @@ class HeaderBarView: UIView {
     /// The rounded translucent pill the home toolbar's buttons sit on.
     private let toolbarBackground = HomeToolbarBackgroundView()
 
+    /// The centred column the home's wordmark and toolbar align to: the screen up to
+    /// `HomeMetrics.maxColumnWidth`, so on a tablet they head the panel rather than the corners.
+    let homeColumnGuide = UILayoutGuide()
+
+    /// The unread mark on the forum bell and the upgrade mark on the gear, on the home: the
+    /// mockup's dot rather than a count.
+    let forumDotView = ToolbarDotView()
+    let settingsDotView = ToolbarDotView()
+
+    /// Where the wordmark and the toolbar pill are laid out, in the header.
+    var wordmarkFrame: CGRect { wordmarkImageView.frame }
+    var toolbarFrame: CGRect { toolbarBackground.frame }
+
     private var classicConstraints: [NSLayoutConstraint] = []
     private var homeConstraints: [NSLayoutConstraint] = []
 
@@ -266,24 +279,13 @@ class HeaderBarView: UIView {
         wordmarkImageView.layer.shadowColor = glow.cgColor
         if let homeTheme {
             toolbarBackground.apply(theme: homeTheme)
-            let palette = ConnectSurfacePalette(theme: homeTheme)
-            forumBadgeLabel.backgroundColor = palette.uiColor(.homeBadge)
-            forumBadgeLabel.textColor = palette.uiColor(.homePillPendingText)
-            forumBadgeLabel.layer.borderColor = palette.uiColor(.homeBadgeRing).cgColor
-        } else {
-            forumBadgeLabel.backgroundColor = UIColor.Warren.yellow
-            forumBadgeLabel.textColor = UIColor.Warren.navy
-            forumBadgeLabel.layer.borderColor = nil
+            forumDotView.apply(theme: homeTheme)
+            settingsDotView.apply(theme: homeTheme)
         }
-        accountButton.setImage(
-            UIImage.Buttons.account.withTintColor(contentColor, renderingMode: .alwaysOriginal),
-            for: .normal
-        )
-        let settingsImage = breadcrumb != nil ? UIImage.Buttons.settingsPartial : UIImage.Buttons.settings
-        settingsButton.setImage(
-            settingsImage.withTintColor(contentColor, renderingMode: .alwaysOriginal),
-            for: .normal
-        )
+        forumBadgeLabel.backgroundColor = UIColor.Warren.yellow
+        forumBadgeLabel.textColor = UIColor.Warren.navy
+        accountButton.setImage(glyph(UIImage.Buttons.account), for: .normal)
+        applySettingsGlyph()
         // The 38 point square of a pressed or focused home button takes the text colour at 12%
         // (desktop `HomeHeader`).
         let pressedTint = homeTheme != nil ? contentColor.withAlphaComponent(0.12) : nil
@@ -331,8 +333,27 @@ class HeaderBarView: UIView {
         wordmarkImageView.layer.shadowOpacity = home ? 0.95 : 0
         wordmarkImageView.layer.shadowRadius = home ? 1.5 : 0
         wordmarkImageView.layer.shadowOffset = .zero
-        forumBadgeLabel.layer.borderWidth = home ? HomeMetrics.Toolbar.badgeRing : 0
         deviceInfoHolder.isHidden = home
+        applyForumSlot()
+        applySettingsGlyph()
+    }
+
+    /// A toolbar glyph in the content colour: on the home the mockup's outline drawn at the
+    /// toolbar's icon size, rendered at the screen's density from the vector.
+    private func glyph(_ image: UIImage) -> UIImage {
+        let side = HomeMetrics.Toolbar.icon
+        let sized = homeTheme != nil ? image.resized(to: CGSize(width: side, height: side)) : image
+        return sized.withTintColor(contentColor, renderingMode: .alwaysOriginal)
+    }
+
+    /// The gear, cut for the breadcrumb on the classic bar; on the home the whole gear with the
+    /// dot in its corner.
+    private func applySettingsGlyph() {
+        let home = homeTheme != nil
+        let image = breadcrumb != nil && !home ? UIImage.Buttons.settingsPartial : UIImage.Buttons.settings
+        settingsButton.setImage(glyph(image), for: .normal)
+        breadcrumbImageView.isHidden = breadcrumb == nil || home
+        settingsDotView.isHidden = breadcrumb == nil || !home
     }
 
     /// The glyph, the badge and the spoken label of the forum slot, all from
@@ -340,14 +361,21 @@ class HeaderBarView: UIView {
     /// disagree.
     private func applyForumSlot() {
         forumButton.isHidden = forumSlot == .none
-        let symbol = forumSlot == .community ? "lifepreserver" : "bell"
-        forumButton.setImage(
-            UIImage(systemName: symbol)?
-                .withTintColor(contentColor, renderingMode: .alwaysOriginal),
-            for: .normal
-        )
+        let home = homeTheme != nil
+        if home, forumSlot != .community, let bell = UIImage(named: "IconBellOutline") {
+            forumButton.setImage(glyph(bell), for: .normal)
+        } else {
+            let symbol = forumSlot == .community ? "lifepreserver" : "bell"
+            let configuration = home ? UIImage.SymbolConfiguration(pointSize: 19, weight: .light) : nil
+            forumButton.setImage(
+                UIImage(systemName: symbol, withConfiguration: configuration)?
+                    .withTintColor(contentColor, renderingMode: .alwaysOriginal),
+                for: .normal
+            )
+        }
         let showsCount = forumSlot == .activity && forumUnread > 0
-        forumBadgeLabel.isHidden = !showsCount
+        forumBadgeLabel.isHidden = !showsCount || home
+        forumDotView.isHidden = !showsCount || !home
         forumBadgeLabel.text = showsCount ? WarrenForumActivity.label(unread: forumUnread) : nil
         forumButton.accessibilityLabel = forumSlotAccessibilityLabel(showsCount: showsCount)
     }
@@ -418,20 +446,8 @@ class HeaderBarView: UIView {
 
     var breadcrumb: Breadcrumb? {
         didSet {
-            if let breadcrumb {
-                breadcrumbImageView.image = breadcrumb.icon
-                breadcrumbImageView.isHidden = false
-                settingsButton.setImage(
-                    .Buttons.settingsPartial.withTintColor(contentColor, renderingMode: .alwaysOriginal),
-                    for: .normal
-                )
-            } else {
-                breadcrumbImageView.isHidden = true
-                settingsButton.setImage(
-                    .Buttons.settings.withTintColor(contentColor, renderingMode: .alwaysOriginal),
-                    for: .normal
-                )
-            }
+            breadcrumbImageView.image = breadcrumb?.icon
+            applySettingsGlyph()
         }
     }
 
@@ -494,6 +510,15 @@ class HeaderBarView: UIView {
             breadcrumbImageView.pinEdgesToSuperview(.init([.top(-3), .trailing(-3)]))
         }
 
+        let dotOutset = HomeMetrics.Toolbar.badgeInset - HomeMetrics.Toolbar.badgeRing
+        for (button, dot) in [(forumButton, forumDotView), (settingsButton, settingsDotView)] {
+            dot.isHidden = true
+            button.addConstrainedSubviews([dot]) {
+                dot.topAnchor.constraint(equalTo: button.topAnchor, constant: dotOutset)
+                dot.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -dotOutset)
+            }
+        }
+
         forumButton.addConstrainedSubviews([forumBadgeLabel]) {
             forumBadgeLabel.topAnchor.constraint(equalTo: forumButton.topAnchor, constant: -2)
             forumBadgeLabel.leadingAnchor.constraint(
@@ -509,6 +534,17 @@ class HeaderBarView: UIView {
         [deviceNameLabel, timeLeftLabel].forEach { deviceInfoHolder.addArrangedSubview($0) }
 
         [wordmarkGlowView, toolbarBackground].forEach { $0.configureForAutoLayout() }
+        addLayoutGuide(homeColumnGuide)
+        let columnFill = homeColumnGuide.widthAnchor.constraint(equalTo: safeAreaLayoutGuide.widthAnchor)
+        columnFill.priority = .defaultHigh
+        NSLayoutConstraint.activate([
+            homeColumnGuide.centerXAnchor.constraint(equalTo: safeAreaLayoutGuide.centerXAnchor),
+            homeColumnGuide.widthAnchor.constraint(lessThanOrEqualTo: safeAreaLayoutGuide.widthAnchor),
+            homeColumnGuide.widthAnchor.constraint(lessThanOrEqualToConstant: HomeMetrics.maxColumnWidth),
+            columnFill,
+            homeColumnGuide.topAnchor.constraint(equalTo: topAnchor),
+            homeColumnGuide.bottomAnchor.constraint(equalTo: bottomAnchor),
+        ])
         addSubview(wordmarkGlowView)
         addSubview(toolbarBackground)
         addConstrainedSubviews([wordmarkImageView, productChipLabel, buttonContainer, deviceInfoHolder]) {
@@ -582,24 +618,26 @@ class HeaderBarView: UIView {
         ]
 
         // The home floats the inked wordmark and a toolbar pill over the art
-        // (desktop `HomeHeader`): both inset from the screen edges, the
-        // toolbar under the status bar, and the header ending just below it,
-        // where the notification banners hang.
+        // (desktop `HomeHeader`): both inset from the column's edges, the
+        // toolbar under the status bar, the wordmark in the corner of the
+        // toolbar's row, and the header ending just below it, where the
+        // notification banners hang.
         let toolbar = HomeMetrics.Toolbar.self
         let inset = HomeMetrics.Hero.headerInset
+        let logoInset = HomeMetrics.Hero.logoInset
         homeConstraints = [
             wordmarkImageView.leadingAnchor.constraint(
-                equalTo: safeAreaLayoutGuide.leadingAnchor,
-                constant: inset + 4
+                equalTo: homeColumnGuide.leadingAnchor,
+                constant: inset + logoInset
             ),
             wordmarkImageView.heightAnchor.constraint(equalToConstant: HomeMetrics.Hero.logoHeight),
-            wordmarkImageView.centerYAnchor.constraint(equalTo: toolbarBackground.centerYAnchor),
+            wordmarkImageView.topAnchor.constraint(equalTo: toolbarBackground.topAnchor, constant: logoInset),
             buttonContainer.topAnchor.constraint(
                 equalTo: layoutMarginsGuide.topAnchor,
                 constant: inset + (toolbar.height - toolbar.button) / 2
             ),
             buttonContainer.trailingAnchor.constraint(
-                equalTo: safeAreaLayoutGuide.trailingAnchor,
+                equalTo: homeColumnGuide.trailingAnchor,
                 constant: -(inset + toolbar.paddingHorizontal)
             ),
             bottomAnchor.constraint(equalTo: toolbarBackground.bottomAnchor, constant: 8),
@@ -644,13 +682,21 @@ class HeaderBarView: UIView {
 /// (desktop `HomeHeader`'s `StyledToolbar`). The shadow lives on this view and
 /// the clipped glass inside it, since a clipping layer cannot cast one.
 final class HomeToolbarBackgroundView: UIView {
+    /// The toolbar's glass, or the notice's: a denser fill under its own deeper drop
+    /// (`0 8px 24px -10px homeNoticeShadow`).
+    enum Surface {
+        case toolbar
+        case notice
+    }
+
     private let blurView = UIVisualEffectView(effect: nil)
     private let tintView = UIView()
     private let radius: CGFloat
+    private let surface: Surface
 
-    /// `radius`: the toolbar's own by default; the notification banner cuts the same glass at 12.
-    init(radius: CGFloat = HomeMetrics.Toolbar.radius) {
+    init(radius: CGFloat = HomeMetrics.Toolbar.radius, surface: Surface = .toolbar) {
         self.radius = radius
+        self.surface = surface
         super.init(frame: .zero)
         isHidden = true
         isUserInteractionEnabled = false
@@ -660,8 +706,8 @@ final class HomeToolbarBackgroundView: UIView {
         tintView.layer.cornerRadius = radius
         tintView.layer.cornerCurve = .continuous
         tintView.layer.borderWidth = 1
-        layer.shadowOffset = CGSize(width: 0, height: 4)
-        layer.shadowRadius = 5
+        layer.shadowOffset = CGSize(width: 0, height: surface == .notice ? 8 : 4)
+        layer.shadowRadius = surface == .notice ? 12 : 5
         layer.shadowOpacity = 1
         [blurView, tintView].forEach { addSubview($0) }
     }
@@ -675,16 +721,63 @@ final class HomeToolbarBackgroundView: UIView {
         blurView.effect = UIBlurEffect(
             style: theme == .dark ? .systemUltraThinMaterialDark : .systemUltraThinMaterialLight
         )
-        tintView.backgroundColor = palette.uiColor(.homeToolbar)
-        tintView.layer.borderColor = palette.uiColor(.homeToolbarLine).cgColor
-        layer.shadowColor = palette.uiColor(.homeToolbarShadow).cgColor
+        switch surface {
+        case .toolbar:
+            tintView.backgroundColor = palette.uiColor(.homeToolbar)
+            tintView.layer.borderColor = palette.uiColor(.homeToolbarLine).cgColor
+            layer.shadowColor = palette.uiColor(.homeToolbarShadow).cgColor
+        case .notice:
+            tintView.backgroundColor = palette.uiColor(.homeNotice)
+            tintView.layer.borderColor = palette.uiColor(.homeNoticeLine).cgColor
+            layer.shadowColor = palette.uiColor(.homeNoticeShadow).cgColor
+        }
     }
 
     override func layoutSubviews() {
         super.layoutSubviews()
         blurView.frame = bounds
         tintView.frame = bounds
-        let shadowShape = UIBezierPath(roundedRect: bounds.insetBy(dx: 3, dy: 3), cornerRadius: radius)
+        // The CSS spread: the toolbar's drop is pulled in by 3, the notice's by 10.
+        let spread: CGFloat = surface == .notice ? 10 : 3
+        let shadowShape = UIBezierPath(roundedRect: bounds.insetBy(dx: spread, dy: spread), cornerRadius: radius)
         layer.shadowPath = shadowShape.cgPath
+    }
+}
+
+/// The mockup's unread dot (desktop `ToolbarBadge`): an 8 point disc of the badge colour ringed in
+/// the toolbar's glass, so it detaches from the glyph under it. The view is the ring's box.
+final class ToolbarDotView: UIView {
+    private let ring = HomeMetrics.Toolbar.badgeRing
+    private let dot = UIView()
+
+    /// The disc, in this view's bounds.
+    var dotFrame: CGRect { dot.frame }
+    var dotColor: UIColor? { dot.backgroundColor }
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        isUserInteractionEnabled = false
+        isAccessibilityElement = false
+        let side = HomeMetrics.Toolbar.badge + 2 * ring
+        layer.cornerRadius = side / 2
+        dot.layer.cornerRadius = HomeMetrics.Toolbar.badge / 2
+        addConstrainedSubviews([dot]) {
+            widthAnchor.constraint(equalToConstant: side)
+            heightAnchor.constraint(equalToConstant: side)
+            dot.centerXAnchor.constraint(equalTo: centerXAnchor)
+            dot.centerYAnchor.constraint(equalTo: centerYAnchor)
+            dot.widthAnchor.constraint(equalToConstant: HomeMetrics.Toolbar.badge)
+            dot.heightAnchor.constraint(equalToConstant: HomeMetrics.Toolbar.badge)
+        }
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    func apply(theme: WarrenTheme) {
+        let palette = ConnectSurfacePalette(theme: theme)
+        backgroundColor = palette.uiColor(.homeBadgeRing)
+        dot.backgroundColor = palette.uiColor(.homeBadge)
     }
 }

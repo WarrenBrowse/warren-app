@@ -29,14 +29,14 @@ final class NotificationBannerTests: XCTestCase {
     func testAnUpdateLeadsWithTheAmberDownload() {
         let lead = NotificationBannerView.lead(icon: .update, style: .warning)
         XCTAssertEqual(lead.systemName, "square.and.arrow.down")
-        XCTAssertEqual(lead.token, .homeBadge)
+        XCTAssertEqual(lead.token, .homeNoticeUpdate)
     }
 
     func testAnAnnouncementLeadsWithAQuietMegaphoneWhateverItsLevel() {
         for style in [NotificationBannerStyle.success, .warning, .error] {
             let lead = NotificationBannerView.lead(icon: .announcement, style: style)
             XCTAssertEqual(lead.systemName, "megaphone", "\(style)")
-            XCTAssertEqual(lead.token, .homeTextSecondary, "\(style)")
+            XCTAssertEqual(lead.token, .homeNoticeAnnouncement, "\(style)")
         }
     }
 
@@ -45,14 +45,14 @@ final class NotificationBannerTests: XCTestCase {
         let warning = NotificationBannerView.lead(icon: nil, style: .warning)
         let error = NotificationBannerView.lead(icon: nil, style: .error)
         XCTAssertEqual(success.systemName, "info.circle")
-        XCTAssertEqual(success.token, .homeTextSecondary)
+        XCTAssertEqual(success.token, .homeNoticeTextSecondary)
         XCTAssertEqual(warning.systemName, "exclamationmark.circle")
         XCTAssertEqual(warning.token, .homeBadge)
         XCTAssertEqual(error.systemName, "exclamationmark.circle")
         XCTAssertEqual(error.token, .homeDisconnectText)
     }
 
-    /// 12 points under the toolbar's bottom edge (the container's top on the home), flush with the
+    /// 10 points under the toolbar's bottom edge (the container's top on the home), flush with the
     /// toolbar's right edge, and never wider than the toolbar's reach.
     func testTheCardHangsUnderTheToolbarOnItsRightEdge() {
         let controller = NotificationController()
@@ -65,9 +65,9 @@ final class NotificationBannerTests: XCTestCase {
         controller.view.layoutIfNeeded()
 
         let card = controller.bannerView.cardView.convert(controller.bannerView.cardView.bounds, to: controller.view)
-        XCTAssertEqual(card.minY, 12, accuracy: 0.5)
+        XCTAssertEqual(card.minY, HomeMetrics.Notice.marginTop, accuracy: 0.5)
         XCTAssertEqual(card.maxX, 393 - HomeMetrics.Hero.headerInset, accuracy: 0.5)
-        XCTAssertEqual(card.width, 272, accuracy: 0.5)
+        XCTAssertEqual(card.width, HomeMetrics.Notice.maxWidth, accuracy: 0.5)
     }
 
     /// A short banner is as wide as its words need, still on the toolbar's right edge.
@@ -79,7 +79,7 @@ final class NotificationBannerTests: XCTestCase {
         controller.view.layoutIfNeeded()
 
         let card = controller.bannerView.cardView.convert(controller.bannerView.cardView.bounds, to: controller.view)
-        XCTAssertLessThan(card.width, 272)
+        XCTAssertLessThan(card.width, HomeMetrics.Notice.maxWidth)
         XCTAssertEqual(card.maxX, 393 - HomeMetrics.Hero.headerInset, accuracy: 0.5)
     }
 
@@ -99,6 +99,20 @@ final class NotificationBannerTests: XCTestCase {
         XCTAssertNotNil(banner.actionButton.configuration?.image)
     }
 
+    /// A card that ends on its button sits tighter around it (8 8 8 12) than one that ends on words
+    /// or the cross (9 10 9 12), and the button is the mockup's 30 point pill.
+    func testACardEndingOnAButtonTightensItsPadding() {
+        let banner = NotificationBannerView(frame: CGRect(x: 0, y: 0, width: 393, height: 120))
+        banner.title = "Update available"
+        banner.action = InAppNotificationAction(title: "Install", handler: {})
+        XCTAssertEqual(banner.contentPadding, NSDirectionalEdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 8))
+        banner.layoutIfNeeded()
+        XCTAssertEqual(banner.actionButton.bounds.height, HomeMetrics.Notice.buttonHeight, accuracy: 0.01)
+
+        banner.action = InAppNotificationAction(image: UIImage.Buttons.bannerClose, handler: {})
+        XCTAssertEqual(banner.contentPadding, NSDirectionalEdgeInsets(top: 9, leading: 12, bottom: 9, trailing: 10))
+    }
+
     /// Words a provider emphasises in white would vanish on the paper glass: the body is redrawn
     /// in the theme's secondary text, its emphasis in the theme's main text.
     func testTheBodyTakesTheThemeColours() {
@@ -111,7 +125,7 @@ final class NotificationBannerTests: XCTestCase {
 
         let plain = styled.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? UIColor
         let emphasis = styled.attribute(.foregroundColor, at: styled.length - 1, effectiveRange: nil) as? UIColor
-        XCTAssertEqual(plain, palette.uiColor(.homeTextSecondary))
+        XCTAssertEqual(plain, palette.uiColor(.homeNoticeTextSecondary))
         XCTAssertEqual(emphasis, palette.uiColor(.homeText))
     }
 

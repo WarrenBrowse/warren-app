@@ -194,4 +194,68 @@ final class HeaderBarViewTests: XCTestCase {
         button.isHighlighted = false
         XCTAssertNil(button.backgroundColor)
     }
+
+    // MARK: - The home toolbar after the 380x620 mockup
+
+    /// On the home the unread count is the mockup's dot, not a number, and it goes with the count.
+    func testOnTheHomeUnreadForumActivityIsADot() {
+        let header = HeaderBarView(frame: .zero)
+        header.homeTheme = .dark
+        header.forumSlot = .activity
+
+        header.forumUnread = 3
+        XCTAssertFalse(header.forumDotView.isHidden)
+        XCTAssertTrue(header.forumBadgeLabel.isHidden)
+
+        header.forumUnread = 0
+        XCTAssertTrue(header.forumDotView.isHidden)
+    }
+
+    /// The settings upgrade mark is the same dot on the home.
+    func testOnTheHomeTheSettingsMarkIsTheSameDot() {
+        let header = HeaderBarView(frame: .zero)
+        header.homeTheme = .dark
+        XCTAssertTrue(header.settingsDotView.isHidden)
+        header.breadcrumb = .warning(.root)
+        XCTAssertFalse(header.settingsDotView.isHidden)
+        header.homeTheme = nil
+        XCTAssertTrue(header.settingsDotView.isHidden)
+    }
+
+    /// The 8 point dot sits 7 points in from the button's top right corner, in the badge colour.
+    func testTheDotSitsInTheButtonsCorner() throws {
+        let header = HeaderBarView(frame: CGRect(x: 0, y: 0, width: 402, height: 200))
+        header.homeTheme = .dark
+        header.forumSlot = .activity
+        header.forumUnread = 2
+        header.layoutIfNeeded()
+        let dot = header.forumDotView.convert(header.forumDotView.dotFrame, to: header.forumButton)
+        XCTAssertEqual(dot.width, HomeMetrics.Toolbar.badge)
+        XCTAssertEqual(dot.minY, HomeMetrics.Toolbar.badgeInset, accuracy: 0.01)
+        XCTAssertEqual(header.forumButton.bounds.maxX - dot.maxX, HomeMetrics.Toolbar.badgeInset, accuracy: 0.01)
+        XCTAssertEqual(
+            header.forumDotView.dotColor, ConnectSurfacePalette(theme: .dark).uiColor(.homeBadge))
+    }
+
+    /// The wordmark is 37 high, 6 inside the toolbar row's corner: x 20, y 20 on the mockup frame.
+    func testTheWordmarkSitsInTheToolbarRow() {
+        // The home header is the toolbar row and the 8 points under it.
+        let header = HeaderBarView(frame: CGRect(x: 0, y: 0, width: 380, height: 70))
+        header.homeTheme = .dark
+        header.layoutIfNeeded()
+        let wordmark = header.wordmarkFrame
+        XCTAssertEqual(wordmark.height, HomeMetrics.Hero.logoHeight, accuracy: 0.01)
+        XCTAssertEqual(wordmark.minX, 20, accuracy: 0.01)
+        XCTAssertEqual(wordmark.minY, 20, accuracy: 0.01)
+    }
+
+    /// On a wide screen the wordmark and the toolbar keep the centred 480 point column.
+    func testOnAWideScreenTheHeaderKeepsTheColumn() {
+        let header = HeaderBarView(frame: CGRect(x: 0, y: 0, width: 1024, height: 70))
+        header.homeTheme = .dark
+        header.layoutIfNeeded()
+        let column = (1024 - HomeMetrics.maxColumnWidth) / 2
+        XCTAssertEqual(header.wordmarkFrame.minX, column + 20, accuracy: 0.01)
+        XCTAssertEqual(header.toolbarFrame.maxX, 1024 - column - HomeMetrics.Hero.headerInset, accuracy: 0.01)
+    }
 }

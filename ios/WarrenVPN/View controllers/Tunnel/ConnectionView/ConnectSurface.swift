@@ -5,7 +5,7 @@
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
 //  The connect screen's own surfaces: the home page, its status, controls,
-//  chips, toolbar and footer (the `home*` tokens), and the surfaces of the
+//  chips, toolbar, notices, details and footer (the `home*` tokens), and the surfaces of the
 //  card design they replaced that other views still draw with. They follow the
 //  theme, light or dark, where the scenery accents of `SceneryTone` do not.
 //

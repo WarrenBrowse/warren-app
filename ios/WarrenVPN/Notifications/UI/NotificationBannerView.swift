@@ -9,28 +9,16 @@
 import UIKit
 import WarrenTypes
 
-/// The in-app banner, mockup 8d (desktop `NotificationBanner.tsx`): a compact card of the home
-/// toolbar's own glass that hangs under the toolbar on its right edge, as wide as its words need
-/// up to the toolbar's reach. A glyph leads in place of a coloured dot, the title and the body
-/// follow, and the card ends with a labelled button or a bare glyph.
+/// The in-app banner of the 380x620 mockup (desktop `NotificationBanner.tsx`, `notice` tokens): a
+/// compact glass card that hangs under the toolbar on its right edge, as wide as its words need up
+/// to its cap. A glyph leads in place of a coloured dot, the title and the body follow, and the
+/// card ends with a labelled button or the bare cross.
 final class NotificationBannerView: UIView {
-    enum Metrics {
-        static let gapBelowToolbar: CGFloat = 12
-        static let maxWidth: CGFloat = 272
-        static let radius: CGFloat = 12
-        static let padding = NSDirectionalEdgeInsets(top: 10, leading: 12, bottom: 10, trailing: 12)
-        static let gap: CGFloat = 10
-        static let icon: CGFloat = 16
-        static let titleSize: CGFloat = 13
-        static let bodySize: CGFloat = 11
-        static let lineGap: CGFloat = 1
-        static let buttonRadius: CGFloat = 8
-        static let buttonTextSize: CGFloat = 12
-    }
+    private typealias Metrics = HomeMetrics.Notice
 
     /// The card itself; the rest of the view is the transparent row it sits in.
     let cardView = UIView()
-    private let glassView = HomeToolbarBackgroundView(radius: Metrics.radius)
+    private let glassView = HomeToolbarBackgroundView(radius: Metrics.radius, surface: .notice)
 
     private let leadIconView: UIImageView = {
         let imageView = UIImageView()
@@ -42,7 +30,7 @@ final class NotificationBannerView: UIView {
 
     private let titleLabel: UILabel = {
         let textLabel = UILabel()
-        textLabel.font = .instrumentSans(size: Metrics.titleSize, weight: .semibold, relativeTo: .footnote)
+        textLabel.font = .instrumentSans(size: HomeMetrics.Notice.titleSize, weight: .semibold, relativeTo: .footnote)
         textLabel.adjustsFontForContentSizeCategory = true
         textLabel.numberOfLines = 0
         textLabel.lineBreakMode = .byWordWrapping
@@ -63,7 +51,7 @@ final class NotificationBannerView: UIView {
         let stackView = UIStackView(arrangedSubviews: [titleLabel, bodyLabel])
         stackView.axis = .vertical
         stackView.alignment = .leading
-        stackView.spacing = Metrics.lineGap
+        stackView.spacing = HomeMetrics.Notice.bodyGap
         return stackView
     }()
 
@@ -71,9 +59,8 @@ final class NotificationBannerView: UIView {
         let stackView = UIStackView(arrangedSubviews: [leadIconView, textStackView, actionButton])
         stackView.axis = .horizontal
         stackView.alignment = .center
-        stackView.spacing = Metrics.gap
+        stackView.spacing = HomeMetrics.Notice.gap
         stackView.isLayoutMarginsRelativeArrangement = true
-        stackView.directionalLayoutMargins = Metrics.padding
         return stackView
     }()
 
@@ -132,16 +119,30 @@ final class NotificationBannerView: UIView {
     /// The words' column is as wide as its longer line needs, up to the room the capped card
     /// leaves it, so a short banner hugs its words and a long one fills the card and wraps.
     private lazy var textWidth = textStackView.widthAnchor.constraint(equalToConstant: 0)
+    private lazy var buttonHeight = actionButton.heightAnchor.constraint(equalToConstant: Metrics.buttonHeight)
 
     override func layoutSubviews() {
         updateTextWidth()
         super.layoutSubviews()
     }
 
+    /// The card's padding: tighter around a closing button, as the mockup draws it.
+    var contentPadding: NSDirectionalEdgeInsets {
+        let endsOnButton = action?.title != nil
+        let vertical = endsOnButton ? Metrics.buttonInset : Metrics.paddingVertical
+        return NSDirectionalEdgeInsets(
+            top: vertical,
+            leading: Metrics.paddingStart,
+            bottom: vertical,
+            trailing: endsOnButton ? Metrics.buttonInset : Metrics.paddingEnd
+        )
+    }
+
     private func updateTextWidth() {
         let inset = HomeMetrics.Hero.headerInset
         let cardWidth = bounds.width > 0 ? min(Metrics.maxWidth, bounds.width - 2 * inset) : Metrics.maxWidth
-        var room = cardWidth - Metrics.padding.leading - Metrics.padding.trailing - Metrics.icon - Metrics.gap
+        let padding = contentPadding
+        var room = cardWidth - padding.leading - padding.trailing - Metrics.icon - Metrics.gap
         if !actionButton.isHidden {
             room -= actionButton.intrinsicContentSize.width + Metrics.gap
         }
@@ -190,7 +191,7 @@ final class NotificationBannerView: UIView {
         // On the toolbar's right edge, as wide as the words need up to the toolbar's reach.
         let inset = HomeMetrics.Hero.headerInset
         addConstrainedSubviews([cardView]) {
-            cardView.topAnchor.constraint(equalTo: topAnchor, constant: Metrics.gapBelowToolbar)
+            cardView.topAnchor.constraint(equalTo: topAnchor, constant: Metrics.marginTop)
             cardView.bottomAnchor.constraint(equalTo: bottomAnchor)
             cardView.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -inset)
             cardView.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor, constant: inset)
@@ -201,16 +202,12 @@ final class NotificationBannerView: UIView {
     private func applyContent() {
         let palette = ConnectSurfacePalette(theme: theme)
         glassView.apply(theme: theme)
-        // The banner's own drop, deeper than the toolbar's (desktop `0 8px 24px -8px`).
-        glassView.layer.shadowColor = UIColor.black.cgColor
-        glassView.layer.shadowOpacity = 0.45
-        glassView.layer.shadowRadius = 8
-        glassView.layer.shadowOffset = CGSize(width: 0, height: 8)
+        contentStackView.directionalLayoutMargins = contentPadding
 
         let lead = Self.lead(icon: icon, style: style)
         leadIconView.image = UIImage(
             systemName: lead.systemName,
-            withConfiguration: UIImage.SymbolConfiguration(pointSize: 14, weight: .medium)
+            withConfiguration: UIImage.SymbolConfiguration(pointSize: 17, weight: .regular)
         )
         leadIconView.tintColor = palette.uiColor(lead.token)
 
@@ -220,11 +217,12 @@ final class NotificationBannerView: UIView {
 
         actionButton.configuration = Self.buttonConfiguration(for: action, palette: palette)
         actionButton.isHidden = actionButton.configuration == nil
+        buttonHeight.isActive = action?.title != nil
         setNeedsLayout()
     }
 
-    /// A titled action is the mockup's light "Install"; one with only an image is that image as a
-    /// bare 16 point glyph in the secondary text.
+    /// A titled action is the mockup's light "Install", 30 high; one with only an image is that
+    /// image as the bare 18 point cross in the notice's secondary text.
     private static func buttonConfiguration(
         for action: InAppNotificationAction?,
         palette: ConnectSurfacePalette
@@ -236,7 +234,8 @@ final class NotificationBannerView: UIView {
             configuration.baseForegroundColor = palette.uiColor(.homePage)
             configuration.cornerStyle = .fixed
             configuration.background.cornerRadius = Metrics.buttonRadius
-            configuration.contentInsets = NSDirectionalEdgeInsets(top: 6, leading: 10, bottom: 6, trailing: 10)
+            configuration.contentInsets = NSDirectionalEdgeInsets(
+                top: 0, leading: Metrics.buttonPaddingHorizontal, bottom: 0, trailing: Metrics.buttonPaddingHorizontal)
             configuration.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { attributes in
                 var attributes = attributes
                 attributes.font = UIFont.instrumentSans(
@@ -249,25 +248,25 @@ final class NotificationBannerView: UIView {
             var configuration = UIButton.Configuration.plain()
             configuration.image =
                 image
-                .resized(to: CGSize(width: Metrics.icon, height: Metrics.icon))
+                .resized(to: CGSize(width: Metrics.close, height: Metrics.close))
                 .withRenderingMode(.alwaysTemplate)
-            configuration.baseForegroundColor = palette.uiColor(.homeTextSecondary)
-            configuration.contentInsets = NSDirectionalEdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4)
+            configuration.baseForegroundColor = palette.uiColor(.homeNoticeTextSecondary)
+            configuration.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0)
             return configuration
         }
         return nil
     }
 
-    /// The glyph a banner leads with (desktop `NotificationLeadIcon`): the amber download for an
-    /// update, a quiet megaphone for an announcement, and otherwise one its level picks.
+    /// The glyph a banner leads with (desktop `noticeIconColor`): the amber download for an
+    /// update, the blue megaphone for an announcement, and otherwise one its level picks.
     static func lead(
         icon: NotificationBannerIcon?,
         style: NotificationBannerStyle
     ) -> (systemName: String, token: ConnectSurfaceToken) {
         switch (icon, style) {
-        case (.update, _): ("square.and.arrow.down", .homeBadge)
-        case (.announcement, _): ("megaphone", .homeTextSecondary)
-        case (nil, .success): ("info.circle", .homeTextSecondary)
+        case (.update, _): ("square.and.arrow.down", .homeNoticeUpdate)
+        case (.announcement, _): ("megaphone", .homeNoticeAnnouncement)
+        case (nil, .success): ("info.circle", .homeNoticeTextSecondary)
         case (nil, .warning): ("exclamationmark.circle", .homeBadge)
         case (nil, .error): ("exclamationmark.circle", .homeDisconnectText)
         }
@@ -287,7 +286,7 @@ final class NotificationBannerView: UIView {
             let emphasised = color != nil
             styled.addAttributes(
                 [
-                    .foregroundColor: palette.uiColor(emphasised ? .homeText : .homeTextSecondary),
+                    .foregroundColor: palette.uiColor(emphasised ? .homeText : .homeNoticeTextSecondary),
                     .font: emphasised ? emphasis : regular,
                 ],
                 range: range

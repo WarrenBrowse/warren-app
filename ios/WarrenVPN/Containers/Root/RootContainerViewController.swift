@@ -908,14 +908,15 @@ class RootContainerViewController: UIViewController {
         if headerBarView.homeTheme != nil, notificationViewLayoutGuide == nil,
             let notificationView = notificationController.view
         {
-            // On the home the banner hangs from the floating toolbar (mockup 8d), which the safe
-            // area, ending a few points below the header, does not know about.
-            let guide = view.safeAreaLayoutGuide
+            // On the home the banner hangs from the floating toolbar, which the safe area, ending a
+            // few points below the header, does not know about, and keeps the header's column so
+            // its right edge stays on the toolbar's on a tablet.
+            let column = headerBarView.homeColumnGuide
             newConstraints = [
                 notificationView.topAnchor.constraint(equalTo: headerBarView.homeToolbarBottomAnchor),
-                notificationView.leadingAnchor.constraint(equalTo: guide.leadingAnchor),
-                notificationView.trailingAnchor.constraint(equalTo: guide.trailingAnchor),
-                notificationView.bottomAnchor.constraint(equalTo: guide.bottomAnchor),
+                notificationView.leadingAnchor.constraint(equalTo: column.leadingAnchor),
+                notificationView.trailingAnchor.constraint(equalTo: column.trailingAnchor),
+                notificationView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
             ]
         } else {
             newConstraints = notificationController.view
