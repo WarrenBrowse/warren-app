@@ -53,8 +53,7 @@ namespace
 void AppendSettingsRules
 (
 	FwContext::Ruleset &ruleset,
-	const WinFwSettings &settings,
-	bool allowExternalDns = false
+	const WinFwSettings &settings
 )
 {
 	if (settings.permitDhcp)
@@ -77,14 +76,11 @@ void AppendSettingsRules
 	ruleset.emplace_back(std::make_unique<baseline::PermitDns>());
 	ruleset.emplace_back(std::make_unique<dns::PermitLoopback>());
 
-	// The block-all DNS rule is what enforces DNS leak protection. The advanced `allowExternalDns`
-	// opt-in skips it so queries to arbitrary resolvers are permitted (they still go through the
-	// tunnel). Without this rule, DNS falls through to the baseline sublayer and is permitted by the
-	// PermitVpnTunnel rule on the tunnel interface.
-	if (!allowExternalDns)
-	{
-		ruleset.emplace_back(std::make_unique<dns::BlockAll>());
-	}
+	// The block-all DNS rule is what enforces DNS leak protection: PermitDns above lifts port 53 out
+	// of the baseline sublayer on every interface, so without this rule nothing restricts it. The
+	// resolvers a policy allows, the tunnel ones or, with `allowExternalDns`, any host through the
+	// tunnel interface, are permitted next to it in the DNS sublayer.
+	ruleset.emplace_back(std::make_unique<dns::BlockAll>());
 }
 
 //
@@ -329,14 +325,18 @@ bool FwContext::applyPolicyConnected
 	Ruleset ruleset;
 
 	AppendNetBlockedRules(ruleset);
-	AppendSettingsRules(ruleset, settings, allowExternalDns);
+	AppendSettingsRules(ruleset, settings);
 
 	for (const auto &relay : relays)
 	{
 		AppendRelayRules(ruleset, relay, relayClients);
 	}
 
-	if (!tunnelDnsServers.empty())
+	if (allowExternalDns)
+	{
+		ruleset.emplace_back(dns::PermitTunnel::AnyHost(tunnelInterfaceAlias));
+	}
+	else if (!tunnelDnsServers.empty())
 	{
 		ruleset.emplace_back(std::make_unique<dns::PermitTunnel>(
 			tunnelInterfaceAlias, tunnelDnsServers

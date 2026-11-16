@@ -526,6 +526,10 @@ fn an_included_app_that_does_not_resolve_holds_nothing_back() {
 
 /// A connected policy on the loopback interface, standing in for the tunnel.
 fn apply_connected(include_only: bool) {
+    apply_connected_with_dns(include_only, talpid_dns::DnsConfig::default());
+}
+
+fn apply_connected_with_dns(include_only: bool, dns: talpid_dns::DnsConfig) {
     use talpid_types::net::{AllowedClients, AllowedEndpoint, Endpoint, TransportProtocol};
 
     let relay = AllowedEndpoint {
@@ -535,7 +539,7 @@ fn apply_connected(include_only: bool) {
         },
         clients: AllowedClients::from(vec![std::env::current_exe().unwrap()]),
     };
-    let dns = talpid_dns::DnsConfig::default().resolve(&["10.64.0.1".parse().unwrap()]);
+    let dns = dns.resolve(&["10.64.0.1".parse().unwrap()]);
     winfw::apply_policy_connected(
         &[relay],
         None,
@@ -548,6 +552,34 @@ fn apply_connected(include_only: bool) {
 }
 
 const RESOLVER_BLOCK: &str = "Block the system resolver's encrypted DNS outside the tunnel";
+
+const ANY_TUNNEL_DNS: [&str; 2] = [
+    "Permit DNS traffic to any resolver inside tunnel (IPv4)",
+    "Permit DNS traffic to any resolver inside tunnel (IPv6)",
+];
+
+/// Inside the LAN the policy shares, so only the DNS rules can refuse it.
+const LAN_RESOLVER: &str = "10.255.255.1:53";
+
+#[test]
+#[ignore = "needs an elevated process and winfw.dll; applies a connected policy"]
+fn external_dns_reaches_resolvers_through_the_tunnel_only() {
+    let _lock = WINFW.lock().unwrap_or_else(|poison| poison.into_inner());
+    let engine = Engine::open();
+    let _fw = Winfw::init();
+
+    apply_connected_with_dns(
+        false,
+        talpid_dns::DnsConfig::default().allow_external_dns(true),
+    );
+    let names = engine.filter_names(our_provider());
+    let lan_blocked = blocked_by_the_filtering_engine(LAN_RESOLVER);
+
+    assert!(lan_blocked, "DNS to a LAN resolver left beside the tunnel");
+    for name in ANY_TUNNEL_DNS {
+        assert!(names.iter().any(|n| n == name), "missing filter {name:?}");
+    }
+}
 
 #[test]
 #[ignore = "needs an elevated process and winfw.dll; applies a connected policy"]

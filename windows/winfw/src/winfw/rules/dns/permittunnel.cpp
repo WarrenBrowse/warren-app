@@ -17,8 +17,21 @@ namespace rules::dns
 
 PermitTunnel::PermitTunnel(const std::wstring &tunnelInterfaceAlias, const std::vector<wfp::IpAddress> &hosts)
 	: m_tunnelInterfaceAlias(tunnelInterfaceAlias)
+	, m_anyHost(false)
 {
 	SplitAddresses(hosts, m_hostsIpv4, m_hostsIpv6);
+}
+
+PermitTunnel::PermitTunnel(const std::wstring &tunnelInterfaceAlias)
+	: m_tunnelInterfaceAlias(tunnelInterfaceAlias)
+	, m_anyHost(true)
+{
+}
+
+//static
+std::unique_ptr<PermitTunnel> PermitTunnel::AnyHost(const std::wstring &tunnelInterfaceAlias)
+{
+	return std::unique_ptr<PermitTunnel>(new PermitTunnel(tunnelInterfaceAlias));
 }
 
 bool PermitTunnel::apply(IObjectInstaller &objectInstaller)
@@ -29,11 +42,13 @@ bool PermitTunnel::apply(IObjectInstaller &objectInstaller)
 	// #1 Permit outbound DNS, IPv4.
 	//
 
-	if (false == m_hostsIpv4.empty())
+	if (m_anyHost || false == m_hostsIpv4.empty())
 	{
 		filterBuilder
 			.key(MullvadGuids::Filter_Dns_PermitTunnel_Outbound_Ipv4())
-			.name(L"Permit selected DNS traffic inside tunnel (IPv4)")
+			.name(m_anyHost
+				? L"Permit DNS traffic to any resolver inside tunnel (IPv4)"
+				: L"Permit selected DNS traffic inside tunnel (IPv4)")
 			.description(L"This filter is part of a rule that permits DNS traffic inside the VPN tunnel")
 			.provider(MullvadGuids::Provider())
 			.layer(FWPM_LAYER_ALE_AUTH_CONNECT_V4)
@@ -57,7 +72,7 @@ bool PermitTunnel::apply(IObjectInstaller &objectInstaller)
 		}
 	}
 
-	if (m_hostsIpv6.empty())
+	if (false == m_anyHost && m_hostsIpv6.empty())
 	{
 		return true;
 	}
@@ -68,7 +83,9 @@ bool PermitTunnel::apply(IObjectInstaller &objectInstaller)
 
 	filterBuilder
 		.key(MullvadGuids::Filter_Dns_PermitTunnel_Outbound_Ipv6())
-		.name(L"Permit selected DNS traffic inside tunnel (IPv6)")
+		.name(m_anyHost
+				? L"Permit DNS traffic to any resolver inside tunnel (IPv6)"
+				: L"Permit selected DNS traffic inside tunnel (IPv6)")
 		.description(L"This filter is part of a rule that permits DNS traffic inside the VPN tunnel")
 		.provider(MullvadGuids::Provider())
 		.layer(FWPM_LAYER_ALE_AUTH_CONNECT_V6)
