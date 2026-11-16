@@ -118,11 +118,13 @@ A new country is one entry there; the extension then takes it with
 platform alone, is what left Singapore photoreal on desktop for a whole release.
 `test/unit/scenery-assets.spec.ts` gates it.
 
-Two rules the connect screen's own geometry rests on: the three layers are
-painted registered on one canvas, so the foreground may slide DOWN over the
-landscape and never up (lifting it uncovers the rows it exists to hide, which
-shipped as a visible tear when the connection card grew), and the foreground's
-slide is the only thing that may move, never the landscape.
+Two rules the home hero's geometry rests on: the three layers are painted
+registered on one canvas, so they move and scale together as one rect and
+never apart (moving one alone tears the art), and where that rect sits is
+computed, never hand-tuned: `fixtures/client-rules/scenery_framing.json` keeps
+the phase's span (the cameras and Bula, or the exit's skyline down to the
+burrow) between the floating header and the fade, on every client. Only Bula's
+own slide into the burrow moves a layer on its own, and only down.
 
 The Android "Auto-connect & Lockdown mode" slides are generated as well, for
 another reason: they depict the system VPN settings, which name the app and show

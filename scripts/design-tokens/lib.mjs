@@ -3,9 +3,8 @@
 // the generated Kotlin `DesignTokens.kt`. The desktop is the source of truth for
 // every value here; Android consumes the generated object, never a hand copy.
 //
-// `components` is the pre-redesign connect screen, frozen in
-// legacy-components.json until the Android home lot stops reading it;
-// `navigation` is still measured on the desktop.
+// `components` holds what is still measured on the desktop components
+// themselves: the navigation slides.
 //
 // Two gates hold the three artefacts together, the way the scenery assets are
 // pinned: `test/unit/design-tokens.spec.ts` (Node only) regenerates everything
@@ -31,7 +30,6 @@ const SOURCES = {
   spacing: `${TOKENS}/spacing-tokens.ts`,
   typography: `${TOKENS}/typography-tokens.ts`,
   home: `${TOKENS}/home-tokens.ts`,
-  legacyComponents: 'scripts/design-tokens/legacy-components.json',
   navigation: `${RENDERER}/lib/transition-hooks.ts`,
 };
 
@@ -149,8 +147,7 @@ function navigationTokens(repoRoot) {
 }
 
 function componentTokens(repoRoot) {
-  const legacy = JSON.parse(read(repoRoot, SOURCES.legacyComponents)).components;
-  return { ...legacy, navigation: navigationTokens(repoRoot) };
+  return { navigation: navigationTokens(repoRoot) };
 }
 
 /** The unit a home key carries, by the naming rule home-tokens.ts documents. */

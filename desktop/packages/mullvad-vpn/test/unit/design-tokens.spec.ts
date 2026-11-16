@@ -46,17 +46,7 @@ describe('design tokens stay generated from the desktop sources', () => {
     );
   });
 
-  it('carries the connect-screen primitives the Android parity test enumerates', () => {
-    // Values are read from the component sources, so a desktop move shows up
-    // here as a stale JSON rather than as a silent Android divergence.
-    expect(tokens.components.connectionCard.radius).toEqual({ value: 16, unit: 'dp' });
-    expect(tokens.components.connectionCard.blockGap).toEqual({ value: 10.5, unit: 'dp' });
-    expect(tokens.components.connectionStatus.wellSize).toEqual({ value: 34, unit: 'dp' });
-    expect(tokens.components.featureChip.paddingHorizontal).toEqual({ value: 8, unit: 'dp' });
-    expect(tokens.components.countryFlag.size).toEqual({ value: 22, unit: 'dp' });
-    expect(tokens.components.betaBanner.pillHeight).toEqual({ value: 21, unit: 'dp' });
-    expect(tokens.components.cardButton.height).toEqual({ value: 32, unit: 'dp' });
-    expect(tokens.components.scenery.washBlend).toBe('soft-light');
+  it('carries the navigation slides Android replays', () => {
     expect(tokens.components.navigation.pushOldTo).toEqual({ value: -0.33, unit: 'ratio' });
   });
 
@@ -64,13 +54,6 @@ describe('design tokens stay generated from the desktop sources', () => {
     expect(Object.keys(tokens.surfaces.light)).toEqual(Object.keys(tokens.surfaces.dark));
     expect(tokens.surfaces.dark.card).toBe('#FF282623');
     expect(tokens.surfaces.light.card).toBe('#FFF7F1E3');
-    // Every surface a component names exists in the tables.
-    const named = Object.values(tokens.components)
-      .flatMap((entries) => Object.entries(entries as Record<string, unknown>))
-      .filter(([name]) => /surface$/i.test(name))
-      .map(([, value]) => value);
-    expect(named.length).toBeGreaterThan(0);
-    for (const surface of named) expect(tokens.surfaces.dark).toHaveProperty(surface as string);
   });
 });
 

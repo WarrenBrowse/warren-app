@@ -22,13 +22,13 @@ designer as a numbered version (V14, V15, ...) of full-canvas masters.
    shipped files instead of being re-encoded from a WebP, and each named layer
    is still emitted for all three clients.
 
-   A new burrow layer moves the rows the mobile layout keys on: the first
-   fully opaque row (`ground_row`), the end of the meadow (`meadow_end_row`) and
-   the paper fade at the left edge (`band_overscan_columns`). Measure them on the
-   encoded `terrier.webp` with the definitions in
-   `fixtures/client-rules/scenery_layout.json`, update that fixture's values,
-   provenance and case expectations, then the constants of `SceneryLayout.kt`
-   and `SceneryLayout.swift`. Both test suites pin the constants to the fixture.
+   New art can move the rows the home hero frames on: the cameras' top and
+   Bula's feet (the `ground` span), the burrow mouth's bottom (the `sky` span's
+   bottom row), and each landscape's `skylineTopRow`. Re-measure them on the
+   encoded layers, then update `fixtures/client-rules/scenery_framing.json`
+   (its `framings` and provenance) and the span constants of the four readers
+   (desktop `framing.ts`, `SceneryFraming.kt`, `SceneryFraming.swift`, the
+   extension's `src/framing.ts`); each suite pins them to the fixture.
 3. `process-scenery.sh` ends by running `scripts/gen-scenery-tables.mjs`, which
    rewrites the `GENERATED scenery table` blocks of the Android and iOS
    resolvers (`ConnectionPhase.kt`, `MapViewController.swift`: countries by ISO
