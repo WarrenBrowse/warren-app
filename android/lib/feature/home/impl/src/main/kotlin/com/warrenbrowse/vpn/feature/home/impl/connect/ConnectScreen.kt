@@ -55,6 +55,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.draw.clip
@@ -983,8 +984,13 @@ private fun HomeContent(
                     details = {
                         HomeDetails(open = compact, state = state, modifier = columnModifier)
                     },
-                    // Measured, never drawn: the card's full height, which the hero makes room for.
-                    detailsProbe = { if (connected) OpenDetails(state, columnModifier) },
+                    // Measured, never drawn nor read out: the card's full height, which the hero
+                    // makes room for.
+                    detailsProbe = {
+                        if (connected) {
+                            OpenDetails(state, columnModifier.clearAndSetSemantics {})
+                        }
+                    },
                     rest = {
                         // The mockup keeps the chips' own margin under them, above the footer.
                         Column(columnModifier.padding(bottom = DesignTokens.Home.Chips.MarginTop)) {

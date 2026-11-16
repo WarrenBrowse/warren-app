@@ -148,7 +148,8 @@ class ConnectScreenTest {
 
             // Assert
             onNodeWithText("Protected").assertExists()
-            onNodeWithText("You are protected").assertExists()
+            // With no place to name, the title and the exit line both say it (desktop parity).
+            onAllNodesWithText("You are protected").assertCountEquals(2)
             onNodeWithText("Disconnect").assertExists()
         }
     }
