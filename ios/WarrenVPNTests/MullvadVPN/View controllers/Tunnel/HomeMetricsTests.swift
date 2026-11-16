@@ -193,6 +193,7 @@ final class HomeMetricsTests: XCTestCase {
     func testATallPhoneGrowsTheHeroToItsMaximumAndLeavesTheRestAboveTheFooter() {
         let layout = phone(height: 1000)
         XCTAssertEqual(layout.heroHeight, 510, accuracy: 0.01)
+        XCTAssertEqual(layout.fullHeight, 510, accuracy: 0.01)
         XCTAssertEqual(layout.gap, 164, accuracy: 0.01)
         XCTAssertFalse(layout.compactFraming)
         XCTAssertFalse(layout.scrolls)
@@ -210,6 +211,8 @@ final class HomeMetricsTests: XCTestCase {
         XCTAssertEqual(layout.heroHeight, 274, accuracy: 0.01)
         XCTAssertTrue(layout.compactFraming)
         XCTAssertFalse(layout.scrolls)
+        // Framed at the scale of the minimum hero, so the art slides up instead of narrowing.
+        XCTAssertEqual(layout.fullHeight, 50 + 400 * 300 / 380, accuracy: 0.01)
     }
 
     func testAScreenTooShortForTheCompactHeroScrollsThePanel() {

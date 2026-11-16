@@ -45,7 +45,8 @@ final class SceneryFramingTests: XCTestCase {
             clearTop: try number(testCase, "clear_top_px"),
             fade: try number(testCase, "fade_px"),
             span: span,
-            compact: testCase["compact"] as? Bool ?? false
+            compact: testCase["compact"] as? Bool ?? false,
+            fullHeight: (testCase["full_hero_height_px"] as? NSNumber).map { CGFloat($0.doubleValue) }
         )
         return (frame, span)
     }
@@ -104,7 +105,8 @@ final class SceneryFramingTests: XCTestCase {
         let at = SceneryFraming.clearBottomFraction
         let index = stops.firstIndex { $0.at >= at }!
         let (low, high) = (stops[index - 1], stops[index])
-        XCTAssertEqual(low.alpha + (high.alpha - low.alpha) * (at - low.at) / (high.at - low.at), 0.5, accuracy: 0.000001)
+        let alpha = low.alpha + (high.alpha - low.alpha) * (at - low.at) / (high.at - low.at)
+        XCTAssertEqual(alpha, 0.5, accuracy: 0.000001)
     }
 
     /// A narrowed canvas is backed by the same landscape covering the whole hero, its span's middle
@@ -126,17 +128,6 @@ final class SceneryFramingTests: XCTestCase {
         let span = SceneryFraming.groundSpan
         let frame = SceneryFraming.frame(width: 380, height: 300, clearTop: 68, fade: 36, span: span)
         XCTAssertNil(SceneryFraming.marginBackdrop(width: 380, height: 300, frame: frame, span: span))
-    }
-
-    /// On a wide hero the compact frame keeps the scale of the open one, so opening the details
-    /// slides the art up instead of zooming it to the full width.
-    func testACompactFrameNeverZoomsPastTheScaleItIsGiven() {
-        let span = SceneryFraming.groundSpan
-        let frame = SceneryFraming.frame(
-            width: 1024, height: 250, clearTop: 68, fade: 30, span: span, compact: true, maxScale: 0.5)
-        XCTAssertEqual(frame.scale, 0.5)
-        XCTAssertEqual(frame.left, (1024 - SceneryFraming.canvasWidth * 0.5) / 2, accuracy: 0.01)
-        XCTAssertEqual(frame.y(ofRow: span.top), 68, accuracy: 0.01)
     }
 
     /// The controller frames the canvas with the fade of its own height, not a fixed band: the
@@ -191,7 +182,8 @@ final class SceneryFramingTests: XCTestCase {
     }
 
     func testEveryFullHeightSpanStaysBetweenTheHeaderAndTheFade() throws {
-        for testCase in try ClientRulesFixtures.cases(try fixture(), "cases") where testCase["compact"] as? Bool != true {
+        let cases = try ClientRulesFixtures.cases(try fixture(), "cases")
+        for testCase in cases where testCase["compact"] as? Bool != true {
             let name = try ClientRulesFixtures.string(testCase, "name")
             let hero = try numbers(testCase, "hero_px")
             let (frame, span) = try frame(for: testCase)
@@ -202,14 +194,25 @@ final class SceneryFramingTests: XCTestCase {
         }
     }
 
-    func testACompactHeroKeepsTheWidthAndPinsTheSpanTopUnderTheHeader() throws {
+    /// Opening the details slides the art up at the scale the same hero has at full height: it
+    /// never zooms, on a wide screen either.
+    func testACompactHeroKeepsItsFullHeightScaleAndPinsTheSpanTopUnderTheHeader() throws {
         let cases = try ClientRulesFixtures.cases(try fixture(), "cases").filter { $0["compact"] as? Bool == true }
         XCTAssertFalse(cases.isEmpty)
         for testCase in cases {
             let name = try ClientRulesFixtures.string(testCase, "name")
             let hero = try numbers(testCase, "hero_px")
+            let fullHeight = try number(testCase, "full_hero_height_px")
             let (frame, span) = try frame(for: testCase)
-            XCTAssertEqual(frame.width, hero[0], accuracy: 0.000001, name)
+            let full = SceneryFraming.frame(
+                width: hero[0],
+                height: fullHeight,
+                clearTop: try number(testCase, "clear_top_px"),
+                fade: SceneryFraming.fade(forHeroHeight: fullHeight),
+                span: span
+            )
+            XCTAssertEqual(frame.scale, full.scale, accuracy: 0.000001, name)
+            XCTAssertEqual(frame.left, full.left, accuracy: 0.000001, name)
             XCTAssertEqual(frame.y(ofRow: span.top), try number(testCase, "clear_top_px"), accuracy: 0.000001, name)
         }
     }

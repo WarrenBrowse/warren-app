@@ -188,8 +188,11 @@ enum HomeMetrics {
 /// details always take the compact hero.
 struct HomeLayout: Equatable {
     let heroHeight: CGFloat
-    /// The art is framed the compact way (width-fit, span top under the header).
+    /// The art is framed the compact way (span top under the header, the rest into the fade).
     let compactFraming: Bool
+    /// The hero height whose scale a compact frame keeps: the hero itself, or the mockup's minimum
+    /// when the screen squeezed it below that. Meaningful with the details closed.
+    let fullHeight: CGFloat
     /// The room left between the chips and the footer.
     let gap: CGFloat
     /// The panel does not fit and scrolls above the footer.
@@ -217,6 +220,7 @@ struct HomeLayout: Equatable {
         return HomeLayout(
             heroHeight: hero,
             compactFraming: detailsOpen || hero < minimum - 0.5,
+            fullHeight: max(hero, minimum),
             gap: max(0, room - hero),
             scrolls: room < hero - 0.5
         )

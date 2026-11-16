@@ -389,6 +389,8 @@ final class SceneryViewController: UIViewController {
     private static let bulaDuration = TimeInterval(HomeMetrics.Hero.bulaMs / 1000)
     private static let blurDuration: TimeInterval = 0.9
     private static let zoomDuration: TimeInterval = 6.0
+    private static let minimumBlurWidth: CGFloat = 64
+    private static let minimumBandFeather: CGFloat = 40
 
     /// The status bar the floating header sits under. The art is clear of the
     /// header below `HomeMetrics.clearTop(safeTop:)`.
@@ -399,6 +401,14 @@ final class SceneryViewController: UIViewController {
         }
     }
 
+    /// The hero height the art is framed for, the one the hero is heading to rather than the one
+    /// an animated resize is passing through, so the art never shrinks to fit a hero halfway open.
+    /// Nil frames for the view's own height.
+    private var targetHeight: CGFloat?
+    /// The hero's height with the details closed, whose scale a compact frame keeps.
+    private var openHeight: CGFloat?
+    private var compact = false
+
     private var phase: ConnectionPhase = .exposed
     private var currentImageName: String?
     private var bulaVisible = true
@@ -407,6 +417,17 @@ final class SceneryViewController: UIViewController {
     /// reframe re-renders once rather than on every layout pass.
     private var lastBlurredWidth: CGFloat = 0
     private var frame: SceneryFraming.Frame?
+
+    // Behind a canvas narrower than the hero: the same landscape at cover scale,
+    // blurred, so the side margins carry the scene on instead of a flat colour.
+    private let backdropView = SceneryViewController.makeLayerView()
+    private var backdropRect: CGRect?
+    /// The landscape and drawn width the visible backdrop was blurred for.
+    private var backdropKey: String?
+    // Over the backdrop, the band above a dropped canvas keeps the landscape's
+    // top fill across the hero, its lower edge feathered into the blur.
+    private let headroomView = UIView()
+    private let headroomMask = GradientView()
 
     // The registered canvas: every layer fills it exactly, so moving or scaling
     // it moves them together.
@@ -472,7 +493,13 @@ final class SceneryViewController: UIViewController {
         featherView.contentMode = .scaleToFill
         canvasView.featherView = featherView
 
-        [canvasView, scrimView, glowView].forEach { view.addSubview($0) }
+        backdropView.isHidden = true
+        headroomView.isHidden = true
+        headroomMask.gradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
+        headroomMask.gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)
+        headroomView.mask = headroomMask
+
+        [backdropView, headroomView, canvasView, scrimView, glowView].forEach { view.addSubview($0) }
 
         fadeView.gradientLayer.colors = SceneryFraming.maskStops.map {
             UIColor.black.withAlphaComponent($0.alpha).cgColor
@@ -528,20 +555,50 @@ final class SceneryViewController: UIViewController {
         guard bounds.width > 0, bounds.height > 0 else { return }
 
         let imageName = currentImageName ?? Self.plainImageName
+        let width = bounds.width
+        let height = targetHeight ?? bounds.height
+        let clearTop = HomeMetrics.clearTop(safeTop: safeTop)
+        let span = SceneryFraming.span(
+            skyFraming: Self.sceneryRow(phase).skyFraming,
+            skylineTopRow: Self.skylineTopRow(of: imageName)
+        )
         let frame = SceneryFraming.frame(
-            width: bounds.width,
-            height: bounds.height,
-            clearTop: HomeMetrics.clearTop(safeTop: safeTop),
-            fade: SceneryFraming.fade(forHeroHeight: bounds.height),
-            span: SceneryFraming.span(
-                skyFraming: Self.sceneryRow(phase).skyFraming,
-                skylineTopRow: Self.skylineTopRow(of: imageName)
-            )
+            width: width,
+            height: height,
+            clearTop: clearTop,
+            fade: SceneryFraming.fade(forHeroHeight: height),
+            span: span,
+            compact: compact,
+            fullHeight: openHeight
         )
         self.frame = frame
         canvasView.frame = frame.rect
         canvasView.setFeather(top: frame.headroom > 0.5, sides: frame.left > 0.5)
         bulaView.transform = bulaTransform(visible: bulaVisible)
+
+        let backdrop = SceneryFraming.marginBackdrop(width: width, height: height, frame: frame, span: span)
+        backdropRect = backdrop
+        backdropView.isHidden = backdrop == nil
+        if let backdrop {
+            backdropView.frame = backdrop
+            refreshBackdrop()
+        }
+        // Without a backdrop the hero's own top fill already shows above the canvas.
+        headroomView.isHidden = backdrop == nil || frame.headroom <= 0.5
+        if !headroomView.isHidden {
+            // The canvas's own top edge already fades into this band; the band fades into the
+            // blur under it over at least the same rows, and never over a line too thin to read
+            // as a fade when the canvas is drawn small.
+            let feather = max(SceneryFraming.featherRows * frame.scale, Self.minimumBandFeather)
+            headroomView.frame = CGRect(x: 0, y: 0, width: width, height: frame.headroom + feather)
+            headroomMask.frame = headroomView.bounds
+            headroomMask.gradientLayer.colors = [
+                UIColor.black.cgColor, UIColor.black.cgColor, UIColor.black.withAlphaComponent(0).cgColor,
+            ]
+            headroomMask.gradientLayer.locations = [
+                0, NSNumber(value: Double(frame.headroom / headroomView.bounds.height)), 1,
+            ]
+        }
 
         // The blur radius is a fraction of the drawn width, so a reframe or a
         // resize needs a fresh render at the new width.
@@ -563,6 +620,35 @@ final class SceneryViewController: UIViewController {
 
     /// The canvas rect in the hero, once laid out. For the screenshot QA.
     var canvasFrame: SceneryFraming.Frame? { frame }
+
+    /// Where the blurred backdrop sits behind a narrowed canvas, nil when the canvas spans the hero.
+    var marginBackdropFrame: CGRect? { backdropView.isHidden ? nil : backdropRect }
+
+    /// Frames the art for a hero of `height` (`openHeight` with the details closed), the compact
+    /// way when `compact`. Animated on the hero's own resize curve, so the art and the hero edge
+    /// move as one.
+    func setHero(height: CGFloat, openHeight: CGFloat, compact: Bool, animated: Bool) {
+        loadViewIfNeeded()
+        guard height != targetHeight || openHeight != self.openHeight || compact != self.compact else { return }
+        let animated = animated && Self.animates && view.window != nil && targetHeight != nil
+        targetHeight = height
+        self.openHeight = openHeight
+        self.compact = compact
+        view.setNeedsLayout()
+        guard animated else {
+            view.layoutIfNeeded()
+            return
+        }
+        let (first, second) = SceneryFraming.compactTransitionCurve
+        let animator = UIViewPropertyAnimator(
+            duration: TimeInterval(SceneryFraming.compactTransitionMs / 1000),
+            controlPoint1: first,
+            controlPoint2: second
+        ) {
+            self.view.layoutIfNeeded()
+        }
+        animator.startAnimation()
+    }
 
     func update(phase: ConnectionPhase, exitCountry: String?, animated: Bool) {
         loadViewIfNeeded()
@@ -594,7 +680,9 @@ final class SceneryViewController: UIViewController {
 
         UIView.animate(withDuration: animated ? Self.crossfadeDuration : 0) {
             self.view.backgroundColor = Self.topFill(of: imageName)
+            self.headroomView.backgroundColor = Self.topFill(of: imageName)
         }
+        refreshBackdrop()
 
         let image = UIImage(named: imageName)
         refreshBlurredLandscape(animated: animated)
@@ -650,7 +738,9 @@ final class SceneryViewController: UIViewController {
         guard let imageName = currentImageName else { return }
 
         let width = frame?.width ?? view.bounds.width
-        guard width > 0 else { return }
+        // A canvas framed for a hero not laid out yet is a sliver, whose blur radius in canvas
+        // pixels would ask Core Image for gigabytes; the real layout renders it.
+        guard width >= Self.minimumBlurWidth else { return }
         lastBlurredWidth = width
         let radius = Double(SceneryFraming.blurRadius(forDrawnWidth: width))
         // Carried across the hop as a String: NSString is a class, so it is not
@@ -671,6 +761,42 @@ final class SceneryViewController: UIViewController {
                     self.applyBlurredImage(blurred, animated: true)
                 }
             }
+        }
+    }
+
+    // The margin backdrop: the landscape blurred by `marginBlur` at the size it is drawn, rendered
+    // off the main thread once per landscape and width, like the connecting blur.
+    private func refreshBackdrop() {
+        guard let imageName = currentImageName, let rect = backdropRect, rect.width >= Self.minimumBlurWidth else {
+            return
+        }
+        let key = "\(imageName)#margin@\(Int(rect.width.rounded()))"
+        guard key != backdropKey else { return }
+        backdropKey = key
+        if let cached = Self.blurredImageCache.object(forKey: key as NSString) {
+            setBackdrop(cached)
+            return
+        }
+        guard let source = UIImage(named: imageName) else { return }
+        let radius = Double(SceneryFraming.marginBlur * SceneryFraming.canvasWidth / rect.width)
+        DispatchQueue.global(qos: .userInitiated).async {
+            guard let blurred = Self.gaussianBlurred(source, radius: radius) else { return }
+            DispatchQueue.main.async {
+                Self.blurredImageCache.setObject(blurred, forKey: key as NSString)
+                if self.backdropKey == key {
+                    self.setBackdrop(blurred)
+                }
+            }
+        }
+    }
+
+    private func setBackdrop(_ image: UIImage) {
+        UIView.transition(
+            with: backdropView,
+            duration: backdropView.image == nil || !Self.animates ? 0 : Self.crossfadeDuration,
+            options: [.transitionCrossDissolve]
+        ) {
+            self.backdropView.image = image
         }
     }
 

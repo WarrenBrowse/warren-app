@@ -99,10 +99,10 @@ enum SceneryFraming {
 
     /// `clearTop`: below this offset nothing floats over the art (the header bottom plus a margin).
     /// `fade`: the band under the clear zone, `fade(forHeroHeight:)`.
-    /// `compact`: the hero is short (the details are open), so the art keeps its width and pins
-    /// the span top under the header, giving its lower part to the fade instead of shrinking.
-    /// `maxScale` caps that compact width-fit: a hero much wider than its column (a tablet) passes
-    /// the scale of its open frame, so the art slides up rather than zooming to the full width.
+    /// `compact`: the hero is short (the details are open), so the art keeps the scale the same
+    /// hero has at its full height (`fullHeight`, the hero with the details closed) and pins the span
+    /// top under the header, its lower part going into the fade: opening the details slides the
+    /// art up, it never zooms into it.
     static func frame(
         width: CGFloat,
         height: CGFloat,
@@ -110,14 +110,14 @@ enum SceneryFraming {
         fade: CGFloat,
         span: Span,
         compact: Bool = false,
-        maxScale: CGFloat = .greatestFiniteMagnitude
+        fullHeight: CGFloat? = nil
     ) -> Frame {
         let clearBottom = height - fade
-        let widthFit = width / canvasWidth
+        let fitBottom = compact ? (fullHeight ?? height) * clearBottomFraction : clearBottom
         // A hero shorter than the header leaves no room at all; the canvas then shrinks to a
         // sliver rather than flipping upside down on a negative scale.
-        let room = max(clearBottom - clearTop, 1)
-        let scale = compact ? min(widthFit, maxScale) : min(widthFit, room / (span.bottom - span.top))
+        let room = max(fitBottom - clearTop, 1)
+        let scale = min(width / canvasWidth, room / (span.bottom - span.top))
         let yMin = clearTop - span.top * scale
         let yMax = clearBottom - span.bottom * scale
         let top = compact ? yMin : min(yMax, max(yMin, 0))
