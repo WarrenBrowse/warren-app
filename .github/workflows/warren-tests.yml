@@ -394,14 +394,22 @@ jobs:
         shell: bash
         run: scripts/ci/test-macos-pkg-preinstall.sh
 
-      # `ci/git-config-global.sh` now fronts every `git config --global` of the
-      # build-env action, on every OS, including the two that install the
-      # WarrenBrowse token rewrites. A regression in its retry loop, its lock
-      # grep or its stale-lock removal breaks the sibling checkouts and the
-      # quinn fork fetch for every job in the fleet, and its own tests ran
-      # nowhere: the script had to be typed by hand to be exercised at all. The
-      # stale-lock arm, which deletes another process's lock after a minute, is
-      # the branch most worth holding.
+      # The build-env action hands every job its WarrenBrowse credential
+      # through `ci/git-auth-env.sh`. A regression there either writes the
+      # credential back into the runners' persistent ~/.gitconfig or sends two
+      # Authorization headers, which GitHub refuses for every sibling checkout
+      # and quinn fork fetch in the fleet.
+      - name: Job-scoped git credential
+        working-directory: .
+        shell: bash
+        run: bash ci/test-git-auth-env.sh
+
+      # `ci/git-config-global.sh` fronts the build-env action's remaining
+      # `git config --global` writes (`safe.directory`), on every OS. A
+      # regression in its retry loop, its lock grep or its stale-lock removal
+      # breaks those writes for every job in the fleet. The stale-lock arm,
+      # which deletes another process's lock after a minute, is the branch most
+      # worth holding.
       - name: git config --global wrapper behaviour
         working-directory: .
         shell: bash

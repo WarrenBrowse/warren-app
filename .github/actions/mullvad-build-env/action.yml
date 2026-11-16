@@ -265,46 +265,16 @@ runs:
       shell: bash
       run: rustup component add ${{ inputs.rustup-components }}
 
-    - name: Authorize cargo to fetch private WarrenBrowse git-deps over HTTPS
-      # CI authenticates to GitHub with an HTTPS token, not an SSH key, so cargo
-      # git fetches of private WarrenBrowse repos fail without a credential.
-      # Rewrite BOTH forms to https+token for cargo's git CLI (its built-in
-      # fetcher ignores url.insteadOf, hence CARGO_NET_GIT_FETCH_WITH_CLI):
-      #   - ssh://git@github.com/WarrenBrowse/  -> the warren-quinn fork
-      #     ([patch.crates-io] points quinn at it via an ssh:// git-dep).
-      #   - https://github.com/WarrenBrowse/    -> any https git-dep on a private
-      #     repo that is NOT redirected to a sibling path in the current cargo
-      #     workspace. Notably `warren_relays_verify`, built from the standalone
-      #     ../warren-contract/warren-discovery workspace by the exit-list bake
-      #     step, pulls `warrenguard-multihop` from git (the app's [patch] does
-      #     not apply there), so its clone of warrenguard.git needs the token.
-      #     Without this it fails "could not read Username for https://github.com"
-      #     on any runner whose ~/.cargo/git cache does not already hold the rev.
-      # Scoped to the WarrenBrowse org only; the bundled runner git is 2.30.x so
-      # GIT_CONFIG_* env is unavailable, `git config --global` is the portable form,
-      # through ci/git-config-global.sh because the Windows runners share one
-      # ~/.gitconfig across three concurrent jobs and a plain write dies on the lock.
+    - name: Authenticate this job's git fetches from the WarrenBrowse org
+      # cargo fetches the quinn and pfctl forks with the git CLI and needs an
+      # authenticated first request. The credential lives in this job's
+      # environment only (ci/git-auth-env.sh says why): never in ~/.gitconfig,
+      # which the self-hosted runners keep after the job.
       if: ${{ inputs.skip-warren-core != 'true' && (inputs.engine-token != '' || inputs.warren-core-token != '') }}
       shell: bash
       env:
         ENGINE_TOKEN: ${{ inputs.engine-token != '' && inputs.engine-token || inputs.warren-core-token }}
-      run: |
-        # ~/.gitconfig PERSISTS on a self-hosted runner and is SHARED by every
-        # runner of a machine (three on the Mac Studio), so each write is one
-        # `--replace-all`, which git makes under its own lock. An unset followed
-        # by an add is two writes: two concurrent jobs interleaved them and left
-        # two extraheader values, so every WarrenBrowse request then carried two
-        # Authorization headers and GitHub refused it with a 400, from the
-        # checkout step on, in every later job of that machine (2026-09-28).
-        insteadof=url."https://x-access-token:${ENGINE_TOKEN}@github.com/WarrenBrowse/".insteadOf
-        bash ci/git-config-global.sh --replace-all "$insteadof" "ssh://git@github.com/WarrenBrowse/" '^ssh://git@github\.com/WarrenBrowse/$'
-        bash ci/git-config-global.sh --replace-all "$insteadof" "https://github.com/WarrenBrowse/" '^https://github\.com/WarrenBrowse/$'
-        # Authenticated from the first request, for the same reason as the
-        # sibling clones above: cargo's fetch of the quinn fork would otherwise
-        # start anonymous and die on GitHub's per-IP throttle.
-        auth="$(printf 'x-access-token:%s' "$ENGINE_TOKEN" | base64 | tr -d '\n')"
-        bash ci/git-config-global.sh --replace-all http."https://github.com/WarrenBrowse/".extraheader "AUTHORIZATION: basic ${auth}"
-        echo "CARGO_NET_GIT_FETCH_WITH_CLI=true" >> "$GITHUB_ENV"
+      run: bash ci/git-auth-env.sh "$GITHUB_ENV"
 
     - name: Assert Cargo.lock pins the quinn fork (prevents silent quinn-patch drop)
       # GUARD: the app consumes the quinn fork as the `warren-quinn` git-dep via
