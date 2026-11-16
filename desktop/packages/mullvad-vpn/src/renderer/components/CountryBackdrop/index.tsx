@@ -211,6 +211,7 @@ export default function CountryBackdrop({ compact = false }: { compact?: boolean
           fade: heroFade(height),
           span: framingSpan(phase, targetCountry),
           compact,
+          fullHeight: size.width * HERO_HEIGHT_RATIO,
         })
       : undefined;
   const mask = frame ? featherMask(frame) : undefined;

@@ -61,9 +61,12 @@ export interface FramingInput {
   // The bottom band where the art fades into the panel.
   fade: number;
   span: FramingSpan;
-  // The details are open: keep the art at full width and give its lower part
-  // to the fade rather than shrinking it to fit the span.
+  // The details are open: keep the scale the art has at the hero's full
+  // height and slide it up, its lower part going into the fade, rather than
+  // shrinking it to fit the span or zooming into it.
   compact?: boolean;
+  // The hero's height with the details closed, which sets a compact scale.
+  fullHeight?: number;
 }
 
 export interface Frame {
@@ -83,12 +86,12 @@ export function frameScenery({
   fade,
   span,
   compact,
+  fullHeight,
 }: FramingInput): Frame {
   const clearBottom = height - fade;
   const widthFit = width / CANVAS_WIDTH;
-  const scale = compact
-    ? widthFit
-    : Math.min(widthFit, (clearBottom - clearTop) / (span.bottom - span.top));
+  const fitBottom = compact ? (fullHeight ?? height) * CLEAR_BOTTOM_FRACTION : clearBottom;
+  const scale = Math.min(widthFit, (fitBottom - clearTop) / (span.bottom - span.top));
   const yMin = clearTop - span.top * scale;
   const yMax = clearBottom - span.bottom * scale;
   const top = compact ? yMin : Math.min(yMax, Math.max(yMin, 0));
