@@ -90,7 +90,7 @@ final class WarrenFailoverNotificationProvider: NotificationProvider,
                 )
             ),
             button: InAppNotificationAction(
-                image: UIImage.Buttons.closeSmall,
+                image: UIImage.Buttons.bannerClose,
                 handler: { [weak self] in
                     guard let self else { return }
                     // Acknowledge the count observed at dismissal time so the

@@ -61,6 +61,12 @@ extension UIImage {
                 .resized(to: CGSize(width: 18, height: 18))
         }
 
+        /// The bare cross that puts a home banner away (mockup 8d); the banner draws it at 16
+        /// points in its own colour.
+        static var bannerClose: UIImage {
+            UIImage(named: "IconCross")!
+        }
+
         static var close: UIImage {
             UIImage(named: "IconClose")!
                 .resized(to: CGSize(width: 24, height: 24))

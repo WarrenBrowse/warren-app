@@ -29,13 +29,17 @@ public struct InAppNotificationDescriptor: Equatable {
     /// Notification button action (optional).
     public var tapAction: InAppNotificationAction?
 
+    /// The glyph the banner leads with; without one, the style picks it.
+    public var icon: NotificationBannerIcon?
+
     public init(
         identifier: NotificationProviderIdentifier,
         style: NotificationBannerStyle,
         title: String,
         body: NSAttributedString,
         button: InAppNotificationAction? = nil,
-        tapAction: InAppNotificationAction? = nil
+        tapAction: InAppNotificationAction? = nil,
+        icon: NotificationBannerIcon? = nil
     ) {
         self.identifier = identifier
         self.style = style
@@ -43,6 +47,7 @@ public struct InAppNotificationDescriptor: Equatable {
         self.body = body
         self.button = button
         self.tapAction = tapAction
+        self.icon = icon
     }
 }
 
@@ -51,17 +56,27 @@ public struct InAppNotificationAction: Equatable {
     /// Image assigned to action button.
     public var image: UIImage?
 
+    /// The label of a button that says what it does (the update banner's "Install"); it takes
+    /// the place of the image.
+    public var title: String?
+
     /// Action handler for button.
     public var handler: (() -> Void)?
 
-    public init(image: UIImage? = nil, handler: (() -> Void)?) {
+    public init(image: UIImage? = nil, title: String? = nil, handler: (() -> Void)?) {
         self.image = image
+        self.title = title
         self.handler = handler
     }
 
     public static func == (lhs: InAppNotificationAction, rhs: InAppNotificationAction) -> Bool {
-        lhs.image == rhs.image
+        lhs.image == rhs.image && lhs.title == rhs.title
     }
+}
+
+/// The glyph a banner leads with in place of its level's (desktop `InAppNotificationIcon`).
+public enum NotificationBannerIcon: Sendable {
+    case update, announcement
 }
 
 public enum NotificationBannerStyle {

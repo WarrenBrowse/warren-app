@@ -117,7 +117,7 @@ final class WarrenAnnouncementNotificationProvider: NotificationProvider,
             title: announcement.headline,
             body: NSAttributedString(string: body),
             button: InAppNotificationAction(
-                image: UIImage.Buttons.closeSmall,
+                image: UIImage.Buttons.bannerClose,
                 handler: { [weak self] in
                     guard let self else { return }
                     dismiss(announcement.id)
@@ -127,7 +127,8 @@ final class WarrenAnnouncementNotificationProvider: NotificationProvider,
                 handler: { [weak self] in
                     self?.present(announcement)
                 }
-            )
+            ),
+            icon: .announcement
         )
     }
 

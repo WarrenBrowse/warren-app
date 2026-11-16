@@ -782,7 +782,14 @@ class RootContainerViewController: UIViewController {
         headerBarView.showsDivider = headerBarPresentation.showsDivider
         headerBarView.tone = headerBarPresentation.tone
         headerBarView.isProductChipSuppressed = !headerBarPresentation.showsProductChip
+        let wasHome = headerBarView.homeTheme != nil
         headerBarView.homeTheme = headerBarPresentation.home
+        if let notificationController {
+            notificationController.theme = headerBarPresentation.home ?? .dark
+            if wasHome != (headerBarPresentation.home != nil), notificationController.view.superview === view {
+                updateNotificationViewConstraints(notificationController)
+            }
+        }
     }
 
     private func updateHeaderBarStyleFromChildPreferences(animated: Bool) {
@@ -897,8 +904,23 @@ class RootContainerViewController: UIViewController {
     private var notificationViewConstraints: [NSLayoutConstraint] = []
 
     private func updateNotificationViewConstraints(_ notificationController: NotificationController) {
-        let newConstraints = notificationController.view
-            .pinEdgesTo(notificationViewLayoutGuide ?? view.safeAreaLayoutGuide)
+        let newConstraints: [NSLayoutConstraint]
+        if headerBarView.homeTheme != nil, notificationViewLayoutGuide == nil,
+            let notificationView = notificationController.view
+        {
+            // On the home the banner hangs from the floating toolbar (mockup 8d), which the safe
+            // area, ending a few points below the header, does not know about.
+            let guide = view.safeAreaLayoutGuide
+            newConstraints = [
+                notificationView.topAnchor.constraint(equalTo: headerBarView.homeToolbarBottomAnchor),
+                notificationView.leadingAnchor.constraint(equalTo: guide.leadingAnchor),
+                notificationView.trailingAnchor.constraint(equalTo: guide.trailingAnchor),
+                notificationView.bottomAnchor.constraint(equalTo: guide.bottomAnchor),
+            ]
+        } else {
+            newConstraints = notificationController.view
+                .pinEdgesTo(notificationViewLayoutGuide ?? view.safeAreaLayoutGuide)
+        }
 
         NSLayoutConstraint.deactivate(notificationViewConstraints)
         NSLayoutConstraint.activate(newConstraints)
@@ -910,6 +932,7 @@ class RootContainerViewController: UIViewController {
         guard let notificationView = notificationController.view else { return }
 
         notificationView.configureForAutoLayout()
+        notificationController.theme = headerBarPresentation.home ?? .dark
 
         addChild(notificationController)
         view.addSubview(notificationView)

@@ -23,6 +23,11 @@ final class NotificationController: UIViewController {
     private(set) var showsBanner = false
     private var lastNotification: InAppNotificationDescriptor?
 
+    /// The home's theme, which the banner's glass and words follow.
+    var theme: WarrenTheme = .dark {
+        didSet { bannerView.theme = theme }
+    }
+
     override func loadView() {
         view = NotificationContainerView(frame: UIScreen.main.bounds)
         view.clipsToBounds = true
@@ -98,6 +103,7 @@ final class NotificationController: UIViewController {
         bannerView.title = notification.title
         bannerView.body = notification.body
         bannerView.style = notification.style
+        bannerView.icon = notification.icon
         bannerView.action = notification.button
         bannerView.tapAction = notification.tapAction
         bannerView.accessibilityLabel = "\(notification.title)\n\(notification.body.string)"
@@ -122,10 +128,9 @@ final class NotificationController: UIViewController {
     }
 
     private func updateAccessibilityFrame() {
-        let layoutFrame = bannerView.layoutMarginsGuide.layoutFrame
         bannerView.accessibilityFrame = UIAccessibility.convertToScreenCoordinates(
-            layoutFrame,
-            in: view
+            bannerView.cardView.frame,
+            in: bannerView
         )
     }
 }

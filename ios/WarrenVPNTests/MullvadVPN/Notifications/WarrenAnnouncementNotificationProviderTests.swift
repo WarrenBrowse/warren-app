@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 import XCTest
 
 @testable import WarrenRustRuntime
@@ -91,6 +92,21 @@ final class WarrenAnnouncementNotificationProviderTests: XCTestCase {
             ) ?? false,
             "the banner is the compact entry; the code and the link live in the full view"
         )
+    }
+
+    /// Mockup 8d: a megaphone in front of the headline and a bare cross to put it away.
+    func testTheBannerLeadsWithAMegaphoneAndEndsWithABareCross() {
+        let provider = WarrenAnnouncementNotificationProvider(
+            source: { [announcement()] },
+            dismissStore: FakeAnnouncementDismissStore(),
+            present: { _ in }
+        )
+
+        let descriptor = provider.notificationDescriptor
+
+        XCTAssertEqual(descriptor?.icon, .announcement)
+        XCTAssertNil(descriptor?.button?.title)
+        XCTAssertEqual(descriptor?.button?.image, UIImage.Buttons.bannerClose)
     }
 
     func testTappingTheBannerOpensTheAnnouncementInFull() {

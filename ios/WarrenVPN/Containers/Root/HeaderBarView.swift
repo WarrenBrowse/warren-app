@@ -55,6 +55,11 @@ class HeaderBarView: UIView {
     private var classicConstraints: [NSLayoutConstraint] = []
     private var homeConstraints: [NSLayoutConstraint] = []
 
+    /// The home toolbar's bottom edge, which the notification banner hangs from.
+    var homeToolbarBottomAnchor: NSLayoutYAxisAnchor {
+        toolbarBackground.bottomAnchor
+    }
+
     /// The theme of the home screen while the header floats over its art, nil
     /// on every other screen.
     var homeTheme: WarrenTheme? {
@@ -279,6 +284,12 @@ class HeaderBarView: UIView {
             settingsImage.withTintColor(contentColor, renderingMode: .alwaysOriginal),
             for: .normal
         )
+        // The 38 point square of a pressed or focused home button takes the text colour at 12%
+        // (desktop `HomeHeader`).
+        let pressedTint = homeTheme != nil ? contentColor.withAlphaComponent(0.12) : nil
+        for button in [forumButton, accountButton, settingsButton] {
+            (button as? IncreasedHitButton)?.pressedTint = pressedTint
+        }
         deviceNameLabel.textColor = subduedContentColor
         timeLeftLabel.textColor = subduedContentColor
         // The forum glyph rides the same two backdrops as the rest, so it is
@@ -308,7 +319,11 @@ class HeaderBarView: UIView {
             button.constraints
                 .filter { $0.firstItem === button && $0.firstAttribute == .height && $0.secondItem == nil }
                 .forEach { $0.constant = buttonSize }
-            button.focusEffect = home ? Self.homeToolbarFocusRing() : nil
+            // On the home a press or focus tints the square (`applyTone`), which a ring around an
+            // icon in the glass pill made heavy.
+            button.focusEffect = nil
+            button.layer.cornerRadius = home ? HomeMetrics.Toolbar.radius - HomeMetrics.Toolbar.paddingHorizontal : 0
+            button.layer.cornerCurve = .continuous
         }
         buttonContainer.spacing = home ? 0 : 12
         toolbarBackground.isHidden = !home
@@ -318,20 +333,6 @@ class HeaderBarView: UIView {
         wordmarkImageView.layer.shadowOffset = .zero
         forumBadgeLabel.layer.borderWidth = home ? HomeMetrics.Toolbar.badgeRing : 0
         deviceInfoHolder.isHidden = home
-    }
-
-    /// The system rings a focused button outside its bounds, which on the home
-    /// spills over the pill's edge; there the ring is the hit area's rounded
-    /// square, drawn inside it (desktop `HomeHeader`).
-    private static func homeToolbarFocusRing() -> UIFocusHaloEffect {
-        let toolbar = HomeMetrics.Toolbar.self
-        let ring = UIFocusHaloEffect(
-            roundedRect: CGRect(x: 0, y: 0, width: toolbar.button, height: toolbar.button),
-            cornerRadius: toolbar.radius - toolbar.paddingHorizontal,
-            curve: .continuous
-        )
-        ring.position = .inside
-        return ring
     }
 
     /// The glyph, the badge and the spoken label of the forum slot, all from
@@ -645,12 +646,14 @@ class HeaderBarView: UIView {
 final class HomeToolbarBackgroundView: UIView {
     private let blurView = UIVisualEffectView(effect: nil)
     private let tintView = UIView()
+    private let radius: CGFloat
 
-    override init(frame: CGRect) {
-        super.init(frame: frame)
+    /// `radius`: the toolbar's own by default; the notification banner cuts the same glass at 12.
+    init(radius: CGFloat = HomeMetrics.Toolbar.radius) {
+        self.radius = radius
+        super.init(frame: .zero)
         isHidden = true
         isUserInteractionEnabled = false
-        let radius = HomeMetrics.Toolbar.radius
         blurView.layer.cornerRadius = radius
         blurView.layer.cornerCurve = .continuous
         blurView.clipsToBounds = true
@@ -681,10 +684,7 @@ final class HomeToolbarBackgroundView: UIView {
         super.layoutSubviews()
         blurView.frame = bounds
         tintView.frame = bounds
-        let shadowShape = UIBezierPath(
-            roundedRect: bounds.insetBy(dx: 3, dy: 3),
-            cornerRadius: HomeMetrics.Toolbar.radius
-        )
+        let shadowShape = UIBezierPath(roundedRect: bounds.insetBy(dx: 3, dy: 3), cornerRadius: radius)
         layer.shadowPath = shadowShape.cgPath
     }
 }

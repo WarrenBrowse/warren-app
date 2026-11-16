@@ -82,6 +82,28 @@ final class NewAppVersionInAppNotificationProvider:
         // we should show the "safe" banner whenever the tunnel is up and IAN is disabled. We keep this state until
         // the app is restarted. If neither of the above is true, we shouldn't show a banner at all since we don't
         // want to urge people to update while we're using phased releases on AppStore.
+        guard includeAllNetworksIsEnabled || hasEnabledIncludeAllNetworksAtLeastOnce else {
+            return nil
+        }
+
+        return Self.descriptor(
+            version: appVersionService.availableVersion,
+            includeAllNetworksIsEnabled: includeAllNetworksIsEnabled,
+            install: { [weak self] in
+                guard let self else { return }
+                NotificationManager.shared.notificationProvider(self, didReceiveAction: "\(identifier)")
+            }
+        )
+    }
+
+    /// Mockup 8d's update banner: "Update available", the version, and an Install button that
+    /// takes the update path, as a tap on the card does. With "Force all apps" on, updating would
+    /// cut the network, so the body says that instead of the version.
+    static func descriptor(
+        version: String?,
+        includeAllNetworksIsEnabled: Bool,
+        install: @escaping () -> Void
+    ) -> InAppNotificationDescriptor {
         let body: String
         if includeAllNetworksIsEnabled {
             body = String(
@@ -91,33 +113,23 @@ final class NewAppVersionInAppNotificationProvider:
                             + "lose network connectivity.", comment: ""),
                 NSLocalizedString("Force all apps", comment: "")
             )
-        } else if hasEnabledIncludeAllNetworksAtLeastOnce {
-            body = NSLocalizedString("Install the latest app version to stay up to date.", comment: "")
+        } else if let version {
+            body = String(format: NSLocalizedString("Version %@", comment: ""), version)
         } else {
-            return nil
+            body = NSLocalizedString("Install the latest app version to stay up to date.", comment: "")
         }
 
-        let string = NSMutableAttributedString(string: body)
-        string.append(NSAttributedString(string: "\n"))
-        string.append(
-            NSAttributedString(
-                string: NSLocalizedString("Tap here to go to AppStore", comment: ""),
-                attributes: [
-                    .font: UIFont.warrenTinySemiBold,
-                    .foregroundColor: UIColor.white,
-                ]))
-
         return InAppNotificationDescriptor(
-            identifier: identifier,
+            identifier: .newAppVersionInAppNotification,
             style: .warning,
-            title: NSLocalizedString("Update available", comment: "").localizedUppercase,
-            body: string,
-            tapAction: InAppNotificationAction(
-                handler: { [weak self] in
-                    guard let self else { return }
-                    NotificationManager.shared.notificationProvider(self, didReceiveAction: "\(identifier)")
-                }
-            )
+            title: NSLocalizedString("Update available", comment: ""),
+            body: NSAttributedString(string: body),
+            button: InAppNotificationAction(
+                title: NSLocalizedString("Install", comment: ""),
+                handler: install
+            ),
+            tapAction: InAppNotificationAction(handler: install),
+            icon: .update
         )
     }
 }

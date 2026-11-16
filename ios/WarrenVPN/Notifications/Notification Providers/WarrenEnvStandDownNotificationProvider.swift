@@ -82,7 +82,7 @@ final class WarrenEnvStandDownNotificationProvider: NotificationProvider,
             title: NSLocalizedString("PRODUCTION HAS PRIORITY", comment: ""),
             body: NSAttributedString(string: body),
             button: InAppNotificationAction(
-                image: UIImage.Buttons.closeSmall,
+                image: UIImage.Buttons.bannerClose,
                 handler: { [weak self] in
                     guard let self else { return }
                     reEnable()

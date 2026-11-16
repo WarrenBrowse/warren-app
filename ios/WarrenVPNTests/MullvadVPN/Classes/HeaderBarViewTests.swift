@@ -168,24 +168,6 @@ final class HeaderBarViewTests: XCTestCase {
         XCTAssertEqual(height(header.settingsButton), UIMetrics.Button.barButtonSize)
     }
 
-    /// A keyboard focus ring on the home toolbar is a rounded square drawn inside each 38 point
-    /// button, so it never spills over the pill's edge; elsewhere the system ring stays.
-    func testTheHomeToolbarRingsItsButtonsInside() throws {
-        let header = HeaderBarView(frame: .zero)
-        let buttons = [header.forumButton, header.accountButton, header.settingsButton]
-
-        header.homeTheme = .dark
-        for button in buttons {
-            let halo = try XCTUnwrap(button.focusEffect as? UIFocusHaloEffect)
-            XCTAssertEqual(halo.position, .inside)
-        }
-
-        header.homeTheme = nil
-        for button in buttons {
-            XCTAssertNil(button.focusEffect)
-        }
-    }
-
     /// The toolbar's glyphs take the opposite tone of its glass in each theme.
     func testTheHomeGlyphsFollowTheTheme() throws {
         let header = HeaderBarView(frame: .zero)
@@ -194,5 +176,22 @@ final class HeaderBarViewTests: XCTestCase {
         header.homeTheme = .light
         let onPaperGlass = try XCTUnwrap(header.settingsButton.image(for: .normal))
         XCTAssertNotEqual(onDarkGlass, onPaperGlass)
+    }
+
+    /// On the home a pressed or focused toolbar button tints its 38 point square with the text
+    /// colour at 12% rather than ringing it (desktop `HomeHeader`).
+    func testAHomeToolbarButtonTintsItsSquareRatherThanRingingIt() throws {
+        let header = HeaderBarView(frame: .zero)
+        header.homeTheme = .dark
+        let button = header.accountButton
+
+        XCTAssertNil(button.focusEffect)
+        XCTAssertNil(button.backgroundColor)
+        button.isHighlighted = true
+        let tint = try XCTUnwrap(button.backgroundColor)
+        XCTAssertEqual(
+            tint, ConnectSurfacePalette(theme: .dark).uiColor(.homeText).withAlphaComponent(0.12))
+        button.isHighlighted = false
+        XCTAssertNil(button.backgroundColor)
     }
 }

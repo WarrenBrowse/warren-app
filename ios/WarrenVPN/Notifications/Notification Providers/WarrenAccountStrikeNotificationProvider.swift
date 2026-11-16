@@ -81,7 +81,7 @@ final class WarrenAccountStrikeNotificationProvider: NotificationProvider,
             title: String(localized: "PORT FORWARDING WARNING", table: "Settings"),
             body: NSAttributedString(string: body),
             button: InAppNotificationAction(
-                image: UIImage.Buttons.closeSmall,
+                image: UIImage.Buttons.bannerClose,
                 handler: { [weak self] in
                     self?.dismiss(notice.strike.dismissalKey)
                 }

@@ -26,6 +26,12 @@ public final class AppVersionService: @unchecked Sendable {
 
     public var onNewAppVersion: (() -> Void)?
 
+    /// The App Store version the last check found newer than this one, nil before any did.
+    public var availableVersion: String? {
+        let version = appPreferences.lastVersionCheck.version
+        return version.isEmpty ? nil : version
+    }
+
     public init(
         urlSession: URLSessionProtocol,
         appPreferences: AppPreferences,

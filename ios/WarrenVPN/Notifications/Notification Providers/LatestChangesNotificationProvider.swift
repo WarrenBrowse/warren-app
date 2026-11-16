@@ -64,7 +64,7 @@ class LatestChangesNotificationProvider: NotificationProvider, InAppNotification
 
     private func createCloseButtonAction() -> InAppNotificationAction {
         InAppNotificationAction(
-            image: UIImage.Buttons.closeSmall,
+            image: UIImage.Buttons.bannerClose,
             handler: { [weak self] in
                 self?.invalidate()
             }
