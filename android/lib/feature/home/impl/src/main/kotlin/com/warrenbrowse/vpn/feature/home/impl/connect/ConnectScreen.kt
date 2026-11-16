@@ -884,6 +884,11 @@ fun ConnectScreen(
 // Keeps a snackbar clear of the footer band it would otherwise cover.
 private val SNACKBAR_ABOVE_FOOTER = 44.dp
 
+// The dark theme's split hero darkens under the status bar, past it by this much, so the light
+// glyphs read over the sky.
+private val STATUS_SCRIM_REACH = 24.dp
+private const val STATUS_SCRIM_ALPHA = 0.6f
+
 // The fade from the hero pane into the panel when the two sit side by side.
 private val SPLIT_EDGE_FADE = 24.dp
 
@@ -1010,9 +1015,8 @@ private fun HomeContent(
 
     BoxWithConstraints(Modifier.fillMaxSize().background(surfaces.homePage)) {
         val split = !isTv() && HomeLayout.splits(maxWidth.value, maxHeight.value)
-        // The status bar sits on the sky, which is pale in every landscape; split, its right half
-        // sits on the page, dark in the dark theme, so there the glyphs stay light.
-        HomeSystemBarGlyphs(darkStatusGlyphs = !(split && surfaces.isDark))
+        val statusBar = homeStatusBar(split, surfaces.isDark)
+        HomeSystemBarGlyphs(darkStatusGlyphs = statusBar.darkGlyphs)
         if (split) {
             val paneHeight = maxHeight
             val panelPadding = Modifier.padding(horizontal = panel.PaddingHorizontal)
@@ -1020,6 +1024,18 @@ private fun HomeContent(
                 // The hero pane keeps its size whatever the panel does: no compact shrink here.
                 Box(Modifier.weight(1f).fillMaxHeight()) {
                     hero(false, paneHeight, paneHeight)
+                    if (statusBar.skyScrim) {
+                        Box(
+                            Modifier.fillMaxWidth()
+                                .height(statusTop + STATUS_SCRIM_REACH)
+                                .background(
+                                    Brush.verticalGradient(
+                                        0f to surfaces.homePage.copy(alpha = STATUS_SCRIM_ALPHA),
+                                        1f to Color.Transparent,
+                                    )
+                                )
+                        )
+                    }
                     // The pane's inner edge melts into the panel rather than cutting the art.
                     Box(
                         Modifier.align(Alignment.CenterEnd)
