@@ -208,7 +208,8 @@ async fn mullvad_ios_get_addresses_inner(
 
 const EXIT_DIRECTORY_TIMEOUT: Duration = Duration::from_secs(15);
 
-/// Conditional `GET /v1/exits` (the signed v10 Warren exit directory).
+/// Conditional `GET /v2/exits` (the signed v11 Warren exit directory: the
+/// v10 one plus each exit's fleet name, shown in the location list).
 /// A bare unsigned GET, like the desktop updater and warren-jni: the
 /// endpoint is public and authenticity comes from the signed body, not
 /// from the transport identity.
@@ -217,7 +218,7 @@ fn warren_exits_response(
     prev_etag: Option<ETag>,
 ) -> impl Future<Output = Result<rest::Response<hyper::body::Incoming>, rest::Error>> {
     let service = handle.service();
-    let request = handle.factory.get("v1/exits");
+    let request = handle.factory.get("v2/exits");
 
     async move {
         let mut request = request?

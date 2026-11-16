@@ -157,14 +157,26 @@ fn make_wireguard_relay(
     )
 }
 
-/// The hostname a relay carries in the GUI list: 16 hex chars of its pubkey,
-/// short and visually distinct. The network stats join reuses it, so the two
-/// can never disagree on which row is which exit.
+/// The hostname a relay carries in the GUI list: its fleet name. The network
+/// stats join reuses it, so the two can never disagree on which row is which
+/// exit. Saved locations never key on it: a single-server pick is reduced to
+/// its country and city (`warren_query_from_settings`).
 pub(crate) fn relay_hostname(relay: &WarrenRelay) -> String {
-    format!(
-        "warren-{}",
-        &hex::encode(relay.endpoint_id().as_bytes())[..16]
+    exit_label(
+        relay.fleet_name(),
+        &hex::encode(relay.endpoint_id().as_bytes()),
     )
+}
+
+/// How an exit is named on screen: the fleet name the operator knows it by
+/// (`fi-hel-bveh1`), or, for a node that has not reported every naming
+/// component and on a v10 roster, `warren-` and the first 16 hex characters
+/// of its key.
+pub(crate) fn exit_label(fleet_name: Option<&str>, pubkey_hex: &str) -> String {
+    match fleet_name {
+        Some(name) => name.to_owned(),
+        None => format!("warren-{}", &pubkey_hex[..16]),
+    }
 }
 
 /// Rough slug of a city name to produce a `CityCode`
@@ -334,5 +346,31 @@ mod tests {
         let out = to_mullvad_relay_list(&list);
         let fr_paris = &out.countries[0].cities[0].relays;
         assert_ne!(fr_paris[0].hostname, fr_paris[1].hostname);
+    }
+
+    /// An exit is shown by the fleet name the operator knows it by, as the
+    /// v11 roster carries it.
+    #[test]
+    fn a_named_exit_is_listed_under_its_fleet_name() {
+        let named = make_warren_relay("FI", "Helsinki", "10.0.0.1", 1)
+            .with_fleet_name(Some("fi-hel-bveh1".to_owned()));
+        let out = to_mullvad_relay_list(&WarrenRelayList::new(vec![named]));
+        assert_eq!(out.countries[0].cities[0].relays[0].hostname, "fi-hel-bveh1");
+    }
+
+    /// Until a node reports every naming component (and on a v10 roster) it
+    /// keeps the short key-based label rather than no label at all.
+    #[test]
+    fn an_unnamed_exit_keeps_its_key_based_label() {
+        let unnamed = make_warren_relay("FI", "Helsinki", "10.0.0.1", 1);
+        let out = to_mullvad_relay_list(&WarrenRelayList::new(vec![unnamed]));
+        let hostname = &out.countries[0].cities[0].relays[0].hostname;
+        assert!(hostname.starts_with("warren-") && hostname.len() == 23, "{hostname}");
+    }
+
+    #[test]
+    fn the_connected_exit_label_prefers_the_fleet_name() {
+        assert_eq!(exit_label(Some("fi-hel-bveh1"), &"ab".repeat(32)), "fi-hel-bveh1");
+        assert_eq!(exit_label(None, &"ab".repeat(32)), "warren-abababababababab");
     }
 }

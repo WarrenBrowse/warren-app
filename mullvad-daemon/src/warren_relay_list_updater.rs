@@ -4,7 +4,7 @@
 //! pattern (cheap periodic check, staleness gate, ETag conditional GET,
 //! exponential backoff, atomic cache write, push to the live selector),
 //! but targets warren-api's public signed endpoint
-//! `GET {api_url}/v1/exits` (format v3 `SignedRelayList`, Ed25519).
+//! `GET {api_url}/v2/exits` (the v11 `SignedRelayList`, Ed25519).
 //!
 //! Security invariants:
 //! - The fetched body is **signature-verified against the pinned server
@@ -394,7 +394,7 @@ pub struct WarrenRelayListUpdater {
     /// Whether the optional offline-admin roster feature is enabled.
     /// **Off by default** (gated by the daemon via `WARREN_ROSTER_ENABLED`).
     /// When `false`, the updater never fetches or enforces a roster: the
-    /// online-signed `/v1/exits` list is published as-is. When `true`, it
+    /// online-signed `/v2/exits` list is published as-is. When `true`, it
     /// fetches `/v1/exits/roster`, verifies it against `roster_pin`, and
     /// drops any live-list exit the roster does not authorize.
     roster_enabled: bool,
@@ -626,7 +626,7 @@ impl WarrenRelayListUpdater {
         etag: Option<String>,
         pinned_server_pubkey: Option<String>,
     ) -> impl std::future::Future<Output = Result<FetchOutcome, Error>> {
-        let url = format!("{}/v1/exits", api_url.trim_end_matches('/'));
+        let url = exit_list_url(&api_url);
         let pin = pinned_server_pubkey;
         retry_future(
             move || Self::fetch_once(http.clone(), url.clone(), etag.clone(), pin.clone()),
@@ -735,6 +735,14 @@ impl WarrenRelayListUpdater {
     }
 }
 
+/// The signed exit list to fetch. The v11 list (`/v2/exits`) is the v10 one
+/// plus each exit's fleet name, which the location list and the connected exit
+/// are shown by; both are signed with the same key and generation, and the
+/// verifier accepts either.
+fn exit_list_url(api_url: &str) -> String {
+    format!("{}/v2/exits", api_url.trim_end_matches('/'))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -743,6 +751,16 @@ mod tests {
     use warren_discovery_core::{
         JsonEgress, JsonEndpoint, JsonListener, JsonLocation, JsonNode, sign_relay_list,
     };
+
+    /// The v11 list is the one that carries each exit's fleet name, which the
+    /// location list and the connected exit are shown by.
+    #[test]
+    fn the_relay_list_is_fetched_from_the_v11_endpoint() {
+        assert_eq!(
+            exit_list_url("https://api.beta.warrenbrowse.com/"),
+            "https://api.beta.warrenbrowse.com/v2/exits"
+        );
+    }
 
     /// Far-future expiry so default fixtures are never "expired".
     const FAR_FUTURE: u64 = 4_000_000_000;

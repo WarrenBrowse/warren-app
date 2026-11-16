@@ -99,7 +99,12 @@ fn project(relays: &[WarrenRelay]) -> String {
             .unwrap_or_else(|| "::".to_owned());
 
         wg_relays.push(serde_json::json!({
-            "hostname": format!("warren-{}", &hex::encode(pubkey_bytes)[..16]),
+            // The fleet name the v11 list carries (`fi-hel-bveh1`), or for an
+            // unnamed node the key-based label the desktop shows too.
+            "hostname": relay
+                .fleet_name()
+                .map(str::to_owned)
+                .unwrap_or_else(|| format!("warren-{}", &hex::encode(pubkey_bytes)[..16])),
             "active": relay.is_active(),
             "owned": true,
             "provider": "warren",
@@ -215,6 +220,7 @@ mod tests {
     use warren_discovery_core::warren_types::{ExitId, SigningKey, WarrenPubkey};
     use warren_discovery_core::{
         JsonEgress, JsonEndpoint, JsonListener, JsonLocation, JsonNode, sign_relay_list,
+        sign_relay_list_v2,
     };
 
     const FAR_FUTURE: u64 = 4_000_000_000;
@@ -266,6 +272,27 @@ mod tests {
 
     fn pubkey_hex(key: &SigningKey) -> String {
         hex::encode(key.verifying_key().to_bytes())
+    }
+
+    /// The location list and the connected exit show an exit by the fleet
+    /// name the v11 list carries; an unnamed one keeps its key-based label.
+    #[test]
+    fn a_v11_exit_is_named_by_its_fleet_name() {
+        let key = SigningKey::from_bytes(&[0xab; 32]);
+        let named = JsonNode {
+            name: Some("fi-hel-bveh1".to_owned()),
+            ..node(5, "fi", "Helsinki", "198.51.100.1", "ipv4")
+        };
+        let unnamed = node(6, "fi", "Helsinki", "198.51.100.2", "ipv4");
+        let signed = sign_relay_list_v2(vec![named, unnamed], &key, 1, 1_700_000_000, FAR_FUTURE);
+        let body = serde_json::to_string(&signed).expect("serialize signed v11");
+
+        let projected =
+            verify_and_project(&body, Some(&pubkey_hex(&key)), NOW).expect("must verify");
+        let json: serde_json::Value = serde_json::from_str(&projected).expect("valid JSON");
+        let relays = json["wireguard"]["relays"].as_array().expect("relays array");
+        assert_eq!(relays[0]["hostname"], "fi-hel-bveh1");
+        assert_eq!(relays[1]["hostname"], format!("warren-{}", &hex::encode([6u8; 32])[..16]));
     }
 
     #[test]

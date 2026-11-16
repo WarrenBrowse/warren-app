@@ -1194,7 +1194,9 @@ impl ParametersGenerator {
         // `multi_hop.exit.exit_id`. Falls back to empty strings if
         // the relay list has no matching entry (descriptor
         // out-of-band of the cached relays.json).
-        let (exit_id_hex, observed_pubkey_hex, country_code, city) = if let Some(multi_hop) =
+        let (exit_id_hex, label_exit_id, observed_pubkey_hex, country_code, city) = if let Some(
+            multi_hop,
+        ) =
             params.multi_hop.as_ref()
         {
             let exit_id =
@@ -1222,6 +1224,7 @@ impl ParametersGenerator {
             };
             (
                 exit_id.to_hex(),
+                exit_id,
                 hex::encode(multi_hop.exit.exit_ed25519_pubkey),
                 mh_country,
                 mh_city,
@@ -1229,6 +1232,7 @@ impl ParametersGenerator {
         } else {
             (
                 params.exit_id.to_hex(),
+                params.exit_id,
                 hex::encode(params.exit_addr.id.as_bytes()),
                 params.country_code.clone(),
                 params.city.clone(),
@@ -1623,7 +1627,16 @@ impl ParametersGenerator {
             latitude: lat,
             longitude: lng,
             mullvad_exit_ip: true,
-            hostname: Some(format!("warren-{}", &observed_pubkey_hex[..16])),
+            // The fleet name the list carries for this exit, the label the
+            // location list shows for it too.
+            hostname: Some(crate::warren_relay_list_view::exit_label(
+                inner
+                    .warren_relay_selector
+                    .as_ref()
+                    .and_then(|sel| sel.relay_by_exit_id(&label_exit_id))
+                    .and_then(|relay| relay.fleet_name()),
+                &observed_pubkey_hex,
+            )),
             entry_hostname: None,
             obfuscator_hostname: None,
         });

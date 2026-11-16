@@ -178,6 +178,11 @@ mod path_metrics;
 #[cfg(any(test, target_os = "android"))]
 mod exit_pin;
 
+// The relay catalogue rows the Kotlin side decodes, host-tested apart from the
+// Android-only export that serves them.
+#[cfg(any(test, target_os = "android"))]
+mod relay_catalog;
+
 #[cfg(target_os = "android")]
 mod android_jni;
 

@@ -1262,7 +1262,7 @@ fn fetch_relays_or_fallback() -> String {
         }
     };
 
-    // `/v1/exits` is unsigned (response is server-signed); use the
+    // `/v2/exits` is unsigned (response is server-signed); use the
     // placeholder-identity client so the code path never accidentally
     // relies on a real mnemonic being available here.
     let client = unsigned_warren_client();
@@ -1270,7 +1270,7 @@ fn fetch_relays_or_fallback() -> String {
     let raw = match runtime.block_on(client.list_exits()) {
         Ok(s) => s,
         Err(_) => {
-            log::warn!("listRelays: GET /v1/exits failed; returning cached/empty");
+            log::warn!("listRelays: GET /v2/exits failed; returning cached/empty");
             return cached_relays_or_empty();
         }
     };
@@ -1289,33 +1289,7 @@ fn fetch_relays_or_fallback() -> String {
         }
     };
 
-    // Project each WarrenRelay to the Kotlin schema: { exit_id,
-    // exit_pubkey_hex, endpoint, country, city, active, weight }.
-    // Pick the first ip_addr entry as the endpoint (the schema is
-    // single-endpoint on the Kotlin side until multi-endpoint
-    // failover lands).
-    let projected: Vec<serde_json::Value> = signed
-        .relays
-        .relays()
-        .iter()
-        .map(|r| {
-            let endpoint = r
-                .endpoint_addr()
-                .ip_addrs()
-                .next()
-                .map(|sa| sa.to_string())
-                .unwrap_or_else(|| "0.0.0.0:443".to_owned());
-            serde_json::json!({
-                "exit_id": r.exit_id().to_hex(),
-                "exit_pubkey_hex": r.endpoint_id().to_hex(),
-                "endpoint": endpoint,
-                "country": r.location().country_code(),
-                "city": r.location().city(),
-                "active": r.is_active(),
-                "weight": r.weight(),
-            })
-        })
-        .collect();
+    let projected = crate::relay_catalog::project_relays(signed.relays.relays());
 
     match serde_json::to_string(&projected) {
         Ok(json) => {

@@ -114,7 +114,7 @@ mod warren_product_config;
 /// `Any` for unsupported cases (custom lists, custom endpoint).
 pub mod warren_query_from_settings;
 /// Periodic + on-startup updater that refreshes the signed Warren exit
-/// list from `GET {warren_api_url}/v1/exits` (ETag conditional GET,
+/// list from `GET {warren_api_url}/v2/exits` (ETag conditional GET,
 /// signature-verified before caching, atomic cache write, hot-swap into
 /// the live selector). Mirrors the upstream `relay_list::RelayListUpdater`.
 pub mod warren_relay_list_updater;
@@ -2257,7 +2257,7 @@ impl Daemon {
         relay_list_updater.update().await;
 
         // Warren fork: spawn the dynamic Warren exit-list updater. It
-        // refreshes `GET {warren_api_url}/v1/exits` on startup +
+        // refreshes `GET {warren_api_url}/v2/exits` on startup +
         // periodically, verifies the signature against the pinned server
         // pubkey before caching, writes the cache atomically, and
         // hot-swaps the live selector + rebroadcasts the GUI view with no
