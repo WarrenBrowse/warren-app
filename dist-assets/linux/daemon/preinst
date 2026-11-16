@@ -1,15 +1,25 @@
 #!/usr/bin/env bash
 set -eu
 
-if command -v systemctl &> /dev/null && systemctl is-system-running | grep -vq offline &> /dev/null; then
-    if systemctl status warren-daemon &> /dev/null; then
-        /opt/Warren\ VPN/resources/warren-setup prepare-restart || true
-        systemctl stop warren-daemon.service
-        systemctl disable warren-daemon.service
-        systemctl disable warren-early-boot-blocking.service || true
-        cp /var/log/warren-vpn/daemon.log /var/log/warren-vpn/old-install-daemon.log \
-            || echo "Failed to copy old daemon log"
-    fi
+# The postinstall registers and starts the daemon through systemd. On a host
+# whose init is something else (MX Linux, antiX, Devuan) it either fails half
+# way, leaving the package half-configured, or completes with no daemon ever
+# started. Refuse before anything is unpacked, and name the installer that
+# sets up a sysvinit or OpenRC service instead.
+if ! command -v systemctl &> /dev/null || [ "$(systemctl is-system-running 2> /dev/null)" = offline ]; then
+    echo "Warren VPN: this package needs systemd, and this system does not run it." >&2
+    echo "Install the headless client with scripts/install.sh from github.com/WarrenBrowse/warren-cli instead:" >&2
+    echo "it sets up a sysvinit or OpenRC service." >&2
+    exit 1
+fi
+
+if systemctl status warren-daemon &> /dev/null; then
+    /opt/Warren\ VPN/resources/warren-setup prepare-restart || true
+    systemctl stop warren-daemon.service
+    systemctl disable warren-daemon.service
+    systemctl disable warren-early-boot-blocking.service || true
+    cp /var/log/warren-vpn/daemon.log /var/log/warren-vpn/old-install-daemon.log \
+        || echo "Failed to copy old daemon log"
 fi
 
 rm -f /var/cache/warren-vpn/relays.json

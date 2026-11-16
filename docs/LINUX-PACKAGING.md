@@ -28,7 +28,12 @@ x86_64 desktop and neither script is arch-generic.
 
 - **`-linux-amd64-sysvinit.deb`** (MX Linux, antiX, Devuan). The systemd
   package's postinst runs `systemctl enable` under `set -e`, so on a host with
-  no systemd dpkg leaves it half-configured. `ci/build-sysvinit-deb.sh` repacks
+  no systemd dpkg would leave it half-configured, and on one where systemd is
+  installed but is not the init it would complete with no daemon started. Its
+  preinst therefore refuses any host where `systemctl` is missing or
+  `is-system-running` answers `offline`, before anything is unpacked, and
+  names this package (`ci/test-linux-maintainer-scripts.sh`; the headless
+  package names the warren-cli installer). `ci/build-sysvinit-deb.sh` repacks
   it with the LSB init scripts in `dist-assets/linux/sysvinit/`, renames it
   `<pkg>-sysvinit` and declares Provides/Conflicts/Replaces on `<pkg>` so the
   two flavours are exclusive. `ci/test-sysvinit-deb.sh` then installs, starts,
