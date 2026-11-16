@@ -5,7 +5,9 @@
       "slug": "plaine",
       "role": "plain",
       "master": "ACCUEIL V33.jpg",
-      "iosImageset": "SceneryPlaine"
+      "iosImageset": "SceneryPlaine",
+      "skylineTopRow": 320,
+      "topFill": "#d5dee7"
     },
     {
       "slug": "terrier",
@@ -25,7 +27,9 @@
       "country": "DE",
       "countryName": "Germany",
       "master": "INTERFACE ALLEMAGNE V14.jpg",
-      "iosImageset": "SceneryGermany"
+      "iosImageset": "SceneryGermany",
+      "skylineTopRow": 140,
+      "topFill": "#f4f3f2"
     },
     {
       "slug": "finland",
@@ -33,7 +37,9 @@
       "country": "FI",
       "countryName": "Finland",
       "master": "INTERFACE FINLANDE V14.jpg",
-      "iosImageset": "SceneryFinland"
+      "iosImageset": "SceneryFinland",
+      "skylineTopRow": 235,
+      "topFill": "#f9f5f0"
     },
     {
       "slug": "france",
@@ -41,7 +47,9 @@
       "country": "FR",
       "countryName": "France",
       "master": "INTERFACE PARIS V142.jpg",
-      "iosImageset": "SceneryFrance"
+      "iosImageset": "SceneryFrance",
+      "skylineTopRow": 160,
+      "topFill": "#f1f2f3"
     },
     {
       "slug": "netherlands",
@@ -49,7 +57,9 @@
       "country": "NL",
       "countryName": "Netherlands",
       "master": "INTERFACE PAYS BAS V14.jpg",
-      "iosImageset": "SceneryNetherlands"
+      "iosImageset": "SceneryNetherlands",
+      "skylineTopRow": 100,
+      "topFill": "#eff2f3"
     },
     {
       "slug": "romania",
@@ -57,7 +67,9 @@
       "country": "RO",
       "countryName": "Romania",
       "master": "INTERFACE ROUMANIE V142.jpg",
-      "iosImageset": "SceneryRomania"
+      "iosImageset": "SceneryRomania",
+      "skylineTopRow": 300,
+      "topFill": "#f8f7f6"
     },
     {
       "slug": "singapore",
@@ -65,7 +77,9 @@
       "country": "SG",
       "countryName": "Singapore",
       "master": "INTERFACE SINGAPOUR V14.jpg",
-      "iosImageset": "ScenerySingapore"
+      "iosImageset": "ScenerySingapore",
+      "skylineTopRow": 360,
+      "topFill": "#fcf7f1"
     }
   ],
   "phases": {
@@ -74,35 +88,40 @@
       "bula": true,
       "blurred": false,
       "accent": "red",
-      "title": "redText"
+      "title": "redText",
+      "framing": "ground"
     },
     "connecting": {
       "landscape": "country",
       "bula": true,
       "blurred": true,
       "accent": "orange",
-      "title": "orangeText"
+      "title": "orangeText",
+      "framing": "ground"
     },
     "protected": {
       "landscape": "country",
       "bula": false,
       "blurred": false,
       "accent": "green",
-      "title": "greenText"
+      "title": "greenText",
+      "framing": "sky"
     },
     "interrupted": {
       "landscape": "country",
       "bula": false,
       "blurred": true,
       "accent": "orange",
-      "title": "orangeText"
+      "title": "orangeText",
+      "framing": "sky"
     },
     "blocked": {
       "landscape": "plain",
       "bula": false,
       "blurred": true,
       "accent": "white",
-      "title": "white"
+      "title": "white",
+      "framing": "ground"
     }
   }
 }
