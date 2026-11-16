@@ -53,6 +53,25 @@ class DesignParityTest {
     }
 
     @Test
+    fun `the subtitle, the exit row, the details card and the notices take the home tokens`() {
+        val home = HomeTypography
+        assertEquals(DesignTokens.Home.Subtitle.LineHeight.value, home.subtitle.lineHeight.value)
+        assertEquals(WarrenFonts.mono, home.exitRow.fontFamily)
+        assertEquals(DesignTokens.Home.ExitRow.TextSize, home.exitRow.fontSize)
+        val details = DesignTokens.Home.Details
+        assertHome(home.detailsLabel, details.TextSize, FontWeight.Normal.weight)
+        assertHome(home.detailsValue, details.TextSize, FontWeight.Normal.weight)
+        assertHome(home.detailsValueStrong, details.TextSize, details.ValueWeight)
+        assertEquals(WarrenFonts.mono, home.detailsMono.fontFamily)
+        assertEquals(details.MonoSize, home.detailsMono.fontSize)
+        assertHome(home.detailsChip, details.ChipSize, details.ChipWeight)
+        val notice = DesignTokens.Home.Notice
+        assertHome(home.bannerTitle, notice.TitleSize, notice.TitleWeight)
+        assertHome(home.bannerBody, notice.BodySize, FontWeight.Normal.weight)
+        assertHome(home.bannerButton, notice.ButtonTextSize, notice.ButtonTextWeight)
+    }
+
+    @Test
     fun `the dark home palette is the desktop dark home surfaces, field for field`() {
         assertHomeSurfaces(
             WarrenSurfaces.Dark,
@@ -94,6 +113,19 @@ class DesignParityTest {
                 DesignTokens.Surfaces.Dark.HomeCancelText,
                 DesignTokens.Surfaces.Dark.HomeCancelHover,
                 DesignTokens.Surfaces.Dark.HomeBeta,
+                DesignTokens.Surfaces.Dark.HomeNotice,
+                DesignTokens.Surfaces.Dark.HomeNoticeLine,
+                DesignTokens.Surfaces.Dark.HomeNoticeShadow,
+                DesignTokens.Surfaces.Dark.HomeNoticeTextSecondary,
+                DesignTokens.Surfaces.Dark.HomeNoticeUpdate,
+                DesignTokens.Surfaces.Dark.HomeNoticeAnnouncement,
+                DesignTokens.Surfaces.Dark.HomeDetails,
+                DesignTokens.Surfaces.Dark.HomeDetailsLine,
+                DesignTokens.Surfaces.Dark.HomeActive,
+                DesignTokens.Surfaces.Dark.HomeActiveWell,
+                DesignTokens.Surfaces.Dark.HomeLoad,
+                DesignTokens.Surfaces.Dark.HomeLoadTrack,
+                DesignTokens.Surfaces.Dark.HomeFlagLine,
             ),
         )
     }
@@ -140,6 +172,19 @@ class DesignParityTest {
                 DesignTokens.Surfaces.Light.HomeCancelText,
                 DesignTokens.Surfaces.Light.HomeCancelHover,
                 DesignTokens.Surfaces.Light.HomeBeta,
+                DesignTokens.Surfaces.Light.HomeNotice,
+                DesignTokens.Surfaces.Light.HomeNoticeLine,
+                DesignTokens.Surfaces.Light.HomeNoticeShadow,
+                DesignTokens.Surfaces.Light.HomeNoticeTextSecondary,
+                DesignTokens.Surfaces.Light.HomeNoticeUpdate,
+                DesignTokens.Surfaces.Light.HomeNoticeAnnouncement,
+                DesignTokens.Surfaces.Light.HomeDetails,
+                DesignTokens.Surfaces.Light.HomeDetailsLine,
+                DesignTokens.Surfaces.Light.HomeActive,
+                DesignTokens.Surfaces.Light.HomeActiveWell,
+                DesignTokens.Surfaces.Light.HomeLoad,
+                DesignTokens.Surfaces.Light.HomeLoadTrack,
+                DesignTokens.Surfaces.Light.HomeFlagLine,
             ),
         )
     }
@@ -278,6 +323,19 @@ class DesignParityTest {
                 palette.homeCancelText,
                 palette.homeCancelHover,
                 palette.homeBeta,
+                palette.homeNotice,
+                palette.homeNoticeLine,
+                palette.homeNoticeShadow,
+                palette.homeNoticeTextSecondary,
+                palette.homeNoticeUpdate,
+                palette.homeNoticeAnnouncement,
+                palette.homeDetails,
+                palette.homeDetailsLine,
+                palette.homeActive,
+                palette.homeActiveWell,
+                palette.homeLoad,
+                palette.homeLoadTrack,
+                palette.homeFlagLine,
             ),
         )
     }

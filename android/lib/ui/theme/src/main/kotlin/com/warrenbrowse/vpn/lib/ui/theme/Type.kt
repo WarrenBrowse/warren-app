@@ -97,6 +97,7 @@ object HomeTypography {
             fontFamily = WarrenFonts.sans,
             fontWeight = FontWeight.Normal,
             fontSize = DesignTokens.Home.Subtitle.TextSize,
+            lineHeight = DesignTokens.Home.Subtitle.LineHeight.value.sp,
         )
     val subtitleMono =
         TextStyle(
@@ -145,36 +146,67 @@ object HomeTypography {
         )
     // The beta label and its cap open the footer's end in bold (desktop FooterBeta, mockup 8d).
     val footerBeta = footer.copy(fontWeight = FontWeight.Bold)
-    // The home banner (desktop NotificationBanner, mockup 8d): a 13 px title over an 11 px body,
-    // and the 12 px label of its button.
+    // The exit row's host name (desktop StyledExitText), in the mono face.
+    val exitRow =
+        TextStyle(
+            fontFamily = WarrenFonts.mono,
+            fontWeight = FontWeight.Normal,
+            fontSize = DesignTokens.Home.ExitRow.TextSize,
+            lineHeight = DesignTokens.Home.Subtitle.LineHeight.value.sp,
+        )
+    // The connection details card: labels and values at 12, addresses in the mono face at 11,
+    // the "active" chip at 10.
+    val detailsLabel =
+        TextStyle(
+            fontFamily = WarrenFonts.sans,
+            fontWeight = FontWeight.Normal,
+            fontSize = DesignTokens.Home.Details.TextSize,
+            lineHeight = DesignTokens.Home.Details.TextSize * LINE_HEIGHT_DETAILS,
+        )
+    val detailsValue = detailsLabel
+    val detailsValueStrong =
+        detailsLabel.copy(fontWeight = FontWeight(DesignTokens.Home.Details.ValueWeight))
+    val detailsMono =
+        detailsLabel.copy(
+            fontFamily = WarrenFonts.mono,
+            fontSize = DesignTokens.Home.Details.MonoSize,
+        )
+    val detailsChip =
+        TextStyle(
+            fontFamily = WarrenFonts.sans,
+            fontWeight = FontWeight(DesignTokens.Home.Details.ChipWeight),
+            fontSize = DesignTokens.Home.Details.ChipSize,
+            lineHeight = DesignTokens.Home.Details.ChipSize * LINE_HEIGHT_TIGHT,
+        )
+    // The home notice (desktop NotificationBanner, mockup): a 13 title over an 11 body, and the
+    // 12 label of its button.
     val bannerTitle =
         TextStyle(
             fontFamily = WarrenFonts.sans,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = BANNER_TITLE_SIZE,
+            fontWeight = FontWeight(DesignTokens.Home.Notice.TitleWeight),
+            fontSize = DesignTokens.Home.Notice.TitleSize,
             lineHeight = BANNER_TITLE_LINE_HEIGHT,
         )
     val bannerBody =
         TextStyle(
             fontFamily = WarrenFonts.sans,
             fontWeight = FontWeight.Normal,
-            fontSize = BANNER_BODY_SIZE,
+            fontSize = DesignTokens.Home.Notice.BodySize,
             lineHeight = BANNER_BODY_LINE_HEIGHT,
         )
     val bannerButton =
         TextStyle(
             fontFamily = WarrenFonts.sans,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = BANNER_BUTTON_SIZE,
+            fontWeight = FontWeight(DesignTokens.Home.Notice.ButtonTextWeight),
+            fontSize = DesignTokens.Home.Notice.ButtonTextSize,
             lineHeight = BANNER_BUTTON_LINE_HEIGHT,
         )
 }
 
 private const val LINE_HEIGHT_TIGHT = 1.2f
+// The desktop details grid sets its text at line-height 1.25.
+private const val LINE_HEIGHT_DETAILS = 1.25f
 private val FOOTER_LINE_HEIGHT = 16.sp
-private val BANNER_TITLE_SIZE = 13.sp
 private val BANNER_TITLE_LINE_HEIGHT = 17.sp
-private val BANNER_BODY_SIZE = 11.sp
 private val BANNER_BODY_LINE_HEIGHT = 15.sp
-private val BANNER_BUTTON_SIZE = 12.sp
 private val BANNER_BUTTON_LINE_HEIGHT = 16.sp

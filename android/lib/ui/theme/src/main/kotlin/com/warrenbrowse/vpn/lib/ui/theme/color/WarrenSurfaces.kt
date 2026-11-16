@@ -76,6 +76,25 @@ data class WarrenSurfaces(
     val homeCancelHover: Color,
     /** The beta label and its live cap in the home footer. */
     val homeBeta: Color,
+    /** The glass of a home notice, its inset line, its drop shadow and its secondary text. */
+    val homeNotice: Color,
+    val homeNoticeLine: Color,
+    val homeNoticeShadow: Color,
+    val homeNoticeTextSecondary: Color,
+    /** The lead glyph of an update notice and of an announcement. */
+    val homeNoticeUpdate: Color,
+    val homeNoticeAnnouncement: Color,
+    /** The connection details card and the exit row's pressed well, and the card's inset line. */
+    val homeDetails: Color,
+    val homeDetailsLine: Color,
+    /** The "active" chip after the obfuscation, on its well. */
+    val homeActive: Color,
+    val homeActiveWell: Color,
+    /** The exit load ring and its track. */
+    val homeLoad: Color,
+    val homeLoadTrack: Color,
+    /** The hairline over the location row's round flag. */
+    val homeFlagLine: Color,
     /** Whether this is the dark palette, for the glyphs a surface cannot carry (system bars). */
     val isDark: Boolean,
 ) {
@@ -145,6 +164,19 @@ data class WarrenSurfaces(
                     homeCancelText = HomeCancelText,
                     homeCancelHover = HomeCancelHover,
                     homeBeta = HomeBeta,
+                    homeNotice = HomeNotice,
+                    homeNoticeLine = HomeNoticeLine,
+                    homeNoticeShadow = HomeNoticeShadow,
+                    homeNoticeTextSecondary = HomeNoticeTextSecondary,
+                    homeNoticeUpdate = HomeNoticeUpdate,
+                    homeNoticeAnnouncement = HomeNoticeAnnouncement,
+                    homeDetails = HomeDetails,
+                    homeDetailsLine = HomeDetailsLine,
+                    homeActive = HomeActive,
+                    homeActiveWell = HomeActiveWell,
+                    homeLoad = HomeLoad,
+                    homeLoadTrack = HomeLoadTrack,
+                    homeFlagLine = HomeFlagLine,
                     isDark = true,
                 )
             }
@@ -214,6 +246,19 @@ data class WarrenSurfaces(
                     homeCancelText = HomeCancelText,
                     homeCancelHover = HomeCancelHover,
                     homeBeta = HomeBeta,
+                    homeNotice = HomeNotice,
+                    homeNoticeLine = HomeNoticeLine,
+                    homeNoticeShadow = HomeNoticeShadow,
+                    homeNoticeTextSecondary = HomeNoticeTextSecondary,
+                    homeNoticeUpdate = HomeNoticeUpdate,
+                    homeNoticeAnnouncement = HomeNoticeAnnouncement,
+                    homeDetails = HomeDetails,
+                    homeDetailsLine = HomeDetailsLine,
+                    homeActive = HomeActive,
+                    homeActiveWell = HomeActiveWell,
+                    homeLoad = HomeLoad,
+                    homeLoadTrack = HomeLoadTrack,
+                    homeFlagLine = HomeFlagLine,
                     isDark = false,
                 )
             }
