@@ -218,7 +218,6 @@ private fun ExitRow(
         )
     // Names what the tap does, as the card's own chevron did.
     val action = stringResource(if (open) R.string.collapse else R.string.expand)
-    val label = stringResource(R.string.connect_panel_connection_details)
     Row(
         modifier =
             Modifier.padding(top = row.MarginTop)
@@ -228,7 +227,7 @@ private fun ExitRow(
                     interactionSource = interactions,
                     indication = null,
                     role = Role.Button,
-                    onClickLabel = "$action $label",
+                    onClickLabel = action,
                     onClick = onClick,
                 )
                 .testTag(CONNECT_CARD_HEADER_TEST_TAG)
