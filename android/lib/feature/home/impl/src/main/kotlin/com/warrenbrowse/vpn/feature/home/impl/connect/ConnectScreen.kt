@@ -15,6 +15,7 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -54,6 +55,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
@@ -882,6 +884,9 @@ fun ConnectScreen(
 // Keeps a snackbar clear of the footer band it would otherwise cover.
 private val SNACKBAR_ABOVE_FOOTER = 44.dp
 
+// The fade from the hero pane into the panel when the two sit side by side.
+private val SPLIT_EDGE_FADE = 24.dp
+
 // Notices float this far under the toolbar, on its right edge.
 private val NOTICES_GAP = DesignTokens.Home.Notice.MarginTop
 
@@ -917,119 +922,182 @@ private fun HomeContent(
     val connected = state.tunnelState is TunnelState.Connected
     // Closed on every change of tunnel state, as on desktop: the card describes one connection.
     var detailsOpen by rememberSaveable(state.tunnelState::class) { mutableStateOf(false) }
-    val compact = detailsOpen && connected
-    BackHandler(enabled = compact) { detailsOpen = false }
-    // The system's "remove animations" scales this to nothing, as reduced motion does on desktop.
-    val progress by
-        animateFloatAsState(
-            targetValue = if (compact) 1f else 0f,
-            animationSpec =
-                tween(SceneryFraming.COMPACT_TRANSITION_MS, easing = COMPACT_EASING),
-            label = "hero_compact",
-        )
+    val open = detailsOpen && connected
+    BackHandler(enabled = open) { detailsOpen = false }
 
     val phase = state.tunnelState.connectionPhase(state.hostOffline)
-    // The status bar always sits on the sky, which is pale in every landscape.
-    HomeSystemBarGlyphs(darkStatusGlyphs = true)
-    val columnModifier =
-        Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
-            .padding(horizontal = panel.PaddingHorizontal)
-
-    Box(Modifier.fillMaxSize().background(surfaces.homePage)) {
-        Column(Modifier.fillMaxSize()) {
-            BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
-                val viewport = maxHeight
-                HomeColumnLayout(
-                    viewport = viewport,
-                    statusTop = statusTop,
-                    compact = compact,
-                    progress = progress,
-                    hero = { frameHeight, fullHeight ->
-                        SceneryHero(
-                            phase = phase,
-                            exitCountry = state.location?.country,
-                            clearTop = clearTop,
-                            glowTop = statusTop,
-                            compact = compact,
-                            frameHeight = frameHeight,
-                            fullHeight = fullHeight,
-                            modifier = Modifier.fillMaxSize(),
+    val hero =
+        @Composable { compact: Boolean, frameHeight: Dp, fullHeight: Dp ->
+            SceneryHero(
+                phase = phase,
+                exitCountry = state.location?.country,
+                clearTop = clearTop,
+                glowTop = statusTop,
+                compact = compact,
+                frameHeight = frameHeight,
+                fullHeight = fullHeight,
+                modifier = Modifier.fillMaxSize(),
+            )
+        }
+    val headerSlot =
+        @Composable {
+            if (showHeader) {
+                Box(
+                    Modifier.windowInsetsPadding(
+                            WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
                         )
-                    },
-                    header = {
-                        if (showHeader) {
-                            Box(
-                                Modifier.windowInsetsPadding(
-                                        WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
-                                    )
-                                    .padding(
-                                        top = headerTop,
-                                        start = heroTokens.HeaderInset,
-                                        end = heroTokens.HeaderInset,
-                                    )
-                            ) {
-                                header()
-                            }
-                        }
-                    },
-                    status = {
-                        HomeStatusBlock(
-                            state = state,
-                            detailsOpen = compact,
-                            onToggleDetails = { detailsOpen = !detailsOpen },
-                            exitLoad = exitLoad,
-                            modifier = columnModifier,
+                        .padding(
+                            top = headerTop,
+                            start = heroTokens.HeaderInset,
+                            end = heroTokens.HeaderInset,
                         )
-                    },
-                    details = {
-                        HomeDetails(open = compact, state = state, modifier = columnModifier)
-                    },
-                    // Measured, never drawn nor read out: the card's full height, which the hero
-                    // makes room for.
-                    detailsProbe = {
-                        if (connected) {
-                            OpenDetails(state, columnModifier.clearAndSetSemantics {})
-                        }
-                    },
-                    rest = {
-                        // The mockup keeps the chips' own margin under them, above the footer.
-                        Column(columnModifier.padding(bottom = DesignTokens.Home.Chips.MarginTop)) {
-                            AppRoutingLabels(state, onAppRoutingClick)
-                            controls()
-                            // One row is reserved even with no chip, so the hero keeps its frame
-                            // when the tunnel comes up and the first chip appears.
-                            Box(
-                                Modifier.padding(top = DesignTokens.Home.Chips.MarginTop)
-                                    .heightIn(min = DesignTokens.Home.Chips.Height)
-                            ) {
-                                chips()
-                            }
-                        }
-                    },
-                )
+                ) {
+                    header()
+                }
             }
-            footer()
+        }
+    val status =
+        @Composable { modifier: Modifier ->
+            HomeStatusBlock(
+                state = state,
+                detailsOpen = open,
+                onToggleDetails = { detailsOpen = !detailsOpen },
+                exitLoad = exitLoad,
+                modifier = modifier,
+            )
+        }
+    val rest =
+        @Composable { modifier: Modifier ->
+            // The mockup keeps the chips' own margin under them, above the footer.
+            Column(modifier.padding(bottom = DesignTokens.Home.Chips.MarginTop)) {
+                AppRoutingLabels(state, onAppRoutingClick)
+                controls()
+                // One row is reserved even with no chip, so the hero keeps its frame when the
+                // tunnel comes up and the first chip appears.
+                Box(
+                    Modifier.padding(top = DesignTokens.Home.Chips.MarginTop)
+                        .heightIn(min = DesignTokens.Home.Chips.Height)
+                ) {
+                    chips()
+                }
+            }
+        }
+    // Transient notices float under the toolbar, on its right edge, over the art, so they never
+    // move the controls; animateContentSize keeps a card arriving or leaving continuous.
+    val notices =
+        @Composable {
+            BoxWithConstraints(
+                Modifier.fillMaxWidth()
+                    .windowInsetsPadding(
+                        WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
+                    )
+                    .padding(
+                        top =
+                            if (showHeader) headerTop + toolbar.Height + NOTICES_GAP
+                            else statusTop + NOTICES_GAP
+                    ),
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                Box(
+                    Modifier.widthIn(max = HomeLayout.COLUMN_MAX_WIDTH.dp)
+                        .fillMaxWidth()
+                        .animateContentSize()
+                ) {
+                    notifications()
+                }
+            }
         }
 
-        // Transient notices float under the toolbar, on its right edge, over the art, so they
-        // never move the controls; animateContentSize keeps a card arriving or leaving continuous.
-        BoxWithConstraints(
-            Modifier.fillMaxWidth()
-                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
-                .padding(
-                    top =
-                        if (showHeader) headerTop + toolbar.Height + NOTICES_GAP
-                        else statusTop + NOTICES_GAP
-                ),
-            contentAlignment = Alignment.TopCenter,
-        ) {
-            Box(
-                Modifier.widthIn(max = HomeLayout.COLUMN_MAX_WIDTH.dp)
-                    .fillMaxWidth()
-                    .animateContentSize()
-            ) {
-                notifications()
+    BoxWithConstraints(Modifier.fillMaxSize().background(surfaces.homePage)) {
+        val split = !isTv() && HomeLayout.splits(maxWidth.value, maxHeight.value)
+        // The status bar sits on the sky, which is pale in every landscape; split, its right half
+        // sits on the page, dark in the dark theme, so there the glyphs stay light.
+        HomeSystemBarGlyphs(darkStatusGlyphs = !(split && surfaces.isDark))
+        if (split) {
+            val paneHeight = maxHeight
+            val panelPadding = Modifier.padding(horizontal = panel.PaddingHorizontal)
+            Row(Modifier.fillMaxSize()) {
+                // The hero pane keeps its size whatever the panel does: no compact shrink here.
+                Box(Modifier.weight(1f).fillMaxHeight()) {
+                    hero(false, paneHeight, paneHeight)
+                    // The pane's inner edge melts into the panel rather than cutting the art.
+                    Box(
+                        Modifier.align(Alignment.CenterEnd)
+                            .fillMaxHeight()
+                            .width(SPLIT_EDGE_FADE)
+                            .background(
+                                Brush.horizontalGradient(
+                                    0f to Color.Transparent,
+                                    1f to surfaces.homePage,
+                                )
+                            )
+                    )
+                    headerSlot()
+                    notices()
+                }
+                Column(
+                    Modifier.weight(1f)
+                        .fillMaxHeight()
+                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.End))
+                ) {
+                    BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+                        val viewport = maxHeight
+                        Column(
+                            Modifier.fillMaxWidth()
+                                .verticalScroll(rememberScrollState())
+                                .heightIn(min = viewport)
+                                .padding(top = statusTop + heroTokens.HeaderInset),
+                            verticalArrangement = Arrangement.Center,
+                        ) {
+                            status(panelPadding)
+                            HomeDetails(open = open, state = state, modifier = panelPadding)
+                            rest(panelPadding)
+                        }
+                    }
+                    footer()
+                }
             }
+        } else {
+            val columnModifier =
+                Modifier.windowInsetsPadding(
+                        WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
+                    )
+                    .padding(horizontal = panel.PaddingHorizontal)
+            // The system's "remove animations" scales this to nothing, as reduced motion does on
+            // desktop.
+            val progress by
+                animateFloatAsState(
+                    targetValue = if (open) 1f else 0f,
+                    animationSpec =
+                        tween(SceneryFraming.COMPACT_TRANSITION_MS, easing = COMPACT_EASING),
+                    label = "hero_compact",
+                )
+            Column(Modifier.fillMaxSize()) {
+                BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+                    HomeColumnLayout(
+                        viewport = maxHeight,
+                        statusTop = statusTop,
+                        compact = open,
+                        progress = progress,
+                        hero = { frameHeight, fullHeight -> hero(open, frameHeight, fullHeight) },
+                        header = headerSlot,
+                        status = { status(columnModifier) },
+                        details = {
+                            HomeDetails(open = open, state = state, modifier = columnModifier)
+                        },
+                        // Measured, never drawn nor read out: the card's full height, which the
+                        // hero makes room for.
+                        detailsProbe = {
+                            if (connected) {
+                                OpenDetails(state, columnModifier.clearAndSetSemantics {})
+                            }
+                        },
+                        rest = { rest(columnModifier) },
+                    )
+                }
+                footer()
+            }
+            notices()
         }
     }
 }

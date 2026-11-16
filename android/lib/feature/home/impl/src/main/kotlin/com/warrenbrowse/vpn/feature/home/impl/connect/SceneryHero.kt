@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.feature.home.impl.connect
 
+import android.graphics.Bitmap
 import android.os.Build
 import android.os.SystemClock
 import androidx.annotation.DrawableRes
@@ -32,7 +33,10 @@ import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.CompositingStrategy
+import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.RenderEffect
 import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.TransformOrigin
@@ -225,30 +229,51 @@ private class ResizeClock(private var compact: Boolean) {
 }
 
 /**
- * The landscape behind the side margins of a narrowed canvas: the same image at cover scale,
- * blurred by [SceneryFraming.MARGIN_BLUR], so a wide hero reads as one landscape rather than a
- * picture in a flat frame. RenderEffect needs API 31; below it the margins keep the top fill.
+ * The landscape behind the side margins of a narrowed canvas: the same image at cover scale, as an
+ * ambient wash with no recognisable shape. The master is first shrunk to a few dozen pixels, which
+ * erases its shapes on every API level once drawn back up with bilinear filtering, then blurred by
+ * [SceneryFraming.MARGIN_BLUR] where RenderEffect exists (API 31) to smooth the filtering away.
  */
 @Composable
 private fun MarginBackdrop(@DrawableRes landscape: Int, cover: SceneryFraming.Frame) {
-    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
     val image = rememberSceneryBitmap(landscape)
+    val wash = remember(image) { washOf(image) }
     Box(
         Modifier.fillMaxSize()
             .graphicsLayer {
-                val radius = SceneryFraming.MARGIN_BLUR.dp.toPx()
-                renderEffect = BlurEffect(radius, radius, TileMode.Clamp)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    val radius = SceneryFraming.MARGIN_BLUR.dp.toPx()
+                    renderEffect = BlurEffect(radius, radius, TileMode.Clamp)
+                }
                 clip = true
             }
-            .drawBehind { drawLayer(image, CanvasRect(cover.left, cover.top, cover.scale)) }
+            .drawBehind {
+                drawImage(
+                    image = wash,
+                    srcOffset = IntOffset.Zero,
+                    srcSize = IntSize(wash.width, wash.height),
+                    dstOffset = IntOffset(cover.left.roundToInt(), cover.top.roundToInt()),
+                    dstSize = IntSize(cover.width.roundToInt(), cover.height.roundToInt()),
+                    filterQuality = FilterQuality.Low,
+                )
+            }
     )
 }
 
-/**
- * The registered canvas. Composed only once a frame exists, so its first frame is placed rather
- * than animated in from nowhere; every later reframe (a phase change, a new landscape) moves the
- * three layers together on the desktop's frame clock.
- */
+// The master shrunk this many times over on each side before it becomes the margin wash.
+private const val WASH_DOWNSCALE = 24
+
+private fun washOf(image: ImageBitmap): ImageBitmap {
+    val source = image.asAndroidBitmap()
+    return Bitmap.createScaledBitmap(
+            source,
+            (source.width / WASH_DOWNSCALE).coerceAtLeast(1),
+            (source.height / WASH_DOWNSCALE).coerceAtLeast(1),
+            true,
+        )
+        .asImageBitmap()
+}
+
 @Composable
 private fun SceneryCanvas(
     target: SceneryFraming.Frame,

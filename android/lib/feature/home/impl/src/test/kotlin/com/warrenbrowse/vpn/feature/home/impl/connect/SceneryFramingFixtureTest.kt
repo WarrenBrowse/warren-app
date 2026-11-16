@@ -143,6 +143,7 @@ class SceneryFramingFixtureTest {
         )
         assertEquals(fixture.int("compact_transition_ms"), SceneryFraming.COMPACT_TRANSITION_MS)
         assertEquals(fixture.float("margin_blur_px"), SceneryFraming.MARGIN_BLUR)
+        assertEquals(fixture.float("split_below_height_px"), HomeLayout.SPLIT_BELOW_HEIGHT)
         val stops =
             fixture.getValue("mask_stops").jsonArray.map { stop ->
                 val (at, alpha) = stop.jsonArray.map { it.jsonPrimitive.content.toFloat() }
@@ -180,8 +181,9 @@ class SceneryFramingFixtureTest {
             // The fixture's clear_top is the status bar plus the header band.
             val statusBar = case.float("clear_top_px") - headerBand.value
             when {
-                // A tablet's hero takes its height from the content column, not its own width.
-                name.startsWith("wide_") -> Unit
+                // A tablet's hero takes its height from the content column, and a split hero
+                // the pane's full height, not their own width.
+                name.startsWith("wide_") || name.contains("_split_") -> Unit
                 case.booleanOr("compact", false) ->
                     assertEquals(
                         height,

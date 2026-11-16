@@ -19,8 +19,8 @@ internal object SceneryFraming {
     /** The mockup's proportions (Warren VPN Accueil, 380x620): a 300 high hero on a 380 width. */
     const val HERO_HEIGHT_RATIO = 300f / 380f
 
-    /** A phone hero takes free height up to this fraction of its width. */
-    const val HERO_MAX_HEIGHT_RATIO = 1.15f
+    /** A phone hero takes free height up to this fraction of its width, which width-fit covers. */
+    const val HERO_MAX_HEIGHT_RATIO = 1.4f
 
     /** The hero while the connection details are open (176 on the 380 width). */
     const val COMPACT_HEIGHT_RATIO = 176f / 380f
@@ -28,8 +28,11 @@ internal object SceneryFraming {
     /** The hero's resize when the details open or close, on the desktop easing cubic-bezier(0.3, 0.7, 0.2, 1). */
     const val COMPACT_TRANSITION_MS = 400
 
-    /** The blur, in dp, of the landscape shown at cover scale beside a narrowed canvas. */
-    const val MARGIN_BLUR = 24f
+    /**
+     * The blur, in dp, of the landscape shown at cover scale beside a narrowed canvas: an ambient
+     * wash with no recognisable shape.
+     */
+    const val MARGIN_BLUR = 60f
 
     /**
      * The hero's alpha from its top to its bottom, the mockup's soft fade: `(fraction of the hero

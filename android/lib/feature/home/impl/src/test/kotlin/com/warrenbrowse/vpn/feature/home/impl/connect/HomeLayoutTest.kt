@@ -35,10 +35,10 @@ class HomeLayoutTest {
 
     @Test
     fun `a tall phone gives the hero its max and the rest to the gap above the footer`() {
-        val plan = plan(width = 412f, viewport = 860f)
+        val plan = plan(width = 412f, viewport = 1000f)
         assertEquals(412f * SceneryFraming.HERO_MAX_HEIGHT_RATIO + STATUS_BAR, plan.hero)
-        assertEquals(860f, plan.content)
-        assertTrue(!plan.scrolls(860f))
+        assertEquals(1000f, plan.content)
+        assertTrue(!plan.scrolls(1000f))
     }
 
     @Test
@@ -114,10 +114,10 @@ class HomeLayoutTest {
     @Test
     fun `on a tall phone the hero gives the card only the room the gap cannot`() {
         val natural = 412f * SceneryFraming.HERO_MAX_HEIGHT_RATIO + STATUS_BAR
-        val gap = 860f - (natural - OVERLAP + PANEL)
-        val open = plan(width = 412f, viewport = 860f, card = 150f, compact = true)
+        val gap = 1000f - (natural - OVERLAP + PANEL)
+        val open = plan(width = 412f, viewport = 1000f, card = 150f, compact = true)
         assertEquals(natural - (150f - gap), open.hero, TOLERANCE)
-        assertEquals(860f, open.content, TOLERANCE)
+        assertEquals(1000f, open.content, TOLERANCE)
         val roomy = plan(width = 412f, viewport = 2000f, card = 150f, compact = true)
         assertEquals(natural, roomy.hero, TOLERANCE)
     }
@@ -127,6 +127,16 @@ class HomeLayoutTest {
         val plan = plan(width = 360f, viewport = 560f, card = 200f, compact = true)
         assertEquals(plan.hero - OVERLAP + PANEL + 200f, plan.content, TOLERANCE)
         assertTrue(plan.scrolls(560f))
+    }
+
+    @Test
+    fun `a screen wider than tall and below the split height sets hero and panel side by side`() {
+        assertTrue(HomeLayout.splits(width = 914f, height = 411f))
+        // Not wider than tall: a short portrait phone keeps the column and scrolls.
+        assertTrue(!HomeLayout.splits(width = 360f, height = 520f))
+        // Wider than tall but tall enough: a landscape tablet keeps the centred column.
+        assertTrue(!HomeLayout.splits(width = 1280f, height = 800f))
+        assertTrue(!HomeLayout.splits(width = 900f, height = HomeLayout.SPLIT_BELOW_HEIGHT))
     }
 
     private companion object {

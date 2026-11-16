@@ -12,10 +12,21 @@ package com.warrenbrowse.vpn.feature.home.impl.connect
  * header, panel and footer in a centred column of at most [COLUMN_MAX_WIDTH] while the hero spans
  * the whole width: the column's rule is the hero's floor, so a landscape tablet keeps its controls
  * on screen, and the free height is taken up to the max of the hero's own width, so a portrait
- * tablet opens no hole above its footer either.
+ * tablet opens no hole above its footer either. A phone in landscape ([splits]) puts the hero, the
+ * left half at full height, beside the panel instead.
  */
 internal object HomeLayout {
     const val COLUMN_MAX_WIDTH = 480f
+
+    /**
+     * A screen wider than tall and shorter than this (a phone in landscape) cannot hold the hero
+     * over the panel: it puts them side by side instead.
+     */
+    const val SPLIT_BELOW_HEIGHT = 560f
+
+    /** Whether a [width] x [height] screen lays the hero and the panel side by side. */
+    fun splits(width: Float, height: Float): Boolean =
+        width > height && height < SPLIT_BELOW_HEIGHT
 
     data class Plan(
         /** The width of the header, panel and footer column. */
