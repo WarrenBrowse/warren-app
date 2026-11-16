@@ -56,7 +56,7 @@ final class RedeemVoucherContentView: UIView {
     private let textField: VoucherTextField = {
         let textField = VoucherTextField()
         textField.font = UIFontMetrics(forTextStyle: .subheadline)
-            .scaledFont(for: .monospacedSystemFont(ofSize: 15, weight: .regular))
+            .scaledFont(for: UIFont(name: WarrenFontFace.monoRegular.rawValue, size: 15) ?? .monospacedSystemFont(ofSize: 15, weight: .regular))
         textField.placeholder = Array(repeating: "XXXX", count: 4).joined(separator: "-")
         textField.placeholderTextColor = .lightGray
         textField.backgroundColor = .white

@@ -162,7 +162,7 @@ class CustomListViewController: UIViewController {
                 format: NSLocalizedString("Do you want to delete the list **%@**?", comment: ""),
                 subject.value.name
             ),
-            options: MarkdownStylingOptions(font: .preferredFont(forTextStyle: .body))
+            options: MarkdownStylingOptions(font: UIFont.instrumentSans(.body))
         )
 
         let presentation = AlertPresentation(

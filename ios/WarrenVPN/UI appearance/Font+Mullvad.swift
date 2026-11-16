@@ -1,29 +1,32 @@
 import SwiftUI
 
+// The app's named text styles, set in Instrument Sans at each text style's size
+// and scaled with Dynamic Type (`WarrenFonts.swift`).
+
 extension Font {
-    static var warrenBig: Font { .largeTitle.bold() }
-    static var warrenLarge: Font { .title.bold() }
-    static var warrenMedium: Font { .title3.weight(.semibold) }
-    static var warrenSmall: Font { .body }
-    static var warrenSmallSemiBold: Font { warrenSmall.weight(.semibold) }
-    static var warrenTiny: Font { .subheadline }
-    static var warrenTinySemiBold: Font { .warrenTiny.weight(.semibold) }
-    static var warrenMini: Font { .footnote }
-    static var warrenMiniSemiBold: Font { warrenMini.weight(.semibold) }
-    static var warrenMicro: Font { .caption2 }
-    static var warrenMicroSemiBold: Font { warrenMicro.weight(.semibold) }
+    static var warrenBig: Font { .instrumentSans(.largeTitle, weight: .bold) }
+    static var warrenLarge: Font { .instrumentSans(.title, weight: .bold) }
+    static var warrenMedium: Font { .instrumentSans(.title3, weight: .semibold) }
+    static var warrenSmall: Font { .instrumentSans(.body) }
+    static var warrenSmallSemiBold: Font { .instrumentSans(.body, weight: .semibold) }
+    static var warrenTiny: Font { .instrumentSans(.subheadline) }
+    static var warrenTinySemiBold: Font { .instrumentSans(.subheadline, weight: .semibold) }
+    static var warrenMini: Font { .instrumentSans(.footnote) }
+    static var warrenMiniSemiBold: Font { .instrumentSans(.footnote, weight: .semibold) }
+    static var warrenMicro: Font { .instrumentSans(.caption2) }
+    static var warrenMicroSemiBold: Font { .instrumentSans(.caption2, weight: .semibold) }
 }
 
 extension UIFont {
-    static var warrenBig: UIFont { .preferredFont(forTextStyle: .largeTitle, weight: .bold) }
-    static var warrenLarge: UIFont { .preferredFont(forTextStyle: .title1, weight: .bold) }
-    static var warrenMedium: UIFont { .preferredFont(forTextStyle: .title3, weight: .semibold) }
-    static var warrenSmall: UIFont { .preferredFont(forTextStyle: .body) }
-    static var warrenSmallSemiBold: UIFont { .preferredFont(forTextStyle: .body, weight: .semibold) }
-    static var warrenTiny: UIFont { .preferredFont(forTextStyle: .subheadline) }
-    static var warrenTinySemiBold: UIFont { .preferredFont(forTextStyle: .subheadline, weight: .semibold) }
-    static var warrenMini: UIFont { .preferredFont(forTextStyle: .footnote) }
-    static var warrenMiniSemiBold: UIFont { .preferredFont(forTextStyle: .footnote, weight: .semibold) }
-    static var warrenMicro: UIFont { .preferredFont(forTextStyle: .caption2) }
-    static var warrenMicroSemiBold: UIFont { .preferredFont(forTextStyle: .caption2, weight: .semibold) }
+    static var warrenBig: UIFont { .instrumentSans(.largeTitle, weight: .bold) }
+    static var warrenLarge: UIFont { .instrumentSans(.title1, weight: .bold) }
+    static var warrenMedium: UIFont { .instrumentSans(.title3, weight: .semibold) }
+    static var warrenSmall: UIFont { .instrumentSans(.body) }
+    static var warrenSmallSemiBold: UIFont { .instrumentSans(.body, weight: .semibold) }
+    static var warrenTiny: UIFont { .instrumentSans(.subheadline) }
+    static var warrenTinySemiBold: UIFont { .instrumentSans(.subheadline, weight: .semibold) }
+    static var warrenMini: UIFont { .instrumentSans(.footnote) }
+    static var warrenMiniSemiBold: UIFont { .instrumentSans(.footnote, weight: .semibold) }
+    static var warrenMicro: UIFont { .instrumentSans(.caption2) }
+    static var warrenMicroSemiBold: UIFont { .instrumentSans(.caption2, weight: .semibold) }
 }

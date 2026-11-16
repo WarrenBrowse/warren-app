@@ -144,10 +144,10 @@ public struct WarrenMnemonicGrid: View {
     private func wordCell(index: Int, word: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text("\(index + 1)")
-                .font(.caption2)
+                .font(.instrumentSans(.caption2))
                 .foregroundColor(.white.opacity(0.6))
             Text(word)
-                .font(.body.monospaced())
+                .font(.jetBrainsMono(.body))
                 .foregroundColor(.white)
                 .padding(.vertical, 8)
                 .padding(.horizontal, 6)

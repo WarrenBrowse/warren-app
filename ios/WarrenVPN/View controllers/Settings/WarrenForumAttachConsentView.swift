@@ -29,11 +29,11 @@ struct WarrenForumAttachConsentView: View {
                         "Attach your logs to your forum report?",
                         comment: "Forum attach consent prompt title")
                 )
-                .font(.headline)
+                .font(.instrumentSans(.headline, weight: .semibold))
                 .foregroundColor(.white)
 
                 Text(bodyText)
-                    .font(.body)
+                    .font(.instrumentSans(.body))
                     .foregroundColor(.white.opacity(0.85))
 
                 Text(
@@ -41,7 +41,7 @@ struct WarrenForumAttachConsentView: View {
                         "Wallet addresses and personal data are removed from the logs. They go privately to the Warren support team and never appear publicly on the forum. You can view exactly what will be sent before approving. Only approve if you opened that forum page yourself.",
                         comment: "Forum attach consent prompt, what leaves the device and the caution")
                 )
-                .font(.footnote)
+                .font(.instrumentSans(.footnote))
                 .foregroundColor(.white.opacity(0.7))
 
                 Button(action: onViewLogs) {
@@ -157,7 +157,7 @@ private struct WarrenForumAttachPreview: View {
         NavigationView {
             ScrollView([.vertical, .horizontal]) {
                 Text(text)
-                    .font(.system(.caption, design: .monospaced))
+                    .font(.jetBrainsMono(.caption))
                     .foregroundColor(.white)
                     .padding(16)
                     .frame(maxWidth: .infinity, alignment: .leading)

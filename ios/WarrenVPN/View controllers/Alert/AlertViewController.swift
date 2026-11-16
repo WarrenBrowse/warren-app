@@ -232,7 +232,7 @@ class AlertViewController: UIViewController {
         let label = UILabel()
 
         label.text = title
-        label.font = .preferredFont(forTextStyle: .largeTitle, weight: .bold)
+        label.font = UIFont.instrumentSans(.largeTitle, weight: .bold)
         label.textColor = .white
         label.adjustsFontForContentSizeCategory = true
         label.textAlignment = .center
@@ -247,7 +247,7 @@ class AlertViewController: UIViewController {
         let label = UILabel()
 
         label.text = title
-        label.font = .preferredFont(forTextStyle: .title3, weight: .semibold)
+        label.font = UIFont.instrumentSans(.title3, weight: .semibold)
         label.textColor = .white.withAlphaComponent(0.9)
         label.adjustsFontForContentSizeCategory = true
         label.numberOfLines = 0
@@ -263,7 +263,7 @@ class AlertViewController: UIViewController {
         message.apply(paragraphStyle: .alert)
 
         label.attributedText = message
-        label.font = .preferredFont(forTextStyle: .body)
+        label.font = UIFont.instrumentSans(.body)
         label.textColor = .white.withAlphaComponent(0.8)
         label.adjustsFontForContentSizeCategory = true
         label.numberOfLines = 0
@@ -325,7 +325,7 @@ class AlertViewController: UIViewController {
 
         let label = UILabel()
         label.text = checkbox.title
-        label.font = .preferredFont(forTextStyle: .footnote)
+        label.font = UIFont.instrumentSans(.footnote)
         label.textColor = .white.withAlphaComponent(0.8)
         label.adjustsFontForContentSizeCategory = true
         label.numberOfLines = 0

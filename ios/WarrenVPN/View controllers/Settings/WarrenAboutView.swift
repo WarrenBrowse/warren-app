@@ -45,7 +45,7 @@ public struct WarrenAboutView: View {
                     .foregroundColor(.white)
 
                 Text("v\(appVersion) (build \(buildNumber))")
-                    .font(.system(.body, design: .monospaced))
+                    .font(.jetBrainsMono(.body))
                     .foregroundColor(.white.opacity(0.6))
 
                 Text(
@@ -55,7 +55,7 @@ public struct WarrenAboutView: View {
                         comment: "Body explaining Warren's differentiator"
                     )
                 )
-                .font(.body)
+                .font(.instrumentSans(.body))
                 .foregroundColor(.white.opacity(0.8))
 
                 linksGroup

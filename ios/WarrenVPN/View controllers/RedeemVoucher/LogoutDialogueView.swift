@@ -30,7 +30,7 @@ class LogoutDialogueView: UIView {
         message.apply(paragraphStyle: .alert)
 
         label.attributedText = message
-        label.font = .preferredFont(forTextStyle: .callout, weight: .semibold)
+        label.font = UIFont.instrumentSans(.callout, weight: .semibold)
         label.numberOfLines = .zero
         label.textColor = .white
 

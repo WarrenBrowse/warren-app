@@ -58,7 +58,7 @@ public struct WarrenForumSignInCodeView: View {
                         comment: "Explains where the forum sign-in code comes from and what typing it does"
                     )
                 )
-                .font(.body)
+                .font(.instrumentSans(.body))
                 .foregroundColor(.white.opacity(0.8))
 
                 VStack(alignment: .leading, spacing: 6) {
@@ -71,7 +71,7 @@ public struct WarrenForumSignInCodeView: View {
                     .foregroundColor(.white)
 
                     TextField("0123456789abcdef0123456789abcdef", text: $code)
-                        .font(.system(.body, design: .monospaced))
+                        .font(.jetBrainsMono(.body))
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .keyboardType(.asciiCapable)

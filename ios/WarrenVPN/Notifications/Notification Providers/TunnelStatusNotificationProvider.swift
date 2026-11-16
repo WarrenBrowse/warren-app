@@ -212,7 +212,7 @@ final class TunnelStatusNotificationProvider: NotificationProvider, InAppNotific
     static func notificationBody(_ string: String) -> NSAttributedString {
         NSAttributedString(
             markdownString: string,
-            options: MarkdownStylingOptions(font: UIFont.preferredFont(forTextStyle: .body)),
+            options: MarkdownStylingOptions(font: UIFont.instrumentSans(.body)),
             applyEffect: { markdownType, _ in
                 guard case .bold = markdownType else { return [:] }
                 return [.foregroundColor: UIColor.InAppNotificationBanner.titleColor]

@@ -140,7 +140,7 @@ extension CustomDNSViewController: @preconcurrency DNSSettingsDataSourceDelegate
         showInfo(
             with: NSAttributedString(
                 markdownString: item.description,
-                options: MarkdownStylingOptions(font: .preferredFont(forTextStyle: .body))
+                options: MarkdownStylingOptions(font: UIFont.instrumentSans(.body))
             ))
     }
 }

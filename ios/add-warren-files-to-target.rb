@@ -293,6 +293,19 @@ FILES_TO_ADD = {
   "WarrenVPN/View controllers/Tunnel/ConnectionView/ProductBanner.swift" => "WarrenVPN",
   "WarrenVPNTests/MullvadVPN/View controllers/Tunnel/ConnectSurfaceTests.swift" => "WarrenVPNTests",
 
+  # Instrument Sans and JetBrains Mono, bundled under the OFL with their
+  # licences, and the faces the code asks for.
+  "WarrenVPN/UI appearance/WarrenFonts.swift" => "WarrenVPN",
+  "WarrenVPNTests/MullvadVPN/UI appearance/WarrenFontsTests.swift" => "WarrenVPNTests",
+  "WarrenVPN/Supporting Files/Fonts/InstrumentSans-Regular.ttf" => "WarrenVPN",
+  "WarrenVPN/Supporting Files/Fonts/InstrumentSans-Medium.ttf" => "WarrenVPN",
+  "WarrenVPN/Supporting Files/Fonts/InstrumentSans-SemiBold.ttf" => "WarrenVPN",
+  "WarrenVPN/Supporting Files/Fonts/InstrumentSans-Bold.ttf" => "WarrenVPN",
+  "WarrenVPN/Supporting Files/Fonts/JetBrainsMono-Regular.ttf" => "WarrenVPN",
+  "WarrenVPN/Supporting Files/Fonts/JetBrainsMono-Medium.ttf" => "WarrenVPN",
+  "WarrenVPN/Supporting Files/Fonts/InstrumentSans-OFL.txt" => "WarrenVPN",
+  "WarrenVPN/Supporting Files/Fonts/JetBrainsMono-OFL.txt" => "WarrenVPN",
+
   # The account's devices (warren-core doc 115): the app's registry
   # configuration at launch, the list, its model and their tests.
   "WarrenVPN/Classes/WarrenDeviceLaunch.swift" => "WarrenVPN",
@@ -355,7 +368,7 @@ FILES_TO_ADD.each do |rel_path, target_name|
     next
   end
 
-  is_resource = rel_path.end_with?(".xcstrings", ".plist", ".png", ".pdf", ".json")
+  is_resource = rel_path.end_with?(".xcstrings", ".plist", ".png", ".pdf", ".json", ".ttf", ".txt")
 
   # Check if a file ref with this path already exists anywhere.
   existing_ref = project.files.find { |f| f.real_path.to_s == File.join(SCRIPT_DIR, rel_path) }

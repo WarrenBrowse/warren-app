@@ -52,7 +52,7 @@ public struct WarrenMnemonicInputView: View {
             .fixedSize(horizontal: false, vertical: true)
 
             TextEditor(text: $phrase)
-                .font(.system(.body, design: .monospaced))
+                .font(.jetBrainsMono(.body))
                 .textInputAutocapitalization(.never)
                 .autocorrectionDisabled(true)
                 .scrollContentBackground(.hidden)

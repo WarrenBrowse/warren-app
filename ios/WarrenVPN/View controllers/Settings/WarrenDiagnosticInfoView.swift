@@ -118,7 +118,7 @@ public struct WarrenDiagnosticInfoView: View {
                 .foregroundColor(.white.opacity(0.7))
             Spacer()
             Text(value)
-                .font(.system(.body, design: .monospaced))
+                .font(.jetBrainsMono(.body))
                 .foregroundColor(.white)
                 .accessibilityLabel("\(label) : \(value)")
         }

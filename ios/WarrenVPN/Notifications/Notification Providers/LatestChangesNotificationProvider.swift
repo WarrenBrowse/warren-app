@@ -55,7 +55,7 @@ class LatestChangesNotificationProvider: NotificationProvider, InAppNotification
         NSAttributedString(
             markdownString: NSLocalizedString("**Tap here** to see what’s new", comment: ""),
             options: MarkdownStylingOptions(
-                font: .preferredFont(forTextStyle: .body)
+                font: UIFont.instrumentSans(.body)
             )
         ) { _, _ in
             [.foregroundColor: UIColor.InAppNotificationBanner.titleColor]

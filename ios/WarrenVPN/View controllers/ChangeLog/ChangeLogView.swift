@@ -19,7 +19,7 @@ struct ChangeLogView<ViewModel>: View where ViewModel: ChangeLogViewModelProtoco
             UIColor.secondaryColor.color.ignoresSafeArea()
             VStack {
                 Text(viewModel.changeLog?.title ?? "")
-                    .font(.title)
+                    .font(.instrumentSans(.title, weight: .bold))
                     .fontWeight(.semibold)
                     .foregroundColor(UIColor.primaryTextColor.color)
                     .frame(maxWidth: .infinity, alignment: .leading)

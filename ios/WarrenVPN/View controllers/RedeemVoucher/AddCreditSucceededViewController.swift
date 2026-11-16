@@ -34,7 +34,7 @@ class AddCreditSucceededViewController: UIViewController, RootContainment {
 
     private let messageLabel: UILabel = {
         let label = UILabel()
-        label.font = UIFont.systemFont(ofSize: 17)
+        label.font = UIFont.instrumentSans(size: 17)
         label.textColor = UIColor.white.withAlphaComponent(0.6)
         label.numberOfLines = 0
         label.translatesAutoresizingMaskIntoConstraints = false

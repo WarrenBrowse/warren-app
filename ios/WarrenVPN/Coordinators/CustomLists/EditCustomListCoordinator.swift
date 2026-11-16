@@ -90,7 +90,7 @@ class EditCustomListCoordinator: Coordinator, Presentable, Presenting {
     private func presentUnsavedChangesDialog() {
         let message = NSMutableAttributedString(
             markdownString: NSLocalizedString("You have unsaved changes.", comment: ""),
-            options: MarkdownStylingOptions(font: .preferredFont(forTextStyle: .body))
+            options: MarkdownStylingOptions(font: UIFont.instrumentSans(.body))
         )
 
         let presentation = AlertPresentation(

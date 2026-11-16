@@ -501,7 +501,7 @@ struct WarrenForumLoginCompletionView: View {
                     : NSLocalizedString(
                         "Your 6-digit code", comment: "Forum login, the title over the completion code")
             )
-            .font(.headline)
+            .font(.instrumentSans(.headline, weight: .semibold))
             .multilineTextAlignment(.center)
             if screen == .finishingInBrowser {
                 Text(
@@ -522,7 +522,7 @@ struct WarrenForumLoginCompletionView: View {
             }
             if codeRevealed {
                 Text(verbatim: appActive ? code : String(repeating: "\u{2022}", count: code.count))
-                    .font(.system(size: 40, weight: .semibold, design: .monospaced))
+                    .font(.custom(WarrenFontFace.monoMedium.rawValue, fixedSize: 40))
                     .kerning(6)
                     .accessibilityLabel(Text(verbatim: code.map(String.init).joined(separator: " ")))
                 Text(
@@ -530,7 +530,7 @@ struct WarrenForumLoginCompletionView: View {
                         "Type this code on the sign-in page of your other device. Never read it out or send it to anyone, including someone who says they are from Warren.",
                         comment: "Forum login, the warning under the completion code")
                 )
-                .font(.footnote)
+                .font(.instrumentSans(.footnote))
                 .multilineTextAlignment(.center)
             } else {
                 Button(

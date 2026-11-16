@@ -31,7 +31,7 @@ struct MainButtonStyle: ButtonStyle {
                         : style.color
                     : style.disabledColor
             )
-            .font(.body.weight(.semibold))
+            .font(.instrumentSans(.body, weight: .semibold))
     }
 }
 

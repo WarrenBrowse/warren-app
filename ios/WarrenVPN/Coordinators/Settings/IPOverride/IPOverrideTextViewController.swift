@@ -54,10 +54,7 @@ class IPOverrideTextViewController: UIViewController {
         textView.spellCheckingType = .no
         textView.autocorrectionType = .no
         textView.textColor = UIColor.label
-        textView.font = UIFont.monospacedSystemFont(
-            ofSize: UIFont.systemFont(ofSize: 14).pointSize,
-            weight: .regular
-        )
+        textView.font = UIFont.jetBrainsMono(size: 14)
 
         view.addConstrainedSubviews([textView]) {
             textView.pinEdgesToSuperview(.all().excluding(.top))

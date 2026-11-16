@@ -55,7 +55,7 @@ final class WarrenWalletEraseViewController: UIViewController {
             tableName: "Wallet",
             comment: "Title of the destructive wallet wipe screen"
         )
-        label.font = .systemFont(ofSize: 22, weight: .semibold)
+        label.font = UIFont.instrumentSans(size: 22, weight: .semibold, relativeTo: .title2)
         label.textColor = .white
         label.numberOfLines = 0
         return label
@@ -68,7 +68,7 @@ final class WarrenWalletEraseViewController: UIViewController {
             tableName: "Wallet",
             comment: "Multi-line warning before the destructive Erase wallet action"
         )
-        label.font = .systemFont(ofSize: 15)
+        label.font = UIFont.instrumentSans(size: 15, relativeTo: .subheadline)
         label.textColor = .white.withAlphaComponent(0.75)
         label.numberOfLines = 0
         return label
@@ -86,7 +86,7 @@ final class WarrenWalletEraseViewController: UIViewController {
         )
         button.setTitleColor(.white, for: .normal)
         button.backgroundColor = .Warren.error
-        button.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
+        button.titleLabel?.font = UIFont.instrumentSans(size: 17, weight: .semibold)
         button.layer.cornerRadius = 8
         button.heightAnchor.constraint(equalToConstant: 48).isActive = true
         button.addTarget(self, action: #selector(handleEraseTapped), for: .touchUpInside)

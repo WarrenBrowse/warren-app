@@ -13,7 +13,7 @@ struct SettingsRowViewFooter: View {
 
     var body: some View {
         Text(verbatim: text)
-            .font(.footnote)
+            .font(.instrumentSans(.footnote))
             .opacity(0.6)
             .foregroundStyle(Color(.primaryTextColor))
             .padding(UIMetrics.SettingsRowView.footerLayoutMargins)

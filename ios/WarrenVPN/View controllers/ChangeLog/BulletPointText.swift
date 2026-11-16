@@ -14,10 +14,10 @@ struct BulletPointText: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
             Text(bullet)
-                .font(.body)
+                .font(.instrumentSans(.body))
                 .foregroundColor(UIColor.secondaryTextColor.color)
             Text(text)
-                .font(.body)
+                .font(.instrumentSans(.body))
                 .foregroundColor(UIColor.secondaryTextColor.color)
                 .lineLimit(nil)
         }

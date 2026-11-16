@@ -73,7 +73,7 @@ class SettingsInputCell: SelectableSettingsCell {
     private func setUpTextField() {
         textField.borderStyle = .none
         textField.layer.cornerRadius = 4
-        textField.font = .preferredFont(forTextStyle: .body)
+        textField.font = UIFont.instrumentSans(.body)
         textField.textAlignment = .right
         textField.delegate = self
         textField.keyboardType = .numberPad

@@ -92,7 +92,7 @@ struct WarrenVoucherWell: View {
 
             HStack(alignment: .center, spacing: 12) {
                 Text(verbatim: code)
-                    .font(.system(.body, design: .monospaced))
+                    .font(.jetBrainsMono(.body))
                     .foregroundStyle(Color.MullvadText.onBackgroundEmphasis100)
                     .textSelection(.enabled)
                     .frame(maxWidth: .infinity, alignment: .leading)

@@ -38,11 +38,21 @@ extension UINavigationBar {
         let backIndicatorTransitionMask = UIImage.backTransitionMask
 
         let titleTextAttributes: [NSAttributedString.Key: Any] = [
-            .foregroundColor: UIColor.NavigationBar.titleColor
+            .foregroundColor: UIColor.NavigationBar.titleColor,
+            .font: UIFont.instrumentSans(.headline, weight: .semibold),
+        ]
+        let largeTitleTextAttributes: [NSAttributedString.Key: Any] = [
+            .foregroundColor: UIColor.NavigationBar.titleColor,
+            .font: UIFont.instrumentSans(.largeTitle, weight: .bold),
+        ]
+        let buttonTextAttributes: [NSAttributedString.Key: Any] = [
+            .foregroundColor: UIColor.NavigationBar.titleColor,
+            .font: UIFont.instrumentSans(.body),
         ]
         let backButtonTitlePositionOffset = UIOffset(horizontal: 4, vertical: 0)
         let backButtonTitleTextAttributes: [NSAttributedString.Key: Any] = [
-            .foregroundColor: UIColor.NavigationBar.backButtonTitleColor
+            .foregroundColor: UIColor.NavigationBar.backButtonTitleColor,
+            .font: UIFont.instrumentSans(.body),
         ]
 
         let navigationBarAppearance = UINavigationBarAppearance()
@@ -55,13 +65,13 @@ extension UINavigationBar {
         }
 
         navigationBarAppearance.titleTextAttributes = titleTextAttributes
-        navigationBarAppearance.largeTitleTextAttributes = titleTextAttributes
+        navigationBarAppearance.largeTitleTextAttributes = largeTitleTextAttributes
 
         let plainBarButtonAppearance = UIBarButtonItemAppearance(style: .plain)
-        plainBarButtonAppearance.normal.titleTextAttributes = titleTextAttributes
+        plainBarButtonAppearance.normal.titleTextAttributes = buttonTextAttributes
 
         let doneBarButtonAppearance = UIBarButtonItemAppearance(style: .done)
-        doneBarButtonAppearance.normal.titleTextAttributes = titleTextAttributes
+        doneBarButtonAppearance.normal.titleTextAttributes = buttonTextAttributes
 
         let backButtonAppearance = UIBarButtonItemAppearance(style: .plain)
         backButtonAppearance.normal.titlePositionAdjustment = backButtonTitlePositionOffset

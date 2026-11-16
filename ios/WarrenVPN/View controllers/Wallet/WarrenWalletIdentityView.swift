@@ -58,7 +58,7 @@ public struct WarrenWalletIdentityView: View {
             // Full address, selectable so the user can copy any portion.
             // The Copy button below always copies the full address.
             Text(address)
-                .font(.system(.body, design: .monospaced))
+                .font(.jetBrainsMono(.body))
                 .foregroundColor(.Warren.yellow)
                 .padding(12)
                 .frame(maxWidth: .infinity, alignment: .leading)
