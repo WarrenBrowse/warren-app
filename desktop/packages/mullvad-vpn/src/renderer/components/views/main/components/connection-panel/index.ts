@@ -1,1 +1,1 @@
-export * from './ConnectionPanel';
+export * from './components';

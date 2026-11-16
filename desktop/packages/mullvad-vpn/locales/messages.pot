@@ -1452,10 +1452,6 @@ msgctxt "connect-view"
 msgid "You’re all set!"
 msgstr ""
 
-#. The hostname line displayed below the country on the main screen
-#. Available placeholders:
-#. %(relay)s - the relay hostname
-#. %(entry)s - the entry relay hostname
 msgctxt "connection-info"
 msgid "%(relay)s via %(entry)s"
 msgstr ""
@@ -4411,51 +4407,67 @@ msgctxt "troubleshoot"
 msgid "Update your kernel."
 msgstr ""
 
+#. Short state badge on the home screen while the kill switch
+#. holds all traffic.
+msgctxt "tunnel-control"
+msgid "Blocked"
+msgstr ""
+
+#. Trailing hint on the location row of the home screen,
+#. which opens the location list.
+msgctxt "tunnel-control"
+msgid "Change"
+msgstr ""
+
 msgctxt "tunnel-control"
 msgid "Connect"
 msgstr ""
 
-#. Bold status title shown when the tunnel is up.
 msgctxt "tunnel-control"
-msgid "Connection established"
+msgid "Connection blocked"
 msgstr ""
 
-#. Secondary line shown while the tunnel is coming up.
 msgctxt "tunnel-control"
 msgid "Connection in progress"
 msgstr ""
 
-#. Bold status title shown when the tunnel is up but the
-#. device has no internet connection.
 msgctxt "tunnel-control"
 msgid "Connection interrupted"
 msgstr ""
 
-#. Secondary line shown while the tunnel is being torn down.
 msgctxt "tunnel-control"
 msgid "Disconnecting..."
 msgstr ""
 
-#. Secondary line shown below the status title while only
-#. the apps chosen in "VPN only for" use the VPN.
+#. Short state badge on the home screen while the tunnel is
+#. up but the device has no internet connection.
+msgctxt "tunnel-control"
+msgid "Interrupted"
+msgstr ""
+
 msgctxt "tunnel-control"
 msgid "Only selected apps are protected"
+msgstr ""
+
+#. Short state badge on the home screen once the tunnel is up.
+msgctxt "tunnel-control"
+msgid "Protected"
 msgstr ""
 
 msgctxt "tunnel-control"
 msgid "Random location"
 msgstr ""
 
+#. Short state badge on the home screen while the traffic
+#. leaves the device unencrypted.
 msgctxt "tunnel-control"
-msgid "Switch location"
+msgid "Unprotected"
 msgstr ""
 
-#. Secondary line shown below the status title when protected.
 msgctxt "tunnel-control"
 msgid "You are protected"
 msgstr ""
 
-#. Bold status title shown when traffic is not protected.
 msgctxt "tunnel-control"
 msgid "You are visible"
 msgstr ""

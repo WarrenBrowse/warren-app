@@ -14,6 +14,7 @@ import { messages, relayLocations } from '../../../src/shared/gettext';
 import { IGuiSettingsState } from '../../../src/shared/gui-settings-state';
 import { ITranslations, MacOsScrollbarVisibility } from '../../../src/shared/ipc-schema';
 import { ICurrentAppVersionInfo } from '../../../src/shared/ipc-types';
+import { WINDOW_HEIGHT, WINDOW_WIDTH } from '../../../src/shared/window-size';
 import { mockData } from '../mock-data';
 
 const DEBUG = false;
@@ -81,8 +82,8 @@ class ApplicationMain {
 
     const window = new BrowserWindow({
       useContentSize: true,
-      width: 400,
-      height: 598,
+      width: WINDOW_WIDTH,
+      height: WINDOW_HEIGHT,
       resizable: false,
       maximizable: false,
       fullscreenable: false,

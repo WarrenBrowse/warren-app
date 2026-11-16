@@ -3214,10 +3214,6 @@ msgctxt "tunnel-control"
 msgid "Only selected apps are protected"
 msgstr "Solo las aplicaciones elegidas están protegidas"
 
-msgctxt "tunnel-control"
-msgid "Switch location"
-msgstr "Cambiar ubicación"
-
 #. Bold status title shown when the tunnel is up but the
 #. device has no internet connection.
 msgctxt "tunnel-control"
@@ -5476,10 +5472,6 @@ msgid "Connecting..."
 msgstr "Conectando..."
 
 msgctxt "tunnel-control"
-msgid "Connection established"
-msgstr "Conexión establecida"
-
-msgctxt "tunnel-control"
 msgid "Encrypting your connection"
 msgstr "Cifrando tu conexión"
 
@@ -6477,3 +6469,36 @@ msgstr "Este dispositivo"
 msgctxt "device-management"
 msgid "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again."
 msgstr "Este dispositivo se desconectó desde otro dispositivo de tu cuenta. Inicia sesión con tu frase de recuperación para volver a usarlo."
+
+#. Short state badge on the home screen while the traffic
+#. leaves the device unencrypted.
+msgctxt "tunnel-control"
+msgid "Unprotected"
+msgstr "Sin protección"
+
+#. Short state badge on the home screen once the tunnel is up.
+msgctxt "tunnel-control"
+msgid "Protected"
+msgstr "Protegido"
+
+#. Short state badge on the home screen while the tunnel is
+#. up but the device has no internet connection.
+msgctxt "tunnel-control"
+msgid "Interrupted"
+msgstr "Interrumpido"
+
+#. Short state badge on the home screen while the kill switch
+#. holds all traffic.
+msgctxt "tunnel-control"
+msgid "Blocked"
+msgstr "Bloqueado"
+
+msgctxt "tunnel-control"
+msgid "Connection blocked"
+msgstr "Conexión bloqueada"
+
+#. Trailing hint on the location row of the home screen,
+#. which opens the location list.
+msgctxt "tunnel-control"
+msgid "Change"
+msgstr "Cambiar"

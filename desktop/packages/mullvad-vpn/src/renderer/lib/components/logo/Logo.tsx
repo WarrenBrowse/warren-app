@@ -10,6 +10,8 @@ export interface LogoProps {
   // Over the bright scenery the light art loses contrast, so some screens render
   // it dark. Defaults to the light-on-charcoal colour.
   wordmarkTone?: 'light' | 'dark';
+  // The lockup's height in pixels, for a screen that does not use the size scale.
+  height?: number;
 }
 
 // Retained for the header's getLogoStateByTunnelState wiring; no longer maps to a
@@ -62,8 +64,16 @@ const Icon = ({ size, tone }: { size: number; tone: 'light' | 'dark' }) => (
 // to ~2.2x the letter band, so the 1.7 factor keeps the letters readable without
 // the ears blowing past the header's vertical budget.
 const WORDMARK_ASPECT = 17355 / 5720;
-const Wordmark = ({ fontSize, tone = 'light' }: { fontSize: number; tone?: 'light' | 'dark' }) => {
-  const height = Math.round(fontSize * 1.7);
+const Wordmark = ({
+  fontSize,
+  tone = 'light',
+  height: heightProp,
+}: {
+  fontSize: number;
+  tone?: 'light' | 'dark';
+  height?: number;
+}) => {
+  const height = heightProp ?? Math.round(fontSize * 1.7);
   return (
     <span
       role="img"
@@ -90,6 +100,7 @@ export const Logo = ({
   variant = 'icon',
   size: sizeProp = '1',
   wordmarkTone = 'light',
+  height,
 }: LogoProps) => {
   switch (variant) {
     case 'icon':
@@ -98,6 +109,6 @@ export const Logo = ({
     // "text" render the same single lockup, with no separate icon beside it.
     case 'text':
     case 'both':
-      return <Wordmark fontSize={textFontSizes[sizeProp]} tone={wordmarkTone} />;
+      return <Wordmark fontSize={textFontSizes[sizeProp]} tone={wordmarkTone} height={height} />;
   }
 };

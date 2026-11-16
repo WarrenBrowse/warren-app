@@ -3117,10 +3117,6 @@ msgctxt "tunnel-control"
 msgid "Connect"
 msgstr "Connexion"
 
-msgctxt "tunnel-control"
-msgid "Switch location"
-msgstr "Changer de localisation"
-
 msgctxt "user-interface-settings-view"
 msgid "Animate map"
 msgstr "Animer la carte"
@@ -4176,10 +4172,6 @@ msgstr "Forum communautaire"
 msgctxt "tunnel-control"
 msgid "Connecting..."
 msgstr "Connexion en cours..."
-
-msgctxt "tunnel-control"
-msgid "Connection established"
-msgstr "Connexion établie"
 
 msgctxt "tunnel-control"
 msgid "Connection interrupted"
@@ -5624,3 +5616,36 @@ msgstr "Cet appareil"
 msgctxt "device-management"
 msgid "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again."
 msgstr "Cet appareil a été déconnecté depuis un autre appareil de votre compte. Connectez-vous avec votre phrase de restauration pour l'utiliser à nouveau."
+
+#. Short state badge on the home screen while the traffic
+#. leaves the device unencrypted.
+msgctxt "tunnel-control"
+msgid "Unprotected"
+msgstr "Non protégé"
+
+#. Short state badge on the home screen once the tunnel is up.
+msgctxt "tunnel-control"
+msgid "Protected"
+msgstr "Protégé"
+
+#. Short state badge on the home screen while the tunnel is
+#. up but the device has no internet connection.
+msgctxt "tunnel-control"
+msgid "Interrupted"
+msgstr "Interrompu"
+
+#. Short state badge on the home screen while the kill switch
+#. holds all traffic.
+msgctxt "tunnel-control"
+msgid "Blocked"
+msgstr "Bloqué"
+
+msgctxt "tunnel-control"
+msgid "Connection blocked"
+msgstr "Connexion bloquée"
+
+#. Trailing hint on the location row of the home screen,
+#. which opens the location list.
+msgctxt "tunnel-control"
+msgid "Change"
+msgstr "Changer"

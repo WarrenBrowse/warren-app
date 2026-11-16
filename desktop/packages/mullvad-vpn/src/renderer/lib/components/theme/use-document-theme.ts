@@ -32,12 +32,17 @@ function useSystemTheme(): Theme | undefined {
   return systemTheme;
 }
 
+// The theme the window is painted in: the user's choice, or the system's.
+export function useResolvedTheme(): Theme {
+  const preference = useSelector((state) => parseThemePreference(state.settings.guiSettings.theme));
+  return resolveTheme(preference, useSystemTheme());
+}
+
 // Writes the resolved theme on the document root, where the global style keys
 // the surface variables on it. A layout effect, so a theme change never paints
 // one frame in the old palette.
 export function useDocumentTheme(): Theme {
-  const preference = useSelector((state) => parseThemePreference(state.settings.guiSettings.theme));
-  const theme = resolveTheme(preference, useSystemTheme());
+  const theme = useResolvedTheme();
 
   useLayoutEffect(() => {
     document.documentElement.dataset.theme = theme;

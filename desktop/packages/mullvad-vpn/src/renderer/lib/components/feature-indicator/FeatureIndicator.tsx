@@ -1,6 +1,6 @@
 import styled, { css } from 'styled-components';
 
-import { surfaces } from '../../foundations';
+import { homeTokens, surfaces } from '../../foundations';
 import { Flex } from '../flex';
 import { FeatureIndicatorText } from './components';
 import { FeatureIndicatorProvider } from './FeatureIndicatorContext';
@@ -9,15 +9,14 @@ export type FeatureIndicatorProps = {
   variant?: 'primary' | 'transparent' | 'error';
 } & React.ComponentPropsWithRef<'button'>;
 
-// Opaque chips in the theme's paper, like the card under them: a translucent
-// chip took the hue of whatever landscape it floated over.
+// Outlined chips on the home page under the controls.
 const styles = {
   variants: {
     primary: {
-      backgroundColor: surfaces.card,
-      borderColor: surfaces.line,
-      borderColorHover: surfaces.textMuted,
-      borderColorPressed: surfaces.text,
+      backgroundColor: 'transparent',
+      borderColor: surfaces.homeChipLine,
+      borderColorHover: surfaces.homeTextSecondary,
+      borderColorPressed: surfaces.homeText,
     },
     transparent: {
       backgroundColor: 'transparent',
@@ -29,10 +28,10 @@ const styles = {
     // state surfaces in red so the user notices it on the main screen
     // without opening settings.
     error: {
-      backgroundColor: surfaces.exposedWell,
-      borderColor: surfaces.exposed,
-      borderColorHover: surfaces.textMuted,
-      borderColorPressed: surfaces.text,
+      backgroundColor: 'transparent',
+      borderColor: surfaces.homeDisconnectLine,
+      borderColorHover: surfaces.homeDisconnectText,
+      borderColorPressed: surfaces.homeText,
     },
   },
 };
@@ -45,11 +44,13 @@ const StyledFeatureIndicator = styled.button<{
     const variant = styles.variants[variantProp];
     return css`
       display: flex;
+      align-items: center;
+      box-sizing: border-box;
+      height: ${homeTokens.chips.height}px;
 
-      border-radius: 7px;
+      border-radius: 99px;
       background: ${variant.backgroundColor};
-      border: 0.5px solid ${variant.borderColor};
-      box-shadow: ${variantProp === 'transparent' ? 'none' : `0 1.5px 5px ${surfaces.shadowSoft}`};
+      border: ${homeTokens.chips.borderWidth}px solid ${variant.borderColor};
 
       ${() => {
         if ($clickable) {
@@ -69,7 +70,7 @@ const StyledFeatureIndicator = styled.button<{
         background: var(--disabled);
       }
       &&:focus-visible {
-        outline: 2px solid ${surfaces.text};
+        outline: 2px solid ${surfaces.homeText};
         outline-offset: -2px;
       }
     `;
@@ -77,7 +78,7 @@ const StyledFeatureIndicator = styled.button<{
 `;
 
 const StyledFlex = styled(Flex)`
-  padding: 5.5px 8px;
+  padding: ${homeTokens.chips.paddingVertical}px ${homeTokens.chips.paddingHorizontal}px;
 `;
 
 function FeatureIndicator({

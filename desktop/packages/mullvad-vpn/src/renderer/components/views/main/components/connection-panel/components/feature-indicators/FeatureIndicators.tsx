@@ -4,14 +4,10 @@ import { FeatureIndicator } from '../../../../../../../lib/components';
 import { useSelector } from '../../../../../../../redux/store';
 import { useGetFeatureIndicator } from './hooks';
 
-// Active features are shown as a vertical stack of pills floating just above the
-// connection card (per the art direction), left-aligned, always visible while the
-// tunnel is up or coming up. The tight gap keeps the stack compact.
+// The chips join the home's chip row as siblings of the other indicators, so
+// they wrap together.
 const StyledStack = styled.div({
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'flex-start',
-  gap: '5px',
+  display: 'contents',
 });
 
 export function FeatureIndicators() {

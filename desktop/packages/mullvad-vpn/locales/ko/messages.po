@@ -3205,10 +3205,6 @@ msgctxt "tunnel-control"
 msgid "Only selected apps are protected"
 msgstr "선택한 앱만 보호되고 있습니다"
 
-msgctxt "tunnel-control"
-msgid "Switch location"
-msgstr "위치 전환"
-
 #. Bold status title shown when the tunnel is up but the
 #. device has no internet connection.
 msgctxt "tunnel-control"
@@ -5446,10 +5442,6 @@ msgid "Connecting..."
 msgstr "연결 중..."
 
 msgctxt "tunnel-control"
-msgid "Connection established"
-msgstr "연결이 설정됨"
-
-msgctxt "tunnel-control"
 msgid "Encrypting your connection"
 msgstr "연결을 암호화하는 중"
 
@@ -6444,3 +6436,36 @@ msgstr "이 장치"
 msgctxt "device-management"
 msgid "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again."
 msgstr "계정의 다른 장치에서 이 장치의 연결을 끊었습니다. 다시 사용하려면 복구 문구로 로그인하세요."
+
+#. Short state badge on the home screen while the traffic
+#. leaves the device unencrypted.
+msgctxt "tunnel-control"
+msgid "Unprotected"
+msgstr "보호되지 않음"
+
+#. Short state badge on the home screen once the tunnel is up.
+msgctxt "tunnel-control"
+msgid "Protected"
+msgstr "보호됨"
+
+#. Short state badge on the home screen while the tunnel is
+#. up but the device has no internet connection.
+msgctxt "tunnel-control"
+msgid "Interrupted"
+msgstr "중단됨"
+
+#. Short state badge on the home screen while the kill switch
+#. holds all traffic.
+msgctxt "tunnel-control"
+msgid "Blocked"
+msgstr "차단됨"
+
+msgctxt "tunnel-control"
+msgid "Connection blocked"
+msgstr "연결 차단됨"
+
+#. Trailing hint on the location row of the home screen,
+#. which opens the location list.
+msgctxt "tunnel-control"
+msgid "Change"
+msgstr "변경"

@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /** SHA-256 of design-tokens.json at generation time. */
-const val DESIGN_TOKENS_SHA256 = "696b922187e1bc24c80d236a03de7ceace60a726b76faa30fabf2c7b4bef0ae7"
+const val DESIGN_TOKENS_SHA256 = "0eaf6fdcba9097521dbed8aefb4454a4cdea8f67a2868f5aaef2ac6fe04b19e3"
 
 @Suppress("MagicNumber", "unused")
 object DesignTokens {
@@ -335,6 +335,7 @@ object DesignTokens {
         }
         object Chips {
             val MarginTop = 12.dp
+            val Height = 23.dp
             val Gap = 6.dp
             val TextSize = 11.sp
             val PaddingVertical = 3.dp

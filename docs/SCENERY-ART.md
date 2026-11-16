@@ -75,7 +75,7 @@ alpha channel, so they are PNG.
 
 ## The output formats, and why each one
 
-Output width is 1140, three times the 380px desktop window, so the art stays
+Output width is 1140, more than three times the 360px desktop window, so the art stays
 crisp on HiDPI.
 
 | client | backgrounds | alpha layers |
@@ -119,7 +119,13 @@ because each renders natively:
 - `android/lib/feature/home/impl/.../connect/ConnectionPhase.kt`
 - `ios/WarrenVPN/View controllers/Tunnel/MapViewController.swift`
 
-Add the slug to the script's `LAYERS` table and to all three lookups. An exit
+Add the slug to the script's `LAYERS` table and to all three lookups, and give
+the new landscape its two framing measurements in `scenery.json`:
+`skylineTopRow`, the canvas row 10 rows above the highest thing that must stay
+visible (a cross, a spire, an antenna tip), and `topFill`, the mean colour of
+its top 12 rows. The home hero frames the skyline under the floating header
+with them, and fills the strip above a canvas that had to drop with that colour
+(`fixtures/client-rules/scenery_framing.json`, read by every client). An exit
 with no bespoke art falls back to the plain, which is also the backdrop of the
 states where no tunnel carries the traffic (the cameras trained on it are what
 tells the user they are exposed). `test/unit/connection-scenery.spec.ts` and

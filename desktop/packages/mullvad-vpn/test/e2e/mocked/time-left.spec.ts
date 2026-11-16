@@ -34,9 +34,9 @@ test.describe('Time left label', () => {
 
   test('Time left should update when time passes', async () => {
     const timeLeft = routes.main.selectors.timeLeftLabel();
-    await expect(timeLeft).toHaveText(/5 days$/);
+    await expect(timeLeft).toHaveText(/5 days left$/);
 
     await page.clock.runFor(ONE_DAY);
-    await expect(timeLeft).toHaveText(/4 days$/);
+    await expect(timeLeft).toHaveText(/4 days left$/);
   });
 });

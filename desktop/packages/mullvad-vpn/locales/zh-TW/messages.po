@@ -3205,10 +3205,6 @@ msgctxt "tunnel-control"
 msgid "Only selected apps are protected"
 msgstr "僅所選應用程式受到保護"
 
-msgctxt "tunnel-control"
-msgid "Switch location"
-msgstr "切換位置"
-
 #. Bold status title shown when the tunnel is up but the
 #. device has no internet connection.
 msgctxt "tunnel-control"
@@ -5446,10 +5442,6 @@ msgid "Connecting..."
 msgstr "連線中…"
 
 msgctxt "tunnel-control"
-msgid "Connection established"
-msgstr "連線已建立"
-
-msgctxt "tunnel-control"
 msgid "Encrypting your connection"
 msgstr "正在加密您的連線"
 
@@ -6444,3 +6436,36 @@ msgstr "此裝置"
 msgctxt "device-management"
 msgid "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again."
 msgstr "此裝置已被您帳戶中的另一台裝置中斷連線。請使用復原短語登入以繼續使用。"
+
+#. Short state badge on the home screen while the traffic
+#. leaves the device unencrypted.
+msgctxt "tunnel-control"
+msgid "Unprotected"
+msgstr "未受保護"
+
+#. Short state badge on the home screen once the tunnel is up.
+msgctxt "tunnel-control"
+msgid "Protected"
+msgstr "已受保護"
+
+#. Short state badge on the home screen while the tunnel is
+#. up but the device has no internet connection.
+msgctxt "tunnel-control"
+msgid "Interrupted"
+msgstr "已中斷"
+
+#. Short state badge on the home screen while the kill switch
+#. holds all traffic.
+msgctxt "tunnel-control"
+msgid "Blocked"
+msgstr "已封鎖"
+
+msgctxt "tunnel-control"
+msgid "Connection blocked"
+msgstr "連線已封鎖"
+
+#. Trailing hint on the location row of the home screen,
+#. which opens the location list.
+msgctxt "tunnel-control"
+msgid "Change"
+msgstr "變更"

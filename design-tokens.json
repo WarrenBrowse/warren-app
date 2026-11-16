@@ -475,6 +475,10 @@
         "value": 12,
         "unit": "dp"
       },
+      "height": {
+        "value": 23,
+        "unit": "dp"
+      },
       "gap": {
         "value": 6,
         "unit": "dp"

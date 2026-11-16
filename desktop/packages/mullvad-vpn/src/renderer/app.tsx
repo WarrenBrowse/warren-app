@@ -55,6 +55,7 @@ import { RoutePath } from '../shared/routes';
 import { Scheduler } from '../shared/scheduler';
 import { ThemePreference } from '../shared/theme';
 import { isTorrentClientConfigError, TorrentClientConfigUpdate } from '../shared/torrent-client';
+import { WINDOW_HEIGHT } from '../shared/window-size';
 import { WithdrawablePurchase, WithdrawalRequest, WithdrawalResult } from '../shared/withdrawal';
 import AppRouter from './components/AppRouter';
 import { BlockingUpdateGate } from './components/BlockingUpdateGate';
@@ -1067,7 +1068,7 @@ export default class AppRenderer {
   // the one we have set.
   // https://github.com/electron/electron/issues/28777
   private checkContentHeight(resize: boolean): void {
-    const expectedContentHeight = 568;
+    const expectedContentHeight = WINDOW_HEIGHT;
     const contentHeight = window.innerHeight;
     if (contentHeight !== expectedContentHeight) {
       log.verbose(

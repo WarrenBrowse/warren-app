@@ -5,7 +5,7 @@ import { isBetaBuild } from '../../../shared/constants/product-env';
 import { urls } from '../../../shared/constants/urls';
 import { messages } from '../../../shared/gettext';
 import { Button, Text } from '../../lib/components';
-import { colors, FontFamilies, surfaces } from '../../lib/foundations';
+import { colors, FontFamilies, homeTokens, surfaces } from '../../lib/foundations';
 import { useBoolean } from '../../lib/utility-hooks';
 import { useSelector } from '../../redux/store';
 import { ExternalLink } from '../ExternalLink';
@@ -21,48 +21,46 @@ const Chip = styled.span`
   background-color: ${colors.yellow};
 `;
 
-// The overlay banner is an opaque surface of the theme, like the connection
-// card: over the scenery a translucent one took the landscape's hue.
-const OverlayChip = styled.span`
+// On the home page, a quiet line above the footer: the chip carries the beta
+// identity, the line its one practical consequence.
+const HomeChip = styled.span`
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
-  height: 21px;
-  padding: 0 8px;
-  border-radius: 6px;
-  background-color: ${surfaces.pill};
-  color: ${surfaces.pillText};
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 5px;
+  background-color: ${surfaces.homeBadge};
+  color: ${surfaces.homePillPendingText};
   font-family: ${FontFamilies.sans};
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.5px;
 `;
 
-const OverlayLine = styled.span`
-  color: ${surfaces.text};
+const HomeLine = styled.span`
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: ${surfaces.homeTextSecondary};
   font-family: ${FontFamilies.sans};
-  font-size: 11px;
-  font-weight: 600;
+  font-size: 12px;
 `;
 
-// One line whatever the language: the banner widens to its text rather than
-// wrapping it.
-const OverlayCard = styled.button`
+const HomeRow = styled.button`
   display: flex;
   align-items: center;
   gap: 8px;
-  width: max-content;
-  height: 36.5px;
-  padding: 0 12px 0 8px;
-  white-space: nowrap;
-  border-radius: 12px;
-  border: 0.5px solid ${surfaces.line};
-  background-color: ${surfaces.card};
-  box-shadow: 0 2px 8px ${surfaces.shadowSoft};
+  width: 100%;
+  padding: 0 ${homeTokens.panel.paddingHorizontal}px;
+  border: none;
+  background: transparent;
+  text-align: start;
   cursor: pointer;
 
   &:focus-visible {
-    outline: 2px solid ${surfaces.text};
+    outline: 2px solid ${surfaces.homeText};
     outline-offset: 2px;
   }
 `;
@@ -82,9 +80,9 @@ const RowCard = styled.button`
 `;
 
 export interface BetaBadgeProps {
-  // 'overlay' floats over the connect view scenery; 'row' is a flat
+  // 'home' is a line of the home page above the footer; 'row' is a flat
   // full-width card for settings-style lists.
-  variant: 'overlay' | 'row';
+  variant: 'home' | 'row';
 }
 
 // The beta identity badge. Compiled out of non-beta builds: the gate is
@@ -103,13 +101,13 @@ export function BetaBadge({ variant }: BetaBadgeProps) {
   const betaLabel = messages.pgettext('beta-badge', 'BETA');
   return (
     <>
-      {variant === 'overlay' ? (
-        <OverlayCard onClick={showDialog} aria-label={ariaLabel}>
-          <OverlayChip>{betaLabel}</OverlayChip>
-          <OverlayLine>
+      {variant === 'home' ? (
+        <HomeRow onClick={showDialog} aria-label={ariaLabel}>
+          <HomeChip>{betaLabel}</HomeChip>
+          <HomeLine>
             <BetaCapLine />
-          </OverlayLine>
-        </OverlayCard>
+          </HomeLine>
+        </HomeRow>
       ) : (
         <RowCard onClick={showDialog} aria-label={ariaLabel}>
           <Chip>

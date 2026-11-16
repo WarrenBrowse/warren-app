@@ -80,6 +80,8 @@ export const homeTokens = {
   },
   chips: {
     marginTop: 12,
+    // Fixed, so the row reserved under the controls is exactly one chip tall.
+    height: 23,
     gap: 6,
     textSize: 11,
     paddingVertical: 3,

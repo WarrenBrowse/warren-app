@@ -1,6 +1,6 @@
 import styled from 'styled-components';
 
-import { FontFamilies, surfaces } from '../../../foundations';
+import { FontFamilies, homeTokens, surfaces } from '../../../foundations';
 import { BodySmallSemiBoldProps, LabelTinySemiBold } from '../../text';
 import { useFeatureIndicatorContext } from '../FeatureIndicatorContext';
 
@@ -8,11 +8,11 @@ export type FeatureIndicatorTextProps<T extends React.ElementType = 'span'> =
   BodySmallSemiBoldProps<T>;
 
 export const StyledFeatureIndicatorText = styled(LabelTinySemiBold)<{ $disabled?: boolean }>`
-  --color: ${({ $disabled }) => ($disabled ? surfaces.textMuted : surfaces.text)};
+  --color: ${({ $disabled }) => ($disabled ? surfaces.homeTextMono : surfaces.homeChipText)};
   font-family: ${FontFamilies.sans};
-  font-size: 11px;
+  font-size: ${homeTokens.chips.textSize}px;
   line-height: 15px;
-  font-weight: 600;
+  font-weight: 400;
   white-space: nowrap;
 `;
 

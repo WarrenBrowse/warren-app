@@ -1,81 +1,94 @@
 import styled from 'styled-components';
 
-import { FlexColumn } from '../../../lib/components/flex-column';
-import { View } from '../../../lib/components/view';
+import { AppCountriesIndicator } from '../../../features/app-routing/components';
+import { PortForwardingIndicator } from '../../../features/port-forwarding/components';
+import { homeTokens, surfaces } from '../../../lib/foundations';
 import { AppMainHeader } from '../../app-main-header';
 import { BetaBadge } from '../../beta-badge';
 import CountryBackdrop from '../../CountryBackdrop';
 import NotificationArea from '../../NotificationArea';
-import { ConnectionPanel } from './components';
+import { FeatureIndicators, MultihopIndicator } from './components';
+import { HomeControls } from './home/HomeControls';
+import { HomeHeader } from './home/HomeHeader';
+import { HomeStatus } from './home/HomeStatus';
 
-// Everything except the backdrop lives in this layer, above the full-bleed
-// scenery.
-const Foreground = styled(FlexColumn)`
-  position: relative;
-  z-index: 1;
-  flex: 1;
-  min-height: 0;
-`;
+const { panel, chips, toolbar, hero } = homeTokens;
 
-const StyledContent = styled(FlexColumn)`
-  position: relative;
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-`;
-
-// The notification cards and the beta marker both belong at the top of the
-// content area. They used to be positioned independently, which made the
-// marker sit ON TOP of any notification that appeared (the marker assumed
-// the cards were right-aligned; they are full width). One stack instead:
-// the cards keep their place and the marker flows below them.
-const StyledTopStack = styled(FlexColumn)`
-  position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  z-index: 1;
-`;
-
-const StyledMain = styled.main`
+const StyledHome = styled.div`
   display: flex;
   flex-direction: column;
-  flex: 1;
-  max-height: 100%;
+  height: 100%;
+  overflow: hidden;
+  background-color: ${surfaces.homePage};
 `;
 
-// Left-aligned under whatever the stack holds above it, so it never covers a
-// notification, and on the connection card's edge. Renders nothing outside beta
-// builds.
-const StyledBetaBadge = styled.div`
-  align-self: flex-start;
-  margin-top: 13.5px;
-  margin-inline-start: 15px;
+// The hero takes whatever height the panel leaves, and the scenery frames
+// itself in it; the panel below keeps its natural height.
+const StyledHero = styled.div`
+  position: relative;
+  flex: 1;
+  min-height: 0;
+`;
+
+// Transient notices float under the toolbar, over the art, so that they never
+// move the controls.
+const StyledNotices = styled.div`
+  position: absolute;
+  top: ${hero.headerInset + toolbar.height + 8}px;
+  left: 0;
+  right: 0;
+  z-index: 2;
+`;
+
+const StyledPanel = styled.main`
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+`;
+
+// One row of chips is reserved even with none, so the hero does not reframe
+// every time the tunnel comes up.
+const StyledChips = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: ${chips.gap}px;
+  min-height: ${chips.height}px;
+  margin-top: ${chips.marginTop}px;
+  padding: 0 ${panel.paddingHorizontal}px;
+`;
+
+const StyledBeta = styled.div`
+  padding: 10px 0;
+  &:empty {
+    display: none;
+  }
 `;
 
 export function MainView() {
   return (
-    <View style={{ position: 'relative' }}>
-      <CountryBackdrop />
-      <Foreground>
-        <AppMainHeader size="1" variant="transparent" tone="dark">
-          <AppMainHeader.ForumButton />
-          <AppMainHeader.AccountButton />
-          <AppMainHeader.SettingsButton />
-        </AppMainHeader>
-        <StyledContent>
-          <StyledTopStack>
-            <NotificationArea />
-            <StyledBetaBadge>
-              <BetaBadge variant="overlay" />
-            </StyledBetaBadge>
-          </StyledTopStack>
-          <StyledMain>
-            <ConnectionPanel />
-          </StyledMain>
-        </StyledContent>
-        <AppMainHeader.Footer />
-      </Foreground>
-    </View>
+    <StyledHome>
+      <StyledHero>
+        <CountryBackdrop />
+        <HomeHeader />
+        <StyledNotices>
+          <NotificationArea />
+        </StyledNotices>
+      </StyledHero>
+      <StyledPanel>
+        <HomeStatus />
+        <HomeControls />
+        <StyledChips>
+          <FeatureIndicators />
+          <MultihopIndicator />
+          <PortForwardingIndicator />
+          <AppCountriesIndicator />
+        </StyledChips>
+        <StyledBeta>
+          <BetaBadge variant="home" />
+        </StyledBeta>
+      </StyledPanel>
+      <AppMainHeader.Footer />
+    </StyledHome>
   );
 }

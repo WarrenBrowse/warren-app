@@ -6,18 +6,16 @@ import { useMainHeaderTone } from '../MainHeaderContext';
 
 // The outline glyphs carry less visual mass than the old filled ones (a stroke
 // weighs less than a solid), so they take the full 32px large step to hold
-// their own next to the wordmark. Done as a local override rather than a
-// one-off entry in the shared size scale.
-const HEADER_ICON_SIZE = '32px';
-
+// their own next to the wordmark. A container may set both variables: the home
+// toolbar draws a larger hit area around a smaller glyph.
 const StyledMainHeaderIconButton = styled(IconButton)`
   && {
-    width: ${HEADER_ICON_SIZE};
-    height: ${HEADER_ICON_SIZE};
+    width: var(--main-header-button-size, 32px);
+    height: var(--main-header-button-size, 32px);
   }
   ${StyledIconButtonIcon} {
-    width: ${HEADER_ICON_SIZE};
-    height: ${HEADER_ICON_SIZE};
+    width: var(--main-header-icon-size, 32px);
+    height: var(--main-header-icon-size, 32px);
   }
 `;
 

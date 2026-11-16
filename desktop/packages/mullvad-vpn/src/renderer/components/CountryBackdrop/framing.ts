@@ -95,13 +95,20 @@ export function hasCountryArt(country: string | undefined): boolean {
   return (country ?? '').trim().toLowerCase() in LANDSCAPES;
 }
 
+// The landscape a phase shows: the exit country's while a tunnel carries the
+// traffic there, the plain otherwise.
+export function phaseLandscape(
+  phase: ConnectionPhase,
+  country: string | undefined,
+): LandscapeLayer {
+  return sceneryManifest.phases[phase].landscape === 'country' ? landscapeFor(country) : PLAIN;
+}
+
 export function framingSpan(phase: ConnectionPhase, country: string | undefined): FramingSpan {
-  const row = sceneryManifest.phases[phase];
-  if (row.framing === 'ground') {
+  if (sceneryManifest.phases[phase].framing === 'ground') {
     return { ...GROUND_SPAN };
   }
-  const landscape = row.landscape === 'country' ? landscapeFor(country) : PLAIN;
-  return { top: landscape.skylineTopRow, bottom: SKY_BOTTOM_ROW };
+  return { top: phaseLandscape(phase, country).skylineTopRow, bottom: SKY_BOTTOM_ROW };
 }
 
 // The round location thumbnail: a full-width square of the landscape whose top

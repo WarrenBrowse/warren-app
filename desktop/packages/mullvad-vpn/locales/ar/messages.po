@@ -3250,10 +3250,6 @@ msgctxt "tunnel-control"
 msgid "Only selected apps are protected"
 msgstr "التطبيقات المختارة وحدها محمية"
 
-msgctxt "tunnel-control"
-msgid "Switch location"
-msgstr "تبديل الموقع"
-
 #. Bold status title shown when the tunnel is up but the
 #. device has no internet connection.
 msgctxt "tunnel-control"
@@ -5531,10 +5527,6 @@ msgid "Connecting..."
 msgstr "جارٍ الاتصال..."
 
 msgctxt "tunnel-control"
-msgid "Connection established"
-msgstr "تم إنشاء الاتصال"
-
-msgctxt "tunnel-control"
 msgid "Encrypting your connection"
 msgstr "جارٍ تشفير اتصالك"
 
@@ -6544,3 +6536,36 @@ msgstr "هذا الجهاز"
 msgctxt "device-management"
 msgid "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again."
 msgstr "تم قطع اتصال هذا الجهاز من جهاز آخر في حسابك. سجّل الدخول بعبارة الاسترداد لاستخدامه مجددًا."
+
+#. Short state badge on the home screen while the traffic
+#. leaves the device unencrypted.
+msgctxt "tunnel-control"
+msgid "Unprotected"
+msgstr "غير محمي"
+
+#. Short state badge on the home screen once the tunnel is up.
+msgctxt "tunnel-control"
+msgid "Protected"
+msgstr "محمي"
+
+#. Short state badge on the home screen while the tunnel is
+#. up but the device has no internet connection.
+msgctxt "tunnel-control"
+msgid "Interrupted"
+msgstr "متقطع"
+
+#. Short state badge on the home screen while the kill switch
+#. holds all traffic.
+msgctxt "tunnel-control"
+msgid "Blocked"
+msgstr "محظور"
+
+msgctxt "tunnel-control"
+msgid "Connection blocked"
+msgstr "الاتصال محظور"
+
+#. Trailing hint on the location row of the home screen,
+#. which opens the location list.
+msgctxt "tunnel-control"
+msgid "Change"
+msgstr "تغيير"

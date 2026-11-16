@@ -2,6 +2,7 @@ import { BrowserWindow, Display, screen, Tray, WebContents } from 'electron';
 
 import { IWindowShapeParameters } from '../shared/ipc-types';
 import { Scheduler } from '../shared/scheduler';
+import { WINDOW_HEIGHT, WINDOW_WIDTH } from '../shared/window-size';
 import { IpcMainEventChannel } from './ipc-event-channel';
 import { isWindows11OrNewer } from './platform-version';
 
@@ -217,9 +218,7 @@ export default class WindowController {
 
   public static getContentSize(unpinnedWindow: boolean): { width: number; height: number } {
     return {
-      // Widened from Mullvad's 320 to fit the full-bleed scenery art, whose
-      // 1417x2120 masters are authored at a 0.668 ratio (400 x 598 matches it).
-      width: 400,
+      width: WINDOW_WIDTH,
       height: WindowController.getContentHeight(unpinnedWindow),
     };
   }
@@ -320,9 +319,7 @@ export default class WindowController {
   // On both Linux and Windows the app height is applied incorrectly:
   // https://github.com/electron/electron/issues/28777
   private static getContentHeight(unpinnedWindow: boolean): number {
-    // Matches the 0.668 aspect ratio of the full-bleed scenery masters (400/598),
-    // so `object-fit: cover` fills the width without cropping the sides.
-    const contentHeight = 598;
+    const contentHeight = WINDOW_HEIGHT;
 
     switch (process.platform) {
       case 'win32':

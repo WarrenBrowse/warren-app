@@ -3214,10 +3214,6 @@ msgctxt "tunnel-control"
 msgid "Only selected apps are protected"
 msgstr "Kun valgte apps er beskyttet"
 
-msgctxt "tunnel-control"
-msgid "Switch location"
-msgstr "Skift placering"
-
 #. Bold status title shown when the tunnel is up but the
 #. device has no internet connection.
 msgctxt "tunnel-control"
@@ -5476,10 +5472,6 @@ msgid "Connecting..."
 msgstr "Opretter forbindelse..."
 
 msgctxt "tunnel-control"
-msgid "Connection established"
-msgstr "Forbindelse oprettet"
-
-msgctxt "tunnel-control"
 msgid "Encrypting your connection"
 msgstr "Krypterer din forbindelse"
 
@@ -6477,3 +6469,36 @@ msgstr "Denne enhed"
 msgctxt "device-management"
 msgid "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again."
 msgstr "Denne enhed blev frakoblet fra en anden enhed på din konto. Log ind med din gendannelsessætning for at bruge den igen."
+
+#. Short state badge on the home screen while the traffic
+#. leaves the device unencrypted.
+msgctxt "tunnel-control"
+msgid "Unprotected"
+msgstr "Ubeskyttet"
+
+#. Short state badge on the home screen once the tunnel is up.
+msgctxt "tunnel-control"
+msgid "Protected"
+msgstr "Beskyttet"
+
+#. Short state badge on the home screen while the tunnel is
+#. up but the device has no internet connection.
+msgctxt "tunnel-control"
+msgid "Interrupted"
+msgstr "Afbrudt"
+
+#. Short state badge on the home screen while the kill switch
+#. holds all traffic.
+msgctxt "tunnel-control"
+msgid "Blocked"
+msgstr "Blokeret"
+
+msgctxt "tunnel-control"
+msgid "Connection blocked"
+msgstr "Forbindelsen er blokeret"
+
+#. Trailing hint on the location row of the home screen,
+#. which opens the location list.
+msgctxt "tunnel-control"
+msgid "Change"
+msgstr "Skift"

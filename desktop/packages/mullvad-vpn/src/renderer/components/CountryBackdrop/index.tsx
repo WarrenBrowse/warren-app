@@ -1,48 +1,77 @@
 import { useEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
-import { getConnectionPhase, getPhaseAccentColor } from '../../lib/connection-phase';
+import { useMeasure } from '../../hooks/useMeasure';
+import { getConnectionPhase } from '../../lib/connection-phase';
 import { useExitEgressDead } from '../../lib/exit-egress';
+import { homeClearTop, homeTokens, surfaces } from '../../lib/foundations';
 import { getReduceMotion } from '../../lib/functions';
 import { useHostOffline } from '../../lib/host-offline';
 import { useSelector } from '../../redux/store';
+import {
+  CANVAS_HEIGHT,
+  CANVAS_WIDTH,
+  FEATHER_ROWS,
+  Frame,
+  frameScenery,
+  framingSpan,
+  phaseLandscape,
+} from './framing';
 import { BULA_IMAGE, resolveScenery, TERRIER_IMAGE } from './scenery';
 
-// The whole scene sits behind the connection panel (which owns z-index 1).
-const Root = styled.div`
+const { hero } = homeTokens;
+
+// Fades the bottom of the hero into the page: the panel's status block rides
+// up over the last rows, so the art has no edge.
+const fadeMask = `linear-gradient(to bottom, #000 calc(100% - ${hero.fade}px), rgba(0, 0, 0, 0.55) calc(100% - ${hero.fade * 0.45}px), transparent 100%)`;
+
+const Root = styled.div<{ $fill: string; $animate: boolean }>`
   position: absolute;
   inset: 0;
   overflow: hidden;
-  background-color: rgb(120, 170, 210); /* sky tone shown before art paints */
+  background-color: ${(props) => props.$fill};
+  transition: ${(props) =>
+    props.$animate ? `background-color ${hero.crossfadeMs}ms ease` : 'none'};
+  -webkit-mask-image: ${fadeMask};
+  mask-image: ${fadeMask};
 `;
 
-// Wrapper carrying the blur+scale of the connecting animation. Both landscape
-// layers live inside so they blur together during a cross-fade.
+// The registered canvas: the three layers fill it exactly, so moving or
+// scaling it moves them together. Edges facing a headroom strip or a side
+// margin are feathered into the top fill behind it.
+const Canvas = styled.div<{ $animate: boolean }>`
+  position: absolute;
+  transition: ${(props) =>
+    props.$animate
+      ? `top ${hero.frameMs}ms ease-in-out, left ${hero.frameMs}ms ease-in-out, width ${hero.frameMs}ms ease-in-out, height ${hero.frameMs}ms ease-in-out`
+      : 'none'};
+`;
+
+const Layer = styled.img`
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  user-select: none;
+  -webkit-user-drag: none;
+`;
+
+// Blur and a slight zoom while the tunnel is not settled; both landscapes of a
+// cross-fade live inside so they blur together.
 const Scene = styled.div<{ $blurred: boolean; $animate: boolean }>`
   position: absolute;
   inset: 0;
-  filter: ${(props) => (props.$blurred ? 'blur(14px) brightness(0.92)' : 'blur(0) brightness(1)')};
+  filter: ${(props) =>
+    props.$blurred ? `blur(${hero.blurRadius}px) brightness(0.92)` : 'blur(0) brightness(1)'};
   transform: ${(props) => (props.$blurred ? 'scale(1.08)' : 'scale(1)')};
   transition: ${(props) =>
     props.$animate ? 'filter 900ms ease, transform 6000ms ease-out' : 'none'};
   will-change: filter, transform;
 `;
 
-const FullBleed = styled.img`
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  user-select: none;
-  -webkit-user-drag: none;
-`;
-
-// The incoming landscape fades in over the previous one (which stays opaque
-// underneath), producing a cross-fade without a background-image transition.
-const FrontLandscape = styled(FullBleed)<{ $animate: boolean }>`
-  animation: ${(props) => (props.$animate ? 'warren-scenery-fade 700ms ease forwards' : 'none')};
+const FrontLandscape = styled(Layer)<{ $animate: boolean }>`
+  animation: ${(props) =>
+    props.$animate ? `warren-scenery-fade ${hero.crossfadeMs}ms ease forwards` : 'none'};
   @keyframes warren-scenery-fade {
     from {
       opacity: 0;
@@ -53,43 +82,62 @@ const FrontLandscape = styled(FullBleed)<{ $animate: boolean }>`
   }
 `;
 
-// Bula rides a small lift, which lands him just above the connection panel
-// instead of floating in the middle of the sky. He stays on the hillside either
-// way, the slope runs the full width down to the panel, so the lower framing
-// costs nothing and fills the empty band above the card.
-const BULA_LIFT_PERCENT = 1;
-
-// Bula sits exposed outside the burrow; when protected he is hidden inside it,
-// sliding down and fading out.
-const Bula = styled(FullBleed)<{ $visible: boolean; $animate: boolean }>`
+// Bula sits on the meadow while exposed and slips into the burrow, sliding down
+// and fading out, once the tunnel is up.
+const Bula = styled(Layer)<{ $visible: boolean; $animate: boolean }>`
   opacity: ${(props) => (props.$visible ? 1 : 0)};
-  transform: translateY(${(props) => -BULA_LIFT_PERCENT + (props.$visible ? 0 : 3)}%);
-  transition: ${(props) => (props.$animate ? 'opacity 550ms ease, transform 550ms ease' : 'none')};
+  transform: translateY(${(props) => (props.$visible ? 0 : 3)}%);
+  transition: ${(props) =>
+    props.$animate ? `opacity ${hero.bulaMs}ms ease, transform ${hero.bulaMs}ms ease` : 'none'};
 `;
 
-// A faint accent tint reinforces the phase (red exposed / orange connecting /
-// green protected) without washing out the artwork.
-const AccentWash = styled.div<{ $color: string; $animate: boolean }>`
+// The page colour over the top of the sky, so the toolbar reads on the
+// brightest plates, and a paper glow behind the inked logo.
+const Scrim = styled.div`
   position: absolute;
   inset: 0;
   pointer-events: none;
   background: linear-gradient(
     to bottom,
-    ${(props) => props.$color} 0%,
-    transparent 22%,
-    transparent 78%,
-    ${(props) => props.$color} 100%
+    ${surfaces.homeScrim} 0%,
+    transparent ${hero.scrimStop * 100}%
   );
-  opacity: 0.14;
-  mix-blend-mode: soft-light;
-  transition: ${(props) => (props.$animate ? 'background 700ms ease' : 'none')};
 `;
 
-// Country the app is connecting to / connected to. Prefer the live geoip exit
-// country; while it resolves during connecting, fall back to the selected relay
-// constraint so the target city shows from the first frame instead of a blurred
-// generic plain.
-function useTargetCountry(): string | undefined {
+const LogoGlow = styled.div`
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: ${hero.glowWidth}px;
+  height: ${hero.glowHeight}px;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 100% 100% at 0% 0%,
+    ${surfaces.homeLogoGlow} 0%,
+    color-mix(in srgb, ${surfaces.homeLogoGlow} 43%, transparent) 45%,
+    transparent 75%
+  );
+`;
+
+function featherMask(frame: Frame): string | undefined {
+  const masks: string[] = [];
+  const feather = (FEATHER_ROWS / CANVAS_HEIGHT) * 100;
+  if (frame.headroom > 0) {
+    masks.push(`linear-gradient(to bottom, transparent 0%, #000 ${feather}%)`);
+  }
+  if (frame.left > 0) {
+    const side = (FEATHER_ROWS / CANVAS_WIDTH) * 100;
+    masks.push(
+      `linear-gradient(to right, transparent 0%, #000 ${side}%, #000 ${100 - side}%, transparent 100%)`,
+    );
+  }
+  return masks.length > 0 ? masks.join(', ') : undefined;
+}
+
+// The country the app is connecting to or connected to. Prefers the live geoip
+// exit country; while it resolves during connecting, falls back to the selected
+// relay constraint so the target city shows from the first frame.
+export function useTargetCountry(): string | undefined {
   const status = useSelector((state) => state.connection.status);
   const relaySettings = useSelector((state) => state.settings.relaySettings);
   const relayLocations = useSelector((state) => state.settings.relayLocations);
@@ -116,11 +164,14 @@ function useTargetCountry(): string | undefined {
   return undefined;
 }
 
+// The home hero: the scenery framed so that what matters in the current phase
+// stays clear of the floating header and of the fade into the panel.
 export default function CountryBackdrop() {
   const status = useSelector((state) => state.connection.status);
   const hostOffline = useHostOffline();
   const exitEgressDead = useExitEgressDead();
   const targetCountry = useTargetCountry();
+  const [ref, size] = useMeasure<HTMLDivElement>();
 
   // e2e runs against deterministic snapshots; skip the decorative scene.
   if (window.env.e2e) {
@@ -129,15 +180,43 @@ export default function CountryBackdrop() {
 
   const phase = getConnectionPhase(status, hostOffline, exitEgressDead);
   const scenery = resolveScenery(phase, targetCountry);
+  const landscape = phaseLandscape(phase, targetCountry);
   const animate = !getReduceMotion();
-  const accent = getPhaseAccentColor(phase);
+  const measured = size.width > 0 && size.height > 0;
+  const frame = measured
+    ? frameScenery({
+        width: size.width,
+        height: size.height,
+        clearTop: homeClearTop,
+        fade: hero.fade,
+        span: framingSpan(phase, targetCountry),
+      })
+    : undefined;
+  const mask = frame ? featherMask(frame) : undefined;
 
   return (
-    <Root>
-      <CrossfadeLandscape src={scenery.image} animate={animate} blurred={scenery.blurred} />
-      <FullBleed src={TERRIER_IMAGE} alt="" aria-hidden />
-      <Bula src={BULA_IMAGE} alt="" aria-hidden $visible={scenery.showBula} $animate={animate} />
-      <AccentWash $color={accent} $animate={animate} />
+    <Root ref={ref} $fill={landscape.topFill} $animate={animate} aria-hidden>
+      {frame && (
+        <Canvas
+          $animate={animate}
+          data-testid="scenery-canvas"
+          style={{
+            left: frame.left,
+            top: frame.top,
+            width: frame.width,
+            height: frame.height,
+            WebkitMaskImage: mask,
+            maskImage: mask,
+            WebkitMaskComposite: mask?.includes('to right') ? 'source-in' : undefined,
+            maskComposite: mask?.includes('to right') ? 'intersect' : undefined,
+          }}>
+          <CrossfadeLandscape src={scenery.image} animate={animate} blurred={scenery.blurred} />
+          <Layer src={TERRIER_IMAGE} alt="" />
+          <Bula src={BULA_IMAGE} alt="" $visible={scenery.showBula} $animate={animate} />
+        </Canvas>
+      )}
+      <Scrim />
+      <LogoGlow />
     </Root>
   );
 }
@@ -164,8 +243,8 @@ function CrossfadeLandscape({ src, animate, blurred }: CrossfadeLandscapeProps) 
 
   return (
     <Scene $blurred={blurred} $animate={animate}>
-      <FullBleed src={layers.back} alt="" aria-hidden />
-      <FrontLandscape key={layers.key} src={layers.front} alt="" aria-hidden $animate={animate} />
+      <Layer src={layers.back} alt="" />
+      <FrontLandscape key={layers.key} src={layers.front} alt="" $animate={animate} />
     </Scene>
   );
 }

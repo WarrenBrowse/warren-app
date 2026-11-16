@@ -17,7 +17,7 @@ import { textDirection } from '../../../src/shared/text-direction';
 import { mockData } from '../mock-data';
 import { MockedTestUtils, startMockedApp } from './mocked-utils';
 
-// The App routing view is narrow (a two-way switch, chips and badges on 400 px), so every
+// The App routing view is narrow (a two-way switch, chips and badges on 360 px), so every
 // catalog is rendered here and checked for clipped labels, and Arabic and Persian are checked to
 // be laid out right to left. Screenshots land in <APP_ROUTING_SCREENSHOTS>/<locale>/ for whoever changes
 // the copy.

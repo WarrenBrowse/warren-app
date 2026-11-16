@@ -1,6 +1,6 @@
 import sceneryManifest from '../../../assets/images/scenery/scenery.json';
 import { TunnelState } from '../../shared/daemon-rpc-types';
-import { Colors, colors, surfaces, SurfaceToken } from './foundations';
+import { Colors, colors } from './foundations';
 
 // The connect screen collapses the daemon tunnel states into four visual phases,
 // each with its own accent colour. This is the single source of truth so the
@@ -51,20 +51,4 @@ export function getPhaseAccentColor(phase: ConnectionPhase): string {
 // token key rather than a resolved value.
 export function getPhaseAccentColorName(phase: ConnectionPhase): Colors {
   return sceneryManifest.phases[phase].accent as Colors;
-}
-
-// The card is its own surface, light or dark with the theme, so it writes the
-// phase in the surface palette rather than in the scenery accents above. The
-// title carries the hue and the well behind the eye is a quiet fill of it.
-const phaseCardColors: Record<ConnectionPhase, { title: SurfaceToken; well: SurfaceToken }> = {
-  exposed: { title: 'exposed', well: 'exposedWell' },
-  connecting: { title: 'connecting', well: 'connectingWell' },
-  protected: { title: 'protected', well: 'protectedWell' },
-  interrupted: { title: 'connecting', well: 'connectingWell' },
-  blocked: { title: 'text', well: 'button' },
-};
-
-export function getPhaseCardColors(phase: ConnectionPhase): { title: string; well: string } {
-  const { title, well } = phaseCardColors[phase];
-  return { title: surfaces[title], well: surfaces[well] };
 }
