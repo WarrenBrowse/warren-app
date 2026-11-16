@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.feature.settings.impl.support
 
+import com.warrenbrowse.vpn.lib.ui.theme.WarrenFonts
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,7 +24,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.lifecycle.compose.dropUnlessResumed
 import com.warrenbrowse.vpn.common.compose.unlessIsDetail
 import com.warrenbrowse.vpn.core.Navigator
@@ -103,7 +103,7 @@ fun ReportPreview(navigator: Navigator, path: String) {
         ) {
             Text(
                 text = text ?: stringResource(R.string.report_problem_collecting),
-                style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                style = MaterialTheme.typography.bodySmall.copy(fontFamily = WarrenFonts.mono),
                 softWrap = false,
             )
         }

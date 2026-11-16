@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.feature.settings.impl
 
+import com.warrenbrowse.vpn.lib.ui.theme.WarrenFonts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -42,7 +43,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.compose.LifecycleResumeEffect
@@ -438,7 +438,7 @@ private fun PubkeyCard(pubkey: String, onCopy: () -> Unit) {
             Text(
                 text = pubkey.shortWarrenAddress(),
                 style = MaterialTheme.typography.bodyMedium,
-                fontFamily = FontFamily.Monospace,
+                fontFamily = WarrenFonts.mono,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
             )
@@ -477,7 +477,7 @@ private fun ForumHandleCard(handle: String) {
         )
         Text(
             text = handle,
-            style = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Monospace),
+            style = MaterialTheme.typography.bodyLarge.copy(fontFamily = WarrenFonts.mono),
             modifier = Modifier.padding(top = Dimens.tinyPadding),
         )
     }

@@ -18,7 +18,7 @@ import com.warrenbrowse.vpn.feature.home.impl.connect.TunnelStatePreviewParamete
 import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
-import com.warrenbrowse.vpn.lib.ui.theme.CardTypography
+import com.warrenbrowse.vpn.lib.ui.theme.HomeTypography
 import com.warrenbrowse.vpn.lib.ui.theme.color.LocalWarrenSurfaces
 
 @Composable
@@ -38,10 +38,10 @@ private fun PreviewConnectionButton(
 
 /**
  * The primary connection action, signalling the ACTION its click performs, in lockstep with the
- * desktop `ConnectButton` + `DisconnectButton`:
- * - Disconnected -> dark green "Connect" (connect)
- * - Connecting -> "Cancel" (abort the in-flight attempt)
- * - Connected -> brick red "Disconnect" (tear down)
+ * desktop `HomeControls` ActionButton:
+ * - Disconnected -> solid green "Connect" (connect)
+ * - Connecting -> outlined "Cancel" (abort the in-flight attempt)
+ * - Connected -> outlined "Disconnect" (tear down)
  * - Disconnecting -> disabled "Connect" (teardown in flight, nothing to do)
  * - Error/blocked -> neutral "Disconnect" (turn the switch off)
  */
@@ -86,7 +86,7 @@ fun ConnectionButton(
             Text(
                 text = label,
                 textAlign = TextAlign.Center,
-                style = CardTypography.button,
+                style = HomeTypography.button,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.fillMaxWidth(),

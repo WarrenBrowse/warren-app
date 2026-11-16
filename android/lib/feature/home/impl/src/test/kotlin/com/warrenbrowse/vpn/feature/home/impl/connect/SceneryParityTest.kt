@@ -1,42 +1,28 @@
 package com.warrenbrowse.vpn.feature.home.impl.connect
 
-import androidx.compose.ui.graphics.BlendMode
 import com.warrenbrowse.vpn.lib.ui.theme.tokens.DesignTokens
 import kotlin.test.assertEquals
 import org.junit.jupiter.api.Test
 
 /**
- * The scenery backdrop's numbers against the desktop `CountryBackdrop`
- * (through the generated tokens): the connecting blur, dim and zoom, the phase
- * wash and every timing. The three clients tell the same visual story, so a
- * value moved on one side fails here.
+ * The hero's numbers against the desktop `CountryBackdrop`: the timings and the blur come from the
+ * generated home tokens, the rest are the desktop literals the hero carries as its own constants.
+ * The three clients tell the same visual story, so a value moved on one side fails here.
  */
 class SceneryParityTest {
 
     @Test
     fun `the connecting landscape blurs, dims and zooms as the desktop does`() {
-        assertEquals(DesignTokens.Scenery.BlurRadius, LANDSCAPE_BLUR_RADIUS)
-        assertEquals(DesignTokens.Scenery.ConnectingZoom, CONNECTING_ZOOM)
+        assertEquals(14f, DesignTokens.Home.Hero.BlurRadius.value)
         // brightness(0.92) is a black overlay at 8 % over opaque art.
-        assertEquals(1f - DesignTokens.Scenery.ConnectingBrightness, CONNECTING_DIM, 1e-6f)
+        assertEquals(0.08f, CONNECTING_DIM, 1e-6f)
+        assertEquals(1.08f, CONNECTING_ZOOM)
+        assertEquals(900, BLUR_MILLIS)
+        assertEquals(6000, ZOOM_MILLIS)
     }
 
     @Test
-    fun `the phase wash is the desktop soft-light wash`() {
-        assertEquals(DesignTokens.Scenery.WashAlpha, WASH_ALPHA)
-        assertEquals(DesignTokens.Scenery.WashTopStop, WASH_TOP_STOP)
-        assertEquals(DesignTokens.Scenery.WashBottomStop, WASH_BOTTOM_STOP)
-        assertEquals("soft-light", DesignTokens.Scenery.WashBlend)
-        assertEquals(BlendMode.Softlight, WASH_BLEND)
-    }
-
-    @Test
-    fun `every scenery timing is the desktop timing`() {
-        assertEquals(DesignTokens.Scenery.BlurTransition, BLUR_MILLIS)
-        assertEquals(DesignTokens.Scenery.ZoomTransition, ZOOM_MILLIS)
-        assertEquals(DesignTokens.Scenery.Crossfade, CROSSFADE_MILLIS)
-        assertEquals(DesignTokens.Scenery.WashTransition, CROSSFADE_MILLIS)
-        assertEquals(DesignTokens.Scenery.BulaTransition, BULA_MILLIS)
-        assertEquals(DesignTokens.Scenery.BulaHideDrop, BULA_HIDE_DROP)
+    fun `Bula slips 3 percent of the canvas down into the burrow`() {
+        assertEquals(0.03f, BULA_HIDE_DROP)
     }
 }

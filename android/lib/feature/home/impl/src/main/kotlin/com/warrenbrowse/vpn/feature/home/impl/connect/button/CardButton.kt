@@ -24,13 +24,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import com.warrenbrowse.vpn.lib.model.TunnelState
-import com.warrenbrowse.vpn.lib.ui.theme.Dimens
+import androidx.compose.ui.unit.Dp
+import com.warrenbrowse.vpn.lib.ui.theme.tokens.DesignTokens
 import com.warrenbrowse.vpn.lib.ui.theme.color.WarrenSurfaces
 
 /**
- * Neutral: the location and shuffle buttons, a raised fill of the card itself. Connect,
- * Disconnect, Cancel: the action, white on a fill that says what the click does rather than the
- * state the tunnel is in (desktop `CardButton`).
+ * Neutral: the location and shuffle fields, and the action that turns the kill switch off.
+ * Connect: a solid go. Disconnect, Cancel: an outlined stop (desktop `HomeControls`), the fill
+ * saying what the click does rather than the state the tunnel is in.
  */
 enum class CardButtonTone {
     Neutral,
@@ -45,31 +46,31 @@ fun CardButtonTone.colors(surfaces: WarrenSurfaces): CardButtonColors =
     when (this) {
         CardButtonTone.Neutral ->
             CardButtonColors(
-                surfaces.button,
-                surfaces.buttonPressed,
-                surfaces.buttonLine,
-                surfaces.text,
+                surfaces.homeField,
+                surfaces.homeFieldPressed,
+                Color.Transparent,
+                surfaces.homeText,
             )
         CardButtonTone.Connect ->
             CardButtonColors(
-                surfaces.connect,
-                surfaces.connectPressed,
+                surfaces.homeConnect,
+                surfaces.homeConnectPressed,
                 Color.Transparent,
-                surfaces.actionText,
+                surfaces.homeConnectText,
             )
         CardButtonTone.Disconnect ->
             CardButtonColors(
-                surfaces.disconnect,
-                surfaces.disconnectPressed,
                 Color.Transparent,
-                surfaces.actionText,
+                surfaces.homeDisconnectHover,
+                surfaces.homeDisconnectLine,
+                surfaces.homeDisconnectText,
             )
         CardButtonTone.Cancel ->
             CardButtonColors(
-                surfaces.cancel,
-                surfaces.cancelPressed,
                 Color.Transparent,
-                surfaces.actionText,
+                surfaces.homeCancelHover,
+                surfaces.homeCancelLine,
+                surfaces.homeCancelText,
             )
     }
 
@@ -89,18 +90,19 @@ fun TunnelState.actionTone(): CardButtonTone =
 
 // The desktop Button transitions its background over 150 ms on a variant change.
 internal const val CARD_BUTTON_COLOR_MILLIS = 150
-private const val DISABLED_CONTENT_ALPHA = 0.5f
+private const val DISABLED_ALPHA = 0.5f
 
 /**
- * A 32 dp card button (desktop `CardButton`): radius 6, a hairline border, the tone's fill, a
- * darker fill while pressed. No Material inflation: the platform extends the touch bounds of a
- * target smaller than 48 dp on its own (DesignParityTest).
+ * A home control (desktop `HomeControls` field and action button): radius 10, the tone's fill, an
+ * inset outline for the outlined tones, a darker fill while pressed, the whole control at half
+ * opacity while disabled.
  */
 @Composable
 fun CardButton(
     colors: CardButtonColors,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
+    height: Dp = DesignTokens.Home.Controls.ButtonHeight,
     enabled: Boolean = true,
     content: @Composable BoxScope.() -> Unit,
 ) {
@@ -124,14 +126,15 @@ fun CardButton(
             animationSpec = tween(CARD_BUTTON_COLOR_MILLIS),
             label = "card_button_text",
         )
-    val shape = RoundedCornerShape(Dimens.cardButtonRadius)
+    val shape = RoundedCornerShape(DesignTokens.Home.Controls.Radius)
     Box(
         modifier =
             modifier
-                .height(Dimens.cardButtonHeight)
+                .height(height)
+                .alpha(if (enabled) 1f else DISABLED_ALPHA)
                 .clip(shape)
                 .background(fill)
-                .border(Dimens.surfaceBorderWidth, border, shape)
+                .border(DesignTokens.Home.Controls.OutlineWidth, border, shape)
                 .clickable(
                     interactionSource = interaction,
                     // The ripple also draws the focus highlight a TV remote needs.
@@ -142,12 +145,6 @@ fun CardButton(
                 ),
         contentAlignment = Alignment.Center,
     ) {
-        CompositionLocalProvider(LocalContentColor provides text) {
-            Box(
-                modifier = if (enabled) Modifier else Modifier.alpha(DISABLED_CONTENT_ALPHA),
-                contentAlignment = Alignment.Center,
-                content = content,
-            )
-        }
+        CompositionLocalProvider(LocalContentColor provides text, content = { content() })
     }
 }

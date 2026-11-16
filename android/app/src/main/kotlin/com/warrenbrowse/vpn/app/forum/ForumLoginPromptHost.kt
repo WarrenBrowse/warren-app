@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.app.forum
 
+import com.warrenbrowse.vpn.lib.ui.theme.WarrenFonts
 import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
@@ -24,7 +25,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
@@ -243,7 +243,7 @@ private fun CompletionDialog(
                     Text(
                         text = view.code,
                         style = MaterialTheme.typography.displaySmall,
-                        fontFamily = FontFamily.Monospace,
+                        fontFamily = WarrenFonts.mono,
                         fontWeight = FontWeight.SemiBold,
                         letterSpacing = 6.sp,
                         textAlign = TextAlign.Center,

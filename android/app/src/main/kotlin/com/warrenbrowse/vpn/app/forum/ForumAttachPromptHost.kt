@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.app.forum
 
+import com.warrenbrowse.vpn.lib.ui.theme.WarrenFonts
 import android.app.Activity
 import android.widget.Toast
 import androidx.compose.foundation.horizontalScroll
@@ -30,7 +31,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithSmallTopBar
@@ -295,7 +295,7 @@ private fun AttachReportPreview(path: String, onClose: () -> Unit) {
             ) {
                 Text(
                     text = text ?: stringResource(R.string.report_problem_collecting),
-                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
+                    style = MaterialTheme.typography.bodySmall.copy(fontFamily = WarrenFonts.mono),
                     softWrap = false,
                 )
             }

@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.lib.ui.component.wallet
 
+import com.warrenbrowse.vpn.lib.ui.theme.WarrenFonts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,7 +14,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.isSensitiveData
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -64,7 +64,7 @@ fun MnemonicInput(
                 // sensitivity-honoring screenshots.
                 .semantics { isSensitiveData = true },
             placeholder = { Text(stringResource(R.string.wallet_import_placeholder)) },
-            textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Monospace),
+            textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = WarrenFonts.mono),
             minLines = 3,
             maxLines = 5,
             keyboardOptions = KeyboardOptions(

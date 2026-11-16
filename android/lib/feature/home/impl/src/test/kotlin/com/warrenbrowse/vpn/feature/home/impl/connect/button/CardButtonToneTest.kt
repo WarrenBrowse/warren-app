@@ -9,8 +9,8 @@ import kotlin.test.assertEquals
 import org.junit.jupiter.api.Test
 
 /**
- * The action button says what the click does (desktop `ConnectButton` and `DisconnectButton`), and
- * each tone paints from the card palette (desktop `CardButton`).
+ * The action button says what the click does (desktop `HomeControls` ActionButton): a solid go, an
+ * outlined stop, and a neutral field to turn the kill switch off.
  */
 class CardButtonToneTest {
 
@@ -34,32 +34,42 @@ class CardButtonToneTest {
     }
 
     @Test
-    fun `the neutral tone is a raised fill of the card, written in the card text`() {
+    fun `the neutral tone is the home field, written in the home text`() {
         val s = WarrenSurfaces.Light
         assertEquals(
             CardButtonColors(
-                fill = s.button,
-                pressed = s.buttonPressed,
-                border = s.buttonLine,
-                text = s.text,
+                fill = s.homeField,
+                pressed = s.homeFieldPressed,
+                border = Color.Transparent,
+                text = s.homeText,
             ),
             CardButtonTone.Neutral.colors(s),
         )
     }
 
     @Test
-    fun `the action tones are white on the fill of their action, with no border`() {
+    fun `connect is a solid fill`() {
         val s = WarrenSurfaces.Dark
         assertEquals(
-            CardButtonColors(s.connect, s.connectPressed, Color.Transparent, s.actionText),
+            CardButtonColors(s.homeConnect, s.homeConnectPressed, Color.Transparent, s.homeConnectText),
             CardButtonTone.Connect.colors(s),
         )
+    }
+
+    @Test
+    fun `disconnect and cancel are outlined, pressed with their hover wash`() {
+        val s = WarrenSurfaces.Dark
         assertEquals(
-            CardButtonColors(s.disconnect, s.disconnectPressed, Color.Transparent, s.actionText),
+            CardButtonColors(
+                Color.Transparent,
+                s.homeDisconnectHover,
+                s.homeDisconnectLine,
+                s.homeDisconnectText,
+            ),
             CardButtonTone.Disconnect.colors(s),
         )
         assertEquals(
-            CardButtonColors(s.cancel, s.cancelPressed, Color.Transparent, s.actionText),
+            CardButtonColors(Color.Transparent, s.homeCancelHover, s.homeCancelLine, s.homeCancelText),
             CardButtonTone.Cancel.colors(s),
         )
     }

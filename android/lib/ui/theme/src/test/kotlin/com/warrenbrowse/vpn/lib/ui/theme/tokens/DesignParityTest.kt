@@ -2,11 +2,10 @@ package com.warrenbrowse.vpn.lib.ui.theme.tokens
 
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import com.warrenbrowse.vpn.lib.ui.theme.CardTypography
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.TextUnit
+import com.warrenbrowse.vpn.lib.ui.theme.HomeTypography
 import com.warrenbrowse.vpn.lib.ui.theme.WarrenFonts
-import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha20
-import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha60
 import com.warrenbrowse.vpn.lib.ui.theme.color.ColorDarkTokens
 import com.warrenbrowse.vpn.lib.ui.theme.color.WarrenSurfaces
 import com.warrenbrowse.vpn.lib.ui.theme.dimensions.defaultDimensions
@@ -14,133 +13,12 @@ import kotlin.test.assertEquals
 import org.junit.jupiter.api.Test
 
 /**
- * The connect-screen primitives Android draws with, enumerated against the generated desktop
- * tokens: a "let me just bump this to 16" edit fails here on the platform that moved. Where Android
- * deliberately deviates, the deviation is pinned next to the desktop value it deviates from.
+ * The primitives Android draws with, enumerated against the generated desktop tokens: a "let me
+ * just bump this to 16" edit fails here on the platform that moved.
  */
 class DesignParityTest {
 
     private val dims = defaultDimensions
-
-    @Test
-    fun `the connection card keeps the desktop geometry`() {
-        assertEquals(DesignTokens.ConnectionCard.PaddingVertical, dims.connectionCardVerticalPadding)
-        assertEquals(
-            DesignTokens.ConnectionCard.PaddingHorizontal,
-            dims.connectionCardHorizontalPadding,
-        )
-        assertEquals(DesignTokens.ConnectionCard.Radius, dims.connectionCardRadius)
-        assertEquals(DesignTokens.Radius.Radius16, dims.connectionCardRadius)
-        assertEquals(DesignTokens.ConnectionCard.BorderWidth, dims.surfaceBorderWidth)
-        assertEquals(
-            DesignTokens.ConnectionCard.MarginHorizontal,
-            dims.connectionCardMarginHorizontal,
-        )
-        assertEquals(DesignTokens.ConnectionCard.MarginBottom, dims.connectionCardMarginBottom)
-        assertEquals(DesignTokens.ConnectionCard.BlockGap, dims.connectionCardBlockGap)
-        assertEquals(DesignTokens.ConnectionCard.ShadowOffsetY, dims.connectionCardShadowOffsetY)
-        assertEquals(DesignTokens.ConnectionCard.ShadowBlur, dims.connectionCardShadowBlur)
-    }
-
-    @Test
-    fun `the card chevron keeps the desktop box and glyph`() {
-        assertEquals(DesignTokens.ConnectionCard.ChevronButtonSize, dims.connectionCardChevronSize)
-        assertEquals(
-            DesignTokens.ConnectionCard.ChevronIconSize,
-            dims.connectionCardChevronIconSize,
-        )
-    }
-
-    @Test
-    fun `the feature chip keeps the desktop padding, radius and shadow`() {
-        assertEquals(DesignTokens.FeatureChip.PaddingVertical, dims.chipVerticalPadding)
-        assertEquals(DesignTokens.FeatureChip.PaddingHorizontal, dims.chipHorizontalPadding)
-        assertEquals(DesignTokens.FeatureChip.Radius, dims.chipCornerRadius)
-        assertEquals(DesignTokens.FeatureChip.BorderWidth, dims.surfaceBorderWidth)
-        assertEquals(DesignTokens.FeatureChip.ShadowOffsetY, dims.chipShadowOffsetY)
-        assertEquals(DesignTokens.FeatureChip.ShadowBlur, dims.chipShadowBlur)
-    }
-
-    @Test
-    fun `the badge stack gaps are the desktop gaps, reachable because chips carry no touch inflation`() {
-        // Measured on a 1080x2400 emulator before the inflation was turned
-        // off: the pills fell exactly 48.00 dp centre to centre, because each
-        // chip sat in its own minimum-interactive row, which read as a stack
-        // several times too loose.
-        //
-        // With the row inflation off (chipInteractiveMinSize) the desktop gap
-        // is reachable exactly. A pill is 27 dp tall (5.5 dp padding on each
-        // side of a 15 sp line, plus the hairline), so each chip meets WCAG 2.2
-        // AA 2.5.8 through its own size, 24 dp being the floor. The chips are
-        // shortcuts, and every one of them is also reachable from Settings.
-        assertEquals(2.dp, DesignTokens.ConnectionCard.BadgeGap)
-        assertEquals(DesignTokens.ConnectionCard.BadgeGap, dims.chipStackGap)
-        assertEquals(DesignTokens.ConnectionCard.BadgesToCardGap, dims.chipsToCardGap)
-        assertEquals(0.dp, dims.chipInteractiveMinSize)
-    }
-
-    @Test
-    fun `the card buttons keep the desktop geometry`() {
-        // 32 dp is under the 48 dp finger floor, and it stays the desktop
-        // height on purpose: the buttons carry no Material inflation, and
-        // Compose extends the touch bounds of any pointer target smaller than
-        // the platform minimum to that minimum, resolving an overlap in favour
-        // of the nearest target. The 10.5 dp between the two rows keeps the
-        // targets from ever claiming each other's centre.
-        assertEquals(DesignTokens.CardButton.Height, dims.cardButtonHeight)
-        assertEquals(DesignTokens.CardButton.Radius, dims.cardButtonRadius)
-        assertEquals(DesignTokens.CardButton.BorderWidth, dims.surfaceBorderWidth)
-        assertEquals(DesignTokens.CardButton.RowGap, dims.cardButtonRowGap)
-        assertEquals(DesignTokens.CardButton.ShuffleWidth, dims.shuffleButtonWidth)
-    }
-
-    @Test
-    fun `the beta banner keeps the desktop overlay card`() {
-        assertEquals(DesignTokens.BetaBanner.MarginTop, dims.betaBannerMarginTop)
-        assertEquals(DesignTokens.BetaBanner.MarginStart, dims.betaBannerMarginStart)
-        assertEquals(DesignTokens.BetaBanner.Height, dims.betaBannerHeight)
-        assertEquals(DesignTokens.BetaBanner.PaddingStart, dims.betaBannerPaddingStart)
-        assertEquals(DesignTokens.BetaBanner.PaddingEnd, dims.betaBannerPaddingEnd)
-        assertEquals(DesignTokens.BetaBanner.Gap, dims.betaBannerGap)
-        assertEquals(DesignTokens.BetaBanner.Radius, dims.betaBannerRadius)
-        assertEquals(DesignTokens.BetaBanner.BorderWidth, dims.surfaceBorderWidth)
-        assertEquals(DesignTokens.BetaBanner.ShadowOffsetY, dims.betaBannerShadowOffsetY)
-        assertEquals(DesignTokens.BetaBanner.ShadowBlur, dims.betaBannerShadowBlur)
-        assertEquals(DesignTokens.BetaBanner.PillHeight, dims.betaPillHeight)
-        assertEquals(DesignTokens.BetaBanner.PillPaddingHorizontal, dims.betaPillPaddingHorizontal)
-        assertEquals(DesignTokens.BetaBanner.PillRadius, dims.betaPillRadius)
-    }
-
-    @Test
-    fun `the footer keeps the desktop surface`() {
-        assertEquals(DesignTokens.Footer.PaddingVertical, dims.footerVerticalPadding)
-        assertEquals(DesignTokens.Footer.PaddingHorizontal, dims.mediumPadding)
-        assertEquals(DesignTokens.Footer.SurfaceAlpha, Alpha60)
-        assertEquals(DesignTokens.Footer.BorderWidth, dims.thinBorderWidth)
-        assertEquals(DesignTokens.Footer.BorderAlpha, Alpha20)
-    }
-
-    @Test
-    fun `the notification banner keeps the desktop card`() {
-        assertEquals(DesignTokens.NotificationBanner.Radius, dims.notificationBannerRadius)
-        assertEquals(DesignTokens.NotificationBanner.EdgeWidth, dims.notificationBannerEdge)
-        assertEquals(
-            DesignTokens.NotificationBanner.PaddingVertical,
-            dims.notificationBannerVerticalPadding,
-        )
-        assertEquals(
-            DesignTokens.NotificationBanner.PaddingStart,
-            dims.notificationBannerStartPadding,
-        )
-        assertEquals(DesignTokens.NotificationBanner.PaddingEnd, dims.notificationBannerEndPadding)
-        assertEquals(DesignTokens.NotificationBanner.Elevation, dims.notificationBannerElevation)
-    }
-
-    @Test
-    fun `the country flag is the desktop round flag with its hairline ring`() {
-        assertEquals(DesignTokens.CountryFlag.Size, dims.countryFlagSize)
-        assertEquals(DesignTokens.CountryFlag.RingWidth, dims.surfaceBorderWidth)
-    }
 
     @Test
     fun `the dialog radius is the desktop radius12`() {
@@ -148,63 +26,126 @@ class DesignParityTest {
     }
 
     @Test
-    fun `the status eye sits in the desktop well`() {
-        assertEquals(DesignTokens.ConnectionStatus.RowGap, dims.connectionStatusGap)
-        assertEquals(DesignTokens.ConnectionStatus.TextGap, dims.connectionStatusTextGap)
-        assertEquals(DesignTokens.ConnectionStatus.TrailingGap, dims.connectionStatusTrailingGap)
-        assertEquals(DesignTokens.ConnectionStatus.WellSize, dims.connectionStatusWellSize)
-        assertEquals(DesignTokens.ConnectionStatus.WellRadius, dims.connectionStatusWellRadius)
-        assertEquals(DesignTokens.ConnectionStatus.IconSize, dims.connectionStatusIconSize)
+    fun `the home text is Instrument Sans at the desktop home sizes`() {
+        val home = HomeTypography
+        assertHome(home.pill, DesignTokens.Home.Pill.TextSize, DesignTokens.Home.Pill.TextWeight)
+        assertHome(home.title, DesignTokens.Home.Title.TextSize, DesignTokens.Home.Title.TextWeight)
+        assertEquals(DesignTokens.Home.Title.LetterSpacingEm, home.title.letterSpacing.value)
+        assertHome(home.subtitle, DesignTokens.Home.Subtitle.TextSize, FontWeight.Normal.weight)
+        assertHome(
+            home.location,
+            DesignTokens.Home.Controls.LabelSize,
+            DesignTokens.Home.Controls.LabelWeight,
+        )
+        assertHome(home.change, DesignTokens.Home.Controls.ChangeSize, FontWeight.Normal.weight)
+        assertHome(
+            home.button,
+            DesignTokens.Home.Controls.ButtonTextSize,
+            DesignTokens.Home.Controls.ButtonTextWeight,
+        )
+        assertHome(home.chip, DesignTokens.Home.Chips.TextSize, FontWeight.Normal.weight)
+        assertHome(home.footer, DesignTokens.Home.Footer.TextSize, FontWeight.Normal.weight)
+        // The host name and the account key are set in the desktop mono face.
+        assertEquals(WarrenFonts.mono, home.subtitleMono.fontFamily)
+        assertEquals(DesignTokens.Home.Subtitle.MonoSize, home.subtitleMono.fontSize)
+        assertEquals(WarrenFonts.mono, home.footerMono.fontFamily)
+        assertEquals(DesignTokens.Home.Footer.TextSize, home.footerMono.fontSize)
     }
 
     @Test
-    fun `the location lines keep the desktop gaps`() {
-        assertEquals(DesignTokens.ConnectionLocation.GapAbove, dims.connectionCardBlockGap)
-        assertEquals(DesignTokens.ConnectionLocation.HostnameGapAbove, dims.hostnameGapAbove)
+    fun `the dark home palette is the desktop dark home surfaces, field for field`() {
+        assertHomeSurfaces(
+            WarrenSurfaces.Dark,
+            listOf(
+                DesignTokens.Surfaces.Dark.HomePage,
+                DesignTokens.Surfaces.Dark.HomeText,
+                DesignTokens.Surfaces.Dark.HomeTextSecondary,
+                DesignTokens.Surfaces.Dark.HomeTextMono,
+                DesignTokens.Surfaces.Dark.HomeField,
+                DesignTokens.Surfaces.Dark.HomeFieldHover,
+                DesignTokens.Surfaces.Dark.HomeFieldPressed,
+                DesignTokens.Surfaces.Dark.HomeFieldIcon,
+                DesignTokens.Surfaces.Dark.HomeFooter,
+                DesignTokens.Surfaces.Dark.HomeChipText,
+                DesignTokens.Surfaces.Dark.HomeChipLine,
+                DesignTokens.Surfaces.Dark.HomeToolbar,
+                DesignTokens.Surfaces.Dark.HomeToolbarLine,
+                DesignTokens.Surfaces.Dark.HomeToolbarShadow,
+                DesignTokens.Surfaces.Dark.HomeBadge,
+                DesignTokens.Surfaces.Dark.HomeBadgeRing,
+                DesignTokens.Surfaces.Dark.HomeScrim,
+                DesignTokens.Surfaces.Dark.HomeLogoGlow,
+                DesignTokens.Surfaces.Dark.HomePillExposed,
+                DesignTokens.Surfaces.Dark.HomePillExposedText,
+                DesignTokens.Surfaces.Dark.HomePillProtected,
+                DesignTokens.Surfaces.Dark.HomePillProtectedText,
+                DesignTokens.Surfaces.Dark.HomePillPending,
+                DesignTokens.Surfaces.Dark.HomePillPendingText,
+                DesignTokens.Surfaces.Dark.HomePillBlocked,
+                DesignTokens.Surfaces.Dark.HomePillBlockedText,
+                DesignTokens.Surfaces.Dark.HomeConnect,
+                DesignTokens.Surfaces.Dark.HomeConnectHover,
+                DesignTokens.Surfaces.Dark.HomeConnectPressed,
+                DesignTokens.Surfaces.Dark.HomeConnectText,
+                DesignTokens.Surfaces.Dark.HomeDisconnectLine,
+                DesignTokens.Surfaces.Dark.HomeDisconnectText,
+                DesignTokens.Surfaces.Dark.HomeDisconnectHover,
+                DesignTokens.Surfaces.Dark.HomeCancelLine,
+                DesignTokens.Surfaces.Dark.HomeCancelText,
+                DesignTokens.Surfaces.Dark.HomeCancelHover,
+            ),
+        )
     }
 
     @Test
-    fun `the card text is the desktop Open Sans at the desktop sizes`() {
-        assertStyle(
-            CardTypography.statusTitle,
-            DesignTokens.ConnectionStatus.TitleSize.value,
-            DesignTokens.ConnectionStatus.TitleLineHeight.value,
-            DesignTokens.ConnectionStatus.TitleWeight,
+    fun `the light home palette is the desktop light home surfaces, field for field`() {
+        assertHomeSurfaces(
+            WarrenSurfaces.Light,
+            listOf(
+                DesignTokens.Surfaces.Light.HomePage,
+                DesignTokens.Surfaces.Light.HomeText,
+                DesignTokens.Surfaces.Light.HomeTextSecondary,
+                DesignTokens.Surfaces.Light.HomeTextMono,
+                DesignTokens.Surfaces.Light.HomeField,
+                DesignTokens.Surfaces.Light.HomeFieldHover,
+                DesignTokens.Surfaces.Light.HomeFieldPressed,
+                DesignTokens.Surfaces.Light.HomeFieldIcon,
+                DesignTokens.Surfaces.Light.HomeFooter,
+                DesignTokens.Surfaces.Light.HomeChipText,
+                DesignTokens.Surfaces.Light.HomeChipLine,
+                DesignTokens.Surfaces.Light.HomeToolbar,
+                DesignTokens.Surfaces.Light.HomeToolbarLine,
+                DesignTokens.Surfaces.Light.HomeToolbarShadow,
+                DesignTokens.Surfaces.Light.HomeBadge,
+                DesignTokens.Surfaces.Light.HomeBadgeRing,
+                DesignTokens.Surfaces.Light.HomeScrim,
+                DesignTokens.Surfaces.Light.HomeLogoGlow,
+                DesignTokens.Surfaces.Light.HomePillExposed,
+                DesignTokens.Surfaces.Light.HomePillExposedText,
+                DesignTokens.Surfaces.Light.HomePillProtected,
+                DesignTokens.Surfaces.Light.HomePillProtectedText,
+                DesignTokens.Surfaces.Light.HomePillPending,
+                DesignTokens.Surfaces.Light.HomePillPendingText,
+                DesignTokens.Surfaces.Light.HomePillBlocked,
+                DesignTokens.Surfaces.Light.HomePillBlockedText,
+                DesignTokens.Surfaces.Light.HomeConnect,
+                DesignTokens.Surfaces.Light.HomeConnectHover,
+                DesignTokens.Surfaces.Light.HomeConnectPressed,
+                DesignTokens.Surfaces.Light.HomeConnectText,
+                DesignTokens.Surfaces.Light.HomeDisconnectLine,
+                DesignTokens.Surfaces.Light.HomeDisconnectText,
+                DesignTokens.Surfaces.Light.HomeDisconnectHover,
+                DesignTokens.Surfaces.Light.HomeCancelLine,
+                DesignTokens.Surfaces.Light.HomeCancelText,
+                DesignTokens.Surfaces.Light.HomeCancelHover,
+            ),
         )
-        assertStyle(
-            CardTypography.statusSubtitle,
-            DesignTokens.ConnectionStatus.SubtitleSize.value,
-            DesignTokens.ConnectionStatus.SubtitleLineHeight.value,
-            FontWeight.Normal.weight,
-        )
-        assertStyle(
-            CardTypography.location,
-            DesignTokens.ConnectionLocation.Size.value,
-            DesignTokens.ConnectionLocation.LineHeight.value,
-            DesignTokens.ConnectionLocation.Weight,
-        )
-        assertStyle(
-            CardTypography.hostname,
-            DesignTokens.ConnectionLocation.HostnameSize.value,
-            DesignTokens.ConnectionLocation.HostnameLineHeight.value,
-            FontWeight.Normal.weight,
-        )
-        assertStyle(
-            CardTypography.button,
-            DesignTokens.CardButton.TextSize.value,
-            DesignTokens.CardButton.TextLineHeight.value,
-            DesignTokens.CardButton.TextWeight,
-        )
-        assertEquals(DesignTokens.BetaBanner.PillTextSize, CardTypography.betaPill.fontSize)
-        assertEquals(DesignTokens.BetaBanner.PillLetterSpacing, CardTypography.betaPill.letterSpacing)
-        assertEquals(
-            DesignTokens.BetaBanner.PillTextWeight,
-            CardTypography.betaPill.fontWeight?.weight,
-        )
-        assertEquals(DesignTokens.BetaBanner.TextSize, CardTypography.betaLine.fontSize)
-        assertEquals(DesignTokens.BetaBanner.TextWeight, CardTypography.betaLine.fontWeight?.weight)
-        assertEquals(WarrenFonts.body, CardTypography.betaPill.fontFamily)
-        assertEquals(WarrenFonts.body, CardTypography.betaLine.fontFamily)
+    }
+
+    @Test
+    fun `each palette knows which theme it is`() {
+        assertEquals(true, WarrenSurfaces.Dark.isDark)
+        assertEquals(false, WarrenSurfaces.Light.isDark)
     }
 
     @Test
@@ -288,15 +229,58 @@ class DesignParityTest {
         assertEquals(DesignTokens.Colors.DarkerBlue10, ColorDarkTokens.Tertiary)
     }
 
-    private fun assertStyle(style: TextStyle, size: Float, lineHeight: Float, weight: Int) {
-        assertEquals(WarrenFonts.body, style.fontFamily)
-        assertEquals(size, style.fontSize.value)
-        assertEquals(lineHeight, style.lineHeight.value)
+    private fun assertHome(style: TextStyle, size: TextUnit, weight: Int) {
+        assertEquals(WarrenFonts.sans, style.fontFamily)
+        assertEquals(size, style.fontSize)
         assertEquals(weight, style.fontWeight?.weight)
     }
 
+    private fun assertHomeSurfaces(palette: WarrenSurfaces, expected: List<Color>) {
+        assertEquals(
+            expected,
+            listOf(
+                palette.homePage,
+                palette.homeText,
+                palette.homeTextSecondary,
+                palette.homeTextMono,
+                palette.homeField,
+                palette.homeFieldHover,
+                palette.homeFieldPressed,
+                palette.homeFieldIcon,
+                palette.homeFooter,
+                palette.homeChipText,
+                palette.homeChipLine,
+                palette.homeToolbar,
+                palette.homeToolbarLine,
+                palette.homeToolbarShadow,
+                palette.homeBadge,
+                palette.homeBadgeRing,
+                palette.homeScrim,
+                palette.homeLogoGlow,
+                palette.homePillExposed,
+                palette.homePillExposedText,
+                palette.homePillProtected,
+                palette.homePillProtectedText,
+                palette.homePillPending,
+                palette.homePillPendingText,
+                palette.homePillBlocked,
+                palette.homePillBlockedText,
+                palette.homeConnect,
+                palette.homeConnectHover,
+                palette.homeConnectPressed,
+                palette.homeConnectText,
+                palette.homeDisconnectLine,
+                palette.homeDisconnectText,
+                palette.homeDisconnectHover,
+                palette.homeCancelLine,
+                palette.homeCancelText,
+                palette.homeCancelHover,
+            ),
+        )
+    }
+
     // In declaration order: a field swapped for its neighbour fails here.
-    private fun assertSurfaces(palette: WarrenSurfaces, expected: List<androidx.compose.ui.graphics.Color>) {
+    private fun assertSurfaces(palette: WarrenSurfaces, expected: List<Color>) {
         assertEquals(
             expected,
             listOf(

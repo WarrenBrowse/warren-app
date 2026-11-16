@@ -1,23 +1,20 @@
 package com.warrenbrowse.vpn.lib.ui.designsystem
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.dropShadow
-import androidx.compose.ui.graphics.shadow.Shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.DpOffset
-import androidx.compose.ui.unit.dp
 import com.warrenbrowse.vpn.lib.ui.designsystem.preview.PreviewColumn
-import com.warrenbrowse.vpn.lib.ui.theme.CardTypography
-import com.warrenbrowse.vpn.lib.ui.theme.Dimens
+import com.warrenbrowse.vpn.lib.ui.theme.HomeTypography
 import com.warrenbrowse.vpn.lib.ui.theme.color.LocalWarrenSurfaces
-import com.warrenbrowse.vpn.lib.ui.theme.shape.chipShape
+import com.warrenbrowse.vpn.lib.ui.theme.tokens.DesignTokens
 
 @Preview
 @Composable
@@ -30,10 +27,9 @@ private fun PreviewWarrenFeatureChip() {
 }
 
 /**
- * A feature badge above the connection card (desktop FeatureIndicator): an opaque pill in the
- * card's paper with its hairline and a soft shadow, 5.5 x 8 padding, 11/600 label, radius 7. A
- * translucent chip took the hue of whatever landscape it floated over. The error variant (a port
- * forward the exit refused) is the exposed well with the exposed hairline.
+ * A feature chip under the home controls (desktop `FeatureIndicator`): an outlined pill on the
+ * page, no fill. The error variant (a port forward the exit refused) takes the disconnect line, so
+ * it reads on the home screen without opening settings.
  */
 @Composable
 fun WarrenFeatureChip(
@@ -43,36 +39,28 @@ fun WarrenFeatureChip(
     isError: Boolean = false,
 ) {
     val surfaces = LocalWarrenSurfaces.current
-    val shape = MaterialTheme.shapes.chipShape
+    val chips = DesignTokens.Home.Chips
     Surface(
         onClick = onClick,
-        modifier =
-            modifier.dropShadow(
-                shape,
-                Shadow(
-                    radius = Dimens.chipShadowBlur,
-                    color = surfaces.shadowSoft,
-                    offset = DpOffset(0.dp, Dimens.chipShadowOffsetY),
-                ),
-            ),
-        shape = shape,
-        color = if (isError) surfaces.exposedWell else surfaces.card,
-        contentColor = surfaces.text,
+        modifier = modifier.heightIn(min = chips.Height),
+        shape = CircleShape,
+        color = Color.Transparent,
+        contentColor = surfaces.homeChipText,
         border =
             BorderStroke(
-                Dimens.surfaceBorderWidth,
-                if (isError) surfaces.exposed else surfaces.line,
+                chips.BorderWidth,
+                if (isError) surfaces.homeDisconnectLine else surfaces.homeChipLine,
             ),
     ) {
         Text(
             text = text,
-            style = CardTypography.chip,
+            style = HomeTypography.chip,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier =
                 Modifier.padding(
-                    horizontal = Dimens.chipHorizontalPadding,
-                    vertical = Dimens.chipVerticalPadding,
+                    horizontal = chips.PaddingHorizontal,
+                    vertical = chips.PaddingVertical,
                 ),
         )
     }

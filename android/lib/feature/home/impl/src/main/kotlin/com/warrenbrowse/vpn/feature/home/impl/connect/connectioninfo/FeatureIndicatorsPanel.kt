@@ -9,13 +9,12 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.LocalMinimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
@@ -30,14 +29,15 @@ import com.warrenbrowse.vpn.lib.repository.WarrenNatPmpStatusProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenPathMetricsProvider
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenFeatureChip
 import com.warrenbrowse.vpn.lib.ui.resource.R
-import com.warrenbrowse.vpn.lib.ui.theme.Dimens
+import androidx.compose.ui.unit.dp
+import com.warrenbrowse.vpn.lib.ui.theme.tokens.DesignTokens
 import org.koin.compose.koinInject
 
 /**
- * The active-feature chips floating above the connection card.
+ * The active-feature chips under the home controls.
  *
- * Every chip is always shown: the card sits over the scenery with the whole screen width available,
- * so there is nothing to collapse behind a "+N more" affordance. The caller supplies the engine's
+ * Every chip is always shown: the row wraps, so there is nothing to collapse behind a "+N more"
+ * affordance. The caller supplies the engine's
  * indicators; the live values that make a chip informative (the MTU in force, the forwarded port,
  * whether the exit actually granted DAITA) live in settings and in the NAT-PMP status, so they are
  * read here rather than threaded through the whole connect state.
@@ -74,19 +74,14 @@ fun AlwaysExpandedFeatureIndicators(
             appCountries = appCountriesSummary(appExits, appRoutes),
         )
 
-    // Desktop stacks the badges in a left-aligned column 5 px apart. The
-    // minimum-interactive row is off for this stack so a chip's layout height
-    // is its own pill and that 5 px is what the user sees; left on, it padded
-    // every chip to 48 dp and the pills fell 27.81 dp apart (measured on a
-    // 1080x2400 screen). Why a pill-sized target is still honest here:
-    // DesignParityTest.
-    CompositionLocalProvider(
-        LocalMinimumInteractiveComponentSize provides Dimens.chipInteractiveMinSize
-    ) {
-        Column(
+    // Outlined chips that wrap under the controls (desktop StyledChips). The minimum-interactive
+    // inflation is off so the rows sit the desktop gap apart at the desktop chip height: the chips
+    // are shortcuts, and every one of them is also reachable from Settings.
+    CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp) {
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(Dimens.chipStackGap),
-            horizontalAlignment = Alignment.Start,
+            horizontalArrangement = Arrangement.spacedBy(DesignTokens.Home.Chips.Gap),
+            verticalArrangement = Arrangement.spacedBy(DesignTokens.Home.Chips.Gap),
         ) {
             chips.forEach { chip ->
                 val sharedTransitionScope = LocalSharedTransitionScope.current

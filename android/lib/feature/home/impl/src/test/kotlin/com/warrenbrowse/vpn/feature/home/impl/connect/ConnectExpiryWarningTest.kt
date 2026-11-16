@@ -30,65 +30,63 @@ class ConnectExpiryWarningTest {
             { "${fmtArgs()[0]} day left. Buy more credit." }
         every { getString(eq(R.string.connect_subscription_expires_in_days), any()) } answers
             { "${fmtArgs()[0]} days left. Buy more credit." }
-        every { getString(eq(R.string.time_left_x), any()) } answers
-            { "Time left: ${fmtArgs()[0]}" }
         every { resources } returns mockk {
             every {
-                getQuantityString(eq(R.plurals.account_remaining_days), any(), any())
-            } answers { "${(invocation.args[2] as Array<*>)[0]} days" }
+                getQuantityString(eq(R.plurals.home_days_left), any(), any())
+            } answers { "${(invocation.args[2] as Array<*>)[0]} days left" }
             every {
-                getQuantityString(eq(R.plurals.account_remaining_months), any(), any())
-            } answers { "${(invocation.args[2] as Array<*>)[0]} months" }
+                getQuantityString(eq(R.plurals.home_months_left), any(), any())
+            } answers { "${(invocation.args[2] as Array<*>)[0]} months left" }
             every {
-                getQuantityString(eq(R.plurals.account_remaining_years), any(), any())
-            } answers { "${(invocation.args[2] as Array<*>)[0]} years" }
+                getQuantityString(eq(R.plurals.home_years_left), any(), any())
+            } answers { "${(invocation.args[2] as Array<*>)[0]} years left" }
         }
     }
 
     @Test
-    fun `no time-left header when expiry unknown`() {
+    fun `no time-left footer when expiry unknown`() {
         assertNull(accountTimeLeftLabel(context, 0L, nowSecs = now))
     }
 
     @Test
-    fun `no time-left header within the last week (banner covers it)`() {
+    fun `no time-left footer within the last week (banner covers it)`() {
         assertNull(accountTimeLeftLabel(context, now + 3 * 86_400, nowSecs = now))
     }
 
     @Test
-    fun `time-left header counts plain days under a month`() {
+    fun `time-left footer counts plain days under a month`() {
         assertEquals(
-            "Time left: 12 days",
+            "12 days left",
             accountTimeLeftLabel(context, now + 12 * 86_400, nowSecs = now),
         )
     }
 
     @Test
-    fun `time-left header rolls a month up from thirty days`() {
+    fun `time-left footer rolls a month up from thirty days`() {
         assertEquals(
-            "Time left: 1 months",
+            "1 months left",
             accountTimeLeftLabel(context, now + 30 * 86_400, nowSecs = now),
         )
     }
 
     @Test
-    fun `time-left header names a year instead of four hundred days`() {
+    fun `time-left footer names a year instead of four hundred days`() {
         assertEquals(
-            "Time left: 1 years",
+            "1 years left",
             accountTimeLeftLabel(context, now + 400 * 86_400, nowSecs = now),
         )
     }
 
     @Test
-    fun `time-left header floors to whole days, like the account card`() {
+    fun `time-left footer floors to whole days, like the account card`() {
         // The header and the account card must never name different units for
         // one expiry, so both floor and both coarsen at 30 and 365 days.
         assertEquals(
-            "Time left: 12 months",
+            "12 months left",
             accountTimeLeftLabel(context, now + 364 * 86_400 + 43_200, nowSecs = now),
         )
         assertEquals(
-            "Time left: 12 days",
+            "12 days left",
             accountTimeLeftLabel(context, now + 12 * 86_400 + 43_200, nowSecs = now),
         )
     }

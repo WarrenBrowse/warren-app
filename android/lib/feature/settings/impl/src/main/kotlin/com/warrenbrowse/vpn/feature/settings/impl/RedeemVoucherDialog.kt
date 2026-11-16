@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.feature.settings.impl
 
+import com.warrenbrowse.vpn.lib.ui.theme.WarrenFonts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,7 +31,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -153,7 +153,7 @@ fun RedeemVoucherDialog(onDismiss: () -> Unit) {
                     modifier = Modifier.fillMaxWidth().focusRequester(focusRequester),
                     placeholder = { Text("XXXX-XXXX-XXXX-XXXX") },
                     textStyle = MaterialTheme.typography.bodyLarge.copy(
-                        fontFamily = FontFamily.Monospace,
+                        fontFamily = WarrenFonts.mono,
                     ),
                     visualTransformation = VoucherVisualTransformation,
                     singleLine = true,

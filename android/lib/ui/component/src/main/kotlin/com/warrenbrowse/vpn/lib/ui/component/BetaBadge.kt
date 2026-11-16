@@ -4,11 +4,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.height
-import androidx.compose.ui.draw.dropShadow
-import androidx.compose.ui.graphics.shadow.Shadow
-import androidx.compose.ui.unit.DpOffset
-import com.warrenbrowse.vpn.lib.ui.theme.CardTypography
-import com.warrenbrowse.vpn.lib.ui.theme.Dimens
+import androidx.compose.ui.text.style.TextOverflow
+import com.warrenbrowse.vpn.lib.ui.theme.HomeTypography
+import com.warrenbrowse.vpn.lib.ui.theme.tokens.DesignTokens
 import com.warrenbrowse.vpn.lib.ui.theme.color.LocalWarrenSurfaces
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -35,8 +33,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha60
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.border
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.theme.color.warning
 
@@ -57,12 +53,11 @@ private const val BPS_PER_MBPS = 1_000_000L
  * eyes a second into every cold start.
  */
 /**
- * Where the badge sits (desktop BetaBadge): [Overlay] is the opaque banner over
- * the scenery on the home screen, left aligned and only as wide as its line;
- * [Row] is the full-width settings row on a charcoal screen.
+ * Where the badge sits (desktop BetaBadge): [Home] is the line above the home
+ * footer; [Row] is the full-width settings row on a charcoal screen.
  */
 enum class BetaBadgeVariant {
-    Overlay,
+    Home,
     Row,
 }
 
@@ -83,8 +78,8 @@ fun BetaBadge(
         }
 
     when (variant) {
-        BetaBadgeVariant.Overlay ->
-            BetaOverlayBanner(line = line, onClick = { dialogVisible = true }, modifier = modifier)
+        BetaBadgeVariant.Home ->
+            BetaHomeLine(line = line, onClick = { dialogVisible = true }, modifier = modifier)
         BetaBadgeVariant.Row ->
             BetaRow(line = line, onClick = { dialogVisible = true }, modifier = modifier)
     }
@@ -95,61 +90,58 @@ fun BetaBadge(
 }
 
 /**
- * The home-screen banner (desktop BetaBadge overlay): an opaque card of the theme, like the
- * connection card, since a translucent one took the landscape's hue. One line whatever the
- * language: the banner widens to its text rather than wrapping it.
+ * The home variant (desktop BetaBadge 'home'): a quiet line above the footer, the chip carrying
+ * the beta identity and the line its one practical consequence. One line whatever the language;
+ * the line ellipsizes rather than wrapping.
  */
 @Composable
-private fun BetaOverlayBanner(line: String?, onClick: () -> Unit, modifier: Modifier) {
+private fun BetaHomeLine(line: String?, onClick: () -> Unit, modifier: Modifier) {
     val surfaces = LocalWarrenSurfaces.current
-    val shape = RoundedCornerShape(Dimens.betaBannerRadius)
     Row(
         modifier =
             modifier
-                .wrapContentWidth(align = Alignment.Start, unbounded = true)
-                .height(Dimens.betaBannerHeight)
-                .dropShadow(
-                    shape,
-                    Shadow(
-                        radius = Dimens.betaBannerShadowBlur,
-                        color = surfaces.shadowSoft,
-                        offset = DpOffset(0.dp, Dimens.betaBannerShadowOffsetY),
-                    ),
-                )
-                .clip(shape)
-                .background(surfaces.card)
-                .border(Dimens.surfaceBorderWidth, surfaces.line, shape)
+                .fillMaxWidth()
                 .clickable(onClick = onClick)
-                .padding(start = Dimens.betaBannerPaddingStart, end = Dimens.betaBannerPaddingEnd),
+                .padding(
+                    horizontal = DesignTokens.Home.Panel.PaddingHorizontal,
+                    vertical = BETA_HOME_ROW_PADDING,
+                ),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Dimens.betaBannerGap),
+        horizontalArrangement = Arrangement.spacedBy(BETA_HOME_GAP),
     ) {
         Box(
             modifier =
-                Modifier.height(Dimens.betaPillHeight)
-                    .clip(RoundedCornerShape(Dimens.betaPillRadius))
-                    .background(surfaces.pill)
-                    .padding(horizontal = Dimens.betaPillPaddingHorizontal),
+                Modifier.height(BETA_HOME_CHIP_HEIGHT)
+                    .clip(RoundedCornerShape(BETA_HOME_CHIP_RADIUS))
+                    .background(surfaces.homeBadge)
+                    .padding(horizontal = BETA_HOME_CHIP_PADDING),
             contentAlignment = Alignment.Center,
         ) {
             Text(
                 text = stringResource(R.string.beta_badge_label),
-                style = CardTypography.betaPill,
-                color = surfaces.pillText,
+                style = HomeTypography.betaChip,
+                color = surfaces.homePillPendingText,
                 maxLines = 1,
             )
         }
         if (line != null) {
             Text(
                 text = line,
-                style = CardTypography.betaLine,
-                color = surfaces.text,
+                style = HomeTypography.betaLine,
+                color = surfaces.homeTextSecondary,
                 maxLines = 1,
-                softWrap = false,
+                overflow = TextOverflow.Ellipsis,
             )
         }
     }
 }
+
+// Desktop HomeChip and HomeRow, which carry no token of their own.
+private val BETA_HOME_ROW_PADDING = 10.dp
+private val BETA_HOME_GAP = 8.dp
+private val BETA_HOME_CHIP_HEIGHT = 18.dp
+private val BETA_HOME_CHIP_RADIUS = 5.dp
+private val BETA_HOME_CHIP_PADDING = 6.dp
 
 /** The full-width settings row on a charcoal screen. */
 @Composable

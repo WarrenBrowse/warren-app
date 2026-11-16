@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.feature.settings.impl.support
 
+import com.warrenbrowse.vpn.lib.ui.theme.WarrenFonts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,7 +27,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
@@ -107,7 +107,7 @@ fun ForumSignInCode(navigator: Navigator) {
                 enabled = !checking,
                 label = { Text(stringResource(R.string.forum_sign_in_code_label)) },
                 placeholder = { Text("0123456789abcdef0123456789abcdef") },
-                textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = FontFamily.Monospace),
+                textStyle = MaterialTheme.typography.bodyLarge.copy(fontFamily = WarrenFonts.mono),
                 isError = invalid,
                 supportingText =
                     if (invalid) {

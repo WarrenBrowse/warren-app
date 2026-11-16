@@ -1,21 +1,13 @@
 package com.warrenbrowse.vpn.feature.home.impl.connect
 
 import androidx.annotation.DrawableRes
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import com.warrenbrowse.vpn.lib.model.TunnelState
 import com.warrenbrowse.vpn.lib.ui.resource.R
-import com.warrenbrowse.vpn.lib.ui.theme.color.pending
-import com.warrenbrowse.vpn.lib.ui.theme.color.positive
-import com.warrenbrowse.vpn.lib.ui.theme.color.positiveText
-import com.warrenbrowse.vpn.lib.ui.theme.color.pendingText
-import com.warrenbrowse.vpn.lib.ui.theme.color.errorText
 
 /**
  * The five presentation phases of the connection, mirroring the desktop
- * `connection-phase.ts`. One source of truth drives the scenery backdrop, the
- * status eye, the status copy and the accent color together, so they can never
+ * `connection-phase.ts`. One source of truth drives the scenery hero, the
+ * status pill, its eye and the status copy together, so they can never
  * drift apart across states.
  */
 enum class ConnectionPhase {
@@ -84,24 +76,6 @@ internal fun ConnectionPhase.titleTone(): SceneryTone =
     }
 
 // END GENERATED phase colour table
-
-/** The saturated accent of a phase, for fills where 3:1 is enough. */
-@Composable fun ConnectionPhase.accentColor(): Color = accentTone().color()
-
-
-// The one place a scenery.json tone meets the Material theme. Exhaustive, so a
-// tone added to the table does not compile until it has its colour here.
-@Composable
-private fun SceneryTone.color(): Color =
-    when (this) {
-        SceneryTone.Green -> MaterialTheme.colorScheme.positive
-        SceneryTone.GreenText -> MaterialTheme.colorScheme.positiveText
-        SceneryTone.Orange -> MaterialTheme.colorScheme.pending
-        SceneryTone.OrangeText -> MaterialTheme.colorScheme.pendingText
-        SceneryTone.Red -> MaterialTheme.colorScheme.error
-        SceneryTone.RedText -> MaterialTheme.colorScheme.errorText
-        SceneryTone.White -> MaterialTheme.colorScheme.onSurface
-    }
 
 /** Which layers the scenery backdrop shows for a phase (desktop `resolveScenery`). */
 data class SceneryState(

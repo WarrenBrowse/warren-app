@@ -1,63 +1,50 @@
 package com.warrenbrowse.vpn.feature.home.impl.connect
 
-import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.material.icons.outlined.Lock
-import androidx.core.view.WindowCompat
-import androidx.compose.ui.platform.LocalView
-import androidx.compose.runtime.DisposableEffect
 import android.app.Activity
 import android.content.res.Resources
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.ReportDrawn
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.LinearOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.togetherWith
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.calculateEndPadding
-import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.rounded.ContentCopy
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -65,44 +52,33 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.boundsInRoot
-import androidx.compose.ui.layout.layout
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLayoutDirection
-import androidx.compose.ui.platform.LocalResources
-import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.tooling.preview.PreviewParameter
-import androidx.compose.ui.unit.dp
-import com.warrenbrowse.vpn.lib.ui.theme.color.positive
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.unit.DpOffset
-import com.warrenbrowse.vpn.lib.ui.component.networkstats.ExitLoadAppearance
-import com.warrenbrowse.vpn.lib.ui.theme.CardTypography
-import com.warrenbrowse.vpn.lib.ui.theme.color.LocalWarrenSurfaces
-import kotlinx.coroutines.delay
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.foundation.background
-import androidx.compose.material.icons.rounded.Check
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
+import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
-import kotlinx.coroutines.launch
 import com.warrenbrowse.vpn.common.compose.CollectSideEffectWithLifecycle
 import com.warrenbrowse.vpn.common.compose.LocalNavAnimatedVisibilityScope
+import com.warrenbrowse.vpn.common.compose.createCopyToClipboardHandle
 import com.warrenbrowse.vpn.common.compose.dropUnlessResumed
 import com.warrenbrowse.vpn.common.compose.isTv
 import com.warrenbrowse.vpn.common.compose.safeOpenUri
@@ -111,90 +87,72 @@ import com.warrenbrowse.vpn.core.LocalResultStore
 import com.warrenbrowse.vpn.core.NavKey2
 import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.appinfo.api.ChangelogNavKey
-import com.warrenbrowse.vpn.feature.managedevices.api.ManageDevicesNavKey
 import com.warrenbrowse.vpn.feature.home.api.Android16UpgradeInfoNavKey
-import com.warrenbrowse.vpn.feature.home.api.ConnectNavKey
-import com.warrenbrowse.vpn.feature.home.impl.connect.button.ConnectionButton
-import com.warrenbrowse.vpn.feature.home.impl.connect.button.SwitchLocationButton
-import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.ConnectionDetailPanel
 import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.AlwaysExpandedFeatureIndicators
+import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.ConnectionDetailPanel
 import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.isUnspecified
 import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.toInAddress
 import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.toOutAddress
 import com.warrenbrowse.vpn.feature.home.impl.connect.notificationbanner.NotificationBanner
+import com.warrenbrowse.vpn.feature.managedevices.api.ManageDevicesNavKey
 import com.warrenbrowse.vpn.feature.settings.api.ConnectAfterLocationPick
-import com.warrenbrowse.vpn.feature.settings.api.WarrenLocationPickerNavKey
+import com.warrenbrowse.vpn.feature.settings.api.ForumActivityNavKey
 import com.warrenbrowse.vpn.feature.settings.api.SettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenDaitaSettingsNavKey
-import androidx.compose.ui.semantics.Role
-import com.warrenbrowse.vpn.lib.model.loadBadgeOf
-import com.warrenbrowse.vpn.lib.ui.component.networkstats.rememberSnapshotStale
-import com.warrenbrowse.vpn.lib.ui.component.networkstats.ExitLoadBadge
+import com.warrenbrowse.vpn.feature.settings.api.WarrenLocationPickerNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenMultihopSettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenPortForwardingSettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenTunnelSettingsNavKey
 import com.warrenbrowse.vpn.feature.settings.api.WarrenWalletSettingsNavKey
 import com.warrenbrowse.vpn.feature.splittunneling.api.SplitTunnelingNavKey
-import androidx.fragment.app.FragmentActivity
 import com.warrenbrowse.vpn.lib.common.util.CreateVpnProfile
-import com.warrenbrowse.vpn.lib.repository.ExitPin
-import com.warrenbrowse.vpn.lib.repository.WarrenConnectResult
-import com.warrenbrowse.vpn.lib.repository.WarrenIncidentReporter
-import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
-import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
-import com.warrenbrowse.vpn.lib.repository.WarrenNetworkInfoProvider
-import com.warrenbrowse.vpn.lib.repository.WarrenProductFlags
-import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionInvoker
-import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
-import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
 import com.warrenbrowse.vpn.lib.common.util.openVpnSettings
+import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
 import com.warrenbrowse.vpn.lib.common.util.removeHtmlTags
 import com.warrenbrowse.vpn.lib.model.FeatureIndicator
 import com.warrenbrowse.vpn.lib.model.GeoIpLocation
 import com.warrenbrowse.vpn.lib.model.InAppNotification
-import com.warrenbrowse.vpn.lib.model.countryDisplayName
-import com.warrenbrowse.vpn.common.compose.createCopyToClipboardHandle
-import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
 import com.warrenbrowse.vpn.lib.model.PrepareError
+import com.warrenbrowse.vpn.lib.model.TunnelState
+import com.warrenbrowse.vpn.lib.model.countryDisplayName
+import com.warrenbrowse.vpn.lib.model.forum.ForumHeaderButton
+import com.warrenbrowse.vpn.lib.model.loadBadgeOf
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import com.warrenbrowse.vpn.lib.model.wallet.shortWarrenAddress
+import com.warrenbrowse.vpn.lib.repository.ExitPin
+import com.warrenbrowse.vpn.lib.repository.ForumActivityState
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenConnectResult
+import com.warrenbrowse.vpn.lib.repository.WarrenIncidentReporter
+import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
+import com.warrenbrowse.vpn.lib.repository.WarrenNetworkInfoProvider
+import com.warrenbrowse.vpn.lib.repository.WarrenProductFlags
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnConnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
+import com.warrenbrowse.vpn.lib.repository.WarrenQuinnReconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenRelayProvider
 import com.warrenbrowse.vpn.lib.repository.WarrenRelaySummary
-import com.warrenbrowse.vpn.lib.model.TunnelState
+import com.warrenbrowse.vpn.lib.repository.WarrenSubscriptionInvoker
 import com.warrenbrowse.vpn.lib.tv.NavigationDrawerTv
+import com.warrenbrowse.vpn.lib.tv.TvForumItem
 import com.warrenbrowse.vpn.lib.ui.component.BetaBadge
 import com.warrenbrowse.vpn.lib.ui.component.BetaBadgeVariant
-import com.warrenbrowse.vpn.lib.ui.component.CountryFlag
-import com.warrenbrowse.vpn.lib.ui.component.ExpandChevron
 import com.warrenbrowse.vpn.lib.ui.component.ForumHeaderSlot
-import com.warrenbrowse.vpn.lib.ui.component.ScaffoldWithTopBar
-import com.warrenbrowse.vpn.lib.model.forum.ForumHeaderButton
-import com.warrenbrowse.vpn.lib.repository.ForumActivityState
-import com.warrenbrowse.vpn.feature.settings.api.ForumActivityNavKey
-import com.warrenbrowse.vpn.lib.tv.TvForumItem
 import com.warrenbrowse.vpn.lib.ui.component.drawVerticalScrollbar
+import com.warrenbrowse.vpn.lib.ui.component.networkstats.ExitLoadAppearance
+import com.warrenbrowse.vpn.lib.ui.component.networkstats.ExitLoadBadge
+import com.warrenbrowse.vpn.lib.ui.component.networkstats.rememberSnapshotStale
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenSnackbar
 import com.warrenbrowse.vpn.lib.ui.resource.R
-import com.warrenbrowse.vpn.lib.ui.tag.CONNECT_BUTTON_TEST_TAG
-import com.warrenbrowse.vpn.lib.ui.tag.CONNECT_CARD_HEADER_TEST_TAG
-import com.warrenbrowse.vpn.lib.ui.tag.SELECT_LOCATION_BUTTON_TEST_TAG
-import com.warrenbrowse.vpn.lib.ui.tag.SHUFFLE_BUTTON_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
-import com.warrenbrowse.vpn.lib.ui.theme.Dimens
-import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha20
-import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha60
-import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha80
+import com.warrenbrowse.vpn.lib.ui.theme.HomeTypography
 import com.warrenbrowse.vpn.lib.ui.theme.color.AlphaScrollbar
-import com.warrenbrowse.vpn.lib.ui.util.visible
+import com.warrenbrowse.vpn.lib.ui.theme.color.LocalWarrenSurfaces
+import com.warrenbrowse.vpn.lib.ui.theme.tokens.DesignTokens
+import kotlin.math.roundToInt
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
-
-private const val CONNECT_BUTTON_THROTTLE_MILLIS = 1000
 
 @Preview("Initial|Connected|Disconnected|Connecting|Error.VpnPermissionDenied")
 @Composable
@@ -362,9 +320,8 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
     val copyPubkey = createCopyToClipboardHandle(snackbarHostState, isSensitive = false)
     val pubkeyCopiedMsg = stringResource(R.string.wallet_settings_pubkey_copied)
 
-    // Selected-exit label for the Switch-location button (desktop UX): while
-    // disconnected the button shows the chosen exit ("Automatic" when none is
-    // pinned), and "Switch location" once connecting/connected.
+    // The selection the location row names while no tunnel carries traffic
+    // ("Automatic" when nothing is pinned), desktop getRelayName.
     val relayProvider = koinInject<WarrenRelayProvider>()
     // Seeding produceState from the cached snapshot keeps the "Automatic" flash
     // away without blocking: resolving the catalogue inline would run the
@@ -390,11 +347,10 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
             localSettings.setExitPinLabel(pin.exitId, resolvedPinLabel)
         }
     }
-    val selectedLocationTitle = if (state.tunnelState !is TunnelState.Disconnected) {
-        null
-    } else {
-        // The pin can name any geographical depth, so the button shows the
-        // depth the user actually chose rather than a resolved exit.
+    // The pin can name any geographical depth, so the row shows the depth the
+    // user actually chose rather than a resolved exit; once a tunnel carries
+    // traffic the row names the exit instead (locationRowLine).
+    val selectedLocationTitle =
         when (val pin = exitPin) {
             ExitPin.Automatic -> automaticLabel
             is ExitPin.Country -> countryDisplayName(pin.country)
@@ -407,7 +363,13 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                     ?: cachedPinLabel?.takeIf { it.exitId == pin.exitId }?.label
                     ?: if (relays.isEmpty()) null else automaticLabel
         }
-    }
+    val selectedCountryCode =
+        when (val pin = exitPin) {
+            ExitPin.Automatic -> null
+            is ExitPin.Country -> pin.country
+            is ExitPin.City -> pin.country
+            is ExitPin.Exit -> relays.firstOrNull { it.exitId == pin.exitId }?.country
+        }
 
     val createVpnProfile =
         rememberLauncherForActivityResult(CreateVpnProfile()) {
@@ -562,6 +524,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                 betaCapResolved = betaCapResolved,
                 accountTimeLeft = accountTimeLeftLabel(context, cachedExpiry),
                 accountShortPubkey = fullPubkey?.shortWarrenAddress(),
+                selectedCountryCode = selectedCountryCode,
                 onCopyPubkey = fullPubkey?.let { full -> { copyPubkey(full, pubkeyCopiedMsg) } },
                 onDisconnectClick = { warrenDisconnect.disconnect() },
                 onConnectClick = onConnectButtonClick,
@@ -737,9 +700,8 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 fun ConnectScreen(
     state: ConnectUiState,
     snackbarHostState: SnackbarHostState = remember { SnackbarHostState() },
@@ -749,6 +711,8 @@ fun ConnectScreen(
     accountTimeLeft: String? = null,
     accountShortPubkey: String? = null,
     onCopyPubkey: (() -> Unit)? = null,
+    // The country the selection names, for the location row's thumbnail while no tunnel is up.
+    selectedCountryCode: String? = null,
     onDisconnectClick: () -> Unit,
     onConnectClick: () -> Unit,
     shuffleEnabled: Boolean = true,
@@ -774,49 +738,103 @@ fun ConnectScreen(
     // for a wallet with no forum account, nothing when the setting is off.
     forumSlot: ForumHeaderSlot? = null,
     onForumClick: () -> Unit = {},
-    // The load of the exit carrying the tunnel, closing the location line; null while there is
+    // The load of the exit carrying the tunnel, closing the subtitle row; null while there is
     // none to show.
     exitLoad: (@Composable () -> Unit)? = null,
 ) {
-    DarkStatusBarGlyphs()
     val contentFocusRequester = remember { FocusRequester() }
+    val tv = isTv()
 
     val content =
-        @Composable { padding: PaddingValues ->
-            Content(
-                contentFocusRequester,
-                padding,
-                state,
-                showBetaBadge,
-                betaCapBps,
-                betaCapResolved,
-                accountShortPubkey,
-                accountTimeLeft,
-                onCopyPubkey,
-                onDisconnectClick,
-                onConnectClick,
-                shuffleEnabled,
-                onShuffleClick,
-                onCancelClick,
-                onSwitchLocationClick,
-                onOpenAppListing,
-                onManageAccountClick,
-                onChangelogClick,
-                onDismissChangelogClick,
-                onNavigateToFeature,
-                onClickDismissAndroid16UpgradeWarning,
-                onClickShowAndroid16UpgradeInfo,
-                onClickDismissUpdateAvailable,
-                onClickDismissExitSwitched,
-                onClickDismissNotice,
-                onClickDismissAnnouncement,
-                onClickReEnableAfterStandDown,
-                onClickManageDevices,
-                exitLoad,
+        @Composable { showHeader: Boolean ->
+            HomeContent(
+                state = state,
+                showHeader = showHeader,
+                header = {
+                    HomeHeader(
+                        forumSlot = forumSlot,
+                        onForumClick = onForumClick,
+                        onAccountClick = onAccountClick,
+                        onSettingsClick = onSettingsClick,
+                    )
+                },
+                notifications = {
+                    NotificationBanner(
+                        modifier = Modifier.fillMaxWidth(),
+                        notification = state.inAppNotification,
+                        isPlayBuild = state.isPlayBuild,
+                        contentFocusRequester = contentFocusRequester,
+                        openAppListing = onOpenAppListing,
+                        onClickShowAccount = onManageAccountClick,
+                        onClickShowChangelog = onChangelogClick,
+                        onClickShowAndroid16UpgradeInfo = onClickShowAndroid16UpgradeInfo,
+                        onClickDismissChangelog = onDismissChangelogClick,
+                        onClickDismissAndroid16UpgradeWarning =
+                            onClickDismissAndroid16UpgradeWarning,
+                        onClickDismissUpdateAvailable = onClickDismissUpdateAvailable,
+                        onClickDismissExitSwitched = onClickDismissExitSwitched,
+                        onClickDismissNotice = onClickDismissNotice,
+                        onClickDismissAnnouncement = onClickDismissAnnouncement,
+                        onClickReEnableAfterStandDown = onClickReEnableAfterStandDown,
+                        onClickManageDevices = onClickManageDevices,
+                    )
+                },
+                controls = {
+                    val locationLine =
+                        locationRowLine(
+                            state.tunnelState,
+                            state.location,
+                            state.selectedRelayItemTitle,
+                        )
+                    val thumbCode =
+                        (locationLine as? HomeLine.ExitPlace)?.countryCode ?: selectedCountryCode
+                    HomeControls(
+                        state = state,
+                        locationName = locationLine?.text().orEmpty(),
+                        thumb = locationThumb(thumbCode),
+                        focusRequester = contentFocusRequester,
+                        shuffleEnabled = shuffleEnabled,
+                        onSwitchLocationClick = onSwitchLocationClick,
+                        onShuffleClick = onShuffleClick,
+                        onConnectClick = onConnectClick,
+                        onCancelClick = onCancelClick,
+                        onDisconnectClick = onDisconnectClick,
+                    )
+                },
+                chips = {
+                    // Sorted by enum ordinal (desktop FeatureIndicators sorts by indicator
+                    // value) so a feature always occupies the same slot.
+                    val features = state.tunnelState.featureIndicators()?.sortedBy { it.ordinal }
+                    if (!features.isNullOrEmpty()) {
+                        AlwaysExpandedFeatureIndicators(
+                            features = features,
+                            multihopCircuit = state.tunnelState.isMultihopCircuit(),
+                            onNavigateToFeature = onNavigateToFeature,
+                        )
+                    }
+                },
+                beta = {
+                    if (showBetaBadge) {
+                        BetaBadge(
+                            capBps = betaCapBps,
+                            capResolved = betaCapResolved,
+                            variant = BetaBadgeVariant.Home,
+                        )
+                    }
+                },
+                footer = {
+                    HomeFooter(
+                        shortPubkey = accountShortPubkey,
+                        onCopyPubkey = onCopyPubkey,
+                        timeLeft = accountTimeLeft,
+                    )
+                },
+                exitLoad = exitLoad,
+                onAppRoutingClick = { onNavigateToFeature(FeatureIndicator.SPLIT_TUNNELING) },
             )
         }
 
-    if (isTv()) {
+    if (tv) {
         Scaffold(
             snackbarHost = {
                 SnackbarHost(
@@ -836,275 +854,327 @@ fun ConnectScreen(
                     },
                 onForumClick = onForumClick,
             ) {
-                content(it)
+                content(false)
             }
         }
         LaunchedEffect(Unit) { contentFocusRequester.requestFocus() }
     } else {
-        ScaffoldWithTopBar(
-            // The header floats transparent over the scenery sky; identity and
-            // time-left moved to the footer strip, matching the desktop
-            // AppMainHeader variant="transparent" tone="dark".
-            topBarColor = Color.Transparent,
-            iconTintColor = Color.Black,
-            onSettingsClicked = onSettingsClick,
-            onAccountClicked = onAccountClick,
-            forumSlot = forumSlot,
-            onForumClicked = onForumClick,
-            snackbarHostState = snackbarHostState,
-        ) {
-            content(it)
-        }
-    }
-}
-
-@Composable
-@Suppress("LongParameterList")
-private fun Content(
-    focusRequester: FocusRequester,
-    paddingValues: PaddingValues,
-    state: ConnectUiState,
-    showBetaBadge: Boolean,
-    betaCapBps: Long?,
-    betaCapResolved: Boolean,
-    accountShortPubkey: String?,
-    accountTimeLeft: String?,
-    onCopyPubkey: (() -> Unit)?,
-    onDisconnectClick: () -> Unit,
-    onConnectClick: () -> Unit,
-    shuffleEnabled: Boolean,
-    onShuffleClick: () -> Unit,
-    onCancelClick: () -> Unit,
-    onSwitchLocationClick: () -> Unit,
-    onOpenAppListing: () -> Unit,
-    onManageAccountClick: () -> Unit,
-    onChangelogClick: () -> Unit,
-    onDismissChangelogClick: () -> Unit,
-    onNavigateToFeature: (FeatureIndicator) -> Unit,
-    onClickDismissAndroid16UpgradeWarning: () -> Unit,
-    onClickShowAndroid16UpgradeInfo: () -> Unit,
-    onClickDismissUpdateAvailable: () -> Unit,
-    onClickDismissExitSwitched: () -> Unit,
-    onClickDismissNotice: () -> Unit,
-    onClickDismissAnnouncement: () -> Unit,
-    onClickReEnableAfterStandDown: () -> Unit,
-    onClickManageDevices: () -> Unit,
-    exitLoad: (@Composable () -> Unit)?,
-) {
-    // The card's top edge in root coordinates, fed to the backdrop at draw
-    // time so the burrow foreground clears the card in every state, tracking
-    // the card's own height animations frame by frame.
-    var cardTopPx by remember { mutableFloatStateOf(Float.NaN) }
-    Box(Modifier.fillMaxSize()) {
-        // Full-bleed scenery behind the transparent header: the top padding is
-        // deliberately not applied to the backdrop, only to the overlay UI.
-        SceneryBackdrop(
-            phase = state.tunnelState.connectionPhase(state.hostOffline),
-            exitCountry = state.location?.country,
-            modifier = Modifier.fillMaxSize(),
-            cardTop = { cardTopPx },
-        )
-
-        Box(
-            Modifier.padding(
-                    top = paddingValues.calculateTopPadding(),
-                    start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
-                    end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                )
-                .fillMaxSize()
-        ) {
-            Box(
+        Box(Modifier.fillMaxSize()) {
+            content(true)
+            SnackbarHost(
+                snackbarHostState,
                 modifier =
-                    Modifier.fillMaxSize().padding(bottom = paddingValues.calculateBottomPadding())
-            ) {
-                // One top stack, in the desktop MainView order: the notification
-                // card keeps the prime slot and the beta marker flows below it,
-                // so a banner is never pushed down by the marker. The slot holds
-                // exactly one card, expiry included, because a screen that can
-                // stack strips is a screen where the most urgent one is not the
-                // one at the top.
-                // animateContentSize keeps the reflow continuous when a card
-                // arrives or leaves, instead of shoving the rows below it.
-                androidx.compose.foundation.layout.Column(
-                    modifier = Modifier.align(Alignment.TopCenter).animateContentSize(),
-                ) {
-                    NotificationBanner(
-                        modifier = Modifier.fillMaxWidth(),
-                        notification = state.inAppNotification,
-                        isPlayBuild = state.isPlayBuild,
-                        contentFocusRequester = focusRequester,
-                        openAppListing = onOpenAppListing,
-                        onClickShowAccount = onManageAccountClick,
-                        onClickShowChangelog = onChangelogClick,
-                        onClickShowAndroid16UpgradeInfo = onClickShowAndroid16UpgradeInfo,
-                        onClickDismissChangelog = onDismissChangelogClick,
-                        onClickDismissAndroid16UpgradeWarning =
-                            onClickDismissAndroid16UpgradeWarning,
-                        onClickDismissUpdateAvailable = onClickDismissUpdateAvailable,
-                        onClickDismissExitSwitched = onClickDismissExitSwitched,
-                        onClickDismissNotice = onClickDismissNotice,
-                        onClickDismissAnnouncement = onClickDismissAnnouncement,
-                        onClickReEnableAfterStandDown = onClickReEnableAfterStandDown,
-                        onClickManageDevices = onClickManageDevices,
-                    )
-                    if (showBetaBadge) {
-                        BetaBadge(
-                            capBps = betaCapBps,
-                            capResolved = betaCapResolved,
-                            variant = BetaBadgeVariant.Overlay,
-                            modifier =
-                                Modifier.padding(
-                                    start = Dimens.betaBannerMarginStart,
-                                    top = Dimens.betaBannerMarginTop,
-                                ),
-                        )
-                    }
-                }
-                androidx.compose.foundation.layout.Column(
-                    modifier = Modifier.align(Alignment.BottomCenter),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    // Active-feature chips float over the scenery ABOVE the
-                    // card, like the desktop badge stack, not inside it. Sorted
-                    // by enum ordinal (desktop FeatureIndicators sorts by
-                    // indicator value) so a feature always occupies the same
-                    // slot instead of shifting as others come and go.
-                    val features =
-                        state.tunnelState.featureIndicators()?.sortedBy { it.ordinal }
-                    if (!features.isNullOrEmpty()) {
-                        Box(
-                            Modifier.widthIn(max = Dimens.connectionCardMaxWidth)
-                                .fillMaxWidth()
-                                .padding(
-                                    start = Dimens.connectionCardMarginHorizontal,
-                                    end = Dimens.connectionCardMarginHorizontal,
-                                    bottom = Dimens.chipsToCardGap,
-                                )
-                        ) {
-                            AlwaysExpandedFeatureIndicators(
-                                features = features,
-                                multihopCircuit = state.tunnelState.isMultihopCircuit(),
-                                onNavigateToFeature = onNavigateToFeature,
-                            )
-                        }
-                    }
-                    Box(
-                        Modifier.onGloballyPositioned { cardTopPx = it.boundsInRoot().top }
-                    ) {
-                        ConnectionCard(
-                            state = state,
-                            exitLoad = exitLoad,
-                            focusRequester = focusRequester,
-                            onSwitchLocationClick = onSwitchLocationClick,
-                            onDisconnectClick = onDisconnectClick,
-                            onCancelClick = onCancelClick,
-                            onConnectClick = onConnectClick,
-                            shuffleEnabled = shuffleEnabled,
-                            onShuffleClick = onShuffleClick,
-                            onIncludeOnlyLabelClick = {
-                                onNavigateToFeature(FeatureIndicator.SPLIT_TUNNELING)
-                            },
-                        )
-                    }
-                    WarrenMainFooter(
-                        shortPubkey = accountShortPubkey,
-                        onCopyPubkey = onCopyPubkey,
-                        timeLeft = accountTimeLeft,
-                    )
-                }
-            }
+                    Modifier.align(Alignment.BottomCenter)
+                        .navigationBarsPadding()
+                        .padding(bottom = SNACKBAR_ABOVE_FOOTER),
+                snackbar = { snackbarData -> WarrenSnackbar(snackbarData = snackbarData) },
+            )
         }
     }
 }
 
-/** Desktop AppMainHeaderPubKey: the check shows for two seconds after a copy. */
-private const val FOOTER_COPIED_MILLIS = 2_000L
+// Keeps a snackbar clear of the footer band it would otherwise cover.
+private val SNACKBAR_ABOVE_FOOTER = 44.dp
+
+// A column of controls wider than this reads as a form on a tablet; the hero keeps the width.
+private val PANEL_MAX_WIDTH = 520.dp
+
+// The side column of a landscape screen, where the panel cannot sit under the hero.
+private val WIDE_PANEL_WIDTH = 400.dp
+
+// The connection details open over the hero (desktop StyledDetailsSheet).
+private val DETAILS_SHEET_MAX_HEIGHT = 300.dp
+private val DETAILS_SHEET_RADIUS = 16.dp
+private const val DETAILS_SHEET_MILLIS = 200
+private val DETAILS_SHEET_SLIDE = 12.dp
+
+// Notices float this far under the toolbar.
+private val NOTICES_GAP = 8.dp
 
 /**
- * Bottom footer strip over the scenery, mirroring the desktop AppMainFooter:
- * the short account pubkey (copyable, monospace) on the left and the remaining
- * subscription time on the right. Legibility comes from the backdrop's own
- * bottom scrim, which runs to the physical screen edge.
+ * The home screen (desktop `MainView`): the scenery hero takes the height the panel leaves, capped
+ * at the width-fit canvas, with the header and the notices floating over it; the panel keeps its
+ * natural height, one chip row reserved so the hero does not reframe when the tunnel comes up; the
+ * footer band closes the screen. A landscape screen puts the panel in a side column instead.
  */
 @Composable
-private fun WarrenMainFooter(
-    shortPubkey: String?,
-    onCopyPubkey: (() -> Unit)?,
-    timeLeft: String?,
+@Suppress("LongParameterList", "LongMethod")
+private fun HomeContent(
+    state: ConnectUiState,
+    showHeader: Boolean,
+    header: @Composable () -> Unit,
+    notifications: @Composable () -> Unit,
+    controls: @Composable () -> Unit,
+    chips: @Composable () -> Unit,
+    beta: @Composable () -> Unit,
+    footer: @Composable () -> Unit,
+    exitLoad: (@Composable () -> Unit)?,
+    onAppRoutingClick: () -> Unit,
 ) {
-    // Desktop AppMainFooter: a 60 % black band with a top hairline, 7 x 16
-    // padding; the copy icon turns into a green check for two seconds. Keyed
-    // on the tap count, not the flag, so a second tap inside the two seconds
-    // restarts them the way the desktop reschedules its timer.
-    var copyCount by remember { mutableIntStateOf(0) }
-    var copied by remember { mutableStateOf(false) }
-    LaunchedEffect(copyCount) {
-        if (copyCount > 0) {
-            copied = true
-            delay(FOOTER_COPIED_MILLIS)
-            copied = false
+    val surfaces = LocalWarrenSurfaces.current
+    val heroTokens = DesignTokens.Home.Hero
+    val toolbar = DesignTokens.Home.Toolbar
+    val panel = DesignTokens.Home.Panel
+    val statusTop = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val headerTop = statusTop + heroTokens.HeaderInset
+    val clearTop =
+        if (showHeader) headerTop + toolbar.Height + heroTokens.ClearMargin
+        else statusTop + heroTokens.ClearMargin
+    val hasTunnel = state.tunnelState.isConnectingOrConnected()
+    // Closed on every change of tunnel state, as on desktop: the sheet describes one connection.
+    var detailsOpen by rememberSaveable(state.tunnelState::class) { mutableStateOf(false) }
+    val sheetOpen = detailsOpen && hasTunnel
+    BackHandler(enabled = sheetOpen) { detailsOpen = false }
+
+    val phase = state.tunnelState.connectionPhase(state.hostOffline)
+    val heroContent =
+        @Composable {
+            SceneryHero(
+                phase = phase,
+                exitCountry = state.location?.country,
+                clearTop = clearTop,
+                glowTop = statusTop,
+                modifier = Modifier.fillMaxSize(),
+            )
         }
-    }
-    Column(modifier = Modifier.fillMaxWidth().background(Color.Black.copy(alpha = Alpha60))) {
-        HorizontalDivider(thickness = 1.dp, color = Color.White.copy(alpha = Alpha20))
-        Row(
-            modifier =
-                Modifier.fillMaxWidth()
-                    .padding(
-                        horizontal = Dimens.mediumPadding,
-                        vertical = Dimens.footerVerticalPadding,
-                    ),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (shortPubkey != null) {
-                Text(
-                    text = shortPubkey,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontFamily = FontFamily.Monospace,
-                    color = Color.White.copy(alpha = Alpha80),
-                    maxLines = 1,
-                )
-                if (onCopyPubkey != null) {
-                    IconButton(
-                        onClick = {
-                            onCopyPubkey()
-                            copyCount++
-                        },
-                        modifier = Modifier.size(Dimens.mediumPadding * 2),
+    val statusBlock =
+        @Composable {
+            HomeStatusBlock(
+                state = state,
+                detailsOpen = sheetOpen,
+                onToggleDetails = { detailsOpen = !detailsOpen },
+                onAppRoutingClick = onAppRoutingClick,
+                exitLoad = exitLoad,
+            )
+        }
+    val panelContent =
+        @Composable { modifier: Modifier ->
+            Column(modifier.fillMaxWidth()) {
+                Column(Modifier.padding(horizontal = panel.PaddingHorizontal)) {
+                    statusBlock()
+                    controls()
+                    // One row is reserved even with no chip, so the hero keeps its frame when the
+                    // tunnel comes up and the first chip appears.
+                    Box(
+                        Modifier.padding(top = DesignTokens.Home.Chips.MarginTop)
+                            .heightIn(min = DesignTokens.Home.Chips.Height)
                     ) {
-                        Icon(
-                            imageVector =
-                                if (copied) Icons.Rounded.Check else Icons.Rounded.ContentCopy,
-                            // A screen reader gets the same confirmation the eye does.
-                            contentDescription =
-                                if (copied) stringResource(R.string.copied)
-                                else stringResource(R.string.copy),
-                            tint =
-                                if (copied) MaterialTheme.colorScheme.positive
-                                else Color.White.copy(alpha = Alpha80),
-                            modifier = Modifier.size(Dimens.mediumPadding),
-                        )
+                        chips()
                     }
                 }
+                Box(Modifier.padding(top = BETA_TOP_GAP)) { beta() }
             }
-            Spacer(modifier = Modifier.weight(1f))
-            if (timeLeft != null) {
-                Text(
-                    text = timeLeft,
-                    style =
-                        MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                    color = Color.White.copy(alpha = Alpha80),
-                    maxLines = 1,
+        }
+    val sheet =
+        @Composable { modifier: Modifier ->
+            DetailsSheet(
+                open = sheetOpen,
+                state = state,
+                modifier = modifier,
+            )
+        }
+
+    BoxWithConstraints(Modifier.fillMaxSize().background(surfaces.homePage)) {
+        val wide = maxWidth > maxHeight && !isTv()
+        val sideWidth = minOf(WIDE_PANEL_WIDTH, maxWidth / 2)
+        // A landscape screen puts the status bar's right half over the panel, which is dark in
+        // the dark theme, so there the glyphs stay light.
+        HomeSystemBarGlyphs(darkStatusGlyphs = !(wide && surfaces.isDark))
+        if (wide) {
+            Row(Modifier.fillMaxSize()) {
+                Box(Modifier.weight(1f).fillMaxHeight()) {
+                    heroContent()
+                    sheet(Modifier.align(Alignment.BottomCenter))
+                }
+                Column(
+                    Modifier.width(sideWidth)
+                        .fillMaxHeight()
+                        .windowInsetsPadding(
+                            WindowInsets.safeDrawing.only(WindowInsetsSides.End)
+                        )
+                ) {
+                    Box(
+                        Modifier.weight(1f)
+                            .verticalScroll(rememberScrollState())
+                            .padding(top = clearTop)
+                    ) {
+                        panelContent(Modifier)
+                    }
+                    footer()
+                }
+            }
+        } else {
+            HomeColumnLayout(
+                hero = heroContent,
+                panel = {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+                        panelContent(Modifier.widthIn(max = PANEL_MAX_WIDTH))
+                    }
+                },
+                sheet = {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.BottomCenter) {
+                        sheet(Modifier.widthIn(max = PANEL_MAX_WIDTH))
+                    }
+                },
+                footer = footer,
+                clearTop = clearTop,
+            )
+        }
+
+        if (showHeader) {
+            Box(
+                Modifier.fillMaxWidth()
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
+                    .padding(
+                        top = headerTop,
+                        start = heroTokens.HeaderInset,
+                        end = heroTokens.HeaderInset,
+                    )
+            ) {
+                header()
+            }
+        }
+        // Transient notices float under the toolbar, over the art, so they never move the
+        // controls; animateContentSize keeps a card arriving or leaving continuous.
+        Box(
+            Modifier.fillMaxWidth()
+                .padding(
+                    top =
+                        if (showHeader) headerTop + toolbar.Height + NOTICES_GAP
+                        else statusTop + NOTICES_GAP
                 )
-            }
+                .animateContentSize()
+        ) {
+            notifications()
         }
     }
 }
 
+private val BETA_TOP_GAP = 2.dp
 
 /**
- * The remaining subscription time for the home header ("Time left: N days"),
- * mirroring the desktop AppMainHeaderTimeLeft. Hidden when there is no
+ * Lays the portrait home out: the footer at the bottom, the panel at its natural height, the hero
+ * above it taking what is left (never more than the width-fit canvas), the panel riding the
+ * overlap up over the hero's fade, and any space a tall screen has to spare between the panel and
+ * the footer. The details sheet sits on the panel's top edge.
+ */
+@Composable
+private fun HomeColumnLayout(
+    hero: @Composable () -> Unit,
+    panel: @Composable () -> Unit,
+    sheet: @Composable () -> Unit,
+    footer: @Composable () -> Unit,
+    clearTop: Dp,
+) {
+    Layout(contents = listOf(hero, panel, footer, sheet)) { measurables, constraints ->
+        val (heroSlot, panelSlot, footerSlot, sheetSlot) = measurables
+        val width = constraints.maxWidth
+        val height = constraints.maxHeight
+        val loose = constraints.copy(minWidth = width, maxWidth = width, minHeight = 0)
+        val footerPlaceable = footerSlot.first().measure(loose)
+        val panelPlaceable = panelSlot.first().measure(loose)
+        val overlap = DesignTokens.Home.Panel.Overlap.roundToPx()
+        val available = height - footerPlaceable.height - (panelPlaceable.height - overlap)
+        val heroHeight =
+            SceneryFraming.heroHeight(available.toFloat(), width.toFloat()).roundToInt()
+        val heroPlaceable = heroSlot.first().measure(Constraints.fixed(width, heroHeight))
+        val sheetMax =
+            minOf(
+                DETAILS_SHEET_MAX_HEIGHT.roundToPx(),
+                (heroHeight - overlap - clearTop.roundToPx()).coerceAtLeast(0),
+            )
+        val sheetPlaceable =
+            sheetSlot.first().measure(loose.copy(maxHeight = sheetMax.coerceAtLeast(0)))
+        layout(width, height) {
+            heroPlaceable.place(0, 0)
+            panelPlaceable.place(0, heroHeight - overlap)
+            footerPlaceable.place(0, height - footerPlaceable.height)
+            // On the panel's top edge, so the pill riding the overlap stays in view.
+            sheetPlaceable.place(0, heroHeight - overlap - sheetPlaceable.height)
+        }
+    }
+}
+
+/**
+ * The connection details, opened over the hero rather than pushing the controls (desktop
+ * `HomeStatus` details sheet): the controls stay where the thumb expects them, the art gives way.
+ */
+@Composable
+private fun DetailsSheet(open: Boolean, state: ConnectUiState, modifier: Modifier = Modifier) {
+    val surfaces = LocalWarrenSurfaces.current
+    val slide = with(LocalDensity.current) { DETAILS_SHEET_SLIDE.roundToPx() }
+    AnimatedVisibility(
+        visible = open,
+        modifier = modifier,
+        enter =
+            fadeIn(tween(DETAILS_SHEET_MILLIS)) +
+                slideInVertically(tween(DETAILS_SHEET_MILLIS)) { slide },
+        exit =
+            fadeOut(tween(DETAILS_SHEET_MILLIS)) +
+                slideOutVertically(tween(DETAILS_SHEET_MILLIS)) { slide },
+    ) {
+        val shape =
+            RoundedCornerShape(topStart = DETAILS_SHEET_RADIUS, topEnd = DETAILS_SHEET_RADIUS)
+        val scrollState = rememberScrollState()
+        Column(
+            Modifier.fillMaxWidth()
+                .dropShadow(
+                    shape,
+                    Shadow(
+                        radius = DETAILS_SHEET_SHADOW_BLUR,
+                        color = Color.Black.copy(alpha = DETAILS_SHEET_SHADOW_ALPHA),
+                        spread = -DETAILS_SHEET_SHADOW_BLUR / 2,
+                        offset = DpOffset(0.dp, -DETAILS_SHEET_SHADOW_BLUR / 2),
+                    ),
+                )
+                .clip(shape)
+                .background(surfaces.homePage)
+                .padding(horizontal = DesignTokens.Home.Panel.PaddingHorizontal)
+                .padding(top = DETAILS_SHEET_TOP_PADDING)
+                .drawVerticalScrollbar(
+                    scrollState,
+                    color = surfaces.homeTextSecondary.copy(alpha = AlphaScrollbar),
+                )
+                .verticalScroll(scrollState)
+        ) {
+            ConnectionDetailPanel(
+                state.tunnelState.toConnectionsDetails(state.location),
+                enableSelectableText = !isTv(),
+                autoRecoveryCount = state.autoRecoveryCount,
+            )
+        }
+    }
+}
+
+private val DETAILS_SHEET_TOP_PADDING = 4.dp
+private val DETAILS_SHEET_SHADOW_BLUR = 24.dp
+private const val DETAILS_SHEET_SHADOW_ALPHA = 0.45f
+
+/**
+ * The status bar sits on the top of the sky in every landscape, which is pale (the scenery's top
+ * fills are all near white) under a scrim of at most 40 %, so dark glyphs keep their contrast
+ * there in both themes, as the inked logo beside them does. The navigation bar sits on the footer
+ * band, which follows the theme. Both are restored to the app's light glyphs on leaving.
+ */
+@Composable
+private fun HomeSystemBarGlyphs(darkStatusGlyphs: Boolean) {
+    val view = LocalView.current
+    val dark = LocalWarrenSurfaces.current.isDark
+    DisposableEffect(view, dark, darkStatusGlyphs) {
+        val window = (view.context as? Activity)?.window
+        val controller = window?.let { WindowCompat.getInsetsController(it, view) }
+        controller?.isAppearanceLightStatusBars = darkStatusGlyphs
+        controller?.isAppearanceLightNavigationBars = !dark
+        onDispose {
+            controller?.isAppearanceLightStatusBars = false
+            controller?.isAppearanceLightNavigationBars = false
+        }
+    }
+}
+
+/**
+ * The remaining subscription time for the home footer ("29 days left"),
+ * mirroring the desktop AppMainFooter time left. Hidden when there is no
  * subscription, when expired, and within the last 3 days (desktop closeToExpiry
  * threshold), where the in-app expiry banner surfaces the remaining time
  * instead.
@@ -1124,30 +1194,23 @@ internal fun accountTimeLeftLabel(
         // thresholds as the account card's RemainingTime, so the header and the
         // card never name different units for one expiry.
         val res = context.resources
-        val unit = when {
+        when {
             days >= 365 -> {
                 val years = (days / 365).toInt()
-                res.getQuantityString(R.plurals.account_remaining_years, years, years)
+                res.getQuantityString(R.plurals.home_years_left, years, years)
             }
             days >= 30 -> {
                 val months = (days / 30).toInt()
-                res.getQuantityString(R.plurals.account_remaining_months, months, months)
+                res.getQuantityString(R.plurals.home_months_left, months, months)
             }
-            else ->
-                res.getQuantityString(R.plurals.account_remaining_days, days.toInt(), days.toInt())
+            else -> res.getQuantityString(R.plurals.home_days_left, days.toInt(), days.toInt())
         }
-        context.getString(R.string.time_left_x, unit)
     }
 }
 
-// Every geometry change inside the card runs on the desktop
-// ConnectionPanelAccordion clock (300ms ease-out), so the rule, the padding and
-// the location block never settle on different curves.
-private const val CARD_TRANSITION_MILLIS = 300
-
-// A long "Country, City" or an "<exit> via <entry>" hostname pair does not fit
-// the card on a phone. The line scrolls its overflow instead of dying in an
-// ellipsis, dwelling at each end like the desktop Marquee.
+// A long value in the connection details does not fit a phone's width. The line
+// scrolls its overflow instead of dying in an ellipsis, dwelling at each end like
+// the desktop Marquee.
 private const val MARQUEE_DWELL_MILLIS = 2000
 
 internal fun Modifier.marqueeLine(): Modifier =
@@ -1157,377 +1220,22 @@ internal fun Modifier.marqueeLine(): Modifier =
         repeatDelayMillis = MARQUEE_DWELL_MILLIS,
     )
 
-@Composable
-private fun ConnectionCard(
-    state: ConnectUiState,
-    exitLoad: (@Composable () -> Unit)?,
-    modifier: Modifier = Modifier,
-    focusRequester: FocusRequester,
-    onSwitchLocationClick: () -> Unit,
-    onDisconnectClick: () -> Unit,
-    onCancelClick: () -> Unit,
-    onConnectClick: () -> Unit,
-    shuffleEnabled: Boolean,
-    onShuffleClick: () -> Unit,
-    onIncludeOnlyLabelClick: () -> Unit,
-) {
-    // The expansion survives connecting <-> connected (a reconnect must not
-    // collapse the panel the user opened) and resets on the way out of them,
-    // where the card has nothing left to expand and no chevron to collapse with.
-    var expanded by
-        rememberSaveable(state.tunnelState.isConnectingOrConnected()) { mutableStateOf(false) }
-    // Back is the primary dismiss gesture on Android: it collapses the card
-    // before it navigates away, and stays inert while the card is collapsed.
-    BackHandler(enabled = expanded) { expanded = false }
-    val surfaces = LocalWarrenSurfaces.current
-    val shape = RoundedCornerShape(Dimens.connectionCardRadius)
-
-    // Opaque, in the theme's paper. A translucent card let each landscape tint
-    // it, so the same card read olive on one country and slate on the next.
-    Box(
-        modifier =
-            modifier
-                .widthIn(max = Dimens.connectionCardMaxWidth)
-                .padding(
-                    start = Dimens.connectionCardMarginHorizontal,
-                    end = Dimens.connectionCardMarginHorizontal,
-                    bottom = Dimens.connectionCardMarginBottom,
-                )
-                .dropShadow(
-                    shape,
-                    Shadow(
-                        radius = Dimens.connectionCardShadowBlur,
-                        color = surfaces.shadowStrong,
-                        offset = DpOffset(0.dp, Dimens.connectionCardShadowOffsetY),
-                    ),
-                )
-                .clip(shape)
-                .background(surfaces.card)
-                .border(Dimens.surfaceBorderWidth, surfaces.line, shape)
-    ) {
-        Column(
-            modifier =
-                Modifier.padding(
-                    vertical = Dimens.connectionCardVerticalPadding,
-                    horizontal = Dimens.connectionCardHorizontalPadding,
-                )
-        ) {
-            ConnectionCardHeader(
-                state,
-                state.location,
-                expanded,
-                onIncludeOnlyLabelClick = onIncludeOnlyLabelClick,
-                exitLoad = exitLoad,
-            ) {
-                expanded = !expanded
-            }
-
-            // The body is available in exactly the states that offer the
-            // chevron, so the affordance can never open onto nothing.
-            AnimatedContent(
-                state.tunnelState.isConnectingOrConnected() to expanded,
-                modifier = Modifier.weight(1f, fill = false),
-                label = "connection_card_connection_details",
-            ) { (hasTunnel, exp) ->
-                if (hasTunnel) {
-                    ConnectionInfo(
-                        state.tunnelState.toConnectionsDetails(state.location),
-                        exp,
-                        autoRecoveryCount = state.autoRecoveryCount,
-                    )
-                }
-            }
-
-            // Desktop CARD_GAP: the one gap between the blocks of the card, so
-            // the space the card holds is shared between them.
-            Spacer(Modifier.height(Dimens.connectionCardBlockGap))
-
-            ButtonPanel(
-                state,
-                focusRequester,
-                onSwitchLocationClick,
-                onDisconnectClick,
-                onCancelClick,
-                onConnectClick,
-                shuffleEnabled,
-                onShuffleClick,
-            )
-        }
-    }
-}
-
-/**
- * The card's top row: status, the expand chevron and the country flag.
- *
- * The chevron keeps its slot in every state and only fades, so the flag owns
- * the top-right corner and never appears to move when the chevron comes and
- * goes (the desktop takes the chevron out of the flow for the same reason).
- */
-@Composable
-private fun ConnectionCardStatusRow(
-    state: ConnectUiState,
-    location: GeoIpLocation?,
-    expanded: Boolean,
-    hasTunnel: Boolean,
-) {
-    val surfaces = LocalWarrenSurfaces.current
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Dimens.connectionStatusTrailingGap),
-    ) {
-        ConnectionStatusText(
-            state = state.tunnelState,
-            hostOffline = state.hostOffline,
-            modifier = Modifier.weight(1f),
-        )
-        val chevronAlpha by
-            animateFloatAsState(
-                targetValue = if (hasTunnel) 1f else 0f,
-                animationSpec = tween(CARD_TRANSITION_MILLIS),
-                label = "connection_card_chevron_alpha",
-            )
-        Box(
-            Modifier.size(Dimens.connectionCardChevronSize),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (chevronAlpha > 0f) {
-                // The card grows upwards, so the arrow points up while
-                // collapsed; the announcement still names what the tap does.
-                CompositionLocalProvider(LocalContentColor provides surfaces.text) {
-                    ExpandChevron(
-                        isExpanded = expanded,
-                        pointsUpWhenCollapsed = true,
-                        modifier =
-                            Modifier.size(Dimens.connectionCardChevronIconSize)
-                                .alpha(chevronAlpha),
-                    )
-                }
-            }
-        }
-        // While a tunnel exists the flag is the exit country; without one there
-        // is no geoip source (Warren skips the conncheck), so the OS locale
-        // region stands in for the user's own country, matching the desktop
-        // CurrentCountryFlag (never the selected exit).
-        val flagCountryCode =
-            when (state.tunnelState) {
-                is TunnelState.Connected,
-                is TunnelState.Connecting,
-                is TunnelState.Disconnecting -> location?.country
-                else -> java.util.Locale.getDefault().country.ifBlank { null }
-            }
-        // The glyph changes at the same instant its source does, so it
-        // cross-fades rather than popping into a different country.
-        AnimatedContent(
-            targetState = flagCountryCode,
-            transitionSpec = {
-                fadeIn(tween(CARD_TRANSITION_MILLIS)) togetherWith
-                    fadeOut(tween(CARD_TRANSITION_MILLIS))
-            },
-            label = "connection_card_flag",
-        ) { code ->
-            CountryFlag(
-                countryCode = code,
-                ringColor = surfaces.line,
-                ringWidth = Dimens.surfaceBorderWidth,
-            )
-        }
-    }
-}
-
-@Composable
-private fun ConnectionCardHeader(
-    state: ConnectUiState,
-    location: GeoIpLocation?,
-    expanded: Boolean,
-    onIncludeOnlyLabelClick: () -> Unit,
-    exitLoad: (@Composable () -> Unit)?,
-    onToggleExpand: () -> Unit,
-) {
-    Column(
-        modifier =
-            Modifier.fillMaxWidth()
-                .clickable(
-                    enabled = state.tunnelState.isConnectingOrConnected(),
-                    onClick = onToggleExpand,
-                )
-                .testTag(CONNECT_CARD_HEADER_TEST_TAG)
-    ) {
-        val hasTunnel = state.tunnelState.isConnectingOrConnected()
-        ConnectionCardStatusRow(state, location, expanded, hasTunnel)
-        AppRoutingLabels(state, onIncludeOnlyLabelClick)
-
-        // The exit location reads under the status only once a tunnel exists;
-        // while disconnected the selector button already names the chosen exit
-        // (desktop shows its Location line in the same states). The pair grows
-        // and shrinks as one block on the desktop accordion's clock: the card is
-        // bottom-anchored, so an unanimated appearance jumps the card, the chips
-        // above it and the footer below it by two text lines at once.
-        AnimatedVisibility(
-            visible = hasTunnel,
-            enter =
-                expandVertically(tween(CARD_TRANSITION_MILLIS, easing = LinearOutSlowInEasing)) +
-                    fadeIn(tween(CARD_TRANSITION_MILLIS)),
-            exit =
-                shrinkVertically(tween(CARD_TRANSITION_MILLIS, easing = LinearOutSlowInEasing)) +
-                    fadeOut(tween(CARD_TRANSITION_MILLIS)),
-        ) {
-            Column {
-                // The exit's load closes the hostname line, or the location line while there is
-                // no hostname, instead of adding a row: the card is bottom-anchored, so a new row
-                // would lift its top edge over the scenery.
-                val surfaces = LocalWarrenSurfaces.current
-                val hostnameText = location.hostnameText()
-                Row(
-                    modifier =
-                        Modifier.fillMaxWidth().padding(top = Dimens.connectionCardBlockGap),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        modifier = Modifier.weight(1f).marqueeLine(),
-                        text = location.asString(),
-                        style = CardTypography.location,
-                        color = surfaces.text,
-                        maxLines = 1,
-                    )
-                    if (hostnameText == null) exitLoad?.invoke()
-                }
-                AnimatedContent(hostnameText, label = "hostname") {
-                    if (it != null) {
-                        Row(
-                            modifier = Modifier.padding(top = Dimens.hostnameGapAbove),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                modifier = Modifier.weight(1f).marqueeLine(),
-                                text = it,
-                                style = CardTypography.hostname,
-                                color = surfaces.textMuted,
-                                maxLines = 1,
-                            )
-                            exitLoad?.invoke()
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-/** The labels App routing puts under the connection state, each opening it. */
-@Composable
-private fun AppRoutingLabels(state: ConnectUiState, onClick: () -> Unit) {
-    state.vpnOnlyForCount?.let { count ->
-        AppRoutingLabel(
-            text = pluralStringResource(R.plurals.vpn_only_for_apps, count, count),
-            icon = painterResource(R.drawable.ic_forum_alert_circle),
-            onClick = onClick,
-        )
-    }
-    // Locked apps have no Internet until the VPN connects, which an app that stopped working must
-    // never leave unexplained (desktop LockedAppsLabel); and when their blackhole is down (another
-    // VPN app took the slot) they reach the Internet without it, which must not read as blocked.
-    if (state.lockedAppsCount > 0 && state.tunnelState !is TunnelState.Connected) {
-        AppRoutingLabel(
-            text =
-                pluralStringResource(
-                    if (state.lockedAppsHeld) R.plurals.apps_blocked_until_vpn
-                    else R.plurals.apps_locked_not_held,
-                    state.lockedAppsCount,
-                    state.lockedAppsCount,
-                ),
-            icon =
-                if (state.lockedAppsHeld) rememberVectorPainter(Icons.Outlined.Lock)
-                else painterResource(R.drawable.ic_forum_alert_circle),
-            onClick = onClick,
-        )
-    }
-}
-
-/**
- * A label under the connection state that opens App routing, so what App routing does to the
- * device is never a surprise whatever the tunnel is doing: only chosen apps use the VPN (desktop
- * IncludeOnlyLabel), or locked apps have no Internet until it connects (desktop LockedAppsLabel).
- */
-@Composable
-private fun AppRoutingLabel(text: String, icon: Painter, onClick: () -> Unit) {
-    val shape = RoundedCornerShape(INCLUDE_ONLY_LABEL_RADIUS)
-    val surfaces = LocalWarrenSurfaces.current
-    // The ocre of the card palette, which keeps its contrast on the cream card
-    // where the charcoal theme's yellow does not.
-    val warning = surfaces.pill
-    Row(
-        modifier =
-            Modifier.padding(top = Dimens.smallPadding)
-                .clip(shape)
-                .background(warning.copy(alpha = INCLUDE_ONLY_LABEL_FILL))
-                .border(Dimens.thinBorderWidth, warning.copy(alpha = INCLUDE_ONLY_LABEL_BORDER), shape)
-                .clickable(role = Role.Button, onClick = onClick)
-                .padding(horizontal = Dimens.smallPadding, vertical = Dimens.tinyPadding),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(Dimens.tinyPadding),
-    ) {
-        Icon(
-            painter = icon,
-            contentDescription = null,
-            tint = warning,
-            modifier = Modifier.size(Dimens.smallIconSize),
-        )
-        Text(
-            text = text,
-            style = MaterialTheme.typography.labelMedium,
-            color = surfaces.text,
-        )
-    }
-}
-
-/**
- * The header paints its own glyphs black over the pale scenery sky; the OS status bar right above
- * it must follow (desktop header tone "dark"), or a white clock sits on the same sky. Restored to
- * the app-wide light glyphs when the screen leaves composition.
- */
-@Composable
-private fun DarkStatusBarGlyphs() {
-    val view = LocalView.current
-    DisposableEffect(view) {
-        val window = (view.context as? Activity)?.window
-        val controller = window?.let { WindowCompat.getInsetsController(it, view) }
-        controller?.isAppearanceLightStatusBars = true
-        onDispose { controller?.isAppearanceLightStatusBars = false }
-    }
-}
-
-/** The exit's load on the hostname line: the ring, the percentage while live, the people. */
+/** The exit's load on the subtitle row: the ring, the percentage while live, the people. */
 @Composable
 private fun CompactExitLoad(load: ConnectedExitLoad) {
     val surfaces = LocalWarrenSurfaces.current
     ExitLoadBadge(
         badge = load.stats.loadBadgeOf(load.exit),
-        modifier = Modifier.padding(start = Dimens.smallPadding),
+        
         showThroughput = false,
         stale = rememberSnapshotStale(load.stats),
         appearance =
             ExitLoadAppearance(
-                textColor = surfaces.textSecondary,
-                textStyle = CardTypography.exitLoad,
-                ringPalette = cardLoadRingPalette(surfaces),
+                textColor = surfaces.homeTextSecondary,
+                textStyle = HomeTypography.exitLoad,
+                ringPalette = homeLoadRingPalette(surfaces),
             ),
     )
-}
-
-private val INCLUDE_ONLY_LABEL_RADIUS = 6.dp
-private const val INCLUDE_ONLY_LABEL_FILL = 0.12f
-private const val INCLUDE_ONLY_LABEL_BORDER = 0.45f
-
-@Composable
-private fun GeoIpLocation?.asString(): String {
-    val city = this?.city
-    return when {
-        this == null -> ""
-        // country is the raw ISO code on the wire; show the localized name.
-        city.isNullOrBlank() -> countryDisplayName(country)
-        else -> stringResource(R.string.country_comma_city, countryDisplayName(country), city)
-    }
 }
 
 // The exit country/city as a single line, used as the "Out" fallback when the
@@ -1540,67 +1248,6 @@ private fun GeoIpLocation?.exitLocationText(): String? {
     if (name.isBlank()) return null
     val c = city
     return if (c.isNullOrBlank()) name else stringResource(R.string.country_comma_city, name, c)
-}
-
-@Composable
-private fun GeoIpLocation?.hostnameText(): String? {
-    val entryHostname = this?.entryHostname
-    val exitHostname = this?.hostname
-    return when {
-        entryHostname != null && exitHostname != null ->
-            stringResource(R.string.x_via_x, exitHostname, entryHostname)
-        else -> exitHostname
-    }
-}
-
-// The active-feature chips live ABOVE the card (desktop badge stack), so the
-// card body only holds the expandable connection details.
-@Composable
-private fun ConnectionInfo(
-    connectionDetails: ConnectionDetails?,
-    expanded: Boolean,
-    autoRecoveryCount: Int = 0,
-) {
-    val scrollState = rememberScrollState()
-    Column(
-        modifier =
-            Modifier.fillMaxWidth()
-                .drawVerticalScrollbar(
-                    scrollState,
-                    color = LocalWarrenSurfaces.current.textMuted.copy(alpha = AlphaScrollbar),
-                )
-                .verticalScroll(scrollState)
-    ) {
-        // The panel is drawn on expansion alone: its heading, protocol,
-        // Reconnects and Obfuscation rows hold whatever the tunnel state, so
-        // the chevron offered while connecting never opens onto nothing. The
-        // In/Out grid stays blank until an endpoint is known.
-        //
-        // The rule and the padding it needs are INSIDE the animation: rendered
-        // on a bare `if (expanded)` they snapped into existence while the panel
-        // below them was still opening.
-        AnimatedVisibility(
-            visible = expanded,
-            enter =
-                expandVertically(tween(CARD_TRANSITION_MILLIS, easing = LinearOutSlowInEasing)) +
-                    fadeIn(tween(CARD_TRANSITION_MILLIS)),
-            exit =
-                shrinkVertically(tween(CARD_TRANSITION_MILLIS, easing = LinearOutSlowInEasing)) +
-                    fadeOut(tween(CARD_TRANSITION_MILLIS)),
-        ) {
-            Column {
-                HorizontalDivider(
-                    Modifier.padding(vertical = Dimens.smallPadding),
-                    color = LocalWarrenSurfaces.current.line,
-                )
-                ConnectionDetailPanel(
-                    connectionDetails,
-                    enableSelectableText = !isTv(),
-                    autoRecoveryCount = autoRecoveryCount,
-                )
-            }
-        }
-    }
 }
 
 data class ConnectionDetails(
@@ -1648,53 +1295,6 @@ fun TunnelState.toConnectionsDetails(exitLocation: GeoIpLocation?): ConnectionDe
     )
 }
 
-@Composable
-@Suppress("LongParameterList")
-private fun ButtonPanel(
-    state: ConnectUiState,
-    selectButtonFocusRequester: FocusRequester,
-    onSwitchLocationClick: () -> Unit,
-    onDisconnectClick: () -> Unit,
-    onCancelClick: () -> Unit,
-    onConnectClick: () -> Unit,
-    shuffleEnabled: Boolean,
-    onShuffleClick: () -> Unit,
-) {
-    var lastConnectionActionTimestamp by remember { mutableLongStateOf(0L) }
-
-    fun handleThrottledAction(action: () -> Unit) {
-        val currentTime = System.currentTimeMillis()
-        if ((currentTime - lastConnectionActionTimestamp) > CONNECT_BUTTON_THROTTLE_MILLIS) {
-            lastConnectionActionTimestamp = currentTime
-            action.invoke()
-        }
-    }
-    Column {
-        SwitchLocationButton(
-            text = state.selectedRelayItemTitle ?: stringResource(id = R.string.switch_location),
-            onSwitchLocation = onSwitchLocationClick,
-            onShuffle = { handleThrottledAction(onShuffleClick) },
-            shuffleEnabled = shuffleEnabled,
-            modifier =
-                Modifier.testTag(SELECT_LOCATION_BUTTON_TEST_TAG)
-                    .focusRequester(selectButtonFocusRequester),
-            shuffleButtonTestTag = SHUFFLE_BUTTON_TEST_TAG,
-        )
-        Spacer(Modifier.height(Dimens.connectionCardBlockGap))
-
-        ConnectionButton(
-            modifier = Modifier.fillMaxWidth().testTag(CONNECT_BUTTON_TEST_TAG),
-            state = state.tunnelState,
-            // Every tunnel action shares the throttle: a Disconnect-then-Connect
-            // double tap would otherwise dispatch a connect into a teardown that
-            // is still in flight.
-            disconnectClick = { handleThrottledAction(onDisconnectClick) },
-            cancelClick = { handleThrottledAction(onCancelClick) },
-            connectClick = { handleThrottledAction(onConnectClick) },
-        )
-    }
-}
-
 // The OS names no app for a legacy always-on VPN, so the unnamed variant is the
 // only honest one: the named template would send the user hunting Android
 // settings for an app called "Legacy app". Same string the system notification
@@ -1732,3 +1332,4 @@ private fun FeatureIndicator.navKey(): NavKey2 =
         FeatureIndicator.REDUCED_MTU,
         FeatureIndicator.CUSTOM_MTU -> WarrenTunnelSettingsNavKey
     }
+

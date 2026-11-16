@@ -23,6 +23,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.warrenbrowse.vpn.lib.model.forum.unreadLabel
@@ -57,6 +58,8 @@ fun ForumHeaderButton(
     tint: Color,
     enabled: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    iconSize: Dp = Dimens.topBarActionIconSize,
 ) {
     val label =
         when (slot) {
@@ -71,7 +74,7 @@ fun ForumHeaderButton(
         }
     IconButton(
         modifier =
-            Modifier.testTag(TOP_BAR_FORUM_BUTTON_TEST_TAG).semantics { contentDescription = label },
+            modifier.testTag(TOP_BAR_FORUM_BUTTON_TEST_TAG).semantics { contentDescription = label },
         enabled = enabled,
         onClick = onClick,
     ) {
@@ -87,7 +90,7 @@ fun ForumHeaderButton(
                     ),
                 tint = tint,
                 contentDescription = null,
-                modifier = Modifier.size(Dimens.topBarActionIconSize),
+                modifier = Modifier.size(iconSize),
             )
             if (slot is ForumHeaderSlot.Activity && slot.unread > 0) {
                 UnreadCountBadge(unread = slot.unread, modifier = Modifier.align(Alignment.TopEnd))

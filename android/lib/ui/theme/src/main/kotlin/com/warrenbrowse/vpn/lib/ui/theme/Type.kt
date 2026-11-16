@@ -5,7 +5,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import com.warrenbrowse.vpn.lib.ui.theme.tokens.DesignTokens
 import com.warrenbrowse.vpn.lib.ui.theme.R
 
 /*
@@ -22,115 +25,137 @@ labelLarge (14sp 500 weight) -> Cell that are not header cells, Dialog texts, de
 
 /**
  * The desktop typefaces, bundled from the same files the Electron app ships
- * (`desktop/packages/mullvad-vpn/assets/fonts`): Source Sans Pro for every
- * title, Open Sans for body and label text. Before this the whole app rendered
- * in Roboto, which was the one thing a side-by-side of the two clients showed
- * first.
+ * (`desktop/packages/mullvad-vpn/assets/fonts`): Instrument Sans for every
+ * title, body and label, JetBrains Mono for keys, codes and host names. Neither
+ * carries Cyrillic; Android falls back to the system face for those glyphs on
+ * its own, which is what the desktop's Open Sans fallback does there.
  */
 object WarrenFonts {
-    val title: FontFamily =
+    val sans: FontFamily =
         FontFamily(
-            Font(R.font.source_sans_pro_semibold, FontWeight.SemiBold),
-            Font(R.font.source_sans_pro_bold, FontWeight.Bold),
+            Font(R.font.instrument_sans_regular, FontWeight.Normal),
+            Font(R.font.instrument_sans_medium, FontWeight.Medium),
+            Font(R.font.instrument_sans_semibold, FontWeight.SemiBold),
+            Font(R.font.instrument_sans_bold, FontWeight.Bold),
         )
 
-    val body: FontFamily =
+    val mono: FontFamily =
         FontFamily(
-            Font(R.font.open_sans_regular, FontWeight.Normal),
-            Font(R.font.open_sans_semibold, FontWeight.SemiBold),
-            Font(R.font.open_sans_bold, FontWeight.Bold),
+            Font(R.font.jetbrains_mono_regular, FontWeight.Normal),
+            Font(R.font.jetbrains_mono_medium, FontWeight.Medium),
         )
 }
 
 internal val MullvadMaterial3Typography =
     with(Typography()) {
         this.copy(
-            displayLarge = displayLarge.merge(fontFamily = WarrenFonts.title),
-            displayMedium = displayMedium.merge(fontFamily = WarrenFonts.title),
-            displaySmall = displaySmall.merge(fontFamily = WarrenFonts.title),
+            displayLarge = displayLarge.merge(fontFamily = WarrenFonts.sans),
+            displayMedium = displayMedium.merge(fontFamily = WarrenFonts.sans),
+            displaySmall = displaySmall.merge(fontFamily = WarrenFonts.sans),
             headlineLarge =
-                headlineLarge.merge(fontFamily = WarrenFonts.title, fontWeight = FontWeight.Bold),
+                headlineLarge.merge(fontFamily = WarrenFonts.sans, fontWeight = FontWeight.Bold),
             headlineMedium =
-                headlineMedium.merge(fontFamily = WarrenFonts.title, fontWeight = FontWeight.SemiBold),
+                headlineMedium.merge(fontFamily = WarrenFonts.sans, fontWeight = FontWeight.SemiBold),
             headlineSmall =
-                headlineSmall.merge(fontFamily = WarrenFonts.title, fontWeight = FontWeight.SemiBold),
+                headlineSmall.merge(fontFamily = WarrenFonts.sans, fontWeight = FontWeight.SemiBold),
             titleLarge =
-                titleLarge.merge(fontFamily = WarrenFonts.title, fontWeight = FontWeight.SemiBold),
+                titleLarge.merge(fontFamily = WarrenFonts.sans, fontWeight = FontWeight.SemiBold),
             titleMedium =
-                titleMedium.merge(fontFamily = WarrenFonts.title, fontWeight = FontWeight.SemiBold),
-            titleSmall = titleSmall.merge(fontFamily = WarrenFonts.title),
-            bodyLarge = bodyLarge.merge(fontFamily = WarrenFonts.body),
-            bodyMedium = bodyMedium.merge(fontFamily = WarrenFonts.body),
-            bodySmall = bodySmall.merge(fontFamily = WarrenFonts.body),
-            labelLarge = labelLarge.merge(fontFamily = WarrenFonts.body),
-            labelMedium = labelMedium.merge(fontFamily = WarrenFonts.body),
-            labelSmall = labelSmall.merge(fontFamily = WarrenFonts.body),
+                titleMedium.merge(fontFamily = WarrenFonts.sans, fontWeight = FontWeight.SemiBold),
+            titleSmall = titleSmall.merge(fontFamily = WarrenFonts.sans),
+            bodyLarge = bodyLarge.merge(fontFamily = WarrenFonts.sans),
+            bodyMedium = bodyMedium.merge(fontFamily = WarrenFonts.sans),
+            bodySmall = bodySmall.merge(fontFamily = WarrenFonts.sans),
+            labelLarge = labelLarge.merge(fontFamily = WarrenFonts.sans),
+            labelMedium = labelMedium.merge(fontFamily = WarrenFonts.sans),
+            labelSmall = labelSmall.merge(fontFamily = WarrenFonts.sans),
         )
     }
 
 /**
- * The connect screen's card, chips and beta banner, written in Open Sans at the desktop sizes
- * (desktop ConnectionStatus, Location, Hostname, CardButton, FeatureIndicatorText, BetaBadge).
+ * The home screen's text, at the desktop home sizes (`homeTokens`): the status pill, the title and
+ * its subtitle, the location row, the action button, the chips, the beta line and the footer.
  * Colours come from the surfaces of the resolved theme, so none is set here.
  */
-object CardTypography {
-    val statusTitle =
+object HomeTypography {
+    val pill =
         TextStyle(
-            fontFamily = WarrenFonts.body,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 16.sp,
-            lineHeight = 19.2.sp,
+            fontFamily = WarrenFonts.sans,
+            fontWeight = FontWeight(DesignTokens.Home.Pill.TextWeight),
+            fontSize = DesignTokens.Home.Pill.TextSize,
+            lineHeight = DesignTokens.Home.Pill.TextSize * LINE_HEIGHT_TIGHT,
         )
-    val statusSubtitle =
+    val title =
         TextStyle(
-            fontFamily = WarrenFonts.body,
+            fontFamily = WarrenFonts.sans,
+            fontWeight = FontWeight(DesignTokens.Home.Title.TextWeight),
+            fontSize = DesignTokens.Home.Title.TextSize,
+            lineHeight = DesignTokens.Home.Title.TextSize * LINE_HEIGHT_TIGHT,
+            letterSpacing = DesignTokens.Home.Title.LetterSpacingEm.em,
+        )
+    val subtitle =
+        TextStyle(
+            fontFamily = WarrenFonts.sans,
             fontWeight = FontWeight.Normal,
-            fontSize = 11.5.sp,
-            lineHeight = 15.sp,
+            fontSize = DesignTokens.Home.Subtitle.TextSize,
+        )
+    val subtitleMono =
+        TextStyle(
+            fontFamily = WarrenFonts.mono,
+            fontWeight = FontWeight.Normal,
+            fontSize = DesignTokens.Home.Subtitle.MonoSize,
         )
     val location =
         TextStyle(
-            fontFamily = WarrenFonts.body,
-            fontWeight = FontWeight.Bold,
-            fontSize = 15.sp,
-            lineHeight = 19.sp,
+            fontFamily = WarrenFonts.sans,
+            fontWeight = FontWeight(DesignTokens.Home.Controls.LabelWeight),
+            fontSize = DesignTokens.Home.Controls.LabelSize,
         )
-    val hostname =
+    val change =
         TextStyle(
-            fontFamily = WarrenFonts.body,
+            fontFamily = WarrenFonts.sans,
             fontWeight = FontWeight.Normal,
-            fontSize = 12.sp,
-            lineHeight = 16.5.sp,
-        )
-    val exitLoad =
-        TextStyle(
-            fontFamily = WarrenFonts.body,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 11.sp,
-            lineHeight = 15.sp,
-            fontFeatureSettings = "tnum",
+            fontSize = DesignTokens.Home.Controls.ChangeSize,
         )
     val button =
         TextStyle(
-            fontFamily = WarrenFonts.body,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 13.sp,
-            lineHeight = 18.sp,
+            fontFamily = WarrenFonts.sans,
+            fontWeight = FontWeight(DesignTokens.Home.Controls.ButtonTextWeight),
+            fontSize = DesignTokens.Home.Controls.ButtonTextSize,
         )
     val chip =
         TextStyle(
-            fontFamily = WarrenFonts.body,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 11.sp,
-            lineHeight = 15.sp,
+            fontFamily = WarrenFonts.sans,
+            fontWeight = FontWeight.Normal,
+            fontSize = DesignTokens.Home.Chips.TextSize,
         )
-    val betaPill =
+    val footer =
         TextStyle(
-            fontFamily = WarrenFonts.body,
-            fontWeight = FontWeight.Bold,
-            fontSize = 11.sp,
-            letterSpacing = 0.5.sp,
+            fontFamily = WarrenFonts.sans,
+            fontWeight = FontWeight.Normal,
+            fontSize = DesignTokens.Home.Footer.TextSize,
+            lineHeight = FOOTER_LINE_HEIGHT,
         )
-    val betaLine =
-        TextStyle(fontFamily = WarrenFonts.body, fontWeight = FontWeight.SemiBold, fontSize = 11.sp)
+    val footerMono = footer.copy(fontFamily = WarrenFonts.mono)
+    val exitLoad =
+        TextStyle(
+            fontFamily = WarrenFonts.sans,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = DesignTokens.Home.Subtitle.MonoSize,
+            fontFeatureSettings = "tnum",
+        )
+    // The desktop BetaBadge home variant: a 10 px bold chip and a 12 px line.
+    val betaChip =
+        TextStyle(
+            fontFamily = WarrenFonts.sans,
+            fontWeight = FontWeight.Bold,
+            fontSize = BETA_CHIP_TEXT_SIZE,
+            letterSpacing = BETA_CHIP_LETTER_SPACING,
+        )
+    val betaLine = footer.copy(lineHeight = TextUnit.Unspecified)
 }
+
+private const val LINE_HEIGHT_TIGHT = 1.2f
+private val FOOTER_LINE_HEIGHT = 16.sp
+private val BETA_CHIP_TEXT_SIZE = 10.sp
+private val BETA_CHIP_LETTER_SPACING = 0.5.sp
