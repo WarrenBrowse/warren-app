@@ -61,6 +61,19 @@ enum ConnectSurfaceToken: String, CaseIterable {
     case homeCancelText
     case homeCancelHover
     case homeBeta
+    case homeNotice
+    case homeNoticeLine
+    case homeNoticeShadow
+    case homeNoticeTextSecondary
+    case homeNoticeUpdate
+    case homeNoticeAnnouncement
+    case homeDetails
+    case homeDetailsLine
+    case homeActive
+    case homeActiveWell
+    case homeLoad
+    case homeLoadTrack
+    case homeFlagLine
 }
 
 struct ConnectSurfacePalette: Equatable {
@@ -131,7 +144,20 @@ struct ConnectSurfacePalette: Equatable {
         case .homeCancelLine: 0xFF93_6831
         case .homeCancelText: 0xFFF1_C17F
         case .homeCancelHover: 0x1AEF_B062
-        case .homeBeta: 0xFFE8_B65C
+        case .homeBeta: 0xFFD6_BB78
+        case .homeNotice: 0xCC14_1311
+        case .homeNoticeLine: 0x12FF_FFFF
+        case .homeNoticeShadow: 0x9900_0000
+        case .homeNoticeTextSecondary: 0xFFA3_9A8D
+        case .homeNoticeUpdate: 0xFFEE_BA70
+        case .homeNoticeAnnouncement: 0xFF94_CCF3
+        case .homeDetails: 0xFF1D_1B18
+        case .homeDetailsLine: 0xFF2C_2925
+        case .homeActive: 0xFF6C_B26F
+        case .homeActiveWell: 0x2E72_B875
+        case .homeLoad: 0xFF72_B875
+        case .homeLoadTrack: 0xFF3A_352F
+        case .homeFlagLine: 0x1F00_0000
         }
     }
 
@@ -178,7 +204,20 @@ struct ConnectSurfacePalette: Equatable {
         case .homeCancelLine: 0xFFBD_853F
         case .homeCancelText: 0xFF8D_5406
         case .homeCancelHover: 0x1ABD_853F
-        case .homeBeta: 0xFF8A_5412
+        case .homeBeta: 0xFF81_520A
+        case .homeNotice: 0xE0FA_F7F0
+        case .homeNoticeLine: 0x1428_1E14
+        case .homeNoticeShadow: 0x5928_1E14
+        case .homeNoticeTextSecondary: 0xFF6F_675C
+        case .homeNoticeUpdate: 0xFFA7_5C00
+        case .homeNoticeAnnouncement: 0xFF1F_689D
+        case .homeDetails: 0xFFEB_E5DA
+        case .homeDetailsLine: 0xFFDD_D4C4
+        case .homeActive: 0xFF6C_B26F
+        case .homeActiveWell: 0x2E72_B875
+        case .homeLoad: 0xFF72_B875
+        case .homeLoadTrack: 0xFFD6_CDBD
+        case .homeFlagLine: 0x1F00_0000
         }
     }
 }

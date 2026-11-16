@@ -33,6 +33,7 @@ final class HomeMetricsTests: XCTestCase {
         ("hero.headerInset", M.Hero.headerInset),
         ("hero.clearMargin", M.Hero.clearMargin),
         ("hero.logoHeight", M.Hero.logoHeight),
+        ("hero.logoInset", M.Hero.logoInset),
         ("hero.scrimStop", M.Hero.scrimStop),
         ("hero.glowWidth", M.Hero.glowWidth),
         ("hero.glowHeight", M.Hero.glowHeight),
@@ -46,8 +47,29 @@ final class HomeMetricsTests: XCTestCase {
         ("toolbar.button", M.Toolbar.button),
         ("toolbar.icon", M.Toolbar.icon),
         ("toolbar.badge", M.Toolbar.badge),
+        ("toolbar.badgeInset", M.Toolbar.badgeInset),
         ("toolbar.badgeRing", M.Toolbar.badgeRing),
         ("toolbar.blur", M.Toolbar.blur),
+        ("notice.marginTop", M.Notice.marginTop),
+        ("notice.maxWidth", M.Notice.maxWidth),
+        ("notice.radius", M.Notice.radius),
+        ("notice.blur", M.Notice.blur),
+        ("notice.gap", M.Notice.gap),
+        ("notice.paddingVertical", M.Notice.paddingVertical),
+        ("notice.paddingStart", M.Notice.paddingStart),
+        ("notice.paddingEnd", M.Notice.paddingEnd),
+        ("notice.buttonInset", M.Notice.buttonInset),
+        ("notice.icon", M.Notice.icon),
+        ("notice.close", M.Notice.close),
+        ("notice.titleSize", M.Notice.titleSize),
+        ("notice.titleWeight", M.Notice.titleWeight),
+        ("notice.bodySize", M.Notice.bodySize),
+        ("notice.bodyGap", M.Notice.bodyGap),
+        ("notice.buttonHeight", M.Notice.buttonHeight),
+        ("notice.buttonPaddingHorizontal", M.Notice.buttonPaddingHorizontal),
+        ("notice.buttonRadius", M.Notice.buttonRadius),
+        ("notice.buttonTextSize", M.Notice.buttonTextSize),
+        ("notice.buttonTextWeight", M.Notice.buttonTextWeight),
         ("panel.paddingHorizontal", M.Panel.paddingHorizontal),
         ("panel.overlap", M.Panel.overlap),
         ("panel.gap", M.Panel.gap),
@@ -62,13 +84,43 @@ final class HomeMetricsTests: XCTestCase {
         ("title.textSize", M.Title.textSize),
         ("title.textWeight", M.Title.textWeight),
         ("title.letterSpacingEm", M.Title.letterSpacingEm),
+        ("subtitle.marginTop", M.Subtitle.marginTop),
+        ("subtitle.paddingVertical", M.Subtitle.paddingVertical),
+        ("subtitle.lineHeight", M.Subtitle.lineHeight),
         ("subtitle.textSize", M.Subtitle.textSize),
         ("subtitle.monoSize", M.Subtitle.monoSize),
+        ("exitRow.marginTop", M.ExitRow.marginTop),
+        ("exitRow.outset", M.ExitRow.outset),
+        ("exitRow.paddingVertical", M.ExitRow.paddingVertical),
+        ("exitRow.radius", M.ExitRow.radius),
+        ("exitRow.gap", M.ExitRow.gap),
+        ("exitRow.textSize", M.ExitRow.textSize),
+        ("exitRow.ring", M.ExitRow.ring),
+        ("exitRow.ringHole", M.ExitRow.ringHole),
+        ("exitRow.person", M.ExitRow.person),
+        ("exitRow.partGap", M.ExitRow.partGap),
+        ("exitRow.chevron", M.ExitRow.chevron),
+        ("exitRow.chevronMs", M.ExitRow.chevronMs),
+        ("details.marginTop", M.Details.marginTop),
+        ("details.radius", M.Details.radius),
+        ("details.paddingVertical", M.Details.paddingVertical),
+        ("details.paddingHorizontal", M.Details.paddingHorizontal),
+        ("details.columnGap", M.Details.columnGap),
+        ("details.rowGap", M.Details.rowGap),
+        ("details.textSize", M.Details.textSize),
+        ("details.valueWeight", M.Details.valueWeight),
+        ("details.monoSize", M.Details.monoSize),
+        ("details.dividerMargin", M.Details.dividerMargin),
+        ("details.chipSize", M.Details.chipSize),
+        ("details.chipWeight", M.Details.chipWeight),
+        ("details.chipPaddingVertical", M.Details.chipPaddingVertical),
+        ("details.chipPaddingHorizontal", M.Details.chipPaddingHorizontal),
         ("controls.marginTop", M.Controls.marginTop),
         ("controls.gap", M.Controls.gap),
         ("controls.rowHeight", M.Controls.rowHeight),
         ("controls.radius", M.Controls.radius),
         ("controls.thumb", M.Controls.thumb),
+        ("controls.thumbLine", M.Controls.thumbLine),
         ("controls.paddingStart", M.Controls.paddingStart),
         ("controls.paddingEnd", M.Controls.paddingEnd),
         ("controls.rowGap", M.Controls.rowGap),
@@ -112,9 +164,9 @@ final class HomeMetricsTests: XCTestCase {
         XCTAssertEqual(shared.subtracting(mirrored), [], "home tokens with no iOS copy")
     }
 
-    /// Tokens the home no longer reads: the hero's fade now follows the mockup curve of
-    /// `fixtures/client-rules/scenery_framing.json`, so the fixed band is left for desktop to drop.
-    private static let retired: Set<String> = ["hero.fade"]
+    /// Tokens the home does not read. None today; one that leaves the home is named here rather
+    /// than dropped from the table silently.
+    private static let retired: Set<String> = []
 
     /// The panel column is the screen up to the tablet cap, and it is what sizes the hero.
     func testTheColumnIsTheScreenWidthUpToTheTabletCap() {
@@ -126,5 +178,58 @@ final class HomeMetricsTests: XCTestCase {
     func testTheClearTopIsTheToolbarBottomPlusTheMargin() {
         XCTAssertEqual(HomeMetrics.clearTop(safeTop: 0), 68)
         XCTAssertEqual(HomeMetrics.clearTop(safeTop: 62), 130)
+    }
+
+    // MARK: - Sharing the screen
+
+    /// A 400 point phone under a 50 point status bar: the hero is 50 + 400 * 300 / 380 at least,
+    /// 50 + 400 * 1.15 at most, 50 + 400 * 176 / 380 while compact. The panel is 300 high with its
+    /// 18 point overlap of the hero, the footer 44.
+    private func phone(height: CGFloat, detailsOpen: Bool = false) -> HomeLayout {
+        HomeLayout.resolve(
+            width: 400, height: height, safeTop: 50, panelHeight: 300, footerHeight: 44, detailsOpen: detailsOpen)
+    }
+
+    func testATallPhoneGrowsTheHeroToItsMaximumAndLeavesTheRestAboveTheFooter() {
+        let layout = phone(height: 1000)
+        XCTAssertEqual(layout.heroHeight, 510, accuracy: 0.01)
+        XCTAssertEqual(layout.gap, 164, accuracy: 0.01)
+        XCTAssertFalse(layout.compactFraming)
+        XCTAssertFalse(layout.scrolls)
+    }
+
+    func testAPhoneBetweenTheBoundsGivesAllItsFreeHeightToTheHero() {
+        let layout = phone(height: 800)
+        XCTAssertEqual(layout.heroHeight, 474, accuracy: 0.01)
+        XCTAssertEqual(layout.gap, 0)
+        XCTAssertFalse(layout.compactFraming)
+    }
+
+    func testAShortScreenLetsTheHeroGoDownToCompactFramedTheCompactWay() {
+        let layout = phone(height: 600)
+        XCTAssertEqual(layout.heroHeight, 274, accuracy: 0.01)
+        XCTAssertTrue(layout.compactFraming)
+        XCTAssertFalse(layout.scrolls)
+    }
+
+    func testAScreenTooShortForTheCompactHeroScrollsThePanel() {
+        let layout = phone(height: 500)
+        XCTAssertEqual(layout.heroHeight, 50 + 400 * 176 / 380, accuracy: 0.01)
+        XCTAssertTrue(layout.scrolls)
+        XCTAssertEqual(layout.gap, 0)
+    }
+
+    func testTheOpenDetailsTakeTheCompactHero() {
+        let layout = phone(height: 1000, detailsOpen: true)
+        XCTAssertEqual(layout.heroHeight, 50 + 400 * 176 / 380, accuracy: 0.01)
+        XCTAssertTrue(layout.compactFraming)
+        XCTAssertFalse(layout.scrolls)
+    }
+
+    /// A tablet sizes its hero from the 480 point column, not from its full width.
+    func testAWideScreenSizesTheHeroFromTheColumn() {
+        let layout = HomeLayout.resolve(
+            width: 1024, height: 1366, safeTop: 24, panelHeight: 300, footerHeight: 44, detailsOpen: false)
+        XCTAssertEqual(layout.heroHeight, 24 + 480 * 1.15, accuracy: 0.01)
     }
 }

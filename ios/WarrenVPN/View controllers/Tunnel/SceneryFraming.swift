@@ -29,27 +29,46 @@ enum SceneryFraming {
         let bottom: CGFloat
     }
 
-    /// The cameras and Bula down to his shins while he is out, below the burrow mouth.
-    static let groundSpan = Span(top: 320, bottom: 995)
+    /// The cameras, the burrow and Bula down to his tail while he is out, which puts the cameras
+    /// where the mockup draws them.
+    static let groundSpan = Span(top: 320, bottom: 900)
 
-    /// Once he is in, the skyline down to the top of the burrow mouth: every flag lies inside.
-    static let skyBottomRow: CGFloat = 760
+    /// Once he is in, the skyline down to below the foot of its flag.
+    static let skyBottomRow: CGFloat = 680
 
-    /// The mockup's proportions (Warren VPN Accueil, 360x640): a 300 point hero on a 360 point
+    /// The mockup's proportions (Warren VPN Accueil, 380x620): a 300 point hero on a 380 point
     /// column.
-    static let heroHeightRatio: CGFloat = 300 / 360
+    static let heroHeightRatio: CGFloat = 300 / 380
 
-    /// The hero fades into the page over its last rows only, the mockup's short and discreet fade
-    /// behind the status pill, as (fraction of the hero height, alpha) from its top to its bottom.
+    /// A phone hero takes free height up to this fraction of its column.
+    static let heroMaxHeightRatio: CGFloat = 1.15
+
+    /// The hero while the connection details are open (176 on the 380 window).
+    static let compactHeightRatio: CGFloat = 176 / 380
+
+    /// The hero's resize when the details open or close, on desktop's
+    /// `cubic-bezier(0.3, 0.7, 0.2, 1)`.
+    static let compactTransitionMs: CGFloat = 400
+    static let compactTransitionCurve: (CGPoint, CGPoint) = (CGPoint(x: 0.3, y: 0.7), CGPoint(x: 0.2, y: 1))
+
+    /// The blur of the landscape behind the side margins of a narrowed canvas, at display size.
+    static let marginBlur: CGFloat = 24
+
+    /// The hero fades into the page along the mockup's soft curve ('Doux'), as (fraction of the
+    /// hero height, alpha) from its top to its bottom.
     static let maskStops: [(at: CGFloat, alpha: CGFloat)] = [
         (0, 1),
-        (0.86, 1),
-        (0.94, 0.5),
+        (0.74, 1),
+        (0.79, 0.9),
+        (0.84, 0.7),
+        (0.89, 0.45),
+        (0.94, 0.2),
+        (0.98, 0.06),
         (1, 0),
     ]
 
     /// The clear zone ends where that curve reaches half opacity; below it the art keeps fading.
-    static let clearBottomFraction: CGFloat = 0.94
+    static let clearBottomFraction: CGFloat = 0.88
 
     /// The band under the clear zone, for a hero of this height.
     static func fade(forHeroHeight height: CGFloat) -> CGFloat {
@@ -58,8 +77,8 @@ enum SceneryFraming {
 
     /// The hero keeps the mockup's proportion of the column it heads, and draws under the status
     /// bar on top of that.
-    static func heroHeight(columnWidth: CGFloat, safeTop: CGFloat) -> CGFloat {
-        columnWidth * heroHeightRatio + safeTop
+    static func heroHeight(columnWidth: CGFloat, safeTop: CGFloat, ratio: CGFloat = heroHeightRatio) -> CGFloat {
+        columnWidth * ratio + safeTop
     }
 
     /// Where the canvas lands in the hero, in points from the hero's top left corner.
@@ -80,15 +99,28 @@ enum SceneryFraming {
 
     /// `clearTop`: below this offset nothing floats over the art (the header bottom plus a margin).
     /// `fade`: the band under the clear zone, `fade(forHeroHeight:)`.
-    static func frame(width: CGFloat, height: CGFloat, clearTop: CGFloat, fade: CGFloat, span: Span) -> Frame {
+    /// `compact`: the hero is short (the details are open), so the art keeps its width and pins
+    /// the span top under the header, giving its lower part to the fade instead of shrinking.
+    /// `maxScale` caps that compact width-fit: a hero much wider than its column (a tablet) passes
+    /// the scale of its open frame, so the art slides up rather than zooming to the full width.
+    static func frame(
+        width: CGFloat,
+        height: CGFloat,
+        clearTop: CGFloat,
+        fade: CGFloat,
+        span: Span,
+        compact: Bool = false,
+        maxScale: CGFloat = .greatestFiniteMagnitude
+    ) -> Frame {
         let clearBottom = height - fade
+        let widthFit = width / canvasWidth
         // A hero shorter than the header leaves no room at all; the canvas then shrinks to a
         // sliver rather than flipping upside down on a negative scale.
         let room = max(clearBottom - clearTop, 1)
-        let scale = min(width / canvasWidth, room / (span.bottom - span.top))
+        let scale = compact ? min(widthFit, maxScale) : min(widthFit, room / (span.bottom - span.top))
         let yMin = clearTop - span.top * scale
         let yMax = clearBottom - span.bottom * scale
-        let top = min(yMax, max(yMin, 0))
+        let top = compact ? yMin : min(yMax, max(yMin, 0))
         return Frame(
             scale: scale,
             left: (width - canvasWidth * scale) / 2,
@@ -97,6 +129,18 @@ enum SceneryFraming {
             height: canvasHeight * scale,
             headroom: max(0, top)
         )
+    }
+
+    /// Where the blurred landscape behind a narrowed canvas lands: at cover scale over the whole
+    /// hero, its span's middle row at the height the canvas puts it, so the horizon runs on across
+    /// the feathered join. Nil when the canvas spans the hero's width and leaves no margin.
+    static func marginBackdrop(width: CGFloat, height: CGFloat, frame: Frame, span: Span) -> CGRect? {
+        guard frame.left > 0.5 else { return nil }
+        let scale = max(width / canvasWidth, height / canvasHeight)
+        let size = CGSize(width: canvasWidth * scale, height: canvasHeight * scale)
+        let middle = (span.top + span.bottom) / 2
+        let top = min(0, max(height - size.height, frame.y(ofRow: middle) - middle * scale))
+        return CGRect(origin: CGPoint(x: (width - size.width) / 2, y: top), size: size)
     }
 
     /// The span a phase frames: the ground whenever Bula is out, the landscape's skyline down to
