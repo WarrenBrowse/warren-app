@@ -80,8 +80,9 @@ internal object SceneryFraming {
 
     /**
      * Where the canvas sits in a [width] x [height] hero. A [compact] hero (the details are open)
-     * keeps the canvas at width-fit and pins the span top under the header, its bottom going into
-     * the fade.
+     * keeps the scale the same hero has at its [fullHeight] and pins the span top under the
+     * header, its bottom going into the fade: opening the details slides the art up and never
+     * zooms into it.
      */
     @Suppress("LongParameterList")
     fun frame(
@@ -91,12 +92,11 @@ internal object SceneryFraming {
         fade: Float,
         span: Span,
         compact: Boolean = false,
+        fullHeight: Float? = null,
     ): Frame {
         val clearBottom = height - fade
-        val widthFit = width / CANVAS_WIDTH
-        val scale =
-            if (compact) widthFit
-            else minOf(widthFit, (clearBottom - clearTop) / (span.bottom - span.top))
+        val fitBottom = if (compact) (fullHeight ?: height) * CLEAR_BOTTOM_FRACTION else clearBottom
+        val scale = minOf(width / CANVAS_WIDTH, (fitBottom - clearTop) / (span.bottom - span.top))
         val yMin = clearTop - span.top * scale
         val yMax = clearBottom - span.bottom * scale
         val top = if (compact) yMin else minOf(yMax, maxOf(yMin, 0f))

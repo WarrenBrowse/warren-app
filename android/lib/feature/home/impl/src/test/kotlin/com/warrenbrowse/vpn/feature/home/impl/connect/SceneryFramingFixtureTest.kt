@@ -36,6 +36,7 @@ class SceneryFramingFixtureTest {
             fade = case.float("fade_px"),
             span = SceneryFraming.Span(span[0], span[1]),
             compact = case.booleanOr("compact", false),
+            fullHeight = case["full_hero_height_px"]?.let { case.float("full_hero_height_px") },
         )
     }
 
@@ -179,6 +180,8 @@ class SceneryFramingFixtureTest {
             // The fixture's clear_top is the status bar plus the header band.
             val statusBar = case.float("clear_top_px") - headerBand.value
             when {
+                // A tablet's hero takes its height from the content column, not its own width.
+                name.startsWith("wide_") -> Unit
                 case.booleanOr("compact", false) ->
                     assertEquals(
                         height,
@@ -194,8 +197,6 @@ class SceneryFramingFixtureTest {
                         ROUNDING,
                         name,
                     )
-                // A tablet's hero takes its height from the content column, not its own width.
-                name.startsWith("wide_") -> Unit
                 else ->
                     assertEquals(
                         height,
