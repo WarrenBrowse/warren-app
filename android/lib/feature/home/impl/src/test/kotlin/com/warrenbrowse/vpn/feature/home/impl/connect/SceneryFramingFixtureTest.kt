@@ -8,9 +8,12 @@ import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.int
 import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.obj
 import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.string
 import com.warrenbrowse.vpn.lib.ui.resource.R
+import com.warrenbrowse.vpn.lib.ui.theme.tokens.DesignTokens
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonArray
+import kotlinx.serialization.json.jsonPrimitive
 import org.junit.jupiter.api.Test
 
 /**
@@ -138,11 +141,51 @@ class SceneryFramingFixtureTest {
     }
 
     @Test
-    fun `the hero is never taller than the width-fit canvas`() {
-        assertEquals(400f, SceneryFraming.heroHeight(available = 400f, width = 360f))
-        val cap = SceneryFraming.CANVAS_HEIGHT * 360f / SceneryFraming.CANVAS_WIDTH
-        assertEquals(cap, SceneryFraming.heroHeight(available = 2000f, width = 360f), TOLERANCE)
-        assertEquals(0f, SceneryFraming.heroHeight(available = -10f, width = 360f))
+    fun `the hero keeps the mockup proportions and fades along the mockup curve`() {
+        assertEquals(fixture.float("hero_height_ratio"), SceneryFraming.HERO_HEIGHT_RATIO, 1e-6f)
+        val stops =
+            fixture.getValue("mask_stops").jsonArray.map { stop ->
+                val (at, alpha) = stop.jsonArray.map { it.jsonPrimitive.content.toFloat() }
+                at to alpha
+            }
+        assertEquals(stops, SceneryFraming.MASK_STOPS)
+        assertEquals(fixture.float("clear_bottom_fraction"), SceneryFraming.CLEAR_BOTTOM_FRACTION)
+    }
+
+    @Test
+    fun `the clear zone ends where the hero fade reaches half opacity`() {
+        assertTrue(
+            SceneryFraming.MASK_STOPS.contains(SceneryFraming.CLEAR_BOTTOM_FRACTION to HALF),
+            "the clear bottom is not the half-opacity stop of the mask",
+        )
+        fixture.cases("cases").forEach { case ->
+            val height = case.floats("hero_px")[1]
+            assertEquals(
+                case.float("fade_px"),
+                SceneryFraming.fade(height),
+                TOLERANCE,
+                case.string("name"),
+            )
+        }
+    }
+
+    @Test
+    fun `the hero is the mockup ratio of its width under the status bar, unless the panel needs it`() {
+        val headerBand = hero.HeaderInset + toolbar.Height + hero.ClearMargin
+        fixture.cases("cases").forEach { case ->
+            val name = case.string("name")
+            val (width, height) = case.floats("hero_px")
+            // The fixture's clear_top is the status bar plus the header band.
+            val statusBar = case.float("clear_top_px") - headerBand.value
+            val natural = SceneryFraming.heroHeight(width, statusBar, available = Float.MAX_VALUE)
+            if (name.startsWith("short_hero")) {
+                assertTrue(natural > height, "$name: the fixture gives this hero less room")
+            } else {
+                assertEquals(height, natural, ROUNDING, name)
+            }
+            assertEquals(height, SceneryFraming.heroHeight(width, statusBar, height), ROUNDING, name)
+        }
+        assertEquals(0f, SceneryFraming.heroHeight(360f, 0f, available = -10f))
     }
 
     @Test
@@ -170,5 +213,10 @@ class SceneryFramingFixtureTest {
 
     private companion object {
         const val TOLERANCE = 0.01f
+        // The fixture writes hero heights in whole pixels.
+        const val ROUNDING = 0.5f
+        const val HALF = 0.5f
+        val hero = DesignTokens.Home.Hero
+        val toolbar = DesignTokens.Home.Toolbar
     }
 }

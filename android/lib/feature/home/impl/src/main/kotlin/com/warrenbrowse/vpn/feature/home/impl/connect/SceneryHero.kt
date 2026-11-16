@@ -61,16 +61,21 @@ internal const val CONNECTING_ZOOM = 1.08f
 internal const val CONNECTING_DIM = 0.08f
 internal const val BULA_HIDE_DROP = 0.03f
 
-// The bottom fade of the hero: opaque down to the fade band, 55 % at 55 % of it, gone at the edge.
-private const val FADE_MID_ALPHA = 0.55f
-private const val FADE_MID_POSITION = 0.45f
-
 // The paper glow behind the logo: full at its corner, 43 % at 45 % of its radius, gone at 75 %.
 private const val GLOW_MID_STOP = 0.45f
 private const val GLOW_MID_ALPHA = 0.43f
 private const val GLOW_END_STOP = 0.75f
 
 private val hero = DesignTokens.Home.Hero
+
+// Built once: a gradient with no explicit end spans whatever it fills, so one brush serves every
+// hero size, and the vararg copy is paid at class load rather than on every frame.
+@Suppress("SpreadOperator")
+private val HERO_MASK =
+    Brush.verticalGradient(
+        *SceneryFraming.MASK_STOPS.map { (at, alpha) -> at to Color.Black.copy(alpha = alpha) }
+            .toTypedArray()
+    )
 
 /**
  * The home hero (desktop `CountryBackdrop`): the three registered scenery layers framed by
@@ -106,7 +111,7 @@ internal fun SceneryHero(
     val density = LocalDensity.current
     val target =
         with(density) {
-            heroFrame(size, clearTop.toPx(), hero.Fade.toPx(), span)
+            heroFrame(size, clearTop.toPx(), SceneryFraming.fade(size.height.toFloat()), span)
         }
     val scrim = surfaces.homeScrim
     val glow = surfaces.homeLogoGlow
@@ -118,7 +123,7 @@ internal fun SceneryHero(
             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
             .drawWithContent {
                 drawContent()
-                drawBottomFade(hero.Fade.toPx())
+                drawHeroMask()
             }
             .drawBehind { drawRect(topFill) }
     ) {
@@ -254,22 +259,12 @@ private fun DrawScope.drawLayer(image: ImageBitmap, r: CanvasRect, dy: Float = 0
     )
 }
 
-/** The bottom band where the art fades into the page, the panel's status riding over it. */
-private fun DrawScope.drawBottomFade(fade: Float) {
-    val h = size.height
-    if (h <= 0f) return
-    val start = ((h - fade) / h).coerceIn(0f, 1f)
-    val mid = ((h - fade * FADE_MID_POSITION) / h).coerceIn(start, 1f)
-    drawRect(
-        brush =
-            Brush.verticalGradient(
-                0f to Color.Black,
-                start to Color.Black,
-                mid to Color.Black.copy(alpha = FADE_MID_ALPHA),
-                1f to Color.Transparent,
-            ),
-        blendMode = BlendMode.DstIn,
-    )
+/**
+ * Fades the hero into the page along the mockup's curve ([SceneryFraming.MASK_STOPS]), the panel's
+ * status riding over its last rows.
+ */
+private fun DrawScope.drawHeroMask() {
+    drawRect(brush = HERO_MASK, blendMode = BlendMode.DstIn)
 }
 
 /** Fades the canvas edges that face the top fill: its top over a headroom strip, its sides. */

@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.only
@@ -892,10 +893,11 @@ private val DETAILS_SHEET_SLIDE = 12.dp
 private val NOTICES_GAP = 8.dp
 
 /**
- * The home screen (desktop `MainView`): the scenery hero takes the height the panel leaves, capped
- * at the width-fit canvas, with the header and the notices floating over it; the panel keeps its
- * natural height, one chip row reserved so the hero does not reframe when the tunnel comes up; the
- * footer band closes the screen. A landscape screen puts the panel in a side column instead.
+ * The home screen (desktop `MainView`): the scenery hero keeps the mockup's proportions, 300/360 of
+ * its width tall under the status bar, with the header and the notices floating over it; the panel
+ * takes the rest of the screen, one chip row reserved so the hero does not reframe when the tunnel
+ * comes up, and the room left between the chips and the beta line above the footer. A landscape
+ * screen puts the panel in a side column instead, and the hero column's width sets its height.
  */
 @Composable
 @Suppress("LongParameterList", "LongMethod")
@@ -937,6 +939,7 @@ private fun HomeContent(
                 modifier = Modifier.fillMaxSize(),
             )
         }
+    val betaLine = @Composable { Box(Modifier.padding(top = BETA_TOP_GAP)) { beta() } }
     val statusBlock =
         @Composable {
             HomeStatusBlock(
@@ -962,7 +965,6 @@ private fun HomeContent(
                         chips()
                     }
                 }
-                Box(Modifier.padding(top = BETA_TOP_GAP)) { beta() }
             }
         }
     val sheet =
@@ -982,8 +984,14 @@ private fun HomeContent(
         HomeSystemBarGlyphs(darkStatusGlyphs = !(wide && surfaces.isDark))
         if (wide) {
             Row(Modifier.fillMaxSize()) {
-                Box(Modifier.weight(1f).fillMaxHeight()) {
-                    heroContent()
+                BoxWithConstraints(Modifier.weight(1f).fillMaxHeight()) {
+                    val heroHeight =
+                        SceneryFraming.heroHeight(
+                            width = maxWidth.value,
+                            statusBar = statusTop.value,
+                            available = maxHeight.value,
+                        )
+                    Box(Modifier.fillMaxWidth().height(heroHeight.dp)) { heroContent() }
                     sheet(Modifier.align(Alignment.BottomCenter))
                 }
                 Column(
@@ -1000,6 +1008,7 @@ private fun HomeContent(
                     ) {
                         panelContent(Modifier)
                     }
+                    betaLine()
                     footer()
                 }
             }
@@ -1011,6 +1020,11 @@ private fun HomeContent(
                         panelContent(Modifier.widthIn(max = PANEL_MAX_WIDTH))
                     }
                 },
+                beta = {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+                        Box(Modifier.widthIn(max = PANEL_MAX_WIDTH).fillMaxWidth()) { betaLine() }
+                    }
+                },
                 sheet = {
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.BottomCenter) {
                         sheet(Modifier.widthIn(max = PANEL_MAX_WIDTH))
@@ -1018,6 +1032,7 @@ private fun HomeContent(
                 },
                 footer = footer,
                 clearTop = clearTop,
+                statusTop = statusTop,
             )
         }
 
@@ -1053,30 +1068,40 @@ private fun HomeContent(
 private val BETA_TOP_GAP = 2.dp
 
 /**
- * Lays the portrait home out: the footer at the bottom, the panel at its natural height, the hero
- * above it taking what is left (never more than the width-fit canvas), the panel riding the
- * overlap up over the hero's fade, and any space a tall screen has to spare between the panel and
- * the footer. The details sheet sits on the panel's top edge.
+ * Lays the portrait home out: the hero at the mockup's ratio of the width under the status bar, the
+ * panel riding the overlap up over its fade, the footer at the bottom with the beta line on it, and
+ * the room left between the panel and the beta line, the mockup's spacer. Only a screen too short
+ * for all of it gives the hero less, never the panel. The details sheet sits on the panel's top
+ * edge.
  */
 @Composable
+@Suppress("LongParameterList")
 private fun HomeColumnLayout(
     hero: @Composable () -> Unit,
     panel: @Composable () -> Unit,
+    beta: @Composable () -> Unit,
     sheet: @Composable () -> Unit,
     footer: @Composable () -> Unit,
     clearTop: Dp,
+    statusTop: Dp,
 ) {
-    Layout(contents = listOf(hero, panel, footer, sheet)) { measurables, constraints ->
-        val (heroSlot, panelSlot, footerSlot, sheetSlot) = measurables
+    Layout(contents = listOf(hero, panel, beta, footer, sheet)) { measurables, constraints ->
+        val (heroSlot, panelSlot, betaSlot, footerSlot, sheetSlot) = measurables
         val width = constraints.maxWidth
         val height = constraints.maxHeight
         val loose = constraints.copy(minWidth = width, maxWidth = width, minHeight = 0)
         val footerPlaceable = footerSlot.first().measure(loose)
+        val betaPlaceable = betaSlot.first().measure(loose)
         val panelPlaceable = panelSlot.first().measure(loose)
         val overlap = DesignTokens.Home.Panel.Overlap.roundToPx()
-        val available = height - footerPlaceable.height - (panelPlaceable.height - overlap)
+        val bottom = height - footerPlaceable.height - betaPlaceable.height
         val heroHeight =
-            SceneryFraming.heroHeight(available.toFloat(), width.toFloat()).roundToInt()
+            SceneryFraming.heroHeight(
+                    width = width.toFloat(),
+                    statusBar = statusTop.toPx(),
+                    available = (bottom - panelPlaceable.height + overlap).toFloat(),
+                )
+                .roundToInt()
         val heroPlaceable = heroSlot.first().measure(Constraints.fixed(width, heroHeight))
         val sheetMax =
             minOf(
@@ -1088,6 +1113,7 @@ private fun HomeColumnLayout(
         layout(width, height) {
             heroPlaceable.place(0, 0)
             panelPlaceable.place(0, heroHeight - overlap)
+            betaPlaceable.place(0, bottom)
             footerPlaceable.place(0, height - footerPlaceable.height)
             // On the panel's top edge, so the pill riding the overlap stays in view.
             sheetPlaceable.place(0, heroHeight - overlap - sheetPlaceable.height)

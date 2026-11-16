@@ -64,9 +64,9 @@ private val PILL_SHADOW_OFFSET = 6.dp
 private const val PILL_SHADOW_ALPHA = 0.6f
 
 // Fixed whether or not the details button is there, so the hero keeps its frame in every state.
-private val SUBTITLE_ROW_HEIGHT = 24.dp
+private val SUBTITLE_ROW_HEIGHT = 18.dp
 private val SUBTITLE_ROW_GAP = 8.dp
-private val DETAILS_BUTTON_SIZE = 24.dp
+private val DETAILS_BUTTON_SIZE = 18.dp
 private val DETAILS_ICON_SIZE = 18.dp
 
 private val APP_ROUTING_LABEL_RADIUS = 6.dp
