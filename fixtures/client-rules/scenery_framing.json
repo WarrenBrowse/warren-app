@@ -1,5 +1,5 @@
 {
-  "_comment": "How every client frames the home hero, after the mockup Warren VPN Accueil (default tweaks: 380x620 window, scene 'Equilibree' 300px, fade 'Doux'). The hero is hero_height_ratio of its width tall (plus the status bar on a phone); on a phone it grows to absorb free height up to hero_max_height_ratio of its width. While the connection details are open it shrinks to compact_height_ratio of its width. The three registered scenery layers are drawn in one canvas rect, the header floats over the top and the art fades into the page along mask_stops. A framing names a span of canvas rows that must stay clear between the header (clear_top_px) and the point where that fade reaches half opacity (clear_bottom_fraction of the hero height, given to the formula as fade_px = height * (1 - clear_bottom_fraction)): the cameras, the burrow and Bula down to his tail whenever he is out (ground), the country's skyline down to below its flag once he is in (sky). The canvas is drawn at width-fit unless the span cannot fit, then it narrows and centres. Its top sits flush with the hero top when it can; it drops (headroom) only when a skyline would otherwise sit under the header, and rises only when the span bottom would pass the half-opacity point. A compact hero keeps the scale the same hero has at full height (full_hero_height_px; width-fit on the desktop window and on phones) and pins the span top under the header, the span bottom going into the fade: opening the details slides the art up, it never zooms into it. The rows above a dropped canvas take the landscape's topFill from scenery.json; the columns beside a narrowed canvas show the same landscape at cover scale blurred by margin_blur_px; the canvas edges facing either are feathered over feather_rows canvas rows.",
+  "_comment": "How every client frames the home hero, after the mockup Warren VPN Accueil (default tweaks: 380x620 window, scene 'Equilibree' 300px, fade 'Doux'). The hero is hero_height_ratio of its width tall (plus the status bar on a phone); on a phone it grows to absorb free height up to hero_max_height_ratio of its width (the most the width-fit canvas still covers). On a screen wider than tall and shorter than split_below_height_px (a phone in landscape) the hero and the panel sit side by side: the hero is the left half at full height, the panel and the footer scroll on the right. While the connection details are open it shrinks to compact_height_ratio of its width. The three registered scenery layers are drawn in one canvas rect, the header floats over the top and the art fades into the page along mask_stops. A framing names a span of canvas rows that must stay clear between the header (clear_top_px) and the point where that fade reaches half opacity (clear_bottom_fraction of the hero height, given to the formula as fade_px = height * (1 - clear_bottom_fraction)): the cameras, the burrow and Bula down to his tail whenever he is out (ground), the country's skyline down to below its flag once he is in (sky). The canvas is drawn at width-fit unless the span cannot fit, then it narrows and centres. Its top sits flush with the hero top when it can; it drops (headroom) only when a skyline would otherwise sit under the header, and rises only when the span bottom would pass the half-opacity point. A compact hero keeps the scale the same hero has at full height (full_hero_height_px; width-fit on the desktop window and on phones) and pins the span top under the header, the span bottom going into the fade: opening the details slides the art up, it never zooms into it. The rows above a dropped canvas take the landscape's topFill from scenery.json; the columns beside a narrowed canvas show the same landscape at cover scale blurred by margin_blur_px (an ambient wash, no recognisable shape); the canvas edges facing either are feathered over feather_rows canvas rows.",
   "version": 4,
   "canvas_px": [
     1140,
@@ -7,10 +7,11 @@
   ],
   "feather_rows": 48,
   "hero_height_ratio": 0.789474,
-  "hero_max_height_ratio": 1.15,
+  "hero_max_height_ratio": 1.4,
+  "split_below_height_px": 560,
   "compact_height_ratio": 0.463158,
   "compact_transition_ms": 400,
-  "margin_blur_px": 24,
+  "margin_blur_px": 60,
   "mask_stops": [
     [
       0,
@@ -295,13 +296,13 @@
     },
     {
       "name": "phone_412_tall_ground",
-      "note": "a tall phone whose hero absorbed the free height up to hero_max_height_ratio: the canvas sits flush at the top",
+      "note": "a tall phone whose hero absorbed the free height up to hero_max_height_ratio: the canvas sits flush at the top and still covers the hero",
       "hero_px": [
         412,
-        498
+        601
       ],
       "clear_top_px": 92,
-      "fade_px": 59.76,
+      "fade_px": 72.12,
       "span_rows": [
         320,
         900
@@ -315,6 +316,30 @@
         "headroom_px": 0,
         "span_top_px": 115.65,
         "span_bottom_px": 325.26
+      }
+    },
+    {
+      "name": "phone_landscape_split_ground",
+      "note": "a phone in landscape, split: the hero is the left half at full height and the panel scrolls on the right",
+      "hero_px": [
+        457,
+        411
+      ],
+      "clear_top_px": 68,
+      "fade_px": 49.32,
+      "span_rows": [
+        320,
+        900
+      ],
+      "expect": {
+        "scale": 0.40088,
+        "canvas_left_px": 0.0,
+        "canvas_top_px": 0,
+        "canvas_width_px": 457.0,
+        "canvas_height_px": 683.9,
+        "headroom_px": 0,
+        "span_top_px": 128.28,
+        "span_bottom_px": 360.79
       }
     },
     {

@@ -30,12 +30,12 @@ export const HERO_MASK_STOPS: Array<[number, number]> = [
 ];
 export const CLEAR_BOTTOM_FRACTION = 0.88;
 // A phone hero takes free height up to this fraction of its width.
-export const HERO_MAX_HEIGHT_RATIO = 1.15;
+export const HERO_MAX_HEIGHT_RATIO = 1.4;
 // The hero while the connection details are open (176px on the 380px window).
 export const HERO_COMPACT_RATIO = 176 / 380;
 export const COMPACT_TRANSITION_MS = 400;
 // The landscape behind the side margins of a narrowed canvas, blurred.
-export const MARGIN_BLUR_PX = 24;
+export const MARGIN_BLUR_PX = 60;
 
 // The band under the clear zone, for a hero of this height.
 export function heroFade(heroHeight: number): number {
