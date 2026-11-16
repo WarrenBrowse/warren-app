@@ -4,7 +4,6 @@ import android.net.ConnectivityManager
 import android.net.Network
 import android.net.VpnService
 import android.os.ParcelFileDescriptor
-import android.os.SystemClock
 import com.warrenbrowse.talpid.model.Connectivity
 import com.warrenbrowse.talpid.model.IpAvailability
 import com.warrenbrowse.vpn.app.connectivity.RelayFamilies
@@ -15,8 +14,6 @@ import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import io.mockk.every
 import io.mockk.mockk
-import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicInteger
@@ -317,6 +314,7 @@ class WarrenQuinnAdapterTest {
         includedApps: MutableStateFlow<Set<String>> = MutableStateFlow(emptySet()),
         appExits: MutableStateFlow<Map<String, AppExit>> = MutableStateFlow(emptyMap()),
         lockedApps: MutableStateFlow<Set<String>> = MutableStateFlow(emptySet()),
+        elapsedRealtimeMs: () -> Long = { 0L },
     ): WarrenQuinnAdapter {
         val settings = mockk<WarrenLocalSettingsRepository>(relaxed = true)
         every { settings.lockedApps } returns lockedApps
@@ -335,6 +333,7 @@ class WarrenQuinnAdapterTest {
             failoverConfig = failoverConfig,
             hasFailoverExit = hasFailoverExit,
             dropRetryGraceMs = dropRetryGraceMs,
+            elapsedRealtimeMs = elapsedRealtimeMs,
         )
     }
 
@@ -539,32 +538,26 @@ class WarrenQuinnAdapterTest {
      */
     @Test
     fun `fallback keeps the live tun when the blackhole cannot be established`() = runTest {
-        mockkStatic(SystemClock::class)
-        every { SystemClock.elapsedRealtime() } returns 0L
-        try {
-            val platform = RecordingPlatform()
-            val (adapter, callback) = connectedAdapter(platform)
-            platform.blackholeFails = true
+        val platform = RecordingPlatform()
+        val (adapter, callback) = connectedAdapter(platform)
+        platform.blackholeFails = true
 
-            callback.onAvailable(mockk<Network>())
-            platform.statusOnConnect = STATUS_CONNECTED
-            platform.status = STATUS_DISCONNECTED
+        callback.onAvailable(mockk<Network>())
+        platform.statusOnConnect = STATUS_CONNECTED
+        platform.status = STATUS_DISCONNECTED
 
-            awaitReal("the fallback must reconnect") {
-                CONNECT_TUNNEL in platform.calls.toList()
-            }
-            val calls = platform.calls.toList()
-            val replaced = calls.indexOf(ESTABLISH_LIVE)
-            val closed = calls.indexOf(CLOSE_ACTIVE)
-            assertTrue(
-                replaced >= 0 && closed > replaced,
-                "the dead session's TUN must hold the routes until the reconnect's " +
-                    "interface replaced it, got: $calls",
-            )
-            adapter.disconnect()
-        } finally {
-            unmockkStatic(SystemClock::class)
+        awaitReal("the fallback must reconnect") {
+            CONNECT_TUNNEL in platform.calls.toList()
         }
+        val calls = platform.calls.toList()
+        val replaced = calls.indexOf(ESTABLISH_LIVE)
+        val closed = calls.indexOf(CLOSE_ACTIVE)
+        assertTrue(
+            replaced >= 0 && closed > replaced,
+            "the dead session's TUN must hold the routes until the reconnect's " +
+                "interface replaced it, got: $calls",
+        )
+        adapter.disconnect()
     }
 
     /**
@@ -575,34 +568,28 @@ class WarrenQuinnAdapterTest {
      */
     @Test
     fun `ensure an ipv6 only network is dialed when the fleet publishes ipv6`() = runTest {
-        mockkStatic(SystemClock::class)
-        every { SystemClock.elapsedRealtime() } returns 0L
-        try {
-            val platform = RecordingPlatform()
-            platform.families = RelayFamilies(RelayFamilies.IPV4 or RelayFamilies.IPV6)
-            val connectivity =
-                MutableStateFlow<Connectivity>(Connectivity.Online(IpAvailability.Ipv6))
-            val adapter = adapterWith(platform, dropRetryGraceMs = 0L, connectivity = connectivity)
-            adapter.connect(config(), Mnemonic(PHRASE))
-            awaitReal("the session must reach Connected on a v6-only network") {
-                adapter.state.value is WarrenTunnelState.Connected
-            }
-
-            platform.statusOnConnect = STATUS_CONNECTED
-            platform.status = STATUS_DISCONNECTED
-            awaitReal("the retry must redial rather than park") {
-                adapter.state.value is WarrenTunnelState.Connected && platform.configs.size >= 2
-            }
-            assertFalse(
-                adapter.state.value.let {
-                    it is WarrenTunnelState.Blocking && it.noDialableNetwork
-                },
-                "a network the fleet can be dialed from must never read as undialable"
-            )
-            adapter.disconnect()
-        } finally {
-            unmockkStatic(SystemClock::class)
+        val platform = RecordingPlatform()
+        platform.families = RelayFamilies(RelayFamilies.IPV4 or RelayFamilies.IPV6)
+        val connectivity =
+            MutableStateFlow<Connectivity>(Connectivity.Online(IpAvailability.Ipv6))
+        val adapter = adapterWith(platform, dropRetryGraceMs = 0L, connectivity = connectivity)
+        adapter.connect(config(), Mnemonic(PHRASE))
+        awaitReal("the session must reach Connected on a v6-only network") {
+            adapter.state.value is WarrenTunnelState.Connected
         }
+
+        platform.statusOnConnect = STATUS_CONNECTED
+        platform.status = STATUS_DISCONNECTED
+        awaitReal("the retry must redial rather than park") {
+            adapter.state.value is WarrenTunnelState.Connected && platform.configs.size >= 2
+        }
+        assertFalse(
+            adapter.state.value.let {
+                it is WarrenTunnelState.Blocking && it.noDialableNetwork
+            },
+            "a network the fleet can be dialed from must never read as undialable"
+        )
+        adapter.disconnect()
     }
 
     /**
@@ -615,34 +602,28 @@ class WarrenQuinnAdapterTest {
     @Test
     fun `ensure a network that routes no entry is named and redialed only once it changes`() =
         runTest {
-            mockkStatic(SystemClock::class)
-            every { SystemClock.elapsedRealtime() } returns 0L
-            try {
-                val platform = RecordingPlatform()
-                val connectivity =
-                    MutableStateFlow<Connectivity>(Connectivity.Online(IpAvailability.Ipv6))
-                platform.families = RelayFamilies(RelayFamilies.IPV4 or RelayFamilies.IPV6)
-                val adapter =
-                    adapterWith(platform, dropRetryGraceMs = 0L, connectivity = connectivity)
-                platform.statusOnConnect = STATUS_NO_REACHABLE_ENTRY
-                adapter.connect(config(), Mnemonic(PHRASE))
+            val platform = RecordingPlatform()
+            val connectivity =
+                MutableStateFlow<Connectivity>(Connectivity.Online(IpAvailability.Ipv6))
+            platform.families = RelayFamilies(RelayFamilies.IPV4 or RelayFamilies.IPV6)
+            val adapter =
+                adapterWith(platform, dropRetryGraceMs = 0L, connectivity = connectivity)
+            platform.statusOnConnect = STATUS_NO_REACHABLE_ENTRY
+            adapter.connect(config(), Mnemonic(PHRASE))
 
-                awaitReal("the block must name the network") {
-                    val state = adapter.state.value
-                    state is WarrenTunnelState.Blocking && state.noDialableNetwork
-                }
-                Thread.sleep(300)
-                assertEquals(1, platform.configs.size, "no redial on the same network")
-
-                platform.statusOnConnect = STATUS_CONNECTED
-                connectivity.value = Connectivity.Online(IpAvailability.Ipv4AndIpv6)
-                awaitReal("the retry must dial once the network changed") {
-                    adapter.state.value is WarrenTunnelState.Connected && platform.configs.size == 2
-                }
-                adapter.disconnect()
-            } finally {
-                unmockkStatic(SystemClock::class)
+            awaitReal("the block must name the network") {
+                val state = adapter.state.value
+                state is WarrenTunnelState.Blocking && state.noDialableNetwork
             }
+            Thread.sleep(300)
+            assertEquals(1, platform.configs.size, "no redial on the same network")
+
+            platform.statusOnConnect = STATUS_CONNECTED
+            connectivity.value = Connectivity.Online(IpAvailability.Ipv4AndIpv6)
+            awaitReal("the retry must dial once the network changed") {
+                adapter.state.value is WarrenTunnelState.Connected && platform.configs.size == 2
+            }
+            adapter.disconnect()
         }
 
     /**
@@ -653,32 +634,26 @@ class WarrenQuinnAdapterTest {
     @Test
     fun `ensure a network that changed during the unroutable dial is dialed at once`() =
         runTest {
-            mockkStatic(SystemClock::class)
-            every { SystemClock.elapsedRealtime() } returns 0L
-            try {
-                val platform = RecordingPlatform()
-                val connectivity =
-                    MutableStateFlow<Connectivity>(Connectivity.Online(IpAvailability.Ipv6))
-                platform.families = RelayFamilies(RelayFamilies.IPV4 or RelayFamilies.IPV6)
-                platform.beforeConnect = { dial ->
-                    if (dial == 1) {
-                        connectivity.value = Connectivity.Online(IpAvailability.Ipv4AndIpv6)
-                        platform.statusOnConnect = STATUS_NO_REACHABLE_ENTRY
-                    } else {
-                        platform.statusOnConnect = STATUS_CONNECTED
-                    }
+            val platform = RecordingPlatform()
+            val connectivity =
+                MutableStateFlow<Connectivity>(Connectivity.Online(IpAvailability.Ipv6))
+            platform.families = RelayFamilies(RelayFamilies.IPV4 or RelayFamilies.IPV6)
+            platform.beforeConnect = { dial ->
+                if (dial == 1) {
+                    connectivity.value = Connectivity.Online(IpAvailability.Ipv4AndIpv6)
+                    platform.statusOnConnect = STATUS_NO_REACHABLE_ENTRY
+                } else {
+                    platform.statusOnConnect = STATUS_CONNECTED
                 }
-                val adapter =
-                    adapterWith(platform, dropRetryGraceMs = 0L, connectivity = connectivity)
-                adapter.connect(config(), Mnemonic(PHRASE))
-
-                awaitReal("the retry must dial on the network the phone moved to") {
-                    adapter.state.value is WarrenTunnelState.Connected && platform.configs.size == 2
-                }
-                adapter.disconnect()
-            } finally {
-                unmockkStatic(SystemClock::class)
             }
+            val adapter =
+                adapterWith(platform, dropRetryGraceMs = 0L, connectivity = connectivity)
+            adapter.connect(config(), Mnemonic(PHRASE))
+
+            awaitReal("the retry must dial on the network the phone moved to") {
+                adapter.state.value is WarrenTunnelState.Connected && platform.configs.size == 2
+            }
+            adapter.disconnect()
         }
 
     /**
@@ -692,32 +667,26 @@ class WarrenQuinnAdapterTest {
     @Test
     fun `ensure a handover park on an ipv6 only network is named and then handed back`() =
         runTest {
-            mockkStatic(SystemClock::class)
-            every { SystemClock.elapsedRealtime() } returns 0L
-            try {
-                val platform = RecordingPlatform()
-                val connectivity =
-                    MutableStateFlow<Connectivity>(Connectivity.Online(IpAvailability.Ipv4))
-                val (adapter, callback) = connectedAdapter(platform, connectivity = connectivity)
+            val platform = RecordingPlatform()
+            val connectivity =
+                MutableStateFlow<Connectivity>(Connectivity.Online(IpAvailability.Ipv4))
+            val (adapter, callback) = connectedAdapter(platform, connectivity = connectivity)
 
-                connectivity.value = Connectivity.Online(IpAvailability.Ipv6)
-                callback.onAvailable(mockk<Network>())
-                platform.statusOnConnect = STATUS_CONNECTED
-                platform.status = STATUS_DISCONNECTED
+            connectivity.value = Connectivity.Online(IpAvailability.Ipv6)
+            callback.onAvailable(mockk<Network>())
+            platform.statusOnConnect = STATUS_CONNECTED
+            platform.status = STATUS_DISCONNECTED
 
-                awaitReal("the handover park must name the network") {
-                    val state = adapter.state.value
-                    state is WarrenTunnelState.Blocking && state.noDialableNetwork
-                }
-
-                connectivity.value = Connectivity.Online(IpAvailability.Ipv4)
-                awaitReal("the handover must resume once IPv4 is back") {
-                    adapter.state.value is WarrenTunnelState.Connected
-                }
-                adapter.disconnect()
-            } finally {
-                unmockkStatic(SystemClock::class)
+            awaitReal("the handover park must name the network") {
+                val state = adapter.state.value
+                state is WarrenTunnelState.Blocking && state.noDialableNetwork
             }
+
+            connectivity.value = Connectivity.Online(IpAvailability.Ipv4)
+            awaitReal("the handover must resume once IPv4 is back") {
+                adapter.state.value is WarrenTunnelState.Connected
+            }
+            adapter.disconnect()
         }
 
     @Test
@@ -811,29 +780,23 @@ class WarrenQuinnAdapterTest {
         // in use elsewhere (that one is the device limit). The refresh can
         // bring tokens, so it is a drop the policy blocks and redials after
         // its grace, named so the screens can offer the account's devices.
-        mockkStatic(SystemClock::class)
-        every { SystemClock.elapsedRealtime() } returns 0L
-        try {
-            val platform = RecordingPlatform()
-            val adapter = adapterWith(platform)
-            adapter.connect(config(), Mnemonic(PHRASE))
-            awaitReal("the session must reach Connected") {
-                adapter.state.value is WarrenTunnelState.Connected
-            }
-
-            platform.status = STATUS_NO_SESSION_TOKEN
-            awaitReal("a session with no token must block", { adapter.state.value.toString() }) {
-                adapter.state.value is WarrenTunnelState.Blocking
-            }
-
-            val blocked = adapter.state.value as WarrenTunnelState.Blocking
-            assertTrue(blocked.reason.startsWith("[NO_SESSION_TOKEN] "), blocked.reason)
-            assertFalse(blocked.expired, "no token is not an expiry")
-            assertFalse(blocked.flapping, "a drop the policy redials, not a parked tunnel")
-            adapter.disconnect()
-        } finally {
-            unmockkStatic(SystemClock::class)
+        val platform = RecordingPlatform()
+        val adapter = adapterWith(platform)
+        adapter.connect(config(), Mnemonic(PHRASE))
+        awaitReal("the session must reach Connected") {
+            adapter.state.value is WarrenTunnelState.Connected
         }
+
+        platform.status = STATUS_NO_SESSION_TOKEN
+        awaitReal("a session with no token must block", { adapter.state.value.toString() }) {
+            adapter.state.value is WarrenTunnelState.Blocking
+        }
+
+        val blocked = adapter.state.value as WarrenTunnelState.Blocking
+        assertTrue(blocked.reason.startsWith("[NO_SESSION_TOKEN] "), blocked.reason)
+        assertFalse(blocked.expired, "no token is not an expiry")
+        assertFalse(blocked.flapping, "a drop the policy redials, not a parked tunnel")
+        adapter.disconnect()
     }
 
     @Test
@@ -892,25 +855,19 @@ class WarrenQuinnAdapterTest {
         // is acted on, so the card keeps saying "interrupted" while the
         // fail-closed policy blocks and redials.
         // The drop path stamps the flap detector off the framework clock.
-        mockkStatic(SystemClock::class)
-        every { SystemClock.elapsedRealtime() } returns 0L
-        try {
-            val platform = RecordingPlatform()
-            val (adapter, _) = connectedAdapter(platform)
-            assertFalse(adapter.pathWedged.value, "a healthy path must not read as wedged")
+        val platform = RecordingPlatform()
+        val (adapter, _) = connectedAdapter(platform)
+        assertFalse(adapter.pathWedged.value, "a healthy path must not read as wedged")
 
-            platform.health = PATH_HEALTH_EGRESS_DEAD
-            platform.status = STATUS_DISCONNECTED
-            awaitReal("the verdict must survive the teardown it caused") {
-                adapter.pathWedged.value
-            }
-            // The drop armed a 15 s retry that would redial, read the same
-            // dead status and stamp the clock again once it is unmocked below,
-            // in whichever test class happens to be running by then.
-            adapter.disconnect()
-        } finally {
-            unmockkStatic(SystemClock::class)
+        platform.health = PATH_HEALTH_EGRESS_DEAD
+        platform.status = STATUS_DISCONNECTED
+        awaitReal("the verdict must survive the teardown it caused") {
+            adapter.pathWedged.value
         }
+        // The drop armed a 15 s retry that would redial, read the same
+        // dead status and stamp the clock again once it is unmocked below,
+        // in whichever test class happens to be running by then.
+        adapter.disconnect()
     }
 
     @Test
@@ -1061,34 +1018,28 @@ class WarrenQuinnAdapterTest {
     @Test
     fun `ensure a drop retry dials the failover exit and reports the switch once it lands`() =
         runTest {
-            mockkStatic(SystemClock::class)
-            every { SystemClock.elapsedRealtime() } returns 0L
-            try {
-                val platform = RecordingPlatform()
-                val alternative =
-                    config().copy(exitPubkeyHex = "ef".repeat(32), exitEndpoint = "exit2.example:443")
-                val adapter =
-                    adapterWith(platform, failoverConfig = { alternative }, dropRetryGraceMs = 0L)
-                adapter.connect(config(), Mnemonic(PHRASE))
-                awaitReal("the session must reach Connected") {
-                    adapter.state.value is WarrenTunnelState.Connected
-                }
-                assertEquals(0, adapter.failoverCount.value)
-
-                platform.statusOnConnect = STATUS_CONNECTED
-                platform.status = STATUS_DISCONNECTED
-                awaitReal("the retry must dial the alternative exit") {
-                    platform.configs.lastOrNull()?.contains("ef".repeat(32)) == true
-                }
-                awaitReal("the landed retry must report one switch") {
-                    adapter.failoverCount.value == 1
-                }
-                val landed = adapter.state.value as WarrenTunnelState.Connected
-                assertEquals("exit2.example:443", landed.exitEndpointHost)
-                adapter.disconnect()
-            } finally {
-                unmockkStatic(SystemClock::class)
+            val platform = RecordingPlatform()
+            val alternative =
+                config().copy(exitPubkeyHex = "ef".repeat(32), exitEndpoint = "exit2.example:443")
+            val adapter =
+                adapterWith(platform, failoverConfig = { alternative }, dropRetryGraceMs = 0L)
+            adapter.connect(config(), Mnemonic(PHRASE))
+            awaitReal("the session must reach Connected") {
+                adapter.state.value is WarrenTunnelState.Connected
             }
+            assertEquals(0, adapter.failoverCount.value)
+
+            platform.statusOnConnect = STATUS_CONNECTED
+            platform.status = STATUS_DISCONNECTED
+            awaitReal("the retry must dial the alternative exit") {
+                platform.configs.lastOrNull()?.contains("ef".repeat(32)) == true
+            }
+            awaitReal("the landed retry must report one switch") {
+                adapter.failoverCount.value == 1
+            }
+            val landed = adapter.state.value as WarrenTunnelState.Connected
+            assertEquals("exit2.example:443", landed.exitEndpointHost)
+            adapter.disconnect()
         }
 
     /**
@@ -1099,41 +1050,35 @@ class WarrenQuinnAdapterTest {
      */
     @Test
     fun `ensure a leaving exit is left at once for an alternative exit`() = runTest {
-        mockkStatic(SystemClock::class)
-        every { SystemClock.elapsedRealtime() } returns 0L
-        try {
-            val platform = RecordingPlatform()
-            val alternative =
-                config().copy(exitPubkeyHex = "ef".repeat(32), exitEndpoint = "exit2.example:443")
-            // A drop retry would wait out this grace: only the leaving path can
-            // dial the alternative within the test's bound.
-            val adapter =
-                adapterWith(platform, failoverConfig = { alternative }, dropRetryGraceMs = 600_000L)
-            adapter.connect(config(), Mnemonic(PHRASE))
-            awaitReal("the session must reach Connected") {
-                adapter.state.value is WarrenTunnelState.Connected
-            }
-            platform.calls.clear()
-
-            platform.statusOnConnect = STATUS_CONNECTED
-            platform.status = STATUS_EXIT_LEAVING
-            awaitReal("the leaving exit must be left for the alternative") {
-                platform.configs.lastOrNull()?.contains("ef".repeat(32)) == true
-            }
-            awaitReal("the failover must land") { adapter.failoverCount.value == 1 }
-
-            val calls = platform.calls.toList()
-            assertTrue(
-                calls.indexOf(ESTABLISH_BLACKHOLE) in 0 until calls.indexOf(CLOSE_ACTIVE),
-                "the blocking TUN must be up before the live one is closed, got: $calls",
-            )
-            assertTrue(platform.exitDownReports.isEmpty(), "a drained exit is not down")
-            val landed = adapter.state.value as WarrenTunnelState.Connected
-            assertEquals("exit2.example:443", landed.exitEndpointHost)
-            adapter.disconnect()
-        } finally {
-            unmockkStatic(SystemClock::class)
+        val platform = RecordingPlatform()
+        val alternative =
+            config().copy(exitPubkeyHex = "ef".repeat(32), exitEndpoint = "exit2.example:443")
+        // A drop retry would wait out this grace: only the leaving path can
+        // dial the alternative within the test's bound.
+        val adapter =
+            adapterWith(platform, failoverConfig = { alternative }, dropRetryGraceMs = 600_000L)
+        adapter.connect(config(), Mnemonic(PHRASE))
+        awaitReal("the session must reach Connected") {
+            adapter.state.value is WarrenTunnelState.Connected
         }
+        platform.calls.clear()
+
+        platform.statusOnConnect = STATUS_CONNECTED
+        platform.status = STATUS_EXIT_LEAVING
+        awaitReal("the leaving exit must be left for the alternative") {
+            platform.configs.lastOrNull()?.contains("ef".repeat(32)) == true
+        }
+        awaitReal("the failover must land") { adapter.failoverCount.value == 1 }
+
+        val calls = platform.calls.toList()
+        assertTrue(
+            calls.indexOf(ESTABLISH_BLACKHOLE) in 0 until calls.indexOf(CLOSE_ACTIVE),
+            "the blocking TUN must be up before the live one is closed, got: $calls",
+        )
+        assertTrue(platform.exitDownReports.isEmpty(), "a drained exit is not down")
+        val landed = adapter.state.value as WarrenTunnelState.Connected
+        assertEquals("exit2.example:443", landed.exitEndpointHost)
+        adapter.disconnect()
     }
 
     /**
@@ -1145,39 +1090,33 @@ class WarrenQuinnAdapterTest {
     @Test
     fun `ensure a failover keeps the live tun when the blackhole cannot be established`() =
         runTest {
-            mockkStatic(SystemClock::class)
-            every { SystemClock.elapsedRealtime() } returns 0L
-            try {
-                val platform = RecordingPlatform()
-                val alternative =
-                    config().copy(exitPubkeyHex = "ef".repeat(32), exitEndpoint = "exit2.example:443")
-                val adapter =
-                    adapterWith(platform, failoverConfig = { alternative }, dropRetryGraceMs = 600_000L)
-                adapter.connect(config(), Mnemonic(PHRASE))
-                awaitReal("the session must reach Connected") {
-                    adapter.state.value is WarrenTunnelState.Connected
-                }
-                platform.calls.clear()
-                platform.blackholeFails = true
-
-                platform.statusOnConnect = STATUS_CONNECTED
-                platform.status = STATUS_EXIT_LEAVING
-                awaitReal("the failover must dial the alternative") {
-                    platform.configs.lastOrNull()?.contains("ef".repeat(32)) == true
-                }
-
-                val calls = platform.calls.toList()
-                val replaced = calls.indexOf(ESTABLISH_LIVE)
-                val closed = calls.indexOf(CLOSE_ACTIVE)
-                assertTrue(
-                    replaced >= 0 && closed > replaced,
-                    "the dead session's TUN must hold the routes until the failover's " +
-                        "interface replaced it, got: $calls",
-                )
-                adapter.disconnect()
-            } finally {
-                unmockkStatic(SystemClock::class)
+            val platform = RecordingPlatform()
+            val alternative =
+                config().copy(exitPubkeyHex = "ef".repeat(32), exitEndpoint = "exit2.example:443")
+            val adapter =
+                adapterWith(platform, failoverConfig = { alternative }, dropRetryGraceMs = 600_000L)
+            adapter.connect(config(), Mnemonic(PHRASE))
+            awaitReal("the session must reach Connected") {
+                adapter.state.value is WarrenTunnelState.Connected
             }
+            platform.calls.clear()
+            platform.blackholeFails = true
+
+            platform.statusOnConnect = STATUS_CONNECTED
+            platform.status = STATUS_EXIT_LEAVING
+            awaitReal("the failover must dial the alternative") {
+                platform.configs.lastOrNull()?.contains("ef".repeat(32)) == true
+            }
+
+            val calls = platform.calls.toList()
+            val replaced = calls.indexOf(ESTABLISH_LIVE)
+            val closed = calls.indexOf(CLOSE_ACTIVE)
+            assertTrue(
+                replaced >= 0 && closed > replaced,
+                "the dead session's TUN must hold the routes until the failover's " +
+                    "interface replaced it, got: $calls",
+            )
+            adapter.disconnect()
         }
 
     /**
@@ -1189,40 +1128,34 @@ class WarrenQuinnAdapterTest {
     @Test
     fun `ensure a leaving exit is not counted as a drop until it repeats without a connection`() =
         runTest {
-            mockkStatic(SystemClock::class)
-            every { SystemClock.elapsedRealtime() } returns 0L
-            try {
-                val platform = RecordingPlatform()
-                val adapter = adapterWith(platform, dropRetryGraceMs = 0L)
-                adapter.connect(config().copy(lockdownMode = false), Mnemonic(PHRASE))
-                awaitReal("the session must reach Connected") {
-                    adapter.state.value is WarrenTunnelState.Connected
-                }
+            val platform = RecordingPlatform()
+            val adapter = adapterWith(platform, dropRetryGraceMs = 0L)
+            adapter.connect(config().copy(lockdownMode = false), Mnemonic(PHRASE))
+            awaitReal("the session must reach Connected") {
+                adapter.state.value is WarrenTunnelState.Connected
+            }
 
-                // Three leavings, each followed by a connection: none is a drop.
-                repeat(3) { round ->
-                    platform.statusOnConnect = STATUS_CONNECTED
-                    platform.status = STATUS_EXIT_LEAVING
-                    awaitReal("leaving ${round + 1} must redial and land") {
-                        platform.configs.size == round + 2 &&
-                            adapter.state.value is WarrenTunnelState.Connected
-                    }
-                }
-                assertTrue(adapter.state.value is WarrenTunnelState.Connected)
-                assertTrue(
-                    platform.exitDownReports.isEmpty(),
-                    "a leaving exit took the drop path: ${platform.exitDownReports}",
-                )
-
-                // Every dial now leaves at once: the flap guard takes over.
-                platform.statusOnConnect = STATUS_EXIT_LEAVING
+            // Three leavings, each followed by a connection: none is a drop.
+            repeat(3) { round ->
+                platform.statusOnConnect = STATUS_CONNECTED
                 platform.status = STATUS_EXIT_LEAVING
-                awaitReal("an exit leaving without a connection must reach the flap guard") {
-                    val state = adapter.state.value
-                    state is WarrenTunnelState.Failed && state.flapping
+                awaitReal("leaving ${round + 1} must redial and land") {
+                    platform.configs.size == round + 2 &&
+                        adapter.state.value is WarrenTunnelState.Connected
                 }
-            } finally {
-                unmockkStatic(SystemClock::class)
+            }
+            assertTrue(adapter.state.value is WarrenTunnelState.Connected)
+            assertTrue(
+                platform.exitDownReports.isEmpty(),
+                "a leaving exit took the drop path: ${platform.exitDownReports}",
+            )
+
+            // Every dial now leaves at once: the flap guard takes over.
+            platform.statusOnConnect = STATUS_EXIT_LEAVING
+            platform.status = STATUS_EXIT_LEAVING
+            awaitReal("an exit leaving without a connection must reach the flap guard") {
+                val state = adapter.state.value
+                state is WarrenTunnelState.Failed && state.flapping
             }
         }
 
@@ -1264,28 +1197,22 @@ class WarrenQuinnAdapterTest {
     /** With no alternative the retry redials the same exit and reports no switch. */
     @Test
     fun `ensure a drop retry without an alternative redials the same exit silently`() = runTest {
-        mockkStatic(SystemClock::class)
-        every { SystemClock.elapsedRealtime() } returns 0L
-        try {
-            val platform = RecordingPlatform()
-            val adapter = adapterWith(platform, failoverConfig = { null }, dropRetryGraceMs = 0L)
-            adapter.connect(config(), Mnemonic(PHRASE))
-            awaitReal("the session must reach Connected") {
-                adapter.state.value is WarrenTunnelState.Connected
-            }
-
-            platform.statusOnConnect = STATUS_CONNECTED
-            platform.status = STATUS_DISCONNECTED
-            awaitReal("the retry must redial") { platform.configs.size == 2 }
-            awaitReal("the redial must land") {
-                adapter.state.value is WarrenTunnelState.Connected
-            }
-            assertTrue(platform.configs.last().contains("ab".repeat(32)))
-            assertEquals(0, adapter.failoverCount.value)
-            adapter.disconnect()
-        } finally {
-            unmockkStatic(SystemClock::class)
+        val platform = RecordingPlatform()
+        val adapter = adapterWith(platform, failoverConfig = { null }, dropRetryGraceMs = 0L)
+        adapter.connect(config(), Mnemonic(PHRASE))
+        awaitReal("the session must reach Connected") {
+            adapter.state.value is WarrenTunnelState.Connected
         }
+
+        platform.statusOnConnect = STATUS_CONNECTED
+        platform.status = STATUS_DISCONNECTED
+        awaitReal("the retry must redial") { platform.configs.size == 2 }
+        awaitReal("the redial must land") {
+            adapter.state.value is WarrenTunnelState.Connected
+        }
+        assertTrue(platform.configs.last().contains("ab".repeat(32)))
+        assertEquals(0, adapter.failoverCount.value)
+        adapter.disconnect()
     }
 
     /**
@@ -1300,40 +1227,34 @@ class WarrenQuinnAdapterTest {
      */
     @Test
     fun `ensure a park on an ipv6 only network is named and then handed back`() = runTest {
-        mockkStatic(SystemClock::class)
-        every { SystemClock.elapsedRealtime() } returns 0L
-        try {
-            val platform = RecordingPlatform()
-            val connectivity =
-                MutableStateFlow<Connectivity>(Connectivity.Online(IpAvailability.Ipv4))
-            val adapter = adapterWith(platform, dropRetryGraceMs = 0L, connectivity = connectivity)
-            adapter.connect(config(), Mnemonic(PHRASE))
-            awaitReal("the session must reach Connected") {
-                adapter.state.value is WarrenTunnelState.Connected
-            }
-
-            // The walk: the network becomes v6-only, then the session drops.
-            connectivity.value = Connectivity.Online(IpAvailability.Ipv6)
-            platform.statusOnConnect = STATUS_CONNECTED
-            platform.status = STATUS_DISCONNECTED
-
-            awaitReal("the parked block must name the network") {
-                val state = adapter.state.value
-                state is WarrenTunnelState.Blocking && state.noDialableNetwork
-            }
-            val parked = adapter.state.value as WarrenTunnelState.Blocking
-            assertEquals("tunnel disconnected", parked.reason)
-            assertFalse(parked.flapping, "a v6-only network is not a flapping tunnel")
-
-            // Back on a dialable network the retry resumes and the tunnel lands.
-            connectivity.value = Connectivity.Online(IpAvailability.Ipv4AndIpv6)
-            awaitReal("the retry must redial once IPv4 is back") {
-                adapter.state.value is WarrenTunnelState.Connected
-            }
-            adapter.disconnect()
-        } finally {
-            unmockkStatic(SystemClock::class)
+        val platform = RecordingPlatform()
+        val connectivity =
+            MutableStateFlow<Connectivity>(Connectivity.Online(IpAvailability.Ipv4))
+        val adapter = adapterWith(platform, dropRetryGraceMs = 0L, connectivity = connectivity)
+        adapter.connect(config(), Mnemonic(PHRASE))
+        awaitReal("the session must reach Connected") {
+            adapter.state.value is WarrenTunnelState.Connected
         }
+
+        // The walk: the network becomes v6-only, then the session drops.
+        connectivity.value = Connectivity.Online(IpAvailability.Ipv6)
+        platform.statusOnConnect = STATUS_CONNECTED
+        platform.status = STATUS_DISCONNECTED
+
+        awaitReal("the parked block must name the network") {
+            val state = adapter.state.value
+            state is WarrenTunnelState.Blocking && state.noDialableNetwork
+        }
+        val parked = adapter.state.value as WarrenTunnelState.Blocking
+        assertEquals("tunnel disconnected", parked.reason)
+        assertFalse(parked.flapping, "a v6-only network is not a flapping tunnel")
+
+        // Back on a dialable network the retry resumes and the tunnel lands.
+        connectivity.value = Connectivity.Online(IpAvailability.Ipv4AndIpv6)
+        awaitReal("the retry must redial once IPv4 is back") {
+            adapter.state.value is WarrenTunnelState.Connected
+        }
+        adapter.disconnect()
     }
 
     /**
@@ -1346,33 +1267,27 @@ class WarrenQuinnAdapterTest {
      */
     @Test
     fun `ensure a drop retry reports the exit it gave up on`() = runTest {
-        mockkStatic(SystemClock::class)
-        every { SystemClock.elapsedRealtime() } returns 0L
-        try {
-            val platform = RecordingPlatform()
-            val alternative =
-                config().copy(exitPubkeyHex = "ef".repeat(32), exitEndpoint = "exit2.example:443")
-            val adapter =
-                adapterWith(platform, failoverConfig = { alternative }, dropRetryGraceMs = 0L)
-            adapter.connect(config(), Mnemonic(PHRASE))
-            awaitReal("the session must reach Connected") {
-                adapter.state.value is WarrenTunnelState.Connected
-            }
-            assertTrue(
-                platform.exitDownReports.isEmpty(),
-                "a session that came up reports nothing"
-            )
-
-            platform.statusOnConnect = STATUS_CONNECTED
-            platform.status = STATUS_DISCONNECTED
-            awaitReal("the drop retry must report the dead exit") {
-                platform.exitDownReports.isNotEmpty()
-            }
-            assertEquals(listOf("ab".repeat(32)), platform.exitDownReports.toList())
-            adapter.disconnect()
-        } finally {
-            unmockkStatic(SystemClock::class)
+        val platform = RecordingPlatform()
+        val alternative =
+            config().copy(exitPubkeyHex = "ef".repeat(32), exitEndpoint = "exit2.example:443")
+        val adapter =
+            adapterWith(platform, failoverConfig = { alternative }, dropRetryGraceMs = 0L)
+        adapter.connect(config(), Mnemonic(PHRASE))
+        awaitReal("the session must reach Connected") {
+            adapter.state.value is WarrenTunnelState.Connected
         }
+        assertTrue(
+            platform.exitDownReports.isEmpty(),
+            "a session that came up reports nothing"
+        )
+
+        platform.statusOnConnect = STATUS_CONNECTED
+        platform.status = STATUS_DISCONNECTED
+        awaitReal("the drop retry must report the dead exit") {
+            platform.exitDownReports.isNotEmpty()
+        }
+        assertEquals(listOf("ab".repeat(32)), platform.exitDownReports.toList())
+        adapter.disconnect()
     }
 
     /**
@@ -1442,36 +1357,30 @@ class WarrenQuinnAdapterTest {
     @Test
     fun `ensure a flapping tunnel without lockdown retires the native session before releasing`() =
         runTest {
-            mockkStatic(SystemClock::class)
-            every { SystemClock.elapsedRealtime() } returns 0L
-            try {
-                val platform = RecordingPlatform()
-                val adapter = adapterWith(platform, dropRetryGraceMs = 0L)
-                adapter.connect(config().copy(lockdownMode = false), Mnemonic(PHRASE))
-                awaitReal("the session must reach Connected") {
-                    adapter.state.value is WarrenTunnelState.Connected
-                }
-
-                // Every redial dies on arrival: the flap guard trips and, with
-                // lockdown off, the policy releases traffic.
-                platform.statusOnConnect = STATUS_DISCONNECTED
-                platform.status = STATUS_DISCONNECTED
-                awaitReal("the flapping tunnel must release traffic") {
-                    adapter.state.value is WarrenTunnelState.Failed
-                }
-
-                val calls = platform.calls.toList()
-                val lastDial = calls.lastIndexOf(CONNECT_TUNNEL)
-                val released = calls.lastIndexOf(CLOSE_ACTIVE)
-                assertTrue(released > lastDial, "the release closes the live TUN, got: $calls")
-                assertTrue(
-                    DISCONNECT_TUNNEL in calls.subList(lastDial, released),
-                    "the release must retire the native session before dropping the TUN, got: " +
-                        calls.subList(lastDial, calls.size),
-                )
-            } finally {
-                unmockkStatic(SystemClock::class)
+            val platform = RecordingPlatform()
+            val adapter = adapterWith(platform, dropRetryGraceMs = 0L)
+            adapter.connect(config().copy(lockdownMode = false), Mnemonic(PHRASE))
+            awaitReal("the session must reach Connected") {
+                adapter.state.value is WarrenTunnelState.Connected
             }
+
+            // Every redial dies on arrival: the flap guard trips and, with
+            // lockdown off, the policy releases traffic.
+            platform.statusOnConnect = STATUS_DISCONNECTED
+            platform.status = STATUS_DISCONNECTED
+            awaitReal("the flapping tunnel must release traffic") {
+                adapter.state.value is WarrenTunnelState.Failed
+            }
+
+            val calls = platform.calls.toList()
+            val lastDial = calls.lastIndexOf(CONNECT_TUNNEL)
+            val released = calls.lastIndexOf(CLOSE_ACTIVE)
+            assertTrue(released > lastDial, "the release closes the live TUN, got: $calls")
+            assertTrue(
+                DISCONNECT_TUNNEL in calls.subList(lastDial, released),
+                "the release must retire the native session before dropping the TUN, got: " +
+                    calls.subList(lastDial, calls.size),
+            )
         }
 
     /**
@@ -1482,27 +1391,21 @@ class WarrenQuinnAdapterTest {
     @Test
     fun `ensure a flapping tunnel without lockdown reports that it released the traffic`() =
         runTest {
-            mockkStatic(SystemClock::class)
-            every { SystemClock.elapsedRealtime() } returns 0L
-            try {
-                val platform = RecordingPlatform()
-                val adapter = adapterWith(platform, dropRetryGraceMs = 0L)
-                adapter.connect(config().copy(lockdownMode = false), Mnemonic(PHRASE))
-                awaitReal("the session must reach Connected") {
-                    adapter.state.value is WarrenTunnelState.Connected
-                }
-
-                platform.statusOnConnect = STATUS_DISCONNECTED
-                platform.status = STATUS_DISCONNECTED
-                awaitReal("the flapping tunnel must release traffic") {
-                    adapter.state.value is WarrenTunnelState.Failed
-                }
-
-                val failed = adapter.state.value as WarrenTunnelState.Failed
-                assertTrue(failed.flapping, "the release must name the flap, got: $failed")
-            } finally {
-                unmockkStatic(SystemClock::class)
+            val platform = RecordingPlatform()
+            val adapter = adapterWith(platform, dropRetryGraceMs = 0L)
+            adapter.connect(config().copy(lockdownMode = false), Mnemonic(PHRASE))
+            awaitReal("the session must reach Connected") {
+                adapter.state.value is WarrenTunnelState.Connected
             }
+
+            platform.statusOnConnect = STATUS_DISCONNECTED
+            platform.status = STATUS_DISCONNECTED
+            awaitReal("the flapping tunnel must release traffic") {
+                adapter.state.value is WarrenTunnelState.Failed
+            }
+
+            val failed = adapter.state.value as WarrenTunnelState.Failed
+            assertTrue(failed.flapping, "the release must name the flap, got: $failed")
         }
 
     /** An include-only adapter, connected, with [installed] on the device. */
@@ -1536,30 +1439,24 @@ class WarrenQuinnAdapterTest {
     @Test
     fun `ensure include-only tunnels the included apps and blackholes the same apps on a drop`() =
         runTest {
-            mockkStatic(SystemClock::class)
-            every { SystemClock.elapsedRealtime() } returns 0L
-            try {
-                val platform = RecordingPlatform()
-                val adapter =
-                    includeOnlyAdapter(
-                        platform,
-                        MutableStateFlow(setOf("org.bank", "org.gone")),
-                        installed = setOf("org.bank"),
-                    )
+            val platform = RecordingPlatform()
+            val adapter =
+                includeOnlyAdapter(
+                    platform,
+                    MutableStateFlow(setOf("org.bank", "org.gone")),
+                    installed = setOf("org.bank"),
+                )
 
-                platform.status = STATUS_DISCONNECTED
-                awaitReal("the drop must bring the blackhole up") {
-                    platform.plans.toList().any { it.blocking }
-                }
-
-                val expected = AppRouting.OnlyFor(setOf("org.bank", SELF_PACKAGE))
-                val plans = platform.plans.toList()
-                assertEquals(expected, plans.first { !it.blocking }.appRouting)
-                assertEquals(expected, plans.first { it.blocking }.appRouting)
-                adapter.disconnect()
-            } finally {
-                unmockkStatic(SystemClock::class)
+            platform.status = STATUS_DISCONNECTED
+            awaitReal("the drop must bring the blackhole up") {
+                platform.plans.toList().any { it.blocking }
             }
+
+            val expected = AppRouting.OnlyFor(setOf("org.bank", SELF_PACKAGE))
+            val plans = platform.plans.toList()
+            assertEquals(expected, plans.first { !it.blocking }.appRouting)
+            assertEquals(expected, plans.first { it.blocking }.appRouting)
+            adapter.disconnect()
         }
 
     /**
@@ -1585,31 +1482,25 @@ class WarrenQuinnAdapterTest {
      */
     @Test
     fun `ensure a flapping include-only tunnel stays blocked without lockdown`() = runTest {
-        mockkStatic(SystemClock::class)
-        every { SystemClock.elapsedRealtime() } returns 0L
-        try {
-            val platform = RecordingPlatform()
-            val adapter =
-                includeOnlyAdapter(
-                    platform,
-                    MutableStateFlow(setOf("org.bank")),
-                    installed = setOf("org.bank"),
-                    lockdown = false,
-                    dropRetryGraceMs = 0L,
-                )
+        val platform = RecordingPlatform()
+        val adapter =
+            includeOnlyAdapter(
+                platform,
+                MutableStateFlow(setOf("org.bank")),
+                installed = setOf("org.bank"),
+                lockdown = false,
+                dropRetryGraceMs = 0L,
+            )
 
-            platform.statusOnConnect = STATUS_DISCONNECTED
-            platform.status = STATUS_DISCONNECTED
-            awaitReal(
-                "the flapping tunnel must park behind the blackhole",
-                detail = { "${adapter.state.value}" },
-            ) {
-                (adapter.state.value as? WarrenTunnelState.Blocking)?.flapping == true
-            }
-            adapter.disconnect()
-        } finally {
-            unmockkStatic(SystemClock::class)
+        platform.statusOnConnect = STATUS_DISCONNECTED
+        platform.status = STATUS_DISCONNECTED
+        awaitReal(
+            "the flapping tunnel must park behind the blackhole",
+            detail = { "${adapter.state.value}" },
+        ) {
+            (adapter.state.value as? WarrenTunnelState.Blocking)?.flapping == true
         }
+        adapter.disconnect()
     }
 
     /** A lapsed subscription is the error state: an included app stays blocked there too. */
@@ -1638,37 +1529,31 @@ class WarrenQuinnAdapterTest {
      */
     @Test
     fun `ensure a list change while blocked replaces the blackhole with the new list`() = runTest {
-        mockkStatic(SystemClock::class)
-        every { SystemClock.elapsedRealtime() } returns 0L
-        try {
-            val platform = RecordingPlatform()
-            val included = MutableStateFlow(setOf("org.bank"))
-            val adapter =
-                includeOnlyAdapter(platform, included, installed = setOf("org.bank", "org.mail"))
-            platform.status = STATUS_DISCONNECTED
-            awaitReal("the drop must bring the blackhole up") {
-                adapter.state.value is WarrenTunnelState.Blocking
-            }
-            platform.calls.clear()
-
-            included.value = setOf("org.bank", "org.mail")
-            awaitReal("the blackhole must follow the list", detail = { "${platform.calls}" }) {
-                "close(blackhole)" in platform.calls.toList()
-            }
-
-            val calls = platform.calls.toList()
-            assertTrue(
-                calls.indexOf(ESTABLISH_BLACKHOLE) in 0 until calls.indexOf("close(blackhole)"),
-                "the new blackhole must be up before the old one closes, got: $calls",
-            )
-            assertEquals(
-                AppRouting.OnlyFor(setOf("org.bank", "org.mail", SELF_PACKAGE)),
-                platform.plans.toList().last().appRouting,
-            )
-            adapter.disconnect()
-        } finally {
-            unmockkStatic(SystemClock::class)
+        val platform = RecordingPlatform()
+        val included = MutableStateFlow(setOf("org.bank"))
+        val adapter =
+            includeOnlyAdapter(platform, included, installed = setOf("org.bank", "org.mail"))
+        platform.status = STATUS_DISCONNECTED
+        awaitReal("the drop must bring the blackhole up") {
+            adapter.state.value is WarrenTunnelState.Blocking
         }
+        platform.calls.clear()
+
+        included.value = setOf("org.bank", "org.mail")
+        awaitReal("the blackhole must follow the list", detail = { "${platform.calls}" }) {
+            "close(blackhole)" in platform.calls.toList()
+        }
+
+        val calls = platform.calls.toList()
+        assertTrue(
+            calls.indexOf(ESTABLISH_BLACKHOLE) in 0 until calls.indexOf("close(blackhole)"),
+            "the new blackhole must be up before the old one closes, got: $calls",
+        )
+        assertEquals(
+            AppRouting.OnlyFor(setOf("org.bank", "org.mail", SELF_PACKAGE)),
+            platform.plans.toList().last().appRouting,
+        )
+        adapter.disconnect()
     }
 
     /**
@@ -1712,29 +1597,28 @@ class WarrenQuinnAdapterTest {
     /** The "Last" row needs the moment the count moved, not only the count. */
     @Test
     fun `ensure a landed recovery stamps the time of the last recovery`() = runTest {
-        mockkStatic(SystemClock::class)
-        every { SystemClock.elapsedRealtime() } returns 12_345L
-        try {
-            val platform = RecordingPlatform()
-            val adapter = adapterWith(platform, failoverConfig = { null }, dropRetryGraceMs = 0L)
-            adapter.connect(config(), Mnemonic(PHRASE))
-            awaitReal("the session must reach Connected") {
-                adapter.state.value is WarrenTunnelState.Connected
-            }
-            assertEquals(null, adapter.lastAutoRecoveryAtMs.value)
-
-            platform.statusOnConnect = STATUS_CONNECTED
-            platform.status = STATUS_DISCONNECTED
-            awaitReal("the retry must be counted as a recovery") {
-                adapter.autoRecoveryCount.value == 1
-            }
-            awaitReal("the recovery must be stamped") {
-                adapter.lastAutoRecoveryAtMs.value == 12_345L
-            }
-            adapter.disconnect()
-        } finally {
-            unmockkStatic(SystemClock::class)
+        val platform = RecordingPlatform()
+        val adapter = adapterWith(
+            platform,
+            failoverConfig = { null },
+            dropRetryGraceMs = 0L,
+            elapsedRealtimeMs = { 12_345L },
+        )
+        adapter.connect(config(), Mnemonic(PHRASE))
+        awaitReal("the session must reach Connected") {
+            adapter.state.value is WarrenTunnelState.Connected
         }
+        assertEquals(null, adapter.lastAutoRecoveryAtMs.value)
+
+        platform.statusOnConnect = STATUS_CONNECTED
+        platform.status = STATUS_DISCONNECTED
+        awaitReal("the retry must be counted as a recovery") {
+            adapter.autoRecoveryCount.value == 1
+        }
+        awaitReal("the recovery must be stamped") {
+            adapter.lastAutoRecoveryAtMs.value == 12_345L
+        }
+        adapter.disconnect()
     }
 
     /**
@@ -1897,29 +1781,23 @@ class WarrenQuinnAdapterTest {
     /** Without lockdown a flapping tunnel releases the device, never the locked apps. */
     @Test
     fun `ensure released traffic keeps the locked apps held`() = runTest {
-        mockkStatic(SystemClock::class)
-        every { SystemClock.elapsedRealtime() } returns 0L
-        try {
-            val platform = RecordingPlatform()
-            platform.installed = setOf("org.bank")
-            val adapter =
-                adapterWith(
-                    platform,
-                    dropRetryGraceMs = 0L,
-                    lockedApps = MutableStateFlow(setOf("org.bank")),
-                )
-            adapter.connect(config().copy(lockdownMode = false), Mnemonic(PHRASE))
+        val platform = RecordingPlatform()
+        platform.installed = setOf("org.bank")
+        val adapter =
+            adapterWith(
+                platform,
+                dropRetryGraceMs = 0L,
+                lockedApps = MutableStateFlow(setOf("org.bank")),
+            )
+        adapter.connect(config().copy(lockdownMode = false), Mnemonic(PHRASE))
 
-            platform.statusOnConnect = STATUS_DISCONNECTED
-            platform.status = STATUS_DISCONNECTED
-            awaitReal(
-                "the released device must keep the locked apps held",
-                detail = { "${adapter.state.value} ${platform.calls}" },
-            ) {
-                adapter.state.value is WarrenTunnelState.Failed && adapter.lockGuardActive.value
-            }
-        } finally {
-            unmockkStatic(SystemClock::class)
+        platform.statusOnConnect = STATUS_DISCONNECTED
+        platform.status = STATUS_DISCONNECTED
+        awaitReal(
+            "the released device must keep the locked apps held",
+            detail = { "${adapter.state.value} ${platform.calls}" },
+        ) {
+            adapter.state.value is WarrenTunnelState.Failed && adapter.lockGuardActive.value
         }
     }
 

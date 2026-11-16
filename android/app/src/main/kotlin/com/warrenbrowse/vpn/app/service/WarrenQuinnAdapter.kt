@@ -86,6 +86,11 @@ class WarrenQuinnAdapter(
     private val hasFailoverExit: (WarrenTunnelConfig) -> Boolean = { false },
     // Injectable so a test does not sit through the production grace.
     private val dropRetryGraceMs: Long = DROP_RETRY_GRACE_MS,
+    // The monotonic clock the flap guard and the recovery stamp read. A test
+    // hands its own: a static mock of SystemClock is global, so an adapter
+    // still running from an earlier test read the unmocked stub and failed
+    // whichever test was running then.
+    private val elapsedRealtimeMs: () -> Long = SystemClock::elapsedRealtime,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     private val lock = Mutex()
@@ -666,7 +671,7 @@ class WarrenQuinnAdapter(
                 val recoveries = platform.autoRecoveryCount() + autoRecovery.count
                 if (recoveries != _autoRecoveryCount.value) {
                     _autoRecoveryCount.value = recoveries
-                    _lastAutoRecoveryAtMs.value = SystemClock.elapsedRealtime()
+                    _lastAutoRecoveryAtMs.value = elapsedRealtimeMs()
                 }
             }
         }
@@ -860,7 +865,7 @@ class WarrenQuinnAdapter(
         // record one. The blackhole-up-FIRST behaviour (block, then retry) is
         // the Mullvad fail-closed model and lives in KillSwitchPolicy.
         val flapping =
-            !userInitiatedDisconnect && flapDetector.recordDrop(SystemClock.elapsedRealtime())
+            !userInitiatedDisconnect && flapDetector.recordDrop(elapsedRealtimeMs())
         when (KillSwitchPolicy.decide(userInitiatedDisconnect, flapping, failsClosed(config))) {
             KillSwitchAction.RELEASE -> {
                 // The one path that returns traffic to the bare network. It
