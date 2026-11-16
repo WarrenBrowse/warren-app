@@ -83,7 +83,7 @@ final class HomeViewController: UIViewController {
         }
     }
 
-    /// Opens the connection details over the hero, as the chevron does.
+    /// Opens the connection details under the exit row, as a tap on it does.
     func openDetails() {
         details.isOpen = true
     }

@@ -344,6 +344,23 @@ extension ConnectionViewViewModel {
         tunnelStatus.state.relays?.entry != nil
     }
 
+    /// The connection details card, empty without a tunnel.
+    var homeDetailsLines: [HomeDetailsLine] {
+        guard showsConnectionDetails else { return [] }
+        return HomeDetails.lines(isMultihop: isMultihop, inAddress: inAddress, out: outAddress ?? outExitLocation)
+    }
+
+    /// The exit endpoint, the way the In row writes the entry. Nil when the directory redacted the
+    /// exit address (published as the unspecified address), which only the exit's place can stand
+    /// in for.
+    var outAddress: String? {
+        guard let endpoint = tunnelStatus.state.relays?.exit.endpoint.socketAddress,
+            endpoint.ip.rawValue.contains(where: { $0 != 0 })
+        else { return nil }
+        let transport = tunnelStatus.observedState.connectionState.map { " \($0.transportLayer.name)" } ?? ""
+        return "\(endpoint.ip):\(endpoint.port)\(transport)"
+    }
+
     // "Out" fallback. Warren runs no am.i-style egress conncheck (the exit
     // IP is redacted for multi-hop), so the exit country/city the daemon
     // already provides identifies where traffic leaves (desktop

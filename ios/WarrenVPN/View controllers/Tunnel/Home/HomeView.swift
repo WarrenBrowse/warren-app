@@ -4,11 +4,11 @@
 //
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  The home screen (desktop `MainView`): the scenery hero keeps the mockup's
-//  proportion of the panel column (300 high on 360) plus the status bar, and
-//  the panel below it (status, controls, chips, then the room the mockup
-//  leaves and the account footer with the beta mark) takes the rest. The floating
-//  header is the root container's.
+//  The home screen (desktop `MainView`): the scenery hero over the panel
+//  (status, controls, chips) and the account footer with the beta mark, the
+//  screen shared between them by `HomeLayout`. The panel and the footer keep a
+//  centred column; the hero spans the full width. The floating header is the
+//  root container's.
 //
 
 import SwiftUI
@@ -20,7 +20,7 @@ final class HomeFooterModel: ObservableObject {
     @Published var expiry: Date?
 }
 
-/// Whether the connection details are open over the hero.
+/// Whether the connection details are open under the exit row.
 final class HomeDetailsModel: ObservableObject {
     @Published var isOpen = false
 }
@@ -40,40 +40,52 @@ struct HomeView: View {
     let scenery: SceneryViewController
     let action: (ConnectionViewViewModel.TunnelAction) -> Void
     @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var panelHeight: CGFloat = 0
+    @State private var footerHeight: CGFloat = 0
+    /// What the open details add to the panel, taken out again to know the hero they close to.
+    @State private var detailsHeight: CGFloat = 0
+
+    /// The details show only while the tunnel is up, so a stale open state never reopens them.
+    private var detailsShown: Bool {
+        details.isOpen && connectionViewModel.tunnelIsConnected
+    }
 
     var body: some View {
         let palette = ConnectSurfacePalette(colorScheme: colorScheme)
 
         GeometryReader { proxy in
+            let layout = homeLayout(in: proxy.size, detailsOpen: detailsShown)
+            let open = homeLayout(
+                in: proxy.size, detailsOpen: false, panelHeight: panelHeight - (detailsShown ? detailsHeight : 0))
             VStack(spacing: 0) {
-                HomeHeroView(controller: scenery)
-                    // The column width drives the height, so a tablet keeps the
-                    // phone's proportions. On a screen too short for the panel
-                    // the hero gives way first.
-                    .frame(
-                        maxWidth: .infinity,
-                        maxHeight: SceneryFraming.heroHeight(
-                            columnWidth: HomeMetrics.columnWidth(forWidth: proxy.size.width),
-                            safeTop: hero.safeTop
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 0) {
+                        HomeHeroView(
+                            controller: scenery,
+                            height: layout.heroHeight,
+                            openHeight: open.fullHeight,
+                            compact: layout.compactFraming,
+                            animated: !reduceMotion
                         )
-                    )
-                    .layoutPriority(1)
-                    .overlay(alignment: .bottom) {
-                        if details.isOpen && connectionViewModel.showsConnectionDetails {
-                            HomeDetailsSheet(viewModel: connectionViewModel)
-                                .transition(.opacity.combined(with: .offset(y: 12)))
-                        }
+                        .frame(height: layout.heroHeight)
+
+                        panel
+                            .frame(maxWidth: HomeMetrics.maxColumnWidth)
+                            .frame(maxWidth: .infinity)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .sizeOfView { panelHeight = $0.height }
+                            // The status block rides up over the hero's fade.
+                            .padding(.top, -HomeMetrics.Panel.overlap)
+
+                        // The room the mockup leaves between the chips and the footer.
+                        Spacer(minLength: 0)
                     }
-
-                panel
-                    .frame(maxWidth: HomeMetrics.maxColumnWidth)
-                    .frame(maxWidth: .infinity)
-                    // The status block rides up over the hero's fade.
-                    .padding(.top, -HomeMetrics.Panel.overlap)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                // The room the mockup leaves between the chips and the footer.
-                Spacer(minLength: 0)
+                    .frame(minHeight: max(0, proxy.size.height - footerHeight), alignment: .top)
+                }
+                .scrollDisabled(!layout.scrolls)
+                .scrollBounceBehavior(.basedOnSize)
+                .ignoresSafeArea(.container, edges: .top)
 
                 HomeFooterView(
                     model: footerModel,
@@ -83,17 +95,39 @@ struct HomeView: View {
                     betaHint: connectionViewModel.productBannerLine,
                     onBeta: { action(.explainNetwork) }
                 )
+                .sizeOfView { footerHeight = $0.height }
             }
         }
         .ignoresSafeArea(.container, edges: .top)
         .background(palette.color(.homePage).ignoresSafeArea())
-        .animation(.easeOut(duration: 0.2), value: details.isOpen)
+        .animation(reduceMotion ? nil : Self.resize, value: detailsShown)
         .onChange(of: connectionViewModel.tunnelStatus.state) { details.isOpen = false }
+        .accessibilityAction(.escape) { details.isOpen = false }
+    }
+
+    /// The hero's resize when the details open or close, desktop's `cubic-bezier(0.3, 0.7, 0.2, 1)`.
+    static let resize = Animation.timingCurve(
+        SceneryFraming.compactTransitionCurve.0.x, SceneryFraming.compactTransitionCurve.0.y,
+        SceneryFraming.compactTransitionCurve.1.x, SceneryFraming.compactTransitionCurve.1.y,
+        duration: TimeInterval(SceneryFraming.compactTransitionMs / 1000)
+    )
+
+    private func homeLayout(in size: CGSize, detailsOpen: Bool, panelHeight: CGFloat? = nil) -> HomeLayout {
+        HomeLayout.resolve(
+            width: size.width,
+            height: size.height,
+            safeTop: hero.safeTop,
+            panelHeight: panelHeight ?? self.panelHeight,
+            footerHeight: footerHeight,
+            detailsOpen: detailsOpen
+        )
     }
 
     private var panel: some View {
         VStack(alignment: .leading, spacing: 0) {
-            HomeStatusView(viewModel: connectionViewModel, detailsOpen: $details.isOpen)
+            HomeStatusView(viewModel: connectionViewModel, detailsOpen: $details.isOpen) {
+                detailsHeight = $0 + HomeMetrics.Details.marginTop + HomeMetrics.Panel.gap
+            }
             HomeControlsView(viewModel: connectionViewModel, action: action)
             HomeChipsView(viewModel: indicatorsViewModel)
                 .padding(.top, HomeMetrics.Chips.marginTop)
@@ -104,13 +138,20 @@ struct HomeView: View {
     }
 }
 
-/// The scenery hero, a UIKit controller laid out in the frame SwiftUI gives it.
+/// The scenery hero, a UIKit controller laid out in the frame SwiftUI gives it and framed for the
+/// height the layout is heading to.
 struct HomeHeroView: UIViewControllerRepresentable {
     let controller: SceneryViewController
+    let height: CGFloat
+    let openHeight: CGFloat
+    let compact: Bool
+    let animated: Bool
 
     func makeUIViewController(context: Context) -> SceneryViewController { controller }
 
-    func updateUIViewController(_ uiViewController: SceneryViewController, context: Context) {}
+    func updateUIViewController(_ uiViewController: SceneryViewController, context: Context) {
+        uiViewController.setHero(height: height, openHeight: openHeight, compact: compact, animated: animated)
+    }
 }
 
 // MARK: - Status
@@ -118,12 +159,15 @@ struct HomeHeroView: UIViewControllerRepresentable {
 struct HomeStatusView: View {
     @ObservedObject var viewModel: ConnectionViewViewModel
     @Binding var detailsOpen: Bool
+    /// The height of the open details card, as it lays out.
+    var onDetailsHeight: (CGFloat) -> Void = { _ in }
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
         let palette = ConnectSurfacePalette(colorScheme: colorScheme)
         let status = viewModel.homeStatus
         let phase = viewModel.connectionPhase
+        let connected = viewModel.tunnelIsConnected
 
         VStack(alignment: .leading, spacing: HomeMetrics.Panel.gap) {
             HomePill(phase: phase, label: status.pill, palette: palette)
@@ -139,56 +183,134 @@ struct HomeStatusView: View {
                 .accessibilityLabel(viewModel.localizedAccessibilityLabelForSecureLabel)
                 .accessibilityAddTraits(.isHeader)
 
-            subtitleRow(status: status, palette: palette)
+            if connected {
+                HomeExitRow(status: status, viewModel: viewModel, isOpen: detailsOpen) {
+                    detailsOpen.toggle()
+                }
+                if detailsOpen {
+                    ConnectionDetailsView(viewModel: viewModel)
+                        .sizeOfView { onDetailsHeight($0.height) }
+                        .padding(.top, HomeMetrics.Details.marginTop)
+                        .transition(.opacity)
+                }
+            } else {
+                subtitle(status.subtitle, palette: palette)
+            }
         }
         .padding(.horizontal, HomeMetrics.Panel.paddingHorizontal)
     }
 
-    /// Fixed in height whether or not the details button is there, so the hero
-    /// above keeps its frame across every state.
-    private func subtitleRow(status: HomeStatus, palette: ConnectSurfacePalette) -> some View {
-        HStack(spacing: 8) {
-            if !status.subtitle.isEmpty {
-                if status.subtitleIsHostname {
+    /// The plain line under the title: one line high even when empty, so the controls below keep
+    /// their place across every state.
+    private func subtitle(_ text: String, palette: ConnectSurfacePalette) -> some View {
+        let subtitle = HomeMetrics.Subtitle.self
+        return Text(verbatim: text)
+            .font(.instrumentSans(size: subtitle.textSize, relativeTo: .footnote))
+            .foregroundStyle(palette.color(.homeTextSecondary))
+            .lineLimit(1)
+            .frame(maxWidth: .infinity, minHeight: subtitle.lineHeight, alignment: .leading)
+            .padding(.vertical, subtitle.paddingVertical)
+            .padding(.top, subtitle.marginTop)
+            .accessibilityIdentifier("connectionStatusSubtitle")
+            .accessibilityHidden(text.isEmpty)
+    }
+}
+
+/// The protected exit line, one button that opens the details under it (desktop `StyledExitRow`):
+/// the exit host in the mono face and a thin chevron at the far end that turns over when open.
+/// Its pressed well reaches past the text on both sides, and its touch target is taller than the
+/// row it draws.
+struct HomeExitRow: View {
+    let status: HomeStatus
+    @ObservedObject var viewModel: ConnectionViewViewModel
+    let isOpen: Bool
+    let toggle: () -> Void
+    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    var body: some View {
+        let palette = ConnectSurfacePalette(colorScheme: colorScheme)
+        let row = HomeMetrics.ExitRow.self
+        Button(action: toggle) {
+            HStack(spacing: row.gap) {
+                if !status.subtitle.isEmpty {
                     Text(verbatim: status.subtitle)
-                        .font(.jetBrainsMono(size: HomeMetrics.Subtitle.monoSize, relativeTo: .footnote))
-                        .foregroundStyle(palette.color(.homeTextMono))
+                        .font(
+                            status.subtitleIsHostname
+                                ? .jetBrainsMono(size: row.textSize, relativeTo: .footnote)
+                                : .instrumentSans(size: HomeMetrics.Subtitle.textSize, relativeTo: .footnote)
+                        )
+                        .foregroundStyle(palette.color(status.subtitleIsHostname ? .homeTextMono : .homeTextSecondary))
                         .lineLimit(1)
                         .truncationMode(.middle)
                         // A host name reads left to right in every language.
-                        .environment(\.layoutDirection, .leftToRight)
+                        .environment(\.layoutDirection, status.subtitleIsHostname ? .leftToRight : layoutDirection)
                         .accessibilityIdentifier(AccessibilityIdentifier.connectionPanelServerLabel.asString)
-                        .accessibilityLabel(viewModel.accessibilityLabelForServer ?? status.subtitle)
-                } else {
-                    Text(verbatim: status.subtitle)
-                        .font(.instrumentSans(size: HomeMetrics.Subtitle.textSize, relativeTo: .footnote))
-                        .foregroundStyle(palette.color(.homeTextSecondary))
-                        .lineLimit(1)
-                        .accessibilityIdentifier("connectionStatusSubtitle")
+                        .accessibilityLabel(Text(verbatim: viewModel.accessibilityLabelForServer ?? status.subtitle))
                 }
-            }
-            Spacer(minLength: 0)
-            if viewModel.showsConnectionDetails {
-                Image(systemName: detailsOpen ? "chevron.down" : "chevron.up")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(palette.color(.homeTextSecondary))
-                    .frame(width: 24, height: 18)
+                Spacer(minLength: 0)
+                HomeExpandMoreShape()
+                    .stroke(
+                        palette.color(.homeTextMono),
+                        style: StrokeStyle(lineWidth: 1.5 * row.chevron / 24, lineCap: .round, lineJoin: .round)
+                    )
+                    .frame(width: row.chevron, height: row.chevron)
+                    .rotationEffect(.degrees(isOpen ? 180 : 0))
+                    .accessibilityElement()
                     .accessibilityAddTraits(.isButton)
                     .accessibilityLabel(
-                        detailsOpen
+                        isOpen
                             ? LocalizedStringKey("Collapse connection details")
                             : LocalizedStringKey("Expand connection details")
                     )
+                    .accessibilityAction { toggle() }
+                    .animation(
+                        reduceMotion ? nil : .timingCurve(0.25, 0.1, 0.25, 1, duration: row.chevronMs / 1000),
+                        value: isOpen
+                    )
             }
         }
-        .frame(minHeight: 18)
-        .contentShape(Rectangle())
-        .onTapGesture {
-            guard viewModel.showsConnectionDetails else { return }
-            detailsOpen.toggle()
-        }
+        .buttonStyle(HomeExitRowButtonStyle())
+        .padding(.top, row.marginTop)
+        .padding(.horizontal, -row.outset)
+        // The host stays a text of its own and the chevron the control VoiceOver reaches, as before
+        // the whole row became the button.
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier(AccessibilityIdentifier.relayStatusCollapseButton.asString)
+    }
+
+    @Environment(\.layoutDirection) private var layoutDirection
+}
+
+/// The exit row's well: the details surface under a press, rounded, with the touch target grown
+/// to 44 points around the 28 point row without moving anything.
+struct HomeExitRowButtonStyle: ButtonStyle {
+    @Environment(\.colorScheme) private var colorScheme
+
+    func makeBody(configuration: Configuration) -> some View {
+        let palette = ConnectSurfacePalette(colorScheme: colorScheme)
+        let row = HomeMetrics.ExitRow.self
+        let shape = RoundedRectangle(cornerRadius: row.radius, style: .continuous)
+        let grow = max(0, (44 - (HomeMetrics.ExitRow.chevron + 2 * row.paddingVertical)) / 2)
+        configuration.label
+            .padding(.vertical, row.paddingVertical)
+            .padding(.horizontal, row.outset)
+            .background(shape.fill(configuration.isPressed ? palette.color(.homeDetails) : .clear))
+            .padding(.vertical, grow)
+            .contentShape(Rectangle())
+            .padding(.vertical, -grow)
+    }
+}
+
+/// The mockup's thin expand-more chevron, `M7 10l5 5 5-5` on a 24 grid.
+struct HomeExpandMoreShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        let unit = rect.width / 24
+        var path = Path()
+        path.move(to: CGPoint(x: rect.minX + 7 * unit, y: rect.minY + 10 * unit))
+        path.addLine(to: CGPoint(x: rect.minX + 12 * unit, y: rect.minY + 15 * unit))
+        path.addLine(to: CGPoint(x: rect.minX + 17 * unit, y: rect.minY + 10 * unit))
+        return path
     }
 }
 
@@ -233,44 +355,5 @@ extension ConnectionPhase {
         case .protected: (.homePillProtected, .homePillProtectedText)
         case .blocked: (.homePillBlocked, .homePillBlockedText)
         }
-    }
-}
-
-// MARK: - Details
-
-/// The connection details open over the hero rather than pushing the controls:
-/// the art is what can give way.
-struct HomeDetailsSheet: View {
-    @ObservedObject var viewModel: ConnectionViewViewModel
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        let palette = ConnectSurfacePalette(colorScheme: colorScheme)
-        ScrollView {
-            VStack(alignment: .leading, spacing: 8) {
-                ConnectionDetailsView(viewModel: viewModel)
-                // Always-on HTTP/3 mimicry, shown while the tunnel is secured so
-                // users know their traffic looks like regular HTTPS.
-                if viewModel.tunnelStatus.state.isSecured {
-                    WarrenObfuscationIndicatorView(palette: palette)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, HomeMetrics.Panel.paddingHorizontal)
-            .padding(.top, 16)
-            // The status block rides up over the sheet's foot, as it does over
-            // the hero.
-            .padding(.bottom, 16 + HomeMetrics.Panel.overlap)
-        }
-        .scrollBounceBehavior(.basedOnSize)
-        // As tall as the details, up to 300 points, then it scrolls.
-        .frame(maxHeight: 300)
-        .fixedSize(horizontal: false, vertical: true)
-        .frame(maxWidth: HomeMetrics.maxColumnWidth)
-        .background(
-            UnevenRoundedRectangle(topLeadingRadius: 16, topTrailingRadius: 16)
-                .fill(palette.color(.homePage))
-                .shadow(color: .black.opacity(0.45), radius: 12, x: 0, y: -6)
-        )
     }
 }

@@ -5,19 +5,17 @@
 //  Created by Warren on 2026-05-21.
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  Obfuscation indicator banner.
-//  Surfaces the always-on HTTP/3 mimicry in connection-details so
-//  users understand that Warren traffic is indistinguishable from
-//  regular HTTPS by default (no toggle, always-on baseline). Also
-//  hosted as the read-only obfuscation settings screen, since the
+//  Obfuscation indicator banner of the read-only obfuscation settings
+//  screen: it explains that Warren traffic is indistinguishable from
+//  regular HTTPS by default (no toggle, always-on baseline), since the
 //  legacy WireGuard obfuscation methods do not apply to Warren tunnels.
+//  The home's connection details name it on a line of their own.
 //
 
 import SwiftUI
 
 /// Always-on obfuscation banner. HTTP/3 mimicry is the Warren
 /// baseline (no Mullvad-style bridge/Shadowsocks rotation needed).
-/// Shown in the connection-details panel below the relay info.
 public struct WarrenObfuscationIndicatorView: View {
     /// The connect card hands its themed palette in; the settings screens,
     /// which have no light design, keep the dark one.

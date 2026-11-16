@@ -24,6 +24,8 @@ import XCTest
 final class HomeScreenshotTests: XCTestCase {
     private var directory: URL!
     private var landscape = false
+    /// A window size to lay the home out at instead of the screen's.
+    private var size: CGSize?
 
     override func setUpWithError() throws {
         guard let path = ProcessInfo.processInfo.environment["WARREN_QA_SHOT_DIR"] else {
@@ -93,28 +95,94 @@ final class HomeScreenshotTests: XCTestCase {
         guard UIDevice.current.userInterfaceIdiom == .pad else {
             throw XCTSkip("landscape is a tablet layout")
         }
-        // The simulator stays in portrait under a unit test, so the window is
-        // laid out at the landscape size of the same screen.
+        // Turn the scene for real, so the safe area is the landscape one; where the request is
+        // refused the window is laid out at the landscape size of the portrait screen instead.
         landscape = true
+        if let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first {
+            scene.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight))
+            try await Task.sleep(for: .milliseconds(1500))
+        }
+        defer {
+            UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first?
+                .requestGeometryUpdate(.iOS(interfaceOrientations: .portrait))
+        }
         for theme in [WarrenTheme.dark, .light] {
             for shot in Self.shots where ["01", "03", "04", "07", "10"].contains(String(shot.name.prefix(2))) {
                 let window = try await window(with: makeHost(shot: shot, theme: theme, badge: nil))
                 try await save(window, "ipad-landscape-\(theme)-\(shot.name).png")
             }
+            let details = makeHost(
+                shot: Shot(name: "details", state: Self.connected("Finland", "fi", "Helsinki"), chips: true),
+                theme: theme, badge: nil)
+            let detailsWindow = try await window(with: details)
+            details.home.openDetails()
+            try await save(detailsWindow, "ipad-landscape-\(theme)-13-details.png")
         }
     }
 
-    /// The connection details open over the hero.
-    func testCaptureTheDetailsSheet() async throws {
+    /// The connection details open in place under the exit row, over a compact hero.
+    func testCaptureTheDetails() async throws {
         let device = UIDevice.current.userInterfaceIdiom == .pad ? "ipad" : "iphone"
-        let host = makeHost(
-            shot: Shot(name: "details", state: Self.connected("Finland", "fi", "Helsinki")),
-            theme: .dark,
-            badge: nil
-        )
-        let window = try await window(with: host)
-        host.home.openDetails()
-        try await save(window, "\(device)-dark-13-details.png")
+        for theme in [WarrenTheme.dark, .light] {
+            let host = makeHost(
+                shot: Shot(name: "details", state: Self.connected("Finland", "fi", "Helsinki"), chips: true),
+                theme: theme,
+                badge: nil
+            )
+            let window = try await window(with: host)
+            host.home.openDetails()
+            try await save(window, "\(device)-\(theme)-13-details.png")
+        }
+    }
+
+    /// The mockup's states at the sizes a phone or a tablet can give the home: a small phone, a
+    /// large one, a tall 20:9 one, a phone on its side and a split-screen column. The window is
+    /// laid out at that size on whatever simulator runs it.
+    func testCaptureTheMockupStatesAtEverySize() async throws {
+        let sizes: [(String, CGSize)] = [
+            ("small-360x640", CGSize(width: 360, height: 640)),
+            ("phone-412x915", CGSize(width: 412, height: 915)),
+            ("tall-360x800", CGSize(width: 360, height: 800)),
+            ("short-844x390", CGSize(width: 844, height: 390)),
+            ("split-320x700", CGSize(width: 320, height: 700)),
+        ]
+        let cap = WarrenNetworkInfo(
+            environment: "beta", degraded: true, defaultRateBps: 20_000_000, paymentsEnabled: false)
+        let update = NewAppVersionInAppNotificationProvider.descriptor(
+            version: "1.4.0", includeAllNetworksIsEnabled: false, install: {})
+        for (label, windowSize) in sizes {
+            size = windowSize
+            for theme in [WarrenTheme.dark, .light] {
+                let finland = Self.connected("Finland", "fi", "Helsinki")
+                let exposed = makeHost(
+                    shot: Shot(
+                        name: "exposed", state: .disconnected,
+                        exitLocations: .only(UserSelectedRelays(locations: [.country("fi")]))),
+                    theme: theme, badge: nil)
+                try await save(try await window(with: exposed), "\(label)-\(theme)-0-exposed.png")
+
+                let protected = makeHost(
+                    shot: Shot(name: "protected", state: finland, chips: true), theme: theme, badge: nil)
+                protected.setForumSlot(.activity)
+                protected.setForumUnread(3)
+                try await save(try await window(with: protected), "\(label)-\(theme)-1-protected.png")
+
+                let details = makeHost(
+                    shot: Shot(name: "details", state: finland, chips: true), theme: theme, badge: nil)
+                let detailsWindow = try await window(with: details)
+                details.home.openDetails()
+                try await save(detailsWindow, "\(label)-\(theme)-2-details.png")
+
+                let beta = makeHost(
+                    shot: Shot(name: "beta", state: .disconnected), theme: theme, badge: "BETA", networkInfo: cap)
+                let notifications = NotificationController()
+                beta.notificationController = notifications
+                let betaWindow = try await window(with: beta)
+                notifications.setNotifications([update], animated: false)
+                try await save(betaWindow, "\(label)-\(theme)-3-update-beta.png")
+            }
+        }
+        size = nil
     }
 
     /// Mockup 8d on a beta build: the update banner over the exposed home, an announcement over
@@ -215,10 +283,15 @@ final class HomeScreenshotTests: XCTestCase {
             UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first)
         let window = UIWindow(windowScene: scene)
         let bounds = scene.screen.bounds
-        window.frame =
-            landscape
-            ? CGRect(x: 0, y: 0, width: max(bounds.width, bounds.height), height: min(bounds.width, bounds.height))
-            : bounds
+        if let size {
+            window.frame = CGRect(origin: .zero, size: size)
+        } else {
+            window.frame =
+                landscape
+                ? CGRect(
+                    x: 0, y: 0, width: max(bounds.width, bounds.height), height: min(bounds.width, bounds.height))
+                : bounds
+        }
         window.rootViewController = root
         window.makeKeyAndVisible()
         try await Task.sleep(for: .milliseconds(900))

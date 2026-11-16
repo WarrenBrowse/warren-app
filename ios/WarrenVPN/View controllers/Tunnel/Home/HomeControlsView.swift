@@ -208,18 +208,25 @@ struct HomeActionButtonStyle: ButtonStyle {
     }
 }
 
-/// The round flag of the location's country, as the mockup's location row shows it. The flags
-/// are rasterised from desktop's SVGs by `ios/scripts/generate-round-flags.sh`.
+/// The round flag of the location's country, as the mockup's location row shows it, under a
+/// hairline so a flag with a white field keeps its edge on the light theme's paper. The flags are
+/// rasterised from desktop's SVGs by `ios/scripts/generate-round-flags.sh`.
 struct HomeLocationFlagView: View {
     let image: UIImage
+    @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
-        let size = HomeMetrics.Controls.thumb
+        let controls = HomeMetrics.Controls.self
         Image(uiImage: image)
             .resizable()
             .interpolation(.high)
-            .frame(width: size, height: size)
+            .frame(width: controls.thumb, height: controls.thumb)
             .clipShape(Circle())
+            .overlay(
+                Circle().strokeBorder(
+                    ConnectSurfacePalette(colorScheme: colorScheme).color(.homeFlagLine),
+                    lineWidth: controls.thumbLine)
+            )
             .accessibilityHidden(true)
     }
 
