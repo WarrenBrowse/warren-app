@@ -13,7 +13,7 @@
 use anyhow::Result;
 use clap::Args;
 use mullvad_management_interface::MullvadProxyClient;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 
 /// The privileged helper that owns the firewall sweep.
@@ -77,7 +77,13 @@ pub fn elevation_hint(setup_path: &str) -> String {
 /// two installs must not have one product's CLI drive another's helper, and
 /// on a blocked machine `PATH` may be the least trustworthy thing available.
 fn setup_binary() -> Result<PathBuf> {
-    let exe = std::env::current_exe()?;
+    setup_binary_next_to(&std::env::current_exe()?)
+}
+
+/// Resolves symlinks first: the packages expose the CLI on `PATH` as a link
+/// into the install directory, and macOS reports that link as the executable.
+fn setup_binary_next_to(exe: &Path) -> Result<PathBuf> {
+    let exe = exe.canonicalize()?;
     let dir = exe
         .parent()
         .ok_or_else(|| anyhow::anyhow!("the CLI has no parent directory"))?;
@@ -132,7 +138,32 @@ impl Unblock {
 
 #[cfg(test)]
 mod tests {
-    use super::{Plan, elevation_hint, plan};
+    use super::{Plan, SETUP_BIN, elevation_hint, plan, setup_binary_next_to};
+
+    /// The macOS and Linux packages put the CLI on `PATH` through a symlink
+    /// (`/usr/local/bin/warren-beta` into the app bundle), and macOS reports
+    /// the symlink as the running executable. The helper must still be found
+    /// in the install directory, never beside the link, or `--deep` fails on
+    /// exactly the blocked machine it exists for.
+    #[cfg(unix)]
+    #[test]
+    fn the_helper_is_found_through_a_symlinked_cli() {
+        let root = std::env::temp_dir().join(format!("warren-unblock-{}", std::process::id()));
+        let install = root.join("install");
+        let on_path = root.join("bin");
+        std::fs::create_dir_all(&install).unwrap();
+        std::fs::create_dir_all(&on_path).unwrap();
+        std::fs::write(install.join("warren"), b"").unwrap();
+        std::fs::write(install.join(SETUP_BIN), b"").unwrap();
+        let link = on_path.join("warren-beta");
+        std::os::unix::fs::symlink(install.join("warren"), &link).unwrap();
+
+        let expected = install.canonicalize().unwrap().join(SETUP_BIN);
+        let found = setup_binary_next_to(&link);
+        std::fs::remove_dir_all(&root).unwrap();
+
+        assert_eq!(found.unwrap(), expected);
+    }
 
     /// The daemon path is the one that needs no privileges, so it must win
     /// whenever it is available. Sending an offline user to an elevated prompt
