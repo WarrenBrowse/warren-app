@@ -20,7 +20,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -148,8 +147,9 @@ private fun LocationRowContent(name: String, flagCode: String?) {
 }
 
 /**
- * The round flag of the location's country (desktop `LocationFlag`), with no ring: the mockup sets
- * it straight on the field. A pick that names no country shows only its name.
+ * The round flag of the location's country (desktop `LocationFlag`), set straight on the field
+ * with the mockup's inset hairline over it, so a flag with a white edge keeps its round. A pick
+ * that names no country shows only its name.
  */
 @Composable
 private fun LocationFlag(countryCode: String?) {
@@ -157,7 +157,8 @@ private fun LocationFlag(countryCode: String?) {
         CountryFlag(
             countryCode = countryCode,
             size = DesignTokens.Home.Controls.Thumb,
-            ringColor = Color.Transparent,
+            ringColor = LocalWarrenSurfaces.current.homeFlagLine,
+            ringWidth = DesignTokens.Home.Controls.ThumbLine,
         )
     }
 }
