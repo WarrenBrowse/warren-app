@@ -99,7 +99,9 @@ class ConnectScreenTest {
             initScreen()
 
             // Assert
+            onNodeWithText("Unprotected").assertExists()
             onNodeWithText("You are visible").assertExists()
+            onNodeWithText("Your connection is not encrypted").assertExists()
             onNodeWithText("Connect").assertExists()
         }
     }
@@ -119,10 +121,10 @@ class ConnectScreenTest {
                     )
             )
 
-            // Assert
-            onNodeWithText("You are visible").assertExists()
+            // Assert: with no target yet the title is the progress itself.
+            onNodeWithText("Connecting").assertExists()
             onNodeWithText("Connection in progress").assertExists()
-            onNodeWithText("Switch location").assertExists()
+            onNodeWithTag(SELECT_LOCATION_BUTTON_TEST_TAG).assertExists()
             onNodeWithText("Cancel").assertExists()
             onNodeWithText("BLOCKING INTERNET").assertExists()
         }
@@ -145,8 +147,8 @@ class ConnectScreenTest {
             )
 
             // Assert
-            onNodeWithText("Connection established").assertExists()
-            onNodeWithText("Switch location").assertExists()
+            onNodeWithText("Protected").assertExists()
+            onNodeWithText("You are protected").assertExists()
             onNodeWithText("Disconnect").assertExists()
         }
     }
@@ -168,7 +170,7 @@ class ConnectScreenTest {
 
             // Assert
             onNodeWithText("Disconnecting...").assertExists()
-            onNodeWithText("Switch location").assertExists()
+            onNodeWithTag(SELECT_LOCATION_BUTTON_TEST_TAG).assertExists()
             // Teardown in flight: desktop shows a disabled green Connect, not a
             // red Disconnect.
             onNodeWithText("Connect").assertExists()
@@ -218,8 +220,8 @@ class ConnectScreenTest {
             )
 
             // Assert
-            onNodeWithText("BLOCKED CONNECTION").assertExists()
-            onNodeWithText("Switch location").assertExists()
+            onNodeWithText("Blocked").assertExists()
+            onNodeWithText("Connection blocked").assertExists()
             onNodeWithText("Disconnect").assertExists()
             onNodeWithText("BLOCKING INTERNET").assertExists()
         }
@@ -246,11 +248,11 @@ class ConnectScreenTest {
 
             // Assert
             onNodeWithText("You are visible").assertExists()
-            onNodeWithText("Switch location").assertExists()
+            onNodeWithTag(SELECT_LOCATION_BUTTON_TEST_TAG).assertExists()
             // A non-blocking error offers a neutral Disconnect (turn the switch
             // off), matching desktop, not a "Dismiss".
             onNodeWithText("Disconnect").assertExists()
-            onNodeWithText(text = "Critical error (your attention is required)", ignoreCase = true)
+            onNodeWithText(text = "Network traffic might be leaking", ignoreCase = true)
                 .assertExists()
         }
     }
@@ -271,9 +273,9 @@ class ConnectScreenTest {
             )
 
             // Assert
+            // Every teardown reads as "Disconnecting..." (desktop home-status-text).
             onNodeWithText("You are visible").assertExists()
-            onNodeWithText("Connection in progress").assertExists()
-            onNodeWithText("Switch location").assertExists()
+            onNodeWithText("Disconnecting...").assertExists()
             // Reconnect teardown: disabled green Connect (desktop parity).
             onNodeWithText("Connect").assertExists()
             onNodeWithText("BLOCKING INTERNET").assertExists()
@@ -297,9 +299,9 @@ class ConnectScreenTest {
 
             // Assert
             // A kill-switch-held teardown reads as a transitional disconnect
-            // (desktop parity), not a distinct BLOCKED CONNECTION status.
+            // (desktop parity), not a distinct blocked status.
             onNodeWithText("Disconnecting...").assertExists()
-            onNodeWithText("Switch location").assertExists()
+            onNodeWithTag(SELECT_LOCATION_BUTTON_TEST_TAG).assertExists()
             onNodeWithText("Connect").assertExists()
             onNodeWithText("BLOCKING INTERNET").assertExists()
         }

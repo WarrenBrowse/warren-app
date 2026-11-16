@@ -17,10 +17,11 @@ import com.warrenbrowse.vpn.test.common.extension.findObjectWithTimeout
 class ConnectPage internal constructor() : Page() {
     private val disconnectSelector = By.text("Disconnect")
     private val cancelSelector = By.text("Cancel")
-    private val connectedSelector = By.text("CONNECTED")
-    private val connectingSelector = By.text("CONNECTING...")
-    private val disconnectedSelector = By.text("DISCONNECTED")
-    private val blockedSelector = By.text("BLOCKED CONNECTION")
+    // The home status pill names the phase; a blocked tunnel is named by the title under it.
+    private val connectedSelector = By.text("Protected")
+    private val connectingSelector = By.text("Connecting")
+    private val disconnectedSelector = By.text("Unprotected")
+    private val blockedSelector = By.text("Connection blocked")
 
     override fun assertIsDisplayed() {
         uiDevice.findObjectWithTimeout(By.res(CONNECT_CARD_HEADER_TEST_TAG), LONG_TIMEOUT)
@@ -74,7 +75,7 @@ class ConnectPage internal constructor() : Page() {
         uiDevice.findObjectWithTimeout(By.res(CONNECT_CARD_HEADER_TEST_TAG)).click()
     }
 
-    /** Extracts the ip address, port and protocol from the connection card. */
+    /** Extracts the ip address, port and protocol from the connection details. */
     private fun extractInIpInformation(): Triple<String, String, String> {
         val inString =
             uiDevice
@@ -91,8 +92,8 @@ class ConnectPage internal constructor() : Page() {
     }
 
     /**
-     * Extracts the in IPv4 address from the connection card. It is a prerequisite that the
-     * connection card is in collapsed state.
+     * Extracts the in IPv4 address from the connection details. It is a prerequisite that the
+     * connection details are closed.
      */
     fun extractInIpAddress(): String {
         expandConnectionCard()
@@ -101,8 +102,8 @@ class ConnectPage internal constructor() : Page() {
     }
 
     /**
-     * Extracts the in IPv4 port from the connection card. It is a prerequisite that the connection
-     * card is in collapsed state.
+     * Extracts the in IPv4 port from the connection details. It is a prerequisite that the
+     * connection details are closed.
      */
     fun extractInIpPort(): String {
         expandConnectionCard()
@@ -111,8 +112,8 @@ class ConnectPage internal constructor() : Page() {
     }
 
     /**
-     * Extracts the out IPv4 address from the connection card. It is a prerequisite that the
-     * connection card is in collapsed state.
+     * Extracts the out IPv4 address from the connection details. It is a prerequisite that the
+     * connection details are closed.
      */
     fun extractOutIpv4Address(): String {
         uiDevice.findObjectWithTimeout(By.res(CONNECT_CARD_HEADER_TEST_TAG)).click()
