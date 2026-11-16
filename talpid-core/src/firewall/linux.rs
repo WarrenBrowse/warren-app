@@ -14,6 +14,7 @@ use std::{
     sync::LazyLock,
 };
 use talpid_cgroup::v2::CGroup2;
+use talpid_dns::ResolvedDnsConfig;
 use talpid_tunnel::TunnelMetadata;
 use talpid_types::net::{
     ALLOWED_LAN_MULTICAST_NETS, AllowedEndpoint, AllowedTunnelTraffic, Endpoint, TransportProtocol,
@@ -987,12 +988,13 @@ impl<'a> PolicyBatch<'a> {
                 // before the DNS block (see `add_allow_tailnet_rules`).
                 self.add_allow_tailnet_rules(&tailnet_interfaces(policy))?;
 
-                // Important to block DNS *before* we allow the tunnel and allow LAN. So DNS
-                // can't leak to the wrong IPs in the tunnel or on the LAN.
-                // The advanced `allow_external_dns` toggle deliberately skips this block so that
-                // queries to arbitrary resolvers reach the exit through the tunnel.
-                if !dns_config.allow_external_dns() {
-                    self.add_drop_dns_rule();
+                for gate in connected_dns_gate(dns_config) {
+                    match gate {
+                        DnsGate::AcceptAnyThroughTunnel => {
+                            self.add_allow_any_tunnel_dns_rules(&tunnel.interface)?
+                        }
+                        DnsGate::DropElsewhere => self.add_drop_dns_rule(),
+                    }
                 }
                 self.add_allow_tunnel_rules(&tunnel.interface)?;
                 if *allow_lan {
@@ -1200,6 +1202,20 @@ impl<'a> PolicyBatch<'a> {
             self.batch.add(&allow_rule, nftnl::MsgType::Add);
         }
 
+        Ok(())
+    }
+
+    /// Accepts outgoing DNS (port 53) to any host, TCP and UDP, when it leaves by the tunnel.
+    fn add_allow_any_tunnel_dns_rules(&mut self, tunnel_interface: &str) -> Result<()> {
+        for chain in &[&self.out_chain, &self.forward_chain] {
+            for protocol in [TransportProtocol::Udp, TransportProtocol::Tcp] {
+                let mut rule = Rule::new(chain);
+                check_iface(&mut rule, Direction::Out, tunnel_interface)?;
+                check_port(&mut rule, protocol, End::Dst, 53);
+                add_verdict(&mut rule, &Verdict::Accept);
+                self.batch.add(&rule, nftnl::MsgType::Add);
+            }
+        }
         Ok(())
     }
 
@@ -1598,6 +1614,28 @@ enum IncludeRule<'a> {
     BlockTunnelAddressProbes(&'a TunnelMetadata),
     /// Lets everything that is not included go, both ways.
     AcceptNotIncluded,
+}
+
+/// How the connected policy treats DNS once the allowed resolvers are let
+/// through, by rule, in the order it is added. Every gate comes before the
+/// tunnel and LAN rules, which accept any port.
+#[derive(Debug, PartialEq)]
+enum DnsGate {
+    /// Port 53 to any resolver, leaving by the tunnel interface only.
+    AcceptAnyThroughTunnel,
+    /// Port 53 on every other interface.
+    DropElsewhere,
+}
+
+/// `allow_external_dns` lets queries reach any resolver, but through the exit:
+/// without the trailing drop, the LAN rules would accept port 53 to a LAN
+/// resolver beside the tunnel.
+fn connected_dns_gate(dns_config: &ResolvedDnsConfig) -> Vec<DnsGate> {
+    if dns_config.allow_external_dns() {
+        vec![DnsGate::AcceptAnyThroughTunnel, DnsGate::DropElsewhere]
+    } else {
+        vec![DnsGate::DropElsewhere]
+    }
 }
 
 fn policy_tunnel(policy: &FirewallPolicy) -> Option<&TunnelMetadata> {
@@ -2177,5 +2215,123 @@ mod lock_kernel_tests {
             !refused_by_the_lock(),
             "the lock held a program it does not name"
         );
+    }
+}
+
+#[cfg(test)]
+mod dns_gate_tests {
+    use super::*;
+    use std::net::Ipv4Addr;
+    use talpid_dns::DnsConfig;
+
+    const GATEWAY: IpAddr = IpAddr::V4(Ipv4Addr::new(10, 66, 0, 1));
+
+    #[test]
+    fn only_the_allowed_resolvers_get_through_by_default() {
+        let config = DnsConfig::default().resolve(&[GATEWAY]);
+
+        assert_eq!(connected_dns_gate(&config), [DnsGate::DropElsewhere]);
+    }
+
+    #[test]
+    fn any_resolver_is_reached_through_the_tunnel_and_never_beside_it() {
+        let config = DnsConfig::default()
+            .allow_external_dns(true)
+            .resolve(&[GATEWAY]);
+
+        assert_eq!(
+            connected_dns_gate(&config),
+            [DnsGate::AcceptAnyThroughTunnel, DnsGate::DropElsewhere]
+        );
+    }
+}
+
+/// The DNS gate against the kernel's nftables: run as root. A dummy interface
+/// stands in for the tunnel, and the probes are TCP so that the policy's reject
+/// answers at once while an accepted connection times out.
+#[cfg(test)]
+mod dns_gate_kernel_tests {
+    use super::*;
+    use std::net::{Ipv4Addr, SocketAddr, TcpStream};
+    use std::process::{Command, Stdio};
+    use std::time::Duration;
+    use talpid_dns::DnsConfig;
+
+    const TUN: &str = "warren-dnstest";
+    /// Shared on the LAN, so only the DNS gate can refuse it.
+    const LAN_RESOLVER: &str = "192.0.2.1:53";
+    /// Routed into the stand-in tunnel, where nothing answers.
+    const TUNNEL_RESOLVER: &str = "198.51.100.1:53";
+
+    struct StandInTunnel;
+
+    impl StandInTunnel {
+        fn up() -> Self {
+            let ip = |args: &[&str]| {
+                let status = Command::new("ip").args(args).status().unwrap();
+                assert!(status.success(), "ip {args:?}");
+            };
+            let _ = Command::new("ip")
+                .args(["link", "del", TUN])
+                .stderr(Stdio::null())
+                .status();
+            ip(&["link", "add", TUN, "type", "dummy"]);
+            ip(&["addr", "add", "10.66.0.2/32", "dev", TUN]);
+            ip(&["link", "set", TUN, "up"]);
+            ip(&["route", "add", "198.51.100.0/24", "dev", TUN]);
+            StandInTunnel
+        }
+    }
+
+    impl Drop for StandInTunnel {
+        fn drop(&mut self) {
+            let _ = Command::new("ip").args(["link", "del", TUN]).status();
+        }
+    }
+
+    fn connected_with_external_dns() -> FirewallPolicy {
+        FirewallPolicy::Connected {
+            peer_endpoints: vec![],
+            tunnel: TunnelMetadata {
+                interface: TUN.to_owned(),
+                ips: vec![IpAddr::V4(Ipv4Addr::new(10, 66, 0, 2))],
+                ipv4_gateway: Ipv4Addr::new(10, 66, 0, 1),
+                ipv6_gateway: None,
+                daita_active: false,
+                effective_mtu: None,
+                legs_bonded: 0,
+                legs_not_delivering: 0,
+            },
+            allow_lan: true,
+            lan_networks: vec!["192.0.2.0/24".parse().unwrap()],
+            dns_config: DnsConfig::default()
+                .allow_external_dns(true)
+                .resolve(&[IpAddr::V4(Ipv4Addr::new(10, 66, 0, 1))]),
+        }
+    }
+
+    fn refused(target: &str) -> bool {
+        let target: SocketAddr = target.parse().unwrap();
+        match TcpStream::connect_timeout(&target, Duration::from_millis(1500)) {
+            Err(error) => error.kind() == io::ErrorKind::ConnectionRefused,
+            Ok(_) => false,
+        }
+    }
+
+    #[test]
+    #[ignore = "needs root"]
+    fn external_dns_reaches_resolvers_through_the_tunnel_only() {
+        let _tunnel = StandInTunnel::up();
+        let mut firewall = Firewall::new(0, None, None).unwrap();
+        firewall
+            .apply_policy(connected_with_external_dns())
+            .unwrap();
+
+        let lan_refused = refused(LAN_RESOLVER);
+        let tunnel_refused = refused(TUNNEL_RESOLVER);
+
+        firewall.reset_policy().unwrap();
+        assert!(lan_refused, "DNS to a LAN resolver left beside the tunnel");
+        assert!(!tunnel_refused, "DNS through the tunnel was refused");
     }
 }
