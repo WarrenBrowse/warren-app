@@ -9,7 +9,7 @@ export type FeatureIndicatorTextProps<T extends React.ElementType = 'span'> =
 
 export const StyledFeatureIndicatorText = styled(LabelTinySemiBold)<{ $disabled?: boolean }>`
   --color: ${({ $disabled }) => ($disabled ? surfaces.textMuted : surfaces.text)};
-  font-family: ${FontFamilies.openSans};
+  font-family: ${FontFamilies.sans};
   font-size: 11px;
   line-height: 15px;
   font-weight: 600;

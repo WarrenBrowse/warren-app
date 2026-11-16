@@ -39,7 +39,7 @@ const StyledHostnameRow = styled.div({
 });
 
 const StyledHostname = styled.span({
-  fontFamily: FontFamilies.openSans,
+  fontFamily: FontFamilies.sans,
   fontSize: '12px',
   fontWeight: 400,
   lineHeight: '16.5px',

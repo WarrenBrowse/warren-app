@@ -24,7 +24,7 @@ const StyledGrid = styled.div<{ $revealed: boolean }>`
   border: 1px solid ${colors.whiteAlpha20};
   border-radius: ${Radius.radius4};
   background-color: ${colors.darkerBlue50};
-  font-family: 'Source Code Pro', Menlo, Consolas, monospace;
+  font-family: var(--font-family-mono);
   filter: ${({ $revealed }) => ($revealed ? 'none' : 'blur(8px)')};
   cursor: ${({ $revealed }) => ($revealed ? 'default' : 'pointer')};
   transition: filter 0.15s ease;

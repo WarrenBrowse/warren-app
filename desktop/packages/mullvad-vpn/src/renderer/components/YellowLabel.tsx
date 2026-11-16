@@ -4,7 +4,7 @@ import { colors } from '../lib/foundations';
 
 export default styled.span({
   display: 'inline-block',
-  fontFamily: 'Open Sans',
+  fontFamily: 'var(--font-family-sans)',
   color: colors.blue,
   fontSize: '12px',
   fontWeight: 800,

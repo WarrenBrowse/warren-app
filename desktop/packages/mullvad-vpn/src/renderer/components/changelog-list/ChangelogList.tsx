@@ -18,7 +18,7 @@ const StyledList = styled.ul`
 `;
 
 const StyledCode = styled.code`
-  font-family: monospace;
+  font-family: var(--font-family-mono);
   color: ${colors.white};
 `;
 

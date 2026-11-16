@@ -32,7 +32,7 @@ const OverlayChip = styled.span`
   border-radius: 6px;
   background-color: ${surfaces.pill};
   color: ${surfaces.pillText};
-  font-family: ${FontFamilies.openSans};
+  font-family: ${FontFamilies.sans};
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.5px;
@@ -40,7 +40,7 @@ const OverlayChip = styled.span`
 
 const OverlayLine = styled.span`
   color: ${surfaces.text};
-  font-family: ${FontFamilies.openSans};
+  font-family: ${FontFamilies.sans};
   font-size: 11px;
   font-weight: 600;
 `;

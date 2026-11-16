@@ -21,7 +21,7 @@ export const StyledExitLoadBadge = styled.span<{ $muted: boolean }>(({ $muted })
   gap: '8px',
   flexShrink: 0,
   color: colors.whiteAlpha60,
-  fontFamily: 'var(--font-family-open-sans)',
+  fontFamily: 'var(--font-family-sans)',
   fontSize: '12px',
   fontWeight: 600,
   lineHeight: '16px',

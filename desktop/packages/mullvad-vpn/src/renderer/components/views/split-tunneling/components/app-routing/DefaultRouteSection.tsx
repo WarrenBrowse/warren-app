@@ -8,7 +8,7 @@ import { useAppRouting } from '../../../../../features/app-routing/hooks';
 import { Dialog } from '../../../../../lib/components/dialog';
 import { Link } from '../../../../../lib/components/link';
 import { colors } from '../../../../../lib/foundations';
-import { sourceSansPro } from '../../../../common-styles';
+import { uiFont } from '../../../../common-styles';
 import { useRoutingActions } from '../../hooks/use-routing-actions';
 import { useRestartDaemon } from '../split-tunneling-settings/components/macos-split-tunneling-availability/hooks';
 import { useSplitModeAvailability } from '../split-tunneling-settings/hooks';
@@ -25,7 +25,7 @@ const StyledSegments = styled.div({
 });
 
 const StyledSegment = styled.button<{ $selected: boolean }>((props) => ({
-  ...sourceSansPro,
+  ...uiFont,
   minHeight: '48px',
   padding: '4px 8px',
   border: 'none',

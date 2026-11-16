@@ -7,7 +7,7 @@ import { useHistory } from '../../lib/history';
 import { useBoolean, useEffectEvent } from '../../lib/utility-hooks';
 import Accordion from '../Accordion';
 import ChevronButton from '../ChevronButton';
-import { buttonText, openSans, sourceSansPro } from '../common-styles';
+import { buttonText, uiFont } from '../common-styles';
 import { Container } from './Container';
 import { Row } from './Row';
 
@@ -26,7 +26,7 @@ export const SectionTitle = styled(Row)<SectionTitleProps>(buttonText, (props) =
   color: props.disabled ? colors.whiteAlpha20 : colors.white,
   fontWeight: props.$thin ? 400 : 600,
   fontSize: props.$thin ? '15px' : '18px',
-  ...(props.$thin ? openSans : sourceSansPro),
+  ...uiFont,
 }));
 
 export const CellSectionContext = React.createContext<boolean>(false);

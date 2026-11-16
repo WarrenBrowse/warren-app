@@ -8,7 +8,7 @@ export const StyledCustomDnsFooter = styled(Cell.CellFooter)({
 });
 
 export const StyledAddCustomDnsLabel = styled(Cell.Label)<{ $paddingLeft?: number }>((props) => ({
-  fontFamily: 'Open Sans',
+  fontFamily: 'var(--font-family-sans)',
   fontWeight: 400,
   fontSize: '16px',
   paddingInlineStart: (props.$paddingLeft ?? 32) + 'px',
@@ -45,7 +45,7 @@ export const StyledButton = styled.button({
 });
 
 export const StyledLabel = styled(Cell.Label)({
-  fontFamily: 'Open Sans',
+  fontFamily: 'var(--font-family-sans)',
   fontWeight: 400,
   fontSize: '16px',
   paddingInlineStart: '32px',

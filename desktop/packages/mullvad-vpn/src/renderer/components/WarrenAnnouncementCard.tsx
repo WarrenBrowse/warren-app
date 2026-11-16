@@ -96,7 +96,8 @@ const VoucherCode = styled.span({
   minWidth: 0,
   userSelect: 'text',
   cursor: 'text',
-  fontFamily: '"SF Mono", "Cascadia Mono", "Roboto Mono", "Ubuntu Mono", monospace',
+  fontFamily:
+    '"JetBrains Mono", "SF Mono", "Cascadia Mono", "Roboto Mono", "Ubuntu Mono", monospace',
   fontSize: '14px',
   lineHeight: '20px',
   letterSpacing: '0.04em',

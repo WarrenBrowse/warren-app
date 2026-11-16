@@ -2,23 +2,19 @@ import React from 'react';
 
 import { colors, spacings } from '../lib/foundations';
 
-export const openSans: React.CSSProperties = {
-  fontFamily: 'Open Sans',
-};
-
-export const sourceSansPro: React.CSSProperties = {
-  fontFamily: '"Source Sans Pro", "Noto Sans Myanmar", "Noto Sans Thai", sans-serif',
+export const uiFont: React.CSSProperties = {
+  fontFamily: 'var(--font-family-sans)',
 };
 
 export const tinyText = {
-  ...openSans,
+  ...uiFont,
   fontSize: '12px',
   fontWeight: 600,
   lineHeight: '18px',
 };
 
 export const smallText = {
-  ...openSans,
+  ...uiFont,
   fontSize: '14px',
   fontWeight: 600,
   lineHeight: '20px',
@@ -31,13 +27,13 @@ export const smallNormalText = {
 };
 
 export const normalText = {
-  ...openSans,
+  ...uiFont,
   fontSize: '15px',
   lineHeight: '18px',
 };
 
 export const largeText = {
-  ...sourceSansPro,
+  ...uiFont,
   fontWeight: 600,
   fontSize: '18px',
   lineHeight: '24px',
@@ -49,14 +45,14 @@ export const buttonText = {
 };
 
 export const bigText = {
-  ...sourceSansPro,
+  ...uiFont,
   fontSize: '24px',
   fontWeight: 700,
   lineHeight: '28px',
 };
 
 export const hugeText = {
-  ...sourceSansPro,
+  ...uiFont,
   fontSize: '32px',
   fontWeight: 700,
   lineHeight: '34px',

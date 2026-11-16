@@ -13,7 +13,7 @@ import { ConnectionPanelAccordion } from '../../../../styles';
 const StyledLocation = styled.span({
   display: 'block',
   paddingTop: '10.5px',
-  fontFamily: FontFamilies.openSans,
+  fontFamily: FontFamilies.sans,
   fontSize: '15px',
   fontWeight: 700,
   lineHeight: '19px',

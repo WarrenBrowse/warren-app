@@ -14,7 +14,7 @@ import { RouteStatusLine } from '../../../../../features/app-routing/components'
 import { useAppRouting, useExitChoiceNames } from '../../../../../features/app-routing/hooks';
 import { colors } from '../../../../../lib/foundations';
 import { useSelector } from '../../../../../redux/store';
-import { sourceSansPro } from '../../../../common-styles';
+import { uiFont } from '../../../../common-styles';
 import { type RoutingTarget, useSplitTunnelingContext } from '../../SplitTunnelingContext';
 import { AppAvatar } from './AppAvatar';
 import { WarningGlyph } from './glyphs';
@@ -64,7 +64,7 @@ const StyledList = styled.ul({
 // The status line runs under the name and the chip both: a long route and a
 // long status in a long language would not fit side by side on one line.
 const StyledRuleButton = styled.button({
-  ...sourceSansPro,
+  ...uiFont,
   display: 'grid',
   gridTemplateColumns: 'auto minmax(80px, 1fr) minmax(0, max-content)',
   alignItems: 'center',

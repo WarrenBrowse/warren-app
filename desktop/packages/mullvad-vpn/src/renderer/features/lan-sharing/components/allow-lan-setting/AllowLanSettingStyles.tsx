@@ -27,7 +27,7 @@ export const StyledActionButton = styled.button({
 });
 
 export const StyledLabel = styled(Cell.Label)({
-  fontFamily: 'Open Sans',
+  fontFamily: 'var(--font-family-sans)',
   fontWeight: 400,
   fontSize: '16px',
   paddingLeft: '32px',

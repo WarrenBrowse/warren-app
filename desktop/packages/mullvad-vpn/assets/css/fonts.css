@@ -1,7 +1,39 @@
+/* The UI face. Instrument Sans has no Cyrillic, so Russian and Ukrainian fall back
+   to Open Sans glyph by glyph through the family stack in typography-tokens.ts. */
 @font-face {
-  font-family: 'Source Sans Pro';
+  font-family: 'Instrument Sans';
+  font-weight: 400;
+  src: url('../fonts/InstrumentSans-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Instrument Sans';
+  font-weight: 500;
+  src: url('../fonts/InstrumentSans-Medium.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Instrument Sans';
+  font-weight: 600;
+  src: url('../fonts/InstrumentSans-SemiBold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'Instrument Sans';
   font-weight: 700;
-  src: url('../fonts/SourceSansPro-Bold.ttf') format('truetype');
+  src: url('../fonts/InstrumentSans-Bold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-weight: 400;
+  src: url('../fonts/JetBrainsMono-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-weight: 500;
+  src: url('../fonts/JetBrainsMono-Medium.ttf') format('truetype');
 }
 
 /* Brand display face, used only by the WARREN wordmark (see Logo.tsx), never by
@@ -23,18 +55,6 @@
   font-family: 'Noto Sans Thai';
   font-weight: 700;
   src: url('../fonts/NotoSansThai-Bold.ttf') format('truetype');
-}
-
-@font-face {
-  font-family: 'Source Sans Pro';
-  font-weight: 600;
-  src: url('../fonts/SourceSansPro-SemiBold.ttf') format('truetype');
-}
-
-@font-face {
-  font-family: 'Source Sans Pro';
-  font-weight: 400;
-  src: url('../fonts/SourceSansPro-Regular.ttf') format('truetype');
 }
 
 @font-face {

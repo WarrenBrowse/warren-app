@@ -106,8 +106,8 @@
   },
   "typography": {
     "fontFamilies": {
-      "openSans": "Open Sans",
-      "sourceSansPro": "Source Sans Pro",
+      "sans": "Instrument Sans",
+      "mono": "JetBrains Mono",
       "nunito": "Nunito"
     },
     "fontWeights": {

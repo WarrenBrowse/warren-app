@@ -55,7 +55,7 @@ const StyledEye = styled(Icon)<{ $color: string }>((props) => ({
 }));
 
 const StyledTitle = styled.span<{ $color: string }>((props) => ({
-  fontFamily: FontFamilies.openSans,
+  fontFamily: FontFamilies.sans,
   fontSize: '16px',
   fontWeight: 600,
   lineHeight: '19.2px',
@@ -63,7 +63,7 @@ const StyledTitle = styled.span<{ $color: string }>((props) => ({
 }));
 
 const StyledSubtitle = styled.span({
-  fontFamily: FontFamilies.openSans,
+  fontFamily: FontFamilies.sans,
   fontSize: '11.5px',
   fontWeight: 400,
   lineHeight: '15px',

@@ -1,14 +1,14 @@
 import { FontFamilyTokens, FontSizeTokens, FontWeightTokens, LineHeightTokens } from '../tokens';
 
 export const fontFamilies = {
-  '--font-family-open-sans': FontFamilyTokens.openSans,
-  '--font-family-source-sans-pro': FontFamilyTokens.sourceSansPro,
+  '--font-family-sans': FontFamilyTokens.sans,
+  '--font-family-mono': FontFamilyTokens.mono,
   '--font-family-nunito': FontFamilyTokens.nunito,
 };
 
 export enum FontFamilies {
-  openSans = 'var(--font-family-open-sans)',
-  sourceSansPro = 'var(--font-family-source-sans-pro)',
+  sans = 'var(--font-family-sans)',
+  mono = 'var(--font-family-mono)',
   nunito = 'var(--font-family-nunito)',
 }
 
@@ -61,10 +61,10 @@ export enum LineHeights {
 }
 
 export enum Fonts {
-  title = FontFamilies.sourceSansPro,
-  body = FontFamilies.openSans,
-  label = FontFamilies.openSans,
-  footnote = FontFamilies.openSans,
+  title = FontFamilies.sans,
+  body = FontFamilies.sans,
+  label = FontFamilies.sans,
+  footnote = FontFamilies.sans,
 }
 
 export type Typography =

@@ -46,7 +46,7 @@ const CodeText = styled.div({
   display: 'block',
   marginTop: '16px',
   color: colors.white,
-  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace',
+  fontFamily: 'var(--font-family-mono)',
   fontSize: '32px',
   fontWeight: 600,
   letterSpacing: '0.3em',

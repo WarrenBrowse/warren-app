@@ -38,7 +38,7 @@ export const StyledTextFieldInput = styled.input<{ $variant?: TextFieldProps['va
       background-color: ${colors.blue40};
       padding: ${variant.padding};
       border-radius: ${variant.borderRadius};
-      font-family: ${fontFamilies['--font-family-open-sans']};
+      font-family: ${fontFamilies['--font-family-sans']};
       font-size: ${fontSizes['--font-size-small']};
       line-height: ${lineHeights['--line-height-small']};
       outline: 1px solid ${colors.chalkAlpha40};

@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 import { colors } from '../../../../../lib/foundations';
-import { sourceSansPro } from '../../../../common-styles';
+import { uiFont } from '../../../../common-styles';
 
 const StyledImage = styled.img<{ $size: number }>((props) => ({
   width: `${props.$size}px`,
@@ -12,7 +12,7 @@ const StyledImage = styled.img<{ $size: number }>((props) => ({
 }));
 
 const StyledLetter = styled.span<{ $size: number }>((props) => ({
-  ...sourceSansPro,
+  ...uiFont,
   width: `${props.$size}px`,
   height: `${props.$size}px`,
   flexShrink: 0,

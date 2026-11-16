@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /** SHA-256 of design-tokens.json at generation time. */
-const val DESIGN_TOKENS_SHA256 = "0cc6a01c8fa72ec9f4957ea25e51c232e945dd42d6bb49fc82f95f32780b9988"
+const val DESIGN_TOKENS_SHA256 = "20d7048633a348083b12178cc99a36e97a545e060cce68a60be910943f2b9597"
 
 @Suppress("MagicNumber", "unused")
 object DesignTokens {
@@ -102,8 +102,8 @@ object DesignTokens {
     }
 
     object FontFamilies {
-        const val OpenSans = "Open Sans"
-        const val SourceSansPro = "Source Sans Pro"
+        const val Sans = "Instrument Sans"
+        const val Mono = "JetBrains Mono"
         const val Nunito = "Nunito"
     }
 

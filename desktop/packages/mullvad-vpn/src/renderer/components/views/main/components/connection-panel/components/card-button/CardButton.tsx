@@ -59,7 +59,7 @@ export const CardButton = styled(Button)<{ $tone: CardButtonTone }>(({ $tone }) 
 
     & ${StyledButtonText} {
       --color: ${tone.text};
-      font-family: ${FontFamilies.openSans};
+      font-family: ${FontFamilies.sans};
       font-size: 13px;
       line-height: 18px;
       font-weight: 600;

@@ -1,7 +1,7 @@
 import styled from 'styled-components';
 
 import { colors, spacings } from '../../../../../lib/foundations';
-import { sourceSansPro } from '../../../../common-styles';
+import { uiFont } from '../../../../common-styles';
 
 // Shared pieces of the App routing screens.
 
@@ -13,7 +13,7 @@ export const StyledSection = styled.section({
 });
 
 export const StyledSectionTitle = styled.h2({
-  ...sourceSansPro,
+  ...uiFont,
   margin: 0,
   fontSize: '17px',
   lineHeight: '22px',
@@ -22,7 +22,7 @@ export const StyledSectionTitle = styled.h2({
 });
 
 export const StyledHelp = styled.p({
-  ...sourceSansPro,
+  ...uiFont,
   margin: 0,
   fontWeight: 400,
   fontSize: '14px',
@@ -31,7 +31,7 @@ export const StyledHelp = styled.p({
 });
 
 export const StyledCard = styled.div({
-  ...sourceSansPro,
+  ...uiFont,
   borderRadius: '10px',
   padding: '14px 16px',
   backgroundColor: colors.blue10,
@@ -55,7 +55,7 @@ export const StyledWarningCard = styled(StyledCard)({
 
 // The pill on a rule and on the "+ App" button.
 export const pill = {
-  ...sourceSansPro,
+  ...uiFont,
   display: 'inline-flex',
   alignItems: 'center',
   gap: '8px',
@@ -71,7 +71,7 @@ export const pill = {
 // A full-height screen of the flow: a title, a body that scrolls, and the
 // buttons at the bottom.
 export const StyledScreen = styled.div({
-  ...sourceSansPro,
+  ...uiFont,
   flex: 1,
   minHeight: 0,
   display: 'flex',
@@ -83,7 +83,7 @@ export const StyledScreen = styled.div({
 });
 
 export const StyledScreenTitle = styled.h1({
-  ...sourceSansPro,
+  ...uiFont,
   margin: 0,
   fontSize: '30px',
   lineHeight: '34px',
@@ -102,7 +102,7 @@ export const StyledScreenBody = styled.div({
 });
 
 export const StyledScreenButton = styled.button({
-  ...sourceSansPro,
+  ...uiFont,
   flexShrink: 0,
   minHeight: '48px',
   border: 'none',
@@ -124,7 +124,7 @@ export const StyledScreenButton = styled.button({
 });
 
 export const StyledTextButton = styled.button({
-  ...sourceSansPro,
+  ...uiFont,
   flexShrink: 0,
   minHeight: '44px',
   border: 'none',
@@ -146,7 +146,7 @@ export const StyledTextButton = styled.button({
 
 // A row of a list: an app, a country, an option.
 export const StyledRowButton = styled.button<{ $selected?: boolean }>((props) => ({
-  ...sourceSansPro,
+  ...uiFont,
   display: 'flex',
   alignItems: 'center',
   gap: '12px',

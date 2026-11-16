@@ -187,7 +187,7 @@ const DetailsRow = styled.div({
   fontSize: '11px',
   lineHeight: 1.5,
   color: colors.whiteAlpha80,
-  fontFamily: 'monospace',
+  fontFamily: 'var(--font-family-mono)',
 });
 
 const DetailsLabel = styled.span({

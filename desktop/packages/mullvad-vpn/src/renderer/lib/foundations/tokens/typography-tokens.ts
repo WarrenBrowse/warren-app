@@ -1,6 +1,8 @@
 export enum FontFamilyTokens {
-  openSans = 'Open Sans',
-  sourceSansPro = '"Source Sans Pro", "Noto Sans Myanmar", "Noto Sans Thai", sans-serif',
+  // Instrument Sans has no Cyrillic: Open Sans draws Russian and Ukrainian, and the
+  // Noto faces the two scripts neither covers.
+  sans = '"Instrument Sans", "Open Sans", "Noto Sans Myanmar", "Noto Sans Thai", sans-serif',
+  mono = '"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace',
   // Brand display face for the WARREN wordmark only (Logo.tsx), not the UI text.
   nunito = '"Nunito", sans-serif',
 }

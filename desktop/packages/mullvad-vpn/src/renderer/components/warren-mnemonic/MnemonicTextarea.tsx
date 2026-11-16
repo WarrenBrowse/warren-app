@@ -21,7 +21,7 @@ const StyledTextarea = styled.textarea`
   border: 1px solid ${colors.whiteAlpha20};
   border-radius: ${Radius.radius4};
   color: ${colors.white};
-  font-family: 'Source Code Pro', Menlo, Consolas, monospace;
+  font-family: var(--font-family-mono);
   font-size: 14px;
   line-height: 1.5;
   resize: vertical;

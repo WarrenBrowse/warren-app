@@ -6,7 +6,7 @@ import CustomScrollbars from './CustomScrollbars';
 import WarrenPubKeyLabel from './WarrenPubKeyLabel';
 
 export const StyledWarrenPubKeyLabel = styled(WarrenPubKeyLabel)({
-  fontFamily: 'Open Sans',
+  fontFamily: 'var(--font-family-sans)',
   lineHeight: '20px',
   fontSize: '20px',
   fontWeight: 700,
