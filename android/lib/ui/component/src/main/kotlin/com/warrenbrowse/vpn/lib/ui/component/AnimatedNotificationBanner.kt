@@ -13,10 +13,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -50,29 +52,18 @@ import com.warrenbrowse.vpn.lib.ui.tag.NOTIFICATION_BANNER_TEXT_ACTION_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.theme.HomeTypography
 import com.warrenbrowse.vpn.lib.ui.theme.color.LocalWarrenSurfaces
 import com.warrenbrowse.vpn.lib.ui.theme.color.WarrenSurfaces
+import com.warrenbrowse.vpn.lib.ui.theme.tokens.DesignTokens
 
 private const val NOTIFICATION_MOTION_MILLIS = 250
 
-// Mockup 8d's banner: the toolbar's own glass under it, on its right edge, reaching as far left
-// as the desktop's 272 px card where the screen allows.
-private val BANNER_MAX_WIDTH = 272.dp
-private val BANNER_RADIUS = 12.dp
-private val BANNER_LINE = 1.dp
-private val BANNER_PADDING_VERTICAL = 10.dp
-private val BANNER_PADDING_HORIZONTAL = 12.dp
-private val BANNER_GAP = 10.dp
-private val BANNER_TEXT_GAP = 1.dp
-private val BANNER_GLYPH = 16.dp
-private val BANNER_ACTION_BOX = 24.dp
-private val BANNER_ACTION_RADIUS = 6.dp
-private val BANNER_TRAILING_GAP = 4.dp
+private val notice = DesignTokens.Home.Notice
+
+// The notice's drop: 0 8 24 -10 of the notice shadow (mockup).
 private val BANNER_SHADOW_BLUR = 24.dp
-private val BANNER_SHADOW_SPREAD = (-8).dp
+private val BANNER_SHADOW_SPREAD = (-10).dp
 private val BANNER_SHADOW_OFFSET = 8.dp
-private const val BANNER_SHADOW_ALPHA = 0.45f
-private val BUTTON_RADIUS = 8.dp
-private val BUTTON_PADDING_VERTICAL = 6.dp
-private val BUTTON_PADDING_HORIZONTAL = 10.dp
+private val BANNER_LINE = 1.dp
+private val BANNER_TRAILING_GAP = 4.dp
 
 @Composable
 fun AnimatedNotificationBanner(
@@ -149,26 +140,31 @@ private fun Notification(
 ) {
     val (title, message, statusLevel, action, messageMaxLines, button) = notificationBannerData
     val surfaces = LocalWarrenSurfaces.current
-    val shape = RoundedCornerShape(BANNER_RADIUS)
+    val shape = RoundedCornerShape(notice.Radius)
+    // A notice that ends on a button hugs it closer (desktop `:has([data-banner-button])`).
+    val end = if (button != null) notice.ButtonInset else notice.PaddingEnd
+    val vertical = if (button != null) notice.ButtonInset else notice.PaddingVertical
     Row(
         modifier =
             modifier
                 .wrapContentWidth(Alignment.End)
-                .widthIn(max = BANNER_MAX_WIDTH)
+                .widthIn(max = notice.MaxWidth)
                 .fillMaxWidth()
                 .dropShadow(
                     shape,
                     Shadow(
                         radius = BANNER_SHADOW_BLUR,
-                        color = Color.Black.copy(alpha = BANNER_SHADOW_ALPHA),
+                        color = surfaces.homeNoticeShadow,
                         spread = BANNER_SHADOW_SPREAD,
                         offset = DpOffset(0.dp, BANNER_SHADOW_OFFSET),
                     ),
                 )
                 .clip(shape)
-                .background(surfaces.homeToolbar)
-                .border(BANNER_LINE, surfaces.homeToolbarLine, shape)
-                .padding(horizontal = BANNER_PADDING_HORIZONTAL, vertical = BANNER_PADDING_VERTICAL)
+                // The desktop glass also blurs the art behind it; a backdrop blur is not
+                // available to a Compose surface, so the notice's own translucency carries it.
+                .background(surfaces.homeNotice)
+                .border(BANNER_LINE, surfaces.homeNoticeLine, shape)
+                .padding(start = notice.PaddingStart, end = end, top = vertical, bottom = vertical)
                 .animateContentSize()
                 // A banner appearing is news a screen-reader user must get:
                 // without a live region TalkBack never announces the switch to
@@ -185,17 +181,17 @@ private fun Notification(
                 }
                 .testTag(NOTIFICATION_BANNER_TEST_TAG),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(BANNER_GAP),
+        horizontalArrangement = Arrangement.spacedBy(notice.Gap),
     ) {
         Icon(
             painter = painterResource(lead.glyph.drawable()),
             contentDescription = null,
             tint = lead.tone.color(surfaces),
-            modifier = Modifier.size(BANNER_GLYPH),
+            modifier = Modifier.size(notice.Icon),
         )
         Column(
             modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(BANNER_TEXT_GAP),
+            verticalArrangement = Arrangement.spacedBy(notice.BodyGap),
         ) {
             Text(
                 // Rendered as authored: a runtime case transform is wrong in
@@ -212,7 +208,7 @@ private fun Notification(
                 Text(
                     text = message.text,
                     style = HomeTypography.bannerBody,
-                    color = surfaces.homeTextSecondary,
+                    color = surfaces.homeNoticeTextSecondary,
                     // Unbounded for every banner this app authors; the operator
                     // notice clamps, because its length is the publisher's choice
                     // and the connect card must stay on screen.
@@ -245,7 +241,7 @@ private fun Notification(
                 horizontalArrangement = Arrangement.spacedBy(BANNER_TRAILING_GAP),
             ) {
                 button?.let { BannerButton(it, surfaces) }
-                action?.let { BannerAction(it, surfaces.homeTextSecondary) }
+                action?.let { BannerAction(it, surfaces.homeNoticeTextSecondary) }
             }
         }
     }
@@ -261,43 +257,50 @@ private fun NotificationGlyph.drawable(): Int =
 
 private fun NotificationTone.color(surfaces: WarrenSurfaces): Color =
     when (this) {
+        NotificationTone.Update -> surfaces.homeNoticeUpdate
+        NotificationTone.Announcement -> surfaces.homeNoticeAnnouncement
         NotificationTone.Badge -> surfaces.homeBadge
-        NotificationTone.Secondary -> surfaces.homeTextSecondary
+        NotificationTone.Secondary -> surfaces.homeNoticeTextSecondary
         NotificationTone.Disconnect -> surfaces.homeDisconnectText
     }
 
 /** The mockup's light "Install": the home text as its fill, the page as its label. */
 @Composable
 private fun BannerButton(button: NotificationButton, surfaces: WarrenSurfaces) {
-    Text(
-        text = button.label,
-        style = HomeTypography.bannerButton,
-        color = surfaces.homePage,
-        maxLines = 1,
+    Box(
         modifier =
-            Modifier.clip(RoundedCornerShape(BUTTON_RADIUS))
+            Modifier.height(notice.ButtonHeight)
+                .clip(RoundedCornerShape(notice.ButtonRadius))
                 .background(surfaces.homeText)
                 .clickable(role = Role.Button, onClick = button.onClick)
-                .padding(horizontal = BUTTON_PADDING_HORIZONTAL, vertical = BUTTON_PADDING_VERTICAL),
-    )
+                .padding(horizontal = notice.ButtonPaddingHorizontal),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = button.label,
+            style = HomeTypography.bannerButton,
+            color = surfaces.homePage,
+            maxLines = 1,
+        )
+    }
 }
 
 /**
- * A bare glyph, as the mockup puts a banner away. The box stays 24 dp to keep the card compact;
- * the pointer input still answers the 48 dp touch floor around it.
+ * A bare glyph, as the mockup puts a banner away: the cross at its 18 size, which the pointer
+ * input still answers on the 48 dp touch floor around it.
  */
 @Composable
 private fun BannerAction(action: NotificationAction, tint: Color) {
     Box(
         modifier =
-            Modifier.size(BANNER_ACTION_BOX)
-                .clip(RoundedCornerShape(BANNER_ACTION_RADIUS))
+            Modifier.size(notice.Close)
+                .clip(CircleShape)
                 .clickable(role = Role.Button, onClick = action.onClick)
                 .testTag(NOTIFICATION_BANNER_ACTION_TEST_TAG),
         contentAlignment = Alignment.Center,
     ) {
         val glyph = action.glyph
-        val iconModifier = Modifier.size(BANNER_GLYPH)
+        val iconModifier = Modifier.size(notice.Close)
         if (glyph != null) {
             Icon(painterResource(glyph), action.contentDescription, iconModifier, tint)
         } else {

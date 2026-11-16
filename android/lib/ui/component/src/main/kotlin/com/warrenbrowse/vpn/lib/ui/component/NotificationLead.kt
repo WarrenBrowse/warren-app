@@ -18,6 +18,8 @@ enum class NotificationGlyph {
 
 /** The home surface a lead glyph is tinted with. */
 enum class NotificationTone {
+    Update,
+    Announcement,
     Badge,
     Secondary,
     Disconnect,
@@ -33,8 +35,8 @@ fun InAppNotification.bannerKind(): NotificationKind? =
     }
 
 /**
- * The glyph a home banner leads with, in place of a coloured dot (desktop `NotificationLeadIcon`,
- * mockup 8d). An announcement stays quiet whatever its level: the operator's words carry it.
+ * The glyph a home banner leads with, in place of a coloured dot (desktop `NotificationLeadIcon`
+ * and `noticeIconColor`). An update and an announcement keep their own colour whatever their level.
  */
 fun notificationLead(kind: NotificationKind?, level: StatusLevel): NotificationLead {
     val glyph =
@@ -51,11 +53,11 @@ fun notificationLead(kind: NotificationKind?, level: StatusLevel): NotificationL
         }
     val tone =
         when {
-            kind == NotificationKind.Announcement -> NotificationTone.Secondary
+            kind == NotificationKind.Update -> NotificationTone.Update
+            kind == NotificationKind.Announcement -> NotificationTone.Announcement
             level == StatusLevel.Error -> NotificationTone.Disconnect
-            kind == null && (level == StatusLevel.Info || level == StatusLevel.None) ->
-                NotificationTone.Secondary
-            else -> NotificationTone.Badge
+            level == StatusLevel.Warning -> NotificationTone.Badge
+            else -> NotificationTone.Secondary
         }
     return NotificationLead(glyph, tone)
 }

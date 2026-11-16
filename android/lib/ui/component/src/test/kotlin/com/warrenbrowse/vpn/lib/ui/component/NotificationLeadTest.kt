@@ -10,23 +10,24 @@ import org.junit.jupiter.api.Test
 
 /**
  * The glyph a home banner leads with in place of the coloured dot (desktop
- * `NotificationLeadIcon`, mockup 8d): the amber download for an update, the
- * megaphone for an announcement, otherwise an alert or an info by level.
+ * `NotificationLeadIcon` and `noticeIconColor`): the amber download for an
+ * update, the blue megaphone for an announcement, otherwise an alert or an info
+ * by level.
  */
 class NotificationLeadTest {
 
     @Test
-    fun `an update leads with the download glyph in the badge amber`() {
+    fun `an update leads with the download glyph in the update amber`() {
         val update = InAppNotification.UpdateAvailable("2026.11")
         assertEquals(NotificationKind.Update, update.bannerKind())
         assertEquals(
-            NotificationLead(NotificationGlyph.Download, NotificationTone.Badge),
+            NotificationLead(NotificationGlyph.Download, NotificationTone.Update),
             notificationLead(update.bannerKind(), update.statusLevel),
         )
     }
 
     @Test
-    fun `an announcement leads with the megaphone in the secondary text, whatever its level`() {
+    fun `an announcement leads with the megaphone in the announcement blue, whatever its level`() {
         val announcement =
             InAppNotification.LaunchAnnouncement(
                 WarrenAnnouncement(
@@ -38,7 +39,7 @@ class NotificationLeadTest {
             )
         assertEquals(NotificationKind.Announcement, announcement.bannerKind())
         assertEquals(
-            NotificationLead(NotificationGlyph.Megaphone, NotificationTone.Secondary),
+            NotificationLead(NotificationGlyph.Megaphone, NotificationTone.Announcement),
             notificationLead(announcement.bannerKind(), announcement.statusLevel),
         )
     }
@@ -65,9 +66,9 @@ class NotificationLeadTest {
     }
 
     @Test
-    fun `an update that failed reads as an error`() {
+    fun `an update keeps its own amber whatever its level`() {
         assertEquals(
-            NotificationLead(NotificationGlyph.Download, NotificationTone.Disconnect),
+            NotificationLead(NotificationGlyph.Download, NotificationTone.Update),
             notificationLead(NotificationKind.Update, StatusLevel.Error),
         )
     }
