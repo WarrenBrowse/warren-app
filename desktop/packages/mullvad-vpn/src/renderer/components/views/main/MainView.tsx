@@ -6,6 +6,7 @@ import { homeTokens, surfaces } from '../../../lib/foundations';
 import { AppMainHeader } from '../../app-main-header';
 import { BetaBadge } from '../../beta-badge';
 import CountryBackdrop from '../../CountryBackdrop';
+import { HERO_HEIGHT_RATIO } from '../../CountryBackdrop/framing';
 import NotificationArea from '../../NotificationArea';
 import { FeatureIndicators, MultihopIndicator } from './components';
 import { HomeControls } from './home/HomeControls';
@@ -20,14 +21,17 @@ const StyledHome = styled.div`
   height: 100%;
   overflow: hidden;
   background-color: ${surfaces.homePage};
+  /* The app thins its glyphs globally; the mockup is drawn with the system
+     smoothing, which gives Instrument Sans its intended weight. */
+  -webkit-font-smoothing: auto;
 `;
 
-// The hero takes whatever height the panel leaves, and the scenery frames
-// itself in it; the panel below keeps its natural height.
+// The hero keeps the mockup's proportions (300 high on a 360 width); the panel
+// below takes the rest of the window.
 const StyledHero = styled.div`
   position: relative;
-  flex: 1;
-  min-height: 0;
+  flex-shrink: 0;
+  aspect-ratio: ${1 / HERO_HEIGHT_RATIO};
 `;
 
 // Transient notices float under the toolbar, over the art, so that they never
@@ -42,9 +46,15 @@ const StyledNotices = styled.div`
 
 const StyledPanel = styled.main`
   position: relative;
-  flex-shrink: 0;
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+`;
+
+// The room the mockup leaves between the chips and the footer.
+const StyledSpacer = styled.div`
+  flex: 1;
 `;
 
 // One row of chips is reserved even with none, so the hero does not reframe
@@ -84,6 +94,7 @@ export function MainView() {
           <PortForwardingIndicator />
           <AppCountriesIndicator />
         </StyledChips>
+        <StyledSpacer />
         <StyledBeta>
           <BetaBadge variant="home" />
         </StyledBeta>

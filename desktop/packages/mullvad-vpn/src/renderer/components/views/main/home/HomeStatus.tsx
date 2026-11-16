@@ -83,7 +83,7 @@ const StyledSubtitleRow = styled.div`
   gap: 8px;
   /* Fixed whether or not the details button is there, so the hero above keeps
      its frame across every state. */
-  height: 24px;
+  height: 18px;
   --load-ring-low: ${surfaces.homePillProtected};
   --load-ring-moderate: ${surfaces.homeBadge};
   --load-ring-high: ${surfaces.homePillPending};

@@ -15,7 +15,9 @@ export const homeTokens = {
     clearMargin: 6,
     // The band at the bottom where the art fades into the page.
     fade: 40,
-    logoHeight: 40,
+    // The mockup's logo is 40 high with its own margin; the bare wordmark
+    // matches its width at 32.
+    logoHeight: 32,
     // The page colour washes the top of the art down to this fraction, so the
     // toolbar and the logo read on the brightest sky.
     scrimStop: 0.34,

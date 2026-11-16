@@ -5,8 +5,12 @@ import { describe, expect, it } from 'vitest';
 
 import sceneryManifest from '../../assets/images/scenery/scenery.json';
 import {
+  CLEAR_BOTTOM_FRACTION,
   frameScenery,
   framingSpan,
+  HERO_HEIGHT_RATIO,
+  HERO_MASK_STOPS,
+  heroFade,
   thumbnailTopRow,
 } from '../../src/renderer/components/CountryBackdrop/framing';
 import { loadClientRules } from './client-rules';
@@ -31,6 +35,9 @@ interface FramingCase {
 
 interface FramingFixture {
   canvas_px: [number, number];
+  hero_height_ratio: number;
+  mask_stops: Array<[number, number]>;
+  clear_bottom_fraction: number;
   feather_rows: number;
   framings: {
     ground: { top_row: number; bottom_row: number };
@@ -51,6 +58,18 @@ describe('scenery framing (fixtures/client-rules/scenery_framing.json)', () => {
       sceneryManifest.canvas.width,
       sceneryManifest.canvas.height,
     ]);
+  });
+
+  it('draws the hero at the mockup proportions and fades it along the mockup curve', () => {
+    expect(HERO_HEIGHT_RATIO).toBeCloseTo(fixture.hero_height_ratio, 6);
+    expect(HERO_MASK_STOPS).toEqual(fixture.mask_stops);
+    expect(CLEAR_BOTTOM_FRACTION).toBe(fixture.clear_bottom_fraction);
+  });
+
+  it('ends the clear zone where the fade reaches half opacity', () => {
+    for (const fixtureCase of fixture.cases) {
+      expect(heroFade(fixtureCase.hero_px[1])).toBeCloseTo(fixtureCase.fade_px, 2);
+    }
   });
 
   for (const fixtureCase of fixture.cases) {

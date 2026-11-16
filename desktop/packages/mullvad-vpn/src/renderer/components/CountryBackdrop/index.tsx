@@ -15,15 +15,19 @@ import {
   Frame,
   frameScenery,
   framingSpan,
+  HERO_MASK_STOPS,
+  heroFade,
   phaseLandscape,
 } from './framing';
 import { BULA_IMAGE, resolveScenery, TERRIER_IMAGE } from './scenery';
 
 const { hero } = homeTokens;
 
-// Fades the bottom of the hero into the page: the panel's status block rides
-// up over the last rows, so the art has no edge.
-const fadeMask = `linear-gradient(to bottom, #000 calc(100% - ${hero.fade}px), rgba(0, 0, 0, 0.55) calc(100% - ${hero.fade * 0.45}px), transparent 100%)`;
+// Fades the hero into the page along the mockup's curve: the panel's status
+// block rides up over the last rows, so the art has no edge.
+const fadeMask = `linear-gradient(to bottom, ${HERO_MASK_STOPS.map(
+  ([at, alpha]) => `rgba(0, 0, 0, ${alpha}) ${at * 100}%`,
+).join(', ')})`;
 
 const Root = styled.div<{ $fill: string; $animate: boolean }>`
   position: absolute;
@@ -188,7 +192,7 @@ export default function CountryBackdrop() {
         width: size.width,
         height: size.height,
         clearTop: homeClearTop,
-        fade: hero.fade,
+        fade: heroFade(size.height),
         span: framingSpan(phase, targetCountry),
       })
     : undefined;

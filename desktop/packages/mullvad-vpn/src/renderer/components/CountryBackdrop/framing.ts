@@ -14,11 +14,32 @@ export const CANVAS_HEIGHT = sceneryManifest.canvas.height;
 // canvas rows into the landscape's top fill, so the join does not show.
 export const FEATHER_ROWS = 48;
 
-// The cameras and the whole of Bula (his feet are the last row of the rabbit
-// layer with alpha >= 128); the burrow mouth lies inside.
-const GROUND_SPAN = { top: 320, bottom: 1131 } as const;
-// Once Bula is in, the skyline down to the burrow mouth he hides in.
-const SKY_BOTTOM_ROW = 930;
+// The mockup's proportions (Warren VPN Accueil, 360x640): a 300px hero on a
+// 360px width, fading into the page along the mockup's own curve. The clear
+// zone ends where that fade reaches half opacity; below it the art keeps
+// fading as in the mockup.
+export const HERO_HEIGHT_RATIO = 300 / 360;
+export const HERO_MASK_STOPS: Array<[number, number]> = [
+  [0, 1],
+  [0.52, 1],
+  [0.64, 0.82],
+  [0.77, 0.5],
+  [0.89, 0.2],
+  [0.96, 0.05],
+  [1, 0],
+];
+export const CLEAR_BOTTOM_FRACTION = 0.77;
+
+// The band under the clear zone, for a hero of this height.
+export function heroFade(heroHeight: number): number {
+  return heroHeight * (1 - CLEAR_BOTTOM_FRACTION);
+}
+
+// The cameras and Bula down to his hips while he is out: his legs and the
+// burrow mouth fade into the panel, as in the mockup.
+const GROUND_SPAN = { top: 320, bottom: 830 } as const;
+// Once he is in, the skyline down to the flag.
+const SKY_BOTTOM_ROW = 610;
 
 const THUMB_MARGIN_ROWS = 40;
 

@@ -40,10 +40,21 @@ const StyledToolbar = styled.div`
   padding: 0 ${toolbar.paddingHorizontal}px;
   border-radius: ${toolbar.radius}px;
   background-color: ${surfaces.homeToolbar};
+  color: ${surfaces.homeText};
   backdrop-filter: blur(${toolbar.blur}px);
   box-shadow:
     inset 0 0 0 1px ${surfaces.homeToolbarLine},
     0 4px 14px -6px ${surfaces.homeToolbarShadow};
+
+  /* The shared icon button rings a circle sized for its own default glyph;
+     in the pill the hit area is a rounded square, and so is its ring. */
+  & button {
+    border-radius: ${toolbar.radius - toolbar.paddingHorizontal}px;
+  }
+  && button:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: -2px;
+  }
 `;
 
 export function HomeHeader() {
