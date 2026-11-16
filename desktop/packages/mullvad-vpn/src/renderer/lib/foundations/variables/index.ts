@@ -4,3 +4,4 @@ export * from './typography-variables';
 export * from './spacing-variables';
 export * from './load-color-variables';
 export * from './surface-variables';
+export * from './home-variables';

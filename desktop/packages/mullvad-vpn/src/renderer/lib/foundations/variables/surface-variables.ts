@@ -20,3 +20,8 @@ export function surfaceVariables(theme: Theme): Record<string, string> {
 export const surfaces = Object.fromEntries(
   surfaceTokenNames.map((token) => [token, `var(${variableName(token)})`]),
 ) as Record<SurfaceToken, string>;
+
+// The two palettes as plain tables, the shape the browser extension's design
+// sync copies into CSS: dark at the root, light under its colour scheme.
+export const surfaceDarkVariables = surfaceVariables('dark');
+export const surfaceLightVariables = surfaceVariables('light');
