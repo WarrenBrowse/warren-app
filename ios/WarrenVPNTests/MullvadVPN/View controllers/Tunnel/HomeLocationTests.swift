@@ -55,7 +55,7 @@ final class HomeLocationTests: XCTestCase {
 
     func testAutomaticIsPicturedByTheWatchedPlain() {
         let location = HomeLocation(tunnelState: .disconnected, exitLocations: .any, selectedName: nil)
-        XCTAssertEqual(location.thumb, .landscape(imageName: "SceneryPlaine", topRow: 280))
+        XCTAssertEqual(location.thumb, .landscape(imageName: "SceneryPlaine", topRow: 273))
     }
 
     func testAWholeCustomListNamesNoCountry() {

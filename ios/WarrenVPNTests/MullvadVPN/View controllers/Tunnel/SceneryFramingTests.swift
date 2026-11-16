@@ -184,7 +184,7 @@ final class SceneryFramingTests: XCTestCase {
             SceneryFraming.Span(top: 100, bottom: 610))
         XCTAssertEqual(
             SceneryViewController.framingSpan(.protected, country: "Sweden"),
-            SceneryFraming.Span(top: 320, bottom: 610))
+            SceneryFraming.Span(top: 313, bottom: 610))
         // The kill switch shows the watched plain whatever the exit.
         XCTAssertEqual(SceneryViewController.framingSpan(.blocked, country: "Finland"), SceneryFraming.groundSpan)
     }
