@@ -9,8 +9,10 @@ package com.warrenbrowse.vpn.feature.home.impl.connect
  * hero, and below that the content scrolls with the footer still pinned. Open details shrink the
  * hero toward the compact hero only as far as the card needs, so a tall phone opens no hole above
  * the footer while a phone with no room to spare reaches the compact ratio. A wide screen keeps its
- * header, panel and footer in a centred column of at most [COLUMN_MAX_WIDTH], which also sets the
- * hero's proportions, while the hero itself spans the whole width.
+ * header, panel and footer in a centred column of at most [COLUMN_MAX_WIDTH] while the hero spans
+ * the whole width: the column's rule is the hero's floor, so a landscape tablet keeps its controls
+ * on screen, and the free height is taken up to the max of the hero's own width, so a portrait
+ * tablet opens no hole above its footer either.
  */
 internal object HomeLayout {
     const val COLUMN_MAX_WIDTH = 480f
@@ -22,6 +24,8 @@ internal object HomeLayout {
         val hero: Float,
         /** The height the hero is heading to, which the art is framed for. */
         val frameHero: Float,
+        /** The hero's height with the details closed, whose scale a compact hero keeps. */
+        val fullHero: Float,
         /** The height of the hero and the panel together, at least the viewport. */
         val content: Float,
     ) {
@@ -48,8 +52,12 @@ internal object HomeLayout {
         progress: Float,
     ): Plan {
         val column = minOf(width, COLUMN_MAX_WIDTH)
+        // On a phone the column is the width, and this is SceneryFraming.heroHeight.
         val natural =
-            SceneryFraming.heroHeight(column, statusBar, available = viewport - panel + overlap)
+            (viewport - panel + overlap).coerceIn(
+                SceneryFraming.compactHeroHeight(column, statusBar),
+                width * SceneryFraming.HERO_MAX_HEIGHT_RATIO + statusBar,
+            )
         val open =
             (viewport - panel - cardFull + overlap).coerceIn(
                 SceneryFraming.compactHeroHeight(column, statusBar),
@@ -60,6 +68,7 @@ internal object HomeLayout {
             column = column,
             hero = hero,
             frameHero = if (compact) open else natural,
+            fullHero = natural,
             content = maxOf(viewport, hero - overlap + panel + card),
         )
     }

@@ -943,7 +943,7 @@ private fun HomeContent(
                     statusTop = statusTop,
                     compact = compact,
                     progress = progress,
-                    hero = { frameHeight ->
+                    hero = { frameHeight, fullHeight ->
                         SceneryHero(
                             phase = phase,
                             exitCountry = state.location?.country,
@@ -951,6 +951,7 @@ private fun HomeContent(
                             glowTop = statusTop,
                             compact = compact,
                             frameHeight = frameHeight,
+                            fullHeight = fullHeight,
                             modifier = Modifier.fillMaxSize(),
                         )
                     },
@@ -1041,7 +1042,7 @@ private fun HomeColumnLayout(
     statusTop: Dp,
     compact: Boolean,
     progress: Float,
-    hero: @Composable (frameHeight: Dp) -> Unit,
+    hero: @Composable (frameHeight: Dp, fullHeight: Dp) -> Unit,
     header: @Composable () -> Unit,
     status: @Composable () -> Unit,
     details: @Composable () -> Unit,
@@ -1077,7 +1078,7 @@ private fun HomeColumnLayout(
             )
         val heroHeight = plan.hero.dp.roundToPx()
         val heroPlaceables =
-            subcompose(HomeSlot.Hero) { hero(plan.frameHero.dp) }
+            subcompose(HomeSlot.Hero) { hero(plan.frameHero.dp, plan.fullHero.dp) }
                 .map { it.measure(Constraints.fixed(width, heroHeight)) }
         val headerPlaceables = measureSlot(HomeSlot.Header, header)
         val left = (width - column) / 2

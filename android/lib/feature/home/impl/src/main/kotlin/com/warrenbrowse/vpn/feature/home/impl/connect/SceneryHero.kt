@@ -94,7 +94,8 @@ private val HERO_MASK =
  * narrowed one show the same landscape at cover scale, blurred; the canvas edges facing either are
  * feathered into them. [glowTop] is the status bar the logo sits under, which its paper glow
  * reaches through. The art is framed for [frameHeight], the height the hero is heading to, so it
- * never shrinks to fit a hero halfway through its [compact] resize.
+ * never shrinks to fit a hero halfway through its [compact] resize; a compact hero keeps the scale
+ * of its [fullHeight].
  */
 @Composable
 @Suppress("LongParameterList")
@@ -105,6 +106,7 @@ internal fun SceneryHero(
     glowTop: Dp,
     compact: Boolean,
     frameHeight: Dp,
+    fullHeight: Dp,
     modifier: Modifier = Modifier,
 ) {
     val scenery = resolveScenery(phase, exitCountry)
@@ -130,6 +132,7 @@ internal fun SceneryHero(
                 clearTop = clearTop.toPx(),
                 span = span,
                 compact = compact,
+                fullHeight = fullHeight.toPx(),
             )
         }
     val reframe = rememberReframeSpec(compact)
@@ -178,6 +181,7 @@ private fun heroFrame(
     clearTop: Float,
     span: SceneryFraming.Span,
     compact: Boolean,
+    fullHeight: Float,
 ): SceneryFraming.Frame? {
     val fade = SceneryFraming.fade(height)
     if (width <= 0f || height - fade - clearTop <= 0f) return null
@@ -188,6 +192,7 @@ private fun heroFrame(
         fade = fade,
         span = span,
         compact = compact,
+        fullHeight = fullHeight,
     )
 }
 

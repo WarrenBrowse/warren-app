@@ -59,15 +59,30 @@ class HomeLayoutTest {
     }
 
     @Test
-    fun `a wide screen sizes the hero from a column of at most 480`() {
-        val plan = plan(width = 1280f, viewport = 2000f)
+    fun `a wide screen keeps a column of at most 480, whose rule is the hero's floor`() {
+        val plan = plan(width = 1280f, viewport = 736f)
         assertEquals(HomeLayout.COLUMN_MAX_WIDTH, plan.column)
+        assertEquals(736f - PANEL + OVERLAP, plan.hero, TOLERANCE)
+        assertEquals(360f, plan(width = 360f, viewport = 600f).column)
+        val short = plan(width = 1280f, viewport = 300f)
         assertEquals(
-            HomeLayout.COLUMN_MAX_WIDTH * SceneryFraming.HERO_MAX_HEIGHT_RATIO + STATUS_BAR,
-            plan.hero,
+            HomeLayout.COLUMN_MAX_WIDTH * SceneryFraming.COMPACT_HEIGHT_RATIO + STATUS_BAR,
+            short.hero,
             TOLERANCE,
         )
-        assertEquals(360f, plan(width = 360f, viewport = 600f).column)
+    }
+
+    @Test
+    fun `a tall tablet's hero takes the free height up to its own width's max, leaving no hole`() {
+        val plan = plan(width = 800f, viewport = 1216f)
+        assertEquals(1216f - PANEL + OVERLAP, plan.hero, TOLERANCE)
+        assertEquals(1216f, plan.hero - OVERLAP + PANEL, TOLERANCE)
+        val taller = plan(width = 800f, viewport = 3000f)
+        assertEquals(
+            800f * SceneryFraming.HERO_MAX_HEIGHT_RATIO + STATUS_BAR,
+            taller.hero,
+            TOLERANCE,
+        )
     }
 
     @Test
@@ -78,6 +93,7 @@ class HomeLayoutTest {
         val open = plan(width = 360f, viewport = viewport, card = 150f, compact = true)
         assertEquals(compact, open.hero, TOLERANCE)
         assertEquals(compact, open.frameHero, TOLERANCE)
+        assertEquals(natural, open.fullHero, TOLERANCE)
         // Halfway through the resize the hero is halfway, the art already framed for the end.
         val half =
             plan(
