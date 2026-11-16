@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -20,6 +21,9 @@ import com.warrenbrowse.vpn.lib.tv.NotificationBannerTv
 import com.warrenbrowse.vpn.lib.ui.component.AnimatedNotificationBanner
 import com.warrenbrowse.vpn.lib.ui.component.WarrenTopBar
 import com.warrenbrowse.vpn.lib.ui.theme.AppTheme
+import com.warrenbrowse.vpn.lib.ui.theme.tokens.DesignTokens
+
+private val SHADOW_ROOM = 32.dp
 
 @Preview
 @Composable
@@ -108,7 +112,14 @@ fun NotificationBanner(
     } else {
         AnimatedNotificationBanner(
             modifier = modifier,
-            notificationModifier = Modifier.fillMaxWidth(),
+            // The toolbar's inset, and room for the card's shadow, inside the banner's clip.
+            notificationModifier =
+                Modifier.fillMaxWidth()
+                    .padding(
+                        start = DesignTokens.Home.Hero.HeaderInset,
+                        end = DesignTokens.Home.Hero.HeaderInset,
+                        bottom = SHADOW_ROOM,
+                    ),
             notification = notification,
             isPlayBuild = isPlayBuild,
             openAppListing = openAppListing,

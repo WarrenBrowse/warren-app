@@ -80,8 +80,6 @@
     <string name="unsupported_version_description">Bu desteklenmeyen uygulama sürümüyle gizliliğiniz risk altında olabilir. Lütfen hemen güncelleyin.</string>
     <string name="update_required_title">Güncelleme gerekli</string>
     <string name="update_required_description">Warren uygulamasının bu sürümü artık desteklenmiyor. Bağlantınızın korunmaya devam etmesi için uygulamayı güncellemeniz gerekir.</string>
-    <string name="update_available">GÜNCELLEME MEVCUT</string>
-    <string name="update_available_description">Sürüm %1$s kullanılabilir. Güncellemeyi indirmek için dokunun.</string>
     <string name="update_now">Şimdi güncelle</string>
     <string name="quit">Çık</string>
     <string name="app_routing">Uygulama yönlendirme</string>
@@ -792,4 +790,8 @@
         <item quantity="other">%1$d yıl kaldı</item>
     </plurals>
     <string name="home_select_location">Konum seçin. Mevcut konum %1$s</string>
+    <string name="update_banner_title">Güncelleme mevcut</string>
+    <string name="update_banner_version">Sürüm %1$s</string>
+    <string name="update_banner_install">Yükle</string>
+    <string name="beta_badge_label">BETA</string>
 </resources>

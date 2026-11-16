@@ -3,6 +3,12 @@ package com.warrenbrowse.vpn.feature.home.impl.connect
 import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -13,8 +19,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -27,12 +34,17 @@ import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import com.warrenbrowse.vpn.lib.ui.component.ForumHeaderButton
+import com.warrenbrowse.vpn.lib.ui.component.ForumHeaderIcon
 import com.warrenbrowse.vpn.lib.ui.component.ForumHeaderSlot
+import com.warrenbrowse.vpn.lib.ui.component.forumHeaderLabel
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.tag.TOP_BAR_ACCOUNT_BUTTON_TEST_TAG
+import com.warrenbrowse.vpn.lib.ui.tag.TOP_BAR_FORUM_BUTTON_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.TOP_BAR_SETTINGS_BUTTON_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.TOP_BAR_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.theme.color.LocalWarrenSurfaces
@@ -48,6 +60,7 @@ private val LOGO_PADDING = 4.dp
 private val TOOLBAR_SHADOW_BLUR = 14.dp
 private val TOOLBAR_SHADOW_SPREAD = (-6).dp
 private val TOOLBAR_SHADOW_OFFSET = 4.dp
+private const val TOOLBAR_TINT_ALPHA = 0.12f
 
 /**
  * The floating header over the hero (desktop `HomeHeader`): the inked wordmark on its paper halo,
@@ -133,18 +146,22 @@ private fun HomeToolbar(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (forumSlot != null) {
-            ForumHeaderButton(
-                slot = forumSlot,
-                tint = tint,
-                enabled = true,
+            val label = forumHeaderLabel(forumSlot)
+            HomeToolbarButton(
                 onClick = onForumClick,
-                modifier = Modifier.size(toolbar.Button),
-                iconSize = toolbar.Icon,
-            )
+                tint = tint,
+                modifier =
+                    Modifier.testTag(TOP_BAR_FORUM_BUTTON_TEST_TAG).semantics {
+                        contentDescription = label
+                    },
+            ) {
+                ForumHeaderIcon(slot = forumSlot, tint = tint, iconSize = toolbar.Icon)
+            }
         }
-        IconButton(
-            modifier = Modifier.size(toolbar.Button).testTag(TOP_BAR_ACCOUNT_BUTTON_TEST_TAG),
+        HomeToolbarButton(
             onClick = onAccountClick,
+            tint = tint,
+            modifier = Modifier.testTag(TOP_BAR_ACCOUNT_BUTTON_TEST_TAG),
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_account_outline),
@@ -153,9 +170,10 @@ private fun HomeToolbar(
                 modifier = Modifier.size(toolbar.Icon),
             )
         }
-        IconButton(
-            modifier = Modifier.size(toolbar.Button).testTag(TOP_BAR_SETTINGS_BUTTON_TEST_TAG),
+        HomeToolbarButton(
             onClick = onSettingsClick,
+            tint = tint,
+            modifier = Modifier.testTag(TOP_BAR_SETTINGS_BUTTON_TEST_TAG),
         ) {
             Icon(
                 painter = painterResource(id = R.drawable.ic_settings_outline),
@@ -164,5 +182,44 @@ private fun HomeToolbar(
                 modifier = Modifier.size(toolbar.Icon),
             )
         }
+    }
+}
+
+/**
+ * A button of the toolbar (desktop `HomeHeader`, mockup 8d): the glyph centred in its 38 dp square,
+ * which a press, a hover or the keyboard focus tints with the glyph colour at 12 %, where a ring or
+ * a round ripple around an icon in the glass pill read heavy.
+ */
+@Composable
+private fun HomeToolbarButton(
+    onClick: () -> Unit,
+    tint: Color,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val toolbar = DesignTokens.Home.Toolbar
+    val interactions = remember { MutableInteractionSource() }
+    val pressed by interactions.collectIsPressedAsState()
+    val focused by interactions.collectIsFocusedAsState()
+    val hovered by interactions.collectIsHoveredAsState()
+    Box(
+        modifier =
+            modifier
+                .size(toolbar.Button)
+                .clip(RoundedCornerShape(toolbar.Radius - toolbar.PaddingHorizontal))
+                .background(
+                    if (pressed || focused || hovered) tint.copy(alpha = TOOLBAR_TINT_ALPHA)
+                    else Color.Transparent
+                )
+                .hoverable(interactions)
+                .clickable(
+                    interactionSource = interactions,
+                    indication = null,
+                    role = Role.Button,
+                    onClick = onClick,
+                ),
+        contentAlignment = Alignment.Center,
+    ) {
+        content()
     }
 }

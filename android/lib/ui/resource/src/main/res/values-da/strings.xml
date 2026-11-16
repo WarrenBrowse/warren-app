@@ -80,8 +80,6 @@
     <string name="unsupported_version_description">Dit privatliv kan være i fare med denne ikke-understøttede appversion. Opdater den straks.</string>
     <string name="update_required_title">Opdatering påkrævet</string>
     <string name="update_required_description">Denne version af Warren understøttes ikke længere. For at holde din forbindelse beskyttet skal du opdatere appen for at fortsætte med at bruge den.</string>
-    <string name="update_available">OPDATERING TILGÆNGELIG</string>
-    <string name="update_available_description">Version %1$s er tilgængelig. Tryk for at hente opdateringen.</string>
     <string name="update_now">Opdater nu</string>
     <string name="quit">Afslut</string>
     <string name="app_routing">App-routing</string>
@@ -792,4 +790,8 @@
         <item quantity="other">%1$d år tilbage</item>
     </plurals>
     <string name="home_select_location">Vælg placering. Nuværende placering er %1$s</string>
+    <string name="update_banner_title">Opdatering tilgængelig</string>
+    <string name="update_banner_version">Version %1$s</string>
+    <string name="update_banner_install">Installér</string>
+    <string name="beta_badge_label">BETA</string>
 </resources>

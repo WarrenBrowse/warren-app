@@ -176,6 +176,25 @@ class HomeStatusTextTest {
         assertNull(locationRowLine(TunnelState.Disconnected(), null, selectedTitle = null))
     }
 
+    @Test
+    fun `the location row flags the exit country once a tunnel carries traffic`() {
+        val exit = locationRowLine(connected, helsinki, selectedTitle = "Germany")
+        assertEquals("fi", locationFlagCode(exit, selectedCountryCode = "DE"))
+    }
+
+    @Test
+    fun `the location row flags the selected country while no tunnel carries traffic`() {
+        val selection = locationRowLine(TunnelState.Disconnected(), helsinki, "Germany")
+        assertEquals("de", locationFlagCode(selection, selectedCountryCode = " DE "))
+    }
+
+    @Test
+    fun `a pick that names no country leaves the location row without a flag`() {
+        val automatic = locationRowLine(TunnelState.Disconnected(), null, "Automatic")
+        assertNull(locationFlagCode(automatic, selectedCountryCode = null))
+        assertNull(locationFlagCode(automatic, selectedCountryCode = " "))
+    }
+
     private fun location(country: String, city: String?, hostname: String?) =
         GeoIpLocation(
             ipv4 = null,

@@ -82,8 +82,6 @@
     <string name="unsupported_version_description">Confidențialitatea dvs. ar putea fi în pericol cu această versiune neacceptată a aplicației. Vă rugăm să actualizați acum.</string>
     <string name="update_required_title">Este necesară actualizarea</string>
     <string name="update_required_description">Această versiune de Warren nu mai este acceptată. Pentru a vă menține conexiunea protejată, trebuie să actualizați aplicația pentru a continua să o utilizați.</string>
-    <string name="update_available">ACTUALIZARE DISPONIBILĂ</string>
-    <string name="update_available_description">Versiunea %1$s este disponibilă. Atingeți pentru a descărca actualizarea.</string>
     <string name="update_now">Actualizați acum</string>
     <string name="quit">Ieșire</string>
     <string name="app_routing">Rutare aplicații</string>
@@ -807,4 +805,8 @@
         <item quantity="other">%1$d de ani rămași</item>
     </plurals>
     <string name="home_select_location">Selectați locația. Locația curentă este %1$s</string>
+    <string name="update_banner_title">Este disponibilă o actualizare</string>
+    <string name="update_banner_version">Versiunea %1$s</string>
+    <string name="update_banner_install">Instalează</string>
+    <string name="beta_badge_label">BETA</string>
 </resources>

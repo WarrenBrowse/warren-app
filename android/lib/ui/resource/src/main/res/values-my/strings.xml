@@ -80,8 +80,6 @@
     <string name="unsupported_version_description">တွဲဖက်မလုပ်ဆောင်နိုင်သည့် ဤအက်ပ်ဗားရှင်းကြောင့် သင့်ကိုယ်ရေးအချက်အလက်များ အန္တရာယ် ရှိနိုင်ပါသည်။ ယခုပင် အပ်ဒိတ်လုပ်ပေးပါ။</string>
     <string name="update_required_title">အပ်ဒိတ် လိုအပ်ပါသည်</string>
     <string name="update_required_description">Warren ၏ ဤဗားရှင်းကို နောက်ထပ် ပံ့ပိုးမှု မပေးတော့ပါ။ သင့်ချိတ်ဆက်မှု ကို ဆက်လက်ကာကွယ်ရန်၊ ဆက်လက်အသုံးပြုနိုင်ရန် အက်ပ်ကို အပ်ဒိတ်လုပ်ရပါမည်။</string>
-    <string name="update_available">အပ်ဒိတ် ရရှိနိုင်ပါပြီ</string>
-    <string name="update_available_description">ဗားရှင်း %1$s ရနိုင်ပါပြီ။ အပ်ဒိတ်ကို ဒေါင်းလုဒ်ရန် တို့ပါ။</string>
     <string name="update_now">ယခု အပ်ဒိတ်လုပ်ပါ</string>
     <string name="quit">ထွက်ရန်</string>
     <string name="app_routing">အက်ပ် လမ်းကြောင်းပေးခြင်း</string>
@@ -781,4 +779,8 @@
         <item quantity="other">%1$d နှစ်သာ ကျန်တော့သည်</item>
     </plurals>
     <string name="home_select_location">တည်နေရာ ရွေးချယ်ပါ။ လက်ရှိတည်နေရာမှာ %1$s ဖြစ်ပါသည်</string>
+    <string name="update_banner_title">အပ်ဒိတ်ရရှိနိုင်ပါပြီ</string>
+    <string name="update_banner_version">ဗားရှင်း %1$s</string>
+    <string name="update_banner_install">ထည့်သွင်းရန်</string>
+    <string name="beta_badge_label">BETA</string>
 </resources>

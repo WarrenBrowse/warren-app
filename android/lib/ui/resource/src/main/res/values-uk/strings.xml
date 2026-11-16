@@ -80,8 +80,6 @@
     <string name="unsupported_version_description">Ваша конфіденційність може бути під загрозою через цю непідтримувану версію застосунку. Оновіть її.</string>
     <string name="update_required_title">Потрібне оновлення</string>
     <string name="update_required_description">Цю версію Warren більше не підтримують. Щоб ваше з’єднання залишалося захищеним, потрібно оновити застосунок, щоб продовжити ним користуватися.</string>
-    <string name="update_available">ДОСТУПНЕ ОНОВЛЕННЯ</string>
-    <string name="update_available_description">Доступна версія %1$s. Торкніться, щоб завантажити оновлення.</string>
     <string name="update_now">Оновити зараз</string>
     <string name="quit">Вийти</string>
     <string name="app_routing">Маршрутизація застосунків</string>
@@ -814,4 +812,8 @@
         <item quantity="other">Залишилося %1$d року</item>
     </plurals>
     <string name="home_select_location">Виберіть розташування. Поточне розташування: %1$s</string>
+    <string name="update_banner_title">Доступне оновлення</string>
+    <string name="update_banner_version">Версія %1$s</string>
+    <string name="update_banner_install">Встановити</string>
+    <string name="beta_badge_label">BETA</string>
 </resources>

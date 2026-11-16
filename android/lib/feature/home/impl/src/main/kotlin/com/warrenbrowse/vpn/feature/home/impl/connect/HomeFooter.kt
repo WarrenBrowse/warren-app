@@ -31,9 +31,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.lib.ui.theme.HomeTypography
 import com.warrenbrowse.vpn.lib.ui.theme.color.LocalWarrenSurfaces
@@ -43,13 +45,23 @@ import kotlinx.coroutines.delay
 /** Desktop AppMainFooter: the check shows for two seconds after a copy. */
 private const val FOOTER_COPIED_MILLIS = 2_000L
 
+// Desktop StyledEnd: the beta cap, a middle dot and the time left, 4 px apart.
+private val FOOTER_END_GAP = 4.dp
+private const val FOOTER_DOT = "\u00B7"
+
 /**
  * The footer band of the home screen (desktop `AppMainFooter`): the short account key in the mono
- * face with its copy action, and the time left on the subscription. The band runs under the
+ * face with its copy action, and at its end the time left on the subscription, after the [beta]
+ * label and its cap on a beta build ("BETA 20 Mbps · 14 days", mockup 8d). The band runs under the
  * navigation bar, its content above it.
  */
 @Composable
-internal fun HomeFooter(shortPubkey: String?, onCopyPubkey: (() -> Unit)?, timeLeft: String?) {
+internal fun HomeFooter(
+    shortPubkey: String?,
+    onCopyPubkey: (() -> Unit)?,
+    timeLeft: String?,
+    beta: (@Composable () -> Unit)? = null,
+) {
     val footer = DesignTokens.Home.Footer
     val surfaces = LocalWarrenSurfaces.current
     // Keyed on the tap count, not the flag, so a second tap inside the two seconds restarts them
@@ -109,6 +121,27 @@ internal fun HomeFooter(shortPubkey: String?, onCopyPubkey: (() -> Unit)?, timeL
             }
         }
         Spacer(Modifier.weight(1f))
+        FooterEnd(beta, timeLeft)
+    }
+}
+
+/** The footer's end: "14 days left", or on a beta build "BETA 20 Mbps · 14 days". */
+@Composable
+private fun FooterEnd(beta: (@Composable () -> Unit)?, timeLeft: String?) {
+    val surfaces = LocalWarrenSurfaces.current
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(FOOTER_END_GAP),
+    ) {
+        beta?.invoke()
+        if (beta != null && timeLeft != null) {
+            Text(
+                text = FOOTER_DOT,
+                style = HomeTypography.footer,
+                color = surfaces.homeTextSecondary,
+                modifier = Modifier.clearAndSetSemantics {},
+            )
+        }
         if (timeLeft != null) {
             Text(
                 text = timeLeft,

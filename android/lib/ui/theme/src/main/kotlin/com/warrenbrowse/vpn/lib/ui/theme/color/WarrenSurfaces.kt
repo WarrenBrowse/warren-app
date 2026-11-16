@@ -74,6 +74,8 @@ data class WarrenSurfaces(
     val homeCancelLine: Color,
     val homeCancelText: Color,
     val homeCancelHover: Color,
+    /** The beta label and its live cap in the home footer. */
+    val homeBeta: Color,
     /** Whether this is the dark palette, for the glyphs a surface cannot carry (system bars). */
     val isDark: Boolean,
 ) {
@@ -142,6 +144,7 @@ data class WarrenSurfaces(
                     homeCancelLine = HomeCancelLine,
                     homeCancelText = HomeCancelText,
                     homeCancelHover = HomeCancelHover,
+                    homeBeta = HomeBeta,
                     isDark = true,
                 )
             }
@@ -210,6 +213,7 @@ data class WarrenSurfaces(
                     homeCancelLine = HomeCancelLine,
                     homeCancelText = HomeCancelText,
                     homeCancelHover = HomeCancelHover,
+                    homeBeta = HomeBeta,
                     isDark = false,
                 )
             }

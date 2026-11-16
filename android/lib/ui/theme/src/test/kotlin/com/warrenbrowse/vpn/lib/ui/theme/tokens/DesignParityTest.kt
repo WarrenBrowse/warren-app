@@ -93,6 +93,7 @@ class DesignParityTest {
                 DesignTokens.Surfaces.Dark.HomeCancelLine,
                 DesignTokens.Surfaces.Dark.HomeCancelText,
                 DesignTokens.Surfaces.Dark.HomeCancelHover,
+                DesignTokens.Surfaces.Dark.HomeBeta,
             ),
         )
     }
@@ -138,6 +139,7 @@ class DesignParityTest {
                 DesignTokens.Surfaces.Light.HomeCancelLine,
                 DesignTokens.Surfaces.Light.HomeCancelText,
                 DesignTokens.Surfaces.Light.HomeCancelHover,
+                DesignTokens.Surfaces.Light.HomeBeta,
             ),
         )
     }
@@ -275,6 +277,7 @@ class DesignParityTest {
                 palette.homeCancelLine,
                 palette.homeCancelText,
                 palette.homeCancelHover,
+                palette.homeBeta,
             ),
         )
     }

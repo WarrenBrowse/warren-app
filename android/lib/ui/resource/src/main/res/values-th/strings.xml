@@ -80,8 +80,6 @@
     <string name="unsupported_version_description">ความเป็นส่วนตัวของคุณอาจมีความเสี่ยง ในขณะที่ใช้งานเวอร์ชันแอปที่ไม่ได้รับการสนับสนุนนี้ โปรดอัปเดตตอนนี้เลย</string>
     <string name="update_required_title">จำเป็นต้องอัปเดต</string>
     <string name="update_required_description">แอป Warren เวอร์ชันนี้ไม่ได้รับการรองรับอีกต่อไป หากต้องการให้การเชื่อมต่อของคุณได้รับการปกป้องต่อไป คุณต้องอัปเดตแอปเพื่อใช้งานต่อ</string>
-    <string name="update_available">มีการอัปเดตให้ใช้งาน</string>
-    <string name="update_available_description">มีเวอร์ชัน %1$s แล้ว แตะเพื่อดาวน์โหลดการอัปเดต</string>
     <string name="update_now">อัปเดตเดี๋ยวนี้</string>
     <string name="quit">ออก</string>
     <string name="app_routing">การกำหนดเส้นทางแอป</string>
@@ -781,4 +779,8 @@
         <item quantity="other">คงเหลือ %1$d ปี</item>
     </plurals>
     <string name="home_select_location">เลือกตำแหน่งที่ตั้ง ตำแหน่งที่ตั้งปัจจุบันคือ %1$s</string>
+    <string name="update_banner_title">มีการอัปเดตให้ใช้งาน</string>
+    <string name="update_banner_version">เวอร์ชัน %1$s</string>
+    <string name="update_banner_install">ติดตั้ง</string>
+    <string name="beta_badge_label">BETA</string>
 </resources>

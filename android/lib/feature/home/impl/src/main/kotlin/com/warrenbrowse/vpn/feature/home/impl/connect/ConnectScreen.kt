@@ -523,7 +523,8 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                 showBetaBadge = productFlags.isBeta,
                 betaCapBps = betaCapBps,
                 betaCapResolved = betaCapResolved,
-                accountTimeLeft = accountTimeLeftLabel(context, cachedExpiry),
+                accountTimeLeft =
+                    accountTimeLeftLabel(context, cachedExpiry, afterBeta = productFlags.isBeta),
                 accountShortPubkey = fullPubkey?.shortWarrenAddress(),
                 selectedCountryCode = selectedCountryCode,
                 onCopyPubkey = fullPubkey?.let { full -> { copyPubkey(full, pubkeyCopiedMsg) } },
@@ -712,7 +713,7 @@ fun ConnectScreen(
     accountTimeLeft: String? = null,
     accountShortPubkey: String? = null,
     onCopyPubkey: (() -> Unit)? = null,
-    // The country the selection names, for the location row's thumbnail while no tunnel is up.
+    // The country the selection names, for the location row's flag while no tunnel is up.
     selectedCountryCode: String? = null,
     onDisconnectClick: () -> Unit,
     onConnectClick: () -> Unit,
@@ -787,12 +788,10 @@ fun ConnectScreen(
                             state.location,
                             state.selectedRelayItemTitle,
                         )
-                    val thumbCode =
-                        (locationLine as? HomeLine.ExitPlace)?.countryCode ?: selectedCountryCode
                     HomeControls(
                         state = state,
                         locationName = locationLine?.text().orEmpty(),
-                        thumb = locationThumb(thumbCode),
+                        flagCode = locationFlagCode(locationLine, selectedCountryCode),
                         focusRequester = contentFocusRequester,
                         shuffleEnabled = shuffleEnabled,
                         onSwitchLocationClick = onSwitchLocationClick,
@@ -814,20 +813,23 @@ fun ConnectScreen(
                         )
                     }
                 },
-                beta = {
-                    if (showBetaBadge) {
-                        BetaBadge(
-                            capBps = betaCapBps,
-                            capResolved = betaCapResolved,
-                            variant = BetaBadgeVariant.Home,
-                        )
-                    }
-                },
                 footer = {
                     HomeFooter(
                         shortPubkey = accountShortPubkey,
                         onCopyPubkey = onCopyPubkey,
                         timeLeft = accountTimeLeft,
+                        beta =
+                            if (showBetaBadge) {
+                                {
+                                    BetaBadge(
+                                        capBps = betaCapBps,
+                                        capResolved = betaCapResolved,
+                                        variant = BetaBadgeVariant.Footer,
+                                    )
+                                }
+                            } else {
+                                null
+                            },
                     )
                 },
                 exitLoad = exitLoad,
@@ -889,15 +891,15 @@ private val DETAILS_SHEET_RADIUS = 16.dp
 private const val DETAILS_SHEET_MILLIS = 200
 private val DETAILS_SHEET_SLIDE = 12.dp
 
-// Notices float this far under the toolbar.
-private val NOTICES_GAP = 8.dp
+// Notices float this far under the toolbar, on its right edge (mockup 8d).
+private val NOTICES_GAP = 12.dp
 
 /**
  * The home screen (desktop `MainView`): the scenery hero keeps the mockup's proportions, 300/360 of
  * its width tall under the status bar, with the header and the notices floating over it; the panel
  * takes the rest of the screen, one chip row reserved so the hero does not reframe when the tunnel
- * comes up, and the room left between the chips and the beta line above the footer. A landscape
- * screen puts the panel in a side column instead, and the hero column's width sets its height.
+ * comes up, and the room left between the chips and the footer. A landscape screen puts the panel
+ * in a side column instead, and the hero column's width sets its height.
  */
 @Composable
 @Suppress("LongParameterList", "LongMethod")
@@ -908,7 +910,6 @@ private fun HomeContent(
     notifications: @Composable () -> Unit,
     controls: @Composable () -> Unit,
     chips: @Composable () -> Unit,
-    beta: @Composable () -> Unit,
     footer: @Composable () -> Unit,
     exitLoad: (@Composable () -> Unit)?,
     onAppRoutingClick: () -> Unit,
@@ -939,7 +940,6 @@ private fun HomeContent(
                 modifier = Modifier.fillMaxSize(),
             )
         }
-    val betaLine = @Composable { Box(Modifier.padding(top = BETA_TOP_GAP)) { beta() } }
     val statusBlock =
         @Composable {
             HomeStatusBlock(
@@ -1008,7 +1008,6 @@ private fun HomeContent(
                     ) {
                         panelContent(Modifier)
                     }
-                    betaLine()
                     footer()
                 }
             }
@@ -1018,11 +1017,6 @@ private fun HomeContent(
                 panel = {
                     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
                         panelContent(Modifier.widthIn(max = PANEL_MAX_WIDTH))
-                    }
-                },
-                beta = {
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
-                        Box(Modifier.widthIn(max = PANEL_MAX_WIDTH).fillMaxWidth()) { betaLine() }
                     }
                 },
                 sheet = {
@@ -1053,6 +1047,7 @@ private fun HomeContent(
         // controls; animateContentSize keeps a card arriving or leaving continuous.
         Box(
             Modifier.fillMaxWidth()
+                .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
                 .padding(
                     top =
                         if (showHeader) headerTop + toolbar.Height + NOTICES_GAP
@@ -1065,36 +1060,31 @@ private fun HomeContent(
     }
 }
 
-private val BETA_TOP_GAP = 2.dp
-
 /**
  * Lays the portrait home out: the hero at the mockup's ratio of the width under the status bar, the
- * panel riding the overlap up over its fade, the footer at the bottom with the beta line on it, and
- * the room left between the panel and the beta line, the mockup's spacer. Only a screen too short
- * for all of it gives the hero less, never the panel. The details sheet sits on the panel's top
- * edge.
+ * panel riding the overlap up over its fade, the footer at the bottom, and the room left between
+ * the panel and the footer, the mockup's spacer. Only a screen too short for all of it gives the
+ * hero less, never the panel. The details sheet sits on the panel's top edge.
  */
 @Composable
 @Suppress("LongParameterList")
 private fun HomeColumnLayout(
     hero: @Composable () -> Unit,
     panel: @Composable () -> Unit,
-    beta: @Composable () -> Unit,
     sheet: @Composable () -> Unit,
     footer: @Composable () -> Unit,
     clearTop: Dp,
     statusTop: Dp,
 ) {
-    Layout(contents = listOf(hero, panel, beta, footer, sheet)) { measurables, constraints ->
-        val (heroSlot, panelSlot, betaSlot, footerSlot, sheetSlot) = measurables
+    Layout(contents = listOf(hero, panel, footer, sheet)) { measurables, constraints ->
+        val (heroSlot, panelSlot, footerSlot, sheetSlot) = measurables
         val width = constraints.maxWidth
         val height = constraints.maxHeight
         val loose = constraints.copy(minWidth = width, maxWidth = width, minHeight = 0)
         val footerPlaceable = footerSlot.first().measure(loose)
-        val betaPlaceable = betaSlot.first().measure(loose)
         val panelPlaceable = panelSlot.first().measure(loose)
         val overlap = DesignTokens.Home.Panel.Overlap.roundToPx()
-        val bottom = height - footerPlaceable.height - betaPlaceable.height
+        val bottom = height - footerPlaceable.height
         val heroHeight =
             SceneryFraming.heroHeight(
                     width = width.toFloat(),
@@ -1113,7 +1103,6 @@ private fun HomeColumnLayout(
         layout(width, height) {
             heroPlaceable.place(0, 0)
             panelPlaceable.place(0, heroHeight - overlap)
-            betaPlaceable.place(0, bottom)
             footerPlaceable.place(0, height - footerPlaceable.height)
             // On the panel's top edge, so the pill riding the overlap stays in view.
             sheetPlaceable.place(0, heroHeight - overlap - sheetPlaceable.height)
@@ -1209,6 +1198,7 @@ internal fun accountTimeLeftLabel(
     context: android.content.Context,
     expiryUnixSecs: Long,
     nowSecs: Long = System.currentTimeMillis() / 1000,
+    afterBeta: Boolean = false,
 ): String? = when {
     expiryUnixSecs <= 0L -> null
     expiryUnixSecs - nowSecs <= 3L * 86_400 -> null
@@ -1220,16 +1210,28 @@ internal fun accountTimeLeftLabel(
         // thresholds as the account card's RemainingTime, so the header and the
         // card never name different units for one expiry.
         val res = context.resources
+        // After the beta cap the footer keeps the bare duration (mockup 8d), where "left" would
+        // make the line run long.
+        val (yearsRes, monthsRes, daysRes) =
+            if (afterBeta) {
+                Triple(
+                    R.plurals.account_remaining_years,
+                    R.plurals.account_remaining_months,
+                    R.plurals.account_remaining_days,
+                )
+            } else {
+                Triple(R.plurals.home_years_left, R.plurals.home_months_left, R.plurals.home_days_left)
+            }
         when {
             days >= 365 -> {
                 val years = (days / 365).toInt()
-                res.getQuantityString(R.plurals.home_years_left, years, years)
+                res.getQuantityString(yearsRes, years, years)
             }
             days >= 30 -> {
                 val months = (days / 30).toInt()
-                res.getQuantityString(R.plurals.home_months_left, months, months)
+                res.getQuantityString(monthsRes, months, months)
             }
-            else -> res.getQuantityString(R.plurals.home_days_left, days.toInt(), days.toInt())
+            else -> res.getQuantityString(daysRes, days.toInt(), days.toInt())
         }
     }
 }

@@ -2,20 +2,23 @@ package com.warrenbrowse.vpn.lib.ui.component
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -25,36 +28,51 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.Dimension
+import androidx.compose.ui.unit.DpOffset
+import androidx.compose.ui.unit.dp
 import com.warrenbrowse.vpn.lib.model.InAppNotification
 import com.warrenbrowse.vpn.lib.model.StatusLevel
 import com.warrenbrowse.vpn.lib.ui.tag.NOTIFICATION_BANNER_ACTION_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.NOTIFICATION_BANNER_TEST_TAG
 import com.warrenbrowse.vpn.lib.ui.tag.NOTIFICATION_BANNER_TEXT_ACTION_TEST_TAG
-import androidx.compose.ui.unit.dp
-import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha60
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.draw.drawBehind
-import androidx.compose.animation.core.tween
-import com.warrenbrowse.vpn.lib.ui.theme.Dimens
-import com.warrenbrowse.vpn.lib.ui.theme.color.positive
-import com.warrenbrowse.vpn.lib.ui.theme.color.warning
+import com.warrenbrowse.vpn.lib.ui.theme.HomeTypography
+import com.warrenbrowse.vpn.lib.ui.theme.color.LocalWarrenSurfaces
+import com.warrenbrowse.vpn.lib.ui.theme.color.WarrenSurfaces
 
-private const val NOTIFICATION_CARD_ALPHA = 0.6f
 private const val NOTIFICATION_MOTION_MILLIS = 250
+
+// Mockup 8d's banner: the toolbar's own glass under it, on its right edge, reaching as far left
+// as the desktop's 272 px card where the screen allows.
+private val BANNER_MAX_WIDTH = 272.dp
+private val BANNER_RADIUS = 12.dp
+private val BANNER_LINE = 1.dp
+private val BANNER_PADDING_VERTICAL = 10.dp
+private val BANNER_PADDING_HORIZONTAL = 12.dp
+private val BANNER_GAP = 10.dp
+private val BANNER_TEXT_GAP = 1.dp
+private val BANNER_GLYPH = 16.dp
+private val BANNER_ACTION_BOX = 24.dp
+private val BANNER_ACTION_RADIUS = 6.dp
+private val BANNER_TRAILING_GAP = 4.dp
+private val BANNER_SHADOW_BLUR = 24.dp
+private val BANNER_SHADOW_SPREAD = (-8).dp
+private val BANNER_SHADOW_OFFSET = 8.dp
+private const val BANNER_SHADOW_ALPHA = 0.45f
+private val BUTTON_RADIUS = 8.dp
+private val BUTTON_PADDING_VERTICAL = 6.dp
+private val BUTTON_PADDING_HORIZONTAL = 10.dp
 
 @Composable
 fun AnimatedNotificationBanner(
@@ -102,7 +120,8 @@ fun AnimatedNotificationBanner(
         if (visibleNotification != null)
             Notification(
                 modifier = notificationModifier,
-                visibleNotification.toNotificationData(
+                lead = notificationLead(visibleNotification.bannerKind(), visibleNotification.statusLevel),
+                notificationBannerData = visibleNotification.toNotificationData(
                     isPlayBuild = isPlayBuild,
                     openAppListing = openAppListing,
                     onClickShowAccount = onClickShowAccount,
@@ -123,34 +142,33 @@ fun AnimatedNotificationBanner(
 
 @Composable
 @Suppress("LongMethod")
-private fun Notification(modifier: Modifier = Modifier, notificationBannerData: NotificationData) {
-    val (title, message, statusLevel, action, messageMaxLines) = notificationBannerData
-    // Floating dark rounded card over the backdrop (desktop NotificationBanner),
-    // instead of an edge-to-edge opaque bar.
-    val shape = RoundedCornerShape(Dimens.notificationBannerRadius)
-    val edgeColor = statusLevel.accent()
-    val edge = Dimens.notificationBannerEdge
-    ConstraintLayout(
+private fun Notification(
+    lead: NotificationLead,
+    notificationBannerData: NotificationData,
+    modifier: Modifier = Modifier,
+) {
+    val (title, message, statusLevel, action, messageMaxLines, button) = notificationBannerData
+    val surfaces = LocalWarrenSurfaces.current
+    val shape = RoundedCornerShape(BANNER_RADIUS)
+    Row(
         modifier =
             modifier
-                .padding(horizontal = Dimens.mediumPadding, vertical = Dimens.tinyPadding)
-                .shadow(Dimens.notificationBannerElevation, shape, clip = false)
-                .clip(shape)
-                .background(color = Color.Black.copy(alpha = NOTIFICATION_CARD_ALPHA))
-                .border(width = 1.dp, color = Color.White.copy(alpha = 0.2f), shape = shape)
-                // The status colour as a top edge, the desktop's accent line.
-                .drawBehind {
-                    drawRect(
-                        color = edgeColor,
-                        size = Size(size.width, edge.toPx()),
-                    )
-                }
-                .padding(
-                    start = Dimens.notificationBannerStartPadding,
-                    end = Dimens.notificationBannerEndPadding,
-                    top = Dimens.notificationBannerVerticalPadding,
-                    bottom = Dimens.notificationBannerVerticalPadding,
+                .wrapContentWidth(Alignment.End)
+                .widthIn(max = BANNER_MAX_WIDTH)
+                .fillMaxWidth()
+                .dropShadow(
+                    shape,
+                    Shadow(
+                        radius = BANNER_SHADOW_BLUR,
+                        color = Color.Black.copy(alpha = BANNER_SHADOW_ALPHA),
+                        spread = BANNER_SHADOW_SPREAD,
+                        offset = DpOffset(0.dp, BANNER_SHADOW_OFFSET),
+                    ),
                 )
+                .clip(shape)
+                .background(surfaces.homeToolbar)
+                .border(BANNER_LINE, surfaces.homeToolbarLine, shape)
+                .padding(horizontal = BANNER_PADDING_HORIZONTAL, vertical = BANNER_PADDING_VERTICAL)
                 .animateContentSize()
                 // A banner appearing is news a screen-reader user must get:
                 // without a live region TalkBack never announces the switch to
@@ -165,144 +183,125 @@ private fun Notification(modifier: Modifier = Modifier, notificationBannerData: 
                             LiveRegionMode.Polite
                         }
                 }
-                .testTag(NOTIFICATION_BANNER_TEST_TAG)
+                .testTag(NOTIFICATION_BANNER_TEST_TAG),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(BANNER_GAP),
     ) {
-        val (status, textTitle, textMessage, actionIcon) = createRefs()
-        NotificationDot(
-            statusLevel,
-            Modifier.constrainAs(status) {
-                top.linkTo(textTitle.top)
-                start.linkTo(parent.start)
-                bottom.linkTo(textTitle.bottom)
-            },
+        Icon(
+            painter = painterResource(lead.glyph.drawable()),
+            contentDescription = null,
+            tint = lead.tone.color(surfaces),
+            modifier = Modifier.size(BANNER_GLYPH),
         )
-        Text(
-            // Rendered as authored: the title resources carry the desktop's
-            // uppercase, because a runtime toUpperCase is wrong in several of
-            // the locales this app ships and leaves translators guessing.
-            text = title,
-            modifier =
-                Modifier.constrainAs(textTitle) {
-                        top.linkTo(parent.top)
-                        start.linkTo(status.end)
-                        if (message != null) {
-                            bottom.linkTo(textMessage.top)
-                        } else {
-                            bottom.linkTo(parent.bottom)
-                        }
-                        if (action != null) {
-                            end.linkTo(actionIcon.start)
-                        } else {
-                            end.linkTo(parent.end)
-                        }
-                        width = Dimension.fillToConstraints
-                    }
-                    .padding(start = Dimens.smallPadding),
-            // Desktop tinyText: 12/18 semibold.
-            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-            color = MaterialTheme.colorScheme.onSurface,
-            // Two lines: a title that interpolates an app name, and long
-            // translations of the version banners, do not fit one. The card
-            // animates its own size, so it grows cleanly.
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-        )
-        message?.let { message ->
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(BANNER_TEXT_GAP),
+        ) {
             Text(
-                text = message.text,
-                modifier =
-                    Modifier.constrainAs(textMessage) {
-                            top.linkTo(textTitle.bottom)
-                            start.linkTo(textTitle.start)
-                            if (action != null) {
-                                end.linkTo(actionIcon.start)
-                                bottom.linkTo(parent.bottom)
-                            } else {
-                                end.linkTo(parent.end)
-                                bottom.linkTo(parent.bottom)
-                            }
-                            width = Dimension.fillToConstraints
-                            height = Dimension.wrapContent
-                        }
-                        .padding(start = Dimens.smallPadding, top = Dimens.tinyPadding)
-                        .wrapContentWidth(Alignment.Start)
-                        .let {
-                            if (message is NotificationMessage.ClickableText) {
-                                it.clickable(
-                                        onClickLabel = message.contentDescription,
-                                        role = Role.Button,
-                                    ) {
-                                        message.onClick()
-                                    }
-                                    .testTag(NOTIFICATION_BANNER_TEXT_ACTION_TEST_TAG)
-                            } else {
-                                it
-                            }
-                        },
-                // Desktop NotificationSubtitleText: 12/600 at 60 % white. The
-                // weight is explicit because the body face ships 400/600/700
-                // only, so labelMedium's 500 would resolve to regular.
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = Alpha60),
-                style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
-                // Unbounded for every banner this app authors; the operator
-                // notice clamps, because its length is the publisher's choice
-                // and the connect card must stay on screen.
-                maxLines = messageMaxLines,
+                // Rendered as authored: a runtime case transform is wrong in
+                // several of the locales this app ships.
+                text = title,
+                style = HomeTypography.bannerTitle,
+                color = surfaces.homeText,
+                // Two lines: a title that interpolates an app name, and long
+                // translations, do not fit one.
+                maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
+            message?.let { message ->
+                Text(
+                    text = message.text,
+                    style = HomeTypography.bannerBody,
+                    color = surfaces.homeTextSecondary,
+                    // Unbounded for every banner this app authors; the operator
+                    // notice clamps, because its length is the publisher's choice
+                    // and the connect card must stay on screen.
+                    maxLines = messageMaxLines,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier =
+                        if (message is NotificationMessage.ClickableText) {
+                            Modifier.clickable(
+                                    onClickLabel = message.contentDescription,
+                                    role = Role.Button,
+                                    onClick = message.onClick,
+                                )
+                                .testTag(NOTIFICATION_BANNER_TEXT_ACTION_TEST_TAG)
+                        } else {
+                            Modifier
+                        },
+                )
+            }
         }
-        action?.let {
-            NotificationAction(
-                it.icon,
-                onClick = it.onClick,
-                contentDescription = it.contentDescription,
+        if (button != null || action != null) {
+            Row(
+                // An announcement keeps its cross on the headline's line (desktop
+                // WarrenAnnouncementCard); every other banner centres its end.
                 modifier =
-                    Modifier.constrainAs(actionIcon) {
-                        top.linkTo(parent.top)
-                        end.linkTo(parent.end)
-                        bottom.linkTo(parent.bottom)
-                    },
-            )
+                    Modifier.align(
+                        if (lead.glyph == NotificationGlyph.Megaphone) Alignment.Top
+                        else Alignment.CenterVertically
+                    ),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(BANNER_TRAILING_GAP),
+            ) {
+                button?.let { BannerButton(it, surfaces) }
+                action?.let { BannerAction(it, surfaces.homeTextSecondary) }
+            }
         }
     }
 }
 
-@Composable
-private fun StatusLevel.accent(): Color =
+private fun NotificationGlyph.drawable(): Int =
     when (this) {
-        StatusLevel.Error -> MaterialTheme.colorScheme.error
-        StatusLevel.Warning -> MaterialTheme.colorScheme.warning
-        StatusLevel.Info -> MaterialTheme.colorScheme.positive
-        StatusLevel.None -> Color.Transparent
+        NotificationGlyph.Download -> R.drawable.ic_download
+        NotificationGlyph.Megaphone -> R.drawable.ic_megaphone
+        NotificationGlyph.Alert -> R.drawable.ic_forum_alert_circle
+        NotificationGlyph.Info -> R.drawable.ic_forum_info_circle
     }
 
+private fun NotificationTone.color(surfaces: WarrenSurfaces): Color =
+    when (this) {
+        NotificationTone.Badge -> surfaces.homeBadge
+        NotificationTone.Secondary -> surfaces.homeTextSecondary
+        NotificationTone.Disconnect -> surfaces.homeDisconnectText
+    }
+
+/** The mockup's light "Install": the home text as its fill, the page as its label. */
 @Composable
-private fun NotificationDot(statusLevel: StatusLevel, modifier: Modifier) {
-    Box(
+private fun BannerButton(button: NotificationButton, surfaces: WarrenSurfaces) {
+    Text(
+        text = button.label,
+        style = HomeTypography.bannerButton,
+        color = surfaces.homePage,
+        maxLines = 1,
         modifier =
-            modifier
-                .background(color = statusLevel.accent(), shape = CircleShape)
-                .size(Dimens.notificationStatusIconSize)
+            Modifier.clip(RoundedCornerShape(BUTTON_RADIUS))
+                .background(surfaces.homeText)
+                .clickable(role = Role.Button, onClick = button.onClick)
+                .padding(horizontal = BUTTON_PADDING_HORIZONTAL, vertical = BUTTON_PADDING_VERTICAL),
     )
 }
 
+/**
+ * A bare glyph, as the mockup puts a banner away. The box stays 24 dp to keep the card compact;
+ * the pointer input still answers the 48 dp touch floor around it.
+ */
 @Composable
-private fun NotificationAction(
-    imageVector: ImageVector,
-    contentDescription: String?,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-
-    IconButton(
-        modifier = modifier.testTag(NOTIFICATION_BANNER_ACTION_TEST_TAG),
-        onClick = onClick,
+private fun BannerAction(action: NotificationAction, tint: Color) {
+    Box(
+        modifier =
+            Modifier.size(BANNER_ACTION_BOX)
+                .clip(RoundedCornerShape(BANNER_ACTION_RADIUS))
+                .clickable(role = Role.Button, onClick = action.onClick)
+                .testTag(NOTIFICATION_BANNER_ACTION_TEST_TAG),
+        contentAlignment = Alignment.Center,
     ) {
-        Icon(
-            modifier = Modifier.padding(Dimens.smallPadding),
-            imageVector = imageVector,
-            contentDescription = contentDescription,
-            tint = MaterialTheme.colorScheme.onSurface,
-        )
+        val glyph = action.glyph
+        val iconModifier = Modifier.size(BANNER_GLYPH)
+        if (glyph != null) {
+            Icon(painterResource(glyph), action.contentDescription, iconModifier, tint)
+        } else {
+            Icon(action.icon, action.contentDescription, iconModifier, tint)
+        }
     }
 }

@@ -1,12 +1,7 @@
 package com.warrenbrowse.vpn.lib.ui.component
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.height
-import androidx.compose.ui.text.style.TextOverflow
 import com.warrenbrowse.vpn.lib.ui.theme.HomeTypography
-import com.warrenbrowse.vpn.lib.ui.theme.tokens.DesignTokens
 import com.warrenbrowse.vpn.lib.ui.theme.color.LocalWarrenSurfaces
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -30,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.warrenbrowse.vpn.lib.ui.theme.color.Alpha60
 import androidx.compose.ui.text.font.FontWeight
@@ -38,6 +34,12 @@ import com.warrenbrowse.vpn.lib.ui.theme.color.warning
 
 private const val FORUM_URL = "https://forum.warrenbrowse.com/"
 private const val BPS_PER_MBPS = 1_000_000L
+
+/** The beta [label] with the live cap after it, "BETA 20 Mbps", or alone with no cap known. */
+fun betaCapLabel(label: String, capBps: Long?): String {
+    val capMbps = capBps?.let { it / BPS_PER_MBPS }?.takeIf { it > 0 }
+    return if (capMbps != null) "$label $capMbps Mbps" else label
+}
 
 /**
  * The beta identity badge: a "BETA" chip plus a one-line
@@ -53,11 +55,11 @@ private const val BPS_PER_MBPS = 1_000_000L
  * eyes a second into every cold start.
  */
 /**
- * Where the badge sits (desktop BetaBadge): [Home] is the line above the home
+ * Where the badge sits (desktop BetaBadge): [Footer] opens the end of the home
  * footer; [Row] is the full-width settings row on a charcoal screen.
  */
 enum class BetaBadgeVariant {
-    Home,
+    Footer,
     Row,
 }
 
@@ -78,8 +80,12 @@ fun BetaBadge(
         }
 
     when (variant) {
-        BetaBadgeVariant.Home ->
-            BetaHomeLine(line = line, onClick = { dialogVisible = true }, modifier = modifier)
+        BetaBadgeVariant.Footer ->
+            BetaFooterLabel(
+                capBps = capBps.takeIf { capResolved },
+                onClick = { dialogVisible = true },
+                modifier = modifier,
+            )
         BetaBadgeVariant.Row ->
             BetaRow(line = line, onClick = { dialogVisible = true }, modifier = modifier)
     }
@@ -90,58 +96,19 @@ fun BetaBadge(
 }
 
 /**
- * The home variant (desktop BetaBadge 'home'): a quiet line above the footer, the chip carrying
- * the beta identity and the line its one practical consequence. One line whatever the language;
- * the line ellipsizes rather than wrapping.
+ * The footer variant (desktop BetaBadge 'footer', mockup 8d): the beta identity and its one
+ * practical consequence, "BETA 20 Mbps", in the beta amber, opening the beta details.
  */
 @Composable
-private fun BetaHomeLine(line: String?, onClick: () -> Unit, modifier: Modifier) {
-    val surfaces = LocalWarrenSurfaces.current
-    Row(
-        modifier =
-            modifier
-                .fillMaxWidth()
-                .clickable(onClick = onClick)
-                .padding(
-                    horizontal = DesignTokens.Home.Panel.PaddingHorizontal,
-                    vertical = BETA_HOME_ROW_PADDING,
-                ),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(BETA_HOME_GAP),
-    ) {
-        Box(
-            modifier =
-                Modifier.height(BETA_HOME_CHIP_HEIGHT)
-                    .clip(RoundedCornerShape(BETA_HOME_CHIP_RADIUS))
-                    .background(surfaces.homeBadge)
-                    .padding(horizontal = BETA_HOME_CHIP_PADDING),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(
-                text = stringResource(R.string.beta_badge_label),
-                style = HomeTypography.betaChip,
-                color = surfaces.homePillPendingText,
-                maxLines = 1,
-            )
-        }
-        if (line != null) {
-            Text(
-                text = line,
-                style = HomeTypography.betaLine,
-                color = surfaces.homeTextSecondary,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-    }
+private fun BetaFooterLabel(capBps: Long?, onClick: () -> Unit, modifier: Modifier) {
+    Text(
+        text = betaCapLabel(stringResource(R.string.beta_badge_label), capBps),
+        style = HomeTypography.footerBeta,
+        color = LocalWarrenSurfaces.current.homeBeta,
+        maxLines = 1,
+        modifier = modifier.clickable(role = Role.Button, onClick = onClick),
+    )
 }
-
-// Desktop HomeChip and HomeRow, which carry no token of their own.
-private val BETA_HOME_ROW_PADDING = 10.dp
-private val BETA_HOME_GAP = 8.dp
-private val BETA_HOME_CHIP_HEIGHT = 18.dp
-private val BETA_HOME_CHIP_RADIUS = 5.dp
-private val BETA_HOME_CHIP_PADDING = 6.dp
 
 /** The full-width settings row on a charcoal screen. */
 @Composable

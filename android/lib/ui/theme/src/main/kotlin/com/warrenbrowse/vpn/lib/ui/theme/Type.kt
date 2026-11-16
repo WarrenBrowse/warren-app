@@ -5,7 +5,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.warrenbrowse.vpn.lib.ui.theme.tokens.DesignTokens
@@ -144,18 +143,38 @@ object HomeTypography {
             fontSize = DesignTokens.Home.Subtitle.MonoSize,
             fontFeatureSettings = "tnum",
         )
-    // The desktop BetaBadge home variant: a 10 px bold chip and a 12 px line.
-    val betaChip =
+    // The beta label and its cap open the footer's end in bold (desktop FooterBeta, mockup 8d).
+    val footerBeta = footer.copy(fontWeight = FontWeight.Bold)
+    // The home banner (desktop NotificationBanner, mockup 8d): a 13 px title over an 11 px body,
+    // and the 12 px label of its button.
+    val bannerTitle =
         TextStyle(
             fontFamily = WarrenFonts.sans,
-            fontWeight = FontWeight.Bold,
-            fontSize = BETA_CHIP_TEXT_SIZE,
-            letterSpacing = BETA_CHIP_LETTER_SPACING,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = BANNER_TITLE_SIZE,
+            lineHeight = BANNER_TITLE_LINE_HEIGHT,
         )
-    val betaLine = footer.copy(lineHeight = TextUnit.Unspecified)
+    val bannerBody =
+        TextStyle(
+            fontFamily = WarrenFonts.sans,
+            fontWeight = FontWeight.Normal,
+            fontSize = BANNER_BODY_SIZE,
+            lineHeight = BANNER_BODY_LINE_HEIGHT,
+        )
+    val bannerButton =
+        TextStyle(
+            fontFamily = WarrenFonts.sans,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = BANNER_BUTTON_SIZE,
+            lineHeight = BANNER_BUTTON_LINE_HEIGHT,
+        )
 }
 
 private const val LINE_HEIGHT_TIGHT = 1.2f
 private val FOOTER_LINE_HEIGHT = 16.sp
-private val BETA_CHIP_TEXT_SIZE = 10.sp
-private val BETA_CHIP_LETTER_SPACING = 0.5.sp
+private val BANNER_TITLE_SIZE = 13.sp
+private val BANNER_TITLE_LINE_HEIGHT = 17.sp
+private val BANNER_BODY_SIZE = 11.sp
+private val BANNER_BODY_LINE_HEIGHT = 15.sp
+private val BANNER_BUTTON_SIZE = 12.sp
+private val BANNER_BUTTON_LINE_HEIGHT = 16.sp

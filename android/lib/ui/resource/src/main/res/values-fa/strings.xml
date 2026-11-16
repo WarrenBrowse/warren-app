@@ -80,8 +80,6 @@
     <string name="unsupported_version_description">حریم خصوصی شما ممکن است با این نسخهٔ اپلیکیشن پشتیبانی‌نشده در خطر باشد. لطفاً هم‌اکنون به‌روزرسانی کنید.</string>
     <string name="update_required_title">به‌روزرسانی لازم است</string>
     <string name="update_required_description">این نسخه از Warren دیگر پشتیبانی نمی‌شود. برای حفظ امنیت اتصال خود، باید برنامه را به‌روزرسانی کنید تا بتوانید همچنان از آن استفاده کنید.</string>
-    <string name="update_available">به‌روزرسانی موجود است</string>
-    <string name="update_available_description">نسخهٔ %1$s در دسترس است. برای دانلود به‌روزرسانی ضربه بزنید.</string>
     <string name="update_now">به‌روزرسانی اکنون</string>
     <string name="quit">خروج</string>
     <string name="app_routing">مسیریابی اپلیکیشن‌ها</string>
@@ -792,4 +790,8 @@
         <item quantity="other">%1$d سال باقی‌مانده</item>
     </plurals>
     <string name="home_select_location">مکان را انتخاب کنید. مکان فعلی ‏%1$s است</string>
+    <string name="update_banner_title">به‌روزرسانی موجود است</string>
+    <string name="update_banner_version">نسخهٔ %1$s</string>
+    <string name="update_banner_install">نصب</string>
+    <string name="beta_badge_label">BETA</string>
 </resources>

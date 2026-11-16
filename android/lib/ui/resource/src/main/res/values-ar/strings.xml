@@ -80,8 +80,6 @@
     <string name="unsupported_version_description">قد تكون خصوصيتك في خطر مع هذا الإصدار غير المدعوم من التطبيق. يُرجى التحديث الآن.</string>
     <string name="update_required_title">التحديث مطلوب</string>
     <string name="update_required_description">لم يعد هذا الإصدار من Warren مدعومًا. للحفاظ على حماية اتصالك، يجب عليك تحديث التطبيق لمواصلة استخدامه.</string>
-    <string name="update_available">يتوفَّر تحديث جديد</string>
-    <string name="update_available_description">الإصدار %1$s متوفر. اضغط لتنزيل التحديث.</string>
     <string name="update_now">حدّث الآن</string>
     <string name="quit">خروج</string>
     <string name="app_routing">توجيه التطبيقات</string>
@@ -836,4 +834,8 @@
         <item quantity="other">يتبقى %1$d عام</item>
     </plurals>
     <string name="home_select_location">حدِّد الموقع. الموقع الحالي هو %1$s</string>
+    <string name="update_banner_title">يتوفَّر تحديث جديد</string>
+    <string name="update_banner_version">الإصدار %1$s</string>
+    <string name="update_banner_install">تثبيت</string>
+    <string name="beta_badge_label">BETA</string>
 </resources>

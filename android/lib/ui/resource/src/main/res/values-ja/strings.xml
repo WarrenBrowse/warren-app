@@ -80,8 +80,6 @@
     <string name="unsupported_version_description">このアプリバージョンはサポートされていないため、プライバシーが危険にさらされる可能性があります。今すぐアップデートしてください。</string>
     <string name="update_required_title">アップデートが必要です</string>
     <string name="update_required_description">このバージョンのWarrenはサポートが終了しました。接続の保護を維持するには、アプリをアップデートして使用を続ける必要があります。</string>
-    <string name="update_available">アップデート可</string>
-    <string name="update_available_description">バージョン %1$s が利用可能です。タップして更新をダウンロードしてください。</string>
     <string name="update_now">今すぐ更新</string>
     <string name="quit">終了</string>
     <string name="app_routing">アプリのルーティング</string>
@@ -781,4 +779,8 @@
         <item quantity="other">残り%1$d 年</item>
     </plurals>
     <string name="home_select_location">場所を選択します。現在の場所は%1$sです</string>
+    <string name="update_banner_title">更新あり</string>
+    <string name="update_banner_version">バージョン%1$s</string>
+    <string name="update_banner_install">インストール</string>
+    <string name="beta_badge_label">BETA</string>
 </resources>

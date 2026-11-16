@@ -26,11 +26,6 @@ data class Dimensions(
     val connectionCardMaxWidth: Dp = 480.dp,
     // The filter chip's corner (the home feature chips are pills).
     val chipCornerRadius: Dp = 7.dp,
-    // Desktop NotificationBanner: radius 14, 2 px status edge, 10 12 10 16 padding.
-    val notificationBannerRadius: Dp = 14.dp,
-    val notificationBannerEdge: Dp = 2.dp,
-    val notificationBannerVerticalPadding: Dp = 10.dp,
-    val notificationBannerElevation: Dp = 8.dp,
     // Desktop DialogPopup: radius 12 on the darkBlue container.
     val dialogCornerRadius: Dp = 12.dp,
     // Desktop CurrentCountryFlag: a 22 px round flag with a hairline ring.
@@ -59,11 +54,8 @@ data class Dimensions(
     val mediumSpacer: Dp = 16.dp,
     val miniPadding: Dp = 4.dp,
     val multihopSelectorPanelRadius: Dp = 16.dp,
-    val notificationBannerEndPadding: Dp = 12.dp,
-    val notificationBannerStartPadding: Dp = 16.dp,
     val notificationEndIconPadding: Dp = 4.dp,
     // This is according to the design, should be updated in the design to standard size
-    val notificationStatusIconSize: Dp = 10.dp,
     val obfuscationNavigationBoxWidth: Dp = 56.dp,
     val outLineButtonBorderWidth: Dp = 1.dp,
     val orDivierMinHeight: Dp = 48.dp,

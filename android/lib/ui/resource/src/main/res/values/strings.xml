@@ -83,8 +83,9 @@
     <!-- Forced-update gate (full screen, replaces the whole UI): desktop/iOS parity copy, distinct from the in-app banner strings above. -->
     <string name="update_required_title">Update required</string>
     <string name="update_required_description">This version of Warren is no longer supported. To keep your connection protected, you must update the app to keep using it.</string>
-    <string name="update_available">UPDATE AVAILABLE</string>
-    <string name="update_available_description">Version %1$s is available. Tap to download the update.</string>
+    <string name="update_banner_title">Update available</string>
+    <string name="update_banner_version">Version %1$s</string>
+    <string name="update_banner_install">Install</string>
     <string name="update_now">Update now</string>
     <string name="quit">Quit</string>
     <string name="app_routing">App routing</string>
@@ -508,7 +509,7 @@
 
     <!-- Beta program (beta flavor only): identity badge, degraded-service
          explanation, auto-granted access and the payment-free recovery. -->
-    <string name="beta_badge_label" translatable="false">BETA</string>
+    <string name="beta_badge_label">BETA</string>
     <string name="beta_badge_line_capped">Free beta network, speed capped at %1$d Mbps</string>
     <string name="beta_badge_line">Free beta network, limited bandwidth</string>
     <string name="beta_dialog_title">Warren beta</string>

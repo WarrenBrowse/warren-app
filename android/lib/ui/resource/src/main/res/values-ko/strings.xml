@@ -80,8 +80,6 @@
     <string name="unsupported_version_description">지원되지 않는 이 앱 버전으로 인해 개인 정보가 위험할 수 있습니다. 지금 업데이트하세요.</string>
     <string name="update_required_title">업데이트가 필요합니다</string>
     <string name="update_required_description">이 버전의 Warren은 더 이상 지원되지 않습니다. 연결 보호를 유지하려면 앱을 업데이트해야 계속 사용할 수 있습니다.</string>
-    <string name="update_available">업데이트 사용 가능</string>
-    <string name="update_available_description">버전 %1$s을(를) 사용할 수 있습니다. 탭하여 업데이트를 다운로드하세요.</string>
     <string name="update_now">지금 업데이트</string>
     <string name="quit">종료</string>
     <string name="app_routing">앱 라우팅</string>
@@ -781,4 +779,8 @@
         <item quantity="other">%1$d년 남음</item>
     </plurals>
     <string name="home_select_location">위치를 선택하세요. 현재 위치는 %1$s입니다</string>
+    <string name="update_banner_title">업데이트 가능</string>
+    <string name="update_banner_version">버전 %1$s</string>
+    <string name="update_banner_install">설치</string>
+    <string name="beta_badge_label">BETA</string>
 </resources>

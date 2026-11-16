@@ -61,40 +61,50 @@ fun ForumHeaderButton(
     modifier: Modifier = Modifier,
     iconSize: Dp = Dimens.topBarActionIconSize,
 ) {
-    val label =
-        when (slot) {
-            is ForumHeaderSlot.Activity ->
-                if (slot.unread > 0) {
-                    stringResource(R.string.forum_activity_header_unread, unreadLabel(slot.unread))
-                } else {
-                    stringResource(R.string.forum_activity_title)
-                }
-            ForumHeaderSlot.Community ->
-                stringResource(R.string.community_forum) + ". " + stringResource(R.string.opens_externally)
-        }
+    val label = forumHeaderLabel(slot)
     IconButton(
         modifier =
             modifier.testTag(TOP_BAR_FORUM_BUTTON_TEST_TAG).semantics { contentDescription = label },
         enabled = enabled,
         onClick = onClick,
     ) {
-        Box {
-            Icon(
-                painter =
-                    painterResource(
-                        id =
-                            when (slot) {
-                                is ForumHeaderSlot.Activity -> R.drawable.ic_bell_outline
-                                ForumHeaderSlot.Community -> R.drawable.ic_lifebuoy_outline
-                            }
-                    ),
-                tint = tint,
-                contentDescription = null,
-                modifier = Modifier.size(iconSize),
-            )
-            if (slot is ForumHeaderSlot.Activity && slot.unread > 0) {
-                UnreadCountBadge(unread = slot.unread, modifier = Modifier.align(Alignment.TopEnd))
+        ForumHeaderIcon(slot = slot, tint = tint, iconSize = iconSize)
+    }
+}
+
+/** What the forum slot says to a screen reader: the unread count, or that it opens the forum. */
+@Composable
+fun forumHeaderLabel(slot: ForumHeaderSlot): String =
+    when (slot) {
+        is ForumHeaderSlot.Activity ->
+            if (slot.unread > 0) {
+                stringResource(R.string.forum_activity_header_unread, unreadLabel(slot.unread))
+            } else {
+                stringResource(R.string.forum_activity_title)
             }
+        ForumHeaderSlot.Community ->
+            stringResource(R.string.community_forum) + ". " + stringResource(R.string.opens_externally)
+    }
+
+/** The slot's glyph and its unread badge, for a host that draws its own button around them. */
+@Composable
+fun ForumHeaderIcon(slot: ForumHeaderSlot, tint: Color, iconSize: Dp = Dimens.topBarActionIconSize) {
+    Box {
+        Icon(
+            painter =
+                painterResource(
+                    id =
+                        when (slot) {
+                            is ForumHeaderSlot.Activity -> R.drawable.ic_bell_outline
+                            ForumHeaderSlot.Community -> R.drawable.ic_lifebuoy_outline
+                        }
+                ),
+            tint = tint,
+            contentDescription = null,
+            modifier = Modifier.size(iconSize),
+        )
+        if (slot is ForumHeaderSlot.Activity && slot.unread > 0) {
+            UnreadCountBadge(unread = slot.unread, modifier = Modifier.align(Alignment.TopEnd))
         }
     }
 }

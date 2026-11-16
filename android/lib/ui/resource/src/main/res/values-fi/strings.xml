@@ -80,8 +80,6 @@
     <string name="unsupported_version_description">Yksityisyytesi saattaa olla vaarassa tämän sovellusversion, jota ei tueta, vuoksi. Päivitä versio heti.</string>
     <string name="update_required_title">Päivitys vaaditaan</string>
     <string name="update_required_description">Tätä Warren-versiota ei enää tueta. Pidääksesi yhteytesi suojattuna sinun on päivitettävä sovellus, jotta voit jatkaa sen käyttöä.</string>
-    <string name="update_available">PÄIVITYS SAATAVILLA</string>
-    <string name="update_available_description">Versio %1$s on saatavilla. Napauta ladataksesi päivityksen.</string>
     <string name="update_now">Päivitä nyt</string>
     <string name="quit">Lopeta</string>
     <string name="app_routing">Sovellusreititys</string>
@@ -792,4 +790,8 @@
         <item quantity="other">%1$d vuotta jäljellä</item>
     </plurals>
     <string name="home_select_location">Valitse sijainti. Nykyinen sijainti on %1$s.</string>
+    <string name="update_banner_title">Päivitys saatavilla</string>
+    <string name="update_banner_version">Versio %1$s</string>
+    <string name="update_banner_install">Asenna</string>
+    <string name="beta_badge_label">BETA</string>
 </resources>

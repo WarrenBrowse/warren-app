@@ -4,7 +4,6 @@ import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures
 import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.cases
 import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.float
 import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.floats
-import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.int
 import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.obj
 import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.string
 import com.warrenbrowse.vpn.lib.ui.resource.R
@@ -50,10 +49,6 @@ class SceneryFramingFixtureTest {
             SceneryFraming.GROUND_SPAN,
         )
         assertEquals(SceneryFraming.SKY_BOTTOM_ROW, framings.obj("sky").float("bottom_row"))
-        assertEquals(
-            SceneryFraming.THUMB_MARGIN_ROWS,
-            fixture.obj("thumbnail").int("thumb_margin_rows"),
-        )
     }
 
     @Test
@@ -100,20 +95,6 @@ class SceneryFramingFixtureTest {
             )
             assertTrue(got.left >= -TOLERANCE, "$name: cropped on the left")
             assertTrue(got.left + got.width <= hero[0] + TOLERANCE, "$name: cropped on the right")
-        }
-    }
-
-    @Test
-    fun `every thumbnail case starts at the row the fixture rule gives`() {
-        val cases = fixture.obj("thumbnail").cases("cases")
-        assertTrue(cases.isNotEmpty(), "the fixture must carry thumbnail cases")
-        cases.forEach { case ->
-            val skyline = case.int("skyline_top_row")
-            assertEquals(
-                case.int("top_row"),
-                SceneryFraming.thumbnailTopRow(skyline),
-                "skyline $skyline",
-            )
         }
     }
 

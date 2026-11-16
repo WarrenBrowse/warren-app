@@ -40,6 +40,15 @@ class ConnectExpiryWarningTest {
             every {
                 getQuantityString(eq(R.plurals.home_years_left), any(), any())
             } answers { "${(invocation.args[2] as Array<*>)[0]} years left" }
+            every {
+                getQuantityString(eq(R.plurals.account_remaining_days), any(), any())
+            } answers { "${(invocation.args[2] as Array<*>)[0]} days" }
+            every {
+                getQuantityString(eq(R.plurals.account_remaining_months), any(), any())
+            } answers { "${(invocation.args[2] as Array<*>)[0]} months" }
+            every {
+                getQuantityString(eq(R.plurals.account_remaining_years), any(), any())
+            } answers { "${(invocation.args[2] as Array<*>)[0]} years" }
         }
     }
 
@@ -88,6 +97,23 @@ class ConnectExpiryWarningTest {
         assertEquals(
             "12 days left",
             accountTimeLeftLabel(context, now + 12 * 86_400 + 43_200, nowSecs = now),
+        )
+    }
+
+    @Test
+    fun `after the beta cap the footer gives the bare duration, in the same units`() {
+        // Mockup 8d: "BETA 20 Mbps · 14 days", where "left" would make the line run long.
+        assertEquals(
+            "12 days",
+            accountTimeLeftLabel(context, now + 12 * 86_400, nowSecs = now, afterBeta = true),
+        )
+        assertEquals(
+            "1 months",
+            accountTimeLeftLabel(context, now + 30 * 86_400, nowSecs = now, afterBeta = true),
+        )
+        assertEquals(
+            "1 years",
+            accountTimeLeftLabel(context, now + 400 * 86_400, nowSecs = now, afterBeta = true),
         )
     }
 }

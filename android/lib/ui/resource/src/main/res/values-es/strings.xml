@@ -80,8 +80,6 @@
     <string name="unsupported_version_description">Al usar esta versión obsoleta de la aplicación, es posible que su privacidad esté en riesgo. Actualice ahora.</string>
     <string name="update_required_title">Actualización necesaria</string>
     <string name="update_required_description">Esta versión de Warren ya no es compatible. Para mantener su conexión protegida, debe actualizar la aplicación para seguir utilizándola.</string>
-    <string name="update_available">ACTUALIZACIÓN DISPONIBLE</string>
-    <string name="update_available_description">La versión %1$s está disponible. Toca para descargar la actualización.</string>
     <string name="update_now">Actualizar ahora</string>
     <string name="quit">Salir</string>
     <string name="app_routing">Enrutamiento de aplicaciones</string>
@@ -795,4 +793,8 @@
         <item quantity="other">Quedan %1$d años</item>
     </plurals>
     <string name="home_select_location">Seleccione la ubicación. La ubicación actual es %1$s</string>
+    <string name="update_banner_title">Actualización disponible</string>
+    <string name="update_banner_version">Versión %1$s</string>
+    <string name="update_banner_install">Instalar</string>
+    <string name="beta_badge_label">BETA</string>
 </resources>

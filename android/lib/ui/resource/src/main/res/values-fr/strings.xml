@@ -80,8 +80,6 @@
     <string name="unsupported_version_description">Votre confidentialité peut être en danger avec cette version non prise en charge de l\'application. Veuillez la mettre à jour maintenant.</string>
     <string name="update_required_title">Mise à jour requise</string>
     <string name="update_required_description">Cette version de Warren n\'est plus prise en charge. Pour garder votre connexion protégée, vous devez mettre à jour l\'application pour continuer à l\'utiliser.</string>
-    <string name="update_available">MISE À JOUR DISPONIBLE</string>
-    <string name="update_available_description">La version %1$s est disponible. Appuyez pour télécharger la mise à jour.</string>
     <string name="update_now">Mettre à jour maintenant</string>
     <string name="quit">Quitter</string>
     <string name="app_routing">Routage des apps</string>
@@ -795,4 +793,8 @@
         <item quantity="other">%1$d ans restants</item>
     </plurals>
     <string name="home_select_location">Sélectionnez une localisation. La localisation actuelle est %1$s</string>
+    <string name="update_banner_title">Mise à jour disponible</string>
+    <string name="update_banner_version">Version %1$s</string>
+    <string name="update_banner_install">Installer</string>
+    <string name="beta_badge_label">BÊTA</string>
 </resources>

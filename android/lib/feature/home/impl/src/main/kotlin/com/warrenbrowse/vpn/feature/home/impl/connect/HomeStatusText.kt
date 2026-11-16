@@ -1,6 +1,5 @@
 package com.warrenbrowse.vpn.feature.home.impl.connect
 
-import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.warrenbrowse.vpn.lib.model.GeoIpLocation
 import com.warrenbrowse.vpn.lib.model.TunnelState
@@ -115,30 +114,11 @@ internal fun locationRowLine(
     }
 }
 
-/** The round picture of the location row. */
-internal sealed interface LocationThumb {
-    /** A full-width square of [landscape], starting at canvas row [topRow]. */
-    data class Art(@param:DrawableRes val landscape: Int, val topRow: Int) : LocationThumb
-
-    data class Flag(val countryCode: String) : LocationThumb
-}
-
 /**
- * The location row's picture (desktop `LocationThumb`): the country's own landscape crowned by
- * its skyline, its flag when it has no art, the watched plain when no country is named.
+ * The country whose round flag leads the location row (desktop `LocationFlag`): the exit's once
+ * the row names it, the selection's otherwise; none for a pick that names no country (Automatic).
  */
-internal fun locationThumb(countryCode: String?): LocationThumb {
-    val code = countryCode?.trim()?.lowercase().orEmpty()
-    val landscape = SceneryTable.countries[code]
-    return when {
-        landscape != null -> art(landscape)
-        code.isNotEmpty() -> LocationThumb.Flag(code)
-        else -> art(SceneryTable.plain)
-    }
+internal fun locationFlagCode(line: HomeLine?, selectedCountryCode: String?): String? {
+    val code = (line as? HomeLine.ExitPlace)?.countryCode ?: selectedCountryCode
+    return code?.trim()?.lowercase()?.takeIf { it.isNotEmpty() }
 }
-
-private fun art(@DrawableRes landscape: Int): LocationThumb.Art =
-    LocationThumb.Art(
-        landscape,
-        SceneryFraming.thumbnailTopRow(SceneryTable.landscapes.getValue(landscape).skylineTopRow),
-    )

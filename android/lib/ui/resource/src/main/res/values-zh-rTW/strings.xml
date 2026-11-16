@@ -80,8 +80,6 @@
     <string name="unsupported_version_description">此應用程式版本不受支援，因此您的隱私可能存在風險。請立即更新。</string>
     <string name="update_required_title">需要更新</string>
     <string name="update_required_description">此版本的 Warren 已不再受支援。為了持續保護您的連線，您必須更新應用程式才能繼續使用。</string>
-    <string name="update_available">可用的更新</string>
-    <string name="update_available_description">版本 %1$s 已推出。輕觸以下載更新。</string>
     <string name="update_now">立即更新</string>
     <string name="quit">結束</string>
     <string name="app_routing">應用程式路由</string>
@@ -781,4 +779,8 @@
         <item quantity="other">剩餘 %1$d 年</item>
     </plurals>
     <string name="home_select_location">選擇位置。目前位置為 %1$s</string>
+    <string name="update_banner_title">已推出更新</string>
+    <string name="update_banner_version">版本 %1$s</string>
+    <string name="update_banner_install">安裝</string>
+    <string name="beta_badge_label">BETA</string>
 </resources>

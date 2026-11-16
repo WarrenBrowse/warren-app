@@ -1,5 +1,6 @@
 package com.warrenbrowse.vpn.lib.ui.component
 
+import androidx.annotation.DrawableRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.OpenInNew
 import androidx.compose.material.icons.rounded.AccountBalanceWallet
@@ -7,7 +8,6 @@ import androidx.compose.material.icons.rounded.Clear
 import androidx.compose.material.icons.rounded.Devices
 import androidx.compose.material.icons.rounded.Info
 import androidx.compose.material.icons.rounded.UnfoldMore
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import com.warrenbrowse.vpn.lib.ui.designsystem.WarrenTextButton
 import androidx.compose.runtime.Composable
@@ -46,6 +46,7 @@ import com.warrenbrowse.vpn.lib.model.WarrenNoticeLevel
 import com.warrenbrowse.vpn.lib.ui.component.NotificationMessage.ClickableText
 import com.warrenbrowse.vpn.lib.ui.component.dialog.InfoDialog
 import com.warrenbrowse.vpn.lib.ui.component.dialog.WarrenAnnouncementDialog
+import com.warrenbrowse.vpn.lib.ui.theme.color.LocalWarrenSurfaces
 
 data class NotificationData(
     val title: AnnotatedString,
@@ -59,6 +60,8 @@ data class NotificationData(
      * publication cap allows far more than a banner can hold.
      */
     val messageMaxLines: Int = Int.MAX_VALUE,
+    /** A labelled button the banner ends with, before its [action] (mockup 8d's "Install"). */
+    val button: NotificationButton? = null,
 ) {
     constructor(
         title: String,
@@ -92,11 +95,25 @@ sealed interface NotificationMessage {
     ) : NotificationMessage
 }
 
+data class NotificationButton(val label: String, val onClick: () -> Unit)
+
 data class NotificationAction(
     val icon: ImageVector,
     val onClick: (() -> Unit),
     val contentDescription: String,
+    /** The desktop artwork to draw instead of [icon], where the banner has one. */
+    @param:DrawableRes val glyph: Int? = null,
 )
+
+/** The bare cross that puts a banner away (desktop `NotificationCloseAction`). */
+@Composable
+private fun dismissAction(onClick: () -> Unit): NotificationAction =
+    NotificationAction(
+        icon = Icons.Rounded.Clear,
+        onClick = onClick,
+        contentDescription = stringResource(R.string.dismiss),
+        glyph = R.drawable.ic_cross,
+    )
 
 @Suppress("LongMethod", "CyclomaticComplexMethod")
 @Composable
@@ -134,7 +151,7 @@ fun InAppNotification.toNotificationData(
                                 withStyle(
                                     SpanStyle(
                                         textDecoration = TextDecoration.Underline,
-                                        color = MaterialTheme.colorScheme.onSurface,
+                                        color = LocalWarrenSurfaces.current.homeText,
                                     )
                                 ) {
                                     append(stringResource(id = R.string.env_stand_down_re_enable))
@@ -176,11 +193,7 @@ fun InAppNotification.toNotificationData(
                 message = stringResource(id = R.string.exit_switched_message),
                 statusLevel = statusLevel,
                 action =
-                    NotificationAction(
-                        Icons.Rounded.Clear,
-                        onClickDismissExitSwitched,
-                        stringResource(id = R.string.dismiss),
-                    ),
+                    dismissAction(onClickDismissExitSwitched),
             )
         InAppNotification.TunnelStateBlocked ->
             NotificationData(
@@ -233,33 +246,20 @@ fun InAppNotification.toNotificationData(
             )
         is InAppNotification.UpdateAvailable ->
             NotificationData(
-                title = stringResource(id = R.string.update_available),
-                // The single action slot holds the dismiss, so the update
-                // itself moves onto the message the way the changelog banner
-                // already does: a banner the user cannot put away is a banner
-                // that also hides whatever ranks below it.
+                title = AnnotatedString(stringResource(id = R.string.update_banner_title)),
                 message =
-                    ClickableText(
-                        text =
-                            buildAnnotatedString {
-                                withStyle(SpanStyle(textDecoration = TextDecoration.Underline)) {
-                                    append(
-                                        stringResource(
-                                            id = R.string.update_available_description,
-                                            version,
-                                        )
-                                    )
-                                }
-                            },
-                        onClick = openAppListing,
-                        contentDescription = stringResource(id = R.string.open_url),
+                    NotificationMessage.Text(
+                        AnnotatedString(stringResource(id = R.string.update_banner_version, version))
                     ),
                 statusLevel = statusLevel,
+                // The dismiss keeps the action slot: a banner the user cannot put away also
+                // hides whatever ranks below it.
                 action =
-                    NotificationAction(
-                        Icons.Rounded.Clear,
-                        onClickDismissUpdateAvailable,
-                        stringResource(id = R.string.dismiss),
+                    dismissAction(onClickDismissUpdateAvailable),
+                button =
+                    NotificationButton(
+                        label = stringResource(id = R.string.update_banner_install),
+                        onClick = openAppListing,
                     ),
             )
         is InAppNotification.NewVersionChangelog ->
@@ -283,11 +283,7 @@ fun InAppNotification.toNotificationData(
                     ),
                 statusLevel = statusLevel,
                 action =
-                    NotificationAction(
-                        Icons.Rounded.Clear,
-                        onClickDismissChangelog,
-                        stringResource(id = R.string.dismiss),
-                    ),
+                    dismissAction(onClickDismissChangelog),
             )
 
         InAppNotification.Android16UpgradeWarning ->
@@ -304,7 +300,7 @@ fun InAppNotification.toNotificationData(
                                 withStyle(
                                     SpanStyle(
                                         textDecoration = TextDecoration.Underline,
-                                        color = MaterialTheme.colorScheme.onSurface,
+                                        color = LocalWarrenSurfaces.current.homeText,
                                     )
                                 ) {
                                     append(stringResource(R.string.click_here))
@@ -317,11 +313,7 @@ fun InAppNotification.toNotificationData(
                     ),
                 statusLevel = statusLevel,
                 action =
-                    NotificationAction(
-                        Icons.Rounded.Clear,
-                        onClickDismissAndroid16UpgradeWarning,
-                        stringResource(id = R.string.dismiss),
-                    ),
+                    dismissAction(onClickDismissAndroid16UpgradeWarning),
             )
     }
 
@@ -363,11 +355,7 @@ private fun launchAnnouncementBannerData(
             ),
         statusLevel = statusLevel,
         action =
-            NotificationAction(
-                Icons.Rounded.Clear,
-                onClick = onDismiss,
-                contentDescription = stringResource(R.string.dismiss),
-            ),
+            dismissAction(onDismiss),
         messageMaxLines = ANNOUNCEMENT_BANNER_MAX_LINES,
     )
 }
@@ -419,11 +407,7 @@ private fun accountStrikeBannerData(
             ),
         statusLevel = statusLevel,
         action =
-            NotificationAction(
-                Icons.Rounded.Clear,
-                onClick = onDismiss,
-                contentDescription = stringResource(R.string.dismiss),
-            ),
+            dismissAction(onDismiss),
     )
 }
 
@@ -469,11 +453,7 @@ private fun operatorNoticeBannerData(
         statusLevel = statusLevel,
         action =
             if (dismissible) {
-                NotificationAction(
-                    Icons.Rounded.Clear,
-                    onClick = onDismiss,
-                    contentDescription = stringResource(R.string.dismiss),
-                )
+                dismissAction(onDismiss)
             } else {
                 NotificationAction(
                     Icons.Rounded.UnfoldMore,
@@ -513,7 +493,7 @@ private fun errorMessageBannerData(
                             withStyle(
                                 SpanStyle(
                                     textDecoration = TextDecoration.Underline,
-                                    color = MaterialTheme.colorScheme.onSurface,
+                                    color = LocalWarrenSurfaces.current.homeText,
                                 )
                             ) {
                                 append(stringResource(id = R.string.manage_devices))
@@ -664,7 +644,7 @@ private fun String.formatWithHtml(): AnnotatedString =
         .toAnnotatedString(
             boldSpanStyle =
                 SpanStyle(
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = LocalWarrenSurfaces.current.homeText,
                     fontWeight = FontWeight.ExtraBold,
                 )
         )

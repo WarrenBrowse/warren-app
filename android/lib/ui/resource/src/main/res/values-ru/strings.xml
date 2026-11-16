@@ -80,8 +80,6 @@
     <string name="unsupported_version_description">Эта версия приложения не поддерживается, что может угрожать неприкосновенности ваших данных. Обновите приложение.</string>
     <string name="update_required_title">Требуется обновление</string>
     <string name="update_required_description">Эта версия Warren больше не поддерживается. Чтобы ваше соединение оставалось защищённым, необходимо обновить приложение для дальнейшего использования.</string>
-    <string name="update_available">ЕСТЬ ОБНОВЛЕНИЕ</string>
-    <string name="update_available_description">Доступна версия %1$s. Нажмите, чтобы загрузить обновление.</string>
     <string name="update_now">Обновить сейчас</string>
     <string name="quit">Выйти</string>
     <string name="app_routing">Маршрутизация приложений</string>
@@ -814,4 +812,8 @@
         <item quantity="other">Осталось %1$d года</item>
     </plurals>
     <string name="home_select_location">Выбрать местоположение. Текущее местоположение %1$s</string>
+    <string name="update_banner_title">Есть обновление</string>
+    <string name="update_banner_version">Версия %1$s</string>
+    <string name="update_banner_install">Установить</string>
+    <string name="beta_badge_label">BETA</string>
 </resources>
