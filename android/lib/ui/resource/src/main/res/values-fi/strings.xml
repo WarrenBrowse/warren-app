@@ -517,7 +517,8 @@
     <string name="onboarding_beta_retry">Yritä uudelleen nyt</string>
     <string name="connection_details_reconnects">Uudelleenyhdistämiset</string>
     <string name="connection_details_obfuscation">Hämärrys</string>
-    <string name="connection_details_obfuscation_active">HTTP/3-jäljittely (aktiivinen)</string>
+    <string name="connection_details_obfuscation_name">HTTP/3-jäljittely</string>
+    <string name="connection_details_obfuscation_chip">aktiivinen</string>
     <string name="connection_details_multihop">Multihop (2 hyppyä)</string>
     <string name="feature_port_forwarding">Porttiohjaus</string>
     <string name="warren_pubkey_warning_title">Palvelimen identiteetti muuttunut</string>

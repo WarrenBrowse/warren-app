@@ -510,7 +510,8 @@
     <string name="onboarding_beta_retry">立即重試</string>
     <string name="connection_details_reconnects">重新連線次數</string>
     <string name="connection_details_obfuscation">混淆</string>
-    <string name="connection_details_obfuscation_active">HTTP/3 模擬（使用中）</string>
+    <string name="connection_details_obfuscation_name">HTTP/3 模擬</string>
+    <string name="connection_details_obfuscation_chip">使用中</string>
     <string name="connection_details_multihop">多重跳躍（2 跳）</string>
     <string name="feature_port_forwarding">連接埠轉發</string>
     <string name="warren_pubkey_warning_title">伺服器身分已變更</string>

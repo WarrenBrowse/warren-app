@@ -510,7 +510,8 @@
     <string name="onboarding_beta_retry">ลองใหม่ทันที</string>
     <string name="connection_details_reconnects">การเชื่อมต่อใหม่</string>
     <string name="connection_details_obfuscation">การพราง</string>
-    <string name="connection_details_obfuscation_active">การเลียนแบบ HTTP/3 (กำลังทำงาน)</string>
+    <string name="connection_details_obfuscation_name">การเลียนแบบ HTTP/3</string>
+    <string name="connection_details_obfuscation_chip">กำลังทำงาน</string>
     <string name="connection_details_multihop">มัลติฮอป (2 ฮอป)</string>
     <string name="feature_port_forwarding">การส่งต่อพอร์ต</string>
     <string name="warren_pubkey_warning_title">อัตลักษณ์ของเซิร์ฟเวอร์เปลี่ยนไป</string>

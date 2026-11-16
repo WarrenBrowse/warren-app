@@ -535,7 +535,8 @@
     <!-- Connect-screen parity block (desktop connection details, TOFU dialog, location picker). -->
     <string name="connection_details_reconnects">Reconnects</string>
     <string name="connection_details_obfuscation">Obfuscation</string>
-    <string name="connection_details_obfuscation_active">HTTP/3 mimicry (active)</string>
+    <string name="connection_details_obfuscation_name">HTTP/3 mimicry</string>
+    <string name="connection_details_obfuscation_chip">active</string>
     <string name="connection_details_multihop">Multihop (2 hops)</string>
     <string name="feature_port_forwarding">Port forwarding</string>
     <string name="warren_pubkey_warning_title">Server identity changed</string>

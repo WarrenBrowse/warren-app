@@ -510,7 +510,8 @@
     <string name="onboarding_beta_retry">ယခု ထပ်ကြိုးစားရန်</string>
     <string name="connection_details_reconnects">ပြန်လည်ချိတ်ဆက်မှုများ</string>
     <string name="connection_details_obfuscation">Obfuscation</string>
-    <string name="connection_details_obfuscation_active">HTTP/3 mimicry (တက်ကြွ)</string>
+    <string name="connection_details_obfuscation_name">HTTP/3 mimicry</string>
+    <string name="connection_details_obfuscation_chip">တက်ကြွ</string>
     <string name="connection_details_multihop">Multihop (၂ hops)</string>
     <string name="feature_port_forwarding">ပို့တ် ပြန်ညွှန်းခြင်း</string>
     <string name="warren_pubkey_warning_title">ဆာဗာ၏ အထောက်အထား ပြောင်းလဲသွားသည်</string>

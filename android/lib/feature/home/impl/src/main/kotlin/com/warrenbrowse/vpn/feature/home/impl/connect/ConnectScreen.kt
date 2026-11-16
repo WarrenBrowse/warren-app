@@ -54,6 +54,9 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.SubcomposeLayout
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.dropShadow
 import androidx.compose.ui.graphics.Color
@@ -90,7 +93,6 @@ import com.warrenbrowse.vpn.core.Navigator
 import com.warrenbrowse.vpn.feature.appinfo.api.ChangelogNavKey
 import com.warrenbrowse.vpn.feature.home.api.Android16UpgradeInfoNavKey
 import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.AlwaysExpandedFeatureIndicators
-import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.ConnectionDetailPanel
 import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.isUnspecified
 import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.toInAddress
 import com.warrenbrowse.vpn.feature.home.impl.connect.connectioninfo.toOutAddress
@@ -879,27 +881,15 @@ fun ConnectScreen(
 // Keeps a snackbar clear of the footer band it would otherwise cover.
 private val SNACKBAR_ABOVE_FOOTER = 44.dp
 
-// A column of controls wider than this reads as a form on a tablet; the hero keeps the width.
-private val PANEL_MAX_WIDTH = 520.dp
-
-// The side column of a landscape screen, where the panel cannot sit under the hero.
-private val WIDE_PANEL_WIDTH = 400.dp
-
-// The connection details open over the hero (desktop StyledDetailsSheet).
-private val DETAILS_SHEET_MAX_HEIGHT = 300.dp
-private val DETAILS_SHEET_RADIUS = 16.dp
-private const val DETAILS_SHEET_MILLIS = 200
-private val DETAILS_SHEET_SLIDE = 12.dp
-
-// Notices float this far under the toolbar, on its right edge (mockup 8d).
-private val NOTICES_GAP = 12.dp
+// Notices float this far under the toolbar, on its right edge.
+private val NOTICES_GAP = DesignTokens.Home.Notice.MarginTop
 
 /**
- * The home screen (desktop `MainView`): the scenery hero keeps the mockup's proportions, 300/360 of
- * its width tall under the status bar, with the header and the notices floating over it; the panel
- * takes the rest of the screen, one chip row reserved so the hero does not reframe when the tunnel
- * comes up, and the room left between the chips and the footer. A landscape screen puts the panel
- * in a side column instead, and the hero column's width sets its height.
+ * The home screen (desktop `MainView`), laid out by [HomeLayout] for the screen it is on: the
+ * scenery hero full width under the status bar with the header floating over it, the panel riding
+ * the overlap up over its fade, the footer pinned at the bottom. Opening the details from the exit
+ * row shrinks the hero to its compact height while the card opens in place, on one clock. A screen
+ * too short for all of it scrolls the hero and the panel together.
  */
 @Composable
 @Suppress("LongParameterList", "LongMethod")
@@ -923,247 +913,196 @@ private fun HomeContent(
     val clearTop =
         if (showHeader) headerTop + toolbar.Height + heroTokens.ClearMargin
         else statusTop + heroTokens.ClearMargin
-    val hasTunnel = state.tunnelState.isConnectingOrConnected()
-    // Closed on every change of tunnel state, as on desktop: the sheet describes one connection.
+    val connected = state.tunnelState is TunnelState.Connected
+    // Closed on every change of tunnel state, as on desktop: the card describes one connection.
     var detailsOpen by rememberSaveable(state.tunnelState::class) { mutableStateOf(false) }
-    val sheetOpen = detailsOpen && hasTunnel
-    BackHandler(enabled = sheetOpen) { detailsOpen = false }
+    val compact = detailsOpen && connected
+    BackHandler(enabled = compact) { detailsOpen = false }
+    // The system's "remove animations" scales this to nothing, as reduced motion does on desktop.
+    val progress by
+        animateFloatAsState(
+            targetValue = if (compact) 1f else 0f,
+            animationSpec =
+                tween(SceneryFraming.COMPACT_TRANSITION_MS, easing = COMPACT_EASING),
+            label = "hero_compact",
+        )
 
     val phase = state.tunnelState.connectionPhase(state.hostOffline)
-    val heroContent =
-        @Composable {
-            SceneryHero(
-                phase = phase,
-                exitCountry = state.location?.country,
-                clearTop = clearTop,
-                glowTop = statusTop,
-                modifier = Modifier.fillMaxSize(),
-            )
-        }
-    val statusBlock =
-        @Composable {
-            HomeStatusBlock(
-                state = state,
-                detailsOpen = sheetOpen,
-                onToggleDetails = { detailsOpen = !detailsOpen },
-                onAppRoutingClick = onAppRoutingClick,
-                exitLoad = exitLoad,
-            )
-        }
-    val panelContent =
-        @Composable { modifier: Modifier ->
-            Column(modifier.fillMaxWidth()) {
-                Column(Modifier.padding(horizontal = panel.PaddingHorizontal)) {
-                    statusBlock()
-                    controls()
-                    // One row is reserved even with no chip, so the hero keeps its frame when the
-                    // tunnel comes up and the first chip appears.
-                    Box(
-                        Modifier.padding(top = DesignTokens.Home.Chips.MarginTop)
-                            .heightIn(min = DesignTokens.Home.Chips.Height)
-                    ) {
-                        chips()
-                    }
-                }
+    // The status bar always sits on the sky, which is pale in every landscape.
+    HomeSystemBarGlyphs(darkStatusGlyphs = true)
+    val columnModifier =
+        Modifier.windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
+            .padding(horizontal = panel.PaddingHorizontal)
+
+    Box(Modifier.fillMaxSize().background(surfaces.homePage)) {
+        Column(Modifier.fillMaxSize()) {
+            BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+                val viewport = maxHeight
+                HomeColumnLayout(
+                    viewport = viewport,
+                    statusTop = statusTop,
+                    compact = compact,
+                    progress = progress,
+                    hero = { frameHeight ->
+                        SceneryHero(
+                            phase = phase,
+                            exitCountry = state.location?.country,
+                            clearTop = clearTop,
+                            glowTop = statusTop,
+                            compact = compact,
+                            frameHeight = frameHeight,
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    },
+                    header = {
+                        if (showHeader) {
+                            Box(
+                                Modifier.windowInsetsPadding(
+                                        WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
+                                    )
+                                    .padding(
+                                        top = headerTop,
+                                        start = heroTokens.HeaderInset,
+                                        end = heroTokens.HeaderInset,
+                                    )
+                            ) {
+                                header()
+                            }
+                        }
+                    },
+                    status = {
+                        HomeStatusBlock(
+                            state = state,
+                            detailsOpen = compact,
+                            onToggleDetails = { detailsOpen = !detailsOpen },
+                            exitLoad = exitLoad,
+                            modifier = columnModifier,
+                        )
+                    },
+                    details = {
+                        HomeDetails(open = compact, state = state, modifier = columnModifier)
+                    },
+                    // Measured, never drawn: the card's full height, which the hero makes room for.
+                    detailsProbe = { if (connected) OpenDetails(state, columnModifier) },
+                    rest = {
+                        // The mockup keeps the chips' own margin under them, above the footer.
+                        Column(columnModifier.padding(bottom = DesignTokens.Home.Chips.MarginTop)) {
+                            AppRoutingLabels(state, onAppRoutingClick)
+                            controls()
+                            // One row is reserved even with no chip, so the hero keeps its frame
+                            // when the tunnel comes up and the first chip appears.
+                            Box(
+                                Modifier.padding(top = DesignTokens.Home.Chips.MarginTop)
+                                    .heightIn(min = DesignTokens.Home.Chips.Height)
+                            ) {
+                                chips()
+                            }
+                        }
+                    },
+                )
             }
-        }
-    val sheet =
-        @Composable { modifier: Modifier ->
-            DetailsSheet(
-                open = sheetOpen,
-                state = state,
-                modifier = modifier,
-            )
+            footer()
         }
 
-    BoxWithConstraints(Modifier.fillMaxSize().background(surfaces.homePage)) {
-        val wide = maxWidth > maxHeight && !isTv()
-        val sideWidth = minOf(WIDE_PANEL_WIDTH, maxWidth / 2)
-        // A landscape screen puts the status bar's right half over the panel, which is dark in
-        // the dark theme, so there the glyphs stay light.
-        HomeSystemBarGlyphs(darkStatusGlyphs = !(wide && surfaces.isDark))
-        if (wide) {
-            Row(Modifier.fillMaxSize()) {
-                BoxWithConstraints(Modifier.weight(1f).fillMaxHeight()) {
-                    val heroHeight =
-                        SceneryFraming.heroHeight(
-                            width = maxWidth.value,
-                            statusBar = statusTop.value,
-                            available = maxHeight.value,
-                        )
-                    Box(Modifier.fillMaxWidth().height(heroHeight.dp)) { heroContent() }
-                    sheet(Modifier.align(Alignment.BottomCenter))
-                }
-                Column(
-                    Modifier.width(sideWidth)
-                        .fillMaxHeight()
-                        .windowInsetsPadding(
-                            WindowInsets.safeDrawing.only(WindowInsetsSides.End)
-                        )
-                ) {
-                    Box(
-                        Modifier.weight(1f)
-                            .verticalScroll(rememberScrollState())
-                            .padding(top = clearTop)
-                    ) {
-                        panelContent(Modifier)
-                    }
-                    footer()
-                }
-            }
-        } else {
-            HomeColumnLayout(
-                hero = heroContent,
-                panel = {
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
-                        panelContent(Modifier.widthIn(max = PANEL_MAX_WIDTH))
-                    }
-                },
-                sheet = {
-                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.BottomCenter) {
-                        sheet(Modifier.widthIn(max = PANEL_MAX_WIDTH))
-                    }
-                },
-                footer = footer,
-                clearTop = clearTop,
-                statusTop = statusTop,
-            )
-        }
-
-        if (showHeader) {
-            Box(
-                Modifier.fillMaxWidth()
-                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
-                    .padding(
-                        top = headerTop,
-                        start = heroTokens.HeaderInset,
-                        end = heroTokens.HeaderInset,
-                    )
-            ) {
-                header()
-            }
-        }
-        // Transient notices float under the toolbar, over the art, so they never move the
-        // controls; animateContentSize keeps a card arriving or leaving continuous.
-        Box(
+        // Transient notices float under the toolbar, on its right edge, over the art, so they
+        // never move the controls; animateContentSize keeps a card arriving or leaving continuous.
+        BoxWithConstraints(
             Modifier.fillMaxWidth()
                 .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal))
                 .padding(
                     top =
                         if (showHeader) headerTop + toolbar.Height + NOTICES_GAP
                         else statusTop + NOTICES_GAP
-                )
-                .animateContentSize()
+                ),
+            contentAlignment = Alignment.TopCenter,
         ) {
-            notifications()
+            Box(
+                Modifier.widthIn(max = HomeLayout.COLUMN_MAX_WIDTH.dp)
+                    .fillMaxWidth()
+                    .animateContentSize()
+            ) {
+                notifications()
+            }
         }
     }
 }
 
 /**
- * Lays the portrait home out: the hero at the mockup's ratio of the width under the status bar, the
- * panel riding the overlap up over its fade, the footer at the bottom, and the room left between
- * the panel and the footer, the mockup's spacer. Only a screen too short for all of it gives the
- * hero less, never the panel. The details sheet sits on the panel's top edge.
+ * Lays the home out by [HomeLayout]: the hero full width at the planned height, framed for the
+ * height it is heading to; the header over its top, aligned to the centred column; the status,
+ * the details card and the rest of the panel in that column under it, riding the overlap up over
+ * the hero's fade. The content is at least the [viewport] tall, so the room left over sits above
+ * the footer, and scrolls when it is taller.
  */
 @Composable
 @Suppress("LongParameterList")
 private fun HomeColumnLayout(
-    hero: @Composable () -> Unit,
-    panel: @Composable () -> Unit,
-    sheet: @Composable () -> Unit,
-    footer: @Composable () -> Unit,
-    clearTop: Dp,
+    viewport: Dp,
     statusTop: Dp,
+    compact: Boolean,
+    progress: Float,
+    hero: @Composable (frameHeight: Dp) -> Unit,
+    header: @Composable () -> Unit,
+    status: @Composable () -> Unit,
+    details: @Composable () -> Unit,
+    detailsProbe: @Composable () -> Unit,
+    rest: @Composable () -> Unit,
 ) {
-    Layout(contents = listOf(hero, panel, footer, sheet)) { measurables, constraints ->
-        val (heroSlot, panelSlot, footerSlot, sheetSlot) = measurables
+    SubcomposeLayout(Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) { constraints ->
         val width = constraints.maxWidth
-        val height = constraints.maxHeight
-        val loose = constraints.copy(minWidth = width, maxWidth = width, minHeight = 0)
-        val footerPlaceable = footerSlot.first().measure(loose)
-        val panelPlaceable = panelSlot.first().measure(loose)
+        val column = HomeLayout.COLUMN_MAX_WIDTH.dp.roundToPx().coerceAtMost(width)
+        val inColumn = Constraints(minWidth = column, maxWidth = column)
+        // A slot may emit nothing (the details while closed): it then takes no room.
+        fun measureSlot(slot: HomeSlot, content: @Composable () -> Unit) =
+            subcompose(slot, content).map { it.measure(inColumn) }
+        val statusPlaceables = measureSlot(HomeSlot.Status, status)
+        val detailsPlaceables = measureSlot(HomeSlot.Details, details)
+        val restPlaceables = measureSlot(HomeSlot.Rest, rest)
+        val statusHeight = statusPlaceables.sumOf { it.height }
+        val detailsHeight = detailsPlaceables.sumOf { it.height }
+        val restHeight = restPlaceables.sumOf { it.height }
+        val openHeight = measureSlot(HomeSlot.DetailsProbe, detailsProbe).sumOf { it.height }
         val overlap = DesignTokens.Home.Panel.Overlap.roundToPx()
-        val bottom = height - footerPlaceable.height
-        val heroHeight =
-            SceneryFraming.heroHeight(
-                    width = width.toFloat(),
-                    statusBar = statusTop.toPx(),
-                    available = (bottom - panelPlaceable.height + overlap).toFloat(),
-                )
-                .roundToInt()
-        val heroPlaceable = heroSlot.first().measure(Constraints.fixed(width, heroHeight))
-        val sheetMax =
-            minOf(
-                DETAILS_SHEET_MAX_HEIGHT.roundToPx(),
-                (heroHeight - overlap - clearTop.roundToPx()).coerceAtLeast(0),
+        val plan =
+            HomeLayout.plan(
+                width = width.toDp().value,
+                viewport = viewport.value,
+                statusBar = statusTop.value,
+                overlap = overlap.toDp().value,
+                panel = (statusHeight + restHeight).toDp().value,
+                card = detailsHeight.toDp().value,
+                cardFull = openHeight.toDp().value,
+                compact = compact,
+                progress = progress,
             )
-        val sheetPlaceable =
-            sheetSlot.first().measure(loose.copy(maxHeight = sheetMax.coerceAtLeast(0)))
-        layout(width, height) {
-            heroPlaceable.place(0, 0)
-            panelPlaceable.place(0, heroHeight - overlap)
-            footerPlaceable.place(0, height - footerPlaceable.height)
-            // On the panel's top edge, so the pill riding the overlap stays in view.
-            sheetPlaceable.place(0, heroHeight - overlap - sheetPlaceable.height)
+        val heroHeight = plan.hero.dp.roundToPx()
+        val heroPlaceables =
+            subcompose(HomeSlot.Hero) { hero(plan.frameHero.dp) }
+                .map { it.measure(Constraints.fixed(width, heroHeight)) }
+        val headerPlaceables = measureSlot(HomeSlot.Header, header)
+        val left = (width - column) / 2
+        layout(width, plan.content.dp.roundToPx()) {
+            heroPlaceables.forEach { it.place(0, 0) }
+            headerPlaceables.forEach { it.place(left, 0) }
+            var y = heroHeight - overlap
+            listOf(statusPlaceables, detailsPlaceables, restPlaceables).forEach { slot ->
+                slot.forEach {
+                    it.place(left, y)
+                    y += it.height
+                }
+            }
         }
     }
 }
 
-/**
- * The connection details, opened over the hero rather than pushing the controls (desktop
- * `HomeStatus` details sheet): the controls stay where the thumb expects them, the art gives way.
- */
-@Composable
-private fun DetailsSheet(open: Boolean, state: ConnectUiState, modifier: Modifier = Modifier) {
-    val surfaces = LocalWarrenSurfaces.current
-    val slide = with(LocalDensity.current) { DETAILS_SHEET_SLIDE.roundToPx() }
-    AnimatedVisibility(
-        visible = open,
-        modifier = modifier,
-        enter =
-            fadeIn(tween(DETAILS_SHEET_MILLIS)) +
-                slideInVertically(tween(DETAILS_SHEET_MILLIS)) { slide },
-        exit =
-            fadeOut(tween(DETAILS_SHEET_MILLIS)) +
-                slideOutVertically(tween(DETAILS_SHEET_MILLIS)) { slide },
-    ) {
-        val shape =
-            RoundedCornerShape(topStart = DETAILS_SHEET_RADIUS, topEnd = DETAILS_SHEET_RADIUS)
-        val scrollState = rememberScrollState()
-        Column(
-            Modifier.fillMaxWidth()
-                .dropShadow(
-                    shape,
-                    Shadow(
-                        radius = DETAILS_SHEET_SHADOW_BLUR,
-                        color = Color.Black.copy(alpha = DETAILS_SHEET_SHADOW_ALPHA),
-                        spread = -DETAILS_SHEET_SHADOW_BLUR / 2,
-                        offset = DpOffset(0.dp, -DETAILS_SHEET_SHADOW_BLUR / 2),
-                    ),
-                )
-                .clip(shape)
-                .background(surfaces.homePage)
-                .padding(horizontal = DesignTokens.Home.Panel.PaddingHorizontal)
-                .padding(top = DETAILS_SHEET_TOP_PADDING)
-                .drawVerticalScrollbar(
-                    scrollState,
-                    color = surfaces.homeTextSecondary.copy(alpha = AlphaScrollbar),
-                )
-                .verticalScroll(scrollState)
-        ) {
-            ConnectionDetailPanel(
-                state.tunnelState.toConnectionsDetails(state.location),
-                enableSelectableText = !isTv(),
-                autoRecoveryCount = state.autoRecoveryCount,
-            )
-        }
-    }
+private enum class HomeSlot {
+    Hero,
+    Header,
+    Status,
+    Details,
+    DetailsProbe,
+    Rest,
 }
-
-private val DETAILS_SHEET_TOP_PADDING = 4.dp
-private val DETAILS_SHEET_SHADOW_BLUR = 24.dp
-private const val DETAILS_SHEET_SHADOW_ALPHA = 0.45f
 
 /**
  * The status bar sits on the top of the sky in every landscape, which is pale (the scenery's top
@@ -1248,19 +1187,19 @@ internal fun Modifier.marqueeLine(): Modifier =
         repeatDelayMillis = MARQUEE_DWELL_MILLIS,
     )
 
-/** The exit's load on the subtitle row: the ring, the percentage while live, the people. */
+/** The exit's load on the exit row: the ring, the percentage while live, the people. */
 @Composable
 private fun CompactExitLoad(load: ConnectedExitLoad) {
     val surfaces = LocalWarrenSurfaces.current
     ExitLoadBadge(
         badge = load.stats.loadBadgeOf(load.exit),
-        
         showThroughput = false,
         stale = rememberSnapshotStale(load.stats),
         appearance =
             ExitLoadAppearance(
-                textColor = surfaces.homeTextSecondary,
-                textStyle = HomeTypography.exitLoad,
+                // The row's own colour and weight (desktop `color: inherit`).
+                textColor = surfaces.homeTextMono,
+                textStyle = HomeTypography.exitLoad.copy(fontWeight = FontWeight.Normal),
                 ringPalette = homeLoadRingPalette(surfaces),
             ),
     )

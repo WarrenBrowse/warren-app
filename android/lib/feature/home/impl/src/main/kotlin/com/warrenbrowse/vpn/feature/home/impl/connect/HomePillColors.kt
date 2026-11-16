@@ -24,14 +24,12 @@ fun ConnectionPhase.pillColors(surfaces: WarrenSurfaces): HomePillColors =
             HomePillColors(surfaces.homePillBlocked, surfaces.homePillBlockedText)
     }
 
-private const val LOAD_RING_TRACK_ALPHA = 0.3f
-
-/** The subtitle row's load ring, in the pill colours of the home palette (desktop HomeStatus). */
+/** The exit row's load ring, in the home load colours (desktop HomeStatus). */
 fun homeLoadRingPalette(surfaces: WarrenSurfaces): LoadRingPalette =
     LoadRingPalette(
-        low = surfaces.homePillProtected,
+        low = surfaces.homeLoad,
         moderate = surfaces.homeBadge,
         high = surfaces.homePillPending,
         saturated = surfaces.homePillExposed,
-        track = surfaces.homeTextSecondary.copy(alpha = LOAD_RING_TRACK_ALPHA),
+        track = surfaces.homeLoadTrack,
     )

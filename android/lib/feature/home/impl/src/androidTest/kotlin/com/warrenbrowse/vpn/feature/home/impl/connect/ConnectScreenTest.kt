@@ -484,10 +484,10 @@ class ConnectScreenTest {
             // dials, Out is where the traffic leaves.
             onAllNodesWithText("$inHost:$inPort UDP").assertCountEquals(2)
 
-            onNodeWithText("Out IPv4").assertExists()
+            // One Out label stacks the exit socket and every egress address.
+            onNodeWithText("Out").assertExists()
             onNodeWithText(outIpv4).assertExists()
 
-            onNodeWithText("Out IPv6").assertExists()
             onNodeWithText(outIpv6).assertExists()
         }
     }
@@ -630,10 +630,10 @@ class ConnectScreenTest {
             onNodeWithText("In").assertExists()
             onNodeWithText("$inHost:$inPort TCP").assertExists()
 
-            onNodeWithText("Out IPv4").assertExists()
+            // One Out label stacks the exit socket and every egress address.
+            onNodeWithText("Out").assertExists()
             onNodeWithText(outIpv4).assertExists()
 
-            onNodeWithText("Out IPv6").assertExists()
             onNodeWithText(outIpv6).assertExists()
         }
     }
@@ -685,10 +685,10 @@ class ConnectScreenTest {
             onNodeWithText("In").assertExists()
             onNodeWithText("$inHost:$inPort UDP").assertExists()
 
-            onNodeWithText("Out IPv4").assertExists()
+            // One Out label stacks the exit socket and every egress address.
+            onNodeWithText("Out").assertExists()
             onNodeWithText(outIpv4).assertExists()
 
-            onNodeWithText("Out IPv6").assertExists()
             onNodeWithText(outIpv6).assertExists()
         }
     }

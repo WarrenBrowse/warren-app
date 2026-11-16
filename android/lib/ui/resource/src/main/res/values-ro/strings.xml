@@ -528,7 +528,8 @@
     <string name="onboarding_beta_retry">Reîncercați acum</string>
     <string name="connection_details_reconnects">Se reconectează</string>
     <string name="connection_details_obfuscation">Ofuscare</string>
-    <string name="connection_details_obfuscation_active">Mimetismul HTTP/3 (activ)</string>
+    <string name="connection_details_obfuscation_name">Mimetismul HTTP/3</string>
+    <string name="connection_details_obfuscation_chip">activ</string>
     <string name="connection_details_multihop">Multihop (2 salturi)</string>
     <string name="feature_port_forwarding">Redirecționarea porturilor</string>
     <string name="warren_pubkey_warning_title">Identitatea serverului s-a modificat</string>

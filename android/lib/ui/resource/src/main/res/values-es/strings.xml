@@ -520,7 +520,8 @@
     <string name="onboarding_beta_retry">Reintentar ahora</string>
     <string name="connection_details_reconnects">Reconexiones</string>
     <string name="connection_details_obfuscation">Ofuscación</string>
-    <string name="connection_details_obfuscation_active">Mimetismo HTTP/3 (activo)</string>
+    <string name="connection_details_obfuscation_name">Mimetismo HTTP/3</string>
+    <string name="connection_details_obfuscation_chip">activo</string>
     <string name="connection_details_multihop">Multihop (2 saltos)</string>
     <string name="feature_port_forwarding">Reenvío de puertos</string>
     <string name="warren_pubkey_warning_title">La identidad del servidor ha cambiado</string>

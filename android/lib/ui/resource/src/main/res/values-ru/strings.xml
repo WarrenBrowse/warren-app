@@ -531,7 +531,8 @@
     <string name="onboarding_beta_retry">Повторить сейчас</string>
     <string name="connection_details_reconnects">Переподключения</string>
     <string name="connection_details_obfuscation">Обфускация</string>
-    <string name="connection_details_obfuscation_active">Мимикрия HTTP/3 (активна)</string>
+    <string name="connection_details_obfuscation_name">Мимикрия HTTP/3</string>
+    <string name="connection_details_obfuscation_chip">активна</string>
     <string name="connection_details_multihop">Multihop (2 узла)</string>
     <string name="feature_port_forwarding">Переадресация портов</string>
     <string name="warren_pubkey_warning_title">Идентичность сервера изменилась</string>

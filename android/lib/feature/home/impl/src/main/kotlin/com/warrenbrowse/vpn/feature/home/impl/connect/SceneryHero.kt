@@ -1,8 +1,12 @@
 package com.warrenbrowse.vpn.feature.home.impl.connect
 
+import android.os.Build
+import android.os.SystemClock
 import androidx.annotation.DrawableRes
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationSpec
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.animateDpAsState
@@ -68,6 +72,9 @@ private const val GLOW_END_STOP = 0.75f
 
 private val hero = DesignTokens.Home.Hero
 
+/** The desktop's easing for the hero's compact resize, cubic-bezier(0.3, 0.7, 0.2, 1). */
+internal val COMPACT_EASING = CubicBezierEasing(0.3f, 0.7f, 0.2f, 1f)
+
 // Built once: a gradient with no explicit end spans whatever it fills, so one brush serves every
 // hero size, and the vararg copy is paid at class load rather than on every frame.
 @Suppress("SpreadOperator")
@@ -83,16 +90,21 @@ private val HERO_MASK =
  * ([clearTop] from the top of this box) and of the fade into the panel. While connecting the
  * landscape blurs and slowly zooms; once protected Bula slips into the burrow.
  *
- * The rows above a canvas that had to drop, and the columns beside a narrowed one, take the
- * landscape's top fill, and the canvas edges facing them are feathered into it. [glowTop] is the
- * status bar the logo sits under, which its paper glow reaches through.
+ * The rows above a canvas that had to drop take the landscape's top fill; the columns beside a
+ * narrowed one show the same landscape at cover scale, blurred; the canvas edges facing either are
+ * feathered into them. [glowTop] is the status bar the logo sits under, which its paper glow
+ * reaches through. The art is framed for [frameHeight], the height the hero is heading to, so it
+ * never shrinks to fit a hero halfway through its [compact] resize.
  */
 @Composable
+@Suppress("LongParameterList")
 internal fun SceneryHero(
     phase: ConnectionPhase,
     exitCountry: String?,
     clearTop: Dp,
     glowTop: Dp,
+    compact: Boolean,
+    frameHeight: Dp,
     modifier: Modifier = Modifier,
 ) {
     val scenery = resolveScenery(phase, exitCountry)
@@ -109,10 +121,18 @@ internal fun SceneryHero(
         )
     var size by remember { mutableStateOf(IntSize.Zero) }
     val density = LocalDensity.current
+    val targetHeight = with(density) { frameHeight.toPx() }
     val target =
         with(density) {
-            heroFrame(size, clearTop.toPx(), SceneryFraming.fade(size.height.toFloat()), span)
+            heroFrame(
+                width = size.width.toFloat(),
+                height = targetHeight,
+                clearTop = clearTop.toPx(),
+                span = span,
+                compact = compact,
+            )
         }
+    val reframe = rememberReframeSpec(compact)
     val scrim = surfaces.homeScrim
     val glow = surfaces.homeLogoGlow
 
@@ -128,7 +148,14 @@ internal fun SceneryHero(
             .drawBehind { drawRect(topFill) }
     ) {
         if (target != null) {
-            SceneryCanvas(target = target, scenery = scenery)
+            if (target.feathersSides) {
+                MarginBackdrop(
+                    landscape = scenery.landscape,
+                    cover =
+                        SceneryFraming.backdrop(size.width.toFloat(), targetHeight, target, span),
+                )
+            }
+            SceneryCanvas(target = target, scenery = scenery, frameSpec = reframe)
         }
         Box(
             Modifier.fillMaxSize().drawBehind {
@@ -146,18 +173,69 @@ internal fun SceneryHero(
 
 /** The frame for the measured hero, or null while it is unmeasured or has no room for the art. */
 private fun heroFrame(
-    size: IntSize,
+    width: Float,
+    height: Float,
     clearTop: Float,
-    fade: Float,
     span: SceneryFraming.Span,
+    compact: Boolean,
 ): SceneryFraming.Frame? {
-    if (size.width <= 0 || size.height - fade - clearTop <= 0f) return null
+    val fade = SceneryFraming.fade(height)
+    if (width <= 0f || height - fade - clearTop <= 0f) return null
     return SceneryFraming.frame(
-        width = size.width.toFloat(),
-        height = size.height.toFloat(),
+        width = width,
+        height = height,
         clearTop = clearTop,
         fade = fade,
         span = span,
+        compact = compact,
+    )
+}
+
+/**
+ * How the canvas moves to a new frame: on the hero's own resize clock while the details open or
+ * close, so the art and the hero edge move as one, and on the desktop's frame clock otherwise.
+ */
+@Composable
+private fun rememberReframeSpec(compact: Boolean): AnimationSpec<Float> {
+    val resize = remember { ResizeClock(compact) }
+    resize.observe(compact, SystemClock.uptimeMillis())
+    return if (resize.resizing(SystemClock.uptimeMillis())) {
+        tween(SceneryFraming.COMPACT_TRANSITION_MS, easing = COMPACT_EASING)
+    } else {
+        tween(hero.FrameMs, easing = EaseInOut)
+    }
+}
+
+/** Remembers when the hero last flipped between its full and its compact height. */
+private class ResizeClock(private var compact: Boolean) {
+    private var until = 0L
+
+    fun observe(compact: Boolean, now: Long) {
+        if (compact == this.compact) return
+        this.compact = compact
+        until = now + SceneryFraming.COMPACT_TRANSITION_MS
+    }
+
+    fun resizing(now: Long): Boolean = now < until
+}
+
+/**
+ * The landscape behind the side margins of a narrowed canvas: the same image at cover scale,
+ * blurred by [SceneryFraming.MARGIN_BLUR], so a wide hero reads as one landscape rather than a
+ * picture in a flat frame. RenderEffect needs API 31; below it the margins keep the top fill.
+ */
+@Composable
+private fun MarginBackdrop(@DrawableRes landscape: Int, cover: SceneryFraming.Frame) {
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+    val image = rememberSceneryBitmap(landscape)
+    Box(
+        Modifier.fillMaxSize()
+            .graphicsLayer {
+                val radius = SceneryFraming.MARGIN_BLUR.dp.toPx()
+                renderEffect = BlurEffect(radius, radius, TileMode.Clamp)
+                clip = true
+            }
+            .drawBehind { drawLayer(image, CanvasRect(cover.left, cover.top, cover.scale)) }
     )
 }
 
@@ -167,8 +245,11 @@ private fun heroFrame(
  * three layers together on the desktop's frame clock.
  */
 @Composable
-private fun SceneryCanvas(target: SceneryFraming.Frame, scenery: SceneryState) {
-    val frameSpec = tween<Float>(hero.FrameMs, easing = EaseInOut)
+private fun SceneryCanvas(
+    target: SceneryFraming.Frame,
+    scenery: SceneryState,
+    frameSpec: AnimationSpec<Float>,
+) {
     val left by animateFloatAsState(target.left, frameSpec, label = "hero_canvas_left")
     val top by animateFloatAsState(target.top, frameSpec, label = "hero_canvas_top")
     val scale by animateFloatAsState(target.scale, frameSpec, label = "hero_canvas_scale")

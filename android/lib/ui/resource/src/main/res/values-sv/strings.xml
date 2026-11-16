@@ -517,7 +517,8 @@
     <string name="onboarding_beta_retry">Försök igen nu</string>
     <string name="connection_details_reconnects">Återanslutningar</string>
     <string name="connection_details_obfuscation">Obfuskering</string>
-    <string name="connection_details_obfuscation_active">HTTP/3-mimikry (aktiv)</string>
+    <string name="connection_details_obfuscation_name">HTTP/3-mimikry</string>
+    <string name="connection_details_obfuscation_chip">aktiv</string>
     <string name="connection_details_multihop">Multihop (2 hopp)</string>
     <string name="feature_port_forwarding">Portvidarebefordran</string>
     <string name="warren_pubkey_warning_title">Serverns identitet har ändrats</string>

@@ -517,7 +517,8 @@
     <string name="onboarding_beta_retry">تلاش دوباره هم‌اکنون</string>
     <string name="connection_details_reconnects">اتصال‌های مجدد</string>
     <string name="connection_details_obfuscation">مبهم‌سازی</string>
-    <string name="connection_details_obfuscation_active">تقلید HTTP/3 (فعال)</string>
+    <string name="connection_details_obfuscation_name">تقلید HTTP/3</string>
+    <string name="connection_details_obfuscation_chip">فعال</string>
     <string name="connection_details_multihop">چندپرشی (۲ پرش)</string>
     <string name="feature_port_forwarding">هدایت درگاه</string>
     <string name="warren_pubkey_warning_title">هویت سرور تغییر کرد</string>

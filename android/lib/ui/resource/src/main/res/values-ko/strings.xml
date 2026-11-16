@@ -510,7 +510,8 @@
     <string name="onboarding_beta_retry">지금 다시 시도</string>
     <string name="connection_details_reconnects">재연결</string>
     <string name="connection_details_obfuscation">난독화</string>
-    <string name="connection_details_obfuscation_active">HTTP/3 모방(활성)</string>
+    <string name="connection_details_obfuscation_name">HTTP/3 모방</string>
+    <string name="connection_details_obfuscation_chip">활성</string>
     <string name="connection_details_multihop">멀티홉(2홉)</string>
     <string name="feature_port_forwarding">포트 포워딩</string>
     <string name="warren_pubkey_warning_title">서버 신원이 변경됨</string>

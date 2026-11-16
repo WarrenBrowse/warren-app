@@ -531,7 +531,8 @@
     <string name="onboarding_beta_retry">Spróbuj teraz</string>
     <string name="connection_details_reconnects">Ponowne połączenia</string>
     <string name="connection_details_obfuscation">Obfuskacja</string>
-    <string name="connection_details_obfuscation_active">Mimikra HTTP/3 (aktywna)</string>
+    <string name="connection_details_obfuscation_name">Mimikra HTTP/3</string>
+    <string name="connection_details_obfuscation_chip">aktywna</string>
     <string name="connection_details_multihop">Multihop (2 przeskoki)</string>
     <string name="feature_port_forwarding">Przekierowanie portów</string>
     <string name="warren_pubkey_warning_title">Tożsamość serwera uległa zmianie</string>

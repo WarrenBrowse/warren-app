@@ -510,7 +510,8 @@
     <string name="onboarding_beta_retry">今すぐ再試行</string>
     <string name="connection_details_reconnects">再接続回数</string>
     <string name="connection_details_obfuscation">難読化</string>
-    <string name="connection_details_obfuscation_active">HTTP/3 模倣（有効）</string>
+    <string name="connection_details_obfuscation_name">HTTP/3 模倣</string>
+    <string name="connection_details_obfuscation_chip">有効</string>
     <string name="connection_details_multihop">マルチホップ（2 ホップ）</string>
     <string name="feature_port_forwarding">ポート転送</string>
     <string name="warren_pubkey_warning_title">サーバーの識別情報が変更されました</string>

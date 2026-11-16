@@ -517,7 +517,8 @@
     <string name="onboarding_beta_retry">Nu opnieuw proberen</string>
     <string name="connection_details_reconnects">Herverbindingen</string>
     <string name="connection_details_obfuscation">Obfuscatie</string>
-    <string name="connection_details_obfuscation_active">HTTP/3-mimicry (actief)</string>
+    <string name="connection_details_obfuscation_name">HTTP/3-mimicry</string>
+    <string name="connection_details_obfuscation_chip">actief</string>
     <string name="connection_details_multihop">Multihop (2 hops)</string>
     <string name="feature_port_forwarding">Poortdoorschakeling</string>
     <string name="warren_pubkey_warning_title">Serveridentiteit gewijzigd</string>

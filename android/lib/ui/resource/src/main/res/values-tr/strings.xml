@@ -517,7 +517,8 @@
     <string name="onboarding_beta_retry">Şimdi tekrar dene</string>
     <string name="connection_details_reconnects">Yeniden bağlanmalar</string>
     <string name="connection_details_obfuscation">Gizleme</string>
-    <string name="connection_details_obfuscation_active">HTTP/3 taklidi (etkin)</string>
+    <string name="connection_details_obfuscation_name">HTTP/3 taklidi</string>
+    <string name="connection_details_obfuscation_chip">etkin</string>
     <string name="connection_details_multihop">Çok atlamalı (2 atlama)</string>
     <string name="feature_port_forwarding">Bağlantı noktası yönlendirme</string>
     <string name="warren_pubkey_warning_title">Sunucu kimliği değişti</string>

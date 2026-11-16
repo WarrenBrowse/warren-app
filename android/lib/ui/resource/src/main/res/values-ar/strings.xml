@@ -545,7 +545,8 @@
     <string name="onboarding_beta_retry">إعادة المحاولة الآن</string>
     <string name="connection_details_reconnects">إعادات الاتصال</string>
     <string name="connection_details_obfuscation">إخفاء الهوية</string>
-    <string name="connection_details_obfuscation_active">محاكاة HTTP/3 (نشطة)</string>
+    <string name="connection_details_obfuscation_name">محاكاة HTTP/3</string>
+    <string name="connection_details_obfuscation_chip">نشطة</string>
     <string name="connection_details_multihop">تعدد القفزات (قفزتان)</string>
     <string name="feature_port_forwarding">إعادة توجيه المنافذ</string>
     <string name="warren_pubkey_warning_title">تغيّرت هوية الخادم</string>

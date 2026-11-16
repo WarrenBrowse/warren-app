@@ -7,9 +7,9 @@ import kotlin.test.assertNull
 import org.junit.jupiter.api.Test
 
 /**
- * The load ring on the subtitle row takes the pill colours of the home palette (desktop
- * `HomeStatus` load-ring variables), so a quiet exit reads in the same green as the protected pill,
- * in either theme.
+ * The load ring on the exit row takes the home load colours (desktop `HomeStatus` load-ring
+ * variables): its own green for a quiet exit, the pill colours as the load rises, on the load
+ * track, in either theme.
  */
 class HomeLoadRingPaletteTest {
 
@@ -18,7 +18,7 @@ class HomeLoadRingPaletteTest {
 
     @Test
     fun `each band is painted in the home colour of its severity`() {
-        assertEquals(surfaces.homePillProtected, palette.colorOf(LoadLevel.LOW))
+        assertEquals(surfaces.homeLoad, palette.colorOf(LoadLevel.LOW))
         assertEquals(surfaces.homeBadge, palette.colorOf(LoadLevel.MODERATE))
         assertEquals(surfaces.homePillPending, palette.colorOf(LoadLevel.HIGH))
         assertEquals(surfaces.homePillExposed, palette.colorOf(LoadLevel.SATURATED))
@@ -30,7 +30,7 @@ class HomeLoadRingPaletteTest {
     }
 
     @Test
-    fun `the track is the secondary text at 30 percent`() {
-        assertEquals(surfaces.homeTextSecondary.copy(alpha = 0.3f), palette.track)
+    fun `the ring runs on the home load track`() {
+        assertEquals(surfaces.homeLoadTrack, palette.track)
     }
 }

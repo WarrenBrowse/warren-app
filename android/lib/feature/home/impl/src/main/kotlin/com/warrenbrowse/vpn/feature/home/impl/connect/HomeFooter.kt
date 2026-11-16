@@ -3,6 +3,7 @@ package com.warrenbrowse.vpn.feature.home.impl.connect
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -11,6 +12,8 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.icons.Icons
@@ -75,53 +78,67 @@ internal fun HomeFooter(
             copied = false
         }
     }
-    Row(
-        modifier =
-            Modifier.fillMaxWidth()
-                .background(surfaces.homeFooter)
-                .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
-                .padding(horizontal = footer.PaddingHorizontal, vertical = footer.PaddingVertical),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(footer.Gap),
+    // The band spans the screen; on a wide one its content keeps the home's centred column.
+    Box(
+        Modifier.fillMaxWidth()
+            .background(surfaces.homeFooter)
+            .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
+            .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)),
+        contentAlignment = Alignment.TopCenter,
     ) {
-        if (shortPubkey != null) {
-            val copyLabel = stringResource(if (copied) R.string.copied else R.string.copy)
-            Row(
-                modifier =
-                    Modifier.clickable(
-                            enabled = onCopyPubkey != null,
-                            role = Role.Button,
-                            onClick = {
-                                onCopyPubkey?.invoke()
-                                copyCount++
-                            },
+        Row(
+            modifier =
+                Modifier.widthIn(max = HomeLayout.COLUMN_MAX_WIDTH.dp)
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = footer.PaddingHorizontal,
+                        vertical = footer.PaddingVertical,
+                    ),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(footer.Gap),
+        ) {
+            if (shortPubkey != null) {
+                val copyLabel = stringResource(if (copied) R.string.copied else R.string.copy)
+                Row(
+                    modifier =
+                        Modifier.clickable(
+                                enabled = onCopyPubkey != null,
+                                role = Role.Button,
+                                onClick = {
+                                    onCopyPubkey?.invoke()
+                                    copyCount++
+                                },
+                            )
+                            .semantics(mergeDescendants = true) { contentDescription = copyLabel },
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(footer.Gap),
+                ) {
+                    // An address reads left to right in every language; without this the halves on
+                    // either side of the ellipsis swap places in Arabic and Persian.
+                    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
+                        Text(
+                            text = shortPubkey,
+                            style = HomeTypography.footerMono,
+                            color = surfaces.homeTextSecondary,
+                            maxLines = 1,
                         )
-                        .semantics(mergeDescendants = true) { contentDescription = copyLabel },
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(footer.Gap),
-            ) {
-                // An address reads left to right in every language; without this the halves on
-                // either side of the ellipsis swap places in Arabic and Persian.
-                CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Ltr) {
-                    Text(
-                        text = shortPubkey,
-                        style = HomeTypography.footerMono,
-                        color = surfaces.homeTextSecondary,
-                        maxLines = 1,
-                    )
-                }
-                if (onCopyPubkey != null) {
-                    Icon(
-                        imageVector = if (copied) Icons.Rounded.Check else Icons.Rounded.ContentCopy,
-                        contentDescription = null,
-                        tint = if (copied) surfaces.homePillProtected else surfaces.homeTextSecondary,
-                        modifier = Modifier.size(footer.Icon),
-                    )
+                    }
+                    if (onCopyPubkey != null) {
+                        Icon(
+                            imageVector =
+                                if (copied) Icons.Rounded.Check else Icons.Rounded.ContentCopy,
+                            contentDescription = null,
+                            tint =
+                                if (copied) surfaces.homePillProtected
+                                else surfaces.homeTextSecondary,
+                            modifier = Modifier.size(footer.Icon),
+                        )
+                    }
                 }
             }
+            Spacer(Modifier.weight(1f))
+            FooterEnd(beta, timeLeft)
         }
-        Spacer(Modifier.weight(1f))
-        FooterEnd(beta, timeLeft)
     }
 }
 
