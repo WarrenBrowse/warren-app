@@ -290,9 +290,14 @@ mod tests {
         let projected =
             verify_and_project(&body, Some(&pubkey_hex(&key)), NOW).expect("must verify");
         let json: serde_json::Value = serde_json::from_str(&projected).expect("valid JSON");
-        let relays = json["wireguard"]["relays"].as_array().expect("relays array");
+        let relays = json["wireguard"]["relays"]
+            .as_array()
+            .expect("relays array");
         assert_eq!(relays[0]["hostname"], "fi-hel-bveh1");
-        assert_eq!(relays[1]["hostname"], format!("warren-{}", &hex::encode([6u8; 32])[..16]));
+        assert_eq!(
+            relays[1]["hostname"],
+            format!("warren-{}", &hex::encode([6u8; 32])[..16])
+        );
     }
 
     #[test]

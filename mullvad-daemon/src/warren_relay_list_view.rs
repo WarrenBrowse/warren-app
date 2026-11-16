@@ -355,7 +355,10 @@ mod tests {
         let named = make_warren_relay("FI", "Helsinki", "10.0.0.1", 1)
             .with_fleet_name(Some("fi-hel-bveh1".to_owned()));
         let out = to_mullvad_relay_list(&WarrenRelayList::new(vec![named]));
-        assert_eq!(out.countries[0].cities[0].relays[0].hostname, "fi-hel-bveh1");
+        assert_eq!(
+            out.countries[0].cities[0].relays[0].hostname,
+            "fi-hel-bveh1"
+        );
     }
 
     /// Until a node reports every naming component (and on a v10 roster) it
@@ -365,12 +368,21 @@ mod tests {
         let unnamed = make_warren_relay("FI", "Helsinki", "10.0.0.1", 1);
         let out = to_mullvad_relay_list(&WarrenRelayList::new(vec![unnamed]));
         let hostname = &out.countries[0].cities[0].relays[0].hostname;
-        assert!(hostname.starts_with("warren-") && hostname.len() == 23, "{hostname}");
+        assert!(
+            hostname.starts_with("warren-") && hostname.len() == 23,
+            "{hostname}"
+        );
     }
 
     #[test]
     fn the_connected_exit_label_prefers_the_fleet_name() {
-        assert_eq!(exit_label(Some("fi-hel-bveh1"), &"ab".repeat(32)), "fi-hel-bveh1");
-        assert_eq!(exit_label(None, &"ab".repeat(32)), "warren-abababababababab");
+        assert_eq!(
+            exit_label(Some("fi-hel-bveh1"), &"ab".repeat(32)),
+            "fi-hel-bveh1"
+        );
+        assert_eq!(
+            exit_label(None, &"ab".repeat(32)),
+            "warren-abababababababab"
+        );
     }
 }

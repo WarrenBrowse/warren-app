@@ -1194,50 +1194,48 @@ impl ParametersGenerator {
         // `multi_hop.exit.exit_id`. Falls back to empty strings if
         // the relay list has no matching entry (descriptor
         // out-of-band of the cached relays.json).
-        let (exit_id_hex, label_exit_id, observed_pubkey_hex, country_code, city) = if let Some(
-            multi_hop,
-        ) =
-            params.multi_hop.as_ref()
-        {
-            let exit_id =
-                talpid_warren_tunnel::RelayExitId::from_bytes(*multi_hop.exit.exit_id.as_bytes());
-            // Prefer the exit hop's geo carried from the signed+attested
-            // directory `NodeEntry` (`assemble`): it is authoritative and
-            // works for exit-only nodes, which are absent from the
-            // single-hop relay list and whose egress IP is redacted. Fall
-            // back to the single-hop relay-list lookup only for the manual
-            // config path (which carries no directory geo).
-            let (mh_country, mh_city) = if !multi_hop.exit_country.is_empty() {
-                (multi_hop.exit_country.clone(), multi_hop.exit_city.clone())
+        let (exit_id_hex, label_exit_id, observed_pubkey_hex, country_code, city) =
+            if let Some(multi_hop) = params.multi_hop.as_ref() {
+                let exit_id = talpid_warren_tunnel::RelayExitId::from_bytes(
+                    *multi_hop.exit.exit_id.as_bytes(),
+                );
+                // Prefer the exit hop's geo carried from the signed+attested
+                // directory `NodeEntry` (`assemble`): it is authoritative and
+                // works for exit-only nodes, which are absent from the
+                // single-hop relay list and whose egress IP is redacted. Fall
+                // back to the single-hop relay-list lookup only for the manual
+                // config path (which carries no directory geo).
+                let (mh_country, mh_city) = if !multi_hop.exit_country.is_empty() {
+                    (multi_hop.exit_country.clone(), multi_hop.exit_city.clone())
+                } else {
+                    inner
+                        .warren_relay_selector
+                        .as_ref()
+                        .and_then(|sel| sel.relay_by_exit_id(&exit_id))
+                        .map(|r| {
+                            (
+                                r.location().country_code().to_owned(),
+                                r.location().city().to_owned(),
+                            )
+                        })
+                        .unwrap_or_default()
+                };
+                (
+                    exit_id.to_hex(),
+                    exit_id,
+                    hex::encode(multi_hop.exit.exit_ed25519_pubkey),
+                    mh_country,
+                    mh_city,
+                )
             } else {
-                inner
-                    .warren_relay_selector
-                    .as_ref()
-                    .and_then(|sel| sel.relay_by_exit_id(&exit_id))
-                    .map(|r| {
-                        (
-                            r.location().country_code().to_owned(),
-                            r.location().city().to_owned(),
-                        )
-                    })
-                    .unwrap_or_default()
+                (
+                    params.exit_id.to_hex(),
+                    params.exit_id,
+                    hex::encode(params.exit_addr.id.as_bytes()),
+                    params.country_code.clone(),
+                    params.city.clone(),
+                )
             };
-            (
-                exit_id.to_hex(),
-                exit_id,
-                hex::encode(multi_hop.exit.exit_ed25519_pubkey),
-                mh_country,
-                mh_city,
-            )
-        } else {
-            (
-                params.exit_id.to_hex(),
-                params.exit_id,
-                hex::encode(params.exit_addr.id.as_bytes()),
-                params.country_code.clone(),
-                params.city.clone(),
-            )
-        };
         // TOFU pubkey pinning is skipped for a custom exit: typing the key
         // out of band IS the pin, and a synthetic exit_id would raise a
         // spurious mismatch when the user rotates their own node's key.
