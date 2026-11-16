@@ -783,4 +783,28 @@
     <string name="device_older_client_body">Un dispozitiv al acestui cont rulează o versiune Warren mai veche de 1.1.36. Nu îți mai blochează celelalte dispozitive. Actualizează-l sau dezinstalează-l.</string>
     <string name="manage_devices">Gestionarea dispozitivelor</string>
     <string name="auth_failed_no_session_token">Acest dispozitiv nu are momentan date de autentificare pentru sesiune. Este posibil ca un alt dispozitiv al contului tău să le folosească.</string>
+    <string name="home_status_unprotected">Neprotejat</string>
+    <string name="home_status_protected">Protejat</string>
+    <string name="home_status_interrupted">Întrerupt</string>
+    <string name="home_status_blocked">Blocat</string>
+    <string name="home_connection_blocked">Conexiune blocată</string>
+    <string name="home_change">Schimbă</string>
+    <string name="home_status_connecting">Conectare</string>
+    <string name="home_only_selected_apps_protected">Doar aplicațiile alese sunt protejate</string>
+    <plurals name="home_days_left">
+        <item quantity="one">Mai este o zi</item>
+        <item quantity="few">%1$d zile rămase</item>
+        <item quantity="other">%1$d de zile rămase</item>
+    </plurals>
+    <plurals name="home_months_left">
+        <item quantity="one">Mai este o lună</item>
+        <item quantity="few">%1$d luni rămase</item>
+        <item quantity="other">%1$d de luni rămase</item>
+    </plurals>
+    <plurals name="home_years_left">
+        <item quantity="one">Mai este un an</item>
+        <item quantity="few">%1$d ani rămași</item>
+        <item quantity="other">%1$d de ani rămași</item>
+    </plurals>
+    <string name="home_select_location">Selectați locația. Locația curentă este %1$s</string>
 </resources>

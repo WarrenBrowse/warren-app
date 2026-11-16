@@ -809,4 +809,25 @@
     <string name="device_older_client_body">A device of this account runs a version of Warren older than 1.1.36. It no longer blocks your other devices. Update or uninstall it.</string>
     <string name="manage_devices">Manage devices</string>
     <string name="auth_failed_no_session_token">This device has no session credentials right now. Another device of your account may be holding them.</string>
+    <string name="home_status_unprotected">Unprotected</string>
+    <string name="home_status_protected">Protected</string>
+    <string name="home_status_interrupted">Interrupted</string>
+    <string name="home_status_blocked">Blocked</string>
+    <string name="home_connection_blocked">Connection blocked</string>
+    <string name="home_change">Change</string>
+    <string name="home_status_connecting">Connecting</string>
+    <string name="home_only_selected_apps_protected">Only selected apps are protected</string>
+    <plurals name="home_days_left">
+        <item quantity="one">1 day left</item>
+        <item quantity="other">%1$d days left</item>
+    </plurals>
+    <plurals name="home_months_left">
+        <item quantity="one">1 month left</item>
+        <item quantity="other">%1$d months left</item>
+    </plurals>
+    <plurals name="home_years_left">
+        <item quantity="one">1 year left</item>
+        <item quantity="other">%1$d years left</item>
+    </plurals>
+    <string name="home_select_location">Select location. Current location is %1$s</string>
 </resources>

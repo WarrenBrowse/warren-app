@@ -771,4 +771,25 @@
     <string name="device_older_client_body">Bu hesaptaki bir cihaz, Warren\'ın 1.1.36\'dan eski bir sürümünü çalıştırıyor. Artık diğer cihazlarınızı engellemiyor. Güncelleyin veya kaldırın.</string>
     <string name="manage_devices">Cihazları yönet</string>
     <string name="auth_failed_no_session_token">Bu cihazın şu anda oturum kimlik bilgisi yok. Hesabınızdaki başka bir cihaz bunları tutuyor olabilir.</string>
+    <string name="home_status_unprotected">Korumasız</string>
+    <string name="home_status_protected">Korumalı</string>
+    <string name="home_status_interrupted">Kesildi</string>
+    <string name="home_status_blocked">Engellendi</string>
+    <string name="home_connection_blocked">Bağlantı engellendi</string>
+    <string name="home_change">Değiştir</string>
+    <string name="home_status_connecting">Bağlanılıyor</string>
+    <string name="home_only_selected_apps_protected">Yalnızca seçilen uygulamalar korunuyor</string>
+    <plurals name="home_days_left">
+        <item quantity="one">%1$d gün kaldı</item>
+        <item quantity="other">%1$d gün kaldı</item>
+    </plurals>
+    <plurals name="home_months_left">
+        <item quantity="one">%1$d ay kaldı</item>
+        <item quantity="other">%1$d ay kaldı</item>
+    </plurals>
+    <plurals name="home_years_left">
+        <item quantity="one">%1$d yıl kaldı</item>
+        <item quantity="other">%1$d yıl kaldı</item>
+    </plurals>
+    <string name="home_select_location">Konum seçin. Mevcut konum %1$s</string>
 </resources>

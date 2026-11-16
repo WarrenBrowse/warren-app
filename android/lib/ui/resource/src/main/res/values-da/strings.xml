@@ -771,4 +771,25 @@
     <string name="device_older_client_body">En enhed på denne konto kører en version af Warren, der er ældre end 1.1.36. Den blokerer ikke længere dine andre enheder. Opdater eller afinstaller den.</string>
     <string name="manage_devices">Administrer enheder</string>
     <string name="auth_failed_no_session_token">Denne enhed har ingen sessionsoplysninger lige nu. En anden enhed på din konto bruger dem muligvis.</string>
+    <string name="home_status_unprotected">Ubeskyttet</string>
+    <string name="home_status_protected">Beskyttet</string>
+    <string name="home_status_interrupted">Afbrudt</string>
+    <string name="home_status_blocked">Blokeret</string>
+    <string name="home_connection_blocked">Forbindelsen er blokeret</string>
+    <string name="home_change">Skift</string>
+    <string name="home_status_connecting">Tilslutter</string>
+    <string name="home_only_selected_apps_protected">Kun valgte apps er beskyttet</string>
+    <plurals name="home_days_left">
+        <item quantity="one">1 dag tilbage</item>
+        <item quantity="other">%1$d dage tilbage</item>
+    </plurals>
+    <plurals name="home_months_left">
+        <item quantity="one">1 måned tilbage</item>
+        <item quantity="other">%1$d måneder tilbage</item>
+    </plurals>
+    <plurals name="home_years_left">
+        <item quantity="one">1 år tilbage</item>
+        <item quantity="other">%1$d år tilbage</item>
+    </plurals>
+    <string name="home_select_location">Vælg placering. Nuværende placering er %1$s</string>
 </resources>

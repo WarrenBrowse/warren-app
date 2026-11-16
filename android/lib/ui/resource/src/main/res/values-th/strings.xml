@@ -763,4 +763,22 @@
     <string name="device_older_client_body">อุปกรณ์หนึ่งในบัญชีนี้ใช้ Warren เวอร์ชันที่เก่ากว่า 1.1.36 อุปกรณ์นั้นไม่ได้บล็อกอุปกรณ์อื่นของคุณอีกต่อไป โปรดอัปเดตหรือถอนการติดตั้ง</string>
     <string name="manage_devices">จัดการอุปกรณ์</string>
     <string name="auth_failed_no_session_token">อุปกรณ์นี้ยังไม่มีข้อมูลรับรองเซสชันในขณะนี้ อุปกรณ์อื่นในบัญชีของคุณอาจถือครองอยู่</string>
+    <string name="home_status_unprotected">ไม่ได้รับการป้องกัน</string>
+    <string name="home_status_protected">ได้รับการป้องกัน</string>
+    <string name="home_status_interrupted">ขัดข้อง</string>
+    <string name="home_status_blocked">ถูกบล็อก</string>
+    <string name="home_connection_blocked">การเชื่อมต่อถูกบล็อก</string>
+    <string name="home_change">เปลี่ยน</string>
+    <string name="home_status_connecting">กำลังเชื่อมต่อ</string>
+    <string name="home_only_selected_apps_protected">เฉพาะแอปที่เลือกเท่านั้นที่ได้รับการปกป้อง</string>
+    <plurals name="home_days_left">
+        <item quantity="other">คงเหลือ %1$d วัน</item>
+    </plurals>
+    <plurals name="home_months_left">
+        <item quantity="other">คงเหลือ %1$d เดือน</item>
+    </plurals>
+    <plurals name="home_years_left">
+        <item quantity="other">คงเหลือ %1$d ปี</item>
+    </plurals>
+    <string name="home_select_location">เลือกตำแหน่งที่ตั้ง ตำแหน่งที่ตั้งปัจจุบันคือ %1$s</string>
 </resources>

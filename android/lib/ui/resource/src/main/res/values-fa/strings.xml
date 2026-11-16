@@ -771,4 +771,25 @@
     <string name="device_older_client_body">یکی از دستگاه‌های این حساب نسخه‌ای از Warren قدیمی‌تر از 1.1.36 را اجرا می‌کند. دیگر دستگاه‌های دیگر شما را مسدود نمی‌کند. آن را به‌روزرسانی یا حذف کنید.</string>
     <string name="manage_devices">مدیریت دستگاه‌ها</string>
     <string name="auth_failed_no_session_token">این دستگاه در حال حاضر اعتبارنامه نشست ندارد. ممکن است دستگاه دیگری از حساب شما آن‌ها را در اختیار داشته باشد.</string>
+    <string name="home_status_unprotected">محافظت‌نشده</string>
+    <string name="home_status_protected">محافظت‌شده</string>
+    <string name="home_status_interrupted">قطع‌شده</string>
+    <string name="home_status_blocked">مسدود</string>
+    <string name="home_connection_blocked">اتصال مسدود است</string>
+    <string name="home_change">تغییر</string>
+    <string name="home_status_connecting">در حال اتصال</string>
+    <string name="home_only_selected_apps_protected">فقط اپلیکیشن‌های انتخاب‌شده محافظت می‌شوند</string>
+    <plurals name="home_days_left">
+        <item quantity="one">%1$d روز باقی‌مانده</item>
+        <item quantity="other">%1$d روز باقی‌مانده</item>
+    </plurals>
+    <plurals name="home_months_left">
+        <item quantity="one">%1$d ماه باقی‌مانده</item>
+        <item quantity="other">%1$d ماه باقی‌مانده</item>
+    </plurals>
+    <plurals name="home_years_left">
+        <item quantity="one">%1$d سال باقی‌مانده</item>
+        <item quantity="other">%1$d سال باقی‌مانده</item>
+    </plurals>
+    <string name="home_select_location">مکان را انتخاب کنید. مکان فعلی ‏%1$s است</string>
 </resources>

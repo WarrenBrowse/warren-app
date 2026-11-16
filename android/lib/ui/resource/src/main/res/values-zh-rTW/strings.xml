@@ -763,4 +763,22 @@
     <string name="device_older_client_body">此帳戶中有一台裝置執行的 Warren 版本早於 1.1.36。它不再封鎖您的其他裝置。請更新或解除安裝。</string>
     <string name="manage_devices">管理裝置</string>
     <string name="auth_failed_no_session_token">此裝置目前沒有工作階段憑證。您帳戶中的另一台裝置可能正在佔用。</string>
+    <string name="home_status_unprotected">未受保護</string>
+    <string name="home_status_protected">已受保護</string>
+    <string name="home_status_interrupted">已中斷</string>
+    <string name="home_status_blocked">已封鎖</string>
+    <string name="home_connection_blocked">連線已封鎖</string>
+    <string name="home_change">變更</string>
+    <string name="home_status_connecting">正在連線</string>
+    <string name="home_only_selected_apps_protected">僅所選應用程式受到保護</string>
+    <plurals name="home_days_left">
+        <item quantity="other">剩餘 %1$d 天</item>
+    </plurals>
+    <plurals name="home_months_left">
+        <item quantity="other">剩餘 %1$d 個月</item>
+    </plurals>
+    <plurals name="home_years_left">
+        <item quantity="other">剩餘 %1$d 年</item>
+    </plurals>
+    <string name="home_select_location">選擇位置。目前位置為 %1$s</string>
 </resources>

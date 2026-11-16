@@ -763,4 +763,22 @@
     <string name="device_older_client_body">ဤအကောင့်ရှိ စက်တစ်ခုသည် 1.1.36 ထက် ဟောင်းသော Warren ဗားရှင်းကို အသုံးပြုနေပါသည်။ ၎င်းသည် သင်၏ အခြားစက်များကို မပိတ်ဆို့တော့ပါ။ ၎င်းကို အပ်ဒိတ်လုပ်ပါ သို့မဟုတ် ဖြုတ်ပါ။</string>
     <string name="manage_devices">စက်များကို စီမံရန်</string>
     <string name="auth_failed_no_session_token">ဤစက်တွင် ယခုအချိန်တွင် session အထောက်အထားများ မရှိပါ။ သင့်အကောင့်ရှိ အခြားစက်တစ်ခုက ၎င်းတို့ကို ကိုင်ထားနိုင်ပါသည်။</string>
+    <string name="home_status_unprotected">ကာကွယ်မထားပါ</string>
+    <string name="home_status_protected">ကာကွယ်ထားသည်</string>
+    <string name="home_status_interrupted">ပြတ်တောက်နေသည်</string>
+    <string name="home_status_blocked">ပိတ်ဆို့ထားသည်</string>
+    <string name="home_connection_blocked">ချိတ်ဆက်မှု ပိတ်ဆို့ထားသည်</string>
+    <string name="home_change">ပြောင်းရန်</string>
+    <string name="home_status_connecting">ချိတ်ဆက်နေဆဲ</string>
+    <string name="home_only_selected_apps_protected">ရွေးထားသော အက်ပ်များသာ ကာကွယ်ထားသည်</string>
+    <plurals name="home_days_left">
+        <item quantity="other">%1$d ရက်သာ ကျန်တော့သည်</item>
+    </plurals>
+    <plurals name="home_months_left">
+        <item quantity="other">%1$d လသာ ကျန်တော့သည်</item>
+    </plurals>
+    <plurals name="home_years_left">
+        <item quantity="other">%1$d နှစ်သာ ကျန်တော့သည်</item>
+    </plurals>
+    <string name="home_select_location">တည်နေရာ ရွေးချယ်ပါ။ လက်ရှိတည်နေရာမှာ %1$s ဖြစ်ပါသည်</string>
 </resources>

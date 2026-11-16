@@ -771,4 +771,25 @@
     <string name="device_older_client_body">Jokin tämän tilin laite käyttää Warrenin versiota, joka on vanhempi kuin 1.1.36. Se ei enää estä muita laitteitasi. Päivitä tai poista se.</string>
     <string name="manage_devices">Hallitse laitteita</string>
     <string name="auth_failed_no_session_token">Tällä laitteella ei ole juuri nyt istunnon tunnistetietoja. Jokin toinen tilisi laite saattaa pitää niitä hallussaan.</string>
+    <string name="home_status_unprotected">Suojaamaton</string>
+    <string name="home_status_protected">Suojattu</string>
+    <string name="home_status_interrupted">Keskeytynyt</string>
+    <string name="home_status_blocked">Estetty</string>
+    <string name="home_connection_blocked">Yhteys estetty</string>
+    <string name="home_change">Vaihda</string>
+    <string name="home_status_connecting">Yhdistetään</string>
+    <string name="home_only_selected_apps_protected">Vain valitut sovellukset on suojattu</string>
+    <plurals name="home_days_left">
+        <item quantity="one">1 päivä jäljellä</item>
+        <item quantity="other">%1$d päivää jäljellä</item>
+    </plurals>
+    <plurals name="home_months_left">
+        <item quantity="one">1 kuukausi jäljellä</item>
+        <item quantity="other">%1$d kuukautta jäljellä</item>
+    </plurals>
+    <plurals name="home_years_left">
+        <item quantity="one">1 vuosi jäljellä</item>
+        <item quantity="other">%1$d vuotta jäljellä</item>
+    </plurals>
+    <string name="home_select_location">Valitse sijainti. Nykyinen sijainti on %1$s.</string>
 </resources>

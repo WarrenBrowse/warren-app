@@ -774,4 +774,25 @@
     <string name="device_older_client_body">Um dispositivo desta conta utiliza uma versão do Warren anterior à 1.1.36. Já não bloqueia os seus outros dispositivos. Atualize-o ou desinstale-o.</string>
     <string name="manage_devices">Gerir dispositivos</string>
     <string name="auth_failed_no_session_token">Este dispositivo não tem credenciais de sessão neste momento. Outro dispositivo da sua conta pode estar a utilizá-las.</string>
+    <string name="home_status_unprotected">Desprotegido</string>
+    <string name="home_status_protected">Protegido</string>
+    <string name="home_status_interrupted">Interrompido</string>
+    <string name="home_status_blocked">Bloqueado</string>
+    <string name="home_connection_blocked">Conexão bloqueada</string>
+    <string name="home_change">Alterar</string>
+    <string name="home_status_connecting">A ligar</string>
+    <string name="home_only_selected_apps_protected">Só as aplicações escolhidas estão protegidas</string>
+    <plurals name="home_days_left">
+        <item quantity="one">1 dia restante</item>
+        <item quantity="other">%1$d dias restantes</item>
+    </plurals>
+    <plurals name="home_months_left">
+        <item quantity="one">1 mês restante</item>
+        <item quantity="other">%1$d meses restantes</item>
+    </plurals>
+    <plurals name="home_years_left">
+        <item quantity="one">1 ano restante</item>
+        <item quantity="other">%1$d anos restantes</item>
+    </plurals>
+    <string name="home_select_location">Selecionar localização. A localização atual é %1$s</string>
 </resources>

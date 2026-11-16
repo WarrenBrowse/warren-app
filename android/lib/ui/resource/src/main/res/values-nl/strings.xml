@@ -771,4 +771,25 @@
     <string name="device_older_client_body">Een apparaat van dit account gebruikt een versie van Warren die ouder is dan 1.1.36. Het blokkeert je andere apparaten niet meer. Werk het bij of verwijder het.</string>
     <string name="manage_devices">Apparaten beheren</string>
     <string name="auth_failed_no_session_token">Dit apparaat heeft op dit moment geen sessiegegevens. Mogelijk heeft een ander apparaat van je account ze in gebruik.</string>
+    <string name="home_status_unprotected">Onbeschermd</string>
+    <string name="home_status_protected">Beschermd</string>
+    <string name="home_status_interrupted">Onderbroken</string>
+    <string name="home_status_blocked">Geblokkeerd</string>
+    <string name="home_connection_blocked">Verbinding geblokkeerd</string>
+    <string name="home_change">Wijzigen</string>
+    <string name="home_status_connecting">Bezig met verbinden</string>
+    <string name="home_only_selected_apps_protected">Alleen gekozen apps zijn beschermd</string>
+    <plurals name="home_days_left">
+        <item quantity="one">1 dag resterend</item>
+        <item quantity="other">%1$d dagen resterend</item>
+    </plurals>
+    <plurals name="home_months_left">
+        <item quantity="one">1 maand resterend</item>
+        <item quantity="other">%1$d maanden resterend</item>
+    </plurals>
+    <plurals name="home_years_left">
+        <item quantity="one">1 jaar resterend</item>
+        <item quantity="other">%1$d jaar resterend</item>
+    </plurals>
+    <string name="home_select_location">Selecteer locatie. Huidige locatie is %1$s</string>
 </resources>

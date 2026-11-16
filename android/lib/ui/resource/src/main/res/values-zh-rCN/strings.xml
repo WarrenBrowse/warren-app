@@ -763,4 +763,22 @@
     <string name="device_older_client_body">此账户中有一台设备运行的 Warren 版本早于 1.1.36。它不再阻止您的其他设备。请更新或卸载它。</string>
     <string name="manage_devices">管理设备</string>
     <string name="auth_failed_no_session_token">此设备目前没有会话凭据。您账户中的另一台设备可能正在占用它们。</string>
+    <string name="home_status_unprotected">未受保护</string>
+    <string name="home_status_protected">已受保护</string>
+    <string name="home_status_interrupted">已中断</string>
+    <string name="home_status_blocked">已阻止</string>
+    <string name="home_connection_blocked">连接已阻止</string>
+    <string name="home_change">更改</string>
+    <string name="home_status_connecting">正在连接</string>
+    <string name="home_only_selected_apps_protected">仅所选应用受到保护</string>
+    <plurals name="home_days_left">
+        <item quantity="other">剩余 %1$d 天</item>
+    </plurals>
+    <plurals name="home_months_left">
+        <item quantity="other">剩余 %1$d 个月</item>
+    </plurals>
+    <plurals name="home_years_left">
+        <item quantity="other">剩余 %1$d 年</item>
+    </plurals>
+    <string name="home_select_location">选择位置。当前位置为 %1$s</string>
 </resources>

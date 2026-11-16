@@ -763,4 +763,22 @@
     <string name="device_older_client_body">このアカウントのデバイスの1台が、1.1.36より古いバージョンのWarrenを使用しています。ほかのデバイスをブロックすることはなくなりました。アップデートするかアンインストールしてください。</string>
     <string name="manage_devices">デバイスを管理</string>
     <string name="auth_failed_no_session_token">このデバイスには現在セッション認証情報がありません。アカウントの別のデバイスが保持している可能性があります。</string>
+    <string name="home_status_unprotected">保護されていません</string>
+    <string name="home_status_protected">保護中</string>
+    <string name="home_status_interrupted">中断</string>
+    <string name="home_status_blocked">ブロック中</string>
+    <string name="home_connection_blocked">接続がブロックされています</string>
+    <string name="home_change">変更</string>
+    <string name="home_status_connecting">接続中</string>
+    <string name="home_only_selected_apps_protected">選択したアプリのみ保護されています</string>
+    <plurals name="home_days_left">
+        <item quantity="other">残り%1$d日</item>
+    </plurals>
+    <plurals name="home_months_left">
+        <item quantity="other">残り%1$d ヶ月</item>
+    </plurals>
+    <plurals name="home_years_left">
+        <item quantity="other">残り%1$d 年</item>
+    </plurals>
+    <string name="home_select_location">場所を選択します。現在の場所は%1$sです</string>
 </resources>

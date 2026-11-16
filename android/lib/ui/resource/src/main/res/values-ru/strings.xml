@@ -787,4 +787,31 @@
     <string name="device_older_client_body">Одно из устройств этого аккаунта использует версию Warren старше 1.1.36. Оно больше не блокирует другие ваши устройства. Обновите или удалите его.</string>
     <string name="manage_devices">Управление устройствами</string>
     <string name="auth_failed_no_session_token">У этого устройства сейчас нет учётных данных сеанса. Возможно, их занимает другое устройство вашего аккаунта.</string>
+    <string name="home_status_unprotected">Без защиты</string>
+    <string name="home_status_protected">Защищено</string>
+    <string name="home_status_interrupted">Прервано</string>
+    <string name="home_status_blocked">Заблокировано</string>
+    <string name="home_connection_blocked">Соединение заблокировано</string>
+    <string name="home_change">Изменить</string>
+    <string name="home_status_connecting">Идет подключение</string>
+    <string name="home_only_selected_apps_protected">Защищены только выбранные приложения</string>
+    <plurals name="home_days_left">
+        <item quantity="one">Остался %1$d день</item>
+        <item quantity="few">Осталось %1$d дня</item>
+        <item quantity="many">Осталось %1$d дней</item>
+        <item quantity="other">Осталось %1$d дня</item>
+    </plurals>
+    <plurals name="home_months_left">
+        <item quantity="one">Остался %1$d месяц</item>
+        <item quantity="few">Осталось %1$d месяца</item>
+        <item quantity="many">Осталось %1$d месяцев</item>
+        <item quantity="other">Осталось %1$d месяца</item>
+    </plurals>
+    <plurals name="home_years_left">
+        <item quantity="one">Остался %1$d год</item>
+        <item quantity="few">Осталось %1$d года</item>
+        <item quantity="many">Осталось %1$d лет</item>
+        <item quantity="other">Осталось %1$d года</item>
+    </plurals>
+    <string name="home_select_location">Выбрать местоположение. Текущее местоположение %1$s</string>
 </resources>
