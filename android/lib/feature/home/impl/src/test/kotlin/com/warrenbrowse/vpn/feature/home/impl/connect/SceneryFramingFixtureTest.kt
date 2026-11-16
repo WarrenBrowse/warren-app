@@ -1,9 +1,11 @@
 package com.warrenbrowse.vpn.feature.home.impl.connect
 
 import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures
+import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.booleanOr
 import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.cases
 import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.float
 import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.floats
+import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.int
 import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.obj
 import com.warrenbrowse.vpn.fixtures.ClientRulesFixtures.string
 import com.warrenbrowse.vpn.lib.ui.resource.R
@@ -33,6 +35,7 @@ class SceneryFramingFixtureTest {
             clearTop = case.float("clear_top_px"),
             fade = case.float("fade_px"),
             span = SceneryFraming.Span(span[0], span[1]),
+            compact = case.booleanOr("compact", false),
         )
     }
 
@@ -89,10 +92,13 @@ class SceneryFramingFixtureTest {
             val spanTop = got.top + span[0] * got.scale
             val spanBottom = got.top + span[1] * got.scale
             assertTrue(spanTop >= case.float("clear_top_px") - TOLERANCE, "$name: under the header")
-            assertTrue(
-                spanBottom <= hero[1] - case.float("fade_px") + TOLERANCE,
-                "$name: in the fade",
-            )
+            // A compact hero gives the span bottom to the fade on purpose.
+            if (!case.booleanOr("compact", false)) {
+                assertTrue(
+                    spanBottom <= hero[1] - case.float("fade_px") + TOLERANCE,
+                    "$name: in the fade",
+                )
+            }
             assertTrue(got.left >= -TOLERANCE, "$name: cropped on the left")
             assertTrue(got.left + got.width <= hero[0] + TOLERANCE, "$name: cropped on the right")
         }
@@ -124,6 +130,18 @@ class SceneryFramingFixtureTest {
     @Test
     fun `the hero keeps the mockup proportions and fades along the mockup curve`() {
         assertEquals(fixture.float("hero_height_ratio"), SceneryFraming.HERO_HEIGHT_RATIO, 1e-6f)
+        assertEquals(
+            fixture.float("hero_max_height_ratio"),
+            SceneryFraming.HERO_MAX_HEIGHT_RATIO,
+            1e-6f,
+        )
+        assertEquals(
+            fixture.float("compact_height_ratio"),
+            SceneryFraming.COMPACT_HEIGHT_RATIO,
+            1e-6f,
+        )
+        assertEquals(fixture.int("compact_transition_ms"), SceneryFraming.COMPACT_TRANSITION_MS)
+        assertEquals(fixture.float("margin_blur_px"), SceneryFraming.MARGIN_BLUR)
         val stops =
             fixture.getValue("mask_stops").jsonArray.map { stop ->
                 val (at, alpha) = stop.jsonArray.map { it.jsonPrimitive.content.toFloat() }
@@ -135,9 +153,11 @@ class SceneryFramingFixtureTest {
 
     @Test
     fun `the clear zone ends where the hero fade reaches half opacity`() {
-        assertTrue(
-            SceneryFraming.MASK_STOPS.contains(SceneryFraming.CLEAR_BOTTOM_FRACTION to HALF),
-            "the clear bottom is not the half-opacity stop of the mask",
+        assertEquals(
+            HALF,
+            maskAlpha(SceneryFraming.CLEAR_BOTTOM_FRACTION),
+            TOLERANCE,
+            "the clear bottom is not where the mask reaches half opacity",
         )
         fixture.cases("cases").forEach { case ->
             val height = case.floats("hero_px")[1]
@@ -151,22 +171,75 @@ class SceneryFramingFixtureTest {
     }
 
     @Test
-    fun `the hero is the mockup ratio of its width under the status bar, unless the panel needs it`() {
+    fun `every fixture hero is the height the hero rule gives its width`() {
         val headerBand = hero.HeaderInset + toolbar.Height + hero.ClearMargin
         fixture.cases("cases").forEach { case ->
             val name = case.string("name")
             val (width, height) = case.floats("hero_px")
             // The fixture's clear_top is the status bar plus the header band.
             val statusBar = case.float("clear_top_px") - headerBand.value
-            val natural = SceneryFraming.heroHeight(width, statusBar, available = Float.MAX_VALUE)
-            if (name.startsWith("short_hero")) {
-                assertTrue(natural > height, "$name: the fixture gives this hero less room")
-            } else {
-                assertEquals(height, natural, ROUNDING, name)
+            when {
+                case.booleanOr("compact", false) ->
+                    assertEquals(
+                        height,
+                        SceneryFraming.compactHeroHeight(width, statusBar),
+                        ROUNDING,
+                        name,
+                    )
+                // The tall phone took all the free height a hero may take.
+                name.endsWith("_tall_ground") ->
+                    assertEquals(
+                        height,
+                        SceneryFraming.heroHeight(width, statusBar, available = Float.MAX_VALUE),
+                        ROUNDING,
+                        name,
+                    )
+                // A tablet's hero takes its height from the content column, not its own width.
+                name.startsWith("wide_") -> Unit
+                else ->
+                    assertEquals(
+                        height,
+                        SceneryFraming.heroHeight(width, statusBar, available = height),
+                        ROUNDING,
+                        name,
+                    )
             }
-            assertEquals(height, SceneryFraming.heroHeight(width, statusBar, height), ROUNDING, name)
         }
-        assertEquals(0f, SceneryFraming.heroHeight(360f, 0f, available = -10f))
+    }
+
+    @Test
+    fun `a phone hero absorbs the free height between the mockup ratio and its max`() {
+        val width = 412f
+        val statusBar = 24f
+        val natural = width * SceneryFraming.HERO_HEIGHT_RATIO + statusBar
+        val max = width * SceneryFraming.HERO_MAX_HEIGHT_RATIO + statusBar
+        val compact = width * SceneryFraming.COMPACT_HEIGHT_RATIO + statusBar
+        assertEquals(max, SceneryFraming.heroHeight(width, statusBar, available = 2000f))
+        assertEquals(natural + 40f, SceneryFraming.heroHeight(width, statusBar, natural + 40f))
+        // Short of room, it gives way down to the compact hero and no further.
+        assertEquals(natural - 40f, SceneryFraming.heroHeight(width, statusBar, natural - 40f))
+        assertEquals(compact, SceneryFraming.heroHeight(width, statusBar, available = 10f))
+    }
+
+    @Test
+    fun `the blurred backdrop covers the hero and keeps the span where the canvas has it`() {
+        val case = fixture.cases("cases").single { it.string("name") == "wide_ground" }
+        val (width, height) = case.floats("hero_px")
+        val span = case.floats("span_rows").let { SceneryFraming.Span(it[0], it[1]) }
+        val frame = frameOf(case)
+        assertTrue(frame.feathersSides, "a narrowed canvas has side margins")
+        val cover = SceneryFraming.backdrop(width, height, frame, span)
+        assertTrue(cover.left <= 0f && cover.left + cover.width >= width, "covers the width")
+        assertTrue(cover.top <= 0f && cover.top + cover.height >= height, "covers the height")
+        val middle = (span.top + span.bottom) / 2f
+        assertEquals(
+            frame.top + middle * frame.scale,
+            cover.top + middle * cover.scale,
+            TOLERANCE,
+            "the span's middle row lines up with the canvas",
+        )
+        val desktop = frameOf(fixture.cases("cases").first())
+        assertTrue(!desktop.feathersSides, "a width-fit canvas has no margin to fill")
     }
 
     @Test
@@ -190,6 +263,16 @@ class SceneryFramingFixtureTest {
                 span = SceneryFraming.GROUND_SPAN,
             )
         assertTrue(!flush.feathersTop && !flush.feathersSides)
+    }
+
+    /** The mask's alpha at [at] of the hero height, between its stops. */
+    private fun maskAlpha(at: Float): Float {
+        val stops = SceneryFraming.MASK_STOPS
+        val upper = stops.indexOfFirst { it.first >= at }
+        if (upper <= 0) return stops.first().second
+        val (a0, v0) = stops[upper - 1]
+        val (a1, v1) = stops[upper]
+        return v0 + (v1 - v0) * (at - a0) / (a1 - a0)
     }
 
     private companion object {

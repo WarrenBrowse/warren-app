@@ -16,30 +16,45 @@ internal object SceneryFraming {
      */
     const val FEATHER_ROWS = 48f
 
-    /** The mockup's proportions (Warren VPN Accueil, 360x640): a 300 high hero on a 360 width. */
-    const val HERO_HEIGHT_RATIO = 300f / 360f
+    /** The mockup's proportions (Warren VPN Accueil, 380x620): a 300 high hero on a 380 width. */
+    const val HERO_HEIGHT_RATIO = 300f / 380f
+
+    /** A phone hero takes free height up to this fraction of its width. */
+    const val HERO_MAX_HEIGHT_RATIO = 1.15f
+
+    /** The hero while the connection details are open (176 on the 380 width). */
+    const val COMPACT_HEIGHT_RATIO = 176f / 380f
+
+    /** The hero's resize when the details open or close, on the desktop easing cubic-bezier(0.3, 0.7, 0.2, 1). */
+    const val COMPACT_TRANSITION_MS = 400
+
+    /** The blur, in dp, of the landscape shown at cover scale beside a narrowed canvas. */
+    const val MARGIN_BLUR = 24f
 
     /**
-     * The hero's alpha from its top to its bottom, the mockup's short fade: `(fraction of the hero
-     * height, alpha)`. The art stays opaque down to the status pill, which rides up over the last
-     * rows, so the fade behind it stays discreet.
+     * The hero's alpha from its top to its bottom, the mockup's soft fade: `(fraction of the hero
+     * height, alpha)`. The status pill rides over the last rows.
      */
     val MASK_STOPS: List<Pair<Float, Float>> =
         listOf(
             0f to 1f,
-            0.86f to 1f,
-            0.94f to 0.5f,
+            0.74f to 1f,
+            0.79f to 0.9f,
+            0.84f to 0.7f,
+            0.89f to 0.45f,
+            0.94f to 0.2f,
+            0.98f to 0.06f,
             1f to 0f,
         )
 
     /** Where [MASK_STOPS] reaches half opacity: the clear zone ends there. */
-    const val CLEAR_BOTTOM_FRACTION = 0.94f
+    const val CLEAR_BOTTOM_FRACTION = 0.88f
 
-    /** The cameras, the whole burrow and Bula down to his shins while he is out. */
-    val GROUND_SPAN = Span(top = 320f, bottom = 995f)
+    /** The cameras, the burrow and Bula down to his tail while he is out. */
+    val GROUND_SPAN = Span(top = 320f, bottom = 900f)
 
-    /** Once Bula is in: the skyline down to the top of the burrow mouth. */
-    const val SKY_BOTTOM_ROW = 760f
+    /** Once Bula is in: the skyline down to below the foot of its flag. */
+    const val SKY_BOTTOM_ROW = 680f
 
     private const val SUBPIXEL = 0.5f
 
@@ -63,13 +78,28 @@ internal object SceneryFraming {
             get() = left > SUBPIXEL
     }
 
-    fun frame(width: Float, height: Float, clearTop: Float, fade: Float, span: Span): Frame {
+    /**
+     * Where the canvas sits in a [width] x [height] hero. A [compact] hero (the details are open)
+     * keeps the canvas at width-fit and pins the span top under the header, its bottom going into
+     * the fade.
+     */
+    @Suppress("LongParameterList")
+    fun frame(
+        width: Float,
+        height: Float,
+        clearTop: Float,
+        fade: Float,
+        span: Span,
+        compact: Boolean = false,
+    ): Frame {
         val clearBottom = height - fade
+        val widthFit = width / CANVAS_WIDTH
         val scale =
-            minOf(width / CANVAS_WIDTH, (clearBottom - clearTop) / (span.bottom - span.top))
+            if (compact) widthFit
+            else minOf(widthFit, (clearBottom - clearTop) / (span.bottom - span.top))
         val yMin = clearTop - span.top * scale
         val yMax = clearBottom - span.bottom * scale
-        val top = minOf(yMax, maxOf(yMin, 0f))
+        val top = if (compact) yMin else minOf(yMax, maxOf(yMin, 0f))
         return Frame(
             scale = scale,
             left = (width - CANVAS_WIDTH * scale) / 2f,
@@ -99,10 +129,41 @@ internal object SceneryFraming {
     fun fade(height: Float): Float = height * (1f - CLEAR_BOTTOM_FRACTION)
 
     /**
-     * The hero at the mockup's ratio of its [width], drawn under the [statusBar] on a phone; the
-     * panel takes the rest. Only a screen too short for both gives the hero less, down to the
-     * [available] height the panel leaves, and the formula then narrows the canvas to fit.
+     * A phone hero [width] wide under the [statusBar]: it absorbs the [available] height the panel
+     * and the footer leave, from the mockup's ratio of its width up to [HERO_MAX_HEIGHT_RATIO]; a
+     * screen too short for the mockup's ratio gives it less, down to the compact hero, below which
+     * the content scrolls instead.
      */
     fun heroHeight(width: Float, statusBar: Float, available: Float): Float =
-        maxOf(0f, minOf(available, width * HERO_HEIGHT_RATIO + statusBar))
+        available.coerceIn(
+            compactHeroHeight(width, statusBar),
+            width * HERO_MAX_HEIGHT_RATIO + statusBar,
+        )
+
+    /** The hero while the details are open: [COMPACT_HEIGHT_RATIO] of its width. */
+    fun compactHeroHeight(width: Float, statusBar: Float): Float =
+        width * COMPACT_HEIGHT_RATIO + statusBar
+
+    /**
+     * The landscape behind the side margins of a narrowed [frame]: the canvas at the scale that
+     * covers the whole hero, blurred by [MARGIN_BLUR], its [span] centred on the same row as the
+     * framed canvas so the horizon runs on behind it.
+     */
+    fun backdrop(width: Float, height: Float, frame: Frame, span: Span): Frame {
+        val scale = maxOf(width / CANVAS_WIDTH, height / CANVAS_HEIGHT)
+        val middle = (span.top + span.bottom) / 2f
+        val top =
+            (frame.top + middle * frame.scale - middle * scale).coerceIn(
+                height - CANVAS_HEIGHT * scale,
+                0f,
+            )
+        return Frame(
+            scale = scale,
+            left = (width - CANVAS_WIDTH * scale) / 2f,
+            top = top,
+            width = CANVAS_WIDTH * scale,
+            height = CANVAS_HEIGHT * scale,
+            headroom = 0f,
+        )
+    }
 }
