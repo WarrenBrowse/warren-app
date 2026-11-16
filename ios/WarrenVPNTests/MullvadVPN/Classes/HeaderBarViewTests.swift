@@ -168,6 +168,24 @@ final class HeaderBarViewTests: XCTestCase {
         XCTAssertEqual(height(header.settingsButton), UIMetrics.Button.barButtonSize)
     }
 
+    /// A keyboard focus ring on the home toolbar is a rounded square drawn inside each 38 point
+    /// button, so it never spills over the pill's edge; elsewhere the system ring stays.
+    func testTheHomeToolbarRingsItsButtonsInside() throws {
+        let header = HeaderBarView(frame: .zero)
+        let buttons = [header.forumButton, header.accountButton, header.settingsButton]
+
+        header.homeTheme = .dark
+        for button in buttons {
+            let halo = try XCTUnwrap(button.focusEffect as? UIFocusHaloEffect)
+            XCTAssertEqual(halo.position, .inside)
+        }
+
+        header.homeTheme = nil
+        for button in buttons {
+            XCTAssertNil(button.focusEffect)
+        }
+    }
+
     /// The toolbar's glyphs take the opposite tone of its glass in each theme.
     func testTheHomeGlyphsFollowTheTheme() throws {
         let header = HeaderBarView(frame: .zero)

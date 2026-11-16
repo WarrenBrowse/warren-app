@@ -308,6 +308,7 @@ class HeaderBarView: UIView {
             button.constraints
                 .filter { $0.firstItem === button && $0.firstAttribute == .height && $0.secondItem == nil }
                 .forEach { $0.constant = buttonSize }
+            button.focusEffect = home ? Self.homeToolbarFocusRing() : nil
         }
         buttonContainer.spacing = home ? 0 : 12
         toolbarBackground.isHidden = !home
@@ -317,6 +318,20 @@ class HeaderBarView: UIView {
         wordmarkImageView.layer.shadowOffset = .zero
         forumBadgeLabel.layer.borderWidth = home ? HomeMetrics.Toolbar.badgeRing : 0
         deviceInfoHolder.isHidden = home
+    }
+
+    /// The system rings a focused button outside its bounds, which on the home
+    /// spills over the pill's edge; there the ring is the hit area's rounded
+    /// square, drawn inside it (desktop `HomeHeader`).
+    private static func homeToolbarFocusRing() -> UIFocusHaloEffect {
+        let toolbar = HomeMetrics.Toolbar.self
+        let ring = UIFocusHaloEffect(
+            roundedRect: CGRect(x: 0, y: 0, width: toolbar.button, height: toolbar.button),
+            cornerRadius: toolbar.radius - toolbar.paddingHorizontal,
+            curve: .continuous
+        )
+        ring.position = .inside
+        return ring
     }
 
     /// The glyph, the badge and the spoken label of the forum slot, all from
