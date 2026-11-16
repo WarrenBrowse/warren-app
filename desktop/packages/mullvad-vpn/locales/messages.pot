@@ -2043,10 +2043,6 @@ msgid "AUTO-RENEWAL SOON"
 msgstr ""
 
 msgctxt "in-app-notifications"
-msgid "BETA UPDATE AVAILABLE"
-msgstr ""
-
-msgctxt "in-app-notifications"
 msgid "BLOCKING INTERNET"
 msgstr ""
 
@@ -2080,11 +2076,6 @@ msgstr ""
 
 msgctxt "in-app-notifications"
 msgid "Click here to see what’s new."
-msgstr ""
-
-#. Link text to go to the app upgrade view
-msgctxt "in-app-notifications"
-msgid "Click here to update"
 msgstr ""
 
 msgctxt "in-app-notifications"
@@ -2140,9 +2131,8 @@ msgctxt "in-app-notifications"
 msgid "IMPORTANT"
 msgstr ""
 
-#. The in-app banner displayed to the user when the app update is available.
 msgctxt "in-app-notifications"
-msgid "Install the latest app version to stay up to date."
+msgid "Install"
 msgstr ""
 
 #. Notification title when the installer failed.
@@ -2259,20 +2249,8 @@ msgctxt "in-app-notifications"
 msgid "TROUBLE CONNECTING?"
 msgstr ""
 
-#. The in-app banner displayed to the user when the app beta update is
-#. available.
-#. Available placeholders:
-#. %(version)s - The version number of the new beta version.
-msgctxt "in-app-notifications"
-msgid "Try out the newest beta version (%(version)s)."
-msgstr ""
-
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
-msgstr ""
-
-msgctxt "in-app-notifications"
-msgid "UPDATE AVAILABLE"
 msgstr ""
 
 #. Generic notification title when the app upgrade failed.

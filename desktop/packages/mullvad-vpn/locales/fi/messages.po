@@ -1603,10 +1603,6 @@ msgid "APP IS OUT OF SYNC"
 msgstr "SOVELLUS EI OLE SYNKRONOITU"
 
 msgctxt "in-app-notifications"
-msgid "BETA UPDATE AVAILABLE"
-msgstr "BEETAPÄIVITYS SAATAVILLA"
-
-msgctxt "in-app-notifications"
 msgid "BLOCKING INTERNET"
 msgstr "VERKKOYHTEYS ESTETTY"
 
@@ -1629,11 +1625,6 @@ msgstr "Yritä latausta uudelleen napsauttamalla tätä"
 msgctxt "in-app-notifications"
 msgid "Click here to see what’s new."
 msgstr "Katso uudet ominaisuudet napsauttamalla tästä."
-
-#. Link text to go to the app upgrade view
-msgctxt "in-app-notifications"
-msgid "Click here to update"
-msgstr "Päivitä napsauttamalla tätä"
 
 msgctxt "in-app-notifications"
 msgid "Connecting is not possible while access is revoked."
@@ -1685,10 +1676,6 @@ msgstr "LADATAAN PÄIVITYSTÄ... %(appUpgradeDownloadProgressValue)s %%"
 msgctxt "in-app-notifications"
 msgid "IMPORTANT"
 msgstr "TÄRKEÄÄ"
-
-msgctxt "in-app-notifications"
-msgid "Install the latest app version to stay up to date."
-msgstr "Pysy ajan tasalla asentamalla sovelluksen uusin versio."
 
 #. Notification title when the installer failed.
 msgctxt "in-app-notifications"
@@ -1772,21 +1759,9 @@ msgctxt "in-app-notifications"
 msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
 msgstr "Tämän laitteen nimi on nyt <em>%(deviceName)s</em>. Katso lisää tililtä kohdasta <a>Hallitse laitteita</a>."
 
-#. The in-app banner displayed to the user when the app beta update is
-#. available.
-#. Available placeholders:
-#. %(version)s - The version number of the new beta version.
-msgctxt "in-app-notifications"
-msgid "Try out the newest beta version (%(version)s)."
-msgstr "Kokeile uusinta beetaversiota (%(version)s)."
-
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
 msgstr "EI-TUETTU VERSIO"
-
-msgctxt "in-app-notifications"
-msgid "UPDATE AVAILABLE"
-msgstr "PÄIVITYS SAATAVILLA"
 
 #. Generic notification title when the app upgrade failed.
 msgctxt "in-app-notifications"
@@ -6502,3 +6477,7 @@ msgstr "Yhteys estetty"
 msgctxt "tunnel-control"
 msgid "Change"
 msgstr "Vaihda"
+
+msgctxt "in-app-notifications"
+msgid "Install"
+msgstr "Asenna"

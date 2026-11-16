@@ -1595,10 +1595,6 @@ msgid "APP IS OUT OF SYNC"
 msgstr "အက်ပ်သည် ကောင်းစွာ အလုပ်မလုပ်ပါ"
 
 msgctxt "in-app-notifications"
-msgid "BETA UPDATE AVAILABLE"
-msgstr "အစမ်းသုံး အပ်ဒိတ် ရနိုင်ပါပြီ"
-
-msgctxt "in-app-notifications"
 msgid "BLOCKING INTERNET"
 msgstr "အင်တာနက် ပိတ်ဆို့နေပါသည်"
 
@@ -1621,11 +1617,6 @@ msgstr "ဒေါင်းလုဒ်ပြန်လုပ်ကြည့်ရ
 msgctxt "in-app-notifications"
 msgid "Click here to see what’s new."
 msgstr "အသစ်ထူးသော အကြောင်းအရာကို ကြည့်ရန် ဤနေရာကို နှိပ်ပါ"
-
-#. Link text to go to the app upgrade view
-msgctxt "in-app-notifications"
-msgid "Click here to update"
-msgstr "အပ်ဒိတ်လုပ်ရန် ဤနေရာကို နှိပ်ပါ"
 
 msgctxt "in-app-notifications"
 msgid "Connecting is not possible while access is revoked."
@@ -1677,10 +1668,6 @@ msgstr "အပ်ဒိတ်ကို ဒေါင်းလုဒ်လုပ�
 msgctxt "in-app-notifications"
 msgid "IMPORTANT"
 msgstr "အရေးကြီး"
-
-msgctxt "in-app-notifications"
-msgid "Install the latest app version to stay up to date."
-msgstr "အပ်ဒိတ်ဖြစ်နေစေရန် နောက်ဆုံးထွက် အက်ပ်ဗားရှင်းကို ထည့်သွင်းပါ။"
 
 #. Notification title when the installer failed.
 msgctxt "in-app-notifications"
@@ -1764,21 +1751,9 @@ msgctxt "in-app-notifications"
 msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
 msgstr "ဤစက်ကို <em>%(deviceName)s</em> ဟု ယခု အမည်ပေးထားသည်။ အကောင့်အောက်ရှိ <a>စက်များ စီမံရန်</a> တွင် အသေးစိတ် ကြည့်ရှုပါ။"
 
-#. The in-app banner displayed to the user when the app beta update is
-#. available.
-#. Available placeholders:
-#. %(version)s - The version number of the new beta version.
-msgctxt "in-app-notifications"
-msgid "Try out the newest beta version (%(version)s)."
-msgstr "နောက်ဆုံးထွက် အစမ်းသုံးဗားရှင်း (%(version)s) ကို စမ်းကြည့်ပါ။"
-
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
 msgstr "တွဲဖက်မလုပ်ဆောင်နိုင်သည့် ဗားရှင်း"
-
-msgctxt "in-app-notifications"
-msgid "UPDATE AVAILABLE"
-msgstr "အပ်ဒိတ် ရရှိနိုင်ပါပြီ"
 
 #. Generic notification title when the app upgrade failed.
 msgctxt "in-app-notifications"
@@ -6472,3 +6447,7 @@ msgstr "ချိတ်ဆက်မှု ပိတ်ဆို့ထားသ�
 msgctxt "tunnel-control"
 msgid "Change"
 msgstr "ပြောင်းရန်"
+
+msgctxt "in-app-notifications"
+msgid "Install"
+msgstr "ထည့်သွင်းရန်"

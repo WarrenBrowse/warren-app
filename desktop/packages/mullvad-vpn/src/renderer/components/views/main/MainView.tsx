@@ -4,7 +4,6 @@ import { AppCountriesIndicator } from '../../../features/app-routing/components'
 import { PortForwardingIndicator } from '../../../features/port-forwarding/components';
 import { homeTokens, surfaces } from '../../../lib/foundations';
 import { AppMainHeader } from '../../app-main-header';
-import { BetaBadge } from '../../beta-badge';
 import CountryBackdrop from '../../CountryBackdrop';
 import { HERO_HEIGHT_RATIO } from '../../CountryBackdrop/framing';
 import NotificationArea from '../../NotificationArea';
@@ -38,9 +37,9 @@ const StyledHero = styled.div`
 // move the controls.
 const StyledNotices = styled.div`
   position: absolute;
-  top: ${hero.headerInset + toolbar.height + 8}px;
-  left: 0;
-  right: 0;
+  top: ${hero.headerInset + toolbar.height + 12}px;
+  left: ${hero.headerInset}px;
+  right: ${hero.headerInset}px;
   z-index: 2;
 `;
 
@@ -68,13 +67,6 @@ const StyledChips = styled.div`
   padding: 0 ${panel.paddingHorizontal}px;
 `;
 
-const StyledBeta = styled.div`
-  padding: 10px 0;
-  &:empty {
-    display: none;
-  }
-`;
-
 export function MainView() {
   return (
     <StyledHome>
@@ -95,9 +87,6 @@ export function MainView() {
           <AppCountriesIndicator />
         </StyledChips>
         <StyledSpacer />
-        <StyledBeta>
-          <BetaBadge variant="home" />
-        </StyledBeta>
       </StyledPanel>
       <AppMainHeader.Footer />
     </StyledHome>

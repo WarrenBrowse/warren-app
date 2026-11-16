@@ -11,7 +11,6 @@ import {
   HERO_HEIGHT_RATIO,
   HERO_MASK_STOPS,
   heroFade,
-  thumbnailTopRow,
 } from '../../src/renderer/components/CountryBackdrop/framing';
 import { loadClientRules } from './client-rules';
 
@@ -42,10 +41,6 @@ interface FramingFixture {
   framings: {
     ground: { top_row: number; bottom_row: number };
     sky: { bottom_row: number };
-  };
-  thumbnail: {
-    thumb_margin_rows: number;
-    cases: Array<{ skyline_top_row: number; top_row: number }>;
   };
   cases: FramingCase[];
 }
@@ -130,11 +125,5 @@ describe('scenery framing (fixtures/client-rules/scenery_framing.json)', () => {
       top: 313,
       bottom: fixture.framings.sky.bottom_row,
     });
-  });
-
-  it('crowns the thumbnail with the skyline', () => {
-    for (const thumbCase of fixture.thumbnail.cases) {
-      expect(thumbnailTopRow(thumbCase.skyline_top_row)).toBe(thumbCase.top_row);
-    }
   });
 });

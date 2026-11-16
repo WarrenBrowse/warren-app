@@ -1603,10 +1603,6 @@ msgid "APP IS OUT OF SYNC"
 msgstr "UYGULAMA SENKRONİZE DEĞİL"
 
 msgctxt "in-app-notifications"
-msgid "BETA UPDATE AVAILABLE"
-msgstr "BETA GÜNCELLEME MEVCUT"
-
-msgctxt "in-app-notifications"
 msgid "BLOCKING INTERNET"
 msgstr "İNTERNET ENGELLENİYOR"
 
@@ -1629,11 +1625,6 @@ msgstr "İndirmeyi yeniden denemek için burayı tıklayın"
 msgctxt "in-app-notifications"
 msgid "Click here to see what’s new."
 msgstr "Yenilikleri incelemek için buraya tıklayın."
-
-#. Link text to go to the app upgrade view
-msgctxt "in-app-notifications"
-msgid "Click here to update"
-msgstr "Güncellemek için burayı tıklayın"
 
 msgctxt "in-app-notifications"
 msgid "Connecting is not possible while access is revoked."
@@ -1685,10 +1676,6 @@ msgstr "GÜNCELLEME İNDİRİLİYOR... %%%(appUpgradeDownloadProgressValue)s"
 msgctxt "in-app-notifications"
 msgid "IMPORTANT"
 msgstr "ÖNEMLİ"
-
-msgctxt "in-app-notifications"
-msgid "Install the latest app version to stay up to date."
-msgstr "Güncel kalmak için en son uygulama sürümünü yükleyin."
 
 #. Notification title when the installer failed.
 msgctxt "in-app-notifications"
@@ -1772,21 +1759,9 @@ msgctxt "in-app-notifications"
 msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
 msgstr "Bu cihazın adı artık <em>%(deviceName)s</em>. Daha fazla bilgi için Hesap menüsündeki <a>Cihazları yönet</a> bölümüne bakın."
 
-#. The in-app banner displayed to the user when the app beta update is
-#. available.
-#. Available placeholders:
-#. %(version)s - The version number of the new beta version.
-msgctxt "in-app-notifications"
-msgid "Try out the newest beta version (%(version)s)."
-msgstr "En yeni beta sürümü (%(version)s) deneyin."
-
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
 msgstr "DESTEKLENMEYEN SÜRÜM"
-
-msgctxt "in-app-notifications"
-msgid "UPDATE AVAILABLE"
-msgstr "GÜNCELLEME MEVCUT"
 
 #. Generic notification title when the app upgrade failed.
 msgctxt "in-app-notifications"
@@ -6502,3 +6477,7 @@ msgstr "Bağlantı engellendi"
 msgctxt "tunnel-control"
 msgid "Change"
 msgstr "Değiştir"
+
+msgctxt "in-app-notifications"
+msgid "Install"
+msgstr "Yükle"

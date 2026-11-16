@@ -137,11 +137,17 @@ export interface SystemNotification {
   action?: SystemNotificationAction;
 }
 
+// The glyph a banner leads with. Without one, the banner's level picks it.
+export type InAppNotificationIcon = 'update' | 'announcement';
+
 export interface InAppNotification {
   indicator?: InAppNotificationIndicatorType;
   action?: InAppNotificationAction;
   title: string;
   subtitle?: string | React.ReactElement | InAppNotificationSubtitle[];
+  icon?: InAppNotificationIcon;
+  // A labelled button the banner ends with, the mockup's "Install".
+  button?: { label: string; action: InAppNotificationAction };
 }
 
 export type InAppNotificationSubtitleString = {

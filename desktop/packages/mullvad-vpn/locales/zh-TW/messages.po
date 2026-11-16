@@ -1595,10 +1595,6 @@ msgid "APP IS OUT OF SYNC"
 msgstr "應用程式未同步"
 
 msgctxt "in-app-notifications"
-msgid "BETA UPDATE AVAILABLE"
-msgstr "有可用的 BETA 更新"
-
-msgctxt "in-app-notifications"
 msgid "BLOCKING INTERNET"
 msgstr "封鎖網際網路"
 
@@ -1621,11 +1617,6 @@ msgstr "按一下此處重新嘗試下載"
 msgctxt "in-app-notifications"
 msgid "Click here to see what’s new."
 msgstr "按一下此處查看最新動態。"
-
-#. Link text to go to the app upgrade view
-msgctxt "in-app-notifications"
-msgid "Click here to update"
-msgstr "按一下此處更新"
 
 msgctxt "in-app-notifications"
 msgid "Connecting is not possible while access is revoked."
@@ -1677,10 +1668,6 @@ msgstr "正在下載更新… %(appUpgradeDownloadProgressValue)s%%"
 msgctxt "in-app-notifications"
 msgid "IMPORTANT"
 msgstr "重要"
-
-msgctxt "in-app-notifications"
-msgid "Install the latest app version to stay up to date."
-msgstr "安裝最新版本的應用程式以保持最新狀態。"
 
 #. Notification title when the installer failed.
 msgctxt "in-app-notifications"
@@ -1764,21 +1751,9 @@ msgctxt "in-app-notifications"
 msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
 msgstr "現在此裝置的名稱是 <em>%(deviceName)s</em>。如需更多資訊，請參閱「帳戶」中的<a>管理裝置</a>。"
 
-#. The in-app banner displayed to the user when the app beta update is
-#. available.
-#. Available placeholders:
-#. %(version)s - The version number of the new beta version.
-msgctxt "in-app-notifications"
-msgid "Try out the newest beta version (%(version)s)."
-msgstr "試用最新 Beta 版本 (%(version)s)。"
-
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
 msgstr "不支援的版本"
-
-msgctxt "in-app-notifications"
-msgid "UPDATE AVAILABLE"
-msgstr "可用的更新"
 
 #. Generic notification title when the app upgrade failed.
 msgctxt "in-app-notifications"
@@ -6469,3 +6444,7 @@ msgstr "連線已封鎖"
 msgctxt "tunnel-control"
 msgid "Change"
 msgstr "變更"
+
+msgctxt "in-app-notifications"
+msgid "Install"
+msgstr "安裝"

@@ -1603,10 +1603,6 @@ msgid "APP IS OUT OF SYNC"
 msgstr "APP IST NICHT SYNCHRONISIERT"
 
 msgctxt "in-app-notifications"
-msgid "BETA UPDATE AVAILABLE"
-msgstr "BETA-UPDATE VERFÜGBAR"
-
-msgctxt "in-app-notifications"
 msgid "BLOCKING INTERNET"
 msgstr "INTERNET SPERREN"
 
@@ -1629,11 +1625,6 @@ msgstr "Klicken Sie hier, um den Download erneut zu versuchen"
 msgctxt "in-app-notifications"
 msgid "Click here to see what’s new."
 msgstr "Klicken Sie hier, um die Änderungen zu sehen."
-
-#. Link text to go to the app upgrade view
-msgctxt "in-app-notifications"
-msgid "Click here to update"
-msgstr "Klicken Sie hier zum Aktualisieren"
 
 msgctxt "in-app-notifications"
 msgid "Connecting is not possible while access is revoked."
@@ -1685,10 +1676,6 @@ msgstr "UPDATE WIRD HERUNTERGELADEN … %(appUpgradeDownloadProgressValue)s%%"
 msgctxt "in-app-notifications"
 msgid "IMPORTANT"
 msgstr "WICHTIG"
-
-msgctxt "in-app-notifications"
-msgid "Install the latest app version to stay up to date."
-msgstr "Installieren Sie die neueste Version der App, um auf dem neuesten Stand zu sein."
 
 #. Notification title when the installer failed.
 msgctxt "in-app-notifications"
@@ -1772,21 +1759,9 @@ msgctxt "in-app-notifications"
 msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
 msgstr "Dieses Gerät heißt jetzt <em>%(deviceName)s</em>. Weitere Informationen finden Sie in Ihrem Konto unter <a>Geräte verwalten</a>."
 
-#. The in-app banner displayed to the user when the app beta update is
-#. available.
-#. Available placeholders:
-#. %(version)s - The version number of the new beta version.
-msgctxt "in-app-notifications"
-msgid "Try out the newest beta version (%(version)s)."
-msgstr "Testen Sie unsere neuste Beta-Version (%(version)s)."
-
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
 msgstr "NICHT UNTERSTÜTZTE VERSION"
-
-msgctxt "in-app-notifications"
-msgid "UPDATE AVAILABLE"
-msgstr "UPDATE VERFÜGBAR"
 
 #. Generic notification title when the app upgrade failed.
 msgctxt "in-app-notifications"
@@ -6502,3 +6477,7 @@ msgstr "Verbindung blockiert"
 msgctxt "tunnel-control"
 msgid "Change"
 msgstr "Ändern"
+
+msgctxt "in-app-notifications"
+msgid "Install"
+msgstr "Installieren"

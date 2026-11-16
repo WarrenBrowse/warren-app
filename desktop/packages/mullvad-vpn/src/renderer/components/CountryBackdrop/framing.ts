@@ -15,33 +15,27 @@ export const CANVAS_HEIGHT = sceneryManifest.canvas.height;
 export const FEATHER_ROWS = 48;
 
 // The mockup's proportions (Warren VPN Accueil, 360x640): a 300px hero on a
-// 360px width, fading into the page along the mockup's own curve. The clear
-// zone ends where that fade reaches half opacity; below it the art keeps
-// fading as in the mockup.
+// 360px width, with the mockup's short fade into the page behind the status
+// pill. The clear zone ends where that fade reaches half opacity.
 export const HERO_HEIGHT_RATIO = 300 / 360;
 export const HERO_MASK_STOPS: Array<[number, number]> = [
   [0, 1],
-  [0.52, 1],
-  [0.64, 0.82],
-  [0.77, 0.5],
-  [0.89, 0.2],
-  [0.96, 0.05],
+  [0.86, 1],
+  [0.94, 0.5],
   [1, 0],
 ];
-export const CLEAR_BOTTOM_FRACTION = 0.77;
+export const CLEAR_BOTTOM_FRACTION = 0.94;
 
 // The band under the clear zone, for a hero of this height.
 export function heroFade(heroHeight: number): number {
   return heroHeight * (1 - CLEAR_BOTTOM_FRACTION);
 }
 
-// The cameras and Bula down to his hips while he is out: his legs and the
-// burrow mouth fade into the panel, as in the mockup.
-const GROUND_SPAN = { top: 320, bottom: 830 } as const;
-// Once he is in, the skyline down to the flag.
-const SKY_BOTTOM_ROW = 610;
-
-const THUMB_MARGIN_ROWS = 40;
+// The cameras, the whole burrow and Bula down to his shins while he is out,
+// which puts the cameras where the mockup draws them.
+const GROUND_SPAN = { top: 320, bottom: 995 } as const;
+// Once he is in, the skyline down to the top of the burrow.
+const SKY_BOTTOM_ROW = 760;
 
 export interface FramingSpan {
   top: number;
@@ -130,10 +124,4 @@ export function framingSpan(phase: ConnectionPhase, country: string | undefined)
     return { ...GROUND_SPAN };
   }
   return { top: phaseLandscape(phase, country).skylineTopRow, bottom: SKY_BOTTOM_ROW };
-}
-
-// The round location thumbnail: a full-width square of the landscape whose top
-// sits just above the skyline, so the landmark crowns it.
-export function thumbnailTopRow(skylineTopRow: number): number {
-  return Math.min(CANVAS_HEIGHT - CANVAS_WIDTH, Math.max(0, skylineTopRow - THUMB_MARGIN_ROWS));
 }

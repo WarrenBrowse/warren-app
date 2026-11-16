@@ -46,14 +46,19 @@ const StyledToolbar = styled.div`
     inset 0 0 0 1px ${surfaces.homeToolbarLine},
     0 4px 14px -6px ${surfaces.homeToolbarShadow};
 
-  /* The shared icon button rings a circle sized for its own default glyph;
-     in the pill the hit area is a rounded square, and so is its ring. */
+  /* The shared icon button is a block that leaves its glyph at the top left:
+     in the pill the glyph sits at the centre of its 38px square. Keyboard
+     focus and hover tint that square rather than ringing it, which a frame
+     around an icon in the glass pill made heavy. */
   & button {
+    display: grid;
+    place-items: center;
     border-radius: ${toolbar.radius - toolbar.paddingHorizontal}px;
   }
+  && button:hover,
   && button:focus-visible {
-    outline: 2px solid currentColor;
-    outline-offset: -2px;
+    outline: none;
+    background-color: color-mix(in srgb, currentColor 12%, transparent);
   }
 `;
 

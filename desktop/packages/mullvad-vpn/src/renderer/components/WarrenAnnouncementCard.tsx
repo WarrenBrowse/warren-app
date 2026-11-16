@@ -3,17 +3,14 @@ import styled from 'styled-components';
 
 import { Url } from '../../shared/constants';
 import { messages } from '../../shared/gettext';
-import {
-  InAppAnnouncementCard,
-  InAppNotificationIndicatorType,
-} from '../../shared/notifications/notification';
+import { InAppAnnouncementCard } from '../../shared/notifications/notification';
 import { copyToClipboard } from '../lib/clipboard';
 import { Button } from '../lib/components/button';
 import { Icon } from '../lib/components/icon';
 import { IconButton } from '../lib/components/icon-button';
 import { Text } from '../lib/components/text';
-import { colors, Radius, spacings } from '../lib/foundations';
-import { NotificationIndicator } from './NotificationBanner';
+import { Radius, spacings, surfaces } from '../lib/foundations';
+import { NotificationSubtitleText, NotificationTitle } from './NotificationBanner';
 
 // How long the copy confirmation stays up. Long enough to be read after the
 // eye has moved back to the code, short enough that it never looks stuck.
@@ -30,6 +27,14 @@ const Card = styled.div({
   minWidth: 0,
 });
 
+// The headline and the body read as one block, as in the banners.
+const TextBlock = styled.div({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '1px',
+  minWidth: 0,
+});
+
 const Header = styled.div({
   display: 'flex',
   flexDirection: 'row',
@@ -38,21 +43,33 @@ const Header = styled.div({
   minWidth: 0,
 });
 
-// The level dot the other banners carry, re-aligned onto the card's title line
-// so the whole notification area keeps one vocabulary for severity.
-const HeaderIndicator = styled(NotificationIndicator)({
-  marginTop: '7px',
-  marginInlineEnd: 0,
-});
-
-const Headline = styled(Text)({
+const Headline = styled(NotificationTitle)({
   flex: 1,
   minWidth: 0,
-  overflowWrap: 'anywhere',
 });
 
-const Body = styled(Text)({
-  overflowWrap: 'anywhere',
+const Body = styled(NotificationSubtitleText)({});
+
+// A bare cross, as the mockup puts an announcement away.
+const StyledDismiss = styled.button({
+  display: 'grid',
+  placeItems: 'center',
+  flexShrink: 0,
+  width: '24px',
+  height: '24px',
+  margin: '-3px -4px 0 0',
+  padding: 0,
+  border: 'none',
+  borderRadius: '6px',
+  background: 'none',
+  color: surfaces.homeTextSecondary,
+  cursor: 'pointer',
+  '&:hover': { color: surfaces.homeText },
+  '&:focus-visible': { outline: `2px solid ${surfaces.homeText}`, outlineOffset: '-2px' },
+});
+
+const StyledDismissIcon = styled(Icon)({
+  '&&': { width: '16px', height: '16px', backgroundColor: 'currentColor' },
 });
 
 // Inset well under the body, so the code reads as a field to act on rather
@@ -63,8 +80,8 @@ const VoucherWell = styled.div({
   gap: spacings.tiny,
   padding: `${spacings.small} ${spacings.small}`,
   borderRadius: Radius.radius8,
-  border: `1px solid ${colors.whiteAlpha20}`,
-  backgroundColor: colors.blackAlpha40,
+  border: `1px solid ${surfaces.homeToolbarLine}`,
+  backgroundColor: surfaces.homeField,
 });
 
 const VoucherLabelRow = styled.div({
@@ -101,7 +118,7 @@ const VoucherCode = styled.span({
   fontSize: '14px',
   lineHeight: '20px',
   letterSpacing: '0.04em',
-  color: colors.white,
+  color: surfaces.homeText,
   overflowWrap: 'anywhere',
 });
 
@@ -118,14 +135,12 @@ function voucherLabel(copied: boolean): string {
 
 export interface WarrenAnnouncementCardProps {
   title: string;
-  indicator?: InAppNotificationIndicatorType;
   announcement: InAppAnnouncementCard;
   onOpenCta: (url: Url) => void;
 }
 
 export function WarrenAnnouncementCard({
   title,
-  indicator,
   announcement,
   onOpenCta,
 }: WarrenAnnouncementCardProps) {
@@ -166,28 +181,23 @@ export function WarrenAnnouncementCard({
 
   return (
     <Card data-testid="announcementCard">
-      <Header>
-        <HeaderIndicator $type={indicator} />
-        <Headline variant="titleMedium" data-testid="announcementHeadline">
-          {title}
-        </Headline>
-        <IconButton
-          size="small"
-          variant="secondary"
-          onClick={announcement.dismiss}
-          data-testid="announcementDismiss"
-          aria-label={
-            // TRANSLATORS: Accessibility label of the control that puts an
-            // TRANSLATORS: announcement away for good.
-            messages.pgettext('accessibility', 'Dismiss the announcement')
-          }>
-          <IconButton.Icon icon="cross-circle" />
-        </IconButton>
-      </Header>
+      <TextBlock>
+        <Header>
+          <Headline data-testid="announcementHeadline">{title}</Headline>
+          <StyledDismiss
+            onClick={announcement.dismiss}
+            data-testid="announcementDismiss"
+            aria-label={
+              // TRANSLATORS: Accessibility label of the control that puts an
+              // TRANSLATORS: announcement away for good.
+              messages.pgettext('accessibility', 'Dismiss the announcement')
+            }>
+            <StyledDismissIcon icon="cross" />
+          </StyledDismiss>
+        </Header>
 
-      <Body variant="labelTiny" color="whiteAlpha80" data-testid="announcementBody">
-        {announcement.body}
-      </Body>
+        <Body data-testid="announcementBody">{announcement.body}</Body>
+      </TextBlock>
 
       {voucherCode !== null && (
         <VoucherWell>

@@ -13,7 +13,7 @@ import { FontFamilies, homeTokens, surfaces } from '../../../../lib/foundations'
 import { TransitionType, useHistory } from '../../../../lib/history';
 import { useSelector } from '../../../../redux/store';
 import { exitPlaceName, getRelayName, selectedCountryCode } from './location-name';
-import { LocationThumb } from './LocationThumb';
+import { LocationFlag } from './LocationFlag';
 
 const { panel, controls } = homeTokens;
 
@@ -185,7 +185,6 @@ function LocationRow() {
   const selectedCode = selectedCountryCode(relaySettings);
   const exitCode = relayLocations.find((country) => country.name === connection.country)?.code;
   const code = (exitName ? exitCode : undefined) ?? selectedCode;
-  const country = exitName ? connection.country : undefined;
 
   const onSelectLocation = useCallback(() => {
     push(RoutePath.selectLocation, { transition: TransitionType.show });
@@ -198,7 +197,7 @@ function LocationRow() {
         messages.pgettext('accessibility', 'Select location. Current location is %(location)s'),
         { location: name },
       )}>
-      <LocationThumb country={country} code={code} />
+      <LocationFlag code={code} />
       <StyledLocationName>{name}</StyledLocationName>
       <StyledChange>
         {

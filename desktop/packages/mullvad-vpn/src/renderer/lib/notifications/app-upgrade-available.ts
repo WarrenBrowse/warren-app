@@ -28,69 +28,46 @@ export class AppUpgradeAvailableNotificationProvider implements InAppNotificatio
   }
 
   public getInAppNotification(): InAppNotification {
-    const { close, platform, suggestedIsBeta } = this.context;
+    const { close, platform, suggestedIsBeta, suggestedUpgradeVersion } = this.context;
     const isLinux = platform === 'linux';
 
     return {
       indicator: 'warning',
-      title: suggestedIsBeta
-        ? messages.pgettext('in-app-notifications', 'BETA UPDATE AVAILABLE')
-        : messages.pgettext('in-app-notifications', 'UPDATE AVAILABLE'),
-      subtitle: [
-        {
-          content: this.inAppMessage(),
-        },
-        {
-          content:
-            // TRANSLATORS: Link text to go to the app upgrade view
-            messages.pgettext('in-app-notifications', 'Click here to update'),
-          action: isLinux
-            ? {
-                type: 'navigate-external',
-                link: {
-                  to: getDownloadUrl(suggestedIsBeta ?? false),
-                  'aria-label':
-                    // TRANSLATORS: Accessibility label for link to go to download page.
-                    messages.pgettext(
-                      'accessibility',
-                      'New version available, click here to go to download page, opens externally',
-                    ),
-                },
-              }
-            : {
-                type: 'navigate-internal',
-                link: {
-                  to: RoutePath.appUpgrade,
-                  // TRANSLATORS: Accessibility label for link to go to upgrade view.
-                  'aria-label': messages.pgettext(
+      icon: 'update',
+      title: messages.pgettext('app-info-view', 'Update available'),
+      subtitle: sprintf(messages.pgettext('app-upgrade-view', 'Version %(version)s'), {
+        version: suggestedUpgradeVersion,
+      }),
+      button: {
+        // TRANSLATORS: Button of the home's update banner, which installs the new version.
+        label: messages.pgettext('in-app-notifications', 'Install'),
+        action: isLinux
+          ? {
+              type: 'navigate-external',
+              link: {
+                to: getDownloadUrl(suggestedIsBeta ?? false),
+                'aria-label':
+                  // TRANSLATORS: Accessibility label for link to go to download page.
+                  messages.pgettext(
                     'accessibility',
-                    'New version available, click here to go to update view',
+                    'New version available, click here to go to download page, opens externally',
                   ),
-                },
               },
-        },
-      ],
+            }
+          : {
+              type: 'navigate-internal',
+              link: {
+                to: RoutePath.appUpgrade,
+                // TRANSLATORS: Accessibility label for link to go to upgrade view.
+                'aria-label': messages.pgettext(
+                  'accessibility',
+                  'New version available, click here to go to update view',
+                ),
+              },
+            },
+      },
+      // A beta is an offer: it can be put away until the next one.
       action: suggestedIsBeta ? { type: 'close', close } : undefined,
     };
-  }
-
-  private inAppMessage(): string {
-    const { suggestedIsBeta, suggestedUpgradeVersion } = this.context;
-    if (suggestedIsBeta) {
-      return sprintf(
-        // TRANSLATORS: The in-app banner displayed to the user when the app beta update is
-        // TRANSLATORS: available.
-        // TRANSLATORS: Available placeholders:
-        // TRANSLATORS: %(version)s - The version number of the new beta version.
-        messages.pgettext('in-app-notifications', 'Try out the newest beta version (%(version)s).'),
-        { version: suggestedUpgradeVersion },
-      );
-    } else {
-      // TRANSLATORS: The in-app banner displayed to the user when the app update is available.
-      return messages.pgettext(
-        'in-app-notifications',
-        'Install the latest app version to stay up to date.',
-      );
-    }
   }
 }

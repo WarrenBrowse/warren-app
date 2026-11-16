@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import styled from 'styled-components';
 
-import { closeToExpiry, formatRemainingTime, hasExpired } from '../../../../shared/account-expiry';
+import { closeToExpiry, hasExpired } from '../../../../shared/account-expiry';
+import { isBetaBuild } from '../../../../shared/constants/product-env';
 import { messages } from '../../../../shared/gettext';
 import log from '../../../../shared/logging';
 import { useScheduler } from '../../../../shared/scheduler';
@@ -11,6 +12,8 @@ import { useInterval } from '../../../lib/hooks';
 import { formatWarrenPubKey } from '../../../lib/pubkey';
 import { useBoolean } from '../../../lib/utility-hooks';
 import { useSelector } from '../../../redux/store';
+import { BetaBadge } from '../../beta-badge';
+import { footerTimeLeft } from './footer-time-left';
 
 const { footer } = homeTokens;
 const COPIED_ICON_DURATION = 2000;
@@ -59,7 +62,10 @@ const StyledCopyIcon = styled(Icon)<{ $copied: boolean }>`
   }
 `;
 
-const StyledTimeLeft = styled.span`
+const StyledEnd = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 4px;
   margin-inline-start: auto;
   white-space: nowrap;
 `;
@@ -101,29 +107,32 @@ function FooterPubKey() {
   );
 }
 
-function FooterTimeLeft() {
+// The footer's end (mockups 8c, 8d): "14 days left", or on a beta build the
+// cap first, "BETA 20 Mbps · 14 days".
+function FooterEnd() {
   const expiry = useSelector((state) => state.account.expiry);
-  const [timeLeft, setTimeLeft] = useState(formatTimeLeft(expiry));
-
-  useInterval(() => setTimeLeft(formatTimeLeft(expiry)), 60 * 60 * 1_000);
-  useEffect(() => setTimeLeft(formatTimeLeft(expiry)), [expiry]);
+  const [, setTick] = useState(0);
+  useInterval(() => setTick((tick) => tick + 1), 60 * 60 * 1_000);
 
   // Close to expiry, the notification area takes over with the renewal call.
-  if (!expiry || closeToExpiry(expiry) || hasExpired(expiry)) {
+  const showTime = !!expiry && !closeToExpiry(expiry) && !hasExpired(expiry);
+  if (!isBetaBuild && !showTime) {
     return null;
   }
-  return <StyledTimeLeft data-testid="time-left">{timeLeft}</StyledTimeLeft>;
-}
-
-function formatTimeLeft(expiry?: string): string {
-  return expiry ? formatRemainingTime(expiry, { suffix: true }) : '';
+  return (
+    <StyledEnd>
+      <BetaBadge variant="footer" />
+      {isBetaBuild && showTime && <span aria-hidden>·</span>}
+      {showTime && <span data-testid="time-left">{footerTimeLeft(expiry, isBetaBuild)}</span>}
+    </StyledEnd>
+  );
 }
 
 export function AppMainFooter() {
   return (
     <StyledFooter>
       <FooterPubKey />
-      <FooterTimeLeft />
+      <FooterEnd />
     </StyledFooter>
   );
 }

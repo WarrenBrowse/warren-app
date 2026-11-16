@@ -1603,10 +1603,6 @@ msgid "APP IS OUT OF SYNC"
 msgstr "LA APLICACIÓN NO ESTÁ SINCRONIZADA"
 
 msgctxt "in-app-notifications"
-msgid "BETA UPDATE AVAILABLE"
-msgstr "ACTUALIZACIÓN BETA DISPONIBLE"
-
-msgctxt "in-app-notifications"
 msgid "BLOCKING INTERNET"
 msgstr "BLOQUEANDO INTERNET"
 
@@ -1629,11 +1625,6 @@ msgstr "Haga clic aquí para reintentar la descarga"
 msgctxt "in-app-notifications"
 msgid "Click here to see what’s new."
 msgstr "Haga clic aquí para ver las novedades."
-
-#. Link text to go to the app upgrade view
-msgctxt "in-app-notifications"
-msgid "Click here to update"
-msgstr "Haga clic aquí para actualizar"
 
 msgctxt "in-app-notifications"
 msgid "Connecting is not possible while access is revoked."
@@ -1685,10 +1676,6 @@ msgstr "DESCARGANDO ACTUALIZACIÓN... %(appUpgradeDownloadProgressValue)s%%"
 msgctxt "in-app-notifications"
 msgid "IMPORTANT"
 msgstr "IMPORTANTE"
-
-msgctxt "in-app-notifications"
-msgid "Install the latest app version to stay up to date."
-msgstr "Instale la última versión de la aplicación para estar actualizado."
 
 #. Notification title when the installer failed.
 msgctxt "in-app-notifications"
@@ -1772,21 +1759,9 @@ msgctxt "in-app-notifications"
 msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
 msgstr "Este dispositivo ahora se llama <em>%(deviceName)s</em>. Encontrará más información en <a>Gestionar dispositivos</a> en la Cuenta."
 
-#. The in-app banner displayed to the user when the app beta update is
-#. available.
-#. Available placeholders:
-#. %(version)s - The version number of the new beta version.
-msgctxt "in-app-notifications"
-msgid "Try out the newest beta version (%(version)s)."
-msgstr "Pruebe la última versión beta (%(version)s)."
-
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
 msgstr "VERSIÓN NO ADMITIDA"
-
-msgctxt "in-app-notifications"
-msgid "UPDATE AVAILABLE"
-msgstr "ACTUALIZACIÓN DISPONIBLE"
 
 #. Generic notification title when the app upgrade failed.
 msgctxt "in-app-notifications"
@@ -6502,3 +6477,7 @@ msgstr "Conexión bloqueada"
 msgctxt "tunnel-control"
 msgid "Change"
 msgstr "Cambiar"
+
+msgctxt "in-app-notifications"
+msgid "Install"
+msgstr "Instalar"

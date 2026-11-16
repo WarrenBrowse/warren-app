@@ -1672,10 +1672,6 @@ msgid "APP IS OUT OF SYNC"
 msgstr "APLICAȚIA NU ESTE SINCRONIZATĂ"
 
 msgctxt "in-app-notifications"
-msgid "BETA UPDATE AVAILABLE"
-msgstr "ACTUALIZARE BETA DISPONIBILĂ"
-
-msgctxt "in-app-notifications"
 msgid "BLOCKING INTERNET"
 msgstr "BLOCAREA INTERNETULUI"
 
@@ -1698,11 +1694,6 @@ msgstr "Faceți clic aici pentru a încerca din nou descărcarea"
 msgctxt "in-app-notifications"
 msgid "Click here to see what’s new."
 msgstr "Faceți clic aici pentru a vedea noutățile."
-
-#. Link text to go to the app upgrade view
-msgctxt "in-app-notifications"
-msgid "Click here to update"
-msgstr "Faceți clic aici pentru a actualiza"
 
 msgctxt "in-app-notifications"
 msgid "Connecting is not possible while access is revoked."
@@ -1758,10 +1749,6 @@ msgstr "IEȘIRE COMANDATĂ"
 msgctxt "in-app-notifications"
 msgid "IMPORTANT"
 msgstr "IMPORTANT"
-
-msgctxt "in-app-notifications"
-msgid "Install the latest app version to stay up to date."
-msgstr "Instalați cea mai recentă versiune a aplicației pentru a fi la curent cu noutățile."
 
 #. Notification title when the installer failed.
 msgctxt "in-app-notifications"
@@ -1845,21 +1832,9 @@ msgctxt "in-app-notifications"
 msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
 msgstr "Acest dispozitiv se numește acum <em>%(deviceName)s</em>. Vezi mai multe la <a>Gestionare dispozitive</a> din Cont."
 
-#. The in-app banner displayed to the user when the app beta update is
-#. available.
-#. Available placeholders:
-#. %(version)s - The version number of the new beta version.
-msgctxt "in-app-notifications"
-msgid "Try out the newest beta version (%(version)s)."
-msgstr "Încercați cea mai nouă versiune beta (%(version)s)."
-
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
 msgstr "VERSIUNE NEASISTATĂ"
-
-msgctxt "in-app-notifications"
-msgid "UPDATE AVAILABLE"
-msgstr "ACTUALIZARE DISPONIBILĂ"
 
 #. Generic notification title when the app upgrade failed.
 msgctxt "in-app-notifications"
@@ -5650,3 +5625,7 @@ msgstr "Conexiune blocată"
 msgctxt "tunnel-control"
 msgid "Change"
 msgstr "Schimbă"
+
+msgctxt "in-app-notifications"
+msgid "Install"
+msgstr "Instalează"

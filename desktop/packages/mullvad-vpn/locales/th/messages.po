@@ -1595,10 +1595,6 @@ msgid "APP IS OUT OF SYNC"
 msgstr "แอปไม่ได้มีการซิงค์"
 
 msgctxt "in-app-notifications"
-msgid "BETA UPDATE AVAILABLE"
-msgstr "มีการอัปเดตเบต้าให้ใช้งาน"
-
-msgctxt "in-app-notifications"
 msgid "BLOCKING INTERNET"
 msgstr "กำลังบล็อกอินเทอร์เน็ต"
 
@@ -1621,11 +1617,6 @@ msgstr "คลิกที่นี่เพื่อลองดาวน์โ
 msgctxt "in-app-notifications"
 msgid "Click here to see what’s new."
 msgstr "คลิกที่นี่ เพื่อดูว่ามีอะไรใหม่"
-
-#. Link text to go to the app upgrade view
-msgctxt "in-app-notifications"
-msgid "Click here to update"
-msgstr "คลิกที่นี่เพื่ออัปเดต"
 
 msgctxt "in-app-notifications"
 msgid "Connecting is not possible while access is revoked."
@@ -1677,10 +1668,6 @@ msgstr "กำลังดาวน์โหลดอัปเดต... %(appUpg
 msgctxt "in-app-notifications"
 msgid "IMPORTANT"
 msgstr "สำคัญ"
-
-msgctxt "in-app-notifications"
-msgid "Install the latest app version to stay up to date."
-msgstr "ติดตั้งแอปเวอร์ชันล่าสุดเพื่อรับข้อมูลการอัปเดตล่าสุด"
 
 #. Notification title when the installer failed.
 msgctxt "in-app-notifications"
@@ -1764,21 +1751,9 @@ msgctxt "in-app-notifications"
 msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
 msgstr "ตอนนี้อุปกรณ์นี้ได้รับการตั้งชื่อว่า <em>%(deviceName)s</em> แล้ว ดูเพิ่มเติมได้ภายใต้หัวข้อ <a>จัดการอุปกรณ์</a> ในบัญชี"
 
-#. The in-app banner displayed to the user when the app beta update is
-#. available.
-#. Available placeholders:
-#. %(version)s - The version number of the new beta version.
-msgctxt "in-app-notifications"
-msgid "Try out the newest beta version (%(version)s)."
-msgstr "ลองใช้เวอร์ชันเบต้าใหม่ล่าสุด (%(version)s)"
-
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
 msgstr "เวอร์ชันที่ไม่รองรับ"
-
-msgctxt "in-app-notifications"
-msgid "UPDATE AVAILABLE"
-msgstr "มีการอัปเดตให้ใช้งาน"
 
 #. Generic notification title when the app upgrade failed.
 msgctxt "in-app-notifications"
@@ -6469,3 +6444,7 @@ msgstr "การเชื่อมต่อถูกบล็อก"
 msgctxt "tunnel-control"
 msgid "Change"
 msgstr "เปลี่ยน"
+
+msgctxt "in-app-notifications"
+msgid "Install"
+msgstr "ติดตั้ง"

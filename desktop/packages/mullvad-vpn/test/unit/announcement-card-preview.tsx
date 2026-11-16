@@ -12,6 +12,7 @@ import {
   lineHeights,
   radius,
   spacingPrimitives,
+  surfaceVariables,
 } from '../../src/renderer/lib/foundations/variables';
 import { WarrenAnnouncementNotificationProvider } from '../../src/renderer/lib/notifications';
 import { WarrenAnnouncement } from '../../src/shared/daemon-rpc-types';
@@ -118,6 +119,7 @@ function rootVariables(): string {
     ...fontSizes,
     ...fontWeights,
     ...lineHeights,
+    ...surfaceVariables('dark'),
   })
     .map(([name, value]) => `  ${name}: ${value};`)
     .join('\n');
@@ -140,7 +142,6 @@ export function renderAnnouncementCardPreview(): string {
         sheet.collectStyles(
           <WarrenAnnouncementCard
             title={notification.title}
-            indicator={notification.indicator}
             announcement={notification.action.announcement}
             onOpenCta={() => undefined}
           />,

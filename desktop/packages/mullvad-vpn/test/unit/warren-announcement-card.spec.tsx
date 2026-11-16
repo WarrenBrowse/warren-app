@@ -83,7 +83,6 @@ function render(
     sheet.collectStyles(
       <WarrenAnnouncementCard
         title={notification.title}
-        indicator={notification.indicator}
         announcement={card(notification)}
         onOpenCta={onOpenCta}
       />,
@@ -321,9 +320,9 @@ describe('Warren launch announcement card', () => {
       };
 
       expect(sizeOf('bannerTitle')).to.be.greaterThan(sizeOf('bannerSubtitle'));
-      // The banner floats over the scenery photograph, so the body text needs
-      // more than the faintest tint on the alpha ladder.
-      expect(rulesFor(rendered, 'bannerSubtitle')).to.contain('--color-white-alpha80');
+      // The banner is the toolbar's glass in either theme, so the body takes
+      // the home's secondary text, which each theme sets against its glass.
+      expect(rulesFor(rendered, 'bannerSubtitle')).to.contain('--surface-home-text-secondary');
     });
   });
 

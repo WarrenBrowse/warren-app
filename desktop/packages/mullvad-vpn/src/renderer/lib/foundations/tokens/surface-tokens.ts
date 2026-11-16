@@ -81,6 +81,7 @@ const dark = {
   homeCancelLine: 'rgb(147, 104, 49)',
   homeCancelText: 'rgb(241, 193, 127)',
   homeCancelHover: 'rgba(239, 176, 98, 0.1)',
+  homeBeta: 'rgb(232, 182, 92)',
 };
 
 export type SurfaceToken = keyof typeof dark;
@@ -153,5 +154,6 @@ export const surfaceTokens: Record<Theme, Record<SurfaceToken, string>> = {
     homeCancelLine: 'rgb(189, 133, 63)',
     homeCancelText: 'rgb(141, 84, 6)',
     homeCancelHover: 'rgba(189, 133, 63, 0.1)',
+    homeBeta: 'rgb(138, 84, 18)',
   },
 };

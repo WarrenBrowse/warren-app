@@ -1635,10 +1635,6 @@ msgid "APP IS OUT OF SYNC"
 msgstr "التطبيق غير متزامن"
 
 msgctxt "in-app-notifications"
-msgid "BETA UPDATE AVAILABLE"
-msgstr "يتوفَّر تحديث جديد للإصدار التجريبي"
-
-msgctxt "in-app-notifications"
 msgid "BLOCKING INTERNET"
 msgstr "الإنترنت محظور"
 
@@ -1661,11 +1657,6 @@ msgstr "انقر هنا لإعادة محاولة التنزيل"
 msgctxt "in-app-notifications"
 msgid "Click here to see what’s new."
 msgstr "انقر هنا للاطلاع على آخر المستجدات."
-
-#. Link text to go to the app upgrade view
-msgctxt "in-app-notifications"
-msgid "Click here to update"
-msgstr "انقر هنا للتحديث"
 
 msgctxt "in-app-notifications"
 msgid "Connecting is not possible while access is revoked."
@@ -1717,10 +1708,6 @@ msgstr "جارٍ تنزيل التحديث... %(appUpgradeDownloadProgressValue)
 msgctxt "in-app-notifications"
 msgid "IMPORTANT"
 msgstr "هام"
-
-msgctxt "in-app-notifications"
-msgid "Install the latest app version to stay up to date."
-msgstr "ثبِّت أحدث إصدار من التطبيق للبقاء على اطلاع دائم بكل جديد."
 
 #. Notification title when the installer failed.
 msgctxt "in-app-notifications"
@@ -1804,21 +1791,9 @@ msgctxt "in-app-notifications"
 msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
 msgstr "تم تغيير اسم هذا الجهاز الآن إلى <em>%(deviceName)s</em>. للمزيد من المعلومات، يُرجى مراجعة <a>إدارة الأجهزة</a> في الحساب."
 
-#. The in-app banner displayed to the user when the app beta update is
-#. available.
-#. Available placeholders:
-#. %(version)s - The version number of the new beta version.
-msgctxt "in-app-notifications"
-msgid "Try out the newest beta version (%(version)s)."
-msgstr "جرِّب أحدث إصدار تجريبي (%(version)s)."
-
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
 msgstr "إصدار غير مدعوم"
-
-msgctxt "in-app-notifications"
-msgid "UPDATE AVAILABLE"
-msgstr "يتوفَّر تحديث جديد"
 
 #. Generic notification title when the app upgrade failed.
 msgctxt "in-app-notifications"
@@ -6569,3 +6544,7 @@ msgstr "الاتصال محظور"
 msgctxt "tunnel-control"
 msgid "Change"
 msgstr "تغيير"
+
+msgctxt "in-app-notifications"
+msgid "Install"
+msgstr "تثبيت"

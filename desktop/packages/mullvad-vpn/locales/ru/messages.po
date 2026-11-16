@@ -1619,10 +1619,6 @@ msgid "APP IS OUT OF SYNC"
 msgstr "ПРИЛОЖЕНИЕ НЕ СИНХРОНИЗИРОВАНО"
 
 msgctxt "in-app-notifications"
-msgid "BETA UPDATE AVAILABLE"
-msgstr "ДОСТУПНА БЕТА-ВЕРСИЯ"
-
-msgctxt "in-app-notifications"
 msgid "BLOCKING INTERNET"
 msgstr "ИНТЕРНЕТ ЗАБЛОКИРОВАН"
 
@@ -1645,11 +1641,6 @@ msgstr "Чтобы повторить попытку скачивания, на�
 msgctxt "in-app-notifications"
 msgid "Click here to see what’s new."
 msgstr "Нажмите здесь и узнайте, что нового."
-
-#. Link text to go to the app upgrade view
-msgctxt "in-app-notifications"
-msgid "Click here to update"
-msgstr "Чтобы обновить, нажмите здесь"
 
 msgctxt "in-app-notifications"
 msgid "Connecting is not possible while access is revoked."
@@ -1701,10 +1692,6 @@ msgstr "СКАЧИВАЕТСЯ ОБНОВЛЕНИЕ... %(appUpgradeDownloadProgr
 msgctxt "in-app-notifications"
 msgid "IMPORTANT"
 msgstr "ВАЖНО"
-
-msgctxt "in-app-notifications"
-msgid "Install the latest app version to stay up to date."
-msgstr "Установите новейшую версию приложения, чтобы ничего не пропустить."
 
 #. Notification title when the installer failed.
 msgctxt "in-app-notifications"
@@ -1788,21 +1775,9 @@ msgctxt "in-app-notifications"
 msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
 msgstr "Имя этого устройства изменено на <em>%(deviceName)s</em>. Подробности указаны в разделе <a>«Управление устройствами»</a> учетной записи."
 
-#. The in-app banner displayed to the user when the app beta update is
-#. available.
-#. Available placeholders:
-#. %(version)s - The version number of the new beta version.
-msgctxt "in-app-notifications"
-msgid "Try out the newest beta version (%(version)s)."
-msgstr "Попробуйте новейшую бета-версию (%(version)s)."
-
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
 msgstr "НЕПОДДЕРЖИВАЕМАЯ ВЕРСИЯ"
-
-msgctxt "in-app-notifications"
-msgid "UPDATE AVAILABLE"
-msgstr "ЕСТЬ ОБНОВЛЕНИЕ"
 
 #. Generic notification title when the app upgrade failed.
 msgctxt "in-app-notifications"
@@ -6542,3 +6517,7 @@ msgstr "Соединение заблокировано"
 msgctxt "tunnel-control"
 msgid "Change"
 msgstr "Изменить"
+
+msgctxt "in-app-notifications"
+msgid "Install"
+msgstr "Установить"

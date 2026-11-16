@@ -32,6 +32,7 @@ export const icons = {
   'info-circle': 'icon-info-circle',
   'lifebuoy-outline': 'icon-lifebuoy-outline',
   'message-outline': 'icon-message-outline',
+  megaphone: 'icon-megaphone',
   'more-horizontal-circle': 'icon-more-horizontal-circle',
   'more-horizontal': 'icon-more-horizontal',
   'more-vertical-circle': 'icon-more-vertical-circle',

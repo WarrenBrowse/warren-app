@@ -1109,7 +1109,7 @@ msgstr "À propos de la bêta Warren"
 #. Label of the beta badge shown in beta builds.
 msgctxt "beta-badge"
 msgid "BETA"
-msgstr "BETA"
+msgstr "BÊTA"
 
 msgctxt "beta-badge"
 msgid "Free beta network, limited bandwidth"
@@ -1605,10 +1605,6 @@ msgid "APP IS OUT OF SYNC"
 msgstr "L'APPLICATION EST DÉSYNCHRONISÉE"
 
 msgctxt "in-app-notifications"
-msgid "BETA UPDATE AVAILABLE"
-msgstr "MISE À JOUR BÊTA DISPONIBLE"
-
-msgctxt "in-app-notifications"
 msgid "BLOCKING INTERNET"
 msgstr "BLOCAGE D'INTERNET"
 
@@ -1631,11 +1627,6 @@ msgstr "Cliquez ici pour réessayer le téléchargement"
 msgctxt "in-app-notifications"
 msgid "Click here to see what’s new."
 msgstr "Cliquez ici pour voir les nouveautés."
-
-#. Link text to go to the app upgrade view
-msgctxt "in-app-notifications"
-msgid "Click here to update"
-msgstr "Cliquez ici pour mettre à jour"
 
 msgctxt "in-app-notifications"
 msgid "Connecting is not possible while access is revoked."
@@ -1691,10 +1682,6 @@ msgstr "SERVEUR DE SORTIE CHANGÉ"
 msgctxt "in-app-notifications"
 msgid "IMPORTANT"
 msgstr "IMPORTANT"
-
-msgctxt "in-app-notifications"
-msgid "Install the latest app version to stay up to date."
-msgstr "Installez la dernière version de l’application pour rester à jour."
 
 #. Notification title when the installer failed.
 msgctxt "in-app-notifications"
@@ -1782,21 +1769,9 @@ msgctxt "in-app-notifications"
 msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
 msgstr "Cet appareil s'appelle à présent <em>%(deviceName)s</em>. Retrouvez plus d'informations sous <a>Gérer les appareils</a> dans Compte."
 
-#. The in-app banner displayed to the user when the app beta update is
-#. available.
-#. Available placeholders:
-#. %(version)s - The version number of the new beta version.
-msgctxt "in-app-notifications"
-msgid "Try out the newest beta version (%(version)s)."
-msgstr "Essayez la nouvelle version bêta (%(version)s)."
-
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
 msgstr "VERSION NON PRISE EN CHARGE"
-
-msgctxt "in-app-notifications"
-msgid "UPDATE AVAILABLE"
-msgstr "MISE À JOUR DISPONIBLE"
 
 #. Generic notification title when the app upgrade failed.
 msgctxt "in-app-notifications"
@@ -5649,3 +5624,7 @@ msgstr "Connexion bloquée"
 msgctxt "tunnel-control"
 msgid "Change"
 msgstr "Changer"
+
+msgctxt "in-app-notifications"
+msgid "Install"
+msgstr "Installer"

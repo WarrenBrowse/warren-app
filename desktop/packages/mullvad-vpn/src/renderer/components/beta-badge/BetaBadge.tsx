@@ -5,7 +5,7 @@ import { isBetaBuild } from '../../../shared/constants/product-env';
 import { urls } from '../../../shared/constants/urls';
 import { messages } from '../../../shared/gettext';
 import { Button, Text } from '../../lib/components';
-import { colors, FontFamilies, homeTokens, surfaces } from '../../lib/foundations';
+import { colors, surfaces } from '../../lib/foundations';
 import { useBoolean } from '../../lib/utility-hooks';
 import { useSelector } from '../../redux/store';
 import { ExternalLink } from '../ExternalLink';
@@ -21,47 +21,22 @@ const Chip = styled.span`
   background-color: ${colors.yellow};
 `;
 
-// On the home page, a quiet line above the footer: the chip carries the beta
-// identity, the line its one practical consequence.
-const HomeChip = styled.span`
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-  height: 18px;
-  padding: 0 6px;
-  border-radius: 5px;
-  background-color: ${surfaces.homeBadge};
-  color: ${surfaces.homePillPendingText};
-  font-family: ${FontFamilies.sans};
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-`;
-
-const HomeLine = styled.span`
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: ${surfaces.homeTextSecondary};
-  font-family: ${FontFamilies.sans};
-  font-size: 12px;
-`;
-
-const HomeRow = styled.button`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  padding: 0 ${homeTokens.panel.paddingHorizontal}px;
+// In the home footer (mockup 8d): the beta identity and its one practical
+// consequence, the cap, in the brand amber, opening the beta details.
+const FooterBeta = styled.button`
+  padding: 0;
   border: none;
   background: transparent;
-  text-align: start;
+  color: ${surfaces.homeBeta};
+  font: inherit;
+  font-weight: 700;
+  white-space: nowrap;
   cursor: pointer;
 
   &:focus-visible {
-    outline: 2px solid ${surfaces.homeText};
+    outline: 1px solid ${surfaces.homeText};
     outline-offset: 2px;
+    border-radius: 4px;
   }
 `;
 
@@ -80,9 +55,9 @@ const RowCard = styled.button`
 `;
 
 export interface BetaBadgeProps {
-  // 'home' is a line of the home page above the footer; 'row' is a flat
-  // full-width card for settings-style lists.
-  variant: 'home' | 'row';
+  // 'footer' sits in the home footer; 'row' is a flat full-width card for
+  // settings-style lists.
+  variant: 'footer' | 'row';
 }
 
 // The beta identity badge. Compiled out of non-beta builds: the gate is
@@ -101,13 +76,10 @@ export function BetaBadge({ variant }: BetaBadgeProps) {
   const betaLabel = messages.pgettext('beta-badge', 'BETA');
   return (
     <>
-      {variant === 'home' ? (
-        <HomeRow onClick={showDialog} aria-label={ariaLabel}>
-          <HomeChip>{betaLabel}</HomeChip>
-          <HomeLine>
-            <BetaCapLine />
-          </HomeLine>
-        </HomeRow>
+      {variant === 'footer' ? (
+        <FooterBeta onClick={showDialog} aria-label={ariaLabel} data-testid="footer-beta">
+          <BetaCap label={betaLabel} />
+        </FooterBeta>
       ) : (
         <RowCard onClick={showDialog} aria-label={ariaLabel}>
           <Chip>
@@ -123,6 +95,15 @@ export function BetaBadge({ variant }: BetaBadgeProps) {
       <BetaInfoDialog visible={dialogVisible} onClose={hideDialog} />
     </>
   );
+}
+
+// The label and the live cap from the daemon's network-info feed: "BETA 20 Mbps".
+function BetaCap({ label }: { label: string }) {
+  const networkInfo = useSelector((state) => state.settings.warrenStatus?.networkInfo);
+  const capMbps = networkInfo?.defaultRateBps
+    ? Math.round(networkInfo.defaultRateBps / BPS_PER_MBPS)
+    : undefined;
+  return <>{capMbps !== undefined ? `${label} ${capMbps} Mbps` : label}</>;
 }
 
 // Short degraded-service line, fed by the live cap from the daemon's

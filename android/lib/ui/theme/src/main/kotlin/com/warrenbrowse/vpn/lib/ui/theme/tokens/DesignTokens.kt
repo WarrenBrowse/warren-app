@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /** SHA-256 of design-tokens.json at generation time. */
-const val DESIGN_TOKENS_SHA256 = "ce5eef3cc970ac2f98a37a0c4d842114438de45df0ce6db8d88e6dfbc5d53625"
+const val DESIGN_TOKENS_SHA256 = "9c978124d3d12942e632663d8dc969c4564d0f288587a4abf55980f0547b2f5f"
 
 @Suppress("MagicNumber", "unused")
 object DesignTokens {
@@ -198,6 +198,7 @@ object DesignTokens {
             val HomeCancelLine = Color(0xFF936831)
             val HomeCancelText = Color(0xFFF1C17F)
             val HomeCancelHover = Color(0x1AEFB062)
+            val HomeBeta = Color(0xFFE8B65C)
         }
         object Light {
             val Card = Color(0xFFF7F1E3)
@@ -265,6 +266,7 @@ object DesignTokens {
             val HomeCancelLine = Color(0xFFBD853F)
             val HomeCancelText = Color(0xFF8D5406)
             val HomeCancelHover = Color(0x1ABD853F)
+            val HomeBeta = Color(0xFF8A5412)
         }
     }
 

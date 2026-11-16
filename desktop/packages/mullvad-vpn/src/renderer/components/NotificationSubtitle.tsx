@@ -2,14 +2,26 @@ import React from 'react';
 import styled from 'styled-components';
 
 import { InAppNotification, InAppNotificationSubtitle } from '../../shared/notifications';
-import { LabelTinySemiBold } from '../lib/components';
 import { Link } from '../lib/components/link';
+import { surfaces } from '../lib/foundations';
 import { ExternalLink } from './ExternalLink';
 import { InternalLink } from './InternalLink';
+import { NotificationSubtitleText } from './NotificationBanner';
 
 export type NotificationSubtitleProps = Pick<InAppNotification, 'subtitle'>;
 
 const StyledLink = styled(Link)``;
+
+// The home banner's body, in the theme's secondary text; its links take the
+// theme's main text so they read on the dark glass and on the paper one.
+const StyledSubtitle = styled(NotificationSubtitleText)`
+  && a,
+  && a *,
+  && button,
+  && button * {
+    color: ${surfaces.homeText};
+  }
+`;
 
 const formatSubtitle = (subtitle: InAppNotificationSubtitle) => {
   if (subtitle.action) {
@@ -55,15 +67,11 @@ export const NotificationSubtitle = ({ subtitle, ...props }: NotificationSubtitl
   }
 
   if (!Array.isArray(subtitle)) {
-    return (
-      <LabelTinySemiBold color="whiteAlpha60" {...props}>
-        {subtitle}
-      </LabelTinySemiBold>
-    );
+    return <StyledSubtitle {...props}>{subtitle}</StyledSubtitle>;
   }
 
   return (
-    <LabelTinySemiBold color="whiteAlpha60" {...props}>
+    <StyledSubtitle {...props}>
       {subtitle.map((subtitle, index, arr) => {
         const content = formatSubtitle(subtitle);
         const key = getSubtitleKey(subtitle);
@@ -75,6 +83,6 @@ export const NotificationSubtitle = ({ subtitle, ...props }: NotificationSubtitl
           </React.Fragment>
         );
       })}
-    </LabelTinySemiBold>
+    </StyledSubtitle>
   );
 };

@@ -1595,10 +1595,6 @@ msgid "APP IS OUT OF SYNC"
 msgstr "アプリが同期していません"
 
 msgctxt "in-app-notifications"
-msgid "BETA UPDATE AVAILABLE"
-msgstr "ベータ版のアップデートを入手できます"
-
-msgctxt "in-app-notifications"
 msgid "BLOCKING INTERNET"
 msgstr "インターネットをブロック中"
 
@@ -1621,11 +1617,6 @@ msgstr "ダウンロードを再試行するにはここをクリックしてく
 msgctxt "in-app-notifications"
 msgid "Click here to see what’s new."
 msgstr "新機能を確認するにはここをクリックしてください。"
-
-#. Link text to go to the app upgrade view
-msgctxt "in-app-notifications"
-msgid "Click here to update"
-msgstr "ここをクリックして更新"
 
 msgctxt "in-app-notifications"
 msgid "Connecting is not possible while access is revoked."
@@ -1677,10 +1668,6 @@ msgstr "更新をダウンロード中... %(appUpgradeDownloadProgressValue)s%%"
 msgctxt "in-app-notifications"
 msgid "IMPORTANT"
 msgstr "重要"
-
-msgctxt "in-app-notifications"
-msgid "Install the latest app version to stay up to date."
-msgstr "アプリの最新バージョンをインストールして、最新の状態を維持してください。"
 
 #. Notification title when the installer failed.
 msgctxt "in-app-notifications"
@@ -1764,21 +1751,9 @@ msgctxt "in-app-notifications"
 msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
 msgstr "このデバイス名は<em>「%(deviceName)s」</em>に変更されました。詳細はアカウントの <a>[デバイスを管理]</a> でご確認ください。"
 
-#. The in-app banner displayed to the user when the app beta update is
-#. available.
-#. Available placeholders:
-#. %(version)s - The version number of the new beta version.
-msgctxt "in-app-notifications"
-msgid "Try out the newest beta version (%(version)s)."
-msgstr "最新のベータ版 (%(version)s) をお試しください。"
-
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
 msgstr "未対応のバージョン"
-
-msgctxt "in-app-notifications"
-msgid "UPDATE AVAILABLE"
-msgstr "アップデート可"
 
 #. Generic notification title when the app upgrade failed.
 msgctxt "in-app-notifications"
@@ -6469,3 +6444,7 @@ msgstr "接続がブロックされています"
 msgctxt "tunnel-control"
 msgid "Change"
 msgstr "変更"
+
+msgctxt "in-app-notifications"
+msgid "Install"
+msgstr "インストール"

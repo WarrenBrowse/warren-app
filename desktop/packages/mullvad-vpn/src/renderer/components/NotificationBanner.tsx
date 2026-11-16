@@ -3,9 +3,12 @@ import React, { useLayoutEffect, useRef, useState } from 'react';
 import styled from 'styled-components';
 
 import { messages } from '../../shared/gettext';
-import { InAppNotificationIndicatorType } from '../../shared/notifications/notification';
-import { IconButton } from '../lib/components';
-import { colors } from '../lib/foundations';
+import {
+  InAppNotificationIcon,
+  InAppNotificationIndicatorType,
+} from '../../shared/notifications/notification';
+import { Icon, IconButton, IconProps } from '../lib/components';
+import { colors, surfaces } from '../lib/foundations';
 import { useExclusiveTask } from '../lib/hooks/use-exclusive-task';
 import { smallText, tinyText } from './common-styles';
 
@@ -17,13 +20,18 @@ const NOTIFICATION_AREA_ID = 'notification-area';
 // at regular weight with enough contrast to survive the glass surface over the
 // scenery photo.
 export const NotificationTitle = styled.span(smallText, {
-  color: colors.white,
+  fontSize: '13px',
+  lineHeight: '17px',
+  fontWeight: 600,
+  color: surfaces.homeText,
   overflowWrap: 'anywhere',
 });
 
 export const NotificationSubtitleText = styled.span(tinyText, {
+  fontSize: '11px',
+  lineHeight: '15px',
   fontWeight: 'normal',
-  color: colors.whiteAlpha80,
+  color: surfaces.homeTextSecondary,
   overflowWrap: 'anywhere',
 });
 
@@ -136,33 +144,120 @@ export function NotificationTroubleshootDialogAction(props: NotificationActionPr
   );
 }
 
+// A bare cross, as the mockup puts away an announcement.
+const StyledCloseButton = styled.button({
+  display: 'grid',
+  placeItems: 'center',
+  width: '24px',
+  height: '24px',
+  padding: 0,
+  border: 'none',
+  borderRadius: '6px',
+  background: 'none',
+  color: surfaces.homeTextSecondary,
+  cursor: 'pointer',
+  '&:hover': { color: surfaces.homeText },
+  '&:focus-visible': { outline: `2px solid ${surfaces.homeText}`, outlineOffset: '-2px' },
+});
+
+const StyledCloseIcon = styled(Icon)({
+  '&&': { width: '16px', height: '16px', backgroundColor: 'currentColor' },
+});
+
 export function NotificationCloseAction(props: NotificationActionProps) {
+  const [onClick] = useExclusiveTask(props.onClick);
   return (
-    <IconButton
+    <StyledCloseButton
       aria-describedby={NOTIFICATION_AREA_ID}
-      variant="secondary"
       aria-label={messages.pgettext('accessibility', 'Close notification')}
-      onClick={props.onClick}
-      size="small">
-      <IconButton.Icon icon="cross-circle" />
-    </IconButton>
+      onClick={onClick}>
+      <StyledCloseIcon icon="cross" />
+    </StyledCloseButton>
+  );
+}
+
+// The labelled button a banner ends with: the mockup's light "Install".
+const StyledBannerButton = styled.button({
+  flexShrink: 0,
+  padding: '6px 10px',
+  border: 'none',
+  borderRadius: '8px',
+  background: surfaces.homeText,
+  color: surfaces.homePage,
+  fontFamily: 'var(--font-family-sans)',
+  fontSize: '12px',
+  lineHeight: '16px',
+  fontWeight: 600,
+  whiteSpace: 'nowrap',
+  cursor: 'pointer',
+  '&:hover': { opacity: 0.9 },
+  '&:focus-visible': { outline: `2px solid ${surfaces.homeText}`, outlineOffset: '2px' },
+});
+
+export function NotificationButton(props: NotificationActionProps & { label: string }) {
+  const [onClick] = useExclusiveTask(props.onClick);
+  return (
+    <StyledBannerButton aria-describedby={NOTIFICATION_AREA_ID} onClick={onClick}>
+      {props.label}
+    </StyledBannerButton>
+  );
+}
+
+const iconByKind: Record<InAppNotificationIcon, IconProps['icon']> = {
+  update: 'download',
+  announcement: 'megaphone',
+};
+
+const iconByLevel: Record<InAppNotificationIndicatorType, IconProps['icon']> = {
+  success: 'info-circle',
+  warning: 'alert-circle',
+  error: 'alert-circle',
+};
+
+const StyledLeadIcon = styled(Icon)<{ $color: string }>((props) => ({
+  '&&': { width: '16px', height: '16px', backgroundColor: props.$color },
+  flexShrink: 0,
+}));
+
+// The glyph a banner leads with, in place of a coloured dot: the mockup's
+// amber download for an update, a megaphone for an announcement.
+export function NotificationLeadIcon(props: {
+  kind?: InAppNotificationIcon;
+  indicator?: InAppNotificationIndicatorType;
+}) {
+  const icon = props.kind ? iconByKind[props.kind] : iconByLevel[props.indicator ?? 'success'];
+  const color =
+    props.kind === 'announcement'
+      ? surfaces.homeTextSecondary
+      : props.indicator === 'error'
+        ? surfaces.homeDisconnectText
+        : props.indicator === 'success' && !props.kind
+          ? surfaces.homeTextSecondary
+          : surfaces.homeBadge;
+  return (
+    <StyledLeadIcon
+      icon={icon}
+      $color={color}
+      aria-hidden
+      data-testid="notificationIndicator"
+      data-level={props.indicator}
+    />
   );
 }
 
 export const NotificationContent = styled.div.attrs({ id: NOTIFICATION_AREA_ID })({
   display: 'flex',
   flexDirection: 'column',
-  gap: '2px',
+  gap: '1px',
   flex: 1,
-  paddingInlineEnd: '4px',
   minWidth: 0,
 });
 
 export const NotificationActions = styled.div({
   display: 'flex',
   flex: 0,
-  flexDirection: 'column',
-  justifyContent: 'center',
+  alignItems: 'center',
+  gap: '4px',
 });
 
 interface INotificationIndicatorProps {
@@ -188,45 +283,30 @@ export const NotificationIndicator = styled.div<INotificationIndicatorProps>((pr
     : colors.transparent,
 }));
 
-// Floats as a glass card over the scenery, matching the connection panel, rather
-// than a solid bar. A green top accent echoes the mockup's update banner.
+// The mockup's banner: the toolbar's own glass, under it and on its right
+// edge, as wide as its words need up to the toolbar's reach.
 const Collapsible = styled(motion.div)({
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'flex-start',
   translateY: '0%',
-  // Offset toward the right rather than spanning the full width (per the art
-  // direction), leaving the left of the scene open.
-  margin: '12px 16px 0 auto',
-  maxWidth: '300px',
-  borderRadius: '14px',
-  border: `1px solid ${colors.whiteAlpha20}`,
-  borderTop: `2px solid ${colors.green}`,
-  backgroundColor: colors.blackAlpha60,
+  marginInlineStart: 'auto',
+  maxWidth: '272px',
+  borderRadius: '12px',
+  backgroundColor: surfaces.homeToolbar,
   backdropFilter: 'blur(10px)',
-  boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
+  boxShadow: `inset 0 0 0 1px ${surfaces.homeToolbarLine}, 0 8px 24px -8px rgba(0, 0, 0, 0.45)`,
   overflow: 'hidden',
 });
 
 const Content = styled.section({
   display: 'flex',
   flexDirection: 'row',
-  paddingBlock: '10px',
-  paddingInlineStart: '16px',
-  paddingInlineEnd: '12px',
+  alignItems: 'center',
+  gap: '10px',
+  padding: '10px 12px',
   height: 'fit-content',
 });
-
-// The edge follows the level when the banner declares one, so the two signals
-// on a card cannot disagree: an amber dot under a green edge reads as two
-// contradictory verdicts on the same message. Android's banner already draws a
-// status-coloured accent, so this is desktop catching up rather than diverging.
-// The override lives here, and never inside `Collapsible`, because
-// scripts/design-tokens/lib.mjs parses that block's `borderTop` literal to
-// publish the design system's default banner edge.
-const LeveledCollapsible = styled(Collapsible)<INotificationIndicatorProps>((props) => ({
-  borderTopColor: props.$type ? notificationIndicatorTypeColorMap[props.$type] : undefined,
-}));
 
 interface INotificationBannerProps {
   children?: React.ReactNode; // Array<NotificationContent | NotificationActions>,
@@ -244,14 +324,14 @@ export function NotificationBanner({
   const translateYInitial = animateIn ? '-100%' : '0%';
 
   return (
-    <LeveledCollapsible
-      $type={indicator}
+    <Collapsible
+      data-level={indicator}
       animate={{ translateY: '0%' }}
       className={className}
       exit={{ translateY: '-100%' }}
       initial={{ translateY: translateYInitial }}
       transition={{ duration: 0.25 }}>
       <Content>{children}</Content>
-    </LeveledCollapsible>
+    </Collapsible>
   );
 }

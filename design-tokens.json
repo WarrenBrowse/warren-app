@@ -184,7 +184,8 @@
       "homeDisconnectHover": "#1AE98664",
       "homeCancelLine": "#FF936831",
       "homeCancelText": "#FFF1C17F",
-      "homeCancelHover": "#1AEFB062"
+      "homeCancelHover": "#1AEFB062",
+      "homeBeta": "#FFE8B65C"
     },
     "light": {
       "card": "#FFF7F1E3",
@@ -251,7 +252,8 @@
       "homeDisconnectHover": "#1AC26B4C",
       "homeCancelLine": "#FFBD853F",
       "homeCancelText": "#FF8D5406",
-      "homeCancelHover": "#1ABD853F"
+      "homeCancelHover": "#1ABD853F",
+      "homeBeta": "#FF8A5412"
     }
   },
   "home": {

@@ -1,10 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { Page } from 'playwright';
 
-import { colorTokens } from '../../../src/renderer/lib/foundations';
 import { ErrorStateCause } from '../../../src/shared/daemon-rpc-types';
 import { RoutesObjectModel } from '../route-object-models';
-import { getBackgroundColor } from '../utils';
 import { MockedTestUtils, startMockedApp } from './mocked-utils';
 
 let page: Page;
@@ -42,8 +40,7 @@ test.describe('Expiration notifications', () => {
     await expect(subTitle).toContainText(/1 day left\. buy more credit\./i);
 
     const indicator = page.getByTestId('notificationIndicator');
-    const indicatorColor = await getBackgroundColor(indicator);
-    expect(indicatorColor).toBe(colorTokens.yellow);
+    await expect(indicator).toHaveAttribute('data-level', 'warning');
 
     await util.ipc.account[''].notify({
       expiry: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
@@ -129,13 +126,13 @@ test.describe('App upgrade notifications', () => {
 
     await sendUpgradeAvailable();
     await expect(notificationTitle).toBeVisible();
-    await expect(notificationTitle).toHaveText('UPDATE AVAILABLE');
+    await expect(notificationTitle).toHaveText('Update available');
   });
 
   test('App upgrade notification handles new version rollback', async () => {
     await sendUpgradeAvailable();
     const notificationTitle = routes.main.getNotificationTitle();
-    await expect(notificationTitle).toHaveText('UPDATE AVAILABLE');
+    await expect(notificationTitle).toHaveText('Update available');
 
     await sendUpgradeRollback();
     await expect(notificationTitle).not.toBeVisible();

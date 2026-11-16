@@ -26,6 +26,7 @@ import {
 import { Button } from '../lib/components';
 import { useConnectingStuck } from '../lib/connecting-stuck';
 import { useExitEgressDead } from '../lib/exit-egress';
+import { TransitionType, useHistory } from '../lib/history';
 import { useHostOffline } from '../lib/host-offline';
 import {
   AppUpgradeErrorNotificationProvider,
@@ -56,10 +57,11 @@ import { ModalAlert, ModalAlertType, ModalMessage, ModalMessageList } from './Mo
 import {
   NotificationActions,
   NotificationBanner,
+  NotificationButton,
   NotificationCloseAction,
   NotificationContent,
   NotificationExpandableSubtitle,
-  NotificationIndicator,
+  NotificationLeadIcon,
   NotificationOpenLinkAction,
   NotificationTitle,
   NotificationTroubleshootDialogAction,
@@ -370,18 +372,17 @@ export default function NotificationArea(props: IProps) {
           className={props.className}
           indicator={notification.indicator}>
           {announcementCard ? (
-            <WarrenAnnouncementCard
-              title={notification.title}
-              indicator={notification.indicator}
-              announcement={announcementCard}
-              onOpenCta={openAnnouncementCta}
-            />
+            <>
+              <NotificationLeadIcon kind="announcement" indicator={notification.indicator} />
+              <WarrenAnnouncementCard
+                title={notification.title}
+                announcement={announcementCard}
+                onOpenCta={openAnnouncementCta}
+              />
+            </>
           ) : (
             <>
-              <NotificationIndicator
-                $type={notification.indicator}
-                data-testid="notificationIndicator"
-              />
+              <NotificationLeadIcon kind={notification.icon} indicator={notification.indicator} />
               <NotificationContent role="status" aria-live="polite">
                 <NotificationTitle data-testid="notificationTitle">
                   {notification.title}
@@ -403,6 +404,12 @@ export default function NotificationArea(props: IProps) {
                   />
                 )}
               </NotificationContent>
+              {notification.button && (
+                <NotificationBannerButton
+                  label={notification.button.label}
+                  action={notification.button.action}
+                />
+              )}
               {notification.action && (
                 <NotificationActionWrapper
                   action={notification.action}
@@ -579,4 +586,26 @@ function NotificationActionWrapper({
       </ModalAlert>
     </>
   );
+}
+
+// The banner's labelled button, which follows its link inside the app or out.
+function NotificationBannerButton({
+  label,
+  action,
+}: {
+  label: string;
+  action: InAppNotificationAction;
+}) {
+  const { openUrl } = useAppContext();
+  const history = useHistory();
+  const onClick = useCallback(async () => {
+    if (action.type === 'navigate-external') {
+      await openUrl(action.link.to);
+    } else if (action.type === 'navigate-internal') {
+      history.push(action.link.to, { transition: TransitionType.show });
+    } else if (action.type === 'close') {
+      action.close();
+    }
+  }, [action, history, openUrl]);
+  return <NotificationButton label={label} onClick={onClick} />;
 }

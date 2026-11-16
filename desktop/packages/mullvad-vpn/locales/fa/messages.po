@@ -1603,10 +1603,6 @@ msgid "APP IS OUT OF SYNC"
 msgstr "اپلیکیشن همگام نیست"
 
 msgctxt "in-app-notifications"
-msgid "BETA UPDATE AVAILABLE"
-msgstr "نسخهٔ بتای جدید موجود است"
-
-msgctxt "in-app-notifications"
 msgid "BLOCKING INTERNET"
 msgstr "مسدود کردن اینترنت"
 
@@ -1629,11 +1625,6 @@ msgstr "برای تلاش دوباره در دانلود، اینجا کلیک �
 msgctxt "in-app-notifications"
 msgid "Click here to see what’s new."
 msgstr "برای مشاهدهٔ تغییرات جدید، اینجا کلیک کنید."
-
-#. Link text to go to the app upgrade view
-msgctxt "in-app-notifications"
-msgid "Click here to update"
-msgstr "برای به‌روزرسانی، اینجا کلیک کنید"
 
 msgctxt "in-app-notifications"
 msgid "Connecting is not possible while access is revoked."
@@ -1685,10 +1676,6 @@ msgstr "در حال دانلود به‌روزرسانی… %(appUpgradeDownload
 msgctxt "in-app-notifications"
 msgid "IMPORTANT"
 msgstr "مهم"
-
-msgctxt "in-app-notifications"
-msgid "Install the latest app version to stay up to date."
-msgstr "جدیدترین نسخهٔ اپلیکیشن را نصب کنید تا به‌روز بمانید."
 
 #. Notification title when the installer failed.
 msgctxt "in-app-notifications"
@@ -1772,21 +1759,9 @@ msgctxt "in-app-notifications"
 msgid "This device is now named <em>%(deviceName)s</em>. See more under <a>Manage devices</a> in Account."
 msgstr "این دستگاه اکنون با نام <em>%(deviceName)s</em> شناخته می‌شود. جزئیات بیشتر را در <a>مدیریت دستگاه‌ها</a> در حساب خود مشاهده کنید."
 
-#. The in-app banner displayed to the user when the app beta update is
-#. available.
-#. Available placeholders:
-#. %(version)s - The version number of the new beta version.
-msgctxt "in-app-notifications"
-msgid "Try out the newest beta version (%(version)s)."
-msgstr "جدیدترین نسخهٔ بتا (%(version)s) را امتحان کنید."
-
 msgctxt "in-app-notifications"
 msgid "UNSUPPORTED VERSION"
 msgstr "نسخهٔ پشتیبانی‌نشده"
-
-msgctxt "in-app-notifications"
-msgid "UPDATE AVAILABLE"
-msgstr "به‌روزرسانی موجود است"
 
 #. Generic notification title when the app upgrade failed.
 msgctxt "in-app-notifications"
@@ -6489,3 +6464,7 @@ msgstr "اتصال مسدود است"
 msgctxt "tunnel-control"
 msgid "Change"
 msgstr "تغییر"
+
+msgctxt "in-app-notifications"
+msgid "Install"
+msgstr "نصب"
