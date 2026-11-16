@@ -1842,13 +1842,6 @@ msgctxt "keys-view"
 msgid "Backup keys"
 msgstr "Sauvegarder les clés"
 
-#. Shown when the daemon rejects the mnemonic
-#. (typically: invalid BIP39 word, bad checksum,
-#. wrong word count). User must check + retry.
-msgctxt "keys-view"
-msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
-msgstr "Le service a rejeté la phrase mnémonique. Vérifiez l'orthographe, le nombre de mots, puis réessayez."
-
 msgctxt "keys-view"
 msgid "Done"
 msgstr "Terminé"
@@ -2162,6 +2155,11 @@ msgstr "Erreur inconnue"
 msgctxt "login-view"
 msgid "Upgrading..."
 msgstr "Mise à niveau..."
+
+#. Error when a recovery phrase could not be restored for a reason that has nothing to do with its words, such as no connection to Warren.
+msgctxt "login-view"
+msgid "Warren could not restore your account right now. Check your internet connection and try again."
+msgstr "Warren n'a pas pu restaurer votre compte pour le moment. Vérifiez votre connexion internet, puis réessayez."
 
 msgctxt "login-view"
 msgid "Valid public key"

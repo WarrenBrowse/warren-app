@@ -145,7 +145,10 @@ test.describe('Login view', () => {
 
     await routes.login.fillRecoveryPhrase(RECOVERY_PHRASE);
 
-    await Promise.all([util.ipc.account.setWarrenMnemonic.expect(), routes.login.submitRestore()]);
+    await Promise.all([
+      util.ipc.account.setWarrenMnemonic.expect({ type: 'ok' }),
+      routes.login.submitRestore(),
+    ]);
 
     await util.ipc.account.device.notify({
       type: 'logged in',

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
 import { messages } from '../../../../shared/gettext';
-import log from '../../../../shared/logging';
 import { useAppContext } from '../../../context';
 import { Button, Checkbox, Text } from '../../../lib/components';
 import { Flex } from '../../../lib/components/flex';
@@ -15,7 +14,12 @@ import { BackAction } from '../../keyboard-navigation';
 import { NavigationContainer } from '../../NavigationContainer';
 import { NavigationScrollbars } from '../../NavigationScrollbars';
 import { HeaderTitle } from '../../SettingsHeader';
-import { countMnemonicWords, MnemonicTextarea, normalizeMnemonic } from '../../warren-mnemonic';
+import {
+  countMnemonicWords,
+  mnemonicImportError,
+  MnemonicTextarea,
+  normalizeMnemonic,
+} from '../../warren-mnemonic';
 
 const DangerCallout = styled.div`
   padding: ${spacings.small} ${spacings.medium};
@@ -47,20 +51,12 @@ export function RestoreMnemonicView() {
   const onSubmit = useCallback(async () => {
     setError(null);
     setSubmitting(true);
-    try {
-      await setWarrenMnemonic(normalizeMnemonic(input));
+    const failure = mnemonicImportError(await setWarrenMnemonic(normalizeMnemonic(input)));
+    setSubmitting(false);
+    if (failure === null) {
       setSuccess(true);
-    } catch (e) {
-      const err = e as Error;
-      log.error(`setWarrenMnemonic failed: ${err.message}`);
-      setError(
-        messages.pgettext(
-          'keys-view',
-          'Daemon rejected the mnemonic. Check spelling, word count, and try again.',
-        ),
-      );
-    } finally {
-      setSubmitting(false);
+    } else {
+      setError(failure);
     }
   }, [input, setWarrenMnemonic]);
 

@@ -2103,6 +2103,11 @@ msgctxt "login-view"
 msgid "Upgrading..."
 msgstr "กำลังอัปเกรด…"
 
+#. Error when a recovery phrase could not be restored for a reason that has nothing to do with its words, such as no connection to Warren.
+msgctxt "login-view"
+msgid "Warren could not restore your account right now. Check your internet connection and try again."
+msgstr "Warren ไม่สามารถกู้คืนบัญชีของคุณได้ในขณะนี้ โปรดตรวจสอบการเชื่อมต่ออินเทอร์เน็ตแล้วลองอีกครั้ง"
+
 msgctxt "login-view"
 msgid "Valid account number"
 msgstr "หมายเลขบัญชีที่ถูกต้อง"
@@ -4723,10 +4728,6 @@ msgstr "เซิร์ฟเวอร์อาจกำหนดพอร์ต
 msgctxt "keys-view"
 msgid "Backup keys"
 msgstr "สำรองคีย์"
-
-msgctxt "keys-view"
-msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
-msgstr "บริการปฏิเสธวลีกู้คืน ตรวจสอบการสะกดและจำนวนคำ แล้วลองอีกครั้ง"
 
 msgctxt "keys-view"
 msgid "Done"

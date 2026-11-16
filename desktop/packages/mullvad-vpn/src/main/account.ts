@@ -11,6 +11,7 @@ import {
   WarrenPubKey,
 } from '../shared/daemon-rpc-types';
 import log from '../shared/logging';
+import { MnemonicImportResult } from '../shared/mnemonic-import';
 import {
   AccountExpiredNotificationProvider,
   CloseToAccountExpiryNotificationProvider,
@@ -21,6 +22,7 @@ import AccountDataCache from './account-data-cache';
 import { DaemonRpc } from './daemon-rpc';
 import { IpcMainEventChannel } from './ipc-event-channel';
 import { logoutReportingRefusal } from './logout-refusal';
+import { mnemonicImportFailure } from './mnemonic-import';
 import { NotificationSender } from './notification-controller';
 import { systemTimeMonitor } from './system-time-monitor';
 import { TunnelStateProvider } from './tunnel-state';
@@ -86,7 +88,7 @@ export default class Account {
     IpcMainEventChannel.account.handleLogout((source) => this.logout(source));
     IpcMainEventChannel.account.handleGetWarrenMnemonic(() => this.daemonRpc.getWarrenMnemonic());
     IpcMainEventChannel.account.handleSetWarrenMnemonic((mnemonic: string) =>
-      this.daemonRpc.setWarrenMnemonic(mnemonic),
+      this.setWarrenMnemonic(mnemonic),
     );
     IpcMainEventChannel.account.handleSubmitVoucher((voucherCode: string) =>
       this.submitVoucher(voucherCode),
@@ -178,6 +180,19 @@ export default class Account {
     this.accountHistoryValue = accountHistory;
 
     IpcMainEventChannel.accountHistory.notify?.(accountHistory);
+  }
+
+  // Resolves rather than throws: an IPC rejection reaches the renderer as a
+  // message string, which cannot tell a wrong phrase from a refused account.
+  private async setWarrenMnemonic(mnemonic: string): Promise<MnemonicImportResult> {
+    try {
+      await this.daemonRpc.setWarrenMnemonic(mnemonic);
+      return { type: 'ok' };
+    } catch (e) {
+      const result = mnemonicImportFailure(e);
+      log.error(`Failed to restore identity (${result.type}): ${(e as Error).message}`);
+      return result;
+    }
   }
 
   // This function monitors if the account is expired due to system clock changes.

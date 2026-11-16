@@ -2111,6 +2111,11 @@ msgctxt "login-view"
 msgid "Upgrading..."
 msgstr "Päivitetään..."
 
+#. Error when a recovery phrase could not be restored for a reason that has nothing to do with its words, such as no connection to Warren.
+msgctxt "login-view"
+msgid "Warren could not restore your account right now. Check your internet connection and try again."
+msgstr "Warren ei voinut palauttaa tiliäsi juuri nyt. Tarkista internetyhteytesi ja yritä uudelleen."
+
 msgctxt "login-view"
 msgid "Valid account number"
 msgstr "Oikea tilin numero"
@@ -5001,10 +5006,6 @@ msgstr "Palvelin voi määrittää eri portin, jos ensisijainen on jo varattu. M
 msgctxt "keys-view"
 msgid "Backup keys"
 msgstr "Varmuuskopioi avaimet"
-
-msgctxt "keys-view"
-msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
-msgstr "Taustapalvelu hylkäsi palautuslauseen. Tarkista kirjoitusasu ja sanojen määrä ja yritä uudelleen."
 
 msgctxt "keys-view"
 msgid "Done"

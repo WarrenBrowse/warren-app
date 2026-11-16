@@ -54,6 +54,7 @@ import {
   IWindowShapeParameters,
 } from './ipc-types';
 import { LogLevel } from './logging-types';
+import { MnemonicImportResult } from './mnemonic-import';
 import { WarrenNetworkStatsResult } from './network-stats';
 import { RenewalUiState } from './renewal';
 import { RoutePath } from './routes';
@@ -516,10 +517,10 @@ export const ipcSchema = {
     // explicit user confirmation.
     getWarrenMnemonic: invoke<void, string>(),
     // Restores an identity from the provided BIP39 mnemonic. BIP39
-    // validation is performed daemon-side. Throws if invalid (=
-    // caller must catch + show error). The daemon hot-swaps the
-    // identity and logs in without requiring a restart.
-    setWarrenMnemonic: invoke<string, void>(),
+    // validation is performed daemon-side, and a failure resolves to its
+    // cause rather than throwing. The daemon hot-swaps the identity and
+    // logs in without requiring a restart.
+    setWarrenMnemonic: invoke<string, MnemonicImportResult>(),
     submitVoucher: invoke<string, VoucherResponse>(),
     updateData: invoke<void, void>(),
     // Starts an app-initiated purchase (doc 35): the main process

@@ -20,6 +20,7 @@ import {
   CopyMnemonicButton,
   countMnemonicWords,
   MnemonicGrid,
+  mnemonicImportError,
   MnemonicTextarea,
   normalizeMnemonic,
 } from '../../warren-mnemonic';
@@ -161,20 +162,13 @@ export function LoginView() {
   const onRestore = useCallback(async () => {
     setError(null);
     setBusy(true);
-    try {
-      await setWarrenMnemonic(normalizeMnemonic(restoreInput));
-      // On success the daemon logs in and emits a device event that
-      // navigates away from this screen. `busy` stays true on purpose:
-      // releasing it before the device event lands re-enables the
-      // submit button for a moment on a screen the user is leaving.
-    } catch (e) {
-      log.error(`Failed to restore identity: ${(e as Error).message}`);
-      setError(
-        messages.pgettext(
-          'login-view',
-          'Invalid recovery phrase. Check the words and their order, then try again.',
-        ),
-      );
+    const failure = mnemonicImportError(await setWarrenMnemonic(normalizeMnemonic(restoreInput)));
+    // On success the daemon logs in and emits a device event that
+    // navigates away from this screen. `busy` stays true on purpose:
+    // releasing it before the device event lands re-enables the
+    // submit button for a moment on a screen the user is leaving.
+    if (failure !== null) {
+      setError(failure);
       setBusy(false);
     }
   }, [restoreInput, setWarrenMnemonic]);

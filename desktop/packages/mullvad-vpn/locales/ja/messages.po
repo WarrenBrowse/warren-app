@@ -2103,6 +2103,11 @@ msgctxt "login-view"
 msgid "Upgrading..."
 msgstr "アップグレード中..."
 
+#. Error when a recovery phrase could not be restored for a reason that has nothing to do with its words, such as no connection to Warren.
+msgctxt "login-view"
+msgid "Warren could not restore your account right now. Check your internet connection and try again."
+msgstr "Warren は現在アカウントを復元できませんでした。インターネット接続を確認して、もう一度お試しください。"
+
 msgctxt "login-view"
 msgid "Valid account number"
 msgstr "有効なアカウント番号"
@@ -4723,10 +4728,6 @@ msgstr "優先ポートがすでに使用されている場合、サーバーは
 msgctxt "keys-view"
 msgid "Backup keys"
 msgstr "キーをバックアップ"
-
-msgctxt "keys-view"
-msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
-msgstr "デーモンがニーモニックを拒否しました。スペルと単語数を確認して、もう一度お試しください。"
 
 msgctxt "keys-view"
 msgid "Done"

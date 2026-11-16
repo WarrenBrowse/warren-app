@@ -2103,6 +2103,11 @@ msgctxt "login-view"
 msgid "Upgrading..."
 msgstr "업그레이드 중..."
 
+#. Error when a recovery phrase could not be restored for a reason that has nothing to do with its words, such as no connection to Warren.
+msgctxt "login-view"
+msgid "Warren could not restore your account right now. Check your internet connection and try again."
+msgstr "Warren이 지금 계정을 복원하지 못했습니다. 인터넷 연결을 확인한 후 다시 시도하세요."
+
 msgctxt "login-view"
 msgid "Valid account number"
 msgstr "유효한 계정 번호"
@@ -4723,10 +4728,6 @@ msgstr "선호하는 포트가 이미 사용 중인 경우 서버가 다른 포�
 msgctxt "keys-view"
 msgid "Backup keys"
 msgstr "키 백업"
-
-msgctxt "keys-view"
-msgid "Daemon rejected the mnemonic. Check spelling, word count, and try again."
-msgstr "데몬이 니모닉을 거부했습니다. 철자와 단어 수를 확인한 후 다시 시도하세요."
 
 msgctxt "keys-view"
 msgid "Done"
