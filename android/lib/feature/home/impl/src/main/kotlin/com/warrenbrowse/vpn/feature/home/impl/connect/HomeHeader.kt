@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
@@ -39,7 +40,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
-import com.warrenbrowse.vpn.lib.ui.component.ForumHeaderIcon
 import com.warrenbrowse.vpn.lib.ui.component.ForumHeaderSlot
 import com.warrenbrowse.vpn.lib.ui.component.forumHeaderLabel
 import com.warrenbrowse.vpn.lib.ui.resource.R
@@ -56,7 +56,6 @@ private const val WARREN_LOCKUP_ASPECT = 17355f / 5720f
 // The paper halo the desktop draws with three drop shadows (1, 4 and 14 px); one blurred copy of
 // the wordmark at the middle radius carries it here.
 private val LOGO_HALO_BLUR = 4.dp
-private val LOGO_PADDING = 4.dp
 private val TOOLBAR_SHADOW_BLUR = 14.dp
 private val TOOLBAR_SHADOW_SPREAD = (-6).dp
 private val TOOLBAR_SHADOW_OFFSET = 4.dp
@@ -93,7 +92,11 @@ private fun HomeLogo() {
     val surfaces = LocalWarrenSurfaces.current
     val wordmark = painterResource(id = R.drawable.wordmark_warren)
     val logoModifier = Modifier.height(height).width(height * WARREN_LOCKUP_ASPECT)
-    Box(Modifier.padding(horizontal = LOGO_PADDING), contentAlignment = Alignment.Center) {
+    // The mockup inks the wordmark 6 inside the header row, so 20 from the frame's edge.
+    Box(
+        Modifier.padding(horizontal = DesignTokens.Home.Hero.LogoInset),
+        contentAlignment = Alignment.Center,
+    ) {
         // RenderEffect needs API 31; below it the radial glow drawn by the hero carries the halo.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             Icon(
@@ -150,12 +153,24 @@ private fun HomeToolbar(
             HomeToolbarButton(
                 onClick = onForumClick,
                 tint = tint,
+                dot = forumSlot is ForumHeaderSlot.Activity && forumSlot.unread > 0,
                 modifier =
                     Modifier.testTag(TOP_BAR_FORUM_BUTTON_TEST_TAG).semantics {
                         contentDescription = label
                     },
             ) {
-                ForumHeaderIcon(slot = forumSlot, tint = tint, iconSize = toolbar.Icon)
+                Icon(
+                    painter =
+                        painterResource(
+                            when (forumSlot) {
+                                is ForumHeaderSlot.Activity -> R.drawable.ic_bell_outline
+                                ForumHeaderSlot.Community -> R.drawable.ic_lifebuoy_outline
+                            }
+                        ),
+                    tint = tint,
+                    contentDescription = null,
+                    modifier = Modifier.size(toolbar.Icon),
+                )
             }
         }
         HomeToolbarButton(
@@ -186,15 +201,17 @@ private fun HomeToolbar(
 }
 
 /**
- * A button of the toolbar (desktop `HomeHeader`, mockup 8d): the glyph centred in its 38 dp square,
+ * A button of the toolbar (desktop `HomeHeader`, mockup): the glyph centred in its 38 dp square,
  * which a press, a hover or the keyboard focus tints with the glyph colour at 12 %, where a ring or
- * a round ripple around an icon in the glass pill read heavy.
+ * a round ripple around an icon in the glass pill read heavy. Unread news is the mockup's [dot] in
+ * the button's top right corner, never a count.
  */
 @Composable
 private fun HomeToolbarButton(
     onClick: () -> Unit,
     tint: Color,
     modifier: Modifier = Modifier,
+    dot: Boolean = false,
     content: @Composable () -> Unit,
 ) {
     val toolbar = DesignTokens.Home.Toolbar
@@ -221,5 +238,31 @@ private fun HomeToolbarButton(
         contentAlignment = Alignment.Center,
     ) {
         content()
+        if (dot) ToolbarDot(Modifier.align(Alignment.TopEnd))
     }
 }
+
+/**
+ * The mockup's unread dot: [DesignTokens.Home.Toolbar.Badge] wide, its edge
+ * [DesignTokens.Home.Toolbar.BadgeInset] from the button's top right corner, ringed in the
+ * toolbar's glass so it detaches from the glyph under it.
+ */
+@Composable
+private fun ToolbarDot(modifier: Modifier = Modifier) {
+    val toolbar = DesignTokens.Home.Toolbar
+    val surfaces = LocalWarrenSurfaces.current
+    Box(
+        modifier
+            .padding(
+                top = toolbar.BadgeInset - toolbar.BadgeRing,
+                end = toolbar.BadgeInset - toolbar.BadgeRing,
+            )
+            .size(toolbar.Badge + toolbar.BadgeRing * 2)
+            .background(surfaces.homeBadgeRing, CircleShape)
+            .padding(toolbar.BadgeRing)
+            .background(surfaces.homeBadge, CircleShape)
+            .testTag(TOOLBAR_DOT_TEST_TAG)
+    )
+}
+
+internal const val TOOLBAR_DOT_TEST_TAG = "home_toolbar_dot_test_tag"
