@@ -138,7 +138,7 @@ impl Unblock {
 
 #[cfg(test)]
 mod tests {
-    use super::{Plan, SETUP_BIN, elevation_hint, plan, setup_binary_next_to};
+    use super::{Plan, elevation_hint, plan};
 
     /// The macOS and Linux packages put the CLI on `PATH` through a symlink
     /// (`/usr/local/bin/warren-beta` into the app bundle), and macOS reports
@@ -148,6 +148,10 @@ mod tests {
     #[cfg(unix)]
     #[test]
     fn the_helper_is_found_through_a_symlinked_cli() {
+        // Imported here: only this Unix-only test uses them, and an unused
+        // import fails the Windows clippy.
+        use super::{SETUP_BIN, setup_binary_next_to};
+
         let root = std::env::temp_dir().join(format!("warren-unblock-{}", std::process::id()));
         let install = root.join("install");
         let on_path = root.join("bin");
