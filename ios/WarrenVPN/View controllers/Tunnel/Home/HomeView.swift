@@ -7,7 +7,7 @@
 //  The home screen (desktop `MainView`): the scenery hero keeps the mockup's
 //  proportion of the panel column (300 high on 360) plus the status bar, and
 //  the panel below it (status, controls, chips, then the room the mockup
-//  leaves, the beta line and the account footer) takes the rest. The floating
+//  leaves and the account footer with the beta mark) takes the rest. The floating
 //  header is the root container's.
 //
 
@@ -75,15 +75,14 @@ struct HomeView: View {
                 // The room the mockup leaves between the chips and the footer.
                 Spacer(minLength: 0)
 
-                if let badge = connectionViewModel.productBadge {
-                    HomeBetaLine(badge: badge, line: connectionViewModel.productBannerLine) {
-                        action(.explainNetwork)
-                    }
-                    .padding(.vertical, 10)
-                    .frame(maxWidth: HomeMetrics.maxColumnWidth)
-                }
-
-                HomeFooterView(model: footerModel)
+                HomeFooterView(
+                    model: footerModel,
+                    beta: connectionViewModel.productBadge.map {
+                        HomeFooterBeta.label(badge: $0, networkInfo: connectionViewModel.networkInfo)
+                    },
+                    betaHint: connectionViewModel.productBannerLine,
+                    onBeta: { action(.explainNetwork) }
+                )
             }
         }
         .ignoresSafeArea(.container, edges: .top)

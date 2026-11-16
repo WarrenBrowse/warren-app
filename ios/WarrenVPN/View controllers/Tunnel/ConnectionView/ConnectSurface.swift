@@ -60,6 +60,7 @@ enum ConnectSurfaceToken: String, CaseIterable {
     case homeCancelLine
     case homeCancelText
     case homeCancelHover
+    case homeBeta
 }
 
 struct ConnectSurfacePalette: Equatable {
@@ -130,6 +131,7 @@ struct ConnectSurfacePalette: Equatable {
         case .homeCancelLine: 0xFF93_6831
         case .homeCancelText: 0xFFF1_C17F
         case .homeCancelHover: 0x1AEF_B062
+        case .homeBeta: 0xFFE8_B65C
         }
     }
 
@@ -176,6 +178,7 @@ struct ConnectSurfacePalette: Equatable {
         case .homeCancelLine: 0xFFBD_853F
         case .homeCancelText: 0xFF8D_5406
         case .homeCancelHover: 0x1ABD_853F
+        case .homeBeta: 0xFF8A_5412
         }
     }
 }

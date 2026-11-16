@@ -9,6 +9,7 @@ import SwiftUI
 import UIKit
 import WarrenMockData
 import WarrenREST
+import WarrenRustRuntime
 import WarrenSettings
 import WarrenTypes
 import XCTest
@@ -116,9 +117,59 @@ final class HomeScreenshotTests: XCTestCase {
         try await save(window, "\(device)-dark-13-details.png")
     }
 
+    /// Mockup 8d on a beta build: the update banner over the exposed home, an announcement over
+    /// Finland with its flag on the location row, and the cap in the footer.
+    func testCaptureTheBannersAndTheBetaFooter() async throws {
+        let device = UIDevice.current.userInterfaceIdiom == .pad ? "ipad" : "iphone"
+        let cap = WarrenNetworkInfo(
+            environment: "beta", degraded: true, defaultRateBps: 20_000_000, paymentsEnabled: false)
+        let update = NewAppVersionInAppNotificationProvider.descriptor(
+            version: "2026.5", includeAllNetworksIsEnabled: false, install: {})
+        let announcements = WarrenAnnouncementNotificationProvider(
+            source: {
+                [
+                    WarrenAnnouncement(
+                        id: "qa", headline: "New servers in Singapore", body: "Available now", level: .info,
+                        cta: nil, voucherCampaignID: nil, voucherCode: nil)
+                ]
+            },
+            dismissStore: QADismissStore(),
+            present: { _ in }
+        )
+        let announcement = try XCTUnwrap(announcements.notificationDescriptor)
+        let shots: [(Shot, InAppNotificationDescriptor)] = [
+            (Shot(name: "14-8d-exposed-update", state: .disconnected), update),
+            (
+                Shot(
+                    name: "15-8d-exposed-picked-finland-update", state: .disconnected,
+                    exitLocations: .only(UserSelectedRelays(locations: [.country("fi")]))),
+                update
+            ),
+            (
+                Shot(name: "16-8d-protected-finland-announcement", state: Self.connected("Finland", "fi", "Helsinki")),
+                announcement
+            ),
+        ]
+        for theme in [WarrenTheme.dark, .light] {
+            for (shot, notification) in shots {
+                let host = makeHost(shot: shot, theme: theme, badge: "BETA", networkInfo: cap)
+                let notifications = NotificationController()
+                host.notificationController = notifications
+                let window = try await window(with: host)
+                notifications.setNotifications([notification], animated: false)
+                try await save(window, "\(device)-\(theme)-\(shot.name).png")
+            }
+        }
+    }
+
     // MARK: - Rendering
 
-    private func makeHost(shot: Shot, theme: WarrenTheme, badge: String?) -> QARootContainer {
+    private func makeHost(
+        shot: Shot,
+        theme: WarrenTheme,
+        badge: String?,
+        networkInfo: WarrenNetworkInfo? = nil
+    ) -> QARootContainer {
         let constraints = RelayConstraints(exitLocations: shot.exitLocations)
         let connection = ConnectionViewViewModel(
             tunnelStatus: TunnelStatus(state: shot.state),
@@ -127,6 +178,7 @@ final class HomeScreenshotTests: XCTestCase {
             customListRepository: CustomListRepository()
         )
         connection.productBadge = badge
+        connection.networkInfo = networkInfo
         var settings = LatestTunnelSettings(relayConstraints: constraints)
         if shot.chips {
             settings.natPmp = WarrenNatPmpSettings(state: .on)
@@ -223,6 +275,7 @@ private final class QAHomeScreen: UIViewController, RootContainment {
 
     var prefersHeaderBarHidden: Bool { false }
     var prefersDeviceInfoBarHidden: Bool { true }
+    var prefersNotificationBarHidden: Bool { false }
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -232,4 +285,8 @@ private final class QAHomeScreen: UIViewController, RootContainment {
         }
         home.didMove(toParent: self)
     }
+}
+
+private final class QADismissStore: WarrenAnnouncementDismissing {
+    var warrenDismissedAnnouncements: [String] = []
 }

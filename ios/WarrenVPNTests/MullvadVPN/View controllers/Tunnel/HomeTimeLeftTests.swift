@@ -28,6 +28,16 @@ final class HomeTimeLeftTests: XCTestCase {
         XCTAssertEqual(HomeTimeLeft.text(now: now, expiry: days(14.5), calendar: calendar), "14 days left")
     }
 
+    /// After the beta cap the line stays short: "BETA 20 Mbps · 14 days".
+    func testAfterTheBetaCapTheFooterGivesTheBareDuration() {
+        XCTAssertEqual(
+            HomeTimeLeft.text(now: now, expiry: days(14.5), afterBeta: true, calendar: calendar), "14 days")
+        XCTAssertEqual(HomeTimeLeft.remaining(from: now, to: days(1.2), suffix: false, calendar: calendar), "1 day")
+        XCTAssertEqual(HomeTimeLeft.remaining(from: now, to: days(731), suffix: false, calendar: calendar), "2 years")
+        XCTAssertEqual(
+            HomeTimeLeft.remaining(from: now, to: days(0.5), suffix: false, calendar: calendar), "less than a day")
+    }
+
     func testOneDayIsSingular() {
         XCTAssertEqual(HomeTimeLeft.remaining(from: now, to: days(1.2), calendar: calendar), "1 day left")
     }

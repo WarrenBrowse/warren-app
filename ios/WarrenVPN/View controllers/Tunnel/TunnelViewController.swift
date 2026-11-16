@@ -70,7 +70,7 @@ class TunnelViewController: UIViewController, RootContainment {
         case .loggedIn, .revoked:
             // The header floats over the hero: the inked wordmark on its paper
             // glow and the toolbar pill (desktop `HomeHeader`). The build is
-            // named on the home's own beta line, so the chip would say it
+            // named in the home's footer, so the chip would say it
             // twice.
             return HeaderBarPresentation(
                 style: .transparent,
@@ -239,9 +239,9 @@ class TunnelViewController: UIViewController, RootContainment {
         setNeedsHeaderBarStyleAppearanceUpdate()
     }
 
-    /// The beta line names the speed cap when the server gives one. Fetched
-    /// once per screen, off the main thread; until it lands the line says the
-    /// bandwidth is limited, which is true on every beta.
+    /// The footer's beta mark names the speed cap when the server gives one. Fetched
+    /// once per screen, off the main thread; until it lands the mark is the
+    /// bare label.
     private func loadNetworkCap() {
         guard connectionViewViewModel.productBadge != nil else { return }
         Task { [weak self] in

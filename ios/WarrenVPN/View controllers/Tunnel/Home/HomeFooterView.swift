@@ -4,12 +4,13 @@
 //
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  The bottom of the home: the feature chips, the beta line and the account
-//  footer band (desktop `FeatureIndicators`, `BetaBadge` 'home' and
-//  `AppMainFooter`).
+//  The bottom of the home: the feature chips and the account footer band,
+//  which carries the beta mark on a beta build (desktop `FeatureIndicators`,
+//  `BetaBadge` 'footer' and `AppMainFooter`).
 //
 
 import SwiftUI
+import WarrenRustRuntime
 
 /// The active features as outlined chips that wrap. One row is reserved even
 /// with none, so the hero does not reframe every time the tunnel comes up.
@@ -94,53 +95,17 @@ struct HomeFlowLayout: Layout {
     }
 }
 
-/// On a non-prod build, a quiet line above the footer: the chip carries the
-/// build's identity, the line its one practical consequence, and a tap
-/// explains the network.
-struct HomeBetaLine: View {
-    let badge: String
-    let line: String
-    let action: () -> Void
-
-    @Environment(\.colorScheme) private var colorScheme
-
-    var body: some View {
-        let palette = ConnectSurfacePalette(colorScheme: colorScheme)
-        Button(action: action) {
-            HStack(spacing: 8) {
-                Text(verbatim: badge)
-                    .font(.instrumentSans(size: 10, weight: .bold, relativeTo: .caption2))
-                    .kerning(0.5)
-                    .foregroundStyle(palette.color(.homePillPendingText))
-                    .padding(.horizontal, 6)
-                    .frame(minHeight: 18)
-                    .background(RoundedRectangle(cornerRadius: 5).fill(palette.color(.homeBadge)))
-                    .fixedSize()
-                Text(verbatim: line)
-                    .font(.instrumentSans(size: 12, relativeTo: .caption))
-                    .foregroundStyle(palette.color(.homeTextSecondary))
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, HomeMetrics.Panel.paddingHorizontal)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(
-            String(
-                format: NSLocalizedString("%@ build, about this network", tableName: "Settings", comment: ""),
-                badge
-            )
-        )
-        .accessibilityHint(line)
-    }
-}
-
 /// The account band at the foot of the home: the shortened public key, which a
-/// tap copies, and the time left.
+/// tap copies, and at the other end the time left, "14 days left", or on a beta
+/// build the cap first, "BETA 20 Mbps · 14 days", a tap on the mark explaining
+/// the network.
 struct HomeFooterView: View {
     @ObservedObject var model: HomeFooterModel
+    /// The beta mark, nil on a build that is not a beta.
+    var beta: String?
+    /// Read out after the mark: the network's one-line explanation.
+    var betaHint: String = ""
+    var onBeta: () -> Void = {}
     @State private var justCopied = false
     @Environment(\.colorScheme) private var colorScheme
 
@@ -173,11 +138,7 @@ struct HomeFooterView: View {
                 .accessibilityLabel(LocalizedStringKey("Copy public key"))
             }
             Spacer(minLength: footer.gap)
-            if let timeLeft = HomeTimeLeft.text(now: Date(), expiry: model.expiry) {
-                Text(verbatim: timeLeft)
-                    .font(.instrumentSans(size: footer.textSize, relativeTo: .caption))
-                    .lineLimit(1)
-            }
+            footerEnd(palette: palette)
         }
         .foregroundStyle(palette.color(.homeTextSecondary))
         .padding(.vertical, footer.paddingVertical)
@@ -187,10 +148,52 @@ struct HomeFooterView: View {
         .background(palette.color(.homeFooter).ignoresSafeArea(edges: .bottom))
     }
 
+    @ViewBuilder
+    private func footerEnd(palette: ConnectSurfacePalette) -> some View {
+        let footer = HomeMetrics.Footer.self
+        let timeLeft = HomeTimeLeft.text(now: Date(), expiry: model.expiry, afterBeta: beta != nil)
+        HStack(spacing: 4) {
+            if let beta {
+                Button(action: onBeta) {
+                    Text(verbatim: beta)
+                        .font(.instrumentSans(size: footer.textSize, weight: .bold, relativeTo: .caption))
+                        .foregroundStyle(palette.color(.homeBeta))
+                        .lineLimit(1)
+                        .fixedSize()
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint(betaHint)
+                .accessibilityIdentifier("footerBeta")
+                if timeLeft != nil {
+                    Text(verbatim: "\u{00B7}")
+                        .font(.instrumentSans(size: footer.textSize, relativeTo: .caption))
+                        .accessibilityHidden(true)
+                }
+            }
+            if let timeLeft {
+                Text(verbatim: timeLeft)
+                    .font(.instrumentSans(size: footer.textSize, relativeTo: .caption))
+                    .lineLimit(1)
+            }
+        }
+    }
+
     /// head...tail form (U+2026), the Polkadot short-address style the desktop
     /// footer uses.
     static func shorten(_ pubkey: String) -> String {
         guard pubkey.count > 13 else { return pubkey }
         return "\(pubkey.prefix(6))\u{2026}\(pubkey.suffix(6))"
+    }
+}
+
+/// The beta mark of the footer (mockup 8d): the build's identity and its one practical
+/// consequence, the cap, "BETA 20 Mbps" (desktop `BetaCap`).
+enum HomeFooterBeta {
+    /// The cap appears once the server names it; until then the mark is the label alone.
+    static func label(badge: String, networkInfo: WarrenNetworkInfo?) -> String {
+        let label = NSLocalizedString(badge, comment: "")
+        guard let mbps = networkInfo?.capMbps else { return label }
+        return "\(label) \(mbps) Mbps"
     }
 }

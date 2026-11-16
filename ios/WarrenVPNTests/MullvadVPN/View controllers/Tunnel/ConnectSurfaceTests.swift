@@ -56,6 +56,17 @@ final class ConnectSurfaceTests: XCTestCase {
         }
     }
 
+    /// The other direction: a home surface desktop adds to the shared table is a token here too,
+    /// so a new colour cannot stay desktop-only.
+    func testEveryHomeSurfaceOfTheSharedTableIsAToken() throws {
+        let surfaces = try XCTUnwrap(try loadTokens()["surfaces"] as? [String: [String: String]])
+        for name in ["dark", "light"] {
+            let shared = Set(try XCTUnwrap(surfaces[name]).keys.filter { $0.hasPrefix("home") })
+            let tokens = Set(ConnectSurfaceToken.allCases.map(\.rawValue))
+            XCTAssertEqual(shared.subtracting(tokens), [], name)
+        }
+    }
+
     /// The two themes are two palettes: a token that reads the same in both
     /// would mean the light copy was never filled in.
     func testTheLightPageIsNotTheDarkPage() {
@@ -142,5 +153,18 @@ final class ConnectSurfaceTests: XCTestCase {
             paymentsEnabled: false
         )
         XCTAssertTrue(viewModel.productBannerLine.contains("20"), viewModel.productBannerLine)
+    }
+
+    /// The footer's beta mark carries the live cap once the server names it, "BETA 20 Mbps", and
+    /// the bare label until then.
+    func testTheFooterBetaMarkNamesTheCapOnceTheServerGivesIt() {
+        XCTAssertEqual(HomeFooterBeta.label(badge: "BETA", networkInfo: nil), "BETA")
+        let info = WarrenNetworkInfo(
+            environment: "beta",
+            degraded: true,
+            defaultRateBps: 20_000_000,
+            paymentsEnabled: false
+        )
+        XCTAssertEqual(HomeFooterBeta.label(badge: "BETA", networkInfo: info), "BETA 20 Mbps")
     }
 }

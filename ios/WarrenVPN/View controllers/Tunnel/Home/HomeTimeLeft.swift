@@ -4,9 +4,9 @@
 //
 //  Copyright © 2026 Warren Browse. All rights reserved.
 //
-//  The time left on the account, as the home footer writes it: "14 days left".
-//  Desktop's `formatRemainingTime(expiry, { suffix: true })` and the footer
-//  that hides it once the expiry notice takes over.
+//  The time left on the account, as the home footer writes it: "14 days left",
+//  or the bare "14 days" after the beta cap. Desktop's `footerTimeLeft` and the
+//  footer that hides it once the expiry notice takes over.
 //
 
 import Foundation
@@ -16,25 +16,35 @@ enum HomeTimeLeft {
     static let closeToExpiryDays = 3
 
     /// The footer line, or nil when there is nothing to say there: no expiry, an expired account,
-    /// or one close enough to expiry that the notification area carries the renewal call.
-    static func text(now: Date, expiry: Date?, calendar: Calendar = .current) -> String? {
+    /// or one close enough to expiry that the notification area carries the renewal call. After
+    /// the beta cap it drops "left", where the mockup keeps the line short.
+    static func text(now: Date, expiry: Date?, afterBeta: Bool = false, calendar: Calendar = .current) -> String? {
         guard let expiry, expiry > now else { return nil }
         if let threshold = calendar.date(byAdding: .day, value: closeToExpiryDays, to: now), expiry <= threshold {
             return nil
         }
-        return remaining(from: now, to: expiry, calendar: calendar)
+        return remaining(from: now, to: expiry, suffix: !afterBeta, calendar: calendar)
     }
 
-    /// Whole years from two years on, whole days below that, and less than a day under one.
-    static func remaining(from now: Date, to expiry: Date, calendar: Calendar = .current) -> String {
+    /// Whole years from two years on, whole days below that, and less than a day under one;
+    /// `suffix` says how long is "left".
+    static func remaining(from now: Date, to expiry: Date, suffix: Bool = true, calendar: Calendar = .current) -> String
+    {
         let days = calendar.dateComponents([.day], from: now, to: expiry).day ?? 0
         if days >= 730 {
             let years = calendar.dateComponents([.year], from: now, to: expiry).year ?? 0
-            return String.localizedStringWithFormat(NSLocalizedString("%lld years left", comment: ""), years)
+            let format =
+                suffix
+                ? NSLocalizedString("%lld years left", comment: "") : NSLocalizedString("%lld years", comment: "")
+            return String.localizedStringWithFormat(format, years)
         }
         if days > 0 {
-            return String.localizedStringWithFormat(NSLocalizedString("%lld days left", comment: ""), days)
+            let format =
+                suffix ? NSLocalizedString("%lld days left", comment: "") : NSLocalizedString("%lld days", comment: "")
+            return String.localizedStringWithFormat(format, days)
         }
-        return NSLocalizedString("Less than a day left", comment: "")
+        return suffix
+            ? NSLocalizedString("Less than a day left", comment: "")
+            : NSLocalizedString("less than a day", comment: "")
     }
 }
