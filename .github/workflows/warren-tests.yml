@@ -203,6 +203,10 @@ jobs:
     # with its macOS tests never having run in CI. This job runs exactly that
     # crate on a macOS runner, and the reusable scope puts it in the release
     # gate as well.
+    # Self-hosted runners keep their state between jobs, so code from a fork
+    # never runs on them: a pull request opened from another repository skips
+    # this job.
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, macOS, ARM64]
     timeout-minutes: 30
     steps:
