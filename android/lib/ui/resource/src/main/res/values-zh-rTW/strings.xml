@@ -247,6 +247,7 @@
     <string name="wallet_import_placeholder">abandon abandon abandon ... about</string>
     <string name="wallet_import_word_count">%1$d / %2$d 個字詞</string>
     <string name="wallet_import_error_invalid">復原短語無效。請檢查單字及其順序，然後重試。</string>
+    <string name="wallet_import_error_failed">您的復原片語有效，但無法儲存到此裝置。請再試一次。</string>
     <string name="wallet_backup_title">備份您的復原短語</string>
     <string name="wallet_backup_warning">任何擁有這 12 個字的人都能存取您的帳戶。切勿分享，也不要存放在線上。</string>
     <string name="wallet_backup_confirm_cta">我已將復原短語記錄在安全的地方。</string>

@@ -258,6 +258,7 @@
     <string name="wallet_import_placeholder">abandon abandon abandon ... about</string>
     <string name="wallet_import_word_count">%1$d / %2$d words</string>
     <string name="wallet_import_error_invalid">Invalid recovery phrase. Check the words and their order, then try again.</string>
+    <string name="wallet_import_error_failed">Your recovery phrase is valid, but it could not be saved on this device. Try again.</string>
     <string name="wallet_backup_title">Back up your recovery phrase</string>
     <string name="wallet_backup_warning">Anyone with these 12 words can access your account. Never share them or store them online.</string>
     <string name="wallet_backup_confirm_cta">I have written down my recovery phrase in a safe place.</string>

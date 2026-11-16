@@ -251,6 +251,7 @@
     <string name="wallet_import_placeholder">abandon abandon abandon ... about</string>
     <string name="wallet_import_word_count">%1$d / %2$d Wörter</string>
     <string name="wallet_import_error_invalid">Ungültige Wiederherstellungsphrase. Überprüfen Sie die Wörter und ihre Reihenfolge und versuchen Sie es erneut.</string>
+    <string name="wallet_import_error_failed">Ihre Wiederherstellungsphrase ist gültig, konnte aber auf diesem Gerät nicht gespeichert werden. Versuchen Sie es erneut.</string>
     <string name="wallet_backup_title">Sichern Sie Ihre Wiederherstellungsphrase</string>
     <string name="wallet_backup_warning">Jeder, der diese 12 Wörter besitzt, kann auf dein Konto zugreifen. Teile sie niemals und speichere sie nicht online.</string>
     <string name="wallet_backup_confirm_cta">Ich habe meine Wiederherstellungsphrase an einem sicheren Ort notiert.</string>

@@ -90,8 +90,14 @@ class AndroidKeystoreWalletRepository(
         mnemonic: Mnemonic,
         authorizer: SensitiveOpAuthorizer?,
     ): WalletAddress = lock.withLock {
+        // Once the engine is loaded, deriving the address fails only on the
+        // words themselves, so that failure alone is an invalid phrase.
         val address = withContext(Dispatchers.IO) {
-            mnemonic.useAsString { jni.mnemonicPubkeySs58(it) }
+            try {
+                mnemonic.useAsString { jni.mnemonicPubkeySs58(it) }
+            } catch (e: Exception) {
+                throw InvalidMnemonicException(e)
+            }
         }
         persist(mnemonic, address, authorizer)
         WalletAddress(address)

@@ -251,6 +251,7 @@
     <string name="wallet_import_placeholder">abandon abandon abandon ... about</string>
     <string name="wallet_import_word_count">%1$d / %2$d woorden</string>
     <string name="wallet_import_error_invalid">Ongeldige herstelzin. Controleer de woorden en hun volgorde en probeer het opnieuw.</string>
+    <string name="wallet_import_error_failed">Je herstelzin is geldig, maar kon niet op dit apparaat worden opgeslagen. Probeer het opnieuw.</string>
     <string name="wallet_backup_title">Maak een back-up van je herstelzin</string>
     <string name="wallet_backup_warning">Iedereen met deze 12 woorden heeft toegang tot je account. Deel ze nooit en bewaar ze niet online.</string>
     <string name="wallet_backup_confirm_cta">Ik heb mijn herstelzin op een veilige plek opgeschreven.</string>

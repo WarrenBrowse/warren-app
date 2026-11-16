@@ -251,6 +251,7 @@
     <string name="wallet_import_placeholder">abandon abandon abandon ... about</string>
     <string name="wallet_import_word_count">%1$d / %2$d ord</string>
     <string name="wallet_import_error_invalid">Ugyldig gendannelsessætning. Kontrollér ordene og deres rækkefølge, og prøv igen.</string>
+    <string name="wallet_import_error_failed">Din gendannelsessætning er gyldig, men den kunne ikke gemmes på denne enhed. Prøv igen.</string>
     <string name="wallet_backup_title">Sikkerhedskopiér din gendannelsessætning</string>
     <string name="wallet_backup_warning">Enhver med disse 12 ord kan få adgang til din konto. Del dem aldrig, og gem dem aldrig online.</string>
     <string name="wallet_backup_confirm_cta">Jeg har skrevet min gendannelsessætning ned et sikkert sted.</string>

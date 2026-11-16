@@ -251,6 +251,7 @@
     <string name="wallet_import_placeholder">abandon abandon abandon ... about</string>
     <string name="wallet_import_word_count">%1$d / %2$d sanaa</string>
     <string name="wallet_import_error_invalid">Virheellinen palautuslause. Tarkista sanat ja niiden järjestys ja yritä uudelleen.</string>
+    <string name="wallet_import_error_failed">Palautuslauseesi on kelvollinen, mutta sitä ei voitu tallentaa tälle laitteelle. Yritä uudelleen.</string>
     <string name="wallet_backup_title">Varmuuskopioi palautuslauseesi</string>
     <string name="wallet_backup_warning">Kuka tahansa, jolla on nämä 12 sanaa, pääsee käsiksi tiliisi. Älä koskaan jaa niitä tai säilytä niitä verkossa.</string>
     <string name="wallet_backup_confirm_cta">Olen kirjoittanut palautuslauseeni muistiin turvalliseen paikkaan.</string>

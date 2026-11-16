@@ -251,6 +251,7 @@
     <string name="wallet_import_placeholder">abandon abandon abandon ... about</string>
     <string name="wallet_import_word_count">%1$d / %2$d کلمه</string>
     <string name="wallet_import_error_invalid">عبارت بازیابی نامعتبر است. کلمات و ترتیب آن‌ها را بررسی کنید و دوباره تلاش کنید.</string>
+    <string name="wallet_import_error_failed">عبارت بازیابی شما معتبر است، اما ذخیره آن در این دستگاه ممکن نشد. دوباره تلاش کنید.</string>
     <string name="wallet_backup_title">از عبارت بازیابی خود نسخه پشتیبان بگیرید</string>
     <string name="wallet_backup_warning">هرکسی که این ۱۲ کلمه را داشته باشد می‌تواند به حساب شما دسترسی پیدا کند. هرگز آن‌ها را به اشتراک نگذارید یا آنلاین ذخیره نکنید.</string>
     <string name="wallet_backup_confirm_cta">عبارت بازیابی خود را در جای امنی یادداشت کرده‌ام.</string>

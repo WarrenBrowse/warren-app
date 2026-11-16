@@ -6,6 +6,7 @@ import co.touchlab.kermit.Logger
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.model.wallet.SensitiveOpAuthorizer
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
+import com.warrenbrowse.vpn.lib.repository.InvalidMnemonicException
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.ui.component.wallet.normalizeMnemonic
 import kotlinx.coroutines.channels.Channel
@@ -105,11 +106,12 @@ class WarrenWalletViewModel(
                         walletRepository.importWallet(m, authorizer)
                         _importPhrase.value = ""
                         _events.send(WarrenWalletEvent.WalletReady)
+                    } catch (e: InvalidMnemonicException) {
+                        Logger.w(throwable = e) { "wallet import rejected the phrase" }
+                        _events.send(WarrenWalletEvent.Error(WalletErrorReason.InvalidPhrase))
                     } catch (e: Exception) {
                         Logger.w(throwable = e) { "wallet import failed" }
-                        // Daemon rejected the BIP39 checksum/wordlist: a typo
-                        // or a wrong word order.
-                        _events.send(WarrenWalletEvent.Error(WalletErrorReason.InvalidPhrase))
+                        _events.send(WarrenWalletEvent.Error(WalletErrorReason.ImportFailed))
                     }
                 }
             } finally {
@@ -142,6 +144,10 @@ enum class WalletErrorReason {
 
     /** Generation or Keystore persistence failed. */
     CreateFailed,
+
+    /** A valid phrase could not be stored: the Keystore or the
+     * authentication prompt failed, or the user declined it. */
+    ImportFailed,
 }
 
 sealed interface WarrenWalletEvent {

@@ -247,6 +247,7 @@
     <string name="wallet_import_placeholder">abandon abandon abandon ... about</string>
     <string name="wallet_import_word_count">%1$d / %2$d 단어</string>
     <string name="wallet_import_error_invalid">잘못된 복구 문구입니다. 단어와 순서를 확인한 후 다시 시도하세요.</string>
+    <string name="wallet_import_error_failed">복구 문구는 유효하지만 이 기기에 저장하지 못했습니다. 다시 시도하세요.</string>
     <string name="wallet_backup_title">복구 문구 백업</string>
     <string name="wallet_backup_warning">이 12개의 단어를 가진 사람은 누구나 계정에 접근할 수 있습니다. 절대 공유하거나 온라인에 저장하지 마세요.</string>
     <string name="wallet_backup_confirm_cta">복구 문구를 안전한 곳에 적어 두었습니다.</string>

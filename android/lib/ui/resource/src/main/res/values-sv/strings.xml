@@ -251,6 +251,7 @@
     <string name="wallet_import_placeholder">abandon abandon abandon ... about</string>
     <string name="wallet_import_word_count">%1$d / %2$d ord</string>
     <string name="wallet_import_error_invalid">Ogiltig återställningsfras. Kontrollera orden och deras ordning och försök igen.</string>
+    <string name="wallet_import_error_failed">Din återställningsfras är giltig, men den kunde inte sparas på den här enheten. Försök igen.</string>
     <string name="wallet_backup_title">Säkerhetskopiera din återställningsfras</string>
     <string name="wallet_backup_warning">Alla med dessa 12 ord kan komma åt ditt konto. Dela dem aldrig och lagra dem aldrig online.</string>
     <string name="wallet_backup_confirm_cta">Jag har skrivit ner min återställningsfras på en säker plats.</string>

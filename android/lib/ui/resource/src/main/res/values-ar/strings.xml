@@ -267,6 +267,7 @@
     <string name="wallet_import_placeholder">abandon abandon abandon ... about</string>
     <string name="wallet_import_word_count">%1$d / %2$d كلمة</string>
     <string name="wallet_import_error_invalid">عبارة استرداد غير صالحة. تحقّق من الكلمات وترتيبها، ثم حاول مرة أخرى.</string>
+    <string name="wallet_import_error_failed">عبارة الاستعادة صحيحة، لكن تعذّر حفظها على هذا الجهاز. أعد المحاولة.</string>
     <string name="wallet_backup_title">احفظ عبارة الاسترداد احتياطيًا</string>
     <string name="wallet_backup_warning">أي شخص يملك هذه الكلمات الـ12 يمكنه الوصول إلى حسابك. لا تشاركها أبدًا ولا تخزّنها على الإنترنت.</string>
     <string name="wallet_backup_confirm_cta">لقد كتبت عبارة الاسترداد في مكان آمن.</string>

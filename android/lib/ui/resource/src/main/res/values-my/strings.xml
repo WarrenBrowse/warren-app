@@ -247,6 +247,7 @@
     <string name="wallet_import_placeholder">abandon abandon abandon ... about</string>
     <string name="wallet_import_word_count">စကားလုံး %1$d / %2$d</string>
     <string name="wallet_import_error_invalid">ပြန်လည်ရယူရေးစကားစု မမှန်ကန်ပါ။ စကားလုံးများနှင့် ၎င်းတို့၏ အစီအစဉ်ကို စစ်ဆေးပြီး ထပ်စမ်းကြည့်ပါ။</string>
+    <string name="wallet_import_error_failed">သင့်ပြန်လည်ရယူရေးစကားစုသည် မှန်ကန်သော်လည်း ဤစက်ပေါ်တွင် သိမ်းဆည်း၍ မရပါ။ ထပ်မံကြိုးစားပါ။</string>
     <string name="wallet_backup_title">သင်၏ ပြန်လည်ရယူရေးစကားစုကို အရန်သိမ်းပါ</string>
     <string name="wallet_backup_warning">ဤ စကားလုံး ၁၂ လုံး ရှိသူ မည်သူမဆို သင့်အကောင့်ကို ဝင်ရောက်နိုင်သည်။ ၎င်းတို့ကို မည်သည့်အခါမျှ မမျှဝေပါနှင့်၊ အွန်လိုင်းတွင်လည်း မသိမ်းဆည်းပါနှင့်။</string>
     <string name="wallet_backup_confirm_cta">ကျွန်ုပ်၏ ပြန်လည်ရယူရေးစကားစုကို လုံခြုံသောနေရာတွင် ရေးမှတ်ထားပါသည်။</string>

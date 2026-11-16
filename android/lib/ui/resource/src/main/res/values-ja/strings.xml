@@ -247,6 +247,7 @@
     <string name="wallet_import_placeholder">abandon abandon abandon ... about</string>
     <string name="wallet_import_word_count">%1$d / %2$d 語</string>
     <string name="wallet_import_error_invalid">無効なリカバリーフレーズです。単語とその順序を確認してから、もう一度お試しください。</string>
+    <string name="wallet_import_error_failed">復元フレーズは有効ですが、このデバイスに保存できませんでした。もう一度お試しください。</string>
     <string name="wallet_backup_title">リカバリーフレーズをバックアップ</string>
     <string name="wallet_backup_warning">この 12 語を知っている人は誰でもあなたのアカウントにアクセスできます。決して共有したり、オンラインで保管したりしないでください。</string>
     <string name="wallet_backup_confirm_cta">リカバリーフレーズを安全な場所に書き留めました。</string>

@@ -251,6 +251,7 @@
     <string name="wallet_import_placeholder">abandon abandon abandon ... about</string>
     <string name="wallet_import_word_count">%1$d / %2$d kelime</string>
     <string name="wallet_import_error_invalid">Geçersiz kurtarma ifadesi. Kelimeleri ve sıralarını kontrol edin, sonra tekrar deneyin.</string>
+    <string name="wallet_import_error_failed">Kurtarma ifadeniz geçerli, ancak bu cihaza kaydedilemedi. Tekrar deneyin.</string>
     <string name="wallet_backup_title">Kurtarma ifadenizi yedekleyin</string>
     <string name="wallet_backup_warning">Bu 12 kelimeye sahip olan herkes hesabınıza erişebilir. Bunları asla paylaşmayın veya çevrimiçi saklamayın.</string>
     <string name="wallet_backup_confirm_cta">Kurtarma ifademi güvenli bir yere yazdım.</string>

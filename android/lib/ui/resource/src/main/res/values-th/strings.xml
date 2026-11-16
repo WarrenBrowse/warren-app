@@ -247,6 +247,7 @@
     <string name="wallet_import_placeholder">abandon abandon abandon ... about</string>
     <string name="wallet_import_word_count">%1$d / %2$d คำ</string>
     <string name="wallet_import_error_invalid">วลีกู้คืนไม่ถูกต้อง ตรวจสอบคำและลำดับของคำ แล้วลองอีกครั้ง</string>
+    <string name="wallet_import_error_failed">วลีกู้คืนของคุณถูกต้อง แต่ไม่สามารถบันทึกลงในอุปกรณ์นี้ได้ โปรดลองอีกครั้ง</string>
     <string name="wallet_backup_title">สำรองวลีกู้คืนของคุณ</string>
     <string name="wallet_backup_warning">ใครก็ตามที่มี 12 คำนี้สามารถเข้าถึงบัญชีของคุณได้ อย่าแชร์หรือเก็บไว้ออนไลน์เด็ดขาด</string>
     <string name="wallet_backup_confirm_cta">ฉันได้จดวลีกู้คืนของฉันไว้ในที่ปลอดภัยแล้ว</string>

@@ -259,6 +259,7 @@
     <string name="wallet_import_placeholder">abandon abandon abandon ... about</string>
     <string name="wallet_import_word_count">%1$d / %2$d слів</string>
     <string name="wallet_import_error_invalid">Недійсна фраза відновлення. Перевірте слова та їхній порядок, потім спробуйте ще раз.</string>
+    <string name="wallet_import_error_failed">Фраза відновлення правильна, але зберегти її на цьому пристрої не вдалося. Спробуйте ще раз.</string>
     <string name="wallet_backup_title">Збережіть свою фразу відновлення</string>
     <string name="wallet_backup_warning">Будь-хто, хто має ці 12 слів, може отримати доступ до вашого облікового запису. Ніколи не діліться ними та не зберігайте їх онлайн.</string>
     <string name="wallet_backup_confirm_cta">Я записав свою фразу відновлення в надійному місці.</string>

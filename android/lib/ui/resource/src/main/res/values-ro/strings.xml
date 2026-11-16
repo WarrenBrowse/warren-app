@@ -259,6 +259,7 @@
     <string name="wallet_import_placeholder">abandon abandon abandon ... about</string>
     <string name="wallet_import_word_count">%1$d / %2$d cuvinte</string>
     <string name="wallet_import_error_invalid">Frază de recuperare invalidă. Verifică cuvintele și ordinea lor, apoi încearcă din nou.</string>
+    <string name="wallet_import_error_failed">Fraza de recuperare este validă, dar nu a putut fi salvată pe acest dispozitiv. Încercați din nou.</string>
     <string name="wallet_backup_title">Salvează-ți fraza de recuperare</string>
     <string name="wallet_backup_warning">Oricine deține aceste 12 cuvinte vă poate accesa contul. Nu le partajați niciodată și nu le stocați online.</string>
     <string name="wallet_backup_confirm_cta">Mi-am notat fraza de recuperare într-un loc sigur.</string>

@@ -254,6 +254,7 @@
     <string name="wallet_import_placeholder">abandon abandon abandon ... about</string>
     <string name="wallet_import_word_count">%1$d / %2$d palabras</string>
     <string name="wallet_import_error_invalid">Frase de recuperación no válida. Comprueba las palabras y su orden, e inténtalo de nuevo.</string>
+    <string name="wallet_import_error_failed">Tu frase de recuperación es válida, pero no se ha podido guardar en este dispositivo. Inténtalo de nuevo.</string>
     <string name="wallet_backup_title">Guarda tu frase de recuperación</string>
     <string name="wallet_backup_warning">Cualquiera que tenga estas 12 palabras puede acceder a tu cuenta. Nunca las compartas ni las guardes en línea.</string>
     <string name="wallet_backup_confirm_cta">He anotado mi frase de recuperación en un lugar seguro.</string>

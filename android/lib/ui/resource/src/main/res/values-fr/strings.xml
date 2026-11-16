@@ -254,6 +254,7 @@
     <string name="wallet_import_placeholder">abandon abandon abandon ... about</string>
     <string name="wallet_import_word_count">%1$d / %2$d mots</string>
     <string name="wallet_import_error_invalid">Phrase de restauration invalide. Vérifiez les mots et leur ordre, puis réessayez.</string>
+    <string name="wallet_import_error_failed">Votre phrase de restauration est valide, mais elle n\'a pas pu être enregistrée sur cet appareil. Réessayez.</string>
     <string name="wallet_backup_title">Sauvegardez votre phrase de restauration</string>
     <string name="wallet_backup_warning">Toute personne possédant ces 12 mots peut accéder à votre compte. Ne les partagez jamais et ne les stockez pas en ligne.</string>
     <string name="wallet_backup_confirm_cta">J\'ai noté ma phrase de restauration en lieu sûr.</string>

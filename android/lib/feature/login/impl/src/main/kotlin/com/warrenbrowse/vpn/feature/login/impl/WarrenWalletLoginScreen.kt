@@ -104,6 +104,7 @@ fun WarrenWalletLoginScreen(
 
     val wrongWordCountError = stringResource(R.string.wallet_import_error_word_count)
     val invalidPhraseError = stringResource(R.string.wallet_import_error_invalid)
+    val importFailedError = stringResource(R.string.wallet_import_error_failed)
     val createFailedError = stringResource(R.string.wallet_create_error)
 
     LaunchedEffect(Unit) {
@@ -117,6 +118,7 @@ fun WarrenWalletLoginScreen(
                             WalletErrorReason.WrongWordCount -> wrongWordCountError
                             WalletErrorReason.InvalidPhrase -> invalidPhraseError
                             WalletErrorReason.CreateFailed -> createFailedError
+                            WalletErrorReason.ImportFailed -> importFailedError
                         }
             }
         }

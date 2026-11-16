@@ -87,3 +87,7 @@ interface WalletRepository {
 /** Thrown when [WalletRepository.unlock] is called but the user cancels
  * or the device cannot authenticate. */
 class WalletAuthorizationDeniedException(message: String) : Exception(message)
+
+/** Thrown by [WalletRepository.importWallet] when the words fail BIP39
+ * validation. Any other import failure happened to a valid phrase. */
+class InvalidMnemonicException(cause: Throwable) : Exception("invalid recovery phrase", cause)

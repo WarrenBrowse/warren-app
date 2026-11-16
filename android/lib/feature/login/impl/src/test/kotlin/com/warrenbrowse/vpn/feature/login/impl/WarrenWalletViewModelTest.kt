@@ -6,6 +6,8 @@ import com.warrenbrowse.vpn.lib.common.test.TestCoroutineRule
 import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.model.wallet.WalletAddress
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
+import com.warrenbrowse.vpn.lib.repository.InvalidMnemonicException
+import com.warrenbrowse.vpn.lib.repository.WalletAuthorizationDeniedException
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -114,7 +116,7 @@ class WarrenWalletViewModelTest {
     @Test
     fun `a phrase the engine rejects reports an invalid phrase`() = runTest {
         coEvery { walletRepository.importWallet(any(), any()) } throws
-            IllegalArgumentException("checksum")
+            InvalidMnemonicException(IllegalArgumentException("checksum"))
 
         viewModel.setImportPhrase(VALID_PHRASE)
 
@@ -123,6 +125,23 @@ class WarrenWalletViewModelTest {
             val event = awaitItem()
             assertIs<WarrenWalletEvent.Error>(event)
             assertEquals(WalletErrorReason.InvalidPhrase, event.reason)
+        }
+    }
+
+    // A valid phrase that could not be stored (the Keystore, a declined
+    // authentication prompt) says nothing about the words the user typed.
+    @Test
+    fun `a valid phrase that cannot be saved reports an import failure`() = runTest {
+        coEvery { walletRepository.importWallet(any(), any()) } throws
+            WalletAuthorizationDeniedException("declined")
+
+        viewModel.setImportPhrase(VALID_PHRASE)
+
+        viewModel.events.test {
+            viewModel.importWallet()
+            val event = awaitItem()
+            assertIs<WarrenWalletEvent.Error>(event)
+            assertEquals(WalletErrorReason.ImportFailed, event.reason)
         }
     }
 

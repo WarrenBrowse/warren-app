@@ -251,6 +251,7 @@
     <string name="wallet_import_placeholder">abandon abandon abandon ... about</string>
     <string name="wallet_import_word_count">%1$d / %2$d ord</string>
     <string name="wallet_import_error_invalid">Ugyldig gjenopprettingsfrase. Kontroller ordene og rekkefølgen deres, og prøv igjen.</string>
+    <string name="wallet_import_error_failed">Gjenopprettingsfrasen er gyldig, men den kunne ikke lagres på denne enheten. Prøv igjen.</string>
     <string name="wallet_backup_title">Sikkerhetskopier gjenopprettingsfrasen din</string>
     <string name="wallet_backup_warning">Alle som har disse 12 ordene, kan få tilgang til kontoen din. Del dem aldri, og lagre dem aldri på nett.</string>
     <string name="wallet_backup_confirm_cta">Jeg har skrevet ned gjenopprettingsfrasen min på et trygt sted.</string>
