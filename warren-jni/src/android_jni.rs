@@ -307,6 +307,9 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_initLogger(
     // never-backed-up directory.
     #[cfg(feature = "tunnel")]
     crate::standing::init(&files_dir);
+    let _ = VERSION_METADATA_FLOOR.set(mullvad_update::version::MetadataVersionFloor::at(
+        files_dir.join("version-metadata-floor"),
+    ));
 
     log_panics::init();
     log::info!("Warren JNI logger initialised in {}", files_dir.display());
@@ -1349,6 +1352,12 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_fetchVersionInfo<
     }
 }
 
+/// The anti-rollback floor of the version manifest, in the app's private
+/// files directory, so a replayed older manifest is refused after a restart
+/// as well. Unset before `initLogger`, when the minimum applies.
+static VERSION_METADATA_FLOOR: std::sync::OnceLock<mullvad_update::version::MetadataVersionFloor> =
+    std::sync::OnceLock::new();
+
 /// One fetch and verification of the manifest, then both verdicts.
 fn fetch_version_verdict(current_version: &str) -> crate::version_check::VersionVerdict {
     use crate::version_check::{VersionVerdict, version_verdict};
@@ -1369,11 +1378,19 @@ fn fetch_version_verdict(current_version: &str) -> crate::version_check::Version
             return VersionVerdict::UNKNOWN;
         }
     };
+    let floor = VERSION_METADATA_FLOOR.get();
+    let lowest = floor.map_or(MIN_VERIFY_METADATA_VERSION, |floor| floor.load());
     let response = match runtime.block_on(HttpVersionInfoProvider::get_versions_for_platform(
         MetaRepositoryPlatform::Android,
-        MIN_VERIFY_METADATA_VERSION,
+        lowest,
     )) {
-        Ok(response) => response,
+        Ok(response) => {
+            if let Some(Err(err)) = floor.map(|floor| floor.raise(response.signed.metadata_version))
+            {
+                log::warn!("fetchVersionInfo: could not persist the metadata floor: {err}");
+            }
+            response
+        }
         Err(_) => {
             log::warn!(
                 "fetchVersionInfo: manifest fetch/verify failed; assuming supported, no update"

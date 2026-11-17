@@ -269,6 +269,7 @@ pub(crate) fn spawn_version_router(
         // responds to `GetLatestVersion` with "no version".
         #[cfg(not(target_os = "android"))]
         super::check::spawn_version_updater(
+            &cache_dir,
             rollout_threshold_seed,
             new_version_tx,
             refresh_version_check_rx,

@@ -43,19 +43,26 @@ pub(super) type VersionCheckResult = std::result::Result<VersionCache, ()>;
 /// check; the poller otherwise re-checks on a fixed interval.
 #[cfg(not(target_os = "android"))]
 pub(super) fn spawn_version_updater(
+    cache_dir: &std::path::Path,
     rollout_threshold_seed: Option<u32>,
     new_version_tx: futures::channel::mpsc::UnboundedSender<VersionCheckResult>,
     refresh_rx: futures::channel::mpsc::UnboundedReceiver<()>,
 ) {
     tokio::spawn(version_updater_loop(
+        mullvad_update::version::MetadataVersionFloor::at(cache_dir.join(METADATA_FLOOR_FILE)),
         rollout_threshold_seed,
         new_version_tx,
         refresh_rx,
     ));
 }
 
+/// The anti-rollback floor's file in the daemon's root-owned cache directory.
+#[cfg(not(target_os = "android"))]
+const METADATA_FLOOR_FILE: &str = "version-metadata-floor";
+
 #[cfg(not(target_os = "android"))]
 async fn version_updater_loop(
+    floor: mullvad_update::version::MetadataVersionFloor,
     rollout_threshold_seed: Option<u32>,
     new_version_tx: futures::channel::mpsc::UnboundedSender<VersionCheckResult>,
     mut refresh_rx: futures::channel::mpsc::UnboundedReceiver<()>,
@@ -78,9 +85,9 @@ async fn version_updater_loop(
     };
 
     // Anti-rollback floor: a fetched manifest must carry a `metadata_version`
-    // at least this high. It is ratcheted up after each accepted response so a
-    // replayed older manifest is rejected for the rest of this daemon run.
-    let mut lowest_metadata_version = mullvad_update::version::MIN_VERIFY_METADATA_VERSION;
+    // at least this high. It is ratcheted up after each accepted response and
+    // persisted, so a replayed older manifest is rejected after a restart too.
+    let mut lowest_metadata_version = floor.load();
 
     loop {
         let interval = match check_once(
@@ -94,6 +101,9 @@ async fn version_updater_loop(
         {
             Ok(cache) => {
                 lowest_metadata_version = lowest_metadata_version.max(cache.metadata_version);
+                if let Err(error) = floor.raise(cache.metadata_version) {
+                    log::error!("Could not persist the version metadata floor: {error}");
+                }
                 // The receiver lives as long as the router; a send error means
                 // the daemon is shutting down, so stop polling.
                 if new_version_tx.unbounded_send(Ok(cache)).is_err() {

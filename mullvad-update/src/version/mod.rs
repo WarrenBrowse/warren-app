@@ -3,6 +3,7 @@
 //! deserialized response.
 //!
 //! The main input here is [`VersionParameters`], and the main output is [`VersionInfo`].
+mod floor;
 mod info;
 mod parameters;
 pub mod rollout;
@@ -11,6 +12,7 @@ pub use info::{
     MIN_VERIFY_METADATA_VERSION, Metadata, VersionInfo, is_current_version_supported,
     is_version_supported,
 };
+pub use floor::MetadataVersionFloor;
 pub use parameters::VersionParameters;
 
 pub use crate::format::Architecture;
