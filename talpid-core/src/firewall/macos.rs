@@ -951,14 +951,15 @@ impl Firewall {
     }
 
     fn remove_rules(&mut self) -> Result<()> {
+        self.remove_rules_named(ANCHOR_NAME)
+    }
+
+    fn remove_rules_named(&mut self, anchor: &str) -> Result<()> {
         // remove_anchor() does not deactivate active rules
-        self.pf
-            .flush_rules(ANCHOR_NAME, pfctl::RulesetKind::Filter)?;
-        self.pf.flush_rules(ANCHOR_NAME, pfctl::RulesetKind::Nat)?;
-        self.pf
-            .flush_rules(ANCHOR_NAME, pfctl::RulesetKind::Redirect)?;
-        self.pf
-            .flush_rules(ANCHOR_NAME, pfctl::RulesetKind::Scrub)?;
+        self.pf.flush_rules(anchor, pfctl::RulesetKind::Filter)?;
+        self.pf.flush_rules(anchor, pfctl::RulesetKind::Nat)?;
+        self.pf.flush_rules(anchor, pfctl::RulesetKind::Redirect)?;
+        self.pf.flush_rules(anchor, pfctl::RulesetKind::Scrub)?;
         Ok(())
     }
 
@@ -1011,7 +1012,10 @@ impl Firewall {
         for env in warren_product_env::ALL {
             // Sweep every environment before reporting: stopping at the first
             // failure would leave the remaining anchors blocking.
-            if let Err(error) = self.remove_anchor_named(env.firewall_id()) {
+            // Removing an anchor leaves its rules active, so they go first.
+            let flushed = self.remove_rules_named(env.firewall_id());
+            let removed = self.remove_anchor_named(env.firewall_id());
+            if let Err(error) = flushed.and(removed) {
                 first_error.get_or_insert(error);
             }
         }
@@ -1605,6 +1609,38 @@ mod reassert_kernel_tests {
         firewall.reset_policy().unwrap();
         assert!(stopped, "pfctl -d left pf running: nothing was tested");
         assert!(reasserted && running, "pf stayed disabled");
+    }
+
+    #[test]
+    #[ignore = "needs root; loads a rule into another environment's anchor"]
+    fn recovery_empties_every_environments_anchor() {
+        let other = warren_product_env::ALL
+            .iter()
+            .map(|env| env.firewall_id())
+            .find(|anchor| *anchor != ANCHOR_NAME)
+            .unwrap();
+        let mut load = Command::new("pfctl")
+            .args(["-a", other, "-f", "-"])
+            .stdin(std::process::Stdio::piped())
+            .spawn()
+            .unwrap();
+        std::io::Write::write_all(
+            load.stdin.as_mut().unwrap(),
+            b"block drop out quick proto tcp to 192.0.2.77\n",
+        )
+        .unwrap();
+        assert!(load.wait().unwrap().success());
+        let loaded = !output_of("pfctl", &["-a", other, "-sr"]).trim().is_empty();
+
+        let mut firewall = Firewall::new().unwrap();
+        firewall.reset_policy_all_generations().unwrap();
+        let left = output_of("pfctl", &["-a", other, "-sr"]);
+
+        assert!(loaded, "the stand-in rule never loaded: nothing was tested");
+        assert!(
+            left.trim().is_empty(),
+            "rules left active in {other}: {left}"
+        );
     }
 
     #[test]
