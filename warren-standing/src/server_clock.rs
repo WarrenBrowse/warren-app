@@ -28,6 +28,13 @@ pub fn attach<T: HttpTransport>(client: WarrenApiClient<T>) -> WarrenApiClient<T
     client.with_server_clock(Arc::clone(shared()))
 }
 
+/// What a tunnel's dated setup is stamped with (the engine's `SetupClock`):
+/// the process's one clock, so an exit never refuses a time the API accepts.
+pub fn setup_clock() -> Arc<dyn Fn() -> u64 + Send + Sync> {
+    let clock = Arc::clone(shared());
+    Arc::new(move || clock.now())
+}
+
 #[cfg(test)]
 mod tests {
     use warren_api::transport::{HttpRequest, HttpResponse, TransportError};
@@ -51,6 +58,32 @@ mod tests {
             WarrenIdentity::from_seed(&[seed; 32]),
             Unused,
         ))
+    }
+
+    #[test]
+    fn a_tunnel_setup_is_dated_on_the_process_clock() {
+        // 2023-11-14 22:13:20 UTC.
+        const SERVER_NOW: u64 = 1_700_000_000;
+        let device_now = || {
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs()
+        };
+        shared().observe_date("Tue, 14 Nov 2023 22:13:20 GMT", device_now());
+
+        let dated = (setup_clock())();
+
+        // Leave the process clock on the device's for the other tests.
+        shared().observe_date(&httpdate_now(), device_now());
+        assert!(
+            (SERVER_NOW..SERVER_NOW + 5).contains(&dated),
+            "a setup dated {dated}, the server reads {SERVER_NOW}"
+        );
+    }
+
+    fn httpdate_now() -> String {
+        httpdate::fmt_http_date(std::time::SystemTime::now())
     }
 
     #[test]
