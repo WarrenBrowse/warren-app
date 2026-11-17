@@ -9,8 +9,10 @@
 # Trigger: direct push to `main` / `warren-base` (the normal dev flow here),
 # PRs targeting those branches, plus on-demand dispatch. Kept cheap so it does
 # not burden direct main pushes: it is the only lightweight (~5 min) workflow,
-# is paths-filtered to Warren code, and uses concurrency cancel-in-progress so
-# rapid successive pushes supersede each other (at most one run at a time).
+# is paths-filtered to Warren code. On a pull request a new push cancels the
+# run in progress. On main it never does: a cancelled run leaves its commit
+# with no finished gate, and a regression it carried is then blamed on the
+# next commit. Pushes in a burst queue instead (one running, one pending).
 
 name: Warren checks
 
@@ -151,7 +153,7 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read

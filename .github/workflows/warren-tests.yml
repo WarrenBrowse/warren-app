@@ -188,6 +188,15 @@ jobs:
             -p mullvad-update -p mullvad-release \
             --features mullvad-update/sign,mullvad-update/client
 
+      # The profile retries a failed test once; name every test that needed it.
+      # Read before the next nextest run overwrites the report.
+      - name: Tests that passed only on a retry
+        run: bash ci/report-retried-tests.sh target/nextest/warren-ci/junit.xml
+
+      # Sub-second: the reporter above, against nextest's JUnit shape.
+      - name: Retried-test reporter (shell tests)
+        run: bash ci/test-report-retried-tests.sh
+
       # The firewall tests that need the kernel's nftables, as root: the
       # kill switch kept across a daemon restart and the early-boot block (the
       # 2026-09-28 incident), the per-app lock, and the DNS rules of the
