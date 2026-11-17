@@ -69,15 +69,11 @@ Once done all screenshots should be saved under `ios/Screenshots` folder.
 
 ### Localizations
 
-The iOS app does not yet have translations.
+The app is translated through the string catalogs (`*.xcstrings`) under `ios/Assets/`,
+`ios/PacketTunnel/` and `ios/WarrenVPN/Supporting Files/`, one entry per language.
 
-There was a script in the past to help with translations, but it was removed.
-Whenever we want to start adding translations for real, this script can be
-resurrected from the git history if we deem it to be the best path forward.
-Look for `ios/requirements.txt`.
+## Bundled relay list
 
-## Cached relays
-
-The script `relays-prebuild.sh` runs on each Xcode build and will download and cache a list of relays if it is not already present for a given configuration.
-The cached list for a given configuration will always override the current relays file.
-To get a fresh relay file on demand, issue a `clean` command to Xcode and re-build the project.
+`WarrenREST/Assets/relays.json` is committed. The "Check relays" build phase
+(`checkRelays.swift`) refuses a Release or MockRelease build whose copy is missing, empty, or
+lists no relay.

@@ -2,12 +2,8 @@ name: 'Setup project toolchain'
 description: 'Setup Xcode project and install toolchain'
 inputs:
   ios_rust_target:
-    description: 'iOS target device'
-    type: choice
+    description: 'Rust target to install: aarch64-apple-ios-sim or aarch64-apple-ios'
     default: aarch64-apple-ios-sim
-    options:
-      - aarch64-apple-ios-sim
-      - aarch64-apple-ios
     required: true
   xcode_version:
     description: >
@@ -32,11 +28,6 @@ runs:
         key: ${{ runner.os }}-spm-${{ hashFiles('ios/**/Package.resolved') }}
         restore-keys: |
           ${{ runner.os }}-spm-
-
-    - name: Setup go-lang
-      uses: actions/setup-go@be3c94b385c4f180051c996d336f57a34c397495  # v3.6.1
-      with:
-        go-version: 1.21.13
 
     - name: Configure Rust
       run: rustup target add ${{ inputs.ios_rust_target }}

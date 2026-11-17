@@ -12,10 +12,10 @@ TEST_DEVICE_IS_IPAD = 0
 // Base64 encoded token for the partner API. Will only be used if account numbers are not configured.
 // PARTNER_API_TOKEN = 
 
-// Mullvad accounts used by UI tests
+// Account used by the UI tests that need one with time left
 HAS_TIME_ACCOUNT_NUMBER = 
 // Note that screenshots tests use the config=MockRelease (which uses a real account), 
-// while UI tests use config=Staging (which uses Stagemole).
+// while UI tests use config=Staging (which uses the staging API).
 // the Debug configuration is provided for developer convenience, and uses real accounts.
 
 // Username for account to use when making an in-app purchase.
@@ -28,10 +28,11 @@ IOS_IN_APP_PURCHASE_PASSWORD =
 AD_SERVING_DOMAIN = analytics.google.com
 
 // A domain which should be reachable. Used to verify Internet connectivity. Must be running a server on port 80.
-SHOULD_BE_REACHABLE_DOMAIN = mullvad.net
+SHOULD_BE_REACHABLE_DOMAIN = example.com
 
 // An IP address which should always be reachable. Must be running a server on port 80.
-SHOULD_BE_REACHABLE_IP_ADDRESS = 45.83.223.209
+// Set it to a host you control.
+SHOULD_BE_REACHABLE_IP_ADDRESS =
  
 // Base URL for the firewall API. Note that // will be treated as a comment, therefor you need to insert a ${} between the slashes for example http:/${}/8.8.8.8
 FIREWALL_API_BASE_URL = http:/${}/8.8.8.8
