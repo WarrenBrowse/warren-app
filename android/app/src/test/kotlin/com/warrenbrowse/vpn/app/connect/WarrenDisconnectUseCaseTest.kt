@@ -90,7 +90,6 @@ class WarrenDisconnectUseCaseTest {
     private class FakeTunnelStateProvider(
         private val infoFlow: MutableStateFlow<WarrenConnectedInfo>,
     ) : WarrenTunnelStateProvider {
-        override val state: StateFlow<String> = MutableStateFlow("").asStateFlow()
         override val connectedInfo: StateFlow<WarrenConnectedInfo> = infoFlow.asStateFlow()
     }
 }

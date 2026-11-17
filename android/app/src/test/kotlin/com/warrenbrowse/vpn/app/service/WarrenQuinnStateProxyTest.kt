@@ -34,7 +34,7 @@ class WarrenQuinnStateProxyTest {
     fun `default state is Disconnected`() = runTest {
         val proxy = WarrenQuinnStateProxy()
         assertEquals(WarrenTunnelState.Disconnected, proxy.tunnelState.value)
-        assertEquals("Disconnected", proxy.state.value)
+        assertEquals(WarrenConnectedInfo.Disconnected, proxy.connectedInfo.value)
     }
 
     @Test
@@ -42,56 +42,13 @@ class WarrenQuinnStateProxyTest {
         val proxy = WarrenQuinnStateProxy()
         proxy.update(WarrenTunnelState.Connecting())
         assertEquals(WarrenTunnelState.Connecting(), proxy.tunnelState.value)
-        assertEquals("Connecting...", proxy.state.value)
-    }
-
-    @Test
-    fun `Connected always advertises always-on HTTP3 mimicry`() = runTest {
-        val proxy = WarrenQuinnStateProxy()
-        proxy.update(
-            WarrenTunnelState.Connected(
-                exitId = "abc",
-                assignedNatPmpPort = null,
-                multiHop = false,
-                daita = false,
-            )
-        )
-        // HTTP/3 mimicry is always-on for Warren tunnels, so the
-        // connection summary surfaces it even with every other flag off.
-        assertEquals("Connected (mimicry)", proxy.state.value)
-    }
-
-    @Test
-    fun `Connected with feature flags renders inline feature list`() = runTest {
-        val proxy = WarrenQuinnStateProxy()
-        proxy.update(
-            WarrenTunnelState.Connected(
-                exitId = "abc",
-                assignedNatPmpPort = 51234,
-                multiHop = true,
-                daita = true,
-            )
-        )
-        val label = proxy.state.value
-        assertTrue(label.startsWith("Connected ("), "got: $label")
-        assertTrue(label.contains("multi-hop"), "got: $label")
-        assertTrue(label.contains("DAITA"), "got: $label")
-        assertTrue(label.contains("mimicry"), "got: $label")
-        assertTrue(label.contains("port 51234"), "got: $label")
-    }
-
-    @Test
-    fun `Reconnecting renders Reconnecting label`() = runTest {
-        val proxy = WarrenQuinnStateProxy()
-        proxy.update(WarrenTunnelState.Reconnecting())
-        assertEquals("Reconnecting...", proxy.state.value)
+        assertEquals(WarrenConnectedInfo.Connecting(), proxy.connectedInfo.value)
     }
 
     @Test
     fun `a teardown in flight is projected as its own state`() = runTest {
         val proxy = WarrenQuinnStateProxy()
         proxy.update(WarrenTunnelState.Disconnecting())
-        assertEquals("Disconnecting...", proxy.state.value)
         assertEquals(WarrenConnectedInfo.Disconnecting(), proxy.connectedInfo.value)
     }
 
@@ -146,12 +103,5 @@ class WarrenQuinnStateProxyTest {
             WarrenConnectedInfo.Failed("dropped", flapping = true),
             proxy.connectedInfo.value,
         )
-    }
-
-    @Test
-    fun `Failed renders Failed with reason`() = runTest {
-        val proxy = WarrenQuinnStateProxy()
-        proxy.update(WarrenTunnelState.Failed("handshake timeout"))
-        assertEquals("Failed: handshake timeout", proxy.state.value)
     }
 }

@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.stateIn
  * connect cycle resets it).
  *
  * Implements [WarrenTunnelStateProvider] so lib-side Composables can subscribe to the state without
- * having to import the app-private [WarrenTunnelState] type (they observe a `String` projection).
+ * having to import the app-private [WarrenTunnelState] type (they observe [WarrenConnectedInfo]).
  */
 class WarrenQuinnStateProxy :
     WarrenTunnelStateProvider,
@@ -47,19 +47,9 @@ class WarrenQuinnStateProxy :
     private val _state = MutableStateFlow<WarrenTunnelState>(WarrenTunnelState.Disconnected)
     val tunnelState: StateFlow<WarrenTunnelState> = _state.asStateFlow()
 
-    override val state: StateFlow<String> =
-        tunnelState
-            .map { it.describe() }
-            .stateIn(
-                scope = scope,
-                started = SharingStarted.Eagerly,
-                initialValue = WarrenTunnelState.Disconnected.describe(),
-            )
-
-    // Lossless typed projection consumed by ConnectionProxy → the main
-    // connection card. Carries the real endpoint hosts + feature flags +
-    // the distinct Failed/Blocking states (the String projection above
-    // flattens these and is kept only for legacy banner display).
+    // Lossless typed projection consumed by ConnectionProxy, the main
+    // connection card and the quick settings tile. Carries the real endpoint
+    // hosts, the feature flags and the distinct Failed/Blocking states.
     override val connectedInfo: StateFlow<WarrenConnectedInfo> =
         tunnelState
             .map { it.toConnectedInfo() }
@@ -178,28 +168,5 @@ class WarrenQuinnStateProxy :
                     noDialableNetwork,
                     banLapsesAtUnixSecs,
                 )
-        }
-
-    private fun WarrenTunnelState.describe(): String =
-        when (this) {
-            is WarrenTunnelState.Disconnected -> "Disconnected"
-            is WarrenTunnelState.Connecting -> "Connecting..."
-            is WarrenTunnelState.Connected ->
-                "Connected" +
-                    listOfNotNull(
-                            if (multiHop) "multi-hop" else null,
-                            if (daita) "DAITA" else null,
-                            // HTTP/3 mimicry is always-on for Warren tunnels (not togglable);
-                            // surface it unconditionally rather than gating on a setting.
-                            "mimicry",
-                            if (assignedNatPmpPort != null) "port $assignedNatPmpPort" else null,
-                        )
-                        .let { features ->
-                            if (features.isEmpty()) "" else " (${features.joinToString()})"
-                        }
-            is WarrenTunnelState.Reconnecting -> "Reconnecting..."
-            is WarrenTunnelState.Disconnecting -> "Disconnecting..."
-            is WarrenTunnelState.Failed -> "Failed: $reason"
-            is WarrenTunnelState.Blocking -> "Blocking internet (kill switch)"
         }
 }

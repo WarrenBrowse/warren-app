@@ -38,7 +38,6 @@ class WarrenSupportReporterImplTest {
         jni: FakeJniBridge = FakeJniBridge(),
         journal: ForumJournal = RecordingJournal(),
         tunnel: WarrenConnectedInfo = WarrenConnectedInfo.Disconnected,
-        stateText: String = "Disconnected",
         wallet: FakeWalletRepository = FakeWalletRepository(),
         compressor: LogCompressor = GzipLogCompressor,
     ): WarrenSupportReporterImpl {
@@ -49,7 +48,7 @@ class WarrenSupportReporterImplTest {
             jni = jni,
             walletRepository = wallet,
             forumIdentityRepository = FakeForumIdentityRepository(),
-            tunnelState = FakeTunnelStateProvider(tunnel, stateText),
+            tunnelState = FakeTunnelStateProvider(tunnel),
             journal = journal,
             appLogDir = dir,
             // The header lines under test, read the way ForumDiagnostics renders
@@ -130,7 +129,6 @@ class WarrenSupportReporterImplTest {
                     dir,
                     jni,
                     tunnel = WarrenConnectedInfo.Failed("exit 203.0.113.7:443 refused"),
-                    stateText = "Failed: exit 203.0.113.7:443 refused",
                 )
                 .collect(forSend = false)
                 .getOrThrow()
@@ -159,7 +157,6 @@ class WarrenSupportReporterImplTest {
                             daita = false,
                             assignedNatPmpPort = 41231,
                         ),
-                    stateText = "Connected (mimicry, port 41231)",
                 )
                 .collect(forSend = false)
                 .getOrThrow()

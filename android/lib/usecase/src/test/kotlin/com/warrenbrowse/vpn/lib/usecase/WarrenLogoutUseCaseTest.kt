@@ -32,7 +32,6 @@ class WarrenLogoutUseCaseTest {
     private val tunnel =
         object : WarrenTunnelStateProvider {
             val info = MutableStateFlow<WarrenConnectedInfo>(WarrenConnectedInfo.Disconnected)
-            override val state: StateFlow<String> = MutableStateFlow("")
             override val connectedInfo: StateFlow<WarrenConnectedInfo> = info.asStateFlow()
         }
 

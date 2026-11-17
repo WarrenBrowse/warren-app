@@ -292,11 +292,9 @@ class WarrenSupportReporterImpl(
 }
 
 /**
- * The header's `tunnel-state` word, from the typed projection. The display
- * string (`WarrenTunnelStateProvider.state`) is not consumed: its Connected
- * shape carries the NAT-PMP port the exit assigned, which a wallet-signed
- * report must never pair with the wallet, and its Failed shape carries the
- * engine reason.
+ * The header's `tunnel-state` word, from the typed projection: the state's name
+ * and nothing it carries, so neither the NAT-PMP port the exit assigned, which a
+ * wallet-signed report must never pair with the wallet, nor the engine reason.
  */
 internal fun tunnelStateWord(info: WarrenConnectedInfo): String =
     when (info) {

@@ -53,12 +53,9 @@ interface WarrenQuinnConnectInvoker {
 
 /**
  * Lossless, typed projection of the live Warren tunnel state, exposed to lib modules without
- * importing the app-private `WarrenTunnelState` type.
- *
- * Unlike the `String` projection on [WarrenTunnelStateProvider.state] (kept for legacy banner
- * display), this carries the structured fields the main connection card needs - the real endpoint
- * hosts, the feature flags, and a distinct [Failed] vs [Blocking] (kill-switch) status - so the
- * card can show the true state instead of collapsing everything to "Disconnected".
+ * importing the app-private `WarrenTunnelState` type. It carries the structured fields the main
+ * connection card needs (the real endpoint hosts, the feature flags, and a distinct [Failed] vs
+ * [Blocking] kill-switch status), and never the engine's failure text for display.
  */
 sealed interface WarrenConnectedInfo {
     data object Disconnected : WarrenConnectedInfo
@@ -165,14 +162,8 @@ sealed interface WarrenConnectedInfo {
  * Lib-side surface for the live Warren tunnel state. The concrete impl is
  * `app/service/WarrenQuinnStateProxy` which mirrors the service-owned
  * [com.warrenbrowse.vpn.app.service.WarrenQuinnAdapter.state] into a process-wide StateFlow.
- *
- * [state] is a legacy `String` projection, hard-coded English carrying the engine's failure reason
- * verbatim. Its only remaining consumer is the quick settings tile, which prefix-matches it into a
- * tile state and never shows it. Never render it: a user-visible surface takes [connectedInfo], the
- * lossless typed projection, and maps it to string resources.
  */
 interface WarrenTunnelStateProvider {
-    val state: StateFlow<String>
     val connectedInfo: StateFlow<WarrenConnectedInfo>
 }
 

@@ -75,10 +75,8 @@ internal class FakeForumIdentityRepository : ForumIdentityRepository {
 
 internal class FakeTunnelStateProvider(
     initial: WarrenConnectedInfo = WarrenConnectedInfo.Disconnected,
-    stateText: String = "",
 ) : WarrenTunnelStateProvider {
     val info = MutableStateFlow(initial)
-    override val state: StateFlow<String> = MutableStateFlow(stateText).asStateFlow()
     override val connectedInfo: StateFlow<WarrenConnectedInfo> = info.asStateFlow()
 }
 
