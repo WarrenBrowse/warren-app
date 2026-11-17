@@ -347,7 +347,7 @@ fn schedule(job: &str, binary: &Path, delay: u64) -> Result<(), Error> {
     );
     let path = PathBuf::from(format!("/Library/LaunchDaemons/{job}.plist"));
     std::fs::write(&path, plist).map_err(Error::Schedule)?;
-    let status = std::process::Command::new("launchctl")
+    let status = std::process::Command::new("/bin/launchctl")
         .args(["load", "-w"])
         .arg(&path)
         .status()
@@ -369,7 +369,7 @@ fn unschedule(job: &str) -> Result<(), Error> {
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
         Err(error) => Err(Error::Schedule(error)),
     };
-    let _ = std::process::Command::new("launchctl")
+    let _ = std::process::Command::new("/bin/launchctl")
         .args(["remove", job])
         .status();
     removed
@@ -397,7 +397,7 @@ fn linux_unit_dir() -> PathBuf {
 
 #[cfg(target_os = "linux")]
 fn systemctl(args: &[&str]) -> Result<(), Error> {
-    let status = std::process::Command::new("systemctl")
+    let status = std::process::Command::new(talpid_types::system_tool::path("systemctl"))
         .args(args)
         .status()
         .map_err(Error::Schedule)?;
@@ -450,7 +450,7 @@ fn schedule(job: &str, binary: &Path, delay: u64) -> Result<(), Error> {
            -User 'SYSTEM' -RunLevel Highest -Force | Out-Null",
         binary = binary.display()
     );
-    let status = std::process::Command::new("powershell")
+    let status = powershell()?
         .args(["-NoProfile", "-NonInteractive", "-Command", &script])
         .status()
         .map_err(Error::Schedule)?;
@@ -458,6 +458,16 @@ fn schedule(job: &str, binary: &Path, delay: u64) -> Result<(), Error> {
         .success()
         .then_some(())
         .ok_or(Error::SchedulerRefused)
+}
+
+/// PowerShell from the system directory, never from `PATH`: the guard is
+/// registered by an installer running elevated.
+#[cfg(target_os = "windows")]
+fn powershell() -> Result<std::process::Command, Error> {
+    let system_dir = talpid_windows::env::get_system_dir().map_err(Error::Schedule)?;
+    Ok(std::process::Command::new(
+        system_dir.join(r"WindowsPowerShell\v1.0\powershell.exe"),
+    ))
 }
 
 #[cfg(target_os = "windows")]
@@ -468,7 +478,10 @@ fn unschedule(job: &str) -> Result<(), Error> {
         "Unregister-ScheduledTask -TaskName '{job}' -Confirm:$false \
          -ErrorAction SilentlyContinue"
     );
-    let _ = std::process::Command::new("powershell")
+    let Ok(mut command) = powershell() else {
+        return Ok(());
+    };
+    let _ = command
         .args(["-NoProfile", "-NonInteractive", "-Command", &script])
         .status();
     Ok(())

@@ -230,7 +230,7 @@ pub fn linux_route_plan(interface: Option<&str>) -> Vec<Vec<String>> {
 pub fn apply_linux_routes(interface: Option<&str>) -> io::Result<()> {
     for args in linux_route_plan(interface) {
         let clearing = args.iter().any(|w| w == "del");
-        let status = std::process::Command::new("ip")
+        let status = std::process::Command::new(talpid_types::system_tool::path("ip"))
             .args(&args)
             .stdout(std::process::Stdio::null())
             .stderr(std::process::Stdio::null())

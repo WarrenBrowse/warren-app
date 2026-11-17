@@ -224,7 +224,7 @@ where
 /// Run `script` detached from this daemon; resolves once it is started.
 async fn spawn_detached(script: String) -> std::io::Result<ExitStatus> {
     let mut command = if Path::new("/run/systemd/system").exists() {
-        let mut command = Command::new("systemd-run");
+        let mut command = Command::new(talpid_types::system_tool::path("systemd-run"));
         command
             .arg(format!(
                 "--unit={}-upgrade",
@@ -242,7 +242,7 @@ async fn spawn_detached(script: String) -> std::io::Result<ExitStatus> {
         command
     } else {
         // `-f` forks and returns at once, so the job is nobody's child.
-        let mut command = Command::new("setsid");
+        let mut command = Command::new(talpid_types::system_tool::path("setsid"));
         command.arg("-f").arg("/bin/sh").arg("-c").arg(script);
         command
     };

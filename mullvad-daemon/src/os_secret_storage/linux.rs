@@ -63,7 +63,7 @@ impl SystemdCredsStorage {
     }
 
     fn run(&self, args: &[&str], stdin_bytes: &[u8]) -> io::Result<Zeroizing<Vec<u8>>> {
-        let mut child = Command::new(SYSTEMD_CREDS)
+        let mut child = Command::new(talpid_types::system_tool::path(SYSTEMD_CREDS))
             .args(args)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
@@ -173,7 +173,7 @@ mod tests {
     use super::*;
 
     fn systemd_creds_available() -> bool {
-        Command::new(SYSTEMD_CREDS)
+        Command::new(talpid_types::system_tool::path(SYSTEMD_CREDS))
             .arg("--version")
             .stdout(Stdio::null())
             .stderr(Stdio::null())

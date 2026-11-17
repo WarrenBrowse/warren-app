@@ -5,7 +5,7 @@ use tokio::process::Command;
 /// Adds an alias to a network interface.
 pub async fn add_alias(interface: &str, addr: IpAddr) -> anyhow::Result<()> {
     let context = || anyhow!("Failed to add interface {interface} alias {addr}");
-    let output = Command::new("ifconfig")
+    let output = Command::new("/sbin/ifconfig")
         .args([interface, "alias", &format!("{addr}"), "up"])
         .output()
         .await
@@ -26,7 +26,7 @@ pub async fn add_alias(interface: &str, addr: IpAddr) -> anyhow::Result<()> {
 /// Removes an alias from a network interface.
 pub async fn remove_alias(interface: &str, addr: IpAddr) -> anyhow::Result<()> {
     let context = || anyhow!("Failed to remove interface {interface} alias {addr}");
-    let output = Command::new("ifconfig")
+    let output = Command::new("/sbin/ifconfig")
         .args([interface, "delete", &format!("{addr}")])
         .output()
         .await

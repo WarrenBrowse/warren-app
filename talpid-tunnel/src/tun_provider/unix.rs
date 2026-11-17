@@ -183,7 +183,7 @@ mod tun05_imp {
                     // ifconfig <device> inet6 <ipv6 address> alias
                     let ipv6 = ipv6.to_string();
                     let device = self.dev.get_ref().name();
-                    Command::new("ifconfig")
+                    Command::new("/sbin/ifconfig")
                         .args([device, "inet6", &ipv6, "alias"])
                         .output()
                         .map_err(Error::SetIpv6)?;
@@ -196,7 +196,7 @@ mod tun05_imp {
                     // ip -6 addr add <ipv6 address> dev <device>
                     let ipv6 = ipv6.to_string();
                     let device = self.dev.get_ref().name();
-                    Command::new("ip")
+                    Command::new(talpid_types::system_tool::path("ip"))
                         .args(["-6", "addr", "add", &ipv6, "dev", device])
                         .output()
                         .map_err(Error::SetIpv6)?;
@@ -407,13 +407,13 @@ mod tun08_imp {
                     let device = self.get_name()?;
                     // ifconfig <device> inet6 <ipv6 address> alias
                     #[cfg(target_os = "macos")]
-                    Command::new("ifconfig")
+                    Command::new("/sbin/ifconfig")
                         .args([&device, "inet6", &ipv6, "alias"])
                         .output()
                         .map_err(Error::SetIpv6)?;
                     // ip -6 addr add <ipv6 address> dev <device>
                     #[cfg(target_os = "linux")]
-                    Command::new("ip")
+                    Command::new(talpid_types::system_tool::path("ip"))
                         .args(["-6", "addr", "add", &ipv6, "dev", &device])
                         .output()
                         .map_err(Error::SetIpv6)?;

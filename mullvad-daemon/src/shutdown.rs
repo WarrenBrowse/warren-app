@@ -51,7 +51,9 @@ pub fn is_shutdown_user_initiated() -> bool {
 /// default rather than guessing.
 #[cfg(target_os = "linux")]
 fn sysv_runlevel_is_running() -> Option<bool> {
-    let output = std::process::Command::new("runlevel").output().ok()?;
+    let output = std::process::Command::new(talpid_types::system_tool::path("runlevel"))
+        .output()
+        .ok()?;
     if !output.status.success() {
         return None;
     }

@@ -65,12 +65,15 @@ pub fn sweep_stale_exit_routes(exits: &[Ipv4Addr]) {
     if exits.is_empty() {
         return;
     }
-    let Ok(output) = Command::new("netstat").args(["-rn", "-f", "inet"]).output() else {
+    let Ok(output) = Command::new("/usr/sbin/netstat")
+        .args(["-rn", "-f", "inet"])
+        .output()
+    else {
         return;
     };
     let stale = stale_exit_host_routes(&String::from_utf8_lossy(&output.stdout), exits);
     for address in stale {
-        match Command::new("route")
+        match Command::new("/sbin/route")
             .args(["-n", "delete", "-host", &address.to_string()])
             .output()
         {
