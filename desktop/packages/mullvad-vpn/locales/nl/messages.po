@@ -6498,3 +6498,11 @@ msgstr "Woord %(position)d"
 msgctxt "login-view"
 msgid "These words do not match your recovery phrase. Check what you wrote down."
 msgstr "Deze woorden komen niet overeen met je herstelzin. Controleer wat je hebt opgeschreven."
+
+msgctxt "in-app-notifications"
+msgid "DISCONNECTION NOT CONFIRMED"
+msgstr "LOSKOPPELEN NIET BEVESTIGD"
+
+msgctxt "in-app-notifications"
+msgid "The server says this device was disconnected from your account, but your account did not confirm it. Nothing was erased from this device."
+msgstr "De server meldt dat dit apparaat is losgekoppeld van je account, maar je account heeft dat niet bevestigd. Er is niets van dit apparaat gewist."

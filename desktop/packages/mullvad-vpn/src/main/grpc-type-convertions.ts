@@ -716,6 +716,7 @@ export function convertFromWarrenStatus(status: grpcTypes.WarrenStatus): WarrenS
     announcements: status.getAnnouncementsList().map(convertFromWarrenAnnouncement),
     accountStanding: convertFromWarrenAccountStanding(status.getAccountStanding()),
     tokenClockSkew: convertFromWarrenTokenClockSkew(status.getTokenClockSkew()),
+    deviceRevocationUnconfirmed: status.getDeviceRevocationUnconfirmed(),
   };
 }
 

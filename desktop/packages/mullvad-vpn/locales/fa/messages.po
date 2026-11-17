@@ -6485,3 +6485,11 @@ msgstr "کلمه %(position)d"
 msgctxt "login-view"
 msgid "These words do not match your recovery phrase. Check what you wrote down."
 msgstr "این کلمات با عبارت بازیابی شما مطابقت ندارند. آنچه را یادداشت کرده‌اید بررسی کنید."
+
+msgctxt "in-app-notifications"
+msgid "DISCONNECTION NOT CONFIRMED"
+msgstr "قطع اتصال تأیید نشد"
+
+msgctxt "in-app-notifications"
+msgid "The server says this device was disconnected from your account, but your account did not confirm it. Nothing was erased from this device."
+msgstr "سرور می‌گوید اتصال این دستگاه از حساب شما قطع شده است، اما حساب شما آن را تأیید نکرده است. چیزی از این دستگاه پاک نشد."

@@ -57,6 +57,7 @@ const BASE_STATUS: WarrenStatus = {
   announcements: [],
   accountStanding: null,
   tokenClockSkew: null,
+  deviceRevocationUnconfirmed: false,
 };
 
 const MISMATCH: WarrenPubkeyMismatch = {

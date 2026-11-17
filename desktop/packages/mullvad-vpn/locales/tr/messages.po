@@ -6498,3 +6498,11 @@ msgstr "%(position)d. kelime"
 msgctxt "login-view"
 msgid "These words do not match your recovery phrase. Check what you wrote down."
 msgstr "Bu kelimeler kurtarma ifadenizle eşleşmiyor. Not ettiklerinizi kontrol edin."
+
+msgctxt "in-app-notifications"
+msgid "DISCONNECTION NOT CONFIRMED"
+msgstr "BAĞLANTI KESME ONAYLANMADI"
+
+msgctxt "in-app-notifications"
+msgid "The server says this device was disconnected from your account, but your account did not confirm it. Nothing was erased from this device."
+msgstr "Sunucu bu cihazın hesabınızla bağlantısının kesildiğini söylüyor, ancak hesabınız bunu onaylamadı. Bu cihazdan hiçbir şey silinmedi."

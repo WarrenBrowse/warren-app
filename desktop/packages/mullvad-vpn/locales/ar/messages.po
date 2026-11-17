@@ -6565,3 +6565,11 @@ msgstr "الكلمة %(position)d"
 msgctxt "login-view"
 msgid "These words do not match your recovery phrase. Check what you wrote down."
 msgstr "هذه الكلمات لا تطابق عبارة الاسترداد. راجع ما دوّنته."
+
+msgctxt "in-app-notifications"
+msgid "DISCONNECTION NOT CONFIRMED"
+msgstr "لم يتم تأكيد قطع الاتصال"
+
+msgctxt "in-app-notifications"
+msgid "The server says this device was disconnected from your account, but your account did not confirm it. Nothing was erased from this device."
+msgstr "يفيد الخادم بأن هذا الجهاز قد فُصل عن حسابك، لكن حسابك لم يؤكد ذلك. لم يُمحَ أي شيء من هذا الجهاز."

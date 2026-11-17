@@ -6468,3 +6468,11 @@ msgstr "စကားလုံး %(position)d"
 msgctxt "login-view"
 msgid "These words do not match your recovery phrase. Check what you wrote down."
 msgstr "ဤစကားလုံးများသည် သင်၏ ပြန်လည်ရယူရေးစကားစုနှင့် မကိုက်ညီပါ။ သင်ရေးမှတ်ထားသည်ကို စစ်ဆေးပါ။"
+
+msgctxt "in-app-notifications"
+msgid "DISCONNECTION NOT CONFIRMED"
+msgstr "ချိတ်ဆက်မှုဖြုတ်ခြင်းကို အတည်မပြုရသေးပါ"
+
+msgctxt "in-app-notifications"
+msgid "The server says this device was disconnected from your account, but your account did not confirm it. Nothing was erased from this device."
+msgstr "ဤစက်ကို သင့်အကောင့်မှ ချိတ်ဆက်မှုဖြုတ်လိုက်သည်ဟု ဆာဗာက ဆိုသော်လည်း သင့်အကောင့်က ၎င်းကို အတည်မပြုခဲ့ပါ။ ဤစက်မှ မည်သည့်အရာကိုမျှ မဖျက်ခဲ့ပါ။"

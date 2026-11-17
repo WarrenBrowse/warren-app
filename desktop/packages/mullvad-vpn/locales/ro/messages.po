@@ -5634,3 +5634,11 @@ msgstr "Cuvântul %(position)d"
 msgctxt "login-view"
 msgid "These words do not match your recovery phrase. Check what you wrote down."
 msgstr "Aceste cuvinte nu se potrivesc cu fraza ta de recuperare. Verifică ce ai notat."
+
+msgctxt "in-app-notifications"
+msgid "DISCONNECTION NOT CONFIRMED"
+msgstr "DECONECTARE NECONFIRMATĂ"
+
+msgctxt "in-app-notifications"
+msgid "The server says this device was disconnected from your account, but your account did not confirm it. Nothing was erased from this device."
+msgstr "Serverul spune că acest dispozitiv a fost deconectat de la contul tău, dar contul tău nu a confirmat acest lucru. Nimic nu a fost șters de pe acest dispozitiv."

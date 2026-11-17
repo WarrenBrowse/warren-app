@@ -18510,7 +18510,8 @@ proto.mullvad_daemon.management_interface.WarrenStatus.toObject = function(inclu
     announcementsList: jspb.Message.toObjectList(msg.getAnnouncementsList(),
     proto.mullvad_daemon.management_interface.WarrenAnnouncement.toObject, includeInstance),
     accountStanding: (f = msg.getAccountStanding()) && proto.mullvad_daemon.management_interface.WarrenAccountStanding.toObject(includeInstance, f),
-    tokenClockSkew: (f = msg.getTokenClockSkew()) && proto.mullvad_daemon.management_interface.WarrenTokenClockSkew.toObject(includeInstance, f)
+    tokenClockSkew: (f = msg.getTokenClockSkew()) && proto.mullvad_daemon.management_interface.WarrenTokenClockSkew.toObject(includeInstance, f),
+    deviceRevocationUnconfirmed: jspb.Message.getBooleanFieldWithDefault(msg, 21, false)
   };
 
   if (includeInstance) {
@@ -18636,6 +18637,10 @@ proto.mullvad_daemon.management_interface.WarrenStatus.deserializeBinaryFromRead
       var value = new proto.mullvad_daemon.management_interface.WarrenTokenClockSkew;
       reader.readMessage(value,proto.mullvad_daemon.management_interface.WarrenTokenClockSkew.deserializeBinaryFromReader);
       msg.setTokenClockSkew(value);
+      break;
+    case 21:
+      var value = /** @type {boolean} */ (reader.readBool());
+      msg.setDeviceRevocationUnconfirmed(value);
       break;
     default:
       reader.skipField();
@@ -18814,6 +18819,13 @@ proto.mullvad_daemon.management_interface.WarrenStatus.serializeBinaryToWriter =
       20,
       f,
       proto.mullvad_daemon.management_interface.WarrenTokenClockSkew.serializeBinaryToWriter
+    );
+  }
+  f = message.getDeviceRevocationUnconfirmed();
+  if (f) {
+    writer.writeBool(
+      21,
+      f
     );
   }
 };
@@ -19387,6 +19399,24 @@ proto.mullvad_daemon.management_interface.WarrenStatus.prototype.clearTokenClock
  */
 proto.mullvad_daemon.management_interface.WarrenStatus.prototype.hasTokenClockSkew = function() {
   return jspb.Message.getField(this, 20) != null;
+};
+
+
+/**
+ * optional bool device_revocation_unconfirmed = 21;
+ * @return {boolean}
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.getDeviceRevocationUnconfirmed = function() {
+  return /** @type {boolean} */ (jspb.Message.getBooleanFieldWithDefault(this, 21, false));
+};
+
+
+/**
+ * @param {boolean} value
+ * @return {!proto.mullvad_daemon.management_interface.WarrenStatus} returns this
+ */
+proto.mullvad_daemon.management_interface.WarrenStatus.prototype.setDeviceRevocationUnconfirmed = function(value) {
+  return jspb.Message.setProto3BooleanField(this, 21, value);
 };
 
 

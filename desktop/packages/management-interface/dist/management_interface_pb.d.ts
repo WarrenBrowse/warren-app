@@ -2262,6 +2262,8 @@ export class WarrenStatus extends jspb.Message {
     clearTokenClockSkew(): void;
     getTokenClockSkew(): WarrenTokenClockSkew | undefined;
     setTokenClockSkew(value?: WarrenTokenClockSkew): WarrenStatus;
+    getDeviceRevocationUnconfirmed(): boolean;
+    setDeviceRevocationUnconfirmed(value: boolean): WarrenStatus;
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): WarrenStatus.AsObject;
@@ -2295,6 +2297,7 @@ export namespace WarrenStatus {
         announcementsList: Array<WarrenAnnouncement.AsObject>,
         accountStanding?: WarrenAccountStanding.AsObject,
         tokenClockSkew?: WarrenTokenClockSkew.AsObject,
+        deviceRevocationUnconfirmed: boolean,
     }
 }
 

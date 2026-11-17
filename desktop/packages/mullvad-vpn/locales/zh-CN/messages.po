@@ -6465,3 +6465,11 @@ msgstr "第 %(position)d 个单词"
 msgctxt "login-view"
 msgid "These words do not match your recovery phrase. Check what you wrote down."
 msgstr "这些单词与您的恢复短语不符。请核对您记下的内容。"
+
+msgctxt "in-app-notifications"
+msgid "DISCONNECTION NOT CONFIRMED"
+msgstr "断开连接未经确认"
+
+msgctxt "in-app-notifications"
+msgid "The server says this device was disconnected from your account, but your account did not confirm it. Nothing was erased from this device."
+msgstr "服务器称此设备已与您的账户断开连接，但您的账户并未确认。此设备上的任何内容均未被删除。"

@@ -6498,3 +6498,11 @@ msgstr "Wort %(position)d"
 msgctxt "login-view"
 msgid "These words do not match your recovery phrase. Check what you wrote down."
 msgstr "Diese Wörter stimmen nicht mit Ihrer Wiederherstellungsphrase überein. Prüfen Sie, was Sie aufgeschrieben haben."
+
+msgctxt "in-app-notifications"
+msgid "DISCONNECTION NOT CONFIRMED"
+msgstr "TRENNUNG NICHT BESTÄTIGT"
+
+msgctxt "in-app-notifications"
+msgid "The server says this device was disconnected from your account, but your account did not confirm it. Nothing was erased from this device."
+msgstr "Der Server meldet, dass dieses Gerät von Ihrem Konto getrennt wurde, aber Ihr Konto hat dies nicht bestätigt. Auf diesem Gerät wurde nichts gelöscht."

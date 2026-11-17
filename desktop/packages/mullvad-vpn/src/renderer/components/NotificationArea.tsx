@@ -46,6 +46,7 @@ import {
   WarrenMaintenanceNotificationProvider,
   WarrenNoticeNotificationProvider,
   WarrenPortMigrationNotificationProvider,
+  WarrenRevocationUnconfirmedNotificationProvider,
   WarrenUncleanRestoreNotificationProvider,
 } from '../lib/notifications';
 import { AppUpgradeAvailableNotificationProvider } from '../lib/notifications/app-upgrade-available';
@@ -224,6 +225,12 @@ export default function NotificationArea(props: IProps) {
     // tunnel cannot come up until the user sets the clock right.
     new WarrenClockSkewNotificationProvider({
       tokenClockSkew: warrenStatus?.tokenClockSkew ?? null,
+    }),
+    // The API refused this device as disconnected without the account's
+    // signature: no credential comes until that changes, and the user must
+    // know the recovery phrase was kept.
+    new WarrenRevocationUnconfirmedNotificationProvider({
+      deviceRevocationUnconfirmed: warrenStatus?.deviceRevocationUnconfirmed ?? false,
     }),
     // Same rank family, distinct cause: the host network is fine but
     // the exit stopped forwarding (doc 62 item 5). Only meaningful

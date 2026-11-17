@@ -888,6 +888,10 @@ export interface WarrenStatus {
   // Set while the token issuer refuses this wallet's refresh for the device
   // clock; `null` once a refresh succeeds. Drives the device clock banner.
   tokenClockSkew: WarrenTokenClockSkew | null;
+  // Set once the API refused this device as disconnected without the
+  // account's signature over that: the daemon disconnected and kept the
+  // identity. Drives the unconfirmed disconnection banner.
+  deviceRevocationUnconfirmed: boolean;
 }
 
 // Category of the abuse report behind a strike.

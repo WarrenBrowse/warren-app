@@ -6498,3 +6498,11 @@ msgstr "Ord %(position)d"
 msgctxt "login-view"
 msgid "These words do not match your recovery phrase. Check what you wrote down."
 msgstr "Disse ord passer ikke til din gendannelsessætning. Tjek det, du har skrevet ned."
+
+msgctxt "in-app-notifications"
+msgid "DISCONNECTION NOT CONFIRMED"
+msgstr "FRAKOBLING IKKE BEKRÆFTET"
+
+msgctxt "in-app-notifications"
+msgid "The server says this device was disconnected from your account, but your account did not confirm it. Nothing was erased from this device."
+msgstr "Serveren siger, at denne enhed blev frakoblet fra din konto, men din konto har ikke bekræftet det. Intet blev slettet fra denne enhed."
