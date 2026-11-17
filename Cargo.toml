@@ -116,6 +116,7 @@ talpid-dbus = { path = "./talpid-dbus" }
 thiserror = "2.0"
 tipsy = "0.7.0"
 tokio = { version = "1.44" }
+tokio-util = "0.7"
 tonic = "0.13.1"
 tonic-build = { version = "0.13.1", default-features = false }
 tower = { version = "0.5.1", features = ["util"] }
