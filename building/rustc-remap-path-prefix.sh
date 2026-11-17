@@ -9,15 +9,20 @@ set -eu
 CARGO_HOME_PATH=${CARGO_HOME:-$HOME/.cargo}
 RUSTUP_HOME_PATH=${RUSTUP_HOME:-$HOME/.rustup}
 SOURCE_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && cd .. && pwd )"
+# The sibling checkouts (warrenguard, warren-sdk-rs, warren-contract) sit next
+# to this one and are compiled in by path.
+WORKSPACE_DIR="$( dirname "$SOURCE_DIR" )"
 CARGO_TARGET_DIR_PATH=${CARGO_TARGET_DIR:-$SOURCE_DIR/target}
 
 # The order is significant. Iterated over in reverse, so last argument is
 # treated as most significant. Since CARGO_TARGET_DIR_PATH might be located
-# under $SOURCE_DIR, it's important to keep it last.
+# under $SOURCE_DIR, it's important to keep it last, and $SOURCE_DIR has to
+# come after the workspace directory that contains it.
 # See: https://github.com/rust-lang/rust/blob/55459598c250d985eb5f840306dfb59f267c03b6/compiler/rustc_span/src/source_map.rs#L1125-L1127
 echo "\
 --remap-path-prefix $CARGO_HOME_PATH=/CARGO_HOME \
 --remap-path-prefix $RUSTUP_HOME_PATH=/RUSTUP_HOME \
+--remap-path-prefix $WORKSPACE_DIR=/WORKSPACE \
 --remap-path-prefix $SOURCE_DIR=/SOURCE_DIR \
 --remap-path-prefix $CARGO_TARGET_DIR_PATH=/CARGO_TARGET_DIR \
 " | xargs

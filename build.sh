@@ -191,6 +191,20 @@ if [[ "$OPTIMIZE" == "true" || "$SIGN" == "true" ]]; then
     # An optimized build is a published one, signed or not: it builds the
     # dependency set the lockfile records, never a fresh resolution.
     CARGO_ARGS+=(--locked)
+    # Nor does it carry the build machine's paths (panic locations, debug
+    # info): they expose the runner's layout and make two builds of one
+    # commit differ. A --config array is appended to the per-target rustflags
+    # of .cargo/config.toml, where RUSTFLAGS would replace them.
+    remap_flags=()
+    for remap in $(building/rustc-remap-path-prefix.sh | sed 's/--remap-path-prefix //g'); do
+        from="${remap%%=*}"
+        # rustc sees native paths on Windows, never Git Bash's /c/... form.
+        if [[ "$(uname -s)" == "MINGW"* ]]; then
+            from="$(cygpath -m "$from")"
+        fi
+        remap_flags+=("'--remap-path-prefix=$from=${remap#*=}'")
+    done
+    CARGO_ARGS+=(--config "target.'cfg(all())'.rustflags=[$(IFS=,; echo "${remap_flags[*]}")]")
 fi
 
 if [[ "$SIGN" == "true" ]]; then
