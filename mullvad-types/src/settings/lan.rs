@@ -96,6 +96,31 @@ fn check_lan_network(network: IpNetwork) -> Result<(), LanNetworkError> {
     Ok(())
 }
 
+/// Whether `network` reaches past the private address space: an IPv4 range
+/// outside the built-in private ranges and the shared address space
+/// (100.64.0.0/10, used by overlay networks), or an IPv6 range inside global
+/// unicast. The firewall lets such a range through outside the tunnel on any
+/// interface, so a route a hostile network pushes for it carries that
+/// traffic in clear.
+pub fn is_public_lan_network(network: &IpNetwork) -> bool {
+    match network {
+        IpNetwork::V4(v4) => {
+            let shared_address_space =
+                IpNetwork::new(std::net::Ipv4Addr::new(100, 64, 0, 0).into(), 10)
+                    .expect("a valid prefix");
+            !ALLOWED_LAN_NETS
+                .iter()
+                .chain(std::iter::once(&shared_address_space))
+                .any(|private| {
+                    private.is_ipv4()
+                        && private.prefix() <= v4.prefix()
+                        && private.contains(std::net::IpAddr::V4(v4.network()))
+                })
+        }
+        IpNetwork::V6(v6) => overlaps(*v6, GLOBAL_UNICAST_IPV6),
+    }
+}
+
 /// Two prefixes overlap exactly when one contains the other's first address.
 fn overlaps(network: Ipv6Network, (address, prefix): (Ipv6Addr, u8)) -> bool {
     let other = Ipv6Network::new(address, prefix).expect("the constant prefixes are valid");
@@ -107,6 +132,15 @@ impl Settings {
     /// from disk is only as trustworthy as whoever last wrote the file.
     pub fn valid_custom_lan_networks(&self) -> Option<Vec<IpNetwork>> {
         validate_lan_networks(self.custom_lan_networks.clone()?).ok()
+    }
+
+    /// The shared networks that reach past the private address space
+    /// ([`is_public_lan_network`]), in list order.
+    pub fn public_lan_networks(&self) -> Vec<IpNetwork> {
+        self.lan_networks()
+            .into_iter()
+            .filter(is_public_lan_network)
+            .collect()
     }
 
     /// The networks shared while `allow_lan` is on: the user's list when
@@ -125,6 +159,42 @@ mod tests {
 
     fn net(s: &str) -> IpNetwork {
         s.parse().expect("valid network literal")
+    }
+
+    #[test]
+    fn a_public_range_is_told_apart_from_the_private_ones() {
+        for public in [
+            "8.0.0.0/8",
+            "203.0.113.0/24",
+            "2001:db8::/32",
+            "2a01:4f8::/32",
+        ] {
+            assert!(is_public_lan_network(&net(public)), "{public}");
+        }
+        for private in [
+            "10.0.0.0/8",
+            "192.168.1.0/24",
+            "172.16.0.0/12",
+            "169.254.0.0/16",
+            "100.64.0.0/10",
+            "fd00::/8",
+            "fe80::/10",
+            "400::/7",
+        ] {
+            assert!(!is_public_lan_network(&net(private)), "{private}");
+        }
+    }
+
+    #[test]
+    fn only_the_public_ranges_of_a_custom_list_are_reported() {
+        let mut settings = Settings {
+            custom_lan_networks: Some(vec![net("192.168.0.0/16"), net("8.0.0.0/8")]),
+            ..Default::default()
+        };
+
+        assert_eq!(settings.public_lan_networks(), vec![net("8.0.0.0/8")]);
+        settings.custom_lan_networks = None;
+        assert!(settings.public_lan_networks().is_empty());
     }
 
     /// A settings file written before the list was customisable has no key

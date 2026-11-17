@@ -2,6 +2,7 @@ use anyhow::{Result, bail};
 use clap::Subcommand;
 use ipnetwork::IpNetwork;
 use mullvad_management_interface::MullvadProxyClient;
+use mullvad_types::settings::is_public_lan_network;
 
 use super::BooleanOption;
 
@@ -61,11 +62,23 @@ impl Lan {
         };
         println!("Shared networks ({origin}):");
         for network in settings.lan_networks() {
-            println!("\t{network}");
+            if is_public_lan_network(&network) {
+                println!("\t{network} (public range)");
+            } else {
+                println!("\t{network}");
+            }
+        }
+        if !settings.public_lan_networks().is_empty() {
+            println!("{PUBLIC_RANGE_WARNING}");
         }
         Ok(())
     }
 }
+
+/// A public range is let through outside the tunnel on every interface, so a
+/// route the local network pushes for it carries that traffic in clear.
+const PUBLIC_RANGE_WARNING: &str = "Warning: a public range is shared. Traffic to it leaves \
+     outside the tunnel on any network, in clear if that network routes it.";
 
 impl Networks {
     async fn handle(self) -> Result<()> {
@@ -88,8 +101,12 @@ impl Networks {
                 return Ok(());
             }
         }
+        let public = networks.iter().any(is_public_lan_network);
         rpc.set_lan_networks(Some(networks)).await?;
         println!("Changed the networks shared by local network sharing");
+        if public {
+            println!("{PUBLIC_RANGE_WARNING}");
+        }
         Ok(())
     }
 }
