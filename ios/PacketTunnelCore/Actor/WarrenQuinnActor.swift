@@ -59,16 +59,16 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     /// `WarrenQuinnTunnelImplementation` (async, off the actor) before
     /// `start(options:)`. When non-nil the resolved config rides the
     /// multi-hop wire protocol (the FFI verifies it against the baked root
-    /// pin). Left nil by tests and when the fetch fails, in which case the
-    /// FFI falls back to the legacy single-hop path. Kept out of the actor
-    /// I/O path so the actor stays unit-testable.
+    /// pin). Nil when no directory could be had, fresh or cached: the FFI
+    /// then refuses to start, and the owner's refresh loop restarts the
+    /// session once one arrives. Kept out of the actor I/O path so the actor
+    /// stays unit-testable.
     public var multihopDirectoryJSON: String?
 
     /// Path to the App Group file persisting the multi-hop directory
     /// anti-rollback high-water mark (highest trusted `generation`). Set by
     /// the owning `WarrenQuinnTunnelImplementation` before `start`. Nil in
-    /// tests and on the single-hop dev path; the FFI then keeps the gate
-    /// per-connect only.
+    /// tests; the FFI then keeps the gate per-connect only.
     public var multihopGenerationStatePath: String?
 
     /// Path to the App Group file persisting the exit-pubkey TOFU pin
@@ -361,9 +361,8 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     /// The production fleet is multi-hop only: when a verified directory was
     /// fetched (`multihopDirectoryJSON` set before start), the config rides
     /// the multi-hop wire protocol. The multi-hop toggle picks 2-hop (entry
-    /// != exit) vs a 1-hop circuit collapsed onto one node. The single-hop
-    /// `exit*` fields are the legacy dev fallback used only when no directory
-    /// was fetched.
+    /// != exit) vs a 1-hop circuit collapsed onto one node. The engine reads
+    /// no `exit*` field; they stay in the C struct for its layout.
     private func makeConfigAndContext(
         selectedRelays: SelectedRelays?,
         seed: Data

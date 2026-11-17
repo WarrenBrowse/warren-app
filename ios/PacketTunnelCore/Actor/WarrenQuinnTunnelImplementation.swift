@@ -262,16 +262,17 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         // The production fleet is multi-hop only, so fetch the signed
         // multi-hop directory before starting: the actor's resolved config
         // carries it to the FFI, which verifies it against the baked root
-        // pin and brings up a MultiHopClient circuit. A failed fetch leaves
-        // it nil and the FFI falls back to the legacy single-hop path (dev).
-        // Done here (async, off the actor) so the actor stays I/O-free and
-        // unit-testable.
-        let directory = await Self.fetchMultihopDirectory()
-        _actor.multihopDirectoryJSON = directory
+        // pin and brings up a MultiHopClient circuit. Without one the FFI
+        // refuses to start, so the loader retries and then falls back to the
+        // last directory that verified. Done here (async, off the actor) so
+        // the actor stays I/O-free and unit-testable.
+        //
         // Persist the directory anti-rollback high-water mark in the App
         // Group container so it survives across connects (iOS has no
         // long-lived daemon to hold it in memory).
         let statePath = multihopGenerationStatePath()
+        let directory = await directoryLoader(statePath: statePath).load()
+        _actor.multihopDirectoryJSON = directory
         _actor.multihopGenerationStatePath = statePath
         // Activate exit-pubkey TOFU pinning: the FFI enforces the pin from
         // this App Group file and fails the connection closed on a
@@ -283,12 +284,10 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         // refresh so a long-lived session picks up a fleet change (a higher
         // generation) instead of riding a stale circuit until the next manual
         // reconnect. Steady state (unchanged generation) is a no-op fetch.
-        if let directory {
-            lastDirectoryGeneration = WarrenQuinnAdapter.checkMultihopGeneration(
-                directoryJSON: directory,
-                generationStatePath: statePath
-            ) ?? -1
-        }
+        lastDirectoryGeneration =
+            directory.flatMap {
+                WarrenQuinnAdapter.checkMultihopGeneration(directoryJSON: $0, generationStatePath: statePath)
+            } ?? -1
         startDirectoryRefreshTask(statePath: statePath)
         bindWalletSeed()
 
@@ -334,16 +333,55 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
     /// 30-minute updater cadence.
     private static let directoryRefreshInterval: UInt64 = 30 * 60 * 1_000_000_000
 
+    /// Interval while the session has no directory at all, so no engine:
+    /// the tunnel is up and carries nothing until one arrives.
+    private static let directoryMissingRefreshInterval: UInt64 = 30 * 1_000_000_000
+
+    /// Pauses between the fetches of a tunnel start, before falling back to
+    /// the cached directory.
+    private static let directoryStartRetryDelays: [UInt64] = [1, 2, 4, 8].map { $0 * 1_000_000_000 }
+
+    /// The App Group file holding the last directory that verified.
+    private func directoryCachePath() -> String? {
+        multihopGenerationStatePath().map { ($0 as NSString).deletingLastPathComponent + "/warren-multihop-directory.json" }
+    }
+
+    private func directoryLoader(statePath: String?) -> MultihopDirectoryLoader {
+        let cachePath = directoryCachePath()
+        return MultihopDirectoryLoader(
+            fetch: { await Self.fetchMultihopDirectory() },
+            verify: { directory in
+                WarrenQuinnAdapter.checkMultihopGeneration(
+                    directoryJSON: directory,
+                    generationStatePath: statePath
+                ) != nil
+            },
+            readCache: {
+                cachePath.flatMap { try? String(contentsOfFile: $0, encoding: .utf8) }
+            },
+            writeCache: { directory in
+                guard let cachePath else { return }
+                try? directory.write(toFile: cachePath, atomically: true, encoding: .utf8)
+            },
+            retryDelays: Self.directoryStartRetryDelays,
+            sleep: { try? await Task.sleep(nanoseconds: $0) }
+        )
+    }
+
     /// Arm the periodic directory-refresh loop. Each tick re-fetches the
     /// signed directory and, only when its verified `generation` is strictly
     /// higher than the running session's, re-applies it and reconnects to a
     /// freshly selected circuit. A failed fetch / verify is a no-op (the live
-    /// tunnel is never torn down on a transient network blip).
+    /// tunnel is never torn down on a transient network blip). A session that
+    /// started without any directory is retried every 30 seconds instead.
     private func startDirectoryRefreshTask(statePath: String?) {
         directoryRefreshTask?.cancel()
         directoryRefreshTask = Task { [weak self] in
             while !Task.isCancelled {
-                try? await Task.sleep(nanoseconds: Self.directoryRefreshInterval)
+                let interval =
+                    self?.lastDirectoryGeneration ?? 0 < 0
+                    ? Self.directoryMissingRefreshInterval : Self.directoryRefreshInterval
+                try? await Task.sleep(nanoseconds: interval)
                 guard !Task.isCancelled, let self else { return }
                 await self.refreshDirectoryOnce(statePath: statePath)
             }
@@ -365,6 +403,9 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
             "Warren multi-hop directory generation advanced (\(lastDirectoryGeneration) -> \(freshGeneration)); re-selecting circuit"
         )
         lastDirectoryGeneration = freshGeneration
+        if let cachePath = directoryCachePath() {
+            try? fresh.write(toFile: cachePath, atomically: true, encoding: .utf8)
+        }
         _actor.multihopDirectoryJSON = fresh
         _actor.restartWithCurrentRelays()
     }
@@ -379,9 +420,8 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
 
     /// Fetches the signed multi-hop directory JSON over URLSession
     /// (transport only; the trust-chain verification happens Rust-side in
-    /// the FFI). Returns nil on any non-200 / transport failure so the
-    /// caller falls back to the single-hop path rather than blocking the
-    /// tunnel start on a dead network.
+    /// the FFI). Returns nil on any non-200 / transport failure; the start
+    /// path retries it, the refresh loop tries again on its next tick.
     ///
     /// The DUAL-STACK route (`/v2`) is asked for first: it is the only copy
     /// carrying each relay's second address family, and a device on an
@@ -573,5 +613,35 @@ private final class ExtensionRelaySelector: @unchecked Sendable {
         guard let selector = lock.withLock({ self.selector }) else { throw NotReady() }
         let settings = (try? SettingsManager.readSettings()) ?? LatestTunnelSettings()
         return try selector.selectRelays(tunnelSettings: settings, connectionAttemptCount: 0)
+    }
+}
+
+/// Gets the signed multi-hop directory a tunnel start needs: the engine
+/// refuses to start without one.
+struct MultihopDirectoryLoader: Sendable {
+    var fetch: @Sendable () async -> String?
+    /// Whether a directory verifies against the root pin and the rollback
+    /// floor.
+    var verify: @Sendable (String) -> Bool
+    var readCache: @Sendable () -> String?
+    var writeCache: @Sendable (String) -> Void
+    /// Pauses between attempts, in nanoseconds.
+    var retryDelays: [UInt64]
+    var sleep: @Sendable (UInt64) async -> Void
+
+    /// A fresh directory, retried over `retryDelays`; then the last one that
+    /// verified, which the engine checks again (signature, expiry, rollback
+    /// floor) before it uses it.
+    func load() async -> String? {
+        var pauses = retryDelays.makeIterator()
+        while true {
+            if let fresh = await fetch(), verify(fresh) {
+                writeCache(fresh)
+                return fresh
+            }
+            guard !Task.isCancelled, let pause = pauses.next() else { break }
+            await sleep(pause)
+        }
+        return readCache().flatMap { verify($0) ? $0 : nil }
     }
 }

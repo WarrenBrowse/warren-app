@@ -601,3 +601,86 @@ final class WarrenQuinnActorTests: XCTestCase {
         }
     }
 }
+
+/// The directory a tunnel start cannot do without: a network that is not
+/// ready yet at wake, or an API down for a few seconds, used to leave the
+/// tunnel without an engine until the next half-hourly refresh.
+final class MultihopDirectoryLoaderTests: XCTestCase {
+    /// Answers each fetch from a script, `nil` meaning a failed fetch.
+    private final class Script: @unchecked Sendable {
+        private let lock = NSLock()
+        private var answers: [String?]
+        private var cachedValue: String?
+        private var fetchCount = 0
+
+        init(_ answers: [String?], cached: String? = nil) {
+            self.answers = answers
+            self.cachedValue = cached
+        }
+
+        var cached: String? { lock.withLock { cachedValue } }
+        var fetches: Int { lock.withLock { fetchCount } }
+
+        func next() -> String? {
+            lock.withLock {
+                fetchCount += 1
+                return answers.isEmpty ? nil : answers.removeFirst()
+            }
+        }
+
+        func store(_ directory: String) {
+            lock.withLock { cachedValue = directory }
+        }
+
+        func loader(
+            retries: Int,
+            verify: @escaping @Sendable (String) -> Bool = { _ in true }
+        ) -> MultihopDirectoryLoader {
+            MultihopDirectoryLoader(
+                fetch: { self.next() },
+                verify: verify,
+                readCache: { self.cached },
+                writeCache: { self.store($0) },
+                retryDelays: Array(repeating: 1, count: retries),
+                sleep: { _ in }
+            )
+        }
+    }
+
+    func test_load_retriesAFailedFetch() async {
+        let script = Script([nil, "fresh"])
+
+        let directory = await script.loader(retries: 3).load()
+
+        XCTAssertEqual(directory, "fresh")
+        XCTAssertEqual(script.fetches, 2)
+    }
+
+    func test_load_keepsTheVerifiedDirectoryForNextTime() async {
+        let script = Script(["fresh"])
+
+        _ = await script.loader(retries: 0).load()
+
+        XCTAssertEqual(script.cached, "fresh")
+    }
+
+    func test_load_fallsBackToTheCachedDirectoryWhenEveryFetchFails() async {
+        let script = Script([nil, nil, nil], cached: "cached")
+
+        let directory = await script.loader(retries: 2).load()
+
+        XCTAssertEqual(directory, "cached")
+        XCTAssertEqual(script.fetches, 3)
+    }
+
+    /// A cached directory the engine would refuse (expired, rolled back) is
+    /// no better than none, and one that fails verification is never cached.
+    func test_load_neitherUsesNorCachesADirectoryThatDoesNotVerify() async {
+        let script = Script(["forged"], cached: "stale")
+
+        let directory = await script.loader(retries: 0, verify: { _ in false }).load()
+
+        XCTAssertNil(directory)
+        XCTAssertEqual(script.cached, "stale")
+    }
+}
