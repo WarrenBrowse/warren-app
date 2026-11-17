@@ -3,6 +3,7 @@ import { GetTextTranslations, po } from 'gettext-parser';
 import Gettext from 'node-gettext';
 import path from 'path';
 
+import { addTranslations } from '../shared/gettext';
 import log from '../shared/logging';
 
 const SOURCE_LANGUAGE = 'en';
@@ -37,7 +38,7 @@ export function loadTranslations(
 
   // Reset the locale to source language if we couldn't load the catalogue for the requested locale
   // Add empty translations to suppress some of the warnings produces by node-gettext
-  catalogue.addTranslations(SOURCE_LANGUAGE, domain, {});
+  addTranslations(catalogue, SOURCE_LANGUAGE, domain, {});
   catalogue.setLocale(SOURCE_LANGUAGE);
   return;
 }
@@ -74,7 +75,9 @@ function parseTranslation(
     robberifyTranslations(translations);
   }
 
-  catalogue.addTranslations(aliasedLocale, domain, translations);
+  if (!addTranslations(catalogue, aliasedLocale, domain, translations)) {
+    return undefined;
+  }
 
   return translations;
 }

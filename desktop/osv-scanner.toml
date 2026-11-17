@@ -1,5 +1,10 @@
 # See repository root `osv-scanner.toml` for instructions and rules for this file.
 
+# node-gettext 3.0.1 still carries the prototype pollution of CVE-2024-21528
+# (GHSA-g974-hxvm-x689): its addTranslations is byte for byte the 3.0.0 code, but
+# the advisory range stops at 3.0.0, so no scanner reports it. Every call goes
+# through addTranslations in src/shared/gettext.ts, which refuses the reserved keys.
+
 # minimatch: denial of service through glob part amplification.
 [[IgnoredVulns]]
 id = "CVE-2026-118764" # GHSA-g3hv-75wg-m249
