@@ -20,10 +20,13 @@
 //! - **macOS**: `0.0.0.0/1` + `128.0.0.0/1 -interface <tun>` in the global table (route-specificity
 //!   over the system default), re-exported verbatim from
 //!   `warrenguard_route_split::default_route_split_macos`, which plants no exit-IP exception of its
-//!   own (same fix as Linux, upstream). The carrier's escape is `IP_BOUND_IF` on the dial socket
-//!   (`lib.rs`, `warren_carrier_socket_bypass` + `discover_warren_phys_ifindex`), applied before
-//!   this split lands, exactly like Windows, and mandatory: a discovery failure aborts the connect
-//!   instead of dialing the carrier unmarked.
+//!   own (same fix as Linux, upstream). The carrier's preferred escape is `IP_BOUND_IF` on the
+//!   dial socket (`lib.rs`, `warren_carrier_socket_bypass` + `discover_warren_phys_ifindex`),
+//!   applied before this split lands. Unlike Windows it is not mandatory: when the physical
+//!   interface is not resolved, when this network has a cached `RouteOnly` verdict, or when the
+//!   carrier egress guard measures the bound socket dead, `lib.rs` posts a `<relay>/32` route
+//!   outside the tunnel instead (the TunnelCrack ServerIP shape, kept as the carrier's fallback;
+//!   pf still opens that relay to root only).
 //! - **Windows**: native `/1` + `/1` split via the Win32 IP Helper API (`warrenguard-winroute`),
 //!   re-exported through the thin [`windows`] wrapper. Plants no host-route exception at all; the
 //!   carrier's escape is `IP_UNICAST_IF` on the dial socket (`lib.rs`,
