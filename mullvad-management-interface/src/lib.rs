@@ -559,7 +559,6 @@ fn build_incoming(
     Error,
 > {
     use std::os::unix::fs::FileTypeExt;
-    use std::os::unix::net::UnixListener as StdUnixListener;
 
     // The daemon removes a stale socket before spawning us, but guard
     // against a leftover socket file from an unclean exit so bind()
@@ -570,11 +569,11 @@ fn build_incoming(
         let _ = std::fs::remove_file(&rpc_socket_path);
     }
 
-    let std_listener = StdUnixListener::bind(&rpc_socket_path).map_err(Error::StartServerError)?;
+    let (std_listener, security) =
+        bind_unreachable_until_secured(&rpc_socket_path, apply_socket_permissions)?;
     std_listener
         .set_nonblocking(true)
         .map_err(Error::StartServerError)?;
-    let security = apply_socket_permissions(&rpc_socket_path)?;
     let listener =
         tokio::net::UnixListener::from_std(std_listener).map_err(Error::StartServerError)?;
 
@@ -597,6 +596,49 @@ fn build_incoming(
     });
 
     Ok((incoming, security))
+}
+
+/// Bind the management socket at `path` and run `secure` on it before any
+/// other account can reach it.
+///
+/// A socket bound in place takes the mode the process umask leaves until
+/// `secure` narrows it, and a connection made in that window stays open. So
+/// the socket is bound inside a directory only the daemon's account can
+/// traverse, secured there, and only then renamed onto its public path,
+/// whatever umask the service manager gave the daemon.
+#[cfg(unix)]
+fn bind_unreachable_until_secured(
+    path: &std::path::Path,
+    secure: impl FnOnce(&std::path::Path) -> Result<SocketSecurity, Error>,
+) -> Result<(std::os::unix::net::UnixListener, SocketSecurity), Error> {
+    use std::os::unix::fs::DirBuilderExt;
+
+    let file_name = path
+        .file_name()
+        .ok_or_else(|| Error::StartServerError(io::Error::from(io::ErrorKind::InvalidInput)))?;
+    let mut staging_name = std::ffi::OsString::from(".");
+    staging_name.push(file_name);
+    staging_name.push(".staging");
+    let staging = path.with_file_name(staging_name);
+
+    // A leftover from an interrupted start sits in a directory only the
+    // daemon's account can write, so it is ours to clear.
+    let _ = fs::remove_dir_all(&staging);
+    fs::DirBuilder::new()
+        .mode(0o700)
+        .create(&staging)
+        .map_err(Error::StartServerError)?;
+
+    let staged = staging.join("s");
+    let published = std::os::unix::net::UnixListener::bind(&staged)
+        .map_err(Error::StartServerError)
+        .and_then(|listener| {
+            let security = secure(&staged)?;
+            fs::rename(&staged, path).map_err(Error::StartServerError)?;
+            Ok((listener, security))
+        });
+    let _ = fs::remove_dir_all(&staging);
+    published
 }
 
 /// The Windows named pipe: see [`windows_pipe`] for who may open it and how
@@ -669,10 +711,9 @@ fn apply_socket_permissions(path: &std::path::Path) -> Result<SocketSecurity, Er
             fs::set_permissions(path, PermissionsExt::from_mode(0o766))
                 .map_err(Error::PermissionsError)?;
             log::info!(
-                "Management socket at {} accepts connections from all local accounts; each RPC \
+                "The management socket accepts connections from all local accounts; each RPC \
                  is authorized against the caller's uid. Set WARREN_MANAGEMENT_SOCKET_GROUP to \
-                 also refuse connections outside a dedicated Unix group.",
-                path.display()
+                 also refuse connections outside a dedicated Unix group."
             );
             Ok(SocketSecurity::WorldAccessible)
         }
@@ -853,6 +894,45 @@ mod socket_access_tests {
             SocketAccessPlan::RestrictToGroup(gid) => assert_eq!(gid.as_raw(), 4242),
             SocketAccessPlan::WorldAccessible => panic!("explicit group was ignored"),
         }
+    }
+
+    #[test]
+    fn socket_is_reachable_only_once_its_permissions_are_set() {
+        let unique = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .subsec_nanos();
+        let dir = std::env::temp_dir().join(format!("wsp-{}-{unique}", std::process::id()));
+        fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("rpc");
+
+        let (listener, security) = bind_unreachable_until_secured(&path, |bound| {
+            assert!(
+                std::os::unix::net::UnixStream::connect(&path).is_err(),
+                "the socket accepted a connection before its permissions were set"
+            );
+            fs::set_permissions(bound, PermissionsExt::from_mode(0o760))
+                .map_err(Error::PermissionsError)?;
+            Ok(SocketSecurity::GroupRestricted)
+        })
+        .unwrap();
+
+        let mode = fs::symlink_metadata(&path).unwrap().permissions().mode() & 0o777;
+        let connected = std::os::unix::net::UnixStream::connect(&path);
+        let leftovers: Vec<_> = fs::read_dir(&dir)
+            .unwrap()
+            .map(|entry| entry.unwrap().file_name())
+            .collect();
+        drop(listener);
+        let _ = fs::remove_dir_all(&dir);
+
+        assert!(matches!(security, SocketSecurity::GroupRestricted));
+        assert_eq!(mode, 0o760);
+        assert!(
+            connected.is_ok(),
+            "the published socket does not accept connections"
+        );
+        assert_eq!(leftovers, vec![std::ffi::OsString::from("rpc")]);
     }
 
     #[test]
