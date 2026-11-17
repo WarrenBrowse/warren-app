@@ -201,8 +201,7 @@ async fn create_utun() -> Result<tun::AsyncDevice, Error> {
 
 /// Set the given IPv6 address `addr` as an IP address for the interface `iface`.
 async fn add_ipv6_address(iface: &str, addr: Ipv6Addr) -> Result<(), Error> {
-    let output = tokio::process::Command::new("ifconfig")
-        .args([iface, "inet6", &addr.to_string(), "alias"])
+    let output = add_ipv6_address_command(iface, addr)
         .output()
         .await
         .map_err(Error::AddIpv6Address)?;
@@ -210,6 +209,14 @@ async fn add_ipv6_address(iface: &str, addr: Ipv6Addr) -> Result<(), Error> {
         return Err(Error::AddIpv6Address(io::Error::other("ifconfig failed")));
     }
     Ok(())
+}
+
+/// The daemon runs as root: the tool is named by its absolute path, never
+/// resolved through `PATH`.
+fn add_ipv6_address_command(iface: &str, addr: Ipv6Addr) -> tokio::process::Command {
+    let mut command = tokio::process::Command::new("/sbin/ifconfig");
+    command.args([iface, "inet6", &addr.to_string(), "alias"]);
+    command
 }
 
 type PktapStream = std::pin::Pin<Box<dyn Stream<Item = Result<PktapPacket, Error>> + Send>>;
@@ -916,5 +923,17 @@ impl PacketCodec for PktapCodec {
             header: header.to_owned(),
             frame,
         })
+    }
+}
+
+#[cfg(test)]
+mod command_tests {
+    use super::*;
+
+    #[test]
+    fn the_ipv6_alias_is_added_by_the_system_ifconfig_whatever_the_path() {
+        let command = add_ipv6_address_command("utun9", Ipv6Addr::LOCALHOST);
+
+        assert_eq!(command.as_std().get_program(), "/sbin/ifconfig");
     }
 }
