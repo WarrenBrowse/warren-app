@@ -29,7 +29,6 @@ barely diverged (so picks apply cleanly):
 - `talpid-dns/`
 - `talpid-net/`
 - firewall code: `talpid-core/src/firewall/`, `windows/winfw/`
-- `mullvad-leak-checker/`
 - split tunneling (`talpid-core` split-tunnel modules, `mullvad-exclude`)
 - privilege boundaries, added 2026-09-28 after three upstream security fixes
   landed outside the list above: `talpid-cgroup/` (setuid helpers), the

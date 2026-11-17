@@ -12,7 +12,7 @@ Warren VPN is a fork of the [Mullvad VPN app](https://github.com/mullvad/mullvad
 project started in a private repository, GitHub does not allow a private fork of a public
 repository, and a repository cannot join a fork network after creation. The `upstream` remote
 stays wired: security and correctness fixes in the platform layers (routing, DNS, firewall,
-split tunneling, leak checker) are cherry-picked from upstream, per
+split tunneling) are cherry-picked from upstream, per
 [`docs/UPSTREAM-DETACH.md`](docs/UPSTREAM-DETACH.md).
 
 Warren VPN carries traffic over a **QUIC** tunnel and identifies its users by a non-custodial

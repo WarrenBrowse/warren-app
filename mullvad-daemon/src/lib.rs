@@ -16,7 +16,6 @@ pub mod device;
 mod dns;
 pub mod exception_logging;
 mod geoip;
-mod leak_checker;
 pub mod logging;
 #[cfg(target_os = "macos")]
 mod macos;
@@ -165,7 +164,6 @@ use futures::{
     future::{AbortHandle, Future, abortable},
 };
 use geoip::GeoIpHandler;
-use leak_checker::{LeakChecker, LeakInfo};
 use management_interface::ManagementInterfaceServer;
 use mullvad_api::{ApiEndpoint, CachedRelayList, access_mode::AccessMethodEvent};
 use mullvad_relay_selector::RelaySelector;
@@ -1001,8 +999,6 @@ pub(crate) enum InternalDaemonEvent {
     /// The tunnel took the split apps of this app routing, which is to be
     /// saved.
     AppRoutingChanged(AppRoutingSettings, ResponseTx<(), Error>),
-    /// A network leak was detected.
-    LeakDetected(LeakInfo),
     /// The window `prepare-restart` opened has expired with no shutdown, so
     /// the lockdown it armed has outlived its installer and must go back to
     /// what the settings say.
@@ -1280,7 +1276,6 @@ pub struct Daemon {
     #[cfg(any(windows, target_os = "linux"))]
     app_locks: Option<talpid_core::app_locks::AppLocks<AppLockEnforcer>>,
     location_handler: GeoIpHandler,
-    leak_checker: LeakChecker,
     /// Mirrors the tunnel into the desktop's own network indicator.
     nm_vpn_indicator: nm_vpn_indicator::NmVpnIndicator,
     /// Kept so `GetWarrenDiagnostics` can resolve the current default route
@@ -2562,17 +2557,6 @@ impl Daemon {
         #[cfg(any(windows, target_os = "linux"))]
         let app_locks = new_app_locks(&settings);
 
-        let leak_checker = {
-            let mut leak_checker = LeakChecker::new(route_manager.clone());
-            let internal_event_tx = internal_event_tx.clone();
-            leak_checker.add_leak_callback(move |info| {
-                internal_event_tx
-                    .send(InternalDaemonEvent::LeakDetected(info))
-                    .is_ok()
-            });
-            leak_checker
-        };
-
         let daemon = Daemon {
             tunnel_state: TunnelState::Disconnected {
                 location: None,
@@ -2608,7 +2592,6 @@ impl Daemon {
             #[cfg(any(windows, target_os = "linux"))]
             app_locks,
             location_handler,
-            leak_checker,
             nm_vpn_indicator: nm_vpn_indicator::NmVpnIndicator::new(&config.settings_dir),
             #[cfg(target_os = "macos")]
             warren_route_manager: route_manager,
@@ -2846,11 +2829,6 @@ impl Daemon {
                 self.update_feature_indicators_on_settings_changed();
             }
             AppRoutingChanged(routing, tx) => self.handle_app_routing_changed(routing, tx).await,
-            LeakDetected(leak_info) => {
-                log::warn!("Network leak detected! Please contact Warren support.");
-                log::warn!("{leak_info:?}");
-                self.handle_leak_event(leak_info)
-            }
             #[cfg(not(target_os = "android"))]
             RestartLockdownDeadman => self.on_restart_lockdown_deadman(),
             WarrenPinUpdate(update) => self.handle_warren_pin_update(update).await,
@@ -3181,8 +3159,6 @@ impl Daemon {
     ) {
         #[cfg(any(windows, target_os = "linux"))]
         self.follow_tunnel_with_app_locks(&tunnel_state_transition);
-        self.leak_checker
-            .on_tunnel_state_transition(tunnel_state_transition.clone());
         self.nm_vpn_indicator
             .on_tunnel_state_transition(&tunnel_state_transition);
 
@@ -3763,10 +3739,6 @@ impl Daemon {
         self.management_interface
             .notifier()
             .notify_app_version(app_version_info);
-    }
-
-    fn handle_leak_event(&mut self, leak: LeakInfo) {
-        self.management_interface.notifier().notify_leak(leak);
     }
 
     async fn handle_device_event(&mut self, event: AccountEvent) {

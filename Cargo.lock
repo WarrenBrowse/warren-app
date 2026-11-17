@@ -2975,7 +2975,6 @@ dependencies = [
  "mullvad-api",
  "mullvad-api-constants",
  "mullvad-fs",
- "mullvad-leak-checker",
  "mullvad-logging",
  "mullvad-management-interface",
  "mullvad-paths",
@@ -3058,22 +3057,6 @@ dependencies = [
  "tempfile",
  "tokio",
  "uuid",
-]
-
-[[package]]
-name = "mullvad-leak-checker"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "futures",
- "log",
- "nix 0.31.3",
- "pnet_packet",
- "socket2 0.5.10",
- "talpid-windows",
- "tokio",
- "windows-sys 0.61.2",
 ]
 
 [[package]]

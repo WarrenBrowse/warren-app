@@ -10,7 +10,6 @@ members = [
   "mullvad-exclude",
   "mullvad-fs",
   "warren-ios",
-  "mullvad-leak-checker",
   "mullvad-logging",
   "mullvad-management-interface",
   "mullvad-nsis",

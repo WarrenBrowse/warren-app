@@ -100,7 +100,6 @@ log-panics = "2.0.0"
 mullvad-api = { path = "../mullvad-api" }
 mullvad-api-constants = { path = "../mullvad-api/mullvad-api-constants" }
 mullvad-fs = { path = "../mullvad-fs" }
-mullvad-leak-checker = { path = "../mullvad-leak-checker" }
 mullvad-logging = { path = "../mullvad-logging" }
 mullvad-management-interface = { path = "../mullvad-management-interface" }
 mullvad-paths = { path = "../mullvad-paths" }

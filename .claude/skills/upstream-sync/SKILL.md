@@ -60,7 +60,7 @@ Take:
   reach code Warren ships, **wherever they land**: sections 2 to 4 of the
   triage exist because upstream's fixes do not stay on the watch list;
 - correctness fixes on the platform layers Warren runs (routing, DNS,
-  firewall, split tunneling, leak checker) and OS compatibility fixes.
+  firewall, split tunneling) and OS compatibility fixes.
 
 Leave, with the reason:
 
