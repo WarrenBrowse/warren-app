@@ -6067,8 +6067,12 @@ impl Daemon {
             })
             .await
         {
-            Ok(_) => {
+            Ok(settings_changed) => {
                 Self::oneshot_send(tx, Ok(()), "set_quantum_resistant_tunnel response");
+                if settings_changed {
+                    log::info!("Reconnecting because the PQ safety setting changed");
+                    self.reconnect_tunnel();
+                }
             }
             Err(e) => {
                 log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
