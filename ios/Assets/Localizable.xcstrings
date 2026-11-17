@@ -25779,7 +25779,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Appareils connectés à ce compte. Déconnecter un appareil le déconnecte du compte : il lui faudra la phrase de restauration pour se reconnecter."
+            "value": "Appareils connectés à ce compte. Déconnecter un appareil le déconnecte du compte : il lui faudra la phrase de récupération pour se reconnecter."
           }
         },
         "it": {
@@ -39454,7 +39454,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "J'ai sauvegardé ma phrase de restauration et je comprends que ce compte sera supprimé de cet appareil."
+            "value": "J'ai sauvegardé ma phrase de récupération et je comprends que ce compte sera supprimé de cet appareil."
           }
         },
         "it": {
@@ -41310,7 +41310,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Si vous n'avez pas sauvegardé votre phrase de restauration, votre abonnement sera définitivement perdu."
+            "value": "Si vous n'avez pas sauvegardé votre phrase de récupération, votre abonnement sera définitivement perdu."
           }
         },
         "it": {
@@ -45298,7 +45298,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Il sera déconnecté d'ici 10 minutes et aura besoin de la phrase de restauration pour se reconnecter. Pour un appareil perdu ou volé, passez plutôt à un nouveau compte : un appareil qui conserve la phrase de restauration peut se reconnecter."
+            "value": "Il sera déconnecté d'ici 10 minutes et aura besoin de la phrase de récupération pour se reconnecter. Pour un appareil perdu ou volé, passez plutôt à un nouveau compte : un appareil qui conserve la phrase de récupération peut se reconnecter."
           }
         },
         "it": {
@@ -49860,7 +49860,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "La déconnexion efface ce compte de cet appareil. Il n'y a ni e-mail ni mot de passe pour vous reconnecter, votre phrase de restauration est le SEUL moyen de le restaurer."
+            "value": "La déconnexion efface ce compte de cet appareil. Il n'y a ni e-mail ni mot de passe pour vous reconnecter, votre phrase de récupération est le SEUL moyen de le restaurer."
           }
         },
         "it": {
@@ -78263,7 +78263,7 @@
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cet appareil a été déconnecté depuis un autre appareil de votre compte. Connectez-vous avec votre phrase de restauration pour l'utiliser à nouveau."
+            "value": "Cet appareil a été déconnecté depuis un autre appareil de votre compte. Connectez-vous avec votre phrase de récupération pour l'utiliser à nouveau."
           }
         },
         "it": {

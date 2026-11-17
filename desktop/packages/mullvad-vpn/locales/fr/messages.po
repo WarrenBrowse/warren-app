@@ -1779,13 +1779,13 @@ msgstr "Terminé"
 
 msgctxt "keys-view"
 msgid "Enter your 12-word (or 24-word) BIP39 mnemonic, separated by spaces."
-msgstr "Saisissez votre phrase mnémonique BIP39 de 12 mots (ou 24 mots), séparés par des espaces."
+msgstr "Saisissez votre phrase de récupération BIP39 de 12 mots (ou 24 mots), séparés par des espaces."
 
 #. Generic error when the daemon RPC fails. Shown
 #. only on transient connection issues.
 msgctxt "keys-view"
 msgid "Failed to retrieve mnemonic from daemon."
-msgstr "Impossible de récupérer la phrase mnémonique depuis le service."
+msgstr "Impossible d'obtenir la phrase de récupération auprès du service."
 
 msgctxt "keys-view"
 msgid "I have written it down in a safe place."
@@ -1809,11 +1809,11 @@ msgstr "Clés"
 #. log in or restore from mnemonic first.
 msgctxt "keys-view"
 msgid "No mnemonic available. Log in or restore an identity first."
-msgstr "Aucune phrase mnémonique disponible. Connectez-vous ou restaurez d'abord une identité."
+msgstr "Aucune phrase de récupération disponible. Connectez-vous ou restaurez d'abord une identité."
 
 msgctxt "keys-view"
 msgid "Restore from mnemonic"
-msgstr "Restaurer depuis une phrase mnémonique"
+msgstr "Restaurer depuis une phrase de récupération"
 
 #. Title label in navigation bar
 msgctxt "keys-view"
@@ -1826,7 +1826,7 @@ msgstr "Restauration en cours…"
 
 msgctxt "keys-view"
 msgid "Reveal mnemonic"
-msgstr "Révéler la phrase mnémonique"
+msgstr "Révéler la phrase de récupération"
 
 msgctxt "keys-view"
 msgid "WARNING: This will REPLACE your current identity. Any subscription tied to the current identity will be unrecoverable."
@@ -1842,7 +1842,7 @@ msgstr "Notez-la sur papier. Ne la stockez jamais dans un cloud, une capture d'�
 
 msgctxt "keys-view"
 msgid "Your 12-word mnemonic is the ONLY way to restore your Warren identity on another device. If lost, your subscription is unrecoverable."
-msgstr "Votre phrase mnémonique de 12 mots est le SEUL moyen de restaurer votre identité Warren sur un autre appareil. Si vous la perdez, votre abonnement est irrécupérable."
+msgstr "Votre phrase de récupération de 12 mots est le SEUL moyen de restaurer votre identité Warren sur un autre appareil. Si vous la perdez, votre abonnement est irrécupérable."
 
 #. Status text app is trying to connect to the system service.
 msgctxt "launch-view"
@@ -1934,7 +1934,7 @@ msgstr "Démarrage…"
 #. Message in troubleshooting modal when the background process failed to start.
 msgctxt "launch-view"
 msgid "The Warren background process failed to start. The background process is responsible for the security, kill switch, and the VPN tunnel. Please try:"
-msgstr "Le démarrage du processus Warren en arrière-plan a échoué. Le processus en arrière-plan est responsable de la sécurité, du coupe-circuit et du tunnel VPN. Veuillez essayer :"
+msgstr "Le démarrage du processus Warren en arrière-plan a échoué. Le processus en arrière-plan est responsable de la sécurité, du kill switch et du tunnel VPN. Veuillez essayer :"
 
 #. Button label for trying to restart the daemon again.
 msgctxt "launch-view"
@@ -2061,7 +2061,7 @@ msgstr "Ou"
 #. internet connection while logged out.
 msgctxt "login-view"
 msgid "Our kill switch is currently blocking your connection."
-msgstr "Notre coupe-circuit bloque actuellement votre connexion."
+msgstr "Notre kill switch bloque actuellement votre connexion."
 
 msgctxt "login-view"
 msgid "Please wait"
@@ -3207,7 +3207,7 @@ msgstr "Pour ce faire, il autorise la communication réseau à l'extérieur du t
 
 msgctxt "vpn-settings-view"
 msgid "Kill switch"
-msgstr "Coupe-circuit"
+msgstr "Kill switch"
 
 msgctxt "vpn-settings-view"
 msgid "Launch app on start-up"
@@ -3275,15 +3275,15 @@ msgstr "Réseaux sociaux"
 
 msgctxt "vpn-settings-view"
 msgid "The app’s built-in kill switch is always on. This setting will additionally block the internet if clicking Disconnect or Quit."
-msgstr "Le coupe-circuit intégré à l'application est toujours activé. Ce paramètre bloquera en plus Internet si vous cliquez sur Déconnecter ou Quitter."
+msgstr "Le kill switch intégré à l'application est toujours activé. Ce paramètre bloquera en plus Internet si vous cliquez sur Déconnecter ou Quitter."
 
 msgctxt "vpn-settings-view"
 msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents."
-msgstr "La différence entre le coupe-circuit d'arrêt et le mode verrouillage est que le coupe-circuit d'arrêt empêchera toute fuite lors des reconnexions automatiques du tunnel, des plantages de logiciels et autres accidents similaires."
+msgstr "La différence entre le kill switch et le mode verrouillage est que le kill switch empêchera toute fuite lors des reconnexions automatiques du tunnel, des plantages de logiciels et autres accidents similaires."
 
 msgctxt "vpn-settings-view"
 msgid "The difference between the Kill Switch and Lockdown Mode is that the Kill Switch will prevent any leaks from happening during automatic tunnel reconnects, software crashes and similar accidents. With Lockdown Mode enabled, you must be connected to a Warren VPN server to be able to reach the internet. Manually disconnecting or quitting the app will block your connection."
-msgstr "La différence entre le coupe-circuit d'arrêt et le mode verrouillage est que le coupe-circuit d'arrêt empêchera toute fuite lors des reconnexions automatiques du tunnel, des plantages de logiciels et autres accidents similaires. Avec le mode verrouillage activé, vous devez être connecté à un serveur Warren VPN pour utiliser Internet. Une déconnexion manuelle ou la fermeture de l'application bloquera votre connexion."
+msgstr "La différence entre le kill switch et le mode verrouillage est que le kill switch empêchera toute fuite lors des reconnexions automatiques du tunnel, des plantages de logiciels et autres accidents similaires. Avec le mode verrouillage activé, vous devez être connecté à un serveur Warren VPN pour utiliser Internet. Une déconnexion manuelle ou la fermeture de l'application bloquera votre connexion."
 
 msgctxt "vpn-settings-view"
 msgid "The DNS server you want to add is a private IP. You must ensure that your network interfaces are configured to use it."
@@ -3493,7 +3493,7 @@ msgstr "• Multi-hop (désactivé par défaut) : routage via deux relais pour r
 
 msgctxt "warren-onboarding"
 msgid "A VPN experience without compromise on privacy. No logs. No accounts. No tracking. Just bandwidth."
-msgstr "Une expérience VPN sans compromis sur la vie privée. Aucune trace. Aucun compte. Aucun suivi. Juste de la bande passante."
+msgstr "Une expérience VPN sans compromis sur la vie privée. Aucun journal d'activité. Aucun compte. Aucun suivi. Juste de la bande passante."
 
 msgctxt "warren-onboarding"
 msgid "All set"
@@ -3525,7 +3525,7 @@ msgstr "Continuer"
 
 msgctxt "warren-onboarding"
 msgid "Daemon has no mnemonic yet - log in or restart the app."
-msgstr "Le service n'a pas encore de phrase mnémonique. Connectez-vous ou redémarrez l'application."
+msgstr "Le service n'a pas encore de phrase de récupération. Connectez-vous ou redémarrez l'application."
 
 msgctxt "warren-onboarding"
 msgid "Daemon rejected the mnemonic. Check spelling and word count, then try again."
@@ -3533,7 +3533,7 @@ msgstr "Le service a rejeté la phrase mnémonique. Vérifiez l'orthographe et l
 
 msgctxt "warren-onboarding"
 msgid "Failed to retrieve mnemonic from daemon."
-msgstr "Impossible de récupérer la phrase mnémonique depuis le service."
+msgstr "Impossible d'obtenir la phrase de récupération auprès du service."
 
 msgctxt "warren-onboarding"
 msgid "Get started"
@@ -3589,7 +3589,7 @@ msgstr "Warren utilise un portefeuille non-custodial (Ed25519 + BIP39). Vous pos
 
 msgctxt "warren-onboarding"
 msgid "Welcome to Warren VPN"
-msgstr "Bienvenue sur Warren VPN"
+msgstr "Bienvenue dans Warren VPN"
 
 msgctxt "warren-onboarding"
 msgid "Write down these 12 words in order and keep them somewhere safe. They are the only way to restore your subscription if you lose access to this device."
@@ -3919,11 +3919,11 @@ msgstr "Sauvegarder ma phrase"
 
 msgctxt "account-view"
 msgid "I have backed up my recovery phrase and understand this account will be removed from this device."
-msgstr "J'ai sauvegardé ma phrase de restauration et je comprends que ce compte sera supprimé de cet appareil."
+msgstr "J'ai sauvegardé ma phrase de récupération et je comprends que ce compte sera supprimé de cet appareil."
 
 msgctxt "account-view"
 msgid "If you have not backed up your recovery phrase, your subscription will be lost permanently."
-msgstr "Si vous n'avez pas sauvegardé votre phrase de restauration, votre abonnement sera définitivement perdu."
+msgstr "Si vous n'avez pas sauvegardé votre phrase de récupération, votre abonnement sera définitivement perdu."
 
 msgctxt "account-view"
 msgid "Log out of this account?"
@@ -3931,15 +3931,15 @@ msgstr "Se déconnecter de ce compte ?"
 
 msgctxt "account-view"
 msgid "Logging out erases this account from this device. There is no email or password to log back in, your recovery phrase is the ONLY way to restore it."
-msgstr "La déconnexion efface ce compte de cet appareil. Il n'y a ni e-mail ni mot de passe pour vous reconnecter, votre phrase de restauration est le SEUL moyen de le restaurer."
+msgstr "La déconnexion efface ce compte de cet appareil. Il n'y a ni e-mail ni mot de passe pour vous reconnecter, votre phrase de récupération est le SEUL moyen de le restaurer."
 
 msgctxt "login-view"
 msgid "Back up your recovery phrase"
-msgstr "Sauvegardez votre phrase de restauration"
+msgstr "Sauvegardez votre phrase de récupération"
 
 msgctxt "login-view"
 msgid "Could not read the new recovery phrase. Try again."
-msgstr "Impossible de lire la nouvelle phrase de restauration. Réessayez."
+msgstr "Impossible de lire la nouvelle phrase de récupération. Réessayez."
 
 msgctxt "login-view"
 msgid "Discard"
@@ -3951,7 +3951,7 @@ msgstr "Abandonner ce nouveau compte ?"
 
 msgctxt "login-view"
 msgid "Enter your 12-word recovery phrase, separated by spaces, to restore your account on this device."
-msgstr "Saisissez votre phrase de restauration de 12 mots, séparés par des espaces, pour restaurer votre compte sur cet appareil."
+msgstr "Saisissez votre phrase de récupération de 12 mots, séparés par des espaces, pour restaurer votre compte sur cet appareil."
 
 msgctxt "login-view"
 msgid "Go back only if you meant to restore an account you already have."
@@ -3963,11 +3963,11 @@ msgstr "J'ai déjà un compte"
 
 msgctxt "login-view"
 msgid "I have written down my recovery phrase in a safe place."
-msgstr "J'ai noté ma phrase de restauration en lieu sûr."
+msgstr "J'ai noté ma phrase de récupération en lieu sûr."
 
 msgctxt "login-view"
 msgid "Invalid recovery phrase. Check the words and their order, then try again."
-msgstr "Phrase de restauration invalide. Vérifiez les mots et leur ordre, puis réessayez."
+msgstr "Phrase de récupération invalide. Vérifiez les mots et leur ordre, puis réessayez."
 
 msgctxt "login-view"
 msgid "Keep it"
@@ -3983,11 +3983,11 @@ msgstr "Restaurez votre compte"
 
 msgctxt "login-view"
 msgid "The account that was just created will be abandoned and its recovery phrase will not be shown again."
-msgstr "Le compte qui vient d'être créé sera abandonné et sa phrase de restauration ne sera plus affichée."
+msgstr "Le compte qui vient d'être créé sera abandonné et sa phrase de récupération ne sera plus affichée."
 
 msgctxt "login-view"
 msgid "Warren uses a non-custodial wallet: your account is a 12-word recovery phrase that only you hold."
-msgstr "Warren utilise un portefeuille non dépositaire : votre compte est une phrase de restauration de 12 mots que vous seul détenez."
+msgstr "Warren utilise un portefeuille non dépositaire : votre compte est une phrase de récupération de 12 mots que vous seul détenez."
 
 msgctxt "login-view"
 msgid "Welcome to Warren"
@@ -5233,7 +5233,7 @@ msgstr "Chemins dégradés (%(stalled)s sur %(bonded)s)"
 
 msgctxt "in-app-notifications"
 msgid "%(product)s has taken priority on this device, so this build disconnected and turned its kill switch off."
-msgstr "%(product)s est prioritaire sur cet appareil : cette version s'est déconnectée et a désactivé son coupe-circuit."
+msgstr "%(product)s est prioritaire sur cet appareil : cette version s'est déconnectée et a désactivé son kill switch."
 
 msgctxt "in-app-notifications"
 msgid "%(product)s holds the tunnel on this device. It stands down on its own as soon as you connect here."
@@ -5507,7 +5507,7 @@ msgstr "Appareils"
 
 msgctxt "device-management"
 msgid "Devices signed in to this account. Disconnecting one signs it out: it needs the recovery phrase to sign in again."
-msgstr "Appareils connectés à ce compte. Déconnecter un appareil le déconnecte du compte : il lui faudra la phrase de restauration pour se reconnecter."
+msgstr "Appareils connectés à ce compte. Déconnecter un appareil le déconnecte du compte : il lui faudra la phrase de récupération pour se reconnecter."
 
 msgctxt "device-management"
 msgid "Disconnect"
@@ -5519,7 +5519,7 @@ msgstr "Déconnecter %(name)s ?"
 
 msgctxt "device-management"
 msgid "It will be signed out within 10 minutes and will need the recovery phrase to sign in again. For a lost or stolen device, move to a new account instead: a device that keeps the recovery phrase can sign in again."
-msgstr "Il sera déconnecté d'ici 10 minutes et aura besoin de la phrase de restauration pour se reconnecter. Pour un appareil perdu ou volé, passez plutôt à un nouveau compte : un appareil qui conserve la phrase de restauration peut se reconnecter."
+msgstr "Il sera déconnecté d'ici 10 minutes et aura besoin de la phrase de récupération pour se reconnecter. Pour un appareil perdu ou volé, passez plutôt à un nouveau compte : un appareil qui conserve la phrase de récupération peut se reconnecter."
 
 msgctxt "device-management"
 msgid "Last active %(date)s"
@@ -5543,7 +5543,7 @@ msgstr "Cet appareil"
 
 msgctxt "device-management"
 msgid "This device was disconnected from another device of your account. Sign in with your recovery phrase to use it again."
-msgstr "Cet appareil a été déconnecté depuis un autre appareil de votre compte. Connectez-vous avec votre phrase de restauration pour l'utiliser à nouveau."
+msgstr "Cet appareil a été déconnecté depuis un autre appareil de votre compte. Connectez-vous avec votre phrase de récupération pour l'utiliser à nouveau."
 
 #. Short state badge on the home screen while the traffic
 #. leaves the device unencrypted.
@@ -5620,11 +5620,11 @@ msgstr "Code source du moteur du tunnel"
 
 msgctxt "login-view"
 msgid "Check your recovery phrase"
-msgstr "Vérifiez votre phrase de restauration"
+msgstr "Vérifiez votre phrase de récupération"
 
 msgctxt "login-view"
 msgid "To make sure you saved it, type these words from your recovery phrase."
-msgstr "Pour vous assurer de l'avoir bien notée, saisissez ces mots de votre phrase de restauration."
+msgstr "Pour vous assurer de l'avoir bien notée, saisissez ces mots de votre phrase de récupération."
 
 msgctxt "login-view"
 msgid "Word %(position)d"
@@ -5632,7 +5632,7 @@ msgstr "Mot %(position)d"
 
 msgctxt "login-view"
 msgid "These words do not match your recovery phrase. Check what you wrote down."
-msgstr "Ces mots ne correspondent pas à votre phrase de restauration. Vérifiez ce que vous avez noté."
+msgstr "Ces mots ne correspondent pas à votre phrase de récupération. Vérifiez ce que vous avez noté."
 
 msgctxt "in-app-notifications"
 msgid "DISCONNECTION NOT CONFIRMED"

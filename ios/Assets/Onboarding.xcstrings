@@ -48,7 +48,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Une expérience VPN sans compromis sur la vie privée. Aucune trace. Aucun compte. Aucun suivi. Juste de la bande passante."
+            "value" : "Une expérience VPN sans compromis sur la vie privée. Aucun journal d'activité. Aucun compte. Aucun suivi. Juste de la bande passante."
           }
         },
         "it" : {
@@ -3748,7 +3748,7 @@
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Warren utilise un portefeuille non dépositaire : votre compte est une phrase de restauration de 12 mots que vous seul détenez."
+            "value" : "Warren utilise un portefeuille non dépositaire : votre compte est une phrase de récupération de 12 mots que vous seul détenez."
           }
         },
         "it" : {
