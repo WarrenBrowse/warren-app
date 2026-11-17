@@ -195,10 +195,18 @@ async fn accept_loop(
             () = tx.closed() => return,
             connected = pipe.connect() => connected,
         };
+        // The next instance exists before this one leaves the loop, so the
+        // name is never free for another process to take. A refusal is only
+        // logged here: the connected client is handed off regardless, and the
+        // top of the loop retries the creation.
+        match security.create_instance(&path, false) {
+            Ok(next) => listening = Some(next),
+            Err(error) => {
+                log::error!("Failed to create the next management pipe instance: {error}")
+            }
+        }
         match connected {
             Ok(()) => {
-                // Handed off before the next instance is created, so a client
-                // is never held behind an instance the OS refuses to create.
                 let tx = tx.clone();
                 tokio::spawn(async move {
                     let connection = identify(pipe).await;
@@ -502,6 +510,27 @@ mod tests {
         let connection = incoming.next().await.unwrap().unwrap();
 
         assert_eq!(connection.creds, None);
+    }
+
+    /// After a client connects and leaves, with no other client, an instance
+    /// still holds the name: there is no moment where another process could
+    /// take it.
+    #[tokio::test]
+    async fn the_name_stays_served_after_a_client_leaves() {
+        let path = unique_pipe("gap");
+        let mut incoming = pin!(incoming(path.clone()).unwrap());
+        let mut client = ClientOptions::new().open(&path).unwrap();
+        client.write_all(b"x").await.unwrap();
+        let connection = incoming.next().await.unwrap().unwrap();
+        drop(client);
+        drop(connection);
+        tokio::task::yield_now().await;
+
+        let squatter = tokio::net::windows::named_pipe::ServerOptions::new()
+            .first_pipe_instance(true)
+            .create(&path);
+
+        assert!(squatter.is_err());
     }
 
     /// Nothing may serve the daemon's pipe name next to the daemon.
