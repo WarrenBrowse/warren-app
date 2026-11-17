@@ -39,7 +39,6 @@
   ],
   "appteam-lead": [
     "audits/**",
-    "ci/keys/**",
     "code-owners.json",
     "docs/supported-platforms.md",
     ".github/CODEOWNERS",

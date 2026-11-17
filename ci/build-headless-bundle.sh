@@ -127,7 +127,6 @@ case "$platform" in
             install -m 0755 "$rel/$binary" "$stage/resources/$binary"
         done
 
-        install -m 0644 dist-assets/ca.crt "$stage/resources/ca.crt"
         install -m 0644 build/relays.json "$stage/resources/relays.json"
         install -m 0644 build/warren-relays.json "$stage/resources/warren-relays.json"
         install -m 0644 CHANGELOG.md "$stage/resources/CHANGELOG.md"
@@ -202,7 +201,6 @@ case "$platform" in
             }
         done
 
-        install -m 0644 dist-assets/ca.crt "$stage/resources/ca.crt"
         install -m 0644 build/relays.json "$stage/resources/relays.json"
         install -m 0644 build/warren-relays.json "$stage/resources/warren-relays.json"
         install -m 0644 CHANGELOG.md "$stage/resources/CHANGELOG.md"
@@ -260,7 +258,6 @@ case "$platform" in
         install -m 0644 dist-assets/binaries/x86_64-pc-windows-msvc/split-tunnel/mullvad-split-tunnel.sys \
             "$stage/mullvad-split-tunnel.sys"
 
-        install -m 0644 dist-assets/ca.crt "$stage/ca.crt"
         install -m 0644 build/relays.json "$stage/relays.json"
         install -m 0644 build/warren-relays.json "$stage/warren-relays.json"
         install -m 0644 CHANGELOG.md "$stage/CHANGELOG.md"

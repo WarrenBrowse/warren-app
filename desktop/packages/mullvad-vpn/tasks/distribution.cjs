@@ -377,7 +377,6 @@ function newConfig() {
     electronFuses: ELECTRON_FUSES,
     compression: noCompression ? 'store' : 'normal',
     extraResources: [
-      { from: distAssets('ca.crt'), to: '.' },
       { from: buildAssets('relays.json'), to: '.' },
       // Warren bootstrap exit list: staged into build/ by build.sh (baked
       // by the CI fetch-warren-relays action, or an inert placeholder).

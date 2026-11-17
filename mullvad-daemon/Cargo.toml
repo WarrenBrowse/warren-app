@@ -39,7 +39,6 @@ assets = [
   { source = "target/release/warren-problem-report", dest = "opt/Warren VPN/resources/", mode = "755" },
   { source = "../dist-assets/linux/warren-daemon.service", dest = "usr/lib/systemd/system/", mode = "644" },
   { source = "../dist-assets/linux/warren-early-boot-blocking.service", dest = "usr/lib/systemd/system/", mode = "644" },
-  { source = "../dist-assets/ca.crt", dest = "opt/Warren VPN/resources/", mode = "644" },
   { source = "../build/relays.json", dest = "opt/Warren VPN/resources/", mode = "644" },
   # The exit list the daemon loads at boot. Without it a fresh headless
   # install has no exits until its first successful fetch from the API, so a
@@ -72,7 +71,6 @@ assets = [
   { source = "target/release/warren-problem-report", dest = "/opt/Warren VPN/resources/", mode = "755" },
   { source = "../dist-assets/linux/warren-daemon.service", dest = "/usr/lib/systemd/system/", mode = "644" },
   { source = "../dist-assets/linux/warren-early-boot-blocking.service", dest = "/usr/lib/systemd/system/", mode = "644" },
-  { source = "../dist-assets/ca.crt", dest = "/opt/Warren VPN/resources/", mode = "644" },
   { source = "../build/relays.json", dest = "/opt/Warren VPN/resources/", mode = "644" },
   { source = "../build/warren-relays.json", dest = "/opt/Warren VPN/resources/", mode = "644" },
   { source = "../build/shell-completions/warren.bash", dest = "/usr/share/bash-completion/completions/warren", mode = "644" },

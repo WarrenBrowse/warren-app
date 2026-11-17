@@ -10,8 +10,7 @@
 /building/android-container-image.txt @faern @albin-mullvad @rawa
 /building/linux-container-image.txt @faern @raksooo @tobias-jarvelov
 
-# Developer signing keys must be approved by team/tech leads
-/ci/keys/ @faern @raksooo @pinkisemils @rawa
+# Update metadata signing keys must be approved by team/tech leads
 /mullvad-update/trusted-metadata-signing-pubkeys @faern @raksooo @pinkisemils @rawa
 
 # Desktop build server files owned by desktop leads
