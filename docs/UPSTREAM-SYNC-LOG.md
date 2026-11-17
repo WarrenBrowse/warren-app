@@ -26,8 +26,81 @@ finished as a pick.
 | upstream | what | why it is open |
 |---|---|---|
 | 9df9e5aedf | Windows: block Hyper-V guests while the tunnel is torn down | Ported (b8f390294e) and built by CI, not validated on a host with Hyper-V: the only Windows guest is ARM64 under QEMU on an M2, and the Hyper-V firewall needs nested virtualization, which Apple's hypervisor offers from M3 on (assumption from Apple's documentation, not measured). Validate on an x64 Windows 11 with WSL. |
-| none (Warren only) | Android: the always-on VPN advice is written and never shown | `Android16UpdateWarningReceiver` sets `show_always_on_vpn_advice`, and nothing reads it. Its input is also unreadable: an app cannot read `Settings.Secure.always_on_vpn_app`, so the verdict is always UNKNOWN. `VpnService.isAlwaysOn()`, recorded since d10ada89e3 as `always_on_vpn`, is the readable source; `isLockdownEnabled()` would give the second half. Needs a UI to show it. |
 | none (inference) | A Warren build before 2ef0cf6ecf next to a Mullvad that loaded split tunnel driver 1.3.0.0 | That build only speaks the 1.2 initialize code, which driver 1.3.0.0 does not define (`src/defs/ioctl.h`), so its split tunneling fails to initialize there. Inferred from the driver source and from the measured converse (a 1.2 driver refuses the 1.3 code); not measured. Fixed from 2ef0cf6ecf on, whichever driver is loaded. |
+| 05ec268c54 | macOS: launchd refuses a daemon binary whose cdhash is not the packed one (GHSA-f33p-7hj4-mvwj) | Ported as 8b6c0c0ab7 and inert until macOS builds are signed with a Developer ID: an unsigned build only has an ad-hoc signature, and a constraint launchd refused would leave no daemon. Waits for the certificate (`docs/RELEASE-PROCUREMENT.md`), then a measure in a clone of a macOS VM: swap `Contents/Resources/warren-daemon` from an admin account and require launchd to refuse it. |
+| 37a2d13b03, cd5e1a4479, fde5bb142b, 87bc5fd34b | macOS: the local resolver under a burst of DNS queries | Ported (5be2860b81, 699e525554) with tests of the limit, the cancel and the single socket. Not measured: that the firewall holds while hundreds of queries are in flight, which needs a macOS VM rather than the Mac hosting the session. Warren forwards through this resolver only when `TALPID_DISABLE_LOCAL_DNS_RESOLVER=0`. |
+| 7eb2316747 | Windows: wait for the management pipe when it is busy instead of failing the ownership check | Applies to `desktop/packages/windows-utils`, the check Warren took with GHSA-wchj (6215ca2303). Needs a Windows run of the GUI against a busy pipe. |
+| e9c0e91430, 35026afc10, 9c74a80950, d9e1c02509, 89385bca5c | Linux: restore `/etc/resolv.conf` when systemd-resolved manages it after the daemon used the static method | Correctness of the DNS layer Warren runs. Warren already restores a stranded `resolv.conf` from its backup (`talpid-dns/src/linux/mod.rs:21-28`), so the overlap has to be read first; the three refactors travel with the fix. Validate in the Lima VM. |
+| c63e56a54f | Windows: start blocking on the split tunnel driver only once it is configured | 455 changed lines in `split_tunnel/windows/mod.rs`, which Warren extended (include-only). Needs the `windows-daemon` CI job and a run in the Windows VM. |
+| ca92820c5d and 14 more (list in the 2026-11-17 entry) | Windows firewall rewritten in Rust as `talpid-winfw` | Not applicable as picks: Warren still ships the C++ `windows/winfw`. Needs a decision from poka between adopting `talpid-winfw` (one port, then clean picks; CORE-FIRST once the `windows-daemon` job validates it) and owning the C++ as Warren code. Either way, `windows/libwfp`, `windows/windows-libraries` and `dist-assets/binaries` are submodules on `github.com/mullvad/*` (`.gitmodules`), which upstream no longer needs: mirror them under WarrenBrowse and repoint `.gitmodules`. |
+| 7f8f5ba8f5 | Android: a `SecurityException` from opening a link crashes the app | Outside the watch list; Warren's `UriHandlerExtensions.kt` has the same unguarded `openUri`. Applies as is; needs the Android unit-test gate run. |
+
+## 2026-11-17: `0d06537e5f` to upstream `d84a4d947b`
+
+Range `0d06537e5f` (upstream main on 2026-09-28) to `d84a4d947b` (upstream main
+on 2026-11-16): 747 non-merge commits, 44 on the watch list as extended in this
+review. Upstream main had moved on to `26a275facf` by the time of the review;
+the next review starts at `d84a4d947b`. Reviewed by an agent for poka.
+
+The upstream changelog gained two `### Security` entries in the range, both
+about code Warren ships: GHSA-f33p-7hj4-mvwj (05ec268c54) and
+GHSA-fh82-c53h-gfvf (a71e7659d0). Neither touched the watch list of the time,
+and the DNS resolver hardening carried no security keyword either, so the watch
+list now also covers `talpid-core/src/resolver.rs`, `talpid-winfw`,
+`mullvad-daemon/src/macos.rs`, the update chain (`mullvad-daemon/src/version`,
+`mullvad-update`, `app-upgrade.ts`, `tasks/distribution.cjs`) and the two
+documents `SECURITY.md` points researchers at. The review is now also
+scheduled: `upstream-review.yml` opens an issue when a Security entry appears
+or a review is older than 30 days (cadence in `UPSTREAM-DETACH.md`).
+
+Closed from the previous Open items: the Android always-on VPN advice is shown
+since 3525cffd21, read through `isAlwaysOn()` and `isLockdownEnabled()`.
+
+### Picked
+
+| upstream | subject | here | note |
+|---|---|---|---|
+| 94a16399fc | Fix parsing of eslogger v12 messages | 51939d8c9c | Split tunneling on macOS 27.3. The test fails without the fix ("Unsupported ESMessage version: 12"). |
+| 37a2d13b03, cd5e1a4479, fde5bb142b | Limit, cancel and keep on one socket the DNS queries the local resolver forwards | 5be2860b81 | Warren's resolver answered a forwarding error with an empty NOERROR, so SERVFAIL never reached the client: errors carrying a response code now pass through as upstream's do. Three tests that upstream did not have, each red without its part of the fix: SERVFAIL past 64 queries, SERVFAIL for queries in flight when the config is replaced, one source port per unanswered query (three without the fix). See Open items for what is not measured. |
+| 87bc5fd34b | Raise open file limit of the macOS daemon | 699e525554 | 4096, bounded by the hard limit; the bound is tested. |
+| 05ec268c54 | Add spawn constraint to macOS launch daemon (GHSA-f33p-7hj4-mvwj) | 8b6c0c0ab7 | Written into the pkg scripts of a signed build only, through Warren's per-environment script renames; a pkg whose postinstall still carries the placeholder fails the build. Checked: the plist generated for a universal binary passes `plutil -lint` and its cdhash matches `codesign`'s. Inert until builds are signed (Open items). |
+
+### Already present
+
+| upstream | subject | note |
+|---|---|---|
+| a71e7659d0 | Keep metadata_version from stale version cache (GHSA-fh82-c53h-gfvf) | Warren had the wider defect, the floor lost at every daemon restart, and fixed it as d08fa64c42 (`MetadataVersionFloor`, persisted in the root cache directory, and in the app's private directory on Android). |
+| 06c3557354 | Bump rustix to 1.1.6 | `Cargo.lock` already resolves 1.1.6. |
+| 7b664c0268, dad8f5c661 | rustls 0.23.46, block-buffer 0.12.1 (outside the watch list) | Both already at those versions. |
+| b368ed12e9 | Electron 44.5.1 (outside the watch list) | Warren is on Electron 45 (45df89a96d). |
+
+### Open
+
+| upstream | subject |
+|---|---|
+| 7eb2316747 | Wait for named pipe to become available |
+| e9c0e91430, 35026afc10, 9c74a80950, d9e1c02509, 89385bca5c | systemd-resolved detection and `resolv.conf` restore, with their refactors |
+| c63e56a54f | Delay blocking on windows split tunnel driver |
+| ca92820c5d, 4d67cc8656, 08ef480667, 1063c99a9d, 1bddb1497f, de0ecb41ff, ba763547aa, f0487fdb58, 708b5239ba, 9db83e4d94, c2c3bf9156, 14266551dd, ff53a68112, 1f07bf3ca4, 5232fd9101 | The C++ Windows firewall replaced by `talpid-winfw` |
+| 7f8f5ba8f5 | Catch SecurityException when opening Uri (outside the watch list) |
+
+What blocks each: Open items above.
+
+### Not taken
+
+| upstream | subject | reason |
+|---|---|---|
+| 6b24a0afc9 | Preserve newer metadata when delayed version checks complete | Not applicable: Warren's poller runs one check at a time in a single loop (`mullvad-daemon/src/version/check.rs`, `version_updater_loop`), so a late answer cannot overtake a newer one. |
+| cb7f1ff92b | Log unparseable eslogger messages in debug mode | It logs the whole eslogger line, which carries process environments, home directories and user names. |
+| 6479d0aa53 | Fix connection attempt failing when no routes are available | `talpid-wireguard`, which Warren does not have. |
+| c3c0a08cb1, d87f973aaa, 1770af207c | Custom VPN configs in the daemon | Mullvad feature. |
+| 1d48d1d28b | Use `tun` 0.8 for the macOS split tunnel utun | Dependency move with no behaviour fix. |
+| 4251f7a7b7 | Fix use of deprecated, unsafe tokio functions | Lint of a newer tokio; Warren's tree is clippy-clean on its own. |
+| 24eac778bc, 87c4e38fcb, eb9435a808, d0ca6f2661 | DnsWatcher arguments, a log line, a clippy lint, a rustdoc link | Refactor, logging, lints. |
+| 3938f533f8, 5bcbea1386 | Known issues for TunnelCrack on iOS, feature table | Mullvad's own iOS app and README; Warren's `known-issues.md` is reviewed against upstream's on its own. |
+| 0827ef753d, 49b1d4291f, 0604c4f9be, 2766f09b50, 428afc0f3b, b01a655a50, c64f2b5bd3, 516414161c, 48604722a1, 765c12152a, 1e85f9d40e | npm bumps motivated by advisories (outside the watch list) | Warren's own dependency schedule for the desktop lockfile. |
+| 84d0dd7617, 325dda6692, 17da409285, 2319f8a2cb, ba7dcacf2b, 41ed165daa, 177b532d3a | Scanner ignore lists, Ruby dependencies, an advisory listing script (outside the watch list) | Upstream's own supply-chain configuration; Warren keeps its own. |
+| f5860f3a76, 836e9cc79f, 45f50427a8, 98ef107740, dc1434e3d3, 4637d096e3, 752b715406, 61e6b9cb72, e4cf36cc18, b5ff5480ec, 074d3736f8, 18a016bea8 | CI worktree check, e2e test helpers (outside the watch list) | Mullvad's test infrastructure. |
 
 ## 2026-09-28 (third pass): the remaining open items
 

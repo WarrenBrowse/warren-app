@@ -10,7 +10,10 @@ talpid-routing
 talpid-dns
 talpid-net
 talpid-core/src/firewall
+talpid-core/src/resolver.rs
 windows/winfw
+# Upstream rewrote windows/winfw in Rust under this name in 2026-11.
+talpid-winfw
 talpid-core/src/split_tunnel
 mullvad-exclude
 
@@ -24,6 +27,18 @@ desktop/packages/mullvad-vpn/src/main/grpc-client.ts
 desktop/packages/windows-utils
 mullvad-management-interface/src/lib.rs
 mullvad-management-interface/src/client.rs
+mullvad-daemon/src/macos.rs
+
+# The update chain: Warren rewrote parts of it, so upstream's fixes here
+# (the 2026-10 metadata rollback advisory) never matched a platform path.
+mullvad-daemon/src/version
+mullvad-update
+desktop/packages/mullvad-vpn/src/main/app-upgrade.ts
+desktop/packages/mullvad-vpn/tasks/distribution.cjs
+
+# Documents researchers are pointed at by SECURITY.md.
+docs/known-issues.md
+docs/security.md
 
 # Binaries Warren ships as Mullvad built them: the split tunnel driver moves here.
 dist-assets/binaries
