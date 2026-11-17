@@ -1,9 +1,5 @@
-#[cfg(all(feature = "libdbus", not(feature = "zbus")))]
+#[cfg(feature = "libdbus")]
 mod dbus_rs;
-#[cfg(feature = "zbus")]
-mod zbus;
 
-#[cfg(all(feature = "libdbus", not(feature = "zbus")))]
+#[cfg(feature = "libdbus")]
 pub use dbus_rs::*;
-#[cfg(feature = "zbus")]
-pub use zbus::*;

@@ -116,26 +116,3 @@ reason = """
 Formats and parses the timestamps of the signed version metadata and of logs
 (mullvad-update, mullvad-types, the daemon). No replacement is wired yet.
 """
-
-# zvariant, zvariant_derive and zbus_names are unmaintained. No vulnerability.
-[[IgnoredVulns]]
-id = "RUSTSEC-2026-0370"
-ignoreUntil = 2027-02-17
-reason = """
-Pulled by zbus through talpid-dbus, the Linux D-Bus client the daemon uses to talk
-to NetworkManager and systemd-resolved on the local system bus.
-"""
-
-[[IgnoredVulns]]
-id = "RUSTSEC-2026-0371"
-ignoreUntil = 2027-02-17
-reason = """
-Same as RUSTSEC-2026-0370: zbus through talpid-dbus, local system bus only.
-"""
-
-[[IgnoredVulns]]
-id = "RUSTSEC-2026-0372"
-ignoreUntil = 2027-02-17
-reason = """
-Same as RUSTSEC-2026-0370: zbus through talpid-dbus, local system bus only.
-"""

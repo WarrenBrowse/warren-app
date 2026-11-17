@@ -1,7 +1,7 @@
 //! DBus system connection
 #![cfg(target_os = "linux")]
 
-#[cfg(feature = "libdbus")] // TODO: implement network_manager using zbus
+#[cfg(feature = "libdbus")]
 pub mod network_manager;
 pub mod systemd;
 pub mod systemd_resolved;
@@ -29,13 +29,4 @@ pub fn get_connection() -> Result<Arc<dbus::blocking::SyncConnection>, dbus::Err
             Ok(new_connection)
         }
     }
-}
-
-#[cfg(feature = "zbus")]
-/// Create a system DBus connection to the system-wide message bus.
-pub fn get_connection_zbus() -> Result<zbus::blocking::Connection, zbus::Error> {
-    // Create the socket once and then clone seems to be the deal with zbus.
-    // No need to go super-fancy with the LazyLock<Mutex<..> shennanings.
-    let system = zbus::blocking::Connection::system()?;
-    Ok(system)
 }
