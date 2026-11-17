@@ -180,8 +180,38 @@ fn init_logger(
         logging::init_logger(config.log_level, log_location, config.log_stdout_timestamps)
             .map_err(|e| e.display_chain_with_msg("Unable to initialize logger"))?;
     log_panics::init();
+    install_fail_closed_panic_hook();
     version::log_version(env!("CARGO_BIN_NAME"));
     Ok(log_handle)
+}
+
+/// Exits the process on any panic, after the logging hook has recorded it,
+/// instead of letting the unwind reach the daemon's orderly teardown: that
+/// teardown resets the firewall when Lockdown mode is off, which turns a panic
+/// while connected into a leak. A crash is the fail-closed outcome: the kernel
+/// keeps the blocking policy and the service supervisor restarts the daemon.
+/// The tunnel state machine already exits this way on its own panics.
+fn install_fail_closed_panic_hook() {
+    let previous = std::panic::take_hook();
+    std::panic::set_hook(fail_closed_hook(
+        previous,
+        talpid_warren_tunnel::force_route_cleanup,
+        || std::process::exit(1),
+    ));
+}
+
+type PanicHook = Box<dyn Fn(&std::panic::PanicHookInfo<'_>) + Sync + Send + 'static>;
+
+fn fail_closed_hook(
+    previous: PanicHook,
+    cleanup: impl Fn() + Sync + Send + 'static,
+    terminate: impl Fn() + Sync + Send + 'static,
+) -> PanicHook {
+    Box::new(move |info| {
+        previous(info);
+        cleanup();
+        terminate();
+    })
 }
 
 fn get_log_dir(config: &cli::Config) -> Result<Option<PathBuf>, String> {
@@ -269,4 +299,47 @@ fn running_as_admin() -> bool {
 fn running_as_admin() -> bool {
     // TODO: Check if user is administrator correctly on Windows.
     true
+}
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Arc;
+    use std::sync::atomic::{AtomicU32, Ordering};
+
+    /// A panic anywhere in the daemon logs, cleans up the routes and ends the
+    /// process, in that order, before any unwinding teardown could reset the
+    /// firewall.
+    #[test]
+    fn a_panic_logs_cleans_up_and_terminates_in_order() {
+        let order = Arc::new(AtomicU32::new(0));
+        let (logged, cleaned, ended) = (
+            Arc::new(AtomicU32::new(0)),
+            Arc::new(AtomicU32::new(0)),
+            Arc::new(AtomicU32::new(0)),
+        );
+        let step = |order: &Arc<AtomicU32>, slot: &Arc<AtomicU32>| {
+            let (order, slot) = (Arc::clone(order), Arc::clone(slot));
+            move || slot.store(order.fetch_add(1, Ordering::SeqCst) + 1, Ordering::SeqCst)
+        };
+        let log = step(&order, &logged);
+        let hook = super::fail_closed_hook(
+            Box::new(move |_| log()),
+            step(&order, &cleaned),
+            step(&order, &ended),
+        );
+
+        let previous = std::panic::take_hook();
+        std::panic::set_hook(hook);
+        let _ = std::panic::catch_unwind(|| panic!("a task panicked"));
+        std::panic::set_hook(previous);
+
+        assert_eq!(
+            (
+                logged.load(Ordering::SeqCst),
+                cleaned.load(Ordering::SeqCst),
+                ended.load(Ordering::SeqCst)
+            ),
+            (1, 2, 3)
+        );
+    }
 }
