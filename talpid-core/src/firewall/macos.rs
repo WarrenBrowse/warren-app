@@ -1608,6 +1608,38 @@ mod reassert_kernel_tests {
     }
 
     #[test]
+    #[ignore = "needs root; loads a rule into another environment's anchor"]
+    fn recovery_empties_every_environments_anchor() {
+        let other = warren_product_env::ALL
+            .iter()
+            .map(|env| env.firewall_id())
+            .find(|anchor| *anchor != ANCHOR_NAME)
+            .unwrap();
+        let mut load = Command::new("pfctl")
+            .args(["-a", other, "-f", "-"])
+            .stdin(std::process::Stdio::piped())
+            .spawn()
+            .unwrap();
+        std::io::Write::write_all(
+            load.stdin.as_mut().unwrap(),
+            b"block drop out quick proto tcp to 192.0.2.77\n",
+        )
+        .unwrap();
+        assert!(load.wait().unwrap().success());
+        let loaded = !output_of("pfctl", &["-a", other, "-sr"]).trim().is_empty();
+
+        let mut firewall = Firewall::new().unwrap();
+        firewall.reset_policy_all_generations().unwrap();
+        let left = output_of("pfctl", &["-a", other, "-sr"]);
+
+        assert!(loaded, "the stand-in rule never loaded: nothing was tested");
+        assert!(
+            left.trim().is_empty(),
+            "rules left active in {other}: {left}"
+        );
+    }
+
+    #[test]
     fn nothing_is_reasserted_before_a_policy_is_applied() {
         // `last_policy` is checked before pf is touched, so this needs no root.
         let Ok(mut firewall) = Firewall::new() else {
