@@ -59,8 +59,45 @@ describe('the staged problem-report link', () => {
       await Promise.all([0, 1].map(() => execFileAsync(process.execPath, ['-e', script], { env })));
 
       expect(fs.readlinkSync(stagedLink)).toBe(
-        '/opt/Warren VPN Beta/resources/mullvad-problem-report',
+        '/opt/Warren VPN Beta/resources/warren-problem-report',
       );
+    },
+    60_000,
+  );
+});
+
+// The link is installed as /usr/bin/warren-problem-report[-env] and must point
+// at the binary the package ships under resources/, or the command exists and
+// fails with "No such file or directory".
+describe('the problem-report link target', () => {
+  it.skipIf(process.platform === 'win32').each(['prod', 'beta'])(
+    'names the problem-report binary the %s package ships',
+    async (productEnv) => {
+      const script = `
+        process.env.WARREN_PRODUCT_ENV = ${JSON.stringify(productEnv)};
+        const fs = require('fs');
+        const path = require('path');
+        const distribution = require(${JSON.stringify(distributionPath)});
+        const config = distribution.newConfig();
+        const shipped = config.linux.extraResources
+          .map((resource) => path.basename(resource.from))
+          .filter((name) => name.includes('problem-report'));
+        const target = fs.readlinkSync(distribution.envProblemReportLink());
+        process.stdout.write(JSON.stringify({ target, shipped, productName: config.productName }));
+      `;
+      const env = {
+        ...process.env,
+        PATH: `${stubBinDir}${path.delimiter}${process.env.PATH ?? ''}`,
+      };
+      const { stdout } = await execFileAsync(process.execPath, ['-e', script], { env });
+      const { target, shipped, productName } = JSON.parse(stdout) as {
+        target: string;
+        shipped: string[];
+        productName: string;
+      };
+
+      expect(shipped).toEqual(['warren-problem-report']);
+      expect(target).toBe(`/opt/${productName}/resources/${shipped[0]}`);
     },
     60_000,
   );
