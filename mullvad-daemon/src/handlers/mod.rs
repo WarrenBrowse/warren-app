@@ -3,5 +3,6 @@
 //! `lib.rs` calls into.
 
 mod access_method;
+mod devices;
 mod forum;
 mod tunnel_options;
