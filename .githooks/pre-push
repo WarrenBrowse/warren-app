@@ -115,8 +115,9 @@ ensure_worktree() {
   return 0
 }
 
-# Gate 1: cargo fmt --check, Warren scope. The -p list is copied verbatim from
-# warren-tests.yml so this and CI format the same crate set. cargo fmt resolves
+# Gate 1: cargo fmt --check, Warren scope. The crates are the ones listed in
+# ci/rust-fmt-scope.txt, which warren-tests.yml reads too, so this and CI
+# format the same set (a copied list once covered 10 of CI's 23). cargo fmt resolves
 # the workspace (path-deps to the sibling repos), so it needs those present;
 # absent, we skip rather than fail on an unrelated resolution error.
 if [ "$has_rs" -eq 1 ]; then
@@ -132,16 +133,16 @@ if [ "$has_rs" -eq 1 ]; then
     echo "warren pre-push: the pushed commit could not be checked out; skipping the fmt gate (CI still enforces it)." >&2
   elif [ "$siblings_ok" -eq 0 ]; then
     echo "warren pre-push: sibling repos (../warrenguard, ../warren-sdk-rs, ../warren-contract) missing; skipping the fmt gate (CI still enforces it)." >&2
+  elif [ ! -f "$worktree/ci/rust-fmt-scope.txt" ]; then
+    echo "warren pre-push: the pushed commit has no ci/rust-fmt-scope.txt; skipping the fmt gate (CI still enforces it)." >&2
   else
     echo "warren pre-push: cargo fmt --check (Warren scope, on the pushed commit)..." >&2
     # Stable rustfmt prints one benign warning per nightly-only rustfmt.toml
     # option (CI does too). Drop just those from stderr so a real diff stands
     # out; the diff itself is on stdout and the exit code is untouched.
+    # shellcheck disable=SC2046 # one "-p <crate>" word pair per listed crate
     if ! (cd "$worktree" && cargo fmt \
-      -p mullvad-daemon -p mullvad-api -p mullvad-types \
-      -p mullvad-management-interface -p mullvad-cli \
-      -p talpid-warren-tunnel -p talpid-core \
-      -p warren-jni -p warren-ios -p warren-forum \
+      $(grep -vE '^[[:space:]]*(#|$)' ci/rust-fmt-scope.txt | sed 's/^/-p /') \
       -- --check) \
       2> >(grep -v 'unstable features are only available in nightly channel' >&2); then
       echo "  FAIL: formatting drift in the pushed commits. Run 'cargo fmt' (Warren scope) and commit before pushing." >&2

@@ -51,15 +51,21 @@ for f in "${staged[@]}"; do
   esac
 done
 
-clean=0
-if [ ${#root_rel[@]} -gt 0 ]; then
-  (cd "$repo_root/desktop" && "$eslint_bin" --max-warnings 0 "${root_rel[@]}") || clean=1
-fi
-if [ ${#pkg_rel[@]} -gt 0 ]; then
-  (cd "$repo_root/desktop/packages/mullvad-vpn" \
-    && "$eslint_bin" --max-warnings 0 "${pkg_rel[@]}") || clean=1
-fi
-if [ $clean -eq 0 ]; then
+# lint_staged [--fix]: each group of staged files through the config CI
+# applies to it, from that config's directory.
+lint_staged() {
+  local status=0
+  if [ ${#root_rel[@]} -gt 0 ]; then
+    (cd "$repo_root/desktop" && "$eslint_bin" "$@" --max-warnings 0 "${root_rel[@]}") || status=1
+  fi
+  if [ ${#pkg_rel[@]} -gt 0 ]; then
+    (cd "$repo_root/desktop/packages/mullvad-vpn" \
+      && "$eslint_bin" "$@" --max-warnings 0 "${pkg_rel[@]}") || status=1
+  fi
+  return $status
+}
+
+if lint_staged; then
   exit 0
 fi
 
@@ -68,8 +74,8 @@ fi
 # commit honest (the developer reviews and re-stages), and avoids pulling any
 # unrelated unstaged hunks of the same file into the commit.
 echo "warren pre-commit: desktop lint failed. Attempting an auto-fix..." >&2
-"$eslint_bin" --fix "${rel[@]}" >/dev/null 2>&1 || true
-if "$eslint_bin" --max-warnings 0 "${rel[@]}" >/dev/null 2>&1; then
+lint_staged --fix >/dev/null 2>&1 || true
+if lint_staged >/dev/null 2>&1; then
   echo "  Auto-fixed formatting/lint in the working tree. Review, re-stage (git add), and commit again." >&2
 else
   echo "  Some errors are not auto-fixable. Run 'npm run lint-fix' in desktop/ and fix the rest by hand." >&2

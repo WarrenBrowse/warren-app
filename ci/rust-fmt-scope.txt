@@ -1,0 +1,26 @@
+# The crates `cargo fmt --check` holds to the format, in CI (warren-tests.yml)
+# and in the local pre-push hook. This repository's own crates only: the
+# sibling repositories taken by path have their own format gate.
+mullvad-daemon
+mullvad-api
+mullvad-types
+mullvad-management-interface
+mullvad-cli
+mullvad-paths
+mullvad-setup
+talpid-warren-tunnel
+talpid-core
+talpid-dns
+talpid-dbus
+talpid-app-routing
+warren-app-routes
+talpid-types
+talpid-cgroup
+mullvad-exclude
+warren-jni
+warren-ios
+warren-forum
+warren-product-env
+warren-standing
+mullvad-update
+mullvad-release

@@ -80,16 +80,12 @@ jobs:
         # the pin, which would fail this gate on code that is not this fork's.
         # Explicit -p list of the Warren-scoped crates (same set as the test and
         # clippy steps below), so sibling path-deps are excluded. Same rationale
-        # as the clippy --no-deps step below.
+        # as the clippy --no-deps step below. The list lives in
+        # ci/rust-fmt-scope.txt, which the local pre-push hook reads too.
         run: |
+          # shellcheck disable=SC2046 # one "-p <crate>" word pair per listed crate
           cargo fmt \
-            -p mullvad-daemon -p mullvad-api -p mullvad-types \
-            -p mullvad-management-interface -p mullvad-cli -p mullvad-paths \
-            -p mullvad-setup \
-            -p talpid-warren-tunnel -p talpid-core -p talpid-dns -p talpid-dbus \
-            -p talpid-app-routing -p warren-app-routes -p talpid-types -p talpid-cgroup -p mullvad-exclude \
-            -p warren-jni -p warren-ios -p warren-forum -p warren-product-env \
-            -p warren-standing -p mullvad-update -p mullvad-release \
+            $(grep -vE '^[[:space:]]*(#|$)' ci/rust-fmt-scope.txt | sed 's/^/-p /') \
             -- --check
 
       # Sub-second, and it guards the release notes every surface shows: the
@@ -547,6 +543,13 @@ jobs:
         working-directory: .
         shell: bash
         run: bash ci/test-release-asset-sums.sh
+
+      # The local hooks: the pre-commit auto-fix reaches the files it reports,
+      # and the pre-push format gate formats the crates this workflow formats.
+      - name: Local git hooks
+        working-directory: .
+        shell: bash
+        run: bash ci/test-git-hooks.sh
 
       - name: Production signing identities guard
         working-directory: .
