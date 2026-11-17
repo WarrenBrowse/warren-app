@@ -113,7 +113,8 @@ So the daemon refuses to run the split tunnel unless its own signature is
 anchored at Apple (`anchor apple generic`, checked with `SecCodeCheckValidity`
 on the running code), before any utun, pf or BPF setup. `split_tunnel_is_supported`
 answers false on such a build, and turning a split mode on fails with "the
-split tunnel needs a signed build". For local testing only, set
+split tunnel needs a signed build". For local testing only, a development build
+(the `api-override` feature) honours
 `WARREN_ALLOW_UNSIGNED_SPLIT_TUNNEL=1` in the daemon's environment (the launchd
 plist): the grant then has to be given again after every rebuild.
 

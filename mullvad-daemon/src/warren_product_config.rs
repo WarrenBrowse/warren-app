@@ -21,6 +21,45 @@ pub const WARREN_API_URL: &str = warren_product_env::API_URL;
 pub const WARREN_SERVER_PUBKEY_HEX: &str =
     "4c2c9253c426ae4db4cc88703f9ac802a020420c7fea6479c87af530ada72c3e";
 
+/// The value of the environment variable `name` when it replaces a compiled trust anchor (the
+/// server key, the multi-hop root). Only development builds (the `api-override` feature) honour
+/// one: in a release build, a leftover development variable in the service environment must not
+/// swap the key the binary pins.
+pub(crate) fn anchor_override(name: &str) -> Option<String> {
+    honoured_anchor_override(name, std::env::var(name).ok())
+}
+
+fn honoured_anchor_override(name: &str, value: Option<String>) -> Option<String> {
+    let value = value.filter(|v| !v.trim().is_empty())?;
+    if cfg!(feature = "api-override") {
+        Some(value)
+    } else {
+        log::warn!("{name} is set and ignored: only development builds honour it");
+        None
+    }
+}
+
+#[cfg(test)]
+mod anchor_override_tests {
+    use super::honoured_anchor_override;
+
+    #[cfg(not(feature = "api-override"))]
+    #[test]
+    fn a_release_build_keeps_its_compiled_anchor() {
+        let value = honoured_anchor_override("WARREN_SERVER_PUBKEY", Some("00".repeat(32)));
+
+        assert_eq!(value, None);
+    }
+
+    #[cfg(feature = "api-override")]
+    #[test]
+    fn a_development_build_takes_the_override() {
+        let value = honoured_anchor_override("WARREN_SERVER_PUBKEY", Some("00".repeat(32)));
+
+        assert_eq!(value, Some("00".repeat(32)));
+    }
+}
+
 #[cfg(test)]
 mod product_env_drift_gate {
     //! Lockstep gates for the compiled product environment. The canonical

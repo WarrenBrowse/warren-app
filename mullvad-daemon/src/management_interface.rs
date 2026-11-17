@@ -802,6 +802,17 @@ impl ManagementService for ManagementServiceImpl {
         // Warren no-log: URL may potentially contain a sensitive
         // host (= private deployment). Log only the length.
         log::debug!("set_warren_api_url(len={})", warren_api_url.len());
+        match crate::warren_remote_config::check_api_url_setting(&warren_api_url) {
+            Ok(()) => {}
+            Err(crate::warren_remote_config::ApiUrlRefused::ReleaseBuild) => {
+                return Err(Status::failed_precondition(
+                    "only development builds talk to another API",
+                ));
+            }
+            Err(crate::warren_remote_config::ApiUrlRefused::NotHttps) => {
+                return Err(Status::invalid_argument("the API URL must use https"));
+            }
+        }
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(&call, DaemonCommand::SetWarrenApiUrl(tx, warren_api_url))?;
         self.wait_for_result(rx).await??;

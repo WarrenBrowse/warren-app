@@ -120,7 +120,7 @@ pub(crate) enum RootPinMode {
 #[must_use]
 pub(crate) fn root_pin_mode() -> RootPinMode {
     root_pin_mode_from(
-        std::env::var("WARREN_MULTIHOP_ROOT_PUBKEY").ok().as_deref(),
+        crate::warren_product_config::anchor_override("WARREN_MULTIHOP_ROOT_PUBKEY").as_deref(),
         WARREN_MULTIHOP_ROOT_PUBKEY_BAKED,
     )
 }

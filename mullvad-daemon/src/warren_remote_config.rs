@@ -27,7 +27,7 @@ use crate::warren_sdk_client::SharedWarrenSeed;
 /// "no default → fall back to `api.mullvad.net`" behaviour, which
 /// pointed the account/device chain at an endpoint Warren does not
 /// operate.
-pub const DEFAULT_WARREN_API_URL: &str = warren_product_env::API_URL;
+pub const DEFAULT_WARREN_API_URL: &str = crate::warren_product_config::WARREN_API_URL;
 
 /// Resolves the warren-api config based on flags + URL sources and the
 /// BIP39-derived seed. Pure function: the caller injects `env_url` (=
@@ -46,17 +46,56 @@ pub(crate) fn resolve(
     env_url: Option<String>,
     seed: Option<SharedWarrenSeed>,
 ) -> Option<WarrenApiConfig> {
-    // First non-empty of [env, settings], else the compiled prod
-    // default - so remote mode never silently falls back to the
-    // Mullvad upstream API just because no URL was configured.
-    let url = [env_url, settings_url]
-        .into_iter()
-        .flatten()
-        .find(|s| !s.is_empty())
-        .unwrap_or_else(|| DEFAULT_WARREN_API_URL.to_owned());
+    let url = api_url(settings_url, env_url);
     let seed = seed?;
 
     Some(WarrenApiConfig { url, seed })
+}
+
+/// The API base URL every Warren client of the daemon talks to.
+///
+/// A development build (the `api-override` feature) takes the first non-empty of `env_url`
+/// (`WARREN_API_URL`) and `settings_url`. A release build always talks to its compiled API: the
+/// signed requests carry the wallet address, and a leftover development setting or a variable
+/// planted in the service environment must not send them anywhere else.
+#[must_use]
+pub(crate) fn api_url(settings_url: Option<String>, env_url: Option<String>) -> String {
+    let configured = [env_url, settings_url]
+        .into_iter()
+        .flatten()
+        .find(|s| !s.is_empty());
+    match configured {
+        Some(url) if cfg!(feature = "api-override") => url,
+        Some(_) => {
+            log::warn!("An API URL is configured and ignored: only development builds honour one");
+            DEFAULT_WARREN_API_URL.to_owned()
+        }
+        None => DEFAULT_WARREN_API_URL.to_owned(),
+    }
+}
+
+/// Why `SetWarrenApiUrl` refuses a value.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum ApiUrlRefused {
+    /// Only development builds talk to another API than their compiled one.
+    ReleaseBuild,
+    /// The signed requests would cross the network in clear.
+    NotHttps,
+}
+
+/// Checks a value for `Settings::warren_api_url` before it is stored. An empty value clears the
+/// setting and is always accepted.
+pub(crate) fn check_api_url_setting(url: &str) -> Result<(), ApiUrlRefused> {
+    if url.is_empty() {
+        return Ok(());
+    }
+    if !cfg!(feature = "api-override") {
+        return Err(ApiUrlRefused::ReleaseBuild);
+    }
+    match url.strip_prefix("https://") {
+        Some(rest) if !rest.is_empty() && !rest.starts_with('/') => Ok(()),
+        _ => Err(ApiUrlRefused::NotHttps),
+    }
 }
 
 #[cfg(test)]
@@ -81,6 +120,47 @@ mod tests {
         assert_eq!(*cfg.seed.read().unwrap(), Zeroizing::new([7u8; 32]));
     }
 
+    #[cfg(not(feature = "api-override"))]
+    #[test]
+    fn a_release_build_talks_to_its_compiled_api_whatever_is_configured() {
+        let url = api_url(
+            Some("https://elsewhere.example".to_owned()),
+            Some("https://also-elsewhere.example".to_owned()),
+        );
+
+        assert_eq!(url, DEFAULT_WARREN_API_URL);
+    }
+
+    #[test]
+    fn clearing_the_api_setting_is_always_accepted() {
+        assert_eq!(check_api_url_setting(""), Ok(()));
+    }
+
+    #[cfg(not(feature = "api-override"))]
+    #[test]
+    fn a_release_build_refuses_to_change_its_api() {
+        assert_eq!(
+            check_api_url_setting("https://api.beta.warrenbrowse.com"),
+            Err(ApiUrlRefused::ReleaseBuild)
+        );
+    }
+
+    #[cfg(feature = "api-override")]
+    #[test]
+    fn a_development_build_refuses_a_cleartext_api() {
+        assert_eq!(
+            check_api_url_setting("http://127.0.0.1:8080"),
+            Err(ApiUrlRefused::NotHttps)
+        );
+    }
+
+    #[cfg(feature = "api-override")]
+    #[test]
+    fn a_development_build_accepts_another_https_api() {
+        assert_eq!(check_api_url_setting("https://127.0.0.1:8443"), Ok(()));
+    }
+
+    #[cfg(feature = "api-override")]
     #[test]
     fn env_url_overrides_settings_url() {
         // Spec priority: env > settings. Allows a dev to point
@@ -126,6 +206,7 @@ mod tests {
         );
     }
 
+    #[cfg(feature = "api-override")]
     #[test]
     fn empty_env_url_falls_through_to_settings_url() {
         // Priority is "first non-empty": an empty env var must not

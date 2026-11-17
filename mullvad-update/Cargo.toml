@@ -56,6 +56,8 @@ tokio = { workspace = true, features = ["fs", "macros", "net", "test-util", "tim
 [features]
 default = []
 client = ["reqwest", "thiserror", "tokio"]
+# Lets the update channel URLs be replaced from the environment (development builds only).
+api-override = []
 sign = ["clap", "rand_core"]
 
 [lints]

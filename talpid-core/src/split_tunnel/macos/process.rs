@@ -32,7 +32,7 @@ const PROBE_TIMEOUT: Duration = Duration::from_secs(2);
 const PROBE_EVENT_INTERVAL: Duration = Duration::from_millis(100);
 /// Lets an unsigned build run the split tunnel, for local testing only: its
 /// Full Disk Access grant is lost at every rebuild. Read from the daemon's own
-/// environment, which only root sets.
+/// environment, which only root sets, and honoured by development builds only.
 const ALLOW_UNSIGNED_ENV: &str = "WARREN_ALLOW_UNSIGNED_SPLIT_TUNNEL";
 
 static MIN_OS_VERSION: LazyLock<MacosVersion> =
@@ -178,7 +178,9 @@ fn signature_allows_split_tunnel(apple_anchored: bool, allow_unsigned: Option<&O
     if apple_anchored {
         return true;
     }
-    let allowed = allow_unsigned == Some(OsStr::new("1"));
+    // A release build only runs the split tunnel signed: the override lifts a trust check, and
+    // must not survive as a leftover in the service environment of a shipped binary.
+    let allowed = cfg!(feature = "api-override") && allow_unsigned == Some(OsStr::new("1"));
     if allowed {
         log::warn!(
             "Running the split tunnel on an unsigned build: its Full Disk Access grant is lost at \
@@ -1077,6 +1079,7 @@ mod test {
         assert_eq!(status, FdaStatus::Inconclusive);
     }
 
+    #[cfg(feature = "api-override")]
     #[test]
     fn an_ad_hoc_build_needs_the_explicit_override() {
         assert!(signature_allows_split_tunnel(true, None));
@@ -1087,5 +1090,12 @@ mod test {
             Some(OsStr::new("yes"))
         ));
         assert!(signature_allows_split_tunnel(false, Some(OsStr::new("1"))));
+    }
+
+    #[cfg(not(feature = "api-override"))]
+    #[test]
+    fn a_release_build_runs_the_split_tunnel_only_when_signed() {
+        assert!(signature_allows_split_tunnel(true, None));
+        assert!(!signature_allows_split_tunnel(false, Some(OsStr::new("1"))));
     }
 }

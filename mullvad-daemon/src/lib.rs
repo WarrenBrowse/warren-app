@@ -1728,23 +1728,20 @@ impl Daemon {
         // hot-swaps it into the live selector. The BIP39 `SigningKey` is
         // loaded from the settings dir. Warren is the only tunnel mode on
         // this fork, so these artifacts are always populated.
-        let warren_api_url = std::env::var("WARREN_API_URL")
-            .ok()
-            .filter(|s| !s.is_empty())
-            .or_else(|| settings.warren_api_url.clone().filter(|s| !s.is_empty()))
-            .unwrap_or_else(|| warren_product_config::WARREN_API_URL.to_owned());
+        let warren_api_url = warren_remote_config::api_url(
+            settings.warren_api_url.clone(),
+            std::env::var("WARREN_API_URL").ok(),
+        );
         // Public `GET /v1/network` descriptor (environment label, degraded
         // flag, default bandwidth cap, payments flag): fetched in the
         // background and pushed to both UIs through the status stream.
         warren_network_info::spawn(warren_api_url.clone(), warren_status_cache.clone());
         // Public stats snapshot: nothing is fetched until a frontend asks.
         warren_network_stats.set_api_base(warren_api_url.clone());
-        // Pinned server pubkey: env override for dev/staging, else the
-        // baked production key. Pinning is mandatory in prod.
+        // Pinned server pubkey: env override in development builds, else
+        // the baked production key. Pinning is mandatory in prod.
         let warren_server_pubkey: Option<String> = Some(
-            std::env::var("WARREN_SERVER_PUBKEY")
-                .ok()
-                .filter(|s| !s.is_empty())
+            warren_product_config::anchor_override("WARREN_SERVER_PUBKEY")
                 .unwrap_or_else(|| warren_product_config::WARREN_SERVER_PUBKEY_HEX.to_owned()),
         );
         // Audit F1 roster: opt-in (off by default), no pubkey baked in.
@@ -5563,12 +5560,14 @@ impl Daemon {
     /// Persists `Settings::warren_api_url`. Restart required to
     /// apply (the daemon resolves the URL at boot in `Daemon::start`,
     /// it does not re-check Settings at runtime). Empty string -> `None`
-    /// on the Settings side (= unset = fallback to Mullvad upstream backend).
+    /// on the Settings side (= unset = the compiled API URL). The RPC
+    /// boundary has already refused any other value in a release build.
     async fn on_set_warren_api_url(&mut self, tx: ResponseTx<(), settings::Error>, url: String) {
         let new_value = if url.is_empty() { None } else { Some(url) };
+        // The length only: the URL may name a host the owner keeps private.
         let display_value = new_value
             .as_deref()
-            .map(|s| s.to_owned())
+            .map(|s| format!("a URL of {} bytes", s.len()))
             .unwrap_or_else(|| "<unset>".to_owned());
         let result = self
             .settings
@@ -5858,17 +5857,10 @@ impl Daemon {
     /// reports. Mirrors the resolution path used by
     /// `warren_api_url_for_params` at boot.
     fn warren_api_url_for_incidents(&self) -> Option<String> {
-        let from_env = std::env::var("WARREN_API_URL")
-            .ok()
-            .filter(|s| !s.is_empty());
-        if from_env.is_some() {
-            return from_env;
-        }
-        let url = self.settings.warren_api_url.clone();
-        if let Some(url) = url.filter(|s| !s.is_empty()) {
-            return Some(url);
-        }
-        Some(warren_product_config::WARREN_API_URL.to_owned())
+        Some(warren_remote_config::api_url(
+            self.settings.warren_api_url.clone(),
+            std::env::var("WARREN_API_URL").ok(),
+        ))
     }
 
     async fn on_set_show_beta_releases(

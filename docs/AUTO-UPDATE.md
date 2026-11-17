@@ -206,7 +206,8 @@ manifest is what protects it.)
 - The live host's address, login and directory layout are operational detail
   and are not recorded in this public document.
 - Override at runtime with the `WARREN_UPDATE_URL` / `WARREN_METADATA_URL` env
-  vars (staging mirrors, local testing).
+  vars (staging mirrors, local testing), in development builds only (the
+  `api-override` feature): a release build ignores them.
 
 ### One-time host setup
 

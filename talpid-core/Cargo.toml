@@ -110,6 +110,8 @@ features = ["Win32_NetworkManagement_WindowsFilteringPlatform"]
 
 [features]
 cgroup2 = []
+# Lets an unsigned macOS build run the split tunnel (development builds only).
+api-override = []
 
 [lints]
 workspace = true

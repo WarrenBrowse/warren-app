@@ -44,10 +44,7 @@ pub const WARREN_METADATA_URL: &str = warren_product_env::DESKTOP_UPDATE_URL;
 /// [`WARREN_RELEASES_URL`] (Warren default).
 #[cfg(feature = "client")]
 pub fn releases_url() -> String {
-    std::env::var("WARREN_UPDATE_URL")
-        .ok()
-        .filter(|s| !s.is_empty())
-        .unwrap_or_else(|| WARREN_RELEASES_URL.to_owned())
+    url_override("WARREN_UPDATE_URL").unwrap_or_else(|| WARREN_RELEASES_URL.to_owned())
 }
 
 /// Returns the effective metadata repository URL: env var override
@@ -55,10 +52,22 @@ pub fn releases_url() -> String {
 /// [`WARREN_METADATA_URL`].
 #[cfg(feature = "client")]
 pub fn metadata_url() -> String {
-    std::env::var("WARREN_METADATA_URL")
-        .ok()
-        .filter(|s| !s.is_empty())
-        .unwrap_or_else(|| WARREN_METADATA_URL.to_owned())
+    url_override("WARREN_METADATA_URL").unwrap_or_else(|| WARREN_METADATA_URL.to_owned())
+}
+
+/// A non-empty `name` from the environment. Only development builds (the
+/// `api-override` feature) honour one: a release build fetches its update
+/// channel from the host it was compiled for, whatever the service
+/// environment says.
+#[cfg(feature = "client")]
+fn url_override(name: &str) -> Option<String> {
+    let value = std::env::var(name).ok().filter(|s| !s.is_empty())?;
+    if cfg!(feature = "api-override") {
+        Some(value)
+    } else {
+        log::warn!("{name} is set and ignored: only development builds honour it");
+        None
+    }
 }
 
 /// Default TLS certificate to pin to.
@@ -161,6 +170,19 @@ mod warren_default_tests {
     /// Anti-regression: setting `WARREN_UPDATE_URL` at runtime must
     /// short-circuit the default. Lets the operator point a staging
     /// build at an internal mirror without recompiling.
+    #[cfg(not(feature = "api-override"))]
+    #[test]
+    fn a_release_build_fetches_its_compiled_update_channel() {
+        let stub = "https://stub.example.test/releases/";
+        with_env_var("WARREN_UPDATE_URL", Some(stub), || {
+            assert_eq!(releases_url(), WARREN_RELEASES_URL);
+        });
+        with_env_var("WARREN_METADATA_URL", Some(stub), || {
+            assert_eq!(metadata_url(), WARREN_METADATA_URL);
+        });
+    }
+
+    #[cfg(feature = "api-override")]
     #[test]
     fn releases_url_env_override_wins_over_default() {
         let stub = "https://stub.example.test/releases/";

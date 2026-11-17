@@ -135,12 +135,11 @@ pub struct Settings {
     /// URL of the warren-api server used by the
     /// `WarrenRemote{Account,Device}Backend`.
     ///
-    /// Expected format: `http(s)://host:port` without trailing slash, e.g.
-    /// `https://api.warrenbrowse.com` or `http://127.0.0.1:8080`.
+    /// Expected format: `https://host:port` without trailing slash.
     ///
-    /// `None` = no warren-remote mode -> fallback to `RemoteAccountBackend`
-    /// (legacy upstream Mullvad path via `api.mullvad.net`). Can be
-    /// overridden via env var `WARREN_API_URL` (takes priority over Settings).
+    /// `None` = the API URL compiled for the product environment. Only
+    /// development builds (the `api-override` feature) honour a value here or
+    /// in the env var `WARREN_API_URL` (which takes priority over Settings).
     #[serde(default)]
     pub warren_api_url: Option<String>,
     /// Number of parallel QUIC connections for the Warren tunnel.

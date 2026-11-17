@@ -99,8 +99,10 @@ and `scripts/dev/windows/build-{daemon,app}.sh`. The shared selection helper
 is `scripts/utils/product-env.sh`, whose host and path tables the
 `warren-product-env` crate pins with a drift test.
 
-Runtime overrides (`WARREN_API_URL`, `WARREN_UPDATE_URL`, settings) still
-apply on top of the compiled defaults, unchanged.
+Runtime overrides of the API and update URLs (`WARREN_API_URL`,
+`WARREN_UPDATE_URL`, the API URL setting) apply on top of the compiled
+defaults in development builds only (the `api-override` feature, which
+`build.sh` turns on without `--optimize`); a release build ignores them.
 
 # Install toolchains and dependencies
 

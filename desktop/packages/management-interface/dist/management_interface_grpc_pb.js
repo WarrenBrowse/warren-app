@@ -1123,10 +1123,12 @@ setLanNetworks: {
   },
   // Persistent URL of the warren-api server (consumed by
 // WarrenRemote{Account,Device}Backend). Format
-// `http(s)://host:port` without a trailing slash. Empty string means
-// unset (= None on the Settings side, falls back to Mullvad upstream).
-// Overridable via the `WARREN_API_URL` env var. A daemon restart is
-// required to apply the change.
+// `https://host:port` without a trailing slash. Empty string means
+// unset (= None on the Settings side, the compiled API URL). A release
+// build refuses any other value (FAILED_PRECONDITION); a development
+// build refuses a URL that is not https (INVALID_ARGUMENT). Overridable
+// via the `WARREN_API_URL` env var in development builds only. A daemon
+// restart is required to apply the change.
 setWarrenApiUrl: {
     path: '/mullvad_daemon.management_interface.ManagementService/SetWarrenApiUrl',
     requestStream: false,
