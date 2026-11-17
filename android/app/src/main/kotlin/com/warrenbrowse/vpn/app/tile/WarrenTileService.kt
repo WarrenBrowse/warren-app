@@ -8,38 +8,49 @@ import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
 import co.touchlab.kermit.Logger
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.withTimeoutOrNull
+import com.warrenbrowse.vpn.lib.common.constant.KEY_CONNECT_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.MAIN_ACTIVITY_CLASS
+import com.warrenbrowse.vpn.lib.common.constant.VPN_SERVICE_CLASS
 import com.warrenbrowse.vpn.lib.common.util.getSupportedPendingIntentFlags
 import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
+import com.warrenbrowse.vpn.lib.model.wallet.WalletState
+import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import com.warrenbrowse.vpn.lib.ui.resource.R
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import org.koin.android.ext.android.get
 
 class WarrenTileService : TileService() {
+    private val scope: CoroutineScope = MainScope()
     private var job: Job? = null
 
     private lateinit var securedIcon: Icon
     private lateinit var unsecuredIcon: Icon
 
-    // The tile reads state from the process-singleton proxy (live mirror of
-    // WarrenQuinnAdapter.state) and issues disconnect through the Warren
-    // use-case. Connecting from the tile requires the wallet UI
-    // (BiometricPrompt), so a disconnected-tile click opens the main activity
-    // rather than dispatching a connect intent directly.
+    // The tile reads the typed tunnel state from the process-singleton proxy (live mirror of
+    // WarrenQuinnAdapter.state) and stops the tunnel through the Warren use case. A connect starts
+    // the service the way the boot receiver does: the service reads the wallet itself, without a
+    // prompt.
     private val tunnelStateProvider = get<WarrenTunnelStateProvider>()
     private val warrenDisconnect = get<WarrenQuinnDisconnectInvoker>()
+    private val wallet = get<WalletRepository>()
 
     override fun onCreate() {
         securedIcon = Icon.createWithResource(this, R.drawable.small_logo_white)
         unsecuredIcon = Icon.createWithResource(this, R.drawable.small_logo_black)
+    }
+
+    override fun onDestroy() {
+        scope.cancel()
+        super.onDestroy()
     }
 
     override fun onClick() {
@@ -56,12 +67,14 @@ class WarrenTileService : TileService() {
             } ?: false
         }
 
+        // The wait for the unlock to propagate suspends instead of holding the main thread, which
+        // the system UI shares with this callback.
         unlockAndRun {
-            runBlocking {
+            scope.launch {
                 val isUnlockStatusPropagated =
                     isUnlockStatusPropagatedWithinTimeout(
-                        unlockTimeoutMillis = 1000L,
-                        unlockCheckDelayMillis = 100L,
+                        unlockTimeoutMillis = UNLOCK_TIMEOUT_MS,
+                        unlockCheckDelayMillis = UNLOCK_CHECK_DELAY_MS,
                     )
 
                 if (isUnlockStatusPropagated) {
@@ -74,7 +87,8 @@ class WarrenTileService : TileService() {
     }
 
     override fun onStartListening() {
-        job = MainScope().launch { launchListenToTunnelState() }
+        job?.cancel()
+        job = scope.launch { launchListenToTunnelState() }
     }
 
     override fun onStopListening() {
@@ -84,27 +98,34 @@ class WarrenTileService : TileService() {
     @SuppressLint("StartActivityAndCollapseDeprecated")
     private fun toggleTunnel() {
         val isSetup = applicationContext.prepareVpnSafe().isRight()
-        if (isSetup && qsTile.state == Tile.STATE_ACTIVE) {
-            // Tile shows the tunnel as connected; user wants disconnect.
-            Logger.i("TileService: dispatching Warren disconnect")
-            warrenDisconnect.disconnect()
-        } else {
-            // Either VPN profile is not set up yet, or tunnel is
-            // disconnected. The Warren connect path needs the wallet's
-            // BiometricPrompt host (FragmentActivity), so we bounce the
-            // user into the main activity rather than starting the
-            // service directly.
-            Logger.i("TileService: opening main activity for Warren connect")
-            val intent =
-                Intent().apply {
-                    setClassName(applicationContext.packageName, MAIN_ACTIVITY_CLASS)
-                    flags =
-                        Intent.FLAG_ACTIVITY_CLEAR_TOP or
-                            Intent.FLAG_ACTIVITY_SINGLE_TOP or
-                            Intent.FLAG_ACTIVITY_NEW_TASK
-                    action = Intent.ACTION_MAIN
-                }
-            startActivityAndCollapseCompat(intent)
+        when {
+            qsTile?.state == Tile.STATE_ACTIVE -> {
+                Logger.i("TileService: dispatching Warren disconnect")
+                warrenDisconnect.disconnect()
+            }
+            isSetup && wallet.state.value !is WalletState.Absent -> {
+                Logger.i("TileService: starting the tunnel")
+                startForegroundService(
+                    Intent().apply {
+                        setClassName(applicationContext.packageName, VPN_SERVICE_CLASS)
+                        action = KEY_CONNECT_ACTION
+                    }
+                )
+            }
+            else -> {
+                // The VPN permission or the wallet is missing: both are granted in the app.
+                Logger.i("TileService: opening main activity to set up the connection")
+                val intent =
+                    Intent().apply {
+                        setClassName(applicationContext.packageName, MAIN_ACTIVITY_CLASS)
+                        flags =
+                            Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                                Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                                Intent.FLAG_ACTIVITY_NEW_TASK
+                        action = Intent.ACTION_MAIN
+                    }
+                startActivityAndCollapseCompat(intent)
+            }
         }
     }
 
@@ -125,39 +146,26 @@ class WarrenTileService : TileService() {
     }
 
     private suspend fun launchListenToTunnelState() {
-        tunnelStateProvider.state
-            .map(::mapToTileState)
-            .collect { updateTileState(it) }
+        tunnelStateProvider.connectedInfo.map(::tileStatusFor).collect { updateTileState(it) }
     }
 
-    private fun mapToTileState(stateLabel: String): Int =
-        when {
-            // The proxy exposes a String projection; "Connected",
-            // "Connecting...", "Reconnecting..." all map to the active
-            // tile (the tunnel intent is captured). Anything else is
-            // inactive.
-            stateLabel.startsWith("Connected") -> Tile.STATE_ACTIVE
-            stateLabel.startsWith("Connecting") -> Tile.STATE_ACTIVE
-            stateLabel.startsWith("Reconnecting") -> Tile.STATE_ACTIVE
-            else -> Tile.STATE_INACTIVE
-        }
-
-    private fun updateTileState(newState: Int) {
+    private fun updateTileState(status: TileStatus) {
         qsTile?.apply {
-            if (newState == Tile.STATE_ACTIVE) {
-                state = Tile.STATE_ACTIVE
-                icon = securedIcon
-                label = resources.getString(R.string.app_name)
-                setSubtitleIfSupported(resources.getText(R.string.connected))
-            } else {
-                state = Tile.STATE_INACTIVE
-                icon = unsecuredIcon
-                label = resources.getString(R.string.app_name)
-                setSubtitleIfSupported(resources.getText(R.string.disconnected))
-            }
+            state = if (status.active) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
+            icon = if (status.active) securedIcon else unsecuredIcon
+            label = resources.getString(R.string.app_name)
+            setSubtitleIfSupported(resources.getText(status.subtitle()))
             updateTile()
         }
     }
+
+    private fun TileStatus.subtitle(): Int =
+        when (this) {
+            TileStatus.Connected -> R.string.connected
+            TileStatus.Connecting -> R.string.connecting
+            TileStatus.Blocking -> R.string.blocking_internet
+            TileStatus.Disconnected -> R.string.disconnected
+        }
 
     private fun Tile.setSubtitleIfSupported(subtitleText: CharSequence) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -165,4 +173,8 @@ class WarrenTileService : TileService() {
         }
     }
 
+    private companion object {
+        const val UNLOCK_TIMEOUT_MS = 1000L
+        const val UNLOCK_CHECK_DELAY_MS = 100L
+    }
 }
