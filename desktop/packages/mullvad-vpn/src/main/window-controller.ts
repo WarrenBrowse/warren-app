@@ -23,7 +23,9 @@ export interface WindowControllerDelegate {
 
 class StandaloneWindowPositioning implements IWindowPositioning {
   public getPosition(window: BrowserWindow): IPosition {
-    const windowBounds = window.getBounds();
+    // The page, not the frame: the result is fed to `setContentBounds`, and
+    // reading the frame here would drift the window upwards on every show.
+    const windowBounds = window.getContentBounds();
 
     const primaryDisplay = screen.getPrimaryDisplay();
     const workArea = primaryDisplay.workArea;
@@ -202,7 +204,10 @@ export default class WindowController {
     if (this.window) {
       const position = this.windowPositioning.getPosition(this.window);
       const size = WindowController.getContentSize(this.delegate.isUnpinnedWindow());
-      this.window.setBounds({ ...position, ...size }, false);
+      // Since Electron 41 `setBounds` sizes the whole window, decorations
+      // included, on a Linux compositor with client-side decorations
+      // (electron/electron#49209); the size here is the page's.
+      this.window.setContentBounds({ ...position, ...size }, false);
     }
 
     this.notifyUpdateWindowShape();
@@ -316,16 +321,17 @@ export default class WindowController {
     }
   }
 
-  // On both Linux and Windows the app height is applied incorrectly:
+  // On Windows the app height is applied incorrectly:
   // https://github.com/electron/electron/issues/28777
   private static getContentHeight(unpinnedWindow: boolean): number {
     const contentHeight = WINDOW_HEIGHT;
 
     switch (process.platform) {
       case 'win32':
-        // On Windows the app height ends up slightly lower than we set it to if running in unpinned
-        // mode and the app becomes a tiny bit taller when pinned to task bar.
-        return unpinnedWindow ? contentHeight + 25 : contentHeight;
+        // Since Electron 41 a window pinned to the taskbar comes out 8px shorter than the bounds
+        // it is given, while an unpinned one gets them exactly:
+        // https://github.com/electron/electron/issues/50783
+        return unpinnedWindow ? contentHeight : contentHeight + 8;
       default:
         return contentHeight;
     }
