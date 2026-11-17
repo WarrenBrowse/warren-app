@@ -1983,13 +1983,14 @@ impl WarrenTunnelMonitor {
                 .open_tun()
                 .map_err(|e| Error::TunSetup(format!("{e}")))?
         };
+        // No inner address: the exit keys the session on it (see
+        // `tun_address_line`).
         log::debug!(
-            "{TRACE_PREFIX} T3={}ms phase=tun_opened elapsed_tun={}ms iface={} ip={}",
+            "{TRACE_PREFIX} T3={}ms phase=tun_opened elapsed_tun={}ms iface={}",
             start_t.elapsed().as_millis(),
             tun_t.elapsed().as_millis(),
             tun.interface_name()
                 .unwrap_or_else(|_| "<unknown>".to_owned()),
-            tun_ip
         );
 
         let metadata = build_tunnel_metadata(&tun, &tun_config, daita_active);
