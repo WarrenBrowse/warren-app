@@ -3651,8 +3651,8 @@ msgid "If an observer monitors these data packets, %(daita)s makes it significan
 msgstr "အကဲခတ်သူတစ်ဦးက ဤဒေတာပက်ကတ်များကို စောင့်ကြည့်လျှင် %(daita)s သည် သင်သွားရောက်ကြည့်ရှုနေသော ဝဘ်ဆိုက်များ သို့မဟုတ် သင်ဆက်သွယ်နေသည့်သူများကို ခွဲခြားဖော်ထုတ်ရန် ၎င်းတို့အတွက် သိသိသာသာ ခက်ခဲစေသည်။"
 
 msgctxt "wireguard-settings-view"
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption."
-msgstr "Quantum Safe အယ်လဂိုရီသမ်တစ်ခုကို သုံး၍ ထပ်ဆောင်း ကီးဖလှယ်မှုတစ်ခုကို ဆောင်ရွက်ပြီး QUIC ၏ ပုံမှန် ကုဒ်ပြောင်းဝှက်မှုအတွင်း ရလဒ်ကို ရောနှောခြင်းအားဖြင့် ဤသည်ကို လုပ်ဆောင်ပါသည်။"
+msgid "It combines a quantum-safe key exchange with the classical one. When it is on, the app only connects through servers that offer it. When it is off, it is still used wherever a server offers it."
+msgstr "၎င်းသည် ကွမ်တမ်ဘေးကင်းသော ကီးဖလှယ်မှုကို ရိုးရာကီးဖလှယ်မှုနှင့် ပေါင်းစပ်သည်။ ဖွင့်ထားလျှင် ၎င်းကို ပံ့ပိုးသော ဆာဗာများမှတစ်ဆင့်သာ အက်ပ်က ချိတ်ဆက်သည်။ ပိတ်ထားလျှင်လည်း ဆာဗာက ပံ့ပိုးသည့်နေရာတိုင်းတွင် ဆက်လက်အသုံးပြုသည်။"
 
 #. The title for the QUIC MTU setting. MTU stands for Maximum
 #. Transmission Unit and controls the maximum size of packets sent over
@@ -3723,8 +3723,8 @@ msgid "The custom port can be any value inside the valid ranges: %(portRanges)s.
 msgstr "စိတ်ကြိုက်ပေါ့တ်သည် အကျုံးဝင် အပိုင်းအခြားများထဲမှ မည်သည့်တန်ဖိုးမဆို ဖြစ်နိုင်ပါသည်- %(portRanges)s ။"
 
 msgctxt "wireguard-settings-view"
-msgid "This feature makes the QUIC tunnel resistant to potential attacks from quantum computers."
-msgstr "ဤလုပ်ဆောင်ချက်သည် Quantum ကွန်ပျူတာများမှ ဖြစ်လာနိုင်ခြေရှိသော တိုက်ခိုက်မှုများကို ခုခံနိုင်သည့် QUIC Tunnel ကို ပြုလုပ်သည်။"
+msgid "This feature protects your traffic to the exit server against potential attacks from quantum computers."
+msgstr "ဤလုပ်ဆောင်ချက်သည် ထွက်ပေါက်ဆာဗာသို့ သွားသော သင့်ဒေတာစီးဆင်းမှုကို ကွမ်တမ်ကွန်ပျူတာများ၏ ဖြစ်နိုင်ချေရှိသော တိုက်ခိုက်မှုများမှ ကာကွယ်ပေးသည်။"
 
 msgctxt "wireguard-settings-view"
 msgid "UDP-over-TCP"

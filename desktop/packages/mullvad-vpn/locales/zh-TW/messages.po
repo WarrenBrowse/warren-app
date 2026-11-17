@@ -3651,8 +3651,8 @@ msgid "If an observer monitors these data packets, %(daita)s makes it significan
 msgstr "如果有觀察者正在監控這些資料封包，%(daita)s 會大大增加他們的難度，讓他們很難辨識您正在瀏覽哪些網站或者在和誰通訊。"
 
 msgctxt "wireguard-settings-view"
-msgid "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption."
-msgstr "此功能會額外使用抗量子演算法進行一次金鑰交換，並將結果混入 QUIC 的一般加密機制中。"
+msgid "It combines a quantum-safe key exchange with the classical one. When it is on, the app only connects through servers that offer it. When it is off, it is still used wherever a server offers it."
+msgstr "它將抗量子金鑰交換與傳統金鑰交換結合。開啟時，App 只會透過提供此功能的伺服器連線。關閉時，只要伺服器提供，仍會使用。"
 
 #. The title for the QUIC MTU setting. MTU stands for Maximum
 #. Transmission Unit and controls the maximum size of packets sent over
@@ -3723,8 +3723,8 @@ msgid "The custom port can be any value inside the valid ranges: %(portRanges)s.
 msgstr "自訂連接埠可以是有效範圍內的任何值：%(portRanges)s。"
 
 msgctxt "wireguard-settings-view"
-msgid "This feature makes the QUIC tunnel resistant to potential attacks from quantum computers."
-msgstr "借助此功能，QUIC 通道便能夠抵抗可能從量子電腦發起的攻擊。"
+msgid "This feature protects your traffic to the exit server against potential attacks from quantum computers."
+msgstr "此功能可保護您傳往出口伺服器的流量，免受量子電腦的潛在攻擊。"
 
 msgctxt "wireguard-settings-view"
 msgid "UDP-over-TCP"

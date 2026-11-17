@@ -26,13 +26,13 @@ export function QuantumResistantSetting(props: QuantumResistantSettingProps) {
                 <ModalMessage>
                   {messages.pgettext(
                     'wireguard-settings-view',
-                    'This feature makes the QUIC tunnel resistant to potential attacks from quantum computers.',
+                    'This feature protects your traffic to the exit server against potential attacks from quantum computers.',
                   )}
                 </ModalMessage>
                 <ModalMessage>
                   {messages.pgettext(
                     'wireguard-settings-view',
-                    'It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption.',
+                    'It combines a quantum-safe key exchange with the classical one. When it is on, the app only connects through servers that offer it. When it is off, it is still used wherever a server offers it.',
                   )}
                 </ModalMessage>
               </>

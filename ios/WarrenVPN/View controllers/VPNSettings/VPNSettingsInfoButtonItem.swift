@@ -91,13 +91,14 @@ enum VPNSettingsInfoButtonItem: CustomStringConvertible {
         case .quantumResistance:
             [
                 NSLocalizedString(
-                    "This feature makes the QUIC tunnel resistant to potential attacks from quantum computers.",
+                    "This feature protects your traffic to the exit server against potential attacks "
+                        + "from quantum computers.",
                     comment: ""
                 ),
                 NSLocalizedString(
-                    "It does this by performing an extra key exchange using a quantum safe algorithm and mixing "
-                        + "the result into QUIC’s regular encryption. This extra step uses approximately 500 kiB "
-                        + "of traffic every time a new tunnel is established.",
+                    "It combines a quantum-safe key exchange with the classical one. When it is on, the app "
+                        + "only connects through servers that offer it. When it is off, it is still used "
+                        + "wherever a server offers it.",
                     comment: ""
                 ),
             ].joinedParagraphs(lineBreaks: 1)

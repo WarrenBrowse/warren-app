@@ -45820,144 +45820,144 @@
         }
       }
     },
-    "It does this by performing an extra key exchange using a quantum safe algorithm and mixing the result into QUIC’s regular encryption. This extra step uses approximately 500 kiB of traffic every time a new tunnel is established.": {
+    "It combines a quantum-safe key exchange with the classical one. When it is on, the app only connects through servers that offer it. When it is off, it is still used wherever a server offers it.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "وتفعل ذلك من خلال إجراء تبادل مفتاح إضافي باستخدام خوارزمية آمنة ضد هجمات الحواسيب الكميّة، ودمج النتيجة في تشفير QUIC الاعتيادي. تستهلك هذه الخطوة الإضافية حوالي 500 كيلو بايت من حركة البيانات في كل مرة يتم فيها إنشاء نفق جديد."
+            "value": "تجمع بين تبادل مفاتيح مقاوم للحواسيب الكمومية وتبادل المفاتيح التقليدي. عند تفعيلها، لا يتصل التطبيق إلا عبر الخوادم التي توفرها. وعند إيقافها، تُستخدم مع ذلك متى ما وفرها الخادم."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Det gør den ved at udføre en ekstra nøgleudveksling ved hjælp af en kvantesikker algoritme og blande resultatet med QUICs almindelige kryptering. Dette ekstra trin bruger cirka 500 kB trafik, hver gang en ny tunnel etableres."
+            "value": "Den kombinerer en kvantesikker nøgleudveksling med den klassiske. Når den er slået til, forbinder appen kun via servere, der tilbyder den. Når den er slået fra, bruges den stadig, hvor en server tilbyder den."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Dazu wird ein zusätzlicher Schlüsselaustausch mit einem quantensicheren Algorithmus durchgeführt und das Ergebnis mit der regulären Verschlüsselung von QUIC vermischt. Dieser zusätzliche Schritt verbraucht jedes Mal, wenn ein neuer Tunnel aufgebaut wird, etwa 500 KiB an Datenverkehr."
+            "value": "Sie kombiniert einen quantensicheren Schlüsselaustausch mit dem klassischen. Ist sie aktiviert, verbindet sich die App nur über Server, die ihn anbieten. Ist sie deaktiviert, wird er trotzdem genutzt, wo ein Server ihn anbietet."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Lo hace al realizar un intercambio de claves adicional usando un algoritmo cuántico seguro y combinando el resultado en el cifrado normal de QUIC. Este paso extra utiliza aproximadamente 500 kiB de tráfico cada vez que se establece un nuevo túnel."
+            "value": "Combina un intercambio de claves resistente a los ordenadores cuánticos con el clásico. Cuando está activada, la aplicación solo se conecta a través de servidores que lo ofrecen. Cuando está desactivada, se sigue usando siempre que un servidor lo ofrezca."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "این کار را با انجام یک تبادل کلیدِ اضافه با استفاده از یک الگوریتم امنِ کوانتومی انجام می‌دهد و نتیجه را در رمزگذاری معمولی QUIC ترکیب می‌کند. این مرحلهٔ اضافی، هر بار که یک تونل جدید برقرار می‌شود، حدود 500 کیلوبایت ترافیک مصرف می‌کند."
+            "value": "این قابلیت یک تبادل کلید مقاوم در برابر کوانتوم را با تبادل کلید کلاسیک ترکیب می‌کند. وقتی روشن است، برنامه فقط از طریق سرورهایی متصل می‌شود که آن را ارائه می‌دهند. وقتی خاموش است، هر جا سروری آن را ارائه دهد همچنان استفاده می‌شود."
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tunneli torjuu hyökkäykset suorittamalla ylimääräisen avaimenvaihdon käyttämällä ensin kvanttiturvallista algoritmia, jonka tuloksen se sekoittaa QUICin tavalliseen salaukseen. Tämä ylimääräinen vaihe käyttää noin 500 kiB liikennettä joka kerta, kun uusi tunneli luodaan."
+            "value": "Se yhdistää kvanttiturvallisen avaintenvaihdon perinteiseen. Kun se on päällä, sovellus muodostaa yhteyden vain sitä tarjoavien palvelimien kautta. Kun se on pois päältä, sitä käytetään silti aina, kun palvelin tarjoaa sitä."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Pour ce faire, il effectue un échange de clés supplémentaire à l'aide d'un algorithme à sécurité quantique et mélange le résultat au chiffrement habituel de QUIC. Cette étape supplémentaire utilise environ 500 kiB de trafic chaque fois qu'un nouveau tunnel est établi."
+            "value": "Elle combine un échange de clés résistant aux ordinateurs quantiques avec l'échange classique. Activée, l'app ne se connecte qu'à travers les serveurs qui le proposent. Désactivée, elle l'utilise quand même dès qu'un serveur le propose."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "L'operazione viene effettuata eseguendo uno scambio di chiavi aggiuntivo con un algoritmo di sicurezza quantistica e mescolando il risultato nella normale crittografia di QUIC. Questo passaggio aggiuntivo utilizza circa 500 kiB di traffico ogni volta che viene stabilito un nuovo tunnel."
+            "value": "Combina uno scambio di chiavi resistente ai computer quantistici con quello classico. Quando è attiva, l'app si connette solo tramite server che lo offrono. Quando è disattivata, viene comunque usato ovunque un server lo offra."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "耐量子アルゴリズムで追加の鍵の交換を実行し、結果をQUICの通常の暗号化に混合させることで行われます。この追加ステップでは、新しいトンネルが確立されるたびに約500kiBのトラフィックが使用されます。"
+            "value": "量子耐性のある鍵交換を従来の鍵交換と組み合わせます。オンのときは、これを提供するサーバー経由でのみ接続します。オフのときも、サーバーが提供していれば使用されます。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이를 위해 양자 안전 알고리즘을 사용하여 추가 키 교환을 수행하고 결과를 QUIC의 일반 암호화에 혼합하는 방법이 이용됩니다. 이 추가 단계는 새 터널이 설정될 때마다 약 500kiB의 트래픽을 사용합니다."
+            "value": "양자 내성 키 교환을 기존 키 교환과 결합합니다. 켜져 있으면 앱은 이를 제공하는 서버를 통해서만 연결합니다. 꺼져 있어도 서버가 제공하는 경우에는 계속 사용됩니다."
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "Quantum Safe အယ်လဂိုရီသမ်တစ်ခုကို သုံး၍ ထပ်ဆောင်း ကီးဖလှယ်မှုတစ်ခုကို ဆောင်ရွက်ပြီး QUIC ၏ ပုံမှန် ကုဒ်ပြောင်းဝှက်မှုအတွင်း ရလဒ်ကို ရောနှောခြင်းအားဖြင့် ဤသည်ကို လုပ်ဆောင်ပါသည်။ ဤထပ်ဆောင်းအဆင့်သည် Tunnel အသစ်တစ်ခု တည်ဆောက်တိုင်း ဒေတာ 500 kiB ခန့်ကို သုံးပါသည်။"
+            "value": "၎င်းသည် ကွမ်တမ်ဘေးကင်းသော ကီးဖလှယ်မှုကို ရိုးရာကီးဖလှယ်မှုနှင့် ပေါင်းစပ်သည်။ ဖွင့်ထားလျှင် ၎င်းကို ပံ့ပိုးသော ဆာဗာများမှတစ်ဆင့်သာ အက်ပ်က ချိတ်ဆက်သည်။ ပိတ်ထားလျှင်လည်း ဆာဗာက ပံ့ပိုးသည့်နေရာတိုင်းတွင် ဆက်လက်အသုံးပြုသည်။"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Det gjøres ved at å utføre en ekstra nøkkelutveksling med en kvantesikker algoritme og kombinere resultatet med QUIC sin vanlige kryptering. Dette ekstratrinnet bruker omtrent 500 kiB trafikk hver gang det opprettes en ny tunnel."
+            "value": "Den kombinerer en kvantesikker nøkkelutveksling med den klassiske. Når den er på, kobler appen seg bare til via servere som tilbyr den. Når den er av, brukes den likevel der en server tilbyr den."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Het doet dit door een extra sleuteluitwisseling uit te voeren met een kwantumveilig algoritme en het resultaat te mengen met de reguliere versleuteling van QUIC. Deze extra stap gebruikt ongeveer 500 kiB aan verkeer elke keer dat een nieuwe tunnel wordt opgezet."
+            "value": "Ze combineert een kwantumveilige sleuteluitwisseling met de klassieke. Als ze aan staat, maakt de app alleen verbinding via servers die dit aanbieden. Als ze uit staat, wordt ze toch gebruikt waar een server dit aanbiedt."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Jest to wykonywane poprzez dodatkową wymianę kluczy przy użyciu algorytmu odpornego na ataki z użyciem komputerów kwantowych i zmieszanie wyniku ze zwykłym szyfrowaniem QUIC. Ten dodatkowy krok zużywa około 500 kB ruchu za każdym razem, gdy ustanawiany jest nowy tunel."
+            "value": "Łączy odporną na komputery kwantowe wymianę kluczy z klasyczną. Gdy jest włączona, aplikacja łączy się tylko przez serwery, które ją oferują. Gdy jest wyłączona, nadal jest używana wszędzie tam, gdzie serwer ją oferuje."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Para isso, realiza uma troca de chaves adicional utilizando um algoritmo resistente à computação quântica, e misturando o resultado na encriptação regular do QUIC. Este passo adicional utiliza aproximadamente 500 kiB de tráfego sempre que um novo túnel é estabelecido."
+            "value": "Combina uma troca de chaves resistente a computadores quânticos com a troca clássica. Quando está ativada, a aplicação só se liga através de servidores que a oferecem. Quando está desativada, continua a ser usada sempre que um servidor a oferece."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Face acest lucru efectuând un schimb suplimentar de chei folosind un algoritm rezistent cuantic și amestecând rezultatul în criptarea obișnuită a QUIC. Acest pas suplimentar folosește aproximativ 500 kiB de trafic de fiecare dată când se stabilește un tunel nou."
+            "value": "Combină un schimb de chei rezistent la computerele cuantice cu cel clasic. Când este activată, aplicația se conectează doar prin servere care îl oferă. Când este dezactivată, este folosit totuși oriunde un server îl oferă."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Для этого функция выполняет дополнительный обмен ключами с использованием квантово-устойчивого алгоритма и добавляет результат к обычному шифрованию QUIC. Эта дополнительная мера использует примерно 500 КиБ трафика при каждом создании нового туннеля."
+            "value": "Она сочетает квантово-устойчивый обмен ключами с классическим. Когда она включена, приложение подключается только через серверы, которые его поддерживают. Когда она выключена, он всё равно используется там, где сервер его поддерживает."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Den gör det genom att göra ett extra nyckelutbyte med en kvantsäker algoritm och kombinera resultatet med QUICs vanliga kryptering. Det här extra steget använder ungefär 500 KiB i trafik varje gång en ny tunnel upprättas."
+            "value": "Den kombinerar ett kvantsäkert nyckelutbyte med det klassiska. När den är på ansluter appen bara via servrar som erbjuder det. När den är av används det ändå där en server erbjuder det."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "ระบบจะดำเนินการสิ่งนี้ผ่านการแลกเปลี่ยนคีย์เพิ่มเติม โดยการใช้อัลกอริทึมแบบควอนตัมที่ปลอดภัย และผสมผลลัพธ์เข้ากับการเข้ารหัสตามปกติของ QUIC และขั้นตอนพิเศษนี้ใช้การรับส่งข้อมูลประมาณ 500 kiB ในทุกครั้งที่สร้างช่องทางใหม่"
+            "value": "ฟีเจอร์นี้รวมการแลกเปลี่ยนคีย์ที่ทนทานต่อควอนตัมเข้ากับการแลกเปลี่ยนคีย์แบบดั้งเดิม เมื่อเปิดอยู่ แอปจะเชื่อมต่อผ่านเซิร์ฟเวอร์ที่รองรับเท่านั้น เมื่อปิดอยู่ ก็ยังคงใช้งานทุกครั้งที่เซิร์ฟเวอร์รองรับ"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu işlemi, bir kuantum güvenlik algoritmasıyla ekstra bir anahtar değişimi gerçekleştirdikten sonra sonucu QUIC'ın normal şifrelemesiyle karıştırarak yapar. Bu ekstra adım, her yeni tünel kurulduğunda yaklaşık 500 kiB trafik kullanır."
+            "value": "Kuantuma dayanıklı bir anahtar değişimini klasik olanla birleştirir. Açıkken uygulama yalnızca bunu sunan sunucular üzerinden bağlanır. Kapalıyken de bir sunucu sunduğu her yerde kullanılmaya devam eder."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Це досягається шляхом виконання додаткового обміну ключами з використанням квантово-стійкого алгоритму й інтеграції його результату в стандартне шифрування QUIC. Цей додатковий крок використовує приблизно 500 КіБ трафіку щоразу, коли створюється новий тунель."
+            "value": "Вона поєднує квантово-стійкий обмін ключами з класичним. Коли її ввімкнено, застосунок підключається лише через сервери, які його пропонують. Коли її вимкнено, він однаково використовується там, де сервер його пропонує."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "实现方法是使用量子安全算法执行额外的密钥交换，并将结果混合到 QUIC 的常规加密中。每次建立新隧道时，这一额外步骤都会使用约 500 kiB 的流量。"
+            "value": "它将抗量子密钥交换与传统密钥交换相结合。开启时，应用只通过提供该功能的服务器连接。关闭时，只要服务器提供，仍会使用。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "實現方法是使用量子安全演算法執行額外的金鑰交換，並將結果混合至 QUIC 的常規加密。每次建立新通道時，這一額外步驟都會使用約 500 kiB 流量。"
+            "value": "它將抗量子金鑰交換與傳統金鑰交換結合。開啟時，App 只會透過提供此功能的伺服器連線。關閉時，只要伺服器提供，仍會使用。"
           }
         }
       }
@@ -86161,144 +86161,144 @@
         }
       }
     },
-    "This feature makes the QUIC tunnel resistant to potential attacks from quantum computers.": {
+    "This feature protects your traffic to the exit server against potential attacks from quantum computers.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "تجعل هذه الميزة نفق QUIC مقاومًا للهجمات المحتملة من الحواسيب الكمّية."
+            "value": "تحمي هذه الميزة حركة بياناتك نحو خادم الخروج من الهجمات المحتملة من الحواسيب الكمومية."
           }
         },
         "da": {
           "stringUnit": {
             "state": "translated",
-            "value": "Denne funktion gør QUIC-tunnelen modstandsdygtig over for potentielle angreb fra kvantecomputere."
+            "value": "Denne funktion beskytter din trafik til exit-serveren mod mulige angreb fra kvantecomputere."
           }
         },
         "de": {
           "stringUnit": {
             "state": "translated",
-            "value": "Diese Funktion macht den QUIC-Tunnel resistent gegen mögliche Angriffe von Quantencomputern."
+            "value": "Diese Funktion schützt Ihren Datenverkehr zum Exit-Server vor möglichen Angriffen durch Quantencomputer."
           }
         },
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esta característica permite que el túnel de QUIC resista posibles ataques de ordenadores cuánticos."
+            "value": "Esta función protege tu tráfico hacia el servidor de salida frente a posibles ataques de ordenadores cuánticos."
           }
         },
         "fa": {
           "stringUnit": {
             "state": "translated",
-            "value": "ویژگی زیر، تونل QUIC را در برابر حملات احتمالی رایانه‌های کوانتومی مقاوم می‌کند."
+            "value": "این قابلیت ترافیک شما به سمت سرور خروجی را در برابر حملات احتمالی رایانه‌های کوانتومی محافظت می‌کند."
           }
         },
         "fi": {
           "stringUnit": {
             "state": "translated",
-            "value": "Tämä ominaisuus tekee QUIC-tunnelista kestävän kvanttitietokoneiden mahdollisia hyökkäyksiä vastaan."
+            "value": "Tämä ominaisuus suojaa poistumispalvelimelle kulkevan liikenteesi kvanttitietokoneiden mahdollisilta hyökkäyksiltä."
           }
         },
         "fr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cette fonctionnalité rend le tunnel QUIC résistant aux attaques potentielles des ordinateurs quantiques."
+            "value": "Cette fonctionnalité protège votre trafic vers le serveur de sortie contre les attaques potentielles des ordinateurs quantiques."
           }
         },
         "it": {
           "stringUnit": {
             "state": "translated",
-            "value": "Questa funzionalità rende il tunnel QUIC resistente ai potenziali attacchi dei computer quantistici."
+            "value": "Questa funzione protegge il tuo traffico verso il server di uscita da potenziali attacchi dei computer quantistici."
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "この機能は、QUICトンネルに量子コンピューターからの潜在的な攻撃に対する耐性を与えます。"
+            "value": "この機能は、出口サーバーへのトラフィックを量子コンピューターによる潜在的な攻撃から保護します。"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "이 기능은 QUIC 터널이 양자 컴퓨터의 잠재적인 공격에 맞서도록 합니다."
+            "value": "이 기능은 출구 서버로 가는 트래픽을 양자 컴퓨터의 잠재적인 공격으로부터 보호합니다."
           }
         },
         "my": {
           "stringUnit": {
             "state": "translated",
-            "value": "ဤလုပ်ဆောင်ချက်သည် Quantum ကွန်ပျူတာများမှ ဖြစ်လာနိုင်ခြေရှိသော တိုက်ခိုက်မှုများကို ခုခံနိုင်သည့် QUIC Tunnel ကို ပြုလုပ်သည်။"
+            "value": "ဤလုပ်ဆောင်ချက်သည် ထွက်ပေါက်ဆာဗာသို့ သွားသော သင့်ဒေတာစီးဆင်းမှုကို ကွမ်တမ်ကွန်ပျူတာများ၏ ဖြစ်နိုင်ချေရှိသော တိုက်ခိုက်မှုများမှ ကာကွယ်ပေးသည်။"
           }
         },
         "nb": {
           "stringUnit": {
             "state": "translated",
-            "value": "Denne funksjonen gjør QUIC-tunnelen motstandsdyktig mot potensielle angrep fra kvantemaskiner."
+            "value": "Denne funksjonen beskytter trafikken din til utgangsserveren mot mulige angrep fra kvantedatamaskiner."
           }
         },
         "nl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Deze eigenschap maakt de QUIC-tunnel bestand tegen mogelijke aanvallen met kwantumcomputers."
+            "value": "Deze functie beschermt je verkeer naar de exitserver tegen mogelijke aanvallen door kwantumcomputers."
           }
         },
         "pl": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ta funkcja sprawia, że tunel QUIC jest odporny na potencjalne ataki ze strony komputerów kwantowych."
+            "value": "Ta funkcja chroni Twój ruch do serwera wyjściowego przed potencjalnymi atakami komputerów kwantowych."
           }
         },
         "pt": {
           "stringUnit": {
             "state": "translated",
-            "value": "Esta funcionalidade torna o túnel do QUIC resistente a potenciais ataques de computadores quânticos."
+            "value": "Esta funcionalidade protege o seu tráfego até ao servidor de saída contra possíveis ataques de computadores quânticos."
           }
         },
         "ro": {
           "stringUnit": {
             "state": "translated",
-            "value": "Această funcție face tunelul QUIC rezistent la potențiale atacuri din partea computerelor cuantice."
+            "value": "Această funcție vă protejează traficul către serverul de ieșire împotriva potențialelor atacuri ale computerelor cuantice."
           }
         },
         "ru": {
           "stringUnit": {
             "state": "translated",
-            "value": "Эта функция делает туннель QUIC устойчивым к потенциальным атакам с использованием квантовых компьютеров."
+            "value": "Эта функция защищает ваш трафик к выходному серверу от возможных атак квантовых компьютеров."
           }
         },
         "sv": {
           "stringUnit": {
             "state": "translated",
-            "value": "Den här funktionen gör QUIC-tunneln resistent mot potentiella attacker från kvantdatorer."
+            "value": "Den här funktionen skyddar din trafik till utgångsservern mot möjliga attacker från kvantdatorer."
           }
         },
         "th": {
           "stringUnit": {
             "state": "translated",
-            "value": "คุณลักษณะนี้จะช่วยให้ช่องทาง QUIC สามารถสกัดกั้นการโจมตีที่อาจมาจากคอมพิวเตอร์ควอนตัมได้"
+            "value": "ฟีเจอร์นี้ปกป้องการรับส่งข้อมูลของคุณไปยังเซิร์ฟเวอร์ขาออกจากการโจมตีที่อาจเกิดขึ้นจากคอมพิวเตอร์ควอนตัม"
           }
         },
         "tr": {
           "stringUnit": {
             "state": "translated",
-            "value": "Bu özellik, QUIC tünelini kuantum bilgisayarlardan gelebilecek potansiyel saldırılara karşı dayanıklı hale getirir."
+            "value": "Bu özellik, çıkış sunucusuna giden trafiğinizi kuantum bilgisayarlarından gelebilecek saldırılara karşı korur."
           }
         },
         "uk": {
           "stringUnit": {
             "state": "translated",
-            "value": "Ця функція робить тунель QUIC стійким до потенційних атак із використанням квантових комп’ютерів."
+            "value": "Ця функція захищає ваш трафік до вихідного сервера від можливих атак квантових комп'ютерів."
           }
         },
         "zh-Hans": {
           "stringUnit": {
             "state": "translated",
-            "value": "借助此功能，QUIC 隧道能够抵抗可能通过量子计算机发起的攻击。"
+            "value": "此功能可保护您发往出口服务器的流量，使其免受量子计算机的潜在攻击。"
           }
         },
         "zh-Hant": {
           "stringUnit": {
             "state": "translated",
-            "value": "借助此功能，QUIC 通道便能夠抵抗可能從量子電腦發起的攻擊。"
+            "value": "此功能可保護您傳往出口伺服器的流量，免受量子電腦的潛在攻擊。"
           }
         }
       }
