@@ -8,12 +8,15 @@ import com.warrenbrowse.vpn.lib.model.wallet.Mnemonic
 import com.warrenbrowse.vpn.lib.model.wallet.SensitiveOpAuthorizer
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import java.time.LocalDate
+import java.util.concurrent.Executors
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Test
@@ -40,9 +43,15 @@ class DeviceRepositoryTest {
         override fun revokeDevice(mnemonic: String, deviceId: String) =
             answer("revoke $deviceId", mnemonic)
 
-        override fun deviceRevoked() = revoked
+        val registryThreads = mutableListOf<String>()
+
+        override fun deviceRevoked(): Boolean {
+            registryThreads += Thread.currentThread().name.substringBefore(" @")
+            return revoked
+        }
 
         override fun forgetDeviceRevocation() {
+            registryThreads += Thread.currentThread().name.substringBefore(" @")
             revoked = false
         }
     }
@@ -72,7 +81,27 @@ class DeviceRepositoryTest {
         DeviceRepository(bridge, wallet, dispatcher)
 
     @Test
-    fun `a revocation shown is consumed natively so it is acted on once`() {
+    fun `the native revocation flag is read and cleared off the calling thread`() {
+        // The service watches it from its main-thread scope, and the native call waits for the
+        // engine runtime the application starts in the background.
+        val io = Executors.newSingleThreadExecutor { Thread(it, "registry-io") }
+        val repository = DeviceRepository(bridge, wallet, io.asCoroutineDispatcher())
+        try {
+            runBlocking {
+                repository.revokedByRegistry()
+                repository.showRevoked()
+                repository.dropRevocation()
+                repository.acknowledgeRevocation()
+            }
+        } finally {
+            io.shutdown()
+        }
+
+        assertEquals(List(4) { "registry-io" }, bridge.registryThreads)
+    }
+
+    @Test
+    fun `a revocation shown is consumed natively so it is acted on once`() = runTest {
         bridge.revoked = true
         val repository = DeviceRepository(bridge)
 
@@ -83,7 +112,7 @@ class DeviceRepositoryTest {
     }
 
     @Test
-    fun `a device still registered reads as not revoked`() {
+    fun `a device still registered reads as not revoked`() = runTest {
         val repository = DeviceRepository(bridge)
 
         assertFalse(repository.revokedByRegistry())
@@ -91,7 +120,7 @@ class DeviceRepositoryTest {
     }
 
     @Test
-    fun `a dropped revocation shows no screen`() {
+    fun `a dropped revocation shows no screen`() = runTest {
         bridge.revoked = true
         val repository = DeviceRepository(bridge)
         assertTrue(repository.revokedByRegistry())
@@ -103,7 +132,7 @@ class DeviceRepositoryTest {
     }
 
     @Test
-    fun `leaving the revoked screen clears the revocation`() {
+    fun `leaving the revoked screen clears the revocation`() = runTest {
         bridge.revoked = true
         val repository = DeviceRepository(bridge)
         repository.showRevoked()

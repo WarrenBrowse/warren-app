@@ -11,6 +11,7 @@ import com.warrenbrowse.vpn.lib.repository.DeviceRepository
 import com.warrenbrowse.vpn.lib.repository.WalletRepository
 import com.warrenbrowse.vpn.lib.repository.WarrenDeviceBridge
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -88,7 +89,7 @@ class DeviceRevocationUseCaseTest {
             override suspend fun erase() = error("unused")
         }
 
-    private val devices = DeviceRepository(bridge, wallet)
+    private val devices = DeviceRepository(bridge, wallet, Dispatchers.Unconfined)
 
     private var logoutOutcome: WarrenLogoutOutcome = WarrenLogoutOutcome.LoggedOut
 

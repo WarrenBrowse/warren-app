@@ -128,7 +128,15 @@ class AndroidTunnelPlatform(
     private val connectivityManager: ConnectivityManager,
 ) : WarrenTunnelPlatform {
 
-    init {
+    // Registered with the first interface rather than at construction: the
+    // service builds this platform on the main thread, and the first call into
+    // WarrenJni waits for the engine library the application loads in the
+    // background. Every tunnel comes after an interface.
+    private var flowOwnerResolverRegistered = false
+
+    private fun registerFlowOwnerResolver() {
+        if (flowOwnerResolverRegistered) return
+        flowOwnerResolverRegistered = true
         // "Country per app" names a flow's app through the platform, which
         // answers only the active VPN app and only from Android 10 on. Below
         // that nothing is registered, and the engine routes no app.
@@ -140,6 +148,7 @@ class AndroidTunnelPlatform(
     }
 
     override fun establish(plan: WarrenTunInterfacePlan): ParcelFileDescriptor? {
+        registerFlowOwnerResolver()
         val builder = vpnService.Builder().setSession(plan.session).setMtu(plan.mtu)
         plan.addresses.forEach {
             try {

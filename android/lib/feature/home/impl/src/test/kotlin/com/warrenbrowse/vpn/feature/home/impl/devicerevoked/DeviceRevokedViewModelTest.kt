@@ -10,6 +10,7 @@ import io.mockk.impl.annotations.MockK
 import io.mockk.mockk
 import io.mockk.unmockkAll
 import kotlin.test.assertEquals
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.test.runTest
@@ -48,7 +49,9 @@ class DeviceRevokedViewModelTest {
             }
         }
 
-    private val deviceRepository = DeviceRepository(bridge)
+    // Unconfined: the native flag is cleared inside the view model's launch, so the assertions
+    // after a click read the cleared state.
+    private val deviceRepository = DeviceRepository(bridge, io = Dispatchers.Unconfined)
 
     @MockK private lateinit var mockConnectionProxy: ConnectionProxy
 
@@ -87,7 +90,7 @@ class DeviceRevokedViewModelTest {
     }
 
     @Test
-    fun `going to login clears the revocation the next login must not find`() {
+    fun `going to login clears the revocation the next login must not find`() = runTest {
         coEvery { mockConnectionProxy.disconnect(any()) } returns true.right()
         deviceRepository.showRevoked()
         bridge.revoked = true

@@ -90,18 +90,23 @@ class DeviceRepository(
      */
     val revocationUnconfirmed: StateFlow<Boolean> = _revocationUnconfirmed.asStateFlow()
 
+    // The native flag is an atomic, but reaching it waits for the engine runtime the application
+    // starts in the background, so every read and clear leaves the caller's thread: the service
+    // watches it from a main-thread scope.
+
     /** Whether the registry revoked this device since the app last took a revocation in. */
-    fun revokedByRegistry(): Boolean = bridge?.deviceRevoked() == true
+    suspend fun revokedByRegistry(): Boolean = withContext(io) { bridge?.deviceRevoked() == true }
 
     /** Whether that revocation was proven, the only case in which the wallet may leave. */
-    fun revocationVerified(): Boolean = bridge?.deviceRevocationVerified() == true
+    suspend fun revocationVerified(): Boolean =
+        withContext(io) { bridge?.deviceRevocationVerified() == true }
 
     /**
      * Takes an unproven revocation in: the native flag is consumed, the wallet stays, and the
      * banner says the disconnection was not confirmed.
      */
-    fun showRevocationUnconfirmed() {
-        bridge?.forgetDeviceRevocation()
+    suspend fun showRevocationUnconfirmed() {
+        forgetNatively()
         _revocationUnconfirmed.value = true
     }
 
@@ -109,8 +114,8 @@ class DeviceRepository(
      * Takes the registry's revocation in: the wallet has left the device, and the revoked screen
      * says why. The native flag is consumed, so the same revocation is acted on once.
      */
-    fun showRevoked() {
-        bridge?.forgetDeviceRevocation()
+    suspend fun showRevoked() {
+        forgetNatively()
         _deviceState.value = DeviceState.Revoked
     }
 
@@ -120,16 +125,18 @@ class DeviceRepository(
     }
 
     /** Drops a revocation that concerns no wallet any more, without a screen. */
-    fun dropRevocation() {
-        bridge?.forgetDeviceRevocation()
+    suspend fun dropRevocation() {
+        forgetNatively()
     }
 
     /** The user left the revoked screen: the next login starts from a clean state. */
-    fun acknowledgeRevocation() {
-        bridge?.forgetDeviceRevocation()
+    suspend fun acknowledgeRevocation() {
+        forgetNatively()
         _deviceState.value = null
         _revocationUnconfirmed.value = false
     }
+
+    private suspend fun forgetNatively() = withContext(io) { bridge?.forgetDeviceRevocation() }
 
     /** The account's devices, this one marked. */
     suspend fun listDevices(): Either<DeviceRegistryError, AccountDeviceList> =
