@@ -84,16 +84,12 @@ pub enum WarrenMnemonic {
     /// subscription. Write it down offline; never share it.
     Export,
 
-    /// Restore a Warren identity from a BIP39 recovery phrase. This
-    /// REPLACES the current identity (the previous one becomes
+    /// Restore a Warren identity from a BIP39 recovery phrase, read from
+    /// the terminal without echo, or from standard input when it is piped.
+    /// This REPLACES the current identity (the previous one becomes
     /// unrecoverable unless separately backed up). The daemon validates
     /// the phrase and hot-swaps the signer (no restart needed).
-    Import {
-        /// The recovery phrase (12 or 24 words, space-separated). Quote
-        /// the whole phrase or pass the words as separate arguments.
-        #[arg(required = true, num_args = 1..)]
-        words: Vec<String>,
-    },
+    Import,
 }
 
 /// Normalises a BIP39 phrase entered on the CLI: splits on any
@@ -111,6 +107,25 @@ pub(crate) fn normalize_mnemonic_words(words: &[String]) -> String {
         .join(" ")
 }
 
+/// The phrase as entered, wiped when dropped. Typed at a terminal it is read
+/// without echo; piped, the whole input is read.
+fn read_phrase() -> Result<zeroize::Zeroizing<String>> {
+    use std::io::{IsTerminal, Read};
+    if std::io::stdin().is_terminal() {
+        let typed = rpassword::prompt_password("Recovery phrase (input hidden): ")?;
+        Ok(zeroize::Zeroizing::new(typed))
+    } else {
+        let mut piped = zeroize::Zeroizing::new(String::new());
+        std::io::stdin().read_to_string(&mut piped)?;
+        Ok(piped)
+    }
+}
+
+/// [`normalize_mnemonic_words`] over one entered block of text.
+fn phrase_from_input(input: &str) -> zeroize::Zeroizing<String> {
+    zeroize::Zeroizing::new(normalize_mnemonic_words(&[input.to_owned()]))
+}
+
 impl Warren {
     pub async fn handle(self) -> Result<()> {
         match self {
@@ -118,9 +133,7 @@ impl Warren {
             Warren::ApiUrl(WarrenApiUrl::Set { url }) => Self::api_url_set(Some(url)).await,
             Warren::ApiUrl(WarrenApiUrl::Unset) => Self::api_url_set(None).await,
             Warren::Mnemonic(WarrenMnemonic::Export) => Self::mnemonic_export().await,
-            Warren::Mnemonic(WarrenMnemonic::Import { words }) => {
-                Self::mnemonic_import(&words).await
-            }
+            Warren::Mnemonic(WarrenMnemonic::Import) => Self::mnemonic_import().await,
             Warren::NConnections(WarrenNConnections::Get) => Self::n_connections_get().await,
             Warren::NConnections(WarrenNConnections::Set { n }) => {
                 Self::n_connections_set(Some(n)).await
@@ -217,10 +230,14 @@ impl Warren {
         Ok(())
     }
 
-    async fn mnemonic_import(words: &[String]) -> Result<()> {
-        let phrase = normalize_mnemonic_words(words);
+    async fn mnemonic_import() -> Result<()> {
+        let input = read_phrase()?;
+        let phrase = phrase_from_input(&input);
+        if phrase.is_empty() {
+            anyhow::bail!("No recovery phrase was entered.");
+        }
         let mut rpc = MullvadProxyClient::new().await?;
-        rpc.set_warren_mnemonic(phrase).await?;
+        rpc.set_warren_mnemonic(phrase.to_string()).await?;
         println!("Warren identity restored - the new identity is now active.");
         println!(
             "If it has an active subscription you can connect; otherwise redeem a voucher first."
@@ -231,7 +248,33 @@ impl Warren {
 
 #[cfg(test)]
 mod tests {
-    use super::normalize_mnemonic_words;
+    use super::{Warren, normalize_mnemonic_words, phrase_from_input};
+    use clap::Parser;
+
+    #[derive(Parser, Debug)]
+    struct Probe {
+        #[command(subcommand)]
+        warren: Warren,
+    }
+
+    /// A phrase on the command line is visible to every local account in
+    /// the process list and stays in the shell history: refused.
+    #[test]
+    fn the_phrase_is_never_taken_as_an_argument() {
+        assert!(
+            Probe::try_parse_from(["probe", "mnemonic", "import", "abandon", "about"]).is_err()
+        );
+        assert!(Probe::try_parse_from(["probe", "mnemonic", "import"]).is_ok());
+    }
+
+    /// Piped input (a file, a password manager) reads like typed input.
+    #[test]
+    fn a_piped_phrase_is_normalised_like_a_typed_one() {
+        assert_eq!(
+            phrase_from_input("  Legal WINNER\n\tthank \n").as_str(),
+            "legal winner thank"
+        );
+    }
 
     #[test]
     fn normalize_collapses_whitespace_and_lowercases() {

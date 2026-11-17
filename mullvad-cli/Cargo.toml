@@ -31,10 +31,13 @@ mullvad-management-interface = { path = "../mullvad-management-interface" }
 mullvad-types = { path = "../mullvad-types", features = ["clap"] }
 mullvad-version = { path = "../mullvad-version" }
 natord = "1.0.9"
+# `warren mnemonic import` reads the recovery phrase without echo.
+rpassword = "7.5"
 serde = { workspace = true }
 serde_json = { workspace = true }
 talpid-types = { path = "../talpid-types" }
 thiserror = { workspace = true }
+zeroize = { workspace = true }
 # `warren version` states the compiled environment and its API host without
 # needing a daemon to answer.
 warren-product-env = { path = "../warren-product-env" }
