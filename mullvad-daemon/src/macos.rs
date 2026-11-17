@@ -160,23 +160,30 @@ pub fn bump_filehandle_limit() {
         return;
     }
 
-    const INCREASED_FILEHANDLE_LIMIT: u64 = 1024;
-    // if file handle limit is already big enough, there's no reason to decrease it.
-    if limits.rlim_cur >= INCREASED_FILEHANDLE_LIMIT {
+    let Some(new_limit) = raised_filehandle_limit(limits.rlim_cur, limits.rlim_max) else {
         return;
-    }
-
-    limits.rlim_cur = INCREASED_FILEHANDLE_LIMIT;
+    };
+    limits.rlim_cur = new_limit;
     // SAFETY: `&limits` is a valid pointer parameter for the getrlimit syscall
     let status = unsafe { libc::setrlimit(libc::RLIMIT_NOFILE, &raw const limits) };
     if status != 0 {
         log::error!(
             "Failed to set file handle limit to {}: {}-{}",
-            INCREASED_FILEHANDLE_LIMIT,
+            new_limit,
             io::Error::from_raw_os_error(status),
             status
         );
     }
+}
+
+/// The soft open-file limit to set given the current soft and hard limits, or `None` when the
+/// current one is already high enough. A burst of DNS queries through the local resolver holds
+/// one socket each, so the default of 256 runs out first.
+fn raised_filehandle_limit(current: u64, hard: u64) -> Option<u64> {
+    // setrlimit fails if the soft limit exceeds OPEN_MAX (10240, syslimits.h) or the hard limit.
+    const INCREASED_FILEHANDLE_LIMIT: u64 = 4096;
+    let new_limit = INCREASED_FILEHANDLE_LIMIT.min(hard);
+    (current < new_limit).then_some(new_limit)
 }
 
 /// Detect when the app bundle is deleted
@@ -371,6 +378,24 @@ fn is_product_installer(path: &[u8]) -> bool {
 mod test {
     use super::*;
     use std::os::unix::fs::PermissionsExt;
+
+    #[test]
+    fn the_open_file_limit_is_raised_to_4096() {
+        assert_eq!(
+            raised_filehandle_limit(256, libc::RLIM_INFINITY),
+            Some(4096)
+        );
+    }
+
+    #[test]
+    fn the_open_file_limit_stays_under_the_hard_limit() {
+        assert_eq!(raised_filehandle_limit(256, 2048), Some(2048));
+    }
+
+    #[test]
+    fn a_high_enough_open_file_limit_is_left_alone() {
+        assert_eq!(raised_filehandle_limit(8192, libc::RLIM_INFINITY), None);
+    }
 
     #[tokio::test]
     async fn an_uninstall_clears_everything_that_keeps_the_kill_switch_up() {
