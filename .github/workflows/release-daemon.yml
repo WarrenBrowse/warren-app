@@ -492,6 +492,9 @@ jobs:
     name: Publish the warren-cli release
     needs: [resolve, linux, linux-arm64, macos, windows]
     runs-on: ubuntu-24.04
+    # It signs the checksum list with the update key, so it runs where every
+    # job reading that key runs (update-metadata.yml).
+    environment: update-signing
     timeout-minutes: 20
     # A draft release is invisible to the install one-liner: its asset URLs
     # answer 404 without a token, and the API does not list it. The pipeline

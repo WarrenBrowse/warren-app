@@ -44,6 +44,9 @@ jobs:
   sign:
     name: Sign ${{ inputs.tag }}
     runs-on: ubuntu-24.04
+    # Every job that reads the update key runs in this environment, where the
+    # key is meant to live behind a required reviewer (update-metadata.yml).
+    environment: update-signing
     timeout-minutes: 20
     env:
       GH_TOKEN: ${{ secrets.WARREN_CLI_RELEASE_TOKEN }}
