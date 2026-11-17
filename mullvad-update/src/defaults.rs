@@ -79,14 +79,15 @@ pub static PINNED_CERTIFICATE: LazyLock<reqwest::Certificate> = LazyLock::new(||
     reqwest::Certificate::from_pem(CERT_BYTES).expect("invalid cert")
 });
 
-/// Pubkeys used to verify metadata from the Warren update channel
-/// (production target).
+/// Pubkeys used to verify metadata from the update channel this binary was
+/// compiled for ([`trusted_metadata_signing_pubkeys`]).
 ///
 /// This key signs app-update manifests, i.e. it can ship a new installer
-/// to every user. It is a dedicated, offline-generated key used for
-/// nothing else, NOT the relay/admin signing key (which is online and has
-/// a known-burned lineage). See `warren-trusted-metadata-signing-pubkeys`
-/// for the trusted pubkey(s) and the rotation procedure. Updates signed by
+/// to every user of its channel. It is used for nothing else, NOT the
+/// relay/admin signing key (which is online and has a known-burned
+/// lineage). See `warren-trusted-metadata-signing-pubkeys` for the prod
+/// key(s) and the rotation procedure, and the `-beta` and `-staging` files
+/// beside it for the other channels. Updates signed by
 /// any other key fail verification and the daemon reports
 /// `app-upgrade-error` (fail-closed).
 pub static TRUSTED_METADATA_SIGNING_PUBKEYS: LazyLock<Vec1<VerifyingKey>> =
