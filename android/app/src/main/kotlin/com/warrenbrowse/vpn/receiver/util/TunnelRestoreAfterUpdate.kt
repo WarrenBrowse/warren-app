@@ -1,7 +1,8 @@
 package com.warrenbrowse.vpn.receiver.util
 
 /**
- * Whether to bring the tunnel back once the app has been replaced by an update.
+ * Whether to bring the tunnel back once the app has been replaced by an update, or once the system
+ * restarted the service after its process died.
  *
  * The update kills the service, and nothing restarts it unless Always-on VPN
  * names this app: a user who was connected is left on the bare network without

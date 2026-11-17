@@ -31,6 +31,7 @@ import com.warrenbrowse.vpn.lib.common.constant.KEY_RECONNECT_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_CONNECT_QUINN_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_TUNNEL_CONFIG_JSON
 import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
+import com.warrenbrowse.vpn.receiver.util.shouldRestoreTunnelAfterUpdate
 import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
 import com.warrenbrowse.vpn.lib.model.AppRouteStatusParser
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationChannelFactory
@@ -364,7 +365,31 @@ class WarrenVpnService : LifecycleVpnService() {
                 }
             }
 
-            intent?.action == KEY_HOLD_LOCKED_APPS_ACTION -> {
+            intent == null -> {
+                // A start with no intent is the system bringing the service back after its
+                // process died (a crash, a memory kill). Bring back the tunnel the user had
+                // asked for, on the same terms as after an app update; otherwise the phone stays
+                // on the bare network without a word.
+                lifecycleScope.launch {
+                    val prefs = getKoin().get<UserPreferencesRepository>().preferences()
+                    val restore =
+                        shouldRestoreTunnelAfterUpdate(
+                            tunnelRequested = prefs.tunnelRequested,
+                            alwaysOnVpn = prefs.alwaysOnVpn,
+                            hasVpnPermission = prepareVpnSafe().isRight(),
+                        )
+                    Logger.i("Service restarted after its process died; restoring the tunnel: $restore")
+                    if (restore) {
+                        foregroundNotificationHandler.startForeground()
+                        val outcome = warrenConnectUseCase.invoke(applicationContext)
+                        if (outcome !is WarrenConnectUseCase.Outcome.Success) {
+                            Logger.w("restart connect did not dispatch: $outcome")
+                        }
+                    }
+                }
+            }
+
+            intent.action == KEY_HOLD_LOCKED_APPS_ACTION -> {
                 // Sent at boot and when an app is locked with no tunnel up. The
                 // foreground comes first, as for every action this service is
                 // started with; the adapter leaves it if nothing is to be held.
