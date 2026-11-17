@@ -24,7 +24,7 @@
     "@babel/runtime": "7.29.7",
     "@eslint/js": "^9.10.0",
     "@types/eslint__js": "^8.42.3",
-    "@types/node": "^22.19.2",
+    "@types/node": "^24.9.0",
     "eslint": "^9.31.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
@@ -35,12 +35,12 @@
     "typescript-eslint": "^8.15.0"
   },
   "engines": {
-    "node": ">=16",
-    "npm": ">=8.3"
+    "node": ">=22.12.0",
+    "npm": ">=10"
   },
   "volta": {
-    "node": "22.22.1",
-    "npm": "11.12.1"
+    "node": "24.22.3",
+    "npm": "11.19.1"
   },
   "overrides": {
     "grpc_tools_node_protoc_ts": {

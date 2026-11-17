@@ -92,15 +92,14 @@ check_app_deps() {
   ensure_electron_binary
 }
 
-# The `electron` npm package downloads its platform binary in a postinstall
-# step (node_modules/electron/install.js, which writes path.txt and unpacks
-# dist/). ROOT CAUSE of the recurring "Electron failed to install correctly":
-# desktop/.npmrc sets `ignore-scripts=true` (a deliberate Mullvad security
-# choice), so EVERY `npm install` / `npm ci` skips that postinstall and the
-# binary is never fetched automatically. Nothing else in the repo installs it
-# explicitly, so a fresh install always leaves Electron broken until repaired
-# by hand. (An inherited ELECTRON_SKIP_BINARY_DOWNLOAD, an interrupted/partial
-# install, or a proxy hiccup produce the same state.) Fix it for good here:
+# The `electron` npm package fetches its platform binary with
+# node_modules/electron/install.js (its `install-electron` bin), which writes
+# path.txt and unpacks dist/. Since Electron 42 nothing runs it at install
+# time: the package has no postinstall any more, and desktop/.npmrc sets
+# `ignore-scripts=true` anyway (a deliberate Mullvad security choice), so a
+# fresh `npm install` / `npm ci` leaves no binary. desktop/scripts/install-scripts.sh
+# runs `install-electron`; a bare npm install does not. (An interrupted or
+# partial download, or a proxy hiccup, produce the same state.) Fix it here:
 # detect the missing binary and run the installer DIRECTLY with `node`
 # (bypassing the npm ignore-scripts gate), forcing the download, before every
 # dev launch. Idempotent and a no-op once the binary is in place.

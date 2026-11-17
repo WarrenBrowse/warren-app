@@ -34,7 +34,7 @@ function desktop_post_install() {
 
     # Setup electron after install
     pushd "$DESKTOP_DIR/node_modules/electron"
-    npm run postinstall
+    npm exec install-electron
     popd
 
     # Run postinstall in our own packages
