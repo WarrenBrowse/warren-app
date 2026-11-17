@@ -77,6 +77,11 @@ esac
 
 clear_gpu_cache
 
+# An upgrade keeps the profile the new version installs.
+case "${1:-remove}" in
+    upgrade | failed-upgrade | abort-upgrade) exit 0 ;;
+esac
+
 # Remove apparmor profile
 if apparmor_parser -R /etc/apparmor.d/warren@WARREN_SUFFIX@ > /dev/null 2>&1; then
     echo "Removing apparmor profile"

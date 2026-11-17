@@ -156,5 +156,69 @@ for case in "dist-assets/linux/before-install.sh bash systemctl_stop yes" \
 	seal_case "$script" "$shell" "$stop" "$arms" 0 proceed
 done
 
+# The post-removal scripts. The settings directory holds the wallet, so only
+# an explicit purge (`apt purge`) may delete it: `dnf remove` passes 0 and has
+# no purge of its own, and erasing a paid identity on a plain removal cannot be
+# undone. The AppArmor profile goes on a real removal only: on an rpm upgrade
+# the old package's post-uninstall runs after the new package's post-install,
+# and would take away the profile the new one just put in place.
+cat > "$TMP/bin/apparmor_parser" << EOF2
+#!/bin/sh
+echo "apparmor_parser \$*" >> "$TMP/calls"
+EOF2
+chmod +x "$TMP/bin/apparmor_parser"
+
+stage_postrm() { # stage_postrm <script>: system paths pointed under $TMP
+	sed -e "s#/var/log/#$TMP/var/log/#g" \
+		-e "s#/var/cache/#$TMP/var/cache/#g" \
+		-e "s#/etc/warren-vpn#$TMP/etc/warren-vpn#g" \
+		-e "s#@WARREN_SUFFIX@##g" \
+		-e "s#/etc/passwd#$TMP/passwd#g" \
+		-e "s#/etc/apparmor.d/#$TMP/apparmor.d/#g" \
+		-e "s#/usr/bin/warren-problem-report#$TMP/warren-problem-report#g" \
+		-e "s#update-rc.d#true#g" \
+		"$SCRIPT_DIR/../$1" > "$TMP/staged"
+}
+
+postrm_case() { # postrm_case <script> <interpreter> <argument> <keeps|erases> <unloads apparmor: yes|no>
+	local script="$1" shell="$2" arg="$3" config="$4" apparmor="$5" result=ok
+	checks=$((checks + 1))
+	rm -rf "${TMP:?}/calls" "${TMP:?}/etc" "${TMP:?}/var"
+	mkdir -p "$TMP/etc/warren-vpn" "$TMP/var/log/warren-vpn" "$TMP/var/cache/warren-vpn"
+	: > "$TMP/etc/warren-vpn/wallet"
+	: > "$TMP/passwd"
+	stage_postrm "$script"
+	PATH="$TMP/bin" "$(command -v "$shell")" "$TMP/staged" "$arg" > "$TMP/out" 2>&1 || result="fails on"
+	case "$config" in
+	keeps) [ -f "$TMP/etc/warren-vpn/wallet" ] || result="erases the settings directory on" ;;
+	erases) [ ! -e "$TMP/etc/warren-vpn" ] || result="keeps the settings directory on" ;;
+	esac
+	if [ "$config" = keeps ] && [ "$arg" = 0 ] && ! grep -q "/etc/warren-vpn" "$TMP/out"; then
+		result="does not say where the kept settings are on"
+	fi
+	local unloaded=no
+	grep -q "^apparmor_parser -R" "$TMP/calls" 2> /dev/null && unloaded=yes
+	[ "$unloaded" = "$apparmor" ] || result="unloads the AppArmor profile=$unloaded on"
+	if [ "$result" = ok ]; then
+		printf '  ok   %s %s: settings %s, AppArmor unloaded=%s\n' "$script" "$arg" "$config" "$apparmor"
+	else
+		failures=$((failures + 1))
+		printf '  FAIL %s %s argument %s\n' "$script" "$result" "$arg"
+	fi
+}
+
+postrm_case dist-assets/linux/after-remove.sh bash purge erases yes
+postrm_case dist-assets/linux/after-remove.sh bash remove keeps yes
+postrm_case dist-assets/linux/after-remove.sh bash 0 keeps yes
+postrm_case dist-assets/linux/after-remove.sh bash 1 keeps no
+postrm_case dist-assets/linux/after-remove.sh bash upgrade keeps no
+# pacman runs it on a removal only, with the removed version as argument.
+postrm_case dist-assets/linux/after-remove.sh bash 1.1.57-1 keeps yes
+postrm_case dist-assets/linux/sysvinit/postrm sh purge erases yes
+postrm_case dist-assets/linux/sysvinit/postrm sh remove keeps yes
+postrm_case dist-assets/linux/sysvinit/postrm sh upgrade keeps no
+postrm_case dist-assets/linux/daemon/postrm bash purge erases no
+postrm_case dist-assets/linux/daemon/postrm bash 0 keeps no
+
 printf '\n%d checks, %d failure(s)\n' "$checks" "$failures"
 [ "$failures" -eq 0 ]

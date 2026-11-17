@@ -30,10 +30,12 @@ case $@ in
   "remove")
     remove_symlinks
     ;;
-  # dnf remove passes a 0
+  # dnf remove passes a 0. rpm has no purge, and the settings directory holds
+  # the wallet: erasing it on a plain removal would destroy a paid identity
+  # whose recovery phrase the user may not have kept.
   "0")
     remove_logs_and_cache
-    remove_config
     remove_symlinks
+    echo "Kept /etc/warren-vpn, which holds the wallet. Delete it to erase the wallet from this machine."
     ;;
 esac

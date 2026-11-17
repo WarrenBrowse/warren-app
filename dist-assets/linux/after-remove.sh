@@ -64,10 +64,12 @@ case $@ in
   # apt remove passes "remove"
   "remove")
     ;;
-  # dnf remove passes a 0
+  # dnf remove passes a 0. rpm has no purge, and the settings directory holds
+  # the wallet: erasing it on a plain removal would destroy a paid identity
+  # whose recovery phrase the user may not have kept.
   "0")
     remove_logs_and_cache
-    remove_config
+    echo "Kept /etc/warren-vpn, which holds the wallet. Delete it to erase the wallet from this machine."
     ;;
 esac
 
@@ -75,8 +77,19 @@ esac
 # the same cache is not used across versions.
 clear_gpu_cache
 
-# Remove apparmor profile
-if apparmor_parser -R /etc/apparmor.d/warren &>/dev/null; then
+# An upgrade keeps the profile: on Fedora the old package's post-uninstall runs
+# after the new package's post-install (see post-transaction.sh), so removing it
+# here would take away the profile the new version just installed. rpm passes
+# the number of versions left installed, so anything above 0 is an upgrade;
+# pacman passes the removed version, which is never a bare number.
+function is_upgrade {
+  case "${1:-}" in
+    upgrade | failed-upgrade | abort-upgrade) return 0 ;;
+  esac
+  [[ "${1:-}" =~ ^[0-9]+$ ]] && [ "$1" -gt 0 ]
+}
+
+if ! is_upgrade "${1:-}" && apparmor_parser -R /etc/apparmor.d/warren &>/dev/null; then
     echo "Removing apparmor profile"
     rm -f /etc/apparmor.d/warren || echo "Failed to delete apparmor profile"
 fi
