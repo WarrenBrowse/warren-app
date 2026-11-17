@@ -79,5 +79,82 @@ for case in "dist-assets/linux/before-install.sh -sysvinit.deb" \
 	mv "$TMP/systemctl.away" "$TMP/bin/systemctl"
 done
 
+# The upgrade seals the host (`warren-setup prepare-restart`) before it stops
+# the daemon: a stop without the seal reads as a user stop and opens the
+# firewall until the new daemon starts. So a seal that fails must abort the
+# upgrade before the stop, a daemon that is already gone (warren-setup's exit
+# status 3) leaves nothing to seal, and the systemd flavours arm the detached
+# update guard before the seal and retire it when they abort. Each script is
+# staged with its installed paths pointed at fakes that record their calls.
+mkdir "$TMP/init.d"
+cat > "$TMP/setup" << EOF2
+#!/bin/sh
+echo "setup \$1" >> "$TMP/calls"
+case "\$1" in prepare-restart) exit "\$(cat "$TMP/seal")" ;; esac
+exit 0
+EOF2
+cat > "$TMP/init.d/warren-daemon" << EOF2
+#!/bin/sh
+echo "init \$1" >> "$TMP/calls"
+EOF2
+chmod +x "$TMP/setup" "$TMP/init.d/warren-daemon"
+
+stage() { # stage <script>: copy with the installed paths pointed at the fakes
+	sed -e "s#/opt/Warren\\\\ VPN/resources/warren-setup#$TMP/setup#g" \
+		-e "s#/opt/Warren VPN/resources/warren-setup#$TMP/setup#g" \
+		-e "s#@WARREN_PRODUCT_DIR@/resources/warren-setup#$TMP/setup#g" \
+		-e "s#@WARREN_SUFFIX@##g" \
+		-e "s#/etc/init.d/#$TMP/init.d/#g" \
+		"$SCRIPT_DIR/../$1" > "$TMP/staged"
+}
+
+seal_case() { # seal_case <script> <interpreter> <stop call> <arms guard> <seal status> <expect>
+	local script="$1" shell="$2" stop="$3" arms="$4" seal="$5" expect="$6" result=ok
+	checks=$((checks + 1))
+	rm -f "$TMP/calls"
+	echo running > "$TMP/state"
+	echo "$seal" > "$TMP/seal"
+	stage "$script"
+	local status=0
+	PATH="$TMP/bin" "$(command -v "$shell")" "$TMP/staged" > "$TMP/out" 2>&1 || status=$?
+	local calls
+	calls="$(cat "$TMP/calls" 2> /dev/null)"
+	case "$expect" in
+	abort)
+		[ "$status" -ne 0 ] || result="installs on"
+		! grep -qx "$stop" <<< "$calls" || result="stops the daemon after"
+		if [ "$arms" = yes ] && ! grep -qx "setup disarm-deadman" <<< "$calls"; then
+			result="leaves the update guard armed after"
+		fi
+		;;
+	proceed)
+		[ "$status" -eq 0 ] || result="aborts on"
+		grep -qx "$stop" <<< "$calls" || result="never stops the daemon on"
+		;;
+	esac
+	if [ "$arms" = yes ] && [ "$(grep -m1 -E '^setup (arm-deadman|prepare-restart)$' <<< "$calls")" != "setup arm-deadman" ]; then
+		result="does not arm the update guard before the seal on"
+	fi
+	if [ "$result" = ok ]; then
+		printf '  ok   %s, seal status %s: %s\n' "$script" "$seal" "$expect"
+	else
+		failures=$((failures + 1))
+		printf '  FAIL %s %s a seal status %s\n' "$script" "$result" "$seal"
+	fi
+}
+
+for case in "dist-assets/linux/before-install.sh bash systemctl_stop yes" \
+	"dist-assets/linux/daemon/preinst bash systemctl_stop yes" \
+	"dist-assets/linux/sysvinit/preinst sh init_stop no"; do
+	read -r script shell stop arms <<< "$case"
+	case "$stop" in
+	systemctl_stop) stop="systemctl stop warren-daemon.service" ;;
+	init_stop) stop="init stop" ;;
+	esac
+	seal_case "$script" "$shell" "$stop" "$arms" 1 abort
+	seal_case "$script" "$shell" "$stop" "$arms" 3 proceed
+	seal_case "$script" "$shell" "$stop" "$arms" 0 proceed
+done
+
 printf '\n%d checks, %d failure(s)\n' "$checks" "$failures"
 [ "$failures" -eq 0 ]

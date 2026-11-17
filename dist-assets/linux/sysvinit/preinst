@@ -10,9 +10,20 @@ SETUP="@WARREN_PRODUCT_DIR@/resources/warren-setup"
 
 if [ -x "/etc/init.d/$NAME" ]; then
     # prepare-restart pins the target state to Secured, so the window between
-    # the old daemon exiting and the new one starting cannot leak.
+    # the old daemon exiting and the new one starting cannot leak. A stop
+    # without it reads as a user stop and opens the firewall, so a seal that
+    # fails aborts the upgrade instead. Status 3 is warren-setup's
+    # DaemonNotRunning: no daemon holds the host, so there is nothing to seal.
+    # Unlike the systemd flavour, no detached update guard is armed: its only
+    # Linux scheduler is a systemd timer.
     if [ -x "$SETUP" ]; then
-        "$SETUP" prepare-restart || true
+        seal_status=0
+        "$SETUP" prepare-restart || seal_status=$?
+        if [ "$seal_status" -ne 0 ] && [ "$seal_status" -ne 3 ]; then
+            echo "Failed to send 'prepare-restart' to the daemon; aborting the install"
+            echo "Stop it with '/etc/init.d/$NAME stop', then install again."
+            exit 1
+        fi
     fi
     if command -v invoke-rc.d > /dev/null 2>&1; then
         invoke-rc.d "$NAME" stop || true

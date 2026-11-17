@@ -14,7 +14,20 @@ if ! command -v systemctl &> /dev/null || [ "$(systemctl is-system-running 2> /d
 fi
 
 if systemctl status warren-daemon &> /dev/null; then
-    /opt/Warren\ VPN/resources/warren-setup prepare-restart || true
+    # Same handover as dist-assets/linux/before-install.sh: arm the detached
+    # update guard (not fatal), then seal the host, and abort rather than stop
+    # a daemon the seal could not reach. Status 3 is warren-setup's
+    # DaemonNotRunning, which leaves nothing holding the host.
+    /opt/Warren\ VPN/resources/warren-setup arm-deadman \
+        || echo "Failed to arm the detached update guard"
+    seal_status=0
+    /opt/Warren\ VPN/resources/warren-setup prepare-restart || seal_status=$?
+    if [ "$seal_status" -ne 0 ] && [ "$seal_status" -ne 3 ]; then
+        echo "Failed to send 'prepare-restart' to the daemon; aborting the install"
+        echo "Stop it with 'systemctl stop warren-daemon.service', then install again."
+        /opt/Warren\ VPN/resources/warren-setup disarm-deadman || true
+        exit 1
+    fi
     systemctl stop warren-daemon.service
     systemctl disable warren-daemon.service
     systemctl disable warren-early-boot-blocking.service || true

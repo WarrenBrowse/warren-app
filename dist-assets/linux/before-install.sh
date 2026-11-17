@@ -21,8 +21,13 @@ if systemctl status warren-daemon &> /dev/null; then
     # FATAL since 2026-08-08, matching Windows: this is what seals the host
     # for the swap. An installer that could not arm the protection must not
     # go on to stop the daemon.
-    if ! /opt/Warren\ VPN/resources/warren-setup prepare-restart; then
+    # Status 3 is warren-setup's DaemonNotRunning: the daemon went away between
+    # the check above and the seal, which leaves nothing holding the host.
+    seal_status=0
+    /opt/Warren\ VPN/resources/warren-setup prepare-restart || seal_status=$?
+    if [ "$seal_status" -ne 0 ] && [ "$seal_status" -ne 3 ]; then
         echo "Failed to send 'prepare-restart' to the daemon; aborting the install"
+        echo "Stop it with 'systemctl stop warren-daemon.service', then install again."
         /opt/Warren\ VPN/resources/warren-setup disarm-deadman || true
         exit 1
     fi

@@ -14,4 +14,9 @@ ln -sf /opt/Warren\ VPN/resources/warren-problem-report /usr/bin/warren-problem-
 
 systemctl enable "/usr/lib/systemd/system/warren-daemon.service"
 systemctl start warren-daemon.service || echo "Failed to start warren-daemon.service"
+
+# The update finished and a daemon owns the machine again: retire the guard the
+# preinst armed. Idempotent, so it is safe whether or not it was armed.
+/opt/Warren\ VPN/resources/warren-setup disarm-deadman \
+    || echo "Failed to disarm the detached update guard"
 systemctl enable "/usr/lib/systemd/system/warren-early-boot-blocking.service"
