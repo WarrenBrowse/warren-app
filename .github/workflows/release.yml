@@ -173,6 +173,7 @@ jobs:
           fi
           count=$(git log --oneline "$previous..${GITHUB_REF_NAME}" | wc -l | tr -d ' ')
           echo "### ${GITHUB_REF_NAME}: $count commit(s) since $previous" >> "$GITHUB_STEP_SUMMARY"
+          # shellcheck disable=SC2016 # the backticks are Markdown, not a command
           git log --pretty='- `%h` %s (%an)' "$previous..${GITHUB_REF_NAME}" >> "$GITHUB_STEP_SUMMARY"
           echo "$count commit(s) since $previous:"
           git log --oneline "$previous..${GITHUB_REF_NAME}"
@@ -904,7 +905,7 @@ jobs:
           printf '%s' "$APPSTORECONNECT_API_KEY_B64" | base64 -d > "$tmp_key"
           mkdir -p ~/.appstoreconnect/private_keys
           cp "$tmp_key" ~/.appstoreconnect/private_keys/AuthKey_"$APPSTORECONNECT_API_KEY_ID".p8
-          ipa_path=$(ls ios/build/ipa/*.ipa | head -1)
+          ipa_path=$(find ios/build/ipa -name '*.ipa' | head -1)
           xcrun altool --upload-app \
             --type ios \
             --file "$ipa_path" \
@@ -1015,10 +1016,12 @@ jobs:
         run: |
           tmp=$(mktemp -t warren-android-keystore-XXXXXX.jks)
           printf '%s' "$ANDROID_KEYSTORE_B64" | base64 -d > "$tmp"
-          echo "WARREN_KEYSTORE_PATH=$tmp" >> "$GITHUB_ENV"
-          echo "WARREN_KEYSTORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
-          echo "WARREN_KEY_ALIAS=$ANDROID_KEY_ALIAS" >> "$GITHUB_ENV"
-          echo "WARREN_KEY_PASSWORD=$ANDROID_KEY_PASSWORD" >> "$GITHUB_ENV"
+          {
+            echo "WARREN_KEYSTORE_PATH=$tmp"
+            echo "WARREN_KEYSTORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD"
+            echo "WARREN_KEY_ALIAS=$ANDROID_KEY_ALIAS"
+            echo "WARREN_KEY_PASSWORD=$ANDROID_KEY_PASSWORD"
+          } >> "$GITHUB_ENV"
 
       # The shared versionCode derivation (mullvad-version, YYVVXZZZ) has no
       # room for the semver patch, so every 0.0.z beta would carry the SAME

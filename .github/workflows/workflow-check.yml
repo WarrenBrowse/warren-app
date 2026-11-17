@@ -1,41 +1,71 @@
 ---
+# Lints every workflow and composite action on each change to them.
+#
+# release.yml and the update-metadata workflows only run on a release tag, so
+# an expression error or a broken script in them used to surface at the next
+# release, after every build had already run. actionlint (with shellcheck,
+# preinstalled on the runner) reads them here instead, and pinact refuses an
+# action that is not pinned by commit.
 name: Workflow check
+
 on:
-  # Auto-triggers disabled in this fork: only release.yml runs on tag push.
-  # Kept runnable on-demand via the Actions tab.
+  push:
+    branches:
+      - main
+    paths: &workflow_paths
+      - ".github/**"
+  pull_request:
+    branches:
+      - main
+    paths: *workflow_paths
   workflow_dispatch:
 
-permissions: {}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
 
 env:
-  PINACT_VERSION: v3.9.0
-  PINACT_BASE_URL: https://github.com/suzuki-shunsuke/pinact/releases/download
+  ACTIONLINT_VERSION: 1.7.12
+  ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+  PINACT_VERSION: 5.0.2
+  PINACT_SHA256: 7f003d8f51e984c2264d2009d430e3e0e87ae404a0e2dc2a9a277b0f731bf5b7
 
 jobs:
-  ensure-pinned-actions:
-    name: Ensure pinned actions
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
+  workflow-check:
+    name: actionlint and pinned actions
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
+        with:
+          persist-credentials: false
 
-      - name: Install pinact
+      # Both tools are checked against the checksums their releases publish
+      # before anything runs them.
+      - name: Install actionlint and pinact
         run: |
-          curl -sSfL "${PINACT_BASE_URL}/${PINACT_VERSION}/pinact_linux_amd64.tar.gz" \
-            | sudo tar -xz -C /usr/local/bin pinact
+          set -euo pipefail
+          bin="$RUNNER_TEMP/bin"
+          mkdir -p "$bin"
+          cd "$RUNNER_TEMP"
+          curl -fsSL -o actionlint.tar.gz \
+            "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
+          echo "$ACTIONLINT_SHA256  actionlint.tar.gz" | sha256sum -c -
+          tar -xzf actionlint.tar.gz -C "$bin" actionlint
+          curl -fsSL -o pinact.tar.gz \
+            "https://github.com/suzuki-shunsuke/pinact/releases/download/v${PINACT_VERSION}/pinact_linux_amd64.tar.gz"
+          echo "$PINACT_SHA256  pinact.tar.gz" | sha256sum -c -
+          tar -xzf pinact.tar.gz -C "$bin" pinact
+          echo "$bin" >> "$GITHUB_PATH"
 
-      - name: Check pinned actions
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+      - name: actionlint
+        run: |
+          shellcheck --version | head -2
+          actionlint
+
+      - name: Every action is pinned by commit
         run: pinact run --check
-
-      - name: Verify tags against SHAs
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: pinact run --verify
-
-      # Reject "<sha> #vX.Y" (no space); pinact silently ignores that form.
-      - name: Check version comment format
-        run: '! grep -rnE "@[0-9a-f]{40} #[^ ]" .github/workflows/android-*.yml'
