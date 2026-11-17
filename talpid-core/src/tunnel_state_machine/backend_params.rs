@@ -541,11 +541,17 @@ mod tests {
         for single_node in [false, true] {
             let mut info = fixture_warren_multi_hop("198.51.100.10:443", "203.0.113.20:443");
             info.single_node = single_node;
-            assert!(!BackendParams::Warren(info.clone()).get_tunnel_endpoint().quantum_resistant);
+            assert!(
+                !BackendParams::Warren(info.clone())
+                    .get_tunnel_endpoint()
+                    .quantum_resistant
+            );
 
             info.quantum_resistant = true;
             assert!(
-                BackendParams::Warren(info).get_tunnel_endpoint().quantum_resistant,
+                BackendParams::Warren(info)
+                    .get_tunnel_endpoint()
+                    .quantum_resistant,
                 "single_node={single_node}"
             );
         }
