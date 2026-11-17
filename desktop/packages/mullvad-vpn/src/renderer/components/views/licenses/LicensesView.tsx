@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import styled from 'styled-components';
 
 import { messages } from '../../../../shared/gettext';
+import log from '../../../../shared/logging';
 import { builtAppSourceUrl, builtEngineSourceUrl } from '../../../../shared/source-links';
 import { useAppContext } from '../../../context';
 import { BodySmall, TitleBig } from '../../../lib/components';
@@ -129,11 +130,14 @@ export function LicensesView() {
 
   useEffect(() => {
     let mounted = true;
-    void window.ipc.app.getLicenseText().then((text) => {
-      if (mounted) {
-        setLicenseText(text);
-      }
-    });
+    window.ipc.app
+      .getLicenseText()
+      .then((text) => {
+        if (mounted) {
+          setLicenseText(text);
+        }
+      })
+      .catch((e: unknown) => log.error(`Failed to read the license text: ${(e as Error).message}`));
     return () => {
       mounted = false;
     };

@@ -21,6 +21,37 @@ export function licenseFilePath({ packaged, resourcesPath, appDir }: LicenseLoca
   return path.resolve(appDir, '..', '..', '..', '..', LICENSE_FILE);
 }
 
+const HEADING = /^#+\s+/;
+const LIST_ITEM = /^-\s+/;
+
+/**
+ * Reflows the licence for a narrow window. The file is hard-wrapped Markdown:
+ * shown as is, every wrapped line breaks again inside the view. Paragraphs and
+ * list items become single lines, headings lose their markers, and blank lines
+ * stay paragraph breaks.
+ */
+export function formatLicenseText(markdown: string): string {
+  return markdown
+    .split(/\n\s*\n/)
+    .map((block) => {
+      const lines: string[] = [];
+      for (const raw of block.split('\n')) {
+        const line = raw.trim();
+        if (line === '') {
+          continue;
+        }
+        if (HEADING.test(line) || LIST_ITEM.test(line) || lines.length === 0) {
+          lines.push(line.replace(HEADING, '').replace(LIST_ITEM, ''));
+        } else {
+          lines[lines.length - 1] += ` ${line}`;
+        }
+      }
+      return lines.join('\n');
+    })
+    .filter((block) => block !== '')
+    .join('\n\n');
+}
+
 /**
  * The GPL text shipped with the app, for the licences screen. An empty string
  * when the file cannot be read: the screen still names the licence and links
@@ -28,7 +59,7 @@ export function licenseFilePath({ packaged, resourcesPath, appDir }: LicenseLoca
  */
 export function readLicenseText(location: LicenseLocation): string {
   try {
-    return fs.readFileSync(licenseFilePath(location), 'utf8');
+    return formatLicenseText(fs.readFileSync(licenseFilePath(location), 'utf8'));
   } catch (e) {
     log.error(`Failed to read ${LICENSE_FILE}`, (e as Error).message);
     return '';

@@ -12,7 +12,7 @@ vi.hoisted(() => {
   };
 });
 
-import { licenseFilePath, readLicenseText } from '../../src/main/license';
+import { formatLicenseText, licenseFilePath, readLicenseText } from '../../src/main/license';
 import { LicensesContent } from '../../src/renderer/components/views/licenses/LicensesView';
 import { appSourceUrl, engineSourceUrl } from '../../src/shared/source-links';
 
@@ -91,6 +91,30 @@ describe('the licence the desktop app ships', () => {
 
     expect(text).toContain('GNU GENERAL PUBLIC LICENSE');
     expect(text).toContain('Version 3, 29 June 2007');
+  });
+
+  it('is reflowed for a narrow window: wrapped lines joined, headings unmarked, items kept apart', () => {
+    const markdown = [
+      '### GNU GENERAL PUBLIC LICENSE',
+      '',
+      'The licenses for most software are designed',
+      'to take away your freedom.',
+      '',
+      '-   a) The work must carry prominent notices stating that you modified',
+      '    it, and giving a relevant date.',
+      '-   b) The work must carry prominent notices.',
+    ].join('\n');
+
+    expect(formatLicenseText(markdown)).toBe(
+      [
+        'GNU GENERAL PUBLIC LICENSE',
+        '',
+        'The licenses for most software are designed to take away your freedom.',
+        '',
+        'a) The work must carry prominent notices stating that you modified it, and giving a relevant date.',
+        'b) The work must carry prominent notices.',
+      ].join('\n'),
+    );
   });
 
   it('answers an empty text rather than throwing when the file is missing', () => {
