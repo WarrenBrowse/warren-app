@@ -218,6 +218,7 @@ class TunnelStateNotificationProviderTest {
                 preferences = userPreferencesRepository,
                 channelId = testChannelId,
                 scope = CoroutineScope(UnconfinedTestDispatcher()),
+                computeDispatcher = UnconfinedTestDispatcher(),
             )
 
         provider.notifications.test {

@@ -9,8 +9,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.plus
 import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
 import com.warrenbrowse.vpn.lib.model.ActionAfterDisconnect
 import com.warrenbrowse.vpn.lib.model.DeviceState
@@ -79,8 +79,13 @@ class TunnelStateNotificationProvider(
                     ),
                 )
             }
-            .flowOn(computeDispatcher)
-            .stateIn(scope, SharingStarted.Eagerly, NotificationUpdate.Cancel(notificationId))
+            // Shared from a coroutine on [computeDispatcher]: no buffer between the computation and
+            // the state, so every update still lands in order.
+            .stateIn(
+                scope + computeDispatcher,
+                SharingStarted.Eagerly,
+                NotificationUpdate.Cancel(notificationId),
+            )
 
     private fun TunnelState.toNotificationTunnelState(
         prepareError: PrepareError?,
