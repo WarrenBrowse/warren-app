@@ -136,8 +136,8 @@ mod warren_remote_config;
 mod warren_report_budget;
 mod warren_sdk_client;
 mod warren_session_gate;
-/// Loads or generates the user's BIP39 mnemonic from
-/// `<settings_dir>/warren_mnemonic.txt`, derives it into an Ed25519
+/// Loads or generates the user's BIP39 mnemonic from the OS secret
+/// store (`os_secret_storage`), derives it into an Ed25519
 /// `SigningKey` and exposes a shared `WarrenAuthSigner` for the
 /// authenticated API requests.
 pub mod warren_signer;
@@ -573,9 +573,9 @@ pub enum DaemonCommand {
         ResponseTx<warren_standing::Standing, warren_account_standing::FetchError>,
     ),
     /// Returns the user's BIP39 mnemonic to allow user-side
-    /// backup via the Electron GUI. `None` if the
-    /// `warren_mnemonic.txt` file does not exist (= identity never
-    /// bootstrapped). See `warren_signer::get_warren_mnemonic`.
+    /// backup via the Electron GUI. `None` if the secret store holds
+    /// no mnemonic (= identity never bootstrapped). See
+    /// `warren_signer::get_warren_mnemonic`.
     ///
     /// Wrapped in `Zeroizing` so the secret heap buffer is wiped
     /// before the allocator recycles it once the GUI has serialized
@@ -1284,9 +1284,8 @@ pub struct Daemon {
     /// points at, and the dual-homing check needs its gateway.
     #[cfg(target_os = "macos")]
     warren_route_manager: RouteManagerHandle,
-    /// Kept to allow runtime reads of the BIP39 mnemonic
-    /// (`<settings_dir>/warren_mnemonic.txt`) via the
-    /// `on_get_warren_mnemonic` handler.
+    /// Kept to allow runtime reads of the BIP39 mnemonic (from the OS
+    /// secret store rooted here) via the `on_get_warren_mnemonic` handler.
     settings_dir: PathBuf,
     /// Shared with the `ManagementInterfaceServer`. The daemon writes
     /// to it on NAT-PMP toggle changes; the gRPC stream subscribers

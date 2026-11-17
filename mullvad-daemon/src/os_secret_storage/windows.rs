@@ -5,9 +5,11 @@
 //! `LocalSystem` via the Service Control Manager, so the
 //! machine-scope DPAPI master key (held in `LSASS`'s memory and
 //! derived from `\SYSTEM` registry hive at boot) is the right
-//! authentication context: the ciphertext can be read back by any
-//! SYSTEM-context code on the same machine after a reboot, but is
-//! cryptographically unreadable when the disk is moved offline.
+//! authentication context: the ciphertext survives a reboot and is
+//! cryptographically unreadable when the disk is moved offline. On the
+//! same machine, machine scope lets any account decrypt a blob it can
+//! read, so the ACL of the settings directory is what keeps the blob
+//! from other accounts.
 //!
 //! ### What this gives us vs raw plaintext on Windows
 //!

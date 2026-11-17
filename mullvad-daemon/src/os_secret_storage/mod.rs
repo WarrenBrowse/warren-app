@@ -1,15 +1,13 @@
 //! OS-native secret storage abstraction.
 //!
 //! Wraps the platform-specific secret stores (System Keychain on
-//! macOS, DPAPI machine scope on Windows) behind a unified trait so
-//! that `warren_signer` can persist the BIP39 mnemonic without
-//! shipping it as plaintext in `<settings_dir>`. On platforms where
-//! no daemon-friendly OS-native store exists (= Linux, where
-//! `secret-service` requires a session D-Bus the daemon does not
-//! have), we explicitly fall back to a plaintext file with a loud
-//! warning, instead of pretending to encrypt with a custom scheme -
-//! the latter is exactly the Signal Desktop "BasicTextEncryption"
-//! fiasco we want to avoid.
+//! macOS, DPAPI machine scope on Windows, `systemd-creds` on Linux)
+//! behind a unified trait so that `warren_signer` can persist the BIP39
+//! mnemonic without shipping it as plaintext in `<settings_dir>`. When
+//! the native store cannot be opened, or `WARREN_USE_PLAINTEXT_STORAGE`
+//! is set, a plaintext file is used instead, with a warning in the log,
+//! rather than a custom encryption scheme (the Signal Desktop
+//! "BasicTextEncryption" mistake).
 //!
 //! ## Threat model improvements vs raw `0o600 root:root` plaintext
 //!
@@ -19,12 +17,13 @@
 //!   which is also `0o600 root:root` - defending against offline
 //!   disk theft on unencrypted volumes.
 //! - Windows: DPAPI with `CRYPTPROTECT_LOCAL_MACHINE` ties the
-//!   ciphertext to the machine's master key, surviving user logoff
-//!   while still requiring local SYSTEM privileges to decrypt.
-//!   Windows Backup excludes DPAPI master keys by default.
-//! - Linux: no improvement (fallback is plaintext file, same as
-//!   upstream Mullvad's `account.json`). Documented to the user via
-//!   the `LinuxStorage::IS_PLAINTEXT` flag and a startup warning.
+//!   ciphertext to the machine's master key, so a copy taken to another
+//!   machine does not decrypt. On the same machine the machine scope
+//!   lets any process decrypt the blob it can read: what keeps other
+//!   accounts out is the ACL of the settings directory (SYSTEM and
+//!   administrators), and the entropy constant is public.
+//! - Linux: `systemd-creds` seals to the TPM2 when there is one, and to
+//!   the root-only host key otherwise (see `linux.rs`).
 //!
 //! ## What this trait is NOT
 //!
@@ -91,7 +90,7 @@ pub trait SecretStorage: Send + Sync {
     fn delete(&self, key: &str) -> io::Result<()>;
 
     /// Returns `true` when this backend stores secrets **in
-    /// plaintext** on disk (= Linux fallback). The boot path uses
+    /// plaintext** on disk (the fallback). The boot path uses
     /// this to surface a loud warning so the user knows their
     /// settings directory contains sensitive material in clear.
     fn is_plaintext(&self) -> bool;

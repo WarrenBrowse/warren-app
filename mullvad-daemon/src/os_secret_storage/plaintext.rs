@@ -1,11 +1,8 @@
 //! Plaintext file-based secret storage.
 //!
-//! Used as the **default backend on Linux** (where no daemon-friendly
-//! OS-native store exists: `secret-service` requires a session D-Bus
-//! that the daemon never has, and the kernel keyring does not
-//! survive a reboot), and as the **explicit fallback** on macOS /
-//! Windows when their respective OS-native backends fail to
-//! initialize at startup.
+//! The **fallback** on every desktop OS: used when the OS-native backend
+//! (System Keychain, DPAPI, `systemd-creds`) fails to initialize, or when
+//! `WARREN_USE_PLAINTEXT_STORAGE` forces it.
 //!
 //! The implementation purposefully avoids any custom "obfuscation
 //! pretending to be encryption" - that pattern is exactly the
