@@ -99,6 +99,8 @@ pub enum Error {
 
     #[error("server returned non-success status {0}")]
     Status(u16),
+    #[error("server response exceeds the size limit")]
+    Oversized,
 
     #[error("signature/format verification failed")]
     Verify(#[from] SignedError),
@@ -609,6 +611,7 @@ impl WarrenRelayListUpdater {
                 Ok(RosterFetch::NotModifiedOrAbsent)
             }
             FetchResponse::Status(status) => Err(Error::Status(status)),
+            FetchResponse::Oversized => Err(Error::Oversized),
             FetchResponse::Body { body, etag } => {
                 let verified = verify_roster_any(&body, &split_pins(pin.as_deref()))?;
                 Ok(RosterFetch::Updated { etag, verified })
@@ -649,6 +652,7 @@ impl WarrenRelayListUpdater {
         match conditional_get(&http, &url, etag).await? {
             FetchResponse::NotModified => Ok(FetchOutcome::NotModified),
             FetchResponse::Status(status) => Err(Error::Status(status)),
+            FetchResponse::Oversized => Err(Error::Oversized),
             FetchResponse::Body { body, etag } => decide_outcome(200, &body, etag, pin.as_deref()),
         }
     }

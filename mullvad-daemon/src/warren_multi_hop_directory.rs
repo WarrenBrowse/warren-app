@@ -84,6 +84,8 @@ pub enum Error {
     NotPublished,
     #[error("server returned non-success status {0}")]
     Status(u16),
+    #[error("server response exceeds the size limit")]
+    Oversized,
     #[error("directory verification failed")]
     Verify(#[from] DirectoryError),
     #[error("directory is expired")]
@@ -959,9 +961,11 @@ async fn fetch_verify_with_body(
             FetchResponse::NotModified => return Ok(DirectoryFetch::NotModified),
             FetchResponse::Status(404) => return Err(Error::NotPublished),
             FetchResponse::Status(status) => return Err(Error::Status(status)),
+            FetchResponse::Oversized => return Err(Error::Oversized),
             FetchResponse::Body { body, etag } => (body, etag),
         },
         FetchResponse::Status(status) => return Err(Error::Status(status)),
+        FetchResponse::Oversized => return Err(Error::Oversized),
         FetchResponse::Body { body, etag } => (body, etag),
     };
     let server_refs: Vec<&str> = server_pins.iter().map(String::as_str).collect();
@@ -995,7 +999,13 @@ async fn fetch_path_quality(http: &reqwest::Client, api_url: &str) -> Option<Pat
     if resp.status() != reqwest::StatusCode::OK {
         return None;
     }
-    parse_path_quality(&resp.text().await.ok()?)
+    let body = crate::warren_artifact_refresh::read_capped(
+        resp,
+        crate::warren_artifact_refresh::MAX_RESPONSE_BYTES,
+    )
+    .await
+    .ok()??;
+    parse_path_quality(&String::from_utf8_lossy(&body))
 }
 
 /// File name of the on-disk directory cache (sits next to the daemon's
@@ -1700,7 +1710,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                         // Server reachable but no/!published directory: not a
                         // connectivity problem, fast-retry would not help.
                         // Keep the cached directory and wait for the timer.
-                        Err(e @ (Error::Status(_) | Error::NotPublished)) => {
+                        Err(e @ (Error::Status(_) | Error::NotPublished | Error::Oversized)) => {
                             retry_backoff.clear();
                             log::warn!(
                                 "Warren multi-hop directory fetch failed ({e}); \

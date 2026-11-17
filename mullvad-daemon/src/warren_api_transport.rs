@@ -251,11 +251,13 @@ async fn send(clients: &Clients, request: HttpRequest) -> Result<HttpResponse, T
             .get(reqwest::header::DATE)
             .and_then(|value| value.to_str().ok())
             .map(str::to_owned);
-        let body = resp
-            .bytes()
-            .await
-            .map_err(|e| to_transport_error(&e))?
-            .to_vec();
+        let body = crate::warren_artifact_refresh::read_capped(
+            resp,
+            crate::warren_artifact_refresh::MAX_RESPONSE_BYTES,
+        )
+        .await
+        .map_err(|e| to_transport_error(&e))?
+        .ok_or_else(|| TransportError::Io("response exceeds the size limit".to_owned()))?;
         let response = HttpResponse::new(status, body);
         Ok(match date {
             Some(date) => response.with_date(date),
@@ -346,6 +348,33 @@ mod tests {
             response.date.as_deref(),
             Some("Tue, 14 Nov 2023 22:13:20 GMT")
         );
+    }
+
+    #[tokio::test]
+    async fn an_answer_past_the_size_limit_is_refused() {
+        let mut server = mockito::Server::new_async().await;
+        let _mock = server
+            .mock("GET", "/v1/subscription")
+            .with_status(200)
+            .with_body(vec![
+                b'a';
+                crate::warren_artifact_refresh::MAX_RESPONSE_BYTES + 1
+            ])
+            .create();
+        let addr: SocketAddr = server.host_with_port().parse().expect("mockito addr");
+
+        let transport = WarrenApiTransport::with_resolver(resolver_for(addr));
+        let response = transport
+            .execute(HttpRequest {
+                method: Method::Get,
+                url: format!("http://{API_HOST}:{}/v1/subscription", addr.port()),
+                headers: vec![],
+                body: vec![],
+                use_sni: true,
+            })
+            .await;
+
+        assert!(matches!(response, Err(TransportError::Io(_))));
     }
 
     /// A device rename is the SDK's only `PATCH`; sent as anything else the

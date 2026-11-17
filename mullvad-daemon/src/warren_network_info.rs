@@ -85,8 +85,14 @@ async fn run(api_base: String, cache: WarrenStatusCache) {
         let outcome = match client.get(&url).send().await {
             Ok(resp) => {
                 let status = resp.status().as_u16();
-                match resp.bytes().await {
-                    Ok(body) => classify(status, &body),
+                match crate::warren_artifact_refresh::read_capped(
+                    resp,
+                    crate::warren_artifact_refresh::MAX_RESPONSE_BYTES,
+                )
+                .await
+                {
+                    Ok(Some(body)) => classify(status, &body),
+                    Ok(None) => Err("/v1/network body exceeds the size limit".to_owned()),
                     Err(e) => Err(format!("/v1/network body read failed: {e}")),
                 }
             }

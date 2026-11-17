@@ -192,6 +192,10 @@ impl WarrenNoticesUpdater {
                 log::debug!("Warren notices endpoint returned {status}");
                 RefreshOutcome::Rejected
             }
+            FetchResponse::Oversized => {
+                log::debug!("Warren notices endpoint answered past the size limit");
+                RefreshOutcome::Rejected
+            }
             FetchResponse::Body { body, etag } => {
                 let pins = split_pins(self.pinned_server_pubkey.as_deref());
                 match verify_signed_notices_any(&body, &pins) {

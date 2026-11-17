@@ -82,6 +82,9 @@ pub(crate) enum FetchResponse {
     /// Any other status; the caller maps it to its artifact semantics
     /// (e.g. `404` = not published yet vs keep-last-good).
     Status(u16),
+    /// `200` with a body over [`MAX_RESPONSE_BYTES`], dropped unread past
+    /// the cap. No signed artifact is that large.
+    Oversized,
 }
 
 /// One ETag conditional GET: sends `If-None-Match` when a validator is
@@ -115,11 +118,44 @@ pub(crate) async fn conditional_get(
         .and_then(|v| v.to_str().ok())
         .map(str::to_owned)
         .or(etag);
-    let body = resp.text().await?;
+    let Some(body) = read_capped(resp, MAX_RESPONSE_BYTES).await? else {
+        return Ok(FetchResponse::Oversized);
+    };
     Ok(FetchResponse::Body {
-        body,
+        body: String::from_utf8_lossy(&body).into_owned(),
         etag: new_etag,
     })
+}
+
+/// The largest response body a Warren client of the daemon reads, the bound the signed
+/// envelope verifier applies too. A server must not make the root daemon hold whatever it sends
+/// within the request timeout.
+pub(crate) const MAX_RESPONSE_BYTES: usize = 4 * 1024 * 1024;
+
+/// Reads the body of `resp` while it stays within `max` bytes, or `None` once it would not: the
+/// rest is never read.
+///
+/// # Errors
+///
+/// Propagates transport failures while reading the body.
+pub(crate) async fn read_capped(
+    mut resp: reqwest::Response,
+    max: usize,
+) -> Result<Option<Vec<u8>>, reqwest::Error> {
+    if resp
+        .content_length()
+        .is_some_and(|announced| announced > max as u64)
+    {
+        return Ok(None);
+    }
+    let mut body = Vec::new();
+    while let Some(chunk) = resp.chunk().await? {
+        if body.len() + chunk.len() > max {
+            return Ok(None);
+        }
+        body.extend_from_slice(&chunk);
+    }
+    Ok(Some(body))
 }
 
 /// Atomically replaces the on-disk artifact cache: write to a temp sibling,
@@ -136,6 +172,62 @@ pub(crate) fn write_cache_atomic(cache_path: &Path, raw: &str) -> std::io::Resul
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    async fn served(body: Vec<u8>, chunked: bool) -> (mockito::ServerGuard, reqwest::Response) {
+        let mut server = mockito::Server::new_async().await;
+        let mock = server.mock("GET", "/").with_status(200);
+        let mock = if chunked {
+            mock.with_chunked_body(move |w| w.write_all(&body))
+        } else {
+            mock.with_body(body)
+        };
+        mock.create_async().await;
+        let response = reqwest::get(server.url()).await.unwrap();
+        (server, response)
+    }
+
+    #[tokio::test]
+    async fn a_body_within_the_cap_is_read_whole() {
+        let (_server, response) = served(vec![b'a'; 1000], true).await;
+
+        let body = read_capped(response, MAX_RESPONSE_BYTES).await.unwrap();
+
+        assert_eq!(body.map(|b| b.len()), Some(1000));
+    }
+
+    #[tokio::test]
+    async fn a_body_announced_larger_than_the_cap_is_refused() {
+        let (_server, response) = served(vec![b'a'; 1001], false).await;
+
+        let body = read_capped(response, 1000).await.unwrap();
+
+        assert_eq!(body, None);
+    }
+
+    #[tokio::test]
+    async fn a_body_that_grows_past_the_cap_is_refused() {
+        let (_server, response) = served(vec![b'a'; 1001], true).await;
+
+        let body = read_capped(response, 1000).await.unwrap();
+
+        assert_eq!(body, None);
+    }
+
+    #[tokio::test]
+    async fn an_artifact_larger_than_the_cap_is_not_handed_on() {
+        let mut server = mockito::Server::new_async().await;
+        server
+            .mock("GET", "/")
+            .with_status(200)
+            .with_body(vec![b'a'; MAX_RESPONSE_BYTES + 1])
+            .create_async()
+            .await;
+        let http = reqwest::Client::new();
+
+        let response = conditional_get(&http, &server.url(), None).await.unwrap();
+
+        assert!(matches!(response, FetchResponse::Oversized));
+    }
 
     #[test]
     fn transport_retry_doubles_from_min_to_cap_and_clears() {

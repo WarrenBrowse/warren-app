@@ -10,9 +10,15 @@
 
 use std::sync::Arc;
 
-/// Hands `builder` the daemon's TLS config, with or without SNI.
+/// Hands `builder` the daemon's TLS config, with or without SNI, and the transport rules every
+/// Warren client follows: no redirect, since a signed request replays wherever it is sent until
+/// its window closes, and no proxy, since none is ever configured for the daemon and one found
+/// in its environment would see every request.
 pub(crate) fn configure(builder: reqwest::ClientBuilder, sni: bool) -> reqwest::ClientBuilder {
-    builder.use_preconfigured_tls(client_config(warren_roots(), sni))
+    builder
+        .use_preconfigured_tls(client_config(warren_roots(), sni))
+        .redirect(reqwest::redirect::Policy::none())
+        .no_proxy()
 }
 
 /// The authority every Warren host gets its certificate from (Let's Encrypt), and no other.
@@ -160,6 +166,68 @@ mod tests {
                 .all(|s| s.contains("Internet Security Research Group")),
             "{subjects:?}"
         );
+    }
+
+    /// A plain HTTP server that answers every request with `response` and counts connections.
+    async fn plain_server(
+        response: String,
+    ) -> (u16, std::sync::Arc<std::sync::atomic::AtomicUsize>) {
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let hits = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        let counter = hits.clone();
+        tokio::spawn(async move {
+            loop {
+                let (mut tcp, _) = listener.accept().await.unwrap();
+                counter.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                let mut request = [0u8; 4096];
+                let _ = tcp.read(&mut request).await;
+                let _ = tcp.write_all(response.as_bytes()).await;
+                let _ = tcp.shutdown().await;
+            }
+        });
+        (port, hits)
+    }
+
+    const OK: &str = "HTTP/1.1 200 OK\r\nContent-Length: 0\r\nConnection: close\r\n\r\n";
+
+    #[tokio::test]
+    async fn a_redirect_is_not_followed() {
+        let (elsewhere, elsewhere_hits) = plain_server(OK.to_owned()).await;
+        let (origin, _) = plain_server(format!(
+            "HTTP/1.1 307 Temporary Redirect\r\nLocation: http://127.0.0.1:{elsewhere}/\r\n\
+             Content-Length: 0\r\nConnection: close\r\n\r\n"
+        ))
+        .await;
+        let client = configure(reqwest::Client::builder(), true).build().unwrap();
+
+        let response = client
+            .get(format!("http://127.0.0.1:{origin}/"))
+            .header("X-Warren-PubKey", "signed")
+            .send()
+            .await
+            .unwrap();
+
+        assert_eq!(response.status(), reqwest::StatusCode::TEMPORARY_REDIRECT);
+        assert_eq!(elsewhere_hits.load(std::sync::atomic::Ordering::SeqCst), 0);
+    }
+
+    #[tokio::test]
+    async fn a_proxy_is_never_used() {
+        let (proxy, proxy_hits) = plain_server(OK.to_owned()).await;
+        let (origin, origin_hits) = plain_server(OK.to_owned()).await;
+        let builder = reqwest::Client::builder()
+            .proxy(reqwest::Proxy::all(format!("http://127.0.0.1:{proxy}")).unwrap());
+        let client = configure(builder, true).build().unwrap();
+
+        client
+            .get(format!("http://127.0.0.1:{origin}/"))
+            .send()
+            .await
+            .unwrap();
+
+        assert_eq!(proxy_hits.load(std::sync::atomic::Ordering::SeqCst), 0);
+        assert_eq!(origin_hits.load(std::sync::atomic::Ordering::SeqCst), 1);
     }
 
     #[tokio::test]
