@@ -288,7 +288,7 @@
     <string name="tunnel_kill_switch_title">終止開關</string>
     <string name="tunnel_kill_switch_subtitle">當通道中斷時封鎖所有流量，而非退回至未受保護的網路。</string>
     <string name="tunnel_kill_switch_info_1">若您的網路突然中斷或通道失敗，此內建功能可防止流量洩漏至 VPN 通道之外：它會封鎖流量，直到連線恢復。</string>
-    <string name="tunnel_kill_switch_info_2">終止開關與鎖定模式的差別在於：終止開關可防止通道自動重新連線、軟體當機等意外期間的洩漏。啟用鎖定模式後，必須連線至 Warren 伺服器才能存取網際網路，手動中斷或結束應用程式都會封鎖您的連線。</string>
+    <string name="tunnel_kill_switch_info_2">終止開關可在通道自動重新連線期間防止外洩。鎖定模式也會在連線反覆中斷或您的帳戶遭拒時，讓流量維持封鎖。兩者在您手動中斷連線後都不會封鎖流量：如需如此，請在 Android 的 VPN 設定中啟用「在沒有 VPN 的情況下封鎖連線」。</string>
     <string name="tunnel_kill_switch_info_3">若連線在短時間內多次中斷，Warren 會停止重試，你的流量會回到一般網路，不再經過 VPN。開啟鎖定模式即可改為維持封鎖。</string>
     <string name="tunnel_ipv6_title">通道內 IPv6</string>
     <string name="tunnel_ipv6_subtitle">透過通道路由 IPv6。關閉時，IPv6 會被封鎖以防止洩漏。</string>
@@ -371,9 +371,9 @@
     <string name="port_forwarding_desc">在已連線的出口伺服器上開啟一個公開連接埠並將其轉發到您的裝置。適用於點對點應用程式、檔案分享或自架服務。</string>
     <string name="port_forwarding_abuse_notice">轉發連接埠可從網際網路存取。若第三方檢舉來自該連接埠的濫用行為，我們會關閉連接埠並在您的帳戶上記錄一次警告；90 天內累計三次警告將撤銷存取權限。詳情與申訴方式：%1$s</string>
     <string name="tunnel_lockdown_mode_title">鎖定模式</string>
-    <string name="tunnel_lockdown_mode_subtitle">啟用鎖定模式後，必須連線至 Warren 伺服器才能存取網際網路。手動中斷或結束應用程式都會封鎖您的連線。</string>
-    <string name="tunnel_lockdown_mode_info_1">終止開關與鎖定模式的差別在於：終止開關可防止通道自動重新連線、軟體當機等意外期間的洩漏。</string>
-    <string name="tunnel_lockdown_mode_info_2">啟用鎖定模式後，必須連線至 Warren 伺服器才能存取網際網路。手動中斷或結束應用程式都會封鎖您的連線。</string>
+    <string name="tunnel_lockdown_mode_subtitle">在連線反覆中斷或您的帳戶遭拒時，讓流量維持封鎖。手動中斷連線會解除封鎖。</string>
+    <string name="tunnel_lockdown_mode_info_1">終止開關可在通道自動重新連線期間防止外洩。鎖定模式也會在連線反覆中斷或您的帳戶遭拒時，讓流量維持封鎖，而不是解除封鎖。</string>
+    <string name="tunnel_lockdown_mode_info_2">手動中斷連線或結束應用程式會解除流量封鎖。如需在 VPN 關閉時一律封鎖流量，請在 Android 的 VPN 設定中啟用「在沒有 VPN 的情況下封鎖連線」。</string>
     <string name="tunnel_custom_dns_blockers_disabled">使用自訂 DNS 伺服器期間，內容封鎖程式會關閉。</string>
     <string name="tunnel_mtu_default">預設</string>
     <string name="tunnel_mtu_hint">設定通道 MTU。有效範圍：%1$d - %2$d。留空則使用預設值。</string>

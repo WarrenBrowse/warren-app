@@ -292,7 +292,7 @@
     <string name="tunnel_kill_switch_title">Avbruddsbryter</string>
     <string name="tunnel_kill_switch_subtitle">Blokker all trafikk hvis tunnelen faller bort, i stedet for å falle tilbake til det ubeskyttede nettverket.</string>
     <string name="tunnel_kill_switch_info_1">Denne innebygde funksjonen hindrer at trafikken din lekker ut av VPN-tunnelen hvis nettverket plutselig slutter å virke eller tunnelen svikter: den blokkerer trafikken til forbindelsen er gjenopprettet.</string>
-    <string name="tunnel_kill_switch_info_2">Forskjellen mellom avbruddsbryteren og låsemodus er at avbruddsbryteren hindrer lekkasjer under automatiske gjentilkoblinger av tunnelen, programvarekrasj og lignende uhell. Med låsemodus aktivert må du være koblet til en Warren-server for å nå internett: å koble fra manuelt eller avslutte appen blokkerer forbindelsen din.</string>
+    <string name="tunnel_kill_switch_info_2">Avbruddsbryteren hindrer lekkasjer under tunnelens automatiske gjenoppkoblinger. Låsemodus holder i tillegg trafikken din blokkert når tilkoblingen faller ut gang på gang eller kontoen din blir avvist. Ingen av dem blokkerer etter at du har koblet fra manuelt: slå på «Blokker tilkoblinger uten VPN» i VPN-innstillingene i Android for det.</string>
     <string name="tunnel_kill_switch_info_3">Hvis forbindelsen faller ut flere ganger i rask rekkefølge, slutter Warren å prøve på nytt, og trafikken din går tilbake til det vanlige nettverket ditt, utenfor VPN. Slå på Låsemodus for å holde den blokkert i stedet.</string>
     <string name="tunnel_ipv6_title">IPv6 i tunnel</string>
     <string name="tunnel_ipv6_subtitle">Rut IPv6 gjennom tunnelen. Når den er av, blokkeres IPv6 for å hindre lekkasjer.</string>
@@ -375,9 +375,9 @@
     <string name="port_forwarding_desc">Åpner en offentlig port på den tilkoblede utgangsserveren og videresender den til enheten din. Nyttig for node-til-node-applikasjoner, fildeling eller selvhostede tjenester.</string>
     <string name="port_forwarding_abuse_notice">En videresendt port er tilgjengelig fra internett. Hvis en tredjepart melder om misbruk derfra, stenger vi porten og registrerer en advarsel på kontoen din; tre advarsler innen 90 dager fjerner tilgangen. Detaljer og hvordan du bestrider: %1$s</string>
     <string name="tunnel_lockdown_mode_title">Låsemodus</string>
-    <string name="tunnel_lockdown_mode_subtitle">Med låsemodus på må du være koblet til en Warren-server for å nå internett. Å koble fra manuelt eller avslutte appen blokkerer forbindelsen din.</string>
-    <string name="tunnel_lockdown_mode_info_1">Forskjellen mellom avbruddsbryteren og låsemodus er at avbruddsbryteren hindrer lekkasjer under automatiske gjentilkoblinger av tunnelen, programvarekrasj og lignende uhell.</string>
-    <string name="tunnel_lockdown_mode_info_2">Med låsemodus på må du være koblet til en Warren-server for å nå internett. Å koble fra manuelt eller avslutte appen blokkerer forbindelsen din.</string>
+    <string name="tunnel_lockdown_mode_subtitle">Holder trafikken din blokkert når tilkoblingen faller ut gang på gang eller kontoen din blir avvist. Manuell frakobling frigir den.</string>
+    <string name="tunnel_lockdown_mode_info_1">Avbruddsbryteren hindrer lekkasjer under tunnelens automatiske gjenoppkoblinger. Låsemodus holder i tillegg trafikken din blokkert når tilkoblingen faller ut gang på gang eller kontoen din blir avvist, i stedet for å frigi den.</string>
+    <string name="tunnel_lockdown_mode_info_2">Manuell frakobling eller å avslutte appen frigir trafikken din. For å holde den blokkert når VPN er av, slå på «Blokker tilkoblinger uten VPN» i VPN-innstillingene i Android.</string>
     <string name="tunnel_custom_dns_blockers_disabled">Innholdsblokkering er slått av mens en egendefinert DNS-server er i bruk.</string>
     <string name="tunnel_mtu_default">Standard</string>
     <string name="tunnel_mtu_hint">Angi tunnelens MTU. Gyldig område: %1$d - %2$d. La stå tomt for standardverdien.</string>

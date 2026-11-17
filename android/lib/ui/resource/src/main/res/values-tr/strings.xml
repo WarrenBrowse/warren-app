@@ -292,7 +292,7 @@
     <string name="tunnel_kill_switch_title">Kill switch</string>
     <string name="tunnel_kill_switch_subtitle">Tünel koparsa korumasız ağa geri dönmek yerine tüm trafiği engelle.</string>
     <string name="tunnel_kill_switch_info_1">Bu yerleşik özellik, ağınız aniden çalışmayı bırakırsa veya tünel başarısız olursa trafiğinizin VPN tünelinin dışına sızmasını önler: bağlantı yeniden kurulana kadar trafiği engeller.</string>
-    <string name="tunnel_kill_switch_info_2">Kill switch ile kilitleme modu arasındaki fark, kill switch\'in tünelin otomatik yeniden bağlanmaları, yazılım çökmeleri ve benzeri kazalar sırasında sızıntıları önlemesidir. Kilitleme modu açıkken internete erişmek için bir Warren sunucusuna bağlı olmanız gerekir: elle bağlantıyı kesmek veya uygulamadan çıkmak bağlantınızı engeller.</string>
+    <string name="tunnel_kill_switch_info_2">Kill switch, tünelin otomatik yeniden bağlanmaları sırasında sızıntıları önler. Kilitleme modu ayrıca bağlantı tekrar tekrar koptuğunda veya hesabınız reddedildiğinde trafiğinizi engelli tutar. İkisi de manuel bağlantı kesmeden sonra engellemez: bunun için Android VPN ayarlarında \"VPN üzerinden olmayan bağlantıları engelle\" seçeneğini açın.</string>
     <string name="tunnel_kill_switch_info_3">Bağlantı kısa sürede art arda birkaç kez koparsa Warren yeniden denemeyi bırakır ve trafiğiniz VPN dışında, normal ağınıza geri döner. Bunun yerine engelli kalması için Kilitleme modunu açın.</string>
     <string name="tunnel_ipv6_title">Tünel içi IPv6</string>
     <string name="tunnel_ipv6_subtitle">IPv6\'yı tünel üzerinden yönlendir. Kapalıyken sızıntıları önlemek için IPv6 engellenir.</string>
@@ -375,9 +375,9 @@
     <string name="port_forwarding_desc">Bağlı çıkış sunucusunda genel bir bağlantı noktası açar ve onu cihazınıza yönlendirir. Eşler arası uygulamalar, dosya paylaşımı veya kendi barındırdığınız hizmetler için kullanışlıdır.</string>
     <string name="port_forwarding_abuse_notice">Yönlendirilen bir bağlantı noktasına internetten erişilebilir. Üçüncü bir taraf buradan gelen bir kötüye kullanımı bildirirse bağlantı noktasını kapatır ve hesabınıza bir uyarı kaydederiz; 90 gün içinde üç uyarı erişimin iptal edilmesine yol açar. Ayrıntılar ve itiraz yolu: %1$s</string>
     <string name="tunnel_lockdown_mode_title">Kilitleme modu</string>
-    <string name="tunnel_lockdown_mode_subtitle">Kilitleme modu açıkken internete erişmek için bir Warren sunucusuna bağlı olmanız gerekir. Elle bağlantıyı kesmek veya uygulamadan çıkmak bağlantınızı engeller.</string>
-    <string name="tunnel_lockdown_mode_info_1">Kill switch ile kilitleme modu arasındaki fark, kill switch\'in tünelin otomatik yeniden bağlanmaları, yazılım çökmeleri ve benzeri kazalar sırasında sızıntıları önlemesidir.</string>
-    <string name="tunnel_lockdown_mode_info_2">Kilitleme modu açıkken internete erişmek için bir Warren sunucusuna bağlı olmanız gerekir. Elle bağlantıyı kesmek veya uygulamadan çıkmak bağlantınızı engeller.</string>
+    <string name="tunnel_lockdown_mode_subtitle">Bağlantı tekrar tekrar koptuğunda veya hesabınız reddedildiğinde trafiğinizi engelli tutar. Manuel bağlantı kesme engeli kaldırır.</string>
+    <string name="tunnel_lockdown_mode_info_1">Kill switch, tünelin otomatik yeniden bağlanmaları sırasında sızıntıları önler. Kilitleme modu ayrıca bağlantı tekrar tekrar koptuğunda veya hesabınız reddedildiğinde trafiğinizi serbest bırakmak yerine engelli tutar.</string>
+    <string name="tunnel_lockdown_mode_info_2">Bağlantıyı manuel olarak kesmek veya uygulamadan çıkmak trafiğinizi serbest bırakır. VPN kapalıyken her zaman engelli kalması için Android VPN ayarlarında \"VPN üzerinden olmayan bağlantıları engelle\" seçeneğini açın.</string>
     <string name="tunnel_custom_dns_blockers_disabled">Özel bir DNS sunucusu kullanılırken içerik engelleyiciler kapalıdır.</string>
     <string name="tunnel_mtu_default">Varsayılan</string>
     <string name="tunnel_mtu_hint">Tünel MTU değerini ayarlayın. Geçerli aralık: %1$d - %2$d. Varsayılan için boş bırakın.</string>

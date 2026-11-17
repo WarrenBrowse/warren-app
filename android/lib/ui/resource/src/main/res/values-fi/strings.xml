@@ -292,7 +292,7 @@
     <string name="tunnel_kill_switch_title">Tappokytkin</string>
     <string name="tunnel_kill_switch_subtitle">Estä kaikki liikenne, jos tunneli katkeaa, sen sijaan että palattaisiin suojaamattomaan verkkoon.</string>
     <string name="tunnel_kill_switch_info_1">Tämä sisäänrakennettu ominaisuus estää liikennettäsi vuotamasta VPN-tunnelin ulkopuolelle, jos verkkosi lakkaa yhtäkkiä toimimasta tai tunneli pettää: se estää liikenteen, kunnes yhteys on palautettu.</string>
-    <string name="tunnel_kill_switch_info_2">Ero tappokytkimen ja lukitustilan välillä on se, että tappokytkin estää vuodot tunnelin automaattisissa uudelleenyhdistämisissä, ohjelmistokaatumisissa ja vastaavissa. Kun lukitustila on käytössä, sinun on oltava yhteydessä Warren-palvelimeen päästäksesi internetiin: manuaalinen katkaisu tai sovelluksen sulkeminen estää yhteytesi.</string>
+    <string name="tunnel_kill_switch_info_2">Tappokytkin estää vuodot tunnelin automaattisten uudelleenyhdistysten aikana. Lukitustila pitää lisäksi liikenteesi estettynä, kun yhteys katkeaa toistuvasti tai tilisi hylätään. Kumpikaan ei estä liikennettä manuaalisen katkaisun jälkeen: ota sitä varten käyttöön \"Estä yhteydet ilman VPN:ää\" Androidin VPN-asetuksissa.</string>
     <string name="tunnel_kill_switch_info_3">Jos yhteys katkeaa useita kertoja nopeasti peräkkäin, Warren lopettaa uudelleenyritykset ja liikenteesi palaa tavalliseen verkkoosi VPN:n ulkopuolelle. Ota Lukitustila käyttöön, jos haluat liikenteen pysyvän estettynä.</string>
     <string name="tunnel_ipv6_title">Tunnelin IPv6</string>
     <string name="tunnel_ipv6_subtitle">Reititä IPv6 tunnelin kautta. Kun pois käytöstä, IPv6 estetään vuotojen ehkäisemiseksi.</string>
@@ -375,9 +375,9 @@
     <string name="port_forwarding_desc">Avaa julkisen portin yhdistetyssä poistumispalvelimessa ja välittää sen laitteellesi. Hyödyllinen vertaisverkkosovelluksille, tiedostojen jakamiseen tai itse isännöityihin palveluihin.</string>
     <string name="port_forwarding_abuse_notice">Ohjattu portti on tavoitettavissa internetistä. Jos kolmas osapuoli ilmoittaa siitä tulevasta väärinkäytöstä, suljemme portin ja kirjaamme varoituksen tilillesi; kolme varoitusta 90 päivän aikana poistaa käyttöoikeuden. Lisätiedot ja riitautus: %1$s</string>
     <string name="tunnel_lockdown_mode_title">Lukitustila</string>
-    <string name="tunnel_lockdown_mode_subtitle">Kun lukitustila on päällä, sinun on oltava yhteydessä Warren-palvelimeen päästäksesi internetiin. Manuaalinen katkaisu tai sovelluksen sulkeminen estää yhteytesi.</string>
-    <string name="tunnel_lockdown_mode_info_1">Ero tappokytkimen ja lukitustilan välillä on se, että tappokytkin estää vuodot tunnelin automaattisissa uudelleenyhdistämisissä, ohjelmistokaatumisissa ja vastaavissa.</string>
-    <string name="tunnel_lockdown_mode_info_2">Kun lukitustila on päällä, sinun on oltava yhteydessä Warren-palvelimeen päästäksesi internetiin. Manuaalinen katkaisu tai sovelluksen sulkeminen estää yhteytesi.</string>
+    <string name="tunnel_lockdown_mode_subtitle">Pitää liikenteesi estettynä, kun yhteys katkeaa toistuvasti tai tilisi hylätään. Manuaalinen katkaisu vapauttaa sen.</string>
+    <string name="tunnel_lockdown_mode_info_1">Tappokytkin estää vuodot tunnelin automaattisten uudelleenyhdistysten aikana. Lukitustila pitää lisäksi liikenteesi estettynä, kun yhteys katkeaa toistuvasti tai tilisi hylätään, sen sijaan että vapauttaisi sen.</string>
+    <string name="tunnel_lockdown_mode_info_2">Manuaalinen katkaisu tai sovelluksen sulkeminen vapauttaa liikenteesi. Jos haluat pitää sen estettynä aina, kun VPN on pois päältä, ota käyttöön \"Estä yhteydet ilman VPN:ää\" Androidin VPN-asetuksissa.</string>
     <string name="tunnel_custom_dns_blockers_disabled">Sisällönestot ovat pois käytöstä, kun oma DNS-palvelin on käytössä.</string>
     <string name="tunnel_mtu_default">Oletus</string>
     <string name="tunnel_mtu_hint">Aseta tunnelin MTU. Kelvollinen väli: %1$d - %2$d. Jätä tyhjäksi käyttääksesi oletusarvoa.</string>

@@ -288,7 +288,7 @@
     <string name="tunnel_kill_switch_title">キルスイッチ</string>
     <string name="tunnel_kill_switch_subtitle">トンネルが切断された場合、保護されていないネットワークにフォールバックせず、すべての通信をブロックします。</string>
     <string name="tunnel_kill_switch_info_1">この組み込み機能は、ネットワークが突然停止したりトンネルが失敗したりした場合に、通信が VPN トンネルの外へ漏れるのを防ぎます。接続が回復するまで通信をブロックします。</string>
-    <string name="tunnel_kill_switch_info_2">キルスイッチとロックダウンモードの違いは、キルスイッチがトンネルの自動再接続やソフトウェアのクラッシュなどの事故での漏えいを防ぐ点です。ロックダウンモードを有効にすると、インターネットに接続するには Warren サーバーへの接続が必須になり、手動で接続を切ったりアプリを終了したりすると通信がブロックされます。</string>
+    <string name="tunnel_kill_switch_info_2">キルスイッチは、トンネルの自動再接続中の漏洩を防ぎます。ロックダウンモードは、接続が何度も切れる場合やアカウントが拒否された場合にも、トラフィックをブロックしたままにします。どちらも手動で切断した後はブロックしません。そのためには、Android の VPN 設定で [VPNを使用していない接続をブロックする] をオンにしてください。</string>
     <string name="tunnel_kill_switch_info_3">接続が短時間に何度も切れると、Warren は再試行を停止し、通信は VPN の外にある通常のネットワークに戻ります。代わりに通信を遮断したままにするには、ロックダウンモードをオンにしてください。</string>
     <string name="tunnel_ipv6_title">トンネル内のIPv6</string>
     <string name="tunnel_ipv6_subtitle">IPv6 をトンネル経由でルーティングします。オフの場合、漏洩を防ぐため IPv6 はブロックされます。</string>
@@ -371,9 +371,9 @@
     <string name="port_forwarding_desc">接続中の出口サーバーで公開ポートを開き、お使いのデバイスに転送します。ピアツーピアアプリ、ファイル共有、セルフホストサービスに便利です。</string>
     <string name="port_forwarding_abuse_notice">転送ポートはインターネットから到達できます。第三者からそのポート由来の不正利用が報告された場合、ポートを閉じてアカウントに警告を記録します。90 日以内に警告が 3 回記録されると、アクセスが取り消されます。詳細と異議申し立て: %1$s</string>
     <string name="tunnel_lockdown_mode_title">ロックダウンモード</string>
-    <string name="tunnel_lockdown_mode_subtitle">ロックダウンモードがオンのときは、インターネットに接続するには Warren サーバーへの接続が必要です。手動で接続を切ったりアプリを終了したりすると通信がブロックされます。</string>
-    <string name="tunnel_lockdown_mode_info_1">キルスイッチとロックダウンモードの違いは、キルスイッチがトンネルの自動再接続やソフトウェアのクラッシュなどの事故での漏えいを防ぐ点です。</string>
-    <string name="tunnel_lockdown_mode_info_2">ロックダウンモードがオンのときは、インターネットに接続するには Warren サーバーへの接続が必要です。手動で接続を切ったりアプリを終了したりすると通信がブロックされます。</string>
+    <string name="tunnel_lockdown_mode_subtitle">接続が何度も切れる場合やアカウントが拒否された場合に、トラフィックをブロックしたままにします。手動で切断すると解除されます。</string>
+    <string name="tunnel_lockdown_mode_info_1">キルスイッチは、トンネルの自動再接続中の漏洩を防ぎます。ロックダウンモードは、接続が何度も切れる場合やアカウントが拒否された場合にも、トラフィックを解除せずにブロックしたままにします。</string>
+    <string name="tunnel_lockdown_mode_info_2">手動で切断するかアプリを終了すると、トラフィックのブロックは解除されます。VPN がオフのときに常にブロックするには、Android の VPN 設定で [VPNを使用していない接続をブロックする] をオンにしてください。</string>
     <string name="tunnel_custom_dns_blockers_disabled">カスタム DNS サーバーの使用中はコンテンツブロッカーがオフになります。</string>
     <string name="tunnel_mtu_default">デフォルト</string>
     <string name="tunnel_mtu_hint">トンネルの MTU を設定します。有効範囲: %1$d - %2$d。空欄にすると既定値になります。</string>

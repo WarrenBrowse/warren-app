@@ -302,7 +302,7 @@
     <string name="tunnel_kill_switch_title">Kill switch</string>
     <string name="tunnel_kill_switch_subtitle">Block all traffic if the tunnel drops, instead of falling back to the unprotected network.</string>
     <string name="tunnel_kill_switch_info_1">This built-in feature prevents your traffic from leaking outside the VPN tunnel if your network suddenly stops working or if the tunnel fails: it blocks your traffic until the connection is reestablished.</string>
-    <string name="tunnel_kill_switch_info_2">The difference between the kill switch and lockdown mode is that the kill switch prevents leaks during automatic tunnel reconnects, software crashes and similar accidents. With lockdown mode enabled, you must be connected to a Warren server to reach the internet: manually disconnecting or quitting the app blocks your connection.</string>
+    <string name="tunnel_kill_switch_info_2">The kill switch prevents leaks during automatic tunnel reconnects. Lockdown mode also keeps your traffic blocked when the connection keeps dropping or your account is refused. Neither blocks after you disconnect manually: for that, turn on \"Block connections without VPN\" in the Android VPN settings.</string>
     <string name="tunnel_kill_switch_info_3">When the connection keeps dropping in quick succession, Warren stops retrying and your traffic goes back to your regular network, outside the VPN. Turn on Lockdown mode to keep it blocked instead.</string>
     <string name="tunnel_ipv6_title">In-tunnel IPv6</string>
     <string name="tunnel_ipv6_subtitle">Route IPv6 through the tunnel. When off, IPv6 is blocked to prevent leaks.</string>
@@ -386,9 +386,9 @@
     <string name="port_forwarding_desc">Opens a public port on the connected exit and forwards it to your device. Useful for peer-to-peer applications, file sharing, or self-hosted services.</string>
     <string name="port_forwarding_abuse_notice">A forwarded port is reachable from the internet. If a third party reports abuse coming from it, we close the port and record a warning on your account; three warnings within 90 days revoke access. Details and how to contest: %1$s</string>
     <string name="tunnel_lockdown_mode_title">Lockdown mode</string>
-    <string name="tunnel_lockdown_mode_subtitle">With lockdown mode on, you must be connected to a Warren server to reach the internet. Manually disconnecting or quitting the app blocks your connection.</string>
-    <string name="tunnel_lockdown_mode_info_1">The difference between the kill switch and lockdown mode is that the kill switch prevents leaks during automatic tunnel reconnects, software crashes and similar accidents.</string>
-    <string name="tunnel_lockdown_mode_info_2">With lockdown mode enabled, you must be connected to a Warren server to reach the internet. Manually disconnecting or quitting the app blocks your connection.</string>
+    <string name="tunnel_lockdown_mode_subtitle">Keeps your traffic blocked when the connection keeps dropping or your account is refused. Disconnecting manually releases it.</string>
+    <string name="tunnel_lockdown_mode_info_1">The kill switch prevents leaks during automatic tunnel reconnects. Lockdown mode also keeps your traffic blocked when the connection keeps dropping or your account is refused, instead of releasing it.</string>
+    <string name="tunnel_lockdown_mode_info_2">Disconnecting manually or quitting the app releases your traffic. To keep it blocked whenever the VPN is off, turn on \"Block connections without VPN\" in the Android VPN settings.</string>
     <string name="tunnel_custom_dns_blockers_disabled">Content blockers are turned off while a custom DNS server is in use.</string>
     <string name="tunnel_mtu_default">Default</string>
     <string name="tunnel_mtu_hint">Set the tunnel MTU. Valid range: %1$d - %2$d. Leave empty for the default.</string>

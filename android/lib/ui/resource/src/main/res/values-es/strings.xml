@@ -295,7 +295,7 @@
     <string name="tunnel_kill_switch_title">Desconexión de seguridad</string>
     <string name="tunnel_kill_switch_subtitle">Bloquea todo el tráfico si el túnel se cae, en lugar de recurrir a la red sin protección.</string>
     <string name="tunnel_kill_switch_info_1">Esta función integrada evita que tu tráfico se filtre fuera del túnel VPN si tu red deja de funcionar de repente o si el túnel falla: bloquea el tráfico hasta que se restablece la conexión.</string>
-    <string name="tunnel_kill_switch_info_2">La diferencia entre la desconexión de seguridad y el modo de bloqueo es que la primera evita fugas durante las reconexiones automáticas del túnel, los fallos de software y accidentes similares. Con el modo de bloqueo activado, debes estar conectado a un servidor de Warren para acceder a internet: desconectarte manualmente o cerrar la aplicación bloquea tu conexión.</string>
+    <string name="tunnel_kill_switch_info_2">La desconexión de seguridad evita fugas durante las reconexiones automáticas del túnel. El modo de bloqueo además mantiene tu tráfico bloqueado cuando la conexión se cae una y otra vez o tu cuenta es rechazada. Ninguno de los dos bloquea después de una desconexión manual: para ello, activa «Bloquear conexiones sin VPN» en los ajustes de VPN de Android.</string>
     <string name="tunnel_kill_switch_info_3">Si la conexión se corta varias veces seguidas en poco tiempo, Warren deja de reintentar y tu tráfico vuelve a tu red habitual, fuera de la VPN. Activa el Modo de bloqueo para que siga bloqueado.</string>
     <string name="tunnel_ipv6_title">Tunelización IPv6</string>
     <string name="tunnel_ipv6_subtitle">Enruta IPv6 a través del túnel. Cuando está desactivado, IPv6 se bloquea para evitar fugas.</string>
@@ -378,9 +378,9 @@
     <string name="port_forwarding_desc">Abre un puerto público en el servidor de salida conectado y lo reenvía a tu dispositivo. Útil para aplicaciones entre pares, uso compartido de archivos o servicios autoalojados.</string>
     <string name="port_forwarding_abuse_notice">Un puerto reenviado es accesible desde internet. Si un tercero denuncia abusos procedentes de él, cerramos el puerto y anotamos un aviso en tu cuenta; tres avisos en 90 días revocan el acceso. Detalles y cómo recurrir: %1$s</string>
     <string name="tunnel_lockdown_mode_title">Modo de bloqueo</string>
-    <string name="tunnel_lockdown_mode_subtitle">Con el modo de bloqueo activado, debes estar conectado a un servidor de Warren para acceder a internet. Desconectarte manualmente o cerrar la aplicación bloquea tu conexión.</string>
-    <string name="tunnel_lockdown_mode_info_1">La diferencia entre la desconexión de seguridad y el modo de bloqueo es que la primera evita fugas durante las reconexiones automáticas del túnel, los fallos de software y accidentes similares.</string>
-    <string name="tunnel_lockdown_mode_info_2">Con el modo de bloqueo activado, debes estar conectado a un servidor de Warren para acceder a internet. Desconectarte manualmente o cerrar la aplicación bloquea tu conexión.</string>
+    <string name="tunnel_lockdown_mode_subtitle">Mantiene tu tráfico bloqueado cuando la conexión se cae una y otra vez o tu cuenta es rechazada. Una desconexión manual lo libera.</string>
+    <string name="tunnel_lockdown_mode_info_1">La desconexión de seguridad evita fugas durante las reconexiones automáticas del túnel. El modo de bloqueo además mantiene tu tráfico bloqueado cuando la conexión se cae una y otra vez o tu cuenta es rechazada, en lugar de liberarlo.</string>
+    <string name="tunnel_lockdown_mode_info_2">Desconectarte manualmente o cerrar la aplicación libera tu tráfico. Para mantenerlo bloqueado siempre que la VPN esté desactivada, activa «Bloquear conexiones sin VPN» en los ajustes de VPN de Android.</string>
     <string name="tunnel_custom_dns_blockers_disabled">Los bloqueadores de contenido están desactivados mientras se usa un servidor DNS personalizado.</string>
     <string name="tunnel_mtu_default">Predeterminado</string>
     <string name="tunnel_mtu_hint">Define la MTU del túnel. Intervalo válido: %1$d - %2$d. Déjalo vacío para el valor predeterminado.</string>

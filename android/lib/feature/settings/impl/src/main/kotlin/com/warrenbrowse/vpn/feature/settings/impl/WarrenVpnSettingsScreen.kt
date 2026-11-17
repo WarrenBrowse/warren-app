@@ -279,9 +279,10 @@ fun WarrenVpnSettings(navigator: Navigator) {
 
             // Kill switch is always on (Android's VpnService blocks non-tunnel
             // traffic whenever the tunnel is up): an info row, not a toggle.
-            // Lockdown mode is the separate opt-in that also blocks while
-            // deliberately disconnected. Mirrors desktop's two rows, each
-            // carrying the modal that states the distinction between them.
+            // Lockdown mode is the separate opt-in that keeps traffic blocked
+            // on a flapping tunnel or a refused account. A manual disconnect
+            // still releases it (KillSwitchPolicy), so its text sends the user
+            // to the system "Block connections without VPN" for that.
             Spacer(Modifier.height(Dimens.smallPadding))
             KillSwitchInfoRow()
             Spacer(Modifier.height(Dimens.smallPadding))

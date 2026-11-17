@@ -300,7 +300,7 @@
     <string name="tunnel_kill_switch_title">Kill switch</string>
     <string name="tunnel_kill_switch_subtitle">Blokuj cały ruch, gdy tunel się rozłączy, zamiast przełączać się na niechronioną sieć.</string>
     <string name="tunnel_kill_switch_info_1">Ta wbudowana funkcja zapobiega wyciekowi ruchu poza tunel VPN, gdy sieć nagle przestanie działać lub tunel zawiedzie: blokuje ruch do czasu przywrócenia połączenia.</string>
-    <string name="tunnel_kill_switch_info_2">Różnica między kill switchem a trybem blokady polega na tym, że kill switch zapobiega wyciekom podczas automatycznych ponownych połączeń tunelu, awarii oprogramowania i podobnych zdarzeń. Przy włączonym trybie blokady musisz być połączony z serwerem Warren, aby korzystać z internetu: ręczne rozłączenie lub zamknięcie aplikacji blokuje połączenie.</string>
+    <string name="tunnel_kill_switch_info_2">Kill switch zapobiega wyciekom podczas automatycznych ponownych połączeń tunelu. Tryb Lockdown dodatkowo blokuje ruch, gdy połączenie raz po raz się zrywa lub Twoje konto zostaje odrzucone. Żaden z nich nie blokuje po ręcznym rozłączeniu: w tym celu włącz opcję „Blokuj połączenia bez pośrednictwa sieci VPN” w ustawieniach VPN Androida.</string>
     <string name="tunnel_kill_switch_info_3">Jeśli połączenie zerwie się kilka razy w krótkim czasie, Warren przestaje ponawiać próby, a ruch wraca do zwykłej sieci, poza VPN. Włącz Tryb Lockdown, aby zamiast tego pozostał zablokowany.</string>
     <string name="tunnel_ipv6_title">Protokół IPv6 w tunelu</string>
     <string name="tunnel_ipv6_subtitle">Kieruj ruch IPv6 przez tunel. Gdy opcja jest wyłączona, IPv6 jest blokowane, aby zapobiec wyciekom.</string>
@@ -383,9 +383,9 @@
     <string name="port_forwarding_desc">Otwiera publiczny port na połączonym serwerze wyjściowym i przekierowuje go do Twojego urządzenia. Przydatne w aplikacjach peer-to-peer, udostępnianiu plików lub usługach hostowanych samodzielnie.</string>
     <string name="port_forwarding_abuse_notice">Przekierowany port jest dostępny z internetu. Jeśli osoba trzecia zgłosi pochodzące z niego nadużycie, zamykamy port i odnotowujemy ostrzeżenie na koncie; trzy ostrzeżenia w ciągu 90 dni odbierają dostęp. Szczegóły i sposób odwołania: %1$s</string>
     <string name="tunnel_lockdown_mode_title">Tryb Lockdown</string>
-    <string name="tunnel_lockdown_mode_subtitle">Przy włączonym trybie blokady musisz być połączony z serwerem Warren, aby korzystać z internetu. Ręczne rozłączenie lub zamknięcie aplikacji blokuje połączenie.</string>
-    <string name="tunnel_lockdown_mode_info_1">Różnica między kill switchem a trybem blokady polega na tym, że kill switch zapobiega wyciekom podczas automatycznych ponownych połączeń tunelu, awarii oprogramowania i podobnych zdarzeń.</string>
-    <string name="tunnel_lockdown_mode_info_2">Przy włączonym trybie blokady musisz być połączony z serwerem Warren, aby korzystać z internetu. Ręczne rozłączenie lub zamknięcie aplikacji blokuje połączenie.</string>
+    <string name="tunnel_lockdown_mode_subtitle">Blokuje ruch, gdy połączenie raz po raz się zrywa lub Twoje konto zostaje odrzucone. Ręczne rozłączenie go zwalnia.</string>
+    <string name="tunnel_lockdown_mode_info_1">Kill switch zapobiega wyciekom podczas automatycznych ponownych połączeń tunelu. Tryb Lockdown dodatkowo blokuje ruch, gdy połączenie raz po raz się zrywa lub Twoje konto zostaje odrzucone, zamiast go zwolnić.</string>
+    <string name="tunnel_lockdown_mode_info_2">Ręczne rozłączenie lub zamknięcie aplikacji zwalnia ruch. Aby był blokowany zawsze, gdy VPN jest wyłączony, włącz opcję „Blokuj połączenia bez pośrednictwa sieci VPN” w ustawieniach VPN Androida.</string>
     <string name="tunnel_custom_dns_blockers_disabled">Blokowanie treści jest wyłączone, gdy używany jest własny serwer DNS.</string>
     <string name="tunnel_mtu_default">Domyślnie</string>
     <string name="tunnel_mtu_hint">Ustaw MTU tunelu. Prawidłowy zakres: %1$d - %2$d. Pozostaw puste, aby użyć wartości domyślnej.</string>

@@ -292,7 +292,7 @@
     <string name="tunnel_kill_switch_title">Killswitch</string>
     <string name="tunnel_kill_switch_subtitle">Blokkeer al het verkeer als de tunnel wegvalt, in plaats van terug te vallen op het onbeschermde netwerk.</string>
     <string name="tunnel_kill_switch_info_1">Deze ingebouwde functie voorkomt dat je verkeer buiten de VPN-tunnel lekt als je netwerk plotseling uitvalt of de tunnel faalt: het verkeer wordt geblokkeerd tot de verbinding is hersteld.</string>
-    <string name="tunnel_kill_switch_info_2">Het verschil tussen de killswitch en de lockdownmodus is dat de killswitch lekken voorkomt tijdens automatische herverbindingen van de tunnel, softwarecrashes en vergelijkbare ongelukken. Met lockdownmodus aan moet je met een Warren-server verbonden zijn om internet te bereiken: handmatig verbreken of de app afsluiten blokkeert je verbinding.</string>
+    <string name="tunnel_kill_switch_info_2">De killswitch voorkomt lekken tijdens automatische herverbindingen van de tunnel. Lockdownmodus houdt je verkeer daarnaast geblokkeerd wanneer de verbinding steeds wegvalt of je account wordt geweigerd. Geen van beide blokkeert na een handmatige verbreking: schakel daarvoor \"Verbindingen zonder VPN blokkeren\" in bij de VPN-instellingen van Android.</string>
     <string name="tunnel_kill_switch_info_3">Als de verbinding meerdere keren kort na elkaar wegvalt, stopt Warren met opnieuw proberen en gaat je verkeer terug naar je gewone netwerk, buiten de VPN. Zet Lockdownmodus aan om het in plaats daarvan geblokkeerd te houden.</string>
     <string name="tunnel_ipv6_title">IPv6 in tunnel</string>
     <string name="tunnel_ipv6_subtitle">Stuur IPv6 door de tunnel. Wanneer uitgeschakeld wordt IPv6 geblokkeerd om lekken te voorkomen.</string>
@@ -375,9 +375,9 @@
     <string name="port_forwarding_desc">Opent een openbare poort op de verbonden exitserver en stuurt deze door naar je apparaat. Handig voor peer-to-peer-toepassingen, bestandsdeling of zelf-gehoste diensten.</string>
     <string name="port_forwarding_abuse_notice">Een doorgeschakelde poort is bereikbaar vanaf internet. Meldt een derde partij misbruik vanaf die poort, dan sluiten we hem en noteren we een waarschuwing op je account; drie waarschuwingen binnen 90 dagen trekken de toegang in. Details en bezwaar maken: %1$s</string>
     <string name="tunnel_lockdown_mode_title">Lockdownmodus</string>
-    <string name="tunnel_lockdown_mode_subtitle">Met de lockdownmodus aan moet je met een Warren-server verbonden zijn om internet te bereiken. Handmatig verbreken of de app afsluiten blokkeert je verbinding.</string>
-    <string name="tunnel_lockdown_mode_info_1">Het verschil tussen de killswitch en de lockdownmodus is dat de killswitch lekken voorkomt tijdens automatische herverbindingen van de tunnel, softwarecrashes en vergelijkbare ongelukken.</string>
-    <string name="tunnel_lockdown_mode_info_2">Met de lockdownmodus aan moet je met een Warren-server verbonden zijn om internet te bereiken. Handmatig verbreken of de app afsluiten blokkeert je verbinding.</string>
+    <string name="tunnel_lockdown_mode_subtitle">Houdt je verkeer geblokkeerd wanneer de verbinding steeds wegvalt of je account wordt geweigerd. Handmatig verbreken geeft het vrij.</string>
+    <string name="tunnel_lockdown_mode_info_1">De killswitch voorkomt lekken tijdens automatische herverbindingen van de tunnel. Lockdownmodus houdt je verkeer daarnaast geblokkeerd wanneer de verbinding steeds wegvalt of je account wordt geweigerd, in plaats van het vrij te geven.</string>
+    <string name="tunnel_lockdown_mode_info_2">Handmatig verbreken of de app afsluiten geeft je verkeer vrij. Om het geblokkeerd te houden zodra de VPN uit staat, schakel je \"Verbindingen zonder VPN blokkeren\" in bij de VPN-instellingen van Android.</string>
     <string name="tunnel_custom_dns_blockers_disabled">Contentblokkeringen staan uit zolang er een aangepaste DNS-server in gebruik is.</string>
     <string name="tunnel_mtu_default">Standaard</string>
     <string name="tunnel_mtu_hint">Stel de MTU van de tunnel in. Geldig bereik: %1$d - %2$d. Laat leeg voor de standaardwaarde.</string>

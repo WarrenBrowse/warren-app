@@ -295,7 +295,7 @@
     <string name="tunnel_kill_switch_title">Coupe-circuit</string>
     <string name="tunnel_kill_switch_subtitle">Bloque tout le trafic si le tunnel tombe, au lieu de basculer sur le réseau non protégé.</string>
     <string name="tunnel_kill_switch_info_1">Cette fonctionnalité intégrée empêche votre trafic de fuir hors du tunnel VPN si votre réseau s\'arrête brusquement ou si le tunnel échoue : elle bloque votre trafic jusqu\'au rétablissement de la connexion.</string>
-    <string name="tunnel_kill_switch_info_2">La différence entre le coupe-circuit et le mode verrouillage : le coupe-circuit empêche les fuites lors des reconnexions automatiques du tunnel, des plantages logiciels et incidents similaires. Avec le mode verrouillage activé, vous devez être connecté à un serveur Warren pour accéder à Internet : vous déconnecter manuellement ou quitter l\'application bloque votre connexion.</string>
+    <string name="tunnel_kill_switch_info_2">Le coupe-circuit empêche les fuites pendant les reconnexions automatiques du tunnel. Le mode verrouillage garde en plus votre trafic bloqué quand la connexion tombe à répétition ou que votre compte est refusé. Aucun des deux ne bloque après une déconnexion manuelle : pour cela, activez « Bloquer les connexions sans VPN » dans les paramètres VPN d\'Android.</string>
     <string name="tunnel_kill_switch_info_3">Si la connexion coupe plusieurs fois de suite en peu de temps, Warren cesse de réessayer et votre trafic repasse par votre réseau habituel, hors du VPN. Activez le Mode verrouillage pour qu\'il reste bloqué.</string>
     <string name="tunnel_ipv6_title">IPv6 en tunnel</string>
     <string name="tunnel_ipv6_subtitle">Achemine l\'IPv6 dans le tunnel. Désactivé, l\'IPv6 est bloqué pour éviter les fuites.</string>
@@ -378,9 +378,9 @@
     <string name="port_forwarding_desc">Ouvre un port public sur le serveur de sortie connecté et le redirige vers votre appareil. Utile pour les applications pair-à-pair, le partage de fichiers ou les services auto-hébergés.</string>
     <string name="port_forwarding_abuse_notice">Un port redirigé est joignable depuis Internet. Si un tiers signale un abus qui en provient, nous fermons le port et enregistrons un avertissement sur votre compte ; trois avertissements en 90 jours révoquent l\'accès. Détails et procédure de contestation : %1$s</string>
     <string name="tunnel_lockdown_mode_title">Mode verrouillage</string>
-    <string name="tunnel_lockdown_mode_subtitle">Avec le mode verrouillage activé, vous devez être connecté à un serveur Warren pour accéder à Internet. Vous déconnecter manuellement ou quitter l\'application bloque votre connexion.</string>
-    <string name="tunnel_lockdown_mode_info_1">La différence entre le coupe-circuit et le mode verrouillage : le coupe-circuit empêche les fuites lors des reconnexions automatiques du tunnel, des plantages logiciels et incidents similaires.</string>
-    <string name="tunnel_lockdown_mode_info_2">Avec le mode verrouillage activé, vous devez être connecté à un serveur Warren pour accéder à Internet. Vous déconnecter manuellement ou quitter l\'application bloque votre connexion.</string>
+    <string name="tunnel_lockdown_mode_subtitle">Garde votre trafic bloqué quand la connexion tombe à répétition ou que votre compte est refusé. Une déconnexion manuelle le libère.</string>
+    <string name="tunnel_lockdown_mode_info_1">Le coupe-circuit empêche les fuites pendant les reconnexions automatiques du tunnel. Le mode verrouillage garde en plus votre trafic bloqué quand la connexion tombe à répétition ou que votre compte est refusé, au lieu de le libérer.</string>
+    <string name="tunnel_lockdown_mode_info_2">Vous déconnecter manuellement ou quitter l\'application libère votre trafic. Pour le garder bloqué dès que le VPN est coupé, activez « Bloquer les connexions sans VPN » dans les paramètres VPN d\'Android.</string>
     <string name="tunnel_custom_dns_blockers_disabled">Les bloqueurs de contenu sont désactivés tant qu\'un serveur DNS personnalisé est utilisé.</string>
     <string name="tunnel_mtu_default">Par défaut</string>
     <string name="tunnel_mtu_hint">Définissez le MTU du tunnel. Plage valide : %1$d - %2$d. Laissez vide pour la valeur par défaut.</string>

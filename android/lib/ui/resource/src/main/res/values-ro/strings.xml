@@ -300,7 +300,7 @@
     <string name="tunnel_kill_switch_title">Kill Switch de oprire de urgență</string>
     <string name="tunnel_kill_switch_subtitle">Blochează tot traficul dacă tunelul cade, în loc să revină la rețeaua neprotejată.</string>
     <string name="tunnel_kill_switch_info_1">Această funcție integrată împiedică scurgerea traficului în afara tunelului VPN dacă rețeaua se oprește brusc sau dacă tunelul cedează: blochează traficul până la restabilirea conexiunii.</string>
-    <string name="tunnel_kill_switch_info_2">Diferența dintre Kill Switch și modul de blocare este că primul previne scurgerile în timpul reconectărilor automate ale tunelului, al blocărilor de software și al altor incidente similare. Cu modul de blocare activat, trebuie să fiți conectat la un server Warren pentru a accesa internetul: deconectarea manuală sau închiderea aplicației vă blochează conexiunea.</string>
+    <string name="tunnel_kill_switch_info_2">Kill Switch-ul previne scurgerile în timpul reconectărilor automate ale tunelului. Modul Blocare vă păstrează în plus traficul blocat atunci când conexiunea cade în mod repetat sau contul vă este refuzat. Niciunul nu blochează după o deconectare manuală: pentru asta, activați \"Blocați conexiunile fără VPN\" în setările VPN din Android.</string>
     <string name="tunnel_kill_switch_info_3">Dacă conexiunea cade de mai multe ori la scurt timp, Warren nu mai reîncearcă, iar traficul revine pe rețeaua obișnuită, în afara VPN-ului. Activați Mod Blocare pentru ca traficul să rămână blocat.</string>
     <string name="tunnel_ipv6_title">IPv6 în tunel</string>
     <string name="tunnel_ipv6_subtitle">Direcționează IPv6 prin tunel. Când este dezactivat, IPv6 este blocat pentru a preveni scurgerile de date.</string>
@@ -383,9 +383,9 @@
     <string name="port_forwarding_desc">Deschide un port public pe serverul de ieșire conectat și îl redirecționează către dispozitivul dvs. Util pentru aplicații peer-to-peer, partajare de fișiere sau servicii găzduite local.</string>
     <string name="port_forwarding_abuse_notice">Un port redirecționat este accesibil din internet. Dacă un terț raportează abuzuri provenite de la el, închidem portul și înregistrăm un avertisment în contul dvs.; trei avertismente în 90 de zile duc la revocarea accesului. Detalii și modul de contestare: %1$s</string>
     <string name="tunnel_lockdown_mode_title">Mod Blocare</string>
-    <string name="tunnel_lockdown_mode_subtitle">Cu modul de blocare activat, trebuie să fiți conectat la un server Warren pentru a accesa internetul. Deconectarea manuală sau închiderea aplicației vă blochează conexiunea.</string>
-    <string name="tunnel_lockdown_mode_info_1">Diferența dintre Kill Switch și modul de blocare este că primul previne scurgerile în timpul reconectărilor automate ale tunelului, al blocărilor de software și al altor incidente similare.</string>
-    <string name="tunnel_lockdown_mode_info_2">Cu modul de blocare activat, trebuie să fiți conectat la un server Warren pentru a accesa internetul. Deconectarea manuală sau închiderea aplicației vă blochează conexiunea.</string>
+    <string name="tunnel_lockdown_mode_subtitle">Vă păstrează traficul blocat atunci când conexiunea cade în mod repetat sau contul vă este refuzat. O deconectare manuală îl eliberează.</string>
+    <string name="tunnel_lockdown_mode_info_1">Kill Switch-ul previne scurgerile în timpul reconectărilor automate ale tunelului. Modul Blocare vă păstrează în plus traficul blocat atunci când conexiunea cade în mod repetat sau contul vă este refuzat, în loc să îl elibereze.</string>
+    <string name="tunnel_lockdown_mode_info_2">Deconectarea manuală sau închiderea aplicației vă eliberează traficul. Pentru a-l păstra blocat ori de câte ori VPN-ul este oprit, activați \"Blocați conexiunile fără VPN\" în setările VPN din Android.</string>
     <string name="tunnel_custom_dns_blockers_disabled">Programele de blocare a conținutului sunt dezactivate cât timp se utilizează un server DNS personalizat.</string>
     <string name="tunnel_mtu_default">Implicit</string>
     <string name="tunnel_mtu_hint">Setați MTU-ul tunelului. Interval valid: %1$d - %2$d. Lăsați gol pentru valoarea implicită.</string>

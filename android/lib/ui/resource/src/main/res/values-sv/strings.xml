@@ -292,7 +292,7 @@
     <string name="tunnel_kill_switch_title">Kill Switch</string>
     <string name="tunnel_kill_switch_subtitle">Blockera all trafik om tunneln bryts, i stället för att falla tillbaka på det oskyddade nätverket.</string>
     <string name="tunnel_kill_switch_info_1">Den här inbyggda funktionen hindrar din trafik från att läcka utanför VPN-tunneln om nätverket plötsligt slutar fungera eller om tunneln fallerar: den blockerar trafiken tills anslutningen är återupprättad.</string>
-    <string name="tunnel_kill_switch_info_2">Skillnaden mellan Kill Switch och låsningsläget är att Kill Switch förhindrar läckor vid automatiska återanslutningar av tunneln, programkrascher och liknande missöden. Med låsningsläget aktiverat måste du vara ansluten till en Warren-server för att nå internet: att koppla från manuellt eller avsluta appen blockerar din anslutning.</string>
+    <string name="tunnel_kill_switch_info_2">Kill Switch förhindrar läckor när tunneln återansluter automatiskt. Låsningsläget håller dessutom din trafik blockerad när anslutningen bryts gång på gång eller ditt konto nekas. Ingen av dem blockerar efter att du kopplat från manuellt: aktivera i stället \"Blockera anslutningar utan VPN\" i Androids VPN-inställningar.</string>
     <string name="tunnel_kill_switch_info_3">Om anslutningen bryts flera gånger i snabb följd slutar Warren försöka igen och din trafik går tillbaka till ditt vanliga nätverk, utanför VPN. Slå på Låsningsläge för att hålla den blockerad i stället.</string>
     <string name="tunnel_ipv6_title">IPv6 i tunnel</string>
     <string name="tunnel_ipv6_subtitle">Skicka IPv6 genom tunneln. När detta är av blockeras IPv6 för att förhindra läckor.</string>
@@ -375,9 +375,9 @@
     <string name="port_forwarding_desc">Öppnar en offentlig port på den anslutna utgångsservern och vidarebefordrar den till din enhet. Användbart för peer-to-peer-program, fildelning eller egenhostade tjänster.</string>
     <string name="port_forwarding_abuse_notice">En vidarebefordrad port är nåbar från internet. Om en tredje part anmäler missbruk därifrån stänger vi porten och noterar en varning på ditt konto; tre varningar inom 90 dagar återkallar åtkomsten. Detaljer och hur du bestrider: %1$s</string>
     <string name="tunnel_lockdown_mode_title">Låsningsläge</string>
-    <string name="tunnel_lockdown_mode_subtitle">Med låsningsläget på måste du vara ansluten till en Warren-server för att nå internet. Att koppla från manuellt eller avsluta appen blockerar din anslutning.</string>
-    <string name="tunnel_lockdown_mode_info_1">Skillnaden mellan Kill Switch och låsningsläget är att Kill Switch förhindrar läckor vid automatiska återanslutningar av tunneln, programkrascher och liknande missöden.</string>
-    <string name="tunnel_lockdown_mode_info_2">Med låsningsläget på måste du vara ansluten till en Warren-server för att nå internet. Att koppla från manuellt eller avsluta appen blockerar din anslutning.</string>
+    <string name="tunnel_lockdown_mode_subtitle">Håller din trafik blockerad när anslutningen bryts gång på gång eller ditt konto nekas. En manuell frånkoppling släpper den.</string>
+    <string name="tunnel_lockdown_mode_info_1">Kill Switch förhindrar läckor när tunneln återansluter automatiskt. Låsningsläget håller dessutom din trafik blockerad när anslutningen bryts gång på gång eller ditt konto nekas, i stället för att släppa den.</string>
+    <string name="tunnel_lockdown_mode_info_2">Om du kopplar från manuellt eller avslutar appen släpps din trafik. För att hålla den blockerad när VPN är av, aktivera \"Blockera anslutningar utan VPN\" i Androids VPN-inställningar.</string>
     <string name="tunnel_custom_dns_blockers_disabled">Innehållsblockerare är avstängda medan en anpassad DNS-server används.</string>
     <string name="tunnel_mtu_default">Standard</string>
     <string name="tunnel_mtu_hint">Ange tunnelns MTU. Giltigt intervall: %1$d - %2$d. Lämna tomt för standardvärdet.</string>

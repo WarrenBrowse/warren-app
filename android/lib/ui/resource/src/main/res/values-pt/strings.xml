@@ -295,7 +295,7 @@
     <string name="tunnel_kill_switch_title">Kill switch</string>
     <string name="tunnel_kill_switch_subtitle">Bloquear todo o tráfego se o túnel cair, em vez de recorrer à rede desprotegida.</string>
     <string name="tunnel_kill_switch_info_1">Esta funcionalidade integrada impede que o seu tráfego saia do túnel VPN se a rede deixar de funcionar de repente ou se o túnel falhar: bloqueia o tráfego até a ligação ser restabelecida.</string>
-    <string name="tunnel_kill_switch_info_2">A diferença entre o kill switch e o modo de bloqueio é que o kill switch evita fugas durante as reconexões automáticas do túnel, falhas de software e acidentes semelhantes. Com o modo de bloqueio ativado, tem de estar ligado a um servidor Warren para aceder à internet: desligar manualmente ou fechar a app bloqueia a sua ligação.</string>
+    <string name="tunnel_kill_switch_info_2">O kill switch evita fugas durante as religações automáticas do túnel. O modo de bloqueio mantém também o seu tráfego bloqueado quando a ligação cai repetidamente ou a sua conta é recusada. Nenhum dos dois bloqueia depois de uma desligação manual: para isso, ative \"Bloquear ligações sem VPN\" nas definições de VPN do Android.</string>
     <string name="tunnel_kill_switch_info_3">Se a ligação cair várias vezes seguidas em pouco tempo, o Warren deixa de tentar novamente e o seu tráfego volta à sua rede habitual, fora da VPN. Ative o Modo de bloqueio para o manter bloqueado.</string>
     <string name="tunnel_ipv6_title">IPv6 em túnel</string>
     <string name="tunnel_ipv6_subtitle">Encaminhar IPv6 através do túnel. Quando desativado, o IPv6 é bloqueado para evitar fugas.</string>
@@ -378,9 +378,9 @@
     <string name="port_forwarding_desc">Abre uma porta pública no servidor de saída conectado e a encaminha para o seu dispositivo. Útil para aplicações ponto a ponto, partilha de ficheiros ou serviços auto-hospedados.</string>
     <string name="port_forwarding_abuse_notice">Uma porta encaminhada é acessível a partir da internet. Se um terceiro denunciar abusos vindos dela, fechamos a porta e registamos um aviso na sua conta; três avisos em 90 dias revogam o acesso. Detalhes e como contestar: %1$s</string>
     <string name="tunnel_lockdown_mode_title">Modo de bloqueio</string>
-    <string name="tunnel_lockdown_mode_subtitle">Com o modo de bloqueio ativado, tem de estar ligado a um servidor Warren para aceder à internet. Desligar manualmente ou fechar a app bloqueia a sua ligação.</string>
-    <string name="tunnel_lockdown_mode_info_1">A diferença entre o kill switch e o modo de bloqueio é que o kill switch evita fugas durante as reconexões automáticas do túnel, falhas de software e acidentes semelhantes.</string>
-    <string name="tunnel_lockdown_mode_info_2">Com o modo de bloqueio ativado, tem de estar ligado a um servidor Warren para aceder à internet. Desligar manualmente ou fechar a app bloqueia a sua ligação.</string>
+    <string name="tunnel_lockdown_mode_subtitle">Mantém o seu tráfego bloqueado quando a ligação cai repetidamente ou a sua conta é recusada. Desligar manualmente liberta-o.</string>
+    <string name="tunnel_lockdown_mode_info_1">O kill switch evita fugas durante as religações automáticas do túnel. O modo de bloqueio mantém também o seu tráfego bloqueado quando a ligação cai repetidamente ou a sua conta é recusada, em vez de o libertar.</string>
+    <string name="tunnel_lockdown_mode_info_2">Desligar manualmente ou sair da aplicação liberta o seu tráfego. Para o manter bloqueado sempre que a VPN está desligada, ative \"Bloquear ligações sem VPN\" nas definições de VPN do Android.</string>
     <string name="tunnel_custom_dns_blockers_disabled">Os bloqueadores de conteúdo estão desativados enquanto estiver a usar um servidor DNS personalizado.</string>
     <string name="tunnel_mtu_default">Padrão</string>
     <string name="tunnel_mtu_hint">Defina a MTU do túnel. Intervalo válido: %1$d - %2$d. Deixe vazio para o valor predefinido.</string>

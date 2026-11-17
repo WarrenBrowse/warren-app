@@ -292,7 +292,7 @@
     <string name="tunnel_kill_switch_title">Kill-switch</string>
     <string name="tunnel_kill_switch_subtitle">Bloker al trafik, hvis tunnelen falder ud, i stedet for at falde tilbage til det ubeskyttede netværk.</string>
     <string name="tunnel_kill_switch_info_1">Denne indbyggede funktion forhindrer, at din trafik lækker uden for VPN-tunnelen, hvis dit netværk pludselig holder op med at virke, eller hvis tunnelen fejler: den blokerer trafikken, indtil forbindelsen er genetableret.</string>
-    <string name="tunnel_kill_switch_info_2">Forskellen mellem kill-switchen og lockdown-tilstand er, at kill-switchen forhindrer læk under automatiske gentilslutninger af tunnelen, softwarenedbrud og lignende uheld. Med lockdown-tilstand aktiveret skal du være tilsluttet en Warren-server for at nå internettet: manuel afbrydelse eller lukning af appen blokerer din forbindelse.</string>
+    <string name="tunnel_kill_switch_info_2">Kill-switchen forhindrer læk under tunnelens automatiske genforbindelser. Lockdown-tilstand holder desuden din trafik blokeret, når forbindelsen falder ud igen og igen, eller din konto bliver afvist. Ingen af dem blokerer, efter du har afbrudt manuelt: slå i stedet \"Bloker forbindelser uden VPN\" til i Androids VPN-indstillinger.</string>
     <string name="tunnel_kill_switch_info_3">Hvis forbindelsen falder ud flere gange i hurtig rækkefølge, holder Warren op med at prøve igen, og din trafik går tilbage til dit almindelige netværk uden om VPN. Slå Lockdown-tilstand til for at holde den blokeret i stedet.</string>
     <string name="tunnel_ipv6_title">IPv6 i tunnel</string>
     <string name="tunnel_ipv6_subtitle">Send IPv6 gennem tunnelen. Når slået fra, blokeres IPv6 for at forhindre lækager.</string>
@@ -375,9 +375,9 @@
     <string name="port_forwarding_desc">Åbner en offentlig port på den tilsluttede udgangsserver og videresender den til din enhed. Nyttigt til peer-to-peer-programmer, fildeling eller selvhostede tjenester.</string>
     <string name="port_forwarding_abuse_notice">En videresendt port er tilgængelig fra internettet. Hvis en tredjepart rapporterer misbrug derfra, lukker vi porten og registrerer en advarsel på din konto; tre advarsler inden for 90 dage fjerner adgangen. Detaljer og hvordan du bestrider: %1$s</string>
     <string name="tunnel_lockdown_mode_title">Lockdown-tilstand</string>
-    <string name="tunnel_lockdown_mode_subtitle">Når lockdown-tilstand er slået til, skal du være tilsluttet en Warren-server for at nå internettet. Manuel afbrydelse eller lukning af appen blokerer din forbindelse.</string>
-    <string name="tunnel_lockdown_mode_info_1">Forskellen mellem kill-switchen og lockdown-tilstand er, at kill-switchen forhindrer læk under automatiske gentilslutninger af tunnelen, softwarenedbrud og lignende uheld.</string>
-    <string name="tunnel_lockdown_mode_info_2">Når lockdown-tilstand er slået til, skal du være tilsluttet en Warren-server for at nå internettet. Manuel afbrydelse eller lukning af appen blokerer din forbindelse.</string>
+    <string name="tunnel_lockdown_mode_subtitle">Holder din trafik blokeret, når forbindelsen falder ud igen og igen, eller din konto bliver afvist. En manuel afbrydelse frigiver den.</string>
+    <string name="tunnel_lockdown_mode_info_1">Kill-switchen forhindrer læk under tunnelens automatiske genforbindelser. Lockdown-tilstand holder desuden din trafik blokeret, når forbindelsen falder ud igen og igen, eller din konto bliver afvist, i stedet for at frigive den.</string>
+    <string name="tunnel_lockdown_mode_info_2">Hvis du afbryder manuelt eller lukker appen, frigives din trafik. For at holde den blokeret, når VPN er slået fra, skal du slå \"Bloker forbindelser uden VPN\" til i Androids VPN-indstillinger.</string>
     <string name="tunnel_custom_dns_blockers_disabled">Indholdsblokkere er slået fra, mens en brugerdefineret DNS-server er i brug.</string>
     <string name="tunnel_mtu_default">Standard</string>
     <string name="tunnel_mtu_hint">Angiv tunnelens MTU. Gyldigt interval: %1$d - %2$d. Lad feltet stå tomt for standardværdien.</string>

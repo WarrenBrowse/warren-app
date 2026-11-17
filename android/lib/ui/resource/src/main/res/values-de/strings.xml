@@ -292,7 +292,7 @@
     <string name="tunnel_kill_switch_title">Killswitch</string>
     <string name="tunnel_kill_switch_subtitle">Blockiere den gesamten Datenverkehr, wenn der Tunnel abbricht, anstatt auf das ungeschützte Netzwerk zurückzufallen.</string>
     <string name="tunnel_kill_switch_info_1">Diese eingebaute Funktion verhindert, dass dein Datenverkehr aus dem VPN-Tunnel austritt, wenn dein Netzwerk plötzlich ausfällt oder der Tunnel abbricht: Sie blockiert den Verkehr, bis die Verbindung wiederhergestellt ist.</string>
-    <string name="tunnel_kill_switch_info_2">Der Unterschied zwischen Killswitch und Lockdown-Modus: Der Killswitch verhindert Lecks bei automatischen Wiederverbindungen des Tunnels, Softwareabstürzen und ähnlichen Zwischenfällen. Im Lockdown-Modus musst du mit einem Warren-Server verbunden sein, um ins Internet zu kommen: Manuelles Trennen oder Beenden der App blockiert deine Verbindung.</string>
+    <string name="tunnel_kill_switch_info_2">Der Killswitch verhindert Lecks bei automatischen Neuverbindungen des Tunnels. Der Sperrmodus hält Ihren Datenverkehr zusätzlich blockiert, wenn die Verbindung wiederholt abbricht oder Ihr Konto abgelehnt wird. Keiner von beiden blockiert nach einer manuellen Trennung: Aktivieren Sie dafür „Verbindungen ohne VPN blockieren“ in den VPN-Einstellungen von Android.</string>
     <string name="tunnel_kill_switch_info_3">Bricht die Verbindung mehrmals kurz hintereinander ab, hört Warren auf, es erneut zu versuchen, und dein Datenverkehr läuft wieder über dein normales Netzwerk, außerhalb des VPN. Aktiviere den Sperrmodus, damit er stattdessen blockiert bleibt.</string>
     <string name="tunnel_ipv6_title">In-Tunnel-IPv6</string>
     <string name="tunnel_ipv6_subtitle">Leite IPv6 durch den Tunnel. Wenn deaktiviert, wird IPv6 blockiert, um Lecks zu verhindern.</string>
@@ -375,9 +375,9 @@
     <string name="port_forwarding_desc">Öffnet einen öffentlichen Port auf dem verbundenen Exit-Server und leitet ihn an Ihr Gerät weiter. Nützlich für Peer-to-Peer-Anwendungen, Dateifreigabe oder selbst gehostete Dienste.</string>
     <string name="port_forwarding_abuse_notice">Ein weitergeleiteter Port ist aus dem Internet erreichbar. Meldet ein Dritter Missbrauch von dort, schließen wir den Port und vermerken eine Verwarnung auf deinem Konto; drei Verwarnungen in 90 Tagen entziehen den Zugang. Details und Einspruch: %1$s</string>
     <string name="tunnel_lockdown_mode_title">Sperrmodus</string>
-    <string name="tunnel_lockdown_mode_subtitle">Bei aktivem Lockdown-Modus musst du mit einem Warren-Server verbunden sein, um ins Internet zu kommen. Manuelles Trennen oder Beenden der App blockiert deine Verbindung.</string>
-    <string name="tunnel_lockdown_mode_info_1">Der Unterschied zwischen Killswitch und Lockdown-Modus: Der Killswitch verhindert Lecks bei automatischen Wiederverbindungen des Tunnels, Softwareabstürzen und ähnlichen Zwischenfällen.</string>
-    <string name="tunnel_lockdown_mode_info_2">Bei aktivem Lockdown-Modus musst du mit einem Warren-Server verbunden sein, um ins Internet zu kommen. Manuelles Trennen oder Beenden der App blockiert deine Verbindung.</string>
+    <string name="tunnel_lockdown_mode_subtitle">Hält Ihren Datenverkehr blockiert, wenn die Verbindung wiederholt abbricht oder Ihr Konto abgelehnt wird. Eine manuelle Trennung gibt ihn frei.</string>
+    <string name="tunnel_lockdown_mode_info_1">Der Killswitch verhindert Lecks bei automatischen Neuverbindungen des Tunnels. Der Sperrmodus hält Ihren Datenverkehr zusätzlich blockiert, wenn die Verbindung wiederholt abbricht oder Ihr Konto abgelehnt wird, statt ihn freizugeben.</string>
+    <string name="tunnel_lockdown_mode_info_2">Eine manuelle Trennung oder das Beenden der App gibt Ihren Datenverkehr frei. Damit er immer blockiert bleibt, wenn das VPN aus ist, aktivieren Sie „Verbindungen ohne VPN blockieren“ in den VPN-Einstellungen von Android.</string>
     <string name="tunnel_custom_dns_blockers_disabled">Inhaltssperren sind deaktiviert, solange ein benutzerdefinierter DNS-Server verwendet wird.</string>
     <string name="tunnel_mtu_default">Standard</string>
     <string name="tunnel_mtu_hint">Lege die Tunnel-MTU fest. Gültiger Bereich: %1$d - %2$d. Leer lassen für den Standardwert.</string>
