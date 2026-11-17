@@ -192,7 +192,8 @@ export interface ResolvedReport {
  */
 export async function resolveApprovedReport(
   reportId: string | undefined,
-  collect: () => Promise<string>,
+  collect: ReportCollector,
+  walletAddress: string | undefined,
   read: (id: string) => Promise<Buffer>,
 ): Promise<ResolvedReport> {
   if (reportId !== undefined) {
@@ -202,8 +203,27 @@ export async function resolveApprovedReport(
       // Previewed file vanished (temp reaper); fall through to re-collect.
     }
   }
-  const fresh = await collect();
+  const fresh = await collect(walletAddress);
   return { bytes: await read(fresh), reportId: fresh };
+}
+
+/** Collects a report with `toRedact` removed from every log, and returns its id. */
+export type ReportCollector = (toRedact: string | undefined) => Promise<string>;
+
+/**
+ * Collects the report the consent prompt previews when the deep link arrives. A failure
+ * yields no id instead of an error: the prompt still shows, and approval collects again.
+ */
+export async function collectAttachPreview(
+  collect: ReportCollector,
+  walletAddress: string | undefined,
+): Promise<string | undefined> {
+  try {
+    return await collect(walletAddress);
+  } catch (error) {
+    log.error(`Forum attach: could not collect the problem report: ${String(error)}`);
+    return undefined;
+  }
 }
 
 /**

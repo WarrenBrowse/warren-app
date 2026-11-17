@@ -34,7 +34,7 @@ export function registerIpcListeners() {
 
 // Also used by the forum attach-logs flow (forum-attach.ts): the report is
 // collected when the deep link arrives so the consent prompt can show it.
-export function collectLogs(toRedact?: string): Promise<string> {
+export function collectLogs(toRedact: string | undefined): Promise<string> {
   const id = randomUUID();
   const reportPath = getProblemReportPath(id);
   const executable = resolveBin('warren-problem-report');

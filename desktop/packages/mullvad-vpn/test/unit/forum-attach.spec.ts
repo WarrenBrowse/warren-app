@@ -10,6 +10,7 @@ vi.mock('../../src/main/forum-login', async (importOriginal) => ({
 import { DaemonRpc } from '../../src/main/daemon-rpc';
 import {
   approveForumAttach,
+  collectAttachPreview,
   MAX_LOG_GZ_BYTES,
   parseForumAttachUrl,
   resolveApprovedReport,
@@ -263,7 +264,7 @@ describe('resolveApprovedReport', () => {
   it('reads the previewed report without collecting a new one', async () => {
     const collect = vi.fn(() => Promise.resolve('fresh-id'));
     const read = vi.fn((id: string) => Promise.resolve(Buffer.from(`report:${id}`)));
-    const report = await resolveApprovedReport('previewed-id', collect, read);
+    const report = await resolveApprovedReport('previewed-id', collect, undefined, read);
     expect(report.bytes.toString()).toBe('report:previewed-id');
     expect(report.reportId).toBe('previewed-id');
     expect(collect).not.toHaveBeenCalled();
@@ -272,7 +273,7 @@ describe('resolveApprovedReport', () => {
   it('collects a fresh report when the deep-link collection had failed', async () => {
     const collect = vi.fn(() => Promise.resolve('fresh-id'));
     const read = vi.fn((id: string) => Promise.resolve(Buffer.from(`report:${id}`)));
-    const report = await resolveApprovedReport(undefined, collect, read);
+    const report = await resolveApprovedReport(undefined, collect, undefined, read);
     expect(report.bytes.toString()).toBe('report:fresh-id');
     expect(report.reportId).toBe('fresh-id');
     expect(collect).toHaveBeenCalledOnce();
@@ -285,16 +286,23 @@ describe('resolveApprovedReport', () => {
         ? Promise.reject(new Error('ENOENT'))
         : Promise.resolve(Buffer.from(`report:${id}`)),
     );
-    const report = await resolveApprovedReport('previewed-id', collect, read);
+    const report = await resolveApprovedReport('previewed-id', collect, undefined, read);
     expect(report.bytes.toString()).toBe('report:fresh-id');
     expect(report.reportId).toBe('fresh-id');
     expect(collect).toHaveBeenCalledOnce();
   });
 
+  it('asks the collector to redact the wallet address on a fresh collection', async () => {
+    const collect = vi.fn((_toRedact: string | undefined) => Promise.resolve('fresh-id'));
+    const read = vi.fn((id: string) => Promise.resolve(Buffer.from(`report:${id}`)));
+    await resolveApprovedReport(undefined, collect, 'wb-address', read);
+    expect(collect).toHaveBeenCalledWith('wb-address');
+  });
+
   it('propagates a failed retry so approve surfaces an error', async () => {
     const collect = vi.fn(() => Promise.reject(new Error('collector missing')));
     const read = vi.fn();
-    await expect(resolveApprovedReport(undefined, collect, read)).rejects.toThrow();
+    await expect(resolveApprovedReport(undefined, collect, undefined, read)).rejects.toThrow();
     expect(read).not.toHaveBeenCalled();
   });
 });
@@ -306,5 +314,20 @@ describe('the gzip cap the app enforces before it sends', () => {
     // sized off the same shared constant. Deriving both from one number is
     // what stops the app sending bytes no answer can come back through.
     expect(MAX_LOG_GZ_BYTES).toBe((BROKER_MAX_LOG_GZ_B64_CHARS / 4) * 3);
+  });
+});
+
+describe('collectAttachPreview', () => {
+  it('asks the collector to redact the wallet address', async () => {
+    const collect = vi.fn((_toRedact: string | undefined) => Promise.resolve('previewed-id'));
+    await expect(collectAttachPreview(collect, 'wb-address')).resolves.toBe('previewed-id');
+    expect(collect).toHaveBeenCalledWith('wb-address');
+  });
+
+  it('still lets the prompt show when the collection fails', async () => {
+    const collect = vi.fn((_toRedact: string | undefined) =>
+      Promise.reject(new Error('collector missing')),
+    );
+    await expect(collectAttachPreview(collect, 'wb-address')).resolves.toBeUndefined();
   });
 });

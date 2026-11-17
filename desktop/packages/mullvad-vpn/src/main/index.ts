@@ -96,6 +96,7 @@ import ForumActivityMonitor, { ForumActivityMonitorDelegate } from './forum-acti
 import {
   approveForumAttach,
   cancelForumAttach,
+  collectAttachPreview,
   ParsedForumAttach,
   parseForumAttachUrl,
   resolveApprovedReport,
@@ -637,12 +638,7 @@ class ApplicationMain
     // exactly what would be sent before the user approves anything. A
     // collection failure must NOT swallow the request silently: the prompt
     // still shows (without the preview) and approve retries the collection.
-    let reportId: string | undefined;
-    try {
-      reportId = await problemReport.collectLogs();
-    } catch (error) {
-      log.error(`Forum attach: could not collect the problem report: ${String(error)}`);
-    }
+    const reportId = await collectAttachPreview(problemReport.collectLogs, this.loggedInPubkey());
     const request: IForumAttachRequest = { ...parsed, reportId };
     this.pendingForumAttach.set(request, Date.now());
     this.userInterface?.showWindow();
@@ -661,7 +657,8 @@ class ApplicationMain
     try {
       const report = await resolveApprovedReport(
         request.reportId,
-        () => problemReport.collectLogs(),
+        problemReport.collectLogs,
+        this.loggedInPubkey(),
         (id) => fs.promises.readFile(problemReport.getProblemReportPath(id)),
       );
       logGz = gzipSync(report.bytes);
