@@ -119,12 +119,12 @@ control="$root/DEBIAN/control"
 # Provides/Conflicts/Replaces make the two flavours mutually exclusive: they own
 # the same paths, so apt has to see them as one slot rather than let both land.
 #
-# Depends is the one thing this flavour states that the fpm-built input does not
-# (electron-builder passes fpm --no-depends): libdbus is the daemon's only
-# unresolved shared library, and without the declaration a host that lacks it
-# installs cleanly and then crash-loops the daemon in silence. Every MX desktop
-# has it, so the dependency costs nothing and turns the one failure mode that
-# would be invisible into an apt message.
+# Depends is restated rather than carried over, so this flavour keeps exactly
+# the one dependency it needs whatever the input declares: libdbus is the
+# daemon's only unresolved shared library, and without the declaration a host
+# that lacks it installs cleanly and then crash-loops the daemon in silence.
+# Every MX desktop has it, so the dependency costs nothing and turns the one
+# failure mode that would be invisible into an apt message.
 awk -v pkg="$package" '
     /^Package:/ { print "Package: " pkg "-sysvinit"; next }
     /^(Provides|Conflicts|Replaces|Depends):/ { next }

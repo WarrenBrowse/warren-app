@@ -510,7 +510,6 @@ function newConfig() {
 
     deb: {
       fpm: [
-        '--no-depends',
         '--version',
         getLinuxVersion(),
         '--before-install',
@@ -548,6 +547,12 @@ function newConfig() {
       ],
       afterInstall: envAsset('linux/after-install.sh'),
       afterRemove: envAsset('linux/after-remove.sh'),
+      // libdbus is the daemon's one shared library a minimal system may lack,
+      // and without it the daemon crash-loops in silence. The Electron
+      // libraries stay undeclared, as before: every desktop has them, and the
+      // electron-builder defaults name packages some distributions renamed.
+      depends: ['libdbus-1-3'],
+      recommends: [],
     },
 
     rpm: {

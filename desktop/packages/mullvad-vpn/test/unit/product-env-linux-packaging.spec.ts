@@ -66,6 +66,7 @@ interface DistributionConfig {
   appId: string;
   productName: string;
   linux: { executableName: string; artifactName: string };
+  deb?: { fpm?: unknown; depends?: unknown };
   rpm?: { fpm?: unknown };
   pacman?: { fpm?: unknown };
 }
@@ -227,5 +228,26 @@ describe('pacman upgrade scriptlets', () => {
   it('starts the new daemon after an upgrade', async () => {
     const postUpgrade = scriptAfter(await pacmanFpm('beta'), '--after-upgrade');
     expect(postUpgrade).toContain('systemctl start warren-daemon-beta.service');
+  }, 60_000);
+});
+
+// libdbus is the daemon's only shared library a minimal system may lack, and
+// without it the daemon crash-loops in silence after a clean install. The
+// rpm and pacman packages already name it; the deb has to declare it too, so
+// apt installs it or says why it cannot.
+describe('deb dependencies', () => {
+  afterEach(() => {
+    delete process.env.WARREN_PRODUCT_ENV;
+  });
+
+  it('declares libdbus for the daemon', async () => {
+    vi.resetModules();
+    process.env.WARREN_PRODUCT_ENV = 'beta';
+    const distribution = await import('../../tasks/distribution.cjs');
+    const config = distribution.newConfig() as unknown as DistributionConfig;
+    const fpm = Array.isArray(config.deb?.fpm) ? config.deb.fpm : [];
+
+    expect(fpm).not.toContain('--no-depends');
+    expect(config.deb?.depends).toContain('libdbus-1-3');
   }, 60_000);
 });
