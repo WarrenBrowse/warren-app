@@ -60,6 +60,14 @@ object WarrenTunDefaults {
      */
     const val EXIT_DNS_RESOLVER = "10.66.0.1"
 
+    /**
+     * The resolver a blocking interface names (TEST-NET-1, never answered):
+     * with no DNS server on an active VPN, Android lets `getaddrinfo` query
+     * the physical network's resolver. Inside the blackhole's default route,
+     * so a query to it dies there.
+     */
+    const val BLACKHOLE_DNS_SERVER = "192.0.2.1"
+
     // Largest usable TUN MTU for the Warren QUIC tunnel and the default. The
     // QUIC datagram path cannot carry more, so this doubles as the ceiling the
     // user-configurable MTU is clamped to (the user may only lower it).
@@ -109,6 +117,7 @@ fun planTunInterface(
     if (blocking) {
         // Kill-switch interface: capture EVERYTHING (LAN included), resolve
         // nothing, pump nothing. "Allow LAN" never weakens the kill switch.
+        // It still names a resolver, one inside its own blackhole.
         return WarrenTunInterfacePlan(
             session = BLOCKING_SESSION,
             addresses = addresses,
@@ -116,7 +125,7 @@ fun planTunInterface(
                 WarrenTunInterfacePlan.TunCidr(WarrenTunDefaults.IPV4_DEFAULT_ROUTE, 0),
                 WarrenTunInterfacePlan.TunCidr(WarrenTunDefaults.IPV6_DEFAULT_ROUTE, 0),
             ),
-            dnsServers = emptyList(),
+            dnsServers = listOf(WarrenTunDefaults.BLACKHOLE_DNS_SERVER),
             mtu = WarrenTunDefaults.MTU,
             blocking = true,
             appRouting = appRouting as? AppRouting.OnlyFor ?: AppRouting.AllApps,
@@ -172,7 +181,7 @@ fun planTunInterface(
 /**
  * The blackhole that holds the apps locked to the VPN while no tunnel runs
  * (docs/app-routing.md section 8): exactly [routing]'s apps, every address
- * family, no DNS, no pump. This app is not on it, so its own API calls, like
+ * family, no pump, no resolver but its own. This app is not on it, so its own API calls, like
  * every app that is not locked, keep the network. "Allow LAN" does not open
  * it, as it does not open the kill switch.
  */
@@ -191,7 +200,7 @@ fun planLockGuard(routing: AppRouting.OnlyFor): WarrenTunInterfacePlan =
                 WarrenTunInterfacePlan.TunCidr(WarrenTunDefaults.IPV4_DEFAULT_ROUTE, 0),
                 WarrenTunInterfacePlan.TunCidr(WarrenTunDefaults.IPV6_DEFAULT_ROUTE, 0),
             ),
-        dnsServers = emptyList(),
+        dnsServers = listOf(WarrenTunDefaults.BLACKHOLE_DNS_SERVER),
         mtu = WarrenTunDefaults.MTU,
         blocking = true,
         appRouting = routing,
@@ -347,12 +356,16 @@ private fun isValidIpv4(v: String): Boolean {
 }
 
 private fun isValidIpv6(v: String): Boolean {
-    // Accept the standard hextet form with at most one "::" compression.
+    // The standard hextet form with at most one "::" compression, eight
+    // hextets in all: a form VpnService.Builder refuses would leave the
+    // interface without the resolver the user chose.
     if (v.count { it == ':' } < 2) return false
     val doubleColons = Regex("::").findAll(v).count()
     if (doubleColons > 1) return false
     val hextets = v.split(':').filter { it.isNotEmpty() }
-    return hextets.all { it.length <= 4 && it.all { c -> c.isDigit() || c.lowercaseChar() in 'a'..'f' } }
+    val sizeOk = if (doubleColons == 1) hextets.size <= 7 else hextets.size == 8
+    return sizeOk &&
+        hextets.all { it.length <= 4 && it.all { c -> c.isDigit() || c.lowercaseChar() in 'a'..'f' } }
 }
 
 // One constant VpnService session name for every interface (active OR

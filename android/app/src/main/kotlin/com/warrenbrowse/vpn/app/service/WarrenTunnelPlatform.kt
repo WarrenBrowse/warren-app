@@ -159,12 +159,19 @@ class AndroidTunnelPlatform(
                 }
             }
         }
-        plan.dnsServers.forEach {
+        val acceptedDns = plan.dnsServers.count {
             try {
                 builder.addDnsServer(it)
+                true
             } catch (e: IllegalArgumentException) {
                 Logger.w(throwable = e) { "skipping invalid DNS server $it" }
+                false
             }
+        }
+        // An interface with no resolver lets Android query the physical
+        // network's: name one nothing answers instead, so DNS fails closed.
+        if (acceptedDns == 0) {
+            builder.addDnsServer(WarrenTunDefaults.BLACKHOLE_DNS_SERVER)
         }
         applyAppRouting(builder, plan.appRouting)
         // establish() validates the full config in the system process and
