@@ -132,8 +132,7 @@ pub unsafe extern "C" fn warren_wallet_derive_pubkey(
     }
     // Safety: seed is at least SEED_LEN bytes (precondition).
     // `Zeroizing` ensures the stack copy is wiped on drop so the secret
-    // seed material does not linger in memory after this function returns
-    // (Fix M-2).
+    // seed material does not linger in memory after this function returns.
     let mut seed_arr = Zeroizing::new([0u8; SEED_LEN]);
     // SAFETY: `seed` points to at least SEED_LEN readable bytes (fn precondition).
     unsafe {
@@ -175,7 +174,7 @@ pub unsafe extern "C" fn warren_wallet_pubkey_ss58(seed: *const u8) -> *mut c_ch
     if seed.is_null() {
         return std::ptr::null_mut();
     }
-    // `Zeroizing` wipes the stack copy of the secret seed on drop (Fix M-2).
+    // `Zeroizing` wipes the stack copy of the secret seed on drop.
     let mut seed_arr = Zeroizing::new([0u8; SEED_LEN]);
     // SAFETY: `seed` points to at least SEED_LEN readable bytes (fn precondition).
     unsafe {
@@ -216,8 +215,7 @@ pub unsafe extern "C" fn warren_wallet_sign(
     }
     // Safety: seed is SEED_LEN bytes (precondition).
     // `Zeroizing` ensures the stack copy is wiped on drop so the secret
-    // seed material does not linger in memory after this function returns
-    // (Fix M-2).
+    // seed material does not linger in memory after this function returns.
     let mut seed_arr = Zeroizing::new([0u8; SEED_LEN]);
     // SAFETY: `seed` points to at least SEED_LEN readable bytes (fn precondition).
     unsafe {
@@ -243,9 +241,9 @@ pub unsafe extern "C" fn warren_wallet_sign(
 mod tests {
     use super::*;
 
-    // ---- Compile-time type assertion for Fix M-2 ----
+    // ---- Compile-time type assertion: the seed copy is zeroized ----
 
-    /// Compile-time proof (Fix M-2): `Zeroizing<[u8; SEED_LEN]>` must implement
+    /// Compile-time proof: `Zeroizing<[u8; SEED_LEN]>` must implement
     /// `Drop` with zeroing semantics.  The `Zeroizing` wrapper from the
     /// `zeroize` crate satisfies this.  If someone accidentally removes the
     /// wrapper and reverts to a plain `[u8; SEED_LEN]`, the helper below would
@@ -268,9 +266,9 @@ mod tests {
         s
     }
 
-    // ---- Functional tests (Fix M-2) ----
+    // ---- Functional tests ----
 
-    /// (M-2) `warren_wallet_derive_pubkey` must produce a non-zero pubkey.
+    /// `warren_wallet_derive_pubkey` must produce a non-zero pubkey.
     /// Verifies that `Zeroizing` does not corrupt the seed before use.
     #[test]
     fn derive_pubkey_produces_nonzero_output() {
@@ -282,7 +280,7 @@ mod tests {
         assert_ne!(pubkey, [0u8; 32], "pubkey must not be all-zero");
     }
 
-    /// (M-2) `warren_wallet_sign` must produce a non-zero signature.
+    /// `warren_wallet_sign` must produce a non-zero signature.
     /// Verifies that `Zeroizing` does not corrupt the seed before use.
     #[test]
     fn sign_produces_nonzero_signature() {
@@ -302,7 +300,7 @@ mod tests {
         assert_ne!(sig, [0u8; 64], "signature must not be all-zero");
     }
 
-    /// (M-2) `derive_pubkey` must be deterministic: two calls with the same
+    /// `derive_pubkey` must be deterministic: two calls with the same
     /// seed produce the same pubkey.  If `Zeroizing` accidentally zeroed the
     /// seed before it was used, the second call would diverge.
     #[test]
@@ -318,7 +316,7 @@ mod tests {
         assert_eq!(pk1, pk2);
     }
 
-    /// (M-2) `sign` must be deterministic: two calls with the same seed and
+    /// `sign` must be deterministic: two calls with the same seed and
     /// payload produce the same signature.
     #[test]
     fn sign_is_deterministic() {
@@ -344,7 +342,7 @@ mod tests {
         assert_eq!(sig1, sig2);
     }
 
-    /// (M-2) `derive_pubkey` must return `RC_INVALID_INPUT` on a null seed.
+    /// `derive_pubkey` must return `RC_INVALID_INPUT` on a null seed.
     #[test]
     fn derive_pubkey_null_seed_returns_error() {
         let mut pk = [0u8; 32];
@@ -408,7 +406,7 @@ mod tests {
         assert!(ptr.is_null());
     }
 
-    /// (M-2) `sign` must return `RC_INVALID_INPUT` on a null seed.
+    /// `sign` must return `RC_INVALID_INPUT` on a null seed.
     #[test]
     fn sign_null_seed_returns_error() {
         let payload = b"x";

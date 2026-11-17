@@ -562,19 +562,25 @@ final class WarrenQuinnActorTests: XCTestCase {
         await assertObservedState(actor, equals: .disconnected)
     }
 
-    func test_bindWalletSigningSeed_storesAndStopClears() async {
+    /// The bound seed is what the engine signs with, and stop wipes it: a
+    /// start after stop has no seed until one is bound again.
+    func test_boundSeedReachesTheEngine_andStopWipesIt() {
+        let adapter = MockWarrenQuinnAdapter()
         let actor = WarrenQuinnActor()
+        actor.bindAdapter(adapter)
         let seed = Data(repeating: 0xAB, count: 32)
         actor.bindWalletSigningSeed(seed)
 
-        // stop() should clear it ; we can't introspect directly but
-        // we can verify the actor stays usable after stop.
-        actor.stop()
-        await assertObservedState(actor, equals: .disconnected)
+        actor.start(options: StartOptions(launchSource: .app, selectedRelays: RelaySelectorStub.selectedRelays))
+        XCTAssertEqual(adapter.lastStartConfig?.walletSigningKey, seed)
 
-        // Re-binding seed after stop should work (idempotent).
+        actor.stop()
+        actor.start(options: StartOptions(launchSource: .app, selectedRelays: RelaySelectorStub.selectedRelays))
+        XCTAssertEqual(adapter.startCount, 1)
+
         actor.bindWalletSigningSeed(seed)
-        await assertObservedState(actor, equals: .disconnected)
+        actor.start(options: StartOptions(launchSource: .app, selectedRelays: RelaySelectorStub.selectedRelays))
+        XCTAssertEqual(adapter.startCount, 2)
     }
 
     // MARK: - Helpers

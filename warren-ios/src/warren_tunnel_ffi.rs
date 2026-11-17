@@ -3221,8 +3221,6 @@ fn now_secs() -> u64 {
 
 #[cfg(test)]
 mod tests {
-    use std::sync::Arc;
-
     // ---- Wallet identity: the tunnel signs as the address the app shows ----
 
     #[test]
@@ -3605,66 +3603,35 @@ mod tests {
         );
     }
 
-    // ---- Fix H-1: clone_arc_from_raw soundness ----
+    // ---- Borrowing the handle from its raw pointer ----
 
-    /// The `clone_arc_from_raw` pattern verified at the logic level using a
-    /// standalone `u32` value (no `tunnel` feature required). This mirrors the
-    /// exact three-step idiom (`from_raw` → `clone` → `into_raw`) used in
-    /// production and validates that:
-    ///
-    /// 1. The cloned `Arc` sees the same value as the original.
-    /// 2. The ref-count is 2 while both arcs are alive.
-    /// 3. After the clone drops, the original is still valid (ref-count back to 1).
-    /// 4. After the original drops via `from_raw`, the value was not double-freed.
-    ///
-    /// This is a direct analogue of `clone_arc_from_raw`: the production
-    /// function does the same three steps on `Arc<WarrenTunnelHandleImpl>`.
+    /// `clone_arc_from_raw` hands out a counted reference to the live handle
+    /// without taking the one the box owns, and refuses a null pointer.
+    #[cfg(all(target_os = "ios", feature = "tunnel"))]
     #[test]
-    fn clone_arc_from_raw_pattern_is_sound() {
-        let arc: Arc<u32> = Arc::new(42);
-        let raw: *const u32 = Arc::into_raw(arc);
-
-        // Replicate the production `clone_arc_from_raw` logic.
-        let cloned: Arc<u32> = {
-            // SAFETY: `raw` came from `Arc::into_raw` above; reconstituting without dropping.
-            let arc = unsafe { Arc::from_raw(raw) };
-            let c = Arc::clone(&arc);
-            let _ = Arc::into_raw(arc);
-            c
-        };
-
-        // Cloned arc holds the value.
-        assert_eq!(*cloned, 42, "cloned arc must see the original value");
-
-        // Drop clone: ref-count goes from 2 back to 1.
-        drop(cloned);
-
-        // The original raw pointer is still valid (ref-count 1).
-        // SAFETY: `raw` came from `Arc::into_raw` above and is still live (ref-count 1).
-        let recovered = unsafe { Arc::from_raw(raw) };
-        assert_eq!(
-            *recovered, 42,
-            "original arc must still be valid after clone drops"
+    fn clone_arc_from_raw_borrows_the_live_handle_and_refuses_null() {
+        let arc = std::sync::Arc::new(
+            super::handle_impl::WarrenTunnelHandleImpl::new().expect("runtime"),
         );
-        // `recovered` drops here, freeing the allocation exactly once.
+        let original = std::sync::Arc::as_ptr(&arc);
+        let handle = super::into_ffi_handle(arc);
+
+        // SAFETY: `handle` is live until the stop below.
+        let borrowed = unsafe { super::clone_arc_from_raw(handle) }.expect("live handle");
+        assert_eq!(std::sync::Arc::as_ptr(&borrowed), original);
+        assert_eq!(std::sync::Arc::strong_count(&borrowed), 2);
+        drop(borrowed);
+
+        // SAFETY: a null pointer is the documented refusal case.
+        assert!(unsafe { super::clone_arc_from_raw(std::ptr::null_mut()) }.is_none());
+
+        // SAFETY: `handle` comes from `into_ffi_handle` and is stopped once.
+        unsafe { super::warren_tunnel_stop(handle) };
     }
 
-    /// (H-1) `clone_arc_from_raw` must return `None` on a null pointer.
-    /// Production code checks this before any dereference.
-    #[test]
-    fn clone_arc_from_raw_null_returns_none() {
-        // We cannot call the production `clone_arc_from_raw` without the
-        // `tunnel` feature, but we verify the null-check logic directly.
-        let ptr: *mut super::WarrenTunnelHandle = std::ptr::null_mut();
-        assert!(ptr.is_null(), "null pointer must be null");
-        // The production function returns None on null; the pattern is:
-        //   if handle.is_null() { return None; }
-        // This test documents and guards that invariant at the type level.
-    }
+    // ---- CallbackEntry Send/Sync bounds ----
 
-    // ---- Fix H-2: CallbackEntry Send/Sync bounds ----
-
-    /// (H-2) Compile-time proof that `CallbackEntry<extern "C" fn(...)>` is
+    /// Compile-time proof that `CallbackEntry<extern "C" fn(...)>` is
     /// `Send + Sync`.  `extern "C" fn` types are inherently `Send + Sync`,
     /// so this bound is trivially satisfied.  If someone removes the `F: Send`
     /// / `F: Send + Sync` bounds, calling `assert_send_sync::<CallbackEntry<…>>()`
@@ -3687,7 +3654,7 @@ mod tests {
         assert_send_sync::<super::handle_impl::CallbackEntry<OutboundCb>>();
     }
 
-    // ---- Fix: EventConnecting vs EventReconnecting distinction ----
+    // ---- EventConnecting vs EventReconnecting distinction ----
 
     /// The `EventConnecting` variant must have a distinct discriminant from all
     /// other event tags, and must not alias `EventReconnecting`. This guards
