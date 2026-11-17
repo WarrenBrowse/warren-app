@@ -516,17 +516,6 @@ jobs:
       WINDOWS_RESULT: ${{ needs.windows.result }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
-      - name: Ensure gh CLI
-        # The self-hosted Rosetta runner does not ship it.
-        run: |
-          if command -v gh >/dev/null 2>&1; then echo "gh present: $(gh --version | head -1)"; exit 0; fi
-          ver=$(curl -fsSL https://api.github.com/repos/cli/cli/releases/latest \
-                  | sed -nE 's/.*"tag_name": *"v?([0-9.]+)".*/\1/p' | head -1)
-          [ -n "$ver" ] || ver=2.62.0
-          curl -fsSL "https://github.com/cli/cli/releases/download/v${ver}/gh_${ver}_linux_amd64.tar.gz" -o /tmp/gh.tgz
-          tar -xzf /tmp/gh.tgz -C /tmp
-          echo "/tmp/gh_${ver}_linux_amd64/bin" >> "$GITHUB_PATH"
-
       - name: Download what the build jobs published
         run: |
           mkdir -p release-files
@@ -607,10 +596,8 @@ jobs:
           gh release upload "$CLI_TAG" release-files/SHA256SUMS release-files/SHA256SUMS.sshsig \
             --repo "$CLI_REPO" --clobber
           notes="$RUNNER_TEMP/notes.md"
-          awk -v ver="$WARREN_VERSION" '
-            /^## /{ if (cap) exit; cap = index($0, "[" ver "]") > 0 }
-            cap { print }
-          ' CHANGELOG.md > "$notes" || true
+          bash ci/extract-changelog-section.sh --with-heading \
+            CHANGELOG.md "$WARREN_VERSION" > "$notes" || true
           if [ ! -s "$notes" ]; then
             printf 'Warren headless (daemon + CLI) %s\n' "$WARREN_VERSION" > "$notes"
           fi
