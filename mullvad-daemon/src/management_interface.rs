@@ -450,10 +450,26 @@ fn withhold_access_method_secrets(method: &mut types::AccessMethodSetting) {
 /// Empties the secrets the settings carry unless the caller may see them:
 /// proxy credentials and a custom relay's private key. The rest of the
 /// settings is what every local account may read.
+/// The ports a forwarding holds on the exit name the owner's use of it, like
+/// the account standing does: another account sees whether forwarding runs,
+/// not on which ports.
+fn withhold_forwarded_ports(status: &mut types::NatPmpStatus, may_see_identity: bool) {
+    if may_see_identity {
+        return;
+    }
+    status.external_port = None;
+    for mapping in &mut status.mappings {
+        mapping.external_port = None;
+        mapping.internal_port = 0;
+    }
+}
+
 fn withhold_settings_secrets(settings: &mut types::Settings, may_see_secrets: bool) {
     if may_see_secrets {
         return;
     }
+    // The URL may name a host the owner keeps private.
+    settings.warren_api_url.clear();
     if let Some(types::relay_settings::Endpoint::Custom(custom)) = settings
         .relay_settings
         .as_mut()
@@ -989,11 +1005,15 @@ impl ManagementService for ManagementServiceImpl {
     ) -> ServiceResult<()> {
         let call = Self::call_of(&request);
         let proto_value = request.into_inner();
+        // No address and no domain in the log: it is readable by every account.
         log::debug!(
-            "set_warren_custom_exit(enabled={}, endpoint={:?}, cover_domain={:?})",
+            "set_warren_custom_exit(enabled={}, endpoint set={}, cover domain set={})",
             proto_value.enabled,
-            proto_value.endpoint,
-            proto_value.cover_domain
+            !proto_value.endpoint.is_empty(),
+            proto_value
+                .cover_domain
+                .as_deref()
+                .is_some_and(|d| !d.is_empty())
         );
         let new_value = mullvad_types::settings::WarrenCustomExitSettings::from(proto_value);
         let (tx, rx) = oneshot::channel();
@@ -1309,16 +1329,23 @@ impl ManagementService for ManagementServiceImpl {
 
     async fn nat_pmp_status_updates(
         &self,
-        _: Request<()>,
+        request: Request<()>,
     ) -> ServiceResult<Self::NatPmpStatusUpdatesStream> {
         log::debug!("nat_pmp_status_updates subscribe");
         let rx = self.warren_status_cache.subscribe();
+        // Decided per item, like the status stream: an owner can become known
+        // while the subscription lives.
+        let wallet_access = Arc::clone(&self.wallet_access);
+        let peer = Self::peer_of(&request);
         #[expect(
             clippy::result_large_err,
             reason = "tonic stream requires Result<T, Status>; the cache only emits Ok values."
         )]
-        let stream = tokio_stream::wrappers::WatchStream::new(rx)
-            .map(|snap| Ok(nat_pmp_state_to_proto(&snap.nat_pmp_mappings)));
+        let stream = tokio_stream::wrappers::WatchStream::new(rx).map(move |snap| {
+            let mut status = nat_pmp_state_to_proto(&snap.nat_pmp_mappings);
+            withhold_forwarded_ports(&mut status, wallet_access.may_see_identity(peer.as_ref()));
+            Ok(status)
+        });
         Ok(Response::new(
             Box::new(Box::pin(stream)) as Self::NatPmpStatusUpdatesStream
         ))
@@ -3595,7 +3622,7 @@ mod tests {
 
     use super::{
         daemon_event, types, withhold_account_secrets, withhold_event_identity,
-        withhold_settings_secrets,
+        withhold_forwarded_ports, withhold_settings_secrets,
     };
 
     /// The GUI keys "banned" on this code, apart from the four codes a
@@ -3963,6 +3990,35 @@ mod tests {
             "a custom relay's private key is a secret"
         );
         assert!(settings.allow_lan);
+    }
+
+    #[test]
+    fn another_account_does_not_learn_which_api_the_owner_set() {
+        let mut settings = settings_with_proxy_secrets();
+        settings.warren_api_url = "https://private.example".to_owned();
+
+        withhold_settings_secrets(&mut settings, false);
+
+        assert_eq!(settings.warren_api_url, "");
+    }
+
+    #[test]
+    fn another_account_does_not_learn_the_ports_the_owner_forwarded() {
+        let mut status = types::NatPmpStatus {
+            external_port: Some(41_234),
+            mappings: vec![types::nat_pmp_status::Mapping {
+                internal_port: 8080,
+                external_port: Some(41_234),
+                ..Default::default()
+            }],
+            ..Default::default()
+        };
+
+        withhold_forwarded_ports(&mut status, false);
+
+        assert_eq!(status.external_port, None);
+        assert_eq!(status.mappings[0].external_port, None);
+        assert_eq!(status.mappings[0].internal_port, 0);
     }
 
     #[test]
