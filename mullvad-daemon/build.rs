@@ -86,15 +86,22 @@ fn embed_info_plist(out_dir: &std::path::Path) {
     );
 }
 
+/// The commit date only decorates the daemon's startup log line, so a build
+/// from a source tarball, or on a machine without git, gets a placeholder
+/// instead of failing.
 fn commit_date() -> String {
-    let output = Command::new("git")
+    let date = Command::new("git")
         .args(["log", "-1", "--date=short", "--pretty=format:%cd"])
         .output()
-        .expect("Unable to get git commit date");
-    std::str::from_utf8(&output.stdout)
-        .unwrap()
-        .trim()
-        .to_owned()
+        .ok()
+        .filter(|output| output.status.success())
+        .and_then(|output| String::from_utf8(output.stdout).ok())
+        .map(|date| date.trim().to_owned())
+        .filter(|date| !date.is_empty());
+    date.unwrap_or_else(|| {
+        println!("cargo::warning=No git commit date available; the daemon logs 'unknown date'");
+        "unknown date".to_owned()
+    })
 }
 
 #[derive(PartialEq, Eq, Clone, Copy)]
