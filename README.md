@@ -25,7 +25,7 @@ This repository holds the desktop and mobile client: the Rust service
 ([`mullvad-daemon`](mullvad-daemon/), built as the `warren-daemon` binary), the Electron GUI
 ([`desktop/`](desktop/)) and the CLI ([`mullvad-cli`](mullvad-cli/), built as the `warren` binary).
 The network security guarantees (firewall lockdown, killswitch, split-tunneling) apply to the QUIC
-tunnel. See [`docs/warren-architecture.md`](docs/warren-architecture.md) for the usage guide.
+tunnel. [`docs/warren-architecture.md`](docs/warren-architecture.md) describes how the fork works.
 
 ## TL;DR: run the app in dev
 
@@ -58,7 +58,7 @@ without touching each other's settings, firewall rules or update feed.
 
 | Platform | Status |
 |---|---|
-| Linux (x86_64) | ✅ published (deb, rpm, pacman) |
+| Linux (x86_64, arm64) | ✅ published (deb, rpm, pacman; on x86_64 also a sysvinit deb and a NixOS flake archive) |
 | macOS (arm64 / x86_64) | ✅ published (universal pkg) |
 | Windows (x64) | ✅ published (NSIS installer) |
 | Android | ✅ published (APK) |
@@ -69,15 +69,15 @@ For the matrix of OS versions and architectures the underlying codebase supports
 
 ## Features
 
-| | Linux (Warren) | macOS (Warren) | Notes |
-|---|:-:|:-:|---|
-| **Warren tunnel (QUIC + Ed25519)** | ✓ | ✓ | The fork's only tunnel mode |
-| **Warren account/subscription (BIP39 + warren-api)** | ✓ | ✓ | BIP39 identity, subscription served by warren-api |
-| Split tunneling | ✓ | ✓ | |
-| Custom DNS server | ✓ | ✓ | |
-| Content blockers (Ads etc) | ✓ | ✓ | |
-| Killswitch / lockdown mode | ✓ | ✓ | |
-| Local network access (optional) | ✓ | ✓ | |
+| | Linux | macOS | Windows | Android | Notes |
+|---|:-:|:-:|:-:|:-:|---|
+| **Warren tunnel (QUIC + Ed25519)** | ✓ | ✓ | ✓ | ✓ | The fork's only tunnel mode |
+| **Warren account/subscription (BIP39 + warren-api)** | ✓ | ✓ | ✓ | ✓ | BIP39 identity, subscription served by warren-api |
+| Per-app routing (split tunneling) | ✓ | ✓ | ✓ | ✓ | Windows uses Mullvad's signed split-tunnel driver |
+| Custom DNS server | ✓ | ✓ | ✓ | ✓ | |
+| Content blockers (Ads etc) | ✓ | ✓ | ✓ | ✓ | |
+| Kill switch / lockdown mode | ✓ | ✓ | ✓ | ✓ | Android relies on the system's Always-on VPN to block outside the app |
+| Local network access (optional) | ✓ | ✓ | ✓ | ✓ | |
 
 The upstream WireGuard obfuscation modes (WireGuard over TCP / Shadowsocks / LWO) were removed
 along with the WireGuard data plane: the Warren tunnel runs QUIC on 443 natively and ships its own
@@ -95,7 +95,7 @@ allows, and how.
 `<settings_dir>/secrets/warren_mnemonic.txt` 0600 on Linux). No account number, no bearer token.
 That same key authenticates the QUIC TLS handshake to the exit *and* signs Warren API requests
 (`X-Warren-{PubKey,Signature,Timestamp,Nonce}` headers). See
-[`docs/warren-architecture.md`](docs/warren-architecture.md) section "Crypto handshake".
+[`docs/warren-architecture.md`](docs/warren-architecture.md), section "Identity".
 
 ## Secure development
 
@@ -126,7 +126,7 @@ issue, see [SECURITY.md](SECURITY.md).
 This repo uses submodules. To clone:
 
 ```bash
-git clone git@github.com:WarrenBrowse/warren-app.git
+git clone https://github.com/WarrenBrowse/warren-app.git
 cd warren-app
 git submodule update --init
 ```
@@ -234,9 +234,6 @@ production. The procedure, the guards and how to withdraw a release are in
 
 ### Warren-specific
 
-* `WARREN_API_URL`: URL of the warren-api backend (account/subscription/device). Empty = compiled
-  default (`https://api.warrenbrowse.com`).
-
 * `WARREN_SETTINGS_DIR`, `WARREN_LOG_DIR`, `WARREN_CACHE_DIR`, `WARREN_RPC_SOCKET_PATH`: Override the
   daemon paths. If unset, the upstream `MULLVAD_*` variants are consulted as a fallback (compat
   aliases).
@@ -281,6 +278,11 @@ production. The procedure, the guards and how to withdraw a release are in
 
 ### Development builds only
 
+Release builds ignore these: the API host and its trust anchors come from the build channel.
+
+* `WARREN_API_URL`: URL of the warren-api backend (account/subscription/device). Unset = the
+  channel's API (`https://api.beta.warrenbrowse.com` for beta builds).
+
 * `MULLVAD_API_HOST`: Hostname to use for warren-api requests (overrides the compiled
   `api.warrenbrowse.com` default; upstream variable name kept for compatibility).
 
@@ -296,7 +298,7 @@ Edit the systemd unit via `systemctl edit warren-daemon.service`:
 
 ```ini
 [Service]
-Environment="WARREN_API_URL=https://api.warrenbrowse.com"
+Environment="WARREN_MANAGEMENT_SOCKET_GROUP=vpnadmins"
 ```
 
 Restart the daemon:
@@ -311,7 +313,7 @@ Use `plutil` (plist path to confirm depending on the fork installer):
 
 ```bash
 sudo plutil -replace EnvironmentVariables -json \
-  '{"WARREN_API_URL": "https://api.warrenbrowse.com"}' \
+  '{"WARREN_MANAGEMENT_SOCKET_GROUP": "vpnadmins"}' \
   /Library/LaunchDaemons/com.warrenbrowse.vpn.daemon.plist
 launchctl unload -w /Library/LaunchDaemons/com.warrenbrowse.vpn.daemon.plist
 launchctl load   -w /Library/LaunchDaemons/com.warrenbrowse.vpn.daemon.plist
@@ -393,8 +395,8 @@ Like upstream, the code splits into two families:
 
 Files worth knowing:
 
-- **Cargo.toml**: workspace root. Lists the 52 member crates, the `warren-*`/`warrenguard-*` path
-  deps on the two siblings, and a `[patch.crates-io]` that points `quinn`/`quinn-proto`/`quinn-udp`
+- **Cargo.toml**: workspace root. Lists the 46 member crates, the `warren-*`/`warrenguard-*` path
+  deps on the three siblings, and a `[patch.crates-io]` that points `quinn`/`quinn-proto`/`quinn-udp`
   at the published `WarrenBrowse/warren-quinn` git-dep (pinned by tag).
 - **mullvad-daemon/**: crate that builds the `warren-daemon` binary.
 - **mullvad-cli/**: crate that builds the `warren` binary (CLI frontend).
@@ -489,8 +491,8 @@ machine. See `mullvad-paths/tests/warren_collision_safety.rs`.
 
 ## Icons
 
-See the [graphics README](graphics/README.md). The Warren icons are not integrated yet; the upstream
-assets are temporarily reused.
+The app, installer and store icons are Warren's own, generated from the two canonical vectors in
+[`graphics/`](graphics/README.md).
 
 ## Locales and translations
 
@@ -527,6 +529,23 @@ GNU General Public License as published by the Free Software Foundation, either 
 the License, or (at your option) any later version.
 
 For the full license agreement, see [LICENSE.md](LICENSE.md).
+
+The binaries also contain code from three Warren repositories licensed under the GNU Affero General
+Public License version 3 or later (`AGPL-3.0-or-later`), compiled in at the commits pinned in this
+repository:
+
+| repository | pinned in |
+|---|---|
+| [`warrenguard`](https://github.com/WarrenBrowse/warrenguard) (tunnel engine) | [`.warrenguard-version`](.warrenguard-version) |
+| [`warren-sdk-rs`](https://github.com/WarrenBrowse/warren-sdk-rs) (`warren-api`, `warren-identity`) | [`.warren-sdk-version`](.warren-sdk-version) |
+| [`warren-contract`](https://github.com/WarrenBrowse/warren-contract) (`warren-contract`, `warren-discovery-core`) | [`.warren-contract-version`](.warren-contract-version) |
+
+Section 13 of each licence allows the combination. The code from this repository stays under the
+GPL and the code from those three stays under the AGPL, and a binary is distributed with the
+corresponding source of both parts at the shipped commits. The AGPL's additional requirement,
+offering the source to users who interact with a modified version over a network, applies to
+whoever runs such a version as a network service; it does not change what a user of the app
+receives. A third party cannot redistribute the binaries under the GPL alone.
 
 **Trademarks**: the names "Mullvad" and "Mullvad VPN" and the associated logo are trademarks of
 Mullvad VPN AB **not covered by the GPL**. The Warren fork does not use these trademarks in its

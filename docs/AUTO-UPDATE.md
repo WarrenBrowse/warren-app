@@ -359,15 +359,15 @@ stubbed:
 - **Stub to replace:** `AppVersionInfoRepository` hardcodes `isSupported = true`
   (its own comment: "poll warren-api `/v1/version` is planned").
 
-**iOS** only has a *soft* path:
+**iOS** checks the same signed metadata:
 
-- `WarrenREST/ApiHandlers/AppVersionService.swift` polls the **iTunes Lookup API**
-  every 24h and shows a "Update available" banner
-  (`NewAppVersionInAppNotificationProvider.swift`) that opens the App Store.
-- No "unsupported / forced" concept exists.
-- Caveat: the App Store id in `ApplicationCoordinator.swift`
-  (`itms-apps://...id1488466513`) is **Mullvad's**, not Warren's; iOS is disabled
-  in CI (no Apple Developer account, no Warren App Store listing yet).
+- `WarrenAppVersionGate.swift` fetches `ios.json` at most once a day, verifies it
+  in Rust (`WarrenVersionManifestVerifier`) and caches the verdict, so the
+  forced-update gate is decided at launch. No manifest, or one that fails
+  verification, means no gate.
+- The gate and the "update available" notice send the user to
+  `WarrenAppStoreListing.url`, the download page, since Warren has no App Store
+  listing yet. iOS is not shipped.
 
 ### Android wiring (the testable one)
 
@@ -380,14 +380,11 @@ That immediately lights up the existing banner + store deep-link. For the
 to the store. ed25519 verification in Kotlin via Tink/BouncyCastle, or a small
 shared Rust verifier over JNI.
 
-### iOS wiring (blocked on an Apple account)
+### iOS wiring
 
-Add a signed version-check against `ios.json` (verify, then
-`isSupported = current >= minimum_supported_version`), a new "unsupported"
-notification provider, and a non-dismissible SwiftUI gate for the forced case
-whose only action opens the App Store. No in-app install (Apple policy). Blocked
-until Warren has an Apple Developer account + its own App Store listing (replace
-the Mullvad `id1488466513`).
+The signed version check and the forced-update gate are in place (see above). An
+App Store listing, once it exists, replaces the download page in
+`WarrenAppStoreListing.url`. No in-app install (Apple policy).
 
 ### Next steps
 
@@ -401,9 +398,9 @@ the Mullvad `id1488466513`).
       cross-compile needs the NDK; Kotlin needs a gradle build).
 - [ ] Build + device-test the Android wiring; confirm the gate + banner with a
       manifest whose `minimum_supported_version` is above the installed version.
-- [ ] iOS (when it ships): signed version-check + "unsupported" provider +
-      forced-update SwiftUI gate + App Store redirect with Warren's app id
-      (currently hardcoded to Mullvad's `id1488466513`).
+- [x] iOS: signed version check and forced-update gate
+      (`WarrenAppVersionGate.swift`); the App Store redirect waits for a
+      Warren listing.
 - [ ] Optional: a direct-APK installer entry in `android.json` for sideloaded
       Android builds (full in-app update via `PackageInstaller`).
 
