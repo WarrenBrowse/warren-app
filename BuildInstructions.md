@@ -1,35 +1,54 @@
 These are instructions on how to build the app on desktop platforms. See the
 [readme](./README.md#building-the-app) for help building on other platforms.
 
-# Pré-requis Warren fork : trois repos voisins
+# Warren prerequisites: three sibling repositories
 
-> ⚠️ **À lire avant tout `cargo build` ou `./build.sh`.**
+**Read this before any `cargo build` or `./build.sh`.**
 
-Le fork Warren consomme des crates via des **path-deps cross-repo** depuis trois
-repos voisins, checkout-és en parallèle de `warren-app` (le fork n'a **aucune
-dépendance sur `warren-core`**) :
+The Warren fork consumes crates by `path` from three sibling repositories,
+checked out next to `warren-app` (the fork has **no dependency on
+`warren-core`**):
 
-- [`warrenguard`](https://github.com/WarrenBrowse/warrenguard) : moteur data-plane
-  (`warrenguard-transport`, `-config`, `-wire`, `-multihop`, `-relay`, …). Pin
-  dans `.warrenguard-version`.
-- [`warren-sdk-rs`](https://github.com/WarrenBrowse/warren-sdk-rs) : SDK client
-  (`warren-api`, `warren-identity`). Pin dans `.warren-sdk-version`.
-- [`warren-contract`](https://github.com/WarrenBrowse/warren-contract) : contrat
-  client/serveur (`warren-contract`, `warren-discovery-core`). Pin dans
+- [`warrenguard`](https://github.com/WarrenBrowse/warrenguard): the data-plane
+  engine (`warrenguard-transport`, `-config`, `-wire`, `-multihop`, `-relay`,
+  ...). Pinned in `.warrenguard-version`.
+- [`warren-sdk-rs`](https://github.com/WarrenBrowse/warren-sdk-rs): the client
+  SDK (`warren-api`, `warren-identity`). Pinned in `.warren-sdk-version`.
+- [`warren-contract`](https://github.com/WarrenBrowse/warren-contract): the
+  client/server contract (`warren-contract`, `warren-discovery-core`). Pinned in
   `.warren-contract-version`.
 
-Layout attendu :
+Expected layout:
 
 ```
-warrenBros/
-├── warren-app/        ← ce repo (fork Mullvad)
-├── warrenguard/       ← moteur data-plane (crates warrenguard-*)
-├── warren-sdk-rs/     ← SDK client (warren-api, warren-identity)
-└── warren-contract/   ← contrat (warren-contract, warren-discovery-core)
+<workspace>/
+├── warren-app/        this repository (Mullvad fork)
+├── warrenguard/       data-plane engine (warrenguard-* crates)
+├── warren-sdk-rs/     client SDK (warren-api, warren-identity)
+└── warren-contract/   contract (warren-contract, warren-discovery-core)
 ```
 
-Si un des siblings est absent ou à un autre path, `cargo metadata` /
-`./build.sh` échouent avec :
+All four repositories are public. Clone them over HTTPS and check each sibling
+out at the commit this tree pins:
+
+```bash
+cd /path/to/workspace
+for repo in warren-app warrenguard warren-sdk-rs warren-contract; do
+  git clone "https://github.com/WarrenBrowse/$repo.git"
+done
+cd warren-app
+git submodule update --init
+git -C ../warrenguard checkout --detach "$(cat .warrenguard-version)"
+git -C ../warren-sdk-rs checkout --detach "$(cat .warren-sdk-version)"
+git -C ../warren-contract checkout --detach "$(cat .warren-contract-version)"
+```
+
+A sibling at another commit than its pin may not compile against this tree. CI
+checks them out at the pins. After moving a pin, regenerate `Cargo.lock` with
+`scripts/dev/regen-lockfile.sh`, never a bare `cargo update`.
+
+When a sibling is missing or at another path, `cargo metadata` and `./build.sh`
+fail with:
 
 ```
 error: failed to load manifest for dependency `warrenguard-transport`
@@ -37,23 +56,12 @@ Caused by: failed to read `../warrenguard/crates/warrenguard-transport/Cargo.tom
 Caused by: No such file or directory (os error 2)
 ```
 
-Setup minimal :
-
-```bash
-cd /path/to/warrenBros
-git clone git@github.com:WarrenBrowse/warrenguard.git
-git clone git@github.com:WarrenBrowse/warren-sdk-rs.git
-git clone git@github.com:WarrenBrowse/warren-contract.git
-git clone git@github.com:WarrenBrowse/warren-app.git
-cd warren-app && git submodule update --init
-```
-
-Les path-deps sont déclarés dans les manifestes crate (`talpid-core`,
+The path dependencies are declared in the crate manifests (`talpid-core`,
 `talpid-warren-tunnel`, `mullvad-daemon`, `mullvad-types`, `warren-jni`,
-`warren-ios`) et le `[patch."https://github.com/WarrenBrowse/warrenguard.git"]`
-du `Cargo.toml` racine. La fork quinn est le git-dep publié
-`WarrenBrowse/warren-quinn` (pin par tag), câblé via `[patch.crates-io]`. Les
-builds Docker `cross` montent les trois siblings (voir [`Cross.toml`](Cross.toml)).
+`warren-ios`) and in the `[patch."https://github.com/WarrenBrowse/warrenguard.git"]`
+section of the root `Cargo.toml`. The quinn fork is the published git
+dependency `WarrenBrowse/warren-quinn` (pinned by tag), wired through
+`[patch.crates-io]`.
 
 # Product environments (prod | staging | beta)
 
@@ -109,7 +117,7 @@ on your platform please submit an issue or a pull request.
   - (Optional) Run the following to install a git `post-checkout` hook that will automatically
     run the `setup-rust` script when the Rust version specified in the `rust-toolchain.toml` file changes:
     ```bash
-    .scripts/setup-rust install-hook
+    ./scripts/setup-rust install-hook
     ```
 
 - You need Node.js and npm. You can find the exact versions in the `volta` section of
@@ -129,9 +137,6 @@ on your platform please submit an issue or a pull request.
 
     Install the `msi` hosted here: https://github.com/volta-cli/volta
 
-- Install Go (ideally version `1.21`) by following the [official instructions](https://golang.org/doc/install).
-  Newer versions may work too.
-
 - Install a protobuf compiler (version 3.15 and up), it can be installed on most major Linux distros
   via the package name `protobuf-compiler`, `protobuf` on macOS via Homebrew, and on Windows
   binaries are available on their GitHub [page](https://github.com/protocolbuffers/protobuf/releases)
@@ -148,7 +153,10 @@ on your platform please submit an issue or a pull request.
   - Windows: Install [Git for Windows] which includes Git Bash and other required unix utilities.
 
 - Install `podman`: https://podman.io/
-  - Used to generate gRPC bindings for the Electron app.
+  - Only needed to regenerate the gRPC bindings of the Electron app after a change to
+    `mullvad-management-interface/proto/`; the generated bindings are committed. The generator
+    still runs in Mullvad's published image
+    (`desktop/packages/management-interface/scripts/container-run-generate-bindings.sh`).
 
 
 [Git for Windows]: https://git-scm.com/download/win
@@ -164,41 +172,28 @@ sudo apt install gcc libdbus-1-dev
 sudo apt install rpm
 ```
 
-#### Warren fork : extra deps Linux
+#### Warren fork: extra Linux dependencies
 
-Le fork Warren ajoute des dépendances natives au-delà des
-besoins upstream Mullvad. Sur Debian 12 / Ubuntu 22.04+ :
+On Debian 12 or Ubuntu 22.04 and later, in addition to the packages above:
 
 ```bash
 sudo apt install \
-  libprotobuf-dev protobuf-compiler \
-  libmnl-dev libnftnl-dev \
-  libnl-3-dev libnl-route-3-dev libnl-genl-3-dev \
-  build-essential clang pkg-config libssl-dev cmake ninja-build
+  protobuf-compiler libprotobuf-dev \
+  build-essential clang pkg-config libssl-dev cmake git
 ```
 
-- `libprotobuf-dev` : nécessaire pour les `.proto` standards
-  (`google/protobuf/empty.proto`, `timestamp.proto`, etc.) que
-  `mullvad-management-interface` importe.
-- `libmnl-dev` + `libnftnl-dev` : linking pour
-  `talpid-core::firewall::linux` (= nftnl-rs) qui appelle directement
-  la lib C. `protobuf-compiler` seul ne suffit pas.
-- `libnl-3-dev` + extensions : netlink helpers utilisés par
-  `talpid-routing::linux`.
-- `build.rs` de `mullvad-daemon` invoque `git log` pour embedder la
-  date du commit. Sur un VPS sans `.git/`, installer `git` puis
-  `git init` un dépôt vide (`git commit --allow-empty`).
+- `libprotobuf-dev` provides the standard `.proto` files
+  (`google/protobuf/empty.proto`, `timestamp.proto`, ...) that
+  `mullvad-management-interface` imports.
+- `libmnl` and `libnftnl` need no package: the build links the static copies in
+  the `dist-assets/binaries` submodule (`.cargo/config.toml`).
+- `git` is optional: the daemon's build script reads the commit date from it for
+  its startup log line, and builds without it from a source tarball.
 
-#### Cross-compile macOS vers Linux
-
-Le `cross` (Docker-based) est supporté : [`Cross.toml`](Cross.toml) monte les
-trois siblings (`../warrenguard`, `../warren-sdk-rs`, `../warren-contract`) dans
-le container `cross-rs/x86_64-unknown-linux-gnu:edge`, donc les path-deps
-cross-repo se résolvent comme sur un hôte natif. Il faut que les trois siblings
-soient checkout-és aux SHAs pin (voir la section pré-requis en tête de doc).
-
-Alternative sans Docker : build natif sur un runner/VPS Linux x86_64 (c'est ce
-que fait la CI release, pas de cross).
+The release builds run natively in the Debian 11 job image
+(`ghcr.io/warrenbrowse/warren-ci-linux`, see `release.yml`), whose glibc 2.31 is
+the floor of every Linux binary shipped. There is no supported cross build from
+macOS: build on a Linux host or in that image.
 
 ### Fedora/RHEL
 
@@ -264,8 +259,6 @@ The host has to have the following installed:
 - `bash` and base Unix utilities must be installed and available in PATH (see the requirement in
   the [All platforms](#all-platforms) section above).
 
-- `zig` installed and available in `%PATH%`. 0.14 or later is recommended: https://ziglang.org/download/.
-
 - `msbuild.exe` available in `%PATH%`. If you installed Visual Studio Community edition, the
   binary can be found under:
 
@@ -316,8 +309,6 @@ In addition to the above requirements:
 The host has to have the following installed:
 
 - A recent version of `bash`. The default version in macOS (3.2.57) isn't supported.
-
-- `clang` is required for CGo.
 
 # Building and packaging the app
 
@@ -418,10 +409,10 @@ TARGETS="riscv64gc-unknown-linux-gnu" ./build.sh --daemon-only --optimize
 
 This section is for building the system service individually.
 
-> **Note (Warren fork)** : le package Cargo s'appelle toujours `mullvad-daemon`
-> (conservé pour faciliter les rebases upstream), mais le binaire produit est
-> `warren-daemon`. Idem env var : `WARREN_RESOURCE_DIR` est l'alias prioritaire,
-> `MULLVAD_RESOURCE_DIR` reste accepté en fallback.
+> **Note (Warren fork)**: the Cargo package is still named `mullvad-daemon`, but
+> the binary it produces is `warren-daemon`. Likewise `WARREN_RESOURCE_DIR` is
+> the variable read first, with `MULLVAD_RESOURCE_DIR` still accepted as a
+> fallback.
 
 1. On Windows, build the C++ libraries:
     ```bash
@@ -429,7 +420,7 @@ This section is for building the system service individually.
     ```
     And copy the `wintun.dll` next to the daemon binary:
     ```bash
-    cp dist-assets/binaries/x86_64-pc-windows-msvc/wintun.dll target/debug/
+    cp dist-assets/binaries/x86_64-pc-windows-msvc/wintun/wintun.dll target/debug/
     ```
 
 1. Build the system daemon plus the other Rust tools and programs:

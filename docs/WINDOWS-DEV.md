@@ -15,7 +15,7 @@ from **Git Bash** and the `.ps1` helpers from PowerShell.
   toolsets + a Windows 11 SDK + clang (`Microsoft.VisualStudio.2022.BuildTools`).
 - **Rust** (`Rustlang.Rustup`), then `rustup target add aarch64-pc-windows-msvc
   x86_64-pc-windows-msvc i686-pc-windows-msvc` (i686 is needed for the NSIS plugins).
-- **zig**, **Go**, **protoc** (`Google.Protobuf`), **volta** (provides the Node/npm
+- **protoc** (`Google.Protobuf`), **volta** (provides the Node/npm
   pinned in `desktop/package.json`), **Git for Windows**.
 - `git config --global core.longpaths true` is **required**: some renderer paths
   exceed the 260-char limit and `git checkout` fails without it.

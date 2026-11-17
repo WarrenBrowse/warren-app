@@ -6,11 +6,13 @@ mapped, never assumed, and the three NetworkManager traps below were each
 paid for by a measurement.
 
 `build.sh` produces `.deb`, `.rpm` and `.pacman` through electron-builder/fpm,
-for the architecture of the machine it runs on. `release.yml` runs it twice, on
-two pools of the same Mac, each native: `build-linux` on the x86_64 (Rosetta)
-one and `build-linux-arm64` on the aarch64 one. Nothing is cross-compiled, so
-neither job needs a second sysroot and the arm64 packages are built by the same
-path that `warren-tests.yml` already exercises on every push. `release-daemon.yml`
+for the architecture of the machine it runs on. `release.yml` runs it twice,
+each natively on a GitHub-hosted runner inside the Debian 11 job image
+(`ghcr.io/warrenbrowse/warren-ci-linux`, glibc 2.31): `build-linux` on
+`ubuntu-24.04` and `build-linux-arm64` on `ubuntu-24.04-arm`. Nothing is
+cross-compiled, so neither job needs a second sysroot and the arm64 packages
+are built by the same path that `warren-tests.yml` already exercises on every
+push. `release-daemon.yml`
 mirrors the split for the headless daemon and CLI.
 
 The architecture spelling differs per format, and per tool. electron-builder
@@ -89,6 +91,7 @@ Three things to keep in mind when touching any of it:
   emulation where the interpreter loses `argv[0]` across `exec` and cannot find
   its own modules. The interpreter and RPATH are set with `patchelf` directly,
   and an explicit check fails the build on a NEEDED entry nothing provides.
-- **The flake pins the update host, never a GitHub asset.** The repository is
-  private, so a release asset answers 404 without a token and `nix build` would
-  fetch nothing.
+- **The flake pins the update host, never a GitHub asset.** The update host is
+  the channel every other client already reads, and the release job builds the
+  flake before the GitHub release is published, so a release asset URL would
+  not answer yet.

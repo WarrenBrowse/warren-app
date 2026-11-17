@@ -7,9 +7,9 @@
 # flake is the distribution channel for that platform, and it is tiny because
 # the payload it pins is the .deb the Linux job already published.
 #
-# The pinned URL is the update host, not the GitHub release: the repository is
-# private, so a release asset answers 404 without a token and no user could
-# fetch anything.
+# The pinned URL is the update host, not the GitHub release: the update host is
+# the channel every client already reads, and the GitHub release is still a
+# draft when this runs.
 #
 # Usage: ci/stage-nixos-flake.sh <input.deb> <stage-dir> <version> <asset-base-url>
 set -euo pipefail
