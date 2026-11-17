@@ -1113,7 +1113,7 @@ jobs:
       - name: Wipe keystore from runner
         if: always() && env.ANDROID_KEYSTORE_B64 != ''
         run: |
-          [ -n "${WARREN_KEYSTORE_PATH:-}" ] && rm -f "$WARREN_KEYSTORE_PATH" || true
+          if [ -n "${WARREN_KEYSTORE_PATH:-}" ]; then rm -f "$WARREN_KEYSTORE_PATH"; fi
 
       - name: Stage release assets (harmonized names)
         if: env.WARREN_CHANNEL == 'prod'

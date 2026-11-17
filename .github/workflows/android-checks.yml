@@ -59,7 +59,9 @@ on:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # A run on main finishes, so every pushed commit keeps a verdict; a newer push
+  # still replaces the one pending behind it.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
