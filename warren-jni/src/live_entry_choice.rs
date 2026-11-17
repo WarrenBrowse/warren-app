@@ -89,6 +89,7 @@ async fn dial(
         )),
         on_path_rtt: None,
         session_token_provider: None,
+        setup_clock: None,
     };
     let (supervisor, mut sessions) = MultiHopSupervisor::new(config);
     let _ = migrate.set(supervisor.migrate_handle());

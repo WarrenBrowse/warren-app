@@ -601,6 +601,7 @@ async fn run_multi_hop_session(
             )),
             on_path_rtt: None,
             session_token_provider: token_provider.clone(),
+            setup_clock: None,
         };
 
         let (supervisor, sessions) = MultiHopSupervisor::new(supervisor_config);

@@ -123,9 +123,13 @@ pub(crate) fn account_refusal_status(reason: RejectionReason) -> Option<SessionS
         RejectionReason::DeviceLimit | RejectionReason::SerialInUse => {
             Some(SessionStatus::DeviceLimit)
         }
+        // A replayed setup and a refused clock end the attempt only: the
+        // redial sends a fresh, freshly dated setup.
         RejectionReason::Banned(_)
         | RejectionReason::IpExhausted
-        | RejectionReason::PolicyRefused => None,
+        | RejectionReason::PolicyRefused
+        | RejectionReason::SetupReplayed
+        | RejectionReason::ClockSkew => None,
     }
 }
 
@@ -906,7 +910,12 @@ mod tests {
                 "{reason:?}"
             );
         }
-        for reason in [RejectionReason::IpExhausted, RejectionReason::PolicyRefused] {
+        for reason in [
+            RejectionReason::IpExhausted,
+            RejectionReason::PolicyRefused,
+            RejectionReason::SetupReplayed,
+            RejectionReason::ClockSkew,
+        ] {
             assert_eq!(account_refusal_status(reason), None, "{reason:?}");
         }
     }

@@ -1153,6 +1153,16 @@ fn reject_error(reason: RejectionReason) -> Error {
         RejectionReason::IpExhausted => Error::BackendTransient(format!(
             "exit rejected the session ({reason}); its address pool is exhausted"
         )),
+        // A setup seen before at this exit: the path replayed it, a redial
+        // sends a fresh one.
+        RejectionReason::SetupReplayed => Error::BackendTransient(format!(
+            "exit refused a replayed setup ({reason}); redialling"
+        )),
+        // One exit refusing the clock may be that exit's own: retry, and let
+        // `refusal_error` blame the device once a second exit says the same.
+        RejectionReason::ClockSkew => Error::BackendTransient(format!(
+            "exit refused the setup's time ({reason}); trying again"
+        )),
         // The engine ends a walk with `DeviceLimit` once every token was
         // refused as in use; a lone `SerialInUse` never reaches here, and
         // means the same thing if it does.
@@ -1178,6 +1188,34 @@ fn reject_error(reason: RejectionReason) -> Error {
             )),
         }),
     }
+}
+
+/// Token the app reads to tell the user the device clock is wrong, never an
+/// account message.
+const CLOCK_SKEW_REASON: &str = "[CLOCK_SKEW]";
+
+/// The clock refusals of every tunnel this process starts: one exit refusing
+/// the time may be that exit's clock, two different exits mean the device's.
+static CLOCK_SKEW_TALLY: std::sync::LazyLock<
+    parking_lot::Mutex<warrenguard_multihop::ClockSkewTally>,
+> = std::sync::LazyLock::new(Default::default);
+
+/// [`reject_error`] for a refusal by `exit`, with the clock rule applied
+/// across tunnel restarts through `tally`.
+fn refusal_error(
+    tally: &mut warrenguard_multihop::ClockSkewTally,
+    reason: RejectionReason,
+    exit: warrenguard_wire::ExitId,
+) -> Error {
+    if reason == RejectionReason::ClockSkew
+        && let warrenguard_wire::Retryability::Fatal(_) = tally.record(exit)
+    {
+        return Error::BackendFatal(format!(
+            "{CLOCK_SKEW_REASON} two exits refused this device's time ({reason}); set the \
+             date and time to automatic"
+        ));
+    }
+    reject_error(reason)
 }
 
 fn expired_reason(reason: RejectionReason) -> String {
@@ -1587,6 +1625,7 @@ impl WarrenTunnelMonitor {
                 ));
             }
         }
+        let dialled_exit = cfg.exit.exit_id;
         let supervisor_config = SupervisorConfig {
             relay: Arc::new(cfg.relay.clone()),
             exit_id: cfg.exit.exit_id,
@@ -1635,6 +1674,7 @@ impl WarrenTunnelMonitor {
             // one identity (sticky inner IP) and pins flows by 5-tuple
             // hash.
             n_connections: usize::from(params.n_connections).max(1),
+            setup_clock: None,
             // docs/59 Lot 3: the pre-swap NAT-PMP reservation and the
             // post-swap re-map observer are wired by the daemon from its
             // live port-forward config (next step); the transport carries
@@ -1786,7 +1826,7 @@ impl WarrenTunnelMonitor {
                     // so surface a clean (recoverable) error instead of
                     // blocking the full timeout.
                     if let Some(reason) = *supervisor_fatal_rx.borrow() {
-                        return Err(reject_error(reason));
+                        return Err(refusal_error(&mut CLOCK_SKEW_TALLY.lock(), reason, dialled_exit));
                     }
                     let remaining = deadline.saturating_duration_since(tokio::time::Instant::now());
                     if remaining.is_zero() {
@@ -1826,12 +1866,14 @@ impl WarrenTunnelMonitor {
                         }
                         _ = supervisor_fatal_rx.changed() => {
                             if let Some(reason) = *supervisor_fatal_rx.borrow() {
-                                return Err(reject_error(reason));
+                                return Err(refusal_error(&mut CLOCK_SKEW_TALLY.lock(), reason, dialled_exit));
                             }
                         }
                     }
                 }
             })?;
+        // An admitted setup proves the clock good enough somewhere.
+        CLOCK_SKEW_TALLY.lock().admitted();
         log::debug!(
             "{TRACE_PREFIX} T2={}ms phase=handshake_done elapsed_handshake={}ms session_kind=MultiHop",
             start_t.elapsed().as_millis(),
@@ -4650,6 +4692,34 @@ mod tests {
         assert_eq!(bypass[0].prefix.prefix(), 32);
         assert_eq!(defaults.len(), 1);
         assert_eq!(defaults[0].prefix.prefix(), 0);
+    }
+
+    #[test]
+    fn a_replayed_setup_is_redialled() {
+        let err = reject_error(RejectionReason::SetupReplayed);
+
+        assert!(matches!(err, Error::BackendTransient(_)), "{err:?}");
+    }
+
+    #[test]
+    fn the_device_clock_is_blamed_only_once_two_exits_refused_it() {
+        let (a, b) = (
+            warrenguard_wire::ExitId::from_bytes([0xA1; 16]),
+            warrenguard_wire::ExitId::from_bytes([0xB2; 16]),
+        );
+        let mut tally = warrenguard_multihop::ClockSkewTally::new();
+
+        let first = refusal_error(&mut tally, RejectionReason::ClockSkew, a);
+        let second = refusal_error(&mut tally, RejectionReason::ClockSkew, b);
+
+        assert!(
+            first.is_recoverable(),
+            "one exit may have the wrong clock: {first:?}"
+        );
+        assert!(
+            matches!(&second, Error::BackendFatal(m) if m.starts_with(CLOCK_SKEW_REASON)),
+            "{second:?}"
+        );
     }
 
     #[test]

@@ -273,6 +273,7 @@ pub(crate) fn route_supervisor_config(
         // One connection: a route carries the traffic of a few apps, and
         // every bonded leg is one more relay connection holding the token.
         n_connections: 1,
+        setup_clock: None,
         pre_swap_check: None,
         on_overlap_swapped: None,
         on_dial_refused: None,

@@ -1405,5 +1405,6 @@ fn main_supervisor_config(
         on_dial_refused: None,
         on_path_rtt: None,
         session_token_provider: Some(tokens),
+        setup_clock: None,
     }
 }

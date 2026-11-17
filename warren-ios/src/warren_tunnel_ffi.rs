@@ -1609,6 +1609,7 @@ fn spawn_multi_hop(
             // (50 MB) leaves no headroom for N bonded Quinn endpoints,
             // and cellular paths rarely benefit from multi-flow bonding.
             n_connections: 1,
+            setup_clock: None,
         };
         let (supervisor, watch) = MultiHopSupervisor::new(cfg);
         // Tokens only: the wallet-signed v6 request tells the exit which account

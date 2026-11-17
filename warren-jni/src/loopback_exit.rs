@@ -206,5 +206,6 @@ pub(crate) fn config_for(
         on_dial_refused: None,
         on_path_rtt: None,
         session_token_provider: None,
+        setup_clock: None,
     }
 }
