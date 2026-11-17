@@ -19,6 +19,7 @@ import SafariServices
 import SwiftUI
 import UIKit
 import WarrenLogging
+import WarrenRustRuntime
 import WarrenSettings
 
 protocol OnboardingWizardCoordinatorDelegate: AnyObject {
@@ -137,10 +138,11 @@ final class OnboardingWizardCoordinator: Coordinator, Presentable, Presenting {
         presentChild(coordinator, animated: true)
     }
 
-    /// Secondary payment path: the Stripe checkout funnel on the web
-    /// (buy a plan, receive a voucher, redeem it in-app).
+    /// Secondary payment path: the Stripe checkout funnel of this build's
+    /// channel on the web (buy a plan, receive a voucher, redeem it in-app).
     private func presentSubscriptionLink() {
-        let safari = SFSafariViewController(url: URL(string: "https://checkout.warrenbrowse.com/")!)
+        guard let url = URL(string: WarrenProductAnchors.current.checkoutURL + "/") else { return }
+        let safari = SFSafariViewController(url: url)
         safari.preferredBarTintColor = .Warren.navy
         safari.preferredControlTintColor = .Warren.yellow
         navigationController.present(safari, animated: true)

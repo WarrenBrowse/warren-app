@@ -313,6 +313,31 @@ impl ProductEnv {
         }
     }
 
+    /// Origin of this environment's website, which hosts the help pages and
+    /// the terms the build's users are under: a beta build that linked the
+    /// production site showed its testers the production pages. Staging has
+    /// no website and sends its testers to the beta one. A bare https origin;
+    /// clients append the page path.
+    #[must_use]
+    pub const fn website_url(self) -> &'static str {
+        match self {
+            ProductEnv::Prod => "https://warren.ro",
+            ProductEnv::Staging | ProductEnv::Beta => "https://beta.warren.ro",
+        }
+    }
+
+    /// Origin of this environment's checkout, where a plan is bought. Each
+    /// stack runs its own, so a build never sends a purchase to another
+    /// channel's checkout. A bare https origin.
+    #[must_use]
+    pub const fn checkout_url(self) -> &'static str {
+        match self {
+            ProductEnv::Prod => "https://checkout.warrenbrowse.com",
+            ProductEnv::Staging => "https://checkout.staging.warrenbrowse.com",
+            ProductEnv::Beta => "https://checkout.beta.warrenbrowse.com",
+        }
+    }
+
     /// Every anchor of this environment as one JSON object: the table the
     /// mobile FFI hands Kotlin (`WarrenJni.productAnchorsJson`) and Swift
     /// (`warren_product_anchors`). Its keys are the columns of
@@ -333,6 +358,8 @@ impl ProductEnv {
             "connect_host": self.connect_host(),
             "forum_public_url": self.forum_public_url(),
             "download_url": self.download_url(),
+            "website_url": self.website_url(),
+            "checkout_url": self.checkout_url(),
         })
         .to_string()
     }

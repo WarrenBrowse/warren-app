@@ -64,6 +64,11 @@ const productAnchorsByEnvironment = {
     // Download page of the channel's own website, which the update notice
     // opens: a beta build that opened the prod page offered the other channel.
     downloadUrl: 'https://warren.ro/telecharger',
+    // Origin of the channel's website (help pages, terms in force) and of its
+    // checkout. A beta build that linked the production site showed its
+    // testers the production pages.
+    websiteUrl: 'https://warren.ro',
+    checkoutUrl: 'https://checkout.warrenbrowse.com',
   },
   staging: {
     apiBaseUrl: 'https://api.staging.warrenbrowse.com/',
@@ -72,6 +77,8 @@ const productAnchorsByEnvironment = {
     deepLinkScheme: 'warren-staging',
     // No staging website: the beta page, never the production one.
     downloadUrl: 'https://beta.warren.ro/telecharger',
+    websiteUrl: 'https://beta.warren.ro',
+    checkoutUrl: 'https://checkout.staging.warrenbrowse.com',
   },
   beta: {
     apiBaseUrl: 'https://api.beta.warrenbrowse.com/',
@@ -79,6 +86,8 @@ const productAnchorsByEnvironment = {
     unixProductDir: 'warren-vpn-beta',
     deepLinkScheme: 'warren-beta',
     downloadUrl: 'https://beta.warren.ro/telecharger',
+    websiteUrl: 'https://beta.warren.ro',
+    checkoutUrl: 'https://checkout.beta.warrenbrowse.com',
   },
 } as const;
 

@@ -31,6 +31,14 @@ public struct WarrenProductAnchors: Equatable, Sendable {
     public let connectHost: String
     /// The forum origin, a bare https URL.
     public let forumPublicURL: String
+    /// The download page of this channel's website.
+    public let downloadURL: String
+    /// This channel's website origin (help pages, terms in force), a bare
+    /// https URL: a build that linked the production site showed the
+    /// production pages to beta testers.
+    public let websiteURL: String
+    /// This channel's checkout origin, a bare https URL.
+    public let checkoutURL: String
 
     /// The table of the environment this binary was compiled for.
     public static let current: WarrenProductAnchors = load()
@@ -93,7 +101,10 @@ public struct WarrenProductAnchors: Equatable, Sendable {
             let applicationID = object["application_id"] as? String,
             let deepLinkScheme = object["deep_link_scheme"] as? String,
             let connectHost = object["connect_host"] as? String,
-            let forumPublicURL = object["forum_public_url"] as? String
+            let forumPublicURL = object["forum_public_url"] as? String,
+            let downloadURL = object["download_url"] as? String,
+            let websiteURL = object["website_url"] as? String,
+            let checkoutURL = object["checkout_url"] as? String
         else {
             return nil
         }
@@ -105,7 +116,10 @@ public struct WarrenProductAnchors: Equatable, Sendable {
             applicationID: applicationID,
             deepLinkScheme: deepLinkScheme,
             connectHost: connectHost,
-            forumPublicURL: forumPublicURL
+            forumPublicURL: forumPublicURL,
+            downloadURL: downloadURL,
+            websiteURL: websiteURL,
+            checkoutURL: checkoutURL
         )
     }
 

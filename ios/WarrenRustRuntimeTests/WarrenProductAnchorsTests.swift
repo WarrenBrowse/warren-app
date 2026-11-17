@@ -19,6 +19,9 @@ final class WarrenProductAnchorsTests: XCTestCase {
         XCTAssertEqual(anchors.deepLinkScheme, try ClientRulesFixtures.string(row, "deep_link_scheme"))
         XCTAssertEqual(anchors.connectHost, try ClientRulesFixtures.string(row, "connect_host"))
         XCTAssertEqual(anchors.forumPublicURL, try ClientRulesFixtures.string(row, "forum_public_url"))
+        XCTAssertEqual(anchors.downloadURL, try ClientRulesFixtures.string(row, "download_url"))
+        XCTAssertEqual(anchors.websiteURL, try ClientRulesFixtures.string(row, "website_url"))
+        XCTAssertEqual(anchors.checkoutURL, try ClientRulesFixtures.string(row, "checkout_url"))
     }
 
     func testEveryFixtureRowDecodesThroughTheSamePath() throws {

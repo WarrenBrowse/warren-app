@@ -55,6 +55,7 @@ import com.warrenbrowse.vpn.lib.common.util.runCatchingCancellable
 fun OnboardingSubscriptionScreen(navigator: Navigator) {
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
+    val checkoutUrl = stringResource(R.string.checkout_url)
     val walletRepository = koinInject<WalletRepository>()
     val subscriptionInvoker = koinInject<WarrenSubscriptionInvoker>()
     val settings = koinInject<WarrenLocalSettingsRepository>()
@@ -181,7 +182,7 @@ fun OnboardingSubscriptionScreen(navigator: Navigator) {
                 val acct = pubkey?.let {
                     java.net.URLEncoder.encode(it.shortWarrenAddress(), "UTF-8")
                 }.orEmpty()
-                uriHandler.safeOpenUri("${claim.checkoutUrl(ONBOARDING_CHECKOUT_URL)}#acct=$acct")
+                uriHandler.safeOpenUri("${claim.checkoutUrl(checkoutUrl)}#acct=$acct")
             },
             text = stringResource(R.string.onboarding_subscription_view_plans),
         )
@@ -217,4 +218,3 @@ fun OnboardingSubscriptionScreen(navigator: Navigator) {
     }
 }
 
-private const val ONBOARDING_CHECKOUT_URL = "https://checkout.warrenbrowse.com/"

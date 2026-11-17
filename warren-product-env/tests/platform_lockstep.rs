@@ -158,6 +158,69 @@ fn the_desktop_typescript_table_is_the_crates() {
             env.download_url(),
             "{name}: downloadUrl"
         );
+        assert_eq!(
+            js_string(block, "websiteUrl", PRODUCT_ENV_TS),
+            env.website_url(),
+            "{name}: websiteUrl"
+        );
+        assert_eq!(
+            js_string(block, "checkoutUrl", PRODUCT_ENV_TS),
+            env.checkout_url(),
+            "{name}: checkoutUrl"
+        );
+    }
+}
+
+/// The Android URL resources of one flavor: the library defaults, with the
+/// flavor's overlay on top.
+fn android_flavor_urls(env: ProductEnv) -> Vec<(String, String)> {
+    let re = Regex::new(r#"<string name="([a-z_]+)"[^>]*>(https://[^<]*)</string>"#).expect("regex");
+    let default = repo_file(ANDROID_DEFAULT_URLS);
+    let overlay_path = ANDROID_FLAVOR_URLS.replace("{env}", env.name());
+    let overlay =
+        std::fs::read_to_string(format!("{}/../{overlay_path}", env!("CARGO_MANIFEST_DIR")))
+            .unwrap_or_default();
+    re.captures_iter(&default)
+        .map(|c| {
+            let name = c[1].to_owned();
+            let value = android_string(&overlay, &name).unwrap_or_else(|| c[2].to_owned());
+            (name, value)
+        })
+        .collect()
+}
+
+/// The help pages, the terms and the checkout are each channel's own: a beta
+/// app that fell through to a production link showed its testers the
+/// production site. Every Android link to the website or the checkout
+/// resolves, per flavor, under that flavor's origin.
+#[test]
+fn the_android_website_and_checkout_links_are_the_channels() {
+    for env in ALL {
+        let urls = android_flavor_urls(env);
+        assert!(
+            urls.iter().any(|(name, _)| name == "checkout_url"),
+            "no `checkout_url` resource"
+        );
+        for (name, value) in urls {
+            let site = value.contains("warren.ro");
+            let checkout = value.contains("checkout.");
+            if site {
+                assert!(
+                    value == env.website_url() || value.starts_with(&format!("{}/", env.website_url())),
+                    "{}: {name} = {value} is not under {}",
+                    env.name(),
+                    env.website_url()
+                );
+            }
+            if checkout {
+                assert!(
+                    value == env.checkout_url() || value.starts_with(&format!("{}/", env.checkout_url())),
+                    "{}: {name} = {value} is not under {}",
+                    env.name(),
+                    env.checkout_url()
+                );
+            }
+        }
     }
 }
 

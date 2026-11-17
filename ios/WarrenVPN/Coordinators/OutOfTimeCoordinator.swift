@@ -9,6 +9,7 @@
 import Routing
 import SafariServices
 import UIKit
+import WarrenRustRuntime
 
 class OutOfTimeCoordinator: Coordinator, Presenting, @preconcurrency OutOfTimeViewControllerDelegate, Poppable {
     let navigationController: RootContainerViewController
@@ -87,12 +88,12 @@ class OutOfTimeCoordinator: Coordinator, Presenting, @preconcurrency OutOfTimeVi
         presentChild(coordinator, animated: true)
     }
 
-    /// Secondary path: the Stripe checkout funnel on the web. The user
-    /// buys a plan on `checkout.warrenbrowse.com`, receives a voucher,
-    /// and redeems it in-app. The funnel is stateless, so no wallet
-    /// identifier is passed in the URL.
+    /// Secondary path: the Stripe checkout funnel of this build's channel
+    /// on the web. The user buys a plan there, receives a voucher, and
+    /// redeems it in-app. The funnel is stateless, so no wallet identifier
+    /// is passed in the URL.
     func didRequestOpenWebCheckout() {
-        guard let url = URL(string: "https://checkout.warrenbrowse.com/") else { return }
+        guard let url = URL(string: WarrenProductAnchors.current.checkoutURL + "/") else { return }
         let safari = SFSafariViewController(url: url)
         safari.preferredBarTintColor = .Warren.navy
         safari.preferredControlTintColor = .Warren.yellow

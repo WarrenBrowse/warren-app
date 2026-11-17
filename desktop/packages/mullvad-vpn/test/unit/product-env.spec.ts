@@ -91,6 +91,25 @@ describe('product_env.json, the desktop reader', () => {
     }
   });
 
+  // The help pages, the terms and the checkout are each channel's own: a beta
+  // build that linked the production site showed its testers its pages.
+  it('sends each build to the website and checkout of its own channel', async () => {
+    for (const row of rows) {
+      const { urls: channelUrls } = await importForProductEnv<
+        typeof import('../../src/shared/constants/urls')
+      >(row.name, '../../src/shared/constants/urls');
+      for (const [name, url] of Object.entries(channelUrls)) {
+        const origin = new URL(url).origin;
+        if (origin.endsWith('warren.ro')) {
+          expect(origin, `${row.name}: ${name}`).toBe(row.website_url);
+        }
+        if (new URL(url).host.startsWith('checkout.')) {
+          expect(origin, `${row.name}: ${name}`).toBe(row.checkout_url);
+        }
+      }
+    }
+  });
+
   // The forum origin is the one anchor the desktop spells as a plain literal
   // rather than reading off the product table, so nothing else would notice it
   // drifting: `isTrustedTopicUrl` derives FORUM_HOST from it, and a stale host

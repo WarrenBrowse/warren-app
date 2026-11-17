@@ -8,6 +8,9 @@
     <string name="privacy_policy_url" translatable="false">https://warren.ro/confidentialite</string>
     <string name="terms_of_use_url" translatable="false">https://warren.ro/cgu</string>
     <string name="refund_policy_url" translatable="false">https://warren.ro/remboursement</string>
+    <!-- The prod channel's checkout; the beta and staging flavors overlay
+         their own, like every website link above and below. -->
+    <string name="checkout_url" translatable="false">https://checkout.warrenbrowse.com/</string>
     <!-- Abuse-report appeal page, named on the port-forwarding page and in the
          suspension notice so the strike that can follow is foreseeable. -->
     <string name="reports_url" translatable="false">https://warren.ro/signalements</string>

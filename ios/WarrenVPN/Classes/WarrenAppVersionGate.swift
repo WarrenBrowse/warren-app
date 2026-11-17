@@ -29,7 +29,7 @@ import WarrenTypes
 /// id inherited from upstream, which sent a user the gate had locked out of
 /// Warren to another company's app.
 enum WarrenAppStoreListing {
-    static let url = URL(string: "https://warren.ro/telecharger")!
+    static let url = URL(string: WarrenProductAnchors.current.downloadURL)!
 }
 
 /// Last verified manifest verdict, persisted across launches.

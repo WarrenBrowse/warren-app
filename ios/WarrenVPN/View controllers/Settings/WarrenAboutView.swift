@@ -72,22 +72,22 @@ public struct WarrenAboutView: View {
         VStack(spacing: 8) {
             linkRow(
                 label: String(localized: "Community forum", table: "Settings", comment: "Opens the Warren community forum in Safari"),
-                url: "https://forum.warrenbrowse.com",
+                url: WarrenProductAnchors.current.forumPublicURL,
                 icon: "bubble.left.and.bubble.right"
             )
             linkRow(
                 label: String(localized: "Visit warren.ro", table: "Settings", comment: "About → marketing site link"),
-                url: "https://warren.ro",
+                url: WarrenProductAnchors.current.websiteURL,
                 icon: "safari"
             )
             linkRow(
                 label: String(localized: "Privacy policy", table: "Settings", comment: ""),
-                url: "https://warren.ro/confidentialite",
+                url: WarrenProductAnchors.current.websiteURL + "/confidentialite",
                 icon: "lock.shield"
             )
             linkRow(
                 label: String(localized: "Terms of service", table: "Settings", comment: ""),
-                url: "https://warren.ro/cgu",
+                url: WarrenProductAnchors.current.websiteURL + "/cgu",
                 icon: "doc.text"
             )
             Button(action: { showsLicenses = true }) {

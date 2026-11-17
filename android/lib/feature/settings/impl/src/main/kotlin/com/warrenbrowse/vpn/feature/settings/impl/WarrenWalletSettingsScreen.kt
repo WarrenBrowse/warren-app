@@ -123,6 +123,7 @@ fun WarrenWalletSettings(navigator: Navigator) {
     // last answer), so a cold start never shows one wording and swaps it.
     val cachedRateBps by settings.cachedNetworkRateBps.collectAsStateWithLifecycle()
     val uriHandler = LocalUriHandler.current
+    val checkoutUrl = stringResource(R.string.checkout_url)
     val scope = rememberCoroutineScope()
 
     val state by walletRepository.state.collectAsStateWithLifecycle()
@@ -267,7 +268,7 @@ fun WarrenWalletSettings(navigator: Navigator) {
                             )
                             pendingPurchase = claim
                             uriHandler.safeOpenUri(
-                                "${claim.checkoutUrl(CHECKOUT_URL)}#acct=$acct",
+                                "${claim.checkoutUrl(checkoutUrl)}#acct=$acct",
                             )
                         },
                         text = stringResource(R.string.account_buy_more_credit),
@@ -600,4 +601,3 @@ internal fun voucherLabel(
 private const val COPIED_ICON_DURATION_MS = 2_000L
 
 // Hosted Stripe checkout funnel (matches desktop `urls.purchase`).
-private const val CHECKOUT_URL = "https://checkout.warrenbrowse.com/"

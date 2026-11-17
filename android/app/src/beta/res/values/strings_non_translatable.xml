@@ -7,4 +7,15 @@
          download page (forum topic 204). Held to the product table by
          warren-product-env/tests/platform_lockstep.rs. -->
     <string name="download_url" translatable="false">https://beta.warren.ro/telecharger</string>
+    <!-- The help pages, the terms and the checkout of this channel: a build
+         that fell through to the library defaults showed its testers the
+         production site. Held to the product table by the same test. -->
+    <string name="faqs_and_guides_url" translatable="false">https://beta.warren.ro/faq</string>
+    <string name="privacy_policy_url" translatable="false">https://beta.warren.ro/confidentialite</string>
+    <string name="terms_of_use_url" translatable="false">https://beta.warren.ro/cgu</string>
+    <string name="refund_policy_url" translatable="false">https://beta.warren.ro/remboursement</string>
+    <string name="reports_url" translatable="false">https://beta.warren.ro/signalements</string>
+    <string name="help_page_url" translatable="false">https://beta.warren.ro/aide</string>
+    <string name="lockdown_url" translatable="false">https://beta.warren.ro/faq</string>
+    <string name="checkout_url" translatable="false">https://checkout.beta.warrenbrowse.com/</string>
 </resources>

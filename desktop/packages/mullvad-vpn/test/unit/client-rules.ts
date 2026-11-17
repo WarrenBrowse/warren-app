@@ -114,6 +114,8 @@ export interface ProductEnvRow {
   connect_host: string;
   forum_public_url: string;
   download_url: string;
+  website_url: string;
+  checkout_url: string;
 }
 
 export interface ProductEnvFixture {

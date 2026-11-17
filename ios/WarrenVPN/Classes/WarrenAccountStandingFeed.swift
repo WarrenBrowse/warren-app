@@ -24,7 +24,7 @@ enum WarrenAccountStandingText {
 
     /// The page that states the strike rule and how to contest a warning or a
     /// revocation, the one the desktop and Android link.
-    static let reportsURL = "https://warren.ro/signalements"
+    static let reportsURL = WarrenProductAnchors.current.websiteURL + "/signalements"
 
     /// A day as the reader writes it. A strike is recorded at day precision,
     /// as midnight UTC, and a ban lapses on a day too, so both are formatted

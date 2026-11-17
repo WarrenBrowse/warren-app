@@ -78,6 +78,7 @@ import com.warrenbrowse.vpn.lib.common.util.runCatchingCancellable
 @Composable
 fun OutOfTimeScreen(navigator: Navigator) {
     val uriHandler = LocalUriHandler.current
+    val checkoutUrl = stringResource(R.string.checkout_url)
     val subscriptionInvoker = koinInject<WarrenSubscriptionInvoker>()
     val tunnelStateProvider = koinInject<WarrenTunnelStateProvider>()
     val disconnectInvoker = koinInject<WarrenQuinnDisconnectInvoker>()
@@ -115,7 +116,7 @@ fun OutOfTimeScreen(navigator: Navigator) {
             java.net.URLEncoder.encode(it.shortWarrenAddress(), "UTF-8")
         }.orEmpty()
         pendingPurchase = claim
-        uriHandler.safeOpenUri("${claim.checkoutUrl(CHECKOUT_URL)}#acct=$acct")
+        uriHandler.safeOpenUri("${claim.checkoutUrl(checkoutUrl)}#acct=$acct")
     }
 
     LifecycleResumeEffect(Unit) {
@@ -316,4 +317,3 @@ private const val REFRESH_INTERVAL_MS = 60_000L
 private const val DISCONNECT_SETTLE_MS = 1_000L
 
 // Hosted Stripe checkout funnel (matches desktop `urls.purchase`).
-private const val CHECKOUT_URL = "https://checkout.warrenbrowse.com/"
