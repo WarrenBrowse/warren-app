@@ -44,6 +44,8 @@ pub enum AppRoutingError {
     InvalidCity,
     #[error("this build cannot lock an app to the VPN")]
     LockUnavailable,
+    #[error("the app id is neither an executable file nor an .app bundle")]
+    NotAnApp,
 }
 
 /// The conventions an app id follows on one platform.
@@ -165,6 +167,23 @@ impl AppId {
     /// As [`Self::lenient`], for the conventions of `flavor`.
     pub fn lenient_as(flavor: AppIdFlavor, raw: &str) -> Self {
         Self::parse_as(flavor, raw).unwrap_or_else(|_| Self(raw.to_owned()))
+    }
+
+    /// Checks that the path names one app on disk: an executable file, or a
+    /// directory that is an `.app` bundle. On macOS a listed path also covers
+    /// every executable under it, so a plain directory such as `/Applications`
+    /// or `/usr` would take a large part of the system with it.
+    ///
+    /// # Errors
+    ///
+    /// [`AppRoutingError::NotAnApp`] for a directory that is not a bundle, or
+    /// a path that does not exist.
+    pub fn check_names_an_app(&self) -> Result<(), AppRoutingError> {
+        match std::fs::metadata(&self.0) {
+            Ok(meta) if meta.is_file() => Ok(()),
+            Ok(meta) if meta.is_dir() && self.0.ends_with(".app") => Ok(()),
+            _ => Err(AppRoutingError::NotAnApp),
+        }
     }
 
     pub fn as_str(&self) -> &str {
@@ -436,6 +455,56 @@ mod tests {
 
     fn app(path: &str) -> AppId {
         AppId::parse_as(AppIdFlavor::Unix, path).unwrap()
+    }
+
+    /// A fresh directory of its own under the system temp dir.
+    fn scratch_dir(tag: &str) -> std::path::PathBuf {
+        let nanos = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map(|d| d.as_nanos())
+            .unwrap_or(0);
+        let dir = std::env::temp_dir().join(format!(
+            "warren-app-id-{tag}-{}-{nanos}",
+            std::process::id()
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn a_plain_directory_does_not_name_an_app() {
+        let dir = scratch_dir("plain");
+
+        let checked = app(dir.to_str().unwrap()).check_names_an_app();
+
+        let _ = std::fs::remove_dir_all(&dir);
+        assert_eq!(checked, Err(AppRoutingError::NotAnApp));
+    }
+
+    #[test]
+    fn a_missing_path_does_not_name_an_app() {
+        let dir = scratch_dir("missing");
+
+        let checked = app(dir.join("gone").to_str().unwrap()).check_names_an_app();
+
+        let _ = std::fs::remove_dir_all(&dir);
+        assert_eq!(checked, Err(AppRoutingError::NotAnApp));
+    }
+
+    #[test]
+    fn a_bundle_or_an_executable_file_names_an_app() {
+        let dir = scratch_dir("bundle");
+        let bundle = dir.join("Browser.app");
+        std::fs::create_dir_all(&bundle).unwrap();
+        let file = dir.join("curl");
+        std::fs::write(&file, b"").unwrap();
+
+        let bundle_checked = app(bundle.to_str().unwrap()).check_names_an_app();
+        let file_checked = app(file.to_str().unwrap()).check_names_an_app();
+
+        let _ = std::fs::remove_dir_all(&dir);
+        assert_eq!(bundle_checked, Ok(()));
+        assert_eq!(file_checked, Ok(()));
     }
 
     fn exit(country: &str) -> ExitChoice {

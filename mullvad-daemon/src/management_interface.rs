@@ -2307,8 +2307,8 @@ impl ManagementService for ManagementServiceImpl {
     async fn add_split_tunnel_app(&self, request: Request<String>) -> ServiceResult<()> {
         let call = Self::call_of(&request);
         log::debug!("add_split_tunnel_app");
-        let app =
-            types::app_routing::app_id(&request.into_inner()).map_err(map_protobuf_type_err)?;
+        let app = types::app_routing::app_id_to_add(&request.into_inner())
+            .map_err(map_protobuf_type_err)?;
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(&call, DaemonCommand::AddSplitTunnelApp(tx, app))?;
         self.wait_for_result(rx)
@@ -2369,8 +2369,8 @@ impl ManagementService for ManagementServiceImpl {
     async fn add_included_app(&self, request: Request<String>) -> ServiceResult<()> {
         let call = Self::call_of(&request);
         log::debug!("add_included_app");
-        let app =
-            types::app_routing::app_id(&request.into_inner()).map_err(map_protobuf_type_err)?;
+        let app = types::app_routing::app_id_to_add(&request.into_inner())
+            .map_err(map_protobuf_type_err)?;
         let (tx, rx) = oneshot::channel();
         self.send_command_to_daemon(&call, DaemonCommand::AddIncludedApp(tx, app))?;
         self.wait_for_result(rx)
@@ -2434,7 +2434,7 @@ impl ManagementService for ManagementServiceImpl {
         let call = Self::call_of(&request);
         log::debug!("set_app_exit");
         let entry = request.into_inner();
-        let app = types::app_routing::app_id(&entry.app).map_err(map_protobuf_type_err)?;
+        let app = types::app_routing::app_id_to_add(&entry.app).map_err(map_protobuf_type_err)?;
         let Some(exit) = entry.exit else {
             return Err(Status::invalid_argument("missing exit"));
         };

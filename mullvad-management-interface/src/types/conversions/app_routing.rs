@@ -65,6 +65,23 @@ pub fn app_id(raw: &str) -> Result<AppId, FromProtobufTypeError> {
     AppId::parse(raw).map_err(|error| FromProtobufTypeError::invalid_argument(error.to_string()))
 }
 
+/// Validates an app id a client adds to a list or gives an exit: as
+/// [`app_id`], and on macOS, where a listed path covers everything under it,
+/// it must name an executable file or an `.app` bundle. Removals keep
+/// [`app_id`], so an app that left the disk can still be taken off a list.
+///
+/// # Errors
+///
+/// As [`app_id`], and [`FromProtobufTypeError::InvalidArgument`] for a path
+/// that names no app on disk.
+pub fn app_id_to_add(raw: &str) -> Result<AppId, FromProtobufTypeError> {
+    let app = app_id(raw)?;
+    #[cfg(target_os = "macos")]
+    app.check_names_an_app()
+        .map_err(|error| FromProtobufTypeError::invalid_argument(error.to_string()))?;
+    Ok(app)
+}
+
 impl From<&AppRoutingSettings> for proto::AppRoutingSettings {
     fn from(settings: &AppRoutingSettings) -> Self {
         let apps = |apps: &std::collections::BTreeSet<AppId>| {
@@ -189,6 +206,15 @@ impl TryFrom<proto::AppRouteStatus> for AppRouteStatus {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn an_app_added_on_macos_is_a_bundle_or_an_executable_never_a_directory() {
+        assert!(app_id_to_add("/usr").is_err());
+        assert!(app_id_to_add("/Applications").is_err());
+        assert!(app_id_to_add("/usr/bin/true").is_ok());
+        assert!(app_id("/usr").is_ok(), "a removal still takes any path");
+    }
 
     fn app(raw: &str) -> AppId {
         AppId::parse(raw).unwrap()
