@@ -46,8 +46,10 @@ jobs:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
 
       - name: Ask the tracker who is seeding ${{ matrix.channel }}
+        env:
+          UPDATES_BASE: ${{ matrix.updates-base }}
         run: |
           python3 ci/check-swarm.py \
-            --downloads-url "${{ matrix.updates-base }}/downloads.json" \
+            --downloads-url "$UPDATES_BASE/downloads.json" \
             --timeout-seconds 120 \
             --interval-seconds 30

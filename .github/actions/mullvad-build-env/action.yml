@@ -258,12 +258,18 @@ runs:
     - name: Override Rust toolchain
       if: ${{ inputs.rust-toolchain != 'stable' }}
       shell: bash
-      run: rustup override set ${{ inputs.rust-toolchain }}
+      env:
+        TOOLCHAIN: ${{ inputs.rust-toolchain }}
+      run: rustup override set "$TOOLCHAIN"
 
     - name: Install Rust components
       if: ${{ inputs.rustup-components != '' }}
       shell: bash
-      run: rustup component add ${{ inputs.rustup-components }}
+      env:
+        COMPONENTS: ${{ inputs.rustup-components }}
+      run: |
+        # shellcheck disable=SC2086 # a space-separated list of components
+        rustup component add $COMPONENTS
 
     - name: Authenticate this job's git fetches from the WarrenBrowse org
       # cargo fetches the quinn and pfctl forks with the git CLI and needs an

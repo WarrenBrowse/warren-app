@@ -110,8 +110,11 @@ on:
   # From a branch, tag-guard refuses to start.
   workflow_dispatch:
 
+# Read-only by default. The jobs that upload to the draft release, read it
+# back (a draft is invisible to a read-only token) or publish it get
+# `contents: write` of their own.
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   # Preliminary gate: the full Warren test suite (daemon cargo test/clippy/fmt +
@@ -209,7 +212,8 @@ jobs:
   tests:
     needs: [tag-guard]
     uses: ./.github/workflows/warren-tests.yml
-    secrets: inherit
+    secrets:
+      WARREN_CORE_RO_TOKEN: ${{ secrets.WARREN_CORE_RO_TOKEN }}
 
   # The headless client (daemon + CLI, no GUI) ships on the SAME tag as the
   # app, always. It is the same daemon binary and the same version, so a CLI
@@ -231,10 +235,15 @@ jobs:
       channel: ${{ needs.tag-guard.outputs.channel }}
       version: ${{ needs.tag-guard.outputs.version }}
       api-url: ${{ needs.tag-guard.outputs.api-url }}
-    secrets: inherit
+    secrets:
+      WARREN_CORE_RO_TOKEN: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+      WARREN_CLI_RELEASE_TOKEN: ${{ secrets.WARREN_CLI_RELEASE_TOKEN }}
+      WARREN_UPDATE_SIGNING_KEY: ${{ secrets.WARREN_UPDATE_SIGNING_KEY }}
 
   build-macos:
     name: Build macOS DMG/PKG
+    permissions:
+      contents: write
     outputs:
       sums: ${{ steps.sums.outputs.sums }}
     needs: [tag-guard, tests]
@@ -334,6 +343,8 @@ jobs:
 
   build-linux:
     name: Build Linux .deb/.rpm/.pacman
+    permissions:
+      contents: write
     outputs:
       sums: ${{ steps.sums.outputs.sums }}
     needs: [tag-guard, tests]
@@ -444,6 +455,8 @@ jobs:
   # would leave the aarch64 packages built by a path nothing else exercises.
   build-linux-arm64:
     name: Build Linux arm64 .deb/.rpm/.pacman
+    permissions:
+      contents: write
     outputs:
       sums: ${{ steps.sums.outputs.sums }}
     needs: [tag-guard, tests]
@@ -540,6 +553,8 @@ jobs:
   # into, and a nix that the build runner has no root to install.
   build-linux-sysvinit:
     name: Build Linux .deb (sysvinit)
+    permissions:
+      contents: write
     outputs:
       sums: ${{ steps.sums.outputs.sums }}
     needs: [tag-guard, build-linux]
@@ -597,6 +612,8 @@ jobs:
 
   build-nixos:
     name: Build NixOS flake
+    permissions:
+      contents: write
     outputs:
       sums: ${{ steps.sums.outputs.sums }}
     needs: [tag-guard, build-linux]
@@ -668,6 +685,8 @@ jobs:
 
   build-windows:
     name: Build Windows MSI
+    permissions:
+      contents: write
     outputs:
       sums: ${{ steps.sums.outputs.sums }}
     needs: [tag-guard, tests]
@@ -928,6 +947,8 @@ jobs:
 
   build-android:
     name: Build Android APK/AAB + Play Store internal-test upload
+    permissions:
+      contents: write
     outputs:
       sums: ${{ steps.sums.outputs.sums }}
     # Android is a first-class release platform: it builds and publishes the APK
@@ -1114,6 +1135,8 @@ jobs:
 
   publish-release:
     name: Publish GitHub Release
+    permissions:
+      contents: write
     needs:
       - tag-guard
       - build-macos

@@ -56,14 +56,23 @@ on:
         description: "API host of the channel, for the baked exit list"
         type: string
         required: true
+    secrets:
+      WARREN_CORE_RO_TOKEN:
+        required: false
+      WARREN_CLI_RELEASE_TOKEN:
+        required: false
+      WARREN_UPDATE_SIGNING_KEY:
+        required: false
   push:
     tags:
       - "daemon-v*"
       - "daemon-beta-v*"
   workflow_dispatch:
 
+# Every release write goes to warren-cli through WARREN_CLI_RELEASE_TOKEN; the
+# workflow's own token only reads this repository.
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   # One place decides the channel, the version and the warren-cli tag, whether

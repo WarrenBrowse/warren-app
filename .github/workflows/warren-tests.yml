@@ -13,6 +13,13 @@ name: Warren tests (reusable)
 
 on:
   workflow_call:
+    secrets:
+      # Read-only access for the sibling checkouts (see mullvad-build-env).
+      WARREN_CORE_RO_TOKEN:
+        required: false
+
+permissions:
+  contents: read
 
 jobs:
   daemon-warren-tests:
