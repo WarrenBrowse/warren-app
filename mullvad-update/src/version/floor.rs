@@ -66,9 +66,14 @@ mod tests {
     #[test]
     fn a_raised_floor_survives_a_new_reader() {
         let dir = tempfile::tempdir().unwrap();
-        MetadataVersionFloor::at(dir.path().join("floor")).raise(42).unwrap();
+        MetadataVersionFloor::at(dir.path().join("floor"))
+            .raise(42)
+            .unwrap();
 
-        assert_eq!(MetadataVersionFloor::at(dir.path().join("floor")).load(), 42);
+        assert_eq!(
+            MetadataVersionFloor::at(dir.path().join("floor")).load(),
+            42
+        );
     }
 
     #[test]
