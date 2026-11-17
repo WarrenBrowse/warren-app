@@ -1,6 +1,5 @@
 import { GetTextTranslations } from 'gettext-parser';
 
-import { MapData } from '../renderer/lib/3dmap';
 import { AppUpgradeError, AppUpgradeEvent } from './app-upgrade';
 import { ILinuxSplitTunnelingApplication, ISplitTunnelingApplication } from './application-types';
 import { DaemonAccessRefusal } from './daemon-access-refusal';
@@ -221,9 +220,6 @@ export type IpcSchema = typeof ipcSchema;
 export const ipcSchema = {
   state: {
     get: invokeSync<void, IAppStateSnapshot>(),
-  },
-  map: {
-    getData: invoke<void, MapData>(),
   },
   window: {
     shape: notifyRenderer<IWindowShapeParameters>(),

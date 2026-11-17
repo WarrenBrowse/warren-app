@@ -35,7 +35,6 @@
     "scripts/**/*.ts",
     "test/**/*.ts",
     "test/**/*.tsx",
-    "assets/geo/*.json",
     "vite.config.ts"
   ]
 }

@@ -194,8 +194,6 @@ const SANDBOX_DISABLED = app.commandLine.hasSwitch('no-sandbox');
 const UPDATE_NOTIFICATION_DISABLED = updateNotificationDisabled(process.env);
 const DAEMON_ACCESS_RETRY_MS = 60_000;
 
-const GEO_DIR = path.resolve(import.meta.dirname, 'assets/geo');
-
 class ApplicationMain
   implements
     NotificationSender,
@@ -1730,22 +1728,6 @@ class ApplicationMain
       this.torrentClientSync.testConnection(),
     );
     IpcMainEventChannel.torrentClient.handleApplyNow(() => this.torrentClientSync.applyNow());
-
-    IpcMainEventChannel.map.handleGetData(async () => {
-      const readGeoFile = async (fileName: string) => {
-        const data = await fs.promises.readFile(path.join(GEO_DIR, fileName));
-
-        return new Uint8Array(data).buffer;
-      };
-
-      return {
-        landContourIndices: await readGeoFile('land_contour_indices.gl'),
-        landPositions: await readGeoFile('land_positions.gl'),
-        landTriangleIndices: await readGeoFile('land_triangle_indices.gl'),
-        oceanIndices: await readGeoFile('ocean_indices.gl'),
-        oceanPositions: await readGeoFile('ocean_positions.gl'),
-      };
-    });
 
     IpcMainEventChannel.tunnel.handleConnect(this.connectTunnel);
     IpcMainEventChannel.tunnel.handleReconnect(this.reconnectTunnel);

@@ -663,7 +663,6 @@ export default class AppRenderer {
   public clearAllRelayOverrides = () => IpcRendererEventChannel.settings.clearAllRelayOverrides();
   public setEnabledRecents = (enabled: boolean) =>
     IpcRendererEventChannel.settings.setEnableRecents(enabled);
-  public getMapData = () => IpcRendererEventChannel.map.getData();
   public setAnimateMap = (displayMap: boolean): void =>
     IpcRendererEventChannel.guiSettings.setAnimateMap(displayMap);
   public setTheme = (theme: ThemePreference): void =>
