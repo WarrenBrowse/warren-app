@@ -6,6 +6,7 @@ import { IGuiSettingsState, SYSTEM_PREFERRED_LOCALE_KEY } from '../shared/gui-se
 import log from '../shared/logging';
 import { DEFAULT_THEME_PREFERENCE, parseThemePreference, ThemePreference } from '../shared/theme';
 import { parseStoredTorrentClient, StoredTorrentClient } from '../shared/torrent-client';
+import { writeFileAtomic } from './atomic-write';
 
 const settingsSchema: Record<keyof IGuiSettingsState, string> = {
   preferredLocale: 'string',
@@ -308,7 +309,7 @@ export default class GuiSettings {
 
   private write(settings: unknown) {
     try {
-      fs.writeFileSync(this.filePath(), JSON.stringify(settings));
+      writeFileAtomic(this.filePath(), JSON.stringify(settings));
     } catch (error) {
       log.error(`Failed to write GUI settings file: ${error}`);
     }
