@@ -70,6 +70,10 @@ pub enum DownloadError {
     #[error("File operation failed: {0}")]
     FileOperation(#[source] io::Error),
 
+    /// The URL does not use https
+    #[error("Refusing to download over a scheme other than https")]
+    InsecureUrl,
+
     /// Other error
     #[error("{0}")]
     Other(&'static str),
@@ -202,16 +206,53 @@ pub async fn get_to_file(
 /// - `progress_updater` - This interface is notified of download progress.
 /// - `size_hint` - File size restrictions.
 pub async fn get_to_writer(
-    mut writer: impl AsyncWrite + AsyncSeek + Unpin,
+    writer: impl AsyncWrite + AsyncSeek + Unpin,
     url: &str,
     progress_updater: &mut impl ProgressUpdater,
     size_hint: SizeHint,
     read_timeout: Duration,
 ) -> Result<(), DownloadError> {
+    download_to_writer(
+        writer,
+        url,
+        progress_updater,
+        size_hint,
+        read_timeout,
+        Transport::Https,
+    )
+    .await
+}
+
+/// What a download may travel over.
+#[derive(Clone, Copy)]
+enum Transport {
+    /// https with TLS 1.2 or later, redirects included. The installer's integrity rests on the
+    /// signed hash alone, so this keeps its contents and timing off a plaintext path.
+    Https,
+    /// Any scheme, for the plain http server the tests run on loopback.
+    #[cfg(test)]
+    LoopbackPlaintext,
+}
+
+async fn download_to_writer(
+    mut writer: impl AsyncWrite + AsyncSeek + Unpin,
+    url: &str,
+    progress_updater: &mut impl ProgressUpdater,
+    size_hint: SizeHint,
+    read_timeout: Duration,
+    transport: Transport,
+) -> Result<(), DownloadError> {
+    let https_only = matches!(transport, Transport::Https);
+    if https_only && reqwest::Url::parse(url).map_or(true, |url| url.scheme() != "https") {
+        return Err(DownloadError::InsecureUrl);
+    }
+
     // Create a new client for each download attempt to prevent stale connections
     let client = reqwest::Client::builder()
         .read_timeout(read_timeout)
         .connect_timeout(CONNECT_TIMEOUT)
+        .https_only(https_only)
+        .min_tls_version(reqwest::tls::Version::TLS_1_2)
         .build()
         .map_err(DownloadError::ClientInitialization)?;
 
@@ -494,12 +535,13 @@ mod test {
         let mut writer = Cursor::new(vec![]);
         let mut progress_updater = FakeProgressUpdater::default();
 
-        get_to_writer(
+        download_to_writer(
             &mut writer,
             &file_url,
             &mut progress_updater,
             SizeHint::Exact(file_data.len()),
             TEST_READ_TIMEOUT,
+            Transport::LoopbackPlaintext,
         )
         .await
         .context("Complete download failed")?;
@@ -529,12 +571,13 @@ mod test {
 
         let mut progress_updater = FakeProgressUpdater::default();
 
-        get_to_writer(
+        download_to_writer(
             &mut limited_writer,
             &file_url,
             &mut progress_updater,
             SizeHint::Exact(file_data.len()),
             TEST_READ_TIMEOUT,
+            Transport::LoopbackPlaintext,
         )
         .await
         .expect_err("Expected interrupted download");
@@ -560,12 +603,13 @@ mod test {
 
         let mut progress_updater = FakeProgressUpdater::default();
 
-        get_to_writer(
+        download_to_writer(
             &mut writer,
             &file_url,
             &mut progress_updater,
             SizeHint::Exact(file_data.len()),
             TEST_READ_TIMEOUT,
+            Transport::LoopbackPlaintext,
         )
         .await
         .context("Partial download failed")?;
@@ -610,6 +654,36 @@ mod test {
         Ok((begin, end))
     }
 
+    /// An installer is only fetched over https: a plaintext URL is refused before any request
+    /// leaves, so a manifest naming one cannot have the download read or delayed on the path.
+    #[tokio::test]
+    async fn a_plaintext_installer_url_is_refused_before_any_request() {
+        let mut server = mockito::Server::new_async().await;
+        let head = server
+            .mock("HEAD", "/installer")
+            .with_header(CONTENT_LENGTH, "3")
+            .expect(0)
+            .create_async()
+            .await;
+        let url = format!("{}/installer", server.url());
+        assert!(url.starts_with("http://"));
+
+        let result = get_to_writer(
+            Cursor::new(vec![]),
+            &url,
+            &mut FakeProgressUpdater::default(),
+            SizeHint::Exact(3),
+            TEST_READ_TIMEOUT,
+        )
+        .await;
+
+        assert!(
+            matches!(result, Err(DownloadError::InsecureUrl)),
+            "got {result:?}"
+        );
+        head.assert_async().await;
+    }
+
     /// Make sure unexpectedly large files are rejected
     #[tokio::test]
     async fn test_nefarious_sizes() -> anyhow::Result<()> {
@@ -621,12 +695,13 @@ mod test {
             .with_header(CONTENT_LENGTH, "2")
             .create();
 
-        get_to_writer(
+        download_to_writer(
             Cursor::new(vec![]),
             &file_url,
             &mut FakeProgressUpdater::default(),
             SizeHint::Exact(1),
             TEST_READ_TIMEOUT,
+            Transport::LoopbackPlaintext,
         )
         .await
         .expect_err("Reject unexpected content length");
@@ -646,12 +721,13 @@ mod test {
             .with_body(&file_data)
             .create();
 
-        get_to_writer(
+        download_to_writer(
             Cursor::new(vec![]),
             &file_url,
             &mut FakeProgressUpdater::default(),
             SizeHint::Exact(file_data.len()),
             TEST_READ_TIMEOUT,
+            Transport::LoopbackPlaintext,
         )
         .await
         .expect_err("Reject unexpected chunk sizes");
