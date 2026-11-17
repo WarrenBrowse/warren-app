@@ -461,8 +461,10 @@
     <string name="onboarding_done_body">Lompakkosi on valmis. Valitse maa ja yhdistä milloin haluat.</string>
     <string name="onboarding_done_cta">Yhdistä</string>
     <string name="connect_subscription_expired">Tilisi käyttöaika on päättynyt. Osta lisää käyttöaikaa.</string>
-    <string name="connect_subscription_expires_in_day">1 päivä jäljellä. Osta lisää käyttöaikaa.</string>
-    <string name="connect_subscription_expires_in_days">%1$d päivää jäljellä. Osta lisää käyttöaikaa.</string>
+    <plurals name="connect_subscription_expires_in">
+        <item quantity="one">1 päivä jäljellä. Osta lisää käyttöaikaa.</item>
+        <item quantity="other">%1$d päivää jäljellä. Osta lisää käyttöaikaa.</item>
+    </plurals>
     <string name="account_out_of_time">EI KÄYTTÖAIKAA</string>
     <string name="account_expiry_unavailable">Ei saatavilla</string>
     <string name="account_pubkey_card_label">Julkinen avain (lompakon osoite)</string>

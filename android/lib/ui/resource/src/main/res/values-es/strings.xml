@@ -464,8 +464,10 @@
     <string name="onboarding_done_body">Tu monedero está listo. Elige un país y conéctate cuando quieras.</string>
     <string name="onboarding_done_cta">Conectar</string>
     <string name="connect_subscription_expired">El crédito de tu cuenta ha caducado. Compra más créditos.</string>
-    <string name="connect_subscription_expires_in_day">Queda 1 día. Compre más crédito.</string>
-    <string name="connect_subscription_expires_in_days">Quedan %1$d días. Compre más crédito.</string>
+    <plurals name="connect_subscription_expires_in">
+        <item quantity="one">Queda 1 día. Compre más crédito.</item>
+        <item quantity="other">Quedan %1$d días. Compre más crédito.</item>
+    </plurals>
     <string name="account_out_of_time">TIEMPO AGOTADO</string>
     <string name="account_expiry_unavailable">No disponible actualmente</string>
     <string name="account_pubkey_card_label">Clave pública (dirección del monedero)</string>

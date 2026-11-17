@@ -461,8 +461,10 @@
     <string name="onboarding_done_body">Lommeboken din er klar. Velg et land og koble til når du vil.</string>
     <string name="onboarding_done_cta">Koble til</string>
     <string name="connect_subscription_expired">Kreditten på kontoen din er utløpt. Kjøp mer kreditt.</string>
-    <string name="connect_subscription_expires_in_day">1 dag igjen. Kjøp mer kreditt.</string>
-    <string name="connect_subscription_expires_in_days">%1$d dager igjen. Kjøp mer kreditt.</string>
+    <plurals name="connect_subscription_expires_in">
+        <item quantity="one">1 dag igjen. Kjøp mer kreditt.</item>
+        <item quantity="other">%1$d dager igjen. Kjøp mer kreditt.</item>
+    </plurals>
     <string name="account_out_of_time">TIDEN HAR UTLØPT</string>
     <string name="account_expiry_unavailable">For øyeblikket utilgjengelig</string>
     <string name="account_pubkey_card_label">Offentlig nøkkel (lommebokadresse)</string>

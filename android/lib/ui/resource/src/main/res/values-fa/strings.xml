@@ -461,8 +461,10 @@
     <string name="onboarding_done_body">کیف پول شما آماده است. یک کشور انتخاب کنید و هر وقت خواستید وصل شوید.</string>
     <string name="onboarding_done_cta">اتصال</string>
     <string name="connect_subscription_expired">اعتبار حساب شما منقضی شده است. اعتبار بیشتری بخرید.</string>
-    <string name="connect_subscription_expires_in_day">1 روز باقی‌مانده. اعتبار بیشتری بخرید.</string>
-    <string name="connect_subscription_expires_in_days">%1$d روز باقی‌مانده. اعتبار بیشتری بخرید.</string>
+    <plurals name="connect_subscription_expires_in">
+        <item quantity="one">1 روز باقی‌مانده. اعتبار بیشتری بخرید.</item>
+        <item quantity="other">%1$d روز باقی‌مانده. اعتبار بیشتری بخرید.</item>
+    </plurals>
     <string name="account_out_of_time">زمان به پایان رسیده است</string>
     <string name="account_expiry_unavailable">در حال حاضر در دسترس نیست</string>
     <string name="account_pubkey_card_label">کلید عمومی (نشانی کیف پول)</string>

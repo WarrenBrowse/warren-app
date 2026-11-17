@@ -457,8 +457,9 @@
     <string name="onboarding_done_body">지갑이 준비되었습니다. 국가를 고르고 원할 때 연결하세요.</string>
     <string name="onboarding_done_cta">연결</string>
     <string name="connect_subscription_expired">계정 크레딧이 만료되었습니다. 추가 크레딧을 구매하세요.</string>
-    <string name="connect_subscription_expires_in_day">%1$d일 남음. 추가 크레딧을 구매하세요.</string>
-    <string name="connect_subscription_expires_in_days">%1$d일 남음. 추가 크레딧을 구매하세요.</string>
+    <plurals name="connect_subscription_expires_in">
+        <item quantity="other">%1$d일 남음. 추가 크레딧을 구매하세요.</item>
+    </plurals>
     <string name="account_out_of_time">시간 초과</string>
     <string name="account_expiry_unavailable">현재 사용 가능</string>
     <string name="account_pubkey_card_label">공개 키(지갑 주소)</string>

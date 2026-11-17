@@ -2,19 +2,12 @@ package com.warrenbrowse.vpn.feature.home.impl.connect
 
 import android.content.Context
 import com.warrenbrowse.vpn.lib.ui.resource.R
-import io.mockk.MockKAnswerScope
 import io.mockk.every
 import io.mockk.mockk
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import org.junit.jupiter.api.Test
-
-// getString(int, vararg Any) delivers its format args as a single Array in
-// invocation.args[1] (mockk does not flatten varargs); fall back to flattened
-// args defensively.
-private fun MockKAnswerScope<String, *>.fmtArgs(): List<Any?> =
-    (invocation.args.getOrNull(1) as? Array<*>)?.toList() ?: invocation.args.drop(1)
 
 class ConnectExpiryWarningTest {
 
@@ -26,10 +19,6 @@ class ConnectExpiryWarningTest {
     private val context: Context = mockk {
         every { getString(R.string.connect_subscription_expired) } returns
             "Your account credit has expired. Buy more credit."
-        every { getString(eq(R.string.connect_subscription_expires_in_day), any()) } answers
-            { "${fmtArgs()[0]} day left. Buy more credit." }
-        every { getString(eq(R.string.connect_subscription_expires_in_days), any()) } answers
-            { "${fmtArgs()[0]} days left. Buy more credit." }
         every { resources } returns mockk {
             every {
                 getQuantityString(eq(R.plurals.home_days_left), any(), any())

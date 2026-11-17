@@ -469,8 +469,12 @@
     <string name="onboarding_done_body">Ваш гаманець готовий. Виберіть країну та підключайтеся будь-коли.</string>
     <string name="onboarding_done_cta">Підключити</string>
     <string name="connect_subscription_expired">Баланс вашого облікового запису вичерпано. Поповніть баланс.</string>
-    <string name="connect_subscription_expires_in_day">Залишився %1$d день. Поповніть баланс.</string>
-    <string name="connect_subscription_expires_in_days">Залишилося %1$d дня. Поповніть баланс.</string>
+    <plurals name="connect_subscription_expires_in">
+        <item quantity="one">Залишився %1$d день. Поповніть баланс.</item>
+        <item quantity="few">Залишилося %1$d дні. Поповніть баланс.</item>
+        <item quantity="many">Залишилося %1$d днів. Поповніть баланс.</item>
+        <item quantity="other">Залишилося %1$d дня. Поповніть баланс.</item>
+    </plurals>
     <string name="account_out_of_time">ЗАКІНЧИВСЯ ЧАС</string>
     <string name="account_expiry_unavailable">Зараз недоступно</string>
     <string name="account_pubkey_card_label">Відкритий ключ (адреса гаманця)</string>

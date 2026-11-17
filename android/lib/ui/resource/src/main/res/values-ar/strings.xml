@@ -477,8 +477,14 @@
     <string name="onboarding_done_body">محفظتك جاهزة. اختر بلداً واتصل متى شئت.</string>
     <string name="onboarding_done_cta">الاتصال</string>
     <string name="connect_subscription_expired">انتهى رصيد حسابك. اشترِ رصيداً إضافياً.</string>
-    <string name="connect_subscription_expires_in_day">يتبقى %1$d يوم. شراء رصيد إضافي.</string>
-    <string name="connect_subscription_expires_in_days">يتبقى %1$d يوم. شراء رصيد إضافي.</string>
+    <plurals name="connect_subscription_expires_in">
+        <item quantity="zero">يتبقى %1$d يوم. شراء رصيد إضافي.</item>
+        <item quantity="one">يتبقى يوم واحد. شراء رصيد إضافي.</item>
+        <item quantity="two">يتبقى يومان. شراء رصيد إضافي.</item>
+        <item quantity="few">يتبقى %1$d أيام. شراء رصيد إضافي.</item>
+        <item quantity="many">يتبقى %1$d يومًا. شراء رصيد إضافي.</item>
+        <item quantity="other">يتبقى %1$d يوم. شراء رصيد إضافي.</item>
+    </plurals>
     <string name="account_out_of_time">انتهى الوقت</string>
     <string name="account_expiry_unavailable">غير متاح حاليًا</string>
     <string name="account_pubkey_card_label">المفتاح العام (عنوان المحفظة)</string>

@@ -464,8 +464,10 @@
     <string name="onboarding_done_body">Il tuo wallet è pronto. Scegli un paese e connettiti quando vuoi.</string>
     <string name="onboarding_done_cta">Connetti</string>
     <string name="connect_subscription_expired">Il credito del tuo account è scaduto. Acquista altro credito.</string>
-    <string name="connect_subscription_expires_in_day">1 giorno rimanente. Acquista altro credito.</string>
-    <string name="connect_subscription_expires_in_days">%1$d giorni rimanenti. Acquista altro credito.</string>
+    <plurals name="connect_subscription_expires_in">
+        <item quantity="one">1 giorno rimanente. Acquista altro credito.</item>
+        <item quantity="other">%1$d giorni rimanenti. Acquista altro credito.</item>
+    </plurals>
     <string name="account_out_of_time">SCADUTO</string>
     <string name="account_expiry_unavailable">Attualmente non disponibile</string>
     <string name="account_pubkey_card_label">Chiave pubblica (indirizzo del portafoglio)</string>

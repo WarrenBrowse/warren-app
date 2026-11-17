@@ -457,8 +457,9 @@
     <string name="onboarding_done_body">ウォレットの準備ができました。国を選んで、いつでも接続してください。</string>
     <string name="onboarding_done_cta">接続</string>
     <string name="connect_subscription_expired">アカウントのクレジットが無効になりました。追加クレジットを購入してください。</string>
-    <string name="connect_subscription_expires_in_day">残り%1$d日。追加クレジットを購入してください。</string>
-    <string name="connect_subscription_expires_in_days">残り%1$d日。追加クレジットを購入してください。</string>
+    <plurals name="connect_subscription_expires_in">
+        <item quantity="other">残り%1$d日。追加クレジットを購入してください。</item>
+    </plurals>
     <string name="account_out_of_time">時間切れ</string>
     <string name="account_expiry_unavailable">現在使用不可</string>
     <string name="account_pubkey_card_label">公開鍵（ウォレットアドレス）</string>

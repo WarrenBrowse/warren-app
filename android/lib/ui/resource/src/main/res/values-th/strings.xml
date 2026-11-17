@@ -457,8 +457,9 @@
     <string name="onboarding_done_body">กระเป๋าเงินของคุณพร้อมแล้ว เลือกประเทศแล้วเชื่อมต่อเมื่อใดก็ได้</string>
     <string name="onboarding_done_cta">เชื่อมต่อ</string>
     <string name="connect_subscription_expired">เครดิตในบัญชีของคุณหมดอายุแล้ว ซื้อเครดิตเพิ่ม</string>
-    <string name="connect_subscription_expires_in_day">คงเหลือ %1$d วัน ซื้อเครดิตเพิ่ม</string>
-    <string name="connect_subscription_expires_in_days">คงเหลือ %1$d วัน ซื้อเครดิตเพิ่ม</string>
+    <plurals name="connect_subscription_expires_in">
+        <item quantity="other">คงเหลือ %1$d วัน ซื้อเครดิตเพิ่ม</item>
+    </plurals>
     <string name="account_out_of_time">หมดเวลา</string>
     <string name="account_expiry_unavailable">ไม่พร้อมใช้งานในปัจจุบัน</string>
     <string name="account_pubkey_card_label">กุญแจสาธารณะ (ที่อยู่กระเป๋าเงิน)</string>

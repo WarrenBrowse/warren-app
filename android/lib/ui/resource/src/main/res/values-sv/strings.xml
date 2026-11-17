@@ -461,8 +461,10 @@
     <string name="onboarding_done_body">Din plånbok är klar. Välj ett land och anslut när du vill.</string>
     <string name="onboarding_done_cta">Anslut</string>
     <string name="connect_subscription_expired">Din kontokredit har gått ut. Köp mer kredit.</string>
-    <string name="connect_subscription_expires_in_day">1 dag kvar. Köp mer kredit.</string>
-    <string name="connect_subscription_expires_in_days">%1$d dagar kvar. Köp mer kredit.</string>
+    <plurals name="connect_subscription_expires_in">
+        <item quantity="one">1 dag kvar. Köp mer kredit.</item>
+        <item quantity="other">%1$d dagar kvar. Köp mer kredit.</item>
+    </plurals>
     <string name="account_out_of_time">INGEN TID KVAR</string>
     <string name="account_expiry_unavailable">Inte tillgänglig för närvarande</string>
     <string name="account_pubkey_card_label">Publik nyckel (plånboksadress)</string>

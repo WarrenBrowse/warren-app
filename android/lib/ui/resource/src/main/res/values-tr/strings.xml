@@ -461,8 +461,10 @@
     <string name="onboarding_done_body">Cüzdanınız hazır. Bir ülke seçin ve istediğiniz zaman bağlanın.</string>
     <string name="onboarding_done_cta">Bağlan</string>
     <string name="connect_subscription_expired">Hesap kredinizin süresi doldu. Daha fazla kredi satın alın.</string>
-    <string name="connect_subscription_expires_in_day">1 gün kaldı. Daha fazla kredi satın alın.</string>
-    <string name="connect_subscription_expires_in_days">%1$d gün kaldı. Daha fazla kredi satın alın.</string>
+    <plurals name="connect_subscription_expires_in">
+        <item quantity="one">1 gün kaldı. Daha fazla kredi satın alın.</item>
+        <item quantity="other">%1$d gün kaldı. Daha fazla kredi satın alın.</item>
+    </plurals>
     <string name="account_out_of_time">SÜRE DOLDU</string>
     <string name="account_expiry_unavailable">Şu an kullanılamıyor</string>
     <string name="account_pubkey_card_label">Genel anahtar (cüzdan adresi)</string>

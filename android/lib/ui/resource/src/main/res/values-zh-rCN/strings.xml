@@ -457,8 +457,9 @@
     <string name="onboarding_done_body">你的钱包已就绪。选择一个国家，随时连接。</string>
     <string name="onboarding_done_cta">连接</string>
     <string name="connect_subscription_expired">你的帐户额度已到期。请购买更多额度。</string>
-    <string name="connect_subscription_expires_in_day">剩余 %1$d 天。购买更多额度。</string>
-    <string name="connect_subscription_expires_in_days">剩余 %1$d 天。购买更多额度。</string>
+    <plurals name="connect_subscription_expires_in">
+        <item quantity="other">剩余 %1$d 天。购买更多额度。</item>
+    </plurals>
     <string name="account_out_of_time">已没有时间</string>
     <string name="account_expiry_unavailable">当前不可用</string>
     <string name="account_pubkey_card_label">公钥（钱包地址）</string>

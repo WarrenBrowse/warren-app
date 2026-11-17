@@ -469,8 +469,12 @@
     <string name="onboarding_done_body">Twój portfel jest gotowy. Wybierz kraj i połącz się, kiedy chcesz.</string>
     <string name="onboarding_done_cta">Połącz</string>
     <string name="connect_subscription_expired">Doładowanie konta wygasło. Doładuj konto.</string>
-    <string name="connect_subscription_expires_in_day">Pozostał 1 dzień. Doładuj konto.</string>
-    <string name="connect_subscription_expires_in_days">Pozostało %1$d dnia. Doładuj konto.</string>
+    <plurals name="connect_subscription_expires_in">
+        <item quantity="one">Pozostał 1 dzień. Doładuj konto.</item>
+        <item quantity="few">Pozostały %1$d dni. Doładuj konto.</item>
+        <item quantity="many">Pozostało %1$d dni. Doładuj konto.</item>
+        <item quantity="other">Pozostało %1$d dnia. Doładuj konto.</item>
+    </plurals>
     <string name="account_out_of_time">KONIEC CZASU</string>
     <string name="account_expiry_unavailable">Obecnie niedostępne</string>
     <string name="account_pubkey_card_label">Klucz publiczny (adres portfela)</string>

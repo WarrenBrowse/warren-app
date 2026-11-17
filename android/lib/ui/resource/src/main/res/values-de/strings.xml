@@ -461,8 +461,10 @@
     <string name="onboarding_done_body">Deine Wallet ist bereit. Wähle ein Land und verbinde dich, wann du willst.</string>
     <string name="onboarding_done_cta">Verbinden</string>
     <string name="connect_subscription_expired">Dein Kontoguthaben ist abgelaufen. Kaufe mehr Guthaben.</string>
-    <string name="connect_subscription_expires_in_day">1 Tag übrig. Mehr Guthaben erwerben.</string>
-    <string name="connect_subscription_expires_in_days">%1$d Tage übrig. Mehr Guthaben erwerben.</string>
+    <plurals name="connect_subscription_expires_in">
+        <item quantity="one">1 Tag übrig. Mehr Guthaben erwerben.</item>
+        <item quantity="other">%1$d Tage übrig. Mehr Guthaben erwerben.</item>
+    </plurals>
     <string name="account_out_of_time">ZEIT ABGELAUFEN</string>
     <string name="account_expiry_unavailable">Derzeit nicht verfügbar</string>
     <string name="account_pubkey_card_label">Öffentlicher Schlüssel (Wallet-Adresse)</string>

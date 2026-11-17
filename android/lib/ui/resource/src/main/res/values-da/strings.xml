@@ -461,8 +461,10 @@
     <string name="onboarding_done_body">Din tegnebog er klar. Vælg et land, og tilslut når du vil.</string>
     <string name="onboarding_done_cta">Tilslut</string>
     <string name="connect_subscription_expired">Din kontokredit er udløbet. Køb mere kredit.</string>
-    <string name="connect_subscription_expires_in_day">1 dag tilbage. Køb mere kredit.</string>
-    <string name="connect_subscription_expires_in_days">%1$d dage tilbage. Køb mere kredit.</string>
+    <plurals name="connect_subscription_expires_in">
+        <item quantity="one">1 dag tilbage. Køb mere kredit.</item>
+        <item quantity="other">%1$d dage tilbage. Køb mere kredit.</item>
+    </plurals>
     <string name="account_out_of_time">TID UDLØBET</string>
     <string name="account_expiry_unavailable">Ikke tilgængelig i øjeblikket</string>
     <string name="account_pubkey_card_label">Offentlig nøgle (tegnebogsadresse)</string>

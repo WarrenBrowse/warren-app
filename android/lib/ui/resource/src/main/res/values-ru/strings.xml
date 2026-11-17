@@ -469,8 +469,12 @@
     <string name="onboarding_done_body">Ваш кошелёк готов. Выберите страну и подключайтесь когда угодно.</string>
     <string name="onboarding_done_cta">Подключить</string>
     <string name="connect_subscription_expired">Баланс вашей учётной записи исчерпан. Пополните баланс.</string>
-    <string name="connect_subscription_expires_in_day">Остался %1$d день. Пополните баланс.</string>
-    <string name="connect_subscription_expires_in_days">Осталось %1$d дня. Пополните баланс.</string>
+    <plurals name="connect_subscription_expires_in">
+        <item quantity="one">Остался %1$d день. Пополните баланс.</item>
+        <item quantity="few">Осталось %1$d дня. Пополните баланс.</item>
+        <item quantity="many">Осталось %1$d дней. Пополните баланс.</item>
+        <item quantity="other">Осталось %1$d дня. Пополните баланс.</item>
+    </plurals>
     <string name="account_out_of_time">ЗАКОНЧИЛОСЬ ВРЕМЯ</string>
     <string name="account_expiry_unavailable">Сейчас недоступно</string>
     <string name="account_pubkey_card_label">Открытый ключ (адрес кошелька)</string>

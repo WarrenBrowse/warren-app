@@ -472,8 +472,10 @@
     <string name="onboarding_done_body">Your wallet is ready. Pick a country and connect whenever you want.</string>
     <string name="onboarding_done_cta">Connect</string>
     <string name="connect_subscription_expired">Your account credit has expired. Buy more credit.</string>
-    <string name="connect_subscription_expires_in_day">%1$d day left. Buy more credit.</string>
-    <string name="connect_subscription_expires_in_days">%1$d days left. Buy more credit.</string>
+    <plurals name="connect_subscription_expires_in">
+        <item quantity="one">%1$d day left. Buy more credit.</item>
+        <item quantity="other">%1$d days left. Buy more credit.</item>
+    </plurals>
     <!-- Account page (desktop AccountView parity) + out-of-time screen. -->
     <string name="account_out_of_time">OUT OF TIME</string>
     <string name="account_expiry_unavailable">Currently unavailable</string>

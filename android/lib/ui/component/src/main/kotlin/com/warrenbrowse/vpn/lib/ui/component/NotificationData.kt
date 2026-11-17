@@ -16,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
@@ -219,14 +220,10 @@ fun InAppNotification.toNotificationData(
                 message =
                     when {
                         daysLeft <= 0L -> stringResource(id = R.string.connect_subscription_expired)
-                        daysLeft == 1L ->
-                            stringResource(
-                                id = R.string.connect_subscription_expires_in_day,
-                                daysLeft,
-                            )
                         else ->
-                            stringResource(
-                                id = R.string.connect_subscription_expires_in_days,
+                            pluralStringResource(
+                                id = R.plurals.connect_subscription_expires_in,
+                                count = daysLeft.toInt(),
                                 daysLeft,
                             )
                     },

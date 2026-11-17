@@ -464,8 +464,10 @@
     <string name="onboarding_done_body">A sua carteira está pronta. Escolha um país e ligue-se quando quiser.</string>
     <string name="onboarding_done_cta">Ligar</string>
     <string name="connect_subscription_expired">O crédito da sua conta expirou. Compre mais crédito.</string>
-    <string name="connect_subscription_expires_in_day">1 dia restante. Comprar mais crédito.</string>
-    <string name="connect_subscription_expires_in_days">%1$d dias restantes. Comprar mais crédito.</string>
+    <plurals name="connect_subscription_expires_in">
+        <item quantity="one">1 dia restante. Comprar mais crédito.</item>
+        <item quantity="other">%1$d dias restantes. Comprar mais crédito.</item>
+    </plurals>
     <string name="account_out_of_time">SEM TEMPO</string>
     <string name="account_expiry_unavailable">Atualmente indisponível</string>
     <string name="account_pubkey_card_label">Chave pública (endereço da carteira)</string>

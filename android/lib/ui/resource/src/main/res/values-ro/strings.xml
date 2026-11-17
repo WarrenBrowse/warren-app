@@ -469,8 +469,11 @@
     <string name="onboarding_done_body">Portofelul dvs. este pregătit. Alegeți o țară și conectați-vă oricând doriți.</string>
     <string name="onboarding_done_cta">Conectați-vă</string>
     <string name="connect_subscription_expired">Soldul contului dvs. a expirat. Cumpărați mai mult credit.</string>
-    <string name="connect_subscription_expires_in_day">Mai este o zi. Cumpărați mai mult credit.</string>
-    <string name="connect_subscription_expires_in_days">%1$d de zile rămase. Cumpărați mai mult credit.</string>
+    <plurals name="connect_subscription_expires_in">
+        <item quantity="one">Mai este o zi. Cumpărați mai mult credit.</item>
+        <item quantity="few">Mai sunt %1$d zile. Cumpărați mai mult credit.</item>
+        <item quantity="other">Mai sunt %1$d de zile. Cumpărați mai mult credit.</item>
+    </plurals>
     <string name="account_out_of_time">A EXPIRAT TIMPUL</string>
     <string name="account_expiry_unavailable">Momentan indisponibil</string>
     <string name="account_pubkey_card_label">Cheie publică (adresa portofelului)</string>

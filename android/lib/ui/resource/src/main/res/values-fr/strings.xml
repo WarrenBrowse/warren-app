@@ -464,8 +464,10 @@
     <string name="onboarding_done_body">Votre portefeuille est prêt. Choisissez un pays et connectez-vous quand vous voulez.</string>
     <string name="onboarding_done_cta">Connexion</string>
     <string name="connect_subscription_expired">Les crédits de votre compte ont expiré. Achetez plus de crédits.</string>
-    <string name="connect_subscription_expires_in_day">1 jour restant. Achetez plus de crédits.</string>
-    <string name="connect_subscription_expires_in_days">%1$d jours restants. Achetez plus de crédits.</string>
+    <plurals name="connect_subscription_expires_in">
+        <item quantity="one">1 jour restant. Achetez plus de crédits.</item>
+        <item quantity="other">%1$d jours restants. Achetez plus de crédits.</item>
+    </plurals>
     <string name="account_out_of_time">PLUS DE TEMPS</string>
     <string name="account_expiry_unavailable">Actuellement indisponible</string>
     <string name="account_pubkey_card_label">Clé publique (adresse du portefeuille)</string>

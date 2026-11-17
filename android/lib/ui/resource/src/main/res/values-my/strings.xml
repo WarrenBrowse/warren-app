@@ -457,8 +457,9 @@
     <string name="onboarding_done_body">သင့်ပိုက်ဆံအိတ် အဆင်သင့်ဖြစ်ပါပြီ။ နိုင်ငံတစ်ခု ရွေးပြီး အချိန်မရွေး ချိတ်ဆက်ပါ။</string>
     <string name="onboarding_done_cta">ချိတ်ဆက်ရန်</string>
     <string name="connect_subscription_expired">သင့်အကောင့် ခရက်ဒစ် သက်တမ်းကုန်သွားပါပြီ။ ခရက်ဒစ်များ ထပ်ဝယ်ပါ။</string>
-    <string name="connect_subscription_expires_in_day">%1$d ရက်သာ ကျန်တော့သည် ။ နောက်ထပ် ခရက်ဒစ်များ ဝယ်ယူပါ။</string>
-    <string name="connect_subscription_expires_in_days">%1$d ရက်သာ ကျန်တော့သည် ။ နောက်ထပ် ခရက်ဒစ်များ ဝယ်ယူပါ။</string>
+    <plurals name="connect_subscription_expires_in">
+        <item quantity="other">%1$d ရက်သာ ကျန်တော့သည် ။ နောက်ထပ် ခရက်ဒစ်များ ဝယ်ယူပါ။</item>
+    </plurals>
     <string name="account_out_of_time">အချိန်စေ့သွားပါပြီ</string>
     <string name="account_expiry_unavailable">လက်ရှိ၌ မရရှိနိုင်ပါ</string>
     <string name="account_pubkey_card_label">အများသုံးသော့ (ပိုက်ဆံအိတ် လိပ်စာ)</string>
