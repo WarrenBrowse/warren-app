@@ -46,6 +46,7 @@ export enum RoutePath {
   selectLocation = '/select-location',
   filter = '/select-location/filter',
   appInfo = '/settings/app-info',
+  licenses = '/settings/app-info/licenses',
   changelog = '/settings/changelog',
   appUpgrade = '/settings/app-upgrade',
   antiCensorship = '/settings/advanced/anti-censorship',

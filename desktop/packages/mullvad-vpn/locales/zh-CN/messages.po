@@ -6425,3 +6425,27 @@ msgstr "HTTP/3 拟态"
 msgctxt "warren-status-view"
 msgid "active"
 msgstr "已启用"
+
+msgctxt "licenses-view"
+msgid "Licenses"
+msgstr "许可证"
+
+msgctxt "licenses-view"
+msgid "This app is free software: you can share it and change it under the terms of the GNU General Public License, version 3 or any later version. The full text is below."
+msgstr "本应用是自由软件：您可以依据 GNU General Public License 第 3 版或任何更高版本的条款分享和修改它。完整文本见下方。"
+
+msgctxt "licenses-view"
+msgid "It is based on the Mullvad VPN app, copyright Mullvad VPN AB, released under the same license."
+msgstr "本应用基于 Mullvad VPN 应用，版权归 Mullvad VPN AB 所有，以相同许可证发布。"
+
+msgctxt "licenses-view"
+msgid "The tunnel engine, warrenguard, is released under the GNU Affero General Public License, version 3."
+msgstr "隧道引擎 warrenguard 以 GNU Affero General Public License 第 3 版发布。"
+
+msgctxt "licenses-view"
+msgid "Source code of this version"
+msgstr "此版本的源代码"
+
+msgctxt "licenses-view"
+msgid "Source code of the tunnel engine"
+msgstr "隧道引擎的源代码"

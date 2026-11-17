@@ -8,7 +8,12 @@ import { BackAction } from '../../keyboard-navigation';
 import { NavigationContainer } from '../../NavigationContainer';
 import { NavigationScrollbars } from '../../NavigationScrollbars';
 import { HeaderTitle } from '../../SettingsHeader';
-import { ChangelogListItem, UpdateAvailableListItem, VersionListItem } from './components';
+import {
+  ChangelogListItem,
+  LicensesListItem,
+  UpdateAvailableListItem,
+  VersionListItem,
+} from './components';
 import { useShowUpdateAvailable } from './hooks';
 
 export function AppInfoView() {
@@ -35,6 +40,7 @@ export function AppInfoView() {
                   <FlexColumn>
                     <ChangelogListItem />
                     <VersionListItem />
+                    <LicensesListItem />
                   </FlexColumn>
                   <BetaSetting />
                 </FlexColumn>

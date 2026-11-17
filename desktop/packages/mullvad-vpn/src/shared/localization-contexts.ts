@@ -37,6 +37,7 @@ export type LocalizationContexts =
   | 'tray-icon-tooltip'
   | 'troubleshoot'
   | 'app-info-view'
+  | 'licenses-view'
   | 'changelog-view'
   | 'app-upgrade-view'
   | 'anti-censorship-view'

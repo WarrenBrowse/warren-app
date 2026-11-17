@@ -344,6 +344,8 @@ export const ipcSchema = {
     showLaunchDaemonSettings: invoke<void, void>(),
     showFullDiskAccessSettings: invoke<void, void>(),
     getPathBaseName: invoke<string, string>(),
+    // The GPL text packaged with the app, for the licences screen.
+    getLicenseText: invoke<void, string>(),
     // Clears the system clipboard, but only if it still holds the
     // provided value (the just-copied mnemonic). Runs in the main
     // process where Electron's `clipboard` module bypasses the

@@ -6425,3 +6425,27 @@ msgstr "HTTP/3 모방"
 msgctxt "warren-status-view"
 msgid "active"
 msgstr "활성"
+
+msgctxt "licenses-view"
+msgid "Licenses"
+msgstr "라이선스"
+
+msgctxt "licenses-view"
+msgid "This app is free software: you can share it and change it under the terms of the GNU General Public License, version 3 or any later version. The full text is below."
+msgstr "이 앱은 자유 소프트웨어입니다. GNU General Public License 버전 3 또는 그 이후 버전의 조건에 따라 공유하고 수정할 수 있습니다. 전문은 아래에 있습니다."
+
+msgctxt "licenses-view"
+msgid "It is based on the Mullvad VPN app, copyright Mullvad VPN AB, released under the same license."
+msgstr "이 앱은 Mullvad VPN AB가 저작권을 가진 Mullvad VPN 앱을 기반으로 하며, 같은 라이선스로 배포됩니다."
+
+msgctxt "licenses-view"
+msgid "The tunnel engine, warrenguard, is released under the GNU Affero General Public License, version 3."
+msgstr "터널 엔진인 warrenguard는 GNU Affero General Public License 버전 3으로 배포됩니다."
+
+msgctxt "licenses-view"
+msgid "Source code of this version"
+msgstr "이 버전의 소스 코드"
+
+msgctxt "licenses-view"
+msgid "Source code of the tunnel engine"
+msgstr "터널 엔진의 소스 코드"

@@ -6458,3 +6458,27 @@ msgstr "HTTP/3 taklidi"
 msgctxt "warren-status-view"
 msgid "active"
 msgstr "etkin"
+
+msgctxt "licenses-view"
+msgid "Licenses"
+msgstr "Lisanslar"
+
+msgctxt "licenses-view"
+msgid "This app is free software: you can share it and change it under the terms of the GNU General Public License, version 3 or any later version. The full text is below."
+msgstr "Bu uygulama özgür yazılımdır: GNU General Public License sürüm 3 veya daha sonraki herhangi bir sürümün koşulları altında paylaşabilir ve değiştirebilirsiniz. Tam metin aşağıdadır."
+
+msgctxt "licenses-view"
+msgid "It is based on the Mullvad VPN app, copyright Mullvad VPN AB, released under the same license."
+msgstr "Telif hakkı Mullvad VPN AB'ye ait olan ve aynı lisansla yayımlanan Mullvad VPN uygulamasını temel alır."
+
+msgctxt "licenses-view"
+msgid "The tunnel engine, warrenguard, is released under the GNU Affero General Public License, version 3."
+msgstr "Tünel motoru warrenguard, GNU Affero General Public License sürüm 3 ile yayımlanmıştır."
+
+msgctxt "licenses-view"
+msgid "Source code of this version"
+msgstr "Bu sürümün kaynak kodu"
+
+msgctxt "licenses-view"
+msgid "Source code of the tunnel engine"
+msgstr "Tünel motorunun kaynak kodu"

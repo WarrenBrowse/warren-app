@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 import react from '@vitejs/plugin-react';
@@ -45,6 +46,31 @@ function resolveProductEnv(): string {
 
 const PRODUCT_ENV = resolveProductEnv();
 
+// The revisions the licences screen links to: the app commit this bundle is
+// built from, and the engine commit `.warrenguard-version` pins. Empty when
+// unknown (no git, no pin file), which links the repository instead.
+function resolveSourceCommit(): string {
+  try {
+    return execFileSync('git', ['rev-parse', 'HEAD'], { encoding: 'utf-8' }).trim();
+  } catch {
+    return '';
+  }
+}
+
+function resolveEngineCommit(): string {
+  try {
+    return readFileSync(
+      fileURLToPath(new URL('../../../.warrenguard-version', import.meta.url)),
+      'utf-8',
+    ).trim();
+  } catch {
+    return '';
+  }
+}
+
+const SOURCE_COMMIT = resolveSourceCommit();
+const ENGINE_COMMIT = resolveEngineCommit();
+
 // NOTE: We have to monkey patch the exit handler to override the default
 // behavior for how to kill the electron app. We use a custom variant of the
 // vite-plugin-electron's treeKillSync function to target only the electron
@@ -80,6 +106,8 @@ const viteConfig = defineConfig({
   define: {
     global: 'window',
     WARREN_PRODUCT_ENV: JSON.stringify(PRODUCT_ENV),
+    WARREN_SOURCE_COMMIT: JSON.stringify(SOURCE_COMMIT),
+    WARREN_ENGINE_COMMIT: JSON.stringify(ENGINE_COMMIT),
     process: {
       platform: process.platform,
       env: {

@@ -29,6 +29,7 @@ import {
   ForumSignInCodeView,
   KeysView,
   LaunchView,
+  LicensesView,
   LoginView,
   LwoSettingsView,
   MainView,
@@ -122,6 +123,7 @@ export default function AppRouter() {
           <Route exact path={RoutePath.selectLocation} component={SelectLocationView} />
           <Route exact path={RoutePath.filter} component={FilterView} />
           <Route exact path={RoutePath.appInfo} component={AppInfoView} />
+          <Route exact path={RoutePath.licenses} component={LicensesView} />
           <Route exact path={RoutePath.changelog} component={ChangelogView} />
           <Route exact path={RoutePath.appUpgrade} component={AppUpgradeView} />
           <Route exact path={RoutePath.antiCensorship} component={AntiCensorshipView} />

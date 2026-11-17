@@ -6458,3 +6458,27 @@ msgstr "HTTP/3-mimikk"
 msgctxt "warren-status-view"
 msgid "active"
 msgstr "aktiv"
+
+msgctxt "licenses-view"
+msgid "Licenses"
+msgstr "Lisenser"
+
+msgctxt "licenses-view"
+msgid "This app is free software: you can share it and change it under the terms of the GNU General Public License, version 3 or any later version. The full text is below."
+msgstr "Denne appen er fri programvare: du kan dele og endre den på vilkårene i GNU General Public License, versjon 3 eller en senere versjon. Hele teksten står nedenfor."
+
+msgctxt "licenses-view"
+msgid "It is based on the Mullvad VPN app, copyright Mullvad VPN AB, released under the same license."
+msgstr "Den bygger på Mullvad VPN-appen, copyright Mullvad VPN AB, utgitt under samme lisens."
+
+msgctxt "licenses-view"
+msgid "The tunnel engine, warrenguard, is released under the GNU Affero General Public License, version 3."
+msgstr "Tunnelmotoren, warrenguard, er utgitt under GNU Affero General Public License, versjon 3."
+
+msgctxt "licenses-view"
+msgid "Source code of this version"
+msgstr "Kildekode for denne versjonen"
+
+msgctxt "licenses-view"
+msgid "Source code of the tunnel engine"
+msgstr "Kildekode for tunnelmotoren"

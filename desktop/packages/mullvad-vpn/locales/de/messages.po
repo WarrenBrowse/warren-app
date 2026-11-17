@@ -6458,3 +6458,27 @@ msgstr "HTTP/3-Mimikry"
 msgctxt "warren-status-view"
 msgid "active"
 msgstr "aktiv"
+
+msgctxt "licenses-view"
+msgid "Licenses"
+msgstr "Lizenzen"
+
+msgctxt "licenses-view"
+msgid "This app is free software: you can share it and change it under the terms of the GNU General Public License, version 3 or any later version. The full text is below."
+msgstr "Diese App ist freie Software: Sie können sie unter den Bedingungen der GNU General Public License, Version 3 oder einer späteren Version, weitergeben und verändern. Der vollständige Text steht unten."
+
+msgctxt "licenses-view"
+msgid "It is based on the Mullvad VPN app, copyright Mullvad VPN AB, released under the same license."
+msgstr "Sie basiert auf der Mullvad VPN App, Copyright Mullvad VPN AB, veröffentlicht unter derselben Lizenz."
+
+msgctxt "licenses-view"
+msgid "The tunnel engine, warrenguard, is released under the GNU Affero General Public License, version 3."
+msgstr "Die Tunnel-Engine warrenguard ist unter der GNU Affero General Public License, Version 3, veröffentlicht."
+
+msgctxt "licenses-view"
+msgid "Source code of this version"
+msgstr "Quellcode dieser Version"
+
+msgctxt "licenses-view"
+msgid "Source code of the tunnel engine"
+msgstr "Quellcode der Tunnel-Engine"

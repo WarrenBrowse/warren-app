@@ -2449,6 +2449,36 @@ msgctxt "launch-view"
 msgid "Warren VPN will restore internet access without VPN protection."
 msgstr ""
 
+#. Credit to the project the app is derived from.
+msgctxt "licenses-view"
+msgid "It is based on the Mullvad VPN app, copyright Mullvad VPN AB, released under the same license."
+msgstr ""
+
+#. Title of the view listing the licences of the app and its parts.
+msgctxt "licenses-view"
+msgid "Licenses"
+msgstr ""
+
+#. Link to the source code of the tunnel engine of this version.
+msgctxt "licenses-view"
+msgid "Source code of the tunnel engine"
+msgstr ""
+
+#. Link to the source code of the exact version that is installed.
+msgctxt "licenses-view"
+msgid "Source code of this version"
+msgstr ""
+
+#. Licence of the separate tunnel engine the app runs.
+msgctxt "licenses-view"
+msgid "The tunnel engine, warrenguard, is released under the GNU Affero General Public License, version 3."
+msgstr ""
+
+#. First paragraph of the licences view.
+msgctxt "licenses-view"
+msgid "This app is free software: you can share it and change it under the terms of the GNU General Public License, version 3 or any later version. The full text is below."
+msgstr ""
+
 #. Separator placed between the items of a short list, such as forwarded ports
 #. ("6881 TCP, 51413 UDP") or a city and its country. Keep the trailing space if
 #. your language puts one after its comma.

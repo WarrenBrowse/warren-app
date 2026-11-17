@@ -6428,3 +6428,27 @@ msgstr "HTTP/3 mimicry"
 msgctxt "warren-status-view"
 msgid "active"
 msgstr "တက်ကြွ"
+
+msgctxt "licenses-view"
+msgid "Licenses"
+msgstr "လိုင်စင်များ"
+
+msgctxt "licenses-view"
+msgid "This app is free software: you can share it and change it under the terms of the GNU General Public License, version 3 or any later version. The full text is below."
+msgstr "ဤအက်ပ်သည် အခမဲ့ဆော့ဖ်ဝဲ ဖြစ်သည်။ GNU General Public License ဗားရှင်း 3 သို့မဟုတ် နောက်ပိုင်းဗားရှင်းတစ်ခုခု၏ စည်းကမ်းချက်များအတိုင်း မျှဝေခြင်းနှင့် ပြင်ဆင်ခြင်း ပြုလုပ်နိုင်သည်။ စာသားအပြည့်အစုံကို အောက်တွင် ဖော်ပြထားသည်။"
+
+msgctxt "licenses-view"
+msgid "It is based on the Mullvad VPN app, copyright Mullvad VPN AB, released under the same license."
+msgstr "ဤအက်ပ်သည် Mullvad VPN AB မူပိုင်ဖြစ်သော Mullvad VPN အက်ပ်ကို အခြေခံထားပြီး တူညီသော လိုင်စင်ဖြင့် ထုတ်ဝေထားသည်။"
+
+msgctxt "licenses-view"
+msgid "The tunnel engine, warrenguard, is released under the GNU Affero General Public License, version 3."
+msgstr "တန်နယ်အင်ဂျင် warrenguard ကို GNU Affero General Public License ဗားရှင်း 3 ဖြင့် ထုတ်ဝေထားသည်။"
+
+msgctxt "licenses-view"
+msgid "Source code of this version"
+msgstr "ဤဗားရှင်း၏ ရင်းမြစ်ကုဒ်"
+
+msgctxt "licenses-view"
+msgid "Source code of the tunnel engine"
+msgstr "တန်နယ်အင်ဂျင်၏ ရင်းမြစ်ကုဒ်"

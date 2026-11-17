@@ -342,7 +342,8 @@ const LINUX_ELECTRON_FUSES = {
 function newConfig() {
   return {
     appId: productEnv.appId,
-    copyright: '© 2026 warrenBrowse SRL',
+    // The app is a fork of the Mullvad VPN app: its copyright stays beside ours.
+    copyright: '© 2026 Mullvad VPN AB, © 2026 warrenBrowse SRL',
     productName: productEnv.productName,
     publish: null,
     // Register the `warren://` deep-link scheme so the OS routes the
@@ -373,6 +374,9 @@ function newConfig() {
       // Loaded by the daemon at boot via load_bootstrap as resource_dir/warren-relays.json.
       { from: buildAssets('warren-relays.json'), to: '.' },
       { from: root('CHANGELOG.md'), to: '.' },
+      // The GPL requires every copy of the program to carry the licence; the
+      // licences screen reads this same file (src/main/license.ts).
+      { from: root('LICENSE.md'), to: '.' },
     ],
 
     directories: {

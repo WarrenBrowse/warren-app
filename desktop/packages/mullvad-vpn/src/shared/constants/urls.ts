@@ -40,6 +40,11 @@ export const urls = {
   // notification and the status file the desktop app writes. Linked from the
   // port-forwarding view.
   portForwardingGuide: 'https://warren.ro/port-forwarding',
+  // Public source of the app (GPL-3.0) and of its tunnel engine (AGPL-3.0),
+  // linked from the licences screen at the revisions this build was made from
+  // (`shared/source-links.ts`).
+  sourceCode: 'https://github.com/WarrenBrowse/warren-app/',
+  engineSourceCode: 'https://github.com/WarrenBrowse/warrenguard/',
 } as const;
 
 type BaseUrl = (typeof urls)[keyof typeof urls];

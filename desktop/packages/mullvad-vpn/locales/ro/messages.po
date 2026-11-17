@@ -5594,3 +5594,27 @@ msgstr "Mimetismul HTTP/3"
 msgctxt "warren-status-view"
 msgid "active"
 msgstr "activ"
+
+msgctxt "licenses-view"
+msgid "Licenses"
+msgstr "Licențe"
+
+msgctxt "licenses-view"
+msgid "This app is free software: you can share it and change it under the terms of the GNU General Public License, version 3 or any later version. The full text is below."
+msgstr "Această aplicație este software liber: o puteți distribui și modifica în condițiile GNU General Public License, versiunea 3 sau orice versiune ulterioară. Textul complet se află mai jos."
+
+msgctxt "licenses-view"
+msgid "It is based on the Mullvad VPN app, copyright Mullvad VPN AB, released under the same license."
+msgstr "Se bazează pe aplicația Mullvad VPN, copyright Mullvad VPN AB, publicată sub aceeași licență."
+
+msgctxt "licenses-view"
+msgid "The tunnel engine, warrenguard, is released under the GNU Affero General Public License, version 3."
+msgstr "Motorul tunelului, warrenguard, este publicat sub GNU Affero General Public License, versiunea 3."
+
+msgctxt "licenses-view"
+msgid "Source code of this version"
+msgstr "Codul sursă al acestei versiuni"
+
+msgctxt "licenses-view"
+msgid "Source code of the tunnel engine"
+msgstr "Codul sursă al motorului tunelului"

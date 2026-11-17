@@ -6425,3 +6425,27 @@ msgstr "การเลียนแบบ HTTP/3"
 msgctxt "warren-status-view"
 msgid "active"
 msgstr "กำลังทำงาน"
+
+msgctxt "licenses-view"
+msgid "Licenses"
+msgstr "สัญญาอนุญาต"
+
+msgctxt "licenses-view"
+msgid "This app is free software: you can share it and change it under the terms of the GNU General Public License, version 3 or any later version. The full text is below."
+msgstr "แอปนี้เป็นซอฟต์แวร์เสรี คุณสามารถแบ่งปันและแก้ไขได้ตามเงื่อนไขของ GNU General Public License รุ่น 3 หรือรุ่นใดก็ได้ที่ใหม่กว่า ข้อความฉบับเต็มอยู่ด้านล่าง"
+
+msgctxt "licenses-view"
+msgid "It is based on the Mullvad VPN app, copyright Mullvad VPN AB, released under the same license."
+msgstr "แอปนี้พัฒนาต่อยอดจากแอป Mullvad VPN ลิขสิทธิ์ของ Mullvad VPN AB ซึ่งเผยแพร่ภายใต้สัญญาอนุญาตเดียวกัน"
+
+msgctxt "licenses-view"
+msgid "The tunnel engine, warrenguard, is released under the GNU Affero General Public License, version 3."
+msgstr "เอนจินอุโมงค์ warrenguard เผยแพร่ภายใต้ GNU Affero General Public License รุ่น 3"
+
+msgctxt "licenses-view"
+msgid "Source code of this version"
+msgstr "ซอร์สโค้ดของเวอร์ชันนี้"
+
+msgctxt "licenses-view"
+msgid "Source code of the tunnel engine"
+msgstr "ซอร์สโค้ดของเอนจินอุโมงค์"

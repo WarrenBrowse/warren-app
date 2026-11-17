@@ -6425,3 +6425,27 @@ msgstr "HTTP/3 模倣"
 msgctxt "warren-status-view"
 msgid "active"
 msgstr "有効"
+
+msgctxt "licenses-view"
+msgid "Licenses"
+msgstr "ライセンス"
+
+msgctxt "licenses-view"
+msgid "This app is free software: you can share it and change it under the terms of the GNU General Public License, version 3 or any later version. The full text is below."
+msgstr "このアプリはフリーソフトウェアです。GNU General Public License バージョン 3 またはそれ以降のバージョンの条件に従って、共有や改変ができます。全文は以下のとおりです。"
+
+msgctxt "licenses-view"
+msgid "It is based on the Mullvad VPN app, copyright Mullvad VPN AB, released under the same license."
+msgstr "このアプリは Mullvad VPN AB が著作権を持つ Mullvad VPN アプリをもとにしており、同じライセンスで公開されています。"
+
+msgctxt "licenses-view"
+msgid "The tunnel engine, warrenguard, is released under the GNU Affero General Public License, version 3."
+msgstr "トンネルエンジン warrenguard は GNU Affero General Public License バージョン 3 で公開されています。"
+
+msgctxt "licenses-view"
+msgid "Source code of this version"
+msgstr "このバージョンのソースコード"
+
+msgctxt "licenses-view"
+msgid "Source code of the tunnel engine"
+msgstr "トンネルエンジンのソースコード"

@@ -124,6 +124,7 @@ import {
 import SafeStorageForumIdentityStore from './forum-store';
 import { ConnectionObserver } from './grpc-client';
 import { IpcMainEventChannel } from './ipc-event-channel';
+import { readLicenseText } from './license';
 import { findIconPath } from './linux-desktop-entry';
 import { pairWindowWithDesktopEntry } from './linux-desktop-identity';
 import { loadTranslations } from './load-translations';
@@ -1882,6 +1883,15 @@ class ApplicationMain
 
     IpcMainEventChannel.app.handleGetPathBaseName((filePath) =>
       Promise.resolve(path.basename(filePath)),
+    );
+    IpcMainEventChannel.app.handleGetLicenseText(() =>
+      Promise.resolve(
+        readLicenseText({
+          packaged: app.isPackaged,
+          resourcesPath: process.resourcesPath,
+          appDir: import.meta.dirname,
+        }),
+      ),
     );
     IpcMainEventChannel.app.handleClearMnemonicFromClipboard((mnemonic) =>
       clearMnemonicFromClipboard(clipboard, mnemonic),
