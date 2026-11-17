@@ -169,32 +169,6 @@ pub struct WarrenTunnelConfig {
 
 pub use crate::redial::SessionStatus;
 
-/// Errors surfaced from the synchronous JNI entry path. Currently only
-/// `JsonParse` actually fires - mnemonic / pubkey / endpoint failures
-/// happen inside the spawned `run_session` task and log there. The other
-/// variants are kept to document the surface the caller should eventually
-/// branch on once a richer error-channel makes it back across JNI.
-///
-/// The `clippy::enum_variant_names` allow exists because the "what failed"
-/// narration is the variant's purpose; renaming each to drop the common
-/// `Mnemonic` / `Config` / `ExitPubkey` etc. suffixes would lose that.
-#[expect(dead_code, reason = "richer error reporting wired in a follow-up")]
-#[expect(
-    clippy::enum_variant_names,
-    reason = "shared `Invalid*` prefix is the variant's documentation purpose"
-)]
-#[derive(Debug, thiserror::Error)]
-pub enum TunnelStartError {
-    #[error("invalid mnemonic: {0}")]
-    InvalidMnemonic(String),
-    #[error("invalid config JSON: {0}")]
-    InvalidConfig(#[source] serde_json::Error),
-    #[error("invalid exit pubkey hex: {0}")]
-    InvalidExitPubkey(String),
-    #[error("invalid exit endpoint: {0}")]
-    InvalidExitEndpoint(String),
-}
-
 /// Drive a single Warren Quinn tunnel from start to teardown.
 ///
 /// Runs on the caller's tokio runtime (the JNI-shared `RUNTIME`). The
@@ -1032,8 +1006,12 @@ fn build_multihop_daita_state(config: &WarrenTunnelConfig) -> DaitaState {
 }
 
 /// Parse the JSON config blob handed in by the Kotlin caller.
-pub fn parse_config(json: &str) -> Result<WarrenTunnelConfig, TunnelStartError> {
-    serde_json::from_str(json).map_err(TunnelStartError::InvalidConfig)
+///
+/// # Errors
+///
+/// The blob is not a `WarrenTunnelConfig`.
+pub fn parse_config(json: &str) -> Result<WarrenTunnelConfig, serde_json::Error> {
+    serde_json::from_str(json)
 }
 
 /// How long an attempt that ended with the session watch closed waits for the

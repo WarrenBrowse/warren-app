@@ -48,31 +48,6 @@ use zeroize::Zeroizing;
 // Error / runtime state
 // ---------------------------------------------------------------------------
 
-// Native-side error taxonomy reserved for the tunnel lifecycle work.
-// Variants are unused until the connectTunnel body actually produces them;
-// keeping the enum here documents the surface the JNI callers should expect
-// to receive via `throw`. The `expect` form (rather than `allow`) makes
-// `cargo clippy -D warnings` fail loudly the day a variant goes from "still
-// unused" to "wrongly removed".
-#[expect(dead_code, reason = "tunnel lifecycle work in progress")]
-#[derive(Debug, thiserror::Error)]
-pub enum Error {
-    #[error("Failed to initialize logging: {0}")]
-    InitializeLogging(String),
-
-    #[error("Failed to create Tokio runtime")]
-    InitTokio(#[source] std::io::Error),
-
-    #[error("Warren tunnel: {0}")]
-    Tunnel(String),
-
-    #[error("Tunnel already running")]
-    TunnelAlreadyRunning,
-
-    #[error("No active tunnel")]
-    NoActiveTunnel,
-}
-
 /// Process-wide tokio runtime, started lazily by `initLogger` and reused
 /// across JNI calls so async warren-core APIs can be driven from synchronous
 /// JNI entry points.
@@ -290,7 +265,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_initLogger(
     }
 
     if let Err(err) = init_log_file(&files_dir) {
-        let _ = env.throw(format!("Failed to init log file: {err}"));
+        let _ = env.throw(format!("Failed to init log file: {:?}", err.kind()));
         return;
     }
 
@@ -315,7 +290,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_initLogger(
     log::info!("Warren JNI logger initialised in {}", files_dir.display());
 }
 
-fn init_log_file(files_dir: &Path) -> Result<(), String> {
+fn init_log_file(files_dir: &Path) -> std::io::Result<()> {
     // Every Rust record goes to logcat (debug and up, tag `WarrenJni`, the
     // `adb logcat -s WarrenJni:V` view) AND to a rotating file under the app's
     // files dir (info and up), which is what a problem report can carry: a
@@ -330,8 +305,7 @@ fn init_log_file(files_dir: &Path) -> Result<(), String> {
         return Ok(());
     }
     let dir = files_dir.join(crate::rust_log::RUST_LOG_DIR_NAME);
-    let sink = crate::rust_log::FileSink::open(&dir)
-        .map_err(|e| format!("rust log file: {:?}", e.kind()))?;
+    let sink = crate::rust_log::FileSink::open(&dir)?;
     let logcat = android_logger::AndroidLogger::new(
         android_logger::Config::default()
             .with_max_level(log::LevelFilter::Debug)

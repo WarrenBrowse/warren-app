@@ -23,13 +23,7 @@ use warren_identity::{derive_node_key, seed_from_mnemonic};
 #[derive(Debug, thiserror::Error)]
 pub enum WalletError {
     #[error("invalid mnemonic: {0}")]
-    InvalidMnemonic(String),
-}
-
-impl From<warren_identity::MnemonicError> for WalletError {
-    fn from(e: warren_identity::MnemonicError) -> Self {
-        WalletError::InvalidMnemonic(e.to_string())
-    }
+    InvalidMnemonic(#[from] warren_identity::MnemonicError),
 }
 
 /// Generate a fresh 12-word English BIP39 mnemonic.
