@@ -47,6 +47,9 @@ pub unsafe extern "C" fn new_shadowsocks_access_method_setting(
     c_password: *const c_char,
     c_cipher: *const c_char,
 ) -> *const c_void {
+    // SAFETY: this function's `# Safety` section requires `address` to point to at least
+    // `address_len` readable bytes, which is what `parse_ip_addr` needs; it only reads 4 or 16
+    // of them and rejects any other length.
     let endpoint: SocketAddr =
         if let Some(ip_address) = unsafe { parse_ip_addr(address, address_len) } {
             SocketAddr::new(ip_address, port)
@@ -54,7 +57,11 @@ pub unsafe extern "C" fn new_shadowsocks_access_method_setting(
             return std::ptr::null();
         };
 
+    // SAFETY: this function's `# Safety` section requires `c_password` to be a NUL-terminated
+    // string valid for this call (null is read as empty); `get_string` copies it before returning.
     let password = unsafe { get_string(c_password) };
+    // SAFETY: this function's `# Safety` section requires `c_cipher` to be a NUL-terminated string
+    // valid for this call (null is read as empty); `get_string` copies it before returning.
     let cipher = unsafe { get_string(c_cipher) };
     // A caller-supplied cipher name must not panic the FFI: an unknown
     // name fails closed with a null return instead of unwinding across
@@ -87,6 +94,9 @@ pub unsafe extern "C" fn new_socks5_access_method_setting(
     c_username: *const c_char,
     c_password: *const c_char,
 ) -> *const c_void {
+    // SAFETY: this function's `# Safety` section requires `address` to point to at least
+    // `address_len` readable bytes, which is what `parse_ip_addr` needs; it only reads 4 or 16
+    // of them and rejects any other length.
     let endpoint: SocketAddr =
         if let Some(ip_address) = unsafe { parse_ip_addr(address, address_len) } {
             SocketAddr::new(ip_address, port)
@@ -98,7 +108,13 @@ pub unsafe extern "C" fn new_socks5_access_method_setting(
         if c_username.is_null() || c_password.is_null() {
             None
         } else {
+            // SAFETY: `c_username` was checked non-null above, and this function's `# Safety`
+            // section requires it to be a NUL-terminated string valid for this call; `get_string`
+            // copies it.
             let username = unsafe { get_string(c_username) };
+            // SAFETY: `c_password` was checked non-null above, and this function's `# Safety`
+            // section requires it to be a NUL-terminated string valid for this call; `get_string`
+            // copies it.
             let password = unsafe { get_string(c_password) };
             SocksAuth::new(username, password).ok()
         }
@@ -123,5 +139,8 @@ pub extern "C" fn get_shadowsocks_chipers() -> *mut libc::c_char {
 /// `cstr_ptr` must be a pointer to a string allocated by another `mullvad_api` function.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn mullvad_api_cstring_drop(cstr_ptr: *mut libc::c_char) {
+    // SAFETY: the caller guarantees that `cstr_ptr` came from `CString::into_raw` in this library
+    // and has not been freed yet, so rebuilding the `CString` frees it exactly once with its
+    // original length.
     let _ = unsafe { CString::from_raw(cstr_ptr) };
 }

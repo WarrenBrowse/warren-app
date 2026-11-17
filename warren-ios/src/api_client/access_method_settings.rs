@@ -161,6 +161,9 @@ impl SwiftAccessMethodSettingsWrapper {
     }
 
     pub unsafe fn into_rust_context(self) -> Box<SwiftAccessMethodSettingsContext> {
+        // SAFETY: the caller guarantees that this wrapper was returned by `Self::new`, so `self.0`
+        // comes from `Box::into_raw`, and that it is consumed only once (`self` is taken by
+        // value, and Swift must not reuse its copy), so the box is rebuilt exactly once.
         unsafe { Box::from_raw(self.0) }
     }
 }

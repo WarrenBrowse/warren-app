@@ -27,9 +27,10 @@ impl AsRef<[u8]> for SwiftData {
 }
 
 impl Drop for SwiftData {
-    // SAFETY: swift_data_drop is a deterministic function that releases and
-    // zeroes the pointer to any data held, if present. It is idempotent.
     fn drop(&mut self) {
+        // SAFETY: `self` is a valid, exclusively borrowed `SwiftData`. `swift_data_drop` releases
+        // the NSData it holds, if any, and nulls the pointer, so it is idempotent and nothing
+        // reads the released object afterwards.
         unsafe { swift_data_drop(self) }
     }
 }

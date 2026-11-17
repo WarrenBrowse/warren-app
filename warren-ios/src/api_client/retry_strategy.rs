@@ -9,6 +9,9 @@ impl SwiftRetryStrategy {
     /// # Safety
     /// The pointer must be a pointing to a valid instance of a `Box<RetryStrategy>`.
     pub unsafe fn into_rust(self) -> RetryStrategy {
+        // SAFETY: the caller guarantees that `self.0` comes from `Box::into_raw` in one of the
+        // `mullvad_api_retry_strategy_*` constructors and has not been consumed, so the box is
+        // rebuilt, moved out of and freed exactly once.
         unsafe { *Box::from_raw(self.0) }
     }
 }

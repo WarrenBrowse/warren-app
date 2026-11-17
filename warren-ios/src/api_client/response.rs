@@ -189,6 +189,10 @@ impl SwiftMullvadApiResponse {
 /// is not safe to call multiple times with the same `SwiftMullvadApiResponse`.
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn mullvad_response_drop(response: SwiftMullvadApiResponse) {
+    // SAFETY: the caller hands back, once, a response built by this module. Its body comes from
+    // `Box<[u8]>::into_raw` with `body_size` elements, the same allocation as a `Vec` whose length
+    // and capacity are `body_size`, and each string comes from `CString::into_raw`. Null fields
+    // were never allocated and are skipped, so every allocation is freed exactly once.
     unsafe {
         if !response.body.is_null() {
             let _ = Vec::from_raw_parts(response.body, response.body_size, response.body_size);

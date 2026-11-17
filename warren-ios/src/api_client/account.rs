@@ -37,6 +37,9 @@ pub unsafe extern "C" fn mullvad_ios_get_account(
     retry_strategy: SwiftRetryStrategy,
     account_number: *const c_char,
 ) -> SwiftCancelHandle {
+    // SAFETY: this function's `# Safety` section requires `completion_cookie` to point to a
+    // live Swift `MullvadApiCompletion`. Ownership moves into the handler, which hands it back
+    // to Swift exactly once through `mullvad_api_completion_finish`.
     let completion_handler =
         SwiftCompletionHandler::new(unsafe { CompletionCookie::new(completion_cookie) });
 
@@ -93,6 +96,9 @@ pub unsafe extern "C" fn mullvad_ios_create_account(
     completion_cookie: *mut libc::c_void,
     retry_strategy: SwiftRetryStrategy,
 ) -> SwiftCancelHandle {
+    // SAFETY: this function's `# Safety` section requires `completion_cookie` to point to a
+    // live Swift `MullvadApiCompletion`. Ownership moves into the handler, which hands it back
+    // to Swift exactly once through `mullvad_api_completion_finish`.
     let completion_handler =
         SwiftCompletionHandler::new(unsafe { CompletionCookie::new(completion_cookie) });
 
@@ -141,6 +147,9 @@ pub unsafe extern "C" fn mullvad_ios_delete_account(
     retry_strategy: SwiftRetryStrategy,
     account_number: *const c_char,
 ) -> SwiftCancelHandle {
+    // SAFETY: this function's `# Safety` section requires `completion_cookie` to point to a
+    // live Swift `MullvadApiCompletion`. Ownership moves into the handler, which hands it back
+    // to Swift exactly once through `mullvad_api_completion_finish`.
     let completion_handler =
         SwiftCompletionHandler::new(unsafe { CompletionCookie::new(completion_cookie) });
 

@@ -94,6 +94,9 @@ struct ForeignPtr {
     ptr: *const c_void,
 }
 /// allow this to be passed across thread boundaries
+// SAFETY: Rust never dereferences `ptr`: it only hands it back, unchanged, to the Swift callback
+// registered with it. Calling that callback from a tokio worker thread is part of the contract of
+// `mullvad_api_init_new`, whose caller supplies both.
 unsafe impl Send for ForeignPtr {}
 
 /// Called by Swift to set the available access methods
@@ -102,6 +105,9 @@ pub unsafe extern "C" fn mullvad_api_update_access_methods(
     api_context: SwiftApiContext,
     settings_wrapper: SwiftAccessMethodSettingsWrapper,
 ) {
+    // SAFETY: Swift passes a wrapper it got from `init_access_method_settings_wrapper`
+    // (`SwiftAccessMethodSettingsWrapper::new`) and does not use it again, so the box is
+    // rebuilt and freed exactly once here.
     let access_methods = unsafe { settings_wrapper.into_rust_context().settings };
     api_context
         .rust_context()

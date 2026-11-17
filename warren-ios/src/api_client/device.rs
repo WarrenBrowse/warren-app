@@ -42,6 +42,9 @@ pub unsafe extern "C" fn mullvad_ios_get_device(
     account_number: *const c_char,
     identifier: *const c_char,
 ) -> SwiftCancelHandle {
+    // SAFETY: this function's `# Safety` section requires `completion_cookie` to point to a
+    // live Swift `MullvadApiCompletion`. Ownership moves into the handler, which hands it back
+    // to Swift exactly once through `mullvad_api_completion_finish`.
     let completion_handler =
         SwiftCompletionHandler::new(unsafe { CompletionCookie::new(completion_cookie) });
 
@@ -53,7 +56,11 @@ pub unsafe extern "C" fn mullvad_ios_get_device(
     let api_context = api_context.rust_context();
     // Safety: The caller must guarantee that `retry_strategy` is not null and has not been freed
     let retry_strategy = unsafe { retry_strategy.into_rust() };
+    // SAFETY: this function's `# Safety` section requires `account_number` to be a NUL-terminated
+    // string valid for this call (null is read as empty); `get_string` copies it before returning.
     let account_number = unsafe { get_string(account_number) };
+    // SAFETY: this function's `# Safety` section requires `identifier` to be a NUL-terminated
+    // string valid for this call (null is read as empty); `get_string` copies it before returning.
     let identifier = unsafe { get_string(identifier) };
 
     let completion = completion_handler.clone();
@@ -101,6 +108,9 @@ pub unsafe extern "C" fn mullvad_ios_get_devices(
     retry_strategy: SwiftRetryStrategy,
     account_number: *const c_char,
 ) -> SwiftCancelHandle {
+    // SAFETY: this function's `# Safety` section requires `completion_cookie` to point to a
+    // live Swift `MullvadApiCompletion`. Ownership moves into the handler, which hands it back
+    // to Swift exactly once through `mullvad_api_completion_finish`.
     let completion_handler =
         SwiftCompletionHandler::new(unsafe { CompletionCookie::new(completion_cookie) });
 
@@ -112,6 +122,8 @@ pub unsafe extern "C" fn mullvad_ios_get_devices(
     let api_context = api_context.rust_context();
     // Safety: The caller must guarantee that `retry_strategy` is not null and has not been freed
     let retry_strategy = unsafe { retry_strategy.into_rust() };
+    // SAFETY: this function's `# Safety` section requires `account_number` to be a NUL-terminated
+    // string valid for this call (null is read as empty); `get_string` copies it before returning.
     let account_number = unsafe { get_string(account_number) };
 
     let completion = completion_handler.clone();
@@ -160,6 +172,9 @@ pub unsafe extern "C" fn mullvad_ios_create_device(
     account_number: *const c_char,
     public_key: *const u8,
 ) -> SwiftCancelHandle {
+    // SAFETY: this function's `# Safety` section requires `completion_cookie` to point to a
+    // live Swift `MullvadApiCompletion`. Ownership moves into the handler, which hands it back
+    // to Swift exactly once through `mullvad_api_completion_finish`.
     let completion_handler =
         SwiftCompletionHandler::new(unsafe { CompletionCookie::new(completion_cookie) });
 
@@ -171,6 +186,8 @@ pub unsafe extern "C" fn mullvad_ios_create_device(
     let api_context = api_context.rust_context();
     // Safety: The caller must guarantee that `retry_strategy` is not null and has not been freed
     let retry_strategy = unsafe { retry_strategy.into_rust() };
+    // SAFETY: this function's `# Safety` section requires `account_number` to be a NUL-terminated
+    // string valid for this call (null is read as empty); `get_string` copies it before returning.
     let account_number = unsafe { get_string(account_number) };
     // Safety: `public_key` pointer must be a valid pointer to 32 unsigned bytes.
     let pub_key: [u8; 32] = unsafe { ptr::read(public_key as *const [u8; 32]) };
@@ -221,6 +238,9 @@ pub unsafe extern "C" fn mullvad_ios_delete_device(
     account_number: *const c_char,
     identifier: *const c_char,
 ) -> SwiftCancelHandle {
+    // SAFETY: this function's `# Safety` section requires `completion_cookie` to point to a
+    // live Swift `MullvadApiCompletion`. Ownership moves into the handler, which hands it back
+    // to Swift exactly once through `mullvad_api_completion_finish`.
     let completion_handler =
         SwiftCompletionHandler::new(unsafe { CompletionCookie::new(completion_cookie) });
 
@@ -232,7 +252,11 @@ pub unsafe extern "C" fn mullvad_ios_delete_device(
     let api_context = api_context.rust_context();
     // Safety: The caller must guarantee that `retry_strategy` is not null and has not been freed
     let retry_strategy = unsafe { retry_strategy.into_rust() };
+    // SAFETY: this function's `# Safety` section requires `account_number` to be a NUL-terminated
+    // string valid for this call (null is read as empty); `get_string` copies it before returning.
     let account_number = unsafe { get_string(account_number) };
+    // SAFETY: this function's `# Safety` section requires `identifier` to be a NUL-terminated
+    // string valid for this call (null is read as empty); `get_string` copies it before returning.
     let identifier = unsafe { get_string(identifier) };
 
     let completion = completion_handler.clone();
@@ -283,6 +307,9 @@ pub unsafe extern "C" fn mullvad_ios_rotate_device_key(
     identifier: *const c_char,
     public_key: *const u8,
 ) -> SwiftCancelHandle {
+    // SAFETY: this function's `# Safety` section requires `completion_cookie` to point to a
+    // live Swift `MullvadApiCompletion`. Ownership moves into the handler, which hands it back
+    // to Swift exactly once through `mullvad_api_completion_finish`.
     let completion_handler =
         SwiftCompletionHandler::new(unsafe { CompletionCookie::new(completion_cookie) });
 
@@ -294,7 +321,11 @@ pub unsafe extern "C" fn mullvad_ios_rotate_device_key(
     let api_context = api_context.rust_context();
     // Safety: The caller must guarantee that `retry_strategy` is not null and has not been freed
     let retry_strategy = unsafe { retry_strategy.into_rust() };
+    // SAFETY: this function's `# Safety` section requires `account_number` to be a NUL-terminated
+    // string valid for this call (null is read as empty); `get_string` copies it before returning.
     let account_number = unsafe { get_string(account_number) };
+    // SAFETY: this function's `# Safety` section requires `identifier` to be a NUL-terminated
+    // string valid for this call (null is read as empty); `get_string` copies it before returning.
     let identifier = unsafe { get_string(identifier) };
     // Safety: `public_key` pointer must be a valid pointer to 32 unsigned bytes.
     let pub_key: [u8; 32] = unsafe { ptr::read(public_key as *const [u8; 32]) };

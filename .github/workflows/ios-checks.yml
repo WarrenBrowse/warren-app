@@ -218,13 +218,10 @@ jobs:
           ios_rust_target: aarch64-apple-ios
           xcode_version: ''
 
-      # `undocumented_unsafe_blocks` is held off for now: the inherited API
-      # client (`warren-ios/src/api_client/`) has dozens of undocumented blocks
-      # and is being cut down. Every other lint gates, on the device target.
       - name: Clippy for the device target
         run: |
           cargo clippy --locked --all-targets --all-features -p warren-ios \
-            --target aarch64-apple-ios -- -D warnings -A clippy::undocumented_unsafe_blocks
+            --target aarch64-apple-ios -- -D warnings
 
       # The tunnel handle only compiles for iOS with the `tunnel` feature, so
       # its tests cannot run on the macOS host. The test binary runs on the

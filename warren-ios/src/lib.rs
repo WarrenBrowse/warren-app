@@ -4,10 +4,6 @@
 // without an iOS cross-compilation toolchain - their deps (bip39,
 // ed25519-dalek, warren-identity, zeroize, std) are all cross-platform.
 #![cfg(any(target_os = "ios", test))]
-// Every `unsafe` block carries a `// SAFETY:` comment, which the workspace's
-// `clippy::undocumented_unsafe_blocks` asks for. The inherited `api_client`
-// module still has blocks without one, so the iOS gate holds that lint off
-// until they are documented or removed.
 
 // Warren-side FFI modules.  `warren_tunnel_ffi` and `warren_wallet_ffi`
 // compile on any platform; the others use iOS-only libc / tokio / mullvad

@@ -37,6 +37,9 @@ pub unsafe extern "C" fn mullvad_ios_init_storekit_payment(
     retry_strategy: SwiftRetryStrategy,
     account_number: *const c_char,
 ) -> SwiftCancelHandle {
+    // SAFETY: this function's `# Safety` section requires `completion_cookie` to point to a
+    // live Swift `MullvadApiCompletion`. Ownership moves into the handler, which hands it back
+    // to Swift exactly once through `mullvad_api_completion_finish`.
     let completion_handler =
         SwiftCompletionHandler::new(unsafe { CompletionCookie::new(completion_cookie) });
 
@@ -111,6 +114,9 @@ pub unsafe extern "C" fn mullvad_ios_check_storekit_payment(
     body: *const u8,
     body_size: usize,
 ) -> SwiftCancelHandle {
+    // SAFETY: this function's `# Safety` section requires `completion_cookie` to point to a
+    // live Swift `MullvadApiCompletion`. Ownership moves into the handler, which hands it back
+    // to Swift exactly once through `mullvad_api_completion_finish`.
     let completion_handler =
         SwiftCompletionHandler::new(unsafe { CompletionCookie::new(completion_cookie) });
 
