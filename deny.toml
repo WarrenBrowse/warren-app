@@ -27,6 +27,9 @@ targets = [
 [advisories]
 version = 2  # https://github.com/EmbarkStudios/cargo-deny/pull/611
 yanked = "deny"
+# Report unsound advisories on transitive crates too: by default cargo-deny only
+# reports them for crates the workspace depends on directly.
+unsound = "all"
 ignore = [
   # Ignored audit issues. This list should be kept short, and effort should be
   # put into removing items from the list.
