@@ -3078,8 +3078,8 @@ msgid "Disconnected from system service"
 msgstr "Yhteys järjestelmäpalveluun katkaistu"
 
 msgctxt "tray-icon-context-menu"
-msgid "Open %(mullvadVpn)s"
-msgstr "Avaa %(mullvadVpn)s"
+msgid "Open %(appName)s"
+msgstr "Avaa %(appName)s"
 
 msgctxt "tray-icon-tooltip"
 msgid "%(city)s, %(country)s"

@@ -89,6 +89,7 @@ import { connectHandlingRefusal } from './connect-refusal';
 import { daemonAccessRefusal } from './daemon-access';
 import { DaemonRpc, SubscriptionListener } from './daemon-rpc';
 import { registerDeviceIpc } from './devices';
+import { updateNotificationDisabled } from './env-switches';
 import Expectation from './expectation';
 import ForumActivityMonitor, { ForumActivityMonitorDelegate } from './forum-activity-monitor';
 import {
@@ -186,7 +187,7 @@ const execAsync = util.promisify(exec);
 const ALLOWED_PERMISSIONS = ['clipboard-sanitized-write'];
 
 const SANDBOX_DISABLED = app.commandLine.hasSwitch('no-sandbox');
-const UPDATE_NOTIFICATION_DISABLED = process.env.MULLVAD_DISABLE_UPDATE_NOTIFICATION === '1';
+const UPDATE_NOTIFICATION_DISABLED = updateNotificationDisabled(process.env);
 const DAEMON_ACCESS_RETRY_MS = 60_000;
 
 const GEO_DIR = path.resolve(import.meta.dirname, 'assets/geo');

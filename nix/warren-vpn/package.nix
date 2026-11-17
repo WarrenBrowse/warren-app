@@ -231,7 +231,7 @@ stdenv.mkDerivation {
     # The in-app updater would offer a download that cannot replace a read-only
     # store path. On NixOS the flake is the update channel.
     wrapProgram $out/bin/${packageName} \
-      --set MULLVAD_DISABLE_UPDATE_NOTIFICATION 1 \
+      --set WARREN_DISABLE_UPDATE_NOTIFICATION 1 \
       --prefix PATH : ${
         lib.makeBinPath [
           coreutils

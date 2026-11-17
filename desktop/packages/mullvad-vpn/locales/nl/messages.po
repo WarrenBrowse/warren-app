@@ -3078,8 +3078,8 @@ msgid "Disconnected from system service"
 msgstr "Verbinding met systeemservice verbroken"
 
 msgctxt "tray-icon-context-menu"
-msgid "Open %(mullvadVpn)s"
-msgstr "%(mullvadVpn)s openen"
+msgid "Open %(appName)s"
+msgstr "%(appName)s openen"
 
 msgctxt "tray-icon-tooltip"
 msgid "%(city)s, %(country)s"

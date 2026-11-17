@@ -546,15 +546,15 @@ export default class UserInterface implements WindowControllerDelegate {
   // On macOS, hotkeys are bound to the app menu and won't work if it's not set,
   // even though the app menu itself is not visible because the app does not appear in the dock.
   private setMacOsAppMenu() {
-    const mullvadVpnSubmenu: Electron.MenuItemConstructorOptions[] = [];
+    const appSubmenu: Electron.MenuItemConstructorOptions[] = [];
     if (process.env.NODE_ENV === 'development') {
-      mullvadVpnSubmenu.unshift({ role: 'quit' }, { role: 'reload' }, { role: 'forceReload' });
+      appSubmenu.unshift({ role: 'quit' }, { role: 'reload' }, { role: 'forceReload' });
     }
 
     const template: Electron.MenuItemConstructorOptions[] = [
       {
         label: productAnchors.displayName,
-        submenu: mullvadVpnSubmenu,
+        submenu: appSubmenu,
       },
       {
         label: 'Edit',
@@ -751,8 +751,8 @@ export default class UserInterface implements WindowControllerDelegate {
   ) {
     const template: Electron.MenuItemConstructorOptions[] = [
       {
-        label: sprintf(messages.pgettext('tray-icon-context-menu', 'Open %(mullvadVpn)s'), {
-          mullvadVpn: productAnchors.displayName,
+        label: sprintf(messages.pgettext('tray-icon-context-menu', 'Open %(appName)s'), {
+          appName: productAnchors.displayName,
         }),
         click: () => this.windowController.show(),
       },

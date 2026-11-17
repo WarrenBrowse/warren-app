@@ -3069,8 +3069,8 @@ msgid "Disconnected from system service"
 msgstr "시스템 서비스에서 연결이 끊겼습니다."
 
 msgctxt "tray-icon-context-menu"
-msgid "Open %(mullvadVpn)s"
-msgstr "%(mullvadVpn)s 열기"
+msgid "Open %(appName)s"
+msgstr "%(appName)s 열기"
 
 msgctxt "tray-icon-tooltip"
 msgid "%(city)s, %(country)s"

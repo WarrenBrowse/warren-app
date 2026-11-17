@@ -57,12 +57,12 @@ describe('the product the tray names', () => {
     const source = fs.readFileSync(USER_INTERFACE_SOURCE, 'utf8');
 
     expect(source).not.toMatch(/^\s*return 'Warren VPN';$/m);
-    expect(source).not.toMatch(/mullvadVpn: 'Warren VPN',/);
+    expect(source).not.toMatch(/appName: 'Warren VPN',/);
     // The application menu, which Linux actually renders whenever the window
     // is unpinned and therefore framed.
     expect(source).not.toMatch(/^\s*label: 'Warren VPN',$/m);
     expect(source).toMatch(/^\s*return productAnchors\.displayName;$/m);
-    expect(source).toMatch(/mullvadVpn: productAnchors\.displayName,/);
+    expect(source).toMatch(/appName: productAnchors\.displayName,/);
     expect(source.match(/^\s*label: productAnchors\.displayName,$/gm)).toHaveLength(2);
   });
 });

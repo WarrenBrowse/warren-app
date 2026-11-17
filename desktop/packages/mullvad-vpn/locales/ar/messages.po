@@ -3114,8 +3114,8 @@ msgid "Disconnected from system service"
 msgstr "تم قطع الاتصال عن خدمة النظام"
 
 msgctxt "tray-icon-context-menu"
-msgid "Open %(mullvadVpn)s"
-msgstr "فتح %(mullvadVpn)s"
+msgid "Open %(appName)s"
+msgstr "فتح %(appName)s"
 
 msgctxt "tray-icon-tooltip"
 msgid "%(city)s, %(country)s"

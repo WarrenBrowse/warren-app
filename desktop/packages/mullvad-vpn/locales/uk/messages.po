@@ -3096,8 +3096,8 @@ msgid "Disconnected from system service"
 msgstr "Відключено від системної служби"
 
 msgctxt "tray-icon-context-menu"
-msgid "Open %(mullvadVpn)s"
-msgstr "Відкрити %(mullvadVpn)s"
+msgid "Open %(appName)s"
+msgstr "Відкрити %(appName)s"
 
 msgctxt "tray-icon-tooltip"
 msgid "%(city)s, %(country)s"

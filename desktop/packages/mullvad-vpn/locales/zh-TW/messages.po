@@ -3069,8 +3069,8 @@ msgid "Disconnected from system service"
 msgstr "已中斷與系統服務的連線"
 
 msgctxt "tray-icon-context-menu"
-msgid "Open %(mullvadVpn)s"
-msgstr "開啟 %(mullvadVpn)s"
+msgid "Open %(appName)s"
+msgstr "開啟 %(appName)s"
 
 msgctxt "tray-icon-tooltip"
 msgid "%(city)s, %(country)s"

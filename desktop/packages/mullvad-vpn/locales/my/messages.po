@@ -3069,8 +3069,8 @@ msgid "Disconnected from system service"
 msgstr "စနစ်ဝန်ဆောင်မှုမှ ချိတ်ဆက်မှု ဖြုတ်ထားပြီး"
 
 msgctxt "tray-icon-context-menu"
-msgid "Open %(mullvadVpn)s"
-msgstr "%(mullvadVpn)s ကို ဖွင့်ရန်"
+msgid "Open %(appName)s"
+msgstr "%(appName)s ကို ဖွင့်ရန်"
 
 msgctxt "tray-icon-tooltip"
 msgid "%(city)s, %(country)s"

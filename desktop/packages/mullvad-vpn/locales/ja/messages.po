@@ -3069,8 +3069,8 @@ msgid "Disconnected from system service"
 msgstr "システムサービスから接続が解除されました"
 
 msgctxt "tray-icon-context-menu"
-msgid "Open %(mullvadVpn)s"
-msgstr "%(mullvadVpn)sを開く"
+msgid "Open %(appName)s"
+msgstr "%(appName)sを開く"
 
 msgctxt "tray-icon-tooltip"
 msgid "%(city)s, %(country)s"

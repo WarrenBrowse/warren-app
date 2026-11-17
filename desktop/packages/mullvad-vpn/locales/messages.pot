@@ -4312,7 +4312,7 @@ msgid "Disconnected from system service"
 msgstr ""
 
 msgctxt "tray-icon-context-menu"
-msgid "Open %(mullvadVpn)s"
+msgid "Open %(appName)s"
 msgstr ""
 
 msgctxt "tray-icon-tooltip"

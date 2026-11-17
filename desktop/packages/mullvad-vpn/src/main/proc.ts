@@ -1,5 +1,7 @@
 import path from 'path';
 
+import { devToolsPath } from './env-switches';
+
 export function resolveBin(binaryName: string) {
   return path.resolve(getBasePath(), binaryName + getExtension());
 }
@@ -7,7 +9,7 @@ export function resolveBin(binaryName: string) {
 function getBasePath(): string {
   if (process.env.NODE_ENV === 'development') {
     return (
-      process.env.MULLVAD_PATH ||
+      devToolsPath(process.env) ||
       path.resolve(path.join(import.meta.dirname, '../../../../target/debug'))
     );
   } else {

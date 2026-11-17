@@ -322,9 +322,9 @@ Inherited from upstream, `setx` from an elevated shell, then `sc.exe stop / star
 
 ## Environment variables used by the desktop frontend
 
-* `MULLVAD_PATH`: Path of the folder containing the auxiliary tools (`warren-problem-report`) in dev.
+* `WARREN_PATH`: Path of the folder containing the auxiliary tools (`warren-problem-report`) in dev.
   Default: `<repo>/target/debug/`.
-* `MULLVAD_DISABLE_UPDATE_NOTIFICATION`: Set to `1` to disable the update notification.
+* `WARREN_DISABLE_UPDATE_NOTIFICATION`: Set to `1` to disable the update notification.
 
 ## Electron development commands
 

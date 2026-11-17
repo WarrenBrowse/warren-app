@@ -3069,8 +3069,8 @@ msgid "Disconnected from system service"
 msgstr "ตัดการเชื่อมต่อจากบริการระบบแล้ว"
 
 msgctxt "tray-icon-context-menu"
-msgid "Open %(mullvadVpn)s"
-msgstr "เปิด %(mullvadVpn)s"
+msgid "Open %(appName)s"
+msgstr "เปิด %(appName)s"
 
 msgctxt "tray-icon-tooltip"
 msgid "%(city)s, %(country)s"
