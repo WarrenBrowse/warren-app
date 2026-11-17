@@ -94,7 +94,7 @@
     "pack:mac": "node tasks/pack-mac.cjs",
     "pack:win": "node tasks/pack-windows.cjs",
     "pack:linux": "node tasks/pack-linux.cjs",
-    "verify:renderer-bundle": "npm run build:vite && node scripts/verify-renderer-bundle.mjs"
+    "verify:renderer-bundle": "npm run build:vite && node scripts/verify-renderer-bundle.mjs && node scripts/verify-main-bundle.mjs"
   },
   "volta": {
     "extends": "../../package.json"

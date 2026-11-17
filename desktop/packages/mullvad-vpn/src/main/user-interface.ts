@@ -525,11 +525,16 @@ export default class UserInterface implements WindowControllerDelegate {
   }
 
   private async installDevTools() {
-    const {
-      default: installer,
-      REACT_DEVELOPER_TOOLS,
-      REDUX_DEVTOOLS,
-    } = await import('electron-devtools-installer');
+    // The build replaces NODE_ENV with a literal, so this condition folds and
+    // the installer chunk is left out of every non-development bundle.
+    const devtools =
+      process.env.NODE_ENV === 'development'
+        ? await import('electron-devtools-installer')
+        : undefined;
+    if (devtools === undefined) {
+      return;
+    }
+    const { default: installer, REACT_DEVELOPER_TOOLS, REDUX_DEVTOOLS } = devtools;
     const forceDownload = !!process.env.UPGRADE_EXTENSIONS;
     const options = { forceDownload, loadExtensionOptions: { allowFileAccess: true } };
     try {
