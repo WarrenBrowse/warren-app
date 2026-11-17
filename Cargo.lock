@@ -6528,6 +6528,7 @@ dependencies = [
  "log",
  "serde_json",
  "sha2",
+ "warren-api",
  "warren-discovery-core",
  "warren-identity",
  "warren-product-env",

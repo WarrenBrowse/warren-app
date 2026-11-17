@@ -361,13 +361,18 @@ pub fn clock_offset_secs(date_header: &str, device_now: u64) -> Option<i64> {
     Some(i64::try_from(server_secs).ok()? - i64::try_from(device_now).ok()?)
 }
 
-/// The device clock now, shifted by `offset_secs` (the value of
-/// [`clock_offset_secs`], or zero when none was measured), or `None` if the
-/// clock is before the epoch or the shift overflows.
+/// The device clock now, corrected by `offset_secs` (the value of
+/// [`clock_offset_secs`], or zero when none was measured) under the SDK's
+/// rule: only a device the server would refuse is corrected, and never more
+/// than a quarter of an hour forward, so an answer dated in the future cannot
+/// mint signatures that become valid later. `None` if the clock is before the
+/// epoch.
 #[must_use]
 pub fn timestamp_with_offset(offset_secs: i64) -> Option<u64> {
-    let now = i64::try_from(unix_secs_now()?).ok()?;
-    u64::try_from(now.checked_add(offset_secs)?).ok()
+    Some(warren_api::clock::corrected_timestamp(
+        unix_secs_now()?,
+        offset_secs,
+    ))
 }
 
 /// What one unsigned read of the session's status (`GET /v1/session/{sid}/status`)
@@ -1944,7 +1949,27 @@ mod tests {
         );
         assert_eq!(clock_offset_secs("yesterday", 1), None);
         assert!(timestamp_with_offset(0).is_some());
-        assert!(timestamp_with_offset(i64::MIN).is_none());
+    }
+
+    #[test]
+    fn a_connect_host_answering_from_the_future_does_not_move_the_stamp() {
+        // A `Date` a year ahead would mint signatures the host could hold and
+        // present when they become current.
+        let a_year = 365 * 24 * 60 * 60;
+        let device_now = unix_secs_now().expect("clock after the epoch");
+
+        let stamp = timestamp_with_offset(a_year).expect("a stamp");
+
+        assert!(stamp.abs_diff(device_now) <= 5, "stamp moved to {stamp}");
+    }
+
+    #[test]
+    fn a_device_behind_the_connect_host_signs_at_its_clock() {
+        let device_now = unix_secs_now().expect("clock after the epoch");
+
+        let stamp = timestamp_with_offset(90).expect("a stamp");
+
+        assert!(stamp.abs_diff(device_now + 90) <= 5, "stamp at {stamp}");
     }
 
     #[test]
