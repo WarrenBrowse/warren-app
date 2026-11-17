@@ -4,6 +4,25 @@ import log from './logging';
 import { capitalize } from './string-helpers';
 
 type Handler<T, R> = (callback: (arg: T) => R) => void;
+
+// Decides from the sending frame's URL whether the main process acts on a
+// renderer message. The main process installs the app-page policy at startup
+// (`main/ipc-sender-policy.ts`); until then every sender is accepted, which is
+// what the unit and mocked suites rely on.
+type SenderPolicy = (senderUrl: string | undefined) => boolean;
+let senderPolicy: SenderPolicy = () => true;
+
+export function setIpcSenderPolicy(policy: SenderPolicy) {
+  senderPolicy = policy;
+}
+
+function senderAllowed(event: string, ipcEvent: { senderFrame?: { url: string } | null }) {
+  if (senderPolicy(ipcEvent.senderFrame?.url)) {
+    return true;
+  }
+  log.error(`Refused IPC message ${event} from a frame that is not the app page`);
+  return false;
+}
 type Sender<T, R> = (arg: T) => R;
 type Notifier<T> = ((arg: T) => void) | undefined;
 type Listener<T> = (callback: (arg: T) => void) => () => void;
@@ -122,8 +141,10 @@ export function send<T>(): RendererToMain<T, void> {
     type: 'send',
     send: (event, ipcRenderer) => (newValue: T) => ipcRenderer.send(event, newValue),
     receive: (event, ipcMain) => (handlerFn: (value: T) => void) => {
-      ipcMain.on(event, (_event, newValue: T) => {
-        handlerFn(newValue);
+      ipcMain.on(event, (ipcEvent, newValue: T) => {
+        if (senderAllowed(event, ipcEvent)) {
+          handlerFn(newValue);
+        }
       });
     },
   };
@@ -137,7 +158,7 @@ export function invokeSync<T, R>(): RendererToMain<T, R> {
     send: (event, ipcRenderer) => (newValue: T) => ipcRenderer.sendSync(event, newValue),
     receive: (event, ipcMain) => (handlerFn: (value: T) => R) => {
       ipcMain.on(event, (ipcEvent, newValue: T) => {
-        ipcEvent.returnValue = handlerFn(newValue);
+        ipcEvent.returnValue = senderAllowed(event, ipcEvent) ? handlerFn(newValue) : undefined;
       });
     },
   };
@@ -192,7 +213,10 @@ function invokeImpl<T, R>(event: string, ipcRenderer: EIpcRenderer): Sender<T, P
 
 function handle<T, R>(event: string, ipcMain: EIpcMain): Handler<T, Promise<R>> {
   return (fn: (arg: T) => Promise<R>) => {
-    ipcMain.handle(event, async (_ipcEvent, arg: T) => {
+    ipcMain.handle(event, async (ipcEvent, arg: T) => {
+      if (!senderAllowed(event, ipcEvent)) {
+        return { type: 'error', message: 'IPC refused' };
+      }
       try {
         return { type: 'success', value: await fn(arg) };
       } catch (e) {

@@ -50,6 +50,7 @@ import {
 } from '../shared/forum-report';
 import { messages, relayLocations } from '../shared/gettext';
 import { guiSettingsForRenderer, SYSTEM_PREFERRED_LOCALE_KEY } from '../shared/gui-settings-state';
+import { setIpcSenderPolicy } from '../shared/ipc-helpers';
 import { ITranslations, MacOsScrollbarVisibility } from '../shared/ipc-schema';
 import { IChangelog, IHistoryObject } from '../shared/ipc-types';
 import log, { ConsoleOutput, Logger } from '../shared/logging';
@@ -125,6 +126,7 @@ import {
 import SafeStorageForumIdentityStore from './forum-store';
 import { ConnectionObserver } from './grpc-client';
 import { IpcMainEventChannel } from './ipc-event-channel';
+import { appPageSenderPolicy } from './ipc-sender-policy';
 import { readLicenseText } from './license';
 import { findIconPath } from './linux-desktop-entry';
 import { pairWindowWithDesktopEntry } from './linux-desktop-identity';
@@ -439,6 +441,13 @@ class ApplicationMain
 
   public run() {
     installProcessErrorHandlers(process, log);
+    setIpcSenderPolicy(
+      appPageSenderPolicy({
+        indexPath: path.join(import.meta.dirname, 'index.html'),
+        devServerUrl:
+          process.env.NODE_ENV === 'development' ? process.env.VITE_DEV_SERVER_URL : undefined,
+      }),
+    );
 
     // Remove window animations to combat window flickering when opening window. Can be removed when
     // this issue has been resolved: https://github.com/electron/electron/issues/12130
