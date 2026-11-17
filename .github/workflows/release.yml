@@ -684,20 +684,37 @@ jobs:
 
   build-ios:
     name: Build iOS IPA + TestFlight upload
-    # iOS is DISABLED for now: Warren has no Apple Developer account yet (it
-    # requires a registered company + D-U-N-S number to open App Store Connect).
-    # To RE-ENABLE iOS later, set the repository variable WARREN_ENABLE_IOS to
-    # 'true' (Settings -> Secrets and variables -> Actions -> Variables tab).
-    # No code change needed; publish-release already treats iOS as non-blocking.
-    # Prod-only: there is no WARREN_PRODUCT_ENV=beta iOS build to produce.
-    if: ${{ vars.WARREN_ENABLE_IOS == 'true' && needs.tag-guard.outputs.channel == 'prod' }}
+    # Dormant until Warren has an Apple Developer account (App Store Connect
+    # needs a registered company and a D-U-N-S number). Setting the repository
+    # variable WARREN_ENABLE_IOS to 'true' turns it on; publish-release treats
+    # iOS as non-blocking either way.
+    #
+    # Built the way ios-checks.yml builds on every push, so turning it on does
+    # not meet a step nobody ran: macos-26 with the image's Xcode (App Store
+    # Connect refuses uploads made with an SDK older than iOS 26), the pinned
+    # sibling engines, the vectors submodule alone (the recursive checkout
+    # reaches git.netfilter.org, which no hosted runner can).
+    #
+    # Both channels: the tag picks WARREN_PRODUCT_ENV, which suffixes the
+    # bundle ids and the App Group (ios/Configurations/ProductEnv.xcconfig).
+    # Each channel signs with its own two profiles, one for the app and one for
+    # the packet tunnel extension; the beta secrets carry a _BETA suffix:
+    #   IOS_DISTRIBUTION_CERT_BASE64, IOS_DISTRIBUTION_PASSWORD
+    #   IOS_APP_PROVISIONING_PROFILE_BASE64[_BETA]
+    #   IOS_TUNNEL_PROVISIONING_PROFILE_BASE64[_BETA]
+    #   APPLE_DEVELOPER_TEAM_ID
+    #   APPSTORECONNECT_API_KEY_BASE64, _ID, APPSTORECONNECT_API_ISSUER_ID
+    if: ${{ vars.WARREN_ENABLE_IOS == 'true' }}
     needs: [tag-guard, tests]
-    runs-on: macos-15
-    timeout-minutes: 90
+    runs-on: macos-26
+    timeout-minutes: 120
     env:
+      WARREN_PRODUCT_ENV: ${{ needs.tag-guard.outputs.channel }}
+      SOURCE_PACKAGES_PATH: .spm
       IOS_DISTRIBUTION_CERT_B64: ${{ secrets.IOS_DISTRIBUTION_CERT_BASE64 }}
       IOS_DISTRIBUTION_PASSWORD: ${{ secrets.IOS_DISTRIBUTION_PASSWORD }}
-      IOS_PROVISIONING_PROFILE_B64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+      IOS_APP_PROFILE_B64: ${{ needs.tag-guard.outputs.channel == 'beta' && secrets.IOS_APP_PROVISIONING_PROFILE_BASE64_BETA || secrets.IOS_APP_PROVISIONING_PROFILE_BASE64 }}
+      IOS_TUNNEL_PROFILE_B64: ${{ needs.tag-guard.outputs.channel == 'beta' && secrets.IOS_TUNNEL_PROVISIONING_PROFILE_BASE64_BETA || secrets.IOS_TUNNEL_PROVISIONING_PROFILE_BASE64 }}
       APPSTORECONNECT_API_KEY_B64: ${{ secrets.APPSTORECONNECT_API_KEY_BASE64 }}
       APPSTORECONNECT_API_KEY_ID: ${{ secrets.APPSTORECONNECT_API_KEY_ID }}
       APPSTORECONNECT_API_ISSUER_ID: ${{ secrets.APPSTORECONNECT_API_ISSUER_ID }}
@@ -706,28 +723,74 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09  # v5.1.0
         with:
-          submodules: recursive
+          submodules: false
+
+      - name: Checkout the golden vectors submodule
+        env:
+          ENGINE_TOKEN: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -n "$ENGINE_TOKEN" ]; then
+            auth="$(printf 'x-access-token:%s' "$ENGINE_TOKEN" | base64 | tr -d '\n')"
+            git -c "http.extraheader=AUTHORIZATION: basic ${auth}" \
+              submodule update --init vectors
+          else
+            git submodule update --init vectors
+          fi
+
+      - uses: ./.github/actions/mullvad-build-env
+        with:
+          engine-token: ${{ secrets.WARREN_CORE_RO_TOKEN }}
+          product-env: ${{ needs.tag-guard.outputs.channel }}
 
       - name: Setup iOS project toolchain
         uses: ./.github/actions/ios/setup-project-toolchain
+        with:
+          ios_rust_target: aarch64-apple-ios
+          xcode_version: ''
 
-      - name: Decode signing cert + provisioning profile
+      - name: Install the signing certificate and both provisioning profiles
         if: env.IOS_DISTRIBUTION_CERT_B64 != ''
         run: |
           set -euo pipefail
-          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          if [ -z "$IOS_APP_PROFILE_B64" ] || [ -z "$IOS_TUNNEL_PROFILE_B64" ]; then
+            echo "::error::The $WARREN_PRODUCT_ENV channel needs both the app and the packet tunnel provisioning profiles"
+            exit 1
+          fi
+          profiles="$HOME/Library/MobileDevice/Provisioning Profiles"
+          mkdir -p "$profiles"
           tmp_cert=$(mktemp -t warren-ios-cert-XXXXXX.p12)
-          tmp_prov=$(mktemp -t warren-ios-prov-XXXXXX.mobileprovision)
           printf '%s' "$IOS_DISTRIBUTION_CERT_B64" | base64 -d > "$tmp_cert"
-          printf '%s' "$IOS_PROVISIONING_PROFILE_B64" | base64 -d > "$tmp_prov"
           security create-keychain -p "" warren-ios.keychain
           security default-keychain -s warren-ios.keychain
           security unlock-keychain -p "" warren-ios.keychain
           security import "$tmp_cert" -k warren-ios.keychain -P "$IOS_DISTRIBUTION_PASSWORD" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple: -s -k "" warren-ios.keychain
-          cp "$tmp_prov" ~/Library/MobileDevice/Provisioning\ Profiles/
-          echo "IOS_CERT_TMP=$tmp_cert" >> "$GITHUB_ENV"
-          echo "IOS_PROV_TMP=$tmp_prov" >> "$GITHUB_ENV"
+          rm -f "$tmp_cert"
+          # Each profile is installed under its UUID and handed to the build by
+          # its Name, which the export options map to its bundle id below.
+          for role in APP TUNNEL; do
+            var="IOS_${role}_PROFILE_B64"
+            tmp_prov=$(mktemp -t warren-ios-prov-XXXXXX.mobileprovision)
+            printf '%s' "${!var}" | base64 -d > "$tmp_prov"
+            security cms -D -i "$tmp_prov" > "$tmp_prov.plist"
+            uuid=$(plutil -extract UUID raw -o - "$tmp_prov.plist")
+            name=$(plutil -extract Name raw -o - "$tmp_prov.plist")
+            cp "$tmp_prov" "$profiles/$uuid.mobileprovision"
+            rm -f "$tmp_prov" "$tmp_prov.plist"
+            echo "IOS_${role}_PROFILE_NAME=$name" >> "$GITHUB_ENV"
+          done
+
+      # The app and the extension each need their own profile, so the name
+      # goes into each target's configuration: a PROVISIONING_PROFILE_SPECIFIER
+      # on the command line would apply one profile to every target.
+      - name: Name the profiles in the generated target configurations
+        if: env.IOS_DISTRIBUTION_CERT_B64 != ''
+        working-directory: ios/Configurations
+        run: |
+          set -euo pipefail
+          printf 'PROVISIONING_PROFILE_SPECIFIER[config=Release] = %s\n' "$IOS_APP_PROFILE_NAME" >> App.xcconfig
+          printf 'PROVISIONING_PROFILE_SPECIFIER[config=Release] = %s\n' "$IOS_TUNNEL_PROFILE_NAME" >> PacketTunnel.xcconfig
 
       - name: Archive WarrenVPN (signed)
         if: env.IOS_DISTRIBUTION_CERT_B64 != ''
@@ -740,29 +803,38 @@ jobs:
             -configuration Release \
             -archivePath build/WarrenVPN.xcarchive \
             -destination 'generic/platform=iOS' \
+            -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_PATH" \
+            -disableAutomaticPackageResolution \
+            WARREN_PRODUCT_ENV="$WARREN_PRODUCT_ENV" \
             DEVELOPMENT_TEAM="$APPLE_DEVELOPER_TEAM_ID" \
-            CODE_SIGN_STYLE=Manual
+            CODE_SIGN_STYLE=Manual 2>&1 | xcbeautify
 
       - name: Export IPA (signed)
         if: env.IOS_DISTRIBUTION_CERT_B64 != ''
         working-directory: ios
         run: |
-          cat > build/ExportOptions.plist <<EOF
-          <?xml version="1.0" encoding="UTF-8"?>
-          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0"><dict>
-            <key>method</key><string>app-store</string>
-            <key>teamID</key><string>${APPLE_DEVELOPER_TEAM_ID}</string>
-            <key>uploadSymbols</key><true/>
-          </dict></plist>
-          EOF
+          set -euo pipefail
+          case "$WARREN_PRODUCT_ENV" in
+            prod) suffix= ;;
+            *) suffix=".$WARREN_PRODUCT_ENV" ;;
+          esac
+          app_id="com.warrenbrowse.vpn.ios${suffix}"
+          plist=build/ExportOptions.plist
+          /usr/libexec/PlistBuddy -c "Add :method string app-store-connect" "$plist"
+          /usr/libexec/PlistBuddy -c "Add :teamID string $APPLE_DEVELOPER_TEAM_ID" "$plist"
+          /usr/libexec/PlistBuddy -c "Add :signingStyle string manual" "$plist"
+          /usr/libexec/PlistBuddy -c "Add :uploadSymbols bool true" "$plist"
+          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles dict" "$plist"
+          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles:$app_id string $IOS_APP_PROFILE_NAME" "$plist"
+          /usr/libexec/PlistBuddy -c "Add :provisioningProfiles:$app_id.PacketTunnel string $IOS_TUNNEL_PROFILE_NAME" "$plist"
+          plutil -lint "$plist"
           xcodebuild -exportArchive \
             -archivePath build/WarrenVPN.xcarchive \
             -exportPath build/ipa \
-            -exportOptionsPlist build/ExportOptions.plist
+            -exportOptionsPlist "$plist"
 
       - name: Upload to TestFlight
-        if: env.APPSTORECONNECT_API_KEY_B64 != ''
+        if: env.IOS_DISTRIBUTION_CERT_B64 != '' && env.APPSTORECONNECT_API_KEY_B64 != ''
         run: |
           set -euo pipefail
           tmp_key=$(mktemp -t appstore-api-key-XXXXXX.p8)
@@ -781,21 +853,24 @@ jobs:
         if: env.IOS_DISTRIBUTION_CERT_B64 == ''
         working-directory: ios
         run: |
-          echo "::warning::IOS_DISTRIBUTION_CERT_BASE64 secret not set; producing unsigned dev archive."
+          set -o pipefail
+          echo "::warning::IOS_DISTRIBUTION_CERT_BASE64 secret not set; producing an unsigned archive."
           xcodebuild archive \
             -project WarrenVPN.xcodeproj \
             -scheme WarrenVPN \
             -configuration Release \
             -archivePath build/WarrenVPN.xcarchive \
             -destination 'generic/platform=iOS' \
-            CODE_SIGNING_ALLOWED=NO
+            -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_PATH" \
+            -disableAutomaticPackageResolution \
+            WARREN_PRODUCT_ENV="$WARREN_PRODUCT_ENV" \
+            CODE_SIGNING_ALLOWED=NO 2>&1 | xcbeautify
 
       - name: Wipe signing material from runner
         if: always() && env.IOS_DISTRIBUTION_CERT_B64 != ''
         run: |
           security delete-keychain warren-ios.keychain || true
-          [ -n "${IOS_CERT_TMP:-}" ] && rm -f "$IOS_CERT_TMP" || true
-          [ -n "${IOS_PROV_TMP:-}" ] && rm -f "$IOS_PROV_TMP" || true
+          rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/"*.mobileprovision
 
       - name: Upload iOS artifacts
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f  # v6.0.0

@@ -2,8 +2,10 @@
 
 This is the iOS version of the Warren VPN app.
 
-All releases have signed git tags on the format `ios/<version>`. For changes between each
-release, see the [changelog].
+The iOS app has not been released yet. When it is, `release.yml` builds it from the same tags
+as the other platforms (`vX.Y.Z` for prod, `beta-vX.Y.Z` for beta), once the repository
+variable `WARREN_ENABLE_IOS` is set and the signing secrets exist. Changes are listed in the
+[changelog].
 
 For Xcode project configuration please refer to [Configure Xcode project] section of build 
 instructions document.
