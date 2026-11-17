@@ -9,7 +9,6 @@
     "ci/cargo-ci.sh",
     "ci/publish-app-to-repositories.sh",
     "desktop/**",
-    "installer-downloader/**",
     "mullvad-*/**",
     "!mullvad-ios/**",
     "!mullvad-jni/**",

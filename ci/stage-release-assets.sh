@@ -8,7 +8,6 @@
 #
 #   WarrenVPN-1.0.10-windows-x64.exe
 #   WarrenVPN-1.0.10-windows-arm64.exe
-#   WarrenVPN-1.0.10-windows-universal.exe
 #   WarrenVPN-1.0.10-macos-universal.pkg
 #   WarrenVPN-1.0.10-linux-amd64.deb
 #   WarrenVPN-1.0.10-linux-x86_64.rpm
@@ -124,15 +123,9 @@ case "$platform" in
     fi
     ;;
   windows)
-    # Single-arch NSIS installers...
+    # Single-arch NSIS installers.
     for f in dist/${SRC}*_x64.exe;   do stage "$f" "${DST}-${version}-windows-x64.exe";   done
     for f in dist/${SRC}*_arm64.exe; do stage "$f" "${DST}-${version}-windows-arm64.exe"; done
-    # ...and the universal installer-downloader (the bare WarrenVPN-<ver>.exe,
-    # i.e. the one WITHOUT an _x64/_arm64 arch suffix).
-    for f in dist/${SRC}*.exe; do
-      case "$f" in *_x64.exe | *_arm64.exe) continue ;; esac
-      stage "$f" "${DST}-${version}-windows-universal.exe"
-    done
     for f in dist/${SRC}*.msi; do stage "$f" "${DST}-${version}-windows-x64.msi"; done
     ;;
   android)

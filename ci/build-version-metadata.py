@@ -11,7 +11,7 @@ ci/stage-release-assets.sh):
   - macOS: the universal `-macos-universal.pkg` (one file, listed for both
     x86 and arm64).
   - Windows: the per-arch `-windows-x64.exe` -> x86, `-windows-arm64.exe` ->
-    arm64 (the `-windows-universal.exe` downloader is not listed per-arch).
+    arm64.
   - Linux: one installer per package format (`package_format`: deb,
     deb-sysvinit, rpm, pacman) and architecture. An install no format fits
     still learns of the release (the daemon's `allow_empty` path) and is sent
@@ -345,10 +345,6 @@ def windows_installers(release_dir: Path, version: str, asset_base: str,
         if not match:
             continue
         token = match.group(1)
-        # The universal installer-downloader is not a per-arch payload; the
-        # metadata lists the concrete x64/arm64 installers only.
-        if token == "universal":
-            continue
         architecture = WIN_ARCH_TOKENS.get(token)
         if architecture is None:
             print(f"  skipping unknown Windows arch token in {path.name}", file=sys.stderr)

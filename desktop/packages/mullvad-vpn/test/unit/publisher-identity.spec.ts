@@ -25,7 +25,6 @@ describe('publisher identity', () => {
       'mullvad-daemon/Cargo.toml',
       'mullvad-problem-report/Cargo.toml',
       'windows-installer/Cargo.toml',
-      'installer-downloader/Cargo.toml',
     ];
     for (const manifest of winres) {
       const text = read(manifest);

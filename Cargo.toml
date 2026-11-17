@@ -4,7 +4,6 @@ members = [
   "android/translations-converter",
   "desktop/packages/nseventforwarder",
   "desktop/packages/windows-utils",
-  "installer-downloader",
   "mullvad-api",
   "mullvad-cli",
   "mullvad-daemon",
@@ -164,10 +163,7 @@ non_ascii_idents = "forbid"
 # Deny old style Rust
 rust_2018_idioms = { level = "deny", priority = -1 }
 single_use_lifetimes = "warn"
-# The `class!` macro in `objc` uses an unknown feature. We rely on this in 'installer-downloader'.
-# The unexpected cfg warning stems from https://github.com/SSheldon/rust-objc/issues/125
-# We need to ignore this until cacao migrates to another objc implementation,
-# or we use another `msg_send!` macro ourselves.
+# Lets code that still tests the retired `cargo-clippy` feature build without a warning.
 unexpected_cfgs = { level = "warn", check-cfg = [
   'cfg(feature, values("cargo-clippy"))'
 ] }
