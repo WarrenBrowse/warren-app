@@ -55,6 +55,35 @@ setup_may_run_as_root() {
     done
 }
 
+# Where the copy of the previous warren-setup is kept while this script runs.
+# Only the test harness, which cannot write under /var/root, names another one.
+STAGE_PARENT=${WARREN_SETUP_STAGE_PARENT:-/var/root}
+ROOT_SETUP=""
+STAGE_DIR=""
+trap 'if [[ -n "$STAGE_DIR" ]]; then rm -rf "$STAGE_DIR"; fi' EXIT
+
+# Copies the previous warren-setup into a directory only root can enter and
+# sets ROOT_SETUP to the copy, which every root call below runs. Checking the
+# bundle path and running it later would leave the time between the two for an
+# admin to swap the bundle. The copy is read through one open descriptor, and
+# taken only if that descriptor is the file the ownership walk accepted.
+stage_setup_for_root() {
+    setup_may_run_as_root || return 1
+    exec 3< "$SETUP" || return 1
+    if ! setup_may_run_as_root \
+        || [[ "$(stat -f '%i' "$SETUP")" != "$(stat -f '%i' /dev/fd/3)" ]] \
+        || [[ "$(stat -f '%u' /dev/fd/3)" != "$TRUSTED_UID" ]]; then
+        exec 3<&-
+        return 1
+    fi
+    STAGE_DIR=$(mktemp -d "$STAGE_PARENT/warren-setup.XXXXXX") || { exec 3<&-; return 1; }
+    chmod 700 "$STAGE_DIR"
+    cat <&3 > "$STAGE_DIR/warren-setup" || { exec 3<&-; return 1; }
+    exec 3<&-
+    chmod 700 "$STAGE_DIR/warren-setup"
+    ROOT_SETUP="$STAGE_DIR/warren-setup"
+}
+
 # The whole seal below belongs to an UPGRADE: it protects the host while the
 # old bundle is deleted and its daemon killed. A first install has neither, so
 # there is nothing to seal and $SETUP does not even exist, which the fatal
@@ -69,8 +98,8 @@ if [[ -x "$SETUP" ]]; then
     # waiting for a human with a terminal. Runs as root: it writes a LaunchDaemon.
     # Not fatal: a machine that cannot schedule the guard is still better served by
     # an update that proceeds with the in-daemon dead-man than by no update at all.
-    if setup_may_run_as_root; then
-        "$SETUP" arm-deadman || echo "Failed to arm the detached update guard"
+    if stage_setup_for_root; then
+        "$ROOT_SETUP" arm-deadman || echo "Failed to arm the detached update guard"
     else
         echo "The previous warren-setup is not controlled by root alone; not running it as root"
     fi
@@ -87,8 +116,8 @@ if [[ -x "$SETUP" ]]; then
     # delete the app and kill the daemon. Proceeding is how a user ends up with no
     # internet, no daemon and no app to click.
     PREPARE_RESTART_STATUS=0
-    if setup_may_run_as_root; then
-        "$SETUP" prepare-restart &>/dev/null || PREPARE_RESTART_STATUS=$?
+    if [[ -n "$ROOT_SETUP" ]]; then
+        "$ROOT_SETUP" prepare-restart &>/dev/null || PREPARE_RESTART_STATUS=$?
     else
         sudo -u nobody "$SETUP" prepare-restart &>/dev/null || PREPARE_RESTART_STATUS=$?
     fi
@@ -98,8 +127,8 @@ if [[ -x "$SETUP" ]]; then
     # a failure. Windows tolerates the same status (MVSETUP_DAEMON_NOT_RUNNING).
     if [[ $PREPARE_RESTART_STATUS -ne 0 && $PREPARE_RESTART_STATUS -ne 3 ]]; then
         echo "Failed to send 'prepare-restart' command to old warren-daemon; aborting the install"
-        if setup_may_run_as_root; then
-            "$SETUP" disarm-deadman || true
+        if [[ -n "$ROOT_SETUP" ]]; then
+            "$ROOT_SETUP" disarm-deadman || true
         fi
         exit 1
     fi
@@ -114,8 +143,8 @@ launchctl unload -w "$DAEMON_PLIST_PATH" || echo "launchctl could not unload the
 # upgrade for an uninstall, lifting the kill switch: stop before that instead.
 if launchctl print "system/$DAEMON_LABEL" > /dev/null 2>&1; then
     echo "The old warren-daemon is still loaded; aborting the install"
-    if setup_may_run_as_root; then
-        "$SETUP" disarm-deadman || true
+    if [[ -n "$ROOT_SETUP" ]]; then
+        "$ROOT_SETUP" disarm-deadman || true
     fi
     exit 1
 fi

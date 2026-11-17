@@ -76,14 +76,35 @@ STUB
     printf '#!/usr/bin/env bash\nexit 1\n' > "$dir/bin/pgrep"
     printf '#!/usr/bin/env bash\nexit 1\n' > "$dir/bin/pkill"
 
+    # The script is macOS-only and speaks BSD stat; the suite also runs on
+    # Linux, where the same fields are read through GNU stat. /dev/fd entries
+    # are symlinks there, so only they are followed.
+    cat > "$dir/bin/stat" <<'STUB'
+#!/usr/bin/env bash
+if [ "$1" = -f ] && /usr/bin/stat --version >/dev/null 2>&1; then
+    case "$3" in
+        /dev/fd/*) exec /usr/bin/stat -L -c "$2" "$3" ;;
+        *) exec /usr/bin/stat -c "$2" "$3" ;;
+    esac
+fi
+exec /usr/bin/stat "$@"
+STUB
+
     chmod +x "$dir/bin/"*
 
     if [ "$with_old_bundle" = "with-old-bundle" ]; then
         local resources="$dir/Applications/Warren VPN.app/Contents/Resources"
         mkdir -p "$resources"
+        # With a swap-on-arm marker, the first root call replaces the binary at
+        # the bundle path, the way an admin racing the installer would.
         cat > "$resources/warren-setup" <<STUB
 #!/usr/bin/env bash
 echo "\$1" >> "$dir/setup-calls"
+if [ "\$1" = arm-deadman ] && [ -e "$dir/swap-on-arm" ]; then
+    printf '#!/usr/bin/env bash\necho substituted >> "%s/setup-calls"\n' "$dir" > "$resources/.swap"
+    chmod 755 "$resources/.swap"
+    mv -f "$resources/.swap" "$resources/warren-setup"
+fi
 [ "\$1" = "prepare-restart" ] && exit $prepare_restart_status
 exit 0
 STUB
@@ -100,11 +121,13 @@ run_preinstall() {
 
     # The script traces to stderr until it redirects itself into preinstall.log,
     # so keep that prologue out of the test output and next to the log.
+    mkdir -p "$dir/stage"
     env -i \
         PATH="$dir/bin:/usr/bin:/bin:/usr/sbin:/sbin" \
         HOME="$dir" \
         WARREN_TEST_SANDBOX="$dir" \
         WARREN_LOG_DIR="$dir/log" \
+        WARREN_SETUP_STAGE_PARENT="$dir/stage" \
         WARREN_TRUSTED_OWNER_UID="$(id -u)" \
         bash "$PREINSTALL" "$dir/package.pkg" "$dir/Applications" \
         2> "$dir/prologue.log" || status=$?
@@ -223,6 +246,20 @@ dir=$(make_sandbox writable-bundle 0 with-old-bundle)
 chmod o+w "$dir/Applications/Warren VPN.app"
 report "an upgrade over a bundle directory another account can write proceeds" 0 "$(run_preinstall "$dir")" "$dir"
 assert_setup_not_called "a warren-setup under a writable bundle is not run as root" "$dir" arm-deadman
+
+# Every root call runs the copy taken once from the old bundle, so swapping the
+# binary at the bundle path between two calls changes nothing that runs as root.
+dir=$(make_sandbox swapped-between-calls 0 with-old-bundle)
+touch "$dir/swap-on-arm"
+report "an upgrade whose old warren-setup is swapped mid-install proceeds" 0 "$(run_preinstall "$dir")" "$dir"
+assert_setup_called "the copy taken before the swap seals the host" "$dir" prepare-restart
+assert_setup_not_called "a warren-setup swapped in after the check never runs" "$dir" substituted
+if [ -z "$(ls -A "$dir/stage")" ]; then
+    echo "ok - the staged copy is removed when the script ends"
+else
+    echo "FAIL - the staged copy is removed when the script ends"
+    failures=$((failures + 1))
+fi
 
 if [ "$failures" -ne 0 ]; then
     echo "$failures assertion(s) failed"
