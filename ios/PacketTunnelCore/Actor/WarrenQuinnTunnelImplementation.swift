@@ -25,6 +25,8 @@ import Foundation
 import WarrenLogging
 import WarrenREST
 import WarrenRustRuntime
+import WarrenSettings
+import WarrenTypes
 @preconcurrency import NetworkExtension
 
 /// Re-applies the tunnel network settings with an exit-allocated IPv4.
@@ -87,12 +89,12 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
     /// triggers a re-selection. `-1` until the first fetch.
     private var lastDirectoryGeneration: Int64 = -1
 
-    /// The relays the session was started with, reused to drive a
-    /// directory-refresh reconnect via `reconnect(to: .preSelected(...))`.
-    private var warrenSelectedRelays: SelectedRelays?
+    /// The extension's own relay selector, for starts that carry no relays.
+    private let relaySelector = ExtensionRelaySelector()
 
     public init() {
-        self._actor = WarrenQuinnActor()
+        let relaySelector = self.relaySelector
+        self._actor = WarrenQuinnActor(selectRelays: { try relaySelector.select() })
         // Best-effort App Group defaults handle. When the bundle is
         // not yet configured (unit tests), this returns nil and the
         // event broadcast becomes a no-op.
@@ -109,6 +111,7 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         apiTransportProvider: APITransportProvider
     ) {
         logger.info("WarrenQuinnTunnelImplementation.setUp (instantiate adapter + wire event callback)")
+        relaySelector.use(RelaySelectorWrapper(relayCache: ipOverrideWrapper))
         // Adapter owns the NEPacketTunnelFlow bridge to the Rust IosTun
         // PacketDevice. The event callback mirrors transitions + NAT-PMP
         // events into the App Group so the main app's
@@ -286,7 +289,6 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
                 generationStatePath: statePath
             ) ?? -1
         }
-        warrenSelectedRelays = options.selectedRelays
         startDirectoryRefreshTask(statePath: statePath)
         bindWalletSeed()
 
@@ -359,13 +361,12 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         }
         // Steady state: the fleet did not change, so keep the live circuit.
         guard freshGeneration > lastDirectoryGeneration else { return }
-        guard let relays = warrenSelectedRelays else { return }
         logger.info(
             "Warren multi-hop directory generation advanced (\(lastDirectoryGeneration) -> \(freshGeneration)); re-selecting circuit"
         )
         lastDirectoryGeneration = freshGeneration
         _actor.multihopDirectoryJSON = fresh
-        _actor.reconnect(to: .preSelected(relays), reconnectReason: .connectionLoss)
+        _actor.restartWithCurrentRelays()
     }
 
     /// warren-api base URL, resolved from the product anchors rather than
@@ -552,5 +553,25 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         }
         defaults.set(json, forKey: WarrenAppGroupKey.pinMismatch.rawValue)
         defaults.set(Date(), forKey: WarrenAppGroupKey.pinMismatchAt.rawValue)
+    }
+}
+
+/// The relay selector of the extension, the same one the app runs, over the
+/// relay cache the two share. Known only once `setUp` hands the cache over,
+/// while the actor that calls it is built before.
+private final class ExtensionRelaySelector: @unchecked Sendable {
+    private struct NotReady: Error {}
+
+    private let lock = NSLock()
+    private var selector: RelaySelectorWrapper?
+
+    func use(_ selector: RelaySelectorWrapper) {
+        lock.withLock { self.selector = selector }
+    }
+
+    func select() throws -> SelectedRelays {
+        guard let selector = lock.withLock({ self.selector }) else { throw NotReady() }
+        let settings = (try? SettingsManager.readSettings()) ?? LatestTunnelSettings()
+        return try selector.selectRelays(tunnelSettings: settings, connectionAttemptCount: 0)
     }
 }

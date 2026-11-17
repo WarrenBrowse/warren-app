@@ -139,10 +139,17 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     /// the exit refuses the session. See [`applyEvent(_:)`].
     private let subscriptionIsActive: @Sendable () -> Bool
 
+    /// Selects relays when a start carries none: an on-demand rule, the
+    /// Settings app and a relaunch after the system ended the extension all
+    /// start the tunnel without the app. `nil` selects nothing.
+    private let selectRelays: (@Sendable () throws -> SelectedRelays)?
+
     public init(
-        subscriptionIsActive: @escaping @Sendable () -> Bool = { WarrenQuinnActor.storedSubscriptionIsActive() }
+        subscriptionIsActive: @escaping @Sendable () -> Bool = { WarrenQuinnActor.storedSubscriptionIsActive() },
+        selectRelays: (@Sendable () throws -> SelectedRelays)? = nil
     ) {
         self.subscriptionIsActive = subscriptionIsActive
+        self.selectRelays = selectRelays
         logger.info("WarrenQuinnActor initialized")
     }
 
@@ -316,10 +323,10 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
             logger.warning("start called before bindWalletSigningSeed ; cannot derive identity")
             return
         }
-        guard let selectedRelays = options.selectedRelays else {
-            logger.warning("start called without selectedRelays ; relay selection deferred to UI layer")
-            return
-        }
+        // The engine picks the circuit from the signed directory, so a start
+        // without relays still starts it; the relays only describe the
+        // connection to the app.
+        let selectedRelays = options.selectedRelays ?? selectRelaysForUnattendedStart()
 
         let (config, context) = makeConfigAndContext(selectedRelays: selectedRelays, seed: seed)
         stateLock.lock()
@@ -332,6 +339,16 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
         } catch {
             logger.error("WarrenQuinnAdapter.start failed: \(error)")
             applyEvent(.disconnected)
+        }
+    }
+
+    private func selectRelaysForUnattendedStart() -> SelectedRelays? {
+        guard let selectRelays else { return nil }
+        do {
+            return try selectRelays()
+        } catch {
+            logger.warning("No relay selected for a start without the app; the engine picks the circuit alone")
+            return nil
         }
     }
 
@@ -348,10 +365,9 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     /// `exit*` fields are the legacy dev fallback used only when no directory
     /// was fetched.
     private func makeConfigAndContext(
-        selectedRelays: SelectedRelays,
+        selectedRelays: SelectedRelays?,
         seed: Data
-    ) -> (WarrenTunnelConfig, ConnectionContext) {
-        let exit = selectedRelays.exit
+    ) -> (WarrenTunnelConfig, ConnectionContext?) {
         // Settings reads are best-effort: a unit test or a not-yet-provisioned
         // store falls back to defaults.
         let settings = try? SettingsManager.readSettings()
@@ -372,9 +388,12 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
         // rule), and the user's entry default may not host a Warren node.
         let exitCountry = Self.warrenExitCountryHint(from: relayConstraints)
 
+        // The engine reads neither exit field: the circuit comes from the
+        // directory. Zeroes stand in when no relay was selected.
+        let exit = selectedRelays?.exit
         let config = WarrenTunnelConfig(
-            exitPubkey: exit.endpoint.publicKey,
-            exitEndpoint: "\(exit.endpoint.socketAddress)",
+            exitPubkey: exit?.endpoint.publicKey ?? Data(count: 32),
+            exitEndpoint: exit.map { "\($0.endpoint.socketAddress)" } ?? "",
             walletSigningKey: seed,
             multiHopRelay: nil,
             daitaSpec: daitaSpec,
@@ -393,12 +412,14 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
             multihopGenerationStatePath: multihopGenerationStatePath,
             pinStorePath: pinStorePath
         )
-        let context = ConnectionContext(
-            selectedRelays: selectedRelays,
-            relayConstraints: relayConstraints,
-            remotePort: exit.endpoint.socketAddress.port,
-            isDaitaEnabled: daitaEnabled
-        )
+        let context = selectedRelays.map { relays in
+            ConnectionContext(
+                selectedRelays: relays,
+                relayConstraints: relayConstraints,
+                remotePort: relays.exit.endpoint.socketAddress.port,
+                isDaitaEnabled: daitaEnabled
+            )
+        }
         return (config, context)
     }
 
@@ -546,14 +567,13 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     public func reconnect(to nextRelays: NextRelays, reconnectReason: ActorReconnectReason) {
         switch nextRelays {
         case let .preSelected(selectedRelays):
-            // A relay change: the app re-selected (Warren has no in-actor
-            // selector), so rebuild the config for the new exit and restart
-            // the adapter.
+            // A relay change the app selected: rebuild the config for the
+            // new exit and restart the adapter.
             restartAdapter(with: selectedRelays)
         case .current, .random:
-            // No new relays to marshal and no in-actor selector, so the best
-            // the actor can do is re-handshake the current exit. True relay
-            // changes arrive as `.preSelected` from the app.
+            // No new relays to marshal, so the best the actor can do is
+            // re-handshake the current exit. True relay changes arrive as
+            // `.preSelected` from the app.
             stateLock.lock()
             let adapter = self.adapter
             stateLock.unlock()
@@ -564,7 +584,16 @@ public final class WarrenQuinnActor: PacketTunnelActorProtocol, @unchecked Senda
     /// Tear down the current Quinn session and bring up a new one against
     /// `selectedRelays` (relay-change path). Holds no lock across the adapter
     /// calls.
-    private func restartAdapter(with selectedRelays: SelectedRelays) {
+    /// Restarts the session on the relays it runs on, or on none when it
+    /// started without any, so a fresh directory reaches the engine.
+    public func restartWithCurrentRelays() {
+        stateLock.lock()
+        let relays = connectionContext?.selectedRelays
+        stateLock.unlock()
+        restartAdapter(with: relays)
+    }
+
+    private func restartAdapter(with selectedRelays: SelectedRelays?) {
         stateLock.lock()
         let adapter = self.adapter
         let seed = self.walletSigningSeed

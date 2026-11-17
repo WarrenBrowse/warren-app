@@ -493,6 +493,67 @@ final class WarrenQuinnActorTests: XCTestCase {
         return actor
     }
 
+    /// An on-demand rule or the Settings app starts the tunnel with no relays
+    /// in the options. The engine must still start, on relays the extension
+    /// selects itself; returning without it leaves the system tunnel up and
+    /// every packet dropped.
+    func test_start_onDemandWithoutRelays_selectsRelaysAndStartsTheEngine() async {
+        let adapter = MockWarrenQuinnAdapter()
+        let actor = WarrenQuinnActor(
+            subscriptionIsActive: { false },
+            selectRelays: { RelaySelectorStub.selectedRelays }
+        )
+        actor.bindAdapter(adapter)
+        actor.bindWalletSigningSeed(Data(repeating: 0xAB, count: 32))
+
+        actor.start(options: StartOptions(launchSource: .onDemand))
+
+        XCTAssertEqual(adapter.startCount, 1)
+        actor.applyEvent(.connected)
+        let state = await actor.observedState
+        guard case let .connected(conn) = state else {
+            return XCTFail("Expected .connected, got \(state)")
+        }
+        XCTAssertEqual(conn.selectedRelays.exit.hostname, RelaySelectorStub.selectedRelays.exit.hostname)
+    }
+
+    /// The engine picks its circuit from the signed directory, so a relay
+    /// list the extension cannot select from (a cold cache) is no reason to
+    /// leave the tunnel without an engine.
+    func test_start_withoutAnySelectableRelay_stillStartsTheEngine() {
+        struct NoRelays: Error {}
+        let adapter = MockWarrenQuinnAdapter()
+        let actor = WarrenQuinnActor(
+            subscriptionIsActive: { false },
+            selectRelays: { throw NoRelays() }
+        )
+        actor.bindAdapter(adapter)
+        actor.bindWalletSigningSeed(Data(repeating: 0xAB, count: 32))
+
+        actor.start(options: StartOptions(launchSource: .system))
+
+        XCTAssertEqual(adapter.startCount, 1)
+        XCTAssertEqual(adapter.lastStartConfig?.exitPubkey.count, 32)
+    }
+
+    /// A newer directory restarts a session that began without relays too:
+    /// keying the restart on app-selected relays left such a session on the
+    /// old circuit until the next manual connect.
+    func test_restartWithCurrentRelays_afterAStartWithoutRelays_restartsTheEngine() {
+        let adapter = MockWarrenQuinnAdapter()
+        let actor = WarrenQuinnActor(subscriptionIsActive: { false }, selectRelays: nil)
+        actor.bindAdapter(adapter)
+        actor.bindWalletSigningSeed(Data(repeating: 0xAB, count: 32))
+        actor.start(options: StartOptions(launchSource: .onDemand))
+
+        actor.multihopDirectoryJSON = "{}"
+        actor.restartWithCurrentRelays()
+
+        XCTAssertEqual(adapter.stopCount, 1)
+        XCTAssertEqual(adapter.startCount, 2)
+        XCTAssertEqual(adapter.lastStartConfig?.multihopDirectoryJSON, "{}")
+    }
+
     func test_start_withoutSeedBound_doesNotCrash() async {
         let actor = WarrenQuinnActor()
         // No bindAdapter ; no bindWalletSigningSeed.
