@@ -117,10 +117,10 @@ warrenguard-daita = { path = "../../warrenguard/crates/warrenguard-daita" }
 warrenguard-backoff = { path = "../../warrenguard/crates/warrenguard-backoff" }
 warrenguard-tls = { path = "../../warrenguard/crates/warrenguard-tls" }
 warrenguard-config = { path = "../../warrenguard/crates/warrenguard-config" }
-# Same git spec as warrenguard's own pin, so the loopback exit's endpoint is
-# the very `quinn` instance the engine dials with (a second copy would be a
-# different `ServerConfig` type).
-quinn = { git = "ssh://git@github.com/WarrenBrowse/warren-quinn.git", tag = "v0.11.16-fork.11", package = "warren-quinn" }
+# The fork the workspace patches crates.io's quinn to, so the loopback exit's
+# endpoint is the very `quinn` instance the engine dials with (a second copy
+# would be a different `ServerConfig` type).
+quinn = { git = "https://github.com/WarrenBrowse/warren-quinn.git", tag = "v0.11.19-fork.17", package = "warren-quinn" }
 # Paused-time (`start_paused`) tests for the token-provider timers.
 tokio = { workspace = true, features = ["test-util"] }
 # The engine's NAT-PMP events, which `natpmp_refusal` classifies. It builds on

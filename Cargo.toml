@@ -88,7 +88,6 @@ log = "0.4"
 mockito = "1.7.2"
 netlink-packet-core = "0.8.1"
 netlink-packet-route = "0.30.0"
-netlink-proto = "0.12.0"
 netlink-sys = "0.8.8"
 nix = "0.31.2"
 once_cell = "1.16"
@@ -113,12 +112,10 @@ shadowsocks = { version = "1.23.2", default-features = false, features = [
 shadowsocks-crypto = { version = "0.6.2", features = ["v1-stream"] }
 socket2 = "0.5.7"
 strum = { version = "0.27" }
-surge-ping = "0.8.4"
 talpid-dbus = { path = "./talpid-dbus" }
 thiserror = "2.0"
 tipsy = "0.7.0"
 tokio = { version = "1.44" }
-tokio-util = "0.7"
 tonic = "0.13.1"
 tonic-build = { version = "0.13.1", default-features = false }
 tower = { version = "0.5.1", features = ["util"] }
@@ -132,9 +129,6 @@ windows = "0.62.2"
 windows-sys = "0.61.2"
 winreg = "0.55"
 wmi = "0.18.1"
-# We cannot use zerocopy "0.8.32" or above due to https://github.com/google/zerocopy/issues/2880
-# TODO: Update the version when the issue is resolved
-zerocopy = "=0.8.31"
 zeroize = "1.8.2"
 
 [workspace.lints.clippy]
@@ -193,14 +187,6 @@ quinn-udp = { git = "https://github.com/WarrenBrowse/warren-quinn.git", tag = "v
 # crates.io pfctl never sets: the kill switch's `block return` then dropped every
 # stale UDP socket's packets in silence. The fork's deltas: its README.
 pfctl = { git = "https://github.com/WarrenBrowse/pfctl-rs.git", tag = "v0.7.0-warren.1" }
-
-# The warrenguard rev pinned in .warrenguard-version still declares the fork over
-# ssh://, which an anonymous clone cannot fetch; redirecting that source keeps the
-# whole graph on the single https URL instead of resolving two copies of quinn.
-# Drop this once the pin moves past warrenguard's own switch to https.
-[patch."ssh://git@github.com/WarrenBrowse/warren-quinn.git"]
-quinn = { git = "https://github.com/WarrenBrowse/warren-quinn.git", tag = "v0.11.19-fork.17", package = "warren-quinn" }
-quinn-udp = { git = "https://github.com/WarrenBrowse/warren-quinn.git", tag = "v0.11.19-fork.17", package = "warren-quinn-udp" }
 
 # warren-sdk-rs's own crates (consumed as path-deps below, e.g. warren-identity)
 # pin `warrenguard-*` as git deps in their OWN workspace, redirected to their
