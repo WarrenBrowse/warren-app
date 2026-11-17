@@ -456,7 +456,6 @@ cargo {
     val isReleaseBuild = isReleaseBuild()
     val generateDebugSymbolsForReleaseBuilds =
         getBooleanProperty("warren.app.build.cargo.generateDebugSymbolsForReleaseBuilds")
-    val enableApiOverride = !isReleaseBuild || appVersion.isDev || appVersion.isAlpha
     environmentalOverrides["WARREN_PRODUCT_ENV"] = rustProductEnv
     module = repoRootPath
     libname = "warren-jni"
@@ -475,17 +474,7 @@ cargo {
             "debug"
         }
     targetDirectory = "$repoRootPath/target"
-    features {
-        val enabledFeatures =
-            buildList {
-                    if (enableApiOverride) {
-                        add("api-override")
-                    }
-                }
-                .toTypedArray()
-
-        @Suppress("SpreadOperator") defaultAnd(*enabledFeatures)
-    }
+    features { defaultAnd() }
     targetIncludes = arrayOf("libwarren_jni.so")
     extraCargoBuildArguments = buildList {
         add("--package=warren-jni")
@@ -571,7 +560,6 @@ dependencies {
     implementation(projects.lib.common)
     implementation(project(":lib:common-compose"))
     // lib.grpc dropped (Mullvad daemon gRPC bridge dead).
-    implementation(projects.lib.endpoint)
     // account/addtime/deleteaccount/redeemvoucher
     // modules deleted (Mullvad-account features without Warren equivalent).
     // anticensorship module deleted.

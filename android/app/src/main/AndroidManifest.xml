@@ -43,14 +43,6 @@
                  android:supportsRtl="true"
                  tools:ignore="CredManMissingDal,CredentialDependency,GoogleAppIndexingWarning">
 
-        <!--
-            This disables the Firebase logging that is added by the billing library.
-        -->
-        <service
-                android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService"
-                tools:node="remove"
-                tools:ignore="MissingClass" />
-
         <profileable
                 android:enabled="true"
                 android:shell="true" />

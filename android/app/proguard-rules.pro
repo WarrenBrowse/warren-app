@@ -12,9 +12,8 @@
 # The rule below spells that contract out for this one class; the default
 # proguard-android-optimize.txt already applies the same rule to every class.
 # It is a keep-names rule, so R8 still drops a native the Kotlin side never
-# calls (today four of the 39 declared: productAnchorsJson, importMnemonic,
-# signRequest, signCanonicalRequest) and only guarantees that a surviving one
-# keeps the exact name its symbol binds to.
+# calls and only guarantees that a surviving one keeps the exact name its
+# symbol binds to.
 -keepclasseswithmembernames class com.warrenbrowse.vpn.jni.WarrenJni {
     native <methods>;
 }

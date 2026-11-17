@@ -200,8 +200,6 @@ rand_v9 = { package = "rand", version = "0.9", optional = true }
 
 [features]
 default = ["tunnel"]
-# Allow the API endpoint URL to be overridden at runtime (dev/staging).
-api-override = []
 # Pull in the Quinn tunnel stack. Enabled by default: ships
 # `warrenguard_transport::AndroidTun` (wraps the VpnService TUN fd).
 tunnel = [

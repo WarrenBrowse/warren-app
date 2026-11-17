@@ -54,8 +54,6 @@ import com.warrenbrowse.vpn.lib.common.constant.KEY_OPEN_FORUM_ACTIVITY
 import com.warrenbrowse.vpn.lib.common.constant.KEY_REQUEST_VPN_PROFILE
 import com.warrenbrowse.vpn.lib.common.util.CreateVpnProfile
 import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
-import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
-import com.warrenbrowse.vpn.lib.endpoint.getApiEndpointConfigurationExtras
 import com.warrenbrowse.vpn.lib.model.PrepareError
 import com.warrenbrowse.vpn.lib.model.Prepared
 import com.warrenbrowse.vpn.lib.repository.ForumActivityOpenRequests
@@ -88,7 +86,6 @@ class MainActivity : AppCompatActivity(), AndroidScopeComponent {
     private val launchVpnPermission =
         registerForActivityResult(CreateVpnProfile()) { _ -> dispatchWarrenConnect() }
 
-    private val apiEndpointFromIntentHolder by inject<ApiEndpointFromIntentHolder>()
     private val warrenAppViewModel by inject<WarrenAppViewModel>()
     private val userPreferencesRepository by inject<UserPreferencesRepository>()
     private val serviceConnectionManager by inject<ServiceConnectionManager>()
@@ -275,10 +272,6 @@ class MainActivity : AppCompatActivity(), AndroidScopeComponent {
 
     private fun handleIntent(intent: Intent) {
         when (val action = intent.action) {
-            Intent.ACTION_MAIN ->
-                apiEndpointFromIntentHolder.setApiEndpointOverride(
-                    intent.getApiEndpointConfigurationExtras()
-                )
             // The activity is exported, so any app may send this action: only
             // the notification this process built carries the secret, and
             // without it the action would connect the VPN on another app's say.

@@ -14,7 +14,6 @@ import androidx.lifecycle.lifecycleScope
 import arrow.atomic.AtomicInt
 import co.touchlab.kermit.Logger
 import com.warrenbrowse.talpid.LifecycleVpnService
-import com.warrenbrowse.vpn.BuildConfig
 import com.warrenbrowse.vpn.app.connect.WarrenConnectUseCase
 import com.warrenbrowse.vpn.app.connectivity.WarrenConnectivityMonitor
 import com.warrenbrowse.vpn.app.standing.WarrenAccountStandingPoller
@@ -32,7 +31,6 @@ import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_CONNECT_QUINN_ACTION
 import com.warrenbrowse.vpn.lib.common.constant.KEY_WARREN_TUNNEL_CONFIG_JSON
 import com.warrenbrowse.vpn.lib.common.util.prepareVpnSafe
 import com.warrenbrowse.vpn.receiver.util.shouldRestoreTunnelAfterUpdate
-import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
 import com.warrenbrowse.vpn.lib.model.AppRouteStatusParser
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationChannelFactory
 import com.warrenbrowse.vpn.lib.pushnotification.NotificationManager
@@ -55,7 +53,6 @@ class WarrenVpnService : LifecycleVpnService() {
 
     private lateinit var warrenConnectUseCase: WarrenConnectUseCase
 
-    private lateinit var apiEndpointFromIntentHolder: ApiEndpointFromIntentHolder
 
     private lateinit var foregroundNotificationHandler: ForegroundNotificationManager
 
@@ -105,7 +102,6 @@ class WarrenVpnService : LifecycleVpnService() {
                 ForegroundNotificationManager(this@WarrenVpnService, get())
             get<NotificationManager>()
 
-            apiEndpointFromIntentHolder = get()
             quinnStateProxy = get()
             warrenConnectUseCase = get()
             connectivityMonitor = get()
@@ -191,13 +187,6 @@ class WarrenVpnService : LifecycleVpnService() {
         }
 
         followLockedApps()
-
-        // Log any API endpoint override seeded by mockapi tests so the
-        // future warren-api-client can pick it up.
-        val intentApiOverride = apiEndpointFromIntentHolder.apiEndpointOverride
-        if (BuildConfig.DEBUG && intentApiOverride != null) {
-            Logger.i("API endpoint override present: $intentApiOverride")
-        }
 
         // The Rust runtime and logger are the application's (`WarrenApplication`
         // initialises them before any component runs); the service starts

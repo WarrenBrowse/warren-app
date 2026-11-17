@@ -62,9 +62,6 @@ import kotlinx.coroutines.withTimeoutOrNull
 // registration) and the teardown all take tens of milliseconds at the exact
 // moment the connect animation starts. `WarrenQuinnAdapterTest` pins the
 // thread affinity.
-//
-// TODO: the builder configuration (DNS, bypass CIDRs, multi-hop entry
-// plumbing) is not wired yet.
 class WarrenQuinnAdapter(
     vpnService: VpnService,
     connectivityManager: ConnectivityManager,

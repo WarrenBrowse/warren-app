@@ -34,8 +34,6 @@ import com.warrenbrowse.vpn.app.service.WarrenQuinnStateProxy
 import com.warrenbrowse.vpn.app.standing.WarrenAccountStandingPoller
 import com.warrenbrowse.vpn.feature.language.impl.LanguageRepository
 import com.warrenbrowse.vpn.jni.WarrenJniBridgeImpl
-import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointFromIntentHolder
-import com.warrenbrowse.vpn.lib.endpoint.ApiEndpointOverride
 import com.warrenbrowse.vpn.lib.model.BuildVersion
 import com.warrenbrowse.vpn.lib.model.NotificationChannel
 import com.warrenbrowse.vpn.lib.model.STRIKE_DISMISSAL_PREFIX
@@ -120,7 +118,6 @@ val appModule = module {
     single { androidContext().resources }
     single { androidContext().userPreferencesStore }
     single { BuildVersion(BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE) }
-    single { ApiEndpointFromIntentHolder() }
     single { AccountRepository() }
     single { DeviceRepository(bridge = get(), wallet = get()) }
     // Here rather than in uiModule: the VPN service watches for this device's
@@ -425,14 +422,6 @@ val appModule = module {
             },
         )
     } bind WarrenNetworkStatsProvider::class
-
-    // With a single flavor dimension AGP does not emit `FLAVOR_infrastructure`;
-    // the canonical flavor name surfaces via `BuildConfig.FLAVOR` directly.
-    if (BuildConfig.FLAVOR != "prod") {
-        single<ApiEndpointOverride> {
-            ApiEndpointOverride(BuildConfig.API_ENDPOINT, BuildConfig.API_IP)
-        }
-    }
 }
 
 private val Context.userPreferencesStore: DataStore<UserPreferences> by

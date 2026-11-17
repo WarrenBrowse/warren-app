@@ -1,11 +1,10 @@
 //! Warren product/deployment constants for the Android client.
 //!
 //! Host-compiled (unlike `android_jni`) so the drift gate below runs in the
-//! routine `cargo test` scope. The Android build does NOT support runtime
-//! API switching in release builds (the `api-override` Cargo feature is
-//! dev/staging only), so the compiled product environment is the mechanism
-//! that points a beta APK at the beta backend: the Gradle `beta` flavor
-//! exports `WARREN_PRODUCT_ENV=beta` to the cargo build.
+//! routine `cargo test` scope. The Android build has no runtime API
+//! switching, so the compiled product environment is the mechanism that
+//! points a beta APK at the beta backend: the Gradle `beta` flavor exports
+//! `WARREN_PRODUCT_ENV=beta` to the cargo build.
 
 /// warren-api base URL of the compiled product environment
 /// (`WARREN_PRODUCT_ENV`: prod | staging | beta, prod when unset).

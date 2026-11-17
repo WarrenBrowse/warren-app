@@ -28,7 +28,6 @@ dependencies {
     implementation(projects.lib.ui.resource)
     implementation(projects.lib.common)
     implementation(projects.lib.model)
-    implementation(projects.lib.endpoint)
 
     implementation(libs.arrow)
     implementation(libs.arrow.optics)
