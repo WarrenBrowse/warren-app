@@ -296,6 +296,7 @@ mod leg_stall;
 mod migration_watchdog;
 mod peer_fence;
 pub use peer_fence::WarrenMigrateHandle;
+mod private_file;
 /// The single-shot channel every in-tunnel guard ends a session through.
 mod reconnect_signal;
 mod session_liveness;

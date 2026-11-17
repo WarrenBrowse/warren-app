@@ -102,7 +102,7 @@ impl SessionPlacement {
             .as_deref()
         {
             // Best effort: a tunnel that cannot write its hint still runs.
-            let _ = std::fs::write(path, encode(exit, assigned));
+            let _ = crate::private_file::write(path, encode(exit, assigned).as_bytes());
         }
     }
 
@@ -168,6 +168,23 @@ mod tests {
             after_restart.recall(),
             Some((EXIT, Ipv4Addr::new(10, 66, 0, 206)))
         );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn the_mirror_names_the_exit_to_its_owner_only() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = TempDir::new("mode");
+        let path = dir.path().join(PLACEMENT_FILE);
+        std::fs::write(&path, b"").expect("write file left by an older build");
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o644)).unwrap();
+
+        let placement = SessionPlacement::new();
+        placement.load_from(dir.path());
+        placement.remember(EXIT, Ipv4Addr::new(10, 66, 0, 206));
+
+        let mode = std::fs::metadata(&path).unwrap().permissions().mode() & 0o777;
+        assert_eq!(mode, 0o600);
     }
 
     #[test]

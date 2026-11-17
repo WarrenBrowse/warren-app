@@ -297,7 +297,7 @@ impl VerdictCache {
         if let Some(parent) = path.parent() {
             let _ = std::fs::create_dir_all(parent);
         }
-        if let Err(e) = std::fs::write(path, out) {
+        if let Err(e) = crate::private_file::write(path, out.as_bytes()) {
             log::debug!("carrier verdict cache: persist failed: {e}");
         }
     }
@@ -313,6 +313,22 @@ mod tests {
         let _ = std::fs::remove_dir_all(&dir);
         std::fs::create_dir_all(&dir).unwrap();
         dir
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn the_networks_the_machine_used_are_readable_by_the_daemon_only() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = tmp_dir("mode");
+        let path = dir.join(FILE_NAME);
+        std::fs::write(&path, "").unwrap();
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o644)).unwrap();
+
+        let mut cache = VerdictCache::load(Some(&dir));
+        cache.record("fp1", CachedVerdict::RouteOnly, 1_000);
+
+        let mode = std::fs::metadata(&path).unwrap().permissions().mode() & 0o777;
+        assert_eq!(mode, 0o600);
     }
 
     #[test]
