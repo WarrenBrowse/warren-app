@@ -1191,6 +1191,24 @@ mod tests {
         assert_eq!(packet, udp_v4(ROUTE1, REMOTE, 50001, 443, b"quic"));
     }
 
+    /// A transport the router cannot attribute (here SCTP) keeps the main
+    /// session whatever app sent it: it stays in the tunnel, through the main
+    /// exit (docs/app-routing.md, section 2.1).
+    #[test]
+    fn a_packet_of_a_transport_the_router_cannot_attribute_stays_on_main() {
+        let mut router = router(os());
+        let mut packet = vec![0x45, 0, 0, 32, 0, 0, 0x40, 0, 64, 132, 0, 0];
+        packet.extend_from_slice(&MAIN);
+        packet.extend_from_slice(&REMOTE);
+        packet.extend_from_slice(&[0; 12]);
+        let original = packet.clone();
+
+        let verdict = router.uplink(&mut packet, now());
+
+        assert_eq!(verdict, Verdict::Main);
+        assert_eq!(packet, original);
+    }
+
     #[test]
     fn an_app_without_a_route_stays_on_main_untouched() {
         let mut os = os();

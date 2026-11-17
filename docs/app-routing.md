@@ -169,6 +169,12 @@ Rules:
   attributed, so it counts as unresolved.
 - ICMP echo is not attributed (no OS table lists ICMP sockets) and goes through
   the main connection.
+- A packet the router cannot attribute to a flow goes through the main
+  connection, whatever app sent it: a transport other than TCP, UDP and ICMP
+  (SCTP, GRE, ESP, UDP-Lite), and an IPv6 packet whose extension headers the
+  parser does not follow (an unknown next header, or a chain of more than eight).
+  It stays in the tunnel, but leaves through the main exit, so the main exit and
+  the app's own exit both see that app.
 - A later fragment follows the decision made for its first fragment; one whose
   first fragment was not seen is dropped. A bare SYN on a 5-tuple still known
   opens a new connection, possibly from another program, and is attributed
@@ -1077,7 +1083,9 @@ no restart.
 ## 5. Security invariants (each one has a test)
 
 1. No packet of an app routed to a country ever egresses through the main
-   session or outside the tunnel while its route session is down.
+   session or outside the tunnel while its route session is down. This covers
+   the flows the router attributes (TCP, UDP, ICMP errors); a packet it cannot
+   attribute takes the main session (section 2.1).
 2. In include-only mode, no packet of an included app leaves outside the
    tunnel, including while the tunnel reconnects and in the error state.
 3. A route session never presents the wallet (no v6 fallback).
