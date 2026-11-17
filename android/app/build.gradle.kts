@@ -62,8 +62,7 @@ val warrenKeystorePassword: String? =
 val warrenKeyAlias: String? =
     (project.findProperty("warren.key.alias") as String?) ?: System.getenv("WARREN_KEY_ALIAS")
 val warrenKeyPassword: String? =
-    (project.findProperty("warren.key.password") as String?)
-        ?: System.getenv("WARREN_KEY_PASSWORD")
+    (project.findProperty("warren.key.password") as String?) ?: System.getenv("WARREN_KEY_PASSWORD")
 val signingConfigured =
     warrenKeystorePath != null &&
         warrenKeystorePassword != null &&
@@ -118,7 +117,6 @@ android {
         // Restoring this behavior when the issue has been resolved is tracked in: DROID-2163
         generateLocaleConfig = false
     }
-
 
     if (signingConfigured) {
         signingConfigs {
@@ -376,9 +374,9 @@ val checkProdReleaseSigning by tasks.registering {
     }
 }
 
-tasks.matching { it.name == "preProdReleaseBuild" }.configureEach {
-    dependsOn(checkProdReleaseSigning)
-}
+tasks
+    .matching { it.name == "preProdReleaseBuild" }
+    .configureEach { dependsOn(checkProdReleaseSigning) }
 
 // Ensure that we have all the JNI libs before merging them.
 tasks

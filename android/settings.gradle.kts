@@ -90,9 +90,4 @@ include(
     ":lib:usecase",
 )
 
-include(
-    ":test",
-    ":test:arch",
-    ":test:detekt",
-    ":test:baselineprofile",
-)
+include(":test", ":test:arch", ":test:detekt", ":test:baselineprofile")
