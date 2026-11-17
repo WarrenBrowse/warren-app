@@ -2,26 +2,54 @@
 name: OSV-Scanner Scheduled Scan
 
 on:
-  # A scheduled vulnerability scan does not burden direct pushes to main, so it
-  # stays enabled. It scans committed lockfiles (no engine build needed),
-  # so no engine token is required here.
+  # Daily so an advisory published after a lockfile last changed is still
+  # caught. Scans committed lockfiles only, so no engine build or token.
+  # Upstream's reusable workflow cannot run here: it uses an action pinned by
+  # tag, which the repository's SHA pinning policy refuses at startup.
   schedule:
-    - cron: "30 7 * * MON-FRI"
+    - cron: "30 7 * * *"
   workflow_dispatch:
 
 permissions: {}
 
 jobs:
   scan-scheduled:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     permissions:
-      # Required to upload SARIF file to CodeQL. See: https://github.com/github/codeql-action/issues/2117
-      actions: read
-      # Require writing security events to upload SARIF file to security tab
-      security-events: write
-      # Only need to read contents
       contents: read
+      # A scheduled run that finds something opens a tracking issue.
+      issues: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
 
-    # yamllint disable rule:line-length
-    uses: "google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@2a387edfbe02a11d856b89172f6e978100177eb4"  # v2.3.2
-    with:
-      checkout-submodules: false
+      - name: osv-scanner on the Rust and Ruby lockfiles
+        uses: google/osv-scanner-action/osv-scanner-action@2a387edfbe02a11d856b89172f6e978100177eb4  # v2.3.2
+        with:
+          scan-args: |-
+            --config=osv-scanner.toml
+            --lockfile=Cargo.lock
+            --lockfile=ios/Gemfile.lock
+
+      - name: osv-scanner on the desktop lockfile
+        if: success() || failure()
+        uses: google/osv-scanner-action/osv-scanner-action@2a387edfbe02a11d856b89172f6e978100177eb4  # v2.3.2
+        with:
+          scan-args: |-
+            --config=desktop/osv-scanner.toml
+            --lockfile=desktop/package-lock.json
+
+      - name: Open an issue when the daily scan finds something
+        if: failure() && github.event_name == 'schedule'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          title="Daily OSV scan failed"
+          if gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "\"$title\" in:title" --json number --jq '.[0].number' | grep -q .; then
+            echo "an open issue already tracks it"
+            exit 0
+          fi
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" \
+            --body "osv-scanner failed on the scheduled run: $RUN_URL"
