@@ -582,7 +582,8 @@ impl ProblemReport {
     }
 
     fn redact(&self, input: &str) -> String {
-        let out1 = Self::redact_account_number(input);
+        let out0 = Self::redact_wallet_material(input);
+        let out1 = Self::redact_account_number(&out0);
         let out2 = Self::redact_home_dir(&out1);
         let out3 = Self::redact_network_info(&out2);
         let out4 = Self::redact_uuid_v4(&out3);
@@ -599,8 +600,18 @@ impl ProblemReport {
         RE.replace_all(input, r#"DnsName("[REDACTED]")"#)
     }
 
+    /// Redact any wallet address and any key-sized hex string. These rules do not rely on the
+    /// caller naming the current wallet: a log can hold the address of a wallet replaced since,
+    /// written by an older build.
+    fn redact_wallet_material(input: &str) -> Cow<'_, str> {
+        static RE: LazyLock<Regex> = LazyLock::new(|| {
+            Regex::new(r"\bwb[1-9A-HJ-NP-Za-km-z]{40,60}\b|\b[0-9a-fA-F]{64,}\b").unwrap()
+        });
+        RE.replace_all(input, "[REDACTED]")
+    }
+
     fn redact_account_number(input: &str) -> Cow<'_, str> {
-        static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new("\\d{16}").unwrap());
+        static RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\b\d{16}\b").unwrap());
         RE.replace_all(input, "[REDACTED ACCOUNT NUMBER]")
     }
 
@@ -1068,6 +1079,36 @@ mod tests {
             report.redact(line),
             r#"rustls::client::hs: Resuming session for DnsName("[REDACTED]")"#
         );
+    }
+
+    #[test]
+    fn redacts_a_wallet_address_the_caller_did_not_name() {
+        // An older build wrote the wallet address into the daemon log, and
+        // the address of a wallet replaced since is not the one the caller
+        // passes, so the rule must not depend on the custom strings.
+        let report = ProblemReport::new(vec![]);
+        let line = "on_set_warren_mnemonic: identity changed, hot-swapping device state to \
+                    new pubkey=wb7kgy8FF4rx4tamkksPfoymeeeZVXLrnSjbBxCun3XhP9DnB";
+        assert_eq!(
+            report.redact(line),
+            "on_set_warren_mnemonic: identity changed, hot-swapping device state to \
+             new pubkey=[REDACTED]"
+        );
+    }
+
+    #[test]
+    fn redacts_a_hex_key() {
+        assert_redacts("3b6a27bcceb6a42d62a3a8d02a6f0d73653215771de243a63ac048a18b59da29");
+    }
+
+    #[test]
+    fn keeps_words_that_merely_start_like_an_address() {
+        assert_does_not_redact("wbsession");
+    }
+
+    #[test]
+    fn keeps_a_number_longer_than_an_account_number() {
+        assert_does_not_redact("1763397245123456789");
     }
 
     #[test]
