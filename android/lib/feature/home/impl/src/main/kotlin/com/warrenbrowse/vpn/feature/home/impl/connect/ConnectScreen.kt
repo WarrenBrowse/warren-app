@@ -159,6 +159,7 @@ import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
+import com.warrenbrowse.vpn.lib.common.util.runCatchingCancellable
 
 @Preview("Initial|Connected|Disconnected|Connecting|Error.VpnPermissionDenied")
 @Composable
@@ -285,7 +286,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
     // Route the user-initiated Connect button through the Warren Quinn use case.
     val onWarrenConnectClick: () -> Unit = {
         warrenScope.launch {
-            runCatching { warrenConnect.connect() }
+            runCatchingCancellable { warrenConnect.connect() }
                 .onSuccess { result -> surfaceConnectFailure(result) }
                 .onFailure { e ->
                     co.touchlab.kermit.Logger.e(throwable = e) { "warren connect failed" }
@@ -311,7 +312,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
     // Mirrors the desktop daemon keeping account.expiry fresh.
     LaunchedEffect(fullPubkey) {
         if (fullPubkey != null) {
-            runCatching { subscriptionInvoker.fetch() }
+            runCatchingCancellable { subscriptionInvoker.fetch() }
                 .onFailure { e ->
                     co.touchlab.kermit.Logger.w(throwable = e) { "subscription fetch failed" }
                 }
@@ -649,7 +650,7 @@ fun Connect(navigator: Navigator, animatedVisibilityScope: AnimatedVisibilitySco
                                 }
                             val result =
                                 if (saved.isSuccess) {
-                                    runCatching { warrenConnect.connect() }.getOrNull()
+                                    runCatchingCancellable { warrenConnect.connect() }.getOrNull()
                                 } else {
                                     null
                                 }

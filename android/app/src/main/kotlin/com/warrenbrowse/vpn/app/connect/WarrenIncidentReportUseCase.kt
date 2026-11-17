@@ -12,6 +12,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * The key-mismatch report the user asks for, mirroring the desktop's "Report to Warren" button on
@@ -66,6 +67,8 @@ class WarrenIncidentReportUseCase(
         } else {
             try {
                 walletRepository.readMnemonic()
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Logger.e(throwable = e) { "reportPubkeyMismatch: mnemonic read failed" }
                 null

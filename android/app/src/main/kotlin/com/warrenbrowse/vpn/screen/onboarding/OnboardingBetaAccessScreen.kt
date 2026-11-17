@@ -32,6 +32,7 @@ import java.text.DateFormat
 import java.util.Date
 import kotlinx.coroutines.delay
 import org.koin.compose.koinInject
+import com.warrenbrowse.vpn.lib.common.util.runCatchingCancellable
 
 /**
  * Beta-flavor onboarding access step, replacing the subscription step:
@@ -63,8 +64,8 @@ fun OnboardingBetaAccessScreen(navigator: Navigator) {
             activating = true
             failed = false
             val redeemed =
-                runCatching { subscriptionInvoker.redeemVoucher("") }.getOrNull()
-            runCatching { subscriptionInvoker.fetch() }
+                runCatchingCancellable { subscriptionInvoker.redeemVoucher("") }.getOrNull()
+            runCatchingCancellable { subscriptionInvoker.fetch() }
             activating = false
             if (redeemed is WarrenVoucherOutcome.Success) {
                 break

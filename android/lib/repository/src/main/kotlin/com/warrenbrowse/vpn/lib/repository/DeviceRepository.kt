@@ -23,6 +23,7 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.booleanOrNull
 import kotlinx.serialization.json.contentOrNull
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * The native calls on the account's device registry (warren-core doc 115,
@@ -177,6 +178,8 @@ class DeviceRepository(
             val mnemonic =
                 try {
                     wallet?.readMnemonic()
+                } catch (e: CancellationException) {
+                    throw e
                 } catch (e: Exception) {
                     Logger.w { "device registry: wallet unreadable (${e::class.simpleName})" }
                     null

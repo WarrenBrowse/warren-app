@@ -59,6 +59,7 @@ import com.warrenbrowse.vpn.lib.ui.theme.Dimens
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+import com.warrenbrowse.vpn.lib.common.util.runCatchingCancellable
 
 /**
  * Full-screen out-of-time gate, mirroring the desktop
@@ -132,7 +133,7 @@ fun OutOfTimeScreen(navigator: Navigator) {
     // entry-time refresh guarding against a stale cache.
     LaunchedEffect(Unit) {
         while (true) {
-            runCatching { subscriptionInvoker.fetch() }
+            runCatchingCancellable { subscriptionInvoker.fetch() }
             delay(REFRESH_INTERVAL_MS)
         }
     }
@@ -223,10 +224,10 @@ fun OutOfTimeScreen(navigator: Navigator) {
                                 // active wallet; then refresh the cached
                                 // expiry the gate observes.
                                 val redeemed =
-                                    runCatching {
+                                    runCatchingCancellable {
                                         subscriptionInvoker.redeemVoucher("")
                                     }.getOrNull()
-                                runCatching { subscriptionInvoker.fetch() }
+                                runCatchingCancellable { subscriptionInvoker.fetch() }
                                 refreshFailed = redeemed !is WarrenVoucherOutcome.Success
                                 checking = false
                             }
@@ -256,7 +257,7 @@ fun OutOfTimeScreen(navigator: Navigator) {
                             onClick = {
                                 checking = true
                                 scope.launch {
-                                    runCatching { subscriptionInvoker.fetch() }
+                                    runCatchingCancellable { subscriptionInvoker.fetch() }
                                     checking = false
                                 }
                             },

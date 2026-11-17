@@ -23,6 +23,7 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * Fetches the wallet's subscription status (signed `GET /v1/subscription`).
@@ -59,6 +60,8 @@ class WarrenSubscriptionUseCase(
         // Routine signing: read silently, no prompt (see WarrenConnectUseCase).
         val mnemonic = try {
             walletRepository.readMnemonic()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Logger.e(throwable = e) { "WarrenSubscriptionUseCase: mnemonic read failed" }
             return WarrenSubscriptionOutcome.Failure(e.message ?: "wallet read failed")
@@ -97,6 +100,8 @@ class WarrenSubscriptionUseCase(
         }
         val mnemonic = try {
             walletRepository.readMnemonic()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Logger.e(throwable = e) { "WarrenSubscriptionUseCase.redeem: mnemonic read failed" }
             return WarrenVoucherOutcome.Failure(e.message ?: "wallet read failed")
@@ -149,6 +154,8 @@ class WarrenSubscriptionUseCase(
             // Routine signing: read silently, no prompt (see WarrenConnectUseCase).
             val mnemonic = try {
                 walletRepository.readMnemonic()
+            } catch (e: CancellationException) {
+                throw e
             } catch (e: Exception) {
                 Logger.e(throwable = e) { "WarrenSubscriptionUseCase.poll: mnemonic read failed" }
                 return@launch
@@ -204,6 +211,8 @@ class WarrenSubscriptionUseCase(
         if (wallet == null || !withContext(Dispatchers.IO) { purchases.holds(wallet) }) return
         val mnemonic = try {
             walletRepository.readMnemonic()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Logger.w { "redeemHeldVouchers: wallet unreadable (${e::class.simpleName})" }
             null

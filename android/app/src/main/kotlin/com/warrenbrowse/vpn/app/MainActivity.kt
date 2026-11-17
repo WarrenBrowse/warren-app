@@ -71,6 +71,7 @@ import org.koin.android.ext.android.inject
 import org.koin.android.scope.AndroidScopeComponent
 import org.koin.androidx.scope.activityScope
 import org.koin.core.context.loadKoinModules
+import com.warrenbrowse.vpn.lib.common.util.runCatchingCancellable
 
 // `AppCompatActivity` rather than `ComponentActivity`: two things need more
 // than the bare activity. `BiometricPrompt` (used by `BiometricPromptAuthorizer`
@@ -105,7 +106,7 @@ class MainActivity : AppCompatActivity(), AndroidScopeComponent {
         // `Prepared` branch in handleRequestVpnProfileIntent) through the
         // Warren Quinn use-case.
         lifecycleScope.launch {
-            runCatching { warrenConnect.connect() }
+            runCatchingCancellable { warrenConnect.connect() }
                 .onFailure { e -> Logger.e(throwable = e) { "Warren connect dispatch failed" } }
         }
     }

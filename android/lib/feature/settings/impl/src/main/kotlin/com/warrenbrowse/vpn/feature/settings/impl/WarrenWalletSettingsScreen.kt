@@ -85,6 +85,7 @@ import com.warrenbrowse.vpn.lib.usecase.WarrenLogoutUseCase
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+import com.warrenbrowse.vpn.lib.common.util.runCatchingCancellable
 
 /**
  * Warren account screen, mirroring the desktop `AccountView` element list and
@@ -153,7 +154,7 @@ fun WarrenWalletSettings(navigator: Navigator) {
             subscriptionInvoker.startPurchasePoll(claim)
         }
         if (walletRepository.state.value !is WalletState.Absent) {
-            scope.launch { runCatching { subscriptionInvoker.fetch() } }
+            scope.launch { runCatchingCancellable { subscriptionInvoker.fetch() } }
         }
         onPauseOrDispose {}
     }

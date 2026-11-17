@@ -19,6 +19,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenLocalSettingsRepository
 import com.warrenbrowse.vpn.app.service.toWireJson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
  * End-to-end Warren connect orchestrator.
@@ -227,6 +228,8 @@ class WarrenConnectUseCase(
         // for revealing the recovery phrase on screen.
         val mnemonic = try {
             walletRepository.readMnemonic()
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: Exception) {
             Logger.e(throwable = e) { "WarrenConnectUseCase: mnemonic read failed" }
             return Outcome.Failure(e.message ?: "wallet read failed")

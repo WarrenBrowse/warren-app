@@ -9,6 +9,7 @@ import com.warrenbrowse.vpn.lib.model.wallet.SensitiveOpAuthorizer
 import com.warrenbrowse.vpn.lib.model.wallet.WalletState
 import java.time.LocalDate
 import java.util.concurrent.Executors
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -57,6 +58,8 @@ class DeviceRepositoryTest {
     }
 
     private class FakeWallet(var present: Boolean = true) : WalletRepository {
+        var cancelRead = false
+
         override val state: StateFlow<WalletState> = MutableStateFlow(WalletState.Absent)
 
         override suspend fun createWallet(authorizer: SensitiveOpAuthorizer?): Mnemonic =
@@ -69,7 +72,11 @@ class DeviceRepositoryTest {
             error("unused")
 
         override suspend fun readMnemonic(): Mnemonic =
-            if (present) Mnemonic(PHRASE) else throw IllegalStateException("no wallet")
+            when {
+                cancelRead -> throw CancellationException("the caller left")
+                present -> Mnemonic(PHRASE)
+                else -> throw IllegalStateException("no wallet")
+            }
 
         override suspend fun erase() = error("unused")
     }
@@ -98,6 +105,20 @@ class DeviceRepositoryTest {
         }
 
         assertEquals(List(4) { "registry-io" }, bridge.registryThreads)
+    }
+
+    @Test
+    fun `a cancelled wallet read cancels the call instead of reading as no wallet`() = runTest {
+        wallet.cancelRead = true
+
+        var escaped: Throwable? = null
+        try {
+            repository(StandardTestDispatcher(testScheduler)).listDevices()
+        } catch (e: CancellationException) {
+            escaped = e
+        }
+
+        assertTrue(escaped is CancellationException)
     }
 
     @Test

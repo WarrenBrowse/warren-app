@@ -9,6 +9,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenConnectedInfo
 import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import java.io.IOException
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -138,6 +139,20 @@ class WarrenLogoutUseCaseTest {
 
         assertEquals(WarrenLogoutOutcome.EraseFailed(failure), outcome)
         assertFalse(wallet.state.value is WalletState.Absent)
+    }
+
+    @Test
+    fun `a cancelled erase cancels the logout instead of reporting a failed erase`() = runTest {
+        eraseFailure = CancellationException("the caller left")
+
+        var escaped: Throwable? = null
+        try {
+            useCase()()
+        } catch (e: CancellationException) {
+            escaped = e
+        }
+
+        assertTrue(escaped is CancellationException)
     }
 
     companion object {

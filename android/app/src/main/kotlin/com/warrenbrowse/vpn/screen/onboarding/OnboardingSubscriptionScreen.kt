@@ -39,6 +39,7 @@ import com.warrenbrowse.vpn.lib.ui.resource.R
 import com.warrenbrowse.vpn.screen.navigation.OnboardingPreferencesNavKey
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+import com.warrenbrowse.vpn.lib.common.util.runCatchingCancellable
 
 /**
  * First-run onboarding "Your subscription" step. Mirrors the desktop
@@ -83,7 +84,7 @@ fun OnboardingSubscriptionScreen(navigator: Navigator) {
         }
         // Refresh the cached expiry on (re)entry so an already-subscribed wallet
         // is recognised without the user tapping "I already have a subscription".
-        scope.launch { runCatching { subscriptionInvoker.fetch() } }
+        scope.launch { runCatchingCancellable { subscriptionInvoker.fetch() } }
         onPauseOrDispose {}
     }
 
@@ -111,7 +112,7 @@ fun OnboardingSubscriptionScreen(navigator: Navigator) {
         checking = true
         errorText = null
         scope.launch {
-            val fetched = runCatching { subscriptionInvoker.fetch() }
+            val fetched = runCatchingCancellable { subscriptionInvoker.fetch() }
             val funded = settings.cachedSubscriptionExpiry.value > System.currentTimeMillis() / 1000
             checking = false
             errorText = when {

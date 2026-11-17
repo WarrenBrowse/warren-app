@@ -6,6 +6,7 @@ import com.warrenbrowse.vpn.lib.repository.WarrenQuinnDisconnectInvoker
 import com.warrenbrowse.vpn.lib.repository.WarrenTunnelStateProvider
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeoutOrNull
+import com.warrenbrowse.vpn.lib.common.util.runCatchingCancellable
 
 sealed interface WarrenLogoutOutcome {
     data object LoggedOut : WarrenLogoutOutcome
@@ -41,7 +42,7 @@ class WarrenLogoutUseCase(
                 tunnelState.connectedInfo.first { it is WarrenConnectedInfo.Disconnected }
             } ?: return WarrenLogoutOutcome.TunnelStillUp
         }
-        return runCatching { wallet.erase() }
+        return runCatchingCancellable { wallet.erase() }
             .fold({ WarrenLogoutOutcome.LoggedOut }, { WarrenLogoutOutcome.EraseFailed(it) })
     }
 
