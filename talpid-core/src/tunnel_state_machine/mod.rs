@@ -399,6 +399,19 @@ impl LockdownMode {
         }
     }
 
+    /// Whether the disconnected state blocks traffic, rather than resetting the
+    /// firewall. The one decision `disconnected_state` applies.
+    pub const fn blocks_while_disconnected(&self) -> bool {
+        self.bool()
+    }
+
+    /// Whether the block outlives a graceful daemon stop. Otherwise the
+    /// shutdown resets the firewall, so a stopped daemon leaves traffic
+    /// flowing. The one decision the state machine's exit applies.
+    pub const fn keeps_block_on_shutdown(&self) -> bool {
+        self.bool() && self.should_persist()
+    }
+
     /// Semantically meaningless on non-Windows platforms
     #[cfg(not(target_os = "windows"))]
     pub fn persist(self, _persist: bool) -> Self {
@@ -810,8 +823,7 @@ impl TunnelStateMachine {
         // cross-platform with no extra import.
         #[cfg(not(target_os = "android"))]
         {
-            let lockdown = self.shared_values.lockdown_mode;
-            if lockdown.bool() && lockdown.should_persist() {
+            if self.shared_values.lockdown_mode.keeps_block_on_shutdown() {
                 // Deliberately does not claim WHICH lockdown this is: this
                 // layer holds a two-state `LockdownMode` and cannot tell the
                 // user's setting from the temporary lock an installer arms

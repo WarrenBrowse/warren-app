@@ -4,12 +4,11 @@
 //! "May traffic flow after the controller goes away" is decided once, for every
 //! Warren client, in `warren_contract::killswitch::expected_posture`. The app
 //! decides it across several datapath sites (the disconnected-state firewall
-//! policy, the graceful-shutdown reset, the panic fail-closed path), so there is
-//! no single app function to call. This gate instead pins the OBSERVABLE table
-//! the app implements, each row cited to the code that realizes it and the
-//! lockdown-driven rows grounded in the real `LockdownMode` primitive, and
-//! asserts it against the shared contract. It fails the moment the app's posture
-//! drifts from the shared semantics.
+//! policy, the graceful-shutdown reset, the panic fail-closed path). The two
+//! lockdown-driven sites read their decision from `LockdownMode` methods this
+//! gate calls too, so a change to either decision fails the gate; the other
+//! rows are structural (a reboot, a crash, a vanished GUI) and cited to the
+//! code that realizes them.
 //!
 //! The app conforms on every row. The shared matrix adopted the app's own
 //! production semantic for a graceful daemon stop (`lockdown ? Blocking :
@@ -26,20 +25,15 @@ use warren_contract::killswitch::{FailPosture, KillswitchTrigger, expected_postu
 fn app_fail_posture(trigger: KillswitchTrigger, lockdown: bool) -> FailPosture {
     let mode = LockdownMode::from(lockdown);
     match trigger {
-        // talpid-core tunnel_state_machine/disconnected_state.rs
-        // (`set_firewall_policy`): lockdown applies a `Blocked` policy, else the
-        // firewall is reset.
-        KillswitchTrigger::UserDisconnect => posture(mode.bool()),
+        // The decision `disconnected_state::set_firewall_policy` applies.
+        KillswitchTrigger::UserDisconnect => posture(mode.blocks_while_disconnected()),
         // A reboot clears kernel firewall state; only a persistent lockdown
         // re-installs a block before traffic (WFP persist flag on Windows,
         // daemon re-applies on early startup elsewhere). `should_persist()` is
         // always true off Windows.
         KillswitchTrigger::HostReboot => posture(mode.bool() && mode.should_persist()),
-        // talpid-core tunnel_state_machine/mod.rs (`run` graceful exit): the
-        // block is kept only for a persistent lockdown, otherwise reset so
-        // "daemon stopped" implies "traffic allowed". The no-lockdown case is
-        // the divergence pinned below.
-        KillswitchTrigger::DaemonShutdown => posture(mode.bool() && mode.should_persist()),
+        // The decision the state machine's graceful exit applies.
+        KillswitchTrigger::DaemonShutdown => posture(mode.keeps_block_on_shutdown()),
         // The management/GUI client vanishing does not stop the daemon: a
         // protected session's blocking firewall stays installed, lockdown or
         // not.

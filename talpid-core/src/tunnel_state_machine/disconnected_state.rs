@@ -82,7 +82,7 @@ impl DisconnectedState {
         // The firewall's persistence is not set here: it tracks the lockdown
         // setting through `set_lockdown_mode`, so it is already correct in
         // every state, including the ones this daemon may die in.
-        let result = if shared_values.lockdown_mode.bool() {
+        let result = if shared_values.lockdown_mode.blocks_while_disconnected() {
             let policy = FirewallPolicy::Blocked {
                 allow_lan: shared_values.allow_lan,
                 lan_networks: shared_values.lan_networks.clone(),
