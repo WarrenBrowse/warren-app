@@ -175,6 +175,14 @@ Rules:
   parser does not follow (an unknown next header, or a chain of more than eight).
   It stays in the tunnel, but leaves through the main exit, so the main exit and
   the app's own exit both see that app.
+- An app is its executable path, never its code signature, as for exclusion
+  ([split tunneling](split-tunneling.md)): a program that runs from a listed path
+  or bundle, or as a child of a listed app on macOS, gets that app's exit. This
+  never takes traffic off the tunnel, since impersonating a routed app only
+  changes the exit it leaves through. In include-only mode the same model
+  decides which programs are tunneled, so a program that is not in the list
+  but runs from an included path is tunneled, and one that copies an included
+  app's executable elsewhere is not.
 - A later fragment follows the decision made for its first fragment; one whose
   first fragment was not seen is dropped. A bare SYN on a 5-tuple still known
   opens a new connection, possibly from another program, and is attributed
