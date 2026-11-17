@@ -104,6 +104,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
         migrationManager = MigrationManager(cacheDirectory: containerURL)
         configureLogging()
         WarrenDeviceLaunch.configure(containerURL: containerURL)
+        provisionTunnelSeed()
 
         let ipOverrideWrapper = IPOverrideWrapper(
             relayCache: RelayCache(cacheDirectory: containerURL),
@@ -612,6 +613,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate, UNUserNotificationCenterD
             return nil
         }
         return directory
+    }
+
+    /// Gives a wallet saved before the tunnel extension had its own seed item
+    /// that item, so the extension can start the tunnel. Off the main thread:
+    /// it derives the seed from the phrase.
+    private func provisionTunnelSeed() {
+        let logger = self.logger
+        Task.detached(priority: .utility) {
+            do {
+                try WarrenWalletKeychain.provisionTunnelSeedIfMissing()
+            } catch {
+                logger?.error("Could not provision the tunnel's wallet seed")
+            }
+        }
     }
 
     /// The SS58 address of the wallet on this device, `nil` without one. It

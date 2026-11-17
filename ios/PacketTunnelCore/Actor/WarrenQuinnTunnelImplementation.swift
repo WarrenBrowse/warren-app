@@ -160,25 +160,33 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         self.adapter = adapter
         _actor.bindAdapter(adapter)
 
-        // Push the wallet Ed25519 signing seed into the actor. The
-        // Keychain entry lives in `Shared/` so the PacketTunnel extension
-        // can read it via the same
-        // `kSecAttrAccessibleWhenUnlockedThisDeviceOnly` attribute.
-        // Failure here means the wallet was never provisioned: the actor's
-        // `start(options:)` logs + bails out cleanly.
-        do {
-            let mnemonic = try WarrenWalletKeychain.loadSecure()
-            let wallet = try WarrenWallet.fromMnemonic(mnemonic)
-            _actor.bindWalletSigningSeed(wallet.seed)
-            wallet.forgetSecret()
-            logger.info("Wallet seed bound to WarrenQuinnActor")
-        } catch {
-            logger.warning(
-                "Wallet seed bind failed: \(error). start(options:) will be a no-op until OnboardingWizard provisions a wallet."
-            )
-        }
-
         startStatsBroadcastTask(adapter: adapter)
+    }
+
+    /// Hands the actor the wallet seed for the session about to start. Read
+    /// at every start rather than once per process: `stop()` wipes the
+    /// actor's copy, and the same extension process can be asked to start
+    /// again. The extension reads the seed item the app shares with it (the
+    /// phrase stays in the app's private access group), which is readable
+    /// after the first unlock, so an on-demand start on a locked device gets
+    /// it too.
+    private func bindWalletSeed() {
+        guard let group = appGroupSuiteName else {
+            logger.warning("No App Group in this bundle; no wallet seed to bind")
+            return
+        }
+        do {
+            var seed = try WarrenTunnelSeedKeychain.load(accessGroup: group)
+            _actor.bindWalletSigningSeed(seed)
+            seed.withUnsafeMutableBytes { buffer in
+                memset_s(buffer.baseAddress, buffer.count, 0, buffer.count)
+            }
+            logger.info("Wallet seed bound to WarrenQuinnActor")
+        } catch WarrenWalletKeychainError.notFound {
+            logger.warning("No wallet seed stored; the tunnel cannot start until the app saves a wallet")
+        } catch {
+            logger.warning("Wallet seed read failed; the tunnel cannot start")
+        }
     }
 
     deinit {
@@ -280,6 +288,7 @@ public final class WarrenQuinnTunnelImplementation: TunnelImplementation, @unche
         }
         warrenSelectedRelays = options.selectedRelays
         startDirectoryRefreshTask(statePath: statePath)
+        bindWalletSeed()
 
         // Forward to the actor ; the actor decides whether to call
         // `adapter.start(config:)` based on the resolved tunnel config
