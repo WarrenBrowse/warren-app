@@ -5,10 +5,8 @@
 //! (`Daemon::start` in `lib.rs`) loads env + seed + settings
 //! then calls [`resolve`] with those already-resolved values.
 //!
-//! Covers these cases (see tests):
-//! 1. `Some(url) && Some(seed)` -> Some.
-//! 2. URL absent from both env AND settings -> compiled default.
-//! 3. seed absent (mnemonic not bootstrapped) -> None.
+//! A URL absent from both the env and the settings resolves to the compiled
+//! default (see tests).
 
 use crate::device::WarrenApiConfig;
 use crate::warren_sdk_client::SharedWarrenSeed;
@@ -44,12 +42,12 @@ pub const DEFAULT_WARREN_API_URL: &str = crate::warren_product_config::WARREN_AP
 pub(crate) fn resolve(
     settings_url: Option<String>,
     env_url: Option<String>,
-    seed: Option<SharedWarrenSeed>,
-) -> Option<WarrenApiConfig> {
-    let url = api_url(settings_url, env_url);
-    let seed = seed?;
-
-    Some(WarrenApiConfig { url, seed })
+    seed: SharedWarrenSeed,
+) -> WarrenApiConfig {
+    WarrenApiConfig {
+        url: api_url(settings_url, env_url),
+        seed,
+    }
 }
 
 /// The API base URL every Warren client of the daemon talks to.
@@ -110,12 +108,7 @@ mod tests {
 
     #[test]
     fn happy_path_returns_config_with_url_and_seed() {
-        let cfg = resolve(
-            Some(DEFAULT_WARREN_API_URL.to_owned()),
-            None,
-            Some(fixed_seed()),
-        );
-        let cfg = cfg.expect("must produce a config");
+        let cfg = resolve(Some(DEFAULT_WARREN_API_URL.to_owned()), None, fixed_seed());
         assert_eq!(cfg.url, DEFAULT_WARREN_API_URL);
         assert_eq!(*cfg.seed.read().unwrap(), Zeroizing::new([7u8; 32]));
     }
@@ -169,9 +162,8 @@ mod tests {
         let cfg = resolve(
             Some("https://api.warrenbrowse.com".to_owned()),
             Some("http://127.0.0.1:8080".to_owned()),
-            Some(fixed_seed()),
+            fixed_seed(),
         );
-        let cfg = cfg.expect("must produce a config");
         assert_eq!(
             cfg.url, "http://127.0.0.1:8080",
             "env_url MUST take priority over settings_url"
@@ -184,8 +176,7 @@ mod tests {
         // back to the Mullvad upstream API (`api.mullvad.net`, which
         // Warren does not operate), we use the compiled production
         // default so the remote backend works out-of-the-box.
-        let cfg = resolve(None, None, Some(fixed_seed()));
-        let cfg = cfg.expect("no URL MUST now produce a config with the compiled default");
+        let cfg = resolve(None, None, fixed_seed());
         assert_eq!(
             cfg.url, DEFAULT_WARREN_API_URL,
             "missing URL MUST default to the prod warren-api endpoint"
@@ -198,8 +189,7 @@ mod tests {
         // persists `Some("")`. We treat that as "not provided" and
         // fall through to the compiled default, not as a hard disable
         // of the Warren remote backend.
-        let cfg = resolve(Some(String::new()), None, Some(fixed_seed()));
-        let cfg = cfg.expect("empty URL MUST fall through to the compiled default");
+        let cfg = resolve(Some(String::new()), None, fixed_seed());
         assert_eq!(
             cfg.url, DEFAULT_WARREN_API_URL,
             "empty URL MUST default to the prod warren-api endpoint"
@@ -214,25 +204,11 @@ mod tests {
         let cfg = resolve(
             Some("https://api.warrenbrowse.com".to_owned()),
             Some(String::new()),
-            Some(fixed_seed()),
+            fixed_seed(),
         );
-        let cfg = cfg.expect("must produce a config");
         assert_eq!(
             cfg.url, "https://api.warrenbrowse.com",
             "an empty env URL MUST fall through to the non-empty settings URL"
         );
-    }
-
-    #[test]
-    fn no_seed_returns_none() {
-        // Edge case: URL configured but no mnemonic loaded (= identity
-        // absent). We MUST NOT build a client with a dummy seed: we fall
-        // back with a warn and no remote config.
-        let cfg = resolve(
-            Some("https://api.warrenbrowse.com".to_owned()),
-            None,
-            None, // seed absent
-        );
-        assert!(cfg.is_none(), "no seed MUST return None");
     }
 }

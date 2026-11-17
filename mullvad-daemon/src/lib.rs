@@ -1560,14 +1560,12 @@ impl Daemon {
         let warren_api_config = warren_remote_config::resolve(
             settings.warren_api_url.clone(),
             env_url,
-            warren_shared_seed.clone(),
+            warren_identity.seed_handle(),
         );
-        match &warren_api_config {
-            Some(cfg) => log::info!("Warren remote backend enabled (api={})", cfg.url),
-            None => log::warn!(
-                "No warren-api signing key (mnemonic missing); account backend unavailable"
-            ),
-        }
+        log::info!(
+            "Warren remote backend enabled (api={})",
+            warren_api_config.url
+        );
 
         // The standing monitor starts further down, once the event loop's
         // plumbing exists; the account backend reports the ban a voucher

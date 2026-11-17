@@ -1,24 +1,15 @@
-//! Abstract trait for the account-level operations, so the daemon drives
-//! them against the Warren backend instead of `AccountsProxy`/`api.mullvad.net`.
+//! The account-level operations (subscription expiry, account deletion,
+//! voucher redemption and collection) behind a trait, implemented by
+//! [`WarrenRemoteAccountBackend`]: signed HTTP requests to the Warren API.
 //!
-//! Lets us dispatch at boot between:
-//! - [`WarrenRemoteAccountBackend`]: signed HTTP backend talking to
-//!   warren-api (the standard Warren path - real subscription expiry).
-//! - [`RemoteAccountBackend`]: thin wrap over the legacy Mullvad
-//!   `AccountsProxy`, used only when no Warren signing key is available.
-//!
-//! Scope (3 methods): `get_data`, `delete_account`,
-//! `submit_voucher`. The remaining methods
-//! (`get_www_auth_token`, `init_play_purchase`, `verify_play_purchase`)
-//! stay in [`super::service::WarrenIdentityService`] directly on
-//! the `AccountsProxy` for this phase.
+//! `get_www_auth_token` still goes through the inherited `AccountsProxy` in
+//! [`super::service::WarrenIdentityService`].
 
 use std::future::Future;
 use std::pin::Pin;
 use std::sync::Arc;
 
 use chrono::Utc;
-use mullvad_api::AccountsProxy;
 use mullvad_api::rest;
 use mullvad_types::account::{AccountData, AccountNumber, VoucherSubmission};
 use zeroize::Zeroizing;
@@ -32,19 +23,15 @@ use crate::warren_sdk_client::SharedWarrenApiClient;
 /// each trait impl must clone its deps before `Box::pin(async move {…})`.
 pub type BoxFut<T> = Pin<Box<dyn Future<Output = T> + Send + 'static>>;
 
-/// Abstract backend for the MVP critical account-level operations.
+/// The account-level operations the identity service drives.
 ///
-/// All methods return `Result<_, rest::Error>` to
-/// preserve ABI compatibility with `retry_future` and with the existing
-/// error map (`map_rest_error` on the
-/// [`super::service`] side). In local mode, `rest::Error` is produced
-/// only for degraded cases (disk corruption for instance) -
-/// the nominal path is always `Ok`.
+/// All methods return `Result<_, rest::Error>` so they fit `retry_future`
+/// and the error map (`map_rest_error`) of [`super::service`].
 pub trait WarrenAccountBackend: Send + Sync {
     /// Fetches the account data (= mainly the expiry).
     fn get_data(&self, account: AccountNumber) -> BoxFut<Result<AccountData, rest::Error>>;
 
-    /// Removes the account (= erases the local identity in POC mode).
+    /// Removes the account.
     ///
     /// Outside Android, `WarrenIdentityService` does not expose
     /// `delete_account` (see `service.rs:#[cfg(target_os = "android")]`),
@@ -61,10 +48,8 @@ pub trait WarrenAccountBackend: Send + Sync {
     )]
     fn delete_account(&self, account: AccountNumber) -> BoxFut<Result<(), rest::Error>>;
 
-    /// Redeems a voucher to create or extend a subscription.
-    /// In warren remote mode: calls `POST /v1/register` (unsigned).
-    /// In local mode: returns a far-future expiry (no network).
-    /// In legacy Mullvad mode: delegates to `AccountsProxy::submit_voucher`.
+    /// Redeems a voucher to create or extend a subscription
+    /// (`POST /v1/register`, unsigned).
     fn submit_voucher(
         &self,
         account: AccountNumber,
@@ -81,66 +66,9 @@ pub trait WarrenAccountBackend: Send + Sync {
     ) -> BoxFut<Result<Option<Zeroizing<String>>, rest::Error>>;
 }
 
-/// Thin wrap of the legacy Mullvad `AccountsProxy`. Delegates each
-/// trait method to the corresponding `AccountsProxy`. Behavior
-/// strictly identical to the pre-Warren-fork Mullvad path.
-#[derive(Clone)]
-pub struct RemoteAccountBackend {
-    proxy: AccountsProxy,
-}
-
-impl RemoteAccountBackend {
-    #[must_use]
-    pub fn new(proxy: AccountsProxy) -> Self {
-        Self { proxy }
-    }
-}
-
-impl WarrenAccountBackend for RemoteAccountBackend {
-    fn get_data(&self, account: AccountNumber) -> BoxFut<Result<AccountData, rest::Error>> {
-        let proxy = self.proxy.clone();
-        Box::pin(async move { proxy.get_data(account).await })
-    }
-
-    fn delete_account(&self, account: AccountNumber) -> BoxFut<Result<(), rest::Error>> {
-        #[cfg(target_os = "android")]
-        {
-            let proxy = self.proxy.clone();
-            Box::pin(async move { proxy.delete_account(account).await })
-        }
-        #[cfg(not(target_os = "android"))]
-        {
-            let _ = account;
-            Box::pin(async move { Err(rest::Error::Aborted) })
-        }
-    }
-
-    fn submit_voucher(
-        &self,
-        account: AccountNumber,
-        voucher: String,
-    ) -> BoxFut<Result<VoucherSubmission, rest::Error>> {
-        let proxy = self.proxy.clone();
-        Box::pin(async move { proxy.submit_voucher(account, voucher).await })
-    }
-
-    fn pull_purchase_voucher(
-        &self,
-        _account: AccountNumber,
-        _claim: String,
-    ) -> BoxFut<Result<Option<Zeroizing<String>>, rest::Error>> {
-        Box::pin(async move { Err(rest::Error::Aborted) })
-    }
-}
-
-/// Warren-Remote backend - implements
-/// [`WarrenAccountBackend`] via the signed HTTP client
+/// Implements [`WarrenAccountBackend`] with the signed HTTP client
 /// ([`SharedWarrenApiClient`], wrapping the SDK's `warren_api::WarrenApiClient`)
-/// that talks to the warren-api server (= alternative to the
-/// `RemoteAccountBackend` path that talks to `api.mullvad.net`).
-///
-/// The standard Warren account backend (= the warren-remote branch of
-/// the dispatch in `device/mod.rs`).
+/// that talks to the Warren API.
 ///
 /// Mapping semantics:
 /// - `get_data(account)`: signed `GET /v1/subscription` ->

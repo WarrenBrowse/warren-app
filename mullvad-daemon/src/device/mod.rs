@@ -42,15 +42,11 @@ use tokio::{
 mod account_backend;
 mod api;
 mod service;
-pub(crate) use account_backend::{
-    BanSink, RemoteAccountBackend, WarrenAccountBackend, WarrenRemoteAccountBackend,
-};
+pub(crate) use account_backend::{BanSink, WarrenAccountBackend, WarrenRemoteAccountBackend};
 pub(crate) use service::WarrenIdentityService;
 
-/// Config needed to instantiate the Warren-Remote account backend
-/// (= warren-api path). Built by the caller (`Daemon::start`) at boot.
-/// `None` falls back to the legacy [`RemoteAccountBackend`] (no
-/// mnemonic/seed available).
+/// Config needed to instantiate the account backend. Built by the caller
+/// (`Daemon::start`) at boot.
 ///
 /// Convention:
 /// - `url`: `http(s)://host:port`, without trailing slash.
@@ -360,33 +356,22 @@ impl AccountManager {
         rest_handle: rest::MullvadRestHandle,
         settings_dir: &Path,
         listener_tx: impl Sender<AccountEvent> + Send + 'static,
-        warren_api_config: Option<WarrenApiConfig>,
+        warren_api_config: WarrenApiConfig,
         warren_ban_sink: Option<account_backend::BanSink>,
     ) -> Result<(AccountManagerHandle, PrivateDeviceState), Error> {
         let (cacher, data) = DeviceCacher::new(settings_dir).await?;
         let number = data.pubkey().map(|pubkey| pubkey.as_str().to_owned());
         let api_availability = rest_handle.availability.clone();
-        // 2-branch dispatch of the account backend:
-        // 1. `warren_api_config = Some(_)` -> [`WarrenRemoteAccountBackend`]
-        //    (talks to warren-api via signed HTTP Ed25519). This is the
-        //    standard Warren path: the real subscription expiry is read
-        //    from `GET /v1/subscription`.
-        // 2. Otherwise (no mnemonic/signing key) -> [`RemoteAccountBackend`]
-        //    (legacy Mullvad upstream path).
-        let account_backend: std::sync::Arc<dyn WarrenAccountBackend> = if let Some(cfg) =
-            warren_api_config
-        {
-            let client = crate::warren_sdk_client::SharedWarrenApiClient::new(cfg.url, cfg.seed);
-            let backend = WarrenRemoteAccountBackend::new(client);
+        let client = crate::warren_sdk_client::SharedWarrenApiClient::new(
+            warren_api_config.url,
+            warren_api_config.seed,
+        );
+        let backend = WarrenRemoteAccountBackend::new(client);
+        let account_backend: std::sync::Arc<dyn WarrenAccountBackend> =
             std::sync::Arc::new(match warren_ban_sink {
                 Some(sink) => backend.with_ban_sink(sink),
                 None => backend,
-            })
-        } else {
-            std::sync::Arc::new(RemoteAccountBackend::new(mullvad_api::AccountsProxy::new(
-                rest_handle.clone(),
-            )))
-        };
+            });
         let warren_identity_service = service::spawn_warren_identity_service(
             rest_handle.clone(),
             number,
