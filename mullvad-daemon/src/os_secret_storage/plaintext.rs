@@ -62,15 +62,13 @@ impl PlaintextStorage {
     }
 
     fn ensure_dir(&self) -> io::Result<()> {
-        if self.secrets_dir.exists() {
-            return Ok(());
-        }
         fs::create_dir_all(&self.secrets_dir)?;
         // Tighten directory perms on Unix-like systems so that a
         // file with relaxed mode created here is still protected by
-        // the enclosing directory. No-op on Windows where ACLs are
-        // inherited from the parent (settings_dir is already
-        // ProgramData-style and root-owned).
+        // the enclosing directory, on every write: a directory left
+        // open by an older build or by hand is not trusted as found.
+        // No-op on Windows where ACLs are inherited from the parent
+        // (settings_dir is already ProgramData-style and root-owned).
         #[cfg(unix)]
         {
             use std::os::unix::fs::PermissionsExt;
@@ -331,6 +329,28 @@ mod tests {
         let path = storage.key_path("k").expect("valid key");
         let mode = fs::metadata(&path).expect("stat").permissions().mode() & 0o777;
         assert_eq!(mode, 0o600, "secret file MUST be 0o600 root-only");
+
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_secrets_directory_found_open_is_closed_before_the_next_write() {
+        use std::os::unix::fs::PermissionsExt;
+        let dir = isolated_tempdir();
+        let storage = PlaintextStorage::new(&dir);
+        fs::create_dir_all(&storage.secrets_dir).expect("create");
+        fs::set_permissions(&storage.secrets_dir, fs::Permissions::from_mode(0o755))
+            .expect("loosen");
+
+        storage.store("k", b"v").expect("write");
+
+        let mode = fs::metadata(&storage.secrets_dir)
+            .expect("stat")
+            .permissions()
+            .mode()
+            & 0o777;
+        assert_eq!(mode, 0o700);
 
         let _ = fs::remove_dir_all(&dir);
     }
