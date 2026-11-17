@@ -71,6 +71,22 @@ pub fn elevation_hint(setup_path: &str) -> String {
     }
 }
 
+/// What the daemon path tells the user. Lockdown is a setting the user chose,
+/// and turning it off outlives this command, so the report names the change
+/// and the command that undoes it.
+#[must_use]
+pub fn daemon_unblock_report(lockdown_was_on: bool) -> String {
+    if lockdown_was_on {
+        format!(
+            "Lockdown mode was on and is now off. Tunnel disconnected.\n\
+             Turn lockdown mode back on once you are connected: {} lockdown-mode set on",
+            crate::BIN_NAME
+        )
+    } else {
+        "Tunnel disconnected.".to_owned()
+    }
+}
+
 /// Absolute path of the privileged helper, which ships next to this binary.
 ///
 /// Resolved from the running executable rather than `PATH`: a machine with
@@ -97,11 +113,12 @@ impl Unblock {
         match plan(client.is_ok(), self.deep) {
             Plan::ViaDaemon => {
                 let mut rpc = client.expect("the plan only picks this path with a live daemon");
+                let lockdown_was_on = rpc.get_settings().await?.lockdown_mode;
                 // Order matters: with lockdown still armed, disconnecting
                 // keeps the block in place by design.
                 rpc.set_lockdown_mode(false).await?;
                 rpc.disconnect_tunnel("warren unblock").await?;
-                println!("Lockdown mode disabled and tunnel disconnected.");
+                println!("{}", daemon_unblock_report(lockdown_was_on));
                 println!(
                     "If traffic is still blocked, re-run with --deep to sweep firewall state \
                      left by other installs."
@@ -138,7 +155,7 @@ impl Unblock {
 
 #[cfg(test)]
 mod tests {
-    use super::{Plan, elevation_hint, plan};
+    use super::{Plan, daemon_unblock_report, elevation_hint, plan};
 
     /// The macOS and Linux packages put the CLI on `PATH` through a symlink
     /// (`/usr/local/bin/warren-beta` into the app bundle), and macOS reports
@@ -185,6 +202,30 @@ mod tests {
         assert_eq!(plan(false, false), Plan::ViaSetupBinary);
         assert_eq!(plan(true, true), Plan::ViaSetupBinary);
         assert_eq!(plan(false, true), Plan::ViaSetupBinary);
+    }
+
+    /// A user who chose lockdown mode loses it to `unblock`: the command says
+    /// so, and gives the exact command that turns it back on.
+    #[test]
+    fn disarming_lockdown_is_announced_with_the_way_back() {
+        let report = daemon_unblock_report(true);
+        assert!(
+            report.contains("Lockdown mode was on and is now off"),
+            "the report must name the setting it changed: {report}"
+        );
+        assert!(
+            report.contains(&format!("{} lockdown-mode set on", crate::BIN_NAME)),
+            "the report must give the command that restores it: {report}"
+        );
+    }
+
+    /// Nothing to restore when lockdown was already off, so the report does
+    /// not claim a change that did not happen.
+    #[test]
+    fn an_unarmed_lockdown_is_not_reported_as_changed() {
+        let report = daemon_unblock_report(false);
+        assert!(!report.contains("lockdown-mode set on"), "{report}");
+        assert!(report.contains("Tunnel disconnected."), "{report}");
     }
 
     /// The hint is read aloud to someone with no internet, so it must contain
