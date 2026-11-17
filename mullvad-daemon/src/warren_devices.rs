@@ -1,4 +1,4 @@
-//! The devices of the logged-in account (warren-core doc 115), as the GUI
+//! The devices of the logged-in account, as the GUI
 //! lists, renames and revokes them from one another: the wallet-signed
 //! `GET /v1/devices`, `PATCH` and `DELETE /v1/devices/{id}`. The list names the account's installs and the days
 //! they were used, so it goes to the account's own screens and never to a

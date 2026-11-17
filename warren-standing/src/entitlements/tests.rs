@@ -40,7 +40,7 @@ struct IssuerState {
     attribution_key: SigningKey,
     refuse_issuance: AtomicBool,
     /// Answers every issue request with the issuer's ban refusal (403
-    /// `{"error":"banned"}`, warren-core doc 105 §5.3).
+    /// `{"error":"banned"}`).
     ban_wallet: AtomicBool,
     fail_transport: AtomicBool,
     /// Answers every issue request with the API's clock refusal (401

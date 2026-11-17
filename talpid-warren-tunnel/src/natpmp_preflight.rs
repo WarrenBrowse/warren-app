@@ -1,5 +1,4 @@
-//! Pre-flight NAT-PMP reservation over a not-yet-published session
-//! (docs/59 Lot 3).
+//! Pre-flight NAT-PMP reservation over a not-yet-published session.
 //!
 //! When the client migrates off a draining exit, the destination exit's
 //! allocator may already hold a port the client has PINNED. The strict
@@ -9,7 +8,7 @@
 //! check): if every pinned rule can be reserved, the swap proceeds and
 //! the ports already exist on the new exit; if any is taken, the swap is
 //! aborted and the client stays on the draining exit, riding the swap
-//! micro-cut with its ports intact (thanks to Lot 2 persistence).
+//! micro-cut with its ports intact (the mappings persist across the swap).
 //!
 //! The reservation is a real RFC 6886 `Map` request. There is no
 //! separate control channel: the request rides the multi-hop datagram
@@ -151,7 +150,7 @@ pub const BUNDLE_RECV_TIMEOUT: Duration = Duration::from_millis(1500);
 /// inner IP packets ride the bundle's sealed datagram path exactly like
 /// post-swap tunnel traffic. Boundary glue over the real QUIC bundle;
 /// the trait logic is unit-tested against fakes and this adapter is
-/// validated against a real exit at rollout (docs/59 § 8).
+/// validated against a real exit at rollout.
 pub struct BundlePreflightTransport {
     bundle: std::sync::Arc<warrenguard_transport::bundle::MultiHopBundle>,
 }
@@ -201,7 +200,7 @@ pub struct PinnedRule {
 
 /// Extracts the user-PINNED rules (explicit external port chosen by the
 /// user, not a sticky follow) from the live port-forward config. Only
-/// these gate a migration (contract C2/C3 of docs/59): auto rules,
+/// these gate a migration: auto rules,
 /// sticky suggestions included, follow best-effort after the swap and
 /// never block it. Empty when port-forwarding is disabled. A dual-proto
 /// rule expands into one reservation per leg on the SAME external port;
@@ -351,8 +350,8 @@ pub const DEFAULT_ATTEMPTS_PER_RULE: usize = 8;
 /// candidate ladder nor surface the C5 cancellation.
 pub const PRE_SWAP_GATE_DEADLINE: Duration = Duration::from_secs(8);
 
-/// Full pre-swap verdict for a candidate exit (docs/59 Lot 3, contract
-/// C1/C2): `true` commits the migration, `false` aborts it and keeps
+/// Full pre-swap verdict for a candidate exit: `true`
+/// commits the migration, `false` aborts it and keeps
 /// the current session.
 ///
 /// - No pinned rule: nothing gates, no pre-flight traffic at all.
@@ -757,7 +756,7 @@ mod tests {
 
     #[tokio::test]
     async fn reserve_all_releases_prior_grants_when_a_later_pin_conflicts() {
-        // Doc 59 D3: aborting a candidate must not leave half the pins
+        // Aborting a candidate must not leave half the pins
         // reserved on it. Rule 1 (8080 -> 50000) is granted, rule 2
         // (9090 -> 50001) conflicts: the abort path sends a best-effort
         // delete (lifetime=0) for rule 1 before giving up.

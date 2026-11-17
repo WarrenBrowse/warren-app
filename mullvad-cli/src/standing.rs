@@ -1,5 +1,5 @@
-//! How the CLI prints the wallet's port-forward abuse standing (warren-core
-//! doc 105): the human warning lines and the JSON view shared by
+//! How the CLI prints the wallet's port-forward abuse standing: the
+//! human warning lines and the JSON view shared by
 //! `account standing`, `port-forward status` and `status --listen`.
 
 use chrono::{DateTime, Utc};

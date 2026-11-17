@@ -1,5 +1,5 @@
-//! Long-lived v7 anonymous-token minting for the iOS tunnel (Privacy Pass,
-//! warren-core doc 64), the Network-Extension twin of the desktop/Android daemon's
+//! Long-lived v7 anonymous-token minting for the iOS tunnel (Privacy Pass),
+//! the Network-Extension twin of the desktop/Android daemon's
 //! `warren_token_provider`.
 //!
 //! Holds one [`warren_api::TokenManager`] per wallet (process-lived, keyed by
@@ -81,7 +81,7 @@ fn spawn_refresh(
                 return;
             }
             if let Err(e) = refreshed {
-                // The issuer refuses a banned wallet (warren-core doc 105 §5.3):
+                // The issuer refuses a banned wallet:
                 // that goes to the standing, which blocks the tunnel before an
                 // exit is dialed. A v7 client never presents its wallet to an
                 // exit, so this is how it learns of the ban at all.

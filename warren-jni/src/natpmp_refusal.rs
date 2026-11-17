@@ -1,5 +1,5 @@
 //! What the Android NAT-PMP path does when an exit refuses its Map request as
-//! not authorized (warren-core doc 105: an exit refuses a request that carries
+//! not authorized (an exit refuses a request that carries
 //! no valid entitlement envelope, RFC 6886 result code 2).
 //!
 //! The engine's refresh loop treats that answer as permanent and stops, so the

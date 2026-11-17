@@ -12,7 +12,7 @@
 //!
 //! The main session is admitted on the wallet's anonymous tokens, with a key
 //! that is no wallet. When the beta token directory offers route admission by
-//! anchor (warren-core doc 107), the main session anchors and the routes to
+//! anchor, the main session anchors and the routes to
 //! the exits it lists are admitted against the anchor, with no token each;
 //! otherwise every route runs on a token, at most two at once, and the others
 //! are reported waiting for a free route.

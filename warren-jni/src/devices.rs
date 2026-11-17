@@ -1,4 +1,4 @@
-//! The account's devices (warren-core doc 115) on Android: this install as a
+//! The account's devices on Android: this install as a
 //! device of its account, registering as `android` with the app's product
 //! version, and the process's [`DeviceRegistry`], which the token and
 //! entitlement mints tell of a revocation and the JNI exports answer from.

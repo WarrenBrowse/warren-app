@@ -11,7 +11,7 @@ warren-product-env = { path = "../warren-product-env" }
 chrono = { workspace = true, features = ["clock", "serde"] }
 clap = { workspace = true, optional = true }
 either = "1.11"
-# Warren fork: `WarrenPubKey` validates an SS58 address (prefix 13295,
+# `WarrenPubKey` validates an SS58 address (prefix 13295,
 # `wb…`). Uses the shared `warren-contract` codec crate directly - the
 # single source of truth for the codec, also re-exported as
 # `warren_identity::ss58` on the backend. No duplicated checksum logic.
@@ -28,7 +28,7 @@ uuid = { version = "1.4.1", features = ["serde", "v4"] }
 vec1 = { workspace = true }
 
 [dev-dependencies]
-# Warren fork - Phase 2.B: serde_json for the serde vector tests of
+# Serde_json for the serde vector tests of
 # `WarrenPubKey` (transparent JSON).
 serde_json = { workspace = true }
 

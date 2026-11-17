@@ -251,7 +251,7 @@ where
                     // Only a bound anchor sets the capacity. One that becomes
                     // unavailable after it was bound leaves its routes up:
                     // they stay admitted at their exits until the control
-                    // plane ends them (warren-core doc 107 section 12), and a
+                    // plane ends them, and a
                     // route it ends falls back to a token.
                     Some(state @ AnchorState::Anchored { .. }) => {
                         self.set_capacity(route_capacity(Some(state))).await;

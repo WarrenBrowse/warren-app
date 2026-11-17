@@ -6,7 +6,7 @@
 //! `warren_identity::derive_node_key`). No token lifecycle, no cache
 //! to invalidate.
 //!
-//! **Canonical format** (see `warren-core/docs/06-auth-wallet.md` § 110):
+//! **Canonical format**:
 //!
 //! ```text
 //! message = METHOD || "\n" || path || "\n" || timestamp || "\n" || nonce_hex || "\n" || sha256_hex(body)

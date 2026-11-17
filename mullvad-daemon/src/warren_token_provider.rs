@@ -1,5 +1,4 @@
-//! Long-lived v7 anonymous-token minting for the app tunnel (Privacy Pass,
-//! warren-core doc 64).
+//! Long-lived v7 anonymous-token minting for the app tunnel (Privacy Pass).
 //!
 //! Holds one [`warren_api::TokenManager`] per wallet (process-lived, keyed by
 //! the ss58 address), spawns a background refresh task the first time a wallet
@@ -34,14 +33,14 @@
 //!
 //! An issuer that refuses the wallet as banned is reported to the account
 //! standing monitor, which blocks the tunnel with the suspension before any
-//! exit is dialed (warren-core doc 105 §5.3).
+//! exit is dialed.
 //!
 //! The same manager reads the route admission block of the token directory
-//! on each refresh (warren-core doc 107): [`route_admission_for`] hands the
+//! on each refresh: [`route_admission_for`] hands the
 //! tunnel the key its main session anchors with and the exits that admit
 //! routes by anchor, as the last directory announced them. The key is used
-//! only under the signature of a server key the daemon pins (doc 107 section
-//! 6.5, [`RouteKemTrust`]). The last signed block is kept in the daemon's
+//! only under the signature of a server key the daemon pins
+//! ([`RouteKemTrust`]). The last signed block is kept in the daemon's
 //! cache directory, so a tunnel started before this run's first directory
 //! read (right after a daemon start) anchors with it rather than not at all.
 //! Every refresh round is announced ([`credentials_for`]), so a tunnel that
@@ -102,7 +101,7 @@ pub(crate) fn keep_rotation_in(dir: PathBuf) {
     let _ = ROTATION_DIR.set(dir);
 }
 
-/// The platform this daemon registers its install as (warren-core doc 115).
+/// The platform this daemon registers its install as.
 #[cfg(target_os = "macos")]
 pub(crate) const DESKTOP_PLATFORM: DevicePlatform = DevicePlatform::Macos;
 #[cfg(target_os = "windows")]

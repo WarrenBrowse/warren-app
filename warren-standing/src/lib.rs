@@ -1,5 +1,4 @@
-//! Port-forward abuse standing of a Warren wallet, as the clients see it
-//! (warren-core doc 105 §5.3, §5.4).
+//! Port-forward abuse standing of a Warren wallet, as the clients see it.
 //!
 //! Two sources tell a client about its standing. `GET /v1/account/standing`
 //! answers the live strikes and the ban in force, and the token and
@@ -140,7 +139,7 @@ impl Ban {
     /// The ban an API refusal carries, `None` for any other failure. Issuance
     /// and every call that credits time (a voucher redemption, the store
     /// payment calls) refuse a wallet on the CRL this way, before consuming
-    /// anything (warren-core doc 105 §5.3).
+    /// anything.
     #[must_use]
     pub fn from_client_error(error: &ClientError) -> Option<Self> {
         match error {

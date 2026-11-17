@@ -88,7 +88,7 @@ pub(crate) struct RelayListUpdater {
     overrides: Vec<RelayOverride>,
     // The relay selector will only ever see the relay list with IP overrides applied.
     relay_selector: RelaySelector,
-    /// Warren fork: when `false`, the updater never hits the network to
+    /// When `false`, the updater never hits the network to
     /// download the upstream Mullvad relay list. On this fork Warren is the
     /// only tunnel mode and the Mullvad list is never consumed (the tunnel
     /// uses `warren-relays.json` via `DaemonWarrenRelaySelector`, the GUI
@@ -172,7 +172,7 @@ impl RelayListUpdater {
                             download_future = Box::pin(Self::download_relay_list(self.api_availability.clone(), self.api_client.clone(), etag).fuse());
                             self.last_check = SystemTime::now();
                         },
-                        // Warren fork: downloads disabled - the Mullvad relay
+                        // Downloads disabled - the Mullvad relay
                         // list is never consumed (see `downloads_enabled`).
                         Event::Update => {
                             log::trace!("Mullvad relay-list download skipped (Warren fork: list unused)");

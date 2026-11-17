@@ -2,8 +2,8 @@
 //! [`warren_discovery_core::WarrenRelaySelector`] crate.
 //!
 //! Encapsulates the state of the `WarrenRelayList` on the daemon side
-//! (will later be populated by a periodic fetch to the API; for the
-//! POC, loaded from `<cache_dir>/warren-relays.json`), and exposes a
+//! (loaded from `<cache_dir>/warren-relays.json` and refreshed by
+//! `warren_relay_list_updater`), and exposes a
 //! stable API for the `ParametersGenerator`. The wrapper returns only
 //! the endpoint components (`EndpointId` + `EndpointAddr`); final
 //! assembly into `WarrenTunnelParameters` (with `signing_key`,

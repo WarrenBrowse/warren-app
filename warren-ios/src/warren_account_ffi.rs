@@ -367,7 +367,7 @@ unsafe fn read_dir(dir: *const c_char) -> Option<std::path::PathBuf> {
     (!dir.is_empty()).then(|| std::path::PathBuf::from(dir))
 }
 
-/// Signed `GET /v1/account/standing` (warren-core doc 105 §5.4): the wallet's
+/// Signed `GET /v1/account/standing`: the wallet's
 /// live port-forward strikes with their case references, the ban with its
 /// lapse, and the strikes this device has not warned about yet, each exactly
 /// once. Which strikes were announced is remembered in a ledger of digests in

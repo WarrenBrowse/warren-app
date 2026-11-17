@@ -1,4 +1,4 @@
-//! This install's device in the account's registry (warren-core doc 115): the
+//! This install's device in the account's registry: the
 //! identity it registers under, kept beside the token rotation in the
 //! install's own state directory, and the registration every token and
 //! entitlement manager of the install sends.
@@ -164,7 +164,7 @@ impl InstallDevice {
     }
 }
 
-/// `manager`, registering and asking as `device` (warren-core doc 115).
+/// `manager`, registering and asking as `device`.
 /// Without a device it asks as no device, the way clients before the
 /// registry did.
 #[must_use]

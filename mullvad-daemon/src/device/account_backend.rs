@@ -112,8 +112,8 @@ fn same_secret(a: &str, b: &str) -> bool {
             == 0
 }
 
-/// Receives the ban an API refusal of `wallet` carries (warren-core doc 105
-/// §5.3). The wallet is its SS58 address, compared by the receiver and never
+/// Receives the ban an API refusal of `wallet` carries. The
+/// wallet is its SS58 address, compared by the receiver and never
 /// logged.
 pub(crate) type BanSink = Arc<dyn Fn(String, warren_standing::Ban) + Send + Sync>;
 
@@ -210,7 +210,7 @@ impl WarrenAccountBackend for WarrenRemoteAccountBackend {
             // desynced identity would burn the PAID voucher into the
             // wrong wallet with no recovery.
             check_account_matches_identity(&account, &pubkey_ss58)?;
-            // App-initiated purchase (doc 35): the GUI polls this same
+            // App-initiated purchase: the GUI polls this same
             // entry point with the claim code of the purchase it opened
             // (wpid + pull secret). The shape fully determines the path:
             // pull the queued secret from the API with the pull secret
@@ -687,7 +687,7 @@ mod tests {
     }
 
     // ===================================================================
-    // App-initiated purchase path (doc 35): submit_voucher with a claim
+    // App-initiated purchase path: submit_voucher with a claim
     // code (wpid + pull secret) pulls the queued secret from
     // POST /v1/checkout/{wpid}/voucher, presenting the pull secret, before
     // redeeming it through POST /v1/register.
@@ -916,7 +916,7 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn a_banned_wallet_keeps_its_paid_voucher_and_the_ban_reaches_the_standing() {
-        // warren-core doc 105 §5.3: the refusal consumed nothing, so the
+        // The refusal consumed nothing, so the
         // pulled secret is the only copy of a voucher the user paid for and
         // still owns. It is kept for the redemption after the ban, the
         // register is not retried (the answer will not change in seconds),
@@ -1468,7 +1468,7 @@ mod tests {
 
     #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
     async fn the_kept_copy_answers_only_the_purchase_s_own_pull_secret() {
-        // The wpid travels in URLs and proves nothing (doc 35 §14): the copy
+        // The wpid travels in URLs and proves nothing: the copy
         // kept after the pull is handed back against the same secret as the
         // server's pull, and a wrong one reads like the server's single 404.
         let mut server = mockito::Server::new_async().await;

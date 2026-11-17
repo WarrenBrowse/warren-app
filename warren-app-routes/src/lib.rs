@@ -8,7 +8,7 @@
 //! planned circuit next to the main session ([`controller`]), and puts the
 //! router of `talpid-app-routing` between the TUN device and the sessions
 //! ([`datapath`]). Route sessions are admitted against the main session's
-//! anchor where the server offers it (warren-core doc 107), and on anonymous
+//! anchor where the server offers it, and on anonymous
 //! tokens otherwise ([`session`]); never on the wallet. A route that is not
 //! connected drops its apps' packets: they never go through the main session,
 //! and never outside the tunnel.

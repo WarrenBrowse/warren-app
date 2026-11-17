@@ -1,8 +1,8 @@
 //! Route admission by anchor as the control plane announces it in its token
-//! directory (warren-core doc 107), read by the tunnel through
+//! directory, read by the tunnel through
 //! [`RouteAdmissionSource`](crate::RouteAdmissionSource). The key is used only
-//! under the signature of a server key the client pins (doc 107 section 6.5,
-//! [`RouteKemTrust`]). The last signed block is kept in the client's cache
+//! under the signature of a server key the client pins
+//! ([`RouteKemTrust`]). The last signed block is kept in the client's cache
 //! directory, so a tunnel started before a run's first directory read anchors
 //! with it rather than not at all: the engine takes a main session's anchor
 //! only when its supervisor is built, so a key that arrives later reaches the

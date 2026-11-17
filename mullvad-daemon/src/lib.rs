@@ -5,10 +5,6 @@ mod access_method;
 pub mod account_history;
 mod android_dns;
 mod api;
-// Kept for upstream-rebase cleanliness but not spawned: the Warren backend has
-// no `app/v1/api-addrs` endpoint (see the fetcher call site in `start_daemon`).
-#[expect(dead_code)]
-mod api_address_updater;
 #[cfg(not(target_os = "android"))]
 mod cleanup;
 mod custom_list;
@@ -95,7 +91,7 @@ pub mod warren_multi_hop;
 /// the manual `warren-multihop.json` as the production source.
 pub mod warren_multi_hop_directory;
 /// Detection of multi-hop opt-in via env var `WARREN_MULTI_HOP`
-/// (POC switch - no UI/CLI toggle for now).
+/// (no UI or CLI toggle).
 pub mod warren_multi_hop_mode;
 /// Background fetcher of the public `GET /v1/network` environment
 /// descriptor, cached into `warren_status` for both UIs.
@@ -127,17 +123,16 @@ pub mod warren_relay_list_view;
 /// `WarrenRelayList` from `cache_dir`, selects the endpoint
 /// components (`EndpointId` + `EndpointAddr`) of a Warren exit.
 pub mod warren_relay_selector;
-/// Phase #4 - resolution of `WarrenApiConfig` (warren-api URL + signing key)
-/// from Settings + env var. Testable pure function extracted from
-/// `Daemon::start`.
+/// Resolution of `WarrenApiConfig` (API URL and identity seed) from the
+/// settings and the environment, as a pure function.
 mod warren_remote_config;
 /// Token bucket capping the exit-down incident reports a flapping
 /// client sends, so one local outage cannot flood the operator feed.
 mod warren_report_budget;
 mod warren_sdk_client;
 mod warren_session_gate;
-/// Loads or generates the user's BIP39 mnemonic from the OS secret
-/// store (`os_secret_storage`), derives it into an Ed25519
+/// Loads the user's BIP39 mnemonic from the OS secret store
+/// (`os_secret_storage`), derives it into an Ed25519
 /// `SigningKey` and exposes a shared `WarrenAuthSigner` for the
 /// authenticated API requests.
 pub mod warren_signer;
@@ -589,16 +584,16 @@ pub enum DaemonCommand {
     /// network, and whether the host holds two interfaces on the default
     /// gateway's subnet.
     GetWarrenDiagnostics(oneshot::Sender<mullvad_types::warren_diagnostics::WarrenDiagnostics>),
-    /// Signs a community-forum login challenge (doc 55). Carries the
+    /// Signs a community-forum login challenge. Carries the
     /// deep-link `sid`; replies with the four X-Warren-* header values +
     /// the request body, or `None` if no identity is bootstrapped. The
     /// signing key never leaves the daemon.
-    /// Sign the community-forum notification read (doc 55). Carries no
+    /// Sign the community-forum notification read. Carries no
     /// argument: the account is derived from the signature itself.
     SignForumNotifications(
         oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
     ),
-    /// Sign marking the caller's own forum notification list seen (doc 55).
+    /// Sign marking the caller's own forum notification list seen.
     /// Its own signature: one is bound to one method and one path, so the
     /// read above can never be replayed as this write.
     SignForumNotificationsSeen(
@@ -608,7 +603,7 @@ pub enum DaemonCommand {
         oneshot::Sender<Option<(mullvad_api::warren_auth::WarrenAuthHeaders, String)>>,
         String,
     ),
-    /// Signs a community-forum attach-logs request (doc 55). Carries the
+    /// Signs a community-forum attach-logs request. Carries the
     /// deep-link `sid`, the forum topic id and the gzipped problem report;
     /// replies with the four X-Warren-* header values + the request body,
     /// or `None` if no identity is bootstrapped. The signing key never
@@ -619,7 +614,7 @@ pub enum DaemonCommand {
         u64,
         Vec<u8>,
     ),
-    /// Signs a community-forum in-app report (doc 55). Carries the form's
+    /// Signs a community-forum in-app report. Carries the form's
     /// fields as one JSON object and the gzipped problem report (`None` for
     /// a report filed without logs); replies with the four X-Warren-* header
     /// values + the exact signed body, or why it could not be signed. The
@@ -661,7 +656,7 @@ pub enum DaemonCommand {
         String,
         Option<String>,
     ),
-    /// List the devices of the logged-in account (warren-core doc 115).
+    /// List the devices of the logged-in account.
     ListWarrenDevices(ResponseTx<warren_api::DeviceListResponse, warren_devices::DevicesError>),
     /// Revoke the account's device with this id. Revoking this device is a
     /// logout: it then disconnects and forgets its identity.
@@ -1406,7 +1401,7 @@ impl Daemon {
             )
         };
 
-        // Warren fork: the identity manager is the single owner of both
+        // The identity manager is the single owner of both
         // identity views (signer + SDK seed). It loads the persisted
         // mnemonic if the user has onboarded, and otherwise runs on the
         // placeholder sentinel: no identity is ever minted outside the
@@ -1707,7 +1702,7 @@ impl Daemon {
         #[cfg(target_os = "linux")]
         let split_tunneling_pid_manager = split_tunnel::PidManager::default();
 
-        // Warren fork: init the Warren tunnel artifacts at boot. The
+        // Init the Warren tunnel artifacts at boot. The
         // signed exit list is loaded synchronously from the **newest
         // verifying source** among the on-disk cache (last fetched) and
         // the build-time baked bootstrap in `resource_dir`, pinned to the
@@ -2187,7 +2182,7 @@ impl Daemon {
                 .notify_relay_list(view.clone());
         }
 
-        // Warren fork: `downloads_enabled = false`. The upstream Mullvad
+        // `downloads_enabled = false`. The upstream Mullvad
         // relay list is never consumed (Warren is the only tunnel mode; the
         // GUI is fed the Warren view, the tunnel uses the Warren selector),
         // and warren-api does not serve the Mullvad relay endpoint, so every
@@ -2227,13 +2222,13 @@ impl Daemon {
             app_upgrade_broadcast,
         );
 
-        // Warren fork: no-op (Mullvad relay downloads are disabled, see
+        // No-op (Mullvad relay downloads are disabled, see
         // `RelayListUpdater::spawn(.., false)`). Kept for parity with
         // upstream boot sequencing; the Warren exit list is fetched by the
         // dedicated `WarrenRelayListUpdater` spawned just below.
         relay_list_updater.update().await;
 
-        // Warren fork: spawn the dynamic Warren exit-list updater. It
+        // Spawn the dynamic Warren exit-list updater. It
         // refreshes `GET {warren_api_url}/v2/exits` on startup +
         // periodically, verifies the signature against the pinned server
         // pubkey before caching, writes the cache atomically, and
@@ -2360,7 +2355,7 @@ impl Daemon {
             );
         }
 
-        // Port-forward abuse standing (warren-core doc 105): polled on the
+        // Port-forward abuse standing: polled on the
         // token refresh cadence and fed the issuers' ban refusals, so a v7
         // client learns of a suspension without dialing an exit.
         let warren_standing_monitor = warren_shared_seed.clone().map(|seed| {
@@ -3257,7 +3252,7 @@ impl Daemon {
             _ => {}
         }
 
-        // Doc 62 item 5: the egress-dead verdict only means something
+        // The egress-dead verdict only means something
         // while a tunnel is up; leaving Connected (rebuild, disconnect,
         // error) invalidates it. The probe of the next tunnel re-raises
         // it if the condition persists.
@@ -4327,7 +4322,7 @@ impl Daemon {
         );
     }
 
-    /// Signs the community-forum login approval for `sid` (doc 55): the
+    /// Signs the community-forum login approval for `sid`: the
     /// canonical request `POST /v1/forum/login` with the bound body
     /// `{"login_version":2,"sid":"<sid>"}`, using the Warren identity key held
     /// in the daemon, and returns the header values + body. Replies `None`
@@ -4348,7 +4343,7 @@ impl Daemon {
         self.sign_forum_request(tx, warren_forum::FORUM_LOGIN_PATH, body, "sign_forum_login");
     }
 
-    /// Signs the community-forum notification read (doc 55). The body is
+    /// Signs the community-forum notification read. The body is
     /// fixed and carries nothing: warren-connect derives the account from
     /// the signature, so there is no field a caller could point elsewhere.
     /// Replies `None` when no signer is bootstrapped.
@@ -4366,7 +4361,7 @@ impl Daemon {
         );
     }
 
-    /// Signs marking the caller's own forum notification list seen (doc 55).
+    /// Signs marking the caller's own forum notification list seen.
     /// Same empty body and same account derivation as the read, over its own
     /// path so the two signatures are not interchangeable.
     ///
@@ -4383,7 +4378,7 @@ impl Daemon {
         );
     }
 
-    /// Signs the community-forum attach-logs request for `sid` (doc 55).
+    /// Signs the community-forum attach-logs request for `sid`.
     /// Builds the canonical body via [`forum_attach_body`] and signs
     /// `POST /v1/forum/attach-logs` with the Warren identity key held in
     /// the daemon, returning the header values + the exact signed body (the
@@ -4449,7 +4444,7 @@ impl Daemon {
         });
     }
 
-    /// Signs the community-forum in-app report (doc 55). Builds the
+    /// Signs the community-forum in-app report. Builds the
     /// canonical body via [`forum_report_body`] (the crate the mobile FFI
     /// share) and signs `POST /v1/forum/report` with the Warren identity key
     /// held in the daemon, returning the header values + the exact signed
@@ -4778,7 +4773,7 @@ impl Daemon {
         tokio::spawn(async move {
             let result = warren_devices::revoke(&client, &id, this).await;
             match result {
-                // Revoking this device is its logout (warren-core doc 115):
+                // Revoking this device is its logout:
                 // the identity it registered under is dead, and the wallet goes
                 // with it, as a user's own sign-out does.
                 Ok(true) => {
@@ -5029,7 +5024,7 @@ impl Daemon {
     }
 
     /// The account's registry revoked this device from another device of the
-    /// account (warren-core doc 115, decision 1): the tunnel comes down, the
+    /// account: the tunnel comes down, the
     /// login reads revoked, which the GUI shows with its revoked view, and the
     /// wallet identity and the device identity are forgotten, so coming back
     /// takes the recovery phrase and registers as a new device.
@@ -7199,7 +7194,7 @@ const fn refreshes_roster_before_retry(cause: &ErrorStateCause) -> bool {
     )
 }
 
-/// Canonical `POST /v1/forum/login` JSON body (doc 55): the bound approval
+/// Canonical `POST /v1/forum/login` JSON body: the bound approval
 /// of the crate the Android and iOS FFI share (`warren_forum::login_body`),
 /// so the desktop signs the bytes the mobile clients do and the GUI POSTs
 /// them verbatim. `None` for a sid that is not 32 lowercase hex, which the
@@ -7210,7 +7205,7 @@ fn forum_login_body(sid: &str) -> Option<String> {
     String::from_utf8(body).ok()
 }
 
-/// Canonical `POST /v1/forum/notifications` JSON body (doc 55). Empty by
+/// Canonical `POST /v1/forum/notifications` JSON body. Empty by
 /// design and frozen as such: the account read is derived from the
 /// signature, so a field here could only ever be one a caller might point
 /// at somebody else. The daemon signs exactly this string and the GUI
@@ -7219,7 +7214,7 @@ fn forum_notifications_body() -> String {
     "{}".to_owned()
 }
 
-/// Canonical `POST /v1/forum/attach-logs` JSON body (doc 55). The field
+/// Canonical `POST /v1/forum/attach-logs` JSON body. The field
 /// order and formatting are a frozen wire contract with warren-connect:
 /// the daemon signs exactly this string and the GUI POSTs it verbatim, so
 /// the signed bytes and the sent bytes are identical. Standard base64
@@ -7234,7 +7229,7 @@ fn forum_attach_body(sid: &str, topic_id: u64, log_gz: &[u8]) -> String {
 /// daemon and the FFI crates cannot sign for two different routes.
 pub use warren_forum::FORUM_REPORT_PATH;
 
-/// Canonical `POST /v1/forum/report` JSON body (doc 55): the form's fields
+/// Canonical `POST /v1/forum/report` JSON body: the form's fields
 /// plus the gzipped problem report as `log_gz_b64`, serialised once by the
 /// crate the Android and iOS FFI share (`warren_forum::report_body`), so the
 /// desktop signs and sends the bytes the mobile clients do. `None` for a

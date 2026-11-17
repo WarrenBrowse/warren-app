@@ -1,5 +1,5 @@
-//! Port-forwarding entitlements for the iOS tunnel (warren-core doc 99,
-//! doc 105): an exit refuses a NAT-PMP Map request that carries no entitlement
+//! Port-forwarding entitlements for the iOS tunnel: an
+//! exit refuses a NAT-PMP Map request that carries no entitlement
 //! envelope, so without this the iOS forwarded port is refused everywhere.
 //!
 //! The mint is `warren_standing::entitlements`, shared with the desktop daemon

@@ -67,7 +67,7 @@ pub(crate) enum NatPmpEventKind {
     Failed { reason: String },
     /// The exit is refusing new allocations for `retry_after_secs`.
     RateLimited { retry_after_secs: u32 },
-    /// The exit refused the mapping as not authorized (warren-core doc 105)
+    /// The exit refused the mapping as not authorized
     /// and the tunnel asks again after `retry_in_secs`.
     Refused {
         refusal: warren_standing::PortRefusal,

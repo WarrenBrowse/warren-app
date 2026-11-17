@@ -1,4 +1,4 @@
-//! Port-forwarding entitlements (warren-core doc 99, doc 105) for the Android
+//! Port-forwarding entitlements for the Android
 //! tunnel. The mint itself is `warren_standing::entitlements`, shared with the
 //! desktop daemon and iOS; this module only wires it to the Android wallet,
 //! transport and standing.

@@ -1,4 +1,4 @@
-//! Port-forward abuse standing of the wallet on Android (warren-core doc 105):
+//! Port-forward abuse standing of the wallet on Android:
 //! the process-lived [`warren_standing::StandingStore`] every input of this
 //! crate feeds (the standing poll, the issuers' ban refusals, an exit's ban
 //! rejection) and the tunnel reads before it dials and while it runs. Its

@@ -44,14 +44,14 @@ parking_lot = "0.12.0"
 # logic can be exercised by host tests.
 tokio = { workspace = true, features = ["rt", "rt-multi-thread", "sync", "time", "macros", "net"] }
 log = { workspace = true }
-# v7 anonymous session credentials (Privacy Pass, doc 64): the token
+# v7 anonymous session credentials (Privacy Pass): the token
 # mint/refresh/stack core (`token_provider` module) is host-tested against a
 # mock transport, so warren-api (transport-agnostic core, no reqwest here) and
 # warrenguard-token (TOKEN_LEN in the stack-source signature) must not be
 # Android-only. The Android target section below adds the reqwest transport.
 warren-api = { path = "../../warren-sdk-rs/crates/warren-api" }
 warrenguard-token = { path = "../../warrenguard/crates/warrenguard-token" }
-# Port-forward abuse standing (warren-core doc 105): the model, the strike
+# Port-forward abuse standing: the model, the strike
 # ledger and the ban mapping shared with the desktop daemon and iOS, so the
 # three clients agree on when to warn and when to block. Host-tested here.
 warren-standing = { path = "../warren-standing" }

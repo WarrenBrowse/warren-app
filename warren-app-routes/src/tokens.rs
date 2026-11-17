@@ -1,5 +1,5 @@
-//! The anonymous session tokens a tunnel's sessions lead with (warren-core
-//! doc 64), shared by the desktop daemon and the Android engine.
+//! The anonymous session tokens a tunnel's sessions lead with,
+//! shared by the desktop daemon and the Android engine.
 //!
 //! The wallet's batch is blinded from its seed, so every client of the wallet
 //! holds the same tokens an epoch, and an exit leases each serial to one live

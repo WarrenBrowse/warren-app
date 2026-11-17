@@ -6,7 +6,7 @@
 //! the available Warren exits in its country/city selector without
 //! a major frontend refactor.
 //!
-//! POC limitations:
+//! Limitations:
 //! - Produced `WireguardRelay` values carry a `wireguard::PublicKey`
 //!   built from the 32 bytes of the Warren Ed25519 pubkey. It is a
 //!   fake x25519 key, never used to set up an actual WG tunnel in
@@ -69,7 +69,7 @@ pub fn to_mullvad_relay_list(warren: &WarrenRelayList) -> RelayList {
                     lng,
                 ));
             }
-            // City-level coordinates: at this POC stage every Warren
+            // City-level coordinates: today every Warren
             // country hosts at most one relay, so the country centroid
             // doubles as the city centroid. When a country grows
             // multiple cities we can move to a city-level table (or
@@ -192,7 +192,7 @@ pub(crate) fn slugify(s: &str) -> String {
 }
 
 /// Display name of a country from its ISO-3166 alpha-2 code.
-/// Minimal POC table - falls back to the code in uppercase if
+/// Minimal table, falls back to the code in uppercase if
 /// the entry is unknown (the GUI will display "FR", "SE", "US" rather
 /// than "France", "Sweden", "United States"). To enrich or replace
 /// with an `isocountry`/`celes` crate if needed.
@@ -233,7 +233,7 @@ fn country_display_name(code: &str) -> String {
 /// that a relay's country code is missing from the table here. To
 /// fix, either add the entry below or bump the signed
 /// `warren-relays.json` schema to carry lat/lng on every relay
-/// (preferred long-term; this table is a Warren-POC stopgap).
+/// (preferred long-term; this table is a stopgap).
 ///
 /// MUST keep ISO-3166 alpha-2 codes in sync with
 /// [`country_display_name`] - any country listed there should also

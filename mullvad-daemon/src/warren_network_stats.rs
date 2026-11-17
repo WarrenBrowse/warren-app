@@ -1,5 +1,5 @@
 //! On-demand fetcher of the public `GET /v1/network/stats` transparency
-//! snapshot (warren-core doc 106).
+//! snapshot.
 //!
 //! Nothing here runs in the background: a periodic request is itself a
 //! fingerprint of a running client, so the API is asked only when a frontend
@@ -21,7 +21,7 @@ const SUPPORTED_VERSION: u64 = 1;
 /// Refuses a body far beyond what a fleet snapshot can weigh, so a captive
 /// portal or a broken proxy cannot push megabytes into both UIs.
 const MAX_BODY_BYTES: usize = 512 * 1024;
-/// The range the server accepts for its window (doc 106 knobs). A snapshot
+/// The range the server accepts for its window. A snapshot
 /// claiming another window is cached as if it said the nearest bound.
 const MIN_WINDOW_SECS: u64 = 30;
 const MAX_WINDOW_SECS: u64 = 3600;

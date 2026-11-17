@@ -1,4 +1,4 @@
-//! Community-forum wallet login (`POST /v1/forum/login`, doc 55) and the
+//! Community-forum wallet login (`POST /v1/forum/login`) and the
 //! forum page's attach-logs upload (`POST /v1/forum/attach-logs`), iOS side.
 //!
 //! The wire bytes, deep-link validation, session URLs, and outcome mapping are

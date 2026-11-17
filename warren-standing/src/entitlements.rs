@@ -1,5 +1,5 @@
-//! Port-forwarding entitlements as every client mints and presents them
-//! (warren-core doc 99, doc 105): the one piece the desktop daemon, the
+//! Port-forwarding entitlements as every client mints and presents them:
+//! the one piece the desktop daemon, the
 //! Android tunnel and the iOS tunnel each used to carry a copy of.
 //!
 //! One [`PortEntitlementManager`] per wallet, process-lived: reused across
@@ -27,7 +27,7 @@
 //! An exhausted batch, an unreachable API and a wallet the issuer refuses all
 //! answer `None`. The Map request then goes out without an envelope, and the
 //! exit refuses it: the attribution tag inside the envelope is mandatory for a
-//! forwarded port (doc 105). A ban the issuer answers goes to the ban sink.
+//! forwarded port. A ban the issuer answers goes to the ban sink.
 
 use std::collections::{BTreeSet, HashMap};
 use std::sync::{Arc, Mutex, PoisonError};
@@ -50,7 +50,7 @@ pub type NowFn = Arc<dyn Fn() -> u64 + Send + Sync>;
 pub type BanSink = Arc<dyn Fn(&[u8; 32], &TokenClientError) -> bool + Send + Sync>;
 
 /// Told once that a device of the install was revoked from another device of
-/// the account (warren-core doc 115), with the wallet and the device it
+/// the account, with the wallet and the device it
 /// concerns; the mint of that device has stopped. The caller acts only when
 /// the device is the one the install asks as now
 /// ([`InstallDevice::is_current`]): another loop of a device already revoked
@@ -250,7 +250,7 @@ impl<T: HttpTransport + 'static> EntitlementMint<T> {
         self
     }
 
-    /// Registers every wallet's manager as `device` (warren-core doc 115):
+    /// Registers every wallet's manager as `device`:
     /// each refresh registers it, every issue request names it, and the name
     /// the registry answers is kept for the next start.
     #[must_use]

@@ -115,7 +115,7 @@ impl NatPmpManager {
     }
 
     /// [`start_from_addr`] presenting `credential` with every request, for a
-    /// rule that holds a port entitlement (warren-core doc 99).
+    /// rule that holds a port entitlement.
     #[must_use = "the returned manager owns the spawned tasks; drop discards control"]
     pub fn start_with_credential(
         runtime: &tokio::runtime::Handle,

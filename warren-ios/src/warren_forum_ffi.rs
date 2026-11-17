@@ -1,4 +1,4 @@
-//! Community-forum wallet login FFI for iOS (`POST /v1/forum/login`, doc 55),
+//! Community-forum wallet login FFI for iOS (`POST /v1/forum/login`),
 //! the forum page's attach-logs upload (`POST /v1/forum/attach-logs`), the
 //! broadcast activity digest and the caller's own notification panel.
 //!

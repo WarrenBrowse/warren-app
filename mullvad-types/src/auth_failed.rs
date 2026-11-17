@@ -23,7 +23,7 @@ pub enum AuthFailed {
     /// the exit admits although the subscription is active, carried as the
     /// `[NO_SESSION_TOKEN]` token. Other devices of the account, or an older
     /// client of it, hold this epoch's tokens, so the app offers the
-    /// account's device list (warren-core doc 115).
+    /// account's device list.
     NoSessionToken,
     /// Warren: two distinct exits refused this device's time on the dated
     /// session setup, carried as the `[CLOCK_SKEW]` token. One refusal alone

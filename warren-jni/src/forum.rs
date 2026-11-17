@@ -1,4 +1,4 @@
-//! Community-forum wallet login (`POST /v1/forum/login`, doc 55) and in-app
+//! Community-forum wallet login (`POST /v1/forum/login`) and in-app
 //! bug report (`POST /v1/forum/report`), Android side.
 //!
 //! The wire bytes, deep-link validation, cancel URL, and outcome mapping are

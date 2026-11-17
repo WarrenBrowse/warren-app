@@ -1,5 +1,5 @@
 //! Why an exit refused a forwarded port as not authorized, and when to ask
-//! again (warren-core doc 105: an exit refuses a NAT-PMP Map request that
+//! again (an exit refuses a NAT-PMP Map request that
 //! carries no valid entitlement envelope, with RFC 6886 result code 2).
 //!
 //! Every client that forwards ports reads the refusal the same way: the

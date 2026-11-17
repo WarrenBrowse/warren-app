@@ -225,7 +225,7 @@ pub async fn run_session(
     // it, not the teardown it caused.
     crate::android_jni::reset_egress_dead();
 
-    // v7 anonymous admission (warren-core doc 64): background-minted Privacy
+    // v7 anonymous admission: background-minted Privacy
     // Pass tokens are presented at setup so the exit admits the session
     // without learning the wallet. The main session is tokens-only
     // (`MAIN_SESSION_ADMISSION`): an empty stack (nothing minted yet, epoch
@@ -238,8 +238,8 @@ pub async fn run_session(
     let tokens = crate::token_provider::tokens_for(signing_key.clone(), session_blinding);
     let session_tokens = (tokens.source)();
 
-    // Port entitlements ride the same wallet and the same coarse refresh
-    // (warren-core doc 99): without one, the exit falls back to its per-client
+    // Port entitlements ride the same wallet and the same coarse refresh:
+    // without one, the exit falls back to its per-client
     // quota and a subscriber's forwarded ports multiply by the number of
     // sessions it holds. Built even when port forwarding is off, so issuance
     // timing never mirrors the moment the user turns it on.
@@ -487,7 +487,7 @@ async fn run_multi_hop_session(
     #[cfg(not(feature = "pq-hpke"))]
     let exit_mlkem768_pubkey: Option<Vec<u8>> = None;
 
-    // v7 anonymous admission (default, warren-core doc 64). The supervisor calls
+    // v7 anonymous admission (default). The supervisor calls
     // the provider once per session establishment and is handed the whole
     // current batch, which it walks past any serial the exit refuses. `presented`
     // records whether a stack actually rode the last setup, which is what lets a
@@ -605,7 +605,7 @@ async fn run_multi_hop_session(
             .with_session_admission(warren_app_routes::main_anchor::MAIN_SESSION_ADMISSION);
         // The main session anchors whenever apps can be attributed, a
         // country set or not, so a country chosen while connected gets its
-        // route by anchor without a reconnect (warren-core doc 107; the
+        // route by anchor without a reconnect (the
         // desktop tunnel does the same). Before the token directory offered a
         // key (a first run) the anchor waits for it. The anchor never leaves
         // the engine.
@@ -857,7 +857,7 @@ async fn run_multi_hop_session(
                 block_for_ban(status, ban);
                 return;
             }
-            // Revocation is the account's decision (warren-core doc 115): no
+            // Revocation is the account's decision: no
             // redial, Kotlin forgets the wallet on this status.
             AttemptEnd::Revoked => {
                 log::warn!("multi-hop: this device was revoked during the session; ending it");
@@ -1295,7 +1295,7 @@ fn maybe_spawn_nat_pmp(
         let mut refusals = warren_standing::RefusalCount::default();
         while let Some(event) = rx.recv().await {
             // The kind only: a grant's `Debug` carries the forwarded port, the
-            // key of an abuse case (warren-core doc 105), and problem reports
+            // key of an abuse case, and problem reports
             // attach this log.
             log::info!(
                 "NAT-PMP event from Android tunnel: {}",

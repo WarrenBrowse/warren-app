@@ -1,4 +1,4 @@
-//! Port-forward abuse standing on iOS (warren-core doc 105 §5.3, §5.4).
+//! Port-forward abuse standing on iOS.
 //!
 //! iOS runs two processes, and each holds its own
 //! [`warren_standing::StandingStore`]:

@@ -1062,7 +1062,7 @@ impl ManagementService for ManagementServiceImpl {
         Ok(Response::new(()))
     }
 
-    /// Signs a community-forum login challenge (doc 55, DiscourseConnect
+    /// Signs a community-forum login challenge (DiscourseConnect
     /// wallet SSO). Validates the deep-link `sid` shape, then asks the
     /// daemon to sign `POST /v1/forum/login` with the Warren identity key
     /// and returns the header values + body for the GUI to POST.
@@ -1092,7 +1092,7 @@ impl ManagementService for ManagementServiceImpl {
         }
     }
 
-    /// Signs a community-forum notification read (doc 55). Takes no
+    /// Signs a community-forum notification read. Takes no
     /// argument: the account read is derived from the signature, so there
     /// is nothing a caller could point at somebody else.
     /// **No-log policy**: never log the pubkey or the signature.
@@ -1119,7 +1119,7 @@ impl ManagementService for ManagementServiceImpl {
         }
     }
 
-    /// Signs marking the caller's own forum notification list seen (doc 55).
+    /// Signs marking the caller's own forum notification list seen.
     /// **No-log policy**: never log the pubkey or the signature.
     async fn sign_forum_notifications_seen(
         &self,
@@ -1144,7 +1144,7 @@ impl ManagementService for ManagementServiceImpl {
         }
     }
 
-    /// Signs a community-forum attach-logs request (doc 55). Validates the
+    /// Signs a community-forum attach-logs request. Validates the
     /// deep-link `sid` shape and the gzipped report size, then asks the
     /// daemon to build and sign the canonical `POST /v1/forum/attach-logs`
     /// body with the Warren identity key, returning the header values plus
@@ -1195,7 +1195,7 @@ impl ManagementService for ManagementServiceImpl {
         }
     }
 
-    /// Signs a community-forum in-app report (doc 55). The body's shape and
+    /// Signs a community-forum in-app report. The body's shape and
     /// the log cap are the shared builder's rules, applied in the daemon
     /// (`warren_forum::report_body`), so this layer and the mobile FFI cannot
     /// disagree on what is signable; it only maps the refusal classes.

@@ -1,6 +1,6 @@
 //! Abstracts over an active VPN tunnel.
 //!
-//! Warren fork: the only tunnel backend is the QUIC-based
+//! The only tunnel backend is the QUIC-based
 //! [`WarrenTunnelMonitor`]. The historical WireGuard backend has been
 //! removed.
 use std::path;

@@ -383,7 +383,7 @@ mod tun08_imp {
         /// async I/O pump on it, without going through the operations
         /// managed by `TunnelDevice` (set_ip, set_up).
         ///
-        /// **Warren fork**: required so that the
+        /// Required so that the
         /// bidirectional TUN <-> QUIC datagram pump of the
         /// `WarrenTunnelMonitor` backend can share an `Arc<AsyncDevice>`
         /// between the uplink task and the downlink task.

@@ -1,6 +1,6 @@
 //! Route sessions on the production datapath: the engine's supervisor and
 //! pumps, the same as the main session's, admitted against the main
-//! session's anchor where the server offers it (warren-core doc 107), and on
+//! session's anchor where the server offers it, and on
 //! anonymous tokens otherwise.
 //!
 //! A route is dialed by anchor when the main session has an anchor that is

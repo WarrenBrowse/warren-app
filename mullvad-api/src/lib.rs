@@ -28,7 +28,6 @@ mod address_cache;
 mod device;
 mod relay_list;
 /// Auth wallet: Ed25519 signature on HTTP API requests.
-/// See `warren-core/docs/06-auth-wallet.md`.
 pub mod warren_auth;
 
 pub use address_cache::Error as AddressCacheError;
@@ -51,7 +50,7 @@ pub const VOUCHER_EXPIRED: &str = "VOUCHER_EXPIRED";
 /// the GUI keeps polling.
 pub const VOUCHER_NOT_READY: &str = "VOUCHER_NOT_READY";
 
-/// Warren: the wallet is banned (warren-core doc 105 §5.3), so the API
+/// Warren: the wallet is banned, so the API
 /// refused to credit it before consuming anything. The voucher stays
 /// unredeemed and the GUI keeps the purchase for after the ban.
 pub const ACCOUNT_BANNED: &str = "WARREN_ACCOUNT_BANNED";

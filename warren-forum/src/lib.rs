@@ -1,4 +1,4 @@
-//! Community-forum wallet login (`POST /v1/forum/login`, warren-core doc 55),
+//! Community-forum wallet login (`POST /v1/forum/login`),
 //! in-app bug report (`POST /v1/forum/report`) and the forum page's
 //! attach-logs upload (`POST /v1/forum/attach-logs`), the shared, host-tested
 //! logic behind both mobile FFI crates.

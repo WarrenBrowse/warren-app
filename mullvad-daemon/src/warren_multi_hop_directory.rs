@@ -192,7 +192,7 @@ pub(crate) fn assemble(
     })
 }
 
-/// docs/59 D2 candidate ladder: the OTHER exits of the SAME COUNTRY as
+/// Candidate ladder: the OTHER exits of the SAME COUNTRY as
 /// `primary`'s exit, each assembled into a full circuit, ordered by
 /// exit weight (descending, index tiebreak) so the ladder is
 /// deterministic. The primary's exit and every `exclude_exit_ids` entry
@@ -827,8 +827,8 @@ fn pick_one_hop_circuit(
 }
 
 /// Selects a **1-hop** circuit: one node serves as both the entry relay
-/// and the exit, both reached on the node's unified `:443` dispatcher
-/// (doc 33). Honors the `exit_country` hint and picks the heaviest node,
+/// and the exit, both reached on the node's unified `:443` dispatcher.
+/// Honors the `exit_country` hint and picks the heaviest node,
 /// deterministically.
 ///
 /// Toggle OFF uses this. The fleet is multi-hop only, so OFF must still
@@ -1859,7 +1859,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                     }
                     let migrated = match (change, desired.as_ref()) {
                         (CircuitChange::Drained | CircuitChange::RefusedEntry, Some(new_cfg)) => {
-                            // docs/59 D2: arm the candidate ladder BEFORE
+                            // Arm the candidate ladder BEFORE
                             // dispatching the migration, so a pre-swap
                             // rejection of this primary candidate can
                             // retry the other same-country exits (no-op
@@ -1906,7 +1906,7 @@ pub(crate) fn spawn(mut cfg: UpdaterConfig) {
                                 "the drained node"
                             }
                         );
-                        // Doc 59 Lot 1: the tunnel survived the swap, so
+                        // The tunnel survived the swap, so
                         // the NAT-PMP refresh loops were NOT restarted and
                         // would only re-create the mappings on the new exit
                         // at the next lifetime/2 renewal. Re-map now.
@@ -2308,7 +2308,7 @@ mod tests {
         );
     }
 
-    // --- Migration candidate ladder (docs 59 D2) ------------------------------
+    // --- Migration candidate ladder ------------------------------
 
     #[test]
     fn migration_alternates_empty_when_the_country_has_one_exit() {

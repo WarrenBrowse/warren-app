@@ -87,7 +87,7 @@ pub fn signing_key_from_mnemonic(mnemonic: &str) -> Result<SigningKey, WalletErr
 /// It must be the SEED, never the signing key: every client of a wallet (the
 /// desktop app, the extension, another phone) derives its batch this way, and
 /// the issuer serves one batch per account and epoch to whoever sends it bit
-/// for bit (warren-core doc 103 section 11). One-way: it does not give back
+/// for bit. One-way: it does not give back
 /// the seed.
 pub fn session_blinding_from_mnemonic(
     mnemonic: &str,

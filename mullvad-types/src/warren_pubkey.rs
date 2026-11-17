@@ -12,7 +12,7 @@
 //! rule `type-newtype-ids` rust-skills); (2) guarantee that a
 //! `WarrenPubKey` is *always* decodable into `[u8; 32]` without
 //! re-validation downstream; (3) replace `AccountNumber` across the
-//! API + daemon chain (see `warren-core/docs/06-auth-wallet.md`).
+//! API + daemon chain.
 //!
 //! **Codec note**: the canonical SS58 codec lives in `warren_contract::ss58`
 //! (the shared client<->server contract crate) and is byte-for-byte compatible

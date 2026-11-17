@@ -1,4 +1,4 @@
-//! The account's devices (warren-core doc 115) on iOS.
+//! The account's devices on iOS.
 //!
 //! iOS runs two processes, and both reach the registry: the Network
 //! Extension's token and entitlement refreshes register the install and learn

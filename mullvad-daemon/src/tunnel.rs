@@ -241,7 +241,7 @@ struct InnerParametersGenerator {
     /// until the daemon boot wires the updater (the drain reactor then
     /// always falls back to the rebuild).
     warren_drain_migration_tx: Option<crate::warren_multi_hop_directory::DrainMigrationTx>,
-    /// docs/59 D2 candidate ladder: ordered same-country alternates to
+    /// Candidate ladder: ordered same-country alternates to
     /// try when the pre-swap gate rejects the primary migration
     /// candidate for a pinned-port conflict. Set by the directory
     /// updater alongside each drain-driven migration; popped by
@@ -272,8 +272,8 @@ struct InnerParametersGenerator {
     /// time a wallet is seen, so it is wired at boot, before any tunnel.
     warren_wallet_activity: crate::warren_wallet_activity::WalletActivity,
     /// The API server keys the daemon pins, which alone may vouch for the
-    /// route KEM key of the token directory (warren-core doc 107 section
-    /// 6.5), and where the last signed block is kept. Fixed at construction,
+    /// route KEM key of the token directory, and
+    /// where the last signed block is kept. Fixed at construction,
     /// before any tunnel can build the wallet's token manager with it; empty
     /// pins leave every route on tokens.
     warren_route_kem_trust: crate::warren_token_provider::RouteKemTrust,
@@ -634,7 +634,7 @@ impl ParametersGenerator {
         let _ = inner.nat_pmp_control_tx.send(cfg);
     }
 
-    /// Doc 59 Lot 1: force an immediate re-request of every NAT-PMP
+    /// Force an immediate re-request of every NAT-PMP
     /// mapping on the CURRENT exit. Called right after a drain-driven
     /// gap-free migration, when the refresh loops would otherwise only
     /// re-create the mappings on the new exit at the next `lifetime/2`
@@ -782,7 +782,7 @@ impl ParametersGenerator {
         }
     }
 
-    /// docs/59 D2: stores the ordered same-country alternates to try if
+    /// Stores the ordered same-country alternates to try if
     /// the pre-swap gate rejects the primary migration candidate.
     /// Replaced on every drain-driven re-selection; cleared once a
     /// migration commits (or the ladder is exhausted).
@@ -790,7 +790,7 @@ impl ParametersGenerator {
         self.0.lock().await.warren_migration_candidates = alternates.into();
     }
 
-    /// docs/59 Lot 3: reaction to a pre-swap rejection (the candidate
+    /// Reaction to a pre-swap rejection (the candidate
     /// exit cannot honour every pinned port). Advances the D2 ladder:
     /// migrates onto the next same-country candidate, or cancels the
     /// migration (C2, stay put + C5 signal) when exhausted.
@@ -811,7 +811,7 @@ impl ParametersGenerator {
         );
     }
 
-    /// docs/59 Lot 3: reaction to a COMMITTED overlap migration. Drops
+    /// Reaction to a COMMITTED overlap migration. Drops
     /// the now-obsolete candidate ladder and re-maps every NAT-PMP rule
     /// on the new exit immediately (auto rules are not covered by the
     /// pre-flight, which only reserves pins).
@@ -820,7 +820,7 @@ impl ParametersGenerator {
         self.remap_warren_nat_pmp_now().await;
     }
 
-    /// docs/59 Lot 3: the pre-swap gate run against a candidate bundle
+    /// The pre-swap gate run against a candidate bundle
     /// before the supervisor commits a make-before-break swap. Reads
     /// the LIVE port-forward config (pins only), reserves each pin on
     /// the candidate over the not-yet-published session, and advances
@@ -1117,7 +1117,7 @@ impl ParametersGenerator {
                 warren_tunnel_params::assemble_from_last_good(&last_good, key, multi_hop, nat_pmp)
             }
         };
-        // v7 anonymous admission (warren-core doc 64): when the daemon has an API
+        // v7 anonymous admission: when the daemon has an API
         // URL and a real wallet seed, present Privacy Pass tokens so the exit
         // admits without learning the account pubkey. The main session is
         // tokens-only (talpid-warren-tunnel `MAIN_SESSION_ADMISSION`): on token
@@ -1127,7 +1127,7 @@ impl ParametersGenerator {
             inner.warren_api_url.as_ref(),
             inner.warren_identity_seed.as_ref(),
         ) {
-            // Route admission by anchor (warren-core doc 107) rides the same
+            // Route admission by anchor rides the same
             // wallet's token directory: with per-app routes, the main session
             // anchors and its routes need no token each where it is offered,
             // under a key one of the daemon's pinned server keys signed.
@@ -1155,8 +1155,8 @@ impl ParametersGenerator {
                 activity,
             ));
             // Port entitlements ride the same wallet and the same coarse
-            // refresh. The exit refuses a Map request without one (warren-core
-            // doc 105), so a wallet without this provider forwards no port.
+            // refresh. The exit refuses a Map request without one, so a
+            // wallet without this provider forwards no port.
             params.port_entitlement_provider = Some(crate::warren_port_entitlements::provider_for(
                 api_url,
                 seed,
@@ -1507,7 +1507,7 @@ impl ParametersGenerator {
             let g = drain_migrate_gen.clone();
             Box::pin(async move { g.migrate_off_drained_exit(exit_id).await })
         }));
-        // Doc 62 item 5: the in-tunnel egress probe publishes its
+        // The in-tunnel egress probe publishes its
         // verdict edges here; the cache flag drives the gRPC
         // `exit_egress_dead` field and the UI's exit-not-forwarding
         // banner. A fresh tunnel starts with a clean verdict (the
@@ -1530,7 +1530,7 @@ impl ParametersGenerator {
                 Box::pin(async move { g.migrate_off_refused_entry(refused.0).await })
             },
         ));
-        // docs/59 Lot 3: pre-swap NAT-PMP reservation gate + post-swap
+        // Pre-swap NAT-PMP reservation gate + post-swap
         // re-map observer, behind the explicit activation knob (the
         // fields stay `None` by default: identical pre-Lot-3 behavior;
         // the guard is enabled by env at the validation rollout).
@@ -1950,7 +1950,7 @@ fn warren_pin_verify(
     }
 }
 
-/// docs/59 Lot 3 activation knob: `WARREN_PRESWAP_PORT_GUARD=1` wires
+/// `WARREN_PRESWAP_PORT_GUARD=1` wires
 /// the pre-swap NAT-PMP reservation gate + candidate ladder onto every
 /// new tunnel. Off by default: the guard ships inert and is enabled at
 /// the real-exit validation rollout.
@@ -1964,7 +1964,7 @@ fn preswap_guard_enabled() -> bool {
     preswap_guard_enabled_from(std::env::var(PRESWAP_PORT_GUARD_ENV).ok().as_deref())
 }
 
-/// Advances the docs/59 D2 candidate ladder after a pre-swap rejection:
+/// Advances the candidate ladder after a pre-swap rejection:
 /// dispatches a migration onto the next candidate via `migrate` (which
 /// reports whether a live migrate handle accepted the target). Returns
 /// `true` when a candidate was dispatched; `false` when the ladder is
@@ -1998,7 +1998,7 @@ fn advance_migration_ladder<F: FnMut(CircuitTarget) -> bool>(
 }
 
 /// Builds the config pushed on the NAT-PMP control channel to force an
-/// immediate re-map of every rule on the CURRENT exit (doc 59 Lot 1):
+/// immediate re-map of every rule on the CURRENT exit:
 /// sticky ports applied so the public port follows best-effort, and the
 /// remap epoch set so the per-rule config differs from the last applied
 /// one (the controller reconfigures instead of debouncing). `None` when
@@ -2068,7 +2068,7 @@ mod warren_preswap_tests {
 
     #[test]
     fn preswap_guard_is_off_by_default() {
-        // docs/59 Lot 3 ships wired but INERT: activation is an explicit
+        // Ships wired but INERT: activation is an explicit
         // env opt-in at the validation rollout, never a silent default.
         assert!(!preswap_guard_enabled_from(None));
         assert!(!preswap_guard_enabled_from(Some("")));

@@ -34,7 +34,7 @@ bip39 = { version = "2", features = ["rand"] }
 # X-Warren-Sig headers must never be acceptable without an explicit
 # version bump + signature regression test. cf. AUDIT_COMPLET.md M-3.
 ed25519-dalek = { version = "=2.2.0", features = ["zeroize", "rand_core"] }
-# Explicit dep for `Zeroizing<[u8;32]>` wrappers in wallet FFI (M-2).
+# Explicit dep for `Zeroizing<[u8;32]>` wrappers in wallet FFI.
 # The `zeroize` crate is already a transitive dep via ed25519-dalek; this
 # direct dep makes the version coupling explicit and prevents it from being
 # silently removed if ed25519-dalek changes its dep tree.
@@ -60,7 +60,7 @@ tracing = "0.1"
 mullvad-update = { path = "../mullvad-update" }
 mullvad-version = { path = "../mullvad-version" }
 warren-product-env = { path = "../warren-product-env" }
-# Port-forward abuse standing (warren-core doc 105): the store both processes
+# Port-forward abuse standing: the store both processes
 # keep, the envelope the app renders and the refusal schedule, shared with
 # Android and the desktop daemon. Cross-platform so the host tests build.
 warren-standing = { path = "../warren-standing" }

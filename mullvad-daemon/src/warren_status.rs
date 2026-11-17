@@ -200,7 +200,7 @@ pub struct WarrenStatusSnapshot {
     /// "server maintenance" banner while this holds; the daemon
     /// re-broadcasts at expiry so the banner drops without a poll.
     pub maintenance_migration_active: bool,
-    /// docs/59 C5: number of maintenance migrations CANCELLED because a
+    /// Number of maintenance migrations CANCELLED because a
     /// user-pinned port could not be reserved on any candidate exit.
     /// The client stays on the draining exit with its ports intact; the
     /// UI toasts "migration postponed, port kept" on each increment.
@@ -217,7 +217,7 @@ pub struct WarrenStatusSnapshot {
     /// the grace expires. The UI shows an immediate "no internet
     /// connection" banner keyed on it, in every tunnel state.
     pub host_offline: bool,
-    /// Doc 62 item 5: true while the in-tunnel egress liveness probe
+    /// True while the in-tunnel egress liveness probe
     /// reports the exit not forwarding (N consecutive probe failures
     /// with the QUIC session otherwise alive, e.g. a drained or
     /// half-swapped exit during a fleet rollout). Cleared by a single
@@ -278,7 +278,7 @@ pub struct WarrenStatusSnapshot {
     /// renderer has no second query to make, and the daemon is the only
     /// side that holds the wallet the code was drawn for.
     pub announcements: Vec<crate::warren_announcements_updater::DisplayAnnouncement>,
-    /// Port-forward abuse standing of the wallet (warren-core doc 105), from
+    /// Port-forward abuse standing of the wallet, from
     /// the last standing poll or an issuer's ban refusal. `None` until one of
     /// them answered, and without a wallet. Account-bound: the management
     /// interface withholds it from a caller that may not see the owner.
@@ -586,7 +586,7 @@ impl WarrenStatusCache {
         let _ = self.tx.send_replace(snapshot);
     }
 
-    /// docs/59 C5: records that a maintenance migration was cancelled
+    /// Records that a maintenance migration was cancelled
     /// because a user-pinned port could not be reserved on any candidate
     /// exit (the client stays put, ports kept), and broadcasts so the UI
     /// can toast the dedicated signal.
@@ -863,7 +863,7 @@ impl WarrenStatusCache {
         let _ = self.tx.send_replace(snapshot);
     }
 
-    /// Record the in-tunnel egress probe's verdict (doc 62 item 5).
+    /// Record the in-tunnel egress probe's verdict.
     /// Pushed on verdict edges by the probe callback and cleared by the
     /// daemon whenever the tunnel leaves Connected (a rebuilt tunnel
     /// starts with a clean verdict). Idempotent: repeated equal
@@ -1359,7 +1359,7 @@ mod tests {
         assert!(!maintenance_active(Some(expired), now));
     }
 
-    // --- Port-conflict migration cancellation (docs 59 C5) -------------------
+    // --- Port-conflict migration cancellation -------------------
 
     #[test]
     fn default_snapshot_has_no_port_migration_cancellation() {
@@ -1902,7 +1902,7 @@ mod tests {
         assert!(!rx.has_changed().unwrap_or(false));
     }
 
-    // --- Exit egress surface (doc 62 item 5) -----------------------
+    // --- Exit egress surface -----------------------
 
     #[test]
     fn default_snapshot_reports_egress_alive() {

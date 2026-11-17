@@ -60,7 +60,7 @@ mod warren_version_ffi;
 // run on the host.
 #[cfg(any(target_os = "ios", test))]
 mod warren_announcements_ffi;
-// Community-forum wallet login (doc 55): the pure request-construction +
+// Community-forum wallet login: the pure request-construction +
 // validation + outcome mapping (host-testable); the network POST that consumes
 // it is iOS-gated in `warren_forum_ffi`.
 #[cfg(any(target_os = "ios", test))]
@@ -74,14 +74,14 @@ mod warren_natpmp_ffi;
 #[cfg(any(all(target_os = "ios", feature = "tunnel"), test))]
 mod warren_port_entitlements;
 
-// The port-forward standing stores of the extension and the app (warren-core
-// doc 105). Cross-platform so the host suite runs its tests.
+// The port-forward standing stores of the extension and the app.
+// Cross-platform so the host suite runs its tests.
 mod warren_standing_ffi;
 
 // iOS-only modules that reference libc, tokio, mullvad-api, etc.
 #[cfg(target_os = "ios")]
 mod warren_account_ffi;
-// The account's devices (warren-core doc 115): the install's registration and
+// The account's devices: the install's registration and
 // revocation, and the list, rename and revoke calls.
 #[cfg(any(target_os = "ios", test))]
 mod warren_devices_ffi;

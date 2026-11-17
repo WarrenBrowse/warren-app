@@ -11,8 +11,8 @@
 //! A user-facing UI toggle (Settings::warren_multi_hop_mode) is left
 //! for a future revision; this env var is the bench-time gate.
 
-/// Name of the env var read at boot. Convention frozen for the POC:
-/// renaming requires a migration in `docs/` and bench scripts.
+/// Name of the env var read at boot. Bench scripts set it: renaming it
+/// breaks them.
 pub const ENV_VAR_NAME: &str = "WARREN_MULTI_HOP";
 
 /// `true` when the user opted into multi-hop via env var.

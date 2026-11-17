@@ -16,7 +16,7 @@ pub mod wallet;
 // (not pub(crate)) because the host build has no internal consumer.
 pub mod product;
 
-// Community-forum wallet login (doc 55): the pure request-construction +
+// Community-forum wallet login: the pure request-construction +
 // validation + outcome mapping (host-testable); the network POST that consumes
 // it is Android-gated in `android_jni`.
 pub mod forum;
@@ -72,7 +72,7 @@ mod rate_limited_tun;
 mod natpmp_follow;
 
 // What the NAT-PMP path does when an exit refuses a Map request as not
-// authorized (warren-core doc 105), host-tested; the task that restarts the
+// authorized, host-tested; the task that restarts the
 // refused loop is Android-gated in `tunnel`.
 #[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 mod natpmp_refusal;
@@ -116,7 +116,7 @@ mod entry_families;
 #[cfg(any(test, target_os = "android"))]
 mod dial_facts;
 
-// v7 anonymous session credentials (Privacy Pass, warren-core doc 64): the per-wallet
+// v7 anonymous session credentials (Privacy Pass): the per-wallet
 // token mint/refresh/stack core is host-tested with a mock transport; the
 // provider that feeds the tunnel handshake is Android-gated inside.
 #[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
@@ -125,13 +125,13 @@ mod devices;
 #[cfg(any(test, all(target_os = "android", feature = "tunnel")))]
 mod token_provider;
 
-// Port-forwarding entitlements (warren-core doc 99): the Android wiring of the
+// Port-forwarding entitlements: the Android wiring of the
 // mint shared with desktop and iOS (`warren_standing::entitlements`, where it
 // is host-tested against the engine's real NAT-PMP loop).
 #[cfg(all(target_os = "android", feature = "tunnel"))]
 mod port_entitlements;
 
-// The process-lived port-forward standing store (warren-core doc 105), whose
+// The process-lived port-forward standing store, whose
 // logic and tests live in the shared `warren-standing` crate.
 #[cfg(all(target_os = "android", feature = "tunnel"))]
 mod standing;

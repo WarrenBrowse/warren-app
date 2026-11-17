@@ -236,7 +236,7 @@ const DEFAULT_FEATURES: u32 = 0;
 /// Today the only user-driven feature is IPv6 dual-stack: the `IPV6`
 /// bit is set iff the user enabled IPv6. Both single-hop and multi-hop
 /// now carry v6 - multi-hop negotiates it over the control `/v2`
-/// (`IpRequestV2`/`IpAssignV2`, cf. docs/31). When the exit cannot serve
+/// (`IpRequestV2`/`IpAssignV2`). When the exit cannot serve
 /// v6 it answers v4-only and the firewall keeps native IPv6 blocked
 /// (no leak).
 #[must_use]
@@ -321,7 +321,7 @@ pub fn assemble_for_attempt(
         // (it owns the generator handle the hook needs).
         warren_drain_migrate: None,
         warren_dial_refused: None,
-        // docs/59 Lot 3: pre-swap NAT-PMP reservation + post-swap re-map,
+        // Pre-swap NAT-PMP reservation + post-swap re-map,
         // wired later from the live port-forward config; None keeps the
         // unconditional-swap behaviour.
         warren_pre_swap_check: None,
@@ -453,7 +453,7 @@ pub fn assemble_failover_for_attempt(
         // (it owns the generator handle the hook needs).
         warren_drain_migrate: None,
         warren_dial_refused: None,
-        // docs/59 Lot 3: pre-swap NAT-PMP reservation + post-swap re-map,
+        // Pre-swap NAT-PMP reservation + post-swap re-map,
         // wired later from the live port-forward config; None keeps the
         // unconditional-swap behaviour.
         warren_pre_swap_check: None,
@@ -644,7 +644,7 @@ pub fn assemble_custom(
         // (it owns the generator handle the hook needs).
         warren_drain_migrate: None,
         warren_dial_refused: None,
-        // docs/59 Lot 3: pre-swap NAT-PMP reservation + post-swap re-map,
+        // Pre-swap NAT-PMP reservation + post-swap re-map,
         // wired later from the live port-forward config; None keeps the
         // unconditional-swap behaviour.
         warren_pre_swap_check: None,

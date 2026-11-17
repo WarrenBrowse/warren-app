@@ -1,4 +1,4 @@
-//! The account's devices (warren-core doc 115) as an app reaches them: this
+//! The account's devices as an app reaches them: this
 //! install as a device of its account, whether the registry revoked it, and
 //! the list, rename and revoke calls the device screens make. Shared by the
 //! Android JNI and the iOS FFI, which hand its answers on as they are.

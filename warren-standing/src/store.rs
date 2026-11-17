@@ -1,5 +1,5 @@
-//! One process's holder of the wallet's standing on the mobile clients
-//! (warren-core doc 105 §5.3, §5.4), shared by `warren-jni` and `warren-ios`
+//! One process's holder of the wallet's standing on the mobile clients,
+//! shared by `warren-jni` and `warren-ios`
 //! so the two cannot drift on the envelope the app renders or on when the
 //! tunnel blocks: the mobile twin of the desktop daemon's
 //! `mullvad-daemon::warren_account_standing`.

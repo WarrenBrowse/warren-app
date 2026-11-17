@@ -1,4 +1,4 @@
-//! Port-entitlement minting for the app tunnel (warren-core doc 99, doc 105).
+//! Port-entitlement minting for the app tunnel.
 //!
 //! The mint is `warren_standing::entitlements`, shared with Android and iOS:
 //! one manager per wallet, process-lived, topped up on a coarse timer. This
@@ -54,7 +54,7 @@ pub(crate) fn provider_for(
     let seed_bytes: [u8; 32] = **seed.read().expect("warren seed RwLock poisoned");
     let wallet_pubkey = WarrenIdentity::from_seed(&seed_bytes).public_key();
     // Derived from the wallet, so a daemon restart is served the batch the
-    // account already holds (warren-core doc 99 section 4 bis).
+    // account already holds.
     let blinding = BlindingKey::port_entitlement(&seed_bytes);
 
     let mint = MINT.get_or_init(|| {

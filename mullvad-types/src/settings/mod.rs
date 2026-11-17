@@ -158,7 +158,7 @@ pub struct Settings {
     /// Warren two-relayed QUIC multi-hop settings.
     /// Default = OFF per doctrine `warren_multihop_doctrine_v1`
     /// (opt-in privacy, full bandwidth 1-hop). The env var
-    /// `WARREN_MULTI_HOP=1` overrides this for POC.
+    /// `WARREN_MULTI_HOP=1` overrides this.
     #[serde(default)]
     pub warren_multi_hop: WarrenMultiHopSettings,
     /// Warren NAT-PMP port-forwarding settings. Default OFF; the

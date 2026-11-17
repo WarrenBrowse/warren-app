@@ -164,7 +164,7 @@ pub enum WarrenTunnelStateC {
     /// app could only say "disconnected" while the desktop daemon names the
     /// lapsed subscription and Android offers to renew.
     Unauthorized = 5,
-    /// The wallet is banned (warren-core doc 105): learned from the token
+    /// The wallet is banned: learned from the token
     /// issuer's refusal before any dial, or from the exit's CRL rejection.
     /// Terminal like `Unauthorized`, and the event says why and until when.
     Banned = 6,
@@ -179,8 +179,8 @@ pub enum WarrenTunnelStateC {
     /// `Unauthorized`: the app reads it as the device limit when it knows the
     /// subscription is active, and as an expiry otherwise.
     TokensRefused = 8,
-    /// This device was revoked from another device of the account
-    /// (warren-core doc 115): its token and entitlement refreshes stopped and
+    /// This device was revoked from another device of the account:
+    /// its token and entitlement refreshes stopped and
     /// its device identity is forgotten. Terminal; the app shows its revoked
     /// screen.
     DeviceRevoked = 9,
@@ -849,7 +849,7 @@ mod handle_impl {
         /// observer closure outlives a single connect; process-lifetime,
         /// no persistence.
         pub entry_rtt: Arc<Mutex<warren_discovery_core::RttCache>>,
-        /// The ban this session ends on (warren-core doc 105), set before
+        /// The ban this session ends on, set before
         /// the terminal edge so it can say what the suspension is for and
         /// until when.
         pub ban: Mutex<Option<warren_standing::Ban>>,
@@ -1489,8 +1489,8 @@ fn spawn_multi_hop(
     let arc_for_task = std::sync::Arc::clone(&arc);
     let wallet_pubkey = signing_key.verifying_key().to_bytes();
     arc.runtime.spawn(async move {
-        // A wallet known to be banned is refused before it dials (warren-core
-        // doc 105 §5.3): the token issuer said so, and an exit would only say
+        // A wallet known to be banned is refused before it dials:
+        // the token issuer said so, and an exit would only say
         // it again.
         if let Some(ban) =
             crate::warren_standing_ffi::tunnel_store().ban_in_force(&wallet_pubkey, now_secs())
@@ -1635,7 +1635,7 @@ fn spawn_multi_hop(
         // and the downlink pump both publish). The reassign task below
         // forwards each fresh address to Swift.
         let ip_assign_channel = IpAssignChannel::new();
-        // v7 anonymous admission (warren-core doc 64): present Privacy Pass
+        // v7 anonymous admission: present Privacy Pass
         // tokens minted for the SAME wallet the handshake signs with, so the
         // exit admits without learning the account pubkey. The main session is
         // tokens-only: with no usable token it does not come up, and the next
@@ -1650,8 +1650,8 @@ fn spawn_multi_hop(
             session_blinding,
             rotation_dir,
         ));
-        // Port entitlements ride the same wallet and the same coarse refresh
-        // (warren-core doc 99). Built even when port forwarding is off, so
+        // Port entitlements ride the same wallet and the same coarse refresh.
+        // Built even when port forwarding is off, so
         // issuance timing never mirrors the moment the user turns it on.
         let port_entitlements = crate::warren_port_entitlements::provider_for(
             signing_key.clone(),
@@ -2279,9 +2279,9 @@ impl Drop for NatPmpGuard {
 /// external port still follows the client across exit changes via the
 /// process-global statics.
 ///
-/// Every request carries the entitlement envelope of the rule's slot
-/// (warren-core doc 105: the exit refuses a Map request without one), read
-/// once per refresh cycle, so a mapping that outlives an epoch presents the
+/// Every request carries the entitlement envelope of the rule's slot (the
+/// exit refuses a Map request without one), read once per refresh cycle, so a
+/// mapping that outlives an epoch presents the
 /// next batch at its next renewal without the loop restarting.
 #[cfg(all(target_os = "ios", feature = "tunnel"))]
 fn maybe_spawn_nat_pmp(
@@ -2381,7 +2381,7 @@ fn maybe_spawn_nat_pmp(
                 warrenguard_natpmp_client::NatPmpEvent::Mapped { .. }
                 | warrenguard_natpmp_client::NatPmpEvent::Renewed { .. } => refusals.on_granted(),
                 // The engine stops on a refusal, which it takes for permanent.
-                // It is not (warren-core doc 105): a missing entitlement comes
+                // It is not: a missing entitlement comes
                 // with the next mint or epoch, and a refused one is usually the
                 // serial the previous inner address still holds until the exit
                 // reaps it, so the mapping is asked for again on the schedule
@@ -2522,10 +2522,10 @@ pub unsafe extern "C" fn warren_tunnel_start(
         let signing_key = tunnel_signing_key(&params.wallet_signing_seed);
         // The session-token batch is blinded from the wallet seed, as every
         // other client of the wallet blinds it, so the issuer serves each of
-        // them the same batch (warren-core doc 103 section 11).
+        // them the same batch.
         let session_blinding = warren_api::BlindingKey::session(&params.wallet_signing_seed);
         // The port-entitlement batch likewise, so a restarted extension is
-        // served the entitlements the account holds (warren-core doc 99).
+        // served the entitlements the account holds.
         let entitlement_blinding =
             warren_api::BlindingKey::port_entitlement(&params.wallet_signing_seed);
 

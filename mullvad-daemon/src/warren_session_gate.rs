@@ -216,7 +216,7 @@ impl<W> SessionGate<W> {
         }
     }
 
-    /// The account's registry revoked this device (warren-core doc 115):
+    /// The account's registry revoked this device:
     /// answers whether the daemon must act on it now (disconnect, forget the
     /// identity), which is only once and only for a logged-in device. The
     /// session tokens and the port entitlements both learn a revocation, and

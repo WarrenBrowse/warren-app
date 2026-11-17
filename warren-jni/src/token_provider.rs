@@ -1,4 +1,4 @@
-//! v7 anonymous session credentials (Privacy Pass, warren-core doc 64) for the Android
+//! v7 anonymous session credentials (Privacy Pass) for the Android
 //! tunnel: the warren-jni twin of the desktop daemon's
 //! `mullvad-daemon::warren_token_provider` and of iOS's
 //! `warren-ios::warren_token_provider`.
@@ -82,7 +82,7 @@ pub(crate) type StackSource =
     Arc<dyn Fn() -> Vec<[u8; warrenguard_token::TOKEN_LEN]> + Send + Sync>;
 
 /// Where a refresh failure of a wallet goes, to learn whether it is the
-/// issuer's ban refusal (warren-core doc 105 §5.3). Answers whether it was one.
+/// issuer's ban refusal. Answers whether it was one.
 /// Shared with the entitlement mint, whose issuer refuses a banned wallet the
 /// same way.
 pub(crate) type BanSink = Arc<dyn Fn(&[u8; 32], &TokenClientError) -> bool + Send + Sync>;
@@ -149,14 +149,14 @@ pub(crate) struct TokenMint<T> {
     restored: AtomicBool,
     ban_sink: Option<BanSink>,
     /// The API server keys trusted to sign the route KEM key of the token
-    /// directory (warren-core doc 107 section 6.5), and the file the last
+    /// directory, and the file the last
     /// signed route admission block is kept in across a process death.
     route_kem_trust: RouteKemTrust,
     /// Where the install's token rotation is kept
     /// ([`warren_standing::token_rotation::install_rotation`]). Without it each
     /// process draws its own and leads with another serial after a restart.
     rotation_dir: Option<PathBuf>,
-    /// The install as a device of its account (warren-core doc 115), which
+    /// The install as a device of its account, which
     /// every manager registers and asks as.
     device: Option<InstallDevice>,
     /// Told once a manager's device was revoked from another device.
@@ -606,7 +606,7 @@ mod tests {
         quota: u32,
         refuse_issuance: AtomicBool,
         /// Answers every issue request with the issuer's ban refusal
-        /// (403 `{"error":"banned"}`, warren-core doc 105 §5.3).
+        /// (403 `{"error":"banned"}`).
         ban_wallet: AtomicBool,
         fail_transport: AtomicBool,
         issue_calls: AtomicUsize,
@@ -835,7 +835,7 @@ mod tests {
 
     /// Two installs of one wallet ask for the same batch, the one the desktop
     /// app and the extension derive from the wallet seed, so the issuer serves
-    /// all of them (warren-core doc 103 section 11). A key blinded from the
+    /// all of them. A key blinded from the
     /// tunnel's signing key instead would be a batch no other client sends.
     #[tokio::test(start_paused = true)]
     async fn every_install_of_a_wallet_asks_for_the_batch_its_seed_derives() {

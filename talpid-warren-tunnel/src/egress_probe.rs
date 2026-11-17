@@ -1,4 +1,4 @@
-//! In-tunnel egress liveness probe (doc 62 item 5).
+//! In-tunnel egress liveness probe.
 //!
 //! RX-silence detection (`session_liveness`, the supervisor's dead-path
 //! watch) only sees the QUIC transport: an exit that is drained or

@@ -84,7 +84,7 @@ service ManagementService {
   // Probes nothing, changes nothing, and carries no identity material: only
   // counts, a verdict kind with its age, and interface names.
   rpc GetWarrenDiagnostics(google.protobuf.Empty) returns (WarrenDiagnostics) {}
-  // Public network transparency snapshot (warren-core doc 106), fetched from
+  // Public network transparency snapshot, fetched from
   // the API only when a frontend calls this and cached for the window it
   // describes. Anonymous display data: nothing in it is about this client.
   rpc GetWarrenNetworkStats(google.protobuf.Empty) returns (WarrenNetworkStats) {}
@@ -107,8 +107,8 @@ service ManagementService {
   // BIP39-validated before being written to disk (= atomic rejection).
   rpc SetWarrenMnemonic(google.protobuf.StringValue) returns (google.protobuf.Empty) {}
 
-  // Signs a community-forum login challenge (DiscourseConnect wallet SSO,
-  // warren-core doc 55). The GUI passes the `sid` from a
+  // Signs a community-forum login challenge (DiscourseConnect wallet SSO).
+  // The GUI passes the `sid` from a
   // `warren://forum-login?sid=..` deep link; the daemon signs the fixed
   // canonical request `POST /v1/forum/login` with body `{"sid":"<sid>"}`
   // using the Warren identity key and returns the four X-Warren-* header
@@ -117,7 +117,7 @@ service ManagementService {
   // sid is malformed.
   rpc SignForumLogin(ForumLoginRequest) returns (ForumLoginSignature) {}
 
-  // Signs a community-forum notification read (warren-core doc 55). The
+  // Signs a community-forum notification read. The
   // canonical request is `POST /v1/forum/notifications` with an empty JSON
   // object as its body: the account to read is derived from the signature,
   // never named in the request, so this cannot be pointed at anyone else.
@@ -132,7 +132,7 @@ service ManagementService {
   // a write. Same account derivation, same empty body.
   rpc SignForumNotificationsSeen(google.protobuf.Empty) returns (ForumLoginSignature) {}
 
-  // Signs a community-forum attach-logs request (warren-core doc 55). The
+  // Signs a community-forum attach-logs request. The
   // GUI passes the `sid` + `topic_id` from a
   // `warren://attach-logs?sid=..&topic=..` deep link plus the gzipped
   // redacted problem report; the daemon builds the canonical JSON body
@@ -144,7 +144,7 @@ service ManagementService {
   // the sid is malformed, or the gzip is empty or exceeds 1 MiB.
   rpc SignForumAttachLogs(ForumAttachLogsRequest) returns (ForumLoginSignature) {}
 
-  // Signs a community-forum in-app report (warren-core doc 55): the
+  // Signs a community-forum in-app report: the
   // Settings, Support, "Report a problem" form filed without a browser. The
   // GUI passes the form's fields as one JSON object (the connect contract's
   // field names: platform, area, frequency, what_happened, steps,
@@ -230,7 +230,7 @@ service ManagementService {
   // event (Mapped / Renewed / Failed / Cancelled).
   rpc NatPmpStatusUpdates(google.protobuf.Empty) returns (stream NatPmpStatus) {}
 
-  // Port-forward abuse standing of the wallet (warren-core doc 105), asked
+  // Port-forward abuse standing of the wallet, asked
   // of the API now rather than read from the last poll, which
   // WarrenStatus.account_standing carries. Owner-only: the strikes name the
   // ports the account forwarded and the cases against it. UNAVAILABLE when
@@ -264,7 +264,7 @@ service ManagementService {
   rpc UpdateDevice(google.protobuf.Empty) returns (google.protobuf.Empty) {}
   rpc ListDevices(google.protobuf.StringValue) returns (DeviceList) {}
   rpc RemoveDevice(DeviceRemoval) returns (google.protobuf.Empty) {}
-  // Renames a device of the logged-in account (warren-core doc 115).
+  // Renames a device of the logged-in account.
   // INVALID_ARGUMENT: malformed id, or a name that is not 1 to 40 characters
   // once trimmed or holds a control character; NOT_FOUND: the account has no
   // such active device; UNAUTHENTICATED: no wallet, or this device was
@@ -951,7 +951,7 @@ message WarrenMultiHopSettings {
   google.protobuf.Duration hpke_epoch_rotation = 4;
 }
 
-// Community-forum wallet login (doc 55). `sid` is the opaque session id
+// Community-forum wallet login. `sid` is the opaque session id
 // from the `warren://forum-login?sid=..` deep link (32 lowercase hex);
 // the daemon validates its shape before signing.
 message ForumLoginRequest {
@@ -987,7 +987,7 @@ message ForumLoginSignature {
   string body = 5;
 }
 
-// Community-forum attach-logs (doc 55). `sid` is the opaque session id from
+// Community-forum attach-logs. `sid` is the opaque session id from
 // the `warren://attach-logs?sid=..` deep link (32 lowercase hex; the daemon
 // validates its shape before signing), `topic_id` the forum topic of the
 // user's bug report, and `log_gz` the gzipped redacted problem report
@@ -998,7 +998,7 @@ message ForumAttachLogsRequest {
   bytes log_gz = 3;
 }
 
-// Community-forum in-app report (doc 55). `report_json` is the form's fields
+// Community-forum in-app report. `report_json` is the form's fields
 // as one JSON object in the connect contract's names (never a `log_gz_b64`
 // of its own: the daemon adds that field), `log_gz` the gzipped redacted
 // problem report, empty when the report is filed without logs (max
@@ -1032,7 +1032,7 @@ message WarrenStatus {
   // status update when the window expires, so the UI banner keyed on
   // this flag self-dismisses.
   bool maintenance_migration_active = 7;
-  // Doc 59 C5: number of maintenance migrations cancelled because a
+  // Number of maintenance migrations cancelled because a
   // user-pinned forwarded port could not be reserved on any candidate
   // exit. The client stays on the draining exit with its ports intact;
   // the UI toasts "migration postponed, port kept" on each increment.
@@ -1044,7 +1044,7 @@ message WarrenStatus {
   // the edge itself (before any tunnel-side grace). Drives the
   // immediate "no internet connection" banner in every tunnel state.
   bool host_offline = 10;
-  // Doc 62 item 5: true while the in-tunnel egress liveness probe
+  // True while the in-tunnel egress liveness probe
   // reports the exit not forwarding (drained / half-swapped exit that
   // still ACKs QUIC keep-alives). Cleared on a successful probe or
   // when the tunnel leaves Connected. Drives the "interrupted" phase
@@ -1096,8 +1096,8 @@ message WarrenStatus {
   // withdrawal clears the card.
   repeated WarrenAnnouncement announcements = 18;
   // Port-forward abuse standing of the wallet, from the last poll of the
-  // standing endpoint or from an issuer that refused the wallet as banned
-  // (warren-core doc 105). Absent until one of them answered, and without a
+  // standing endpoint or from an issuer that refused the wallet as banned.
+  // Absent until one of them answered, and without a
   // wallet. Withheld from a caller that may not see the owner's identity: it
   // names the ports the account forwarded and the cases against it.
   WarrenAccountStanding account_standing = 19;
@@ -1820,7 +1820,7 @@ message Device {
   bytes pubkey = 3;
   bool hijack_dns = 5;
   google.protobuf.Timestamp created = 6;
-  // The account's device registry (warren-core doc 115). Where the device
+  // The account's device registry. Where the device
   // runs (`android`, `ios`, `macos`, `windows`, `linux`, `cli`, `browser`, or
   // `other` for one this build does not know), the version it last
   // registered with, and the days (`YYYY-MM-DD`, UTC) it registered and was

@@ -13,9 +13,8 @@ crate-type = ["rlib", "staticlib"]
 [dependencies]
 anyhow = { workspace = true }
 async-trait = "0.1"
-# Warren fork - Phase 2 auth wallet: Ed25519 signature on HTTP API
-# requests (see `mullvad-api/src/warren_auth.rs` and
-# `warren-core/docs/06-auth-wallet.md`).
+# Ed25519 signature on HTTP API
+# requests (see `mullvad-api/src/warren_auth.rs`).
 #
 # `zeroize` is REQUIRED - `WarrenAuthSigner` holds the signing key
 # behind an `RwLock<SigningKey>` and swaps it in-place on mnemonic
@@ -46,12 +45,12 @@ mullvad-api-constants = { path = "./mullvad-api-constants" }
 mullvad-fs = { path = "../mullvad-fs" }
 mullvad-types = { path = "../mullvad-types" }
 mullvad-version = { path = "../mullvad-version" }
-# Warren fork: consume the canonical HEADER_* + canonical_message wire
+# Consume the canonical HEADER_* + canonical_message wire
 # format from warren-identity (re-exported from its `signing` module)
 # rather than duplicating them locally - a silent divergence would
 # break every signed API request.
 warren-identity = { path = "../../warren-sdk-rs/crates/warren-identity" }
-# Warren fork: single-home the product User-Agent. The REST client sends
+# Single-home the product User-Agent. The REST client sends
 # `warren_contract::product::USER_AGENT` rather than a local copy, so a UA
 # change is one edit and cannot silently fingerprint this client apart.
 warren-contract = { path = "../../warren-contract" }

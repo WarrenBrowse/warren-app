@@ -31,8 +31,8 @@ pub const API_PORT_DEFAULT: u16 = 443;
 /// `api.warrenbrowse.com` (the SAN), so security is unchanged.
 ///
 /// STATUS: intentionally **deferred / left `None`**.
-/// Full rationale + the exact resume steps live in warren-core
-/// `docs/31-API-BOOTSTRAP-PRIVACY.md`. Read that before changing this.
+/// The backend team keeps the rationale and the resume steps; ask before
+/// changing this.
 ///
 /// ⚠️ REQUIRES a server-side prerequisite: the API must answer on a dedicated,
 /// stable IP that serves the `api.warrenbrowse.com` certificate **without**

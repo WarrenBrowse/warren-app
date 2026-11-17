@@ -9,7 +9,7 @@ license.workspace = true
 # Pure, host-tested logic shared by the desktop daemon and the mobile FFI
 # crates (warren-jni, warren-ios), the same shape as `warren-incidents`: no
 # platform deps and no transport. It turns the standing endpoint and the
-# issuer's ban refusal into one model (warren-core doc 105 §5.3, §5.4), decides
+# issuer's ban refusal into one model, decides
 # which strikes are new to this device, and names the tunnel error a ban maps
 # to, so the three clients cannot disagree on when to warn and when to block.
 # The mobile `StandingStore` persists the strike ledger with `std::fs` in a

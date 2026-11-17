@@ -1559,7 +1559,7 @@ fn fetch_network_info_json() -> String {
 }
 
 /// One fetch of the public network transparency snapshot
-/// (`GET /v1/network/stats`, warren-core doc 106), sanity-checked and wrapped
+/// (`GET /v1/network/stats`), sanity-checked and wrapped
 /// by [`crate::network_stats::envelope`]: `{"ok":true,"stats":{..}}` with the
 /// document as served, or `{"ok":false,"reason":".."}` where `unavailable`
 /// means the API does not serve it (404).
@@ -2028,7 +2028,7 @@ fn unix_now() -> u64 {
 }
 
 // ---------------------------------------------------------------------------
-// Port-forward abuse standing (warren-core doc 105 §5.4)
+// Port-forward abuse standing
 // ---------------------------------------------------------------------------
 
 /// Polls the wallet's standing (signed `GET /v1/account/standing`) and answers
@@ -2118,7 +2118,7 @@ pub extern "system" fn Java_com_warrenbrowse_vpn_jni_WarrenJni_getBanVerdict(
 }
 
 // ---------------------------------------------------------------------------
-// The account's devices (warren-core doc 115)
+// The account's devices
 // ---------------------------------------------------------------------------
 
 /// Runs one device registry call of `mnemonic`'s wallet and answers its
@@ -2373,7 +2373,7 @@ async fn collect_pulled(
     Ok(pulled)
 }
 
-/// Redeem a voucher OR claim an app-initiated purchase (doc 35).
+/// Redeem a voucher OR claim an app-initiated purchase.
 ///
 /// Mirrors the desktop daemon's `submit_voucher`: a purchase claim (the wpid
 /// followed by the app's pull secret) is NOT a voucher, so we first pull the

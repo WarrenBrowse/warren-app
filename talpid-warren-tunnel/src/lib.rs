@@ -53,7 +53,7 @@ pub use warrenguard_config::TUNNEL_GATEWAY_IP;
 // types from this crate (it owns `MultiHopConfig`).
 pub use warrenguard_transport::drain_policy;
 pub use warrenguard_transport::supervisor::{CircuitTarget, MigrateHandle};
-// docs/59 Lot 3: the daemon builds the pre-swap NAT-PMP reservation
+// The daemon builds the pre-swap NAT-PMP reservation
 // closure, whose subject is the candidate bundle, and hands the
 // supervisor a `PreSwapCheck` / `OverlapSwapObserver`. Re-exported so
 // mullvad-daemon needs no direct warrenguard-transport dependency.
@@ -254,10 +254,10 @@ pub use warren_app_routes::{SessionTokenSource, make_session_token_provider};
 /// Hands a port-forwarding rule the entitlement it presents, by SLOT.
 ///
 /// A slot is a rule's stable place in the subscriber's per-epoch batch: one
-/// entitlement buys one forwarded port (warren-core doc 99), so two live rules
+/// entitlement buys one forwarded port, so two live rules
 /// must never draw the same one. `None` for a slot means the subscriber has no
 /// entitlement left: the Map request then goes out without an envelope, the
-/// exit refuses it (warren-core doc 105), and the controller reports the rule
+/// exit refuses it, and the controller reports the rule
 /// as having no entitlement and asks again later. A refused entitlement is
 /// reported to the batch, which moves the slot to another one: the wallet's
 /// other devices hold the same batch.
@@ -310,8 +310,8 @@ use adapter::MullvadTunPacketDevice;
 pub mod nat_pmp_manager;
 pub use nat_pmp_manager::{NatPmpEvent, NatPmpEventObserver, NatPmpFailureReason, NatPmpManager};
 
-/// Pre-flight NAT-PMP reservation over a not-yet-published session
-/// (docs/59 Lot 3): reserve a pinned port on a candidate exit BEFORE
+/// Pre-flight NAT-PMP reservation over a not-yet-published session:
+/// reserve a pinned port on a candidate exit BEFORE
 /// committing a make-before-break migration, so a pinned rule never
 /// silently loses its port to a maintenance switch.
 pub mod natpmp_preflight;
@@ -499,7 +499,7 @@ pub struct WarrenTunnelParameters {
     /// reactor always escalates the rebuild). Multi-hop only.
     pub warren_drain_migrate: Option<WarrenDrainMigrate>,
 
-    /// Doc 62 item 5: invoked by the in-tunnel egress liveness probe on
+    /// Invoked by the in-tunnel egress liveness probe on
     /// verdict edges. `true` = the exit stopped forwarding (N consecutive
     /// in-tunnel probes dead while the QUIC session stays alive), `false`
     /// = egress recovered. The daemon wires this to
@@ -520,14 +520,14 @@ pub struct WarrenTunnelParameters {
     /// refresh removes the node). Multi-hop only.
     pub warren_dial_refused: Option<WarrenDialRefused>,
 
-    /// docs/59 Lot 3: pre-swap gate run against a candidate exit before a
+    /// Pre-swap gate run against a candidate exit before a
     /// make-before-break migration commits, so a pinned port is reserved
     /// on the candidate first (else the migration is aborted). `None`
     /// commits every overlap swap unconditionally. Wired by the daemon
     /// from its live port-forward config.
     pub warren_pre_swap_check: Option<warrenguard_transport::supervisor::PreSwapCheck>,
 
-    /// docs/59 Lot 3: observer fired after a committed overlap migration,
+    /// Observer fired after a committed overlap migration,
     /// used to re-map NAT-PMP on the new exit immediately. `None` = not
     /// observed. Wired by the daemon.
     pub warren_on_overlap_swapped: Option<warrenguard_transport::supervisor::OverlapSwapObserver>,
@@ -620,7 +620,7 @@ pub struct WarrenTunnelParameters {
     /// setting.
     pub require_pq: bool,
 
-    /// Anonymous v7 session tokens (Privacy Pass, warren-core doc 64): the
+    /// Anonymous v7 session tokens (Privacy Pass): the
     /// main session and every route session each open their own provider from
     /// it. When a provider yields a non-empty stack, the session presents
     /// `IpRequestV7` and the exit admits on a token, never learning the
@@ -631,7 +631,7 @@ pub struct WarrenTunnelParameters {
     /// provider never mints and never consumes.
     pub session_tokens: Option<SessionTokenSource>,
 
-    /// Per-rule port entitlements (warren-core doc 99). When set, every
+    /// Per-rule port entitlements. When set, every
     /// NAT-PMP request carries the credential its rule's slot holds, and the
     /// exit bounds the subscriber's forwarded ports across the whole fleet
     /// instead of per session. `None`, or an exhausted batch, sends the request
@@ -648,8 +648,8 @@ pub struct WarrenTunnelParameters {
     /// Told the state of every route session whenever one of them changes.
     pub on_app_routes: Option<app_routes::AppRouteObserver>,
 
-    /// Route admission by anchor as the token directory announces it
-    /// (warren-core doc 107). With per-app routes wired and a key on offer,
+    /// Route admission by anchor as the token directory announces it.
+    /// With per-app routes wired and a key on offer,
     /// the main session anchors and routes to the exits it lists are
     /// admitted against that anchor instead of a token each. `None` runs
     /// every route on tokens.
@@ -1413,7 +1413,7 @@ enum MonitorBackend {
         /// without a published session (silent redial not landing), so
         /// the UI never shows Connected on a dead tunnel.
         liveness_handle: tokio::task::JoinHandle<()>,
-        /// Doc 62 item 5: in-tunnel egress liveness probe. Catches the
+        /// In-tunnel egress liveness probe. Catches the
         /// case RX-silence cannot: an exit that ACKs QUIC keep-alives
         /// but forwards nothing (drained / half-swapped rollout).
         egress_probe_handle: tokio::task::JoinHandle<()>,
@@ -1709,7 +1709,7 @@ impl WarrenTunnelMonitor {
             n_connections: usize::from(params.n_connections).max(1),
             setup_clock: params.setup_clock.clone(),
             require_pq: params.require_pq,
-            // docs/59 Lot 3: the pre-swap NAT-PMP reservation and the
+            // The pre-swap NAT-PMP reservation and the
             // post-swap re-map observer are wired by the daemon from its
             // live port-forward config (next step); the transport carries
             // the hooks, `None` keeps the pre-hook behavior.
@@ -2705,7 +2705,7 @@ impl WarrenTunnelMonitor {
             })
         };
 
-        // Doc 62 item 5: in-tunnel egress liveness probe. RX-silence
+        // In-tunnel egress liveness probe. RX-silence
         // never trips on a drained/half-swapped exit that keeps ACKing
         // QUIC keep-alives while forwarding nothing; this probe proves
         // real egress and surfaces the exit_egress_dead verdict (plus
@@ -3881,8 +3881,8 @@ fn derive_multi_hop_tun_ip(pubkey_bytes: &[u8; 32]) -> std::net::Ipv4Addr {
 }
 
 /// Builds a `TunConfig` for the multi-hop path with the given IPv4 and
-/// an optional exit-allocated IPv6 (multi-hop `/v2` dual-stack, cf.
-/// docs/31). MTU pinned to 1280 (Warren `TUNNEL_INITIAL_MTU`), v4
+/// an optional exit-allocated IPv6 (multi-hop `/v2` dual-stack).
+/// MTU pinned to 1280 (Warren `TUNNEL_INITIAL_MTU`), v4
 /// gateway pinned to `10.66.0.1`. When `ipv6` is `Some`, the v6 address
 /// is added and the gateway is pinned to `fdcc:f:1::1`
 /// (`TUNNEL_GATEWAY_IPV6`); `None` keeps the TUN v4-only and the
@@ -4013,7 +4013,7 @@ impl SupervisorVerdict {
 /// The auth-failed token of a tokens-only main session that found no token
 /// the exit admits while the subscription is active: the wallet's other
 /// devices, or an older client of it, hold this epoch's tokens. The apps offer
-/// the account's device list on it (warren-core doc 115).
+/// the account's device list on it.
 pub const NO_SESSION_TOKEN_REASON: &str = "[NO_SESSION_TOKEN]";
 
 /// The error a first session that closed before it came up ends in, naming

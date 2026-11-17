@@ -37,7 +37,7 @@ pub(crate) fn parse(input: &str) -> Option<PurchaseClaim> {
 pub(crate) enum RegisterFailure {
     /// A transport failure or a server error: retry, keep the secret.
     Transient,
-    /// The wallet is banned (warren-core doc 105 section 5.3): the refusal
+    /// The wallet is banned: the refusal
     /// consumed nothing, so the secret is kept for after the ban, and a retry
     /// cannot change the answer.
     Banned(warren_standing::Ban),
@@ -148,7 +148,7 @@ mod tests {
 
     #[test]
     fn the_kept_copy_answers_only_the_purchase_s_own_pull_secret() {
-        // The wpid travels in URLs and proves nothing (warren-core doc 35).
+        // The wpid travels in URLs and proves nothing.
         let pulled = PulledVouchers::new();
 
         pulled.keep(&claim('a', '1'), "XXXX-YYYY-ZZZZ-WWWW");

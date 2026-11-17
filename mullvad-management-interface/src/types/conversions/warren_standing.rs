@@ -1,4 +1,4 @@
-//! The wallet's port-forward abuse standing (warren-core doc 105) between the
+//! The wallet's port-forward abuse standing between the
 //! shared `warren-standing` model and the wire.
 
 use warren_standing::{AbuseCategory, AccountStrike, Ban, BanReasonCode, NewStrike, Standing};

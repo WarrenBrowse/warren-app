@@ -271,7 +271,7 @@ impl AccountManagerHandle {
     }
 
     /// Marks the login revoked: the device was disconnected from another
-    /// device of the account (warren-core doc 115). Persisted, so the
+    /// device of the account. Persisted, so the
     /// revocation survives a restart, and announced as
     /// [`PrivateDeviceEvent::Revoked`].
     pub async fn revoke(&self) -> Result<(), Error> {
