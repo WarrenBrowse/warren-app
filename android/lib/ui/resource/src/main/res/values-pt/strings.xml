@@ -466,6 +466,7 @@
     <string name="connect_subscription_expired">O crédito da sua conta expirou. Compre mais crédito.</string>
     <plurals name="connect_subscription_expires_in">
         <item quantity="one">1 dia restante. Comprar mais crédito.</item>
+        <item quantity="many">%1$d dias restantes. Comprar mais crédito.</item>
         <item quantity="other">%1$d dias restantes. Comprar mais crédito.</item>
     </plurals>
     <string name="account_out_of_time">SEM TEMPO</string>

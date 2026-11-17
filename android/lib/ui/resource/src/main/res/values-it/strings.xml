@@ -466,6 +466,7 @@
     <string name="connect_subscription_expired">Il credito del tuo account è scaduto. Acquista altro credito.</string>
     <plurals name="connect_subscription_expires_in">
         <item quantity="one">1 giorno rimanente. Acquista altro credito.</item>
+        <item quantity="many">%1$d giorni rimanenti. Acquista altro credito.</item>
         <item quantity="other">%1$d giorni rimanenti. Acquista altro credito.</item>
     </plurals>
     <string name="account_out_of_time">SCADUTO</string>

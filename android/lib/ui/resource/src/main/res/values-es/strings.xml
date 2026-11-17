@@ -466,6 +466,7 @@
     <string name="connect_subscription_expired">El crédito de tu cuenta ha caducado. Compra más créditos.</string>
     <plurals name="connect_subscription_expires_in">
         <item quantity="one">Queda 1 día. Compre más crédito.</item>
+        <item quantity="many">Quedan %1$d días. Compre más crédito.</item>
         <item quantity="other">Quedan %1$d días. Compre más crédito.</item>
     </plurals>
     <string name="account_out_of_time">TIEMPO AGOTADO</string>
