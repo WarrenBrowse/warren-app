@@ -254,13 +254,9 @@ impl SettingsPersister {
         log::debug!("Writing settings to {}", path.display());
 
         let buffer = serde_json::to_string_pretty(settings).map_err(Error::SerializeError)?;
+        // The settings hold proxy credentials, a custom relay's key and the owner's exits, and
+        // every local account can list the directory: `AtomicFile` creates them owner-only.
         let mut file = mullvad_fs::AtomicFile::new(path)
-            .await
-            .map_err(|e| Error::WriteError(path.display().to_string(), e))?;
-        // The settings hold proxy credentials, a custom relay's key and the
-        // owner's exits, and every local account can list the directory.
-        #[cfg(unix)]
-        file.set_permissions(std::os::unix::fs::PermissionsExt::from_mode(0o600))
             .await
             .map_err(|e| Error::WriteError(path.display().to_string(), e))?;
         file.write_all(&buffer.into_bytes())
