@@ -46,11 +46,14 @@ import kotlinx.coroutines.withContext
  * Keystore: encrypt / decrypt operations happen inside the secure
  * subsystem (hardware-backed on devices that support it).
  *
- * Biometric gating: every cleartext read goes through [unlock], which
- * requires the app-supplied [SensitiveOpAuthorizer] (a `BiometricPrompt`
- * in production) to succeed first; [decryptMnemonic] is private and has no
- * other caller. So the mnemonic cannot be decrypted without a user
- * authentication at the application layer.
+ * Biometric gating covers the phrase shown to the user only: [unlock], used
+ * to display it, requires the app-supplied [SensitiveOpAuthorizer] (a
+ * `BiometricPrompt` in production) to succeed first. [readMnemonic] decrypts
+ * with no prompt for every signed API call and the background pollers, and
+ * the master key is not bound to user authentication, so any code running in
+ * the app process can obtain the phrase. Each such read also leaves an
+ * immutable `String` copy on the heap, since the JNI calls take the phrase
+ * as a `String`.
  *
  * Remaining hardening (deferred):
  *   - Hardware-enforced auth via `setUserAuthenticationRequired(true)` on
