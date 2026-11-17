@@ -134,6 +134,9 @@ cbindgen = { version = "0.28.0", default-features = false }
 # build on every host without adding anything to the shipped staticlib.
 [dev-dependencies]
 tokio = { workspace = true, features = ["macros", "rt", "sync", "time"] }
+# The refusal verdicts (`TerminalVerdict` from an exit's rejection) are tested
+# on the host, where the `tunnel` feature does not build.
+warrenguard-multihop = { path = "../../warrenguard/crates/warrenguard-multihop" }
 tempfile = "3"
 
 [features]

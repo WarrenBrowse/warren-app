@@ -47,6 +47,16 @@ final class DeviceBannerRoutingTests: XCTestCase {
         XCTAssertFalse(TunnelStatusNotificationProvider.bodyText(for: .accountBanned).contains("Manage devices"))
     }
 
+    /// Two exits refused this device's time: the fix is in the system
+    /// settings, so the banner names the clock and opens nothing.
+    func testTheClockSkewBannerNamesTheDeviceClock() {
+        XCTAssertNil(TunnelStatusNotificationProvider.action(for: .clockSkew))
+        XCTAssertEqual(
+            TunnelStatusNotificationProvider.bodyText(for: .clockSkew),
+            "This device’s clock is off: set it right to connect."
+        )
+    }
+
     func testTheRevokedScreenSaysAnotherDeviceOfTheAccountDisconnectedIt() {
         XCTAssertEqual(
             RevokedDeviceView.bodyText,

@@ -144,6 +144,20 @@ final class WarrenQuinnActorTests: XCTestCase {
         XCTAssertEqual(blocked.reason, .deviceRevoked)
     }
 
+    /// Two different exits refused this device's time: its own reason, on
+    /// which the app asks for automatic date and time.
+    func test_applyEvent_clockSkew_surfacesClockSkew() async {
+        let actor = makeStartedActor()
+        actor.applyEvent(.connected)
+        actor.applyEvent(.clockSkew)
+        let state = await actor.observedState
+        guard case let .error(blocked) = state else {
+            return XCTFail("Expected .error, got \(state)")
+        }
+        XCTAssertEqual(blocked.reason, .clockSkew)
+        XCTAssertFalse(blocked.reason.recoverableError(), "a redial meets the same refusal")
+    }
+
     /// No token the exit admits, for another reason than the device limit:
     /// its own reason, on which the screens offer the account's devices.
     func test_applyEvent_noSessionToken_surfacesNoSessionToken() async {

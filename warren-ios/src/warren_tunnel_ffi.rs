@@ -184,6 +184,10 @@ pub enum WarrenTunnelStateC {
     /// `DeviceLimit`): the store is empty for the epoch, or the exit refused
     /// every token. The screens offer the account's devices on it.
     NoSessionToken = 10,
+    /// Two different exits refused this device's time on the dated session
+    /// setup: the device clock is wrong and a redial meets the same refusal.
+    /// Terminal; the app asks for automatic date and time.
+    ClockSkew = 11,
 }
 
 /// Tunnel status snapshot.
@@ -255,6 +259,8 @@ pub enum WarrenTunnelEventTagC {
     EventDeviceRevoked = 14,
     /// Terminal counterpart of `NoSessionToken`.
     EventNoSessionToken = 15,
+    /// Terminal counterpart of `ClockSkew`.
+    EventClockSkew = 16,
 }
 
 /// Tagged-union event payload.
@@ -461,12 +467,14 @@ enum TerminalVerdict {
     /// No session token the exit admits, for another reason than the device
     /// limit.
     NoSessionToken,
+    /// Two different exits refused this device's time.
+    ClockSkew,
     /// Everything else: the user disconnected, the tunnel was torn down, or
     /// the refusal was one iOS has nowhere to explain yet.
     Ordinary,
 }
 
-#[cfg(feature = "tunnel")]
+#[cfg(any(test, feature = "tunnel"))]
 impl From<Option<warrenguard_multihop::RejectionReason>> for TerminalVerdict {
     fn from(reason: Option<warrenguard_multihop::RejectionReason>) -> Self {
         use warrenguard_multihop::RejectionReason;
@@ -498,6 +506,32 @@ impl From<Option<warrenguard_multihop::RejectionReason>> for TerminalVerdict {
             Some(RejectionReason::TokensRefusedWithoutReason) => Self::TokensRefused,
         }
     }
+}
+
+/// The clock refusals of every session this process starts: one exit
+/// refusing the time may be that exit's clock, two different exits mean the
+/// device's.
+#[cfg(feature = "tunnel")]
+static CLOCK_SKEW_TALLY: std::sync::LazyLock<
+    std::sync::Mutex<warrenguard_multihop::ClockSkewTally>,
+> = std::sync::LazyLock::new(Default::default);
+
+/// The verdict a session refused with `reason` by `exit` ends on, with the
+/// clock rule applied through `tally`: [`TerminalVerdict::ClockSkew`] once a
+/// second, different exit refused this device's time, the refusal's own
+/// verdict otherwise.
+#[cfg(any(test, feature = "tunnel"))]
+fn refusal_verdict(
+    tally: &mut warrenguard_multihop::ClockSkewTally,
+    reason: Option<warrenguard_multihop::RejectionReason>,
+    exit: warrenguard_multihop::ExitId,
+) -> TerminalVerdict {
+    if reason == Some(warrenguard_multihop::RejectionReason::ClockSkew)
+        && tally.record(exit).is_fatal()
+    {
+        return TerminalVerdict::ClockSkew;
+    }
+    reason.into()
 }
 
 /// How long a session whose watch closed waits for the supervisor's own
@@ -556,6 +590,10 @@ fn terminal_for(verdict: TerminalVerdict) -> (WarrenTunnelStateC, WarrenTunnelEv
         TerminalVerdict::NoSessionToken => (
             WarrenTunnelStateC::NoSessionToken,
             WarrenTunnelEventTagC::EventNoSessionToken,
+        ),
+        TerminalVerdict::ClockSkew => (
+            WarrenTunnelStateC::ClockSkew,
+            WarrenTunnelEventTagC::EventClockSkew,
         ),
         TerminalVerdict::Ordinary => (
             WarrenTunnelStateC::Disconnected,
@@ -1546,6 +1584,7 @@ fn spawn_multi_hop(
         // Extension has no process env, so the knob resolves to its default-ON.
         let idle_cover = idle_cover_active(warrenguard_config::knobs::idle_cover_enabled(), false);
         let rtt_store = std::sync::Arc::clone(&arc_for_task.entry_rtt);
+        let dialled_exit = circuit.exit.exit_id;
         let cfg = SupervisorConfig {
             relay: std::sync::Arc::new(circuit.relay),
             exit_id: circuit.exit.exit_id,
@@ -1910,6 +1949,12 @@ fn spawn_multi_hop(
             match transition {
                 WatchTransition::Connected { first } => {
                     was_connected = true;
+                    // An exit admitted this setup's time: earlier refusals no
+                    // longer say anything about the device clock.
+                    CLOCK_SKEW_TALLY
+                        .lock()
+                        .unwrap_or_else(std::sync::PoisonError::into_inner)
+                        .admitted();
                     arc_for_task
                         .has_connected_once
                         .store(true, Ordering::Release);
@@ -1962,7 +2007,13 @@ fn spawn_multi_hop(
         } else if let Some(stopped_for) = stopped_for {
             stopped_for
         } else {
-            fatal.into()
+            refusal_verdict(
+                &mut CLOCK_SKEW_TALLY
+                    .lock()
+                    .unwrap_or_else(std::sync::PoisonError::into_inner),
+                fatal,
+                dialled_exit,
+            )
         };
         let (terminal_state, terminal_event) = terminal_for(verdict);
         arc_for_task.set_state(terminal_state);
@@ -3294,6 +3345,58 @@ mod tests {
             (state as i32, event as i32),
             (9, 14),
             "WarrenQuinnAdapter reads these values from the generated header"
+        );
+    }
+
+    /// A device clock two exits refused ends on a state and an event of its
+    /// own, on which the app asks for automatic date and time.
+    #[test]
+    fn a_refused_device_clock_ends_on_its_own_state() {
+        let (state, event) = super::terminal_for(super::TerminalVerdict::ClockSkew);
+        assert_eq!(state, super::WarrenTunnelStateC::ClockSkew);
+        assert_eq!(event, super::WarrenTunnelEventTagC::EventClockSkew);
+        assert_eq!(
+            (state as i32, event as i32),
+            (11, 16),
+            "WarrenQuinnAdapter reads these values from the generated header"
+        );
+    }
+
+    /// One exit refusing this device's time may be that exit's clock, so the
+    /// session ends as an ordinary one and the app redials; a second,
+    /// different exit names the device clock, until a setup is admitted.
+    #[test]
+    fn the_device_clock_is_blamed_only_once_two_exits_refused_it() {
+        use warrenguard_multihop::{ClockSkewTally, ExitId, RejectionReason};
+
+        let mut tally = ClockSkewTally::default();
+        let first = ExitId::from_bytes([1; 16]);
+        let second = ExitId::from_bytes([2; 16]);
+        let clock = Some(RejectionReason::ClockSkew);
+
+        assert_eq!(
+            super::refusal_verdict(&mut tally, clock, first),
+            super::TerminalVerdict::Ordinary
+        );
+        assert_eq!(
+            super::refusal_verdict(&mut tally, Some(RejectionReason::SetupReplayed), second),
+            super::TerminalVerdict::Ordinary,
+            "only a clock refusal counts"
+        );
+        assert_eq!(
+            super::refusal_verdict(&mut tally, clock, second),
+            super::TerminalVerdict::ClockSkew
+        );
+        tally.admitted();
+        assert_eq!(
+            super::refusal_verdict(&mut tally, clock, first),
+            super::TerminalVerdict::Ordinary,
+            "an admitted setup clears the earlier refusals"
+        );
+        assert_eq!(
+            super::refusal_verdict(&mut tally, Some(RejectionReason::DeviceLimit), first),
+            super::TerminalVerdict::DeviceLimit,
+            "every other refusal keeps its own verdict"
         );
     }
 

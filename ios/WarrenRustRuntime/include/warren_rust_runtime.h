@@ -98,6 +98,10 @@ typedef enum WarrenTunnelEventTagC {
    * Terminal counterpart of `NoSessionToken`.
    */
   EventNoSessionToken = 15,
+  /**
+   * Terminal counterpart of `ClockSkew`.
+   */
+  EventClockSkew = 16,
 } WarrenTunnelEventTagC;
 
 /**
@@ -158,6 +162,12 @@ typedef enum WarrenTunnelStateC {
    * every token. The screens offer the account's devices on it.
    */
   NoSessionToken = 10,
+  /**
+   * Two different exits refused this device's time on the dated session
+   * setup: the device clock is wrong and a redial meets the same refusal.
+   * Terminal; the app asks for automatic date and time.
+   */
+  ClockSkew = 11,
 } WarrenTunnelStateC;
 
 typedef struct ApiContext ApiContext;

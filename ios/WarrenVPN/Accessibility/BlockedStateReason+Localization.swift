@@ -67,6 +67,8 @@ extension BlockedStateReason {
                 "This device has no session credentials right now. Another device of your account may be holding them.",
                 comment: ""
             )
+        case .clockSkew:
+            NSLocalizedString("This device’s clock is off: set it right to connect.", comment: "")
         default:
             NSLocalizedString(
                 "Unable to start tunnel connection. Please report the problem on our community forum.",

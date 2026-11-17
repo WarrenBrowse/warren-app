@@ -245,6 +245,11 @@ public enum BlockedStateReason: String, Codable, Equatable, Sendable {
     /// (warren-core doc 115).
     case noSessionToken
 
+    /// Two different exits refused this device's time on the dated session
+    /// setup: the device clock is wrong, and a redial meets the same refusal
+    /// until the user sets the date and time to automatic.
+    case clockSkew
+
     /// Device revoked.
     case deviceRevoked
 
@@ -275,7 +280,7 @@ public enum BlockedStateReason: String, Codable, Equatable, Sendable {
             .noSessionToken:
             return true
         case .deviceRevoked, .deviceLoggedOut, .tunnelAdapter, .accountExpired, .invalidAccount, .unknown,
-            .accountBanned, .accountBannedPortForwarding, .tooManyDevices:
+            .accountBanned, .accountBannedPortForwarding, .tooManyDevices, .clockSkew:
             return false
         }
     }

@@ -86593,6 +86593,148 @@
         }
       }
     },
+    "This device’s clock is off: set it right to connect.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ساعة هذا الجهاز غير مضبوطة: اضبطها للاتصال."
+          }
+        },
+        "da": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enhedens ur går forkert: stil det rigtigt for at oprette forbindelse."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Uhr dieses Geräts geht falsch: Stellen Sie sie richtig, um sich zu verbinden."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El reloj de este dispositivo está desajustado: corríjalo para conectarse."
+          }
+        },
+        "fa": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ساعت این دستگاه درست نیست: برای اتصال آن را تنظیم کنید."
+          }
+        },
+        "fi": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tämän laitteen kello on väärässä: korjaa se yhdistääksesi."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'horloge de cet appareil est décalée : remettez-la à l'heure pour vous connecter."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "L'orologio di questo dispositivo è sfasato: correggilo per connetterti."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "このデバイスの時計がずれています。接続するには時刻を正しく設定してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 기기의 시계가 어긋나 있습니다. 연결하려면 시간을 올바르게 맞추세요."
+          }
+        },
+        "my": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ဤစက်၏ နာရီ မှားနေသည်: ချိတ်ဆက်ရန် နာရီကို မှန်အောင် ပြင်ပါ။"
+          }
+        },
+        "nb": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klokken på denne enheten går feil: still den riktig for å koble til."
+          }
+        },
+        "nl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "De klok van dit apparaat loopt verkeerd: zet hem gelijk om verbinding te maken."
+          }
+        },
+        "pl": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Zegar tego urządzenia jest nieprawidłowy: ustaw go poprawnie, aby się połączyć."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "O relógio deste dispositivo está desacertado: acerte-o para se ligar."
+          }
+        },
+        "ro": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ceasul acestui dispozitiv este decalat: potriviți-l pentru a vă conecta."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Часы этого устройства сбиты: настройте их, чтобы подключиться."
+          }
+        },
+        "sv": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Klockan på den här enheten går fel: ställ in den rätt för att ansluta."
+          }
+        },
+        "th": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "นาฬิกาของอุปกรณ์นี้คลาดเคลื่อน โปรดตั้งเวลาให้ถูกต้องเพื่อเชื่อมต่อ"
+          }
+        },
+        "tr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Bu cihazın saati yanlış: bağlanmak için saati düzeltin."
+          }
+        },
+        "uk": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Годинник цього пристрою збився: налаштуйте його, щоб підключитися."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此设备的时钟不准确：请校准时间后再连接。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "此裝置的時鐘不準確：請校正時間後再連線。"
+          }
+        }
+      }
+    },
     "This feature allows access to other devices on the local network, such as for sharing, printing, streaming, etc.": {
       "localizations": {
         "ar": {
