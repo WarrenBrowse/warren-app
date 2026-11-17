@@ -44,6 +44,11 @@
 //!   entitlement refresh or a device registry call. Kotlin takes the tunnel
 //!   down, forgets the wallet and shows the revoked screen; coming back takes
 //!   the recovery phrase.
+//! - `ClockSkew` (11) is terminal: two different exits refused the dated
+//!   setup for this device's time, so the device clock is wrong and a redial
+//!   meets the same refusal. Kotlin blocks under its own cause and asks for
+//!   automatic date and time. One exit alone refusing the time only ends the
+//!   attempt, since that exit's clock may be the wrong one.
 
 /// Tunnel session status reported back to Kotlin via
 /// `WarrenJni.getTunnelStatus()`. Encoded as an `i32` rather than an enum
@@ -78,4 +83,6 @@ pub enum SessionStatus {
     NoSessionToken = 9,
     /// Another device of the account revoked this one: see the module doc.
     DeviceRevoked = 10,
+    /// Two different exits refused this device's time: see the module doc.
+    ClockSkew = 11,
 }

@@ -769,6 +769,7 @@
     <string name="device_older_client_body">En enhed på denne konto kører en version af Warren, der er ældre end 1.1.36. Den blokerer ikke længere dine andre enheder. Opdater eller afinstaller den.</string>
     <string name="manage_devices">Administrer enheder</string>
     <string name="auth_failed_no_session_token">Denne enhed har ingen sessionsoplysninger lige nu. En anden enhed på din konto bruger dem muligvis.</string>
+    <string name="auth_failed_clock_skew">Enhedens ur går forkert: stil det rigtigt for at oprette forbindelse.</string>
     <string name="home_status_unprotected">Ubeskyttet</string>
     <string name="home_status_protected">Beskyttet</string>
     <string name="home_status_interrupted">Afbrudt</string>

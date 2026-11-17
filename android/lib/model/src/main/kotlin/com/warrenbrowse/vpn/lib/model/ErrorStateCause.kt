@@ -89,6 +89,10 @@ sealed interface AuthFailedError {
     // than the device limit; another device of the account may hold them (warren-core doc 115).
     data object NoSessionToken : AuthFailedError
 
+    // Warren: two different exits refused this device's time on the dated session setup; the
+    // device clock is wrong and the app asks for automatic date and time.
+    data object ClockSkew : AuthFailedError
+
     // Warren: the account was explicitly revoked (banned) by the operator (its
     // pubkey is on the signed CRL). Distinct from ExpiredAccount (renewable) so
     // the app shows a suspension rather than a renew prompt. [lapsesAtUnixSecs]
@@ -123,7 +127,8 @@ sealed interface AuthFailedError {
          * The account verdict an auth-failed reason names by its leading
          * `[TOKEN]`: a ban (see [banOf]), `[TOO_MANY_CONNECTIONS]` when the
          * exit refused another device past the account's limit, or
-         * `[NO_SESSION_TOKEN]` when no session token was at hand. `null` for a
+         * `[NO_SESSION_TOKEN]` when no session token was at hand, or
+         * `[CLOCK_SKEW]` when two exits refused this device's time. `null` for a
          * reason that carries none of them.
          */
         fun fromReason(reason: String, lapsesAtUnixSecs: Long?): AuthFailedError? =
@@ -131,6 +136,7 @@ sealed interface AuthFailedError {
                 ?: when (TOKEN.find(reason)?.groupValues?.get(1)) {
                     "TOO_MANY_CONNECTIONS" -> TooManyConnections
                     "NO_SESSION_TOKEN" -> NoSessionToken
+                    "CLOCK_SKEW" -> ClockSkew
                     else -> null
                 }
     }

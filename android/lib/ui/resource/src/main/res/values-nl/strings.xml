@@ -769,6 +769,7 @@
     <string name="device_older_client_body">Een apparaat van dit account gebruikt een versie van Warren die ouder is dan 1.1.36. Het blokkeert je andere apparaten niet meer. Werk het bij of verwijder het.</string>
     <string name="manage_devices">Apparaten beheren</string>
     <string name="auth_failed_no_session_token">Dit apparaat heeft op dit moment geen sessiegegevens. Mogelijk heeft een ander apparaat van je account ze in gebruik.</string>
+    <string name="auth_failed_clock_skew">De klok van dit apparaat loopt verkeerd: zet hem gelijk om verbinding te maken.</string>
     <string name="home_status_unprotected">Onbeschermd</string>
     <string name="home_status_protected">Beschermd</string>
     <string name="home_status_interrupted">Onderbroken</string>

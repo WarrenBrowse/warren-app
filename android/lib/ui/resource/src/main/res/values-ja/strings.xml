@@ -761,6 +761,7 @@
     <string name="device_older_client_body">このアカウントのデバイスの1台が、1.1.36より古いバージョンのWarrenを使用しています。ほかのデバイスをブロックすることはなくなりました。アップデートするかアンインストールしてください。</string>
     <string name="manage_devices">デバイスを管理</string>
     <string name="auth_failed_no_session_token">このデバイスには現在セッション認証情報がありません。アカウントの別のデバイスが保持している可能性があります。</string>
+    <string name="auth_failed_clock_skew">このデバイスの時計がずれています。接続するには時刻を正しく設定してください。</string>
     <string name="home_status_unprotected">保護されていません</string>
     <string name="home_status_protected">保護中</string>
     <string name="home_status_interrupted">中断</string>

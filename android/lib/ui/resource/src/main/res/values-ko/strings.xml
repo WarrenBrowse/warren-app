@@ -761,6 +761,7 @@
     <string name="device_older_client_body">이 계정의 장치 중 하나가 1.1.36보다 오래된 버전의 Warren을 실행하고 있습니다. 더 이상 다른 장치를 차단하지 않습니다. 업데이트하거나 제거하세요.</string>
     <string name="manage_devices">장치 관리</string>
     <string name="auth_failed_no_session_token">이 장치에는 현재 세션 자격 증명이 없습니다. 계정의 다른 장치가 보유하고 있을 수 있습니다.</string>
+    <string name="auth_failed_clock_skew">이 기기의 시계가 어긋나 있습니다. 연결하려면 시간을 올바르게 맞추세요.</string>
     <string name="home_status_unprotected">보호되지 않음</string>
     <string name="home_status_protected">보호됨</string>
     <string name="home_status_interrupted">중단됨</string>

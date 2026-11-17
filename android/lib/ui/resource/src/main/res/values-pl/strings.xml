@@ -785,6 +785,7 @@
     <string name="device_older_client_body">Jedno z urządzeń tego konta używa wersji Warren starszej niż 1.1.36. Nie blokuje już Twoich pozostałych urządzeń. Zaktualizuj je lub odinstaluj.</string>
     <string name="manage_devices">Zarządzaj urządzeniami</string>
     <string name="auth_failed_no_session_token">To urządzenie nie ma obecnie danych uwierzytelniających sesji. Może je zajmować inne urządzenie z Twojego konta.</string>
+    <string name="auth_failed_clock_skew">Zegar tego urządzenia jest nieprawidłowy: ustaw go poprawnie, aby się połączyć.</string>
     <string name="home_status_unprotected">Bez ochrony</string>
     <string name="home_status_protected">Chroniony</string>
     <string name="home_status_interrupted">Przerwane</string>

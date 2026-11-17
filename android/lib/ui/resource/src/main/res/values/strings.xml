@@ -810,6 +810,7 @@
     <string name="device_older_client_body">A device of this account runs a version of Warren older than 1.1.36. It no longer blocks your other devices. Update or uninstall it.</string>
     <string name="manage_devices">Manage devices</string>
     <string name="auth_failed_no_session_token">This device has no session credentials right now. Another device of your account may be holding them.</string>
+    <string name="auth_failed_clock_skew">This device’s clock is off: set it right to connect.</string>
     <string name="home_status_unprotected">Unprotected</string>
     <string name="home_status_protected">Protected</string>
     <string name="home_status_interrupted">Interrupted</string>

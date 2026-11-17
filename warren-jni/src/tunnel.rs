@@ -801,6 +801,9 @@ async fn run_multi_hop_session(
                 presented.load(Ordering::Relaxed)
             );
             remap_addresses.set(spec.assigned, spec.assigned_v6);
+            // An exit admitted this setup's time: earlier refusals no longer
+            // say anything about the device clock.
+            CLOCK_SKEW_TALLY.lock().admitted();
             crate::remap_tun::RemapTun::new(
                 routed_tun.clone(),
                 LOCAL_TUN_IPV4,
@@ -895,6 +898,20 @@ async fn run_multi_hop_session(
                 status.store(terminal as i32);
                 return;
             }
+            // One exit refusing this device's time may be that exit's clock:
+            // the attempt ends for a redial. A second, different exit names
+            // the device clock, and redialling would only meet it again.
+            AttemptEnd::Session(SessionEnd::Rejected(reason @ RejectionReason::ClockSkew))
+                if let Some(terminal) = crate::supervised_session::clock_refusal_status(
+                    &mut CLOCK_SKEW_TALLY.lock(),
+                    reason,
+                    exit_node.exit.exit_id,
+                ) =>
+            {
+                log::warn!("multi-hop: two exits refused this device's time");
+                status.store(terminal as i32);
+                return;
+            }
             AttemptEnd::Session(SessionEnd::ExitLeaving) => {
                 status.store(SessionStatus::ExitLeaving as i32);
                 return;
@@ -918,6 +935,12 @@ async fn run_multi_hop_session(
 
     status.store(SessionStatus::Disconnected as i32);
 }
+
+/// The clock refusals of every tunnel this process starts: one exit refusing
+/// the time may be that exit's clock, two different exits mean the device's.
+static CLOCK_SKEW_TALLY: std::sync::LazyLock<
+    parking_lot::Mutex<warrenguard_multihop::ClockSkewTally>,
+> = std::sync::LazyLock::new(Default::default);
 
 /// Seconds since the Unix epoch, 0 on a clock before it.
 fn unix_now_secs() -> u64 {

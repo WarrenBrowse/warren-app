@@ -762,6 +762,7 @@ private fun AuthFailedError.errorMessageId(): Int =
         AuthFailedError.InvalidAccount -> R.string.auth_failed_invalid_account
         AuthFailedError.TooManyConnections -> R.string.auth_failed_too_many_connections
         AuthFailedError.NoSessionToken -> R.string.auth_failed_no_session_token
+        AuthFailedError.ClockSkew -> R.string.auth_failed_clock_skew
         // A ban is a suspension, not a renewable expiry: distinct copy so the
         // user contacts support rather than trying to top up. The
         // port-forwarding ban names the forwarded-port cause specifically.

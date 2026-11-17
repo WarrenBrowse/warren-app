@@ -785,6 +785,7 @@
     <string name="device_older_client_body">Одно из устройств этого аккаунта использует версию Warren старше 1.1.36. Оно больше не блокирует другие ваши устройства. Обновите или удалите его.</string>
     <string name="manage_devices">Управление устройствами</string>
     <string name="auth_failed_no_session_token">У этого устройства сейчас нет учётных данных сеанса. Возможно, их занимает другое устройство вашего аккаунта.</string>
+    <string name="auth_failed_clock_skew">Часы этого устройства сбиты: настройте их, чтобы подключиться.</string>
     <string name="home_status_unprotected">Без защиты</string>
     <string name="home_status_protected">Защищено</string>
     <string name="home_status_interrupted">Прервано</string>

@@ -133,6 +133,24 @@ pub(crate) fn account_refusal_status(reason: RejectionReason) -> Option<SessionS
     }
 }
 
+/// The terminal status a refusal by `exit` leaves once the clock rule is
+/// applied through `tally`: [`SessionStatus::ClockSkew`] when a second,
+/// different exit refused this device's time, `None` otherwise (one exit
+/// alone may be the wrong one, so that attempt only ends for a redial).
+pub(crate) fn clock_refusal_status(
+    tally: &mut warrenguard_multihop::ClockSkewTally,
+    reason: RejectionReason,
+    exit: warrenguard_multihop::ExitId,
+) -> Option<SessionStatus> {
+    if reason != RejectionReason::ClockSkew {
+        return None;
+    }
+    match tally.record(exit) {
+        warrenguard_transport::Retryability::Fatal(_) => Some(SessionStatus::ClockSkew),
+        _ => None,
+    }
+}
+
 /// The terminal status a supervisor that stopped with `error` leaves for
 /// Kotlin, `None` for a stop the fail-closed drop policy handles as a plain
 /// teardown. A tokens-only session whose every token the exit said is in use
@@ -918,6 +936,47 @@ mod tests {
         ] {
             assert_eq!(account_refusal_status(reason), None, "{reason:?}");
         }
+    }
+
+    /// One exit refusing this device's time may be that exit's clock, so the
+    /// attempt ends for a redial; a second, different exit names the device
+    /// clock on its own terminal status, until a setup is admitted again.
+    #[test]
+    fn the_device_clock_is_blamed_only_once_two_exits_refused_it() {
+        let mut tally = warrenguard_multihop::ClockSkewTally::default();
+        let first = warrenguard_multihop::ExitId::from_bytes([1; 16]);
+        let second = warrenguard_multihop::ExitId::from_bytes([2; 16]);
+
+        assert_eq!(
+            clock_refusal_status(&mut tally, RejectionReason::ClockSkew, first),
+            None,
+            "one exit alone may be wrong"
+        );
+        assert_eq!(
+            clock_refusal_status(&mut tally, RejectionReason::ClockSkew, first),
+            None,
+            "the same exit twice is still one exit"
+        );
+        assert_eq!(
+            clock_refusal_status(&mut tally, RejectionReason::SetupReplayed, second),
+            None,
+            "only a clock refusal counts"
+        );
+        assert_eq!(
+            clock_refusal_status(&mut tally, RejectionReason::ClockSkew, second),
+            Some(SessionStatus::ClockSkew)
+        );
+        tally.admitted();
+        assert_eq!(
+            clock_refusal_status(&mut tally, RejectionReason::ClockSkew, second),
+            None,
+            "an admitted setup clears the earlier refusals"
+        );
+        assert_eq!(
+            SessionStatus::ClockSkew as i32,
+            11,
+            "WarrenQuinnAdapter.STATUS_CLOCK_SKEW mirrors this code"
+        );
     }
 
     /// A setup made again make before break (a wallet session set up again on

@@ -71,6 +71,7 @@ class WarrenQuinnAdapterTest {
         const val STATUS_NO_REACHABLE_ENTRY = 8
         const val STATUS_NO_SESSION_TOKEN = 9
         const val STATUS_DEVICE_REVOKED = 10
+        const val STATUS_CLOCK_SKEW = 11
 
         const val SELF_PACKAGE = "com.warrenbrowse.vpn.test"
 
@@ -770,6 +771,33 @@ class WarrenQuinnAdapterTest {
             assertFalse(blocked.expired, "a device limit is not an expiry")
             withContext(Dispatchers.Default) { delay(500) }
             assertFalse(CONNECT_TUNNEL in platform.calls, "a device limit must not be redialed")
+            adapter.disconnect()
+        }
+
+    @Test
+    fun `ensure a clock two exits refused blocks with the clock skew token and is never redialed`() =
+        runTest {
+            // Rust ends the session with this status once two different exits
+            // refused this device's time. A redial meets the same refusal; the
+            // block carries the token the card asks for automatic time on.
+            val platform = RecordingPlatform()
+            val adapter = adapterWith(platform, dropRetryGraceMs = 50L)
+            adapter.connect(config(), Mnemonic(PHRASE))
+            awaitReal("the session must reach Connected") {
+                adapter.state.value is WarrenTunnelState.Connected
+            }
+            platform.calls.clear()
+
+            platform.status = STATUS_CLOCK_SKEW
+            awaitReal("a refused clock must block", { adapter.state.value.toString() }) {
+                adapter.state.value is WarrenTunnelState.Blocking
+            }
+
+            val blocked = adapter.state.value as WarrenTunnelState.Blocking
+            assertTrue(blocked.reason.startsWith("[CLOCK_SKEW] "), blocked.reason)
+            assertFalse(blocked.expired, "a wrong clock is not an expiry")
+            withContext(Dispatchers.Default) { delay(500) }
+            assertFalse(CONNECT_TUNNEL in platform.calls, "a refused clock must not be redialed")
             adapter.disconnect()
         }
 

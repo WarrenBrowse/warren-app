@@ -583,15 +583,18 @@ class WarrenQuinnAdapter(
                         }
                         break
                     }
-                    if (code == STATUS_DEVICE_LIMIT) {
+                    if (code == STATUS_DEVICE_LIMIT || code == STATUS_CLOCK_SKEW) {
                         // Terminal like an expiry: the account already uses
-                        // its maximum number of devices, and a redial meets
-                        // the same count until one of them disconnects.
+                        // its maximum number of devices, or two exits refused
+                        // this device's time, and a redial meets the same
+                        // refusal until the user acts.
+                        val reason =
+                            if (code == STATUS_CLOCK_SKEW) CLOCK_SKEW_REASON else DEVICE_LIMIT_REASON
                         lock.withLock {
                             if (userInitiatedDisconnect) {
                                 _state.value = WarrenTunnelState.Disconnected
                             } else {
-                                onSessionDeviceLimited(sessionConfig)
+                                onTerminalRefusal(sessionConfig, reason)
                             }
                         }
                         break
@@ -974,23 +977,25 @@ class WarrenQuinnAdapter(
     }
 
     /**
-     * Handle the exit refusing another device past the account's limit, the
-     * way [onSessionExpired] handles a lapsed subscription: never a reconnect,
-     * the kill switch kept when the session fails closed, traffic released
-     * otherwise. The state carries the `[TOO_MANY_CONNECTIONS]` reason the card
-     * reads "too many connections" from. Must be called holding [lock].
+     * Handle a refusal no redial lifts (another device past the account's
+     * limit, or a device clock two exits refused) the way [onSessionExpired]
+     * handles a lapsed subscription: never a reconnect, the kill switch kept
+     * when the session fails closed, traffic released otherwise. The state
+     * carries [reason], whose leading token (`[TOO_MANY_CONNECTIONS]`,
+     * `[CLOCK_SKEW]`) the card names the cause from. Must be called holding
+     * [lock].
      */
-    private fun onSessionDeviceLimited(config: WarrenTunnelConfig) {
+    private fun onTerminalRefusal(config: WarrenTunnelConfig, reason: String) {
         _natPmpStatus.value = NATPMP_IDLE
         _effectiveMtu.value = null
         flapDetector.reset()
         if (failsClosed(config)) {
-            Logger.w("WarrenQuinnAdapter: device limit reached; blocking")
-            enterBlockingMode(config, DEVICE_LIMIT_REASON)
+            Logger.w("WarrenQuinnAdapter: terminal refusal; blocking")
+            enterBlockingMode(config, reason)
         } else {
-            Logger.w("WarrenQuinnAdapter: device limit reached; releasing")
+            Logger.w("WarrenQuinnAdapter: terminal refusal; releasing")
             releaseTraffic()
-            _state.value = WarrenTunnelState.Failed(DEVICE_LIMIT_REASON)
+            _state.value = WarrenTunnelState.Failed(reason)
         }
     }
 
@@ -1442,6 +1447,7 @@ class WarrenQuinnAdapter(
             STATUS_BANNED -> WarrenTunnelState.Failed(BanVerdict.UNKNOWN.reason)
             STATUS_DEVICE_LIMIT -> WarrenTunnelState.Failed(DEVICE_LIMIT_REASON)
             STATUS_NO_SESSION_TOKEN -> WarrenTunnelState.Failed(NO_SESSION_TOKEN_REASON)
+            STATUS_CLOCK_SKEW -> WarrenTunnelState.Failed(CLOCK_SKEW_REASON)
             else -> WarrenTunnelState.Failed("native status code $code")
         }
 
@@ -1479,6 +1485,15 @@ class WarrenQuinnAdapter(
         // Another device of the account revoked this one. Mirrors
         // `warren_jni::redial::SessionStatus::DeviceRevoked`.
         const val STATUS_DEVICE_REVOKED = 10
+
+        // Two different exits refused this device's time. Mirrors
+        // `warren_jni::redial::SessionStatus::ClockSkew`.
+        const val STATUS_CLOCK_SKEW = 11
+
+        // Opens on the auth-failed token the desktop daemon blocks with for
+        // the same cause.
+        const val CLOCK_SKEW_REASON =
+            "[CLOCK_SKEW] two exits refused this device's time; set the date and time to automatic"
 
         // Opens on the auth-failed token the desktop daemon blocks with for
         // the same cause (warren-core doc 115).

@@ -359,6 +359,23 @@ class ConnectionProxyTest {
     }
 
     @Test
+    fun `a clock two exits refused blocks under the clock skew cause`() = runTest {
+        val state =
+            mapped(
+                WarrenConnectedInfo.Blocking(
+                    "[CLOCK_SKEW] two exits refused this device's time; set the date and " +
+                        "time to automatic"
+                )
+            ) as TunnelState.Error
+
+        assertTrue(state.errorState.isBlocking)
+        assertEquals(
+            AuthFailedError.ClockSkew,
+            (state.errorState.cause as ErrorStateCause.AuthFailed).error,
+        )
+    }
+
+    @Test
     fun `a released device limit is a non-blocking too-many-connections error`() = runTest {
         val state =
             mapped(WarrenConnectedInfo.Failed("[TOO_MANY_CONNECTIONS] too many devices"))

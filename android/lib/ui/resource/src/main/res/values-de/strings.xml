@@ -769,6 +769,7 @@
     <string name="device_older_client_body">Ein Gerät dieses Kontos verwendet eine Warren-Version, die älter als 1.1.36 ist. Es blockiert Ihre anderen Geräte nicht mehr. Aktualisieren oder deinstallieren Sie es.</string>
     <string name="manage_devices">Geräte verwalten</string>
     <string name="auth_failed_no_session_token">Dieses Gerät hat derzeit keine Sitzungsnachweise. Möglicherweise belegt ein anderes Gerät Ihres Kontos sie.</string>
+    <string name="auth_failed_clock_skew">Die Uhr dieses Geräts geht falsch: Stellen Sie sie richtig, um sich zu verbinden.</string>
     <string name="home_status_unprotected">Ungeschützt</string>
     <string name="home_status_protected">Geschützt</string>
     <string name="home_status_interrupted">Unterbrochen</string>

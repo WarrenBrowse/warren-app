@@ -785,6 +785,7 @@
     <string name="device_older_client_body">Один із пристроїв цього облікового запису використовує версію Warren, старішу за 1.1.36. Він більше не блокує інші ваші пристрої. Оновіть або видаліть його.</string>
     <string name="manage_devices">Керування пристроями</string>
     <string name="auth_failed_no_session_token">Цей пристрій зараз не має облікових даних сеансу. Можливо, їх утримує інший пристрій вашого облікового запису.</string>
+    <string name="auth_failed_clock_skew">Годинник цього пристрою збився: налаштуйте його, щоб підключитися.</string>
     <string name="home_status_unprotected">Без захисту</string>
     <string name="home_status_protected">Захищено</string>
     <string name="home_status_interrupted">Перервано</string>

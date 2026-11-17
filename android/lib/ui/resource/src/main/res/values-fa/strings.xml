@@ -769,6 +769,7 @@
     <string name="device_older_client_body">یکی از دستگاه‌های این حساب نسخه‌ای از Warren قدیمی‌تر از 1.1.36 را اجرا می‌کند. دیگر دستگاه‌های دیگر شما را مسدود نمی‌کند. آن را به‌روزرسانی یا حذف کنید.</string>
     <string name="manage_devices">مدیریت دستگاه‌ها</string>
     <string name="auth_failed_no_session_token">این دستگاه در حال حاضر اعتبارنامه نشست ندارد. ممکن است دستگاه دیگری از حساب شما آن‌ها را در اختیار داشته باشد.</string>
+    <string name="auth_failed_clock_skew">ساعت این دستگاه درست نیست: برای اتصال آن را تنظیم کنید.</string>
     <string name="home_status_unprotected">محافظت‌نشده</string>
     <string name="home_status_protected">محافظت‌شده</string>
     <string name="home_status_interrupted">قطع‌شده</string>
