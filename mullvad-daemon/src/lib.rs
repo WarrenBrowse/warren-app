@@ -5966,10 +5966,7 @@ impl Daemon {
             .update(move |settings| settings.obfuscation_settings = new_settings)
             .await
         {
-            Ok(settings_changed) => {
-                if settings_changed {
-                    self.reconnect_tunnel();
-                }
+            Ok(_) => {
                 Self::oneshot_send(tx, Ok(()), "set_obfuscation_settings");
             }
             Err(err) => {
@@ -6012,14 +6009,8 @@ impl Daemon {
             .update(|settings| settings.tunnel_options.wireguard.userspace = userspace)
             .await
         {
-            Ok(settings_changed) => {
+            Ok(_) => {
                 Self::oneshot_send(tx, Ok(()), "set_userspace_wireguard response");
-                if settings_changed {
-                    log::info!(
-                        "Initiating tunnel restart because the userspace WireGuard setting changed"
-                    );
-                    self.reconnect_tunnel();
-                }
             }
             Err(e) => {
                 log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
@@ -6069,12 +6060,8 @@ impl Daemon {
             })
             .await
         {
-            Ok(settings_changed) => {
+            Ok(_) => {
                 Self::oneshot_send(tx, Ok(()), "set_quantum_resistant_tunnel response");
-                if settings_changed {
-                    log::info!("Reconnecting because the PQ safety setting changed");
-                    self.reconnect_tunnel();
-                }
             }
             Err(e) => {
                 log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
@@ -6099,11 +6086,9 @@ impl Daemon {
                     return; // DAITA is not supported for custom relays
                 }
 
-                // Mirror the toggle onto the Warren-side
-                // parameters generator so the next reconnect picks up
-                // `Setup.daita_support = value` on the warrenguard-wire
-                // v3 handshake. Single UI surface drives both
-                // backends (WireGuard upstream + Quinn Warren).
+                // Mirror the toggle onto the parameters generator so the
+                // next reconnect carries `Setup.daita_support = value` on
+                // the warrenguard-wire v3 handshake.
                 self.parameters_generator
                     .set_warren_enable_daita(value)
                     .await;
@@ -6274,14 +6259,8 @@ impl Daemon {
             .update(move |settings| settings.tunnel_options.wireguard.mtu = mtu)
             .await
         {
-            Ok(settings_changed) => {
+            Ok(_) => {
                 Self::oneshot_send(tx, Ok(()), "set_wireguard_mtu response");
-                if settings_changed {
-                    log::info!(
-                        "Initiating tunnel restart because the WireGuard MTU setting changed"
-                    );
-                    self.reconnect_tunnel();
-                }
             }
             Err(e) => {
                 log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
@@ -6304,14 +6283,8 @@ impl Daemon {
             })
             .await
         {
-            Ok(settings_changed) => {
+            Ok(_) => {
                 Self::oneshot_send(tx, Ok(()), "set_wireguard_allowed_ips response");
-                if settings_changed {
-                    log::info!(
-                        "Initiating tunnel restart because the WireGuard allowed IPs setting changed"
-                    );
-                    self.reconnect_tunnel();
-                }
             }
             Err(e) => {
                 log::error!("{}", e.display_chain_with_msg("Unable to save settings"));
